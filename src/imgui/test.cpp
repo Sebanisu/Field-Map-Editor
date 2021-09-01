@@ -54,11 +54,14 @@ int main()
       if (event.type == sf::Event::Resized) {
         // this scales up the elements without losing the horizontal space. so going from 4:3 to 16:9 will end up with wide screen.
         scale = std::round(static_cast<float>(event.size.height) / window_height);
-        const auto scalex = static_cast<float>(event.size.width) / static_cast<float>(event.size.height);
+        const auto scale_width = static_cast<float>(event.size.width) / static_cast<float>(event.size.height) * window_height;
+        if (scale < 1.0F) {
+          scale = 1.0F;
+        }
         ImGui::GetIO().FontGlobalScale = scale;
         ImGui::GetStyle() = original_style;// restore original before applying scale.
         ImGui::GetStyle().ScaleAllSizes(scale);
-        window.setView(sf::View(sf::FloatRect(0.0F, 0.0F, scalex * window_height, window_height)));
+        window.setView(sf::View(sf::FloatRect(0.0F, 0.0F, scale_width, window_height)));
       } else if (event.type == sf::Event::Closed) {
         window.close();
       }
