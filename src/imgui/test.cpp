@@ -1,43 +1,85 @@
 #include <imgui.h>
 #include <imgui-SFML.h>
-
+#include <fmt/core.h>
 #include <SFML/Graphics/RenderWindow.hpp>
 #include <SFML/System/Clock.hpp>
 #include <SFML/Window/Event.hpp>
 #include <SFML/Graphics/CircleShape.hpp>
+template<typename T>
+struct dialog
+{
+private:
+  const char *m_title;
+  ImVec2 m_pos{};
+  T m_f{};
+  ImGuiWindowFlags m_flags{};
 
+public:
+  dialog(const char *const title, ImVec2 pos, T &&f, ImGuiWindowFlags flags = static_cast<ImGuiWindowFlags>(static_cast<unsigned int>(ImGuiWindowFlags_AlwaysAutoResize) | static_cast<unsigned int>(ImGuiWindowFlags_NoCollapse)))
+    : m_title(title), m_pos(pos), m_f(std::forward<T>(f)), m_flags(flags)
+  {
+  }
+  void draw(bool first = false) const
+  {
+
+    ImGui::Begin(m_title, nullptr, m_flags);
+    // const auto current_size = ImGui::GetWindowSize();
+    // auto size = ImVec2{ std::max(current_size.x, m_size.x), std::max(std::round((current_size.y / current_size.x) * m_size.y), m_size.y) };
+    // ImGui::SetWindowSize(ImVec2{ m_size.x * scale, m_size.y * scale });
+    if (first) {
+      ImGui::SetWindowPos(m_pos);
+    }
+    m_f();
+    ImGui::End();
+  }
+};
 int main()
 {
-  sf::RenderWindow window(sf::VideoMode(640, 480), "ImGui + SFML = <3");
-  window.setFramerateLimit(60);
+  const auto window_width = 800;
+  const auto window_height = 600;
+  sf::RenderWindow window(sf::VideoMode(window_width, window_height), "ImGui + SFML = <3");
+  window.setFramerateLimit(360);
   ImGui::SFML::Init(window);
 
-  sf::CircleShape shape(100.f);
+  sf::CircleShape shape(100.0F);
   shape.setFillColor(sf::Color::Green);
-
   sf::Clock deltaClock;
+  auto scale = 1.0F;
+  const auto original_style = ImGui::GetStyle();
+  bool first = true;
   while (window.isOpen()) {
-    sf::Event event;
+    sf::Event event{};
     while (window.pollEvent(event)) {
       ImGui::SFML::ProcessEvent(event);
-
-      if (event.type == sf::Event::Closed) {
+      if (event.type == sf::Event::Resized) {
+        // this scales up the elements without losing the horizontal space. so going from 4:3 to 16:9 will end up with wide screen.
+        scale = std::round(static_cast<float>(event.size.height) / window_height);
+        const auto scalex = static_cast<float>(event.size.width) / static_cast<float>(event.size.height);
+        ImGui::GetIO().FontGlobalScale = scale;
+        ImGui::GetStyle() = original_style;// restore original before applying scale.
+        ImGui::GetStyle().ScaleAllSizes(scale);
+        window.setView(sf::View(sf::FloatRect(0.0F, 0.0F, scalex * window_height, window_height)));
+      } else if (event.type == sf::Event::Closed) {
         window.close();
       }
     }
 
+
+    const auto view_port = window.getViewport(window.getView());
     ImGui::SFML::Update(window, deltaClock.restart());
 
-//    ImGui::ShowDemoWindow();
-
-    ImGui::Begin("Hello, world!");
-    ImGui::Button("Look at this pretty button");
-    ImGui::End();
+    const static auto hello_world = dialog(
+      "Hello, world!", ImVec2{ 0.0F, 0.0F }, [&view_port]() {
+        ImGui::Button(fmt::format("Look at this pretty button {} {}", view_port.width, view_port.height).c_str());
+      },
+      static_cast<ImGuiWindowFlags>(ImGuiWindowFlags_AlwaysAutoResize));
+    hello_world.draw(first);
 
     window.clear();
     window.draw(shape);
     ImGui::SFML::Render(window);
     window.display();
+    first = false;
   }
 
   ImGui::SFML::Shutdown();

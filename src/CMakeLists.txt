@@ -33,6 +33,8 @@ endif()
 if(CPP_STARTER_USE_IMGUI)
   message("Using Dear ImGui")
   add_subdirectory(imgui)
+else()
+  message("Not using Dear ImGui")
 endif()
 
 # Nana
