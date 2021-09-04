@@ -23,4 +23,3 @@ class CppStarterProject(ConanFile):
             self.requires("imgui-sfml/2.1@bincrafters/stable")
         if self.options.cpp_starter_use_sdl == "ON":
             self.requires("sdl2/2.0.10@bincrafters/stable")
-
