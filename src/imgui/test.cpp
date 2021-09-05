@@ -11,6 +11,7 @@
 #include <SFML/Graphics/Texture.hpp>
 #include <SFML/System/Clock.hpp>
 #include <SFML/Window/Event.hpp>
+#include <utility>
 template<typename T>
 struct dialog
 {
@@ -45,26 +46,75 @@ public:
     ImGui::End();
   }
 };
-void Game(const open_viii::archive::FIFLFS<true> &);
-int  main()
+void Game();
+struct archives_group
 {
-  open_viii::Paths::for_each_path([](const std::filesystem::path &path) {
-    std::cout << path << std::endl;
-    static constexpr auto coo      = open_viii::LangT::en;
-    const auto            archives = open_viii::archive::Archives(
-                 path, open_viii::LangCommon::to_string<coo>());
+private:
+  open_viii::LangT             m_coo{};
+  std::filesystem::path        m_path{};
+  open_viii::archive::Archives m_archives{};
+
+public:
+  archives_group(const open_viii::LangT in_coo,
+    std::filesystem::path             &&in_path,
+    open_viii::archive::Archives      &&in_archives)
+    : m_coo(in_coo), m_path(std::move(in_path)),
+      m_archives(std::move(in_archives))
+  {}
+  [[nodiscard]] const auto &coo() const { return m_coo; };
+  [[nodiscard]] const auto &path() const { return m_path; };
+  [[nodiscard]] const auto &archives() const { return m_archives; };
+  static auto get_path(open_viii::LangT in_coo, std::filesystem::path in_path)
+  {
+    // todo need a way to filter out versions of game that don't have a
+    // language.
+    std::cout << in_path << std::endl;
+    auto archives = open_viii::archive::Archives(
+      in_path, open_viii::LangCommon::to_string(in_coo));
     if (!static_cast<bool>(archives)) {
-      std::cerr << "Failed to load path: " << path.string() << '\n';
-      return;
+      std::cerr << "Failed to load path: " << in_path.string() << '\n';
+      return std::optional<archives_group>{};
     }
-    const auto &fields =
-      archives.get<open_viii::archive::ArchiveTypeT::field>();
-    Game(fields);
-  });
-}
-void Game(const open_viii::archive::FIFLFS<true> &fields)
+    return std::optional<archives_group>{
+      std::in_place, in_coo, std::move(in_path), std::move(archives)
+    };
+    //    const auto &fields =
+    //      archives.get<open_viii::archive::ArchiveTypeT::field>();
+    //    Game(fields);
+  }
+};
+int  main() { Game(); }
+void Game()
 {
   using namespace open_viii::graphics::literals;
+  std::vector<std::string> paths{};
+  open_viii::Paths::for_each_path([&paths](const std::filesystem::path &p) {
+    paths.emplace_back(p.string());
+  });
+  if (paths.empty()) {
+    return;
+  }
+  std::vector<const char *>
+    paths_c_str{};// imgui doesn't support std::string or std::string_view or
+                  // std::filesystem::path, only const char *
+  paths_c_str.reserve(paths.size());
+  std::ranges::transform(paths,
+    std::back_inserter(paths_c_str),
+    [](const std::string &p) { return p.c_str(); });
+
+  constexpr auto coos       = open_viii::LangCommon::to_array();
+  constexpr auto coos_c_str = open_viii::LangCommon::to_c_str_array();
+
+  auto opt_archives = archives_group::get_path(coos.front(), paths.front());
+  if (!opt_archives.has_value()) {
+    return;
+  }
+  const auto                      &archives = opt_archives->archives();
+  open_viii::archive::FIFLFS<true> fields{};
+  const auto get_fields = [&archives]() -> open_viii::archive::FIFLFS<true> {
+    return archives.get<open_viii::archive::ArchiveTypeT::field>();
+  };
+  fields = get_fields();
   const auto map_data_string = fields.map_data();
   auto       map_data_c_str  = std::vector<const char *>{};
   map_data_c_str.reserve(map_data_string.size());
@@ -74,16 +124,18 @@ void Game(const open_viii::archive::FIFLFS<true> &fields)
   int        current_map = 0;
   const auto set_field   = [&current_map, &fields, &map_data_string]() {
     open_viii::archive::FIFLFS<false> archive{};
-    fields.execute_with_nested(
-        { map_data_string.at(static_cast<std::size_t>(current_map)) },
-        [&archive](
-        auto &&field) { archive = std::forward<decltype(field)>(field); },
-        {},
-        true);
+    if (!map_data_string.empty()) {
+      fields.execute_with_nested(
+          { map_data_string.at(static_cast<std::size_t>(current_map)) },
+          [&archive](
+          auto &&field) { archive = std::forward<decltype(field)>(field); },
+          {},
+          true);
+    }
     return archive;
   };
   auto                  field         = set_field();
-  auto                  ms            = mim_sprite(field, 4_bpp, 0);
+  auto                  ms            = mim_sprite(field, 4_bpp, 0,{});
   static constexpr auto window_width  = 800;
   static constexpr auto window_height = 600;
   sf::RenderWindow      window(
@@ -96,8 +148,21 @@ void Game(const open_viii::archive::FIFLFS<true> &fields)
   sf::Clock  deltaClock;
   const auto original_style = ImGui::GetStyle();
   bool       first          = true;
-  const auto scale_window   = [&ms, &original_style, &window](
-                              const float width, const float height) {
+  auto       scale_window   = [&ms,
+                        &original_style,
+                        &window,
+                        save_width  = float{},
+                        save_height = float{}](
+                        float width = 0, float height = 0) mutable {
+    auto load = [](auto &saved, auto &not_saved) {
+      if (not_saved == 0) {
+        not_saved = saved;
+      } else {
+        saved = not_saved;
+      }
+    };
+    load(save_width, width);
+    load(save_height, height);
     // this scales up the elements without losing the horizontal space. so
     // going from 4:3 to 16:9 will end up with wide screen.
     auto       scale       = width / window_height;
@@ -150,15 +215,41 @@ void Game(const open_viii::archive::FIFLFS<true> &fields)
         xy                    = std::array<float, 2>{},
         bpp_selected_item     = int{},
         palette_selected_item = int{},
+        coo_selected_item = int{},
+        path_selected_item = int{},
+        draw_palette          = false,
         &map_data_c_str,
         &current_map,
         &set_field,
-        &field]() mutable {
+        &scale_window,
+        coos_c_str,
+        paths_c_str,
+        &field, &coos]() mutable {
         const auto get_bpp = [&bpp_selected_item]() {
           static constexpr std::array bpp = { 4_bpp, 8_bpp, 16_bpp };
           return bpp.at(bpp_selected_item);
         };
         bool changed = false;
+        if (ImGui::Combo("Path",
+              &path_selected_item,
+              paths_c_str.data(),
+              static_cast<int>(paths_c_str.size()),
+              10)) {
+
+//          field   = set_field();
+//          ms      = ms.with_field(field);
+//          changed = true;
+        }
+        if (ImGui::Combo("Language",
+              &coo_selected_item,
+              coos_c_str.data(),
+              static_cast<int>(coos_c_str.size()),
+              5)) {
+
+          //          field   = set_field();
+                    ms      = ms.with_coo(coos.at(coo_selected_item));
+                    changed = true;
+        }
         if (ImGui::Combo("Field",
               &current_map,
               map_data_c_str.data(),
@@ -169,53 +260,67 @@ void Game(const open_viii::archive::FIFLFS<true> &fields)
           ms      = ms.with_field(field);
           changed = true;
         }
-        static constexpr std::array bpp_items     = { "4", "8", "16" };
-        static constexpr std::array palette_items = { "0",
-          "1",
-          "2",
-          "3",
-          "4",
-          "5",
-          "6",
-          "7",
-          "8",
-          "9",
-          "10",
-          "11",
-          "12",
-          "13",
-          "14",
-          "15" };
-
-        if (ImGui::Combo("BPP",
-              &bpp_selected_item,
-              bpp_items.data(),
-              bpp_items.size(),
-              3)) {
-          ms      = ms.with_bpp(get_bpp());
-          changed = true;
-        }
-        if (bpp_selected_item != 2) {
-          if (ImGui::Combo("Palette",
-                &palette_selected_item,
-                palette_items.data(),
-                palette_items.size(),
-                10)) {
-            ms =
-              ms.with_palette(static_cast<std::uint8_t>(palette_selected_item));
+        if (!ms.fail()) {
+          if (ImGui::Checkbox("Draw Palette Texture", &draw_palette)) {
+            ms      = ms.with_draw_palette(draw_palette);
             changed = true;
           }
-        }
-        format_imgui_text("X: {:>9.3f} px  Width:  {:>4} px",
-          ms.sprite().getPosition().x,
-          ms.width());
-        format_imgui_text("Y: {:>9.3f} px  Height: {:>4} px",
-          ms.sprite().getPosition().y,
-          ms.height());
-        format_imgui_text("Width == Max Tiles");
-        if (ImGui::SliderFloat2("Adjust", xy.data(), -1.0, 0.0F) || changed) {
-          ms.sprite().setPosition(xy[0] * static_cast<float>(ms.width()),
-            xy[1] * static_cast<float>(ms.height()));
+          if (!ms.draw_palette()) {
+            static constexpr std::array bpp_items     = { "4", "8", "16" };
+            static constexpr std::array palette_items = { "0",
+              "1",
+              "2",
+              "3",
+              "4",
+              "5",
+              "6",
+              "7",
+              "8",
+              "9",
+              "10",
+              "11",
+              "12",
+              "13",
+              "14",
+              "15" };
+
+            if (ImGui::Combo("BPP",
+                  &bpp_selected_item,
+                  bpp_items.data(),
+                  bpp_items.size(),
+                  3)) {
+              ms      = ms.with_bpp(get_bpp());
+              changed = true;
+            }
+            if (bpp_selected_item != 2) {
+              if (ImGui::Combo("Palette",
+                    &palette_selected_item,
+                    palette_items.data(),
+                    palette_items.size(),
+                    10)) {
+                ms = ms.with_palette(
+                  static_cast<std::uint8_t>(palette_selected_item));
+                changed = true;
+              }
+            }
+          }
+          format_imgui_text("X: {:>9.3f} px  Width:  {:>4} px",
+            ms.sprite().getPosition().x,
+            ms.width());
+          format_imgui_text("Y: {:>9.3f} px  Height: {:>4} px",
+            ms.sprite().getPosition().y,
+            ms.height());
+          if (!ms.draw_palette()) {
+            format_imgui_text("Width == Max Tiles");
+          }
+          if (ImGui::SliderFloat2("Adjust", xy.data(), -1.0, 0.0F) || changed) {
+            ms.sprite().setPosition(xy[0] * static_cast<float>(ms.width()),
+              xy[1] * static_cast<float>(ms.height()));
+            changed = true;
+          }
+          if (changed) {
+            scale_window();
+          }
         }
       },
       static_cast<ImGuiWindowFlags>(ImGuiWindowFlags_AlwaysAutoResize));
