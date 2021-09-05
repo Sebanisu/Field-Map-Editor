@@ -1,7 +1,7 @@
+#include "archives_group.hpp"
 #include "mim_sprite.hpp"
 #include "open_viii/archive/Archives.hpp"
 #include "open_viii/graphics/background/Map.hpp"
-#include "open_viii/paths/Paths.hpp"
 #include <fmt/core.h>
 #include <imgui-SFML.h>
 #include <imgui.h>
@@ -47,42 +47,7 @@ public:
   }
 };
 void Game();
-struct archives_group
-{
-private:
-  open_viii::LangT             m_coo{};
-  std::filesystem::path        m_path{};
-  open_viii::archive::Archives m_archives{};
 
-public:
-  archives_group(const open_viii::LangT in_coo,
-    std::filesystem::path             &&in_path,
-    open_viii::archive::Archives      &&in_archives)
-    : m_coo(in_coo), m_path(std::move(in_path)),
-      m_archives(std::move(in_archives))
-  {}
-  [[nodiscard]] const auto &coo() const { return m_coo; };
-  [[nodiscard]] const auto &path() const { return m_path; };
-  [[nodiscard]] const auto &archives() const { return m_archives; };
-  static auto get_path(open_viii::LangT in_coo, std::filesystem::path in_path)
-  {
-    // todo need a way to filter out versions of game that don't have a
-    // language.
-    std::cout << in_path << std::endl;
-    auto archives = open_viii::archive::Archives(
-      in_path, open_viii::LangCommon::to_string(in_coo));
-    if (!static_cast<bool>(archives)) {
-      std::cerr << "Failed to load path: " << in_path.string() << '\n';
-      return std::optional<archives_group>{};
-    }
-    return std::optional<archives_group>{
-      std::in_place, in_coo, std::move(in_path), std::move(archives)
-    };
-    //    const auto &fields =
-    //      archives.get<open_viii::archive::ArchiveTypeT::field>();
-    //    Game(fields);
-  }
-};
 int  main() { Game(); }
 void Game()
 {
@@ -102,19 +67,19 @@ void Game()
     std::back_inserter(paths_c_str),
     [](const std::string &p) { return p.c_str(); });
 
-  constexpr auto coos       = open_viii::LangCommon::to_array();
-  constexpr auto coos_c_str = open_viii::LangCommon::to_c_str_array();
+  constexpr auto coos         = open_viii::LangCommon::to_array();
+  constexpr auto coos_c_str   = open_viii::LangCommon::to_c_str_array();
 
-  auto opt_archives = archives_group::get_path(coos.front(), paths.front());
-  if (!opt_archives.has_value()) {
-    return;
-  }
-  const auto                      &archives = opt_archives->archives();
+  auto           opt_archives = archives_group(coos.front(), paths.front());
+  //  if (!opt_archives.failed()) {
+  //    return;
+  //  }
+  auto *         archives     = &(opt_archives.archives());
   open_viii::archive::FIFLFS<true> fields{};
   const auto get_fields = [&archives]() -> open_viii::archive::FIFLFS<true> {
-    return archives.get<open_viii::archive::ArchiveTypeT::field>();
+    return archives->get<open_viii::archive::ArchiveTypeT::field>();
   };
-  fields = get_fields();
+  fields                     = get_fields();
   const auto map_data_string = fields.map_data();
   auto       map_data_c_str  = std::vector<const char *>{};
   map_data_c_str.reserve(map_data_string.size());
@@ -135,7 +100,7 @@ void Game()
     return archive;
   };
   auto                  field         = set_field();
-  auto                  ms            = mim_sprite(field, 4_bpp, 0,{});
+  auto                  ms            = mim_sprite(field, 4_bpp, 0, {});
   static constexpr auto window_width  = 800;
   static constexpr auto window_height = 600;
   sf::RenderWindow      window(
@@ -215,16 +180,20 @@ void Game()
         xy                    = std::array<float, 2>{},
         bpp_selected_item     = int{},
         palette_selected_item = int{},
-        coo_selected_item = int{},
-        path_selected_item = int{},
+        coo_selected_item     = int{},
+        path_selected_item    = int{},
         draw_palette          = false,
         &map_data_c_str,
         &current_map,
         &set_field,
         &scale_window,
-        coos_c_str,
-        paths_c_str,
-        &field, &coos]() mutable {
+        &coos_c_str,
+        &paths_c_str,
+        &field,
+        &coos,
+        &paths,
+        &opt_archives,
+        &archives, &get_fields, &fields]() mutable {
         const auto get_bpp = [&bpp_selected_item]() {
           static constexpr std::array bpp = { 4_bpp, 8_bpp, 16_bpp };
           return bpp.at(bpp_selected_item);
@@ -235,10 +204,12 @@ void Game()
               paths_c_str.data(),
               static_cast<int>(paths_c_str.size()),
               10)) {
-
-//          field   = set_field();
-//          ms      = ms.with_field(field);
-//          changed = true;
+          opt_archives = opt_archives.with_path(paths.at(path_selected_item));
+          archives     = &(opt_archives.archives());
+          fields       = get_fields();
+          field        = set_field();
+          ms           = ms.with_field(field);
+          changed      = true;
         }
         if (ImGui::Combo("Language",
               &coo_selected_item,
@@ -247,8 +218,8 @@ void Game()
               5)) {
 
           //          field   = set_field();
-                    ms      = ms.with_coo(coos.at(coo_selected_item));
-                    changed = true;
+          ms      = ms.with_coo(coos.at(coo_selected_item));
+          changed = true;
         }
         if (ImGui::Combo("Field",
               &current_map,
