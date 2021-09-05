@@ -1,6 +1,7 @@
 #include "archives_group.hpp"
 #include "mim_sprite.hpp"
 #include "open_viii/archive/Archives.hpp"
+#include "imfilebrowser.h"
 #include "open_viii/graphics/background/Map.hpp"
 #include <fmt/core.h>
 #include <imgui-SFML.h>
@@ -51,6 +52,9 @@ void Game();
 int  main() { Game(); }
 void Game()
 {
+  // create a file browser instance
+  ImGui::FileBrowser fileDialog{ImGuiFileBrowserFlags_SelectDirectory};
+  fileDialog.SetTypeFilters({".fs", ".fi",".fl",".zzz"});
   using namespace open_viii::graphics::literals;
   std::vector<std::string> paths{};
   open_viii::Paths::for_each_path([&paths](const std::filesystem::path &p) {
@@ -71,9 +75,6 @@ void Game()
   constexpr auto coos_c_str   = open_viii::LangCommon::to_c_str_array();
 
   auto           opt_archives = archives_group(coos.front(), paths.front());
-  //  if (!opt_archives.failed()) {
-  //    return;
-  //  }
   auto *         archives     = &(opt_archives.archives());
   open_viii::archive::FIFLFS<true> fields{};
   const auto get_fields = [&archives]() -> open_viii::archive::FIFLFS<true> {
@@ -193,7 +194,7 @@ void Game()
         &coos,
         &paths,
         &opt_archives,
-        &archives, &get_fields, &fields]() mutable {
+        &archives, &get_fields, &fields, &fileDialog]() mutable {
         const auto get_bpp = [&bpp_selected_item]() {
           static constexpr std::array bpp = { 4_bpp, 8_bpp, 16_bpp };
           return bpp.at(bpp_selected_item);
@@ -211,6 +212,11 @@ void Game()
           ms           = ms.with_field(field);
           changed      = true;
         }
+        // open file dialog when user clicks this button
+        if(ImGui::Button("open file dialog"))
+          fileDialog.Open();
+
+        fileDialog.Display();
         if (ImGui::Combo("Language",
               &coo_selected_item,
               coos_c_str.data(),
