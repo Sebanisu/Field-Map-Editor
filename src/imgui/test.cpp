@@ -3,12 +3,12 @@
 #include "filebrowser.hpp"
 #include "mim_sprite.hpp"
 #include "open_viii/graphics/background/Map.hpp"
-#include <fmt/core.h>
 #include <imgui-SFML.h>
 #include <imgui.h>
 #include <SFML/Graphics/CircleShape.hpp>
 #include <SFML/Graphics/RenderWindow.hpp>
 #include <SFML/Window/Event.hpp>
+#include "imgui_format_text.hpp"
 #include <utility>
 
 void Game();
@@ -129,14 +129,7 @@ void Game()
     shape.setOrigin(shape_bounds.left + shape_bounds.width / f2,
       shape_bounds.top + shape_bounds.height / f2);
     shape.setPosition(view.getCenter());
-    static const auto format_imgui_text =
-      []<typename... T>(fmt::format_string<T...> fmt, T && ...items)
-    {
-      const auto data = fmt::format(std::forward<decltype(fmt)>(fmt),
-        std::forward<decltype(items)>(items)...);
-      ImGui::Text(
-        "%s", data.c_str());// I hate this doesn't just take a std::string.
-    };
+
     const static auto hello_world = dialog(
       "Hello, world!",
       ImVec2{ 0.0F, 0.0F },
@@ -162,7 +155,7 @@ void Game()
         &fields,
         &fileDialog]() mutable {
         const auto get_bpp = [&bpp_selected_item]() {
-          static constexpr std::array bpp = { 4_bpp, 8_bpp, 16_bpp };
+          static constexpr std::array bpp = mim_sprite::bpp_selections();
           return bpp.at(bpp_selected_item);
         };
         bool changed = false;
@@ -202,67 +195,10 @@ void Game()
           ms      = ms.with_field(field);
           changed = true;
         }
-        if (!ms.fail()) {
-          if (ImGui::Checkbox("Draw Palette Texture", &draw_palette)) {
-            ms      = ms.with_draw_palette(draw_palette);
-            changed = true;
-          }
-          if (!ms.draw_palette()) {
-            static constexpr std::array bpp_items     = { "4", "8", "16" };
-            static constexpr std::array palette_items = { "0",
-              "1",
-              "2",
-              "3",
-              "4",
-              "5",
-              "6",
-              "7",
-              "8",
-              "9",
-              "10",
-              "11",
-              "12",
-              "13",
-              "14",
-              "15" };
-
-            if (ImGui::Combo("BPP",
-                  &bpp_selected_item,
-                  bpp_items.data(),
-                  bpp_items.size(),
-                  3)) {
-              ms      = ms.with_bpp(get_bpp());
-              changed = true;
-            }
-            if (bpp_selected_item != 2) {
-              if (ImGui::Combo("Palette",
-                    &palette_selected_item,
-                    palette_items.data(),
-                    palette_items.size(),
-                    10)) {
-                ms = ms.with_palette(
-                  static_cast<std::uint8_t>(palette_selected_item));
-                changed = true;
-              }
-            }
-          }
-          format_imgui_text("X: {:>9.3f} px  Width:  {:>4} px",
-            ms.sprite().getPosition().x,
-            ms.width());
-          format_imgui_text("Y: {:>9.3f} px  Height: {:>4} px",
-            ms.sprite().getPosition().y,
-            ms.height());
-          if (!ms.draw_palette()) {
-            format_imgui_text("Width == Max Tiles");
-          }
-          if (ImGui::SliderFloat2("Adjust", xy.data(), -1.0, 0.0F) || changed) {
-            ms.sprite().setPosition(xy[0] * static_cast<float>(ms.width()),
-              xy[1] * static_cast<float>(ms.height()));
-            changed = true;
-          }
-          if (changed) {
-            scale_window();
-          }
+        changed =
+          mim_sprite::ImGui_controls(ms, bpp_selected_item, palette_selected_item, draw_palette,xy) || changed;
+        if (changed) {
+          scale_window();
         }
       },
       static_cast<ImGuiWindowFlags>(ImGuiWindowFlags_AlwaysAutoResize));

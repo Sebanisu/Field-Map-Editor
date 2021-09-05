@@ -25,7 +25,6 @@ public:
   {}
   void draw(bool first = false) const
   {
-
     ImGui::Begin(m_title, nullptr, m_flags);
     // const auto current_size = ImGui::GetWindowSize();
     // auto size = ImVec2{ std::max(current_size.x, m_size.x),
