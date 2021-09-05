@@ -1,60 +1,23 @@
 #include "archives_group.hpp"
+#include "dialog.hpp"
+#include "filebrowser.hpp"
 #include "mim_sprite.hpp"
-#include "open_viii/archive/Archives.hpp"
-#include "imfilebrowser.h"
 #include "open_viii/graphics/background/Map.hpp"
 #include <fmt/core.h>
 #include <imgui-SFML.h>
 #include <imgui.h>
 #include <SFML/Graphics/CircleShape.hpp>
 #include <SFML/Graphics/RenderWindow.hpp>
-#include <SFML/Graphics/Sprite.hpp>
-#include <SFML/Graphics/Texture.hpp>
-#include <SFML/System/Clock.hpp>
 #include <SFML/Window/Event.hpp>
 #include <utility>
-template<typename T>
-struct dialog
-{
-private:
-  const char      *m_title;
-  ImVec2           m_pos{};
-  mutable T        m_f{};
-  ImGuiWindowFlags m_flags{};
 
-public:
-  dialog(const char *const title,
-    ImVec2                 pos,
-    T                    &&f,
-    ImGuiWindowFlags       flags = static_cast<ImGuiWindowFlags>(
-      static_cast<unsigned int>(ImGuiWindowFlags_AlwaysAutoResize)
-      | static_cast<unsigned int>(ImGuiWindowFlags_NoCollapse)))
-    : m_title(title), m_pos(pos), m_f(std::forward<T>(f)), m_flags(flags)
-  {}
-  void draw(bool first = false) const
-  {
-
-    ImGui::Begin(m_title, nullptr, m_flags);
-    // const auto current_size = ImGui::GetWindowSize();
-    // auto size = ImVec2{ std::max(current_size.x, m_size.x),
-    // std::max(std::round((current_size.y / current_size.x) * m_size.y),
-    // m_size.y) }; ImGui::SetWindowSize(ImVec2{ m_size.x * scale, m_size.y *
-    // scale });
-    if (first) {
-      ImGui::SetWindowPos(m_pos);
-    }
-    m_f();
-    ImGui::End();
-  }
-};
 void Game();
-
 int  main() { Game(); }
 void Game()
 {
   // create a file browser instance
-  ImGui::FileBrowser fileDialog{ImGuiFileBrowserFlags_SelectDirectory};
-  fileDialog.SetTypeFilters({".fs", ".fi",".fl",".zzz"});
+  ImGui::FileBrowser fileDialog{ ImGuiFileBrowserFlags_SelectDirectory };
+  fileDialog.SetTypeFilters({ ".fs", ".fi", ".fl", ".zzz" });
   using namespace open_viii::graphics::literals;
   std::vector<std::string> paths{};
   open_viii::Paths::for_each_path([&paths](const std::filesystem::path &p) {
@@ -75,7 +38,7 @@ void Game()
   constexpr auto coos_c_str   = open_viii::LangCommon::to_c_str_array();
 
   auto           opt_archives = archives_group(coos.front(), paths.front());
-  auto *         archives     = &(opt_archives.archives());
+  const auto    *archives     = &(opt_archives.archives());
   open_viii::archive::FIFLFS<true> fields{};
   const auto get_fields = [&archives]() -> open_viii::archive::FIFLFS<true> {
     return archives->get<open_viii::archive::ArchiveTypeT::field>();
@@ -194,7 +157,10 @@ void Game()
         &coos,
         &paths,
         &opt_archives,
-        &archives, &get_fields, &fields, &fileDialog]() mutable {
+        &archives,
+        &get_fields,
+        &fields,
+        &fileDialog]() mutable {
         const auto get_bpp = [&bpp_selected_item]() {
           static constexpr std::array bpp = { 4_bpp, 8_bpp, 16_bpp };
           return bpp.at(bpp_selected_item);
@@ -213,8 +179,7 @@ void Game()
           changed      = true;
         }
         // open file dialog when user clicks this button
-        if(ImGui::Button("open file dialog"))
-          fileDialog.Open();
+        if (ImGui::Button("open file dialog")) fileDialog.Open();
 
         fileDialog.Display();
         if (ImGui::Combo("Language",

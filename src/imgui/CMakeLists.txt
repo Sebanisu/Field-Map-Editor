@@ -16,3 +16,6 @@ target_link_libraries(test_imgui
         PRIVATE OpenVIII_CPP_WIP_VIIIGraphics
         PRIVATE Threads::Threads
         PRIVATE imgui_filebrowser)
+
+target_compile_definitions(test_imgui
+        PUBLIC NOMINMAX)
