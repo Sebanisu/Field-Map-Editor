@@ -1,3 +1,4 @@
+#include "mim_sprite.hpp"
 #include "open_viii/archive/Archives.hpp"
 #include "open_viii/graphics/background/Map.hpp"
 #include "open_viii/paths/Paths.hpp"
@@ -63,6 +64,7 @@ int  main()
 }
 void Game(const open_viii::archive::FIFLFS<true> &fields)
 {
+  using namespace open_viii::graphics::literals;
   const auto map_data_string = fields.map_data();
   auto       map_data_c_str  = std::vector<const char *>{};
   map_data_c_str.reserve(map_data_string.size());
@@ -80,54 +82,12 @@ void Game(const open_viii::archive::FIFLFS<true> &fields)
         true);
     return archive;
   };
-  auto       field        = set_field();
-  // fields.execute_with_nested(
-  //   {}, [](const open_viii::archive::FIFLFS<false> &field) { Game(field); });
-
-  bool       min_map_fail = false;
-  const auto load_mim     = [&min_map_fail, &field]() {
-    if (!field.all_set()) {
-      const auto map_buffer =
-        field.get_entry_data(open_viii::graphics::background::Map<>::EXT);
-      auto mim_buffer =
-        field.get_entry_data(open_viii::graphics::background::Mim::EXT);
-      min_map_fail = map_buffer.empty() || mim_buffer.empty();
-      if (!min_map_fail) {
-        return open_viii::graphics::background::Mim(
-              std::move(mim_buffer), field.get_base_name());
-      }
-    }
-    return open_viii::graphics::background::Mim{};
-  };
-  auto mim = load_mim();
-
-  using namespace open_viii::graphics::literals;
-  static constexpr auto                         window_width  = 800;
-  static constexpr auto                         window_height = 600;
-  std::vector<open_viii::graphics::Color32RGBA> colors{};
-  sf::Texture                                   texture{};
-  sf::Sprite                                    sprite{};
-  bool                                          sprite_fail = false;
-  const auto set_sprite = [&colors, &texture, &mim, &sprite, &sprite_fail](
-                            const open_viii::graphics::BPPT &bppt    = 4_bpp,
-                            const std::uint8_t               palette = 0U) {
-    colors = mim.get_colors<open_viii::graphics::Color32RGBA>(bppt, palette);
-    if (mim.get_width(bppt) == 0
-        || !texture.create(mim.get_width(bppt), mim.get_height())) {
-      sprite_fail = true;
-      return;
-    }
-    texture.update(reinterpret_cast<const sf::Uint8 *>(
-      colors.data()));// expects an unsigned char pointer. colors underlying
-                      // type is an array of chars.
-    texture.setSmooth(false);
-    sprite      = {};
-    sprite_fail = false;
-    sprite.setTexture(texture);
-  };
-
-  sf::RenderWindow window(
-    sf::VideoMode(window_width, window_height), "ImGui + SFML = <3");
+  auto                  field         = set_field();
+  auto                  ms            = mim_sprite(field, 4_bpp, 0);
+  static constexpr auto window_width  = 800;
+  static constexpr auto window_height = 600;
+  sf::RenderWindow      window(
+         sf::VideoMode(window_width, window_height), "ImGui + SFML = <3");
   window.setFramerateLimit(360U);
   ImGui::SFML::Init(window);
 
@@ -136,12 +96,12 @@ void Game(const open_viii::archive::FIFLFS<true> &fields)
   sf::Clock  deltaClock;
   const auto original_style = ImGui::GetStyle();
   bool       first          = true;
-  const auto scale_window   = [&mim, &original_style, &window](
+  const auto scale_window   = [&ms, &original_style, &window](
                               const float width, const float height) {
     // this scales up the elements without losing the horizontal space. so
     // going from 4:3 to 16:9 will end up with wide screen.
     auto       scale       = width / window_height;
-    const auto scale_width = width / height * mim.get_height();
+    const auto scale_width = width / height * static_cast<float>(ms.height());
     if (scale < 1.0F) {
       scale = 1.0F;
     }
@@ -149,8 +109,8 @@ void Game(const open_viii::archive::FIFLFS<true> &fields)
     ImGui::GetStyle() =
       original_style;// restore original before applying scale.
     ImGui::GetStyle().ScaleAllSizes(std::round(scale));
-    window.setView(sf::View(sf::FloatRect(
-      0.0F, 0.0F, scale_width, static_cast<float>(mim.get_height()))));
+    window.setView(sf::View(
+      sf::FloatRect(0.0F, 0.0F, scale_width, static_cast<float>(ms.height()))));
   };
   if (window.isOpen()) {
     scale_window(
@@ -186,22 +146,18 @@ void Game(const open_viii::archive::FIFLFS<true> &fields)
     const static auto hello_world = dialog(
       "Hello, world!",
       ImVec2{ 0.0F, 0.0F },
-      [&sprite,
-        &mim,
+      [&ms,
         xy                    = std::array<float, 2>{},
         bpp_selected_item     = int{},
         palette_selected_item = int{},
-        &set_sprite,
-        &first,
-        &sprite_fail,
         &map_data_c_str,
         &current_map,
-        &set_field, &field, &load_mim]() mutable {
+        &set_field,
+        &field]() mutable {
         const auto get_bpp = [&bpp_selected_item]() {
           static constexpr std::array bpp = { 4_bpp, 8_bpp, 16_bpp };
           return bpp.at(bpp_selected_item);
         };
-        auto bppt    = get_bpp();
         bool changed = false;
         if (ImGui::Combo("Field",
               &current_map,
@@ -209,66 +165,65 @@ void Game(const open_viii::archive::FIFLFS<true> &fields)
               static_cast<int>(map_data_c_str.size()),
               10)) {
 
-          field = set_field();
-          mim = load_mim();
-          set_sprite(bppt, static_cast<std::uint8_t>(palette_selected_item));
-          changed = !sprite_fail && field.all_set();
+          field   = set_field();
+          ms      = ms.with_field(field);
+          changed = true;
         }
-        if (!sprite_fail) {
-          static constexpr std::array bpp_items     = { "4", "8", "16" };
-          static constexpr std::array palette_items = { "0",
-            "1",
-            "2",
-            "3",
-            "4",
-            "5",
-            "6",
-            "7",
-            "8",
-            "9",
-            "10",
-            "11",
-            "12",
-            "13",
-            "14",
-            "15" };
+        static constexpr std::array bpp_items     = { "4", "8", "16" };
+        static constexpr std::array palette_items = { "0",
+          "1",
+          "2",
+          "3",
+          "4",
+          "5",
+          "6",
+          "7",
+          "8",
+          "9",
+          "10",
+          "11",
+          "12",
+          "13",
+          "14",
+          "15" };
 
-          changed =
-            ImGui::Combo(
-              "BPP", &bpp_selected_item, bpp_items.data(), bpp_items.size(), 3)
-            || first || changed;
-
-          bppt = get_bpp();
-          if (bpp_selected_item != 2) {
-            changed = ImGui::Combo("Palette",
-                        &palette_selected_item,
-                        palette_items.data(),
-                        palette_items.size(),
-                        10)
-                      || changed;
+        if (ImGui::Combo("BPP",
+              &bpp_selected_item,
+              bpp_items.data(),
+              bpp_items.size(),
+              3)) {
+          ms      = ms.with_bpp(get_bpp());
+          changed = true;
+        }
+        if (bpp_selected_item != 2) {
+          if (ImGui::Combo("Palette",
+                &palette_selected_item,
+                palette_items.data(),
+                palette_items.size(),
+                10)) {
+            ms =
+              ms.with_palette(static_cast<std::uint8_t>(palette_selected_item));
+            changed = true;
           }
-
-          if (changed) {
-            set_sprite(bppt, static_cast<std::uint8_t>(palette_selected_item));
-          }
-          format_imgui_text("X: {:>9.3f} px  Width:  {:>4} px",
-            sprite.getPosition().x,
-            mim.get_width(bppt));
-          format_imgui_text("Y: {:>9.3f} px  Height: {:>4} px",
-            sprite.getPosition().y,
-            mim.get_height());
-          format_imgui_text("Width == Max Tiles");
-          if (ImGui::SliderFloat2("Adjust", xy.data(), -1.0, 0.0F) || changed) {
-            sprite.setPosition(xy[0] * static_cast<float>(mim.get_width(bppt)),
-              xy[1] * static_cast<float>(mim.get_height()));
-          }
+        }
+        format_imgui_text("X: {:>9.3f} px  Width:  {:>4} px",
+          ms.sprite().getPosition().x,
+          ms.width());
+        format_imgui_text("Y: {:>9.3f} px  Height: {:>4} px",
+          ms.sprite().getPosition().y,
+          ms.height());
+        format_imgui_text("Width == Max Tiles");
+        if (ImGui::SliderFloat2("Adjust", xy.data(), -1.0, 0.0F) || changed) {
+          ms.sprite().setPosition(xy[0] * static_cast<float>(ms.width()),
+            xy[1] * static_cast<float>(ms.height()));
         }
       },
       static_cast<ImGuiWindowFlags>(ImGuiWindowFlags_AlwaysAutoResize));
+
     hello_world.draw(first);
 
     window.clear();
-    window.draw(sprite);
+    window.draw(ms.sprite());
     // window.draw(shape);
     ImGui::SFML::Render(window);
     window.display();
