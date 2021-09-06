@@ -34,36 +34,11 @@ void Game()
     std::back_inserter(paths_c_str),
     [](const std::string &p) { return p.c_str(); });
 
-  constexpr auto coos         = open_viii::LangCommon::to_array();
-  constexpr auto coos_c_str   = open_viii::LangCommon::to_c_str_array();
-
+  static constexpr auto coos         = open_viii::LangCommon::to_array();
+  static constexpr auto coos_c_str   = open_viii::LangCommon::to_c_str_array();
   auto           opt_archives = archives_group(coos.front(), paths.front());
-  const auto    *archives     = &(opt_archives.archives());
-  open_viii::archive::FIFLFS<true> fields{};
-  const auto get_fields = [&archives]() -> open_viii::archive::FIFLFS<true> {
-    return archives->get<open_viii::archive::ArchiveTypeT::field>();
-  };
-  fields                     = get_fields();
-  const auto map_data_string = fields.map_data();
-  auto       map_data_c_str  = std::vector<const char *>{};
-  map_data_c_str.reserve(map_data_string.size());
-  std::ranges::transform(map_data_string,
-    std::back_inserter(map_data_c_str),
-    [](const std::string &str) { return str.c_str(); });
   int        current_map = 0;
-  const auto set_field   = [&current_map, &fields, &map_data_string]() {
-    open_viii::archive::FIFLFS<false> archive{};
-    if (!map_data_string.empty()) {
-      fields.execute_with_nested(
-          { map_data_string.at(static_cast<std::size_t>(current_map)) },
-          [&archive](
-          auto &&field) { archive = std::forward<decltype(field)>(field); },
-          {},
-          true);
-    }
-    return archive;
-  };
-  auto                  field         = set_field();
+  auto                  field         = opt_archives.field(current_map);
   auto                  ms            = mim_sprite(field, 4_bpp, 0, {});
   static constexpr auto window_width  = 800;
   static constexpr auto window_height = 600;
@@ -140,19 +115,12 @@ void Game()
         coo_selected_item     = int{},
         path_selected_item    = int{},
         draw_palette          = false,
-        &map_data_c_str,
         &current_map,
-        &set_field,
         &scale_window,
-        &coos_c_str,
         &paths_c_str,
         &field,
-        &coos,
         &paths,
         &opt_archives,
-        &archives,
-        &get_fields,
-        &fields,
         &fileDialog]() mutable {
         const auto get_bpp = [&bpp_selected_item]() {
           static constexpr std::array bpp = mim_sprite::bpp_selections();
@@ -165,9 +133,7 @@ void Game()
               static_cast<int>(paths_c_str.size()),
               10)) {
           opt_archives = opt_archives.with_path(paths.at(path_selected_item));
-          archives     = &(opt_archives.archives());
-          fields       = get_fields();
-          field        = set_field();
+          field        = opt_archives.field(current_map);
           ms           = ms.with_field(field);
           changed      = true;
         }
@@ -187,11 +153,11 @@ void Game()
         }
         if (ImGui::Combo("Field",
               &current_map,
-              map_data_c_str.data(),
-              static_cast<int>(map_data_c_str.size()),
+              opt_archives.mapdata_c_str().data(),
+              static_cast<int>(opt_archives.mapdata_c_str().size()),
               10)) {
 
-          field   = set_field();
+          field   = opt_archives.field(current_map);
           ms      = ms.with_field(field);
           changed = true;
         }
