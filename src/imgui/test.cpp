@@ -1,6 +1,7 @@
 #include "archives_group.hpp"
 #include "dialog.hpp"
 #include "filebrowser.hpp"
+#include "imgui_format_text.hpp"
 #include "mim_sprite.hpp"
 #include "open_viii/graphics/background/Map.hpp"
 #include <imgui-SFML.h>
@@ -8,16 +9,21 @@
 #include <SFML/Graphics/CircleShape.hpp>
 #include <SFML/Graphics/RenderWindow.hpp>
 #include <SFML/Window/Event.hpp>
-#include "imgui_format_text.hpp"
 #include <utility>
 
 void Game();
+void update_path(std::vector<std::string> &paths,
+  int                                      current_map,
+  int                                      path_selected_item,
+  archives_group                          &opt_archives,
+  open_viii::archive::FIFLFS<false>       &field,
+  mim_sprite                              &ms,
+  bool                                    &changed);
 int  main() { Game(); }
 void Game()
 {
   // create a file browser instance
-  ImGui::FileBrowser fileDialog{ ImGuiFileBrowserFlags_SelectDirectory };
-  fileDialog.SetTypeFilters({ ".fs", ".fi", ".fl", ".zzz" });
+  ImGui::FileBrowser file_dialog{ ImGuiFileBrowserFlags_SelectDirectory };
   using namespace open_viii::graphics::literals;
   std::vector<std::string> paths{};
   open_viii::Paths::for_each_path([&paths](const std::filesystem::path &p) {
@@ -34,10 +40,8 @@ void Game()
     std::back_inserter(paths_c_str),
     [](const std::string &p) { return p.c_str(); });
 
-  static constexpr auto coos         = open_viii::LangCommon::to_array();
-  static constexpr auto coos_c_str   = open_viii::LangCommon::to_c_str_array();
-  auto           opt_archives = archives_group(coos.front(), paths.front());
-  int        current_map = 0;
+  auto                  opt_archives  = archives_group({}, paths.front());
+  int                   current_map   = 0;
   auto                  field         = opt_archives.field(current_map);
   auto                  ms            = mim_sprite(field, 4_bpp, 0, {});
   static constexpr auto window_width  = 800;
@@ -46,9 +50,6 @@ void Game()
          sf::VideoMode(window_width, window_height), "ImGui + SFML = <3");
   window.setFramerateLimit(360U);
   ImGui::SFML::Init(window);
-
-  sf::CircleShape shape(100.0F);
-  shape.setFillColor(sf::Color::Green);
   sf::Clock  deltaClock;
   const auto original_style = ImGui::GetStyle();
   bool       first          = true;
@@ -99,11 +100,11 @@ void Game()
     const auto view = window.getView();
     // const auto view_port = window.getViewport(view);
     ImGui::SFML::Update(window, deltaClock.restart());
-    static constexpr float f2           = 2.0F;
-    const auto             shape_bounds = shape.getLocalBounds();
-    shape.setOrigin(shape_bounds.left + shape_bounds.width / f2,
-      shape_bounds.top + shape_bounds.height / f2);
-    shape.setPosition(view.getCenter());
+    //    static constexpr float f2           = 2.0F;
+    //    const auto             shape_bounds = shape.getLocalBounds();
+    //    shape.setOrigin(shape_bounds.left + shape_bounds.width / f2,
+    //      shape_bounds.top + shape_bounds.height / f2);
+    //    shape.setPosition(view.getCenter());
 
     const static auto hello_world = dialog(
       "Hello, world!",
@@ -121,48 +122,52 @@ void Game()
         &field,
         &paths,
         &opt_archives,
-        &fileDialog]() mutable {
-        const auto get_bpp = [&bpp_selected_item]() {
-          static constexpr std::array bpp = mim_sprite::bpp_selections();
-          return bpp.at(bpp_selected_item);
-        };
+        &file_dialog]() mutable {
         bool changed = false;
         if (ImGui::Combo("Path",
               &path_selected_item,
               paths_c_str.data(),
               static_cast<int>(paths_c_str.size()),
               10)) {
-          opt_archives = opt_archives.with_path(paths.at(path_selected_item));
-          field        = opt_archives.field(current_map);
-          ms           = ms.with_field(field);
-          changed      = true;
+          update_path(paths,
+            current_map,
+            path_selected_item,
+            opt_archives,
+            field,
+            ms,
+            changed);
         }
         // open file dialog when user clicks this button
-        if (ImGui::Button("open file dialog")) fileDialog.Open();
-
-        fileDialog.Display();
-        if (ImGui::Combo("Language",
-              &coo_selected_item,
-              coos_c_str.data(),
-              static_cast<int>(coos_c_str.size()),
-              5)) {
-
-          //          field   = set_field();
-          ms      = ms.with_coo(coos.at(coo_selected_item));
-          changed = true;
+        if (ImGui::Button("Locate a FF8 install")) {
+          file_dialog.Open();
+          file_dialog.SetTitle("Choose FF8 install directory");
+          file_dialog.SetTypeFilters({ ".exe" });//".fs", ".fi", ".fl", ".zzz"
         }
-        if (ImGui::Combo("Field",
-              &current_map,
-              opt_archives.mapdata_c_str().data(),
-              static_cast<int>(opt_archives.mapdata_c_str().size()),
-              10)) {
 
-          field   = opt_archives.field(current_map);
-          ms      = ms.with_field(field);
-          changed = true;
+        file_dialog.Display();
+        if (file_dialog.HasSelected()) {
+          const auto selected_path = file_dialog.GetSelected();
+          paths.emplace_back(selected_path.string());
+          paths_c_str = archives_group::get_c_str(
+            paths);// seems the pointers move when you push back above
+
+          current_map = static_cast<int>(paths.size()) - 1;
+          update_path(paths,
+            current_map,
+            path_selected_item,
+            opt_archives,
+            field,
+            ms,
+            changed);
+          file_dialog.ClearSelected();
         }
+        changed = archives_group::ImGui_controls(
+                    opt_archives, field, ms, current_map, coo_selected_item)
+                  || changed;
         changed =
-          mim_sprite::ImGui_controls(ms, bpp_selected_item, palette_selected_item, draw_palette,xy) || changed;
+          mim_sprite::ImGui_controls(
+            ms, bpp_selected_item, palette_selected_item, draw_palette, xy)
+          || changed;
         if (changed) {
           scale_window();
         }
@@ -180,4 +185,17 @@ void Game()
   }
 
   ImGui::SFML::Shutdown();
+}
+void update_path(std::vector<std::string> &paths,
+  int                                      current_map,
+  int                                      path_selected_item,
+  archives_group                          &opt_archives,
+  open_viii::archive::FIFLFS<false>       &field,
+  mim_sprite                              &ms,
+  bool                                    &changed)
+{
+  opt_archives = opt_archives.with_path(paths.at(path_selected_item));
+  field        = opt_archives.field(current_map);
+  ms           = ms.with_field(field);
+  changed      = true;
 }

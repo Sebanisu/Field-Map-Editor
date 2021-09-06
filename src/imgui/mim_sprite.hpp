@@ -229,7 +229,7 @@ public:
         if (ImGui::Combo("BPP",
               &bpp_selected_item,
               bpp_items.data(),
-              bpp_items.size(),
+              static_cast<int>(bpp_items.size()),
               3)) {
           ms = ms.with_bpp(
             bpp_selections().at(static_cast<std::size_t>(bpp_selected_item)));
@@ -239,7 +239,7 @@ public:
           if (ImGui::Combo("Palette",
                 &palette_selected_item,
                 palette_items.data(),
-                palette_items.size(),
+                static_cast<int>(palette_items.size()),
                 10)) {
             ms =
               ms.with_palette(static_cast<std::int8_t>(palette_selections().at(

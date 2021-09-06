@@ -4,8 +4,10 @@
 
 #ifndef MYPROJECT_ARCHIVES_GROUP_HPP
 #define MYPROJECT_ARCHIVES_GROUP_HPP
+#include "mim_sprite.hpp"
 #include "open_viii/archive/Archives.hpp"
 #include "open_viii/paths/Paths.hpp"
+#include <imgui.h>
 #include <ranges>
 #include <string>
 #include <string_view>
@@ -94,6 +96,38 @@ public:
         true);
     }
     return archive;
+  }
+  static bool ImGui_controls(archives_group &opt_archives,
+    open_viii::archive::FIFLFS<false>       &field,
+    mim_sprite                              &ms,
+    int                                     &current_map,
+    int                                     &coo_selected_item)
+  {
+    static constexpr auto coos       = open_viii::LangCommon::to_array();
+    static constexpr auto coos_c_str = open_viii::LangCommon::to_c_str_array();
+    bool                  changed    = false;
+    if (ImGui::Combo("Language",
+          &coo_selected_item,
+          coos_c_str.data(),
+          static_cast<int>(coos_c_str.size()),
+          5)) {
+
+      // field   = opt_archives.field(current_map);
+      // ms      = ms.with_field(field);
+      ms = ms.with_coo(coos.at(static_cast<std::size_t>(coo_selected_item)));
+      changed = true;
+    }
+    if (ImGui::Combo("Field",
+          &current_map,
+          opt_archives.mapdata_c_str().data(),
+          static_cast<int>(opt_archives.mapdata_c_str().size()),
+          10)) {
+
+      field   = opt_archives.field(current_map);
+      ms      = ms.with_field(field);
+      changed = true;
+    }
+    return changed;
   }
 };
 #endif// MYPROJECT_ARCHIVES_GROUP_HPP
