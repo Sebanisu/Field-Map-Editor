@@ -151,7 +151,7 @@ void Game()
           paths_c_str = archives_group::get_c_str(
             paths);// seems the pointers move when you push back above
 
-          current_map = static_cast<int>(paths.size()) - 1;
+          path_selected_item = static_cast<int>(paths.size()) - 1;
           update_path(paths,
             current_map,
             path_selected_item,
