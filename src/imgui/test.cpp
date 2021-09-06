@@ -9,6 +9,7 @@
 #include <SFML/Graphics/CircleShape.hpp>
 #include <SFML/Graphics/RenderWindow.hpp>
 #include <SFML/Window/Event.hpp>
+#include "events.hpp"
 #include <utility>
 
 void Game();
@@ -86,13 +87,21 @@ void Game()
     scale_window(
       static_cast<float>(window_width), static_cast<float>(window_height));
   }
-  while (window.isOpen()) {
-    sf::Event event{};
-    while (window.pollEvent(event)) {
+  sf::Event event{};
+  while (true) {
+    if (!window.isOpen()) {
+      break;
+    }
+    while (true) {
+      if(!window.pollEvent(event)) {
+        break;
+      }
       ImGui::SFML::ProcessEvent(event);
       if (event.type == sf::Event::Resized) {
-        scale_window(static_cast<float>(event.size.width),
-          static_cast<float>(event.size.height));
+        [&scale_window](sf::Event::SizeEvent size) {
+          scale_window(
+            static_cast<float>(size.width), static_cast<float>(size.height));
+        }(event.size);
       } else if (event.type == sf::Event::Closed) {
         window.close();
       }
