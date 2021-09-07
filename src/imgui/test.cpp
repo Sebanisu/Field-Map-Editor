@@ -130,20 +130,7 @@ void Game()
         &file_dialog,
         &scale_width,
         &changed]() mutable {
-        if (ImGui::Combo("Path",
-              &path_selected_item,
-              paths_c_str.data(),
-              static_cast<int>(paths_c_str.size()),
-              10)) {
-          update_path(paths,
-            current_map,
-            path_selected_item,
-            opt_archives,
-            field,
-            ms,
-            changed);
-        }
-        if (ImGui::BeginMainMenuBar()) {
+        if (ImGui::BeginMenuBar()) {
           if (ImGui::BeginMenu("File")) {
             if (ImGui::MenuItem("Locate a FF8 install")) {
               file_dialog.Open();
@@ -157,14 +144,28 @@ void Game()
             }
             ImGui::EndMenu();
           }
-          ImGui::EndMainMenuBar();
+          ImGui::EndMenuBar();
         }
-        // open file dialog when user clicks this button
-        if (ImGui::Button("Locate a FF8 install")) {
-          file_dialog.Open();
-          file_dialog.SetTitle("Choose FF8 install directory");
-          file_dialog.SetTypeFilters({ ".exe" });//".fs", ".fi", ".fl", ".zzz"
+        if (ImGui::Combo("Path",
+              &path_selected_item,
+              paths_c_str.data(),
+              static_cast<int>(paths_c_str.size()),
+              10)) {
+          update_path(paths,
+            current_map,
+            path_selected_item,
+            opt_archives,
+            field,
+            ms,
+            changed);
         }
+        //        // open file dialog when user clicks this button
+        //        if (ImGui::Button("Locate a FF8 install")) {
+        //          file_dialog.Open();
+        //          file_dialog.SetTitle("Choose FF8 install directory");
+        //          file_dialog.SetTypeFilters({ ".exe" });//".fs", ".fi",
+        //          ".fl", ".zzz"
+        //        }
 
         file_dialog.Display();
         if (file_dialog.HasSelected()) {
@@ -197,7 +198,8 @@ void Game()
           scale_window();
         }
       },
-      static_cast<ImGuiWindowFlags>(ImGuiWindowFlags_AlwaysAutoResize));
+      static_cast<ImGuiWindowFlags>(
+        ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_MenuBar));
 
     hello_world.draw(first);
 
