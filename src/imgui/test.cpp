@@ -62,9 +62,9 @@ void Game()
                         save_height = float{},
                         &window,
                         &scale_width](
-                        float width = 0, float height = 0) mutable {
+                        float width = {}, float height = {}) mutable {
     auto load = [](auto &saved, auto &not_saved) {
-      if (not_saved == 0) {
+      if (not_saved < std::numeric_limits<float>::epsilon()) {
         not_saved = saved;
       } else {
         saved = not_saved;
