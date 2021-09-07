@@ -4,11 +4,11 @@
 
 #ifndef MYPROJECT_GUI_HPP
 #define MYPROJECT_GUI_HPP
-#include <cstdint>
-#include <SFML/Graphics/RenderWindow.hpp>
 #include "archives_group.hpp"
 #include "events.hpp"
 #include "filebrowser.hpp"
+#include <cstdint>
+#include <SFML/Graphics/RenderWindow.hpp>
 struct gui
 {
 private:
@@ -37,8 +37,11 @@ private:
   ImGuiStyle                                m_original_style   = {};
   mutable sf::Event                         m_event            = {};
   mutable bool                              m_first            = { true };
-  // create a file browser instance
-  mutable ImGui::FileBrowser                directory_browser{
+  // create a file browser instances
+  mutable ImGui::FileBrowser m_save_file_browser{ static_cast<ImGuiFileBrowserFlags>(
+    static_cast<std::uint32_t>(ImGuiFileBrowserFlags_EnterNewFilename)
+    | static_cast<std::uint32_t>(ImGuiFileBrowserFlags_CreateNewDir)) };
+  mutable ImGui::FileBrowser m_directory_browser{
     ImGuiFileBrowserFlags_SelectDirectory
   };
   static std::vector<std::string> get_paths();

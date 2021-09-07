@@ -29,16 +29,20 @@ void gui::loop() const
       if (ImGui::BeginMenuBar()) {
         if (ImGui::BeginMenu("File")) {
           if (ImGui::MenuItem("Locate a FF8 install")) {
-            directory_browser.Open();
-            directory_browser.SetTitle("Choose FF8 install directory");
-            directory_browser.SetTypeFilters(
-              { ".exe" });//".fs", ".fi", ".fl", ".zzz"
+            m_directory_browser.Open();
+            m_directory_browser.SetTitle("Choose FF8 install directory");
+            m_directory_browser.SetTypeFilters(
+              { ".exe" });
           }
-
           if (ImGui::MenuItem("Save Displayed Texture",
                 nullptr,
                 false,
                 !m_mim_sprite.fail())) {
+            m_save_file_browser.Open();
+            m_save_file_browser.SetTitle("Save Texture as...");
+            m_save_file_browser.SetTypeFilters(
+              { ".png", ".ppm" });
+            m_save_file_browser.SetInputName("TEST.png");
           }
           ImGui::EndMenu();
         }
@@ -51,16 +55,27 @@ void gui::loop() const
             10)) {
         update_path();
       }
-      directory_browser.Display();
-      if (directory_browser.HasSelected()) {
-        const auto selected_path = directory_browser.GetSelected();
+      m_save_file_browser.Display();
+      m_directory_browser.Display();
+      if (m_directory_browser.HasSelected()) {
+        const auto selected_path = m_directory_browser.GetSelected();
         m_paths.emplace_back(selected_path.string());
         m_paths_c_str = archives_group::get_c_str(
           m_paths);// seems the pointers move when you push back above
 
         m_selected_path = static_cast<int>(m_paths.size()) - 1;
         update_path();
-        directory_browser.ClearSelected();
+        m_directory_browser.ClearSelected();
+      }
+      if (m_save_file_browser.HasSelected()) {
+       [[maybe_unused]] const auto selected_path = m_save_file_browser.GetSelected();
+//        m_paths.emplace_back(selected_path.string());
+//        m_paths_c_str = archives_group::get_c_str(
+//          m_paths);// seems the pointers move when you push back above
+//
+//        m_selected_path = static_cast<int>(m_paths.size()) - 1;
+//        update_path();
+        m_save_file_browser.ClearSelected();
       }
       m_changed = archives_group::ImGui_controls(m_archives_group,
                     m_field,
@@ -180,7 +195,7 @@ ImGuiStyle gui::init_and_get_style() const
 }
 gui::gui(std::uint32_t         width,
   std::uint32_t                height,
-  [[maybe_unused]] const char *title)
+  [[maybe_unused]] const char * const title)
   : m_window_width(width), m_window_height(height), m_title(title),
     m_window(get_render_window()), m_paths(get_paths()),
     m_paths_c_str(get_paths_c_str()), m_archives_group(get_archives_group()),
