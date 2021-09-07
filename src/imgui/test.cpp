@@ -42,58 +42,65 @@ void Game()
     std::back_inserter(paths_c_str),
     [](const std::string &p) { return p.c_str(); });
 
-  auto                    opt_archives  = archives_group({}, paths.front());
-  int                     current_map   = 0;
-  auto                    field         = opt_archives.field(current_map);
-  auto                    ms            = mim_sprite(field, 4_bpp, 0, {});
-  static constexpr auto   window_width  = 800;
-  static constexpr auto   window_height = 600;
-  sf::RenderWindow window(
-    sf::VideoMode(window_width, window_height), "ImGui + SFML = <3");
+  auto                  opt_archives  = archives_group({}, paths.front());
+  int                   current_map   = 0;
+  auto                  field         = opt_archives.field(current_map);
+  auto                  ms            = mim_sprite(field, 4_bpp, 0, {});
+  static constexpr auto window_width  = 800;
+  static constexpr auto window_height = 600;
+  sf::RenderWindow      window(
+         sf::VideoMode(window_width, window_height), "ImGui + SFML = <3");
   window.setFramerateLimit(360U);
   ImGui::SFML::Init(window);
   sf::Clock  deltaClock;
   const auto original_style = ImGui::GetStyle();
   bool       first          = true;
-  auto       scale_window =
-    [&ms, &original_style, save_width = float{}, save_height = float{}, &window](
-      float width = 0, float height = 0) mutable {
-      auto load = [](auto &saved, auto &not_saved) {
-        if (not_saved == 0) {
-          not_saved = saved;
-        } else {
-          saved = not_saved;
-        }
-      };
-      load(save_width, width);
-      load(save_height, height);
-      // this scales up the elements without losing the horizontal space. so
-      // going from 4:3 to 16:9 will end up with wide screen.
-      auto       scale       = width / window_height;
-      const auto scale_width = width / height * static_cast<float>(ms.height());
-      if (scale < 1.0F) {
-        scale = 1.0F;
+  float      scale_width    = {};
+  auto       scale_window   = [&ms,
+                        &original_style,
+                        save_width  = float{},
+                        save_height = float{},
+                        &window,
+                        &scale_width](
+                        float width = 0, float height = 0) mutable {
+    auto load = [](auto &saved, auto &not_saved) {
+      if (not_saved == 0) {
+        not_saved = saved;
+      } else {
+        saved = not_saved;
       }
-      ImGui::GetIO().FontGlobalScale = std::round(scale);
-      ImGui::GetStyle() =
-        original_style;// restore original before applying scale.
-      ImGui::GetStyle().ScaleAllSizes(std::round(scale));
-      window.setView(sf::View(sf::FloatRect(
-        0.0F, 0.0F, scale_width, static_cast<float>(ms.height()))));
     };
+    load(save_width, width);
+    load(save_height, height);
+    // this scales up the elements without losing the horizontal space. so
+    // going from 4:3 to 16:9 will end up with wide screen.
+    auto scale  = width / window_height;
+    scale_width = width / height * static_cast<float>(ms.height());
+    if (scale < 1.0F) {
+      scale = 1.0F;
+    }
+    ImGui::GetIO().FontGlobalScale = std::round(scale);
+    ImGui::GetStyle() =
+      original_style;// restore original before applying scale.
+    ImGui::GetStyle().ScaleAllSizes(std::round(scale));
+    window.setView(sf::View(
+      sf::FloatRect(0.0F, 0.0F, scale_width, static_cast<float>(ms.height()))));
+  };
   if (window.isOpen()) {
     scale_window(
       static_cast<float>(window_width), static_cast<float>(window_height));
   }
   sf::Event event{};
   while (window.isOpen()) {
+    bool changed = false;
     while (window.pollEvent(event)) {
       ImGui::SFML::ProcessEvent(event);
       const auto event_variant = events::get(event);
       std::visit(events::make_visitor(
-                   [&scale_window](const sf::Event::SizeEvent &size) {
+                   [&scale_window, &changed](const sf::Event::SizeEvent &size) {
                      scale_window(static_cast<float>(size.width),
                        static_cast<float>(size.height));
+                     changed = true;
                    },
                    [&event, &window](const auto) {
                      if (event.type == sf::Event::Closed) {
@@ -120,8 +127,9 @@ void Game()
         &field,
         &paths,
         &opt_archives,
-        &file_dialog]() mutable {
-        bool changed = false;
+        &file_dialog,
+        &scale_width,
+        &changed]() mutable {
         if (ImGui::Combo("Path",
               &path_selected_item,
               paths_c_str.data(),
@@ -135,18 +143,17 @@ void Game()
             ms,
             changed);
         }
-        if(ImGui::BeginMainMenuBar())
-        {
-          if (ImGui::BeginMenu("File"))
-          {
-            if(ImGui::MenuItem("Locate a FF8 install"))
-            {
+        if (ImGui::BeginMainMenuBar()) {
+          if (ImGui::BeginMenu("File")) {
+            if (ImGui::MenuItem("Locate a FF8 install")) {
               file_dialog.Open();
               file_dialog.SetTitle("Choose FF8 install directory");
-              file_dialog.SetTypeFilters({ ".exe" });//".fs", ".fi", ".fl", ".zzz"
+              file_dialog.SetTypeFilters(
+                { ".exe" });//".fs", ".fi", ".fl", ".zzz"
             }
 
-            if(ImGui::MenuItem("Save Displayed Texture", nullptr,false,!ms.fail())) {
+            if (ImGui::MenuItem(
+                  "Save Displayed Texture", nullptr, false, !ms.fail())) {
             }
             ImGui::EndMenu();
           }
@@ -179,10 +186,13 @@ void Game()
         changed = archives_group::ImGui_controls(
                     opt_archives, field, ms, current_map, coo_selected_item)
                   || changed;
-        changed =
-          mim_sprite::ImGui_controls(
-            ms, bpp_selected_item, palette_selected_item, draw_palette, xy)
-          || changed;
+        changed = mim_sprite::ImGui_controls(changed,
+          ms,
+          bpp_selected_item,
+          palette_selected_item,
+          draw_palette,
+          xy,
+          scale_width);
         if (changed) {
           scale_window();
         }

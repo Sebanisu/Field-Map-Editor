@@ -211,13 +211,14 @@ public:
       "14",
       "15" };
   }
-  static bool ImGui_controls(mim_sprite &ms,
-    int                                 &bpp_selected_item,
-    int                                 &palette_selected_item,
-    bool                                &draw_palette,
-    std::array<float, 2>                &xy)
+  static bool ImGui_controls(bool changed,
+    mim_sprite                   &ms,
+    int                          &bpp_selected_item,
+    int                          &palette_selected_item,
+    bool                         &draw_palette,
+    std::array<float, 2>         &xy,
+    float                         scale_width = 0.0F)
   {
-    bool changed = false;
     if (!ms.fail()) {
       if (ImGui::Checkbox("Draw Palette Texture", &draw_palette)) {
         ms      = ms.with_draw_palette(draw_palette);
@@ -257,8 +258,9 @@ public:
       if (!ms.draw_palette()) {
         format_imgui_text("Width == Max Tiles");
       }
-      if (ImGui::SliderFloat2("Adjust", xy.data(), -1.0, 0.0F) || changed) {
-        ms.sprite().setPosition(xy[0] * static_cast<float>(ms.width()),
+      if (ImGui::SliderFloat2("Adjust", xy.data(), -1.0F, 0.0F) || changed) {
+        ms.sprite().setPosition(
+          xy[0] * (static_cast<float>(ms.width()) - scale_width),
           xy[1] * static_cast<float>(ms.height()));
         changed = true;
       }
