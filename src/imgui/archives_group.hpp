@@ -15,15 +15,14 @@
 struct archives_group
 {
 private:
-  open_viii::LangT                        m_coo           = {};
-  std::filesystem::path                   m_path          = {};
-  mutable bool                            m_failed        = true;
-  open_viii::archive::Archives            m_archives      = {};
-  const open_viii::archive::FIFLFS<true> *m_fields        = {};
-  std::vector<std::string>                m_mapdata       = {};
-  std::vector<const char *>               m_mapdata_c_str = {};
+  open_viii::LangT             m_coo           = {};
+  std::filesystem::path        m_path          = {};
+  mutable bool                 m_failed        = true;
+  open_viii::archive::Archives m_archives      = {};
+  std::vector<std::string>     m_mapdata       = {};
+  std::vector<const char *>    m_mapdata_c_str = {};
 
-  auto                                    get_archives() const
+  auto                         get_archives() const
   {
     // todo need a way to filter out versions of game that don't have a
     // language.
@@ -36,10 +35,14 @@ private:
     m_failed = false;
     return archives;
   }
+  [[nodiscard]] const auto &fields() const
+  {
+    return m_archives.get<open_viii::archive::ArchiveTypeT::field>();
+  }
   std::vector<std::string> get_mapdata() const
   {
-    if (!m_failed && m_fields != nullptr) {
-      return m_fields->map_data();
+    if (!m_failed && fields().all_set()) {
+      return fields().map_data();
     }
     return {};
   }
@@ -57,9 +60,8 @@ public:
   }
   archives_group(const open_viii::LangT in_coo, auto &&in_path)
     : m_coo(in_coo), m_path(std::forward<decltype(in_path)>(in_path)),
-      m_archives(get_archives()),
-      m_fields(&m_archives.get<open_viii::archive::ArchiveTypeT::field>()),
-      m_mapdata(get_mapdata()), m_mapdata_c_str(get_c_str(m_mapdata))
+      m_archives(get_archives()), m_mapdata(get_mapdata()),
+      m_mapdata_c_str(get_c_str(m_mapdata))
   {}
   /**
    * Only really needed if we need to reload files. In fields in remaster all
@@ -81,14 +83,13 @@ public:
   [[nodiscard]] const auto &path() const { return m_path; };
   [[nodiscard]] const auto &archives() const { return m_archives; };
   [[nodiscard]] bool        failed() const { return m_failed; }
-  [[nodiscard]] const auto *fields() const { return m_fields; }
   [[nodiscard]] const auto &mapdata() const { return m_mapdata; }
   [[nodiscard]] const auto &mapdata_c_str() const { return m_mapdata_c_str; }
   [[nodiscard]] auto        field(const int current_map) const
   {
     open_viii::archive::FIFLFS<false> archive{};
     if (!m_mapdata.empty()) {
-      m_fields->execute_with_nested(
+      fields().execute_with_nested(
         { m_mapdata.at(static_cast<std::size_t>(current_map)) },
         [&archive](
           auto &&field) { archive = std::forward<decltype(field)>(field); },

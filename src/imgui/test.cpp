@@ -135,6 +135,23 @@ void Game()
             ms,
             changed);
         }
+        if(ImGui::BeginMainMenuBar())
+        {
+          if (ImGui::BeginMenu("File"))
+          {
+            if(ImGui::MenuItem("Locate a FF8 install"))
+            {
+              file_dialog.Open();
+              file_dialog.SetTitle("Choose FF8 install directory");
+              file_dialog.SetTypeFilters({ ".exe" });//".fs", ".fi", ".fl", ".zzz"
+            }
+
+            if(ImGui::MenuItem("Save Displayed Texture", nullptr,false,!ms.fail())) {
+            }
+            ImGui::EndMenu();
+          }
+          ImGui::EndMainMenuBar();
+        }
         // open file dialog when user clicks this button
         if (ImGui::Button("Locate a FF8 install")) {
           file_dialog.Open();
