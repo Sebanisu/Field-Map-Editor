@@ -133,7 +133,7 @@ void gui::scale_window(float width, float height) const
   load(save_height, height);
   // this scales up the elements without losing the horizontal space. so
   // going from 4:3 to 16:9 will end up with wide screen.
-  auto scale    = width / m_window_height;
+  auto scale    = width / static_cast<float>(m_window_height);
   m_scale_width = width / height * static_cast<float>(m_mim_sprite.height());
   if (scale < 1.0F) {
     scale = 1.0F;
@@ -178,7 +178,9 @@ ImGuiStyle gui::init_and_get_style() const
   ImGui::SFML::Init(m_window);
   return ImGui::GetStyle();
 }
-gui::gui(std::uint32_t width, std::uint32_t height, const char *title)
+gui::gui(std::uint32_t         width,
+  std::uint32_t                height,
+  [[maybe_unused]] const char *title)
   : m_window_width(width), m_window_height(height), m_title(title),
     m_window(get_render_window()), m_paths(get_paths()),
     m_paths_c_str(get_paths_c_str()), m_archives_group(get_archives_group()),
