@@ -58,6 +58,7 @@ public:
       [](const std::string &str) { return str.c_str(); });
     return ret;
   }
+  archives_group() = default;
   archives_group(const open_viii::LangT in_coo, auto &&in_path)
     : m_coo(in_coo), m_path(std::forward<decltype(in_path)>(in_path)),
       m_archives(get_archives()), m_mapdata(get_mapdata()),
