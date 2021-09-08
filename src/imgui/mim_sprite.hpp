@@ -7,6 +7,7 @@
 #include "imgui_format_text.hpp"
 #include "open_viii/archive/Archives.hpp"
 #include "open_viii/graphics/background/Mim.hpp"
+#include "open_viii/graphics/Png.hpp"
 #include <imgui.h>
 #include <SFML/Graphics/Sprite.hpp>
 #include <SFML/Graphics/Texture.hpp>
@@ -266,6 +267,20 @@ public:
       }
     }
     return changed;
+  }
+  void save(const std::filesystem::path &dest_path)
+  {
+    if (open_viii::tools::i_ends_with(dest_path.string(), ".ppm")) {
+      open_viii::graphics::Ppm::save(
+        m_colors, width(), height(), dest_path.string());
+    } else if (open_viii::tools::i_ends_with(dest_path.string(), ".png")) {
+      open_viii::graphics::Png::save(m_colors,
+        width(),
+        height(),
+        dest_path.string(),
+        dest_path.stem().string(),
+        "");
+    }
   }
 };
 #endif// MYPROJECT_MIM_SPRITE_HPP

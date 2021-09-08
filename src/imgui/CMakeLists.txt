@@ -18,4 +18,8 @@ target_link_libraries(test_imgui
         PRIVATE imgui_filebrowser)
 
 target_compile_definitions(test_imgui
-        PUBLIC NOMINMAX)
+        PUBLIC NOMINMAX) # imgui uses unguarded min and max.
+if (MSVC)
+    target_compile_definitions(test_imgui
+            PUBLIC _CRT_SECURE_NO_WARNINGS) # required by libpng
+endif ()

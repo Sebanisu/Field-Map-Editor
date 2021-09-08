@@ -69,12 +69,7 @@ void gui::loop() const
       }
       if (m_save_file_browser.HasSelected()) {
        [[maybe_unused]] const auto selected_path = m_save_file_browser.GetSelected();
-//        m_paths.emplace_back(selected_path.string());
-//        m_paths_c_str = archives_group::get_c_str(
-//          m_paths);// seems the pointers move when you push back above
-//
-//        m_selected_path = static_cast<int>(m_paths.size()) - 1;
-//        update_path();
+       m_mim_sprite.save(selected_path);
         m_save_file_browser.ClearSelected();
       }
       m_changed = archives_group::ImGui_controls(m_archives_group,
