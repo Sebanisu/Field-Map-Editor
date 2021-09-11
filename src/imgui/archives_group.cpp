@@ -74,7 +74,7 @@ bool archives_group::ImGui_controls(archives_group &opt_archives,
   open_viii::archive::FIFLFS<false>                &field,
   mim_sprite                                       &ms,
   map_sprite                                       &map,
-  int                                              &current_map,
+  int                                              &current_field,
   int                                              &coo_selected_item)
 {
   static constexpr auto coos       = open_viii::LangCommon::to_array();
@@ -93,12 +93,12 @@ bool archives_group::ImGui_controls(archives_group &opt_archives,
     changed = true;
   }
   if (ImGui::Combo("Field",
-        &current_map,
+        &current_field,
         opt_archives.mapdata_c_str().data(),
         static_cast<int>(opt_archives.mapdata_c_str().size()),
         10)) {
 
-    field   = opt_archives.field(current_map);
+    field   = opt_archives.field(current_field);
     ms      = ms.with_field(field);
     map     = map.with_field(field);
     changed = true;

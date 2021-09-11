@@ -33,7 +33,7 @@ private:
   mutable int                               m_selected_path    = {};
   mutable bool                              draw_palette       = { false };
   mutable mim_sprite                        m_mim_sprite       = {};
-  [[maybe_unused]] mutable map_sprite                        m_map_sprite       = {};
+  mutable map_sprite                        m_map_sprite       = {};
   mutable bool                              m_changed          = { false };
   ImGuiStyle                                m_original_style   = {};
   mutable sf::Event                         m_event            = {};

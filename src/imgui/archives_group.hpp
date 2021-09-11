@@ -62,7 +62,7 @@ public:
     open_viii::archive::FIFLFS<false>       &field,
     mim_sprite                              &ms,
     map_sprite                              &map,
-    int                                     &current_map,
+    int                                     &current_field,
     int                                     &coo_selected_item);
 };
 #endif// MYPROJECT_ARCHIVES_GROUP_HPP
