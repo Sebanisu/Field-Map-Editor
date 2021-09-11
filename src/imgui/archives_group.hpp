@@ -4,64 +4,30 @@
 
 #ifndef MYPROJECT_ARCHIVES_GROUP_HPP
 #define MYPROJECT_ARCHIVES_GROUP_HPP
+#include "map_sprite.hpp"
 #include "mim_sprite.hpp"
 #include "open_viii/archive/Archives.hpp"
-#include "open_viii/paths/Paths.hpp"
-#include <imgui.h>
-#include <ranges>
-#include <string>
-#include <string_view>
-#include <vector>
 struct archives_group
 {
 private:
-  open_viii::LangT             m_coo           = {};
-  std::filesystem::path        m_path          = {};
-  mutable bool                 m_failed        = true;
-  open_viii::archive::Archives m_archives      = {};
-  std::vector<std::string>     m_mapdata       = {};
-  std::vector<const char *>    m_mapdata_c_str = {};
+  open_viii::LangT                                      m_coo           = {};
+  std::filesystem::path                                 m_path          = {};
+  mutable bool                                          m_failed        = true;
+  open_viii::archive::Archives                          m_archives      = {};
+  std::vector<std::string>                              m_mapdata       = {};
+  std::vector<const char *>                             m_mapdata_c_str = {};
 
-  auto                         get_archives() const
-  {
-    // todo need a way to filter out versions of game that don't have a
-    // language.
-    std::cout << m_path << std::endl;
-    auto archives = open_viii::archive::Archives(
-      m_path, open_viii::LangCommon::to_string(m_coo));
-    if (!static_cast<bool>(archives)) {
-      std::cerr << "Failed to load path: " << m_path.string() << '\n';
-    }
-    m_failed = false;
-    return archives;
-  }
-  [[nodiscard]] const auto &fields() const
-  {
-    return m_archives.get<open_viii::archive::ArchiveTypeT::field>();
-  }
-  std::vector<std::string> get_mapdata() const
-  {
-    if (!m_failed && fields().all_set()) {
-      return fields().map_data();
-    }
-    return {};
-  }
+  open_viii::archive::Archives                          get_archives() const;
+  [[nodiscard]] const open_viii::archive::FIFLFS<true> &fields() const;
+  std::vector<std::string>                              get_map_data() const;
 
 public:
   [[nodiscard]] static std::vector<const char *> get_c_str(
-    const std::vector<std::string> &in_vector)
-  {
-    std::vector<const char *> ret{};
-    ret.reserve(in_vector.size());
-    std::ranges::transform(in_vector,
-      std::back_inserter(ret),
-      [](const std::string &str) { return str.c_str(); });
-    return ret;
-  }
+    const std::vector<std::string> &in_vector);
   archives_group() = default;
-  archives_group(const open_viii::LangT in_coo, auto &&in_path)
+  [[maybe_unused]] archives_group(const open_viii::LangT in_coo, auto &&in_path)
     : m_coo(in_coo), m_path(std::forward<decltype(in_path)>(in_path)),
-      m_archives(get_archives()), m_mapdata(get_mapdata()),
+      m_archives(get_archives()), m_mapdata(get_map_data()),
       m_mapdata_c_str(get_c_str(m_mapdata))
   {}
   /**
@@ -72,64 +38,31 @@ public:
    * @param in_coo new language code
    * @return new copy of this object with new language loaded.
    */
-  [[nodiscard]] auto with_coo(const open_viii::LangT in_coo) const
+  [[nodiscard]] archives_group with_coo(const open_viii::LangT in_coo) const
   {
-    return archives_group(in_coo, m_path);
+    return { in_coo, m_path };
   }
-  [[nodiscard]] auto with_path(auto &&in_path) const
+  /**
+   * Creates a new archive_group pointing to the provided path.
+   * @param in_path new path.
+   * @return new archive_group
+   */
+  [[nodiscard]] archives_group with_path(auto &&in_path) const
   {
-    return archives_group(m_coo, std::forward<decltype(in_path)>(in_path));
+    return { m_coo, std::forward<decltype(in_path)>(in_path) };
   }
-  [[nodiscard]] const auto &coo() const { return m_coo; };
-  [[nodiscard]] const auto &path() const { return m_path; };
-  [[nodiscard]] const auto &archives() const { return m_archives; };
-  [[nodiscard]] bool        failed() const { return m_failed; }
-  [[nodiscard]] const auto &mapdata() const { return m_mapdata; }
-  [[nodiscard]] const auto &mapdata_c_str() const { return m_mapdata_c_str; }
-  [[nodiscard]] auto        field(const int current_map) const
-  {
-    open_viii::archive::FIFLFS<false> archive{};
-    if (!m_mapdata.empty()) {
-      fields().execute_with_nested(
-        { m_mapdata.at(static_cast<std::size_t>(current_map)) },
-        [&archive](
-          auto &&field) { archive = std::forward<decltype(field)>(field); },
-        {},
-        true);
-    }
-    return archive;
-  }
+  [[maybe_unused]] [[nodiscard]] const open_viii::LangT &coo() const;
+  [[nodiscard]] const std::filesystem::path             &path() const;
+  [[nodiscard]] const open_viii::archive::Archives      &archives() const;
+  [[nodiscard]] bool                                     failed() const;
+  [[nodiscard]] const std::vector<std::string>          &mapdata() const;
+  [[nodiscard]] const std::vector<const char *>         &mapdata_c_str() const;
+  [[nodiscard]] open_viii::archive::FIFLFS<false> field(int current_map) const;
   static bool ImGui_controls(archives_group &opt_archives,
     open_viii::archive::FIFLFS<false>       &field,
     mim_sprite                              &ms,
+    map_sprite                              &map,
     int                                     &current_map,
-    int                                     &coo_selected_item)
-  {
-    static constexpr auto coos       = open_viii::LangCommon::to_array();
-    static constexpr auto coos_c_str = open_viii::LangCommon::to_c_str_array();
-    bool                  changed    = false;
-    if (ImGui::Combo("Language",
-          &coo_selected_item,
-          coos_c_str.data(),
-          static_cast<int>(coos_c_str.size()),
-          5)) {
-
-      // field   = opt_archives.field(current_map);
-      // ms      = ms.with_field(field);
-      ms = ms.with_coo(coos.at(static_cast<std::size_t>(coo_selected_item)));
-      changed = true;
-    }
-    if (ImGui::Combo("Field",
-          &current_map,
-          opt_archives.mapdata_c_str().data(),
-          static_cast<int>(opt_archives.mapdata_c_str().size()),
-          10)) {
-
-      field   = opt_archives.field(current_map);
-      ms      = ms.with_field(field);
-      changed = true;
-    }
-    return changed;
-  }
+    int                                     &coo_selected_item);
 };
 #endif// MYPROJECT_ARCHIVES_GROUP_HPP

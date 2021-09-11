@@ -23,3 +23,7 @@ class CppStarterProject(ConanFile):
             self.requires("imgui-sfml/2.1@bincrafters/stable")
         if self.options.cpp_starter_use_sdl == "ON":
             self.requires("sdl2/2.0.10@bincrafters/stable")
+# required for linux? sudo apt-get install -y pkg-config
+# required for WSL? error when ever conan tried to run sudo.
+# sudo -A apt-get update
+# sudo -A apt-get install -y --no-install-recommends libx11-xcb-dev libxcb-dri3-dev libxcb-icccm4-dev libxcb-image0-dev libxcb-keysyms1-dev libxcb-randr0-dev libxcb-render-util0-dev libxcb-render0-dev libxcb-shape0-dev libxcb-sync-dev libxcb-util-dev libxcb-xfixes0-dev libxcb-xinerama0-dev libxcb-xkb-dev xorg-dev libudev-dev

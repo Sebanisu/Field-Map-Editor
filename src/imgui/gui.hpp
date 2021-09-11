@@ -33,14 +33,17 @@ private:
   mutable int                               m_selected_path    = {};
   mutable bool                              draw_palette       = { false };
   mutable mim_sprite                        m_mim_sprite       = {};
+  [[maybe_unused]] mutable map_sprite                        m_map_sprite       = {};
   mutable bool                              m_changed          = { false };
   ImGuiStyle                                m_original_style   = {};
   mutable sf::Event                         m_event            = {};
   mutable bool                              m_first            = { true };
   // create a file browser instances
-  mutable ImGui::FileBrowser m_save_file_browser{ static_cast<ImGuiFileBrowserFlags>(
-    static_cast<std::uint32_t>(ImGuiFileBrowserFlags_EnterNewFilename)
-    | static_cast<std::uint32_t>(ImGuiFileBrowserFlags_CreateNewDir)) };
+  mutable ImGui::FileBrowser                m_save_file_browser{
+    static_cast<ImGuiFileBrowserFlags>(
+      static_cast<std::uint32_t>(ImGuiFileBrowserFlags_EnterNewFilename)
+      | static_cast<std::uint32_t>(ImGuiFileBrowserFlags_CreateNewDir))
+  };
   mutable ImGui::FileBrowser m_directory_browser{
     ImGuiFileBrowserFlags_SelectDirectory
   };
@@ -52,10 +55,11 @@ private:
   sf::RenderWindow                get_render_window() const;
   void                            update_path() const;
   mim_sprite                      get_mim_sprite() const;
-  ImGuiStyle                      init_and_get_style() const;
-  void                            loop_events() const;
-  void                            loop() const;
-  void scale_window(float width = {}, float height = {}) const;
+  map_sprite                      get_map_sprite() const;
+  ImGuiStyle init_and_get_style() const;
+  void       loop_events() const;
+  void       loop() const;
+  void       scale_window(float width = {}, float height = {}) const;
 
 public:
   gui(std::uint32_t width, std::uint32_t height, const char *title);

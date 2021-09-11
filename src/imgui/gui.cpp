@@ -4,6 +4,7 @@
 #include "gui.hpp"
 #include "dialog.hpp"
 #include "open_viii/graphics/background/Map.hpp"
+#include "open_viii/paths/Paths.hpp"
 #include <imgui-SFML.h>
 #include <imgui.h>
 void gui::start() const
@@ -31,8 +32,7 @@ void gui::loop() const
           if (ImGui::MenuItem("Locate a FF8 install")) {
             m_directory_browser.Open();
             m_directory_browser.SetTitle("Choose FF8 install directory");
-            m_directory_browser.SetTypeFilters(
-              { ".exe" });
+            m_directory_browser.SetTypeFilters({ ".exe" });
           }
           if (ImGui::MenuItem("Save Displayed Texture",
                 nullptr,
@@ -40,8 +40,7 @@ void gui::loop() const
                 !m_mim_sprite.fail())) {
             m_save_file_browser.Open();
             m_save_file_browser.SetTitle("Save Texture as...");
-            m_save_file_browser.SetTypeFilters(
-              { ".png", ".ppm" });
+            m_save_file_browser.SetTypeFilters({ ".png", ".ppm" });
             m_save_file_browser.SetInputName("TEST.png");
           }
           ImGui::EndMenu();
@@ -68,13 +67,15 @@ void gui::loop() const
         m_directory_browser.ClearSelected();
       }
       if (m_save_file_browser.HasSelected()) {
-       [[maybe_unused]] const auto selected_path = m_save_file_browser.GetSelected();
-       m_mim_sprite.save(selected_path);
+        [[maybe_unused]] const auto selected_path =
+          m_save_file_browser.GetSelected();
+        m_mim_sprite.save(selected_path);
         m_save_file_browser.ClearSelected();
       }
       m_changed = archives_group::ImGui_controls(m_archives_group,
                     m_field,
                     m_mim_sprite,
+                    m_map_sprite,
                     m_selected_field,
                     m_selected_coo)
                   || m_changed;
@@ -165,7 +166,7 @@ sf::RenderWindow gui::get_render_window() const
 }
 void gui::update_path() const
 {
-  m_archives_group = m_archives_group.with_path(m_paths.at(m_selected_path));
+  m_archives_group = m_archives_group.with_path(m_paths.at(static_cast<std::size_t>(m_selected_path)));
   m_field          = m_archives_group.field(m_selected_field);
   m_mim_sprite     = m_mim_sprite.with_field(m_field);
   m_changed        = true;
@@ -177,8 +178,9 @@ std::vector<const char *> gui::get_paths_c_str() const
 mim_sprite gui::get_mim_sprite() const
 {
   return { m_field,
-    mim_sprite::bpp_selections().front(),
-    static_cast<std::uint8_t>(mim_sprite::palette_selections().front()),
+    open_viii::graphics::background::Mim::bpp_selections().front(),
+    static_cast<std::uint8_t>(
+      open_viii::graphics::background::Mim::palette_selections().front()),
     open_viii::LangCommon::to_array().front() };
 }
 ImGuiStyle gui::init_and_get_style() const
@@ -188,16 +190,23 @@ ImGuiStyle gui::init_and_get_style() const
   ImGui::SFML::Init(m_window);
   return ImGui::GetStyle();
 }
-gui::gui(std::uint32_t         width,
-  std::uint32_t                height,
-  [[maybe_unused]] const char * const title)
+gui::gui(std::uint32_t               width,
+  std::uint32_t                      height,
+  [[maybe_unused]] const char *const title)
   : m_window_width(width), m_window_height(height), m_title(title),
     m_window(get_render_window()), m_paths(get_paths()),
     m_paths_c_str(get_paths_c_str()), m_archives_group(get_archives_group()),
     m_field(m_archives_group.field(m_selected_field)),
-    m_mim_sprite(get_mim_sprite()), m_original_style(init_and_get_style())
+    m_mim_sprite(get_mim_sprite()), m_map_sprite(get_map_sprite()),
+    m_original_style(init_and_get_style())
 {}
 gui::gui(const char *title)
   : gui(default_window_width, default_window_height, title)
 {}
 gui::gui() : gui("") {}
+map_sprite gui::get_map_sprite() const
+{
+  return { m_field,
+           open_viii::LangCommon::to_array().at(
+             static_cast<std::size_t>(m_selected_coo)) };
+}
