@@ -158,6 +158,7 @@ private:
           }
           vertex_group vg{};
           vg.texture = &m_texture->at(pos);
+          vg.vertices.setPrimitiveType(sf::Quads);
           std::ranges::for_each(filtered,
             [&vg, &raw_tileSize, &new_tileSize](const tile_type &tile) {
               auto quad = std::array<sf::Vertex, 4U>{};

@@ -47,6 +47,10 @@ void gui::loop() const
         }
         ImGui::EndMenuBar();
       }
+
+      if(ImGui::Combo("Draw", &m_selected_draw, m_draw_selections.data(), static_cast<int>(m_draw_selections.size()))){
+        m_changed = true;
+      }
       if (ImGui::Combo("Path",
             &m_selected_path,
             m_paths_c_str.data(),
@@ -96,7 +100,10 @@ void gui::loop() const
   hello_world.draw(m_first);
 
   m_window.clear();
+  if(m_selected_draw == 0)
   m_window.draw(m_mim_sprite.sprite());
+  if(m_selected_draw == 1)
+    m_window.draw(m_map_sprite);
   ImGui::SFML::Render(m_window);
   m_window.display();
   m_first = false;
