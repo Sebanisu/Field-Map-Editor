@@ -48,7 +48,10 @@ void gui::loop() const
         ImGui::EndMenuBar();
       }
 
-      if(ImGui::Combo("Draw", &m_selected_draw, m_draw_selections.data(), static_cast<int>(m_draw_selections.size()))){
+      if (ImGui::Combo("Draw",
+            &m_selected_draw,
+            m_draw_selections.data(),
+            static_cast<int>(m_draw_selections.size()))) {
         m_changed = true;
       }
       if (ImGui::Combo("Path",
@@ -83,13 +86,22 @@ void gui::loop() const
                     m_selected_field,
                     m_selected_coo)
                   || m_changed;
-      m_changed = mim_sprite::ImGui_controls(m_changed,
-        m_mim_sprite,
-        m_selected_bpp,
-        m_selected_palette,
-        draw_palette,
-        xy,
-        m_scale_width);
+      if (m_selected_draw == 0) {
+        m_changed = mim_sprite::ImGui_controls(m_changed,
+          m_mim_sprite,
+          m_selected_bpp,
+          m_selected_palette,
+          draw_palette,
+          xy,
+          m_scale_width);
+      } else if (m_selected_draw == 1) {
+        m_changed = map_sprite::ImGui_controls(m_changed,
+          m_map_sprite,
+          m_selected_bpp,
+          m_selected_palette,
+          xy,
+          m_scale_width);
+      }
       if (m_changed) {
         scale_window();
       }
@@ -100,10 +112,12 @@ void gui::loop() const
   hello_world.draw(m_first);
 
   m_window.clear();
-  if(m_selected_draw == 0)
-  m_window.draw(m_mim_sprite.sprite());
-  if(m_selected_draw == 1)
+  if (m_selected_draw == 0) {
+    m_window.draw(m_mim_sprite.sprite());
+  }
+  if (m_selected_draw == 1) {
     m_window.draw(m_map_sprite);
+  }
   ImGui::SFML::Render(m_window);
   m_window.display();
   m_first = false;
@@ -140,7 +154,21 @@ void gui::scale_window(float width, float height) const
 {
   static auto save_width  = float{};
   static auto save_height = float{};
-  auto        load        = [](auto &saved, auto &not_saved) {
+  //  float img_width = [this]()
+  //  {
+  //    if(m_selected_draw ==1)
+  //    {
+  //      return static_cast<float>(m_map_sprite.width());
+  //    }
+  //    return static_cast<float>(m_mim_sprite.width());
+  //  }();
+  float       img_height  = [this]() {
+    if (m_selected_draw == 1) {
+      return static_cast<float>(m_map_sprite.height());
+    }
+    return static_cast<float>(m_mim_sprite.height());
+  }();
+  auto load = [](auto &saved, auto &not_saved) {
     if (not_saved < std::numeric_limits<float>::epsilon()) {
       not_saved = saved;
     } else {
@@ -152,7 +180,7 @@ void gui::scale_window(float width, float height) const
   // this scales up the elements without losing the horizontal space. so
   // going from 4:3 to 16:9 will end up with wide screen.
   auto scale    = width / static_cast<float>(m_window_height);
-  m_scale_width = width / height * static_cast<float>(m_mim_sprite.height());
+  m_scale_width = width / height * img_height;
   if (scale < 1.0F) {
     scale = 1.0F;
   }
@@ -160,8 +188,8 @@ void gui::scale_window(float width, float height) const
   ImGui::GetStyle() =
     m_original_style;// restore original before applying scale.
   ImGui::GetStyle().ScaleAllSizes(std::round(scale));
-  m_window.setView(sf::View(sf::FloatRect(
-    0.0F, 0.0F, m_scale_width, static_cast<float>(m_mim_sprite.height()))));
+  m_window.setView(
+    sf::View(sf::FloatRect(0.0F, 0.0F, m_scale_width, img_height)));
 }
 archives_group gui::get_archives_group() const
 {
@@ -173,10 +201,11 @@ sf::RenderWindow gui::get_render_window() const
 }
 void gui::update_path() const
 {
-  m_archives_group = m_archives_group.with_path(m_paths.at(static_cast<std::size_t>(m_selected_path)));
-  m_field          = m_archives_group.field(m_selected_field);
-  m_mim_sprite     = m_mim_sprite.with_field(m_field);
-  m_changed        = true;
+  m_archives_group = m_archives_group.with_path(
+    m_paths.at(static_cast<std::size_t>(m_selected_path)));
+  m_field      = m_archives_group.field(m_selected_field);
+  m_mim_sprite = m_mim_sprite.with_field(m_field);
+  m_changed    = true;
 }
 std::vector<const char *> gui::get_paths_c_str() const
 {
@@ -214,6 +243,6 @@ gui::gui() : gui("") {}
 map_sprite gui::get_map_sprite() const
 {
   return { m_field,
-           open_viii::LangCommon::to_array().at(
-             static_cast<std::size_t>(m_selected_coo)) };
+    open_viii::LangCommon::to_array().at(
+      static_cast<std::size_t>(m_selected_coo)) };
 }
