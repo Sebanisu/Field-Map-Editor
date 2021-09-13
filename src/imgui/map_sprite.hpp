@@ -11,6 +11,7 @@
 #include "open_viii/graphics/background/Mim.hpp"
 #include "tile_map.hpp"
 #include <imgui.h>
+#include <SFML/Graphics/RenderTexture.hpp>
 #include <SFML/Graphics/Texture.hpp>
 struct map_sprite
   : public sf::Drawable
@@ -34,7 +35,9 @@ private:
                                m_bpp_and_palette                   = {};
   static constexpr std::size_t MAX_TEXTURES                        = 16 * 2 + 1;
   std::unique_ptr<std::array<sf::Texture, MAX_TEXTURES>> m_texture = {};
-  std::vector<vertex_group>                              m_vertex_groups{};
+  std::vector<vertex_group>                              m_vertex_groups = {};
+  mutable std::unique_ptr<sf::RenderTexture>             m_render_texture =
+    std::make_unique<sf::RenderTexture>();
   using color_type  = open_viii::graphics::Color32RGBA;
   using colors_type = std::vector<color_type>;
 
@@ -132,6 +135,62 @@ private:
     });
     return ret;
   }
+
+  void set_quad(auto  &&quad,
+    const sf::Vector2u &new_tileSize,
+    const sf::Vector2u &raw_tileSize,
+    const auto          source_x,
+    const auto          source_y,
+    const auto          x,
+    const auto          y) const
+  {
+    auto i  = x / static_cast<decltype(x)>(raw_tileSize.x);
+    auto j  = y / static_cast<decltype(y)>(raw_tileSize.y);
+    auto tu = (source_x) / static_cast<decltype(source_x)>(raw_tileSize.x);
+    auto tv = source_y / static_cast<decltype(source_y)>(raw_tileSize.y);
+
+    quad[0].position = sf::Vector2f(
+      static_cast<float>(i * static_cast<decltype(i)>(new_tileSize.x)),
+      static_cast<float>(j * static_cast<decltype(j)>(new_tileSize.y)));
+    quad[1].position = sf::Vector2f(
+      static_cast<float>((i + 1) * static_cast<decltype(i)>(new_tileSize.x)),
+      static_cast<float>(j * static_cast<decltype(j)>(new_tileSize.y)));
+    quad[2].position = sf::Vector2f(
+      static_cast<float>((i + 1) * static_cast<decltype(i)>(new_tileSize.x)),
+      static_cast<float>((j + 1) * static_cast<decltype(j)>(new_tileSize.y)));
+    quad[3].position = sf::Vector2f(
+      static_cast<float>(i * static_cast<decltype(i)>(new_tileSize.x)),
+      static_cast<float>((j + 1) * static_cast<decltype(j)>(new_tileSize.y)));
+
+    // define its 4 texture coordinates
+    quad[0].texCoords = sf::Vector2f(
+      static_cast<float>(tu * static_cast<decltype(tu)>(new_tileSize.x)),
+      static_cast<float>(tv * static_cast<decltype(tv)>(new_tileSize.y)));
+    quad[1].texCoords = sf::Vector2f(
+      static_cast<float>((tu + 1) * static_cast<decltype(tu)>(new_tileSize.x)),
+      static_cast<float>(tv * static_cast<decltype(tv)>(new_tileSize.y)));
+    quad[2].texCoords = sf::Vector2f(
+      static_cast<float>((tu + 1) * static_cast<decltype(tu)>(new_tileSize.x)),
+      static_cast<float>((tv + 1) * static_cast<decltype(tv)>(new_tileSize.y)));
+    quad[3].texCoords = sf::Vector2f(
+      static_cast<float>(tu * static_cast<decltype(tu)>(new_tileSize.x)),
+      static_cast<float>((tv + 1) * static_cast<decltype(tv)>(new_tileSize.y)));
+  }
+  void set_quad(auto  &&quad,
+    const sf::Vector2u &new_tileSize,
+    const sf::Vector2u &raw_tileSize,
+    auto              &&tile) const
+  {
+    using tile_type = std::decay_t<decltype(tile)>;
+    set_quad(quad,
+      new_tileSize,
+      raw_tileSize,
+      tile.source_x()
+        + tile.texture_id() * tile_type::texture_page_width(tile.depth()),
+      tile.source_y(),
+      tile.x(),
+      tile.y());
+  }
   std::vector<vertex_group> get_vertex_groups(
     const sf::Vector2u new_tileSize = { 16U, 16U })
   {
@@ -168,123 +227,39 @@ private:
           vg.vertices.setPrimitiveType(sf::Quads);
 
           std::ranges::for_each(filtered,
-            [&vg, &raw_tileSize, &new_tileSize](const tile_type &tile) {
-              auto quad        = std::array<sf::Vertex, 4U>{};
-              //              auto i =
-              //                tile.x() /
-              //                static_cast<decltype(tile.x())>(raw_tileSize.x);
-              //              auto j =
-              //                tile.y() /
-              //                static_cast<decltype(tile.y())>(raw_tileSize.y);
-              //              auto tu =
-              //                (tile.source_x()
-              //                  + tile.texture_id()
-              //                      * tile_type::texture_page_width(tile.depth()))
-              //                /
-              //                static_cast<decltype(tile.source_x())>(raw_tileSize.x);
-              //              auto tv =
-              //                tile.source_y()
-              //                /
-              //                static_cast<decltype(tile.source_y())>(raw_tileSize.y);
-
-              quad[0].position = sf::Vector2f(
-                static_cast<float>(tile.x()), static_cast<float>(tile.y()));
-              quad[1].position = sf::Vector2f(static_cast<float>(tile.x() + 16),
-                static_cast<float>(tile.y()));
-              quad[2].position = sf::Vector2f(static_cast<float>(tile.x() + 16),
-                static_cast<float>(tile.y() + 16));
-              quad[3].position = sf::Vector2f(static_cast<float>(tile.x()),
-                static_cast<float>(tile.y() + 16));
-
-              // define its 4 texture coordinates
-              quad[0].texCoords =
-                sf::Vector2f(static_cast<float>(tile.source_x()),
-                  static_cast<float>(tile.source_y()));
-              quad[1].texCoords =
-                sf::Vector2f(static_cast<float>(tile.source_x() + 16),
-                  static_cast<float>(tile.source_y()));
-              quad[2].texCoords =
-                sf::Vector2f(static_cast<float>(tile.source_x() + 16),
-                  static_cast<float>(tile.source_y() + 16));
-              quad[3].texCoords =
-                sf::Vector2f(static_cast<float>(tile.source_x()),
-                  static_cast<float>(tile.source_y() + 16));
-              //              auto quad = std::array<sf::Vertex, 4U>{};
-              //              auto i =
-              //                tile.x() /
-              //                static_cast<decltype(tile.x())>(raw_tileSize.x);
-              //              auto j =
-              //                tile.y() /
-              //                static_cast<decltype(tile.y())>(raw_tileSize.y);
-              //              auto tu =
-              //                (tile.source_x()
-              //                  + tile.texture_id()
-              //                      * tile_type::texture_page_width(tile.depth()))
-              //                /
-              //                static_cast<decltype(tile.source_x())>(raw_tileSize.x);
-              //              auto tv =
-              //                tile.source_y()
-              //                /
-              //                static_cast<decltype(tile.source_y())>(raw_tileSize.y);
-              //
-              //              quad[0].position =
-              //                sf::Vector2f(static_cast<float>(
-              //                               i *
-              //                               static_cast<decltype(i)>(new_tileSize.x)),
-              //                  static_cast<float>(
-              //                    j *
-              //                    static_cast<decltype(j)>(new_tileSize.y)));
-              //              quad[1].position = sf::Vector2f(
-              //                static_cast<float>(
-              //                  (i + 1) *
-              //                  static_cast<decltype(i)>(new_tileSize.x)),
-              //                static_cast<float>(
-              //                  j *
-              //                  static_cast<decltype(j)>(new_tileSize.y)));
-              //              quad[2].position = sf::Vector2f(
-              //                static_cast<float>(
-              //                  (i + 1) *
-              //                  static_cast<decltype(i)>(new_tileSize.x)),
-              //                static_cast<float>(
-              //                  (j + 1) *
-              //                  static_cast<decltype(j)>(new_tileSize.y)));
+            [&vg, &raw_tileSize, &new_tileSize, this](const tile_type &tile) {
+              auto quad = std::array<sf::Vertex, 4U>{};
+              //              quad[0].position = sf::Vector2f(
+              //                static_cast<float>(tile.x()),
+              //                static_cast<float>(tile.y()));
+              //              quad[1].position =
+              //              sf::Vector2f(static_cast<float>(tile.x() + 16),
+              //                static_cast<float>(tile.y()));
+              //              quad[2].position =
+              //              sf::Vector2f(static_cast<float>(tile.x() + 16),
+              //                static_cast<float>(tile.y() + 16));
               //              quad[3].position =
-              //                sf::Vector2f(static_cast<float>(
-              //                               i *
-              //                               static_cast<decltype(i)>(new_tileSize.x)),
-              //                  static_cast<float>(
-              //                    (j + 1) *
-              //                    static_cast<decltype(j)>(new_tileSize.y)));
-
-              // define its 4 texture coordinates
+              //              sf::Vector2f(static_cast<float>(tile.x()),
+              //                static_cast<float>(tile.y() + 16));
+              //
+              //              // define its 4 texture coordinates
               //              quad[0].texCoords =
-              //                sf::Vector2f(static_cast<float>(
-              //                               tu *
-              //                               static_cast<decltype(tu)>(new_tileSize.x)),
-              //                  static_cast<float>(
-              //                    tv *
-              //                    static_cast<decltype(tv)>(new_tileSize.y)));
-              //              quad[1].texCoords = sf::Vector2f(
-              //                static_cast<float>(
-              //                  (tu + 1) *
-              //                  static_cast<decltype(tu)>(new_tileSize.x)),
-              //                static_cast<float>(
-              //                  tv *
-              //                  static_cast<decltype(tv)>(new_tileSize.y)));
-              //              quad[2].texCoords = sf::Vector2f(
-              //                static_cast<float>(
-              //                  (tu + 1) *
-              //                  static_cast<decltype(tu)>(new_tileSize.x)),
-              //                static_cast<float>(
-              //                  (tv + 1) *
-              //                  static_cast<decltype(tv)>(new_tileSize.y)));
+              //                sf::Vector2f(static_cast<float>(tile.source_x()),
+              //                  static_cast<float>(tile.source_y()));
+              //              quad[1].texCoords =
+              //                sf::Vector2f(static_cast<float>(tile.source_x()
+              //                + 16),
+              //                  static_cast<float>(tile.source_y()));
+              //              quad[2].texCoords =
+              //                sf::Vector2f(static_cast<float>(tile.source_x()
+              //                + 16),
+              //                  static_cast<float>(tile.source_y() + 16));
               //              quad[3].texCoords =
-              //                sf::Vector2f(static_cast<float>(
-              //                               tu *
-              //                               static_cast<decltype(tu)>(new_tileSize.x)),
-              //                  static_cast<float>(
-              //                    (tv + 1) *
-              //                    static_cast<decltype(tv)>(new_tileSize.y)));
+              //                sf::Vector2f(static_cast<float>(tile.source_x()),
+              //                  static_cast<float>(tile.source_y() + 16));
+
+              set_quad(quad, new_tileSize, raw_tileSize, tile);
+
               std::ranges::for_each(
                 quad, [&vg](auto &&vertex) { vg.vertices.append(vertex); });
             });
@@ -303,6 +278,12 @@ private:
       m_map.canvas());
   }
 
+  void get_render_texture() const
+  {
+    m_render_texture->create(width(), height());
+    update_render_texture();
+  }
+
 public:
   map_sprite() = default;
   map_sprite(const open_viii::archive::FIFLFS<false> &field,
@@ -311,12 +292,18 @@ public:
       m_canvas(get_canvas()), m_unique_z_axis(get_unique_z_axis()),
       m_bpp_and_palette(get_bpp_and_palette()), m_texture(get_textures()),
       m_vertex_groups(get_vertex_groups())
-  {}
-  void draw(sf::RenderTarget &target, sf::RenderStates states) const final
+  {
+    get_render_texture();
+  }
+  void update_render_texture() const
+  {
+    local_draw(*m_render_texture, sf::RenderStates::Default);
+  }
+  void local_draw(sf::RenderTarget &target, sf::RenderStates states) const
   {
     // apply the transform
-    states.transform *= getTransform();
-
+    // states.transform *= getTransform();
+    target.clear(sf::Color::Transparent);
     std::ranges::for_each(
       m_vertex_groups, [&target, &states](const vertex_group &v) {
         if (!v.enabled) {
@@ -337,14 +324,14 @@ public:
   {
     return { field, m_coo };
   }
-  auto        width() const { return m_canvas.width(); }
-  auto        height() const { return m_canvas.height(); }
-  static bool ImGui_controls(bool changed,
-    map_sprite                   &ms,
-    int & /*bpp_selected_item*/,
-    int & /*palette_selected_item*/,
-    std::array<float, 2> &xy,
-    float                 scale_width = 0.0F)
+  std::uint32_t width() const { return m_canvas.width(); }
+  std::uint32_t height() const { return m_canvas.height(); }
+  static bool   ImGui_controls(bool changed,
+      map_sprite                   &ms,
+      int   &/*bpp_selected_item*/,
+      int   &/*palette_selected_item*/,
+      std::array<float, 2> &xy,
+      float                 scale_width = 0.0F)
   {
     static constexpr std::array bpp_items =
       open_viii::graphics::background::Mim::bpp_selections_c_str();
@@ -384,6 +371,21 @@ public:
     }
 
     return changed;
+  }
+  void draw(sf::RenderTarget &target, sf::RenderStates states) const final
+  {
+    // apply the transform
+    states.transform *= getTransform();
+    m_render_texture->display();
+    states.texture = &m_render_texture->getTexture();
+    sf::VertexArray out{};
+    out.setPrimitiveType(sf::Quads);
+    out.resize(4U);
+    auto quad = std::span<sf::Vertex>(&out[0], 4);
+    auto size = sf::Vector2u(width(), height());
+    set_quad(quad, size, size, 0, 0, 0, 0);
+    // draw the vertex array
+    target.draw(out, states);
   }
 };
 #endif// MYPROJECT_MAP_SPRITE_HPP
