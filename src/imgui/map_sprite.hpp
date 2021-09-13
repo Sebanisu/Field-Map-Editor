@@ -13,24 +13,30 @@
 #include <imgui.h>
 #include <SFML/Graphics/RenderTexture.hpp>
 #include <SFML/Graphics/Texture.hpp>
+
+
 struct map_sprite
   : public sf::Drawable
   , public sf::Transformable
 {
   struct vertex_group
   {
-    bool               enabled  = { true };
-    const sf::Texture *texture  = {};
-    sf::VertexArray    vertices = {};
+    bool                                        enabled    = { true };
+    const sf::Texture                          *texture    = {};
+    sf::VertexArray                             vertices   = {};
+    open_viii::graphics::background::BlendModeT blend_mode = {
+      open_viii::graphics::background::BlendModeT::none
+    };
   };
 
 private:
-  const open_viii::archive::FIFLFS<false>      *m_field         = {};
-  open_viii::LangT                              m_coo           = {};
-  open_viii::graphics::background::Mim          m_mim           = {};
-  open_viii::graphics::background::Map          m_map           = {};
-  open_viii::graphics::Rectangle<std::uint32_t> m_canvas        = {};
-  std::vector<std::uint16_t>                    m_unique_z_axis = {};
+  const open_viii::archive::FIFLFS<false>                 *m_field         = {};
+  open_viii::LangT                                         m_coo           = {};
+  open_viii::graphics::background::Mim                     m_mim           = {};
+  open_viii::graphics::background::Map                     m_map           = {};
+  open_viii::graphics::Rectangle<std::uint32_t>            m_canvas        = {};
+  std::vector<std::uint16_t>                               m_unique_z_axis = {};
+  std::vector<open_viii::graphics::background::BlendModeT> m_blend_modes   = {};
   std::vector<std::pair<open_viii::graphics::BPPT, std::uint8_t>>
                                m_bpp_and_palette                   = {};
   static constexpr std::size_t MAX_TEXTURES                        = 16 * 2 + 1;
@@ -120,6 +126,23 @@ private:
     std::cout << '\n';
     return ret;
   }
+  std::vector<open_viii::graphics::background::BlendModeT> get_blend_modes()
+  {
+    std::vector<open_viii::graphics::background::BlendModeT> ret{};
+    m_map.visit_tiles([&ret](auto &&tiles) {
+      std::ranges::transform(tiles,
+        std::back_inserter(ret),
+        [](const auto &tile) { return tile.blend_mode(); });
+      std::ranges::sort(ret, std::greater<>());
+      auto last = std::unique(ret.begin(), ret.end());
+      ret.erase(last, ret.end());
+    });
+    for (const auto z : ret) {
+      std::cout << static_cast<std::uint32_t>(z) << '\t';
+    }
+    std::cout << '\n';
+    return ret;
+  }
   std::vector<std::pair<open_viii::graphics::BPPT, std::uint8_t>>
     get_bpp_and_palette()
   {
@@ -202,69 +225,74 @@ private:
 
       for (const auto &z : m_unique_z_axis) {
         for (const auto &[bpp, palette] : m_bpp_and_palette) {
-          if (bpp.bpp24()) {
-            continue;
-          }
-          size_t     pos   = get_texture_pos(bpp, palette);
-          const auto width = m_mim.get_width(bpp);
-          // const auto height = m_mim.get_height();
-          if (width == 0U) {
-            continue;
-          }
-          tiles_type filtered = {};
-          std::copy_if(tiles.begin(),
-            tiles.end(),
-            std::back_inserter(filtered),
-            [&z, lbpp = bpp, lpalette = palette](const auto &tile) -> bool {
-              return tile.z() == z && tile.depth() == lbpp
-                     && tile.palette_id() == lpalette;
-            });
-          if (std::empty(filtered)) {
-            continue;
-          }
-          vertex_group vg{};
-          vg.texture = &m_texture->at(pos);
-          vg.vertices.setPrimitiveType(sf::Quads);
+          for (const auto &blend_mode : m_blend_modes) {
+            if (bpp.bpp24()) {
+              continue;
+            }
+            size_t     pos   = get_texture_pos(bpp, palette);
+            const auto width = m_mim.get_width(bpp);
+            // const auto height = m_mim.get_height();
+            if (width == 0U) {
+              continue;
+            }
+            tiles_type filtered = {};
+            std::copy_if(tiles.begin(),
+              tiles.end(),
+              std::back_inserter(filtered),
+              [&z, lbpp = bpp, lpalette = palette, blend_mode](
+                const auto &tile) -> bool {
+                return tile.z() == z && tile.depth() == lbpp
+                       && tile.palette_id() == lpalette
+                       && tile.blend_mode() == blend_mode;
+              });
+            if (std::empty(filtered)) {
+              continue;
+            }
+            vertex_group vg{};
+            vg.blend_mode = blend_mode;
+            vg.texture    = &m_texture->at(pos);
+            vg.vertices.setPrimitiveType(sf::Quads);
 
-          std::ranges::for_each(filtered,
-            [&vg, &raw_tileSize, &new_tileSize, this](const tile_type &tile) {
-              auto quad = std::array<sf::Vertex, 4U>{};
-              //              quad[0].position = sf::Vector2f(
-              //                static_cast<float>(tile.x()),
-              //                static_cast<float>(tile.y()));
-              //              quad[1].position =
-              //              sf::Vector2f(static_cast<float>(tile.x() + 16),
-              //                static_cast<float>(tile.y()));
-              //              quad[2].position =
-              //              sf::Vector2f(static_cast<float>(tile.x() + 16),
-              //                static_cast<float>(tile.y() + 16));
-              //              quad[3].position =
-              //              sf::Vector2f(static_cast<float>(tile.x()),
-              //                static_cast<float>(tile.y() + 16));
-              //
-              //              // define its 4 texture coordinates
-              //              quad[0].texCoords =
-              //                sf::Vector2f(static_cast<float>(tile.source_x()),
-              //                  static_cast<float>(tile.source_y()));
-              //              quad[1].texCoords =
-              //                sf::Vector2f(static_cast<float>(tile.source_x()
-              //                + 16),
-              //                  static_cast<float>(tile.source_y()));
-              //              quad[2].texCoords =
-              //                sf::Vector2f(static_cast<float>(tile.source_x()
-              //                + 16),
-              //                  static_cast<float>(tile.source_y() + 16));
-              //              quad[3].texCoords =
-              //                sf::Vector2f(static_cast<float>(tile.source_x()),
-              //                  static_cast<float>(tile.source_y() + 16));
+            std::ranges::for_each(filtered,
+              [&vg, &raw_tileSize, &new_tileSize, this](const tile_type &tile) {
+                auto quad = std::array<sf::Vertex, 4U>{};
+                //              quad[0].position = sf::Vector2f(
+                //                static_cast<float>(tile.x()),
+                //                static_cast<float>(tile.y()));
+                //              quad[1].position =
+                //              sf::Vector2f(static_cast<float>(tile.x() + 16),
+                //                static_cast<float>(tile.y()));
+                //              quad[2].position =
+                //              sf::Vector2f(static_cast<float>(tile.x() + 16),
+                //                static_cast<float>(tile.y() + 16));
+                //              quad[3].position =
+                //              sf::Vector2f(static_cast<float>(tile.x()),
+                //                static_cast<float>(tile.y() + 16));
+                //
+                //              // define its 4 texture coordinates
+                //              quad[0].texCoords =
+                //                sf::Vector2f(static_cast<float>(tile.source_x()),
+                //                  static_cast<float>(tile.source_y()));
+                //              quad[1].texCoords =
+                //                sf::Vector2f(static_cast<float>(tile.source_x()
+                //                + 16),
+                //                  static_cast<float>(tile.source_y()));
+                //              quad[2].texCoords =
+                //                sf::Vector2f(static_cast<float>(tile.source_x()
+                //                + 16),
+                //                  static_cast<float>(tile.source_y() + 16));
+                //              quad[3].texCoords =
+                //                sf::Vector2f(static_cast<float>(tile.source_x()),
+                //                  static_cast<float>(tile.source_y() + 16));
 
-              set_quad(quad, new_tileSize, raw_tileSize, tile);
+                set_quad(quad, new_tileSize, raw_tileSize, tile);
 
-              std::ranges::for_each(
-                quad, [&vg](auto &&vertex) { vg.vertices.append(vertex); });
-            });
-          if (vg.vertices.getVertexCount() != 0) {
-            ret.emplace_back(std::move(vg));
+                std::ranges::for_each(
+                  quad, [&vg](auto &&vertex) { vg.vertices.append(vertex); });
+              });
+            if (vg.vertices.getVertexCount() != 0) {
+              ret.emplace_back(std::move(vg));
+            }
           }
         }
       }
@@ -289,7 +317,8 @@ public:
   map_sprite(const open_viii::archive::FIFLFS<false> &field,
     open_viii::LangT                                  coo)
     : m_field(&field), m_coo(coo), m_mim(get_mim()), m_map(get_map()),
-      m_canvas(get_canvas()), m_unique_z_axis(get_unique_z_axis()),
+      m_canvas(get_canvas()), m_blend_modes(get_blend_modes()),
+      m_unique_z_axis(get_unique_z_axis()),
       m_bpp_and_palette(get_bpp_and_palette()), m_texture(get_textures()),
       m_vertex_groups(get_vertex_groups())
   {
@@ -298,6 +327,16 @@ public:
   void update_render_texture() const
   {
     local_draw(*m_render_texture, sf::RenderStates::Default);
+  }
+  static sf::BlendMode &GetBlendMode()
+  {
+    static auto BlendSubtract = sf::BlendMode{ sf::BlendMode::DstColor,// or One
+      sf::BlendMode::One,
+      sf::BlendMode::ReverseSubtract,
+      sf::BlendMode::One,
+      sf::BlendMode::OneMinusSrcAlpha,
+      sf::BlendMode::Add };
+    return BlendSubtract;
   }
   void local_draw(sf::RenderTarget &target, sf::RenderStates states) const
   {
@@ -308,6 +347,18 @@ public:
       m_vertex_groups, [&target, &states](const vertex_group &v) {
         if (!v.enabled) {
           return;
+        }
+
+        states.blendMode = sf::BlendAlpha;
+        if (v.blend_mode == open_viii::graphics::background::BlendModeT::add) {
+          states.blendMode = sf::BlendAdd;
+        } else if (v.blend_mode
+                   == open_viii::graphics::background::BlendModeT::half_add) {
+          states.blendMode = sf::BlendAdd;
+        } else if (v.blend_mode
+                   == open_viii::graphics::background::BlendModeT::subtract) {
+          states.blendMode = GetBlendMode();
+          // states.blendMode = sf::BlendMultiply;
         }
         // apply the tileset texture
         states.texture = v.texture;
@@ -326,12 +377,77 @@ public:
   }
   std::uint32_t width() const { return m_canvas.width(); }
   std::uint32_t height() const { return m_canvas.height(); }
-  static bool   ImGui_controls(bool changed,
-      map_sprite                   &ms,
-      int   &/*bpp_selected_item*/,
-      int   &/*palette_selected_item*/,
-      std::array<float, 2> &xy,
-      float                 scale_width = 0.0F)
+  template<typename... T>
+  requires(sizeof...(T) == 6U) static bool draw_drop_downs()
+  {
+    static constexpr std::array factor   = { "Zero",
+      "One",
+      "SrcColor",
+      "OneMinusSrcColor",
+      "DstColor",
+      "OneMinusDstColor",
+      "SrcAlpha",
+      "OneMinusSrcAlpha",
+      "DstAlpha",
+      "OneMinusDstAlpha" };
+    static constexpr std::array equation = {
+      "Add", "Subtract", "ReverseSubtract"//, "Min", "Max"
+    };
+    static constexpr std::array names = {
+      "colorSourceFactor",
+      "colorDestinationFactor",
+      "colorBlendEquation",
+      "alphaSourceFactor",
+      "alphaDestinationFactor",
+      "alphaBlendEquation",
+    };
+
+    static std::array<int, std::ranges::size(names)> values = {};
+    auto name  = std::ranges::begin(names);
+    auto value = std::ranges::begin(values);
+    static_assert(sizeof...(T) == std::ranges::size(names));
+    const auto result = std::ranges::any_of(
+      std::array{ ([](const char *const local_name, int &local_value) -> bool {
+        using Real_Factor   = sf::BlendMode::Factor;
+        using Real_Equation = sf::BlendMode::Equation;
+        if constexpr (std::is_same_v<T, Real_Factor>) {
+          return ImGui::Combo(local_name,
+            &local_value,
+            std::ranges::data(factor),
+            std::ranges::ssize(factor));
+        } else if constexpr (std::is_same_v<T, Real_Equation>) {
+          return ImGui::Combo(local_name,
+            &local_value,
+            std::ranges::data(equation),
+            std::ranges::ssize(equation));
+        } else {
+          return false;
+        }
+      }(*(name++), *(value++)))... },
+      std::identity());
+    if (result) {
+      value          = std::ranges::begin(values);
+      GetBlendMode() = sf::BlendMode{ (static_cast<T>(*(value++)))... };
+    }
+    return result;
+  }
+  static bool draw_drop_downs()
+  {
+    using Real_Factor   = sf::BlendMode::Factor;
+    using Real_Equation = sf::BlendMode::Equation;
+    return draw_drop_downs<Real_Factor,
+      Real_Factor,
+      Real_Equation,
+      Real_Factor,
+      Real_Factor,
+      Real_Equation>();
+  }
+  static bool ImGui_controls(bool changed,
+    map_sprite                   &ms,
+    int & /*bpp_selected_item*/,
+    int & /*palette_selected_item*/,
+    std::array<float, 2> &xy,
+    float                 scale_width = 0.0F)
   {
     static constexpr std::array bpp_items =
       open_viii::graphics::background::Mim::bpp_selections_c_str();
@@ -360,6 +476,9 @@ public:
     //      }
     //    }
 
+    if (draw_drop_downs()) {
+      ms.update_render_texture();
+    }
     format_imgui_text(
       "X: {:>9.3f} px  Width:  {:>4} px", ms.getPosition().x, ms.width());
     format_imgui_text(
