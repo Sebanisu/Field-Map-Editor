@@ -11,7 +11,7 @@ build_script:
       "%PYTHON%" -m pip install --user conan
       mkdir build
       cmake --version
-      cmake -S c:\projects\source -B build -G \"CodeBlocks - NMake Makefiles\" -DCMAKE_BUILD_TYPE:STRING=Release -DCPP_STARTER_USE_IMGUI=ON
+      cmake -S c:\projects\source -B build -G "CodeBlocks - NMake Makefiles" -DCMAKE_BUILD_TYPE:STRING=Release -DCPP_STARTER_USE_IMGUI=ON
       cmake --build build --target all --config "Release"
 test_script:
   - cmd: cd build && ctest -C Debug
