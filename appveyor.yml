@@ -11,7 +11,7 @@ build_script:
 
     "%PYTHON%" -m pip install --user conan
 
-    cmake -S c:\projects\source -B ./build -G "Visual Studio 16 2019" -DCMAKE_BUILD_TYPE:STRING=Release
+    cmake -S c:\projects\source -B ./build -G "Visual Studio 16 2019" -DCMAKE_BUILD_TYPE:STRING=Release -DCPP_STARTER_USE_IMGUI=ON
 
     cmake --build ./build --config "Release"
 

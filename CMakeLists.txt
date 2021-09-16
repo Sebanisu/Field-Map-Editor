@@ -1,5 +1,12 @@
 cmake_minimum_required(VERSION 3.18)
-
+function(SET_TARGET_PATHS target)
+  set_target_properties(${target}
+          PROPERTIES
+          ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/lib"
+          LIBRARY_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/lib"
+          RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/bin"
+          )
+endfunction()
 # Set the project name to your project name, my project isn't very descriptive
 project(myproject LANGUAGES C CXX)
 include(cmake/StandardProjectSettings.cmake)

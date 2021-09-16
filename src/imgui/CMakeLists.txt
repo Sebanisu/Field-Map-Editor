@@ -41,3 +41,4 @@ if (MSVC)
     target_compile_definitions(test_imgui
             PUBLIC _CRT_SECURE_NO_WARNINGS) # required by libpng
 endif ()
+SET_TARGET_PATHS(test_imgui)
