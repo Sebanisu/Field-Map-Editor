@@ -35,6 +35,7 @@ private:
   open_viii::graphics::background::Mim                     m_mim           = {};
   open_viii::graphics::background::Map                     m_map           = {};
   open_viii::graphics::Rectangle<std::uint32_t>            m_canvas        = {};
+  std::vector<std::uint8_t>                                m_unique_layers = {};
   std::vector<std::uint16_t>                               m_unique_z_axis = {};
   std::vector<open_viii::graphics::background::BlendModeT> m_blend_modes   = {};
   std::vector<std::pair<open_viii::graphics::BPPT, std::uint8_t>>
@@ -126,6 +127,24 @@ private:
     std::cout << '\n';
     return ret;
   }
+
+  std::vector<std::uint8_t> get_unique_layers()
+  {
+    std::vector<std::uint8_t> ret{};
+    m_map.visit_tiles([&ret](auto &&tiles) {
+      std::ranges::transform(tiles,
+        std::back_inserter(ret),
+        [](const auto &tile) { return tile.layer_id(); });
+      std::ranges::sort(ret, std::greater<>());
+      auto last = std::unique(ret.begin(), ret.end());
+      ret.erase(last, ret.end());
+    });
+    for (const auto z : ret) {
+      std::cout << +z << '\t';
+    }
+    std::cout << '\n';
+    return ret;
+  }
   std::vector<open_viii::graphics::background::BlendModeT> get_blend_modes()
   {
     std::vector<open_viii::graphics::background::BlendModeT> ret{};
@@ -133,7 +152,7 @@ private:
       std::ranges::transform(tiles,
         std::back_inserter(ret),
         [](const auto &tile) { return tile.blend_mode(); });
-      std::ranges::sort(ret, std::greater<>());
+      std::ranges::sort(ret, std::less<>());
       auto last = std::unique(ret.begin(), ret.end());
       ret.erase(last, ret.end());
     });
@@ -224,74 +243,80 @@ private:
       const auto raw_tileSize          = sf::Vector2u{ 16U, 16U };
 
       for (const auto &z : m_unique_z_axis) {
-        for (const auto &[bpp, palette] : m_bpp_and_palette) {
-          for (const auto &blend_mode : m_blend_modes) {
-            if (bpp.bpp24()) {
-              continue;
-            }
-            size_t     pos   = get_texture_pos(bpp, palette);
-            const auto width = m_mim.get_width(bpp);
-            // const auto height = m_mim.get_height();
-            if (width == 0U) {
-              continue;
-            }
-            tiles_type filtered = {};
-            std::copy_if(tiles.begin(),
-              tiles.end(),
-              std::back_inserter(filtered),
-              [&z, lbpp = bpp, lpalette = palette, blend_mode](
-                const auto &tile) -> bool {
-                return tile.z() == z && tile.depth() == lbpp
-                       && tile.palette_id() == lpalette
-                       && tile.blend_mode() == blend_mode;
-              });
-            if (std::empty(filtered)) {
-              continue;
-            }
-            vertex_group vg{};
-            vg.blend_mode = blend_mode;
-            vg.texture    = &m_texture->at(pos);
-            vg.vertices.setPrimitiveType(sf::Quads);
+        for (const auto &layer : m_unique_layers) {
+          for (const auto &[bpp, palette] : m_bpp_and_palette) {
+            for (const auto &blend_mode : m_blend_modes) {
+              if (bpp.bpp24()) {
+                continue;
+              }
+              size_t     pos   = get_texture_pos(bpp, palette);
+              const auto width = m_mim.get_width(bpp);
+              // const auto height = m_mim.get_height();
+              if (width == 0U) {
+                continue;
+              }
+              tiles_type filtered = {};
+              std::copy_if(tiles.begin(),
+                tiles.end(),
+                std::back_inserter(filtered),
+                [&z, lbpp = bpp, lpalette = palette, blend_mode, &layer](
+                  const auto &tile) -> bool {
+                  return tile.z() == z && tile.depth() == lbpp
+                         && tile.palette_id() == lpalette
+                         && tile.blend_mode() == blend_mode
+                         && tile.layer_id() == layer;
+                });
+              if (std::empty(filtered)) {
+                continue;
+              }
+              vertex_group vg{};
+              vg.blend_mode = blend_mode;
+              vg.texture    = &m_texture->at(pos);
+              vg.vertices.setPrimitiveType(sf::Quads);
 
-            std::ranges::for_each(filtered,
-              [&vg, &raw_tileSize, &new_tileSize, this](const tile_type &tile) {
-                auto quad = std::array<sf::Vertex, 4U>{};
-                //              quad[0].position = sf::Vector2f(
-                //                static_cast<float>(tile.x()),
-                //                static_cast<float>(tile.y()));
-                //              quad[1].position =
-                //              sf::Vector2f(static_cast<float>(tile.x() + 16),
-                //                static_cast<float>(tile.y()));
-                //              quad[2].position =
-                //              sf::Vector2f(static_cast<float>(tile.x() + 16),
-                //                static_cast<float>(tile.y() + 16));
-                //              quad[3].position =
-                //              sf::Vector2f(static_cast<float>(tile.x()),
-                //                static_cast<float>(tile.y() + 16));
-                //
-                //              // define its 4 texture coordinates
-                //              quad[0].texCoords =
-                //                sf::Vector2f(static_cast<float>(tile.source_x()),
-                //                  static_cast<float>(tile.source_y()));
-                //              quad[1].texCoords =
-                //                sf::Vector2f(static_cast<float>(tile.source_x()
-                //                + 16),
-                //                  static_cast<float>(tile.source_y()));
-                //              quad[2].texCoords =
-                //                sf::Vector2f(static_cast<float>(tile.source_x()
-                //                + 16),
-                //                  static_cast<float>(tile.source_y() + 16));
-                //              quad[3].texCoords =
-                //                sf::Vector2f(static_cast<float>(tile.source_x()),
-                //                  static_cast<float>(tile.source_y() + 16));
+              std::ranges::for_each(filtered,
+                [&vg, &raw_tileSize, &new_tileSize, this](
+                  const tile_type &tile) {
+                  auto quad = std::array<sf::Vertex, 4U>{};
+                  //              quad[0].position = sf::Vector2f(
+                  //                static_cast<float>(tile.x()),
+                  //                static_cast<float>(tile.y()));
+                  //              quad[1].position =
+                  //              sf::Vector2f(static_cast<float>(tile.x() +
+                  //              16),
+                  //                static_cast<float>(tile.y()));
+                  //              quad[2].position =
+                  //              sf::Vector2f(static_cast<float>(tile.x() +
+                  //              16),
+                  //                static_cast<float>(tile.y() + 16));
+                  //              quad[3].position =
+                  //              sf::Vector2f(static_cast<float>(tile.x()),
+                  //                static_cast<float>(tile.y() + 16));
+                  //
+                  //              // define its 4 texture coordinates
+                  //              quad[0].texCoords =
+                  //                sf::Vector2f(static_cast<float>(tile.source_x()),
+                  //                  static_cast<float>(tile.source_y()));
+                  //              quad[1].texCoords =
+                  //                sf::Vector2f(static_cast<float>(tile.source_x()
+                  //                + 16),
+                  //                  static_cast<float>(tile.source_y()));
+                  //              quad[2].texCoords =
+                  //                sf::Vector2f(static_cast<float>(tile.source_x()
+                  //                + 16),
+                  //                  static_cast<float>(tile.source_y() + 16));
+                  //              quad[3].texCoords =
+                  //                sf::Vector2f(static_cast<float>(tile.source_x()),
+                  //                  static_cast<float>(tile.source_y() + 16));
 
-                set_quad(quad, new_tileSize, raw_tileSize, tile);
+                  set_quad(quad, new_tileSize, raw_tileSize, tile);
 
-                std::ranges::for_each(
-                  quad, [&vg](auto &&vertex) { vg.vertices.append(vertex); });
-              });
-            if (vg.vertices.getVertexCount() != 0) {
-              ret.emplace_back(std::move(vg));
+                  std::ranges::for_each(
+                    quad, [&vg](auto &&vertex) { vg.vertices.append(vertex); });
+                });
+              if (vg.vertices.getVertexCount() != 0) {
+                ret.emplace_back(std::move(vg));
+              }
             }
           }
         }
@@ -318,6 +343,7 @@ public:
     open_viii::LangT                                  coo)
     : m_field(&field), m_coo(coo), m_mim(get_mim()), m_map(get_map()),
       m_canvas(get_canvas()), m_blend_modes(get_blend_modes()),
+      m_unique_layers(get_unique_layers()),
       m_unique_z_axis(get_unique_z_axis()),
       m_bpp_and_palette(get_bpp_and_palette()), m_texture(get_textures()),
       m_vertex_groups(get_vertex_groups())
