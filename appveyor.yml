@@ -19,7 +19,7 @@ build_script:
 
       cmake --version
 
-      cmake -S c:\projects\source -B build -G "CodeBlocks - NMake Makefiles" -DCMAKE_BUILD_TYPE:STRING=Release -DCPP_STARTER_USE_IMGUI=ON
+      cmake -S c:\projects\source -B build -G "Ninja Multi-Config" -DCMAKE_BUILD_TYPE:STRING=Release -DCPP_STARTER_USE_IMGUI=ON
 
       cmake --build build --target all --config "Release"
 
