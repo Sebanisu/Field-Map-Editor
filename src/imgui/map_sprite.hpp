@@ -440,12 +440,12 @@ public:
           return ImGui::Combo(local_name,
             &local_value,
             std::ranges::data(factor),
-            std::ranges::ssize(factor));
+            static_cast<int>(std::ranges::ssize(factor)));
         } else if constexpr (std::is_same_v<T, Real_Equation>) {
           return ImGui::Combo(local_name,
             &local_value,
             std::ranges::data(equation),
-            std::ranges::ssize(equation));
+            static_cast<int>(std::ranges::ssize(equation)));
         } else {
           return false;
         }
