@@ -19,9 +19,9 @@ build_script:
 
       cmake --version
 
-      cmake -S c:\projects\source -B build -G "Ninja Multi-Config" -DCMAKE_BUILD_TYPE:STRING=Release -DCPP_STARTER_USE_IMGUI=ON
+      cmake -S c:\projects\source -B ./build -G "Visual Studio 16 2019" -DCMAKE_BUILD_TYPE:STRING=Release -DCPP_STARTER_USE_IMGUI=ON
 
-      cmake --build build --target all --config "Release"
+      cmake --build ./build --target all --config "Release"
 
 test_script:
   - cmd: cd build && ctest -C Debug
