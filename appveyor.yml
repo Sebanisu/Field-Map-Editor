@@ -3,27 +3,18 @@ image:
 clone_folder: c:\projects\source
 
 environment:
-  PYTHON: "C:\\Python38-x64\\python.exe"
-
-
-init:
-  - cmd: '"C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\Tools\VsDevCmd.bat"'
+    PYTHON: "C:\\Python38-x64\\python.exe"
 
 build_script:
-  - cmd: >-
-      set PATH=%PATH%;C:\Users\appveyor\AppData\Roaming\Python\Python38\Scripts
+- cmd: >-
+    set PATH=%PATH%;C:\Users\appveyor\AppData\Roaming\Python\Python38\Scripts
 
-      "%PYTHON%" -m pip install --user conan
+    "%PYTHON%" -m pip install --user conan
+  mkdir build
+  
+    cmake -S c:\projects\source -B ./build -G "Visual Studio 16 2019" -DCMAKE_BUILD_TYPE:STRING=Release -DCPP_STARTER_USE_IMGUI=ON
 
-      conan remove "*" -s -b -f
-
-      mkdir build
-
-      cmake --version
-
-      cmake -S c:\projects\source -B ./build -G "Visual Studio 16 2019" -DCMAKE_BUILD_TYPE:STRING=Release -DCPP_STARTER_USE_IMGUI=ON
-
-      cmake --build ./build --config "Release"
+    cmake --build ./build --config "Release"
 
 test_script:
-  - cmd: cd build && ctest -C Debug
+- cmd: cd build && ctest -C Debug
