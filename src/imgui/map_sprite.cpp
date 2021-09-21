@@ -1,7 +1,4 @@
 #include "map_sprite.hpp"
-//
-// Created by pcvii on 9/20/2021.
-//
 open_viii::graphics::background::Mim map_sprite::get_mim() const
 {
   auto lang_name = "_" + std::string(open_viii::LangCommon::to_string(m_coo))
@@ -10,6 +7,7 @@ open_viii::graphics::background::Mim map_sprite::get_mim() const
              open_viii::graphics::background::Mim::EXT }),
     m_field->get_base_name() };
 }
+
 open_viii::graphics::background::Map map_sprite::get_map() const
 {
   auto lang_name = "_" + std::string(open_viii::LangCommon::to_string(m_coo))
@@ -20,13 +18,15 @@ open_viii::graphics::background::Map map_sprite::get_map() const
     true,
     true };
 }
+
 map_sprite::colors_type map_sprite::get_colors(open_viii::graphics::BPPT bpp,
   std::uint8_t palette,
-  bool         draw_palette)
+  bool         draw_palette) const
 {
   return m_mim.get_colors<open_viii::graphics::Color32RGBA>(
     bpp, palette, draw_palette);
 }
+
 constexpr std::size_t map_sprite::get_texture_pos(open_viii::graphics::BPPT bpp,
   std::uint8_t palette)
 {
@@ -41,8 +41,15 @@ constexpr std::size_t map_sprite::get_texture_pos(open_viii::graphics::BPPT bpp,
   return MAX_TEXTURES - 1;
   // 16bpp doesn't have palettes.
 }
+
+const sf::Texture *map_sprite::get_texture(const open_viii::graphics::BPPT bpp,
+  const std::uint8_t palette) const
+{
+  return &m_texture->at(get_texture_pos(bpp, palette));
+}
+
 std::unique_ptr<std::array<sf::Texture, map_sprite::MAX_TEXTURES>>
-  map_sprite::get_textures()
+  map_sprite::get_textures() const
 {
   auto ret = std::make_unique<std::array<sf::Texture, MAX_TEXTURES>>(
     std::array<sf::Texture, MAX_TEXTURES>{});
@@ -63,7 +70,8 @@ std::unique_ptr<std::array<sf::Texture, map_sprite::MAX_TEXTURES>>
   std::cout << '\n';
   return ret;
 }
-std::vector<std::uint16_t> map_sprite::get_unique_z_axis()
+
+std::vector<std::uint16_t> map_sprite::get_unique_z_axis() const
 {
   std::vector<std::uint16_t> ret{};
   m_map.visit_tiles([&ret](auto &&tiles) {
@@ -80,7 +88,8 @@ std::vector<std::uint16_t> map_sprite::get_unique_z_axis()
   std::cout << '\n';
   return ret;
 }
-std::vector<std::uint8_t> map_sprite::get_unique_layers()
+
+std::vector<std::uint8_t> map_sprite::get_unique_layers() const
 {
   std::vector<std::uint8_t> ret{};
   m_map.visit_tiles([&ret](auto &&tiles) {
@@ -97,8 +106,9 @@ std::vector<std::uint8_t> map_sprite::get_unique_layers()
   std::cout << '\n';
   return ret;
 }
+
 std::vector<open_viii::graphics::background::BlendModeT>
-  map_sprite::get_blend_modes()
+  map_sprite::get_blend_modes() const
 {
   std::vector<open_viii::graphics::background::BlendModeT> ret{};
   m_map.visit_tiles([&ret](auto &&tiles) {
@@ -115,8 +125,9 @@ std::vector<open_viii::graphics::background::BlendModeT>
   std::cout << '\n';
   return ret;
 }
+
 std::vector<std::pair<open_viii::graphics::BPPT, std::uint8_t>>
-  map_sprite::get_bpp_and_palette()
+  map_sprite::get_bpp_and_palette() const
 {
   std::vector<std::pair<open_viii::graphics::BPPT, std::uint8_t>> ret{};
   m_map.visit_tiles([&ret](auto &&tiles) {
@@ -130,14 +141,18 @@ std::vector<std::pair<open_viii::graphics::BPPT, std::uint8_t>>
   });
   return ret;
 }
-void map_sprite::set_quad(auto &&quad,
-  const sf::Vector2u            &new_tileSize,
-  const sf::Vector2u            &raw_tileSize,
-  auto                           source_x,
-  auto                           source_y,
-  auto                           x,
-  auto                           y) const
+
+[[nodiscard]] sf::VertexArray map_sprite::get_quad(
+  const sf::Vector2u &new_tileSize,
+  const sf::Vector2u &raw_tileSize,
+  auto                source_x,
+  auto                source_y,
+  auto                x,
+  auto                y) const
 {
+  sf::VertexArray quad{};
+  quad.resize(4);
+  quad.setPrimitiveType(sf::Quads);
   auto i  = x / static_cast<decltype(x)>(raw_tileSize.x);
   auto j  = y / static_cast<decltype(y)>(raw_tileSize.y);
   auto tu = (source_x) / static_cast<decltype(source_x)>(raw_tileSize.x);
@@ -169,15 +184,17 @@ void map_sprite::set_quad(auto &&quad,
   quad[3].texCoords = sf::Vector2f(
     static_cast<float>(tu * static_cast<decltype(tu)>(new_tileSize.x)),
     static_cast<float>((tv + 1) * static_cast<decltype(tv)>(new_tileSize.y)));
+  return quad;
 }
-void map_sprite::set_quad(auto &&quad,
-  const sf::Vector2u            &new_tileSize,
-  const sf::Vector2u            &raw_tileSize,
-  auto                         &&tile) const
+
+[[nodiscard]] sf::VertexArray map_sprite::get_quad(
+  const sf::Vector2u &new_tileSize,
+  const sf::Vector2u &raw_tileSize,
+  auto              &&tile) const
 {
+
   using tile_type = std::decay_t<decltype(tile)>;
-  set_quad(quad,
-    new_tileSize,
+  return get_quad(new_tileSize,
     raw_tileSize,
     tile.source_x()
       + tile.texture_id() * tile_type::texture_page_width(tile.depth()),
@@ -185,95 +202,115 @@ void map_sprite::set_quad(auto &&quad,
     tile.x(),
     tile.y());
 }
-std::vector<map_sprite::vertex_group> map_sprite::get_vertex_groups(
-  const sf::Vector2u new_tileSize)
+
+// std::vector<map_sprite::vertex_group> map_sprite::get_vertex_groups(
+//   const sf::Vector2u new_tileSize)
+//{
+//   std::vector<vertex_group> ret{};
+//   m_map.visit_tiles([&ret, this, &new_tileSize](auto &&tiles) {
+//     using tiles_type                 = std::decay_t<decltype(tiles)>;
+//     using tile_type [[maybe_unused]] = typename tiles_type::value_type;
+//     const auto raw_tileSize          = sf::Vector2u{ 16U, 16U };
+//
+//     for (const auto &z : m_unique_z_axis) {
+//       for (const auto &layer : m_unique_layers) {
+//         for (const auto &[bpp, palette] : m_bpp_and_palette) {
+//           for (const auto &blend_mode : m_blend_modes) {
+//             if (bpp.bpp24()) {
+//               continue;
+//             }
+//             size_t     pos   = get_texture_pos(bpp, palette);
+//             const auto width = m_mim.get_width(bpp);
+//             // const auto height = m_mim.get_height();
+//             if (width == 0U) {
+//               continue;
+//             }
+//             tiles_type filtered = {};
+//             std::copy_if(tiles.begin(),
+//               tiles.end(),
+//               std::back_inserter(filtered),
+//               [&z, lbpp = bpp, lpalette = palette, blend_mode, &layer](
+//                 const auto &tile) -> bool {
+//                 return tile.z() == z && tile.depth() == lbpp
+//                        && tile.palette_id() == lpalette
+//                        && tile.blend_mode() == blend_mode
+//                        && tile.layer_id() == layer;
+//               });
+//             if (std::empty(filtered)) {
+//               continue;
+//             }
+//             vertex_group vg{};
+//             vg.blend_mode = blend_mode;
+//             vg.texture    = &m_texture->at(pos);
+//             vg.vertices.setPrimitiveType(sf::Quads);
+//
+//             std::ranges::for_each(filtered,
+//               [&vg, &raw_tileSize, &new_tileSize, this](const tile_type
+//               &tile) {
+//                 auto quad = std::array<sf::Vertex, 4U>{};
+//                 get_quad(quad, new_tileSize, raw_tileSize, tile);
+//
+//                 std::ranges::for_each(
+//                   quad, [&vg](auto &&vertex) { vg.vertices.append(vertex);
+//                   });
+//               });
+//             if (vg.vertices.getVertexCount() != 0) {
+//               ret.emplace_back(std::move(vg));
+//             }
+//           }
+//         }
+//       }
+//     }
+//   });
+//   return ret;
+// }
+void set_color(sf::VertexArray &v, const sf::Color &color)
 {
-  std::vector<vertex_group> ret{};
-  m_map.visit_tiles([&ret, this, &new_tileSize](auto &&tiles) {
-    using tiles_type                 = std::decay_t<decltype(tiles)>;
-    using tile_type [[maybe_unused]] = typename tiles_type::value_type;
-    const auto raw_tileSize          = sf::Vector2u{ 16U, 16U };
-
-    for (const auto &z : m_unique_z_axis) {
-      for (const auto &layer : m_unique_layers) {
-        for (const auto &[bpp, palette] : m_bpp_and_palette) {
-          for (const auto &blend_mode : m_blend_modes) {
-            if (bpp.bpp24()) {
-              continue;
-            }
-            size_t     pos   = get_texture_pos(bpp, palette);
-            const auto width = m_mim.get_width(bpp);
-            // const auto height = m_mim.get_height();
-            if (width == 0U) {
-              continue;
-            }
-            tiles_type filtered = {};
-            std::copy_if(tiles.begin(),
-              tiles.end(),
-              std::back_inserter(filtered),
-              [&z, lbpp = bpp, lpalette = palette, blend_mode, &layer](
-                const auto &tile) -> bool {
-                return tile.z() == z && tile.depth() == lbpp
-                       && tile.palette_id() == lpalette
-                       && tile.blend_mode() == blend_mode
-                       && tile.layer_id() == layer;
-              });
-            if (std::empty(filtered)) {
-              continue;
-            }
-            vertex_group vg{};
-            vg.blend_mode = blend_mode;
-            vg.texture    = &m_texture->at(pos);
-            vg.vertices.setPrimitiveType(sf::Quads);
-
-            std::ranges::for_each(filtered,
-              [&vg, &raw_tileSize, &new_tileSize, this](const tile_type &tile) {
-                auto quad = std::array<sf::Vertex, 4U>{};
-                set_quad(quad, new_tileSize, raw_tileSize, tile);
-
-                std::ranges::for_each(
-                  quad, [&vg](auto &&vertex) { vg.vertices.append(vertex); });
-              });
-            if (vg.vertices.getVertexCount() != 0) {
-              ret.emplace_back(std::move(vg));
-            }
-          }
-        }
-      }
-    }
-  });
-  return ret;
+  for (std::size_t i{}; i != v.getVertexCount(); ++i) v[i].color = color;
 }
 void map_sprite::local_draw(sf::RenderTarget &target,
   sf::RenderStates                            states) const
 {
-  // apply the transform
-  // states.transform *= getTransform();
+  const auto new_tileSize = sf::Vector2u{ 16U, 16U };
   target.clear(sf::Color::Transparent);
-  std::ranges::for_each(
-    m_vertex_groups, [&target, &states](const vertex_group &v) {
-      if (!v.enabled) {
-        return;
-      }
+  m_map.visit_tiles([this, &new_tileSize, &states, &target](auto &&tiles) {
+    for (const auto &z : m_unique_z_axis) {
+      std::for_each(std::rbegin(tiles),
+        std::rend(tiles),
+        [this, &new_tileSize, &states, &target, &z](const auto &tile) {
+          if (tile.z() != z) {
+            return;
+          }
+          const auto raw_tileSize = sf::Vector2u{ 16U, 16U };
+          auto       quad         = get_quad(new_tileSize, raw_tileSize, tile);
+          states.blendMode        = sf::BlendAlpha;
+          if (tile.blend_mode()
+              == open_viii::graphics::background::BlendModeT::add) {
+            states.blendMode = sf::BlendAdd;
+          } else if (tile.blend_mode()
+                     == open_viii::graphics::background::BlendModeT::half_add) {
+            states.blendMode = sf::BlendAdd;
+            set_color(quad, { 127, 127, 127, 127 });// 50% alpha
+          } else if (tile.blend_mode()
+                     == open_viii::graphics::background::BlendModeT::
+                       quarter_add) {
+            states.blendMode = sf::BlendAdd;
+            set_color(quad, { 63, 63, 63, 63 });// 25% alpha
+          } else if (tile.blend_mode()
+                     == open_viii::graphics::background::BlendModeT::subtract) {
+            states.blendMode = GetBlendSubtract();
+            // states.blendMode = sf::BlendMultiply;
+          }
+          // apply the tileset texture
+          states.texture = get_texture(tile.depth(), tile.palette_id());
 
-      states.blendMode = sf::BlendAlpha;
-      if (v.blend_mode == open_viii::graphics::background::BlendModeT::add) {
-        states.blendMode = sf::BlendAdd;
-      } else if (v.blend_mode
-                 == open_viii::graphics::background::BlendModeT::half_add) {
-        states.blendMode = sf::BlendAdd;
-      } else if (v.blend_mode
-                 == open_viii::graphics::background::BlendModeT::subtract) {
-        states.blendMode = GetBlendSubtract();
-        // states.blendMode = sf::BlendMultiply;
-      }
-      // apply the tileset texture
-      states.texture = v.texture;
-
-      // draw the vertex array
-      target.draw(v.vertices, states);
-    });
+          // draw the vertex array
+          target.draw(quad, states);
+        });
+    }
+  });
 }
+
 sf::BlendMode &map_sprite::GetBlendSubtract()
 {
   static auto BlendSubtract = sf::BlendMode{ sf::BlendMode::DstColor,// or One
@@ -284,15 +321,18 @@ sf::BlendMode &map_sprite::GetBlendSubtract()
     sf::BlendMode::Add };
   return BlendSubtract;
 }
+
 map_sprite map_sprite::with_coo(const open_viii::LangT coo) const
 {
   return { *m_field, coo };
 }
+
 map_sprite map_sprite::with_field(
-  const open_viii::archive::FIFLFS<false> &field)
+  const open_viii::archive::FIFLFS<false> &field) const
 {
   return { field, m_coo };
 }
+
 bool map_sprite::draw_drop_downs()
 {
   using Real_Factor   = sf::BlendMode::Factor;
@@ -304,6 +344,7 @@ bool map_sprite::draw_drop_downs()
     Real_Factor,
     Real_Equation>();
 }
+
 bool map_sprite::ImGui_controls(bool changed,
   map_sprite                        &ms,
   int &,
@@ -332,21 +373,19 @@ bool map_sprite::ImGui_controls(bool changed,
 
   return changed;
 }
+
 void map_sprite::draw(sf::RenderTarget &target, sf::RenderStates states) const
 {
   // apply the transform
   states.transform *= getTransform();
   m_render_texture->display();
   states.texture = &m_render_texture->getTexture();
-  sf::VertexArray out{};
-  out.setPrimitiveType(sf::Quads);
-  out.resize(4U);
-  auto quad = std::span<sf::Vertex>(&out[0], 4);
-  auto size = sf::Vector2u(width(), height());
-  set_quad(quad, size, size, 0, 0, 0, 0);
+  auto size      = sf::Vector2u(width(), height());
+  auto quad      = get_quad(size, size, 0, 0, 0, 0);
   // draw the vertex array
-  target.draw(out, states);
+  target.draw(quad, states);
 }
+
 template<typename... T>
 requires(sizeof...(T) == 6U) bool map_sprite::draw_drop_downs()
 {
@@ -360,9 +399,11 @@ requires(sizeof...(T) == 6U) bool map_sprite::draw_drop_downs()
     "OneMinusSrcAlpha",
     "DstAlpha",
     "OneMinusDstAlpha" };
+
   static constexpr std::array equation = {
     "Add", "Subtract", "ReverseSubtract"//, "Min", "Max"
   };
+
   static constexpr std::array names = {
     "colorSourceFactor",
     "colorDestinationFactor",
