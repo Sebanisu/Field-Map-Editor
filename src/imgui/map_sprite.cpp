@@ -1,22 +1,31 @@
 #include "map_sprite.hpp"
+#include "append_inserter.hpp"
+#include "imgui_format_text.hpp"
+#include <imgui.h>
 open_viii::graphics::background::Mim map_sprite::get_mim() const
 {
-  auto lang_name = "_" + std::string(open_viii::LangCommon::to_string(m_coo))
-                   + std::string(open_viii::graphics::background::Mim::EXT);
-  return { m_field->get_entry_data({ std::string_view(lang_name),
-             open_viii::graphics::background::Mim::EXT }),
-    m_field->get_base_name() };
+  if(m_field != nullptr) {
+    auto lang_name = "_" + std::string(open_viii::LangCommon::to_string(m_coo))
+                     + std::string(open_viii::graphics::background::Mim::EXT);
+    return { m_field->get_entry_data({ std::string_view(lang_name),
+               open_viii::graphics::background::Mim::EXT }),
+      m_field->get_base_name() };
+  }
+  return {};
 }
 
 open_viii::graphics::background::Map map_sprite::get_map() const
 {
-  auto lang_name = "_" + std::string(open_viii::LangCommon::to_string(m_coo))
-                   + std::string(open_viii::graphics::background::Map::EXT);
-  return open_viii::graphics::background::Map{ m_mim.mim_type(),
-    m_field->get_entry_data({ std::string_view(lang_name),
-      open_viii::graphics::background::Map::EXT }),
-    true,
-    true };
+  if(m_field != nullptr) {
+    auto lang_name = "_" + std::string(open_viii::LangCommon::to_string(m_coo))
+                     + std::string(open_viii::graphics::background::Map::EXT);
+    return open_viii::graphics::background::Map{ m_mim.mim_type(),
+      m_field->get_entry_data({ std::string_view(lang_name),
+        open_viii::graphics::background::Map::EXT }),
+      true,
+      true };
+  }
+  return {};
 }
 
 map_sprite::colors_type map_sprite::get_colors(open_viii::graphics::BPPT bpp,
@@ -142,7 +151,7 @@ std::vector<std::pair<open_viii::graphics::BPPT, std::uint8_t>>
   return ret;
 }
 
-[[nodiscard]] sf::VertexArray map_sprite::get_quad(
+[[nodiscard]] std::array<sf::Vertex, 4U> map_sprite::get_triangle_strip(
   const sf::Vector2u &new_tileSize,
   const sf::Vector2u &raw_tileSize,
   auto                source_x,
@@ -150,51 +159,53 @@ std::vector<std::pair<open_viii::graphics::BPPT, std::uint8_t>>
   auto                x,
   auto                y) const
 {
-  sf::VertexArray quad{};
-  quad.resize(4);
-  quad.setPrimitiveType(sf::Quads);
   auto i  = x / static_cast<decltype(x)>(raw_tileSize.x);
   auto j  = y / static_cast<decltype(y)>(raw_tileSize.y);
   auto tu = (source_x) / static_cast<decltype(source_x)>(raw_tileSize.x);
   auto tv = source_y / static_cast<decltype(source_y)>(raw_tileSize.y);
-
-  quad[0].position = sf::Vector2f(
-    static_cast<float>(i * static_cast<decltype(i)>(new_tileSize.x)),
-    static_cast<float>(j * static_cast<decltype(j)>(new_tileSize.y)));
-  quad[1].position = sf::Vector2f(
-    static_cast<float>((i + 1) * static_cast<decltype(i)>(new_tileSize.x)),
-    static_cast<float>(j * static_cast<decltype(j)>(new_tileSize.y)));
-  quad[2].position = sf::Vector2f(
-    static_cast<float>((i + 1) * static_cast<decltype(i)>(new_tileSize.x)),
-    static_cast<float>((j + 1) * static_cast<decltype(j)>(new_tileSize.y)));
-  quad[3].position = sf::Vector2f(
-    static_cast<float>(i * static_cast<decltype(i)>(new_tileSize.x)),
-    static_cast<float>((j + 1) * static_cast<decltype(j)>(new_tileSize.y)));
-
-  // define its 4 texture coordinates
-  quad[0].texCoords = sf::Vector2f(
-    static_cast<float>(tu * static_cast<decltype(tu)>(new_tileSize.x)),
-    static_cast<float>(tv * static_cast<decltype(tv)>(new_tileSize.y)));
-  quad[1].texCoords = sf::Vector2f(
-    static_cast<float>((tu + 1) * static_cast<decltype(tu)>(new_tileSize.x)),
-    static_cast<float>(tv * static_cast<decltype(tv)>(new_tileSize.y)));
-  quad[2].texCoords = sf::Vector2f(
-    static_cast<float>((tu + 1) * static_cast<decltype(tu)>(new_tileSize.x)),
-    static_cast<float>((tv + 1) * static_cast<decltype(tv)>(new_tileSize.y)));
-  quad[3].texCoords = sf::Vector2f(
-    static_cast<float>(tu * static_cast<decltype(tu)>(new_tileSize.x)),
-    static_cast<float>((tv + 1) * static_cast<decltype(tv)>(new_tileSize.y)));
-  return quad;
+  return std::array{
+    sf::Vertex{
+      sf::Vector2f{
+        static_cast<float>((i + 1) * static_cast<decltype(i)>(new_tileSize.x)),
+        static_cast<float>(j * static_cast<decltype(j)>(new_tileSize.y)) },
+      sf::Vector2f{ static_cast<float>(
+                      (tu + 1) * static_cast<decltype(tu)>(new_tileSize.x)),
+        static_cast<float>(tv * static_cast<decltype(tv)>(new_tileSize.y)) } },
+    sf::Vertex{
+      sf::Vector2f{
+        static_cast<float>(i * static_cast<decltype(i)>(new_tileSize.x)),
+        static_cast<float>(j * static_cast<decltype(j)>(new_tileSize.y)) },
+      sf::Vector2f{
+        static_cast<float>(tu * static_cast<decltype(tu)>(new_tileSize.x)),
+        static_cast<float>(tv * static_cast<decltype(tv)>(new_tileSize.y)) } },
+    sf::Vertex{
+      sf::Vector2f{
+        static_cast<float>((i + 1) * static_cast<decltype(i)>(new_tileSize.x)),
+        static_cast<float>(
+          (j + 1) * static_cast<decltype(j)>(new_tileSize.y)) },
+      sf::Vector2f{ static_cast<float>(
+                      (tu + 1) * static_cast<decltype(tu)>(new_tileSize.x)),
+        static_cast<float>(
+          (tv + 1) * static_cast<decltype(tv)>(new_tileSize.y)) } },
+    sf::Vertex{ sf::Vector2f{ static_cast<float>(
+                                i * static_cast<decltype(i)>(new_tileSize.x)),
+                  static_cast<float>(
+                    (j + 1) * static_cast<decltype(j)>(new_tileSize.y)) },
+      sf::Vector2f{
+        static_cast<float>(tu * static_cast<decltype(tu)>(new_tileSize.x)),
+        static_cast<float>(
+          (tv + 1) * static_cast<decltype(tv)>(new_tileSize.y)) } }
+  };
 }
 
-[[nodiscard]] sf::VertexArray map_sprite::get_quad(
+[[nodiscard]] std::array<sf::Vertex, 4U> map_sprite::get_triangle_strip(
   const sf::Vector2u &new_tileSize,
   const sf::Vector2u &raw_tileSize,
   auto              &&tile) const
 {
 
   using tile_type = std::decay_t<decltype(tile)>;
-  return get_quad(new_tileSize,
+  return get_triangle_strip(new_tileSize,
     raw_tileSize,
     tile.source_x()
       + tile.texture_id() * tile_type::texture_page_width(tile.depth()),
@@ -264,9 +275,11 @@ std::vector<std::pair<open_viii::graphics::BPPT, std::uint8_t>>
 //   });
 //   return ret;
 // }
-void set_color(sf::VertexArray &v, const sf::Color &color)
+void set_color(std::array<sf::Vertex, 4U> &vertices, const sf::Color &color)
 {
-  for (std::size_t i{}; i != v.getVertexCount(); ++i) v[i].color = color;
+  for (auto &vertex : vertices) {
+    vertex.color = color;
+  }
 }
 void map_sprite::local_draw(sf::RenderTarget &target,
   sf::RenderStates                            states) const
@@ -282,7 +295,7 @@ void map_sprite::local_draw(sf::RenderTarget &target,
             return;
           }
           const auto raw_tileSize = sf::Vector2u{ 16U, 16U };
-          auto       quad         = get_quad(new_tileSize, raw_tileSize, tile);
+          auto       quad         = get_triangle_strip(new_tileSize, raw_tileSize, tile);
           states.blendMode        = sf::BlendAlpha;
           if (tile.blend_mode()
               == open_viii::graphics::background::BlendModeT::add) {
@@ -305,10 +318,11 @@ void map_sprite::local_draw(sf::RenderTarget &target,
           states.texture = get_texture(tile.depth(), tile.palette_id());
 
           // draw the vertex array
-          target.draw(quad, states);
+          target.draw(quad.data(),quad.size(),sf::TriangleStrip, states);
         });
     }
   });
+
 }
 
 sf::BlendMode &map_sprite::GetBlendSubtract()
@@ -333,112 +347,120 @@ map_sprite map_sprite::with_field(
   return { field, m_coo };
 }
 
-bool map_sprite::draw_drop_downs()
-{
-  using Real_Factor   = sf::BlendMode::Factor;
-  using Real_Equation = sf::BlendMode::Equation;
-  return draw_drop_downs<Real_Factor,
-    Real_Factor,
-    Real_Equation,
-    Real_Factor,
-    Real_Factor,
-    Real_Equation>();
-}
+// bool map_sprite::draw_drop_downs()
+//{
+//   using Real_Factor   = sf::BlendMode::Factor;
+//   using Real_Equation = sf::BlendMode::Equation;
+//   return draw_drop_downs<Real_Factor,
+//     Real_Factor,
+//     Real_Equation,
+//     Real_Factor,
+//     Real_Factor,
+//     Real_Equation>();
+// }
 
-bool map_sprite::ImGui_controls(bool changed,
-  map_sprite                        &ms,
-  int &,
-  int &,
-  std::array<float, 2> &xy,
-  float                 scale_width)
-{
-  static constexpr std::array bpp_items =
-    open_viii::graphics::background::Mim::bpp_selections_c_str();
-  static constexpr std::array palette_items =
-    open_viii::graphics::background::Mim::palette_selections_c_str();
-
-
-  if (draw_drop_downs()) {
-    ms.update_render_texture();
-  }
-  format_imgui_text(
-    "X: {:>9.3f} px  Width:  {:>4} px", ms.getPosition().x, ms.width());
-  format_imgui_text(
-    "Y: {:>9.3f} px  Height: {:>4} px", ms.getPosition().y, ms.height());
-  if (ImGui::SliderFloat2("Adjust", xy.data(), -1.0F, 0.0F) || changed) {
-    ms.setPosition(xy[0] * (static_cast<float>(ms.width()) - scale_width),
-      xy[1] * static_cast<float>(ms.height()));
-    changed = true;
-  }
-
-  return changed;
-}
+// bool map_sprite::ImGui_controls(bool changed,
+//   map_sprite                        &ms,
+//   int &,
+//   int &,
+//   std::array<float, 2> &xy,
+//   float                 scale_width)
+//{
+//   static constexpr std::array bpp_items =
+//     open_viii::graphics::background::Mim::bpp_selections_c_str();
+//   static constexpr std::array palette_items =
+//     open_viii::graphics::background::Mim::palette_selections_c_str();
+//
+//
+////  if (draw_drop_downs()) {
+////    ms.update_render_texture();
+////  }
+//
+//
+//  return changed;
+//}
 
 void map_sprite::draw(sf::RenderTarget &target, sf::RenderStates states) const
 {
   // apply the transform
   states.transform *= getTransform();
-  m_render_texture->display();
   states.texture = &m_render_texture->getTexture();
   auto size      = sf::Vector2u(width(), height());
-  auto quad      = get_quad(size, size, 0, 0, 0, 0);
+  auto quad      = get_triangle_strip(size, size, 0, 0, 0, 0);
   // draw the vertex array
-  target.draw(quad, states);
+  target.draw(quad.data(),quad.size(),sf::TriangleStrip, states);
 }
-
-template<typename... T>
-requires(sizeof...(T) == 6U) bool map_sprite::draw_drop_downs()
+void map_sprite::update_render_texture() const
 {
-  static constexpr std::array factor   = { "Zero",
-    "One",
-    "SrcColor",
-    "OneMinusSrcColor",
-    "DstColor",
-    "OneMinusDstColor",
-    "SrcAlpha",
-    "OneMinusSrcAlpha",
-    "DstAlpha",
-    "OneMinusDstAlpha" };
-
-  static constexpr std::array equation = {
-    "Add", "Subtract", "ReverseSubtract"//, "Min", "Max"
-  };
-
-  static constexpr std::array names = {
-    "colorSourceFactor",
-    "colorDestinationFactor",
-    "colorBlendEquation",
-    "alphaSourceFactor",
-    "alphaDestinationFactor",
-    "alphaBlendEquation",
-  };
-
-  static std::array<int, std::ranges::size(names)> values = {};
-  auto name  = std::ranges::begin(names);
-  auto value = std::ranges::begin(values);
-  static_assert(sizeof...(T) == std::ranges::size(names));
-  const auto result = std::ranges::any_of(
-    std::array{ ([](const char *const local_name, int &local_value) -> bool {
-      using Real_Factor   = sf::BlendMode::Factor;
-      using Real_Equation = sf::BlendMode::Equation;
-      if constexpr (std::is_same_v<T, Real_Factor>) {
-        return ImGui::Combo(local_name,
-          &local_value,
-          std::ranges::data(factor),
-          static_cast<int>(std::ranges::ssize(factor)));
-      } else if constexpr (std::is_same_v<T, Real_Equation>) {
-        return ImGui::Combo(local_name,
-          &local_value,
-          std::ranges::data(equation),
-          static_cast<int>(std::ranges::ssize(equation)));
-      } else {
-        return false;
-      }
-    }(*(name++), *(value++)))... },
-    std::identity());
-  if (result) {
-    value              = std::ranges::begin(values);
-    GetBlendSubtract() = sf::BlendMode{ (static_cast<T>(*(value++)))... };
+  if (m_render_texture) {
+    local_draw(*m_render_texture, sf::RenderStates::Default);
+    m_render_texture->display();
   }
-  return result;
 }
+void map_sprite::save(const std::filesystem::path &path) const
+{
+  if (!m_render_texture) {
+    return;
+  }
+  const auto image = m_render_texture->getTexture().copyToImage();
+  if (!image.saveToFile(path.string())) {
+    std::cerr << "failure to save file:" << path << std::endl;
+  }
+}
+
+// template<typename... T>
+// requires(sizeof...(T) == 6U) bool map_sprite::draw_drop_downs()
+//{
+//   static constexpr std::array factor   = { "Zero",
+//     "One",
+//     "SrcColor",
+//     "OneMinusSrcColor",
+//     "DstColor",
+//     "OneMinusDstColor",
+//     "SrcAlpha",
+//     "OneMinusSrcAlpha",
+//     "DstAlpha",
+//     "OneMinusDstAlpha" };
+//
+//   static constexpr std::array equation = {
+//     "Add", "Subtract", "ReverseSubtract"//, "Min", "Max"
+//   };
+//
+//   static constexpr std::array names = {
+//     "colorSourceFactor",
+//     "colorDestinationFactor",
+//     "colorBlendEquation",
+//     "alphaSourceFactor",
+//     "alphaDestinationFactor",
+//     "alphaBlendEquation",
+//   };
+//
+//   static std::array<int, std::ranges::size(names)> values = {};
+//   auto name  = std::ranges::begin(names);
+//   auto value = std::ranges::begin(values);
+//   static_assert(sizeof...(T) == std::ranges::size(names));
+//   const auto result = std::ranges::any_of(
+//     std::array{ ([](const char *const local_name, int &local_value) -> bool {
+//       using Real_Factor   = sf::BlendMode::Factor;
+//       using Real_Equation = sf::BlendMode::Equation;
+//       if constexpr (std::is_same_v<T, Real_Factor>) {
+//         return ImGui::Combo(local_name,
+//           &local_value,
+//           std::ranges::data(factor),
+//           static_cast<int>(std::ranges::ssize(factor)));
+//       } else if constexpr (std::is_same_v<T, Real_Equation>) {
+//         return ImGui::Combo(local_name,
+//           &local_value,
+//           std::ranges::data(equation),
+//           static_cast<int>(std::ranges::ssize(equation)));
+//       } else {
+//         return false;
+//       }
+//     }(*(name++), *(value++)))... },
+//     std::identity());
+//   if (result) {
+//     value              = std::ranges::begin(values);
+//     GetBlendSubtract() = sf::BlendMode{ (static_cast<T>(*(value++)))... };
+//   }
+//   return result;
+// }

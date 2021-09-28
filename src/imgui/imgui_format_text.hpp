@@ -6,7 +6,7 @@
 #define MYPROJECT_IMGUI_FORMAT_TEXT_HPP
 #include <fmt/core.h>
 #include <imgui.h>
-const auto format_imgui_text =
+inline const auto format_imgui_text =
   []<typename... T>(fmt::format_string<T...> fmt, T &&...items)
 {
   const auto data = fmt::format(

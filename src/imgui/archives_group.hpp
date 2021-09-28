@@ -11,7 +11,7 @@ struct archives_group
 {
 private:
   open_viii::LangT                                      m_coo           = {};
-  std::filesystem::path                                 m_path          = {};
+  std::string                                           m_path          = {};
   mutable bool                                          m_failed        = true;
   open_viii::archive::Archives                          m_archives      = {};
   std::vector<std::string>                              m_mapdata       = {};
@@ -25,10 +25,10 @@ public:
   [[nodiscard]] static std::vector<const char *> get_c_str(
     const std::vector<std::string> &in_vector);
   archives_group() = default;
-  [[maybe_unused]] archives_group(const open_viii::LangT in_coo, auto &&in_path)
-    : m_coo(in_coo), m_path(std::forward<decltype(in_path)>(in_path)),
-      m_archives(get_archives()), m_mapdata(get_map_data()),
-      m_mapdata_c_str(get_c_str(m_mapdata))
+  [[maybe_unused]] archives_group(const open_viii::LangT in_coo,
+    const std::string                                   &in_path)
+    : m_coo(in_coo), m_path(in_path), m_archives(get_archives()),
+      m_mapdata(get_map_data()), m_mapdata_c_str(get_c_str(m_mapdata))
   {}
   /**
    * Only really needed if we need to reload files. In fields in remaster all
@@ -38,31 +38,19 @@ public:
    * @param in_coo new language code
    * @return new copy of this object with new language loaded.
    */
-  [[nodiscard]] archives_group with_coo(const open_viii::LangT in_coo) const
-  {
-    return { in_coo, m_path };
-  }
+  [[nodiscard]] archives_group with_coo(open_viii::LangT in_coo) const;
   /**
    * Creates a new archive_group pointing to the provided path.
    * @param in_path new path.
    * @return new archive_group
    */
-  [[nodiscard]] archives_group with_path(auto &&in_path) const
-  {
-    return { m_coo, std::forward<decltype(in_path)>(in_path) };
-  }
-  [[maybe_unused]] [[nodiscard]] const open_viii::LangT &coo() const;
-  [[nodiscard]] const std::filesystem::path             &path() const;
-  [[nodiscard]] const open_viii::archive::Archives      &archives() const;
-  [[nodiscard]] bool                                     failed() const;
-  [[nodiscard]] const std::vector<std::string>          &mapdata() const;
-  [[nodiscard]] const std::vector<const char *>         &mapdata_c_str() const;
+  [[nodiscard]] archives_group with_path(const std::string &in_path) const;
+  [[maybe_unused]] [[nodiscard]] const open_viii::LangT &coo() const noexcept;
+  [[nodiscard]] const std::string                       &path() const noexcept;
+  [[nodiscard]] const open_viii::archive::Archives &archives() const noexcept;
+  [[nodiscard]] bool                                failed() const noexcept;
+  [[nodiscard]] const std::vector<std::string>     &mapdata() const noexcept;
+  [[nodiscard]] const std::vector<const char *> &mapdata_c_str() const noexcept;
   [[nodiscard]] open_viii::archive::FIFLFS<false> field(int current_map) const;
-  static bool ImGui_controls(archives_group &opt_archives,
-    open_viii::archive::FIFLFS<false>       &field,
-    mim_sprite                              &ms,
-    map_sprite                              &map,
-    int                                     &current_field,
-    int                                     &coo_selected_item);
 };
 #endif// MYPROJECT_ARCHIVES_GROUP_HPP

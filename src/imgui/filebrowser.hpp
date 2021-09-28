@@ -1,9 +1,7 @@
-//
-// Created by pcvii on 9/5/2021.
-//
-
 #ifndef MYPROJECT_FILEBROWSER_HPP
 #define MYPROJECT_FILEBROWSER_HPP
-#include <imgui.h> //file browser requires imgui.h to be first.
+// clang-format off
+#include <imgui.h>//file browser requires imgui.h to be first.
 #include "imfilebrowser.h"
+// clang-format on
 #endif// MYPROJECT_FILEBROWSER_HPP

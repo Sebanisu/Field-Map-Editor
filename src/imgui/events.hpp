@@ -18,21 +18,21 @@ template<typename... B>
   };
   return visitor{ std::forward<B>(b)... };
 }
-template<typename... B>
-[[nodiscard]] inline auto make_scope_guard(B &&...b) noexcept
-{
-  struct scope_gaurd : std::decay_t<B>...
-  {// disreguard rule of 5.
-    //    scope_gaurd(B &&...t) : B(std::forward<B>(t))...{}
-    //    scope_gaurd()                        = delete;
-    //    scope_gaurd(const scope_gaurd &)     = delete;
-    //    scope_gaurd(scope_gaurd &&) noexcept = delete;
-    //    auto &operator=(const scope_gaurd &) = delete;
-    //    auto &operator=(scope_gaurd &&) noexcept = delete;
-    ~scope_gaurd() { ((void)B::operator()(), ...); }
-  };
-  return scope_gaurd{ std::forward<B>(b)... };
-}
+//template<typename... B>
+//[[nodiscard]] inline auto make_scope_guard(B &&...b) noexcept
+//{
+//  struct scope_gaurd : std::decay_t<B>...
+//  {// disreguard rule of 5.
+//    //    scope_gaurd(B &&...t) : B(std::forward<B>(t))...{}
+//    //    scope_gaurd()                        = delete;
+//    //    scope_gaurd(const scope_gaurd &)     = delete;
+//    //    scope_gaurd(scope_gaurd &&) noexcept = delete;
+//    //    auto &operator=(const scope_gaurd &) = delete;
+//    //    auto &operator=(scope_gaurd &&) noexcept = delete;
+//    ~scope_gaurd() { ((void)B::operator()(), ...); }
+//  };
+//  return scope_gaurd{ std::forward<B>(b)... };
+//}
 using sf_event_variant = std::variant<std::monostate,
   sf::Event::SizeEvent,
   sf::Event::TextEvent,

@@ -14,27 +14,27 @@
 #include <vector>
 // this will hold class that has enough info to load and draw mim files.
 struct mim_sprite
+  : public sf::Drawable
+  , public sf::Transformable
 {
 
 
 private:
-  const open_viii::archive::FIFLFS<false>      *m_field        = {};
-  open_viii::LangT                              m_coo          = {};
-  open_viii::graphics::background::Mim          m_mim          = {};
-  open_viii::graphics::BPPT                     m_bpp          = {};
-  std::uint8_t                                  m_palette      = {};
-  bool                                          m_draw_palette = { false };
-  std::vector<open_viii::graphics::Color32RGBA> m_colors       = {};
-  std::unique_ptr<sf::Texture>                  m_texture      = {};
-  mutable sf::Sprite
-    m_sprite = {};// You need to be able to update sprite to control position
-                  // and draw it. See getter method below!
+  const open_viii::archive::FIFLFS<false>           *m_field        = {};
+  open_viii::LangT                                   m_coo          = {};
+  open_viii::graphics::background::Mim               m_mim          = {};
+  open_viii::graphics::BPPT                          m_bpp          = {};
+  std::uint8_t                                       m_palette      = {};
+  bool                                               m_draw_palette = { false };
+  std::vector<open_viii::graphics::Color32RGBA>      m_colors       = {};
+  std::unique_ptr<sf::Texture>                       m_texture      = {};
+  std::array<sf::Vertex, 4U>                         m_vertices     = {};
   [[nodiscard]] open_viii::graphics::background::Mim get_mim() const;
   [[nodiscard]] static open_viii::graphics::BPPT     get_bpp(
         const open_viii::graphics::BPPT &in_bpp);
   [[nodiscard]] std::unique_ptr<sf::Texture> get_texture() const;
-  [[nodiscard]] sf::Sprite                   get_sprite() const;
   [[nodiscard]] std::vector<open_viii::graphics::Color32RGBA> get_colors();
+  [[nodiscard]] std::array<sf::Vertex, 4U> get_vertices() const;
 
 public:
   mim_sprite() = default;
@@ -77,21 +77,21 @@ public:
    * @param in_bpp
    * @return mim_sprite object
    */
-  [[nodiscard]] mim_sprite  with_palette(const std::uint8_t &in_palette) const;
+  [[nodiscard]] mim_sprite with_palette(const std::uint8_t &in_palette) const;
   /**
    * Create a new object and change coo.
    */
-  [[nodiscard]] mim_sprite  with_coo(open_viii::LangT in_coo) const;
+  [[nodiscard]] mim_sprite with_coo(open_viii::LangT in_coo) const;
   /**
    * Create a new object and Toggle drawing palette.
    */
-  [[nodiscard]] mim_sprite  with_draw_palette(bool in_draw_palette) const;
-  /**
-   * Getter for sprite, required for changing position and drawing.
-   * @todo maybe want to control access.
-   * @return Sprite
-   */
-  [[nodiscard]] sf::Sprite &sprite() const noexcept;
+  [[nodiscard]] mim_sprite with_draw_palette(bool in_draw_palette) const;
+  //  /**
+  //   * Getter for sprite, required for changing position and drawing.
+  //   * @todo maybe want to control access.
+  //   * @return Sprite
+  //   */
+  //  [[nodiscard]] sf::Sprite &sprite() const noexcept;
   /**
    * @return width in px
    */
@@ -110,15 +110,10 @@ public:
    * @return true or false
    */
   [[nodiscard]] bool          fail() const noexcept;
-  [[nodiscard]] const open_viii::graphics::background::Mim &
+  [[nodiscard]] const open_viii::graphics::background::Mim    &
     mim() const noexcept;
-  static bool ImGui_controls(bool changed,
-    mim_sprite                   &ms,
-    int                          &bpp_selected_item,
-    int                          &palette_selected_item,
-    bool                         &draw_palette,
-    std::array<float, 2>         &xy,
-    float                         scale_width = 0.0F);
-  void        save(const std::filesystem::path &dest_path) const;
+  void save(const std::filesystem::path &dest_path) const;
+
+  void draw(sf::RenderTarget &target, sf::RenderStates states) const final;
 };
 #endif// MYPROJECT_MIM_SPRITE_HPP

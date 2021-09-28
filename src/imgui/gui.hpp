@@ -69,5 +69,21 @@ public:
   explicit gui(const char *title);
   gui();
   void start() const;
+  void combo_path() const;
+  void combo_draw() const;
+  void menuitem_save_texture(const std::string &path, bool b) const;
+  void menuitem_locate_ff8() const;
+  void file_browser_save_texture() const;
+  void file_browser_locate_ff8() const;
+  void menu_bar() const;
+  template<typename T>
+  void        slider_xy_sprite(T &sprite) const;
+  void        combo_mim_palette() const;
+  void        combo_mim_bpp() const;
+  void        checkbox_mim_palette_texture() const;
+  void        combo_field() const;
+  void        combo_coo() const;
+  std::string save_texture_path() const;
+  void        update_field() const;
 };
 #endif// MYPROJECT_GUI_HPP

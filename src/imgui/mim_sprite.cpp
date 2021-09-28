@@ -1,14 +1,19 @@
 #include "mim_sprite.hpp"
+#include <SFML/Graphics/RenderTarget.hpp>
 //
 // Created by pcvii on 9/8/2021.
 //
 open_viii::graphics::background::Mim mim_sprite::get_mim() const
 {
-  auto lang_name = "_" + std::string(open_viii::LangCommon::to_string(m_coo))
-                   + std::string(open_viii::graphics::background::Mim::EXT);
-  return { m_field->get_entry_data({ std::string_view(lang_name),
-             open_viii::graphics::background::Mim::EXT }),
-    m_field->get_base_name() };
+  auto lang_name = fmt::format("_{}{}",
+    std::string(open_viii::LangCommon::to_string(m_coo)),
+    open_viii::graphics::background::Mim::EXT);
+  if (m_field) {
+    return { m_field->get_entry_data({ std::string_view(lang_name),
+               open_viii::graphics::background::Mim::EXT }),
+      m_field->get_base_name() };
+  }
+  return {};
 }
 open_viii::graphics::BPPT mim_sprite::get_bpp(
   const open_viii::graphics::BPPT &in_bpp)
@@ -32,7 +37,6 @@ std::unique_ptr<sf::Texture> mim_sprite::get_texture() const
   }
   return texture;
 }
-sf::Sprite mim_sprite::get_sprite() const { return sf::Sprite(*m_texture); }
 std::vector<open_viii::graphics::Color32RGBA> mim_sprite::get_colors()
 {
   return m_mim.get_colors<open_viii::graphics::Color32RGBA>(
@@ -46,7 +50,7 @@ std::vector<open_viii::graphics::Color32RGBA> mim_sprite::get_colors()
   const bool                               force_draw_palette)
   : m_field(&in_field), m_coo(in_coo), m_mim(get_mim()), m_bpp(get_bpp(in_bpp)),
     m_palette(in_palette), m_draw_palette(force_draw_palette),
-    m_colors(get_colors()), m_texture(get_texture()), m_sprite(get_sprite())
+    m_colors(get_colors()), m_texture(get_texture()), m_vertices(get_vertices())
 {}
 mim_sprite mim_sprite::with_field(
   const open_viii::archive::FIFLFS<false> &in_field) const
@@ -69,7 +73,7 @@ mim_sprite mim_sprite::with_draw_palette(bool in_draw_palette) const
 {
   return { *m_field, m_bpp, m_palette, m_coo, in_draw_palette };
 }
-sf::Sprite   &mim_sprite::sprite() const noexcept { return m_sprite; }
+// sf::Sprite   &mim_sprite::sprite() const noexcept { return m_sprite; }
 std::uint32_t mim_sprite::width() const noexcept
 {
   return m_mim.get_width(m_bpp, m_draw_palette);
@@ -83,65 +87,7 @@ bool mim_sprite::fail() const noexcept
 {
   return !m_texture || m_colors.empty() || width() == 0;
 }
-bool mim_sprite::ImGui_controls(bool changed,
-  mim_sprite                        &ms,
-  int                               &bpp_selected_item,
-  int                               &palette_selected_item,
-  bool                              &draw_palette,
-  std::array<float, 2>              &xy,
-  float                              scale_width)
-{
-  if (!ms.fail()) {
-    if (ImGui::Checkbox("Draw Palette Texture", &draw_palette)) {
-      ms      = ms.with_draw_palette(draw_palette);
-      changed = true;
-    }
-    if (!ms.draw_palette()) {
-      static constexpr std::array bpp_items =
-        open_viii::graphics::background::Mim::bpp_selections_c_str();
-      static constexpr std::array palette_items =
-        open_viii::graphics::background::Mim::palette_selections_c_str();
-      if (ImGui::Combo("BPP",
-            &bpp_selected_item,
-            bpp_items.data(),
-            static_cast<int>(bpp_items.size()),
-            3)) {
-        ms =
-          ms.with_bpp(open_viii::graphics::background::Mim::bpp_selections().at(
-            static_cast<std::size_t>(bpp_selected_item)));
-        changed = true;
-      }
-      if (bpp_selected_item != 2) {
-        if (ImGui::Combo("Palette",
-              &palette_selected_item,
-              palette_items.data(),
-              static_cast<int>(palette_items.size()),
-              10)) {
-          ms      = ms.with_palette(static_cast<std::uint8_t>(
-            open_viii::graphics::background::Mim::palette_selections().at(
-                   static_cast<std::size_t>(palette_selected_item))));
-          changed = true;
-        }
-      }
-    }
-    format_imgui_text("X: {:>9.3f} px  Width:  {:>4} px",
-      ms.sprite().getPosition().x,
-      ms.width());
-    format_imgui_text("Y: {:>9.3f} px  Height: {:>4} px",
-      ms.sprite().getPosition().y,
-      ms.height());
-    if (!ms.draw_palette()) {
-      format_imgui_text("Width == Max Tiles");
-    }
-    if (ImGui::SliderFloat2("Adjust", xy.data(), -1.0F, 0.0F) || changed) {
-      ms.sprite().setPosition(
-        xy[0] * (static_cast<float>(ms.width()) - scale_width),
-        xy[1] * static_cast<float>(ms.height()));
-      changed = true;
-    }
-  }
-  return changed;
-}
+
 void mim_sprite::save(const std::filesystem::path &dest_path) const
 {
   if (open_viii::tools::i_ends_with(dest_path.string(), ".ppm")) {
@@ -160,4 +106,35 @@ void mim_sprite::save(const std::filesystem::path &dest_path) const
   mim_sprite::mim() const noexcept
 {
   return m_mim;
+}
+
+
+void mim_sprite::draw(sf::RenderTarget &target, sf::RenderStates states) const
+{
+  if (m_texture) {
+    states.transform *= getTransform();
+    states.texture = m_texture.get();
+    target.draw(m_vertices.data(), 4U, sf::TriangleStrip, states);
+  }
+}
+std::array<sf::Vertex, 4U> mim_sprite::get_vertices() const
+{
+  if (m_texture) {
+
+    const sf::Vector2u size  = m_texture->getSize();
+    const auto         frect = sf::FloatRect(
+              0.F, 0.F, static_cast<float>(size.x), static_cast<float>(size.y));
+    float      left   = frect.left;
+    float      right  = left + frect.width;
+    float      top    = frect.top;
+    float      bottom = top + frect.height;
+    std::array ret    = {
+      sf::Vertex{ sf::Vector2f{ left, top }, sf::Vector2f{ left, top } },
+      sf::Vertex{ sf::Vector2f{ left, bottom }, sf::Vector2f{ left, bottom } },
+      sf::Vertex{ sf::Vector2f{ right, top }, sf::Vector2f{ right, top } },
+      sf::Vertex{ sf::Vector2f{ right, bottom }, sf::Vector2f{ right, bottom } }
+    };
+    return ret;
+  }
+  return {};
 }
