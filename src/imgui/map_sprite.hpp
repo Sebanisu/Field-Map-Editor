@@ -21,6 +21,7 @@ private:
   const open_viii::archive::FIFLFS<false>                 *m_field         = {};
   open_viii::LangT                                         m_coo           = {};
   open_viii::graphics::background::Mim                     m_mim           = {};
+  mutable std::string                                      m_map_path      = {};
   open_viii::graphics::background::Map                     m_map           = {};
   open_viii::graphics::Rectangle<std::uint32_t>            m_canvas        = {};
   std::vector<std::uint8_t>                                m_unique_layers = {};
@@ -35,11 +36,12 @@ private:
   using color_type  = open_viii::graphics::Color32RGBA;
   using colors_type = std::vector<color_type>;
   [[nodiscard]] open_viii::graphics::background::Mim get_mim() const;
-  open_viii::graphics::background::Map
-    get_map(bool sort_remove, bool shift, std::string *out_path) const;
-  [[nodiscard]] colors_type get_colors(open_viii::graphics::BPPT bpp,
-    std::uint8_t                                                 palette,
-    bool draw_palette = false) const;
+  open_viii::graphics::background::Map get_map(std::string *out_path = nullptr,
+    bool                                                    sort_remove = true,
+    bool                                                    shift = true) const;
+  [[nodiscard]] colors_type            get_colors(open_viii::graphics::BPPT bpp,
+               std::uint8_t                                                 palette,
+               bool draw_palette = false) const;
   [[nodiscard]] static constexpr std::size_t
     get_texture_pos(open_viii::graphics::BPPT bpp, std::uint8_t palette);
   [[nodiscard]] const sf::Texture *get_texture(open_viii::graphics::BPPT bpp,
@@ -82,7 +84,7 @@ public:
   map_sprite() = default;
   map_sprite(const open_viii::archive::FIFLFS<false> &field,
     open_viii::LangT                                  coo)
-    : m_field(&field), m_coo(coo), m_mim(get_mim()), m_map(get_map()),
+    : m_field(&field), m_coo(coo), m_mim(get_mim()), m_map(get_map(&m_map_path)),
       m_canvas(get_canvas()), m_blend_modes(get_blend_modes()),
       m_unique_layers(get_unique_layers()),
       m_unique_z_axis(get_unique_z_axis()),
@@ -90,7 +92,7 @@ public:
   {
     get_render_texture();
   }
-  void                  update_render_texture() const;
+  void                        update_render_texture() const;
   static const sf::BlendMode &GetBlendSubtract();
   void local_draw(sf::RenderTarget &target, sf::RenderStates states) const;
   map_sprite with_coo(open_viii::LangT coo) const;
@@ -100,5 +102,8 @@ public:
   void draw(sf::RenderTarget &target, sf::RenderStates states) const final;
 
   void save(const std::filesystem::path &path) const;
+  void map_save(const std::filesystem::path &dest_path) const;
+  std::string   map_filename();
+  bool          fail() const;
 };
 #endif// MYPROJECT_MAP_SPRITE_HPP

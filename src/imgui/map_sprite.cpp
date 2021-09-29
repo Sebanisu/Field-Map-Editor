@@ -15,10 +15,8 @@ open_viii::graphics::background::Mim map_sprite::get_mim() const
   return {};
 }
 
-open_viii::graphics::background::Map map_sprite::get_map(
-  bool         sort_remove = true,
-  bool         shift       = true,
-  std::string *out_path    = nullptr) const
+open_viii::graphics::background::Map
+  map_sprite::get_map(std::string *out_path, bool sort_remove, bool shift) const
 {
   if (m_field != nullptr) {
     auto lang_name = fmt::format("_{}{}",
@@ -321,6 +319,34 @@ void map_sprite::save(const std::filesystem::path &path) const
   if (!image.saveToFile(path.string())) {
     std::cerr << "failure to save file:" << path << std::endl;
   }
+}
+bool map_sprite::fail() const
+{
+  using namespace open_viii::graphics::literals;
+  return m_mim.get_width(4_bpp, 0U) == 0;
+}
+void map_sprite::map_save(const std::filesystem::path &dest_path) const
+{
+  const auto map  = get_map(nullptr, false, false);
+  const auto path = dest_path.string();
+
+  open_viii::tools::write_buffer(
+    [&map](std::ostream &os) {
+      map.visit_tiles([&os](auto &&tiles) {
+        for (const auto &tile : tiles) {
+          //          std::array<char, sizeof(tile)> data{};
+          //          std::memcpy(data.data(), &tile, sizeof(tile));
+          const auto data = std::bit_cast<std::array<char, sizeof(tile)>>(tile);
+          os.write(data.data(), data.size());
+        }
+      });
+    },
+    path,
+    "");
+}
+std::string map_sprite::map_filename()
+{
+  return std::filesystem::path(m_map_path).filename().string();
 }
 
 // template<typename... T>

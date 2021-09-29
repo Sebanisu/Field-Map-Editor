@@ -90,5 +90,8 @@ public:
   std::string save_texture_path() const;
   void        update_field() const;
   void menuitem_save_mim_file(const std::string &path, bool disable) const;
+  void menuitem_save_map_file(const std::string &path, bool disable) const;
+  bool        mim_test() const;
+  bool        map_test() const;
 };
 #endif// MYPROJECT_GUI_HPP

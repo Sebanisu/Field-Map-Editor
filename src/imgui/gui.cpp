@@ -12,9 +12,9 @@ void gui::start() const
     scale_window(
       static_cast<float>(m_window_width), static_cast<float>(m_window_height));
     do {
-      ImGui::SFML::Update(m_window, m_delta_clock.restart());
       m_changed = false;
       loop_events();
+      ImGui::SFML::Update(m_window, m_delta_clock.restart());
       loop();
     } while (m_window.isOpen());
     ImGui::SFML::Shutdown();
@@ -39,33 +39,31 @@ void gui::loop() const
       combo_coo();
       combo_field();
 
-      if (!m_mim_sprite.fail()) {
-        if (m_selected_draw == 0) {
-          checkbox_mim_palette_texture();
-          if (!m_mim_sprite.draw_palette()) {
-            combo_mim_bpp();
-            combo_mim_palette();
-          }
-          if (!m_mim_sprite.draw_palette()) {
-            format_imgui_text("Width == Max Tiles");
-          }
-          if (m_changed) {
-            scale_window();
-          }
-          slider_xy_sprite(m_mim_sprite);
-        } else if (m_selected_draw == 1) {
-          if (m_changed) {
-            scale_window();
-          }
-          slider_xy_sprite(m_map_sprite);
+      if (mim_test()) {
+        checkbox_mim_palette_texture();
+        if (!m_mim_sprite.draw_palette()) {
+          combo_mim_bpp();
+          combo_mim_palette();
         }
+        if (!m_mim_sprite.draw_palette()) {
+          format_imgui_text("Width == Max Tiles");
+        }
+        if (m_changed) {
+          scale_window();
+        }
+        slider_xy_sprite(m_mim_sprite);
+      } else if (map_test()) {
+        if (m_changed) {
+          scale_window();
+        }
+        slider_xy_sprite(m_map_sprite);
       }
     }
   }
   ImGui::End();
 
   m_window.clear();
-  if (m_selected_draw == 0) {
+  if (mim_test()) {
     if (m_changed) {
       if (m_mim_sprite.draw_palette()) {
         m_grid = m_grid.with_spacing_and_size(
@@ -77,16 +75,15 @@ void gui::loop() const
         m_texture_page_grid =
           m_texture_page_grid
             .with_spacing_and_size(
-              { (1U << static_cast<unsigned int>((3 - m_selected_bpp) + 5)),
-                256U },
+              // 2^8 = 256 so subtracting 1 is 128 subtracting 2 is 64
+              { (1U << static_cast<unsigned int>((8 - m_selected_bpp))), 256U },
               { m_mim_sprite.width(), m_mim_sprite.height() })
             .with_color(sf::Color::Yellow);
       }
     }
     m_grid.setPosition(m_mim_sprite.getPosition());
     m_window.draw(m_mim_sprite);
-  }
-  if (m_selected_draw == 1) {
+  } else if (map_test()) {
     if (m_changed) {
       m_grid = m_grid.with_spacing_and_size(
         { 16U, 16U }, { m_map_sprite.width(), m_map_sprite.height() });
@@ -97,8 +94,7 @@ void gui::loop() const
   if (m_draw_grid) {
     m_window.draw(m_grid);
   }
-  if (!m_mim_sprite.draw_palette() && m_draw_texture_page_grid
-      && m_selected_draw == 0) {
+  if (!m_mim_sprite.draw_palette() && m_draw_texture_page_grid && mim_test()) {
     m_texture_page_grid.setPosition(m_mim_sprite.getPosition());
     m_window.draw(m_texture_page_grid);
   }
@@ -115,10 +111,10 @@ void gui::combo_coo() const
         coos_c_str.data(),
         static_cast<int>(coos_c_str.size()),
         5)) {
-    if (m_selected_draw == 0) {
+    if (mim_test()) {
       m_mim_sprite =
         m_mim_sprite.with_coo(coos.at(static_cast<size_t>(m_selected_coo)));
-    } else {
+    } else if (map_test()) {
       m_map_sprite =
         m_map_sprite.with_coo(coos.at(static_cast<size_t>(m_selected_coo)));
     }
@@ -140,7 +136,7 @@ void gui::update_field() const
   m_field = m_archives_group.field(m_selected_field);
   if (m_selected_draw == 0) {
     m_mim_sprite = m_mim_sprite.with_field(m_field);
-  } else {
+  } else if (m_selected_draw == 1) {
     m_map_sprite = m_map_sprite.with_field(m_field);
   }
   m_changed = true;
@@ -148,7 +144,7 @@ void gui::update_field() const
 void gui::checkbox_mim_palette_texture() const
 {
   if (ImGui::Checkbox("Draw Palette Texture", &m_draw_palette)) {
-    if (m_selected_draw == 0) {
+    if (mim_test()) {
       m_mim_sprite = m_mim_sprite.with_draw_palette(m_draw_palette);
       m_changed    = true;
     }
@@ -163,7 +159,7 @@ void gui::combo_mim_bpp() const
         bpp_items.data(),
         static_cast<int>(bpp_items.size()),
         static_cast<int>(bpp_items.size()))) {
-    if (m_selected_draw == 0) {
+    if (mim_test()) {
       m_mim_sprite = m_mim_sprite.with_bpp(
         open_viii::graphics::background::Mim::bpp_selections().at(
           static_cast<size_t>(m_selected_bpp)));
@@ -181,7 +177,7 @@ void gui::combo_mim_palette() const
           palette_items.data(),
           static_cast<int>(palette_items.size()),
           static_cast<int>(palette_items.size()))) {
-      if (m_selected_draw == 0) {
+      if (mim_test()) {
         m_mim_sprite = m_mim_sprite.with_palette(static_cast<uint8_t>(
           open_viii::graphics::background::Mim::palette_selections().at(
             static_cast<size_t>(m_selected_palette))));
@@ -210,8 +206,9 @@ void gui::menu_bar() const
   if (ImGui::BeginMenuBar()) {
     if (ImGui::BeginMenu("File")) {
       menuitem_locate_ff8();
-      menuitem_save_texture(save_texture_path(), !m_mim_sprite.fail());
-      menuitem_save_mim_file(m_mim_sprite.mim_filename(),!m_mim_sprite.fail());
+      menuitem_save_texture(save_texture_path(), mim_test() || map_test());
+      menuitem_save_mim_file(m_mim_sprite.mim_filename(), mim_test());
+      menuitem_save_map_file(m_map_sprite.map_filename(), map_test());
       ImGui::EndMenu();
     }
     if (ImGui::BeginMenu("Grid")) {
@@ -223,6 +220,14 @@ void gui::menu_bar() const
     ImGui::EndMenuBar();
   }
 }
+bool gui::map_test() const
+{
+  return !m_map_sprite.fail() && m_selected_draw == 1;
+}
+bool gui::mim_test() const
+{
+  return !m_mim_sprite.fail() && m_selected_draw == 0;
+}
 std::string gui::save_texture_path() const
 {
   if (m_archives_group.mapdata().empty()) {
@@ -230,7 +235,7 @@ std::string gui::save_texture_path() const
   }
   const std::string &field_name =
     m_archives_group.mapdata().at(static_cast<size_t>(m_selected_field));
-  if (m_selected_draw == 0)// MIM
+  if (mim_test())// MIM
   {
     if (m_mim_sprite.draw_palette()) {
       return fmt::format("{}_mim_palettes.png", field_name);
@@ -240,8 +245,10 @@ std::string gui::save_texture_path() const
         static_cast<size_t>(m_selected_bpp)));
     return fmt::format(
       "{}_mim_{}bpp_{}.png", field_name, bpp, m_selected_palette);
+  } else if (map_test()) {
+    return fmt::format("{}_map.png", field_name);
   }
-  return fmt::format("{}_map.png", field_name);
+  return {};
 }
 void gui::file_browser_locate_ff8() const
 {
@@ -262,17 +269,22 @@ void gui::file_browser_save_texture() const
   if (m_save_file_browser.HasSelected()) {
     [[maybe_unused]] const auto selected_path =
       m_save_file_browser.GetSelected();
-    if (m_selected_draw == 0) {
-      const auto str_path =selected_path.string();
-      if(open_viii::tools::i_ends_with(str_path,".mim"))
-      {
+    if (mim_test()) {
+      const auto str_path = selected_path.string();
+      if (open_viii::tools::i_ends_with(
+            str_path, open_viii::graphics::background::Mim::EXT)) {
         m_mim_sprite.mim_save(selected_path);
-      }
-      else {
+      } else {
         m_mim_sprite.save(selected_path);
       }
-    } else {
-      m_map_sprite.save(selected_path);
+    } else if (map_test()) {
+      const auto str_path = selected_path.string();
+      if (open_viii::tools::i_ends_with(
+            str_path, open_viii::graphics::background::Map::EXT)) {
+        m_map_sprite.map_save(selected_path);
+      } else {
+        m_map_sprite.save(selected_path);
+      }
     }
     m_save_file_browser.ClearSelected();
   }
@@ -299,7 +311,18 @@ void gui::menuitem_save_mim_file(const std::string &path, bool disable) const
   if (ImGui::MenuItem("Save Mim File", nullptr, false, disable)) {
     m_save_file_browser.Open();
     m_save_file_browser.SetTitle("Save Mim as...");
-    m_save_file_browser.SetTypeFilters({ ".mim" });
+    m_save_file_browser.SetTypeFilters(
+      { open_viii::graphics::background::Mim::EXT.data() });
+    m_save_file_browser.SetInputName(path);
+  }
+}
+void gui::menuitem_save_map_file(const std::string &path, bool disable) const
+{
+  if (ImGui::MenuItem("Save Map File", nullptr, false, disable)) {
+    m_save_file_browser.Open();
+    m_save_file_browser.SetTitle("Save Map as...");
+    m_save_file_browser.SetTypeFilters(
+      { open_viii::graphics::background::Map::EXT.data() });
     m_save_file_browser.SetInputName(path);
   }
 }
@@ -311,8 +334,7 @@ void gui::combo_draw() const
         static_cast<int>(m_draw_selections.size()))) {
     if (m_selected_draw == 0) {
       m_mim_sprite = get_mim_sprite();
-    }
-    if (m_selected_draw == 1) {
+    } else if (m_selected_draw == 1) {
       m_map_sprite = get_map_sprite();
     }
     m_changed = true;
@@ -361,7 +383,7 @@ void gui::scale_window(float width, float height) const
   static auto save_width  = float{};
   static auto save_height = float{};
   float       img_height  = [this]() {
-    if (m_selected_draw == 1) {
+    if (map_test()) {
       return static_cast<float>(m_map_sprite.height());
     }
     return static_cast<float>(m_mim_sprite.height());
