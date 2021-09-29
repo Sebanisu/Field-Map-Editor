@@ -7,6 +7,7 @@
 #include "archives_group.hpp"
 #include "events.hpp"
 #include "filebrowser.hpp"
+#include "grid.hpp"
 #include <cstdint>
 #include <SFML/Graphics/RenderWindow.hpp>
 struct gui
@@ -23,26 +24,26 @@ private:
   mutable sf::Clock                 m_delta_clock   = {};
   mutable std::vector<std::string>  m_paths         = {};
   mutable std::vector<const char *> m_paths_c_str   = {};
-  mutable archives_group            m_archives_group              = {};
-  mutable int                       m_selected_field              = {};
-  mutable open_viii::archive::FIFLFS<false>    m_field            = {};
-  mutable std::array<float, 2>                 xy                 = {};
-  mutable int                                  m_selected_bpp     = {};
-  mutable int                                  m_selected_palette = {};
-  mutable int                                  m_selected_coo     = {};
-  mutable int                                  m_selected_path    = {};
-  mutable bool                                 draw_palette       = { false };
-  mutable mim_sprite                           m_mim_sprite       = {};
-  mutable map_sprite                           m_map_sprite       = {};
-  mutable int                                  m_selected_draw    = {};
-  mutable bool                                 m_changed          = { false };
-  ImGuiStyle                                   m_original_style   = {};
-  mutable sf::Event                            m_event            = {};
-  mutable bool                                 m_first            = { true };
-  static constexpr std::array<const char *, 2> m_draw_selections  = { "MIM",
-    "MAP" };
+  mutable archives_group            m_archives_group           = {};
+  mutable int                       m_selected_field           = {};
+  mutable open_viii::archive::FIFLFS<false> m_field            = {};
+  mutable std::array<float, 2>              xy                 = {};
+  mutable int                               m_selected_bpp     = {};
+  mutable int                               m_selected_palette = {};
+  mutable int                               m_selected_coo     = {};
+  mutable int                               m_selected_path    = {};
+  mutable bool                              draw_palette       = { false };
+  mutable mim_sprite                        m_mim_sprite       = {};
+  mutable map_sprite                        m_map_sprite       = {};
+  mutable int                               m_selected_draw    = {};
+  mutable bool                              m_changed          = { false };
+  ImGuiStyle                                m_original_style   = {};
+  mutable sf::Event                         m_event            = {};
+  mutable bool                              m_first            = { true };
+  static constexpr std::array m_draw_selections = { "MIM", "MAP" };
+  mutable grid                        m_grid            = {};
   // create a file browser instances
-  mutable ImGui::FileBrowser                   m_save_file_browser{
+  mutable ImGui::FileBrowser  m_save_file_browser{
     static_cast<ImGuiFileBrowserFlags>(
       static_cast<std::uint32_t>(ImGuiFileBrowserFlags_EnterNewFilename)
       | static_cast<std::uint32_t>(ImGuiFileBrowserFlags_CreateNewDir))

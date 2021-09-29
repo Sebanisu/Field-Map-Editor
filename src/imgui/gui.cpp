@@ -22,7 +22,6 @@ void gui::start() const
 }
 void gui::loop() const
 {
-  m_changed = false;
   if (ImGui::Begin("Control Panel",
         nullptr,
         static_cast<ImGuiWindowFlags>(
@@ -67,11 +66,27 @@ void gui::loop() const
 
   m_window.clear();
   if (m_selected_draw == 0) {
+    if (m_changed) {
+      if (m_mim_sprite.draw_palette()) {
+        m_grid =
+          grid{ { 1U, 1U }, { m_mim_sprite.width(), m_mim_sprite.height() } };
+      } else {
+        m_grid =
+          grid{ { 16U, 16U }, { m_mim_sprite.width(), m_mim_sprite.height() } };
+      }
+      m_grid.setPosition(m_mim_sprite.getPosition());
+    }
     m_window.draw(m_mim_sprite);
   }
   if (m_selected_draw == 1) {
+    if (m_changed) {
+      m_grid =
+        grid{ { 16U, 16U }, { m_map_sprite.width(), m_map_sprite.height() } };
+      m_grid.setPosition(m_map_sprite.getPosition());
+    }
     m_window.draw(m_map_sprite);
   }
+  m_window.draw(m_grid);
   ImGui::SFML::Render(m_window);
   m_window.display();
   m_first = false;
