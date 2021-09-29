@@ -68,11 +68,11 @@ void gui::loop() const
   if (m_selected_draw == 0) {
     if (m_changed) {
       if (m_mim_sprite.draw_palette()) {
-        m_grid =
-          grid{ { 1U, 1U }, { m_mim_sprite.width(), m_mim_sprite.height() } };
+        m_grid = m_grid.with_spacing_and_size(
+          { 1U, 1U }, { m_mim_sprite.width(), m_mim_sprite.height() });
       } else {
-        m_grid =
-          grid{ { 16U, 16U }, { m_mim_sprite.width(), m_mim_sprite.height() } };
+        m_grid = m_grid.with_spacing_and_size(
+          { 16U, 16U }, { m_mim_sprite.width(), m_mim_sprite.height() });
       }
       m_grid.setPosition(m_mim_sprite.getPosition());
     }
@@ -80,8 +80,8 @@ void gui::loop() const
   }
   if (m_selected_draw == 1) {
     if (m_changed) {
-      m_grid =
-        grid{ { 16U, 16U }, { m_map_sprite.width(), m_map_sprite.height() } };
+      m_grid = m_grid.with_spacing_and_size(
+        { 16U, 16U }, { m_map_sprite.width(), m_map_sprite.height() });
       m_grid.setPosition(m_map_sprite.getPosition());
     }
     m_window.draw(m_map_sprite);

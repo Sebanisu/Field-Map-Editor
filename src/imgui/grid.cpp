@@ -3,26 +3,25 @@
 //
 
 #include "grid.hpp"
-std::vector<sf::Vertex> grid::get_vertices(const sf::Vector2u &spacing,
-  const sf::Vector2u                                          &size)
+std::vector<sf::Vertex> grid::get_vertices() const
 {
   std::vector<sf::Vertex> ret     = {};
-  const unsigned int      x_count = size.x / spacing.x+1;
-  const unsigned int      y_count = size.y / spacing.y+1;
+  const unsigned int      x_count = m_size.x / m_spacing.x+1;
+  const unsigned int      y_count = m_size.y / m_spacing.y+1;
   const auto              count   = x_count + y_count;
   if (count <= 2U) {
     return ret;
   }
   ret.reserve(count);
   for (unsigned int x = 0U; x != x_count; ++x) {
-    ret.emplace_back(sf::Vector2f{ static_cast<float>(x * spacing.x), 0.F });
+    ret.emplace_back(sf::Vector2f{ static_cast<float>(x * m_spacing.x), 0.F });
     ret.emplace_back(sf::Vector2f{
-      static_cast<float>(x * spacing.x), static_cast<float>(size.y) });
+      static_cast<float>(x * m_spacing.x), static_cast<float>(m_size.y) });
   }
   for (unsigned int y = 0U; y != y_count; ++y) {
-    ret.emplace_back(sf::Vector2f{ 0.F, static_cast<float>(y * spacing.y) });
+    ret.emplace_back(sf::Vector2f{ 0.F, static_cast<float>(y * m_spacing.y) });
     ret.emplace_back(sf::Vector2f{
-      static_cast<float>(size.x), static_cast<float>(y * spacing.y) });
+      static_cast<float>(m_size.x), static_cast<float>(y * m_spacing.y) });
   }
   return ret;
 }
@@ -31,6 +30,14 @@ void grid::draw(sf::RenderTarget &target, sf::RenderStates states) const
   states.transform *= getTransform();
   target.draw(m_vertices.data(), m_vertices.size(), sf::Lines, states);
 }
+grid grid::with_spacing_and_size(const sf::Vector2u &spacing, const sf::Vector2u &size) const
+{
+  if(spacing == m_spacing && size == m_size)
+  {
+    return *this;
+  }
+  return {spacing,size};
+}
 grid::grid(const sf::Vector2u &spacing, const sf::Vector2u &size)
-  : m_vertices(get_vertices(spacing, size))
+  : m_spacing(spacing), m_size(size), m_vertices(get_vertices())
 {}
