@@ -35,7 +35,8 @@ private:
   using color_type  = open_viii::graphics::Color32RGBA;
   using colors_type = std::vector<color_type>;
   [[nodiscard]] open_viii::graphics::background::Mim get_mim() const;
-  [[nodiscard]] open_viii::graphics::background::Map get_map() const;
+  open_viii::graphics::background::Map
+    get_map(bool sort_remove, bool shift, std::string *out_path) const;
   [[nodiscard]] colors_type get_colors(open_viii::graphics::BPPT bpp,
     std::uint8_t                                                 palette,
     bool draw_palette = false) const;
@@ -90,7 +91,7 @@ public:
     get_render_texture();
   }
   void                  update_render_texture() const;
-  static sf::BlendMode &GetBlendSubtract();
+  static const sf::BlendMode &GetBlendSubtract();
   void local_draw(sf::RenderTarget &target, sf::RenderStates states) const;
   map_sprite with_coo(open_viii::LangT coo) const;
   map_sprite with_field(const open_viii::archive::FIFLFS<false> &field) const;
