@@ -73,20 +73,32 @@ void gui::loop() const
       } else {
         m_grid = m_grid.with_spacing_and_size(
           { 16U, 16U }, { m_mim_sprite.width(), m_mim_sprite.height() });
+
+        m_texture_page_grid =
+          m_texture_page_grid
+            .with_spacing_and_size(
+              { (1U << static_cast<unsigned int>((3 - m_selected_bpp) + 5)),
+                256U },
+              { m_mim_sprite.width(), m_mim_sprite.height() })
+            .with_color(sf::Color::Yellow);
       }
-      m_grid.setPosition(m_mim_sprite.getPosition());
     }
+    m_grid.setPosition(m_mim_sprite.getPosition());
     m_window.draw(m_mim_sprite);
   }
   if (m_selected_draw == 1) {
     if (m_changed) {
       m_grid = m_grid.with_spacing_and_size(
         { 16U, 16U }, { m_map_sprite.width(), m_map_sprite.height() });
-      m_grid.setPosition(m_map_sprite.getPosition());
     }
+    m_grid.setPosition(m_map_sprite.getPosition());
     m_window.draw(m_map_sprite);
   }
   m_window.draw(m_grid);
+  if (!m_mim_sprite.draw_palette()) {
+    m_texture_page_grid.setPosition(m_mim_sprite.getPosition());
+    m_window.draw(m_texture_page_grid);
+  }
   ImGui::SFML::Render(m_window);
   m_window.display();
   m_first = false;
@@ -100,10 +112,13 @@ void gui::combo_coo() const
         coos_c_str.data(),
         static_cast<int>(coos_c_str.size()),
         5)) {
-    m_mim_sprite =
-      m_mim_sprite.with_coo(coos.at(static_cast<size_t>(m_selected_coo)));
-    m_map_sprite =
-      m_map_sprite.with_coo(coos.at(static_cast<size_t>(m_selected_coo)));
+    if (m_selected_draw == 0) {
+      m_mim_sprite =
+        m_mim_sprite.with_coo(coos.at(static_cast<size_t>(m_selected_coo)));
+    } else {
+      m_map_sprite =
+        m_map_sprite.with_coo(coos.at(static_cast<size_t>(m_selected_coo)));
+    }
     m_changed = true;
   }
 }
@@ -119,16 +134,21 @@ void gui::combo_field() const
 }
 void gui::update_field() const
 {
-  m_field      = m_archives_group.field(m_selected_field);
-  m_mim_sprite = m_mim_sprite.with_field(m_field);
-  m_map_sprite = m_map_sprite.with_field(m_field);
-  m_changed    = true;
+  m_field = m_archives_group.field(m_selected_field);
+  if (m_selected_draw == 0) {
+    m_mim_sprite = m_mim_sprite.with_field(m_field);
+  } else {
+    m_map_sprite = m_map_sprite.with_field(m_field);
+  }
+  m_changed = true;
 }
 void gui::checkbox_mim_palette_texture() const
 {
   if (ImGui::Checkbox("Draw Palette Texture", &draw_palette)) {
-    m_mim_sprite = m_mim_sprite.with_draw_palette(draw_palette);
-    m_changed    = true;
+    if (m_selected_draw == 0) {
+      m_mim_sprite = m_mim_sprite.with_draw_palette(draw_palette);
+      m_changed    = true;
+    }
   }
 }
 void gui::combo_mim_bpp() const
@@ -140,10 +160,12 @@ void gui::combo_mim_bpp() const
         bpp_items.data(),
         static_cast<int>(bpp_items.size()),
         static_cast<int>(bpp_items.size()))) {
-    m_mim_sprite = m_mim_sprite.with_bpp(
-      open_viii::graphics::background::Mim::bpp_selections().at(
-        static_cast<size_t>(m_selected_bpp)));
-    m_changed = true;
+    if (m_selected_draw == 0) {
+      m_mim_sprite = m_mim_sprite.with_bpp(
+        open_viii::graphics::background::Mim::bpp_selections().at(
+          static_cast<size_t>(m_selected_bpp)));
+      m_changed = true;
+    }
   }
 }
 void gui::combo_mim_palette() const
@@ -156,10 +178,12 @@ void gui::combo_mim_palette() const
           palette_items.data(),
           static_cast<int>(palette_items.size()),
           static_cast<int>(palette_items.size()))) {
-      m_mim_sprite = m_mim_sprite.with_palette(static_cast<uint8_t>(
-        open_viii::graphics::background::Mim::palette_selections().at(
-          static_cast<size_t>(m_selected_palette))));
-      m_changed    = true;
+      if (m_selected_draw == 0) {
+        m_mim_sprite = m_mim_sprite.with_palette(static_cast<uint8_t>(
+          open_viii::graphics::background::Mim::palette_selections().at(
+            static_cast<size_t>(m_selected_palette))));
+        m_changed    = true;
+      }
     }
   }
 }

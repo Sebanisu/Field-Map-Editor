@@ -14,18 +14,22 @@ struct grid
   , public sf::Transformable
 {
 private:
-  sf::Vector2u m_spacing = {};
-    sf::Vector2u m_size = {};
-  std::vector<sf::Vertex>        m_vertices = {};
+  sf::Vector2u            m_spacing  = {};
+  sf::Vector2u            m_size     = {};
+  sf::Color               m_color    = sf::Color::White;
+  std::vector<sf::Vertex> m_vertices = {};
 
   std::vector<sf::Vertex> get_vertices() const;
 
 public:
   grid() = default;
-  grid(const sf::Vector2u &spacing, const sf::Vector2u &size);
+  grid(const sf::Vector2u &spacing,
+    const sf::Vector2u    &size,
+    const sf::Color       &color = sf::Color::White);
 
   void draw(sf::RenderTarget &target, sf::RenderStates states) const final;
   grid with_spacing_and_size(const sf::Vector2u &spacing,
     const sf::Vector2u                          &size) const;
+  grid with_color(const sf::Color &color);
 };
 #endif// MYPROJECT_GRID_HPP

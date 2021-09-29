@@ -40,8 +40,9 @@ private:
   ImGuiStyle                                m_original_style   = {};
   mutable sf::Event                         m_event            = {};
   mutable bool                              m_first            = { true };
-  static constexpr std::array m_draw_selections = { "MIM", "MAP" };
-  mutable grid                        m_grid            = {};
+  static constexpr std::array m_draw_selections   = { "MIM", "MAP" };
+  mutable grid                m_grid              = {};
+  mutable grid                m_texture_page_grid = {};
   // create a file browser instances
   mutable ImGui::FileBrowser  m_save_file_browser{
     static_cast<ImGuiFileBrowserFlags>(
