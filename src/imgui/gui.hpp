@@ -32,7 +32,7 @@ private:
   mutable int                               m_selected_palette = {};
   mutable int                               m_selected_coo     = {};
   mutable int                               m_selected_path    = {};
-  mutable bool                              draw_palette       = { false };
+  mutable bool                              m_draw_palette     = { false };
   mutable mim_sprite                        m_mim_sprite       = {};
   mutable map_sprite                        m_map_sprite       = {};
   mutable int                               m_selected_draw    = {};
@@ -40,9 +40,11 @@ private:
   ImGuiStyle                                m_original_style   = {};
   mutable sf::Event                         m_event            = {};
   mutable bool                              m_first            = { true };
-  static constexpr std::array m_draw_selections   = { "MIM", "MAP" };
-  mutable grid                m_grid              = {};
-  mutable grid                m_texture_page_grid = {};
+  static constexpr std::array m_draw_selections        = { "MIM", "MAP" };
+  mutable grid                m_grid                   = {};
+  mutable grid                m_texture_page_grid      = {};
+  mutable bool                m_draw_grid              = { false };
+  mutable bool                m_draw_texture_page_grid = { false };
   // create a file browser instances
   mutable ImGui::FileBrowser  m_save_file_browser{
     static_cast<ImGuiFileBrowserFlags>(

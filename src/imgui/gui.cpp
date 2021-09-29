@@ -94,8 +94,11 @@ void gui::loop() const
     m_grid.setPosition(m_map_sprite.getPosition());
     m_window.draw(m_map_sprite);
   }
-  m_window.draw(m_grid);
-  if (!m_mim_sprite.draw_palette()) {
+  if (m_draw_grid) {
+    m_window.draw(m_grid);
+  }
+  if (!m_mim_sprite.draw_palette() && m_draw_texture_page_grid
+      && m_selected_draw == 0) {
     m_texture_page_grid.setPosition(m_mim_sprite.getPosition());
     m_window.draw(m_texture_page_grid);
   }
@@ -144,9 +147,9 @@ void gui::update_field() const
 }
 void gui::checkbox_mim_palette_texture() const
 {
-  if (ImGui::Checkbox("Draw Palette Texture", &draw_palette)) {
+  if (ImGui::Checkbox("Draw Palette Texture", &m_draw_palette)) {
     if (m_selected_draw == 0) {
-      m_mim_sprite = m_mim_sprite.with_draw_palette(draw_palette);
+      m_mim_sprite = m_mim_sprite.with_draw_palette(m_draw_palette);
       m_changed    = true;
     }
   }
@@ -208,6 +211,12 @@ void gui::menu_bar() const
     if (ImGui::BeginMenu("File")) {
       menuitem_locate_ff8();
       menuitem_save_texture(save_texture_path(), !m_mim_sprite.fail());
+      ImGui::EndMenu();
+    }
+    if (ImGui::BeginMenu("Grid")) {
+      ImGui::MenuItem("Draw Tile Grid", nullptr, &m_draw_grid);
+      ImGui::MenuItem(
+        "Draw Texture Page Grid", nullptr, &m_draw_texture_page_grid);
       ImGui::EndMenu();
     }
     ImGui::EndMenuBar();
@@ -283,6 +292,12 @@ void gui::combo_draw() const
         &m_selected_draw,
         m_draw_selections.data(),
         static_cast<int>(m_draw_selections.size()))) {
+    if (m_selected_draw == 0) {
+      m_mim_sprite = get_mim_sprite();
+    }
+    if (m_selected_draw == 1) {
+      m_map_sprite = get_map_sprite();
+    }
     m_changed = true;
   }
 }
@@ -381,10 +396,14 @@ std::vector<const char *> gui::get_paths_c_str() const
 mim_sprite gui::get_mim_sprite() const
 {
   return { m_field,
-    open_viii::graphics::background::Mim::bpp_selections().front(),
+    open_viii::graphics::background::Mim::bpp_selections().at(
+      static_cast<std::size_t>(m_selected_bpp)),
     static_cast<std::uint8_t>(
-      open_viii::graphics::background::Mim::palette_selections().front()),
-    open_viii::LangCommon::to_array().front() };
+      open_viii::graphics::background::Mim::palette_selections().at(
+        static_cast<std::size_t>(m_selected_palette))),
+    open_viii::LangCommon::to_array().at(
+      static_cast<std::size_t>(m_selected_coo)),
+    m_draw_palette };
 }
 ImGuiStyle gui::init_and_get_style() const
 {
