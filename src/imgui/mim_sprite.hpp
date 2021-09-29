@@ -22,6 +22,7 @@ struct mim_sprite
 private:
   const open_viii::archive::FIFLFS<false>           *m_field        = {};
   open_viii::LangT                                   m_coo          = {};
+  mutable std::string                                m_mim_path     = {};
   open_viii::graphics::background::Mim               m_mim          = {};
   open_viii::graphics::BPPT                          m_bpp          = {};
   std::uint8_t                                       m_palette      = {};
@@ -115,5 +116,7 @@ public:
   void save(const std::filesystem::path &dest_path) const;
 
   void draw(sf::RenderTarget &target, sf::RenderStates states) const final;
+  std::string mim_filename() const;
+  void        mim_save(const std::filesystem::path &dest_path) const;
 };
 #endif// MYPROJECT_MIM_SPRITE_HPP

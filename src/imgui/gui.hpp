@@ -89,5 +89,6 @@ public:
   void        combo_coo() const;
   std::string save_texture_path() const;
   void        update_field() const;
+  void menuitem_save_mim_file(const std::string &path, bool disable) const;
 };
 #endif// MYPROJECT_GUI_HPP

@@ -211,6 +211,7 @@ void gui::menu_bar() const
     if (ImGui::BeginMenu("File")) {
       menuitem_locate_ff8();
       menuitem_save_texture(save_texture_path(), !m_mim_sprite.fail());
+      menuitem_save_mim_file(m_mim_sprite.mim_filename(),!m_mim_sprite.fail());
       ImGui::EndMenu();
     }
     if (ImGui::BeginMenu("Grid")) {
@@ -262,7 +263,14 @@ void gui::file_browser_save_texture() const
     [[maybe_unused]] const auto selected_path =
       m_save_file_browser.GetSelected();
     if (m_selected_draw == 0) {
-      m_mim_sprite.save(selected_path);
+      const auto str_path =selected_path.string();
+      if(open_viii::tools::i_ends_with(str_path,".mim"))
+      {
+        m_mim_sprite.mim_save(selected_path);
+      }
+      else {
+        m_mim_sprite.save(selected_path);
+      }
     } else {
       m_map_sprite.save(selected_path);
     }
@@ -284,6 +292,15 @@ void gui::menuitem_save_texture(const std::string &path, bool disable) const
     m_save_file_browser.SetTitle("Save Texture as...");
     m_save_file_browser.SetTypeFilters({ ".png", ".ppm" });
     m_save_file_browser.SetInputName(path.c_str());
+  }
+}
+void gui::menuitem_save_mim_file(const std::string &path, bool disable) const
+{
+  if (ImGui::MenuItem("Save Mim File", nullptr, false, disable)) {
+    m_save_file_browser.Open();
+    m_save_file_browser.SetTitle("Save Mim as...");
+    m_save_file_browser.SetTypeFilters({ ".mim" });
+    m_save_file_browser.SetInputName(path);
   }
 }
 void gui::combo_draw() const

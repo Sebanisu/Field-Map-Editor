@@ -10,7 +10,7 @@ open_viii::graphics::background::Mim mim_sprite::get_mim() const
     open_viii::graphics::background::Mim::EXT);
   if (m_field) {
     return { m_field->get_entry_data({ std::string_view(lang_name),
-               open_viii::graphics::background::Mim::EXT }),
+               open_viii::graphics::background::Mim::EXT }, &m_mim_path),
       m_field->get_base_name() };
   }
   return {};
@@ -102,12 +102,20 @@ void mim_sprite::save(const std::filesystem::path &dest_path) const
       "");
   }
 }
+std::string mim_sprite::mim_filename() const
+{
+  return std::filesystem::path(m_mim_path).filename().string();
+}
+void mim_sprite::mim_save(const std::filesystem::path &dest_path) const
+{
+  const auto path = dest_path.string();
+  open_viii::tools::write_buffer(m_mim.buffer(),path,"");
+}
 [[nodiscard]] const open_viii::graphics::background::Mim &
   mim_sprite::mim() const noexcept
 {
   return m_mim;
 }
-
 
 void mim_sprite::draw(sf::RenderTarget &target, sf::RenderStates states) const
 {
