@@ -22,7 +22,7 @@ private:
   std::uint8_t      palette                  = {};
   std::string       ext                      = ".png";
 
-private:
+public:
   void get_path() const
   {
     const std::string_view prefix    = std::string_view(fieldname).substr(0, 2);
