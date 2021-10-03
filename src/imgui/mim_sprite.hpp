@@ -4,6 +4,7 @@
 
 #ifndef MYPROJECT_MIM_SPRITE_HPP
 #define MYPROJECT_MIM_SPRITE_HPP
+#include "grid.hpp"
 #include "imgui_format_text.hpp"
 #include "open_viii/archive/Archives.hpp"
 #include "open_viii/graphics/background/Mim.hpp"
@@ -30,6 +31,8 @@ private:
   std::vector<open_viii::graphics::Color32RGBA>      m_colors       = {};
   std::unique_ptr<sf::Texture>                       m_texture      = {};
   std::array<sf::Vertex, 4U>                         m_vertices     = {};
+  grid                                               m_grid         = {};
+  grid                                               m_texture_page_grid = {};
   [[nodiscard]] open_viii::graphics::background::Mim get_mim() const;
   [[nodiscard]] static open_viii::graphics::BPPT     get_bpp(
         const open_viii::graphics::BPPT &in_bpp);
@@ -116,7 +119,9 @@ public:
   void save(const std::filesystem::path &dest_path) const;
 
   void draw(sf::RenderTarget &target, sf::RenderStates states) const final;
-  std::string mim_filename() const;
-  void        mim_save(const std::filesystem::path &dest_path) const;
+  std::string       mim_filename() const;
+  void              mim_save(const std::filesystem::path &dest_path) const;
+  const mim_sprite &toggle_grids(bool enable_grid,
+    bool                              enable_texture_page_grid);
 };
 #endif// MYPROJECT_MIM_SPRITE_HPP

@@ -302,6 +302,9 @@ void map_sprite::draw(sf::RenderTarget &target, sf::RenderStates states) const
   auto quad      = get_triangle_strip(size, size, 0, 0, 0, 0);
   // draw the vertex array
   target.draw(quad.data(), quad.size(), sf::TriangleStrip, states);
+  // draw grid
+  states.texture = nullptr;
+  target.draw(m_grid, states);
 }
 void map_sprite::update_render_texture() const
 {
@@ -347,6 +350,16 @@ void map_sprite::map_save(const std::filesystem::path &dest_path) const
 std::string map_sprite::map_filename()
 {
   return std::filesystem::path(m_map_path).filename().string();
+}
+
+const map_sprite &map_sprite::toggle_grid(bool enable) const
+{
+  if (enable) {
+    m_grid.enable();
+  } else {
+    m_grid.disable();
+  }
+  return *this;
 }
 
 // template<typename... T>

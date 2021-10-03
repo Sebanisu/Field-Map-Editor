@@ -4,6 +4,7 @@
 
 #ifndef MYPROJECT_MAP_SPRITE_HPP
 #define MYPROJECT_MAP_SPRITE_HPP
+#include "grid.hpp"
 #include "open_viii/archive/Archives.hpp"
 #include "open_viii/graphics/background/Map.hpp"
 #include "open_viii/graphics/background/Mim.hpp"
@@ -28,11 +29,15 @@ private:
   std::vector<std::uint16_t>                               m_unique_z_axis = {};
   std::vector<open_viii::graphics::background::BlendModeT> m_blend_modes   = {};
   std::vector<std::pair<open_viii::graphics::BPPT, std::uint8_t>>
-                               m_bpp_and_palette                   = {};
-  static constexpr std::size_t MAX_TEXTURES                        = 16 * 2 + 1;
+                               m_bpp_and_palette = {};
+  static constexpr std::size_t MAX_TEXTURES =
+    16 * 13;// 13*16 for texture page / palette combos. 16*2+1 for palette bpp
+            // combos.
   std::unique_ptr<std::array<sf::Texture, MAX_TEXTURES>> m_texture = {};
   mutable std::unique_ptr<sf::RenderTexture>             m_render_texture =
     std::make_unique<sf::RenderTexture>();
+  grid m_grid       = {};
+
   using color_type  = open_viii::graphics::Color32RGBA;
   using colors_type = std::vector<color_type>;
   [[nodiscard]] open_viii::graphics::background::Mim get_mim() const;
@@ -84,11 +89,12 @@ public:
   map_sprite() = default;
   map_sprite(const open_viii::archive::FIFLFS<false> &field,
     open_viii::LangT                                  coo)
-    : m_field(&field), m_coo(coo), m_mim(get_mim()), m_map(get_map(&m_map_path)),
-      m_canvas(get_canvas()), m_blend_modes(get_blend_modes()),
-      m_unique_layers(get_unique_layers()),
+    : m_field(&field), m_coo(coo), m_mim(get_mim()),
+      m_map(get_map(&m_map_path)), m_canvas(get_canvas()),
+      m_blend_modes(get_blend_modes()), m_unique_layers(get_unique_layers()),
       m_unique_z_axis(get_unique_z_axis()),
-      m_bpp_and_palette(get_bpp_and_palette()), m_texture(get_textures())
+      m_bpp_and_palette(get_bpp_and_palette()), m_texture(get_textures()),
+      m_grid({ 16U, 16U }, { width(), height() })
   {
     get_render_texture();
   }
@@ -100,10 +106,11 @@ public:
   std::uint32_t width() const { return m_canvas.width(); }
   std::uint32_t height() const { return m_canvas.height(); }
   void draw(sf::RenderTarget &target, sf::RenderStates states) const final;
+  const map_sprite & toggle_grid(bool enable) const;
 
-  void save(const std::filesystem::path &path) const;
-  void map_save(const std::filesystem::path &dest_path) const;
-  std::string   map_filename();
-  bool          fail() const;
+  void        save(const std::filesystem::path &path) const;
+  void        map_save(const std::filesystem::path &dest_path) const;
+  std::string map_filename();
+  bool        fail() const;
 };
 #endif// MYPROJECT_MAP_SPRITE_HPP

@@ -64,39 +64,9 @@ void gui::loop() const
 
   m_window.clear();
   if (mim_test()) {
-    if (m_changed) {
-      if (m_mim_sprite.draw_palette()) {
-        m_grid = m_grid.with_spacing_and_size(
-          { 1U, 1U }, { m_mim_sprite.width(), m_mim_sprite.height() });
-      } else {
-        m_grid = m_grid.with_spacing_and_size(
-          { 16U, 16U }, { m_mim_sprite.width(), m_mim_sprite.height() });
-
-        m_texture_page_grid =
-          m_texture_page_grid
-            .with_spacing_and_size(
-              // 2^8 = 256 so subtracting 1 is 128 subtracting 2 is 64
-              { (1U << static_cast<unsigned int>((8 - m_selected_bpp))), 256U },
-              { m_mim_sprite.width(), m_mim_sprite.height() })
-            .with_color(sf::Color::Yellow);
-      }
-    }
-    m_grid.setPosition(m_mim_sprite.getPosition());
-    m_window.draw(m_mim_sprite);
+    m_window.draw(m_mim_sprite.toggle_grids(m_draw_grid,m_draw_texture_page_grid));
   } else if (map_test()) {
-    if (m_changed) {
-      m_grid = m_grid.with_spacing_and_size(
-        { 16U, 16U }, { m_map_sprite.width(), m_map_sprite.height() });
-    }
-    m_grid.setPosition(m_map_sprite.getPosition());
-    m_window.draw(m_map_sprite);
-  }
-  if (m_draw_grid) {
-    m_window.draw(m_grid);
-  }
-  if (!m_mim_sprite.draw_palette() && m_draw_texture_page_grid && mim_test()) {
-    m_texture_page_grid.setPosition(m_mim_sprite.getPosition());
-    m_window.draw(m_texture_page_grid);
+    m_window.draw(m_map_sprite.toggle_grid(m_draw_grid));
   }
   ImGui::SFML::Render(m_window);
   m_window.display();

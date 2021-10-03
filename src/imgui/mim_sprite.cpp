@@ -9,8 +9,10 @@ open_viii::graphics::background::Mim mim_sprite::get_mim() const
     std::string(open_viii::LangCommon::to_string(m_coo)),
     open_viii::graphics::background::Mim::EXT);
   if (m_field) {
-    return { m_field->get_entry_data({ std::string_view(lang_name),
-               open_viii::graphics::background::Mim::EXT }, &m_mim_path),
+    return { m_field->get_entry_data(
+               { std::string_view(lang_name),
+                 open_viii::graphics::background::Mim::EXT },
+               &m_mim_path),
       m_field->get_base_name() };
   }
   return {};
@@ -50,7 +52,17 @@ std::vector<open_viii::graphics::Color32RGBA> mim_sprite::get_colors()
   const bool                               force_draw_palette)
   : m_field(&in_field), m_coo(in_coo), m_mim(get_mim()), m_bpp(get_bpp(in_bpp)),
     m_palette(in_palette), m_draw_palette(force_draw_palette),
-    m_colors(get_colors()), m_texture(get_texture()), m_vertices(get_vertices())
+    m_colors(get_colors()), m_texture(get_texture()),
+    m_vertices(get_vertices()),
+    m_grid(draw_palette() ? grid{ { 1U, 1U }, { width(), height() } }
+                          : grid{ { 16U, 16U }, { width(), height() } }),
+    m_texture_page_grid(
+      draw_palette()
+        ? grid{}
+        : grid{
+          { (1U << static_cast<unsigned int>((8 - (m_bpp.raw() & 3U)))), 256U },
+          { width(), height() },
+          sf::Color::Yellow })
 {}
 mim_sprite mim_sprite::with_field(
   const open_viii::archive::FIFLFS<false> &in_field) const
@@ -109,7 +121,7 @@ std::string mim_sprite::mim_filename() const
 void mim_sprite::mim_save(const std::filesystem::path &dest_path) const
 {
   const auto path = dest_path.string();
-  open_viii::tools::write_buffer(m_mim.buffer(),path,"");
+  open_viii::tools::write_buffer(m_mim.buffer(), path, "");
 }
 [[nodiscard]] const open_viii::graphics::background::Mim &
   mim_sprite::mim() const noexcept
@@ -121,8 +133,16 @@ void mim_sprite::draw(sf::RenderTarget &target, sf::RenderStates states) const
 {
   if (m_texture) {
     states.transform *= getTransform();
-    states.texture = m_texture.get();
+    states.blendMode = sf::BlendAlpha;
+    states.texture   = m_texture.get();
+    // draw texture
     target.draw(m_vertices.data(), 4U, sf::TriangleStrip, states);
+    // draw grids
+    states.texture = nullptr;
+    target.draw(m_grid, states);
+    if (!m_draw_palette) {
+      target.draw(m_texture_page_grid, states);
+    }
   }
 }
 std::array<sf::Vertex, 4U> mim_sprite::get_vertices() const
@@ -145,4 +165,20 @@ std::array<sf::Vertex, 4U> mim_sprite::get_vertices() const
     return ret;
   }
   return {};
+}
+
+const mim_sprite &mim_sprite::toggle_grids(bool enable_grid,
+  bool                                          enable_texture_page_grid)
+{
+  if (enable_grid) {
+    m_grid.enable();
+  } else {
+    m_grid.disable();
+  }
+  if (enable_texture_page_grid) {
+    m_texture_page_grid.enable();
+  } else {
+    m_texture_page_grid.disable();
+  }
+  return *this;
 }

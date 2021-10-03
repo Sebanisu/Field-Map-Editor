@@ -41,8 +41,6 @@ private:
   mutable sf::Event                         m_event            = {};
   mutable bool                              m_first            = { true };
   static constexpr std::array m_draw_selections        = { "MIM", "MAP" };
-  mutable grid                m_grid                   = {};
-  mutable grid                m_texture_page_grid      = {};
   mutable bool                m_draw_grid              = { false };
   mutable bool                m_draw_texture_page_grid = { false };
   // create a file browser instances

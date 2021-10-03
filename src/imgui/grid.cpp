@@ -3,6 +3,7 @@
 //
 
 #include "grid.hpp"
+#include <iostream>
 std::vector<sf::Vertex> grid::get_vertices() const
 {
   std::vector<sf::Vertex> ret     = {};
@@ -31,7 +32,12 @@ std::vector<sf::Vertex> grid::get_vertices() const
 }
 void grid::draw(sf::RenderTarget &target, sf::RenderStates states) const
 {
+  if (!m_enable) {
+    return;
+  }
+  std::cout << m_vertices.size() << '\n';
   states.transform *= getTransform();
+  states.blendMode = sf::BlendAlpha;
   target.draw(m_vertices.data(), m_vertices.size(), sf::Lines, states);
 }
 grid grid::with_spacing_and_size(const sf::Vector2u &spacing,
@@ -55,3 +61,15 @@ grid::grid(const sf::Vector2u &spacing,
   const sf::Color             &color)
   : m_spacing(spacing), m_size(size), m_color(color), m_vertices(get_vertices())
 {}
+
+void grid::enable() const
+{
+  m_enable = true;
+  std::cout << "enabled\n";
+}
+
+void grid::disable() const
+{
+  m_enable = false;
+  std::cout << "disable\n";
+}
