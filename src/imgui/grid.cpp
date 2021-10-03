@@ -35,7 +35,6 @@ void grid::draw(sf::RenderTarget &target, sf::RenderStates states) const
   if (!m_enable) {
     return;
   }
-  std::cout << m_vertices.size() << '\n';
   states.transform *= getTransform();
   states.blendMode = sf::BlendAlpha;
   target.draw(m_vertices.data(), m_vertices.size(), sf::Lines, states);
