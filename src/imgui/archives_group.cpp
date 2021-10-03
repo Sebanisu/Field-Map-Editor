@@ -65,6 +65,7 @@ open_viii::archive::FIFLFS<false> archives_group::field(
       [&archive](
         auto &&field) { archive = std::forward<decltype(field)>(field); },
       {},
+      [](auto&&){return true;},
       true);
   }
   return archive;
