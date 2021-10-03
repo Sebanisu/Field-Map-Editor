@@ -62,14 +62,6 @@ grid::grid(const sf::Vector2u &spacing,
   : m_spacing(spacing), m_size(size), m_color(color), m_vertices(get_vertices())
 {}
 
-void grid::enable() const
-{
-  m_enable = true;
-  std::cout << "enabled\n";
-}
+void grid::enable() const { m_enable = true; }
 
-void grid::disable() const
-{
-  m_enable = false;
-  std::cout << "disable\n";
-}
+void grid::disable() const { m_enable = false; }
