@@ -8,7 +8,7 @@ open_viii::graphics::background::Mim mim_sprite::get_mim() const
   auto lang_name = fmt::format("_{}{}",
     std::string(open_viii::LangCommon::to_string(m_coo)),
     open_viii::graphics::background::Mim::EXT);
-  if (m_field) {
+  if (m_field != nullptr) {
     return { m_field->get_entry_data(
                { std::string_view(lang_name),
                  open_viii::graphics::background::Mim::EXT },
@@ -39,11 +39,13 @@ std::unique_ptr<sf::Texture> mim_sprite::get_texture() const
   }
   return texture;
 }
+
 std::vector<open_viii::graphics::Color32RGBA> mim_sprite::get_colors()
 {
   return m_mim.get_colors<open_viii::graphics::Color32RGBA>(
     m_bpp, m_palette, m_draw_palette);
 }
+
 [[maybe_unused]] mim_sprite::mim_sprite(
   const open_viii::archive::FIFLFS<false> &in_field,
   const open_viii::graphics::BPPT         &in_bpp,
@@ -64,37 +66,45 @@ std::vector<open_viii::graphics::Color32RGBA> mim_sprite::get_colors()
           { width(), height() },
           sf::Color::Yellow })
 {}
+
 mim_sprite mim_sprite::with_field(
   const open_viii::archive::FIFLFS<false> &in_field) const
 {
   return { in_field, m_bpp, m_palette, m_coo, m_draw_palette };
 }
+
 mim_sprite mim_sprite::with_bpp(const open_viii::graphics::BPPT &in_bpp) const
 {
   return { *m_field, get_bpp(in_bpp), m_palette, m_coo, m_draw_palette };
 }
+
 mim_sprite mim_sprite::with_palette(const uint8_t &in_palette) const
 {
   return { *m_field, m_bpp, in_palette, m_coo, m_draw_palette };
 }
+
 mim_sprite mim_sprite::with_coo(const open_viii::LangT in_coo) const
 {
   return { *m_field, m_bpp, m_palette, in_coo, m_draw_palette };
 }
+
 mim_sprite mim_sprite::with_draw_palette(bool in_draw_palette) const
 {
   return { *m_field, m_bpp, m_palette, m_coo, in_draw_palette };
 }
-// sf::Sprite   &mim_sprite::sprite() const noexcept { return m_sprite; }
+
 std::uint32_t mim_sprite::width() const noexcept
 {
   return m_mim.get_width(m_bpp, m_draw_palette);
 }
+
 std::uint32_t mim_sprite::height() const noexcept
 {
   return m_mim.get_height(m_draw_palette);
 }
+
 bool mim_sprite::draw_palette() const noexcept { return m_draw_palette; }
+
 bool mim_sprite::fail() const noexcept
 {
   return !m_texture || m_colors.empty() || width() == 0;
@@ -144,6 +154,7 @@ void mim_sprite::draw(sf::RenderTarget &target, sf::RenderStates states) const
     }
   }
 }
+
 std::array<sf::Vertex, 4U> mim_sprite::get_vertices() const
 {
   if (m_texture) {
