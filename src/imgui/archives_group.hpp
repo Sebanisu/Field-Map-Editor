@@ -51,7 +51,8 @@ public:
   [[nodiscard]] bool                                failed() const noexcept;
   [[nodiscard]] const std::vector<std::string>     &mapdata() const noexcept;
   [[nodiscard]] const std::vector<const char *> &mapdata_c_str() const noexcept;
-  [[nodiscard]] open_viii::archive::FIFLFS<false> field(int current_map) const;
+  [[nodiscard]] std::shared_ptr<open_viii::archive::FIFLFS<false>> field(
+    int current_map) const;
   [[nodiscard]] int find_field(std::string_view needle) const;
 };
 #endif// MYPROJECT_ARCHIVES_GROUP_HPP

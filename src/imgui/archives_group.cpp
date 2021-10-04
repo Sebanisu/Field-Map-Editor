@@ -55,15 +55,15 @@ const std::vector<const char *> &archives_group::mapdata_c_str() const noexcept
 {
   return m_mapdata_c_str;
 }
-open_viii::archive::FIFLFS<false> archives_group::field(
+std::shared_ptr<open_viii::archive::FIFLFS<false>> archives_group::field(
   const int current_map) const
 {
-  open_viii::archive::FIFLFS<false> archive{};
+  std::shared_ptr<open_viii::archive::FIFLFS<false>> archive{};
   if (!m_mapdata.empty()) {
     fields().execute_with_nested(
       { m_mapdata.at(static_cast<std::size_t>(current_map)) },
       [&archive](
-        auto &&field) { archive = std::forward<decltype(field)>(field); },
+        auto &&field) { archive = std::make_shared<open_viii::archive::FIFLFS<false>>(std::forward<decltype(field)>(field)); },
       {},
       [](auto &&) { return true; },
       true);

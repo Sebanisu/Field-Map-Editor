@@ -21,7 +21,7 @@ struct mim_sprite
 
 
 private:
-  const open_viii::archive::FIFLFS<false>           *m_field        = {};
+  std::shared_ptr<open_viii::archive::FIFLFS<false>> m_field        = {};
   open_viii::LangT                                   m_coo          = {};
   mutable std::string                                m_mim_path     = {};
   open_viii::graphics::background::Mim               m_mim          = {};
@@ -48,11 +48,12 @@ public:
    * @param in_bpp
    * @param in_palette
    */
-  [[maybe_unused]] mim_sprite(const open_viii::archive::FIFLFS<false> &in_field,
-    const open_viii::graphics::BPPT                                   &in_bpp,
-    const std::uint8_t &in_palette,
-    open_viii::LangT    in_coo,
-    bool                force_draw_palette = false);
+  [[maybe_unused]] mim_sprite(
+    std::shared_ptr<open_viii::archive::FIFLFS<false>> in_field,
+    const open_viii::graphics::BPPT                   &in_bpp,
+    const std::uint8_t                                &in_palette,
+    open_viii::LangT                                   in_coo,
+    bool force_draw_palette = false);
   //  /**
   //   * Get sprite of palette texture
   //   * @param in_field
@@ -68,7 +69,7 @@ public:
    * @return mim_sprite object
    */
   [[nodiscard]] mim_sprite with_field(
-    const open_viii::archive::FIFLFS<false> &in_field) const;
+    std::shared_ptr<open_viii::archive::FIFLFS<false>> in_field) const;
   /**
    * Create a new object with a new bits per pixel and the same settings
    * @param in_bpp

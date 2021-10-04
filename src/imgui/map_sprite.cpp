@@ -299,11 +299,11 @@ const sf::BlendMode &map_sprite::GetBlendSubtract()
 
 map_sprite map_sprite::with_coo(const open_viii::LangT coo) const
 {
-  return { *m_field, coo, m_draw_swizzle, m_filters };
+  return { m_field, coo, m_draw_swizzle, m_filters };
 }
 
 map_sprite map_sprite::with_field(
-  const open_viii::archive::FIFLFS<false> &field) const
+  std::shared_ptr<open_viii::archive::FIFLFS<false>> field) const
 {
   return { field, m_coo, m_draw_swizzle, m_filters };
 }

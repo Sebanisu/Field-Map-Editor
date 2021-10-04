@@ -22,7 +22,7 @@ private:
   static constexpr std::uint32_t    default_window_width  = 800U;
   static constexpr std::uint32_t    default_window_height = 600U;
 
-  mutable int m_id = {};
+  mutable int                       m_id                  = {};
   std::uint32_t                     m_window_width  = { default_window_width };
   mutable float                     m_scale_width   = {};
   std::uint32_t                     m_window_height = { default_window_height };
@@ -31,23 +31,23 @@ private:
   mutable sf::Clock                 m_delta_clock   = {};
   mutable std::vector<std::string>  m_paths         = {};
   mutable std::vector<const char *> m_paths_c_str   = {};
-  mutable archives_group            m_archives_group           = {};
-  mutable int                       m_selected_field           = {};
-  mutable open_viii::archive::FIFLFS<false> m_field            = {};
-  mutable std::array<float, 2>              xy                 = {};
-  mutable int                               m_selected_bpp     = {};
-  mutable int                               m_selected_palette = {};
-  mutable int                               m_selected_coo     = {};
-  mutable int                               m_selected_path    = {};
-  mutable bool                              m_draw_palette     = { false };
-  mutable mim_sprite                        m_mim_sprite       = {};
-  mutable bool                              m_map_swizzle      = { false };
-  mutable map_sprite                        m_map_sprite       = {};
-  mutable int                               m_selected_draw    = { 1 };
-  mutable bool                              m_changed          = { false };
-  ImGuiStyle                                m_original_style   = {};
-  mutable sf::Event                         m_event            = {};
-  mutable bool                              m_first            = { true };
+  mutable archives_group            m_archives_group                 = {};
+  mutable int                       m_selected_field                 = {};
+  mutable std::shared_ptr<open_viii::archive::FIFLFS<false>> m_field = {};
+  mutable std::array<float, 2>                               xy      = {};
+  mutable int                 m_selected_bpp                         = {};
+  mutable int                 m_selected_palette                     = {};
+  mutable int                 m_selected_coo                         = {};
+  mutable int                 m_selected_path                        = {};
+  mutable bool                m_draw_palette           = { false };
+  mutable mim_sprite          m_mim_sprite             = {};
+  mutable bool                m_map_swizzle            = { false };
+  mutable map_sprite          m_map_sprite             = {};
+  mutable int                 m_selected_draw          = { 1 };
+  mutable bool                m_changed                = { false };
+  ImGuiStyle                  m_original_style         = {};
+  mutable sf::Event           m_event                  = {};
+  mutable bool                m_first                  = { true };
   static constexpr std::array m_draw_selections        = { "MIM", "MAP" };
   mutable bool                m_draw_grid              = { false };
   mutable bool                m_draw_texture_page_grid = { false };
@@ -94,11 +94,11 @@ private:
   void menuitem_save_map_file(const std::string &path, bool disable) const;
   void scale_window(float width = {}, float height = {}) const;
   int  get_selected_field();
-  std::uint8_t palette() const;
+  std::uint8_t              palette() const;
   open_viii::graphics::BPPT bpp() const
   {
-  return open_viii::graphics::background::Mim::bpp_selections().at(
-    static_cast<size_t>(m_selected_bpp));
+    return open_viii::graphics::background::Mim::bpp_selections().at(
+      static_cast<size_t>(m_selected_bpp));
   }
 };
 #endif// MYPROJECT_GUI_HPP

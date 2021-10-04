@@ -21,11 +21,11 @@ struct map_sprite
 
 public:
   map_sprite() = default;
-  map_sprite(const open_viii::archive::FIFLFS<false> &field,
+  map_sprite(std::shared_ptr<open_viii::archive::FIFLFS<false>> field,
     open_viii::LangT                                  coo,
     bool                                              draw_swizzle,
     filters                                           in_filters)
-    : m_draw_swizzle(draw_swizzle), m_filters(in_filters), m_field(&field),
+    : m_draw_swizzle(draw_swizzle), m_filters(in_filters), m_field(field),
       m_coo(coo), m_mim(get_mim()), m_map(get_map(&m_map_path)),
       m_canvas(get_canvas()), m_blend_modes(get_blend_modes()),
       m_unique_layers(get_unique_layers()),
@@ -35,7 +35,7 @@ public:
   {
     init_render_texture();
   }
-  map_sprite update(const open_viii::archive::FIFLFS<false> &field,
+  map_sprite update(std::shared_ptr<open_viii::archive::FIFLFS<false>> field,
     open_viii::LangT                                         coo,
     bool                                                     draw_swizzle) const
 
@@ -52,7 +52,7 @@ public:
   void          save(const std::filesystem::path &path) const;
   void          map_save(const std::filesystem::path &dest_path) const;
   map_sprite    with_coo(open_viii::LangT coo) const;
-  map_sprite with_field(const open_viii::archive::FIFLFS<false> &field) const;
+  map_sprite with_field(std::shared_ptr<open_viii::archive::FIFLFS<false>> field) const;
   void draw(sf::RenderTarget &target, sf::RenderStates states) const final;
   const map_sprite &toggle_grid(bool enable,
     bool                             enable_texture_page_grid) const;
@@ -157,7 +157,7 @@ public:
 private:
   mutable bool                                       m_draw_swizzle = { false };
   mutable filters                                    m_filters      = {};
-  const open_viii::archive::FIFLFS<false> * m_field        = {};
+  std::shared_ptr<open_viii::archive::FIFLFS<false>> m_field        = {};
   open_viii::LangT                                   m_coo          = {};
   open_viii::graphics::background::Mim               m_mim          = {};
   mutable std::string                                m_map_path     = {};
