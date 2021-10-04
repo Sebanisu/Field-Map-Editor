@@ -157,7 +157,7 @@ public:
 private:
   mutable bool                                       m_draw_swizzle = { false };
   mutable filters                                    m_filters      = {};
-  std::shared_ptr<open_viii::archive::FIFLFS<false>> m_field        = {};
+  const open_viii::archive::FIFLFS<false> * m_field        = {};
   open_viii::LangT                                   m_coo          = {};
   open_viii::graphics::background::Mim               m_mim          = {};
   mutable std::string                                m_map_path     = {};
