@@ -1,5 +1,6 @@
 #include "mim_sprite.hpp"
 #include <SFML/Graphics/RenderTarget.hpp>
+#include <utility>
 //
 // Created by pcvii on 9/8/2021.
 //
@@ -26,9 +27,9 @@ open_viii::graphics::BPPT mim_sprite::get_bpp(
   }
   return 4_bpp;
 }
-std::unique_ptr<sf::Texture> mim_sprite::get_texture() const
+std::shared_ptr<sf::Texture> mim_sprite::get_texture() const
 {
-  auto texture = std::make_unique<sf::Texture>(sf::Texture{});
+  auto texture = std::make_shared<sf::Texture>(sf::Texture{});
 
   if (!m_colors.empty() && width() != 0U && texture
       && texture->create(width(), height())) {
@@ -52,7 +53,7 @@ std::vector<open_viii::graphics::Color32RGBA> mim_sprite::get_colors()
   const uint8_t                                     &in_palette,
   const open_viii::LangT                             in_coo,
   const bool                                         force_draw_palette)
-  : m_field(in_field), m_coo(in_coo), m_mim(get_mim()), m_bpp(get_bpp(in_bpp)),
+  : m_field(std::move(in_field)), m_coo(in_coo), m_mim(get_mim()), m_bpp(get_bpp(in_bpp)),
     m_palette(in_palette), m_draw_palette(force_draw_palette),
     m_colors(get_colors()), m_texture(get_texture()),
     m_vertices(get_vertices()),
@@ -70,7 +71,7 @@ std::vector<open_viii::graphics::Color32RGBA> mim_sprite::get_colors()
 mim_sprite mim_sprite::with_field(
   std::shared_ptr<open_viii::archive::FIFLFS<false>> in_field) const
 {
-  return { in_field, m_bpp, m_palette, m_coo, m_draw_palette };
+  return { std::move(in_field), m_bpp, m_palette, m_coo, m_draw_palette };
 }
 
 mim_sprite mim_sprite::with_bpp(const open_viii::graphics::BPPT &in_bpp) const

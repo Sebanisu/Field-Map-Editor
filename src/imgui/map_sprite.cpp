@@ -1,6 +1,8 @@
 #include "map_sprite.hpp"
+
 #include "append_inserter.hpp"
 #include "imgui_format_text.hpp"
+#include <utility>
 open_viii::graphics::background::Mim map_sprite::get_mim() const
 {
   if (m_field != nullptr) {
@@ -60,10 +62,10 @@ const sf::Texture *map_sprite::get_texture(const open_viii::graphics::BPPT bpp,
   return &m_texture->at(get_texture_pos(bpp, palette));
 }
 
-std::unique_ptr<std::array<sf::Texture, map_sprite::MAX_TEXTURES>>
+std::shared_ptr<std::array<sf::Texture, map_sprite::MAX_TEXTURES>>
   map_sprite::get_textures() const
 {
-  auto ret = std::make_unique<std::array<sf::Texture, MAX_TEXTURES>>(
+  auto ret = std::make_shared<std::array<sf::Texture, MAX_TEXTURES>>(
     std::array<sf::Texture, MAX_TEXTURES>{});
   if (!fail()) {
     for (const auto &[bpp, palette] : m_bpp_and_palette) {
@@ -305,7 +307,7 @@ map_sprite map_sprite::with_coo(const open_viii::LangT coo) const
 map_sprite map_sprite::with_field(
   std::shared_ptr<open_viii::archive::FIFLFS<false>> field) const
 {
-  return { field, m_coo, m_draw_swizzle, m_filters };
+  return { std::move(field), m_coo, m_draw_swizzle, m_filters };
 }
 
 void map_sprite::enable_draw_swizzle() const
@@ -358,7 +360,15 @@ void map_sprite::save(const std::filesystem::path &path) const
 bool map_sprite::fail() const
 {
   using namespace open_viii::graphics::literals;
-  return !m_render_texture || (m_mim.get_width(4_bpp, false) == 0);
+  if (!m_render_texture) {
+    std::cout << "m_render_texture is null" << std::endl;
+    return true;
+  }
+  if (m_mim.get_width(4_bpp, false) == 0) {
+    std::cout << "m_mim width is 0" << std::endl;
+    return true;
+  }
+  return false;
 }
 void map_sprite::map_save(const std::filesystem::path &dest_path) const
 {
@@ -409,6 +419,9 @@ void map_sprite::resize_render_texture() const
 }
 void map_sprite::init_render_texture() const
 {
+  if (!m_render_texture) {
+    m_render_texture = std::make_shared<sf::RenderTexture>();
+  }
   resize_render_texture();
   update_render_texture();
 }

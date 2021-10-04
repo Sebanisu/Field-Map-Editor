@@ -13,6 +13,7 @@
 #include <SFML/Graphics/RenderTexture.hpp>
 #include <SFML/Graphics/Transformable.hpp>
 #include <SFML/Graphics/Vertex.hpp>
+#include <utility>
 
 struct map_sprite
   : public sf::Drawable
@@ -22,25 +23,26 @@ struct map_sprite
 public:
   map_sprite() = default;
   map_sprite(std::shared_ptr<open_viii::archive::FIFLFS<false>> field,
-    open_viii::LangT                                  coo,
-    bool                                              draw_swizzle,
-    filters                                           in_filters)
-    : m_draw_swizzle(draw_swizzle), m_filters(in_filters), m_field(field),
-      m_coo(coo), m_mim(get_mim()), m_map(get_map(&m_map_path)),
-      m_canvas(get_canvas()), m_blend_modes(get_blend_modes()),
-      m_unique_layers(get_unique_layers()),
+    open_viii::LangT                                            coo,
+    bool                                                        draw_swizzle,
+    filters                                                     in_filters)
+    : m_draw_swizzle(draw_swizzle), m_filters(in_filters),
+      m_field(std::move(field)), m_coo(coo), m_mim(get_mim()),
+      m_map(get_map(&m_map_path)), m_canvas(get_canvas()),
+      m_blend_modes(get_blend_modes()), m_unique_layers(get_unique_layers()),
       m_unique_z_axis(get_unique_z_axis()),
       m_bpp_and_palette(get_bpp_and_palette()), m_texture(get_textures()),
-      m_grid(get_grid()), m_texture_page_grid(get_texture_page_grid())
+      m_grid(get_grid()), m_texture_page_grid(get_texture_page_grid()),
+      m_render_texture(std::make_shared<sf::RenderTexture>())
   {
     init_render_texture();
   }
   map_sprite update(std::shared_ptr<open_viii::archive::FIFLFS<false>> field,
-    open_viii::LangT                                         coo,
-    bool                                                     draw_swizzle) const
+    open_viii::LangT                                                   coo,
+    bool draw_swizzle) const
 
   {
-    return { field, coo, draw_swizzle, m_filters };
+    return { std::move(field), coo, draw_swizzle, m_filters };
   }
 
   void          enable_draw_swizzle() const;
@@ -52,7 +54,8 @@ public:
   void          save(const std::filesystem::path &path) const;
   void          map_save(const std::filesystem::path &dest_path) const;
   map_sprite    with_coo(open_viii::LangT coo) const;
-  map_sprite with_field(std::shared_ptr<open_viii::archive::FIFLFS<false>> field) const;
+  map_sprite    with_field(
+       std::shared_ptr<open_viii::archive::FIFLFS<false>> field) const;
   void draw(sf::RenderTarget &target, sf::RenderStates states) const final;
   const map_sprite &toggle_grid(bool enable,
     bool                             enable_texture_page_grid) const;
@@ -171,14 +174,13 @@ private:
   static constexpr std::size_t MAX_TEXTURES =
     16 * 13;// 13*16 for texture page / palette combos. 16*2+1 for palette bpp
             // combos.
-  std::unique_ptr<std::array<sf::Texture, MAX_TEXTURES>> m_texture = {};
-  mutable std::unique_ptr<sf::RenderTexture>             m_render_texture =
-    std::make_unique<sf::RenderTexture>();
-  mutable grid m_grid              = {};
-  grid         m_texture_page_grid = {};
+  std::shared_ptr<std::array<sf::Texture, MAX_TEXTURES>> m_texture        = {};
+  mutable std::shared_ptr<sf::RenderTexture>             m_render_texture = {};
+  mutable grid                                           m_grid           = {};
+  grid m_texture_page_grid                                                = {};
 
-  grid         get_grid() const;
-  grid         get_texture_page_grid() const;
+  grid get_grid() const;
+  grid get_texture_page_grid() const;
 
   using color_type  = open_viii::graphics::Color32RGBA;
   using colors_type = std::vector<color_type>;
@@ -193,7 +195,7 @@ private:
     get_texture_pos(open_viii::graphics::BPPT bpp, std::uint8_t palette);
   [[nodiscard]] const sf::Texture *get_texture(open_viii::graphics::BPPT bpp,
     std::uint8_t palette) const;
-  [[nodiscard]] std::unique_ptr<std::array<sf::Texture, MAX_TEXTURES>>
+  [[nodiscard]] std::shared_ptr<std::array<sf::Texture, MAX_TEXTURES>>
                                            get_textures() const;
   [[nodiscard]] std::vector<std::uint16_t> get_unique_z_axis() const;
   [[nodiscard]] std::vector<std::uint8_t>  get_unique_layers() const;

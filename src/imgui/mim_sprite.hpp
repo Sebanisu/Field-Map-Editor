@@ -29,14 +29,14 @@ private:
   std::uint8_t                                       m_palette      = {};
   bool                                               m_draw_palette = { false };
   std::vector<open_viii::graphics::Color32RGBA>      m_colors       = {};
-  std::unique_ptr<sf::Texture>                       m_texture      = {};
+  std::shared_ptr<sf::Texture>                       m_texture      = {};
   std::array<sf::Vertex, 4U>                         m_vertices     = {};
   grid                                               m_grid         = {};
   grid                                               m_texture_page_grid = {};
   [[nodiscard]] open_viii::graphics::background::Mim get_mim() const;
   [[nodiscard]] static open_viii::graphics::BPPT     get_bpp(
         const open_viii::graphics::BPPT &in_bpp);
-  [[nodiscard]] std::unique_ptr<sf::Texture> get_texture() const;
+  [[nodiscard]] std::shared_ptr<sf::Texture> get_texture() const;
   [[nodiscard]] std::vector<open_viii::graphics::Color32RGBA> get_colors();
   [[nodiscard]] std::array<sf::Vertex, 4U> get_vertices() const;
 
