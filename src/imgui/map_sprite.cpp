@@ -1,7 +1,6 @@
 #include "map_sprite.hpp"
 #include "append_inserter.hpp"
 #include "imgui_format_text.hpp"
-#include <imgui.h>
 open_viii::graphics::background::Mim map_sprite::get_mim() const
 {
   if (m_field != nullptr) {
@@ -250,6 +249,13 @@ void map_sprite::local_draw(sf::RenderTarget &target,
           if (tile.z() != z) {
             return;
           }
+          if(m_filters.palette.enabled())
+          {
+            if(tile.palette_id() != m_filters.palette.value())
+            {
+              return;
+            }
+          }
           const auto raw_tileSize = sf::Vector2u{ 16U, 16U };
           auto quad = get_triangle_strip(new_tileSize, raw_tileSize, tile);
           states.blendMode = sf::BlendAlpha;
@@ -297,13 +303,13 @@ const sf::BlendMode &map_sprite::GetBlendSubtract()
 
 map_sprite map_sprite::with_coo(const open_viii::LangT coo) const
 {
-  return { *m_field, coo, m_draw_swizzle };
+  return { *m_field, coo, m_draw_swizzle, m_filters };
 }
 
 map_sprite map_sprite::with_field(
   const open_viii::archive::FIFLFS<false> &field) const
 {
-  return { field, m_coo, m_draw_swizzle };
+  return { field, m_coo, m_draw_swizzle, m_filters };
 }
 
 void map_sprite::enable_draw_swizzle() const
@@ -392,7 +398,7 @@ const map_sprite &map_sprite::toggle_grid(bool enable,
   }
 
   if (enable_texture_page_grid) {
-    //std::cout << "enabled: " << m_texture_page_grid.count() << '\n';
+    // std::cout << "enabled: " << m_texture_page_grid.count() << '\n';
     m_texture_page_grid.enable();
   } else {
     m_texture_page_grid.disable();

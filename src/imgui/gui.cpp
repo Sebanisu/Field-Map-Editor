@@ -43,7 +43,7 @@ void gui::loop() const
         checkbox_mim_palette_texture();
         if (!m_mim_sprite.draw_palette()) {
           combo_mim_bpp();
-          combo_mim_palette();
+          combo_palette();
         }
         if (!m_mim_sprite.draw_palette()) {
           format_imgui_text("Width == Max Tiles");
@@ -54,6 +54,7 @@ void gui::loop() const
         slider_xy_sprite(m_mim_sprite);
       } else if (map_test()) {
         checkbox_map_swizzle();
+        combo_palette();
         if (m_changed) {
           scale_window();
         }
@@ -68,7 +69,8 @@ void gui::loop() const
     m_window.draw(
       m_mim_sprite.toggle_grids(m_draw_grid, m_draw_texture_page_grid));
   } else if (map_test()) {
-    m_window.draw(m_map_sprite.toggle_grid(m_draw_grid, m_draw_texture_page_grid));
+    m_window.draw(
+      m_map_sprite.toggle_grid(m_draw_grid, m_draw_texture_page_grid));
   }
   ImGui::SFML::Render(m_window);
   m_window.display();
@@ -150,7 +152,21 @@ void gui::combo_mim_bpp() const
     m_changed = true;
   }
 }
-void gui::combo_mim_palette() const
+std::uint8_t gui::palette() const
+{
+  return static_cast<uint8_t>(
+    open_viii::graphics::background::Mim::palette_selections().at(
+      static_cast<size_t>(m_selected_palette)));
+}
+static void update_palette(mim_sprite &sprite, uint8_t palette)
+{
+  sprite = sprite.with_palette(palette);
+}
+static void update_palette(map_sprite &sprite, uint8_t palette)
+{
+  sprite.filter_palette(palette);
+}
+void gui::combo_palette() const
 {
   if (m_selected_bpp != 2) {
     static constexpr std::array palette_items =
@@ -160,10 +176,24 @@ void gui::combo_mim_palette() const
           palette_items.data(),
           static_cast<int>(palette_items.size()),
           static_cast<int>(palette_items.size()))) {
-      m_mim_sprite = m_mim_sprite.with_palette(static_cast<uint8_t>(
-        open_viii::graphics::background::Mim::palette_selections().at(
-          static_cast<size_t>(m_selected_palette))));
-      m_changed    = true;
+      if (mim_test()) {
+        update_palette(m_mim_sprite, palette());
+      }
+      if (map_test()) {
+        update_palette(m_map_sprite, palette());
+      }
+      m_changed = true;
+    }
+    static bool enable_palette_filter = false;
+    if (map_test()) {
+      ImGui::SameLine();
+      if (ImGui::Checkbox("", &enable_palette_filter)) {
+        if (enable_palette_filter) {
+          m_map_sprite.filter_palette_enable();
+        } else {
+          m_map_sprite.filter_palette_disable();
+        }
+      }
     }
   }
 }
@@ -452,7 +482,8 @@ map_sprite gui::get_map_sprite() const
   return { m_field,
     open_viii::LangCommon::to_array().at(
       static_cast<std::size_t>(m_selected_coo)),
-    m_map_swizzle };
+    m_map_swizzle,
+    {} };
 }
 int gui::get_selected_field()
 {

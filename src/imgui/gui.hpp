@@ -78,7 +78,7 @@ private:
   void                            file_browser_locate_ff8() const;
   void                            menu_bar() const;
   void                            slider_xy_sprite(auto &sprite) const;
-  void                            combo_mim_palette() const;
+  void                            combo_palette() const;
   void                            combo_mim_bpp() const;
   void                            checkbox_mim_palette_texture() const;
   void                            combo_field() const;
@@ -93,5 +93,6 @@ private:
   void menuitem_save_map_file(const std::string &path, bool disable) const;
   void scale_window(float width = {}, float height = {}) const;
   int  get_selected_field();
+  std::uint8_t palette() const;
 };
 #endif// MYPROJECT_GUI_HPP
