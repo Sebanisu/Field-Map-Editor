@@ -163,51 +163,42 @@ std::vector<std::pair<open_viii::graphics::BPPT, std::uint8_t>>
   auto                x,
   auto                y) const
 {
-  auto i  = x / static_cast<decltype(x)>(raw_tileSize.x);
-  auto j  = y / static_cast<decltype(y)>(raw_tileSize.y);
-  auto tu = (source_x) / static_cast<decltype(source_x)>(raw_tileSize.x);
-  auto tv = source_y / static_cast<decltype(source_y)>(raw_tileSize.y);
-  return std::array{
-    sf::Vertex{
-      sf::Vector2f{
-        static_cast<float>((i + 1) * static_cast<decltype(i)>(new_tileSize.x)),
-        static_cast<float>(j * static_cast<decltype(j)>(new_tileSize.y)) },
-      sf::Vector2f{ static_cast<float>(
-                      (tu + 1) * static_cast<decltype(tu)>(new_tileSize.x)),
-        static_cast<float>(tv * static_cast<decltype(tv)>(new_tileSize.y)) } },
-    sf::Vertex{
-      sf::Vector2f{
-        static_cast<float>(i * static_cast<decltype(i)>(new_tileSize.x)),
-        static_cast<float>(j * static_cast<decltype(j)>(new_tileSize.y)) },
-      sf::Vector2f{
-        static_cast<float>(tu * static_cast<decltype(tu)>(new_tileSize.x)),
-        static_cast<float>(tv * static_cast<decltype(tv)>(new_tileSize.y)) } },
-    sf::Vertex{
-      sf::Vector2f{
-        static_cast<float>((i + 1) * static_cast<decltype(i)>(new_tileSize.x)),
-        static_cast<float>(
-          (j + 1) * static_cast<decltype(j)>(new_tileSize.y)) },
-      sf::Vector2f{ static_cast<float>(
-                      (tu + 1) * static_cast<decltype(tu)>(new_tileSize.x)),
-        static_cast<float>(
-          (tv + 1) * static_cast<decltype(tv)>(new_tileSize.y)) } },
-    sf::Vertex{ sf::Vector2f{ static_cast<float>(
-                                i * static_cast<decltype(i)>(new_tileSize.x)),
-                  static_cast<float>(
-                    (j + 1) * static_cast<decltype(j)>(new_tileSize.y)) },
-      sf::Vector2f{
-        static_cast<float>(tu * static_cast<decltype(tu)>(new_tileSize.x)),
-        static_cast<float>(
-          (tv + 1) * static_cast<decltype(tv)>(new_tileSize.y)) } }
+  auto i =
+    static_cast<std::uint32_t>(x / static_cast<decltype(x)>(raw_tileSize.x));
+  auto j =
+    static_cast<std::uint32_t>(y / static_cast<decltype(y)>(raw_tileSize.y));
+  std::uint32_t tu =
+    (source_x) / static_cast<decltype(source_x)>(raw_tileSize.x);
+  std::uint32_t tv = source_y / static_cast<decltype(source_y)>(raw_tileSize.y);
+  const auto    tovec = [](auto &&x, auto &&y) {
+    return sf::Vector2f{ static_cast<float>(x), static_cast<float>(y) };
   };
+  const auto tovert = [&tovec](auto &&x, auto &&y, auto &&texx, auto &&texy) {
+    return sf::Vertex{ tovec(x, y), tovec(texx, texy) };
+  };
+  return std::array{ tovert((i + 1) * new_tileSize.x,
+                       j * new_tileSize.y,
+                       (tu + 1) * new_tileSize.x,
+                       tv * new_tileSize.y),
+    tovert(i * new_tileSize.x,
+      j * new_tileSize.y,
+      tu * new_tileSize.x,
+      tv * new_tileSize.y),
+    tovert((i + 1) * new_tileSize.x,
+      (j + 1) * new_tileSize.y,
+      (tu + 1) * new_tileSize.x,
+      (tv + 1) * new_tileSize.y),
+    tovert(i * new_tileSize.x,
+      (j + 1) * new_tileSize.y,
+      tu * new_tileSize.x,
+      (tv + 1) * new_tileSize.y) };
 }
 
-[[nodiscard]] std::array<sf::Vertex, 4U> map_sprite::get_triangle_strip(
-  const sf::Vector2u &new_tileSize,
-  const sf::Vector2u &raw_tileSize,
-  auto              &&tile) const
+[[maybe_unused]] [[nodiscard]] std::array<sf::Vertex, 4U>
+  map_sprite::get_triangle_strip(const sf::Vector2u &new_tileSize,
+    const sf::Vector2u                              &raw_tileSize,
+    auto                                           &&tile) const
 {
-
   using tile_type = std::decay_t<decltype(tile)>;
   return get_triangle_strip(new_tileSize,
     raw_tileSize,

@@ -67,7 +67,7 @@ private:
     auto                source_y,
     auto                x,
     auto                y) const;
-  std::array<sf::Vertex, 4U> get_triangle_strip(
+  [[maybe_unused]] std::array<sf::Vertex, 4U> get_triangle_strip(
     const sf::Vector2u &new_tileSize,
     const sf::Vector2u &raw_tileSize,
     auto              &&tile) const;
