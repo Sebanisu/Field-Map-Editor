@@ -53,6 +53,7 @@ void gui::loop() const
         }
         slider_xy_sprite(m_mim_sprite);
       } else if (map_test()) {
+        checkbox_map_swizzle();
         if (m_changed) {
           scale_window();
         }
@@ -64,7 +65,8 @@ void gui::loop() const
 
   m_window.clear();
   if (mim_test()) {
-    m_window.draw(m_mim_sprite.toggle_grids(m_draw_grid,m_draw_texture_page_grid));
+    m_window.draw(
+      m_mim_sprite.toggle_grids(m_draw_grid, m_draw_texture_page_grid));
   } else if (map_test()) {
     m_window.draw(m_map_sprite.toggle_grid(m_draw_grid));
   }
@@ -93,14 +95,16 @@ void gui::combo_coo() const
 }
 void gui::combo_field() const
 {
+  static constexpr auto items = 20;
   if (ImGui::Combo("Field",
         &m_selected_field,
         m_archives_group.mapdata_c_str().data(),
         static_cast<int>(m_archives_group.mapdata_c_str().size()),
-        20)) {
+        items)) {
     update_field();
   }
 }
+
 void gui::update_field() const
 {
   m_field = m_archives_group.field(m_selected_field);
@@ -111,13 +115,24 @@ void gui::update_field() const
   }
   m_changed = true;
 }
+
+void gui::checkbox_map_swizzle() const
+{
+  if (ImGui::Checkbox("Swizzle", &m_map_swizzle)) {
+    if (m_map_swizzle) {
+      m_map_sprite.enable_draw_swizzle();
+    } else {
+      m_map_sprite.disable_draw_swizzle();
+    }
+    m_changed = true;
+  }
+}
+
 void gui::checkbox_mim_palette_texture() const
 {
   if (ImGui::Checkbox("Draw Palette Texture", &m_draw_palette)) {
-    if (mim_test()) {
-      m_mim_sprite = m_mim_sprite.with_draw_palette(m_draw_palette);
-      m_changed    = true;
-    }
+    m_mim_sprite = m_mim_sprite.with_draw_palette(m_draw_palette);
+    m_changed    = true;
   }
 }
 void gui::combo_mim_bpp() const
@@ -129,12 +144,10 @@ void gui::combo_mim_bpp() const
         bpp_items.data(),
         static_cast<int>(bpp_items.size()),
         static_cast<int>(bpp_items.size()))) {
-    if (mim_test()) {
-      m_mim_sprite = m_mim_sprite.with_bpp(
-        open_viii::graphics::background::Mim::bpp_selections().at(
-          static_cast<size_t>(m_selected_bpp)));
-      m_changed = true;
-    }
+    m_mim_sprite = m_mim_sprite.with_bpp(
+      open_viii::graphics::background::Mim::bpp_selections().at(
+        static_cast<size_t>(m_selected_bpp)));
+    m_changed = true;
   }
 }
 void gui::combo_mim_palette() const
@@ -147,17 +160,15 @@ void gui::combo_mim_palette() const
           palette_items.data(),
           static_cast<int>(palette_items.size()),
           static_cast<int>(palette_items.size()))) {
-      if (mim_test()) {
-        m_mim_sprite = m_mim_sprite.with_palette(static_cast<uint8_t>(
-          open_viii::graphics::background::Mim::palette_selections().at(
-            static_cast<size_t>(m_selected_palette))));
-        m_changed    = true;
-      }
+      m_mim_sprite = m_mim_sprite.with_palette(static_cast<uint8_t>(
+        open_viii::graphics::background::Mim::palette_selections().at(
+          static_cast<size_t>(m_selected_palette))));
+      m_changed    = true;
     }
   }
 }
-template<typename T>
-void gui::slider_xy_sprite(T &sprite) const
+
+void gui::slider_xy_sprite(auto &sprite) const
 {
   format_imgui_text(
     "X: {:>9.3f} px  Width:  {:>4} px", sprite.getPosition().x, sprite.width());
@@ -427,6 +438,7 @@ gui::gui(std::uint32_t               width,
   : m_window_width(width), m_window_height(height), m_title(title),
     m_window(get_render_window()), m_paths(get_paths()),
     m_paths_c_str(get_paths_c_str()), m_archives_group(get_archives_group()),
+    m_selected_field(get_selected_field()),
     m_field(m_archives_group.field(m_selected_field)),
     m_mim_sprite(get_mim_sprite()), m_map_sprite(get_map_sprite()),
     m_original_style(init_and_get_style())
@@ -439,5 +451,13 @@ map_sprite gui::get_map_sprite() const
 {
   return { m_field,
     open_viii::LangCommon::to_array().at(
-      static_cast<std::size_t>(m_selected_coo)) };
+      static_cast<std::size_t>(m_selected_coo)),
+    m_map_swizzle };
+}
+int gui::get_selected_field()
+{
+  if (int field = m_archives_group.find_field("crtower3"); field != -1) {
+    return field;
+  }
+  return 0;
 }

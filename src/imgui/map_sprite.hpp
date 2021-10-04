@@ -17,17 +17,45 @@ struct map_sprite
   : public sf::Drawable
   , public sf::Transformable
 {
+public:
+  map_sprite() = default;
+  map_sprite(const open_viii::archive::FIFLFS<false> &field,
+    open_viii::LangT                                  coo,
+    bool                                              draw_swizzle)
+    : m_draw_swizzle(draw_swizzle), m_field(&field), m_coo(coo),
+      m_mim(get_mim()), m_map(get_map(&m_map_path)), m_canvas(get_canvas()),
+      m_blend_modes(get_blend_modes()), m_unique_layers(get_unique_layers()),
+      m_unique_z_axis(get_unique_z_axis()),
+      m_bpp_and_palette(get_bpp_and_palette()), m_texture(get_textures()),
+      m_grid({ 16U, 16U }, { width(), height() })
+  {
+    init_render_texture();
+  }
+
+  const map_sprite &toggle_grid(bool enable) const;
+  void              enable_draw_swizzle() const;
+  void              disable_draw_swizzle() const;
+  std::string       map_filename();
+  bool              fail() const;
+  std::uint32_t     width() const;
+  std::uint32_t     height() const;
+  void              save(const std::filesystem::path &path) const;
+  void              map_save(const std::filesystem::path &dest_path) const;
+  map_sprite        with_coo(open_viii::LangT coo) const;
+  map_sprite with_field(const open_viii::archive::FIFLFS<false> &field) const;
+  void draw(sf::RenderTarget &target, sf::RenderStates states) const final;
 
 private:
-  const open_viii::archive::FIFLFS<false>                 *m_field         = {};
-  open_viii::LangT                                         m_coo           = {};
-  open_viii::graphics::background::Mim                     m_mim           = {};
-  mutable std::string                                      m_map_path      = {};
-  open_viii::graphics::background::Map                     m_map           = {};
-  open_viii::graphics::Rectangle<std::uint32_t>            m_canvas        = {};
-  std::vector<std::uint8_t>                                m_unique_layers = {};
-  std::vector<std::uint16_t>                               m_unique_z_axis = {};
-  std::vector<open_viii::graphics::background::BlendModeT> m_blend_modes   = {};
+  mutable bool                                  m_draw_swizzle  = { false };
+  const open_viii::archive::FIFLFS<false>      *m_field         = {};
+  open_viii::LangT                              m_coo           = {};
+  open_viii::graphics::background::Mim          m_mim           = {};
+  mutable std::string                           m_map_path      = {};
+  open_viii::graphics::background::Map          m_map           = {};
+  open_viii::graphics::Rectangle<std::uint32_t> m_canvas        = {};
+  std::vector<std::uint8_t>                     m_unique_layers = {};
+  std::vector<std::uint16_t>                    m_unique_z_axis = {};
+  std::vector<open_viii::graphics::background::BlendModeT> m_blend_modes = {};
   std::vector<std::pair<open_viii::graphics::BPPT, std::uint8_t>>
                                m_bpp_and_palette = {};
   static constexpr std::size_t MAX_TEXTURES =
@@ -58,59 +86,29 @@ private:
   [[nodiscard]] std::vector<open_viii::graphics::background::BlendModeT>
     get_blend_modes() const;
   [[nodiscard]] std::vector<std::pair<open_viii::graphics::BPPT, std::uint8_t>>
-                             get_bpp_and_palette() const;
+    get_bpp_and_palette() const;
 
-  std::array<sf::Vertex, 4U> get_triangle_strip(
+  [[nodiscard]] open_viii::graphics::Rectangle<std::uint32_t>
+                                           get_canvas() const;
+  void                                     resize_render_texture() const;
+  void                                     init_render_texture() const;
+
+  [[nodiscard]] std::array<sf::Vertex, 4U> get_triangle_strip(
     const sf::Vector2u &new_tileSize,
     const sf::Vector2u &raw_tileSize,
     auto                source_x,
     auto                source_y,
     auto                x,
     auto                y) const;
-  [[maybe_unused]] std::array<sf::Vertex, 4U> get_triangle_strip(
+
+  [[nodiscard]] std::array<sf::Vertex, 4U> get_triangle_strip(
     const sf::Vector2u &new_tileSize,
     const sf::Vector2u &raw_tileSize,
     auto              &&tile) const;
-  open_viii::graphics::Rectangle<std::uint32_t> get_canvas() const
-  {
-    return static_cast<open_viii::graphics::Rectangle<std::uint32_t>>(
-      m_map.canvas());
-  }
 
-  void get_render_texture() const
-  {
-    m_render_texture->create(width(), height());
-    update_render_texture();
-  }
-  //  template<typename... T>
-  //  requires(sizeof...(T) == 6U) static bool draw_drop_downs();
 
-public:
-  map_sprite() = default;
-  map_sprite(const open_viii::archive::FIFLFS<false> &field,
-    open_viii::LangT                                  coo)
-    : m_field(&field), m_coo(coo), m_mim(get_mim()),
-      m_map(get_map(&m_map_path)), m_canvas(get_canvas()),
-      m_blend_modes(get_blend_modes()), m_unique_layers(get_unique_layers()),
-      m_unique_z_axis(get_unique_z_axis()),
-      m_bpp_and_palette(get_bpp_and_palette()), m_texture(get_textures()),
-      m_grid({ 16U, 16U }, { width(), height() })
-  {
-    get_render_texture();
-  }
   void                        update_render_texture() const;
   static const sf::BlendMode &GetBlendSubtract();
   void local_draw(sf::RenderTarget &target, sf::RenderStates states) const;
-  map_sprite with_coo(open_viii::LangT coo) const;
-  map_sprite with_field(const open_viii::archive::FIFLFS<false> &field) const;
-  std::uint32_t width() const { return m_canvas.width(); }
-  std::uint32_t height() const { return m_canvas.height(); }
-  void draw(sf::RenderTarget &target, sf::RenderStates states) const final;
-  const map_sprite & toggle_grid(bool enable) const;
-
-  void        save(const std::filesystem::path &path) const;
-  void        map_save(const std::filesystem::path &dest_path) const;
-  std::string map_filename();
-  bool        fail() const;
 };
 #endif// MYPROJECT_MAP_SPRITE_HPP

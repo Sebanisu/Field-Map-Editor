@@ -65,7 +65,7 @@ open_viii::archive::FIFLFS<false> archives_group::field(
       [&archive](
         auto &&field) { archive = std::forward<decltype(field)>(field); },
       {},
-      [](auto&&){return true;},
+      [](auto &&) { return true; },
       true);
   }
   return archive;
@@ -77,4 +77,17 @@ archives_group archives_group::with_coo(const open_viii::LangT in_coo) const
 archives_group archives_group::with_path(const std::string &in_path) const
 {
   return { m_coo, in_path };
+}
+
+int archives_group::find_field(std::string_view needle) const
+{
+  const auto first = m_mapdata.cbegin();
+  const auto last  = m_mapdata.cend();
+  const auto it    = std::find_if(first, last, [&needle](const auto &name) {
+    return open_viii::tools::i_find(name, needle);
+     });
+  if (it != last) {
+    return static_cast<int>(std::distance(first, it));
+  }
+  return -1;
 }
