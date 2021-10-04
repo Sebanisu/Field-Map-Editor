@@ -13,7 +13,7 @@ void gui::start() const
       static_cast<float>(m_window_width), static_cast<float>(m_window_height));
     do {
       m_changed = false;
-      m_id= {};
+      m_id      = {};
       loop_events();
       ImGui::SFML::Update(m_window, m_delta_clock.restart());
       loop();
@@ -80,6 +80,7 @@ void gui::loop() const
 }
 void gui::combo_coo() const
 {
+  ImGui::PushID(++m_id);
   static constexpr auto coos       = open_viii::LangCommon::to_array();
   static constexpr auto coos_c_str = open_viii::LangCommon::to_c_str_array();
   if (ImGui::Combo("Language",
@@ -96,9 +97,11 @@ void gui::combo_coo() const
     }
     m_changed = true;
   }
+  ImGui::PopID();
 }
 void gui::combo_field() const
 {
+  ImGui::PushID(++m_id);
   static constexpr auto items = 20;
   if (ImGui::Combo("Field",
         &m_selected_field,
@@ -107,6 +110,7 @@ void gui::combo_field() const
         items)) {
     update_field();
   }
+  ImGui::PopID();
 }
 
 void gui::update_field() const
@@ -149,6 +153,7 @@ static void update_bpp(map_sprite &sprite, open_viii::graphics::BPPT bpp)
 }
 void gui::combo_bpp() const
 {
+  ImGui::PushID(++m_id);
   static constexpr std::array bpp_items =
     open_viii::graphics::background::Mim::bpp_selections_c_str();
   if (ImGui::Combo("BPP",
@@ -160,6 +165,8 @@ void gui::combo_bpp() const
     if (map_test()) update_bpp(m_map_sprite, bpp());
     m_changed = true;
   }
+  ImGui::PopID();
+  ImGui::PushID(++m_id);
   static bool enable_palette_filter = false;
   if (map_test()) {
     ImGui::SameLine();
@@ -172,6 +179,7 @@ void gui::combo_bpp() const
       m_changed = true;
     }
   }
+  ImGui::PopID();
 }
 std::uint8_t gui::palette() const
 {
@@ -189,6 +197,7 @@ static void update_palette(map_sprite &sprite, uint8_t palette)
 }
 void gui::combo_palette() const
 {
+  ImGui::PushID(++m_id);
   if (m_selected_bpp != 2) {
     static constexpr std::array palette_items =
       open_viii::graphics::background::Mim::palette_selections_c_str();
@@ -220,6 +229,7 @@ void gui::combo_palette() const
       ImGui::PopID();
     }
   }
+  ImGui::PopID();
 }
 
 void gui::slider_xy_sprite(auto &sprite) const
@@ -363,6 +373,7 @@ void gui::menuitem_save_map_file(const std::string &path, bool disable) const
 }
 void gui::combo_draw() const
 {
+  ImGui::PushID(++m_id);
   if (ImGui::Combo("Draw",
         &m_selected_draw,
         m_draw_selections.data(),
@@ -370,13 +381,18 @@ void gui::combo_draw() const
     if (m_selected_draw == 0) {
       m_mim_sprite = get_mim_sprite();
     } else if (m_selected_draw == 1) {
-      m_map_sprite = get_map_sprite();
+      m_map_sprite = m_map_sprite.update(m_field,
+        open_viii::LangCommon::to_array().at(
+          static_cast<std::size_t>(m_selected_coo)),
+        m_map_swizzle);
     }
     m_changed = true;
   }
+  ImGui::PopID();
 }
 void gui::combo_path() const
 {
+  ImGui::PushID(++m_id);
   if (ImGui::Combo("Path",
         &m_selected_path,
         m_paths_c_str.data(),
@@ -384,6 +400,7 @@ void gui::combo_path() const
         10)) {
     update_path();
   }
+  ImGui::PopID();
 }
 std::vector<std::string> gui::get_paths()
 {
