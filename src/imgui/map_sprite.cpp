@@ -310,12 +310,14 @@ void map_sprite::enable_draw_swizzle() const
 {
   m_draw_swizzle = true;
   init_render_texture();
+  m_grid = get_grid();
 }
 
 void map_sprite::disable_draw_swizzle() const
 {
   m_draw_swizzle = false;
   init_render_texture();
+  m_grid = get_grid();
 }
 
 void map_sprite::draw(sf::RenderTarget &target, sf::RenderStates states) const
@@ -329,6 +331,10 @@ void map_sprite::draw(sf::RenderTarget &target, sf::RenderStates states) const
   target.draw(quad.data(), quad.size(), sf::TriangleStrip, states);
   // draw grid
   target.draw(m_grid, states);
+  // draw texture_page_grid
+  if (m_draw_swizzle) {
+    target.draw(m_texture_page_grid, states);
+  }
 }
 void map_sprite::update_render_texture() const
 {
@@ -376,12 +382,20 @@ std::string map_sprite::map_filename()
   return std::filesystem::path(m_map_path).filename().string();
 }
 
-const map_sprite &map_sprite::toggle_grid(bool enable) const
+const map_sprite &map_sprite::toggle_grid(bool enable,
+  bool                                         enable_texture_page_grid) const
 {
   if (enable) {
     m_grid.enable();
   } else {
     m_grid.disable();
+  }
+
+  if (enable_texture_page_grid) {
+    //std::cout << "enabled: " << m_texture_page_grid.count() << '\n';
+    m_texture_page_grid.enable();
+  } else {
+    m_texture_page_grid.disable();
   }
   return *this;
 }
@@ -418,6 +432,18 @@ std::uint32_t map_sprite::height() const
     return m_mim.get_height();
   }
   return m_canvas.height();
+}
+grid map_sprite::get_grid() const
+{
+  return { { 16U, 16U }, { width(), height() } };
+}
+grid map_sprite::get_texture_page_grid() const
+{
+  using namespace open_viii::graphics::literals;
+  return { { (1U << static_cast<unsigned int>((8 - ((4_bpp).raw() & 3U)))),
+             256U },
+    { m_mim.get_width(4_bpp), m_mim.get_height() },
+    sf::Color::Yellow };
 }
 
 // template<typename... T>

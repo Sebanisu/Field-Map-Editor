@@ -68,7 +68,7 @@ void gui::loop() const
     m_window.draw(
       m_mim_sprite.toggle_grids(m_draw_grid, m_draw_texture_page_grid));
   } else if (map_test()) {
-    m_window.draw(m_map_sprite.toggle_grid(m_draw_grid));
+    m_window.draw(m_map_sprite.toggle_grid(m_draw_grid, m_draw_texture_page_grid));
   }
   ImGui::SFML::Render(m_window);
   m_window.display();

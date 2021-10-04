@@ -7,27 +7,29 @@
 std::vector<sf::Vertex> grid::get_vertices() const
 {
   std::vector<sf::Vertex> ret     = {};
-  const unsigned int      x_count = m_size.x / m_spacing.x + 1;
-  const unsigned int      y_count = m_size.y / m_spacing.y + 1;
+  const unsigned int      x_count = m_size.x / m_spacing.x;
+  const unsigned int      y_count = m_size.y / m_spacing.y;
   const auto              count   = x_count + y_count;
   if (count <= 2U) {
     return ret;
   }
   ret.reserve(count);
-  for (unsigned int x = 0U; x != x_count; ++x) {
-    ret.emplace_back(
-      sf::Vector2f{ static_cast<float>(x * m_spacing.x), 0.F }, m_color);
-    ret.emplace_back(sf::Vector2f{ static_cast<float>(x * m_spacing.x),
-                       static_cast<float>(m_size.y) },
-      m_color);
-  }
-  for (unsigned int y = 0U; y != y_count; ++y) {
-    ret.emplace_back(
-      sf::Vector2f{ 0.F, static_cast<float>(y * m_spacing.y) }, m_color);
-    ret.emplace_back(sf::Vector2f{ static_cast<float>(m_size.x),
-                       static_cast<float>(y * m_spacing.y) },
-      m_color);
-  }
+
+  const auto tovec = [](auto &&in_x, auto &&in_y) {
+    return sf::Vector2f{ static_cast<float>(in_x), static_cast<float>(in_y) };
+  };
+  if (x_count != 0) {
+    for (unsigned int x = 1U; x != x_count; ++x) {
+      ret.emplace_back(tovec(x * m_spacing.x, 0.F), m_color);
+      ret.emplace_back(tovec(x * m_spacing.x, m_size.y), m_color);
+    }
+}
+  if (y_count != 0) {
+    for (unsigned int y = 1U; y != y_count; ++y) {
+      ret.emplace_back(tovec(0.F, y * m_spacing.y), m_color);
+      ret.emplace_back(tovec(m_size.x, y * m_spacing.y), m_color);
+    }
+}
   return ret;
 }
 void grid::draw(sf::RenderTarget &target, sf::RenderStates states) const

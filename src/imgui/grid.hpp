@@ -18,7 +18,7 @@ private:
   sf::Vector2u            m_size     = {};
   sf::Color               m_color    = sf::Color::White;
   std::vector<sf::Vertex> m_vertices = {};
-  mutable bool            m_enable     = { true };
+  mutable bool            m_enable   = { true };
 
   std::vector<sf::Vertex> get_vertices() const;
 
@@ -34,5 +34,6 @@ public:
   grid with_color(const sf::Color &color);
   void enable() const;
   void disable() const;
+  std::size_t count() const { return std::size(m_vertices); }
 };
 #endif// MYPROJECT_GRID_HPP

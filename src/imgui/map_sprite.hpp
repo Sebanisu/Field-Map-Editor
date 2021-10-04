@@ -17,6 +17,7 @@ struct map_sprite
   : public sf::Drawable
   , public sf::Transformable
 {
+
 public:
   map_sprite() = default;
   map_sprite(const open_viii::archive::FIFLFS<false> &field,
@@ -27,12 +28,11 @@ public:
       m_blend_modes(get_blend_modes()), m_unique_layers(get_unique_layers()),
       m_unique_z_axis(get_unique_z_axis()),
       m_bpp_and_palette(get_bpp_and_palette()), m_texture(get_textures()),
-      m_grid({ 16U, 16U }, { width(), height() })
+      m_grid(get_grid()), m_texture_page_grid(get_texture_page_grid())
   {
     init_render_texture();
   }
 
-  const map_sprite &toggle_grid(bool enable) const;
   void              enable_draw_swizzle() const;
   void              disable_draw_swizzle() const;
   std::string       map_filename();
@@ -44,6 +44,7 @@ public:
   map_sprite        with_coo(open_viii::LangT coo) const;
   map_sprite with_field(const open_viii::archive::FIFLFS<false> &field) const;
   void draw(sf::RenderTarget &target, sf::RenderStates states) const final;
+  const map_sprite &toggle_grid(bool enable, bool enable_texture_page_grid) const;
 
 private:
   mutable bool                                  m_draw_swizzle  = { false };
@@ -64,7 +65,11 @@ private:
   std::unique_ptr<std::array<sf::Texture, MAX_TEXTURES>> m_texture = {};
   mutable std::unique_ptr<sf::RenderTexture>             m_render_texture =
     std::make_unique<sf::RenderTexture>();
-  grid m_grid       = {};
+  mutable grid m_grid              = {};
+  grid m_texture_page_grid = {};
+
+  grid get_grid() const;
+  grid get_texture_page_grid() const;
 
   using color_type  = open_viii::graphics::Color32RGBA;
   using colors_type = std::vector<color_type>;
