@@ -51,15 +51,35 @@ public:
     bool                             enable_texture_page_grid) const;
   void              filter_palette(std::uint8_t palette) const
   {
-    if(m_filters.palette.update(palette).enabled()) {
+    if (m_filters.palette.update(palette).enabled()) {
       update_render_texture();
     }
   }
-  void filter_palette_enable() const { m_filters.palette.enable();
-  update_render_texture();
+  void filter_palette_enable() const
+  {
+    m_filters.palette.enable();
+    update_render_texture();
   }
-  void filter_palette_disable() const { m_filters.palette.disable();
-  update_render_texture();
+  void filter_palette_disable() const
+  {
+    m_filters.palette.disable();
+    update_render_texture();
+  }
+  void filter_bpp(open_viii::graphics::BPPT bpp) const
+  {
+    if (m_filters.bpp.update(bpp).enabled()) {
+      update_render_texture();
+    }
+  }
+  void filter_bpp_enable() const
+  {
+    m_filters.bpp.enable();
+    update_render_texture();
+  }
+  void filter_bpp_disable() const
+  {
+    m_filters.bpp.disable();
+    update_render_texture();
   }
 
 private:

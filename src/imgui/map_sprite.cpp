@@ -249,10 +249,14 @@ void map_sprite::local_draw(sf::RenderTarget &target,
           if (tile.z() != z) {
             return;
           }
-          if(m_filters.palette.enabled())
-          {
-            if(tile.palette_id() != m_filters.palette.value())
-            {
+          using namespace open_viii::graphics::literals;
+          if (m_filters.palette.enabled() && m_filters.bpp.value() != 16_bpp) {
+            if (tile.palette_id() != m_filters.palette.value()) {
+              return;
+            }
+          }
+          if (m_filters.bpp.enabled()) {
+            if (tile.depth() != m_filters.bpp.value()) {
               return;
             }
           }

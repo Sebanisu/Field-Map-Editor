@@ -13,6 +13,7 @@ void gui::start() const
       static_cast<float>(m_window_width), static_cast<float>(m_window_height));
     do {
       m_changed = false;
+      m_id= {};
       loop_events();
       ImGui::SFML::Update(m_window, m_delta_clock.restart());
       loop();
@@ -42,7 +43,7 @@ void gui::loop() const
       if (mim_test()) {
         checkbox_mim_palette_texture();
         if (!m_mim_sprite.draw_palette()) {
-          combo_mim_bpp();
+          combo_bpp();
           combo_palette();
         }
         if (!m_mim_sprite.draw_palette()) {
@@ -54,6 +55,7 @@ void gui::loop() const
         slider_xy_sprite(m_mim_sprite);
       } else if (map_test()) {
         checkbox_map_swizzle();
+        combo_bpp();
         combo_palette();
         if (m_changed) {
           scale_window();
@@ -137,7 +139,15 @@ void gui::checkbox_mim_palette_texture() const
     m_changed    = true;
   }
 }
-void gui::combo_mim_bpp() const
+static void update_bpp(mim_sprite &sprite, open_viii::graphics::BPPT bpp)
+{
+  sprite = sprite.with_bpp(bpp);
+}
+static void update_bpp(map_sprite &sprite, open_viii::graphics::BPPT bpp)
+{
+  sprite.filter_bpp(bpp);
+}
+void gui::combo_bpp() const
 {
   static constexpr std::array bpp_items =
     open_viii::graphics::background::Mim::bpp_selections_c_str();
@@ -146,10 +156,21 @@ void gui::combo_mim_bpp() const
         bpp_items.data(),
         static_cast<int>(bpp_items.size()),
         static_cast<int>(bpp_items.size()))) {
-    m_mim_sprite = m_mim_sprite.with_bpp(
-      open_viii::graphics::background::Mim::bpp_selections().at(
-        static_cast<size_t>(m_selected_bpp)));
+    if (mim_test()) update_bpp(m_mim_sprite, bpp());
+    if (map_test()) update_bpp(m_map_sprite, bpp());
     m_changed = true;
+  }
+  static bool enable_palette_filter = false;
+  if (map_test()) {
+    ImGui::SameLine();
+    if (ImGui::Checkbox("", &enable_palette_filter)) {
+      if (enable_palette_filter) {
+        m_map_sprite.filter_bpp_enable();
+      } else {
+        m_map_sprite.filter_bpp_disable();
+      }
+      m_changed = true;
+    }
   }
 }
 std::uint8_t gui::palette() const
@@ -187,13 +208,16 @@ void gui::combo_palette() const
     static bool enable_palette_filter = false;
     if (map_test()) {
       ImGui::SameLine();
+      ImGui::PushID(++m_id);
       if (ImGui::Checkbox("", &enable_palette_filter)) {
         if (enable_palette_filter) {
           m_map_sprite.filter_palette_enable();
         } else {
           m_map_sprite.filter_palette_disable();
         }
+        m_changed = true;
       }
+      ImGui::PopID();
     }
   }
 }

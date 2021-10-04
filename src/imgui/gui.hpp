@@ -22,6 +22,7 @@ private:
   static constexpr std::uint32_t    default_window_width  = 800U;
   static constexpr std::uint32_t    default_window_height = 600U;
 
+  mutable int m_id = {};
   std::uint32_t                     m_window_width  = { default_window_width };
   mutable float                     m_scale_width   = {};
   std::uint32_t                     m_window_height = { default_window_height };
@@ -79,7 +80,7 @@ private:
   void                            menu_bar() const;
   void                            slider_xy_sprite(auto &sprite) const;
   void                            combo_palette() const;
-  void                            combo_mim_bpp() const;
+  void                            combo_bpp() const;
   void                            checkbox_mim_palette_texture() const;
   void                            combo_field() const;
   void                            combo_coo() const;
@@ -94,5 +95,10 @@ private:
   void scale_window(float width = {}, float height = {}) const;
   int  get_selected_field();
   std::uint8_t palette() const;
+  open_viii::graphics::BPPT bpp() const
+  {
+  return open_viii::graphics::background::Mim::bpp_selections().at(
+    static_cast<size_t>(m_selected_bpp));
+  }
 };
 #endif// MYPROJECT_GUI_HPP
