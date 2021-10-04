@@ -22,12 +22,13 @@ include(${CMAKE_SOURCE_DIR}/cmake/OpenVIII_CPP_WIP.cmake)
 include(${CMAKE_SOURCE_DIR}/cmake/ImGuiFileBrowser.cmake)
 add_executable(test_imgui test.cpp gui.cpp archives_group.cpp mim_sprite.cpp map_sprite.cpp grid.cpp grid.hpp upscales.cpp upscales.hpp)
 #set_property(TARGET test_imgui PROPERTY CXX_STANDARD 20)
-find_package(ImGui-SFML REQUIRED)
+#find_package(ImGui-SFML REQUIRED)
 find_package(fmt)
+include(../../cmake/imgui-sfml.cmake)
 target_link_libraries(test_imgui
         PRIVATE project_warnings
         PRIVATE project_options
-        PRIVATE ImGui-SFML::ImGui-SFML
+        PRIVATE ImGui-SFML
         PRIVATE fmt::fmt
         PRIVATE OpenVIII_CPP_WIP_VIIIPaths
         PRIVATE OpenVIII_CPP_WIP_VIIIArchive
