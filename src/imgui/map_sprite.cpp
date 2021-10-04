@@ -325,7 +325,7 @@ void map_sprite::save(const std::filesystem::path &path) const
 bool map_sprite::fail() const
 {
   using namespace open_viii::graphics::literals;
-  return m_mim.get_width(4_bpp, 0U) == 0;
+  return m_mim.get_width(4_bpp, false) == 0;
 }
 void map_sprite::map_save(const std::filesystem::path &dest_path) const
 {
