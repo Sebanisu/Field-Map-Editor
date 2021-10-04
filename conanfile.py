@@ -20,7 +20,9 @@ class CppStarterProject(ConanFile):
 
     def requirements(self):
         if self.options.cpp_starter_use_imgui == "ON":
-            self.requires("imgui-sfml/2.1@bincrafters/stable")
+            #self.requires("imgui-sfml/2.1@bincrafters/stable")
+            self.requires("imgui/1.84.2")
+            self.requires("sfml/2.5.1")
         if self.options.cpp_starter_use_sdl == "ON":
             self.requires("sdl2/2.0.10@bincrafters/stable")
 # required for linux? sudo apt-get install -y pkg-config
