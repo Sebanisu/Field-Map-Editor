@@ -80,7 +80,7 @@ std::unique_ptr<std::array<sf::Texture, map_sprite::MAX_TEXTURES>>
         ret->at(pos).update(reinterpret_cast<const sf::Uint8 *>(colors.data()));
       }
     }
-    std::cout << '\n';
+    std::cout << std::endl;
   }
   return ret;
 }
@@ -100,7 +100,7 @@ std::vector<std::uint16_t> map_sprite::get_unique_z_axis() const
     for (const auto z : ret) {
       std::cout << z << '\t';
     }
-    std::cout << '\n';
+    std::cout << std::endl;
   }
   return ret;
 }
@@ -120,7 +120,7 @@ std::vector<std::uint8_t> map_sprite::get_unique_layers() const
     for (const auto layer : ret) {
       std::cout << +layer << '\t';
     }
-    std::cout << '\n';
+    std::cout << std::endl;
   }
   return ret;
 }
@@ -141,7 +141,7 @@ std::vector<open_viii::graphics::background::BlendModeT>
     for (const auto z : ret) {
       std::cout << static_cast<std::uint32_t>(z) << '\t';
     }
-    std::cout << '\n';
+    std::cout << std::endl;
   }
   return ret;
 }
@@ -249,16 +249,8 @@ void map_sprite::local_draw(sf::RenderTarget &target,
           if (tile.z() != z) {
             return;
           }
-          using namespace open_viii::graphics::literals;
-          if (m_filters.palette.enabled() && m_filters.bpp.value() != 16_bpp) {
-            if (tile.palette_id() != m_filters.palette.value()) {
-              return;
-            }
-          }
-          if (m_filters.bpp.enabled()) {
-            if (tile.depth() != m_filters.bpp.value()) {
-              return;
-            }
+          if (fail_filter(tile)) {
+            return;
           }
           const auto raw_tileSize = sf::Vector2u{ 16U, 16U };
           auto quad = get_triangle_strip(new_tileSize, raw_tileSize, tile);
@@ -454,6 +446,47 @@ grid map_sprite::get_texture_page_grid() const
              256U },
     { m_mim.get_width(4_bpp), m_mim.get_height() },
     sf::Color::Yellow };
+}
+
+bool map_sprite::fail_filter(auto &tile) const
+{
+  using namespace open_viii::graphics::literals;
+  if (m_filters.palette.enabled() && m_filters.bpp.value() != 16_bpp) {
+    if (tile.palette_id() != m_filters.palette.value()) {
+      return true;
+    }
+  }
+  if (m_filters.bpp.enabled()) {
+    if (tile.depth() != m_filters.bpp.value()) {
+      return true;
+    }
+  }
+  if (m_filters.blend_mode.enabled()) {
+    if (tile.blend_mode() != m_filters.blend_mode.value()) {
+      return true;
+    }
+  }
+  if (m_filters.animation_id.enabled()) {
+    if (tile.animation_id() != m_filters.animation_id.value()) {
+      return true;
+    }
+  }
+  if (m_filters.animation_frame.enabled()) {
+    if (tile.animation_state() != m_filters.animation_frame.value()) {
+      return true;
+    }
+  }
+  if (m_filters.layer_id.enabled()) {
+    if (tile.layer_id() != m_filters.layer_id.value()) {
+      return true;
+    }
+  }
+  if (m_filters.texture_page_id.enabled()) {
+    if (tile.texture_id() != m_filters.texture_page_id.value()) {
+      return true;
+    }
+  }
+  return false;
 }
 
 // template<typename... T>

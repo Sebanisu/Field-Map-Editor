@@ -35,6 +35,13 @@ public:
   {
     init_render_texture();
   }
+  map_sprite update(const open_viii::archive::FIFLFS<false> &field,
+    open_viii::LangT                                         coo,
+    bool                                                     draw_swizzle) const
+
+  {
+    return { field, coo, draw_swizzle, m_filters };
+  }
 
   void          enable_draw_swizzle() const;
   void          disable_draw_swizzle() const;
@@ -81,18 +88,83 @@ public:
     m_filters.bpp.disable();
     update_render_texture();
   }
+  void filter_blend_mode(
+    open_viii::graphics::background::BlendModeT blend_mode) const
+  {
+    if (m_filters.blend_mode.update(blend_mode).enabled()) {
+      update_render_texture();
+    }
+  }
+  void filter_blend_mode_enable() const
+  {
+    m_filters.blend_mode.enable();
+    update_render_texture();
+  }
+  void filter_blend_mode_disable() const
+  {
+    m_filters.blend_mode.disable();
+    update_render_texture();
+  }
+  void filter_animation_id(std::uint8_t animation_id) const
+  {
+    if (m_filters.animation_id.update(animation_id).enabled()) {
+      update_render_texture();
+    }
+  }
+  void filter_animation_id_enable() const
+  {
+    m_filters.animation_id.enable();
+    update_render_texture();
+  }
+  void filter_animation_id_disable() const
+  {
+    m_filters.animation_id.disable();
+    update_render_texture();
+  }
+  void filter_animation_frame(std::uint8_t animation_frame) const
+  {
+    if (m_filters.animation_id.update(animation_frame).enabled()) {
+      update_render_texture();
+    }
+  }
+  void filter_animation_frame_enable() const
+  {
+    m_filters.animation_frame.enable();
+    update_render_texture();
+  }
+  void filter_animation_frame_disable() const
+  {
+    m_filters.animation_frame.disable();
+    update_render_texture();
+  }
+  void filter_layer_id(std::uint8_t layer_id) const
+  {
+    if (m_filters.layer_id.update(layer_id).enabled()) {
+      update_render_texture();
+    }
+  }
+  void filter_layer_id_enable() const
+  {
+    m_filters.layer_id.enable();
+    update_render_texture();
+  }
+  void filter_layer_id_disable() const
+  {
+    m_filters.layer_id.disable();
+    update_render_texture();
+  }
 
 private:
-  mutable bool                                  m_draw_swizzle  = { false };
-  mutable filters                               m_filters       = {};
-  const open_viii::archive::FIFLFS<false>      *m_field         = {};
-  open_viii::LangT                              m_coo           = {};
-  open_viii::graphics::background::Mim          m_mim           = {};
-  mutable std::string                           m_map_path      = {};
-  open_viii::graphics::background::Map          m_map           = {};
-  open_viii::graphics::Rectangle<std::uint32_t> m_canvas        = {};
-  std::vector<std::uint8_t>                     m_unique_layers = {};
-  std::vector<std::uint16_t>                    m_unique_z_axis = {};
+  mutable bool                                       m_draw_swizzle = { false };
+  mutable filters                                    m_filters      = {};
+  std::shared_ptr<open_viii::archive::FIFLFS<false>> m_field        = {};
+  open_viii::LangT                                   m_coo          = {};
+  open_viii::graphics::background::Mim               m_mim          = {};
+  mutable std::string                                m_map_path     = {};
+  open_viii::graphics::background::Map               m_map          = {};
+  open_viii::graphics::Rectangle<std::uint32_t>      m_canvas       = {};
+  std::vector<std::uint8_t>                          m_unique_layers     = {};
+  std::vector<std::uint16_t>                         m_unique_z_axis     = {};
   std::vector<open_viii::graphics::background::BlendModeT> m_blend_modes = {};
   std::vector<std::pair<open_viii::graphics::BPPT, std::uint8_t>>
                                m_bpp_and_palette = {};
@@ -152,5 +224,6 @@ private:
   void                        update_render_texture() const;
   static const sf::BlendMode &GetBlendSubtract();
   void local_draw(sf::RenderTarget &target, sf::RenderStates states) const;
+  bool fail_filter(auto &tile) const;
 };
 #endif// MYPROJECT_MAP_SPRITE_HPP

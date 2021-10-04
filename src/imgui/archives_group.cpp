@@ -13,7 +13,7 @@ open_viii::archive::Archives archives_group::get_archives() const
   auto archives = open_viii::archive::Archives(
     m_path, open_viii::LangCommon::to_string(m_coo));
   if (!static_cast<bool>(archives)) {
-    std::cerr << "Failed to load path: " << m_path << '\n';
+    std::cerr << "Failed to load path: " << m_path << std::endl;
   }
   m_failed = false;
   return archives;

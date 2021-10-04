@@ -4,6 +4,7 @@
 
 #ifndef MYPROJECT_FILTER_HPP
 #define MYPROJECT_FILTER_HPP
+#include "open_viii/graphics/background/BlendModeT.hpp"
 #include "open_viii/graphics/BPPT.hpp"
 #include <cstdint>
 #include <utility>
@@ -41,8 +42,13 @@ public:
 };
 struct filters
 {
-  filter<std::uint8_t>              palette = {};
-  filter<open_viii::graphics::BPPT> bpp     = []() {
+  filter<std::uint8_t>                                palette         = {};
+  filter<std::uint8_t>                                animation_id    = {};
+  filter<std::uint8_t>                                animation_frame = {};
+  filter<std::uint8_t>                                layer_id        = {};
+  filter<std::uint8_t>                                texture_page_id = {};
+  filter<open_viii::graphics::background::BlendModeT> blend_mode      = {};
+  filter<open_viii::graphics::BPPT>                   bpp             = []() {
     using namespace open_viii::graphics::literals;
     return filter<open_viii::graphics::BPPT>(4_bpp);
   }();
