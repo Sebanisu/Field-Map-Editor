@@ -1,6 +1,6 @@
 include(FetchContent)
-find_package(imgui REQUIRED)
-find_package(sfml REQUIRED)
+find_package(imgui REQUIRED) #from conan
+find_package(sfml REQUIRED) #from conan
 #list(GET imgui_INCLUDE_DIRS 0 IMGUI_DIR)
 #message(STATUS "dir='${IMGUI_DIR}'")
 #foreach(dir ${imgui_INCLUDE_DIRS})
