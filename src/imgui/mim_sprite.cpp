@@ -138,7 +138,6 @@ void mim_sprite::draw(sf::RenderTarget &target, sf::RenderStates states) const
     // draw texture
     target.draw(m_vertices.data(), 4U, sf::TriangleStrip, states);
     // draw grids
-    states.texture = nullptr;
     target.draw(m_grid, states);
     if (!m_draw_palette) {
       target.draw(m_texture_page_grid, states);

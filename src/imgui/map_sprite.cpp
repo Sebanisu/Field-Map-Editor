@@ -303,7 +303,6 @@ void map_sprite::draw(sf::RenderTarget &target, sf::RenderStates states) const
   // draw the vertex array
   target.draw(quad.data(), quad.size(), sf::TriangleStrip, states);
   // draw grid
-  states.texture = nullptr;
   target.draw(m_grid, states);
 }
 void map_sprite::update_render_texture() const
