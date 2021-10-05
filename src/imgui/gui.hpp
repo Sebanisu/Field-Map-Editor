@@ -100,5 +100,7 @@ private:
     return open_viii::graphics::background::Mim::bpp_selections().at(
       static_cast<size_t>(m_selected_bpp));
   }
+  void combo_blend_mode() const;
+  void combo_layers() const;
 };
 #endif// MYPROJECT_GUI_HPP

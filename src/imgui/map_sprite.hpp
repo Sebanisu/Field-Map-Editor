@@ -9,6 +9,7 @@
 #include "open_viii/archive/Archives.hpp"
 #include "open_viii/graphics/background/Map.hpp"
 #include "open_viii/graphics/background/Mim.hpp"
+#include <fmt/format.h>
 #include <SFML/Graphics/Drawable.hpp>
 #include <SFML/Graphics/RenderTexture.hpp>
 #include <SFML/Graphics/Transformable.hpp>
@@ -31,23 +32,44 @@ public:
       m_field(std::move(field)), m_coo(coo), m_mim(get_mim()),
       m_map(get_map(&m_map_path)), m_canvas(get_canvas()),
       m_unique_layers(get_unique_layers()),
-      m_unique_texture_pages(get_unique_texture_pagess()),
+      m_unique_texture_pages(get_unique_texture_pages()),
       m_unique_animation_ids(get_unique_animation_ids()),
       m_unique_animation_frames(get_unique_animation_frames()),
       m_blend_modes(get_blend_modes()), m_unique_z_axis(get_unique_z_axis()),
+      m_unique_layers_str(get_strings(m_unique_layers)),
+      m_unique_texture_pages_str(get_strings(m_unique_texture_pages)),
+      m_unique_animation_ids_str(get_strings(m_unique_animation_ids)),
+      m_unique_animation_frames_str(get_strings(m_unique_animation_frames)),
+      m_blend_modes_str(get_strings(m_blend_modes)),
       m_bpp_and_palette(get_bpp_and_palette()), m_texture(get_textures()),
       m_grid(get_grid()), m_texture_page_grid(get_texture_page_grid()),
       m_render_texture(std::make_shared<sf::RenderTexture>())
   {
     init_render_texture();
   }
-
-  /**
-   * Sometimes the rendertexture just fails to be set. So I added this to the
-   * loop.
-   */
-  void       init_render_texture_if_null() const;
-
+  template<typename T>
+  static std::vector<std::string> get_strings(const std::vector<T> &data);
+  template<typename T, typename U>
+  static std::map<T,std::vector<std::string>> get_strings(const std::map<T,std::vector<U>> &data);
+  static std::vector<const char *> get_c_str(const std::vector<std::string> &data)
+  {
+    std::vector<const char *> vector;
+    vector.reserve(std::size(data));
+    std::ranges::transform(data, std::back_inserter(vector), [](const std::string &t) {
+      return t.c_str();
+    });
+    return vector;
+  }
+  template<typename T>
+  static std::map<T,std::vector<const char *>> get_c_str(const std::map<T,std::vector<std::string>> &data)
+  {
+    std::map<T,std::vector<const char *>> map = {};
+    for(const auto &[key, vector]: data)
+    {
+      map.emplace(key,get_c_str(vector));
+    }
+    return map;
+  }
   map_sprite update(std::shared_ptr<open_viii::archive::FIFLFS<false>> field,
     open_viii::LangT                                                   coo,
     bool draw_swizzle) const
@@ -70,25 +92,31 @@ public:
   void draw(sf::RenderTarget &target, sf::RenderStates states) const final;
   const map_sprite &toggle_grid(bool enable,
     bool                             enable_texture_page_grid) const;
-  void              filter_palette(std::uint8_t palette) const;
-  void              filter_palette_enable() const;
-  void              filter_palette_disable() const;
-  void              filter_bpp(open_viii::graphics::BPPT bpp) const;
-  void              filter_bpp_enable() const;
-  void              filter_bpp_disable() const;
-  void              filter_blend_mode(
-                 open_viii::graphics::background::BlendModeT blend_mode) const;
-  void filter_blend_mode_enable() const;
-  void filter_blend_mode_disable() const;
-  void filter_animation_id(std::uint8_t animation_id) const;
-  void filter_animation_id_enable() const;
-  void filter_animation_id_disable() const;
-  void filter_animation_frame(std::uint8_t animation_frame) const;
-  void filter_animation_frame_enable() const;
-  void filter_animation_frame_disable() const;
-  void filter_layer_id(std::uint8_t layer_id) const;
-  void filter_layer_id_enable() const;
-  void filter_layer_id_disable() const;
+  bool empty() const;
+  auto & filter() const
+  {
+    return m_filters;
+  }
+  const auto & blend_modes() const
+  {
+    return m_blend_modes;
+  }
+
+  const auto & blend_modes_str() const
+  {
+    return m_blend_modes_str;
+  }
+
+  const auto & layer_ids() const
+  {
+    return m_unique_layers;
+  }
+
+  const auto & layer_ids_str() const
+  {
+    return m_unique_layers_str;
+  }
+  void                        update_render_texture() const;
 
 private:
   mutable bool                                       m_draw_swizzle = { false };
@@ -106,18 +134,26 @@ private:
     m_unique_animation_frames                                              = {};
   std::vector<open_viii::graphics::background::BlendModeT> m_blend_modes   = {};
   std::vector<std::uint16_t>                               m_unique_z_axis = {};
+
+  std::vector<std::string> m_unique_layers_str                             = {};
+  std::vector<std::string> m_unique_texture_pages_str                      = {};
+  std::vector<std::string> m_unique_animation_ids_str                      = {};
+  std::map<std::uint8_t, std::vector<std::string>>
+                           m_unique_animation_frames_str = {};
+  std::vector<std::string> m_blend_modes_str             = {};
+  std::vector<std::string> m_unique_z_axis_str           = {};
   std::vector<std::pair<open_viii::graphics::BPPT, std::uint8_t>>
                                m_bpp_and_palette = {};
   static constexpr std::size_t MAX_TEXTURES =
     16 * 13;// 13*16 for texture page / palette combos. 16*2+1 for palette bpp
             // combos.
-  std::shared_ptr<std::array<sf::Texture, MAX_TEXTURES>> m_texture        = {};
-  mutable std::shared_ptr<sf::RenderTexture>             m_render_texture = {};
-  mutable grid                                           m_grid           = {};
-  grid m_texture_page_grid                                                = {};
+  mutable std::shared_ptr<std::array<sf::Texture, MAX_TEXTURES>> m_texture = {};
+  mutable std::shared_ptr<sf::RenderTexture> m_render_texture              = {};
+  mutable grid                               m_grid                        = {};
+  grid                                       m_texture_page_grid           = {};
 
-  grid get_grid() const;
-  grid get_texture_page_grid() const;
+  grid                                       get_grid() const;
+  grid                                       get_texture_page_grid() const;
 
   using color_type  = open_viii::graphics::Color32RGBA;
   using colors_type = std::vector<color_type>;
@@ -160,7 +196,6 @@ private:
     auto              &&tile) const;
 
 
-  void                        update_render_texture() const;
   static const sf::BlendMode &GetBlendSubtract();
   void local_draw(sf::RenderTarget &target, sf::RenderStates states) const;
   bool fail_filter(auto &tile) const;
@@ -173,7 +208,7 @@ private:
   std::vector<T>            get_unique_from_tiles(lambdaT &&lambda,
                sortT                                      &&sort = {},
                filterT                                                   &&= {}) const;
-  std::vector<std::uint8_t> get_unique_texture_pagess() const;
+  std::vector<std::uint8_t> get_unique_texture_pages() const;
   std::map<std::uint8_t, std::vector<std::uint8_t>>
     get_unique_animation_frames() const;
 };

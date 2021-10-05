@@ -6,13 +6,17 @@
 #include <imgui-SFML.h>
 #include <imgui.h>
 
-void gui::start() const
+typedef const bool i;
+void               gui::start() const
 {
   if (m_window.isOpen()) {
     scale_window(
       static_cast<float>(m_window_width), static_cast<float>(m_window_height));
     do {
-      m_map_sprite.init_render_texture_if_null();
+      //      if(!map_test() && m_selected_draw == 1)
+      //      {
+      //        m_map_sprite = get_map_sprite();
+      //      }
       m_changed = false;
       m_id      = {};
       loop_events();
@@ -58,6 +62,8 @@ void gui::loop() const
         checkbox_map_swizzle();
         combo_bpp();
         combo_palette();
+        combo_blend_mode();
+        combo_layers();
         if (m_changed) {
           scale_window();
         }
@@ -150,7 +156,9 @@ static void update_bpp(mim_sprite &sprite, open_viii::graphics::BPPT bpp)
 }
 static void update_bpp(map_sprite &sprite, open_viii::graphics::BPPT bpp)
 {
-  sprite.filter_bpp(bpp);
+  if (sprite.filter().bpp.update(bpp).enabled()) {
+    sprite.update_render_texture();
+  }
 }
 void gui::combo_bpp() const
 {
@@ -162,8 +170,12 @@ void gui::combo_bpp() const
         bpp_items.data(),
         static_cast<int>(bpp_items.size()),
         static_cast<int>(bpp_items.size()))) {
-    if (mim_test()) update_bpp(m_mim_sprite, bpp());
-    if (map_test()) update_bpp(m_map_sprite, bpp());
+    if (mim_test()) {
+      update_bpp(m_mim_sprite, bpp());
+    }
+    if (map_test()) {
+      update_bpp(m_map_sprite, bpp());
+    }
     m_changed = true;
   }
   ImGui::PopID();
@@ -173,10 +185,11 @@ void gui::combo_bpp() const
     ImGui::SameLine();
     if (ImGui::Checkbox("", &enable_palette_filter)) {
       if (enable_palette_filter) {
-        m_map_sprite.filter_bpp_enable();
+        m_map_sprite.filter().bpp.enable();
       } else {
-        m_map_sprite.filter_bpp_disable();
+        m_map_sprite.filter().bpp.disable();
       }
+      m_map_sprite.update_render_texture();
       m_changed = true;
     }
   }
@@ -194,7 +207,9 @@ static void update_palette(mim_sprite &sprite, uint8_t palette)
 }
 static void update_palette(map_sprite &sprite, uint8_t palette)
 {
-  sprite.filter_palette(palette);
+  if (sprite.filter().palette.update(palette).enabled()) {
+    sprite.update_render_texture();
+  }
 }
 void gui::combo_palette() const
 {
@@ -221,10 +236,11 @@ void gui::combo_palette() const
       ImGui::PushID(++m_id);
       if (ImGui::Checkbox("", &enable_palette_filter)) {
         if (enable_palette_filter) {
-          m_map_sprite.filter_palette_enable();
+          m_map_sprite.filter().palette.enable();
         } else {
-          m_map_sprite.filter_palette_disable();
+          m_map_sprite.filter().palette.disable();
         }
+        m_map_sprite.update_render_texture();
         m_changed = true;
       }
       ImGui::PopID();
@@ -533,4 +549,102 @@ int gui::get_selected_field()
     return field;
   }
   return 0;
+}
+static bool generic_combo(int &id,
+  const char                  *name,
+  auto                       &&value_lambda,
+  auto                       &&string_lambda,
+  auto                       &&filter_lambda)
+{
+  bool               changed     = false;
+  static bool        checked     = false;
+  const auto        &values      = value_lambda();
+  const auto        &strings     = string_lambda();
+  auto              &filter      = filter_lambda();
+  static std::size_t current_idx = {};
+  if (const auto it = std::find(values.begin(), values.end(), filter.value());
+      it != values.end()) {
+    current_idx = static_cast<size_t>(std::distance(values.begin(), it));
+  } else {
+    current_idx = 0;
+    if (!std::empty(values)) {
+      filter.update(values.front());
+    }
+    changed = true;
+  }
+  if (std::empty(values) || std::empty(strings)) {
+    if (checked) {
+      filter.disable();
+      checked = false;
+      return true;
+    }
+    return false;
+  }
+  const char *current_item = strings[current_idx].c_str();
+
+  ImGui::PushID(++id);
+  if (ImGui::BeginCombo(name, current_item))
+  // The second parameter is the label previewed
+  // before opening the combo.
+  {
+    const auto old = current_idx;
+    for (std::size_t n = 0; n != std::size(strings); ++n) {
+      i           is_selected = (current_idx == n);
+      // You can store your selection however you
+      // want, outside or inside your objects
+      // ImGui::PushID(++m_id);
+      const char *v           = strings[n].c_str();
+      if (ImGui::Selectable(v, is_selected)) {
+        current_idx = n;
+        changed     = true;
+      }
+      // ImGui::PopID();
+      if (is_selected) {
+        ImGui::SetItemDefaultFocus();
+        // You may set the initial focus when
+        // opening the combo (scrolling + for
+        // keyboard navigation support)
+      }
+    }
+    ImGui::EndCombo();
+  }
+  changed = filter.update(values[current_idx]).enabled() && changed;
+  ImGui::PopID();
+  ImGui::PushID(++id);
+  ImGui::SameLine();
+  if (ImGui::Checkbox("", &checked)) {
+    if (checked) {
+      filter.enable();
+    } else {
+      filter.disable();
+    }
+    changed = true;
+  }
+  ImGui::PopID();
+  return changed;
+}
+void gui::combo_blend_mode() const
+{
+  if (generic_combo(
+        m_id,
+        "Blend Mode",
+        [this]() { return m_map_sprite.blend_modes(); },
+        [this]() { return m_map_sprite.blend_modes_str(); },
+        [this]() -> auto & { return m_map_sprite.filter().blend_mode; })) {
+    m_map_sprite.update_render_texture();
+    m_changed = true;
+  };
+}
+
+void gui::combo_layers() const
+{
+  if (generic_combo(
+        m_id,
+        "Layers",
+        [this]() { return m_map_sprite.layer_ids(); },
+        [this]() { return m_map_sprite.layer_ids_str(); },
+        [this]() -> auto & { return m_map_sprite.filter().layer_id; })) {
+    m_map_sprite.update_render_texture();
+    m_changed = true;
+  };
 }

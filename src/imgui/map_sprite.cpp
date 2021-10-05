@@ -4,22 +4,29 @@
 #include "imgui_format_text.hpp"
 #include <utility>
 using namespace open_viii::graphics::background;
+using namespace open_viii::graphics::literals;
+using namespace std::string_literals;
+
 template<typename T, typename lambdaT, typename sortT, typename filterT>
 std::vector<T> map_sprite::get_unique_from_tiles(lambdaT &&lambda,
   sortT                                                  &&sort,
   filterT                                                &&filter) const
 {
-  std::vector<T> ret{};
-  if (!fail()) {
-    m_map.visit_tiles([&ret, &lambda, &sort, &filter](auto &&tiles) {
+  return m_map.visit_tiles([&lambda, &sort, &filter](auto &&tiles) {
+    std::vector<T> ret{};
+    if (!std::empty(tiles)) {
       std::ranges::transform(
         tiles | std::views::filter(filter), std::back_inserter(ret), lambda);
       std::ranges::sort(ret, sort);
       auto last = std::unique(ret.begin(), ret.end());
       ret.erase(last, ret.end());
-    });
-  }
-  return ret;
+    }
+    return ret;
+  });
+}
+bool map_sprite::empty() const
+{
+  return m_map.visit_tiles([](auto &&tiles) { return std::empty(tiles); });
 }
 
 std::map<std::uint8_t, std::vector<std::uint8_t>>
@@ -58,7 +65,7 @@ std::vector<std::uint8_t> map_sprite::get_unique_layers() const
     [](const auto &tile) { return tile.layer_id(); });
 }
 
-std::vector<std::uint8_t> map_sprite::get_unique_texture_pagess() const
+std::vector<std::uint8_t> map_sprite::get_unique_texture_pages() const
 {
   return get_unique_from_tiles<std::uint8_t>(
     [](const auto &tile) { return tile.texture_id(); });
@@ -138,7 +145,7 @@ std::shared_ptr<std::array<sf::Texture, map_sprite::MAX_TEXTURES>>
 {
   auto ret = std::make_shared<std::array<sf::Texture, MAX_TEXTURES>>(
     std::array<sf::Texture, MAX_TEXTURES>{});
-  if (!fail()) {
+  if (!std::empty(m_bpp_and_palette)) {
     for (const auto &[bpp, palette] : m_bpp_and_palette) {
       if (bpp.bpp24()) {
         continue;
@@ -348,15 +355,37 @@ void map_sprite::save(const std::filesystem::path &path) const
 }
 bool map_sprite::fail() const
 {
+  static bool once = true;
   using namespace open_viii::graphics::literals;
   if (!m_render_texture) {
-    std::cout << "m_render_texture is null" << std::endl;
+    if (once) {
+      std::cout << "m_render_texture is null" << std::endl;
+      once = false;
+    }
+    return true;
+  }
+  if (!m_texture) {
+    if (once) {
+      std::cout << "m_texture is null" << std::endl;
+      once = false;
+    }
     return true;
   }
   if (m_mim.get_width(4_bpp, false) == 0) {
-    std::cout << "m_mim width is 0" << std::endl;
+    if (once) {
+      std::cout << "m_mim width is 0" << std::endl;
+      once = false;
+    }
     return true;
   }
+  if (empty()) {
+    if (once) {
+      std::cout << "m_map is empty" << std::endl;
+      once = false;
+    }
+    return true;
+  }
+  once = true;
   return false;
 }
 void map_sprite::map_save(const std::filesystem::path &dest_path) const
@@ -414,14 +443,7 @@ void map_sprite::init_render_texture() const
   resize_render_texture();
   update_render_texture();
 }
-void map_sprite::init_render_texture_if_null() const
-{
-  if (!m_render_texture) {
-    m_render_texture = std::make_shared<sf::RenderTexture>();
-    resize_render_texture();
-    update_render_texture();
-  }
-}
+
 
 open_viii::graphics::Rectangle<std::uint32_t> map_sprite::get_canvas() const
 {
@@ -498,101 +520,41 @@ bool map_sprite::fail_filter(auto &tile) const
   }
   return false;
 }
-void map_sprite::filter_palette_enable() const
+template<typename T, typename U>
+std::map<T, std::vector<std::string>> map_sprite::get_strings(
+  const std::map<T, std::vector<U>> &data)
 {
-  m_filters.palette.enable();
-  update_render_texture();
-}
-void map_sprite::filter_palette_disable() const
-{
-  m_filters.palette.disable();
-  update_render_texture();
-}
-void map_sprite::filter_bpp(open_viii::graphics::BPPT bpp) const
-{
-  if (m_filters.bpp.update(bpp).enabled()) {
-    update_render_texture();
+  std::map<T, std::vector<std::string>> map = {};
+  for (const auto &[key, vector] : data) {
+    map.emplace(key, get_strings<U>(vector));
   }
+  return map;
 }
-void map_sprite::filter_bpp_enable() const
+template<typename T>
+std::vector<std::string> map_sprite::get_strings(const std::vector<T> &data)
 {
-  m_filters.bpp.enable();
-  update_render_texture();
-}
-void map_sprite::filter_palette(std::uint8_t palette) const
-{
-  if (m_filters.palette.update(palette).enabled()) {
-    update_render_texture();
-  }
-}
-void map_sprite::filter_blend_mode(BlendModeT blend_mode) const
-{
-  if (m_filters.blend_mode.update(blend_mode).enabled()) {
-    update_render_texture();
-  }
-}
-void map_sprite::filter_bpp_disable() const
-{
-  m_filters.bpp.disable();
-  update_render_texture();
-}
-void map_sprite::filter_blend_mode_enable() const
-{
-  m_filters.blend_mode.enable();
-  update_render_texture();
-}
-void map_sprite::filter_blend_mode_disable() const
-{
-  m_filters.blend_mode.disable();
-  update_render_texture();
-}
-void map_sprite::filter_animation_id(std::uint8_t animation_id) const
-{
-  if (m_filters.animation_id.update(animation_id).enabled()) {
-    update_render_texture();
-  }
-}
-void map_sprite::filter_animation_id_enable() const
-{
-  m_filters.animation_id.enable();
-  update_render_texture();
-}
-void map_sprite::filter_animation_id_disable() const
-{
-  m_filters.animation_id.disable();
-  update_render_texture();
-}
-void map_sprite::filter_animation_frame(std::uint8_t animation_frame) const
-{
-  if (m_filters.animation_id.update(animation_frame).enabled()) {
-    update_render_texture();
-  }
-}
-void map_sprite::filter_animation_frame_enable() const
-{
-  m_filters.animation_frame.enable();
-  update_render_texture();
-}
-void map_sprite::filter_animation_frame_disable() const
-{
-  m_filters.animation_frame.disable();
-  update_render_texture();
-}
-void map_sprite::filter_layer_id(std::uint8_t layer_id) const
-{
-  if (m_filters.layer_id.update(layer_id).enabled()) {
-    update_render_texture();
-  }
-}
-void map_sprite::filter_layer_id_enable() const
-{
-  m_filters.layer_id.enable();
-  update_render_texture();
-}
-void map_sprite::filter_layer_id_disable() const
-{
-  m_filters.layer_id.disable();
-  update_render_texture();
+  std::vector<std::string> vector;
+  vector.reserve(std::size(data));
+  std::ranges::transform(data, std::back_inserter(vector), [](const T &t) {
+    if constexpr (std::is_same_v<T, BlendModeT>) {
+      switch (t) {
+      case BlendModeT::quarter_add:
+        return "quarter add"s;
+      case BlendModeT::half_add:
+        return "half add"s;
+      case BlendModeT::add:
+        return "add"s;
+      default:
+      case BlendModeT::none:
+        return "none"s;
+      case BlendModeT::subtract:
+        return "subtract"s;
+      }
+    } else {
+      return fmt::format("{}", t);
+    }
+  });
+  return vector;
 }
 
 // template<typename... T>
