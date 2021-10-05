@@ -3,30 +3,103 @@
 #include "append_inserter.hpp"
 #include "imgui_format_text.hpp"
 #include <utility>
-open_viii::graphics::background::Mim map_sprite::get_mim() const
+using namespace open_viii::graphics::background;
+template<typename T, typename lambdaT, typename sortT, typename filterT>
+std::vector<T> map_sprite::get_unique_from_tiles(lambdaT &&lambda,
+  sortT                                                  &&sort,
+  filterT                                                &&filter) const
+{
+  std::vector<T> ret{};
+  if (!fail()) {
+    m_map.visit_tiles([&ret, &lambda, &sort, &filter](auto &&tiles) {
+      std::ranges::transform(
+        tiles | std::views::filter(filter), std::back_inserter(ret), lambda);
+      std::ranges::sort(ret, sort);
+      auto last = std::unique(ret.begin(), ret.end());
+      ret.erase(last, ret.end());
+    });
+  }
+  return ret;
+}
+
+std::map<std::uint8_t, std::vector<std::uint8_t>>
+  map_sprite::get_unique_animation_frames() const
+{
+  std::map<std::uint8_t, std::vector<std::uint8_t>> ret = {};
+  //  auto                                   me  = std::max_element(
+  //                                       m_unique_animation_ids.begin(),
+  //                                       m_unique_animation_ids.end());
+  //  ret.resize(*me + 1U);
+  for (const auto &id : m_unique_animation_ids) {
+    ret.emplace(id,
+      get_unique_from_tiles<std::uint8_t>(
+        [](const auto &tile) { return tile.animation_state(); },
+        {},
+        [&id](const auto &tile) { return id == tile.animation_id(); }));
+  }
+  return ret;
+}
+
+std::vector<std::uint8_t> map_sprite::get_unique_animation_ids() const
+{
+  return get_unique_from_tiles<std::uint8_t>(
+    [](const auto &tile) { return tile.animation_id(); });
+}
+
+std::vector<std::uint16_t> map_sprite::get_unique_z_axis() const
+{
+  return get_unique_from_tiles<std::uint16_t>(
+    [](const auto &tile) { return tile.z(); }, std::greater<>{});
+}
+
+std::vector<std::uint8_t> map_sprite::get_unique_layers() const
+{
+  return get_unique_from_tiles<std::uint8_t>(
+    [](const auto &tile) { return tile.layer_id(); });
+}
+
+std::vector<std::uint8_t> map_sprite::get_unique_texture_pagess() const
+{
+  return get_unique_from_tiles<std::uint8_t>(
+    [](const auto &tile) { return tile.texture_id(); });
+}
+
+std::vector<BlendModeT> map_sprite::get_blend_modes() const
+{
+  return get_unique_from_tiles<BlendModeT>(
+    [](const auto &tile) { return tile.blend_mode(); });
+}
+
+std::vector<std::pair<open_viii::graphics::BPPT, std::uint8_t>>
+  map_sprite::get_bpp_and_palette() const
+{
+  return get_unique_from_tiles<
+    std::pair<open_viii::graphics::BPPT, std::uint8_t>>([](const auto &tile) {
+    return std::pair(tile.depth(), tile.palette_id());
+  });
+}
+
+Mim map_sprite::get_mim() const
 {
   if (m_field != nullptr) {
-    auto lang_name = fmt::format("_{}{}",
-      open_viii::LangCommon::to_string(m_coo),
-      open_viii::graphics::background::Mim::EXT);
-    return { m_field->get_entry_data({ std::string_view(lang_name),
-               open_viii::graphics::background::Mim::EXT }),
+    auto lang_name =
+      fmt::format("_{}{}", open_viii::LangCommon::to_string(m_coo), Mim::EXT);
+    return { m_field->get_entry_data({ std::string_view(lang_name), Mim::EXT }),
       m_field->get_base_name() };
   }
   return {};
 }
 
-open_viii::graphics::background::Map
-  map_sprite::get_map(std::string *out_path, bool sort_remove, bool shift) const
+Map map_sprite::get_map(std::string *out_path,
+  bool                               sort_remove,
+  bool                               shift) const
 {
   if (m_field != nullptr) {
-    auto lang_name = fmt::format("_{}{}",
-      open_viii::LangCommon::to_string(m_coo),
-      open_viii::graphics::background::Map::EXT);
-    return open_viii::graphics::background::Map{ m_mim.mim_type(),
-      m_field->get_entry_data({ std::string_view(lang_name),
-                                open_viii::graphics::background::Map::EXT },
-        out_path),
+    auto lang_name =
+      fmt::format("_{}{}", open_viii::LangCommon::to_string(m_coo), Map::EXT);
+    return Map{ m_mim.mim_type(),
+      m_field->get_entry_data(
+        { std::string_view(lang_name), Map::EXT }, out_path),
       sort_remove,
       shift };
   }
@@ -48,9 +121,7 @@ constexpr std::size_t map_sprite::get_texture_pos(open_viii::graphics::BPPT bpp,
     return palette;
   }
   if (bpp.bpp8()) {
-    return palette
-           + std::size(
-             open_viii::graphics::background::Mim::palette_selections());
+    return palette + std::size(Mim::palette_selections());
   }
   return MAX_TEXTURES - 1;
   // 16bpp doesn't have palettes.
@@ -84,83 +155,6 @@ std::shared_ptr<std::array<sf::Texture, map_sprite::MAX_TEXTURES>>
     }
     std::cout << std::endl;
   }
-  return ret;
-}
-
-std::vector<std::uint16_t> map_sprite::get_unique_z_axis() const
-{
-  std::vector<std::uint16_t> ret{};
-  if (!fail()) {
-    m_map.visit_tiles([&ret](auto &&tiles) {
-      std::ranges::transform(tiles,
-        std::back_inserter(ret),
-        [](const auto &tile) { return tile.z(); });
-      std::ranges::sort(ret, std::greater<>());
-      auto last = std::unique(ret.begin(), ret.end());
-      ret.erase(last, ret.end());
-    });
-    for (const auto z : ret) {
-      std::cout << z << '\t';
-    }
-    std::cout << std::endl;
-  }
-  return ret;
-}
-
-std::vector<std::uint8_t> map_sprite::get_unique_layers() const
-{
-  std::vector<std::uint8_t> ret{};
-  if (!fail()) {
-    m_map.visit_tiles([&ret](auto &&tiles) {
-      std::ranges::transform(tiles,
-        std::back_inserter(ret),
-        [](const auto &tile) { return tile.layer_id(); });
-      std::ranges::sort(ret, std::greater<>());
-      auto last = std::unique(ret.begin(), ret.end());
-      ret.erase(last, ret.end());
-    });
-    for (const auto layer : ret) {
-      std::cout << +layer << '\t';
-    }
-    std::cout << std::endl;
-  }
-  return ret;
-}
-
-std::vector<open_viii::graphics::background::BlendModeT>
-  map_sprite::get_blend_modes() const
-{
-  std::vector<open_viii::graphics::background::BlendModeT> ret{};
-  if (!fail()) {
-    m_map.visit_tiles([&ret](auto &&tiles) {
-      std::ranges::transform(tiles,
-        std::back_inserter(ret),
-        [](const auto &tile) { return tile.blend_mode(); });
-      std::ranges::sort(ret, std::less<>());
-      auto last = std::unique(ret.begin(), ret.end());
-      ret.erase(last, ret.end());
-    });
-    for (const auto z : ret) {
-      std::cout << static_cast<std::uint32_t>(z) << '\t';
-    }
-    std::cout << std::endl;
-  }
-  return ret;
-}
-
-std::vector<std::pair<open_viii::graphics::BPPT, std::uint8_t>>
-  map_sprite::get_bpp_and_palette() const
-{
-  std::vector<std::pair<open_viii::graphics::BPPT, std::uint8_t>> ret{};
-  m_map.visit_tiles([&ret](auto &&tiles) {
-    std::ranges::transform(
-      tiles, std::back_inserter(ret), [](const auto &tile) {
-        return std::pair(tile.depth(), tile.palette_id());
-      });
-    std::ranges::sort(ret, std::less<>());
-    auto last = std::unique(ret.begin(), ret.end());
-    ret.erase(last, ret.end());
-  });
   return ret;
 }
 
@@ -257,24 +251,19 @@ void map_sprite::local_draw(sf::RenderTarget &target,
           const auto raw_tileSize = sf::Vector2u{ 16U, 16U };
           auto quad = get_triangle_strip(new_tileSize, raw_tileSize, tile);
           states.blendMode = sf::BlendAlpha;
-          if (tile.blend_mode()
-              == open_viii::graphics::background::BlendModeT::add) {
+          if (tile.blend_mode() == BlendModeT::add) {
             states.blendMode = sf::BlendAdd;
-          } else if (tile.blend_mode()
-                     == open_viii::graphics::background::BlendModeT::half_add) {
+          } else if (tile.blend_mode() == BlendModeT::half_add) {
             states.blendMode = sf::BlendAdd;
             constexpr static std::uint8_t per50 =
               (std::numeric_limits<std::uint8_t>::max)() / 2U;
             set_color(quad, { per50, per50, per50, per50 });// 50% alpha
-          } else if (tile.blend_mode()
-                     == open_viii::graphics::background::BlendModeT::
-                       quarter_add) {
+          } else if (tile.blend_mode() == BlendModeT::quarter_add) {
             states.blendMode = sf::BlendAdd;
             constexpr static std::uint8_t per25 =
               (std::numeric_limits<std::uint8_t>::max)() / 4U;
             set_color(quad, { per25, per25, per25, per25 });// 25% alpha
-          } else if (tile.blend_mode()
-                     == open_viii::graphics::background::BlendModeT::subtract) {
+          } else if (tile.blend_mode() == BlendModeT::subtract) {
             states.blendMode = GetBlendSubtract();
             // states.blendMode = sf::BlendMultiply;
           }
@@ -425,6 +414,14 @@ void map_sprite::init_render_texture() const
   resize_render_texture();
   update_render_texture();
 }
+void map_sprite::init_render_texture_if_null() const
+{
+  if (!m_render_texture) {
+    m_render_texture = std::make_shared<sf::RenderTexture>();
+    resize_render_texture();
+    update_render_texture();
+  }
+}
 
 open_viii::graphics::Rectangle<std::uint32_t> map_sprite::get_canvas() const
 {
@@ -500,6 +497,102 @@ bool map_sprite::fail_filter(auto &tile) const
     }
   }
   return false;
+}
+void map_sprite::filter_palette_enable() const
+{
+  m_filters.palette.enable();
+  update_render_texture();
+}
+void map_sprite::filter_palette_disable() const
+{
+  m_filters.palette.disable();
+  update_render_texture();
+}
+void map_sprite::filter_bpp(open_viii::graphics::BPPT bpp) const
+{
+  if (m_filters.bpp.update(bpp).enabled()) {
+    update_render_texture();
+  }
+}
+void map_sprite::filter_bpp_enable() const
+{
+  m_filters.bpp.enable();
+  update_render_texture();
+}
+void map_sprite::filter_palette(std::uint8_t palette) const
+{
+  if (m_filters.palette.update(palette).enabled()) {
+    update_render_texture();
+  }
+}
+void map_sprite::filter_blend_mode(BlendModeT blend_mode) const
+{
+  if (m_filters.blend_mode.update(blend_mode).enabled()) {
+    update_render_texture();
+  }
+}
+void map_sprite::filter_bpp_disable() const
+{
+  m_filters.bpp.disable();
+  update_render_texture();
+}
+void map_sprite::filter_blend_mode_enable() const
+{
+  m_filters.blend_mode.enable();
+  update_render_texture();
+}
+void map_sprite::filter_blend_mode_disable() const
+{
+  m_filters.blend_mode.disable();
+  update_render_texture();
+}
+void map_sprite::filter_animation_id(std::uint8_t animation_id) const
+{
+  if (m_filters.animation_id.update(animation_id).enabled()) {
+    update_render_texture();
+  }
+}
+void map_sprite::filter_animation_id_enable() const
+{
+  m_filters.animation_id.enable();
+  update_render_texture();
+}
+void map_sprite::filter_animation_id_disable() const
+{
+  m_filters.animation_id.disable();
+  update_render_texture();
+}
+void map_sprite::filter_animation_frame(std::uint8_t animation_frame) const
+{
+  if (m_filters.animation_id.update(animation_frame).enabled()) {
+    update_render_texture();
+  }
+}
+void map_sprite::filter_animation_frame_enable() const
+{
+  m_filters.animation_frame.enable();
+  update_render_texture();
+}
+void map_sprite::filter_animation_frame_disable() const
+{
+  m_filters.animation_frame.disable();
+  update_render_texture();
+}
+void map_sprite::filter_layer_id(std::uint8_t layer_id) const
+{
+  if (m_filters.layer_id.update(layer_id).enabled()) {
+    update_render_texture();
+  }
+}
+void map_sprite::filter_layer_id_enable() const
+{
+  m_filters.layer_id.enable();
+  update_render_texture();
+}
+void map_sprite::filter_layer_id_disable() const
+{
+  m_filters.layer_id.disable();
+  update_render_texture();
 }
 
 // template<typename... T>

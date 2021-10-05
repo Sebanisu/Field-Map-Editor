@@ -12,6 +12,7 @@ void gui::start() const
     scale_window(
       static_cast<float>(m_window_width), static_cast<float>(m_window_height));
     do {
+      m_map_sprite.init_render_texture_if_null();
       m_changed = false;
       m_id      = {};
       loop_events();
