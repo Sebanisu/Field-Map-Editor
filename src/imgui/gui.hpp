@@ -102,5 +102,6 @@ private:
   }
   void combo_blend_mode() const;
   void combo_layers() const;
+  void combo_texture_pages() const;
 };
 #endif// MYPROJECT_GUI_HPP

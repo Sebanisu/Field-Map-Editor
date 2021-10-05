@@ -116,6 +116,17 @@ public:
   {
     return m_unique_layers_str;
   }
+
+
+  const auto & texture_pages() const
+  {
+    return m_unique_texture_pages;
+  }
+
+  const auto & texture_pages_str() const
+  {
+    return m_unique_texture_pages_str;
+  }
   void                        update_render_texture() const;
 
 private:

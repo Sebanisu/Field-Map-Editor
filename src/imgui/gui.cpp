@@ -6,7 +6,7 @@
 #include <imgui-SFML.h>
 #include <imgui.h>
 
-void               gui::start() const
+void gui::start() const
 {
   if (m_window.isOpen()) {
     scale_window(
@@ -63,6 +63,7 @@ void gui::loop() const
         combo_palette();
         combo_blend_mode();
         combo_layers();
+        combo_texture_pages();
         if (m_changed) {
           scale_window();
         }
@@ -588,7 +589,7 @@ static bool generic_combo(int &id,
   {
     const auto old = current_idx;
     for (std::size_t n = 0; n != std::size(strings); ++n) {
-      i           is_selected = (current_idx == n);
+      const bool  is_selected = (current_idx == n);
       // You can store your selection however you
       // want, outside or inside your objects
       // ImGui::PushID(++m_id);
@@ -643,6 +644,18 @@ void gui::combo_layers() const
         [this]() { return m_map_sprite.layer_ids(); },
         [this]() { return m_map_sprite.layer_ids_str(); },
         [this]() -> auto & { return m_map_sprite.filter().layer_id; })) {
+    m_map_sprite.update_render_texture();
+    m_changed = true;
+  };
+}
+void gui::combo_texture_pages() const
+{
+  if (generic_combo(
+        m_id,
+        "Texture Page",
+        [this]() { return m_map_sprite.texture_pages(); },
+        [this]() { return m_map_sprite.texture_pages_str(); },
+        [this]() -> auto & { return m_map_sprite.filter().texture_page_id; })) {
     m_map_sprite.update_render_texture();
     m_changed = true;
   };
