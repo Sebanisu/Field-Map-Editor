@@ -6,7 +6,6 @@
 #include <imgui-SFML.h>
 #include <imgui.h>
 
-typedef const bool i;
 void               gui::start() const
 {
   if (m_window.isOpen()) {
