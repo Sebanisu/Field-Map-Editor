@@ -59,9 +59,9 @@ void gui::loop() const
         slider_xy_sprite(m_mim_sprite);
       } else if (map_test()) {
         checkbox_map_swizzle();
-        combo_bpp();
-        combo_palette();
-        combo_blend_mode();
+        combo_filtered_bpps();
+        combo_filtered_palettes();
+        combo_blend_modes();
         combo_layers();
         combo_texture_pages();
         combo_animation_ids();
@@ -625,34 +625,36 @@ static bool generic_combo(int &id,
   ImGui::PopID();
   return changed;
 }
-//void gui::combo_filtered_palette() const
-//{
-//  if (generic_combo(
-//        m_id,
-//        "Palette",
-//        [this]() { return m_map_sprite.palettes(); },
-//        [this]() { return m_map_sprite.palettes_str(); },
-//        [this]() -> auto & { return m_map_sprite.filter().palette; })) {
-//    m_map_sprite.update_render_texture();
-//    m_changed = true;
-//  }
-//}
+void gui::combo_filtered_palettes() const
+{
+  if (generic_combo(
+        m_id,
+        "Palette",
+        [this]() { return m_map_sprite.palettes(); },
+        [this]() { return m_map_sprite.palettes_str(); },
+        [this]() -> auto & { return m_map_sprite.filter().palette; })) {
+    m_map_sprite.update_render_texture();
+    m_selected_palette = m_map_sprite.filter().palette.value();
+    m_changed          = true;
+  }
+}
 
 
-//void gui::combo_filtered_bpps() const
-//{
-//  if (generic_combo(
-//        m_id,
-//        "Palette",
-//        [this]() { return m_map_sprite.bpps(); },
-//        [this]() { return m_map_sprite.bpps_str(); },
-//        [this]() -> auto & { return m_map_sprite.filter().bpp; })) {
-//    m_map_sprite.update_render_texture();
-//    m_changed = true;
-//  }
-//}
+void gui::combo_filtered_bpps() const
+{
+  if (generic_combo(
+        m_id,
+        "BPP",
+        [this]() { return m_map_sprite.bpps(); },
+        [this]() { return m_map_sprite.bpps_str(); },
+        [this]() -> auto & { return m_map_sprite.filter().bpp; })) {
+    m_map_sprite.update_render_texture();
+    m_selected_bpp = m_map_sprite.filter().bpp.value().raw();
+    m_changed      = true;
+  }
+}
 
-void gui::combo_blend_mode() const
+void gui::combo_blend_modes() const
 {
   if (generic_combo(
         m_id,

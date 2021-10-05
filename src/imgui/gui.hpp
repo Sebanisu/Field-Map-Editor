@@ -100,12 +100,12 @@ private:
     return open_viii::graphics::background::Mim::bpp_selections().at(
       static_cast<size_t>(m_selected_bpp));
   }
-  void combo_blend_mode() const;
+  void combo_blend_modes() const;
   void combo_layers() const;
   void combo_texture_pages() const;
   void combo_animation_ids() const;
   void combo_animation_frames() const;
-//  void combo_filtered_palette() const;
-//  void combo_filtered_bpps() const;
+  void combo_filtered_palettes() const;
+  void combo_filtered_bpps() const;
 };
 #endif// MYPROJECT_GUI_HPP

@@ -25,6 +25,8 @@ struct map_sprite
 
 public:
   map_sprite() = default;
+  std::vector<open_viii::graphics::BPPT> get_bpps();
+  std::map<open_viii::graphics::BPPT, std::vector<std::uint8_t>> get_palettes();
   map_sprite(std::shared_ptr<open_viii::archive::FIFLFS<false>> field,
     open_viii::LangT                                            coo,
     bool                                                        draw_swizzle,
@@ -42,6 +44,8 @@ public:
       m_unique_animation_ids_str(get_strings(m_unique_animation_ids)),
       m_unique_animation_frames_str(get_strings(m_unique_animation_frames)),
       m_blend_modes_str(get_strings(m_blend_modes)),
+      m_bpps(get_bpps()),m_bpps_str(get_strings(m_bpps)),m_palettes(get_palettes()),
+      m_palettes_str(get_strings(m_palettes)),
       m_bpp_and_palette(get_bpp_and_palette()), m_texture(get_textures()),
       m_grid(get_grid()), m_texture_page_grid(get_texture_page_grid()),
       m_render_texture(std::make_shared<sf::RenderTexture>())
@@ -107,6 +111,8 @@ public:
   const auto &animation_ids() const { return m_unique_animation_ids; }
   const auto &animation_ids_str() const { return m_unique_animation_ids_str; }
 
+  const auto &bpps() const { return m_bpps; }
+  const auto &bpps_str() const { return m_bpps_str; }
   const auto &animation_frames() const
   {
     const auto value = m_filters.animation_id.value();
@@ -121,6 +127,24 @@ public:
     const auto value = m_filters.animation_id.value();
     if (m_unique_animation_frames_str.contains(value)) {
       return m_unique_animation_frames_str.at(value);
+    }
+    static std::vector<std::string> empty{};
+    return empty;
+  }
+  const auto &palettes() const
+  {
+    const auto value = m_filters.bpp.value();
+    if (m_palettes.contains(value)) {
+      return m_palettes.at(value);
+    }
+    static std::vector<std::uint8_t> empty{};
+    return empty;
+  }
+  const auto &palettes_str() const
+  {
+    const auto value = m_filters.bpp.value();
+    if (m_palettes_str.contains(value)) {
+      return m_palettes_str.at(value);
     }
     static std::vector<std::string> empty{};
     return empty;
