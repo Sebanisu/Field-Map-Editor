@@ -64,6 +64,8 @@ void gui::loop() const
         combo_blend_mode();
         combo_layers();
         combo_texture_pages();
+        combo_animation_ids();
+        combo_animation_frames();
         if (m_changed) {
           scale_window();
         }
@@ -623,6 +625,33 @@ static bool generic_combo(int &id,
   ImGui::PopID();
   return changed;
 }
+//void gui::combo_filtered_palette() const
+//{
+//  if (generic_combo(
+//        m_id,
+//        "Palette",
+//        [this]() { return m_map_sprite.palettes(); },
+//        [this]() { return m_map_sprite.palettes_str(); },
+//        [this]() -> auto & { return m_map_sprite.filter().palette; })) {
+//    m_map_sprite.update_render_texture();
+//    m_changed = true;
+//  }
+//}
+
+
+//void gui::combo_filtered_bpps() const
+//{
+//  if (generic_combo(
+//        m_id,
+//        "Palette",
+//        [this]() { return m_map_sprite.bpps(); },
+//        [this]() { return m_map_sprite.bpps_str(); },
+//        [this]() -> auto & { return m_map_sprite.filter().bpp; })) {
+//    m_map_sprite.update_render_texture();
+//    m_changed = true;
+//  }
+//}
+
 void gui::combo_blend_mode() const
 {
   if (generic_combo(
@@ -633,7 +662,7 @@ void gui::combo_blend_mode() const
         [this]() -> auto & { return m_map_sprite.filter().blend_mode; })) {
     m_map_sprite.update_render_texture();
     m_changed = true;
-  };
+  }
 }
 
 void gui::combo_layers() const
@@ -646,7 +675,7 @@ void gui::combo_layers() const
         [this]() -> auto & { return m_map_sprite.filter().layer_id; })) {
     m_map_sprite.update_render_texture();
     m_changed = true;
-  };
+  }
 }
 void gui::combo_texture_pages() const
 {
@@ -658,5 +687,29 @@ void gui::combo_texture_pages() const
         [this]() -> auto & { return m_map_sprite.filter().texture_page_id; })) {
     m_map_sprite.update_render_texture();
     m_changed = true;
-  };
+  }
+}
+void gui::combo_animation_ids() const
+{
+  if (generic_combo(
+        m_id,
+        "Animation ID",
+        [this]() { return m_map_sprite.animation_ids(); },
+        [this]() { return m_map_sprite.animation_ids_str(); },
+        [this]() -> auto & { return m_map_sprite.filter().animation_id; })) {
+    m_map_sprite.update_render_texture();
+    m_changed = true;
+  }
+}
+void gui::combo_animation_frames() const
+{
+  if (generic_combo(
+        m_id,
+        "Animation Frame",
+        [this]() { return m_map_sprite.animation_frames(); },
+        [this]() { return m_map_sprite.animation_frames_str(); },
+        [this]() -> auto & { return m_map_sprite.filter().animation_frame; })) {
+    m_map_sprite.update_render_texture();
+    m_changed = true;
+  }
 }

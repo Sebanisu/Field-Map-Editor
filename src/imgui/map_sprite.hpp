@@ -50,23 +50,25 @@ public:
   template<typename T>
   static std::vector<std::string> get_strings(const std::vector<T> &data);
   template<typename T, typename U>
-  static std::map<T,std::vector<std::string>> get_strings(const std::map<T,std::vector<U>> &data);
-  static std::vector<const char *> get_c_str(const std::vector<std::string> &data)
+  static std::map<T, std::vector<std::string>> get_strings(
+    const std::map<T, std::vector<U>> &data);
+  static std::vector<const char *> get_c_str(
+    const std::vector<std::string> &data)
   {
     std::vector<const char *> vector;
     vector.reserve(std::size(data));
-    std::ranges::transform(data, std::back_inserter(vector), [](const std::string &t) {
-      return t.c_str();
-    });
+    std::ranges::transform(data,
+      std::back_inserter(vector),
+      [](const std::string &t) { return t.c_str(); });
     return vector;
   }
   template<typename T>
-  static std::map<T,std::vector<const char *>> get_c_str(const std::map<T,std::vector<std::string>> &data)
+  static std::map<T, std::vector<const char *>> get_c_str(
+    const std::map<T, std::vector<std::string>> &data)
   {
-    std::map<T,std::vector<const char *>> map = {};
-    for(const auto &[key, vector]: data)
-    {
-      map.emplace(key,get_c_str(vector));
+    std::map<T, std::vector<const char *>> map = {};
+    for (const auto &[key, vector] : data) {
+      map.emplace(key, get_c_str(vector));
     }
     return map;
   }
@@ -92,42 +94,39 @@ public:
   void draw(sf::RenderTarget &target, sf::RenderStates states) const final;
   const map_sprite &toggle_grid(bool enable,
     bool                             enable_texture_page_grid) const;
-  bool empty() const;
-  auto & filter() const
-  {
-    return m_filters;
-  }
-  const auto & blend_modes() const
-  {
-    return m_blend_modes;
-  }
+  bool              empty() const;
+  auto             &filter() const { return m_filters; }
+  const auto       &blend_modes() const { return m_blend_modes; }
+  const auto       &blend_modes_str() const { return m_blend_modes_str; }
+  const auto       &layer_ids() const { return m_unique_layers; }
+  const auto       &layer_ids_str() const { return m_unique_layers_str; }
+  const auto       &texture_pages() const { return m_unique_texture_pages; }
+  const auto &texture_pages_str() const { return m_unique_texture_pages_str; }
 
-  const auto & blend_modes_str() const
-  {
-    return m_blend_modes_str;
-  }
+  const auto &animation_ids() const { return m_unique_animation_ids; }
+  const auto &animation_ids_str() const { return m_unique_animation_ids_str; }
 
-  const auto & layer_ids() const
+  const auto &animation_frames() const
   {
-    return m_unique_layers;
+    const auto value = m_filters.animation_id.value();
+    if (m_unique_animation_frames.contains(value)) {
+      return m_unique_animation_frames.at(value);
+    } else {
+      static std::vector<std::uint8_t> empty{};
+      return empty;
+    }
   }
-
-  const auto & layer_ids_str() const
+  const auto &animation_frames_str() const
   {
-    return m_unique_layers_str;
+    const auto value = m_filters.animation_id.value();
+    if (m_unique_animation_frames_str.contains(value)) {
+      return m_unique_animation_frames_str.at(value);
+    } else {
+      static std::vector<std::string> empty{};
+      return empty;
+    }
   }
-
-
-  const auto & texture_pages() const
-  {
-    return m_unique_texture_pages;
-  }
-
-  const auto & texture_pages_str() const
-  {
-    return m_unique_texture_pages_str;
-  }
-  void                        update_render_texture() const;
+  void update_render_texture() const;
 
 private:
   mutable bool                                       m_draw_swizzle = { false };
