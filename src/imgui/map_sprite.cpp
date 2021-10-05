@@ -4,9 +4,10 @@
 #include "imgui_format_text.hpp"
 #include <utility>
 using namespace open_viii::graphics::background;
+using namespace open_viii::graphics;
 using namespace open_viii::graphics::literals;
 using namespace std::string_literals;
-
+//static std::mutex mutex_texture{};
 template<typename T, typename lambdaT, typename sortT, typename filterT>
 std::vector<T> map_sprite::get_unique_from_tiles(lambdaT &&lambda,
   sortT                                                  &&sort,
@@ -150,19 +151,31 @@ std::shared_ptr<std::array<sf::Texture, map_sprite::MAX_TEXTURES>>
       if (bpp.bpp24()) {
         continue;
       }
-      std::cout << bpp << '\t' << +palette << '\t' << '\t';
-      size_t pos   = get_texture_pos(bpp, palette);
-      auto   width = m_mim.get_width(bpp);
-      if (width != 0U) {
-        const auto colors = get_colors(bpp, palette);
-        ret->at(pos).create(width, m_mim.get_height());
-        ret->at(pos).setSmooth(false);
-        ret->at(pos).update(reinterpret_cast<const sf::Uint8 *>(colors.data()));
+      //std::cout << bpp << '\t' << +palette << '\t' << '\t';
+      size_t pos = get_texture_pos(bpp, palette);
+      if (m_mim.get_width(bpp) != 0U) {
+        m_futures.emplace_back(std::async(
+          std::launch::async,
+          [this](sf::Texture *texture, BPPT bppt, std::uint8_t pal) {
+            const auto colors = get_colors(bppt, pal);
+            //std::lock_guard<std::mutex> lock(mutex_texture);
+            texture->create(m_mim.get_width(bppt), m_mim.get_height());
+            texture->setSmooth(false);
+            texture->update(reinterpret_cast<const sf::Uint8 *>(colors.data()));
+          },
+          &(ret->at(pos)),
+          bpp,
+          palette));
       }
     }
-    std::cout << std::endl;
+    //std::cout << std::endl;
   }
   return ret;
+}
+void map_sprite::wait_for_futures() const
+{
+  std::ranges::for_each(m_futures, [](auto && f){f.wait();});
+  m_futures.clear();
 }
 
 [[nodiscard]] std::array<sf::Vertex, 4U> map_sprite::get_triangle_strip(
@@ -242,6 +255,7 @@ void set_color(std::array<sf::Vertex, 4U> &vertices, const sf::Color &color)
 void map_sprite::local_draw(sf::RenderTarget &target,
   sf::RenderStates                            states) const
 {
+  wait_for_futures();
   const auto new_tileSize = sf::Vector2u{ 16U, 16U };
   target.clear(sf::Color::Transparent);
   m_map.visit_tiles([this, &new_tileSize, &states, &target](auto &&tiles) {
@@ -275,6 +289,8 @@ void map_sprite::local_draw(sf::RenderTarget &target,
             // states.blendMode = sf::BlendMultiply;
           }
           // apply the tileset texture
+
+          //std::lock_guard<std::mutex> lock(mutex_texture);
           states.texture = get_texture(tile.depth(), tile.palette_id());
 
           // draw the vertex array

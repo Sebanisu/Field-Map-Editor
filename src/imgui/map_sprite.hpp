@@ -10,6 +10,7 @@
 #include "open_viii/graphics/background/Map.hpp"
 #include "open_viii/graphics/background/Mim.hpp"
 #include <fmt/format.h>
+#include <future>
 #include <SFML/Graphics/Drawable.hpp>
 #include <SFML/Graphics/RenderTexture.hpp>
 #include <SFML/Graphics/Transformable.hpp>
@@ -111,24 +112,23 @@ public:
     const auto value = m_filters.animation_id.value();
     if (m_unique_animation_frames.contains(value)) {
       return m_unique_animation_frames.at(value);
-    } else {
-      static std::vector<std::uint8_t> empty{};
-      return empty;
     }
+    static std::vector<std::uint8_t> empty{};
+    return empty;
   }
   const auto &animation_frames_str() const
   {
     const auto value = m_filters.animation_id.value();
     if (m_unique_animation_frames_str.contains(value)) {
       return m_unique_animation_frames_str.at(value);
-    } else {
-      static std::vector<std::string> empty{};
-      return empty;
     }
+    static std::vector<std::string> empty{};
+    return empty;
   }
   void update_render_texture() const;
 
 private:
+  mutable std::vector<std::future<void>>             m_futures      = {};
   mutable bool                                       m_draw_swizzle = { false };
   mutable filters                                    m_filters      = {};
   std::shared_ptr<open_viii::archive::FIFLFS<false>> m_field        = {};
@@ -149,9 +149,16 @@ private:
   std::vector<std::string> m_unique_texture_pages_str                      = {};
   std::vector<std::string> m_unique_animation_ids_str                      = {};
   std::map<std::uint8_t, std::vector<std::string>>
-                           m_unique_animation_frames_str = {};
-  std::vector<std::string> m_blend_modes_str             = {};
-  std::vector<std::string> m_unique_z_axis_str           = {};
+                                         m_unique_animation_frames_str = {};
+  std::vector<std::string>               m_blend_modes_str             = {};
+  std::vector<std::string>               m_unique_z_axis_str           = {};
+
+  std::vector<open_viii::graphics::BPPT> m_bpps                        = {};
+  std::map<open_viii::graphics::BPPT, std::vector<std::uint8_t>>
+                           m_palettes = {};
+  std::vector<std::string> m_bpps_str = {};
+  std::map<open_viii::graphics::BPPT, std::vector<std::string>>
+    m_palettes_str = {};
   std::vector<std::pair<open_viii::graphics::BPPT, std::uint8_t>>
                                m_bpp_and_palette = {};
   static constexpr std::size_t MAX_TEXTURES =
@@ -164,6 +171,7 @@ private:
 
   grid                                       get_grid() const;
   grid                                       get_texture_page_grid() const;
+
 
   using color_type  = open_viii::graphics::Color32RGBA;
   using colors_type = std::vector<color_type>;
@@ -220,6 +228,7 @@ private:
                filterT                                                   &&= {}) const;
   std::vector<std::uint8_t> get_unique_texture_pages() const;
   std::map<std::uint8_t, std::vector<std::uint8_t>>
-    get_unique_animation_frames() const;
+       get_unique_animation_frames() const;
+  void wait_for_futures() const;
 };
 #endif// MYPROJECT_MAP_SPRITE_HPP
