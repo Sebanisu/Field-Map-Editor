@@ -117,30 +117,37 @@ void gui::loop() const
       combo_path();
       combo_coo();
       combo_field();
-
-      if (mim_test()) {
+      const char *filter_title = "Filters";
+      if (mim_test())
+      {
         checkbox_mim_palette_texture();
-        if (!m_mim_sprite.draw_palette()) {
-          combo_bpp();
-          combo_palette();
-        }
-        if (!m_mim_sprite.draw_palette()) {
-          format_imgui_text("Width == Max Tiles");
+        if (ImGui::CollapsingHeader(filter_title)) {
+          if (!m_mim_sprite.draw_palette()) {
+            combo_bpp();
+            combo_palette();
+          }
+          if (!m_mim_sprite.draw_palette()) {
+            format_imgui_text("Width == Max Tiles");
+          }
         }
         if (m_changed) {
           scale_window();
         }
         slider_xy_sprite(m_mim_sprite);
-      } else if (map_test()) {
+      }
+      else if (map_test())
+      {
         checkbox_map_swizzle();
-        combo_filtered_bpps();
-        combo_filtered_palettes();
-        combo_blend_modes();
-        combo_blend_other();
-        combo_layers();
-        combo_texture_pages();
-        combo_animation_ids();
-        combo_animation_frames();
+        if (ImGui::CollapsingHeader(filter_title)) {
+          combo_filtered_bpps();
+          combo_filtered_palettes();
+          combo_blend_modes();
+          combo_blend_other();
+          combo_layers();
+          combo_texture_pages();
+          combo_animation_ids();
+          combo_animation_frames();
+        }
         if (m_changed) {
           scale_window();
         }
@@ -667,6 +674,19 @@ static bool generic_combo(int &id,
   const char *current_item = strings[current_idx].c_str();
 
   ImGui::PushID(++id);
+  if (ImGui::Checkbox("", &checked)) {
+    if (checked) {
+      filter.enable();
+      fmt::print("enable: \t{} \t{}\n", name, values[current_idx]);
+    } else {
+      filter.disable();
+      fmt::print("disable: \t{} \t{}\n", name, values[current_idx]);
+    }
+    changed = true;
+  }
+  ImGui::PopID();  
+  ImGui::SameLine();
+  ImGui::PushID(++id);
   if (ImGui::BeginCombo(name, current_item))
   // The second parameter is the label previewed
   // before opening the combo.
@@ -696,19 +716,6 @@ static bool generic_combo(int &id,
     ImGui::EndCombo();
   }
   changed = filter.update(values[current_idx]).enabled() && changed;
-  ImGui::PopID();
-  ImGui::PushID(++id);
-  ImGui::SameLine();
-  if (ImGui::Checkbox("", &checked)) {
-    if (checked) {
-      filter.enable();
-      fmt::print("enable: \t{} \t{}\n", name, values[current_idx]);
-    } else {
-      filter.disable();
-      fmt::print("disable: \t{} \t{}\n", name, values[current_idx]);
-    }
-    changed = true;
-  }
   ImGui::PopID();
   return changed;
 }
