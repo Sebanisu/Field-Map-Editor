@@ -95,11 +95,7 @@ private:
   void scale_window(float width = {}, float height = {}) const;
   int  get_selected_field();
   std::uint8_t              palette() const;
-  open_viii::graphics::BPPT bpp() const
-  {
-    return open_viii::graphics::background::Mim::bpp_selections().at(
-      static_cast<size_t>(m_selected_bpp));
-  }
+  open_viii::graphics::BPPT bpp() const;
   void combo_blend_modes() const;
   void combo_layers() const;
   void combo_texture_pages() const;

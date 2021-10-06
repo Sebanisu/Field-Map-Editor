@@ -582,14 +582,22 @@ std::vector<std::string> map_sprite::get_strings(const std::vector<T> &data)
         return "subtract"s;
       }
     } else if constexpr (std::is_same_v<T, BPPT>) {
-      if (t.bpp8()) return "8"s;
-      if (t.bpp16()) return "16"s;
+      if (t.bpp8())
+        return "8"s;
+      if (t.bpp16())
+        return "16"s;
       return "4"s;
     } else {
       return fmt::format("{}", t);
     }
   });
   return vector;
+}
+all_unique_values_and_strings map_sprite::get_all_unique_values_and_strings()
+{
+  return m_map.visit_tiles([](const auto &tiles) {
+    return all_unique_values_and_strings(tiles);
+  });
 }
 
 // template<typename... T>

@@ -715,3 +715,8 @@ void gui::combo_animation_frames() const
     m_changed = true;
   }
 }
+open_viii::graphics::BPPT gui::bpp() const
+{
+  return open_viii::graphics::background::Mim::bpp_selections().at(
+    static_cast<size_t>(m_selected_bpp));
+}

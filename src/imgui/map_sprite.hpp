@@ -9,6 +9,7 @@
 #include "open_viii/archive/Archives.hpp"
 #include "open_viii/graphics/background/Map.hpp"
 #include "open_viii/graphics/background/Mim.hpp"
+#include "unique_values.hpp"
 #include <fmt/format.h>
 #include <future>
 #include <SFML/Graphics/Drawable.hpp>
@@ -16,7 +17,6 @@
 #include <SFML/Graphics/Transformable.hpp>
 #include <SFML/Graphics/Vertex.hpp>
 #include <utility>
-
 struct map_sprite
   : public sf::Drawable
   , public sf::Transformable
@@ -25,30 +25,41 @@ struct map_sprite
 
 public:
   map_sprite() = default;
-  std::vector<open_viii::graphics::BPPT> get_bpps();
+  std::vector<open_viii::graphics::BPPT>                         get_bpps();
   std::map<open_viii::graphics::BPPT, std::vector<std::uint8_t>> get_palettes();
+  all_unique_values_and_strings get_all_unique_values_and_strings();
   map_sprite(std::shared_ptr<open_viii::archive::FIFLFS<false>> field,
     open_viii::LangT                                            coo,
     bool                                                        draw_swizzle,
     filters                                                     in_filters)
-    : m_draw_swizzle(draw_swizzle), m_filters(in_filters),
-      m_field(std::move(field)), m_coo(coo), m_mim(get_mim()),
-      m_map(get_map(&m_map_path)), m_canvas(get_canvas()),
-      m_unique_layers(get_unique_layers()),
-      m_unique_texture_pages(get_unique_texture_pages()),
-      m_unique_animation_ids(get_unique_animation_ids()),
-      m_unique_animation_frames(get_unique_animation_frames()),
-      m_blend_modes(get_blend_modes()), m_unique_z_axis(get_unique_z_axis()),
-      m_unique_layers_str(get_strings(m_unique_layers)),
-      m_unique_texture_pages_str(get_strings(m_unique_texture_pages)),
-      m_unique_animation_ids_str(get_strings(m_unique_animation_ids)),
-      m_unique_animation_frames_str(get_strings(m_unique_animation_frames)),
-      m_blend_modes_str(get_strings(m_blend_modes)),
-      m_bpps(get_bpps()),m_bpps_str(get_strings(m_bpps)),m_palettes(get_palettes()),
-      m_palettes_str(get_strings(m_palettes)),
-      m_bpp_and_palette(get_bpp_and_palette()), m_texture(get_textures()),
-      m_grid(get_grid()), m_texture_page_grid(get_texture_page_grid()),
-      m_render_texture(std::make_shared<sf::RenderTexture>())
+    : m_draw_swizzle(draw_swizzle)
+    , m_filters(in_filters)
+    , m_field(std::move(field))
+    , m_coo(coo)
+    , m_mim(get_mim())
+    , m_map(get_map(&m_map_path))
+    , m_all_unique_values_and_strings(get_all_unique_values_and_strings())
+    , m_canvas(get_canvas())
+    , m_unique_layers(get_unique_layers())
+    , m_unique_texture_pages(get_unique_texture_pages())
+    , m_unique_animation_ids(get_unique_animation_ids())
+    , m_unique_animation_frames(get_unique_animation_frames())
+    , m_blend_modes(get_blend_modes())
+    , m_unique_z_axis(get_unique_z_axis())
+    , m_unique_layers_str(get_strings(m_unique_layers))
+    , m_unique_texture_pages_str(get_strings(m_unique_texture_pages))
+    , m_unique_animation_ids_str(get_strings(m_unique_animation_ids))
+    , m_unique_animation_frames_str(get_strings(m_unique_animation_frames))
+    , m_blend_modes_str(get_strings(m_blend_modes))
+    , m_bpps(get_bpps())
+    , m_bpps_str(get_strings(m_bpps))
+    , m_palettes(get_palettes())
+    , m_palettes_str(get_strings(m_palettes))
+    , m_bpp_and_palette(get_bpp_and_palette())
+    , m_texture(get_textures())
+    , m_grid(get_grid())
+    , m_texture_page_grid(get_texture_page_grid())
+    , m_render_texture(std::make_shared<sf::RenderTexture>())
   {
     init_render_texture();
   }
@@ -100,19 +111,52 @@ public:
   const map_sprite &toggle_grid(bool enable,
     bool                             enable_texture_page_grid) const;
   bool              empty() const;
-  auto             &filter() const { return m_filters; }
-  const auto       &blend_modes() const { return m_blend_modes; }
-  const auto       &blend_modes_str() const { return m_blend_modes_str; }
-  const auto       &layer_ids() const { return m_unique_layers; }
-  const auto       &layer_ids_str() const { return m_unique_layers_str; }
-  const auto       &texture_pages() const { return m_unique_texture_pages; }
-  const auto &texture_pages_str() const { return m_unique_texture_pages_str; }
+  auto             &filter() const
+  {
+    return m_filters;
+  }
+  const auto &blend_modes() const
+  {
+    return m_blend_modes;
+  }
+  const auto &blend_modes_str() const
+  {
+    return m_blend_modes_str;
+  }
+  const auto &layer_ids() const
+  {
+    return m_unique_layers;
+  }
+  const auto &layer_ids_str() const
+  {
+    return m_unique_layers_str;
+  }
+  const auto &texture_pages() const
+  {
+    return m_unique_texture_pages;
+  }
+  const auto &texture_pages_str() const
+  {
+    return m_unique_texture_pages_str;
+  }
 
-  const auto &animation_ids() const { return m_unique_animation_ids; }
-  const auto &animation_ids_str() const { return m_unique_animation_ids_str; }
+  const auto &animation_ids() const
+  {
+    return m_unique_animation_ids;
+  }
+  const auto &animation_ids_str() const
+  {
+    return m_unique_animation_ids_str;
+  }
 
-  const auto &bpps() const { return m_bpps; }
-  const auto &bpps_str() const { return m_bpps_str; }
+  const auto &bpps() const
+  {
+    return m_bpps;
+  }
+  const auto &bpps_str() const
+  {
+    return m_bpps_str;
+  }
   const auto &animation_frames() const
   {
     const auto value = m_filters.animation_id.value();
@@ -160,10 +204,11 @@ private:
   open_viii::graphics::background::Mim               m_mim          = {};
   mutable std::string                                m_map_path     = {};
   open_viii::graphics::background::Map               m_map          = {};
-  open_viii::graphics::Rectangle<std::uint32_t>      m_canvas       = {};
-  std::vector<std::uint8_t>                          m_unique_layers = {};
-  std::vector<std::uint8_t> m_unique_texture_pages                   = {};
-  std::vector<std::uint8_t> m_unique_animation_ids                   = {};
+  all_unique_values_and_strings m_all_unique_values_and_strings     = {};
+  open_viii::graphics::Rectangle<std::uint32_t> m_canvas            = {};
+  std::vector<std::uint8_t>                     m_unique_layers     = {};
+  std::vector<std::uint8_t>                     m_unique_texture_pages = {};
+  std::vector<std::uint8_t>                     m_unique_animation_ids = {};
   std::map<std::uint8_t, std::vector<std::uint8_t>>
     m_unique_animation_frames                                              = {};
   std::vector<open_viii::graphics::background::BlendModeT> m_blend_modes   = {};
