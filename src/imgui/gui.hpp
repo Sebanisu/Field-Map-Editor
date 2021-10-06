@@ -147,5 +147,7 @@ private:
     combo_filtered_bpps() const;
   void
     combo_blend_other() const;
+  void
+    combo_z() const;
 };
 #endif// MYPROJECT_GUI_HPP

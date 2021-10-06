@@ -85,6 +85,7 @@ public:
 };
 struct filters
 {
+  filter<std::uint16_t>                               z               = {};
   filter<std::uint8_t>                                palette         = {};
   filter<std::uint8_t>                                animation_id    = {};
   filter<std::uint8_t>                                animation_frame = {};

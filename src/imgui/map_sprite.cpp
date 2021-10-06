@@ -525,7 +525,8 @@ bool
          || test(m_filters.animation_id, tile.animation_id())
          || test(m_filters.animation_frame, tile.animation_state())
          || test(m_filters.layer_id, tile.layer_id())
-         || test(m_filters.texture_page_id, tile.texture_id());
+         || test(m_filters.texture_page_id, tile.texture_id())
+         || test(m_filters.z, tile.z());
 #else
   if (m_filters.palette.enabled() && m_filters.bpp.value() != 16_bpp)
   {

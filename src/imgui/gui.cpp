@@ -164,6 +164,7 @@ void
           combo_texture_pages();
           combo_animation_ids();
           combo_animation_frames();
+          combo_z();
         }
         if (m_changed)
         {
@@ -983,6 +984,23 @@ void
     m_changed = true;
   }
 }
+
+void
+  gui::combo_z() const
+{
+  const auto &pair = m_map_sprite.uniques().z();
+  if (generic_combo(
+        m_id,
+        "Z",
+        [&pair]() { return pair.values(); },
+        [&pair]() { return pair.strings(); },
+        [this]() -> auto & { return m_map_sprite.filter().z; }))
+  {
+    m_map_sprite.update_render_texture();
+    m_changed = true;
+  }
+}
+
 void
   gui::combo_animation_frames() const
 {
