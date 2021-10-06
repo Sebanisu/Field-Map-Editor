@@ -91,6 +91,7 @@ void gui::start() const
 }
 void gui::loop() const
 {
+  static sf::Color clear_color = { 0, 0, 0, 255 };
   if (ImGui::Begin("Control Panel",
         nullptr,
         static_cast<ImGuiWindowFlags>(
@@ -101,6 +102,15 @@ void gui::loop() const
     }
     menu_bar();
     file_browser_locate_ff8();
+    static float clear_color_f[3]{};
+    if (ImGui::ColorEdit3(
+          "Background", clear_color_f, ImGuiColorEditFlags_DisplayRGB)) {
+      // changed color
+      clear_color = { static_cast<sf::Uint8>(255U * clear_color_f[0]),
+        static_cast<sf::Uint8>(255U * clear_color_f[1]),
+        static_cast<sf::Uint8>(255U * clear_color_f[2]),
+        255U };
+    }
     combo_draw();
     if (!m_paths.empty()) {
       file_browser_save_texture();
@@ -140,7 +150,7 @@ void gui::loop() const
   }
   ImGui::End();
 
-  m_window.clear();
+  m_window.clear(clear_color);
   if (mim_test()) {
     m_window.draw(
       m_mim_sprite.toggle_grids(m_draw_grid, m_draw_texture_page_grid));
