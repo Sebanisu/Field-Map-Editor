@@ -25,8 +25,6 @@ struct map_sprite
 
 public:
   map_sprite() = default;
-  std::vector<open_viii::graphics::BPPT>                         get_bpps();
-  std::map<open_viii::graphics::BPPT, std::vector<std::uint8_t>> get_palettes();
   all_unique_values_and_strings get_all_unique_values_and_strings();
   map_sprite(std::shared_ptr<open_viii::archive::FIFLFS<false>> field,
     open_viii::LangT                                            coo,
@@ -40,22 +38,6 @@ public:
     , m_map(get_map(&m_map_path))
     , m_all_unique_values_and_strings(get_all_unique_values_and_strings())
     , m_canvas(get_canvas())
-//    , m_unique_layers(get_unique_layers())
-//    , m_unique_texture_pages(get_unique_texture_pages())
-//    , m_unique_animation_ids(get_unique_animation_ids())
-//    , m_unique_animation_frames(get_unique_animation_frames())
-//    , m_blend_modes(get_blend_modes())
-//    , m_unique_z_axis(get_unique_z_axis())
-//    , m_unique_layers_str(get_strings(m_unique_layers))
-//    , m_unique_texture_pages_str(get_strings(m_unique_texture_pages))
-//    , m_unique_animation_ids_str(get_strings(m_unique_animation_ids))
-//    , m_unique_animation_frames_str(get_strings(m_unique_animation_frames))
-//    , m_blend_modes_str(get_strings(m_blend_modes))
-//    , m_bpps(get_bpps())
-//    , m_bpps_str(get_strings(m_bpps))
-//    , m_palettes(get_palettes())
-//    , m_palettes_str(get_strings(m_palettes))
-    //, m_bpp_and_palette(get_bpp_and_palette())
     , m_texture(get_textures())
     , m_grid(get_grid())
     , m_texture_page_grid(get_texture_page_grid())
@@ -63,43 +45,11 @@ public:
   {
     init_render_texture();
   }
-  [[nodiscard]] const all_unique_values_and_strings &
-    uniques() const
-  {
-    return m_all_unique_values_and_strings;
-  }
-  template<typename T>
-  static std::vector<std::string> get_strings(const std::vector<T> &data);
-  template<typename T, typename U>
-  static std::map<T, std::vector<std::string>> get_strings(
-    const std::map<T, std::vector<U>> &data);
-  static std::vector<const char *> get_c_str(
-    const std::vector<std::string> &data)
-  {
-    std::vector<const char *> vector;
-    vector.reserve(std::size(data));
-    std::ranges::transform(data,
-      std::back_inserter(vector),
-      [](const std::string &t) { return t.c_str(); });
-    return vector;
-  }
-  template<typename T>
-  static std::map<T, std::vector<const char *>> get_c_str(
-    const std::map<T, std::vector<std::string>> &data)
-  {
-    std::map<T, std::vector<const char *>> map = {};
-    for (const auto &[key, vector] : data) {
-      map.emplace(key, get_c_str(vector));
-    }
-    return map;
-  }
-  map_sprite update(std::shared_ptr<open_viii::archive::FIFLFS<false>> field,
-    open_viii::LangT                                                   coo,
-    bool draw_swizzle) const
+  [[nodiscard]] const all_unique_values_and_strings &uniques() const;
 
-  {
-    return { std::move(field), coo, draw_swizzle, m_filters };
-  }
+  map_sprite    update(std::shared_ptr<open_viii::archive::FIFLFS<false>> field,
+       open_viii::LangT                                                   coo,
+       bool draw_swizzle) const;
 
   void          enable_draw_swizzle() const;
   void          disable_draw_swizzle() const;
@@ -116,89 +66,8 @@ public:
   const map_sprite &toggle_grid(bool enable,
     bool                             enable_texture_page_grid) const;
   bool              empty() const;
-  auto             &filter() const
-  {
-    return m_filters;
-  }
-  //const auto &blend_modes() const
-  //{
-  //  return m_blend_modes;
-  //}
-  //const auto &blend_modes_str() const
-  //{
-  //  return m_blend_modes_str;
-  //}
-  //const auto &layer_ids() const
-  //{
-  //  return m_unique_layers;
-  //}
-  //const auto &layer_ids_str() const
-  //{
-  //  return m_unique_layers_str;
-  //}
-  //const auto &texture_pages() const
-  //{
-  //  return m_unique_texture_pages;
-  //}
-  //const auto &texture_pages_str() const
-  //{
-  //  return m_unique_texture_pages_str;
-  //}
-
-  //const auto &animation_ids() const
-  //{
-  //  return m_unique_animation_ids;
-  //}
-  //const auto &animation_ids_str() const
-  //{
-  //  return m_unique_animation_ids_str;
-  //}
-
-  //const auto &bpps() const
-  //{
-  //  return m_bpps;
-  //}
-  //const auto &bpps_str() const
-  //{
-  //  return m_bpps_str;
-  //}
-  //const auto &animation_frames() const
-  //{
-  //  const auto value = m_filters.animation_id.value();
-  //  if (m_unique_animation_frames.contains(value)) {
-  //    return m_unique_animation_frames.at(value);
-  //  }
-  //  static std::vector<std::uint8_t> empty{};
-  //  return empty;
-  //}
-  //const auto &animation_frames_str() const
-  //{
-  //  const auto value = m_filters.animation_id.value();
-  //  if (m_unique_animation_frames_str.contains(value)) {
-  //    return m_unique_animation_frames_str.at(value);
-  //  }
-  //  static std::vector<std::string> empty{};
-  //  return empty;
-  //}
-  //const auto &palettes() const
-  //{
-  //  const auto value = m_filters.bpp.value();
-  //  if (m_palettes.contains(value)) {
-  //    return m_palettes.at(value);
-  //  }
-  //  static std::vector<std::uint8_t> empty{};
-  //  return empty;
-  //}
-  //const auto &palettes_str() const
-  //{
-  //  const auto value = m_filters.bpp.value();
-  //  if (m_palettes_str.contains(value)) {
-  //    return m_palettes_str.at(value);
-  //  }
-  //  static std::vector<std::string> empty{};
-  //  return empty;
-  //}
-  void update_render_texture() const;
+  filters          &filter() const;
+  void              update_render_texture() const;
 
 private:
   mutable std::vector<std::future<void>>             m_futures      = {};
@@ -211,31 +80,7 @@ private:
   open_viii::graphics::background::Map               m_map          = {};
   all_unique_values_and_strings m_all_unique_values_and_strings     = {};
   open_viii::graphics::Rectangle<std::uint32_t> m_canvas            = {};
-  //std::vector<std::uint8_t>                     m_unique_layers     = {};
-  //std::vector<std::uint8_t>                     m_unique_texture_pages = {};
-  //std::vector<std::uint8_t>                     m_unique_animation_ids = {};
-  //std::map<std::uint8_t, std::vector<std::uint8_t>>
-  //  m_unique_animation_frames                                              = {};
-  //std::vector<open_viii::graphics::background::BlendModeT> m_blend_modes   = {};
-  //std::vector<std::uint16_t>                               m_unique_z_axis = {};
-
-  //std::vector<std::string> m_unique_layers_str                             = {};
-  //std::vector<std::string> m_unique_texture_pages_str                      = {};
-  //std::vector<std::string> m_unique_animation_ids_str                      = {};
-  //std::map<std::uint8_t, std::vector<std::string>>
-  //                                       m_unique_animation_frames_str = {};
-  //std::vector<std::string>               m_blend_modes_str             = {};
-  //std::vector<std::string>               m_unique_z_axis_str           = {};
-
-  //std::vector<open_viii::graphics::BPPT> m_bpps                        = {};
-  //std::map<open_viii::graphics::BPPT, std::vector<std::uint8_t>>
-  //                         m_palettes = {};
-  //std::vector<std::string> m_bpps_str = {};
-  //std::map<open_viii::graphics::BPPT, std::vector<std::string>>
-  //  m_palettes_str = {};
-  //std::vector<std::pair<open_viii::graphics::BPPT, std::uint8_t>>
-  //                             m_bpp_and_palette = {};
-  static constexpr std::size_t MAX_TEXTURES =
+  static constexpr std::size_t                  MAX_TEXTURES =
     16 * 13;// 13*16 for texture page / palette combos. 16*2+1 for palette bpp
             // combos.
   mutable std::shared_ptr<std::array<sf::Texture, MAX_TEXTURES>> m_texture = {};
@@ -261,14 +106,7 @@ private:
   [[nodiscard]] const sf::Texture *get_texture(open_viii::graphics::BPPT bpp,
     std::uint8_t palette) const;
   [[nodiscard]] std::shared_ptr<std::array<sf::Texture, MAX_TEXTURES>>
-                                           get_textures() const;
-  [[nodiscard]] std::vector<std::uint16_t> get_unique_z_axis() const;
-  [[nodiscard]] std::vector<std::uint8_t>  get_unique_layers() const;
-  [[nodiscard]] std::vector<open_viii::graphics::background::BlendModeT>
-    get_blend_modes() const;
-  [[nodiscard]] std::vector<std::pair<open_viii::graphics::BPPT, std::uint8_t>>
-    get_bpp_and_palette() const;
-
+    get_textures() const;
   [[nodiscard]] open_viii::graphics::Rectangle<std::uint32_t>
                                            get_canvas() const;
   void                                     resize_render_texture() const;
@@ -291,18 +129,7 @@ private:
   static const sf::BlendMode &GetBlendSubtract();
   void local_draw(sf::RenderTarget &target, sf::RenderStates states) const;
   bool fail_filter(auto &tile) const;
-  std::vector<std::uint8_t> get_unique_animation_ids() const;
   static constexpr auto default_filter_lambda = [](auto &&) { return true; };
-  template<typename T,
-    typename lambdaT,
-    typename sortT   = std::less<>,
-    typename filterT = decltype(default_filter_lambda)>
-  //std::vector<T>            get_unique_from_tiles(lambdaT &&lambda,
-  //             sortT                                      &&sort = {},
-  //             filterT                                                   &&= {}) const;
-  std::vector<std::uint8_t> get_unique_texture_pages() const;
-  std::map<std::uint8_t, std::vector<std::uint8_t>>
-       get_unique_animation_frames() const;
-  void wait_for_futures() const;
+  void                  wait_for_futures() const;
 };
 #endif// MYPROJECT_MAP_SPRITE_HPP
