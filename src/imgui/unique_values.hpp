@@ -107,10 +107,10 @@ public:
   {}
   template<std::ranges::range tilesT>
   explicit all_unique_values_and_strings(const tilesT &tiles)
-    : m_z(tiles,
-      [](const auto &tile) { return tile.z(); }//,
-                                               //     std::greater<>{}
-      )
+    : m_z(
+      tiles,
+      [](const auto &tile) { return tile.z(); },
+      std::greater<>{})
     , m_layer_id(tiles, [](const auto &tile) { return tile.layer_id(); })
     , m_texture_page_id(tiles,
         [](const auto &tile) { return tile.texture_id(); })

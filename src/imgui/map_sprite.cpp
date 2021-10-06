@@ -8,99 +8,99 @@ using namespace open_viii::graphics;
 using namespace open_viii::graphics::literals;
 using namespace std::string_literals;
 // static std::mutex mutex_texture{};
-template<typename T, typename lambdaT, typename sortT, typename filterT>
-std::vector<T> map_sprite::get_unique_from_tiles(lambdaT &&lambda,
-  sortT                                                  &&sort,
-  filterT                                                &&filter) const
-{
-  return m_map.visit_tiles([&lambda, &sort, &filter](auto &&tiles) {
-    std::vector<T> ret{};
-    if (!std::empty(tiles)) {
-      std::ranges::transform(
-        tiles | std::views::filter(filter), std::back_inserter(ret), lambda);
-      std::ranges::sort(ret, sort);
-      auto last = std::unique(ret.begin(), ret.end());
-      ret.erase(last, ret.end());
-    }
-    return ret;
-  });
-}
-std::vector<open_viii::graphics::BPPT> map_sprite::get_bpps()
-{
-  return get_unique_from_tiles<open_viii::graphics::BPPT>(
-    [](const auto &tile) { return tile.depth(); });
-}
+//template<typename T, typename lambdaT, typename sortT, typename filterT>
+//std::vector<T> map_sprite::get_unique_from_tiles(lambdaT &&lambda,
+//  sortT                                                  &&sort,
+//  filterT                                                &&filter) const
+//{
+//  return m_map.visit_tiles([&lambda, &sort, &filter](auto &&tiles) {
+//    std::vector<T> ret{};
+//    if (!std::empty(tiles)) {
+//      std::ranges::transform(
+//        tiles | std::views::filter(filter), std::back_inserter(ret), lambda);
+//      std::ranges::sort(ret, sort);
+//      auto last = std::unique(ret.begin(), ret.end());
+//      ret.erase(last, ret.end());
+//    }
+//    return ret;
+//  });
+//}
+//std::vector<open_viii::graphics::BPPT> map_sprite::get_bpps()
+//{
+//  return get_unique_from_tiles<open_viii::graphics::BPPT>(
+//    [](const auto &tile) { return tile.depth(); });
+//}
 bool map_sprite::empty() const
 {
   return m_map.visit_tiles([](auto &&tiles) { return std::empty(tiles); });
 }
 
-std::map<std::uint8_t, std::vector<std::uint8_t>>
-  map_sprite::get_unique_animation_frames() const
-{
-  std::map<std::uint8_t, std::vector<std::uint8_t>> ret = {};
-  for (const auto &id : m_unique_animation_ids) {
-    ret.emplace(id,
-      get_unique_from_tiles<std::uint8_t>(
-        [](const auto &tile) { return tile.animation_state(); },
-        {},
-        [&id](const auto &tile) { return id == tile.animation_id(); }));
-  }
-  return ret;
-}
+//std::map<std::uint8_t, std::vector<std::uint8_t>>
+//  map_sprite::get_unique_animation_frames() const
+//{
+//  std::map<std::uint8_t, std::vector<std::uint8_t>> ret = {};
+//  for (const auto &id : m_unique_animation_ids) {
+//    ret.emplace(id,
+//      get_unique_from_tiles<std::uint8_t>(
+//        [](const auto &tile) { return tile.animation_state(); },
+//        {},
+//        [&id](const auto &tile) { return id == tile.animation_id(); }));
+//  }
+//  return ret;
+//}
 
-std::map<open_viii::graphics::BPPT, std::vector<std::uint8_t>>
-  map_sprite::get_palettes()
-{
-  std::map<open_viii::graphics::BPPT, std::vector<std::uint8_t>> ret = {};
-  for (const auto &id : m_bpps) {
-    ret.emplace(id,
-      get_unique_from_tiles<std::uint8_t>(
-        [](const auto &tile) { return tile.palette_id(); },
-        {},
-        [&id](const auto &tile) { return id == tile.depth(); }));
-  }
-  return ret;
-}
+//std::map<open_viii::graphics::BPPT, std::vector<std::uint8_t>>
+//  map_sprite::get_palettes()
+//{
+//  std::map<open_viii::graphics::BPPT, std::vector<std::uint8_t>> ret = {};
+//  for (const auto &id : m_bpps) {
+//    ret.emplace(id,
+//      get_unique_from_tiles<std::uint8_t>(
+//        [](const auto &tile) { return tile.palette_id(); },
+//        {},
+//        [&id](const auto &tile) { return id == tile.depth(); }));
+//  }
+//  return ret;
+//}
 
-std::vector<std::uint8_t> map_sprite::get_unique_animation_ids() const
-{
-  return get_unique_from_tiles<std::uint8_t>(
-    [](const auto &tile) { return tile.animation_id(); });
-}
+//std::vector<std::uint8_t> map_sprite::get_unique_animation_ids() const
+//{
+//  return get_unique_from_tiles<std::uint8_t>(
+//    [](const auto &tile) { return tile.animation_id(); });
+//}
 
-std::vector<std::uint16_t> map_sprite::get_unique_z_axis() const
-{
-  return get_unique_from_tiles<std::uint16_t>(
-    [](const auto &tile) { return tile.z(); }, std::greater<>{});
-}
+//std::vector<std::uint16_t> map_sprite::get_unique_z_axis() const
+//{
+//  return get_unique_from_tiles<std::uint16_t>(
+//    [](const auto &tile) { return tile.z(); }, std::greater<>{});
+//}
 
-std::vector<std::uint8_t> map_sprite::get_unique_layers() const
-{
-  return get_unique_from_tiles<std::uint8_t>(
-    [](const auto &tile) { return tile.layer_id(); });
-}
+//std::vector<std::uint8_t> map_sprite::get_unique_layers() const
+//{
+//  return get_unique_from_tiles<std::uint8_t>(
+//    [](const auto &tile) { return tile.layer_id(); });
+//}
 
-std::vector<std::uint8_t> map_sprite::get_unique_texture_pages() const
-{
-  return get_unique_from_tiles<std::uint8_t>(
-    [](const auto &tile) { return tile.texture_id(); });
-}
+//std::vector<std::uint8_t> map_sprite::get_unique_texture_pages() const
+//{
+//  return get_unique_from_tiles<std::uint8_t>(
+//    [](const auto &tile) { return tile.texture_id(); });
+//}
 
-std::vector<BlendModeT> map_sprite::get_blend_modes() const
-{
-  return get_unique_from_tiles<BlendModeT>(
-    [](const auto &tile) { return tile.blend_mode(); });
-}
+//std::vector<BlendModeT> map_sprite::get_blend_modes() const
+//{
+//  return get_unique_from_tiles<BlendModeT>(
+//    [](const auto &tile) { return tile.blend_mode(); });
+//}
 
-std::vector<std::pair<open_viii::graphics::BPPT, std::uint8_t>>
-  map_sprite::get_bpp_and_palette() const
-{
-  return get_unique_from_tiles<
-    std::pair<open_viii::graphics::BPPT, std::uint8_t>>([](const auto &tile) {
-    return std::pair(tile.depth(), tile.palette_id());
-  });
-}
+//std::vector<std::pair<open_viii::graphics::BPPT, std::uint8_t>>
+//  map_sprite::get_bpp_and_palette() const
+//{
+//  return get_unique_from_tiles<
+//    std::pair<open_viii::graphics::BPPT, std::uint8_t>>([](const auto &tile) {
+//    return std::pair(tile.depth(), tile.palette_id());
+//  });
+//}
 
 Mim map_sprite::get_mim() const
 {
@@ -161,28 +161,34 @@ std::shared_ptr<std::array<sf::Texture, map_sprite::MAX_TEXTURES>>
 {
   auto ret = std::make_shared<std::array<sf::Texture, MAX_TEXTURES>>(
     std::array<sf::Texture, MAX_TEXTURES>{});
-  if (!std::empty(m_bpp_and_palette)) {
-    for (const auto &[bpp, palette] : m_bpp_and_palette) {
-      if (bpp.bpp24()) {
-        continue;
+  const auto& range = m_all_unique_values_and_strings.bpp().values();
+  if (!std::empty(range)) {
+      for (const auto& bpp : range) {
+          const auto& map = m_all_unique_values_and_strings.palette();
+          if (map.contains(bpp)) {
+              for (const auto& palette : map.at(bpp).values()) {
+                  if (bpp.bpp24()) {
+                      continue;
+                  }
+                  // std::cout << bpp << '\t' << +palette << '\t' << '\t';
+                  size_t pos = get_texture_pos(bpp, palette);
+                  if (m_mim.get_width(bpp) != 0U) {
+                      m_futures.emplace_back(std::async(
+                          std::launch::async,
+                          [this](sf::Texture* texture, BPPT bppt, std::uint8_t pal) {
+                              const auto colors = get_colors(bppt, pal);
+                              // std::lock_guard<std::mutex> lock(mutex_texture);
+                              texture->create(m_mim.get_width(bppt), m_mim.get_height());
+                              texture->setSmooth(false);
+                              texture->update(reinterpret_cast<const sf::Uint8*>(colors.data()));
+                          },
+                          &(ret->at(pos)),
+                              bpp,
+                              palette));
+                  }
+              }
+          }
       }
-      // std::cout << bpp << '\t' << +palette << '\t' << '\t';
-      size_t pos = get_texture_pos(bpp, palette);
-      if (m_mim.get_width(bpp) != 0U) {
-        m_futures.emplace_back(std::async(
-          std::launch::async,
-          [this](sf::Texture *texture, BPPT bppt, std::uint8_t pal) {
-            const auto colors = get_colors(bppt, pal);
-            // std::lock_guard<std::mutex> lock(mutex_texture);
-            texture->create(m_mim.get_width(bppt), m_mim.get_height());
-            texture->setSmooth(false);
-            texture->update(reinterpret_cast<const sf::Uint8 *>(colors.data()));
-          },
-          &(ret->at(pos)),
-          bpp,
-          palette));
-      }
-    }
     // std::cout << std::endl;
   }
   return ret;
@@ -274,7 +280,7 @@ void map_sprite::local_draw(sf::RenderTarget &target,
   const auto new_tileSize = sf::Vector2u{ 16U, 16U };
   target.clear(sf::Color::Transparent);
   m_map.visit_tiles([this, &new_tileSize, &states, &target](auto &&tiles) {
-    for (const auto &z : m_unique_z_axis) {
+    for (const auto &z : m_all_unique_values_and_strings.z().values()) {
       std::for_each(std::rbegin(tiles),
         std::rend(tiles),
         [this, &new_tileSize, &states, &target, &z](const auto &tile) {
