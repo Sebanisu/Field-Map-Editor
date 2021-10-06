@@ -525,18 +525,25 @@ ImGuiStyle gui::init_and_get_style() const
 gui::gui(std::uint32_t               width,
   std::uint32_t                      height,
   [[maybe_unused]] const char *const title)
-  : m_window_width(width), m_window_height(height), m_title(title),
-    m_window(get_render_window()), m_paths(get_paths()),
-    m_paths_c_str(get_paths_c_str()), m_archives_group(get_archives_group()),
-    m_selected_field(get_selected_field()),
-    m_field(m_archives_group.field(m_selected_field)),
-    m_mim_sprite(get_mim_sprite()), m_map_sprite(get_map_sprite()),
-    m_original_style(init_and_get_style())
+  : m_window_width(width)
+  , m_window_height(height)
+  , m_title(title)
+  , m_window(get_render_window())
+  , m_paths(get_paths())
+  , m_paths_c_str(get_paths_c_str())
+  , m_archives_group(get_archives_group())
+  , m_selected_field(get_selected_field())
+  , m_field(m_archives_group.field(m_selected_field))
+  , m_mim_sprite(get_mim_sprite())
+  , m_map_sprite(get_map_sprite())
+  , m_original_style(init_and_get_style())
 {}
 gui::gui(const char *title)
   : gui(default_window_width, default_window_height, title)
 {}
-gui::gui() : gui("") {}
+gui::gui()
+  : gui("")
+{}
 map_sprite gui::get_map_sprite() const
 {
   return { m_field,
@@ -627,26 +634,31 @@ static bool generic_combo(int &id,
 }
 void gui::combo_filtered_palettes() const
 {
-  if (generic_combo(
-        m_id,
-        "Palette",
-        [this]() { return m_map_sprite.palettes(); },
-        [this]() { return m_map_sprite.palettes_str(); },
-        [this]() -> auto & { return m_map_sprite.filter().palette; })) {
-    m_map_sprite.update_render_texture();
-    m_selected_palette = m_map_sprite.filter().palette.value();
-    m_changed          = true;
+  const auto &map = m_map_sprite.uniques().palette();
+  const auto &key = m_map_sprite.filter().bpp.value();
+  if (map.contains(key)) {
+    const auto &pair = map.at(key);
+    if (generic_combo(
+          m_id,
+          "Palette",
+          [&pair]() { return pair.values(); },
+          [&pair]() { return pair.strings(); },
+          [this]() -> auto & { return m_map_sprite.filter().palette; })) {
+      m_map_sprite.update_render_texture();
+      m_selected_palette = m_map_sprite.filter().palette.value();
+      m_changed          = true;
+    }
   }
 }
 
-
 void gui::combo_filtered_bpps() const
 {
+  const auto &pair = m_map_sprite.uniques().bpp();
   if (generic_combo(
         m_id,
         "BPP",
-        [this]() { return m_map_sprite.bpps(); },
-        [this]() { return m_map_sprite.bpps_str(); },
+        [&pair]() { return pair.values(); },
+        [&pair]() { return pair.strings(); },
         [this]() -> auto & { return m_map_sprite.filter().bpp; })) {
     m_map_sprite.update_render_texture();
     m_selected_bpp = m_map_sprite.filter().bpp.value().raw();
@@ -656,11 +668,12 @@ void gui::combo_filtered_bpps() const
 
 void gui::combo_blend_modes() const
 {
+  const auto &pair = m_map_sprite.uniques().blend_mode();
   if (generic_combo(
         m_id,
         "Blend Mode",
-        [this]() { return m_map_sprite.blend_modes(); },
-        [this]() { return m_map_sprite.blend_modes_str(); },
+        [&pair]() { return pair.values(); },
+        [&pair]() { return pair.strings(); },
         [this]() -> auto & { return m_map_sprite.filter().blend_mode; })) {
     m_map_sprite.update_render_texture();
     m_changed = true;
@@ -669,11 +682,12 @@ void gui::combo_blend_modes() const
 
 void gui::combo_layers() const
 {
+  const auto &pair = m_map_sprite.uniques().layer_id();
   if (generic_combo(
         m_id,
         "Layers",
-        [this]() { return m_map_sprite.layer_ids(); },
-        [this]() { return m_map_sprite.layer_ids_str(); },
+        [&pair]() { return pair.values(); },
+        [&pair]() { return pair.strings(); },
         [this]() -> auto & { return m_map_sprite.filter().layer_id; })) {
     m_map_sprite.update_render_texture();
     m_changed = true;
@@ -681,11 +695,12 @@ void gui::combo_layers() const
 }
 void gui::combo_texture_pages() const
 {
+  const auto &pair = m_map_sprite.uniques().texture_page_id();
   if (generic_combo(
         m_id,
         "Texture Page",
-        [this]() { return m_map_sprite.texture_pages(); },
-        [this]() { return m_map_sprite.texture_pages_str(); },
+        [&pair]() { return pair.values(); },
+        [&pair]() { return pair.strings(); },
         [this]() -> auto & { return m_map_sprite.filter().texture_page_id; })) {
     m_map_sprite.update_render_texture();
     m_changed = true;
@@ -693,11 +708,12 @@ void gui::combo_texture_pages() const
 }
 void gui::combo_animation_ids() const
 {
+  const auto &pair = m_map_sprite.uniques().animation_id();
   if (generic_combo(
         m_id,
         "Animation ID",
-        [this]() { return m_map_sprite.animation_ids(); },
-        [this]() { return m_map_sprite.animation_ids_str(); },
+        [&pair]() { return pair.values(); },
+        [&pair]() { return pair.strings(); },
         [this]() -> auto & { return m_map_sprite.filter().animation_id; })) {
     m_map_sprite.update_render_texture();
     m_changed = true;
@@ -705,14 +721,21 @@ void gui::combo_animation_ids() const
 }
 void gui::combo_animation_frames() const
 {
-  if (generic_combo(
-        m_id,
-        "Animation Frame",
-        [this]() { return m_map_sprite.animation_frames(); },
-        [this]() { return m_map_sprite.animation_frames_str(); },
-        [this]() -> auto & { return m_map_sprite.filter().animation_frame; })) {
-    m_map_sprite.update_render_texture();
-    m_changed = true;
+  const auto &map = m_map_sprite.uniques().animation_frame();
+  const auto &key = m_map_sprite.filter().animation_id.value();
+  if (map.contains(key)) {
+    const auto &pair = map.at(key);
+    if (generic_combo(
+          m_id,
+          "Animation Frame",
+          [&pair]() { return pair.values(); },
+          [&pair]() { return pair.strings(); },
+          [this]() -> auto & {
+            return m_map_sprite.filter().animation_frame;
+          })) {
+      m_map_sprite.update_render_texture();
+      m_changed = true;
+    }
   }
 }
 open_viii::graphics::BPPT gui::bpp() const

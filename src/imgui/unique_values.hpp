@@ -118,6 +118,7 @@ public:
         [](const auto &tile) { return tile.animation_id(); })
     , m_blend_other(tiles, [](const auto &tile) { return tile.blend(); })
     , m_blend_mode(tiles, [](const auto &tile) { return tile.blend_mode(); })
+    , m_bpp(tiles, [](const auto &tile) { return tile.depth(); })
     , m_animation_frame(get_map<std::uint8_t, std::uint8_t>(
         tiles,
         m_animation_id,

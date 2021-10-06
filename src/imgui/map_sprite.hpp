@@ -63,6 +63,11 @@ public:
   {
     init_render_texture();
   }
+  [[nodiscard]] const all_unique_values_and_strings &
+    uniques() const
+  {
+    return m_all_unique_values_and_strings;
+  }
   template<typename T>
   static std::vector<std::string> get_strings(const std::vector<T> &data);
   template<typename T, typename U>
