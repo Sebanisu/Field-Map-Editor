@@ -118,8 +118,7 @@ void gui::loop() const
       combo_coo();
       combo_field();
       const char *filter_title = "Filters";
-      if (mim_test())
-      {
+      if (mim_test()) {
         checkbox_mim_palette_texture();
         if (ImGui::CollapsingHeader(filter_title)) {
           if (!m_mim_sprite.draw_palette()) {
@@ -134,9 +133,7 @@ void gui::loop() const
           scale_window();
         }
         slider_xy_sprite(m_mim_sprite);
-      }
-      else if (map_test())
-      {
+      } else if (map_test()) {
         checkbox_map_swizzle();
         if (ImGui::CollapsingHeader(filter_title)) {
           combo_filtered_bpps();
@@ -684,14 +681,14 @@ static bool generic_combo(int &id,
     }
     changed = true;
   }
-  ImGui::PopID();  
+  ImGui::PopID();
   ImGui::SameLine();
   ImGui::PushID(++id);
+  const auto old = current_idx;
   if (ImGui::BeginCombo(name, current_item))
   // The second parameter is the label previewed
   // before opening the combo.
   {
-    const auto old = current_idx;
     for (std::size_t n = 0; n != std::size(strings); ++n) {
       const bool  is_selected = (current_idx == n);
       // You can store your selection however you
@@ -715,8 +712,10 @@ static bool generic_combo(int &id,
     }
     ImGui::EndCombo();
   }
-  changed = filter.update(values[current_idx]).enabled() && changed;
   ImGui::PopID();
+  changed =
+    (filter.update(values[current_idx]).enabled() && (old != current_idx))
+    || changed;
   return changed;
 }
 void gui::combo_filtered_palettes() const
