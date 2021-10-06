@@ -5,6 +5,70 @@
 #include "open_viii/paths/Paths.hpp"
 #include <imgui-SFML.h>
 #include <imgui.h>
+using namespace open_viii::graphics::background;
+using namespace open_viii::graphics;
+using namespace open_viii::graphics::literals;
+using namespace std::string_literals;
+std::ostream &operator<<(std::ostream               &os,
+  const open_viii::graphics::background::BlendModeT &bm)
+{
+  switch (bm) {
+  case BlendModeT::quarter_add:
+    return os << "quarter add"s;
+  case BlendModeT::half_add:
+    return os << "half add"s;
+  case BlendModeT::add:
+    return os << "add"s;
+  default:
+  case BlendModeT::none:
+    return os << "none"s;
+  case BlendModeT::subtract:
+    return os << "subtract"s;
+  }
+}
+
+template<>
+struct fmt::formatter<BPPT>
+{
+  // Presentation format: 'f' - fixed, 'e' - exponential.
+  char           presentation = 'f';
+
+  // Parses format specifications of the form ['f' | 'e'].
+  constexpr auto parse(format_parse_context &ctx) -> decltype(ctx.begin())
+  {
+    // [ctx.begin(), ctx.end()) is a character range that contains a part of
+    // the format string starting from the format specifications to be parsed,
+    // e.g. in
+    //
+    //   fmt::format("{:f} - BPPT of interest", BPPT{1, 2});
+    //
+    // the range will contain "f} - BPPT of interest". The formatter should
+    // parse specifiers until '}' or the end of the range. In this example
+    // the formatter should parse the 'f' specifier and return an iterator
+    // BPPTing to '}'.
+
+    // Parse the presentation format and store it in the formatter:
+    auto it = ctx.begin(), end = ctx.end();
+    if (it != end && (*it == 'f' || *it == 'e'))
+      presentation = *it++;
+
+    // Check if reached the end of the range:
+    if (it != end && *it != '}')
+      throw format_error("invalid format");
+
+    // Return an iterator past the end of the parsed range:
+    return it;
+  }
+
+  // Formats the BPPT p using the parsed format specification (presentation)
+  // stored in this formatter.
+  template<typename FormatContext>
+  auto format(const BPPT &p, FormatContext &ctx) -> decltype(ctx.out())
+  {
+    // ctx.out() is an output iterator to write to.
+    return format_to(ctx.out(), "{}", static_cast<int>(p));
+  }
+};
 
 void gui::start() const
 {
@@ -62,6 +126,7 @@ void gui::loop() const
         combo_filtered_bpps();
         combo_filtered_palettes();
         combo_blend_modes();
+        combo_blend_other();
         combo_layers();
         combo_texture_pages();
         combo_animation_ids();
@@ -615,6 +680,9 @@ static bool generic_combo(int &id,
         // keyboard navigation support)
       }
     }
+    if (old != current_idx) {
+      fmt::print("set: \t{} \t{}\n", name, values[current_idx]);
+    }
     ImGui::EndCombo();
   }
   changed = filter.update(values[current_idx]).enabled() && changed;
@@ -624,8 +692,10 @@ static bool generic_combo(int &id,
   if (ImGui::Checkbox("", &checked)) {
     if (checked) {
       filter.enable();
+      fmt::print("enable: \t{} \t{}\n", name, values[current_idx]);
     } else {
       filter.disable();
+      fmt::print("disable: \t{} \t{}\n", name, values[current_idx]);
     }
     changed = true;
   }
@@ -661,7 +731,7 @@ void gui::combo_filtered_bpps() const
         [&pair]() { return pair.strings(); },
         [this]() -> auto & { return m_map_sprite.filter().bpp; })) {
     m_map_sprite.update_render_texture();
-    m_selected_bpp = m_map_sprite.filter().bpp.value().raw();
+    m_selected_bpp = m_map_sprite.filter().bpp.value().raw() & 3U;
     m_changed      = true;
   }
 }
@@ -715,6 +785,19 @@ void gui::combo_animation_ids() const
         [&pair]() { return pair.values(); },
         [&pair]() { return pair.strings(); },
         [this]() -> auto & { return m_map_sprite.filter().animation_id; })) {
+    m_map_sprite.update_render_texture();
+    m_changed = true;
+  }
+}
+void gui::combo_blend_other() const
+{
+  const auto &pair = m_map_sprite.uniques().blend_other();
+  if (generic_combo(
+        m_id,
+        "Blend Other",
+        [&pair]() { return pair.values(); },
+        [&pair]() { return pair.strings(); },
+        [this]() -> auto & { return m_map_sprite.filter().blend_other; })) {
     m_map_sprite.update_render_texture();
     m_changed = true;
   }

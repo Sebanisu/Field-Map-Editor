@@ -431,6 +431,21 @@ grid map_sprite::get_texture_page_grid() const
 bool map_sprite::fail_filter(auto &tile) const
 {
   using namespace open_viii::graphics::literals;
+#if 1
+  const auto test = []<typename T>(
+                      const ::filter<T> &in_filter, const auto &value) -> bool {
+    return (in_filter && value != in_filter);
+  };
+  return (m_filters.bpp.value() != 16_bpp
+           && test(m_filters.palette, tile.palette_id()))
+         || test(m_filters.bpp, tile.depth())
+         || test(m_filters.blend_mode, tile.blend_mode())
+         || test(m_filters.blend_other, tile.blend())
+         || test(m_filters.animation_id, tile.animation_id())
+         || test(m_filters.animation_frame, tile.animation_state())
+         || test(m_filters.layer_id, tile.layer_id())
+         || test(m_filters.texture_page_id, tile.texture_id());
+#else
   if (m_filters.palette.enabled() && m_filters.bpp.value() != 16_bpp) {
     if (tile.palette_id() != m_filters.palette.value()) {
       return true;
@@ -443,6 +458,11 @@ bool map_sprite::fail_filter(auto &tile) const
   }
   if (m_filters.blend_mode.enabled()) {
     if (tile.blend_mode() != m_filters.blend_mode.value()) {
+      return true;
+    }
+  }
+  if (m_filters.blend_other.enabled()) {
+    if (tile.blend() != m_filters.blend_other.value()) {
       return true;
     }
   }
@@ -467,6 +487,7 @@ bool map_sprite::fail_filter(auto &tile) const
     }
   }
   return false;
+#endif
 }
 
 all_unique_values_and_strings map_sprite::get_all_unique_values_and_strings()

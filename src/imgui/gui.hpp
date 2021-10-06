@@ -96,12 +96,13 @@ private:
   int  get_selected_field();
   std::uint8_t              palette() const;
   open_viii::graphics::BPPT bpp() const;
-  void combo_blend_modes() const;
-  void combo_layers() const;
-  void combo_texture_pages() const;
-  void combo_animation_ids() const;
-  void combo_animation_frames() const;
-  void combo_filtered_palettes() const;
-  void combo_filtered_bpps() const;
+  void                      combo_blend_modes() const;
+  void                      combo_layers() const;
+  void                      combo_texture_pages() const;
+  void                      combo_animation_ids() const;
+  void                      combo_animation_frames() const;
+  void                      combo_filtered_palettes() const;
+  void                      combo_filtered_bpps() const;
+  void                      combo_blend_other() const;
 };
 #endif// MYPROJECT_GUI_HPP
