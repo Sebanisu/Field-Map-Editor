@@ -7,11 +7,16 @@
 #include <fmt/core.h>
 #include <imgui.h>
 inline const auto format_imgui_text =
-  []<typename... T>(fmt::format_string<T...> fmt, T &&...items)
+  []<std::size_t sizeT = 0xFFU, typename... T>(fmt::format_string<T...> fmt,
+    T &&...items)
 {
-  const auto data = fmt::format(
-    std::forward<decltype(fmt)>(fmt), std::forward<decltype(items)>(items)...);
-  ImGui::Text(
-    "%s", data.c_str());// I hate this doesn't just take a std::string.
+  std::array<char, sizeT> buffer{};
+  const auto              it = fmt::format_to_n(std::begin(buffer),
+                 sizeT - 1U,
+                 std::forward<decltype(fmt)>(fmt),
+                 std::forward<decltype(items)>(items)...);
+  *it.out                    = '\0';
+  ImGui::Text("%s", std::data(buffer));
+  // it seems ImGui::Text is coping the values into it's own buffer.
 };
 #endif// MYPROJECT_IMGUI_FORMAT_TEXT_HPP
