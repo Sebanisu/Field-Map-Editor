@@ -32,22 +32,25 @@ public:
     filterT                                      &&filter = {})
     : m_values(get_values(tiles, lambda, sort, filter))
     , m_strings(get_strings(m_values))
-  {}
-  [[nodiscard]] const auto &values() const
+  {
+  }
+  [[nodiscard]] const auto &
+    values() const
   {
     return m_values;
   }
-  [[nodiscard]] const auto &strings() const
+  [[nodiscard]] const auto &
+    strings() const
   {
     return m_strings;
   }
 
 private:
-  std::vector<T>                         m_values{};
-  std::vector<std::string>               m_strings{};
+  std::vector<T>           m_values{};
+  std::vector<std::string> m_strings{};
 
-  [[nodiscard]] std::vector<std::string> get_strings(
-    const std::vector<T> &data) const
+  [[nodiscard]] std::vector<std::string>
+    get_strings(const std::vector<T> &data) const
   {
     using namespace open_viii::graphics::background;
     using namespace open_viii::graphics;
@@ -55,41 +58,52 @@ private:
     using namespace std::string_literals;
     std::vector<std::string> vector;
     vector.reserve(std::size(data));
-    std::ranges::transform(data, std::back_inserter(vector), [](const T &t) {
-      if constexpr (std::is_same_v<T, BlendModeT>) {
-        switch (t) {
-        case BlendModeT::quarter_add:
-          return "quarter add"s;
-        case BlendModeT::half_add:
-          return "half add"s;
-        case BlendModeT::add:
-          return "add"s;
-        default:
-        case BlendModeT::none:
-          return "none"s;
-        case BlendModeT::subtract:
-          return "subtract"s;
+    std::ranges::transform(data,
+      std::back_inserter(vector),
+      [](const T &t)
+      {
+        if constexpr (std::is_same_v<T, BlendModeT>)
+        {
+          switch (t)
+          {
+          case BlendModeT::quarter_add:
+            return "quarter add"s;
+          case BlendModeT::half_add:
+            return "half add"s;
+          case BlendModeT::add:
+            return "add"s;
+          default:
+          case BlendModeT::none:
+            return "none"s;
+          case BlendModeT::subtract:
+            return "subtract"s;
+          }
         }
-      } else if constexpr (std::is_same_v<T, BPPT>) {
-        if (t.bpp8())
-          return "8"s;
-        if (t.bpp16())
-          return "16"s;
-        return "4"s;
-      } else {
-        return fmt::format("{}", t);
-      }
-    });
+        else if constexpr (std::is_same_v<T, BPPT>)
+        {
+          if (t.bpp8())
+            return "8"s;
+          if (t.bpp16())
+            return "16"s;
+          return "4"s;
+        }
+        else
+        {
+          return fmt::format("{}", t);
+        }
+      });
     return vector;
   }
   template<typename tilesT, typename lambdaT, typename sortT, typename filterT>
-  [[nodiscard]] std::vector<T> get_values(const tilesT &tiles,
-    lambdaT                                           &&lambda,
-    sortT                                             &&sort,
-    filterT                                           &&filter) const
+  [[nodiscard]] std::vector<T>
+    get_values(const tilesT &tiles,
+      lambdaT              &&lambda,
+      sortT                &&sort,
+      filterT              &&filter) const
   {
     std::vector<T> ret{};
-    if (!std::ranges::empty(tiles)) {
+    if (!std::ranges::empty(tiles))
+    {
       std::ranges::transform(
         tiles | std::views::filter(filter), std::back_inserter(ret), lambda);
       std::ranges::sort(ret, sort);
@@ -104,7 +118,8 @@ struct all_unique_values_and_strings
 public:
   all_unique_values_and_strings() = default;
   explicit all_unique_values_and_strings(std::monostate)
-  {}
+  {
+  }
   template<std::ranges::range tilesT>
   explicit all_unique_values_and_strings(const tilesT &tiles)
     : m_z(
@@ -124,49 +139,58 @@ public:
         m_animation_id,
         [](const auto &tile) { return tile.animation_state(); },
         {},
-        [](const auto key, const auto &tile) {
-          return key == tile.animation_id();
-        }))
+        [](const auto key, const auto &tile)
+        { return key == tile.animation_id(); }))
     , m_palette(get_map<std::uint8_t, open_viii::graphics::BPPT>(
         tiles,
         m_bpp,
         [](const auto &tile) { return tile.palette_id(); },
         {},
         [](const auto key, const auto &tile) { return key == tile.depth(); }))
-  {}
-  [[nodiscard]] const auto &z() const
+  {
+  }
+  [[nodiscard]] const auto &
+    z() const
   {
     return m_z;
   }
-  [[nodiscard]] const auto &layer_id() const
+  [[nodiscard]] const auto &
+    layer_id() const
   {
     return m_layer_id;
   }
-  [[nodiscard]] const auto &texture_page_id() const
+  [[nodiscard]] const auto &
+    texture_page_id() const
   {
     return m_texture_page_id;
   }
-  [[nodiscard]] const auto &animation_id() const
+  [[nodiscard]] const auto &
+    animation_id() const
   {
     return m_animation_id;
   }
-  [[nodiscard]] const auto &blend_other() const
+  [[nodiscard]] const auto &
+    blend_other() const
   {
     return m_blend_other;
   }
-  [[nodiscard]] const auto &blend_mode() const
+  [[nodiscard]] const auto &
+    blend_mode() const
   {
     return m_blend_mode;
   }
-  [[nodiscard]] const auto &bpp() const
+  [[nodiscard]] const auto &
+    bpp() const
   {
     return m_bpp;
   }
-  [[nodiscard]] const auto &animation_frame() const
+  [[nodiscard]] const auto &
+    animation_frame() const
   {
     return m_animation_frame;
   }
-  [[nodiscard]] const auto &palette() const
+  [[nodiscard]] const auto &
+    palette() const
   {
     return m_palette;
   }
@@ -192,20 +216,21 @@ private:
     typename lambdaT,
     typename sortT   = std::less<>,
     typename filterT = decltype(default_filter_lambda)>
-  static std::map<keyT, unique_values_and_strings<valT>> get_map(
-    const tilesT                          &tiles,
-    const unique_values_and_strings<keyT> &keys,
-    lambdaT                              &&lambda,
-    sortT                                &&sort   = {},
-    filterT                              &&filter = {})
+  static std::map<keyT, unique_values_and_strings<valT>>
+    get_map(const tilesT                    &tiles,
+      const unique_values_and_strings<keyT> &keys,
+      lambdaT                              &&lambda,
+      sortT                                &&sort   = {},
+      filterT                              &&filter = {})
   {
     std::map<keyT, unique_values_and_strings<valT>> ret = {};
-    for (const auto &key : keys.values()) {
+    for (const auto &key : keys.values())
+    {
       ret.emplace(key,
-        unique_values_and_strings<valT>(
-          tiles, lambda, sort, [&key, &filter](const auto &tile) {
-            return filter(key, tile);
-          }));
+        unique_values_and_strings<valT>(tiles,
+          lambda,
+          sort,
+          [&key, &filter](const auto &tile) { return filter(key, tile); }));
     }
     return ret;
   }

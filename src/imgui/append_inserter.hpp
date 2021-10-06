@@ -13,9 +13,8 @@
 #include <memory>
 #include <utility>
 template<typename ContainerT>
-requires(requires(ContainerT c, typename ContainerT::value_type v) {
-  c.append(v);
-}) class append_insert_iterator
+requires(requires(ContainerT c, typename ContainerT::value_type v)
+  { c.append(v); }) class append_insert_iterator
 {// wrap pushes to append of container as output iterator
 public:
   using iterator_category                     = std::output_iterator_tag;
@@ -28,32 +27,42 @@ public:
   constexpr explicit append_insert_iterator(
     ContainerT &local_container) noexcept
     : container(std::addressof(local_container))
-  {}
-  constexpr append_insert_iterator &operator=(
-    const typename ContainerT::value_type &value)
+  {
+  }
+  constexpr append_insert_iterator &
+    operator=(const typename ContainerT::value_type &value)
   {
     container->append(value);
     return *this;
   }
-  constexpr append_insert_iterator &operator=(
-    typename ContainerT::value_type &&value)
+  constexpr append_insert_iterator &
+    operator=(typename ContainerT::value_type &&value)
   {
     container->append(std::move(value));
     return *this;
   }
-  [[nodiscard]] constexpr append_insert_iterator &operator*() noexcept
+  [[nodiscard]] constexpr append_insert_iterator &
+    operator*() noexcept
   {
     return *this;
   }
-  constexpr append_insert_iterator &operator++() noexcept { return *this; }
-  constexpr append_insert_iterator  operator++(int) noexcept { return *this; }
+  constexpr append_insert_iterator &
+    operator++() noexcept
+  {
+    return *this;
+  }
+  constexpr append_insert_iterator
+    operator++(int) noexcept
+  {
+    return *this;
+  }
 
 protected:
   ContainerT *container = nullptr;
 };
 template<class ContainerT>
-[[nodiscard]] constexpr append_insert_iterator<ContainerT> append_inserter(
-  ContainerT &container) noexcept
+[[nodiscard]] constexpr append_insert_iterator<ContainerT>
+  append_inserter(ContainerT &container) noexcept
 {
   return append_insert_iterator<ContainerT>(container);
 }

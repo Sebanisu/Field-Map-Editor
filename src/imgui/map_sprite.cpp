@@ -7,14 +7,17 @@ using namespace open_viii::graphics::background;
 using namespace open_viii::graphics;
 using namespace open_viii::graphics::literals;
 using namespace std::string_literals;
-bool map_sprite::empty() const
+bool
+  map_sprite::empty() const
 {
   return m_map.visit_tiles([](auto &&tiles) { return std::empty(tiles); });
 }
 
-Mim map_sprite::get_mim() const
+Mim
+  map_sprite::get_mim() const
 {
-  if (m_field != nullptr) {
+  if (m_field != nullptr)
+  {
     auto lang_name =
       fmt::format("_{}{}", open_viii::LangCommon::to_string(m_coo), Mim::EXT);
     return { m_field->get_entry_data({ std::string_view(lang_name), Mim::EXT }),
@@ -23,11 +26,11 @@ Mim map_sprite::get_mim() const
   return {};
 }
 
-Map map_sprite::get_map(std::string *out_path,
-  bool                               sort_remove,
-  bool                               shift) const
+Map
+  map_sprite::get_map(std::string *out_path, bool sort_remove, bool shift) const
 {
-  if (m_field != nullptr) {
+  if (m_field != nullptr)
+  {
     auto lang_name =
       fmt::format("_{}{}", open_viii::LangCommon::to_string(m_coo), Map::EXT);
     return Map{ m_mim.mim_type(),
@@ -39,29 +42,34 @@ Map map_sprite::get_map(std::string *out_path,
   return {};
 }
 
-map_sprite::colors_type map_sprite::get_colors(open_viii::graphics::BPPT bpp,
-  std::uint8_t palette,
-  bool         draw_palette) const
+map_sprite::colors_type
+  map_sprite::get_colors(open_viii::graphics::BPPT bpp,
+    std::uint8_t                                   palette,
+    bool                                           draw_palette) const
 {
   return m_mim.get_colors<open_viii::graphics::Color32RGBA>(
     bpp, palette, draw_palette);
 }
 
-constexpr std::size_t map_sprite::get_texture_pos(open_viii::graphics::BPPT bpp,
-  std::uint8_t palette)
+constexpr std::size_t
+  map_sprite::get_texture_pos(open_viii::graphics::BPPT bpp,
+    std::uint8_t                                        palette)
 {
-  if (bpp.bpp4()) {
+  if (bpp.bpp4())
+  {
     return palette;
   }
-  if (bpp.bpp8()) {
+  if (bpp.bpp8())
+  {
     return palette + std::size(Mim::palette_selections());
   }
   return MAX_TEXTURES - 1;
   // 16bpp doesn't have palettes.
 }
 
-const sf::Texture *map_sprite::get_texture(const open_viii::graphics::BPPT bpp,
-  const std::uint8_t palette) const
+const sf::Texture *
+  map_sprite::get_texture(const open_viii::graphics::BPPT bpp,
+    const std::uint8_t                                    palette) const
 {
   return &m_texture->at(get_texture_pos(bpp, palette));
 }
@@ -72,20 +80,27 @@ std::shared_ptr<std::array<sf::Texture, map_sprite::MAX_TEXTURES>>
   auto ret = std::make_shared<std::array<sf::Texture, MAX_TEXTURES>>(
     std::array<sf::Texture, MAX_TEXTURES>{});
   const auto &range = m_all_unique_values_and_strings.bpp().values();
-  if (!std::empty(range)) {
-    for (const auto &bpp : range) {
+  if (!std::empty(range))
+  {
+    for (const auto &bpp : range)
+    {
       const auto &map = m_all_unique_values_and_strings.palette();
-      if (map.contains(bpp)) {
-        for (const auto &palette : map.at(bpp).values()) {
-          if (bpp.bpp24()) {
+      if (map.contains(bpp))
+      {
+        for (const auto &palette : map.at(bpp).values())
+        {
+          if (bpp.bpp24())
+          {
             continue;
           }
           // std::cout << bpp << '\t' << +palette << '\t' << '\t';
           size_t pos = get_texture_pos(bpp, palette);
-          if (m_mim.get_width(bpp) != 0U) {
+          if (m_mim.get_width(bpp) != 0U)
+          {
             m_futures.emplace_back(std::async(
               std::launch::async,
-              [this](sf::Texture *texture, BPPT bppt, std::uint8_t pal) {
+              [this](sf::Texture *texture, BPPT bppt, std::uint8_t pal)
+              {
                 const auto colors = get_colors(bppt, pal);
                 // std::lock_guard<std::mutex> lock(mutex_texture);
                 texture->create(m_mim.get_width(bppt), m_mim.get_height());
@@ -104,19 +119,20 @@ std::shared_ptr<std::array<sf::Texture, map_sprite::MAX_TEXTURES>>
   }
   return ret;
 }
-void map_sprite::wait_for_futures() const
+void
+  map_sprite::wait_for_futures() const
 {
   std::ranges::for_each(m_futures, [](auto &&f) { f.wait(); });
   m_futures.clear();
 }
 
-[[nodiscard]] std::array<sf::Vertex, 4U> map_sprite::get_triangle_strip(
-  const sf::Vector2u &new_tileSize,
-  const sf::Vector2u &raw_tileSize,
-  auto                source_x,
-  auto                source_y,
-  auto                x,
-  auto                y) const
+[[nodiscard]] std::array<sf::Vertex, 4U>
+  map_sprite::get_triangle_strip(const sf::Vector2u &new_tileSize,
+    const sf::Vector2u                              &raw_tileSize,
+    auto                                             source_x,
+    auto                                             source_y,
+    auto                                             x,
+    auto                                             y) const
 {
   auto i =
     static_cast<std::uint32_t>(x / static_cast<decltype(x)>(raw_tileSize.x));
@@ -149,10 +165,10 @@ void map_sprite::wait_for_futures() const
       (tv + 1) * new_tileSize.y) };
 }
 
-[[nodiscard]] std::array<sf::Vertex, 4U> map_sprite::get_triangle_strip(
-  const sf::Vector2u &new_tileSize,
-  const sf::Vector2u &raw_tileSize,
-  auto              &&tile) const
+[[nodiscard]] std::array<sf::Vertex, 4U>
+  map_sprite::get_triangle_strip(const sf::Vector2u &new_tileSize,
+    const sf::Vector2u                              &raw_tileSize,
+    auto                                           &&tile) const
 {
   using tile_type = std::decay_t<decltype(tile)>;
   using namespace open_viii::graphics::literals;
@@ -160,16 +176,20 @@ void map_sprite::wait_for_futures() const
     tile.source_x()
     + tile.texture_id() * tile_type::texture_page_width(tile.depth());
 
-  const auto dst_x = [this, &tile]() {
-    if (m_draw_swizzle) {
+  const auto dst_x = [this, &tile]()
+  {
+    if (m_draw_swizzle)
+    {
       return static_cast<uint32_t>(
         tile.source_x()
         + tile.texture_id() * tile_type::texture_page_width(4_bpp));
     }
     return static_cast<uint32_t>(tile.x());
   }();
-  const auto dst_y = [this, &tile]() {
-    if (m_draw_swizzle) {
+  const auto dst_y = [this, &tile]()
+  {
+    if (m_draw_swizzle)
+    {
       return static_cast<uint32_t>(tile.source_y());
     }
     return static_cast<uint32_t>(tile.y());
@@ -178,61 +198,78 @@ void map_sprite::wait_for_futures() const
     new_tileSize, raw_tileSize, src_x, tile.source_y(), dst_x, dst_y);
 }
 
-void set_color(std::array<sf::Vertex, 4U> &vertices, const sf::Color &color)
+void
+  set_color(std::array<sf::Vertex, 4U> &vertices, const sf::Color &color)
 {
-  for (auto &vertex : vertices) {
+  for (auto &vertex : vertices)
+  {
     vertex.color = color;
   }
 }
-void map_sprite::local_draw(sf::RenderTarget &target,
-  sf::RenderStates                            states) const
+void
+  map_sprite::local_draw(sf::RenderTarget &target,
+    sf::RenderStates                       states) const
 {
   wait_for_futures();
   const auto new_tileSize = sf::Vector2u{ 16U, 16U };
   target.clear(sf::Color::Transparent);
-  m_map.visit_tiles([this, &new_tileSize, &states, &target](auto &&tiles) {
-    for (const auto &z : m_all_unique_values_and_strings.z().values()) {
-      std::for_each(std::rbegin(tiles),
-        std::rend(tiles),
-        [this, &new_tileSize, &states, &target, &z](const auto &tile) {
-          if (tile.z() != z) {
-            return;
-          }
-          if (fail_filter(tile)) {
-            return;
-          }
-          const auto raw_tileSize = sf::Vector2u{ 16U, 16U };
-          auto quad = get_triangle_strip(new_tileSize, raw_tileSize, tile);
-          states.blendMode = sf::BlendAlpha;
-          if (tile.blend_mode() == BlendModeT::add) {
-            states.blendMode = sf::BlendAdd;
-          } else if (tile.blend_mode() == BlendModeT::half_add) {
-            states.blendMode = sf::BlendAdd;
-            constexpr static std::uint8_t per50 =
-              (std::numeric_limits<std::uint8_t>::max)() / 2U;
-            set_color(quad, { per50, per50, per50, per50 });// 50% alpha
-          } else if (tile.blend_mode() == BlendModeT::quarter_add) {
-            states.blendMode = sf::BlendAdd;
-            constexpr static std::uint8_t per25 =
-              (std::numeric_limits<std::uint8_t>::max)() / 4U;
-            set_color(quad, { per25, per25, per25, per25 });// 25% alpha
-          } else if (tile.blend_mode() == BlendModeT::subtract) {
-            states.blendMode = GetBlendSubtract();
-            // states.blendMode = sf::BlendMultiply;
-          }
-          // apply the tileset texture
+  m_map.visit_tiles(
+    [this, &new_tileSize, &states, &target](auto &&tiles)
+    {
+      for (const auto &z : m_all_unique_values_and_strings.z().values())
+      {
+        std::for_each(std::rbegin(tiles),
+          std::rend(tiles),
+          [this, &new_tileSize, &states, &target, &z](const auto &tile)
+          {
+            if (tile.z() != z)
+            {
+              return;
+            }
+            if (fail_filter(tile))
+            {
+              return;
+            }
+            const auto raw_tileSize = sf::Vector2u{ 16U, 16U };
+            auto quad = get_triangle_strip(new_tileSize, raw_tileSize, tile);
+            states.blendMode = sf::BlendAlpha;
+            if (tile.blend_mode() == BlendModeT::add)
+            {
+              states.blendMode = sf::BlendAdd;
+            }
+            else if (tile.blend_mode() == BlendModeT::half_add)
+            {
+              states.blendMode = sf::BlendAdd;
+              constexpr static std::uint8_t per50 =
+                (std::numeric_limits<std::uint8_t>::max)() / 2U;
+              set_color(quad, { per50, per50, per50, per50 });// 50% alpha
+            }
+            else if (tile.blend_mode() == BlendModeT::quarter_add)
+            {
+              states.blendMode = sf::BlendAdd;
+              constexpr static std::uint8_t per25 =
+                (std::numeric_limits<std::uint8_t>::max)() / 4U;
+              set_color(quad, { per25, per25, per25, per25 });// 25% alpha
+            }
+            else if (tile.blend_mode() == BlendModeT::subtract)
+            {
+              states.blendMode = GetBlendSubtract();
+              // states.blendMode = sf::BlendMultiply;
+            }
+            // apply the tileset texture
 
-          // std::lock_guard<std::mutex> lock(mutex_texture);
-          states.texture = get_texture(tile.depth(), tile.palette_id());
+            // std::lock_guard<std::mutex> lock(mutex_texture);
+            states.texture = get_texture(tile.depth(), tile.palette_id());
 
-          // draw the vertex array
-          target.draw(quad.data(), quad.size(), sf::TriangleStrip, states);
-        });
-    }
-  });
+            // draw the vertex array
+            target.draw(quad.data(), quad.size(), sf::TriangleStrip, states);
+          });
+      }
+    });
 }
 
-const sf::BlendMode &map_sprite::GetBlendSubtract()
+const sf::BlendMode &
+  map_sprite::GetBlendSubtract()
 {
   static auto BlendSubtract = sf::BlendMode{ sf::BlendMode::DstColor,// or One
     sf::BlendMode::One,
@@ -243,32 +280,37 @@ const sf::BlendMode &map_sprite::GetBlendSubtract()
   return BlendSubtract;
 }
 
-map_sprite map_sprite::with_coo(const open_viii::LangT coo) const
+map_sprite
+  map_sprite::with_coo(const open_viii::LangT coo) const
 {
   return { m_field, coo, m_draw_swizzle, m_filters };
 }
 
-map_sprite map_sprite::with_field(
-  std::shared_ptr<open_viii::archive::FIFLFS<false>> field) const
+map_sprite
+  map_sprite::with_field(
+    std::shared_ptr<open_viii::archive::FIFLFS<false>> field) const
 {
   return { std::move(field), m_coo, m_draw_swizzle, m_filters };
 }
 
-void map_sprite::enable_draw_swizzle() const
+void
+  map_sprite::enable_draw_swizzle() const
 {
   m_draw_swizzle = true;
   init_render_texture();
   m_grid = get_grid();
 }
 
-void map_sprite::disable_draw_swizzle() const
+void
+  map_sprite::disable_draw_swizzle() const
 {
   m_draw_swizzle = false;
   init_render_texture();
   m_grid = get_grid();
 }
 
-void map_sprite::draw(sf::RenderTarget &target, sf::RenderStates states) const
+void
+  map_sprite::draw(sf::RenderTarget &target, sf::RenderStates states) const
 {
   // apply the transform
   states.transform *= getTransform();
@@ -280,54 +322,69 @@ void map_sprite::draw(sf::RenderTarget &target, sf::RenderStates states) const
   // draw grid
   target.draw(m_grid, states);
   // draw texture_page_grid
-  if (m_draw_swizzle) {
+  if (m_draw_swizzle)
+  {
     target.draw(m_texture_page_grid, states);
   }
 }
-void map_sprite::update_render_texture() const
+void
+  map_sprite::update_render_texture() const
 {
-  if (!fail()) {
+  if (!fail())
+  {
     local_draw(*m_render_texture, sf::RenderStates::Default);
     m_render_texture->display();
   }
 }
-void map_sprite::save(const std::filesystem::path &path) const
+void
+  map_sprite::save(const std::filesystem::path &path) const
 {
-  if (fail()) {
+  if (fail())
+  {
     return;
   }
   const auto image = m_render_texture->getTexture().copyToImage();
-  if (!image.saveToFile(path.string())) {
+  if (!image.saveToFile(path.string()))
+  {
     std::cerr << "failure to save file:" << path << std::endl;
   }
 }
-bool map_sprite::fail() const
+bool
+  map_sprite::fail() const
 {
   static bool once = true;
   using namespace open_viii::graphics::literals;
-  if (!m_render_texture) {
-    if (once) {
+  if (!m_render_texture)
+  {
+    if (once)
+    {
       std::cout << "m_render_texture is null" << std::endl;
       once = false;
     }
     return true;
   }
-  if (!m_texture) {
-    if (once) {
+  if (!m_texture)
+  {
+    if (once)
+    {
       std::cout << "m_texture is null" << std::endl;
       once = false;
     }
     return true;
   }
-  if (m_mim.get_width(4_bpp, false) == 0) {
-    if (once) {
+  if (m_mim.get_width(4_bpp, false) == 0)
+  {
+    if (once)
+    {
       std::cout << "m_mim width is 0" << std::endl;
       once = false;
     }
     return true;
   }
-  if (empty()) {
-    if (once) {
+  if (empty())
+  {
+    if (once)
+    {
       std::cout << "m_map is empty" << std::endl;
       once = false;
     }
@@ -336,56 +393,73 @@ bool map_sprite::fail() const
   once = true;
   return false;
 }
-void map_sprite::map_save(const std::filesystem::path &dest_path) const
+void
+  map_sprite::map_save(const std::filesystem::path &dest_path) const
 {
   const auto map  = get_map(nullptr, false, false);
   const auto path = dest_path.string();
 
   open_viii::tools::write_buffer(
-    [&map](std::ostream &os) {
-      map.visit_tiles([&os](auto &&tiles) {
-        for (const auto &tile : tiles) {
-          //          std::array<char, sizeof(tile)> data{};
-          //          std::memcpy(data.data(), &tile, sizeof(tile));
-          const auto data = std::bit_cast<std::array<char, sizeof(tile)>>(tile);
-          os.write(data.data(), data.size());
-        }
-      });
+    [&map](std::ostream &os)
+    {
+      map.visit_tiles(
+        [&os](auto &&tiles)
+        {
+          for (const auto &tile : tiles)
+          {
+            //          std::array<char, sizeof(tile)> data{};
+            //          std::memcpy(data.data(), &tile, sizeof(tile));
+            const auto data =
+              std::bit_cast<std::array<char, sizeof(tile)>>(tile);
+            os.write(data.data(), data.size());
+          }
+        });
     },
     path,
     "");
 }
-std::string map_sprite::map_filename()
+std::string
+  map_sprite::map_filename()
 {
   return std::filesystem::path(m_map_path).filename().string();
 }
 
-const map_sprite &map_sprite::toggle_grid(bool enable,
-  bool                                         enable_texture_page_grid) const
+const map_sprite &
+  map_sprite::toggle_grid(bool enable, bool enable_texture_page_grid) const
 {
-  if (enable) {
+  if (enable)
+  {
     m_grid.enable();
-  } else {
+  }
+  else
+  {
     m_grid.disable();
   }
 
-  if (enable_texture_page_grid) {
+  if (enable_texture_page_grid)
+  {
     // std::cout << "enabled: " << m_texture_page_grid.count() << '\n';
     m_texture_page_grid.enable();
-  } else {
+  }
+  else
+  {
     m_texture_page_grid.disable();
   }
   return *this;
 }
-void map_sprite::resize_render_texture() const
+void
+  map_sprite::resize_render_texture() const
 {
-  if (!fail()) {
+  if (!fail())
+  {
     m_render_texture->create(width(), height());
   }
 }
-void map_sprite::init_render_texture() const
+void
+  map_sprite::init_render_texture() const
 {
-  if (!m_render_texture) {
+  if (!m_render_texture)
+  {
     m_render_texture = std::make_shared<sf::RenderTexture>();
   }
   resize_render_texture();
@@ -393,33 +467,40 @@ void map_sprite::init_render_texture() const
 }
 
 
-open_viii::graphics::Rectangle<std::uint32_t> map_sprite::get_canvas() const
+open_viii::graphics::Rectangle<std::uint32_t>
+  map_sprite::get_canvas() const
 {
   return static_cast<open_viii::graphics::Rectangle<std::uint32_t>>(
     m_map.canvas());
 }
 
-std::uint32_t map_sprite::width() const
+std::uint32_t
+  map_sprite::width() const
 {
-  if (m_draw_swizzle) {
+  if (m_draw_swizzle)
+  {
     using namespace open_viii::graphics::literals;
     return m_mim.get_width(4_bpp);
   }
   return m_canvas.width();
 }
 
-std::uint32_t map_sprite::height() const
+std::uint32_t
+  map_sprite::height() const
 {
-  if (m_draw_swizzle) {
+  if (m_draw_swizzle)
+  {
     return m_mim.get_height();
   }
   return m_canvas.height();
 }
-grid map_sprite::get_grid() const
+grid
+  map_sprite::get_grid() const
 {
   return { { 16U, 16U }, { width(), height() } };
 }
-grid map_sprite::get_texture_page_grid() const
+grid
+  map_sprite::get_texture_page_grid() const
 {
   using namespace open_viii::graphics::literals;
   return { { (1U << static_cast<unsigned int>((8 - ((4_bpp).raw() & 3U)))),
@@ -428,14 +509,14 @@ grid map_sprite::get_texture_page_grid() const
     sf::Color::Yellow };
 }
 
-bool map_sprite::fail_filter(auto &tile) const
+bool
+  map_sprite::fail_filter(auto &tile) const
 {
   using namespace open_viii::graphics::literals;
 #if 1
   const auto test = []<typename T>(
-                      const ::filter<T> &in_filter, const auto &value) -> bool {
-    return (in_filter && value != in_filter);
-  };
+                      const ::filter<T> &in_filter, const auto &value) -> bool
+  { return (in_filter && value != in_filter); };
   return (m_filters.bpp.value() != 16_bpp
            && test(m_filters.palette, tile.palette_id()))
          || test(m_filters.bpp, tile.depth())
@@ -446,43 +527,59 @@ bool map_sprite::fail_filter(auto &tile) const
          || test(m_filters.layer_id, tile.layer_id())
          || test(m_filters.texture_page_id, tile.texture_id());
 #else
-  if (m_filters.palette.enabled() && m_filters.bpp.value() != 16_bpp) {
-    if (tile.palette_id() != m_filters.palette.value()) {
+  if (m_filters.palette.enabled() && m_filters.bpp.value() != 16_bpp)
+  {
+    if (tile.palette_id() != m_filters.palette.value())
+    {
       return true;
     }
   }
-  if (m_filters.bpp.enabled()) {
-    if (tile.depth() != m_filters.bpp.value()) {
+  if (m_filters.bpp.enabled())
+  {
+    if (tile.depth() != m_filters.bpp.value())
+    {
       return true;
     }
   }
-  if (m_filters.blend_mode.enabled()) {
-    if (tile.blend_mode() != m_filters.blend_mode.value()) {
+  if (m_filters.blend_mode.enabled())
+  {
+    if (tile.blend_mode() != m_filters.blend_mode.value())
+    {
       return true;
     }
   }
-  if (m_filters.blend_other.enabled()) {
-    if (tile.blend() != m_filters.blend_other.value()) {
+  if (m_filters.blend_other.enabled())
+  {
+    if (tile.blend() != m_filters.blend_other.value())
+    {
       return true;
     }
   }
-  if (m_filters.animation_id.enabled()) {
-    if (tile.animation_id() != m_filters.animation_id.value()) {
+  if (m_filters.animation_id.enabled())
+  {
+    if (tile.animation_id() != m_filters.animation_id.value())
+    {
       return true;
     }
   }
-  if (m_filters.animation_frame.enabled()) {
-    if (tile.animation_state() != m_filters.animation_frame.value()) {
+  if (m_filters.animation_frame.enabled())
+  {
+    if (tile.animation_state() != m_filters.animation_frame.value())
+    {
       return true;
     }
   }
-  if (m_filters.layer_id.enabled()) {
-    if (tile.layer_id() != m_filters.layer_id.value()) {
+  if (m_filters.layer_id.enabled())
+  {
+    if (tile.layer_id() != m_filters.layer_id.value())
+    {
       return true;
     }
   }
-  if (m_filters.texture_page_id.enabled()) {
-    if (tile.texture_id() != m_filters.texture_page_id.value()) {
+  if (m_filters.texture_page_id.enabled())
+  {
+    if (tile.texture_id() != m_filters.texture_page_id.value())
+    {
       return true;
     }
   }
@@ -490,24 +587,27 @@ bool map_sprite::fail_filter(auto &tile) const
 #endif
 }
 
-all_unique_values_and_strings map_sprite::get_all_unique_values_and_strings()
+all_unique_values_and_strings
+  map_sprite::get_all_unique_values_and_strings()
 {
   return m_map.visit_tiles(
     [](const auto &tiles) { return all_unique_values_and_strings(tiles); });
 }
 
-filters &map_sprite::filter() const
+filters &
+  map_sprite::filter() const
 {
   return m_filters;
 }
-map_sprite map_sprite::update(
-  std::shared_ptr<open_viii::archive::FIFLFS<false>> field,
-  open_viii::LangT                                   coo,
-  bool                                               draw_swizzle) const
+map_sprite
+  map_sprite::update(std::shared_ptr<open_viii::archive::FIFLFS<false>> field,
+    open_viii::LangT                                                    coo,
+    bool draw_swizzle) const
 {
   return { std::move(field), coo, draw_swizzle, m_filters };
 }
-const all_unique_values_and_strings &map_sprite::uniques() const
+const all_unique_values_and_strings &
+  map_sprite::uniques() const
 {
   return m_all_unique_values_and_strings;
 }

@@ -24,36 +24,44 @@ public:
   explicit filter(T value, bool enabled = false)
     : m_value(std::move(value))
     , m_enabled(enabled)
-  {}
+  {
+  }
   template<typename U>
-  filter &update(U &&value)
+  filter &
+    update(U &&value)
   {
     m_value = std::forward<U>(value);
     return *this;
   }
-  [[nodiscard]] const T &value() const
+  [[nodiscard]] const T &
+    value() const
   {
     return m_value;
   }
-  [[nodiscard]] const bool &enabled() const
+  [[nodiscard]] const bool &
+    enabled() const
   {
     return m_enabled;
   }
-  filter &enable()
+  filter &
+    enable()
   {
     m_enabled = true;
     return *this;
   }
-  filter &disable()
+  filter &
+    disable()
   {
     m_enabled = false;
     return *this;
   }
-  [[nodiscard]] bool operator==(const T &cmp) const
+  [[nodiscard]] bool
+    operator==(const T &cmp) const
   {
     return m_value == cmp;
   }
-  [[nodiscard]] bool operator!=(const T &cmp) const
+  [[nodiscard]] bool
+    operator!=(const T &cmp) const
   {
     return m_value != cmp;
   }
@@ -61,15 +69,15 @@ public:
   {
     return m_enabled;
   }
-//  /**
-//   * common test for tiles.
-//   * @param cmp value of tile
-//   * @return true if not match and enabled.
-//   */
-//  [[nodiscard]] bool test(const T &cmp) const
-//  {
-//    return m_enabled && m_value != cmp;
-//  }
+  //  /**
+  //   * common test for tiles.
+  //   * @param cmp value of tile
+  //   * @return true if not match and enabled.
+  //   */
+  //  [[nodiscard]] bool test(const T &cmp) const
+  //  {
+  //    return m_enabled && m_value != cmp;
+  //  }
   explicit operator T() const
   {
     return m_value;
@@ -84,7 +92,8 @@ struct filters
   filter<std::uint8_t>                                texture_page_id = {};
   filter<open_viii::graphics::background::BlendModeT> blend_mode      = {};
   filter<std::uint8_t>                                blend_other     = {};
-  filter<open_viii::graphics::BPPT>                   bpp             = []() {
+  filter<open_viii::graphics::BPPT>                   bpp             = []()
+  {
     using namespace open_viii::graphics::literals;
     return filter<open_viii::graphics::BPPT>(4_bpp);
   }();

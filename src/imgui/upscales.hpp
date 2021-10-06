@@ -32,18 +32,23 @@ public:
     const open_viii::LangT      &coo,
     std::uint8_t                 texture_page,
     std::uint8_t                 palette)
-    : m_root(std::move(root)), m_field_name(std::move(field_name)), m_coo(coo),
-      m_texture_page(texture_page), m_palette(palette)
-  {}
+    : m_root(std::move(root))
+    , m_field_name(std::move(field_name))
+    , m_coo(coo)
+    , m_texture_page(texture_page)
+    , m_palette(palette)
+  {
+  }
 
-  void get_path() const
+  void
+    get_path() const
   {
     const std::string_view prefix = std::string_view(m_field_name).substr(0, 2);
     const auto             filenames = std::array{
       fmt::format("{}_{}_{}{}", m_field_name, m_texture_page, m_palette, m_ext),
       fmt::format("{}_{}{}", m_field_name, m_texture_page, m_ext)
     };
-    std::string three_character_coo_or_x = "x"; //placeholder.
+    std::string three_character_coo_or_x = "x";// placeholder.
     const auto  paths                    = std::array{
       tl::string::replace_slashes(fmt::format(
                             R"(DEMASTER_EXP\textures\field_bg\{}\{}\)", prefix, m_field_name)),

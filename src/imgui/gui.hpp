@@ -16,7 +16,8 @@ public:
   gui(std::uint32_t width, std::uint32_t height, const char *title);
   explicit gui(const char *title);
   gui();
-  void start() const;
+  void
+    start() const;
 
 private:
   static constexpr std::uint32_t    default_window_width  = 800U;
@@ -60,49 +61,91 @@ private:
   mutable ImGui::FileBrowser m_directory_browser{
     ImGuiFileBrowserFlags_SelectDirectory
   };
-  static std::vector<std::string> get_paths();
+  static std::vector<std::string>
+    get_paths();
   // imgui doesn't support std::string or std::string_view or
   // std::filesystem::path, only const char *
-  std::vector<const char *>       get_paths_c_str() const;
-  archives_group                  get_archives_group() const;
-  sf::RenderWindow                get_render_window() const;
-  void                            update_path() const;
-  mim_sprite                      get_mim_sprite() const;
-  map_sprite                      get_map_sprite() const;
-  ImGuiStyle                      init_and_get_style() const;
-  void                            loop_events() const;
-  void                            loop() const;
-  void                            combo_path() const;
-  void                            combo_draw() const;
-  void                            menuitem_locate_ff8() const;
-  void                            file_browser_save_texture() const;
-  void                            file_browser_locate_ff8() const;
-  void                            menu_bar() const;
-  void                            slider_xy_sprite(auto &sprite) const;
-  void                            combo_palette() const;
-  void                            combo_bpp() const;
-  void                            checkbox_mim_palette_texture() const;
-  void                            combo_field() const;
-  void                            combo_coo() const;
-  std::string                     save_texture_path() const;
-  void                            update_field() const;
-  bool                            mim_test() const;
-  bool                            map_test() const;
-  void                            checkbox_map_swizzle() const;
-  void menuitem_save_texture(const std::string &path, bool b) const;
-  void menuitem_save_mim_file(const std::string &path, bool disable) const;
-  void menuitem_save_map_file(const std::string &path, bool disable) const;
-  void scale_window(float width = {}, float height = {}) const;
-  int  get_selected_field();
-  std::uint8_t              palette() const;
-  open_viii::graphics::BPPT bpp() const;
-  void                      combo_blend_modes() const;
-  void                      combo_layers() const;
-  void                      combo_texture_pages() const;
-  void                      combo_animation_ids() const;
-  void                      combo_animation_frames() const;
-  void                      combo_filtered_palettes() const;
-  void                      combo_filtered_bpps() const;
-  void                      combo_blend_other() const;
+  std::vector<const char *>
+    get_paths_c_str() const;
+  archives_group
+    get_archives_group() const;
+  sf::RenderWindow
+    get_render_window() const;
+  void
+    update_path() const;
+  mim_sprite
+    get_mim_sprite() const;
+  map_sprite
+    get_map_sprite() const;
+  ImGuiStyle
+    init_and_get_style() const;
+  void
+    loop_events() const;
+  void
+    loop() const;
+  void
+    combo_path() const;
+  void
+    combo_draw() const;
+  void
+    menuitem_locate_ff8() const;
+  void
+    file_browser_save_texture() const;
+  void
+    file_browser_locate_ff8() const;
+  void
+    menu_bar() const;
+  void
+    slider_xy_sprite(auto &sprite) const;
+  void
+    combo_palette() const;
+  void
+    combo_bpp() const;
+  void
+    checkbox_mim_palette_texture() const;
+  void
+    combo_field() const;
+  void
+    combo_coo() const;
+  std::string
+    save_texture_path() const;
+  void
+    update_field() const;
+  bool
+    mim_test() const;
+  bool
+    map_test() const;
+  void
+    checkbox_map_swizzle() const;
+  void
+    menuitem_save_texture(const std::string &path, bool b) const;
+  void
+    menuitem_save_mim_file(const std::string &path, bool disable) const;
+  void
+    menuitem_save_map_file(const std::string &path, bool disable) const;
+  void
+    scale_window(float width = {}, float height = {}) const;
+  int
+    get_selected_field();
+  std::uint8_t
+    palette() const;
+  open_viii::graphics::BPPT
+    bpp() const;
+  void
+    combo_blend_modes() const;
+  void
+    combo_layers() const;
+  void
+    combo_texture_pages() const;
+  void
+    combo_animation_ids() const;
+  void
+    combo_animation_frames() const;
+  void
+    combo_filtered_palettes() const;
+  void
+    combo_filtered_bpps() const;
+  void
+    combo_blend_other() const;
 };
 #endif// MYPROJECT_GUI_HPP
