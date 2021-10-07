@@ -9,9 +9,15 @@ using namespace open_viii::graphics::background;
 using namespace open_viii::graphics;
 using namespace open_viii::graphics::literals;
 using namespace std::string_literals;
+struct mouse_positions
+{
+  inline static sf::Vector2i pixel        = {};
+  inline static sf::Vector2i tile         = {};
+  inline static int          texture_page = {};
+};
+
 std::ostream &
-  operator<<(std::ostream                             &os,
-    const open_viii::graphics::background::BlendModeT &bm)
+  operator<<(std::ostream &os, const BlendModeT &bm)
 {
   switch (bm)
   {
@@ -172,38 +178,10 @@ void
         }
         slider_xy_sprite(m_map_sprite);
       }
-      const auto    &mouse_pos = sf::Mouse::getPosition(m_window);
-      const auto    &win_size  = m_window.getSize();
-      constexpr auto in_bounds = [](auto i, auto low, auto high) {
-        return std::cmp_greater_equal(i, low) && std::cmp_less_equal(i, high);
-      };
-      if (in_bounds(mouse_pos.x, 0, win_size.x)
-          && in_bounds(mouse_pos.y, 0, win_size.y) && m_window.hasFocus())
-      {
-        const sf::Vector2i clamped_mouse_pos = {
-          std::clamp(mouse_pos.x, 0, static_cast<int>(win_size.x)),
-          std::clamp(mouse_pos.y, 0, static_cast<int>(win_size.y))
-        };
-        const auto pixel_pos = m_window.mapPixelToCoords(clamped_mouse_pos);
 
-        if (((mim_test()
-               && in_bounds(
-                 static_cast<int>(pixel_pos.x), 0, m_mim_sprite.width())
-               && in_bounds(
-                 static_cast<int>(pixel_pos.y), 0, m_mim_sprite.height()))
-              || (map_test()
-                  && in_bounds(
-                    static_cast<int>(pixel_pos.x), 0, m_map_sprite.width())
-                  && in_bounds(
-                    static_cast<int>(pixel_pos.y), 0, m_map_sprite.height())))
-            && !ImGui::IsWindowHovered(ImGuiHoveredFlags_AnyWindow))
-        {
-          format_imgui_text("Mouse Pos: ({}, {})  Tile Pos: ({}, {})",
-            static_cast<int>(pixel_pos.x),
-            static_cast<int>(pixel_pos.y),
-            static_cast<int>(pixel_pos.x) / 16,
-            static_cast<int>(pixel_pos.y) / 16);
-        }
+
+      if (handle_mouse_cursor())
+      {
       }
     }
   }
@@ -223,6 +201,72 @@ void
   ImGui::SFML::Render(m_window);
   m_window.display();
   m_first = false;
+}
+bool
+  gui::handle_mouse_cursor() const
+{
+  bool           mouse_enabled = false;
+  const auto    &mouse_pos     = sf::Mouse::getPosition(m_window);
+  const auto    &win_size      = m_window.getSize();
+  constexpr auto in_bounds     = [](auto i, auto low, auto high)
+  { return std::cmp_greater_equal(i, low) && std::cmp_less_equal(i, high); };
+  if (in_bounds(mouse_pos.x, 0, win_size.x)
+      && in_bounds(mouse_pos.y, 0, win_size.y) && m_window.hasFocus())
+  {
+    const sf::Vector2i clamped_mouse_pos = {
+      std::clamp(mouse_pos.x, 0, static_cast<int>(win_size.x)),
+      std::clamp(mouse_pos.y, 0, static_cast<int>(win_size.y))
+    };
+
+    const auto pixel_pos   = m_window.mapPixelToCoords(clamped_mouse_pos);
+    mouse_positions::pixel = { static_cast<int>(pixel_pos.x),
+      static_cast<int>(pixel_pos.y) };
+    const auto &x          = mouse_positions::pixel.x;
+    const auto &y          = mouse_positions::pixel.y;
+
+    if (((mim_test() && in_bounds(x, 0, m_mim_sprite.width())
+           && in_bounds(y, 0, m_mim_sprite.height()))
+          || (map_test() && in_bounds(x, 0, m_map_sprite.width())
+              && in_bounds(y, 0, m_map_sprite.height())))
+        && !ImGui::IsWindowHovered(ImGuiHoveredFlags_AnyWindow))
+    {
+      mouse_enabled                 = true;
+      mouse_positions::tile         = mouse_positions::pixel / 16;
+      auto       &tilex             = mouse_positions::tile.x;
+      const auto &tiley             = mouse_positions::tile.y;
+      mouse_positions::texture_page = tilex / 16;// for 4bit swizzle.
+      auto      &texture_page       = mouse_positions::texture_page;
+      const auto is_swizzle =
+        (map_test() && m_map_swizzle) || (mim_test() && !m_draw_palette);
+      if (is_swizzle)
+      {
+        tilex %= 16;
+        if (mim_test())
+        {
+          if (m_selected_bpp == 1)
+          {
+            texture_page = x / 128;
+          }
+          else if (m_selected_bpp == 2)
+          {
+            texture_page = x / 64;
+          }
+        }
+      }
+      format_imgui_text("Mouse Pos: ({:4}, {:3})", x, y);
+      ImGui::SameLine();
+      if (map_test() || !m_draw_palette)
+      {
+        format_imgui_text("Tile Pos: ({:2}, {:2})", tilex, tiley);
+      }
+      if (is_swizzle)
+      {
+        ImGui::SameLine();
+        format_imgui_text("Page: {:2}", texture_page);
+      }
+    }
+  }
+  return mouse_enabled;
 }
 void
   gui::combo_coo() const
@@ -308,12 +352,12 @@ void
   }
 }
 static void
-  update_bpp(mim_sprite &sprite, open_viii::graphics::BPPT bpp)
+  update_bpp(mim_sprite &sprite, BPPT bpp)
 {
   sprite = sprite.with_bpp(bpp);
 }
 static void
-  update_bpp(map_sprite &sprite, open_viii::graphics::BPPT bpp)
+  update_bpp(map_sprite &sprite, BPPT bpp)
 {
   if (sprite.filter().bpp.update(bpp).enabled())
   {
@@ -324,8 +368,7 @@ void
   gui::combo_bpp() const
 {
   ImGui::PushID(++m_id);
-  static constexpr std::array bpp_items =
-    open_viii::graphics::background::Mim::bpp_selections_c_str();
+  static constexpr std::array bpp_items = Mim::bpp_selections_c_str();
   if (ImGui::Combo("BPP",
         &m_selected_bpp,
         bpp_items.data(),
@@ -368,8 +411,7 @@ std::uint8_t
   gui::palette() const
 {
   return static_cast<uint8_t>(
-    open_viii::graphics::background::Mim::palette_selections().at(
-      static_cast<size_t>(m_selected_palette)));
+    Mim::palette_selections().at(static_cast<size_t>(m_selected_palette)));
 }
 static void
   update_palette(mim_sprite &sprite, uint8_t palette)
@@ -390,8 +432,7 @@ void
   ImGui::PushID(++m_id);
   if (m_selected_bpp != 2)
   {
-    static constexpr std::array palette_items =
-      open_viii::graphics::background::Mim::palette_selections_c_str();
+    static constexpr std::array palette_items = Mim::palette_selections_c_str();
     if (ImGui::Combo("Palette",
           &m_selected_palette,
           palette_items.data(),
@@ -496,8 +537,7 @@ std::string
       return fmt::format("{}_mim_palettes.png", field_name);
     }
     const int bpp = static_cast<int>(
-      open_viii::graphics::background::Mim::bpp_selections().at(
-        static_cast<size_t>(m_selected_bpp)));
+      Mim::bpp_selections().at(static_cast<size_t>(m_selected_bpp)));
     return fmt::format(
       "{}_mim_{}bpp_{}.png", field_name, bpp, m_selected_palette);
   }
@@ -533,8 +573,7 @@ void
     if (mim_test())
     {
       const auto str_path = selected_path.string();
-      if (open_viii::tools::i_ends_with(
-            str_path, open_viii::graphics::background::Mim::EXT))
+      if (open_viii::tools::i_ends_with(str_path, Mim::EXT))
       {
         m_mim_sprite.mim_save(selected_path);
       }
@@ -546,8 +585,7 @@ void
     else if (map_test())
     {
       const auto str_path = selected_path.string();
-      if (open_viii::tools::i_ends_with(
-            str_path, open_viii::graphics::background::Map::EXT))
+      if (open_viii::tools::i_ends_with(str_path, Map::EXT))
       {
         m_map_sprite.map_save(selected_path);
       }
@@ -587,8 +625,7 @@ void
   {
     m_save_file_browser.Open();
     m_save_file_browser.SetTitle("Save Mim as...");
-    m_save_file_browser.SetTypeFilters(
-      { open_viii::graphics::background::Mim::EXT.data() });
+    m_save_file_browser.SetTypeFilters({ Mim::EXT.data() });
     m_save_file_browser.SetInputName(path);
   }
 }
@@ -599,8 +636,7 @@ void
   {
     m_save_file_browser.Open();
     m_save_file_browser.SetTitle("Save Map as...");
-    m_save_file_browser.SetTypeFilters(
-      { open_viii::graphics::background::Map::EXT.data() });
+    m_save_file_browser.SetTypeFilters({ Map::EXT.data() });
     m_save_file_browser.SetInputName(path);
   }
 }
@@ -746,11 +782,9 @@ mim_sprite
   gui::get_mim_sprite() const
 {
   return { m_field,
-    open_viii::graphics::background::Mim::bpp_selections().at(
-      static_cast<std::size_t>(m_selected_bpp)),
-    static_cast<std::uint8_t>(
-      open_viii::graphics::background::Mim::palette_selections().at(
-        static_cast<std::size_t>(m_selected_palette))),
+    Mim::bpp_selections().at(static_cast<std::size_t>(m_selected_bpp)),
+    static_cast<std::uint8_t>(Mim::palette_selections().at(
+      static_cast<std::size_t>(m_selected_palette))),
     open_viii::LangCommon::to_array().at(
       static_cast<std::size_t>(m_selected_coo)),
     m_draw_palette };
@@ -1054,9 +1088,8 @@ void
     }
   }
 }
-open_viii::graphics::BPPT
+BPPT
   gui::bpp() const
 {
-  return open_viii::graphics::background::Mim::bpp_selections().at(
-    static_cast<size_t>(m_selected_bpp));
+  return Mim::bpp_selections().at(static_cast<size_t>(m_selected_bpp));
 }

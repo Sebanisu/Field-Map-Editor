@@ -157,5 +157,6 @@ private:
   static constexpr auto default_filter_lambda = [](auto &&) { return true; };
   void
     wait_for_futures() const;
+
 };
 #endif// MYPROJECT_MAP_SPRITE_HPP

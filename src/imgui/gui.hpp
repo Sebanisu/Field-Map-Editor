@@ -150,5 +150,7 @@ private:
     combo_blend_other() const;
   void
     combo_z() const;
+  bool
+    handle_mouse_cursor() const;
 };
 #endif// MYPROJECT_GUI_HPP
