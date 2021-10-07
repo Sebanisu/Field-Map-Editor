@@ -135,16 +135,16 @@ private:
     init_render_texture() const;
 
   [[nodiscard]] std::array<sf::Vertex, 4U>
-    get_triangle_strip(const sf::Vector2u &new_tileSize,
-      const sf::Vector2u                  &raw_tileSize,
+    get_triangle_strip(const sf::Vector2u &draw_size,
+      const sf::Vector2u                  &texture_size,
       auto                                 source_x,
       auto                                 source_y,
       auto                                 x,
       auto                                 y) const;
 
   [[nodiscard]] std::array<sf::Vertex, 4U>
-    get_triangle_strip(const sf::Vector2u &new_tileSize,
-      const sf::Vector2u                  &raw_tileSize,
+    get_triangle_strip(const sf::Vector2u &draw_size,
+      const sf::Vector2u                  &texture_size,
       auto                               &&tile) const;
 
 

@@ -126,47 +126,45 @@ void
 }
 
 [[nodiscard]] std::array<sf::Vertex, 4U>
-  map_sprite::get_triangle_strip(const sf::Vector2u &new_tileSize,
-    const sf::Vector2u                              &raw_tileSize,
+  map_sprite::get_triangle_strip(const sf::Vector2u &draw_size,
+    const sf::Vector2u                              &texture_size,
     auto                                             source_x,
     auto                                             source_y,
     auto                                             x,
     auto                                             y) const
 {
   auto i =
-    static_cast<std::uint32_t>(x / static_cast<decltype(x)>(raw_tileSize.x));
+    static_cast<std::uint32_t>(x / static_cast<decltype(x)>(texture_size.x));
   auto j =
-    static_cast<std::uint32_t>(y / static_cast<decltype(y)>(raw_tileSize.y));
+    static_cast<std::uint32_t>(y / static_cast<decltype(y)>(texture_size.y));
   std::uint32_t tu =
-    (source_x) / static_cast<decltype(source_x)>(raw_tileSize.x);
-  std::uint32_t tv = source_y / static_cast<decltype(source_y)>(raw_tileSize.y);
+    (source_x) / static_cast<decltype(source_x)>(texture_size.x);
+  std::uint32_t tv = source_y / static_cast<decltype(source_y)>(texture_size.y);
   const auto    tovec = [](auto &&x, auto &&y) {
     return sf::Vector2f{ static_cast<float>(x), static_cast<float>(y) };
   };
   const auto tovert = [&tovec](auto &&x, auto &&y, auto &&texx, auto &&texy) {
     return sf::Vertex{ tovec(x, y), tovec(texx, texy) };
   };
-  return std::array{ tovert((i + 1) * new_tileSize.x,
-                       j * new_tileSize.y,
-                       (tu + 1) * new_tileSize.x,
-                       tv * new_tileSize.y),
-    tovert(i * new_tileSize.x,
-      j * new_tileSize.y,
-      tu * new_tileSize.x,
-      tv * new_tileSize.y),
-    tovert((i + 1) * new_tileSize.x,
-      (j + 1) * new_tileSize.y,
-      (tu + 1) * new_tileSize.x,
-      (tv + 1) * new_tileSize.y),
-    tovert(i * new_tileSize.x,
-      (j + 1) * new_tileSize.y,
-      tu * new_tileSize.x,
-      (tv + 1) * new_tileSize.y) };
+  return std::array{ tovert((i + 1) * draw_size.x,
+                       j * draw_size.y,
+                       (tu + 1) * draw_size.x,
+                       tv * draw_size.y),
+    tovert(
+      i * draw_size.x, j * draw_size.y, tu * draw_size.x, tv * draw_size.y),
+    tovert((i + 1) * draw_size.x,
+      (j + 1) * draw_size.y,
+      (tu + 1) * draw_size.x,
+      (tv + 1) * draw_size.y),
+    tovert(i * draw_size.x,
+      (j + 1) * draw_size.y,
+      tu * draw_size.x,
+      (tv + 1) * draw_size.y) };
 }
 
 [[nodiscard]] std::array<sf::Vertex, 4U>
-  map_sprite::get_triangle_strip(const sf::Vector2u &new_tileSize,
-    const sf::Vector2u                              &raw_tileSize,
+  map_sprite::get_triangle_strip(const sf::Vector2u &draw_size,
+    const sf::Vector2u                              &texture_size,
     auto                                           &&tile) const
 {
   using tile_type = std::decay_t<decltype(tile)>;
@@ -194,7 +192,7 @@ void
     return static_cast<uint32_t>(tile.y());
   }();
   return get_triangle_strip(
-    new_tileSize, raw_tileSize, src_x, tile.source_y(), dst_x, dst_y);
+    draw_size, texture_size, src_x, tile.source_y(), dst_x, dst_y);
 }
 
 void
@@ -205,21 +203,42 @@ void
     vertex.color = color;
   }
 }
+
+// void
+//   map_sprite::find_intercepting(sf::Vector2i tile_pos,
+//     std::uint8_t                             texture_page)
+//{
+//   m_map.visit_tiles(
+//     [this, &tile_pos, &texture_page](auto &&tiles)
+//     {
+//       for (const auto &tile : tiles)
+//       {
+//         if (fail_filter() || (tile.source_x() / 16U != tile_pos.x)
+//             || (tile.source_y() / 16U != tile_pos.y)
+//             || (tile.texture_id() / 16U != texture_page))
+//         {
+//           continue;
+//         };
+//         std::cout << tile << std::endl;
+//       }
+//     });
+// }
+
 void
   map_sprite::local_draw(sf::RenderTarget &target,
     sf::RenderStates                       states) const
 {
   wait_for_futures();
-  const auto new_tileSize = sf::Vector2u{ 16U, 16U };
+  const auto draw_size = sf::Vector2u{ 16U, 16U };
   target.clear(sf::Color::Transparent);
   m_map.visit_tiles(
-    [this, &new_tileSize, &states, &target](auto &&tiles)
+    [this, &draw_size, &states, &target](auto &&tiles)
     {
       for (const auto &z : m_all_unique_values_and_strings.z().values())
       {
         std::for_each(std::rbegin(tiles),
           std::rend(tiles),
-          [this, &new_tileSize, &states, &target, &z](const auto &tile)
+          [this, &draw_size, &states, &target, &z](const auto &tile)
           {
             if (tile.z() != z)
             {
@@ -229,8 +248,8 @@ void
             {
               return;
             }
-            const auto raw_tileSize = sf::Vector2u{ 16U, 16U };
-            auto quad = get_triangle_strip(new_tileSize, raw_tileSize, tile);
+            const auto texture_size = sf::Vector2u{ 16U, 16U };
+            auto       quad = get_triangle_strip(draw_size, texture_size, tile);
             states.blendMode = sf::BlendAlpha;
             if (tile.blend_mode() == BlendModeT::add)
             {
@@ -313,9 +332,10 @@ void
 {
   // apply the transform
   states.transform *= getTransform();
-  states.texture = &m_render_texture->getTexture();
-  auto size      = sf::Vector2u(width(), height());
-  auto quad      = get_triangle_strip(size, size, 0, 0, 0, 0);
+  states.texture    = &m_render_texture->getTexture();
+  auto texture_size = m_render_texture->getSize();
+  auto draw_size    = sf::Vector2u(width(), height());
+  auto quad         = get_triangle_strip(draw_size, texture_size, 0, 0, 0, 0);
   // draw the vertex array
   target.draw(quad.data(), quad.size(), sf::TriangleStrip, states);
   // draw grid

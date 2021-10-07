@@ -5,6 +5,7 @@
 #include "open_viii/paths/Paths.hpp"
 #include <imgui-SFML.h>
 #include <imgui.h>
+#include <SFML/Window/Mouse.hpp>
 using namespace open_viii::graphics::background;
 using namespace open_viii::graphics;
 using namespace open_viii::graphics::literals;
@@ -174,9 +175,20 @@ void
         slider_xy_sprite(m_map_sprite);
       }
 
-
-      if (handle_mouse_cursor())
+      m_mouse_positions.mouse_enabled = handle_mouse_cursor();
+      if (m_mouse_positions.mouse_enabled)
       {
+        if (m_mouse_positions.left_changed())
+        {
+          // mouse click on-screen.
+        }
+      }
+      else
+      {
+        if (m_mouse_positions.left_changed())
+        {
+          // mouse up off-screen.
+        }
       }
     }
   }
@@ -225,38 +237,44 @@ bool
               && in_bounds(y, 0, m_map_sprite.height())))
         && !ImGui::IsWindowHovered(ImGuiHoveredFlags_AnyWindow))
     {
-      mouse_enabled                  = true;
-      m_mouse_positions.tile         = m_mouse_positions.pixel / 16;
-      auto       &tilex              = m_mouse_positions.tile.x;
-      const auto &tiley              = m_mouse_positions.tile.y;
-      m_mouse_positions.texture_page = tilex / 16;// for 4bit swizzle.
-      auto      &texture_page        = m_mouse_positions.texture_page;
-      const auto is_swizzle          = (map_test() && m_selections.draw_swizzle)
+      mouse_enabled         = true;
+      const auto is_swizzle = (map_test() && m_selections.draw_swizzle)
                               || (mim_test() && !m_selections.draw_palette);
-      if (is_swizzle)
+      if (m_mouse_positions.mouse_moved)
       {
-        tilex %= 16;
-        if (mim_test())
+        m_mouse_positions.tile         = m_mouse_positions.pixel / 16;
+        auto       &tilex              = m_mouse_positions.tile.x;
+        m_mouse_positions.texture_page = tilex / 16;// for 4bit swizzle.
+        auto &texture_page             = m_mouse_positions.texture_page;
+        if (is_swizzle)
         {
-          if (m_selections.bpp == 1)
+          tilex %= 16;
+          if (mim_test())
           {
-            texture_page = x / 128;
-          }
-          else if (m_selections.bpp == 2)
-          {
-            texture_page = x / 64;
+            if (m_selections.bpp == 1)
+            {
+              texture_page = x / 128;
+            }
+            else if (m_selections.bpp == 2)
+            {
+              texture_page = x / 64;
+            }
           }
         }
       }
-      format_imgui_text("Mouse Pos: ({:4}, {:3})", x, y);
+      format_imgui_text("Mouse Pos: ({:4}, {:3})",
+        m_mouse_positions.pixel.x,
+        m_mouse_positions.pixel.y);
       ImGui::SameLine();
       if (map_test() || !m_selections.draw_palette)
       {
-        format_imgui_text("Tile Pos: ({:2}, {:2})", tilex, tiley);
+        format_imgui_text("Tile Pos: ({:2}, {:2})",
+          m_mouse_positions.tile.x,
+          m_mouse_positions.tile.y);
       }
       if (is_swizzle)
       {
-        format_imgui_text("Page: {:2}", texture_page);
+        format_imgui_text("Page: {:2}", m_mouse_positions.texture_page);
       }
     }
   }
@@ -684,6 +702,7 @@ std::vector<std::string>
 void
   gui::loop_events() const
 {
+  m_mouse_positions.update();
   while (m_window.pollEvent(m_event))
   {
     ImGui::SFML::ProcessEvent(m_event);
@@ -694,6 +713,39 @@ void
                    scale_window(static_cast<float>(size.width),
                      static_cast<float>(size.height));
                    m_changed = true;
+                 },
+                 [this](const sf::Event::MouseMoveEvent &)
+                 {
+                   m_mouse_positions.mouse_moved = true;
+                   // TODO move setting mouse pos code here?
+                   // m_changed = true;
+                 },
+                 [this](const sf::Event::MouseButtonEvent &mouse)
+                 {
+                   const sf::Mouse::Button &button = mouse.button;
+                   if (!m_mouse_positions.mouse_enabled)
+                   {
+                     m_mouse_positions.left = false;
+                     return;
+                   }
+
+                   switch (button)
+                   {
+                   case sf::Mouse::Button::Left:
+                   {
+                     m_mouse_positions.left = !m_mouse_positions.left;
+                     // m_changed              = true;
+                     if (m_mouse_positions.left)
+                     {
+                       std::cout << "Left Mouse Button Down" << std::endl;
+                     }
+                     else
+                     {
+                       std::cout << "Left Mouse Button Up" << std::endl;
+                     }
+                   }
+                   break;
+                   }
                  },
                  [this]([[maybe_unused]] const std::monostate &)
                  {

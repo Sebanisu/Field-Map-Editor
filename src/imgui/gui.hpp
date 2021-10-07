@@ -22,9 +22,31 @@ public:
 private:
   struct mouse_positions
   {
-    sf::Vector2i pixel        = {};
-    sf::Vector2i tile         = {};
-    int          texture_page = {};
+    sf::Vector2i pixel         = {};
+    sf::Vector2i tile          = {};
+    int          texture_page  = {};
+    bool         left          = { false };
+    bool         mouse_enabled = { false };
+    bool         mouse_moved   = { false };
+    void
+      update()
+    {
+      old_left    = left;
+      mouse_moved = false;
+    }
+    bool
+      left_changed() const
+    {
+      const auto condition = old_left != left;
+      if (!mouse_enabled && condition)
+      {
+        std::cout << "Warning! mouse up off screen!" << std::endl;
+      }
+      return condition;
+    }
+
+  private:
+    bool old_left = { false };
   };
   struct selections
   {
