@@ -186,16 +186,17 @@ void
         };
         const auto pixel_pos = m_window.mapPixelToCoords(clamped_mouse_pos);
 
-        if ((mim_test()
-              && in_bounds(
-                static_cast<int>(pixel_pos.x), 0, m_mim_sprite.width())
-              && in_bounds(
-                static_cast<int>(pixel_pos.y), 0, m_mim_sprite.height()))
-            || (map_test()
-                && in_bounds(
-                  static_cast<int>(pixel_pos.x), 0, m_map_sprite.width())
-                && in_bounds(
-                  static_cast<int>(pixel_pos.y), 0, m_map_sprite.height())))
+        if (((mim_test()
+               && in_bounds(
+                 static_cast<int>(pixel_pos.x), 0, m_mim_sprite.width())
+               && in_bounds(
+                 static_cast<int>(pixel_pos.y), 0, m_mim_sprite.height()))
+              || (map_test()
+                  && in_bounds(
+                    static_cast<int>(pixel_pos.x), 0, m_map_sprite.width())
+                  && in_bounds(
+                    static_cast<int>(pixel_pos.y), 0, m_map_sprite.height())))
+            && !ImGui::IsWindowHovered(ImGuiHoveredFlags_AnyWindow))
         {
           format_imgui_text("Mouse Pos: ({}, {})  Tile Pos: ({}, {})",
             static_cast<int>(pixel_pos.x),
