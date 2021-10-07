@@ -172,6 +172,38 @@ void
         }
         slider_xy_sprite(m_map_sprite);
       }
+      const auto    &mouse_pos = sf::Mouse::getPosition(m_window);
+      const auto    &win_size  = m_window.getSize();
+      constexpr auto in_bounds = [](auto i, auto low, auto high) {
+        return std::cmp_greater_equal(i, low) && std::cmp_less_equal(i, high);
+      };
+      if (in_bounds(mouse_pos.x, 0, win_size.x)
+          && in_bounds(mouse_pos.y, 0, win_size.y))
+      {
+        const sf::Vector2i clamped_mouse_pos = {
+          std::clamp(mouse_pos.x, 0, static_cast<int>(win_size.x)),
+          std::clamp(mouse_pos.y, 0, static_cast<int>(win_size.y))
+        };
+        const auto pixel_pos = m_window.mapPixelToCoords(clamped_mouse_pos);
+
+        if ((mim_test()
+              && in_bounds(
+                static_cast<int>(pixel_pos.x), 0, m_mim_sprite.width())
+              && in_bounds(
+                static_cast<int>(pixel_pos.y), 0, m_mim_sprite.height()))
+            || (map_test()
+                && in_bounds(
+                  static_cast<int>(pixel_pos.x), 0, m_map_sprite.width())
+                && in_bounds(
+                  static_cast<int>(pixel_pos.y), 0, m_map_sprite.height())))
+        {
+          format_imgui_text("Mouse Pos: ({}, {})  Tile Pos: ({}, {})",
+            static_cast<int>(pixel_pos.x),
+            static_cast<int>(pixel_pos.y),
+            static_cast<int>(pixel_pos.x) / 16,
+            static_cast<int>(pixel_pos.y) / 16);
+        }
+      }
     }
   }
   ImGui::End();
@@ -403,16 +435,15 @@ void
   gui::slider_xy_sprite(auto &sprite) const
 {
   format_imgui_text(
-    "X: {:>9.3f} px  Width:  {:>4} px", sprite.getPosition().x, sprite.width());
-  format_imgui_text("Y: {:>9.3f} px  Height: {:>4} px",
-    sprite.getPosition().y,
-    sprite.height());
+    "X: {:>9.3f} px  Width:  {:>4} px", m_cam_pos.x, sprite.width());
+  format_imgui_text(
+    "Y: {:>9.3f} px  Height: {:>4} px", m_cam_pos.y, sprite.height());
   if (ImGui::SliderFloat2("Adjust", xy.data(), -1.0F, 0.0F) || m_changed)
   {
-    sprite.setPosition(
-      xy[0] * (static_cast<float>(sprite.width()) - m_scale_width),
-      xy[1] * static_cast<float>(sprite.height()));
+    m_cam_pos = { -xy[0] * (static_cast<float>(sprite.width()) - m_scale_width),
+      -xy[1] * static_cast<float>(sprite.height()) };
     m_changed = true;
+    scale_window();
   }
 }
 void
@@ -681,8 +712,8 @@ void
   ImGui::GetStyle() =
     m_original_style;// restore original before applying scale.
   ImGui::GetStyle().ScaleAllSizes(std::round(scale));
-  m_window.setView(
-    sf::View(sf::FloatRect(0.0F, 0.0F, m_scale_width, img_height)));
+  m_window.setView(sf::View(
+    sf::FloatRect(m_cam_pos.x, m_cam_pos.y, m_scale_width, img_height)));
 }
 archives_group
   gui::get_archives_group() const
@@ -903,8 +934,9 @@ void
         [this]() -> auto & { return m_map_sprite.filter().bpp; }))
   {
     m_map_sprite.update_render_texture();
-    m_selected_bpp = m_map_sprite.filter().bpp.value().raw() & 3U;
-    m_changed      = true;
+    m_selected_bpp =
+      static_cast<int>(m_map_sprite.filter().bpp.value().raw() & 3U);
+    m_changed = true;
   }
 }
 

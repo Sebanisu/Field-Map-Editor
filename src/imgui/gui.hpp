@@ -52,6 +52,7 @@ private:
   static constexpr std::array m_draw_selections        = { "MIM", "MAP" };
   mutable bool                m_draw_grid              = { false };
   mutable bool                m_draw_texture_page_grid = { false };
+  mutable sf::Vector2f        m_cam_pos                = {};
   // create a file browser instances
   mutable ImGui::FileBrowser  m_save_file_browser{
     static_cast<ImGuiFileBrowserFlags>(
