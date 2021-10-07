@@ -178,7 +178,7 @@ void
         return std::cmp_greater_equal(i, low) && std::cmp_less_equal(i, high);
       };
       if (in_bounds(mouse_pos.x, 0, win_size.x)
-          && in_bounds(mouse_pos.y, 0, win_size.y))
+          && in_bounds(mouse_pos.y, 0, win_size.y) && m_window.hasFocus())
       {
         const sf::Vector2i clamped_mouse_pos = {
           std::clamp(mouse_pos.x, 0, static_cast<int>(win_size.x)),
