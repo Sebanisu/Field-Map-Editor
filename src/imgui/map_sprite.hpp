@@ -120,8 +120,7 @@ private:
       bool               shift       = true) const;
   [[nodiscard]] colors_type
     get_colors(open_viii::graphics::BPPT bpp,
-      std::uint8_t                       palette,
-      bool                               draw_palette = false) const;
+      std::uint8_t                       palette) const;
   [[nodiscard]] static constexpr std::size_t
     get_texture_pos(open_viii::graphics::BPPT bpp, std::uint8_t palette);
   [[nodiscard]] const sf::Texture *

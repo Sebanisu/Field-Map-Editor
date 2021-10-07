@@ -44,11 +44,10 @@ Map
 
 map_sprite::colors_type
   map_sprite::get_colors(open_viii::graphics::BPPT bpp,
-    std::uint8_t                                   palette,
-    bool                                           draw_palette) const
+    std::uint8_t                                   palette) const
 {
   return m_mim.get_colors<open_viii::graphics::Color32RGBA>(
-    bpp, palette, draw_palette);
+    bpp, palette, false);
 }
 
 constexpr std::size_t
