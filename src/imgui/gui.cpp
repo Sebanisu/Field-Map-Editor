@@ -9,12 +9,7 @@ using namespace open_viii::graphics::background;
 using namespace open_viii::graphics;
 using namespace open_viii::graphics::literals;
 using namespace std::string_literals;
-struct mouse_positions
-{
-  inline static sf::Vector2i pixel        = {};
-  inline static sf::Vector2i tile         = {};
-  inline static int          texture_page = {};
-};
+
 
 std::ostream &
   operator<<(std::ostream &os, const BlendModeT &bm)
@@ -89,7 +84,7 @@ void
       static_cast<float>(m_window_width), static_cast<float>(m_window_height));
     do
     {
-      //      if(!map_test() && m_selected_draw == 1)
+      //      if(!map_test() && m_selections.draw == 1)
       //      {
       //        m_map_sprite = get_map_sprite();
       //      }
@@ -190,13 +185,13 @@ void
   m_window.clear(clear_color);
   if (mim_test())
   {
-    m_window.draw(
-      m_mim_sprite.toggle_grids(m_draw_grid, m_draw_texture_page_grid));
+    m_window.draw(m_mim_sprite.toggle_grids(
+      m_selections.draw_grid, m_selections.draw_texture_page_grid));
   }
   else if (map_test())
   {
-    m_window.draw(
-      m_map_sprite.toggle_grid(m_draw_grid, m_draw_texture_page_grid));
+    m_window.draw(m_map_sprite.toggle_grid(
+      m_selections.draw_grid, m_selections.draw_texture_page_grid));
   }
   ImGui::SFML::Render(m_window);
   m_window.display();
@@ -218,11 +213,11 @@ bool
       std::clamp(mouse_pos.y, 0, static_cast<int>(win_size.y))
     };
 
-    const auto pixel_pos   = m_window.mapPixelToCoords(clamped_mouse_pos);
-    mouse_positions::pixel = { static_cast<int>(pixel_pos.x),
+    const auto pixel_pos    = m_window.mapPixelToCoords(clamped_mouse_pos);
+    m_mouse_positions.pixel = { static_cast<int>(pixel_pos.x),
       static_cast<int>(pixel_pos.y) };
-    const auto &x          = mouse_positions::pixel.x;
-    const auto &y          = mouse_positions::pixel.y;
+    const auto &x           = m_mouse_positions.pixel.x;
+    const auto &y           = m_mouse_positions.pixel.y;
 
     if (((mim_test() && in_bounds(x, 0, m_mim_sprite.width())
            && in_bounds(y, 0, m_mim_sprite.height()))
@@ -230,24 +225,24 @@ bool
               && in_bounds(y, 0, m_map_sprite.height())))
         && !ImGui::IsWindowHovered(ImGuiHoveredFlags_AnyWindow))
     {
-      mouse_enabled                 = true;
-      mouse_positions::tile         = mouse_positions::pixel / 16;
-      auto       &tilex             = mouse_positions::tile.x;
-      const auto &tiley             = mouse_positions::tile.y;
-      mouse_positions::texture_page = tilex / 16;// for 4bit swizzle.
-      auto      &texture_page       = mouse_positions::texture_page;
-      const auto is_swizzle =
-        (map_test() && m_map_swizzle) || (mim_test() && !m_draw_palette);
+      mouse_enabled                  = true;
+      m_mouse_positions.tile         = m_mouse_positions.pixel / 16;
+      auto       &tilex              = m_mouse_positions.tile.x;
+      const auto &tiley              = m_mouse_positions.tile.y;
+      m_mouse_positions.texture_page = tilex / 16;// for 4bit swizzle.
+      auto      &texture_page        = m_mouse_positions.texture_page;
+      const auto is_swizzle          = (map_test() && m_selections.draw_swizzle)
+                              || (mim_test() && !m_selections.draw_palette);
       if (is_swizzle)
       {
         tilex %= 16;
         if (mim_test())
         {
-          if (m_selected_bpp == 1)
+          if (m_selections.bpp == 1)
           {
             texture_page = x / 128;
           }
-          else if (m_selected_bpp == 2)
+          else if (m_selections.bpp == 2)
           {
             texture_page = x / 64;
           }
@@ -255,13 +250,12 @@ bool
       }
       format_imgui_text("Mouse Pos: ({:4}, {:3})", x, y);
       ImGui::SameLine();
-      if (map_test() || !m_draw_palette)
+      if (map_test() || !m_selections.draw_palette)
       {
         format_imgui_text("Tile Pos: ({:2}, {:2})", tilex, tiley);
       }
       if (is_swizzle)
       {
-        ImGui::SameLine();
         format_imgui_text("Page: {:2}", texture_page);
       }
     }
@@ -275,7 +269,7 @@ void
   static constexpr auto coos       = open_viii::LangCommon::to_array();
   static constexpr auto coos_c_str = open_viii::LangCommon::to_c_str_array();
   if (ImGui::Combo("Language",
-        &m_selected_coo,
+        &m_selections.coo,
         coos_c_str.data(),
         static_cast<int>(coos_c_str.size()),
         5))
@@ -283,12 +277,12 @@ void
     if (mim_test())
     {
       m_mim_sprite =
-        m_mim_sprite.with_coo(coos.at(static_cast<size_t>(m_selected_coo)));
+        m_mim_sprite.with_coo(coos.at(static_cast<size_t>(m_selections.coo)));
     }
     else if (map_test())
     {
       m_map_sprite =
-        m_map_sprite.with_coo(coos.at(static_cast<size_t>(m_selected_coo)));
+        m_map_sprite.with_coo(coos.at(static_cast<size_t>(m_selections.coo)));
     }
     m_changed = true;
   }
@@ -300,7 +294,7 @@ void
   ImGui::PushID(++m_id);
   static constexpr auto items = 20;
   if (ImGui::Combo("Field",
-        &m_selected_field,
+        &m_selections.field,
         m_archives_group.mapdata_c_str().data(),
         static_cast<int>(m_archives_group.mapdata_c_str().size()),
         items))
@@ -313,12 +307,12 @@ void
 void
   gui::update_field() const
 {
-  m_field = m_archives_group.field(m_selected_field);
-  if (m_selected_draw == 0)
+  m_field = m_archives_group.field(m_selections.field);
+  if (m_selections.draw == 0)
   {
     m_mim_sprite = m_mim_sprite.with_field(m_field);
   }
-  else if (m_selected_draw == 1)
+  else if (m_selections.draw == 1)
   {
     m_map_sprite = m_map_sprite.with_field(m_field);
   }
@@ -328,9 +322,9 @@ void
 void
   gui::checkbox_map_swizzle() const
 {
-  if (ImGui::Checkbox("Swizzle", &m_map_swizzle))
+  if (ImGui::Checkbox("Swizzle", &m_selections.draw_swizzle))
   {
-    if (m_map_swizzle)
+    if (m_selections.draw_swizzle)
     {
       m_map_sprite.enable_draw_swizzle();
     }
@@ -345,9 +339,9 @@ void
 void
   gui::checkbox_mim_palette_texture() const
 {
-  if (ImGui::Checkbox("Draw Palette Texture", &m_draw_palette))
+  if (ImGui::Checkbox("Draw Palette Texture", &m_selections.draw_palette))
   {
-    m_mim_sprite = m_mim_sprite.with_draw_palette(m_draw_palette);
+    m_mim_sprite = m_mim_sprite.with_draw_palette(m_selections.draw_palette);
     m_changed    = true;
   }
 }
@@ -370,7 +364,7 @@ void
   ImGui::PushID(++m_id);
   static constexpr std::array bpp_items = Mim::bpp_selections_c_str();
   if (ImGui::Combo("BPP",
-        &m_selected_bpp,
+        &m_selections.bpp,
         bpp_items.data(),
         static_cast<int>(bpp_items.size()),
         static_cast<int>(bpp_items.size())))
@@ -411,7 +405,7 @@ std::uint8_t
   gui::palette() const
 {
   return static_cast<uint8_t>(
-    Mim::palette_selections().at(static_cast<size_t>(m_selected_palette)));
+    Mim::palette_selections().at(static_cast<size_t>(m_selections.palette)));
 }
 static void
   update_palette(mim_sprite &sprite, uint8_t palette)
@@ -430,11 +424,11 @@ void
   gui::combo_palette() const
 {
   ImGui::PushID(++m_id);
-  if (m_selected_bpp != 2)
+  if (m_selections.bpp != 2)
   {
     static constexpr std::array palette_items = Mim::palette_selections_c_str();
     if (ImGui::Combo("Palette",
-          &m_selected_palette,
+          &m_selections.palette,
           palette_items.data(),
           static_cast<int>(palette_items.size()),
           static_cast<int>(palette_items.size())))
@@ -503,9 +497,10 @@ void
     }
     if (ImGui::BeginMenu("Grid"))
     {
-      ImGui::MenuItem("Draw Tile Grid", nullptr, &m_draw_grid);
-      ImGui::MenuItem(
-        "Draw Texture Page Grid", nullptr, &m_draw_texture_page_grid);
+      ImGui::MenuItem("Draw Tile Grid", nullptr, &m_selections.draw_grid);
+      ImGui::MenuItem("Draw Texture Page Grid",
+        nullptr,
+        &m_selections.draw_texture_page_grid);
       ImGui::EndMenu();
     }
     ImGui::EndMenuBar();
@@ -514,12 +509,12 @@ void
 bool
   gui::map_test() const
 {
-  return !m_map_sprite.fail() && m_selected_draw == 1;
+  return !m_map_sprite.fail() && m_selections.draw == 1;
 }
 bool
   gui::mim_test() const
 {
-  return !m_mim_sprite.fail() && m_selected_draw == 0;
+  return !m_mim_sprite.fail() && m_selections.draw == 0;
 }
 std::string
   gui::save_texture_path() const
@@ -529,7 +524,7 @@ std::string
     return {};
   }
   const std::string &field_name =
-    m_archives_group.mapdata().at(static_cast<size_t>(m_selected_field));
+    m_archives_group.mapdata().at(static_cast<size_t>(m_selections.field));
   if (mim_test())// MIM
   {
     if (m_mim_sprite.draw_palette())
@@ -537,9 +532,9 @@ std::string
       return fmt::format("{}_mim_palettes.png", field_name);
     }
     const int bpp = static_cast<int>(
-      Mim::bpp_selections().at(static_cast<size_t>(m_selected_bpp)));
+      Mim::bpp_selections().at(static_cast<size_t>(m_selections.bpp)));
     return fmt::format(
-      "{}_mim_{}bpp_{}.png", field_name, bpp, m_selected_palette);
+      "{}_mim_{}bpp_{}.png", field_name, bpp, m_selections.palette);
   }
   else if (map_test())
   {
@@ -557,7 +552,7 @@ void
     m_paths.emplace_back(selected_path.string());
     m_paths_c_str = archives_group::get_c_str(
       m_paths);// seems the pointers move when you push back above
-    m_selected_path = static_cast<int>(m_paths.size()) - 1;
+    m_selections.path = static_cast<int>(m_paths.size()) - 1;
     update_path();
     m_directory_browser.ClearSelected();
   }
@@ -645,20 +640,20 @@ void
 {
   ImGui::PushID(++m_id);
   if (ImGui::Combo("Draw",
-        &m_selected_draw,
+        &m_selections.draw,
         m_draw_selections.data(),
         static_cast<int>(m_draw_selections.size())))
   {
-    if (m_selected_draw == 0)
+    if (m_selections.draw == 0)
     {
       m_mim_sprite = get_mim_sprite();
     }
-    else if (m_selected_draw == 1)
+    else if (m_selections.draw == 1)
     {
       m_map_sprite = m_map_sprite.update(m_field,
         open_viii::LangCommon::to_array().at(
-          static_cast<std::size_t>(m_selected_coo)),
-        m_map_swizzle);
+          static_cast<std::size_t>(m_selections.coo)),
+        m_selections.draw_swizzle);
     }
     m_changed = true;
   }
@@ -669,7 +664,7 @@ void
 {
   ImGui::PushID(++m_id);
   if (ImGui::Combo("Path",
-        &m_selected_path,
+        &m_selections.path,
         m_paths_c_str.data(),
         static_cast<int>(m_paths_c_str.size()),
         10))
@@ -770,7 +765,7 @@ void
   gui::update_path() const
 {
   m_archives_group = m_archives_group.with_path(
-    m_paths.at(static_cast<std::size_t>(m_selected_path)));
+    m_paths.at(static_cast<std::size_t>(m_selections.path)));
   update_field();
 }
 std::vector<const char *>
@@ -782,12 +777,12 @@ mim_sprite
   gui::get_mim_sprite() const
 {
   return { m_field,
-    Mim::bpp_selections().at(static_cast<std::size_t>(m_selected_bpp)),
+    Mim::bpp_selections().at(static_cast<std::size_t>(m_selections.bpp)),
     static_cast<std::uint8_t>(Mim::palette_selections().at(
-      static_cast<std::size_t>(m_selected_palette))),
+      static_cast<std::size_t>(m_selections.palette))),
     open_viii::LangCommon::to_array().at(
-      static_cast<std::size_t>(m_selected_coo)),
-    m_draw_palette };
+      static_cast<std::size_t>(m_selections.coo)),
+    m_selections.draw_palette };
 }
 ImGuiStyle
   gui::init_and_get_style() const
@@ -807,12 +802,17 @@ gui::gui(std::uint32_t               width,
   , m_paths(get_paths())
   , m_paths_c_str(get_paths_c_str())
   , m_archives_group(get_archives_group())
-  , m_selected_field(get_selected_field())
-  , m_field(m_archives_group.field(m_selected_field))
+  , m_field(init_field())
   , m_mim_sprite(get_mim_sprite())
   , m_map_sprite(get_map_sprite())
   , m_original_style(init_and_get_style())
 {
+}
+std::shared_ptr<open_viii::archive::FIFLFS<false>>
+  gui::init_field()
+{
+  m_selections.field = get_selected_field();
+  return m_archives_group.field(m_selections.field);
 }
 gui::gui(const char *title)
   : gui(default_window_width, default_window_height, title)
@@ -827,8 +827,8 @@ map_sprite
 {
   return { m_field,
     open_viii::LangCommon::to_array().at(
-      static_cast<std::size_t>(m_selected_coo)),
-    m_map_swizzle,
+      static_cast<std::size_t>(m_selections.coo)),
+    m_selections.draw_swizzle,
     {} };
 }
 int
@@ -951,8 +951,8 @@ void
           [this]() -> auto & { return m_map_sprite.filter().palette; }))
     {
       m_map_sprite.update_render_texture();
-      m_selected_palette = m_map_sprite.filter().palette.value();
-      m_changed          = true;
+      m_selections.palette = m_map_sprite.filter().palette.value();
+      m_changed            = true;
     }
   }
 }
@@ -969,7 +969,7 @@ void
         [this]() -> auto & { return m_map_sprite.filter().bpp; }))
   {
     m_map_sprite.update_render_texture();
-    m_selected_bpp =
+    m_selections.bpp =
       static_cast<int>(m_map_sprite.filter().bpp.value().raw() & 3U);
     m_changed = true;
   }
@@ -1091,5 +1091,5 @@ void
 BPPT
   gui::bpp() const
 {
-  return Mim::bpp_selections().at(static_cast<size_t>(m_selected_bpp));
+  return Mim::bpp_selections().at(static_cast<size_t>(m_selections.bpp));
 }

@@ -141,4 +141,4 @@ public:
   const mim_sprite &
     toggle_grids(bool enable_grid, bool enable_texture_page_grid);
 };
-#endif// MYPROJECT_MIM_SPRITE_HPP
+#endif

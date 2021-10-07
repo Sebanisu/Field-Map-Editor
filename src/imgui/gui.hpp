@@ -20,10 +20,31 @@ public:
     start() const;
 
 private:
+  struct mouse_positions
+  {
+    sf::Vector2i pixel        = {};
+    sf::Vector2i tile         = {};
+    int          texture_page = {};
+  };
+  struct selections
+  {
+    int  bpp                    = {};
+    int  palette                = {};
+    int  field                  = {};
+    int  coo                    = {};
+    int  path                   = {};
+    int  draw                   = { 1 };
+    bool draw_palette           = { false };
+    bool draw_grid              = { false };
+    bool draw_texture_page_grid = { false };
+    bool draw_swizzle           = { false };
+  };
   static constexpr std::uint32_t    default_window_width  = 800U;
   static constexpr std::uint32_t    default_window_height = 600U;
 
   mutable int                       m_id                  = {};
+  mutable mouse_positions           m_mouse_positions     = {};
+  mutable selections                m_selections          = {};
   std::uint32_t                     m_window_width  = { default_window_width };
   mutable float                     m_scale_width   = {};
   std::uint32_t                     m_window_height = { default_window_height };
@@ -32,27 +53,17 @@ private:
   mutable sf::Clock                 m_delta_clock   = {};
   mutable std::vector<std::string>  m_paths         = {};
   mutable std::vector<const char *> m_paths_c_str   = {};
-  mutable archives_group            m_archives_group                 = {};
-  mutable int                       m_selected_field                 = {};
-  mutable std::shared_ptr<open_viii::archive::FIFLFS<false>> m_field = {};
-  mutable std::array<float, 2>                               xy      = {};
-  mutable int                 m_selected_bpp                         = {};
-  mutable int                 m_selected_palette                     = {};
-  mutable int                 m_selected_coo                         = {};
-  mutable int                 m_selected_path                        = {};
-  mutable bool                m_draw_palette           = { false };
-  mutable mim_sprite          m_mim_sprite             = {};
-  mutable bool                m_map_swizzle            = { false };
-  mutable map_sprite          m_map_sprite             = {};
-  mutable int                 m_selected_draw          = { 1 };
-  mutable bool                m_changed                = { false };
-  ImGuiStyle                  m_original_style         = {};
-  mutable sf::Event           m_event                  = {};
-  mutable bool                m_first                  = { true };
-  static constexpr std::array m_draw_selections        = { "MIM", "MAP" };
-  mutable bool                m_draw_grid              = { false };
-  mutable bool                m_draw_texture_page_grid = { false };
-  mutable sf::Vector2f        m_cam_pos                = {};
+  mutable archives_group            m_archives_group                      = {};
+  mutable std::shared_ptr<open_viii::archive::FIFLFS<false>> m_field      = {};
+  mutable std::array<float, 2>                               xy           = {};
+  mutable mim_sprite                                         m_mim_sprite = {};
+  mutable map_sprite                                         m_map_sprite = {};
+  mutable bool                m_changed         = { false };
+  ImGuiStyle                  m_original_style  = {};
+  mutable sf::Event           m_event           = {};
+  mutable bool                m_first           = { true };
+  static constexpr std::array m_draw_selections = { "MIM", "MAP" };
+  mutable sf::Vector2f        m_cam_pos         = {};
   // create a file browser instances
   mutable ImGui::FileBrowser  m_save_file_browser{
     static_cast<ImGuiFileBrowserFlags>(
@@ -152,5 +163,7 @@ private:
     combo_z() const;
   bool
     handle_mouse_cursor() const;
+  std::shared_ptr<open_viii::archive::FIFLFS<false>>
+    init_field();
 };
 #endif// MYPROJECT_GUI_HPP
