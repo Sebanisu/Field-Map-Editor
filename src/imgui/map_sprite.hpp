@@ -10,6 +10,7 @@
 #include "open_viii/graphics/background/Map.hpp"
 #include "open_viii/graphics/background/Mim.hpp"
 #include "unique_values.hpp"
+#include <cstdint>
 #include <fmt/format.h>
 #include <future>
 #include <SFML/Graphics/Drawable.hpp>
@@ -84,6 +85,10 @@ public:
     filter() const;
   void
     update_render_texture() const;
+  void
+    find_intersecting(const sf::Vector2i &pixel_pos,
+      const sf::Vector2i                 &tile_pos,
+      const std::uint8_t                 &texture_page);
 
 private:
   mutable std::vector<std::future<void>>             m_futures      = {};
@@ -119,8 +124,7 @@ private:
       bool               sort_remove = true,
       bool               shift       = true) const;
   [[nodiscard]] colors_type
-    get_colors(open_viii::graphics::BPPT bpp,
-      std::uint8_t                       palette) const;
+    get_colors(open_viii::graphics::BPPT bpp, std::uint8_t palette) const;
   [[nodiscard]] static constexpr std::size_t
     get_texture_pos(open_viii::graphics::BPPT bpp, std::uint8_t palette);
   [[nodiscard]] const sf::Texture *
@@ -157,6 +161,5 @@ private:
   static constexpr auto default_filter_lambda = [](auto &&) { return true; };
   void
     wait_for_futures() const;
-
 };
 #endif// MYPROJECT_MAP_SPRITE_HPP

@@ -180,14 +180,27 @@ void
       {
         if (m_mouse_positions.left_changed())
         {
-          // mouse click on-screen.
+          if (map_test())
+          {
+            if (m_mouse_positions.left)
+            {
+              // left mouse down
+              m_map_sprite.find_intersecting(m_mouse_positions.pixel,
+                m_mouse_positions.tile,
+                m_mouse_positions.texture_page);
+            }
+            else
+            {
+              // left mouse up
+            }
+          }
         }
       }
       else
       {
-        if (m_mouse_positions.left_changed())
+        if (m_mouse_positions.left_changed() && !m_mouse_positions.left)
         {
-          // mouse up off-screen.
+          // mouse up off-screen ?
         }
       }
     }
@@ -235,17 +248,19 @@ bool
            && in_bounds(y, 0, m_mim_sprite.height()))
           || (map_test() && in_bounds(x, 0, m_map_sprite.width())
               && in_bounds(y, 0, m_map_sprite.height())))
-        && !ImGui::IsWindowHovered(ImGuiHoveredFlags_AnyWindow))
+        && !ImGui::IsWindowHovered(ImGuiHoveredFlags_AnyWindow)
+        && !ImGui::IsAnyItemHovered())
     {
       mouse_enabled         = true;
       const auto is_swizzle = (map_test() && m_selections.draw_swizzle)
                               || (mim_test() && !m_selections.draw_palette);
       if (m_mouse_positions.mouse_moved)
       {
-        m_mouse_positions.tile         = m_mouse_positions.pixel / 16;
-        auto       &tilex              = m_mouse_positions.tile.x;
-        m_mouse_positions.texture_page = tilex / 16;// for 4bit swizzle.
-        auto &texture_page             = m_mouse_positions.texture_page;
+        m_mouse_positions.tile = m_mouse_positions.pixel / 16;
+        auto &tilex            = m_mouse_positions.tile.x;
+        m_mouse_positions.texture_page =
+          static_cast<std::uint8_t>(tilex / 16);// for 4bit swizzle.
+        auto &texture_page = m_mouse_positions.texture_page;
         if (is_swizzle)
         {
           tilex %= 16;
@@ -253,11 +268,11 @@ bool
           {
             if (m_selections.bpp == 1)
             {
-              texture_page = x / 128;
+              texture_page = static_cast<std::uint8_t>(x / 128);
             }
             else if (m_selections.bpp == 2)
             {
-              texture_page = x / 64;
+              texture_page = static_cast<std::uint8_t>(x / 64);
             }
           }
         }

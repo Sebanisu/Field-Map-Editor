@@ -24,7 +24,7 @@ private:
   {
     sf::Vector2i pixel         = {};
     sf::Vector2i tile          = {};
-    int          texture_page  = {};
+    std::uint8_t texture_page  = {};
     bool         left          = { false };
     bool         mouse_enabled = { false };
     bool         mouse_moved   = { false };

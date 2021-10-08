@@ -204,25 +204,54 @@ void
   }
 }
 
-// void
-//   map_sprite::find_intercepting(sf::Vector2i tile_pos,
-//     std::uint8_t                             texture_page)
-//{
-//   m_map.visit_tiles(
-//     [this, &tile_pos, &texture_page](auto &&tiles)
-//     {
-//       for (const auto &tile : tiles)
-//       {
-//         if (fail_filter() || (tile.source_x() / 16U != tile_pos.x)
-//             || (tile.source_y() / 16U != tile_pos.y)
-//             || (tile.texture_id() / 16U != texture_page))
-//         {
-//           continue;
-//         };
-//         std::cout << tile << std::endl;
-//       }
-//     });
-// }
+void
+  map_sprite::find_intersecting(const sf::Vector2i &pixel_pos,
+    const sf::Vector2i                             &tile_pos,
+    const std::uint8_t                             &texture_page)
+{
+  m_map.visit_tiles(
+    [this, &tile_pos, &texture_page, &pixel_pos](auto &&tiles)
+    {
+      std::size_t i = 0;
+      for (const auto &tile : tiles)
+      {
+        static constexpr auto in_bounds = [](auto i, auto low, auto high) {
+          return std::cmp_greater_equal(i, low) && std::cmp_less_equal(i, high);
+        };
+
+        static constexpr auto tile_size = 16U;
+        if (fail_filter(tile))
+        {
+          continue;
+        }
+        if (m_draw_swizzle)
+        {
+          if (std::cmp_equal(tile_pos.x, tile.source_x() / tile_size))
+          {
+            if (std::cmp_equal(tile_pos.y, tile.source_y() / tile_size))
+            {
+              if (std::cmp_equal(tile.texture_id(), texture_page))
+              {
+                goto good;
+              }
+            }
+          }
+        }
+        else if (in_bounds(pixel_pos.x, tile.x(), tile.x() + tile_size))
+        {
+          if (in_bounds(pixel_pos.y, tile.y(), tile.y() + tile_size))
+          {
+            goto good;
+          }
+        }
+        continue;
+      good:
+        ++i;
+        std::cout << tile << std::endl;
+      }
+      fmt::print("found {:3}\n", i);
+    });
+}
 
 void
   map_sprite::local_draw(sf::RenderTarget &target,
