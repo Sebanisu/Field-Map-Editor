@@ -722,6 +722,7 @@ void
   {
     ImGui::SFML::ProcessEvent(m_event);
     const auto event_variant = events::get(m_event);
+    const auto & type          = m_event.type;
     std::visit(events::make_visitor(
                  [this](const sf::Event::SizeEvent &size)
                  {
@@ -735,7 +736,7 @@ void
                    // TODO move setting mouse pos code here?
                    // m_changed = true;
                  },
-                 [this](const sf::Event::MouseButtonEvent &mouse)
+                 [this, &type](const sf::Event::MouseButtonEvent &mouse)
                  {
                    const sf::Mouse::Button &button = mouse.button;
                    if (!m_mouse_positions.mouse_enabled)
@@ -743,23 +744,37 @@ void
                      m_mouse_positions.left = false;
                      return;
                    }
-
-                   switch (button)
+                   switch (type)
                    {
-                   case sf::Mouse::Button::Left:
-                   {
-                     m_mouse_positions.left = !m_mouse_positions.left;
-                     // m_changed              = true;
-                     if (m_mouse_positions.left)
+                   case sf::Event::EventType::MouseButtonPressed:
+                     ///< A mouse button was pressed (data in event.mouseButton)
                      {
-                       std::cout << "Left Mouse Button Down" << std::endl;
+                       switch (button)
+                       {
+                       case sf::Mouse::Button::Left:
+                       {
+                         m_mouse_positions.left = true;
+                         std::cout << "Left Mouse Button Down" << std::endl;
+                       }
+                       break;
+                       }
                      }
-                     else
+                     break;
+                   case sf::Event::EventType::MouseButtonReleased:
+                     ///< A mouse button was released (data in
+                     ///< event.mouseButton)
                      {
-                       std::cout << "Left Mouse Button Up" << std::endl;
+                       switch (button)
+                       {
+                       case sf::Mouse::Button::Left:
+                       {
+                         m_mouse_positions.left = false;
+                         std::cout << "Left Mouse Button Up" << std::endl;
+                       }
+                       break;
+                       }
                      }
-                   }
-                   break;
+                     break;
                    }
                  },
                  [this]([[maybe_unused]] const std::monostate &)
