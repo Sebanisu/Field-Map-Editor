@@ -295,6 +295,17 @@ void
     });
 }
 
+auto map_sprite::duel_visitor(auto && lambda)
+{
+  return m_map_const.visit_tiles([this,&lambda](auto const & tiles_const)
+    {
+      return m_map.visit_tiles([&lambda, &tiles_const](auto && tiles){
+          return lambda(tiles_const, tiles);
+      });
+    });
+
+}
+
 void
   map_sprite::local_draw(sf::RenderTarget &target,
     sf::RenderStates                       states) const

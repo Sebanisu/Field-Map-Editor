@@ -168,5 +168,6 @@ private:
   static constexpr auto default_filter_lambda = [](auto &&) { return true; };
   void
     wait_for_futures() const;
+  auto duel_visitor(auto && lambda);
 };
 #endif// MYPROJECT_MAP_SPRITE_HPP
