@@ -295,15 +295,35 @@ void
     });
 }
 
-auto map_sprite::duel_visitor(auto && lambda)
+auto
+  map_sprite::duel_visitor(auto &&lambda)
 {
-  return m_map_const.visit_tiles([this,&lambda](auto const & tiles_const)
+  return m_map_const.visit_tiles(
+    [this, &lambda](auto const &tiles_const)
     {
-      return m_map.visit_tiles([&lambda, &tiles_const](auto && tiles){
-          return lambda(tiles_const, tiles);
-      });
+      return m_map.visit_tiles([&lambda, &tiles_const](auto &&tiles)
+        { return lambda(tiles_const, std::forward<decltype(tiles)>(tiles)); });
     });
+}
 
+void
+  map_sprite::for_all_tiles(auto &&lambda)
+{
+  duel_visitor(
+    [&lambda](auto const &tiles_const, auto &&tiles)
+    {
+      assert(std::size(tiles_const) == std::size(tiles));
+      auto       tc  = std::crbegin(tiles_const);
+      const auto tce = std::crend(tiles_const);
+      auto       t   = std::rbegin(tiles);
+      const auto te  = std::rend(tiles);
+      for (; t != te && tc != tce; (void)++tc, ++t)
+      {
+        const auto &tile_const = *tc;
+        auto       &tile       = *t;
+        lambda(tc, t);
+      }
+    });
 }
 
 void
