@@ -104,7 +104,7 @@ private:
   open_viii::graphics::background::Mim               m_mim          = {};
   mutable std::string                                m_map_path     = {};
   open_viii::graphics::background::Map               m_map_const    = {};
-  open_viii::graphics::background::Map               m_map          = {};
+  mutable open_viii::graphics::background::Map       m_map          = {};
   all_unique_values_and_strings m_all_unique_values_and_strings     = {};
   open_viii::graphics::Rectangle<std::uint32_t> m_canvas            = {};
   static constexpr std::size_t                  MAX_TEXTURES =
@@ -169,8 +169,8 @@ private:
   void
     wait_for_futures() const;
   auto
-    duel_visitor(auto &&lambda);
+    duel_visitor(auto &&lambda) const;
   void
-    for_all_tiles(auto &&lambda);
+    for_all_tiles(auto &&lambda) const;
 };
 #endif// MYPROJECT_MAP_SPRITE_HPP

@@ -296,7 +296,7 @@ void
 }
 
 auto
-  map_sprite::duel_visitor(auto &&lambda)
+  map_sprite::duel_visitor(auto &&lambda) const
 {
   return m_map_const.visit_tiles(
     [this, &lambda](auto const &tiles_const)
@@ -307,7 +307,7 @@ auto
 }
 
 void
-  map_sprite::for_all_tiles(auto &&lambda)
+  map_sprite::for_all_tiles(auto &&lambda) const
 {
   duel_visitor(
     [&lambda](auto const &tiles_const, auto &&tiles)
@@ -319,9 +319,9 @@ void
       const auto te  = std::rend(tiles);
       for (; t != te && tc != tce; (void)++tc, ++t)
       {
-        const auto &tile_const = *tc;
-        auto       &tile       = *t;
-        lambda(tc, t);
+        const is_tile auto &tile_const = *tc;
+        is_tile auto       &tile       = *t;
+        lambda(tile_const, tile);
       }
     });
 }
@@ -333,59 +333,55 @@ void
   wait_for_futures();
   const auto draw_size = sf::Vector2u{ 16U, 16U };
   target.clear(sf::Color::Transparent);
-  m_map.visit_tiles(
-    [this, &draw_size, &states, &target](auto &&tiles)
-    {
-      for (const auto &z : m_all_unique_values_and_strings.z().values())
+  for (const auto &z : m_all_unique_values_and_strings.z().values())
+  {
+    for_all_tiles(
+      [this, &draw_size, &states, &target, &z](
+        [[maybe_unused]] const auto &tile_const, const auto &tile)
       {
-        std::for_each(std::rbegin(tiles),
-          std::rend(tiles),
-          [this, &draw_size, &states, &target, &z](const auto &tile)
-          {
-            if (tile.z() != z)
-            {
-              return;
-            }
-            if (fail_filter(tile))
-            {
-              return;
-            }
-            const auto texture_size = sf::Vector2u{ 16U, 16U };
-            auto       quad = get_triangle_strip(draw_size, texture_size, tile);
-            states.blendMode = sf::BlendAlpha;
-            if (tile.blend_mode() == BlendModeT::add)
-            {
-              states.blendMode = sf::BlendAdd;
-            }
-            else if (tile.blend_mode() == BlendModeT::half_add)
-            {
-              states.blendMode = sf::BlendAdd;
-              constexpr static std::uint8_t per50 =
-                (std::numeric_limits<std::uint8_t>::max)() / 2U;
-              set_color(quad, { per50, per50, per50, per50 });// 50% alpha
-            }
-            else if (tile.blend_mode() == BlendModeT::quarter_add)
-            {
-              states.blendMode = sf::BlendAdd;
-              constexpr static std::uint8_t per25 =
-                (std::numeric_limits<std::uint8_t>::max)() / 4U;
-              set_color(quad, { per25, per25, per25, per25 });// 25% alpha
-            }
-            else if (tile.blend_mode() == BlendModeT::subtract)
-            {
-              states.blendMode = GetBlendSubtract();
-              // states.blendMode = sf::BlendMultiply;
-            }
-            // apply the tileset texture
+        if (tile.z() != z)
+        {
+          return;
+        }
+        if (fail_filter(tile))
+        {
+          return;
+        }
+        const auto texture_size = sf::Vector2u{ 16U, 16U };
+        auto       quad  = get_triangle_strip(draw_size, texture_size, tile);
+        states.blendMode = sf::BlendAlpha;
+        if (tile.blend_mode() == BlendModeT::add)
+        {
+          states.blendMode = sf::BlendAdd;
+        }
+        else if (tile.blend_mode() == BlendModeT::half_add)
+        {
+          states.blendMode = sf::BlendAdd;
+          constexpr static std::uint8_t per50 =
+            (std::numeric_limits<std::uint8_t>::max)() / 2U;
+          set_color(quad, { per50, per50, per50, per50 });// 50% alpha
+        }
+        else if (tile.blend_mode() == BlendModeT::quarter_add)
+        {
+          states.blendMode = sf::BlendAdd;
+          constexpr static std::uint8_t per25 =
+            (std::numeric_limits<std::uint8_t>::max)() / 4U;
+          set_color(quad, { per25, per25, per25, per25 });// 25% alpha
+        }
+        else if (tile.blend_mode() == BlendModeT::subtract)
+        {
+          states.blendMode = GetBlendSubtract();
+          // states.blendMode = sf::BlendMultiply;
+        }
+        // apply the tileset texture
 
-            // std::lock_guard<std::mutex> lock(mutex_texture);
-            states.texture = get_texture(tile.depth(), tile.palette_id());
+        // std::lock_guard<std::mutex> lock(mutex_texture);
+        states.texture = get_texture(tile.depth(), tile.palette_id());
 
-            // draw the vertex array
-            target.draw(quad.data(), quad.size(), sf::TriangleStrip, states);
-          });
-      }
-    });
+        // draw the vertex array
+        target.draw(quad.data(), quad.size(), sf::TriangleStrip, states);
+      });
+  }
 }
 
 const sf::BlendMode &
