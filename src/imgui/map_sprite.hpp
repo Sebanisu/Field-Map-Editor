@@ -37,7 +37,8 @@ public:
     , m_field(std::move(field))
     , m_coo(coo)
     , m_mim(get_mim())
-    , m_map(get_map(&m_map_path))
+    , m_map_const(get_map(&m_map_path))
+    , m_map(m_map_const)
     , m_all_unique_values_and_strings(get_all_unique_values_and_strings())
     , m_canvas(get_canvas())
     , m_texture(get_textures())
@@ -102,6 +103,7 @@ private:
   open_viii::LangT                                   m_coo          = {};
   open_viii::graphics::background::Mim               m_mim          = {};
   mutable std::string                                m_map_path     = {};
+  open_viii::graphics::background::Map               m_map_const    = {};
   open_viii::graphics::background::Map               m_map          = {};
   all_unique_values_and_strings m_all_unique_values_and_strings     = {};
   open_viii::graphics::Rectangle<std::uint32_t> m_canvas            = {};
