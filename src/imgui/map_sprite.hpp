@@ -37,7 +37,8 @@ public:
     , m_field(std::move(field))
     , m_coo(coo)
     , m_mim(get_mim())
-    , m_map(get_map(&m_map_path))
+    , m_map_raw(get_map(&m_map_path))
+    , m_map(m_map_raw)
     , m_all_unique_values_and_strings(get_all_unique_values_and_strings())
     , m_canvas(get_canvas())
     , m_texture(get_textures())
@@ -89,6 +90,11 @@ public:
     find_intersecting(const sf::Vector2i &pixel_pos,
       const sf::Vector2i                 &tile_pos,
       const std::uint8_t                 &texture_page);
+  void
+    update_position(const sf::Vector2i &pixel_pos,
+      const sf::Vector2i               &tile_pos,
+      const std::uint8_t               &texture_page);
+
 
 private:
   mutable std::vector<std::future<void>>             m_futures      = {};
@@ -98,6 +104,7 @@ private:
   open_viii::LangT                                   m_coo          = {};
   open_viii::graphics::background::Mim               m_mim          = {};
   mutable std::string                                m_map_path     = {};
+  open_viii::graphics::background::Map               m_map_raw      = {};
   open_viii::graphics::background::Map               m_map          = {};
   all_unique_values_and_strings m_all_unique_values_and_strings     = {};
   open_viii::graphics::Rectangle<std::uint32_t> m_canvas            = {};
@@ -108,6 +115,7 @@ private:
   mutable std::shared_ptr<sf::RenderTexture> m_render_texture              = {};
   mutable grid                               m_grid                        = {};
   grid                                       m_texture_page_grid           = {};
+  std::vector<std::size_t>                   m_saved_indicies              = {};
 
   grid
     get_grid() const;

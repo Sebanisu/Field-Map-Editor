@@ -166,7 +166,8 @@ void
   map_sprite::get_triangle_strip(const sf::Vector2u &draw_size,
     const sf::Vector2u                              &texture_size,
     auto                                           &&tile) const
-{
+{// TODO add overload that takes two tiles one for UVs that is unmodified and
+ // one that is new.
   using tile_type = std::decay_t<decltype(tile)>;
   using namespace open_viii::graphics::literals;
   const auto src_x =
@@ -205,51 +206,93 @@ void
 }
 
 void
-  map_sprite::find_intersecting(const sf::Vector2i &pixel_pos,
-    const sf::Vector2i                             &tile_pos,
-    const std::uint8_t                             &texture_page)
+  map_sprite::update_position(const sf::Vector2i &pixel_pos,
+    const sf::Vector2i                           &tile_pos,
+    const std::uint8_t                           &texture_page)
 {
   m_map.visit_tiles(
     [this, &tile_pos, &texture_page, &pixel_pos](auto &&tiles)
     {
-      std::size_t i = 0;
-      for (const auto &tile : tiles)
+      for (auto i : m_saved_indicies)
       {
-        static constexpr auto in_bounds = [](auto i, auto low, auto high) {
-          return std::cmp_greater_equal(i, low) && std::cmp_less_equal(i, high);
-        };
-
+        auto                 &tile      = tiles[i];
         static constexpr auto tile_size = 16U;
-        if (fail_filter(tile))
-        {
-          continue;
-        }
+
         if (m_draw_swizzle)
         {
-          if (std::cmp_equal(tile_pos.x, tile.source_x() / tile_size))
+          tile =
+            tile
+              .with_source_xy(static_cast<std::uint8_t>(tile_pos.x * tile_size),
+                static_cast<std::uint8_t>(tile_pos.y * tile_size))
+              .with_texture_id(texture_page);
+        }
+      }
+    });
+  update_render_texture();
+}
+
+void
+  map_sprite::find_intersecting(const sf::Vector2i &pixel_pos,
+    const sf::Vector2i                             &tile_pos,
+    const std::uint8_t                             &texture_page)
+{
+  m_saved_indicies = m_map.visit_tiles(
+    [this, &tile_pos, &texture_page, &pixel_pos](auto &&tiles)
+    {
+      std::vector<std::size_t> out = {};
+      auto                     filtered_tiles =
+        tiles
+        | std::views::filter(
+          [this, &tile_pos, &texture_page, &pixel_pos](const auto &tile) -> bool
           {
-            if (std::cmp_equal(tile_pos.y, tile.source_y() / tile_size))
+            static constexpr auto in_bounds = [](auto i, auto low, auto high) {
+              return std::cmp_greater_equal(i, low)
+                     && std::cmp_less_equal(i, high);
+            };
+            static constexpr auto tile_size = 16U;
+            if (fail_filter(tile))
             {
-              if (std::cmp_equal(tile.texture_id(), texture_page))
+              return false;
+            }
+            if (m_draw_swizzle)
+            {
+              if (std::cmp_equal(tile_pos.x, tile.source_x() / tile_size))
               {
-                goto good;
+                if (std::cmp_equal(tile_pos.y, tile.source_y() / tile_size))
+                {
+                  if (std::cmp_equal(tile.texture_id(), texture_page))
+                  {
+                    return true;
+                  }
+                }
               }
             }
-          }
-        }
-        else if (in_bounds(pixel_pos.x, tile.x(), tile.x() + tile_size))
+            else if (in_bounds(pixel_pos.x, tile.x(), tile.x() + tile_size))
+            {
+              if (in_bounds(pixel_pos.y, tile.y(), tile.y() + tile_size))
+              {
+                return true;
+              }
+            }
+            return false;
+          });
+      std::transform(std::begin(filtered_tiles),
+        std::end(filtered_tiles),
+        std::back_inserter(out),
+        [&tiles](const auto &tile)
         {
-          if (in_bounds(pixel_pos.y, tile.y(), tile.y() + tile_size))
-          {
-            goto good;
-          }
-        }
-        continue;
-      good:
-        ++i;
-        std::cout << tile << std::endl;
+          const auto *const start = tiles.data();
+          const auto *const curr  = &tile;
+          std::cout << tile << std::endl;
+          return static_cast<std::size_t>(std::distance(start, curr));
+        });
+      fmt::print("\n\tFound {:3}\n", out.size());
+      for (const auto &i : out)
+      {
+        fmt::print("{:4} ", i);
       }
-      fmt::print("found {:3}\n", i);
+      puts("\n");
+      return out;
     });
 }
 
@@ -260,58 +303,68 @@ void
   wait_for_futures();
   const auto draw_size = sf::Vector2u{ 16U, 16U };
   target.clear(sf::Color::Transparent);
-  m_map.visit_tiles(
-    [this, &draw_size, &states, &target](auto &&tiles)
+  m_map_raw.visit_tiles(
+    [this, &draw_size, &states, &target](const auto &tiles_raw)
     {
-      for (const auto &z : m_all_unique_values_and_strings.z().values())
-      {
-        std::for_each(std::rbegin(tiles),
-          std::rend(tiles),
-          [this, &draw_size, &states, &target, &z](const auto &tile)
+      m_map.visit_tiles(
+        [this, &draw_size, &states, &target, tiles_raw](auto &&tiles)
+        {
+          for (const auto &z : m_all_unique_values_and_strings.z().values())
           {
-            if (tile.z() != z)
-            {
-              return;
-            }
-            if (fail_filter(tile))
-            {
-              return;
-            }
-            const auto texture_size = sf::Vector2u{ 16U, 16U };
-            auto       quad = get_triangle_strip(draw_size, texture_size, tile);
-            states.blendMode = sf::BlendAlpha;
-            if (tile.blend_mode() == BlendModeT::add)
-            {
-              states.blendMode = sf::BlendAdd;
-            }
-            else if (tile.blend_mode() == BlendModeT::half_add)
-            {
-              states.blendMode = sf::BlendAdd;
-              constexpr static std::uint8_t per50 =
-                (std::numeric_limits<std::uint8_t>::max)() / 2U;
-              set_color(quad, { per50, per50, per50, per50 });// 50% alpha
-            }
-            else if (tile.blend_mode() == BlendModeT::quarter_add)
-            {
-              states.blendMode = sf::BlendAdd;
-              constexpr static std::uint8_t per25 =
-                (std::numeric_limits<std::uint8_t>::max)() / 4U;
-              set_color(quad, { per25, per25, per25, per25 });// 25% alpha
-            }
-            else if (tile.blend_mode() == BlendModeT::subtract)
-            {
-              states.blendMode = GetBlendSubtract();
-              // states.blendMode = sf::BlendMultiply;
-            }
-            // apply the tileset texture
+            auto       tile_b_r = std::rbegin(tiles_raw);
+            const auto tile_e_r = std::rend(tiles_raw);
+            auto       tile_b   = std::rbegin(tiles);
+            const auto tile_e   = std::rend(tiles);
+            for (; tile_b_r != tile_e_r && tile_b != tile_e;
+                 (void)++tile_b_r, ++tile_b)
 
-            // std::lock_guard<std::mutex> lock(mutex_texture);
-            states.texture = get_texture(tile.depth(), tile.palette_id());
+            {
+              [[maybe_unused]] const auto &tile_r = *tile_b_r;
+              const auto                  &tile   = *tile_b;
+              if (tile.z() != z)
+              {
+                return;
+              }
+              if (fail_filter(tile))
+              {
+                return;
+              }
+              const auto texture_size = sf::Vector2u{ 16U, 16U };
+              auto quad = get_triangle_strip(draw_size, texture_size, tile);
+              states.blendMode = sf::BlendAlpha;
+              if (tile.blend_mode() == BlendModeT::add)
+              {
+                states.blendMode = sf::BlendAdd;
+              }
+              else if (tile.blend_mode() == BlendModeT::half_add)
+              {
+                states.blendMode = sf::BlendAdd;
+                constexpr static std::uint8_t per50 =
+                  (std::numeric_limits<std::uint8_t>::max)() / 2U;
+                set_color(quad, { per50, per50, per50, per50 });// 50% alpha
+              }
+              else if (tile.blend_mode() == BlendModeT::quarter_add)
+              {
+                states.blendMode = sf::BlendAdd;
+                constexpr static std::uint8_t per25 =
+                  (std::numeric_limits<std::uint8_t>::max)() / 4U;
+                set_color(quad, { per25, per25, per25, per25 });// 25% alpha
+              }
+              else if (tile.blend_mode() == BlendModeT::subtract)
+              {
+                states.blendMode = GetBlendSubtract();
+                // states.blendMode = sf::BlendMultiply;
+              }
+              // apply the tileset texture
 
-            // draw the vertex array
-            target.draw(quad.data(), quad.size(), sf::TriangleStrip, states);
-          });
-      }
+              // std::lock_guard<std::mutex> lock(mutex_texture);
+              states.texture = get_texture(tile.depth(), tile.palette_id());
+
+              // draw the vertex array
+              target.draw(quad.data(), quad.size(), sf::TriangleStrip, states);
+            };
+          }
+        });
     });
 }
 
