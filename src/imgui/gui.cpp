@@ -192,6 +192,9 @@ void
             else
             {
               // left mouse up
+              m_map_sprite.update_position(m_mouse_positions.pixel,
+                m_mouse_positions.tile,
+                m_mouse_positions.texture_page);
             }
           }
         }
@@ -721,8 +724,8 @@ void
   while (m_window.pollEvent(m_event))
   {
     ImGui::SFML::ProcessEvent(m_event);
-    const auto event_variant = events::get(m_event);
-    const auto & type          = m_event.type;
+    const auto  event_variant = events::get(m_event);
+    const auto &type          = m_event.type;
     std::visit(events::make_visitor(
                  [this](const sf::Event::SizeEvent &size)
                  {

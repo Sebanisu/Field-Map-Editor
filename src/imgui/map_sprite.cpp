@@ -205,51 +205,93 @@ void
 }
 
 void
-  map_sprite::find_intersecting(const sf::Vector2i &pixel_pos,
-    const sf::Vector2i                             &tile_pos,
-    const std::uint8_t                             &texture_page)
+  map_sprite::update_position(const sf::Vector2i &pixel_pos,
+    const sf::Vector2i                           &tile_pos,
+    const std::uint8_t                           &texture_page)
 {
   m_map.visit_tiles(
     [this, &tile_pos, &texture_page, &pixel_pos](auto &&tiles)
     {
-      std::size_t i = 0;
-      for (const auto &tile : tiles)
+      for (auto i : m_saved_indicies)
       {
-        static constexpr auto in_bounds = [](auto i, auto low, auto high) {
-          return std::cmp_greater_equal(i, low) && std::cmp_less_equal(i, high);
-        };
-
+        auto                 &tile      = tiles[i];
         static constexpr auto tile_size = 16U;
-        if (fail_filter(tile))
-        {
-          continue;
-        }
+
         if (m_draw_swizzle)
         {
-          if (std::cmp_equal(tile_pos.x, tile.source_x() / tile_size))
+          tile =
+            tile
+              .with_source_xy(static_cast<std::uint8_t>(tile_pos.x * tile_size),
+                static_cast<std::uint8_t>(tile_pos.y * tile_size))
+              .with_texture_id(texture_page);
+        }
+      }
+    });
+  update_render_texture();
+}
+
+void
+  map_sprite::find_intersecting(const sf::Vector2i &pixel_pos,
+    const sf::Vector2i                             &tile_pos,
+    const std::uint8_t                             &texture_page)
+{
+  m_saved_indicies = m_map.visit_tiles(
+    [this, &tile_pos, &texture_page, &pixel_pos](auto &&tiles)
+    {
+      std::vector<std::size_t> out = {};
+      auto                     filtered_tiles =
+        tiles
+        | std::views::filter(
+          [this, &tile_pos, &texture_page, &pixel_pos](const auto &tile) -> bool
           {
-            if (std::cmp_equal(tile_pos.y, tile.source_y() / tile_size))
+            static constexpr auto in_bounds = [](auto i, auto low, auto high) {
+              return std::cmp_greater_equal(i, low)
+                     && std::cmp_less_equal(i, high);
+            };
+            static constexpr auto tile_size = 16U;
+            if (fail_filter(tile))
             {
-              if (std::cmp_equal(tile.texture_id(), texture_page))
+              return false;
+            }
+            if (m_draw_swizzle)
+            {
+              if (std::cmp_equal(tile_pos.x, tile.source_x() / tile_size))
               {
-                goto good;
+                if (std::cmp_equal(tile_pos.y, tile.source_y() / tile_size))
+                {
+                  if (std::cmp_equal(tile.texture_id(), texture_page))
+                  {
+                    return true;
+                  }
+                }
               }
             }
-          }
-        }
-        else if (in_bounds(pixel_pos.x, tile.x(), tile.x() + tile_size))
+            else if (in_bounds(pixel_pos.x, tile.x(), tile.x() + tile_size))
+            {
+              if (in_bounds(pixel_pos.y, tile.y(), tile.y() + tile_size))
+              {
+                return true;
+              }
+            }
+            return false;
+          });
+      std::transform(std::begin(filtered_tiles),
+        std::end(filtered_tiles),
+        std::back_inserter(out),
+        [&tiles](const auto &tile)
         {
-          if (in_bounds(pixel_pos.y, tile.y(), tile.y() + tile_size))
-          {
-            goto good;
-          }
-        }
-        continue;
-      good:
-        ++i;
-        std::cout << tile << std::endl;
+          const auto *const start = tiles.data();
+          const auto *const curr  = &tile;
+          std::cout << tile << std::endl;
+          return static_cast<std::size_t>(std::distance(start, curr));
+        });
+      fmt::print("\n\tFound {:3}\n", out.size());
+      for (const auto &i : out)
+      {
+        fmt::print("{:4} ", i);
       }
-      fmt::print("found {:3}\n", i);
+      puts("\n");
+      return out;
     });
 }
 

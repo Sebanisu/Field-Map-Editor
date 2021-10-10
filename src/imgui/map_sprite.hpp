@@ -86,6 +86,10 @@ public:
   void
     update_render_texture() const;
   void
+    update_position(const sf::Vector2i &pixel_pos,
+      const sf::Vector2i               &tile_pos,
+      const std::uint8_t               &texture_page);
+  void
     find_intersecting(const sf::Vector2i &pixel_pos,
       const sf::Vector2i                 &tile_pos,
       const std::uint8_t                 &texture_page);
@@ -108,6 +112,7 @@ private:
   mutable std::shared_ptr<sf::RenderTexture> m_render_texture              = {};
   mutable grid                               m_grid                        = {};
   grid                                       m_texture_page_grid           = {};
+  std::vector<std::size_t>                   m_saved_indicies              = {};
 
   grid
     get_grid() const;
