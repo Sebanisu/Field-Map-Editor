@@ -206,5 +206,9 @@ private:
     handle_mouse_cursor() const;
   std::shared_ptr<open_viii::archive::FIFLFS<false>>
     init_field();
+  void
+    text_mouse_position() const;
+  void
+    on_click_not_imgui() const;
 };
 #endif// MYPROJECT_GUI_HPP

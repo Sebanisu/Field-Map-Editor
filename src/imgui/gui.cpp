@@ -176,49 +176,15 @@ void
       }
 
       m_mouse_positions.mouse_enabled = handle_mouse_cursor();
-      if (m_mouse_positions.mouse_enabled)
-      {
-        m_mouse_positions.update_sprite_pos(m_selections.draw_swizzle);
-        if (m_mouse_positions.left_changed())
-        {
-          if (map_test())
-          {
-            if (m_mouse_positions.left)
-            {
-              // left mouse down
-              // m_mouse_positions.cover =
-              m_mouse_positions.sprite =
-                m_map_sprite.find_intersecting(m_mouse_positions.pixel,
-                  m_mouse_positions.tile,
-                  m_mouse_positions.texture_page);
-              m_mouse_positions.max_tile_x = m_map_sprite.max_x_for_saved();
-            }
-            else
-            {
-              // left mouse up
-              m_map_sprite.update_position(m_mouse_positions.pixel,
-                m_mouse_positions.tile,
-                m_mouse_positions.texture_page);
-              // m_mouse_positions.cover =
-              m_mouse_positions.sprite     = {};
-              m_mouse_positions.max_tile_x = {};
-            }
-          }
-        }
-      }
-      else
-      {
-        if (m_mouse_positions.left_changed() && !m_mouse_positions.left)
-        {
-          // m_mouse_positions.cover =
-          m_mouse_positions.sprite = {};
-          // mouse up off-screen ?
-        }
-      }
+      text_mouse_position();
     }
   }
+  else
+  {
+    m_mouse_positions.mouse_enabled = handle_mouse_cursor();
+  }
   ImGui::End();
-
+  on_click_not_imgui();
   m_window.clear(clear_color);
   if (mim_test())
   {
@@ -236,6 +202,70 @@ void
   ImGui::SFML::Render(m_window);
   m_window.display();
   m_first = false;
+}
+void
+  gui::on_click_not_imgui() const
+{
+  if (m_mouse_positions.mouse_enabled)
+  {
+    m_mouse_positions.update_sprite_pos(m_selections.draw_swizzle);
+    if (m_mouse_positions.left_changed())
+    {
+      if (map_test())
+      {
+        if (m_mouse_positions.left)
+        {
+          // left mouse down
+          // m_mouse_positions.cover =
+          m_mouse_positions.sprite =
+            m_map_sprite.find_intersecting(m_mouse_positions.pixel,
+              m_mouse_positions.tile,
+              m_mouse_positions.texture_page);
+          m_mouse_positions.max_tile_x = m_map_sprite.max_x_for_saved();
+        }
+        else
+        {
+          // left mouse up
+          m_map_sprite.update_position(m_mouse_positions.pixel,
+            m_mouse_positions.tile,
+            m_mouse_positions.texture_page);
+          // m_mouse_positions.cover =
+          m_mouse_positions.sprite     = {};
+          m_mouse_positions.max_tile_x = {};
+        }
+      }
+    }
+  }
+  else
+  {
+    if (m_mouse_positions.left_changed() && !m_mouse_positions.left)
+    {
+      // m_mouse_positions.cover =
+      m_mouse_positions.sprite = {};
+      // mouse up off-screen ?
+    }
+  }
+}
+void
+  gui::text_mouse_position() const
+{
+  if (m_mouse_positions.mouse_enabled)
+  {
+    format_imgui_text("Mouse Pos: ({:4}, {:3})",
+      m_mouse_positions.pixel.x,
+      m_mouse_positions.pixel.y);
+    ImGui::SameLine();
+    if (map_test() || !m_selections.draw_palette)
+    {
+      format_imgui_text("Tile Pos: ({:2}, {:2})",
+        m_mouse_positions.tile.x,
+        m_mouse_positions.tile.y);
+    }
+    if (m_selections.draw_swizzle)
+    {
+      format_imgui_text("Page: {:2}", m_mouse_positions.texture_page);
+    }
+  }
 }
 bool
   gui::handle_mouse_cursor() const
@@ -258,14 +288,14 @@ bool
       static_cast<int>(pixel_pos.y) };
     const auto &x           = m_mouse_positions.pixel.x;
     const auto &y           = m_mouse_positions.pixel.y;
-    auto io = ImGui::GetIO();
+    auto        io          = ImGui::GetIO();
     if (((mim_test() && in_bounds(x, 0, m_mim_sprite.width())
            && in_bounds(y, 0, m_mim_sprite.height()))
           || (map_test() && in_bounds(x, 0, m_map_sprite.width())
               && in_bounds(y, 0, m_map_sprite.height())))
         && !io.WantCaptureMouse)
-        //!ImGui::IsWindowHovered(ImGuiHoveredFlags_AnyWindow)
-        //&& !ImGui::IsAnyItemHovered())
+    //! ImGui::IsWindowHovered(ImGuiHoveredFlags_AnyWindow)
+    //&& !ImGui::IsAnyItemHovered())
     {
       mouse_enabled         = true;
       const auto is_swizzle = (map_test() && m_selections.draw_swizzle)
@@ -292,20 +322,6 @@ bool
             }
           }
         }
-      }
-      format_imgui_text("Mouse Pos: ({:4}, {:3})",
-        m_mouse_positions.pixel.x,
-        m_mouse_positions.pixel.y);
-      ImGui::SameLine();
-      if (map_test() || !m_selections.draw_palette)
-      {
-        format_imgui_text("Tile Pos: ({:2}, {:2})",
-          m_mouse_positions.tile.x,
-          m_mouse_positions.tile.y);
-      }
-      if (is_swizzle)
-      {
-        format_imgui_text("Page: {:2}", m_mouse_positions.texture_page);
       }
     }
   }
