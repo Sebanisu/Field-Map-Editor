@@ -171,6 +171,8 @@ private:
   auto
     duel_visitor(auto &&lambda) const;
   void
+    for_all_tiles(auto const &tiles_const, auto &&tiles, auto &&lambda) const;
+  void
     for_all_tiles(auto &&lambda) const;
 };
 #endif// MYPROJECT_MAP_SPRITE_HPP

@@ -307,22 +307,32 @@ auto
 }
 
 void
+  map_sprite::for_all_tiles(auto const &tiles_const,
+    auto                              &&tiles,
+    auto                              &&lambda) const
+{
+  assert(std::size(tiles_const) == std::size(tiles));
+  auto       tc  = std::crbegin(tiles_const);
+  const auto tce = std::crend(tiles_const);
+  auto       t   = std::rbegin(tiles);
+  //const auto te  = std::rend(tiles);
+  for (; /*t != te &&*/ tc != tce; (void)++tc, ++t)
+  {
+    const is_tile auto &tile_const = *tc;
+    is_tile auto       &tile       = *t;
+    lambda(tile_const, tile);
+  }
+}
+
+void
   map_sprite::for_all_tiles(auto &&lambda) const
 {
   duel_visitor(
-    [&lambda](auto const &tiles_const, auto &&tiles)
+    [&lambda,this](auto const &tiles_const, auto &&tiles)
     {
-      assert(std::size(tiles_const) == std::size(tiles));
-      auto       tc  = std::crbegin(tiles_const);
-      const auto tce = std::crend(tiles_const);
-      auto       t   = std::rbegin(tiles);
-      const auto te  = std::rend(tiles);
-      for (; t != te && tc != tce; (void)++tc, ++t)
-      {
-        const is_tile auto &tile_const = *tc;
-        is_tile auto       &tile       = *t;
-        lambda(tile_const, tile);
-      }
+      for_all_tiles(tiles_const,
+        std::forward<decltype(tiles)>(tiles),
+        std::forward<decltype(lambda)>(lambda));
     });
 }
 
