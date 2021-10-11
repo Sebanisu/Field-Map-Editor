@@ -91,8 +91,13 @@ public:
     update_position(const sf::Vector2i &pixel_pos,
       const sf::Vector2i               &tile_pos,
       const std::uint8_t               &texture_page);
-  sf::Sprite
+  std::vector<std::size_t>
     find_intersecting(const sf::Vector2i &pixel_pos,
+      const sf::Vector2i                 &tile_pos,
+      const std::uint8_t                 &texture_page,
+      const bool                                      skip_filters = false);
+  sf::Sprite
+    save_intersecting(const sf::Vector2i &pixel_pos,
       const sf::Vector2i                 &tile_pos,
       const std::uint8_t                 &texture_page);
   std::uint8_t

@@ -247,12 +247,23 @@ void
     [this, &tile_pos, &texture_page, &pixel_pos](auto &&tiles)
     {
       static constexpr std::uint8_t tile_size = 16U;
-      std::uint8_t max_x = max_x_for_saved() * tile_size;
+      std::uint8_t                  max_x     = max_x_for_saved() * tile_size;
       for (auto i : m_saved_indicies)
       {
-        auto                         &tile      = tiles[i];
+        auto &tile = tiles[i];
         if (m_draw_swizzle)
         {
+          if (auto intersecting =
+                find_intersecting(pixel_pos, tile_pos, texture_page, true);
+              !intersecting.empty())
+          {
+            // this might not be good enough as two 4 bpp tiles fit in the same
+            // location as 8 bpp. and two 8 bpp fit in space for 16 bpp.
+            // but this should catch obvious problems.
+            fmt::print(
+              "There are {} tiles at this location. Choose an empty location!\n", intersecting.size());
+            return;
+          }
           tile =
             tile
               .with_source_xy(
@@ -273,30 +284,47 @@ void
 }
 
 sf::Sprite
-  map_sprite::find_intersecting(const sf::Vector2i &pixel_pos,
+  map_sprite::save_intersecting(const sf::Vector2i &pixel_pos,
     const sf::Vector2i                             &tile_pos,
     const std::uint8_t                             &texture_page)
 {
-  sf::Sprite sprite = {};
+  static constexpr auto tile_size       = 16;
+  static constexpr auto tile_size_float = 16.F;
+  sf::Sprite            sprite          = {};
   sprite.setTexture(m_render_texture->getTexture());
-  sprite.setTextureRect({ (pixel_pos.x / 16) * 16, tile_pos.y * 16, 16, 16 });
-  sprite.setPosition((pixel_pos.x / 16) * 16.F, tile_pos.y * 16.F);
+  sprite.setTextureRect({ (pixel_pos.x / tile_size) * tile_size,
+    tile_pos.y * tile_size,
+    tile_size,
+    tile_size });
+  sprite.setPosition(
+    static_cast<float>(pixel_pos.x / tile_size) * tile_size_float,
+    tile_pos.y * tile_size_float);
+  m_saved_indicies = find_intersecting(pixel_pos, tile_pos, texture_page);
+  return sprite;
+}
 
-  m_saved_indicies = m_map.visit_tiles(
-    [this, &tile_pos, &texture_page, &pixel_pos](auto &&tiles)
+std::vector<size_t>
+  map_sprite::find_intersecting(const sf::Vector2i &pixel_pos,
+    const sf::Vector2i                             &tile_pos,
+    const std::uint8_t                             &texture_page,
+    const bool                                      skip_filters)
+{
+  return m_map.visit_tiles(
+    [this, &tile_pos, &texture_page, &pixel_pos, &skip_filters](auto &&tiles)
     {
       std::vector<std::size_t> out = {};
       auto                     filtered_tiles =
         tiles
         | std::views::filter(
-          [this, &tile_pos, &texture_page, &pixel_pos](const auto &tile) -> bool
+          [this, &skip_filters, &tile_pos, &texture_page, &pixel_pos](
+            const auto &tile) -> bool
           {
             static constexpr auto in_bounds = [](auto i, auto low, auto high) {
               return std::cmp_greater_equal(i, low)
                      && std::cmp_less_equal(i, high);
             };
             static constexpr auto tile_size = 16U;
-            if (fail_filter(tile))
+            if (!skip_filters && fail_filter(tile))
             {
               return false;
             }
@@ -340,7 +368,6 @@ sf::Sprite
       puts("\n");
       return out;
     });
-  return sprite;
 }
 
 auto
