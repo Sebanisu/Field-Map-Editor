@@ -28,13 +28,14 @@ private:
     bool         left          = { false };
     bool         mouse_enabled = { false };
     bool         mouse_moved   = { false };
+    sf::Sprite   sprite        = {};
     void
       update()
     {
       old_left    = left;
       mouse_moved = false;
     }
-    bool
+    [[nodiscard]] bool
       left_changed() const
     {
       const auto condition = old_left != left;

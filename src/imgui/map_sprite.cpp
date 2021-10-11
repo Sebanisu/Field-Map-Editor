@@ -165,13 +165,15 @@ void
 [[nodiscard]] std::array<sf::Vertex, 4U>
   map_sprite::get_triangle_strip(const sf::Vector2u &draw_size,
     const sf::Vector2u                              &texture_size,
+    const auto                                      &tile_const,
     auto                                           &&tile) const
 {
   using tile_type = std::decay_t<decltype(tile)>;
   using namespace open_viii::graphics::literals;
-  const auto src_x =
-    tile.source_x()
-    + tile.texture_id() * tile_type::texture_page_width(tile.depth());
+  const auto src_x = tile_const.source_x()
+                     + tile_const.texture_id()
+                         * tile_type::texture_page_width(tile_const.depth());
+  const auto src_y = tile_const.source_y();
 
   const auto dst_x = [this, &tile]()
   {
@@ -192,7 +194,7 @@ void
     return static_cast<uint32_t>(tile.y());
   }();
   return get_triangle_strip(
-    draw_size, texture_size, src_x, tile.source_y(), dst_x, dst_y);
+    draw_size, texture_size, src_x, src_y, dst_x, dst_y);
 }
 
 void
@@ -230,11 +232,15 @@ void
   update_render_texture();
 }
 
-void
+sf::Sprite
   map_sprite::find_intersecting(const sf::Vector2i &pixel_pos,
     const sf::Vector2i                             &tile_pos,
     const std::uint8_t                             &texture_page)
 {
+  sf::Sprite sprite = {};
+  sprite.setTexture(m_render_texture->getTexture());
+  sprite.setTextureRect(
+    { (pixel_pos.x/16) * 16, tile_pos.y * 16, 16, 16 });
   m_saved_indicies = m_map.visit_tiles(
     [this, &tile_pos, &texture_page, &pixel_pos](auto &&tiles)
     {
@@ -293,6 +299,7 @@ void
       puts("\n");
       return out;
     });
+  return sprite;
 }
 
 auto
@@ -315,7 +322,7 @@ void
   auto       tc  = std::crbegin(tiles_const);
   const auto tce = std::crend(tiles_const);
   auto       t   = std::rbegin(tiles);
-  //const auto te  = std::rend(tiles);
+  // const auto te  = std::rend(tiles);
   for (; /*t != te &&*/ tc != tce; (void)++tc, ++t)
   {
     const is_tile auto &tile_const = *tc;
@@ -328,7 +335,7 @@ void
   map_sprite::for_all_tiles(auto &&lambda) const
 {
   duel_visitor(
-    [&lambda,this](auto const &tiles_const, auto &&tiles)
+    [&lambda, this](auto const &tiles_const, auto &&tiles)
     {
       for_all_tiles(tiles_const,
         std::forward<decltype(tiles)>(tiles),
@@ -358,7 +365,8 @@ void
           return;
         }
         const auto texture_size = sf::Vector2u{ 16U, 16U };
-        auto       quad  = get_triangle_strip(draw_size, texture_size, tile);
+        auto       quad =
+          get_triangle_strip(draw_size, texture_size, tile_const, tile);
         states.blendMode = sf::BlendAlpha;
         if (tile.blend_mode() == BlendModeT::add)
         {

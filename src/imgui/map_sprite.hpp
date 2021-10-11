@@ -15,6 +15,7 @@
 #include <future>
 #include <SFML/Graphics/Drawable.hpp>
 #include <SFML/Graphics/RenderTexture.hpp>
+#include <SFML/Graphics/Sprite.hpp>
 #include <SFML/Graphics/Transformable.hpp>
 #include <SFML/Graphics/Vertex.hpp>
 #include <utility>
@@ -90,7 +91,7 @@ public:
     update_position(const sf::Vector2i &pixel_pos,
       const sf::Vector2i               &tile_pos,
       const std::uint8_t               &texture_page);
-  void
+  sf::Sprite
     find_intersecting(const sf::Vector2i &pixel_pos,
       const sf::Vector2i                 &tile_pos,
       const std::uint8_t                 &texture_page);
@@ -156,8 +157,8 @@ private:
   [[nodiscard]] std::array<sf::Vertex, 4U>
     get_triangle_strip(const sf::Vector2u &draw_size,
       const sf::Vector2u                  &texture_size,
+      const auto                          &tile_const,
       auto                               &&tile) const;
-
 
   static const sf::BlendMode &
     GetBlendSubtract();
