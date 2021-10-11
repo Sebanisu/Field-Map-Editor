@@ -227,6 +227,11 @@ void
                 static_cast<std::uint8_t>(tile_pos.y * tile_size))
               .with_texture_id(texture_page);
         }
+        else
+        {
+          tile = tile.with_xy(static_cast<std::int16_t>((pixel_pos.x/tile_size) * tile_size),
+            static_cast<std::int16_t>((pixel_pos.y/tile_size) * tile_size));
+        }
       }
     });
   update_render_texture();
@@ -239,8 +244,9 @@ sf::Sprite
 {
   sf::Sprite sprite = {};
   sprite.setTexture(m_render_texture->getTexture());
-  sprite.setTextureRect(
-    { (pixel_pos.x/16) * 16, tile_pos.y * 16, 16, 16 });
+  sprite.setTextureRect({ (pixel_pos.x / 16) * 16, tile_pos.y * 16, 16, 16 });
+  sprite.setPosition((pixel_pos.x / 16) * 16.F, tile_pos.y * 16.F);
+
   m_saved_indicies = m_map.visit_tiles(
     [this, &tile_pos, &texture_page, &pixel_pos](auto &&tiles)
     {

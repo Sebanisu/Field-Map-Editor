@@ -179,7 +179,8 @@ void
       if (m_mouse_positions.mouse_enabled)
       {
         m_mouse_positions.sprite.setPosition(
-          (m_mouse_positions.pixel.x/16) * 16.F, (m_mouse_positions.pixel.y/16) * 16.F);
+          (m_mouse_positions.pixel.x / 16) * 16.F,
+          (m_mouse_positions.pixel.y / 16) * 16.F);
         if (m_mouse_positions.left_changed())
         {
           if (map_test())
@@ -187,6 +188,7 @@ void
             if (m_mouse_positions.left)
             {
               // left mouse down
+              // m_mouse_positions.cover =
               m_mouse_positions.sprite =
                 m_map_sprite.find_intersecting(m_mouse_positions.pixel,
                   m_mouse_positions.tile,
@@ -198,6 +200,7 @@ void
               m_map_sprite.update_position(m_mouse_positions.pixel,
                 m_mouse_positions.tile,
                 m_mouse_positions.texture_page);
+              // m_mouse_positions.cover =
               m_mouse_positions.sprite = {};
             }
           }
@@ -207,6 +210,7 @@ void
       {
         if (m_mouse_positions.left_changed() && !m_mouse_positions.left)
         {
+          // m_mouse_positions.cover =
           m_mouse_positions.sprite = {};
           // mouse up off-screen ?
         }
@@ -226,6 +230,8 @@ void
     m_window.draw(m_map_sprite.toggle_grid(
       m_selections.draw_grid, m_selections.draw_texture_page_grid));
   }
+  //  m_mouse_positions.cover.setColor(clear_color);
+  //  m_window.draw(m_mouse_positions.cover);
   m_window.draw(m_mouse_positions.sprite);
   ImGui::SFML::Render(m_window);
   m_window.display();

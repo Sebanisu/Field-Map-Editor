@@ -29,6 +29,7 @@ private:
     bool         mouse_enabled = { false };
     bool         mouse_moved   = { false };
     sf::Sprite   sprite        = {};
+    //sf::Sprite   cover         = {};
     void
       update()
     {
