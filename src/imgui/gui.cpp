@@ -200,7 +200,7 @@ void
                 m_mouse_positions.tile,
                 m_mouse_positions.texture_page);
               // m_mouse_positions.cover =
-              m_mouse_positions.sprite = {};
+              m_mouse_positions.sprite     = {};
               m_mouse_positions.max_tile_x = {};
             }
           }
@@ -258,13 +258,14 @@ bool
       static_cast<int>(pixel_pos.y) };
     const auto &x           = m_mouse_positions.pixel.x;
     const auto &y           = m_mouse_positions.pixel.y;
-
+    auto io = ImGui::GetIO();
     if (((mim_test() && in_bounds(x, 0, m_mim_sprite.width())
            && in_bounds(y, 0, m_mim_sprite.height()))
           || (map_test() && in_bounds(x, 0, m_map_sprite.width())
               && in_bounds(y, 0, m_map_sprite.height())))
-        && !ImGui::IsWindowHovered(ImGuiHoveredFlags_AnyWindow)
-        && !ImGui::IsAnyItemHovered())
+        && !io.WantCaptureMouse)
+        //!ImGui::IsWindowHovered(ImGuiHoveredFlags_AnyWindow)
+        //&& !ImGui::IsAnyItemHovered())
     {
       mouse_enabled         = true;
       const auto is_swizzle = (map_test() && m_selections.draw_swizzle)
@@ -841,8 +842,10 @@ void
   ImGui::GetStyle() =
     m_original_style;// restore original before applying scale.
   ImGui::GetStyle().ScaleAllSizes(std::round(scale));
-  m_window.setView(sf::View(
-    sf::FloatRect(std::round(m_cam_pos.x), std::round(m_cam_pos.y), m_scale_width, std::round(img_height))));
+  m_window.setView(sf::View(sf::FloatRect(std::round(m_cam_pos.x),
+    std::round(m_cam_pos.y),
+    m_scale_width,
+    std::round(img_height))));
 }
 archives_group
   gui::get_archives_group() const
