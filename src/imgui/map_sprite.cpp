@@ -233,7 +233,7 @@ std::uint8_t
                                  return std::uint32_t{ tile_size };
                                });
       const auto it =
-        std::max_element(transform_range.begin(), transform_range.end());
+        std::min_element(transform_range.begin(), transform_range.end());
       return static_cast<std::uint8_t>((*it - tile_size) / tile_size);
     });
 }
