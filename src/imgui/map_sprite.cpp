@@ -206,6 +206,38 @@ void
   }
 }
 
+std::uint8_t
+  map_sprite::max_x_for_saved() const
+{
+  static constexpr std::uint8_t tile_size = 16U;
+  return m_map.visit_tiles(
+    [this](const auto &tiles)
+    {
+      auto transform_range = m_saved_indicies
+                             | std::views::transform(
+                               [this, &tiles](std::size_t i)
+                               {
+                                 auto &tile = tiles[i];
+                                 if (m_draw_swizzle)
+                                 {
+                                   if (tile.depth().bpp4())
+                                   {
+                                     return 256U;
+                                   }
+                                   if (tile.depth().bpp16())
+                                   {
+                                     return 64U;
+                                   }
+                                   return 128U;
+                                 }
+                                 return std::uint32_t{ tile_size };
+                               });
+      const auto it =
+        std::max_element(transform_range.begin(), transform_range.end());
+      return static_cast<std::uint8_t>((*it - tile_size) / tile_size);
+    });
+}
+
 void
   map_sprite::update_position(const sf::Vector2i &pixel_pos,
     const sf::Vector2i                           &tile_pos,
@@ -214,23 +246,26 @@ void
   m_map.visit_tiles(
     [this, &tile_pos, &texture_page, &pixel_pos](auto &&tiles)
     {
+      static constexpr std::uint8_t tile_size = 16U;
+      std::uint8_t max_x = max_x_for_saved() * tile_size;
       for (auto i : m_saved_indicies)
       {
-        auto                 &tile      = tiles[i];
-        static constexpr auto tile_size = 16U;
-
+        auto                         &tile      = tiles[i];
         if (m_draw_swizzle)
         {
           tile =
             tile
-              .with_source_xy(static_cast<std::uint8_t>(tile_pos.x * tile_size),
+              .with_source_xy(
+                (std::min)(
+                  static_cast<std::uint8_t>(tile_pos.x * tile_size), max_x),
                 static_cast<std::uint8_t>(tile_pos.y * tile_size))
               .with_texture_id(texture_page);
         }
         else
         {
-          tile = tile.with_xy(static_cast<std::int16_t>((pixel_pos.x/tile_size) * tile_size),
-            static_cast<std::int16_t>((pixel_pos.y/tile_size) * tile_size));
+          tile = tile.with_xy(
+            static_cast<std::int16_t>((pixel_pos.x / tile_size) * tile_size),
+            static_cast<std::int16_t>((pixel_pos.y / tile_size) * tile_size));
         }
       }
     });

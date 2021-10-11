@@ -29,7 +29,8 @@ private:
     bool         mouse_enabled = { false };
     bool         mouse_moved   = { false };
     sf::Sprite   sprite        = {};
-    //sf::Sprite   cover         = {};
+    std::uint8_t max_tile_x    = {};
+    // sf::Sprite   cover         = {};
     void
       update()
     {
@@ -45,6 +46,22 @@ private:
         std::cout << "Warning! mouse up off screen!" << std::endl;
       }
       return condition;
+    }
+    [[nodiscard]] void
+      update_sprite_pos(bool swizzle, float spacing = 256.F)
+    {
+      float x = {};
+      if (swizzle && max_tile_x != 0U)
+      {
+        x = ((std::min)(static_cast<std::uint8_t>(tile.x), max_tile_x) * 16.F)
+            + (texture_page * spacing);
+      }
+      else
+      {
+        x = (pixel.x / 16) * 16.F;
+      }
+      float y = (pixel.y / 16) * 16.F;
+      sprite.setPosition(x, y);
     }
 
   private:

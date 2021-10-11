@@ -178,9 +178,7 @@ void
       m_mouse_positions.mouse_enabled = handle_mouse_cursor();
       if (m_mouse_positions.mouse_enabled)
       {
-        m_mouse_positions.sprite.setPosition(
-          (m_mouse_positions.pixel.x / 16) * 16.F,
-          (m_mouse_positions.pixel.y / 16) * 16.F);
+        m_mouse_positions.update_sprite_pos(m_selections.draw_swizzle);
         if (m_mouse_positions.left_changed())
         {
           if (map_test())
@@ -193,6 +191,7 @@ void
                 m_map_sprite.find_intersecting(m_mouse_positions.pixel,
                   m_mouse_positions.tile,
                   m_mouse_positions.texture_page);
+              m_mouse_positions.max_tile_x = m_map_sprite.max_x_for_saved();
             }
             else
             {
@@ -202,6 +201,7 @@ void
                 m_mouse_positions.texture_page);
               // m_mouse_positions.cover =
               m_mouse_positions.sprite = {};
+              m_mouse_positions.max_tile_x = {};
             }
           }
         }
@@ -832,7 +832,7 @@ void
   // this scales up the elements without losing the horizontal space. so
   // going from 4:3 to 16:9 will end up with wide screen.
   auto scale    = height / static_cast<float>(m_window_height);
-  m_scale_width = width / height * img_height;
+  m_scale_width = std::round(width / height * img_height);
   if (scale < 1.0F)
   {
     scale = 1.0F;
@@ -842,7 +842,7 @@ void
     m_original_style;// restore original before applying scale.
   ImGui::GetStyle().ScaleAllSizes(std::round(scale));
   m_window.setView(sf::View(
-    sf::FloatRect(m_cam_pos.x, m_cam_pos.y, m_scale_width, img_height)));
+    sf::FloatRect(std::round(m_cam_pos.x), std::round(m_cam_pos.y), m_scale_width, std::round(img_height))));
 }
 archives_group
   gui::get_archives_group() const

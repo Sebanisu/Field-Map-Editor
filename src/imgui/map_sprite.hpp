@@ -95,6 +95,8 @@ public:
     find_intersecting(const sf::Vector2i &pixel_pos,
       const sf::Vector2i                 &tile_pos,
       const std::uint8_t                 &texture_page);
+  std::uint8_t
+    max_x_for_saved() const;
 
 private:
   mutable std::vector<std::future<void>>             m_futures      = {};
