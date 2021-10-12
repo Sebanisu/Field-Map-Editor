@@ -237,17 +237,93 @@ std::uint8_t
       return static_cast<std::uint8_t>((*it - tile_size) / tile_size);
     });
 }
+std::size_t
+  map_sprite::row_empties(std::uint8_t tile_y,
+    std::uint8_t                       texture_page,
+    const bool                         move_from_row)
+{
+  static constexpr auto tile_size = 16U;
+  return m_map.visit_tiles(
+    [this, &tile_y, &texture_page, &move_from_row](auto &&tiles) -> std::size_t
+    {
+      std::vector<std::pair<std::uint8_t, std::int8_t>> values = {};
+      auto                                              filtered_range =
+        tiles
+        | std::views::filter(
+          [&tile_y, &texture_page](const auto &tile) -> bool
+          {
+            return std::cmp_equal((tile.source_y() / tile_size), tile_y)
+                   && std::cmp_equal(texture_page, tile.texture_id());
+          });
+      std::transform(std::ranges::begin(filtered_range),
+        std::ranges::end(filtered_range),
+        std::back_inserter(values),
+        [](const auto &tile)
+        {
+          return std::make_pair(
+            static_cast<std::uint8_t>(1U << (tile.depth().raw() & 3U)),
+            static_cast<std::uint8_t>(tile.source_x() / tile_size));
+        });
+      std::ranges::sort(values);
+      const auto [first, last] = std::ranges::unique(values);
+      values.erase(first, last);
+      std::size_t total = tile_size
+                          - std::reduce(values.begin(),
+                            values.end(),
+                            std::size_t{},
+                            [](const std::size_t left, const auto &right_pair)
+                            { return left + right_pair.first; });
+      if (move_from_row)
+      {
+        total += 1U;
+      }
+      return total;
+    });
+}
 
 void
   map_sprite::update_position(const sf::Vector2i &pixel_pos,
     const sf::Vector2i                           &tile_pos,
     const std::uint8_t                           &texture_page)
 {
+  if (m_saved_indicies.empty())
+  {
+    return;
+  }
   m_map.visit_tiles(
     [this, &tile_pos, &texture_page, &pixel_pos](auto &&tiles)
     {
       static constexpr std::uint8_t tile_size = 16U;
       std::uint8_t                  max_x     = max_x_for_saved() * tile_size;
+      if (m_draw_swizzle)
+      {
+        if (auto intersecting =
+              find_intersecting(pixel_pos, tile_pos, texture_page, true);
+            !intersecting.empty())
+        {
+          // this might not be good enough as two 4 bpp tiles fit in the
+          // same location as 8 bpp. and two 8 bpp fit in space for 16 bpp.
+          // but this should catch obvious problems.
+          fmt::print(
+            "There are {} tiles at this location. Choose an empty "
+            "location!\n",
+            intersecting.size());
+          return;
+        }
+        const auto &tile     = tiles[m_saved_indicies.front()];
+        bool        same_row = ((tile.source_y() / tile_size) == tile_pos.y)
+                        && (texture_page == tile.texture_id());
+//        fmt::print("{} == {} && {} == {}\n",
+//          (tile.source_y() / tile_size),
+//          tile_pos.y,
+//          texture_page,
+//          tile.texture_id());
+        const auto empty_count = row_empties(
+          static_cast<std::uint8_t>(tile_pos.y), texture_page, same_row);
+        fmt::print("Empty cells in row = {}\n", empty_count);
+        if(empty_count==0)
+          return;
+      }
       for (auto i : m_saved_indicies)
       {
         auto &tile = tiles[i];
@@ -257,12 +333,18 @@ void
                 find_intersecting(pixel_pos, tile_pos, texture_page, true);
               !intersecting.empty())
           {
-            // this might not be good enough as two 4 bpp tiles fit in the same
-            // location as 8 bpp. and two 8 bpp fit in space for 16 bpp.
-            // but this should catch obvious problems.
-            fmt::print(
-              "There are {} tiles at this location. Choose an empty location!\n", intersecting.size());
-            return;
+            if (std::ranges::any_of(intersecting,
+                  [&tile, &tiles](const auto &j)
+                  {
+                    const auto &other_tile = tiles[j];
+                    return (tile.depth() != other_tile.depth())
+                           || (tile.palette_id() != other_tile.palette_id());
+                  }))
+            {
+              // this second pass is to make sure tiles you are moving aren't
+              // conflicting with different bpp or palette.
+              continue;
+            }
           }
           tile =
             tile

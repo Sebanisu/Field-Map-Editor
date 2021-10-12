@@ -95,7 +95,11 @@ public:
     find_intersecting(const sf::Vector2i &pixel_pos,
       const sf::Vector2i                 &tile_pos,
       const std::uint8_t                 &texture_page,
-      const bool                                      skip_filters = false);
+      const bool                          skip_filters = false);
+  std::size_t
+    row_empties(std::uint8_t tile_y,
+      std::uint8_t           texture_page,
+      bool                   move_from_row = false);
   sf::Sprite
     save_intersecting(const sf::Vector2i &pixel_pos,
       const sf::Vector2i                 &tile_pos,
