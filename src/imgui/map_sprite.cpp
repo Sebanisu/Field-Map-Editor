@@ -859,8 +859,18 @@ void
                                });
     if (filtered_textures.begin() != filtered_textures.end())
     {
-      const auto y = filtered_textures.begin()->getSize().y;
-      m_scale      = (y - (y % 256U)) / 256U;
+      const auto y        = filtered_textures.begin()->getSize().y;
+      m_scale             = y / 256U;
+      const auto max_size = sf::Texture::getMaximumSize();
+      while (width() * m_scale > max_size || height() * m_scale > max_size)
+      {
+        m_scale >>= 1U;
+        if (m_scale <= 1U)
+        {
+          m_scale = 1U;
+          break;
+        }
+      }
       fmt::print("{}\t", m_scale);
       m_render_texture->create(width() * m_scale, height() * m_scale);
     }
