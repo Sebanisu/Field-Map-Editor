@@ -725,9 +725,8 @@ void
   if (reload_textures)
   {
     m_texture = get_textures();
-
-
-    resize_render_texture();
+    init_render_texture();
+    return;
   }
   if (!fail())
   {
