@@ -477,13 +477,14 @@ sf::Sprite
   static constexpr auto tile_size_float = 16.F;
   sf::Sprite            sprite          = {};
   sprite.setTexture(m_render_texture->getTexture());
-  sprite.setTextureRect({ (pixel_pos.x / tile_size) * tile_size,
-    tile_pos.y * tile_size,
-    tile_size,
-    tile_size });
+  sprite.setTextureRect({ static_cast<int>((pixel_pos.x / tile_size) * tile_size * m_scale),
+    static_cast<int>(tile_pos.y * tile_size * m_scale),
+    static_cast<int>(tile_size * m_scale),
+    static_cast<int>(tile_size * m_scale) });
   sprite.setPosition(
     static_cast<float>(pixel_pos.x / tile_size) * tile_size_float,
     tile_pos.y * tile_size_float);
+  sprite.setScale(1.F/m_scale,1.F/m_scale);
   m_saved_indicies = find_intersecting(pixel_pos, tile_pos, texture_page);
   return sprite;
 }
