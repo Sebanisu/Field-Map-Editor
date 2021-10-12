@@ -131,7 +131,8 @@ void
       combo_path();
       combo_coo();
       combo_field();
-      const char *filter_title = "Filters";
+      combo_upscale_path();
+      static constexpr char filter_title[] = "Filters";
       if (mim_test())
       {
         checkbox_mim_palette_texture();
@@ -331,7 +332,6 @@ void
   gui::combo_coo() const
 {
   ImGui::PushID(++m_id);
-  static constexpr auto coos       = open_viii::LangCommon::to_array();
   static constexpr auto coos_c_str = open_viii::LangCommon::to_c_str_array();
   if (ImGui::Combo("Language",
         &m_selections.coo,
@@ -341,17 +341,22 @@ void
   {
     if (mim_test())
     {
-      m_mim_sprite =
-        m_mim_sprite.with_coo(coos.at(static_cast<size_t>(m_selections.coo)));
+      m_mim_sprite = m_mim_sprite.with_coo(get_coo());
     }
     else if (map_test())
     {
-      m_map_sprite =
-        m_map_sprite.with_coo(coos.at(static_cast<size_t>(m_selections.coo)));
+      m_map_sprite = m_map_sprite.with_coo(get_coo());
     }
     m_changed = true;
   }
   ImGui::PopID();
+}
+const open_viii::LangT &
+  gui::get_coo() const
+{
+
+  static constexpr auto coos = open_viii::LangCommon::to_array();
+  return coos.at(static_cast<size_t>(m_selections.coo));
 }
 void
   gui::combo_field() const
@@ -715,10 +720,8 @@ void
     }
     else if (m_selections.draw == 1)
     {
-      m_map_sprite = m_map_sprite.update(m_field,
-        open_viii::LangCommon::to_array().at(
-          static_cast<std::size_t>(m_selections.coo)),
-        m_selections.draw_swizzle);
+      m_map_sprite =
+        m_map_sprite.update(m_field, get_coo(), m_selections.draw_swizzle);
     }
     m_changed = true;
   }
@@ -896,8 +899,7 @@ mim_sprite
     Mim::bpp_selections().at(static_cast<std::size_t>(m_selections.bpp)),
     static_cast<std::uint8_t>(Mim::palette_selections().at(
       static_cast<std::size_t>(m_selections.palette))),
-    open_viii::LangCommon::to_array().at(
-      static_cast<std::size_t>(m_selections.coo)),
+    get_coo(),
     m_selections.draw_palette };
 }
 ImGuiStyle
@@ -941,11 +943,7 @@ gui::gui()
 map_sprite
   gui::get_map_sprite() const
 {
-  return { m_field,
-    open_viii::LangCommon::to_array().at(
-      static_cast<std::size_t>(m_selections.coo)),
-    m_selections.draw_swizzle,
-    {} };
+  return { m_field, get_coo(), m_selections.draw_swizzle, {} };
 }
 int
   gui::get_selected_field()
@@ -993,7 +991,8 @@ static bool
     }
     return false;
   }
-  const char *current_item = strings[current_idx].c_str();
+
+  const auto *current_item = strings[current_idx].c_str();
 
   ImGui::PushID(++id);
   if (ImGui::Checkbox("", &checked))
@@ -1208,4 +1207,51 @@ BPPT
   gui::bpp() const
 {
   return Mim::bpp_selections().at(static_cast<size_t>(m_selections.bpp));
+}
+
+void
+  gui::combo_upscale_path() const
+{
+  std::vector<std::string> paths = {};
+  auto                     transform_paths =
+    m_paths
+    | std::views::transform(
+      [this](const std::string &path)
+      {
+        return upscales(
+          std::filesystem::path(path), m_field->get_base_name(), get_coo())
+          .get_paths();
+      });
+  // std::views::join; broken in msvc.
+  auto process = [&paths](const auto &temp_paths)
+  {
+    for (auto &path : temp_paths
+                        | std::views::filter(
+                          [](const std::filesystem::path &path)
+                          {
+                            return std::filesystem::exists(path)
+                                   && std::filesystem::is_directory(path);
+                          }))
+    {
+      paths.emplace_back(path.string());
+    }
+  };
+  for (auto temp_paths : transform_paths)
+  {
+    process(temp_paths);
+  }
+  process(upscales(
+    std::filesystem::current_path(), m_field->get_base_name(), get_coo())
+            .get_paths());
+
+  if (generic_combo(
+        m_id,
+        "Upscale Path",
+        [&paths]() { return paths; },
+        [&paths]() { return paths; },
+        [this]() -> auto & { return m_map_sprite.filter().upscale; }))
+  {
+    m_map_sprite.update_render_texture(true);
+    m_changed = true;
+  }
 }

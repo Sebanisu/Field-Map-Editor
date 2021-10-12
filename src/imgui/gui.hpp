@@ -9,6 +9,7 @@
 #include "filebrowser.hpp"
 #include "grid.hpp"
 #include <cstdint>
+#include "upscales.hpp"
 #include <SFML/Graphics/RenderWindow.hpp>
 struct gui
 {
@@ -210,5 +211,9 @@ private:
     text_mouse_position() const;
   void
     on_click_not_imgui() const;
+  void
+    combo_upscale_path() const;
+  const open_viii::LangT &
+    get_coo() const;
 };
 #endif// MYPROJECT_GUI_HPP

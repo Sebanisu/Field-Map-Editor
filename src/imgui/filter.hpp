@@ -7,6 +7,7 @@
 #include "open_viii/graphics/background/BlendModeT.hpp"
 #include "open_viii/graphics/BPPT.hpp"
 #include <cstdint>
+#include <filesystem>
 #include <fmt/format.h>
 #include <map>
 #include <string>
@@ -98,5 +99,6 @@ struct filters
     using namespace open_viii::graphics::literals;
     return filter<open_viii::graphics::BPPT>(4_bpp);
   }();
+  filter<std::filesystem::path> upscale = {};
 };
 #endif// MYPROJECT_FILTER_HPP

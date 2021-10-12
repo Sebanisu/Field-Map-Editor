@@ -50,32 +50,43 @@ map_sprite::colors_type
     bpp, palette, false);
 }
 
-constexpr std::size_t
-  map_sprite::get_texture_pos(open_viii::graphics::BPPT bpp,
-    std::uint8_t                                        palette)
+std::size_t
+  map_sprite::get_texture_pos(const open_viii::graphics::BPPT bpp,
+    const std::uint8_t                                        palette,
+    const std::uint8_t texture_page) const
 {
-  if (bpp.bpp4())
+  if (!m_filters.upscale.enabled())
   {
-    return palette;
+    if (bpp.bpp4())
+    {
+      return palette;
+    }
+    if (bpp.bpp8())
+    {
+      return palette + std::size(Mim::palette_selections());
+    }
+    return MAX_TEXTURES - 1;// 16bpp doesn't have palettes.
   }
-  if (bpp.bpp8())
+  const size_t j = texture_page * 16 + palette;
+  if (m_texture->at(j).getSize().y == 0)
   {
-    return palette + std::size(Mim::palette_selections());
+    return MAX_TEXTURES - 13U + texture_page;
   }
-  return MAX_TEXTURES - 1;
-  // 16bpp doesn't have palettes.
+  return j;
 }
 
 const sf::Texture *
   map_sprite::get_texture(const open_viii::graphics::BPPT bpp,
-    const std::uint8_t                                    palette) const
+    const std::uint8_t                                    palette,
+    const std::uint8_t                                    texture_page) const
 {
-  return &m_texture->at(get_texture_pos(bpp, palette));
+  return &m_texture->at(get_texture_pos(bpp, palette, texture_page));
 }
 
 std::shared_ptr<std::array<sf::Texture, map_sprite::MAX_TEXTURES>>
   map_sprite::get_textures() const
 {
+
   auto ret = std::make_shared<std::array<sf::Texture, MAX_TEXTURES>>(
     std::array<sf::Texture, MAX_TEXTURES>{});
   const auto &range = m_all_unique_values_and_strings.bpp().values();
@@ -86,37 +97,119 @@ std::shared_ptr<std::array<sf::Texture, map_sprite::MAX_TEXTURES>>
       const auto &map = m_all_unique_values_and_strings.palette();
       if (map.contains(bpp))
       {
+
         for (const auto &palette : map.at(bpp).values())
         {
           if (bpp.bpp24())
           {
             continue;
           }
-          // std::cout << bpp << '\t' << +palette << '\t' << '\t';
-          size_t pos = get_texture_pos(bpp, palette);
-          if (m_mim.get_width(bpp) != 0U)
+          if (!m_filters.upscale.enabled())
           {
-            m_futures.emplace_back(std::async(
-              std::launch::async,
-              [this](sf::Texture *texture, BPPT bppt, std::uint8_t pal)
-              {
-                const auto colors = get_colors(bppt, pal);
-                // std::lock_guard<std::mutex> lock(mutex_texture);
-                texture->create(m_mim.get_width(bppt), m_mim.get_height());
-                texture->setSmooth(false);
-                texture->update(
-                  reinterpret_cast<const sf::Uint8 *>(colors.data()));
-              },
-              &(ret->at(pos)),
-              bpp,
-              palette));
+            load_mim_textures(ret, bpp, palette);
+          }
+          else
+          {
+            find_upscale_path(ret, palette);
           }
         }
       }
     }
-    // std::cout << std::endl;
+    if (m_filters.upscale.enabled())
+    {
+      find_upscale_path(ret);
+    }
+  }
+  size_t i = {};
+  for (const auto &texture : *ret)
+  {
+    const auto size = texture.getSize();
+    if (size.x != 0)
+    {
+      fmt::print("\ttex: {:3} - ({:4}, {:4})\n", i++, size.x, size.y);
+    }
+    else
+    {
+      ++i;
+    }
   }
   return ret;
+}
+void
+  map_sprite::load_mim_textures(
+    std::shared_ptr<std::array<sf::Texture, MAX_TEXTURES>> &ret,
+    open_viii::graphics::BPPT                               bpp,
+    std::uint8_t                                            palette) const
+{// std::cout << bpp << '\t' << +palette << '\t' << '\t';
+  if (m_mim.get_width(bpp) != 0U)
+  {
+    size_t pos = get_texture_pos(bpp, palette, 0);
+    m_futures.emplace_back(std::async(
+      std::launch::async,
+      [this](sf::Texture *texture, BPPT bppt, uint8_t pal)
+      {
+        const auto colors = get_colors(bppt, pal);
+        // std::lock_guard<std::mutex> lock(mutex_texture);
+        texture->create(m_mim.get_width(bppt), m_mim.get_height());
+        texture->setSmooth(false);
+        texture->update(reinterpret_cast<const sf::Uint8 *>(colors.data()));
+      },
+      &(ret->at(pos)),
+      bpp,
+      palette));
+  }
+}
+void
+  map_sprite::find_upscale_path(
+    std::shared_ptr<std::array<sf::Texture, MAX_TEXTURES>> &ret) const
+{
+  for (const auto &texture_page :
+    m_all_unique_values_and_strings.texture_page_id().values())
+  {
+    const auto  &root           = m_filters.upscale.value();
+    const auto   paths          = m_upscales.get_file_paths(root, texture_page);
+    const size_t i              = MAX_TEXTURES - 13 + texture_page;
+    auto         filtered_paths = paths
+                          | std::views::filter(
+                            [](const std::filesystem::path &path)
+                            {
+                              return std::filesystem::exists(path)
+                                     && !std::filesystem::is_directory(path);
+                            });
+    if (filtered_paths.begin() != filtered_paths.end())
+    {
+      const auto &path = *(filtered_paths.begin());
+      fmt::print("{}\n", path.string());
+      ret->at(i).loadFromFile(path.string());
+    }
+  }
+}
+void
+  map_sprite::find_upscale_path(
+    std::shared_ptr<std::array<sf::Texture, MAX_TEXTURES>> &ret,
+    std::uint8_t                                            palette) const
+{
+  for (const auto &texture_page :
+    m_all_unique_values_and_strings.texture_page_id().values())
+  {
+    const auto  &root  = m_filters.upscale.value();
+    const auto   paths = m_upscales.get_file_paths(root, texture_page, palette);
+    const size_t i     = texture_page * 16 + palette;
+    auto         filtered_paths = paths
+                          | std::views::filter(
+                            [](const std::filesystem::path &path)
+                            {
+                              return std::filesystem::exists(path)
+                                     && !std::filesystem::is_directory(path);
+                            });
+
+    if (filtered_paths.begin() != filtered_paths.end())
+    {
+      const auto &path = *(filtered_paths.begin());
+      fmt::print("{}\n", path.string());
+      ret->at(i).loadFromFile(path.string());
+    }
+  }
 }
 void
   map_sprite::wait_for_futures() const
@@ -133,13 +226,11 @@ void
     auto                                             x,
     auto                                             y) const
 {
-  auto i =
-    static_cast<std::uint32_t>(x / static_cast<decltype(x)>(texture_size.x));
-  auto j =
-    static_cast<std::uint32_t>(y / static_cast<decltype(y)>(texture_size.y));
-  std::uint32_t tu =
-    (source_x) / static_cast<decltype(source_x)>(texture_size.x);
-  std::uint32_t tv = source_y / static_cast<decltype(source_y)>(texture_size.y);
+  constexpr static auto tile_size = 16U;
+  auto i = static_cast<std::uint32_t>(x / static_cast<decltype(x)>(tile_size));
+  auto j = static_cast<std::uint32_t>(y / static_cast<decltype(y)>(tile_size));
+  std::uint32_t tu    = (source_x) / static_cast<decltype(source_x)>(tile_size);
+  std::uint32_t tv    = source_y / static_cast<decltype(source_y)>(tile_size);
   const auto    tovec = [](auto &&x, auto &&y) {
     return sf::Vector2f{ static_cast<float>(x), static_cast<float>(y) };
   };
@@ -148,18 +239,20 @@ void
   };
   return std::array{ tovert((i + 1) * draw_size.x,
                        j * draw_size.y,
-                       (tu + 1) * draw_size.x,
-                       tv * draw_size.y),
-    tovert(
-      i * draw_size.x, j * draw_size.y, tu * draw_size.x, tv * draw_size.y),
+                       (tu + 1) * texture_size.x,
+                       tv * texture_size.y),
+    tovert(i * draw_size.x,
+      j * draw_size.y,
+      tu * texture_size.x,
+      tv * texture_size.y),
     tovert((i + 1) * draw_size.x,
       (j + 1) * draw_size.y,
-      (tu + 1) * draw_size.x,
-      (tv + 1) * draw_size.y),
+      (tu + 1) * texture_size.x,
+      (tv + 1) * texture_size.y),
     tovert(i * draw_size.x,
       (j + 1) * draw_size.y,
-      tu * draw_size.x,
-      (tv + 1) * draw_size.y) };
+      tu * texture_size.x,
+      (tv + 1) * texture_size.y) };
 }
 
 [[nodiscard]] std::array<sf::Vertex, 4U>
@@ -168,17 +261,26 @@ void
     const auto                                      &tile_const,
     auto                                           &&tile) const
 {
-  using tile_type = std::decay_t<decltype(tile)>;
   using namespace open_viii::graphics::literals;
-  const auto src_x = tile_const.source_x()
-                     + tile_const.texture_id()
-                         * tile_type::texture_page_width(tile_const.depth());
+  using tile_type    = std::decay_t<decltype(tile)>;
+  auto       src_tpw = tile_type::texture_page_width(tile_const.depth());
+  const auto x       = [this, &tile_const, &src_tpw]() -> std::uint32_t
+  {
+    if (m_filters.upscale.enabled())
+    {
+      return 0;
+    }
+      return tile_const.texture_id()
+        * src_tpw;
+  }();
+  const auto src_x = tile_const.source_x() + x;
   const auto src_y = tile_const.source_y();
 
   const auto dst_x = [this, &tile]()
   {
     if (m_draw_swizzle)
     {
+      using tile_type = std::decay_t<decltype(tile)>;
       return static_cast<uint32_t>(
         tile.source_x()
         + tile.texture_id() * tile_type::texture_page_width(4_bpp));
@@ -313,16 +415,18 @@ void
         const auto &tile     = tiles[m_saved_indicies.front()];
         bool        same_row = ((tile.source_y() / tile_size) == tile_pos.y)
                         && (texture_page == tile.texture_id());
-//        fmt::print("{} == {} && {} == {}\n",
-//          (tile.source_y() / tile_size),
-//          tile_pos.y,
-//          texture_page,
-//          tile.texture_id());
+        //        fmt::print("{} == {} && {} == {}\n",
+        //          (tile.source_y() / tile_size),
+        //          tile_pos.y,
+        //          texture_page,
+        //          tile.texture_id());
         const auto empty_count = row_empties(
           static_cast<std::uint8_t>(tile_pos.y), texture_page, same_row);
         fmt::print("Empty cells in row = {}\n", empty_count);
-        if(empty_count==0)
+        if (empty_count == 0)
+        {
           return;
+        }
       }
       for (auto i : m_saved_indicies)
       {
@@ -514,7 +618,11 @@ void
         {
           return;
         }
-        const auto texture_size = sf::Vector2u{ 16U, 16U };
+        states.texture =
+          get_texture(tile.depth(), tile.palette_id(), tile.texture_id());
+        const auto raw_texture_size = states.texture->getSize();
+        const auto i                = raw_texture_size.y / 16U;
+        const auto texture_size     = sf::Vector2u{ i, i };
         auto       quad =
           get_triangle_strip(draw_size, texture_size, tile_const, tile);
         states.blendMode = sf::BlendAlpha;
@@ -544,7 +652,6 @@ void
         // apply the tileset texture
 
         // std::lock_guard<std::mutex> lock(mutex_texture);
-        states.texture = get_texture(tile.depth(), tile.palette_id());
 
         // draw the vertex array
         target.draw(quad.data(), quad.size(), sf::TriangleStrip, states);
@@ -555,12 +662,13 @@ void
 const sf::BlendMode &
   map_sprite::GetBlendSubtract()
 {
-  static auto BlendSubtract = sf::BlendMode{ sf::BlendMode::DstColor,// or One
-    sf::BlendMode::One,
-    sf::BlendMode::ReverseSubtract,
-    sf::BlendMode::One,
-    sf::BlendMode::OneMinusSrcAlpha,
-    sf::BlendMode::Add };
+  const static auto BlendSubtract =
+    sf::BlendMode{ sf::BlendMode::DstColor,// or One
+      sf::BlendMode::One,
+      sf::BlendMode::ReverseSubtract,
+      sf::BlendMode::One,
+      sf::BlendMode::OneMinusSrcAlpha,
+      sf::BlendMode::Add };
   return BlendSubtract;
 }
 
@@ -613,8 +721,12 @@ void
   }
 }
 void
-  map_sprite::update_render_texture() const
+  map_sprite::update_render_texture(bool reload_textures) const
 {
+  if (reload_textures)
+  {
+    m_texture = get_textures();
+  }
   if (!fail())
   {
     local_draw(*m_render_texture, sf::RenderStates::Default);

@@ -10,6 +10,7 @@
 #include "open_viii/graphics/background/Map.hpp"
 #include "open_viii/graphics/background/Mim.hpp"
 #include "unique_values.hpp"
+#include "upscales.hpp"
 #include <cstdint>
 #include <fmt/format.h>
 #include <future>
@@ -34,9 +35,10 @@ public:
     bool                                                        draw_swizzle,
     filters                                                     in_filters)
     : m_draw_swizzle(draw_swizzle)
-    , m_filters(in_filters)
+    , m_filters(std::move(in_filters))
     , m_field(std::move(field))
     , m_coo(coo)
+    , m_upscales(m_field->get_base_name(), m_coo)
     , m_mim(get_mim())
     , m_map_const(get_map(&m_map_path))
     , m_map(m_map_const)
@@ -86,7 +88,7 @@ public:
   filters &
     filter() const;
   void
-    update_render_texture() const;
+    update_render_texture(bool reload_textures = false) const;
   void
     update_position(const sf::Vector2i &pixel_pos,
       const sf::Vector2i               &tile_pos,
@@ -95,7 +97,7 @@ public:
     find_intersecting(const sf::Vector2i &pixel_pos,
       const sf::Vector2i                 &tile_pos,
       const std::uint8_t                 &texture_page,
-      const bool                          skip_filters = false);
+      bool                                skip_filters = false);
   std::size_t
     row_empties(std::uint8_t tile_y,
       std::uint8_t           texture_page,
@@ -113,6 +115,7 @@ private:
   mutable filters                                    m_filters      = {};
   std::shared_ptr<open_viii::archive::FIFLFS<false>> m_field        = {};
   open_viii::LangT                                   m_coo          = {};
+  ::upscales                                         m_upscales     = {};
   open_viii::graphics::background::Mim               m_mim          = {};
   mutable std::string                                m_map_path     = {};
   open_viii::graphics::background::Map               m_map_const    = {};
@@ -120,8 +123,8 @@ private:
   all_unique_values_and_strings m_all_unique_values_and_strings     = {};
   open_viii::graphics::Rectangle<std::uint32_t> m_canvas            = {};
   static constexpr std::size_t                  MAX_TEXTURES =
-    16 * 13;// 13*16 for texture page / palette combos. 16*2+1 for palette bpp
-            // combos.
+    16 * 14;// 14*16 for texture page / palette combos. 16*2+1 for palette
+            // bpp combos.
   mutable std::shared_ptr<std::array<sf::Texture, MAX_TEXTURES>> m_texture = {};
   mutable std::shared_ptr<sf::RenderTexture> m_render_texture              = {};
   mutable grid                               m_grid                        = {};
@@ -144,10 +147,14 @@ private:
       bool               shift       = true) const;
   [[nodiscard]] colors_type
     get_colors(open_viii::graphics::BPPT bpp, std::uint8_t palette) const;
-  [[nodiscard]] static constexpr std::size_t
-    get_texture_pos(open_viii::graphics::BPPT bpp, std::uint8_t palette);
+  [[nodiscard]] std::size_t
+    get_texture_pos(open_viii::graphics::BPPT bpp,
+      std::uint8_t                            palette,
+      std::uint8_t                            texture_page) const;
   [[nodiscard]] const sf::Texture *
-    get_texture(open_viii::graphics::BPPT bpp, std::uint8_t palette) const;
+    get_texture(open_viii::graphics::BPPT bpp,
+      std::uint8_t                        palette,
+      std::uint8_t                        texture_page) const;
   [[nodiscard]] std::shared_ptr<std::array<sf::Texture, MAX_TEXTURES>>
     get_textures() const;
   [[nodiscard]] open_viii::graphics::Rectangle<std::uint32_t>
@@ -186,5 +193,17 @@ private:
     for_all_tiles(auto const &tiles_const, auto &&tiles, auto &&lambda) const;
   void
     for_all_tiles(auto &&lambda) const;
+  void
+    find_upscale_path(
+      std::shared_ptr<std::array<sf::Texture, MAX_TEXTURES>> &ret,
+      uint8_t                                                 palette) const;
+  void
+    find_upscale_path(
+      std::shared_ptr<std::array<sf::Texture, MAX_TEXTURES>> &ret) const;
+  void
+    load_mim_textures(
+      std::shared_ptr<std::array<sf::Texture, MAX_TEXTURES>> &ret,
+      open_viii::graphics::BPPT                               bpp,
+      uint8_t                                                 palette) const;
 };
 #endif// MYPROJECT_MAP_SPRITE_HPP
