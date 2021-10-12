@@ -270,8 +270,7 @@ void
     {
       return 0;
     }
-      return tile_const.texture_id()
-        * src_tpw;
+    return tile_const.texture_id() * src_tpw;
   }();
   const auto src_x = tile_const.source_x() + x;
   const auto src_y = tile_const.source_y();
@@ -602,12 +601,11 @@ void
     sf::RenderStates                       states) const
 {
   wait_for_futures();
-  const auto draw_size = sf::Vector2u{ 16U, 16U };
   target.clear(sf::Color::Transparent);
   for (const auto &z : m_all_unique_values_and_strings.z().values())
   {
     for_all_tiles(
-      [this, &draw_size, &states, &target, &z](
+      [this, &states, &target, &z](
         [[maybe_unused]] const auto &tile_const, const auto &tile)
       {
         if (tile.z() != z)
@@ -623,6 +621,7 @@ void
         const auto raw_texture_size = states.texture->getSize();
         const auto i                = raw_texture_size.y / 16U;
         const auto texture_size     = sf::Vector2u{ i, i };
+        const auto draw_size = sf::Vector2u{ 16U * m_scale, 16U * m_scale };
         auto       quad =
           get_triangle_strip(draw_size, texture_size, tile_const, tile);
         states.blendMode = sf::BlendAlpha;
@@ -726,6 +725,9 @@ void
   if (reload_textures)
   {
     m_texture = get_textures();
+
+
+    resize_render_texture();
   }
   if (!fail())
   {
@@ -849,7 +851,25 @@ void
 {
   if (!fail())
   {
-    m_render_texture->create(width(), height());
+    auto filtered_textures = *m_texture
+                             | std::views::filter(
+                               [](const auto &texture)
+                               {
+                                 const auto &size = texture.getSize();
+                                 return size.x != 0 && size.y != 0;
+                               });
+    if (filtered_textures.begin() != filtered_textures.end())
+    {
+      const auto y = filtered_textures.begin()->getSize().y;
+      m_scale      = (y - (y % 256U)) / 256U;
+      fmt::print("{}\t", m_scale);
+      m_render_texture->create(width() * m_scale, height() * m_scale);
+    }
+    else
+    {
+      m_scale = 1;
+      m_render_texture->create(width(), height());
+    }
   }
 }
 void
