@@ -157,6 +157,10 @@ void
       else if (map_test())
       {
         checkbox_map_swizzle();
+        if(ImGui::Button("Compact"))
+        {
+          m_map_sprite.compact();
+        }
         if (ImGui::CollapsingHeader(filter_title))
         {
           combo_filtered_bpps();
