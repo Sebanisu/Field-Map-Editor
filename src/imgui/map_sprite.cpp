@@ -348,68 +348,73 @@ void
   m_map.visit_tiles(
     [](auto &&tiles)
     {
-      using tileT =
-        std::decay_t<typename std::decay_t<decltype(tiles)>::value_type>;
-      using keyT = std::tuple<std::uint8_t,
-        decltype(tileT{}.texture_id()),
-        decltype(tileT{}.source_y()),
-        decltype(tileT{}.source_x()),
-        decltype(tileT{}.palette_id())>;
-      std::map<keyT, std::vector<tileT *>> pointers{};
-      std::ranges::for_each(tiles,
-        [&pointers](tileT &tile)
-        {
-          tileT *tp  = &tile;
-          keyT   key = { static_cast<std::uint8_t>(
-                         3U - (tile.depth().raw() & 3U)),
-            tile.texture_id(),
-            tile.source_y(),
-            tile.source_x(),
-            tile.palette_id() };
-          if (pointers.contains(key))
-          {
-            pointers.at(key).push_back(tp);
-          }
-          else
-          {
-            pointers.emplace(key, std::vector<tileT *>{ tp });
-          }
-        });
-      std::uint8_t col        = {};
-      std::uint8_t row        = {};
-      std::uint8_t page       = {};
-      std::size_t  row_weight = {};
-      for (auto &[key, tps] : pointers)
+      for (int pass = 2; pass != 0;
+           --pass)// at least 2 passes needed as things might get shifted to
+                  // other texture pages and then the keys are less valuable.
       {
-        const auto weight =
-          static_cast<std::uint8_t>(1U << (3U - std::get<0>(key)));
-
-        if (std::cmp_greater_equal(col, tile_size)
-            || std::cmp_greater_equal(row_weight, tile_size)
-            || std::cmp_greater(row_weight + weight, tile_size))
+        using tileT =
+          std::decay_t<typename std::decay_t<decltype(tiles)>::value_type>;
+        using keyT = std::tuple<decltype(tileT{}.texture_id()),
+          decltype(tileT{}.source_y()),
+          std::uint8_t,
+          decltype(tileT{}.source_x()),
+          decltype(tileT{}.palette_id())>;
+        std::map<keyT, std::vector<tileT *>> pointers{};
+        std::ranges::for_each(tiles,
+          [&pointers](tileT &tile)
+          {
+            tileT *tp  = &tile;
+            keyT   key = { tile.texture_id(),
+              tile.source_y(),
+              static_cast<std::uint8_t>(3U - (tile.depth().raw() & 3U)),
+              tile.source_x(),
+              tile.palette_id() };
+            if (pointers.contains(key))
+            {
+              pointers.at(key).push_back(tp);
+            }
+            else
+            {
+              pointers.emplace(key, std::vector<tileT *>{ tp });
+            }
+          });
+        std::uint8_t col        = {};
+        std::uint8_t row        = {};
+        std::uint8_t page       = {};
+        std::size_t  row_weight = {};
+        for (auto &[key, tps] : pointers)
         {
-          ++row;
-          col        = {};
-          row_weight = {};
-        }
+          const auto weight =
+            static_cast<std::uint8_t>(1U << (3U - std::get<2>(key)));
 
-        if (std::cmp_greater_equal(row, tile_size))
-        {
-          ++page;
-          row = {};
-        }
+          if (std::cmp_greater_equal(col, tile_size)
+              || std::cmp_greater_equal(row_weight, tile_size)
+              || std::cmp_greater(row_weight + weight, tile_size))
+          {
+            ++row;
+            col        = {};
+            row_weight = {};
+          }
 
-        for (tileT *const tp : tps)
-        {
-          *tp = tp->with_source_xy(
-                    static_cast<decltype(tileT{}.source_x())>(col * tile_size),
-                    static_cast<decltype(tileT{}.source_y())>(row * tile_size))
-                  .with_texture_id(
-                    static_cast<decltype(tileT{}.texture_id())>(page));
-        }
+          if (std::cmp_greater_equal(row, tile_size))
+          {
+            ++page;
+            row = {};
+          }
 
-        row_weight += weight;
-        ++col;
+          for (tileT *const tp : tps)
+          {
+            *tp =
+              tp->with_source_xy(
+                  static_cast<decltype(tileT{}.source_x())>(col * tile_size),
+                  static_cast<decltype(tileT{}.source_y())>(row * tile_size))
+                .with_texture_id(
+                  static_cast<decltype(tileT{}.texture_id())>(page));
+          }
+
+          row_weight += weight;
+          ++col;
+        }
       }
     });
   update_render_texture();
@@ -695,8 +700,8 @@ void
         {
           return;
         }
-        states.texture =
-          get_texture(tile_const.depth(), tile_const.palette_id(), tile_const.texture_id());
+        states.texture = get_texture(
+          tile_const.depth(), tile_const.palette_id(), tile_const.texture_id());
         const auto raw_texture_size = states.texture->getSize();
         const auto i                = raw_texture_size.y / 16U;
         const auto texture_size     = sf::Vector2u{ i, i };
