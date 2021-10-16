@@ -27,7 +27,7 @@ Mim
 }
 
 Map
-  map_sprite::get_map(std::string *out_path, bool sort_remove, bool shift) const
+  map_sprite::get_map(std::string *out_path, bool shift) const
 {
   if (m_field != nullptr)
   {
@@ -36,7 +36,6 @@ Map
     return Map{ m_mim.mim_type(),
       m_field->get_entry_data(
         { std::string_view(lang_name), Map::EXT }, out_path),
-      sort_remove,
       shift };
   }
   return {};
@@ -878,7 +877,7 @@ bool
 void
   map_sprite::map_save(const std::filesystem::path &dest_path) const
 {
-  const auto map  = get_map(nullptr, false, false);
+  const auto map  = get_map(nullptr, false);
   const auto path = dest_path.string();
 
   open_viii::tools::write_buffer(
@@ -955,12 +954,14 @@ void
           break;
         }
       }
-      fmt::print("{}\t", m_scale);
+      fmt::print(
+        "{}, ({}, {})\n", m_scale, width() * m_scale, height() * m_scale);
       m_render_texture->create(width() * m_scale, height() * m_scale);
     }
     else
     {
       m_scale = 1;
+      fmt::print("{}, ({}, {})\n", m_scale, width(), height());
       m_render_texture->create(width(), height());
     }
   }

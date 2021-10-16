@@ -146,7 +146,6 @@ private:
     get_mim() const;
   open_viii::graphics::background::Map
     get_map(std::string *out_path    = nullptr,
-      bool               sort_remove = true,
       bool               shift       = true) const;
   [[nodiscard]] colors_type
     get_colors(open_viii::graphics::BPPT bpp, std::uint8_t palette) const;
