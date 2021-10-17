@@ -30,3 +30,4 @@ Thumbs.db
 # Output Directories
 bin/
 lib/
+*.i
