@@ -7,6 +7,8 @@ using namespace open_viii::graphics::background;
 using namespace open_viii::graphics;
 using namespace open_viii::graphics::literals;
 using namespace std::string_literals;
+static constexpr auto filter_invalid =
+  open_viii::graphics::background::Map::filter_invalid();
 bool
   map_sprite::empty() const
 {
@@ -350,8 +352,6 @@ template<typename key_lambdaT, typename weight_lambdaT>
     const int                               passes) const
 {
   static constexpr auto tile_size = 16U;
-  static constexpr auto filter_invalid =
-    open_viii::graphics::background::Map::filter_invalid();
   m_map.visit_tiles(
     [this, &key_lambda, &weight_lambda, &passes](auto &&tiles)
     {
@@ -437,6 +437,61 @@ void
     },
     [](const auto &key, const auto &)
     { return static_cast<std::uint8_t>(1U << (3U - std::get<2>(key))); });
+}
+
+
+void
+  map_sprite::compact2() const
+{
+  compact_generic(
+    [](const auto &tile)
+    {
+      return std::make_tuple(
+        static_cast<std::uint8_t>(3U - (tile.depth().raw() & 3U)),
+        tile.texture_id(),
+        tile.source_y(),
+        tile.source_x(),
+        tile.palette_id());
+    },
+    [](const auto &key, const auto &)
+    { return static_cast<std::uint8_t>(1U << (3U - std::get<0>(key))); });
+}
+
+void
+  map_sprite::flatten_bpp() const
+{
+  m_map.visit_tiles(
+    [](auto &tiles)
+    {
+      std::ranges::transform(tiles,
+        tiles.begin(),
+        [](const auto tile)
+        {
+          if (filter_invalid(tile))
+          {
+            return tile.with_depth(4_bpp);
+          }
+          return tile;
+        });
+    });
+}
+void
+  map_sprite::flatten_palette() const
+{
+  m_map.visit_tiles(
+    [](auto &tiles)
+    {
+      std::ranges::transform(tiles,
+        tiles.begin(),
+        [](const auto tile)
+        {
+          if (filter_invalid(tile))
+          {
+            return tile.with_palette_id(0);
+          }
+          return tile;
+        });
+    });
 }
 
 std::size_t
@@ -716,6 +771,10 @@ void
           return;
         }
         if (fail_filter(tile))
+        {
+          return;
+        }
+        if(!filter_invalid(tile))
         {
           return;
         }

@@ -157,9 +157,28 @@ void
       else if (map_test())
       {
         checkbox_map_swizzle();
-        if(ImGui::Button("Compact"))
+        format_imgui_text("{}", "Compact: ");
+        ImGui::SameLine();
+        if (ImGui::Button("Rows"))
         {
           m_map_sprite.compact();
+        }
+        ImGui::SameLine();
+        if (ImGui::Button("All"))
+        {
+          m_map_sprite.compact2();
+        }
+        ImGui::SameLine();
+        format_imgui_text("{}", "Flatten: ");
+        ImGui::SameLine();
+        if (ImGui::Button("BPP"))
+        {
+          m_map_sprite.flatten_bpp();
+        }
+        ImGui::SameLine();
+        if (ImGui::Button("Palette"))
+        {
+          m_map_sprite.flatten_palette();
         }
         if (ImGui::CollapsingHeader(filter_title))
         {

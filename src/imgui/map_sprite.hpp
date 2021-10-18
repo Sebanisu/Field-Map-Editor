@@ -110,6 +110,12 @@ public:
     max_x_for_saved() const;
   void
     compact() const;
+  void
+    compact2() const;
+  void
+    flatten_bpp() const;
+  void
+    flatten_palette() const;
 
 
 private:
