@@ -283,7 +283,6 @@ void
   {
     if (m_draw_swizzle)
     {
-      using tile_type = std::decay_t<decltype(tile)>;
       return static_cast<uint32_t>(
         tile.source_x()
         + tile.texture_id() * tile_type::texture_page_width(4_bpp));
@@ -353,7 +352,7 @@ template<typename key_lambdaT, typename weight_lambdaT>
 {
   static constexpr auto tile_size = 16U;
   m_map.visit_tiles(
-    [this, &key_lambda, &weight_lambda, &passes](auto &&tiles)
+    [&key_lambda, &weight_lambda, &passes](auto &&tiles)
     {
       for (int pass = passes; pass != 0;
            --pass)// at least 2 passes needed as things might get shifted to
@@ -746,7 +745,7 @@ void
   map_sprite::for_all_tiles(auto &&lambda) const
 {
   duel_visitor(
-    [&lambda, this](auto const &tiles_const, auto &&tiles)
+    [&lambda,this](auto const &tiles_const, auto &&tiles)
     {
       for_all_tiles(tiles_const,
         std::forward<decltype(tiles)>(tiles),
