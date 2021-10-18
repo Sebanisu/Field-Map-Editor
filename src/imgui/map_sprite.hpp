@@ -207,9 +207,10 @@ private:
       std::shared_ptr<std::array<sf::Texture, MAX_TEXTURES>> &ret,
       open_viii::graphics::BPPT                               bpp,
       uint8_t                                                 palette) const;
-  void
-    compact_generic(auto &&key_lambda,
-      auto               &&weight_lambda,
-      const int            passes = 2) const;
+  template<typename key_lambdaT, typename weight_lambdaT>
+  [[maybe_unused]] void
+    compact_generic(key_lambdaT &&key_lambda,
+      weight_lambdaT            &&weight_lambda,
+      const int                   passes = 2) const;
 };
 #endif// MYPROJECT_MAP_SPRITE_HPP

@@ -151,6 +151,7 @@ void
         // std::lock_guard<std::mutex> lock(mutex_texture);
         texture->create(m_mim.get_width(bppt), m_mim.get_height());
         texture->setSmooth(false);
+        texture->generateMipmap();
         texture->update(reinterpret_cast<const sf::Uint8 *>(colors.data()));
       },
       &(ret->at(pos)),
@@ -207,6 +208,8 @@ void
       const auto &path = *(filtered_paths.begin());
       fmt::print("{}\n", path.string());
       ret->at(i).loadFromFile(path.string());
+      ret->at(i).setSmooth(false);
+      ret->at(i).generateMipmap();
     }
   }
 }
@@ -340,34 +343,37 @@ std::uint8_t
       return std::uint8_t(255U);
     });
 }
-void
-  map_sprite::compact() const
+template<typename key_lambdaT, typename weight_lambdaT>
+[[maybe_unused]] void
+  map_sprite::compact_generic(key_lambdaT &&key_lambda,
+    weight_lambdaT                        &&weight_lambda,
+    const int                               passes) const
 {
   static constexpr auto tile_size = 16U;
+  static constexpr auto filter_invalid =
+    open_viii::graphics::background::Map::filter_invalid();
   m_map.visit_tiles(
-    [](auto &&tiles)
+    [this, &key_lambda, &weight_lambda, &passes](auto &&tiles)
     {
-      for (int pass = 2; pass != 0;
+      for (int pass = passes; pass != 0;
            --pass)// at least 2 passes needed as things might get shifted to
                   // other texture pages and then the keys are less valuable.
       {
         using tileT =
           std::decay_t<typename std::decay_t<decltype(tiles)>::value_type>;
-        using keyT = std::tuple<decltype(tileT{}.texture_id()),
-          decltype(tileT{}.source_y()),
-          std::uint8_t,
-          decltype(tileT{}.source_x()),
-          decltype(tileT{}.palette_id())>;
+        using keyT = decltype(key_lambda(tileT{}));
         std::map<keyT, std::vector<tileT *>> pointers{};
+
+
         std::ranges::for_each(tiles,
-          [&pointers](tileT &tile)
+          [&pointers, &key_lambda](tileT &tile)
           {
+            if (!filter_invalid(tile))
+            {
+              return;
+            }
             tileT *tp  = &tile;
-            keyT   key = { tile.texture_id(),
-              tile.source_y(),
-              static_cast<std::uint8_t>(3U - (tile.depth().raw() & 3U)),
-              tile.source_x(),
-              tile.palette_id() };
+            keyT   key = key_lambda(tile);
             if (pointers.contains(key))
             {
               pointers.at(key).push_back(tp);
@@ -383,8 +389,7 @@ void
         std::size_t  row_weight = {};
         for (auto &[key, tps] : pointers)
         {
-          const auto weight =
-            static_cast<std::uint8_t>(1U << (3U - std::get<2>(key)));
+          const auto weight = weight_lambda(key, tps);
 
           if (std::cmp_greater_equal(col, tile_size)
               || std::cmp_greater_equal(row_weight, tile_size)
@@ -417,6 +422,21 @@ void
       }
     });
   update_render_texture();
+}
+void
+  map_sprite::compact() const
+{
+  compact_generic(
+    [](const auto &tile)
+    {
+      return std::make_tuple(tile.texture_id(),
+        tile.source_y(),
+        static_cast<std::uint8_t>(3U - (tile.depth().raw() & 3U)),
+        tile.source_x(),
+        tile.palette_id());
+    },
+    [](const auto &key, const auto &)
+    { return static_cast<std::uint8_t>(1U << (3U - std::get<2>(key))); });
 }
 
 std::size_t
@@ -815,6 +835,8 @@ void
   {
     local_draw(*m_render_texture, sf::RenderStates::Default);
     m_render_texture->display();
+    m_render_texture->setSmooth(false);
+    m_render_texture->generateMipmap();
   }
 }
 void
