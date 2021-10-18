@@ -108,7 +108,8 @@ public:
       const std::uint8_t                 &texture_page);
   std::uint8_t
     max_x_for_saved() const;
-  void compact() const;
+  void
+    compact() const;
 
 
 private:
@@ -132,7 +133,7 @@ private:
   mutable grid                               m_grid                        = {};
   grid                                       m_texture_page_grid           = {};
   std::vector<std::size_t>                   m_saved_indicies              = {};
-  mutable std::uint32_t                      m_scale                       = {1};
+  mutable std::uint32_t                      m_scale = { 1 };
 
   grid
     get_grid() const;
@@ -145,8 +146,7 @@ private:
   [[nodiscard]] open_viii::graphics::background::Mim
     get_mim() const;
   open_viii::graphics::background::Map
-    get_map(std::string *out_path    = nullptr,
-      bool               shift       = true) const;
+    get_map(std::string *out_path = nullptr, bool shift = true) const;
   [[nodiscard]] colors_type
     get_colors(open_viii::graphics::BPPT bpp, std::uint8_t palette) const;
   [[nodiscard]] std::size_t
@@ -207,5 +207,9 @@ private:
       std::shared_ptr<std::array<sf::Texture, MAX_TEXTURES>> &ret,
       open_viii::graphics::BPPT                               bpp,
       uint8_t                                                 palette) const;
+  void
+    compact_generic(auto &&key_lambda,
+      auto               &&weight_lambda,
+      const int            passes = 2) const;
 };
 #endif// MYPROJECT_MAP_SPRITE_HPP
