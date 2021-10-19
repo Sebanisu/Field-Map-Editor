@@ -770,14 +770,6 @@ void
       [this, &states, &target, &z, &drew, &pupu_map](
         [[maybe_unused]] const auto &tile_const, const auto &tile)
       {
-        if (tile.z() != z)
-        {
-          return;
-        }
-        if (fail_filter(tile))
-        {
-          return;
-        }
         if (m_filters.pupu.enabled())
         {
           const auto get_pupu = [&tile, &pupu_map]()
@@ -803,6 +795,14 @@ void
           {
             return;
           }
+        }
+        if (tile.z() != z)
+        {
+          return;
+        }
+        if (fail_filter(tile))
+        {
+          return;
         }
         if (!filter_invalid(tile_const))
         {
