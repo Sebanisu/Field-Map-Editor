@@ -6,6 +6,7 @@
 #define MYPROJECT_FILTER_HPP
 #include "open_viii/graphics/background/BlendModeT.hpp"
 #include "open_viii/graphics/BPPT.hpp"
+#include "PupuID.hpp"
 #include <cstdint>
 #include <filesystem>
 #include <fmt/format.h>
@@ -86,6 +87,7 @@ public:
 };
 struct filters
 {
+  filter<PupuID>                                      pupu            = {};
   filter<std::uint16_t>                               z               = {};
   filter<std::uint8_t>                                palette         = {};
   filter<std::uint8_t>                                animation_id    = {};

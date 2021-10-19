@@ -59,18 +59,17 @@ public:
   }
 
   [[nodiscard]] auto
-      get_file_paths(const std::filesystem::path& field_root,
-          std::uint8_t                              texture_page,
-          std::string_view                          ext = m_ext) const
+    get_file_paths(const std::filesystem::path &field_root,
+      std::uint8_t                              texture_page,
+      std::string_view                          ext = m_ext) const
   {
-      return std::array{ 
-        field_root
-          / fmt::format("{}_{}_{}{}",
-            m_field_name,
-            open_viii::LangCommon::to_string(m_coo),
-            texture_page,
-            ext),
-        field_root / fmt::format("{}_{}{}", m_field_name, texture_page, ext) };
+    return std::array{ field_root
+                         / fmt::format("{}_{}_{}{}",
+                           m_field_name,
+                           open_viii::LangCommon::to_string(m_coo),
+                           texture_page,
+                           ext),
+      field_root / fmt::format("{}_{}{}", m_field_name, texture_page, ext) };
   }
 
   [[nodiscard]] auto

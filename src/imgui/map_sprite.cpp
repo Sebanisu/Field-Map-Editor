@@ -127,7 +127,7 @@ std::shared_ptr<std::array<sf::Texture, map_sprite::MAX_TEXTURES>>
     const auto size = texture.getSize();
     if (size.x != 0)
     {
-      //fmt::print("\ttex: {:3} - ({:4}, {:4})\n", i++, size.x, size.y);
+      // fmt::print("\ttex: {:3} - ({:4}, {:4})\n", i++, size.x, size.y);
     }
     else
     {
@@ -762,10 +762,12 @@ void
   bool drew = false;
   wait_for_futures();
   target.clear(sf::Color::Transparent);
+  std::map<std::tuple<PupuID, std::int32_t, std::int32_t>, std::uint8_t>
+    pupu_map{};
   for (const auto &z : m_all_unique_values_and_strings.z().values())
   {
     for_all_tiles(
-      [this, &states, &target, &z, &drew](
+      [this, &states, &target, &z, &drew, &pupu_map](
         [[maybe_unused]] const auto &tile_const, const auto &tile)
       {
         if (tile.z() != z)
@@ -775,6 +777,32 @@ void
         if (fail_filter(tile))
         {
           return;
+        }
+        if (m_filters.pupu.enabled())
+        {
+          const auto get_pupu = [&tile, &pupu_map]()
+          {
+            const auto tuple = std::make_tuple(PupuID(tile.layer_id(),
+                                                 tile.blend_mode(),
+                                                 tile.animation_id(),
+                                                 tile.animation_state()),
+              std::int32_t{ tile.x() },
+              std::int32_t{ tile.y() });
+
+            if (pupu_map.contains(tuple))
+            {
+              ++(pupu_map.at(tuple));
+            }
+            else
+            {
+              pupu_map.emplace(tuple, std::uint8_t{});
+            }
+            return std::get<0>(tuple) + pupu_map.at(tuple);
+          };
+          if (m_filters.pupu.value() != get_pupu())
+          {
+            return;
+          }
         }
         if (!filter_invalid(tile_const))
         {
@@ -818,7 +846,7 @@ void
         // apply the tileset texture
 
         // std::lock_guard<std::mutex> lock(mutex_texture);
-        //fmt::print("({}, {})\t", raw_texture_size.x, raw_texture_size.y);
+        // fmt::print("({}, {})\t", raw_texture_size.x, raw_texture_size.y);
         // draw the vertex array
         target.draw(quad.data(), quad.size(), sf::TriangleStrip, states);
         drew = true;
@@ -1042,14 +1070,14 @@ void
           break;
         }
       }
-      //fmt::print(
-      //  "{}, ({}, {})\n", m_scale, width() * m_scale, height() * m_scale);
+      // fmt::print(
+      //   "{}, ({}, {})\n", m_scale, width() * m_scale, height() * m_scale);
       m_render_texture->create(width() * m_scale, height() * m_scale);
     }
     else
     {
       m_scale = 1;
-      //fmt::print("{}, ({}, {})\n", m_scale, width(), height());
+      // fmt::print("{}, ({}, {})\n", m_scale, width(), height());
       m_render_texture->create(width(), height());
     }
   }
@@ -1126,6 +1154,8 @@ bool
          || test(m_filters.layer_id, tile.layer_id())
          || test(m_filters.texture_page_id, tile.texture_id())
          || test(m_filters.z, tile.z());
+
+  // TODO need to generate pupus for this map so I get the offset.
 #else
   if (m_filters.palette.enabled() && m_filters.bpp.value() != 16_bpp)
   {
@@ -1396,22 +1426,3 @@ void
     texture.getTexture().copyToImage().saveToFile(file_path.string());
   }
 }
-
-// PupuID = uint32_t(0U + (tile.layer_id() <<
-// 24U)+(static_cast<std::uint32_t>(tile.blend_mode()) << 20U) +
-// (tile.animation_id() <<12U)+ (tile.animation_state()<<4U))
-
-//std::transform(Sprites.cbegin(), Sprites.cend() - 1, Sprites.cbegin() + 1, Sprites.begin()+1, [](const Sprite& first, Sprite second) {
-//    static constexpr auto mask = 0xFFFFFFF0U;
-//    if ((first.ID & mask) == (second.ID & mask))
-//    {
-//      second.ID = first.ID + 1;
-//    }
-//    return second;
-//  });
-
-//IDs.reserve(Sprites.size());
-//std::transform(Sprites.cbegin(), Sprites.cend(), std::back_inserter(IDs), [](const Sprite& sprite) {return sprite.ID; });
-//std::sort(IDs.begin(), IDs.end());
-//auto it = std::unique(IDs.begin(), IDs.end());
-//IDs.erase(it, IDs.end());

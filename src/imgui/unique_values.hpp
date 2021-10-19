@@ -6,6 +6,7 @@
 #define MYPROJECT_UNIQUE_VALUES_HPP
 #include "open_viii/graphics/background/BlendModeT.hpp"
 #include "open_viii/graphics/BPPT.hpp"
+#include "PupuID.hpp"
 #include <concepts>
 #include <cstdint>
 #include <fmt/format.h>
@@ -19,18 +20,22 @@ struct unique_values_and_strings
 {
 private:
   static constexpr auto default_filter_lambda = [](auto &&) { return true; };
+  static constexpr auto kite                  = [](auto &&, auto &&ret)
+  { return std::forward<decltype(ret)>(ret); };
 
 public:
   unique_values_and_strings() = default;
   template<std::ranges::range tilesT,
     typename lambdaT,
     typename sortT   = std::less<>,
-    typename filterT = decltype(default_filter_lambda)>
+    typename filterT = decltype(default_filter_lambda),
+    typename secondT = decltype(kite)>
   explicit unique_values_and_strings(const tilesT &tiles,
     lambdaT                                      &&lambda,
-    sortT                                        &&sort   = {},
-    filterT                                      &&filter = {})
-    : m_values(get_values(tiles, lambda, sort, filter))
+    sortT                                        &&sort        = {},
+    filterT                                      &&filter      = {},
+    secondT                                      &&second_pass = {})
+    : m_values(second_pass(tiles, get_values(tiles, lambda, sort, filter)))
     , m_strings(get_strings(m_values))
   {
   }
@@ -122,10 +127,33 @@ public:
   }
   template<std::ranges::range tilesT>
   explicit all_unique_values_and_strings(const tilesT &tiles)
-    : m_z(
+    : m_pupu(
       tiles,
-      [](const auto &tile) { return tile.z(); },
-      std::greater<>{})
+      [this](const auto &tile)
+      {
+        const auto tuple = std::make_tuple(PupuID(tile.layer_id(),
+                                             tile.blend_mode(),
+                                             tile.animation_id(),
+                                             tile.animation_state()),
+          std::int32_t{ tile.x() },
+          std::int32_t{ tile.y() });
+
+        if (pupu_map.contains(tuple))
+        {
+          ++(pupu_map.at(tuple));
+        }
+        else
+        {
+          pupu_map.emplace(tuple, std::uint8_t{});
+        }
+        return std::get<0>(tuple) + pupu_map.at(tuple);
+      },
+      [](const PupuID &left, const PupuID &right)
+      { return left.raw() < right.raw(); })
+    , m_z(
+        tiles,
+        [](const auto &tile) { return tile.z(); },
+        std::greater<>{})
     , m_layer_id(tiles, [](const auto &tile) { return tile.layer_id(); })
     , m_texture_page_id(tiles,
         [](const auto &tile) { return tile.texture_id(); })
@@ -194,8 +222,16 @@ public:
   {
     return m_palette;
   }
+  [[nodiscard]] const auto &
+    pupu() const
+  {
+    return m_pupu;
+  }
 
 private:
+  std::map<std::tuple<PupuID, std::int32_t, std::int32_t>, std::uint8_t>
+                                           pupu_map          = {};
+  unique_values_and_strings<PupuID>        m_pupu            = {};
   unique_values_and_strings<std::uint16_t> m_z               = {};
   unique_values_and_strings<std::uint8_t>  m_layer_id        = {};
   unique_values_and_strings<std::uint8_t>  m_texture_page_id = {};

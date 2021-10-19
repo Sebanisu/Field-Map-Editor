@@ -182,6 +182,7 @@ void
         }
         if (ImGui::CollapsingHeader(filter_title))
         {
+          combo_pupu();
           combo_filtered_bpps();
           combo_filtered_palettes();
           combo_blend_modes();
@@ -1076,6 +1077,22 @@ static bool
     (filter.update(values[current_idx]).enabled() && (old != current_idx))
     || changed;
   return changed;
+}
+
+void
+  gui::combo_pupu() const
+{
+  const auto &pair = m_map_sprite.uniques().pupu();
+  if (generic_combo(
+        m_id,
+        "Pupu ID",
+        [&pair]() { return pair.values(); },
+        [&pair]() { return pair.strings(); },
+        [this]() -> auto & { return m_map_sprite.filter().pupu; }))
+  {
+    m_map_sprite.update_render_texture();
+    m_changed = true;
+  }
 }
 void
   gui::combo_filtered_palettes() const

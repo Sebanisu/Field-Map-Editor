@@ -8,8 +8,8 @@
 #include "events.hpp"
 #include "filebrowser.hpp"
 #include "grid.hpp"
-#include <cstdint>
 #include "upscales.hpp"
+#include <cstdint>
 #include <SFML/Graphics/RenderWindow.hpp>
 struct gui
 {
@@ -151,6 +151,8 @@ private:
     menu_bar() const;
   void
     slider_xy_sprite(auto &sprite) const;
+  void
+    combo_pupu() const;
   void
     combo_palette() const;
   void
