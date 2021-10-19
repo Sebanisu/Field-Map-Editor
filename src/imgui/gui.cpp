@@ -586,6 +586,10 @@ void
       menuitem_save_texture(save_texture_path(), mim_test() || map_test());
       menuitem_save_mim_file(m_mim_sprite.mim_filename(), mim_test());
       menuitem_save_map_file(m_map_sprite.map_filename(), map_test());
+      if(ImGui::MenuItem("Save All Texture Changes",nullptr,false,true))
+      {
+        m_map_sprite.save_new_textures(std::filesystem::current_path());
+      }
       ImGui::EndMenu();
     }
     if (ImGui::BeginMenu("Grid"))

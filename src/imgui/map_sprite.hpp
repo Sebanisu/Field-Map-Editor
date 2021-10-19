@@ -24,12 +24,10 @@ struct map_sprite
   : public sf::Drawable
   , public sf::Transformable
 {
-
-
 public:
-  map_sprite() = default;
-  all_unique_values_and_strings
-    get_all_unique_values_and_strings();
+  using color_type  = open_viii::graphics::Color32RGBA;
+  using colors_type = std::vector<color_type>;
+  map_sprite()      = default;
   map_sprite(std::shared_ptr<open_viii::archive::FIFLFS<false>> field,
     open_viii::LangT                                            coo,
     bool                                                        draw_swizzle,
@@ -116,21 +114,24 @@ public:
     flatten_bpp() const;
   void
     flatten_palette() const;
-
+  void
+    save_new_textures(const std::filesystem::path &path) const;
 
 private:
-  mutable std::vector<std::future<void>>             m_futures      = {};
-  mutable bool                                       m_draw_swizzle = { false };
-  mutable filters                                    m_filters      = {};
-  std::shared_ptr<open_viii::archive::FIFLFS<false>> m_field        = {};
-  open_viii::LangT                                   m_coo          = {};
-  ::upscales                                         m_upscales     = {};
-  open_viii::graphics::background::Mim               m_mim          = {};
-  mutable std::string                                m_map_path     = {};
-  open_viii::graphics::background::Map               m_map_const    = {};
-  mutable open_viii::graphics::background::Map       m_map          = {};
-  all_unique_values_and_strings m_all_unique_values_and_strings     = {};
-  open_viii::graphics::Rectangle<std::uint32_t> m_canvas            = {};
+  mutable std::vector<std::future<void>> m_futures               = {};
+  mutable bool                           m_draw_swizzle          = { false };
+  mutable bool    m_disable_texture_page_shift                   = { false };
+  mutable bool    m_disable_blends                               = { false };
+  mutable filters m_filters                                      = {};
+  std::shared_ptr<open_viii::archive::FIFLFS<false>> m_field     = {};
+  open_viii::LangT                                   m_coo       = {};
+  ::upscales                                         m_upscales  = {};
+  open_viii::graphics::background::Mim               m_mim       = {};
+  mutable std::string                                m_map_path  = {};
+  open_viii::graphics::background::Map               m_map_const = {};
+  mutable open_viii::graphics::background::Map       m_map       = {};
+  all_unique_values_and_strings m_all_unique_values_and_strings  = {};
+  open_viii::graphics::Rectangle<std::uint32_t> m_canvas         = {};
   static constexpr std::size_t                  MAX_TEXTURES =
     16 * 14;// 14*16 for texture page / palette combos. 16*2+1 for palette
             // bpp combos.
@@ -145,10 +146,8 @@ private:
     get_grid() const;
   grid
     get_texture_page_grid() const;
-
-
-  using color_type  = open_viii::graphics::Color32RGBA;
-  using colors_type = std::vector<color_type>;
+  all_unique_values_and_strings
+    get_all_unique_values_and_strings() const;
   [[nodiscard]] open_viii::graphics::background::Mim
     get_mim() const;
   open_viii::graphics::background::Map
@@ -188,7 +187,7 @@ private:
 
   static const sf::BlendMode &
     GetBlendSubtract();
-  void
+  [[nodiscard]] bool
     local_draw(sf::RenderTarget &target, sf::RenderStates states) const;
   bool
                         fail_filter(auto &tile) const;
@@ -217,6 +216,15 @@ private:
   [[maybe_unused]] void
     compact_generic(key_lambdaT &&key_lambda,
       weight_lambdaT            &&weight_lambda,
-      const int                   passes = 2) const;
+      int                         passes = 2) const;
+
+  template<const char * pattern>
+  void
+    save_specific(const std::filesystem::path &path,
+      const std::string                       &field_name,
+      std::uint32_t                                 height,
+      std::uint8_t                             texture_page,
+      std::optional<open_viii::graphics::BPPT> bpp     = std::nullopt,
+      std::optional<std::uint8_t>              palette = std::nullopt) const;
 };
 #endif// MYPROJECT_MAP_SPRITE_HPP

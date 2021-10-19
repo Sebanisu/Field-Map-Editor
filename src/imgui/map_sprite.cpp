@@ -68,7 +68,7 @@ std::size_t
     }
     return MAX_TEXTURES - 1;// 16bpp doesn't have palettes.
   }
-  const size_t j = texture_page * 16 + palette;
+  const size_t j = static_cast<size_t>(texture_page) * 16U + palette;
   if (m_texture->at(j).getSize().y == 0)
   {
     return MAX_TEXTURES - 13U + texture_page;
@@ -283,9 +283,11 @@ void
   {
     if (m_draw_swizzle)
     {
-      return static_cast<uint32_t>(
-        tile.source_x()
-        + tile.texture_id() * tile_type::texture_page_width(4_bpp));
+      if (!m_disable_texture_page_shift)
+        return static_cast<uint32_t>(
+          tile.source_x()
+          + tile.texture_id() * tile_type::texture_page_width(4_bpp));
+      return static_cast<uint32_t>(tile.source_x());
     }
     return static_cast<uint32_t>(tile.x());
   }();
@@ -745,7 +747,7 @@ void
   map_sprite::for_all_tiles(auto &&lambda) const
 {
   duel_visitor(
-    [&lambda,this](auto const &tiles_const, auto &&tiles)
+    [&lambda, this](auto const &tiles_const, auto &&tiles)
     {
       for_all_tiles(tiles_const,
         std::forward<decltype(tiles)>(tiles),
@@ -753,16 +755,17 @@ void
     });
 }
 
-void
+[[nodiscard]] bool
   map_sprite::local_draw(sf::RenderTarget &target,
     sf::RenderStates                       states) const
 {
+  bool drew = false;
   wait_for_futures();
   target.clear(sf::Color::Transparent);
   for (const auto &z : m_all_unique_values_and_strings.z().values())
   {
     for_all_tiles(
-      [this, &states, &target, &z](
+      [this, &states, &target, &z, &drew](
         [[maybe_unused]] const auto &tile_const, const auto &tile)
       {
         if (tile.z() != z)
@@ -773,7 +776,7 @@ void
         {
           return;
         }
-        if(!filter_invalid(tile))
+        if (!filter_invalid(tile_const))
         {
           return;
         }
@@ -786,37 +789,42 @@ void
         auto       quad =
           get_triangle_strip(draw_size, texture_size, tile_const, tile);
         states.blendMode = sf::BlendAlpha;
-        if (tile.blend_mode() == BlendModeT::add)
+        if (!m_disable_blends)
         {
-          states.blendMode = sf::BlendAdd;
-        }
-        else if (tile.blend_mode() == BlendModeT::half_add)
-        {
-          states.blendMode = sf::BlendAdd;
-          constexpr static std::uint8_t per50 =
-            (std::numeric_limits<std::uint8_t>::max)() / 2U;
-          set_color(quad, { per50, per50, per50, per50 });// 50% alpha
-        }
-        else if (tile.blend_mode() == BlendModeT::quarter_add)
-        {
-          states.blendMode = sf::BlendAdd;
-          constexpr static std::uint8_t per25 =
-            (std::numeric_limits<std::uint8_t>::max)() / 4U;
-          set_color(quad, { per25, per25, per25, per25 });// 25% alpha
-        }
-        else if (tile.blend_mode() == BlendModeT::subtract)
-        {
-          states.blendMode = GetBlendSubtract();
-          // states.blendMode = sf::BlendMultiply;
+          if (tile.blend_mode() == BlendModeT::add)
+          {
+            states.blendMode = sf::BlendAdd;
+          }
+          else if (tile.blend_mode() == BlendModeT::half_add)
+          {
+            states.blendMode = sf::BlendAdd;
+            constexpr static std::uint8_t per50 =
+              (std::numeric_limits<std::uint8_t>::max)() / 2U;
+            set_color(quad, { per50, per50, per50, per50 });// 50% alpha
+          }
+          else if (tile.blend_mode() == BlendModeT::quarter_add)
+          {
+            states.blendMode = sf::BlendAdd;
+            constexpr static std::uint8_t per25 =
+              (std::numeric_limits<std::uint8_t>::max)() / 4U;
+            set_color(quad, { per25, per25, per25, per25 });// 25% alpha
+          }
+          else if (tile.blend_mode() == BlendModeT::subtract)
+          {
+            states.blendMode = GetBlendSubtract();
+            // states.blendMode = sf::BlendMultiply;
+          }
         }
         // apply the tileset texture
 
         // std::lock_guard<std::mutex> lock(mutex_texture);
-
+        fmt::print("({}, {})\t", raw_texture_size.x, raw_texture_size.y);
         // draw the vertex array
         target.draw(quad.data(), quad.size(), sf::TriangleStrip, states);
+        drew = true;
       });
   }
+  return drew;
 }
 
 const sf::BlendMode &
@@ -891,7 +899,7 @@ void
   }
   if (!fail())
   {
-    local_draw(*m_render_texture, sf::RenderStates::Default);
+    (void)local_draw(*m_render_texture, sf::RenderStates::Default);
     m_render_texture->display();
     m_render_texture->setSmooth(false);
     m_render_texture->generateMipmap();
@@ -1180,7 +1188,7 @@ bool
 }
 
 all_unique_values_and_strings
-  map_sprite::get_all_unique_values_and_strings()
+  map_sprite::get_all_unique_values_and_strings() const
 {
   return m_map.visit_tiles(
     [](const auto &tiles) { return all_unique_values_and_strings(tiles); });
@@ -1260,3 +1268,131 @@ const all_unique_values_and_strings &
 //   }
 //   return result;
 // }
+//
+// Each image is a texture page use the scale of the largest
+// source_texture_height/256. The texture is square. or you could look at it as
+// 16x16 tiles. Though I'd rather keep the same dimensions as the original
+// image. If you have overlapping palettes you can use texture page and palette.
+// Though for successful drawing this shouldn't really be usable. Unless
+// demaster fixes the palette filtering this really isn't 100% helpful though it
+// does keep the tiles from being lost.
+//
+// Add option to Menu Save "Save new textures".
+// Pop up a directory picker dialog box. So They can choose a directory to save
+// the images too. Pre populated with the 2 letter prefix\fieldname. If path
+// doesn't exist create it. create blank textures same dims as existing textures
+// height in a square. draw all tiles to that texture that exist with only alpha
+// blending no special sauce. With the matching texture page and or palette.
+// Save to png with {fieldname}_{texture_page}_{palette}.png or
+// {fieldname}_{texture_page}.png Do this till all the textures are created. Add
+// detection for overlapping palettes and make sure to place them into other
+// files. map - save changes #48 - this should be done at the same time
+// especially when map has changed.
+void
+  map_sprite::save_new_textures(const std::filesystem::path &path) const
+{
+  // assert(std::filesystem::path.is_directory(path));
+  const std::string     field_name             = { m_field->get_base_name() };
+  static constexpr char pattern_texture_page[] = { "{}_{}.png" };
+  static constexpr char pattern_texture_page_palette[] = { "{}_{}_{}.png" };
+
+  const auto            unique_values = get_all_unique_values_and_strings();
+  const auto           &unique_texture_page_ids =
+    unique_values.texture_page_id().values();
+  const auto &unique_bpp       = unique_values.bpp().values();
+  const auto  backup_filters   = m_filters;
+  const auto  backup_swizzle   = m_draw_swizzle;
+  m_filters                    = {};
+  m_filters.upscale            = backup_filters.upscale;
+  m_draw_swizzle               = true;
+  m_disable_texture_page_shift = true;
+  m_disable_blends             = true;
+  auto transform_range         = *m_texture
+                         | std::views::transform([](const sf::Texture &texture)
+                           { return texture.getSize().y; });
+  auto max_height_it =
+    std::max_element(transform_range.begin(), transform_range.end());
+  std::uint32_t height = {};
+  if (max_height_it != transform_range.end())
+  {
+    height = *max_height_it;
+  }
+  else
+  {
+    height = 256U;
+  }
+  const auto backup_scale = m_scale;
+  m_scale                 = height / 256U;
+  if (m_scale == 0U)
+    m_scale = 1U;
+  bool map_test =
+    unique_bpp.size() == 1U
+    && unique_values.palette().at(unique_bpp.front()).values().size() <= 1U;
+  for (const auto &texture_page : unique_texture_page_ids)
+  {
+    if (!map_test)
+    {
+      for (const auto &bpp : unique_bpp)
+      {
+        const auto &unique_palette = unique_values.palette().at(bpp).values();
+        for (const auto &palette : unique_palette)
+        {
+          save_specific<pattern_texture_page_palette>(
+            path, field_name, height, texture_page, bpp, palette);
+        }
+      }
+    }
+    save_specific<pattern_texture_page>(path, field_name, height, texture_page);
+  }
+  m_filters                    = backup_filters;
+  m_draw_swizzle               = backup_swizzle;
+  m_disable_texture_page_shift = false;
+  m_disable_blends             = false;
+  m_scale                      = backup_scale;
+}
+template<const char *pattern>
+void
+  map_sprite::save_specific(const std::filesystem::path &path,
+    const std::string                                   &field_name,
+    std::uint32_t                                        height,
+    std::uint8_t                                         texture_page,
+    std::optional<BPPT>                                  bpp,
+    std::optional<std::uint8_t>                          palette) const
+{
+  sf::RenderTexture texture;
+  texture.create(height, height);
+
+  std::string filename = [&]()
+  {
+    if (palette.has_value())
+    {
+      return fmt::format(pattern, field_name, texture_page, *palette);
+    }
+    return fmt::format(pattern, field_name, texture_page);
+  }();
+  if (palette.has_value())
+  {
+    m_filters.palette.update(*palette).enable();
+  }
+  else
+  {
+    m_filters.palette.disable();
+  }
+  if (bpp.has_value())
+  {
+    m_filters.bpp.update(*bpp).enable();
+  }
+  else
+  {
+    m_filters.bpp.disable();
+  }
+  m_filters.texture_page_id.update(texture_page).enable();
+  if (local_draw(texture, sf::RenderStates::Default))
+  {
+    const auto file_path = path / filename;
+    texture.display();
+    texture.setSmooth(false);
+    texture.generateMipmap();
+    texture.getTexture().copyToImage().saveToFile(file_path.string());
+  }
+}
