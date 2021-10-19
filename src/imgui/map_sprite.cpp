@@ -762,10 +762,10 @@ void
   bool drew = false;
   wait_for_futures();
   target.clear(sf::Color::Transparent);
-  std::map<std::tuple<PupuID, std::int32_t, std::int32_t>, std::uint8_t>
-    pupu_map{};
   for (const auto &z : m_all_unique_values_and_strings.z().values())
   {
+    std::map<std::tuple<PupuID, std::int32_t, std::int32_t>, std::uint8_t>
+      pupu_map{};
     for_all_tiles(
       [this, &states, &target, &z, &drew, &pupu_map](
         [[maybe_unused]] const auto &tile_const, const auto &tile)
