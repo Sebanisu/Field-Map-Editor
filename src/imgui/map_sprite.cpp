@@ -772,14 +772,14 @@ void
       {
         if (m_filters.pupu.enabled())
         {
-          const auto get_pupu = [&tile, &pupu_map]()
+          const auto get_pupu = [&tile_const, &pupu_map]()
           {
-            const auto tuple = std::make_tuple(PupuID(tile.layer_id(),
-                                                 tile.blend_mode(),
-                                                 tile.animation_id(),
-                                                 tile.animation_state()),
-              std::int32_t{ tile.x() },
-              std::int32_t{ tile.y() });
+            const auto tuple = std::make_tuple(PupuID(tile_const.layer_id(),
+                                                 tile_const.blend_mode(),
+                                                 tile_const.animation_id(),
+                                                 tile_const.animation_state()),
+              std::int32_t{ tile_const.x() },
+              std::int32_t{ tile_const.y() });
 
             if (pupu_map.contains(tuple))
             {
@@ -1318,6 +1318,67 @@ const all_unique_values_and_strings &
 // detection for overlapping palettes and make sure to place them into other
 // files. map - save changes #48 - this should be done at the same time
 // especially when map has changed.
+template<typename T>
+struct setting_backup
+{
+private:
+  const T    m_backup;
+  T &m_value;
+
+public:
+  const T &
+    backup() const
+  {
+    return m_backup;
+  }
+  T &
+    value() const
+  {
+    return m_value;
+  }
+  auto &
+    operator=(const T &in_value) const
+  {
+    m_value = in_value;
+    return *this;
+  }
+  bool
+    operator==(const T &in_value) const
+  {
+    return m_value == in_value;
+  }
+  setting_backup(T &in_value)
+    : m_backup(in_value)
+    , m_value(in_value)
+  {
+  }
+  ~setting_backup()
+  {
+    m_value = m_backup;
+  }
+};
+struct settings_backup
+{
+public:
+  setting_backup<::filters> filters;
+  setting_backup<bool>      draw_swizzle;
+  setting_backup<bool>      disable_texture_page_shift;
+  setting_backup<bool>      disable_blends;
+  setting_backup<uint32_t>  scale;
+
+  settings_backup(::filters &in_filters,
+    bool                    &in_draw_swizzle,
+    bool                    &in_disable_texture_page_shift,
+    bool                    &in_disable_blends,
+    std::uint32_t           &in_scale)
+    : filters(in_filters)
+    , draw_swizzle(in_draw_swizzle)
+    , disable_texture_page_shift(in_disable_texture_page_shift)
+    , disable_blends(in_disable_blends)
+    , scale(in_scale)
+  {
+  }
+};
 void
   map_sprite::save_new_textures(const std::filesystem::path &path) const
 {
@@ -1329,30 +1390,19 @@ void
   const auto            unique_values = get_all_unique_values_and_strings();
   const auto           &unique_texture_page_ids =
     unique_values.texture_page_id().values();
-  const auto &unique_bpp       = unique_values.bpp().values();
-  const auto  backup_filters   = m_filters;
-  const auto  backup_swizzle   = m_draw_swizzle;
-  m_filters                    = {};
-  m_filters.upscale            = backup_filters.upscale;
-  m_draw_swizzle               = true;
-  m_disable_texture_page_shift = true;
-  m_disable_blends             = true;
-  auto transform_range         = *m_texture
-                         | std::views::transform([](const sf::Texture &texture)
-                           { return texture.getSize().y; });
-  auto max_height_it =
-    std::max_element(transform_range.begin(), transform_range.end());
-  std::uint32_t height = {};
-  if (max_height_it != transform_range.end())
-  {
-    height = *max_height_it;
-  }
-  else
-  {
-    height = 256U;
-  }
-  const auto backup_scale = m_scale;
-  m_scale                 = height / 256U;
+  const auto           &unique_bpp = unique_values.bpp().values();
+  const settings_backup settings(m_filters,
+    m_draw_swizzle,
+    m_disable_texture_page_shift,
+    m_disable_blends,
+    m_scale);
+  settings.filters                    = {};
+  settings.filters.value().upscale    = settings.filters.backup().upscale;
+  settings.draw_swizzle               = true;
+  settings.disable_texture_page_shift = true;
+  settings.disable_blends             = true;
+  uint32_t height                     = get_max_texture_height();
+  settings.scale                      = height / 256U;
   if (m_scale == 0U)
     m_scale = 1U;
   bool map_test =
@@ -1368,37 +1418,94 @@ void
         for (const auto &palette : unique_palette)
         {
           save_specific<pattern_texture_page_palette>(
-            path, field_name, height, texture_page, bpp, palette);
+            path, field_name, height, height, texture_page, bpp, palette);
         }
       }
     }
-    save_specific<pattern_texture_page>(path, field_name, height, texture_page);
+    save_specific<pattern_texture_page>(
+      path, field_name, height, height, texture_page);
   }
-  m_filters                    = backup_filters;
-  m_draw_swizzle               = backup_swizzle;
-  m_disable_texture_page_shift = false;
-  m_disable_blends             = false;
-  m_scale                      = backup_scale;
+}
+
+void
+  map_sprite::save_pupu_textures(const std::filesystem::path &path) const
+{
+  // assert(std::filesystem::path.is_directory(path));
+  const std::string     field_name     = { m_field->get_base_name() };
+  static constexpr char pattern_pupu[] = { "{}_{}.png" };
+
+  const auto &unique_pupu_ids = m_all_unique_values_and_strings.pupu().values();
+  const settings_backup settings(m_filters,
+    m_draw_swizzle,
+    m_disable_texture_page_shift,
+    m_disable_blends,
+    m_scale);
+  settings.filters                    = {};
+  settings.filters.value().upscale    = settings.filters.backup().upscale;
+  settings.draw_swizzle               = true;
+  settings.disable_texture_page_shift = true;
+  settings.disable_blends             = true;
+  // todo maybe draw with blends enabled to transparent black or white.
+  uint32_t tex_height                 = get_max_texture_height();
+  settings.scale                      = tex_height / 256U;
+  const auto canvas                   = m_map.canvas() * m_scale;
+  if (settings.scale == 0U)
+  {
+    settings.scale = 1U;
+  }
+  for (const PupuID &pupu : unique_pupu_ids)
+  {
+    save_specific<pattern_pupu>(
+      path, field_name, canvas.width(), canvas.height(), {}, {}, {}, pupu);
+  }
+}
+uint32_t
+  map_sprite::get_max_texture_height() const
+{
+  auto transform_range = *m_texture
+                         | std::views::transform([](const sf::Texture &texture)
+                           { return texture.getSize().y; });
+  auto max_height_it =
+    std::max_element(transform_range.begin(), transform_range.end());
+  uint32_t tex_height = {};
+  if (max_height_it != transform_range.end())
+  {
+    tex_height = *max_height_it;
+  }
+  else
+  {
+    tex_height = 256U;
+  }
+  return tex_height;
 }
 template<const char *pattern>
 void
   map_sprite::save_specific(const std::filesystem::path &path,
     const std::string                                   &field_name,
+    std::uint32_t                                        width,
     std::uint32_t                                        height,
-    std::uint8_t                                         texture_page,
-    std::optional<BPPT>                                  bpp,
-    std::optional<std::uint8_t>                          palette) const
+    std::optional<std::uint8_t>                          texture_page,
+    std::optional<open_viii::graphics::BPPT>             bpp,
+    std::optional<std::uint8_t>                          palette,
+    std::optional<PupuID>                                pupu) const
 {
-  sf::RenderTexture texture;
-  texture.create(height, height);
-  // todo put language code in filename. because of remaster multilanguage maps.
+  // todo put language code in filename. because of remaster multilanguage
+  // maps.
   std::string filename = [&]()
   {
-    if (palette.has_value())
+    if (texture_page.has_value())
     {
-      return fmt::format(pattern, field_name, texture_page, *palette);
+      if (palette.has_value())
+      {
+        return fmt::format(pattern, field_name, *texture_page, *palette);
+      }
+      return fmt::format(pattern, field_name, *texture_page);
     }
-    return fmt::format(pattern, field_name, texture_page);
+    if (pupu.has_value())
+    {
+      return fmt::format(pattern, field_name, *pupu);
+    }
+    return std::string{};
   }();
   if (palette.has_value())
   {
@@ -1416,7 +1523,25 @@ void
   {
     m_filters.bpp.disable();
   }
-  m_filters.texture_page_id.update(texture_page).enable();
+  if (texture_page.has_value())
+  {
+    m_filters.texture_page_id.update(*texture_page).enable();
+  }
+  else
+  {
+    m_filters.texture_page_id.disable();
+  }
+
+  if (pupu.has_value())
+  {
+    m_filters.pupu.update(*pupu).enable();
+  }
+  else
+  {
+    m_filters.pupu.disable();
+  }
+  sf::RenderTexture texture;
+  texture.create(width, height);
   if (local_draw(texture, sf::RenderStates::Default))
   {
     const auto file_path = path / filename;

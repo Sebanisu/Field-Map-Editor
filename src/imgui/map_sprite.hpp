@@ -116,6 +116,8 @@ public:
     flatten_palette() const;
   void
     save_new_textures(const std::filesystem::path &path) const;
+  void
+    save_pupu_textures(const std::filesystem::path &path) const;
 
 private:
   mutable std::vector<std::future<void>> m_futures               = {};
@@ -218,13 +220,17 @@ private:
       weight_lambdaT            &&weight_lambda,
       int                         passes = 2) const;
 
-  template<const char * pattern>
+  template<const char *pattern>
   void
     save_specific(const std::filesystem::path &path,
       const std::string                       &field_name,
-      std::uint32_t                                 height,
-      std::uint8_t                             texture_page,
-      std::optional<open_viii::graphics::BPPT> bpp     = std::nullopt,
-      std::optional<std::uint8_t>              palette = std::nullopt) const;
+      std::uint32_t                            width,
+      std::uint32_t                            height,
+      std::optional<std::uint8_t>              texture_page = std::nullopt,
+      std::optional<open_viii::graphics::BPPT> bpp          = std::nullopt,
+      std::optional<std::uint8_t>              palette      = std::nullopt,
+      std::optional<PupuID>                    pupu = std::nullopt) const;
+  uint32_t
+    get_max_texture_height() const;
 };
 #endif// MYPROJECT_MAP_SPRITE_HPP
