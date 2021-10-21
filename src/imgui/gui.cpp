@@ -591,6 +591,10 @@ void
       {
         m_map_sprite.save_new_textures(std::filesystem::current_path());
       }
+      if(ImGui::MenuItem("Save Pupu Textures",nullptr,false,true))
+      {
+        m_map_sprite.save_pupu_textures(std::filesystem::current_path());
+      }
       ImGui::EndMenu();
     }
     if (ImGui::BeginMenu("Grid"))

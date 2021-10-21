@@ -730,16 +730,43 @@ void
     auto                              &&tiles,
     auto                              &&lambda) const
 {
+
+  std::map<std::tuple<PupuID, std::int32_t, std::int32_t>, std::uint8_t>
+                      pupu_map{};
+  std::vector<PupuID> pupu_ids = {};
+  pupu_ids.reserve(std::size(tiles_const));
+  const auto get_pupu = [&pupu_map](const auto &tile_const)
+  {
+    const auto tuple = std::make_tuple(PupuID(tile_const.layer_id(),
+                                         tile_const.blend_mode(),
+                                         tile_const.animation_id(),
+                                         tile_const.animation_state()),
+      std::int32_t{ tile_const.x() },
+      std::int32_t{ tile_const.y() });
+
+    if (pupu_map.contains(tuple))
+    {
+      ++(pupu_map.at(tuple));
+    }
+    else
+    {
+      pupu_map.emplace(tuple, std::uint8_t{});
+    }
+    return std::get<0>(tuple) + pupu_map.at(tuple);
+  };
+  std::ranges::transform(tiles_const, std::back_inserter(pupu_ids), get_pupu);
   assert(std::size(tiles_const) == std::size(tiles));
-  auto       tc  = std::crbegin(tiles_const);
-  const auto tce = std::crend(tiles_const);
-  auto       t   = std::rbegin(tiles);
+  auto       tc     = std::crbegin(tiles_const);
+  const auto tce    = std::crend(tiles_const);
+  auto       t      = std::rbegin(tiles);
+  auto       pupu_t = std::rbegin(pupu_ids);
   // const auto te  = std::rend(tiles);
-  for (; /*t != te &&*/ tc != tce; (void)++tc, ++t)
+  for (; /*t != te &&*/ tc != tce; (void)++tc, ++t, ++pupu_t)
   {
     const is_tile auto &tile_const = *tc;
     is_tile auto       &tile       = *t;
-    lambda(tile_const, tile);
+    const PupuID       &pupu_const = *pupu_t;
+    lambda(tile_const, tile, pupu_const);
   }
 }
 
@@ -764,34 +791,13 @@ void
   target.clear(sf::Color::Transparent);
   for (const auto &z : m_all_unique_values_and_strings.z().values())
   {
-    std::map<std::tuple<PupuID, std::int32_t, std::int32_t>, std::uint8_t>
-      pupu_map{};
     for_all_tiles(
-      [this, &states, &target, &z, &drew, &pupu_map](
-        [[maybe_unused]] const auto &tile_const, const auto &tile)
+      [this, &states, &target, &z, &drew](
+        [[maybe_unused]] const auto &tile_const, const auto &tile, const PupuID & pupu_id)
       {
         if (m_filters.pupu.enabled())
         {
-          const auto get_pupu = [&tile_const, &pupu_map]()
-          {
-            const auto tuple = std::make_tuple(PupuID(tile_const.layer_id(),
-                                                 tile_const.blend_mode(),
-                                                 tile_const.animation_id(),
-                                                 tile_const.animation_state()),
-              std::int32_t{ tile_const.x() },
-              std::int32_t{ tile_const.y() });
-
-            if (pupu_map.contains(tuple))
-            {
-              ++(pupu_map.at(tuple));
-            }
-            else
-            {
-              pupu_map.emplace(tuple, std::uint8_t{});
-            }
-            return std::get<0>(tuple) + pupu_map.at(tuple);
-          };
-          if (m_filters.pupu.value() != get_pupu())
+          if (m_filters.pupu.value() != pupu_id)
           {
             return;
           }
@@ -1322,8 +1328,8 @@ template<typename T>
 struct setting_backup
 {
 private:
-  const T    m_backup;
-  T &m_value;
+  const T m_backup;
+  T      &m_value;
 
 public:
   const T &
@@ -1442,7 +1448,7 @@ void
     m_scale);
   settings.filters                    = {};
   settings.filters.value().upscale    = settings.filters.backup().upscale;
-  settings.draw_swizzle               = true;
+  settings.draw_swizzle               = false;
   settings.disable_texture_page_shift = true;
   settings.disable_blends             = true;
   // todo maybe draw with blends enabled to transparent black or white.
