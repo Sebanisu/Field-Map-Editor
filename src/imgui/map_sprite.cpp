@@ -765,12 +765,12 @@ void
   for (; /*t != te &&*/ tc != tce; (void)++tc, ++t, ++pupu_t)
   {
     const is_tile auto &tile_const = *tc;
-    if(!filter_invalid(tile_const))
+    if (!filter_invalid(tile_const))
     {
       continue;
     }
-    is_tile auto       &tile       = *t;
-    const PupuID       &pupu_const = *pupu_t;
+    is_tile auto &tile       = *t;
+    const PupuID &pupu_const = *pupu_t;
     lambda(tile_const, tile, pupu_const);
   }
 }
@@ -1426,19 +1426,32 @@ void
     settings.filters.value().texture_page_id.update(texture_page).enable();
     if (!map_test)
     {
-      for (const auto &bpp : unique_bpp)
-      {
-        const auto &unique_palette = unique_values.palette().at(bpp).values();
-        for (const auto &palette : unique_palette)
+      if (m_map.visit_tiles(
+            [&texture_page](const auto &tiles) -> bool
+            {
+              auto filtered_tiles =
+                tiles
+                | std::views::filter([&texture_page](const auto &tile) -> bool
+                  { return std::cmp_equal(tile.texture_id(), texture_page); });
+              auto [min, max] = std::ranges::minmax_element(filtered_tiles,
+                {},
+                [](const auto &tile) { return tile.palette_id(); });
+              fmt::print("{}\t{}\n",min->palette_id(), max->palette_id());
+              return !std::cmp_equal(min->palette_id(), max->palette_id());
+            }))
+        for (const auto &bpp : unique_bpp)
         {
-          settings.filters.value().palette.update(palette).enable();
-          settings.filters.value().bpp.update(bpp).enable();
-          auto out_path = save_path<pattern_texture_page_palette>(
-            path, field_name, texture_page, palette);
-          auto out_texture = save_texture(height, height);
-          async_save(out_path, out_texture);
+          const auto &unique_palette = unique_values.palette().at(bpp).values();
+          for (const auto &palette : unique_palette)
+          {
+            settings.filters.value().palette.update(palette).enable();
+            settings.filters.value().bpp.update(bpp).enable();
+            auto out_path = save_path<pattern_texture_page_palette>(
+              path, field_name, texture_page, palette);
+            auto out_texture = save_texture(height, height);
+            async_save(out_path, out_texture);
+          }
         }
-      }
     }
     settings.filters.value().palette.disable();
     settings.filters.value().bpp.disable();
