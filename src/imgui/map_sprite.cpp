@@ -756,6 +756,7 @@ void
   };
   std::ranges::transform(tiles_const, std::back_inserter(pupu_ids), get_pupu);
   assert(std::size(tiles_const) == std::size(tiles));
+  assert(std::size(tiles_const) == std::size(pupu_ids));
   auto       tc     = std::crbegin(tiles_const);
   const auto tce    = std::crend(tiles_const);
   auto       t      = std::rbegin(tiles);
@@ -764,6 +765,10 @@ void
   for (; /*t != te &&*/ tc != tce; (void)++tc, ++t, ++pupu_t)
   {
     const is_tile auto &tile_const = *tc;
+    if(!filter_invalid(tile_const))
+    {
+      continue;
+    }
     is_tile auto       &tile       = *t;
     const PupuID       &pupu_const = *pupu_t;
     lambda(tile_const, tile, pupu_const);
@@ -793,7 +798,9 @@ void
   {
     for_all_tiles(
       [this, &states, &target, &z, &drew](
-        [[maybe_unused]] const auto &tile_const, const auto &tile, const PupuID & pupu_id)
+        [[maybe_unused]] const auto &tile_const,
+        const auto                  &tile,
+        const PupuID                &pupu_id)
       {
         if (m_filters.pupu.enabled())
         {
@@ -1416,6 +1423,7 @@ void
     && unique_values.palette().at(unique_bpp.front()).values().size() <= 1U;
   for (const auto &texture_page : unique_texture_page_ids)
   {
+    settings.filters.value().texture_page_id.update(texture_page).enable();
     if (!map_test)
     {
       for (const auto &bpp : unique_bpp)
@@ -1423,14 +1431,23 @@ void
         const auto &unique_palette = unique_values.palette().at(bpp).values();
         for (const auto &palette : unique_palette)
         {
-          save_specific<pattern_texture_page_palette>(
-            path, field_name, height, height, texture_page, bpp, palette);
+          settings.filters.value().palette.update(palette).enable();
+          settings.filters.value().bpp.update(bpp).enable();
+          auto out_path = save_path<pattern_texture_page_palette>(
+            path, field_name, texture_page, palette);
+          auto out_texture = save_texture(height, height);
+          async_save(out_path, out_texture);
         }
       }
     }
-    save_specific<pattern_texture_page>(
-      path, field_name, height, height, texture_page);
+    settings.filters.value().palette.disable();
+    settings.filters.value().bpp.disable();
+    auto out_path =
+      save_path<pattern_texture_page>(path, field_name, texture_page);
+    auto out_texture = save_texture(height, height);
+    async_save(out_path, out_texture);
   }
+  wait_for_futures();
 }
 
 void
@@ -1461,8 +1478,27 @@ void
   }
   for (const PupuID &pupu : unique_pupu_ids)
   {
-    save_specific<pattern_pupu>(
-      path, field_name, canvas.width(), canvas.height(), {}, {}, {}, pupu);
+    settings.filters.value().pupu.update(pupu).enable();
+    std::filesystem::path out_path =
+      save_path<pattern_pupu>(path, field_name, {}, {}, pupu);
+    std::shared_ptr<sf::RenderTexture> out_texture =
+      save_texture(canvas.width(), canvas.height());
+    async_save(out_path, out_texture);
+  }
+  wait_for_futures();
+}
+void
+  map_sprite::async_save(const std::filesystem::path &out_path,
+    const std::shared_ptr<sf::RenderTexture>         &out_texture) const
+{
+  if (out_texture)
+  {
+    m_futures.emplace_back(std::async(
+      std::launch::async,
+      [](std::filesystem::path op, auto ot)
+      { ot.copyToImage().saveToFile(op.string()); },
+      out_path,
+      out_texture->getTexture()));
   }
 }
 uint32_t
@@ -1485,15 +1521,12 @@ uint32_t
   return tex_height;
 }
 template<const char *pattern>
-void
-  map_sprite::save_specific(const std::filesystem::path &path,
-    const std::string                                   &field_name,
-    std::uint32_t                                        width,
-    std::uint32_t                                        height,
-    std::optional<std::uint8_t>                          texture_page,
-    std::optional<open_viii::graphics::BPPT>             bpp,
-    std::optional<std::uint8_t>                          palette,
-    std::optional<PupuID>                                pupu) const
+std::filesystem::path
+  map_sprite::save_path(const std::filesystem::path &path,
+    const std::string                               &field_name,
+    std::optional<std::uint8_t>                      texture_page,
+    std::optional<std::uint8_t>                      palette,
+    std::optional<PupuID>                            pupu) const
 {
   // todo put language code in filename. because of remaster multilanguage
   // maps.
@@ -1513,47 +1546,21 @@ void
     }
     return std::string{};
   }();
-  if (palette.has_value())
-  {
-    m_filters.palette.update(*palette).enable();
-  }
-  else
-  {
-    m_filters.palette.disable();
-  }
-  if (bpp.has_value())
-  {
-    m_filters.bpp.update(*bpp).enable();
-  }
-  else
-  {
-    m_filters.bpp.disable();
-  }
-  if (texture_page.has_value())
-  {
-    m_filters.texture_page_id.update(*texture_page).enable();
-  }
-  else
-  {
-    m_filters.texture_page_id.disable();
-  }
 
-  if (pupu.has_value())
+  return path / filename;
+}
+
+std::shared_ptr<sf::RenderTexture>
+  map_sprite::save_texture(std::uint32_t width, std::uint32_t height) const
+{
+  auto texture = std::make_shared<sf::RenderTexture>();
+  texture->create(width, height);
+  if (local_draw(*texture, sf::RenderStates::Default))
   {
-    m_filters.pupu.update(*pupu).enable();
+    texture->display();
+    texture->setSmooth(false);
+    texture->generateMipmap();
+    return texture;
   }
-  else
-  {
-    m_filters.pupu.disable();
-  }
-  sf::RenderTexture texture;
-  texture.create(width, height);
-  if (local_draw(texture, sf::RenderStates::Default))
-  {
-    const auto file_path = path / filename;
-    texture.display();
-    texture.setSmooth(false);
-    texture.generateMipmap();
-    texture.getTexture().copyToImage().saveToFile(file_path.string());
-  }
+  return nullptr;
 }

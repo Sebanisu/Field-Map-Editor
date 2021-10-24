@@ -109,8 +109,12 @@ private:
     std::vector<T> ret{};
     if (!std::ranges::empty(tiles))
     {
+      static constexpr auto filter_invalid0 =
+        open_viii::graphics::background::Map::filter_invalid();
       std::ranges::transform(
-        tiles | std::views::filter(filter), std::back_inserter(ret), lambda);
+        tiles | std::views::filter(filter_invalid0) | std::views::filter(filter),
+        std::back_inserter(ret),
+        lambda);
       std::ranges::sort(ret, sort);
       auto last = std::unique(ret.begin(), ret.end());
       ret.erase(last, ret.end());

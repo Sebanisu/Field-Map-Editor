@@ -221,16 +221,18 @@ private:
       int                         passes = 2) const;
 
   template<const char *pattern>
-  void
-    save_specific(const std::filesystem::path &path,
-      const std::string                       &field_name,
-      std::uint32_t                            width,
-      std::uint32_t                            height,
-      std::optional<std::uint8_t>              texture_page = std::nullopt,
-      std::optional<open_viii::graphics::BPPT> bpp          = std::nullopt,
-      std::optional<std::uint8_t>              palette      = std::nullopt,
-      std::optional<PupuID>                    pupu = std::nullopt) const;
+  std::filesystem::path
+    save_path(const std::filesystem::path &path,
+      const std::string                   &field_name,
+      std::optional<std::uint8_t>          texture_page = std::nullopt,
+      std::optional<std::uint8_t>          palette      = std::nullopt,
+      std::optional<PupuID>                pupu         = std::nullopt) const;
+  std::shared_ptr<sf::RenderTexture>
+    save_texture(std::uint32_t width, std::uint32_t height) const;
   uint32_t
     get_max_texture_height() const;
+  void
+    async_save(const std::filesystem::path     &out_path,
+      const std::shared_ptr<sf::RenderTexture> &out_texture) const;
 };
 #endif// MYPROJECT_MAP_SPRITE_HPP
