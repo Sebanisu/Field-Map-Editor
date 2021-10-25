@@ -119,6 +119,7 @@ std::shared_ptr<std::array<sf::Texture, map_sprite::MAX_TEXTURES>>
     {
       find_upscale_path(ret);
     }
+    wait_for_futures();
   }
   size_t i = {};
   for (const auto &texture : *ret)
@@ -167,22 +168,28 @@ void
   for (const auto &texture_page :
     m_all_unique_values_and_strings.texture_page_id().values())
   {
-    const auto  &root           = m_filters.upscale.value();
-    const auto   paths          = m_upscales.get_file_paths(root, texture_page);
-    const size_t i              = MAX_TEXTURES - 13 + texture_page;
-    auto         filtered_paths = paths
-                          | std::views::filter(
-                            [](const std::filesystem::path &path)
-                            {
-                              return std::filesystem::exists(path)
-                                     && !std::filesystem::is_directory(path);
-                            });
-    if (filtered_paths.begin() != filtered_paths.end())
+    const size_t i  = MAX_TEXTURES - 13 + texture_page;
+    const auto   fn = [this, texture_page](sf::Texture *texture) -> void
     {
-      const auto &path = *(filtered_paths.begin());
-      fmt::print("{}\n", path.string());
-      ret->at(i).loadFromFile(path.string());
-    }
+      const auto &root  = m_filters.upscale.value();
+      const auto  paths = m_upscales.get_file_paths(root, texture_page);
+      auto        filtered_paths = paths
+                            | std::views::filter(
+                              [](const std::filesystem::path &path)
+                              {
+                                return std::filesystem::exists(path)
+                                       && !std::filesystem::is_directory(path);
+                              });
+      if (filtered_paths.begin() != filtered_paths.end())
+      {
+        const auto &path = *(filtered_paths.begin());
+        fmt::print("{}\n", path.string());
+        texture->loadFromFile(path.string());
+        texture->setSmooth(false);
+        texture->generateMipmap();
+      }
+    };
+    m_futures.emplace_back(std::async(std::launch::async, fn, &(ret->at(i))));
   }
 }
 void
@@ -193,25 +200,29 @@ void
   for (const auto &texture_page :
     m_all_unique_values_and_strings.texture_page_id().values())
   {
-    const auto  &root  = m_filters.upscale.value();
-    const auto   paths = m_upscales.get_file_paths(root, texture_page, palette);
-    const size_t i     = size_t{ texture_page } * 16U + palette;
-    auto         filtered_paths = paths
-                          | std::views::filter(
-                            [](const std::filesystem::path &path)
-                            {
-                              return std::filesystem::exists(path)
-                                     && !std::filesystem::is_directory(path);
-                            });
-
-    if (filtered_paths.begin() != filtered_paths.end())
+    const size_t i  = size_t{ texture_page } * 16U + palette;
+    auto const   fn = [texture_page, palette, this](sf::Texture *const texture)
     {
-      const auto &path = *(filtered_paths.begin());
-      fmt::print("{}\n", path.string());
-      ret->at(i).loadFromFile(path.string());
-      ret->at(i).setSmooth(false);
-      ret->at(i).generateMipmap();
-    }
+      const auto &root = m_filters.upscale.value();
+      const auto paths = m_upscales.get_file_paths(root, texture_page, palette);
+      auto       filtered_paths = paths
+                            | std::views::filter(
+                              [](const std::filesystem::path &path)
+                              {
+                                return std::filesystem::exists(path)
+                                       && !std::filesystem::is_directory(path);
+                              });
+
+      if (filtered_paths.begin() != filtered_paths.end())
+      {
+        const auto &path = *(filtered_paths.begin());
+        fmt::print("{}\n", path.string());
+        texture->loadFromFile(path.string());
+        texture->setSmooth(false);
+        texture->generateMipmap();
+      }
+    };
+    m_futures.emplace_back(std::async(std::launch::async, fn, &(ret->at(i))));
   }
 }
 void
@@ -788,7 +799,6 @@ void
     sf::RenderStates                       states) const
 {
   bool drew = false;
-  wait_for_futures();
   target.clear(sf::Color::Transparent);
   for (const auto &z : m_all_unique_values_and_strings.z().values())
   {
