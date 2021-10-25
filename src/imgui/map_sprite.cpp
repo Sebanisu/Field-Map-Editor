@@ -1513,7 +1513,7 @@ void
   {
     settings.filters.value().pupu.update(pupu).enable();
     std::filesystem::path out_path =
-      save_path(pattern_pupu, path, field_name, {}, {}, pupu);
+      save_path(pattern_pupu, path, field_name, pupu);
     std::shared_ptr<sf::RenderTexture> out_texture =
       save_texture(static_cast<std::uint32_t>(canvas.width()),
         static_cast<std::uint32_t>(canvas.height()));
@@ -1554,35 +1554,68 @@ uint32_t
   }
   return tex_height;
 }
-
 std::filesystem::path
-  map_sprite::save_path(fmt::string_view pattern,
-    const std::filesystem::path         &path,
-    const std::string                   &field_name,
-    std::optional<std::uint8_t>          texture_page,
-    std::optional<std::uint8_t>          palette,
-    std::optional<PupuID>                pupu) const
+  map_sprite::save_path(
+    fmt::format_string<std::string_view, std::uint8_t> pattern,
+    const std::filesystem::path                       &path,
+    const std::string_view                            &field_name,
+    const std::uint8_t                                 texture_page) const
 {
-  // todo put language code in filename. because of remaster multilanguage
-  // maps.
-  std::string filename = {};
-  if (texture_page.has_value())
-  {
-    if (palette.has_value())
-    {
-      filename = fmt::format(fmt::runtime(pattern), field_name, *texture_page, *palette);
-    }
-    else
-    {
-      filename = fmt::format(fmt::runtime(pattern), field_name, *texture_page);
-    }
-  }
-  else if (pupu.has_value())
-  {
-    filename = fmt::format(fmt::runtime(pattern), field_name, *pupu);
-  }
-  return path / filename;
+  return path
+         / fmt::vformat(fmt::string_view(pattern),
+           fmt::make_format_args(field_name, texture_page));
 }
+std::filesystem::path
+  map_sprite::save_path(
+    fmt::format_string<std::string_view, std::uint8_t, std::uint8_t> pattern,
+    const std::filesystem::path                                     &path,
+    const std::string_view                                          &field_name,
+    std::uint8_t texture_page,
+    std::uint8_t palette) const
+{
+  return path
+         / fmt::vformat(fmt::string_view(pattern),
+           fmt::make_format_args(field_name, texture_page, palette));
+}
+std::filesystem::path
+  map_sprite::save_path(fmt::format_string<std::string_view, PupuID> pattern,
+    const std::filesystem::path                                     &path,
+    const std::string_view                                          &field_name,
+    PupuID                                                           pupu) const
+{
+  return path
+         / fmt::vformat(
+           fmt::string_view(pattern), fmt::make_format_args(field_name, pupu));
+}
+//std::filesystem::path
+//  map_sprite::save_path(fmt::string_view pattern,
+//    const std::filesystem::path         &path,
+//    const std::string                   &field_name,
+//    std::optional<std::uint8_t>          texture_page,
+//    std::optional<std::uint8_t>          palette,
+//    std::optional<PupuID>                pupu) const
+//{
+//  // todo put language code in filename. because of remaster multilanguage
+//  // maps.
+//  std::string filename = {};
+//  if (texture_page.has_value())
+//  {
+//    if (palette.has_value())
+//    {
+//      filename =
+//        fmt::format(fmt::runtime(pattern), field_name, *texture_page, *palette);
+//    }
+//    else
+//    {
+//      filename = fmt::format(fmt::runtime(pattern), field_name, *texture_page);
+//    }
+//  }
+//  else if (pupu.has_value())
+//  {
+//    filename = fmt::format(fmt::runtime(pattern), field_name, *pupu);
+//  }
+//  return path / filename;
+//}
 
 std::shared_ptr<sf::RenderTexture>
   map_sprite::save_texture(std::uint32_t width, std::uint32_t height) const

@@ -222,13 +222,6 @@ private:
       weight_lambdaT            &&weight_lambda,
       int                         passes = 2) const;
 
-  std::filesystem::path
-    save_path(fmt::string_view pattern,
-      const std::filesystem::path         &path,
-      const std::string                   &field_name,
-      std::optional<std::uint8_t>          texture_page = std::nullopt,
-      std::optional<std::uint8_t>          palette      = std::nullopt,
-      std::optional<PupuID>                pupu         = std::nullopt) const;
   std::shared_ptr<sf::RenderTexture>
     save_texture(std::uint32_t width, std::uint32_t height) const;
   uint32_t
@@ -271,5 +264,21 @@ private:
       });
     return r;
   }
+  std::filesystem::path
+    save_path(fmt::format_string<std::string_view, uint8_t> pattern,
+      const std::filesystem::path                          &path,
+      const std::string_view                               &field_name,
+      uint8_t                                         texture_page) const;
+  std::filesystem::path
+    save_path(fmt::format_string<std::string_view, uint8_t, uint8_t> pattern,
+      const std::filesystem::path                                   &path,
+      const std::string_view                                        &field_name,
+      uint8_t texture_page,
+      uint8_t palette) const;
+  std::filesystem::path
+    save_path(fmt::format_string<std::string_view, PupuID> pattern,
+      const std::filesystem::path                         &path,
+      const std::string_view                              &field_name,
+      PupuID                                               pupu) const;
 };
 #endif// MYPROJECT_MAP_SPRITE_HPP
