@@ -48,7 +48,7 @@ private:
       }
       return condition;
     }
-    [[nodiscard]] void
+    void
       update_sprite_pos(bool swizzle, float spacing = 256.F)
     {
       float x = {};
@@ -59,9 +59,9 @@ private:
       }
       else
       {
-        x = (pixel.x / 16) * 16.F;
+        x = (static_cast<float>(pixel.x / 16)) * 16.F;
       }
-      float y = (pixel.y / 16) * 16.F;
+      float y = (static_cast<float>(pixel.y / 16)) * 16.F;
       sprite.setPosition(x, y);
     }
 

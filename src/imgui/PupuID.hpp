@@ -5,8 +5,8 @@
 #ifndef MYPROJECT_PUPUID_HPP
 #define MYPROJECT_PUPUID_HPP
 #include "open_viii/graphics/background/BlendModeT.hpp"
-#include <fmt/format.h>
 #include <compare>
+#include <fmt/format.h>
 struct PupuID
 {
   constexpr PupuID() = default;
@@ -23,11 +23,12 @@ struct PupuID
     std::uint8_t                                animation_id,
     std::uint8_t                                animation_state,
     std::uint8_t                                offset = 0U)
-    : PupuID(
-      std::uint32_t((layer_id << layer_offset)
-                    + (static_cast<std::uint32_t>(blend_mode) << blend_offset)
-                    + (animation_id << animation_offset)
-                    + (animation_state << animation_state_offset) + offset))
+    : PupuID(std::uint32_t{
+      static_cast<std::uint32_t>(layer_id << layer_offset)
+      + (static_cast<std::uint32_t>(blend_mode) << blend_offset)
+      + static_cast<std::uint32_t>(animation_id << animation_offset)
+      + static_cast<std::uint32_t>(animation_state << animation_state_offset)
+      + offset })
   {
   }
   constexpr auto
@@ -67,7 +68,8 @@ struct PupuID
     return (m_raw & mask) == (right.raw() & mask);
   }
 
-  constexpr auto operator<=>(const PupuID&) const = default;
+  constexpr auto
+    operator<=>(const PupuID &) const = default;
 
 private:
   std::uint32_t m_raw{};
@@ -113,7 +115,7 @@ struct fmt::formatter<PupuID>
     // BPPTing to '}'.
 
     // Parse the presentation format and store it in the formatter:
-    auto it = ctx.begin();
+    auto it  = ctx.begin();
     auto end = ctx.end();
     if (it != end && (*it == 'f' || *it == 'e'))
       presentation = *it++;

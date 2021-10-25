@@ -43,9 +43,9 @@ public:
     , m_all_unique_values_and_strings(get_all_unique_values_and_strings())
     , m_canvas(get_canvas())
     , m_texture(get_textures())
+    , m_render_texture(std::make_shared<sf::RenderTexture>())
     , m_grid(get_grid())
     , m_texture_page_grid(get_texture_page_grid())
-    , m_render_texture(std::make_shared<sf::RenderTexture>())
   {
     init_render_texture();
   }
@@ -194,6 +194,8 @@ private:
   bool
                         fail_filter(auto &tile) const;
   static constexpr auto default_filter_lambda = [](auto &&) { return true; };
+  static constexpr auto filter_invalid =
+    open_viii::graphics::background::Map::filter_invalid();
   void
     wait_for_futures() const;
   auto
@@ -220,9 +222,9 @@ private:
       weight_lambdaT            &&weight_lambda,
       int                         passes = 2) const;
 
-  template<const char *pattern>
   std::filesystem::path
-    save_path(const std::filesystem::path &path,
+    save_path(fmt::string_view pattern,
+      const std::filesystem::path         &path,
       const std::string                   &field_name,
       std::optional<std::uint8_t>          texture_page = std::nullopt,
       std::optional<std::uint8_t>          palette      = std::nullopt,
@@ -234,5 +236,40 @@ private:
   void
     async_save(const std::filesystem::path     &out_path,
       const std::shared_ptr<sf::RenderTexture> &out_texture) const;
+  template<typename tilesT,
+    typename key_lambdaT,
+    typename value_lambdaT,
+    typename filterT = decltype(default_filter_lambda)>
+  auto
+    generate_map(tilesT &&tiles,
+      key_lambdaT       &&key_lambda,
+      value_lambdaT     &&value_lambda,
+      filterT           &&filter = {}) const
+  {
+    using tileT  = std::decay_t<typename std::decay_t<tilesT>::value_type>;
+    using keyT   = decltype(key_lambda(tileT{}));
+    using valueT = decltype(value_lambda(tileT{}));
+    std::map<keyT, std::vector<valueT>> r{};
+    auto filtered_tiles = tiles | std::views::filter(filter);
+    std::ranges::for_each(filtered_tiles,
+      [&r, &key_lambda, &value_lambda](auto &&tile)
+      {
+        if (!filter_invalid(tile))
+        {
+          return;
+        }
+        valueT value = value_lambda(tile);
+        keyT   key   = key_lambda(tile);
+        if (r.contains(key))
+        {
+          r.at(key).push_back(value);
+        }
+        else
+        {
+          r.emplace(key, std::vector<valueT>{ value });
+        }
+      });
+    return r;
+  }
 };
 #endif// MYPROJECT_MAP_SPRITE_HPP

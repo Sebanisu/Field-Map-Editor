@@ -587,11 +587,11 @@ void
       menuitem_save_texture(save_texture_path(), mim_test() || map_test());
       menuitem_save_mim_file(m_mim_sprite.mim_filename(), mim_test());
       menuitem_save_map_file(m_map_sprite.map_filename(), map_test());
-      if(ImGui::MenuItem("Save All Texture Changes",nullptr,false,true))
+      if (ImGui::MenuItem("Save All Texture Changes", nullptr, false, true))
       {
         m_map_sprite.save_new_textures(std::filesystem::current_path());
       }
-      if(ImGui::MenuItem("Save Pupu Textures",nullptr,false,true))
+      if (ImGui::MenuItem("Save Pupu Textures", nullptr, false, true))
       {
         m_map_sprite.save_pupu_textures(std::filesystem::current_path());
       }
@@ -824,6 +824,8 @@ void
                          std::cout << "Left Mouse Button Down" << std::endl;
                        }
                        break;
+                       default:
+                         break;
                        }
                      }
                      break;
@@ -839,8 +841,12 @@ void
                          std::cout << "Left Mouse Button Up" << std::endl;
                        }
                        break;
+                       default:
+                         break;
                        }
                      }
+                     break;
+                   default:
                      break;
                    }
                  },
@@ -1273,13 +1279,14 @@ void
   // std::views::join; broken in msvc.
   auto process = [&paths](const auto &temp_paths)
   {
-    for (auto &path : temp_paths
+    auto filter_paths = temp_paths
                         | std::views::filter(
                           [](const std::filesystem::path &path)
                           {
                             return std::filesystem::exists(path)
                                    && std::filesystem::is_directory(path);
-                          }))
+                          });
+    for (auto &path : filter_paths)
     {
       paths.emplace_back(path.string());
     }

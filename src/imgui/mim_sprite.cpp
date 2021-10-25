@@ -74,7 +74,7 @@ std::vector<open_viii::graphics::Color32RGBA>
       draw_palette()
         ? grid{}
         : grid{
-          { (1U << static_cast<unsigned int>((8 - (m_bpp.raw() & 3U)))), 256U },
+          { (1U << ((8U - (m_bpp.raw() & 3U)))), 256U },
           { width(), height() },
           sf::Color::Yellow })
 {
