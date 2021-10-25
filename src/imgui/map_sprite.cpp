@@ -1397,6 +1397,26 @@ public:
   {
   }
 };
+bool
+  map_sprite::check_if_one_palette(const std::uint8_t &texture_page) const
+{
+  return m_map.visit_tiles(
+    [&texture_page](const auto &tiles) -> bool
+    {
+      auto filtered_tiles =
+        tiles
+        | std::views::filter([&texture_page](const auto &tile) -> bool
+          { return std::cmp_equal(tile.texture_id(), texture_page); });
+      auto [min, max] = std::ranges::minmax_element(
+        filtered_tiles, {}, [](const auto &tile) { return tile.palette_id(); });
+      if (min != filtered_tiles.end() && max != filtered_tiles.end())
+      {
+        fmt::print("{}\t{}\n", min->palette_id(), max->palette_id());
+        return !std::cmp_equal(min->palette_id(), max->palette_id());
+      }
+      return false;
+    });
+}
 void
   map_sprite::save_new_textures(const std::filesystem::path &path) const
 {
@@ -1430,51 +1450,26 @@ void
 
   for (const auto &texture_page : unique_texture_page_ids)
   {
-    m_map_const.visit_tiles(
-      [&texture_page, this](const auto &tiles)
-      {
-        //        using tileT =
-        //          std::decay_t<typename
-        //          std::decay_t<decltype(tiles)>::value_type>;
-
-        auto map_xy_palette = generate_map(
-          tiles,
-          [](const auto &tile) { return std::make_tuple(tile.x(), tile.y()); },
-          [](const auto &tile) { return tile.palette_id(); },
-          [&texture_page](const auto &tile)
-          { return std::cmp_equal(texture_page, tile.texture_id()); });
-        for (auto &[xy, palette_vector] : map_xy_palette)
-        {
-          std::ranges::sort(palette_vector);
-          auto [first, last] = std::ranges::unique(palette_vector);
-          palette_vector.erase(first, last);
-        }
-      });
     settings.filters.value().texture_page_id.update(texture_page).enable();
     if (!map_test)
     {
-      if (m_map.visit_tiles(
-            [&texture_page](const auto &tiles) -> bool
-            {
-              auto filtered_tiles =
-                tiles
-                | std::views::filter([&texture_page](const auto &tile) -> bool
-                  { return std::cmp_equal(tile.texture_id(), texture_page); });
-              auto [min, max] = std::ranges::minmax_element(filtered_tiles,
-                {},
-                [](const auto &tile) { return tile.palette_id(); });
-              if (min != filtered_tiles.end() && max != filtered_tiles.end())
-              {
-                fmt::print("{}\t{}\n", min->palette_id(), max->palette_id());
-                return !std::cmp_equal(min->palette_id(), max->palette_id());
-              }
-              return false;
-            }))
+      if (check_if_one_palette(texture_page))
       {
+        const auto conflicting_palettes =
+          get_conflicting_palettes(texture_page);
         for (const auto &bpp : unique_bpp)
         {
           const auto &unique_palette = unique_values.palette().at(bpp).values();
-          for (const auto &palette : unique_palette)
+          auto        filter_palette =
+            unique_palette
+            | std::views::filter(
+              [&conflicting_palettes](const std::uint8_t &palette)
+              {
+                return std::ranges::any_of(conflicting_palettes,
+                  [&palette](const std::uint8_t &other)
+                  { return palette == other; });
+              });
+          for (const auto &palette : filter_palette)
           {
             settings.filters.value().palette.update(palette).enable();
             settings.filters.value().bpp.update(bpp).enable();
@@ -1497,6 +1492,51 @@ void
     async_save(out_path, out_texture);
   }
   wait_for_futures();
+}
+std::vector<std::uint8_t>
+  map_sprite::get_conflicting_palettes(const std::uint8_t &texture_page) const
+{
+  const auto palettes = m_map_const.visit_tiles(
+    [&texture_page, this](const auto &tiles)
+    {
+      //        using tileT =
+      //          std::decay_t<typename
+      //          std::decay_t<decltype(tiles)>::value_type>;
+
+      auto map_xy_palette = generate_map(
+        tiles,
+        [](const auto &tile)
+        { return std::make_tuple(tile.source_x(), tile.source_y()); },
+        [](const auto &tile) { return tile.palette_id(); },
+        [&texture_page](const auto &tile)
+        { return std::cmp_equal(texture_page, tile.texture_id()); });
+      std::vector<uint8_t> conflict_palettes{};
+      for (auto &[xy, palette_vector] : map_xy_palette)
+      {
+        std::ranges::sort(palette_vector);
+        auto [first, last] = std::ranges::unique(palette_vector);
+        palette_vector.erase(first, last);
+        if (palette_vector.size() <= 1U)
+        {
+          map_xy_palette.erase(xy);
+        }
+        else
+        {
+          conflict_palettes.insert(conflict_palettes.end(),
+            palette_vector.begin(),
+            palette_vector.end());
+        }
+      }
+      std::ranges::sort(conflict_palettes);
+      auto [first, last] = std::ranges::unique(conflict_palettes);
+      conflict_palettes.erase(first, last);
+      for (auto p : conflict_palettes)
+      {
+        fmt::print("{}\n", p);
+      }
+      return conflict_palettes;
+    });
+  return palettes;
 }
 
 void

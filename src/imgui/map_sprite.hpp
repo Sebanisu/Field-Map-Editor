@@ -268,7 +268,7 @@ private:
     save_path(fmt::format_string<std::string_view, uint8_t> pattern,
       const std::filesystem::path                          &path,
       const std::string_view                               &field_name,
-      uint8_t                                         texture_page) const;
+      uint8_t                                               texture_page) const;
   std::filesystem::path
     save_path(fmt::format_string<std::string_view, uint8_t, uint8_t> pattern,
       const std::filesystem::path                                   &path,
@@ -280,5 +280,9 @@ private:
       const std::filesystem::path                         &path,
       const std::string_view                              &field_name,
       PupuID                                               pupu) const;
+  bool
+    check_if_one_palette(const uint8_t &texture_page) const;
+  std::vector<uint8_t>
+    get_conflicting_palettes(const uint8_t &texture_page) const;
 };
 #endif// MYPROJECT_MAP_SPRITE_HPP
