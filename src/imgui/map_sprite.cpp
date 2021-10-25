@@ -1427,12 +1427,18 @@ void
         //          std::decay_t<typename
         //          std::decay_t<decltype(tiles)>::value_type>;
 
-        return generate_map(
+        auto map_xy_palette = generate_map(
           tiles,
           [](const auto &tile) { return std::make_tuple(tile.x(), tile.y()); },
           [](const auto &tile) { return tile.palette_id(); },
           [&texture_page](const auto &tile)
           { return std::cmp_equal(texture_page, tile.texture_id()); });
+        for (auto &[xy, palette_vector] : map_xy_palette)
+        {
+          std::ranges::sort(palette_vector);
+          auto [first, last] = std::ranges::unique(palette_vector);
+          palette_vector.erase(first, last);
+        }
       });
     settings.filters.value().texture_page_id.update(texture_page).enable();
     if (!map_test)
@@ -1529,16 +1535,15 @@ void
   {
     m_futures.emplace_back(std::async(
       std::launch::async,
-      [](std::filesystem::path op, auto ot)
-      { ot.copyToImage().saveToFile(op.string()); },
+      [](std::filesystem::path op, auto ot) { ot.saveToFile(op.string()); },
       out_path,
-      out_texture->getTexture()));
+      out_texture->getTexture().copyToImage()));
   }
 }
 uint32_t
   map_sprite::get_max_texture_height() const
 {
-  auto transform_range = *m_texture
+  auto transform_range = (*m_texture)
                          | std::views::transform([](const sf::Texture &texture)
                            { return texture.getSize().y; });
   auto max_height_it =
@@ -1587,35 +1592,37 @@ std::filesystem::path
          / fmt::vformat(
            fmt::string_view(pattern), fmt::make_format_args(field_name, pupu));
 }
-//std::filesystem::path
-//  map_sprite::save_path(fmt::string_view pattern,
-//    const std::filesystem::path         &path,
-//    const std::string                   &field_name,
-//    std::optional<std::uint8_t>          texture_page,
-//    std::optional<std::uint8_t>          palette,
-//    std::optional<PupuID>                pupu) const
+// std::filesystem::path
+//   map_sprite::save_path(fmt::string_view pattern,
+//     const std::filesystem::path         &path,
+//     const std::string                   &field_name,
+//     std::optional<std::uint8_t>          texture_page,
+//     std::optional<std::uint8_t>          palette,
+//     std::optional<PupuID>                pupu) const
 //{
-//  // todo put language code in filename. because of remaster multilanguage
-//  // maps.
-//  std::string filename = {};
-//  if (texture_page.has_value())
-//  {
-//    if (palette.has_value())
-//    {
-//      filename =
-//        fmt::format(fmt::runtime(pattern), field_name, *texture_page, *palette);
-//    }
-//    else
-//    {
-//      filename = fmt::format(fmt::runtime(pattern), field_name, *texture_page);
-//    }
-//  }
-//  else if (pupu.has_value())
-//  {
-//    filename = fmt::format(fmt::runtime(pattern), field_name, *pupu);
-//  }
-//  return path / filename;
-//}
+//   // todo put language code in filename. because of remaster multilanguage
+//   // maps.
+//   std::string filename = {};
+//   if (texture_page.has_value())
+//   {
+//     if (palette.has_value())
+//     {
+//       filename =
+//         fmt::format(fmt::runtime(pattern), field_name, *texture_page,
+//         *palette);
+//     }
+//     else
+//     {
+//       filename = fmt::format(fmt::runtime(pattern), field_name,
+//       *texture_page);
+//     }
+//   }
+//   else if (pupu.has_value())
+//   {
+//     filename = fmt::format(fmt::runtime(pattern), field_name, *pupu);
+//   }
+//   return path / filename;
+// }
 
 std::shared_ptr<sf::RenderTexture>
   map_sprite::save_texture(std::uint32_t width, std::uint32_t height) const
