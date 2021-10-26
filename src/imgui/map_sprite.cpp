@@ -748,9 +748,10 @@ auto
 void
   map_sprite::for_all_tiles(auto const &tiles_const,
     auto                              &&tiles,
-    auto                              &&lambda) const
+    auto                              &&lambda,
+    bool                                skip_invalid) const
 {
-
+  // todo move pupu generation to constructor
   std::map<std::tuple<PupuID, std::int32_t, std::int32_t>, std::uint8_t>
                       pupu_map{};
   std::vector<PupuID> pupu_ids = {};
@@ -785,7 +786,7 @@ void
   for (; /*t != te &&*/ tc != tce; (void)++tc, ++t, ++pupu_t)
   {
     const is_tile auto &tile_const = *tc;
-    if (!filter_invalid(tile_const))
+    if (skip_invalid && !filter_invalid(tile_const))
     {
       continue;
     }
@@ -796,14 +797,15 @@ void
 }
 
 void
-  map_sprite::for_all_tiles(auto &&lambda) const
+  map_sprite::for_all_tiles(auto &&lambda, bool skip_invalid) const
 {
   duel_visitor(
-    [&lambda, this](auto const &tiles_const, auto &&tiles)
+    [&lambda, &skip_invalid, this](auto const &tiles_const, auto &&tiles)
     {
       for_all_tiles(tiles_const,
         std::forward<decltype(tiles)>(tiles),
-        std::forward<decltype(lambda)>(lambda));
+        std::forward<decltype(lambda)>(lambda),
+        skip_invalid);
     });
 }
 
@@ -1435,8 +1437,8 @@ void
   map_sprite::save_new_textures(const std::filesystem::path &path) const
 {
   // assert(std::filesystem::path.is_directory(path));
-  const std::string     field_name             = { str_to_lower(m_field->get_base_name()) };
-  static constexpr char pattern_texture_page[] = { "{}_{}.png" };
+  const std::string     field_name = { str_to_lower(m_field->get_base_name()) };
+  static constexpr char pattern_texture_page[]             = { "{}_{}.png" };
   static constexpr char pattern_texture_page_palette[]     = { "{}_{}_{}.png" };
   static constexpr char pattern_coo_texture_page[]         = { "{}_{}_{}.png" };
   static constexpr char pattern_coo_texture_page_palette[] = {
@@ -1570,7 +1572,7 @@ void
   map_sprite::save_pupu_textures(const std::filesystem::path &path) const
 {
   // assert(std::filesystem::path.is_directory(path));
-  const std::string     field_name         = { str_to_lower(m_field->get_base_name()) };
+  const std::string     field_name = { str_to_lower(m_field->get_base_name()) };
   static constexpr char pattern_pupu[]     = { "{}_{}.png" };
   static constexpr char pattern_coo_pupu[] = { "{}_{}_{}.png" };
 

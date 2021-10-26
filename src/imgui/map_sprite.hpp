@@ -203,9 +203,9 @@ private:
   auto
     duel_visitor(auto &&lambda) const;
   void
-    for_all_tiles(auto const &tiles_const, auto &&tiles, auto &&lambda) const;
+    for_all_tiles(auto const &tiles_const, auto &&tiles, auto &&lambda, bool skip_invalid) const;
   void
-    for_all_tiles(auto &&lambda) const;
+    for_all_tiles(auto &&lambda, bool skip_invalid = true) const;
   void
     find_upscale_path(
       std::shared_ptr<std::array<sf::Texture, MAX_TEXTURES>> &ret,
