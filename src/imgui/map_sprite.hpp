@@ -208,9 +208,12 @@ private:
     for_all_tiles(auto const &tiles_const,
       auto                  &&tiles,
       auto                  &&lambda,
-      bool                    skip_invalid) const;
+      bool                    skip_invalid,
+      bool                    regular_order) const;
   void
-    for_all_tiles(auto &&lambda, bool skip_invalid = true) const;
+    for_all_tiles(auto &&lambda,
+      bool               skip_invalid  = true,
+      bool               regular_order = false) const;
   void
     find_upscale_path(
       std::shared_ptr<std::array<sf::Texture, MAX_TEXTURES>> &ret,

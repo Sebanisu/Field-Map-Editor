@@ -749,7 +749,8 @@ void
   map_sprite::for_all_tiles(auto const &tiles_const,
     auto                              &&tiles,
     auto                              &&lambda,
-    bool                                skip_invalid) const
+    bool                                skip_invalid,
+    bool                                regular_order) const
 {
   // todo move pupu generation to constructor
   std::map<std::tuple<PupuID, std::int32_t, std::int32_t>, std::uint8_t>
@@ -778,34 +779,51 @@ void
   std::ranges::transform(tiles_const, std::back_inserter(pupu_ids), get_pupu);
   assert(std::size(tiles_const) == std::size(tiles));
   assert(std::size(tiles_const) == std::size(pupu_ids));
-  auto       tc     = std::crbegin(tiles_const);
-  const auto tce    = std::crend(tiles_const);
-  auto       t      = std::rbegin(tiles);
-  auto       pupu_t = std::rbegin(pupu_ids);
-  // const auto te  = std::rend(tiles);
-  for (; /*t != te &&*/ tc != tce; (void)++tc, ++t, ++pupu_t)
+  const auto process = [this, &skip_invalid, &lambda](
+                         auto tc, const auto tce, auto t, auto pupu_t)
   {
-    const is_tile auto &tile_const = *tc;
-    if (skip_invalid && !filter_invalid(tile_const))
+    for (; /*t != te &&*/ tc != tce; (void)++tc, ++t, ++pupu_t)
     {
-      continue;
+      const is_tile auto &tile_const = *tc;
+      if (skip_invalid && !filter_invalid(tile_const))
+      {
+        continue;
+      }
+      is_tile auto &tile       = *t;
+      const PupuID &pupu_const = *pupu_t;
+      lambda(tile_const, tile, pupu_const);
     }
-    is_tile auto &tile       = *t;
-    const PupuID &pupu_const = *pupu_t;
-    lambda(tile_const, tile, pupu_const);
+  };
+  if (!regular_order)
+  {
+    process(std::crbegin(tiles_const),
+      std::crend(tiles_const),
+      std::rbegin(tiles),
+      std::rbegin(pupu_ids));
+  }
+  else
+  {
+    process(std::cbegin(tiles_const),
+      std::cend(tiles_const),
+      std::begin(tiles),
+      std::begin(pupu_ids));
   }
 }
 
 void
-  map_sprite::for_all_tiles(auto &&lambda, bool skip_invalid) const
+  map_sprite::for_all_tiles(auto &&lambda,
+    bool                           skip_invalid,
+    bool                           regular_order) const
 {
   duel_visitor(
-    [&lambda, &skip_invalid, this](auto const &tiles_const, auto &&tiles)
+    [&lambda, &skip_invalid, &regular_order, this](
+      auto const &tiles_const, auto &&tiles)
     {
       for_all_tiles(tiles_const,
         std::forward<decltype(tiles)>(tiles),
         std::forward<decltype(lambda)>(lambda),
-        skip_invalid);
+        skip_invalid,
+        regular_order);
     });
 }
 
@@ -1761,33 +1779,34 @@ std::shared_ptr<sf::RenderTexture>
   return nullptr;
 }
 void
-  map_sprite::save_modified_map(const std::filesystem::path & dest_path) const
+  map_sprite::save_modified_map(const std::filesystem::path &dest_path) const
 {
   const auto path = dest_path.string();
   open_viii::tools::write_buffer(
     [this](std::ostream &os)
     {
-  for_all_tiles(
-    [this, &os](const auto &tile_const, const auto &tile, const auto &)
-    {
-      const auto append = [this,&os](auto t)
-      {
-        //shift to original offset
-        t = t.shift_xy(m_map.offset());
-        //save tile
-        const auto data =
-          std::bit_cast<std::array<char, sizeof(t)>>(t);
-        os.write(data.data(), data.size());
-      };
-      if (!filter_invalid(tile_const))
-      {// write from tiles const
-        append(tile_const);
-        return;
-      }
-      append(tile);
-      //write from tiles.
+      for_all_tiles(
+        [this, &os](const auto &tile_const, const auto &tile, const auto &)
+        {
+          const auto append = [this, &os](auto t)
+          {
+            // shift to original offset
+            t               = t.shift_xy(m_map.offset());
+            // save tile
+            const auto data = std::bit_cast<std::array<char, sizeof(t)>>(t);
+            os.write(data.data(), data.size());
+          };
+          if (!filter_invalid(tile_const))
+          {// write from tiles const
+            append(tile_const);
+            return;
+          }
+          append(tile);
+          // write from tiles.
+        },
+        false,
+        true);
     },
-    false); },
     path,
     "");
 }
