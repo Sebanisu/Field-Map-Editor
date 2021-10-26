@@ -1760,3 +1760,34 @@ std::shared_ptr<sf::RenderTexture>
   }
   return nullptr;
 }
+void
+  map_sprite::save_modified_map(const std::filesystem::path & dest_path) const
+{
+  const auto path = dest_path.string();
+  open_viii::tools::write_buffer(
+    [this](std::ostream &os)
+    {
+  for_all_tiles(
+    [this, &os](const auto &tile_const, const auto &tile, const auto &)
+    {
+      const auto append = [this,&os](auto t)
+      {
+        //shift to original offset
+        t = t.shift_xy(m_map.offset());
+        //save tile
+        const auto data =
+          std::bit_cast<std::array<char, sizeof(t)>>(t);
+        os.write(data.data(), data.size());
+      };
+      if (!filter_invalid(tile_const))
+      {// write from tiles const
+        append(tile_const);
+        return;
+      }
+      append(tile);
+      //write from tiles.
+    },
+    false); },
+    path,
+    "");
+}

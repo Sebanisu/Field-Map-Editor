@@ -217,5 +217,9 @@ private:
     combo_upscale_path() const;
   const open_viii::LangT &
     get_coo() const;
+  mutable bool m_modified_map ={false};
+  void
+    menuitem_save_map_file_modified(const std::string &path,
+      bool                                             disable) const;
 };
 #endif// MYPROJECT_GUI_HPP

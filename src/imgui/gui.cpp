@@ -587,6 +587,7 @@ void
       menuitem_save_texture(save_texture_path(), mim_test() || map_test());
       menuitem_save_mim_file(m_mim_sprite.mim_filename(), mim_test());
       menuitem_save_map_file(m_map_sprite.map_filename(), map_test());
+      menuitem_save_map_file_modified(m_map_sprite.map_filename(), map_test());
       if (ImGui::MenuItem("Save All Texture Changes", nullptr, false, true))
       {
         m_map_sprite.save_new_textures(std::filesystem::current_path());
@@ -684,7 +685,14 @@ void
       const auto str_path = selected_path.string();
       if (open_viii::tools::i_ends_with(str_path, Map::EXT))
       {
-        m_map_sprite.map_save(selected_path);
+        if(m_modified_map)
+        {
+          m_map_sprite.save_modified_map(selected_path);
+        }
+        else
+        {
+          m_map_sprite.map_save(selected_path);
+        }
       }
       else
       {
@@ -729,12 +737,26 @@ void
 void
   gui::menuitem_save_map_file(const std::string &path, bool disable) const
 {
-  if (ImGui::MenuItem("Save Map File", nullptr, false, disable))
+  if (ImGui::MenuItem("Save Map File (unmodified)", nullptr, false, disable))
   {
     m_save_file_browser.Open();
     m_save_file_browser.SetTitle("Save Map as...");
     m_save_file_browser.SetTypeFilters({ Map::EXT.data() });
     m_save_file_browser.SetInputName(path);
+    m_modified_map = false;
+  }
+}
+void
+  gui::menuitem_save_map_file_modified(const std::string &path,
+    bool                                                  disable) const
+{
+  if (ImGui::MenuItem("Save Map File (modified)", nullptr, false, disable))
+  {
+    m_save_file_browser.Open();
+    m_save_file_browser.SetTitle("Save Map as...");
+    m_save_file_browser.SetTypeFilters({ Map::EXT.data() });
+    m_save_file_browser.SetInputName(path);
+    m_modified_map = true;
   }
 }
 void

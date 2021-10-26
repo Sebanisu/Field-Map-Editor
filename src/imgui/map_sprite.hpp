@@ -119,6 +119,8 @@ public:
     save_new_textures(const std::filesystem::path &path) const;
   void
     save_pupu_textures(const std::filesystem::path &path) const;
+  void
+    save_modified_map(const std::filesystem::path &path) const;
 
 private:
   mutable std::vector<std::future<void>> m_futures               = {};
@@ -203,7 +205,10 @@ private:
   auto
     duel_visitor(auto &&lambda) const;
   void
-    for_all_tiles(auto const &tiles_const, auto &&tiles, auto &&lambda, bool skip_invalid) const;
+    for_all_tiles(auto const &tiles_const,
+      auto                  &&tiles,
+      auto                  &&lambda,
+      bool                    skip_invalid) const;
   void
     for_all_tiles(auto &&lambda, bool skip_invalid = true) const;
   void
