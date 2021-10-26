@@ -38,7 +38,8 @@ public:
     , m_coo(coo)
     , m_upscales(get_upscales())
     , m_mim(get_mim())
-    , m_map_const(get_map(&m_map_path))
+    , m_using_coo(false)
+    , m_map_const(get_map(&m_map_path, true, m_using_coo))
     , m_map(m_map_const)
     , m_all_unique_values_and_strings(get_all_unique_values_and_strings())
     , m_canvas(get_canvas())
@@ -130,6 +131,7 @@ private:
   ::upscales                                         m_upscales  = {};
   open_viii::graphics::background::Mim               m_mim       = {};
   mutable std::string                                m_map_path  = {};
+  bool                                               m_using_coo = {};
   open_viii::graphics::background::Map               m_map_const = {};
   mutable open_viii::graphics::background::Map       m_map       = {};
   all_unique_values_and_strings m_all_unique_values_and_strings  = {};
@@ -153,7 +155,7 @@ private:
   [[nodiscard]] open_viii::graphics::background::Mim
     get_mim() const;
   open_viii::graphics::background::Map
-    get_map(std::string *out_path = nullptr, bool shift = true) const;
+    get_map(std::string *out_path, bool shift, bool &coo) const;
   [[nodiscard]] colors_type
     get_colors(open_viii::graphics::BPPT bpp, std::uint8_t palette) const;
   [[nodiscard]] std::size_t
@@ -264,6 +266,27 @@ private:
       });
     return r;
   }
+
+  std::filesystem::path
+    save_path_coo(
+      fmt::format_string<std::string_view, std::string_view, uint8_t> pattern,
+      const std::filesystem::path                                    &path,
+      const std::string_view &field_name,
+      uint8_t                 texture_page) const;
+  std::filesystem::path
+    save_path_coo(
+      fmt::format_string<std::string_view, std::string_view, uint8_t, uint8_t>
+                                   pattern,
+      const std::filesystem::path &path,
+      const std::string_view      &field_name,
+      uint8_t                      texture_page,
+      uint8_t                      palette) const;
+  std::filesystem::path
+    save_path_coo(
+      fmt::format_string<std::string_view, std::string_view, PupuID> pattern,
+      const std::filesystem::path                                   &path,
+      const std::string_view                                        &field_name,
+      PupuID pupu) const;
   std::filesystem::path
     save_path(fmt::format_string<std::string_view, uint8_t> pattern,
       const std::filesystem::path                          &path,

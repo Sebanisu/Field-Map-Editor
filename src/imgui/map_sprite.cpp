@@ -8,6 +8,16 @@ using namespace open_viii::graphics::background;
 using namespace open_viii::graphics;
 using namespace open_viii::graphics::literals;
 using namespace std::string_literals;
+static std::string
+  str_to_lower(std::string &&input)
+{
+  std::string output{};
+  output.reserve(std::size(input) + 1);
+  std::ranges::transform(input,
+    std::back_inserter(output),
+    [](char c) -> char { return static_cast<char>(::tolower(c)); });
+  return output;
+}
 bool
   map_sprite::empty() const
 {
@@ -17,27 +27,30 @@ bool
 Mim
   map_sprite::get_mim() const
 {
-  if (m_field != nullptr)
+  if (m_field)
   {
     auto lang_name =
       fmt::format("_{}{}", open_viii::LangCommon::to_string(m_coo), Mim::EXT);
     return { m_field->get_entry_data({ std::string_view(lang_name), Mim::EXT }),
-      m_field->get_base_name() };
+      str_to_lower(m_field->get_base_name()) };
   }
   return {};
 }
 
 Map
-  map_sprite::get_map(std::string *out_path, bool shift) const
+  map_sprite::get_map(std::string *out_path, bool shift, bool &coo) const
 {
-  if (m_field != nullptr)
+  if (m_field)
   {
-    auto lang_name =
+    std::size_t out_path_pos = {};
+    auto        lang_name =
       fmt::format("_{}{}", open_viii::LangCommon::to_string(m_coo), Map::EXT);
-    return Map{ m_mim.mim_type(),
+    auto map = Map{ m_mim.mim_type(),
       m_field->get_entry_data(
-        { std::string_view(lang_name), Map::EXT }, out_path),
+        { std::string_view(lang_name), Map::EXT }, out_path, &out_path_pos),
       shift };
+    coo      = out_path_pos == 0U;
+    return map;
   }
   return {};
 }
@@ -1012,7 +1025,8 @@ bool
 void
   map_sprite::map_save(const std::filesystem::path &dest_path) const
 {
-  const auto map  = get_map(nullptr, false);
+  bool       coo  = false;
+  const auto map  = get_map(nullptr, false, coo);
   const auto path = dest_path.string();
 
   open_viii::tools::write_buffer(
@@ -1421,12 +1435,16 @@ void
   map_sprite::save_new_textures(const std::filesystem::path &path) const
 {
   // assert(std::filesystem::path.is_directory(path));
-  const std::string     field_name             = { m_field->get_base_name() };
+  const std::string     field_name             = { str_to_lower(m_field->get_base_name()) };
   static constexpr char pattern_texture_page[] = { "{}_{}.png" };
-  static constexpr char pattern_texture_page_palette[] = { "{}_{}_{}.png" };
+  static constexpr char pattern_texture_page_palette[]     = { "{}_{}_{}.png" };
+  static constexpr char pattern_coo_texture_page[]         = { "{}_{}_{}.png" };
+  static constexpr char pattern_coo_texture_page_palette[] = {
+    "{}_{}_{}_{}.png"
+  };
 
-  const auto            unique_values = get_all_unique_values_and_strings();
-  const auto           &unique_texture_page_ids =
+  const auto  unique_values = get_all_unique_values_and_strings();
+  const auto &unique_texture_page_ids =
     unique_values.texture_page_id().values();
   const auto           &unique_bpp = unique_values.bpp().values();
   const settings_backup settings(m_filters,
@@ -1473,11 +1491,17 @@ void
           {
             settings.filters.value().palette.update(palette).enable();
             settings.filters.value().bpp.update(bpp).enable();
-            auto out_path    = save_path(pattern_texture_page_palette,
-                 path,
-                 field_name,
-                 texture_page,
-                 palette);
+            auto out_path    = m_using_coo
+                                 ? save_path_coo(pattern_coo_texture_page_palette,
+                                   path,
+                                   field_name,
+                                   texture_page,
+                                   palette)
+                                 : save_path(pattern_texture_page_palette,
+                                   path,
+                                   field_name,
+                                   texture_page,
+                                   palette);
             auto out_texture = save_texture(height, height);
             async_save(out_path, out_texture);
           }
@@ -1487,7 +1511,10 @@ void
     settings.filters.value().palette.disable();
     settings.filters.value().bpp.disable();
     auto out_path =
-      save_path(pattern_texture_page, path, field_name, texture_page);
+      m_using_coo
+        ? save_path_coo(
+          pattern_coo_texture_page, path, field_name, texture_page)
+        : save_path(pattern_texture_page, path, field_name, texture_page);
     auto out_texture = save_texture(height, height);
     async_save(out_path, out_texture);
   }
@@ -1543,8 +1570,9 @@ void
   map_sprite::save_pupu_textures(const std::filesystem::path &path) const
 {
   // assert(std::filesystem::path.is_directory(path));
-  const std::string     field_name     = { m_field->get_base_name() };
-  static constexpr char pattern_pupu[] = { "{}_{}.png" };
+  const std::string     field_name         = { str_to_lower(m_field->get_base_name()) };
+  static constexpr char pattern_pupu[]     = { "{}_{}.png" };
+  static constexpr char pattern_coo_pupu[] = { "{}_{}_{}.png" };
 
   const auto &unique_pupu_ids = m_all_unique_values_and_strings.pupu().values();
   const settings_backup settings(m_filters,
@@ -1569,7 +1597,8 @@ void
   {
     settings.filters.value().pupu.update(pupu).enable();
     std::filesystem::path out_path =
-      save_path(pattern_pupu, path, field_name, pupu);
+      m_using_coo ? save_path_coo(pattern_coo_pupu, path, field_name, pupu)
+                  : save_path(pattern_pupu, path, field_name, pupu);
     std::shared_ptr<sf::RenderTexture> out_texture =
       save_texture(static_cast<std::uint32_t>(canvas.width()),
         static_cast<std::uint32_t>(canvas.height()));
@@ -1608,6 +1637,47 @@ uint32_t
     tex_height = 256U;
   }
   return tex_height;
+}
+std::filesystem::path
+  map_sprite::save_path_coo(
+    fmt::format_string<std::string_view, std::string_view, uint8_t> pattern,
+    const std::filesystem::path                                    &path,
+    const std::string_view                                         &field_name,
+    uint8_t texture_page) const
+{
+  return path
+         / fmt::vformat(fmt::string_view(pattern),
+           fmt::make_format_args(field_name,
+             open_viii::LangCommon::to_string(m_coo),
+             texture_page));
+}
+std::filesystem::path
+  map_sprite::save_path_coo(
+    fmt::format_string<std::string_view, std::string_view, uint8_t, uint8_t>
+                                 pattern,
+    const std::filesystem::path &path,
+    const std::string_view      &field_name,
+    uint8_t                      texture_page,
+    uint8_t                      palette) const
+{
+  return path
+         / fmt::vformat(fmt::string_view(pattern),
+           fmt::make_format_args(field_name,
+             open_viii::LangCommon::to_string(m_coo),
+             texture_page,
+             palette));
+}
+std::filesystem::path
+  map_sprite::save_path_coo(
+    fmt::format_string<std::string_view, std::string_view, PupuID> pattern,
+    const std::filesystem::path                                   &path,
+    const std::string_view                                        &field_name,
+    PupuID                                                         pupu) const
+{
+  return path
+         / fmt::vformat(fmt::string_view(pattern),
+           fmt::make_format_args(
+             field_name, open_viii::LangCommon::to_string(m_coo), pupu));
 }
 std::filesystem::path
   map_sprite::save_path(
