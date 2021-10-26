@@ -36,7 +36,7 @@ public:
     , m_filters(std::move(in_filters))
     , m_field(std::move(field))
     , m_coo(coo)
-    , m_upscales(m_field->get_base_name(), m_coo)
+    , m_upscales(get_upscales())
     , m_mim(get_mim())
     , m_map_const(get_map(&m_map_path))
     , m_map(m_map_const)
@@ -284,5 +284,14 @@ private:
     check_if_one_palette(const uint8_t &texture_page) const;
   std::vector<uint8_t>
     get_conflicting_palettes(const uint8_t &texture_page) const;
+  ::upscales
+    get_upscales()
+  {
+    if (m_field)
+    {
+      return { m_field->get_base_name(), m_coo };
+    }
+    return {};
+  }
 };
 #endif// MYPROJECT_MAP_SPRITE_HPP

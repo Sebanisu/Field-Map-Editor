@@ -1272,9 +1272,11 @@ void
     | std::views::transform(
       [this](const std::string &path)
       {
-        return upscales(
-          std::filesystem::path(path), m_field->get_base_name(), get_coo())
-          .get_paths();
+        if (m_field)
+          return upscales(
+            std::filesystem::path(path), m_field->get_base_name(), get_coo())
+            .get_paths();
+        return upscales{}.get_paths();
       });
   // std::views::join; broken in msvc.
   auto process = [&paths](const auto &temp_paths)
@@ -1295,18 +1297,21 @@ void
   {
     process(temp_paths);
   }
-  process(upscales(
-    std::filesystem::current_path(), m_field->get_base_name(), get_coo())
-            .get_paths());
-
-  if (generic_combo(
-        m_id,
-        "Upscale Path",
-        [&paths]() { return paths; },
-        [&paths]() { return paths; },
-        [this]() -> auto & { return m_map_sprite.filter().upscale; }))
+  if (m_field)
   {
-    m_map_sprite.update_render_texture(true);
-    m_changed = true;
+    process(upscales(
+      std::filesystem::current_path(), m_field->get_base_name(), get_coo())
+              .get_paths());
+
+    if (generic_combo(
+          m_id,
+          "Upscale Path",
+          [&paths]() { return paths; },
+          [&paths]() { return paths; },
+          [this]() -> auto & { return m_map_sprite.filter().upscale; }))
+    {
+      m_map_sprite.update_render_texture(true);
+      m_changed = true;
+    }
   }
 }
