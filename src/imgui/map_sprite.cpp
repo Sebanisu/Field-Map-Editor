@@ -1779,6 +1779,50 @@ std::shared_ptr<sf::RenderTexture>
   return nullptr;
 }
 void
+  map_sprite::load_map(const std::filesystem::path &src_path) const
+{
+  const auto filesize = std::filesystem::file_size(src_path);
+  const auto tilesize = m_map.visit_tiles([](auto &&tiles)
+    { return sizeof(typename std::decay_t<decltype(tiles)>::value_type); });
+  const auto tilecount =
+    m_map_const.visit_tiles([](const auto &tiles) { return std::size(tiles); });
+  assert(std::cmp_equal(tilecount, filesize / tilesize));
+  if (!std::cmp_equal(tilecount, filesize / tilesize))
+  {
+    fmt::print("Error wrong size map file, {} != {} / {}\n", tilecount, filesize , tilesize);
+    return;
+  }
+  const auto path = src_path.string();
+  open_viii::tools::read_from_file(
+    [this](std::istream &os)
+    {
+      for_all_tiles(
+        [this, &os](const auto &, auto &tile, const auto &)
+        {
+          const auto append = [this, &os](auto &t)
+          {
+            // load tile
+            std::array<char, sizeof(t)> data = {};
+            os.read(data.data(), data.size());
+            t = std::bit_cast<std::decay_t<decltype(t)>>(data);
+
+            // shift to origin
+            t = t.shift_xy(m_map.offset().abs());
+          };
+//          if (!filter_invalid(tile_const))
+//          {
+//            return;
+//          }
+          append(tile);
+          // write from tiles.
+        },
+        false,
+        true);
+    },
+    path);
+  update_render_texture();
+}
+void
   map_sprite::save_modified_map(const std::filesystem::path &dest_path) const
 {
   const auto path = dest_path.string();

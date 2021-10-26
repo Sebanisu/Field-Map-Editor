@@ -21,6 +21,12 @@ public:
     start() const;
 
 private:
+  enum struct map_dialog_mode
+  {
+    save_unmodified,
+    save_modified,
+    load
+  };
   struct mouse_positions
   {
     sf::Vector2i pixel         = {};
@@ -217,9 +223,12 @@ private:
     combo_upscale_path() const;
   const open_viii::LangT &
     get_coo() const;
-  mutable bool m_modified_map ={false};
+  mutable map_dialog_mode m_modified_map ={};
   void
     menuitem_save_map_file_modified(const std::string &path,
+      bool                                             disable) const;
+  void
+    menuitem_load_map_file(const std::string &path,
       bool                                             disable) const;
 };
 #endif// MYPROJECT_GUI_HPP

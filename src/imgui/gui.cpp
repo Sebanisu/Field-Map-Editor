@@ -586,6 +586,7 @@ void
       menuitem_locate_ff8();
       menuitem_save_texture(save_texture_path(), mim_test() || map_test());
       menuitem_save_mim_file(m_mim_sprite.mim_filename(), mim_test());
+      menuitem_load_map_file(m_map_sprite.map_filename(), map_test());
       menuitem_save_map_file(m_map_sprite.map_filename(), map_test());
       menuitem_save_map_file_modified(m_map_sprite.map_filename(), map_test());
       if (ImGui::MenuItem("Save All Texture Changes", nullptr, false, true))
@@ -685,13 +686,24 @@ void
       const auto str_path = selected_path.string();
       if (open_viii::tools::i_ends_with(str_path, Map::EXT))
       {
-        if(m_modified_map)
+        switch (m_modified_map)
+        {
+        case map_dialog_mode::save_modified:
         {
           m_map_sprite.save_modified_map(selected_path);
         }
-        else
+        break;
+        case map_dialog_mode::save_unmodified:
         {
           m_map_sprite.map_save(selected_path);
+        }
+        break;
+        case map_dialog_mode::load:
+        {
+          m_map_sprite.load_map(selected_path);
+          m_changed = true;
+        }
+        break;
         }
       }
       else
@@ -743,7 +755,7 @@ void
     m_save_file_browser.SetTitle("Save Map as...");
     m_save_file_browser.SetTypeFilters({ Map::EXT.data() });
     m_save_file_browser.SetInputName(path);
-    m_modified_map = false;
+    m_modified_map = map_dialog_mode::save_unmodified;
   }
 }
 void
@@ -756,7 +768,20 @@ void
     m_save_file_browser.SetTitle("Save Map as...");
     m_save_file_browser.SetTypeFilters({ Map::EXT.data() });
     m_save_file_browser.SetInputName(path);
-    m_modified_map = true;
+    m_modified_map = map_dialog_mode::save_modified;
+  }
+}
+void
+  gui::menuitem_load_map_file(const std::string &path,
+    bool                                                  disable) const
+{
+  if (ImGui::MenuItem("Load Map File", nullptr, false, disable))
+  {
+    m_save_file_browser.Open();
+    m_save_file_browser.SetTitle("Load Map...");
+    m_save_file_browser.SetTypeFilters({ Map::EXT.data() });
+    m_save_file_browser.SetInputName(path);
+    m_modified_map = map_dialog_mode::load;
   }
 }
 void
