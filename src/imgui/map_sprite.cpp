@@ -21,7 +21,8 @@ static std::string
 bool
   map_sprite::empty() const
 {
-  return m_map.visit_tiles([](auto &&tiles) { return std::empty(tiles); });
+  return m_maps.const_back().visit_tiles(
+    [](const auto &tiles) { return std::empty(tiles); });
 }
 
 Mim
@@ -342,7 +343,7 @@ std::uint8_t
   map_sprite::max_x_for_saved() const
 {
   static constexpr std::uint8_t tile_size = 16U;
-  return m_map.visit_tiles(
+  return m_maps.const_back().visit_tiles(
     [this](const auto &tiles)
     {
       auto transform_range = m_saved_indicies
@@ -380,7 +381,7 @@ template<typename key_lambdaT, typename weight_lambdaT>
     const int                               passes) const
 {
   static constexpr auto tile_size = 16U;
-  m_map.visit_tiles(
+  m_maps.copy_back().visit_tiles(
     [&key_lambda, &weight_lambda, &passes, this](auto &&tiles)
     {
       for (int pass = passes; pass != 0;
@@ -469,7 +470,7 @@ void
 void
   map_sprite::flatten_bpp() const
 {
-  m_map.visit_tiles(
+  m_maps.copy_back().visit_tiles(
     [](auto &tiles)
     {
       std::ranges::transform(tiles,
@@ -487,7 +488,7 @@ void
 void
   map_sprite::flatten_palette() const
 {
-  m_map.visit_tiles(
+  m_maps.copy_back().visit_tiles(
     [](auto &tiles)
     {
       std::ranges::transform(tiles,
@@ -508,8 +509,8 @@ std::size_t
     std::uint8_t                       texture_page,
     const bool                         move_from_row)
 {
-  return m_map.visit_tiles(
-    [&tile_y, &texture_page, &move_from_row](auto &&tiles) -> std::size_t
+  return m_maps.const_back().visit_tiles(
+    [&tile_y, &texture_page, &move_from_row](const auto &tiles) -> std::size_t
     {
       std::vector<std::pair<std::uint8_t, std::int8_t>> values = {};
       auto                                              filtered_range =
@@ -560,7 +561,7 @@ void
   {
     return;
   }
-  m_map.visit_tiles(
+  m_maps.copy_back().visit_tiles(
     [this, &tile_pos, &texture_page, &pixel_pos](auto &&tiles)
     {
       static constexpr std::uint8_t tile_size = 16U;
@@ -669,8 +670,9 @@ std::vector<size_t>
     const std::uint8_t                             &texture_page,
     const bool                                      skip_filters)
 {
-  return m_map.visit_tiles(
-    [this, &tile_pos, &texture_page, &pixel_pos, &skip_filters](auto &&tiles)
+  return m_maps.const_back().visit_tiles(
+    [this, &tile_pos, &texture_page, &pixel_pos, &skip_filters](
+      const auto &tiles)
     {
       std::vector<std::size_t> out = {};
       auto                     filtered_tiles =
@@ -737,10 +739,10 @@ std::vector<size_t>
 auto
   map_sprite::duel_visitor(auto &&lambda) const
 {
-  return m_map_const.visit_tiles(
+  return m_maps.front().visit_tiles(
     [this, &lambda](auto const &tiles_const)
     {
-      return m_map.visit_tiles([&lambda, &tiles_const](auto &&tiles)
+      return m_maps.back().visit_tiles([&lambda, &tiles_const](auto &&tiles)
         { return lambda(tiles_const, std::forward<decltype(tiles)>(tiles)); });
     });
 }
@@ -1151,7 +1153,7 @@ open_viii::graphics::Rectangle<std::uint32_t>
   map_sprite::get_canvas() const
 {
   return static_cast<open_viii::graphics::Rectangle<std::uint32_t>>(
-    m_map.canvas());
+    m_maps.const_back().canvas());
 }
 
 std::uint32_t
@@ -1272,7 +1274,7 @@ bool
 all_unique_values_and_strings
   map_sprite::get_all_unique_values_and_strings() const
 {
-  return m_map.visit_tiles(
+  return m_maps.const_back().visit_tiles(
     [](const auto &tiles) { return all_unique_values_and_strings(tiles); });
 }
 
@@ -1434,7 +1436,7 @@ public:
 bool
   map_sprite::check_if_one_palette(const std::uint8_t &texture_page) const
 {
-  return m_map.visit_tiles(
+  return m_maps.const_back().visit_tiles(
     [&texture_page](const auto &tiles) -> bool
     {
       auto filtered_tiles =
@@ -1543,7 +1545,7 @@ void
 std::vector<std::uint8_t>
   map_sprite::get_conflicting_palettes(const std::uint8_t &texture_page) const
 {
-  const auto palettes = m_map_const.visit_tiles(
+  const auto palettes = m_maps.front().visit_tiles(
     [&texture_page, this](const auto &tiles)
     {
       //        using tileT =
@@ -1608,7 +1610,7 @@ void
   // todo maybe draw with blends enabled to transparent black or white.
   uint32_t tex_height                 = get_max_texture_height();
   settings.scale                      = tex_height / 256U;
-  const auto canvas = m_map.canvas() * static_cast<int>(m_scale);
+  const auto canvas = m_maps.const_back().canvas() * static_cast<int>(m_scale);
   if (settings.scale == 0U)
   {
     settings.scale = 1U;
@@ -1782,20 +1784,24 @@ void
   map_sprite::load_map(const std::filesystem::path &src_path) const
 {
   const auto filesize = std::filesystem::file_size(src_path);
-  const auto tilesize = m_map.visit_tiles([](auto &&tiles)
+  const auto tilesize = m_maps.const_back().visit_tiles([](auto &&tiles)
     { return sizeof(typename std::decay_t<decltype(tiles)>::value_type); });
   const auto tilecount =
-    m_map_const.visit_tiles([](const auto &tiles) { return std::size(tiles); });
+    m_maps.front().visit_tiles([](const auto &tiles) { return std::size(tiles); });
   assert(std::cmp_equal(tilecount, filesize / tilesize));
   if (!std::cmp_equal(tilecount, filesize / tilesize))
   {
-    fmt::print("Error wrong size map file, {} != {} / {}\n", tilecount, filesize , tilesize);
+    fmt::print("Error wrong size map file, {} != {} / {}\n",
+      tilecount,
+      filesize,
+      tilesize);
     return;
   }
   const auto path = src_path.string();
   open_viii::tools::read_from_file(
     [this](std::istream &os)
     {
+      (void)m_maps.copy_back();
       for_all_tiles(
         [this, &os](const auto &, auto &tile, const auto &)
         {
@@ -1807,12 +1813,12 @@ void
             t = std::bit_cast<std::decay_t<decltype(t)>>(data);
 
             // shift to origin
-            t = t.shift_xy(m_map.offset().abs());
+            t = t.shift_xy(m_maps.const_back().offset().abs());
           };
-//          if (!filter_invalid(tile_const))
-//          {
-//            return;
-//          }
+          //          if (!filter_invalid(tile_const))
+          //          {
+          //            return;
+          //          }
           append(tile);
           // write from tiles.
         },
@@ -1835,7 +1841,7 @@ void
           const auto append = [this, &os](auto t)
           {
             // shift to original offset
-            t               = t.shift_xy(m_map.offset());
+            t               = t.shift_xy(m_maps.const_back().offset());
             // save tile
             const auto data = std::bit_cast<std::array<char, sizeof(t)>>(t);
             os.write(data.data(), data.size());

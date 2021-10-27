@@ -39,8 +39,7 @@ public:
     , m_upscales(get_upscales())
     , m_mim(get_mim())
     , m_using_coo(false)
-    , m_map_const(get_map(&m_map_path, true, m_using_coo))
-    , m_map(m_map_const)
+    , m_maps(get_map(&m_map_path, true, m_using_coo))
     , m_all_unique_values_and_strings(get_all_unique_values_and_strings())
     , m_canvas(get_canvas())
     , m_texture(get_textures())
@@ -49,6 +48,12 @@ public:
     , m_texture_page_grid(get_texture_page_grid())
   {
     init_render_texture();
+  }
+  void
+    undo()
+  {
+    (void)m_maps.undo();
+    update_render_texture();
   }
   [[nodiscard]] const all_unique_values_and_strings &
     uniques() const;
@@ -125,6 +130,94 @@ public:
     load_map(const std::filesystem::path &dest_path) const;
 
 private:
+  struct maps
+  {
+    maps() = default;
+    explicit maps(open_viii::graphics::background::Map &&in_map)
+      : m_maps{ std::move(in_map) }
+    {
+      copy_back();
+    }
+    open_viii::graphics::background::Map &
+      copy_back() const
+    {
+      m_history.push_back(true);
+      return m_maps.emplace_back(m_maps.back());
+    }
+    const open_viii::graphics::background::Map &
+      copy_back_to_front() const
+    {
+      m_maps.insert(m_maps.begin(), m_maps.back());
+      m_history.push_back(false);
+      return front();
+    }
+    const open_viii::graphics::background::Map &
+      copy_front() const
+    {
+      m_maps.insert(m_maps.begin(), m_maps.front());
+      m_history.push_back(false);
+      return m_maps.front();
+    }
+    [[nodiscard]] const open_viii::graphics::background::Map &
+      front() const noexcept
+    {
+      return m_maps.front();
+    }
+    [[nodiscard]] open_viii::graphics::background::Map &
+      mutable_front() const noexcept
+    {
+      return m_maps.front();
+    }
+    [[nodiscard]] open_viii::graphics::background::Map &
+      back() const noexcept
+    {
+      return m_maps.back();
+    }
+    [[nodiscard]] const open_viii::graphics::background::Map &
+      const_back() const noexcept
+    {
+      return m_maps.back();
+    }
+    bool
+      undo() const
+    {
+      if (m_maps.size() <= 2U)
+      {
+        return false;
+      }
+      bool last = m_history.back();
+      m_history.pop_back();
+      if (last)
+      {
+        (void)pop_back();
+        return true;
+      }
+      (void)pop_front();
+      return true;
+    }
+
+  private:
+    open_viii::graphics::background::Map &
+      pop_back() const
+    {
+      if (m_maps.size() > 2U)
+      {
+        m_maps.pop_back();
+      }
+      return m_maps.back();
+    }
+    const open_viii::graphics::background::Map &
+      pop_front() const
+    {
+      if (m_maps.size() > 2U)
+      {
+        m_maps.erase(m_maps.begin());
+      }
+      return m_maps.front();
+    }
+    mutable std::vector<open_viii::graphics::background::Map> m_maps{};
+    mutable std::vector<bool>                                 m_history{};
+  };
   mutable std::vector<std::future<void>> m_futures               = {};
   mutable bool                           m_draw_swizzle          = { false };
   mutable bool    m_disable_texture_page_shift                   = { false };
@@ -136,8 +229,7 @@ private:
   open_viii::graphics::background::Mim               m_mim       = {};
   mutable std::string                                m_map_path  = {};
   bool                                               m_using_coo = {};
-  open_viii::graphics::background::Map               m_map_const = {};
-  mutable open_viii::graphics::background::Map       m_map       = {};
+  maps                                               m_maps      = {};
   all_unique_values_and_strings m_all_unique_values_and_strings  = {};
   open_viii::graphics::Rectangle<std::uint32_t> m_canvas         = {};
   static constexpr std::size_t                  MAX_TEXTURES =

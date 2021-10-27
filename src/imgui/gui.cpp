@@ -850,6 +850,21 @@ void
                    // TODO move setting mouse pos code here?
                    // m_changed = true;
                  },
+                 [this, type](const sf::Event::KeyEvent & key)
+                 {
+                   if(ImGui::GetIO().WantCaptureKeyboard)
+                   {
+                     return;
+                   }
+                   if(type == sf::Event::EventType::KeyReleased)
+                   {
+                     if(key.control && key.code == sf::Keyboard::Z)
+                     {
+
+                       m_map_sprite.undo();
+                     }
+                   }
+                 },
                  [this, &type](const sf::Event::MouseButtonEvent &mouse)
                  {
                    const sf::Mouse::Button &button = mouse.button;
