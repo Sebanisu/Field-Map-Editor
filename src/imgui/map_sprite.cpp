@@ -963,19 +963,21 @@ void
         {
           states.texture = get_texture(pupu_id);
         }
-        if (states.texture == nullptr || states.texture->getSize().y == 0 || states.texture->getSize().x == 0)
+        if (states.texture == nullptr || states.texture->getSize().y == 0
+            || states.texture->getSize().x == 0)
         {
-            return;
+          return;
         }
         const auto draw_size = sf::Vector2u{ 16U * m_scale, 16U * m_scale };
         const auto raw_texture_size = states.texture->getSize();
         const auto i                = raw_texture_size.y / 16U;
-        const auto texture_size     = [this, &i, &draw_size, &raw_texture_size]()
+        const auto texture_size = [this, &i, &draw_size, &raw_texture_size]()
         {
           if (m_filters.deswizzle.enabled())
           {
             const auto local_scale = raw_texture_size.y / m_canvas.height();
-            return sf::Vector2u{ 16U * local_scale, 16U * local_scale };;
+            return sf::Vector2u{ 16U * local_scale, 16U * local_scale };
+            ;
           }
           return sf::Vector2u{ i, i };
         }();
@@ -1591,13 +1593,19 @@ void
     m_scale);
   settings.filters                    = {};
   settings.filters.value().upscale    = settings.filters.backup().upscale;
+  settings.filters.value().deswizzle  = settings.filters.backup().deswizzle;
   settings.draw_swizzle               = true;
   settings.disable_texture_page_shift = true;
   settings.disable_blends             = true;
   uint32_t height                     = get_max_texture_height();
   settings.scale                      = height / 256U;
-  if (m_scale == 0U)
-    m_scale = 1U;
+  if (settings.filters.value().deswizzle.enabled())
+  {
+    settings.scale = height / m_canvas.height();
+    height         = settings.scale.value() * 256U;
+  }
+  if (settings.scale == 0U)
+    settings.scale = 1U;
   bool map_test =
     unique_bpp.size() == 1U
     && unique_values.palette().at(unique_bpp.front()).values().size() <= 1U;
@@ -1680,14 +1688,17 @@ std::vector<std::uint8_t>
         [&texture_page](const auto &tile)
         { return std::cmp_equal(texture_page, tile.texture_id()); });
       std::vector<uint8_t> conflict_palettes{};
-      for (auto &[xy, palette_vector] : map_xy_palette)
+
+      for (auto &kvp : map_xy_palette)
       {
+        // const auto& xy = kvp.first;
+        std::vector<std::uint8_t> &palette_vector = kvp.second;
         std::ranges::sort(palette_vector);
         auto [first, last] = std::ranges::unique(palette_vector);
         palette_vector.erase(first, last);
         if (palette_vector.size() <= 1U)
         {
-          map_xy_palette.erase(xy);
+          // map_xy_palette.erase(xy);
         }
         else
         {
