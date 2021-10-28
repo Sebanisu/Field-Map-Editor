@@ -426,7 +426,11 @@ void
   {
     m_map_sprite = m_map_sprite.with_field(m_field);
   }
-  m_changed = true;
+
+  m_loaded_swizzle_texture_path   = std::filesystem::path{};
+  m_loaded_deswizzle_texture_path = std::filesystem::path{};
+
+  m_changed                       = true;
 }
 
 void
@@ -1505,8 +1509,11 @@ void
   {
     return;
   }
-  //std::vector<std::filesystem::path> values = { m_loaded_deswizzle_texture_path };
-  std::vector<std::string> strings = { m_loaded_deswizzle_texture_path.string() };
+  // std::vector<std::filesystem::path> values = {
+  // m_loaded_deswizzle_texture_path };
+  std::vector<std::string> strings = {
+    m_loaded_deswizzle_texture_path.string()
+  };
   if (generic_combo(
         m_id,
         "Deswizzle Path",
