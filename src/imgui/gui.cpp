@@ -92,7 +92,13 @@ void
       m_changed = false;
       m_id      = {};
       loop_events();
-      ImGui::SFML::Update(m_window, m_delta_clock.restart());
+      const sf::Time &dt = m_delta_clock.restart();
+      if(m_scrolling.scroll(xy, dt))
+      {
+        m_changed = true;
+        m_mouse_positions.mouse_moved = true;
+      }
+      ImGui::SFML::Update(m_window, dt);
       loop();
     } while (m_window.isOpen());
     ImGui::SFML::Shutdown();
@@ -584,18 +590,35 @@ void
     if (ImGui::BeginMenu("File"))
     {
       menuitem_locate_ff8();
+      ImGui::Separator();
       menuitem_save_texture(save_texture_path(), mim_test() || map_test());
-      menuitem_save_mim_file(m_mim_sprite.mim_filename(), mim_test());
-      menuitem_load_map_file(m_map_sprite.map_filename(), map_test());
-      menuitem_save_map_file(m_map_sprite.map_filename(), map_test());
-      menuitem_save_map_file_modified(m_map_sprite.map_filename(), map_test());
-      if (ImGui::MenuItem("Save All Texture Changes", nullptr, false, true))
+      if (mim_test())
       {
-        m_map_sprite.save_new_textures(std::filesystem::current_path());
+        ImGui::Separator();
+        menuitem_save_mim_file(m_mim_sprite.mim_filename());
       }
-      if (ImGui::MenuItem("Save Pupu Textures", nullptr, false, true))
+      if (map_test())
       {
-        m_map_sprite.save_pupu_textures(std::filesystem::current_path());
+        ImGui::Separator();
+        menuitem_save_map_file(m_map_sprite.map_filename());
+        menuitem_load_map_file(m_map_sprite.map_filename());
+        menuitem_save_map_file_modified(m_map_sprite.map_filename());
+        ImGui::Separator();
+        if (ImGui::MenuItem("Save Swizzled Textures", nullptr, false, true))
+        {
+          m_map_sprite.save_new_textures(std::filesystem::current_path());
+        }
+        if (ImGui::MenuItem("Load Swizzled Textures", nullptr, false, true))
+        {
+          // m_map_sprite.save_new_textures(std::filesystem::current_path());
+          m_loaded_swizzle_texture_path = std::filesystem::current_path();
+        }
+        ImGui::Separator();
+        if (ImGui::MenuItem(
+              "Save Deswizzled Textures (Pupu)", nullptr, false, true))
+        {
+          m_map_sprite.save_pupu_textures(std::filesystem::current_path());
+        }
       }
       ImGui::EndMenu();
     }
@@ -725,9 +748,9 @@ void
   }
 }
 void
-  gui::menuitem_save_texture(const std::string &path, bool disable) const
+  gui::menuitem_save_texture(const std::string &path, bool enabled) const
 {
-  if (ImGui::MenuItem("Save Displayed Texture", nullptr, false, disable))
+  if (ImGui::MenuItem("Save Displayed Texture", nullptr, false, enabled))
   {
     m_save_file_browser.Open();
     m_save_file_browser.SetTitle("Save Texture as...");
@@ -736,9 +759,9 @@ void
   }
 }
 void
-  gui::menuitem_save_mim_file(const std::string &path, bool disable) const
+  gui::menuitem_save_mim_file(const std::string &path, bool enabled) const
 {
-  if (ImGui::MenuItem("Save Mim File", nullptr, false, disable))
+  if (ImGui::MenuItem("Save Mim File", nullptr, false, enabled))
   {
     m_save_file_browser.Open();
     m_save_file_browser.SetTitle("Save Mim as...");
@@ -747,9 +770,9 @@ void
   }
 }
 void
-  gui::menuitem_save_map_file(const std::string &path, bool disable) const
+  gui::menuitem_save_map_file(const std::string &path, bool enabled) const
 {
-  if (ImGui::MenuItem("Save Map File (unmodified)", nullptr, false, disable))
+  if (ImGui::MenuItem("Save Map File (unmodified)", nullptr, false, enabled))
   {
     m_save_file_browser.Open();
     m_save_file_browser.SetTitle("Save Map as...");
@@ -760,9 +783,9 @@ void
 }
 void
   gui::menuitem_save_map_file_modified(const std::string &path,
-    bool                                                  disable) const
+    bool                                                  enabled) const
 {
-  if (ImGui::MenuItem("Save Map File (modified)", nullptr, false, disable))
+  if (ImGui::MenuItem("Save Map File (modified)", nullptr, false, enabled))
   {
     m_save_file_browser.Open();
     m_save_file_browser.SetTitle("Save Map as...");
@@ -772,10 +795,9 @@ void
   }
 }
 void
-  gui::menuitem_load_map_file(const std::string &path,
-    bool                                                  disable) const
+  gui::menuitem_load_map_file(const std::string &path, bool enabled) const
 {
-  if (ImGui::MenuItem("Load Map File", nullptr, false, disable))
+  if (ImGui::MenuItem("Load Map File", nullptr, false, enabled))
   {
     m_save_file_browser.Open();
     m_save_file_browser.SetTitle("Load Map...");
@@ -850,18 +872,53 @@ void
                    // TODO move setting mouse pos code here?
                    // m_changed = true;
                  },
-                 [this, type](const sf::Event::KeyEvent & key)
+                 [this, type](const sf::Event::KeyEvent &key)
                  {
-                   if(ImGui::GetIO().WantCaptureKeyboard)
+                   if (ImGui::GetIO().WantCaptureKeyboard)
                    {
+                     m_scrolling.reset();
                      return;
                    }
-                   if(type == sf::Event::EventType::KeyReleased)
+                   if (type == sf::Event::EventType::KeyReleased)
                    {
-                     if(key.control && key.code == sf::Keyboard::Z)
+                     if (key.control && key.code == sf::Keyboard::Z)
                      {
-
                        m_map_sprite.undo();
+                     }
+                     else if (key.code == sf::Keyboard::Up)
+                     {
+                       m_scrolling.up = false;
+                     }
+                     else if (key.code == sf::Keyboard::Down)
+                     {
+                       m_scrolling.down = false;
+                     }
+                     else if (key.code == sf::Keyboard::Left)
+                     {
+                       m_scrolling.left = false;
+                     }
+                     else if (key.code == sf::Keyboard::Right)
+                     {
+                       m_scrolling.right = false;
+                     }
+                   }
+                   if (type == sf::Event::EventType::KeyPressed)
+                   {
+                     if (key.code == sf::Keyboard::Up)
+                     {
+                       m_scrolling.up = true;
+                     }
+                     else if (key.code == sf::Keyboard::Down)
+                     {
+                       m_scrolling.down = true;
+                     }
+                     else if (key.code == sf::Keyboard::Left)
+                     {
+                       m_scrolling.left = true;
+                     }
+                     else if (key.code == sf::Keyboard::Right)
+                     {
+                       m_scrolling.right = true;
                      }
                    }
                  },
@@ -951,16 +1008,16 @@ void
   load(save_height, height);
   // this scales up the elements without losing the horizontal space. so
   // going from 4:3 to 16:9 will end up with wide screen.
-  auto scale    = height / static_cast<float>(m_window_height);
+  // auto scale    = height / static_cast<float>(m_window_height);
   m_scale_width = std::round(width / height * img_height);
-  if (scale < 1.0F)
-  {
-    scale = 1.0F;
-  }
-  ImGui::GetIO().FontGlobalScale = std::round(scale);
-  ImGui::GetStyle() =
-    m_original_style;// restore original before applying scale.
-  ImGui::GetStyle().ScaleAllSizes(std::round(scale));
+  //  if (scale < 1.0F)
+  //  {
+  //    scale = 1.0F;
+  //  }
+  // ImGui::GetIO().FontGlobalScale = std::round(scale);
+  // ImGui::GetStyle() =
+  //  m_original_style;// restore original before applying scale.
+  // ImGui::GetStyle().ScaleAllSizes(std::round(scale));
   m_window.setView(sf::View(sf::FloatRect(std::round(m_cam_pos.x),
     std::round(m_cam_pos.y),
     m_scale_width,
@@ -1358,6 +1415,10 @@ void
   for (auto temp_paths : transform_paths)
   {
     process(temp_paths);
+  }
+  if (std::filesystem::exists(m_loaded_swizzle_texture_path))
+  {
+    paths.push_back(m_loaded_swizzle_texture_path.string());
   }
   if (m_field)
   {

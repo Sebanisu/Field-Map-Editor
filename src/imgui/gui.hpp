@@ -74,6 +74,59 @@ private:
   private:
     bool old_left = { false };
   };
+  struct scrolling
+  {
+    static constexpr float total_scroll_time = 1000.F * 3.F;// ms to scroll 100%
+    bool                   left{};
+    bool                   right{};
+    bool                   up{};
+    bool                   down{};
+    void
+      reset() noexcept
+    {
+      left = right = up = down = false;
+    };
+    bool
+      scroll(std::array<float, 2U> &in_xy, const sf::Time &time)
+    {
+      bool       changed = false;
+      if(!(left || right || up || down))
+      {
+        return changed;
+      }
+      const auto time_ms = static_cast<float>(time.asMicroseconds())/1000.F;
+      const auto change    = time_ms / total_scroll_time;
+      fmt::print("{:.2f} / {:.2f} = {:.10f}\n",time_ms,total_scroll_time, change);
+      //const auto change  = std::lerp(0.F, 1.F, diff);
+      if (left && right)
+      {
+      }
+      else if (left)
+      {
+        in_xy[0] = std::clamp(in_xy[0] + change, -1.F, 0.F);
+        changed  = true;
+      }
+      else if (right)
+      {
+        in_xy[0] = std::clamp(in_xy[0] - change, -1.F, 0.F);
+        changed  = true;
+      }
+      if (up && down)
+      {
+      }
+      else if (up)
+      {
+        in_xy[1] = std::clamp(in_xy[1] + change, -1.F, 0.F);
+        changed  = true;
+      }
+      else if (down)
+      {
+        in_xy[1] = std::clamp(in_xy[1] - change, -1.F, 0.F);
+        changed  = true;
+      }
+      return changed;
+    }
+  };
   struct selections
   {
     int  bpp                    = {};
@@ -89,7 +142,7 @@ private:
   };
   static constexpr std::uint32_t    default_window_width  = 800U;
   static constexpr std::uint32_t    default_window_height = 600U;
-
+  mutable scrolling                 m_scrolling           = {};
   mutable int                       m_id                  = {};
   mutable mouse_positions           m_mouse_positions     = {};
   mutable selections                m_selections          = {};
@@ -180,11 +233,16 @@ private:
   void
     checkbox_map_swizzle() const;
   void
-    menuitem_save_texture(const std::string &path, bool b) const;
+    menuitem_save_texture(const std::string &path, bool enabled = true) const;
   void
-    menuitem_save_mim_file(const std::string &path, bool disable) const;
+    menuitem_save_mim_file(const std::string &path, bool enabled = true) const;
   void
-    menuitem_save_map_file(const std::string &path, bool disable) const;
+    menuitem_save_map_file(const std::string &path, bool enabled = true) const;
+  void
+    menuitem_save_map_file_modified(const std::string &path,
+      bool                                             enabled = true) const;
+  void
+    menuitem_load_map_file(const std::string &path, bool enabled = true) const;
   void
     scale_window(float width = {}, float height = {}) const;
   int
@@ -221,14 +279,9 @@ private:
     on_click_not_imgui() const;
   void
     combo_upscale_path() const;
-  const open_viii::LangT &
+  const open_viii::LangT                             &
     get_coo() const;
-  mutable map_dialog_mode m_modified_map ={};
-  void
-    menuitem_save_map_file_modified(const std::string &path,
-      bool                                             disable) const;
-  void
-    menuitem_load_map_file(const std::string &path,
-      bool                                             disable) const;
+  mutable map_dialog_mode       m_modified_map = {};
+  mutable std::filesystem::path m_loaded_swizzle_texture_path{};
 };
 #endif// MYPROJECT_GUI_HPP
