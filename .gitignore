@@ -31,3 +31,5 @@ Thumbs.db
 bin/
 lib/
 *.i
+
+enc_temp_folder/*
