@@ -571,9 +571,9 @@ void
   gui::slider_xy_sprite(auto &sprite) const
 {
   format_imgui_text(
-    "X: {:>9.3f} px  Width:  {:>4} px", m_cam_pos.x, sprite.width());
+    "X: {:>9.3f} px  Width:  {:>4} px", -std::abs(m_cam_pos.x), sprite.width());
   format_imgui_text(
-    "Y: {:>9.3f} px  Height: {:>4} px", m_cam_pos.y, sprite.height());
+    "Y: {:>9.3f} px  Height: {:>4} px", -std::abs(m_cam_pos.y), sprite.height());
   if (ImGui::SliderFloat2("Adjust", xy.data(), -1.0F, 0.0F) || m_changed)
   {
     m_cam_pos = { -xy[0] * (static_cast<float>(sprite.width()) - m_scale_width),
