@@ -96,6 +96,18 @@ const sf::Texture *
 {
   return &m_texture->at(get_texture_pos(bpp, palette, texture_page));
 }
+const sf::Texture *
+  map_sprite::get_texture(const ::PupuID &pupu) const
+{
+  const auto &values = m_all_unique_values_and_strings.pupu().values();
+  auto        it     = std::ranges::find(values, pupu);
+  if (it != values.end())
+  {
+    return &m_texture->at(
+      static_cast<std::size_t>(std::distance(values.begin(), it)));
+  }
+  return nullptr;
+}
 
 std::shared_ptr<std::array<sf::Texture, map_sprite::MAX_TEXTURES>>
   map_sprite::get_textures() const
@@ -104,27 +116,30 @@ std::shared_ptr<std::array<sf::Texture, map_sprite::MAX_TEXTURES>>
   auto ret = std::make_shared<std::array<sf::Texture, MAX_TEXTURES>>(
     std::array<sf::Texture, MAX_TEXTURES>{});
   const auto &range = m_all_unique_values_and_strings.bpp().values();
-  if (!std::empty(range))
+  if (!m_filters.deswizzle.enabled())
   {
-    for (const auto &bpp : range)
+    if (!std::empty(range))
     {
-      const auto &map = m_all_unique_values_and_strings.palette();
-      if (map.contains(bpp))
+      for (const auto &bpp : range)
       {
-
-        for (const auto &palette : map.at(bpp).values())
+        const auto &map = m_all_unique_values_and_strings.palette();
+        if (map.contains(bpp))
         {
-          if (bpp.bpp24())
+
+          for (const auto &palette : map.at(bpp).values())
           {
-            continue;
-          }
-          if (!m_filters.upscale.enabled())
-          {
-            load_mim_textures(ret, bpp, palette);
-          }
-          else
-          {
-            find_upscale_path(ret, palette);
+            if (bpp.bpp24())
+            {
+              continue;
+            }
+            if (!m_filters.upscale.enabled())
+            {
+              load_mim_textures(ret, bpp, palette);
+            }
+            else
+            {
+              find_upscale_path(ret, palette);
+            }
           }
         }
       }
@@ -133,21 +148,25 @@ std::shared_ptr<std::array<sf::Texture, map_sprite::MAX_TEXTURES>>
     {
       find_upscale_path(ret);
     }
-    wait_for_futures();
   }
-  size_t i = {};
-  for (const auto &texture : *ret)
+  else
   {
-    const auto size = texture.getSize();
-    if (size.x != 0)
-    {
-      // fmt::print("\ttex: {:3} - ({:4}, {:4})\n", i++, size.x, size.y);
-    }
-    else
-    {
-      ++i;
-    }
+    find_deswizzle_path(ret);
   }
+  // size_t i = {};
+  // for (const auto &texture : *ret)
+  //{
+  //   const auto size = texture.getSize();
+  //   if (size.x != 0)
+  //   {
+  //     // fmt::print("\ttex: {:3} - ({:4}, {:4})\n", i++, size.x, size.y);
+  //   }
+  //   else
+  //   {
+  //     ++i;
+  //   }
+  // }
+  wait_for_futures();
   return ret;
 }
 void
@@ -205,6 +224,68 @@ void
     };
     m_futures.emplace_back(std::async(std::launch::async, fn, &(ret->at(i))));
   }
+}
+void
+  map_sprite::find_deswizzle_path(
+    std::shared_ptr<std::array<sf::Texture, MAX_TEXTURES>> &ret) const
+{
+  auto field_name = get_base_name();
+  std::ranges::for_each(m_all_unique_values_and_strings.pupu().values(),
+    [&ret, &field_name, this, i = size_t{}](const ::PupuID &pupu) mutable
+    {
+      static constexpr char pattern_pupu[]     = { "{}_{}.png" };
+      static constexpr char pattern_coo_pupu[] = { "{}_{}_{}.png" };
+      std::filesystem::path in_path{};
+      if (m_using_coo)
+      {
+        in_path = save_path_coo(
+          pattern_coo_pupu, m_filters.deswizzle.value(), field_name, pupu);
+      }
+      else
+      {
+        in_path = save_path(
+          pattern_pupu, m_filters.deswizzle.value(), field_name, pupu);
+      }
+      const auto fn = [in_path](sf::Texture *texture) -> void
+      {
+        if (std::filesystem::exists(in_path))
+        {
+          fmt::print("{}\n", in_path.string());
+          texture->loadFromFile(in_path.string());
+          texture->setSmooth(false);
+          texture->generateMipmap();
+        }
+      };
+
+      m_futures.emplace_back(
+        std::async(std::launch::async, fn, &(ret->at(i++))));
+    });
+  /*for (const auto& texture_page :
+      m_all_unique_values_and_strings.texture_page_id().values())
+  {
+      const size_t i = MAX_TEXTURES - 13 + texture_page;
+      const auto   fn = [this, texture_page](sf::Texture* texture) -> void
+      {
+          const auto& root = m_filters.upscale.value();
+          const auto  paths = m_upscales.get_file_paths(root, texture_page);
+          auto        filtered_paths = paths
+              | std::views::filter(
+                  [](const std::filesystem::path& path)
+                  {
+                      return std::filesystem::exists(path)
+                          && !std::filesystem::is_directory(path);
+                  });
+          if (filtered_paths.begin() != filtered_paths.end())
+          {
+              const auto& path = *(filtered_paths.begin());
+              fmt::print("{}\n", path.string());
+              texture->loadFromFile(path.string());
+              texture->setSmooth(false);
+              texture->generateMipmap();
+          }
+      };
+      m_futures.emplace_back(std::async(std::launch::async, fn, &(ret->at(i))));
+  }*/
 }
 void
   map_sprite::find_upscale_path(
@@ -303,8 +384,18 @@ void
     }
     return tile_const.texture_id() * src_tpw;
   }();
-  const auto src_x = tile_const.source_x() + x;
-  const auto src_y = tile_const.source_y();
+  const auto src_x = [&tile_const, &x, this]() -> std::uint32_t
+  {
+    if (m_filters.deswizzle.enabled())
+      return static_cast<std::uint32_t>(tile_const.x());
+    return tile_const.source_x() + x;
+  }();
+  const auto src_y = [&tile_const, this]() -> std::uint32_t
+  {
+    if (m_filters.deswizzle.enabled())
+      return static_cast<std::uint32_t>(tile_const.y());
+    return tile_const.source_y();
+  }();
 
   const auto dst_x = [this, &tile]()
   {
@@ -862,13 +953,33 @@ void
         {
           return;
         }
-        states.texture = get_texture(
-          tile_const.depth(), tile_const.palette_id(), tile_const.texture_id());
+        if (!m_filters.deswizzle.enabled())
+        {
+          states.texture = get_texture(tile_const.depth(),
+            tile_const.palette_id(),
+            tile_const.texture_id());
+        }
+        else
+        {
+          states.texture = get_texture(pupu_id);
+        }
+        if (states.texture == nullptr || states.texture->getSize().y == 0 || states.texture->getSize().x == 0)
+        {
+            return;
+        }
+        const auto draw_size = sf::Vector2u{ 16U * m_scale, 16U * m_scale };
         const auto raw_texture_size = states.texture->getSize();
         const auto i                = raw_texture_size.y / 16U;
-        const auto texture_size     = sf::Vector2u{ i, i };
-        const auto draw_size = sf::Vector2u{ 16U * m_scale, 16U * m_scale };
-        auto       quad =
+        const auto texture_size     = [this, &i, &draw_size, &raw_texture_size]()
+        {
+          if (m_filters.deswizzle.enabled())
+          {
+            const auto local_scale = raw_texture_size.y / m_canvas.height();
+            return sf::Vector2u{ 16U * local_scale, 16U * local_scale };;
+          }
+          return sf::Vector2u{ i, i };
+        }();
+        auto quad =
           get_triangle_strip(draw_size, texture_size, tile_const, tile);
         states.blendMode = sf::BlendAlpha;
         if (!m_disable_blends)
@@ -1113,8 +1224,12 @@ void
                                });
     if (filtered_textures.begin() != filtered_textures.end())
     {
-      const auto y        = filtered_textures.begin()->getSize().y;
-      m_scale             = y / 256U;
+      const auto y = filtered_textures.begin()->getSize().y;
+      m_scale      = y / 256U;
+      if (m_filters.deswizzle.enabled())
+      {
+        m_scale = y / m_canvas.height();
+      }
       const auto max_size = sf::Texture::getMaximumSize();
       while (width() * m_scale > max_size || height() * m_scale > max_size)
       {
@@ -1457,10 +1572,10 @@ void
   map_sprite::save_new_textures(const std::filesystem::path &path) const
 {
   // assert(std::filesystem::path.is_directory(path));
-  const std::string     field_name = { get_base_name() };
-  static constexpr char pattern_texture_page[]             = { "{}_{}.png" };
-  static constexpr char pattern_texture_page_palette[]     = { "{}_{}_{}.png" };
-  static constexpr char pattern_coo_texture_page[]         = { "{}_{}_{}.png" };
+  const std::string     field_name                     = { get_base_name() };
+  static constexpr char pattern_texture_page[]         = { "{}_{}.png" };
+  static constexpr char pattern_texture_page_palette[] = { "{}_{}_{}.png" };
+  static constexpr char pattern_coo_texture_page[]     = { "{}_{}_{}.png" };
   static constexpr char pattern_coo_texture_page_palette[] = {
     "{}_{}_{}_{}.png"
   };

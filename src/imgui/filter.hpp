@@ -101,6 +101,7 @@ struct filters
     using namespace open_viii::graphics::literals;
     return filter<open_viii::graphics::BPPT>(4_bpp);
   }();
-  filter<std::filesystem::path> upscale = {};
+  filter<std::filesystem::path> upscale   = {};
+  filter<std::filesystem::path> deswizzle = {};
 };
 #endif// MYPROJECT_FILTER_HPP

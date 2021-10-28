@@ -268,6 +268,10 @@ private:
   void
     menuitem_save_deswizzle_textures() const;
   void
+    menuitem_load_swizzle_textures() const;
+  void
+    menuitem_load_deswizzle_textures() const;
+  void
     menuitem_save_texture(const std::string &path, bool enabled = true) const;
   void
     menuitem_save_mim_file(const std::string &path, bool enabled = true) const;
@@ -314,12 +318,13 @@ private:
     on_click_not_imgui() const;
   void
     combo_upscale_path() const;
+  void
+    combo_deswizzle_path() const;
   const open_viii::LangT                             &
     get_coo() const;
   mutable map_dialog_mode       m_modified_map           = {};
   mutable map_directory_mode    m_modified_directory_map = {};
   mutable std::filesystem::path m_loaded_swizzle_texture_path{};
-  void
-    menuitem_load_swizzle_textures() const;
+  mutable std::filesystem::path m_loaded_deswizzle_texture_path{};
 };
 #endif// MYPROJECT_GUI_HPP

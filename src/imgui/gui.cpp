@@ -147,6 +147,7 @@ void
       combo_coo();
       combo_field();
       combo_upscale_path();
+      combo_deswizzle_path();
       static constexpr char filter_title[] = "Filters";
       if (mim_test())
       {
@@ -618,6 +619,7 @@ void
         menuitem_load_swizzle_textures();
         ImGui::Separator();
         menuitem_save_deswizzle_textures();
+        menuitem_load_deswizzle_textures();
       }
       ImGui::EndMenu();
     }
@@ -719,6 +721,21 @@ void
       m_map_sprite.save_pupu_textures(selected_path);
       m_map_sprite.save_modified_map(
         selected_path / m_map_sprite.map_filename());
+    }
+    else if (m_modified_directory_map
+             == map_directory_mode::load_deswizzle_textures)
+    {
+      m_loaded_deswizzle_texture_path = selected_path;
+      m_map_sprite.filter()
+        .deswizzle.update(m_loaded_deswizzle_texture_path)
+        .enable();
+      auto map_path =
+        m_loaded_deswizzle_texture_path / m_map_sprite.map_filename();
+      if (std::filesystem::exists(map_path))
+      {
+        m_map_sprite.load_map(map_path);
+      }
+      m_map_sprite.update_render_texture(true);
     }
     m_directory_browser.ClearSelected();
   }
@@ -834,6 +851,17 @@ void
     m_directory_browser.SetTitle("Choose directory to load textures from");
     m_directory_browser.SetTypeFilters({ ".map", ".png" });
     m_modified_directory_map = map_directory_mode::load_swizzle_textures;
+  }
+}
+void
+  gui::menuitem_load_deswizzle_textures() const
+{
+  if (ImGui::MenuItem("Load Deswizzled Textures", nullptr, false, true))
+  {
+    m_directory_browser.Open();
+    m_directory_browser.SetTitle("Choose directory to load textures from");
+    m_directory_browser.SetTypeFilters({ ".map", ".png" });
+    m_modified_directory_map = map_directory_mode::load_deswizzle_textures;
   }
 }
 void
@@ -1470,7 +1498,27 @@ BPPT
 {
   return Mim::bpp_selections().at(static_cast<size_t>(m_selections.bpp));
 }
-
+void
+  gui::combo_deswizzle_path() const
+{
+  if (!std::filesystem::exists(m_loaded_deswizzle_texture_path) || !m_field)
+  {
+    return;
+  }
+  //std::vector<std::filesystem::path> values = { m_loaded_deswizzle_texture_path };
+  std::vector<std::string> strings = { m_loaded_deswizzle_texture_path.string() };
+  if (generic_combo(
+        m_id,
+        "Deswizzle Path",
+        //[&values]() { return values; },
+        [&strings]() { return strings; },
+        [&strings]() { return strings; },
+        [this]() -> auto & { return m_map_sprite.filter().deswizzle; }))
+  {
+    m_map_sprite.update_render_texture(true);
+    m_changed = true;
+  }
+}
 void
   gui::combo_upscale_path() const
 {

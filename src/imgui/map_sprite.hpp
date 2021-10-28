@@ -130,6 +130,7 @@ public:
     load_map(const std::filesystem::path &dest_path) const;
   std::string
     get_base_name() const;
+
 private:
   struct maps
   {
@@ -263,6 +264,8 @@ private:
     get_texture(open_viii::graphics::BPPT bpp,
       std::uint8_t                        palette,
       std::uint8_t                        texture_page) const;
+  [[nodiscard]] const sf::Texture *
+    get_texture(const ::PupuID &pupu) const;
   [[nodiscard]] std::shared_ptr<std::array<sf::Texture, MAX_TEXTURES>>
     get_textures() const;
   [[nodiscard]] open_viii::graphics::Rectangle<std::uint32_t>
@@ -315,6 +318,9 @@ private:
       uint8_t                                                 palette) const;
   void
     find_upscale_path(
+      std::shared_ptr<std::array<sf::Texture, MAX_TEXTURES>> &ret) const;
+  void
+    find_deswizzle_path(
       std::shared_ptr<std::array<sf::Texture, MAX_TEXTURES>> &ret) const;
   void
     load_mim_textures(
