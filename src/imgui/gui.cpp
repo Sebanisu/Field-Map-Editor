@@ -93,9 +93,17 @@ void
       m_id      = {};
       loop_events();
       const sf::Time &dt = m_delta_clock.restart();
-      if(m_scrolling.scroll(xy, dt))
+      if (m_selections.draw_swizzle || (!m_selections.draw_palette && mim_test()))
       {
-        m_changed = true;
+        m_scrolling.total_scroll_time[0] = 4000.F;
+      }
+      else
+      {
+        m_scrolling.total_scroll_time[0] = 1000.F;
+      }
+      if (m_scrolling.scroll(xy, dt))
+      {
+        m_changed                     = true;
         m_mouse_positions.mouse_moved = true;
       }
       ImGui::SFML::Update(m_window, dt);
@@ -572,8 +580,9 @@ void
 {
   format_imgui_text(
     "X: {:>9.3f} px  Width:  {:>4} px", -std::abs(m_cam_pos.x), sprite.width());
-  format_imgui_text(
-    "Y: {:>9.3f} px  Height: {:>4} px", -std::abs(m_cam_pos.y), sprite.height());
+  format_imgui_text("Y: {:>9.3f} px  Height: {:>4} px",
+    -std::abs(m_cam_pos.y),
+    sprite.height());
   if (ImGui::SliderFloat2("Adjust", xy.data(), -1.0F, 0.0F) || m_changed)
   {
     m_cam_pos = { -xy[0] * (static_cast<float>(sprite.width()) - m_scale_width),
@@ -1062,8 +1071,9 @@ mim_sprite
 ImGuiStyle
   gui::init_and_get_style() const
 {
-  static constexpr auto fps_lock = 360U;
-  m_window.setFramerateLimit(fps_lock);
+//  static constexpr auto fps_lock = 360U;
+//  m_window.setFramerateLimit(fps_lock);
+  m_window.setVerticalSyncEnabled(true);
   ImGui::SFML::Init(m_window);
   return ImGui::GetStyle();
 }

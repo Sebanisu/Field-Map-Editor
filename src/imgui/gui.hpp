@@ -76,11 +76,11 @@ private:
   };
   struct scrolling
   {
-    static constexpr float total_scroll_time = 1000.F * 3.F;// ms to scroll 100%
-    bool                   left{};
-    bool                   right{};
-    bool                   up{};
-    bool                   down{};
+    std::array<float, 2U> total_scroll_time = { 1000.F, 1000.F };
+    bool                  left{};
+    bool                  right{};
+    bool                  up{};
+    bool                  down{};
     void
       reset() noexcept
     {
@@ -89,40 +89,61 @@ private:
     bool
       scroll(std::array<float, 2U> &in_xy, const sf::Time &time)
     {
-      bool       changed = false;
-      if(!(left || right || up || down))
+      bool changed = false;
+      if (!(left || right || up || down))
       {
         return changed;
       }
-      const auto time_ms = static_cast<float>(time.asMicroseconds())/1000.F;
-      const auto change    = time_ms / total_scroll_time;
-      fmt::print("{:.2f} / {:.2f} = {:.10f}\n",time_ms,total_scroll_time, change);
-      //const auto change  = std::lerp(0.F, 1.F, diff);
+      const auto time_ms = static_cast<float>(time.asMicroseconds()) / 1000.F;
       if (left && right)
       {
       }
-      else if (left)
+      else
       {
-        in_xy[0] = std::clamp(in_xy[0] + change, -1.F, 0.F);
-        changed  = true;
-      }
-      else if (right)
-      {
-        in_xy[0] = std::clamp(in_xy[0] - change, -1.F, 0.F);
-        changed  = true;
+        float total_time = (in_xy[0] + 1.F) * total_scroll_time[0];
+        //        fmt::print("{:.2f} = ({:.2f} + 1.00) * {:.2f}\n",
+        //          total_time,
+        //          in_xy[0],
+        //          total_scroll_time[0]);
+        if (left)
+        {
+          in_xy[0] = std::lerp(-1.F,
+            0.F,
+            std::clamp(
+              (total_time + time_ms) / total_scroll_time[0], 0.F, 1.F));
+          changed  = true;
+        }
+        else if (right)
+        {
+          in_xy[0] = std::lerp(-1.F,
+            0.F,
+            std::clamp(
+              (total_time - time_ms) / total_scroll_time[0], 0.F, 1.F));
+          changed  = true;
+        }
       }
       if (up && down)
       {
       }
-      else if (up)
+      else
       {
-        in_xy[1] = std::clamp(in_xy[1] + change, -1.F, 0.F);
-        changed  = true;
-      }
-      else if (down)
-      {
-        in_xy[1] = std::clamp(in_xy[1] - change, -1.F, 0.F);
-        changed  = true;
+        float total_time = (in_xy[1] + 1.F) * total_scroll_time[1];
+        if (up)
+        {
+          in_xy[1] = std::lerp(-1.F,
+            0.F,
+            std::clamp(
+              (total_time + time_ms) / total_scroll_time[1], 0.F, 1.F));
+          changed  = true;
+        }
+        else if (down)
+        {
+          in_xy[1] = std::lerp(-1.F,
+            0.F,
+            std::clamp(
+              (total_time - time_ms) / total_scroll_time[1], 0.F, 1.F));
+          changed  = true;
+        }
       }
       return changed;
     }
