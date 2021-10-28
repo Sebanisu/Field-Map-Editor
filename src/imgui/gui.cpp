@@ -93,7 +93,8 @@ void
       m_id      = {};
       loop_events();
       const sf::Time &dt = m_delta_clock.restart();
-      if (m_selections.draw_swizzle || (!m_selections.draw_palette && mim_test()))
+      if (m_selections.draw_swizzle
+          || (!m_selections.draw_palette && mim_test()))
       {
         m_scrolling.total_scroll_time[0] = 4000.F;
       }
@@ -610,17 +611,29 @@ void
       {
         ImGui::Separator();
         menuitem_save_map_file(m_map_sprite.map_filename());
-        menuitem_load_map_file(m_map_sprite.map_filename());
         menuitem_save_map_file_modified(m_map_sprite.map_filename());
+        menuitem_load_map_file(m_map_sprite.map_filename());
         ImGui::Separator();
         if (ImGui::MenuItem("Save Swizzled Textures", nullptr, false, true))
         {
-          m_map_sprite.save_new_textures(std::filesystem::current_path());
+          auto path = std::filesystem::current_path();
+          m_map_sprite.save_new_textures(path);
+          m_map_sprite.save_modified_map(path / m_map_sprite.map_filename());
         }
         if (ImGui::MenuItem("Load Swizzled Textures", nullptr, false, true))
         {
           // m_map_sprite.save_new_textures(std::filesystem::current_path());
           m_loaded_swizzle_texture_path = std::filesystem::current_path();
+          m_map_sprite.filter()
+            .upscale.update(m_loaded_swizzle_texture_path)
+            .enable();
+          auto map_path =
+            m_loaded_swizzle_texture_path / m_map_sprite.map_filename();
+          if (std::filesystem::exists(map_path))
+          {
+            m_map_sprite.load_map(map_path);
+          }
+          m_map_sprite.update_render_texture(true);
         }
         ImGui::Separator();
         if (ImGui::MenuItem(
@@ -1071,8 +1084,8 @@ mim_sprite
 ImGuiStyle
   gui::init_and_get_style() const
 {
-//  static constexpr auto fps_lock = 360U;
-//  m_window.setFramerateLimit(fps_lock);
+  //  static constexpr auto fps_lock = 360U;
+  //  m_window.setFramerateLimit(fps_lock);
   m_window.setVerticalSyncEnabled(true);
   ImGui::SFML::Init(m_window);
   return ImGui::GetStyle();
@@ -1129,10 +1142,10 @@ static bool
     auto           &&filter_lambda)
 {
   bool               changed     = false;
-  static bool        checked     = false;
   const auto        &values      = value_lambda();
   const auto        &strings     = string_lambda();
   auto              &filter      = filter_lambda();
+  bool               checked     = filter.enabled();
   static std::size_t current_idx = {};
   if (const auto it = std::find(values.begin(), values.end(), filter.value());
       it != values.end())
@@ -1153,7 +1166,6 @@ static bool
     if (checked)
     {
       filter.disable();
-      checked = false;
       return true;
     }
     return false;
