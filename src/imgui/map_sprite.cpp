@@ -1457,7 +1457,7 @@ void
   map_sprite::save_new_textures(const std::filesystem::path &path) const
 {
   // assert(std::filesystem::path.is_directory(path));
-  const std::string     field_name = { str_to_lower(m_field->get_base_name()) };
+  const std::string     field_name = { get_base_name() };
   static constexpr char pattern_texture_page[]             = { "{}_{}.png" };
   static constexpr char pattern_texture_page_palette[]     = { "{}_{}_{}.png" };
   static constexpr char pattern_coo_texture_page[]         = { "{}_{}_{}.png" };
@@ -1541,6 +1541,11 @@ void
     async_save(out_path, out_texture);
   }
   wait_for_futures();
+}
+std::string
+  map_sprite::get_base_name() const
+{
+  return str_to_lower(m_field->get_base_name());
 }
 std::vector<std::uint8_t>
   map_sprite::get_conflicting_palettes(const std::uint8_t &texture_page) const

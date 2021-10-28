@@ -614,33 +614,10 @@ void
         menuitem_save_map_file_modified(m_map_sprite.map_filename());
         menuitem_load_map_file(m_map_sprite.map_filename());
         ImGui::Separator();
-        if (ImGui::MenuItem("Save Swizzled Textures", nullptr, false, true))
-        {
-          auto path = std::filesystem::current_path();
-          m_map_sprite.save_new_textures(path);
-          m_map_sprite.save_modified_map(path / m_map_sprite.map_filename());
-        }
-        if (ImGui::MenuItem("Load Swizzled Textures", nullptr, false, true))
-        {
-          // m_map_sprite.save_new_textures(std::filesystem::current_path());
-          m_loaded_swizzle_texture_path = std::filesystem::current_path();
-          m_map_sprite.filter()
-            .upscale.update(m_loaded_swizzle_texture_path)
-            .enable();
-          auto map_path =
-            m_loaded_swizzle_texture_path / m_map_sprite.map_filename();
-          if (std::filesystem::exists(map_path))
-          {
-            m_map_sprite.load_map(map_path);
-          }
-          m_map_sprite.update_render_texture(true);
-        }
+        menuitem_save_swizzle_textures();
+        menuitem_load_swizzle_textures();
         ImGui::Separator();
-        if (ImGui::MenuItem(
-              "Save Deswizzled Textures (Pupu)", nullptr, false, true))
-        {
-          m_map_sprite.save_pupu_textures(std::filesystem::current_path());
-        }
+        menuitem_save_deswizzle_textures();
       }
       ImGui::EndMenu();
     }
@@ -697,12 +674,52 @@ void
   m_directory_browser.Display();
   if (m_directory_browser.HasSelected())
   {
-    const auto selected_path = m_directory_browser.GetSelected();
-    m_paths.emplace_back(selected_path.string());
-    m_paths_c_str = archives_group::get_c_str(
-      m_paths);// seems the pointers move when you push back above
-    m_selections.path = static_cast<int>(m_paths.size()) - 1;
-    update_path();
+    auto selected_path = m_directory_browser.GetSelected();
+    if (m_modified_directory_map == map_directory_mode::ff8_install_directory)
+    {
+      m_paths.emplace_back(selected_path.string());
+      m_paths_c_str = archives_group::get_c_str(
+        m_paths);// seems the pointers move when you push back above
+      m_selections.path = static_cast<int>(m_paths.size()) - 1;
+      update_path();
+    }
+    else if (m_modified_directory_map
+             == map_directory_mode::save_swizzle_textures)
+    {
+      std::string base_name = m_map_sprite.get_base_name();
+      std::string prefix    = base_name.substr(0U, 2U);
+      selected_path         = selected_path / prefix / base_name;
+      std::filesystem::create_directories(selected_path);
+      m_map_sprite.save_new_textures(selected_path);
+      m_map_sprite.save_modified_map(
+        selected_path / m_map_sprite.map_filename());
+    }
+    else if (m_modified_directory_map
+             == map_directory_mode::load_swizzle_textures)
+    {
+      m_loaded_swizzle_texture_path = selected_path;
+      m_map_sprite.filter()
+        .upscale.update(m_loaded_swizzle_texture_path)
+        .enable();
+      auto map_path =
+        m_loaded_swizzle_texture_path / m_map_sprite.map_filename();
+      if (std::filesystem::exists(map_path))
+      {
+        m_map_sprite.load_map(map_path);
+      }
+      m_map_sprite.update_render_texture(true);
+    }
+    else if (m_modified_directory_map
+             == map_directory_mode::save_deswizzle_textures)
+    {
+      std::string base_name = m_map_sprite.get_base_name();
+      std::string prefix    = base_name.substr(0U, 2U);
+      selected_path         = selected_path / prefix / base_name;
+      std::filesystem::create_directories(selected_path);
+      m_map_sprite.save_pupu_textures(selected_path);
+      m_map_sprite.save_modified_map(
+        selected_path / m_map_sprite.map_filename());
+    }
     m_directory_browser.ClearSelected();
   }
 }
@@ -767,6 +784,56 @@ void
     m_directory_browser.Open();
     m_directory_browser.SetTitle("Choose FF8 install directory");
     m_directory_browser.SetTypeFilters({ ".exe" });
+    m_modified_directory_map = map_directory_mode::ff8_install_directory;
+  }
+}
+void
+  gui::menuitem_save_swizzle_textures() const
+{
+  if (ImGui::MenuItem("Save Swizzled Textures", nullptr, false, true))
+  {
+    m_directory_browser.Open();
+
+    std::string base_name = m_map_sprite.get_base_name();
+    std::string prefix    = base_name.substr(0U, 2U);
+    auto        title =
+      fmt::format("Choose directory to save textures (appends {}{}{})",
+        prefix,
+        char{ std::filesystem::path::preferred_separator },
+        base_name);
+    m_directory_browser.SetTitle(title);
+    m_directory_browser.SetTypeFilters({ ".map", ".png" });
+    m_modified_directory_map = map_directory_mode::save_swizzle_textures;
+  }
+}
+void
+  gui::menuitem_save_deswizzle_textures() const
+{
+  if (ImGui::MenuItem("Save Deswizzled Textures (Pupu)", nullptr, false, true))
+  {
+    m_directory_browser.Open();
+
+    std::string base_name = m_map_sprite.get_base_name();
+    std::string prefix    = base_name.substr(0U, 2U);
+    auto        title =
+      fmt::format("Choose directory to save textures (appends {}{}{})",
+        prefix,
+        char{ std::filesystem::path::preferred_separator },
+        base_name);
+    m_directory_browser.SetTitle(title);
+    m_directory_browser.SetTypeFilters({ ".map", ".png" });
+    m_modified_directory_map = map_directory_mode::save_deswizzle_textures;
+  }
+}
+void
+  gui::menuitem_load_swizzle_textures() const
+{
+  if (ImGui::MenuItem("Load Swizzled Textures", nullptr, false, true))
+  {
+    m_directory_browser.Open();
+    m_directory_browser.SetTitle("Choose directory to load textures from");
+    m_directory_browser.SetTypeFilters({ ".map", ".png" });
+    m_modified_directory_map = map_directory_mode::load_swizzle_textures;
   }
 }
 void

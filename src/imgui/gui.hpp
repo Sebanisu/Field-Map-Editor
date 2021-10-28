@@ -27,6 +27,14 @@ private:
     save_modified,
     load
   };
+  enum struct map_directory_mode
+  {
+    ff8_install_directory,
+    save_swizzle_textures,
+    save_deswizzle_textures,
+    load_swizzle_textures,
+    load_deswizzle_textures
+  };
   struct mouse_positions
   {
     sf::Vector2i pixel         = {};
@@ -193,7 +201,9 @@ private:
       | static_cast<std::uint32_t>(ImGuiFileBrowserFlags_CreateNewDir))
   };
   mutable ImGui::FileBrowser m_directory_browser{
-    ImGuiFileBrowserFlags_SelectDirectory
+    static_cast<ImGuiFileBrowserFlags>(
+      static_cast<std::uint32_t>(ImGuiFileBrowserFlags_SelectDirectory)
+      | static_cast<std::uint32_t>(ImGuiFileBrowserFlags_CreateNewDir))
   };
   static std::vector<std::string>
     get_paths();
@@ -221,8 +231,6 @@ private:
     combo_path() const;
   void
     combo_draw() const;
-  void
-    menuitem_locate_ff8() const;
   void
     file_browser_save_texture() const;
   void
@@ -253,6 +261,12 @@ private:
     map_test() const;
   void
     checkbox_map_swizzle() const;
+  void
+    menuitem_locate_ff8() const;
+  void
+    menuitem_save_swizzle_textures() const;
+  void
+    menuitem_save_deswizzle_textures() const;
   void
     menuitem_save_texture(const std::string &path, bool enabled = true) const;
   void
@@ -302,7 +316,10 @@ private:
     combo_upscale_path() const;
   const open_viii::LangT                             &
     get_coo() const;
-  mutable map_dialog_mode       m_modified_map = {};
+  mutable map_dialog_mode       m_modified_map           = {};
+  mutable map_directory_mode    m_modified_directory_map = {};
   mutable std::filesystem::path m_loaded_swizzle_texture_path{};
+  void
+    menuitem_load_swizzle_textures() const;
 };
 #endif// MYPROJECT_GUI_HPP

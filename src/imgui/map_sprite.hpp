@@ -128,7 +128,8 @@ public:
     save_modified_map(const std::filesystem::path &path) const;
   void
     load_map(const std::filesystem::path &dest_path) const;
-
+  std::string
+    get_base_name() const;
 private:
   struct maps
   {
