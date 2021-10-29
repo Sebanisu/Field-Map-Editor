@@ -33,7 +33,64 @@ private:
     save_swizzle_textures,
     save_deswizzle_textures,
     load_swizzle_textures,
-    load_deswizzle_textures
+    load_deswizzle_textures,
+    batch_save_deswizzle_textures
+  };
+  struct batch_deswizzle
+  {
+    void
+      enable(std::filesystem::path in_outgoing)
+    {
+      enabled  = true;
+      pos      = 0;
+      outgoing = std::move(in_outgoing);
+    }
+    void
+      disable()
+    {
+      enabled = false;
+    }
+    template<typename lambdaT>
+    bool
+      operator()(const std::vector<std::string> &fields, lambdaT &&lambda)
+    {
+      if (!enabled)
+      {
+        return false;
+      }
+      const char *title = "Batch saving deswizzle textures...";
+      ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(),
+        ImGuiCond_Always,
+        ImVec2(0.5f, 0.5f));
+      ImGui::OpenPopup(title);
+      if (ImGui::BeginPopupModal(title,
+            nullptr,
+            ImGuiWindowFlags_AlwaysAutoResize
+              | ImGuiWindowFlags_NoSavedSettings))
+      {
+        if (fields.size() <= pos)
+        {
+          disable();
+        }
+        else
+        {
+          format_imgui_text("{:>3.2f}% - Processing {}...",
+            static_cast<float>(pos) * 100.F
+              / static_cast<float>(std::size(fields)),
+            fields[pos]);
+          ImGui::Separator();
+          lambda(static_cast<int>(pos), outgoing);
+          ++pos;
+        }
+        ImGui::EndPopup();
+      }
+      return false;
+    }
+
+  private:
+    bool                  enabled  = { false };
+    std::size_t           pos      = {};
+    std::filesystem::path outgoing = {};
   };
   struct mouse_positions
   {
@@ -172,6 +229,7 @@ private:
   static constexpr std::uint32_t    default_window_width  = 800U;
   static constexpr std::uint32_t    default_window_height = 600U;
   mutable scrolling                 m_scrolling           = {};
+  mutable batch_deswizzle           m_batch_deswizzle     = {};
   mutable int                       m_id                  = {};
   mutable mouse_positions           m_mouse_positions     = {};
   mutable selections                m_selections          = {};

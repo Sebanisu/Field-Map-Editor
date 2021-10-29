@@ -142,6 +142,38 @@ void
     combo_draw();
     if (!m_paths.empty())
     {
+      if (m_batch_deswizzle(m_archives_group.mapdata(),
+            [this](const int &pos, std::filesystem::path selected_path)
+            {
+              auto field = m_archives_group.field(pos);
+              if (!field)
+                return;
+              // todo get all languages this only get the selected or default
+              auto map = m_map_sprite.with_field(field);
+              if (map.fail())
+                return;
+              std::string base_name = map.get_base_name();
+              std::string prefix    = base_name.substr(0U, 2U);
+              selected_path         = selected_path / prefix / base_name;
+              if (std::filesystem::create_directories(selected_path))
+              {
+                format_imgui_text(
+                  "Directory Created {}", selected_path.string());
+              }
+              else
+              {
+                format_imgui_text(
+                  "Directory Exists {}", selected_path.string());
+              }
+              map.save_pupu_textures(selected_path);
+              format_imgui_text("Saving Textures");
+              const std::filesystem::path map_path =
+                selected_path / map.map_filename();
+              map.save_modified_map(map_path);
+              format_imgui_text("Saving Map file: {}", map_path.string());
+            }))
+      {
+      }
       file_browser_save_texture();
       combo_path();
       combo_coo();
@@ -635,6 +667,25 @@ void
         &m_selections.draw_texture_page_grid);
       ImGui::EndMenu();
     }
+
+    if (ImGui::BeginMenu("Batch"))
+    {
+      if (ImGui::MenuItem("Deswizzle"))
+      {
+        m_directory_browser.Open();
+
+        std::string base_name = m_map_sprite.get_base_name();
+        std::string prefix    = base_name.substr(0U, 2U);
+        m_directory_browser.SetTitle("Choose directory to save textures");
+        m_directory_browser.SetTypeFilters({ ".map", ".png" });
+        m_modified_directory_map =
+          map_directory_mode::batch_save_deswizzle_textures;
+      }
+      if (ImGui::MenuItem("Reswizzle"))
+      {
+      }
+      ImGui::EndMenu();
+    }
     ImGui::EndMenuBar();
   }
 }
@@ -740,6 +791,11 @@ void
         m_map_sprite.load_map(map_path);
       }
       m_map_sprite.update_render_texture(true);
+    }
+    else if (m_modified_directory_map
+             == map_directory_mode::batch_save_deswizzle_textures)
+    {
+      m_batch_deswizzle.enable(selected_path);
     }
     m_directory_browser.ClearSelected();
   }
