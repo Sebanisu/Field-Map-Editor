@@ -157,17 +157,19 @@ std::shared_ptr<std::array<sf::Texture, map_sprite::MAX_TEXTURES>>
   //   }
   // }
   wait_for_futures();
-  if (std::ranges::all_of(*ret, [](const sf::Texture &texture) {
+  if (std::ranges::all_of(*ret,
+        [](const sf::Texture &texture)
+        {
           auto size = texture.getSize();
           return size.x == 0 || size.y == 0;
-      }))
+        }))
   {
-    if(m_filters.upscale.enabled())
+    if (m_filters.upscale.enabled())
     {
       m_filters.upscale.disable();
       ret = get_textures();
     }
-    else if(m_filters.deswizzle.enabled())
+    else if (m_filters.deswizzle.enabled())
     {
       m_filters.deswizzle.disable();
       ret = get_textures();
@@ -230,8 +232,12 @@ void
     };
     if (i >= MAX_TEXTURES)
     {
-        fmt::print("{}:{} - Index out of range {} / {}\n", __FILE__, __LINE__, i, MAX_TEXTURES);
-        return;
+      fmt::print("{}:{} - Index out of range {} / {}\n",
+        __FILE__,
+        __LINE__,
+        i,
+        MAX_TEXTURES);
+      return;
     }
     m_futures.emplace_back(std::async(std::launch::async, fn, &(ret->at(i))));
   }
@@ -1653,17 +1659,20 @@ void
           {
             settings.filters.value().palette.update(palette).enable();
             settings.filters.value().bpp.update(bpp).enable();
-            auto out_path    = m_using_coo
-                                 ? save_path_coo(pattern_coo_texture_page_palette,
-                                   path,
-                                   field_name,
-                                   texture_page,
-                                   palette)
-                                 : save_path(pattern_texture_page_palette,
-                                   path,
-                                   field_name,
-                                   texture_page,
-                                   palette);
+            auto out_path = [&]() -> std::filesystem::path
+            {
+              if (m_using_coo)
+                return save_path_coo(pattern_coo_texture_page_palette,
+                  path,
+                  field_name,
+                  texture_page,
+                  palette);
+              return save_path(pattern_texture_page_palette,
+                path,
+                field_name,
+                texture_page,
+                palette);
+            }();
             auto out_texture = save_texture(height, height);
             async_save(out_path, out_texture);
           }
