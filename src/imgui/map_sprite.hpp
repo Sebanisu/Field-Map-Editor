@@ -247,8 +247,10 @@ private:
   all_unique_values_and_strings m_all_unique_values_and_strings  = {};
   open_viii::graphics::Rectangle<std::uint32_t> m_canvas         = {};
   static constexpr std::size_t                  MAX_TEXTURES =
-    16 * 14;// 14*16 for texture page / palette combos. 16*2+1 for palette
-            // bpp combos.
+    250U;// glgate1 had 238
+         // 16 * 14;// 14*16 for texture page / palette combos. 16*2+1 for
+         // palette
+         // bpp combos.
   mutable std::shared_ptr<std::array<sf::Texture, MAX_TEXTURES>> m_texture = {};
   mutable std::shared_ptr<sf::RenderTexture> m_render_texture              = {};
   mutable grid                               m_grid                        = {};

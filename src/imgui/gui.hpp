@@ -35,17 +35,41 @@ private:
     save_deswizzle_textures,
     load_swizzle_textures,
     load_deswizzle_textures,
-    batch_save_deswizzle_textures
+    batch_save_deswizzle_textures,
+    batch_load_deswizzle_textures,
+    batch_save_swizzle_textures,
   };
   struct batch_deswizzle
   {
     void
-      enable(std::filesystem::path in_outgoing)
+      enable(std::filesystem::path in_outgoing);
+    void
+      disable();
+    template<typename lambdaT, typename askT>
+    bool
+      operator()(const std::vector<std::string> &fields,
+        lambdaT                                &&lambda,
+        askT                                   &&ask_lambda);
+
+  private:
+    bool                  enabled  = { false };
+    std::size_t           pos      = {};
+    std::filesystem::path outgoing = {};
+    bool                  asked    = { false };
+    ::filters             filters  = {};
+    std::chrono::time_point<std::chrono::high_resolution_clock> start = {};
+  };
+  struct batch_reswizzle
+  {
+    void
+      enable(std::filesystem::path in_incoming,
+        std::filesystem::path      in_outgoing)
     {
-      enabled  = true;
-      pos      = 0;
+      enabled = true;
+      pos     = 0;
+      filters.deswizzle.update(std::move(in_incoming)).enable();
       outgoing = std::move(in_outgoing);
-      asked    = false;
+      asked    = true;// disable asking.
       start    = std::chrono::high_resolution_clock::now();
     }
     void
@@ -57,13 +81,13 @@ private:
     bool
       operator()(const std::vector<std::string> &fields,
         lambdaT                                &&lambda,
-        askT                                   &&ask_lambda)
+        [[maybe_unused]] askT                  &&ask_lambda)
     {
       if (!enabled)
       {
         return false;
       }
-      const char *title = "Batch saving deswizzle textures...";
+      const char *title = "Batch saving swizzle textures...";
       ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(),
         ImGuiCond_Always,
         ImVec2(0.5F, 0.5F));
@@ -76,13 +100,14 @@ private:
         if (fields.size() <= pos)
         {
           auto current = std::chrono::high_resolution_clock::now();
-          fmt::print("{:%H:%M:%S} - Finished the batch deswizzle...\n",
-            current - start);
+          fmt::print(
+            "{:%H:%M:%S} - Finished the batch swizzle...\n", current - start);
           disable();
+          return pos > 0U;
         }
         if (!asked)
         {
-          asked = ask_lambda(filters.upscale);
+          // asked = ask_lambda(filters.upscale);
         }
         else
         {
@@ -247,6 +272,7 @@ private:
   static constexpr std::uint32_t    default_window_height = 600U;
   mutable scrolling                 m_scrolling           = {};
   mutable batch_deswizzle           m_batch_deswizzle     = {};
+  mutable batch_reswizzle           m_batch_reswizzle     = {};
   mutable int                       m_id                  = {};
   mutable mouse_positions           m_mouse_positions     = {};
   mutable selections                m_selections          = {};

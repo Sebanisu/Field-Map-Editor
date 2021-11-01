@@ -93,8 +93,18 @@ const sf::Texture *
   auto        it     = std::ranges::find(values, pupu);
   if (it != values.end())
   {
-    return &m_texture->at(
-      static_cast<std::size_t>(std::distance(values.begin(), it)));
+    auto i = static_cast<std::size_t>(std::distance(values.begin(), it));
+    if (i >= MAX_TEXTURES)
+    {
+      fmt::print(stderr,
+        "{}:{} - Index out of range {} / {}\n",
+        __FILE__,
+        __LINE__,
+        i,
+        MAX_TEXTURES);
+      return nullptr;
+    }
+    return &m_texture->at(i);
   }
   return nullptr;
 }
@@ -232,7 +242,8 @@ void
     };
     if (i >= MAX_TEXTURES)
     {
-      fmt::print("{}:{} - Index out of range {} / {}\n",
+      fmt::print(stderr,
+        "{}:{} - Index out of range {} / {}\n",
         __FILE__,
         __LINE__,
         i,
@@ -273,7 +284,16 @@ void
           texture->generateMipmap();
         }
       };
-
+      if (i >= MAX_TEXTURES)
+      {
+        fmt::print(stderr,
+          "{}:{} - Index out of range {} / {}\n",
+          __FILE__,
+          __LINE__,
+          i,
+          MAX_TEXTURES);
+        return;
+      }
       m_futures.emplace_back(
         std::async(std::launch::async, fn, &(ret->at(i++))));
     });

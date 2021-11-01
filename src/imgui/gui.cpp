@@ -154,7 +154,7 @@ void
                 return;
               }
               // todo get all languages this only get the selected or default
-              std::string base_name = str_to_lower(field->get_base_name());
+              std::string      base_name = str_to_lower(field->get_base_name());
               std::string_view prefix =
                 std::string_view(base_name).substr(0U, 2U);
               if (filters.upscale.enabled())
@@ -173,6 +173,14 @@ void
               if (map.fail())
               {
                 return;
+              }
+              if (filters.upscale.enabled())
+              {
+                auto map_path = filters.upscale.value() / map.map_filename();
+                if (std::filesystem::exists(map_path))
+                {
+                  map.load_map(map_path);
+                }
               }
               selected_path = selected_path / prefix / base_name;
               if (std::filesystem::create_directories(selected_path))
@@ -200,6 +208,68 @@ void
 
               return ImGui::Button("Start");
             }))
+      {
+      }
+      if (m_batch_reswizzle(
+            m_archives_group.mapdata(),
+            [this](const int       &pos,
+              std::filesystem::path selected_path,
+              ::filters             filters)
+            {
+              auto field = m_archives_group.field(pos);
+              if (!field)
+              {
+                return;
+              }
+              // todo get all languages this only get the selected or default
+              std::string      base_name = str_to_lower(field->get_base_name());
+              std::string_view prefix =
+                std::string_view(base_name).substr(0U, 2U);
+              if (filters.deswizzle.enabled())
+              {
+                filters.deswizzle.update(
+                  filters.deswizzle.value() / prefix / base_name);
+                if (!std::filesystem::exists(filters.deswizzle.value())
+                    || !std::filesystem::is_directory(
+                      filters.deswizzle.value()))
+                {
+                  filters.deswizzle.disable();
+                }
+              }
+              auto map = m_map_sprite.with_field(field).with_filters(filters);
+              //               map_sprite{ m_field, open_viii::LangT::en, {},
+              //               filters };
+              if (map.fail())
+              {
+                return;
+              }
+              if (filters.deswizzle.enabled())
+              {
+                auto map_path = filters.deswizzle.value() / map.map_filename();
+                if (std::filesystem::exists(map_path))
+                {
+                  map.load_map(map_path);
+                }
+              }
+              selected_path = selected_path / prefix / base_name;
+              if (std::filesystem::create_directories(selected_path))
+              {
+                format_imgui_text(
+                  "Directory Created {}", selected_path.string());
+              }
+              else
+              {
+                format_imgui_text(
+                  "Directory Exists {}", selected_path.string());
+              }
+              map.save_new_textures(selected_path);
+              format_imgui_text("Saving Textures");
+              const std::filesystem::path map_path =
+                selected_path / map.map_filename();
+              map.save_modified_map(map_path);
+              format_imgui_text("Saving Map file: {}", map_path.string());
+            },
+            [this]() { return ImGui::Button("Start"); }))
       {
       }
       file_browser_save_texture();
@@ -701,9 +771,8 @@ void
       if (ImGui::MenuItem("Deswizzle"))
       {
         m_directory_browser.Open();
-
-        std::string base_name = m_map_sprite.get_base_name();
-        std::string prefix    = base_name.substr(0U, 2U);
+        // std::string base_name = m_map_sprite.get_base_name();
+        // std::string prefix    = base_name.substr(0U, 2U);
         m_directory_browser.SetTitle("Choose directory to save textures");
         m_directory_browser.SetTypeFilters({ ".map", ".png" });
         m_modified_directory_map =
@@ -711,6 +780,15 @@ void
       }
       if (ImGui::MenuItem("Reswizzle"))
       {
+        m_directory_browser.Open();
+        // std::string base_name = m_map_sprite.get_base_name();
+        // std::string prefix    = base_name.substr(0U, 2U);
+        m_directory_browser.SetTitle(
+          "Choose source directory of deswizzled textures (contains two letter "
+          "directories)");
+        m_directory_browser.SetTypeFilters({ ".map", ".png" });
+        m_modified_directory_map =
+          map_directory_mode::batch_load_deswizzle_textures;
       }
       ImGui::EndMenu();
     }
@@ -759,6 +837,7 @@ void
   m_directory_browser.Display();
   if (m_directory_browser.HasSelected())
   {
+    static std::filesystem::path reswizzle_src = {};
     auto selected_path = m_directory_browser.GetSelected();
     if (m_modified_directory_map == map_directory_mode::ff8_install_directory)
     {
@@ -824,6 +903,26 @@ void
              == map_directory_mode::batch_save_deswizzle_textures)
     {
       m_batch_deswizzle.enable(selected_path);
+    }
+    else if (m_modified_directory_map
+             == map_directory_mode::batch_save_swizzle_textures)
+    {
+      m_batch_reswizzle.enable(
+        std::move(reswizzle_src), std::move(selected_path));
+    }
+    else if (m_modified_directory_map
+             == map_directory_mode::batch_load_deswizzle_textures)
+    {
+      reswizzle_src = std::move(selected_path);
+      m_directory_browser.Open();
+      // std::string base_name = m_map_sprite.get_base_name();
+      // std::string prefix    = base_name.substr(0U, 2U);
+      m_directory_browser.SetTitle(
+        "Choose destination directory where reswizzled textures will be "
+        "saved.");
+      m_directory_browser.SetTypeFilters({ ".map", ".png" });
+      m_modified_directory_map =
+        map_directory_mode::batch_save_swizzle_textures;
     }
     m_directory_browser.ClearSelected();
   }
@@ -1673,6 +1772,66 @@ bool
     {
       return true;
     }
+  }
+  return false;
+}
+void
+  gui::batch_deswizzle::enable(std::filesystem::path in_outgoing)
+{
+  enabled  = true;
+  pos      = 0;
+  outgoing = std::move(in_outgoing);
+  asked    = false;
+  start    = std::chrono::high_resolution_clock::now();
+}
+void
+  gui::batch_deswizzle::disable()
+{
+  enabled = false;
+}
+template<typename lambdaT, typename askT>
+bool
+  gui::batch_deswizzle::operator()(const std::vector<std::string> &fields,
+    lambdaT                                                      &&lambda,
+    askT                                                         &&ask_lambda)
+{
+  if (!enabled)
+  {
+    return false;
+  }
+  const char *title = "Batch saving deswizzle textures...";
+  ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(),
+    ImGuiCond_Always,
+    ImVec2(0.5F, 0.5F));
+  ImGui::OpenPopup(title);
+  if (ImGui::BeginPopupModal(title,
+        nullptr,
+        ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings))
+  {
+    if (fields.size() <= pos)
+    {
+      auto current = std::chrono::high_resolution_clock::now();
+      fmt::print(
+        "{:%H:%M:%S} - Finished the batch deswizzle...\n", current - start);
+      disable();
+      return pos > 0U;
+    }
+    if (!asked)
+    {
+      asked = ask_lambda(filters.upscale);
+    }
+    else
+    {
+      auto current = std::chrono::high_resolution_clock::now();
+      format_imgui_text("{:%H:%M:%S} - {:>3.2f}% - Processing {}...",
+        current - start,
+        static_cast<float>(pos) * 100.F / static_cast<float>(std::size(fields)),
+        fields[pos]);
+      ImGui::Separator();
+      lambda(static_cast<int>(pos), outgoing, filters);
+      ++pos;
+    }
+    ImGui::EndPopup();
   }
   return false;
 }

@@ -94,7 +94,7 @@ std::shared_ptr<open_viii::archive::FIFLFS<false>>
   }
   else
   {
-      fmt::print("{}:{} - Index out of range {} / {}\n", __FILE__, __LINE__, current_map, m_mapdata.size());
+      fmt::print(stderr,"{}:{} - Index out of range {} / {}\n", __FILE__, __LINE__, current_map, m_mapdata.size());
   }
   return archive;
 }
