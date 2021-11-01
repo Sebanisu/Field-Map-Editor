@@ -1791,11 +1791,24 @@ void
 {
   if (out_texture)
   {
-    m_futures.emplace_back(std::async(
-      std::launch::async,
-      [](std::filesystem::path op, auto ot) { ot.saveToFile(op.string()); },
+#if 1
+    // trying packaged task to so we don't wait for files to save.
+    const auto task = [](std::filesystem::path op, sf::Image &&image)
+    { image.saveToFile(op.string()); };
+
+    auto package =
+      std::packaged_task<void(std::filesystem::path, sf::Image)>{ task };
+
+    std::thread{
+      std::move(package), out_path, out_texture->getTexture().copyToImage()
+    }
+      .detach();
+#else
+    m_futures.emplace_back(std::async(std::launch::async,
+      task,
       out_path,
       out_texture->getTexture().copyToImage()));
+#endif
   }
 }
 uint32_t
