@@ -75,8 +75,35 @@ public:
   [[nodiscard]] auto
     get_paths() const
   {
+    if(m_field_name.empty())
+    {
+      return std::array{
+        m_root
+          / tl::string::replace_slashes(fmt::format(
+            R"(DEMASTER_EXP\textures\field_bg)")),
+        m_root
+          / tl::string::replace_slashes(
+            fmt::format(R"(textures\fields)")),
+        m_root
+          / tl::string::replace_slashes(
+            fmt::format(R"(textures)")),
+        m_root
+          / tl::string::replace_slashes(
+            fmt::format(R"(ff8\Data\{}\field\mapdata)",
+              open_viii::LangCommon::to_string_3_char(m_coo))),
+        m_root
+          / tl::string::replace_slashes(
+            fmt::format(R"(ff8\Data\{}\FIELD\mapdata)",
+              open_viii::LangCommon::to_string_3_char(m_coo))),
+        m_root
+          / tl::string::replace_slashes(fmt::format(
+            R"(ff8\Data\{}\field\mapdata)", 'x')),
+        m_root
+          / tl::string::replace_slashes(fmt::format(
+            R"(ff8\Data\{}\FIELD\mapdata)", 'x'))
+      };
+    }
     const std::string_view prefix = std::string_view(m_field_name).substr(0, 2);
-
     return std::array{
       m_root
         / tl::string::replace_slashes(fmt::format(

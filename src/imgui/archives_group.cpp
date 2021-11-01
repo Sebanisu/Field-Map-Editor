@@ -79,7 +79,7 @@ std::shared_ptr<open_viii::archive::FIFLFS<false>>
   archives_group::field(const int current_map) const
 {
   std::shared_ptr<open_viii::archive::FIFLFS<false>> archive{};
-  if (!m_mapdata.empty())
+  if (!m_mapdata.empty() && std::cmp_less(current_map, m_mapdata.size()))
   {
     fields().execute_with_nested(
       { m_mapdata.at(static_cast<std::size_t>(current_map)) },
@@ -91,6 +91,10 @@ std::shared_ptr<open_viii::archive::FIFLFS<false>>
       {},
       [](auto &&) { return true; },
       true);
+  }
+  else
+  {
+      fmt::print("{}:{} - Index out of range {} / {}\n", __FILE__, __LINE__, current_map, m_mapdata.size());
   }
   return archive;
 }

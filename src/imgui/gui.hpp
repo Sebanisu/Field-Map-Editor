@@ -10,6 +10,7 @@
 #include "grid.hpp"
 #include "upscales.hpp"
 #include <cstdint>
+#include <fmt/chrono.h>
 #include <SFML/Graphics/RenderWindow.hpp>
 struct gui
 {
@@ -44,15 +45,19 @@ private:
       enabled  = true;
       pos      = 0;
       outgoing = std::move(in_outgoing);
+      asked    = false;
+      start    = std::chrono::high_resolution_clock::now();
     }
     void
       disable()
     {
       enabled = false;
     }
-    template<typename lambdaT>
+    template<typename lambdaT, typename askT>
     bool
-      operator()(const std::vector<std::string> &fields, lambdaT &&lambda)
+      operator()(const std::vector<std::string> &fields,
+        lambdaT                                &&lambda,
+        askT                                   &&ask_lambda)
     {
       if (!enabled)
       {
@@ -61,7 +66,7 @@ private:
       const char *title = "Batch saving deswizzle textures...";
       ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(),
         ImGuiCond_Always,
-        ImVec2(0.5f, 0.5f));
+        ImVec2(0.5F, 0.5F));
       ImGui::OpenPopup(title);
       if (ImGui::BeginPopupModal(title,
             nullptr,
@@ -70,16 +75,25 @@ private:
       {
         if (fields.size() <= pos)
         {
+          auto current = std::chrono::high_resolution_clock::now();
+          fmt::print("{:%H:%M:%S} - Finished the batch deswizzle...\n",
+            current - start);
           disable();
+        }
+        if (!asked)
+        {
+          asked = ask_lambda(filters.upscale);
         }
         else
         {
-          format_imgui_text("{:>3.2f}% - Processing {}...",
+          auto current = std::chrono::high_resolution_clock::now();
+          format_imgui_text("{:%H:%M:%S} - {:>3.2f}% - Processing {}...",
+            current - start,
             static_cast<float>(pos) * 100.F
               / static_cast<float>(std::size(fields)),
             fields[pos]);
           ImGui::Separator();
-          lambda(static_cast<int>(pos), outgoing);
+          lambda(static_cast<int>(pos), outgoing, filters);
           ++pos;
         }
         ImGui::EndPopup();
@@ -91,6 +105,9 @@ private:
     bool                  enabled  = { false };
     std::size_t           pos      = {};
     std::filesystem::path outgoing = {};
+    bool                  asked    = { false };
+    ::filters             filters  = {};
+    std::chrono::time_point<std::chrono::high_resolution_clock> start = {};
   };
   struct mouse_positions
   {
@@ -376,6 +393,10 @@ private:
     on_click_not_imgui() const;
   void
     combo_upscale_path() const;
+  bool
+    combo_upscale_path(::filter<std::filesystem::path> &filter,
+      const std::string                                &field_name,
+      open_viii::LangT                                  coo = {}) const;
   void
     combo_deswizzle_path() const;
   const open_viii::LangT                             &

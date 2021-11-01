@@ -20,6 +20,16 @@
 #include <SFML/Graphics/Transformable.hpp>
 #include <SFML/Graphics/Vertex.hpp>
 #include <utility>
+static inline std::string
+  str_to_lower(std::string &&input)
+{
+  std::string output{};
+  output.reserve(std::size(input) + 1);
+  std::ranges::transform(input,
+    std::back_inserter(output),
+    [](char c) -> char { return static_cast<char>(::tolower(c)); });
+  return output;
+}
 struct map_sprite
   : public sf::Drawable
   , public sf::Transformable
@@ -83,6 +93,8 @@ public:
     with_coo(open_viii::LangT coo) const;
   map_sprite
     with_field(std::shared_ptr<open_viii::archive::FIFLFS<false>> field) const;
+  map_sprite
+    with_filters(::filters filters) const;
   void
     draw(sf::RenderTarget &target, sf::RenderStates states) const final;
   const map_sprite &

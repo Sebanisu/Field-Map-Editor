@@ -142,19 +142,39 @@ void
     combo_draw();
     if (!m_paths.empty())
     {
-      if (m_batch_deswizzle(m_archives_group.mapdata(),
-            [this](const int &pos, std::filesystem::path selected_path)
+      if (m_batch_deswizzle(
+            m_archives_group.mapdata(),
+            [this](const int       &pos,
+              std::filesystem::path selected_path,
+              ::filters             filters)
             {
               auto field = m_archives_group.field(pos);
               if (!field)
+              {
                 return;
+              }
               // todo get all languages this only get the selected or default
-              auto map = m_map_sprite.with_field(field);
+              std::string base_name = str_to_lower(field->get_base_name());
+              std::string_view prefix =
+                std::string_view(base_name).substr(0U, 2U);
+              if (filters.upscale.enabled())
+              {
+                filters.upscale.update(
+                  filters.upscale.value() / prefix / base_name);
+                if (!std::filesystem::exists(filters.upscale.value())
+                    || !std::filesystem::is_directory(filters.upscale.value()))
+                {
+                  filters.upscale.disable();
+                }
+              }
+              auto map = m_map_sprite.with_field(field).with_filters(filters);
+              //               map_sprite{ m_field, open_viii::LangT::en, {},
+              //               filters };
               if (map.fail())
+              {
                 return;
-              std::string base_name = map.get_base_name();
-              std::string prefix    = base_name.substr(0U, 2U);
-              selected_path         = selected_path / prefix / base_name;
+              }
+              selected_path = selected_path / prefix / base_name;
               if (std::filesystem::create_directories(selected_path))
               {
                 format_imgui_text(
@@ -171,6 +191,14 @@ void
                 selected_path / map.map_filename();
               map.save_modified_map(map_path);
               format_imgui_text("Saving Map file: {}", map_path.string());
+            },
+            [this](::filter<std::filesystem::path> &filter)
+            {
+              if (combo_upscale_path(filter, ""))
+              {
+              }
+
+              return ImGui::Button("Start");
             }))
       {
       }
@@ -1585,15 +1613,26 @@ void
 void
   gui::combo_upscale_path() const
 {
+  if (combo_upscale_path(
+        m_map_sprite.filter().upscale, m_field->get_base_name(), get_coo()))
+  {
+    m_map_sprite.update_render_texture(true);
+    m_changed = true;
+  }
+}
+bool
+  gui::combo_upscale_path(::filter<std::filesystem::path> &filter,
+    const std::string                                     &field_name,
+    open_viii::LangT                                       coo) const
+{
   std::vector<std::string> paths = {};
   auto                     transform_paths =
     m_paths
     | std::views::transform(
-      [this](const std::string &path)
+      [this, &field_name, &coo](const std::string &path)
       {
         if (m_field)
-          return upscales(
-            std::filesystem::path(path), m_field->get_base_name(), get_coo())
+          return upscales(std::filesystem::path(path), field_name, coo)
             .get_paths();
         return upscales{}.get_paths();
       });
@@ -1622,19 +1661,18 @@ void
   }
   if (m_field)
   {
-    process(upscales(
-      std::filesystem::current_path(), m_field->get_base_name(), get_coo())
-              .get_paths());
+    process(
+      upscales(std::filesystem::current_path(), field_name, coo).get_paths());
 
     if (generic_combo(
           m_id,
           "Upscale Path",
           [&paths]() { return paths; },
           [&paths]() { return paths; },
-          [this]() -> auto & { return m_map_sprite.filter().upscale; }))
+          [ this, &filter ]() -> auto & { return filter; }))
     {
-      m_map_sprite.update_render_texture(true);
-      m_changed = true;
+      return true;
     }
   }
+  return false;
 }

@@ -8,16 +8,6 @@ using namespace open_viii::graphics::background;
 using namespace open_viii::graphics;
 using namespace open_viii::graphics::literals;
 using namespace std::string_literals;
-static std::string
-  str_to_lower(std::string &&input)
-{
-  std::string output{};
-  output.reserve(std::size(input) + 1);
-  std::ranges::transform(input,
-    std::back_inserter(output),
-    [](char c) -> char { return static_cast<char>(::tolower(c)); });
-  return output;
-}
 bool
   map_sprite::empty() const
 {
@@ -167,6 +157,22 @@ std::shared_ptr<std::array<sf::Texture, map_sprite::MAX_TEXTURES>>
   //   }
   // }
   wait_for_futures();
+  if (std::ranges::all_of(*ret, [](const sf::Texture &texture) {
+          auto size = texture.getSize();
+          return size.x == 0 || size.y == 0;
+      }))
+  {
+    if(m_filters.upscale.enabled())
+    {
+      m_filters.upscale.disable();
+      ret = get_textures();
+    }
+    else if(m_filters.deswizzle.enabled())
+    {
+      m_filters.deswizzle.disable();
+      ret = get_textures();
+    }
+  }
   return ret;
 }
 void
@@ -222,6 +228,11 @@ void
         texture->generateMipmap();
       }
     };
+    if (i >= MAX_TEXTURES)
+    {
+        fmt::print("{}:{} - Index out of range {} / {}\n", __FILE__, __LINE__, i, MAX_TEXTURES);
+        return;
+    }
     m_futures.emplace_back(std::async(std::launch::async, fn, &(ret->at(i))));
   }
 }
@@ -1046,6 +1057,12 @@ map_sprite
     std::shared_ptr<open_viii::archive::FIFLFS<false>> field) const
 {
   return { std::move(field), m_coo, m_draw_swizzle, m_filters };
+}
+
+map_sprite
+  map_sprite::with_filters(::filters filters) const
+{
+  return { m_field, m_coo, m_draw_swizzle, filters };
 }
 
 void
