@@ -30,7 +30,7 @@ static inline std::string
     [](char c) -> char { return static_cast<char>(::tolower(c)); });
   return output;
 }
-struct map_sprite
+struct map_sprite final
   : public sf::Drawable
   , public sf::Transformable
 {

@@ -9,7 +9,7 @@
 #include <SFML/Graphics/Transformable.hpp>
 #include <SFML/Graphics/Vertex.hpp>
 #include <vector>
-struct grid
+struct grid final
   : public sf::Drawable
   , public sf::Transformable
 {

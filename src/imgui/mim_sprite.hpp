@@ -4,8 +4,8 @@
 
 #ifndef MYPROJECT_MIM_SPRITE_HPP
 #define MYPROJECT_MIM_SPRITE_HPP
+#include "format_imgui_text.hpp"
 #include "grid.hpp"
-#include "imgui_format_text.hpp"
 #include "open_viii/archive/Archives.hpp"
 #include "open_viii/graphics/background/Mim.hpp"
 #include "open_viii/graphics/Png.hpp"
@@ -14,7 +14,7 @@
 #include <SFML/Graphics/Texture.hpp>
 #include <vector>
 // this will hold class that has enough info to load and draw mim files.
-struct mim_sprite
+struct mim_sprite final
   : public sf::Drawable
   , public sf::Transformable
 {
