@@ -59,6 +59,11 @@ private:
     ::filters             filters  = {};
     std::chrono::time_point<std::chrono::high_resolution_clock> start = {};
   };
+  enum struct compact_type
+  {
+    rows,
+    all
+  };
   struct batch_reswizzle
   {
     void
@@ -69,7 +74,7 @@ private:
       pos     = 0;
       filters.deswizzle.update(std::move(in_incoming)).enable();
       outgoing = std::move(in_outgoing);
-      asked    = true;// disable asking.
+      asked    = false;
       start    = std::chrono::high_resolution_clock::now();
     }
     void
@@ -107,7 +112,7 @@ private:
         }
         if (!asked)
         {
-          // asked = ask_lambda(filters.upscale);
+          asked = ask_lambda(compact_filter, bpp, palette);
         }
         else
         {
@@ -118,7 +123,7 @@ private:
               / static_cast<float>(std::size(fields)),
             fields[pos]);
           ImGui::Separator();
-          lambda(static_cast<int>(pos), outgoing, filters);
+          lambda(static_cast<int>(pos), outgoing, filters,compact_filter, bpp, palette);
           ++pos;
         }
         ImGui::EndPopup();
@@ -127,11 +132,14 @@ private:
     }
 
   private:
-    bool                  enabled  = { false };
-    std::size_t           pos      = {};
-    std::filesystem::path outgoing = {};
-    bool                  asked    = { false };
-    ::filters             filters  = {};
+    bool                   enabled        = { false };
+    bool                   asked          = { false };
+    bool                   bpp            = { false };
+    bool                   palette        = { false };
+    std::size_t            pos            = {};
+    std::filesystem::path  outgoing       = {};
+    ::filters              filters        = {};
+    ::filter<compact_type> compact_filter = {};
     std::chrono::time_point<std::chrono::high_resolution_clock> start = {};
   };
   struct mouse_positions
@@ -431,5 +439,7 @@ private:
   mutable map_directory_mode    m_modified_directory_map = {};
   mutable std::filesystem::path m_loaded_swizzle_texture_path{};
   mutable std::filesystem::path m_loaded_deswizzle_texture_path{};
+  void
+    combo_compact_type(filter<compact_type> &) const;
 };
 #endif// MYPROJECT_GUI_HPP

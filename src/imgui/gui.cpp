@@ -271,9 +271,12 @@ void
       }
       if (m_batch_reswizzle(
             m_archives_group.mapdata(),
-            [this](const int       &pos,
-              std::filesystem::path selected_path,
-              ::filters             filters)
+            [this](const int         &pos,
+              std::filesystem::path   selected_path,
+              ::filters               filters,
+              ::filter<compact_type> &compact,
+              bool                   &flatten_bpp,
+              bool                   &flatten_palette)
             {
               auto field = m_archives_group.field(pos);
               if (!field)
@@ -332,6 +335,33 @@ void
               format_imgui_text("Saving Textures");
               const auto process = [&]()
               {
+                const auto c = [&]
+                {
+                  if (compact.enabled())
+                  {
+                    if (compact.value() == compact_type::rows)
+                    {
+                      map.compact();
+                    }
+                    if (compact.value() == compact_type::all)
+                    {
+                      map.compact2();
+                    }
+                  }
+                };
+                c();
+                if (flatten_bpp)
+                {
+                  map.flatten_bpp();
+                }
+                if (flatten_palette)
+                {
+                  map.flatten_palette();
+                }
+                if (flatten_bpp || flatten_palette)
+                {
+                  c();
+                }
                 const std::filesystem::path map_path =
                   selected_path / map.map_filename();
                 map.save_new_textures(selected_path);
@@ -377,7 +407,18 @@ void
                 process();
               }
             },
-            [this]() { return ImGui::Button("Start"); }))
+            [this](::filter<compact_type> &compact,
+              bool                        &flatten_bpp,
+              bool                        &flatten_palette)
+            {
+              combo_compact_type(compact);
+              ImGui::Separator();
+              format_imgui_text("Flatten: ");
+              ImGui::Checkbox("BPP", &flatten_bpp);
+              ImGui::SameLine();
+              ImGui::Checkbox("Palette", &flatten_palette);
+              return ImGui::Button("Start");
+            }))
       {
       }
       file_browser_save_texture();
@@ -1746,6 +1787,25 @@ void
         [&pair]() { return pair.values(); },
         [&pair]() { return pair.strings(); },
         [this]() -> auto & { return m_map_sprite.filter().blend_other; }))
+  {
+    m_map_sprite.update_render_texture();
+    m_changed = true;
+  }
+}
+void
+  gui::combo_compact_type(::filter<compact_type> &compact) const
+{
+  using namespace std::string_literals;
+  if (generic_combo(
+        m_id,
+        "Compact",
+        []() {
+          return std::array{ compact_type::rows, compact_type::all };
+        },
+        []() {
+          return std::array{ "rows"s, "all"s };
+        },
+        [&]() -> auto & { return compact; }))
   {
     m_map_sprite.update_render_texture();
     m_changed = true;
