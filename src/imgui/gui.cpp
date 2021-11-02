@@ -280,6 +280,12 @@ void
               {
                 return;
               }
+              const auto map_pairs =
+                field->get_vector_of_indexes_and_files({ ".map" });
+              if (map_pairs.empty())
+              {
+                return;
+              }
               // todo get all languages this only get the selected or default
               std::string      base_name = str_to_lower(field->get_base_name());
               std::string_view prefix =
@@ -295,7 +301,9 @@ void
                   filters.deswizzle.disable();
                 }
               }
-              auto map = m_map_sprite.with_field(field).with_filters(filters);
+              auto map = m_map_sprite.with_field(field)
+                           .with_coo(open_viii::LangT::generic)
+                           .with_filters(filters);
               //               map_sprite{ m_field, open_viii::LangT::en, {},
               //               filters };
               if (map.fail())
@@ -321,12 +329,53 @@ void
                 format_imgui_text(
                   "Directory Exists {}", selected_path.string());
               }
-              map.save_new_textures(selected_path);
               format_imgui_text("Saving Textures");
-              const std::filesystem::path map_path =
-                selected_path / map.map_filename();
-              map.save_modified_map(map_path);
-              format_imgui_text("Saving Map file: {}", map_path.string());
+              const auto process = [&]()
+              {
+                const std::filesystem::path map_path =
+                  selected_path / map.map_filename();
+                map.save_new_textures(selected_path);
+                map.save_modified_map(map_path);
+                format_imgui_text("Saving Map file: {}", map_path.string());
+              };
+
+              if (map_pairs.size() > 1U)
+              {
+                fmt::print("{}:{} - count of maps: {}\t field: {}\n",
+                  __FILE__,
+                  __LINE__,
+                  map_pairs.size(),
+                  base_name);
+                for (const auto &[i, file_path] : map_pairs)
+                {
+                  const auto filename =
+                    std::filesystem::path(file_path).filename().stem().string();
+                  std::string_view filename_view = { filename };
+                  std::string_view basename_view = { base_name };
+                  if (filename_view.substr(
+                        0, std::min(std::size(filename), std::size(base_name)))
+                      != basename_view.substr(
+                        0, std::min(std::size(filename), std::size(base_name))))
+                  {
+                    continue;
+                  }
+                  if (filename.size() == base_name.size())
+                  {
+                    process();
+                    continue;
+                  }
+                  const auto coo_view =
+                    filename_view.substr(std::size(base_name) + 1U, 2U);
+                  fmt::print("\t{}\t{}\n", filename, coo_view);
+                  map =
+                    map.with_coo(open_viii::LangCommon::from_string(coo_view));
+                  process();
+                }
+              }
+              else
+              {
+                process();
+              }
             },
             [this]() { return ImGui::Button("Start"); }))
       {
