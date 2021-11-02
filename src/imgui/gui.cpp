@@ -2,6 +2,7 @@
 // Created by pcvii on 9/7/2021.
 //
 #include "gui.hpp"
+#include "gui_labels.hpp"
 #include "open_viii/paths/Paths.hpp"
 #include <imgui-SFML.h>
 #include <imgui.h>
@@ -75,7 +76,228 @@ struct fmt::formatter<BPPT>
     return format_to(ctx.out(), "{}", static_cast<int>(p));
   }
 };
+template<typename T>
+concept returns_range_concept = requires(std::decay_t<T> t)
+{
+  {
+    t()
+    } -> std::ranges::range;
+};
+template<typename T>
+concept filter_concept = requires(std::decay_t<T> t)
+{
+  {
+    t.enabled()
+    } -> std::convertible_to<bool>;
+  {
+    t.update(t.value())
+    } -> std::convertible_to<T>;
+  {
+    t.enable()
+    } -> std::convertible_to<T>;
+  {
+    t.disable()
+    } -> std::convertible_to<T>;
+};
+template<typename T>
+concept returns_filter_concept = requires(std::decay_t<T> t)
+{
+  {
+    t()
+    } -> filter_concept;
+};
+template<
+  returns_range_concept  value_lambdaT,
+  returns_range_concept  string_lambdaT,
+  returns_filter_concept filter_lambdaT>
+static bool
+  generic_combo(
+    int             &id,
+    std::string_view name,
+    value_lambdaT  &&value_lambda,
+    string_lambdaT &&string_lambda,
+    filter_lambdaT &&filter_lambda)
+{
+  bool               changed     = false;
+  const auto        &values      = value_lambda();
+  const auto        &strings     = string_lambda();
+  auto              &filter      = filter_lambda();
+  bool               checked     = filter.enabled();
+  static std::size_t current_idx = {};
+  if (const auto it = std::find(values.begin(), values.end(), filter.value());
+      it != values.end())
+  {
+    current_idx = static_cast<size_t>(std::distance(values.begin(), it));
+  }
+  else
+  {
+    current_idx = 0;
+    if (!std::empty(values))
+    {
+      filter.update(values.front());
+    }
+    changed = true;
+  }
+  if (std::empty(values) || std::empty(strings))
+  {
+    if (checked)
+    {
+      filter.disable();
+      return true;
+    }
+    return false;
+  }
 
+  const auto *current_item = strings.at(current_idx).data();
+
+  ImGui::PushID(++id);
+  static constexpr auto pattern = "{}: \t{} \t{}\n";
+  if (ImGui::Checkbox("", &checked))
+  {
+    if (checked)
+    {
+      filter.enable();
+      fmt::print(pattern, gui_labels::enable, name, values.at(current_idx));
+    }
+    else
+    {
+      filter.disable();
+      fmt::print(pattern, gui_labels::disable, name, values.at(current_idx));
+    }
+    changed = true;
+  }
+  ImGui::PopID();
+  ImGui::SameLine();
+  ImGui::PushID(++id);
+  const auto old = current_idx;
+  if (ImGui::BeginCombo(name.data(), current_item))
+  // The second parameter is the label previewed
+  // before opening the combo.
+  {
+    for (std::size_t n = 0; auto &string : strings)
+    {
+      const bool  is_selected = (current_idx == n);
+      // You can store your selection however you
+      // want, outside or inside your objects
+      // ImGui::PushID(++m_id);
+      const char *v           = string.data();
+      if (ImGui::Selectable(v, is_selected))
+      {
+        current_idx = n;
+        changed     = true;
+      }
+      // ImGui::PopID();
+      if (is_selected)
+      {
+        ImGui::SetItemDefaultFocus();
+        // You may set the initial focus when
+        // opening the combo (scrolling + for
+        // keyboard navigation support)
+      }
+      ++n;
+    }
+    if (old != current_idx)
+    {
+      fmt::print(pattern, gui_labels::set, name, values.at(current_idx));
+    }
+    ImGui::EndCombo();
+  }
+  ImGui::PopID();
+  changed =
+    (filter.update(values.at(current_idx)).enabled() && (old != current_idx))
+    || changed;
+  return changed;
+}
+template<
+  returns_range_concept value_lambdaT,
+  returns_range_concept string_lambdaT,
+  typename valueT>
+requires requires(value_lambdaT v)
+{
+  {
+    *(v().begin())
+    } -> std::convertible_to<valueT>;
+  {
+    *(v().begin())
+    } -> std::equality_comparable_with<valueT>;
+}
+static bool
+  generic_combo(
+    int             &id,
+    std::string_view name,
+    value_lambdaT  &&value_lambda,
+    string_lambdaT &&string_lambda,
+    valueT          &value)
+{
+  bool        changed   = false;
+  const auto &values    = value_lambda();
+  const auto &strings   = string_lambda();
+  using dT              = decltype(std::distance(values.begin(), values.end()));
+  static dT current_idx = {};
+  {
+    if (const auto it = std::find(values.begin(), values.end(), value);
+        it != values.end())
+    {
+      current_idx = std::ranges::distance(std::ranges::cbegin(values), it);
+    }
+    else
+    {
+      current_idx = 0;
+      if (!std::empty(values))
+      {
+        value = values.front();
+      }
+      changed = true;
+    }
+  }
+  if (std::empty(values) || std::empty(strings))
+  {
+    return false;
+  }
+  const auto next = [](const auto &r, const auto &idx)
+  { return std::ranges::next(std::ranges::cbegin(r), idx); };
+  const auto            current_item = next(strings, current_idx);
+  static constexpr auto pattern      = "{}: \t{} \t{}\n";
+  ImGui::PushID(++id);
+  const auto old = current_idx;
+  if (ImGui::BeginCombo(
+        name.data(), current_item->data(), ImGuiComboFlags_HeightLarge))
+  // The second parameter is the label previewed
+  // before opening the combo.
+  {
+    std::ranges::for_each(
+      strings,
+      [&](const auto &string)
+      {
+        const bool  is_selected = (*current_item == string);
+        // You can store your selection however you
+        // want, outside or inside your objects
+        // ImGui::PushID(++m_id);
+        const char *c_str_value = std::ranges::data(string);
+        if (ImGui::Selectable(c_str_value, is_selected))
+        {
+          current_idx = std::distance(std::ranges::data(strings), &string);
+          changed     = true;
+        }
+        // ImGui::PopID();
+        if (is_selected)
+        {
+          ImGui::SetItemDefaultFocus();
+          // You may set the initial focus when
+          // opening the combo (scrolling + for
+          // keyboard navigation support)
+        }
+      });
+    if (old != current_idx)
+    {
+      fmt::print(pattern, gui_labels::set, name, *next(values, current_idx));
+    }
+    ImGui::EndCombo();
+  }
+  ImGui::PopID();
+  value = *next(values, current_idx);
+  return old != current_idx || changed;
+}
 void
   gui::start() const
 {
@@ -93,8 +315,8 @@ void
       m_id      = {};
       loop_events();
       const sf::Time &dt = m_delta_clock.restart();
-      if (m_selections.draw_swizzle
-          || (!m_selections.draw_palette && mim_test()))
+      if (
+        m_selections.draw_swizzle || (!m_selections.draw_palette && mim_test()))
       {
         m_scrolling.total_scroll_time[0] = 4000.F;
       }
@@ -116,10 +338,12 @@ void
 void
   gui::loop() const
 {
+  using namespace std::string_view_literals;
   static sf::Color clear_color = {
     0, 0, 0, std::numeric_limits<sf::Uint8>::max()
   };
-  if (ImGui::Begin("Control Panel",
+  if (ImGui::Begin(
+        gui_labels::control_panel.data(),
         nullptr,
         static_cast<ImGuiWindowFlags>(
           static_cast<uint32_t>(ImGuiWindowFlags_AlwaysAutoResize)
@@ -133,17 +357,20 @@ void
     file_browser_locate_ff8();
     static std::array<float, 3U> clear_color_f{};
     if (ImGui::ColorEdit3(
-          "Background", clear_color_f.data(), ImGuiColorEditFlags_DisplayRGB))
+          gui_labels::background.data(),
+          clear_color_f.data(),
+          ImGuiColorEditFlags_DisplayRGB))
     {
       // changed color
-      clear_color = { static_cast<sf::Uint8>(
-                        std::numeric_limits<sf::Uint8>::max()
-                        * clear_color_f[0]),
+      clear_color = {
+        static_cast<sf::Uint8>(
+          std::numeric_limits<sf::Uint8>::max() * clear_color_f[0]),
         static_cast<sf::Uint8>(
           std::numeric_limits<sf::Uint8>::max() * clear_color_f[1]),
         static_cast<sf::Uint8>(
           std::numeric_limits<sf::Uint8>::max() * clear_color_f[2]),
-        std::numeric_limits<sf::Uint8>::max() };
+        std::numeric_limits<sf::Uint8>::max()
+      };
     }
     ImGui::SameLine();
     {
@@ -153,285 +380,18 @@ void
     combo_draw();
     if (!m_paths.empty())
     {
-      if (m_batch_deswizzle(
-            m_archives_group.mapdata(),
-            [this](const int       &pos,
-              std::filesystem::path selected_path,
-              ::filters             filters)
-            {
-              auto field = m_archives_group.field(pos);
-              if (!field)
-              {
-                return;
-              }
-              const auto map_pairs =
-                field->get_vector_of_indexes_and_files({ ".map" });
-              if (map_pairs.empty())
-              {
-                return;
-              }
-              // todo get all languages this only get the selected or default
-              std::string      base_name = str_to_lower(field->get_base_name());
-              std::string_view prefix =
-                std::string_view(base_name).substr(0U, 2U);
-              if (filters.upscale.enabled())
-              {
-                filters.upscale.update(
-                  filters.upscale.value() / prefix / base_name);
-                if (!std::filesystem::exists(filters.upscale.value())
-                    || !std::filesystem::is_directory(filters.upscale.value()))
-                {
-                  filters.upscale.disable();
-                }
-              }
-              auto map = m_map_sprite.with_field(field)
-                           .with_coo(open_viii::LangT::generic)
-                           .with_filters(filters);
-              //               map_sprite{ m_field, open_viii::LangT::en, {},
-              //               filters };
-              if (map.fail())
-              {
-                return;
-              }
-              if (filters.upscale.enabled())
-              {
-                auto map_path = filters.upscale.value() / map.map_filename();
-                if (std::filesystem::exists(map_path))
-                {
-                  map.load_map(map_path);
-                }
-              }
-              selected_path = selected_path / prefix / base_name;
-              if (std::filesystem::create_directories(selected_path))
-              {
-                format_imgui_text(
-                  "Directory Created {}", selected_path.string());
-              }
-              else
-              {
-                format_imgui_text(
-                  "Directory Exists {}", selected_path.string());
-              }
-              map.save_pupu_textures(selected_path);
-              format_imgui_text("Saving Textures");
-              const auto process = [&]()
-              {
-                const std::filesystem::path map_path =
-                  selected_path / map.map_filename();
-                map.save_modified_map(map_path);
-                format_imgui_text("Saving Map file: {}", map_path.string());
-              };
-              if (map_pairs.size() > 1U)
-              {
-                fmt::print("{}:{} - count of maps: {}\t field: {}\n",
-                  __FILE__,
-                  __LINE__,
-                  map_pairs.size(),
-                  base_name);
-                for (const auto &[i, file_path] : map_pairs)
-                {
-                  const auto filename =
-                    std::filesystem::path(file_path).filename().stem().string();
-                  std::string_view filename_view = { filename };
-                  std::string_view basename_view = { base_name };
-                  if (filename_view.substr(
-                        0, std::min(std::size(filename), std::size(base_name)))
-                      != basename_view.substr(
-                        0, std::min(std::size(filename), std::size(base_name))))
-                  {
-                    continue;
-                  }
-                  if (filename.size() == base_name.size())
-                  {
-                    process();
-                    continue;
-                  }
-                  const auto coo_view =
-                    filename_view.substr(std::size(base_name) + 1U, 2U);
-                  fmt::print("\t{}\t{}\n", filename, coo_view);
-                  map =
-                    map.with_coo(open_viii::LangCommon::from_string(coo_view));
-                  process();
-                }
-              }
-              else
-              {
-                process();
-              }
-            },
-            [this](::filter<std::filesystem::path> &filter)
-            {
-              if (combo_upscale_path(filter, ""))
-              {
-              }
-
-              return ImGui::Button("Start");
-            }))
-      {
-      }
-      if (m_batch_reswizzle(
-            m_archives_group.mapdata(),
-            [this](const int         &pos,
-              std::filesystem::path   selected_path,
-              ::filters               filters,
-              ::filter<compact_type> &compact,
-              bool                   &flatten_bpp,
-              bool                   &flatten_palette)
-            {
-              auto field = m_archives_group.field(pos);
-              if (!field)
-              {
-                return;
-              }
-              const auto map_pairs =
-                field->get_vector_of_indexes_and_files({ ".map" });
-              if (map_pairs.empty())
-              {
-                return;
-              }
-              // todo get all languages this only get the selected or default
-              std::string      base_name = str_to_lower(field->get_base_name());
-              std::string_view prefix =
-                std::string_view(base_name).substr(0U, 2U);
-              if (filters.deswizzle.enabled())
-              {
-                filters.deswizzle.update(
-                  filters.deswizzle.value() / prefix / base_name);
-                if (!std::filesystem::exists(filters.deswizzle.value())
-                    || !std::filesystem::is_directory(
-                      filters.deswizzle.value()))
-                {
-                  filters.deswizzle.disable();
-                }
-              }
-              auto map = m_map_sprite.with_field(field)
-                           .with_coo(open_viii::LangT::generic)
-                           .with_filters(filters);
-              //               map_sprite{ m_field, open_viii::LangT::en, {},
-              //               filters };
-              if (map.fail())
-              {
-                return;
-              }
-              if (filters.deswizzle.enabled())
-              {
-                auto map_path = filters.deswizzle.value() / map.map_filename();
-                if (std::filesystem::exists(map_path))
-                {
-                  map.load_map(map_path);
-                }
-              }
-              selected_path = selected_path / prefix / base_name;
-              if (std::filesystem::create_directories(selected_path))
-              {
-                format_imgui_text(
-                  "Directory Created {}", selected_path.string());
-              }
-              else
-              {
-                format_imgui_text(
-                  "Directory Exists {}", selected_path.string());
-              }
-              format_imgui_text("Saving Textures");
-              const auto process = [&]()
-              {
-                const auto c = [&]
-                {
-                  if (compact.enabled())
-                  {
-                    if (compact.value() == compact_type::rows)
-                    {
-                      map.compact();
-                    }
-                    if (compact.value() == compact_type::all)
-                    {
-                      map.compact2();
-                    }
-                  }
-                };
-                c();
-                if (flatten_bpp)
-                {
-                  map.flatten_bpp();
-                }
-                if (flatten_palette)
-                {
-                  map.flatten_palette();
-                }
-                if (flatten_bpp || flatten_palette)
-                {
-                  c();
-                }
-                const std::filesystem::path map_path =
-                  selected_path / map.map_filename();
-                map.save_new_textures(selected_path);
-                map.save_modified_map(map_path);
-                format_imgui_text("Saving Map file: {}", map_path.string());
-              };
-
-              if (map_pairs.size() > 1U)
-              {
-                fmt::print("{}:{} - count of maps: {}\t field: {}\n",
-                  __FILE__,
-                  __LINE__,
-                  map_pairs.size(),
-                  base_name);
-                for (const auto &[i, file_path] : map_pairs)
-                {
-                  const auto filename =
-                    std::filesystem::path(file_path).filename().stem().string();
-                  std::string_view filename_view = { filename };
-                  std::string_view basename_view = { base_name };
-                  if (filename_view.substr(
-                        0, std::min(std::size(filename), std::size(base_name)))
-                      != basename_view.substr(
-                        0, std::min(std::size(filename), std::size(base_name))))
-                  {
-                    continue;
-                  }
-                  if (filename.size() == base_name.size())
-                  {
-                    process();
-                    continue;
-                  }
-                  const auto coo_view =
-                    filename_view.substr(std::size(base_name) + 1U, 2U);
-                  fmt::print("\t{}\t{}\n", filename, coo_view);
-                  map =
-                    map.with_coo(open_viii::LangCommon::from_string(coo_view));
-                  process();
-                }
-              }
-              else
-              {
-                process();
-              }
-            },
-            [this](::filter<compact_type> &compact,
-              bool                        &flatten_bpp,
-              bool                        &flatten_palette)
-            {
-              combo_compact_type(compact);
-              ImGui::Separator();
-              format_imgui_text("Flatten: ");
-              ImGui::Checkbox("BPP", &flatten_bpp);
-              ImGui::SameLine();
-              ImGui::Checkbox("Palette", &flatten_palette);
-              return ImGui::Button("Start");
-            }))
-      {
-      }
+      popup_batch_deswizzle();
+      popup_batch_reswizzle();
       file_browser_save_texture();
       combo_path();
       combo_coo();
       combo_field();
       combo_upscale_path();
       combo_deswizzle_path();
-      static constexpr char filter_title[] = "Filters";
       if (mim_test())
       {
         checkbox_mim_palette_texture();
-        if (ImGui::CollapsingHeader(filter_title))
+        if (ImGui::CollapsingHeader(gui_labels::filters.data()))
         {
           if (!m_mim_sprite.draw_palette())
           {
@@ -440,7 +400,8 @@ void
           }
           if (!m_mim_sprite.draw_palette())
           {
-            format_imgui_text("Width == Max Tiles");
+            format_imgui_text(
+              "{} == {}", gui_labels::width, gui_labels::max_tiles);
           }
         }
         if (m_changed)
@@ -452,30 +413,30 @@ void
       else if (map_test())
       {
         checkbox_map_swizzle();
-        format_imgui_text("{}", "Compact: ");
+        format_imgui_text("{}: ", gui_labels::compact);
         ImGui::SameLine();
-        if (ImGui::Button("Rows"))
+        if (ImGui::Button(gui_labels::rows.data()))
         {
           m_map_sprite.compact();
         }
         ImGui::SameLine();
-        if (ImGui::Button("All"))
+        if (ImGui::Button(gui_labels::all.data()))
         {
           m_map_sprite.compact2();
         }
         ImGui::SameLine();
-        format_imgui_text("{}", "Flatten: ");
+        format_imgui_text("{}: ", gui_labels::flatten);
         ImGui::SameLine();
-        if (ImGui::Button("BPP"))
+        if (ImGui::Button(gui_labels::bpp.data()))
         {
           m_map_sprite.flatten_bpp();
         }
         ImGui::SameLine();
-        if (ImGui::Button("Palette"))
+        if (ImGui::Button(gui_labels::palette.data()))
         {
           m_map_sprite.flatten_palette();
         }
-        if (ImGui::CollapsingHeader(filter_title))
+        if (ImGui::CollapsingHeader(gui_labels::filters.data()))
         {
           combo_pupu();
           combo_filtered_bpps();
@@ -524,6 +485,489 @@ void
   m_first = false;
 }
 void
+  gui::popup_batch_common_filter_start(
+    ::filter<std::filesystem::path> filter,
+    std::string_view                prefix,
+    std::string_view                base_name) const
+{// filters.upscale
+  if (filter.enabled())
+  {
+    filter.update(filter.value() / prefix / base_name);
+    if (
+      !std::filesystem::exists(filter.value())
+      || !std::filesystem::is_directory(filter.value()))
+    {
+      filter.disable();
+    }
+  }
+}
+
+template<typename batch_opT, typename filterT, typename askT, typename processT>
+void
+  gui::popup_batch_common(
+    batch_opT &&batch_op,
+    filterT   &&filter,
+    askT      &&ask,
+    processT  &&process) const
+{
+  if (batch_op(
+        m_archives_group.mapdata(),
+        [&](
+          const int &pos, std::filesystem::path selected_path, filters filters, auto&&... rest)
+        {
+          auto field = m_archives_group.field(pos);
+          if (!field)
+          {
+            return;
+          }
+          const auto map_pairs = field->get_vector_of_indexes_and_files(
+            { open_viii::graphics::background::Map::EXT });
+          if (map_pairs.empty())
+          {
+            return;
+          }
+          std::string      base_name = str_to_lower(field->get_base_name());
+          std::string_view prefix = std::string_view(base_name).substr(0U, 2U);
+          popup_batch_common_filter_start(filter(filters), prefix, base_name);
+
+          auto map = m_map_sprite.with_field(field)
+                       .with_coo(open_viii::LangT::generic)
+                       .with_filters(filters);
+          if (map.fail())
+          {
+            return;
+          }
+          if (filter(filters).enabled())
+          {
+            auto map_path = filter(filters).value() / map.map_filename();
+            if (std::filesystem::exists(map_path))
+            {
+              map.load_map(map_path);
+            }
+          }
+          selected_path = selected_path / prefix / base_name;
+          if (std::filesystem::create_directories(selected_path))
+          {
+            format_imgui_text(
+              "{} {}", gui_labels::directory_created, selected_path.string());
+          }
+          else
+          {
+            format_imgui_text(
+              "{} {}", gui_labels::directory_exists, selected_path.string());
+          }
+          format_imgui_text(gui_labels::saving_textures);
+
+          if (map_pairs.size() > 1U)
+          {
+            fmt::print(
+              "{}:{} - {}: {}\t {}: {}\n",
+              __FILE__,
+              __LINE__,
+              gui_labels::count_of_maps,
+              map_pairs.size(),
+              gui_labels::field,
+              base_name);
+            for (const auto &[i, file_path] : map_pairs)
+            {
+              const auto filename =
+                std::filesystem::path(file_path).filename().stem().string();
+              std::string_view filename_view = { filename };
+              std::string_view basename_view = { base_name };
+              if (
+                filename_view.substr(
+                  0, std::min(std::size(filename), std::size(base_name)))
+                != basename_view.substr(
+                  0, std::min(std::size(filename), std::size(base_name))))
+              {
+                continue;
+              }
+              if (filename.size() == base_name.size())
+              {
+                process(selected_path, map, rest...);
+                continue;
+              }
+              const auto coo_view =
+                filename_view.substr(std::size(base_name) + 1U, 2U);
+              fmt::print("\t{}\t{}\n", filename, coo_view);
+              map = map.with_coo(open_viii::LangCommon::from_string(coo_view));
+              process(selected_path, map, rest...);
+            }
+          }
+          else
+          {
+            process(selected_path, map, rest...);
+          }
+        },
+        ask))
+  {
+  }
+}
+
+void
+  gui::popup_batch_deswizzle() const
+{
+  popup_batch_common(
+    m_batch_deswizzle,
+    [](::filters &filters) -> ::filter<std::filesystem::path> & {
+      return filters.upscale;
+    },
+    [this](::filter<std::filesystem::path> &filter)
+    {
+      if (combo_upscale_path(filter, ""))
+      {
+      }
+
+      return ImGui::Button(gui_labels::start.data());
+    },
+    [&](const auto &selected_path, auto &map)
+    {
+      map.save_pupu_textures(selected_path);
+      const std::filesystem::path map_path = selected_path / map.map_filename();
+      map.save_modified_map(map_path);
+      format_imgui_text(
+        "{} {} {}: {}",
+        gui_labels::saving,
+        open_viii::graphics::background::Map::EXT,
+        gui_labels::file,
+        map_path.string());
+    });
+}
+//{
+//  if (m_batch_deswizzle(
+//        m_archives_group.mapdata(),
+//        [this](
+//          const int &pos, std::filesystem::path selected_path, filters
+//          filters)
+//        {
+//          auto field = m_archives_group.field(pos);
+//          if (!field)
+//          {
+//            return;
+//          }
+//          const auto map_pairs = field->get_vector_of_indexes_and_files(
+//            { open_viii::graphics::background::Map::EXT });
+//          if (map_pairs.empty())
+//          {
+//            return;
+//          }
+//          std::string      base_name = str_to_lower(field->get_base_name());
+//          std::string_view prefix = std::string_view(base_name).substr(0U,
+//          2U); popup_batch_common_filter_start(filters.upscale, prefix,
+//          base_name);
+//
+//          auto map = m_map_sprite.with_field(field)
+//                       .with_coo(open_viii::LangT::generic)
+//                       .with_filters(filters);
+//          //               map_sprite{ m_field, open_viii::LangT::en, {},
+//          //               filters };
+//          if (map.fail())
+//          {
+//            return;
+//          }
+//          if (filters.upscale.enabled())
+//          {
+//            auto map_path = filters.upscale.value() / map.map_filename();
+//            if (std::filesystem::exists(map_path))
+//            {
+//              map.load_map(map_path);
+//            }
+//          }
+//          selected_path = selected_path / prefix / base_name;
+//          if (std::filesystem::create_directories(selected_path))
+//          {
+//            format_imgui_text(
+//              "{} {}", gui_labels::directory_created, selected_path.string());
+//          }
+//          else
+//          {
+//            format_imgui_text(
+//              "{} {}", gui_labels::directory_exists, selected_path.string());
+//          }
+//          map.save_pupu_textures(selected_path);
+//          format_imgui_text(gui_labels::saving_textures);
+//          const auto process = [&]()
+//          {
+//            const std::filesystem::path map_path =
+//              selected_path / map.map_filename();
+//            map.save_modified_map(map_path);
+//            format_imgui_text(
+//              "{} {} {}: {}",
+//              gui_labels::saving,
+//              open_viii::graphics::background::Map::EXT,
+//              gui_labels::file,
+//              map_path.string());
+//          };
+//          if (map_pairs.size() > 1U)
+//          {
+//            fmt::print(
+//              "{}:{} - {}: {}\t {}: {}\n",
+//              __FILE__,
+//              __LINE__,
+//              gui_labels::count_of_maps,
+//              map_pairs.size(),
+//              gui_labels::field,
+//              base_name);
+//            for (const auto &[i, file_path] : map_pairs)
+//            {
+//              const auto filename =
+//                std::filesystem::path(file_path).filename().stem().string();
+//              std::string_view filename_view = { filename };
+//              std::string_view basename_view = { base_name };
+//              if (
+//                filename_view.substr(
+//                  0, std::min(std::size(filename), std::size(base_name)))
+//                != basename_view.substr(
+//                  0, std::min(std::size(filename), std::size(base_name))))
+//              {
+//                continue;
+//              }
+//              if (filename.size() == base_name.size())
+//              {
+//                process();
+//                continue;
+//              }
+//              const auto coo_view =
+//                filename_view.substr(std::size(base_name) + 1U, 2U);
+//              fmt::print("\t{}\t{}\n", filename, coo_view);
+//              map =
+//              map.with_coo(open_viii::LangCommon::from_string(coo_view));
+//              process();
+//            }
+//          }
+//          else
+//          {
+//            process();
+//          }
+//        },
+//        [this](filter<std::filesystem::path> &filter)
+//        {
+//          if (combo_upscale_path(filter, ""))
+//          {
+//          }
+//
+//          return ImGui::Button(gui_labels::start.data());
+//        }))
+//  {
+//  }
+//}
+
+void
+  gui::popup_batch_reswizzle() const
+{
+  popup_batch_common(
+    m_batch_reswizzle,
+    [](::filters &filters) -> ::filter<std::filesystem::path> & {
+      return filters.deswizzle;
+    },
+    [this](
+      filter<compact_type> &compact, bool &flatten_bpp, bool &flatten_palette)
+    {
+      combo_compact_type(compact);
+      ImGui::Separator();
+      format_imgui_text("Flatten: ");
+      ImGui::Checkbox("BPP", &flatten_bpp);
+      ImGui::SameLine();
+      ImGui::Checkbox("Palette", &flatten_palette);
+      return ImGui::Button("Start");
+    },
+    [&](
+      const auto                 &selected_path,
+      auto                       &map,
+      const filter<compact_type> &compact,
+      const bool                 &flatten_bpp,
+      const bool                 &flatten_palette)
+    {
+      const auto c = [&]
+      {
+        if (compact.enabled())
+        {
+          if (compact.value() == compact_type::rows)
+          {
+            map.compact();
+          }
+          if (compact.value() == compact_type::all)
+          {
+            map.compact2();
+          }
+        }
+      };
+      c();
+      if (flatten_bpp)
+      {
+        map.flatten_bpp();
+      }
+      if (flatten_palette)
+      {
+        map.flatten_palette();
+      }
+      if (flatten_bpp || flatten_palette)
+      {
+        c();
+      }
+      const std::filesystem::path map_path = selected_path / map.map_filename();
+      map.save_new_textures(selected_path);
+      map.save_modified_map(map_path);
+      format_imgui_text("Saving Map file: {}", map_path.string());
+    });
+}
+//void
+//  gui::popup_batch_reswizzle() const
+//{
+//  if (m_batch_reswizzle(
+//        m_archives_group.mapdata(),
+//        [this](
+//          const int            &pos,
+//          std::filesystem::path selected_path,
+//          filters               filters,
+//          filter<compact_type> &compact,
+//          bool                 &flatten_bpp,
+//          bool                 &flatten_palette)
+//        {
+//          auto field = m_archives_group.field(pos);
+//          if (!field)
+//          {
+//            return;
+//          }
+//          const auto map_pairs = field->get_vector_of_indexes_and_files(
+//            { open_viii::graphics::background::Map::EXT });
+//          if (map_pairs.empty())
+//          {
+//            return;
+//          }
+//          // todo get all languages this only get the selected or default
+//          std::string      base_name = str_to_lower(field->get_base_name());
+//          std::string_view prefix = std::string_view(base_name).substr(0U, 2U);
+//          if (filters.deswizzle.enabled())
+//          {
+//            filters.deswizzle.update(
+//              filters.deswizzle.value() / prefix / base_name);
+//            if (
+//              !std::filesystem::exists(filters.deswizzle.value())
+//              || !std::filesystem::is_directory(filters.deswizzle.value()))
+//            {
+//              filters.deswizzle.disable();
+//            }
+//          }
+//          auto map = m_map_sprite.with_field(field)
+//                       .with_coo(open_viii::LangT::generic)
+//                       .with_filters(filters);
+//          //               map_sprite{ m_field, open_viii::LangT::en, {},
+//          //               filters };
+//          if (map.fail())
+//          {
+//            return;
+//          }
+//          if (filters.deswizzle.enabled())
+//          {
+//            auto map_path = filters.deswizzle.value() / map.map_filename();
+//            if (std::filesystem::exists(map_path))
+//            {
+//              map.load_map(map_path);
+//            }
+//          }
+//          selected_path = selected_path / prefix / base_name;
+//          if (std::filesystem::create_directories(selected_path))
+//          {
+//            format_imgui_text("Directory Created {}", selected_path.string());
+//          }
+//          else
+//          {
+//            format_imgui_text("Directory Exists {}", selected_path.string());
+//          }
+//          format_imgui_text("Saving Textures");
+//          const auto process = [&]()
+//          {
+//            const auto c = [&]
+//            {
+//              if (compact.enabled())
+//              {
+//                if (compact.value() == compact_type::rows)
+//                {
+//                  map.compact();
+//                }
+//                if (compact.value() == compact_type::all)
+//                {
+//                  map.compact2();
+//                }
+//              }
+//            };
+//            c();
+//            if (flatten_bpp)
+//            {
+//              map.flatten_bpp();
+//            }
+//            if (flatten_palette)
+//            {
+//              map.flatten_palette();
+//            }
+//            if (flatten_bpp || flatten_palette)
+//            {
+//              c();
+//            }
+//            const std::filesystem::path map_path =
+//              selected_path / map.map_filename();
+//            map.save_new_textures(selected_path);
+//            map.save_modified_map(map_path);
+//            format_imgui_text("Saving Map file: {}", map_path.string());
+//          };
+//
+//          if (map_pairs.size() > 1U)
+//          {
+//            fmt::print(
+//              "{}:{} - count of maps: {}\t field: {}\n",
+//              __FILE__,
+//              __LINE__,
+//              map_pairs.size(),
+//              base_name);
+//            for (const auto &[i, file_path] : map_pairs)
+//            {
+//              const auto filename =
+//                std::filesystem::path(file_path).filename().stem().string();
+//              std::string_view filename_view = { filename };
+//              std::string_view basename_view = { base_name };
+//              if (
+//                filename_view.substr(
+//                  0, std::min(std::size(filename), std::size(base_name)))
+//                != basename_view.substr(
+//                  0, std::min(std::size(filename), std::size(base_name))))
+//              {
+//                continue;
+//              }
+//              if (filename.size() == base_name.size())
+//              {
+//                process();
+//                continue;
+//              }
+//              const auto coo_view =
+//                filename_view.substr(std::size(base_name) + 1U, 2U);
+//              fmt::print("\t{}\t{}\n", filename, coo_view);
+//              map = map.with_coo(open_viii::LangCommon::from_string(coo_view));
+//              process();
+//            }
+//          }
+//          else
+//          {
+//            process();
+//          }
+//        },
+//        [this](
+//          filter<compact_type> &compact,
+//          bool                 &flatten_bpp,
+//          bool                 &flatten_palette)
+//        {
+//          combo_compact_type(compact);
+//          ImGui::Separator();
+//          format_imgui_text("Flatten: ");
+//          ImGui::Checkbox("BPP", &flatten_bpp);
+//          ImGui::SameLine();
+//          ImGui::Checkbox("Palette", &flatten_palette);
+//          return ImGui::Button("Start");
+//        }))
+//  {
+//  }
+//}
+void
   gui::on_click_not_imgui() const
 {
   if (m_mouse_positions.mouse_enabled)
@@ -537,16 +981,17 @@ void
         {
           // left mouse down
           // m_mouse_positions.cover =
-          m_mouse_positions.sprite =
-            m_map_sprite.save_intersecting(m_mouse_positions.pixel,
-              m_mouse_positions.tile,
-              m_mouse_positions.texture_page);
+          m_mouse_positions.sprite = m_map_sprite.save_intersecting(
+            m_mouse_positions.pixel,
+            m_mouse_positions.tile,
+            m_mouse_positions.texture_page);
           m_mouse_positions.max_tile_x = m_map_sprite.max_x_for_saved();
         }
         else
         {
           // left mouse up
-          m_map_sprite.update_position(m_mouse_positions.pixel,
+          m_map_sprite.update_position(
+            m_mouse_positions.pixel,
             m_mouse_positions.tile,
             m_mouse_positions.texture_page);
           // m_mouse_positions.cover =
@@ -571,13 +1016,15 @@ void
 {
   if (m_mouse_positions.mouse_enabled)
   {
-    format_imgui_text("Mouse Pos: ({:4}, {:3})",
+    format_imgui_text(
+      "Mouse Pos: ({:4}, {:3})",
       m_mouse_positions.pixel.x,
       m_mouse_positions.pixel.y);
     ImGui::SameLine();
     if (map_test() || !m_selections.draw_palette)
     {
-      format_imgui_text("Tile Pos: ({:2}, {:2})",
+      format_imgui_text(
+        "Tile Pos: ({:2}, {:2})",
         m_mouse_positions.tile.x,
         m_mouse_positions.tile.y);
     }
@@ -595,8 +1042,9 @@ bool
   const auto    &win_size      = m_window.getSize();
   constexpr auto in_bounds     = [](auto i, auto low, auto high)
   { return std::cmp_greater_equal(i, low) && std::cmp_less_equal(i, high); };
-  if (in_bounds(mouse_pos.x, 0, win_size.x)
-      && in_bounds(mouse_pos.y, 0, win_size.y) && m_window.hasFocus())
+  if (
+    in_bounds(mouse_pos.x, 0, win_size.x)
+    && in_bounds(mouse_pos.y, 0, win_size.y) && m_window.hasFocus())
   {
     const sf::Vector2i clamped_mouse_pos = {
       std::clamp(mouse_pos.x, 0, static_cast<int>(win_size.x)),
@@ -605,7 +1053,7 @@ bool
 
     const auto pixel_pos    = m_window.mapPixelToCoords(clamped_mouse_pos);
     m_mouse_positions.pixel = { static_cast<int>(pixel_pos.x),
-      static_cast<int>(pixel_pos.y) };
+                                static_cast<int>(pixel_pos.y) };
     const auto &x           = m_mouse_positions.pixel.x;
     const auto &y           = m_mouse_positions.pixel.y;
     auto        io          = ImGui::GetIO();
@@ -622,23 +1070,26 @@ bool
                               || (mim_test() && !m_selections.draw_palette);
       if (m_mouse_positions.mouse_moved)
       {
-        m_mouse_positions.tile = m_mouse_positions.pixel / 16;
+        static constexpr int tile_size       = 16;
+        static constexpr int texture_page_t1 = 128;
+        static constexpr int texture_page_t2 = 64;
+        m_mouse_positions.tile = m_mouse_positions.pixel / tile_size;
         auto &tilex            = m_mouse_positions.tile.x;
         m_mouse_positions.texture_page =
-          static_cast<std::uint8_t>(tilex / 16);// for 4bit swizzle.
+          static_cast<std::uint8_t>(tilex / tile_size);// for 4bit swizzle.
         auto &texture_page = m_mouse_positions.texture_page;
         if (is_swizzle)
         {
-          tilex %= 16;
+          tilex %= tile_size;
           if (mim_test())
           {
             if (m_selections.bpp == 1)
             {
-              texture_page = static_cast<std::uint8_t>(x / 128);
+              texture_page = static_cast<std::uint8_t>(x / texture_page_t1);
             }
             else if (m_selections.bpp == 2)
             {
-              texture_page = static_cast<std::uint8_t>(x / 64);
+              texture_page = static_cast<std::uint8_t>(x / texture_page_t2);
             }
           }
         }
@@ -650,13 +1101,22 @@ bool
 void
   gui::combo_coo() const
 {
-  ImGui::PushID(++m_id);
-  static constexpr auto coos_c_str = open_viii::LangCommon::to_c_str_array();
-  if (ImGui::Combo("Language",
-        &m_selections.coo,
-        coos_c_str.data(),
-        static_cast<int>(coos_c_str.size()),
-        5))
+  if (generic_combo(
+        m_id,
+        gui_labels::language,
+        []()
+        {
+          return std::views::iota(
+            static_cast<int>(open_viii::LangT::begin),
+            static_cast<int>(open_viii::LangT::end));
+        },
+        []()
+        {
+          static constexpr auto coos_string_array =
+            open_viii::LangCommon::to_string_array();
+          return coos_string_array;
+        },
+        m_selections.coo))
   {
     if (mim_test())
     {
@@ -668,7 +1128,6 @@ void
     }
     m_changed = true;
   }
-  ImGui::PopID();
 }
 const open_viii::LangT &
   gui::get_coo() const
@@ -680,17 +1139,26 @@ const open_viii::LangT &
 void
   gui::combo_field() const
 {
-  ImGui::PushID(++m_id);
-  static constexpr auto items = 20;
-  if (ImGui::Combo("Field",
-        &m_selections.field,
-        m_archives_group.mapdata_c_str().data(),
-        static_cast<int>(m_archives_group.mapdata_c_str().size()),
-        items))
+  if (generic_combo(
+        m_id,
+        gui_labels::field,
+        [this]()
+        {
+          return std::views::iota(
+            0,
+            static_cast<int>(std::ranges::ssize(m_archives_group.mapdata())));
+        },
+        [this]() { return m_archives_group.mapdata(); },
+        m_selections.field))
+  //  static constexpr auto items = 20;
+  //  if (ImGui::Combo("Field",
+  //        &m_selections.field,
+  //        m_archives_group.mapdata_c_str().data(),
+  //        static_cast<int>(m_archives_group.mapdata_c_str().size()),
+  //        items))
   {
     update_field();
   }
-  ImGui::PopID();
 }
 
 void
@@ -756,7 +1224,8 @@ void
 {
   ImGui::PushID(++m_id);
   static constexpr std::array bpp_items = Mim::bpp_selections_c_str();
-  if (ImGui::Combo("BPP",
+  if (ImGui::Combo(
+        "BPP",
         &m_selections.bpp,
         bpp_items.data(),
         static_cast<int>(bpp_items.size()),
@@ -820,7 +1289,8 @@ void
   if (m_selections.bpp != 2)
   {
     static constexpr std::array palette_items = Mim::palette_selections_c_str();
-    if (ImGui::Combo("Palette",
+    if (ImGui::Combo(
+          "Palette",
           &m_selections.palette,
           palette_items.data(),
           static_cast<int>(palette_items.size()),
@@ -865,13 +1335,14 @@ void
 {
   format_imgui_text(
     "X: {:>9.3f} px  Width:  {:>4} px", -std::abs(m_cam_pos.x), sprite.width());
-  format_imgui_text("Y: {:>9.3f} px  Height: {:>4} px",
+  format_imgui_text(
+    "Y: {:>9.3f} px  Height: {:>4} px",
     -std::abs(m_cam_pos.y),
     sprite.height());
   if (ImGui::SliderFloat2("Adjust", xy.data(), -1.0F, 0.0F) || m_changed)
   {
     m_cam_pos = { -xy[0] * (static_cast<float>(sprite.width()) - m_scale_width),
-      -xy[1] * static_cast<float>(sprite.height()) };
+                  -xy[1] * static_cast<float>(sprite.height()) };
     m_changed = true;
     scale_window();
   }
@@ -909,7 +1380,8 @@ void
     if (ImGui::BeginMenu("Grid"))
     {
       ImGui::MenuItem("Draw Tile Grid", nullptr, &m_selections.draw_grid);
-      ImGui::MenuItem("Draw Texture Page Grid",
+      ImGui::MenuItem(
+        "Draw Texture Page Grid",
         nullptr,
         &m_selections.draw_texture_page_grid);
       ImGui::EndMenu();
@@ -996,8 +1468,8 @@ void
       m_selections.path = static_cast<int>(m_paths.size()) - 1;
       update_path();
     }
-    else if (m_modified_directory_map
-             == map_directory_mode::save_swizzle_textures)
+    else if (
+      m_modified_directory_map == map_directory_mode::save_swizzle_textures)
     {
       std::string base_name = m_map_sprite.get_base_name();
       std::string prefix    = base_name.substr(0U, 2U);
@@ -1007,8 +1479,8 @@ void
       m_map_sprite.save_modified_map(
         selected_path / m_map_sprite.map_filename());
     }
-    else if (m_modified_directory_map
-             == map_directory_mode::load_swizzle_textures)
+    else if (
+      m_modified_directory_map == map_directory_mode::load_swizzle_textures)
     {
       m_loaded_swizzle_texture_path = selected_path;
       m_map_sprite.filter()
@@ -1022,8 +1494,8 @@ void
       }
       m_map_sprite.update_render_texture(true);
     }
-    else if (m_modified_directory_map
-             == map_directory_mode::save_deswizzle_textures)
+    else if (
+      m_modified_directory_map == map_directory_mode::save_deswizzle_textures)
     {
       std::string base_name = m_map_sprite.get_base_name();
       std::string prefix    = base_name.substr(0U, 2U);
@@ -1033,8 +1505,8 @@ void
       m_map_sprite.save_modified_map(
         selected_path / m_map_sprite.map_filename());
     }
-    else if (m_modified_directory_map
-             == map_directory_mode::load_deswizzle_textures)
+    else if (
+      m_modified_directory_map == map_directory_mode::load_deswizzle_textures)
     {
       m_loaded_deswizzle_texture_path = selected_path;
       m_map_sprite.filter()
@@ -1048,19 +1520,22 @@ void
       }
       m_map_sprite.update_render_texture(true);
     }
-    else if (m_modified_directory_map
-             == map_directory_mode::batch_save_deswizzle_textures)
+    else if (
+      m_modified_directory_map
+      == map_directory_mode::batch_save_deswizzle_textures)
     {
       m_batch_deswizzle.enable(selected_path);
     }
-    else if (m_modified_directory_map
-             == map_directory_mode::batch_save_swizzle_textures)
+    else if (
+      m_modified_directory_map
+      == map_directory_mode::batch_save_swizzle_textures)
     {
       m_batch_reswizzle.enable(
         std::move(reswizzle_src), std::move(selected_path));
     }
-    else if (m_modified_directory_map
-             == map_directory_mode::batch_load_deswizzle_textures)
+    else if (
+      m_modified_directory_map
+      == map_directory_mode::batch_load_deswizzle_textures)
     {
       reswizzle_src = std::move(selected_path);
       m_directory_browser.Open();
@@ -1149,11 +1624,11 @@ void
 
     std::string base_name = m_map_sprite.get_base_name();
     std::string prefix    = base_name.substr(0U, 2U);
-    auto        title =
-      fmt::format("Choose directory to save textures (appends {}{}{})",
-        prefix,
-        char{ std::filesystem::path::preferred_separator },
-        base_name);
+    auto        title     = fmt::format(
+                 "Choose directory to save textures (appends {}{}{})",
+                 prefix,
+                 char{ std::filesystem::path::preferred_separator },
+                 base_name);
     m_directory_browser.SetTitle(title);
     m_directory_browser.SetTypeFilters({ ".map", ".png" });
     m_modified_directory_map = map_directory_mode::save_swizzle_textures;
@@ -1168,11 +1643,11 @@ void
 
     std::string base_name = m_map_sprite.get_base_name();
     std::string prefix    = base_name.substr(0U, 2U);
-    auto        title =
-      fmt::format("Choose directory to save textures (appends {}{}{})",
-        prefix,
-        char{ std::filesystem::path::preferred_separator },
-        base_name);
+    auto        title     = fmt::format(
+                 "Choose directory to save textures (appends {}{}{})",
+                 prefix,
+                 char{ std::filesystem::path::preferred_separator },
+                 base_name);
     m_directory_browser.SetTitle(title);
     m_directory_browser.SetTypeFilters({ ".map", ".png" });
     m_modified_directory_map = map_directory_mode::save_deswizzle_textures;
@@ -1235,8 +1710,8 @@ void
   }
 }
 void
-  gui::menuitem_save_map_file_modified(const std::string &path,
-    bool                                                  enabled) const
+  gui::menuitem_save_map_file_modified(const std::string &path, bool enabled)
+    const
 {
   if (ImGui::MenuItem("Save Map File (modified)", nullptr, false, enabled))
   {
@@ -1262,11 +1737,17 @@ void
 void
   gui::combo_draw() const
 {
-  ImGui::PushID(++m_id);
-  if (ImGui::Combo("Draw",
-        &m_selections.draw,
-        m_draw_selections.data(),
-        static_cast<int>(m_draw_selections.size())))
+  if (generic_combo(
+        m_id,
+        gui_labels::draw,
+        []()
+        {
+          return std::views::iota(
+            0, static_cast<int>(std::size(m_draw_selections)));
+          ;
+        },
+        [this]() { return m_draw_selections; },
+        m_selections.draw))
   {
     if (m_selections.draw == 0)
     {
@@ -1279,17 +1760,18 @@ void
     }
     m_changed = true;
   }
-  ImGui::PopID();
 }
 void
   gui::combo_path() const
 {
   ImGui::PushID(++m_id);
-  if (ImGui::Combo("Path",
-        &m_selections.path,
-        m_paths_c_str.data(),
-        static_cast<int>(m_paths_c_str.size()),
-        10))
+  if (generic_combo(
+        m_id,
+        gui_labels::path,
+        [this]()
+        { return std::views::iota(0, static_cast<int>(std::size(m_paths))); },
+        [this]() { return m_paths; },
+        m_selections.path))
   {
     update_path();
   }
@@ -1300,7 +1782,7 @@ std::vector<std::string>
 {
   std::vector<std::string> paths{};
   open_viii::Paths::for_each_path([&paths](const std::filesystem::path &p)
-    { paths.emplace_back(p.string()); });
+                                  { paths.emplace_back(p.string()); });
   return paths;
 }
 void
@@ -1312,124 +1794,125 @@ void
     ImGui::SFML::ProcessEvent(m_event);
     const auto  event_variant = events::get(m_event);
     const auto &type          = m_event.type;
-    std::visit(events::make_visitor(
-                 [this](const sf::Event::SizeEvent &size)
-                 {
-                   scale_window(static_cast<float>(size.width),
-                     static_cast<float>(size.height));
-                   m_changed = true;
-                 },
-                 [this](const sf::Event::MouseMoveEvent &)
-                 {
-                   m_mouse_positions.mouse_moved = true;
-                   // TODO move setting mouse pos code here?
-                   // m_changed = true;
-                 },
-                 [this, type](const sf::Event::KeyEvent &key)
-                 {
-                   if (ImGui::GetIO().WantCaptureKeyboard)
-                   {
-                     m_scrolling.reset();
-                     return;
-                   }
-                   if (type == sf::Event::EventType::KeyReleased)
-                   {
-                     if (key.control && key.code == sf::Keyboard::Z)
-                     {
-                       m_map_sprite.undo();
-                     }
-                     else if (key.code == sf::Keyboard::Up)
-                     {
-                       m_scrolling.up = false;
-                     }
-                     else if (key.code == sf::Keyboard::Down)
-                     {
-                       m_scrolling.down = false;
-                     }
-                     else if (key.code == sf::Keyboard::Left)
-                     {
-                       m_scrolling.left = false;
-                     }
-                     else if (key.code == sf::Keyboard::Right)
-                     {
-                       m_scrolling.right = false;
-                     }
-                   }
-                   if (type == sf::Event::EventType::KeyPressed)
-                   {
-                     if (key.code == sf::Keyboard::Up)
-                     {
-                       m_scrolling.up = true;
-                     }
-                     else if (key.code == sf::Keyboard::Down)
-                     {
-                       m_scrolling.down = true;
-                     }
-                     else if (key.code == sf::Keyboard::Left)
-                     {
-                       m_scrolling.left = true;
-                     }
-                     else if (key.code == sf::Keyboard::Right)
-                     {
-                       m_scrolling.right = true;
-                     }
-                   }
-                 },
-                 [this, &type](const sf::Event::MouseButtonEvent &mouse)
-                 {
-                   const sf::Mouse::Button &button = mouse.button;
-                   if (!m_mouse_positions.mouse_enabled)
-                   {
-                     m_mouse_positions.left = false;
-                     return;
-                   }
-                   switch (type)
-                   {
-                   case sf::Event::EventType::MouseButtonPressed:
-                     ///< A mouse button was pressed (data in event.mouseButton)
-                     {
-                       switch (button)
-                       {
-                       case sf::Mouse::Button::Left:
-                       {
-                         m_mouse_positions.left = true;
-                         std::cout << "Left Mouse Button Down" << std::endl;
-                       }
-                       break;
-                       default:
-                         break;
-                       }
-                     }
-                     break;
-                   case sf::Event::EventType::MouseButtonReleased:
-                     ///< A mouse button was released (data in
-                     ///< event.mouseButton)
-                     {
-                       switch (button)
-                       {
-                       case sf::Mouse::Button::Left:
-                       {
-                         m_mouse_positions.left = false;
-                         std::cout << "Left Mouse Button Up" << std::endl;
-                       }
-                       break;
-                       default:
-                         break;
-                       }
-                     }
-                     break;
-                   default:
-                     break;
-                   }
-                 },
-                 [this]([[maybe_unused]] const std::monostate &)
-                 {
-                   if (m_event.type == sf::Event::Closed)
-                   {
-                     m_window.close();
-                   }
-                 },
-                 []([[maybe_unused]] const auto &) {}),
+    std::visit(
+      events::make_visitor(
+        [this](const sf::Event::SizeEvent &size)
+        {
+          scale_window(
+            static_cast<float>(size.width), static_cast<float>(size.height));
+          m_changed = true;
+        },
+        [this](const sf::Event::MouseMoveEvent &)
+        {
+          m_mouse_positions.mouse_moved = true;
+          // TODO move setting mouse pos code here?
+          // m_changed = true;
+        },
+        [this, type](const sf::Event::KeyEvent &key)
+        {
+          if (ImGui::GetIO().WantCaptureKeyboard)
+          {
+            m_scrolling.reset();
+            return;
+          }
+          if (type == sf::Event::EventType::KeyReleased)
+          {
+            if (key.control && key.code == sf::Keyboard::Z)
+            {
+              m_map_sprite.undo();
+            }
+            else if (key.code == sf::Keyboard::Up)
+            {
+              m_scrolling.up = false;
+            }
+            else if (key.code == sf::Keyboard::Down)
+            {
+              m_scrolling.down = false;
+            }
+            else if (key.code == sf::Keyboard::Left)
+            {
+              m_scrolling.left = false;
+            }
+            else if (key.code == sf::Keyboard::Right)
+            {
+              m_scrolling.right = false;
+            }
+          }
+          if (type == sf::Event::EventType::KeyPressed)
+          {
+            if (key.code == sf::Keyboard::Up)
+            {
+              m_scrolling.up = true;
+            }
+            else if (key.code == sf::Keyboard::Down)
+            {
+              m_scrolling.down = true;
+            }
+            else if (key.code == sf::Keyboard::Left)
+            {
+              m_scrolling.left = true;
+            }
+            else if (key.code == sf::Keyboard::Right)
+            {
+              m_scrolling.right = true;
+            }
+          }
+        },
+        [this, &type](const sf::Event::MouseButtonEvent &mouse)
+        {
+          const sf::Mouse::Button &button = mouse.button;
+          if (!m_mouse_positions.mouse_enabled)
+          {
+            m_mouse_positions.left = false;
+            return;
+          }
+          switch (type)
+          {
+          case sf::Event::EventType::MouseButtonPressed:
+            ///< A mouse button was pressed (data in event.mouseButton)
+            {
+              switch (button)
+              {
+              case sf::Mouse::Button::Left:
+              {
+                m_mouse_positions.left = true;
+                std::cout << "Left Mouse Button Down" << std::endl;
+              }
+              break;
+              default:
+                break;
+              }
+            }
+            break;
+          case sf::Event::EventType::MouseButtonReleased:
+            ///< A mouse button was released (data in
+            ///< event.mouseButton)
+            {
+              switch (button)
+              {
+              case sf::Mouse::Button::Left:
+              {
+                m_mouse_positions.left = false;
+                std::cout << "Left Mouse Button Up" << std::endl;
+              }
+              break;
+              default:
+                break;
+              }
+            }
+            break;
+          default:
+            break;
+          }
+        },
+        [this]([[maybe_unused]] const std::monostate &)
+        {
+          if (m_event.type == sf::Event::Closed)
+          {
+            m_window.close();
+          }
+        },
+        []([[maybe_unused]] const auto &) {}),
       event_variant);
   }
 }
@@ -1469,9 +1952,10 @@ void
   //  }
   // ImGui::GetIO().FontGlobalScale = std::round(scale);
   // ImGui::GetStyle() =
-  //  m_original_style;// restore original before applying scale.
+  // m_original_style;// restore original before applying scale.
   // ImGui::GetStyle().ScaleAllSizes(std::round(scale));
-  m_window.setView(sf::View(sf::FloatRect(std::round(m_cam_pos.x),
+  m_window.setView(sf::View(sf::FloatRect(
+    std::round(m_cam_pos.x),
     std::round(m_cam_pos.y),
     m_scale_width,
     std::round(img_height))));
@@ -1488,7 +1972,8 @@ archives_group
 sf::RenderWindow
   gui::get_render_window() const
 {
-  return { sf::VideoMode(m_window_width, m_window_height), m_title };
+  return sf::RenderWindow{ sf::VideoMode(m_window_width, m_window_height),
+                           sf::String{ gui_labels::window_title } };
 }
 void
   gui::update_path() const
@@ -1506,27 +1991,23 @@ mim_sprite
   gui::get_mim_sprite() const
 {
   return { m_field,
-    Mim::bpp_selections().at(static_cast<std::size_t>(m_selections.bpp)),
-    static_cast<std::uint8_t>(Mim::palette_selections().at(
-      static_cast<std::size_t>(m_selections.palette))),
-    get_coo(),
-    m_selections.draw_palette };
+           Mim::bpp_selections().at(static_cast<std::size_t>(m_selections.bpp)),
+           static_cast<std::uint8_t>(Mim::palette_selections().at(
+             static_cast<std::size_t>(m_selections.palette))),
+           get_coo(),
+           m_selections.draw_palette };
 }
-ImGuiStyle
+void
   gui::init_and_get_style() const
 {
   //  static constexpr auto fps_lock = 360U;
   //  m_window.setFramerateLimit(fps_lock);
   m_window.setVerticalSyncEnabled(true);
   ImGui::SFML::Init(m_window);
-  return ImGui::GetStyle();
 }
-gui::gui(std::uint32_t               width,
-  std::uint32_t                      height,
-  [[maybe_unused]] const char *const title)
+gui::gui(std::uint32_t width, std::uint32_t height)
   : m_window_width(width)
   , m_window_height(height)
-  , m_title(title)
   , m_window(get_render_window())
   , m_paths(get_paths())
   , m_paths_c_str(get_paths_c_str())
@@ -1534,8 +2015,9 @@ gui::gui(std::uint32_t               width,
   , m_field(init_field())
   , m_mim_sprite(get_mim_sprite())
   , m_map_sprite(get_map_sprite())
-  , m_original_style(init_and_get_style())
+
 {
+  init_and_get_style();
 }
 std::shared_ptr<open_viii::archive::FIFLFS<false>>
   gui::init_field()
@@ -1543,12 +2025,8 @@ std::shared_ptr<open_viii::archive::FIFLFS<false>>
   m_selections.field = get_selected_field();
   return m_archives_group.field(m_selections.field);
 }
-gui::gui(const char *title)
-  : gui(default_window_width, default_window_height, title)
-{
-}
 gui::gui()
-  : gui("")
+  : gui(default_window_width, default_window_height)
 {
 }
 map_sprite
@@ -1559,107 +2037,19 @@ map_sprite
 int
   gui::get_selected_field()
 {
-  if (int field = m_archives_group.find_field("crtower3"); field != -1)
+  if (const int field = m_archives_group.find_field(starter_field());
+      field != -1)
   {
     return field;
   }
   return 0;
 }
-static bool
-  generic_combo(int &id,
-    const char      *name,
-    auto           &&value_lambda,
-    auto           &&string_lambda,
-    auto           &&filter_lambda)
+std::string_view
+  gui::starter_field() const
 {
-  bool               changed     = false;
-  const auto        &values      = value_lambda();
-  const auto        &strings     = string_lambda();
-  auto              &filter      = filter_lambda();
-  bool               checked     = filter.enabled();
-  static std::size_t current_idx = {};
-  if (const auto it = std::find(values.begin(), values.end(), filter.value());
-      it != values.end())
-  {
-    current_idx = static_cast<size_t>(std::distance(values.begin(), it));
-  }
-  else
-  {
-    current_idx = 0;
-    if (!std::empty(values))
-    {
-      filter.update(values.front());
-    }
-    changed = true;
-  }
-  if (std::empty(values) || std::empty(strings))
-  {
-    if (checked)
-    {
-      filter.disable();
-      return true;
-    }
-    return false;
-  }
-
-  const auto *current_item = strings[current_idx].c_str();
-
-  ImGui::PushID(++id);
-  if (ImGui::Checkbox("", &checked))
-  {
-    if (checked)
-    {
-      filter.enable();
-      fmt::print("enable: \t{} \t{}\n", name, values[current_idx]);
-    }
-    else
-    {
-      filter.disable();
-      fmt::print("disable: \t{} \t{}\n", name, values[current_idx]);
-    }
-    changed = true;
-  }
-  ImGui::PopID();
-  ImGui::SameLine();
-  ImGui::PushID(++id);
-  const auto old = current_idx;
-  if (ImGui::BeginCombo(name, current_item))
-  // The second parameter is the label previewed
-  // before opening the combo.
-  {
-    for (std::size_t n = 0; n != std::size(strings); ++n)
-    {
-      const bool  is_selected = (current_idx == n);
-      // You can store your selection however you
-      // want, outside or inside your objects
-      // ImGui::PushID(++m_id);
-      const char *v           = strings[n].c_str();
-      if (ImGui::Selectable(v, is_selected))
-      {
-        current_idx = n;
-        changed     = true;
-      }
-      // ImGui::PopID();
-      if (is_selected)
-      {
-        ImGui::SetItemDefaultFocus();
-        // You may set the initial focus when
-        // opening the combo (scrolling + for
-        // keyboard navigation support)
-      }
-    }
-    if (old != current_idx)
-    {
-      fmt::print("set: \t{} \t{}\n", name, values[current_idx]);
-    }
-    ImGui::EndCombo();
-  }
-  ImGui::PopID();
-  changed =
-    (filter.update(values[current_idx]).enabled() && (old != current_idx))
-    || changed;
-  return changed;
+  return "crtower3";
 }
+
 
 void
   gui::combo_pupu() const
@@ -1667,7 +2057,7 @@ void
   const auto &pair = m_map_sprite.uniques().pupu();
   if (generic_combo(
         m_id,
-        "Pupu ID",
+        gui_labels::pupu_id,
         [&pair]() { return pair.values(); },
         [&pair]() { return pair.strings(); },
         [this]() -> auto & { return m_map_sprite.filter().pupu; }))
@@ -1686,7 +2076,7 @@ void
     const auto &pair = map.at(key);
     if (generic_combo(
           m_id,
-          "Palette",
+          gui_labels::palette,
           [&pair]() { return pair.values(); },
           [&pair]() { return pair.strings(); },
           [this]() -> auto & { return m_map_sprite.filter().palette; }))
@@ -1704,7 +2094,7 @@ void
   const auto &pair = m_map_sprite.uniques().bpp();
   if (generic_combo(
         m_id,
-        "BPP",
+        gui_labels::bpp,
         [&pair]() { return pair.values(); },
         [&pair]() { return pair.strings(); },
         [this]() -> auto & { return m_map_sprite.filter().bpp; }))
@@ -1722,7 +2112,7 @@ void
   const auto &pair = m_map_sprite.uniques().blend_mode();
   if (generic_combo(
         m_id,
-        "Blend Mode",
+        gui_labels::blend_mode,
         [&pair]() { return pair.values(); },
         [&pair]() { return pair.strings(); },
         [this]() -> auto & { return m_map_sprite.filter().blend_mode; }))
@@ -1738,7 +2128,7 @@ void
   const auto &pair = m_map_sprite.uniques().layer_id();
   if (generic_combo(
         m_id,
-        "Layers",
+        gui_labels::layers,
         [&pair]() { return pair.values(); },
         [&pair]() { return pair.strings(); },
         [this]() -> auto & { return m_map_sprite.filter().layer_id; }))
@@ -1753,7 +2143,7 @@ void
   const auto &pair = m_map_sprite.uniques().texture_page_id();
   if (generic_combo(
         m_id,
-        "Texture Page",
+        gui_labels::texture_page,
         [&pair]() { return pair.values(); },
         [&pair]() { return pair.strings(); },
         [this]() -> auto & { return m_map_sprite.filter().texture_page_id; }))
@@ -1768,7 +2158,7 @@ void
   const auto &pair = m_map_sprite.uniques().animation_id();
   if (generic_combo(
         m_id,
-        "Animation ID",
+        gui_labels::animation_id,
         [&pair]() { return pair.values(); },
         [&pair]() { return pair.strings(); },
         [this]() -> auto & { return m_map_sprite.filter().animation_id; }))
@@ -1783,7 +2173,7 @@ void
   const auto &pair = m_map_sprite.uniques().blend_other();
   if (generic_combo(
         m_id,
-        "Blend Other",
+        gui_labels::blend_other,
         [&pair]() { return pair.values(); },
         [&pair]() { return pair.strings(); },
         [this]() -> auto & { return m_map_sprite.filter().blend_other; }))
@@ -1795,20 +2185,17 @@ void
 void
   gui::combo_compact_type(::filter<compact_type> &compact) const
 {
-  using namespace std::string_literals;
   if (generic_combo(
         m_id,
-        "Compact",
+        gui_labels::compact,
         []() {
           return std::array{ compact_type::rows, compact_type::all };
         },
         []() {
-          return std::array{ "rows"s, "all"s };
+          return std::array{ gui_labels::rows, gui_labels::all };
         },
         [&]() -> auto & { return compact; }))
   {
-    m_map_sprite.update_render_texture();
-    m_changed = true;
   }
 }
 
@@ -1818,7 +2205,7 @@ void
   const auto &pair = m_map_sprite.uniques().z();
   if (generic_combo(
         m_id,
-        "Z",
+        gui_labels::z,
         [&pair]() { return pair.values(); },
         [&pair]() { return pair.strings(); },
         [this]() -> auto & { return m_map_sprite.filter().z; }))
@@ -1838,7 +2225,7 @@ void
     const auto &pair = map.at(key);
     if (generic_combo(
           m_id,
-          "Animation Frame",
+          gui_labels::animation_frame,
           [&pair]() { return pair.values(); },
           [&pair]() { return pair.strings(); },
           [this]() -> auto & { return m_map_sprite.filter().animation_frame; }))
@@ -1867,7 +2254,7 @@ void
   };
   if (generic_combo(
         m_id,
-        "Deswizzle Path",
+        gui_labels::deswizzle_path,
         //[&values]() { return values; },
         [&strings]() { return strings; },
         [&strings]() { return strings; },
@@ -1880,6 +2267,8 @@ void
 void
   gui::combo_upscale_path() const
 {
+  if (!m_field)
+    return;
   if (combo_upscale_path(
         m_map_sprite.filter().upscale, m_field->get_base_name(), get_coo()))
   {
@@ -1888,9 +2277,10 @@ void
   }
 }
 bool
-  gui::combo_upscale_path(::filter<std::filesystem::path> &filter,
-    const std::string                                     &field_name,
-    open_viii::LangT                                       coo) const
+  gui::combo_upscale_path(
+    ::filter<std::filesystem::path> &filter,
+    const std::string               &field_name,
+    open_viii::LangT                 coo) const
 {
   std::vector<std::string> paths = {};
   auto                     transform_paths =
@@ -1933,7 +2323,7 @@ bool
 
     if (generic_combo(
           m_id,
-          "Upscale Path",
+          gui_labels::upscale_path,
           [&paths]() { return paths; },
           [&paths]() { return paths; },
           [ this, &filter ]() -> auto & { return filter; }))
@@ -1959,20 +2349,22 @@ void
 }
 template<typename lambdaT, typename askT>
 bool
-  gui::batch_deswizzle::operator()(const std::vector<std::string> &fields,
-    lambdaT                                                      &&lambda,
-    askT                                                         &&ask_lambda)
+  gui::batch_deswizzle::operator()(
+    const std::vector<std::string> &fields,
+    lambdaT                       &&lambda,
+    askT                          &&ask_lambda)
 {
   if (!enabled)
   {
     return false;
   }
-  const char *title = "Batch saving deswizzle textures...";
-  ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(),
+  ImGui::SetNextWindowPos(
+    ImGui::GetMainViewport()->GetCenter(),
     ImGuiCond_Always,
     ImVec2(0.5F, 0.5F));
-  ImGui::OpenPopup(title);
-  if (ImGui::BeginPopupModal(title,
+  ImGui::OpenPopup(gui_labels::batch_deswizzle_title.data());
+  if (ImGui::BeginPopupModal(
+        gui_labels::batch_deswizzle_title.data(),
         nullptr,
         ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings))
   {
@@ -1980,7 +2372,9 @@ bool
     {
       auto current = std::chrono::high_resolution_clock::now();
       fmt::print(
-        "{:%H:%M:%S} - Finished the batch deswizzle...\n", current - start);
+        "{:%H:%M:%S} - {}\n",
+        current - start,
+        gui_labels::batch_deswizzle_finish);
       disable();
       return pos > 0U;
     }
@@ -1991,9 +2385,11 @@ bool
     else
     {
       auto current = std::chrono::high_resolution_clock::now();
-      format_imgui_text("{:%H:%M:%S} - {:>3.2f}% - Processing {}...",
+      format_imgui_text(
+        "{:%H:%M:%S} - {:>3.2f}% - {} {}...",
         current - start,
         static_cast<float>(pos) * 100.F / static_cast<float>(std::size(fields)),
+        gui_labels::processing,
         fields[pos]);
       ImGui::Separator();
       lambda(static_cast<int>(pos), outgoing, filters);

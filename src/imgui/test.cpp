@@ -2,6 +2,6 @@
 int
   main()
 {
-  const auto the_gui = gui{ "Field Map Editor" };
+  const auto the_gui = gui{};
   the_gui.start();
 }
