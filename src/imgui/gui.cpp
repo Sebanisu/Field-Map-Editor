@@ -116,7 +116,9 @@ void
 void
   gui::loop() const
 {
-  static sf::Color clear_color = { 0, 0, 0, 255 };
+  static sf::Color clear_color = {
+    0, 0, 0, std::numeric_limits<sf::Uint8>::max()
+  };
   if (ImGui::Begin("Control Panel",
         nullptr,
         static_cast<ImGuiWindowFlags>(
@@ -129,15 +131,24 @@ void
     }
     menu_bar();
     file_browser_locate_ff8();
-    static float clear_color_f[3]{};
+    static std::array<float, 3U> clear_color_f{};
     if (ImGui::ColorEdit3(
-          "Background", clear_color_f, ImGuiColorEditFlags_DisplayRGB))
+          "Background", clear_color_f.data(), ImGuiColorEditFlags_DisplayRGB))
     {
       // changed color
-      clear_color = { static_cast<sf::Uint8>(255U * clear_color_f[0]),
-        static_cast<sf::Uint8>(255U * clear_color_f[1]),
-        static_cast<sf::Uint8>(255U * clear_color_f[2]),
-        255U };
+      clear_color = { static_cast<sf::Uint8>(
+                        std::numeric_limits<sf::Uint8>::max()
+                        * clear_color_f[0]),
+        static_cast<sf::Uint8>(
+          std::numeric_limits<sf::Uint8>::max() * clear_color_f[1]),
+        static_cast<sf::Uint8>(
+          std::numeric_limits<sf::Uint8>::max() * clear_color_f[2]),
+        std::numeric_limits<sf::Uint8>::max() };
+    }
+    ImGui::SameLine();
+    {
+      const auto framerate = ImGui::GetIO().Framerate;
+      format_imgui_text("   {:>3.2f} fps", framerate);
     }
     combo_draw();
     if (!m_paths.empty())
@@ -150,6 +161,12 @@ void
             {
               auto field = m_archives_group.field(pos);
               if (!field)
+              {
+                return;
+              }
+              const auto map_pairs =
+                field->get_vector_of_indexes_and_files({ ".map" });
+              if (map_pairs.empty())
               {
                 return;
               }
@@ -167,7 +184,9 @@ void
                   filters.upscale.disable();
                 }
               }
-              auto map = m_map_sprite.with_field(field).with_filters(filters);
+              auto map = m_map_sprite.with_field(field)
+                           .with_coo(open_viii::LangT::generic)
+                           .with_filters(filters);
               //               map_sprite{ m_field, open_viii::LangT::en, {},
               //               filters };
               if (map.fail())
@@ -195,10 +214,50 @@ void
               }
               map.save_pupu_textures(selected_path);
               format_imgui_text("Saving Textures");
-              const std::filesystem::path map_path =
-                selected_path / map.map_filename();
-              map.save_modified_map(map_path);
-              format_imgui_text("Saving Map file: {}", map_path.string());
+              const auto process = [&]()
+              {
+                const std::filesystem::path map_path =
+                  selected_path / map.map_filename();
+                map.save_modified_map(map_path);
+                format_imgui_text("Saving Map file: {}", map_path.string());
+              };
+              if (map_pairs.size() > 1U)
+              {
+                fmt::print("{}:{} - count of maps: {}\t field: {}\n",
+                  __FILE__,
+                  __LINE__,
+                  map_pairs.size(),
+                  base_name);
+                for (const auto &[i, file_path] : map_pairs)
+                {
+                  const auto filename =
+                    std::filesystem::path(file_path).filename().stem().string();
+                  std::string_view filename_view = { filename };
+                  std::string_view basename_view = { base_name };
+                  if (filename_view.substr(
+                        0, std::min(std::size(filename), std::size(base_name)))
+                      != basename_view.substr(
+                        0, std::min(std::size(filename), std::size(base_name))))
+                  {
+                    continue;
+                  }
+                  if (filename.size() == base_name.size())
+                  {
+                    process();
+                    continue;
+                  }
+                  const auto coo_view =
+                    filename_view.substr(std::size(base_name) + 1U, 2U);
+                  fmt::print("\t{}\t{}\n", filename, coo_view);
+                  map =
+                    map.with_coo(open_viii::LangCommon::from_string(coo_view));
+                  process();
+                }
+              }
+              else
+              {
+                process();
+              }
             },
             [this](::filter<std::filesystem::path> &filter)
             {
