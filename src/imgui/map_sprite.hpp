@@ -25,7 +25,8 @@ static inline std::string
 {
   std::string output{};
   output.reserve(std::size(input) + 1);
-  std::ranges::transform(input,
+  std::ranges::transform(
+    input,
     std::back_inserter(output),
     [](char c) -> char { return static_cast<char>(::tolower(c)); });
   return output;
@@ -38,10 +39,11 @@ public:
   using color_type  = open_viii::graphics::Color32RGBA;
   using colors_type = std::vector<color_type>;
   map_sprite()      = default;
-  map_sprite(std::shared_ptr<open_viii::archive::FIFLFS<false>> field,
-    open_viii::LangT                                            coo,
-    bool                                                        draw_swizzle,
-    filters                                                     in_filters)
+  map_sprite(
+    std::shared_ptr<open_viii::archive::FIFLFS<false>> field,
+    open_viii::LangT                                   coo,
+    bool                                               draw_swizzle,
+    filters                                            in_filters)
     : m_draw_swizzle(draw_swizzle)
     , m_filters(std::move(in_filters))
     , m_field(std::move(field))
@@ -69,9 +71,10 @@ public:
     uniques() const;
 
   map_sprite
-    update(std::shared_ptr<open_viii::archive::FIFLFS<false>> field,
-      open_viii::LangT                                        coo,
-      bool draw_swizzle) const;
+    update(
+      std::shared_ptr<open_viii::archive::FIFLFS<false>> field,
+      open_viii::LangT                                   coo,
+      bool                                               draw_swizzle) const;
 
   void
     enable_draw_swizzle() const;
@@ -106,22 +109,26 @@ public:
   void
     update_render_texture(bool reload_textures = false) const;
   void
-    update_position(const sf::Vector2i &pixel_pos,
-      const sf::Vector2i               &tile_pos,
-      const std::uint8_t               &texture_page);
+    update_position(
+      const sf::Vector2i &pixel_pos,
+      const sf::Vector2i &tile_pos,
+      const std::uint8_t &texture_page);
   std::vector<std::size_t>
-    find_intersecting(const sf::Vector2i &pixel_pos,
-      const sf::Vector2i                 &tile_pos,
-      const std::uint8_t                 &texture_page,
-      bool                                skip_filters = false);
+    find_intersecting(
+      const sf::Vector2i &pixel_pos,
+      const sf::Vector2i &tile_pos,
+      const std::uint8_t &texture_page,
+      bool                skip_filters = false);
   std::size_t
-    row_empties(std::uint8_t tile_y,
-      std::uint8_t           texture_page,
-      bool                   move_from_row = false);
+    row_empties(
+      std::uint8_t tile_y,
+      std::uint8_t texture_page,
+      bool         move_from_row = false);
   sf::Sprite
-    save_intersecting(const sf::Vector2i &pixel_pos,
-      const sf::Vector2i                 &tile_pos,
-      const std::uint8_t                 &texture_page);
+    save_intersecting(
+      const sf::Vector2i &pixel_pos,
+      const sf::Vector2i &tile_pos,
+      const std::uint8_t &texture_page);
   std::uint8_t
     max_x_for_saved() const;
   void
@@ -271,13 +278,15 @@ private:
   [[nodiscard]] colors_type
     get_colors(open_viii::graphics::BPPT bpp, std::uint8_t palette) const;
   [[nodiscard]] std::size_t
-    get_texture_pos(open_viii::graphics::BPPT bpp,
-      std::uint8_t                            palette,
-      std::uint8_t                            texture_page) const;
+    get_texture_pos(
+      open_viii::graphics::BPPT bpp,
+      std::uint8_t              palette,
+      std::uint8_t              texture_page) const;
   [[nodiscard]] const sf::Texture *
-    get_texture(open_viii::graphics::BPPT bpp,
-      std::uint8_t                        palette,
-      std::uint8_t                        texture_page) const;
+    get_texture(
+      open_viii::graphics::BPPT bpp,
+      std::uint8_t              palette,
+      std::uint8_t              texture_page) const;
   [[nodiscard]] const sf::Texture *
     get_texture(const ::PupuID &pupu) const;
   [[nodiscard]] std::shared_ptr<std::array<sf::Texture, MAX_TEXTURES>>
@@ -290,18 +299,20 @@ private:
     init_render_texture() const;
 
   [[nodiscard]] std::array<sf::Vertex, 4U>
-    get_triangle_strip(const sf::Vector2u &draw_size,
-      const sf::Vector2u                  &texture_size,
-      auto                                 source_x,
-      auto                                 source_y,
-      auto                                 x,
-      auto                                 y) const;
+    get_triangle_strip(
+      const sf::Vector2u &draw_size,
+      const sf::Vector2u &texture_size,
+      auto                source_x,
+      auto                source_y,
+      auto                x,
+      auto                y) const;
 
   [[nodiscard]] std::array<sf::Vertex, 4U>
-    get_triangle_strip(const sf::Vector2u &draw_size,
-      const sf::Vector2u                  &texture_size,
-      const auto                          &tile_const,
-      auto                               &&tile) const;
+    get_triangle_strip(
+      const sf::Vector2u &draw_size,
+      const sf::Vector2u &texture_size,
+      const auto         &tile_const,
+      auto              &&tile) const;
 
   static const sf::BlendMode &
     GetBlendSubtract();
@@ -317,15 +328,17 @@ private:
   auto
     duel_visitor(auto &&lambda) const;
   void
-    for_all_tiles(auto const &tiles_const,
-      auto                  &&tiles,
-      auto                  &&lambda,
-      bool                    skip_invalid,
-      bool                    regular_order) const;
+    for_all_tiles(
+      auto const &tiles_const,
+      auto      &&tiles,
+      auto      &&lambda,
+      bool        skip_invalid,
+      bool        regular_order) const;
   void
-    for_all_tiles(auto &&lambda,
-      bool               skip_invalid  = true,
-      bool               regular_order = false) const;
+    for_all_tiles(
+      auto &&lambda,
+      bool   skip_invalid  = true,
+      bool   regular_order = false) const;
   void
     find_upscale_path(
       std::shared_ptr<std::array<sf::Texture, MAX_TEXTURES>> &ret,
@@ -343,33 +356,38 @@ private:
       uint8_t                                                 palette) const;
   template<typename key_lambdaT, typename weight_lambdaT>
   [[maybe_unused]] void
-    compact_generic(key_lambdaT &&key_lambda,
-      weight_lambdaT            &&weight_lambda,
-      int                         passes = 2) const;
+    compact_generic(
+      key_lambdaT    &&key_lambda,
+      weight_lambdaT &&weight_lambda,
+      int              passes = 2) const;
 
   std::shared_ptr<sf::RenderTexture>
     save_texture(std::uint32_t width, std::uint32_t height) const;
   uint32_t
     get_max_texture_height() const;
   void
-    async_save(const std::filesystem::path     &out_path,
+    async_save(
+      const std::filesystem::path              &out_path,
       const std::shared_ptr<sf::RenderTexture> &out_texture) const;
-  template<typename tilesT,
+  template<
+    typename tilesT,
     typename key_lambdaT,
     typename value_lambdaT,
     typename filterT = decltype(default_filter_lambda)>
   auto
-    generate_map(tilesT &&tiles,
-      key_lambdaT       &&key_lambda,
-      value_lambdaT     &&value_lambda,
-      filterT           &&filter = {}) const
+    generate_map(
+      tilesT        &&tiles,
+      key_lambdaT   &&key_lambda,
+      value_lambdaT &&value_lambda,
+      filterT       &&filter = {}) const
   {
     using tileT  = std::decay_t<typename std::decay_t<tilesT>::value_type>;
     using keyT   = decltype(key_lambda(tileT{}));
     using valueT = decltype(value_lambda(tileT{}));
     std::map<keyT, std::vector<valueT>> r{};
     auto filtered_tiles = tiles | std::views::filter(filter);
-    std::ranges::for_each(filtered_tiles,
+    std::ranges::for_each(
+      filtered_tiles,
       [&r, &key_lambda, &value_lambda](auto &&tile)
       {
         if (!filter_invalid(tile))
@@ -411,21 +429,24 @@ private:
       const std::string_view                                        &field_name,
       PupuID pupu) const;
   std::filesystem::path
-    save_path(fmt::format_string<std::string_view, uint8_t> pattern,
-      const std::filesystem::path                          &path,
-      const std::string_view                               &field_name,
-      uint8_t                                               texture_page) const;
+    save_path(
+      fmt::format_string<std::string_view, uint8_t> pattern,
+      const std::filesystem::path                  &path,
+      const std::string_view                       &field_name,
+      uint8_t                                       texture_page) const;
   std::filesystem::path
-    save_path(fmt::format_string<std::string_view, uint8_t, uint8_t> pattern,
-      const std::filesystem::path                                   &path,
-      const std::string_view                                        &field_name,
-      uint8_t texture_page,
-      uint8_t palette) const;
+    save_path(
+      fmt::format_string<std::string_view, uint8_t, uint8_t> pattern,
+      const std::filesystem::path                           &path,
+      const std::string_view                                &field_name,
+      uint8_t                                                texture_page,
+      uint8_t                                                palette) const;
   std::filesystem::path
-    save_path(fmt::format_string<std::string_view, PupuID> pattern,
-      const std::filesystem::path                         &path,
-      const std::string_view                              &field_name,
-      PupuID                                               pupu) const;
+    save_path(
+      fmt::format_string<std::string_view, PupuID> pattern,
+      const std::filesystem::path                 &path,
+      const std::string_view                      &field_name,
+      PupuID                                       pupu) const;
   bool
     check_if_one_palette(const uint8_t &texture_page) const;
   std::vector<uint8_t>

@@ -14,7 +14,7 @@
 #include <utility>
 template<typename ContainerT>
 requires(requires(ContainerT c, typename ContainerT::value_type v)
-  { c.append(v); }) class append_insert_iterator
+         { c.append(v); }) class append_insert_iterator
 {// wrap pushes to append of container as output iterator
 public:
   using iterator_category                     = std::output_iterator_tag;

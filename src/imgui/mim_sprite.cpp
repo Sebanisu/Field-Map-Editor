@@ -7,7 +7,8 @@
 open_viii::graphics::background::Mim
   mim_sprite::get_mim() const
 {
-  auto lang_name = fmt::format("_{}{}",
+  auto lang_name = fmt::format(
+    "_{}{}",
     std::string(open_viii::LangCommon::to_string(m_coo)),
     open_viii::graphics::background::Mim::EXT);
   if (m_field != nullptr)
@@ -16,7 +17,7 @@ open_viii::graphics::background::Mim
                { std::string_view(lang_name),
                  open_viii::graphics::background::Mim::EXT },
                &m_mim_path),
-      m_field->get_base_name() };
+             m_field->get_base_name() };
   }
   return {};
 }
@@ -35,8 +36,9 @@ std::shared_ptr<sf::Texture>
 {
   auto texture = std::make_shared<sf::Texture>(sf::Texture{});
 
-  if (!m_colors.empty() && width() != 0U && texture
-      && texture->create(width(), height()))
+  if (
+    !m_colors.empty() && width() != 0U && texture
+    && texture->create(width(), height()))
   {
     // expects an unsigned char pointer. colors
     // underlying type is an array of chars.
@@ -68,15 +70,14 @@ std::vector<open_viii::graphics::Color32RGBA>
   , m_colors(get_colors())
   , m_texture(get_texture())
   , m_vertices(get_vertices())
-  , m_grid(draw_palette() ? grid{ { 1U, 1U }, { width(), height() } }
-                          : grid{ { 16U, 16U }, { width(), height() } })
+  , m_grid(
+      draw_palette() ? grid{ { 1U, 1U }, { width(), height() } }
+                     : grid{ { 16U, 16U }, { width(), height() } })
   , m_texture_page_grid(
-      draw_palette()
-        ? grid{}
-        : grid{
-          { (1U << ((8U - (m_bpp.raw() & 3U)))), 256U },
-          { width(), height() },
-          sf::Color::Yellow })
+      draw_palette() ? grid{}
+                     : grid{ { (1U << ((8U - (m_bpp.raw() & 3U)))), 256U },
+                             { width(), height() },
+                             sf::Color::Yellow })
 {
 }
 
@@ -145,7 +146,8 @@ void
   }
   else if (open_viii::tools::i_ends_with(dest_path.string(), ".png"))
   {
-    open_viii::graphics::Png::save(m_colors,
+    open_viii::graphics::Png::save(
+      m_colors,
       width(),
       height(),
       dest_path.string(),

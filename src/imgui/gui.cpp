@@ -489,7 +489,7 @@ void
     ::filter<std::filesystem::path> filter,
     std::string_view                prefix,
     std::string_view                base_name) const
-{// filters.upscale
+{
   if (filter.enabled())
   {
     filter.update(filter.value() / prefix / base_name);
@@ -513,7 +513,10 @@ void
   if (batch_op(
         m_archives_group.mapdata(),
         [&](
-          const int &pos, std::filesystem::path selected_path, filters filters, auto&&... rest)
+          const int            &pos,
+          std::filesystem::path selected_path,
+          filters               filters,
+          auto &&...rest)
         {
           auto field = m_archives_group.field(pos);
           if (!field)
@@ -633,124 +636,6 @@ void
         map_path.string());
     });
 }
-//{
-//  if (m_batch_deswizzle(
-//        m_archives_group.mapdata(),
-//        [this](
-//          const int &pos, std::filesystem::path selected_path, filters
-//          filters)
-//        {
-//          auto field = m_archives_group.field(pos);
-//          if (!field)
-//          {
-//            return;
-//          }
-//          const auto map_pairs = field->get_vector_of_indexes_and_files(
-//            { open_viii::graphics::background::Map::EXT });
-//          if (map_pairs.empty())
-//          {
-//            return;
-//          }
-//          std::string      base_name = str_to_lower(field->get_base_name());
-//          std::string_view prefix = std::string_view(base_name).substr(0U,
-//          2U); popup_batch_common_filter_start(filters.upscale, prefix,
-//          base_name);
-//
-//          auto map = m_map_sprite.with_field(field)
-//                       .with_coo(open_viii::LangT::generic)
-//                       .with_filters(filters);
-//          //               map_sprite{ m_field, open_viii::LangT::en, {},
-//          //               filters };
-//          if (map.fail())
-//          {
-//            return;
-//          }
-//          if (filters.upscale.enabled())
-//          {
-//            auto map_path = filters.upscale.value() / map.map_filename();
-//            if (std::filesystem::exists(map_path))
-//            {
-//              map.load_map(map_path);
-//            }
-//          }
-//          selected_path = selected_path / prefix / base_name;
-//          if (std::filesystem::create_directories(selected_path))
-//          {
-//            format_imgui_text(
-//              "{} {}", gui_labels::directory_created, selected_path.string());
-//          }
-//          else
-//          {
-//            format_imgui_text(
-//              "{} {}", gui_labels::directory_exists, selected_path.string());
-//          }
-//          map.save_pupu_textures(selected_path);
-//          format_imgui_text(gui_labels::saving_textures);
-//          const auto process = [&]()
-//          {
-//            const std::filesystem::path map_path =
-//              selected_path / map.map_filename();
-//            map.save_modified_map(map_path);
-//            format_imgui_text(
-//              "{} {} {}: {}",
-//              gui_labels::saving,
-//              open_viii::graphics::background::Map::EXT,
-//              gui_labels::file,
-//              map_path.string());
-//          };
-//          if (map_pairs.size() > 1U)
-//          {
-//            fmt::print(
-//              "{}:{} - {}: {}\t {}: {}\n",
-//              __FILE__,
-//              __LINE__,
-//              gui_labels::count_of_maps,
-//              map_pairs.size(),
-//              gui_labels::field,
-//              base_name);
-//            for (const auto &[i, file_path] : map_pairs)
-//            {
-//              const auto filename =
-//                std::filesystem::path(file_path).filename().stem().string();
-//              std::string_view filename_view = { filename };
-//              std::string_view basename_view = { base_name };
-//              if (
-//                filename_view.substr(
-//                  0, std::min(std::size(filename), std::size(base_name)))
-//                != basename_view.substr(
-//                  0, std::min(std::size(filename), std::size(base_name))))
-//              {
-//                continue;
-//              }
-//              if (filename.size() == base_name.size())
-//              {
-//                process();
-//                continue;
-//              }
-//              const auto coo_view =
-//                filename_view.substr(std::size(base_name) + 1U, 2U);
-//              fmt::print("\t{}\t{}\n", filename, coo_view);
-//              map =
-//              map.with_coo(open_viii::LangCommon::from_string(coo_view));
-//              process();
-//            }
-//          }
-//          else
-//          {
-//            process();
-//          }
-//        },
-//        [this](filter<std::filesystem::path> &filter)
-//        {
-//          if (combo_upscale_path(filter, ""))
-//          {
-//          }
-//
-//          return ImGui::Button(gui_labels::start.data());
-//        }))
-//  {
-//  }
-//}
 
 void
   gui::popup_batch_reswizzle() const
@@ -811,162 +696,7 @@ void
       format_imgui_text("Saving Map file: {}", map_path.string());
     });
 }
-//void
-//  gui::popup_batch_reswizzle() const
-//{
-//  if (m_batch_reswizzle(
-//        m_archives_group.mapdata(),
-//        [this](
-//          const int            &pos,
-//          std::filesystem::path selected_path,
-//          filters               filters,
-//          filter<compact_type> &compact,
-//          bool                 &flatten_bpp,
-//          bool                 &flatten_palette)
-//        {
-//          auto field = m_archives_group.field(pos);
-//          if (!field)
-//          {
-//            return;
-//          }
-//          const auto map_pairs = field->get_vector_of_indexes_and_files(
-//            { open_viii::graphics::background::Map::EXT });
-//          if (map_pairs.empty())
-//          {
-//            return;
-//          }
-//          // todo get all languages this only get the selected or default
-//          std::string      base_name = str_to_lower(field->get_base_name());
-//          std::string_view prefix = std::string_view(base_name).substr(0U, 2U);
-//          if (filters.deswizzle.enabled())
-//          {
-//            filters.deswizzle.update(
-//              filters.deswizzle.value() / prefix / base_name);
-//            if (
-//              !std::filesystem::exists(filters.deswizzle.value())
-//              || !std::filesystem::is_directory(filters.deswizzle.value()))
-//            {
-//              filters.deswizzle.disable();
-//            }
-//          }
-//          auto map = m_map_sprite.with_field(field)
-//                       .with_coo(open_viii::LangT::generic)
-//                       .with_filters(filters);
-//          //               map_sprite{ m_field, open_viii::LangT::en, {},
-//          //               filters };
-//          if (map.fail())
-//          {
-//            return;
-//          }
-//          if (filters.deswizzle.enabled())
-//          {
-//            auto map_path = filters.deswizzle.value() / map.map_filename();
-//            if (std::filesystem::exists(map_path))
-//            {
-//              map.load_map(map_path);
-//            }
-//          }
-//          selected_path = selected_path / prefix / base_name;
-//          if (std::filesystem::create_directories(selected_path))
-//          {
-//            format_imgui_text("Directory Created {}", selected_path.string());
-//          }
-//          else
-//          {
-//            format_imgui_text("Directory Exists {}", selected_path.string());
-//          }
-//          format_imgui_text("Saving Textures");
-//          const auto process = [&]()
-//          {
-//            const auto c = [&]
-//            {
-//              if (compact.enabled())
-//              {
-//                if (compact.value() == compact_type::rows)
-//                {
-//                  map.compact();
-//                }
-//                if (compact.value() == compact_type::all)
-//                {
-//                  map.compact2();
-//                }
-//              }
-//            };
-//            c();
-//            if (flatten_bpp)
-//            {
-//              map.flatten_bpp();
-//            }
-//            if (flatten_palette)
-//            {
-//              map.flatten_palette();
-//            }
-//            if (flatten_bpp || flatten_palette)
-//            {
-//              c();
-//            }
-//            const std::filesystem::path map_path =
-//              selected_path / map.map_filename();
-//            map.save_new_textures(selected_path);
-//            map.save_modified_map(map_path);
-//            format_imgui_text("Saving Map file: {}", map_path.string());
-//          };
-//
-//          if (map_pairs.size() > 1U)
-//          {
-//            fmt::print(
-//              "{}:{} - count of maps: {}\t field: {}\n",
-//              __FILE__,
-//              __LINE__,
-//              map_pairs.size(),
-//              base_name);
-//            for (const auto &[i, file_path] : map_pairs)
-//            {
-//              const auto filename =
-//                std::filesystem::path(file_path).filename().stem().string();
-//              std::string_view filename_view = { filename };
-//              std::string_view basename_view = { base_name };
-//              if (
-//                filename_view.substr(
-//                  0, std::min(std::size(filename), std::size(base_name)))
-//                != basename_view.substr(
-//                  0, std::min(std::size(filename), std::size(base_name))))
-//              {
-//                continue;
-//              }
-//              if (filename.size() == base_name.size())
-//              {
-//                process();
-//                continue;
-//              }
-//              const auto coo_view =
-//                filename_view.substr(std::size(base_name) + 1U, 2U);
-//              fmt::print("\t{}\t{}\n", filename, coo_view);
-//              map = map.with_coo(open_viii::LangCommon::from_string(coo_view));
-//              process();
-//            }
-//          }
-//          else
-//          {
-//            process();
-//          }
-//        },
-//        [this](
-//          filter<compact_type> &compact,
-//          bool                 &flatten_bpp,
-//          bool                 &flatten_palette)
-//        {
-//          combo_compact_type(compact);
-//          ImGui::Separator();
-//          format_imgui_text("Flatten: ");
-//          ImGui::Checkbox("BPP", &flatten_bpp);
-//          ImGui::SameLine();
-//          ImGui::Checkbox("Palette", &flatten_palette);
-//          return ImGui::Button("Start");
-//        }))
-//  {
-//  }
-//}
+
 void
   gui::on_click_not_imgui() const
 {

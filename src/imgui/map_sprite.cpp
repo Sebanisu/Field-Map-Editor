@@ -11,8 +11,8 @@ using namespace std::string_literals;
 bool
   map_sprite::empty() const
 {
-  return m_maps.const_back().visit_tiles(
-    [](const auto &tiles) { return std::empty(tiles); });
+  return m_maps.const_back().visit_tiles([](const auto &tiles)
+                                         { return std::empty(tiles); });
 }
 
 Mim
@@ -23,7 +23,7 @@ Mim
     auto lang_name =
       fmt::format("_{}{}", open_viii::LangCommon::to_string(m_coo), Mim::EXT);
     return { m_field->get_entry_data({ std::string_view(lang_name), Mim::EXT }),
-      str_to_lower(m_field->get_base_name()) };
+             str_to_lower(m_field->get_base_name()) };
   }
   return {};
 }
@@ -36,28 +36,31 @@ Map
     std::size_t out_path_pos = {};
     auto        lang_name =
       fmt::format("_{}{}", open_viii::LangCommon::to_string(m_coo), Map::EXT);
-    auto map = Map{ m_mim.mim_type(),
+    auto map = Map{
+      m_mim.mim_type(),
       m_field->get_entry_data(
         { std::string_view(lang_name), Map::EXT }, out_path, &out_path_pos),
-      shift };
-    coo      = out_path_pos == 0U;
+      shift
+    };
+    coo = out_path_pos == 0U;
     return map;
   }
   return {};
 }
 
 map_sprite::colors_type
-  map_sprite::get_colors(open_viii::graphics::BPPT bpp,
-    std::uint8_t                                   palette) const
+  map_sprite::get_colors(open_viii::graphics::BPPT bpp, std::uint8_t palette)
+    const
 {
   return m_mim.get_colors<open_viii::graphics::Color32RGBA>(
     bpp, palette, false);
 }
 
 std::size_t
-  map_sprite::get_texture_pos(const open_viii::graphics::BPPT bpp,
-    const std::uint8_t                                        palette,
-    const std::uint8_t texture_page) const
+  map_sprite::get_texture_pos(
+    const open_viii::graphics::BPPT bpp,
+    const std::uint8_t              palette,
+    const std::uint8_t              texture_page) const
 {
   if (!m_filters.upscale.enabled())
   {
@@ -80,9 +83,10 @@ std::size_t
 }
 
 const sf::Texture *
-  map_sprite::get_texture(const open_viii::graphics::BPPT bpp,
-    const std::uint8_t                                    palette,
-    const std::uint8_t                                    texture_page) const
+  map_sprite::get_texture(
+    const open_viii::graphics::BPPT bpp,
+    const std::uint8_t              palette,
+    const std::uint8_t              texture_page) const
 {
   return &m_texture->at(get_texture_pos(bpp, palette, texture_page));
 }
@@ -96,7 +100,8 @@ const sf::Texture *
     auto i = static_cast<std::size_t>(std::distance(values.begin(), it));
     if (i >= MAX_TEXTURES)
     {
-      fmt::print(stderr,
+      fmt::print(
+        stderr,
         "{}:{} - Index out of range {} / {}\n",
         __FILE__,
         __LINE__,
@@ -167,7 +172,8 @@ std::shared_ptr<std::array<sf::Texture, map_sprite::MAX_TEXTURES>>
   //   }
   // }
   wait_for_futures();
-  if (std::ranges::all_of(*ret,
+  if (std::ranges::all_of(
+        *ret,
         [](const sf::Texture &texture)
         {
           auto size = texture.getSize();
@@ -217,7 +223,7 @@ void
     std::shared_ptr<std::array<sf::Texture, MAX_TEXTURES>> &ret) const
 {
   for (const auto &texture_page :
-    m_all_unique_values_and_strings.texture_page_id().values())
+       m_all_unique_values_and_strings.texture_page_id().values())
   {
     const size_t i  = MAX_TEXTURES - 13 + texture_page;
     const auto   fn = [this, texture_page](sf::Texture *texture) -> void
@@ -242,7 +248,8 @@ void
     };
     if (i >= MAX_TEXTURES)
     {
-      fmt::print(stderr,
+      fmt::print(
+        stderr,
         "{}:{} - Index out of range {} / {}\n",
         __FILE__,
         __LINE__,
@@ -258,7 +265,8 @@ void
     std::shared_ptr<std::array<sf::Texture, MAX_TEXTURES>> &ret) const
 {
   auto field_name = get_base_name();
-  std::ranges::for_each(m_all_unique_values_and_strings.pupu().values(),
+  std::ranges::for_each(
+    m_all_unique_values_and_strings.pupu().values(),
     [&ret, &field_name, this, i = size_t{}](const ::PupuID &pupu) mutable
     {
       static constexpr char pattern_pupu[]     = { "{}_{}.png" };
@@ -286,7 +294,8 @@ void
       };
       if (i >= MAX_TEXTURES)
       {
-        fmt::print(stderr,
+        fmt::print(
+          stderr,
           "{}:{} - Index out of range {} / {}\n",
           __FILE__,
           __LINE__,
@@ -330,7 +339,7 @@ void
     std::uint8_t                                            palette) const
 {
   for (const auto &texture_page :
-    m_all_unique_values_and_strings.texture_page_id().values())
+       m_all_unique_values_and_strings.texture_page_id().values())
   {
     const size_t i  = size_t{ texture_page } * 16U + palette;
     auto const   fn = [texture_page, palette, this](sf::Texture *const texture)
@@ -365,12 +374,13 @@ void
 }
 
 [[nodiscard]] std::array<sf::Vertex, 4U>
-  map_sprite::get_triangle_strip(const sf::Vector2u &draw_size,
-    const sf::Vector2u                              &texture_size,
-    auto                                             source_x,
-    auto                                             source_y,
-    auto                                             x,
-    auto                                             y) const
+  map_sprite::get_triangle_strip(
+    const sf::Vector2u &draw_size,
+    const sf::Vector2u &texture_size,
+    auto                source_x,
+    auto                source_y,
+    auto                x,
+    auto                y) const
 {
   constexpr static auto tile_size = 16U;
   auto i = static_cast<std::uint32_t>(x / static_cast<decltype(x)>(tile_size));
@@ -382,33 +392,38 @@ void
   const auto tovec = [](auto &&in_x, auto &&in_y) {
     return sf::Vector2f{ static_cast<float>(in_x), static_cast<float>(in_y) };
   };
-  const auto tovert = [&tovec](
-                        auto &&in_x, auto &&in_y, auto &&texx, auto &&texy) {
-    return sf::Vertex{ tovec(in_x, in_y), tovec(texx, texy) };
-  };
-  return std::array{ tovert((i + 1) * draw_size.x,
+  const auto tovert =
+    [&tovec](auto &&in_x, auto &&in_y, auto &&texx, auto &&texy) {
+      return sf::Vertex{ tovec(in_x, in_y), tovec(texx, texy) };
+    };
+  return std::array{ tovert(
+                       (i + 1) * draw_size.x,
                        j * draw_size.y,
                        (tu + 1) * texture_size.x,
                        tv * texture_size.y),
-    tovert(i * draw_size.x,
-      j * draw_size.y,
-      tu * texture_size.x,
-      tv * texture_size.y),
-    tovert((i + 1) * draw_size.x,
-      (j + 1) * draw_size.y,
-      (tu + 1) * texture_size.x,
-      (tv + 1) * texture_size.y),
-    tovert(i * draw_size.x,
-      (j + 1) * draw_size.y,
-      tu * texture_size.x,
-      (tv + 1) * texture_size.y) };
+                     tovert(
+                       i * draw_size.x,
+                       j * draw_size.y,
+                       tu * texture_size.x,
+                       tv * texture_size.y),
+                     tovert(
+                       (i + 1) * draw_size.x,
+                       (j + 1) * draw_size.y,
+                       (tu + 1) * texture_size.x,
+                       (tv + 1) * texture_size.y),
+                     tovert(
+                       i * draw_size.x,
+                       (j + 1) * draw_size.y,
+                       tu * texture_size.x,
+                       (tv + 1) * texture_size.y) };
 }
 
 [[nodiscard]] std::array<sf::Vertex, 4U>
-  map_sprite::get_triangle_strip(const sf::Vector2u &draw_size,
-    const sf::Vector2u                              &texture_size,
-    const auto                                      &tile_const,
-    auto                                           &&tile) const
+  map_sprite::get_triangle_strip(
+    const sf::Vector2u &draw_size,
+    const sf::Vector2u &texture_size,
+    const auto         &tile_const,
+    auto              &&tile) const
 {
   using namespace open_viii::graphics::literals;
   using tile_type    = std::decay_t<decltype(tile)>;
@@ -504,9 +519,10 @@ std::uint8_t
 
 template<typename key_lambdaT, typename weight_lambdaT>
 [[maybe_unused]] void
-  map_sprite::compact_generic(key_lambdaT &&key_lambda,
-    weight_lambdaT                        &&weight_lambda,
-    const int                               passes) const
+  map_sprite::compact_generic(
+    key_lambdaT    &&key_lambda,
+    weight_lambdaT &&weight_lambda,
+    const int        passes) const
 {
   static constexpr auto tile_size = 16U;
   m_maps.copy_back().visit_tiles(
@@ -526,9 +542,10 @@ template<typename key_lambdaT, typename weight_lambdaT>
         {
           const auto weight = weight_lambda(key, tps);
 
-          if (std::cmp_greater_equal(col, tile_size)
-              || std::cmp_greater_equal(row_weight, tile_size)
-              || std::cmp_greater(row_weight + weight, tile_size))
+          if (
+            std::cmp_greater_equal(col, tile_size)
+            || std::cmp_greater_equal(row_weight, tile_size)
+            || std::cmp_greater(row_weight + weight, tile_size))
           {
             ++row;
             col        = {};
@@ -567,7 +584,8 @@ void
   compact_generic(
     [](const auto &tile)
     {
-      return std::make_tuple(tile.texture_id(),
+      return std::make_tuple(
+        tile.texture_id(),
         tile.source_y(),
         static_cast<std::uint8_t>(3U - (tile.depth().raw() & 3U)),
         tile.source_x(),
@@ -601,7 +619,8 @@ void
   m_maps.copy_back().visit_tiles(
     [](auto &tiles)
     {
-      std::ranges::transform(tiles,
+      std::ranges::transform(
+        tiles,
         tiles.begin(),
         [](const auto tile)
         {
@@ -619,7 +638,8 @@ void
   m_maps.copy_back().visit_tiles(
     [](auto &tiles)
     {
-      std::ranges::transform(tiles,
+      std::ranges::transform(
+        tiles,
         tiles.begin(),
         [](const auto tile)
         {
@@ -633,9 +653,10 @@ void
 }
 
 std::size_t
-  map_sprite::row_empties(std::uint8_t tile_y,
-    std::uint8_t                       texture_page,
-    const bool                         move_from_row)
+  map_sprite::row_empties(
+    std::uint8_t tile_y,
+    std::uint8_t texture_page,
+    const bool   move_from_row)
 {
   return m_maps.const_back().visit_tiles(
     [&tile_y, &texture_page, &move_from_row](const auto &tiles) -> std::size_t
@@ -650,7 +671,8 @@ std::size_t
             return std::cmp_equal((tile.source_y() / tile_size), tile_y)
                    && std::cmp_equal(texture_page, tile.texture_id());
           });
-      std::transform(std::ranges::begin(filtered_range),
+      std::transform(
+        std::ranges::begin(filtered_range),
         std::ranges::end(filtered_range),
         std::back_inserter(values),
         [](const auto &tile)
@@ -681,9 +703,10 @@ std::size_t
 }
 
 void
-  map_sprite::update_position(const sf::Vector2i &pixel_pos,
-    const sf::Vector2i                           &tile_pos,
-    const std::uint8_t                           &texture_page)
+  map_sprite::update_position(
+    const sf::Vector2i &pixel_pos,
+    const sf::Vector2i &tile_pos,
+    const std::uint8_t &texture_page)
 {
   if (m_saved_indicies.empty())
   {
@@ -734,7 +757,8 @@ void
                 find_intersecting(pixel_pos, tile_pos, texture_page, true);
               !intersecting.empty())
           {
-            if (std::ranges::any_of(intersecting,
+            if (std::ranges::any_of(
+                  intersecting,
                   [&tile, &tiles](const auto &j)
                   {
                     const auto &other_tile = tiles[j];
@@ -767,9 +791,10 @@ void
 }
 
 sf::Sprite
-  map_sprite::save_intersecting(const sf::Vector2i &pixel_pos,
-    const sf::Vector2i                             &tile_pos,
-    const std::uint8_t                             &texture_page)
+  map_sprite::save_intersecting(
+    const sf::Vector2i &pixel_pos,
+    const sf::Vector2i &tile_pos,
+    const std::uint8_t &texture_page)
 {
   static constexpr auto tile_size       = 16;
   static constexpr auto tile_size_float = 16.F;
@@ -793,10 +818,11 @@ sf::Sprite
 }
 
 std::vector<size_t>
-  map_sprite::find_intersecting(const sf::Vector2i &pixel_pos,
-    const sf::Vector2i                             &tile_pos,
-    const std::uint8_t                             &texture_page,
-    const bool                                      skip_filters)
+  map_sprite::find_intersecting(
+    const sf::Vector2i &pixel_pos,
+    const sf::Vector2i &tile_pos,
+    const std::uint8_t &texture_page,
+    const bool          skip_filters)
 {
   return m_maps.const_back().visit_tiles(
     [this, &tile_pos, &texture_page, &pixel_pos, &skip_filters](
@@ -831,11 +857,13 @@ std::vector<size_t>
                 }
               }
             }
-            else if (in_bounds(pixel_pos.x,
+            else if (in_bounds(
+                       pixel_pos.x,
                        tile.x(),
                        tile.x() + static_cast<int>(tile_size)))
             {
-              if (in_bounds(pixel_pos.y,
+              if (in_bounds(
+                    pixel_pos.y,
                     tile.y(),
                     tile.y() + static_cast<int>(tile_size)))
               {
@@ -844,7 +872,8 @@ std::vector<size_t>
             }
             return false;
           });
-      std::transform(std::begin(filtered_tiles),
+      std::transform(
+        std::begin(filtered_tiles),
         std::end(filtered_tiles),
         std::back_inserter(out),
         [&tiles](const auto &tile)
@@ -870,17 +899,19 @@ auto
   return m_maps.front().visit_tiles(
     [this, &lambda](auto const &tiles_const)
     {
-      return m_maps.back().visit_tiles([&lambda, &tiles_const](auto &&tiles)
+      return m_maps.back().visit_tiles(
+        [&lambda, &tiles_const](auto &&tiles)
         { return lambda(tiles_const, std::forward<decltype(tiles)>(tiles)); });
     });
 }
 
 void
-  map_sprite::for_all_tiles(auto const &tiles_const,
-    auto                              &&tiles,
-    auto                              &&lambda,
-    bool                                skip_invalid,
-    bool                                regular_order) const
+  map_sprite::for_all_tiles(
+    auto const &tiles_const,
+    auto      &&tiles,
+    auto      &&lambda,
+    bool        skip_invalid,
+    bool        regular_order) const
 {
   // todo move pupu generation to constructor
   std::map<std::tuple<PupuID, std::int32_t, std::int32_t>, std::uint8_t>
@@ -889,10 +920,12 @@ void
   pupu_ids.reserve(std::size(tiles_const));
   const auto get_pupu = [&pupu_map](const auto &tile_const)
   {
-    const auto tuple = std::make_tuple(PupuID(tile_const.layer_id(),
-                                         tile_const.blend_mode(),
-                                         tile_const.animation_id(),
-                                         tile_const.animation_state()),
+    const auto tuple = std::make_tuple(
+      PupuID(
+        tile_const.layer_id(),
+        tile_const.blend_mode(),
+        tile_const.animation_id(),
+        tile_const.animation_state()),
       std::int32_t{ tile_const.x() },
       std::int32_t{ tile_const.y() });
 
@@ -909,8 +942,8 @@ void
   std::ranges::transform(tiles_const, std::back_inserter(pupu_ids), get_pupu);
   assert(std::size(tiles_const) == std::size(tiles));
   assert(std::size(tiles_const) == std::size(pupu_ids));
-  const auto process = [this, &skip_invalid, &lambda](
-                         auto tc, const auto tce, auto t, auto pupu_t)
+  const auto process =
+    [this, &skip_invalid, &lambda](auto tc, const auto tce, auto t, auto pupu_t)
   {
     for (; /*t != te &&*/ tc != tce; (void)++tc, ++t, ++pupu_t)
     {
@@ -926,14 +959,16 @@ void
   };
   if (!regular_order)
   {
-    process(std::crbegin(tiles_const),
+    process(
+      std::crbegin(tiles_const),
       std::crend(tiles_const),
       std::rbegin(tiles),
       std::rbegin(pupu_ids));
   }
   else
   {
-    process(std::cbegin(tiles_const),
+    process(
+      std::cbegin(tiles_const),
       std::cend(tiles_const),
       std::begin(tiles),
       std::begin(pupu_ids));
@@ -941,15 +976,17 @@ void
 }
 
 void
-  map_sprite::for_all_tiles(auto &&lambda,
-    bool                           skip_invalid,
-    bool                           regular_order) const
+  map_sprite::for_all_tiles(
+    auto &&lambda,
+    bool   skip_invalid,
+    bool   regular_order) const
 {
   duel_visitor(
     [&lambda, &skip_invalid, &regular_order, this](
       auto const &tiles_const, auto &&tiles)
     {
-      for_all_tiles(tiles_const,
+      for_all_tiles(
+        tiles_const,
         std::forward<decltype(tiles)>(tiles),
         std::forward<decltype(lambda)>(lambda),
         skip_invalid,
@@ -958,8 +995,8 @@ void
 }
 
 [[nodiscard]] bool
-  map_sprite::local_draw(sf::RenderTarget &target,
-    sf::RenderStates                       states) const
+  map_sprite::local_draw(sf::RenderTarget &target, sf::RenderStates states)
+    const
 {
   bool drew = false;
   target.clear(sf::Color::Transparent);
@@ -992,7 +1029,8 @@ void
         }
         if (!m_filters.deswizzle.enabled())
         {
-          states.texture = get_texture(tile_const.depth(),
+          states.texture = get_texture(
+            tile_const.depth(),
             tile_const.palette_id(),
             tile_const.texture_id());
         }
@@ -1000,8 +1038,9 @@ void
         {
           states.texture = get_texture(pupu_id);
         }
-        if (states.texture == nullptr || states.texture->getSize().y == 0
-            || states.texture->getSize().x == 0)
+        if (
+          states.texture == nullptr || states.texture->getSize().y == 0
+          || states.texture->getSize().x == 0)
         {
           return;
         }
@@ -1064,11 +1103,9 @@ const sf::BlendMode &
 {
   const static auto BlendSubtract =
     sf::BlendMode{ sf::BlendMode::DstColor,// or One
-      sf::BlendMode::One,
-      sf::BlendMode::ReverseSubtract,
-      sf::BlendMode::One,
-      sf::BlendMode::OneMinusSrcAlpha,
-      sf::BlendMode::Add };
+                   sf::BlendMode::One,      sf::BlendMode::ReverseSubtract,
+                   sf::BlendMode::One,      sf::BlendMode::OneMinusSrcAlpha,
+                   sf::BlendMode::Add };
   return BlendSubtract;
 }
 
@@ -1346,8 +1383,8 @@ grid
 {
   using namespace open_viii::graphics::literals;
   return { { (1U << (8U - ((4_bpp).raw() & 3U))), 256U },
-    { m_mim.get_width(4_bpp), m_mim.get_height() },
-    sf::Color::Yellow };
+           { m_mim.get_width(4_bpp), m_mim.get_height() },
+           sf::Color::Yellow };
 }
 
 bool
@@ -1355,11 +1392,11 @@ bool
 {
   using namespace open_viii::graphics::literals;
 #if 1
-  const auto test = []<typename T>(
-                      const ::filter<T> &in_filter, const auto &value) -> bool
+  const auto test =
+    []<typename T>(const ::filter<T> &in_filter, const auto &value) -> bool
   { return (in_filter && value != in_filter); };
   return (m_filters.bpp.value() != 16_bpp
-           && test(m_filters.palette, tile.palette_id()))
+          && test(m_filters.palette, tile.palette_id()))
          || test(m_filters.bpp, tile.depth())
          || test(m_filters.blend_mode, tile.blend_mode())
          || test(m_filters.blend_other, tile.blend())
@@ -1444,9 +1481,10 @@ filters &
   return m_filters;
 }
 map_sprite
-  map_sprite::update(std::shared_ptr<open_viii::archive::FIFLFS<false>> field,
-    open_viii::LangT                                                    coo,
-    bool draw_swizzle) const
+  map_sprite::update(
+    std::shared_ptr<open_viii::archive::FIFLFS<false>> field,
+    open_viii::LangT                                   coo,
+    bool                                               draw_swizzle) const
 {
   return { std::move(field), coo, draw_swizzle, m_filters };
 }
@@ -1580,11 +1618,12 @@ public:
   setting_backup<bool>      disable_blends;
   setting_backup<uint32_t>  scale;
 
-  settings_backup(::filters &in_filters,
-    bool                    &in_draw_swizzle,
-    bool                    &in_disable_texture_page_shift,
-    bool                    &in_disable_blends,
-    std::uint32_t           &in_scale)
+  settings_backup(
+    ::filters     &in_filters,
+    bool          &in_draw_swizzle,
+    bool          &in_disable_texture_page_shift,
+    bool          &in_disable_blends,
+    std::uint32_t &in_scale)
     : filters(in_filters)
     , draw_swizzle(in_draw_swizzle)
     , disable_texture_page_shift(in_disable_texture_page_shift)
@@ -1601,7 +1640,8 @@ bool
     {
       auto filtered_tiles =
         tiles
-        | std::views::filter([&texture_page](const auto &tile) -> bool
+        | std::views::filter(
+          [&texture_page](const auto &tile) -> bool
           { return std::cmp_equal(tile.texture_id(), texture_page); });
       auto [min, max] = std::ranges::minmax_element(
         filtered_tiles, {}, [](const auto &tile) { return tile.palette_id(); });
@@ -1629,7 +1669,8 @@ void
   const auto &unique_texture_page_ids =
     unique_values.texture_page_id().values();
   const auto           &unique_bpp = unique_values.bpp().values();
-  const settings_backup settings(m_filters,
+  const settings_backup settings(
+    m_filters,
     m_draw_swizzle,
     m_disable_texture_page_shift,
     m_disable_blends,
@@ -1671,7 +1712,8 @@ void
             | std::views::filter(
               [&conflicting_palettes](const std::uint8_t &palette)
               {
-                return std::ranges::any_of(conflicting_palettes,
+                return std::ranges::any_of(
+                  conflicting_palettes,
                   [&palette](const std::uint8_t &other)
                   { return palette == other; });
               });
@@ -1682,12 +1724,14 @@ void
             auto out_path = [&]() -> std::filesystem::path
             {
               if (m_using_coo)
-                return save_path_coo(pattern_coo_texture_page_palette,
+                return save_path_coo(
+                  pattern_coo_texture_page_palette,
                   path,
                   field_name,
                   texture_page,
                   palette);
-              return save_path(pattern_texture_page_palette,
+              return save_path(
+                pattern_texture_page_palette,
                 path,
                 field_name,
                 texture_page,
@@ -1748,7 +1792,8 @@ std::vector<std::uint8_t>
         }
         else
         {
-          conflict_palettes.insert(conflict_palettes.end(),
+          conflict_palettes.insert(
+            conflict_palettes.end(),
             palette_vector.begin(),
             palette_vector.end());
         }
@@ -1774,7 +1819,8 @@ void
   static constexpr char pattern_coo_pupu[] = { "{}_{}_{}.png" };
 
   const auto &unique_pupu_ids = m_all_unique_values_and_strings.pupu().values();
-  const settings_backup settings(m_filters,
+  const settings_backup settings(
+    m_filters,
     m_draw_swizzle,
     m_disable_texture_page_shift,
     m_disable_blends,
@@ -1798,16 +1844,17 @@ void
     std::filesystem::path out_path =
       m_using_coo ? save_path_coo(pattern_coo_pupu, path, field_name, pupu)
                   : save_path(pattern_pupu, path, field_name, pupu);
-    std::shared_ptr<sf::RenderTexture> out_texture =
-      save_texture(static_cast<std::uint32_t>(canvas.width()),
-        static_cast<std::uint32_t>(canvas.height()));
+    std::shared_ptr<sf::RenderTexture> out_texture = save_texture(
+      static_cast<std::uint32_t>(canvas.width()),
+      static_cast<std::uint32_t>(canvas.height()));
     async_save(out_path, out_texture);
   }
   wait_for_futures();
 }
 void
-  map_sprite::async_save(const std::filesystem::path &out_path,
-    const std::shared_ptr<sf::RenderTexture>         &out_texture) const
+  map_sprite::async_save(
+    const std::filesystem::path              &out_path,
+    const std::shared_ptr<sf::RenderTexture> &out_texture) const
 {
   if (out_texture)
   {
@@ -1819,12 +1866,13 @@ void
     auto package =
       std::packaged_task<void(std::filesystem::path, sf::Image)>{ task };
 
-    std::thread{
-      std::move(package), out_path, out_texture->getTexture().copyToImage()
-    }
+    std::thread{ std::move(package),
+                 out_path,
+                 out_texture->getTexture().copyToImage() }
       .detach();
 #else
-    m_futures.emplace_back(std::async(std::launch::async,
+    m_futures.emplace_back(std::async(
+      std::launch::async,
       task,
       out_path,
       out_texture->getTexture().copyToImage()));
@@ -1834,9 +1882,10 @@ void
 uint32_t
   map_sprite::get_max_texture_height() const
 {
-  auto transform_range = (*m_texture)
-                         | std::views::transform([](const sf::Texture &texture)
-                           { return texture.getSize().y; });
+  auto transform_range =
+    (*m_texture)
+    | std::views::transform([](const sf::Texture &texture)
+                            { return texture.getSize().y; });
   auto max_height_it =
     std::max_element(transform_range.begin(), transform_range.end());
   uint32_t tex_height = {};
@@ -1858,8 +1907,10 @@ std::filesystem::path
     uint8_t texture_page) const
 {
   return path
-         / fmt::vformat(fmt::string_view(pattern),
-           fmt::make_format_args(field_name,
+         / fmt::vformat(
+           fmt::string_view(pattern),
+           fmt::make_format_args(
+             field_name,
              open_viii::LangCommon::to_string(m_coo),
              texture_page));
 }
@@ -1873,8 +1924,10 @@ std::filesystem::path
     uint8_t                      palette) const
 {
   return path
-         / fmt::vformat(fmt::string_view(pattern),
-           fmt::make_format_args(field_name,
+         / fmt::vformat(
+           fmt::string_view(pattern),
+           fmt::make_format_args(
+             field_name,
              open_viii::LangCommon::to_string(m_coo),
              texture_page,
              palette));
@@ -1887,7 +1940,8 @@ std::filesystem::path
     PupuID                                                         pupu) const
 {
   return path
-         / fmt::vformat(fmt::string_view(pattern),
+         / fmt::vformat(
+           fmt::string_view(pattern),
            fmt::make_format_args(
              field_name, open_viii::LangCommon::to_string(m_coo), pupu));
 }
@@ -1899,7 +1953,8 @@ std::filesystem::path
     const std::uint8_t                                 texture_page) const
 {
   return path
-         / fmt::vformat(fmt::string_view(pattern),
+         / fmt::vformat(
+           fmt::string_view(pattern),
            fmt::make_format_args(field_name, texture_page));
 }
 std::filesystem::path
@@ -1911,14 +1966,16 @@ std::filesystem::path
     std::uint8_t palette) const
 {
   return path
-         / fmt::vformat(fmt::string_view(pattern),
+         / fmt::vformat(
+           fmt::string_view(pattern),
            fmt::make_format_args(field_name, texture_page, palette));
 }
 std::filesystem::path
-  map_sprite::save_path(fmt::format_string<std::string_view, PupuID> pattern,
-    const std::filesystem::path                                     &path,
-    const std::string_view                                          &field_name,
-    PupuID                                                           pupu) const
+  map_sprite::save_path(
+    fmt::format_string<std::string_view, PupuID> pattern,
+    const std::filesystem::path                 &path,
+    const std::string_view                      &field_name,
+    PupuID                                       pupu) const
 {
   return path
          / fmt::vformat(
@@ -1973,15 +2030,17 @@ std::shared_ptr<sf::RenderTexture>
 void
   map_sprite::load_map(const std::filesystem::path &src_path) const
 {
-  const auto filesize  = std::filesystem::file_size(src_path);
-  const auto tilesize  = m_maps.const_back().visit_tiles([](auto &&tiles)
-     { return sizeof(typename std::decay_t<decltype(tiles)>::value_type); });
+  const auto filesize = std::filesystem::file_size(src_path);
+  const auto tilesize = m_maps.const_back().visit_tiles(
+    [](auto &&tiles)
+    { return sizeof(typename std::decay_t<decltype(tiles)>::value_type); });
   const auto tilecount = m_maps.front().visit_tiles(
     [](const auto &tiles) { return std::size(tiles); });
   assert(std::cmp_equal(tilecount, filesize / tilesize));
   if (!std::cmp_equal(tilecount, filesize / tilesize))
   {
-    fmt::print("Error wrong size map file, {} != {} / {}\n",
+    fmt::print(
+      "Error wrong size map file, {} != {} / {}\n",
       tilecount,
       filesize,
       tilesize);

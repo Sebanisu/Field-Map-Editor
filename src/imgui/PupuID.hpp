@@ -18,7 +18,8 @@ struct PupuID
   static constexpr std::uint32_t blend_offset           = 20U;
   static constexpr std::uint32_t animation_offset       = 12U;
   static constexpr std::uint32_t animation_state_offset = 4U;
-  constexpr PupuID(std::uint16_t                layer_id,
+  constexpr PupuID(
+    std::uint16_t                               layer_id,
     open_viii::graphics::background::BlendModeT blend_mode,
     std::uint8_t                                animation_id,
     std::uint8_t                                animation_state,

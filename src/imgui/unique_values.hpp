@@ -25,16 +25,18 @@ private:
 
 public:
   unique_values_and_strings() = default;
-  template<std::ranges::range tilesT,
+  template<
+    std::ranges::range tilesT,
     typename lambdaT,
     typename sortT   = std::less<>,
     typename filterT = decltype(default_filter_lambda),
     typename secondT = decltype(kite)>
-  explicit unique_values_and_strings(const tilesT &tiles,
-    lambdaT                                      &&lambda,
-    sortT                                        &&sort        = {},
-    filterT                                      &&filter      = {},
-    secondT                                      &&second_pass = {})
+  explicit unique_values_and_strings(
+    const tilesT &tiles,
+    lambdaT     &&lambda,
+    sortT       &&sort        = {},
+    filterT     &&filter      = {},
+    secondT     &&second_pass = {})
     : m_values(second_pass(tiles, get_values(tiles, lambda, sort, filter)))
     , m_strings(get_strings(m_values))
   {
@@ -63,7 +65,8 @@ private:
     using namespace std::string_literals;
     std::vector<std::string> vector;
     vector.reserve(std::size(data));
-    std::ranges::transform(data,
+    std::ranges::transform(
+      data,
       std::back_inserter(vector),
       [](const T &t)
       {
@@ -101,10 +104,11 @@ private:
   }
   template<typename tilesT, typename lambdaT, typename sortT, typename filterT>
   [[nodiscard]] std::vector<T>
-    get_values(const tilesT &tiles,
-      lambdaT              &&lambda,
-      sortT                &&sort,
-      filterT              &&filter) const
+    get_values(
+      const tilesT &tiles,
+      lambdaT     &&lambda,
+      sortT       &&sort,
+      filterT     &&filter) const
   {
     std::vector<T> ret{};
     if (!std::ranges::empty(tiles))
@@ -112,7 +116,8 @@ private:
       static constexpr auto filter_invalid0 =
         open_viii::graphics::background::Map::filter_invalid();
       std::ranges::transform(
-        tiles | std::views::filter(filter_invalid0) | std::views::filter(filter),
+        tiles | std::views::filter(filter_invalid0)
+          | std::views::filter(filter),
         std::back_inserter(ret),
         lambda);
       std::ranges::sort(ret, sort);
@@ -135,10 +140,12 @@ public:
       tiles,
       [this](const auto &tile)
       {
-        const auto tuple = std::make_tuple(PupuID(tile.layer_id(),
-                                             tile.blend_mode(),
-                                             tile.animation_id(),
-                                             tile.animation_state()),
+        const auto tuple = std::make_tuple(
+          PupuID(
+            tile.layer_id(),
+            tile.blend_mode(),
+            tile.animation_id(),
+            tile.animation_state()),
           std::int32_t{ tile.x() },
           std::int32_t{ tile.y() });
 
@@ -159,9 +166,11 @@ public:
         [](const auto &tile) { return tile.z(); },
         std::greater<>{})
     , m_layer_id(tiles, [](const auto &tile) { return tile.layer_id(); })
-    , m_texture_page_id(tiles,
+    , m_texture_page_id(
+        tiles,
         [](const auto &tile) { return tile.texture_id(); })
-    , m_animation_id(tiles,
+    , m_animation_id(
+        tiles,
         [](const auto &tile) { return tile.animation_id(); })
     , m_blend_other(tiles, [](const auto &tile) { return tile.blend(); })
     , m_blend_mode(tiles, [](const auto &tile) { return tile.blend_mode(); })
@@ -250,14 +259,16 @@ private:
                         m_palette             = {};
 
   static constexpr auto default_filter_lambda = [](auto &&) { return true; };
-  template<typename valT,
+  template<
+    typename valT,
     typename keyT,
     typename tilesT,
     typename lambdaT,
     typename sortT   = std::less<>,
     typename filterT = decltype(default_filter_lambda)>
   static std::map<keyT, unique_values_and_strings<valT>>
-    get_map(const tilesT                    &tiles,
+    get_map(
+      const tilesT                          &tiles,
       const unique_values_and_strings<keyT> &keys,
       lambdaT                              &&lambda,
       sortT                                &&sort   = {},
@@ -266,8 +277,10 @@ private:
     std::map<keyT, unique_values_and_strings<valT>> ret = {};
     for (const auto &key : keys.values())
     {
-      ret.emplace(key,
-        unique_values_and_strings<valT>(tiles,
+      ret.emplace(
+        key,
+        unique_values_and_strings<valT>(
+          tiles,
           lambda,
           sort,
           [&key, &filter](const auto &tile) { return filter(key, tile); }));

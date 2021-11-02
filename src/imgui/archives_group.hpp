@@ -28,8 +28,9 @@ public:
   [[nodiscard]] static std::vector<const char *>
     get_c_str(const std::vector<std::string> &in_vector);
   archives_group() = default;
-  [[maybe_unused]] archives_group(const open_viii::LangT in_coo,
-    const std::string                                   &in_path)
+  [[maybe_unused]] archives_group(
+    const open_viii::LangT in_coo,
+    const std::string     &in_path)
     : m_coo(in_coo)
     , m_path(in_path)
     , m_archives(get_archives())

@@ -51,8 +51,9 @@ void
   target.draw(m_vertices.data(), m_vertices.size(), sf::Lines, states);
 }
 grid
-  grid::with_spacing_and_size(const sf::Vector2u &spacing,
-    const sf::Vector2u                           &size) const
+  grid::with_spacing_and_size(
+    const sf::Vector2u &spacing,
+    const sf::Vector2u &size) const
 {
   if (spacing == m_spacing && size == m_size)
   {
@@ -70,9 +71,10 @@ grid
 
   return { m_spacing, m_size, color };
 }
-grid::grid(const sf::Vector2u &spacing,
-  const sf::Vector2u          &size,
-  const sf::Color             &color)
+grid::grid(
+  const sf::Vector2u &spacing,
+  const sf::Vector2u &size,
+  const sf::Color    &color)
   : m_spacing(spacing)
   , m_size(size)
   , m_color(color)

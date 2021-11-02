@@ -35,7 +35,8 @@ template<typename... B>
 //   };
 //   return scope_gaurd{ std::forward<B>(b)... };
 // }
-using sf_event_variant = std::variant<std::monostate,
+using sf_event_variant = std::variant<
+  std::monostate,
   sf::Event::SizeEvent,
   sf::Event::TextEvent,
   sf::Event::KeyEvent,

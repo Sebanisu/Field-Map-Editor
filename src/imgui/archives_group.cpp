@@ -39,7 +39,8 @@ std::vector<const char *>
 {
   std::vector<const char *> ret{};
   ret.reserve(in_vector.size());
-  std::ranges::transform(in_vector,
+  std::ranges::transform(
+    in_vector,
     std::back_inserter(ret),
     [](const std::string &str) { return str.c_str(); });
   return ret;
@@ -94,7 +95,13 @@ std::shared_ptr<open_viii::archive::FIFLFS<false>>
   }
   else
   {
-      fmt::print(stderr,"{}:{} - Index out of range {} / {}\n", __FILE__, __LINE__, current_map, m_mapdata.size());
+    fmt::print(
+      stderr,
+      "{}:{} - Index out of range {} / {}\n",
+      __FILE__,
+      __LINE__,
+      current_map,
+      m_mapdata.size());
   }
   return archive;
 }
@@ -114,7 +121,8 @@ int
 {
   const auto first = m_mapdata.cbegin();
   const auto last  = m_mapdata.cend();
-  const auto it    = std::find_if(first,
+  const auto it    = std::find_if(
+       first,
        last,
        [&needle](const auto &name)
        { return open_viii::tools::i_find(name, needle); });
