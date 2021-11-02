@@ -1,7 +1,7 @@
 #include "map_sprite.hpp"
 
 #include "append_inserter.hpp"
-#include "imgui_format_text.hpp"
+#include "format_imgui_text.hpp"
 #include <bit>
 #include <utility>
 using namespace open_viii::graphics::background;
