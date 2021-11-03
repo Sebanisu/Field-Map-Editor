@@ -69,78 +69,15 @@ private:
     void
       enable(
         std::filesystem::path in_incoming,
-        std::filesystem::path in_outgoing)
-    {
-      enabled = true;
-      pos     = 0;
-      filters.deswizzle.update(std::move(in_incoming)).enable();
-      outgoing = std::move(in_outgoing);
-      asked    = false;
-      start    = std::chrono::high_resolution_clock::now();
-    }
+        std::filesystem::path in_outgoing);
     void
-      disable()
-    {
-      enabled = false;
-    }
+      disable();
     template<typename lambdaT, typename askT>
     bool
       operator()(
         const std::vector<std::string> &fields,
         lambdaT                       &&lambda,
-        [[maybe_unused]] askT         &&ask_lambda)
-    {
-      if (!enabled)
-      {
-        return false;
-      }
-      const char *title = "Batch saving swizzle textures...";
-      ImGui::SetNextWindowPos(
-        ImGui::GetMainViewport()->GetCenter(),
-        ImGuiCond_Always,
-        ImVec2(0.5F, 0.5F));
-      ImGui::OpenPopup(title);
-      if (ImGui::BeginPopupModal(
-            title,
-            nullptr,
-            ImGuiWindowFlags_AlwaysAutoResize
-              | ImGuiWindowFlags_NoSavedSettings))
-      {
-        if (fields.size() <= pos)
-        {
-          auto current = std::chrono::high_resolution_clock::now();
-          fmt::print(
-            "{:%H:%M:%S} - Finished the batch swizzle...\n", current - start);
-          disable();
-          return pos > 0U;
-        }
-        if (!asked)
-        {
-          asked = ask_lambda(compact_filter, bpp, palette);
-        }
-        else
-        {
-          auto current = std::chrono::high_resolution_clock::now();
-          format_imgui_text(
-            "{:%H:%M:%S} - {:>3.2f}% - Processing {}...",
-            current - start,
-            static_cast<float>(pos) * 100.F
-              / static_cast<float>(std::size(fields)),
-            fields[pos]);
-          ImGui::Separator();
-          lambda(
-            static_cast<int>(pos),
-            outgoing,
-            filters,
-            compact_filter,
-            bpp,
-            palette);
-          ++pos;
-        }
-        ImGui::EndPopup();
-      }
-      return false;
-    }
+        [[maybe_unused]] askT         &&ask_lambda);
 
   private:
     bool                   enabled        = { false };
@@ -165,37 +102,11 @@ private:
     std::uint8_t max_tile_x    = {};
     // sf::Sprite   cover         = {};
     void
-      update()
-    {
-      old_left    = left;
-      mouse_moved = false;
-    }
+      update();
     [[nodiscard]] bool
-      left_changed() const
-    {
-      const auto condition = old_left != left;
-      if (!mouse_enabled && condition)
-      {
-        std::cout << "Warning! mouse up off screen!" << std::endl;
-      }
-      return condition;
-    }
+      left_changed() const;
     void
-      update_sprite_pos(bool swizzle, float spacing = 256.F)
-    {
-      float x = {};
-      if (swizzle && max_tile_x != 0U)
-      {
-        x = ((std::min)(static_cast<std::uint8_t>(tile.x), max_tile_x) * 16.F)
-            + (texture_page * spacing);
-      }
-      else
-      {
-        x = (static_cast<float>(pixel.x / 16)) * 16.F;
-      }
-      float y = (static_cast<float>(pixel.y / 16)) * 16.F;
-      sprite.setPosition(x, y);
-    }
+      update_sprite_pos(bool swizzle, float spacing = 256.F);
 
   private:
     bool old_left = { false };
@@ -208,75 +119,9 @@ private:
     bool                  up{};
     bool                  down{};
     void
-      reset() noexcept
-    {
-      left = right = up = down = false;
-    };
+      reset() noexcept;
     bool
-      scroll(std::array<float, 2U> &in_xy, const sf::Time &time)
-    {
-      bool changed = false;
-      if (!(left || right || up || down))
-      {
-        return changed;
-      }
-      const auto time_ms = static_cast<float>(time.asMicroseconds()) / 1000.F;
-      if (left && right)
-      {
-      }
-      else
-      {
-        float total_time = (in_xy[0] + 1.F) * total_scroll_time[0];
-        //        fmt::print("{:.2f} = ({:.2f} + 1.00) * {:.2f}\n",
-        //          total_time,
-        //          in_xy[0],
-        //          total_scroll_time[0]);
-        if (left)
-        {
-          in_xy[0] = std::lerp(
-            -1.F,
-            0.F,
-            std::clamp(
-              (total_time + time_ms) / total_scroll_time[0], 0.F, 1.F));
-          changed = true;
-        }
-        else if (right)
-        {
-          in_xy[0] = std::lerp(
-            -1.F,
-            0.F,
-            std::clamp(
-              (total_time - time_ms) / total_scroll_time[0], 0.F, 1.F));
-          changed = true;
-        }
-      }
-      if (up && down)
-      {
-      }
-      else
-      {
-        float total_time = (in_xy[1] + 1.F) * total_scroll_time[1];
-        if (up)
-        {
-          in_xy[1] = std::lerp(
-            -1.F,
-            0.F,
-            std::clamp(
-              (total_time + time_ms) / total_scroll_time[1], 0.F, 1.F));
-          changed = true;
-        }
-        else if (down)
-        {
-          in_xy[1] = std::lerp(
-            -1.F,
-            0.F,
-            std::clamp(
-              (total_time - time_ms) / total_scroll_time[1], 0.F, 1.F));
-          changed = true;
-        }
-      }
-      return changed;
-    }
+      scroll(std::array<float, 2U> &in_xy, const sf::Time &time);
   };
   struct selections
   {
