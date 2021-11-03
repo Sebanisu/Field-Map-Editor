@@ -1112,20 +1112,22 @@ const sf::BlendMode &
 map_sprite
   map_sprite::with_coo(const open_viii::LangT coo) const
 {
-  return { m_field, coo, m_draw_swizzle, m_filters };
+  return { m_field, coo, m_draw_swizzle, m_filters, m_disable_blends };
 }
 
 map_sprite
   map_sprite::with_field(
     std::shared_ptr<open_viii::archive::FIFLFS<false>> field) const
 {
-  return { std::move(field), m_coo, m_draw_swizzle, m_filters };
+  return {
+    std::move(field), m_coo, m_draw_swizzle, m_filters, m_disable_blends
+  };
 }
 
 map_sprite
   map_sprite::with_filters(::filters filters) const
 {
-  return { m_field, m_coo, m_draw_swizzle, filters };
+  return { m_field, m_coo, m_draw_swizzle, filters, m_disable_blends };
 }
 
 void
@@ -1486,7 +1488,7 @@ map_sprite
     open_viii::LangT                                   coo,
     bool                                               draw_swizzle) const
 {
-  return { std::move(field), coo, draw_swizzle, m_filters };
+  return { std::move(field), coo, draw_swizzle, m_filters, m_disable_blends };
 }
 const all_unique_values_and_strings &
   map_sprite::uniques() const

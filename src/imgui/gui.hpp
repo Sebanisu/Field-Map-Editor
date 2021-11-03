@@ -135,6 +135,7 @@ private:
     bool draw_grid              = { false };
     bool draw_texture_page_grid = { false };
     bool draw_swizzle           = { false };
+    bool draw_disable_blending  = { false };
   };
   static constexpr std::uint32_t    default_window_width  = 800U;
   static constexpr std::uint32_t    default_window_height = 600U;
@@ -232,6 +233,8 @@ private:
     map_test() const;
   void
     checkbox_map_swizzle() const;
+  void
+    checkbox_map_disable_blending() const;
   void
     menuitem_locate_ff8() const;
   void

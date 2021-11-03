@@ -43,8 +43,10 @@ public:
     std::shared_ptr<open_viii::archive::FIFLFS<false>> field,
     open_viii::LangT                                   coo,
     bool                                               draw_swizzle,
-    filters                                            in_filters)
+    filters                                            in_filters,
+    bool                                               force_disable_blends)
     : m_draw_swizzle(draw_swizzle)
+    , m_disable_blends(force_disable_blends)
     , m_filters(std::move(in_filters))
     , m_field(std::move(field))
     , m_coo(coo)
@@ -80,6 +82,19 @@ public:
     enable_draw_swizzle() const;
   void
     disable_draw_swizzle() const;
+  void
+    enable_disable_blends() const
+  {
+    m_disable_blends = true;
+    init_render_texture();
+  }
+  void
+    disable_disable_blends() const
+  {
+    m_disable_blends = false;
+    init_render_texture();
+  }
+
   std::string
     map_filename();
   bool

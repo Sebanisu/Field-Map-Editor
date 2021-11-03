@@ -413,6 +413,7 @@ void
       else if (map_test())
       {
         checkbox_map_swizzle();
+        checkbox_map_disable_blending();
         format_imgui_text("{}: ", gui_labels::compact);
         ImGui::SameLine();
         if (ImGui::Button(gui_labels::rows.data()))
@@ -926,7 +927,22 @@ void
     m_changed = true;
   }
 }
-
+void
+  gui::checkbox_map_disable_blending() const
+{
+  if (ImGui::Checkbox("Disable Blending", &m_selections.draw_disable_blending))
+  {
+    if (m_selections.draw_disable_blending)
+    {
+      m_map_sprite.enable_disable_blends();
+    }
+    else
+    {
+      m_map_sprite.disable_disable_blends();
+    }
+    m_changed = true;
+  }
+}
 void
   gui::checkbox_mim_palette_texture() const
 {
@@ -1762,7 +1778,11 @@ gui::gui()
 map_sprite
   gui::get_map_sprite() const
 {
-  return { m_field, get_coo(), m_selections.draw_swizzle, {} };
+  return { m_field,
+           get_coo(),
+           m_selections.draw_swizzle,
+           {},
+           m_selections.draw_disable_blending };
 }
 int
   gui::get_selected_field()
@@ -2190,8 +2210,7 @@ bool
       in_xy[0] = std::lerp(
         -1.F,
         0.F,
-        std::clamp(
-          (total_time + time_ms) / total_scroll_time[0], 0.F, 1.F));
+        std::clamp((total_time + time_ms) / total_scroll_time[0], 0.F, 1.F));
       changed = true;
     }
     else if (right)
@@ -2199,8 +2218,7 @@ bool
       in_xy[0] = std::lerp(
         -1.F,
         0.F,
-        std::clamp(
-          (total_time - time_ms) / total_scroll_time[0], 0.F, 1.F));
+        std::clamp((total_time - time_ms) / total_scroll_time[0], 0.F, 1.F));
       changed = true;
     }
   }
@@ -2215,8 +2233,7 @@ bool
       in_xy[1] = std::lerp(
         -1.F,
         0.F,
-        std::clamp(
-          (total_time + time_ms) / total_scroll_time[1], 0.F, 1.F));
+        std::clamp((total_time + time_ms) / total_scroll_time[1], 0.F, 1.F));
       changed = true;
     }
     else if (down)
@@ -2224,8 +2241,7 @@ bool
       in_xy[1] = std::lerp(
         -1.F,
         0.F,
-        std::clamp(
-          (total_time - time_ms) / total_scroll_time[1], 0.F, 1.F));
+        std::clamp((total_time - time_ms) / total_scroll_time[1], 0.F, 1.F));
       changed = true;
     }
   }
@@ -2254,10 +2270,9 @@ bool
     ImVec2(0.5F, 0.5F));
   ImGui::OpenPopup(title);
   if (ImGui::BeginPopupModal(
-    title,
-    nullptr,
-    ImGuiWindowFlags_AlwaysAutoResize
-    | ImGuiWindowFlags_NoSavedSettings))
+        title,
+        nullptr,
+        ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings))
   {
     if (fields.size() <= pos)
     {
@@ -2277,17 +2292,11 @@ bool
       format_imgui_text(
         "{:%H:%M:%S} - {:>3.2f}% - Processing {}...",
         current - start,
-        static_cast<float>(pos) * 100.F
-        / static_cast<float>(std::size(fields)),
+        static_cast<float>(pos) * 100.F / static_cast<float>(std::size(fields)),
         fields[pos]);
       ImGui::Separator();
       lambda(
-        static_cast<int>(pos),
-        outgoing,
-        filters,
-        compact_filter,
-        bpp,
-        palette);
+        static_cast<int>(pos), outgoing, filters, compact_filter, bpp, palette);
       ++pos;
     }
     ImGui::EndPopup();
