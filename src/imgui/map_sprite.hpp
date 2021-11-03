@@ -475,5 +475,7 @@ private:
     }
     return {};
   }
+  size_t
+    size_of_map() const;
 };
 #endif// MYPROJECT_MAP_SPRITE_HPP

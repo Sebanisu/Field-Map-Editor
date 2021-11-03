@@ -7,6 +7,7 @@
 #include <imgui-SFML.h>
 #include <imgui.h>
 #include <SFML/Window/Mouse.hpp>
+#include <utility>
 using namespace open_viii::graphics::background;
 using namespace open_viii::graphics;
 using namespace open_viii::graphics::literals;
@@ -229,11 +230,10 @@ static bool
     string_lambdaT &&string_lambda,
     valueT          &value)
 {
-  bool        changed   = false;
-  const auto &values    = value_lambda();
-  const auto &strings   = string_lambda();
-  using dT              = decltype(std::distance(values.begin(), values.end()));
-  static dT current_idx = {};
+  bool        changed = false;
+  const auto &values  = value_lambda();
+  const auto &strings = string_lambda();
+  static std::ranges::range_difference_t<decltype(values)> current_idx = {};
   {
     if (const auto it = std::find(values.begin(), values.end(), value);
         it != values.end())
@@ -255,7 +255,14 @@ static bool
     return false;
   }
   const auto next = [](const auto &r, const auto &idx)
-  { return std::ranges::next(std::ranges::cbegin(r), idx); };
+  {
+    // sometimes the types are different. So I had to static cast to silence
+    // warning.
+    return std::ranges::next(
+      std::ranges::cbegin(r),
+      static_cast<std::iter_difference_t<decltype(std::ranges::cbegin(r))>>(
+        idx));
+  };
   const auto            current_item = next(strings, current_idx);
   static constexpr auto pattern      = "{}: \t{} \t{}\n";
   ImGui::PushID(++id);
@@ -272,14 +279,12 @@ static bool
         const bool  is_selected = (*current_item == string);
         // You can store your selection however you
         // want, outside or inside your objects
-        // ImGui::PushID(++m_id);
         const char *c_str_value = std::ranges::data(string);
         if (ImGui::Selectable(c_str_value, is_selected))
         {
           current_idx = std::distance(std::ranges::data(strings), &string);
           changed     = true;
         }
-        // ImGui::PopID();
         if (is_selected)
         {
           ImGui::SetItemDefaultFocus();
@@ -2314,4 +2319,22 @@ void
   outgoing = std::move(in_outgoing);
   asked    = false;
   start    = std::chrono::high_resolution_clock::now();
+}
+inline std::vector<std::filesystem::path>
+  find_maps_in_directory(std::filesystem::path src, size_t reserve = {})
+{
+  std::vector<std::filesystem::path> r{};
+  r.reserve(reserve);
+  for (auto path : std::filesystem::recursive_directory_iterator{ src })
+  {
+    if (
+      path.path().has_extension()
+      && open_viii::tools::i_ends_with(
+        path.path().extension().string(),
+        open_viii::graphics::background::Map::EXT))
+    {
+      r.emplace_back(std::move(path.path()));
+    }
+  }
+  return r;
 }

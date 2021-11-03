@@ -2112,3 +2112,12 @@ void
     path,
     "");
 }
+std::size_t
+  map_sprite::size_of_map() const
+{  return m_maps.back().visit_tiles(
+    [](const auto &tiles)
+    {
+      using tile_type = typename std::decay_t<decltype(tiles)>::value_type;
+      return std::ranges::size(tiles) * sizeof(tile_type);
+    });
+};
