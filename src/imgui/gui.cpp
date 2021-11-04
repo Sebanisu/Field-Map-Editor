@@ -1162,6 +1162,17 @@ void
         m_modified_directory_map =
           map_directory_mode::batch_load_deswizzle_textures;
       }
+
+      if (ImGui::MenuItem("Embed .map files into Archives"))
+      {
+        m_directory_browser.Open();
+        m_directory_browser.SetTitle(
+          "Choose source directory of your textures and .map files "
+          "(contains two letter directories)");
+        m_directory_browser.SetTypeFilters({ ".map" });
+        m_modified_directory_map =
+          map_directory_mode::batch_embed_map_files;
+      }
       ImGui::EndMenu();
     }
     ImGui::EndMenuBar();

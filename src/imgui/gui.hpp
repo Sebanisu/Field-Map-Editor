@@ -37,6 +37,7 @@ private:
     batch_save_deswizzle_textures,
     batch_load_deswizzle_textures,
     batch_save_swizzle_textures,
+    batch_embed_map_files,
   };
   struct batch_deswizzle
   {
