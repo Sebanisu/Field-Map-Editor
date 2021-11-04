@@ -33,7 +33,15 @@ set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON) ## automatically create a module defini
 find_package(Threads REQUIRED)
 include(${CMAKE_SOURCE_DIR}/cmake/OpenVIII_CPP_WIP.cmake)
 include(${CMAKE_SOURCE_DIR}/cmake/ImGuiFileBrowser.cmake)
-add_executable(test_imgui test.cpp gui.cpp archives_group.cpp mim_sprite.cpp map_sprite.cpp grid.cpp grid.hpp upscales.cpp upscales.hpp)
+add_executable(test_imgui
+        test.cpp
+        gui.cpp
+        archives_group.cpp
+        mim_sprite.cpp
+        map_sprite.cpp
+        grid.cpp
+        upscales.cpp
+        )
 #set_property(TARGET test_imgui PROPERTY CXX_STANDARD 20)
 #find_package(ImGui-SFML REQUIRED)
 find_package(fmt)
