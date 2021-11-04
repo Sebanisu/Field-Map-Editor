@@ -132,9 +132,3 @@ int
   }
   return -1;
 }
-bool
-  archives_group::in_main_zzz() const
-{
-  return m_archives.get<open_viii::archive::ArchiveTypeT::zzz_main>()
-    .has_value();
-}

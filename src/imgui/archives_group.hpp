@@ -71,7 +71,5 @@ public:
     field(int current_map) const;
   [[nodiscard]] int
     find_field(std::string_view needle) const;
-  [[nodiscard]] bool
-    in_main_zzz() const;
 };
 #endif// MYPROJECT_ARCHIVES_GROUP_HPP
