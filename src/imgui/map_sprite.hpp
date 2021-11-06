@@ -107,6 +107,8 @@ public:
     save(const std::filesystem::path &path) const;
   void
     map_save(const std::filesystem::path &dest_path) const;
+  void
+    test_map(const std::filesystem::path &saved_path) const;
   map_sprite
     with_coo(open_viii::LangT coo) const;
   map_sprite

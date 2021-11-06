@@ -387,6 +387,7 @@ void
     {
       popup_batch_deswizzle();
       popup_batch_reswizzle();
+      popup_batch_embed();
       file_browser_save_texture();
       combo_path();
       combo_coo();
@@ -1170,8 +1171,7 @@ void
           "Choose source directory of your textures and .map files "
           "(contains two letter directories)");
         m_directory_browser.SetTypeFilters({ ".map" });
-        m_modified_directory_map =
-          map_directory_mode::batch_embed_map_files;
+        m_modified_directory_map = map_directory_mode::batch_embed_map_files;
       }
       ImGui::EndMenu();
     }
@@ -1287,6 +1287,11 @@ void
       == map_directory_mode::batch_save_deswizzle_textures)
     {
       m_batch_deswizzle.enable(selected_path);
+    }
+    else if (
+      m_modified_directory_map == map_directory_mode::batch_embed_map_files)
+    {
+      m_batch_embed.enable(selected_path);
     }
     else if (
       m_modified_directory_map
@@ -2348,4 +2353,230 @@ inline std::vector<std::filesystem::path>
     }
   }
   return r;
+}
+void
+  gui::batch_embed::enable(std::filesystem::path in_outgoing)
+{
+  m_enabled  = { true };
+  m_pos      = {};
+  m_outgoing = in_outgoing;
+  m_asked    = { true };
+  m_start    = std::chrono::high_resolution_clock::now();
+}
+void
+  gui::batch_embed::disable()
+{
+  m_enabled = { false };
+}
+template<typename lambdaT, typename askT>
+bool
+  gui::batch_embed::operator()(
+    const std::vector<std::string> &fields,
+    lambdaT                       &&lambda,
+    askT                          &&ask_lambda)
+{
+  if (!m_enabled)
+  {
+    return false;
+  }
+  const char *title = "Batch embedding .map files into archives...";
+  ImGui::SetNextWindowPos(
+    ImGui::GetMainViewport()->GetCenter(),
+    ImGuiCond_Always,
+    ImVec2(0.5F, 0.5F));
+  ImGui::OpenPopup(title);
+  if (ImGui::BeginPopupModal(
+        title,
+        nullptr,
+        ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings))
+  {
+    if (fields.size() <= m_pos)
+    {
+      auto current = std::chrono::high_resolution_clock::now();
+      fmt::print(
+        "{:%H:%M:%S} - Finished the batch swizzle...\n", current - m_start);
+      disable();
+      return m_pos > 0U;
+    }
+    if (!m_asked)
+    {
+      m_asked = ask_lambda();
+    }
+    else
+    {
+      auto current = std::chrono::high_resolution_clock::now();
+      format_imgui_text(
+        "{:%H:%M:%S} - {:>3.2f}% - Processing {}...",
+        current - m_start,
+        static_cast<float>(m_pos) * 100.F
+          / static_cast<float>(std::size(fields)),
+        fields[m_pos]);
+      ImGui::Separator();
+      lambda(static_cast<int>(m_pos), m_outgoing);
+      ++m_pos;
+    }
+    ImGui::EndPopup();
+  }
+  return false;
+}
+
+[[nodiscard]] inline bool
+  any_matches(
+    const std::vector<std::filesystem::path>       &paths,
+    const std::vector<open_viii::archive::FileData> all_file_data)
+{
+  return std::ranges::any_of(
+    all_file_data,
+    [&paths](const open_viii::archive::FileData &file_data)
+    {
+      const auto in_path = file_data.get_path();
+      return in_path.has_filename()
+             && open_viii::archive::any_matches(paths, in_path);
+    });
+}
+template<bool Nested>
+std::vector<std::filesystem::path>
+  gui::replace_entries(
+    const open_viii::archive::FIFLFS<Nested> &field,
+    const std::vector<std::filesystem::path> &paths) const
+{
+  auto tmp = open_viii::archive::replace_files<Nested>(field, paths);
+  std::ranges::for_each(
+    tmp,
+    [](const auto &path) { format_imgui_text("Updating: {}", path.string()); });
+  return tmp;
+}
+void
+  gui::popup_batch_embed() const
+{
+  static std::vector<std::filesystem::path> results = {};
+  if (m_batch_embed(
+        m_archives_group.mapdata(),
+        [this](const int &pos, std::filesystem::path selected_path)
+        {
+          if (pos <= 0)
+          {
+            results.clear();
+          }
+          auto field = m_archives_group.field(pos);
+          if (!field)
+          {
+            return;
+          }
+          auto       paths = find_maps_in_directory(selected_path);
+          const auto tmp   = replace_entries(*field, paths);
+
+          results.insert(
+            std::ranges::end(results),
+            std::ranges::begin(tmp),
+            std::ranges::end(tmp));
+        },
+        [this]() { return ImGui::Button(gui_labels::start.data()); }))
+  {
+    const auto fields = m_archives_group.archives()
+                          .get<open_viii::archive::ArchiveTypeT::field>();
+    {
+      const auto tmp = replace_entries(fields, results);
+      std::ranges::for_each(
+        results, [](const auto &path) { std::filesystem::remove(path); });
+      results = tmp;
+    }
+    if (!open_viii::archive::fiflfs_in_main_zzz(m_archives_group.archives()))
+    {
+      return;
+    }
+    const open_viii::archive::ZZZ &zzzmain =
+      m_archives_group.archives()
+        .get<open_viii::archive::ArchiveTypeT::zzz_main>()
+        .value();
+    auto src = zzzmain.data();
+
+    std::ranges::sort(
+      src,
+      [](
+        const open_viii::archive::FileData &l,
+        const open_viii::archive::FileData &r)
+      { return std::cmp_less(l.offset(), r.offset()); });
+    auto        dst  = src;// copy
+    const auto &path = zzzmain.path();
+
+    fmt::print("Attempting to work: \"{}\"\n", path.string());
+    if (!any_matches(results, dst))
+    {
+      return;
+    }
+    // danger here there are files with the same filename. Should be fine for
+    // fields because there is only one copy.
+    auto transform_view =
+      dst
+      | std::views::transform(
+        [](const open_viii::archive::FileData &file_data)
+        { return std::ranges::size(file_data.get_path_string_view()) + 16U; });
+    const auto header_size = std::reduce(
+      transform_view.begin(), transform_view.end(), sizeof(std::uint32_t));
+    std::ranges::transform(
+      dst,
+      std::ranges::begin(dst),
+      [&, i = uint64_t{ header_size }](
+        open_viii::archive::FileData file_data) mutable
+      {
+        if (auto match =
+              open_viii::archive::find_match(results, file_data.get_path());
+            match != std::ranges::end(results))
+        {
+          file_data = file_data.with_uncompressed_size(
+            static_cast<std::uint32_t>(std::filesystem::file_size(*match)));
+        }
+        file_data = file_data.with_offset(i);
+        i += file_data.uncompressed_size();
+        return file_data;
+      });
+
+    const auto   &temp     = std::filesystem::temp_directory_path();
+    auto          out_path = temp / path.filename();
+    std::ofstream fs_mainzzz(
+      out_path, std::ios::out | std::ios::binary | std::ios::trunc);
+    fmt::print("Creating: \"{}\"\n", out_path.string());
+    const auto count = std::bit_cast<std::array<char, sizeof(std::uint32_t)>>(
+      static_cast<std::uint32_t>(std::ranges::size(dst)));
+    fs_mainzzz.write(count.data(), count.size());
+    std::ranges::for_each(
+      dst,
+      [&](const open_viii::archive::FileData &file_data)
+      {
+        std::string filename = file_data.get_path_string();
+        tl::string::undo_replace_slashes(filename);
+        const auto filename_length =
+          std::bit_cast<std::array<char, sizeof(std::uint32_t)>>(
+            static_cast<std::uint32_t>(std::ranges::size(filename)));
+        fs_mainzzz.write(filename_length.data(), filename_length.size());
+        fs_mainzzz.write(filename.data(), filename.size());
+        const auto offset =
+          std::bit_cast<std::array<char, sizeof(std::uint64_t)>>(
+            file_data.offset());
+        fs_mainzzz.write(offset.data(), offset.size());
+        const auto uncompressed_size =
+          std::bit_cast<std::array<char, sizeof(std::uint32_t)>>(
+            file_data.uncompressed_size());
+        fs_mainzzz.write(uncompressed_size.data(), uncompressed_size.size());
+      });
+
+    std::ifstream   in_fs_mainzzz(path, std::ios::in | std::ios::binary);
+    tl::read::input input(&in_fs_mainzzz);
+    std::ranges::for_each(
+      src,
+      [&](const open_viii::archive::FileData &file_data)
+      {
+        if (auto match =
+              open_viii::archive::find_match(results, file_data.get_path());
+            match != std::ranges::end(results))
+        {
+          const auto buffer = open_viii::tools::read_entire_file(*match);
+          fs_mainzzz.write(buffer.data(), buffer.size());
+          return;
+        }
+        const auto buffer = open_viii::archive::FS::get_entry(input, file_data);
+        fs_mainzzz.write(buffer.data(), buffer.size());
+      });
+  }
 }

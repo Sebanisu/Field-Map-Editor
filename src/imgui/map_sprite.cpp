@@ -2081,9 +2081,61 @@ void
   update_render_texture();
 }
 void
+  map_sprite::test_map(const std::filesystem::path &saved_path) const
+{
+  const auto raw_map =
+    Map{ m_mim.mim_type(),
+         m_field->get_entry_data({ saved_path.filename().string() }),
+         false };
+  auto saved_map = Map{ m_mim.mim_type(),
+                        open_viii::tools::read_entire_file(saved_path),
+                        false };
+
+  raw_map.visit_tiles(
+    [&](const auto &raw_tiles)
+    {
+      saved_map.visit_tiles(
+        [&](const auto &saved_tiles)
+        {
+          if constexpr (std::
+                          is_same_v<decltype(raw_tiles), decltype(saved_tiles)>)
+          {
+            using pair_type = decltype(std::make_pair(
+              &raw_tiles.front(), &saved_tiles.front()));
+            std::vector<pair_type> pairs{};
+            std::ranges::transform(
+              raw_tiles,
+              saved_tiles,
+              std::back_inserter(pairs),
+              [](const auto &raw_tile, const auto &saved_tile)
+              {
+                if (!(raw_tile == saved_tile))
+                {
+                  return std::make_pair(&raw_tile, &saved_tile);
+                }
+                return pair_type{ nullptr, nullptr };
+              });
+            pairs.erase(
+              std::remove(
+                pairs.begin(), pairs.end(), pair_type{ nullptr, nullptr }),
+              pairs.end());
+            std::ranges::for_each(
+              pairs,
+              [](const pair_type &pair)
+              {
+                std::cout << *pair.first << std::endl
+                          << *pair.second << std::endl
+                          << std::endl;
+              });
+          }
+        });
+    });
+}
+void
   map_sprite::save_modified_map(const std::filesystem::path &dest_path) const
 {
   const auto path = dest_path.string();
+  fmt::print("Saving modified map: {}\n", path);
   open_viii::tools::write_buffer(
     [this](std::ostream &os)
     {
@@ -2093,7 +2145,13 @@ void
           const auto append = [this, &os](auto t)
           {
             // shift to original offset
-            t               = t.shift_xy(m_maps.const_back().offset());
+
+            // static constexpr auto end_x{ 0x7FFFU };
+            // if (t.x() != end_x)
+            if (filter_invalid(t))
+            {
+              t = t.shift_xy(m_maps.const_back().offset());
+            }
             // save tile
             const auto data = std::bit_cast<std::array<char, sizeof(t)>>(t);
             os.write(data.data(), data.size());
@@ -2111,10 +2169,12 @@ void
     },
     path,
     "");
+  test_map(dest_path);
 }
 std::size_t
   map_sprite::size_of_map() const
-{  return m_maps.back().visit_tiles(
+{
+  return m_maps.back().visit_tiles(
     [](const auto &tiles)
     {
       using tile_type = typename std::decay_t<decltype(tiles)>::value_type;

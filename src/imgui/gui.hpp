@@ -60,6 +60,26 @@ private:
     ::filters             filters  = {};
     std::chrono::time_point<std::chrono::high_resolution_clock> start = {};
   };
+  struct batch_embed
+  {
+    void
+      enable(std::filesystem::path in_outgoing);
+    void
+      disable();
+    template<typename lambdaT, typename askT>
+    bool
+      operator()(
+        const std::vector<std::string> &fields,
+        lambdaT                       &&lambda,
+        askT                          &&ask_lambda);
+
+  private:
+    bool                  m_enabled  = { false };
+    std::size_t           m_pos      = {};
+    std::filesystem::path m_outgoing = {};
+    bool                  m_asked    = { false };
+    std::chrono::time_point<std::chrono::high_resolution_clock> m_start = {};
+  };
   enum struct compact_type
   {
     rows,
@@ -143,6 +163,7 @@ private:
   mutable scrolling                 m_scrolling           = {};
   mutable batch_deswizzle           m_batch_deswizzle     = {};
   mutable batch_reswizzle           m_batch_reswizzle     = {};
+  mutable batch_embed               m_batch_embed         = {};
   mutable int                       m_id                  = {};
   mutable mouse_positions           m_mouse_positions     = {};
   mutable selections                m_selections          = {};
@@ -331,5 +352,12 @@ private:
       filterT   &&filter,
       askT      &&ask,
       processT  &&process) const;
+  void
+    popup_batch_embed() const;
+  template<bool Nested = false>
+  std::vector<std::filesystem::path>
+    replace_entries(
+      const open_viii::archive::FIFLFS<Nested> &field,
+      const std::vector<std::filesystem::path> &paths) const;
 };
 #endif// MYPROJECT_GUI_HPP
