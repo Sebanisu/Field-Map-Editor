@@ -245,6 +245,8 @@ private:
     combo_field() const;
   void
     combo_coo() const;
+  void
+    combo_draw_bit() const;
   std::string
     save_texture_path() const;
   void

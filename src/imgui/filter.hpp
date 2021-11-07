@@ -85,8 +85,15 @@ public:
     return m_value;
   }
 };
+enum struct draw_bitT
+{
+  all,
+  disabled,
+  enabled,
+};
 struct filters
 {
+  filter<draw_bitT>                                   draw_bit        = {};
   filter<PupuID>                                      pupu            = {};
   filter<std::uint16_t>                               z               = {};
   filter<std::uint8_t>                                palette         = {};

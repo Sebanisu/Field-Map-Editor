@@ -1015,6 +1015,31 @@ void
             return;
           }
         }
+        if (m_filters.draw_bit.enabled())
+        {
+          switch (m_filters.draw_bit.value())
+          {
+          case draw_bitT::all:
+          default:
+            break;
+          case draw_bitT::enabled:
+          {
+            if (!tile_const.draw())
+            {
+              return;
+            }
+            break;
+          }
+          case draw_bitT::disabled:
+          {
+            if (tile_const.draw())
+            {
+              return;
+            }
+            break;
+          }
+          }
+        }
         if (tile.z() != z)
         {
           return;

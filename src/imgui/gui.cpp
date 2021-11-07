@@ -455,6 +455,7 @@ void
           combo_animation_ids();
           combo_animation_frames();
           combo_z();
+          combo_draw_bit();
         }
         if (m_changed)
         {
@@ -1832,6 +1833,29 @@ void
         [&pair]() { return pair.values(); },
         [&pair]() { return pair.strings(); },
         [this]() -> auto & { return m_map_sprite.filter().pupu; }))
+  {
+    m_map_sprite.update_render_texture();
+    m_changed = true;
+  }
+}
+
+void
+  gui::combo_draw_bit() const
+{
+  using namespace std::string_view_literals;
+  if (generic_combo(
+        m_id,
+        gui_labels::draw_bit,
+        []()
+        {
+          return std::array{ draw_bitT::all,
+                             draw_bitT::enabled,
+                             draw_bitT::disabled };
+        },
+        []() {
+          return std::array{ "all"sv, "enabled"sv, "disabled"sv };
+        },
+        [this]() -> auto & { return m_map_sprite.filter().draw_bit; }))
   {
     m_map_sprite.update_render_texture();
     m_changed = true;

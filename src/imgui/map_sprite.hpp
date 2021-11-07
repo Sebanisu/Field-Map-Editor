@@ -20,6 +20,7 @@
 #include <SFML/Graphics/Transformable.hpp>
 #include <SFML/Graphics/Vertex.hpp>
 #include <utility>
+
 static inline std::string
   str_to_lower(std::string &&input)
 {
@@ -168,6 +169,9 @@ public:
     get_base_name() const;
 
 private:
+  static constexpr auto default_filter_lambda = [](auto &&) { return true; };
+  static constexpr auto filter_invalid =
+    open_viii::graphics::background::Map::filter_invalid();
   struct maps
   {
     maps() = default;
@@ -336,10 +340,7 @@ private:
   [[nodiscard]] bool
     local_draw(sf::RenderTarget &target, sf::RenderStates states) const;
   bool
-                        fail_filter(auto &tile) const;
-  static constexpr auto default_filter_lambda = [](auto &&) { return true; };
-  static constexpr auto filter_invalid =
-    open_viii::graphics::background::Map::filter_invalid();
+    fail_filter(auto &tile) const;
   void
     wait_for_futures() const;
   auto
