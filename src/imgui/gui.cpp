@@ -2700,7 +2700,9 @@ void
                              std::ranges::size(filename)));
                        fs_mainzzz.write(
                          filename_length.data(), filename_length.size());
-                       fs_mainzzz.write(filename.data(), filename.size());
+                       fs_mainzzz.write(
+                         filename.data(),
+                         static_cast<std::streamsize>(filename.size()));
                        const auto offset =
                          std::bit_cast<std::array<char, sizeof(std::uint64_t)>>(
                            file_data.offset());
@@ -2727,16 +2729,21 @@ void
                        {
                          const auto buffer =
                            open_viii::tools::read_entire_file(*match);
-                         fs_mainzzz.write(buffer.data(), buffer.size());
+                         fs_mainzzz.write(
+                           buffer.data(),
+                           static_cast<std::streamsize>(buffer.size()));
                          return;
                        }
                        const auto buffer =
                          open_viii::archive::FS::get_entry(input, file_data);
-                       fs_mainzzz.write(buffer.data(), buffer.size());
+                       fs_mainzzz.write(
+                         buffer.data(),
+                         static_cast<std::streamsize>(buffer.size()));
                      });
                    std::ranges::for_each(
                      results,
-                     [](const auto &path) { std::filesystem::remove(path); });
+                     [](const auto &rem_path)
+                     { std::filesystem::remove(rem_path); });
                    results.clear();
                    results.push_back(out_path);
                  });

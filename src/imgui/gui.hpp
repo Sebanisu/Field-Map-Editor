@@ -73,7 +73,7 @@ private:
     bool
       operator()(const T &fields, lambdaT &&lambda, askT &&ask_lambda);
     std::chrono::time_point<std::chrono::high_resolution_clock>
-      start() const noexcept;;
+      start() const noexcept;
 
   private:
     bool                  m_enabled  = { false };
