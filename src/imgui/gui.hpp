@@ -63,15 +63,17 @@ private:
   struct batch_embed
   {
     void
-      enable(std::filesystem::path in_outgoing);
+      enable(
+        std::filesystem::path                                       in_outgoing,
+        std::chrono::time_point<std::chrono::high_resolution_clock> start =
+          std::chrono::high_resolution_clock::now());
     void
       disable();
-    template<typename lambdaT, typename askT>
+    template<typename lambdaT, typename askT, std::ranges::range T>
     bool
-      operator()(
-        const std::vector<std::string> &fields,
-        lambdaT                       &&lambda,
-        askT                          &&ask_lambda);
+      operator()(const T &fields, lambdaT &&lambda, askT &&ask_lambda);
+    std::chrono::time_point<std::chrono::high_resolution_clock>
+      start() const noexcept;;
 
   private:
     bool                  m_enabled  = { false };
@@ -164,6 +166,8 @@ private:
   mutable batch_deswizzle           m_batch_deswizzle     = {};
   mutable batch_reswizzle           m_batch_reswizzle     = {};
   mutable batch_embed               m_batch_embed         = {};
+  mutable batch_embed               m_batch_embed2        = {};
+  mutable batch_embed               m_batch_embed3        = {};
   mutable int                       m_id                  = {};
   mutable mouse_positions           m_mouse_positions     = {};
   mutable selections                m_selections          = {};
@@ -361,5 +365,14 @@ private:
     replace_entries(
       const open_viii::archive::FIFLFS<Nested> &field,
       const std::vector<std::filesystem::path> &paths) const;
+
+  mutable std::vector<std::future<void>> m_futures = {};
+  template<typename T, typename... argsT>
+  void
+    launch_async(T &&task, argsT &&...args) const;
+  void
+    wait_for_futures() const;
+  bool
+    check_futures() const;
 };
 #endif// MYPROJECT_GUI_HPP

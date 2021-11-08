@@ -77,6 +77,52 @@ struct fmt::formatter<BPPT>
     return format_to(ctx.out(), "{}", static_cast<int>(p));
   }
 };
+template<>
+struct fmt::formatter<std::filesystem::path>
+{
+  // Presentation format: 'f' - fixed, 'e' - exponential.
+  char presentation = 'f';
+
+  // Parses format specifications of the form ['f' | 'e'].
+  constexpr auto
+    parse(format_parse_context &ctx) -> decltype(ctx.begin())
+  {
+    // [ctx.begin(), ctx.end()) is a character range that contains a part of
+    // the format string starting from the format specifications to be parsed,
+    // e.g. in
+    //
+    //   fmt::format("{:f} - std::filesystem::path of interest",
+    //   std::filesystem::path{1, 2});
+    //
+    // the range will contain "f} - std::filesystem::path of interest". The
+    // formatter should parse specifiers until '}' or the end of the range. In
+    // this example the formatter should parse the 'f' specifier and return an
+    // iterator std::filesystem::pathing to '}'.
+
+    // Parse the presentation format and store it in the formatter:
+    auto it = ctx.begin(), end = ctx.end();
+    if (it != end && (*it == 'f' || *it == 'e'))
+      presentation = *it++;
+
+    // Check if reached the end of the range:
+    if (it != end && *it != '}')
+      throw format_error("invalid format");
+
+    // Return an iterator past the end of the parsed range:
+    return it;
+  }
+
+  // Formats the std::filesystem::path p using the parsed format specification
+  // (presentation) stored in this formatter.
+  template<typename FormatContext>
+  auto
+    format(const std::filesystem::path &p, FormatContext &ctx)
+      -> decltype(ctx.out())
+  {
+    // ctx.out() is an output iterator to write to.
+    return format_to(ctx.out(), "{}", p.string());
+  }
+};
 template<typename T>
 concept returns_range_concept = requires(std::decay_t<T> t)
 {
@@ -385,9 +431,6 @@ void
     combo_draw();
     if (!m_paths.empty())
     {
-      popup_batch_deswizzle();
-      popup_batch_reswizzle();
-      popup_batch_embed();
       file_browser_save_texture();
       combo_path();
       combo_coo();
@@ -472,6 +515,9 @@ void
   {
     m_mouse_positions.mouse_enabled = handle_mouse_cursor();
   }
+  popup_batch_deswizzle();
+  popup_batch_reswizzle();
+  popup_batch_embed();
   ImGui::End();
   on_click_not_imgui();
   m_window.clear(clear_color);
@@ -2379,25 +2425,27 @@ inline std::vector<std::filesystem::path>
   return r;
 }
 void
-  gui::batch_embed::enable(std::filesystem::path in_outgoing)
+  gui::batch_embed::enable(
+    std::filesystem::path                                       in_outgoing,
+    std::chrono::time_point<std::chrono::high_resolution_clock> start)
 {
   m_enabled  = { true };
   m_pos      = {};
   m_outgoing = in_outgoing;
-  m_asked    = { true };
-  m_start    = std::chrono::high_resolution_clock::now();
+  m_asked    = { false };
+  m_start    = start;
 }
 void
   gui::batch_embed::disable()
 {
   m_enabled = { false };
 }
-template<typename lambdaT, typename askT>
+template<typename lambdaT, typename askT, std::ranges::range T>
 bool
   gui::batch_embed::operator()(
-    const std::vector<std::string> &fields,
-    lambdaT                       &&lambda,
-    askT                          &&ask_lambda)
+    const T  &fields,
+    lambdaT &&lambda,
+    askT    &&ask_lambda)
 {
   if (!m_enabled)
   {
@@ -2418,7 +2466,8 @@ bool
     {
       auto current = std::chrono::high_resolution_clock::now();
       fmt::print(
-        "{:%H:%M:%S} - Finished the batch swizzle...\n", current - m_start);
+        "{:%H:%M:%S} - Finished the batch embed operation...\n",
+        current - m_start);
       disable();
       return m_pos > 0U;
     }
@@ -2429,19 +2478,34 @@ bool
     else
     {
       auto current = std::chrono::high_resolution_clock::now();
-      format_imgui_text(
-        "{:%H:%M:%S} - {:>3.2f}% - Processing {}...",
-        current - m_start,
-        static_cast<float>(m_pos) * 100.F
-          / static_cast<float>(std::size(fields)),
-        fields[m_pos]);
-      ImGui::Separator();
-      lambda(static_cast<int>(m_pos), m_outgoing);
-      ++m_pos;
+      if (std::size(fields) != 1U)
+      {
+        format_imgui_text(
+          "{:%H:%M:%S} - {:>3.2f}% - Processing {}...",
+          current - m_start,
+          static_cast<float>(m_pos) * 100.F
+            / static_cast<float>(std::size(fields)),
+          fields[m_pos]);
+      }
+      else
+      {
+        format_imgui_text(
+          "{:%H:%M:%S} - Processing {}...", current - m_start, fields[m_pos]);
+        ImGui::Separator();
+      }
+      int tmp = static_cast<int>(m_pos);
+      lambda(tmp, m_outgoing);
+      ++tmp;
+      m_pos = static_cast<std::size_t>(tmp);
     }
     ImGui::EndPopup();
   }
   return false;
+}
+std::chrono::time_point<std::chrono::high_resolution_clock>
+  gui::batch_embed::start() const noexcept
+{
+  return m_start;
 }
 
 [[nodiscard]] inline bool
@@ -2465,142 +2529,241 @@ std::vector<std::filesystem::path>
     const std::vector<std::filesystem::path> &paths) const
 {
   auto tmp = open_viii::archive::replace_files<Nested>(field, paths);
-  std::ranges::for_each(
-    tmp,
-    [](const auto &path) { format_imgui_text("Updating: {}", path.string()); });
   return tmp;
 }
+
 void
   gui::popup_batch_embed() const
 {
-  static std::vector<std::filesystem::path> results = {};
+  static std::mutex                         append_results_mutex = {};
+  static std::vector<std::filesystem::path> results              = {};
   if (m_batch_embed(
         m_archives_group.mapdata(),
-        [this](const int &pos, std::filesystem::path selected_path)
+        [this](const int &in_pos, const std::filesystem::path &in_selected_path)
         {
-          if (pos <= 0)
-          {
-            results.clear();
-          }
-          auto field = m_archives_group.field(pos);
-          if (!field)
-          {
-            return;
-          }
-          auto       paths = find_maps_in_directory(selected_path);
-          const auto tmp   = replace_entries(*field, paths);
+          launch_async(
+            [this](const int pos, const std::filesystem::path selected_path)
+            {
+              if (pos <= 0)
+              {
+                std::lock_guard guard{ append_results_mutex };
+                results.clear();
+              }
+              auto field = m_archives_group.field(pos);
+              if (!field)
+              {
+                return;
+              }
+              auto            paths = find_maps_in_directory(selected_path);
+              const auto      tmp   = replace_entries(*field, paths);
 
-          results.insert(
-            std::ranges::end(results),
-            std::ranges::begin(tmp),
-            std::ranges::end(tmp));
+              std::lock_guard guard{ append_results_mutex };
+              results.insert(
+                std::ranges::end(results),
+                std::ranges::begin(tmp),
+                std::ranges::end(tmp));
+            },
+            in_pos,
+            in_selected_path);
         },
         [this]() { return ImGui::Button(gui_labels::start.data()); }))
   {
-    const auto fields = m_archives_group.archives()
-                          .get<open_viii::archive::ArchiveTypeT::field>();
-    {
-      const auto tmp = replace_entries(fields, results);
-      std::ranges::for_each(
-        results, [](const auto &path) { std::filesystem::remove(path); });
-      results = tmp;
-    }
-    if (!open_viii::archive::fiflfs_in_main_zzz(m_archives_group.archives()))
-    {
-      return;
-    }
-    const open_viii::archive::ZZZ &zzzmain =
-      m_archives_group.archives()
-        .get<open_viii::archive::ArchiveTypeT::zzz_main>()
-        .value();
-    auto src = zzzmain.data();
-
-    std::ranges::sort(
-      src,
-      [](
-        const open_viii::archive::FileData &l,
-        const open_viii::archive::FileData &r)
-      { return std::cmp_less(l.offset(), r.offset()); });
-    auto        dst  = src;// copy
-    const auto &path = zzzmain.path();
-
-    fmt::print("Attempting to work: \"{}\"\n", path.string());
-    if (!any_matches(results, dst))
-    {
-      return;
-    }
-    // danger here there are files with the same filename. Should be fine for
-    // fields because there is only one copy.
-    auto transform_view =
-      dst
-      | std::views::transform(
-        [](const open_viii::archive::FileData &file_data)
-        { return std::ranges::size(file_data.get_path_string_view()) + 16U; });
-    const auto header_size = std::reduce(
-      transform_view.begin(), transform_view.end(), sizeof(std::uint32_t));
-    std::ranges::transform(
-      dst,
-      std::ranges::begin(dst),
-      [&, i = uint64_t{ header_size }](
-        open_viii::archive::FileData file_data) mutable
-      {
-        if (auto match =
-              open_viii::archive::find_match(results, file_data.get_path());
-            match != std::ranges::end(results))
-        {
-          file_data = file_data.with_uncompressed_size(
-            static_cast<std::uint32_t>(std::filesystem::file_size(*match)));
-        }
-        file_data = file_data.with_offset(i);
-        i += file_data.uncompressed_size();
-        return file_data;
-      });
-
-    const auto   &temp     = std::filesystem::temp_directory_path();
-    auto          out_path = temp / path.filename();
-    std::ofstream fs_mainzzz(
-      out_path, std::ios::out | std::ios::binary | std::ios::trunc);
-    fmt::print("Creating: \"{}\"\n", out_path.string());
-    const auto count = std::bit_cast<std::array<char, sizeof(std::uint32_t)>>(
-      static_cast<std::uint32_t>(std::ranges::size(dst)));
-    fs_mainzzz.write(count.data(), count.size());
-    std::ranges::for_each(
-      dst,
-      [&](const open_viii::archive::FileData &file_data)
-      {
-        std::string filename = file_data.get_path_string();
-        tl::string::undo_replace_slashes(filename);
-        const auto filename_length =
-          std::bit_cast<std::array<char, sizeof(std::uint32_t)>>(
-            static_cast<std::uint32_t>(std::ranges::size(filename)));
-        fs_mainzzz.write(filename_length.data(), filename_length.size());
-        fs_mainzzz.write(filename.data(), filename.size());
-        const auto offset =
-          std::bit_cast<std::array<char, sizeof(std::uint64_t)>>(
-            file_data.offset());
-        fs_mainzzz.write(offset.data(), offset.size());
-        const auto uncompressed_size =
-          std::bit_cast<std::array<char, sizeof(std::uint32_t)>>(
-            file_data.uncompressed_size());
-        fs_mainzzz.write(uncompressed_size.data(), uncompressed_size.size());
-      });
-
-    std::ifstream   in_fs_mainzzz(path, std::ios::in | std::ios::binary);
-    tl::read::input input(&in_fs_mainzzz);
-    std::ranges::for_each(
-      src,
-      [&](const open_viii::archive::FileData &file_data)
-      {
-        if (auto match =
-              open_viii::archive::find_match(results, file_data.get_path());
-            match != std::ranges::end(results))
-        {
-          const auto buffer = open_viii::tools::read_entire_file(*match);
-          fs_mainzzz.write(buffer.data(), buffer.size());
-          return;
-        }
-        const auto buffer = open_viii::archive::FS::get_entry(input, file_data);
-        fs_mainzzz.write(buffer.data(), buffer.size());
-      });
+    m_batch_embed2.enable({}, m_batch_embed.start());
   }
+  else if (m_batch_embed2(
+             std::array{ "fields" },
+             [this](int &pos, const std::filesystem::path &)
+             {
+               format_imgui_text(
+                 "{}", "Updating fields.fi, fields.fl, and fields.fs...");
+               if (check_futures())
+               {
+                 --pos;
+                 return;
+               }
+               wait_for_futures();
+               launch_async(
+                 [this]()
+                 {
+                   const auto &fields =
+                     m_archives_group.archives()
+                       .get<open_viii::archive::ArchiveTypeT::field>();
+                   {
+                     const auto      tmp = replace_entries(fields, results);
+                     //                     std::ranges::for_each(
+                     //                       tmp,
+                     //                       [](const auto &path) {
+                     //                       format_imgui_text("Updating: {}",
+                     //                       path.string()); });
+                     std::lock_guard guard{ append_results_mutex };
+                     std::ranges::for_each(
+                       results,
+                       [](const auto &path) { std::filesystem::remove(path); });
+                     results = tmp;
+                   }
+                 });
+             },
+             [this]() { return true; }))
+  {
+    if (open_viii::archive::fiflfs_in_main_zzz(m_archives_group.archives()))
+    {
+      m_batch_embed3.enable({}, m_batch_embed2.start());
+    }
+  }
+  else if (m_batch_embed3(
+             std::array{ "main.zzz" },
+
+             [this](int &pos, const std::filesystem::path &)
+             {
+               format_imgui_text("{}", "Updating main.zzz...");
+               if (check_futures())
+               {
+                 --pos;
+                 return;
+               }
+               wait_for_futures();
+               launch_async(
+                 [this]()
+                 {
+                   const open_viii::archive::ZZZ &zzzmain =
+                     m_archives_group.archives()
+                       .get<open_viii::archive::ArchiveTypeT::zzz_main>()
+                       .value();
+                   auto src = zzzmain.data();
+
+                   std::ranges::sort(
+                     src,
+                     [](
+                       const open_viii::archive::FileData &l,
+                       const open_viii::archive::FileData &r)
+                     { return std::cmp_less(l.offset(), r.offset()); });
+                   auto        dst  = src;// copy
+                   const auto &path = zzzmain.path();
+
+                   fmt::print("Attempting to work: \"{}\"\n", path.string());
+                   if (!any_matches(results, dst))
+                   {
+                     return;
+                   }
+                   // danger here there are files with the same filename. Should
+                   // be fine for fields because there is only one copy.
+                   auto transform_view =
+                     dst
+                     | std::views::transform(
+                       [](const open_viii::archive::FileData &file_data) {
+                         return std::ranges::size(
+                                  file_data.get_path_string_view())
+                                + 16U;
+                       });
+                   const auto header_size = std::reduce(
+                     transform_view.begin(),
+                     transform_view.end(),
+                     sizeof(std::uint32_t));
+                   std::ranges::transform(
+                     dst,
+                     std::ranges::begin(dst),
+                     [&, i = uint64_t{ header_size }](
+                       open_viii::archive::FileData file_data) mutable
+                     {
+                       if (auto match = open_viii::archive::find_match(
+                             results, file_data.get_path());
+                           match != std::ranges::end(results))
+                       {
+                         file_data = file_data.with_uncompressed_size(
+                           static_cast<std::uint32_t>(
+                             std::filesystem::file_size(*match)));
+                       }
+                       file_data = file_data.with_offset(i);
+                       i += file_data.uncompressed_size();
+                       return file_data;
+                     });
+
+                   const auto   &temp = std::filesystem::temp_directory_path();
+                   auto          out_path = temp / path.filename();
+                   std::ofstream fs_mainzzz(
+                     out_path,
+                     std::ios::out | std::ios::binary | std::ios::trunc);
+                   fmt::print("Creating: \"{}\"\n", out_path.string());
+                   const auto count =
+                     std::bit_cast<std::array<char, sizeof(std::uint32_t)>>(
+                       static_cast<std::uint32_t>(std::ranges::size(dst)));
+                   fs_mainzzz.write(count.data(), count.size());
+                   std::ranges::for_each(
+                     dst,
+                     [&](const open_viii::archive::FileData &file_data)
+                     {
+                       std::string filename = file_data.get_path_string();
+                       tl::string::undo_replace_slashes(filename);
+                       const auto filename_length =
+                         std::bit_cast<std::array<char, sizeof(std::uint32_t)>>(
+                           static_cast<std::uint32_t>(
+                             std::ranges::size(filename)));
+                       fs_mainzzz.write(
+                         filename_length.data(), filename_length.size());
+                       fs_mainzzz.write(filename.data(), filename.size());
+                       const auto offset =
+                         std::bit_cast<std::array<char, sizeof(std::uint64_t)>>(
+                           file_data.offset());
+                       fs_mainzzz.write(offset.data(), offset.size());
+                       const auto uncompressed_size =
+                         std::bit_cast<std::array<char, sizeof(std::uint32_t)>>(
+                           file_data.uncompressed_size());
+                       fs_mainzzz.write(
+                         uncompressed_size.data(), uncompressed_size.size());
+                     });
+
+                   std::ifstream in_fs_mainzzz(
+                     path, std::ios::in | std::ios::binary);
+                   tl::read::input input(&in_fs_mainzzz);
+
+                   std::lock_guard guard{ append_results_mutex };
+                   std::ranges::for_each(
+                     src,
+                     [&](const open_viii::archive::FileData &file_data)
+                     {
+                       if (auto match = open_viii::archive::find_match(
+                             results, file_data.get_path());
+                           match != std::ranges::end(results))
+                       {
+                         const auto buffer =
+                           open_viii::tools::read_entire_file(*match);
+                         fs_mainzzz.write(buffer.data(), buffer.size());
+                         return;
+                       }
+                       const auto buffer =
+                         open_viii::archive::FS::get_entry(input, file_data);
+                       fs_mainzzz.write(buffer.data(), buffer.size());
+                     });
+                   std::ranges::for_each(
+                     results,
+                     [](const auto &path) { std::filesystem::remove(path); });
+                   results.clear();
+                   results.push_back(out_path);
+                 });
+             },
+             [this]() { return true; }))
+  {
+  }
+}
+
+void
+  gui::wait_for_futures() const
+{
+  std::ranges::for_each(m_futures, [](auto &&f) { f.wait(); });
+  m_futures.clear();
+}
+bool
+  gui::check_futures() const
+{
+  return std::ranges::any_of(
+    m_futures,
+    [](std::future<void> &f) {
+      return f.wait_for(std::chrono::seconds{}) != std::future_status::ready;
+    });
+}
+template<typename T, typename... argsT>
+void
+  gui::launch_async(T &&task, argsT &&...args) const
+{
+  m_futures.emplace_back(std::async(std::launch::async, task, args...));
 }
