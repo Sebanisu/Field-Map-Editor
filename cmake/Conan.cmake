@@ -50,6 +50,7 @@ macro(run_conan)
                 ${CMAKE_SOURCE_DIR}
                 BUILD
                 missing
+                #all
                 # Pass compile-time configured options into conan
                 OPTIONS
                 cpp_starter_use_imgui=${CPP_STARTER_USE_IMGUI}

@@ -2194,7 +2194,7 @@ void
     },
     path,
     "");
-  test_map(dest_path);
+  //test_map(dest_path);
 }
 std::size_t
   map_sprite::size_of_map() const

@@ -12,7 +12,42 @@ using namespace open_viii::graphics::background;
 using namespace open_viii::graphics;
 using namespace open_viii::graphics::literals;
 using namespace std::string_literals;
-
+/**
+ * @see https://godbolt.org/z/xce9jEbqh
+ * @tparam T enforced std::filesystem::path
+ * @tparam U anything that converts to std::filesystem::path
+ * @param lhs T value
+ * @param rhs U value
+ * @return lhs + rhs
+ */
+template<typename T, typename U>
+requires std::same_as<std::decay_t<T>, std::filesystem::path> &&(
+  !std::same_as<std::decay_t<U>, std::filesystem::path>)&&std::
+  convertible_to<std::decay_t<U>, std::filesystem::path> inline std::
+    filesystem::path
+  operator+(const T &lhs, const U &rhs)
+{
+  auto tmp = lhs;
+  tmp += rhs;
+  return tmp;
+}
+/**
+ * @see https://godbolt.org/z/xce9jEbqh
+ * @tparam T enforced std::filesystem::path
+ * @param lhs anything that converts to std::filesystem::path
+ * @param rhs T value
+ * @return lhs + rhs
+ */
+template<typename T>
+requires std::same_as<std::decay_t<T>, std::filesystem::path> || std::
+  same_as<std::decay_t<T>, std::filesystem::directory_entry>
+inline std::filesystem::path
+  operator+(const std::filesystem::path &lhs, const T &rhs)
+{
+  auto tmp = lhs;
+  tmp += rhs;
+  return tmp;
+}
 
 std::ostream &
   operator<<(std::ostream &os, const BlendModeT &bm)
@@ -1575,10 +1610,9 @@ void
     m_changed = true;
   }
 }
-void
+bool
   gui::combo_path() const
 {
-  ImGui::PushID(++m_id);
   if (generic_combo(
         m_id,
         gui_labels::path,
@@ -1588,8 +1622,9 @@ void
         m_selections.path))
   {
     update_path();
+    return true;
   }
-  ImGui::PopID();
+  return false;
 }
 std::vector<std::string>
   gui::get_paths()
@@ -1795,6 +1830,12 @@ void
   m_archives_group = m_archives_group.with_path(
     m_paths.at(static_cast<std::size_t>(m_selections.path)));
   update_field();
+  if (m_batch_embed4.enabled())
+  {
+    m_batch_embed4.enable(
+      m_paths.at(static_cast<std::size_t>(m_selections.path)),
+      m_batch_embed4.start());
+  }
 }
 std::vector<const char *>
   gui::get_paths_c_str() const
@@ -2209,6 +2250,7 @@ bool
         nullptr,
         ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings))
   {
+    const auto g = scope_guard([]() { ImGui::EndPopup(); });
     if (fields.size() <= pos)
     {
       auto current = std::chrono::high_resolution_clock::now();
@@ -2236,7 +2278,6 @@ bool
       lambda(static_cast<int>(pos), outgoing, filters);
       ++pos;
     }
-    ImGui::EndPopup();
   }
   return false;
 }
@@ -2365,6 +2406,7 @@ bool
         nullptr,
         ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings))
   {
+    const auto g = scope_guard([]() { ImGui::EndPopup(); });
     if (fields.size() <= pos)
     {
       auto current = std::chrono::high_resolution_clock::now();
@@ -2390,7 +2432,6 @@ bool
         static_cast<int>(pos), outgoing, filters, compact_filter, bpp, palette);
       ++pos;
     }
-    ImGui::EndPopup();
   }
   return false;
 }
@@ -2462,6 +2503,7 @@ bool
         nullptr,
         ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings))
   {
+    const auto g = scope_guard([]() { ImGui::EndPopup(); });
     if (fields.size() <= m_pos)
     {
       auto current = std::chrono::high_resolution_clock::now();
@@ -2498,7 +2540,6 @@ bool
       ++tmp;
       m_pos = static_cast<std::size_t>(tmp);
     }
-    ImGui::EndPopup();
   }
   return false;
 }
@@ -2506,6 +2547,11 @@ std::chrono::time_point<std::chrono::high_resolution_clock>
   gui::batch_embed::start() const noexcept
 {
   return m_start;
+}
+bool
+  gui::batch_embed::enabled() const noexcept
+{
+  return m_enabled;
 }
 
 [[nodiscard]] inline bool
@@ -2546,7 +2592,7 @@ void
             {
               if (pos <= 0)
               {
-                std::lock_guard guard{ append_results_mutex };
+                std::scoped_lock guard{ append_results_mutex };
                 results.clear();
               }
               auto field = m_archives_group.field(pos);
@@ -2557,7 +2603,7 @@ void
               auto            paths = find_maps_in_directory(selected_path);
               const auto      tmp   = replace_entries(*field, paths);
 
-              std::lock_guard guard{ append_results_mutex };
+              std::scoped_lock guard{ append_results_mutex };
               results.insert(
                 std::ranges::end(results),
                 std::ranges::begin(tmp),
@@ -2566,7 +2612,11 @@ void
             in_pos,
             in_selected_path);
         },
-        [this]() { return ImGui::Button(gui_labels::start.data()); }))
+        [this]()
+        {
+          //  return ImGui::Button(gui_labels::start.data());
+          return true;
+        }))
   {
     m_batch_embed2.enable({}, m_batch_embed.start());
   }
@@ -2575,7 +2625,8 @@ void
              [this](int &pos, const std::filesystem::path &)
              {
                format_imgui_text(
-                 "{}", "Updating fields.fi, fields.fl, and fields.fs...");
+                 "{}",
+                 "Waiting for smaller field archives to finish writing...");
                if (check_futures())
                {
                  --pos;
@@ -2595,7 +2646,7 @@ void
                      //                       [](const auto &path) {
                      //                       format_imgui_text("Updating: {}",
                      //                       path.string()); });
-                     std::lock_guard guard{ append_results_mutex };
+                     std::scoped_lock guard{ append_results_mutex };
                      std::ranges::for_each(
                        results,
                        [](const auto &path) { std::filesystem::remove(path); });
@@ -2603,19 +2654,34 @@ void
                    }
                  });
              },
-             [this]() { return true; }))
+             [this]()
+             {
+               //               format_imgui_text(
+               //                 "{}", "Updating fields.fi, fields.fl, and
+               //                 fields.fs...");
+               //               return !check_futures();
+               return true;
+             }))
   {
     if (open_viii::archive::fiflfs_in_main_zzz(m_archives_group.archives()))
     {
       m_batch_embed3.enable({}, m_batch_embed2.start());
     }
+    else
+    {
+      m_batch_embed4.enable(
+        m_paths.at(static_cast<std::size_t>(m_selections.path)),
+        m_batch_embed2.start());
+    }
   }
   else if (m_batch_embed3(
-             std::array{ "main.zzz" },
+             std::array{ "fields" },
 
              [this](int &pos, const std::filesystem::path &)
              {
-               format_imgui_text("{}", "Updating main.zzz...");
+               // format_imgui_text("{}", "Updating main.zzz...");
+               format_imgui_text(
+                 "{}", "Updating fields.fi, fields.fl, and fields.fs...");
                if (check_futures())
                {
                  --pos;
@@ -2718,7 +2784,7 @@ void
                      path, std::ios::in | std::ios::binary);
                    tl::read::input input(&in_fs_mainzzz);
 
-                   std::lock_guard guard{ append_results_mutex };
+                   std::scoped_lock guard{ append_results_mutex };
                    std::ranges::for_each(
                      src,
                      [&](const open_viii::archive::FileData &file_data)
@@ -2740,6 +2806,7 @@ void
                          buffer.data(),
                          static_cast<std::streamsize>(buffer.size()));
                      });
+                   // make sure this code is ran.
                    std::ranges::for_each(
                      results,
                      [](const auto &rem_path)
@@ -2748,8 +2815,133 @@ void
                    results.push_back(out_path);
                  });
              },
-             [this]() { return true; }))
+             [this]()
+             {
+               //               format_imgui_text(
+               //                 "{}", "{}", "Updating fields.fi, fields.fl,
+               //                 and fields.fs...");
+               //               return !check_futures();
+               return true;
+             }))
   {
+    m_batch_embed4.enable(
+      m_paths.at(static_cast<std::size_t>(m_selections.path)),
+      m_batch_embed3.start());
+  }
+  else if (m_batch_embed4(
+             std::array{ "save" },
+             [this](int &pos, const std::filesystem::path &in_selected_path)
+             {
+               format_imgui_text("{}", "Saving Files...");
+               if (check_futures())
+               {
+                 --pos;
+                 return;
+               }
+               wait_for_futures();
+               launch_async(
+                 [this](const std::filesystem::path selected_path)
+                 {
+                   const auto move = [&](const std::filesystem::path &path)
+                   {
+                     const auto it = std::ranges::find_if(
+                       results,
+                       [&](const std::filesystem::path &tmp_path)
+                       { return tmp_path.filename() == path.filename(); });
+                     if (it == results.end())
+                     {
+                       return;
+                     }
+                     if (std::filesystem::exists(path))
+                     {
+                       // IF files exist rename to same path .bak
+                       std::filesystem::copy(
+                         path,
+                         path + ".bak",
+                         std::filesystem::copy_options::overwrite_existing);
+                     }
+                     std::filesystem::copy(
+                       *it,
+                       path,
+                       std::filesystem::copy_options::overwrite_existing);
+                     std::filesystem::remove(*it);
+                     results.erase(it);
+                   };
+                   // I need to detect the path where the game files are then
+                   // save them there.
+                   if (open_viii::archive::fiflfs_in_main_zzz(
+                         m_archives_group.archives()))
+                   {
+                     const open_viii::archive::ZZZ &zzz_main =
+                       m_archives_group.archives()
+                         .get<open_viii::archive::ArchiveTypeT::zzz_main>()
+                         .value();
+                     const auto &path_zzz_main = zzz_main.path();
+                     move(path_zzz_main);
+                   }
+                   else
+                   {
+                     const open_viii::archive::FIFLFS<true> &fields =
+                       m_archives_group.archives()
+                         .get<open_viii::archive::ArchiveTypeT::field>();
+                     const auto &path_fi = fields.fi().path_or_nested_path();
+                     move(path_fi);
+                     const auto &path_fl = fields.fl().path_or_nested_path();
+                     move(path_fl);
+                     const auto &path_fs = fields.fs().path_or_nested_path();
+                     move(path_fs);
+                   }
+                   while (!results.empty())
+                   {
+                     // If I can't find the files just save to
+                     // the selected directory.
+                     move(
+                       selected_path.parent_path() / results.back().filename());
+                   }
+                 },
+                 in_selected_path);
+             },
+             [this]()
+             {
+               if (check_futures())
+               {
+                 auto current = std::chrono::high_resolution_clock::now();
+                 format_imgui_text(
+                   "{:%H:%M:%S}", current - m_batch_embed4.start());
+                 if (open_viii::archive::fiflfs_in_main_zzz(
+                       m_archives_group.archives()))
+                 {
+                   format_imgui_text(
+                     "{}", "Updating main.zzz...Finishing writing...");
+                 }
+                 else
+                 {
+                   format_imgui_text(
+                     "{}",
+                     "Updating fields.fi, fields.fl, and fields.fs...Finishing "
+                     "writing...");
+                 }
+                 return false;
+               }
+               format_imgui_text("{}", "Choose where to save the files.");
+               std::ranges::for_each(
+                 results,
+                 [](const std::filesystem::path &path)
+                 { format_imgui_text("\t\"{}\"", path); });
+               format_imgui_text(
+                 "{}", "(If files exist they will renamed filename.bak)");
+               combo_path();
+               if (ImGui::Button("Browse"))
+               {
+                 file_browser_locate_ff8();
+               }
+
+               return ImGui::Button("Okay");
+             }))
+  {
+    if (open_viii::archive::fiflfs_in_main_zzz(m_archives_group.archives()))
+    {
+    }
   }
 }
 

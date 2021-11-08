@@ -21,6 +21,16 @@ public:
     start() const;
 
 private:
+  struct scope_guard
+  {
+    scope_guard(void (*t)()) : func(std::move(t)) { }
+
+    ~scope_guard() { func(); }
+
+  private:
+
+    void (*func)();
+  };
   enum struct map_dialog_mode
   {
     save_unmodified,
@@ -74,6 +84,9 @@ private:
       operator()(const T &fields, lambdaT &&lambda, askT &&ask_lambda);
     std::chrono::time_point<std::chrono::high_resolution_clock>
       start() const noexcept;
+
+    bool
+      enabled() const noexcept;
 
   private:
     bool                  m_enabled  = { false };
@@ -168,6 +181,7 @@ private:
   mutable batch_embed               m_batch_embed         = {};
   mutable batch_embed               m_batch_embed2        = {};
   mutable batch_embed               m_batch_embed3        = {};
+  mutable batch_embed               m_batch_embed4        = {};
   mutable int                       m_id                  = {};
   mutable mouse_positions           m_mouse_positions     = {};
   mutable selections                m_selections          = {};
@@ -225,7 +239,7 @@ private:
     loop_events() const;
   void
     loop() const;
-  void
+  bool
     combo_path() const;
   void
     combo_draw() const;
