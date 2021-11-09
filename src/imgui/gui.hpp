@@ -358,7 +358,7 @@ private:
     starter_field() const;
   void
     popup_batch_common_filter_start(
-      ::filter<std::filesystem::path> filter,
+      ::filter<std::filesystem::path> &filter,
       std::string_view                prefix,
       std::string_view                base_name) const;
   template<

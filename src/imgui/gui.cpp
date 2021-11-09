@@ -575,7 +575,7 @@ void
 }
 void
   gui::popup_batch_common_filter_start(
-    ::filter<std::filesystem::path> filter,
+    ::filter<std::filesystem::path> &filter,
     std::string_view                prefix,
     std::string_view                base_name) const
 {
@@ -1327,6 +1327,7 @@ void
       m_modified_directory_map == map_directory_mode::load_swizzle_textures)
     {
       m_loaded_swizzle_texture_path = selected_path;
+      m_map_sprite.filter().deswizzle.disable();
       m_map_sprite.filter()
         .upscale.update(m_loaded_swizzle_texture_path)
         .enable();
@@ -1353,6 +1354,7 @@ void
       m_modified_directory_map == map_directory_mode::load_deswizzle_textures)
     {
       m_loaded_deswizzle_texture_path = selected_path;
+      m_map_sprite.filter().upscale.disable();
       m_map_sprite.filter()
         .deswizzle.update(m_loaded_deswizzle_texture_path)
         .enable();
@@ -2142,6 +2144,10 @@ void
         [&strings]() { return strings; },
         [this]() -> auto & { return m_map_sprite.filter().deswizzle; }))
   {
+    if (m_map_sprite.filter().deswizzle.enabled())
+    {
+      m_map_sprite.filter().upscale.disable();
+    }
     m_map_sprite.update_render_texture(true);
     m_changed = true;
   }
@@ -2154,6 +2160,10 @@ void
   if (combo_upscale_path(
         m_map_sprite.filter().upscale, m_field->get_base_name(), get_coo()))
   {
+    if (m_map_sprite.filter().upscale.enabled())
+    {
+      m_map_sprite.filter().deswizzle.disable();
+    }
     m_map_sprite.update_render_texture(true);
     m_changed = true;
   }
@@ -2600,8 +2610,8 @@ void
               {
                 return;
               }
-              auto            paths = find_maps_in_directory(selected_path);
-              const auto      tmp   = replace_entries(*field, paths);
+              auto             paths = find_maps_in_directory(selected_path);
+              const auto       tmp   = replace_entries(*field, paths);
 
               std::scoped_lock guard{ append_results_mutex };
               results.insert(
@@ -2640,7 +2650,7 @@ void
                      m_archives_group.archives()
                        .get<open_viii::archive::ArchiveTypeT::field>();
                    {
-                     const auto      tmp = replace_entries(fields, results);
+                     const auto       tmp = replace_entries(fields, results);
                      //                     std::ranges::for_each(
                      //                       tmp,
                      //                       [](const auto &path) {
@@ -2782,7 +2792,7 @@ void
 
                    std::ifstream in_fs_mainzzz(
                      path, std::ios::in | std::ios::binary);
-                   tl::read::input input(&in_fs_mainzzz);
+                   tl::read::input  input(&in_fs_mainzzz);
 
                    std::scoped_lock guard{ append_results_mutex };
                    std::ranges::for_each(

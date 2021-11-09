@@ -158,19 +158,6 @@ std::shared_ptr<std::array<sf::Texture, map_sprite::MAX_TEXTURES>>
   {
     find_deswizzle_path(ret);
   }
-  // size_t i = {};
-  // for (const auto &texture : *ret)
-  //{
-  //   const auto size = texture.getSize();
-  //   if (size.x != 0)
-  //   {
-  //     // fmt::print("\ttex: {:3} - ({:4}, {:4})\n", i++, size.x, size.y);
-  //   }
-  //   else
-  //   {
-  //     ++i;
-  //   }
-  // }
   wait_for_futures();
   if (std::ranges::all_of(
         *ret,

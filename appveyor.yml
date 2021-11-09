@@ -15,7 +15,7 @@ build_script:
 
     mkdir build
   
-    cmake -S c:\projects\source -B ./build -G "Visual Studio 16 2019" -DCMAKE_BUILD_TYPE:STRING=Release -DCPP_STARTER_USE_IMGUI=ON
+    cmake -S c:\projects\source -B ./build -G "Visual Studio 16 2019" -A x64 -DCMAKE_BUILD_TYPE:STRING=Release -DCPP_STARTER_USE_IMGUI=ON
 
     cmake --build ./build --config "Release"
 
