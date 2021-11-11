@@ -12,7 +12,7 @@ class CppStarterProject(ConanFile):
     version = "0.1"
     requires = (
         "catch2/2.13.7",
-        "docopt.cpp/0.6.2",
+        "docopt.cpp/0.6.3",
         "fmt/8.0.1",
         "spdlog/1.9.2",
     )
@@ -24,7 +24,7 @@ class CppStarterProject(ConanFile):
             self.requires("imgui/1.85")
             self.requires("sfml/2.5.1")
         if self.options.cpp_starter_use_sdl == "ON":
-            self.requires("sdl2/2.0.10@bincrafters/stable")
+            self.requires("sdl/2.0.16")
 # required for linux? sudo apt-get install -y pkg-config
 # required for WSL? error when ever conan tried to run sudo.
 # sudo -A apt-get update
