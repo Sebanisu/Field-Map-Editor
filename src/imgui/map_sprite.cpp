@@ -1278,7 +1278,7 @@ void
     "");
 }
 std::string
-  map_sprite::map_filename()
+  map_sprite::map_filename() const
 {
   return std::filesystem::path(m_map_path).filename().string();
 }
@@ -1670,6 +1670,15 @@ bool
 void
   map_sprite::save_new_textures(const std::filesystem::path &path) const
 {
+  for (bool b : gen_new_textures(path))
+  {
+    std::ignore = b;
+  }
+}
+
+cppcoro::generator<bool>
+  map_sprite::gen_new_textures(const std::filesystem::path path) const
+{
   // assert(std::filesystem::path.is_directory(path));
   const std::string     field_name                     = { get_base_name() };
   static constexpr char pattern_texture_page[]         = { "{}_{}.png" };
@@ -1751,8 +1760,11 @@ void
                 texture_page,
                 palette);
             }();
+            co_yield true;
             auto out_texture = save_texture(height, height);
+            co_yield true;
             async_save(out_path, out_texture);
+            co_yield true;
           }
         }
       }
@@ -1764,8 +1776,11 @@ void
         ? save_path_coo(
           pattern_coo_texture_page, path, field_name, texture_page)
         : save_path(pattern_texture_page, path, field_name, texture_page);
+    co_yield true;
     auto out_texture = save_texture(height, height);
+    co_yield true;
     async_save(out_path, out_texture);
+    co_yield true;
   }
   wait_for_futures();
 }
@@ -1827,6 +1842,15 @@ std::vector<std::uint8_t>
 void
   map_sprite::save_pupu_textures(const std::filesystem::path &path) const
 {
+  for (bool b : gen_pupu_textures(path))
+  {
+    std::ignore = b;
+  }
+}
+
+cppcoro::generator<bool>
+  map_sprite::gen_pupu_textures(const std::filesystem::path path) const
+{
   // assert(std::filesystem::path.is_directory(path));
   const std::string     field_name = { str_to_lower(m_field->get_base_name()) };
   static constexpr char pattern_pupu[]     = { "{}_{}.png" };
@@ -1858,10 +1882,13 @@ void
     std::filesystem::path out_path =
       m_using_coo ? save_path_coo(pattern_coo_pupu, path, field_name, pupu)
                   : save_path(pattern_pupu, path, field_name, pupu);
+    co_yield true;
     std::shared_ptr<sf::RenderTexture> out_texture = save_texture(
       static_cast<std::uint32_t>(canvas.width()),
       static_cast<std::uint32_t>(canvas.height()));
+    co_yield true;
     async_save(out_path, out_texture);
+    co_yield true;
   }
   wait_for_futures();
 }
@@ -2181,7 +2208,7 @@ void
     },
     path,
     "");
-  //test_map(dest_path);
+  test_map(dest_path);
 }
 std::size_t
   map_sprite::size_of_map() const

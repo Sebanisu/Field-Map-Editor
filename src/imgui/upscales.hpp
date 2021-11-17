@@ -49,6 +49,8 @@ public:
       std::uint8_t                 palette,
       std::string_view             ext = m_ext) const
   {
+    const std::string_view prefix = std::string_view(m_field_name).substr(0, 2);
+
     return std::array{
       field_root
         / fmt::format(
@@ -58,7 +60,17 @@ public:
           texture_page,
           palette,
           ext),
+      field_root / prefix / m_field_name
+        / fmt::format(
+          "{}_{}_{}_{}{}",
+          m_field_name,
+          open_viii::LangCommon::to_string(m_coo),
+          texture_page,
+          palette,
+          ext),
       field_root
+        / fmt::format("{}_{}_{}{}", m_field_name, texture_page, palette, ext),
+      field_root / prefix / m_field_name
         / fmt::format("{}_{}_{}{}", m_field_name, texture_page, palette, ext)
     };
   }
@@ -69,6 +81,8 @@ public:
       std::uint8_t                 texture_page,
       std::string_view             ext = m_ext) const
   {
+
+    const std::string_view prefix = std::string_view(m_field_name).substr(0, 2);
     return std::array{
       field_root
         / fmt::format(
@@ -77,7 +91,16 @@ public:
           open_viii::LangCommon::to_string(m_coo),
           texture_page,
           ext),
-      field_root / fmt::format("{}_{}{}", m_field_name, texture_page, ext)
+      field_root / prefix / m_field_name
+        / fmt::format(
+          "{}_{}_{}{}",
+          m_field_name,
+          open_viii::LangCommon::to_string(m_coo),
+          texture_page,
+          ext),
+      field_root / fmt::format("{}_{}{}", m_field_name, texture_page, ext),
+      field_root / prefix / m_field_name
+        / fmt::format("{}_{}{}", m_field_name, texture_page, ext)
     };
   }
 

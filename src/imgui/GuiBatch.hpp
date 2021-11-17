@@ -8,6 +8,7 @@
 #include "filebrowser.hpp"
 #include "open_viii/paths/Paths.hpp"
 #include <cppcoro/generator.hpp>
+#include <cppcoro/task.hpp>
 namespace fme
 {
 struct GuiBatch
@@ -119,56 +120,59 @@ private:
     }
   }
   static cppcoro::generator<::map_sprite>
-    get_map_sprite(auto gen_field, const ::filters in_filters)
+    get_map_sprite(
+      const std::shared_ptr<open_viii::archive::FIFLFS<false>> &field,
+      const ::filters                                          &in_filters)
   {
-    for (const std::shared_ptr<open_viii::archive::FIFLFS<false>> &field :
-         gen_field)
+    std::string base_name     = str_to_lower(field->get_base_name());
+    auto        local_filters = in_filters;
+
+    popup_batch_common_filter_start(local_filters, base_name);
+
+    fmt::print("{}\n", base_name);
+    auto sprite =
+      map_sprite{ field, open_viii::LangT::generic, {}, local_filters, {} };
+    const auto load_map_file =
+      [&](const ::filter<std::filesystem::path> &filter)
     {
-      std::string base_name     = str_to_lower(field->get_base_name());
-      auto        local_filters = in_filters;
-
-      if (local_filters.upscale.enabled())
+      if (!filter.enabled())
+        return;
+      auto map_path = filter.value() / sprite.map_filename();
+      if (std::filesystem::exists(map_path))
       {
-        popup_batch_common_filter_start(local_filters.upscale, base_name);
+        sprite.load_map(map_path);
       }
-      else if (local_filters.deswizzle.enabled())
-      {
-        popup_batch_common_filter_start(local_filters.deswizzle, base_name);
-      }
-
-      fmt::print("{}\n", base_name);
-      auto sprite =
-        map_sprite{ field, open_viii::LangT::generic, {}, local_filters, {} };
-      const auto load_map_file =
-        [&](const ::filter<std::filesystem::path> &filter)
-      {
-        if (!filter.enabled())
-          return;
-        auto map_path = filter.value() / sprite.map_filename();
-        if (std::filesystem::exists(map_path))
-        {
-          sprite.load_map(map_path);
-        }
-      };
+    };
+    if (!sprite.fail())
+    {
+      load_map_file(local_filters.upscale);
+      load_map_file(local_filters.deswizzle);
+      fmt::print(
+        "{}\n", open_viii::LangCommon::to_string(open_viii::LangT::generic));
+      co_yield std::move(sprite);
+    }
+    for (const open_viii::LangT coo : get_field_coos(field))
+    {
+      sprite = map_sprite{ field, coo, {}, local_filters, {} };
       if (!sprite.fail())
       {
+        fmt::print("{}\n", open_viii::LangCommon::to_string(coo));
         load_map_file(local_filters.upscale);
         load_map_file(local_filters.deswizzle);
-        fmt::print(
-          "{}\n", open_viii::LangCommon::to_string(open_viii::LangT::generic));
         co_yield std::move(sprite);
       }
-      for (const open_viii::LangT coo : get_field_coos(field))
-      {
-        sprite = map_sprite{ field, coo, {}, local_filters, {} };
-        if (!sprite.fail())
-        {
-          fmt::print("{}\n", open_viii::LangCommon::to_string(coo));
-          load_map_file(local_filters.upscale);
-          load_map_file(local_filters.deswizzle);
-          co_yield std::move(sprite);
-        }
-      }
+    }
+  }
+  static void
+    popup_batch_common_filter_start(::filters &filters, std::string &base_name)
+  {
+    if (filters.upscale.enabled())
+    {
+      popup_batch_common_filter_start(filters.upscale, base_name);
+    }
+    else if (filters.deswizzle.enabled())
+    {
+      popup_batch_common_filter_start(filters.deswizzle, base_name);
     }
   }
   static void
@@ -188,10 +192,70 @@ private:
       }
     }
   }
-  [[nodiscard]] cppcoro::generator<map_sprite>
+  [[nodiscard]] cppcoro::generator<bool>
     source()
   {
-    ::filters filters{};
+    const auto filters   = get_filters();
+    auto       gen_field = get_field(m_archive_group);
+    for (auto field : gen_field)
+    {
+      co_yield true;
+      auto gen_map_sprite = get_map_sprite(field, filters);
+      co_yield true;
+      for (::map_sprite &ms_ref : gen_map_sprite)
+      {
+        auto ms = std::move(ms_ref);
+        co_yield true;
+        compact_and_flatten(ms);
+        co_yield true;
+        auto gen_save_output = save_output(std::move(ms));
+        co_yield true;
+        for (bool b : gen_save_output)
+        {
+          co_yield b;
+        }
+      }
+    }
+  }
+  cppcoro::generator<bool>
+    save_output(const map_sprite ms) const
+  {
+    if (m_output_path.has_value())
+    {
+      std::string      base_name = ms.get_base_name();
+      std::string_view prefix    = std::string_view{ base_name }.substr(0, 2);
+      auto selected_path         = m_output_path.value() / prefix / base_name;
+      if (
+        (static_cast<uint32_t>(m_transformation_type)
+         & static_cast<uint32_t>(BatchOperationTransformation::Deswizzle))
+        != 0)
+      {
+        // ms.save_pupu_textures(selected_path);
+        auto gen_pupu_textures = ms.gen_pupu_textures(selected_path);
+        for (bool b : gen_pupu_textures)
+        {
+          co_yield b;
+        }
+      }
+      else if (
+        (static_cast<uint32_t>(m_transformation_type)
+         & static_cast<uint32_t>(BatchOperationTransformation::Swizzle))
+        != 0)
+      {
+        auto gen_new_textures = ms.gen_new_textures(selected_path);
+        for (bool b : gen_new_textures)
+        {
+          co_yield b;
+        }
+      }
+      const std::filesystem::path map_path = selected_path / ms.map_filename();
+      ms.save_modified_map(map_path);
+    }
+  }
+  filters
+    get_filters()
+  {
+    filters filters{};
     if (m_source_type == BatchOperationSource::Swizzles)
     {
       filters.upscale.update(m_source_path.value()).enable();
@@ -200,12 +264,7 @@ private:
     {
       filters.deswizzle.update(m_source_path.value()).enable();
     }
-    auto gen_map_sprite = get_map_sprite(get_field(m_archive_group), filters);
-    for (::map_sprite &ms : gen_map_sprite)
-    {
-      compact_and_flatten(ms);
-      co_yield std::move(ms);
-    }
+    return filters;
   }
   void
     compact_and_flatten(map_sprite &ms) const
@@ -214,16 +273,14 @@ private:
     {
       if (
         (static_cast<uint32_t>(m_transformation_type)
-         & static_cast<uint32_t>(
-           BatchOperationTransformation::CompactRows))
+         & static_cast<uint32_t>(BatchOperationTransformation::CompactRows))
         != 0)
       {
         ms.compact();
       }
       if (
         (static_cast<uint32_t>(m_transformation_type)
-         & static_cast<uint32_t>(
-           BatchOperationTransformation::CompactAll))
+         & static_cast<uint32_t>(BatchOperationTransformation::CompactAll))
         != 0)
       {
         ms.compact2();
@@ -235,8 +292,7 @@ private:
       bool r = false;
       if (
         (static_cast<uint32_t>(m_transformation_type)
-         & static_cast<uint32_t>(
-           BatchOperationTransformation::FlattenBPP))
+         & static_cast<uint32_t>(BatchOperationTransformation::FlattenBPP))
         != 0)
       {
         ms.flatten_bpp();
@@ -244,8 +300,7 @@ private:
       }
       if (
         (static_cast<uint32_t>(m_transformation_type)
-         & static_cast<uint32_t>(
-           BatchOperationTransformation::FlattenPalette))
+         & static_cast<uint32_t>(BatchOperationTransformation::FlattenPalette))
         != 0)
       {
         ms.flatten_palette();

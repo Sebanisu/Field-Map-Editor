@@ -11,6 +11,7 @@
 #include "open_viii/graphics/background/Mim.hpp"
 #include "unique_values.hpp"
 #include "upscales.hpp"
+#include <cppcoro/generator.hpp>
 #include <cstdint>
 #include <fmt/format.h>
 #include <future>
@@ -97,7 +98,7 @@ public:
   }
 
   std::string
-    map_filename();
+    map_filename() const;
   bool
     fail() const;
   std::uint32_t
@@ -159,8 +160,12 @@ public:
     flatten_palette() const;
   void
     save_new_textures(const std::filesystem::path &path) const;
+  cppcoro::generator<bool>
+    gen_new_textures(const std::filesystem::path path) const;
   void
     save_pupu_textures(const std::filesystem::path &path) const;
+  cppcoro::generator<bool>
+    gen_pupu_textures(const std::filesystem::path path) const;
   void
     save_modified_map(const std::filesystem::path &path) const;
   void
