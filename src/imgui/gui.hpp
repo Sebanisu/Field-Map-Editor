@@ -7,11 +7,16 @@
 #include "archives_group.hpp"
 #include "events.hpp"
 #include "filebrowser.hpp"
+#include "formatters.hpp"
+#include "generic_combo.hpp"
 #include "grid.hpp"
+#include "scope_guard.hpp"
 #include "upscales.hpp"
 #include <cstdint>
 #include <fmt/chrono.h>
 #include <SFML/Graphics/RenderWindow.hpp>
+namespace fme
+{
 struct gui
 {
 public:
@@ -21,16 +26,6 @@ public:
     start() const;
 
 private:
-  struct scope_guard
-  {
-    scope_guard(void (*t)()) : func(std::move(t)) { }
-
-    ~scope_guard() { func(); }
-
-  private:
-
-    void (*func)();
-  };
   enum struct map_dialog_mode
   {
     save_unmodified,
@@ -359,8 +354,8 @@ private:
   void
     popup_batch_common_filter_start(
       ::filter<std::filesystem::path> &filter,
-      std::string_view                prefix,
-      std::string_view                base_name) const;
+      std::string_view                 prefix,
+      std::string_view                 base_name) const;
   template<
     typename batch_opT,
     typename filterT,
@@ -388,5 +383,19 @@ private:
     wait_for_futures() const;
   bool
     check_futures() const;
+  void
+    batch_ops_ask_menu() const;
+  bool
+    combo_upscale_path(
+      std::filesystem::path &path,
+      const std::string     &field_name,
+      open_viii::LangT       coo) const;
+  void
+    open_locate_ff8_filebrowser() const;
+  void
+    open_swizzle_filebrowser() const;
+  void
+    open_deswizzle_filebrowser() const;
 };
+}// namespace fme
 #endif// MYPROJECT_GUI_HPP

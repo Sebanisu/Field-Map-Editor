@@ -2,6 +2,6 @@
 int
   main()
 {
-  const auto the_gui = gui{};
+  const auto the_gui = fme::gui{};
   the_gui.start();
 }

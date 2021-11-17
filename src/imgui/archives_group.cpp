@@ -17,7 +17,7 @@ open_viii::archive::Archives
   {
     std::cerr << "Failed to load path: " << m_path << std::endl;
   }
-  m_failed = false;
+  m_failed = !archives;
   return archives;
 }
 const open_viii::archive::FIFLFS<true> &

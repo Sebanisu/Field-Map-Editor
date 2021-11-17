@@ -41,10 +41,11 @@ add_executable(test_imgui
         map_sprite.cpp
         grid.cpp
         upscales.cpp
-        )
+        GuiBatch.cpp GuiBatch.hpp generic_combo.hpp formatters.hpp scope_guard.hpp)
 #set_property(TARGET test_imgui PROPERTY CXX_STANDARD 20)
 #find_package(ImGui-SFML REQUIRED)
 find_package(fmt)
+find_package(cppcoro)
 include(../../cmake/imgui-sfml.cmake)
 target_link_libraries(test_imgui
         PRIVATE project_warnings
@@ -55,7 +56,8 @@ target_link_libraries(test_imgui
         PRIVATE OpenVIII_CPP_WIP_VIIIArchive
         PRIVATE OpenVIII_CPP_WIP_VIIIGraphics
         PRIVATE Threads::Threads
-        PRIVATE imgui_filebrowser)
+        PRIVATE imgui_filebrowser
+        PRIVATE cppcoro::cppcoro)
 
 target_compile_definitions(test_imgui
         PUBLIC NOMINMAX) # imgui uses unguarded min and max.

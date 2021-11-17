@@ -1,6 +1,8 @@
 //
 // Created by pcvii on 9/7/2021.
 //
+
+#include "GuiBatch.hpp"
 #include "gui.hpp"
 #include "gui_labels.hpp"
 #include "open_viii/paths/Paths.hpp"
@@ -48,7 +50,6 @@ inline std::filesystem::path
   tmp += rhs;
   return tmp;
 }
-
 std::ostream &
   operator<<(std::ostream &os, const BlendModeT &bm)
 {
@@ -68,322 +69,8 @@ std::ostream &
   }
 }
 
-template<>
-struct fmt::formatter<BPPT>
+namespace fme
 {
-  // Presentation format: 'f' - fixed, 'e' - exponential.
-  char presentation = 'f';
-
-  // Parses format specifications of the form ['f' | 'e'].
-  constexpr auto
-    parse(format_parse_context &ctx) -> decltype(ctx.begin())
-  {
-    // [ctx.begin(), ctx.end()) is a character range that contains a part of
-    // the format string starting from the format specifications to be parsed,
-    // e.g. in
-    //
-    //   fmt::format("{:f} - BPPT of interest", BPPT{1, 2});
-    //
-    // the range will contain "f} - BPPT of interest". The formatter should
-    // parse specifiers until '}' or the end of the range. In this example
-    // the formatter should parse the 'f' specifier and return an iterator
-    // BPPTing to '}'.
-
-    // Parse the presentation format and store it in the formatter:
-    auto it = ctx.begin(), end = ctx.end();
-    if (it != end && (*it == 'f' || *it == 'e'))
-      presentation = *it++;
-
-    // Check if reached the end of the range:
-    if (it != end && *it != '}')
-      throw format_error("invalid format");
-
-    // Return an iterator past the end of the parsed range:
-    return it;
-  }
-
-  // Formats the BPPT p using the parsed format specification (presentation)
-  // stored in this formatter.
-  template<typename FormatContext>
-  auto
-    format(const BPPT &p, FormatContext &ctx) -> decltype(ctx.out())
-  {
-    // ctx.out() is an output iterator to write to.
-    return format_to(ctx.out(), "{}", static_cast<int>(p));
-  }
-};
-template<>
-struct fmt::formatter<std::filesystem::path>
-{
-  // Presentation format: 'f' - fixed, 'e' - exponential.
-  char presentation = 'f';
-
-  // Parses format specifications of the form ['f' | 'e'].
-  constexpr auto
-    parse(format_parse_context &ctx) -> decltype(ctx.begin())
-  {
-    // [ctx.begin(), ctx.end()) is a character range that contains a part of
-    // the format string starting from the format specifications to be parsed,
-    // e.g. in
-    //
-    //   fmt::format("{:f} - std::filesystem::path of interest",
-    //   std::filesystem::path{1, 2});
-    //
-    // the range will contain "f} - std::filesystem::path of interest". The
-    // formatter should parse specifiers until '}' or the end of the range. In
-    // this example the formatter should parse the 'f' specifier and return an
-    // iterator std::filesystem::pathing to '}'.
-
-    // Parse the presentation format and store it in the formatter:
-    auto it = ctx.begin(), end = ctx.end();
-    if (it != end && (*it == 'f' || *it == 'e'))
-      presentation = *it++;
-
-    // Check if reached the end of the range:
-    if (it != end && *it != '}')
-      throw format_error("invalid format");
-
-    // Return an iterator past the end of the parsed range:
-    return it;
-  }
-
-  // Formats the std::filesystem::path p using the parsed format specification
-  // (presentation) stored in this formatter.
-  template<typename FormatContext>
-  auto
-    format(const std::filesystem::path &p, FormatContext &ctx)
-      -> decltype(ctx.out())
-  {
-    // ctx.out() is an output iterator to write to.
-    return format_to(ctx.out(), "{}", p.string());
-  }
-};
-template<typename T>
-concept returns_range_concept = requires(std::decay_t<T> t)
-{
-  {
-    t()
-    } -> std::ranges::range;
-};
-template<typename T>
-concept filter_concept = requires(std::decay_t<T> t)
-{
-  {
-    t.enabled()
-    } -> std::convertible_to<bool>;
-  {
-    t.update(t.value())
-    } -> std::convertible_to<T>;
-  {
-    t.enable()
-    } -> std::convertible_to<T>;
-  {
-    t.disable()
-    } -> std::convertible_to<T>;
-};
-template<typename T>
-concept returns_filter_concept = requires(std::decay_t<T> t)
-{
-  {
-    t()
-    } -> filter_concept;
-};
-template<
-  returns_range_concept  value_lambdaT,
-  returns_range_concept  string_lambdaT,
-  returns_filter_concept filter_lambdaT>
-static bool
-  generic_combo(
-    int             &id,
-    std::string_view name,
-    value_lambdaT  &&value_lambda,
-    string_lambdaT &&string_lambda,
-    filter_lambdaT &&filter_lambda)
-{
-  bool               changed     = false;
-  const auto        &values      = value_lambda();
-  const auto        &strings     = string_lambda();
-  auto              &filter      = filter_lambda();
-  bool               checked     = filter.enabled();
-  static std::size_t current_idx = {};
-  if (const auto it = std::find(values.begin(), values.end(), filter.value());
-      it != values.end())
-  {
-    current_idx = static_cast<size_t>(std::distance(values.begin(), it));
-  }
-  else
-  {
-    current_idx = 0;
-    if (!std::empty(values))
-    {
-      filter.update(values.front());
-    }
-    changed = true;
-  }
-  if (std::empty(values) || std::empty(strings))
-  {
-    if (checked)
-    {
-      filter.disable();
-      return true;
-    }
-    return false;
-  }
-
-  const auto *current_item = strings.at(current_idx).data();
-
-  ImGui::PushID(++id);
-  static constexpr auto pattern = "{}: \t{} \t{}\n";
-  if (ImGui::Checkbox("", &checked))
-  {
-    if (checked)
-    {
-      filter.enable();
-      fmt::print(pattern, gui_labels::enable, name, values.at(current_idx));
-    }
-    else
-    {
-      filter.disable();
-      fmt::print(pattern, gui_labels::disable, name, values.at(current_idx));
-    }
-    changed = true;
-  }
-  ImGui::PopID();
-  ImGui::SameLine();
-  ImGui::PushID(++id);
-  const auto old = current_idx;
-  if (ImGui::BeginCombo(name.data(), current_item))
-  // The second parameter is the label previewed
-  // before opening the combo.
-  {
-    for (std::size_t n = 0; auto &string : strings)
-    {
-      const bool  is_selected = (current_idx == n);
-      // You can store your selection however you
-      // want, outside or inside your objects
-      // ImGui::PushID(++m_id);
-      const char *v           = string.data();
-      if (ImGui::Selectable(v, is_selected))
-      {
-        current_idx = n;
-        changed     = true;
-      }
-      // ImGui::PopID();
-      if (is_selected)
-      {
-        ImGui::SetItemDefaultFocus();
-        // You may set the initial focus when
-        // opening the combo (scrolling + for
-        // keyboard navigation support)
-      }
-      ++n;
-    }
-    if (old != current_idx)
-    {
-      fmt::print(pattern, gui_labels::set, name, values.at(current_idx));
-    }
-    ImGui::EndCombo();
-  }
-  ImGui::PopID();
-  changed =
-    (filter.update(values.at(current_idx)).enabled() && (old != current_idx))
-    || changed;
-  return changed;
-}
-template<
-  returns_range_concept value_lambdaT,
-  returns_range_concept string_lambdaT,
-  typename valueT>
-requires requires(value_lambdaT v)
-{
-  {
-    *(v().begin())
-    } -> std::convertible_to<valueT>;
-  {
-    *(v().begin())
-    } -> std::equality_comparable_with<valueT>;
-}
-static bool
-  generic_combo(
-    int             &id,
-    std::string_view name,
-    value_lambdaT  &&value_lambda,
-    string_lambdaT &&string_lambda,
-    valueT          &value)
-{
-  bool        changed = false;
-  const auto &values  = value_lambda();
-  const auto &strings = string_lambda();
-  static std::ranges::range_difference_t<decltype(values)> current_idx = {};
-  {
-    if (const auto it = std::find(values.begin(), values.end(), value);
-        it != values.end())
-    {
-      current_idx = std::ranges::distance(std::ranges::cbegin(values), it);
-    }
-    else
-    {
-      current_idx = 0;
-      if (!std::empty(values))
-      {
-        value = values.front();
-      }
-      changed = true;
-    }
-  }
-  if (std::empty(values) || std::empty(strings))
-  {
-    return false;
-  }
-  const auto next = [](const auto &r, const auto &idx)
-  {
-    // sometimes the types are different. So I had to static cast to silence
-    // warning.
-    return std::ranges::next(
-      std::ranges::cbegin(r),
-      static_cast<std::iter_difference_t<decltype(std::ranges::cbegin(r))>>(
-        idx));
-  };
-  const auto            current_item = next(strings, current_idx);
-  static constexpr auto pattern      = "{}: \t{} \t{}\n";
-  ImGui::PushID(++id);
-  const auto old = current_idx;
-  if (ImGui::BeginCombo(
-        name.data(), current_item->data(), ImGuiComboFlags_HeightLarge))
-  // The second parameter is the label previewed
-  // before opening the combo.
-  {
-    std::ranges::for_each(
-      strings,
-      [&](const auto &string)
-      {
-        const bool  is_selected = (*current_item == string);
-        // You can store your selection however you
-        // want, outside or inside your objects
-        const char *c_str_value = std::ranges::data(string);
-        if (ImGui::Selectable(c_str_value, is_selected))
-        {
-          current_idx = std::distance(std::ranges::data(strings), &string);
-          changed     = true;
-        }
-        if (is_selected)
-        {
-          ImGui::SetItemDefaultFocus();
-          // You may set the initial focus when
-          // opening the combo (scrolling + for
-          // keyboard navigation support)
-        }
-      });
-    if (old != current_idx)
-    {
-      fmt::print(pattern, gui_labels::set, name, *next(values, current_idx));
-    }
-    ImGui::EndCombo();
-  }
-  ImGui::PopID();
-  value = *next(values, current_idx);
-  return old != current_idx || changed;
-}
 void
   gui::start() const
 {
@@ -552,8 +239,9 @@ void
   }
   popup_batch_deswizzle();
   popup_batch_reswizzle();
-  popup_batch_embed();
   ImGui::End();
+  batch_ops_ask_menu();
+  popup_batch_embed();
   on_click_not_imgui();
   m_window.clear(clear_color);
   if (mim_test())
@@ -576,8 +264,8 @@ void
 void
   gui::popup_batch_common_filter_start(
     ::filter<std::filesystem::path> &filter,
-    std::string_view                prefix,
-    std::string_view                base_name) const
+    std::string_view                 prefix,
+    std::string_view                 base_name) const
 {
   if (filter.enabled())
   {
@@ -668,9 +356,9 @@ void
               std::string_view basename_view = { base_name };
               if (
                 filename_view.substr(
-                  0, std::min(std::size(filename), std::size(base_name)))
+                  0, std::min(std::size(filename_view), std::size(basename_view)))
                 != basename_view.substr(
-                  0, std::min(std::size(filename), std::size(base_name))))
+                  0, std::min(std::size(filename_view), std::size(basename_view))))
               {
                 continue;
               }
@@ -680,7 +368,7 @@ void
                 continue;
               }
               const auto coo_view =
-                filename_view.substr(std::size(base_name) + 1U, 2U);
+                filename_view.substr(std::size(basename_view) + 1U, 2U);
               fmt::print("\t{}\t{}\n", filename, coo_view);
               map = map.with_coo(open_viii::LangCommon::from_string(coo_view));
               process(selected_path, map, rest...);
@@ -1460,11 +1148,16 @@ void
 {
   if (ImGui::MenuItem("Locate a FF8 install"))
   {
-    m_directory_browser.Open();
-    m_directory_browser.SetTitle("Choose FF8 install directory");
-    m_directory_browser.SetTypeFilters({ ".exe" });
-    m_modified_directory_map = map_directory_mode::ff8_install_directory;
+    open_locate_ff8_filebrowser();
   }
+}
+void
+  gui::open_locate_ff8_filebrowser() const
+{
+  m_directory_browser.Open();
+  m_directory_browser.SetTitle("Choose FF8 install directory");
+  m_directory_browser.SetTypeFilters({ ".exe" });
+  m_modified_directory_map = map_directory_mode::ff8_install_directory;
 }
 void
   gui::menuitem_save_swizzle_textures() const
@@ -1509,22 +1202,32 @@ void
 {
   if (ImGui::MenuItem("Load Swizzled Textures", nullptr, false, true))
   {
-    m_directory_browser.Open();
-    m_directory_browser.SetTitle("Choose directory to load textures from");
-    m_directory_browser.SetTypeFilters({ ".map", ".png" });
-    m_modified_directory_map = map_directory_mode::load_swizzle_textures;
+    open_swizzle_filebrowser();
   }
+}
+void
+  gui::open_swizzle_filebrowser() const
+{
+  m_directory_browser.Open();
+  m_directory_browser.SetTitle("Choose directory to load textures from");
+  m_directory_browser.SetTypeFilters({ ".map", ".png" });
+  m_modified_directory_map = map_directory_mode::load_swizzle_textures;
 }
 void
   gui::menuitem_load_deswizzle_textures() const
 {
   if (ImGui::MenuItem("Load Deswizzled Textures", nullptr, false, true))
   {
-    m_directory_browser.Open();
-    m_directory_browser.SetTitle("Choose directory to load textures from");
-    m_directory_browser.SetTypeFilters({ ".map", ".png" });
-    m_modified_directory_map = map_directory_mode::load_deswizzle_textures;
+    open_deswizzle_filebrowser();
   }
+}
+void
+  gui::open_deswizzle_filebrowser() const
+{
+  m_directory_browser.Open();
+  m_directory_browser.SetTitle("Choose directory to load textures from");
+  m_directory_browser.SetTypeFilters({ ".map", ".png" });
+  m_modified_directory_map = map_directory_mode::load_deswizzle_textures;
 }
 void
   gui::menuitem_save_texture(const std::string &path, bool enabled) const
@@ -2219,6 +1922,64 @@ bool
           [&paths]() { return paths; },
           [&paths]() { return paths; },
           [ this, &filter ]() -> auto & { return filter; }))
+    {
+      return true;
+    }
+  }
+  return false;
+}
+
+bool
+  gui::combo_upscale_path(
+    std::filesystem::path &path,
+    const std::string     &field_name,
+    open_viii::LangT       coo) const
+{
+  std::vector<std::string> paths = {};
+  auto                     transform_paths =
+    m_paths
+    | std::views::transform(
+      [this, &field_name, &coo](const std::string &path)
+      {
+        if (m_field)
+          return upscales(std::filesystem::path(path), field_name, coo)
+            .get_paths();
+        return upscales{}.get_paths();
+      });
+  // std::views::join; broken in msvc.
+  auto process = [&paths](const auto &temp_paths)
+  {
+    auto filter_paths = temp_paths
+                        | std::views::filter(
+                          [](const std::filesystem::path &path)
+                          {
+                            return std::filesystem::exists(path)
+                                   && std::filesystem::is_directory(path);
+                          });
+    for (auto &path : filter_paths)
+    {
+      paths.emplace_back(path.string());
+    }
+  };
+  for (auto temp_paths : transform_paths)
+  {
+    process(temp_paths);
+  }
+  if (std::filesystem::exists(m_loaded_swizzle_texture_path))
+  {
+    paths.push_back(m_loaded_swizzle_texture_path.string());
+  }
+  if (m_field)
+  {
+    process(
+      upscales(std::filesystem::current_path(), field_name, coo).get_paths());
+
+    if (generic_combo(
+          m_id,
+          gui_labels::upscale_path,
+          [&paths]() { return paths; },
+          [&paths]() { return paths; },
+          path))
     {
       return true;
     }
@@ -2976,3 +2737,141 @@ void
 {
   m_futures.emplace_back(std::async(std::launch::async, task, args...));
 }
+void
+  gui::batch_ops_ask_menu() const
+{
+#if 1
+  static GuiBatch test{};
+  test(&m_id);
+#else
+  using namespace std::string_view_literals;
+  if (ImGui::Begin(
+        "Batch Operations", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
+  {
+    if (ImGui::CollapsingHeader("Source", ImGuiTreeNodeFlags_DefaultOpen))
+    {
+      static int            selected_src_type = {};
+
+      static constexpr auto src_types         = std::array{ "Fields Archive"sv,
+                                                    "Upscales or Swizzles"sv,
+                                                    "Deswizzles"sv };
+      generic_combo(
+        m_id,
+        "Type",
+        []()
+        {
+          return std::views::iota(
+            0, static_cast<int>(std::ranges::ssize(src_types)));
+        },
+        []() { return src_types; },
+        selected_src_type);
+      static std::filesystem::path selected_src_swizzle_path   = {};
+      static std::filesystem::path selected_src_deswizzle_path = {};
+      if (selected_src_type == 0)
+      {
+        combo_path();
+        ImGui::PushID(++m_id);
+        if (ImGui::Button("Browse"))
+        {
+          open_locate_ff8_filebrowser();
+        }
+        ImGui::PopID();
+      }
+      else if (selected_src_type == 1)
+      {
+        if (combo_upscale_path(selected_src_swizzle_path, "", {}))
+        {
+        }
+        ImGui::PushID(++m_id);
+        if (ImGui::Button("Browse"))
+        {
+          open_swizzle_filebrowser();
+        }
+        ImGui::PopID();
+      }
+      else if (selected_src_type == 2)
+      {
+        format_imgui_text("Directory: {}", selected_src_deswizzle_path);
+        ImGui::PushID(++m_id);
+        if (ImGui::Button("Browse"))
+        {
+          open_deswizzle_filebrowser();
+        }
+        ImGui::PopID();
+      }
+    }
+    static constexpr auto task_types =
+      std::array{ "None"sv, "Deswizzle"sv, "Swizzle"sv };
+    static int                  task_type       = {};
+    static filter<compact_type> compact         = {};
+    static bool                 flatten_bpp     = {};
+    static bool                 flatten_palette = {};
+    if (ImGui::CollapsingHeader(
+          "Transformation", ImGuiTreeNodeFlags_DefaultOpen))
+    {
+      generic_combo(
+        m_id,
+        "Task"sv,
+        []()
+        {
+          return std::views::iota(
+            0, static_cast<int>(std::ranges::ssize(task_types)));
+        },
+        []() { return task_types; },
+        task_type);
+      combo_compact_type(compact);
+      format_imgui_text("Flatten: ");
+      ImGui::SameLine();
+      ImGui::Checkbox("BPP", &flatten_bpp);
+      ImGui::SameLine();
+      ImGui::Checkbox("Palette", &flatten_palette);
+      ImGui::Separator();
+    }
+    if (
+      task_type != 0
+      && ImGui::CollapsingHeader("Destination", ImGuiTreeNodeFlags_DefaultOpen))
+    {
+      static std::filesystem::path selected_dst_path{};
+      format_imgui_text("Directory: {}", selected_dst_path);
+      ImGui::PushID(++m_id);
+      if (ImGui::Button("Browse"))
+      {
+      }
+      ImGui::PopID();
+    }
+    if (ImGui::CollapsingHeader(
+          "Embed .map(s) into archives", ImGuiTreeNodeFlags_DefaultOpen))
+    {
+      static bool embed_maps   = {};
+      static bool reload_after = { true };
+      ImGui::PushID(++m_id);
+      if (ImGui::Checkbox("", &embed_maps))
+      {
+      }
+      if (embed_maps)
+      {
+        ImGui::SameLine();
+        combo_path();
+        ImGui::PopID();
+        if (ImGui::Checkbox("Reload after?", &reload_after))
+        {
+        }
+      }
+    }
+    ImGui::Separator();
+    ImGui::PushID(++m_id);
+    if (ImGui::Button("Start"))
+    {
+    }
+    ImGui::PopID();
+    ImGui::SameLine();
+    ImGui::PushID(++m_id);
+    if (ImGui::Button("Cancel"))
+    {
+    }
+    ImGui::PopID();
+  }
+  ImGui::End();
+#endif
+}
+}// namespace fme
