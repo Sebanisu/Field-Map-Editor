@@ -18,7 +18,7 @@ int
   {
     fmt::print(
       stderr,
-      "Error! {}:{} GLFW Window Failed to create\n",
+      "Error! {}:{} GLFW Failed to create Window\n",
       __FILE__,
       __LINE__);
     glfwTerminate();
@@ -46,6 +46,8 @@ int
     std::size(positions) * sizeof(float),
     std::data(positions),
     GL_STATIC_DRAW);
+  glEnableVertexAttribArray(0);
+  glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), 0);
 
   /* Loop until the user closes the window */
   while (!glfwWindowShouldClose(window))
@@ -54,7 +56,8 @@ int
     glClear(GL_COLOR_BUFFER_BIT);
 
     /* Draw bound vertices */
-    glDrawArrays(GL_TRIANGLES, 0, static_cast<GLsizei>(std::size(positions) / 3U));
+    glDrawArrays(
+      GL_TRIANGLES, 0, static_cast<GLsizei>(std::size(positions) / 3U));
 
     /* Swap front and back buffers */
     glfwSwapBuffers(window);

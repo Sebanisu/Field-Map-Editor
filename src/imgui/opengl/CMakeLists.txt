@@ -1,3 +1,5 @@
 add_subdirectory(episode_1)
 add_subdirectory(episode_2)
 add_subdirectory(episode_3)
+add_subdirectory(episode_4)
+add_subdirectory(episode_5)
