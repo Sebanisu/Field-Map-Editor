@@ -57,7 +57,7 @@ int
 
     /* Draw bound vertices */
     glDrawArrays(
-      GL_TRIANGLES, 0, static_cast<GLsizei>(std::size(positions) / 3U));
+      GL_TRIANGLES, 0, static_cast<GLsizei>(std::size(positions) / 2U));
 
     /* Swap front and back buffers */
     glfwSwapBuffers(window);
