@@ -53,6 +53,7 @@ int
     /* Render here */
     glClear(GL_COLOR_BUFFER_BIT);
 
+    /* Draw bound vertices */
     glDrawArrays(GL_TRIANGLES, 0, std::size(positions) / 3U);
 
     /* Swap front and back buffers */
