@@ -396,6 +396,8 @@ private:
     open_swizzle_filebrowser() const;
   void
     open_deswizzle_filebrowser() const;
+  [[nodiscard]] scope_guard
+    PushPop() const;
 };
 }// namespace fme
 #endif// MYPROJECT_GUI_HPP

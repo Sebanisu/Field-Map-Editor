@@ -5,6 +5,7 @@
 #ifndef MYPROJECT_GENERIC_COMBO_HPP
 #define MYPROJECT_GENERIC_COMBO_HPP
 #include "gui_labels.hpp"
+#include "scope_guard.hpp"
 #include <algorithm>
 #include <fmt/format.h>
 #include <imgui.h>
@@ -94,61 +95,68 @@ inline static bool
   };
   const auto            current_item = next(strings, current_idx);
   static constexpr auto pattern      = "{}: \t{} \t{}\n";
-  ImGui::PushID(++id);
-  if (ImGui::Checkbox("", &checked))
   {
-    if (checked)
+    const auto sc = scope_guard{ &ImGui::PopID };
+    ImGui::PushID(++id);
+    if (ImGui::Checkbox("", &checked))
     {
-      filter.enable();
-      fmt::print(pattern, gui_labels::enable, name, *next(values, current_idx));
-    }
-    else
-    {
-      filter.disable();
-      fmt::print(
-        pattern, gui_labels::disable, name, *next(values, current_idx));
-    }
-    changed = true;
-  }
-  ImGui::PopID();
-  ImGui::SameLine();
-  ImGui::PushID(++id);
-  const auto old = current_idx;
-  if (ImGui::BeginCombo(
-        name.data(), current_item->data(), ImGuiComboFlags_HeightLarge))
-  // The second parameter is the label previewed
-  // before opening the combo.
-  {
-    std::ranges::for_each(
-      strings,
-      [&](const auto &string)
+      if (checked)
       {
-        const bool  is_selected = (*current_item == string);
-        // You can store your selection however you
-        // want, outside or inside your objects
-        // ImGui::PushID(++m_id);
-        const char *v           = string.data();
-        if (ImGui::Selectable(v, is_selected))
-        {
-          current_idx = std::distance(std::ranges::data(strings), &string);
-          changed     = true;
-        }
-        // ImGui::PopID();
-        if (is_selected)
-        {
-          ImGui::SetItemDefaultFocus();
-          // You may set the initial focus when
-          // opening the combo (scrolling + for
-          // keyboard navigation support)
-        }
-      });
-    if (old != current_idx)
-    {
-      fmt::print(pattern, gui_labels::set, name, *next(values, current_idx));
+        filter.enable();
+        fmt::print(
+          pattern, gui_labels::enable, name, *next(values, current_idx));
+      }
+      else
+      {
+        filter.disable();
+        fmt::print(
+          pattern, gui_labels::disable, name, *next(values, current_idx));
+      }
+      changed = true;
     }
-    ImGui::EndCombo();
   }
-  ImGui::PopID();
+  ImGui::SameLine();
+  const auto old = current_idx;
+  {
+    const auto sc = scope_guard{ &ImGui::PopID };
+    ImGui::PushID(++id);
+    if (ImGui::BeginCombo(
+          name.data(), current_item->data(), ImGuiComboFlags_HeightLarge))
+    // The second parameter is the label previewed
+    // before opening the combo.
+    {
+      std::ranges::for_each(
+        strings,
+        [&](const auto &string)
+        {
+          const bool  is_selected = (*current_item == string);
+          // You can store your selection however you
+          // want, outside or inside your objects
+          const char *v           = string.data();
+          {
+            const auto sc = scope_guard{ &ImGui::PopID };
+            ImGui::PushID(++id);
+            if (ImGui::Selectable(v, is_selected))
+            {
+              current_idx = std::distance(std::ranges::data(strings), &string);
+              changed     = true;
+            }
+          }
+          if (is_selected)
+          {
+            ImGui::SetItemDefaultFocus();
+            // You may set the initial focus when
+            // opening the combo (scrolling + for
+            // keyboard navigation support)
+          }
+        });
+      if (old != current_idx)
+      {
+        fmt::print(pattern, gui_labels::set, name, *next(values, current_idx));
+      }
+      ImGui::EndCombo();
+    }
+  }
   changed = (filter.update(*next(values, current_idx)).enabled()
              && (old != current_idx))
             || changed;
@@ -210,41 +218,47 @@ inline static bool
   };
   const auto            current_item = next(strings, current_idx);
   static constexpr auto pattern      = "{}: \t{} \t{}\n";
-  ImGui::PushID(++id);
-  const auto old = current_idx;
-  if (ImGui::BeginCombo(
-        name.data(), current_item->data(), ImGuiComboFlags_HeightLarge))
-  // The second parameter is the label previewed
-  // before opening the combo.
+  const auto            old          = current_idx;
   {
-    std::ranges::for_each(
-      strings,
-      [&](const auto &string)
-      {
-        const bool  is_selected = (*current_item == string);
-        // You can store your selection however you
-        // want, outside or inside your objects
-        const char *c_str_value = std::ranges::data(string);
-        if (ImGui::Selectable(c_str_value, is_selected))
-        {
-          current_idx = std::distance(std::ranges::data(strings), &string);
-          changed     = true;
-        }
-        if (is_selected)
-        {
-          ImGui::SetItemDefaultFocus();
-          // You may set the initial focus when
-          // opening the combo (scrolling + for
-          // keyboard navigation support)
-        }
-      });
-    if (old != current_idx)
+    const auto sc = scope_guard{ &ImGui::PopID };
+    ImGui::PushID(++id);
+    if (ImGui::BeginCombo(
+          name.data(), current_item->data(), ImGuiComboFlags_HeightLarge))
+    // The second parameter is the label previewed
+    // before opening the combo.
     {
-      fmt::print(pattern, gui_labels::set, name, *next(values, current_idx));
+      std::ranges::for_each(
+        strings,
+        [&](const auto &string)
+        {
+          const bool  is_selected = (*current_item == string);
+          // You can store your selection however you
+          // want, outside or inside your objects
+          const char *c_str_value = std::ranges::data(string);
+          {
+            const auto sc = scope_guard{ &ImGui::PopID };
+            ImGui::PushID(++id);
+            if (ImGui::Selectable(c_str_value, is_selected))
+            {
+              current_idx = std::distance(std::ranges::data(strings), &string);
+              changed     = true;
+            }
+          }
+          if (is_selected)
+          {
+            ImGui::SetItemDefaultFocus();
+            // You may set the initial focus when
+            // opening the combo (scrolling + for
+            // keyboard navigation support)
+          }
+        });
+      if (old != current_idx)
+      {
+        fmt::print(pattern, gui_labels::set, name, *next(values, current_idx));
+      }
+      ImGui::EndCombo();
     }
-    ImGui::EndCombo();
   }
-  ImGui::PopID();
   value = *next(values, current_idx);
   return old != current_idx || changed;
 }

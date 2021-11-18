@@ -3,6 +3,7 @@
 #include "append_inserter.hpp"
 #include "format_imgui_text.hpp"
 #include <bit>
+#include <open_viii/graphics/Png.hpp>
 #include <utility>
 using namespace open_viii::graphics::background;
 using namespace open_viii::graphics;
@@ -1782,7 +1783,13 @@ cppcoro::generator<bool>
     async_save(out_path, out_texture);
     co_yield true;
   }
-  wait_for_futures();
+  for (std::future<void> &future : m_futures)
+  {
+    co_yield true;
+    future.wait();
+    co_yield true;
+  }
+  m_futures.clear();
 }
 std::string
   map_sprite::get_base_name() const
@@ -1890,7 +1897,13 @@ cppcoro::generator<bool>
     async_save(out_path, out_texture);
     co_yield true;
   }
-  wait_for_futures();
+  for (std::future<void> &future : m_futures)
+  {
+    co_yield true;
+    future.wait();
+    co_yield true;
+  }
+  m_futures.clear();
 }
 void
   map_sprite::async_save(
@@ -1899,11 +1912,55 @@ void
 {
   if (out_texture)
   {
-#if 1
     // trying packaged task to so we don't wait for files to save.
-    const auto task = [](std::filesystem::path op, sf::Image &&image)
-    { image.saveToFile(op.string()); };
+    const auto task = [this](std::filesystem::path op, sf::Image image)
+    {
+      std::error_code ec{};
+      std::filesystem::create_directories(op.parent_path(), ec);
+      if (ec)
+      {
+        fmt::print(
+          stderr,
+          "error {}:{} - {}: {} - path: {}\n",
+          __FILE__,
+          __LINE__,
+          ec.value(),
+          ec.message(),
+          op.string());
+        ec.clear();
+      }
+      if (
+        image.getSize().x == 0 || image.getSize().y == 0
+        || image.getPixelsPtr() == nullptr)
+      {
+        fmt::print(
+          stderr,
+          "error {}:{} Invalid image: \"{}\" - ({},{})\n",
+          __FILE__,
+          __LINE__,
+          op.string(),
+          image.getSize().x,
+          image.getSize().y);
+        return;
+      }
+      const std::string filename = op.string();
+      size_t            i        = { 1U };
+      for (;;)
+      {
+        if (!save_png_image(image, filename))
+        {
+          fmt::print(stderr, "Looping on fail {:>2} times\n", i++);
+          std::this_thread::sleep_for(std::chrono::milliseconds{ 1000 });
+        }
+        else
+        {
+          fmt::print("Saved \"{}\"\n", filename);
+          break;
+        }
+      }
+    };
 
+#if 0
     auto package =
       std::packaged_task<void(std::filesystem::path, sf::Image)>{ task };
 
@@ -1919,6 +1976,24 @@ void
       out_texture->getTexture().copyToImage()));
 #endif
   }
+}
+bool
+  map_sprite::save_png_image(
+    const sf::Image   &image,
+    const std::string &filename) const
+{
+#if 0
+  return image.saveToFile(filename);
+#else
+  return open_viii::graphics::Png::save(
+           image.getPixelsPtr(),
+           image.getSize().x,
+           image.getSize().y,
+           filename,
+           {},
+           {})
+    .has_value();
+#endif
 }
 uint32_t
   map_sprite::get_max_texture_height() const

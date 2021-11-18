@@ -40,8 +40,7 @@ bool
       ask_archive_path() && ask_source() && ask_transformation() && ask_output()
       && ask_post_operation())
     {
-      PupuID(++*m_id);
-      const auto pop = scope_guard(&ImGui::PopID);
+      const auto sg = PushPop();
       if (ImGui::Button("Start"))
       {
         puts("Pushed Start");
@@ -88,16 +87,20 @@ bool
     {
       m_embed_path = paths.at(static_cast<std::size_t>(selected_embed_path));
     }
-    ImGui::PushID(++m_id);
-    if (ImGui::Checkbox("Enable ", &m_embed_maps))
     {
+      const auto sg = PushPop();
+      if (ImGui::Checkbox("Enable ", &m_embed_maps))
+      {
+      }
     }
     if (m_embed_maps)
     {
       ImGui::SameLine();
-      ImGui::PopID();
-      if (ImGui::Checkbox("Reload after?", &m_reload_after))
       {
+        const auto sg = PushPop();
+        if (ImGui::Checkbox("Reload after?", &m_reload_after))
+        {
+        }
       }
     }
   }
@@ -115,18 +118,18 @@ bool
     requires_output
     && ImGui::CollapsingHeader("Output", ImGuiTreeNodeFlags_DefaultOpen))
   {
-    static auto db = create_directory_browser("Select Directory");
-    ImGui::PushID(++*m_id);
     if (m_output_path.has_value() && !m_output_path.value().empty())
     {
       format_imgui_text("Directory: \"{}\"", m_output_path.value());
     }
-    if (ImGui::Button("Browse"))
     {
-      db.Open();
+      const auto sg = PushPop();
+      if (ImGui::Button("Browse"))
+      {
+        m_output_browser.Open();
+      }
     }
-    ImGui::PopID();
-    if (auto path = ask_for_path(db); path.has_value())
+    if (auto path = ask_for_path(m_output_browser); path.has_value())
     {
       m_output_path = path;
     }
@@ -137,8 +140,7 @@ bool
 bool
   fme::GuiBatch::ask_archive_path() const
 {
-  static auto db = create_directory_browser("Select Directory");
-  static int  selected_src_archive_int = {};
+  static int selected_src_archive_int = {};
   if (generic_combo(
         *m_id,
         "Archive Path",
@@ -153,13 +155,14 @@ bool
     m_archive_group = m_archive_group.with_path(
       m_archive_paths.at(static_cast<std::size_t>(selected_src_archive_int)));
   }
-  ImGui::PushID(++*m_id);
-  if (ImGui::Button("Browse"))
   {
-    db.Open();
+    const auto sg = PushPop();
+    if (ImGui::Button("Browse"))
+    {
+      m_archive_browser.Open();
+    }
   }
-  ImGui::PopID();
-  if (auto path = ask_for_path(db); path.has_value())
+  if (auto path = ask_for_path(m_archive_browser); path.has_value())
   {
     selected_src_archive_int = static_cast<int>(m_archive_paths.size());
     m_archive_group          = m_archive_group.with_path(
@@ -192,18 +195,18 @@ bool
       m_source_type == BatchOperationSource::Swizzles
       || m_source_type == BatchOperationSource::Deswizzles)
     {
-      static auto db = create_directory_browser("Select Directory");
-      ImGui::PushID(++*m_id);
       if (m_source_path.has_value() && !m_source_path.value().empty())
       {
         format_imgui_text("Directory: \"{}\"", m_source_path.value());
       }
-      if (ImGui::Button("Browse"))
       {
-        db.Open();
+        const auto sg = PushPop();
+        if (ImGui::Button("Browse"))
+        {
+          m_source_browser.Open();
+        }
       }
-      ImGui::PopID();
-      if (auto path = ask_for_path(db); path.has_value())
+      if (auto path = ask_for_path(m_source_browser); path.has_value())
       {
         m_source_path = path;
       }
@@ -213,6 +216,12 @@ bool
          || ((m_source_type == BatchOperationSource::Swizzles
               || m_source_type == BatchOperationSource::Deswizzles)
              && m_source_path.has_value() && !m_source_path.value().empty());
+}
+scope_guard
+  fme::GuiBatch::PushPop() const
+{
+  ImGui::PushID(++*m_id);
+  return scope_guard{ &ImGui::PopID };
 }
 bool
   fme::GuiBatch::ask_transformation() const

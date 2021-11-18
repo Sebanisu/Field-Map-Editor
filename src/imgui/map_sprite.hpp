@@ -485,5 +485,7 @@ private:
   }
   size_t
     size_of_map() const;
+  bool
+    save_png_image(const sf::Image &image, const std::string &filename) const;
 };
 #endif// MYPROJECT_MAP_SPRITE_HPP

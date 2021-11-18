@@ -7,6 +7,7 @@
 #include "archives_group.hpp"
 #include "filebrowser.hpp"
 #include "open_viii/paths/Paths.hpp"
+#include "scope_guard.hpp"
 #include <cppcoro/generator.hpp>
 #include <cppcoro/task.hpp>
 namespace fme
@@ -30,11 +31,11 @@ struct GuiBatch
     FlattenBPP                 = 1U << 4U,
     FlattenPalette             = 1U << 5U,
   };
-  GuiBatch()
+  GuiBatch(archives_group ag)
     : m_archive_paths(open_viii::Paths::get())
-    , m_archive_group(
-        m_archive_paths.empty() ? archives_group{}
-                                : archives_group{ {}, m_archive_paths.front() })
+    , m_archive_group(std::move(ag))
+  // m_archive_paths.empty() ? archives_group{}
+  //                         : archives_group{ {}, m_archive_paths.front() })
   {
   }
   void
@@ -342,6 +343,14 @@ private:
   mutable bool                                 m_embed_maps          = {};
   mutable bool                                 m_reload_after        = { true };
   mutable std::optional<std::filesystem::path> m_embed_path          = {};
+  mutable ImGui::FileBrowser                   m_archive_browser =
+    create_directory_browser("Select Directory");
+  mutable ImGui::FileBrowser m_source_browser =
+    create_directory_browser("Select Directory");
+  mutable ImGui::FileBrowser m_output_browser =
+    create_directory_browser("Select Directory");
+  [[nodiscard]] scope_guard
+    PushPop() const;
 };
 }// namespace fme
 #endif// MYPROJECT_GUIBATCH_HPP

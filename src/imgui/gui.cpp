@@ -2,9 +2,9 @@
 // Created by pcvii on 9/7/2021.
 //
 
-#include "GuiBatch.hpp"
 #include "gui.hpp"
 #include "gui_labels.hpp"
+#include "GuiBatch.hpp"
 #include "open_viii/paths/Paths.hpp"
 #include <imgui-SFML.h>
 #include <imgui.h>
@@ -356,9 +356,11 @@ void
               std::string_view basename_view = { base_name };
               if (
                 filename_view.substr(
-                  0, std::min(std::size(filename_view), std::size(basename_view)))
+                  0,
+                  std::min(std::size(filename_view), std::size(basename_view)))
                 != basename_view.substr(
-                  0, std::min(std::size(filename_view), std::size(basename_view))))
+                  0,
+                  std::min(std::size(filename_view), std::size(basename_view))))
               {
                 continue;
               }
@@ -741,49 +743,56 @@ static void
     sprite.update_render_texture();
   }
 }
+scope_guard gui::PushPop() const
+{
+  ImGui::PushID(++m_id);
+  return scope_guard{ &ImGui::PopID };
+}
 void
   gui::combo_bpp() const
 {
-  ImGui::PushID(++m_id);
-  static constexpr std::array bpp_items = Mim::bpp_selections_c_str();
-  if (ImGui::Combo(
-        "BPP",
-        &m_selections.bpp,
-        bpp_items.data(),
-        static_cast<int>(bpp_items.size()),
-        static_cast<int>(bpp_items.size())))
   {
-    if (mim_test())
+    const auto sg = PushPop();
+    static constexpr std::array bpp_items = Mim::bpp_selections_c_str();
+    if (ImGui::Combo(
+          "BPP",
+          &m_selections.bpp,
+          bpp_items.data(),
+          static_cast<int>(bpp_items.size()),
+          static_cast<int>(bpp_items.size())))
     {
-      update_bpp(m_mim_sprite, bpp());
-    }
-    if (map_test())
-    {
-      update_bpp(m_map_sprite, bpp());
-    }
-    m_changed = true;
-  }
-  ImGui::PopID();
-  ImGui::PushID(++m_id);
-  static bool enable_palette_filter = false;
-  if (map_test())
-  {
-    ImGui::SameLine();
-    if (ImGui::Checkbox("", &enable_palette_filter))
-    {
-      if (enable_palette_filter)
+      if (mim_test())
       {
-        m_map_sprite.filter().bpp.enable();
+        update_bpp(m_mim_sprite, bpp());
       }
-      else
+      if (map_test())
       {
-        m_map_sprite.filter().bpp.disable();
+        update_bpp(m_map_sprite, bpp());
       }
-      m_map_sprite.update_render_texture();
       m_changed = true;
     }
   }
-  ImGui::PopID();
+  {
+    const auto sg = PushPop();
+    static bool enable_palette_filter = false;
+    if (map_test())
+    {
+      ImGui::SameLine();
+      if (ImGui::Checkbox("", &enable_palette_filter))
+      {
+        if (enable_palette_filter)
+        {
+          m_map_sprite.filter().bpp.enable();
+        }
+        else
+        {
+          m_map_sprite.filter().bpp.disable();
+        }
+        m_map_sprite.update_render_texture();
+        m_changed = true;
+      }
+    }
+  }
 }
 std::uint8_t
   gui::palette() const
@@ -807,49 +816,51 @@ static void
 void
   gui::combo_palette() const
 {
-  ImGui::PushID(++m_id);
   if (m_selections.bpp != 2)
   {
     static constexpr std::array palette_items = Mim::palette_selections_c_str();
-    if (ImGui::Combo(
-          "Palette",
-          &m_selections.palette,
-          palette_items.data(),
-          static_cast<int>(palette_items.size()),
-          static_cast<int>(palette_items.size())))
     {
-      if (mim_test())
+      const auto sg = PushPop();
+      if (ImGui::Combo(
+            "Palette",
+            &m_selections.palette,
+            palette_items.data(),
+            static_cast<int>(palette_items.size()),
+            static_cast<int>(palette_items.size())))
       {
-        update_palette(m_mim_sprite, palette());
+        if (mim_test())
+        {
+          update_palette(m_mim_sprite, palette());
+        }
+        if (map_test())
+        {
+          update_palette(m_map_sprite, palette());
+        }
+        m_changed = true;
       }
-      if (map_test())
-      {
-        update_palette(m_map_sprite, palette());
-      }
-      m_changed = true;
     }
-    static bool enable_palette_filter = false;
     if (map_test())
     {
       ImGui::SameLine();
-      ImGui::PushID(++m_id);
-      if (ImGui::Checkbox("", &enable_palette_filter))
       {
-        if (enable_palette_filter)
+        static bool enable_palette_filter = false;
+        const auto sg = PushPop();
+        if (ImGui::Checkbox("", &enable_palette_filter))
         {
-          m_map_sprite.filter().palette.enable();
+          if (enable_palette_filter)
+          {
+            m_map_sprite.filter().palette.enable();
+          }
+          else
+          {
+            m_map_sprite.filter().palette.disable();
+          }
+          m_map_sprite.update_render_texture();
+          m_changed = true;
         }
-        else
-        {
-          m_map_sprite.filter().palette.disable();
-        }
-        m_map_sprite.update_render_texture();
-        m_changed = true;
       }
-      ImGui::PopID();
     }
   }
-  ImGui::PopID();
 }
 
 void
@@ -2741,7 +2752,7 @@ void
   gui::batch_ops_ask_menu() const
 {
 #if 1
-  static GuiBatch test{};
+  static GuiBatch test{ m_archives_group };
   test(&m_id);
 #else
   using namespace std::string_view_literals;
@@ -2770,34 +2781,37 @@ void
       if (selected_src_type == 0)
       {
         combo_path();
-        ImGui::PushID(++m_id);
-        if (ImGui::Button("Browse"))
         {
-          open_locate_ff8_filebrowser();
+          const auto sg = PushPop();
+          if (ImGui::Button("Browse"))
+          {
+            open_locate_ff8_filebrowser();
+          }
         }
-        ImGui::PopID();
       }
       else if (selected_src_type == 1)
       {
         if (combo_upscale_path(selected_src_swizzle_path, "", {}))
         {
         }
-        ImGui::PushID(++m_id);
-        if (ImGui::Button("Browse"))
         {
-          open_swizzle_filebrowser();
+          const auto sg = PushPop();
+          if (ImGui::Button("Browse"))
+          {
+            open_swizzle_filebrowser();
+          }
         }
-        ImGui::PopID();
       }
       else if (selected_src_type == 2)
       {
         format_imgui_text("Directory: {}", selected_src_deswizzle_path);
-        ImGui::PushID(++m_id);
-        if (ImGui::Button("Browse"))
         {
-          open_deswizzle_filebrowser();
+          const auto sg = PushPop();
+          if (ImGui::Button("Browse"))
+          {
+            open_deswizzle_filebrowser();
+          }
         }
-        ImGui::PopID();
       }
     }
     static constexpr auto task_types =
@@ -2833,43 +2847,50 @@ void
     {
       static std::filesystem::path selected_dst_path{};
       format_imgui_text("Directory: {}", selected_dst_path);
-      ImGui::PushID(++m_id);
-      if (ImGui::Button("Browse"))
       {
+        const auto sg = PushPop();
+        if (ImGui::Button("Browse"))
+        {
+        }
       }
-      ImGui::PopID();
     }
     if (ImGui::CollapsingHeader(
           "Embed .map(s) into archives", ImGuiTreeNodeFlags_DefaultOpen))
     {
       static bool embed_maps   = {};
       static bool reload_after = { true };
-      ImGui::PushID(++m_id);
-      if (ImGui::Checkbox("", &embed_maps))
       {
+        const auto sg = PushPop();
+        if (ImGui::Checkbox("", &embed_maps))
+        {
+        }
       }
       if (embed_maps)
       {
         ImGui::SameLine();
         combo_path();
-        ImGui::PopID();
-        if (ImGui::Checkbox("Reload after?", &reload_after))
         {
+          const auto sg = PushPop();
+          if (ImGui::Checkbox("Reload after?", &reload_after))
+          {
+          }
         }
       }
     }
     ImGui::Separator();
-    ImGui::PushID(++m_id);
-    if (ImGui::Button("Start"))
     {
+      const auto sg = PushPop();
+      if (ImGui::Button("Start"))
+      {
+      }
     }
-    ImGui::PopID();
     ImGui::SameLine();
-    ImGui::PushID(++m_id);
-    if (ImGui::Button("Cancel"))
     {
+      const auto sg = PushPop();
+      if (ImGui::Button("Cancel"))
+      {
+      }
     }
-    ImGui::PopID();
   }
   ImGui::End();
 #endif
