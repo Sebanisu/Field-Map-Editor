@@ -1,8 +1,9 @@
 #include <GLFW/glfw3.h>
 
-int main(void)
+int
+  main(void)
 {
-  GLFWwindow* window;
+  GLFWwindow *window;
 
   /* Initialize the library */
   if (!glfwInit())
@@ -24,6 +25,12 @@ int main(void)
   {
     /* Render here */
     glClear(GL_COLOR_BUFFER_BIT);
+
+    glBegin(GL_TRIANGLES);
+    glVertex2f(-0.5F, -.5F);
+    glVertex2f(0.F, 0.5F);
+    glVertex2f(0.5F, -0.5F);
+    glEnd();
 
     /* Swap front and back buffers */
     glfwSwapBuffers(window);
