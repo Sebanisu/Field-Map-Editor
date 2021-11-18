@@ -66,4 +66,5 @@ if (MSVC)
             PUBLIC _CRT_SECURE_NO_WARNINGS) # required by libpng
     target_link_options(test_imgui PRIVATE "/PROFILE")
 endif ()
+enable_sanitizers(test_imgui )
 SET_TARGET_PATHS(test_imgui)

@@ -9,7 +9,8 @@
       "installRoot": "${projectDir}\\out\\install\\${name}",
       "cmakeCommandArgs": "-DCPP_STARTER_USE_IMGUI=ON",
       "buildCommandArgs": "",
-      "ctestCommandArgs": ""
+      "ctestCommandArgs": "",
+      "addressSanitizerEnabled": true
     },
     {
       "name": "x64-Release",

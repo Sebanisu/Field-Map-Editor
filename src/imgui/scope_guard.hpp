@@ -4,7 +4,7 @@
 
 #ifndef MYPROJECT_SCOPE_GUARD_HPP
 #define MYPROJECT_SCOPE_GUARD_HPP
-struct scope_guard
+struct [[nodiscard]] scope_guard
 {
   scope_guard(void (*t)())
     : func(std::move(t))

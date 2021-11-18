@@ -10,6 +10,7 @@
 #include <imgui.h>
 #include <SFML/Window/Mouse.hpp>
 #include <utility>
+//#define USE_THREADS
 using namespace open_viii::graphics::background;
 using namespace open_viii::graphics;
 using namespace open_viii::graphics::literals;
@@ -743,7 +744,8 @@ static void
     sprite.update_render_texture();
   }
 }
-scope_guard gui::PushPop() const
+scope_guard
+  gui::PushPop() const
 {
   ImGui::PushID(++m_id);
   return scope_guard{ &ImGui::PopID };
@@ -752,7 +754,7 @@ void
   gui::combo_bpp() const
 {
   {
-    const auto sg = PushPop();
+    const auto                  sg        = PushPop();
     static constexpr std::array bpp_items = Mim::bpp_selections_c_str();
     if (ImGui::Combo(
           "BPP",
@@ -773,7 +775,7 @@ void
     }
   }
   {
-    const auto sg = PushPop();
+    const auto  sg                    = PushPop();
     static bool enable_palette_filter = false;
     if (map_test())
     {
@@ -844,7 +846,7 @@ void
       ImGui::SameLine();
       {
         static bool enable_palette_filter = false;
-        const auto sg = PushPop();
+        const auto  sg                    = PushPop();
         if (ImGui::Checkbox("", &enable_palette_filter))
         {
           if (enable_palette_filter)
@@ -2746,7 +2748,13 @@ template<typename T, typename... argsT>
 void
   gui::launch_async(T &&task, argsT &&...args) const
 {
-  m_futures.emplace_back(std::async(std::launch::async, task, args...));
+#ifdef USE_THREADS
+  m_futures.emplace_back(std::async(
+    std::launch::async, std::forward<T>(task), std::forward<argsT>(args)...));
+#undef USE_THREADS
+#else
+  task(std::forward<argsT>(args)...);
+#endif
 }
 void
   gui::batch_ops_ask_menu() const

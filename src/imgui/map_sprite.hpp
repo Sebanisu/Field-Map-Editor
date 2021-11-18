@@ -377,6 +377,9 @@ private:
       std::shared_ptr<std::array<sf::Texture, MAX_TEXTURES>> &ret,
       open_viii::graphics::BPPT                               bpp,
       uint8_t                                                 palette) const;
+  template<typename F, typename... T>
+  void
+    spawn_thread(F &&f, T &&...t) const;
   template<typename key_lambdaT, typename weight_lambdaT>
   [[maybe_unused]] void
     compact_generic(

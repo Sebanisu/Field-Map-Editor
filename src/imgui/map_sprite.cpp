@@ -5,6 +5,7 @@
 #include <bit>
 #include <open_viii/graphics/Png.hpp>
 #include <utility>
+//#define USE_THREADS
 using namespace open_viii::graphics::background;
 using namespace open_viii::graphics;
 using namespace open_viii::graphics::literals;
@@ -181,6 +182,18 @@ std::shared_ptr<std::array<sf::Texture, map_sprite::MAX_TEXTURES>>
   }
   return ret;
 }
+template<typename F, typename... T>
+void
+  map_sprite::spawn_thread(F &&f, T &&...t) const
+{
+#ifdef USE_THREADS
+  m_futures.emplace_back(
+    std::async(std::launch::async, std::forward<F>(f), std::forward<T>(t)...));
+#undef USE_THREADS
+#else
+  f(std::forward<T>(t)...);
+#endif
+}
 void
   map_sprite::load_mim_textures(
     std::shared_ptr<std::array<sf::Texture, MAX_TEXTURES>> &ret,
@@ -189,21 +202,17 @@ void
 {// std::cout << bpp << '\t' << +palette << '\t' << '\t';
   if (m_mim.get_width(bpp) != 0U)
   {
-    size_t pos = get_texture_pos(bpp, palette, 0);
-    m_futures.emplace_back(std::async(
-      std::launch::async,
-      [this](sf::Texture *texture, BPPT bppt, uint8_t pal)
-      {
-        const auto colors = get_colors(bppt, pal);
-        // std::lock_guard<std::mutex> lock(mutex_texture);
-        texture->create(m_mim.get_width(bppt), m_mim.get_height());
-        texture->setSmooth(false);
-        texture->generateMipmap();
-        texture->update(reinterpret_cast<const sf::Uint8 *>(colors.data()));
-      },
-      &(ret->at(pos)),
-      bpp,
-      palette));
+    size_t     pos  = get_texture_pos(bpp, palette, 0);
+    const auto task = [this](sf::Texture *texture, BPPT bppt, uint8_t pal)
+    {
+      const auto colors = get_colors(bppt, pal);
+      // std::lock_guard<std::mutex> lock(mutex_texture);
+      texture->create(m_mim.get_width(bppt), m_mim.get_height());
+      texture->setSmooth(false);
+      texture->generateMipmap();
+      texture->update(reinterpret_cast<const sf::Uint8 *>(colors.data()));
+    };
+    spawn_thread(task, &(ret->at(pos)), bpp, palette);
   }
 }
 void
@@ -245,7 +254,7 @@ void
         MAX_TEXTURES);
       return;
     }
-    m_futures.emplace_back(std::async(std::launch::async, fn, &(ret->at(i))));
+    spawn_thread(fn, &(ret->at(i)));
   }
 }
 void
@@ -291,8 +300,7 @@ void
           MAX_TEXTURES);
         return;
       }
-      m_futures.emplace_back(
-        std::async(std::launch::async, fn, &(ret->at(i++))));
+      spawn_thread(fn, &(ret->at(i++)));
     });
   /*for (const auto& texture_page :
       m_all_unique_values_and_strings.texture_page_id().values())
@@ -318,7 +326,7 @@ void
               texture->generateMipmap();
           }
       };
-      m_futures.emplace_back(std::async(std::launch::async, fn, &(ret->at(i))));
+      spawn_thread(fn, &(ret->at(i)));
   }*/
 }
 void
@@ -351,13 +359,13 @@ void
         texture->generateMipmap();
       }
     };
-    m_futures.emplace_back(std::async(std::launch::async, fn, &(ret->at(i))));
+    spawn_thread(fn, &(ret->at(i)));
   }
 }
 void
   map_sprite::wait_for_futures() const
 {
-  std::ranges::for_each(m_futures, [](auto &&f) { f.wait(); });
+  std::ranges::for_each(m_futures, [](auto &f) { f.wait(); });
   m_futures.clear();
 }
 
@@ -1969,11 +1977,7 @@ void
                  out_texture->getTexture().copyToImage() }
       .detach();
 #else
-    m_futures.emplace_back(std::async(
-      std::launch::async,
-      task,
-      out_path,
-      out_texture->getTexture().copyToImage()));
+    spawn_thread(task, out_path, out_texture->getTexture().copyToImage());
 #endif
   }
 }
