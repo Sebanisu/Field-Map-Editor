@@ -38,3 +38,4 @@ target_link_libraries(opengl_series_episode_5
 target_compile_definitions(opengl_series_episode_5
         PRIVATE GLEW_STATIC
         )
+SET_TARGET_PATHS(opengl_series_episode_5)

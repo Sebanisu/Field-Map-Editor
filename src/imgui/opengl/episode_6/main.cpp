@@ -1,8 +1,70 @@
 #include <array>
+#include <filesystem>
 #include <fmt/format.h>
+#include <fstream>
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
+#include <sstream>
 using namespace std::string_view_literals;
+
+struct ShaderProgramSource
+{
+  std::string vertex_shader{};
+  std::string fragment_shader{};
+};
+inline ShaderProgramSource
+  ParseShader(const std::filesystem::path &file_path)
+{
+  std::ifstream fs(file_path, std::ios::binary | std::ios::in);
+  if (!fs.is_open())
+  {
+    fmt::print(
+      stderr,
+      "Error {}:{} - Failed to open shader \n\t\"{}\"\n",
+      __FILE__,
+      __LINE__,
+      file_path.string());
+    return {};
+  }
+  enum class ShaderType
+  {
+    None     = -1,
+    Vertex   = 0,
+    Fragment = 1,
+  };
+  std::stringstream ss[2U] = {};
+  {
+    std::string line{};
+    ShaderType  mode = ShaderType::None;
+    while (std::getline(fs, line))
+    {
+      if (line.find("#shader") != std::string::npos)
+      {
+        if (line.find("vertex") != std::string::npos)
+        {
+          // set mode to vertex.
+          mode = ShaderType::Vertex;
+        }
+        else if (line.find("fragment") != std::string::npos)
+        {
+          // set mode to fragment.
+          mode = ShaderType::Fragment;
+        }
+      }
+      else
+      {
+        if (std::string::size_type pos = line.find("#");
+            pos != std::string::npos)
+        {
+          line.erase(0, pos);
+        }
+        ss[static_cast<std::size_t>(mode)] << line << '\n';
+      }
+    }
+  }
+
+  return { ss[0].str(), ss[1].str() };
+}
 inline std::uint32_t
   CompileShader(const std::uint32_t type, const std::string_view source)
 {
@@ -21,7 +83,7 @@ inline std::uint32_t
     glGetShaderInfoLog(id, length, &length, std::data(message));
     fmt::print(
       stderr,
-      "Error {}:{} - Failed to compile sharder {} - {}\n",
+      "Error {}:{} - Failed to compile shader {} - {}\n",
       __FILE__,
       __LINE__,
       (type == GL_VERTEX_SHADER ? "GL_VERTEX_SHADER"sv
@@ -96,25 +158,10 @@ int
   glEnableVertexAttribArray(0);
   glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), 0);
 
-  std::uint32_t shader = CreateShader(
-    R"(#version 330 core
-
-layout(location = 0) in vec4 position;
-
-void main()
-{
-  gl_Position = position;
-}
-)"sv,
-    R"(#version 330 core
-
-layout(location = 0) out vec4 color;
-
-void main()
-{
-  color = vec4(1.0, 0.0, 0.0, 1.0);
-}
-)"sv);
+  ShaderProgramSource source = ParseShader(
+    std::filesystem::current_path() / "res" / "shader" / "basic.shader");
+  std::uint32_t shader =
+    CreateShader(source.vertex_shader, source.fragment_shader);
   glUseProgram(shader);
 
   /* Loop until the user closes the window */

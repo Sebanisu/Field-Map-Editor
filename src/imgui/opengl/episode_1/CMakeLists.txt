@@ -33,3 +33,5 @@ target_link_libraries(opengl_series_episode_1
         PRIVATE glfw
         PRIVATE OpenGL::GL
         )
+
+SET_TARGET_PATHS(opengl_series_episode_1)

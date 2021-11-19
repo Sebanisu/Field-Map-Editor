@@ -38,3 +38,12 @@ target_link_libraries(opengl_series_episode_6
 target_compile_definitions(opengl_series_episode_6
         PRIVATE GLEW_STATIC
         )
+SET_TARGET_PATHS(opengl_series_episode_6)
+
+
+add_custom_command(TARGET opengl_series_episode_6 POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E echo
+        "Copying ${CMAKE_CURRENT_SOURCE_DIR}/res to $<TARGET_FILE_DIR:opengl_series_episode_6>/res")
+add_custom_command(TARGET opengl_series_episode_6 POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_directory
+        ${CMAKE_CURRENT_SOURCE_DIR}/res $<TARGET_FILE_DIR:opengl_series_episode_6>/res)
