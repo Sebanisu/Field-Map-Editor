@@ -145,16 +145,31 @@ int
 
   fmt::print("{}\n", glGetString(GL_VERSION));
 
-  std::array    positions{ -0.5F, -.5F, 0.F, 0.5F, 0.5F, -0.5F };
+  std::array positions{ -0.5F, -0.5F, 0.5F, -0.5F, 0.5F, 0.5F, -0.5F, 0.5F };
+  std::array indices{ 0U, 1U, 2U, 2U, 3U, 0U };
 
-  std::uint32_t buffer{};
-  glGenBuffers(1, &buffer);
-  glBindBuffer(GL_ARRAY_BUFFER, buffer);
-  glBufferData(
-    GL_ARRAY_BUFFER,
-    std::size(positions) * sizeof(float),
-    std::data(positions),
-    GL_STATIC_DRAW);
+  {
+    std::uint32_t buffer{};
+    glGenBuffers(1, &buffer);
+    glBindBuffer(GL_ARRAY_BUFFER, buffer);
+    glBufferData(
+      GL_ARRAY_BUFFER,
+      std::size(positions) * sizeof(float),
+      std::data(positions),
+      GL_STATIC_DRAW);
+  }
+
+  {
+    std::uint32_t ibo{};
+    glGenBuffers(1, &ibo);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
+    glBufferData(
+      GL_ELEMENT_ARRAY_BUFFER,
+      std::size(indices) * sizeof(std::uint32_t),
+      std::data(indices),
+      GL_STATIC_DRAW);
+  }
+
   glEnableVertexAttribArray(0);
   glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), 0);
 
@@ -171,8 +186,11 @@ int
     glClear(GL_COLOR_BUFFER_BIT);
 
     /* Draw bound vertices */
-    glDrawArrays(
-      GL_TRIANGLES, 0, static_cast<GLsizei>(std::size(positions) / 2U));
+    glDrawElements(
+      GL_TRIANGLES,
+      static_cast<GLsizei>(std::size(indices)),
+      GL_UNSIGNED_INT,
+      nullptr);
 
     /* Swap front and back buffers */
     glfwSwapBuffers(window);
