@@ -1,12 +1,106 @@
 #include <array>
+#include <concepts>
 #include <filesystem>
 #include <fmt/format.h>
 #include <fstream>
+#include <functional>
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
+#include <source_location>
 #include <sstream>
 using namespace std::string_view_literals;
 
+void
+  GLClearError()
+{
+  while (glGetError() != GL_NO_ERROR)
+    ;
+}
+
+void
+  GLGetError(
+    const std::source_location location = std::source_location::current())
+{
+  GLenum error;
+  while ((error = glGetError()) != GL_NO_ERROR)
+  {
+    using namespace std::string_view_literals;
+    fmt::print(
+      stderr,
+      "Error {}({}:{}) {}: 0x{:>04X}:{}\n",
+      location.file_name(),
+      location.line(),
+      location.column(),
+      location.function_name(),
+      error,
+      [&error]()
+      {
+        switch (error)
+        {
+        case GL_INVALID_ENUM:
+          return "GL_INVALID_ENUM"sv;
+        case GL_INVALID_VALUE:
+          return "GL_INVALID_VALUE"sv;
+        case GL_INVALID_OPERATION:
+          return "GL_INVALID_OPERATION"sv;
+        case GL_INVALID_FRAMEBUFFER_OPERATION:
+          return "GL_INVALID_FRAMEBUFFER_OPERATION"sv;
+        case GL_OUT_OF_MEMORY:
+          return "GL_OUT_OF_MEMORY"sv;
+        case GL_STACK_UNDERFLOW:
+          return "GL_STACK_UNDERFLOW"sv;
+        case GL_STACK_OVERFLOW:
+          return "GL_STACK_OVERFLOW"sv;
+        }
+        return ""sv;
+      }());
+  }
+}
+template<typename FuncT, typename... ArgsT>
+requires std::invocable<FuncT, ArgsT...>
+struct GLCall
+{
+  GLCall(
+    FuncT &&func,
+    ArgsT &&...args,
+    std::source_location location = std::source_location::current())
+  {
+    GLClearError();
+    if constexpr (!std::is_void_v<std::invoke_result_t<FuncT, ArgsT...>>)
+    {
+      r() =
+        std::invoke(std::forward<FuncT>(func), std::forward<ArgsT>(args)...);
+    }
+    else
+    {
+      std::invoke(std::forward<FuncT>(func), std::forward<ArgsT>(args)...);
+    }
+    GLGetError(std::move(location));
+  }
+  [[nodiscard]] auto
+    operator()()
+    && requires(!std::is_void_v<std::invoke_result_t<FuncT, ArgsT...>>)
+  {
+    return std::move(r());
+  }
+  [[nodiscard]] auto
+    operator()()
+    & requires(!std::is_void_v<std::invoke_result_t<FuncT, ArgsT...>>)
+  {
+    return r();
+  }
+  [[nodiscard]] auto &
+    r()
+    & requires(!std::is_void_v<std::invoke_result_t<FuncT, ArgsT...>>)
+  {
+    static std::invoke_result_t<FuncT, ArgsT...> temp;
+    return temp;
+  }
+
+private:
+};
+template<typename... Ts>
+GLCall(Ts &&...) -> GLCall<Ts...>;
 struct ShaderProgramSource
 {
   std::string vertex_shader{};
@@ -68,19 +162,19 @@ inline ShaderProgramSource
 inline std::uint32_t
   CompileShader(const std::uint32_t type, const std::string_view source)
 {
-  const std::uint32_t id  = glCreateShader(type);
+  const std::uint32_t id  = GLCall{ glCreateShader, type }();
   const char         *src = std::data(source);
-  glShaderSource(id, 1, &src, nullptr);
-  glCompileShader(id);
+  GLCall{ glShaderSource, id, 1, &src, nullptr };
+  GLCall{ glCompileShader, id };
 
   int result{};
-  glGetShaderiv(id, GL_COMPILE_STATUS, &result);
+  GLCall{ glGetShaderiv, id, GL_COMPILE_STATUS, &result };
   if (result == GL_FALSE)
   {
     int length{};
-    glGetShaderiv(id, GL_INFO_LOG_LENGTH, &length);
+    GLCall{ glGetShaderiv, id, GL_INFO_LOG_LENGTH, &length };
     std::string message(length, '\0');
-    glGetShaderInfoLog(id, length, &length, std::data(message));
+    GLCall{ glGetShaderInfoLog, id, length, &length, std::data(message) };
     fmt::print(
       stderr,
       "Error {}:{} - Failed to compile shader {} - {}\n",
@@ -89,7 +183,7 @@ inline std::uint32_t
       (type == GL_VERTEX_SHADER ? "GL_VERTEX_SHADER"sv
                                 : "GL_FRAGMENT_SHADER"sv),
       message);
-    glDeleteShader(id);
+    GLCall{ glDeleteShader, id };
     return 0U;
   }
 
@@ -102,13 +196,13 @@ inline std::uint32_t
 {
   const std::uint32_t vs = CompileShader(GL_VERTEX_SHADER, vertexShader);
   const std::uint32_t fs = CompileShader(GL_FRAGMENT_SHADER, fragmentShader);
-  const std::uint32_t program = glCreateProgram();
-  glAttachShader(program, vs);
-  glAttachShader(program, fs);
-  glLinkProgram(program);
-  glValidateProgram(program);
-  glDeleteShader(vs);
-  glDeleteShader(fs);
+  const std::uint32_t program = GLCall{ glCreateProgram }();
+  GLCall{ glAttachShader, program, vs };
+  GLCall{ glAttachShader, program, fs };
+  GLCall{ glLinkProgram, program };
+  GLCall{ glValidateProgram, program };
+  GLCall{ glDeleteShader, vs };
+  GLCall{ glDeleteShader, fs };
   return program;
 }
 
@@ -143,54 +237,62 @@ int
     fmt::print(stderr, "Error! {}:{} GLEW NOT OKAY\n", __FILE__, __LINE__);
   }
 
-  fmt::print("{}\n", glGetString(GL_VERSION));
+  fmt::print("{}\n", GLCall{ glGetString, GL_VERSION }());
 
   std::array positions{ -0.5F, -0.5F, 0.5F, -0.5F, 0.5F, 0.5F, -0.5F, 0.5F };
   std::array indices{ 0U, 1U, 2U, 2U, 3U, 0U };
 
   {
     std::uint32_t buffer{};
-    glGenBuffers(1, &buffer);
-    glBindBuffer(GL_ARRAY_BUFFER, buffer);
-    glBufferData(
-      GL_ARRAY_BUFFER,
-      std::size(positions) * sizeof(float),
-      std::data(positions),
-      GL_STATIC_DRAW);
+    GLCall{ glGenBuffers, 1, &buffer };
+    GLCall{ glBindBuffer, GL_ARRAY_BUFFER, buffer };
+    GLCall{ glBufferData,
+            GL_ARRAY_BUFFER,
+            std::size(positions) * sizeof(float),
+            std::data(positions),
+            GL_STATIC_DRAW };
   }
 
   {
     std::uint32_t ibo{};
-    glGenBuffers(1, &ibo);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
-    glBufferData(
-      GL_ELEMENT_ARRAY_BUFFER,
-      std::size(indices) * sizeof(std::uint32_t),
-      std::data(indices),
-      GL_STATIC_DRAW);
+    GLCall{ glGenBuffers, 1, &ibo };
+    GLCall{ glBindBuffer, GL_ELEMENT_ARRAY_BUFFER, ibo };
+    GLCall{ glBufferData,
+            GL_ELEMENT_ARRAY_BUFFER,
+            std::size(indices) * sizeof(std::uint32_t),
+            std::data(indices),
+            GL_STATIC_DRAW };
   }
 
-  glEnableVertexAttribArray(0);
-  glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), 0);
+  GLCall{ glEnableVertexAttribArray, 0 };
+  GLCall{ glVertexAttribPointer,
+          0,
+          2,
+          GL_FLOAT,
+          std::uint8_t{ GL_FALSE },
+          std::int32_t{ 2 * sizeof(float) },
+          static_cast<const void *>(0) };
 
   ShaderProgramSource source = ParseShader(
     std::filesystem::current_path() / "res" / "shader" / "basic.shader");
+
   std::uint32_t shader =
     CreateShader(source.vertex_shader, source.fragment_shader);
-  glUseProgram(shader);
+
+  GLCall{ glUseProgram, shader };
 
   /* Loop until the user closes the window */
   while (!glfwWindowShouldClose(window))
   {
     /* Render here */
-    glClear(GL_COLOR_BUFFER_BIT);
+    GLCall{ glClear, GL_COLOR_BUFFER_BIT };
 
     /* Draw bound vertices */
-    glDrawElements(
-      GL_TRIANGLES,
-      static_cast<GLsizei>(std::size(indices)),
-      GL_UNSIGNED_INT,
-      nullptr);
+    GLCall{ glDrawElements,
+            GL_TRIANGLES,
+            static_cast<std::int32_t>(std::size(indices)),
+            GL_UNSIGNED_INT,
+            nullptr };
 
     /* Swap front and back buffers */
     glfwSwapBuffers(window);
@@ -199,7 +301,7 @@ int
     glfwPollEvents();
   }
 
-  glDeleteProgram(shader);
+  GLCall{ glDeleteProgram, shader };
   glfwTerminate();
   return 0;
 }
