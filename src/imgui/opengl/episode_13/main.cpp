@@ -46,12 +46,9 @@ int
 
   fmt::print("{}\n", GLCall{ glGetString, GL_VERSION }());
 
-  std::array positions{ -0.5F, -0.5F, 0.5F, -0.5F, 0.5F, 0.5F, -0.5F, 0.5F };
-  std::array indices{ 0U, 1U, 2U, 2U, 3U, 0U };
-
   auto       va = VertexArray{};
-  const auto vb = VertexBuffer{ positions };
-  const auto ib = IndexBuffer{ indices };
+  const auto vb = VertexBuffer{ std::array{ -0.5F, -0.5F, 0.5F, -0.5F, 0.5F, 0.5F, -0.5F, 0.5F } };
+  const auto ib = IndexBuffer{ std::array{ 0U, 1U, 2U, 2U, 3U, 0U } };
   VertexBufferLayout layout{};
   layout.push_back<float>(2U);
   va.push_back(vb, layout);
@@ -59,6 +56,7 @@ int
   const auto s = Shader{ std::filesystem::current_path() / "res" / "shader"
                          / "basic.shader" };
 
+  s.Bind();
   s.SetUniform("u_Color", 0.8F, 0.3F, 0.8F, 1.0F);
 
   // Unbind
@@ -70,21 +68,17 @@ int
   float r         = 0.F;
   float increment = 0.05F;
   /* Loop until the user closes the window */
+  Renderer renderer{};
   while (!glfwWindowShouldClose(window))
   {
     /* Render here */
-    GLCall{ glClear, GL_COLOR_BUFFER_BIT };
+    renderer.Clear();
+
     s.Bind();
     s.SetUniform("u_Color", r, 0.3F, 0.8F, 1.0F);
-    va.Bind();
-    ib.Bind();
 
-    /* Draw bound vertices */
-    GLCall{ glDrawElements,
-            GL_TRIANGLES,
-            static_cast<std::int32_t>(std::size(indices)),
-            GL_UNSIGNED_INT,
-            nullptr };
+    renderer.Draw(s,va,ib);
+
     if (r > 1.F)
       increment = -0.05F;
     if (r < 0.F)
