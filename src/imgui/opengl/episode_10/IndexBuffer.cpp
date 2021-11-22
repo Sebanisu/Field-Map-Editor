@@ -2,10 +2,7 @@
 
 IndexBuffer::~IndexBuffer()
 {
-  if (m_renderer_id != 0U)
-  {
-    GLCall{ glDeleteBuffers, 1, &m_renderer_id };
-  }
+  GLCall{ glDeleteBuffers, 1, &m_renderer_id };
 }
 
 IndexBuffer::IndexBuffer(IndexBuffer &&other)

@@ -1,17 +1,18 @@
 #include "IndexBuffer.hpp"
 #include "Renderer.hpp"
+#include "scope_guard.hpp"
 #include "VertexBuffer.hpp"
-#include <array>
 #include <cassert>
-#include <concepts>
 #include <filesystem>
 #include <fmt/format.h>
 #include <fstream>
-#include <functional>
-#include <GL/glew.h>
-#include <GLFW/glfw3.h>
-#include <source_location>
-#include <sstream>
+//#include <array>
+//#include <concepts>
+//#include <functional>
+//#include <GL/glew.h>
+//#include <GLFW/glfw3.h>
+//#include <source_location>
+//#include <sstream>
 using namespace std::string_view_literals;
 struct ShaderProgramSource
 {
@@ -85,7 +86,7 @@ inline std::uint32_t
   {
     int length{};
     GLCall{ glGetShaderiv, id, GL_INFO_LOG_LENGTH, &length };
-    std::string message(length, '\0');
+    std::string message(static_cast<std::string::size_type>(length), '\0');
     GLCall{ glGetShaderInfoLog, id, length, &length, std::data(message) };
     fmt::print(
       stderr,
@@ -147,7 +148,7 @@ int
 
   /* Make the window's context current */
   glfwMakeContextCurrent(window);
-
+  const auto terminate = scope_guard(&glfwTerminate);
   glfwSwapInterval(1);
 
   /* Init GLEW after context */
@@ -168,27 +169,9 @@ int
     GLCall{ glBindVertexArray, vao };
   }
 
-  std::uint32_t buffer{};
-  {
-    GLCall{ glGenBuffers, 1, &buffer };
-    GLCall{ glBindBuffer, GL_ARRAY_BUFFER, buffer };
-    GLCall{ glBufferData,
-            GL_ARRAY_BUFFER,
-            std::size(positions) * sizeof(float),
-            std::data(positions),
-            GL_STATIC_DRAW };
-  }
+  const auto vb = VertexBuffer{ positions };
+  const auto ib = IndexBuffer{ indices };
 
-  std::uint32_t ibo{};
-  {
-    GLCall{ glGenBuffers, 1, &ibo };
-    GLCall{ glBindBuffer, GL_ELEMENT_ARRAY_BUFFER, ibo };
-    GLCall{ glBufferData,
-            GL_ELEMENT_ARRAY_BUFFER,
-            std::size(indices) * sizeof(std::uint32_t),
-            std::data(indices),
-            GL_STATIC_DRAW };
-  }
   // end VertexArray
 
   GLCall{ glEnableVertexAttribArray, 0 };
@@ -230,7 +213,7 @@ int
     GLCall{ glUseProgram, shader };
     GLCall{ glUniform4f, location, r, 0.3F, 0.8F, 1.0F };
     GLCall{ glBindVertexArray, vao };
-    GLCall{ glBindBuffer, GL_ELEMENT_ARRAY_BUFFER, ibo };
+    // ib.Bind();
 
     /* Draw bound vertices */
     GLCall{ glDrawElements,
@@ -253,6 +236,7 @@ int
   }
 
   GLCall{ glDeleteProgram, shader };
-  glfwTerminate();
+  // GLCall{ glDeleteVertexArrays, 1, &vao };
+
   return 0;
 }

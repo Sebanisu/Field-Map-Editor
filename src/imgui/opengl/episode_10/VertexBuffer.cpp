@@ -1,11 +1,7 @@
 #include "VertexBuffer.hpp"
-
 VertexBuffer::~VertexBuffer()
 {
-  if (m_renderer_id != 0U)
-  {
-    GLCall{ glDeleteBuffers, 1, &m_renderer_id };
-  }
+  GLCall{ glDeleteBuffers, 1, &m_renderer_id };
 }
 
 VertexBuffer::VertexBuffer(VertexBuffer &&other)

@@ -15,12 +15,13 @@ private:
   IndexBuffer()               = default;
 
 public:
-  IndexBuffer(std::ranges::contiguous_range auto &&buffer)
+  template<std::ranges::contiguous_range R>
+  requires std::unsigned_integral<std::ranges::range_value_t<R>>
+    IndexBuffer(R &&buffer)
     : m_count(std::ranges::size(buffer))
   {
     const std::ptrdiff_t size_in_bytes = static_cast<std::ptrdiff_t>(
-      std::ranges::size(buffer)
-      * sizeof(std::ranges::range_value_t<decltype(buffer)>));
+      std::ranges::size(buffer) * sizeof(std::ranges::range_value_t<R>));
     const void *data = std::ranges::data(buffer);
     GLCall{ glGenBuffers, 1, &m_renderer_id };
     GLCall{ glBindBuffer, GL_ELEMENT_ARRAY_BUFFER, m_renderer_id };
