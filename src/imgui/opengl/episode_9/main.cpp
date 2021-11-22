@@ -220,6 +220,7 @@ int
   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
   glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
+
   /* Create a windowed mode window and its OpenGL context */
   window = glfwCreateWindow(640, 480, "Hello World", NULL, NULL);
   if (!window)
@@ -249,14 +250,15 @@ int
   std::array positions{ -0.5F, -0.5F, 0.5F, -0.5F, 0.5F, 0.5F, -0.5F, 0.5F };
   std::array indices{ 0U, 1U, 2U, 2U, 3U, 0U };
 
-
+  //begin VertexArray
   uint32_t   vao{};
-  GLCall{ glGenVertexArrays, 1, &vao };
-  GLCall{ glBindVertexArray, vao };
-
-
   {
-    std::uint32_t buffer{};
+    GLCall{ glGenVertexArrays, 1, &vao };
+    GLCall{ glBindVertexArray, vao };
+  }
+
+  std::uint32_t buffer{};
+  {
     GLCall{ glGenBuffers, 1, &buffer };
     GLCall{ glBindBuffer, GL_ARRAY_BUFFER, buffer };
     GLCall{ glBufferData,
@@ -266,25 +268,26 @@ int
             GL_STATIC_DRAW };
   }
 
-
   std::uint32_t ibo{};
-  GLCall{ glGenBuffers, 1, &ibo };
-  GLCall{ glBindBuffer, GL_ELEMENT_ARRAY_BUFFER, ibo };
-  GLCall{ glBufferData,
-          GL_ELEMENT_ARRAY_BUFFER,
-          std::size(indices) * sizeof(std::uint32_t),
-          std::data(indices),
-          GL_STATIC_DRAW };
+  {
+    GLCall{ glGenBuffers, 1, &ibo };
+    GLCall{ glBindBuffer, GL_ELEMENT_ARRAY_BUFFER, ibo };
+    GLCall{ glBufferData,
+            GL_ELEMENT_ARRAY_BUFFER,
+            std::size(indices) * sizeof(std::uint32_t),
+            std::data(indices),
+            GL_STATIC_DRAW };
+  }
+  //end VertexArray
 
-
-  //  GLCall{ glEnableVertexAttribArray, 0 };
-  //  GLCall{ glVertexAttribPointer,
-  //          0,
-  //          2,
-  //          GL_FLOAT,
-  //          std::uint8_t{ GL_FALSE },
-  //          std::int32_t{ 2 * sizeof(float) },
-  //          static_cast<const void *>(0) };
+  GLCall{ glEnableVertexAttribArray, 0 };
+  GLCall{ glVertexAttribPointer,
+          0,
+          2,
+          GL_FLOAT,
+          std::uint8_t{ GL_FALSE },
+          std::int32_t{ 2 * sizeof(float) },
+          static_cast<const void *>(0) };
 
   ShaderProgramSource source = ParseShader(
     std::filesystem::current_path() / "res" / "shader" / "basic.shader");
@@ -299,6 +302,13 @@ int
   assert(location != -1);
   GLCall{ glUniform4f, location, 0.8F, 0.3F, 0.8F, 1.0F };
 
+
+  // Unbind
+  GLCall{ glBindVertexArray, 0 };
+  GLCall{ glUseProgram, 0 };
+  GLCall{ glBindBuffer, GL_ARRAY_BUFFER, 0 };
+  GLCall{ glBindBuffer, GL_ELEMENT_ARRAY_BUFFER, 0 };
+
   float r         = 0.F;
   float increment = 0.05F;
   /* Loop until the user closes the window */
@@ -306,10 +316,8 @@ int
   {
     /* Render here */
     GLCall{ glClear, GL_COLOR_BUFFER_BIT };
-
     GLCall{ glUseProgram, shader };
     GLCall{ glUniform4f, location, r, 0.3F, 0.8F, 1.0F };
-
     GLCall{ glBindVertexArray, vao };
     GLCall{ glBindBuffer, GL_ELEMENT_ARRAY_BUFFER, ibo };
 
