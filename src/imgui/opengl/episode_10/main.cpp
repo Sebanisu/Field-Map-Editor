@@ -1,4 +1,6 @@
+#include "IndexBuffer.hpp"
 #include "Renderer.hpp"
+#include "VertexBuffer.hpp"
 #include <array>
 #include <cassert>
 #include <concepts>
