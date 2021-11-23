@@ -25,11 +25,6 @@ int
 
   constexpr int window_width  = 1280;
   constexpr int window_height = 720;
-  constexpr int window_gcm    = std::gcd(window_width, window_height);
-  const auto    window_vec2   = glm::vec2(
-         static_cast<float>(window_width) / window_gcm,
-         static_cast<float>(window_height) / window_gcm);
-  /* Create a windowed mode window and its OpenGL context */
   window =
     glfwCreateWindow(window_width, window_height, "Hello World", NULL, NULL);
   if (!window)
@@ -62,10 +57,10 @@ int
   auto               va = VertexArray{};
   const auto         vb = VertexBuffer{ std::array{
     // clang-format off
-    -0.5F, -0.5F, 0.F, 0.F, // 0
-     0.5F, -0.5F, 1.F, 0.F, // 1
-     0.5F,  0.5F, 1.F, 1.F, // 2
-    -0.5F,  0.5F, 0.F, 1.F, // 3
+    100.0F, 100.0F, 0.F, 0.F, // 0
+    200.0F, 100.0F, 1.F, 0.F, // 1
+    200.0F, 200.0F, 1.F, 1.F, // 2
+    100.0F, 200.0F, 0.F, 1.F, // 3
     // clang-format on
   } };
   const auto ib = IndexBuffer{ std::array{ 0U, 1U, 2U, 2U, 3U, 0U } };
@@ -75,17 +70,17 @@ int
   va.push_back(vb, layout);
 
   // Projection Matrix
-  // glm::mat4  proj = glm::ortho(-2.F, 2.F, -1.5F, 1.5F, -1.F, 1.F);
-  const float scale = .5F / window_vec2.y;
-  glm::mat4   proj  = glm::ortho(
-       window_vec2.x * -scale,
-       window_vec2.x * scale,
-       window_vec2.y * -scale,
-       window_vec2.y * scale,
-       -1.F,
-       1.F);
+  glm::mat4 proj = glm::ortho(
+    0.F,
+    static_cast<float>(window_width),
+    0.F,
+    static_cast<float>(window_height),
+    -1.F,
+    1.F);
+  glm::vec4  vp     = { 100.F, 100.F, 0.F, 1.F };
+  auto       result = proj * vp;
 
-  const auto s = Shader{ std::filesystem::current_path() / "res" / "shader"
+  const auto s      = Shader{ std::filesystem::current_path() / "res" / "shader"
                          / "basic.shader" };
   s.Bind();
   s.SetUniform("u_Color", 0.8F, 0.3F, 0.8F, 1.0F);
@@ -116,6 +111,7 @@ int
     s.SetUniform("u_Color", r, 0.3F, 0.8F, 1.0F);
     t.Bind(0);
     s.SetUniform("u_Texture", 0);
+    s.SetUniform("u_MVP", proj);
 
     renderer.Draw(s, va, ib);
 
