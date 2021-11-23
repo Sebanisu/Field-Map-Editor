@@ -6,6 +6,7 @@
 #define MYPROJECT_SHADER_HPP
 #include "Renderer.hpp"
 #include <cassert>
+#include <concepts>
 #include <filesystem>
 #include <fmt/format.h>
 #include <fstream>
@@ -42,9 +43,76 @@ public:
     UnBind() const;
 
   // Set Uniforms
-  void
-    SetUniform(std::string_view name, float f0, float f1, float f2, float f3)
-      const;
+  template<typename... T>
+  requires((sizeof...(T) >= 1U) && (sizeof...(T) <= 4U))
+    && ((std::floating_point<T> && ...) || (std::unsigned_integral<T> && ...) || (std::signed_integral<T> && ...)) void SetUniform(
+      std::string_view name,
+      T... v) const
+  {
+    const auto perform = [&]<typename NT>(auto &&fun)
+    {
+      GLCall{ std::forward<decltype(fun)>(fun),
+              get_uniform_location(name),
+              static_cast<NT>(v)... };
+    };
+    if constexpr ((std::floating_point<T> && ...))
+    {
+      if constexpr (sizeof...(T) == 1U)
+      {
+        perform.template operator()<float>(glUniform1f);
+      }
+      else if constexpr (sizeof...(T) == 2U)
+      {
+        perform.template operator()<float>(glUniform2f);
+      }
+      else if constexpr (sizeof...(T) == 3U)
+      {
+        perform.template operator()<float>(glUniform3f);
+      }
+      else if constexpr (sizeof...(T) == 4U)
+      {
+        perform.template operator()<float>(glUniform4f);
+      }
+    }
+    else if constexpr ((std::unsigned_integral<T> && ...))
+    {
+      if constexpr (sizeof...(T) == 1U)
+      {
+        perform.template operator()<std::uint32_t>(glUniform1ui);
+      }
+      else if constexpr (sizeof...(T) == 2U)
+      {
+        perform.template operator()<std::uint32_t>(glUniform2ui);
+      }
+      else if constexpr (sizeof...(T) == 3U)
+      {
+        perform.template operator()<std::uint32_t>(glUniform3ui);
+      }
+      else if constexpr (sizeof...(T) == 4U)
+      {
+        perform.template operator()<std::uint32_t>(glUniform4ui);
+      }
+    }
+    else if constexpr ((std::signed_integral<T> && ...))
+    {
+      if constexpr (sizeof...(T) == 1U)
+      {
+        perform.template operator()<std::int32_t>(glUniform1i);
+      }
+      else if constexpr (sizeof...(T) == 2U)
+      {
+        perform.template operator()<std::int32_t>(glUniform2i);
+      }
+      else if constexpr (sizeof...(T) == 3U)
+      {
+        perform.template operator()<std::int32_t>(glUniform3i);
+      }
+      else if constexpr (sizeof...(T) == 4U)
+      {
+        perform.template operator()<std::int32_t>(glUniform4i);
+      }
+    }
+  }
 
 private:
   struct ShaderProgramSource

@@ -74,5 +74,6 @@ void
         }
         return ""sv;
       }());
+    throw std::exception{};
   }
 }

@@ -46,16 +46,6 @@ void
 {
   GLCall{ glUseProgram, 0U };
 }
-void
-  Shader::SetUniform(
-    std::string_view name,
-    float            f0,
-    float            f1,
-    float            f2,
-    float            f3) const
-{
-  GLCall{ glUniform4f, get_uniform_location(name), f0, f1, f2, f3 };
-}
 Shader::ShaderProgramSource
   Shader::ParseShader()
 {

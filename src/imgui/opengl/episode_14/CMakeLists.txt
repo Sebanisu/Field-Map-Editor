@@ -19,6 +19,8 @@ else ()
     set(CMAKE_CXX_STANDARD 20) # /std:c++latest for msvc and -std=c++20 for everyone else.
 endif ()
 
+
+include(${CMAKE_SOURCE_DIR}/cmake/OpenVIII_CPP_WIP.cmake)
 find_package(Threads REQUIRED)
 find_package(fmt REQUIRED)
 find_package(glfw3 REQUIRED)
@@ -32,6 +34,7 @@ add_executable(opengl_series_episode_14
         VertexArray.cpp
         VertexBufferLayout.cpp
         Shader.cpp
+        Texture.cpp
         )
 target_link_libraries(opengl_series_episode_14
         PRIVATE project_warnings
@@ -40,6 +43,7 @@ target_link_libraries(opengl_series_episode_14
         PRIVATE glfw
         PRIVATE GLEW::GLEW
         PRIVATE OpenGL::GL
+        PRIVATE OpenVIII_CPP_WIP_VIIIGraphics
         )
 target_compile_definitions(opengl_series_episode_14
         PRIVATE GLEW_STATIC
@@ -53,3 +57,9 @@ add_custom_command(TARGET opengl_series_episode_14 POST_BUILD
 add_custom_command(TARGET opengl_series_episode_14 POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_directory
         ${CMAKE_CURRENT_SOURCE_DIR}/res $<TARGET_FILE_DIR:opengl_series_episode_14>/res)
+
+if (MSVC)
+    target_compile_definitions(opengl_series_episode_14
+            PUBLIC _CRT_SECURE_NO_WARNINGS) # required by libpng
+    target_link_options(opengl_series_episode_14 PRIVATE "/PROFILE")
+endif ()
