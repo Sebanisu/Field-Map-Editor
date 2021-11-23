@@ -69,22 +69,24 @@ int
   layout.push_back<float>(2U);
   va.push_back(vb, layout);
 
-  // Projection Matrix
-  glm::mat4 proj = glm::ortho(
+  auto proj = glm::ortho(
     0.F,
     static_cast<float>(window_width),
     0.F,
     static_cast<float>(window_height),
     -1.F,
     1.F);
-  glm::vec4  vp     = { 100.F, 100.F, 0.F, 1.F };
-  auto       result = proj * vp;
+  auto view = glm::translate(glm::mat4{1.F},glm::vec3(-100.F,0.F,0.F));
+
+  auto model = glm::translate(glm::mat4{1.F},glm::vec3(200.F,200.F,0.F));
+
+  auto mvp = proj * view * model;
 
   const auto s      = Shader{ std::filesystem::current_path() / "res" / "shader"
                          / "basic.shader" };
   s.Bind();
   s.SetUniform("u_Color", 0.8F, 0.3F, 0.8F, 1.0F);
-  s.SetUniform("u_MVP", proj);
+  s.SetUniform("u_MVP", mvp);
 
   const auto t =
     Texture(std::filesystem::current_path() / "res" / "textures" / "logo.png");
@@ -111,7 +113,7 @@ int
     s.SetUniform("u_Color", r, 0.3F, 0.8F, 1.0F);
     t.Bind(0);
     s.SetUniform("u_Texture", 0);
-    s.SetUniform("u_MVP", proj);
+    s.SetUniform("u_MVP", mvp);
 
     renderer.Draw(s, va, ib);
 
