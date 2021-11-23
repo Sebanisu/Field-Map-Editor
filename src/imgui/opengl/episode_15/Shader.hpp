@@ -10,6 +10,8 @@
 #include <filesystem>
 #include <fmt/format.h>
 #include <fstream>
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 #include <sstream>
 #include <string_view>
 #include <unordered_map>
@@ -112,6 +114,11 @@ public:
         perform.template operator()<std::int32_t>(glUniform4i);
       }
     }
+  }
+  void
+    SetUniform(std::string_view name, const glm::mat4 &matrix) const
+  {
+    GLCall{ glUniformMatrix4fv, get_uniform_location(name), 1, GLboolean{GL_FALSE}, &matrix[0][0] };
   }
 
 private:

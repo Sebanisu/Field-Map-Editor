@@ -6,6 +6,8 @@
 #include "VertexArray.hpp"
 #include "VertexBuffer.hpp"
 #include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <numeric>
 
 int
   main(void)
@@ -21,7 +23,12 @@ int
   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
   glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-
+  constexpr int window_width  = 640;
+  constexpr int window_height = 480;
+  constexpr int window_gcm    = std::gcd(window_width, window_height);
+  const auto    window_vec2   = glm::vec2(
+         static_cast<float>(window_width) / window_gcm,
+         static_cast<float>(window_height) / window_gcm);
   /* Create a windowed mode window and its OpenGL context */
   window = glfwCreateWindow(640, 480, "Hello World", NULL, NULL);
   if (!window)
@@ -66,11 +73,22 @@ int
   layout.push_back<float>(2U);
   va.push_back(vb, layout);
 
+  // Projection Matrix
+  // glm::mat4  proj = glm::ortho(-2.F, 2.F, -1.5F, 1.5F, -1.F, 1.F);
+  const float scale = 0.25F;
+  glm::mat4   proj  = glm::ortho(
+       window_vec2.x * -scale,
+       window_vec2.x * scale,
+       window_vec2.y * -scale,
+       window_vec2.y * scale,
+       -1.F,
+       1.F);
+
   const auto s = Shader{ std::filesystem::current_path() / "res" / "shader"
                          / "basic.shader" };
-
   s.Bind();
   s.SetUniform("u_Color", 0.8F, 0.3F, 0.8F, 1.0F);
+  s.SetUniform("u_MVP", proj);
 
   const auto t =
     Texture(std::filesystem::current_path() / "res" / "textures" / "logo.png");
