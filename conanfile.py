@@ -23,6 +23,7 @@ class CppStarterProject(ConanFile):
             #self.requires("imgui-sfml/2.1@bincrafters/stable")
             self.requires("glfw/3.3.5")
             self.requires("glew/2.2.0")
+            self.requires("glm/0.9.9.8")
             self.requires("imgui/1.85")
             self.requires("sfml/2.5.1")
             self.requires("andreasbuhr-cppcoro/cci.20210113")

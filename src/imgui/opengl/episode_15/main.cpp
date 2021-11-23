@@ -5,6 +5,7 @@
 #include "Texture.hpp"
 #include "VertexArray.hpp"
 #include "VertexBuffer.hpp"
+#include <glm/glm.hpp>
 
 int
   main(void)

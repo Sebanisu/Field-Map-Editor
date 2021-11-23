@@ -26,6 +26,7 @@ find_package(fmt REQUIRED)
 find_package(glfw3 REQUIRED)
 find_package(GLEW REQUIRED)
 find_package(OpenGL REQUIRED)
+find_package(glm REQUIRED)
 add_executable(opengl_series_episode_15
         main.cpp
         Renderer.cpp
@@ -44,6 +45,7 @@ target_link_libraries(opengl_series_episode_15
         PRIVATE GLEW::GLEW
         PRIVATE OpenGL::GL
         PRIVATE OpenVIII_CPP_WIP_VIIIGraphics
+        PRIVATE glm::glm
         )
 target_compile_definitions(opengl_series_episode_15
         PRIVATE GLEW_STATIC
