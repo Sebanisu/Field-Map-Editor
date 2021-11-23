@@ -47,7 +47,7 @@ add_executable(test_imgui
 #find_package(ImGui-SFML REQUIRED)
 find_package(fmt)
 find_package(cppcoro)
-include(../../../cmake/imgui-sfml.cmake)
+include(${CMAKE_SOURCE_DIR}/cmake/imgui-sfml.cmake)
 target_link_libraries(test_imgui
         PRIVATE project_warnings
         PRIVATE project_options
