@@ -73,13 +73,13 @@ int
   GLCall{ glBlendFunc, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA };
 
 
-  auto proj = glm::ortho(
-    0.F,
-    static_cast<float>(window_width),
-    0.F,
-    static_cast<float>(window_height),
-    -1.F,
-    1.F);
+//  auto proj = glm::ortho(
+//    0.F,
+//    static_cast<float>(window_width),
+//    0.F,
+//    static_cast<float>(window_height),
+//    -1.F,
+//    1.F);
 
 
   const auto s = Shader{ std::filesystem::current_path() / "res" / "shader"
@@ -134,9 +134,6 @@ int
   // NULL, io.Fonts->GetGlyphRangesJapanese()); IM_ASSERT(font != NULL);
 
   const test::Test auto test_menu = test::TestMenu{};
-  test_menu.push_back(
-    "Test Clear Color",
-    []() -> test::TestMenu::test_types { return test::TestClearColor{}; });
   while (!glfwWindowShouldClose(window))
   {
     /* Poll for and process events */
@@ -162,7 +159,7 @@ int
     ImGui::End();
     ImGui::Render();
     renderer.Clear();
-    // update window size varibles
+    // update window size variables
     glfwGetFramebufferSize(window, &window_width, &window_height);
     // glViewport(0, 0, display_w, display_h);
     /* Render here */

@@ -11,9 +11,9 @@ class VertexBuffer
 {
 private:
   std::uint32_t m_renderer_id = {};
-  VertexBuffer()              = default;
 
 public:
+  VertexBuffer()              = default;
   VertexBuffer(std::ranges::contiguous_range auto &&buffer)
   {
     const std::ptrdiff_t size_in_bytes = static_cast<std::ptrdiff_t>(

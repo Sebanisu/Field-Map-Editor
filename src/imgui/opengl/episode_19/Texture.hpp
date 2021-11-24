@@ -8,33 +8,37 @@
 #include <filesystem>
 #include <open_viii/graphics/BPPT.hpp>
 #include <open_viii/graphics/Png.hpp>
-//#include <open_viii/graphics/Rectangle.hpp>
+#include <open_viii/graphics/Rectangle.hpp>
 class Texture
 {
 private:
-  std::uint32_t            m_renderer_id = {};
-  std::filesystem::path    m_path        = {};
-  // open_viii::graphics::Point<std::uint32_t>     m_width_height = {};
+  std::uint32_t                             m_renderer_id  = {};
+  std::filesystem::path                     m_path         = {};
+  open_viii::graphics::Point<std::uint32_t> m_width_height = {};
   // std::int32_t             m_bpp         = {};
   // std::vector<open_viii::graphics::Color32RGBA> m_colors       = {};
-  open_viii::graphics::Png m_png{};
-  Texture() = default;
+
 
 public:
+  Texture() = default;
   Texture(std::filesystem::path path)
     : m_path(std::move(path))
-    , m_png(open_viii::graphics::Png{ m_path, true })
   {
+    auto png       = open_viii::graphics::Png{ m_path, true };
+    m_width_height = { png.width(), png.height() };
     GLCall{ glGenTextures, 1, &m_renderer_id };
-    Bind();
+    GLCall{ glBindTexture, GL_TEXTURE_2D, m_renderer_id };
     GLCall{ &glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR };
     GLCall{ &glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR };
-    GLCall{ &glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE };
-    GLCall{ &glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE };
-    GLCall{ &glTexImage2D,    GL_TEXTURE_2D,    0, GL_RGBA8,
-            width(),          height(),         0, GL_RGBA,
-            GL_UNSIGNED_BYTE, &(*m_png.begin()) };
-    UnBind();
+    GLCall{
+      &glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE
+    };
+    GLCall{
+      &glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE
+    };
+    GLCall{ &glTexImage2D,    GL_TEXTURE_2D,  0, GL_RGBA8,
+            width(),          height(),       0, GL_RGBA,
+            GL_UNSIGNED_BYTE, &(*png.begin()) };
   }
   ~Texture()
   {
@@ -54,12 +58,12 @@ public:
   std::uint32_t
     width() const
   {
-    return m_png.width();
+    return m_width_height.x();
   }
   std::uint32_t
     height() const
   {
-    return m_png.height();
+    return m_width_height.y();
   }
   Texture(const Texture &) = delete;
   Texture &
@@ -85,7 +89,7 @@ public:
     // the two objects are effectively swapped
     swap(first.m_renderer_id, second.m_renderer_id);
     swap(first.m_path, second.m_path);
-    swap(first.m_png, second.m_png);
+    swap(first.m_width_height, second.m_width_height);
   }
 };
 

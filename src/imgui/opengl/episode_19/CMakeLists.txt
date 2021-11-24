@@ -40,6 +40,7 @@ add_executable(opengl_series_episode_19
         tests/Test.h
         tests/TestClearColor.cpp
         tests/TestMenu.cpp
+        tests/TestTexture2D.cpp
         )
 target_link_libraries(opengl_series_episode_19
         PRIVATE project_warnings

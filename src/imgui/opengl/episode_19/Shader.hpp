@@ -22,9 +22,9 @@ private:
   std::filesystem::path                                      m_file_path{};
   // cache for uniforms
   mutable std::unordered_map<std::string_view, std::int32_t> m_cache{};
-  Shader() = default;
 
 public:
+  Shader() = default;
   Shader(std::filesystem::path file_path);
   ~Shader();
 

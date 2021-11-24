@@ -5,7 +5,9 @@
 #ifndef MYPROJECT_TESTMENU_HPP
 #define MYPROJECT_TESTMENU_HPP
 #include "TestClearColor.hpp"
+#include "TestTexture2D.hpp"
 #include <functional>
+#include <string>
 #include <variant>
 #include <vector>
 namespace test
@@ -13,11 +15,18 @@ namespace test
 class TestMenu
 {
 public:
-  using test_types = std::variant<std::monostate, TestClearColor>;
-  TestMenu()       = default;
+  using test_types =
+    std::variant<std::monostate, TestClearColor, TestTexture2D>;
+  TestMenu()
+    : TestMenu(std::monostate{})
+  {
+  }
+
   TestMenu(test_types current)
     : m_current(std::move(current))
   {
+    push_back<TestClearColor>("Test Clear Color");
+    push_back<TestTexture2D>("Test Texture2D");
   }
   void
     OnUpdate(float) const;

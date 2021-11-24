@@ -11,6 +11,9 @@
 #include <source_location>
 #include <utility>
 void
+  BeginErrorCallBack();
+void EndErrorCallback();
+void
   GLClearError();
 
 void

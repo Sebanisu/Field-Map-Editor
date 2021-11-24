@@ -37,29 +37,4 @@ public:
   friend void
     swap(VertexArray &first, VertexArray &second);
 };
-
-
-template<>
-inline void
-  VertexBufferLayout::push_back<float>(std::uint32_t count)
-{
-  m_stride +=
-    m_elements.emplace_back(GL_FLOAT, count, std::uint8_t{ GL_FALSE }).size();
-}
-template<>
-inline void
-  VertexBufferLayout::push_back<std::uint32_t>(std::uint32_t count)
-{
-  m_stride +=
-    m_elements.emplace_back(GL_UNSIGNED_INT, count, std::uint8_t{ GL_FALSE })
-      .size();
-}
-template<>
-inline void
-  VertexBufferLayout::push_back<std::uint8_t>(std::uint32_t count)
-{
-  m_stride +=
-    m_elements.emplace_back(GL_UNSIGNED_BYTE, count, std::uint8_t{ GL_TRUE })
-      .size();
-}
 #endif// MYPROJECT_VERTEXARRAY_HPP

@@ -12,9 +12,9 @@ class IndexBuffer
 private:
   std::uint32_t m_renderer_id = {};
   std::size_t   m_size        = {};
-  IndexBuffer()               = default;
 
 public:
+  IndexBuffer()               = default;
   template<std::ranges::contiguous_range R>
   requires std::unsigned_integral<std::ranges::range_value_t<R>>
     IndexBuffer(R &&buffer)
