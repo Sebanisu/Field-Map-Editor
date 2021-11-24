@@ -207,6 +207,14 @@ int
       {
       }
     }
+
+    ImGui::Text(
+      "%s",
+      fmt::format(
+        "Application average {:.3f} ms/frame ({:.3f} FPS)",
+        1000.0f / ImGui::GetIO().Framerate,
+        ImGui::GetIO().Framerate)
+        .c_str());
     ImGui::End();
 
 
