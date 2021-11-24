@@ -4,6 +4,7 @@
 
 #ifndef MYPROJECT_TESTMENU_HPP
 #define MYPROJECT_TESTMENU_HPP
+#include "TestBatchRendering.hpp"
 #include "TestClearColor.hpp"
 #include "TestTexture2D.hpp"
 #include <functional>
@@ -15,8 +16,8 @@ namespace test
 class TestMenu
 {
 public:
-  using test_types =
-    std::variant<std::monostate, TestClearColor, TestTexture2D>;
+  using test_types = std::
+    variant<std::monostate, TestClearColor, TestTexture2D, TestBatchRendering>;
   TestMenu()
     : TestMenu(std::monostate{})
   {
