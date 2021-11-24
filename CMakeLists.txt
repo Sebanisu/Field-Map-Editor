@@ -71,6 +71,8 @@ option(ENABLE_CONAN "Use Conan for dependency management" ON)
 if(ENABLE_CONAN)
   include(cmake/Conan.cmake)
   run_conan()
+  include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
+  #conan_basic_setup()
 endif()
 
 if(ENABLE_TESTING)
