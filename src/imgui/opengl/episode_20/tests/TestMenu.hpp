@@ -28,6 +28,7 @@ public:
   {
     push_back<TestClearColor>("Test Clear Color");
     push_back<TestTexture2D>("Test Texture2D");
+    push_back<TestBatchRendering>("Test Batch Rendering");
   }
   void
     OnUpdate(float) const;
