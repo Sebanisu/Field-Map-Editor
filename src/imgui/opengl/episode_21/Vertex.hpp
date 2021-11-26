@@ -5,11 +5,11 @@
 #ifndef MYPROJECT_VERTEX_HPP
 #define MYPROJECT_VERTEX_HPP
 #include "VertexBufferLayout.hpp"
+#include <algorithm>
 #include <array>
 #include <glm/glm.hpp>
-#include <vector>
 #include <ranges>
-#include <algorithm>
+#include <vector>
 struct Vertex
 {
   glm::vec2 location{};
@@ -21,11 +21,11 @@ struct Vertex
     glm::vec2 in_location,
     glm::vec4 in_color,
     glm::vec2 in_uv,
-    float     in_texture_slot = {})
+    int       in_texture_slot = {})
     : location(std::move(in_location))
     , color(std::move(in_color))
     , uv(in_uv)
-    , texture_slot(in_texture_slot)
+    , texture_slot(static_cast<float>(in_texture_slot))
   {
   }
   constexpr Vertex(
@@ -37,11 +37,11 @@ struct Vertex
     float a,
     float u,
     float v,
-    float in_texture_slot = {})
+    int   in_texture_slot = {})
     : location(x, y)
     , color(r, g, b, a)
     , uv(u, v)
-    , texture_slot(in_texture_slot)
+    , texture_slot(static_cast<float>(in_texture_slot))
   {
   }
   static VertexBufferLayout
@@ -55,25 +55,16 @@ struct Vertex
 };
 using Quad = std::array<Vertex, 4U>;
 constexpr inline Quad
-  CreateQuad(glm::vec2 offset, glm::vec4 color, int texture_id = {})
+  CreateQuad(glm::vec2 offset, glm::vec4 color, int texture_id = {}, float size = 1.F)
 {
   return {
-    Vertex{ glm::vec2{ -0.5F, -0.5F } + offset,
-            color,
-            { 0.F, 0.F },
-            static_cast<float>(texture_id) },// 0
-    Vertex{ glm::vec2{ 0.5F, -0.5F } + offset,
-            color,
-            { 1.F, 0.F },
-            static_cast<float>(texture_id) },// 1
-    Vertex{ glm::vec2{ 0.5F, 0.5F } + offset,
-            color,
-            { 1.F, 1.F },
-            static_cast<float>(texture_id) },// 2
-    Vertex{ glm::vec2{ -0.5F, 0.5F } + offset,
-            color,
-            { 0.F, 1.F },
-            static_cast<float>(texture_id) },// 3
+    Vertex{ offset, color, { 0.F, 0.F }, texture_id },// 0
+    Vertex{
+      offset + glm::vec2{ size, 0.F }, color, { 1.F, 0.F }, texture_id },// 1
+    Vertex{
+      offset + glm::vec2{ size, size }, color, { 1.F, 1.F }, texture_id },// 2
+    Vertex{
+      offset + glm::vec2{ 0.F, size }, color, { 0.F, 1.F }, texture_id },// 3
   };
 }
 inline std::vector<std::uint32_t>

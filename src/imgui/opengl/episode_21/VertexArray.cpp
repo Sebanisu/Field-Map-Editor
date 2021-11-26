@@ -33,31 +33,8 @@ void
 
   GLCall{ glBindVertexArray, 0U };
 }
-void
-  VertexArray::push_back(
-    const VertexBuffer       &vb,
-    const VertexBufferLayout &layout)
-{
-  Bind();
-  vb.Bind();
-  std::ranges::for_each(
-    layout.elements(),
-    [i      = std::uint32_t{},
-     offset = static_cast<const std::uint8_t *>(nullptr),
-     &layout](const VertexBufferLayout::VertexBufferElement &element) mutable
-    {
-      GLCall{ glEnableVertexAttribArray, i };
-      GLCall{ glVertexAttribPointer,
-              i,
-              element.count,
-              element.type,
-              element.normalized,
-              static_cast<int32_t>(layout.stride()),
-              offset };
-      offset += element.size();
-      ++i;
-    });
-}
+
+
 void
   swap(VertexArray &first, VertexArray &second)// nothrow
 {

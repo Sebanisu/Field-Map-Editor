@@ -46,6 +46,7 @@ add_executable(opengl_series_episode_21
         tests/TestTexture2D.cpp
         tests/TestBatchRendering.cpp
         tests/TestBatchRenderingTexture2D.cpp
+        tests/TestBatchRenderingTexture2DDynamic.cpp
         )
 target_link_libraries(opengl_series_episode_21
         PRIVATE project_warnings

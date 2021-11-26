@@ -12,7 +12,8 @@
 #include <utility>
 void
   BeginErrorCallBack();
-void EndErrorCallback();
+void
+  EndErrorCallback();
 void
   GLClearError();
 
@@ -66,15 +67,23 @@ private:
 template<typename... Ts>
 GLCall(Ts &&...) -> GLCall<Ts...>;
 template<typename T>
+concept Void = std::is_void_v<T>;
+template<typename T>
 concept Bindable = requires(T t)
 {
-  t.Bind();
-  t.UnBind();
+  {
+    t.Bind()
+    } -> Void;
+  {
+    t.UnBind()
+    } -> Void;
 };
 template<typename T>
 concept SizedBindable = Bindable<T> && requires(T t)
 {
-  t.size();
+  {
+    t.size()
+    } -> std::integral;
 };
 class Renderer
 {

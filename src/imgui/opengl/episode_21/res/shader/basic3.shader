@@ -27,7 +27,7 @@ in float v_texture;
 in vec2 v_TexCoord;
 in vec4 v_color;
 
-uniform sampler2D u_Textures[10];
+uniform sampler2D u_Textures[32];
 
 uniform vec4 u_Color;
 //uniform sampler2D u_Texture;
@@ -36,5 +36,5 @@ void main()
 {
   int index = int(v_texture);
   vec4 texColor = texture(u_Textures[index], v_TexCoord);
-  color = texColor * u_Color; //vec4(texColor.r,texColor.g,texColor.b,1.0); //u_Color * v_color *
+  color = texColor * u_Color * v_color;
 }

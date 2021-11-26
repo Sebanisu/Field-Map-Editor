@@ -8,6 +8,7 @@
 #include "TestClearColor.hpp"
 #include "TestTexture2D.hpp"
 #include "TestBatchRenderingTexture2D.hpp"
+#include "TestBatchRenderingTexture2DDynamic.hpp"
 #include <functional>
 #include <string>
 #include <variant>
@@ -18,7 +19,7 @@ class TestMenu
 {
 public:
   using test_types = std::
-    variant<std::monostate, TestClearColor, TestTexture2D, TestBatchRendering,TestBatchRenderingTexture2D>;
+    variant<std::monostate, TestClearColor, TestTexture2D, TestBatchRendering,TestBatchRenderingTexture2D,TestBatchRenderingTexture2DDynamic>;
   TestMenu()
     : TestMenu(std::monostate{})
   {
@@ -31,6 +32,7 @@ public:
     push_back<TestTexture2D>("Test Texture2D");
     push_back<TestBatchRendering>("Test Batch Rendering");
     push_back<TestBatchRenderingTexture2D>("Test Batch Rendering with Texture2D");
+    push_back<TestBatchRenderingTexture2DDynamic>("Test Batch Rendering with Texture2D Dynamic");
   }
   void
     OnUpdate(float) const;
