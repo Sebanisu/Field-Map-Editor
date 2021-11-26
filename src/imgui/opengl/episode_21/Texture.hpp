@@ -101,5 +101,5 @@ public:
     swap(first.m_width_height, second.m_width_height);
   }
 };
-
+static_assert(Bindable<Texture>);
 #endif// MYPROJECT_TEXTURE_HPP

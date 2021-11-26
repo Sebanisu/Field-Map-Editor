@@ -50,5 +50,6 @@ public:
   friend void
     swap(IndexBuffer &first, IndexBuffer &second);
 };
+static_assert(Bindable<IndexBuffer>);
 
 #endif// MYPROJECT_INDEXBUFFER_HPP

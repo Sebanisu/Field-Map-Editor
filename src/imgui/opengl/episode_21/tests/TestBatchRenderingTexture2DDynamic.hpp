@@ -4,7 +4,7 @@
 
 #ifndef MYPROJECT_TestBatchRenderingTexture2DDynamic_HPP
 #define MYPROJECT_TestBatchRenderingTexture2DDynamic_HPP
-#include "IndexBuffer.hpp"
+#include "IndexBufferDynamic.hpp"
 #include "scope_guard.hpp"
 #include "Shader.hpp"
 #include "Test.h"
@@ -41,7 +41,6 @@ public:
 
     //    constexpr auto quad_size  = std::size(Quad{});
     //    const auto     quad_count = std::size(vertices) / quad_size;
-    m_index_buffer = IndexBuffer{ QuadIndices(1000) };
 
     m_vertex_array.Bind();
     m_vertex_array.push_back(m_vertex_buffer, Vertex::Layout());
@@ -63,13 +62,7 @@ public:
                 + CreateQuad(model_offset2, colors[1], 2)
                 + CreateQuad(model_offset3, colors[2], 3);
 
-    m_vertex_buffer.Bind();
-    GLCall{ glBufferSubData,
-            GL_ARRAY_BUFFER,
-            0,
-            std::ranges::size(vertices)
-              * sizeof(std::ranges::range_value_t<decltype(vertices)>),
-            std::ranges::data(vertices) };
+    m_vertex_buffer_size = m_vertex_buffer.Update(vertices);
   }
   void
     OnRender()
@@ -98,7 +91,7 @@ public:
         ++i;
       }
       m_shader.SetUniform("u_Textures", slots);
-      renderer.Draw(m_vertex_array, m_index_buffer);
+      renderer.Draw(m_vertex_buffer_size, m_vertex_array, m_index_buffer);
     }
     //    {
     //      const auto model = glm::translate(glm::mat4{ 1.F }, model2_offset);
@@ -153,15 +146,16 @@ public:
   }
 
 private:
-  VertexBufferDynamic  m_vertex_buffer = {};
-  IndexBuffer          m_index_buffer  = {};
-  Shader               m_shader        = {};
-  VertexArray          m_vertex_array  = {};
-  std::vector<Texture> m_textures      = {};
-  mutable glm::vec3    view_offset     = { 0.F, 0.F, 0.F };
-  mutable glm::vec2    model_offset1   = { 2.F, 0.F };
-  mutable glm::vec2    model_offset2   = { 4.F, 0.F };
-  mutable glm::vec2    model_offset3   = { 6.F, 0.F };
+  VertexBufferDynamic     m_vertex_buffer      = { 1000 };
+  IndexBufferDynamic      m_index_buffer       = { 1000 };
+  IndexBufferDynamicSize  m_vertex_buffer_size = {};
+  Shader                  m_shader             = {};
+  VertexArray             m_vertex_array       = {};
+  std::vector<Texture>    m_textures           = {};
+  mutable glm::vec3       view_offset          = { 0.F, 0.F, 0.F };
+  mutable glm::vec2       model_offset1        = { 2.F, 0.F };
+  mutable glm::vec2       model_offset2        = { 4.F, 0.F };
+  mutable glm::vec2       model_offset3        = { 6.F, 0.F };
 };
 static_assert(Test<TestBatchRenderingTexture2DDynamic>);
 }// namespace test

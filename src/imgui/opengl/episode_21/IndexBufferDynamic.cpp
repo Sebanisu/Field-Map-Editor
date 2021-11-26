@@ -30,12 +30,6 @@ void
   GLCall{ glBindBuffer, GL_ELEMENT_ARRAY_BUFFER, 0U };
 }
 
-std::size_t
-  IndexBufferDynamic::size() const
-{
-  return m_size;
-}
-
 void
   swap(IndexBufferDynamic &first, IndexBufferDynamic &second)// nothrow
 {
@@ -45,5 +39,4 @@ void
   // by swapping the members of two objects,
   // the two objects are effectively swapped
   swap(first.m_renderer_id, second.m_renderer_id);
-  swap(first.m_size, second.m_size);
 }

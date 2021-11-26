@@ -58,4 +58,5 @@ public:
   friend void
     swap(VertexArray &first, VertexArray &second);
 };
+static_assert(Bindable<VertexArray>);
 #endif// MYPROJECT_VERTEXARRAY_HPP

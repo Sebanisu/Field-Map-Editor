@@ -44,6 +44,7 @@ public:
   friend void
     swap(VertexBuffer &first, VertexBuffer &second);
 };
+static_assert(Bindable<VertexBuffer>);
 
 
 #endif// MYPROJECT_VERTEXBUFFER_HPP

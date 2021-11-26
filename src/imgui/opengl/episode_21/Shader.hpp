@@ -178,4 +178,5 @@ private:
   std::int32_t
     get_uniform_location(std::string_view name) const;
 };
+static_assert(Bindable<Shader>);
 #endif// MYPROJECT_SHADER_HPP

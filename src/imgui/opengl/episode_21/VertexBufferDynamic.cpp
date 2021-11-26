@@ -38,4 +38,5 @@ void
   // by swapping the members of two objects,
   // the two objects are effectively swapped
   swap(first.m_renderer_id, second.m_renderer_id);
+  swap(first.m_max_size, second.m_max_size);
 }

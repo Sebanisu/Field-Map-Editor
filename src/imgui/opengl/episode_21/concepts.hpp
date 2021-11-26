@@ -10,7 +10,7 @@ concept decay_same_as = std::is_same_v<std::decay_t<T>, std::decay_t<U>>;
 template<typename T>
 concept Void = std::is_void_v<T>;
 template<typename T>
-concept Bindable = requires(T t)
+concept Bindable = std::default_initializable<T> && std::movable<T> && requires(const T t)
 {
   {
     t.Bind()
@@ -20,7 +20,7 @@ concept Bindable = requires(T t)
     } -> Void;
 };
 template<typename T>
-concept SizedBindable = Bindable<T> && requires(T t)
+concept SizedBindable = Bindable<T> && requires(const T t)
 {
   {
     t.size()
