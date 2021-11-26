@@ -29,10 +29,11 @@ find_package(OpenGL REQUIRED)
 find_package(glm REQUIRED)
 find_package(imgui REQUIRED)
 find_package(stb REQUIRED)
-add_executable(opengl_series_episode_20
+add_executable(opengl_series_episode_21
         main.cpp
         Renderer.cpp
         VertexBuffer.cpp
+        VertexBufferDynamic.cpp
         IndexBuffer.cpp
         VertexArray.cpp
         VertexBufferLayout.cpp
@@ -45,7 +46,7 @@ add_executable(opengl_series_episode_20
         tests/TestBatchRendering.cpp
         tests/TestBatchRenderingTexture2D.cpp
         )
-target_link_libraries(opengl_series_episode_20
+target_link_libraries(opengl_series_episode_21
         PRIVATE project_warnings
         PRIVATE fmt::fmt
         PRIVATE Threads::Threads
@@ -58,24 +59,24 @@ target_link_libraries(opengl_series_episode_20
         PRIVATE imgui::imgui
         PRIVATE imgui_glfw
         )
-target_compile_definitions(opengl_series_episode_20
+target_compile_definitions(opengl_series_episode_21
         PRIVATE GLEW_STATIC
         )
-target_include_directories(opengl_series_episode_20
+target_include_directories(opengl_series_episode_21
         PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
         )
-SET_TARGET_PATHS(opengl_series_episode_20)
+SET_TARGET_PATHS(opengl_series_episode_21)
 
 
-add_custom_command(TARGET opengl_series_episode_20 POST_BUILD
+add_custom_command(TARGET opengl_series_episode_21 POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E echo
-        "Copying ${CMAKE_CURRENT_SOURCE_DIR}/res to $<TARGET_FILE_DIR:opengl_series_episode_20>/res")
-add_custom_command(TARGET opengl_series_episode_20 POST_BUILD
+        "Copying ${CMAKE_CURRENT_SOURCE_DIR}/res to $<TARGET_FILE_DIR:opengl_series_episode_21>/res")
+add_custom_command(TARGET opengl_series_episode_21 POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_directory
-        ${CMAKE_CURRENT_SOURCE_DIR}/res $<TARGET_FILE_DIR:opengl_series_episode_20>/res)
+        ${CMAKE_CURRENT_SOURCE_DIR}/res $<TARGET_FILE_DIR:opengl_series_episode_21>/res)
 
 if (MSVC)
-    target_compile_definitions(opengl_series_episode_20
+    target_compile_definitions(opengl_series_episode_21
             PUBLIC _CRT_SECURE_NO_WARNINGS) # required by libpng
-    target_link_options(opengl_series_episode_20 PRIVATE "/PROFILE")
+    target_link_options(opengl_series_episode_21 PRIVATE "/PROFILE")
 endif ()
