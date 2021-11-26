@@ -8,6 +8,8 @@
 #include <array>
 #include <glm/glm.hpp>
 #include <vector>
+#include <ranges>
+#include <algorithm>
 struct Vertex
 {
   glm::vec2 location{};
@@ -73,6 +75,23 @@ constexpr inline Quad
             { 0.F, 1.F },
             static_cast<float>(texture_id) },// 3
   };
+}
+inline std::vector<std::uint32_t>
+  QuadIndices(std::size_t count)
+{
+  static constexpr auto      init = std::array{ 0, 1, 2, 2, 3, 0 };
+  std::vector<std::uint32_t> indices{};
+  indices.reserve(std::size(init) * count);
+  constexpr auto quad_size = std::size(Quad{});
+  for (std::size_t i{}; i != count; ++i)
+  {
+    std::ranges::transform(
+      init,
+      std::back_inserter(indices),
+      [&i, &quad_size](std::uint32_t index)
+      { return static_cast<std::uint32_t>(index + i * quad_size); });
+  }
+  return indices;
 }
 inline std::vector<Vertex> &
   operator+=(std::vector<Vertex> &vertices, const Quad &quad)

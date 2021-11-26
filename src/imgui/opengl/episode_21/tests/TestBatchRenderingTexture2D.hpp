@@ -41,30 +41,17 @@ public:
                                         glm::vec4{ 0.F, 1.F, 0.F, 1.F },
                                         glm::vec4{ 0.F, 0.F, 1.F, 1.F } };
 
-    [[maybe_unused]] constexpr auto indices_init = std::array{
-      // clang-format off
-        0U, 1U, 2U, // 0
-        2U, 3U, 0U  // 1
-      // clang-format on
-    };
+
     std::vector<Vertex> vertices{};
     vertices.reserve(12U);
     vertices += CreateQuad({ 2.F, 0.F }, colors[0], 1)
                 + CreateQuad({ 4.F, 0.F }, colors[1], 2)
                 + CreateQuad({ 6.F, 0.F }, colors[2], 3);
-    m_vertex_buffer    = VertexBuffer{ vertices };
-    auto       indices = std::vector(indices_init.begin(), indices_init.end());
-    const auto quad_count = std::size(vertices) / std::size(Quad{});
-    for (std::size_t i = 1U; i != quad_count; ++i)
-      std::ranges::transform(
-        indices_init.cbegin(),
-        indices_init.cend(),
-        std::back_inserter(indices),
-        [&i](std::uint32_t index) {
-          return static_cast<std::uint32_t>(index + (std::size(Quad{}) * i));
-        });
-    m_index_buffer = IndexBuffer{ indices };
 
+    m_vertex_buffer    = VertexBuffer{ vertices };
+    constexpr auto quad_size         = std::size(Quad{});
+    const auto quad_count = std::size(vertices) / quad_size;
+    m_index_buffer = IndexBuffer{ QuadIndices(quad_count) };
 
     m_vertex_array.Bind();
     m_vertex_array.push_back(m_vertex_buffer, Vertex::Layout());

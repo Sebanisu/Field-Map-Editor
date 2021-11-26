@@ -35,6 +35,7 @@ add_executable(opengl_series_episode_21
         VertexBuffer.cpp
         VertexBufferDynamic.cpp
         IndexBuffer.cpp
+        IndexBufferDynamic.cpp
         VertexArray.cpp
         VertexBufferLayout.cpp
         Shader.cpp
