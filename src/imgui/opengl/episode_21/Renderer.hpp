@@ -4,10 +4,12 @@
 
 #ifndef MYPROJECT_RENDERER_HPP
 #define MYPROJECT_RENDERER_HPP
+#include "concepts.hpp"
 #include <concepts>
 #include <functional>
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
+#include <optional>
 #include <source_location>
 #include <utility>
 void
@@ -21,19 +23,22 @@ void
   GLGetError(
     const std::source_location location = std::source_location::current());
 
+
 template<typename FuncT, typename... ArgsT>
 requires std::invocable<FuncT, ArgsT...>
 struct GLCall
 {
+public:
+  using return_value_type = std::decay_t<std::invoke_result_t<FuncT, ArgsT...>>;
   GLCall(
     FuncT &&func,
     ArgsT &&...args,
     std::source_location location = std::source_location::current())
   {
     GLClearError();
-    if constexpr (!std::is_void_v<std::invoke_result_t<FuncT, ArgsT...>>)
+    if constexpr (!Void<return_value_type>)
     {
-      r() =
+      holder.return_value =
         std::invoke(std::forward<FuncT>(func), std::forward<ArgsT>(args)...);
     }
     else
@@ -45,46 +50,35 @@ struct GLCall
 
   [[nodiscard]] auto
     operator()()
-    && requires(!std::is_void_v<std::invoke_result_t<FuncT, ArgsT...>>)
+    && requires(!Void<return_value_type>)
   {
-    return std::move(r());
+    return std::move(holder.return_value);
   }
   [[nodiscard]] auto
     operator()()
-    & requires(!std::is_void_v<std::invoke_result_t<FuncT, ArgsT...>>)
+    & requires(!Void<return_value_type>)
   {
-    return r();
-  }
-  [[nodiscard]] static auto &
-    r() requires(!std::is_void_v<std::invoke_result_t<FuncT, ArgsT...>>)
-  {
-    static std::invoke_result_t<FuncT, ArgsT...> temp;
-    return temp;
+    return holder.return_value;
   }
 
-private:
+private
+  :
+
+  template<typename T>
+  struct optional_holder
+  {
+    T return_value{};
+  };
+  template<>
+  struct optional_holder<void>
+  {
+    std::nullopt_t return_value{ std::nullopt };
+  };
+  optional_holder<return_value_type> holder{};
 };
 template<typename... Ts>
 GLCall(Ts &&...) -> GLCall<Ts...>;
-template<typename T>
-concept Void = std::is_void_v<T>;
-template<typename T>
-concept Bindable = requires(T t)
-{
-  {
-    t.Bind()
-    } -> Void;
-  {
-    t.UnBind()
-    } -> Void;
-};
-template<typename T>
-concept SizedBindable = Bindable<T> && requires(T t)
-{
-  {
-    t.size()
-    } -> std::integral;
-};
+
 class Renderer
 {
 public:
