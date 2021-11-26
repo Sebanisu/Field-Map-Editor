@@ -19,36 +19,7 @@ namespace test
 class TestTexture2D
 {
 public:
-  TestTexture2D()
-    : m_vertex_buffer{ std::array{
-      // clang-format off
-       -50.0F,-50.0F, 0.F, 0.F, // 0
-        50.0F,-50.0F, 1.F, 0.F, // 1
-        50.0F, 50.0F, 1.F, 1.F, // 2
-       -50.0F, 50.0F, 0.F, 1.F, // 3
-      // clang-format on
-    } }
-    , m_index_buffer{ std::array{
-        // clang-format off
-        0U, 1U, 2U, // 0
-        2U, 3U, 0U  // 1
-        // clang-format on
-      } }
-    , m_vertex_buffer_layout{
-      VertexBufferLayout::VertexBufferElementType<float>{2U},
-      VertexBufferLayout::VertexBufferElementType<float>{2U},
-    }
-    , m_texture{ std::filesystem::current_path() / "res" / "textures"
-                 / "logo.png" }
-    , m_shader{ std::filesystem::current_path() / "res" / "shader"
-                / "basic.shader" }
-  {
-    m_vertex_array.Bind();
-    m_vertex_array.push_back(m_vertex_buffer, m_vertex_buffer_layout);
-    m_shader.Bind();
-    m_shader.SetUniform("u_Color", 1.F, 1.F, 1.F, 1.F);
-    m_shader.SetUniform("u_Texture", 0);
-  }
+  TestTexture2D();
   void
     OnUpdate(float) const
   {

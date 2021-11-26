@@ -24,6 +24,17 @@ void
     const std::source_location location = std::source_location::current());
 
 
+template<typename T>
+struct optional_holder
+{
+  T return_value{};
+};
+template<>
+struct optional_holder<void>
+{
+  std::nullopt_t return_value{ std::nullopt };
+};
+
 template<typename FuncT, typename... ArgsT>
 requires std::invocable<FuncT, ArgsT...>
 struct GLCall
@@ -61,20 +72,7 @@ public:
     return holder.return_value;
   }
 
-private
-  :
-
-  template<typename T>
-  struct optional_holder
-  {
-    T return_value{};
-  };
-  template<>
-  struct optional_holder<void>
-  {
-    std::nullopt_t return_value{ std::nullopt };
-  };
-  optional_holder<return_value_type> holder{};
+private : optional_holder<return_value_type> holder{};
 };
 template<typename... Ts>
 GLCall(Ts &&...) -> GLCall<Ts...>;

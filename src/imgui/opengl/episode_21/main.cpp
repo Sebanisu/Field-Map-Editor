@@ -73,8 +73,6 @@ int
   GLCall{ glBlendFunc, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA };
 
 
-
-
   /* Loop until the user closes the window */
   Renderer renderer{};
 
@@ -119,7 +117,7 @@ int
   // io.Fonts->AddFontFromFileTTF("c:\\Windows\\Fonts\\ArialUni.ttf", 18.0f,
   // NULL, io.Fonts->GetGlyphRangesJapanese()); IM_ASSERT(font != NULL);
 
-  const test::Test auto test_menu = test::TestMenu{};
+  const auto test_menu = test::TestMenu{};
   while (!glfwWindowShouldClose(window))
   {
     /* Poll for and process events */
@@ -133,7 +131,7 @@ int
     // place imgui here draws here.
     if (ImGui::Begin("Test Window", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
     {
-      test_menu.OnImGuiRender();
+      test::OnImGuiRender(test_menu);
       ImGui::Text(
         "%s",
         fmt::format(
@@ -150,8 +148,8 @@ int
     // glViewport(0, 0, display_w, display_h);
     /* Render here */
     // renderer.Clear();
-    test_menu.OnUpdate(float{});
-    test_menu.OnRender();
+    test::OnUpdate(test_menu, float{});
+    test::OnRender(test_menu);
 
 
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
