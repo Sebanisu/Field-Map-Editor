@@ -15,7 +15,7 @@ private:
 public:
   IndexBufferDynamic() = default;
   IndexBufferDynamic(std::size_t count)
-  :IndexBufferDynamic(QuadIndices(count))
+    : IndexBufferDynamic(QuadIndices(count))
   {
   }
   template<std::ranges::contiguous_range R>
@@ -38,9 +38,9 @@ public:
   IndexBufferDynamic &
     operator=(const IndexBufferDynamic &) = delete;
 
-  IndexBufferDynamic(IndexBufferDynamic &&other);
+  IndexBufferDynamic(IndexBufferDynamic &&other) noexcept;
   IndexBufferDynamic &
-    operator=(IndexBufferDynamic &&other);
+    operator=(IndexBufferDynamic &&other) noexcept;
 
   void
     Bind() const;
@@ -48,7 +48,7 @@ public:
     UnBind() const;
 
   friend void
-    swap(IndexBufferDynamic &first, IndexBufferDynamic &second);
+    swap(IndexBufferDynamic &first, IndexBufferDynamic &second) noexcept;
 };
 static_assert(Bindable<IndexBufferDynamic>);
 #endif// MYPROJECT_IndexBufferDynamic_HPP

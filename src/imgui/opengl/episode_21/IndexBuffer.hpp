@@ -14,7 +14,7 @@ private:
   std::size_t   m_size        = {};
 
 public:
-  IndexBuffer()               = default;
+  IndexBuffer() = default;
   template<std::ranges::contiguous_range R>
   requires std::unsigned_integral<std::ranges::range_value_t<R>>
     IndexBuffer(R &&buffer)
@@ -36,9 +36,9 @@ public:
   IndexBuffer &
     operator=(const IndexBuffer &) = delete;
 
-  IndexBuffer(IndexBuffer &&other);
+  IndexBuffer(IndexBuffer &&other) noexcept;
   IndexBuffer &
-    operator=(IndexBuffer &&other);
+    operator=(IndexBuffer &&other) noexcept;
 
   void
     Bind() const;
@@ -48,7 +48,7 @@ public:
     size() const;
 
   friend void
-    swap(IndexBuffer &first, IndexBuffer &second);
+    swap(IndexBuffer &first, IndexBuffer &second) noexcept;
 };
 static_assert(Bindable<IndexBuffer>);
 

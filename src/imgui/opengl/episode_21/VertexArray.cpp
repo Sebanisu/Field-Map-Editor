@@ -11,13 +11,13 @@ VertexArray::~VertexArray()
 {
   GLCall{ glDeleteVertexArrays, 1, &m_renderer_id };
 }
-VertexArray::VertexArray(VertexArray &&other)
+VertexArray::VertexArray(VertexArray &&other) noexcept
   : VertexArray()
 {
   swap(*this, other);
 }
 VertexArray &
-  VertexArray::operator=(VertexArray &&other)
+  VertexArray::operator=(VertexArray &&other) noexcept
 {
   swap(*this, other);
   return *this;
@@ -36,7 +36,7 @@ void
 
 
 void
-  swap(VertexArray &first, VertexArray &second)// nothrow
+  swap(VertexArray &first, VertexArray &second) noexcept// nothrow
 {
   // enable ADL (not necessary in our case, but good practice)
   using std::swap;
@@ -45,4 +45,3 @@ void
   // the two objects are effectively swapped
   swap(first.m_renderer_id, second.m_renderer_id);
 }
-

@@ -4,14 +4,14 @@ VertexBuffer::~VertexBuffer()
   GLCall{ glDeleteBuffers, 1, &m_renderer_id };
 }
 
-VertexBuffer::VertexBuffer(VertexBuffer &&other)
+VertexBuffer::VertexBuffer(VertexBuffer &&other) noexcept
   : VertexBuffer()
 {
   swap(*this, other);
 }
 
 VertexBuffer &
-  VertexBuffer::operator=(VertexBuffer &&other)
+  VertexBuffer::operator=(VertexBuffer &&other) noexcept
 {
   swap(*this, other);
   return *this;
@@ -30,7 +30,7 @@ void
 }
 
 void
-  swap(VertexBuffer &first, VertexBuffer &second)// nothrow
+  swap(VertexBuffer &first, VertexBuffer &second) noexcept// nothrow
 {
   // enable ADL (not necessary in our case, but good practice)
   using std::swap;

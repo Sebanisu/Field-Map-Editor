@@ -37,7 +37,7 @@ void
         return ""sv;
       }());
 
-    //throw std::exception{};
+    // throw std::exception{};
   }
 }
 void
@@ -76,7 +76,7 @@ void
         }
         return ""sv;
       }());
-    //throw std::exception{};
+    // throw std::exception{};
   }
 }
 
@@ -133,7 +133,8 @@ void
     },
     0);
 }
-void EndErrorCallback()
+void
+  EndErrorCallback()
 {
   glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
 }

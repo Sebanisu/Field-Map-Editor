@@ -13,19 +13,19 @@ Shader::~Shader()
 {
   GLCall{ glDeleteProgram, m_renderer_id };
 }
-Shader::Shader(Shader &&other)
+Shader::Shader(Shader &&other) noexcept
   : Shader()
 {
   swap(*this, other);
 }
 Shader &
-  Shader::operator=(Shader &&other)
+  Shader::operator=(Shader &&other) noexcept
 {
   swap(*this, other);
   return *this;
 }
 void
-  Shader::swap(Shader &first, Shader &second)// nothrow
+  Shader::swap(Shader &first, Shader &second) noexcept// nothrow
 {
   // enable ADL (not necessary in our case, but good practice)
   using std::swap;

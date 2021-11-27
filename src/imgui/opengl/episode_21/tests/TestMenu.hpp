@@ -10,10 +10,10 @@
 #include "TestClearColor.hpp"
 #include "TestTexture2D.hpp"
 #include <functional>
+#include <imgui.h>
 #include <string>
 #include <variant>
 #include <vector>
-#include <imgui.h>
 namespace test
 {
 class MenuItem
@@ -22,13 +22,13 @@ private:
   class MenuItemConcept
   {
   protected:
-    MenuItemConcept() = default;
-    MenuItemConcept(const MenuItemConcept &) = default;
-    MenuItemConcept(MenuItemConcept &&)      = default;
+    MenuItemConcept()                            = default;
+    MenuItemConcept(const MenuItemConcept &)     = default;
+    MenuItemConcept(MenuItemConcept &&) noexcept = default;
     MenuItemConcept &
       operator=(const MenuItemConcept &) = default;
     MenuItemConcept &
-      operator=(MenuItemConcept &&) = default;
+      operator=(MenuItemConcept &&) noexcept = default;
 
   public:
     virtual ~MenuItemConcept(){};
@@ -51,7 +51,7 @@ private:
       OnUpdate(float ts) const final
     {
       using test::OnUpdate;
-      return OnUpdate(m_test,ts);
+      return OnUpdate(m_test, ts);
     }
     void
       OnRender() const final
@@ -104,7 +104,7 @@ public:
   {
   }
   template<typename T>
-  MenuItem(T &&test)
+  MenuItem(T &&test) noexcept
     : MenuItem()
   {
     if constexpr (decay_same_as<T, MenuItem>)
@@ -121,13 +121,13 @@ public:
   MenuItem(const MenuItem &other) = delete;
   MenuItem &
     operator=(const MenuItem &other) = delete;
-  MenuItem(MenuItem &&other)
+  MenuItem(MenuItem &&other) noexcept
     : MenuItem()
   {
     swap(*this, other);
   }
   MenuItem &
-    operator=(MenuItem &&other)
+    operator=(MenuItem &&other) noexcept
   {
     swap(*this, other);
     return *this;
@@ -138,7 +138,7 @@ public:
     return bool{ m_impl };
   }
   friend void
-    swap(MenuItem &left, MenuItem &right)
+    swap(MenuItem &left, MenuItem &right) noexcept
   {
     using std::swap;
     swap(left.m_impl, right.m_impl);
@@ -163,13 +163,13 @@ public:
     push_back<TestBatchRenderingTexture2DDynamic>(
       "Test Batch Rendering with Texture2D Dynamic");
   }
-  TestMenu(TestMenu &&other)
+  TestMenu(TestMenu &&other) noexcept
     : TestMenu()
   {
     swap(*this, other);
   }
   TestMenu &
-    operator=(TestMenu &&other)
+    operator=(TestMenu &&other) noexcept
   {
     swap(*this, other);
     return *this;
@@ -193,7 +193,7 @@ public:
   }
 
   friend void
-    swap(TestMenu &left, TestMenu &right)
+    swap(TestMenu &left, TestMenu &right) noexcept
   {
     using std::swap;
     swap(left.m_current, right.m_current);

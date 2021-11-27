@@ -13,7 +13,7 @@ private:
   std::uint32_t m_renderer_id = {};
 
 public:
-  VertexBuffer()              = default;
+  VertexBuffer() = default;
   VertexBuffer(std::ranges::contiguous_range auto &&buffer)
   {
     const std::ptrdiff_t size_in_bytes = static_cast<std::ptrdiff_t>(
@@ -32,9 +32,9 @@ public:
   VertexBuffer &
     operator=(const VertexBuffer &) = delete;
 
-  VertexBuffer(VertexBuffer &&other);
+  VertexBuffer(VertexBuffer &&other) noexcept;
   VertexBuffer &
-    operator=(VertexBuffer &&other);
+    operator=(VertexBuffer &&other) noexcept;
 
   void
     Bind() const;
@@ -42,7 +42,7 @@ public:
     UnBind() const;
 
   friend void
-    swap(VertexBuffer &first, VertexBuffer &second);
+    swap(VertexBuffer &first, VertexBuffer &second) noexcept;
 };
 static_assert(Bindable<VertexBuffer>);
 

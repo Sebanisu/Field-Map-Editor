@@ -10,17 +10,17 @@ namespace test
 template<typename T>
 concept Test =
   std::default_initializable<T> && std::movable<T> &&(// requires(const T &t)
-    //{
-    //  {
-    //    t.OnUpdate(float{})
-    //    } -> Void;
-    //  {
-    //    t.OnRender()
-    //    } -> Void;
-    //  {
-    //    t.OnImGuiRender()
-    //    } -> Void;
-    //} ||
+                                                      //{
+                                                      //  {
+                                                      //    t.OnUpdate(float{})
+                                                      //    } -> Void;
+                                                      //  {
+                                                      //    t.OnRender()
+                                                      //    } -> Void;
+                                                      //  {
+                                                      //    t.OnImGuiRender()
+                                                      //    } -> Void;
+                                                      //} ||
     requires(const T &t)
     {
       {

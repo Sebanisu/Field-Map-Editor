@@ -4,14 +4,14 @@ VertexBufferDynamic::~VertexBufferDynamic()
   GLCall{ glDeleteBuffers, 1, &m_renderer_id };
 }
 
-VertexBufferDynamic::VertexBufferDynamic(VertexBufferDynamic &&other)
+VertexBufferDynamic::VertexBufferDynamic(VertexBufferDynamic &&other) noexcept
   : VertexBufferDynamic()
 {
   swap(*this, other);
 }
 
 VertexBufferDynamic &
-  VertexBufferDynamic::operator=(VertexBufferDynamic &&other)
+  VertexBufferDynamic::operator=(VertexBufferDynamic &&other) noexcept
 {
   swap(*this, other);
   return *this;
@@ -30,7 +30,9 @@ void
 }
 
 void
-  swap(VertexBufferDynamic &first, VertexBufferDynamic &second)// nothrow
+  swap(
+    VertexBufferDynamic &first,
+    VertexBufferDynamic &second) noexcept// nothrow
 {
   // enable ADL (not necessary in our case, but good practice)
   using std::swap;

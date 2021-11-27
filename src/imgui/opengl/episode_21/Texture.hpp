@@ -23,7 +23,7 @@ public:
   Texture(std::filesystem::path path)
     : m_path(std::move(path))
   {
-    if(m_path.empty())
+    if (m_path.empty())
       return;
     stbi_set_flip_vertically_on_load(1);
 
@@ -55,8 +55,8 @@ public:
   void
     Bind(int slot = 0) const
   {
-    //GLCall{ glActiveTexture, static_cast<GLenum>(GL_TEXTURE0 + slot) };
-    //GLCall{ glBindTexture, GL_TEXTURE_2D, m_renderer_id };
+    // GLCall{ glActiveTexture, static_cast<GLenum>(GL_TEXTURE0 + slot) };
+    // GLCall{ glBindTexture, GL_TEXTURE_2D, m_renderer_id };
     GLCall{ glBindTextureUnit, slot, m_renderer_id };
   }
   void
@@ -77,19 +77,19 @@ public:
   Texture(const Texture &) = delete;
   Texture &
     operator=(const Texture &) = delete;
-  Texture(Texture &&other)
+  Texture(Texture &&other) noexcept
     : Texture()
   {
     swap(*this, other);
   }
   Texture &
-    operator=(Texture &&other)
+    operator=(Texture &&other) noexcept
   {
     swap(*this, other);
     return *this;
   }
   void
-    swap(Texture &first, Texture &second)// nothrow
+    swap(Texture &first, Texture &second) noexcept// nothrow
   {
     // enable ADL (not necessary in our case, but good practice)
     using std::swap;

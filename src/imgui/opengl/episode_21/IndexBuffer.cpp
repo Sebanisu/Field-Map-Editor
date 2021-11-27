@@ -5,14 +5,14 @@ IndexBuffer::~IndexBuffer()
   GLCall{ glDeleteBuffers, 1, &m_renderer_id };
 }
 
-IndexBuffer::IndexBuffer(IndexBuffer &&other)
+IndexBuffer::IndexBuffer(IndexBuffer &&other) noexcept
   : IndexBuffer()
 {
   swap(*this, other);
 }
 
 IndexBuffer &
-  IndexBuffer::operator=(IndexBuffer &&other)
+  IndexBuffer::operator=(IndexBuffer &&other) noexcept
 {
   swap(*this, other);
   return *this;
@@ -37,7 +37,7 @@ std::size_t
 }
 
 void
-  swap(IndexBuffer &first, IndexBuffer &second)// nothrow
+  swap(IndexBuffer &first, IndexBuffer &second) noexcept// nothrow
 {
   // enable ADL (not necessary in our case, but good practice)
   using std::swap;

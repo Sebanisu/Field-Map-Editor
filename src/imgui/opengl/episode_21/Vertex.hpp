@@ -55,7 +55,11 @@ struct Vertex
 };
 using Quad = std::array<Vertex, 4U>;
 constexpr inline Quad
-  CreateQuad(glm::vec2 offset, glm::vec4 color, int texture_id = {}, float size = 1.F)
+  CreateQuad(
+    glm::vec2 offset,
+    glm::vec4 color,
+    int       texture_id = {},
+    float     size       = 1.F)
 {
   return {
     Vertex{ offset, color, { 0.F, 0.F }, texture_id },// 0

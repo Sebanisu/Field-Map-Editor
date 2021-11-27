@@ -62,9 +62,9 @@ public:
   VertexBufferDynamic &
     operator=(const VertexBufferDynamic &) = delete;
 
-  VertexBufferDynamic(VertexBufferDynamic &&other);
+  VertexBufferDynamic(VertexBufferDynamic &&other) noexcept;
   VertexBufferDynamic &
-    operator=(VertexBufferDynamic &&other);
+    operator=(VertexBufferDynamic &&other) noexcept;
 
   void
     Bind() const;
@@ -89,7 +89,7 @@ public:
 
 
   friend void
-    swap(VertexBufferDynamic &first, VertexBufferDynamic &second);
+    swap(VertexBufferDynamic &first, VertexBufferDynamic &second) noexcept;
 };
 static_assert(Bindable<VertexBufferDynamic>);
 

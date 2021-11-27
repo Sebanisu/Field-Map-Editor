@@ -33,12 +33,12 @@ public:
   Shader &
     operator=(const Shader &) = delete;
 
-  Shader(Shader &&other);
+  Shader(Shader &&other) noexcept;
   Shader &
-    operator=(Shader &&other);
+    operator=(Shader &&other) noexcept;
 
   void
-    swap(Shader &first, Shader &second);
+    swap(Shader &first, Shader &second) noexcept;
 
   void
     Bind() const;

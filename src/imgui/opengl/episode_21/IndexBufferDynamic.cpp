@@ -5,14 +5,14 @@ IndexBufferDynamic::~IndexBufferDynamic()
   GLCall{ glDeleteBuffers, 1, &m_renderer_id };
 }
 
-IndexBufferDynamic::IndexBufferDynamic(IndexBufferDynamic &&other)
+IndexBufferDynamic::IndexBufferDynamic(IndexBufferDynamic &&other) noexcept
   : IndexBufferDynamic()
 {
   swap(*this, other);
 }
 
 IndexBufferDynamic &
-  IndexBufferDynamic::operator=(IndexBufferDynamic &&other)
+  IndexBufferDynamic::operator=(IndexBufferDynamic &&other) noexcept
 {
   swap(*this, other);
   return *this;
@@ -31,7 +31,7 @@ void
 }
 
 void
-  swap(IndexBufferDynamic &first, IndexBufferDynamic &second)// nothrow
+  swap(IndexBufferDynamic &first, IndexBufferDynamic &second) noexcept// nothrow
 {
   // enable ADL (not necessary in our case, but good practice)
   using std::swap;

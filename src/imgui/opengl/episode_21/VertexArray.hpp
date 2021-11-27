@@ -23,10 +23,10 @@ public:
   VertexArray &
     operator=(const VertexArray &) = delete;
 
-  VertexArray(VertexArray &&other);
+  VertexArray(VertexArray &&other) noexcept;
 
   VertexArray &
-    operator=(VertexArray &&other);
+    operator=(VertexArray &&other) noexcept;
 
   void
     Bind() const;
@@ -56,7 +56,7 @@ public:
       });
   }
   friend void
-    swap(VertexArray &first, VertexArray &second);
+    swap(VertexArray &first, VertexArray &second) noexcept;
 };
 static_assert(Bindable<VertexArray>);
 #endif// MYPROJECT_VERTEXARRAY_HPP

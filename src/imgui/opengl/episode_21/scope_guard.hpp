@@ -19,18 +19,19 @@ struct [[nodiscard]] scope_guard
   scope_guard &
     operator=(const scope_guard &other)
   {
-    func = other.func;
+    scope_guard tmp{ other };
+    *this = std::move(tmp);
     return *this;
   }
 
-  scope_guard(scope_guard &&other)
+  scope_guard(scope_guard &&other) noexcept
     : scope_guard()
   {
     swap(*this, other);
   }
 
   scope_guard &
-    operator=(scope_guard &&other)
+    operator=(scope_guard &&other) noexcept
   {
     swap(*this, other);
     return *this;
@@ -45,7 +46,7 @@ struct [[nodiscard]] scope_guard
   }
 
   void
-    swap(scope_guard &first, scope_guard &second)// nothrow
+    swap(scope_guard &first, scope_guard &second) noexcept// nothrow
   {
     // enable ADL (not necessary in our case, but good practice)
     using std::swap;
@@ -70,22 +71,23 @@ struct [[nodiscard]] scope_guard_expensive
     : func(other.func)
   {
   }
-  
+
   scope_guard_expensive &
     operator=(const scope_guard_expensive &other)
   {
-    func = other.func;
+    scope_guard_expensive tmp{ other };
+    *this = std::move(tmp);
     return *this;
   }
 
-  scope_guard_expensive(scope_guard_expensive &&other)
+  scope_guard_expensive(scope_guard_expensive &&other) noexcept
     : scope_guard_expensive()
   {
     swap(*this, other);
   }
 
   scope_guard_expensive &
-    operator=(scope_guard_expensive &&other)
+    operator=(scope_guard_expensive &&other) noexcept
   {
     swap(*this, other);
     return *this;
@@ -100,7 +102,9 @@ struct [[nodiscard]] scope_guard_expensive
   }
 
   void
-    swap(scope_guard_expensive &first, scope_guard_expensive &second)// nothrow
+    swap(
+      scope_guard_expensive &first,
+      scope_guard_expensive &second) noexcept// nothrow
   {
     // enable ADL (not necessary in our case, but good practice)
     using std::swap;
