@@ -50,17 +50,20 @@ private:
     void
       OnUpdate(float ts) const final
     {
-      return m_test.OnUpdate(ts);
+      using test::OnUpdate;
+      return OnUpdate(m_test,ts);
     }
     void
       OnRender() const final
     {
-      return m_test.OnRender();
+      using test::OnRender;
+      return OnRender(m_test);
     }
     void
       OnImGuiRender() const final
     {
-      return m_test.OnImGuiRender();
+      using test::OnImGuiRender;
+      return OnImGuiRender(m_test);
     }
 
   private:
