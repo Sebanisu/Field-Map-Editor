@@ -12,6 +12,7 @@ Shader::Shader(std::filesystem::path file_path)
 Shader::~Shader()
 {
   GLCall{ glDeleteProgram, m_renderer_id };
+  UnBind();
 }
 Shader::Shader(Shader &&other) noexcept
   : Shader()
@@ -42,7 +43,7 @@ void
   GLCall{ glUseProgram, m_renderer_id };
 }
 void
-  Shader::UnBind() const
+  Shader::UnBind()
 {
   GLCall{ glUseProgram, 0U };
 }

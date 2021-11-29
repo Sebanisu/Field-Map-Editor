@@ -2,6 +2,7 @@
 VertexBufferDynamic::~VertexBufferDynamic()
 {
   GLCall{ glDeleteBuffers, 1, &m_renderer_id };
+  UnBind();
 }
 
 VertexBufferDynamic::VertexBufferDynamic(VertexBufferDynamic &&other) noexcept
@@ -24,9 +25,20 @@ void
 }
 
 void
-  VertexBufferDynamic::UnBind() const
+  VertexBufferDynamic::UnBind()
 {
   GLCall{ glBindBuffer, GL_ARRAY_BUFFER, 0U };
+}
+VertexBufferDynamic::VertexBufferDynamic(size_t count)
+  : m_max_size(count * 4U)
+{
+  GLCall{ glGenBuffers, 1, &m_renderer_id };
+  GLCall{ glBindBuffer, GL_ARRAY_BUFFER, m_renderer_id };
+  GLCall{ glBufferData,
+          GL_ARRAY_BUFFER,
+          static_cast<std::ptrdiff_t>(count * sizeof(Quad)),
+          nullptr,
+          GL_DYNAMIC_DRAW };
 }
 
 void

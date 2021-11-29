@@ -17,7 +17,7 @@ concept Bindable =
     t.Bind()
     } -> Void;
   {
-    t.UnBind()
+    T::UnBind()
     } -> Void;
 };
 template<typename T>

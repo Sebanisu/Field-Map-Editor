@@ -30,8 +30,8 @@ public:
 
   void
     Bind() const;
-  void
-    UnBind() const;
+  static void
+    UnBind();
   void
     push_back(const Bindable auto &vb, const VertexBufferLayout &layout)
   {

@@ -38,8 +38,8 @@ public:
 
   void
     Bind() const;
-  void
-    UnBind() const;
+  static void
+    UnBind();
 
   friend void
     swap(VertexBuffer &first, VertexBuffer &second) noexcept;

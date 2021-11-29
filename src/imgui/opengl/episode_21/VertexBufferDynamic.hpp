@@ -29,8 +29,8 @@ public:
   {
   }
 
-  constexpr void
-    UnBind() const noexcept
+  static constexpr void
+    UnBind() noexcept
   {
   }
 };
@@ -45,17 +45,7 @@ private:
 
 public:
   VertexBufferDynamic() = default;
-  VertexBufferDynamic(size_t count)
-    : m_max_size(count * 4U)
-  {
-    GLCall{ glGenBuffers, 1, &m_renderer_id };
-    GLCall{ glBindBuffer, GL_ARRAY_BUFFER, m_renderer_id };
-    GLCall{ glBufferData,
-            GL_ARRAY_BUFFER,
-            static_cast<std::ptrdiff_t>(count * sizeof(Quad)),
-            nullptr,
-            GL_DYNAMIC_DRAW };
-  }
+  VertexBufferDynamic(size_t count);
   ~VertexBufferDynamic();
 
   VertexBufferDynamic(const VertexBufferDynamic &) = delete;
@@ -68,8 +58,8 @@ public:
 
   void
     Bind() const;
-  void
-    UnBind() const;
+  static void
+    UnBind();
   template<std::ranges::contiguous_range T>
   [[nodiscard]] IndexBufferDynamicSize
     Update(const T &vertices) const

@@ -158,13 +158,14 @@ inline void
                   1.F);
   const auto view = glm::translate(glm::mat4{ 1.F }, self.view_offset);
   Renderer   renderer{};
+  self.m_shader.Bind();
   {
     const auto model = glm::translate(glm::mat4{ 1.F }, self.model_offset);
     const auto mvp   = proj * view * model;
     self.m_shader.SetUniform("u_MVP", mvp);
     self.m_shader.SetUniform("u_Color", 1.F, 1.F, 1.F, 1.F);
     // m_shader.SetUniform("u_Texture", 0);
-    renderer.Draw(self.m_vertex_array, self.m_index_buffer, self.m_shader);
+    renderer.Draw(self.m_vertex_array, self.m_index_buffer);
   }
 }
 }// namespace test

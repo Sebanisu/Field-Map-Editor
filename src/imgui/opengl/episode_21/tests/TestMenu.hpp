@@ -96,7 +96,7 @@ private:
     }
   }
 
-  mutable std::unique_ptr<MenuItemConcept> m_impl{ nullptr };
+  mutable std::unique_ptr<const MenuItemConcept> m_impl{ nullptr };
 
 public:
   MenuItem()
@@ -113,9 +113,9 @@ public:
     }
     else
     {
+      using std::swap;
       static_assert(Test<T>);
-      m_impl =
-        std::unique_ptr<MenuItemConcept>{ new MenuItemModel(std::move(test)) };
+      m_impl = std::make_unique<MenuItemModel<std::decay_t<T>>>(std::move(test));
     }
   }
   MenuItem(const MenuItem &other) = delete;

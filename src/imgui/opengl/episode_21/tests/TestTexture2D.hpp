@@ -56,20 +56,19 @@ void
              -1.F,
              1.F);
   const auto view = glm::translate(glm::mat4{ 1.F }, self.view_offset);
-  Renderer   renderer{};
+  self.m_shader.Bind();
+  Renderer renderer{};
   {
     const auto model = glm::translate(glm::mat4{ 1.F }, self.model_offset);
     const auto mvp   = proj * view * model;
     self.m_shader.SetUniform("u_MVP", mvp);
-    renderer.Draw(
-      self.m_vertex_array, self.m_index_buffer, self.m_shader, self.m_texture);
+    renderer.Draw(self.m_vertex_array, self.m_index_buffer, self.m_texture);
   }
   {
     const auto model = glm::translate(glm::mat4{ 1.F }, self.model2_offset);
     const auto mvp   = proj * view * model;
     self.m_shader.SetUniform("u_MVP", mvp);
-    renderer.Draw(
-      self.m_vertex_array, self.m_index_buffer, self.m_shader, self.m_texture);
+    renderer.Draw(self.m_vertex_array, self.m_index_buffer, self.m_texture);
   }
 }
 void

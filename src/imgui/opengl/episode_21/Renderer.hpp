@@ -17,7 +17,12 @@ void
 void
   EndErrorCallback();
 void
-  GLClearError();
+  GLClearError(
+    const std::source_location location = std::source_location::current());
+
+bool
+  GLCheckError(
+    const std::source_location location = std::source_location::current());
 
 void
   GLGetError(
@@ -46,7 +51,7 @@ public:
     ArgsT &&...args,
     std::source_location location = std::source_location::current())
   {
-    GLClearError();
+    GLClearError(location);
     if constexpr (!Void<return_value_type>)
     {
       holder.return_value =

@@ -53,6 +53,9 @@ struct Vertex
              VertexBufferLayout::VertexBufferElementType<float>{ 1U } };
   }
 };
+static_assert(
+  std::movable<
+    Vertex> && std::copyable<Vertex> && std::default_initializable<Vertex>);
 using Quad = std::array<Vertex, 4U>;
 constexpr inline Quad
   CreateQuad(

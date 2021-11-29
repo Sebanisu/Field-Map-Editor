@@ -152,7 +152,10 @@ int
     test::OnRender(test_menu);
 
 
+    BeginErrorCallBack();
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+    EndErrorCallback();
+    GLClearError();
 
     /* Swap front and back buffers */
     glfwSwapBuffers(window);

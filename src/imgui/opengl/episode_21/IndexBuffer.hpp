@@ -42,8 +42,8 @@ public:
 
   void
     Bind() const;
-  void
-    UnBind() const;
+  static void
+    UnBind();
   std::size_t
     size() const;
 

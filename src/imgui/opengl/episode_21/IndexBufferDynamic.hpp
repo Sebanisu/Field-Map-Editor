@@ -44,8 +44,8 @@ public:
 
   void
     Bind() const;
-  void
-    UnBind() const;
+  static void
+    UnBind();
 
   friend void
     swap(IndexBufferDynamic &first, IndexBufferDynamic &second) noexcept;

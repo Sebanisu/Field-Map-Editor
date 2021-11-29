@@ -37,7 +37,7 @@ public:
 private:
   VertexBufferDynamic            m_vertex_buffer      = { 1000 };
   IndexBufferDynamic             m_index_buffer       = { 1000 };
-  mutable IndexBufferDynamicSize m_vertex_buffer_size = {};
+  mutable IndexBufferDynamicSize index_buffer_size    = {};
   Shader                         m_shader             = {};
   VertexArray                    m_vertex_array       = {};
   std::vector<Texture>           m_textures           = {};
@@ -80,7 +80,7 @@ void
               + CreateQuad(self.model_offset2, colors[1], 2)
               + CreateQuad(self.model_offset3, colors[2], 3);
 
-  self.m_vertex_buffer_size = self.m_vertex_buffer.Update(vertices);
+  self.index_buffer_size = self.m_vertex_buffer.Update(vertices);
 }
 void
   OnRender(const TestBatchRenderingTexture2DDynamic &self)
@@ -110,7 +110,7 @@ void
     }
     self.m_shader.SetUniform("u_Textures", slots);
     renderer.Draw(
-      self.m_vertex_buffer_size, self.m_vertex_array, self.m_index_buffer);
+      self.index_buffer_size, self.m_vertex_array, self.m_index_buffer);
   }
 }
 void

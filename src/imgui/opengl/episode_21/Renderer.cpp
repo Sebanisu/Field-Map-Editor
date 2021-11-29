@@ -4,52 +4,16 @@
 
 #include "Renderer.hpp"
 #include <fmt/format.h>
-void
-  GLClearError()
+bool
+  GLCheckError(std::string_view prefix, const std::source_location location)
 {
-  GLenum error;
-  while ((error = glGetError()) != GL_NO_ERROR)
+  if (GLenum error = glGetError(); error != GL_NO_ERROR)
   {
     using namespace std::string_view_literals;
     fmt::print(
       stderr,
-      "Cleared Error: 0x{:>04X}:{}\n",
-      error,
-      [&error]()
-      {
-        switch (error)
-        {
-        case GL_INVALID_ENUM:
-          return "GL_INVALID_ENUM"sv;
-        case GL_INVALID_VALUE:
-          return "GL_INVALID_VALUE"sv;
-        case GL_INVALID_OPERATION:
-          return "GL_INVALID_OPERATION"sv;
-        case GL_INVALID_FRAMEBUFFER_OPERATION:
-          return "GL_INVALID_FRAMEBUFFER_OPERATION"sv;
-        case GL_OUT_OF_MEMORY:
-          return "GL_OUT_OF_MEMORY"sv;
-        case GL_STACK_UNDERFLOW:
-          return "GL_STACK_UNDERFLOW"sv;
-        case GL_STACK_OVERFLOW:
-          return "GL_STACK_OVERFLOW"sv;
-        }
-        return ""sv;
-      }());
-
-    // throw std::exception{};
-  }
-}
-void
-  GLGetError(const std::source_location location)
-{
-  GLenum error;
-  while ((error = glGetError()) != GL_NO_ERROR)
-  {
-    using namespace std::string_view_literals;
-    fmt::print(
-      stderr,
-      "Error {}({}:{}) {}: 0x{:>04X}:{}\n",
+      "{} {}:{}:{} {}: 0x{:>04X}:{}\n",
+      prefix,
       location.file_name(),
       location.line(),
       location.column(),
@@ -76,7 +40,26 @@ void
         }
         return ""sv;
       }());
-    // throw std::exception{};
+    return true;
+  }
+  return false;
+}
+void
+  GLClearError(const std::source_location location)
+{
+  while (GLCheckError("Cleared Error", location))
+  {
+    // do nothing;
+  }
+}
+
+
+void
+  GLGetError(const std::source_location location)
+{
+  while (GLCheckError("Error", location))
+  {
+    throw std::exception{};
   }
 }
 
@@ -117,6 +100,10 @@ void
         { GL_DEBUG_SEVERITY_LOW, "LOW" },
         { GL_DEBUG_SEVERITY_NOTIFICATION, "NOTIFICATION" }
       };
+      if (GL_DEBUG_SEVERITY_NOTIFICATION == severity)
+      {
+        return;
+      }
       std::string src = errorSourceMap.at(source);
       std::string tp  = errorTypeMap.at(type);
       std::string sv  = severityMap.at(severity);
@@ -128,8 +115,8 @@ void
         tp,
         sv,
         message);
-      //            if (GL_DEBUG_SEVERITY_HIGH == severity)
-      //              throw std::exception{};
+      if (GL_DEBUG_SEVERITY_HIGH == severity)
+        throw std::exception{};
     },
     0);
 }

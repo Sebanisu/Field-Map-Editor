@@ -3,6 +3,7 @@
 IndexBufferDynamic::~IndexBufferDynamic()
 {
   GLCall{ glDeleteBuffers, 1, &m_renderer_id };
+  UnBind();
 }
 
 IndexBufferDynamic::IndexBufferDynamic(IndexBufferDynamic &&other) noexcept
@@ -25,7 +26,7 @@ void
 }
 
 void
-  IndexBufferDynamic::UnBind() const
+  IndexBufferDynamic::UnBind()
 {
   GLCall{ glBindBuffer, GL_ELEMENT_ARRAY_BUFFER, 0U };
 }

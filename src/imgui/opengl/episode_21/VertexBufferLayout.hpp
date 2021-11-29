@@ -52,7 +52,9 @@ private:
   std::size_t                      m_stride   = {};
   std::vector<VertexBufferElement> m_elements = {};
 };
-
+static_assert(
+  std::movable<
+    VertexBufferLayout> && std::copyable<VertexBufferLayout> && std::default_initializable<VertexBufferLayout>);
 template<>
 inline void
   VertexBufferLayout::push_back<float>(std::uint32_t count)

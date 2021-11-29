@@ -10,6 +10,7 @@ VertexArray::VertexArray()
 VertexArray::~VertexArray()
 {
   GLCall{ glDeleteVertexArrays, 1, &m_renderer_id };
+  UnBind();
 }
 VertexArray::VertexArray(VertexArray &&other) noexcept
   : VertexArray()
@@ -27,8 +28,8 @@ void
 {
   GLCall{ glBindVertexArray, m_renderer_id };
 }
-void
-  VertexArray::UnBind() const
+ void
+  VertexArray::UnBind()
 {
 
   GLCall{ glBindVertexArray, 0U };
