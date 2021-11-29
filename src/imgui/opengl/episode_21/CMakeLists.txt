@@ -41,7 +41,7 @@ add_executable(opengl_series_episode_21
         Shader.cpp
         Texture.cpp
         tests/Test.h
-        )
+        tests/TestTexture2D.cpp)
 target_link_libraries(opengl_series_episode_21
         PRIVATE project_warnings
         PRIVATE fmt::fmt
