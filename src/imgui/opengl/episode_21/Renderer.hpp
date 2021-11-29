@@ -9,6 +9,7 @@
 #include <functional>
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
+#include <glm/glm.hpp>
 #include <optional>
 #include <source_location>
 #include <utility>
@@ -84,11 +85,28 @@ GLCall(Ts &&...) -> GLCall<Ts...>;
 
 class Renderer
 {
+private:
+  mutable glm::vec4 m_clear_color{};
+
 public:
+  void
+    ClearColor(glm::vec4 color) const
+  {
+    m_clear_color = std::move(color);
+  }
+  void
+    ClearColor(const float r, const float g, const float b, const float a) const
+  {
+    ClearColor({ r, g, b, a });
+  }
   void
     Clear() const
   {
-    GLCall{ glClearColor, 0.F, 0.F, 0.F, 0.F };
+    GLCall{ glClearColor,
+            m_clear_color.r,
+            m_clear_color.g,
+            m_clear_color.b,
+            m_clear_color.a };
     GLCall{ glClear, GL_COLOR_BUFFER_BIT };
   }
   template<Bindable... Ts>
