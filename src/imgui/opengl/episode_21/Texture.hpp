@@ -22,6 +22,8 @@ public:
   Texture() = default;
   Texture(std::filesystem::path path);
   ~Texture();
+  std::uint32_t
+    ID() const noexcept;
   void
     Bind(int slot = 0) const;
   static void

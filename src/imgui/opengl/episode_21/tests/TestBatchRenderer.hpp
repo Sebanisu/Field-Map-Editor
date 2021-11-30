@@ -23,9 +23,13 @@ public:
 
 private:
   void
-                              GenerateQuads() const;
+    GenerateQuads() const;
+  void
+                              SetUniforms() const;
   BatchRenderer               m_batch_renderer{};
-  mutable std::array<int, 2U> m_count = { 100, 100 };
+  mutable std::array<int, 2U> m_count     = { 100, 100 };
+  mutable glm::vec3           view_offset = { -2.F, -1.F, 0.F };
+  mutable float               m_zoom      = { 0.078F };
 };
 inline void
   OnUpdate(const TestBatchRenderer &self, float ts)
@@ -35,17 +39,41 @@ inline void
 inline void
   OnRender(const TestBatchRenderer &self)
 {
+  self.SetUniforms();
   // OnRender(self.m_batch_renderer);
   self.GenerateQuads();
 }
 inline void
   OnImGuiRender(const TestBatchRenderer &self)
 {
-  const auto pop = scope_guard{ &ImGui::PopID };
-  int        id{};
-  ImGui::PushID(++id);
-  if (ImGui::SliderInt2("Quad (X, Y)", std::data(self.m_count), 0, 100))
+  int window_width = 16;
+  int id           = 0;
+
   {
+    const auto pop = scope_guard(&ImGui::PopID);
+    ImGui::PushID(++id);
+    if (ImGui::SliderFloat2(
+          "View Offset",
+          &self.view_offset.x,
+          -static_cast<float>(window_width),
+          static_cast<float>(window_width)))
+    {
+    }
+  }
+  {
+    const auto pop = scope_guard{ &ImGui::PopID };
+    ImGui::PushID(++id);
+    if (ImGui::SliderFloat("Zoom", &self.m_zoom, 1.F, .001F))
+    {
+    }
+  }
+  {
+    const auto pop = scope_guard{ &ImGui::PopID };
+    ImGui::PushID(++id);
+    if (ImGui::SliderInt2(
+          "Quad Axis Count (X, Y)", std::data(self.m_count), 0, 100))
+    {
+    }
   }
   ImGui::Text(
     "%s",
@@ -54,9 +82,32 @@ inline void
   ImGui::Text(
     "%s",
     fmt::format(
-      "Total Verts Rendered: {}", self.m_count[0] * self.m_count[1] * 4U)
+      "Total Vertices Rendered: {}", self.m_count[0] * self.m_count[1] * 4U)
+      .c_str());
+  ImGui::Text(
+    "%s",
+    fmt::format(
+      "Total Indices Rendered: {}", self.m_count[0] * self.m_count[1] * 6U)
       .c_str());
   OnImGuiRender(self.m_batch_renderer);
+}
+inline void
+  test::TestBatchRenderer::SetUniforms() const
+{
+  const float window_width  = 16.F;
+  const float window_height = 9.F;
+  const auto  proj          = glm::ortho(
+              view_offset.x / m_zoom,
+              (view_offset.x + window_width) / m_zoom,
+              view_offset.y / m_zoom,
+              (view_offset.y + window_height) / m_zoom,
+              -1.F,
+              1.F);
+
+  const auto mvp = proj;
+  m_batch_renderer.Shader().Bind();
+  m_batch_renderer.Shader().SetUniform("u_MVP", mvp);
+  m_batch_renderer.Shader().SetUniform("u_Color", 1.F, 1.F, 1.F, 1.F);
 }
 static_assert(Test<TestBatchRenderer>);
 }// namespace test

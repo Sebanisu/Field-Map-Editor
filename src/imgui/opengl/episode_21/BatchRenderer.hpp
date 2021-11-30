@@ -50,13 +50,17 @@ public:
   void
     Draw() const;
 
+  const auto &
+    Shader() const
+  {
+    return m_shader;
+  }
+
 private:
   void
     FlushVertices() const;
   void
-    DrawVertices() const;
-  void
-                              SetUniforms() const;
+                              DrawVertices() const;
   std::size_t                 m_quad_count    = { 100U };
   VertexBufferDynamic         m_vertex_buffer = { QUAD_COUNT() };
   IndexBufferDynamic          m_index_buffer  = { QUAD_COUNT() };
@@ -67,10 +71,8 @@ private:
                                                return r;
                                              }() };
   mutable IndexBufferDynamicSize index_buffer_size = {};
-  Shader                         m_shader          = {};
+  ::Shader                       m_shader          = {};
   VertexArray                    m_vertex_array    = {};
-  mutable glm::vec3              view_offset       = { -2.F, -1.F, 0.F };
-  mutable float                  m_zoom            = { 0.078F };
 };
 void
   OnUpdate(const BatchRenderer &, float);

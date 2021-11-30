@@ -54,27 +54,8 @@ void
 {
 }
 void
-  test::OnImGuiRender(const BatchRenderer &self)
+  test::OnImGuiRender(const BatchRenderer &)
 {
-  int        id           = 0;
-
-  int        window_width = 16;
-  const auto pop          = scope_guard(&ImGui::PopID);
-  ImGui::PushID(++id);
-  if (ImGui::SliderFloat2(
-        "View Offset",
-        &self.view_offset.x,
-        -static_cast<float>(window_width),
-        static_cast<float>(window_width)))
-  {
-  }
-  const auto pop2 = pop;
-  ImGui::PushID(++id);
-  if (ImGui::SliderFloat("Zoom", &self.m_zoom, 1.F, .001F))
-  {
-  }
-
-
   ImGui::Text("%s", fmt::format("Total Draws: {}", test::draw_count).c_str());
 }
 void
@@ -91,27 +72,8 @@ void
   {
     return;
   }
-  SetUniforms();
   renderer.Draw(index_buffer_size, m_vertex_array, m_index_buffer, m_shader);
   ++draw_count;
-}
-void
-  test::BatchRenderer::SetUniforms() const
-{
-  const float window_width  = 16.F;
-  const float window_height = 9.F;
-  const auto  proj          = glm::ortho(
-              view_offset.x / m_zoom,
-              (view_offset.x + window_width) / m_zoom,
-              view_offset.y / m_zoom,
-              (view_offset.y + window_height) / m_zoom,
-              -1.F,
-              1.F);
-
-  const auto mvp = proj;
-  m_shader.Bind();
-  m_shader.SetUniform("u_MVP", mvp);
-  m_shader.SetUniform("u_Color", 1.F, 1.F, 1.F, 1.F);
 }
 void
   test::BatchRenderer::Clear() const

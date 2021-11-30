@@ -68,6 +68,11 @@ Texture &
   swap(*this, other);
   return *this;
 }
+std::uint32_t
+  Texture::ID() const noexcept
+{
+  return m_renderer_id;
+}
 void
   swap(Texture &first, Texture &second) noexcept// nothrow
 {
