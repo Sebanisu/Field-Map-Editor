@@ -56,6 +56,11 @@ public:
   void
     Clear() const;
   void
+    DrawQuad(glm::vec2 offset, const Texture &texture) const
+  {
+    DrawQuad(offset, { 1.F, 1.F, 1.F, 1.F }, texture);
+  }
+  void
     DrawQuad(glm::vec2 offset, glm::vec4 color, const Texture &texture) const
   {
     if (const auto result = std::ranges::find(m_texture_slots, texture.ID());
@@ -120,6 +125,7 @@ private:
   VertexArray                        m_vertex_array          = {};
   mutable std::vector<std::uint32_t> m_texture_slots         = {};
   mutable std::vector<std::int32_t>  m_uniform_texture_slots = {};
+  Texture m_blank = { (std::numeric_limits<std::uint32_t>::max)() };
 };
 void
   OnUpdate(const BatchRenderer &, float);

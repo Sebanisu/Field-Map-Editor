@@ -16,19 +16,7 @@ Texture::Texture(std::filesystem::path path)
   auto                 png      = std::unique_ptr<stbi_uc, decltype(deleter)>(
     stbi_load(m_path.string().c_str(), &x, &y, &channels, 4));
   m_width_height = { x, y };
-  GLCall{ glGenTextures, 1, &m_renderer_id };
-  GLCall{ glBindTexture, GL_TEXTURE_2D, m_renderer_id };
-  GLCall{ &glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR };
-  GLCall{ &glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR };
-  GLCall{
-    &glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE
-  };
-  GLCall{
-    &glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE
-  };
-  GLCall{ &glTexImage2D,    GL_TEXTURE_2D, 0, GL_RGBA8,
-          width(),          height(),      0, GL_RGBA,
-          GL_UNSIGNED_BYTE, png.get() };
+  init_texture(png.get());
 }
 Texture::~Texture()
 {

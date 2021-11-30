@@ -98,6 +98,8 @@ void
     self.m_shader.Bind();
     self.m_shader.SetUniform("u_MVP", mvp);
     self.m_shader.SetUniform("u_Color", 1.F, 1.F, 1.F, 1.F);
+    self.m_blank.Bind(0);
+    self.m_shader.SetUniform("u_Textures",std::array{0});
     renderer.Draw(
       self.index_buffer_size, self.m_vertex_array, self.m_index_buffer);
     ++draw_count;

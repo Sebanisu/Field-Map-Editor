@@ -19,7 +19,6 @@ public:
       []()
       {
         std::vector<Texture> r{};
-        r.emplace_back(std::numeric_limits<std::uint32_t>::max());
         r.emplace_back(
           std::filesystem::current_path() / "res" / "textures" / "logo.png");
         r.emplace_back(
@@ -82,7 +81,7 @@ inline void
   {
     const auto pop = scope_guard{ &ImGui::PopID };
     ImGui::PushID(++id);
-    if (ImGui::SliderFloat("Zoom", &self.m_zoom, 1.F, .001F))
+    if (ImGui::SliderFloat("Zoom", &self.m_zoom, 2.F, .001F))
     {
     }
   }

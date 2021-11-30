@@ -21,6 +21,8 @@ BatchRenderer::BatchRenderer(std::size_t quad_count)
 {
   m_vertex_array.Bind();
   m_vertex_array.push_back(m_vertex_buffer, Vertex::Layout());
+  m_texture_slots.reserve(
+    static_cast<std::uint32_t>(Max_Texture_Image_Units()));
 }
 
 void
@@ -81,5 +83,6 @@ void
   BatchRenderer::Clear() const
 {
   m_texture_slots.clear();
+  m_texture_slots.push_back(m_blank.ID());
   m_vertices.clear();
 }

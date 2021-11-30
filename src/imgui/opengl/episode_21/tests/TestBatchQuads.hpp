@@ -41,6 +41,7 @@ private:
   mutable glm::vec3              view_offset       = { -2.F, -1.F, 0.F };
   mutable std::array<int, 2U>    m_count           = { 100, 100 };
   mutable float                  m_zoom            = { 0.078F };
+  Texture m_blank = {(std::numeric_limits<std::uint32_t>::max)()};
 };
 void
   OnUpdate(const TestBatchQuads &, float);

@@ -34,14 +34,7 @@ uniform vec4 u_Color;
 
 void main()
 {
-  if (v_texture == 0)
-  {
-    color = u_Color * v_color;
-  }
-  else
-  {
-    int index = int(v_texture);
-    vec4 texColor = texture(u_Textures[index], v_TexCoord);
-    color = texColor * u_Color * v_color;
-  }
+  int index = int(v_texture);
+  vec4 texColor = texture(u_Textures[index], v_TexCoord);
+  color = texColor * u_Color * v_color;
 }
