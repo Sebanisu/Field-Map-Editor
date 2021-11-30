@@ -136,7 +136,12 @@ void
   ImGui::Text(
     "%s",
     fmt::format(
-      "Total Verts Rendered: {}", self.m_count[0] * self.m_count[1] * 4U)
+      "Total Vertices Rendered: {}", self.m_count[0] * self.m_count[1] * 4)
+      .c_str());
+  ImGui::Text(
+    "%s",
+    fmt::format(
+      "Total Indices Rendered: {}", self.m_count[0] * self.m_count[1] * 6)
       .c_str());
   ImGui::Text("%s", fmt::format("Total Draws: {}", test::draw_count).c_str());
 }

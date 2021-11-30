@@ -12,8 +12,6 @@
 #include <glm/glm.hpp>
 #include <vector>
 
-namespace test
-{
 class BatchRenderer
 {
 public:
@@ -81,5 +79,5 @@ void
 void
   OnImGuiRender(const BatchRenderer &);
 
-}// namespace test
+
 #endif// MYPROJECT_BATCHRENDERER_HPP
