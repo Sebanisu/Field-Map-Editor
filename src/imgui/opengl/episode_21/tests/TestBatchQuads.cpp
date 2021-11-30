@@ -126,7 +126,7 @@ void
 
   const auto pop3 = pop;
   ImGui::PushID(++id);
-  if (ImGui::SliderInt2("Quad (X, Y)", std::data(self.m_count), 0, 100))
+  if (ImGui::SliderInt2("Quad (X, Y)", std::data(self.m_count), 0, 256))
   {
   }
   ImGui::Text(

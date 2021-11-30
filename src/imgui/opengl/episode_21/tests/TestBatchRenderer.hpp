@@ -44,7 +44,7 @@ private:
     GenerateQuads() const;
   void
                                      SetUniforms() const;
-  BatchRenderer                      m_batch_renderer{};
+  BatchRenderer                      m_batch_renderer= {10000};
   mutable std::vector<Texture>       m_textures      = {};
   mutable std::array<int, 2U>        m_count         = { 100, 100 };
   mutable glm::vec3                  view_offset     = { -2.F, -1.F, 0.F };
@@ -90,7 +90,7 @@ inline void
     const auto pop = scope_guard{ &ImGui::PopID };
     ImGui::PushID(++id);
     if (ImGui::SliderInt2(
-          "Quad Axis Count (X, Y)", std::data(self.m_count), 0, 100))
+          "Quad Axis Count (X, Y)", std::data(self.m_count), 0, 256))
     {
     }
   }
