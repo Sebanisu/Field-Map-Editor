@@ -8,6 +8,7 @@
 #include <algorithm>
 #include <array>
 #include <glm/glm.hpp>
+#include <iterator>
 #include <ranges>
 #include <vector>
 struct Vertex
@@ -99,7 +100,8 @@ inline std::vector<std::uint32_t>
 inline std::vector<Vertex> &
   operator+=(std::vector<Vertex> &vertices, const Quad &quad)
 {
-  vertices.insert(std::end(vertices), std::begin(quad), std::end(quad));
+  //  vertices.insert(std::end(vertices), std::begin(quad), std::end(quad));
+  std::ranges::copy(quad, std::back_inserter(vertices));
   return vertices;
 }
 inline std::vector<Vertex> &
@@ -107,10 +109,11 @@ inline std::vector<Vertex> &
     std::vector<Vertex>       &vertices_left,
     const std::vector<Vertex> &vertices_right)
 {
-  vertices_left.insert(
-    std::end(vertices_left),
-    std::begin(vertices_right),
-    std::end(vertices_right));
+  std::ranges::copy(vertices_right, std::back_inserter(vertices_left));
+  //  vertices_left.insert(
+  //    std::end(vertices_left),
+  //    std::begin(vertices_right),
+  //    std::end(vertices_right));
   return vertices_left;
 }
 [[nodiscard]] inline std::vector<Vertex>

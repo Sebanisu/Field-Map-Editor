@@ -1,23 +1,13 @@
 //
 // Created by pcvii on 11/29/2021.
 //
-//#include "IndexBufferDynamic.hpp"
-#include "scope_guard.hpp"
-//#include "Shader.hpp"
-#include "Test.h"
-//#include "Texture.hpp"
-#include "Vertex.hpp"
-//#include "VertexArray.hpp"
-//#include "VertexBufferDynamic.hpp"
-//#include "VertexBufferLayout.hpp"
-//#include <algorithm>
-//#include <array>
-//#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-#include <imgui.h>
-//#include <ranges>
 #include "TestBatchRenderingTexture2DDynamic.hpp"
 #include "Renderer.hpp"
+#include "scope_guard.hpp"
+#include "Test.h"
+#include "Vertex.hpp"
+#include <glm/gtc/matrix_transform.hpp>
+#include <imgui.h>
 static_assert(test::Test<test::TestBatchRenderingTexture2DDynamic>);
 namespace test
 {

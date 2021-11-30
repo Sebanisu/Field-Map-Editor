@@ -2,13 +2,14 @@
 // Created by pcvii on 11/29/2021.
 //
 #include "TestMenu.hpp"
+#include "Test.h"
+#include "TestBatchQuads.hpp"
 #include "TestBatchRendering.hpp"
 #include "TestBatchRenderingTexture2D.hpp"
 #include "TestBatchRenderingTexture2DDynamic.hpp"
 #include "TestClearColor.hpp"
 #include "TestTexture2D.hpp"
 #include <imgui.h>
-#include "Test.h"
 static_assert(test::Test<test::TestMenu>);
 void
   test::OnRender(const TestMenu &self)
@@ -78,6 +79,7 @@ test::TestMenu::TestMenu(test::TestMenu::test_types current)
   push_back<TestBatchRenderingTexture2D>("Test Batch Rendering with Texture2D");
   push_back<TestBatchRenderingTexture2DDynamic>(
     "Test Batch Rendering with Texture2D Dynamic");
+  push_back<TestBatchQuads>("Test Batch Rendering with Quads");
 }
 test::TestMenu::TestMenu()
   : TestMenu(MenuItem{})
