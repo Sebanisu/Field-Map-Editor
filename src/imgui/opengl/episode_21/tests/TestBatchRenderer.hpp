@@ -14,6 +14,24 @@ namespace test
 class TestBatchRenderer
 {
 public:
+  TestBatchRenderer()
+    : m_textures(
+      []()
+      {
+        std::vector<Texture> r{};
+        r.emplace_back(std::numeric_limits<std::uint32_t>::max());
+        r.emplace_back(
+          std::filesystem::current_path() / "res" / "textures" / "logo.png");
+        r.emplace_back(
+          std::filesystem::current_path() / "res" / "textures"
+          / "mitchell-luo-q9ZiOzsMAhE-unsplash.png");
+        r.emplace_back(
+          std::filesystem::current_path() / "res" / "textures"
+          / "math-yDq60_c-g2E-unsplash.png");
+        return r;
+      }())
+  {
+  }
   friend void
     OnUpdate(const TestBatchRenderer &, float);
   friend void
@@ -25,11 +43,12 @@ private:
   void
     GenerateQuads() const;
   void
-                              SetUniforms() const;
-  BatchRenderer               m_batch_renderer{};
-  mutable std::array<int, 2U> m_count     = { 100, 100 };
-  mutable glm::vec3           view_offset = { -2.F, -1.F, 0.F };
-  mutable float               m_zoom      = { 0.078F };
+                                     SetUniforms() const;
+  BatchRenderer                      m_batch_renderer{};
+  mutable std::vector<Texture>       m_textures      = {};
+  mutable std::array<int, 2U>        m_count         = { 100, 100 };
+  mutable glm::vec3                  view_offset     = { -2.F, -1.F, 0.F };
+  mutable float                      m_zoom          = { 0.078F };
 };
 inline void
   OnUpdate(const TestBatchRenderer &self, float ts)

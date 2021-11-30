@@ -32,6 +32,14 @@ void
   BatchRenderer::Draw() const
 {
   index_buffer_size = m_vertex_buffer.Update(m_vertices);
+  m_shader.Bind();
+  for (std::int32_t i{}; const std::uint32_t id : m_texture_slots)
+  {
+    GLCall{ glActiveTexture, static_cast<GLenum>(GL_TEXTURE0 + i) };
+    GLCall{ glBindTexture, GL_TEXTURE_2D, id };
+    m_uniform_texture_slots.push_back(i++);
+  }
+  m_shader.SetUniform("u_Textures", m_uniform_texture_slots);
   DrawVertices();
 }
 void
@@ -72,5 +80,6 @@ void
 void
   BatchRenderer::Clear() const
 {
+  m_texture_slots.clear();
   m_vertices.clear();
 }

@@ -41,8 +41,50 @@ public:
   {
     return m_quad_count * 6U;
   };
+
+  [[nodiscard]] static const std::int32_t &
+    Max_Texture_Image_Units()
+  {
+    static const std::int32_t number = []()
+    {
+      std::int32_t texture_units{};
+      GLCall{ glGetIntegerv, GL_MAX_TEXTURE_IMAGE_UNITS, &texture_units };
+      return texture_units;
+    }();
+    return number;
+  }
   void
     Clear() const;
+  void
+    DrawQuad(glm::vec2 offset, glm::vec4 color, const Texture &texture) const
+  {
+    if (const auto result = std::ranges::find(m_texture_slots, texture.ID());
+        result != std::ranges::end(m_texture_slots))
+    {
+      Draw(CreateQuad(
+        offset,
+        color,
+        static_cast<int>(result - std::ranges::begin(m_texture_slots))));
+    }
+    else
+    {
+      if (std::cmp_equal(
+            std::ranges::size(m_texture_slots), Max_Texture_Image_Units()))
+      {
+        FlushVertices();
+      }
+      m_texture_slots.push_back(texture.ID());
+      Draw(CreateQuad(
+        offset,
+        color,
+        static_cast<int>(std::ranges::size(m_texture_slots) - 1U)));
+    }
+  }
+  void
+    DrawQuad(glm::vec2 offset, glm::vec4 color) const
+  {
+    Draw(CreateQuad(offset, color, 0));
+  }
   void
     Draw(Quad quad) const;
   void
@@ -52,6 +94,11 @@ public:
     Shader() const
   {
     return m_shader;
+  }
+  const auto &
+    TextureSlots() const
+  {
+    return m_texture_slots;
   }
 
 private:
@@ -68,9 +115,11 @@ private:
                                                r.reserve(VERT_COUNT());
                                                return r;
                                              }() };
-  mutable IndexBufferDynamicSize index_buffer_size = {};
-  ::Shader                       m_shader          = {};
-  VertexArray                    m_vertex_array    = {};
+  mutable IndexBufferDynamicSize     index_buffer_size       = {};
+  ::Shader                           m_shader                = {};
+  VertexArray                        m_vertex_array          = {};
+  mutable std::vector<std::uint32_t> m_texture_slots         = {};
+  mutable std::vector<std::int32_t>  m_uniform_texture_slots = {};
 };
 void
   OnUpdate(const BatchRenderer &, float);
