@@ -43,13 +43,20 @@ public:
   {
     return m_quad_count * 6U;
   };
+  void
+    Clear() const;
+  void
+    Draw(Quad quad) const;
+  void
+    Draw() const;
 
 private:
   void
-                              GenerateQuads() const;
-  void FlushVertices() const;
+    FlushVertices() const;
   void
-                                 DrawVertices() const;
+    DrawVertices() const;
+  void
+                              SetUniforms() const;
   std::size_t                 m_quad_count    = { 100U };
   VertexBufferDynamic         m_vertex_buffer = { QUAD_COUNT() };
   IndexBufferDynamic          m_index_buffer  = { QUAD_COUNT() };
@@ -63,14 +70,7 @@ private:
   Shader                         m_shader          = {};
   VertexArray                    m_vertex_array    = {};
   mutable glm::vec3              view_offset       = { -2.F, -1.F, 0.F };
-  mutable std::array<int, 2U>    m_count           = { 100, 100 };
   mutable float                  m_zoom            = { 0.078F };
-  void
-    SetUniforms() const;
-  void
-    Draw( Quad quad) const;
-  void
-    Draw() const;
 };
 void
   OnUpdate(const BatchRenderer &, float);
@@ -78,8 +78,6 @@ void
   OnRender(const BatchRenderer &);
 void
   OnImGuiRender(const BatchRenderer &);
-void
-  gen_verts(const BatchRenderer &);
 
 }// namespace test
 #endif// MYPROJECT_BATCHRENDERER_HPP

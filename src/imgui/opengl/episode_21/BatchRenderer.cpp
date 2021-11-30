@@ -35,27 +35,6 @@ void
   draw_count = 0U;
 }
 void
-  test::BatchRenderer::GenerateQuads() const
-{
-  m_vertices.clear();
-  auto x_rng = std::views::iota(uint32_t{}, static_cast<uint32_t>(m_count[0]));
-  auto y_rng = std::views::iota(uint32_t{}, static_cast<uint32_t>(m_count[1]));
-  for (const auto x : x_rng)
-  {
-    for (const auto y : y_rng)
-    {
-      float r = static_cast<float>(x) / static_cast<float>(m_count[0]);
-      float g = static_cast<float>(y) / static_cast<float>(m_count[1]);
-      Draw(CreateQuad(
-        { static_cast<float>(x), static_cast<float>(y) },
-        { r, g, 1.F, 1.F },
-        0));
-    }
-  }
-
-  Draw();
-}
-void
   test::BatchRenderer::Draw() const
 {
   index_buffer_size = m_vertex_buffer.Update(m_vertices);
@@ -71,9 +50,8 @@ void
   m_vertices += std::move(quad);
 }
 void
-  test::OnRender(const BatchRenderer &self)
+  test::OnRender(const BatchRenderer &)
 {
-  self.GenerateQuads();
 }
 void
   test::OnImGuiRender(const BatchRenderer &self)
@@ -96,20 +74,7 @@ void
   {
   }
 
-  const auto pop3 = pop;
-  ImGui::PushID(++id);
-  if (ImGui::SliderInt2("Quad (X, Y)", std::data(self.m_count), 0, 100))
-  {
-  }
-  ImGui::Text(
-    "%s",
-    fmt::format("Total Quads Rendered: {}", self.m_count[0] * self.m_count[1])
-      .c_str());
-  ImGui::Text(
-    "%s",
-    fmt::format(
-      "Total Verts Rendered: {}", self.m_count[0] * self.m_count[1] * 4U)
-      .c_str());
+
   ImGui::Text("%s", fmt::format("Total Draws: {}", test::draw_count).c_str());
 }
 void
@@ -147,4 +112,9 @@ void
   m_shader.Bind();
   m_shader.SetUniform("u_MVP", mvp);
   m_shader.SetUniform("u_Color", 1.F, 1.F, 1.F, 1.F);
+}
+void
+  test::BatchRenderer::Clear() const
+{
+  m_vertices.clear();
 }
