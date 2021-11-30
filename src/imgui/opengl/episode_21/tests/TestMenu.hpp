@@ -4,6 +4,7 @@
 
 #ifndef MYPROJECT_TESTMENU_HPP
 #define MYPROJECT_TESTMENU_HPP
+#include "Test.h"
 #include "TestBatchRendering.hpp"
 #include "TestBatchRenderingTexture2D.hpp"
 #include "TestBatchRenderingTexture2DDynamic.hpp"
@@ -115,7 +116,8 @@ public:
     {
       using std::swap;
       static_assert(Test<T>);
-      m_impl = std::make_unique<MenuItemModel<std::decay_t<T>>>(std::move(test));
+      m_impl =
+        std::make_unique<MenuItemModel<std::decay_t<T>>>(std::move(test));
     }
   }
   MenuItem(const MenuItem &other) = delete;

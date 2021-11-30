@@ -41,7 +41,7 @@ add_executable(opengl_series_episode_21
         Shader.cpp
         Texture.cpp
         tests/Test.h
-        tests/TestTexture2D.cpp tests/TestClearColor.cpp tests/TestBatchRendering.cpp scope_guard.cpp tests/TestBatchRenderingTexture2D.cpp)
+        tests/TestTexture2D.cpp tests/TestClearColor.cpp tests/TestBatchRendering.cpp scope_guard.cpp tests/TestBatchRenderingTexture2D.cpp tests/TestBatchRenderingTexture2DDynamic.cpp)
 target_link_libraries(opengl_series_episode_21
         PRIVATE project_warnings
         PRIVATE fmt::fmt
