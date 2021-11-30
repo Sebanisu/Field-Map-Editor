@@ -5,9 +5,15 @@
 #include "Renderer.hpp"
 #include "scope_guard.hpp"
 #include "Shader.hpp"
+#include "Test.h"
 #include "Texture.hpp"
 #include <array>
 #include <imgui.h>
+static_assert(test::Test<test::TestTexture2D>);
+namespace test
+{
+static const Renderer renderer{};
+}
 test::TestTexture2D::TestTexture2D()
   : m_vertex_buffer{ std::array{
     // clang-format off
@@ -87,7 +93,6 @@ void
              1.F);
   const auto view = glm::translate(glm::mat4{ 1.F }, self.view_offset);
   self.m_shader.Bind();
-  Renderer renderer{};
   {
     const auto model = glm::translate(glm::mat4{ 1.F }, self.model_offset);
     const auto mvp   = proj * view * model;

@@ -4,7 +4,6 @@
 
 #ifndef MYPROJECT_TESTCLEARCOLOR_HPP
 #define MYPROJECT_TESTCLEARCOLOR_HPP
-#include "Test.h"
 #include <array>
 #include <glm/glm.hpp>
 namespace test
@@ -23,6 +22,8 @@ public:
 private:
   mutable glm::vec4 m_clear_color = { 0.2F, 0.3F, 0.8F, 1.F };
 };
-static_assert(Test<TestClearColor>);
+void OnUpdate(const TestClearColor &, float);
+void OnRender(const TestClearColor &);
+void OnImGuiRender(const TestClearColor &);
 }// namespace test
 #endif// MYPROJECT_TESTCLEARCOLOR_HPP

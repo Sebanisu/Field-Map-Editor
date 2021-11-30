@@ -15,8 +15,13 @@ struct Vertex
   glm::vec2 location{};
   glm::vec4 color{};
   glm::vec2 uv{};
-  float     texture_slot;
+  float     texture_slot{};
   constexpr Vertex() = default;
+  constexpr Vertex(glm::vec2 in_location, glm::vec4 in_color)
+    : location(std::move(in_location))
+    , color(std::move(in_color))
+  {
+  }
   constexpr Vertex(
     glm::vec2 in_location,
     glm::vec4 in_color,

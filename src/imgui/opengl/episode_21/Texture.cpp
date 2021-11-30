@@ -69,7 +69,7 @@ Texture &
   return *this;
 }
 void
-  Texture::swap(Texture &first, Texture &second) noexcept// nothrow
+  swap(Texture &first, Texture &second) noexcept// nothrow
 {
   // enable ADL (not necessary in our case, but good practice)
   using std::swap;

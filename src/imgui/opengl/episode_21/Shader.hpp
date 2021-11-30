@@ -37,7 +37,7 @@ public:
   Shader &
     operator=(Shader &&other) noexcept;
 
-  void
+  friend void
     swap(Shader &first, Shader &second) noexcept;
 
   void

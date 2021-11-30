@@ -6,7 +6,6 @@
 #define MYPROJECT_TestTexture2D_HPP
 #include "IndexBuffer.hpp"
 #include "Shader.hpp"
-#include "Test.h"
 #include "Texture.hpp"
 #include "VertexArray.hpp"
 #include "VertexBuffer.hpp"
@@ -35,6 +34,11 @@ private:
   mutable glm::vec3          model_offset           = { 200.F, 200.F, 0.F };
   mutable glm::vec3          model2_offset          = { 400.F, 200.F, 0.F };
 };
-static_assert(Test<TestTexture2D>);
+void
+  OnUpdate(const TestTexture2D &, float);
+void
+  OnRender(const TestTexture2D &);
+void
+  OnImGuiRender(const TestTexture2D &);
 }// namespace test
 #endif// MYPROJECT_TestTexture2D_HPP

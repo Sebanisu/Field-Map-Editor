@@ -4,49 +4,56 @@
 
 #ifndef MYPROJECT_SCOPE_GUARD_HPP
 #define MYPROJECT_SCOPE_GUARD_HPP
+#include <algorithm>
 #include <functional>
+#include <ranges>
 struct [[nodiscard]] scope_guard
 {
-  scope_guard(void (*t)())
+  constexpr scope_guard(void (*t)())
     : func(std::move(t))
   {
   }
-  scope_guard(const scope_guard &other)
-    : func(other.func)
-  {
+
+  ~scope_guard()
+  {// bug in gcc making this not constexpr with -Werror=useless-cast
+    exec();
   }
 
-  scope_guard &
-    operator=(const scope_guard &other)
+  constexpr scope_guard &
+    operator=(void (*t)())
   {
-    scope_guard tmp{ other };
-    *this = std::move(tmp);
+    exec();
+    func = std::move(t);
     return *this;
   }
 
-  scope_guard(scope_guard &&other) noexcept
+  constexpr scope_guard(const scope_guard &other)
+    : func(other.func)
+  {
+  }
+  constexpr scope_guard &
+    operator=(const scope_guard &other)
+  {
+    exec();
+    func = other.func;
+    return *this;
+  }
+  constexpr scope_guard(scope_guard &&other) noexcept
     : scope_guard()
   {
     swap(*this, other);
   }
-
-  scope_guard &
+  constexpr scope_guard &
     operator=(scope_guard &&other) noexcept
   {
     swap(*this, other);
     return *this;
   }
 
-  ~scope_guard()
-  {
-    if (func != nullptr)
-    {
-      func();
-    }
-  }
-
-  void
-    swap(scope_guard &first, scope_guard &second) noexcept// nothrow
+  constexpr friend void
+    swap(
+      scope_guard &first,
+      scope_guard &second) noexcept// nothrow
   {
     // enable ADL (not necessary in our case, but good practice)
     using std::swap;
@@ -55,67 +62,61 @@ struct [[nodiscard]] scope_guard
     // the two objects are effectively swapped
     swap(first.func, second.func);
   }
+  template<size_t count>
+  [[nodiscard]] static constexpr auto
+    array(void (*t)())
+  {
+    std::array<scope_guard, count> r{};
+    std::ranges::for_each(r, [&t](scope_guard &guard) { guard = t; });
+    return r;
+  }
+  constexpr scope_guard() = default;
 
 private:
-  scope_guard() = default;
-  void (*func)();
+  constexpr void
+    exec() const
+  {
+    if (func != nullptr)
+    {
+      func();
+    }
+  }
+  void (*func)() = nullptr;
 };
 
 struct [[nodiscard]] scope_guard_expensive
 {
-  scope_guard_expensive(std::function<void()> t)
-    : func(std::move(t))
-  {
-  }
-  scope_guard_expensive(const scope_guard_expensive &other)
-    : func(other.func)
-  {
-  }
+  scope_guard_expensive(std::function<void()> t);
+  scope_guard_expensive(const scope_guard_expensive &other);
 
   scope_guard_expensive &
-    operator=(const scope_guard_expensive &other)
-  {
-    scope_guard_expensive tmp{ other };
-    *this = std::move(tmp);
-    return *this;
-  }
+    operator=(const scope_guard_expensive &other);
 
-  scope_guard_expensive(scope_guard_expensive &&other) noexcept
-    : scope_guard_expensive()
-  {
-    swap(*this, other);
-  }
+  scope_guard_expensive(scope_guard_expensive &&other) noexcept;
 
   scope_guard_expensive &
-    operator=(scope_guard_expensive &&other) noexcept
+    operator=(scope_guard_expensive &&other) noexcept;
+
+  scope_guard_expensive &
+    operator=(std::function<void()> t);
+
+  ~scope_guard_expensive();
+
+  friend void
+    swap(scope_guard_expensive &first, scope_guard_expensive &second) noexcept;
+
+  template<std::convertible_to<std::function<void()>> T, size_t count>
+  [[nodiscard]] static std::array<scope_guard_expensive, count>
+    array(T t)
   {
-    swap(*this, other);
-    return *this;
+    std::array<scope_guard_expensive, count> r{};
+    std::ranges::for_each(r, [&t](scope_guard_expensive &guard) { guard = t; });
+    return r;
   }
 
-  ~scope_guard_expensive()
-  {
-    if (func != nullptr)
-    {
-      func();
-    }
-  }
-
-  void
-    swap(
-      scope_guard_expensive &first,
-      scope_guard_expensive &second) noexcept// nothrow
-  {
-    // enable ADL (not necessary in our case, but good practice)
-    using std::swap;
-
-    // by swapping the members of two objects,
-    // the two objects are effectively swapped
-    swap(first.func, second.func);
-  }
+  scope_guard_expensive() = default;
 
 private:
-  scope_guard_expensive() = default;
-  std::function<void()> func;
+  std::function<void()> func{};
 };
 #endif// MYPROJECT_SCOPE_GUARD_HPP

@@ -26,7 +26,7 @@ Shader &
   return *this;
 }
 void
-  Shader::swap(Shader &first, Shader &second) noexcept// nothrow
+  swap(Shader &first, Shader &second) noexcept// nothrow
 {
   // enable ADL (not necessary in our case, but good practice)
   using std::swap;

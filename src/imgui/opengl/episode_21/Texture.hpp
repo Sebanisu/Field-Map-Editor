@@ -36,7 +36,7 @@ public:
   Texture(Texture &&other) noexcept;
   Texture &
     operator=(Texture &&other) noexcept;
-  void
+  friend void
     swap(Texture &first, Texture &second) noexcept;
 };
 static_assert(Bindable<Texture>);
