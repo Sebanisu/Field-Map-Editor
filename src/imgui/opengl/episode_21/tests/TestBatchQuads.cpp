@@ -5,7 +5,7 @@
 #include "TestBatchQuads.hpp"
 #include "Renderer.hpp"
 #include "scope_guard.hpp"
-#include "Test.h"
+#include "Test.hpp"
 #include "TestBatchQuads.hpp"
 #include "Vertex.hpp"
 #include <glm/gtc/matrix_transform.hpp>
@@ -86,8 +86,6 @@ void
   }
   const float window_width  = 16.F;
   const float window_height = 9.F;
-  //  const auto  center = glm::vec3(window_width / 2.F, window_height / 2.F,
-  //  0.F);
   const auto  proj          = glm::ortho(
               self.view_offset.x / self.m_zoom,
               (self.view_offset.x + window_width) / self.m_zoom,
@@ -95,11 +93,6 @@ void
               (self.view_offset.y + window_height) / self.m_zoom,
               -1.F,
               1.F);
-  // glm::scale
-  //  const auto view_zoom = glm::translate(glm::mat4{ 1.F }, center) *
-  //  self.m_zoom
-  //                         * glm::translate(glm::mat4{ 1.F }, -center);
-  //  const auto view_pos = glm::translate(glm::mat4{ 1.F }, self.view_offset);
   {
     const auto mvp = proj;
     self.m_shader.Bind();

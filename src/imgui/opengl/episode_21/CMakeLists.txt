@@ -40,8 +40,8 @@ add_executable(opengl_series_episode_21
         VertexBufferLayout.cpp
         Shader.cpp
         Texture.cpp
-        tests/Test.h
-        tests/TestTexture2D.cpp tests/TestClearColor.cpp tests/TestBatchRendering.cpp scope_guard.cpp tests/TestBatchRenderingTexture2D.cpp tests/TestBatchRenderingTexture2DDynamic.cpp tests/TestMenu.cpp tests/MenuItem.cpp tests/TestBatchQuads.cpp tests/TestBatchQuads.hpp)
+        tests/Test.hpp
+        tests/TestTexture2D.cpp tests/TestClearColor.cpp tests/TestBatchRendering.cpp scope_guard.cpp tests/TestBatchRenderingTexture2D.cpp tests/TestBatchRenderingTexture2DDynamic.cpp tests/TestMenu.cpp tests/MenuItem.cpp tests/TestBatchQuads.cpp tests/TestBatchQuads.hpp BatchRenderer.cpp BatchRenderer.hpp tests/TestBatchRenderer.hpp tests/TestBatchRenderer.cpp)
 target_link_libraries(opengl_series_episode_21
         PRIVATE project_warnings
         PRIVATE fmt::fmt

@@ -5,7 +5,7 @@
 #ifndef MYPROJECT_MENUITEM_HPP
 #define MYPROJECT_MENUITEM_HPP
 
-#include "Test.h"
+#include "Test.hpp"
 #include <memory>
 namespace test
 {

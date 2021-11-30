@@ -3,7 +3,7 @@
 //
 #include "TestBatchRenderingTexture2D.hpp"
 #include "scope_guard.hpp"
-#include "Test.h"
+#include "Test.hpp"
 #include "Vertex.hpp"
 #include <array>
 #include <glm/gtc/matrix_transform.hpp>

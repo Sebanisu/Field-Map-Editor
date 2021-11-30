@@ -4,7 +4,7 @@
 #include "TestBatchRenderingTexture2DDynamic.hpp"
 #include "Renderer.hpp"
 #include "scope_guard.hpp"
-#include "Test.h"
+#include "Test.hpp"
 #include "Vertex.hpp"
 #include <glm/gtc/matrix_transform.hpp>
 #include <imgui.h>

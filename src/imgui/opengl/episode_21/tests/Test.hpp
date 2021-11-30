@@ -2,8 +2,8 @@
 // Created by pcvii on 11/23/2021.
 //
 
-#ifndef MYPROJECT_TEST_H
-#define MYPROJECT_TEST_H
+#ifndef MYPROJECT_TEST_HPP
+#define MYPROJECT_TEST_HPP
 #include "concepts.hpp"
 namespace test
 {
@@ -34,4 +34,4 @@ concept Test =
         } -> Void;
     });
 }// namespace test
-#endif// MYPROJECT_TEST_H
+#endif// MYPROJECT_TEST_HPP

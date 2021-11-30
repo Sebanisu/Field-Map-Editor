@@ -2,8 +2,9 @@
 // Created by pcvii on 11/29/2021.
 //
 #include "TestMenu.hpp"
-#include "Test.h"
+#include "Test.hpp"
 #include "TestBatchQuads.hpp"
+#include "TestBatchRenderer.hpp"
 #include "TestBatchRendering.hpp"
 #include "TestBatchRenderingTexture2D.hpp"
 #include "TestBatchRenderingTexture2DDynamic.hpp"
@@ -80,6 +81,7 @@ test::TestMenu::TestMenu(test::TestMenu::test_types current)
   push_back<TestBatchRenderingTexture2DDynamic>(
     "Test Batch Rendering with Texture2D Dynamic");
   push_back<TestBatchQuads>("Test Batch Rendering with Quads");
+  push_back<TestBatchRenderer>("Test Batch Renderer Class");
 }
 test::TestMenu::TestMenu()
   : TestMenu(MenuItem{})
