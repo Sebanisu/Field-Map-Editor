@@ -195,52 +195,20 @@ public:
   }
 
   friend void
-    swap(TestMenu &left, TestMenu &right) noexcept
-  {
-    using std::swap;
-    swap(left.m_current, right.m_current);
-    swap(left.m_list, right.m_list);
-  }
+    swap(TestMenu &left, TestMenu &right) noexcept;
 
 private:
   mutable test_types m_current = {};
   mutable std::vector<std::pair<std::string, std::function<test_types()>>>
     m_list = {};
 };
-inline void
-  OnRender(const TestMenu &self)
-{
-  OnRender(self.m_current);
-}
-inline void
-  OnImGuiRender(const TestMenu &self)
-{
-  if (self.m_current)
-  {
-    OnImGuiRender(self.m_current);
-    if (ImGui::Button("Back"))
-    {
-      self.m_current = MenuItem{};
-    }
-  }
-  else
-  {
-    for (const auto &[name, funt] : self.m_list)
-    {
-      if (ImGui::Button(name.c_str()))
-      {
-        self.m_current = funt();
-        break;
-      }
-    }
-  }
-}
-
-inline void
-  OnUpdate(const TestMenu &self, float delta_time)
-{
-  OnUpdate(self.m_current, delta_time);
-}
-static_assert(Test<TestMenu>);
+void
+  OnRender(const TestMenu &self);
+void
+  OnImGuiRender(const TestMenu &self);
+void
+  OnUpdate(const TestMenu &self, float delta_time);
+void
+  swap(TestMenu &left, TestMenu &right) noexcept;
 }// namespace test
 #endif// MYPROJECT_TESTMENU_HPP
