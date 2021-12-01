@@ -17,9 +17,10 @@ public:
   using test_types = FF8MenuItem;
   FF8Menu();
   FF8Menu(test_types current);
-  FF8Menu(FF8Menu &&other) noexcept;
+  FF8Menu(FF8Menu &&other) noexcept= default;
   FF8Menu &
-    operator=(FF8Menu &&other) noexcept;
+    operator=(FF8Menu &&other) noexcept=
+      default;
   friend void
     OnUpdate(const FF8Menu &, float);
   friend void
@@ -38,9 +39,6 @@ public:
   void
     push_back(std::string name, std::function<test_types()> funt) const;
 
-  friend void
-    swap(FF8Menu &left, FF8Menu &right) noexcept;
-
 private:
   mutable test_types m_current = {};
   mutable std::vector<std::pair<std::string, std::function<test_types()>>>
@@ -54,7 +52,5 @@ void
   OnImGuiRender(const FF8Menu &self);
 void
   OnUpdate(const FF8Menu &self, float delta_time);
-void
-  swap(FF8Menu &left, FF8Menu &right) noexcept;
 }// namespace ff8
 #endif// MYPROJECT_FF8MENU_HPP

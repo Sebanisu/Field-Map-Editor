@@ -50,30 +50,11 @@ void
 {
   OnUpdate(self.m_current, delta_time);
 }
-
-void
-  ff8::swap(FF8Menu &left, FF8Menu &right) noexcept
-{
-  using std::swap;
-  swap(left.m_current, right.m_current);
-  swap(left.m_list, right.m_list);
-}
 void
   ff8::FF8Menu::push_back(std::string name, std::function<test_types()> funt)
     const
 {
   m_list.emplace_back(std::move(name), std::move(funt));
-}
-ff8::FF8Menu &
-  ff8::FF8Menu::operator=(ff8::FF8Menu &&other) noexcept
-{
-  swap(*this, other);
-  return *this;
-}
-ff8::FF8Menu::FF8Menu(ff8::FF8Menu &&other) noexcept
-  : FF8Menu()
-{
-  swap(*this, other);
 }
 ff8::FF8Menu::FF8Menu(ff8::FF8Menu::test_types current)
   : m_current(std::move(current))

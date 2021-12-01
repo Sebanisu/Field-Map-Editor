@@ -99,14 +99,12 @@ public:
   }
   FF8MenuItem(const FF8MenuItem &other) = delete;
   FF8MenuItem &
-    operator=(const FF8MenuItem &other) = delete;
-  FF8MenuItem(FF8MenuItem &&other) noexcept;
+    operator=(const FF8MenuItem &other)     = delete;
+  FF8MenuItem(FF8MenuItem &&other) noexcept = default;
   FF8MenuItem &
-    operator=(FF8MenuItem &&other) noexcept;
+    operator=(FF8MenuItem &&other) noexcept = default;
 
     operator bool() const;
-  friend void
-    swap(FF8MenuItem &left, FF8MenuItem &right) noexcept;
 };
 void
   OnUpdate(const FF8MenuItem &menu_item, float ts);
@@ -114,7 +112,5 @@ void
   OnRender(const FF8MenuItem &menu_item);
 void
   OnImGuiRender(const FF8MenuItem &menu_item);
-void
-  swap(FF8MenuItem &left, FF8MenuItem &right) noexcept;
 }// namespace ff8
 #endif// MYPROJECT_FF8MENUITEM_HPP

@@ -27,24 +27,7 @@ void
     return menu_item.m_impl->OnImGuiRender();
   }
 }
-ff8::FF8MenuItem::FF8MenuItem(ff8::FF8MenuItem &&other) noexcept
-  : FF8MenuItem()
-{
-  swap(*this, other);
-}
-ff8::FF8MenuItem &
-  ff8::FF8MenuItem::operator=(ff8::FF8MenuItem &&other) noexcept
-{
-  swap(*this, other);
-  return *this;
-}
 ff8::FF8MenuItem::operator bool() const
 {
   return bool{ m_impl };
-}
-void
-  ff8::swap(FF8MenuItem &left, FF8MenuItem &right) noexcept
-{
-  using std::swap;
-  swap(left.m_impl, right.m_impl);
 }

@@ -49,7 +49,5 @@ void
   OnImGuiRender(const TestMenu &self);
 void
   OnUpdate(const TestMenu &self, float delta_time);
-void
-  swap(TestMenu &left, TestMenu &right) noexcept;
 }// namespace test
 #endif// MYPROJECT_TESTMENU_HPP

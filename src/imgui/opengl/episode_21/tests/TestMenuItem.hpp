@@ -112,7 +112,5 @@ void
   OnRender(const TestMenuItem &menu_item);
 void
   OnImGuiRender(const TestMenuItem &menu_item);
-void
-  swap(TestMenuItem &left, TestMenuItem &right) noexcept;
 }// namespace test
 #endif// MYPROJECT_TESTMENUITEM_HPP
