@@ -7,6 +7,7 @@
 #include "IndexBufferDynamic.hpp"
 #include "Shader.hpp"
 #include "Texture.hpp"
+#include "SubTexture.hpp"
 #include "VertexArray.hpp"
 #include "VertexBufferDynamic.hpp"
 #include <glm/glm.hpp>
@@ -61,10 +62,15 @@ public:
     DrawQuad(offset, { 1.F, 1.F, 1.F, 1.F }, texture);
   }
   void
+    DrawQuad(glm::vec2 offset, const SubTexture &texture) const
+  {
+    DrawQuad(offset, { 1.F, 1.F, 1.F, 1.F }, texture);
+  }
+  void
     DrawQuad(
       glm::vec2      offset,
       glm::vec4      color,
-      const Texture &texture,
+      const SubTexture &texture,
       const float    tiling_factor = 1.F) const
   {
     if (const auto result = std::ranges::find(m_texture_slots, texture.ID());
@@ -74,7 +80,7 @@ public:
         offset,
         color,
         static_cast<int>(result - std::ranges::begin(m_texture_slots)),
-        tiling_factor));
+        tiling_factor,texture.UV()));
     }
     else
     {

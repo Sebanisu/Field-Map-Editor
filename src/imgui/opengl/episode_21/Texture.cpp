@@ -26,9 +26,9 @@ Texture::~Texture()
 void
   Texture::Bind(int slot) const
 {
-  // GLCall{ glActiveTexture, static_cast<GLenum>(GL_TEXTURE0 + slot) };
-  // GLCall{ glBindTexture, GL_TEXTURE_2D, m_renderer_id };
-  GLCall{ glBindTextureUnit, slot, m_renderer_id };
+   GLCall{ glActiveTexture, static_cast<GLenum>(GL_TEXTURE0 + slot) };
+   GLCall{ glBindTexture, GL_TEXTURE_2D, m_renderer_id };
+  //GLCall{ glBindTextureUnit, slot, m_renderer_id };
 }
 void
   Texture::UnBind()

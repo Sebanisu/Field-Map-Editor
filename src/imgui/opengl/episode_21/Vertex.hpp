@@ -13,11 +13,11 @@
 #include <vector>
 struct Vertex
 {
-  glm::vec2 location{};
-  glm::vec4 color{ 1.F, 1.F, 1.F, 1.F };
-  glm::vec2 uv{};
-  [[maybe_unused]] float     texture_slot{};
-  [[maybe_unused]] float     tiling_factor{ 1.F };
+  glm::vec2              location{};
+  glm::vec4              color{ 1.F, 1.F, 1.F, 1.F };
+  glm::vec2              uv{};
+  [[maybe_unused]] float texture_slot{};
+  [[maybe_unused]] float tiling_factor{ 1.F };
   static VertexBufferLayout
     Layout()
   {
@@ -34,32 +34,36 @@ static_assert(
 using Quad = std::array<Vertex, 4U>;
 constexpr inline Quad
   CreateQuad(
-    const glm::vec2 offset,
-    const glm::vec4 color,
-    const int       texture_id    = {},
-    const float     tiling_factor = 1.F,
-    const glm::vec2 size          = { 1.F, 1.F })
+    const glm::vec2                 offset,
+    const glm::vec4                 color,
+    const int                       texture_id    = {},
+    const float                     tiling_factor = 1.F,
+    const std::array<glm::vec2, 4U> uv            = { glm::vec2{ 0.F, 0.F },
+                                           glm::vec2{ 1.F, 0.F },
+                                           glm::vec2{ 1.F, 1.F },
+                                           glm::vec2{ 0.F, 1.F } },
+    const glm::vec2                 size          = { 1.F, 1.F })
 {
   const auto f_texture_id = static_cast<float>(texture_id);
   return {
     Vertex{ .location      = { offset },
             .color         = { color },
-            .uv            = { 0.F, 0.F },
+            .uv            = uv[0],
             .texture_slot  = f_texture_id,
             .tiling_factor = tiling_factor },// 0
     Vertex{ .location      = { offset + glm::vec2{ size.x, 0.F } },
             .color         = { color },
-            .uv            = { 1.F, 0.F },
+            .uv            = uv[1],
             .texture_slot  = f_texture_id,
             .tiling_factor = tiling_factor },// 1
     Vertex{ .location      = { offset + glm::vec2{ size.x, size.y } },
             .color         = { color },
-            .uv            = { 1.F, 1.F },
+            .uv            = uv[2],
             .texture_slot  = f_texture_id,
             .tiling_factor = tiling_factor },// 2
     Vertex{ .location{ offset + glm::vec2{ 0.F, size.y } },
             .color         = { color },
-            .uv            = { 0.F, 1.F },
+            .uv            = uv[3],
             .texture_slot  = f_texture_id,
             .tiling_factor = tiling_factor },// 3
   };
