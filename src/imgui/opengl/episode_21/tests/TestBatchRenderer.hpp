@@ -81,7 +81,7 @@ inline void
   {
     const auto pop = scope_guard{ &ImGui::PopID };
     ImGui::PushID(++id);
-    if (ImGui::SliderFloat("Zoom", &self.m_zoom, 2.F, .001F))
+    if (ImGui::SliderFloat("Zoom", &self.m_zoom, 4.F, .001F))
     {
     }
   }

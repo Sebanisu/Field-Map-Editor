@@ -41,10 +41,10 @@ public:
             GL_TEXTURE_MIN_FILTER,
             GL_NEAREST_MIPMAP_NEAREST };
     GLCall{
-      &glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE
+      &glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT
     };
     GLCall{
-      &glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE
+      &glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT
     };
     GLCall{ &glTexImage2D,    GL_TEXTURE_2D, 0, GL_RGBA8,
             width(),          height(),      0, GL_RGBA,

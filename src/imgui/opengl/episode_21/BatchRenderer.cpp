@@ -35,6 +35,7 @@ void
 {
   index_buffer_size = m_vertex_buffer.Update(m_vertices);
   m_shader.Bind();
+  m_uniform_texture_slots.clear();
   for (std::int32_t i{}; const std::uint32_t id : m_texture_slots)
   {
     GLCall{ glActiveTexture, static_cast<GLenum>(GL_TEXTURE0 + i) };

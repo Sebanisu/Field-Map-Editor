@@ -14,48 +14,17 @@
 struct Vertex
 {
   glm::vec2 location{};
-  glm::vec4 color{};
+  glm::vec4 color{ 1.F, 1.F, 1.F, 1.F };
   glm::vec2 uv{};
-  float     texture_slot{};
-  constexpr Vertex() = default;
-  constexpr Vertex(glm::vec2 in_location, glm::vec4 in_color)
-    : location(std::move(in_location))
-    , color(std::move(in_color))
-  {
-  }
-  constexpr Vertex(
-    glm::vec2 in_location,
-    glm::vec4 in_color,
-    glm::vec2 in_uv,
-    int       in_texture_slot = {})
-    : location(std::move(in_location))
-    , color(std::move(in_color))
-    , uv(in_uv)
-    , texture_slot(static_cast<float>(in_texture_slot))
-  {
-  }
-  constexpr Vertex(
-    float x,
-    float y,
-    float r,
-    float g,
-    float b,
-    float a,
-    float u,
-    float v,
-    int   in_texture_slot = {})
-    : location(x, y)
-    , color(r, g, b, a)
-    , uv(u, v)
-    , texture_slot(static_cast<float>(in_texture_slot))
-  {
-  }
+  [[maybe_unused]] float     texture_slot{};
+  [[maybe_unused]] float     tiling_factor{ 1.F };
   static VertexBufferLayout
     Layout()
   {
     return { VertexBufferLayout::VertexBufferElementType<float>{ 2U },
              VertexBufferLayout::VertexBufferElementType<float>{ 4U },
              VertexBufferLayout::VertexBufferElementType<float>{ 2U },
+             VertexBufferLayout::VertexBufferElementType<float>{ 1U },
              VertexBufferLayout::VertexBufferElementType<float>{ 1U } };
   }
 };
@@ -65,19 +34,34 @@ static_assert(
 using Quad = std::array<Vertex, 4U>;
 constexpr inline Quad
   CreateQuad(
-    glm::vec2 offset,
-    glm::vec4 color,
-    int       texture_id = {},
-    float     size       = 1.F)
+    const glm::vec2 offset,
+    const glm::vec4 color,
+    const int       texture_id    = {},
+    const float     tiling_factor = 1.F,
+    const glm::vec2 size          = { 1.F, 1.F })
 {
+  const auto f_texture_id = static_cast<float>(texture_id);
   return {
-    Vertex{ offset, color, { 0.F, 0.F }, texture_id },// 0
-    Vertex{
-      offset + glm::vec2{ size, 0.F }, color, { 1.F, 0.F }, texture_id },// 1
-    Vertex{
-      offset + glm::vec2{ size, size }, color, { 1.F, 1.F }, texture_id },// 2
-    Vertex{
-      offset + glm::vec2{ 0.F, size }, color, { 0.F, 1.F }, texture_id },// 3
+    Vertex{ .location      = { offset },
+            .color         = { color },
+            .uv            = { 0.F, 0.F },
+            .texture_slot  = f_texture_id,
+            .tiling_factor = tiling_factor },// 0
+    Vertex{ .location      = { offset + glm::vec2{ size.x, 0.F } },
+            .color         = { color },
+            .uv            = { 1.F, 0.F },
+            .texture_slot  = f_texture_id,
+            .tiling_factor = tiling_factor },// 1
+    Vertex{ .location      = { offset + glm::vec2{ size.x, size.y } },
+            .color         = { color },
+            .uv            = { 1.F, 1.F },
+            .texture_slot  = f_texture_id,
+            .tiling_factor = tiling_factor },// 2
+    Vertex{ .location{ offset + glm::vec2{ 0.F, size.y } },
+            .color         = { color },
+            .uv            = { 0.F, 1.F },
+            .texture_slot  = f_texture_id,
+            .tiling_factor = tiling_factor },// 3
   };
 }
 inline std::vector<std::uint32_t>

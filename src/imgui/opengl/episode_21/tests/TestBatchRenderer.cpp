@@ -24,7 +24,8 @@ void
       m_batch_renderer.DrawQuad(
         { static_cast<float>(x), static_cast<float>(y) },
         { r, g, 1.F, 1.F },
-        m_textures.at(*text_index));
+        m_textures.at(*text_index),
+        static_cast<float>(1U << (*text_index)));
       ++text_index;
     }
   }
