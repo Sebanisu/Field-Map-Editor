@@ -28,11 +28,14 @@ public:
       float            scale       = 1.F)
   {
     return { texture,
-             { (coords.x * cell_size.x * scale) / texture.width(),
-               (coords.y * cell_size.y * scale) / texture.height() },
-             { ((coords.x + sprite_size.x) * cell_size.x * scale) / texture.width(),
+             { (coords.x * cell_size.x * scale)
+                 / static_cast<float>(texture.width()),
+               (coords.y * cell_size.y * scale)
+                 / static_cast<float>(texture.height()) },
+             { ((coords.x + sprite_size.x) * cell_size.x * scale)
+                 / static_cast<float>(texture.width()),
                ((coords.y + sprite_size.y) * cell_size.y * scale)
-                 / texture.height() } };
+                 / static_cast<float>(texture.height()) } };
   }
   std::uint32_t
     ID() const

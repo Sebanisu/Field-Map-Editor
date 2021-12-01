@@ -31,6 +31,18 @@ concept Test =
         } -> Void;
       {
         OnImGuiRender(t)
+        } -> std::same_as<bool>;
+    } ||
+    requires(const T &t)
+    {
+      {
+        OnUpdate(t, float{})
+        } -> Void;
+      {
+        OnRender(t)
+        } -> Void;
+      {
+        OnImGuiRender(t)
         } -> Void;
     });
 }// namespace test

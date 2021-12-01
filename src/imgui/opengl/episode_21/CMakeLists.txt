@@ -41,7 +41,28 @@ add_executable(opengl_series_episode_21
         Shader.cpp
         Texture.cpp
         tests/Test.hpp
-        tests/TestTexture2D.cpp tests/TestClearColor.cpp tests/TestBatchRendering.cpp scope_guard.cpp tests/TestBatchRenderingTexture2D.cpp tests/TestBatchRenderingTexture2DDynamic.cpp tests/TestMenu.cpp tests/MenuItem.cpp tests/TestBatchQuads.cpp tests/TestBatchQuads.hpp BatchRenderer.cpp BatchRenderer.hpp tests/TestBatchRenderer.hpp tests/TestBatchRenderer.cpp SubTexture.cpp SubTexture.hpp)
+        tests/TestTexture2D.cpp
+        tests/TestClearColor.cpp
+        tests/TestBatchRendering.cpp
+        scope_guard.cpp
+        tests/TestBatchRenderingTexture2D.cpp
+        tests/TestBatchRenderingTexture2DDynamic.cpp
+        tests/TestMenu.cpp
+        tests/TestMenuItem.cpp
+        tests/TestBatchQuads.cpp
+        BatchRenderer.cpp
+        tests/TestBatchRenderer.cpp
+        SubTexture.cpp
+        ff8/Archive.cpp
+        ff8/Paths.cpp
+        ff8/Coos.cpp
+        ff8/Fields.cpp
+        tests/TestFF8Archive.cpp
+        ff8/Map.cpp
+        ff8/Mim.cpp
+        ff8/FF8MenuItem.cpp
+        ff8/FF8Menu.cpp
+        )
 target_link_libraries(opengl_series_episode_21
         PRIVATE project_warnings
         PRIVATE fmt::fmt
@@ -50,6 +71,7 @@ target_link_libraries(opengl_series_episode_21
         PRIVATE OpenGL::GL
         PRIVATE GLEW::GLEW
         PRIVATE OpenVIII_CPP_WIP_VIIIGraphics
+        PRIVATE OpenVIII_CPP_WIP_VIIIArchive
         PRIVATE stb::stb
         PRIVATE glm::glm
         PRIVATE imgui::imgui

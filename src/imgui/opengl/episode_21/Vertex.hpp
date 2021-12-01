@@ -13,11 +13,11 @@
 #include <vector>
 struct Vertex
 {
-  glm::vec2              location{};
-  glm::vec4              color{ 1.F, 1.F, 1.F, 1.F };
-  glm::vec2              uv{};
-  [[maybe_unused]] float texture_slot{};
-  [[maybe_unused]] float tiling_factor{ 1.F };
+  glm::vec2 location{};
+  glm::vec4 color{ 1.F, 1.F, 1.F, 1.F };
+  glm::vec2 uv{};
+  float     texture_slot{};
+  float     tiling_factor{ 1.F };
   static VertexBufferLayout
     Layout()
   {
