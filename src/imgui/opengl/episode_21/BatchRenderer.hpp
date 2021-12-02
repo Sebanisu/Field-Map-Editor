@@ -6,8 +6,8 @@
 #define MYPROJECT_BATCHRENDERER_HPP
 #include "IndexBufferDynamic.hpp"
 #include "Shader.hpp"
-#include "Texture.hpp"
 #include "SubTexture.hpp"
+#include "Texture.hpp"
 #include "VertexArray.hpp"
 #include "VertexBufferDynamic.hpp"
 #include <glm/glm.hpp>
@@ -57,9 +57,12 @@ public:
   void
     Clear() const;
   void
-    DrawQuad(glm::vec2 offset, const Texture &texture) const
+    DrawQuad(
+      glm::vec2      offset,
+      const Texture &texture,
+      glm::vec2      size = glm::vec2{ 1.F }) const
   {
-    DrawQuad(offset, { 1.F, 1.F, 1.F, 1.F }, texture);
+    DrawQuad(offset, { 1.F, 1.F, 1.F, 1.F }, texture, 1.F, size);
   }
   void
     DrawQuad(glm::vec2 offset, const SubTexture &texture) const
@@ -68,10 +71,11 @@ public:
   }
   void
     DrawQuad(
-      glm::vec2      offset,
-      glm::vec4      color,
+      glm::vec2         offset,
+      glm::vec4         color,
       const SubTexture &texture,
-      const float    tiling_factor = 1.F) const
+      const float       tiling_factor = 1.F,
+      glm::vec2         size          = glm::vec2{ 1.F }) const
   {
     if (const auto result = std::ranges::find(m_texture_slots, texture.ID());
         result != std::ranges::end(m_texture_slots))
@@ -80,7 +84,9 @@ public:
         offset,
         color,
         static_cast<int>(result - std::ranges::begin(m_texture_slots)),
-        tiling_factor,texture.UV()));
+        tiling_factor,
+        texture.UV(),
+        size));
     }
     else
     {
@@ -94,7 +100,9 @@ public:
         offset,
         color,
         static_cast<int>(std::ranges::size(m_texture_slots) - 1U),
-        tiling_factor));
+        tiling_factor,
+        texture.UV(),
+        size));
     }
   }
   void

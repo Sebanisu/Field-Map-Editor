@@ -34,7 +34,7 @@ public:
     push_back(
       std::move(name),
       [this]() -> test_types
-      { return FF8MenuItem(test::test_dummy<T>{}, m_fields); });
+      { return FF8MenuItem(std::in_place_type_t<T>{}, m_fields); });
   }
   void
     push_back(std::string name, std::function<test_types()> funt) const;

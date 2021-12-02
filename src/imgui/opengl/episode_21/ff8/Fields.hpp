@@ -10,6 +10,19 @@
 #include <open_viii/graphics/background/Mim.hpp>
 namespace ff8
 {
+[[nodiscard]] open_viii::graphics::background::Mim
+  LoadMim(
+    open_viii::archive::FIFLFS<false> field,
+    std::string_view                  coo,
+    std::string                      &out_path,
+    bool                             &coo_was_used);
+[[nodiscard]] open_viii::graphics::background::Map
+  LoadMap(
+    open_viii::archive::FIFLFS<false>           field,
+    std::string_view                            coo,
+    const open_viii::graphics::background::Mim &mim,
+    std::string                                &out_path,
+    bool                                       &coo_was_used);
 class Fields
 {
 public:
@@ -39,53 +52,8 @@ public:
   {
     return m_archive.Coo();
   }
-  [[nodiscard]] open_viii::graphics::background::Mim
-    Mim(std::string &out_path, bool &coo) const
-  {
-    std::size_t out_path_pos = {};
-    auto        lang_name =
-      fmt::format("_{}{}", Coo(), open_viii::graphics::background::Mim::EXT);
 
-    auto buffer = m_field.get_entry_data(
-      { std::string_view(lang_name),
-        open_viii::graphics::background::Mim::EXT },
-      &out_path,
-      &out_path_pos);
-    coo = out_path_pos == 0U;// if true then the coo was picked.
-    if (!std::ranges::empty(buffer))
-    {
-      fmt::print("loaded: {}\n",out_path);
-      auto mim =
-        open_viii::graphics::background::Mim{ buffer, m_field.get_base_name() };
-      return mim;
-    }
-    return {};
-  }
-  [[nodiscard]] open_viii::graphics::background::Map
-    Map(
-      const open_viii::graphics::background::Mim &mim,
-      std::string                                &out_path,
-      bool                                       &coo) const
-  {
-    bool        shift        = true;
-    std::size_t out_path_pos = {};
-    auto        lang_name =
-      fmt::format("_{}{}", Coo(), open_viii::graphics::background::Map::EXT);
-    auto buffer = m_field.get_entry_data(
-      { std::string_view(lang_name),
-        open_viii::graphics::background::Map::Map::EXT },
-      &out_path,
-      &out_path_pos);
-    coo = out_path_pos == 0U;// if true then the coo was picked.
-    if (!std::ranges::empty(buffer))
-    {
-      fmt::print("loaded: {}\n",out_path);
-      auto map =
-        open_viii::graphics::background::Map{ mim.mim_type(), buffer, shift };
-      return map;
-    }
-    return {};
-  }
+
   void
     init() const
   {

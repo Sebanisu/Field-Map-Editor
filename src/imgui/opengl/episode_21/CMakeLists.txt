@@ -62,7 +62,8 @@ add_executable(opengl_series_episode_21
         ff8/Mim.cpp
         ff8/FF8MenuItem.cpp
         ff8/FF8Menu.cpp
-        )
+        ff8/Palettes.cpp
+        ff8/BPPs.cpp DelayedTextures.cpp DelayedTextures.hpp ff8/FF8LoadTextures.cpp ff8/FF8LoadTextures.hpp)
 target_link_libraries(opengl_series_episode_21
         PRIVATE project_warnings
         PRIVATE fmt::fmt

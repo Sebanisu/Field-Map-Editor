@@ -13,14 +13,15 @@ VertexArray::~VertexArray()
   UnBind();
 }
 VertexArray::VertexArray(VertexArray &&other) noexcept
-  : VertexArray()
 {
-  swap(*this, other);
+  m_renderer_id = other.m_renderer_id;
+  other.m_renderer_id = 0;
 }
 VertexArray &
   VertexArray::operator=(VertexArray &&other) noexcept
 {
-  swap(*this, other);
+  using std::swap;
+  swap(m_renderer_id,other.m_renderer_id);
   return *this;
 }
 void
@@ -33,16 +34,4 @@ void
 {
 
   GLCall{ glBindVertexArray, 0U };
-}
-
-
-void
-  swap(VertexArray &first, VertexArray &second) noexcept// nothrow
-{
-  // enable ADL (not necessary in our case, but good practice)
-  using std::swap;
-
-  // by swapping the members of two objects,
-  // the two objects are effectively swapped
-  swap(first.m_renderer_id, second.m_renderer_id);
 }

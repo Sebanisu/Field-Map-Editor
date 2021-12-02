@@ -6,7 +6,6 @@
 #define MYPROJECT_FF8MENUITEM_HPP
 
 #include "tests/Test.hpp"
-#include "tests/test_dummy.hpp"
 #include <memory>
 namespace ff8
 {
@@ -87,14 +86,15 @@ public:
   {
   }
   template<typename T, typename... argsT>
-  FF8MenuItem(test::test_dummy<T>, argsT &&...args)
+  FF8MenuItem(std::in_place_type_t<T>, argsT &&...args)
     : m_impl(std::make_unique<FF8MenuItemModel<std::decay_t<T>>>(
       std::forward<argsT>(args)...))
   {
+    static_assert(test::Test<T>);
   }
   template<typename T>
   FF8MenuItem(T t)
-    : FF8MenuItem(test::test_dummy<T>{}, std::move(t))
+    : FF8MenuItem(std::in_place_type_t<T>{}, std::move(t))
   {
   }
   FF8MenuItem(const FF8MenuItem &other) = delete;

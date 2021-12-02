@@ -6,7 +6,7 @@
 #define MYPROJECT_TESTMENUITEM_HPP
 
 #include "Test.hpp"
-#include "test_dummy.hpp"
+#include <utility>
 #include <memory>
 namespace test
 {
@@ -87,14 +87,15 @@ public:
   {
   }
   template<typename T, typename... argsT>
-  TestMenuItem(test_dummy<T>, argsT &&...args) noexcept
+  TestMenuItem(std::in_place_type_t<T>, argsT &&...args) noexcept
     : m_impl(std::make_unique<TestMenuItemModel<std::decay_t<T>>>(
       std::forward<argsT>(args)...))
   {
+    static_assert(test::Test<T>);
   }
   template<typename T>
   TestMenuItem(T t)
-    : TestMenuItem(test::test_dummy<T>{}, std::move(t))
+    : TestMenuItem(std::in_place_type_t<T>{}, std::move(t))
   {
   }
   TestMenuItem(const TestMenuItem &other) = delete;

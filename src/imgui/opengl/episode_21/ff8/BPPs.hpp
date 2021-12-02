@@ -1,0 +1,56 @@
+//
+// Created by pcvii on 12/1/2021.
+//
+
+#ifndef MYPROJECT_BPPS_HPP
+#define MYPROJECT_BPPS_HPP
+#include "tests/Test.hpp"
+#include <array>
+#include <open_viii/graphics/BPPT.hpp>
+namespace ff8
+{
+class BPPs
+{
+public:
+  friend void
+    OnUpdate(const BPPs &, float);
+  friend void
+    OnRender(const BPPs &);
+  friend bool
+    OnImGuiRender(const BPPs &);
+  open_viii::graphics::BPPT
+    BPP() const
+  {
+    return m_values.at(static_cast<std::size_t>(m_current));
+  }
+  std::string_view
+    String() const
+  {
+    return m_strings.at(static_cast<std::size_t>(m_current));
+  }
+  int Index() const
+  {
+    return m_current;
+  }
+private:
+  static constexpr auto m_values = []()
+  {
+    using namespace open_viii::graphics::literals;
+    return std::array{ 4_bpp, 8_bpp, 16_bpp };
+  }();
+  static constexpr auto m_strings = []()
+  {
+    using namespace std::string_view_literals;
+    return std::array{ "4"sv, "8"sv, "16"sv };
+  }();
+  mutable int m_current{};
+};
+static_assert(test::Test<BPPs>);
+void
+  OnUpdate(const BPPs &, float);
+void
+  OnRender(const BPPs &);
+bool
+  OnImGuiRender(const BPPs &);
+}// namespace ff8
+#endif// MYPROJECT_BPPS_HPP

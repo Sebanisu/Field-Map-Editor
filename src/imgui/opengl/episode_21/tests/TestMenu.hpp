@@ -33,7 +33,7 @@ public:
   void
     push_back(std::string name) const
   {
-    push_back(std::move(name), []() -> test_types { return test_dummy<T>{}; });
+    push_back(std::move(name), []() -> test_types { return std::in_place_type_t<T>{}; });
   }
   void
     push_back(std::string name, std::function<test_types()> funt) const;
