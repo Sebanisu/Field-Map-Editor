@@ -92,7 +92,7 @@ private:
   Archive                                   m_archive  = {};
   mutable std::vector<std::string>          m_map_data = {};
   mutable open_viii::archive::FIFLFS<false> m_field    = {};
-  mutable int                               m_current  = {};
+  inline static int                         m_current  = {};
 };
 static_assert(test::Test<Fields>);
 
@@ -107,6 +107,7 @@ inline void
 inline bool
   OnImGuiRender(const Fields &self)
 {
+  int  id      = {};
   bool changed = { false };
   if (OnImGuiRender(self.m_archive))
   {
@@ -114,28 +115,67 @@ inline bool
     self.m_field    = self.load_field();
     changed         = true;
   }
-  if (ImGui::BeginCombo("Field", self.Map_Name().c_str()))
+  const ImGuiStyle &style   = ImGui::GetStyle();
+  const float       spacing = style.ItemInnerSpacing.x;
   {
-    int        id  = {};
-    const auto end = scope_guard{ &ImGui::EndCombo };
-    for (int i{}; const std::string &map : self.m_map_data)
+    const float w         = ImGui::CalcItemWidth();
+    const float button_sz = ImGui::GetFrameHeight();
+    ImGui::PushItemWidth(w - spacing * 2.0f - button_sz * 2.0f);
+    const auto popwidth = scope_guard{ &ImGui::PopItemWidth };
+    const auto disabled = scope_guard{ &ImGui::EndDisabled };
+    ImGui::BeginDisabled(std::ranges::empty(self.m_map_data));
+    if (ImGui::BeginCombo(
+          "##Field", self.Map_Name().c_str(), ImGuiComboFlags_HeightLargest))
     {
-      const bool is_selected = i == self.m_current;
-      const auto pop         = scope_guard{ &ImGui::PopID };
-      ImGui::PushID(++id);
-      if (ImGui::Selectable(map.c_str(), is_selected))
+      const auto end = scope_guard{ &ImGui::EndCombo };
+      for (int i{}; const std::string &map : self.m_map_data)
       {
-        self.m_current = i;
-        changed        = true;
-        self.m_field   = self.load_field();
+        const bool is_selected = i == self.m_current;
+        const auto pop         = scope_guard{ &ImGui::PopID };
+        ImGui::PushID(++id);
+        if (ImGui::Selectable(map.c_str(), is_selected))
+        {
+          self.m_current = i;
+          changed        = true;
+          self.m_field   = self.load_field();
+        }
+        if (is_selected)
+        {
+          ImGui::SetItemDefaultFocus();
+        }
+        ++i;
       }
-      if (is_selected)
-      {
-        ImGui::SetItemDefaultFocus();
-      }
-      ++i;
     }
   }
+  {
+    const auto pop = scope_guard{ &ImGui::PopID };
+    ImGui::PushID(++id);
+    ImGui::SameLine(0, spacing);
+    const auto disabled = scope_guard{ &ImGui::EndDisabled };
+    ImGui::BeginDisabled(std::cmp_less_equal(self.m_current, 0));
+    if (ImGui::ArrowButton("##l", ImGuiDir_Left))
+    {
+      --self.m_current;
+      changed      = true;
+      self.m_field = self.load_field();
+    }
+  }
+  {
+    const auto pop = scope_guard{ &ImGui::PopID };
+    ImGui::PushID(++id);
+    ImGui::SameLine(0, spacing);
+    const auto disabled = scope_guard{ &ImGui::EndDisabled };
+    ImGui::BeginDisabled(std::cmp_greater_equal(
+      self.m_current + 1, std::ranges::size(self.m_map_data)));
+    if (ImGui::ArrowButton("##r", ImGuiDir_Right))
+    {
+      ++self.m_current;
+      changed      = true;
+      self.m_field = self.load_field();
+    }
+  }
+  ImGui::SameLine(0, spacing);
+  ImGui::Text("%s", "Field");
   return changed;
 }
 }// namespace ff8

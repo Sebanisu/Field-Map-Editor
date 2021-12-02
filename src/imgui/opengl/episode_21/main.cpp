@@ -32,6 +32,7 @@ int
   int window_height = 720;
   window =
     glfwCreateWindow(window_width, window_height, "Hello World", NULL, NULL);
+
   if (!window)
   {
     fmt::print(
@@ -66,6 +67,13 @@ int
   {
     fmt::print(stderr, "Error! {}:{} GLEW NOT OKAY\n", __FILE__, __LINE__);
   }
+
+  /* Update Viewport when glfw detects window resize */
+  glfwSetFramebufferSizeCallback(
+    window,
+    [](GLFWwindow *, int width, int height) {
+      GLCall{ glViewport, 0, 0, width, height };
+    });
 
   fmt::print("{}\n", GLCall{ glGetString, GL_VERSION }());
 
