@@ -8,7 +8,6 @@
 #include "BPPs.hpp"
 #include "FF8LoadTextures.hpp"
 #include "Fields.hpp"
-#include "MVP.hpp"
 #include "Palettes.hpp"
 namespace ff8
 {
@@ -59,42 +58,36 @@ private:
   inline static glm::vec3              m_view_offset      = {};
   inline static glm::vec2              m_view_percent     = { 0.F, 0.5F };
   inline static bool                   m_draw_palette     = false;
-  inline static MVP                    m_mvp              = {};
 };
 static_assert(test::Test<Mim>);
 inline void
   ff8::Mim::SetUniforms() const
 {
-  const auto &texture       = CurrentTexture();
-  float       window_height = texture.height() / 16.F;
-  using ::SetUniforms;
-  SetUniforms(m_mvp, m_batch_renderer.Shader(), window_height);
-  //  open_viii::graphics::Rectangle<int> m_viewport{};
-  //  GLCall{ glGetIntegerv, GL_VIEWPORT, reinterpret_cast<int *>(&m_viewport)
-  //  }; const auto &texture       = CurrentTexture(); float       window_height
-  //  = texture.height() / 16.F; float window_width = window_height *
-  //  (m_viewport.width() - m_viewport.x())
-  //                       / (m_viewport.height() - m_viewport.y());
-  //
-  //  const auto proj = glm::ortho(
-  //    m_view_offset.x / m_zoom,
-  //    (m_view_offset.x + window_width) / m_zoom,
-  //    m_view_offset.y / m_zoom,
-  //    (m_view_offset.y + window_height) / m_zoom,
-  //    -1.F,
-  //    1.F);
-  //
-  //  const auto mvp = proj;
-  //  m_batch_renderer.Shader().Bind();
-  //  m_batch_renderer.Shader().SetUniform("u_MVP", mvp);
-  //  m_batch_renderer.Shader().SetUniform("u_Color", 1.F, 1.F, 1.F, 1.F);
+  const auto                         &texture       = CurrentTexture();
+  float                               window_height = texture.height() / 16.F;
+  open_viii::graphics::Rectangle<int> m_viewport{};
+  GLCall{ glGetIntegerv, GL_VIEWPORT, reinterpret_cast<int *>(&m_viewport) };
+  float window_width = window_height * (m_viewport.width() - m_viewport.x())
+                       / (m_viewport.height() - m_viewport.y());
+
+  const auto proj = glm::ortho(
+    m_view_offset.x / m_zoom,
+    (m_view_offset.x + window_width) / m_zoom,
+    m_view_offset.y / m_zoom,
+    (m_view_offset.y + window_height) / m_zoom,
+    -1.F,
+    1.F);
+
+  const auto mvp = proj;
+  m_batch_renderer.Shader().Bind();
+  m_batch_renderer.Shader().SetUniform("u_MVP", mvp);
+  m_batch_renderer.Shader().SetUniform("u_Color", 1.F, 1.F, 1.F, 1.F);
 }
 inline void
   OnUpdate(const Mim &self, float ts)
 {
   self.m_delayed_textures.check();
   OnUpdate(self.m_batch_renderer, ts);
-  OnUpdate(self.m_mvp, ts);
 }
 inline void
   OnRender(const Mim &self)
@@ -111,7 +104,6 @@ inline void
   self.m_batch_renderer.DrawQuad(glm::vec2{ 0.F }, texture, size);
   self.m_batch_renderer.Draw();
   OnRender(self.m_batch_renderer);
-  OnRender(self.m_mvp);
 }
 inline void
   OnImGuiRender(const Mim &self)
@@ -221,7 +213,6 @@ inline void
     }
   }
   OnImGuiRender(self.m_batch_renderer);
-  OnImGuiRender(self.m_mvp);
 }
 
 }// namespace ff8
