@@ -66,7 +66,7 @@ public:
                           [](const std::uint32_t id)
                           {
                             GLCall{ glDeleteTextures, 1, &id };
-                            GLCall{ glBindTexture, GL_TEXTURE_2D, 0U };
+                            Texture::UnBind();
                           } };
     GLCall{
       &glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST
