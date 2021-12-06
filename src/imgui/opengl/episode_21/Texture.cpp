@@ -18,17 +18,12 @@ Texture::Texture(std::filesystem::path path)
   m_width_height = { x, y };
   init_texture(png.get());
 }
-Texture::~Texture()
-{
-  GLCall{ glDeleteTextures, 1, &m_renderer_id };
-  UnBind();
-}
 void
   Texture::Bind(int slot) const
 {
-   GLCall{ glActiveTexture, static_cast<GLenum>(GL_TEXTURE0 + slot) };
-   GLCall{ glBindTexture, GL_TEXTURE_2D, m_renderer_id };
-  //GLCall{ glBindTextureUnit, slot, m_renderer_id };
+  GLCall{ glActiveTexture, static_cast<GLenum>(GL_TEXTURE0 + slot) };
+  GLCall{ glBindTexture, GL_TEXTURE_2D, m_renderer_id };
+  // GLCall{ glBindTextureUnit, slot, m_renderer_id };
 }
 void
   Texture::UnBind()
@@ -45,31 +40,8 @@ std::int32_t
 {
   return m_width_height.y();
 }
-Texture::Texture(Texture &&other) noexcept
-  : Texture()
-{
-  swap(*this, other);
-}
-Texture &
-  Texture::operator=(Texture &&other) noexcept
-{
-  swap(*this, other);
-  return *this;
-}
 std::uint32_t
   Texture::ID() const noexcept
 {
   return m_renderer_id;
-}
-void
-  swap(Texture &first, Texture &second) noexcept// nothrow
-{
-  // enable ADL (not necessary in our case, but good practice)
-  using std::swap;
-
-  // by swapping the members of two objects,
-  // the two objects are effectively swapped
-  swap(first.m_renderer_id, second.m_renderer_id);
-  swap(first.m_path, second.m_path);
-  swap(first.m_width_height, second.m_width_height);
 }
