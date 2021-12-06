@@ -4,32 +4,25 @@
 
 #include "VertexArray.hpp"
 VertexArray::VertexArray()
+  : m_renderer_id{ []() -> std::uint32_t
+                   {
+                     std::uint32_t tmp{};
+                     GLCall{ glGenVertexArrays, 1, &tmp };
+                     return tmp;
+                   }(),
+                   [](std::uint32_t id)
+                   {
+                     GLCall{ glDeleteVertexArrays, 1, &id };
+                     VertexArray::UnBind();
+                   } }
 {
-  GLCall{ glGenVertexArrays, 1, &m_renderer_id };
-}
-VertexArray::~VertexArray()
-{
-  GLCall{ glDeleteVertexArrays, 1, &m_renderer_id };
-  UnBind();
-}
-VertexArray::VertexArray(VertexArray &&other) noexcept
-{
-  m_renderer_id = other.m_renderer_id;
-  other.m_renderer_id = 0;
-}
-VertexArray &
-  VertexArray::operator=(VertexArray &&other) noexcept
-{
-  using std::swap;
-  swap(m_renderer_id,other.m_renderer_id);
-  return *this;
 }
 void
   VertexArray::Bind() const
 {
   GLCall{ glBindVertexArray, m_renderer_id };
 }
- void
+void
   VertexArray::UnBind()
 {
 

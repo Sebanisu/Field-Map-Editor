@@ -5,6 +5,7 @@
 #ifndef MYPROJECT_VERTEXARRAY_HPP
 #define MYPROJECT_VERTEXARRAY_HPP
 #include "Renderer.hpp"
+#include "unique_value.hpp"
 #include "VertexBuffer.hpp"
 #include "VertexBufferLayout.hpp"
 #include <algorithm>
@@ -12,22 +13,10 @@
 class VertexArray
 {
 private:
-  std::uint32_t m_renderer_id{};
+  GLID m_renderer_id{};
 
 public:
   VertexArray();
-  ~VertexArray();
-
-
-  VertexArray(const VertexArray &) = delete;
-  VertexArray &
-    operator=(const VertexArray &) = delete;
-
-  VertexArray(VertexArray &&other) noexcept;
-
-  VertexArray &
-    operator=(VertexArray &&other) noexcept;
-
   void
     Bind() const;
   static void
