@@ -5,44 +5,44 @@
 #ifndef MYPROJECT_VERTEXBUFFER_HPP
 #define MYPROJECT_VERTEXBUFFER_HPP
 #include "Renderer.hpp"
+#include "unique_value.hpp"
 #include <cstdint>
 #include <ranges>
 class VertexBuffer
 {
 private:
-  std::uint32_t m_renderer_id = {};
+  GLID m_renderer_id = {};
 
 public:
   VertexBuffer() = default;
   VertexBuffer(std::ranges::contiguous_range auto &&buffer)
+    : m_renderer_id(
+      [&]() -> std::uint32_t
+      {
+        std::uint32_t        tmp           = {};
+        const std::ptrdiff_t size_in_bytes = static_cast<std::ptrdiff_t>(
+          std::ranges::size(buffer)
+          * sizeof(std::ranges::range_value_t<decltype(buffer)>));
+        const void *data = std::ranges::data(buffer);
+        GLCall{ glGenBuffers, 1, &tmp };
+        GLCall{ glBindBuffer, GL_ARRAY_BUFFER, tmp };
+        GLCall{
+          glBufferData, GL_ARRAY_BUFFER, size_in_bytes, data, GL_STATIC_DRAW
+        };
+        return tmp;
+      }(),
+      [](std::uint32_t id)
+      {
+        GLCall{ glDeleteBuffers, 1, &id };
+        VertexBuffer::UnBind();
+      })
   {
-    const std::ptrdiff_t size_in_bytes = static_cast<std::ptrdiff_t>(
-      std::ranges::size(buffer)
-      * sizeof(std::ranges::range_value_t<decltype(buffer)>));
-    const void *data = std::ranges::data(buffer);
-    GLCall{ glGenBuffers, 1, &m_renderer_id };
-    GLCall{ glBindBuffer, GL_ARRAY_BUFFER, m_renderer_id };
-    GLCall{
-      glBufferData, GL_ARRAY_BUFFER, size_in_bytes, data, GL_STATIC_DRAW
-    };
   }
-  ~VertexBuffer();
-
-  VertexBuffer(const VertexBuffer &) = delete;
-  VertexBuffer &
-    operator=(const VertexBuffer &) = delete;
-
-  VertexBuffer(VertexBuffer &&other) noexcept;
-  VertexBuffer &
-    operator=(VertexBuffer &&other) noexcept;
 
   void
     Bind() const;
   static void
     UnBind();
-
-  friend void
-    swap(VertexBuffer &first, VertexBuffer &second) noexcept;
 };
 static_assert(Bindable<VertexBuffer>);
 
