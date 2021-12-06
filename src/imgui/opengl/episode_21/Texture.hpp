@@ -8,6 +8,7 @@
 #include "unique_value.hpp"
 #include <algorithm>
 #include <array>
+#include <cstring>
 #include <filesystem>
 #include <open_viii/graphics/Rectangle.hpp>
 #include <ranges>
@@ -105,14 +106,15 @@ public:
   static void
     flip(R &range, const std::ranges::range_difference_t<R> stride)
   {
-    if (std::ranges::size(range) % stride != 0)
+    if (std::ranges::ssize(range) % stride != 0)
     {
       // throw or use another function that's more flexible.
       return flip_slow(range, stride);
     }
     static constexpr auto sizeof_value = sizeof(std::ranges::range_value_t<R>);
-    const auto            stride_in_bytes = stride * sizeof_value;
-    auto                  buffer = std::make_unique<char[]>(stride_in_bytes);
+    const auto            stride_in_bytes =
+      static_cast<std::size_t>(stride) * sizeof_value;
+    auto       buffer      = std::make_unique<char[]>(stride_in_bytes);
     const auto swap_memory = [tmp = buffer.get(), stride, stride_in_bytes](
                                std::ranges::range_reference_t<R> &left,
                                std::ranges::range_reference_t<R> &right)
@@ -129,7 +131,7 @@ public:
       swap_memory(*b, *m);
       std::ranges::advance(b, stride);
     }
-  };
+  }
 
   std::uint32_t
     ID() const noexcept;

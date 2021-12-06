@@ -10,9 +10,9 @@ void
 {
   GLCall{ glBindBuffer, GL_ARRAY_BUFFER, 0U };
 }
+
 VertexBufferDynamic::VertexBufferDynamic(size_t count)
-  : m_max_size(count * 4U)
-  , m_renderer_id{ [&count]() -> std::uint32_t
+  : m_renderer_id{ [&count]() -> std::uint32_t
                    {
                      std::uint32_t tmp;
                      GLCall{ glGenBuffers, 1, &tmp };
@@ -29,5 +29,6 @@ VertexBufferDynamic::VertexBufferDynamic(size_t count)
                      GLCall{ glDeleteBuffers, 1, &id };
                      VertexBufferDynamic::UnBind();
                    } }
+  , m_max_size(count * 4U)
 {
 }

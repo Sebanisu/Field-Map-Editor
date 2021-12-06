@@ -5,6 +5,7 @@
 #ifndef MYPROJECT_RENDERER_HPP
 #define MYPROJECT_RENDERER_HPP
 #include "concepts.hpp"
+#include "IndexType.hpp"
 #include <concepts>
 #include <functional>
 #include <GL/glew.h>
@@ -130,13 +131,29 @@ public:
                }
              }(ts)
              + ...);
+    auto type = (
+      [](const auto &typed)
+        -> IndexType
+             {
+               typed.Bind();
+               if constexpr (has_Type_for_IndexType<std::decay_t<decltype(typed)>>)
+               {
+                 return typed.Type();
+               }
+               else
+               {
+                 return IndexType::none;
+               }
+             }(ts)
+             + ...);
 
+    assert(type != IndexType::none);
     if (size != 0)
     {
       GLCall{ glDrawElements,
               GL_TRIANGLES,
               static_cast<std::int32_t>(size),
-              GL_UNSIGNED_INT,
+              +type,
               nullptr };
     }
   }
