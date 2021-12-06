@@ -17,7 +17,17 @@ int
   main(void)
 {
   using namespace std::string_view_literals;
-  GLFWwindow *window;
+  const auto end_program_function = [](GLFWwindow *window)
+  {
+    // Cleanup
+    ImGui_ImplOpenGL3_Shutdown();
+    ImGui_ImplGlfw_Shutdown();
+    ImGui::DestroyContext();
+
+    glfwDestroyWindow(window);
+    glfwTerminate();
+  };
+
 
   /* Initialize the library */
   if (!glfwInit())
@@ -28,10 +38,11 @@ int
   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
   glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-  int window_width  = 1280;
-  int window_height = 720;
-  window =
-    glfwCreateWindow(window_width, window_height, "Hello World", NULL, NULL);
+  int                         window_width  = 1280;
+  int                         window_height = 720;
+  std::shared_ptr<GLFWwindow> window(
+    glfwCreateWindow(window_width, window_height, "Hello World", NULL, NULL),
+    end_program_function);
 
   if (!window)
   {
@@ -45,20 +56,7 @@ int
   }
 
   /* Make the window's context current */
-  glfwMakeContextCurrent(window);
-
-  // This function runs on exit.
-  const auto terminate = scope_guard_expensive(
-    [window]()
-    {
-      // Cleanup
-      ImGui_ImplOpenGL3_Shutdown();
-      ImGui_ImplGlfw_Shutdown();
-      ImGui::DestroyContext();
-
-      glfwDestroyWindow(window);
-      glfwTerminate();
-    });
+  glfwMakeContextCurrent(window.get());
 
   glfwSwapInterval(1);
 
@@ -70,7 +68,7 @@ int
 
   /* Update Viewport when glfw detects window resize */
   glfwSetFramebufferSizeCallback(
-    window,
+    window.get(),
     [](GLFWwindow *, int width, int height) {
       GLCall{ glViewport, 0, 0, width, height };
     });
@@ -98,7 +96,7 @@ int
   // ImGui::StyleColorsClassic();
 
   // Setup Platform/Renderer backends
-  ImGui_ImplGlfw_InitForOpenGL(window, true);
+  ImGui_ImplGlfw_InitForOpenGL(window.get(), true);
   ImGui_ImplOpenGL3_Init(glsl_version);
 
   // Load Fonts
@@ -126,7 +124,7 @@ int
   // NULL, io.Fonts->GetGlyphRangesJapanese()); IM_ASSERT(font != NULL);
 
   const auto test_menu = test::TestMenu{};
-  while (!glfwWindowShouldClose(window))
+  while (!glfwWindowShouldClose(window.get()))
   {
     /* Poll for and process events */
     glfwPollEvents();
@@ -152,7 +150,7 @@ int
     ImGui::Render();
     renderer.Clear();
     // update window size variables
-    glfwGetFramebufferSize(window, &window_width, &window_height);
+    glfwGetFramebufferSize(window.get(), &window_width, &window_height);
     // glViewport(0, 0, display_w, display_h);
     /* Render here */
     // renderer.Clear();
@@ -166,8 +164,7 @@ int
     GLClearError();
 
     /* Swap front and back buffers */
-    glfwSwapBuffers(window);
+    glfwSwapBuffers(window.get());
   }
-
   return 0;
 }
