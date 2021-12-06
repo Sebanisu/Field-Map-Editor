@@ -24,7 +24,7 @@ VertexBufferDynamic::VertexBufferDynamic(size_t count)
                              GL_DYNAMIC_DRAW };
                      return tmp;
                    }(),
-                   [](std::uint32_t id)
+                   [](const std::uint32_t id)
                    {
                      GLCall{ glDeleteBuffers, 1, &id };
                      VertexBufferDynamic::UnBind();

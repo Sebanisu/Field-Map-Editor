@@ -41,7 +41,7 @@ public:
                                GL_STATIC_DRAW };
                        return tmp;
                      }(),
-                     [](std::uint32_t id)
+                     [](const std::uint32_t id)
                      {
                        GLCall{ glDeleteBuffers, 1, &id };
                        IndexBuffer::UnBind();

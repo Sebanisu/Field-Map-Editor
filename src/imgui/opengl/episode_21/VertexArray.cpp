@@ -10,7 +10,7 @@ VertexArray::VertexArray()
                      GLCall{ glGenVertexArrays, 1, &tmp };
                      return tmp;
                    }(),
-                   [](std::uint32_t id)
+                   [](const std::uint32_t id)
                    {
                      GLCall{ glDeleteVertexArrays, 1, &id };
                      VertexArray::UnBind();
