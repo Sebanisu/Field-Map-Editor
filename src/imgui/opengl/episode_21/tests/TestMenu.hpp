@@ -4,6 +4,7 @@
 
 #ifndef MYPROJECT_TESTMENU_HPP
 #define MYPROJECT_TESTMENU_HPP
+#include "EventItem.hpp"
 #include "TestMenuItem.hpp"
 #include <functional>
 #include <string>
@@ -28,12 +29,16 @@ public:
   friend void
     OnRender(const TestMenu &);
   friend void
-    OnImGuiRender(const TestMenu &);
+    OnImGuiUpdate(const TestMenu &);
+  friend void
+    OnEvent(const TestMenu &, const Event::Item &);
   template<Test T>
   void
     push_back(std::string name) const
   {
-    push_back(std::move(name), []() -> test_types { return std::in_place_type_t<T>{}; });
+    push_back(
+      std::move(name),
+      []() -> test_types { return std::in_place_type_t<T>{}; });
   }
   void
     push_back(std::string name, std::function<test_types()> funt) const;
@@ -46,8 +51,10 @@ private:
 void
   OnRender(const TestMenu &self);
 void
-  OnImGuiRender(const TestMenu &self);
+  OnImGuiUpdate(const TestMenu &self);
 void
   OnUpdate(const TestMenu &self, float delta_time);
+void
+  OnEvent(const TestMenu &, const Event::Item &);
 }// namespace test
 #endif// MYPROJECT_TESTMENU_HPP

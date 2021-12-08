@@ -4,8 +4,8 @@
 
 #ifndef MYPROJECT_INDEXBUFFERDYNAMICSIZE_HPP
 #define MYPROJECT_INDEXBUFFERDYNAMICSIZE_HPP
-#include <cstdint>
 #include "concepts.hpp"
+#include <cstdint>
 /**
  * This is a bindable holder for the size of the used index buffer. To be passed
  * into renderer. The Renderer will call size() and get the size out of it.

@@ -12,9 +12,9 @@ void
   OnRender(self.m_current);
 }
 void
-  ff8::OnImGuiRender(const FF8Menu &self)
+  ff8::OnImGuiUpdate(const FF8Menu &self)
 {
-  bool fields_changed = ff8::OnImGuiRender(self.m_fields);
+  bool fields_changed = ff8::OnImGuiUpdate(self.m_fields);
   if (self.m_current)
   {
     if (fields_changed)
@@ -22,7 +22,7 @@ void
       self.m_current = self.m_list.at(self.m_current_pos).second();
     }
     ImGui::Separator();
-    OnImGuiRender(self.m_current);
+    OnImGuiUpdate(self.m_current);
     ImGui::Separator();
     if (ImGui::Button("Back"))
     {
@@ -66,4 +66,9 @@ ff8::FF8Menu::FF8Menu(ff8::FF8Menu::test_types current)
 ff8::FF8Menu::FF8Menu()
   : FF8Menu(FF8MenuItem{})
 {
+}
+void
+  ff8::OnEvent(const FF8Menu &self, const Event::Item &e)
+{
+  OnEvent(self.m_current, e);
 }

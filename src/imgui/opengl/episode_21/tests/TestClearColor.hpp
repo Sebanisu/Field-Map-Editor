@@ -17,13 +17,16 @@ public:
   friend void
     OnRender(const TestClearColor &);
   friend void
-    OnImGuiRender(const TestClearColor &);
+    OnImGuiUpdate(const TestClearColor &);
 
 private:
   mutable glm::vec4 m_clear_color = { 0.2F, 0.3F, 0.8F, 1.F };
 };
-void OnUpdate(const TestClearColor &, float);
-void OnRender(const TestClearColor &);
-void OnImGuiRender(const TestClearColor &);
+void
+  OnUpdate(const TestClearColor &, float);
+void
+  OnRender(const TestClearColor &);
+void
+  OnImGuiUpdate(const TestClearColor &);
 }// namespace test
 #endif// MYPROJECT_TESTCLEARCOLOR_HPP

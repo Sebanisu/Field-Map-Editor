@@ -17,6 +17,8 @@ std::size_t
 {
   return m_size;
 }
-IndexType IndexBuffer::Type() const {
+IndexType
+  IndexBuffer::Type() const
+{
   return m_type;
 };

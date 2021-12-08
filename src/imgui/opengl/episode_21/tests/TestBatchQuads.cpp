@@ -80,33 +80,33 @@ void
 void
   test::OnRender(const TestBatchQuads &self)
 {
-  if(std::ranges::empty(vertices))
+  if (std::ranges::empty(vertices))
   {
     return;
   }
   const float window_width  = 16.F;
   const float window_height = 9.F;
   const auto  proj          = glm::ortho(
-              self.view_offset.x / self.m_zoom,
-              (self.view_offset.x + window_width) / self.m_zoom,
-              self.view_offset.y / self.m_zoom,
-              (self.view_offset.y + window_height) / self.m_zoom,
-              -1.F,
-              1.F);
+    self.view_offset.x / self.m_zoom,
+    (self.view_offset.x + window_width) / self.m_zoom,
+    self.view_offset.y / self.m_zoom,
+    (self.view_offset.y + window_height) / self.m_zoom,
+    -1.F,
+    1.F);
   {
     const auto mvp = proj;
     self.m_shader.Bind();
     self.m_shader.SetUniform("u_MVP", mvp);
     self.m_shader.SetUniform("u_Color", 1.F, 1.F, 1.F, 1.F);
     self.m_blank.Bind(0);
-    self.m_shader.SetUniform("u_Textures",std::array{0});
+    self.m_shader.SetUniform("u_Textures", std::array{ 0 });
     renderer.Draw(
       self.index_buffer_size, self.m_vertex_array, self.m_index_buffer);
     ++draw_count;
   }
 }
 void
-  test::OnImGuiRender(const TestBatchQuads &self)
+  test::OnImGuiUpdate(const TestBatchQuads &self)
 {
   int        id           = 0;
 

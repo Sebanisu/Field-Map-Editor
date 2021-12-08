@@ -18,7 +18,7 @@ public:
   friend void
     OnRender(const Paths &);
   friend bool
-    OnImGuiRender(const Paths &);
+    OnImGuiUpdate(const Paths &);
   [[nodiscard]] const std::string &
     Path() const
   {
@@ -48,7 +48,7 @@ inline void
 {
 }
 inline bool
-  OnImGuiRender(const Paths &self)
+  OnImGuiUpdate(const Paths &self)
 {
   bool changed = { false };
   if (ImGui::BeginCombo("Path", self.Path().c_str()))

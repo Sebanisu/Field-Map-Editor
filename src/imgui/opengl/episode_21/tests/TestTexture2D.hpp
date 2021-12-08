@@ -21,7 +21,7 @@ public:
   friend void
     OnRender(const TestTexture2D &);
   friend void
-    OnImGuiRender(const TestTexture2D &);
+    OnImGuiUpdate(const TestTexture2D &);
 
 private:
   mutable VertexArray        m_vertex_array         = {};
@@ -39,6 +39,6 @@ void
 void
   OnRender(const TestTexture2D &);
 void
-  OnImGuiRender(const TestTexture2D &);
+  OnImGuiUpdate(const TestTexture2D &);
 }// namespace test
 #endif// MYPROJECT_TestTexture2D_HPP

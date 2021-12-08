@@ -9,14 +9,14 @@ std::size_t
 {
   switch (type)
   {
-  case GL_FLOAT:
-    return sizeof(GLfloat);
-  case GL_INT:
-    return sizeof(GLint);
-  case GL_UNSIGNED_INT:
-    return sizeof(GLuint);
-  case GL_BYTE:
-    return sizeof(GLbyte);
+    case GL_FLOAT:
+      return sizeof(GLfloat);
+    case GL_INT:
+      return sizeof(GLint);
+    case GL_UNSIGNED_INT:
+      return sizeof(GLuint);
+    case GL_BYTE:
+      return sizeof(GLbyte);
   }
   assert(false);
   return 0;

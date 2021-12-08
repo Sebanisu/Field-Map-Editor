@@ -8,6 +8,9 @@
 #include <functional>
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
+#include <imgui.h>
+#include <imgui_impl_glfw.h>
+#include <imgui_impl_opengl3.h>
 #include <memory>
 #include <string>
 class Window final
@@ -52,9 +55,9 @@ private:
     [](GLFWwindow *window)
   {
     // Cleanup
-    //    ImGui_ImplOpenGL3_Shutdown();
-    //    ImGui_ImplGlfw_Shutdown();
-    //    ImGui::DestroyContext();
+    ImGui_ImplOpenGL3_Shutdown();
+    ImGui_ImplGlfw_Shutdown();
+    ImGui::DestroyContext();
 
     glfwDestroyWindow(window);
     // glfwTerminate();
@@ -65,5 +68,11 @@ private:
   };
   static WindowData &
     GetWindowData(GLFWwindow *);
+  void
+    InitCallbacks() const;
+  void
+    InitImGui(const char *glsl_version) const;
+  void
+    InitGLFW();
 };
 #endif// MYPROJECT_WINDOW_HPP

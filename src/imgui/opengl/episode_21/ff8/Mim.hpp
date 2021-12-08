@@ -21,7 +21,7 @@ public:
   friend void
     OnRender(const Mim &);
   friend void
-    OnImGuiRender(const Mim &);
+    OnImGuiUpdate(const Mim &);
   Mim() = default;
   Mim(const Fields &fields)
     : m_mim(LoadMim(fields.Field(), fields.Coo(), m_path, m_choose_coo))
@@ -107,7 +107,7 @@ inline void
   OnRender(self.m_batch_renderer);
 }
 inline void
-  OnImGuiRender(const Mim &self)
+  OnImGuiUpdate(const Mim &self)
 {
   int                                 id = 0;
   open_viii::graphics::Rectangle<int> m_viewport{};
@@ -124,7 +124,7 @@ inline void
   {
     const auto disable = scope_guard(&ImGui::EndDisabled);
     ImGui::BeginDisabled(texture.height() == 0 || texture.width() == 0);
-    if (OnImGuiRender(self.m_bpp))
+    if (OnImGuiUpdate(self.m_bpp))
     {
       const glm::vec2 new_max = {
         static_cast<float>(texture.width()) * self.m_zoom / 16.F - window_width,
@@ -138,7 +138,7 @@ inline void
   {
     const auto disable = scope_guard(&ImGui::EndDisabled);
     ImGui::BeginDisabled(texture.height() == 0 || texture.width() == 0);
-    if (OnImGuiRender(self.m_palette))
+    if (OnImGuiUpdate(self.m_palette))
     {
       const glm::vec2 new_max = {
         static_cast<float>(texture.width()) * self.m_zoom / 16.F - window_width,
@@ -214,7 +214,7 @@ inline void
       self.m_view_offset.y = self.m_view_percent.y * new_max.y;
     }
   }
-  OnImGuiRender(self.m_batch_renderer);
+  OnImGuiUpdate(self.m_batch_renderer);
 }
 
 }// namespace ff8

@@ -36,18 +36,18 @@ public:
   friend void
     OnRender(const TestBatchRenderer &);
   friend void
-    OnImGuiRender(const TestBatchRenderer &);
+    OnImGuiUpdate(const TestBatchRenderer &);
 
 private:
   void
     GenerateQuads() const;
   void
-                                     SetUniforms() const;
-  BatchRenderer                      m_batch_renderer= {10000};
-  mutable std::vector<Texture>       m_textures      = {};
-  mutable std::array<int, 2U>        m_count         = { 100, 100 };
-  mutable glm::vec3                  view_offset     = { -2.F, -1.F, 0.F };
-  mutable float                      m_zoom          = { 0.078F };
+                               SetUniforms() const;
+  BatchRenderer                m_batch_renderer = { 10000 };
+  mutable std::vector<Texture> m_textures       = {};
+  mutable std::array<int, 2U>  m_count          = { 100, 100 };
+  mutable glm::vec3            view_offset      = { -2.F, -1.F, 0.F };
+  mutable float                m_zoom           = { 0.078F };
 };
 inline void
   OnUpdate(const TestBatchRenderer &self, float ts)
@@ -62,7 +62,7 @@ inline void
   self.GenerateQuads();
 }
 inline void
-  OnImGuiRender(const TestBatchRenderer &self)
+  OnImGuiUpdate(const TestBatchRenderer &self)
 {
   int window_width = 16;
   int id           = 0;
@@ -107,7 +107,7 @@ inline void
     fmt::format(
       "Total Indices Rendered: {}", self.m_count[0] * self.m_count[1] * 6)
       .c_str());
-  OnImGuiRender(self.m_batch_renderer);
+  OnImGuiUpdate(self.m_batch_renderer);
 }
 inline void
   test::TestBatchRenderer::SetUniforms() const
@@ -115,12 +115,12 @@ inline void
   const float window_width  = 16.F;
   const float window_height = 9.F;
   const auto  proj          = glm::ortho(
-              view_offset.x / m_zoom,
-              (view_offset.x + window_width) / m_zoom,
-              view_offset.y / m_zoom,
-              (view_offset.y + window_height) / m_zoom,
-              -1.F,
-              1.F);
+    view_offset.x / m_zoom,
+    (view_offset.x + window_width) / m_zoom,
+    view_offset.y / m_zoom,
+    (view_offset.y + window_height) / m_zoom,
+    -1.F,
+    1.F);
 
   const auto mvp = proj;
   m_batch_renderer.Shader().Bind();

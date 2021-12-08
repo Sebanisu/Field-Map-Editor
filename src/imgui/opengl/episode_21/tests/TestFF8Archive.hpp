@@ -15,7 +15,9 @@ public:
   friend void
     OnRender(const TestFF8Archive &);
   friend void
-    OnImGuiRender(const TestFF8Archive &);
+    OnImGuiUpdate(const TestFF8Archive &);
+  friend void
+    OnEvent(const TestFF8Archive &, const Event::Item &);
 
 private:
   ff8::FF8Menu ff8_menu = {};
@@ -31,9 +33,14 @@ inline void
   ff8::OnRender(self.ff8_menu);
 }
 inline void
-  OnImGuiRender(const TestFF8Archive &self)
+  OnImGuiUpdate(const TestFF8Archive &self)
 {
-  ff8::OnImGuiRender(self.ff8_menu);
+  ff8::OnImGuiUpdate(self.ff8_menu);
+}
+inline void
+  OnEvent(const TestFF8Archive &self, const Event::Item &e)
+{
+  ff8::OnEvent(self.ff8_menu, e);
 }
 }// namespace test
 #endif// MYPROJECT_TESTFF8ARCHIVE_HPP

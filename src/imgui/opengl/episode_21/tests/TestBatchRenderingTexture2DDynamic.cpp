@@ -53,12 +53,12 @@ void
   const int window_width  = 16;
   const int window_height = 9;
   auto      proj          = glm::ortho(
-                  0.F,
-                  static_cast<float>(window_width),
-                  0.F,
-                  static_cast<float>(window_height),
-                  -1.F,
-                  1.F);
+    0.F,
+    static_cast<float>(window_width),
+    0.F,
+    static_cast<float>(window_height),
+    -1.F,
+    1.F);
   const auto view = glm::translate(glm::mat4{ 1.F }, self.view_offset);
   {
     const auto mvp = proj * view;
@@ -78,7 +78,7 @@ void
   }
 }
 void
-  test::OnImGuiRender(const TestBatchRenderingTexture2DDynamic &self)
+  test::OnImGuiUpdate(const TestBatchRenderingTexture2DDynamic &self)
 {
   int        id           = 0;
 

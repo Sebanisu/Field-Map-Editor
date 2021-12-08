@@ -9,21 +9,21 @@
 
 namespace Event
 {
-//enum class Type : std::uint32_t
+// enum class Type : std::uint32_t
 //{
-//  None,
-//  WindowClose,
-//  WindowResize,
-//  WindowFocus,
-//  WindowLostFocus,
-//  WindowMoved,
-//  KeyPressed,
-//  KeyReleased,
-//  MouseButtonPressed,
-//  MouseButtonReleased,
-//  MouseMoved,
-//  MouseScrolled
-//};
+//   None,
+//   WindowClose,
+//   WindowResize,
+//   WindowFocus,
+//   WindowLostFocus,
+//   WindowMoved,
+//   KeyPressed,
+//   KeyReleased,
+//   MouseButtonPressed,
+//   MouseButtonReleased,
+//   MouseMoved,
+//   MouseScrolled
+// };
 enum class Category : std::uint16_t
 {
   None        = 0U,
@@ -55,5 +55,5 @@ constexpr bool
 {
   return (l & r) != Category::None;
 }
-}
+}// namespace Event
 #endif// MYPROJECT_EVENTENUMS_HPP

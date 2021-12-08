@@ -17,7 +17,7 @@ public:
   friend void
     OnRender(const Palettes &);
   friend bool
-    OnImGuiRender(const Palettes &);
+    OnImGuiUpdate(const Palettes &);
   std::uint8_t
     Palette() const
   {
@@ -56,6 +56,6 @@ void
 void
   OnRender(const Palettes &);
 bool
-  OnImGuiRender(const Palettes &);
+  OnImGuiUpdate(const Palettes &);
 }// namespace ff8
 #endif// MYPROJECT_PALETTES_HPP

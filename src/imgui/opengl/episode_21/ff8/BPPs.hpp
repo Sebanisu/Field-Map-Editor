@@ -17,7 +17,7 @@ public:
   friend void
     OnRender(const BPPs &);
   friend bool
-    OnImGuiRender(const BPPs &);
+    OnImGuiUpdate(const BPPs &);
   open_viii::graphics::BPPT
     BPP() const
   {
@@ -28,10 +28,12 @@ public:
   {
     return m_strings.at(static_cast<std::size_t>(m_current));
   }
-  int Index() const
+  int
+    Index() const
   {
     return m_current;
   }
+
 private:
   static constexpr auto m_values = []()
   {
@@ -51,6 +53,6 @@ void
 void
   OnRender(const BPPs &);
 bool
-  OnImGuiRender(const BPPs &);
+  OnImGuiUpdate(const BPPs &);
 }// namespace ff8
 #endif// MYPROJECT_BPPS_HPP

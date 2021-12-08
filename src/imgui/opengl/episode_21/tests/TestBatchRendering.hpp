@@ -20,7 +20,7 @@ public:
   friend void
     OnRender(const TestBatchRendering &);
   friend void
-    OnImGuiRender(const TestBatchRendering &);
+    OnImGuiUpdate(const TestBatchRendering &);
 
 private:
   VertexBuffer      m_vertex_buffer = {};
@@ -35,7 +35,7 @@ void
 void
   OnRender(const TestBatchRendering &);
 void
-  OnImGuiRender(const TestBatchRendering &);
+  OnImGuiUpdate(const TestBatchRendering &);
 }// namespace test
 
 #endif// MYPROJECT_TESTBATCHRENDERING_HPP

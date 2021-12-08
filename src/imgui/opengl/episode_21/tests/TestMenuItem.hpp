@@ -5,9 +5,10 @@
 #ifndef MYPROJECT_TESTMENUITEM_HPP
 #define MYPROJECT_TESTMENUITEM_HPP
 
+#include "EventItem.hpp"
 #include "Test.hpp"
-#include <utility>
 #include <memory>
+#include <utility>
 namespace test
 {
 void
@@ -15,7 +16,15 @@ void
 void
   OnRender();
 void
-  OnImGuiRender();
+  OnImGuiUpdate();
+void
+  OnEvent();
+
+template<typename T>
+concept has_OnEvent = requires(const T &t, const Event::Item &e)
+{
+  test::OnEvent(t, e);
+};
 class TestMenuItem
 {
 private:
@@ -37,7 +46,9 @@ private:
     virtual void
       OnRender() const = 0;
     virtual void
-      OnImGuiRender() const = 0;
+      OnImGuiUpdate() const = 0;
+    virtual void
+      OnEvent(const Event::Item &) const = 0;
   };
   template<Test testT>
   class TestMenuItemModel final : public TestMenuItemConcept
@@ -60,10 +71,20 @@ private:
       return OnRender(m_test);
     }
     void
-      OnImGuiRender() const final
+      OnImGuiUpdate() const final
     {
-      using test::OnImGuiRender;
-      return OnImGuiRender(m_test);
+      using test::OnImGuiUpdate;
+      return OnImGuiUpdate(m_test);
+    }
+
+    void
+      OnEvent(const Event::Item &e) const final
+    {
+      if constexpr (has_OnEvent<testT>)
+      {
+        using test::OnEvent;
+        return OnEvent(m_test, e);
+      }
     }
 
     TestMenuItemModel() = default;
@@ -77,7 +98,9 @@ private:
   friend void
     OnRender(const TestMenuItem &menu_item);
   friend void
-    OnImGuiRender(const TestMenuItem &menu_item);
+    OnImGuiUpdate(const TestMenuItem &menu_item);
+  friend void
+    OnEvent(const TestMenuItem &, const Event::Item &);
 
   mutable std::unique_ptr<const TestMenuItemConcept> m_impl{ nullptr };
 
@@ -112,6 +135,8 @@ void
 void
   OnRender(const TestMenuItem &menu_item);
 void
-  OnImGuiRender(const TestMenuItem &menu_item);
+  OnImGuiUpdate(const TestMenuItem &menu_item);
+void
+  OnEvent(const TestMenuItem &, const Event::Item &);
 }// namespace test
 #endif// MYPROJECT_TESTMENUITEM_HPP

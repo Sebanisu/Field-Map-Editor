@@ -13,7 +13,7 @@ void
 {
 }
 bool
-  ff8::OnImGuiRender(const Palettes &self)
+  ff8::OnImGuiUpdate(const Palettes &self)
 {
   bool changed = { false };
   if (ImGui::BeginCombo("Palette", self.String().data()))

@@ -31,7 +31,7 @@ public:
   friend void
     OnRender(const Fields &);
   friend bool
-    OnImGuiRender(const Fields &);
+    OnImGuiUpdate(const Fields &);
   [[nodiscard]] const open_viii::archive::FIFLFS<false> &
     Field() const
   {
@@ -105,11 +105,11 @@ inline void
 {
 }
 inline bool
-  OnImGuiRender(const Fields &self)
+  OnImGuiUpdate(const Fields &self)
 {
   int  id      = {};
   bool changed = { false };
-  if (OnImGuiRender(self.m_archive))
+  if (OnImGuiUpdate(self.m_archive))
   {
     self.m_map_data = self.m_archive.Fields().map_data();
     self.m_field    = self.load_field();

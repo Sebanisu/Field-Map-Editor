@@ -17,15 +17,15 @@ DelayedTextures
                   using namespace open_viii::graphics::literals;
                   switch (1U << (i + 2U))
                   {
-                  case open_viii::graphics::BPPT::BPP4:
-                  default:
-                    return 4_bpp;
-                  case open_viii::graphics::BPPT::BPP8:
-                    return 8_bpp;
-                  case open_viii::graphics::BPPT::BPP16:
-                    return 16_bpp;
-                  case open_viii::graphics::BPPT::BPP24:
-                    return 24_bpp;
+                    case open_viii::graphics::BPPT::BPP4:
+                    default:
+                      return 4_bpp;
+                    case open_viii::graphics::BPPT::BPP8:
+                      return 8_bpp;
+                    case open_viii::graphics::BPPT::BPP16:
+                      return 16_bpp;
+                    case open_viii::graphics::BPPT::BPP24:
+                      return 24_bpp;
                   }
                 });
   auto palettes = std::views::iota(std::uint8_t{}, std::uint8_t{ 16 });

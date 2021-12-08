@@ -59,7 +59,7 @@ void
 {
 }
 void
-  OnImGuiRender(const BatchRenderer &)
+  OnImGuiUpdate(const BatchRenderer &)
 {
   ImGui::Text("%s", fmt::format("Total Draws: {}", draw_count).c_str());
 }

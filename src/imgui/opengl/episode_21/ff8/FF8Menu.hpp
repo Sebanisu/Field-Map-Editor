@@ -17,16 +17,17 @@ public:
   using test_types = FF8MenuItem;
   FF8Menu();
   FF8Menu(test_types current);
-  FF8Menu(FF8Menu &&other) noexcept= default;
+  FF8Menu(FF8Menu &&other) noexcept = default;
   FF8Menu &
-    operator=(FF8Menu &&other) noexcept=
-      default;
+    operator=(FF8Menu &&other) noexcept = default;
   friend void
     OnUpdate(const FF8Menu &, float);
   friend void
     OnRender(const FF8Menu &);
   friend void
-    OnImGuiRender(const FF8Menu &);
+    OnImGuiUpdate(const FF8Menu &);
+  friend void
+    OnEvent(const FF8Menu &, const Event::Item &);
   template<test::Test T>
   void
     push_back(std::string name) const
@@ -49,8 +50,10 @@ private:
 void
   OnRender(const FF8Menu &self);
 void
-  OnImGuiRender(const FF8Menu &self);
+  OnImGuiUpdate(const FF8Menu &self);
 void
   OnUpdate(const FF8Menu &self, float delta_time);
+void
+  OnEvent(const FF8Menu &, const Event::Item &);
 }// namespace ff8
 #endif// MYPROJECT_FF8MENU_HPP

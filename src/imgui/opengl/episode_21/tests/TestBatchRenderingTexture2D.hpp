@@ -24,7 +24,7 @@ public:
   friend void
     OnRender(const TestBatchRenderingTexture2D &);
   friend void
-    OnImGuiRender(const TestBatchRenderingTexture2D &);
+    OnImGuiUpdate(const TestBatchRenderingTexture2D &);
 
 private:
   VertexBuffer         m_vertex_buffer = {};
@@ -40,6 +40,6 @@ void
 void
   OnRender(const TestBatchRenderingTexture2D &);
 void
-  OnImGuiRender(const TestBatchRenderingTexture2D &);
+  OnImGuiUpdate(const TestBatchRenderingTexture2D &);
 }// namespace test
 #endif// MYPROJECT_TestBatchRenderingTexture2D_HPP

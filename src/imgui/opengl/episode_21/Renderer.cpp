@@ -23,20 +23,20 @@ bool
       {
         switch (error)
         {
-        case GL_INVALID_ENUM:
-          return "GL_INVALID_ENUM"sv;
-        case GL_INVALID_VALUE:
-          return "GL_INVALID_VALUE"sv;
-        case GL_INVALID_OPERATION:
-          return "GL_INVALID_OPERATION"sv;
-        case GL_INVALID_FRAMEBUFFER_OPERATION:
-          return "GL_INVALID_FRAMEBUFFER_OPERATION"sv;
-        case GL_OUT_OF_MEMORY:
-          return "GL_OUT_OF_MEMORY"sv;
-        case GL_STACK_UNDERFLOW:
-          return "GL_STACK_UNDERFLOW"sv;
-        case GL_STACK_OVERFLOW:
-          return "GL_STACK_OVERFLOW"sv;
+          case GL_INVALID_ENUM:
+            return "GL_INVALID_ENUM"sv;
+          case GL_INVALID_VALUE:
+            return "GL_INVALID_VALUE"sv;
+          case GL_INVALID_OPERATION:
+            return "GL_INVALID_OPERATION"sv;
+          case GL_INVALID_FRAMEBUFFER_OPERATION:
+            return "GL_INVALID_FRAMEBUFFER_OPERATION"sv;
+          case GL_OUT_OF_MEMORY:
+            return "GL_OUT_OF_MEMORY"sv;
+          case GL_STACK_UNDERFLOW:
+            return "GL_STACK_UNDERFLOW"sv;
+          case GL_STACK_OVERFLOW:
+            return "GL_STACK_OVERFLOW"sv;
         }
         return ""sv;
       }());
@@ -77,28 +77,29 @@ void
       const GLchar                *message,
       [[maybe_unused]] const void *userParam)
     {
+      using namespace std::string_literals;
       static const std::unordered_map<GLenum, std::string> errorSourceMap{
-        { GL_DEBUG_SOURCE_API, "SOURCE_API" },
-        { GL_DEBUG_SOURCE_WINDOW_SYSTEM, "WINDOW_SYSTEM" },
-        { GL_DEBUG_SOURCE_SHADER_COMPILER, "SHADER_COMPILER" },
-        { GL_DEBUG_SOURCE_THIRD_PARTY, "THIRD_PARTY" },
-        { GL_DEBUG_SOURCE_APPLICATION, "APPLICATION" },
-        { GL_DEBUG_SOURCE_OTHER, "OTHER" }
+        { GL_DEBUG_SOURCE_API, "SOURCE_API"s },
+        { GL_DEBUG_SOURCE_WINDOW_SYSTEM, "WINDOW_SYSTEM"s },
+        { GL_DEBUG_SOURCE_SHADER_COMPILER, "SHADER_COMPILER"s },
+        { GL_DEBUG_SOURCE_THIRD_PARTY, "THIRD_PARTY"s },
+        { GL_DEBUG_SOURCE_APPLICATION, "APPLICATION"s },
+        { GL_DEBUG_SOURCE_OTHER, "OTHER"s }
       };
       static const std::unordered_map<GLenum, std::string> errorTypeMap{
-        { GL_DEBUG_TYPE_ERROR, "ERROR" },
-        { GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR, "DEPRECATED_BEHAVIOR" },
-        { GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR, "UNDEFINED_BEHAVIOR" },
-        { GL_DEBUG_TYPE_PORTABILITY, "PORTABILITY" },
-        { GL_DEBUG_TYPE_PERFORMANCE, "PERFORMANCE" },
-        { GL_DEBUG_TYPE_OTHER, "OTHER" },
-        { GL_DEBUG_TYPE_MARKER, "MARKER" }
+        { GL_DEBUG_TYPE_ERROR, "ERROR"s },
+        { GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR, "DEPRECATED_BEHAVIOR"s },
+        { GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR, "UNDEFINED_BEHAVIOR"s },
+        { GL_DEBUG_TYPE_PORTABILITY, "PORTABILITY"s },
+        { GL_DEBUG_TYPE_PERFORMANCE, "PERFORMANCE"s },
+        { GL_DEBUG_TYPE_OTHER, "OTHER"s },
+        { GL_DEBUG_TYPE_MARKER, "MARKER"s }
       };
       static const std::unordered_map<GLenum, std::string> severityMap{
-        { GL_DEBUG_SEVERITY_HIGH, "HIGH" },
-        { GL_DEBUG_SEVERITY_MEDIUM, "MEDIUM" },
-        { GL_DEBUG_SEVERITY_LOW, "LOW" },
-        { GL_DEBUG_SEVERITY_NOTIFICATION, "NOTIFICATION" }
+        { GL_DEBUG_SEVERITY_HIGH, "HIGH"s },
+        { GL_DEBUG_SEVERITY_MEDIUM, "MEDIUM"s },
+        { GL_DEBUG_SEVERITY_LOW, "LOW"s },
+        { GL_DEBUG_SEVERITY_NOTIFICATION, "NOTIFICATION"s }
       };
       if (GL_DEBUG_SEVERITY_NOTIFICATION == severity)
       {

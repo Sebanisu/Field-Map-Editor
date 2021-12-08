@@ -1,5 +1,7 @@
 #include "EventDispatcher.hpp"
 #include "IndexBuffer.hpp"
+#include "LayerStack.hpp"
+#include "LayerTests.hpp"
 #include "Renderer.hpp"
 #include "scope_guard.hpp"
 #include "Shader.hpp"
@@ -17,13 +19,13 @@
 #include <thread>
 static bool running  = true;
 static bool minimize = false;
-static bool
+bool
   OnWindowClose(const Event::WindowClose &)
 {
   running = false;
   return true;
 }
-static bool
+bool
   OnWindowResize(const Event::WindowResize &e)
 {
   minimize = e.Width() == 0 or e.Height() == 0;
@@ -33,29 +35,44 @@ int
   main(void)
 {
 #if 1
+  const Layer::Stack layers = {};
+  layers.emplace_layers(std::in_place_type_t<Layer::Tests>{});
   using namespace std::string_view_literals;
-  const auto window   = Window::Create(Window::WindowData{
-      .Title          = "OpenGL Test Code",
-      .width          = 1280,
-      .height         = 720,
-      .event_callback = [&](const Event::Item &e)
+  const auto     window   = Window::Create(Window::WindowData{
+          .Title          = "OpenGL Test Code",
+          .width          = 1280,
+          .height         = 720,
+          .event_callback = [&](const Event::Item &e)
     {
       Event::Dispatcher dispatcher = { e };
+      bool skip =(Event::HasFlag(e.category(),Event::Category::Mouse)
+                   && ImGui::GetIO().WantCaptureMouse)
+                  || (Event::HasFlag(e.category(),Event::Category::Keyboard)
+                      && ImGui::GetIO().WantCaptureKeyboard);
+      if (skip)
+      {
+        return;
+      }
       dispatcher.Dispatch<Event::WindowClose>(&OnWindowClose);
       dispatcher.Dispatch<Event::WindowResize>(&OnWindowResize);
+      Layer::OnEvent(layers, e);
       fmt::print("Event::{}\t{}\t{}\n", e.Name(), e.CategoryName(), e.Data());
     } });
-  Renderer   renderer = {};
+  const Renderer renderer = {};
   while (running)
   {
-    window->OnUpdate(); //First thing you do on update;
+    window->OnUpdate();// First thing you do on update;
     if (!minimize)
     {
       renderer.Clear();
-      window->OnRender();//Last thing you do on render;
+      Layer::OnImGuiUpdate(layers);
+      Layer::OnUpdate(layers, {});
+      Layer::OnRender(layers);
+      window->OnRender();// Last thing you do on render;
     }
     else
     {
+      ImGui::EndFrame();// call instead of render when minimized.
       std::this_thread::sleep_for(std::chrono::milliseconds(500));
     }
   }
@@ -195,7 +212,7 @@ int
     // place imgui here draws here.
     if (ImGui::Begin("Test Window", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
     {
-      test::OnImGuiRender(test_menu);
+      test::OnImGuiUpdate(test_menu);
       ImGui::Text(
         "%s",
         fmt::format(

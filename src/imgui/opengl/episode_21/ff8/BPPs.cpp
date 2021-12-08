@@ -14,7 +14,7 @@ void
 {
 }
 bool
-  ff8::OnImGuiRender(const BPPs &self)
+  ff8::OnImGuiUpdate(const BPPs &self)
 {
   bool changed = { false };
   if (ImGui::BeginCombo("BPP", self.String().data()))

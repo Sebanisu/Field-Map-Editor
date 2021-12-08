@@ -31,7 +31,7 @@ public:
   friend void
     OnRender(const Map &);
   friend void
-    OnImGuiRender(const Map &);
+    OnImGuiUpdate(const Map &);
 
 private:
   std::string                          m_mim_path         = {};
@@ -53,7 +53,7 @@ inline void
 {
 }
 inline void
-  OnImGuiRender(const Map &)
+  OnImGuiUpdate(const Map &)
 {
 }
 }// namespace ff8

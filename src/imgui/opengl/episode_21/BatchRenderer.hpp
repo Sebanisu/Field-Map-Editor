@@ -24,7 +24,7 @@ public:
   friend void
     OnRender(const BatchRenderer &);
   friend void
-    OnImGuiRender(const BatchRenderer &);
+    OnImGuiUpdate(const BatchRenderer &);
 
 
   [[nodiscard]] std::size_t
@@ -152,7 +152,7 @@ void
 void
   OnRender(const BatchRenderer &);
 void
-  OnImGuiRender(const BatchRenderer &);
+  OnImGuiUpdate(const BatchRenderer &);
 
 
 #endif// MYPROJECT_BATCHRENDERER_HPP

@@ -18,7 +18,7 @@ concept Test =
                                                       //    t.OnRender()
                                                       //    } -> Void;
                                                       //  {
-                                                      //    t.OnImGuiRender()
+                                                      //    t.OnImGuiUpdate()
                                                       //    } -> Void;
                                                       //} ||
     requires(const T &t)
@@ -30,7 +30,7 @@ concept Test =
         OnRender(t)
         } -> Void;
       {
-        OnImGuiRender(t)
+        OnImGuiUpdate(t)
         } -> std::same_as<bool>;
     } ||
     requires(const T &t)
@@ -42,7 +42,7 @@ concept Test =
         OnRender(t)
         } -> Void;
       {
-        OnImGuiRender(t)
+        OnImGuiUpdate(t)
         } -> Void;
     });
 }// namespace test

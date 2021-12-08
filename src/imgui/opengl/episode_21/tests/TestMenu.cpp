@@ -9,8 +9,8 @@
 #include "TestBatchRenderingTexture2D.hpp"
 #include "TestBatchRenderingTexture2DDynamic.hpp"
 #include "TestClearColor.hpp"
-#include "TestTexture2D.hpp"
 #include "TestFF8Archive.hpp"
+#include "TestTexture2D.hpp"
 #include <imgui.h>
 static_assert(test::Test<test::TestMenu>);
 void
@@ -19,11 +19,11 @@ void
   OnRender(self.m_current);
 }
 void
-  test::OnImGuiRender(const TestMenu &self)
+  test::OnImGuiUpdate(const TestMenu &self)
 {
   if (self.m_current)
   {
-    OnImGuiRender(self.m_current);
+    OnImGuiUpdate(self.m_current);
     if (ImGui::Button("Back"))
     {
       self.m_current = TestMenuItem{};
@@ -71,4 +71,10 @@ test::TestMenu::TestMenu(test::TestMenu::test_types current)
 test::TestMenu::TestMenu()
   : TestMenu(TestMenuItem{})
 {
+}
+
+void
+  test::OnEvent(const TestMenu &self, const Event::Item &e)
+{
+  OnEvent(self.m_current, e);
 }

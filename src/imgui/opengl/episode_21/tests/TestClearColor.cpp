@@ -23,7 +23,7 @@ void
   renderer.Clear();
 }
 void
-  test::OnImGuiRender(const TestClearColor &self)
+  test::OnImGuiUpdate(const TestClearColor &self)
 {
   if (ImGui::ColorEdit4("Clear Color", &self.m_clear_color.r))
   {

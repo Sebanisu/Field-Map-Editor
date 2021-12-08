@@ -1,10 +1,9 @@
 //
-// Created by pcvii on 11/29/2021.
+// Created by pcvii on 12/8/2021.
 //
-#include "FF8MenuItem.hpp"
-
+#include "LayerItem.hpp"
 void
-  ff8::OnUpdate(const FF8MenuItem &menu_item, float ts)
+  Layer::OnUpdate(const Item &menu_item, float ts)
 {
   if (menu_item)
   {
@@ -12,7 +11,7 @@ void
   }
 }
 void
-  ff8::OnRender(const FF8MenuItem &menu_item)
+  Layer::OnRender(const Item &menu_item)
 {
   if (menu_item)
   {
@@ -20,7 +19,7 @@ void
   }
 }
 void
-  ff8::OnImGuiUpdate(const FF8MenuItem &menu_item)
+  Layer::OnImGuiUpdate(const Item &menu_item)
 {
   if (menu_item)
   {
@@ -28,14 +27,14 @@ void
   }
 }
 void
-  ff8::OnEvent(const FF8MenuItem &menu_item, const Event::Item &e)
+  Layer::OnEvent(const Item &menu_item, const Event::Item &e)
 {
   if (menu_item)
   {
     return menu_item.m_impl->OnEvent(e);
   }
 }
-ff8::FF8MenuItem::operator bool() const
+Layer::Item::operator bool() const
 {
   return bool{ m_impl };
 }

@@ -24,7 +24,7 @@ public:
   friend void
     OnRender(const TestBatchRenderingTexture2DDynamic &);
   friend void
-    OnImGuiRender(const TestBatchRenderingTexture2DDynamic &);
+    OnImGuiUpdate(const TestBatchRenderingTexture2DDynamic &);
 
 private:
   VertexBufferDynamic            m_vertex_buffer   = { 1000 };
@@ -43,7 +43,7 @@ void
 void
   OnRender(const TestBatchRenderingTexture2DDynamic &);
 void
-  OnImGuiRender(const TestBatchRenderingTexture2DDynamic &);
+  OnImGuiUpdate(const TestBatchRenderingTexture2DDynamic &);
 
 }// namespace test
 #endif// MYPROJECT_TestBatchRenderingTexture2DDynamic_HPP

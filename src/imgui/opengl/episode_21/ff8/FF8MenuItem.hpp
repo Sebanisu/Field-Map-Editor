@@ -6,6 +6,7 @@
 #define MYPROJECT_FF8MENUITEM_HPP
 
 #include "tests/Test.hpp"
+#include <EventItem.hpp>
 #include <memory>
 namespace ff8
 {
@@ -14,7 +15,14 @@ void
 void
   OnRender();
 void
-  OnImGuiRender();
+  OnImGuiUpdate();
+void
+  OnEvent();
+template<typename T>
+concept has_OnEvent = requires(const T &t, const Event::Item &e)
+{
+  ff8::OnEvent(t, e);
+};
 class FF8MenuItem
 {
 private:
@@ -36,7 +44,9 @@ private:
     virtual void
       OnRender() const = 0;
     virtual void
-      OnImGuiRender() const = 0;
+      OnImGuiUpdate() const = 0;
+    virtual void
+      OnEvent(const Event::Item &) const = 0;
   };
   template<test::Test testT>
   class FF8MenuItemModel final : public FF8MenuItemConcept
@@ -59,10 +69,19 @@ private:
       return OnRender(m_test);
     }
     void
-      OnImGuiRender() const final
+      OnImGuiUpdate() const final
     {
-      using ff8::OnImGuiRender;
-      return OnImGuiRender(m_test);
+      using ff8::OnImGuiUpdate;
+      return OnImGuiUpdate(m_test);
+    }
+    void
+      OnEvent(const Event::Item &e) const final
+    {
+      if constexpr (has_OnEvent<testT>)
+      {
+        using ff8::OnEvent;
+        return OnEvent(m_test, e);
+      }
     }
 
     FF8MenuItemModel() = default;
@@ -76,7 +95,9 @@ private:
   friend void
     OnRender(const FF8MenuItem &menu_item);
   friend void
-    OnImGuiRender(const FF8MenuItem &menu_item);
+    OnImGuiUpdate(const FF8MenuItem &menu_item);
+  friend void
+    OnEvent(const FF8MenuItem &menu_item, const Event::Item &);
 
   mutable std::unique_ptr<const FF8MenuItemConcept> m_impl{ nullptr };
 
@@ -111,6 +132,8 @@ void
 void
   OnRender(const FF8MenuItem &menu_item);
 void
-  OnImGuiRender(const FF8MenuItem &menu_item);
+  OnImGuiUpdate(const FF8MenuItem &menu_item);
+void
+  OnEvent(const FF8MenuItem &menu_item, const Event::Item &);
 }// namespace ff8
 #endif// MYPROJECT_FF8MENUITEM_HPP

@@ -20,14 +20,22 @@ void
   }
 }
 void
-  test::OnImGuiRender(const TestMenuItem &menu_item)
+  test::OnImGuiUpdate(const TestMenuItem &menu_item)
 {
   if (menu_item)
   {
-    return menu_item.m_impl->OnImGuiRender();
+    return menu_item.m_impl->OnImGuiUpdate();
   }
 }
 test::TestMenuItem::operator bool() const
 {
   return bool{ m_impl };
+}
+void
+  test::OnEvent(const TestMenuItem &menu_item, const Event::Item &e)
+{
+  if (menu_item)
+  {
+    return menu_item.m_impl->OnEvent(e);
+  }
 }

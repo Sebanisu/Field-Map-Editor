@@ -45,7 +45,7 @@ test::TestTexture2D::TestTexture2D()
   m_shader.SetUniform("u_Texture", 0);
 }
 void
-  test::OnImGuiRender(const TestTexture2D &self)
+  test::OnImGuiUpdate(const TestTexture2D &self)
 {
   int        id           = 0;
   const auto pop          = scope_guard(&ImGui::PopID);
@@ -85,12 +85,12 @@ void
   int  window_width  = 1280;
   int  window_height = 720;
   auto proj          = glm::ortho(
-             0.F,
-             static_cast<float>(window_width),
-             0.F,
-             static_cast<float>(window_height),
-             -1.F,
-             1.F);
+    0.F,
+    static_cast<float>(window_width),
+    0.F,
+    static_cast<float>(window_height),
+    -1.F,
+    1.F);
   const auto view = glm::translate(glm::mat4{ 1.F }, self.view_offset);
   self.m_shader.Bind();
   {

@@ -19,7 +19,7 @@
 #include <ranges>
 static_assert(test::Test<test::TestBatchRendering>);
 void
-  test::OnImGuiRender(const TestBatchRendering &self)
+  test::OnImGuiUpdate(const TestBatchRendering &self)
 {
   int        id           = 0;
   const auto pop          = scope_guard::array<2U>(&ImGui::PopID);
@@ -53,12 +53,12 @@ void
   const int window_width  = 16;
   const int window_height = 9;
   auto      proj          = glm::ortho(
-                  0.F,
-                  static_cast<float>(window_width),
-                  0.F,
-                  static_cast<float>(window_height),
-                  -1.F,
-                  1.F);
+    0.F,
+    static_cast<float>(window_width),
+    0.F,
+    static_cast<float>(window_height),
+    -1.F,
+    1.F);
   const auto view = glm::translate(glm::mat4{ 1.F }, self.view_offset);
   Renderer   renderer{};
   self.m_shader.Bind();

@@ -17,7 +17,7 @@ public:
   friend void
     OnRender(const Archive &);
   friend bool
-    OnImGuiRender(const Archive &);
+    OnImGuiUpdate(const Archive &);
 
   [[nodiscard]] const open_viii::archive::Archives &
     Archives() const
@@ -35,12 +35,13 @@ public:
   {
     return m_coos.Coo();
   }
-  void init() const
+  void
+    init() const
   {
     m_paths.init();
-    m_archives = { m_paths.Path(),
-                   m_coos.Coo() };
+    m_archives = { m_paths.Path(), m_coos.Coo() };
   }
+
 private:
   Paths                                m_paths    = {};
   Coos                                 m_coos     = {};
@@ -55,9 +56,9 @@ inline void
 {
 }
 inline bool
-  OnImGuiRender(const Archive &self)
+  OnImGuiUpdate(const Archive &self)
 {
-  if (OnImGuiRender(self.m_paths) || OnImGuiRender(self.m_coos))
+  if (OnImGuiUpdate(self.m_paths) || OnImGuiUpdate(self.m_coos))
   {
     self.m_archives = { self.m_paths.Path(), self.m_coos.Coo() };
     return true;

@@ -9,7 +9,7 @@ template<typename... B>
 [[nodiscard]] inline auto
   make_visitor(B &&...b) noexcept
 {
-  struct visitor final: public std::decay_t<B>...
+  struct visitor final : public std::decay_t<B>...
   {
     using B::operator()...;
   };

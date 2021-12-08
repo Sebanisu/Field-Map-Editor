@@ -18,7 +18,7 @@ public:
   friend void
     OnRender(const Coos &);
   friend bool
-    OnImGuiRender(const Coos &);
+    OnImGuiUpdate(const Coos &);
   [[nodiscard]] std::string_view
     Coo() const
   {
@@ -40,7 +40,7 @@ inline void
 {
 }
 inline bool
-  OnImGuiRender(const Coos &self)
+  OnImGuiUpdate(const Coos &self)
 {
   bool changed = { false };
   if (ImGui::BeginCombo("Language", self.Coo().data()))
