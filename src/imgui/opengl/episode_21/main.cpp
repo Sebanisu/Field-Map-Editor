@@ -1,3 +1,4 @@
+#include "EventDispatcher.hpp"
 #include "IndexBuffer.hpp"
 #include "Renderer.hpp"
 #include "scope_guard.hpp"
@@ -6,17 +7,73 @@
 #include "Texture.hpp"
 #include "VertexArray.hpp"
 #include "VertexBuffer.hpp"
+#include "Window.hpp"
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <imgui.h>
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_opengl3.h>
 #include <numeric>
-
+#include <thread>
+static bool running  = true;
+static bool minimize = false;
+static bool
+  OnWindowClose(const Event::WindowClose &)
+{
+  running = false;
+  return true;
+}
+static bool
+  OnWindowResize(const Event::WindowResize &e)
+{
+  minimize = e.Width() == 0 or e.Height() == 0;
+  return true;
+}
 int
   main(void)
 {
+#if 1
   using namespace std::string_view_literals;
+  const auto window   = Window::Create(Window::WindowData{
+      .Title          = "OpenGL Test Code",
+      .width          = 1280,
+      .height         = 720,
+      .event_callback = [&](const Event::Item &e)
+    {
+      Event::Dispatcher dispatcher = { e };
+      dispatcher.Dispatch<Event::WindowClose>(&OnWindowClose);
+      dispatcher.Dispatch<Event::WindowResize>(&OnWindowResize);
+      fmt::print("Event::{}\t{}\t{}\n", e.Name(), e.CategoryName(), e.Data());
+    } });
+  Renderer   renderer = {};
+  while (running)
+  {
+    window->OnUpdate(); //First thing you do on update;
+    if (!minimize)
+    {
+      renderer.Clear();
+      window->OnRender();//Last thing you do on render;
+    }
+    else
+    {
+      std::this_thread::sleep_for(std::chrono::milliseconds(500));
+    }
+  }
+#else
+  {
+    auto ed = Event::Dispatcher(Event::WindowResize(1920, 1080));
+    ed.Dispatch<Event::WindowResize>(
+      [](const Event::WindowResize &window_resize_event) -> bool
+      {
+        fmt::print(
+          "{}:{}\t{:>4}x{:>4}",
+          window_resize_event.Name(),
+          window_resize_event.CategoryName(),
+          window_resize_event.Width(),
+          window_resize_event.Height());
+        return true;
+      });
+  }
   const auto end_program_function = [](GLFWwindow *window)
   {
     // Cleanup
@@ -106,11 +163,12 @@ int
   // - AddFontFromFileTTF() will return the ImFont* so you can store it if you
   // need to select the font among multiple.
   // - If the file cannot be loaded, the function will return NULL. Please
-  // handle those errors in your application (e.g. use an assertion, or display
-  // an error and quit).
-  // - The fonts will be rasterized at a given size (w/ oversampling) and stored
-  // into a texture when calling ImFontAtlas::Build()/GetTexDataAsXXXX(), which
-  // ImGui_ImplXXXX_NewFrame below will call.
+  // handle those errors in your application (e.g. use an assertion, or
+  // display an error and quit).
+  // - The fonts will be rasterized at a given size (w/ oversampling) and
+  // stored into a texture when calling
+  // ImFontAtlas::Build()/GetTexDataAsXXXX(), which ImGui_ImplXXXX_NewFrame
+  // below will call.
   // - Read 'docs/FONTS.md' for more instructions and details.
   // - Remember that in C/C++ if you want to include a backslash \ in a string
   // literal you need to write a double backslash \\ !
@@ -167,4 +225,5 @@ int
     glfwSwapBuffers(window.get());
   }
   return 0;
+#endif
 }

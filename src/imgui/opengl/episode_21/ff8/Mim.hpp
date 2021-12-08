@@ -63,12 +63,13 @@ static_assert(test::Test<Mim>);
 inline void
   ff8::Mim::SetUniforms() const
 {
-  const auto                         &texture       = CurrentTexture();
-  float                               window_height = texture.height() / 16.F;
+  const auto &texture       = CurrentTexture();
+  float       window_height = static_cast<float>(texture.height()) / 16.F;
   open_viii::graphics::Rectangle<int> m_viewport{};
   GLCall{ glGetIntegerv, GL_VIEWPORT, reinterpret_cast<int *>(&m_viewport) };
-  float window_width = window_height * (m_viewport.width() - m_viewport.x())
-                       / (m_viewport.height() - m_viewport.y());
+  float window_width =
+    window_height * (static_cast<float>(m_viewport.width() - m_viewport.x()))
+    / (static_cast<float>(m_viewport.height() - m_viewport.y()));
 
   const auto proj = glm::ortho(
     m_view_offset.x / m_zoom,
@@ -115,9 +116,10 @@ inline void
     ImGui::Checkbox("Draw Palette", &self.m_draw_palette);
   }
   const auto &texture       = self.CurrentTexture();
-  float       window_height = texture.height() / 16.F;
-  float window_width = window_height * (m_viewport.width() - m_viewport.x())
-                       / (m_viewport.height() - m_viewport.y());
+  float       window_height = static_cast<float>(texture.height()) / 16.F;
+  float       window_width =
+    window_height * (static_cast<float>(m_viewport.width() - m_viewport.x()))
+    / (static_cast<float>(m_viewport.height() - m_viewport.y()));
 
   {
     const auto disable = scope_guard(&ImGui::EndDisabled);
@@ -125,8 +127,8 @@ inline void
     if (OnImGuiRender(self.m_bpp))
     {
       const glm::vec2 new_max = {
-        static_cast<float>(texture.width() * self.m_zoom) / 16.F - window_width,
-        static_cast<float>(texture.height() * self.m_zoom) / 16.F
+        static_cast<float>(texture.width()) * self.m_zoom / 16.F - window_width,
+        static_cast<float>(texture.height()) * self.m_zoom / 16.F
           - window_height
       };
       self.m_view_offset.x = self.m_view_percent.x * new_max.x;
@@ -139,8 +141,8 @@ inline void
     if (OnImGuiRender(self.m_palette))
     {
       const glm::vec2 new_max = {
-        static_cast<float>(texture.width() * self.m_zoom) / 16.F - window_width,
-        static_cast<float>(texture.height() * self.m_zoom) / 16.F
+        static_cast<float>(texture.width()) * self.m_zoom / 16.F - window_width,
+        static_cast<float>(texture.height()) * self.m_zoom / 16.F
           - window_height
       };
       self.m_view_offset.x = self.m_view_percent.x * new_max.x;
@@ -155,9 +157,9 @@ inline void
 
   ImGui::Separator();
   const glm::vec2 max = {
-    static_cast<float>(texture.width() * self.m_zoom) / window_height
+    static_cast<float>(texture.width()) * self.m_zoom / window_height
       - window_width,
-    static_cast<float>(texture.height() * self.m_zoom) / window_height
+    static_cast<float>(texture.height()) * self.m_zoom / window_height
       - window_height
   };
   {
@@ -203,8 +205,8 @@ inline void
      // std::numeric_limits<float>::epsilon() && std::abs(self.m_zoom) >
      // std::numeric_limits<float>::epsilon())
       const glm::vec2 new_max = {
-        static_cast<float>(texture.width() * self.m_zoom) / 16.F - window_width,
-        static_cast<float>(texture.height() * self.m_zoom) / 16.F
+        static_cast<float>(texture.width()) * self.m_zoom / 16.F - window_width,
+        static_cast<float>(texture.height()) * self.m_zoom / 16.F
           - window_height
       };
 
