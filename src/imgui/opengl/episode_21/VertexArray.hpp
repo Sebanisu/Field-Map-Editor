@@ -17,12 +17,9 @@ private:
 
 public:
   VertexArray();
-  void
-    Bind() const;
-  static void
-    UnBind();
-  void
-    push_back(const Bindable auto &vb, const VertexBufferLayout &layout)
+  void        Bind() const;
+  static void UnBind();
+  void push_back(const Bindable auto &vb, const VertexBufferLayout &layout)
   {
     Bind();
     vb.Bind();
@@ -30,8 +27,8 @@ public:
       layout.elements(),
       [i      = std::uint32_t{},
        offset = static_cast<const std::uint8_t *>(nullptr),
-       &layout](const VertexBufferLayout::VertexBufferElement &element) mutable
-      {
+       &layout](
+        const VertexBufferLayout::VertexBufferElement &element) mutable {
         GLCall{ glEnableVertexAttribArray, i };
         GLCall{ glVertexAttribPointer,
                 i,

@@ -19,14 +19,12 @@ Shader::Shader(Shader &&other) noexcept
 {
   swap(*this, other);
 }
-Shader &
-  Shader::operator=(Shader &&other) noexcept
+Shader &Shader::operator=(Shader &&other) noexcept
 {
   swap(*this, other);
   return *this;
 }
-void
-  swap(Shader &first, Shader &second) noexcept// nothrow
+void swap(Shader &first, Shader &second) noexcept// nothrow
 {
   // enable ADL (not necessary in our case, but good practice)
   using std::swap;
@@ -37,18 +35,15 @@ void
   swap(first.m_file_path, second.m_file_path);
   swap(first.m_cache, second.m_cache);
 }
-void
-  Shader::Bind() const
+void Shader::Bind() const
 {
   GLCall{ glUseProgram, m_renderer_id };
 }
-void
-  Shader::UnBind()
+void Shader::UnBind()
 {
   GLCall{ glUseProgram, 0U };
 }
-Shader::ShaderProgramSource
-  Shader::ParseShader()
+Shader::ShaderProgramSource Shader::ParseShader()
 {
   std::ifstream fs(m_file_path, std::ios::binary | std::ios::in);
   if (!fs.is_open())
@@ -131,10 +126,9 @@ std::uint32_t
 
   return id;
 }
-std::uint32_t
-  Shader::CreateShader(
-    const std::string_view vertexShader,
-    const std::string_view fragmentShader)
+std::uint32_t Shader::CreateShader(
+  const std::string_view vertexShader,
+  const std::string_view fragmentShader)
 {
   const std::uint32_t vs = CompileShader(GL_VERTEX_SHADER, vertexShader);
   const std::uint32_t fs = CompileShader(GL_FRAGMENT_SHADER, fragmentShader);
@@ -147,8 +141,7 @@ std::uint32_t
   GLCall{ glDeleteShader, fs };
   return program;
 }
-std::int32_t
-  Shader::get_uniform_location(std::string_view name) const
+std::int32_t Shader::get_uniform_location(std::string_view name) const
 {
   if (m_cache.contains(name))
   {

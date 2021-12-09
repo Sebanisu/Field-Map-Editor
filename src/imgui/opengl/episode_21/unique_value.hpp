@@ -31,16 +31,13 @@ public:
   {
     swap(*this, other);
   }
-  unique_value &
-    operator=(const unique_value &) = delete;
-  unique_value &
-    operator=(unique_value &&other) noexcept
+  unique_value &operator=(const unique_value &) = delete;
+  unique_value &operator                        =(unique_value &&other) noexcept
   {
     swap(*this, other);
     return *this;
   }
-  friend void
-    swap(unique_value &left, unique_value &right) noexcept
+  friend void swap(unique_value &left, unique_value &right) noexcept
   {
     using std::swap;
     swap(left.m_value, right.m_value);

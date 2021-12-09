@@ -20,13 +20,10 @@ private:
 public:
   VertexBufferDynamic() = default;
   VertexBufferDynamic(size_t count);
-  void
-    Bind() const;
-  static void
-    UnBind();
+  void        Bind() const;
+  static void UnBind();
   template<std::ranges::contiguous_range T>
-  [[nodiscard]] IndexBufferDynamicSize
-    Update(const T &vertices) const
+  [[nodiscard]] IndexBufferDynamicSize Update(const T &vertices) const
   {
     assert(std::ranges::size(vertices) <= m_max_size);
     Bind();

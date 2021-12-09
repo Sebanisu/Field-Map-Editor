@@ -155,8 +155,7 @@ enum class KEY : int
 
   LAST          = MENU,
 };
-static constexpr auto
-  operator+(KEY e) noexcept
+static constexpr auto operator+(KEY e) noexcept
   -> std::enable_if_t<std::is_enum<KEY>::value, std::underlying_type_t<KEY>>
 {
   return static_cast<std::underlying_type_t<KEY>>(e);

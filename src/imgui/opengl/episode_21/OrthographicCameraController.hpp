@@ -13,17 +13,12 @@ public:
   OrthographicCameraController() = default;
   OrthographicCameraController(float aspect_ratio);
 
+  friend void OnUpdate(const OrthographicCameraController &, float ts);
+  friend void OnImguiRender(const OrthographicCameraController &);
+  friend void OnRender(const OrthographicCameraController &) {}
   friend void
-    OnUpdate(const OrthographicCameraController &, float ts);
-  friend void
-    OnImguiRender(const OrthographicCameraController &);
-  friend void
-    OnRender(const OrthographicCameraController &)
-  {
-  }
-  friend void OnEvent(const OrthographicCameraController &, const Event::Item &);
-  const OrthographicCamera &
-    Camera() const
+    OnEvent(const OrthographicCameraController &, const Event::Item &);
+  const OrthographicCamera &Camera() const
   {
     return m_camera;
   }
@@ -40,10 +35,9 @@ public:
     bool bottom;
     bool top;
   };
-  return_values
-    CheckBounds() const
+  return_values CheckBounds() const
   {
-    //todo test code.
+    // todo test code.
     const glm::mat4 &vpm  = m_camera.ViewProjectionMatrix();
     const float      near = vpm[3][2] / (vpm[2][2] - 1.0f);
     const float      far  = vpm[3][2] / (vpm[2][2] + 1.0f);
@@ -87,9 +81,7 @@ private:
   float                      m_rotation_speed    = { 180.F };
   mutable glm::vec4          m_bounds            = {};
 };
-void
-  OnUpdate(const OrthographicCameraController &, float ts);
-void
-  OnImguiRender(const OrthographicCameraController &);
+void OnUpdate(const OrthographicCameraController &, float ts);
+void OnImguiRender(const OrthographicCameraController &);
 void OnEvent(const OrthographicCameraController &, const Event::Item &);
 #endif// MYPROJECT_ORTHOGRAPHICCAMERACONTROLLER_HPP

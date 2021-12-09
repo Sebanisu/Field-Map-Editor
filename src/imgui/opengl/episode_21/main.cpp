@@ -29,7 +29,7 @@ bool OnWindowResize(const Event::WindowResize &e)
 int main(void)
 {
 #if 1
-  //anything created in the window must be destroyed before the window.
+  // anything created in the window must be destroyed before the window.
   const auto window = Window::Create(Window::WindowData{
     .Title = "OpenGL Test Code", .width = 1280, .height = 720 });
   {

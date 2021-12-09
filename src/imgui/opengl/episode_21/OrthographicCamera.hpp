@@ -14,35 +14,30 @@ public:
     : m_projection_matrix(glm::ortho(left, right, bottom, top, near, far))
   {
   }
-  void
-    SetProjection(float left, float right, float bottom, float top)
+  void SetProjection(float left, float right, float bottom, float top)
   {
     m_projection_matrix      = glm::ortho(left, right, bottom, top, near, far);
     m_view_projection_matrix = m_projection_matrix * m_view_matrix;
   }
-  void
-    SetPosition(glm::vec3 position)
+  void SetPosition(glm::vec3 position)
   {
     m_position = position;
     recalculate_view_matrix();
   }
-  void
-    SetRotation(float rotation)
+  void SetRotation(float rotation)
   {
     m_rotation = rotation;
     recalculate_view_matrix();
   }
 
   static constexpr glm::mat4 identity_matrix = glm::mat4{ 1.F };
-  const glm::mat4 &
-    ViewProjectionMatrix() const
+  const glm::mat4           &ViewProjectionMatrix() const
   {
     return m_view_projection_matrix;
   }
 
 private:
-  void
-    recalculate_view_matrix()
+  void recalculate_view_matrix()
   {
     const auto view_transform =
       glm::translate(identity_matrix, m_position)

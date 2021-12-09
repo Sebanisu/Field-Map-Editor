@@ -18,30 +18,25 @@ Texture::Texture(std::filesystem::path path)
   m_width_height = { x, y };
   init_texture(png.get());
 }
-void
-  Texture::Bind(int slot) const
+void Texture::Bind(int slot) const
 {
   GLCall{ glActiveTexture, static_cast<GLenum>(GL_TEXTURE0 + slot) };
   GLCall{ glBindTexture, GL_TEXTURE_2D, m_renderer_id };
   // GLCall{ glBindTextureUnit, slot, m_renderer_id };
 }
-void
-  Texture::UnBind()
+void Texture::UnBind()
 {
   GLCall{ glBindTexture, GL_TEXTURE_2D, 0U };
 }
-std::int32_t
-  Texture::width() const
+std::int32_t Texture::width() const
 {
   return m_width_height.x();
 }
-std::int32_t
-  Texture::height() const
+std::int32_t Texture::height() const
 {
   return m_width_height.y();
 }
-std::uint32_t
-  Texture::ID() const noexcept
+std::uint32_t Texture::ID() const noexcept
 {
   return m_renderer_id;
 }

@@ -15,13 +15,11 @@ enum class IndexType : GLenum
   UNSIGNED_INT   = GL_UNSIGNED_INT,
 };
 
-inline constexpr GLenum
-  operator+(IndexType it)
+inline constexpr GLenum operator+(IndexType it)
 {
   return static_cast<GLenum>(it);
 }
-inline constexpr IndexType
-  operator+(IndexType l, IndexType r)
+inline constexpr IndexType operator+(IndexType l, IndexType r)
 {
   auto value = static_cast<IndexType>((+l) + (+r));
   assert(
@@ -30,23 +28,19 @@ inline constexpr IndexType
   return value;
 }
 template<typename T>
-inline constexpr IndexType
-  GetIndexType() = delete;
+inline constexpr IndexType GetIndexType() = delete;
 template<>
-inline constexpr IndexType
-  GetIndexType<GLbyte>()
+inline constexpr IndexType GetIndexType<GLbyte>()
 {
   return IndexType::UNSIGNED_BYTE;
 }
 template<>
-inline constexpr IndexType
-  GetIndexType<GLushort>()
+inline constexpr IndexType GetIndexType<GLushort>()
 {
   return IndexType::UNSIGNED_SHORT;
 }
 template<>
-inline constexpr IndexType
-  GetIndexType<GLuint>()
+inline constexpr IndexType GetIndexType<GLuint>()
 {
   return IndexType::UNSIGNED_INT;
 }

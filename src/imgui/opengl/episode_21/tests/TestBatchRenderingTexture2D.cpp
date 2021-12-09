@@ -85,18 +85,12 @@ void test::TestBatchRenderingTexture2D::OnImGuiUpdate() const
 
   ImGui::PushID(++id);
   if (ImGui::SliderFloat3(
-        "View Offset",
-        &view_offset.x,
-        0.F,
-        static_cast<float>(window_width)))
+        "View Offset", &view_offset.x, 0.F, static_cast<float>(window_width)))
   {
   }
   ImGui::PushID(++id);
   if (ImGui::SliderFloat3(
-        "Model Offset",
-        &model_offset.x,
-        0.F,
-        static_cast<float>(window_width)))
+        "Model Offset", &model_offset.x, 0.F, static_cast<float>(window_width)))
   {
   }
 }

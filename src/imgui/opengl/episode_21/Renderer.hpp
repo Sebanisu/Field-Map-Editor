@@ -14,21 +14,16 @@
 #include <optional>
 #include <source_location>
 #include <utility>
-void
-  BeginErrorCallBack();
-void
-  EndErrorCallback();
-void
-  GLClearError(
-    const std::source_location location = std::source_location::current());
+void BeginErrorCallBack();
+void EndErrorCallback();
+void GLClearError(
+  const std::source_location location = std::source_location::current());
 
-bool
-  GLCheckError(
-    const std::source_location location = std::source_location::current());
+bool GLCheckError(
+  const std::source_location location = std::source_location::current());
 
-void
-  GLGetError(
-    const std::source_location location = std::source_location::current());
+void GLGetError(
+  const std::source_location location = std::source_location::current());
 
 
 template<typename T>
@@ -66,15 +61,11 @@ public:
     GLGetError(std::move(location));
   }
 
-  [[nodiscard]] auto
-    operator()()
-    && requires(!Void<return_value_type>)
+  [[nodiscard]] auto operator()() && requires(!Void<return_value_type>)
   {
     return std::move(holder.return_value);
   }
-  [[nodiscard]] auto
-    operator()()
-    & requires(!Void<return_value_type>)
+  [[nodiscard]] auto operator()() & requires(!Void<return_value_type>)
   {
     return holder.return_value;
   }
@@ -90,8 +81,7 @@ private:
   mutable glm::vec4 m_clear_color{};
 
 public:
-  void
-    ClearColor(glm::vec4 color) const
+  void ClearColor(glm::vec4 color) const
   {
     m_clear_color = std::move(color);
   }
@@ -100,8 +90,7 @@ public:
   {
     ClearColor({ r, g, b, a });
   }
-  void
-    Clear() const
+  void Clear() const
   {
     GLCall{ glClearColor,
             m_clear_color.r,
@@ -111,41 +100,32 @@ public:
     GLCall{ glClear, GL_COLOR_BUFFER_BIT };
   }
   template<Bindable... Ts>
-  static void
-    Draw(const Ts &...ts)
+  static void Draw(const Ts &...ts)
   {
     ((void)ts.Bind(), ...);
 
-    size_t size = (
-      [](const auto &bindable)
-        -> size_t
-             {
-               bindable.Bind();
-               if constexpr (SizedBindable<std::decay_t<decltype(bindable)>>)
-               {
-                 return bindable.size();
-               }
-               else
-               {
-                 return 0U;
-               }
-             }(ts)
-             + ...);
-    auto type = (
-      [](const auto &typed)
-        -> IndexType
-             {
-               typed.Bind();
-               if constexpr (has_Type_for_IndexType<std::decay_t<decltype(typed)>>)
-               {
-                 return typed.Type();
-               }
-               else
-               {
-                 return IndexType::none;
-               }
-             }(ts)
-             + ...);
+    size_t size = ([](const auto &bindable) -> size_t {
+      bindable.Bind();
+      if constexpr (SizedBindable<std::decay_t<decltype(bindable)>>)
+      {
+        return bindable.size();
+      }
+      else
+      {
+        return 0U;
+      }
+    }(ts) + ...);
+    auto   type = ([](const auto &typed) -> IndexType {
+      typed.Bind();
+      if constexpr (has_Type_for_IndexType<std::decay_t<decltype(typed)>>)
+      {
+        return typed.Type();
+      }
+      else
+      {
+        return IndexType::none;
+      }
+    }(ts) + ...);
 
     assert(type != IndexType::none);
     if (size != 0)

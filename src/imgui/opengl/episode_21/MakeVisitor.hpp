@@ -6,8 +6,7 @@
 #define MYPROJECT_MAKEVISITOR_HPP
 #include <utility>
 template<typename... B>
-[[nodiscard]] inline auto
-  make_visitor(B &&...b) noexcept
+[[nodiscard]] inline auto make_visitor(B &&...b) noexcept
 {
   struct visitor final : public std::decay_t<B>...
   {

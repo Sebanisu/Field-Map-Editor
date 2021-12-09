@@ -25,18 +25,15 @@ BatchRenderer::BatchRenderer(std::size_t quad_count)
     static_cast<std::uint32_t>(Max_Texture_Image_Units()));
 }
 
-void
-  BatchRenderer::OnUpdate(float) const
+void BatchRenderer::OnUpdate(float) const
 {
   draw_count = 0U;
 }
-void
-  BatchRenderer::Draw() const
+void BatchRenderer::Draw() const
 {
   FlushVertices();
 }
-void
-  BatchRenderer::Draw(Quad quad) const
+void BatchRenderer::Draw(Quad quad) const
 {
   if (std::ranges::size(m_vertices) == VERT_COUNT())
   {
@@ -44,21 +41,18 @@ void
   }
   m_vertices += std::move(quad);
 }
-void
-  BatchRenderer::OnImGuiUpdate() const
+void BatchRenderer::OnImGuiUpdate() const
 {
   ImGui::Text("%s", fmt::format("Total Draws: {}", draw_count).c_str());
 }
-void
-  BatchRenderer::FlushVertices() const
+void BatchRenderer::FlushVertices() const
 {
   index_buffer_size = m_vertex_buffer.Update(m_vertices);
-BindTextures();
+  BindTextures();
   DrawVertices();
   m_vertices.clear();
 }
-void
-  BatchRenderer::DrawVertices() const
+void BatchRenderer::DrawVertices() const
 {
   if (std::ranges::empty(m_vertices))
   {
@@ -67,8 +61,7 @@ void
   renderer.Draw(index_buffer_size, m_vertex_array, m_index_buffer, m_shader);
   ++draw_count;
 }
-void
-  BatchRenderer::Clear() const
+void BatchRenderer::Clear() const
 {
   m_texture_slots.clear();
   m_texture_slots.push_back(m_blank.ID());
@@ -89,9 +82,9 @@ std::size_t BatchRenderer::INDEX_COUNT() const noexcept
 const std::int32_t &BatchRenderer::Max_Texture_Image_Units()
 {
   static const std::int32_t number = []() {
-         std::int32_t texture_units{};
-         GLCall{ glGetIntegerv, GL_MAX_TEXTURE_IMAGE_UNITS, &texture_units };
-         return texture_units;
+    std::int32_t texture_units{};
+    GLCall{ glGetIntegerv, GL_MAX_TEXTURE_IMAGE_UNITS, &texture_units };
+    return texture_units;
   }();
   return number;
 }
@@ -114,7 +107,7 @@ void BatchRenderer::DrawQuad(
   glm::vec2         size) const
 {
   if (const auto result = std::ranges::find(m_texture_slots, texture.ID());
-    result != std::ranges::end(m_texture_slots))
+      result != std::ranges::end(m_texture_slots))
   {
     Draw(CreateQuad(
       offset,
@@ -127,7 +120,7 @@ void BatchRenderer::DrawQuad(
   else
   {
     if (std::cmp_equal(
-      std::ranges::size(m_texture_slots), Max_Texture_Image_Units()))
+          std::ranges::size(m_texture_slots), Max_Texture_Image_Units()))
     {
       FlushVertices();
     }

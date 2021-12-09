@@ -50,22 +50,19 @@ public:
     }
     init_texture(std::ranges::data(r));
   }
-  void
-    init_texture(const void *color)
+  void init_texture(const void *color)
   {
     if (m_width_height.area() == 0)
     {
       return;
     }
-    m_renderer_id = GLID{ []() -> std::uint32_t
-                          {
-                            std::uint32_t tmp;
-                            GLCall{ glGenTextures, 1, &tmp };
-                            GLCall{ glBindTexture, GL_TEXTURE_2D, tmp };
-                            return tmp;
-                          }(),
-                          [](const std::uint32_t id)
-                          {
+    m_renderer_id = GLID{ []() -> std::uint32_t {
+                           std::uint32_t tmp;
+                           GLCall{ glGenTextures, 1, &tmp };
+                           GLCall{ glBindTexture, GL_TEXTURE_2D, tmp };
+                           return tmp;
+                         }(),
+                          [](const std::uint32_t id) {
                             GLCall{ glDeleteTextures, 1, &id };
                             Texture::UnBind();
                           } };
@@ -103,8 +100,7 @@ public:
 
   template<std::ranges::contiguous_range R>
   requires std::permutable<std::ranges::iterator_t<R>>
-  static void
-    flip(R &range, const std::ranges::range_difference_t<R> stride)
+  static void flip(R &range, const std::ranges::range_difference_t<R> stride)
   {
     if (std::ranges::ssize(range) % stride != 0)
     {
@@ -117,8 +113,7 @@ public:
     auto       buffer      = std::make_unique<char[]>(stride_in_bytes);
     const auto swap_memory = [tmp = buffer.get(), stride, stride_in_bytes](
                                std::ranges::range_reference_t<R> &left,
-                               std::ranges::range_reference_t<R> &right)
-    {
+                               std::ranges::range_reference_t<R> &right) {
       std::memcpy(tmp, &left, stride_in_bytes);
       std::memcpy(&left, &right, stride_in_bytes);
       std::memcpy(&right, tmp, stride_in_bytes);
@@ -133,16 +128,11 @@ public:
     }
   }
 
-  std::uint32_t
-    ID() const noexcept;
-  void
-    Bind(int slot = 0) const;
-  static void
-    UnBind();
-  std::int32_t
-    width() const;
-  std::int32_t
-    height() const;
+  std::uint32_t ID() const noexcept;
+  void          Bind(int slot = 0) const;
+  static void   UnBind();
+  std::int32_t  width() const;
+  std::int32_t  height() const;
 };
 static_assert(Bindable<Texture>);
 #endif// MYPROJECT_TEXTURE_HPP

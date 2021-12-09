@@ -30,20 +30,15 @@ public:
   ~Shader();
 
   Shader(const Shader &) = delete;
-  Shader &
-    operator=(const Shader &) = delete;
+  Shader &operator=(const Shader &) = delete;
 
   Shader(Shader &&other) noexcept;
-  Shader &
-    operator=(Shader &&other) noexcept;
+  Shader     &operator=(Shader &&other) noexcept;
 
-  friend void
-    swap(Shader &first, Shader &second) noexcept;
+  friend void swap(Shader &first, Shader &second) noexcept;
 
-  void
-    Bind() const;
-  static void
-    UnBind();
+  void        Bind() const;
+  static void UnBind();
 
   // Set Uniforms
   template<typename... T>
@@ -52,8 +47,7 @@ public:
       std::string_view name,
       T... v) const
   {
-    const auto perform = [&]<typename NT>(auto &&fun)
-    {
+    const auto perform = [&]<typename NT>(auto &&fun) {
       GLCall{ std::forward<decltype(fun)>(fun),
               get_uniform_location(name),
               static_cast<NT>(v)... };
@@ -125,8 +119,7 @@ public:
         std::ranges::range_value_t<T>,
         std::int32_t>)) void SetUniform(std::string_view name, T v) const
   {
-    const auto perform = [&]<typename NT>(auto &&fun)
-    {
+    const auto perform = [&]<typename NT>(auto &&fun) {
       GLCall{ std::forward<decltype(fun)>(fun),
               get_uniform_location(name),
               static_cast<GLsizei>(std::ranges::ssize(v)),
@@ -151,8 +144,7 @@ public:
       perform.template operator()<float>(glUniform1iv);
     }
   }
-  void
-    SetUniform(std::string_view name, const glm::mat4 &matrix) const
+  void SetUniform(std::string_view name, const glm::mat4 &matrix) const
   {
     GLCall{ glUniformMatrix4fv,
             get_uniform_location(name),
@@ -167,16 +159,13 @@ private:
     std::string vertex_shader{};
     std::string fragment_shader{};
   };
-  [[nodiscard]] ShaderProgramSource
-    ParseShader();
+  [[nodiscard]] ShaderProgramSource ParseShader();
   [[nodiscard]] std::uint32_t
     CompileShader(const std::uint32_t type, const std::string_view source);
-  std::uint32_t
-    CreateShader(
-      const std::string_view vertexShader,
-      const std::string_view fragmentShader);
-  std::int32_t
-    get_uniform_location(std::string_view name) const;
+  std::uint32_t CreateShader(
+    const std::string_view vertexShader,
+    const std::string_view fragmentShader);
+  std::int32_t get_uniform_location(std::string_view name) const;
 };
 static_assert(Bindable<Shader>);
 #endif// MYPROJECT_SHADER_HPP

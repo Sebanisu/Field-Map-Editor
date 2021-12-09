@@ -17,8 +17,7 @@ public:
   VertexBuffer() = default;
   VertexBuffer(std::ranges::contiguous_range auto &&buffer)
     : m_renderer_id(
-      [&]() -> std::uint32_t
-      {
+      [&]() -> std::uint32_t {
         std::uint32_t        tmp           = {};
         const std::ptrdiff_t size_in_bytes = static_cast<std::ptrdiff_t>(
           std::ranges::size(buffer)
@@ -31,18 +30,15 @@ public:
         };
         return tmp;
       }(),
-      [](const std::uint32_t id)
-      {
+      [](const std::uint32_t id) {
         GLCall{ glDeleteBuffers, 1, &id };
         VertexBuffer::UnBind();
       })
   {
   }
 
-  void
-    Bind() const;
-  static void
-    UnBind();
+  void        Bind() const;
+  static void UnBind();
 };
 static_assert(Bindable<VertexBuffer>);
 

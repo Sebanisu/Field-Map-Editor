@@ -33,20 +33,16 @@ public:
   }
   struct VertexBufferElement
   {
-    std::uint32_t type       = {};
-    std::uint32_t count      = {};
-    std::uint8_t  normalized = {};
-    static std::size_t
-      size_of_type(std::uint32_t type);
-    std::size_t
-      size() const;
+    std::uint32_t      type       = {};
+    std::uint32_t      count      = {};
+    std::uint8_t       normalized = {};
+    static std::size_t size_of_type(std::uint32_t type);
+    std::size_t        size() const;
   };
   template<typename T>
-  void push_back(std::uint32_t) = delete;
-  const std::vector<VertexBufferElement> &
-    elements() const noexcept;
-  std::size_t
-    stride() const noexcept;
+  void                                    push_back(std::uint32_t) = delete;
+  const std::vector<VertexBufferElement> &elements() const noexcept;
+  std::size_t                             stride() const noexcept;
 
 private:
   std::size_t                      m_stride   = {};
@@ -56,30 +52,26 @@ static_assert(
   std::movable<
     VertexBufferLayout> && std::copyable<VertexBufferLayout> && std::default_initializable<VertexBufferLayout>);
 template<>
-inline void
-  VertexBufferLayout::push_back<float>(std::uint32_t count)
+inline void VertexBufferLayout::push_back<float>(std::uint32_t count)
 {
   m_stride +=
     m_elements.emplace_back(GL_FLOAT, count, std::uint8_t{ GL_FALSE }).size();
 }
 template<>
-inline void
-  VertexBufferLayout::push_back<std::int32_t>(std::uint32_t count)
+inline void VertexBufferLayout::push_back<std::int32_t>(std::uint32_t count)
 {
   m_stride +=
     m_elements.emplace_back(GL_INT, count, std::uint8_t{ GL_FALSE }).size();
 }
 template<>
-inline void
-  VertexBufferLayout::push_back<std::uint32_t>(std::uint32_t count)
+inline void VertexBufferLayout::push_back<std::uint32_t>(std::uint32_t count)
 {
   m_stride +=
     m_elements.emplace_back(GL_UNSIGNED_INT, count, std::uint8_t{ GL_FALSE })
       .size();
 }
 template<>
-inline void
-  VertexBufferLayout::push_back<std::uint8_t>(std::uint32_t count)
+inline void VertexBufferLayout::push_back<std::uint8_t>(std::uint32_t count)
 {
   m_stride +=
     m_elements.emplace_back(GL_UNSIGNED_BYTE, count, std::uint8_t{ GL_TRUE })

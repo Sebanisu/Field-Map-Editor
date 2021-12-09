@@ -19,13 +19,12 @@ public:
     , m_uv{ min, glm::vec2{ max.x, min.y }, max, glm::vec2{ min.x, max.y } }
   {
   }
-  static SubTexture
-    CreateFromCoords(
-      const Texture   &texture,
-      const glm::vec2 &coords,
-      const glm::vec2 &cell_size,
-      const glm::vec2 &sprite_size = { 1.F, 1.F },
-      float            scale       = 1.F)
+  static SubTexture CreateFromCoords(
+    const Texture   &texture,
+    const glm::vec2 &coords,
+    const glm::vec2 &cell_size,
+    const glm::vec2 &sprite_size = { 1.F, 1.F },
+    float            scale       = 1.F)
   {
     return { texture,
              { (coords.x * cell_size.x * scale)
@@ -37,24 +36,20 @@ public:
                ((coords.y + sprite_size.y) * cell_size.y * scale)
                  / static_cast<float>(texture.height()) } };
   }
-  std::uint32_t
-    ID() const
+  std::uint32_t ID() const
   {
     return m_render_id;
   }
-  std::array<glm::vec2, 4U>
-    UV() const
+  std::array<glm::vec2, 4U> UV() const
   {
     return m_uv;
   }
-  void
-    Bind(std::int32_t slot = 0) const
+  void Bind(std::int32_t slot = 0) const
   {
     GLCall{ glActiveTexture, static_cast<GLenum>(GL_TEXTURE0 + slot) };
     GLCall{ glBindTexture, GL_TEXTURE_2D, m_render_id };
   }
-  static void
-    UnBind()
+  static void UnBind()
   {
     Texture::UnBind();
   };

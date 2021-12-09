@@ -37,17 +37,15 @@ scope_guard_expensive::~scope_guard_expensive()
     func();
   }
 }
-scope_guard_expensive &
-  scope_guard_expensive::operator=(std::function<void()> t)
+scope_guard_expensive &scope_guard_expensive::operator=(std::function<void()> t)
 {
   scope_guard_expensive tmp{ t };
   *this = std::move(tmp);
   return *this;
 }
-void
-  swap(
-    scope_guard_expensive &first,
-    scope_guard_expensive &second) noexcept// nothrow
+void swap(
+  scope_guard_expensive &first,
+  scope_guard_expensive &second) noexcept// nothrow
 {
   // enable ADL (not necessary in our case, but good practice)
   using std::swap;

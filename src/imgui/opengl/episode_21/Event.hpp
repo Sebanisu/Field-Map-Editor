@@ -57,18 +57,15 @@ public:
   {
   }
 
-  constexpr int
-    Width() const
+  constexpr int Width() const
   {
     return m_width;
   }
-  constexpr int
-    Height() const
+  constexpr int Height() const
   {
     return m_height;
   }
-  std::string
-    Data() const
+  std::string Data() const
   {
     return fmt::format("{:>5}, {:>5}", m_width, m_height);
   }
@@ -92,18 +89,15 @@ public:
   {
   }
 
-  constexpr int
-    Width() const
+  constexpr int Width() const
   {
     return m_width;
   }
-  constexpr int
-    Height() const
+  constexpr int Height() const
   {
     return m_height;
   }
-  std::string
-    Data() const
+  std::string Data() const
   {
     return fmt::format("{:>5}, {:>5}", m_width, m_height);
   }
@@ -120,8 +114,7 @@ class WindowClose
   EVENT_CLASS_CATEGORY(Category::Application)
   EVENT_HANDLED
 
-  std::string
-    Data() const
+  std::string Data() const
   {
     return {};
   }
@@ -138,24 +131,20 @@ public:
     : m_offset{ std::move(x), std::move(y) }
   {
   }
-  constexpr std::array<int, 2U>
-    Position() const
+  constexpr std::array<int, 2U> Position() const
   {
     return m_offset;
   }
 
-  constexpr int
-    X() const
+  constexpr int X() const
   {
     return m_offset[0];
   }
-  constexpr int
-    Y() const
+  constexpr int Y() const
   {
     return m_offset[1];
   }
-  std::string
-    Data() const
+  std::string Data() const
   {
     return fmt::format("{:>5}, {:>5}", m_offset[0], m_offset[1]);
   }
@@ -176,18 +165,15 @@ class KeyPressed
     , m_repeat(repeat)
   {
   }
-  constexpr KEY
-    Key() const
+  constexpr KEY Key() const
   {
     return m_key;
   }
-  constexpr bool
-    Repeat() const
+  constexpr bool Repeat() const
   {
     return m_repeat;
   }
-  std::string
-    Data() const
+  std::string Data() const
   {
     return fmt::format("{:>3}, {}", +m_key, m_repeat);
   }
@@ -208,13 +194,11 @@ class KeyReleased
     : m_key(code)
   {
   }
-  constexpr KEY
-    Key() const
+  constexpr KEY Key() const
   {
     return m_key;
   }
-  std::string
-    Data() const
+  std::string Data() const
   {
     return fmt::format("{:>3}", +m_key);
   }
@@ -235,13 +219,11 @@ class MouseButtonPressed
     : m_button(code)
   {
   }
-  constexpr MOUSE
-    Button() const
+  constexpr MOUSE Button() const
   {
     return m_button;
   }
-  std::string
-    Data() const
+  std::string Data() const
   {
     return fmt::format("{:>2}", +m_button);
   }
@@ -262,13 +244,11 @@ class MouseButtonReleased
     : m_button(code)
   {
   }
-  constexpr MOUSE
-    Button() const
+  constexpr MOUSE Button() const
   {
     return m_button;
   }
-  std::string
-    Data() const
+  std::string Data() const
   {
     return fmt::format("{:>2}", +m_button);
   }
@@ -289,25 +269,21 @@ public:
     : m_offset{ std::move(x_offset), std::move(y_offset) }
   {
   }
-  constexpr std::array<float, 2U>
-    Offsets() const
+  constexpr std::array<float, 2U> Offsets() const
   {
     return m_offset;
   }
 
-  constexpr float
-    XOffset() const
+  constexpr float XOffset() const
   {
     return m_offset[0];
   }
-  constexpr float
-    YOffset() const
+  constexpr float YOffset() const
   {
     return m_offset[1];
   }
 
-  std::string
-    Data() const
+  std::string Data() const
   {
     return fmt::format("{:>5.2f}, {:>5.2f}", m_offset[0], m_offset[1]);
   }
@@ -328,24 +304,20 @@ public:
     : m_position{ std::move(x), std::move(y) }
   {
   }
-  constexpr std::array<float, 2U>
-    Position() const
+  constexpr std::array<float, 2U> Position() const
   {
     return m_position;
   }
 
-  constexpr float
-    X() const
+  constexpr float X() const
   {
     return m_position[0];
   }
-  constexpr float
-    Y() const
+  constexpr float Y() const
   {
     return m_position[1];
   }
-  std::string
-    Data() const
+  std::string Data() const
   {
     return fmt::format("{:>5.2f}, {:>5.2f}", m_position[0], m_position[1]);
   }

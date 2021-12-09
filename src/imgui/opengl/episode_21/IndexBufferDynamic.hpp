@@ -28,8 +28,7 @@ public:
     // clang-format on
     IndexBufferDynamic(const R &buffer)
     : m_renderer_id(
-      [&buffer]() -> std::uint32_t
-      {
+      [&buffer]() -> std::uint32_t {
         std::uint32_t        tmp{};
         const std::ptrdiff_t size_in_bytes = static_cast<std::ptrdiff_t>(
           std::ranges::size(buffer) * sizeof(std::ranges::range_value_t<R>));
@@ -43,8 +42,7 @@ public:
                 GL_STATIC_DRAW };
         return tmp;
       }(),
-      [](const std::uint32_t id)
-      {
+      [](const std::uint32_t id) {
         GLCall{ glDeleteBuffers, 1, &id };
         IndexBufferDynamic::UnBind();
       })
@@ -52,12 +50,9 @@ public:
   {
   }
 
-  void
-    Bind() const;
-  static void
-    UnBind();
-  IndexType
-    Type() const;
+  void        Bind() const;
+  static void UnBind();
+  IndexType   Type() const;
 };
 static_assert(
   Bindable<IndexBufferDynamic> && has_Type_for_IndexType<IndexBufferDynamic>);

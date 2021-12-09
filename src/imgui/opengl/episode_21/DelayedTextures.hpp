@@ -21,8 +21,7 @@ struct DelayedTextures
     std::make_unique<std::array<Texture, 49U>>()
   };
   mutable std::vector<std::future<return_data>> futures{};
-  void
-    check() const
+  void                                          check() const
   {
     for (std::future<return_data> &future : futures)
     {
@@ -41,8 +40,7 @@ struct DelayedTextures
     }
     remove_invalid();
   }
-  void
-    remove_invalid() const
+  void remove_invalid() const
   {
     if (!std::ranges::empty(futures))
     {

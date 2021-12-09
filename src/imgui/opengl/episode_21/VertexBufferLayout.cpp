@@ -21,8 +21,7 @@ std::size_t
   assert(false);
   return 0;
 }
-std::size_t
-  VertexBufferLayout::VertexBufferElement::size() const
+std::size_t VertexBufferLayout::VertexBufferElement::size() const
 {
   return count * size_of_type(type);
 }
@@ -32,8 +31,7 @@ const std::vector<VertexBufferLayout::VertexBufferElement> &
 {
   return m_elements;
 }
-std::size_t
-  VertexBufferLayout::stride() const noexcept
+std::size_t VertexBufferLayout::stride() const noexcept
 {
   return m_stride;
 }

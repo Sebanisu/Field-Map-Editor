@@ -31,7 +31,7 @@ public:
     std::function<void(const Event::Item &)>;// void (*)(const EventItem &);
   void SetEventCallback(EventCallbackFn function) const
   {
-    auto & window_data =  GetWindowData(m_window.get());
+    auto &window_data          = GetWindowData(m_window.get());
     window_data.event_callback = std::move(function);
   }
   struct WindowData

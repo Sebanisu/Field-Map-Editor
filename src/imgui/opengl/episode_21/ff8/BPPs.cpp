@@ -5,8 +5,7 @@
 #include "BPPs.hpp"
 #include "imgui.h"
 #include "scope_guard.hpp"
-bool
-  ff8::BPPs::OnImGuiUpdate() const
+bool ff8::BPPs::OnImGuiUpdate() const
 {
   bool changed = { false };
   if (ImGui::BeginCombo("BPP", String().data()))
@@ -21,7 +20,7 @@ bool
       if (ImGui::Selectable(string.data(), is_selected))
       {
         m_current = i;
-        changed        = true;
+        changed   = true;
       }
       if (is_selected)
       {

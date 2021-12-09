@@ -6,10 +6,10 @@
 #define MYPROJECT_TestTexture2D_HPP
 #include "IndexBuffer.hpp"
 #include "Shader.hpp"
+#include "Test.hpp"
 #include "Texture.hpp"
 #include "VertexArray.hpp"
 #include "VertexBuffer.hpp"
-#include "Test.hpp"
 #include <glm/glm.hpp>
 namespace test
 {

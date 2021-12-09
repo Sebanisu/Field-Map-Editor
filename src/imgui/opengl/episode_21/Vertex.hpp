@@ -13,13 +13,12 @@
 #include <vector>
 struct Vertex
 {
-  glm::vec2 location{};
-  glm::vec4 color{ 1.F, 1.F, 1.F, 1.F };
-  glm::vec2 uv{};
-  float     texture_slot{};
-  float     tiling_factor{ 1.F };
-  static VertexBufferLayout
-    Layout()
+  glm::vec2                 location{};
+  glm::vec4                 color{ 1.F, 1.F, 1.F, 1.F };
+  glm::vec2                 uv{};
+  float                     texture_slot{};
+  float                     tiling_factor{ 1.F };
+  static VertexBufferLayout Layout()
   {
     return { VertexBufferLayout::VertexBufferElementType<float>{ 2U },
              VertexBufferLayout::VertexBufferElementType<float>{ 4U },
@@ -32,17 +31,16 @@ static_assert(
   std::movable<
     Vertex> && std::copyable<Vertex> && std::default_initializable<Vertex>);
 using Quad = std::array<Vertex, 4U>;
-constexpr inline Quad
-  CreateQuad(
-    const glm::vec2                 offset,
-    const glm::vec4                 color,
-    const int                       texture_id    = {},
-    const float                     tiling_factor = 1.F,
-    const std::array<glm::vec2, 4U> uv            = { glm::vec2{ 0.F, 0.F },
-                                           glm::vec2{ 1.F, 0.F },
-                                           glm::vec2{ 1.F, 1.F },
-                                           glm::vec2{ 0.F, 1.F } },
-    const glm::vec2                 size          = { 1.F, 1.F })
+constexpr inline Quad CreateQuad(
+  const glm::vec2                 offset,
+  const glm::vec4                 color,
+  const int                       texture_id    = {},
+  const float                     tiling_factor = 1.F,
+  const std::array<glm::vec2, 4U> uv            = { glm::vec2{ 0.F, 0.F },
+                                         glm::vec2{ 1.F, 0.F },
+                                         glm::vec2{ 1.F, 1.F },
+                                         glm::vec2{ 0.F, 1.F } },
+  const glm::vec2                 size          = { 1.F, 1.F })
 {
   const auto f_texture_id = static_cast<float>(texture_id);
   return {
@@ -68,8 +66,7 @@ constexpr inline Quad
             .tiling_factor = tiling_factor },// 3
   };
 }
-inline std::vector<std::uint32_t>
-  QuadIndices(std::size_t count)
+inline std::vector<std::uint32_t> QuadIndices(std::size_t count)
 {
   static constexpr auto      init = std::array{ 0, 1, 2, 2, 3, 0 };
   std::vector<std::uint32_t> indices{};
@@ -78,10 +75,9 @@ inline std::vector<std::uint32_t>
   for (std::size_t i{}; i != count; ++i)
   {
     std::ranges::transform(
-      init,
-      std::back_inserter(indices),
-      [&i, &quad_size](std::uint32_t index)
-      { return static_cast<std::uint32_t>(index + i * quad_size); });
+      init, std::back_inserter(indices), [&i, &quad_size](std::uint32_t index) {
+        return static_cast<std::uint32_t>(index + i * quad_size);
+      });
   }
   return indices;
 }
@@ -92,10 +88,9 @@ inline std::vector<Vertex> &
   std::ranges::copy(quad, std::back_inserter(vertices));
   return vertices;
 }
-inline std::vector<Vertex> &
-  operator+=(
-    std::vector<Vertex>       &vertices_left,
-    const std::vector<Vertex> &vertices_right)
+inline std::vector<Vertex> &operator+=(
+  std::vector<Vertex>       &vertices_left,
+  const std::vector<Vertex> &vertices_right)
 {
   std::ranges::copy(vertices_right, std::back_inserter(vertices_left));
   //  vertices_left.insert(
@@ -119,10 +114,9 @@ inline std::vector<Vertex> &
   vertices += quad_right;
   return vertices;
 }
-[[nodiscard]] inline std::vector<Vertex>
-  operator+(
-    std::vector<Vertex>        vertices_left,
-    const std::vector<Vertex> &vertices_right)
+[[nodiscard]] inline std::vector<Vertex> operator+(
+  std::vector<Vertex>        vertices_left,
+  const std::vector<Vertex> &vertices_right)
 {
   vertices_left += vertices_right;
   return vertices_left;

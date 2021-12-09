@@ -18,9 +18,9 @@ public:
   bool OnImGuiUpdate() const;
   void OnEvent(const Event::Item &) const {}
 
-  [[nodiscard]] const open_viii::archive::Archives &Archives() const;
+  [[nodiscard]] const open_viii::archive::Archives     &Archives() const;
   [[nodiscard]] const open_viii::archive::FIFLFS<true> &Fields() const;
-  [[nodiscard]] std::string_view Coo() const;
+  [[nodiscard]] std::string_view                        Coo() const;
 
 private:
   Paths                                m_paths    = {};

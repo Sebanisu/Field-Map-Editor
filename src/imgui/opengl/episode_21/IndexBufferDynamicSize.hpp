@@ -21,20 +21,13 @@ public:
     : m_size(in_size)
   {
   }
-  constexpr std::size_t
-    size() const noexcept
+  constexpr std::size_t size() const noexcept
   {
     return m_size;
   }
-  constexpr void
-    Bind() const noexcept
-  {
-  }
+  constexpr void        Bind() const noexcept {}
 
-  static constexpr void
-    UnBind() noexcept
-  {
-  }
+  static constexpr void UnBind() noexcept {}
 };
 static_assert(
   SizedBindable<

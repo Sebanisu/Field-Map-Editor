@@ -11,9 +11,7 @@ DelayedTextures
   DelayedTextures rdt{};
   rdt.futures.reserve(49U);
   auto bpps = std::views::iota(std::uint32_t{ 0 }, std::uint32_t{ 3 })
-              | std::views::transform(
-                [](const std::uint32_t i)
-                {
+              | std::views::transform([](const std::uint32_t i) {
                   using namespace open_viii::graphics::literals;
                   switch (1U << (i + 2U))
                   {
@@ -33,8 +31,7 @@ DelayedTextures
                    const open_viii::graphics::background::Mim in_mim,
                    const open_viii::graphics::BPPT            in_bpp,
                    const std::uint8_t                         in_palette,
-                   Texture *in_out) -> DelayedTextures::return_data
-  {
+                   Texture *in_out) -> DelayedTextures::return_data {
     auto r = DelayedTextures::return_data{
       .colors =
         in_mim.get_colors<open_viii::graphics::Color32RGBA>(in_bpp, in_palette),
@@ -74,8 +71,7 @@ DelayedTextures
     rdt.futures.emplace_back(std::async(
       std::launch::async,
       [](const open_viii::graphics::background::Mim in_mim, Texture *in_out)
-        -> DelayedTextures::return_data
-      {
+        -> DelayedTextures::return_data {
         auto r = DelayedTextures::return_data{
           .colors =
             in_mim.get_colors<open_viii::graphics::Color32RGBA>({}, {}, true),

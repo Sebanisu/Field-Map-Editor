@@ -19,8 +19,7 @@ struct [[nodiscard]] scope_guard
     exec();
   }
 
-  constexpr scope_guard &
-    operator=(void (*t)())
+  constexpr scope_guard &operator=(void (*t)())
   {
     exec();
     func = std::move(t);
@@ -31,8 +30,7 @@ struct [[nodiscard]] scope_guard
     : func(other.func)
   {
   }
-  constexpr scope_guard &
-    operator=(const scope_guard &other)
+  constexpr scope_guard &operator=(const scope_guard &other)
   {
     exec();
     func = other.func;
@@ -43,17 +41,15 @@ struct [[nodiscard]] scope_guard
   {
     swap(*this, other);
   }
-  constexpr scope_guard &
-    operator=(scope_guard &&other) noexcept
+  constexpr scope_guard &operator=(scope_guard &&other) noexcept
   {
     swap(*this, other);
     return *this;
   }
 
-  constexpr friend void
-    swap(
-      scope_guard &first,
-      scope_guard &second) noexcept// nothrow
+  constexpr friend void swap(
+    scope_guard &first,
+    scope_guard &second) noexcept// nothrow
   {
     // enable ADL (not necessary in our case, but good practice)
     using std::swap;
@@ -63,8 +59,7 @@ struct [[nodiscard]] scope_guard
     swap(first.func, second.func);
   }
   template<size_t count>
-  [[nodiscard]] static constexpr auto
-    array(void (*t)())
+  [[nodiscard]] static constexpr auto array(void (*t)())
   {
     std::array<scope_guard, count> r{};
     std::ranges::for_each(r, [&t](scope_guard &guard) { guard = t; });
@@ -73,8 +68,7 @@ struct [[nodiscard]] scope_guard
   constexpr scope_guard() = default;
 
 private:
-  constexpr void
-    exec() const
+  constexpr void exec() const
   {
     if (func != nullptr)
     {
@@ -89,16 +83,13 @@ struct [[nodiscard]] scope_guard_expensive
   scope_guard_expensive(std::function<void()> t);
   scope_guard_expensive(const scope_guard_expensive &other);
 
-  scope_guard_expensive &
-    operator=(const scope_guard_expensive &other);
+  scope_guard_expensive &operator=(const scope_guard_expensive &other);
 
   scope_guard_expensive(scope_guard_expensive &&other) noexcept;
 
-  scope_guard_expensive &
-    operator=(scope_guard_expensive &&other) noexcept;
+  scope_guard_expensive &operator=(scope_guard_expensive &&other) noexcept;
 
-  scope_guard_expensive &
-    operator=(std::function<void()> t);
+  scope_guard_expensive &operator=(std::function<void()> t);
 
   ~scope_guard_expensive();
 
@@ -106,8 +97,7 @@ struct [[nodiscard]] scope_guard_expensive
     swap(scope_guard_expensive &first, scope_guard_expensive &second) noexcept;
 
   template<std::convertible_to<std::function<void()>> T, size_t count>
-  [[nodiscard]] static std::array<scope_guard_expensive, count>
-    array(T t)
+  [[nodiscard]] static std::array<scope_guard_expensive, count> array(T t)
   {
     std::array<scope_guard_expensive, count> r{};
     std::ranges::for_each(r, [&t](scope_guard_expensive &guard) { guard = t; });

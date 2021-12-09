@@ -4,8 +4,7 @@
 
 #include "Renderer.hpp"
 #include <fmt/format.h>
-bool
-  GLCheckError(std::string_view prefix, const std::source_location location)
+bool GLCheckError(std::string_view prefix, const std::source_location location)
 {
   if (GLenum error = glGetError(); error != GL_NO_ERROR)
   {
@@ -19,8 +18,7 @@ bool
       location.column(),
       location.function_name(),
       error,
-      [&error]()
-      {
+      [&error]() {
         switch (error)
         {
           case GL_INVALID_ENUM:
@@ -44,8 +42,7 @@ bool
   }
   return false;
 }
-void
-  GLClearError(const std::source_location location)
+void GLClearError(const std::source_location location)
 {
   while (GLCheckError("Cleared Error", location))
   {
@@ -54,8 +51,7 @@ void
 }
 
 
-void
-  GLGetError(const std::source_location location)
+void GLGetError(const std::source_location location)
 {
   while (GLCheckError("Error", location))
   {
@@ -63,8 +59,7 @@ void
   }
 }
 
-void
-  BeginErrorCallBack()
+void BeginErrorCallBack()
 {
   glEnable(GL_DEBUG_OUTPUT);
   glDebugMessageCallback(
@@ -75,8 +70,7 @@ void
       GLenum                       severity,
       [[maybe_unused]] GLsizei     length,
       const GLchar                *message,
-      [[maybe_unused]] const void *userParam)
-    {
+      [[maybe_unused]] const void *userParam) {
       using namespace std::string_literals;
       static const std::unordered_map<GLenum, std::string> errorSourceMap{
         { GL_DEBUG_SOURCE_API, "SOURCE_API"s },
@@ -121,8 +115,7 @@ void
     },
     0);
 }
-void
-  EndErrorCallback()
+void EndErrorCallback()
 {
   glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
 }
