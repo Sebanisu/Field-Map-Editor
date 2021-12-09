@@ -16,7 +16,7 @@ bool
 {
   if (!m_window)
     return false;
-  const int state = glfwGetKey(m_window.get(), +keycode);
+  const int state = glfwGetKey(m_window, +keycode);
   return state == GLFW_PRESS || state == GLFW_REPEAT;
 }
 bool
@@ -25,7 +25,7 @@ bool
 
   if (!m_window)
     return false;
-  const int state = glfwGetMouseButton(m_window.get(), +button);
+  const int state = glfwGetMouseButton(m_window, +button);
   return state == GLFW_PRESS;
 }
 std::array<float, 2U>
@@ -34,18 +34,18 @@ std::array<float, 2U>
   std::array<double, 2U> pos{};
   if (!m_window)
     return {};
-  glfwGetCursorPos(m_window.get(), &pos[0], &pos[1]);
+  glfwGetCursorPos(m_window, &pos[0], &pos[1]);
   return { static_cast<float>(pos[0]), static_cast<float>(pos[1]) };
 }
 float
   Input::GetMouseX()
 {
-  auto [x, y] = GetMousePosition();
+  const auto [x, y] = GetMousePosition();
   return x;
 }
 float
   Input::GetMouseY()
 {
-  auto [x, y] = GetMousePosition();
+  const auto [x, y] = GetMousePosition();
   return y;
 }

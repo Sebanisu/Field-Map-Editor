@@ -110,13 +110,15 @@ void
   }
   glfwMakeContextCurrent(m_window.get());
   glfwSetWindowUserPointer(m_window.get(), &m_data);
+  BindInputPollingToWindow();
   EnableVSync();
   glfwGetFramebufferSize(
     m_window.get(), &m_data.frame_buffer_width, &m_data.frame_buffer_height);
 }
 void
   Window::InitImGui(const char *glsl_version) const
-{// Setup Dear ImGui context
+{
+  // Setup Dear ImGui context
   IMGUI_CHECKVERSION();
   ImGui::CreateContext();
   ImGuiIO &io = ImGui::GetIO();
@@ -279,4 +281,9 @@ bool
   Window::WindowClosing() const
 {
   return glfwWindowShouldClose(m_window.get());
+}
+void
+  Window::BindInputPollingToWindow() const
+{
+  Input::m_window = m_window.get();
 }

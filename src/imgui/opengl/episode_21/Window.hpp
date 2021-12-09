@@ -13,9 +13,11 @@
 #include <imgui_impl_opengl3.h>
 #include <memory>
 #include <string>
+#include "Input.hpp"
 class Window final
 {
 public:
+  void BindInputPollingToWindow() const;
   void
     OnUpdate() const;
   void

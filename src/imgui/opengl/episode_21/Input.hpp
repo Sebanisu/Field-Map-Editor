@@ -10,26 +10,24 @@
 #include <GLFW/glfw3.h>
 #include <memory>
 
+class Window;
 class Input
 {
 public:
-  Input(std::shared_ptr<GLFWwindow> window)
-    : m_window(std::move(window))
-  {
-  }
-  bool
+  static bool
     IsKeyPressed(KEY keycode);
-  bool
+  static bool
     IsMouseButtonPressed(MOUSE button);
-  std::array<float, 2U>
+  static std::array<float, 2U>
     GetMousePosition();
-  float
+  static float
     GetMouseX();
-
-  float
+  static float
     GetMouseY();
+  friend Window;
 
 private:
-  std::shared_ptr<GLFWwindow> m_window{};
+  Input() = default;
+  inline static GLFWwindow *m_window = nullptr;
 };
 #endif// MYPROJECT_INPUT_HPP
