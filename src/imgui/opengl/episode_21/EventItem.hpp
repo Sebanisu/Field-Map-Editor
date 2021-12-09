@@ -32,8 +32,7 @@ public:
   }
 
   using value_type = Event::Item;
-  std::string_view
-    Name() const
+  std::string_view Name() const
   {
     return std::visit(
       make_visitor(
@@ -41,8 +40,7 @@ public:
         [](std::monostate) { return std::string_view(""); }),
       m_impl);
   }
-  Event::Category
-    category() const
+  Event::Category category() const
   {
     return std::visit(
       make_visitor(
@@ -50,8 +48,7 @@ public:
         [](std::monostate) { return Event::Category::None; }),
       m_impl);
   }
-  std::string_view
-    CategoryName() const
+  std::string_view CategoryName() const
   {
     return std::visit(
       make_visitor(
@@ -59,8 +56,7 @@ public:
         [](std::monostate) { return std::string_view(""); }),
       m_impl);
   }
-  bool
-    Handled() const
+  bool Handled() const
   {
     return std::visit(
       make_visitor(
@@ -69,8 +65,7 @@ public:
       m_impl);
   }
 
-  std::string
-    Data() const
+  std::string Data() const
   {
     return std::visit(
       make_visitor(
@@ -79,15 +74,13 @@ public:
       m_impl);
   }
   template<Event::is eventT>
-  bool
-    contains() const
+  bool contains() const
   {
     return std::get_if<eventT>(&m_impl) == nullptr ? false : true;
   }
 
   template<Event::is eventT>
-  const eventT *
-    Get() const
+  const eventT *Get() const
   {
     return std::get_if<eventT>(&m_impl);
   }
