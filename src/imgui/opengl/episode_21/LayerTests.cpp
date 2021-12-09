@@ -4,24 +4,19 @@
 
 #include "LayerTests.hpp"
 #include <imgui.h>
-
-
-void
-  Layer::OnUpdate(const Tests &self, float ts)
+void Layer::Tests::OnUpdate(float ts) const
 {
-  test::OnUpdate(self.test_menu, ts);
+  test_menu.OnUpdate(ts);
 }
-void
-  Layer::OnRender(const Tests &self)
+void Layer::Tests::OnRender() const
 {
-  test::OnRender(self.test_menu);
+  test_menu.OnRender();
 }
-void
-  Layer::OnImGuiUpdate(const Tests &self)
+void Layer::Tests::OnImGuiUpdate() const
 {
   if (ImGui::Begin("Test Window", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
   {
-    test::OnImGuiUpdate(self.test_menu);
+    test_menu.OnImGuiUpdate();
     ImGui::Text(
       "%s",
       fmt::format(
@@ -32,8 +27,7 @@ void
   }
   ImGui::End();
 }
-void
-  Layer::OnEvent(const Tests &self, const Event::Item &e)
+void Layer::Tests::OnEvent(const Event::Item &e) const
 {
-  test::OnEvent(self.test_menu, e);
+  test_menu.OnEvent(e);
 }

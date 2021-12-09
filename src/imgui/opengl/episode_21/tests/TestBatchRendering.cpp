@@ -18,8 +18,7 @@
 #include <imgui.h>
 #include <ranges>
 static_assert(test::Test<test::TestBatchRendering>);
-void
-  test::OnImGuiUpdate(const TestBatchRendering &self)
+void test::TestBatchRendering::OnImGuiUpdate() const
 {
   int        id           = 0;
   const auto pop          = scope_guard::array<2U>(&ImGui::PopID);
@@ -28,27 +27,16 @@ void
 
   ImGui::PushID(++id);
   if (ImGui::SliderFloat3(
-        "View Offset",
-        &self.view_offset.x,
-        0.F,
-        static_cast<float>(window_width)))
+        "View Offset", &view_offset.x, 0.F, static_cast<float>(window_width)))
   {
   }
   ImGui::PushID(++id);
   if (ImGui::SliderFloat3(
-        "Model Offset",
-        &self.model_offset.x,
-        0.F,
-        static_cast<float>(window_width)))
+        "Model Offset", &model_offset.x, 0.F, static_cast<float>(window_width)))
   {
   }
 }
-void
-  test::OnUpdate(const TestBatchRendering &, float)
-{
-}
-void
-  test::OnRender(const TestBatchRendering &self)
+void test::TestBatchRendering::OnRender() const
 {
   const int window_width  = 16;
   const int window_height = 9;
@@ -59,16 +47,16 @@ void
     static_cast<float>(window_height),
     -1.F,
     1.F);
-  const auto view = glm::translate(glm::mat4{ 1.F }, self.view_offset);
+  const auto view = glm::translate(glm::mat4{ 1.F }, view_offset);
   Renderer   renderer{};
-  self.m_shader.Bind();
+  m_shader.Bind();
   {
-    const auto model = glm::translate(glm::mat4{ 1.F }, self.model_offset);
+    const auto model = glm::translate(glm::mat4{ 1.F }, model_offset);
     const auto mvp   = proj * view * model;
-    self.m_shader.SetUniform("u_MVP", mvp);
-    self.m_shader.SetUniform("u_Color", 1.F, 1.F, 1.F, 1.F);
+    m_shader.SetUniform("u_MVP", mvp);
+    m_shader.SetUniform("u_Color", 1.F, 1.F, 1.F, 1.F);
     // m_shader.SetUniform("u_Texture", 0);
-    renderer.Draw(self.m_vertex_array, self.m_index_buffer);
+    renderer.Draw(m_vertex_array, m_index_buffer);
   }
 }
 test::TestBatchRendering::TestBatchRendering()
@@ -98,8 +86,7 @@ test::TestBatchRendering::TestBatchRendering()
       vertices_init.cbegin(),
       vertices_init.cend(),
       std::back_inserter(vertices),
-      [&colors, &i](Vertex vertex)
-      {
+      [&colors, &i](Vertex vertex) {
         vertex.location.x += 2.F * static_cast<float>(i);
         vertex.color = colors[i];
         return vertex;

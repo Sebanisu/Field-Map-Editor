@@ -24,25 +24,18 @@ public:
     std::ranges::move(overlays, std::back_inserter(m_layers));
   }
   Stack(Stack &&other) noexcept = default;
-  Stack &
-    operator=(Stack &&other) noexcept = default;
-  friend void
-    OnUpdate(const Stack &, float);
-  friend void
-    OnRender(const Stack &);
-  friend void
-    OnImGuiUpdate(const Stack &);
-  friend void
-    OnEvent(const Stack &, const Event::Item &);
+  Stack &operator=(Stack &&other) noexcept = default;
+  void   OnUpdate(float) const;
+  void   OnRender() const;
+  void   OnImGuiUpdate() const;
+  void   OnEvent(const Event::Item &) const;
   template<typename... T>
-  void
-    emplace_layers(T &&...args) const
+  void emplace_layers(T &&...args) const
   {
     end_of_layers = m_layers.emplace(end_of_layers, std::forward<T>(args)...);
   }
   template<typename... T>
-  void
-    emplace_overlays(T &&...args) const
+  void emplace_overlays(T &&...args) const
   {
     m_layers.emplace_back(std::forward<T>(args)...);
   }
@@ -54,13 +47,5 @@ private:
   };
   // start of overlay
 };
-void
-  OnRender(const Stack &self);
-void
-  OnImGuiUpdate(const Stack &self);
-void
-  OnUpdate(const Stack &self, float delta_time);
-void
-  OnEvent(const Stack &, const Event::Item &);
 }// namespace Layer
 #endif// MYPROJECT_LAYERSTACK_HPP

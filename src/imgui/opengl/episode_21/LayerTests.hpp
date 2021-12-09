@@ -13,21 +13,10 @@ namespace Layer
 class Tests
 {
 public:
-  Tests()              = default;
-  Tests(const Tests &) = delete;
-  Tests &
-    operator=(const Tests &) = delete;
-  Tests(Tests &&) noexcept   = default;
-  Tests &
-    operator=(Tests &&) noexcept = default;
-  friend void
-    OnUpdate(const Tests &, float);
-  friend void
-    OnRender(const Tests &);
-  friend void
-    OnImGuiUpdate(const Tests &);
-  friend void
-    OnEvent(const Tests &, const Event::Item &);
+  void OnUpdate(float) const;
+  void OnRender() const;
+  void OnImGuiUpdate() const;
+  void OnEvent(const Event::Item &) const;
 
 private:
   test::TestMenu test_menu = {};
@@ -35,13 +24,5 @@ private:
 
 static_assert(test::Test<test::TestMenu>);
 static_assert(test::Test<Tests>);
-void
-  OnUpdate(const Tests &, float);
-void
-  OnRender(const Tests &);
-void
-  OnImGuiUpdate(const Tests &);
-void
-  OnEvent(const Tests &, const Event::Item &);
 }// namespace Layer
 #endif// MYPROJECT_LAYERTESTS_HPP

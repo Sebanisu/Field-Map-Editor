@@ -4,31 +4,22 @@
 #include "Palettes.hpp"
 #include "imgui.h"
 #include "scope_guard.hpp"
-void
-  ff8::OnUpdate(const Palettes &, float)
-{
-}
-void
-  ff8::OnRender(const Palettes &)
-{
-}
-bool
-  ff8::OnImGuiUpdate(const Palettes &self)
+bool ff8::Palettes::OnImGuiUpdate() const
 {
   bool changed = { false };
-  if (ImGui::BeginCombo("Palette", self.String().data()))
+  if (ImGui::BeginCombo("Palette", String().data()))
   {
     int        id  = {};
     const auto end = scope_guard{ &ImGui::EndCombo };
-    for (int i{}; const std::string_view &string : self.m_strings)
+    for (int i{}; const std::string_view &string : m_strings)
     {
-      const bool is_selected = i == self.m_current;
+      const bool is_selected = i == m_current;
       const auto pop         = scope_guard{ &ImGui::PopID };
       ImGui::PushID(++id);
       if (ImGui::Selectable(string.data(), is_selected))
       {
-        self.m_current = i;
-        changed        = true;
+        m_current = i;
+        changed   = true;
       }
       if (is_selected)
       {
@@ -38,4 +29,16 @@ bool
     }
   }
   return changed;
+}
+std::uint8_t ff8::Palettes::Palette() const
+{
+  return m_values.at(static_cast<std::size_t>(m_current));
+}
+std::string_view ff8::Palettes::String() const
+{
+  return m_strings.at(static_cast<std::size_t>(m_current));
+}
+int ff8::Palettes::Index() const
+{
+  return m_current;
 }

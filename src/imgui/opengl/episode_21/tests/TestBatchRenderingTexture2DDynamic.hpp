@@ -6,6 +6,7 @@
 #define MYPROJECT_TestBatchRenderingTexture2DDynamic_HPP
 #include "IndexBufferDynamic.hpp"
 #include "Shader.hpp"
+#include "Test.hpp"
 #include "Texture.hpp"
 #include "VertexArray.hpp"
 #include "VertexBufferDynamic.hpp"
@@ -18,13 +19,10 @@ class TestBatchRenderingTexture2DDynamic
 {
 public:
   TestBatchRenderingTexture2DDynamic();
-
-  friend void
-    OnUpdate(const TestBatchRenderingTexture2DDynamic &, float);
-  friend void
-    OnRender(const TestBatchRenderingTexture2DDynamic &);
-  friend void
-    OnImGuiUpdate(const TestBatchRenderingTexture2DDynamic &);
+  void OnUpdate(float) const;
+  void OnRender() const;
+  void OnImGuiUpdate() const;
+  void OnEvent(const Event::Item &) const {}
 
 private:
   VertexBufferDynamic            m_vertex_buffer   = { 1000 };
@@ -38,12 +36,9 @@ private:
   mutable glm::vec2              model_offset2     = { 4.F, 0.F };
   mutable glm::vec2              model_offset3     = { 6.F, 0.F };
 };
-void
-  OnUpdate(const TestBatchRenderingTexture2DDynamic &, float);
-void
-  OnRender(const TestBatchRenderingTexture2DDynamic &);
-void
-  OnImGuiUpdate(const TestBatchRenderingTexture2DDynamic &);
+void OnUpdate(const TestBatchRenderingTexture2DDynamic &, float);
+void OnRender(const TestBatchRenderingTexture2DDynamic &);
+void OnImGuiUpdate(const TestBatchRenderingTexture2DDynamic &);
 
 }// namespace test
 #endif// MYPROJECT_TestBatchRenderingTexture2DDynamic_HPP

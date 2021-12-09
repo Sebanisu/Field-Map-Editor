@@ -46,12 +46,7 @@ test::TestBatchRenderingTexture2D::TestBatchRenderingTexture2D()
   m_shader.Bind();
   m_shader.SetUniform("u_Color", 1.F, 1.F, 1.F, 1.F);
 }
-void
-  test::OnUpdate(const TestBatchRenderingTexture2D &, float)
-{
-}
-void
-  test::OnRender(const TestBatchRenderingTexture2D &self)
+void test::TestBatchRenderingTexture2D::OnRender() const
 {
   const int window_width  = 16;
   const int window_height = 9;
@@ -62,26 +57,25 @@ void
     static_cast<float>(window_height),
     -1.F,
     1.F);
-  const auto view = glm::translate(glm::mat4{ 1.F }, self.view_offset);
+  const auto view = glm::translate(glm::mat4{ 1.F }, view_offset);
   {
-    const auto model = glm::translate(glm::mat4{ 1.F }, self.model_offset);
+    const auto model = glm::translate(glm::mat4{ 1.F }, model_offset);
     const auto mvp   = proj * view * model;
-    self.m_shader.Bind();
-    self.m_shader.SetUniform("u_MVP", mvp);
-    self.m_shader.SetUniform("u_Color", 1.F, 1.F, 1.F, 1.F);
+    m_shader.Bind();
+    m_shader.SetUniform("u_MVP", mvp);
+    m_shader.SetUniform("u_Color", 1.F, 1.F, 1.F, 1.F);
     std::vector<std::int32_t> slots{ 0 };
-    slots.reserve(std::size(self.m_textures) + 1U);
-    for (std::int32_t i{}; auto &texture : self.m_textures)
+    slots.reserve(std::size(m_textures) + 1U);
+    for (std::int32_t i{}; auto &texture : m_textures)
     {
       texture.Bind(slots.emplace_back(1 + i));
       ++i;
     }
-    self.m_shader.SetUniform("u_Textures", slots);
-    renderer.Draw(self.m_vertex_array, self.m_index_buffer);
+    m_shader.SetUniform("u_Textures", slots);
+    renderer.Draw(m_vertex_array, m_index_buffer);
   }
 }
-void
-  test::OnImGuiUpdate(const TestBatchRenderingTexture2D &self)
+void test::TestBatchRenderingTexture2D::OnImGuiUpdate() const
 {
   int        id           = 0;
   const auto pop          = scope_guard(&ImGui::PopID);
@@ -92,7 +86,7 @@ void
   ImGui::PushID(++id);
   if (ImGui::SliderFloat3(
         "View Offset",
-        &self.view_offset.x,
+        &view_offset.x,
         0.F,
         static_cast<float>(window_width)))
   {
@@ -100,7 +94,7 @@ void
   ImGui::PushID(++id);
   if (ImGui::SliderFloat3(
         "Model Offset",
-        &self.model_offset.x,
+        &model_offset.x,
         0.F,
         static_cast<float>(window_width)))
   {

@@ -5,28 +5,32 @@
 #include "LayerStack.hpp"
 #include <ranges>
 static_assert(test::Test<Layer::Stack>);
-void
-  Layer::OnRender(const Stack &self)
+void Layer::Stack::OnRender() const
 {
-  for (const auto &layer : self.m_layers)
-    OnRender(layer);
+  for (const Item &layer : m_layers)
+  {
+    layer.OnRender();
+  }
 }
-void
-  Layer::OnImGuiUpdate(const Stack &self)
+void Layer::Stack::OnImGuiUpdate() const
 {
-  for (const auto &layer : self.m_layers)
-    OnImGuiUpdate(layer);
+  for (const Item &layer : m_layers)
+  {
+    layer.OnImGuiUpdate();
+  }
 }
-void
-  Layer::OnUpdate(const Stack &self, float delta_time)
+void Layer::Stack::OnUpdate(float delta_time) const
 {
-  for (const auto &layer : self.m_layers)
-    OnUpdate(layer, delta_time);
+  for (const Item &layer : m_layers)
+  {
+    layer.OnUpdate(delta_time);
+  }
 }
-void
-  Layer::OnEvent(const Stack &self, const Event::Item &e)
+void Layer::Stack::OnEvent(const Event::Item &e) const
 {
-  auto reversed = self.m_layers | std::views::reverse;
-  for (const auto &layer : reversed)
-    OnEvent(layer, e);
+  auto reversed = m_layers | std::views::reverse;
+  for (const Item &layer : reversed)
+  {
+    layer.OnEvent(e);
+  }
 }

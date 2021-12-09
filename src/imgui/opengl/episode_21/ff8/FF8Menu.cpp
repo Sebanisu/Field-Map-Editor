@@ -6,38 +6,37 @@
 #include "Mim.hpp"
 #include <imgui.h>
 static_assert(test::Test<ff8::FF8Menu>);
-void
-  ff8::OnRender(const FF8Menu &self)
+void ff8::FF8Menu::OnRender() const
 {
-  OnRender(self.m_current);
+  m_current.OnRender();
 }
-void
-  ff8::OnImGuiUpdate(const FF8Menu &self)
+
+void ff8::FF8Menu::OnImGuiUpdate() const
 {
-  bool fields_changed = ff8::OnImGuiUpdate(self.m_fields);
-  if (self.m_current)
+  bool fields_changed = m_fields.OnImGuiUpdate();
+  if (m_current)
   {
     if (fields_changed)
     {
-      self.m_current = self.m_list.at(self.m_current_pos).second();
+      m_current = m_list.at(m_current_pos).second();
     }
     ImGui::Separator();
-    OnImGuiUpdate(self.m_current);
+    m_current.OnImGuiUpdate();
     ImGui::Separator();
     if (ImGui::Button("Back"))
     {
-      self.m_current = FF8MenuItem{};
+      m_current = FF8MenuItem{};
     }
     ImGui::Separator();
   }
   else
   {
-    for (std::size_t i{}; const auto &[name, funt] : self.m_list)
+    for (std::size_t i{}; const auto &[name, funt] : m_list)
     {
       if (ImGui::Button(name.c_str()))
       {
-        self.m_current     = funt();
-        self.m_current_pos = i;
+        m_current     = funt();
+        m_current_pos = i;
         break;
       }
       ++i;
@@ -45,30 +44,30 @@ void
   }
 }
 
-void
-  ff8::OnUpdate(const FF8Menu &self, float delta_time)
+void ff8::FF8Menu::OnUpdate(float delta_time) const
 {
-  OnUpdate(self.m_current, delta_time);
+  m_current.OnUpdate(delta_time);
 }
-void
-  ff8::FF8Menu::push_back(std::string name, std::function<test_types()> funt)
-    const
+
+void ff8::FF8Menu::push_back(std::string name, std::function<test_types()> funt)
+  const
 {
   m_list.emplace_back(std::move(name), std::move(funt));
 }
+
 ff8::FF8Menu::FF8Menu(ff8::FF8Menu::test_types current)
   : m_current(std::move(current))
 {
   push_back<Map>("Test Map File");
   push_back<Mim>("Test Mim File");
-  m_fields.init();
 }
+
 ff8::FF8Menu::FF8Menu()
   : FF8Menu(FF8MenuItem{})
 {
 }
-void
-  ff8::OnEvent(const FF8Menu &self, const Event::Item &e)
+
+void ff8::FF8Menu::OnEvent(const Event::Item &e) const
 {
-  OnEvent(self.m_current, e);
+  m_current.OnEvent(e);
 }

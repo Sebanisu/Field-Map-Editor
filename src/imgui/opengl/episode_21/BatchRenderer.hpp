@@ -7,6 +7,7 @@
 #include "IndexBufferDynamic.hpp"
 #include "Shader.hpp"
 #include "SubTexture.hpp"
+#include "tests/Test.hpp"
 #include "Texture.hpp"
 #include "VertexArray.hpp"
 #include "VertexBufferDynamic.hpp"
@@ -19,127 +20,46 @@ public:
   BatchRenderer();
   BatchRenderer(std::size_t quad_count);
 
-  friend void
-    OnUpdate(const BatchRenderer &, float);
-  friend void
-    OnRender(const BatchRenderer &);
-  friend void
-    OnImGuiUpdate(const BatchRenderer &);
+  void                      OnUpdate(float) const;
+  void                      OnRender() const;
+  void                      OnImGuiUpdate() const;
+  void                      OnEvent(const Event::Item &) const {}
 
+  [[nodiscard]] std::size_t QUAD_COUNT() const noexcept;
+  [[nodiscard]] std::size_t VERT_COUNT() const noexcept;
+  [[nodiscard]] [[maybe_unused]] std::size_t INDEX_COUNT() const noexcept;
+  [[nodiscard]] static const std::int32_t   &Max_Texture_Image_Units();
+  void                                       Clear() const;
+  void                                       DrawQuad(
+                                          glm::vec2      offset,
+                                          const Texture &texture,
+                                          glm::vec2      size = glm::vec2{ 1.F }) const;
+  void DrawQuad(glm::vec2 offset, const SubTexture &texture) const;
+  void DrawQuad(
+    glm::vec2         offset,
+    glm::vec4         color,
+    const SubTexture &texture,
+    const float       tiling_factor = 1.F,
+    glm::vec2         size          = glm::vec2{ 1.F }) const;
+  [[maybe_unused]] void DrawQuad(glm::vec2 offset, glm::vec4 color) const;
+  void                  Draw(Quad quad) const;
+  void                  Draw() const;
 
-  [[nodiscard]] std::size_t
-    QUAD_COUNT() const noexcept
-  {
-    return m_quad_count;
-  };
-  [[nodiscard]] std::size_t
-    VERT_COUNT() const noexcept
-  {
-    return m_quad_count * 4U;
-  };
-  [[nodiscard]] [[maybe_unused]] std::size_t
-    INDEX_COUNT() const noexcept
-  {
-    return m_quad_count * 6U;
-  };
-
-  [[nodiscard]] static const std::int32_t &
-    Max_Texture_Image_Units()
-  {
-    static const std::int32_t number = []()
-    {
-      std::int32_t texture_units{};
-      GLCall{ glGetIntegerv, GL_MAX_TEXTURE_IMAGE_UNITS, &texture_units };
-      return texture_units;
-    }();
-    return number;
-  }
-  void
-    Clear() const;
-  void
-    DrawQuad(
-      glm::vec2      offset,
-      const Texture &texture,
-      glm::vec2      size = glm::vec2{ 1.F }) const
-  {
-    DrawQuad(offset, { 1.F, 1.F, 1.F, 1.F }, texture, 1.F, size);
-  }
-  void
-    DrawQuad(glm::vec2 offset, const SubTexture &texture) const
-  {
-    DrawQuad(offset, { 1.F, 1.F, 1.F, 1.F }, texture);
-  }
-  void
-    DrawQuad(
-      glm::vec2         offset,
-      glm::vec4         color,
-      const SubTexture &texture,
-      const float       tiling_factor = 1.F,
-      glm::vec2         size          = glm::vec2{ 1.F }) const
-  {
-    if (const auto result = std::ranges::find(m_texture_slots, texture.ID());
-        result != std::ranges::end(m_texture_slots))
-    {
-      Draw(CreateQuad(
-        offset,
-        color,
-        static_cast<int>(result - std::ranges::begin(m_texture_slots)),
-        tiling_factor,
-        texture.UV(),
-        size));
-    }
-    else
-    {
-      if (std::cmp_equal(
-            std::ranges::size(m_texture_slots), Max_Texture_Image_Units()))
-      {
-        FlushVertices();
-      }
-      m_texture_slots.push_back(texture.ID());
-      Draw(CreateQuad(
-        offset,
-        color,
-        static_cast<int>(std::ranges::size(m_texture_slots) - 1U),
-        tiling_factor,
-        texture.UV(),
-        size));
-    }
-  }
-  void
-    DrawQuad(glm::vec2 offset, glm::vec4 color) const
-  {
-    Draw(CreateQuad(offset, color, 0));
-  }
-  void
-    Draw(Quad quad) const;
-  void
-    Draw() const;
-
-  const auto &
-    Shader() const
-  {
-    return m_shader;
-  }
-  const auto &
-    TextureSlots() const
-  {
-    return m_texture_slots;
-  }
+  const ::Shader       &Shader() const;
+  const std::vector<std::uint32_t> &TextureSlots() const;
 
 private:
-  void
-    FlushVertices() const;
-  void
-                              DrawVertices() const;
+  void                        FlushVertices() const;
+  void                        DrawVertices() const;
+  void                        BindTextures() const;
   std::size_t                 m_quad_count    = { 100U };
   VertexBufferDynamic         m_vertex_buffer = { QUAD_COUNT() };
   IndexBufferDynamic          m_index_buffer  = { QUAD_COUNT() };
-  mutable std::vector<Vertex> m_vertices      = { [this]()
-                                             {
-                                               std::vector<Vertex>r{};
-                                               r.reserve(VERT_COUNT());
-                                               return r;
-                                             }() };
+  mutable std::vector<Vertex> m_vertices      = { [this]() {
+    std::vector<Vertex>       r{};
+    r.reserve(VERT_COUNT());
+    return r;
+  }() };
   mutable IndexBufferDynamicSize     index_buffer_size       = {};
   ::Shader                           m_shader                = {};
   VertexArray                        m_vertex_array          = {};
@@ -147,12 +67,4 @@ private:
   mutable std::vector<std::int32_t>  m_uniform_texture_slots = {};
   Texture m_blank = { (std::numeric_limits<std::uint32_t>::max)() };
 };
-void
-  OnUpdate(const BatchRenderer &, float);
-void
-  OnRender(const BatchRenderer &);
-void
-  OnImGuiUpdate(const BatchRenderer &);
-
-
 #endif// MYPROJECT_BATCHRENDERER_HPP

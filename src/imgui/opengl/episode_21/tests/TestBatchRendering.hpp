@@ -15,12 +15,10 @@ class TestBatchRendering
 {
 public:
   TestBatchRendering();
-  friend void
-    OnUpdate(const TestBatchRendering &, float);
-  friend void
-    OnRender(const TestBatchRendering &);
-  friend void
-    OnImGuiUpdate(const TestBatchRendering &);
+  void OnUpdate(float) const {}
+  void OnRender() const;
+  void OnImGuiUpdate() const;
+  void OnEvent(const Event::Item &) const {}
 
 private:
   VertexBuffer      m_vertex_buffer = {};
@@ -30,12 +28,6 @@ private:
   mutable glm::vec3 view_offset     = { 0.F, 0.F, 0.F };
   mutable glm::vec3 model_offset    = { 0.F, 0.F, 0.F };
 };
-void
-  OnUpdate(const TestBatchRendering &, float);
-void
-  OnRender(const TestBatchRendering &);
-void
-  OnImGuiUpdate(const TestBatchRendering &);
 }// namespace test
 
 #endif// MYPROJECT_TESTBATCHRENDERING_HPP

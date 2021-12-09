@@ -30,40 +30,47 @@ find_package(glm REQUIRED)
 find_package(imgui REQUIRED)
 find_package(stb REQUIRED)
 add_executable(opengl_series_episode_21
-        main.cpp
-        Renderer.cpp
-        VertexBuffer.cpp
-        VertexBufferDynamic.cpp
+        BatchRenderer.cpp
+        DelayedTextures.cpp
         IndexBuffer.cpp
         IndexBufferDynamic.cpp
-        VertexArray.cpp
-        VertexBufferLayout.cpp
+        Input.cpp
+        LayerItem.cpp
+        LayerStack.cpp
+        LayerTests.cpp
+        OrthographicCameraController.cpp
+        Renderer.cpp
         Shader.cpp
-        Texture.cpp
-        tests/Test.hpp
-        tests/TestTexture2D.cpp
-        tests/TestClearColor.cpp
-        tests/TestBatchRendering.cpp
-        scope_guard.cpp
-        tests/TestBatchRenderingTexture2D.cpp
-        tests/TestBatchRenderingTexture2DDynamic.cpp
-        tests/TestMenu.cpp
-        tests/TestMenuItem.cpp
-        tests/TestBatchQuads.cpp
-        BatchRenderer.cpp
-        tests/TestBatchRenderer.cpp
         SubTexture.cpp
+        Texture.cpp
+        VertexArray.cpp
+        VertexBuffer.cpp
+        VertexBufferDynamic.cpp
+        VertexBufferLayout.cpp
+        Window.cpp
         ff8/Archive.cpp
-        ff8/Paths.cpp
+        ff8/BPPs.cpp
         ff8/Coos.cpp
+        ff8/FF8LoadTextures.cpp
+        ff8/FF8Menu.cpp
+        ff8/FF8MenuItem.cpp
         ff8/Fields.cpp
-        tests/TestFF8Archive.cpp
         ff8/Map.cpp
         ff8/Mim.cpp
-        ff8/FF8MenuItem.cpp
-        ff8/FF8Menu.cpp
         ff8/Palettes.cpp
-        ff8/BPPs.cpp DelayedTextures.cpp DelayedTextures.hpp ff8/FF8LoadTextures.cpp ff8/FF8LoadTextures.hpp OrthographicCameraController.cpp OrthographicCameraController.hpp Input.cpp Input.hpp unique_value.hpp Window.cpp Window.hpp Event.hpp LayerItem.cpp LayerStack.cpp LayerStack.hpp LayerTests.cpp)
+        ff8/Paths.cpp
+        main.cpp
+        scope_guard.cpp
+        tests/TestBatchQuads.cpp
+        tests/TestBatchRenderer.cpp
+        tests/TestBatchRendering.cpp
+        tests/TestBatchRenderingTexture2D.cpp
+        tests/TestBatchRenderingTexture2DDynamic.cpp
+        tests/TestClearColor.cpp
+        tests/TestFF8Archive.cpp
+        tests/TestMenu.cpp
+        tests/TestMenuItem.cpp
+        tests/TestTexture2D.cpp)
 target_link_libraries(opengl_series_episode_21
         PRIVATE project_warnings
         PRIVATE fmt::fmt

@@ -2,36 +2,32 @@
 // Created by pcvii on 12/8/2021.
 //
 #include "LayerItem.hpp"
-void
-  Layer::OnUpdate(const Item &menu_item, float ts)
+void Layer::Item::OnUpdate(float ts) const
 {
-  if (menu_item)
+  if (m_impl)
   {
-    return menu_item.m_impl->OnUpdate(ts);
+    return m_impl->OnUpdate(ts);
   }
 }
-void
-  Layer::OnRender(const Item &menu_item)
+void Layer::Item::OnRender() const
 {
-  if (menu_item)
+  if (m_impl)
   {
-    return menu_item.m_impl->OnRender();
+    return m_impl->OnRender();
   }
 }
-void
-  Layer::OnImGuiUpdate(const Item &menu_item)
+void Layer::Item::OnImGuiUpdate() const
 {
-  if (menu_item)
+  if (m_impl)
   {
-    return menu_item.m_impl->OnImGuiUpdate();
+    return m_impl->OnImGuiUpdate();
   }
 }
-void
-  Layer::OnEvent(const Item &menu_item, const Event::Item &e)
+void Layer::Item::OnEvent(const Event::Item &e) const
 {
-  if (menu_item)
+  if (m_impl)
   {
-    return menu_item.m_impl->OnEvent(e);
+    return m_impl->OnEvent(e);
   }
 }
 Layer::Item::operator bool() const

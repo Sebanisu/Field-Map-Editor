@@ -18,27 +18,19 @@ public:
   FF8Menu();
   FF8Menu(test_types current);
   FF8Menu(FF8Menu &&other) noexcept = default;
-  FF8Menu &
-    operator=(FF8Menu &&other) noexcept = default;
-  friend void
-    OnUpdate(const FF8Menu &, float);
-  friend void
-    OnRender(const FF8Menu &);
-  friend void
-    OnImGuiUpdate(const FF8Menu &);
-  friend void
-    OnEvent(const FF8Menu &, const Event::Item &);
+  FF8Menu &operator=(FF8Menu &&other) noexcept = default;
+  void     OnUpdate(float) const;
+  void     OnRender() const;
+  void     OnImGuiUpdate() const;
+  void     OnEvent(const Event::Item &) const;
   template<test::Test T>
-  void
-    push_back(std::string name) const
+  void push_back(std::string name) const
   {
-    push_back(
-      std::move(name),
-      [this]() -> test_types
-      { return FF8MenuItem(std::in_place_type_t<T>{}, m_fields); });
+    push_back(std::move(name), [this]() -> test_types {
+      return FF8MenuItem(std::in_place_type_t<T>{}, m_fields);
+    });
   }
-  void
-    push_back(std::string name, std::function<test_types()> funt) const;
+  void push_back(std::string name, std::function<test_types()> funt) const;
 
 private:
   mutable test_types m_current = {};
@@ -47,13 +39,5 @@ private:
   Fields              m_fields      = {};
   mutable std::size_t m_current_pos = {};
 };
-void
-  OnRender(const FF8Menu &self);
-void
-  OnImGuiUpdate(const FF8Menu &self);
-void
-  OnUpdate(const FF8Menu &self, float delta_time);
-void
-  OnEvent(const FF8Menu &, const Event::Item &);
 }// namespace ff8
 #endif// MYPROJECT_FF8MENU_HPP

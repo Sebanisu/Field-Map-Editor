@@ -5,6 +5,7 @@
 #ifndef MYPROJECT_WINDOW_HPP
 #define MYPROJECT_WINDOW_HPP
 #include "EventItem.hpp"
+#include "Input.hpp"
 #include <functional>
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
@@ -13,27 +14,26 @@
 #include <imgui_impl_opengl3.h>
 #include <memory>
 #include <string>
-#include "Input.hpp"
 class Window final
 {
 public:
   void BindInputPollingToWindow() const;
-  void
-    OnUpdate() const;
-  void
-    OnRender() const;
-  int
-    Width() const;
-  int
-    Height() const;
-  void
-    EnableVSync();
-  void
-    DisableVSync();
-  bool
-    VSync() const;
+  void BeginFrame() const;
+  void EndFrameRendered() const;
+  // When not rendering Call this.
+  void EndFrame() const;
+  int  Width() const;
+  int  Height() const;
+  void EnableVSync();
+  void DisableVSync();
+  bool VSync() const;
   using EventCallbackFn =
     std::function<void(const Event::Item &)>;// void (*)(const EventItem &);
+  void SetEventCallback(EventCallbackFn function) const
+  {
+    auto & window_data =  GetWindowData(m_window.get());
+    window_data.event_callback = std::move(function);
+  }
   struct WindowData
   {
     std::string     Title               = {};
@@ -46,35 +46,29 @@ public:
   };
   static std::unique_ptr<Window> Create(WindowData);
 
-  bool
-    WindowClosing() const;
+  bool                           WindowClosing() const;
 
 
 private:
   Window(WindowData);
   WindowData m_data = {};
   inline static void (*const destroy_window)(GLFWwindow *) =
-    [](GLFWwindow *window)
-  {
-    // Cleanup
-    ImGui_ImplOpenGL3_Shutdown();
-    ImGui_ImplGlfw_Shutdown();
-    ImGui::DestroyContext();
+    [](GLFWwindow *window) {
+      // Cleanup
+      ImGui_ImplOpenGL3_Shutdown();
+      ImGui_ImplGlfw_Shutdown();
+      ImGui::DestroyContext();
 
-    glfwDestroyWindow(window);
-    // glfwTerminate();
-  };
+      glfwDestroyWindow(window);
+      // glfwTerminate();
+    };
   std::unique_ptr<GLFWwindow, decltype(destroy_window)> m_window{
     nullptr,
     destroy_window
   };
-  static WindowData &
-    GetWindowData(GLFWwindow *);
-  void
-    InitCallbacks() const;
-  void
-    InitImGui(const char *glsl_version) const;
-  void
-    InitGLFW();
+  static WindowData &GetWindowData(GLFWwindow *);
+  void               InitCallbacks() const;
+  void               InitImGui(const char *glsl_version) const;
+  void               InitGLFW();
 };
 #endif// MYPROJECT_WINDOW_HPP

@@ -44,8 +44,7 @@ test::TestTexture2D::TestTexture2D()
   m_shader.SetUniform("u_Color", 1.F, 1.F, 1.F, 1.F);
   m_shader.SetUniform("u_Texture", 0);
 }
-void
-  test::OnImGuiUpdate(const TestTexture2D &self)
+void test::TestTexture2D::OnImGuiUpdate() const
 {
   int        id           = 0;
   const auto pop          = scope_guard(&ImGui::PopID);
@@ -56,16 +55,13 @@ void
 
   ImGui::PushID(++id);
   if (ImGui::SliderFloat3(
-        "View Offset",
-        &self.view_offset.x,
-        0.F,
-        static_cast<float>(window_width)))
+        "View Offset", &view_offset.x, 0.F, static_cast<float>(window_width)))
   {
   }
   ImGui::PushID(++id);
   if (ImGui::SliderFloat3(
         "Model 1 Offset",
-        &self.model_offset.x,
+        &model_offset.x,
         0.F,
         static_cast<float>(window_width)))
   {
@@ -73,14 +69,13 @@ void
   ImGui::PushID(++id);
   if (ImGui::SliderFloat3(
         "Model 2 Offset",
-        &self.model2_offset.x,
+        &model2_offset.x,
         0.F,
         static_cast<float>(window_width)))
   {
   }
 }
-void
-  test::OnRender(const TestTexture2D &self)
+void test::TestTexture2D::OnRender() const
 {
   int  window_width  = 1280;
   int  window_height = 720;
@@ -91,23 +86,18 @@ void
     static_cast<float>(window_height),
     -1.F,
     1.F);
-  const auto view = glm::translate(glm::mat4{ 1.F }, self.view_offset);
-  self.m_shader.Bind();
+  const auto view = glm::translate(glm::mat4{ 1.F }, view_offset);
+  m_shader.Bind();
   {
-    const auto model = glm::translate(glm::mat4{ 1.F }, self.model_offset);
+    const auto model = glm::translate(glm::mat4{ 1.F }, model_offset);
     const auto mvp   = proj * view * model;
-    self.m_shader.SetUniform("u_MVP", mvp);
-    renderer.Draw(self.m_vertex_array, self.m_index_buffer, self.m_texture);
+    m_shader.SetUniform("u_MVP", mvp);
+    renderer.Draw(m_vertex_array, m_index_buffer, m_texture);
   }
   {
-    const auto model = glm::translate(glm::mat4{ 1.F }, self.model2_offset);
+    const auto model = glm::translate(glm::mat4{ 1.F }, model2_offset);
     const auto mvp   = proj * view * model;
-    self.m_shader.SetUniform("u_MVP", mvp);
-    renderer.Draw(self.m_vertex_array, self.m_index_buffer, self.m_texture);
+    m_shader.SetUniform("u_MVP", mvp);
+    renderer.Draw(m_vertex_array, m_index_buffer, m_texture);
   }
-}
-
-void
-  test::OnUpdate(const TestTexture2D &, float)
-{
 }

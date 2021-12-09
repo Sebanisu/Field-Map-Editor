@@ -9,6 +9,7 @@
 #include "Texture.hpp"
 #include "VertexArray.hpp"
 #include "VertexBuffer.hpp"
+#include "Test.hpp"
 #include <glm/glm.hpp>
 namespace test
 {
@@ -16,12 +17,10 @@ class TestTexture2D
 {
 public:
   TestTexture2D();
-  friend void
-    OnUpdate(const TestTexture2D &, float);
-  friend void
-    OnRender(const TestTexture2D &);
-  friend void
-    OnImGuiUpdate(const TestTexture2D &);
+  void OnUpdate(float) const {}
+  void OnRender() const;
+  void OnImGuiUpdate() const;
+  void OnEvent(const Event::Item &) const {}
 
 private:
   mutable VertexArray        m_vertex_array         = {};
@@ -34,11 +33,5 @@ private:
   mutable glm::vec3          model_offset           = { 200.F, 200.F, 0.F };
   mutable glm::vec3          model2_offset          = { 400.F, 200.F, 0.F };
 };
-void
-  OnUpdate(const TestTexture2D &, float);
-void
-  OnRender(const TestTexture2D &);
-void
-  OnImGuiUpdate(const TestTexture2D &);
 }// namespace test
 #endif// MYPROJECT_TestTexture2D_HPP

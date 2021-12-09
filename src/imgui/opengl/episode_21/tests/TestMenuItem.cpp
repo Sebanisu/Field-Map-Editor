@@ -3,39 +3,35 @@
 //
 #include "TestMenuItem.hpp"
 
-void
-  test::OnUpdate(const TestMenuItem &menu_item, float ts)
+void test::TestMenuItem::OnUpdate(float ts)
 {
-  if (menu_item)
+  if (m_impl)
   {
-    return menu_item.m_impl->OnUpdate(ts);
+    return m_impl->OnUpdate(ts);
   }
 }
-void
-  test::OnRender(const TestMenuItem &menu_item)
+void test::TestMenuItem::OnRender()
 {
-  if (menu_item)
+  if (m_impl)
   {
-    return menu_item.m_impl->OnRender();
+    return m_impl->OnRender();
   }
 }
-void
-  test::OnImGuiUpdate(const TestMenuItem &menu_item)
+void test::TestMenuItem::OnImGuiUpdate()
 {
-  if (menu_item)
+  if (m_impl)
   {
-    return menu_item.m_impl->OnImGuiUpdate();
+    return m_impl->OnImGuiUpdate();
   }
 }
 test::TestMenuItem::operator bool() const
 {
   return bool{ m_impl };
 }
-void
-  test::OnEvent(const TestMenuItem &menu_item, const Event::Item &e)
+void test::TestMenuItem::OnEvent(const Event::Item &e)
 {
-  if (menu_item)
+  if (m_impl)
   {
-    return menu_item.m_impl->OnEvent(e);
+    return m_impl->OnEvent(e);
   }
 }

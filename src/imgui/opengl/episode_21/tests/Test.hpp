@@ -5,45 +5,65 @@
 #ifndef MYPROJECT_TEST_HPP
 #define MYPROJECT_TEST_HPP
 #include "concepts.hpp"
+namespace Event
+{
+class Item;
+}
 namespace test
 {
 template<typename T>
 concept Test =
-  std::default_initializable<T> && std::movable<T> &&(// requires(const T &t)
-                                                      //{
-                                                      //  {
-                                                      //    t.OnUpdate(float{})
-                                                      //    } -> Void;
-                                                      //  {
-                                                      //    t.OnRender()
-                                                      //    } -> Void;
-                                                      //  {
-                                                      //    t.OnImGuiUpdate()
-                                                      //    } -> Void;
-                                                      //} ||
-    requires(const T &t)
+  std::default_initializable<T> && std::movable<T> &&(
+    requires(const T &t, const Event::Item & e)
     {
       {
-        OnUpdate(t, float{})
-        } -> Void;
-      {
-        OnRender(t)
-        } -> Void;
-      {
-        OnImGuiUpdate(t)
+        t.OnImGuiUpdate()
         } -> std::same_as<bool>;
+      {
+        t.OnUpdate(float{})
+        } -> Void;
+      {
+        t.OnRender()
+        } -> Void;
+      {
+        t.OnEvent(e)
+        } -> Void;
     } ||
-    requires(const T &t)
+    requires(const T &t, const Event::Item & e)
     {
       {
-        OnUpdate(t, float{})
+        t.OnImGuiUpdate()
         } -> Void;
       {
-        OnRender(t)
+        t.OnUpdate(float{})
         } -> Void;
       {
-        OnImGuiUpdate(t)
+        t.OnRender()
+        } -> Void;
+      {
+        t.OnEvent(e)
         } -> Void;
     });
 }// namespace test
+// free function overloads for the member functions.
+template<test::Test T>
+inline auto OnImGuiUpdate(const T &t)
+{
+  return t.OnImGuiUpdate();
+}
+template<test::Test T>
+inline auto OnUpdate(const T &t, const float ts)
+{
+  return t.OnUpdate(ts);
+}
+template<test::Test T>
+inline auto OnRender(const T &t)
+{
+  return t.OnRender();
+}
+template<test::Test T>
+inline auto OnEvent(const T &t, const Event::Item &e)
+{
+  return t.OnEvent(e);
+}
 #endif// MYPROJECT_TEST_HPP

@@ -3,36 +3,32 @@
 //
 #include "FF8MenuItem.hpp"
 
-void
-  ff8::OnUpdate(const FF8MenuItem &menu_item, float ts)
+void ff8::FF8MenuItem::OnUpdate(float ts) const
 {
-  if (menu_item)
+  if (m_impl)
   {
-    return menu_item.m_impl->OnUpdate(ts);
+    return m_impl->OnUpdate(ts);
   }
 }
-void
-  ff8::OnRender(const FF8MenuItem &menu_item)
+void ff8::FF8MenuItem::OnRender() const
 {
-  if (menu_item)
+  if (m_impl)
   {
-    return menu_item.m_impl->OnRender();
+    return m_impl->OnRender();
   }
 }
-void
-  ff8::OnImGuiUpdate(const FF8MenuItem &menu_item)
+void ff8::FF8MenuItem::OnImGuiUpdate() const
 {
-  if (menu_item)
+  if (m_impl)
   {
-    return menu_item.m_impl->OnImGuiUpdate();
+    return m_impl->OnImGuiUpdate();
   }
 }
-void
-  ff8::OnEvent(const FF8MenuItem &menu_item, const Event::Item &e)
+void ff8::FF8MenuItem::OnEvent(const Event::Item &e) const
 {
-  if (menu_item)
+  if (m_impl)
   {
-    return menu_item.m_impl->OnEvent(e);
+    return m_impl->OnEvent(e);
   }
 }
 ff8::FF8MenuItem::operator bool() const

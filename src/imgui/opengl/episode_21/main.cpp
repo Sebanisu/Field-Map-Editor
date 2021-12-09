@@ -12,76 +12,70 @@
 #include "Window.hpp"
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
-#include <imgui.h>
-#include <imgui_impl_glfw.h>
-#include <imgui_impl_opengl3.h>
 #include <numeric>
 #include <thread>
 static bool running  = true;
 static bool minimize = false;
-bool
-  OnWindowClose(const Event::WindowClose &)
+bool        OnWindowClose(const Event::WindowClose &)
 {
   running = false;
   return true;
 }
-bool
-  OnWindowResize(const Event::WindowResize &e)
+bool OnWindowResize(const Event::WindowResize &e)
 {
   minimize = e.Width() == 0 or e.Height() == 0;
   return true;
 }
-int
-  main(void)
+int main(void)
 {
 #if 1
-  const Layer::Stack layers = {};
-  layers.emplace_layers(std::in_place_type_t<Layer::Tests>{});
-  using namespace std::string_view_literals;
-  const auto     window   = Window::Create(Window::WindowData{
-          .Title          = "OpenGL Test Code",
-          .width          = 1280,
-          .height         = 720,
-          .event_callback = [&](const Event::Item &e)
-    {
+  //anything created in the window must be destroyed before the window.
+  const auto window = Window::Create(Window::WindowData{
+    .Title = "OpenGL Test Code", .width = 1280, .height = 720 });
+  {
+    const Layer::Stack layers = {};
+    window->SetEventCallback([&](const Event::Item &e) {
       Event::Dispatcher dispatcher = { e };
       bool skip =(Event::HasFlag(e.category(),Event::Category::Mouse)
-                   && ImGui::GetIO().WantCaptureMouse)
-                  || (Event::HasFlag(e.category(),Event::Category::Keyboard)
-                      && ImGui::GetIO().WantCaptureKeyboard);
+                         && ImGui::GetIO().WantCaptureMouse)
+                        || (Event::HasFlag(e.category(),Event::Category::Keyboard)
+                            && ImGui::GetIO().WantCaptureKeyboard);
       if (skip)
       {
         return;
       }
       dispatcher.Dispatch<Event::WindowClose>(&OnWindowClose);
       dispatcher.Dispatch<Event::WindowResize>(&OnWindowResize);
-      Layer::OnEvent(layers, e);
+      layers.OnEvent(e);
       fmt::print("Event::{}\t{}\t{}\n", e.Name(), e.CategoryName(), e.Data());
-    } });
-  const Renderer renderer = {};
-  while (running)
-  {
-    window->OnUpdate();// First thing you do on update;
-    if (!minimize)
+    });
+    layers.emplace_layers(std::in_place_type_t<Layer::Tests>{});
+    using namespace std::string_view_literals;
+
+    const Renderer renderer = {};
+    while (running)
     {
-      renderer.Clear();
-      Layer::OnImGuiUpdate(layers);
-      Layer::OnUpdate(layers, {});
-      Layer::OnRender(layers);
-      window->OnRender();// Last thing you do on render;
-    }
-    else
-    {
-      ImGui::EndFrame();// call instead of render when minimized.
-      std::this_thread::sleep_for(std::chrono::milliseconds(500));
+      window->BeginFrame();// First thing you do on update;
+      if (!minimize)
+      {
+        renderer.Clear();
+        layers.OnImGuiUpdate();
+        layers.OnUpdate({});
+        layers.OnRender();
+        window->EndFrameRendered();// Last thing you do on render;
+      }
+      else
+      {
+        window->EndFrame();
+      }
     }
   }
+  glfwTerminate();
 #else
   {
     auto ed = Event::Dispatcher(Event::WindowResize(1920, 1080));
     ed.Dispatch<Event::WindowResize>(
-      [](const Event::WindowResize &window_resize_event) -> bool
-      {
+      [](const Event::WindowResize &window_resize_event) -> bool {
         fmt::print(
           "{}:{}\t{:>4}x{:>4}",
           window_resize_event.Name(),
@@ -91,8 +85,7 @@ int
         return true;
       });
   }
-  const auto end_program_function = [](GLFWwindow *window)
-  {
+  const auto end_program_function = [](GLFWwindow *window) {
     // Cleanup
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplGlfw_Shutdown();
@@ -142,8 +135,7 @@ int
 
   /* Update Viewport when glfw detects window resize */
   glfwSetFramebufferSizeCallback(
-    window.get(),
-    [](GLFWwindow *, int width, int height) {
+    window.get(), [](GLFWwindow *, int width, int height) {
       GLCall{ glViewport, 0, 0, width, height };
     });
 
@@ -212,7 +204,7 @@ int
     // place imgui here draws here.
     if (ImGui::Begin("Test Window", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
     {
-      test::OnImGuiUpdate(test_menu);
+      test_menu.OnImGuiUpdate();
       ImGui::Text(
         "%s",
         fmt::format(
@@ -229,8 +221,8 @@ int
     // glViewport(0, 0, display_w, display_h);
     /* Render here */
     // renderer.Clear();
-    test::OnUpdate(test_menu, float{});
-    test::OnRender(test_menu);
+    test_menu.OnUpdate(float{});
+    test_menu.OnRender();
 
 
     BeginErrorCallBack();

@@ -12,12 +12,10 @@ namespace ff8
 class BPPs
 {
 public:
-  friend void
-    OnUpdate(const BPPs &, float);
-  friend void
-    OnRender(const BPPs &);
-  friend bool
-    OnImGuiUpdate(const BPPs &);
+  void             OnUpdate(float) const {}
+  void             OnRender() const {}
+  bool             OnImGuiUpdate() const;
+  void             OnEvent(const Event::Item &) const {}
   open_viii::graphics::BPPT
     BPP() const
   {
@@ -48,11 +46,5 @@ private:
   mutable int m_current{};
 };
 static_assert(test::Test<BPPs>);
-void
-  OnUpdate(const BPPs &, float);
-void
-  OnRender(const BPPs &);
-bool
-  OnImGuiUpdate(const BPPs &);
 }// namespace ff8
 #endif// MYPROJECT_BPPS_HPP

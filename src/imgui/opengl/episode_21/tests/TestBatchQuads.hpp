@@ -6,12 +6,12 @@
 #define MYPROJECT_TESTBATCHQUADS_HPP
 #include "IndexBufferDynamic.hpp"
 #include "Shader.hpp"
+#include "Test.hpp"
 #include "Texture.hpp"
 #include "VertexArray.hpp"
 #include "VertexBufferDynamic.hpp"
 #include <glm/glm.hpp>
 #include <vector>
-
 namespace test
 {
 class TestBatchQuads
@@ -19,15 +19,12 @@ class TestBatchQuads
 public:
   TestBatchQuads();
 
-  friend void
-    OnUpdate(const TestBatchQuads &, float);
-  friend void
-    OnRender(const TestBatchQuads &);
-  friend void
-    OnImGuiUpdate(const TestBatchQuads &);
 
-  friend void
-                               gen_verts(const TestBatchQuads &);
+  void                         OnUpdate(float) const;
+  void                         OnRender() const;
+  void                         OnImGuiUpdate() const;
+  void                         OnEvent(const Event::Item &) const {}
+  void                         gen_verts() const;
 
   static constexpr std::size_t QUAD_COUNT = { 100U };
   static constexpr std::size_t VERT_COUNT = { QUAD_COUNT * 4U };
@@ -43,14 +40,5 @@ private:
   mutable float                  m_zoom            = { 0.078F };
   Texture m_blank = { (std::numeric_limits<std::uint32_t>::max)() };
 };
-void
-  OnUpdate(const TestBatchQuads &, float);
-void
-  OnRender(const TestBatchQuads &);
-void
-  OnImGuiUpdate(const TestBatchQuads &);
-void
-  gen_verts(const TestBatchQuads &);
-
 }// namespace test
 #endif// MYPROJECT_TESTBATCHQUADS_HPP

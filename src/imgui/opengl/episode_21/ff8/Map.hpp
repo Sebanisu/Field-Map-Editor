@@ -14,24 +14,11 @@ class Map
 {
 public:
   Map() = default;
-  Map(const Fields &fields)
-    : m_mim(LoadMim(fields.Field(), fields.Coo(), m_mim_path, m_mim_choose_coo))
-    , m_map(LoadMap(
-        fields.Field(),
-        fields.Coo(),
-        m_mim,
-        m_map_path,
-        m_map_choose_coo))
-    , m_delayed_textures(LoadTextures(m_mim))
-  {
-  }
-
-  friend void
-    OnUpdate(const Map &, float);
-  friend void
-    OnRender(const Map &);
-  friend void
-    OnImGuiUpdate(const Map &);
+  Map(const Fields &fields);
+  void OnUpdate(float) const;
+  void OnRender() const {}
+  void OnImGuiUpdate() const {}
+  void OnEvent(const Event::Item &) const {}
 
 private:
   std::string                          m_mim_path         = {};
@@ -43,18 +30,5 @@ private:
   DelayedTextures                      m_delayed_textures = {};
 };
 static_assert(test::Test<Map>);
-inline void
-  OnUpdate(const Map &self, float)
-{
-  self.m_delayed_textures.check();
-}
-inline void
-  OnRender(const Map &)
-{
-}
-inline void
-  OnImGuiUpdate(const Map &)
-{
-}
 }// namespace ff8
 #endif// MYPROJECT_MAP_HPP

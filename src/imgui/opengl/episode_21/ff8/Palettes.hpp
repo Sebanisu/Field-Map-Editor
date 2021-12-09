@@ -12,36 +12,20 @@ namespace ff8
 class Palettes
 {
 public:
-  friend void
-    OnUpdate(const Palettes &, float);
-  friend void
-    OnRender(const Palettes &);
-  friend bool
-    OnImGuiUpdate(const Palettes &);
-  std::uint8_t
-    Palette() const
-  {
-    return m_values.at(static_cast<std::size_t>(m_current));
-  }
-  std::string_view
-    String() const
-  {
-    return m_strings.at(static_cast<std::size_t>(m_current));
-  }
-  int
-    Index() const
-  {
-    return m_current;
-  }
+  void             OnUpdate(float) const {}
+  void             OnRender() const {}
+  bool             OnImGuiUpdate() const;
+  void             OnEvent(const Event::Item &) const {}
+  std::uint8_t     Palette() const;
+  std::string_view String() const;
+  int              Index() const;
 
 private:
-  static constexpr auto m_values = []()
-  {
+  static constexpr auto m_values = []() {
     return std::array<std::uint8_t, 16U>{ 0, 1, 2,  3,  4,  5,  6,  7,
                                           8, 9, 10, 11, 12, 13, 14, 15 };
   }();
-  static constexpr auto m_strings = []()
-  {
+  static constexpr auto m_strings = []() {
     using namespace std::string_view_literals;
 
     return std::array{ "0"sv,  "1"sv,  "2"sv,  "3"sv, "4"sv,  "5"sv,
@@ -51,11 +35,5 @@ private:
   mutable int m_current{};
 };
 static_assert(test::Test<Palettes>);
-void
-  OnUpdate(const Palettes &, float);
-void
-  OnRender(const Palettes &);
-bool
-  OnImGuiUpdate(const Palettes &);
 }// namespace ff8
 #endif// MYPROJECT_PALETTES_HPP

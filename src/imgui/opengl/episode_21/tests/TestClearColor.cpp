@@ -4,7 +4,6 @@
 
 #include "TestClearColor.hpp"
 #include "Renderer.hpp"
-#include "Test.hpp"
 #include <imgui.h>
 static_assert(test::Test<test::TestClearColor>);
 
@@ -17,21 +16,14 @@ test::TestClearColor::TestClearColor()
 {
   renderer.ClearColor(m_clear_color);
 }
-void
-  test::OnRender(const TestClearColor &)
+void test::TestClearColor::OnRender() const
 {
   renderer.Clear();
 }
-void
-  test::OnImGuiUpdate(const TestClearColor &self)
+void test::TestClearColor::OnImGuiUpdate() const
 {
-  if (ImGui::ColorEdit4("Clear Color", &self.m_clear_color.r))
+  if (ImGui::ColorEdit4("Clear Color", &m_clear_color.r))
   {
-    renderer.ClearColor(self.m_clear_color);
+    renderer.ClearColor(m_clear_color);
   }
-}
-
-void
-  test::OnUpdate(const TestClearColor &, float)
-{
 }

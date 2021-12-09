@@ -24,14 +24,10 @@ public:
   TestMenu(TestMenu &&other) noexcept         = default;
   TestMenu &
     operator=(TestMenu &&other) noexcept = default;
-  friend void
-    OnUpdate(const TestMenu &, float);
-  friend void
-    OnRender(const TestMenu &);
-  friend void
-    OnImGuiUpdate(const TestMenu &);
-  friend void
-    OnEvent(const TestMenu &, const Event::Item &);
+  void OnUpdate(float) const;
+  void OnRender() const;
+  void OnImGuiUpdate() const;
+  void OnEvent(const Event::Item &) const;
   template<Test T>
   void
     push_back(std::string name) const
@@ -48,13 +44,5 @@ private:
   mutable std::vector<std::pair<std::string, std::function<test_types()>>>
     m_list = {};
 };
-void
-  OnRender(const TestMenu &self);
-void
-  OnImGuiUpdate(const TestMenu &self);
-void
-  OnUpdate(const TestMenu &self, float delta_time);
-void
-  OnEvent(const TestMenu &, const Event::Item &);
 }// namespace test
 #endif// MYPROJECT_TESTMENU_HPP

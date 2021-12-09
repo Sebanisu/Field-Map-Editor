@@ -13,44 +13,41 @@
 #include "TestTexture2D.hpp"
 #include <imgui.h>
 static_assert(test::Test<test::TestMenu>);
-void
-  test::OnRender(const TestMenu &self)
+void test::TestMenu::OnRender() const
 {
-  OnRender(self.m_current);
+  m_current.OnRender();
 }
-void
-  test::OnImGuiUpdate(const TestMenu &self)
+void test::TestMenu::OnImGuiUpdate() const
 {
-  if (self.m_current)
+  if (m_current)
   {
-    OnImGuiUpdate(self.m_current);
+    m_current.OnImGuiUpdate();
     if (ImGui::Button("Back"))
     {
-      self.m_current = TestMenuItem{};
+      m_current = TestMenuItem{};
     }
   }
   else
   {
-    for (const auto &[name, funt] : self.m_list)
+    for (const auto &[name, funt] : m_list)
     {
       if (ImGui::Button(name.c_str()))
       {
-        self.m_current = funt();
+        m_current = funt();
         break;
       }
     }
   }
 }
 
-void
-  test::OnUpdate(const TestMenu &self, float delta_time)
+void test::TestMenu::OnUpdate(float delta_time) const
 {
-  OnUpdate(self.m_current, delta_time);
+  m_current.OnUpdate(delta_time);
 }
 
-void
-  test::TestMenu::push_back(std::string name, std::function<test_types()> funt)
-    const
+void test::TestMenu::push_back(
+  std::string                 name,
+  std::function<test_types()> funt) const
 {
   m_list.emplace_back(std::move(name), std::move(funt));
 }
@@ -73,8 +70,7 @@ test::TestMenu::TestMenu()
 {
 }
 
-void
-  test::OnEvent(const TestMenu &self, const Event::Item &e)
+void test::TestMenu::OnEvent(const Event::Item &e) const
 {
-  OnEvent(self.m_current, e);
+  m_current.OnEvent(e);
 }
