@@ -4,6 +4,7 @@
 
 #ifndef MYPROJECT_ORTHOGRAPHICCAMERACONTROLLER_HPP
 #define MYPROJECT_ORTHOGRAPHICCAMERACONTROLLER_HPP
+#include "EventItem.hpp"
 #include "OrthographicCamera.hpp"
 #include <fmt/format.h>
 class OrthographicCameraController
@@ -20,16 +21,12 @@ public:
     OnRender(const OrthographicCameraController &)
   {
   }
-
+  friend void OnEvent(const OrthographicCameraController &, const Event::Item &);
   const OrthographicCamera &
     Camera() const
   {
     return m_camera;
   }
-  // todo events
-  // void OnEvent(event& e);
-  // bool OnMouseScrolled(event& e);
-  // bool OnWindowResized(event& e);
 
   // todo add bounds for left,right,top,bottom.
   //  these will keep the not allow moving beyond those points.
@@ -46,6 +43,7 @@ public:
   return_values
     CheckBounds() const
   {
+    //todo test code.
     const glm::mat4 &vpm  = m_camera.ViewProjectionMatrix();
     const float      near = vpm[3][2] / (vpm[2][2] - 1.0f);
     const float      far  = vpm[3][2] / (vpm[2][2] + 1.0f);
@@ -85,12 +83,13 @@ private:
   bool                       m_rotation_enabled  = { true };
   mutable glm::vec3          m_position          = {};
   mutable float              m_rotation          = {};
-  float                      m_translation_speed = { 1.F };
-  float                      m_rotation_speed    = { 1.F };
+  float                      m_translation_speed = { 16.F };
+  float                      m_rotation_speed    = { 180.F };
   mutable glm::vec4          m_bounds            = {};
 };
 void
   OnUpdate(const OrthographicCameraController &, float ts);
 void
   OnImguiRender(const OrthographicCameraController &);
+void OnEvent(const OrthographicCameraController &, const Event::Item &);
 #endif// MYPROJECT_ORTHOGRAPHICCAMERACONTROLLER_HPP
