@@ -1,13 +1,14 @@
 //
 // Created by pcvii on 12/6/2021.
 //
-static bool glfw_init = false;
 #include "Window.hpp"
 #include "Event.hpp"
 #include "Renderer.hpp"
 #include <fmt/format.h>
 #include <thread>
-void Window::BeginFrame() const
+static bool glfw_init  = false;
+static bool imgui_init = false;
+void        Window::BeginFrame() const
 {
   /* Poll for and process events */
   glfwPollEvents();
@@ -60,15 +61,8 @@ Window::Window(Window::WindowData in_data)
 
   const char *glsl_version = "#version 130";
   InitGLFW();
-  /* Init GLEW after context */
-  if (glewInit() != GLEW_OK)
-  {
-    fmt::print(stderr, "Error! {}:{} GLEW NOT OKAY\n", __FILE__, __LINE__);
-  }
-  fmt::print("{}\n", GLCall{ glGetString, GL_VERSION }());
+  fmt::print("{}\n", GLCall{}(glGetString, GL_VERSION));
   InitImGui(glsl_version);
-
-
   InitCallbacks();
 }
 void Window::InitGLFW()
@@ -106,9 +100,21 @@ void Window::InitGLFW()
   EnableVSync();
   glfwGetFramebufferSize(
     m_window.get(), &m_data.frame_buffer_width, &m_data.frame_buffer_height);
+  /* Init GLEW after context */
+  if (glewInit() != GLEW_OK)
+  {
+    fmt::print(stderr, "Error! {}:{} GLEW NOT OKAY\n", __FILE__, __LINE__);
+  }
+  GLCall{}(glEnable, GL_BLEND);
+  GLCall{}(glBlendFunc, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 }
 void Window::InitImGui(const char *glsl_version) const
 {
+  if (imgui_init)
+  {
+    return;
+  }
+  imgui_init = true;
   // Setup Dear ImGui context
   IMGUI_CHECKVERSION();
   ImGui::CreateContext();
@@ -157,6 +163,7 @@ void Window::InitCallbacks() const
   // GLFW callBacks
   glfwSetErrorCallback([](int error, const char *description) {
     fmt::print(stderr, "Error GLFW {}: {}\n", error, description);
+    throw;
   });
 
   glfwSetWindowSizeCallback(

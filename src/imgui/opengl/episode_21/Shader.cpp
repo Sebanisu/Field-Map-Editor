@@ -11,7 +11,7 @@ Shader::Shader(std::filesystem::path file_path)
 }
 Shader::~Shader()
 {
-  GLCall{ glDeleteProgram, m_renderer_id };
+  GLCall{}(glDeleteProgram, m_renderer_id);
   UnBind();
 }
 Shader::Shader(Shader &&other) noexcept
@@ -37,11 +37,11 @@ void swap(Shader &first, Shader &second) noexcept// nothrow
 }
 void Shader::Bind() const
 {
-  GLCall{ glUseProgram, m_renderer_id };
+  GLCall{}(glUseProgram, m_renderer_id);
 }
 void Shader::UnBind()
 {
-  GLCall{ glUseProgram, 0U };
+  GLCall{}(glUseProgram, 0U);
 }
 Shader::ShaderProgramSource Shader::ParseShader()
 {
@@ -99,19 +99,19 @@ std::uint32_t
   Shader::CompileShader(const std::uint32_t type, const std::string_view source)
 {
   using namespace std::string_view_literals;
-  const std::uint32_t id  = GLCall{ glCreateShader, type }();
+  const std::uint32_t id  = GLCall{}(glCreateShader, type);
   const char         *src = std::data(source);
-  GLCall{ glShaderSource, id, 1, &src, nullptr };
-  GLCall{ glCompileShader, id };
+  GLCall{}(glShaderSource, id, 1, &src, nullptr);
+  GLCall{}(glCompileShader, id);
 
   int result{};
-  GLCall{ glGetShaderiv, id, GL_COMPILE_STATUS, &result };
+  GLCall{}(glGetShaderiv, id, GL_COMPILE_STATUS, &result);
   if (result == GL_FALSE)
   {
     int length{};
-    GLCall{ glGetShaderiv, id, GL_INFO_LOG_LENGTH, &length };
+    GLCall{}(glGetShaderiv, id, GL_INFO_LOG_LENGTH, &length);
     std::string message(static_cast<std::string::size_type>(length), '\0');
-    GLCall{ glGetShaderInfoLog, id, length, &length, std::data(message) };
+    GLCall{}(glGetShaderInfoLog, id, length, &length, std::data(message));
     fmt::print(
       stderr,
       "Error {}:{} - Failed to compile shader {} - {}\n",
@@ -120,7 +120,7 @@ std::uint32_t
       (type == GL_VERTEX_SHADER ? "GL_VERTEX_SHADER"sv
                                 : "GL_FRAGMENT_SHADER"sv),
       message);
-    GLCall{ glDeleteShader, id };
+    GLCall{}(glDeleteShader, id);
     return 0U;
   }
 
@@ -132,13 +132,13 @@ std::uint32_t Shader::CreateShader(
 {
   const std::uint32_t vs = CompileShader(GL_VERTEX_SHADER, vertexShader);
   const std::uint32_t fs = CompileShader(GL_FRAGMENT_SHADER, fragmentShader);
-  const std::uint32_t program = GLCall{ glCreateProgram }();
-  GLCall{ glAttachShader, program, vs };
-  GLCall{ glAttachShader, program, fs };
-  GLCall{ glLinkProgram, program };
-  GLCall{ glValidateProgram, program };
-  GLCall{ glDeleteShader, vs };
-  GLCall{ glDeleteShader, fs };
+  const std::uint32_t program = GLCall{}(glCreateProgram);
+  GLCall{}(glAttachShader, program, vs);
+  GLCall{}(glAttachShader, program, fs);
+  GLCall{}(glLinkProgram, program);
+  GLCall{}(glValidateProgram, program);
+  GLCall{}(glDeleteShader, vs);
+  GLCall{}(glDeleteShader, fs);
   return program;
 }
 std::int32_t Shader::get_uniform_location(std::string_view name) const
@@ -149,7 +149,7 @@ std::int32_t Shader::get_uniform_location(std::string_view name) const
   }
 
   std::int32_t location =
-    GLCall{ glGetUniformLocation, m_renderer_id, std::ranges::data(name) }();
+    GLCall{}(glGetUniformLocation, m_renderer_id, std::ranges::data(name));
 
   if (location == -1)
   {

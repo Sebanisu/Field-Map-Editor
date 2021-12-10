@@ -37,43 +37,37 @@ struct optional_holder<void>
   std::nullopt_t return_value{ std::nullopt };
 };
 
-template<typename FuncT, typename... ArgsT>
-requires std::invocable<FuncT, ArgsT...>
 struct GLCall
 {
 public:
-  using return_value_type = std::decay_t<std::invoke_result_t<FuncT, ArgsT...>>;
-  GLCall(
-    FuncT &&func,
-    ArgsT &&...args,
-    std::source_location location = std::source_location::current())
+  GLCall(std::source_location location = std::source_location::current())
+    : m_source_location(std::move(location))
   {
-    GLClearError(location);
+  }
+  template<typename FuncT, typename... ArgsT>
+  requires std::invocable<FuncT, ArgsT...>
+  [[nodiscard]] auto operator()(FuncT &&func, ArgsT &&...args) &&
+  {
+    using return_value_type =
+      std::decay_t<std::invoke_result_t<FuncT, ArgsT...>>;
+    GLClearError(m_source_location);
     if constexpr (!Void<return_value_type>)
     {
-      holder.return_value =
+      return_value_type return_value =
         std::invoke(std::forward<FuncT>(func), std::forward<ArgsT>(args)...);
+      GLGetError(m_source_location);
+      return return_value;
     }
     else
     {
       std::invoke(std::forward<FuncT>(func), std::forward<ArgsT>(args)...);
+      GLGetError(m_source_location);
     }
-    GLGetError(std::move(location));
   }
 
-  [[nodiscard]] auto operator()() && requires(!Void<return_value_type>)
-  {
-    return std::move(holder.return_value);
-  }
-  [[nodiscard]] auto operator()() & requires(!Void<return_value_type>)
-  {
-    return holder.return_value;
-  }
-
-private : optional_holder<return_value_type> holder{};
+private:
+  std::source_location m_source_location = {};
 };
-template<typename... Ts>
-GLCall(Ts &&...) -> GLCall<Ts...>;
 
 class Renderer
 {
@@ -92,12 +86,13 @@ public:
   }
   void Clear() const
   {
-    GLCall{ glClearColor,
-            m_clear_color.r,
-            m_clear_color.g,
-            m_clear_color.b,
-            m_clear_color.a };
-    GLCall{ glClear, GL_COLOR_BUFFER_BIT };
+    GLCall{}(
+      glClearColor,
+      m_clear_color.r,
+      m_clear_color.g,
+      m_clear_color.b,
+      m_clear_color.a);
+    GLCall{}(glClear, GL_COLOR_BUFFER_BIT);
   }
   template<Bindable... Ts>
   static void Draw(const Ts &...ts)
@@ -130,11 +125,12 @@ public:
     assert(type != IndexType::none);
     if (size != 0)
     {
-      GLCall{ glDrawElements,
-              GL_TRIANGLES,
-              static_cast<std::int32_t>(size),
-              +type,
-              nullptr };
+      GLCall{}(
+        glDrawElements,
+        GL_TRIANGLES,
+        static_cast<std::int32_t>(size),
+        +type,
+        nullptr);
     }
   }
 };

@@ -58,29 +58,37 @@ public:
     }
     m_renderer_id = GLID{ []() -> std::uint32_t {
                            std::uint32_t tmp;
-                           GLCall{ glGenTextures, 1, &tmp };
-                           GLCall{ glBindTexture, GL_TEXTURE_2D, tmp };
+                           GLCall{}(glGenTextures, 1, &tmp);
+                           GLCall{}(glBindTexture, GL_TEXTURE_2D, tmp);
                            return tmp;
                          }(),
                           [](const std::uint32_t id) {
-                            GLCall{ glDeleteTextures, 1, &id };
+                            GLCall{}(glDeleteTextures, 1, &id);
                             Texture::UnBind();
                           } };
-    GLCall{
-      &glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST
-    };
-    GLCall{ &glTexParameteri,
-            GL_TEXTURE_2D,
-            GL_TEXTURE_MIN_FILTER,
-            GL_NEAREST_MIPMAP_NEAREST };
-    GLCall{ &glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT };
-    GLCall{ &glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT };
-    GLCall{ &glTexImage2D,    GL_TEXTURE_2D, 0, GL_RGBA8,
-            width(),          height(),      0, GL_RGBA,
-            GL_UNSIGNED_BYTE, color };
+    GLCall{}(
+      &glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    GLCall{}(
+      &glTexParameteri,
+      GL_TEXTURE_2D,
+      GL_TEXTURE_MIN_FILTER,
+      GL_NEAREST_MIPMAP_NEAREST);
+    GLCall{}(&glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    GLCall{}(&glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    GLCall{}(
+      &glTexImage2D,
+      GL_TEXTURE_2D,
+      0,
+      GL_RGBA8,
+      width(),
+      height(),
+      0,
+      GL_RGBA,
+      GL_UNSIGNED_BYTE,
+      color);
     // Unavailable in OpenGL 2.1, use gluBuild2DMipmaps() instead
-    GLCall{ glGenerateMipmap, GL_TEXTURE_2D };
-    GLCall{ glBindTexture, GL_TEXTURE_2D, 0 };
+    GLCall{}(glGenerateMipmap, GL_TEXTURE_2D);
+    GLCall{}(glBindTexture, GL_TEXTURE_2D, 0);
   }
   template<std::ranges::random_access_range R>
   requires std::permutable<std::ranges::iterator_t<R>>

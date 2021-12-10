@@ -46,8 +46,8 @@ public:
   }
   void Bind(std::int32_t slot = 0) const
   {
-    GLCall{ glActiveTexture, static_cast<GLenum>(GL_TEXTURE0 + slot) };
-    GLCall{ glBindTexture, GL_TEXTURE_2D, m_render_id };
+    GLCall{}(glActiveTexture, static_cast<GLenum>(GL_TEXTURE0 + slot));
+    GLCall{}(glBindTexture, GL_TEXTURE_2D, m_render_id);
   }
   static void UnBind()
   {

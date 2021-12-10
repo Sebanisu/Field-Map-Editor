@@ -29,7 +29,7 @@ void ff8::Mim::OnImGuiUpdate() const
 {
   int                                 id = 0;
   open_viii::graphics::Rectangle<int> m_viewport{};
-  GLCall{ glGetIntegerv, GL_VIEWPORT, reinterpret_cast<int *>(&m_viewport) };
+  GLCall{}(glGetIntegerv, GL_VIEWPORT, reinterpret_cast<int *>(&m_viewport));
   {
     ImGui::Checkbox("Draw Palette", &m_draw_palette);
   }
@@ -156,7 +156,7 @@ void ff8::Mim::SetUniforms() const
   const auto &texture       = CurrentTexture();
   float       window_height = static_cast<float>(texture.height()) / 16.F;
   open_viii::graphics::Rectangle<int> m_viewport{};
-  GLCall{ glGetIntegerv, GL_VIEWPORT, reinterpret_cast<int *>(&m_viewport) };
+  GLCall{}(glGetIntegerv, GL_VIEWPORT, reinterpret_cast<int *>(&m_viewport));
   float window_width =
     window_height * (static_cast<float>(m_viewport.width() - m_viewport.x()))
     / (static_cast<float>(m_viewport.height() - m_viewport.y()));

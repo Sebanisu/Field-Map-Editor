@@ -48,9 +48,10 @@ public:
       T... v) const
   {
     const auto perform = [&]<typename NT>(auto &&fun) {
-      GLCall{ std::forward<decltype(fun)>(fun),
-              get_uniform_location(name),
-              static_cast<NT>(v)... };
+      GLCall{}(
+        std::forward<decltype(fun)>(fun),
+        get_uniform_location(name),
+        static_cast<NT>(v)...);
     };
     if constexpr ((std::floating_point<T> && ...))
     {
@@ -120,10 +121,11 @@ public:
         std::int32_t>)) void SetUniform(std::string_view name, T v) const
   {
     const auto perform = [&]<typename NT>(auto &&fun) {
-      GLCall{ std::forward<decltype(fun)>(fun),
-              get_uniform_location(name),
-              static_cast<GLsizei>(std::ranges::ssize(v)),
-              std::ranges::data(v) };
+      GLCall{}(
+        std::forward<decltype(fun)>(fun),
+        get_uniform_location(name),
+        static_cast<GLsizei>(std::ranges::ssize(v)),
+        std::ranges::data(v));
     };
 
     assert(!std::ranges::empty(v));
@@ -146,11 +148,12 @@ public:
   }
   void SetUniform(std::string_view name, const glm::mat4 &matrix) const
   {
-    GLCall{ glUniformMatrix4fv,
-            get_uniform_location(name),
-            1,
-            GLboolean{ GL_FALSE },
-            &matrix[0][0] };
+    GLCall{}(
+      glUniformMatrix4fv,
+      get_uniform_location(name),
+      1,
+      GLboolean{ GL_FALSE },
+      &matrix[0][0]);
   }
 
 private:

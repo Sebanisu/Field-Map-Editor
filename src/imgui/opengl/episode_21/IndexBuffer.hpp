@@ -31,17 +31,18 @@ public:
                           std::ranges::size(buffer)
                           * sizeof(std::ranges::range_value_t<R>));
                       const void *data = std::ranges::data(buffer);
-                      GLCall{ glGenBuffers, 1, &tmp };
-                      GLCall{ glBindBuffer, GL_ELEMENT_ARRAY_BUFFER, tmp };
-                      GLCall{ glBufferData,
-                              GL_ELEMENT_ARRAY_BUFFER,
-                              size_in_bytes,
-                              data,
-                              GL_STATIC_DRAW };
+                      GLCall{}(glGenBuffers, 1, &tmp);
+                      GLCall{}(glBindBuffer, GL_ELEMENT_ARRAY_BUFFER, tmp);
+                      GLCall{}(
+                        glBufferData,
+                        GL_ELEMENT_ARRAY_BUFFER,
+                        size_in_bytes,
+                        data,
+                        GL_STATIC_DRAW);
                       return tmp;
                     }(),
                      [](const std::uint32_t id) {
-                       GLCall{ glDeleteBuffers, 1, &id };
+                       GLCall{}(glDeleteBuffers, 1, &id);
                        IndexBuffer::UnBind();
                      } }
     , m_size(std::ranges::size(buffer))

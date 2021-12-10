@@ -15,10 +15,9 @@ public:
     : m_event(std::move(event))
   {
   }
-
   template<typename T, typename F>
   requires std::is_invocable_r_v<bool, F, const T &>
-  bool Dispatch(F func)
+  bool Dispatch(F func) const
   {
     if (m_event.contains<T>())
     {

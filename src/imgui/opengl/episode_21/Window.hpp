@@ -55,9 +55,9 @@ private:
   inline static void (*const destroy_window)(GLFWwindow *) =
     [](GLFWwindow *window) {
       // Cleanup
-      ImGui_ImplOpenGL3_Shutdown();
-      ImGui_ImplGlfw_Shutdown();
-      ImGui::DestroyContext();
+//      ImGui_ImplOpenGL3_Shutdown();
+//      ImGui_ImplGlfw_Shutdown();
+//      ImGui::DestroyContext();
 
       glfwDestroyWindow(window);
       // glfwTerminate();

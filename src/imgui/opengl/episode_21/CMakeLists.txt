@@ -70,7 +70,7 @@ add_executable(opengl_series_episode_21
         tests/TestFF8Archive.cpp
         tests/TestMenu.cpp
         tests/TestMenuItem.cpp
-        tests/TestTexture2D.cpp)
+        tests/TestTexture2D.cpp Application.cpp Application.hpp)
 target_link_libraries(opengl_series_episode_21
         PRIVATE project_warnings
         PRIVATE fmt::fmt

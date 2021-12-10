@@ -27,13 +27,13 @@ public:
   {
     assert(std::ranges::size(vertices) <= m_max_size);
     Bind();
-    GLCall{ glBufferSubData,
-            GL_ARRAY_BUFFER,
-            0,
-            static_cast<std::ptrdiff_t>(
-              std::ranges::size(vertices)
-              * sizeof(std::ranges::range_value_t<T>)),
-            std::ranges::data(vertices) };
+    GLCall{}(
+      glBufferSubData,
+      GL_ARRAY_BUFFER,
+      0,
+      static_cast<std::ptrdiff_t>(
+        std::ranges::size(vertices) * sizeof(std::ranges::range_value_t<T>)),
+      std::ranges::data(vertices));
     return IndexBufferDynamicSize(
       (std::ranges::size(vertices) / std::size(Quad{}) * 6U));
   }

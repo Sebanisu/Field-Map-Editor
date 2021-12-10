@@ -1,76 +1,19 @@
-#include "EventDispatcher.hpp"
-#include "IndexBuffer.hpp"
-#include "LayerStack.hpp"
-#include "LayerTests.hpp"
-#include "Renderer.hpp"
-#include "scope_guard.hpp"
-#include "Shader.hpp"
-#include "tests/TestMenu.hpp"
-#include "Texture.hpp"
-#include "VertexArray.hpp"
-#include "VertexBuffer.hpp"
-#include "Window.hpp"
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-#include <numeric>
-#include <thread>
-static bool running  = true;
-static bool minimize = false;
-bool        OnWindowClose(const Event::WindowClose &)
-{
-  running = false;
-  return true;
-}
-bool OnWindowResize(const Event::WindowResize &e)
-{
-  minimize = e.Width() == 0 or e.Height() == 0;
-  return true;
-}
+#include "Application.hpp"
 int main(void)
 {
 #if 1
   // anything created in the window must be destroyed before the window.
-  const auto window = Window::Create(Window::WindowData{
-    .Title = "OpenGL Test Code", .width = 1280, .height = 720 });
-  {
-    const Layer::Stack layers = {};
-    window->SetEventCallback([&](const Event::Item &e) {
-      Event::Dispatcher dispatcher = { e };
-      bool skip =(Event::HasFlag(e.category(),Event::Category::Mouse)
-                         && ImGui::GetIO().WantCaptureMouse)
-                        || (Event::HasFlag(e.category(),Event::Category::Keyboard)
-                            && ImGui::GetIO().WantCaptureKeyboard);
-      if (skip)
-      {
-        return;
-      }
-      dispatcher.Dispatch<Event::WindowClose>(&OnWindowClose);
-      dispatcher.Dispatch<Event::WindowResize>(&OnWindowResize);
-      layers.OnEvent(e);
-      fmt::print("Event::{}\t{}\t{}\n", e.Name(), e.CategoryName(), e.Data());
-    });
-    layers.emplace_layers(std::in_place_type_t<Layer::Tests>{});
-    using namespace std::string_view_literals;
+  const scope_guard_expensive end = { []() {
+    ImGui_ImplOpenGL3_Shutdown();
+    ImGui_ImplGlfw_Shutdown();
+    ImGui::DestroyContext();
 
-    const Renderer renderer = {};
-    while (running)
-    {
-      window->BeginFrame();// First thing you do on update;
-      if (!minimize)
-      {
-        renderer.Clear();
-        layers.OnImGuiUpdate();
-        layers.OnUpdate({});
-        layers.OnRender();
-        window->EndFrameRendered();// Last thing you do on render;
-      }
-      else
-      {
-        window->EndFrame();
-      }
-    }
-  }
-  glfwTerminate();
+    glfwTerminate();
+  } };
+//  while (true)
+//  {
+    Application("OpenGL Test Application", 1280, 720).Run();
+//  }
 #else
   {
     auto ed = Event::Dispatcher(Event::WindowResize(1920, 1080));
@@ -136,13 +79,13 @@ int main(void)
   /* Update Viewport when glfw detects window resize */
   glfwSetFramebufferSizeCallback(
     window.get(), [](GLFWwindow *, int width, int height) {
-      GLCall{ glViewport, 0, 0, width, height };
+      GLCall{}(glViewport, 0, 0, width, height);
     });
 
-  fmt::print("{}\n", GLCall{ glGetString, GL_VERSION }());
+  fmt::print("{}\n", GLCall{}(glGetString, GL_VERSION)());
 
-  GLCall{ glEnable, GL_BLEND };
-  GLCall{ glBlendFunc, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA };
+  GLCall{}(glEnable, GL_BLEND);
+  GLCall{}(glBlendFunc, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 
   /* Loop until the user closes the window */

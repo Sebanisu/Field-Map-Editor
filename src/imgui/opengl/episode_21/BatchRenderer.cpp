@@ -83,7 +83,7 @@ const std::int32_t &BatchRenderer::Max_Texture_Image_Units()
 {
   static const std::int32_t number = []() {
     std::int32_t texture_units{};
-    GLCall{ glGetIntegerv, GL_MAX_TEXTURE_IMAGE_UNITS, &texture_units };
+    GLCall{}(glGetIntegerv, GL_MAX_TEXTURE_IMAGE_UNITS, &texture_units);
     return texture_units;
   }();
   return number;
@@ -156,8 +156,8 @@ void BatchRenderer::BindTextures() const
   m_uniform_texture_slots.clear();
   for (std::int32_t i{}; const std::uint32_t id : m_texture_slots)
   {
-    GLCall{ glActiveTexture, static_cast<GLenum>(GL_TEXTURE0 + i) };
-    GLCall{ glBindTexture, GL_TEXTURE_2D, id };
+    GLCall{}(glActiveTexture, static_cast<GLenum>(GL_TEXTURE0 + i));
+    GLCall{}(glBindTexture, GL_TEXTURE_2D, id);
     m_uniform_texture_slots.push_back(i++);
   }
   m_shader.SetUniform("u_Textures", m_uniform_texture_slots);
