@@ -8,12 +8,33 @@
 #include "MenuItem.hpp"
 #include "tests/Test.hpp"
 
+template<typename T>
+concept is_MenuElementType =
+  test::Test<typename std::decay_t<T>::value_type> && requires(const T &t)
+{
+  typename std::decay_t<T>::value_type;
+  {
+    t.name
+    } -> decay_same_as<std::string>;
+};
 
 class Menu
 {
 public:
   Menu();
-  Menu(MenuItem current);
+  template<is_MenuElementType... T>
+  Menu(T &&...t)
+    : Menu()
+  {
+    ((void)push_back<typename std::decay_t<T>::value_type>(std::move(t.name)),
+     ...);
+  }
+  template<test::Test T>
+  struct MenuElementType
+  {
+    using value_type = T;
+    std::string name;
+  };
 
   Menu(const Menu &other) noexcept = delete;
   Menu &operator=(const Menu &other) noexcept = delete;
@@ -30,9 +51,18 @@ public:
       std::move(name), []() -> MenuItem { return std::in_place_type_t<T>{}; });
   }
   void push_back(std::string name, std::function<MenuItem()> funt) const;
-
+  void reload() const {
+    if(m_current)
+    {
+      m_current = m_list[m_current_index].second();
+    }
+  }
+  bool selected() const {
+    return m_current;
+  }
 private:
   mutable MenuItem m_current = {};
+  mutable std::size_t m_current_index = {};
   mutable std::vector<std::pair<std::string, std::function<MenuItem()>>>
     m_list = {};
 };

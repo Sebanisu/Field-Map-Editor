@@ -56,7 +56,6 @@ add_executable(opengl_series_episode_21
         ff8/Coos.cpp
         ff8/FF8LoadTextures.cpp
         ff8/FF8Menu.cpp
-        ff8/FF8MenuItem.cpp
         ff8/Fields.cpp
         ff8/Map.cpp
         ff8/Mim.cpp
@@ -72,7 +71,6 @@ add_executable(opengl_series_episode_21
         tests/TestClearColor.cpp
         tests/TestFF8Archive.cpp
         tests/TestMenu.cpp
-        tests/TestMenuItem.cpp
         tests/TestTexture2D.cpp
         )
 target_link_libraries(opengl_series_episode_21

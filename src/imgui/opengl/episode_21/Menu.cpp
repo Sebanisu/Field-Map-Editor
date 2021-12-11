@@ -20,13 +20,15 @@ void Menu::OnImGuiUpdate() const
   }
   else
   {
-    for (const auto &[name, funt] : m_list)
+    for (std::size_t i = {}; const auto &[name, funt] : m_list)
     {
       if (ImGui::Button(name.c_str()))
       {
-        m_current = funt();
+        m_current       = funt();
+        m_current_index = i;
         break;
       }
+      ++i;
     }
   }
 }
@@ -41,12 +43,8 @@ void Menu::push_back(std::string name, std::function<MenuItem()> funt) const
   m_list.emplace_back(std::move(name), std::move(funt));
 }
 
-Menu::Menu(MenuItem current)
-  : m_current(std::move(current))
-{
-}
 Menu::Menu()
-  : Menu(MenuItem{})
+  : m_current(MenuItem{})
 {
 }
 
