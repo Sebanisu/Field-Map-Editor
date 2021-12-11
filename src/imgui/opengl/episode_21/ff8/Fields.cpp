@@ -59,11 +59,14 @@ bool ff8::Fields::OnImGuiUpdate() const
 {
   int  id      = {};
   bool changed = { false };
+  starttime    = std::chrono::steady_clock::now();
   if (m_archive.OnImGuiUpdate())
   {
     m_map_data = m_archive.Fields().map_data();
     m_field    = load_field();
     changed    = true;
+    endtime    = std::chrono::steady_clock::now();
+    fmt::print("time to load fields = {:%S} seconds\n", endtime - starttime);
   }
   const ImGuiStyle &style   = ImGui::GetStyle();
   const float       spacing = style.ItemInnerSpacing.x;

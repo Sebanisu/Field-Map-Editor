@@ -47,9 +47,10 @@ public:
   }
 
   Fields()
+    : m_map_data(m_archive.Fields().map_data())
+    , m_field(load_field())
   {
-    m_map_data = m_archive.Fields().map_data();
-    m_field    = load_field();
+    fmt::print("time to load fields = {:%S} seconds\n", endtime - starttime);
   }
 
 private:
@@ -79,10 +80,14 @@ private:
     }
     return archive;
   }
+
+  mutable std::chrono::steady_clock::time_point starttime =
+    std::chrono::steady_clock::now();
   Archive                                   m_archive  = {};
   mutable std::vector<std::string>          m_map_data = {};
   mutable open_viii::archive::FIFLFS<false> m_field    = {};
   inline static int                         m_current  = {};
+  mutable std::chrono::steady_clock::time_point endtime = std::chrono::steady_clock::now();
 };
 static_assert(test::Test<Fields>);
 }// namespace ff8

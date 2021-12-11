@@ -4,7 +4,6 @@
 #include "FF8Menu.hpp"
 #include "Map.hpp"
 #include "Mim.hpp"
-
 static_assert(test::Test<ff8::FF8Menu>);
 void ff8::FF8Menu::OnRender() const
 {
