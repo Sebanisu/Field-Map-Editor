@@ -4,9 +4,9 @@
 
 #ifndef MYPROJECT_LAYERITEM_HPP
 #define MYPROJECT_LAYERITEM_HPP
+#include "EventItem.hpp"
 #include "tests/Test.hpp"
-#include <EventItem.hpp>
-#include <memory>
+
 namespace Layer
 {
 class Item

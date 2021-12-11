@@ -4,9 +4,8 @@
 
 #ifndef MYPROJECT_INDEXTYPE_HPP
 #define MYPROJECT_INDEXTYPE_HPP
-#include <cassert>
-#include <cstdint>
-#include <GL/glew.h>
+
+
 enum class IndexType : GLenum
 {
   none           = 0,

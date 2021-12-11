@@ -45,6 +45,7 @@ Application::Application(std::string Title, int width, int height)
 }
 void Application::Run() const
 {
+  SetCurrentWindow();
   const Renderer renderer = {};
   while (running)
   {
@@ -62,4 +63,13 @@ void Application::Run() const
       window->EndFrame();
     }
   }
+  running = true;
+}
+void Application::SetCurrentWindow() const
+{
+  current_window = window.get();
+}
+const Window *Application::CurrentWindow()
+{
+  return current_window;
 }

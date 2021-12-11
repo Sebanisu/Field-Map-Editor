@@ -5,8 +5,8 @@
 #ifndef MYPROJECT_BPPS_HPP
 #define MYPROJECT_BPPS_HPP
 #include "tests/Test.hpp"
-#include <array>
-#include <open_viii/graphics/BPPT.hpp>
+
+
 namespace ff8
 {
 class BPPs

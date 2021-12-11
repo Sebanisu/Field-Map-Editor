@@ -5,9 +5,8 @@
 #ifndef MYPROJECT_VERTEXBUFFERLAYOUT_HPP
 #define MYPROJECT_VERTEXBUFFERLAYOUT_HPP
 #include "concepts.hpp"
-#include <cassert>
-#include <GL/glew.h>
-#include <vector>
+
+
 template<typename T>
 concept is_VertexBufferElementType = requires(T t)
 {

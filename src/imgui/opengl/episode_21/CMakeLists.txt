@@ -28,8 +28,9 @@ find_package(glfw3 REQUIRED)
 find_package(OpenGL REQUIRED)
 find_package(glm REQUIRED)
 find_package(imgui REQUIRED)
-find_package(stb REQUIRED)
+add_subdirectory(stbi)
 add_executable(opengl_series_episode_21
+        Application.cpp
         BatchRenderer.cpp
         DelayedTextures.cpp
         IndexBuffer.cpp
@@ -38,6 +39,8 @@ add_executable(opengl_series_episode_21
         LayerItem.cpp
         LayerStack.cpp
         LayerTests.cpp
+        Menu.cpp
+        MenuItem.cpp
         OrthographicCameraController.cpp
         Renderer.cpp
         Shader.cpp
@@ -70,7 +73,8 @@ add_executable(opengl_series_episode_21
         tests/TestFF8Archive.cpp
         tests/TestMenu.cpp
         tests/TestMenuItem.cpp
-        tests/TestTexture2D.cpp Application.cpp Application.hpp)
+        tests/TestTexture2D.cpp
+        )
 target_link_libraries(opengl_series_episode_21
         PRIVATE project_warnings
         PRIVATE fmt::fmt
@@ -80,8 +84,8 @@ target_link_libraries(opengl_series_episode_21
         PRIVATE GLEW::GLEW
         PRIVATE OpenVIII_CPP_WIP_VIIIGraphics
         PRIVATE OpenVIII_CPP_WIP_VIIIArchive
-        PRIVATE stb::stb
         PRIVATE glm::glm
+        PRIVATE stbi_wrapper
         PRIVATE imgui::imgui
         PRIVATE imgui_glfw
         )
@@ -106,3 +110,49 @@ if (MSVC)
             PUBLIC _CRT_SECURE_NO_WARNINGS) # required by libpng
     target_link_options(opengl_series_episode_21 PRIVATE "/PROFILE")
 endif ()
+
+target_precompile_headers(opengl_series_episode_21
+        PRIVATE
+        <algorithm>
+        <array>
+        <cassert>
+        <concepts>
+        <cstdint>
+        <cstring>
+        <filesystem>
+        <fstream>
+        <functional>
+        <future>
+        <iterator>
+        <memory>
+        <optional>
+        <ranges>
+        <source_location>
+        <span>
+        <sstream>
+        <string>
+        <string_view>
+        <thread>
+        <type_traits>
+        <unordered_map>
+        <utility>
+        <variant>
+        <vector>
+        <GL/glew.h>
+        <GLFW/glfw3.h>
+        <fmt/format.h>
+        <stb_image.h>
+        <glm/glm.hpp>
+        <glm/gtc/matrix_transform.hpp>
+        <imgui.h>
+        <imgui_impl_glfw.h>
+        <imgui_impl_opengl3.h>
+        <open_viii/archive/Archives.hpp>
+        <open_viii/graphics/BPPT.hpp>
+        <open_viii/graphics/Rectangle.hpp>
+        <open_viii/graphics/background/Map.hpp>
+        <open_viii/graphics/background/Mim.hpp>
+        <open_viii/graphics/color/Color32.hpp>
+        <open_viii/paths/Paths.hpp>
+        <open_viii/strings/LangCommon.hpp>
+        )

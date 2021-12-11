@@ -6,16 +6,8 @@
 #define MYPROJECT_SHADER_HPP
 #include "concepts.hpp"
 #include "Renderer.hpp"
-#include <cassert>
-#include <concepts>
-#include <filesystem>
-#include <fmt/format.h>
-#include <fstream>
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-#include <sstream>
-#include <string_view>
-#include <unordered_map>
+
+
 class Shader
 {
 private:

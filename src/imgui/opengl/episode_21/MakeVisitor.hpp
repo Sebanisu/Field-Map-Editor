@@ -4,7 +4,7 @@
 
 #ifndef MYPROJECT_MAKEVISITOR_HPP
 #define MYPROJECT_MAKEVISITOR_HPP
-#include <utility>
+
 template<typename... B>
 [[nodiscard]] inline auto make_visitor(B &&...b) noexcept
 {

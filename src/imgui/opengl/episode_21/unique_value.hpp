@@ -4,8 +4,6 @@
 
 #ifndef MYPROJECT_UNIQUE_VALUE_HPP
 #define MYPROJECT_UNIQUE_VALUE_HPP
-#include <cstdint>
-#include <functional>
 template<typename T>
 class weak_value;
 template<typename T>

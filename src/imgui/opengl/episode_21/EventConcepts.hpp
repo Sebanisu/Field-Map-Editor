@@ -8,8 +8,8 @@
 #include "EventEnums.hpp"
 #include "KeyCodes.hpp"
 #include "MouseButtonCodes.hpp"
-#include <array>
-#include <string_view>
+
+
 namespace Event
 {
 template<typename T>

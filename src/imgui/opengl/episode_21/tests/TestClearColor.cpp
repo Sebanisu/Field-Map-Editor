@@ -4,7 +4,7 @@
 
 #include "TestClearColor.hpp"
 #include "Renderer.hpp"
-#include <imgui.h>
+
 static_assert(test::Test<test::TestClearColor>);
 
 namespace test

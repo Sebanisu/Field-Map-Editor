@@ -6,10 +6,7 @@
 #define MYPROJECT_EVENTITEM_HPP
 #include "Event.hpp"
 #include "MakeVisitor.hpp"
-#include <memory>
-#include <optional>
-#include <utility>
-#include <variant>
+
 
 namespace Event
 {

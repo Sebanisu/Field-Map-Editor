@@ -9,14 +9,13 @@
 //#include "VertexArray.hpp"
 //#include "VertexBuffer.hpp"
 //#include "VertexBufferLayout.hpp"
-#include <algorithm>
-#include <array>
-#include <vector>
-//#include <glm/glm.hpp>
-//#include <glm/gtc/matrix_transform.hpp>
+
+
+//
+//
 #include "TestBatchRendering.hpp"
-#include <imgui.h>
-#include <ranges>
+
+
 static_assert(test::Test<test::TestBatchRendering>);
 void test::TestBatchRendering::OnImGuiUpdate() const
 {

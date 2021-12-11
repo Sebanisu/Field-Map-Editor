@@ -4,7 +4,7 @@
 
 #ifndef MYPROJECT_KEYCODES_HPP
 #define MYPROJECT_KEYCODES_HPP
-#include <utility>
+
 // from glfw3.h
 enum class KEY : int
 {

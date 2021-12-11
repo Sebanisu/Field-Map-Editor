@@ -4,7 +4,7 @@
 
 #ifndef MYPROJECT_MOUSEBUTTONCODES_HPP
 #define MYPROJECT_MOUSEBUTTONCODES_HPP
-#include <utility>
+
 enum class MOUSE : int
 {
   BUTTON_1      = 0,

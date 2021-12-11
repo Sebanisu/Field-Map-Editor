@@ -5,8 +5,8 @@
 #include "BatchRenderer.hpp"
 #include "scope_guard.hpp"
 #include "tests/Test.hpp"
-#include <imgui.h>
-#include <ranges>
+
+
 static_assert(test::Test<BatchRenderer>);
 static const Renderer renderer{};
 static std::uint32_t  draw_count = 0U;

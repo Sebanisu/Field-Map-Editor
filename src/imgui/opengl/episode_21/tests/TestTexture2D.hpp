@@ -10,7 +10,7 @@
 #include "Texture.hpp"
 #include "VertexArray.hpp"
 #include "VertexBuffer.hpp"
-#include <glm/glm.hpp>
+
 namespace test
 {
 class TestTexture2D

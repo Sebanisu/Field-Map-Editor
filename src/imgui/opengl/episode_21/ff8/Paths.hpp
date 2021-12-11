@@ -5,9 +5,9 @@
 #ifndef MYPROJECT_PATHS_HPP
 #define MYPROJECT_PATHS_HPP
 #include "scope_guard.hpp"
-#include <imgui.h>
-#include <open_viii/paths/Paths.hpp>
-#include <tests/Test.hpp>
+
+
+#include "tests/Test.hpp"
 namespace ff8
 {
 class Paths

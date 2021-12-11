@@ -6,8 +6,8 @@
 #define MYPROJECT_FIELDS_HPP
 #include "Archive.hpp"
 #include "fmt/format.h"
-#include <open_viii/graphics/background/Map.hpp>
-#include <open_viii/graphics/background/Mim.hpp>
+
+
 namespace ff8
 {
 [[nodiscard]] open_viii::graphics::background::Mim LoadMim(

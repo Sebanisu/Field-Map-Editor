@@ -4,8 +4,8 @@
 #include "Window.hpp"
 #include "Event.hpp"
 #include "Renderer.hpp"
-#include <fmt/format.h>
-#include <thread>
+
+
 static bool glfw_init  = false;
 static bool imgui_init = false;
 void        Window::BeginFrame() const
@@ -82,8 +82,13 @@ void Window::InitGLFW()
   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
   glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
+  // const auto monitors = GetMonitors();
   m_window.reset(glfwCreateWindow(
-    m_data.width, m_data.height, m_data.Title.c_str(), nullptr, nullptr));
+    m_data.width,
+    m_data.height,
+    m_data.Title.c_str(),
+    nullptr,// monitors.front(),
+    nullptr));
 
   if (!m_window)
   {
@@ -110,24 +115,23 @@ void Window::InitGLFW()
 }
 void Window::InitImGui(const char *glsl_version) const
 {
-  if (imgui_init)
+  if (!imgui_init)
   {
-    return;
+
+    imgui_init = true;
+    // Setup Dear ImGui context
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
+    ImGuiIO &io = ImGui::GetIO();
+    (void)io;
+    // io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable
+    // Keyboard Controls io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad; //
+    // Enable Gamepad Controls
+
+    // Setup Dear ImGui style
+    ImGui::StyleColorsDark();
+    // ImGui::StyleColorsClassic();
   }
-  imgui_init = true;
-  // Setup Dear ImGui context
-  IMGUI_CHECKVERSION();
-  ImGui::CreateContext();
-  ImGuiIO &io = ImGui::GetIO();
-  (void)io;
-  // io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable
-  // Keyboard Controls io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad; //
-  // Enable Gamepad Controls
-
-  // Setup Dear ImGui style
-  ImGui::StyleColorsDark();
-  // ImGui::StyleColorsClassic();
-
   // Setup Platform/Renderer backends
   ImGui_ImplGlfw_InitForOpenGL(m_window.get(), true);
   ImGui_ImplOpenGL3_Init(glsl_version);

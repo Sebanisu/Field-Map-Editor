@@ -6,8 +6,8 @@
 #define MYPROJECT_COOS_HPP
 #include "scope_guard.hpp"
 #include "tests/Test.hpp"
-#include <imgui.h>
-#include <open_viii/strings/LangCommon.hpp>
+
+
 namespace ff8
 {
 class Coos

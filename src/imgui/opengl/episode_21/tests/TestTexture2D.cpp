@@ -7,8 +7,8 @@
 #include "Shader.hpp"
 #include "Test.hpp"
 #include "Texture.hpp"
-#include <array>
-#include <imgui.h>
+
+
 static_assert(test::Test<test::TestTexture2D>);
 namespace test
 {

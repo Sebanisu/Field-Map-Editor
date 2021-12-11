@@ -6,13 +6,9 @@
 #define MYPROJECT_TEXTURE_HPP
 #include "Renderer.hpp"
 #include "unique_value.hpp"
-#include <algorithm>
-#include <array>
-#include <cstring>
-#include <filesystem>
-#include <open_viii/graphics/Rectangle.hpp>
-#include <ranges>
 #include <stb_image.h>
+
+
 class Texture
 {
 private:

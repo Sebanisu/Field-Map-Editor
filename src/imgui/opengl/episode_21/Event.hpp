@@ -5,9 +5,8 @@
 #ifndef MYPROJECT_EVENT_HPP
 #define MYPROJECT_EVENT_HPP
 #include "EventConcepts.hpp"
-#include <array>
-#include <fmt/format.h>
-#include <variant>
+
+
 namespace Event
 {
 #define EVENT_CLASS_TYPE(in_type)                                     \

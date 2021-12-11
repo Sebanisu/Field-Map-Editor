@@ -5,7 +5,7 @@
 #ifndef MYPROJECT_SUBTEXTURE_HPP
 #define MYPROJECT_SUBTEXTURE_HPP
 #include "Texture.hpp"
-#include <array>
+
 class SubTexture
 {
 public:

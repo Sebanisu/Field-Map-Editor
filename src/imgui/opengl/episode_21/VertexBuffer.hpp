@@ -6,8 +6,8 @@
 #define MYPROJECT_VERTEXBUFFER_HPP
 #include "Renderer.hpp"
 #include "unique_value.hpp"
-#include <cstdint>
-#include <ranges>
+
+
 class VertexBuffer
 {
 private:

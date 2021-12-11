@@ -5,12 +5,8 @@
 #ifndef MYPROJECT_VERTEX_HPP
 #define MYPROJECT_VERTEX_HPP
 #include "VertexBufferLayout.hpp"
-#include <algorithm>
-#include <array>
-#include <glm/glm.hpp>
-#include <iterator>
-#include <ranges>
-#include <vector>
+
+
 struct Vertex
 {
   glm::vec2                 location{};

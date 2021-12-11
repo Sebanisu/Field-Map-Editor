@@ -7,8 +7,8 @@
 #include "IndexType.hpp"
 #include "Renderer.hpp"
 #include "unique_value.hpp"
-#include <cstdint>
-#include <span>
+
+
 class IndexBuffer
 {
 private:

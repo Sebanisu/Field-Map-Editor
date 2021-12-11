@@ -6,14 +6,8 @@
 #define MYPROJECT_RENDERER_HPP
 #include "concepts.hpp"
 #include "IndexType.hpp"
-#include <concepts>
-#include <functional>
-#include <GL/glew.h>
-#include <GLFW/glfw3.h>
-#include <glm/glm.hpp>
-#include <optional>
-#include <source_location>
-#include <utility>
+
+
 void BeginErrorCallBack();
 void EndErrorCallback();
 void GLClearError(

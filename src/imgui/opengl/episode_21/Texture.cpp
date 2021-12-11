@@ -1,7 +1,5 @@
-// Do not delete this file. STB IMAGE requires one cpp file compiles it with
-// macro ENABLED
-#define STB_IMAGE_IMPLEMENTATION
 #include "Texture.hpp"
+#include <stb_image.h>
 Texture::Texture(std::filesystem::path path)
   : m_path(std::move(path))
 {

@@ -6,7 +6,7 @@
 #define MYPROJECT_ORTHOGRAPHICCAMERACONTROLLER_HPP
 #include "EventItem.hpp"
 #include "OrthographicCamera.hpp"
-#include <fmt/format.h>
+
 class OrthographicCameraController
 {
 public:

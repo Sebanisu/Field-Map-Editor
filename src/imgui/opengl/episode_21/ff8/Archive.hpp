@@ -6,7 +6,7 @@
 #define MYPROJECT_ARCHIVE_HPP
 #include "Coos.hpp"
 #include "Paths.hpp"
-#include <open_viii/archive/Archives.hpp>
+
 namespace ff8
 {
 class Archive

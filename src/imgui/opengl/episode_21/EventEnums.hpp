@@ -5,7 +5,6 @@
 #ifndef MYPROJECT_EVENTENUMS_HPP
 #define MYPROJECT_EVENTENUMS_HPP
 
-#include <cstdint>
 
 namespace Event
 {

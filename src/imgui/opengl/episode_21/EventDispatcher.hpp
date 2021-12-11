@@ -5,7 +5,7 @@
 #ifndef MYPROJECT_EVENTDISPATCHER_HPP
 #define MYPROJECT_EVENTDISPATCHER_HPP
 #include "EventItem.hpp"
-#include <functional>
+
 namespace Event
 {
 class Dispatcher

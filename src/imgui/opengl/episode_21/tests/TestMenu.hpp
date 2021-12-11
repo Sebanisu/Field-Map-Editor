@@ -6,9 +6,8 @@
 #define MYPROJECT_TESTMENU_HPP
 #include "EventItem.hpp"
 #include "TestMenuItem.hpp"
-#include <functional>
-#include <string>
-#include <vector>
+
+
 namespace test
 {
 class TestMenu

@@ -5,8 +5,8 @@
 #ifndef MYPROJECT_TESTCLEARCOLOR_HPP
 #define MYPROJECT_TESTCLEARCOLOR_HPP
 #include "Test.hpp"
-#include <array>
-#include <glm/glm.hpp>
+
+
 namespace test
 {
 class TestClearColor

@@ -5,11 +5,8 @@
 #ifndef MYPROJECT_LAYERSTACK_HPP
 #define MYPROJECT_LAYERSTACK_HPP
 #include "LayerItem.hpp"
-#include <algorithm>
-#include <functional>
-#include <span>
-#include <string>
-#include <vector>
+
+
 namespace Layer
 {
 class Stack

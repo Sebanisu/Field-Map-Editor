@@ -5,8 +5,8 @@
 #ifndef MYPROJECT_PALETTES_HPP
 #define MYPROJECT_PALETTES_HPP
 #include "tests/Test.hpp"
-#include <array>
-#include <open_viii/graphics/BPPT.hpp>
+
+
 namespace ff8
 {
 class Palettes

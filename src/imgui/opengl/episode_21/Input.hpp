@@ -6,10 +6,7 @@
 #define MYPROJECT_INPUT_HPP
 #include "KeyCodes.hpp"
 #include "MouseButtonCodes.hpp"
-#include <array>
-#include <GL/glew.h>
-#include <GLFW/glfw3.h>
-#include <memory>
+
 
 class Window;
 class Input

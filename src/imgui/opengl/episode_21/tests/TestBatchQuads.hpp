@@ -10,8 +10,8 @@
 #include "Texture.hpp"
 #include "VertexArray.hpp"
 #include "VertexBufferDynamic.hpp"
-#include <glm/glm.hpp>
-#include <vector>
+
+
 namespace test
 {
 class TestBatchQuads

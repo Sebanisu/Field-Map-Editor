@@ -6,9 +6,8 @@
 #define MYPROJECT_FF8MENU_HPP
 #include "FF8MenuItem.hpp"
 #include "Fields.hpp"
-#include <functional>
-#include <string>
-#include <vector>
+
+
 namespace ff8
 {
 class FF8Menu

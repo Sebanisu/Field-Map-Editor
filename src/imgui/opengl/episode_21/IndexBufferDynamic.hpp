@@ -8,7 +8,7 @@
 #include "Renderer.hpp"
 #include "unique_value.hpp"
 #include "Vertex.hpp"
-#include <cstdint>
+
 class IndexBufferDynamic
 {
 private:

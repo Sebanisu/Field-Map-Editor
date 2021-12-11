@@ -4,9 +4,8 @@
 
 #ifndef MYPROJECT_SCOPE_GUARD_HPP
 #define MYPROJECT_SCOPE_GUARD_HPP
-#include <algorithm>
-#include <functional>
-#include <ranges>
+
+
 struct [[nodiscard]] scope_guard
 {
   constexpr scope_guard(void (*t)())

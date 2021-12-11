@@ -5,9 +5,9 @@
 #ifndef MYPROJECT_LAYERTESTS_HPP
 #define MYPROJECT_LAYERTESTS_HPP
 
+#include "EventItem.hpp"
 #include "tests/Test.hpp"
 #include "tests/TestMenu.hpp"
-#include <EventItem.hpp>
 namespace Layer
 {
 class Tests

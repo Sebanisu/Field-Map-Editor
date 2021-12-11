@@ -3,7 +3,7 @@
 //
 
 #include "LayerStack.hpp"
-#include <ranges>
+
 static_assert(test::Test<Layer::Stack>);
 void Layer::Stack::OnRender() const
 {

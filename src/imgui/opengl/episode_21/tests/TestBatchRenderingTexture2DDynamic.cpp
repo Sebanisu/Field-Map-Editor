@@ -5,8 +5,8 @@
 #include "Renderer.hpp"
 #include "scope_guard.hpp"
 #include "Vertex.hpp"
-#include <glm/gtc/matrix_transform.hpp>
-#include <imgui.h>
+
+
 static_assert(test::Test<test::TestBatchRenderingTexture2DDynamic>);
 namespace test
 {

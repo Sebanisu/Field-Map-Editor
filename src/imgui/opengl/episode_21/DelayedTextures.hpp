@@ -5,9 +5,8 @@
 #ifndef MYPROJECT_DELAYEDTEXTURES_HPP
 #define MYPROJECT_DELAYEDTEXTURES_HPP
 #include "Texture.hpp"
-#include <fmt/format.h>
-#include <future>
-#include <open_viii/graphics/color/Color32.hpp>
+
+
 struct DelayedTextures
 {
   struct return_data

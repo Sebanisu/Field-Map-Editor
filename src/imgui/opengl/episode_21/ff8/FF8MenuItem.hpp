@@ -5,9 +5,9 @@
 #ifndef MYPROJECT_FF8MENUITEM_HPP
 #define MYPROJECT_FF8MENUITEM_HPP
 
+#include "EventItem.hpp"
 #include "tests/Test.hpp"
-#include <EventItem.hpp>
-#include <memory>
+
 namespace ff8
 {
 class FF8MenuItem

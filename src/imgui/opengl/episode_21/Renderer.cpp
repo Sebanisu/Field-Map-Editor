@@ -3,7 +3,7 @@
 //
 
 #include "Renderer.hpp"
-#include <fmt/format.h>
+
 bool GLCheckError(std::string_view prefix, const std::source_location location)
 {
   if (GLenum error = glGetError(); error != GL_NO_ERROR)

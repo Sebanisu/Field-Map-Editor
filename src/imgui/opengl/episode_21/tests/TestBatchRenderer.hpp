@@ -4,10 +4,10 @@
 
 #ifndef MYPROJECT_TESTBATCHRENDERER_HPP
 #define MYPROJECT_TESTBATCHRENDERER_HPP
+#include "BatchRenderer.hpp"
+#include "scope_guard.hpp"
 #include "Test.hpp"
-#include <BatchRenderer.hpp>
-#include <imgui.h>
-#include <scope_guard.hpp>
+
 
 namespace test
 {

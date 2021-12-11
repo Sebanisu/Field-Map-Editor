@@ -3,8 +3,8 @@
 //
 
 #include "FF8LoadTextures.hpp"
-#include <future>
-#include <vector>
+
+
 DelayedTextures
   ff8::LoadTextures(const open_viii::graphics::background::Mim &mim)
 {

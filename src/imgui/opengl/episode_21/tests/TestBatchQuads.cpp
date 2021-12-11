@@ -7,9 +7,8 @@
 #include "scope_guard.hpp"
 #include "TestBatchQuads.hpp"
 #include "Vertex.hpp"
-#include <glm/gtc/matrix_transform.hpp>
-#include <imgui.h>
-#include <ranges>
+
+
 static_assert(test::Test<test::TestBatchQuads>);
 namespace test
 {
