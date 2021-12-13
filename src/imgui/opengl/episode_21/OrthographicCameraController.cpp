@@ -56,9 +56,13 @@ bool OrthographicCameraController::OnImGuiUpdate() const
 {
   // draw info about the camera here.
   ImGui::Text(
-    "%s", fmt::format("X, Y: {},{}", m_position.x, m_position.y).c_str());
+    "%s",
+    fmt::format("X, Y: {:>4.4f}, {:>4.4f}", m_position.x, m_position.y)
+      .c_str());
   ImGui::Text("%s", fmt::format("Rotation: {}", m_rotation).c_str());
   ImGui::Text("%s", fmt::format("Zoom: {}", m_zoom_level).c_str());
+  ImGui::Text(
+    "%s", fmt::format("Zoom Precision: {}", m_zoom_precision).c_str());
   return false;
 }
 void OrthographicCameraController::OnEvent(const Event::Item &e) const
@@ -73,7 +77,26 @@ void OrthographicCameraController::OnEvent(const Event::Item &e) const
   Event::Dispatcher dispatcher(e);
   dispatcher.Dispatch<Event::MouseScroll>(
     [&set_projection, this](const Event::MouseScroll &ms) {
-      m_zoom_level -= ms.YOffset();
+      if (
+        m_zoom_level - ms.YOffset() * m_zoom_precision
+        < std::numeric_limits<float>::epsilon())
+      {
+        m_zoom_precision /= 10.F;
+      }
+      if (
+        m_zoom_level - ms.YOffset() * m_zoom_precision - m_zoom_precision * 10.F
+        > std::numeric_limits<float>::epsilon())
+      {
+        m_zoom_precision *= 10.F;
+        if (m_zoom_precision > 0.25F)
+          m_zoom_precision = std::nearbyint(m_zoom_precision);
+      }
+      m_zoom_precision = (std::clamp)(m_zoom_precision, 0.0001F, 1.F);
+
+      m_zoom_level -= ms.YOffset() * m_zoom_precision;
+      if (m_zoom_precision - 1.F > std::numeric_limits<float>::epsilon())
+        m_zoom_level = std::nearbyint(m_zoom_level);
+      m_zoom_level = (std::max)(m_zoom_level, 0.0001F);
       set_projection();
       return true;
     });

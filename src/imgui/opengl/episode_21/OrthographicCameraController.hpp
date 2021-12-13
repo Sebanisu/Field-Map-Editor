@@ -80,6 +80,7 @@ public:
 private:
   mutable float              m_aspect_ratio      = {};
   mutable float              m_zoom_level        = { 1.F };
+  mutable float              m_zoom_precision    = { 1.F };
   mutable OrthographicCamera m_camera            = {};
   bool                       m_rotation_enabled  = { true };
   mutable glm::vec3          m_position          = {};
