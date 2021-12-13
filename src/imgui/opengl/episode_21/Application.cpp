@@ -6,6 +6,7 @@
 #include "EventDispatcher.hpp"
 #include "LayerTests.hpp"
 #include "Renderer.hpp"
+#include "TimeStep.hpp"
 
 static bool running  = true;
 static bool minimize = false;
@@ -47,6 +48,7 @@ void Application::Run() const
 {
   SetCurrentWindow();
   const Renderer renderer = {};
+  const TimeStep time_step = {};
   while (running)
   {
     window->BeginFrame();// First thing you do on update;
@@ -54,7 +56,7 @@ void Application::Run() const
     {
       renderer.Clear();
       layers.OnImGuiUpdate();
-      layers.OnUpdate({});
+      layers.OnUpdate(time_step);
       layers.OnRender();
       window->EndFrameRendered();// Last thing you do on render;
     }

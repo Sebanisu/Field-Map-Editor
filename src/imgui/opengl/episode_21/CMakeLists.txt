@@ -72,7 +72,7 @@ add_executable(opengl_series_episode_21
         tests/TestFF8Archive.cpp
         tests/TestMenu.cpp
         tests/TestTexture2D.cpp
-        )
+        TimeStep.cpp TimeStep.hpp)
 target_link_libraries(opengl_series_episode_21
         PRIVATE project_warnings
         PRIVATE fmt::fmt

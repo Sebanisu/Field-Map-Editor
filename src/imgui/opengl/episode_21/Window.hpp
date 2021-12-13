@@ -89,6 +89,10 @@ public:
       GLFW_DONT_CARE);
     data.monitor = nullptr;
   }
+  const WindowData &ViewWindowData() const
+  {
+    return GetWindowData(m_window.get());
+  }
 
 private:
   Window(WindowData);
@@ -110,9 +114,9 @@ private:
     nullptr,
     destroy_window
   };
-  static WindowData &GetWindowData(GLFWwindow *);
   void               InitCallbacks() const;
   void               InitImGui(const char *glsl_version) const;
   void               InitGLFW();
+  static WindowData &GetWindowData(GLFWwindow *);
 };
 #endif// MYPROJECT_WINDOW_HPP

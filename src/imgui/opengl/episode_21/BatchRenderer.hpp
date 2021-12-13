@@ -5,6 +5,7 @@
 #ifndef MYPROJECT_BATCHRENDERER_HPP
 #define MYPROJECT_BATCHRENDERER_HPP
 #include "IndexBufferDynamic.hpp"
+#include "OrthographicCameraController.hpp"
 #include "Shader.hpp"
 #include "SubTexture.hpp"
 #include "tests/Test.hpp"
@@ -22,7 +23,7 @@ public:
   void                      OnUpdate(float) const;
   void                      OnRender() const;
   void                      OnImGuiUpdate() const;
-  void                      OnEvent(const Event::Item &) const {}
+  void                      OnEvent(const Event::Item &e) const;
 
   [[nodiscard]] std::size_t QUAD_COUNT() const noexcept;
   [[nodiscard]] std::size_t VERT_COUNT() const noexcept;
@@ -45,7 +46,10 @@ public:
   void                  Draw() const;
 
   const ::Shader       &Shader() const;
+  OrthographicCameraController     &Camera() const;
   const std::vector<std::uint32_t> &TextureSlots() const;
+  void                              Bind() const;
+  static void                       UnBind();
 
 private:
   void                        FlushVertices() const;
@@ -59,11 +63,14 @@ private:
     r.reserve(VERT_COUNT());
     return r;
   }() };
-  mutable IndexBufferDynamicSize     index_buffer_size       = {};
-  ::Shader                           m_shader                = {};
-  VertexArray                        m_vertex_array          = {};
-  mutable std::vector<std::uint32_t> m_texture_slots         = {};
-  mutable std::vector<std::int32_t>  m_uniform_texture_slots = {};
+  mutable IndexBufferDynamicSize       index_buffer_size       = {};
+  ::Shader                             m_shader                = {};
+  VertexArray                          m_vertex_array          = {};
+  mutable std::vector<std::uint32_t>   m_texture_slots         = {};
+  mutable std::vector<std::int32_t>    m_uniform_texture_slots = {};
+  mutable OrthographicCameraController m_camera                = {};
   Texture m_blank = { (std::numeric_limits<std::uint32_t>::max)() };
 };
+static_assert(test::Test<BatchRenderer>);
+static_assert(Bindable<BatchRenderer>);
 #endif// MYPROJECT_BATCHRENDERER_HPP

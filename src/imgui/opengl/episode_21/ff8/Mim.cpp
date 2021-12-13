@@ -153,24 +153,30 @@ const Texture &ff8::Mim::CurrentTexture() const
 
 void ff8::Mim::SetUniforms() const
 {
-  const auto &texture       = CurrentTexture();
-  float       window_height = static_cast<float>(texture.height()) / 16.F;
-  open_viii::graphics::Rectangle<int> m_viewport{};
-  GLCall{}(glGetIntegerv, GL_VIEWPORT, reinterpret_cast<int *>(&m_viewport));
-  float window_width =
-    window_height * (static_cast<float>(m_viewport.width() - m_viewport.x()))
-    / (static_cast<float>(m_viewport.height() - m_viewport.y()));
+  // const auto &texture = CurrentTexture();
+  //   float       window_height = static_cast<float>(texture.height()) / 16.F;
+  //   open_viii::graphics::Rectangle<int> m_viewport{};
+  //   GLCall{}(glGetIntegerv, GL_VIEWPORT, reinterpret_cast<int
+  //   *>(&m_viewport)); float window_width =
+  //     window_height * (static_cast<float>(m_viewport.width() -
+  //     m_viewport.x())) / (static_cast<float>(m_viewport.height() -
+  //     m_viewport.y()));
 
-  const auto proj = glm::ortho(
-    m_view_offset.x / m_zoom,
-    (m_view_offset.x + window_width) / m_zoom,
-    m_view_offset.y / m_zoom,
-    (m_view_offset.y + window_height) / m_zoom,
-    -1.F,
-    1.F);
+  //  const auto proj = glm::ortho(
+  //    m_view_offset.x / m_zoom,
+  //    (m_view_offset.x + window_width) / m_zoom,
+  //    m_view_offset.y / m_zoom,
+  //    (m_view_offset.y + window_height) / m_zoom,
+  //    -1.F,
+  //    1.F);
+  //
+  //  const auto mvp = proj;
+  // m_batch_renderer.Shader().Bind();
+  // m_batch_renderer.Shader().SetUniform("u_MVP", mvp);
 
-  const auto mvp = proj;
-  m_batch_renderer.Shader().Bind();
-  m_batch_renderer.Shader().SetUniform("u_MVP", mvp);
+  m_batch_renderer.Bind();
   m_batch_renderer.Shader().SetUniform("u_Color", 1.F, 1.F, 1.F, 1.F);
+}
+void ff8::Mim::OnEvent(const Event::Item &e) const {
+  m_batch_renderer.OnEvent(e);
 }

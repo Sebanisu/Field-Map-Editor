@@ -18,7 +18,7 @@ public:
   void OnUpdate(float) const;
   void OnRender() const;
   void OnImGuiUpdate() const;
-  void OnEvent(const Event::Item &) const {}
+  void OnEvent(const Event::Item &) const;
   Mim() = default;
   Mim(const Fields &fields);
   std::size_t    Index() const;
