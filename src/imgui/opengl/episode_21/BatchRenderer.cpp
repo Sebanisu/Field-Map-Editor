@@ -19,6 +19,7 @@ BatchRenderer::BatchRenderer(std::size_t quad_count)
   , m_shader(
       std::filesystem::current_path() / "res" / "shader" / "basic3.shader")
 {
+  m_camera.RefreshAspectRatio();
   m_vertex_array.Bind();
   m_vertex_array.push_back(m_vertex_buffer, Vertex::Layout());
   m_texture_slots.reserve(

@@ -68,7 +68,7 @@ private:
   VertexArray                          m_vertex_array          = {};
   mutable std::vector<std::uint32_t>   m_texture_slots         = {};
   mutable std::vector<std::int32_t>    m_uniform_texture_slots = {};
-  mutable OrthographicCameraController m_camera                = {};
+  inline static OrthographicCameraController m_camera                = {16/9};
   Texture m_blank = { (std::numeric_limits<std::uint32_t>::max)() };
 };
 static_assert(test::Test<BatchRenderer>);

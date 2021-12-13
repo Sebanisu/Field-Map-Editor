@@ -34,9 +34,6 @@ private:
   inline static const BPPs             m_bpp              = {};
   inline static const Palettes         m_palette          = {};
   BatchRenderer                        m_batch_renderer   = {};
-  inline static float                  m_zoom             = { 1.F };
-  inline static glm::vec3              m_view_offset      = {};
-  inline static glm::vec2              m_view_percent     = { 0.F, 0.5F };
   inline static bool                   m_draw_palette     = false;
 };
 static_assert(test::Test<Mim>);
