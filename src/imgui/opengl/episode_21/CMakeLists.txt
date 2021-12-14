@@ -36,9 +36,9 @@ add_executable(opengl_series_episode_21
         IndexBuffer.cpp
         IndexBufferDynamic.cpp
         Input.cpp
-        LayerItem.cpp
-        LayerStack.cpp
-        LayerTests.cpp
+        Layer/LayerItem.cpp
+        Layer/LayerStack.cpp
+        Layer/LayerTests.cpp
         Menu.cpp
         MenuItem.cpp
         OrthographicCameraController.cpp
