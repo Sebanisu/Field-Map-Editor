@@ -3,7 +3,7 @@
 //
 #include "TestBatchRenderingTexture2D.hpp"
 #include "scope_guard.hpp"
-#include "Test.hpp"
+#include "Renderable.hpp"
 #include "Vertex.hpp"
 
 

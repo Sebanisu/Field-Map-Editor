@@ -4,7 +4,7 @@
 
 #ifndef MYPROJECT_BPPS_HPP
 #define MYPROJECT_BPPS_HPP
-#include "Test.hpp"
+#include "Renderable.hpp"
 
 
 namespace ff8

@@ -7,7 +7,7 @@
 #include "scope_guard.hpp"
 
 
-#include "Test.hpp"
+#include "Renderable.hpp"
 namespace ff8
 {
 class Paths

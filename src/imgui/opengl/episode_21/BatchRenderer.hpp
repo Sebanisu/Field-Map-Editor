@@ -8,7 +8,7 @@
 #include "OrthographicCameraController.hpp"
 #include "Shader.hpp"
 #include "SubTexture.hpp"
-#include "Test.hpp"
+#include "Renderable.hpp"
 #include "Texture.hpp"
 #include "VertexArray.hpp"
 #include "VertexBufferDynamic.hpp"

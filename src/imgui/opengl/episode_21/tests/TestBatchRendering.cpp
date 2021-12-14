@@ -4,7 +4,7 @@
 //#include "IndexBuffer.hpp"
 #include "scope_guard.hpp"
 //#include "Shader.hpp"
-#include "Test.hpp"
+#include "Renderable.hpp"
 #include "Vertex.hpp"
 //#include "VertexArray.hpp"
 //#include "VertexBuffer.hpp"

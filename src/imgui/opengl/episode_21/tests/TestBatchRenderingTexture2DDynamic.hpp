@@ -6,7 +6,7 @@
 #define MYPROJECT_TestBatchRenderingTexture2DDynamic_HPP
 #include "IndexBufferDynamic.hpp"
 #include "Shader.hpp"
-#include "Test.hpp"
+#include "Renderable.hpp"
 #include "Texture.hpp"
 #include "VertexArray.hpp"
 #include "VertexBufferDynamic.hpp"

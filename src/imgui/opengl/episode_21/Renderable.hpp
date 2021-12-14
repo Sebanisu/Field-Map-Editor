@@ -2,8 +2,8 @@
 // Created by pcvii on 11/23/2021.
 //
 
-#ifndef MYPROJECT_TEST_HPP
-#define MYPROJECT_TEST_HPP
+#ifndef MYPROJECT_RENDERABLE_HPP
+#define MYPROJECT_RENDERABLE_HPP
 #include "concepts.hpp"
 namespace Event
 {
@@ -64,4 +64,4 @@ inline auto OnEvent(const T &t, const Event::Item &e)
 {
   return t.OnEvent(e);
 }
-#endif// MYPROJECT_TEST_HPP
+#endif// MYPROJECT_RENDERABLE_HPP

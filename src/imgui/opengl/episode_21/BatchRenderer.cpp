@@ -4,7 +4,7 @@
 
 #include "BatchRenderer.hpp"
 #include "scope_guard.hpp"
-#include "Test.hpp"
+#include "Renderable.hpp"
 
 
 static_assert(Renderable<BatchRenderer>);

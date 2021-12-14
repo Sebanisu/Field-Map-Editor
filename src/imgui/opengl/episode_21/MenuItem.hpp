@@ -5,7 +5,7 @@
 #ifndef MYPROJECT_MenuItem_HPP
 #define MYPROJECT_MenuItem_HPP
 #include "EventItem.hpp"
-#include "Test.hpp"
+#include "Renderable.hpp"
 
 
 class MenuItem

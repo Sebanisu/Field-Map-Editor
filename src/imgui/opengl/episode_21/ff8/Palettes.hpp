@@ -4,7 +4,7 @@
 
 #ifndef MYPROJECT_PALETTES_HPP
 #define MYPROJECT_PALETTES_HPP
-#include "Test.hpp"
+#include "Renderable.hpp"
 
 
 namespace ff8

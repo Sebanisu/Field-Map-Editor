@@ -7,7 +7,7 @@
 #include "Application.hpp"
 #include "EventItem.hpp"
 #include "OrthographicCamera.hpp"
-#include "Test.hpp"
+#include "Renderable.hpp"
 class OrthographicCameraController
 {
 public:

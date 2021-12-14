@@ -4,7 +4,7 @@
 
 #ifndef MYPROJECT_TESTCLEARCOLOR_HPP
 #define MYPROJECT_TESTCLEARCOLOR_HPP
-#include "Test.hpp"
+#include "Renderable.hpp"
 
 
 namespace test
