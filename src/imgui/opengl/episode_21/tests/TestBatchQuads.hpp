@@ -6,7 +6,7 @@
 #define MYPROJECT_TESTBATCHQUADS_HPP
 #include "IndexBufferDynamic.hpp"
 #include "Shader.hpp"
-#include "Renderable.hpp"
+
 #include "Texture.hpp"
 #include "VertexArray.hpp"
 #include "VertexBufferDynamic.hpp"

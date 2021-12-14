@@ -12,7 +12,7 @@ void ff8::FF8Menu::OnRender() const
 void ff8::FF8Menu::OnImGuiUpdate() const
 {
   bool fields_changed = m_fields.OnImGuiUpdate();
-  if(fields_changed)
+  if (fields_changed)
   {
     m_menu.reload();
   }

@@ -5,7 +5,7 @@
 #include "Renderer.hpp"
 #include "scope_guard.hpp"
 #include "Shader.hpp"
-#include "Renderable.hpp"
+
 #include "Texture.hpp"
 
 

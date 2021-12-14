@@ -7,7 +7,7 @@
 #include "Application.hpp"
 #include "EventItem.hpp"
 #include "OrthographicCamera.hpp"
-#include "Renderable.hpp"
+
 class OrthographicCameraController
 {
 public:
@@ -96,13 +96,13 @@ public:
 private:
   float get_frame_buffer_aspect_ratio() const
   {
-    if(Application::CurrentWindow())
+    if (Application::CurrentWindow())
     {
       const auto &window_data = Application::CurrentWindow()->ViewWindowData();
       return static_cast<float>(window_data.frame_buffer_width)
              / static_cast<float>(window_data.frame_buffer_height);
     }
-    return(16.F/9.F);
+    return (16.F / 9.F);
   }
   void set_projection() const
   {

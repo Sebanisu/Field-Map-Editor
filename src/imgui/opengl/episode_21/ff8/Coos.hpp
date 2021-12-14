@@ -5,7 +5,6 @@
 #ifndef MYPROJECT_COOS_HPP
 #define MYPROJECT_COOS_HPP
 #include "scope_guard.hpp"
-#include "Renderable.hpp"
 
 
 namespace ff8

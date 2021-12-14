@@ -4,7 +4,6 @@
 
 #ifndef MYPROJECT_BPPS_HPP
 #define MYPROJECT_BPPS_HPP
-#include "Renderable.hpp"
 
 
 namespace ff8

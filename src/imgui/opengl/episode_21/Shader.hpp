@@ -4,7 +4,7 @@
 
 #ifndef MYPROJECT_SHADER_HPP
 #define MYPROJECT_SHADER_HPP
-#include "concepts.hpp"
+
 #include "Renderer.hpp"
 
 

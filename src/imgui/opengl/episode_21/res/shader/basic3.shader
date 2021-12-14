@@ -45,7 +45,7 @@ void main()
 
   if (u_Grid.y > 0 && u_Grid.x > 0)
   {
-    vec2 grid_size = vec2(float(textureSize2d.x)/u_Grid.x,float(textureSize2d.y)/u_Grid.y);
+    vec2 grid_size = vec2(float(textureSize2d.x)/u_Grid.x, float(textureSize2d.y)/u_Grid.y);
     float y = fract(v_TexCoord.y * grid_size.y);
     float x = fract(v_TexCoord.x * grid_size.x);
     float y2 = fract((1.0 - v_TexCoord.y) * grid_size.y);

@@ -4,7 +4,7 @@
 
 #ifndef MYPROJECT_INDEXBUFFERDYNAMICSIZE_HPP
 #define MYPROJECT_INDEXBUFFERDYNAMICSIZE_HPP
-#include "concepts.hpp"
+
 
 /**
  * This is a bindable holder for the size of the used index buffer. To be passed

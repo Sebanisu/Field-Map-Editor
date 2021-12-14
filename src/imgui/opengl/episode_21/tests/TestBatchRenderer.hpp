@@ -6,7 +6,6 @@
 #define MYPROJECT_TESTBATCHRENDERER_HPP
 #include "BatchRenderer.hpp"
 #include "scope_guard.hpp"
-#include "Renderable.hpp"
 
 
 namespace test

@@ -4,7 +4,6 @@
 
 #ifndef MYPROJECT_VERTEXBUFFERLAYOUT_HPP
 #define MYPROJECT_VERTEXBUFFERLAYOUT_HPP
-#include "concepts.hpp"
 
 
 template<typename T>

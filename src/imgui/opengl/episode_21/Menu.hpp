@@ -6,7 +6,7 @@
 #define MYPROJECT_MENU_HPP
 #include "EventItem.hpp"
 #include "MenuItem.hpp"
-#include "Renderable.hpp"
+
 
 template<typename T>
 concept is_MenuElementType =
@@ -51,17 +51,20 @@ public:
       std::move(name), []() -> MenuItem { return std::in_place_type_t<T>{}; });
   }
   void push_back(std::string name, std::function<MenuItem()> funt) const;
-  void reload() const {
-    if(m_current)
+  void reload() const
+  {
+    if (m_current)
     {
       m_current = m_list[m_current_index].second();
     }
   }
-  bool selected() const {
+  bool selected() const
+  {
     return m_current;
   }
+
 private:
-  mutable MenuItem m_current = {};
+  mutable MenuItem    m_current       = {};
   mutable std::size_t m_current_index = {};
   mutable std::vector<std::pair<std::string, std::function<MenuItem()>>>
     m_list = {};

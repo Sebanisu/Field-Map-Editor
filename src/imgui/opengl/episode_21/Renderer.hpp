@@ -4,7 +4,7 @@
 
 #ifndef MYPROJECT_RENDERER_HPP
 #define MYPROJECT_RENDERER_HPP
-#include "concepts.hpp"
+
 #include "IndexType.hpp"
 
 

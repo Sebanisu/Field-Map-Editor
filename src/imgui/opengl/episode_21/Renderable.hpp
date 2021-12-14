@@ -4,7 +4,6 @@
 
 #ifndef MYPROJECT_RENDERABLE_HPP
 #define MYPROJECT_RENDERABLE_HPP
-#include "concepts.hpp"
 namespace Event
 {
 class Item;

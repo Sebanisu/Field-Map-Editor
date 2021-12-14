@@ -154,4 +154,6 @@ target_precompile_headers(opengl_series_episode_21
         <open_viii/graphics/color/Color32.hpp>
         <open_viii/paths/Paths.hpp>
         <open_viii/strings/LangCommon.hpp>
+        [["concepts.hpp"]]
+        [["Renderable.hpp"]]
         )

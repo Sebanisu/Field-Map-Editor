@@ -6,8 +6,8 @@
 TimeStep::operator float() const
 {
   time_point current = Clock::now();
-  auto frame = current - last;
-  //optional check for min frame time here.
-  last = current;
+  auto       frame   = current - last;
+  // optional check for min frame time here.
+  last               = current;
   return frame.count();
 }

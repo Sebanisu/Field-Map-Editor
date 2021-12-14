@@ -12,9 +12,9 @@ class Application
 public:
   Application() = default;
   Application(std::string Title, int width, int height);
-  void                       Run() const;
-  static const Window * CurrentWindow();
-  void                       SetCurrentWindow() const;
+  void                 Run() const;
+  static const Window *CurrentWindow();
+  void                 SetCurrentWindow() const;
 
 private:
   // window must be valid while other opengl objects exists.

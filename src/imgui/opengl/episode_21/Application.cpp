@@ -47,7 +47,7 @@ Application::Application(std::string Title, int width, int height)
 void Application::Run() const
 {
   SetCurrentWindow();
-  const Renderer renderer = {};
+  const Renderer renderer  = {};
   const TimeStep time_step = {};
   while (running)
   {

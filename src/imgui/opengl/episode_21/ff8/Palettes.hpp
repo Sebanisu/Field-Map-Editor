@@ -4,7 +4,6 @@
 
 #ifndef MYPROJECT_PALETTES_HPP
 #define MYPROJECT_PALETTES_HPP
-#include "Renderable.hpp"
 
 
 namespace ff8

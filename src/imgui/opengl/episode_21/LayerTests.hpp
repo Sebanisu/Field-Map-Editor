@@ -6,7 +6,7 @@
 #define MYPROJECT_LAYERTESTS_HPP
 
 #include "EventItem.hpp"
-#include "Renderable.hpp"
+
 #include "tests/TestMenu.hpp"
 namespace Layer
 {

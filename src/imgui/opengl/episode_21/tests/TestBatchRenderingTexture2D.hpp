@@ -6,7 +6,7 @@
 #define MYPROJECT_TestBatchRenderingTexture2D_HPP
 #include "IndexBuffer.hpp"
 #include "Shader.hpp"
-#include "Renderable.hpp"
+
 #include "Texture.hpp"
 #include "VertexArray.hpp"
 #include "VertexBuffer.hpp"
