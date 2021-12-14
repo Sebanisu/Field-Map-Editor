@@ -13,6 +13,10 @@ void ff8::Mim::OnUpdate(float ts) const
       static_cast<float>(texture.width()),
       0.F,
       static_cast<float>(texture.height()) });
+  if (m_snap_zoom_to_height)
+  {
+    m_batch_renderer.Camera().SetZoom();
+  }
   m_batch_renderer.OnUpdate(ts);
 }
 
@@ -38,6 +42,7 @@ void ff8::Mim::OnImGuiUpdate() const
     ImGui::BeginDisabled(texture.height() == 0 || texture.width() == 0);
     ImGui::Checkbox("Draw Palette", &m_draw_palette);
     ImGui::Checkbox("Draw Grid", &m_draw_grid);
+    ImGui::Checkbox("Snap Zoom to Height", &m_snap_zoom_to_height);
     if (m_bpp.OnImGuiUpdate() || m_palette.OnImGuiUpdate())
     {
     }
@@ -74,7 +79,7 @@ const Texture &ff8::Mim::CurrentTexture() const
 void ff8::Mim::SetUniforms() const
 {
   m_batch_renderer.Bind();
-  if(!m_draw_grid)
+  if (!m_draw_grid)
   {
     m_batch_renderer.Shader().SetUniform("u_Grid", 0.F, 0.F);
   }
