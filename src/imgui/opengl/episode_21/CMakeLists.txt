@@ -46,6 +46,7 @@ add_executable(opengl_series_episode_21
         Shader.cpp
         SubTexture.cpp
         Texture.cpp
+        TimeStep.cpp
         VertexArray.cpp
         VertexBuffer.cpp
         VertexBufferDynamic.cpp
@@ -63,16 +64,16 @@ add_executable(opengl_series_episode_21
         ff8/Paths.cpp
         main.cpp
         scope_guard.cpp
-        tests/TestBatchQuads.cpp
-        tests/TestBatchRenderer.cpp
-        tests/TestBatchRendering.cpp
-        tests/TestBatchRenderingTexture2D.cpp
-        tests/TestBatchRenderingTexture2DDynamic.cpp
-        tests/TestClearColor.cpp
-        tests/TestFF8Archive.cpp
-        tests/TestMenu.cpp
-        tests/TestTexture2D.cpp
-        TimeStep.cpp TimeStep.hpp)
+        test/TestBatchQuads.cpp
+        test/TestBatchRenderer.cpp
+        test/TestBatchRendering.cpp
+        test/TestBatchRenderingTexture2D.cpp
+        test/TestBatchRenderingTexture2DDynamic.cpp
+        test/TestClearColor.cpp
+        test/TestFF8Archive.cpp
+        test/TestMenu.cpp
+        test/TestTexture2D.cpp
+        )
 target_link_libraries(opengl_series_episode_21
         PRIVATE project_warnings
         PRIVATE fmt::fmt

@@ -7,7 +7,7 @@
 
 #include "EventItem.hpp"
 
-#include "tests/TestMenu.hpp"
+#include "test/TestMenu.hpp"
 namespace Layer
 {
 class Tests
