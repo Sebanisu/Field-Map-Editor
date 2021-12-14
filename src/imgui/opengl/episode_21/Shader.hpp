@@ -4,10 +4,7 @@
 
 #ifndef MYPROJECT_SHADER_HPP
 #define MYPROJECT_SHADER_HPP
-
 #include "Renderer.hpp"
-
-
 class Shader
 {
 private:
@@ -34,10 +31,15 @@ public:
 
   // Set Uniforms
   template<typename... T>
-  requires((sizeof...(T) >= 1U) && (sizeof...(T) <= 4U))
-    && ((std::floating_point<T> && ...) || (std::unsigned_integral<T> && ...) || (std::signed_integral<T> && ...)) void SetUniform(
-      std::string_view name,
-      T... v) const
+  // clang-format off
+  requires
+    ((sizeof...(T) >= 1U)
+      && (sizeof...(T) <= 4U))
+    && ((std::floating_point<T> && ...)
+      || (std::unsigned_integral<T> && ...)
+      || (std::signed_integral<T> && ...))
+    // clang-format on
+    void SetUniform(std::string_view name, T... v) const
   {
     const auto perform = [&]<typename NT>(auto &&fun) {
       GLCall{}(
