@@ -9,7 +9,7 @@
 #include "Texture.hpp"
 
 
-static_assert(test::Test<test::TestTexture2D>);
+static_assert(Renderable<test::TestTexture2D>);
 namespace test
 {
 static const Renderer renderer{};

@@ -29,6 +29,6 @@ private:
   open_viii::graphics::background::Map m_map              = {};
   DelayedTextures                      m_delayed_textures = {};
 };
-static_assert(test::Test<Map>);
+static_assert(Renderable<Map>);
 }// namespace ff8
 #endif// MYPROJECT_MAP_HPP

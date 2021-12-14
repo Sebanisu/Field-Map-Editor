@@ -7,7 +7,7 @@
 #include "scope_guard.hpp"
 
 
-#include "tests/Test.hpp"
+#include "Test.hpp"
 namespace ff8
 {
 class Paths
@@ -24,6 +24,6 @@ private:
   mutable std::vector<std::string> m_paths   = {};
   mutable int                      m_current = {};
 };
-static_assert(test::Test<Paths>);
+static_assert(Renderable<Paths>);
 }// namespace ff8
 #endif// MYPROJECT_PATHS_HPP

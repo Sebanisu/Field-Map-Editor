@@ -4,7 +4,7 @@
 
 #ifndef MYPROJECT_BPPS_HPP
 #define MYPROJECT_BPPS_HPP
-#include "tests/Test.hpp"
+#include "Test.hpp"
 
 
 namespace ff8
@@ -40,6 +40,6 @@ private:
   }();
   mutable int m_current{};
 };
-static_assert(test::Test<BPPs>);
+static_assert(Renderable<BPPs>);
 }// namespace ff8
 #endif// MYPROJECT_BPPS_HPP

@@ -8,7 +8,7 @@
 #include "OrthographicCameraController.hpp"
 #include "Shader.hpp"
 #include "SubTexture.hpp"
-#include "tests/Test.hpp"
+#include "Test.hpp"
 #include "Texture.hpp"
 #include "VertexArray.hpp"
 #include "VertexBufferDynamic.hpp"
@@ -71,6 +71,6 @@ private:
   inline static OrthographicCameraController m_camera                = {16/9};
   Texture m_blank = { (std::numeric_limits<std::uint32_t>::max)() };
 };
-static_assert(test::Test<BatchRenderer>);
+static_assert(Renderable<BatchRenderer>);
 static_assert(Bindable<BatchRenderer>);
 #endif// MYPROJECT_BATCHRENDERER_HPP

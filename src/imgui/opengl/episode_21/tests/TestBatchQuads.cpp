@@ -9,7 +9,7 @@
 #include "Vertex.hpp"
 
 
-static_assert(test::Test<test::TestBatchQuads>);
+static_assert(Renderable<test::TestBatchQuads>);
 namespace test
 {
 static const Renderer renderer{};

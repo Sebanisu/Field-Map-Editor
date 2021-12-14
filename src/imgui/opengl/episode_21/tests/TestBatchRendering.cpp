@@ -16,7 +16,7 @@
 #include "TestBatchRendering.hpp"
 
 
-static_assert(test::Test<test::TestBatchRendering>);
+static_assert(Renderable<test::TestBatchRendering>);
 void test::TestBatchRendering::OnImGuiUpdate() const
 {
   int        id           = 0;

@@ -6,7 +6,7 @@
 #define MYPROJECT_LAYERTESTS_HPP
 
 #include "EventItem.hpp"
-#include "tests/Test.hpp"
+#include "Test.hpp"
 #include "tests/TestMenu.hpp"
 namespace Layer
 {
@@ -22,7 +22,7 @@ private:
   test::TestMenu test_menu = {};
 };
 
-static_assert(test::Test<test::TestMenu>);
-static_assert(test::Test<Tests>);
+static_assert(Renderable<test::TestMenu>);
+static_assert(Renderable<Tests>);
 }// namespace Layer
 #endif// MYPROJECT_LAYERTESTS_HPP

@@ -5,7 +5,7 @@
 #ifndef MYPROJECT_COOS_HPP
 #define MYPROJECT_COOS_HPP
 #include "scope_guard.hpp"
-#include "tests/Test.hpp"
+#include "Test.hpp"
 
 
 namespace ff8
@@ -26,6 +26,6 @@ private:
   static constexpr auto m_coos = open_viii::LangCommon::to_string_array();
   mutable int           m_current{};
 };
-static_assert(test::Test<Coos>);
+static_assert(Renderable<Coos>);
 }// namespace ff8
 #endif// MYPROJECT_COOS_HPP

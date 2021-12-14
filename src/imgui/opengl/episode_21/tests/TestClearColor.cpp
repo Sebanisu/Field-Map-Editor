@@ -5,7 +5,7 @@
 #include "TestClearColor.hpp"
 #include "Renderer.hpp"
 
-static_assert(test::Test<test::TestClearColor>);
+static_assert(Renderable<test::TestClearColor>);
 
 namespace test
 {

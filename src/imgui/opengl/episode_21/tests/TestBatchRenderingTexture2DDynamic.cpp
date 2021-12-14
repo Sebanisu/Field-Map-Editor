@@ -7,7 +7,7 @@
 #include "Vertex.hpp"
 
 
-static_assert(test::Test<test::TestBatchRenderingTexture2DDynamic>);
+static_assert(Renderable<test::TestBatchRenderingTexture2DDynamic>);
 namespace test
 {
 static const Renderer renderer{};

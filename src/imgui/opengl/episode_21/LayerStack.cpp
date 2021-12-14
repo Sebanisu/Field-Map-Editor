@@ -4,7 +4,7 @@
 
 #include "LayerStack.hpp"
 
-static_assert(test::Test<Layer::Stack>);
+static_assert(Renderable<Layer::Stack>);
 void Layer::Stack::OnRender() const
 {
   for (const Item &layer : m_layers)

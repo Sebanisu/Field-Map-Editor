@@ -16,7 +16,7 @@ void OrthographicCameraController::OnUpdate(float ts) const
   {
     zoom(-1.F);
   }
-  if(Input::IsKeyPressed(KEY::Z))
+  if (Input::IsKeyPressed(KEY::Z))
   {
     SetZoom();
   }
@@ -140,13 +140,13 @@ void OrthographicCameraController::zoom(const float offset) const
   {
     m_zoom_precision *= 10.F;
     if (m_zoom_precision > 0.25F)
-      m_zoom_precision = nearbyint(m_zoom_precision);
+      m_zoom_precision = std::nearbyint(m_zoom_precision);
   }
   m_zoom_precision = (std::clamp)(m_zoom_precision, 0.0001F, 1.F);
 
   m_zoom_level -= offset * m_zoom_precision;
   if (m_zoom_precision - 1.F > std::numeric_limits<float>::epsilon())
-    m_zoom_level = nearbyint(m_zoom_level);
+    m_zoom_level = std::nearbyint(m_zoom_level);
   m_zoom_level = (std::max)(m_zoom_level, 0.0001F);
   set_projection();
 }

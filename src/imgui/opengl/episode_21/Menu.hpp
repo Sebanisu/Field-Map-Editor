@@ -6,11 +6,11 @@
 #define MYPROJECT_MENU_HPP
 #include "EventItem.hpp"
 #include "MenuItem.hpp"
-#include "tests/Test.hpp"
+#include "Test.hpp"
 
 template<typename T>
 concept is_MenuElementType =
-  test::Test<typename std::decay_t<T>::value_type> && requires(const T &t)
+  Renderable<typename std::decay_t<T>::value_type> && requires(const T &t)
 {
   typename std::decay_t<T>::value_type;
   {
@@ -29,7 +29,7 @@ public:
     ((void)push_back<typename std::decay_t<T>::value_type>(std::move(t.name)),
      ...);
   }
-  template<test::Test T>
+  template<Renderable T>
   struct MenuElementType
   {
     using value_type = T;
@@ -44,7 +44,7 @@ public:
   void  OnRender() const;
   void  OnImGuiUpdate() const;
   void  OnEvent(const Event::Item &) const;
-  template<test::Test T>
+  template<Renderable T>
   void push_back(std::string name) const
   {
     push_back(

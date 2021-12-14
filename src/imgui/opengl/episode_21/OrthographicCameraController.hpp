@@ -7,7 +7,7 @@
 #include "Application.hpp"
 #include "EventItem.hpp"
 #include "OrthographicCamera.hpp"
-#include "tests/Test.hpp"
+#include "Test.hpp"
 class OrthographicCameraController
 {
 public:
@@ -123,5 +123,5 @@ private:
   mutable std::optional<return_values> m_bounds            = {};
   void                                 zoom(const float offset) const;
 };
-static_assert(test::Test<OrthographicCameraController>);
+static_assert(Renderable<OrthographicCameraController>);
 #endif// MYPROJECT_ORTHOGRAPHICCAMERACONTROLLER_HPP

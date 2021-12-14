@@ -5,7 +5,7 @@
 #ifndef MYPROJECT_MenuItem_HPP
 #define MYPROJECT_MenuItem_HPP
 #include "EventItem.hpp"
-#include "tests/Test.hpp"
+#include "Test.hpp"
 
 
 class MenuItem
@@ -27,35 +27,35 @@ private:
     virtual void OnImGuiUpdate() const              = 0;
     virtual void OnEvent(const Event::Item &) const = 0;
   };
-  template<test::Test testT>
+  template<Renderable renderableT>
   class MenuItemModel final : public MenuItemConcept
   {
   public:
-    MenuItemModel(testT t)
-      : m_test(std::move(t))
+    MenuItemModel(renderableT t)
+      : m_renderable(std::move(t))
     {
     }
     void OnUpdate(float ts) const final
     {
-      return m_test.OnUpdate(ts);
+      return m_renderable.OnUpdate(ts);
     }
     void OnRender() const final
     {
-      return m_test.OnRender();
+      return m_renderable.OnRender();
     }
     void OnImGuiUpdate() const final
     {
-      return m_test.OnImGuiUpdate();
+      return m_renderable.OnImGuiUpdate();
     }
     void OnEvent(const Event::Item &e) const final
     {
-      return m_test.OnEvent(e);
+      return m_renderable.OnEvent(e);
     }
 
     MenuItemModel() = default;
 
   private:
-    testT m_test;
+    renderableT m_renderable;
   };
 
   mutable std::unique_ptr<const MenuItemConcept> m_impl{ nullptr };
@@ -74,7 +74,7 @@ public:
     : m_impl(std::make_unique<MenuItemModel<std::decay_t<T>>>(
       std::forward<argsT>(args)...))
   {
-    static_assert(test::Test<T>);
+    static_assert(Renderable<T>);
   }
   template<typename T>
   [[maybe_unused]] MenuItem(T t)

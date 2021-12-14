@@ -38,6 +38,6 @@ private:
   inline static bool                   m_draw_grid           = false;
   inline static bool                   m_snap_zoom_to_height = true;
 };
-static_assert(test::Test<Mim>);
+static_assert(Renderable<Mim>);
 }// namespace ff8
 #endif// MYPROJECT_MIM_HPP

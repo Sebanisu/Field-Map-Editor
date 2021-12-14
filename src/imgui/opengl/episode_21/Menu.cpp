@@ -3,7 +3,7 @@
 //
 
 #include "Menu.hpp"
-static_assert(test::Test<Menu>);
+static_assert(Renderable<Menu>);
 void Menu::OnRender() const
 {
   m_current.OnRender();

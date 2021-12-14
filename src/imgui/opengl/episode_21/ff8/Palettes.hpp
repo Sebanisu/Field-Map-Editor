@@ -4,7 +4,7 @@
 
 #ifndef MYPROJECT_PALETTES_HPP
 #define MYPROJECT_PALETTES_HPP
-#include "tests/Test.hpp"
+#include "Test.hpp"
 
 
 namespace ff8
@@ -34,6 +34,6 @@ private:
   }();
   mutable int m_current{};
 };
-static_assert(test::Test<Palettes>);
+static_assert(Renderable<Palettes>);
 }// namespace ff8
 #endif// MYPROJECT_PALETTES_HPP

@@ -4,10 +4,10 @@
 
 #include "BatchRenderer.hpp"
 #include "scope_guard.hpp"
-#include "tests/Test.hpp"
+#include "Test.hpp"
 
 
-static_assert(test::Test<BatchRenderer>);
+static_assert(Renderable<BatchRenderer>);
 static const Renderer renderer{};
 static std::uint32_t  draw_count = 0U;
 BatchRenderer::BatchRenderer()
