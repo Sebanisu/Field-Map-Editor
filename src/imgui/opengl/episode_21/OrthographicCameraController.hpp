@@ -96,9 +96,13 @@ public:
 private:
   float get_frame_buffer_aspect_ratio() const
   {
-    const auto &window_data = Application::CurrentWindow()->ViewWindowData();
-    return static_cast<float>(window_data.frame_buffer_width)
-           / static_cast<float>(window_data.frame_buffer_height);
+    if(Application::CurrentWindow())
+    {
+      const auto &window_data = Application::CurrentWindow()->ViewWindowData();
+      return static_cast<float>(window_data.frame_buffer_width)
+             / static_cast<float>(window_data.frame_buffer_height);
+    }
+    return(16.F/9.F);
   }
   void set_projection() const
   {

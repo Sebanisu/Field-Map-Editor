@@ -35,6 +35,7 @@ private:
   inline static const Palettes         m_palette          = {};
   BatchRenderer                        m_batch_renderer   = {};
   inline static bool                   m_draw_palette     = false;
+  inline static bool                   m_draw_grid        = false;
 };
 static_assert(test::Test<Mim>);
 }// namespace ff8

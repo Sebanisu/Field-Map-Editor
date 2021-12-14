@@ -37,6 +37,7 @@ void ff8::Mim::OnImGuiUpdate() const
     const auto disable = scope_guard(&ImGui::EndDisabled);
     ImGui::BeginDisabled(texture.height() == 0 || texture.width() == 0);
     ImGui::Checkbox("Draw Palette", &m_draw_palette);
+    ImGui::Checkbox("Draw Grid", &m_draw_grid);
     if (m_bpp.OnImGuiUpdate() || m_palette.OnImGuiUpdate())
     {
     }
@@ -73,6 +74,21 @@ const Texture &ff8::Mim::CurrentTexture() const
 void ff8::Mim::SetUniforms() const
 {
   m_batch_renderer.Bind();
+  if(!m_draw_grid)
+  {
+    m_batch_renderer.Shader().SetUniform("u_Grid", 0.F, 0.F);
+  }
+  else
+  {
+    if (!m_draw_palette)
+    {
+      m_batch_renderer.Shader().SetUniform("u_Grid", 16.F, 16.F);
+    }
+    else
+    {
+      m_batch_renderer.Shader().SetUniform("u_Grid", 1.F, 1.F);
+    }
+  }
   m_batch_renderer.Shader().SetUniform("u_Color", 1.F, 1.F, 1.F, 1.F);
 }
 void ff8::Mim::OnEvent(const Event::Item &e) const
