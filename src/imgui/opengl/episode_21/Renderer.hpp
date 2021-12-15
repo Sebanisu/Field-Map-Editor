@@ -86,7 +86,7 @@ public:
       m_clear_color.g,
       m_clear_color.b,
       m_clear_color.a);
-    GLCall{}(glClear, GL_COLOR_BUFFER_BIT);
+    GLCall{}(glClear, GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   }
   template<Bindable... Ts>
   static void Draw(const Ts &...ts)

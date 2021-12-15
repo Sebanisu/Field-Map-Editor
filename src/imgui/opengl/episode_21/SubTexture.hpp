@@ -10,6 +10,10 @@ class SubTexture
 {
 public:
   SubTexture() = default;
+  SubTexture(GLID_copy id)
+    : m_render_id(std::move(id))
+  {
+  }
   SubTexture(const Texture &texture)
     : m_render_id(texture.ID())
   {
@@ -36,7 +40,7 @@ public:
                ((coords.y + sprite_size.y) * cell_size.y * scale)
                  / static_cast<float>(texture.height()) } };
   }
-  std::uint32_t ID() const
+  GLID_copy ID() const
   {
     return m_render_id;
   }
@@ -59,7 +63,7 @@ private:
                                                  glm::vec2{ 1.F, 0.F },
                                                  glm::vec2{ 1.F, 1.F },
                                                  glm::vec2{ 0.F, 1.F } };
-  std::uint32_t         m_render_id       = {};
+  GLID_copy             m_render_id       = {};
   std::decay_t<decltype(Default_UV)> m_uv = { Default_UV };
 };
 static_assert(Bindable<SubTexture>);

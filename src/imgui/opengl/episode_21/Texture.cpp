@@ -34,7 +34,7 @@ std::int32_t Texture::height() const
 {
   return m_width_height.y();
 }
-std::uint32_t Texture::ID() const noexcept
+GLID_copy Texture::ID() const noexcept
 {
   return m_renderer_id;
 }

@@ -63,7 +63,7 @@ class weak_value
 {
 public:
   weak_value() = default;
-  weak_value(unique_value<T> t)
+  weak_value(const unique_value<T> &t)
     : m_value(t.m_value)
   {
   }

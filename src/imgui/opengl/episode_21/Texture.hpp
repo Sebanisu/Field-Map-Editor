@@ -132,11 +132,11 @@ public:
     }
   }
 
-  std::uint32_t ID() const noexcept;
-  void          Bind(int slot = 0) const;
-  static void   UnBind();
-  std::int32_t  width() const;
-  std::int32_t  height() const;
+  GLID_copy    ID() const noexcept;
+  void         Bind(int slot = 0) const;
+  static void  UnBind();
+  std::int32_t width() const;
+  std::int32_t height() const;
 };
 static_assert(Bindable<Texture>);
 #endif// MYPROJECT_TEXTURE_HPP

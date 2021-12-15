@@ -4,9 +4,13 @@
 
 #include "Application.hpp"
 #include "Event/EventDispatcher.hpp"
+#include "FrameBuffer.hpp"
+#include "IndexBufferDynamic.hpp"
 #include "Layer/LayerTests.hpp"
 #include "Renderer.hpp"
 #include "TimeStep.hpp"
+#include "Vertex.hpp"
+#include "VertexBuffer.hpp"
 
 static bool running  = true;
 static bool minimize = false;
@@ -54,10 +58,21 @@ void Application::Run() const
     window->BeginFrame();// First thing you do on update;
     if (!minimize)
     {
+      renderer.ClearColor(0.F, 0.F, 0.F, 0.F);
       renderer.Clear();
       layers.OnImGuiUpdate();
       layers.OnUpdate(time_step);
+      FrameBuffer fb(FrameBufferSpecification{
+        .width = current_window->Width(), .height = current_window->Height() });
+      fb.Bind();
+      renderer.Clear();
       layers.OnRender();
+//      GLCall{}(glDrawBuffer, GL_FRONT);
+      fb.UnBind();
+       layers.OnRender();
+            const auto ca = fb.GetColorAttachment();
+            renderer.Draw(ca,VertexBuffer(CreateQuad({},{1.F,1.F,1.F,1.F},ca.ID(),{},{},{current_window->Width(),
+            current_window->Height()})),IndexBufferDynamic(1));
       window->EndFrameRendered();// Last thing you do on render;
     }
     else
