@@ -3,7 +3,7 @@
 //
 
 #include "OrthographicCameraController.hpp"
-#include "EventDispatcher.hpp"
+#include "Event/EventDispatcher.hpp"
 #include "Input.hpp"
 
 void OrthographicCameraController::OnUpdate(float ts) const

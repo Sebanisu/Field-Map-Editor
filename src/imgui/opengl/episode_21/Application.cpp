@@ -3,7 +3,7 @@
 //
 
 #include "Application.hpp"
-#include "EventDispatcher.hpp"
+#include "Event/EventDispatcher.hpp"
 #include "Layer/LayerTests.hpp"
 #include "Renderer.hpp"
 #include "TimeStep.hpp"

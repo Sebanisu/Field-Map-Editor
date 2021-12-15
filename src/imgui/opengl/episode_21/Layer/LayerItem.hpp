@@ -4,7 +4,7 @@
 
 #ifndef MYPROJECT_LAYERITEM_HPP
 #define MYPROJECT_LAYERITEM_HPP
-#include "EventItem.hpp"
+#include "Event/EventItem.hpp"
 
 
 namespace Layer

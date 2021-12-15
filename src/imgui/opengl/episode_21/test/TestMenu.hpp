@@ -4,7 +4,7 @@
 
 #ifndef MYPROJECT_TESTMENU_HPP
 #define MYPROJECT_TESTMENU_HPP
-#include "EventItem.hpp"
+#include "Event/EventItem.hpp"
 #include "Menu.hpp"
 
 namespace test

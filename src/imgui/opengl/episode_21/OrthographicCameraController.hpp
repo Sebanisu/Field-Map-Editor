@@ -5,7 +5,7 @@
 #ifndef MYPROJECT_ORTHOGRAPHICCAMERACONTROLLER_HPP
 #define MYPROJECT_ORTHOGRAPHICCAMERACONTROLLER_HPP
 #include "Application.hpp"
-#include "EventItem.hpp"
+#include "Event/EventItem.hpp"
 #include "OrthographicCamera.hpp"
 
 class OrthographicCameraController

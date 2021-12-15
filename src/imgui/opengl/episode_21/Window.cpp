@@ -2,7 +2,7 @@
 // Created by pcvii on 12/6/2021.
 //
 #include "Window.hpp"
-#include "Event.hpp"
+#include "Event/Event.hpp"
 #include "Renderer.hpp"
 
 

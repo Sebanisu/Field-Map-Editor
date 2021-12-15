@@ -4,7 +4,7 @@
 
 #ifndef MYPROJECT_WINDOW_HPP
 #define MYPROJECT_WINDOW_HPP
-#include "EventItem.hpp"
+#include "Event/EventItem.hpp"
 #include "Input.hpp"
 
 

@@ -4,7 +4,7 @@
 
 #ifndef MYPROJECT_MENU_HPP
 #define MYPROJECT_MENU_HPP
-#include "EventItem.hpp"
+#include "Event/EventItem.hpp"
 #include "MenuItem.hpp"
 
 

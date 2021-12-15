@@ -5,7 +5,7 @@
 #ifndef MYPROJECT_LAYERTESTS_HPP
 #define MYPROJECT_LAYERTESTS_HPP
 
-#include "EventItem.hpp"
+#include "Event/EventItem.hpp"
 
 #include "test/TestMenu.hpp"
 namespace Layer
