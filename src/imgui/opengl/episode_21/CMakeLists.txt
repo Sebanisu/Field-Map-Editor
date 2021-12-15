@@ -158,3 +158,9 @@ target_precompile_headers(opengl_series_episode_21
         [["concepts.hpp"]]
         [["Renderable.hpp"]]
         )
+#target_include_directories(opengl_series_episode_21 PRIVATE
+#        $<$<CONFIG:Debug>:${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/opengl_series_episode_21.dir/Debug>
+#        $<$<CONFIG:RelWithDebInfo>:${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/opengl_series_episode_21.dir/RelWithDebInfo>
+#        $<$<CONFIG:Release>:${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/opengl_series_episode_21.dir/Release>
+#        #$<$<CONFIG:MinSizeRel>:${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/opengl_series_episode_21.dir/MinSizeRel>
+#        ${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/opengl_series_episode_21.dir)
