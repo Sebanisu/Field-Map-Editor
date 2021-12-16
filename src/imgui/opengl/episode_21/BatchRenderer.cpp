@@ -18,16 +18,14 @@ BatchRenderer::BatchRenderer(std::size_t quad_count)
   , m_shader(
       std::filesystem::current_path() / "res" / "shader" / "basic3.shader")
 {
-  m_camera.RefreshAspectRatio();
   m_vertex_array.Bind();
   m_vertex_array.push_back(m_vertex_buffer, Vertex::Layout());
   m_texture_slots.reserve(
     static_cast<std::uint32_t>(Max_Texture_Image_Units()));
 }
 
-void BatchRenderer::OnUpdate(float ts) const
+void BatchRenderer::OnUpdate(float) const
 {
-  m_camera.OnUpdate(ts);
   draw_count = 0U;
 }
 void BatchRenderer::Draw() const
@@ -44,9 +42,6 @@ void BatchRenderer::Draw(Quad quad) const
 }
 void BatchRenderer::OnImGuiUpdate() const
 {
-  if (m_camera.OnImGuiUpdate())
-  {
-  }
   ImGui::Text("%s", fmt::format("Total Draws: {}", draw_count).c_str());
 }
 void BatchRenderer::FlushVertices() const
@@ -152,7 +147,6 @@ const std::vector<std::uint32_t> &BatchRenderer::TextureSlots() const
 }
 void BatchRenderer::OnRender() const
 {
-  m_camera.OnRender();
   FlushVertices();
 }
 void BatchRenderer::BindTextures() const
@@ -167,20 +161,14 @@ void BatchRenderer::BindTextures() const
   }
   m_shader.SetUniform("u_Textures", m_uniform_texture_slots);
 }
-void BatchRenderer::OnEvent(const Event::Item &e) const
+void BatchRenderer::OnEvent(const Event::Item &) const
 {
-  m_camera.OnEvent(e);
 }
 void BatchRenderer::Bind() const
 {
   m_shader.Bind();
-  m_shader.SetUniform("u_MVP", m_camera.Camera().ViewProjectionMatrix());
 }
 void BatchRenderer::UnBind()
 {
   ::Shader::UnBind();
-}
-OrthographicCameraController &BatchRenderer::Camera() const
-{
-  return m_camera;
 }

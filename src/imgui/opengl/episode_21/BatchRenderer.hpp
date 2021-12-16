@@ -5,7 +5,6 @@
 #ifndef MYPROJECT_BATCHRENDERER_HPP
 #define MYPROJECT_BATCHRENDERER_HPP
 #include "IndexBufferDynamic.hpp"
-#include "OrthographicCameraController.hpp"
 #include "Shader.hpp"
 #include "SubTexture.hpp"
 
@@ -46,7 +45,6 @@ public:
   void                  Draw() const;
 
   const ::Shader       &Shader() const;
-  OrthographicCameraController     &Camera() const;
   const std::vector<std::uint32_t> &TextureSlots() const;
   void                              Bind() const;
   static void                       UnBind();
@@ -68,7 +66,6 @@ private:
   VertexArray                                m_vertex_array          = {};
   mutable std::vector<std::uint32_t>         m_texture_slots         = {};
   mutable std::vector<std::int32_t>          m_uniform_texture_slots = {};
-  inline static OrthographicCameraController m_camera = { 16 / 9 };
   Texture m_blank = { (std::numeric_limits<std::uint32_t>::max)() };
 };
 static_assert(Renderable<BatchRenderer>);

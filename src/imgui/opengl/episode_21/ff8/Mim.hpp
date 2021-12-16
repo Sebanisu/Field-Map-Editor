@@ -15,12 +15,12 @@ DelayedTextures LoadTextures(const open_viii::graphics::background::Mim &mim);
 class Mim
 {
 public:
+  Mim() = default;
+  Mim(const Fields &fields);
   void OnUpdate(float) const;
   void OnRender() const;
   void OnImGuiUpdate() const;
   void OnEvent(const Event::Item &) const;
-  Mim() = default;
-  Mim(const Fields &fields);
   std::size_t    Index() const;
   const Texture &CurrentTexture() const;
 
@@ -31,12 +31,7 @@ private:
   open_viii::graphics::background::Mim m_mim                 = {};
   // 3 bpp x 16 palettes 48 possible textures + 1 for palette texture
   DelayedTextures                      m_delayed_textures    = {};
-  inline static const BPPs             m_bpp                 = {};
-  inline static const Palettes         m_palette             = {};
   BatchRenderer                        m_batch_renderer      = {};
-  inline static bool                   m_draw_palette        = false;
-  inline static bool                   m_draw_grid           = false;
-  inline static bool                   m_snap_zoom_to_height = true;
 };
 static_assert(Renderable<Mim>);
 }// namespace ff8

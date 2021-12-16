@@ -3,25 +3,35 @@
 //
 
 #include "Mim.hpp"
-
+#include "OrthographicCameraController.hpp"
+namespace ff8
+{
+static const BPPs                   bpp                 = {};
+static const Palettes               palette             = {};
+static bool                         draw_palette        = false;
+static bool                         draw_grid           = false;
+static bool                         snap_zoom_to_height = true;
+static OrthographicCameraController camera              = { 16 / 9 };
+}// namespace ff8
 void ff8::Mim::OnUpdate(float ts) const
 {
   m_delayed_textures.check();
   const auto &texture = CurrentTexture();
-  m_batch_renderer.Camera().SetMaxBounds(
-    { 0.F,
-      static_cast<float>(texture.width()),
-      0.F,
-      static_cast<float>(texture.height()) });
-  if (m_snap_zoom_to_height)
+  camera.SetMaxBounds({ 0.F,
+                        static_cast<float>(texture.width()),
+                        0.F,
+                        static_cast<float>(texture.height()) });
+  if (snap_zoom_to_height)
   {
-    m_batch_renderer.Camera().SetZoom();
+    camera.SetZoom();
   }
+  camera.OnUpdate(ts);
   m_batch_renderer.OnUpdate(ts);
 }
 
 void ff8::Mim::OnRender() const
 {
+  camera.OnRender();
   SetUniforms();
   const auto &texture = CurrentTexture();
   if (texture.width() == 0 || texture.height() == 0)
@@ -40,10 +50,10 @@ void ff8::Mim::OnImGuiUpdate() const
   {
     const auto disable = scope_guard(&ImGui::EndDisabled);
     ImGui::BeginDisabled(texture.height() == 0 || texture.width() == 0);
-    ImGui::Checkbox("Draw Palette", &m_draw_palette);
-    ImGui::Checkbox("Draw Grid", &m_draw_grid);
-    ImGui::Checkbox("Snap Zoom to Height", &m_snap_zoom_to_height);
-    if (m_bpp.OnImGuiUpdate() || m_palette.OnImGuiUpdate())
+    ImGui::Checkbox("Draw Palette", &draw_palette);
+    ImGui::Checkbox("Draw Grid", &draw_grid);
+    ImGui::Checkbox("Snap Zoom to Height", &snap_zoom_to_height);
+    if (bpp.OnImGuiUpdate() || palette.OnImGuiUpdate())
     {
     }
   }
@@ -53,6 +63,10 @@ void ff8::Mim::OnImGuiUpdate() const
       "Texture Width: {:>5}, Height: {:>5}", texture.width(), texture.height())
       .c_str());
   ImGui::Separator();
+  if (camera.OnImGuiUpdate())
+  {
+  }
+  ImGui::Separator();
   m_batch_renderer.OnImGuiUpdate();
 }
 
@@ -60,16 +74,17 @@ ff8::Mim::Mim(const ff8::Fields &fields)
   : m_mim(LoadMim(fields.Field(), fields.Coo(), m_path, m_choose_coo))
   , m_delayed_textures(LoadTextures(m_mim))
 {
+  camera.RefreshAspectRatio();
 }
 
 std::size_t ff8::Mim::Index() const
 {
-  return static_cast<std::size_t>(m_bpp.Index()) * 16U + m_palette.Palette();
+  return static_cast<std::size_t>(bpp.Index()) * 16U + palette.Palette();
 }
 
 const Texture &ff8::Mim::CurrentTexture() const
 {
-  if (m_draw_palette)
+  if (draw_palette)
   {
     return m_delayed_textures.textures->back();
   }
@@ -79,13 +94,15 @@ const Texture &ff8::Mim::CurrentTexture() const
 void ff8::Mim::SetUniforms() const
 {
   m_batch_renderer.Bind();
-  if (!m_draw_grid)
+  m_batch_renderer.Shader().SetUniform(
+    "u_MVP", camera.Camera().ViewProjectionMatrix());
+  if (!draw_grid)
   {
     m_batch_renderer.Shader().SetUniform("u_Grid", 0.F, 0.F);
   }
   else
   {
-    if (!m_draw_palette)
+    if (!draw_palette)
     {
       m_batch_renderer.Shader().SetUniform("u_Grid", 16.F, 16.F);
     }
@@ -98,5 +115,6 @@ void ff8::Mim::SetUniforms() const
 }
 void ff8::Mim::OnEvent(const Event::Item &e) const
 {
+  camera.OnEvent(e);
   m_batch_renderer.OnEvent(e);
 }
