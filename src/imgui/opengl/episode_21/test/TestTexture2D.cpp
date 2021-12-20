@@ -25,10 +25,6 @@ test::TestTexture2D::TestTexture2D()
     2U, 3U, 0U  // 1
       // clang-format on
     } }
-  , m_vertex_buffer_layout{
-    VertexBufferLayout::VertexBufferElementType<float>{2U},
-    VertexBufferLayout::VertexBufferElementType<float>{2U},
-  }
   , m_texture{ std::filesystem::current_path() / "res" / "textures"
                / "logo.png" }
   , m_shader{ std::filesystem::current_path() / "res" / "shader"

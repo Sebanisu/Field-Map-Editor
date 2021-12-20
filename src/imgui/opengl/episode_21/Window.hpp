@@ -102,13 +102,9 @@ private:
       // Cleanup
       ImGui_ImplOpenGL3_Shutdown();
       ImGui_ImplGlfw_Shutdown();
-      // ImGui::DestroyContext();
-
       // disable polling:
       Input::m_window = nullptr;
-
       glfwDestroyWindow(window);
-      // glfwTerminate();
     };
   std::unique_ptr<GLFWwindow, decltype(destroy_window)> m_window{
     nullptr,

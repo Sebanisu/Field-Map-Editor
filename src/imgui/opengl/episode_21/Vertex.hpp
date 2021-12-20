@@ -14,13 +14,13 @@ struct Vertex
   glm::vec2                 uv{};
   float                     texture_slot{};
   float                     tiling_factor{ 1.F };
-  static VertexBufferLayout Layout()
+  static auto Layout()
   {
-    return { VertexBufferLayout::VertexBufferElementType<float>{ 2U },
-             VertexBufferLayout::VertexBufferElementType<float>{ 4U },
-             VertexBufferLayout::VertexBufferElementType<float>{ 2U },
-             VertexBufferLayout::VertexBufferElementType<float>{ 1U },
-             VertexBufferLayout::VertexBufferElementType<float>{ 1U } };
+    return VertexBufferLayout{ VertexBufferElementType<float>{ 2U },
+             VertexBufferElementType<float>{ 4U },
+             VertexBufferElementType<float>{ 2U },
+             VertexBufferElementType<float>{ 1U },
+             VertexBufferElementType<float>{ 1U } };
   }
 };
 static_assert(

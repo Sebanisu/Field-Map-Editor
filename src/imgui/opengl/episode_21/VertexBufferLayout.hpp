@@ -11,68 +11,144 @@ concept is_VertexBufferElementType = requires(T t)
 {
   typename std::decay_t<T>::value_type;
   {
-    t.count
+    t.Count()
     } -> decay_same_as<std::uint32_t>;
 };
+
+struct VertexBufferElement
+{
+  std::uint32_t                type       = {};
+  std::uint32_t                count      = {};
+  std::uint8_t                 normalized = {};
+
+  constexpr static std::size_t size_of_type(std::uint32_t type)
+  {
+    switch (type)
+    {
+      case GL_FLOAT:
+        return sizeof(GLfloat);
+      case GL_INT:
+        return sizeof(GLint);
+      case GL_UNSIGNED_INT:
+        return sizeof(GLuint);
+      case GL_BYTE:
+        return sizeof(GLbyte);
+    }
+    assert(false);
+    return 0;
+  }
+  constexpr std::size_t size() const
+  {
+    return count * size_of_type(type);
+  }
+  constexpr std::size_t operator+(const VertexBufferElement &other)
+  {
+    return size() + other.size();
+  }
+  constexpr operator std::size_t() const
+  {
+    return size();
+  }
+};
+
+template<typename T>
+struct VertexBufferElementType
+{
+  constexpr VertexBufferElementType(std::uint32_t in_count)
+    : count(in_count)
+  {
+  }
+  using value_type = T;
+  constexpr operator VertexBufferElement() const
+  {
+    if constexpr (std::is_same_v<value_type, std::uint8_t>)
+    {
+      return { type, count, std::uint8_t{ GL_TRUE } };
+    }
+    else
+    {
+      return { type, count, std::uint8_t{ GL_FALSE } };
+    }
+  };
+
+  constexpr std::uint32_t Count() const noexcept
+  {
+    return count;
+  }
+
+private:
+  std::uint32_t count = {};
+  std::uint32_t type  = []() {
+    if constexpr (std::is_same_v<value_type, GLfloat>)
+    {
+      return GL_FLOAT;
+    }
+    else if constexpr (std::is_same_v<value_type, GLint>)
+    {
+      return GL_INT;
+    }
+    else if constexpr (std::is_same_v<value_type, GLuint>)
+    {
+      return GL_UNSIGNED_INT;
+    }
+    else if constexpr (std::is_same_v<value_type, GLbyte>)
+    {
+      return GL_BYTE;
+    }
+  }();
+};
+
+template<std::size_t ElementCount>
 class VertexBufferLayout
 {
 public:
-  VertexBufferLayout() = default;
-  template<typename T>
-  struct VertexBufferElementType
-  {
-    using value_type = T;
-    std::uint32_t count;
-  };
   template<is_VertexBufferElementType... Ts>
-  VertexBufferLayout(Ts... ts)
+  constexpr VertexBufferLayout(Ts &&...ts)
+    : m_elements{static_cast<VertexBufferElement>(std::forward<Ts>(ts))...}
+    , m_stride(std::reduce(
+        std::begin(m_elements),
+        std::end(m_elements),
+        std::size_t{ 0U },
+        [](auto l, auto r) { return l + r; }))
   {
-    ((void)push_back<typename Ts::value_type>(ts.count), ...);
   }
-  struct VertexBufferElement
+  constexpr auto begin() const noexcept
   {
-    std::uint32_t      type       = {};
-    std::uint32_t      count      = {};
-    std::uint8_t       normalized = {};
-    static std::size_t size_of_type(std::uint32_t type);
-    std::size_t        size() const;
-  };
-  template<typename T>
-  void                                    push_back(std::uint32_t) = delete;
-  const std::vector<VertexBufferElement> &elements() const noexcept;
-  std::size_t                             stride() const noexcept;
+    using std::ranges::begin;
+    return begin(m_elements);
+  }
+  constexpr auto cbegin() const noexcept
+  {
+    using std::ranges::cbegin;
+    return cbegin(m_elements);
+  }
+  constexpr auto end() const noexcept
+  {
+    using std::ranges::end;
+    return end(m_elements);
+  }
+  constexpr auto cend() const noexcept
+  {
+    using std::ranges::cend;
+    return cend(m_elements);
+  }
+  constexpr auto size() const noexcept
+  {
+    using std::ranges::size;
+    return size(m_elements);
+  }
+  constexpr std::size_t stride() const noexcept
+  {
+    return m_stride;
+  }
 
 private:
-  std::size_t                      m_stride   = {};
-  std::vector<VertexBufferElement> m_elements = {};
+  std::array<VertexBufferElement, ElementCount> m_elements = {};
+  std::size_t                                   m_stride   = {};
 };
+template<is_VertexBufferElementType... Ts>
+VertexBufferLayout(Ts &&...) -> VertexBufferLayout<sizeof...(Ts)>;
 static_assert(
-  std::movable<
-    VertexBufferLayout> && std::copyable<VertexBufferLayout> && std::default_initializable<VertexBufferLayout>);
-template<>
-inline void VertexBufferLayout::push_back<float>(std::uint32_t count)
-{
-  m_stride +=
-    m_elements.emplace_back(GL_FLOAT, count, std::uint8_t{ GL_FALSE }).size();
-}
-template<>
-inline void VertexBufferLayout::push_back<std::int32_t>(std::uint32_t count)
-{
-  m_stride +=
-    m_elements.emplace_back(GL_INT, count, std::uint8_t{ GL_FALSE }).size();
-}
-template<>
-inline void VertexBufferLayout::push_back<std::uint32_t>(std::uint32_t count)
-{
-  m_stride +=
-    m_elements.emplace_back(GL_UNSIGNED_INT, count, std::uint8_t{ GL_FALSE })
-      .size();
-}
-template<>
-inline void VertexBufferLayout::push_back<std::uint8_t>(std::uint32_t count)
-{
-  m_stride +=
-    m_elements.emplace_back(GL_UNSIGNED_BYTE, count, std::uint8_t{ GL_TRUE })
-      .size();
-}
+  std::movable<VertexBufferLayout<1>> && std::copyable<VertexBufferLayout<1>>);
+
 #endif// MYPROJECT_VERTEXBUFFERLAYOUT_HPP

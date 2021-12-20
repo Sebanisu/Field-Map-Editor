@@ -10,6 +10,7 @@
 #include "Texture.hpp"
 #include "VertexArray.hpp"
 #include "VertexBuffer.hpp"
+#include "VertexBufferLayout.hpp"
 
 namespace test
 {
@@ -23,15 +24,18 @@ public:
   void OnEvent(const Event::Item &) const {}
 
 private:
-  mutable VertexArray        m_vertex_array         = {};
-  mutable VertexBuffer       m_vertex_buffer        = {};
-  mutable IndexBuffer        m_index_buffer         = {};
-  mutable VertexBufferLayout m_vertex_buffer_layout = {};
-  mutable Texture            m_texture              = {};
-  mutable Shader             m_shader               = {};
-  mutable glm::vec3          view_offset            = { 0.F, 0.F, 0.F };
-  mutable glm::vec3          model_offset           = { 200.F, 200.F, 0.F };
-  mutable glm::vec3          model2_offset          = { 400.F, 200.F, 0.F };
+  VertexBuffer          m_vertex_buffer        = {};
+  IndexBuffer           m_index_buffer         = {};
+  Texture               m_texture              = {};
+  Shader                m_shader               = {};
+  VertexArray           m_vertex_array         = {};
+  mutable glm::vec3     view_offset            = { 0.F, 0.F, 0.F };
+  mutable glm::vec3     model_offset           = { 200.F, 200.F, 0.F };
+  mutable glm::vec3     model2_offset          = { 400.F, 200.F, 0.F };
+  constexpr static auto m_vertex_buffer_layout = VertexBufferLayout(
+    VertexBufferElementType<float>{ 2U },
+    VertexBufferElementType<float>{ 2U }
+  );
 };
 }// namespace test
 #endif// MYPROJECT_TestTexture2D_HPP

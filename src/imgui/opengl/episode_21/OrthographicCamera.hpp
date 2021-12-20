@@ -10,6 +10,14 @@ class OrthographicCamera
 {
 public:
   OrthographicCamera() = default;
+  OrthographicCamera(glm::vec2 offset, glm::vec2 size)
+    : OrthographicCamera(
+      offset.x,
+      offset.x + size.x,
+      offset.y,
+      offset.y + size.y)
+  {
+  }
   OrthographicCamera(float left, float right, float bottom, float top)
     : m_projection_matrix(glm::ortho(left, right, bottom, top, near, far))
   {

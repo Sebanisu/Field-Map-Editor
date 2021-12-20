@@ -78,7 +78,6 @@ void Window::InitGLFW()
     {
       fmt::print(
         stderr, "Error! {}:{} GLFW Failed to Initialize\n", __FILE__, __LINE__);
-      glfwTerminate();
       std::exit(EXIT_FAILURE);
     }
     glfw_init = true;
@@ -102,7 +101,6 @@ void Window::InitGLFW()
       "Error! {}:{} GLFW Failed to create Window\n",
       __FILE__,
       __LINE__);
-    glfwTerminate();
     std::exit(EXIT_FAILURE);
   }
   glfwMakeContextCurrent(m_window.get());

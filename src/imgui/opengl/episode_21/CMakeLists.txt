@@ -34,6 +34,7 @@ add_executable(opengl_series_episode_21
         BatchRenderer.cpp
         DelayedTextures.cpp
         FrameBuffer.cpp
+        FrameBufferRenderer.cpp
         GLCheck.cpp
         IndexBuffer.cpp
         IndexBufferDynamic.cpp
@@ -52,7 +53,6 @@ add_executable(opengl_series_episode_21
         VertexArray.cpp
         VertexBuffer.cpp
         VertexBufferDynamic.cpp
-        VertexBufferLayout.cpp
         Window.cpp
         ff8/Archive.cpp
         ff8/BPPs.cpp
