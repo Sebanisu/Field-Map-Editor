@@ -25,14 +25,30 @@ struct VertexBufferElement
   {
     switch (type)
     {
-      case GL_FLOAT:
-        return sizeof(GLfloat);
-      case GL_INT:
-        return sizeof(GLint);
-      case GL_UNSIGNED_INT:
-        return sizeof(GLuint);
+        // glVertexAttribPointer and glVertexAttribIPointer
       case GL_BYTE:
+      case GL_UNSIGNED_BYTE: {
+        static_assert(sizeof(GLbyte) == sizeof(GLubyte));
         return sizeof(GLbyte);
+      }
+      case GL_SHORT:
+      case GL_UNSIGNED_SHORT: {
+        static_assert(sizeof(GLshort) == sizeof(GLushort));
+        return sizeof(GLshort);
+      }
+      case GL_INT:
+      case GL_UNSIGNED_INT: {
+        static_assert(sizeof(GLint) == sizeof(GLuint));
+        return sizeof(GLint);
+      }
+        // glVertexAttribPointer
+      case GL_FLOAT: {
+        return sizeof(GLfloat);
+      }
+        // glVertexAttribLPointer or glVertexAttribPointer
+      case GL_DOUBLE: {
+        return sizeof(GLdouble);
+      }
     }
     assert(false);
     return 0;
@@ -79,6 +95,10 @@ struct VertexBufferElementType
 private:
   std::uint32_t count = {};
   std::uint32_t type  = []() {
+    if constexpr (std::is_same_v<value_type, GLdouble>)
+    {
+      return GL_DOUBLE;
+    }
     if constexpr (std::is_same_v<value_type, GLfloat>)
     {
       return GL_FLOAT;
@@ -90,6 +110,18 @@ private:
     else if constexpr (std::is_same_v<value_type, GLuint>)
     {
       return GL_UNSIGNED_INT;
+    }    
+    else if constexpr (std::is_same_v<value_type, GLshort>)
+    {
+      return GL_SHORT;
+    }
+    else if constexpr (std::is_same_v<value_type, GLushort>)
+    {
+      return GL_UNSIGNED_SHORT;
+    }
+    else if constexpr (std::is_same_v<value_type, GLubyte>)
+    {
+      return GL_UNSIGNED_BYTE;
     }
     else if constexpr (std::is_same_v<value_type, GLbyte>)
     {
@@ -104,7 +136,7 @@ class VertexBufferLayout
 public:
   template<is_VertexBufferElementType... Ts>
   constexpr VertexBufferLayout(Ts &&...ts)
-    : m_elements{static_cast<VertexBufferElement>(std::forward<Ts>(ts))...}
+    : m_elements{ static_cast<VertexBufferElement>(std::forward<Ts>(ts))... }
     , m_stride(std::reduce(
         std::begin(m_elements),
         std::end(m_elements),
@@ -137,9 +169,9 @@ public:
     using std::ranges::size;
     return size(m_elements);
   }
-  constexpr std::size_t stride() const noexcept
+  constexpr std::int32_t stride() const noexcept
   {
-    return m_stride;
+    return static_cast<std::int32_t>(m_stride);
   }
 
 private:

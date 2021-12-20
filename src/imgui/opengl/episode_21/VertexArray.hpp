@@ -23,7 +23,7 @@ public:
   void push_back(
     const bindableT                        &vertex_buffer,
     const VertexBufferLayout<ElementCount> &layout)
-  { //todo tag vertex_buffers so we can exclude other types.
+  {// todo tag vertex_buffers so we can exclude other types.
     Bind();
     vertex_buffer.Bind();
     std::ranges::for_each(
@@ -32,14 +32,16 @@ public:
        offset = static_cast<const std::uint8_t *>(nullptr),
        &layout](const VertexBufferElement &element) mutable {
         GLCall{}(glEnableVertexAttribArray, i);
+
         GLCall{}(
           glVertexAttribPointer,
           i,
           element.count,
           element.type,
           element.normalized,
-          static_cast<int32_t>(layout.stride()),
+          layout.stride(),
           offset);
+
         offset += element.size();
         ++i;
       });
