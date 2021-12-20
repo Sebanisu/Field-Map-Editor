@@ -48,4 +48,50 @@ concept has_Type_for_IndexType = requires(const T &t)
 {
   t.Type() + IndexType::none;
 };
+template<typename T>
+// clang-format off
+  requires(!has_Type_for_IndexType<T>)
+  // clang-format on
+  inline IndexType Type(const T &) noexcept
+{
+  return IndexType::none;
+}
+template<has_Type_for_IndexType T>
+inline IndexType Type(const T &typed) noexcept
+{
+  return typed.Type();
+}
+template<typename T>
+// clang-format off
+  requires(!has_Type_for_IndexType<T>)
+  // clang-format on
+  consteval inline std::size_t CountType() noexcept
+{
+  return {};
+}
+template<has_Type_for_IndexType T>
+consteval inline std::size_t CountType() noexcept
+{
+  return 1U;
+}
+template<typename... T>
+inline consteval bool check_has_Type_for_IndexType()
+{
+  if constexpr (sizeof...(T) != 0U)
+  {
+    return (CountType<T>() + ...) == std::size_t{ 1U };
+  }
+  else
+  {
+    return false;
+  }
+}
+template<typename... T>
+// clang-format off
+  requires(sizeof...(T) > 1U && check_has_Type_for_IndexType<T...>())
+  // clang-format on
+  inline IndexType Type(const T &...typed)
+{
+  return (::Type<T>(typed) + ...);
+}
 #endif// MYPROJECT_INDEXTYPE_HPP
