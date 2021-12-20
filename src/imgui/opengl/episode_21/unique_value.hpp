@@ -12,8 +12,8 @@ class unique_value
 public:
   unique_value() = default;
   unique_value(T t, void (*f)(T))
-    : m_value(t)
-    , m_function(f)
+    : m_value(std::move(t))
+    , m_function(std::move(f))
   {
   }
   unique_value(const unique_value &) = delete;
@@ -56,6 +56,8 @@ private:
 static_assert(
   std::movable<unique_value<
     std::uint32_t>> && !std::copyable<unique_value<std::uint32_t>>);
+using GLID = unique_value<std::uint32_t>;
+
 template<typename T, std::invocable<T> F>
 unique_value(T t, F f) -> unique_value<T>;
 template<typename T>
@@ -78,6 +80,5 @@ private:
 static_assert(
   std::movable<
     weak_value<std::uint32_t>> && std::copyable<weak_value<std::uint32_t>>);
-using GLID      = unique_value<std::uint32_t>;
 using GLID_copy = weak_value<std::uint32_t>;
 #endif// MYPROJECT_UNIQUE_VALUE_HPP

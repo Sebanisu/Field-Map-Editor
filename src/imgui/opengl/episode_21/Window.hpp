@@ -97,7 +97,7 @@ public:
 private:
   Window(WindowData);
   WindowData m_data = {};
-  inline static void (*const destroy_window)(GLFWwindow *) =
+  constexpr inline static void (*const destroy_window)(GLFWwindow *) =
     [](GLFWwindow *window) {
       // Cleanup
       ImGui_ImplOpenGL3_Shutdown();

@@ -61,7 +61,11 @@ Window::Window(Window::WindowData in_data)
 
   const char *glsl_version = "#version 130";
   InitGLFW();
-  fmt::print("{}\n", GLCall{}(glGetString, GL_VERSION));
+  const unsigned char *gl_version = GLCall{}(glGetString, GL_VERSION);
+  if (gl_version != nullptr)
+  {
+    fmt::print("{}\n", gl_version);
+  }
   InitImGui(glsl_version);
   InitCallbacks();
 }
@@ -75,6 +79,7 @@ void Window::InitGLFW()
       fmt::print(
         stderr, "Error! {}:{} GLFW Failed to Initialize\n", __FILE__, __LINE__);
       glfwTerminate();
+      std::exit(EXIT_FAILURE);
     }
     glfw_init = true;
   }
@@ -98,6 +103,7 @@ void Window::InitGLFW()
       __FILE__,
       __LINE__);
     glfwTerminate();
+    std::exit(EXIT_FAILURE);
   }
   glfwMakeContextCurrent(m_window.get());
   glfwSetWindowUserPointer(m_window.get(), &m_data);
@@ -109,6 +115,7 @@ void Window::InitGLFW()
   if (glewInit() != GLEW_OK)
   {
     fmt::print(stderr, "Error! {}:{} GLEW NOT OKAY\n", __FILE__, __LINE__);
+    std::exit(EXIT_FAILURE);
   }
   GLCall{}(glEnable, GL_BLEND);
   GLCall{}(glBlendFunc, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);

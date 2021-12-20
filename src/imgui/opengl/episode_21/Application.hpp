@@ -19,7 +19,6 @@ public:
 private:
   // window must be valid while other opengl objects exists.
   std::unique_ptr<Window> window         = nullptr;
-  inline static Window   *current_window = nullptr;
   Layer::Stack            layers         = {};
 };
 #endif// MYPROJECT_APPLICATION_HPP

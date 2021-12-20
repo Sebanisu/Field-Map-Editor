@@ -10,10 +10,6 @@
 
 
 static_assert(Renderable<test::TestBatchQuads>);
-namespace test
-{
-static const Renderer renderer{};
-}// namespace test
 test::TestBatchQuads::TestBatchQuads()
   : m_shader(
     std::filesystem::current_path() / "res" / "shader" / "basic3.shader")
@@ -91,7 +87,7 @@ void test::TestBatchQuads::OnRender() const
     m_shader.SetUniform("u_Color", 1.F, 1.F, 1.F, 1.F);
     m_blank.Bind(0);
     m_shader.SetUniform("u_Textures", std::array{ 0 });
-    renderer.Draw(index_buffer_size, m_vertex_array, m_index_buffer);
+    Renderer::Draw(index_buffer_size, m_vertex_array, m_index_buffer);
     ++draw_count;
   }
 }

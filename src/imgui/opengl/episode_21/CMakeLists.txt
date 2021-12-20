@@ -34,6 +34,7 @@ add_executable(opengl_series_episode_21
         BatchRenderer.cpp
         DelayedTextures.cpp
         FrameBuffer.cpp
+        GLCheck.cpp
         IndexBuffer.cpp
         IndexBufferDynamic.cpp
         Input.cpp

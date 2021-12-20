@@ -3,18 +3,17 @@
 //
 
 #include "Application.hpp"
+//#include "BatchRenderer.hpp"
 #include "Event/EventDispatcher.hpp"
 #include "FrameBuffer.hpp"
-#include "IndexBufferDynamic.hpp"
 #include "Layer/LayerTests.hpp"
 #include "Renderer.hpp"
 #include "TimeStep.hpp"
-#include "Vertex.hpp"
-#include "VertexBuffer.hpp"
 
-static bool running  = true;
-static bool minimize = false;
-static bool OnWindowClose(const Event::WindowClose &)
+static Window *current_window = nullptr;
+static bool    running        = true;
+static bool    minimize       = false;
+static bool    OnWindowClose(const Event::WindowClose &)
 {
   running = false;
   return true;
@@ -51,28 +50,32 @@ Application::Application(std::string Title, int width, int height)
 void Application::Run() const
 {
   SetCurrentWindow();
-  const Renderer renderer  = {};
   const TimeStep time_step = {};
+  //  const BatchRenderer batch_renderer = { 1 };
   while (running)
   {
     window->BeginFrame();// First thing you do on update;
     if (!minimize)
     {
-      renderer.ClearColor(0.F, 0.F, 0.F, 0.F);
-      renderer.Clear();
+      Renderer::Clear.Color(0.F, 0.F, 0.F, 0.F);
+      Renderer::Clear();
       layers.OnImGuiUpdate();
       layers.OnUpdate(time_step);
-      FrameBuffer fb(FrameBufferSpecification{
-        .width = current_window->Width(), .height = current_window->Height() });
-      fb.Bind();
-      renderer.Clear();
+      //      FrameBuffer fb(FrameBufferSpecification{
+      //        .width = current_window->Width(), .height =
+      //        current_window->Height() });
+      //      fb.Bind();
+      //      renderer.Clear();
       layers.OnRender();
-//      GLCall{}(glDrawBuffer, GL_FRONT);
-      fb.UnBind();
-       layers.OnRender();
-            const auto ca = fb.GetColorAttachment();
-            renderer.Draw(ca,VertexBuffer(CreateQuad({},{1.F,1.F,1.F,1.F},ca.ID(),{},{},{current_window->Width(),
-            current_window->Height()})),IndexBufferDynamic(1));
+      //      fb.UnBind();
+      //      batch_renderer.Clear();
+      //      batch_renderer.DrawQuad({0.F,0.F},fb.GetColorAttachment());
+      //      batch_renderer.Draw();
+
+      //       layers.OnRender();
+      //            const auto ca = fb.GetColorAttachment();
+      //            renderer.Draw(ca,VertexBuffer(CreateQuad({},{1.F,1.F,1.F,1.F},ca.ID(),{},{},{current_window->Width(),
+      //            current_window->Height()})),IndexBufferDynamic(1));
       window->EndFrameRendered();// Last thing you do on render;
     }
     else

@@ -47,7 +47,6 @@ void test::TestBatchRendering::OnRender() const
     -1.F,
     1.F);
   const auto view = glm::translate(glm::mat4{ 1.F }, view_offset);
-  Renderer   renderer{};
   m_shader.Bind();
   {
     const auto model = glm::translate(glm::mat4{ 1.F }, model_offset);
@@ -55,7 +54,7 @@ void test::TestBatchRendering::OnRender() const
     m_shader.SetUniform("u_MVP", mvp);
     m_shader.SetUniform("u_Color", 1.F, 1.F, 1.F, 1.F);
     // m_shader.SetUniform("u_Texture", 0);
-    renderer.Draw(m_vertex_array, m_index_buffer);
+    Renderer::Draw(m_vertex_array, m_index_buffer);
   }
 }
 test::TestBatchRendering::TestBatchRendering()

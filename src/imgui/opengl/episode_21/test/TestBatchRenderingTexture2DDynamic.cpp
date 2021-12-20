@@ -8,10 +8,6 @@
 
 
 static_assert(Renderable<test::TestBatchRenderingTexture2DDynamic>);
-namespace test
-{
-static const Renderer renderer{};
-}
 test::TestBatchRenderingTexture2DDynamic::TestBatchRenderingTexture2DDynamic()
   : m_shader(
     std::filesystem::current_path() / "res" / "shader" / "basic3.shader")
@@ -68,7 +64,7 @@ void test::TestBatchRenderingTexture2DDynamic::OnRender() const
       ++i;
     }
     m_shader.SetUniform("u_Textures", slots);
-    renderer.Draw(index_buffer_size, m_vertex_array, m_index_buffer);
+    Renderer::Draw(index_buffer_size, m_vertex_array, m_index_buffer);
   }
 }
 void test::TestBatchRenderingTexture2DDynamic::OnImGuiUpdate() const

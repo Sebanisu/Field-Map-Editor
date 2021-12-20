@@ -7,7 +7,6 @@
 
 
 static_assert(Renderable<BatchRenderer>);
-static const Renderer renderer{};
 static std::uint32_t  draw_count = 0U;
 BatchRenderer::BatchRenderer()
   : BatchRenderer(100U)
@@ -57,7 +56,7 @@ void BatchRenderer::DrawVertices() const
   {
     return;
   }
-  renderer.Draw(index_buffer_size, m_vertex_array, m_index_buffer, m_shader);
+  Renderer::Draw(index_buffer_size, m_vertex_array, m_index_buffer, m_shader);
   ++draw_count;
 }
 void BatchRenderer::Clear() const

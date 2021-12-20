@@ -8,10 +8,6 @@
 
 
 static_assert(Renderable<test::TestBatchRenderingTexture2D>);
-namespace test
-{
-static const Renderer renderer{};
-}
 test::TestBatchRenderingTexture2D::TestBatchRenderingTexture2D()
   : m_shader(
     std::filesystem::current_path() / "res" / "shader" / "basic3.shader")
@@ -71,7 +67,7 @@ void test::TestBatchRenderingTexture2D::OnRender() const
       ++i;
     }
     m_shader.SetUniform("u_Textures", slots);
-    renderer.Draw(m_vertex_array, m_index_buffer);
+    Renderer::Draw(m_vertex_array, m_index_buffer);
   }
 }
 void test::TestBatchRenderingTexture2D::OnImGuiUpdate() const

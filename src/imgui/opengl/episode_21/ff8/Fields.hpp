@@ -6,8 +6,6 @@
 #define MYPROJECT_FIELDS_HPP
 #include "Archive.hpp"
 #include "fmt/format.h"
-
-
 namespace ff8
 {
 [[nodiscard]] open_viii::graphics::background::Mim LoadMim(
@@ -24,69 +22,23 @@ namespace ff8
 class Fields
 {
 public:
+  Fields();
   void OnUpdate(float) const {}
   void OnRender() const {}
   bool OnImGuiUpdate() const;
   void OnEvent(const Event::Item &) const {}
-  [[nodiscard]] const open_viii::archive::FIFLFS<false> &Field() const
-  {
-    return m_field;
-  }
-  [[nodiscard]] const std::string &Map_Name() const
-  {
-    if (std::cmp_less(m_current, std::ranges::size(m_map_data)))
-    {
-      return m_map_data.at(static_cast<std::size_t>(m_current));
-    }
-    const static auto tmp = std::string("");
-    return tmp;
-  }
-  [[nodiscard]] std::string_view Coo() const
-  {
-    return m_archive.Coo();
-  }
-
-  Fields()
-    : m_map_data(m_archive.Fields().map_data())
-    , m_field(load_field())
-  {
-    fmt::print("time to load fields = {:%S} seconds\n", endtime - starttime);
-  }
+  [[nodiscard]] const open_viii::archive::FIFLFS<false> &Field() const;
+  [[nodiscard]] const std::string &Map_Name() const;
+  [[nodiscard]] std::string_view Coo() const;
 
 private:
-  open_viii::archive::FIFLFS<false> load_field() const
-  {
-    open_viii::archive::FIFLFS<false> archive{};
-    if (!m_map_data.empty() && std::cmp_less(m_current, m_map_data.size()))
-    {
-      m_archive.Fields().execute_with_nested(
-        { Map_Name() },
-        [&archive](auto &&field) {
-          archive = std::forward<decltype(field)>(field);
-        },
-        {},
-        [](auto &&) { return true; },
-        true);
-    }
-    else
-    {
-      fmt::print(
-        stderr,
-        "{}:{} - Index out of range {} / {}\n",
-        __FILE__,
-        __LINE__,
-        m_current,
-        m_map_data.size());
-    }
-    return archive;
-  }
+  open_viii::archive::FIFLFS<false> load_field() const;
 
   mutable std::chrono::steady_clock::time_point starttime =
     std::chrono::steady_clock::now();
   Archive                                       m_archive  = {};
   mutable std::vector<std::string>              m_map_data = {};
   mutable open_viii::archive::FIFLFS<false>     m_field    = {};
-  inline static int                             m_current  = {};
   mutable std::chrono::steady_clock::time_point endtime =
     std::chrono::steady_clock::now();
 };

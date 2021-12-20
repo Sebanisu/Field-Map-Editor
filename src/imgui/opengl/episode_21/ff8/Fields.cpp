@@ -3,6 +3,10 @@
 //
 
 #include "Fields.hpp"
+namespace ff8
+{
+static int current_index = {};
+}
 [[nodiscard]] open_viii::graphics::background::Mim ff8::LoadMim(
   open_viii::archive::FIFLFS<false> field,
   std::string_view                  coo,
@@ -83,14 +87,14 @@ bool ff8::Fields::OnImGuiUpdate() const
       const auto end = scope_guard{ &ImGui::EndCombo };
       for (int i{}; const std::string &map : m_map_data)
       {
-        const bool is_selected = i == m_current;
+        const bool is_selected = i == current_index;
         const auto pop         = scope_guard{ &ImGui::PopID };
         ImGui::PushID(++id);
         if (ImGui::Selectable(map.c_str(), is_selected))
         {
-          m_current = i;
-          changed   = true;
-          m_field   = load_field();
+          current_index = i;
+          changed       = true;
+          m_field       = load_field();
         }
         if (is_selected)
         {
@@ -105,10 +109,10 @@ bool ff8::Fields::OnImGuiUpdate() const
     ImGui::PushID(++id);
     ImGui::SameLine(0, spacing);
     const auto disabled = scope_guard{ &ImGui::EndDisabled };
-    ImGui::BeginDisabled(std::cmp_less_equal(m_current, 0));
+    ImGui::BeginDisabled(std::cmp_less_equal(current_index, 0));
     if (ImGui::ArrowButton("##l", ImGuiDir_Left))
     {
-      --m_current;
+      --current_index;
       changed = true;
       m_field = load_field();
     }
@@ -119,10 +123,10 @@ bool ff8::Fields::OnImGuiUpdate() const
     ImGui::SameLine(0, spacing);
     const auto disabled = scope_guard{ &ImGui::EndDisabled };
     ImGui::BeginDisabled(
-      std::cmp_greater_equal(m_current + 1, std::ranges::size(m_map_data)));
+      std::cmp_greater_equal(current_index + 1, std::ranges::size(m_map_data)));
     if (ImGui::ArrowButton("##r", ImGuiDir_Right))
     {
-      ++m_current;
+      ++current_index;
       changed = true;
       m_field = load_field();
     }
@@ -130,4 +134,53 @@ bool ff8::Fields::OnImGuiUpdate() const
   ImGui::SameLine(0, spacing);
   ImGui::Text("%s", "Field");
   return changed;
+}
+open_viii::archive::FIFLFS<false> ff8::Fields::load_field() const
+{
+  open_viii::archive::FIFLFS<false> archive{};
+  if (!m_map_data.empty() && std::cmp_less(current_index, m_map_data.size()))
+  {
+    m_archive.Fields().execute_with_nested(
+      { Map_Name() },
+      [&archive](auto &&field) {
+        archive = std::forward<decltype(field)>(field);
+      },
+      {},
+      [](auto &&) { return true; },
+      true);
+  }
+  else
+  {
+    fmt::print(
+      stderr,
+      "{}:{} - Index out of range {} / {}\n",
+      __FILE__,
+      __LINE__,
+      current_index,
+      m_map_data.size());
+  }
+  return archive;
+}
+std::string_view ff8::Fields::Coo() const
+{
+  return m_archive.Coo();
+}
+const std::string &ff8::Fields::Map_Name() const
+{
+  if (std::cmp_less(current_index, std::ranges::size(m_map_data)))
+  {
+    return m_map_data[static_cast<std::size_t>(current_index)];
+  }
+  const static auto tmp = std::string("");
+  return tmp;
+}
+ff8::Fields::Fields()
+  : m_map_data(m_archive.Fields().map_data())
+  , m_field(load_field())
+{
+  fmt::print("time to load fields = {:%S} seconds\n", endtime - starttime);
+}
+const open_viii::archive::FIFLFS<false> &ff8::Fields::Field() const
+{
+  return m_field;
 }
