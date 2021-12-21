@@ -9,18 +9,18 @@
 
 struct Vertex
 {
-  glm::vec2                 location{};
-  glm::vec4                 color{ 1.F, 1.F, 1.F, 1.F };
-  glm::vec2                 uv{};
-  float                     texture_slot{};
-  float                     tiling_factor{ 1.F };
+  glm::vec2   location{};
+  glm::vec4   color{ 1.F, 1.F, 1.F, 1.F };
+  glm::vec2   uv{};
+  float       texture_slot{};
+  float       tiling_factor{ 1.F };
   static auto Layout()
   {
     return VertexBufferLayout{ VertexBufferElementType<float>{ 2U },
-             VertexBufferElementType<float>{ 4U },
-             VertexBufferElementType<float>{ 2U },
-             VertexBufferElementType<float>{ 1U },
-             VertexBufferElementType<float>{ 1U } };
+                               VertexBufferElementType<float>{ 4U },
+                               VertexBufferElementType<float>{ 2U },
+                               VertexBufferElementType<float>{ 1U },
+                               VertexBufferElementType<float>{ 1U } };
   }
 };
 static_assert(
@@ -62,16 +62,42 @@ constexpr inline Quad CreateQuad(
             .tiling_factor = tiling_factor },// 3
   };
 }
+static constexpr auto QuadIndicesInit = std::array<std::uint32_t, 6U>{ 0, 1, 2, 2, 3, 0 };
+template<std::size_t count>
+constexpr inline std::array<std::uint32_t, count * std::size(QuadIndicesInit)>
+  QuadIndices()
+{
+  using std::ranges::size;
+  std::array<std::uint32_t, count * size(QuadIndicesInit)> indices{};
+  constexpr auto quad_size = size(Quad{});
+  for (std::size_t i{}; i != count; ++i)
+  {
+    using std::ranges::range_difference_t;
+    using std::ranges::advance;
+    using std::ranges::transform;
+    using std::ranges::begin;
+    auto f = begin(indices);
+    advance(
+      f,
+      static_cast<range_difference_t<decltype(indices)>>(
+        i * size(QuadIndicesInit)));
+    transform(QuadIndicesInit, f, [&](std::uint32_t index) {
+      return static_cast<std::uint32_t>(index + i * quad_size);
+    });
+  }
+  return indices;
+}
 inline std::vector<std::uint32_t> QuadIndices(std::size_t count)
 {
-  static constexpr auto      init = std::array{ 0, 1, 2, 2, 3, 0 };
   std::vector<std::uint32_t> indices{};
-  indices.reserve(std::size(init) * count);
+  indices.reserve(std::size(QuadIndicesInit) * count);
   constexpr auto quad_size = std::size(Quad{});
   for (std::size_t i{}; i != count; ++i)
   {
     std::ranges::transform(
-      init, std::back_inserter(indices), [&i, &quad_size](std::uint32_t index) {
+      QuadIndicesInit,
+      std::back_inserter(indices),
+      [&i, &quad_size](std::uint32_t index) {
         return static_cast<std::uint32_t>(index + i * quad_size);
       });
   }
