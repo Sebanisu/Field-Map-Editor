@@ -5,14 +5,14 @@
 #ifndef MYPROJECT_FRAMEBUFFER_HPP
 #define MYPROJECT_FRAMEBUFFER_HPP
 #include "Renderer.hpp"
-#include "unique_value.hpp"
 #include "SubTexture.hpp"
+#include "unique_value.hpp"
 struct FrameBufferSpecification
 {
-  int      width             = {};
-  int      height            = {};
-  //uint32_t samples           = { 1 };
-  //bool     swap_chain_target = { false };
+  int width  = {};
+  int height = {};
+  // uint32_t samples           = { 1 };
+  // bool     swap_chain_target = { false };
 };
 class FrameBuffer
 {
@@ -26,21 +26,9 @@ public:
           GLCall{}(glCreateTextures, GL_TEXTURE_2D, 1, &tmp);
           GLCall{}(glBindTexture, GL_TEXTURE_2D, tmp);
           GLCall{}(
-            glTexImage2D,
-            GL_TEXTURE_2D,
-            0,
-            GL_RGB8,
-            m_specification.width,
-            m_specification.height,
-            0,
-            GL_RGBA,
-            GL_UNSIGNED_BYTE,
-            nullptr);
-
+            &glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
           GLCall{}(
-            &glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-          GLCall{}(
-            &glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+            &glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
           GLCall{}(
             &glTexParameteri,
             GL_TEXTURE_2D,
@@ -51,6 +39,17 @@ public:
             GL_TEXTURE_2D,
             GL_TEXTURE_WRAP_T,
             GL_CLAMP_TO_BORDER);
+
+          glTexImage2D(
+            GL_TEXTURE_2D,
+            0,
+            GL_RGBA8,
+            m_specification.width,
+            m_specification.height,
+            0,
+            GL_RGBA,
+            GL_UNSIGNED_BYTE,
+            nullptr);
           GLCall{}(glBindTexture, GL_TEXTURE_2D, 0);
           return tmp;
         }(),
@@ -60,17 +59,6 @@ public:
           std::uint32_t tmp{};
           GLCall{}(glCreateTextures, GL_TEXTURE_2D, 1, &tmp);
           GLCall{}(glBindTexture, GL_TEXTURE_2D, tmp);
-          GLCall{}(
-            glTexImage2D,
-            GL_TEXTURE_2D,
-            0,
-            GL_DEPTH24_STENCIL8,
-            m_specification.width,
-            m_specification.height,
-            0,
-            GL_DEPTH_STENCIL,
-            GL_UNSIGNED_INT_24_8,
-            nullptr);
 
           GLCall{}(
             &glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
@@ -86,6 +74,17 @@ public:
             GL_TEXTURE_2D,
             GL_TEXTURE_WRAP_T,
             GL_CLAMP_TO_EDGE);
+          GLCall{}(
+            glTexImage2D,
+            GL_TEXTURE_2D,
+            0,
+            GL_DEPTH_COMPONENT,
+            m_specification.width,
+            m_specification.height,
+            0,
+            GL_DEPTH_COMPONENT,
+            GL_UNSIGNED_BYTE,
+            nullptr);
           GLCall{}(glBindTexture, GL_TEXTURE_2D, 0);
           return tmp;
         }(),
@@ -103,7 +102,7 @@ public:
             0);
           glFramebufferTexture2D(
             GL_FRAMEBUFFER,
-            GL_DEPTH_STENCIL_ATTACHMENT,
+            GL_DEPTH_ATTACHMENT,
             GL_TEXTURE_2D,
             m_depth_attachment,
             0);
@@ -139,9 +138,11 @@ public:
   {
     return m_specification;
   }
-SubTexture GetColorAttachment() const {
-  return SubTexture(m_depth_attachment);
-}
+  SubTexture GetColorAttachment() const
+  {
+    return SubTexture(m_color_attachment);
+  }
+
 private:
   FrameBufferSpecification m_specification    = {};
   GLID                     m_color_attachment = {};
