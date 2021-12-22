@@ -52,11 +52,103 @@ private:
   T m_value             = {};
   void (*m_function)(T) = nullptr;
 };
+template<typename T, std::size_t sizeT>
+class unique_value_array
+{
+public:
+  using ParameterT     = std::array<unsigned int, sizeT> &;
+  unique_value_array() = default;
+  template<decay_same_as<T>... Us>
+  unique_value_array(void (*destroy)(ParameterT), Us... ts)
+    : m_value{ std::forward<Us>(ts)... }
+    , m_function(std::move(destroy))
+  {
+  }
+  unique_value_array(
+    void (*destroy)(std::array<unsigned int, sizeT> &),
+    std::invocable<std::array<T, sizeT> &> auto &&create)
+    : m_function(move(destroy))
+  {
+    std::invoke(create, m_value);
+  }
+  unique_value_array(const unique_value_array &) = delete;
+  ~unique_value_array() noexcept
+  {
+    if (m_function != nullptr)
+    {
+      std::invoke(m_function, m_value);
+    }
+  }
+  unique_value_array(unique_value_array &&other) noexcept
+    : unique_value_array()
+  {
+    swap(*this, other);
+  }
+  unique_value_array &operator=(const unique_value_array &) = delete;
+  unique_value_array &operator=(unique_value_array &&other) noexcept
+  {
+    swap(*this, other);
+    return *this;
+  }
+  friend void swap(unique_value_array &left, unique_value_array &right) noexcept
+  {
+    using std::swap;
+    swap(left.m_value, right.m_value);
+    swap(left.m_function, right.m_function);
+  }
+  const T &operator[](std::size_t index) const
+  {
+    return m_value[index];
+  }
+  const T &at(std::size_t index) const
+  {
+    return m_value.at(index);
+  }
+  auto size() const
+  {
+    return m_value.size();
+  }
+  const auto *data() const
+  {
+    return m_value.data();
+  }
+  auto begin() const
+  {
+    return m_value.begin();
+  }
+  auto end() const
+  {
+    return m_value.end();
+  }
+  auto cbegin() const
+  {
+    return m_value.cbegin();
+  }
+  auto cend() const
+  {
+    return m_value.cend();
+  }
+  operator T() const noexcept
+  {
+    return m_value;
+  }
+  friend weak_value<std::array<T, sizeT>>;
+
+private:
+  std::array<T, sizeT> m_value   = {};
+  void (*m_function)(ParameterT) = nullptr;
+};
 
 static_assert(
   std::movable<unique_value<
     std::uint32_t>> && !std::copyable<unique_value<std::uint32_t>>);
+static_assert(
+  std::movable<unique_value_array<
+    std::uint32_t,
+    1>> && !std::copyable<unique_value_array<std::uint32_t, 1>>);
 using GLID = unique_value<std::uint32_t>;
+template<std::size_t sizeT>
+using GLID_array = unique_value_array<std::uint32_t, sizeT>;
 
 template<typename T, std::invocable<T> F>
 unique_value(T t, F f) -> unique_value<T>;

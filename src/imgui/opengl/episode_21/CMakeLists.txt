@@ -45,6 +45,7 @@ add_executable(opengl_series_episode_21
         Menu.cpp
         MenuItem.cpp
         OrthographicCameraController.cpp
+        PixelBuffer.cpp
         Renderer.cpp
         Shader.cpp
         SubTexture.cpp
