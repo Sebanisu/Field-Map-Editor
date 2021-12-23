@@ -56,17 +56,17 @@ template<typename T, std::size_t sizeT>
 class unique_value_array
 {
 public:
-  using ParameterT     = std::array<unsigned int, sizeT> &;
-  unique_value_array() = default;
+  using ParameterT      = std::array<unsigned int, sizeT> &;
+  using ConstParameterT = const std::array<unsigned int, sizeT> &;
+  unique_value_array()  = default;
   template<decay_same_as<T>... Us>
   unique_value_array(void (*destroy)(ParameterT), Us... ts)
     : m_value{ std::forward<Us>(ts)... }
     , m_function(std::move(destroy))
   {
   }
-  unique_value_array(
-    void (*destroy)(std::array<unsigned int, sizeT> &),
-    std::invocable<std::array<T, sizeT> &> auto &&create)
+  template<std::invocable<ParameterT> createT>
+  unique_value_array(void (*destroy)(ParameterT), createT &&create)
     : m_function(move(destroy))
   {
     std::invoke(create, m_value);
