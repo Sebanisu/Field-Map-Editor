@@ -67,27 +67,22 @@ void Application::Run() const
       layers.OnImGuiUpdate();
       layers.OnUpdate(time_step);
       FrameBuffer fb(FrameBufferSpecification{
-        .width = current_window->Width(), .height = current_window->Height() });
+        .width  = current_window->ViewWindowData().frame_buffer_width,
+        .height = current_window->ViewWindowData().frame_buffer_height });
       fb.Bind();
       Renderer::Clear();
       layers.OnRender();
       fb.UnBind();
-      fbr.Draw(fb);
-      window->EndFrameRendered();// Last thing you do on render;
       if (TimeStep::now() - last > TimeStep::duration(5s))
       {
         PixelBuffer pixel_buffer{ fb.Specification() };
-        pixel_buffer(fb, fmt::format("test ({}).png",test_number++));
-        while (pixel_buffer(
-          [](std::span<uint8_t> data, std::filesystem::path path, int width, int height) {
-            fmt::print(
-              "{}\t{} bytes\n", path.string().c_str(), std::ranges::size(data));
-            Texture::flip(data,width*4);
-            stbi_write_png(path.string().c_str(),width,height,4,data.data(),width*4);
-          }))
+        pixel_buffer(fb, fmt::format("test ({}).png", test_number++));
+        while (pixel_buffer(&Texture::save))
           ;
         last = TimeStep::now();
       }
+      fbr.Draw(fb);
+      window->EndFrameRendered();// Last thing you do on render;
     }
     else
     {

@@ -105,18 +105,31 @@ public:
     }
   }
 
-  static void save(std::span<uint8_t> data, std::filesystem::path path, int width, int height)
+  static void save(
+    std::span<uint8_t>    data,
+    std::filesystem::path path,
+    int                   width,
+    int                   height)
   {
     fmt::print(
-      "{}\t{} bytes\n", path.string().c_str(), std::ranges::size(data));
-    Texture::flip(data,width*4);
-    stbi_write_png(path.string().c_str(),width,height,4,data.data(),width*4);
+      "{}\t{} bytes\twidth {}\theight {}\n",
+      path.string().c_str(),
+      std::ranges::size(data),
+      width,
+      height);
+    Texture::flip(data, width * 4);
+    stbi_write_png(
+      path.string().c_str(), width, height, 4, data.data(), width * 4);
   }
 
   template<std::ranges::contiguous_range R>
   requires std::permutable<std::ranges::iterator_t<R>>
   static void flip(R &range, const std::ranges::range_difference_t<R> stride)
   {
+    if (std::ranges::empty(range))
+    {
+      return;
+    }
     if (std::ranges::ssize(range) % stride != 0)
     {
       // throw or use another function that's more flexible.
@@ -135,7 +148,7 @@ public:
     };
     auto b = std::ranges::begin(range);
     auto m = std::ranges::end(range);
-    while (b != m)
+    while (b < m)
     {
       std::ranges::advance(m, -stride);
       swap_memory(*b, *m);
