@@ -117,7 +117,7 @@ private:
       Bind(index);
       set[index]   = true;
       paths[index] = std::move(path);
-      glReadPixels(0, 0, width, height, GL_BGRA, GL_UNSIGNED_BYTE, 0);
+      glReadPixels(0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, 0);
     }
   }
   void Next() const

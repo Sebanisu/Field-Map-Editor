@@ -91,15 +91,26 @@ public:
   static constexpr void
     flip_slow(R &range, const std::ranges::range_difference_t<R> stride)
   {
-    auto b = std::ranges::begin(range);
-    auto e = std::ranges::end(range);
+    using std::ranges::begin;
+    using std::ranges::end;
+    using std::ranges::rotate;
+    auto b = begin(range);
+    auto e = end(range);
     auto m = e;
     std::ranges::advance(m, -stride);
     while (b < m)
     {
-      std::ranges::rotate(b, m, e);
+      rotate(b, m, e);
       std::ranges::advance(b, stride);
     }
+  }
+
+  static void save(std::span<uint8_t> data, std::filesystem::path path, int width, int height)
+  {
+    fmt::print(
+      "{}\t{} bytes\n", path.string().c_str(), std::ranges::size(data));
+    Texture::flip(data,width*4);
+    stbi_write_png(path.string().c_str(),width,height,4,data.data(),width*4);
   }
 
   template<std::ranges::contiguous_range R>
@@ -115,7 +126,7 @@ public:
     const auto            stride_in_bytes =
       static_cast<std::size_t>(stride) * sizeof_value;
     auto       buffer      = std::make_unique<char[]>(stride_in_bytes);
-    const auto swap_memory = [tmp = buffer.get(), stride, stride_in_bytes](
+    const auto swap_memory = [tmp = buffer.get(), stride_in_bytes](
                                std::ranges::range_reference_t<R> &left,
                                std::ranges::range_reference_t<R> &right) {
       std::memcpy(tmp, &left, stride_in_bytes);
