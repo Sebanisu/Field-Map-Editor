@@ -188,6 +188,7 @@ void Window::InitCallbacks() const
       auto &data               = GetWindowData(window);
       data.frame_buffer_width  = width;
       data.frame_buffer_height = height;
+      GLCall{}(glViewport, 0, 0, width, height);
       data.event_callback(Event::FrameBufferResize(width, height));
     });
 
