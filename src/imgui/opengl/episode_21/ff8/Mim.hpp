@@ -17,21 +17,22 @@ class Mim
 public:
   Mim() = default;
   Mim(const Fields &fields);
-  void OnUpdate(float) const;
-  void OnRender() const;
-  void OnImGuiUpdate() const;
-  void OnEvent(const Event::Item &) const;
+  void           OnUpdate(float) const;
+  void           OnRender() const;
+  void           OnImGuiUpdate() const;
+  void           OnEvent(const Event::Item &) const;
   std::size_t    Index() const;
   const Texture &CurrentTexture() const;
+  void           Save() const;
 
 private:
   void                                 SetUniforms() const;
-  std::string                          m_path                = {};
-  bool                                 m_choose_coo          = {};
-  open_viii::graphics::background::Mim m_mim                 = {};
+  std::string                          m_path             = {};
+  bool                                 m_choose_coo       = {};
+  open_viii::graphics::background::Mim m_mim              = {};
   // 3 bpp x 16 palettes 48 possible textures + 1 for palette texture
-  DelayedTextures                      m_delayed_textures    = {};
-  BatchRenderer                        m_batch_renderer      = {};
+  DelayedTextures                      m_delayed_textures = {};
+  BatchRenderer                        m_batch_renderer   = {};
 };
 static_assert(Renderable<Mim>);
 }// namespace ff8

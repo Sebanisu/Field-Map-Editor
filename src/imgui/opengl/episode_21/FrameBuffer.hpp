@@ -19,11 +19,11 @@ class FrameBuffer
 public:
   FrameBuffer() = default;
   FrameBuffer(FrameBufferSpecification spec)
-    : m_specification(std::move(spec))
-    , m_color_attachment(
+    : m_specification{std::move(spec)}
+    , m_color_attachment{
         [this]() {
           std::uint32_t tmp{};
-          GLCall{}(glCreateTextures, GL_TEXTURE_2D, 1, &tmp);
+          GLCall{}(glGenTextures, 1, &tmp);
           GLCall{}(glBindTexture, GL_TEXTURE_2D, tmp);
           GLCall{}(
             &glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -53,11 +53,11 @@ public:
           GLCall{}(glBindTexture, GL_TEXTURE_2D, 0);
           return tmp;
         }(),
-        [](std::uint32_t id) { GLCall{}(glDeleteTextures, 1, &id); })
-    , m_depth_attachment(
+        [](std::uint32_t id) { GLCall{}(glDeleteTextures, 1, &id); }}
+    , m_depth_attachment{
         [this]() {
           std::uint32_t tmp{};
-          GLCall{}(glCreateTextures, GL_TEXTURE_2D, 1, &tmp);
+          GLCall{}(glGenTextures, 1, &tmp);
           GLCall{}(glBindTexture, GL_TEXTURE_2D, tmp);
 
           GLCall{}(
@@ -88,42 +88,48 @@ public:
           GLCall{}(glBindTexture, GL_TEXTURE_2D, 0);
           return tmp;
         }(),
-        [](std::uint32_t id) { GLCall{}(glDeleteTextures, 1, &id); })
-    , m_renderer_id(
-        [this]() {
-          std::uint32_t tmp{};
-          GLCall{}(glCreateFramebuffers, 1, &tmp);
-          GLCall{}(glBindFramebuffer, GL_FRAMEBUFFER, tmp);
-          glFramebufferTexture2D(
-            GL_FRAMEBUFFER,
-            GL_COLOR_ATTACHMENT0,
-            GL_TEXTURE_2D,
-            m_color_attachment,
-            0);
-          glFramebufferTexture2D(
-            GL_FRAMEBUFFER,
-            GL_DEPTH_ATTACHMENT,
-            GL_TEXTURE_2D,
-            m_depth_attachment,
-            0);
-
-          GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
-          if (status != GL_FRAMEBUFFER_COMPLETE)
-          {
-            fmt::print(
-              stderr,
-              "Error {}:{} NOT GL_FRAMEBUFFER_COMPLETE - {}",
-              __FILE__,
-              __LINE__,
-              status);
-          }
-          return tmp;
-        }(),
-        [](std::uint32_t id) {
-          GLCall{}(glDeleteFramebuffers, 1, &id);
-          UnBind();
-        })
+        [](std::uint32_t id) { GLCall{}(glDeleteTextures, 1, &id); }}
   {
+    // Sometimes the textures wouldn't be defined before defining m_renderer_id
+    // So I moved this code inside here.
+    m_renderer_id = GLID(
+      [this]() {
+        std::uint32_t tmp{};
+        GLCall{}(glCreateFramebuffers, 1, &tmp);
+        GLCall{}(glBindFramebuffer, GL_FRAMEBUFFER, tmp);
+//        fmt::print(
+//          "m_color_attachment {}\n", static_cast<uint32_t>(m_color_attachment));
+        GLCall{}(
+          glFramebufferTexture2D,
+          GL_FRAMEBUFFER,
+          GL_COLOR_ATTACHMENT0,
+          GL_TEXTURE_2D,
+          m_color_attachment,
+          0);
+        GLCall{}(
+          glFramebufferTexture2D,
+          GL_FRAMEBUFFER,
+          GL_DEPTH_ATTACHMENT,
+          GL_TEXTURE_2D,
+          m_depth_attachment,
+          0);
+
+        GLenum status = GLCall{}(glCheckFramebufferStatus, GL_FRAMEBUFFER);
+        if (status != GL_FRAMEBUFFER_COMPLETE)
+        {
+          fmt::print(
+            stderr,
+            "Error {}:{} NOT GL_FRAMEBUFFER_COMPLETE - {}",
+            __FILE__,
+            __LINE__,
+            status);
+        }
+        return tmp;
+      }(),
+      [](std::uint32_t id) {
+        GLCall{}(glDeleteFramebuffers, 1, &id);
+        UnBind();
+      });
     UnBind();
   }
   void Bind() const

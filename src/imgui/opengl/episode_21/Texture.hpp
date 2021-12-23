@@ -118,6 +118,23 @@ public:
       width,
       height);
     Texture::flip(data, width * 4);
+    if (path.has_parent_path())
+    {
+      std::error_code ec{};
+      std::filesystem::create_directories(path.parent_path(), ec);
+      if (ec)
+      {
+        fmt::print(
+          stderr,
+          "error {}:{} - {}: {} - path: {}\n",
+          __FILE__,
+          __LINE__,
+          ec.value(),
+          ec.message(),
+          path.string().c_str());
+        ec.clear();
+      }
+    }
     stbi_write_png(
       path.string().c_str(), width, height, 4, data.data(), width * 4);
   }

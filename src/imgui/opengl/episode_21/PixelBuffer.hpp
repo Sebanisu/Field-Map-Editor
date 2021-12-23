@@ -20,9 +20,12 @@ public:
   PixelBuffer(const FrameBufferSpecification &fbs)
     : width(fbs.width)
     , height(fbs.height)
-    , DATA_SIZE(fbs.height * fbs.width * 4)
+    , DATA_SIZE(
+        static_cast<std::ptrdiff_t>(fbs.height)
+        * static_cast<std::ptrdiff_t>(fbs.width) * std::ptrdiff_t{ 4 })
     , pbos{ [](typename GLID_array<ARRAY_SIZE>::ParameterT ids) {
-             glDeleteBuffers(
+             GLCall{}(
+               glDeleteBuffers,
                static_cast<std::int32_t>(std::ranges::size(ids)),
                std::ranges::data(ids));
            },
@@ -30,14 +33,19 @@ public:
               // create 2 pixel buffer objects, you need to delete them when
               // program exits. glBufferData() with NULL pointer reserves only
               // memory space.
-              glGenBuffers(
+              GLCall{}(
+                glGenBuffers,
                 static_cast<std::int32_t>(std::ranges::size(ids)),
                 std::ranges::data(ids));
               for (auto &id : ids)
               {
-                glBindBuffer(GL_PIXEL_PACK_BUFFER, id);
-                glBufferData(
-                  GL_PIXEL_PACK_BUFFER, DATA_SIZE, 0, GL_STREAM_READ);
+                GLCall{}(glBindBuffer, GL_PIXEL_PACK_BUFFER, id);
+                GLCall{}(
+                  glBufferData,
+                  GL_PIXEL_PACK_BUFFER,
+                  DATA_SIZE,
+                  nullptr,
+                  GL_STREAM_READ);
                 // todo will need to alter DATA_SIZE and update buffers when
                 // window resizes
               }
@@ -117,7 +125,8 @@ private:
       Bind(index);
       set[index]   = true;
       paths[index] = std::move(path);
-      glReadPixels(0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, 0);
+      GLCall{}(
+        glReadPixels, 0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
     }
   }
   void Next() const
@@ -129,18 +138,18 @@ private:
   }
   void Bind(std::size_t i) const
   {
-    glBindBuffer(GL_PIXEL_PACK_BUFFER, pbos[i]);
+    GLCall{}(glBindBuffer, GL_PIXEL_PACK_BUFFER, pbos[i]);
   }
   static void UnBind()
   {
     // back to conventional pixel operation
-    glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
+    GLCall{}(glBindBuffer, GL_PIXEL_PACK_BUFFER, 0);
   }
   mutable std::size_t index      = {};
   mutable std::size_t next_index = { (index + 1) % ARRAY_SIZE };
   std::int32_t        width      = {};
   std::int32_t        height     = {};
-  std::int32_t        DATA_SIZE  = {};// number of bytes in image.
+  std::ptrdiff_t      DATA_SIZE  = {};// number of bytes in image.
   mutable std::array<bool, ARRAY_SIZE>                  set   = {};
   mutable std::array<std::filesystem::path, ARRAY_SIZE> paths = {};
   GLID_array<ARRAY_SIZE>                                pbos  = {};

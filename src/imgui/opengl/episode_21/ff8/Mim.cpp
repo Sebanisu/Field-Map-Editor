@@ -3,7 +3,9 @@
 //
 
 #include "Mim.hpp"
+#include "FrameBuffer.hpp"
 #include "OrthographicCameraController.hpp"
+#include "PixelBuffer.hpp"
 namespace ff8
 {
 static const BPPs                   bpp                 = {};
@@ -11,6 +13,7 @@ static const Palettes               palette             = {};
 static bool                         draw_palette        = false;
 static bool                         draw_grid           = false;
 static bool                         snap_zoom_to_height = true;
+static bool                         saving              = false;
 static OrthographicCameraController camera              = { 16 / 9 };
 }// namespace ff8
 void ff8::Mim::OnUpdate(float ts) const
@@ -66,6 +69,10 @@ void ff8::Mim::OnImGuiUpdate() const
   if (camera.OnImGuiUpdate())
   {
   }
+  if (ImGui::Button("Save"))
+  {
+    Save();
+  }
   ImGui::Separator();
   m_batch_renderer.OnImGuiUpdate();
 }
@@ -94,8 +101,19 @@ const Texture &ff8::Mim::CurrentTexture() const
 void ff8::Mim::SetUniforms() const
 {
   m_batch_renderer.Bind();
-  m_batch_renderer.Shader().SetUniform(
-    "u_MVP", camera.Camera().ViewProjectionMatrix());
+  if (saving)
+  {
+    m_batch_renderer.Shader().SetUniform(
+      "u_MVP",
+      OrthographicCamera{
+        { 0, 0 }, { CurrentTexture().width(), CurrentTexture().height() } }
+        .ViewProjectionMatrix());
+  }
+  else
+  {
+    m_batch_renderer.Shader().SetUniform(
+      "u_MVP", camera.Camera().ViewProjectionMatrix());
+  }
   if (!draw_grid)
   {
     m_batch_renderer.Shader().SetUniform("u_Grid", 0.F, 0.F);
@@ -117,4 +135,32 @@ void ff8::Mim::OnEvent(const Event::Item &e) const
 {
   camera.OnEvent(e);
   m_batch_renderer.OnEvent(e);
+}
+void ff8::Mim::Save() const
+{
+  saving                 = true;
+  const Texture &texture = CurrentTexture();
+  FrameBuffer    fb({ .width = texture.width(), .height = texture.height() });
+  glViewport(0, 0, texture.width(), texture.height());
+  fb.Bind();
+  OnRender();
+  fb.UnBind();
+  glViewport(
+    0,
+    0,
+    Application::CurrentWindow()->ViewWindowData().frame_buffer_width,
+    Application::CurrentWindow()->ViewWindowData().frame_buffer_height);
+  PixelBuffer  pixel_buffer{ fb.Specification() };
+  auto         fs_path = std::filesystem::path(m_path);
+  pixel_buffer.operator()(
+    fb,
+    fs_path.parent_path()
+      / fmt::format(
+        "{}_{}_{}.png",
+        fs_path.stem().string(),
+        bpp.String(),
+        palette.String()));
+  while (pixel_buffer.operator()(&Texture::save))
+    ;
+  saving = false;
 }
