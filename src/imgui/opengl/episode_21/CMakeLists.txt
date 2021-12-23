@@ -145,6 +145,7 @@ target_precompile_headers(opengl_series_episode_21
         <fmt/format.h>
         <fmt/chrono.h>
         <stb_image.h>
+        <stb_image_write.h>
         <glm/glm.hpp>
         <glm/gtc/matrix_transform.hpp>
         <imgui.h>
