@@ -88,6 +88,7 @@ void Application::Run() const
     {
       window->EndFrame();
     }
+    std::cout << std::flush;
   }
   running = true;
 }
