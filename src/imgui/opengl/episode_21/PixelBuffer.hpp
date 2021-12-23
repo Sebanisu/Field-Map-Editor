@@ -44,7 +44,7 @@ class PixelBuffer
   }
   bool operator()(
     const FrameBuffer                    &fb,
-    std::invocable<std::uint8_t *> auto &&call_back) const
+    std::invocable<std::span<const std::uint8_t>> auto &&call_back) const
   {
     Next();
     ToPBO(fb);
@@ -57,7 +57,9 @@ class PixelBuffer
     FromPBO(std::forward<decltype(call_back)>(call_back));
     return std::ranges::any_of(set, std::identity{});
   }
-  void FromPBO(std::invocable<std::uint8_t *> auto &&call_back) const
+
+private:
+  void FromPBO(std::invocable<std::span<const std::uint8_t>> auto &&call_back) const
   {
     // map the PBO to process its data by CPU
     const scope_guard unbind_pbo_buffer = (&UnBind);
@@ -68,7 +70,7 @@ class PixelBuffer
         glMapBuffer(GL_PIXEL_PACK_BUFFER, GL_READ_ONLY)) };
       if (ptr)
       {
-        std::invoke(call_back, ptr.get());
+        std::invoke(call_back, std::span{ptr.get(),static_cast<std::size_t>(DATA_SIZE)});
       }
     }
   }
