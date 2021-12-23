@@ -81,9 +81,9 @@ public:
   }
   void SetZoom() const
   {
-    m_zoom_level = (m_bounds->top - m_bounds->bottom) / 2.F;
     if (m_bounds)
     {
+      m_zoom_level = (m_bounds->top - m_bounds->bottom) / 2.F;
       zoom(0.F);
     }
   }
