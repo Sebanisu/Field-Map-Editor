@@ -54,7 +54,7 @@ void GLGetError(const std::source_location location)
 {
   while (GLCheckError("Error", location))
   {
-    throw std::exception{};
+    //throw std::exception{};
   }
 }
 
@@ -110,8 +110,8 @@ void BeginErrorCallBack()
         tp,
         sv,
         message);
-      if (GL_DEBUG_SEVERITY_HIGH == severity)
-        throw std::exception{};
+      //if (GL_DEBUG_SEVERITY_HIGH == severity)
+        //throw std::exception{};
     },
     0);
 }

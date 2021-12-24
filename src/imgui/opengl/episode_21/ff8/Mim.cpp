@@ -38,6 +38,7 @@ void ff8::Mim::OnRender() const
 {
   if (texture == nullptr)
     texture = &CurrentTexture();
+
   if (texture->width() == 0 || texture->height() == 0)
   {
     return;
@@ -90,8 +91,14 @@ void ff8::Mim::OnImGuiUpdate() const
 
 ff8::Mim::Mim(const ff8::Fields &fields)
   : m_mim(LoadMim(fields.Field(), fields.Coo(), m_path, m_choose_coo))
-  , m_delayed_textures(LoadTextures(m_mim))
 {
+  texture = nullptr;
+  if (!std::empty(m_path))
+  {
+    fmt::print("Loaded {}\n", m_path);
+    fmt::print("Loading Textures from Mim \n");
+    m_delayed_textures = LoadTextures(m_mim);
+  }
   camera.RefreshAspectRatio();
 }
 

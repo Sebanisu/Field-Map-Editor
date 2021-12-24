@@ -94,6 +94,10 @@ public:
     return GetWindowData(m_window.get());
   }
 
+  static void DefaultBlend();
+  static void AddBlend();
+  static void SubtractBlend();
+
 private:
   Window(WindowData);
   WindowData m_data = {};

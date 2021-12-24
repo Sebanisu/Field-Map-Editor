@@ -116,7 +116,7 @@ void Window::InitGLFW()
     std::exit(EXIT_FAILURE);
   }
   GLCall{}(glEnable, GL_BLEND);
-  GLCall{}(glBlendFunc, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+  DefaultBlend();
 }
 void Window::InitImGui(const char *glsl_version) const
 {
@@ -275,4 +275,19 @@ void Window::EndFrame() const
 {
   ImGui::EndFrame();// call instead of render when minimized.
   std::this_thread::sleep_for(std::chrono::milliseconds(500));
+}
+void Window::DefaultBlend()
+{
+  GLCall{}(glBlendFunc, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+  GLCall{}(glBlendEquation, GL_FUNC_ADD);
+}
+
+void Window::AddBlend() {
+  GLCall{}(glBlendFuncSeparate, GL_ONE, GL_ONE, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+  GLCall{}(glBlendEquation, GL_FUNC_ADD);
+}
+
+void Window::SubtractBlend() {
+  GLCall{}(glBlendFuncSeparate, GL_SRC_COLOR, GL_DST_COLOR, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+  GLCall{}(glBlendEquationSeparate,GL_FUNC_REVERSE_SUBTRACT, GL_FUNC_ADD);
 }

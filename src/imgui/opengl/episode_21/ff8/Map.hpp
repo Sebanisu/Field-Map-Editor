@@ -17,7 +17,7 @@ public:
   Map(const Fields &fields);
   void OnUpdate(float) const;
   void OnRender() const;
-  void OnImGuiUpdate() const {}
+  void OnImGuiUpdate() const;
   void OnEvent(const Event::Item &) const;
 
 private:
