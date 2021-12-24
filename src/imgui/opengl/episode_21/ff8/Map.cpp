@@ -115,12 +115,17 @@ void ff8::Map::OnRender() const
       //      }
       auto       texture_page_offset = tile.texture_id() * texture_page_width;
 
-      auto      &texture     = m_delayed_textures.textures->at(texture_index);
-      SubTexture sub_texture = {
+      auto      &texture      = m_delayed_textures.textures->at(texture_index);
+
+      const auto texture_dims = glm::vec2(texture.width(), texture.height());
+      SubTexture sub_texture  = {
         texture,
-        glm::vec2{ tile.source_x() + texture_page_offset, texture.height() - tile.source_y() },
+        glm::vec2{ tile.source_x() + texture_page_offset,
+                   texture_dims.y - tile.source_y() }
+          / texture_dims,
         glm::vec2{ tile.source_x() + texture_page_offset + 16,
-                   texture.height() - (tile.source_y() + 16) }
+                   texture_dims.y - (tile.source_y() + 16) }
+          / texture_dims
       };
 
       m_batch_renderer.DrawQuad(

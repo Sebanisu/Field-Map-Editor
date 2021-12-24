@@ -21,12 +21,10 @@ public:
   SubTexture(const Texture &texture, const glm::vec2 &min, const glm::vec2 &max)
     : m_render_id(texture.ID())
   {
-    // might want this division to be done outside.
-    const auto texture_dims = glm::vec2(texture.width(), texture.height());
-    m_uv                    = { (min / texture_dims),
-              (glm::vec2{ max.x, min.y } / texture_dims),
-              (max / texture_dims),
-              (glm::vec2{ min.x, max.y } / texture_dims) };
+    m_uv = { (glm::vec2{ min.x, min.y }),
+             (glm::vec2{ max.x, min.y }),
+             (glm::vec2{ max.x, max.y }),
+             (glm::vec2{ min.x, max.y }) };
   }
   static SubTexture CreateFromCoords(
     const Texture   &texture,
