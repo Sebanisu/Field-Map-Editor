@@ -16,8 +16,8 @@ struct DelayedTextures
     std::int32_t                                  height{};
     Texture                                      *out{};
   };
-  mutable std::unique_ptr<std::array<Texture, 49U>> textures{
-    std::make_unique<std::array<Texture, 49U>>()
+  mutable std::unique_ptr<std::array<Texture, 2U * 16U + 3U>> textures{
+    std::make_unique<std::array<Texture, 2U * 16U + 3U>>()
   };
   mutable std::vector<std::future<return_data>> futures{};
   void                                          check() const

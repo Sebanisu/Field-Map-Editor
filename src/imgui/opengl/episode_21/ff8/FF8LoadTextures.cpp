@@ -9,8 +9,8 @@ DelayedTextures
   ff8::LoadTextures(const open_viii::graphics::background::Mim &mim)
 {
   DelayedTextures rdt{};
-  rdt.futures.reserve(49U);
-  auto bpps = std::views::iota(std::uint32_t{ 0 }, std::uint32_t{ 3 })
+  rdt.futures.reserve(35U);
+  auto bpps = std::views::iota(std::uint32_t{ 0 }, std::uint32_t{ 2 })
               | std::views::transform([](const std::uint32_t i) {
                   using namespace open_viii::graphics::literals;
                   switch (1U << (i + 2U))
@@ -54,7 +54,6 @@ DelayedTextures
         "Loading BPP {}, Palette {} Texture\n",
         1U << (bpp_offset + 2U),
         palette);
-
       rdt.futures.emplace_back(std::async(
         std::launch::async,
         process,
@@ -64,6 +63,26 @@ DelayedTextures
         &rdt.textures->at(bpp_offset * 16 + palette)));
     }
     ++bpp_offset;
+  }
+  {
+    using namespace open_viii::graphics::literals;
+    fmt::print("Loading BPP 16 Texture\n");
+    rdt.futures.emplace_back(std::async(
+      std::launch::async,
+      process,
+      mim,
+      16_bpp,
+      std::uint8_t{ 0 },
+      &rdt.textures->at(2 * 16)));
+
+    fmt::print("Loading BPP 24 Texture\n");
+    rdt.futures.emplace_back(std::async(
+      std::launch::async,
+      process,
+      mim,
+      24_bpp,
+      std::uint8_t{ 0 },
+      &rdt.textures->at(2 * 16 + 1)));
   }
   {
     fmt::print("Loading Palette Texture\n");

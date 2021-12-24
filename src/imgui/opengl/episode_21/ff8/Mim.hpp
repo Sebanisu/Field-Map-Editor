@@ -11,7 +11,6 @@
 #include "Palettes.hpp"
 namespace ff8
 {
-DelayedTextures LoadTextures(const open_viii::graphics::background::Mim &mim);
 class Mim
 {
 public:
@@ -33,6 +32,7 @@ private:
   // 3 bpp x 16 palettes 48 possible textures + 1 for palette texture
   DelayedTextures                      m_delayed_textures = {};
   BatchRenderer                        m_batch_renderer   = {};
+  void                                 Save_All() const;
 };
 static_assert(Renderable<Mim>);
 }// namespace ff8
