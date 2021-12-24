@@ -87,15 +87,18 @@ const std::int32_t &BatchRenderer::Max_Texture_Image_Units()
   return number;
 }
 void BatchRenderer::DrawQuad(
-  glm::vec2      offset,
   const Texture &texture,
+  glm::vec2      offset,
   glm::vec2      size) const
 {
   DrawQuad(offset, { 1.F, 1.F, 1.F, 1.F }, texture, 1.F, size);
 }
-void BatchRenderer::DrawQuad(glm::vec2 offset, const SubTexture &texture) const
+void BatchRenderer::DrawQuad(
+  const SubTexture &texture,
+  glm::vec2         offset,
+  glm::vec2         size) const
 {
-  DrawQuad(offset, { 1.F, 1.F, 1.F, 1.F }, texture);
+  DrawQuad(offset, { 1.F, 1.F, 1.F, 1.F }, texture,1.F,size);
 }
 void BatchRenderer::DrawQuad(
   glm::vec2         offset,

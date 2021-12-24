@@ -29,11 +29,9 @@ public:
   [[nodiscard]] [[maybe_unused]] std::size_t INDEX_COUNT() const noexcept;
   [[nodiscard]] static const std::int32_t   &Max_Texture_Image_Units();
   void                                       Clear() const;
-  void                                       DrawQuad(
-                                          glm::vec2      offset,
-                                          const Texture &texture,
-                                          glm::vec2      size = glm::vec2{ 1.F }) const;
-  void DrawQuad(glm::vec2 offset, const SubTexture &texture) const;
+  void DrawQuad(const Texture &texture, glm::vec2 offset, glm::vec2 size = glm::vec2{ 1.F }) const;
+  void
+    DrawQuad(const SubTexture &texture, glm::vec2 offset, glm::vec2 size = glm::vec2{ 1.F }) const;
   void DrawQuad(
     glm::vec2         offset,
     glm::vec4         color,

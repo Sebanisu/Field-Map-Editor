@@ -16,9 +16,9 @@ public:
   Map() = default;
   Map(const Fields &fields);
   void OnUpdate(float) const;
-  void OnRender() const {}
+  void OnRender() const;
   void OnImGuiUpdate() const {}
-  void OnEvent(const Event::Item &) const {}
+  void OnEvent(const Event::Item &) const;
 
 private:
   std::string                          m_mim_path         = {};
@@ -28,6 +28,8 @@ private:
   open_viii::graphics::background::Mim m_mim              = {};
   open_viii::graphics::background::Map m_map              = {};
   DelayedTextures                      m_delayed_textures = {};
+  void                                 SetUniforms() const;
+  BatchRenderer                        m_batch_renderer{};
 };
 static_assert(Renderable<Map>);
 }// namespace ff8

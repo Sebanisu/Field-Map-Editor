@@ -46,7 +46,7 @@ void ff8::Mim::OnRender() const
   SetUniforms();
   glm::vec2 size = { texture->width(), texture->height() };
   m_batch_renderer.Clear();
-  m_batch_renderer.DrawQuad(glm::vec2{ 0.F }, *texture, size);
+  m_batch_renderer.DrawQuad(*texture, glm::vec2{ 0.F }, size);
   m_batch_renderer.Draw();
   m_batch_renderer.OnRender();
   texture = nullptr;
