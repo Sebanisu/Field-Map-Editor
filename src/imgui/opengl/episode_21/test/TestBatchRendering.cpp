@@ -65,10 +65,10 @@ test::TestBatchRendering::TestBatchRendering()
                                       glm::vec4{ 0.F, 1.F, 0.F, 1.F },
                                       glm::vec4{ 0.F, 0.F, 1.F, 1.F } };
   constexpr auto vertices_init = std::array{
-    Vertex{ { -0.5F, -0.5F }, colors[0] },// 0
-    Vertex{ { 0.5F, -0.5F }, colors[0] },// 1
-    Vertex{ { 0.5F, 0.5F }, colors[0] },// 2
-    Vertex{ { -0.5F, 0.5F }, colors[0] },// 3
+    Vertex{ { -0.5F, -0.5F, 0.F }, colors[0] },// 0
+    Vertex{ { 0.5F, -0.5F, 0.F }, colors[0] },// 1
+    Vertex{ { 0.5F, 0.5F, 0.F }, colors[0] },// 2
+    Vertex{ { -0.5F, 0.5F, 0.F }, colors[0] },// 3
   };
   [[maybe_unused]] constexpr auto indices_init = std::array{
     // clang-format off

@@ -53,7 +53,7 @@ void test::TestBatchQuads::gen_verts() const
       float r = static_cast<float>(x) / static_cast<float>(m_count[0]);
       float g = static_cast<float>(y) / static_cast<float>(m_count[1]);
       vertices += CreateQuad(
-        { static_cast<float>(x), static_cast<float>(y) },
+        { static_cast<float>(x), static_cast<float>(y), 0.F },
         { r, g, 1.F, 1.F },
         0);
       if (std::ranges::size(vertices) == max_count)

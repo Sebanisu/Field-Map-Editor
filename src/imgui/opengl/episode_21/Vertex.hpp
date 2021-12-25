@@ -9,14 +9,14 @@
 
 struct Vertex
 {
-  glm::vec2   location{};
+  glm::vec3   location{};
   glm::vec4   color{ 1.F, 1.F, 1.F, 1.F };
   glm::vec2   uv{};
   float       texture_slot{};
   float       tiling_factor{ 1.F };
   static auto Layout()
   {
-    return VertexBufferLayout{ VertexBufferElementType<float>{ 2U },
+    return VertexBufferLayout{ VertexBufferElementType<float>{ 3U },
                                VertexBufferElementType<float>{ 4U },
                                VertexBufferElementType<float>{ 2U },
                                VertexBufferElementType<float>{ 1U },
@@ -28,7 +28,7 @@ static_assert(
     Vertex> && std::copyable<Vertex> && std::default_initializable<Vertex>);
 using Quad = std::array<Vertex, 4U>;
 constexpr inline Quad CreateQuad(
-  const glm::vec2                 offset,
+  const glm::vec3                 offset,
   const glm::vec4                 color,
   const int                       texture_id    = {},
   const float                     tiling_factor = 1.F,
@@ -45,24 +45,25 @@ constexpr inline Quad CreateQuad(
             .uv            = uv[0],
             .texture_slot  = f_texture_id,
             .tiling_factor = tiling_factor },// 0
-    Vertex{ .location      = { offset + glm::vec2{ size.x, 0.F } },
+    Vertex{ .location      = { offset + glm::vec3{ size.x, 0.F, 0.F } },
             .color         = { color },
             .uv            = uv[1],
             .texture_slot  = f_texture_id,
             .tiling_factor = tiling_factor },// 1
-    Vertex{ .location      = { offset + glm::vec2{ size.x, size.y } },
+    Vertex{ .location      = { offset + glm::vec3{ size.x, size.y, 0.F } },
             .color         = { color },
             .uv            = uv[2],
             .texture_slot  = f_texture_id,
             .tiling_factor = tiling_factor },// 2
-    Vertex{ .location{ offset + glm::vec2{ 0.F, size.y } },
+    Vertex{ .location{ offset + glm::vec3{ 0.F, size.y, 0.F } },
             .color         = { color },
             .uv            = uv[3],
             .texture_slot  = f_texture_id,
             .tiling_factor = tiling_factor },// 3
   };
 }
-static constexpr auto QuadIndicesInit = std::array<std::uint32_t, 6U>{ 0, 1, 2, 2, 3, 0 };
+static constexpr auto QuadIndicesInit =
+  std::array<std::uint32_t, 6U>{ 0, 1, 2, 2, 3, 0 };
 template<std::size_t count>
 constexpr inline std::array<std::uint32_t, count * std::size(QuadIndicesInit)>
   QuadIndices()

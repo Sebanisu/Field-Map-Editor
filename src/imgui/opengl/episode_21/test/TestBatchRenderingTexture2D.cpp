@@ -27,9 +27,9 @@ test::TestBatchRenderingTexture2D::TestBatchRenderingTexture2D()
 
   std::vector<Vertex> vertices{};
   vertices.reserve(12U);
-  vertices += CreateQuad({ 2.F, 0.F }, colors[0], 1)
-              + CreateQuad({ 4.F, 0.F }, colors[1], 2)
-              + CreateQuad({ 6.F, 0.F }, colors[2], 3);
+  vertices += CreateQuad({ 2.F, 0.F, 0.F }, colors[0], 1)
+              + CreateQuad({ 4.F, 0.F, 0.F }, colors[1], 2)
+              + CreateQuad({ 6.F, 0.F, 0.F }, colors[2], 3);
 
   m_vertex_buffer           = VertexBuffer{ vertices };
   constexpr auto quad_size  = std::size(Quad{});

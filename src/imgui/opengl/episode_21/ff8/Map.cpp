@@ -9,6 +9,66 @@ static OrthographicCameraController camera              = { 16 / 9 };
 static bool                         snap_zoom_to_height = true;
 static bool                         draw_grid           = false;
 static bool                         saving              = false;
+static constexpr glm::vec4 default_uniform_color = { 1.F, 1.F, 1.F, 1.F };
+static constexpr glm::vec4 half_uniform_color    = { .5F, .5F, .5F, .5F };
+static constexpr glm::vec4 quarter_uniform_color = { .25F, .25F, .25F, .25F };
+static glm::vec4           uniform_color         = default_uniform_color;
+
+
+static constexpr auto      parameters            = std::array{ GL_ZERO,
+                                               GL_ONE,
+                                               GL_SRC_COLOR,
+                                               GL_ONE_MINUS_SRC_COLOR,
+                                               GL_DST_COLOR,
+                                               GL_ONE_MINUS_DST_COLOR,
+                                               GL_SRC_ALPHA,
+                                               GL_ONE_MINUS_SRC_ALPHA,
+                                               GL_DST_ALPHA,
+                                               GL_ONE_MINUS_DST_ALPHA,
+                                               GL_CONSTANT_COLOR,
+                                               GL_ONE_MINUS_CONSTANT_COLOR,
+                                               GL_CONSTANT_ALPHA,
+                                               GL_ONE_MINUS_CONSTANT_ALPHA,
+                                               GL_SRC_ALPHA_SATURATE,
+                                               GL_SRC1_COLOR,
+                                               GL_ONE_MINUS_SRC_COLOR,
+                                               GL_SRC1_ALPHA,
+                                               GL_ONE_MINUS_SRC1_ALPHA };
+static constexpr auto      parameters_string =
+  std::array{ "GL_ZERO",// 0
+              "GL_ONE",// 1
+              "GL_SRC_COLOR",// 2
+              "GL_ONE_MINUS_SRC_COLOR",// 3
+              "GL_DST_COLOR",// 4
+              "GL_ONE_MINUS_DST_COLOR",// 5
+              "GL_SRC_ALPHA",// 6
+              "GL_ONE_MINUS_SRC_ALPHA",// 7
+              "GL_DST_ALPHA",// 8
+              "GL_ONE_MINUS_DST_ALPHA",// 9
+              "GL_CONSTANT_COLOR",// 10
+              "GL_ONE_MINUS_CONSTANT_COLOR",// 11
+              "GL_CONSTANT_ALPHA",// 12
+              "GL_ONE_MINUS_CONSTANT_ALPHA",// 13
+              "GL_SRC_ALPHA_SATURATE",// 14
+              "GL_SRC1_COLOR",// 15
+              "GL_ONE_MINUS_SRC_COLOR",// 16
+              "GL_SRC1_ALPHA",// 17
+              "GL_ONE_MINUS_SRC1_ALPHA" };// 18
+static constexpr auto equations = std::array{ GL_FUNC_ADD,
+                                              GL_FUNC_SUBTRACT,
+                                              GL_FUNC_REVERSE_SUBTRACT,
+                                              GL_MIN,
+                                              GL_MAX };
+static constexpr auto equations_string =
+  std::array{ "GL_FUNC_ADD",// 0
+              "GL_FUNC_SUBTRACT",// 1
+              "GL_FUNC_REVERSE_SUBTRACT",// 2
+              "GL_MIN",// 3
+              "GL_MAX" };// 4
+static std::array<int, 4> add_parameter_selections{ 2, 1, 6, 7 };
+static std::array<int, 2> add_equation_selections{};
+static std::array<int, 4> subtract_parameter_selections{ 4, 1, 6, 7 };
+static std::array<int, 2> subtract_equation_selections{ 2, 0 };
 
 ff8::Map::Map(const ff8::Fields &fields)
   : m_mim(LoadMim(fields.Field(), fields.Coo(), m_mim_path, m_mim_choose_coo))
@@ -19,7 +79,7 @@ ff8::Map::Map(const ff8::Fields &fields)
       m_map_path,
       m_map_choose_coo))
 {
-  if(!std::empty(m_mim_path))
+  if (!std::empty(m_mim_path))
   {
     fmt::print("Loaded {}\n", m_mim_path);
     fmt::print("Loaded {}\n", m_map_path);
@@ -85,77 +145,151 @@ void ff8::Map::SetUniforms() const
   {
     m_batch_renderer.Shader().SetUniform("u_Grid", 16.F, 16.F);
   }
-  m_batch_renderer.Shader().SetUniform("u_Color", 1.F, 1.F, 1.F, 1.F);
+  m_batch_renderer.Shader().SetUniform(
+    "u_Color",
+    uniform_color.r,
+    uniform_color.g,
+    uniform_color.b,
+    uniform_color.a);
 }
 
 void ff8::Map::OnRender() const
 {
   using open_viii::graphics::background::BlendModeT;
-  BlendModeT last_blend_mode{BlendModeT::none};
+  BlendModeT last_blend_mode{ BlendModeT::none };
+  uniform_color = default_uniform_color;
   Window::DefaultBlend();
   camera.OnRender();
   SetUniforms();
   m_batch_renderer.Clear();
   m_map.visit_tiles([&](const auto &tiles) {
-    for (const auto &tile : tiles | std::views::reverse)
+    //    const auto i_max_z = std::ranges::max_element(
+    //      tiles, {}, [](const auto &tile) { return tile.z(); });
+    //    if (i_max_z == std::ranges::end(tiles))
+    //    {
+    //      return;
+    //    }
+    //    const float                max_z = static_cast<float>(i_max_z->z());
+    std::vector<std::uint16_t> unique_z{};
     {
-      const auto  bpp                = tile.depth();
-      const auto  palette            = tile.palette_id();
+      unique_z.reserve(std::ranges::size(tiles));
+      std::ranges::transform(
+        tiles, std::back_inserter(unique_z), [](const auto &tile) {
+          return tile.z();
+        });
+      std::ranges::sort(unique_z);
+      auto [begin, end] = std::ranges::unique(unique_z);
+      unique_z.erase(begin, end);
+    }
 
-      std::size_t texture_index      = palette;
-      int         texture_page_width = 256;
-      if (bpp.bpp8())
+    for (const auto z : unique_z | std::views::reverse)
+    {
+      // fmt::print("z = {}\n", z);
+      for (const auto &tile :
+           tiles | std::views::reverse
+             | std::views::filter([z](const auto &t) { return z == t.z(); }))
       {
-        texture_index      = 16 + palette;
-        texture_page_width = 128;
-      }
-      else if (bpp.bpp16())
-      {
-        texture_index      = 16 * 2;
-        texture_page_width = 64;
-      }
-      auto  texture_page_offset = tile.texture_id() * texture_page_width;
+        const auto  bpp                = tile.depth();
+        const auto  palette            = tile.palette_id();
 
-      auto &texture = m_delayed_textures.textures->at(texture_index);
-      if (texture.width() == 0 || texture.height() == 0)
-        continue;
-      const auto texture_dims =
-        glm::vec2(m_mim.get_width(tile.depth()), m_mim.get_height());
-      SubTexture sub_texture = {
-        texture,
-        glm::vec2{ tile.source_x() + texture_page_offset,
-                   texture_dims.y - (tile.source_y() + 16) }
-          / texture_dims,
-        glm::vec2{ tile.source_x() + texture_page_offset + 16,
-                   texture_dims.y - tile.source_y() }
-          / texture_dims
-      };
-      auto blend_mode = tile.blend_mode();
-      if(blend_mode != last_blend_mode)
-      {
-        last_blend_mode = blend_mode;
-        switch(blend_mode)
+        std::size_t texture_index      = palette;
+        int         texture_page_width = 256;
+        if (bpp.bpp8())
         {
-          case BlendModeT::add:
-          case BlendModeT::half_add:
-          case BlendModeT::quarter_add: {
-            //Window::AddBlend();
-          }
-          break;
-          case BlendModeT ::subtract:
-          {
-            //Window::SubtractBlend();
-          }
-          break;
-          default:
-            Window::DefaultBlend();
+          texture_index      = 16 + palette;
+          texture_page_width = 128;
         }
-        m_batch_renderer.Draw(); //flush buffer.
+        else if (bpp.bpp16())
+        {
+          texture_index      = 16 * 2;
+          texture_page_width = 64;
+        }
+        auto  texture_page_offset = tile.texture_id() * texture_page_width;
+
+        auto &texture = m_delayed_textures.textures->at(texture_index);
+        if (texture.width() == 0 || texture.height() == 0)
+          continue;
+        const auto texture_dims =
+          glm::vec2(m_mim.get_width(tile.depth()), m_mim.get_height());
+        SubTexture sub_texture = {
+          texture,
+          glm::vec2{ tile.source_x() + texture_page_offset,
+                     texture_dims.y - (tile.source_y() + 16) }
+            / texture_dims,
+          glm::vec2{ tile.source_x() + texture_page_offset + 16,
+                     texture_dims.y - tile.source_y() }
+            / texture_dims
+        };
+        auto blend_mode = tile.blend_mode();
+        if (blend_mode != last_blend_mode)
+        {
+          m_batch_renderer.Draw();// flush buffer.
+          last_blend_mode = blend_mode;
+          switch (blend_mode)
+          {
+            case BlendModeT::half_add:
+              uniform_color = half_uniform_color;
+              break;
+            case BlendModeT::quarter_add:
+              uniform_color = quarter_uniform_color;
+              break;
+            default:
+              uniform_color = default_uniform_color;
+              break;
+          }
+          switch (blend_mode)
+          {
+            case BlendModeT::half_add:
+            case BlendModeT::quarter_add:
+            case BlendModeT::add: {
+              glBlendFuncSeparate(
+                parameters.at(
+                  static_cast<std::size_t>(add_parameter_selections[0])),
+                parameters.at(
+                  static_cast<std::size_t>(add_parameter_selections[1])),
+                parameters.at(
+                  static_cast<std::size_t>(add_parameter_selections[2])),
+                parameters.at(
+                  static_cast<std::size_t>(add_parameter_selections[3])));
+              // Window::AddBlend();
+              glBlendEquationSeparate(
+                equations.at(
+                  static_cast<std::size_t>(add_equation_selections[0])),
+                equations.at(
+                  static_cast<std::size_t>(add_equation_selections[1])));
+            }
+            break;
+            case BlendModeT ::subtract: {
+              glBlendFuncSeparate(
+                parameters.at(
+                  static_cast<std::size_t>(subtract_parameter_selections[0])),
+                parameters.at(
+                  static_cast<std::size_t>(subtract_parameter_selections[1])),
+                parameters.at(
+                  static_cast<std::size_t>(subtract_parameter_selections[2])),
+                parameters.at(
+                  static_cast<std::size_t>(subtract_parameter_selections[3])));
+              // Window::SubtractBlend();
+              glBlendEquationSeparate(
+                equations.at(
+                  static_cast<std::size_t>(subtract_equation_selections[0])),
+                equations.at(
+                  static_cast<std::size_t>(subtract_equation_selections[1])));
+            }
+            break;
+            default:
+              Window::DefaultBlend();
+          }
+        }
+        m_batch_renderer.DrawQuad(
+          sub_texture,
+          glm::vec3(
+            tile.x(),
+            (camera.Bounds().top - 16) - tile.y(),
+            //(max_z == 0.F ? 0.F : static_cast<float>(tile.z()) / -max_z)),
+            0.F),
+          glm::vec2(16.F, 16.F));
       }
-      m_batch_renderer.DrawQuad(
-        sub_texture,
-        glm::vec2(tile.x(), (camera.Bounds().top - 16) - tile.y()),
-        glm::vec2(16, 16));
     }
   });
   m_batch_renderer.Draw();
@@ -167,7 +301,78 @@ void ff8::Map::OnEvent(const Event::Item &e) const
   camera.OnEvent(e);
   m_batch_renderer.OnEvent(e);
 }
-void ff8::Map::OnImGuiUpdate() const {
+void ff8::Map::OnImGuiUpdate() const
+{
+  if (ImGui::CollapsingHeader("Add Blend"))
+  {
+    ImGui::Combo(
+      "srcRGB",
+      &add_parameter_selections[0],
+      std::ranges::data(parameters_string),
+      static_cast<int>(std::ranges::ssize(parameters_string)));
+    ImGui::Combo(
+      "dstRGB",
+      &add_parameter_selections[1],
+      std::ranges::data(parameters_string),
+      static_cast<int>(std::ranges::ssize(parameters_string)));
+    ImGui::Combo(
+      "srcAlpha",
+      &add_parameter_selections[2],
+      std::ranges::data(parameters_string),
+      static_cast<int>(std::ranges::ssize(parameters_string)));
+    ImGui::Combo(
+      "dstAlpha",
+      &add_parameter_selections[3],
+      std::ranges::data(parameters_string),
+      static_cast<int>(std::ranges::ssize(parameters_string)));
+    ImGui::Separator();
+    ImGui::Combo(
+      "modeRGB",
+      &add_equation_selections[0],
+      std::ranges::data(equations_string),
+      static_cast<int>(std::ranges::ssize(equations_string)));
+    ImGui::Combo(
+      "modeAlpha",
+      &add_equation_selections[1],
+      std::ranges::data(equations_string),
+      static_cast<int>(std::ranges::ssize(equations_string)));
+  }
+  if (ImGui::CollapsingHeader("Subtract Blend"))
+  {
+    ImGui::PushID(1);
+    const auto pop = scope_guard(&ImGui::PopID);
+    ImGui::Combo(
+      "srcRGB",
+      &subtract_parameter_selections[0],
+      std::ranges::data(parameters_string),
+      static_cast<int>(std::ranges::ssize(parameters_string)));
+    ImGui::Combo(
+      "dstRGB",
+      &subtract_parameter_selections[1],
+      std::ranges::data(parameters_string),
+      static_cast<int>(std::ranges::ssize(parameters_string)));
+    ImGui::Combo(
+      "srcAlpha",
+      &subtract_parameter_selections[2],
+      std::ranges::data(parameters_string),
+      static_cast<int>(std::ranges::ssize(parameters_string)));
+    ImGui::Combo(
+      "dstAlpha",
+      &subtract_parameter_selections[3],
+      std::ranges::data(parameters_string),
+      static_cast<int>(std::ranges::ssize(parameters_string)));
+    ImGui::Separator();
+    ImGui::Combo(
+      "modeRGB",
+      &subtract_equation_selections[0],
+      std::ranges::data(equations_string),
+      static_cast<int>(std::ranges::ssize(equations_string)));
+    ImGui::Combo(
+      "modeAlpha",
+      &subtract_equation_selections[1],
+      std::ranges::data(equations_string),
+      static_cast<int>(std::ranges::ssize(equations_string)));
+  }
   m_batch_renderer.OnImGuiUpdate();
   camera.OnImGuiUpdate();
 }

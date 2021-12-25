@@ -57,7 +57,7 @@ void main()
     }
     else
     {
-      color =texColor;
+      color =texColor * u_Color * v_color;
     }
   }
   else

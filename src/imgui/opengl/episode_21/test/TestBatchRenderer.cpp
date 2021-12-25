@@ -21,7 +21,7 @@ void test::TestBatchRenderer::GenerateQuads() const
       float g = static_cast<float>(y) / static_cast<float>(m_count[1]);
 
       m_batch_renderer.DrawQuad(
-        { static_cast<float>(x), static_cast<float>(y) },
+        { static_cast<float>(x), static_cast<float>(y), 0.F },
         { r, g, 1.F, 1.F },
         m_textures.at(*text_index),
         static_cast<float>(1U << (*text_index)));
