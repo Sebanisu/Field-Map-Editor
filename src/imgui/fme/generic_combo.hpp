@@ -47,13 +47,12 @@ template<
   returns_range_concept  value_lambdaT,
   returns_range_concept  string_lambdaT,
   returns_filter_concept filter_lambdaT>
-inline static bool
-  generic_combo(
-    int             &id,
-    std::string_view name,
-    value_lambdaT  &&value_lambda,
-    string_lambdaT &&string_lambda,
-    filter_lambdaT &&filter_lambda)
+inline static bool generic_combo(
+  int             &id,
+  std::string_view name,
+  value_lambdaT  &&value_lambda,
+  string_lambdaT &&string_lambda,
+  filter_lambdaT &&filter_lambda)
 {
   bool        changed = false;
   const auto &values  = value_lambda();
@@ -84,8 +83,7 @@ inline static bool
     }
     return false;
   }
-  const auto next = [](const auto &r, const auto &idx)
-  {
+  const auto next = [](const auto &r, const auto &idx) {
     // sometimes the types are different. So I had to static cast to silence
     // warning.
     return std::ranges::next(
@@ -125,31 +123,28 @@ inline static bool
     // The second parameter is the label previewed
     // before opening the combo.
     {
-      std::ranges::for_each(
-        strings,
-        [&](const auto &string)
+      std::ranges::for_each(strings, [&](const auto &string) {
+        const bool  is_selected = (*current_item == string);
+        // You can store your selection however you
+        // want, outside or inside your objects
+        const char *v           = string.data();
         {
-          const bool  is_selected = (*current_item == string);
-          // You can store your selection however you
-          // want, outside or inside your objects
-          const char *v           = string.data();
+          const auto sc = scope_guard{ &ImGui::PopID };
+          ImGui::PushID(++id);
+          if (ImGui::Selectable(v, is_selected))
           {
-            const auto sc = scope_guard{ &ImGui::PopID };
-            ImGui::PushID(++id);
-            if (ImGui::Selectable(v, is_selected))
-            {
-              current_idx = std::distance(std::ranges::data(strings), &string);
-              changed     = true;
-            }
+            current_idx = std::distance(std::ranges::data(strings), &string);
+            changed     = true;
           }
-          if (is_selected)
-          {
-            ImGui::SetItemDefaultFocus();
-            // You may set the initial focus when
-            // opening the combo (scrolling + for
-            // keyboard navigation support)
-          }
-        });
+        }
+        if (is_selected)
+        {
+          ImGui::SetItemDefaultFocus();
+          // You may set the initial focus when
+          // opening the combo (scrolling + for
+          // keyboard navigation support)
+        }
+      });
       if (old != current_idx)
       {
         fmt::print(pattern, gui_labels::set, name, *next(values, current_idx));
@@ -175,13 +170,12 @@ requires requires(value_lambdaT v)
     *(v().begin())
     } -> std::equality_comparable_with<valueT>;
 }
-inline static bool
-  generic_combo(
-    int             &id,
-    std::string_view name,
-    value_lambdaT  &&value_lambda,
-    string_lambdaT &&string_lambda,
-    valueT          &value)
+inline static bool generic_combo(
+  int             &id,
+  std::string_view name,
+  value_lambdaT  &&value_lambda,
+  string_lambdaT &&string_lambda,
+  valueT          &value)
 {
   bool        changed = false;
   const auto &values  = value_lambda();
@@ -207,8 +201,7 @@ inline static bool
   {
     return false;
   }
-  const auto next = [](const auto &r, const auto &idx)
-  {
+  const auto next = [](const auto &r, const auto &idx) {
     // sometimes the types are different. So I had to static cast to silence
     // warning.
     return std::ranges::next(
@@ -227,31 +220,28 @@ inline static bool
     // The second parameter is the label previewed
     // before opening the combo.
     {
-      std::ranges::for_each(
-        strings,
-        [&](const auto &string)
+      std::ranges::for_each(strings, [&](const auto &string) {
+        const bool  is_selected = (*current_item == string);
+        // You can store your selection however you
+        // want, outside or inside your objects
+        const char *c_str_value = std::ranges::data(string);
         {
-          const bool  is_selected = (*current_item == string);
-          // You can store your selection however you
-          // want, outside or inside your objects
-          const char *c_str_value = std::ranges::data(string);
+          const auto sc = scope_guard{ &ImGui::PopID };
+          ImGui::PushID(++id);
+          if (ImGui::Selectable(c_str_value, is_selected))
           {
-            const auto sc = scope_guard{ &ImGui::PopID };
-            ImGui::PushID(++id);
-            if (ImGui::Selectable(c_str_value, is_selected))
-            {
-              current_idx = std::distance(std::ranges::data(strings), &string);
-              changed     = true;
-            }
+            current_idx = std::distance(std::ranges::data(strings), &string);
+            changed     = true;
           }
-          if (is_selected)
-          {
-            ImGui::SetItemDefaultFocus();
-            // You may set the initial focus when
-            // opening the combo (scrolling + for
-            // keyboard navigation support)
-          }
-        });
+        }
+        if (is_selected)
+        {
+          ImGui::SetItemDefaultFocus();
+          // You may set the initial focus when
+          // opening the combo (scrolling + for
+          // keyboard navigation support)
+        }
+      });
       if (old != current_idx)
       {
         fmt::print(pattern, gui_labels::set, name, *next(values, current_idx));

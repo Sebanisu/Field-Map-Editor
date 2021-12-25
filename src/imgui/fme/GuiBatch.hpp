@@ -38,51 +38,36 @@ struct [[nodiscard]] GuiBatch
   //                         : archives_group{ {}, m_archive_paths.front() })
   {
   }
-  void
-    operator()(int *id);
+  void operator()(int *id);
 
 private:
   static cppcoro::generator<std::tuple<int, std::string>>
     get_field_id_and_name(std::vector<std::string> maps);
   static cppcoro::generator<std::shared_ptr<open_viii::archive::FIFLFS<false>>>
     get_field(::archives_group archives_group);
-  static cppcoro::generator<open_viii::LangT>
-    get_field_coos(
-      const std::shared_ptr<open_viii::archive::FIFLFS<false>> field);
-  static cppcoro::generator<::map_sprite>
-    get_map_sprite(
-      const std::shared_ptr<open_viii::archive::FIFLFS<false>> &field,
-      const ::filters                                          &in_filters);
+  static cppcoro::generator<open_viii::LangT> get_field_coos(
+    const std::shared_ptr<open_viii::archive::FIFLFS<false>> field);
+  static cppcoro::generator<::map_sprite> get_map_sprite(
+    const std::shared_ptr<open_viii::archive::FIFLFS<false>> &field,
+    const ::filters                                          &in_filters);
   static void
     popup_batch_common_filter_start(::filters &filters, std::string &base_name);
-  static void
-    popup_batch_common_filter_start(
-      ::filter<std::filesystem::path> &filter,
-      std::string_view                 base_name);
-  [[nodiscard]] cppcoro::generator<bool>
-    source();
-  cppcoro::generator<bool>
-    save_output(const map_sprite ms) const;
-  filters
-    get_filters();
-  void
-    compact_and_flatten(map_sprite &ms) const;
-  [[nodiscard]] bool
-    ask() const;
-  [[nodiscard]] bool
-    ask_post_operation() const;
-  [[nodiscard]] bool
-    ask_output() const;
-  [[nodiscard]] bool
-    ask_archive_path() const;
-  [[nodiscard]] bool
-    ask_source() const;
-  [[nodiscard]] bool
-    ask_transformation() const;
-  [[nodiscard]] static ImGui::FileBrowser
-    create_directory_browser(
-      std::string              title,
-      std::vector<std::string> filetypes = {});
+  static void popup_batch_common_filter_start(
+    ::filter<std::filesystem::path> &filter,
+    std::string_view                 base_name);
+  [[nodiscard]] cppcoro::generator<bool> source();
+  cppcoro::generator<bool>               save_output(const map_sprite ms) const;
+  filters                                get_filters();
+  void               compact_and_flatten(map_sprite &ms) const;
+  [[nodiscard]] bool ask() const;
+  [[nodiscard]] bool ask_post_operation() const;
+  [[nodiscard]] bool ask_output() const;
+  [[nodiscard]] bool ask_archive_path() const;
+  [[nodiscard]] bool ask_source() const;
+  [[nodiscard]] bool ask_transformation() const;
+  [[nodiscard]] static ImGui::FileBrowser create_directory_browser(
+    std::string              title,
+    std::vector<std::string> filetypes = {});
   [[nodiscard]] static std::optional<std::filesystem::path>
     ask_for_path(ImGui::FileBrowser &file_browser);
 
@@ -102,8 +87,7 @@ private:
     create_directory_browser("Select Directory");
   mutable ImGui::FileBrowser m_output_browser =
     create_directory_browser("Select Directory");
-  [[nodiscard]] scope_guard
-    PushPop() const;
+  [[nodiscard]] scope_guard PushPop() const;
 };
 }// namespace fme
 #endif// MYPROJECT_GUIBATCH_HPP

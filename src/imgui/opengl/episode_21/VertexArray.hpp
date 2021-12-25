@@ -21,9 +21,9 @@ public:
   VertexArray(
     const bindableT                        &vertex_buffer,
     const VertexBufferLayout<ElementCount> &layout)
-  : VertexArray()
+    : VertexArray()
   {
-    push_back(vertex_buffer,layout);
+    push_back(vertex_buffer, layout);
   }
   void        Bind() const;
   static void UnBind();

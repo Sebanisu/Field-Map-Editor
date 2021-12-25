@@ -5,10 +5,11 @@
 #include "Map.hpp"
 #include "OrthographicCameraController.hpp"
 
-static OrthographicCameraController camera              = { 16 / 9 };
-static bool                         snap_zoom_to_height = true;
-static bool                         draw_grid           = false;
-static bool                         saving              = false;
+static OrthographicCameraController camera               = { 16 / 9 };
+static bool                         snap_zoom_to_height  = true;
+static bool                         draw_grid            = false;
+static bool                         saving               = false;
+static bool                         enable_percent_blend = true;
 static constexpr glm::vec4 default_uniform_color = { 1.F, 1.F, 1.F, 1.F };
 static constexpr glm::vec4 half_uniform_color    = { .5F, .5F, .5F, .5F };
 static constexpr glm::vec4 quarter_uniform_color = { .25F, .25F, .25F, .25F };
@@ -94,10 +95,13 @@ void ff8::Map::OnUpdate(float ts) const
   m_delayed_textures.check();
 
   m_map.visit_tiles([&](const auto &tiles) {
+    auto f_tiles = tiles
+                   | std::views::filter(
+                     open_viii::graphics::background::Map::filter_invalid());
     auto [i_min_x, i_max_x] = std::ranges::minmax_element(
-      tiles, {}, [](const auto &tile) { return tile.x(); });
+      f_tiles, {}, [](const auto &tile) { return tile.x(); });
     auto [i_min_y, i_max_y] = std::ranges::minmax_element(
-      tiles, {}, [](const auto &tile) { return tile.y(); });
+      f_tiles, {}, [](const auto &tile) { return tile.y(); });
 
     if (i_min_x == i_max_x || i_min_y == i_max_y)
     {
@@ -124,15 +128,6 @@ void ff8::Map::OnUpdate(float ts) const
 void ff8::Map::SetUniforms() const
 {
   m_batch_renderer.Bind();
-  //  if (saving)
-  //  {
-  //    batch_renderer.Shader().SetUniform(
-  //      "u_MVP",
-  //      OrthographicCamera{ { 0, 0 }, { texture->width(), texture->height() }
-  //      }
-  //        .ViewProjectionMatrix());
-  //  }
-  //  else
   {
     m_batch_renderer.Shader().SetUniform(
       "u_MVP", camera.Camera().ViewProjectionMatrix());
@@ -153,6 +148,40 @@ void ff8::Map::SetUniforms() const
     uniform_color.a);
 }
 
+auto index_and_page_width(auto bpp, auto palette)
+{
+  struct
+  {
+    size_t texture_index      = {};
+    int    texture_page_width = { 256 };
+  } r = { .texture_index = palette };
+  if (bpp.bpp8())
+  {
+    r.texture_index      = 16 + palette;
+    r.texture_page_width = 128;
+  }
+  else if (bpp.bpp16())
+  {
+    r.texture_index      = 16 * 2;
+    r.texture_page_width = 64;
+  }
+  return r;
+}
+void set_blend_mode_selections(
+  const std::array<int, 4U> &parameters_selections,
+  const std::array<int, 2U> &equation_selections)
+{
+  GLCall{}(
+    glBlendFuncSeparate,
+    parameters.at(static_cast<std::size_t>(parameters_selections[0])),
+    parameters.at(static_cast<std::size_t>(parameters_selections[1])),
+    parameters.at(static_cast<std::size_t>(parameters_selections[2])),
+    parameters.at(static_cast<std::size_t>(parameters_selections[3])));
+  GLCall{}(
+    glBlendEquationSeparate,
+    equations.at(static_cast<std::size_t>(equation_selections[0])),
+    equations.at(static_cast<std::size_t>(equation_selections[1])));
+}
 void ff8::Map::OnRender() const
 {
   using open_viii::graphics::background::BlendModeT;
@@ -162,7 +191,11 @@ void ff8::Map::OnRender() const
   camera.OnRender();
   SetUniforms();
   m_batch_renderer.Clear();
+  const auto offset_y = camera.Bounds().top - 16 + camera.Bounds().bottom;
   m_map.visit_tiles([&](const auto &tiles) {
+    auto f_tiles = tiles
+                   | std::views::filter(
+                     open_viii::graphics::background::Map::filter_invalid());
     //    const auto i_max_z = std::ranges::max_element(
     //      tiles, {}, [](const auto &tile) { return tile.z(); });
     //    if (i_max_z == std::ranges::end(tiles))
@@ -174,7 +207,7 @@ void ff8::Map::OnRender() const
     {
       unique_z.reserve(std::ranges::size(tiles));
       std::ranges::transform(
-        tiles, std::back_inserter(unique_z), [](const auto &tile) {
+        f_tiles, std::back_inserter(unique_z), [](const auto &tile) {
           return tile.z();
         });
       std::ranges::sort(unique_z);
@@ -186,24 +219,14 @@ void ff8::Map::OnRender() const
     {
       // fmt::print("z = {}\n", z);
       for (const auto &tile :
-           tiles | std::views::reverse
+           f_tiles | std::views::reverse
              | std::views::filter([z](const auto &t) { return z == t.z(); }))
       {
-        const auto  bpp                = tile.depth();
-        const auto  palette            = tile.palette_id();
+        const auto bpp     = tile.depth();
+        const auto palette = tile.palette_id();
+        const auto [texture_index, texture_page_width] =
+          index_and_page_width(bpp, palette);
 
-        std::size_t texture_index      = palette;
-        int         texture_page_width = 256;
-        if (bpp.bpp8())
-        {
-          texture_index      = 16 + palette;
-          texture_page_width = 128;
-        }
-        else if (bpp.bpp16())
-        {
-          texture_index      = 16 * 2;
-          texture_page_width = 64;
-        }
         auto  texture_page_offset = tile.texture_id() * texture_page_width;
 
         auto &texture = m_delayed_textures.textures->at(texture_index);
@@ -225,56 +248,33 @@ void ff8::Map::OnRender() const
         {
           m_batch_renderer.Draw();// flush buffer.
           last_blend_mode = blend_mode;
-          switch (blend_mode)
+          if (enable_percent_blend)
           {
-            case BlendModeT::half_add:
-              uniform_color = half_uniform_color;
-              break;
-            case BlendModeT::quarter_add:
-              uniform_color = quarter_uniform_color;
-              break;
-            default:
-              uniform_color = default_uniform_color;
-              break;
+            switch (blend_mode)
+            {
+              case BlendModeT::half_add:
+                uniform_color = half_uniform_color;
+                break;
+              case BlendModeT::quarter_add:
+                uniform_color = quarter_uniform_color;
+                break;
+              default:
+                uniform_color = default_uniform_color;
+                break;
+            }
           }
           switch (blend_mode)
           {
             case BlendModeT::half_add:
             case BlendModeT::quarter_add:
             case BlendModeT::add: {
-              glBlendFuncSeparate(
-                parameters.at(
-                  static_cast<std::size_t>(add_parameter_selections[0])),
-                parameters.at(
-                  static_cast<std::size_t>(add_parameter_selections[1])),
-                parameters.at(
-                  static_cast<std::size_t>(add_parameter_selections[2])),
-                parameters.at(
-                  static_cast<std::size_t>(add_parameter_selections[3])));
-              // Window::AddBlend();
-              glBlendEquationSeparate(
-                equations.at(
-                  static_cast<std::size_t>(add_equation_selections[0])),
-                equations.at(
-                  static_cast<std::size_t>(add_equation_selections[1])));
+              set_blend_mode_selections(
+                add_parameter_selections, add_equation_selections);
             }
             break;
             case BlendModeT ::subtract: {
-              glBlendFuncSeparate(
-                parameters.at(
-                  static_cast<std::size_t>(subtract_parameter_selections[0])),
-                parameters.at(
-                  static_cast<std::size_t>(subtract_parameter_selections[1])),
-                parameters.at(
-                  static_cast<std::size_t>(subtract_parameter_selections[2])),
-                parameters.at(
-                  static_cast<std::size_t>(subtract_parameter_selections[3])));
-              // Window::SubtractBlend();
-              glBlendEquationSeparate(
-                equations.at(
-                  static_cast<std::size_t>(subtract_equation_selections[0])),
-                equations.at(
-                  static_cast<std::size_t>(subtract_equation_selections[1])));
+              set_blend_mode_selections(
+                subtract_parameter_selections, subtract_equation_selections);
             }
             break;
             default:
@@ -283,11 +283,7 @@ void ff8::Map::OnRender() const
         }
         m_batch_renderer.DrawQuad(
           sub_texture,
-          glm::vec3(
-            tile.x(),
-            (camera.Bounds().top - 16) - tile.y(),
-            //(max_z == 0.F ? 0.F : static_cast<float>(tile.z()) / -max_z)),
-            0.F),
+          glm::vec3(tile.x(), offset_y - tile.y(), 0.F),
           glm::vec2(16.F, 16.F));
       }
     }
@@ -296,83 +292,66 @@ void ff8::Map::OnRender() const
   m_batch_renderer.OnRender();
   Window::DefaultBlend();
 }
+
 void ff8::Map::OnEvent(const Event::Item &e) const
 {
   camera.OnEvent(e);
   m_batch_renderer.OnEvent(e);
 }
+void Blend_Combos(
+  std::array<int, 4U> &parameters_selections,
+  std::array<int, 2U> &equation_selections)
+{
+  ImGui::Combo(
+    "srcRGB",
+    &parameters_selections[0],
+    std::ranges::data(parameters_string),
+    static_cast<int>(std::ranges::ssize(parameters_string)));
+  ImGui::Combo(
+    "dstRGB",
+    &parameters_selections[1],
+    std::ranges::data(parameters_string),
+    static_cast<int>(std::ranges::ssize(parameters_string)));
+  ImGui::Combo(
+    "srcAlpha",
+    &parameters_selections[2],
+    std::ranges::data(parameters_string),
+    static_cast<int>(std::ranges::ssize(parameters_string)));
+  ImGui::Combo(
+    "dstAlpha",
+    &parameters_selections[3],
+    std::ranges::data(parameters_string),
+    static_cast<int>(std::ranges::ssize(parameters_string)));
+  ImGui::Separator();
+  ImGui::Combo(
+    "modeRGB",
+    &equation_selections[0],
+    std::ranges::data(equations_string),
+    static_cast<int>(std::ranges::ssize(equations_string)));
+  ImGui::Combo(
+    "modeAlpha",
+    &equation_selections[1],
+    std::ranges::data(equations_string),
+    static_cast<int>(std::ranges::ssize(equations_string)));
+}
 void ff8::Map::OnImGuiUpdate() const
 {
+  ImGui::Checkbox("Snap Zoom to Height", &snap_zoom_to_height);
   if (ImGui::CollapsingHeader("Add Blend"))
   {
-    ImGui::Combo(
-      "srcRGB",
-      &add_parameter_selections[0],
-      std::ranges::data(parameters_string),
-      static_cast<int>(std::ranges::ssize(parameters_string)));
-    ImGui::Combo(
-      "dstRGB",
-      &add_parameter_selections[1],
-      std::ranges::data(parameters_string),
-      static_cast<int>(std::ranges::ssize(parameters_string)));
-    ImGui::Combo(
-      "srcAlpha",
-      &add_parameter_selections[2],
-      std::ranges::data(parameters_string),
-      static_cast<int>(std::ranges::ssize(parameters_string)));
-    ImGui::Combo(
-      "dstAlpha",
-      &add_parameter_selections[3],
-      std::ranges::data(parameters_string),
-      static_cast<int>(std::ranges::ssize(parameters_string)));
-    ImGui::Separator();
-    ImGui::Combo(
-      "modeRGB",
-      &add_equation_selections[0],
-      std::ranges::data(equations_string),
-      static_cast<int>(std::ranges::ssize(equations_string)));
-    ImGui::Combo(
-      "modeAlpha",
-      &add_equation_selections[1],
-      std::ranges::data(equations_string),
-      static_cast<int>(std::ranges::ssize(equations_string)));
+    ImGui::Checkbox("Percent Blends (50%,25%)", &enable_percent_blend);
+    ImGui::PushID(1);
+    const auto pop = scope_guard(&ImGui::PopID);
+    Blend_Combos(add_parameter_selections, add_equation_selections);
   }
   if (ImGui::CollapsingHeader("Subtract Blend"))
   {
-    ImGui::PushID(1);
+    ImGui::PushID(2);
     const auto pop = scope_guard(&ImGui::PopID);
-    ImGui::Combo(
-      "srcRGB",
-      &subtract_parameter_selections[0],
-      std::ranges::data(parameters_string),
-      static_cast<int>(std::ranges::ssize(parameters_string)));
-    ImGui::Combo(
-      "dstRGB",
-      &subtract_parameter_selections[1],
-      std::ranges::data(parameters_string),
-      static_cast<int>(std::ranges::ssize(parameters_string)));
-    ImGui::Combo(
-      "srcAlpha",
-      &subtract_parameter_selections[2],
-      std::ranges::data(parameters_string),
-      static_cast<int>(std::ranges::ssize(parameters_string)));
-    ImGui::Combo(
-      "dstAlpha",
-      &subtract_parameter_selections[3],
-      std::ranges::data(parameters_string),
-      static_cast<int>(std::ranges::ssize(parameters_string)));
-    ImGui::Separator();
-    ImGui::Combo(
-      "modeRGB",
-      &subtract_equation_selections[0],
-      std::ranges::data(equations_string),
-      static_cast<int>(std::ranges::ssize(equations_string)));
-    ImGui::Combo(
-      "modeAlpha",
-      &subtract_equation_selections[1],
-      std::ranges::data(equations_string),
-      static_cast<int>(std::ranges::ssize(equations_string)));
+    Blend_Combos(subtract_parameter_selections, subtract_equation_selections);
   }
+  ImGui::Separator();
   m_batch_renderer.OnImGuiUpdate();
+  ImGui::Separator();
   camera.OnImGuiUpdate();
 }

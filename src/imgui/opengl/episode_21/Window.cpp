@@ -284,17 +284,17 @@ void Window::DefaultBlend()
 
 void Window::AddBlend()
 {
-  //GLCall{}(glBlendFuncSeparate, GL_SRC_ALPHA, GL_ONE, GL_ONE, GL_ONE);
+  // GLCall{}(glBlendFuncSeparate, GL_SRC_ALPHA, GL_ONE, GL_ONE, GL_ONE);
   GLCall{}(glBlendEquationSeparate, GL_FUNC_ADD, GL_FUNC_ADD);
 }
 
 void Window::SubtractBlend()
 {
-//  GLCall{}(
-//    glBlendFuncSeparate,
-//    GL_SRC_COLOR,
-//    GL_DST_COLOR,
-//    GL_SRC_ALPHA,
-//    GL_ONE_MINUS_SRC_ALPHA);
+  //  GLCall{}(
+  //    glBlendFuncSeparate,
+  //    GL_SRC_COLOR,
+  //    GL_DST_COLOR,
+  //    GL_SRC_ALPHA,
+  //    GL_ONE_MINUS_SRC_ALPHA);
   GLCall{}(glBlendEquationSeparate, GL_FUNC_REVERSE_SUBTRACT, GL_FUNC_ADD);
 }

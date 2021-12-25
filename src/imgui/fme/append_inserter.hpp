@@ -13,8 +13,9 @@
 #include <memory>
 #include <utility>
 template<typename ContainerT>
-requires(requires(ContainerT c, typename ContainerT::value_type v)
-         { c.append(v); }) class append_insert_iterator
+requires(requires(ContainerT c, typename ContainerT::value_type v) {
+  c.append(v);
+}) class append_insert_iterator
 {// wrap pushes to append of container as output iterator
 public:
   using iterator_category                     = std::output_iterator_tag;
@@ -41,18 +42,15 @@ public:
     container->append(std::move(value));
     return *this;
   }
-  [[nodiscard]] constexpr append_insert_iterator &
-    operator*() noexcept
+  [[nodiscard]] constexpr append_insert_iterator &operator*() noexcept
   {
     return *this;
   }
-  constexpr append_insert_iterator &
-    operator++() noexcept
+  constexpr append_insert_iterator &operator++() noexcept
   {
     return *this;
   }
-  constexpr append_insert_iterator
-    operator++(int) noexcept
+  constexpr append_insert_iterator operator++(int) noexcept
   {
     return *this;
   }

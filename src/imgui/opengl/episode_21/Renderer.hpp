@@ -16,6 +16,7 @@ public:
   void Color(glm::vec4 color);
   void Color(const float r, const float g, const float b, const float a);
   void operator()() const;
+
 private:
   glm::vec4 m_color{};
 };

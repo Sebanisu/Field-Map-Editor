@@ -29,41 +29,34 @@ public:
   {
   }
   template<typename U>
-  filter &
-    update(U &&value)
+  filter &update(U &&value)
   {
     m_value = std::forward<U>(value);
     return *this;
   }
-  [[nodiscard]] const T &
-    value() const
+  [[nodiscard]] const T &value() const
   {
     return m_value;
   }
-  [[nodiscard]] const bool &
-    enabled() const
+  [[nodiscard]] const bool &enabled() const
   {
     return m_enabled;
   }
-  filter &
-    enable()
+  filter &enable()
   {
     m_enabled = true;
     return *this;
   }
-  filter &
-    disable()
+  filter &disable()
   {
     m_enabled = false;
     return *this;
   }
-  [[nodiscard]] bool
-    operator==(const T &cmp) const
+  [[nodiscard]] bool operator==(const T &cmp) const
   {
     return m_value == cmp;
   }
-  [[nodiscard]] bool
-    operator!=(const T &cmp) const
+  [[nodiscard]] bool operator!=(const T &cmp) const
   {
     return m_value != cmp;
   }
@@ -103,8 +96,7 @@ struct filters
   filter<std::uint8_t>                                texture_page_id = {};
   filter<open_viii::graphics::background::BlendModeT> blend_mode      = {};
   filter<std::uint8_t>                                blend_other     = {};
-  filter<open_viii::graphics::BPPT>                   bpp             = []()
-  {
+  filter<open_viii::graphics::BPPT>                   bpp             = []() {
     using namespace open_viii::graphics::literals;
     return filter<open_viii::graphics::BPPT>(4_bpp);
   }();

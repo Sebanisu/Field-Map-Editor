@@ -42,12 +42,11 @@ public:
   {
   }
 
-  [[nodiscard]] auto
-    get_file_paths(
-      const std::filesystem::path &field_root,
-      std::uint8_t                 texture_page,
-      std::uint8_t                 palette,
-      std::string_view             ext = m_ext) const
+  [[nodiscard]] auto get_file_paths(
+    const std::filesystem::path &field_root,
+    std::uint8_t                 texture_page,
+    std::uint8_t                 palette,
+    std::string_view             ext = m_ext) const
   {
     const std::string_view prefix = std::string_view(m_field_name).substr(0, 2);
 
@@ -75,11 +74,10 @@ public:
     };
   }
 
-  [[nodiscard]] auto
-    get_file_paths(
-      const std::filesystem::path &field_root,
-      std::uint8_t                 texture_page,
-      std::string_view             ext = m_ext) const
+  [[nodiscard]] auto get_file_paths(
+    const std::filesystem::path &field_root,
+    std::uint8_t                 texture_page,
+    std::string_view             ext = m_ext) const
   {
 
     const std::string_view prefix = std::string_view(m_field_name).substr(0, 2);
@@ -104,8 +102,7 @@ public:
     };
   }
 
-  [[nodiscard]] auto
-    get_paths() const
+  [[nodiscard]] auto get_paths() const
   {
     if (m_field_name.empty())
     {

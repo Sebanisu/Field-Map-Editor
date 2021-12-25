@@ -28,11 +28,11 @@ public:
   bool OnImGuiUpdate() const;
   void OnEvent(const Event::Item &) const {}
   [[nodiscard]] const open_viii::archive::FIFLFS<false> &Field() const;
-  [[nodiscard]] const std::string &Map_Name() const;
-  [[nodiscard]] std::string_view Coo() const;
+  [[nodiscard]] const std::string                       &Map_Name() const;
+  [[nodiscard]] std::string_view                         Coo() const;
 
 private:
-  open_viii::archive::FIFLFS<false> load_field() const;
+  open_viii::archive::FIFLFS<false>             load_field() const;
 
   mutable std::chrono::steady_clock::time_point starttime =
     std::chrono::steady_clock::now();

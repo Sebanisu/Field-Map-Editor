@@ -7,7 +7,7 @@
 
 
 static_assert(Renderable<BatchRenderer>);
-static std::uint32_t  draw_count = 0U;
+static std::uint32_t draw_count = 0U;
 BatchRenderer::BatchRenderer()
   : BatchRenderer(100U)
 {
@@ -98,7 +98,7 @@ void BatchRenderer::DrawQuad(
   glm::vec3         offset,
   glm::vec2         size) const
 {
-  DrawQuad(offset, { 1.F, 1.F, 1.F, 1.F }, texture,1.F,size);
+  DrawQuad(offset, { 1.F, 1.F, 1.F, 1.F }, texture, 1.F, size);
 }
 void BatchRenderer::DrawQuad(
   glm::vec3         offset,
@@ -163,9 +163,7 @@ void BatchRenderer::BindTextures() const
   }
   m_shader.SetUniform("u_Textures", m_uniform_texture_slots);
 }
-void BatchRenderer::OnEvent(const Event::Item &) const
-{
-}
+void BatchRenderer::OnEvent(const Event::Item &) const {}
 void BatchRenderer::Bind() const
 {
   m_shader.Bind();

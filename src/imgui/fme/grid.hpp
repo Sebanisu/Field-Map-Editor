@@ -20,8 +20,7 @@ private:
   std::vector<sf::Vertex> m_vertices = {};
   mutable bool            m_enable   = { true };
 
-  std::vector<sf::Vertex>
-    get_vertices() const;
+  std::vector<sf::Vertex> get_vertices() const;
 
 public:
   grid() = default;
@@ -30,19 +29,14 @@ public:
     const sf::Vector2u &size,
     const sf::Color    &color = sf::Color::White);
 
-  void
-    draw(sf::RenderTarget &target, sf::RenderStates states) const final;
-  grid
-    with_spacing_and_size(const sf::Vector2u &spacing, const sf::Vector2u &size)
-      const;
-  grid
-    with_color(const sf::Color &color);
-  void
-    enable() const;
-  void
-    disable() const;
-  std::size_t
-    count() const
+  void draw(sf::RenderTarget &target, sf::RenderStates states) const final;
+  grid with_spacing_and_size(
+    const sf::Vector2u &spacing,
+    const sf::Vector2u &size) const;
+  grid        with_color(const sf::Color &color);
+  void        enable() const;
+  void        disable() const;
+  std::size_t count() const
   {
     return std::size(m_vertices);
   }

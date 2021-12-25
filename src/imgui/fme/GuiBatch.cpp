@@ -29,8 +29,7 @@ static constexpr auto BatchOperationTransformationStrings =
 static constexpr auto BatchOperationTransformationCompactStrings =
   std::array{ std::string_view{ "Rows" }, std::string_view{ "All" } };
 }// namespace fme
-bool
-  fme::GuiBatch::ask() const
+bool fme::GuiBatch::ask() const
 {
   const auto end = scope_guard(&ImGui::End);
   if (ImGui::Begin(
@@ -50,8 +49,7 @@ bool
   }
   return false;
 }
-bool
-  fme::GuiBatch::ask_post_operation() const
+bool fme::GuiBatch::ask_post_operation() const
 {
   static int               selected_embed_path = {};
   std::vector<std::string> paths               = {};
@@ -109,8 +107,7 @@ bool
          || (!m_embed_maps && (static_cast<std::uint32_t>(m_transformation_type) & 0b11U) != 0U && m_output_path.has_value()
              && !m_output_path.value().empty());
 }
-bool
-  fme::GuiBatch::ask_output() const
+bool fme::GuiBatch::ask_output() const
 {
   const bool requires_output =
     (static_cast<std::uint32_t>(m_transformation_type) & 0b11U) != 0U;
@@ -137,15 +134,13 @@ bool
   return !requires_output
          || (m_output_path.has_value() && !m_output_path.value().empty());
 }
-bool
-  fme::GuiBatch::ask_archive_path() const
+bool fme::GuiBatch::ask_archive_path() const
 {
   static int selected_src_archive_int = {};
   if (generic_combo(
         *m_id,
         "Archive Path",
-        [&]()
-        {
+        [&]() {
           return std::views::iota(
             0, static_cast<int>(std::ranges::ssize(m_archive_paths)));
         },
@@ -166,12 +161,11 @@ bool
   {
     selected_src_archive_int = static_cast<int>(m_archive_paths.size());
     m_archive_group          = m_archive_group.with_path(
-               m_archive_paths.emplace_back(path.value().string()));
+      m_archive_paths.emplace_back(path.value().string()));
   }
   return !std::empty(m_archive_paths) && !m_archive_group.failed();
 }
-bool
-  fme::GuiBatch::ask_source() const
+bool fme::GuiBatch::ask_source() const
 {
   if (ImGui::CollapsingHeader("Source", ImGuiTreeNodeFlags_DefaultOpen))
   {
@@ -179,8 +173,7 @@ bool
     if (generic_combo(
           *m_id,
           "Type",
-          []()
-          {
+          []() {
             return std::views::iota(
               0,
               static_cast<int>(
@@ -217,14 +210,12 @@ bool
               || m_source_type == BatchOperationSource::Deswizzles)
              && m_source_path.has_value() && !m_source_path.value().empty());
 }
-scope_guard
-  fme::GuiBatch::PushPop() const
+scope_guard fme::GuiBatch::PushPop() const
 {
   ImGui::PushID(++*m_id);
   return scope_guard{ &ImGui::PopID };
 }
-bool
-  fme::GuiBatch::ask_transformation() const
+bool fme::GuiBatch::ask_transformation() const
 {
   if (!ImGui::CollapsingHeader(
         "Transformation", ImGuiTreeNodeFlags_DefaultOpen))
@@ -235,8 +226,7 @@ bool
     if (generic_combo(
           *m_id,
           "Task"sv,
-          []()
-          {
+          []() {
             return std::views::iota(
               0,
               static_cast<int>(
@@ -266,8 +256,7 @@ bool
       generic_combo(
         *m_id,
         "Compact"sv,
-        []()
-        {
+        []() {
           return std::views::iota(
             0,
             static_cast<int>(
@@ -319,10 +308,9 @@ bool
     m_transformation_type == BatchOperationTransformation::None
     && m_source_type == BatchOperationSource::FieldsArchive);
 }
-ImGui::FileBrowser
-  fme::GuiBatch::create_directory_browser(
-    std::string              title,
-    std::vector<std::string> filetypes)
+ImGui::FileBrowser fme::GuiBatch::create_directory_browser(
+  std::string              title,
+  std::vector<std::string> filetypes)
 {
   ImGui::FileBrowser directory_browser{ static_cast<ImGuiFileBrowserFlags>(
     static_cast<std::uint32_t>(ImGuiFileBrowserFlags_SelectDirectory)
@@ -343,54 +331,50 @@ std::optional<std::filesystem::path>
   }
   return path;
 }
-void
-  fme::GuiBatch::compact_and_flatten(map_sprite &ms) const
+void fme::GuiBatch::compact_and_flatten(map_sprite &ms) const
 {
-  const auto c = [&]
-  {
-         if (
-           (static_cast<uint32_t>(m_transformation_type)
-            & static_cast<uint32_t>(BatchOperationTransformation::CompactRows))
-           != 0)
-         {
-           ms.compact();
-         }
-         if (
-           (static_cast<uint32_t>(m_transformation_type)
-            & static_cast<uint32_t>(BatchOperationTransformation::CompactAll))
-           != 0)
-         {
-           ms.compact2();
-         }
+  const auto c = [&] {
+    if (
+      (static_cast<uint32_t>(m_transformation_type)
+       & static_cast<uint32_t>(BatchOperationTransformation::CompactRows))
+      != 0)
+    {
+      ms.compact();
+    }
+    if (
+      (static_cast<uint32_t>(m_transformation_type)
+       & static_cast<uint32_t>(BatchOperationTransformation::CompactAll))
+      != 0)
+    {
+      ms.compact2();
+    }
   };
   c();
-  const auto f = [&]() -> bool
-  {
-         if (
-           (static_cast<uint32_t>(m_transformation_type)
-            & static_cast<uint32_t>(BatchOperationTransformation::FlattenBPP))
-           != 0)
-         {
-           ms.flatten_bpp();
-           return true;
-         }
-         if (
-           (static_cast<uint32_t>(m_transformation_type)
-            & static_cast<uint32_t>(BatchOperationTransformation::FlattenPalette))
-           != 0)
-         {
-           ms.flatten_palette();
-           return true;
-         }
-         return false;
+  const auto f = [&]() -> bool {
+    if (
+      (static_cast<uint32_t>(m_transformation_type)
+       & static_cast<uint32_t>(BatchOperationTransformation::FlattenBPP))
+      != 0)
+    {
+      ms.flatten_bpp();
+      return true;
+    }
+    if (
+      (static_cast<uint32_t>(m_transformation_type)
+       & static_cast<uint32_t>(BatchOperationTransformation::FlattenPalette))
+      != 0)
+    {
+      ms.flatten_palette();
+      return true;
+    }
+    return false;
   };
   if (f())
   {
     c();
   }
 }
-filters
-  fme::GuiBatch::get_filters()
+filters fme::GuiBatch::get_filters()
 {
   filters filters{};
   if (m_source_type == BatchOperationSource::Swizzles)
@@ -403,14 +387,13 @@ filters
   }
   return filters;
 }
-cppcoro::generator<bool>
-  fme::GuiBatch::save_output(const map_sprite ms) const
+cppcoro::generator<bool> fme::GuiBatch::save_output(const map_sprite ms) const
 {
   if (m_output_path.has_value())
   {
-    std::string      base_name = ms.get_base_name();
-    std::string_view prefix    = std::string_view{ base_name }.substr(0, 2);
-    auto selected_path         = m_output_path.value() / prefix / base_name;
+    std::string      base_name     = ms.get_base_name();
+    std::string_view prefix        = std::string_view{ base_name }.substr(0, 2);
+    auto             selected_path = m_output_path.value() / prefix / base_name;
     if (
       (static_cast<uint32_t>(m_transformation_type)
        & static_cast<uint32_t>(BatchOperationTransformation::Deswizzle))
@@ -438,8 +421,7 @@ cppcoro::generator<bool>
     ms.save_modified_map(map_path);
   }
 }
-cppcoro::generator<bool>
-  fme::GuiBatch::source()
+cppcoro::generator<bool> fme::GuiBatch::source()
 {
   const auto filters   = get_filters();
   auto       gen_field = get_field(m_archive_group);
@@ -463,10 +445,9 @@ cppcoro::generator<bool>
     }
   }
 }
-void
-  fme::GuiBatch::popup_batch_common_filter_start(
-    filter<std::filesystem::path> &filter,
-    std::string_view               base_name)
+void fme::GuiBatch::popup_batch_common_filter_start(
+  filter<std::filesystem::path> &filter,
+  std::string_view               base_name)
 {
   std::string_view prefix = base_name.substr(0, 2);
   if (filter.enabled())
@@ -480,10 +461,9 @@ void
     }
   }
 }
-void
-  fme::GuiBatch::popup_batch_common_filter_start(
-    filters     &filters,
-    std::string &base_name)
+void fme::GuiBatch::popup_batch_common_filter_start(
+  filters     &filters,
+  std::string &base_name)
 {
   if (filters.upscale.enabled())
   {
@@ -494,10 +474,9 @@ void
     popup_batch_common_filter_start(filters.deswizzle, base_name);
   }
 }
-cppcoro::generator<::map_sprite>
-  fme::GuiBatch::get_map_sprite(
-    const std::shared_ptr<open_viii::archive::FIFLFS<false>> &field,
-    const filters                                            &in_filters)
+cppcoro::generator<::map_sprite> fme::GuiBatch::get_map_sprite(
+  const std::shared_ptr<open_viii::archive::FIFLFS<false>> &field,
+  const filters                                            &in_filters)
 {
   std::string base_name     = str_to_lower(field->get_base_name());
   auto        local_filters = in_filters;
@@ -508,15 +487,14 @@ cppcoro::generator<::map_sprite>
   auto sprite =
     map_sprite{ field, open_viii::LangT::generic, {}, local_filters, {} };
   const auto load_map_file =
-    [&](const ::filter<std::filesystem::path> &filter)
-    {
-           if (!filter.enabled())
-             return;
-           auto map_path = filter.value() / sprite.map_filename();
-           if (std::filesystem::exists(map_path))
-           {
-             sprite.load_map(map_path);
-           }
+    [&](const ::filter<std::filesystem::path> &filter) {
+      if (!filter.enabled())
+        return;
+      auto map_path = filter.value() / sprite.map_filename();
+      if (std::filesystem::exists(map_path))
+      {
+        sprite.load_map(map_path);
+      }
     };
   if (!sprite.fail())
   {
@@ -539,9 +517,8 @@ cppcoro::generator<::map_sprite>
     }
   }
 }
-cppcoro::generator<open_viii::LangT>
-  fme::GuiBatch::get_field_coos(
-    const std::shared_ptr<open_viii::archive::FIFLFS<false>> field)
+cppcoro::generator<open_viii::LangT> fme::GuiBatch::get_field_coos(
+  const std::shared_ptr<open_viii::archive::FIFLFS<false>> field)
 {
   auto map_pairs = field->get_vector_of_indexes_and_files(
     { open_viii::graphics::background::Map::EXT });
@@ -556,9 +533,9 @@ cppcoro::generator<open_viii::LangT>
     if (
       std::size(filename_view) > std::size(basename_view)
       && filename_view.substr(
-        0, std::min(std::size(filename_view), std::size(basename_view)))
-         == basename_view.substr(
-        0, std::min(std::size(filename_view), std::size(basename_view))))
+           0, std::min(std::size(filename_view), std::size(basename_view)))
+           == basename_view.substr(
+             0, std::min(std::size(filename_view), std::size(basename_view))))
     {
       const auto coo_view =
         filename_view.substr(std::size(basename_view) + 1U, 2U);
@@ -588,8 +565,7 @@ cppcoro::generator<std::tuple<int, std::string>>
     ++i;
   }
 }
-void
-  fme::GuiBatch::operator()(int *id)
+void fme::GuiBatch::operator()(int *id)
 {
   m_id              = std::move(id);
   static bool asked = { false };
@@ -601,7 +577,7 @@ void
     }
     return;
   }
-  if(asked)
+  if (asked)
   {
     static std::optional<decltype(source())> gen_source{};
     static decltype(decltype(source()){}.begin()) gen_current{};

@@ -12,11 +12,10 @@ template<>
 struct fmt::formatter<open_viii::graphics::background::BlendModeT>
 {
   // Presentation format: 'f' - fixed, 'e' - exponential.
-  char presentation = 'f';
+  char           presentation = 'f';
 
   // Parses format specifications of the form ['f' | 'e'].
-  constexpr auto
-    parse(format_parse_context &ctx) -> decltype(ctx.begin())
+  constexpr auto parse(format_parse_context &ctx) -> decltype(ctx.begin())
   {
     // [ctx.begin(), ctx.end()) is a character range that contains a part of
     // the format string starting from the format specifications to be parsed,
@@ -45,26 +44,25 @@ struct fmt::formatter<open_viii::graphics::background::BlendModeT>
   // Formats the BlendModeT p using the parsed format specification
   // (presentation) stored in this formatter.
   template<typename FormatContext>
-  auto
-    format(
-      const open_viii::graphics::background::BlendModeT &p,
-      FormatContext &ctx) -> decltype(ctx.out())
+  auto format(
+    const open_viii::graphics::background::BlendModeT &p,
+    FormatContext &ctx) -> decltype(ctx.out())
   {
     // ctx.out() is an output iterator to write to.
     switch (p)
     {
-    default:
-      return fmt::format_to(ctx.out(), "{}", static_cast<int>(p));
-    case open_viii::graphics::background::BlendModeT::none:
-      return fmt::format_to(ctx.out(), "none");
-    case open_viii::graphics::background::BlendModeT::subtract:
-      return fmt::format_to(ctx.out(), "subtract");
-    case open_viii::graphics::background::BlendModeT::add:
-      return fmt::format_to(ctx.out(), "add");
-    case open_viii::graphics::background::BlendModeT::half_add:
-      return fmt::format_to(ctx.out(), "half add");
-    case open_viii::graphics::background::BlendModeT::quarter_add:
-      return fmt::format_to(ctx.out(), "quarter add");
+      default:
+        return fmt::format_to(ctx.out(), "{}", static_cast<int>(p));
+      case open_viii::graphics::background::BlendModeT::none:
+        return fmt::format_to(ctx.out(), "none");
+      case open_viii::graphics::background::BlendModeT::subtract:
+        return fmt::format_to(ctx.out(), "subtract");
+      case open_viii::graphics::background::BlendModeT::add:
+        return fmt::format_to(ctx.out(), "add");
+      case open_viii::graphics::background::BlendModeT::half_add:
+        return fmt::format_to(ctx.out(), "half add");
+      case open_viii::graphics::background::BlendModeT::quarter_add:
+        return fmt::format_to(ctx.out(), "quarter add");
     }
   }
 };
@@ -72,11 +70,10 @@ template<>
 struct fmt::formatter<open_viii::graphics::BPPT>
 {
   // Presentation format: 'f' - fixed, 'e' - exponential.
-  char presentation = 'f';
+  char           presentation = 'f';
 
   // Parses format specifications of the form ['f' | 'e'].
-  constexpr auto
-    parse(format_parse_context &ctx) -> decltype(ctx.begin())
+  constexpr auto parse(format_parse_context &ctx) -> decltype(ctx.begin())
   {
     // [ctx.begin(), ctx.end()) is a character range that contains a part of
     // the format string starting from the format specifications to be parsed,
@@ -105,9 +102,8 @@ struct fmt::formatter<open_viii::graphics::BPPT>
   // Formats the BPPT p using the parsed format specification (presentation)
   // stored in this formatter.
   template<typename FormatContext>
-  auto
-    format(const open_viii::graphics::BPPT &p, FormatContext &ctx)
-      -> decltype(ctx.out())
+  auto format(const open_viii::graphics::BPPT &p, FormatContext &ctx)
+    -> decltype(ctx.out())
   {
     // ctx.out() is an output iterator to write to.
     if (p.bpp4())
@@ -133,11 +129,10 @@ template<>
 struct fmt::formatter<std::filesystem::path>
 {
   // Presentation format: 'f' - fixed, 'e' - exponential.
-  char presentation = 'f';
+  char           presentation = 'f';
 
   // Parses format specifications of the form ['f' | 'e'].
-  constexpr auto
-    parse(format_parse_context &ctx) -> decltype(ctx.begin())
+  constexpr auto parse(format_parse_context &ctx) -> decltype(ctx.begin())
   {
     // [ctx.begin(), ctx.end()) is a character range that contains a part of
     // the format string starting from the format specifications to be parsed,
@@ -167,9 +162,8 @@ struct fmt::formatter<std::filesystem::path>
   // Formats the std::filesystem::path p using the parsed format specification
   // (presentation) stored in this formatter.
   template<typename FormatContext>
-  auto
-    format(const std::filesystem::path &p, FormatContext &ctx)
-      -> decltype(ctx.out())
+  auto format(const std::filesystem::path &p, FormatContext &ctx)
+    -> decltype(ctx.out())
   {
     // ctx.out() is an output iterator to write to.
     return fmt::format_to(ctx.out(), "{}", p.string());

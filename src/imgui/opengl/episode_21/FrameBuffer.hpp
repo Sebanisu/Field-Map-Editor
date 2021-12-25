@@ -19,76 +19,72 @@ class FrameBuffer
 public:
   FrameBuffer() = default;
   FrameBuffer(FrameBufferSpecification spec)
-    : m_specification{std::move(spec)}
+    : m_specification{ std::move(spec) }
     , m_color_attachment{
-        [this]() {
-          std::uint32_t tmp{};
-          GLCall{}(glGenTextures, 1, &tmp);
-          GLCall{}(glBindTexture, GL_TEXTURE_2D, tmp);
-          GLCall{}(
-            &glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-          GLCall{}(
-            &glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-          GLCall{}(
-            &glTexParameteri,
-            GL_TEXTURE_2D,
-            GL_TEXTURE_WRAP_S,
-            GL_CLAMP_TO_BORDER);
-          GLCall{}(
-            &glTexParameteri,
-            GL_TEXTURE_2D,
-            GL_TEXTURE_WRAP_T,
-            GL_CLAMP_TO_BORDER);
+      [this]() {
+        std::uint32_t tmp{};
+        GLCall{}(glGenTextures, 1, &tmp);
+        GLCall{}(glBindTexture, GL_TEXTURE_2D, tmp);
+        GLCall{}(
+          &glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        GLCall{}(
+          &glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        GLCall{}(
+          &glTexParameteri,
+          GL_TEXTURE_2D,
+          GL_TEXTURE_WRAP_S,
+          GL_CLAMP_TO_BORDER);
+        GLCall{}(
+          &glTexParameteri,
+          GL_TEXTURE_2D,
+          GL_TEXTURE_WRAP_T,
+          GL_CLAMP_TO_BORDER);
 
-          glTexImage2D(
-            GL_TEXTURE_2D,
-            0,
-            GL_RGBA8,
-            m_specification.width,
-            m_specification.height,
-            0,
-            GL_RGBA,
-            GL_UNSIGNED_BYTE,
-            nullptr);
-          GLCall{}(glBindTexture, GL_TEXTURE_2D, 0);
-          return tmp;
-        }(),
-        [](std::uint32_t id) { GLCall{}(glDeleteTextures, 1, &id); }}
+        glTexImage2D(
+          GL_TEXTURE_2D,
+          0,
+          GL_RGBA8,
+          m_specification.width,
+          m_specification.height,
+          0,
+          GL_RGBA,
+          GL_UNSIGNED_BYTE,
+          nullptr);
+        GLCall{}(glBindTexture, GL_TEXTURE_2D, 0);
+        return tmp;
+      }(),
+      [](std::uint32_t id) { GLCall{}(glDeleteTextures, 1, &id); }
+    }
     , m_depth_attachment{
-        [this]() {
-          std::uint32_t tmp{};
-          GLCall{}(glGenTextures, 1, &tmp);
-          GLCall{}(glBindTexture, GL_TEXTURE_2D, tmp);
+      [this]() {
+        std::uint32_t tmp{};
+        GLCall{}(glGenTextures, 1, &tmp);
+        GLCall{}(glBindTexture, GL_TEXTURE_2D, tmp);
 
-          GLCall{}(
-            &glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-          GLCall{}(
-            &glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-          GLCall{}(
-            &glTexParameteri,
-            GL_TEXTURE_2D,
-            GL_TEXTURE_WRAP_S,
-            GL_CLAMP_TO_EDGE);
-          GLCall{}(
-            &glTexParameteri,
-            GL_TEXTURE_2D,
-            GL_TEXTURE_WRAP_T,
-            GL_CLAMP_TO_EDGE);
-          GLCall{}(
-            glTexImage2D,
-            GL_TEXTURE_2D,
-            0,
-            GL_DEPTH_COMPONENT,
-            m_specification.width,
-            m_specification.height,
-            0,
-            GL_DEPTH_COMPONENT,
-            GL_UNSIGNED_BYTE,
-            nullptr);
-          GLCall{}(glBindTexture, GL_TEXTURE_2D, 0);
-          return tmp;
-        }(),
-        [](std::uint32_t id) { GLCall{}(glDeleteTextures, 1, &id); }}
+        GLCall{}(
+          &glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        GLCall{}(
+          &glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        GLCall{}(
+          &glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        GLCall{}(
+          &glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        GLCall{}(
+          glTexImage2D,
+          GL_TEXTURE_2D,
+          0,
+          GL_DEPTH_COMPONENT,
+          m_specification.width,
+          m_specification.height,
+          0,
+          GL_DEPTH_COMPONENT,
+          GL_UNSIGNED_BYTE,
+          nullptr);
+        GLCall{}(glBindTexture, GL_TEXTURE_2D, 0);
+        return tmp;
+      }(),
+      [](std::uint32_t id) { GLCall{}(glDeleteTextures, 1, &id); }
+    }
   {
     // Sometimes the textures wouldn't be defined before defining m_renderer_id
     // So I moved this code inside here.
@@ -97,8 +93,9 @@ public:
         std::uint32_t tmp{};
         GLCall{}(glCreateFramebuffers, 1, &tmp);
         GLCall{}(glBindFramebuffer, GL_FRAMEBUFFER, tmp);
-//        fmt::print(
-//          "m_color_attachment {}\n", static_cast<uint32_t>(m_color_attachment));
+        //        fmt::print(
+        //          "m_color_attachment {}\n",
+        //          static_cast<uint32_t>(m_color_attachment));
         GLCall{}(
           glFramebufferTexture2D,
           GL_FRAMEBUFFER,

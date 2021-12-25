@@ -14,10 +14,10 @@ inline const auto format_imgui_text =
 {
   std::array<char, sizeT> buffer{};
   const auto              it = fmt::vformat_to_n(
-                 std::begin(buffer),
-                 sizeT - 1U,
-                 fmt::string_view(fmt),
-                 fmt::make_format_args(std::forward<decltype(items)>(items)...));
+    std::begin(buffer),
+    sizeT - 1U,
+    fmt::string_view(fmt),
+    fmt::make_format_args(std::forward<decltype(items)>(items)...));
   *it.out = '\0';
   ImGui::Text("%s", std::data(buffer));
   // it seems ImGui::Text is coping the values into it's own buffer.

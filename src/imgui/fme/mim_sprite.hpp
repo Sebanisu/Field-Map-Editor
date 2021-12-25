@@ -33,16 +33,12 @@ private:
   std::array<sf::Vertex, 4U>                         m_vertices     = {};
   grid                                               m_grid         = {};
   grid                                               m_texture_page_grid = {};
-  [[nodiscard]] open_viii::graphics::background::Mim
-    get_mim() const;
+  [[nodiscard]] open_viii::graphics::background::Mim get_mim() const;
   [[nodiscard]] static open_viii::graphics::BPPT
     get_bpp(const open_viii::graphics::BPPT &in_bpp);
-  [[nodiscard]] std::shared_ptr<sf::Texture>
-    get_texture() const;
-  [[nodiscard]] std::vector<open_viii::graphics::Color32RGBA>
-    get_colors();
-  [[nodiscard]] std::array<sf::Vertex, 4U>
-    get_vertices() const;
+  [[nodiscard]] std::shared_ptr<sf::Texture> get_texture() const;
+  [[nodiscard]] std::vector<open_viii::graphics::Color32RGBA> get_colors();
+  [[nodiscard]] std::array<sf::Vertex, 4U> get_vertices() const;
 
 public:
   mim_sprite() = default;
@@ -72,9 +68,8 @@ public:
    * @param in_field
    * @return mim_sprite object
    */
-  [[nodiscard]] mim_sprite
-    with_field(
-      std::shared_ptr<open_viii::archive::FIFLFS<false>> in_field) const;
+  [[nodiscard]] mim_sprite with_field(
+    std::shared_ptr<open_viii::archive::FIFLFS<false>> in_field) const;
   /**
    * Create a new object with a new bits per pixel and the same settings
    * @param in_bpp
@@ -87,18 +82,15 @@ public:
    * @param in_bpp
    * @return mim_sprite object
    */
-  [[nodiscard]] mim_sprite
-    with_palette(const std::uint8_t &in_palette) const;
+  [[nodiscard]] mim_sprite with_palette(const std::uint8_t &in_palette) const;
   /**
    * Create a new object and change coo.
    */
-  [[nodiscard]] mim_sprite
-    with_coo(open_viii::LangT in_coo) const;
+  [[nodiscard]] mim_sprite with_coo(open_viii::LangT in_coo) const;
   /**
    * Create a new object and Toggle drawing palette.
    */
-  [[nodiscard]] mim_sprite
-    with_draw_palette(bool in_draw_palette) const;
+  [[nodiscard]] mim_sprite with_draw_palette(bool in_draw_palette) const;
   //  /**
   //   * Getter for sprite, required for changing position and drawing.
   //   * @todo maybe want to control access.
@@ -108,36 +100,28 @@ public:
   /**
    * @return width in px
    */
-  [[nodiscard]] std::uint32_t
-    width() const noexcept;
+  [[nodiscard]] std::uint32_t width() const noexcept;
   /**
    * @return height in px
    */
-  [[nodiscard]] std::uint32_t
-    height() const noexcept;
+  [[nodiscard]] std::uint32_t height() const noexcept;
   /**
    * If in draw palette mode
    * @return true or false
    */
-  [[nodiscard]] bool
-    draw_palette() const noexcept;
+  [[nodiscard]] bool          draw_palette() const noexcept;
   /**
    * If failed state
    * @return true or false
    */
-  [[nodiscard]] bool
-    fail() const noexcept;
-  [[nodiscard]] const open_viii::graphics::background::Mim &
+  [[nodiscard]] bool          fail() const noexcept;
+  [[nodiscard]] const open_viii::graphics::background::Mim    &
     mim() const noexcept;
-  void
-    save(const std::filesystem::path &dest_path) const;
+  void save(const std::filesystem::path &dest_path) const;
 
-  void
-    draw(sf::RenderTarget &target, sf::RenderStates states) const final;
-  std::string
-    mim_filename() const;
-  void
-    mim_save(const std::filesystem::path &dest_path) const;
+  void draw(sf::RenderTarget &target, sf::RenderStates states) const final;
+  std::string mim_filename() const;
+  void        mim_save(const std::filesystem::path &dest_path) const;
   const mim_sprite &
     toggle_grids(bool enable_grid, bool enable_texture_page_grid);
 };

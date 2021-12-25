@@ -32,34 +32,29 @@ struct PupuID
       + offset })
   {
   }
-  constexpr auto
-    operator+=(std::uint32_t right)
+  constexpr auto operator+=(std::uint32_t right)
   {
     m_raw += right;
     return *this;
   }
-  [[nodiscard]] constexpr auto
-    operator+(std::uint32_t right) const
+  [[nodiscard]] constexpr auto operator+(std::uint32_t right) const
   {
     auto cpy = *this;
     cpy += right;
     return cpy;
   }
-  constexpr auto
-    operator+=(PupuID right)
+  constexpr auto operator+=(PupuID right)
   {
     m_raw += right.raw();
     return *this;
   }
-  [[nodiscard]] constexpr auto
-    operator+(PupuID right) const
+  [[nodiscard]] constexpr auto operator+(PupuID right) const
   {
     auto cpy = *this;
     cpy += right.raw();
     return cpy;
   }
-  [[nodiscard]] constexpr std::uint32_t
-    raw() const
+  [[nodiscard]] constexpr std::uint32_t raw() const
   {
     return m_raw;
   }
@@ -69,8 +64,7 @@ struct PupuID
     return (m_raw & mask) == (right.raw() & mask);
   }
 
-  constexpr auto
-    operator<=>(const PupuID &) const = default;
+  constexpr auto operator<=>(const PupuID &) const = default;
 
 private:
   std::uint32_t m_raw{};
@@ -98,11 +92,10 @@ template<>
 struct fmt::formatter<PupuID>
 {
   // Presentation format: 'f' - fixed, 'e' - exponential.
-  char presentation = 'f';
+  char           presentation = 'f';
 
   // Parses format specifications of the form ['f' | 'e'].
-  constexpr auto
-    parse(format_parse_context &ctx) -> decltype(ctx.begin())
+  constexpr auto parse(format_parse_context &ctx) -> decltype(ctx.begin())
   {
     // [ctx.begin(), ctx.end()) is a character range that contains a part of
     // the format string starting from the format specifications to be parsed,
@@ -132,8 +125,7 @@ struct fmt::formatter<PupuID>
   // Formats the BPPT p using the parsed format specification (presentation)
   // stored in this formatter.
   template<typename FormatContext>
-  auto
-    format(const PupuID &p, FormatContext &ctx) -> decltype(ctx.out())
+  auto format(const PupuID &p, FormatContext &ctx) -> decltype(ctx.out())
   {
     // ctx.out() is an output iterator to write to.
     return format_to(ctx.out(), "{:08X}", p.raw());

@@ -7,7 +7,8 @@
 class TimeStep
 {
 private:
-  using Clock      = std::chrono::steady_clock;
+  using Clock = std::chrono::steady_clock;
+
 public:
   using duration   = std::chrono::duration<float>;
   using time_point = std::chrono::time_point<Clock, duration>;

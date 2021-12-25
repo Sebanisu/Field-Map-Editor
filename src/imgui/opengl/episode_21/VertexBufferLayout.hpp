@@ -110,7 +110,7 @@ private:
     else if constexpr (std::is_same_v<value_type, GLuint>)
     {
       return GL_UNSIGNED_INT;
-    }    
+    }
     else if constexpr (std::is_same_v<value_type, GLshort>)
     {
       return GL_SHORT;

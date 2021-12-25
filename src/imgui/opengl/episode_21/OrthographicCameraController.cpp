@@ -68,11 +68,11 @@ void OrthographicCameraController::OnUpdate(float ts) const
         const bool top    = high > high_max + span;
         if (bottom)
         {
-          pos += std::abs(low_max - span - low);
+          pos += low_max - span - low;
         }
         if (top)
         {
-          pos -= std::abs(high - (high_max + span));
+          pos -= high - (high_max + span);
         }
       };
     fix_bounds(

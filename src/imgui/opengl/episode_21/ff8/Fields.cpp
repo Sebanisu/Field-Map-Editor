@@ -38,7 +38,7 @@ static int current_index = {};
   std::string                                &out_path,
   bool                                       &coo_was_used)
 {
-  bool        shift        = true;
+  bool        shift        = false;
   std::size_t out_path_pos = {};
   auto        lang_name =
     fmt::format("_{}{}", coo, open_viii::graphics::background::Map::EXT);

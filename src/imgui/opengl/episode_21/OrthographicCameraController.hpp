@@ -60,8 +60,10 @@ public:
   void SetMaxBounds(return_values bounds) const
   {
     if (
-      bounds.left + bounds.right > std::numeric_limits<float>::epsilon()
-      && bounds.bottom + bounds.top > std::numeric_limits<float>::epsilon())
+      std::abs(bounds.left) + std::abs(bounds.right)
+        > std::numeric_limits<float>::epsilon()
+      && std::abs(bounds.bottom) + std::abs(bounds.top)
+           > std::numeric_limits<float>::epsilon())
       m_bounds = std::move(bounds);
     else
       DisableBounds();

@@ -4,8 +4,7 @@
 //
 // Created by pcvii on 9/8/2021.
 //
-open_viii::graphics::background::Mim
-  mim_sprite::get_mim() const
+open_viii::graphics::background::Mim mim_sprite::get_mim() const
 {
   auto lang_name = fmt::format(
     "_{}{}",
@@ -31,8 +30,7 @@ open_viii::graphics::BPPT
   }
   return 4_bpp;
 }
-std::shared_ptr<sf::Texture>
-  mim_sprite::get_texture() const
+std::shared_ptr<sf::Texture> mim_sprite::get_texture() const
 {
   auto texture = std::make_shared<sf::Texture>(sf::Texture{});
 
@@ -48,8 +46,7 @@ std::shared_ptr<sf::Texture>
   return texture;
 }
 
-std::vector<open_viii::graphics::Color32RGBA>
-  mim_sprite::get_colors()
+std::vector<open_viii::graphics::Color32RGBA> mim_sprite::get_colors()
 {
   return m_mim.get_colors<open_viii::graphics::Color32RGBA>(
     m_bpp, m_palette, m_draw_palette);
@@ -81,63 +78,53 @@ std::vector<open_viii::graphics::Color32RGBA>
 {
 }
 
-mim_sprite
-  mim_sprite::with_field(
-    std::shared_ptr<open_viii::archive::FIFLFS<false>> in_field) const
+mim_sprite mim_sprite::with_field(
+  std::shared_ptr<open_viii::archive::FIFLFS<false>> in_field) const
 {
   return { std::move(in_field), m_bpp, m_palette, m_coo, m_draw_palette };
 }
 
-mim_sprite
-  mim_sprite::with_bpp(const open_viii::graphics::BPPT &in_bpp) const
+mim_sprite mim_sprite::with_bpp(const open_viii::graphics::BPPT &in_bpp) const
 {
   return { m_field, get_bpp(in_bpp), m_palette, m_coo, m_draw_palette };
 }
 
-mim_sprite
-  mim_sprite::with_palette(const uint8_t &in_palette) const
+mim_sprite mim_sprite::with_palette(const uint8_t &in_palette) const
 {
   return { m_field, m_bpp, in_palette, m_coo, m_draw_palette };
 }
 
-mim_sprite
-  mim_sprite::with_coo(const open_viii::LangT in_coo) const
+mim_sprite mim_sprite::with_coo(const open_viii::LangT in_coo) const
 {
   return { m_field, m_bpp, m_palette, in_coo, m_draw_palette };
 }
 
-mim_sprite
-  mim_sprite::with_draw_palette(bool in_draw_palette) const
+mim_sprite mim_sprite::with_draw_palette(bool in_draw_palette) const
 {
   return { m_field, m_bpp, m_palette, m_coo, in_draw_palette };
 }
 
-std::uint32_t
-  mim_sprite::width() const noexcept
+std::uint32_t mim_sprite::width() const noexcept
 {
   return m_mim.get_width(m_bpp, m_draw_palette);
 }
 
-std::uint32_t
-  mim_sprite::height() const noexcept
+std::uint32_t mim_sprite::height() const noexcept
 {
   return m_mim.get_height(m_draw_palette);
 }
 
-bool
-  mim_sprite::draw_palette() const noexcept
+bool mim_sprite::draw_palette() const noexcept
 {
   return m_draw_palette;
 }
 
-bool
-  mim_sprite::fail() const noexcept
+bool mim_sprite::fail() const noexcept
 {
   return !m_texture || m_colors.empty() || width() == 0;
 }
 
-void
-  mim_sprite::save(const std::filesystem::path &dest_path) const
+void mim_sprite::save(const std::filesystem::path &dest_path) const
 {
   if (open_viii::tools::i_ends_with(dest_path.string(), ".ppm"))
   {
@@ -155,13 +142,11 @@ void
       "");
   }
 }
-std::string
-  mim_sprite::mim_filename() const
+std::string mim_sprite::mim_filename() const
 {
   return std::filesystem::path(m_mim_path).filename().string();
 }
-void
-  mim_sprite::mim_save(const std::filesystem::path &dest_path) const
+void mim_sprite::mim_save(const std::filesystem::path &dest_path) const
 {
   const auto path = dest_path.string();
   open_viii::tools::write_buffer(m_mim.buffer(), path, "");
@@ -172,8 +157,7 @@ void
   return m_mim;
 }
 
-void
-  mim_sprite::draw(sf::RenderTarget &target, sf::RenderStates states) const
+void mim_sprite::draw(sf::RenderTarget &target, sf::RenderStates states) const
 {
   if (m_texture)
   {
@@ -191,15 +175,14 @@ void
   }
 }
 
-std::array<sf::Vertex, 4U>
-  mim_sprite::get_vertices() const
+std::array<sf::Vertex, 4U> mim_sprite::get_vertices() const
 {
   if (m_texture)
   {
 
     const sf::Vector2u size  = m_texture->getSize();
     const auto         frect = sf::FloatRect(
-              0.F, 0.F, static_cast<float>(size.x), static_cast<float>(size.y));
+      0.F, 0.F, static_cast<float>(size.x), static_cast<float>(size.y));
     float      left   = frect.left;
     float      right  = left + frect.width;
     float      top    = frect.top;

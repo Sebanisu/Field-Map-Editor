@@ -34,8 +34,7 @@ private:
   mutable glm::vec3     model2_offset          = { 400.F, 200.F, 0.F };
   constexpr static auto m_vertex_buffer_layout = VertexBufferLayout(
     VertexBufferElementType<float>{ 2U },
-    VertexBufferElementType<float>{ 2U }
-  );
+    VertexBufferElementType<float>{ 2U });
 };
 }// namespace test
 #endif// MYPROJECT_TestTexture2D_HPP

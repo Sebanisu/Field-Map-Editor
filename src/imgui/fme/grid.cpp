@@ -4,8 +4,7 @@
 
 #include "grid.hpp"
 #include <iostream>
-std::vector<sf::Vertex>
-  grid::get_vertices() const
+std::vector<sf::Vertex> grid::get_vertices() const
 {
   std::vector<sf::Vertex> ret     = {};
   const unsigned int      x_count = m_size.x / m_spacing.x;
@@ -38,8 +37,7 @@ std::vector<sf::Vertex>
   }
   return ret;
 }
-void
-  grid::draw(sf::RenderTarget &target, sf::RenderStates states) const
+void grid::draw(sf::RenderTarget &target, sf::RenderStates states) const
 {
   if (!m_enable)
   {
@@ -50,10 +48,9 @@ void
   states.blendMode = sf::BlendAlpha;
   target.draw(m_vertices.data(), m_vertices.size(), sf::Lines, states);
 }
-grid
-  grid::with_spacing_and_size(
-    const sf::Vector2u &spacing,
-    const sf::Vector2u &size) const
+grid grid::with_spacing_and_size(
+  const sf::Vector2u &spacing,
+  const sf::Vector2u &size) const
 {
   if (spacing == m_spacing && size == m_size)
   {
@@ -61,8 +58,7 @@ grid
   }
   return { spacing, size, m_color };
 }
-grid
-  grid::with_color(const sf::Color &color)
+grid grid::with_color(const sf::Color &color)
 {
   if (color == m_color)
   {
@@ -82,14 +78,12 @@ grid::grid(
 {
 }
 
-void
-  grid::enable() const
+void grid::enable() const
 {
   m_enable = true;
 }
 
-void
-  grid::disable() const
+void grid::disable() const
 {
   m_enable = false;
 }
