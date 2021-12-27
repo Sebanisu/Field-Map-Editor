@@ -180,7 +180,6 @@ void ff8::Mim::Save() const
     0,
     Application::CurrentWindow()->ViewWindowData().frame_buffer_width,
     Application::CurrentWindow()->ViewWindowData().frame_buffer_height);
-  PixelBuffer pixel_buffer{ fb.Specification() };
   auto        fs_path = std::filesystem::path(m_path);
   auto        string  = fmt::format(
     "{}_mim_{}_{}.png",
@@ -196,6 +195,7 @@ void ff8::Mim::Save() const
   {
     string = fmt::format("{}_mim_clut.png", fs_path.stem().string());
   }
+  PixelBuffer pixel_buffer{ fb.Specification() };
   pixel_buffer.operator()(fb, fs_path.parent_path() / string);
   while (pixel_buffer.operator()(&Texture::save))
     ;
