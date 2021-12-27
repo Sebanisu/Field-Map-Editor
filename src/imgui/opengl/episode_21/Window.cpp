@@ -241,9 +241,19 @@ void Window::InitCallbacks() const
     });
   glfwSetScrollCallback(
     m_window.get(), [](GLFWwindow *window, double x_offset, double y_offset) {
-      auto &data = GetWindowData(window);
-      data.event_callback(Event::MouseScroll(
-        static_cast<float>(x_offset), static_cast<float>(y_offset)));
+      auto    &data = GetWindowData(window);
+
+      ImGuiIO &io   = ImGui::GetIO();
+      if (io.WantCaptureMouse)
+      {
+        io.MouseWheelH += (float)x_offset;
+        io.MouseWheel += (float)y_offset;
+      }
+      else
+      {
+        data.event_callback(Event::MouseScroll(
+          static_cast<float>(x_offset), static_cast<float>(y_offset)));
+      }
     });
 
   glfwSetCursorPosCallback(
