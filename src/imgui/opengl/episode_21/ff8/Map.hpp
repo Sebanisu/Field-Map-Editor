@@ -5,6 +5,7 @@
 #ifndef MYPROJECT_MAP_HPP
 #define MYPROJECT_MAP_HPP
 #include "Fields.hpp"
+#include "FrameBuffer.hpp"
 #include "Mim.hpp"
 #include "Texture.hpp"
 
@@ -21,16 +22,28 @@ public:
   void OnEvent(const Event::Item &) const;
 
 private:
-  std::string                          m_mim_path         = {};
-  std::string                          m_map_path         = {};
-  bool                                 m_mim_choose_coo   = {};
-  bool                                 m_map_choose_coo   = {};
-  open_viii::graphics::background::Mim m_mim              = {};
-  open_viii::graphics::background::Map m_map              = {};
-  DelayedTextures                      m_delayed_textures = {};
+  // set uniforms
   void                                 SetUniforms() const;
-  BatchRenderer                        m_batch_renderer{};
+  // draws tiles
   void                                 RenderTiles() const;
+  // internal mim file path
+  std::string                          m_mim_path         = {};
+  // internal map file path
+  std::string                          m_map_path         = {};
+  // if coo was chosen instead of default.
+  bool                                 m_mim_choose_coo   = {};
+  // if coo was chosen instead of default.
+  bool                                 m_map_choose_coo   = {};
+  //container for field textures
+  open_viii::graphics::background::Mim m_mim              = {};
+  //container for field tile information
+  open_viii::graphics::background::Map m_map              = {};
+  //loads the textures overtime instead of forcing them to load at start.
+  DelayedTextures                      m_delayed_textures = {};
+  //takes quads and draws them to the frame buffer or screen.
+  BatchRenderer                        m_batch_renderer   = {};
+  //holds rendered image at 1:1 scale to prevent gaps when scaling.
+  FrameBuffer                          m_frame_buffer     = {};
 };
 static_assert(Renderable<Map>);
 }// namespace ff8
