@@ -55,77 +55,25 @@ public:
       return OrthographicCamera(left, right, bottom, top);
     }
   };
-  return_values Bounds() const
-  {
-    return return_values{ .left = -m_zoom_level * m_aspect_ratio + m_position.x,
-                          .right = m_zoom_level * m_aspect_ratio + m_position.x,
-                          .bottom = -m_zoom_level + m_position.y,
-                          .top    = m_zoom_level + m_position.y };
-  }
-  void SetMaxBounds(return_values bounds) const
-  {
-    if (
-      std::abs(bounds.left) + std::abs(bounds.right)
-        > std::numeric_limits<float>::epsilon()
-      && std::abs(bounds.bottom) + std::abs(bounds.top)
-           > std::numeric_limits<float>::epsilon())
-      m_bounds = std::move(bounds);
-    else
-      DisableBounds();
-  }
-  void DisableBounds() const
-  {
-    m_bounds = std::nullopt;
-  }
-  void RefreshAspectRatio() const
-  {
-    RefreshAspectRatio(get_frame_buffer_aspect_ratio());
-  }
-  void RefreshAspectRatio(float new_aspect_ratio) const
-  {
-    m_aspect_ratio = new_aspect_ratio;
-    set_projection();
-  }
-  void SetZoom() const
-  {
-    if (m_bounds)
-    {
-      m_zoom_level = (m_bounds->top - m_bounds->bottom) / 2.F;
-      zoom(0.F);
-    }
-  }
-  void SetZoom(float new_zoom) const
-  {
-    m_zoom_level = new_zoom;
-    zoom(0.F);
-  }
+  return_values                       CurrentBounds() const;
+  const std::optional<return_values> &MaxBounds() const;
+  void                                SetMaxBounds(return_values bounds) const;
+  void                                DisableBounds() const;
+  void                                RefreshAspectRatio() const;
+  void                  RefreshAspectRatio(float new_aspect_ratio) const;
+  void                  SetZoom() const;
+  [[maybe_unused]] void SetZoom(float new_zoom) const;
 
 private:
-  float get_frame_buffer_aspect_ratio() const
-  {
-    if (Application::CurrentWindow())
-    {
-      const auto &window_data = Application::CurrentWindow()->ViewWindowData();
-      return static_cast<float>(window_data.frame_buffer_width)
-             / static_cast<float>(window_data.frame_buffer_height);
-    }
-    return (16.F / 9.F);
-  }
-  void set_projection() const
-  {
-    m_camera.SetProjection(
-      -m_aspect_ratio * m_zoom_level,
-      m_aspect_ratio * m_zoom_level,
-      -m_zoom_level,
-      m_zoom_level);
-  }
+  float                                get_frame_buffer_aspect_ratio() const;
+  void                                 set_projection() const;
   mutable float                        m_aspect_ratio      = {};
   mutable float                        m_zoom_level        = { 1.F };
   mutable float                        m_zoom_precision    = { 1.F };
   mutable OrthographicCamera           m_camera            = {};
   mutable glm::vec3                    m_position          = {};
   mutable float                        m_rotation          = {};
-  float                                m_translation_speed = { 16.F };
+  float                                m_translation_speed = { -64.F };
   float                                m_rotation_speed    = { 180.F };
   mutable std::optional<return_values> m_bounds            = {};
   void                                 zoom(const float offset) const;

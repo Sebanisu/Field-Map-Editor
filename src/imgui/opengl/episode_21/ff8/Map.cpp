@@ -113,7 +113,7 @@ ff8::Map::Map(const ff8::Fields &fields)
     const auto width  = max_x - min_x + 16;
     const auto height = max_y - min_y + 16;
     offset_y          = static_cast<float>(min_y + max_y);
-#if 0
+#if 1
 
     camera.SetMaxBounds({ static_cast<float>(min_x),
                           static_cast<float>(max_x + 16),
@@ -251,7 +251,7 @@ void ff8::Map::RenderFrameBuffer() const
   m_batch_renderer.Clear();
   m_batch_renderer.DrawQuad(
     m_frame_buffer.GetColorAttachment(),
-    glm::vec3(0.F, 0.F, 0.F),
+    glm::vec3(camera.MaxBounds()->left, camera.MaxBounds()->bottom, 0.F),
     glm::vec2(
       m_frame_buffer.Specification().width,
       m_frame_buffer.Specification().height));
