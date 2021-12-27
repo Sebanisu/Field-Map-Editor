@@ -49,6 +49,11 @@ public:
     float right{};
     float bottom{};
     float top{};
+
+          operator OrthographicCamera() const
+    {
+      return OrthographicCamera(left, right, bottom, top);
+    }
   };
   return_values Bounds() const
   {
@@ -125,5 +130,8 @@ private:
   mutable std::optional<return_values> m_bounds            = {};
   void                                 zoom(const float offset) const;
 };
+void MakeViewPortMatchBounds(
+  const OrthographicCameraController::return_values &bounds);
+void RestoreViewPortToFrameBuffer();
 static_assert(Renderable<OrthographicCameraController>);
 #endif// MYPROJECT_ORTHOGRAPHICCAMERACONTROLLER_HPP

@@ -238,7 +238,7 @@ void ff8::Mim::Save_All() const
     }
     FrameBuffer fb({ .width = texture->width(), .height = texture->height() });
     fb.Bind();
-    glViewport(0, 0, texture->width(), texture->height());
+    GLCall{}(glViewport, 0, 0, texture->width(), texture->height());
     OnRender();
     fb.UnBind();
     PixelBuffer pixel_buffer{ fb.Specification() };
@@ -253,10 +253,6 @@ void ff8::Mim::Save_All() const
     while (pixel_buffer.operator()(&Texture::save))
       ;
   }
-  glViewport(
-    0,
-    0,
-    Application::CurrentWindow()->ViewWindowData().frame_buffer_width,
-    Application::CurrentWindow()->ViewWindowData().frame_buffer_height);
+  RestoreViewPortToFrameBuffer();
   saving = false;
 }

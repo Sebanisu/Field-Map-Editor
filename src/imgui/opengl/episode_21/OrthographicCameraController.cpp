@@ -4,6 +4,7 @@
 
 #include "OrthographicCameraController.hpp"
 #include "Event/EventDispatcher.hpp"
+#include "GLCheck.hpp"
 #include "Input.hpp"
 
 void OrthographicCameraController::OnUpdate(float ts) const
@@ -149,4 +150,28 @@ void OrthographicCameraController::zoom(const float offset) const
     m_zoom_level = std::nearbyint(m_zoom_level);
   m_zoom_level = (std::max)(m_zoom_level, 0.0001F);
   set_projection();
+}
+void MakeViewPortMatchBounds(
+  const OrthographicCameraController::return_values &bounds)
+{
+  GLCall{}(
+    glViewport,
+    static_cast<GLint>(bounds.left),
+    static_cast<GLint>(bounds.bottom),
+    static_cast<GLsizei>(bounds.right) - static_cast<GLsizei>(bounds.left),
+    static_cast<GLsizei>(bounds.top) - static_cast<GLsizei>(bounds.bottom));
+}
+void RestoreViewPortToFrameBuffer()
+{
+  if (Application::CurrentWindow())
+  {
+    GLCall{}(
+      glViewport,
+      GLint{ 0 },
+      GLint{ 0 },
+      static_cast<GLsizei>(
+        Application::CurrentWindow()->ViewWindowData().frame_buffer_width),
+      static_cast<GLsizei>(
+        Application::CurrentWindow()->ViewWindowData().frame_buffer_height));
+  }
 }
