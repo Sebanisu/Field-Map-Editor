@@ -73,7 +73,7 @@ private:
   mutable OrthographicCamera           m_camera            = {};
   mutable glm::vec3                    m_position          = {};
   mutable float                        m_rotation          = {};
-  float                                m_translation_speed = { -64.F };
+  float                                m_translation_speed = { -128.F };
   float                                m_rotation_speed    = { 180.F };
   mutable std::optional<return_values> m_bounds            = {};
   void                                 zoom(const float offset) const;
