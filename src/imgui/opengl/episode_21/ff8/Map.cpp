@@ -5,6 +5,7 @@
 #include "Map.hpp"
 #include "FrameBufferBackup.hpp"
 #include "OrthographicCameraController.hpp"
+#include "PixelBuffer.hpp"
 
 static OrthographicCameraController camera               = { 16 / 9 };
 static OrthographicCamera           fixed_render_camera  = {};
@@ -13,7 +14,7 @@ static bool                         draw_grid            = false;
 static bool                         saving               = false;
 static bool                         offscreen_drawing    = false;
 static bool                         enable_percent_blend = true;
-static float                        midpoint_y           = 0.F;
+static float                        offset_y             = 0.F;
 static constexpr glm::vec4 default_uniform_color = { 1.F, 1.F, 1.F, 1.F };
 static constexpr glm::vec4 half_uniform_color    = { .5F, .5F, .5F, .5F };
 static constexpr glm::vec4 quarter_uniform_color = { .25F, .25F, .25F, .25F };
@@ -105,16 +106,23 @@ ff8::Map::Map(const ff8::Fields &fields)
     {
       return;
     }
-    const auto min_x = i_min_x->x();
-    const auto max_x = i_max_x->x();
-    const auto min_y = i_min_y->y();
-    const auto max_y = i_max_y->y();
-    midpoint_y =
-      static_cast<float>(std::midpoint(int{ min_y }, int{ max_y }));
+    const auto min_x  = i_min_x->x();
+    const auto max_x  = i_max_x->x();
+    const auto min_y  = i_min_y->y();
+    const auto max_y  = i_max_y->y();
     const auto width  = max_x - min_x + 16;
     const auto height = max_y - min_y + 16;
+    offset_y          = static_cast<float>(min_y + max_y);
+#if 0
+
+    camera.SetMaxBounds({ static_cast<float>(min_x),
+                          static_cast<float>(max_x + 16),
+                          static_cast<float>(min_y),
+                          static_cast<float>(max_y + 16) });
+#else
     camera.SetMaxBounds(
       { 0.F, static_cast<float>(width), 0.F, static_cast<float>(height) });
+#endif
     fixed_render_camera.SetProjection(
       static_cast<float>(min_x),
       static_cast<float>(max_x + 16),
@@ -202,9 +210,16 @@ void set_blend_mode_selections(
 }
 void ff8::Map::OnRender() const
 {
+  if (std::ranges::empty(m_map_path) || std::ranges::empty(m_mim_path))
+  {
+    return;
+  }
+#if 0
+  RenderTiles();
+#else
   {
     offscreen_drawing = true;
-    int        drawFboId{};
+    int drawFboId{};
     const auto fbb = FrameBufferBackup{};
     m_frame_buffer.Bind();
     GLCall{}(
@@ -216,10 +231,15 @@ void ff8::Map::OnRender() const
     Renderer::Clear();
     RenderTiles();
     GLCall{}(glBindFramebuffer, GL_FRAMEBUFFER, drawFboId);
+    PixelBuffer pixel_buffer{ m_frame_buffer.Specification() };
+    pixel_buffer.operator()(m_frame_buffer, "test_map_fb.png");
+    while (pixel_buffer.operator()(&Texture::save))
+      ;
   }
   offscreen_drawing = false;
   RestoreViewPortToFrameBuffer();
   RenderFrameBuffer();
+#endif
 }
 void ff8::Map::RenderFrameBuffer() const
 {
@@ -337,7 +357,7 @@ void ff8::Map::RenderTiles() const
         }
         m_batch_renderer.DrawQuad(
           sub_texture,
-          glm::vec3(tile.x(), midpoint_y - tile.y(), 0.F),
+          glm::vec3(tile.x(), offset_y - tile.y(), 0.F),
           glm::vec2(16.F, 16.F));
       }
     }
