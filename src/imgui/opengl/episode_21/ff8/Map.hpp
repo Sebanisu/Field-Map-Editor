@@ -30,6 +30,7 @@ private:
   DelayedTextures                      m_delayed_textures = {};
   void                                 SetUniforms() const;
   BatchRenderer                        m_batch_renderer{};
+  void                                 RenderTiles() const;
 };
 static_assert(Renderable<Map>);
 }// namespace ff8

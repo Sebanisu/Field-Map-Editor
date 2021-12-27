@@ -184,6 +184,10 @@ void set_blend_mode_selections(
 }
 void ff8::Map::OnRender() const
 {
+  RenderTiles();
+}
+void ff8::Map::RenderTiles() const
+{
   using open_viii::graphics::background::BlendModeT;
   BlendModeT last_blend_mode{ BlendModeT::none };
   uniform_color = default_uniform_color;
@@ -292,7 +296,6 @@ void ff8::Map::OnRender() const
   m_batch_renderer.OnRender();
   Window::DefaultBlend();
 }
-
 void ff8::Map::OnEvent(const Event::Item &e) const
 {
   camera.OnEvent(e);
