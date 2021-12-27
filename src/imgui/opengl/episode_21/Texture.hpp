@@ -113,7 +113,7 @@ public:
   {
     fmt::print(
       "{}\t{} bytes\twidth {}\theight {}\n",
-      path.string().c_str(),
+      std::filesystem::absolute(path).string().c_str(),
       std::ranges::size(data),
       width,
       height);
