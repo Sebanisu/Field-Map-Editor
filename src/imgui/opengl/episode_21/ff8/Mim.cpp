@@ -6,6 +6,7 @@
 #include "FrameBuffer.hpp"
 #include "OrthographicCameraController.hpp"
 #include "PixelBuffer.hpp"
+#include "FrameBufferBackup.hpp"
 namespace ff8
 {
 static const BPPs                   bpp                 = {};
@@ -167,11 +168,13 @@ void ff8::Mim::Save() const
   const Texture &local_texture = CurrentTexture();
   FrameBuffer    fb(
     { .width = local_texture.width(), .height = local_texture.height() });
-  fb.Bind();
-  Renderer::Clear();
-  glViewport(0, 0, local_texture.width(), local_texture.height());
-  OnRender();
-  fb.UnBind();
+  {
+    const auto fbb = FrameBufferBackup{};
+    fb.Bind();
+    Renderer::Clear();
+    glViewport(0, 0, local_texture.width(), local_texture.height());
+    OnRender();
+  }
   glViewport(
     0,
     0,
@@ -238,11 +241,13 @@ void ff8::Mim::Save_All() const
       continue;
     }
     FrameBuffer fb({ .width = texture->width(), .height = texture->height() });
-    fb.Bind();
-    Renderer::Clear();
-    GLCall{}(glViewport, 0, 0, texture->width(), texture->height());
-    OnRender();
-    fb.UnBind();
+    {
+      const auto fbb = FrameBufferBackup{};
+      fb.Bind();
+      Renderer::Clear();
+      GLCall{}(glViewport, 0, 0, texture->width(), texture->height());
+      OnRender();
+    }
     PixelBuffer pixel_buffer{ fb.Specification() };
     auto        fs_path = std::filesystem::path(m_path);
     auto        string  = fmt::format(
