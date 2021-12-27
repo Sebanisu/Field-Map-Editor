@@ -34,15 +34,15 @@ private:
   bool                                 m_mim_choose_coo   = {};
   // if coo was chosen instead of default.
   bool                                 m_map_choose_coo   = {};
-  //container for field textures
+  // container for field textures
   open_viii::graphics::background::Mim m_mim              = {};
-  //container for field tile information
+  // container for field tile information
   open_viii::graphics::background::Map m_map              = {};
-  //loads the textures overtime instead of forcing them to load at start.
+  // loads the textures overtime instead of forcing them to load at start.
   DelayedTextures                      m_delayed_textures = {};
-  //takes quads and draws them to the frame buffer or screen.
+  // takes quads and draws them to the frame buffer or screen.
   BatchRenderer                        m_batch_renderer   = {};
-  //holds rendered image at 1:1 scale to prevent gaps when scaling.
+  // holds rendered image at 1:1 scale to prevent gaps when scaling.
   FrameBuffer                          m_frame_buffer     = {};
 };
 static_assert(Renderable<Map>);

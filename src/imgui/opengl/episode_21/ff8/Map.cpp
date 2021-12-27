@@ -88,12 +88,6 @@ ff8::Map::Map(const ff8::Fields &fields)
     m_delayed_textures = LoadTextures(m_mim);
   }
   camera.RefreshAspectRatio();
-}
-
-void ff8::Map::OnUpdate(float ts) const
-{
-  m_delayed_textures.check();
-
   m_map.visit_tiles([&](const auto &tiles) {
     auto f_tiles = tiles
                    | std::views::filter(
@@ -107,17 +101,26 @@ void ff8::Map::OnUpdate(float ts) const
     {
       return;
     }
-    const auto min_x = i_min_x->x();
-    const auto max_x = i_max_x->x();
-    const auto min_y = i_min_y->y();
-    const auto max_y = i_max_y->y();
-    //    const auto width  = max_x - min_x + 16;
-    //    const auto height = max_y - min_y + 16;
+    const auto min_x  = i_min_x->x();
+    const auto max_x  = i_max_x->x();
+    const auto min_y  = i_min_y->y();
+    const auto max_y  = i_max_y->y();
+    const auto width  = max_x - min_x + 16;
+    const auto height = max_y - min_y + 16;
     camera.SetMaxBounds({ static_cast<float>(min_x),
                           static_cast<float>(max_x + 16),
                           static_cast<float>(min_y),
                           static_cast<float>(max_y + 16) });
+    m_frame_buffer = FrameBuffer(FrameBufferSpecification{
+      .width = std::abs(width), .height = std::abs(height) });
   });
+}
+
+void ff8::Map::OnUpdate(float ts) const
+{
+  m_delayed_textures.check();
+
+
   if (snap_zoom_to_height)
   {
     camera.SetZoom();
