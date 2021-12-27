@@ -113,16 +113,12 @@ ff8::Map::Map(const ff8::Fields &fields)
     const auto width  = max_x - min_x + 16;
     const auto height = max_y - min_y + 16;
     offset_y          = static_cast<float>(min_y + max_y);
-#if 1
 
     camera.SetMaxBounds({ static_cast<float>(min_x),
                           static_cast<float>(max_x + 16),
                           static_cast<float>(min_y),
                           static_cast<float>(max_y + 16) });
-#else
-    camera.SetMaxBounds(
-      { 0.F, static_cast<float>(width), 0.F, static_cast<float>(height) });
-#endif
+
     fixed_render_camera.SetProjection(
       static_cast<float>(min_x),
       static_cast<float>(max_x + 16),
@@ -214,12 +210,10 @@ void ff8::Map::OnRender() const
   {
     return;
   }
-#if 0
-  RenderTiles();
-#else
   {
     offscreen_drawing = true;
-    int drawFboId{};
+    const auto not_offscreen_drawing =
+      scope_guard([]() { offscreen_drawing = false; });
     const auto fbb = FrameBufferBackup{};
     m_frame_buffer.Bind();
     GLCall{}(
@@ -230,16 +224,9 @@ void ff8::Map::OnRender() const
       m_frame_buffer.Specification().height);
     Renderer::Clear();
     RenderTiles();
-    GLCall{}(glBindFramebuffer, GL_FRAMEBUFFER, drawFboId);
-    PixelBuffer pixel_buffer{ m_frame_buffer.Specification() };
-    pixel_buffer.operator()(m_frame_buffer, "test_map_fb.png");
-    while (pixel_buffer.operator()(&Texture::save))
-      ;
   }
-  offscreen_drawing = false;
   RestoreViewPortToFrameBuffer();
   RenderFrameBuffer();
-#endif
 }
 void ff8::Map::RenderFrameBuffer() const
 {
@@ -409,22 +396,45 @@ void Blend_Combos(
 }
 void ff8::Map::OnImGuiUpdate() const
 {
-  ImGui::Checkbox("Snap Zoom to Height", &snap_zoom_to_height);
-  if (ImGui::CollapsingHeader("Add Blend"))
   {
-    ImGui::Checkbox("Percent Blends (50%,25%)", &enable_percent_blend);
-    ImGui::PushID(1);
-    const auto pop = scope_guard(&ImGui::PopID);
-    Blend_Combos(add_parameter_selections, add_equation_selections);
+    const auto disable = scope_guard(&ImGui::EndDisabled);
+    ImGui::BeginDisabled(
+      std::ranges::empty(m_map_path) || std::ranges::empty(m_mim_path));
+    ImGui::Checkbox("Snap Zoom to Height", &snap_zoom_to_height);
+    if (ImGui::CollapsingHeader("Add Blend"))
+    {
+      ImGui::Checkbox("Percent Blends (50%,25%)", &enable_percent_blend);
+      ImGui::PushID(1);
+      const auto pop = scope_guard(&ImGui::PopID);
+      Blend_Combos(add_parameter_selections, add_equation_selections);
+    }
+    if (ImGui::CollapsingHeader("Subtract Blend"))
+    {
+      ImGui::PushID(2);
+      const auto pop = scope_guard(&ImGui::PopID);
+      Blend_Combos(subtract_parameter_selections, subtract_equation_selections);
+    }
+    if (ImGui::Button("Save"))
+    {
+      Save();
+    }
   }
-  if (ImGui::CollapsingHeader("Subtract Blend"))
-  {
-    ImGui::PushID(2);
-    const auto pop = scope_guard(&ImGui::PopID);
-    Blend_Combos(subtract_parameter_selections, subtract_equation_selections);
-  }
+  ImGui::Separator();
+  camera.OnImGuiUpdate();
   ImGui::Separator();
   m_batch_renderer.OnImGuiUpdate();
   ImGui::Separator();
-  camera.OnImGuiUpdate();
+}
+void ff8::Map::Save() const
+{
+  saving                = true;
+  const auto not_saving = scope_guard([]() { saving = false; });
+  OnRender();
+  const auto path = std::filesystem::path(m_map_path);
+  auto       string =
+    fmt::format("{}_map.png", (path.parent_path() / path.stem()).string());
+  PixelBuffer  pixel_buffer{ m_frame_buffer.Specification() };
+  pixel_buffer.operator()(m_frame_buffer, string);
+  while (pixel_buffer.operator()(&Texture::save))
+    ;
 }

@@ -45,6 +45,7 @@ private:
   // holds rendered image at 1:1 scale to prevent gaps when scaling.
   FrameBuffer                          m_frame_buffer     = {};
   void                                 RenderFrameBuffer() const;
+  void                                 Save() const;
 };
 static_assert(Renderable<Map>);
 }// namespace ff8

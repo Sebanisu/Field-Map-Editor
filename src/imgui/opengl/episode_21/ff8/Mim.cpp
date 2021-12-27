@@ -66,7 +66,16 @@ void ff8::Mim::OnImGuiUpdate() const
     if (bpp.OnImGuiUpdate() || palette.OnImGuiUpdate())
     {
     }
+    if (ImGui::Button("Save"))
+    {
+      Save();
+    }
+    if (ImGui::Button("Save All"))
+    {
+      Save_All();
+    }
   }
+  ImGui::Separator();
   ImGui::Text(
     "%s",
     fmt::format(
@@ -75,17 +84,7 @@ void ff8::Mim::OnImGuiUpdate() const
       local_texture.height())
       .c_str());
   ImGui::Separator();
-  if (camera.OnImGuiUpdate())
-  {
-  }
-  if (ImGui::Button("Save"))
-  {
-    Save();
-  }
-  if (ImGui::Button("Save All"))
-  {
-    Save_All();
-  }
+  camera.OnImGuiUpdate();
   ImGui::Separator();
   m_batch_renderer.OnImGuiUpdate();
 }
@@ -256,8 +255,8 @@ void ff8::Mim::Save_All() const
       string = fmt::format("{}_mim_{}.png", fs_path.stem().string(), local_bpp);
     else if (local_bpp == -1)
       string = fmt::format("{}_mim_clut.png", fs_path.stem().string());
-    pixel_buffer.operator()(fb, fs_path.parent_path() / string);
-    while (pixel_buffer.operator()(&Texture::save))
+    pixel_buffer(fb, fs_path.parent_path() / string);
+    while (pixel_buffer(&Texture::save))
       ;
   }
   RestoreViewPortToFrameBuffer();
