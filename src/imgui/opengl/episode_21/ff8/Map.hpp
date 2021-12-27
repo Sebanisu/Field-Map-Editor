@@ -44,6 +44,7 @@ private:
   BatchRenderer                        m_batch_renderer   = {};
   // holds rendered image at 1:1 scale to prevent gaps when scaling.
   FrameBuffer                          m_frame_buffer     = {};
+  void                                 RenderFrameBuffer() const;
 };
 static_assert(Renderable<Map>);
 }// namespace ff8

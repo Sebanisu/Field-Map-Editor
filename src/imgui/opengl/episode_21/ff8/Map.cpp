@@ -3,13 +3,17 @@
 //
 
 #include "Map.hpp"
+#include "FrameBufferBackup.hpp"
 #include "OrthographicCameraController.hpp"
 
 static OrthographicCameraController camera               = { 16 / 9 };
+static OrthographicCamera           fixed_render_camera  = {};
 static bool                         snap_zoom_to_height  = true;
 static bool                         draw_grid            = false;
 static bool                         saving               = false;
+static bool                         offscreen_drawing    = false;
 static bool                         enable_percent_blend = true;
+static float                        midpoint_y           = 0.F;
 static constexpr glm::vec4 default_uniform_color = { 1.F, 1.F, 1.F, 1.F };
 static constexpr glm::vec4 half_uniform_color    = { .5F, .5F, .5F, .5F };
 static constexpr glm::vec4 quarter_uniform_color = { .25F, .25F, .25F, .25F };
@@ -101,16 +105,21 @@ ff8::Map::Map(const ff8::Fields &fields)
     {
       return;
     }
-    const auto min_x  = i_min_x->x();
-    const auto max_x  = i_max_x->x();
-    const auto min_y  = i_min_y->y();
-    const auto max_y  = i_max_y->y();
+    const auto min_x = i_min_x->x();
+    const auto max_x = i_max_x->x();
+    const auto min_y = i_min_y->y();
+    const auto max_y = i_max_y->y();
+    midpoint_y =
+      static_cast<float>(std::midpoint(int{ min_y }, int{ max_y }));
     const auto width  = max_x - min_x + 16;
     const auto height = max_y - min_y + 16;
-    camera.SetMaxBounds({ static_cast<float>(min_x),
-                          static_cast<float>(max_x + 16),
-                          static_cast<float>(min_y),
-                          static_cast<float>(max_y + 16) });
+    camera.SetMaxBounds(
+      { 0.F, static_cast<float>(width), 0.F, static_cast<float>(height) });
+    fixed_render_camera.SetProjection(
+      static_cast<float>(min_x),
+      static_cast<float>(max_x + 16),
+      static_cast<float>(min_y),
+      static_cast<float>(max_y + 16));
     m_frame_buffer = FrameBuffer(FrameBufferSpecification{
       .width = std::abs(width), .height = std::abs(height) });
   });
@@ -131,11 +140,17 @@ void ff8::Map::OnUpdate(float ts) const
 void ff8::Map::SetUniforms() const
 {
   m_batch_renderer.Bind();
+  if (offscreen_drawing || saving)
+  {
+    m_batch_renderer.Shader().SetUniform(
+      "u_MVP", fixed_render_camera.ViewProjectionMatrix());
+  }
+  else
   {
     m_batch_renderer.Shader().SetUniform(
       "u_MVP", camera.Camera().ViewProjectionMatrix());
   }
-  if (!draw_grid || saving)
+  if (!draw_grid || offscreen_drawing || saving)
   {
     m_batch_renderer.Shader().SetUniform("u_Grid", 0.F, 0.F);
   }
@@ -187,7 +202,40 @@ void set_blend_mode_selections(
 }
 void ff8::Map::OnRender() const
 {
-  RenderTiles();
+  {
+    offscreen_drawing = true;
+    int        drawFboId{};
+    const auto fbb = FrameBufferBackup{};
+    m_frame_buffer.Bind();
+    GLCall{}(
+      glViewport,
+      0,
+      0,
+      m_frame_buffer.Specification().width,
+      m_frame_buffer.Specification().height);
+    Renderer::Clear();
+    RenderTiles();
+    GLCall{}(glBindFramebuffer, GL_FRAMEBUFFER, drawFboId);
+  }
+  offscreen_drawing = false;
+  RestoreViewPortToFrameBuffer();
+  RenderFrameBuffer();
+}
+void ff8::Map::RenderFrameBuffer() const
+{
+  if (saving)
+  {
+    return;
+  }
+  SetUniforms();
+  m_batch_renderer.Clear();
+  m_batch_renderer.DrawQuad(
+    m_frame_buffer.GetColorAttachment(),
+    glm::vec3(0.F, 0.F, 0.F),
+    glm::vec2(
+      m_frame_buffer.Specification().width,
+      m_frame_buffer.Specification().height));
+  m_batch_renderer.OnRender();// flush buffer
 }
 void ff8::Map::RenderTiles() const
 {
@@ -198,7 +246,6 @@ void ff8::Map::RenderTiles() const
   camera.OnRender();
   SetUniforms();
   m_batch_renderer.Clear();
-  const auto offset_y = camera.Bounds().top - 16 + camera.Bounds().bottom;
   m_map.visit_tiles([&](const auto &tiles) {
     auto f_tiles = tiles
                    | std::views::filter(
@@ -290,7 +337,7 @@ void ff8::Map::RenderTiles() const
         }
         m_batch_renderer.DrawQuad(
           sub_texture,
-          glm::vec3(tile.x(), offset_y - tile.y(), 0.F),
+          glm::vec3(tile.x(), midpoint_y - tile.y(), 0.F),
           glm::vec2(16.F, 16.F));
       }
     }
