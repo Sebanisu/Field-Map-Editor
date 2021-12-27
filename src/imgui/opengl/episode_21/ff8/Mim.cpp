@@ -168,6 +168,7 @@ void ff8::Mim::Save() const
   FrameBuffer    fb(
     { .width = local_texture.width(), .height = local_texture.height() });
   fb.Bind();
+  Renderer::Clear();
   glViewport(0, 0, local_texture.width(), local_texture.height());
   OnRender();
   fb.UnBind();
@@ -238,6 +239,7 @@ void ff8::Mim::Save_All() const
     }
     FrameBuffer fb({ .width = texture->width(), .height = texture->height() });
     fb.Bind();
+    Renderer::Clear();
     GLCall{}(glViewport, 0, 0, texture->width(), texture->height());
     OnRender();
     fb.UnBind();
