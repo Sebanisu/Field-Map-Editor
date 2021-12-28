@@ -5,10 +5,10 @@
 #include "FF8LoadTextures.hpp"
 
 
-DelayedTextures
+DelayedTextures<35U>
   ff8::LoadTextures(const open_viii::graphics::background::Mim &mim)
 {
-  DelayedTextures rdt{};
+  DelayedTextures<35U> rdt{};
   rdt.futures.reserve(35U);
   auto bpps = std::views::iota(std::uint32_t{ 0 }, std::uint32_t{ 2 })
               | std::views::transform([](const std::uint32_t i) {
@@ -31,8 +31,8 @@ DelayedTextures
                    const open_viii::graphics::background::Mim in_mim,
                    const open_viii::graphics::BPPT            in_bpp,
                    const std::uint8_t                         in_palette,
-                   Texture *in_out) -> DelayedTextures::return_data {
-    auto r = DelayedTextures::return_data{
+                   Texture *in_out) -> DelayedTexturesData {
+    auto r = DelayedTexturesData{
       .colors =
         in_mim.get_colors<open_viii::graphics::Color32RGBA>(in_bpp, in_palette),
       .width  = static_cast<int32_t>(in_mim.get_width(in_bpp)),
@@ -90,8 +90,8 @@ DelayedTextures
     rdt.futures.emplace_back(std::async(
       std::launch::async,
       [](const open_viii::graphics::background::Mim in_mim, Texture *in_out)
-        -> DelayedTextures::return_data {
-        auto r = DelayedTextures::return_data{
+        -> DelayedTexturesData {
+        auto r = DelayedTexturesData{
           .colors =
             in_mim.get_colors<open_viii::graphics::Color32RGBA>({}, {}, true),
           .width  = static_cast<std::int32_t>(in_mim.get_width({}, true)),

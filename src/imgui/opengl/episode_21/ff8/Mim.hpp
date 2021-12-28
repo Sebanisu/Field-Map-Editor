@@ -30,7 +30,7 @@ private:
   bool                                 m_choose_coo       = {};
   open_viii::graphics::background::Mim m_mim              = {};
   // 3 bpp x 16 palettes 48 possible textures + 1 for palette texture
-  DelayedTextures                      m_delayed_textures = {};
+  DelayedTextures<35U>                 m_delayed_textures = {};
   BatchRenderer                        m_batch_renderer   = {};
   void                                 Save_All() const;
 };
