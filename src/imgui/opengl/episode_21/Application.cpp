@@ -62,7 +62,7 @@ void Application::Run() const
     window->BeginFrame();// First thing you do on update;
     if (!minimize)
     {
-      Renderer::Clear.Color(0.F, 0.F, 0.F, 0.F);
+      Renderer::Clear.Color({ 0.F, 0.F, 0.F, 0.F });
       Renderer::Clear();
       layers.OnImGuiUpdate();
       layers.OnUpdate(time_step);
