@@ -20,7 +20,7 @@ private:
 
 
 public:
-  Texture() = default;
+  constexpr Texture() = default;
   Texture(std::filesystem::path path);
   Texture(std::array<std::uint8_t, 4U> color)
     : Texture(std::bit_cast<std::uint32_t>(color))
@@ -58,10 +58,7 @@ public:
                            GLCall{}(glBindTexture, GL_TEXTURE_2D, tmp);
                            return tmp;
                          }(),
-                          [](const std::uint32_t id) {
-                            GLCall{}(glDeleteTextures, 1, &id);
-                            Texture::UnBind();
-                          } };
+                          Destroy };
     GLCall{}(
       &glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     GLCall{}(
@@ -173,11 +170,31 @@ public:
     }
   }
 
-  GLID_copy    ID() const noexcept;
-  void         Bind(int slot = 0) const;
-  static void  UnBind();
-  std::int32_t width() const;
-  std::int32_t height() const;
+  GLID_copy             ID() const noexcept;
+  void                  Bind(int slot = 0) const;
+  constexpr static void Destroy(const std::uint32_t id)
+  {
+    if (!std::is_constant_evaluated())
+    {
+      GLCall{}(glDeleteTextures, 1, &id);
+    }
+    Texture::UnBind();
+  }
+  constexpr static void UnBind()
+  {
+    if (!std::is_constant_evaluated())
+    {
+      GLCall{}(glBindTexture, GL_TEXTURE_2D, 0U);
+    }
+  }
+  constexpr std::int32_t width() const
+  {
+    return m_width_height.x();
+  }
+  constexpr std::int32_t height() const
+  {
+    return m_width_height.y();
+  }
 };
 static_assert(Bindable<Texture>);
 #endif// MYPROJECT_TEXTURE_HPP

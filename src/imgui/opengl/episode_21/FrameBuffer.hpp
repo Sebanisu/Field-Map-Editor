@@ -53,7 +53,7 @@ public:
         GLCall{}(glBindTexture, GL_TEXTURE_2D, 0);
         return tmp;
       }(),
-      [](std::uint32_t id) { GLCall{}(glDeleteTextures, 1, &id); }
+      Texture::Destroy
     }
     , m_depth_attachment{
       [this]() {
@@ -83,7 +83,7 @@ public:
         GLCall{}(glBindTexture, GL_TEXTURE_2D, 0);
         return tmp;
       }(),
-      [](std::uint32_t id) { GLCall{}(glDeleteTextures, 1, &id); }
+      Texture::Destroy
     }
   {
     // Sometimes the textures wouldn't be defined before defining m_renderer_id
@@ -133,9 +133,12 @@ public:
   {
     GLCall{}(glBindFramebuffer, GL_FRAMEBUFFER, m_renderer_id);
   }
-  static void UnBind()
+  constexpr static void UnBind()
   {
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    if (!std::is_constant_evaluated())
+    {
+      glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    }
   }
   const FrameBufferSpecification &Specification() const
   {

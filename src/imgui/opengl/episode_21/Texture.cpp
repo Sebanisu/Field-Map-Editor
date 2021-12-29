@@ -22,18 +22,8 @@ void Texture::Bind(int slot) const
   GLCall{}(glBindTexture, GL_TEXTURE_2D, m_renderer_id);
   // GLCall{}( glBindTextureUnit, slot, m_renderer_id );
 }
-void Texture::UnBind()
-{
-  GLCall{}(glBindTexture, GL_TEXTURE_2D, 0U);
-}
-std::int32_t Texture::width() const
-{
-  return m_width_height.x();
-}
-std::int32_t Texture::height() const
-{
-  return m_width_height.y();
-}
+
+
 GLID_copy Texture::ID() const noexcept
 {
   return m_renderer_id;
