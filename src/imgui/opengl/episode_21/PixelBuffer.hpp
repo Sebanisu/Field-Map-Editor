@@ -10,6 +10,10 @@
 class PixelBuffer
 {
   constexpr static inline std::size_t ARRAY_SIZE = { 2U };
+
+  using ArrayT     = GLID_array<uint32_t, ARRAY_SIZE>;
+  using ValueT     = typename ArrayT::ValueT;
+  using ParameterT = typename ArrayT::ParameterT;
   // wrapping this pointer to force it to call glUnmapBuffer. Should scope this.
   using unique_glubyte =
     std::unique_ptr<uint8_t, decltype([](const GLubyte *const) {
@@ -23,13 +27,14 @@ public:
     , DATA_SIZE(
         static_cast<std::ptrdiff_t>(fbs.height)
         * static_cast<std::ptrdiff_t>(fbs.width) * std::ptrdiff_t{ 4 })
-    , pbos{ [](typename GLID_array<ARRAY_SIZE>::ParameterT ids) {
+    , pbos{ [](ParameterT ids) {
              GLCall{}(
                glDeleteBuffers,
                static_cast<std::int32_t>(std::ranges::size(ids)),
                std::ranges::data(ids));
            },
-            [&](typename GLID_array<ARRAY_SIZE>::ParameterT ids) {
+            [&]() {
+              auto ids = ValueT{};
               // create 2 pixel buffer objects, you need to delete them when
               // program exits. glBufferData() with NULL pointer reserves only
               // memory space.
@@ -49,6 +54,7 @@ public:
                 // todo will need to alter DATA_SIZE and update buffers when
                 // window resizes
               }
+              return ids;
             } }
   {
   }
@@ -152,6 +158,6 @@ private:
   std::ptrdiff_t      DATA_SIZE  = {};// number of bytes in image.
   mutable std::array<bool, ARRAY_SIZE>                  set   = {};
   mutable std::array<std::filesystem::path, ARRAY_SIZE> paths = {};
-  GLID_array<ARRAY_SIZE>                                pbos  = {};
+  ArrayT                                                pbos  = {};
 };
 #endif// MYPROJECT_PIXELBUFFER_HPP

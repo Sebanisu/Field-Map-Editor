@@ -30,7 +30,7 @@ public:
     swap(*this, other);
   }
   constexpr unique_value &operator=(const unique_value &) = delete;
-  constexpr unique_value &operator                        =(unique_value &&other) noexcept
+  constexpr unique_value &operator=(unique_value &&other) noexcept
   {
     swap(*this, other);
     return *this;
@@ -52,116 +52,158 @@ private:
   T m_value             = {};
   void (*m_function)(T) = nullptr;
 };
+using GLID = unique_value<std::uint32_t>;
+static_assert(std::movable<GLID> && !std::copyable<GLID>);
+static_assert(GLID(1, [](std::uint32_t) {}) == std::uint32_t{ 1 });
+
 template<typename T, std::size_t sizeT>
 class unique_value_array
 {
 public:
-  using ParameterT      = std::array<unsigned int, sizeT> &;
-  using ConstParameterT = const std::array<unsigned int, sizeT> &;
+  using ValueT          = std::array<T, sizeT>;
+  using ParameterT      = ValueT &;
+  using ConstParameterT = const ValueT &;
   unique_value_array()  = default;
   template<decay_same_as<T>... Us>
-  unique_value_array(void (*destroy)(ParameterT), Us... ts)
+  constexpr unique_value_array(void (*destroy)(ParameterT), Us... ts)
     : m_value{ std::forward<Us>(ts)... }
     , m_function(std::move(destroy))
   {
   }
-  template<std::invocable<ParameterT> createT>
-  unique_value_array(void (*destroy)(ParameterT), createT &&create)
-    : m_function(move(destroy))
+  template<std::invocable createT>
+  requires decay_same_as<ValueT, std::invoke_result_t<createT>>
+  constexpr unique_value_array(void (*destroy)(ParameterT), createT &&create)
+    : m_value(std::invoke(create))
+    , m_function(move(destroy))
   {
-    std::invoke(create, m_value);
   }
-  unique_value_array(const unique_value_array &) = delete;
-  ~unique_value_array() noexcept
+  constexpr ~unique_value_array() noexcept
   {
     if (m_function != nullptr)
     {
       std::invoke(m_function, m_value);
     }
   }
-  unique_value_array(unique_value_array &&other) noexcept
+  unique_value_array(const unique_value_array &) = delete;
+  unique_value_array &operator=(const unique_value_array &) = delete;
+  constexpr unique_value_array(unique_value_array &&other) noexcept
     : unique_value_array()
   {
     swap(*this, other);
   }
-  unique_value_array &operator=(const unique_value_array &) = delete;
-  unique_value_array &operator=(unique_value_array &&other) noexcept
+  constexpr unique_value_array &operator=(unique_value_array &&other) noexcept
   {
     swap(*this, other);
     return *this;
   }
-  friend void swap(unique_value_array &left, unique_value_array &right) noexcept
+  constexpr friend void
+    swap(unique_value_array &left, unique_value_array &right) noexcept
   {
     using std::swap;
     swap(left.m_value, right.m_value);
     swap(left.m_function, right.m_function);
   }
-  const T &operator[](std::size_t index) const
+  constexpr const T &operator[](std::size_t index) const
   {
     return m_value[index];
   }
-  const T &at(std::size_t index) const
+  constexpr const T &at(std::size_t index) const
   {
     return m_value.at(index);
   }
-  auto size() const
+  constexpr auto size() const
   {
     return m_value.size();
   }
-  const auto *data() const
+  constexpr const auto *data() const
   {
     return m_value.data();
   }
-  auto begin() const
+  constexpr auto begin() const
   {
     return m_value.begin();
   }
-  auto end() const
+  constexpr auto end() const
   {
     return m_value.end();
   }
-  auto cbegin() const
+  constexpr auto cbegin() const
   {
     return m_value.cbegin();
   }
-  auto cend() const
+  constexpr auto cend() const
   {
     return m_value.cend();
   }
-  operator T() const noexcept
+  constexpr operator ValueT() const noexcept
   {
     return m_value;
   }
-  friend weak_value<std::array<T, sizeT>>;
+  friend weak_value<ValueT>;
 
 private:
-  std::array<T, sizeT> m_value   = {};
+  ValueT m_value                 = {};
   void (*m_function)(ParameterT) = nullptr;
 };
+template<typename T, decay_same_as<T>... Ts>
+unique_value_array(void (*)(std::array<T, sizeof...(Ts) + 1U> &), T, Ts...)
+  -> unique_value_array<T, sizeof...(Ts) + 1U>;
 
+template<std::invocable CreatorT>
+unique_value_array(void (*)(std::invoke_result_t<CreatorT> &), CreatorT)
+  -> unique_value_array<
+    typename std::invoke_result_t<CreatorT>::value_type,
+    std::ranges::size(typename std::invoke_result_t<CreatorT>{})>;
+template<decay_same_as<std::uint32_t> T, std::size_t sizeT>
+using GLID_array = unique_value_array<T, sizeT>;
 static_assert(
-  std::movable<unique_value<
-    std::uint32_t>> && !std::copyable<unique_value<std::uint32_t>>);
+  std::movable<
+    GLID_array<uint32_t, 1>> && !std::copyable<GLID_array<uint32_t, 1>>);
 static_assert(
-  std::movable<unique_value_array<
-    std::uint32_t,
-    1>> && !std::copyable<unique_value_array<std::uint32_t, 1>>);
-using GLID = unique_value<std::uint32_t>;
-template<std::size_t sizeT>
-using GLID_array = unique_value_array<std::uint32_t, sizeT>;
-
+  static_cast<std::array<std::uint32_t, 1>>(GLID_array<std::uint32_t, 1>(
+    [](GLID_array<std::uint32_t, 1>::ParameterT) {},
+    1U))
+  == std::array{ 1U });
+static_assert(
+  static_cast<std::array<std::uint32_t, 1>>(GLID_array<std::uint32_t, 1>(
+    [](GLID_array<std::uint32_t, 1>::ParameterT) {},
+    []() {
+      GLID_array<std::uint32_t, 1>::ValueT out{};
+      out[0] = 1U;
+      return out;
+    }))
+  == std::array{ 1U });
+static_assert(
+  static_cast<std::array<std::uint32_t, 1>>(unique_value_array(
+    [](GLID_array<std::uint32_t, 1>::ParameterT) {},
+    []() {
+      GLID_array<std::uint32_t, 1>::ValueT out{};
+      out[0] = 1U;
+      return out;
+    }))
+  == std::array{ 1U });
 template<typename T, std::invocable<T> F>
 unique_value(T t, F f) -> unique_value<T>;
+template<typename T, typename U, std::size_t Usz>
+concept array_type_and_size_are_same =
+  decay_same_as<std::ranges::range_value_t<T>, U> && std::ranges::size(T{})
+== Usz;
 template<typename T>
 class weak_value
 {
 public:
-  weak_value() = default;
-  weak_value(const unique_value<T> &t)
+  constexpr weak_value() = default;
+  constexpr weak_value(const unique_value<T> &t)
     : m_value(t.m_value)
   {
   }
-  operator T() const noexcept
+  template<typename U, std::size_t Usz>
+  requires array_type_and_size_are_same<T, U, Usz>
+  constexpr weak_value(const unique_value_array<U, Usz> &t)
+    : m_value(t.m_value)
+  {
+  }
+  constexpr operator T() const noexcept
   {
     return m_value;
   }
@@ -169,8 +211,13 @@ public:
 private:
   T m_value = {};
 };
-static_assert(
-  std::movable<
-    weak_value<std::uint32_t>> && std::copyable<weak_value<std::uint32_t>>);
 using GLID_copy = weak_value<std::uint32_t>;
+static_assert(std::movable<GLID_copy> && std::copyable<GLID_copy>);
+static_assert(GLID_copy{ GLID(1, [](std::uint32_t) {}) } == std::uint32_t{ 1 });
+static_assert(
+  static_cast<std::array<std::uint32_t, 1U>>(
+    weak_value<std::array<std::uint32_t, 1U>>{ GLID_array<std::uint32_t, 1U>(
+      [](typename GLID_array<std::uint32_t, 1U>::ParameterT) {},
+      1U) })
+  == std::array{ 1U });
 #endif// MYPROJECT_UNIQUE_VALUE_HPP

@@ -246,8 +246,8 @@ void Window::InitCallbacks() const
       ImGuiIO &io   = ImGui::GetIO();
       if (io.WantCaptureMouse)
       {
-        io.MouseWheelH += (float)x_offset;
-        io.MouseWheel += (float)y_offset;
+        io.MouseWheelH += static_cast<float>(x_offset);
+        io.MouseWheel += static_cast<float>(y_offset);
       }
       else
       {
