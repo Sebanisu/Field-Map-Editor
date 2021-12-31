@@ -10,39 +10,39 @@ template<typename T>
 class unique_value
 {
 public:
-  unique_value() = default;
-  unique_value(T t, void (*f)(T))
+  constexpr unique_value() = default;
+  constexpr unique_value(T t, void (*f)(T))
     : m_value(std::move(t))
     , m_function(std::move(f))
   {
   }
   unique_value(const unique_value &) = delete;
-  ~unique_value() noexcept
+  constexpr ~unique_value() noexcept
   {
     if (m_function != nullptr)
     {
       std::invoke(m_function, std::move(m_value));
     }
   }
-  unique_value(unique_value &&other) noexcept
+  constexpr unique_value(unique_value &&other) noexcept
     : unique_value()
   {
     swap(*this, other);
   }
-  unique_value &operator=(const unique_value &) = delete;
-  unique_value &operator                        =(unique_value &&other) noexcept
+  constexpr unique_value &operator=(const unique_value &) = delete;
+  constexpr unique_value &operator                        =(unique_value &&other) noexcept
   {
     swap(*this, other);
     return *this;
   }
-  friend void swap(unique_value &left, unique_value &right) noexcept
+  friend constexpr void swap(unique_value &left, unique_value &right) noexcept
   {
     using std::swap;
     swap(left.m_value, right.m_value);
     swap(left.m_function, right.m_function);
   }
 
-  operator T() const noexcept
+  constexpr operator T() const noexcept
   {
     return m_value;
   }
