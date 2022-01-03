@@ -24,16 +24,16 @@ public:
   void OnEvent(const Event::Item &) const {}
 
 private:
-  VertexBufferDynamic            m_vertex_buffer   = { 1000 };
-  glengine::IndexBufferDynamic   m_index_buffer    = { 1000 };
-  mutable IndexBufferDynamicSize index_buffer_size = {};
-  Shader                         m_shader          = {};
-  VertexArray                    m_vertex_array    = {};
-  std::vector<Texture>           m_textures        = {};
-  mutable glm::vec3              view_offset       = { 0.F, 0.F, 0.F };
-  mutable glm::vec3              model_offset1     = { 2.F, 0.F, 0.F };
-  mutable glm::vec3              model_offset2     = { 4.F, 0.F, 0.F };
-  mutable glm::vec3              model_offset3     = { 6.F, 0.F, 0.F };
+  VertexBufferDynamic                      m_vertex_buffer   = { 1000 };
+  glengine::IndexBufferDynamic             m_index_buffer    = { 1000 };
+  mutable glengine::IndexBufferDynamicSize index_buffer_size = {};
+  Shader                                   m_shader          = {};
+  VertexArray                              m_vertex_array    = {};
+  std::vector<Texture>                     m_textures        = {};
+  mutable glm::vec3                        view_offset   = { 0.F, 0.F, 0.F };
+  mutable glm::vec3                        model_offset1 = { 2.F, 0.F, 0.F };
+  mutable glm::vec3                        model_offset2 = { 4.F, 0.F, 0.F };
+  mutable glm::vec3                        model_offset3 = { 6.F, 0.F, 0.F };
 };
 void OnUpdate(const TestBatchRenderingTexture2DDynamic &, float);
 void OnRender(const TestBatchRenderingTexture2DDynamic &);

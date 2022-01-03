@@ -22,7 +22,7 @@ public:
   void        Bind() const;
   static void UnBind();
   template<std::ranges::contiguous_range T>
-  [[nodiscard]] IndexBufferDynamicSize Update(const T &vertices) const
+  [[nodiscard]] glengine::IndexBufferDynamicSize Update(const T &vertices) const
   {
     assert(std::ranges::size(vertices) <= m_max_size);
     Bind();
@@ -33,7 +33,7 @@ public:
       static_cast<std::ptrdiff_t>(
         std::ranges::size(vertices) * sizeof(std::ranges::range_value_t<T>)),
       std::ranges::data(vertices));
-    return IndexBufferDynamicSize(
+    return glengine::IndexBufferDynamicSize(
       (std::ranges::size(vertices) / std::size(Quad{}) * 6U));
   }
 };
