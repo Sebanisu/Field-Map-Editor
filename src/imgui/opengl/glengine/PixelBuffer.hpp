@@ -7,8 +7,11 @@
 #include "FrameBuffer.hpp"
 #include "scope_guard.hpp"
 #include "unique_value.hpp"
+namespace glengine
+{
 class PixelBuffer
 {
+  // todo make array_size a template argument?
   constexpr static inline std::size_t ARRAY_SIZE = { 2U };
 
   using ArrayT                                   = GLID_array<ARRAY_SIZE>;
@@ -160,4 +163,5 @@ private:
   mutable std::array<std::filesystem::path, ARRAY_SIZE> paths = {};
   ArrayT                                                pbos  = {};
 };
+}// namespace glengine
 #endif// MYPROJECT_PIXELBUFFER_HPP

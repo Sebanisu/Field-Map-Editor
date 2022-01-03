@@ -75,7 +75,7 @@ void Application::Run() const
       fb.UnBind();
       if (TimeStep::now() - last > TimeStep::duration(5s))
       {
-        PixelBuffer pixel_buffer{ fb.Specification() };
+        glengine::PixelBuffer pixel_buffer{ fb.Specification() };
         pixel_buffer(fb, fmt::format("test ({}).png", test_number++));
         while (pixel_buffer(&Texture::save))
           ;

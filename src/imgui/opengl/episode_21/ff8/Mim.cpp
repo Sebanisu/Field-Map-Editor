@@ -196,8 +196,8 @@ void ff8::Mim::Save() const
   {
     string = fmt::format("{}_mim_clut.png", fs_path.stem().string());
   }
-  PixelBuffer  pixel_buffer{ fb.Specification() };
-  pixel_buffer.operator()(fb, fs_path.parent_path() / string);
+  glengine::PixelBuffer pixel_buffer{ fb.Specification() };
+  pixel_buffer.         operator()(fb, fs_path.parent_path() / string);
   while (pixel_buffer.operator()(&Texture::save))
     ;
   saving = false;
@@ -250,9 +250,9 @@ void ff8::Mim::Save_All() const
       GLCall{}(glViewport, 0, 0, texture->width(), texture->height());
       OnRender();
     }
-    PixelBuffer pixel_buffer{ fb.Specification() };
-    auto        fs_path = std::filesystem::path(m_path);
-    auto        string  = fmt::format(
+    glengine::PixelBuffer pixel_buffer{ fb.Specification() };
+    auto                  fs_path = std::filesystem::path(m_path);
+    auto                  string  = fmt::format(
       "{}_mim_{}_{}.png", fs_path.stem().string(), local_bpp, local_palette);
     if (local_bpp == 16 || local_bpp == 24)
       string = fmt::format("{}_mim_{}.png", fs_path.stem().string(), local_bpp);

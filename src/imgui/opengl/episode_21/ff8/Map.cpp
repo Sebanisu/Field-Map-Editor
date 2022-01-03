@@ -434,8 +434,8 @@ void ff8::Map::Save() const
   const auto path = std::filesystem::path(m_map_path);
   auto       string =
     fmt::format("{}_map.png", (path.parent_path() / path.stem()).string());
-  PixelBuffer  pixel_buffer{ m_frame_buffer.Specification() };
-  pixel_buffer.operator()(m_frame_buffer, string);
+  glengine::PixelBuffer pixel_buffer{ m_frame_buffer.Specification() };
+  pixel_buffer.         operator()(m_frame_buffer, string);
   while (pixel_buffer.operator()(&Texture::save))
     ;
 }
