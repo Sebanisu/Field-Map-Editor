@@ -43,8 +43,9 @@ inline void Draw(const Ts &...ts)
   auto   type = glengine::Type<Ts...>(ts...);
 
   assert(
-    type == IndexType::UNSIGNED_INT || type == IndexType::UNSIGNED_SHORT
-    || type == IndexType::UNSIGNED_BYTE);
+    type == glengine::IndexType::UNSIGNED_INT
+    || type == glengine::IndexType::UNSIGNED_SHORT
+    || type == glengine::IndexType::UNSIGNED_BYTE);
   assert(size != 0);
   GLCall{}(
     glDrawElements,
