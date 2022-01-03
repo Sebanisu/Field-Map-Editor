@@ -50,7 +50,7 @@ class FrameBufferRenderer
   }
 
 public:
-  void Draw(const FrameBuffer &frame_buffer) const
+  void Draw(const glengine::FrameBuffer &frame_buffer) const
   {
     SetUniform();
     Renderer::Draw(

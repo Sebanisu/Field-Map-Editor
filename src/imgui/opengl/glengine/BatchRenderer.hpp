@@ -74,5 +74,5 @@ private:
 };
 static_assert(Renderable<BatchRenderer>);
 static_assert(Bindable<BatchRenderer>);
-}
+}// namespace glengine
 #endif// MYPROJECT_BATCHRENDERER_HPP

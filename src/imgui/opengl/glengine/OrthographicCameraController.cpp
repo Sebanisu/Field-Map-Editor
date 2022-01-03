@@ -8,7 +8,7 @@
 #include "Input.hpp"
 
 extern float Get_Frame_Buffer_Aspect_Ratio();
-void OrthographicCameraController::OnUpdate(float ts) const
+void         OrthographicCameraController::OnUpdate(float ts) const
 {
   if (Input::IsKeyPressed(KEY::EQUAL) || Input::IsKeyPressed(KEY::KP_ADD))
   {

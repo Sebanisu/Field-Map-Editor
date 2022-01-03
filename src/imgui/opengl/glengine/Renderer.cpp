@@ -3,6 +3,3 @@
 //
 
 #include "Renderer.hpp"
-
-
-

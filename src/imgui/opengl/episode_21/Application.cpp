@@ -66,7 +66,7 @@ void Application::Run() const
       Renderer::Clear();
       layers.OnImGuiUpdate();
       layers.OnUpdate(time_step);
-      FrameBuffer fb(FrameBufferSpecification{
+      glengine::FrameBuffer fb(glengine::FrameBufferSpecification{
         .width  = current_window->ViewWindowData().frame_buffer_width,
         .height = current_window->ViewWindowData().frame_buffer_height });
       fb.Bind();

@@ -3,11 +3,11 @@
 //
 
 #include "Mim.hpp"
+#include "Application.hpp"
 #include "FrameBuffer.hpp"
 #include "FrameBufferBackup.hpp"
 #include "OrthographicCameraController.hpp"
 #include "PixelBuffer.hpp"
-#include "Application.hpp"
 namespace ff8
 {
 static const BPPs                   bpp                 = {};
@@ -164,9 +164,9 @@ void ff8::Mim::OnEvent(const Event::Item &e) const
 }
 void ff8::Mim::Save() const
 {
-  saving                       = true;
-  const Texture &local_texture = CurrentTexture();
-  FrameBuffer    fb(
+  saving                              = true;
+  const Texture        &local_texture = CurrentTexture();
+  glengine::FrameBuffer fb(
     { .width = local_texture.width(), .height = local_texture.height() });
   {
     const auto fbb = FrameBufferBackup{};
@@ -240,7 +240,8 @@ void ff8::Mim::Save_All() const
     {
       continue;
     }
-    FrameBuffer fb({ .width = texture->width(), .height = texture->height() });
+    glengine::FrameBuffer fb(
+      { .width = texture->width(), .height = texture->height() });
     {
       const auto fbb = FrameBufferBackup{};
       fb.Bind();

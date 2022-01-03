@@ -43,7 +43,7 @@ private:
   // takes quads and draws them to the frame buffer or screen.
   glengine::BatchRenderer              m_batch_renderer   = {};
   // holds rendered image at 1:1 scale to prevent gaps when scaling.
-  FrameBuffer                          m_frame_buffer     = {};
+  glengine::FrameBuffer                m_frame_buffer     = {};
   void                                 RenderFrameBuffer() const;
   void                                 Save() const;
 };

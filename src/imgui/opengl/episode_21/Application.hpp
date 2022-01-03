@@ -22,6 +22,6 @@ private:
   Layer::Stack            layers = {};
 };
 
-void RestoreViewPortToFrameBuffer();
+void  RestoreViewPortToFrameBuffer();
 float Get_Frame_Buffer_Aspect_Ratio();
 #endif// MYPROJECT_APPLICATION_HPP

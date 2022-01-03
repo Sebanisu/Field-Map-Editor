@@ -3,11 +3,11 @@
 //
 
 #include "Map.hpp"
+#include "Application.hpp"
 #include "FrameBufferBackup.hpp"
 #include "OrthographicCameraController.hpp"
 #include "PixelBuffer.hpp"
 #include "Window.hpp"
-#include "Application.hpp"
 static OrthographicCameraController camera               = { 16 / 9 };
 static OrthographicCamera           fixed_render_camera  = {};
 static bool                         snap_zoom_to_height  = true;
@@ -125,7 +125,7 @@ ff8::Map::Map(const ff8::Fields &fields)
       static_cast<float>(max_x + 16),
       static_cast<float>(min_y),
       static_cast<float>(max_y + 16));
-    m_frame_buffer = FrameBuffer(FrameBufferSpecification{
+    m_frame_buffer = glengine::FrameBuffer(glengine::FrameBufferSpecification{
       .width = std::abs(width), .height = std::abs(height) });
   });
 }

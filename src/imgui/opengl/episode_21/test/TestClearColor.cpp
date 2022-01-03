@@ -4,5 +4,3 @@
 
 #include "TestClearColor.hpp"
 #include "Renderer.hpp"
-
-

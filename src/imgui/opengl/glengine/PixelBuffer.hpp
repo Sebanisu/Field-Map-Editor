@@ -11,9 +11,9 @@ class PixelBuffer
 {
   constexpr static inline std::size_t ARRAY_SIZE = { 2U };
 
-  using ArrayT     = GLID_array<ARRAY_SIZE>;
-  using ValueT     = typename ArrayT::ValueT;
-  using ParameterT = typename ArrayT::ParameterT;
+  using ArrayT                                   = GLID_array<ARRAY_SIZE>;
+  using ValueT                                   = typename ArrayT::ValueT;
+  using ParameterT                               = typename ArrayT::ParameterT;
   // wrapping this pointer to force it to call glUnmapBuffer. Should scope this.
   using unique_glubyte =
     std::unique_ptr<uint8_t, decltype([](const GLubyte *const) {
@@ -21,7 +21,7 @@ class PixelBuffer
                     })>;
 
 public:
-  PixelBuffer(const FrameBufferSpecification &fbs)
+  PixelBuffer(const glengine::FrameBufferSpecification &fbs)
     : width(fbs.width)
     , height(fbs.height)
     , DATA_SIZE(
@@ -66,9 +66,9 @@ public:
    * @return true if any values are present
    */
   bool operator()(
-    const FrameBuffer    &fb,
-    std::filesystem::path path,
-    bool *const           full = nullptr) const
+    const glengine::FrameBuffer &fb,
+    std::filesystem::path        path,
+    bool *const                  full = nullptr) const
   {
     Next();
     ToPBO(fb, std::move(path));
@@ -117,11 +117,11 @@ private:
       }
     }
   }
-  void ToPBO(const FrameBuffer &fb, std::filesystem::path path) const
+  void ToPBO(const glengine::FrameBuffer &fb, std::filesystem::path path) const
   {
     // set the target framebuffer to read
     fb.Bind();
-    const scope_guard unbind_frame_buffer = (&FrameBuffer::UnBind);
+    const scope_guard unbind_frame_buffer = (&glengine::FrameBuffer::UnBind);
     glReadBuffer(GL_COLOR_ATTACHMENT0);
 
     // read pixels from framebuffer to PBO

@@ -156,13 +156,10 @@ unique_value_array(void (*)(std::invoke_result_t<CreatorT> &), CreatorT)
     std::ranges::size(typename std::invoke_result_t<CreatorT>{})>;
 template<std::size_t sizeT>
 using GLID_array = unique_value_array<std::uint32_t, sizeT>;
+static_assert(std::movable<GLID_array<1>> && !std::copyable<GLID_array<1>>);
 static_assert(
-  std::movable<
-    GLID_array<1>> && !std::copyable<GLID_array<1>>);
-static_assert(
-  static_cast<std::array<std::uint32_t, 1>>(GLID_array<1>(
-    [](GLID_array<1>::ParameterT) {},
-    1U))
+  static_cast<std::array<std::uint32_t, 1>>(
+    GLID_array<1>([](GLID_array<1>::ParameterT) {}, 1U))
   == std::array{ 1U });
 static_assert(
   static_cast<std::array<std::uint32_t, 1>>(GLID_array<1>(
@@ -216,8 +213,7 @@ static_assert(std::movable<GLID_copy> && std::copyable<GLID_copy>);
 static_assert(GLID_copy{ GLID(1, [](std::uint32_t) {}) } == std::uint32_t{ 1 });
 static_assert(
   static_cast<std::array<std::uint32_t, 1U>>(
-    weak_value<std::array<std::uint32_t, 1U>>{ GLID_array<1U>(
-      [](typename GLID_array<1U>::ParameterT) {},
-      1U) })
+    weak_value<std::array<std::uint32_t, 1U>>{
+      GLID_array<1U>([](typename GLID_array<1U>::ParameterT) {}, 1U) })
   == std::array{ 1U });
 #endif// MYPROJECT_UNIQUE_VALUE_HPP
