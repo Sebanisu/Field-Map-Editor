@@ -209,15 +209,15 @@ void Window::InitCallbacks() const
       switch (action)
       {
         case GLFW_PRESS: {
-          data.event_callback(Event::KeyPressed(KEY{ key }, false));
+          data.event_callback(Event::KeyPressed(glengine::KEY{ key }, false));
           break;
         }
         case GLFW_RELEASE: {
-          data.event_callback(Event::KeyReleased(KEY{ key }));
+          data.event_callback(Event::KeyReleased(glengine::KEY{ key }));
           break;
         }
         case GLFW_REPEAT: {
-          data.event_callback(Event::KeyPressed(KEY{ key }, true));
+          data.event_callback(Event::KeyPressed(glengine::KEY{ key }, true));
           break;
         }
       }

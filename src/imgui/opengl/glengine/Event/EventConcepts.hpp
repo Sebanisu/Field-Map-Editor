@@ -34,10 +34,10 @@ concept is = decay_same_as<typename T::value_type, T> && requires(const T &t)
 template<typename T>
 concept is_Key = is<T> && requires(const T &t)
 {
-  T(KEY::A);
+  T(glengine::KEY::A);
   {
     t.Key()
-    } -> decay_same_as<KEY>;
+    } -> decay_same_as<glengine::KEY>;
 };
 template<typename T>
 concept is_MouseMove = is<T> && requires(const T &t)

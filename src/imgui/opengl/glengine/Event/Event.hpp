@@ -159,12 +159,12 @@ class KeyPressed
   EVENT_CLASS_CATEGORY(Category::Input | Category::Keyboard)
   EVENT_HANDLED
   constexpr KeyPressed() = default;
-  constexpr KeyPressed(KEY code, bool repeat = false)
+  constexpr KeyPressed(glengine::KEY code, bool repeat = false)
     : m_key(code)
     , m_repeat(repeat)
   {
   }
-  constexpr KEY Key() const
+  constexpr glengine::KEY Key() const
   {
     return m_key;
   }
@@ -178,7 +178,7 @@ class KeyPressed
   }
 
 private:
-  KEY  m_key{};
+  glengine::KEY  m_key{};
   bool m_repeat{};
 };
 static_assert(is_Key<KeyPressed>);
@@ -189,11 +189,11 @@ class KeyReleased
   EVENT_CLASS_CATEGORY(Category::Input | Category::Keyboard)
   EVENT_HANDLED
   constexpr KeyReleased() = default;
-  constexpr KeyReleased(KEY code)
+  constexpr KeyReleased(glengine::KEY code)
     : m_key(code)
   {
   }
-  constexpr KEY Key() const
+  constexpr glengine::KEY Key() const
   {
     return m_key;
   }
@@ -203,7 +203,7 @@ class KeyReleased
   }
 
 private:
-  KEY m_key{};
+  glengine::KEY m_key{};
 };
 static_assert(is_Key<KeyReleased>);
 

@@ -4,7 +4,8 @@
 
 #ifndef MYPROJECT_KEYCODES_HPP
 #define MYPROJECT_KEYCODES_HPP
-
+namespace glengine
+{
 // from glfw3.h
 enum class KEY : int
 {
@@ -160,4 +161,5 @@ static constexpr auto operator+(KEY e) noexcept
 {
   return static_cast<std::underlying_type_t<KEY>>(e);
 }
+}// namespace glengine
 #endif// MYPROJECT_KEYCODES_HPP
