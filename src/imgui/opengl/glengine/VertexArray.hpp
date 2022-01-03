@@ -8,8 +8,8 @@
 #include "unique_value.hpp"
 #include "VertexBuffer.hpp"
 #include "VertexBufferLayout.hpp"
-
-
+namespace glengine
+{
 class VertexArray
 {
 private:
@@ -56,4 +56,5 @@ public:
   }
 };
 static_assert(Bindable<VertexArray>);
+}// namespace glengine
 #endif// MYPROJECT_VERTEXARRAY_HPP

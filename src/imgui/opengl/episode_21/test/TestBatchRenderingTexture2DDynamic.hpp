@@ -28,7 +28,7 @@ private:
   glengine::IndexBufferDynamic             m_index_buffer    = { 1000 };
   mutable glengine::IndexBufferDynamicSize index_buffer_size = {};
   glengine::Shader                         m_shader          = {};
-  VertexArray                              m_vertex_array    = {};
+  glengine::VertexArray                    m_vertex_array    = {};
   std::vector<glengine::Texture>           m_textures        = {};
   mutable glm::vec3                        view_offset   = { 0.F, 0.F, 0.F };
   mutable glm::vec3                        model_offset1 = { 2.F, 0.F, 0.F };

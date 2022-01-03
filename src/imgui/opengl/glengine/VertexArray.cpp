@@ -3,6 +3,8 @@
 //
 
 #include "VertexArray.hpp"
+namespace glengine
+{
 VertexArray::VertexArray()
   : m_renderer_id{ []() -> std::uint32_t {
                     std::uint32_t tmp{};
@@ -24,3 +26,4 @@ void VertexArray::UnBind()
 
   GLCall{}(glBindVertexArray, 0U);
 }
+}// namespace glengine
