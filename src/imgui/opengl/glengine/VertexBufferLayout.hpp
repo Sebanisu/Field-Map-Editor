@@ -4,8 +4,8 @@
 
 #ifndef MYPROJECT_VERTEXBUFFERLAYOUT_HPP
 #define MYPROJECT_VERTEXBUFFERLAYOUT_HPP
-
-
+namespace glengine
+{
 template<typename T>
 concept is_VertexBufferElementType = requires(T t)
 {
@@ -182,5 +182,5 @@ template<is_VertexBufferElementType... Ts>
 VertexBufferLayout(Ts &&...) -> VertexBufferLayout<sizeof...(Ts)>;
 static_assert(
   std::movable<VertexBufferLayout<1>> && std::copyable<VertexBufferLayout<1>>);
-
+}// namespace glengine
 #endif// MYPROJECT_VERTEXBUFFERLAYOUT_HPP

@@ -16,11 +16,13 @@ struct Vertex
   float       tiling_factor{ 1.F };
   static auto Layout()
   {
-    return VertexBufferLayout{ VertexBufferElementType<float>{ 3U },
-                               VertexBufferElementType<float>{ 4U },
-                               VertexBufferElementType<float>{ 2U },
-                               VertexBufferElementType<float>{ 1U },
-                               VertexBufferElementType<float>{ 1U } };
+    return glengine::VertexBufferLayout{
+      glengine::VertexBufferElementType<float>{ 3U },
+      glengine::VertexBufferElementType<float>{ 4U },
+      glengine::VertexBufferElementType<float>{ 2U },
+      glengine::VertexBufferElementType<float>{ 1U },
+      glengine::VertexBufferElementType<float>{ 1U }
+    };
   }
 };
 static_assert(
