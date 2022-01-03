@@ -32,7 +32,7 @@ public:
   std::string_view Name() const
   {
     return std::visit(
-      make_visitor(
+      glengine::make_visitor(
         [](const Event::is auto &value) { return value.Name(); },
         [](std::monostate) { return std::string_view(""); }),
       m_impl);
@@ -40,7 +40,7 @@ public:
   Event::Category category() const
   {
     return std::visit(
-      make_visitor(
+      glengine::make_visitor(
         [](const Event::is auto &value) { return value.category(); },
         [](std::monostate) { return Event::Category::None; }),
       m_impl);
@@ -48,7 +48,7 @@ public:
   std::string_view CategoryName() const
   {
     return std::visit(
-      make_visitor(
+      glengine::make_visitor(
         [](const Event::is auto &value) { return value.CategoryName(); },
         [](std::monostate) { return std::string_view(""); }),
       m_impl);
@@ -56,7 +56,7 @@ public:
   bool Handled() const
   {
     return std::visit(
-      make_visitor(
+      glengine::make_visitor(
         [](const Event::is auto &value) { return value.Handled(); },
         [](std::monostate) { return false; }),
       m_impl);
@@ -65,7 +65,7 @@ public:
   std::string Data() const
   {
     return std::visit(
-      make_visitor(
+      glengine::make_visitor(
         [](const Event::is auto &value) { return value.Data(); },
         [](std::monostate) { return std::string{}; }),
       m_impl);
