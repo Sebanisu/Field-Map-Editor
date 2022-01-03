@@ -30,7 +30,7 @@ public:
     using return_value_type =
       std::decay_t<std::invoke_result_t<FuncT, ArgsT...>>;
     GLClearError(m_source_location);
-    if constexpr (!Void<return_value_type>)
+    if constexpr (!glengine::Void<return_value_type>)
     {
       return_value_type return_value =
         std::invoke(std::forward<FuncT>(func), std::forward<ArgsT>(args)...);

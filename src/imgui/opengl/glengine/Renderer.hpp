@@ -38,8 +38,8 @@ namespace Renderer
   template<Bindable... Ts>
   inline void Draw(const Ts &...ts)
   {
-    ::Bind<Ts...>(ts...);
-    size_t size = ::size<Ts...>(ts...);
+    glengine::Bind<Ts...>(ts...);
+    size_t size = glengine::size<Ts...>(ts...);
     auto   type = glengine::Type<Ts...>(ts...);
 
     assert(

@@ -4,7 +4,8 @@
 
 #ifndef MYPROJECT_CONCEPTS_HPP
 #define MYPROJECT_CONCEPTS_HPP
-
+namespace glengine
+{
 template<typename T, typename U>
 concept decay_same_as = std::is_same_v<std::decay_t<T>, std::decay_t<U>>;
 template<typename T>
@@ -77,7 +78,7 @@ template<typename... T>
   // clang-format on
   inline std::size_t size(const T &...bindables)
 {
-  return (::size<T>(bindables) + ...);
+  return (glengine::size<T>(bindables) + ...);
 }
-
+}// namespace glengine
 #endif// MYPROJECT_CONCEPTS_HPP
