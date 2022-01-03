@@ -1,5 +1,6 @@
 #include "IndexBuffer.hpp"
-
+namespace glengine
+{
 void IndexBuffer::Bind() const
 {
   GLCall{}(glBindBuffer, GL_ELEMENT_ARRAY_BUFFER, m_renderer_id);
@@ -18,3 +19,4 @@ IndexType IndexBuffer::Type() const
 {
   return m_type;
 };
+}// namespace glengine

@@ -7,8 +7,8 @@
 #include "IndexType.hpp"
 #include "Renderer.hpp"
 #include "unique_value.hpp"
-
-
+namespace glengine
+{
 class IndexBuffer
 {
 private:
@@ -55,5 +55,5 @@ public:
   std::size_t size() const;
 };
 static_assert(Bindable<IndexBuffer> && has_Type_for_IndexType<IndexBuffer>);
-
+}// namespace glengine
 #endif// MYPROJECT_INDEXBUFFER_HPP

@@ -25,7 +25,7 @@ public:
 
 private:
   VertexBuffer          m_vertex_buffer        = {};
-  IndexBuffer           m_index_buffer         = {};
+  glengine::IndexBuffer m_index_buffer         = {};
   Texture               m_texture              = {};
   Shader                m_shader               = {};
   VertexArray           m_vertex_array         = {};

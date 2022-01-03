@@ -101,7 +101,7 @@ test::TestBatchRendering::TestBatchRendering()
         return static_cast<std::uint32_t>(
           index + (std::size(vertices_init) * i));
       });
-  m_index_buffer = IndexBuffer{ indices };
+  m_index_buffer = glengine::IndexBuffer{ indices };
 
 
   m_vertex_array.Bind();

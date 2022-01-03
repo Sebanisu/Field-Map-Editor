@@ -34,7 +34,7 @@ test::TestBatchRenderingTexture2D::TestBatchRenderingTexture2D()
   m_vertex_buffer           = VertexBuffer{ vertices };
   constexpr auto quad_size  = std::size(Quad{});
   const auto     quad_count = std::size(vertices) / quad_size;
-  m_index_buffer            = IndexBuffer{ QuadIndices(quad_count) };
+  m_index_buffer            = glengine::IndexBuffer{ QuadIndices(quad_count) };
 
   m_vertex_array.Bind();
   m_vertex_array.push_back(m_vertex_buffer, Vertex::Layout());
