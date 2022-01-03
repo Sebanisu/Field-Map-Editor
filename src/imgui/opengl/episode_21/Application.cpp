@@ -62,15 +62,15 @@ void Application::Run() const
     window->BeginFrame();// First thing you do on update;
     if (!minimize)
     {
-      Renderer::Clear.Color({ 0.F, 0.F, 0.F, 0.F });
-      Renderer::Clear();
+      glengine::Renderer::Clear.Color({ 0.F, 0.F, 0.F, 0.F });
+      glengine::Renderer::Clear();
       layers.OnImGuiUpdate();
       layers.OnUpdate(time_step);
       glengine::FrameBuffer fb(glengine::FrameBufferSpecification{
         .width  = current_window->ViewWindowData().frame_buffer_width,
         .height = current_window->ViewWindowData().frame_buffer_height });
       fb.Bind();
-      Renderer::Clear();
+      glengine::Renderer::Clear();
       layers.OnRender();
       fb.UnBind();
       if (TimeStep::now() - last > TimeStep::duration(5s))

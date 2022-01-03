@@ -64,7 +64,7 @@ void test::TestBatchRenderingTexture2DDynamic::OnRender() const
       ++i;
     }
     m_shader.SetUniform("u_Textures", slots);
-    Renderer::Draw(index_buffer_size, m_vertex_array, m_index_buffer);
+    glengine::Renderer::Draw(index_buffer_size, m_vertex_array, m_index_buffer);
   }
 }
 void test::TestBatchRenderingTexture2DDynamic::OnImGuiUpdate() const

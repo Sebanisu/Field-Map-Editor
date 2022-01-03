@@ -54,7 +54,7 @@ void test::TestBatchRendering::OnRender() const
     m_shader.SetUniform("u_MVP", mvp);
     m_shader.SetUniform("u_Color", 1.F, 1.F, 1.F, 1.F);
     // m_shader.SetUniform("u_Texture", 0);
-    Renderer::Draw(m_vertex_array, m_index_buffer);
+    glengine::Renderer::Draw(m_vertex_array, m_index_buffer);
   }
 }
 test::TestBatchRendering::TestBatchRendering()

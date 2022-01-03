@@ -42,7 +42,6 @@ add_library(glengine STATIC
         Menu.cpp
         MenuItem.cpp
         OrthographicCameraController.cpp
-        Renderer.cpp
         Shader.cpp
         SubTexture.cpp
         Texture.cpp

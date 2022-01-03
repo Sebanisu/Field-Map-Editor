@@ -172,7 +172,7 @@ void ff8::Mim::Save() const
   {
     const auto fbb = glengine::FrameBufferBackup{};
     fb.Bind();
-    Renderer::Clear();
+    glengine::Renderer::Clear();
     glViewport(0, 0, local_texture.width(), local_texture.height());
     OnRender();
   }
@@ -246,7 +246,7 @@ void ff8::Mim::Save_All() const
     {
       const auto fbb = glengine::FrameBufferBackup{};
       fb.Bind();
-      Renderer::Clear();
+      glengine::Renderer::Clear();
       GLCall{}(glViewport, 0, 0, texture->width(), texture->height());
       OnRender();
     }

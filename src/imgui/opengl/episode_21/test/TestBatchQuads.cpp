@@ -86,7 +86,7 @@ void test::TestBatchQuads::OnRender() const
     m_shader.SetUniform("u_Color", 1.F, 1.F, 1.F, 1.F);
     m_blank.Bind(0);
     m_shader.SetUniform("u_Textures", std::array{ 0 });
-    Renderer::Draw(index_buffer_size, m_vertex_array, m_index_buffer);
+    glengine::Renderer::Draw(index_buffer_size, m_vertex_array, m_index_buffer);
     ++draw_count;
   }
 }

@@ -223,7 +223,7 @@ void ff8::Map::OnRender() const
       0,
       m_frame_buffer.Specification().width,
       m_frame_buffer.Specification().height);
-    Renderer::Clear();
+    glengine::Renderer::Clear();
     RenderTiles();
   }
   RestoreViewPortToFrameBuffer();

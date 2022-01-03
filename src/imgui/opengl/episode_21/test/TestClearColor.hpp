@@ -33,7 +33,9 @@ public:
 private:
   static constexpr glm::vec4        DEFAULT_COLOR = { 0.2F, 0.3F, 0.8F, 1.F };
   static inline constinit glm::vec4 m_clear_color = { DEFAULT_COLOR };
-  static inline constinit Renderer::Clear_impl LocalClear = { DEFAULT_COLOR };
+  static inline constinit glengine::Renderer::Clear_impl LocalClear = {
+    DEFAULT_COLOR
+  };
 };
 }// namespace test
 static_assert(glengine::Renderable<test::TestClearColor>);

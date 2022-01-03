@@ -79,12 +79,12 @@ void test::TestTexture2D::OnRender() const
     const auto model = glm::translate(glm::mat4{ 1.F }, model_offset);
     const auto mvp   = proj * view * model;
     m_shader.SetUniform("u_MVP", mvp);
-    Renderer::Draw(m_vertex_array, m_index_buffer, m_texture);
+    glengine::Renderer::Draw(m_vertex_array, m_index_buffer, m_texture);
   }
   {
     const auto model = glm::translate(glm::mat4{ 1.F }, model2_offset);
     const auto mvp   = proj * view * model;
     m_shader.SetUniform("u_MVP", mvp);
-    Renderer::Draw(m_vertex_array, m_index_buffer, m_texture);
+    glengine::Renderer::Draw(m_vertex_array, m_index_buffer, m_texture);
   }
 }
