@@ -13,6 +13,8 @@
 #include "VertexArray.hpp"
 #include "VertexBuffer.hpp"
 #include "VertexBufferLayout.hpp"
+namespace glengine
+{
 class FrameBufferRenderer
 {
   struct simple_vertex
@@ -43,18 +45,10 @@ class FrameBufferRenderer
     VertexBufferElementType<float>{ 2U });
   VertexArray m_vertex_array = { m_vertex_buffer, m_layout };
   IndexBuffer m_index_buffer{ QuadIndicesInit };
-  void        SetUniform() const
-  {
-    m_shader.Bind();
-    m_shader.SetUniform("u_MVP", m_camera.ViewProjectionMatrix());
-  }
+  void        SetUniform() const;
 
 public:
-  void Draw(const glengine::FrameBuffer &frame_buffer) const
-  {
-    SetUniform();
-    Renderer::Draw(
-      frame_buffer.GetColorAttachment(), m_vertex_array, m_index_buffer);
-  }
+  void Draw(const glengine::FrameBuffer &frame_buffer) const;
 };
+}// namespace glengine
 #endif// MYPROJECT_FRAMEBUFFERRENDERER_HPP

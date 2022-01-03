@@ -52,9 +52,9 @@ Application::Application(std::string Title, int width, int height)
 void Application::Run() const
 {
   SetCurrentWindow();
-  const TimeStep      time_step = {};
-  FrameBufferRenderer fbr       = {};
-  auto                last      = TimeStep::now();
+  const TimeStep                time_step = {};
+  glengine::FrameBufferRenderer fbr       = {};
+  auto                          last      = TimeStep::now();
   using namespace std::chrono_literals;
   std::size_t test_number = 0;
   while (running)
