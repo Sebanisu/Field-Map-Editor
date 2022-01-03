@@ -4,6 +4,8 @@
 
 #ifndef MYPROJECT_TIMESTEP_HPP
 #define MYPROJECT_TIMESTEP_HPP
+namespace glengine
+{
 class TimeStep
 {
 private:
@@ -19,5 +21,5 @@ public:
 private:
   mutable time_point last = now();
 };
-
+}// namespace glengine
 #endif// MYPROJECT_TIMESTEP_HPP

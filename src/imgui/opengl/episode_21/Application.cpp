@@ -52,9 +52,9 @@ Application::Application(std::string Title, int width, int height)
 void Application::Run() const
 {
   SetCurrentWindow();
-  const TimeStep                time_step = {};
+  const glengine::TimeStep      time_step = {};
   glengine::FrameBufferRenderer fbr       = {};
-  auto                          last      = TimeStep::now();
+  auto                          last      = glengine::TimeStep::now();
   using namespace std::chrono_literals;
   std::size_t test_number = 0;
   while (running)
@@ -73,13 +73,13 @@ void Application::Run() const
       glengine::Renderer::Clear();
       layers.OnRender();
       fb.UnBind();
-      if (TimeStep::now() - last > TimeStep::duration(5s))
+      if (glengine::TimeStep::now() - last > glengine::TimeStep::duration(5s))
       {
         glengine::PixelBuffer pixel_buffer{ fb.Specification() };
         pixel_buffer(fb, fmt::format("test ({}).png", test_number++));
         while (pixel_buffer(&glengine::Texture::save))
           ;
-        last = TimeStep::now();
+        last = glengine::TimeStep::now();
       }
       fbr.Draw(fb);
       window->EndFrameRendered();// Last thing you do on render;

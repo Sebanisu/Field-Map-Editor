@@ -16,7 +16,7 @@ static bool                                   draw_palette        = false;
 static bool                                   draw_grid           = false;
 static bool                                   snap_zoom_to_height = true;
 static bool                                   saving              = false;
-static const glengine::Texture                         *texture             = nullptr;
+static const glengine::Texture               *texture             = nullptr;
 static glengine::OrthographicCameraController camera              = { 16 / 9 };
 }// namespace ff8
 void ff8::Mim::OnUpdate(float ts) const
@@ -165,9 +165,9 @@ void ff8::Mim::OnEvent(const Event::Item &e) const
 }
 void ff8::Mim::Save() const
 {
-  saving                              = true;
-  const glengine::Texture        &local_texture = CurrentTexture();
-  glengine::FrameBuffer fb(
+  saving                                 = true;
+  const glengine::Texture &local_texture = CurrentTexture();
+  glengine::FrameBuffer    fb(
     { .width = local_texture.width(), .height = local_texture.height() });
   {
     const auto fbb = glengine::FrameBufferBackup{};

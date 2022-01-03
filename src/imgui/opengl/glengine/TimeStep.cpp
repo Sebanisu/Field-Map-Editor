@@ -3,6 +3,8 @@
 //
 
 #include "TimeStep.hpp"
+namespace glengine
+{
 TimeStep::operator float() const
 {
   time_point current = now();
@@ -15,3 +17,4 @@ TimeStep::time_point TimeStep::now()
 {
   return Clock::now();
 }
+}// namespace glengine
