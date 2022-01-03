@@ -33,7 +33,7 @@ void test::TestBatchRenderer::GenerateQuads() const
 
 test::TestBatchRenderer::TestBatchRenderer()
   : m_textures([]() {
-    std::vector<Texture> r{};
+    std::vector<glengine::Texture> r{};
     r.emplace_back(
       std::filesystem::current_path() / "res" / "textures" / "logo.png");
     r.emplace_back(

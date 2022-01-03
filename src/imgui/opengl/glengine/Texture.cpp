@@ -1,5 +1,7 @@
 #include "Texture.hpp"
 #include <stb_image.h>
+namespace glengine
+{
 Texture::Texture(std::filesystem::path path)
   : m_path(std::move(path))
 {
@@ -29,3 +31,4 @@ GLID_copy Texture::ID() const noexcept
 {
   return m_renderer_id;
 }
+}// namespace glengine

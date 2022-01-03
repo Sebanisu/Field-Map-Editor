@@ -77,7 +77,7 @@ void Application::Run() const
       {
         glengine::PixelBuffer pixel_buffer{ fb.Specification() };
         pixel_buffer(fb, fmt::format("test ({}).png", test_number++));
-        while (pixel_buffer(&Texture::save))
+        while (pixel_buffer(&glengine::Texture::save))
           ;
         last = TimeStep::now();
       }

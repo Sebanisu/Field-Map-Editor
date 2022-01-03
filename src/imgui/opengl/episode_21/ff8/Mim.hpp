@@ -16,13 +16,13 @@ class Mim
 public:
   Mim() = default;
   Mim(const Fields &fields);
-  void           OnUpdate(float) const;
-  void           OnRender() const;
-  void           OnImGuiUpdate() const;
-  void           OnEvent(const Event::Item &) const;
-  std::size_t    Index() const;
-  const Texture &CurrentTexture() const;
-  void           Save() const;
+  void                     OnUpdate(float) const;
+  void                     OnRender() const;
+  void                     OnImGuiUpdate() const;
+  void                     OnEvent(const Event::Item &) const;
+  std::size_t              Index() const;
+  const glengine::Texture &CurrentTexture() const;
+  void                     Save() const;
 
 private:
   void                                 SetUniforms() const;

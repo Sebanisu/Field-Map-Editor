@@ -26,7 +26,7 @@ public:
 private:
   VertexBuffer          m_vertex_buffer        = {};
   glengine::IndexBuffer m_index_buffer         = {};
-  Texture               m_texture              = {};
+  glengine::Texture     m_texture              = {};
   glengine::Shader      m_shader               = {};
   VertexArray           m_vertex_array         = {};
   mutable glm::vec3     view_offset            = { 0.F, 0.F, 0.F };

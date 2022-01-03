@@ -16,7 +16,7 @@ static bool                                   draw_palette        = false;
 static bool                                   draw_grid           = false;
 static bool                                   snap_zoom_to_height = true;
 static bool                                   saving              = false;
-static const Texture                         *texture             = nullptr;
+static const glengine::Texture                         *texture             = nullptr;
 static glengine::OrthographicCameraController camera              = { 16 / 9 };
 }// namespace ff8
 void ff8::Mim::OnUpdate(float ts) const
@@ -116,7 +116,7 @@ std::size_t ff8::Mim::Index() const
   return static_cast<std::size_t>(bpp.Index()) * 16U + palette.Palette();
 }
 
-const Texture &ff8::Mim::CurrentTexture() const
+const glengine::Texture &ff8::Mim::CurrentTexture() const
 {
   if (draw_palette)
   {
@@ -166,7 +166,7 @@ void ff8::Mim::OnEvent(const Event::Item &e) const
 void ff8::Mim::Save() const
 {
   saving                              = true;
-  const Texture        &local_texture = CurrentTexture();
+  const glengine::Texture        &local_texture = CurrentTexture();
   glengine::FrameBuffer fb(
     { .width = local_texture.width(), .height = local_texture.height() });
   {
@@ -198,7 +198,7 @@ void ff8::Mim::Save() const
   }
   glengine::PixelBuffer pixel_buffer{ fb.Specification() };
   pixel_buffer.         operator()(fb, fs_path.parent_path() / string);
-  while (pixel_buffer.operator()(&Texture::save))
+  while (pixel_buffer.operator()(&glengine::Texture::save))
     ;
   saving = false;
 }
@@ -259,7 +259,7 @@ void ff8::Mim::Save_All() const
     else if (local_bpp == -1)
       string = fmt::format("{}_mim_clut.png", fs_path.stem().string());
     pixel_buffer(fb, fs_path.parent_path() / string);
-    while (pixel_buffer(&Texture::save))
+    while (pixel_buffer(&glengine::Texture::save))
       ;
   }
   RestoreViewPortToFrameBuffer();

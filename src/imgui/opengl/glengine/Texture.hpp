@@ -7,8 +7,8 @@
 #include "Renderer.hpp"
 #include "unique_value.hpp"
 #include <stb_image.h>
-
-
+namespace glengine
+{
 class Texture
 {
 private:
@@ -200,4 +200,5 @@ public:
   }
 };
 static_assert(Bindable<Texture>);
+}// namespace glengine
 #endif// MYPROJECT_TEXTURE_HPP

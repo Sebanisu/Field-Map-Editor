@@ -32,7 +32,7 @@ glengine::DelayedTextures<35U>
                    const open_viii::graphics::background::Mim in_mim,
                    const open_viii::graphics::BPPT            in_bpp,
                    const std::uint8_t                         in_palette,
-                   Texture *in_out) -> glengine::DelayedTexturesData {
+                   glengine::Texture *in_out) -> glengine::DelayedTexturesData {
     auto r = glengine::DelayedTexturesData{
       .colors =
         in_mim.get_colors<glm::vec<4, std::uint8_t>>(in_bpp, in_palette),
@@ -40,7 +40,7 @@ glengine::DelayedTextures<35U>
       .height = static_cast<int32_t>(in_mim.get_height()),
       .out    = in_out
     };
-    Texture::flip(r.colors, r.width);
+    glengine::Texture::flip(r.colors, r.width);
     return r;
   };
   for (std::size_t bpp_offset{}; const open_viii::graphics::BPPT bpp : bpps)
@@ -90,15 +90,16 @@ glengine::DelayedTextures<35U>
 
     rdt.futures.emplace_back(std::async(
       std::launch::async,
-      [](const open_viii::graphics::background::Mim in_mim, Texture *in_out)
-        -> glengine::DelayedTexturesData {
+      [](
+        const open_viii::graphics::background::Mim in_mim,
+        glengine::Texture *in_out) -> glengine::DelayedTexturesData {
         auto r = glengine::DelayedTexturesData{
           .colors = in_mim.get_colors<glm::vec<4, std::uint8_t>>({}, {}, true),
           .width  = static_cast<std::int32_t>(in_mim.get_width({}, true)),
           .height = static_cast<std::int32_t>(in_mim.get_height(true)),
           .out    = in_out
         };
-        Texture::flip(r.colors, r.width);
+        glengine::Texture::flip(r.colors, r.width);
         return r;
       },
       mim,
