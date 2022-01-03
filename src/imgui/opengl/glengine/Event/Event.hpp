@@ -214,11 +214,11 @@ class MouseButtonPressed
     Category::Input | Category::Mouse | Category::MouseButton)
   EVENT_HANDLED
   constexpr MouseButtonPressed() = default;
-  constexpr MouseButtonPressed(MOUSE code)
+  constexpr MouseButtonPressed(glengine::MOUSE code)
     : m_button(code)
   {
   }
-  constexpr MOUSE Button() const
+  constexpr glengine::MOUSE Button() const
   {
     return m_button;
   }
@@ -228,7 +228,7 @@ class MouseButtonPressed
   }
 
 private:
-  MOUSE m_button{};
+  glengine::MOUSE m_button{};
 };
 static_assert(is_MouseButton<MouseButtonPressed>);
 
@@ -239,11 +239,11 @@ class MouseButtonReleased
     Category::Input | Category::Mouse | Category::MouseButton)
   EVENT_HANDLED
   constexpr MouseButtonReleased() = default;
-  constexpr MouseButtonReleased(MOUSE code)
+  constexpr MouseButtonReleased(glengine::MOUSE code)
     : m_button(code)
   {
   }
-  constexpr MOUSE Button() const
+  constexpr glengine::MOUSE Button() const
   {
     return m_button;
   }
@@ -253,7 +253,7 @@ class MouseButtonReleased
   }
 
 private:
-  MOUSE m_button{};
+  glengine::MOUSE m_button{};
 };
 static_assert(is_MouseButton<MouseButtonReleased>);
 

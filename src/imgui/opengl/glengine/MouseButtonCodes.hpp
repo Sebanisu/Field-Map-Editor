@@ -4,7 +4,8 @@
 
 #ifndef MYPROJECT_MOUSEBUTTONCODES_HPP
 #define MYPROJECT_MOUSEBUTTONCODES_HPP
-
+namespace glengine
+{
 enum class MOUSE : int
 {
   BUTTON_1      = 0,
@@ -25,4 +26,5 @@ static constexpr auto operator+(MOUSE e) noexcept
 {
   return static_cast<std::underlying_type_t<MOUSE>>(e);
 }
+}// namespace glengine
 #endif// MYPROJECT_MOUSEBUTTONCODES_HPP

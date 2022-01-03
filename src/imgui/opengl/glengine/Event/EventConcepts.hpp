@@ -70,10 +70,10 @@ concept is_WindowMove = is<T> && requires(const T &t)
 template<typename T>
 concept is_MouseButton = is<T> && requires(const T &t)
 {
-  T(MOUSE::BUTTON_1);
+  T(glengine::MOUSE::BUTTON_1);
   {
     t.Button()
-    } -> decay_same_as<MOUSE>;
+    } -> decay_same_as<glengine::MOUSE>;
 };
 template<typename T>
 concept is_MouseScroll = is<T> && requires(const T &t)

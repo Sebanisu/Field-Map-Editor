@@ -226,6 +226,7 @@ void Window::InitCallbacks() const
   glfwSetMouseButtonCallback(
     m_window.get(),
     [](GLFWwindow *window, int button, int action, [[maybe_unused]] int mods) {
+      using glengine::MOUSE;
       auto &data = GetWindowData(window);
       switch (action)
       {
