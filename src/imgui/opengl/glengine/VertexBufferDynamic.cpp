@@ -1,4 +1,6 @@
 #include "VertexBufferDynamic.hpp"
+namespace glengine
+{
 void VertexBufferDynamic::Bind() const
 {
   GLCall{}(glBindBuffer, GL_ARRAY_BUFFER, m_renderer_id);
@@ -29,3 +31,4 @@ VertexBufferDynamic::VertexBufferDynamic(size_t count)
   , m_max_size(count * 4U)
 {
 }
+}// namespace glengine

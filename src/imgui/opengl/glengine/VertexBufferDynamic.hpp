@@ -8,8 +8,8 @@
 #include "Renderer.hpp"
 #include "unique_value.hpp"
 #include "Vertex.hpp"
-
-
+namespace glengine
+{
 class VertexBufferDynamic
 {
 private:
@@ -38,5 +38,5 @@ public:
   }
 };
 static_assert(Bindable<VertexBufferDynamic>);
-
+}// namespace glengine
 #endif// MYPROJECT_VertexBufferDynamic_HPP

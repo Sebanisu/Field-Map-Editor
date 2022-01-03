@@ -24,7 +24,7 @@ public:
   void OnEvent(const Event::Item &) const {}
 
 private:
-  VertexBufferDynamic                      m_vertex_buffer   = { 1000 };
+  glengine::VertexBufferDynamic            m_vertex_buffer   = { 1000 };
   glengine::IndexBufferDynamic             m_index_buffer    = { 1000 };
   mutable glengine::IndexBufferDynamicSize index_buffer_size = {};
   glengine::Shader                         m_shader          = {};

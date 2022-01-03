@@ -30,7 +30,7 @@ public:
   static constexpr std::size_t VERT_COUNT = { QUAD_COUNT * 4U };
 
 private:
-  VertexBufferDynamic                      m_vertex_buffer   = { QUAD_COUNT };
+  glengine::VertexBufferDynamic            m_vertex_buffer   = { QUAD_COUNT };
   glengine::IndexBufferDynamic             m_index_buffer    = { QUAD_COUNT };
   mutable glengine::IndexBufferDynamicSize index_buffer_size = {};
   glengine::Shader                         m_shader          = {};
