@@ -5,10 +5,11 @@
 #ifndef MYPROJECT_DELAYEDTEXTURES_HPP
 #define MYPROJECT_DELAYEDTEXTURES_HPP
 #include "Texture.hpp"
-
+namespace glengine
+{
 struct DelayedTexturesData
 {
-  std::vector<glm::vec<4,std::uint8_t>> colors{};
+  std::vector<glm::vec<4, std::uint8_t>> colors{};
   std::int32_t                           width{};
   std::int32_t                           height{};
   Texture                               *out{};
@@ -52,4 +53,5 @@ struct DelayedTextures
     }
   }
 };
+}// namespace glengine
 #endif// MYPROJECT_DELAYEDTEXTURES_HPP

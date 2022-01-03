@@ -39,7 +39,7 @@ private:
   // container for field tile information
   open_viii::graphics::background::Map m_map              = {};
   // loads the textures overtime instead of forcing them to load at start.
-  DelayedTextures<35U>                 m_delayed_textures = {};
+  glengine::DelayedTextures<35U>       m_delayed_textures = {};
   // takes quads and draws them to the frame buffer or screen.
   glengine::BatchRenderer              m_batch_renderer   = {};
   // holds rendered image at 1:1 scale to prevent gaps when scaling.

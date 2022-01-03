@@ -4,12 +4,12 @@
 
 #include "FF8LoadTextures.hpp"
 
-//static_assert(struct_of_color_byte<glm::vec<4, std::uint8_t>>);
+// static_assert(struct_of_color_byte<glm::vec<4, std::uint8_t>>);
 
-DelayedTextures<35U>
+glengine::DelayedTextures<35U>
   ff8::LoadTextures(const open_viii::graphics::background::Mim &mim)
 {
-  DelayedTextures<35U> rdt{};
+  glengine::DelayedTextures<35U> rdt{};
   rdt.futures.reserve(35U);
   auto bpps = std::views::iota(std::uint32_t{ 0 }, std::uint32_t{ 2 })
               | std::views::transform([](const std::uint32_t i) {
@@ -32,8 +32,8 @@ DelayedTextures<35U>
                    const open_viii::graphics::background::Mim in_mim,
                    const open_viii::graphics::BPPT            in_bpp,
                    const std::uint8_t                         in_palette,
-                   Texture *in_out) -> DelayedTexturesData {
-    auto r = DelayedTexturesData{
+                   Texture *in_out) -> glengine::DelayedTexturesData {
+    auto r = glengine::DelayedTexturesData{
       .colors =
         in_mim.get_colors<glm::vec<4, std::uint8_t>>(in_bpp, in_palette),
       .width  = static_cast<int32_t>(in_mim.get_width(in_bpp)),
@@ -91,10 +91,9 @@ DelayedTextures<35U>
     rdt.futures.emplace_back(std::async(
       std::launch::async,
       [](const open_viii::graphics::background::Mim in_mim, Texture *in_out)
-        -> DelayedTexturesData {
-        auto r = DelayedTexturesData{
-          .colors =
-            in_mim.get_colors<glm::vec<4, std::uint8_t>>({}, {}, true),
+        -> glengine::DelayedTexturesData {
+        auto r = glengine::DelayedTexturesData{
+          .colors = in_mim.get_colors<glm::vec<4, std::uint8_t>>({}, {}, true),
           .width  = static_cast<std::int32_t>(in_mim.get_width({}, true)),
           .height = static_cast<std::int32_t>(in_mim.get_height(true)),
           .out    = in_out

@@ -8,7 +8,7 @@
 
 namespace ff8
 {
-DelayedTextures<35U>
+glengine::DelayedTextures<35U>
   LoadTextures(const open_viii::graphics::background::Mim &mim);
 }
 #endif// MYPROJECT_FF8LOADTEXTURES_HPP
