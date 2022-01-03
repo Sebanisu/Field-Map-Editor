@@ -215,7 +215,7 @@ void ff8::Map::OnRender() const
     offscreen_drawing = true;
     const auto not_offscreen_drawing =
       scope_guard([]() { offscreen_drawing = false; });
-    const auto fbb = FrameBufferBackup{};
+    const auto fbb = glengine::FrameBufferBackup{};
     m_frame_buffer.Bind();
     GLCall{}(
       glViewport,

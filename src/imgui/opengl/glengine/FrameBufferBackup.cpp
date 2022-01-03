@@ -3,3 +3,14 @@
 //
 
 #include "FrameBufferBackup.hpp"
+glengine::FrameBufferBackup::FrameBufferBackup()
+  : m_render_id{ []() -> std::uint32_t {
+                  int32_t id = {};
+                  GLCall{}(glGetIntegerv, GL_FRAMEBUFFER_BINDING, &id);
+                  return static_cast<std::uint32_t>(id);
+                }(),
+                 [](std::uint32_t id) {
+                   GLCall{}(glBindFramebuffer, GL_FRAMEBUFFER, id);
+                 } }
+{
+}
