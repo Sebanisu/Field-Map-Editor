@@ -11,7 +11,7 @@ class PixelBuffer
 {
   constexpr static inline std::size_t ARRAY_SIZE = { 2U };
 
-  using ArrayT     = GLID_array<uint32_t, ARRAY_SIZE>;
+  using ArrayT     = GLID_array<ARRAY_SIZE>;
   using ValueT     = typename ArrayT::ValueT;
   using ParameterT = typename ArrayT::ParameterT;
   // wrapping this pointer to force it to call glUnmapBuffer. Should scope this.
