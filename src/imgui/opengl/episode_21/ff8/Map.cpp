@@ -190,7 +190,7 @@ auto index_and_page_width(auto bpp, auto palette)
   }
   return r;
 }
-void set_blend_mode_selections(
+static void set_blend_mode_selections(
   const std::array<int, 4U> &parameters_selections,
   const std::array<int, 2U> &equation_selections)
 {
@@ -359,7 +359,7 @@ void ff8::Map::OnEvent(const glengine::Event::Item &e) const
   camera.OnEvent(e);
   m_batch_renderer.OnEvent(e);
 }
-void Blend_Combos(
+static void Blend_Combos(
   std::array<int, 4U> &parameters_selections,
   std::array<int, 2U> &equation_selections)
 {

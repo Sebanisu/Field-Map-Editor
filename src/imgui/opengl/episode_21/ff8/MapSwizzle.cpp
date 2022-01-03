@@ -99,18 +99,21 @@ ff8::MapSwizzle::MapSwizzle(const ff8::Fields &fields)
                    | std::views::filter(
                      open_viii::graphics::background::Map::filter_invalid());
     auto [i_min_x, i_max_x] = std::ranges::minmax_element(
-      f_tiles, {}, [](const auto &tile) { return tile.x(); });
+      f_tiles, {}, [](const auto &tile) { return tile.source_x(); });
+    auto [i_min_texture_page, i_max_texture_page] = std::ranges::minmax_element(
+      f_tiles, {}, [](const auto &tile) { return tile.texture_id(); });
     auto [i_min_y, i_max_y] = std::ranges::minmax_element(
-      f_tiles, {}, [](const auto &tile) { return tile.y(); });
+      f_tiles, {}, [](const auto &tile) { return tile.source_y(); });
 
     if (i_min_x == i_max_x || i_min_y == i_max_y)
     {
       return;
     }
-    const auto min_x  = i_min_x->x();
-    const auto max_x  = i_max_x->x();
-    const auto min_y  = i_min_y->y();
-    const auto max_y  = i_max_y->y();
+    const auto min_x = i_min_x->source_x();
+    const auto max_x =
+      i_max_x->source_x() + i_max_texture_page->texture_id() * 256;
+    const auto min_y  = i_min_y->source_y();
+    const auto max_y  = i_max_y->source_y();
     const auto width  = max_x - min_x + 16;
     const auto height = max_y - min_y + 16;
     offset_y          = static_cast<float>(min_y + max_y);
@@ -190,7 +193,7 @@ auto index_and_page_width(auto bpp, auto palette)
   }
   return r;
 }
-void set_blend_mode_selections(
+static void set_blend_mode_selections(
   const std::array<int, 4U> &parameters_selections,
   const std::array<int, 2U> &equation_selections)
 {
@@ -345,7 +348,10 @@ void ff8::MapSwizzle::RenderTiles() const
         }
         m_batch_renderer.DrawQuad(
           sub_texture,
-          glm::vec3(tile.x(), offset_y - tile.y(), 0.F),
+          glm::vec3(
+            tile.source_x() + tile.texture_id() * 256.0F,
+            offset_y - tile.source_y(),
+            0.F),
           glm::vec2(16.F, 16.F));
       }
     }
@@ -359,7 +365,7 @@ void ff8::MapSwizzle::OnEvent(const glengine::Event::Item &e) const
   camera.OnEvent(e);
   m_batch_renderer.OnEvent(e);
 }
-void Blend_Combos(
+static void Blend_Combos(
   std::array<int, 4U> &parameters_selections,
   std::array<int, 2U> &equation_selections)
 {
