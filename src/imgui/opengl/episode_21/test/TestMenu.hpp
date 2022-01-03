@@ -19,7 +19,7 @@ public:
   void OnEvent(const Event::Item &) const;
 
 private:
-  Menu m_menu{};
+  glengine::Menu m_menu{};
 };
 }// namespace test
 #endif// MYPROJECT_TESTMENU_HPP

@@ -15,16 +15,20 @@ static_assert(Renderable<test::TestMenu>);
 
 test::TestMenu::TestMenu()
   : m_menu(
-    Menu::MenuElementType<TestClearColor>{ "Test Clear Color" },
-    Menu::MenuElementType<TestTexture2D>{ "Test Texture2D" },
-    Menu::MenuElementType<TestBatchRendering>{ "Test Batch Rendering" },
-    Menu::MenuElementType<TestBatchRenderingTexture2D>{
+    glengine::Menu::MenuElementType<TestClearColor>{ "Test Clear Color" },
+    glengine::Menu::MenuElementType<TestTexture2D>{ "Test Texture2D" },
+    glengine::Menu::MenuElementType<TestBatchRendering>{
+      "Test Batch Rendering" },
+    glengine::Menu::MenuElementType<TestBatchRenderingTexture2D>{
       "Test Batch Rendering with Texture2D" },
-    Menu::MenuElementType<TestBatchRenderingTexture2DDynamic>{
+    glengine::Menu::MenuElementType<TestBatchRenderingTexture2DDynamic>{
       "Test Batch Rendering with Texture2D Dynamic" },
-    Menu::MenuElementType<TestBatchQuads>{ "Test Batch Rendering with Quads" },
-    Menu::MenuElementType<TestBatchRenderer>{ "Test Batch Renderer Class" },
-    Menu::MenuElementType<TestFF8Archive>{ "Test FF8 Archive Loading" })
+    glengine::Menu::MenuElementType<TestBatchQuads>{
+      "Test Batch Rendering with Quads" },
+    glengine::Menu::MenuElementType<TestBatchRenderer>{
+      "Test Batch Renderer Class" },
+    glengine::Menu::MenuElementType<TestFF8Archive>{
+      "Test FF8 Archive Loading" })
 {
 }
 void test::TestMenu::OnRender() const

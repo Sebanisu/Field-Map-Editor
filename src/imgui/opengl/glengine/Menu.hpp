@@ -6,8 +6,8 @@
 #define MYPROJECT_MENU_HPP
 #include "Event/EventItem.hpp"
 #include "MenuItem.hpp"
-
-
+namespace glengine
+{
 template<typename T>
 concept is_MenuElementType =
   Renderable<typename std::decay_t<T>::value_type> && requires(const T &t)
@@ -69,4 +69,5 @@ private:
   mutable std::vector<std::pair<std::string, std::function<MenuItem()>>>
     m_list = {};
 };
+}// namespace glengine
 #endif// MYPROJECT_MENU_HPP

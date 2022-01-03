@@ -27,8 +27,8 @@ public:
   }
 
 private:
-  Menu   m_menu{};
-  Fields m_fields = {};
+  glengine::Menu m_menu{};
+  Fields         m_fields = {};
 };
 }// namespace ff8
 #endif// MYPROJECT_FF8MENU_HPP

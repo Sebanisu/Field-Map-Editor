@@ -178,8 +178,8 @@ class KeyPressed
   }
 
 private:
-  glengine::KEY  m_key{};
-  bool m_repeat{};
+  glengine::KEY m_key{};
+  bool          m_repeat{};
 };
 static_assert(is_Key<KeyPressed>);
 

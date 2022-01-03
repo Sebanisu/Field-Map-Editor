@@ -1,8 +1,9 @@
 //
 // Created by pcvii on 11/29/2021.
 //
-
 #include "Menu.hpp"
+namespace glengine
+{
 static_assert(Renderable<Menu>);
 void Menu::OnRender() const
 {
@@ -52,3 +53,4 @@ void Menu::OnEvent(const Event::Item &e) const
 {
   m_current.OnEvent(e);
 }
+}// namespace glengine
