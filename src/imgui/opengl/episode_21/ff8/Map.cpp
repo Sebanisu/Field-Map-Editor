@@ -8,14 +8,14 @@
 #include "OrthographicCameraController.hpp"
 #include "PixelBuffer.hpp"
 #include "Window.hpp"
-static OrthographicCameraController camera               = { 16 / 9 };
-static glengine::OrthographicCamera fixed_render_camera  = {};
-static bool                         snap_zoom_to_height  = true;
-static bool                         draw_grid            = false;
-static bool                         saving               = false;
-static bool                         offscreen_drawing    = false;
-static bool                         enable_percent_blend = true;
-static float                        offset_y             = 0.F;
+static glengine::OrthographicCameraController camera               = { 16 / 9 };
+static glengine::OrthographicCamera           fixed_render_camera  = {};
+static bool                                   snap_zoom_to_height  = true;
+static bool                                   draw_grid            = false;
+static bool                                   saving               = false;
+static bool                                   offscreen_drawing    = false;
+static bool                                   enable_percent_blend = true;
+static float                                  offset_y             = 0.F;
 static constexpr glm::vec4 default_uniform_color = { 1.F, 1.F, 1.F, 1.F };
 static constexpr glm::vec4 half_uniform_color    = { .5F, .5F, .5F, .5F };
 static constexpr glm::vec4 quarter_uniform_color = { .25F, .25F, .25F, .25F };

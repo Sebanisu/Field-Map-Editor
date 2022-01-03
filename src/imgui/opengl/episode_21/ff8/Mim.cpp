@@ -10,14 +10,14 @@
 #include "PixelBuffer.hpp"
 namespace ff8
 {
-static const BPPs                   bpp                 = {};
-static const Palettes               palette             = {};
-static bool                         draw_palette        = false;
-static bool                         draw_grid           = false;
-static bool                         snap_zoom_to_height = true;
-static bool                         saving              = false;
-static const Texture               *texture             = nullptr;
-static OrthographicCameraController camera              = { 16 / 9 };
+static const BPPs                             bpp                 = {};
+static const Palettes                         palette             = {};
+static bool                                   draw_palette        = false;
+static bool                                   draw_grid           = false;
+static bool                                   snap_zoom_to_height = true;
+static bool                                   saving              = false;
+static const Texture                         *texture             = nullptr;
+static glengine::OrthographicCameraController camera              = { 16 / 9 };
 }// namespace ff8
 void ff8::Mim::OnUpdate(float ts) const
 {

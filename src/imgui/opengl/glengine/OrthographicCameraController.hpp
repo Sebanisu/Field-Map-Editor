@@ -6,6 +6,8 @@
 #define MYPROJECT_ORTHOGRAPHICCAMERACONTROLLER_HPP
 #include "Event/EventItem.hpp"
 #include "OrthographicCamera.hpp"
+namespace glengine
+{
 class OrthographicCameraController
 {
 public:
@@ -72,4 +74,5 @@ private:
 void MakeViewPortMatchBounds(
   const OrthographicCameraController::return_values &bounds);
 static_assert(Renderable<OrthographicCameraController>);
+}// namespace glengine
 #endif// MYPROJECT_ORTHOGRAPHICCAMERACONTROLLER_HPP

@@ -8,7 +8,9 @@
 #include "Input.hpp"
 
 extern float Get_Frame_Buffer_Aspect_Ratio();
-void         OrthographicCameraController::OnUpdate(float ts) const
+namespace glengine
+{
+void OrthographicCameraController::OnUpdate(float ts) const
 {
   using glengine::Input;
   using glengine::KEY;
@@ -275,3 +277,4 @@ void MakeViewPortMatchBounds(
     std::abs(
       static_cast<GLsizei>(bounds.top) - static_cast<GLsizei>(bounds.bottom)));
 }
+}// namespace glengine
