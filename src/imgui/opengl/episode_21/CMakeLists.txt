@@ -37,6 +37,7 @@ add_executable(opengl_series_episode_21
         ff8/FF8Menu.cpp
         ff8/Fields.cpp
         ff8/Map.cpp
+        ff8/MapSwizzle.cpp
         ff8/Mim.cpp
         ff8/Palettes.cpp
         ff8/Paths.cpp
