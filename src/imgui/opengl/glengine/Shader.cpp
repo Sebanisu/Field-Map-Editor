@@ -1,8 +1,9 @@
 //
 // Created by pcvii on 11/22/2021.
 //
-
 #include "Shader.hpp"
+namespace glengine
+{
 Shader::Shader(std::filesystem::path file_path)
   : m_file_path(std::move(file_path))
 {
@@ -167,3 +168,4 @@ std::int32_t Shader::get_uniform_location(std::string_view name) const
 
   return location;
 }
+}// namespace glengine

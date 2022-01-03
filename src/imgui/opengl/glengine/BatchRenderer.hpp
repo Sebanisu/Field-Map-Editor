@@ -44,11 +44,11 @@ public:
     const SubTexture &texture,
     const float       tiling_factor = 1.F,
     glm::vec2         size          = glm::vec2{ 1.F }) const;
-  [[maybe_unused]] void DrawQuad(glm::vec3 offset, glm::vec4 color) const;
-  void                  Draw(Quad quad) const;
-  void                  Draw() const;
+  [[maybe_unused]] void   DrawQuad(glm::vec3 offset, glm::vec4 color) const;
+  void                    Draw(Quad quad) const;
+  void                    Draw() const;
 
-  const ::Shader       &Shader() const;
+  const glengine::Shader &Shader() const;
   const std::vector<std::uint32_t> &TextureSlots() const;
   void                              Bind() const;
   static void                       UnBind();
@@ -66,7 +66,7 @@ private:
     return r;
   }() };
   mutable IndexBufferDynamicSize     index_buffer_size       = {};
-  ::Shader                           m_shader                = {};
+  glengine::Shader                   m_shader                = {};
   VertexArray                        m_vertex_array          = {};
   mutable std::vector<std::uint32_t> m_texture_slots         = {};
   mutable std::vector<std::int32_t>  m_uniform_texture_slots = {};

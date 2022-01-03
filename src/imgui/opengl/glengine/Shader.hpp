@@ -5,6 +5,8 @@
 #ifndef MYPROJECT_SHADER_HPP
 #define MYPROJECT_SHADER_HPP
 #include "Renderer.hpp"
+namespace glengine
+{
 class Shader
 {
 private:
@@ -165,4 +167,5 @@ private:
   std::int32_t get_uniform_location(std::string_view name) const;
 };
 static_assert(Bindable<Shader>);
+}// namespace glengine
 #endif// MYPROJECT_SHADER_HPP

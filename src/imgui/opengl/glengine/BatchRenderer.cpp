@@ -171,6 +171,6 @@ void BatchRenderer::Bind() const
 }
 void BatchRenderer::UnBind()
 {
-  ::Shader::UnBind();
+  glengine::Shader::UnBind();
 }
 }// namespace glengine

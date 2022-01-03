@@ -33,7 +33,7 @@ private:
   VertexBufferDynamic                      m_vertex_buffer   = { QUAD_COUNT };
   glengine::IndexBufferDynamic             m_index_buffer    = { QUAD_COUNT };
   mutable glengine::IndexBufferDynamicSize index_buffer_size = {};
-  Shader                                   m_shader          = {};
+  glengine::Shader                         m_shader          = {};
   VertexArray                              m_vertex_array    = {};
   mutable glm::vec3                        view_offset = { -2.F, -1.F, 0.F };
   mutable std::array<int, 2U>              m_count     = { 100, 100 };
