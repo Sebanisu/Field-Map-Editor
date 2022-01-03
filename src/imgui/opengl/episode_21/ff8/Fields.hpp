@@ -26,7 +26,7 @@ public:
   void OnUpdate(float) const {}
   void OnRender() const {}
   bool OnImGuiUpdate() const;
-  void OnEvent(const Event::Item &) const {}
+  void OnEvent(const glengine::Event::Item &) const {}
   [[nodiscard]] const open_viii::archive::FIFLFS<false> &Field() const;
   [[nodiscard]] const std::string                       &Map_Name() const;
   [[nodiscard]] std::string_view                         Coo() const;

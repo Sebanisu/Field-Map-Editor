@@ -15,12 +15,12 @@
 static glengine::Window *current_window = nullptr;
 static bool              running        = true;
 static bool              minimize       = false;
-static bool              OnWindowClose(const Event::WindowClose &)
+static bool              OnWindowClose(const glengine::Event::WindowClose &)
 {
   running = false;
   return true;
 }
-static bool OnWindowResize(const Event::WindowResize &e)
+static bool OnWindowResize(const glengine::Event::WindowResize &e)
 {
   minimize = e.Width() == 0 or e.Height() == 0;
   return true;
@@ -31,18 +31,18 @@ Application::Application(std::string Title, int width, int height)
     .Title          = std::move(Title),
     .width          = std::move(width),
     .height         = std::move(height),
-    .event_callback = [&](const Event::Item &e) {
-      const Event::Dispatcher dispatcher = { e };
-      const bool skip =(Event::HasFlag(e.category(),Event::Category::Mouse)
+    .event_callback = [&](const glengine::Event::Item &e) {
+      const glengine::Event::Dispatcher dispatcher = { e };
+      const bool skip =(glengine::Event::HasFlag(e.category(),glengine::Event::Category::Mouse)
                    && ImGui::GetIO().WantCaptureMouse)
-                  || (Event::HasFlag(e.category(),Event::Category::Keyboard)
+                  || (glengine::Event::HasFlag(e.category(),glengine::Event::Category::Keyboard)
                       && ImGui::GetIO().WantCaptureKeyboard);
       if (skip)
       {
         return;
       }
-      dispatcher.Dispatch<Event::WindowClose>(&OnWindowClose);
-      dispatcher.Dispatch<Event::WindowResize>(&OnWindowResize);
+      dispatcher.Dispatch<glengine::Event::WindowClose>(&OnWindowClose);
+      dispatcher.Dispatch<glengine::Event::WindowResize>(&OnWindowResize);
       layers.OnEvent(e);
       fmt::print("Event::{}\t{}\t{}\n", e.Name(), e.CategoryName(), e.Data());
     } }))

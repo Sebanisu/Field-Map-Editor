@@ -43,7 +43,7 @@ void test::TestMenu::OnUpdate(float delta_time) const
 {
   m_menu.OnUpdate(delta_time);
 }
-void test::TestMenu::OnEvent(const Event::Item &e) const
+void test::TestMenu::OnEvent(const glengine::Event::Item &e) const
 {
   m_menu.OnEvent(e);
 }

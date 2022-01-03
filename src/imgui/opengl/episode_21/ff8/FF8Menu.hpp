@@ -17,7 +17,7 @@ public:
   void OnUpdate(float) const;
   void OnRender() const;
   void OnImGuiUpdate() const;
-  void OnEvent(const Event::Item &) const;
+  void OnEvent(const glengine::Event::Item &) const;
   template<glengine::Renderable T>
   void push_back(std::string name) const
   {

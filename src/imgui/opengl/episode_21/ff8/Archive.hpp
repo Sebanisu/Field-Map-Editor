@@ -16,7 +16,7 @@ public:
   void OnUpdate(float) const {}
   void OnRender() const {}
   bool OnImGuiUpdate() const;
-  void OnEvent(const Event::Item &) const {}
+  void OnEvent(const glengine::Event::Item &) const {}
 
   [[nodiscard]] const open_viii::archive::Archives     &Archives() const;
   [[nodiscard]] const open_viii::archive::FIFLFS<true> &Fields() const;

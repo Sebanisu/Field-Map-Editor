@@ -14,7 +14,7 @@ public:
   void             OnUpdate(float) const {}
   void             OnRender() const {}
   bool             OnImGuiUpdate() const;
-  void             OnEvent(const Event::Item &) const {}
+  void             OnEvent(const glengine::Event::Item &) const {}
   std::uint8_t     Palette() const;
   std::string_view String() const;
   int              Index() const;

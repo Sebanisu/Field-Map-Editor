@@ -15,7 +15,7 @@ void test::TestFF8Archive::OnImGuiUpdate() const
 {
   ff8_menu.OnImGuiUpdate();
 }
-void test::TestFF8Archive::OnEvent(const Event::Item &e) const
+void test::TestFF8Archive::OnEvent(const glengine::Event::Item &e) const
 {
   ff8_menu.OnEvent(e);
 }

@@ -13,7 +13,7 @@ public:
   void OnUpdate(float) const;
   void OnRender() const;
   void OnImGuiUpdate() const;
-  void OnEvent(const Event::Item &) const;
+  void OnEvent(const glengine::Event::Item &) const;
 
 private:
   ff8::FF8Menu ff8_menu = {};

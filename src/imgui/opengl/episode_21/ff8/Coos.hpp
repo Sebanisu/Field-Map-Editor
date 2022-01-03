@@ -15,7 +15,7 @@ public:
   void                           OnUpdate(float) const {}
   void                           OnRender() const {}
   bool                           OnImGuiUpdate() const;
-  void                           OnEvent(const Event::Item &) const {}
+  void                           OnEvent(const glengine::Event::Item &) const {}
   [[nodiscard]] std::string_view Coo() const
   {
     return m_coos.at(static_cast<std::size_t>(m_current));

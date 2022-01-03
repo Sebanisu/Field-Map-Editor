@@ -21,10 +21,10 @@ public:
   void OnUpdate(float) const {}
   void OnRender() const;
   void OnImGuiUpdate() const;
-  void OnEvent(const Event::Item &) const {}
+  void OnEvent(const glengine::Event::Item &) const {}
 
 private:
-  glengine::VertexBuffer                   m_vertex_buffer = {};
+  glengine::VertexBuffer         m_vertex_buffer = {};
   glengine::IndexBuffer          m_index_buffer  = {};
   glengine::Shader               m_shader        = {};
   glengine::VertexArray          m_vertex_array  = {};

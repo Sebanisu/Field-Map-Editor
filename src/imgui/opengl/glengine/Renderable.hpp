@@ -4,12 +4,12 @@
 
 #ifndef MYPROJECT_RENDERABLE_HPP
 #define MYPROJECT_RENDERABLE_HPP
-namespace Event
-{
-class Item;
-}
 namespace glengine
 {
+namespace Event
+{
+  class Item;
+}
 template<typename T>
 concept Renderable =
   std::default_initializable<T> && std::movable<T> &&(

@@ -12,10 +12,10 @@ namespace ff8
 class Paths
 {
 public:
-  void                             OnUpdate(float) const {}
-  void                             OnRender() const {}
-  bool                             OnImGuiUpdate() const;
-  void                             OnEvent(const Event::Item &) const {}
+  void OnUpdate(float) const {}
+  void OnRender() const {}
+  bool OnImGuiUpdate() const;
+  void OnEvent(const glengine::Event::Item &) const {}
   [[nodiscard]] const std::string &Path() const;
   Paths();
 

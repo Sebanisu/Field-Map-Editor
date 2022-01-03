@@ -28,7 +28,7 @@ public:
       }
     }
   }
-  constexpr void OnEvent(const Event::Item &) const {}
+  constexpr void OnEvent(const glengine::Event::Item &) const {}
 
 private:
   static constexpr glm::vec4        DEFAULT_COLOR = { 0.2F, 0.3F, 0.8F, 1.F };

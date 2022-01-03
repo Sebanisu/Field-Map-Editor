@@ -2,6 +2,8 @@
 // Created by pcvii on 12/8/2021.
 //
 #include "LayerItem.hpp"
+namespace glengine
+{
 void Layer::Item::OnUpdate(float ts) const
 {
   if (m_impl)
@@ -34,3 +36,4 @@ Layer::Item::operator bool() const
 {
   return bool{ m_impl };
 }
+}// namespace glengine

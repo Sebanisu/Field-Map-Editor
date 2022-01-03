@@ -19,7 +19,7 @@ public:
 private:
   // window must be valid while other opengl objects exists.
   std::unique_ptr<glengine::Window> window = nullptr;
-  Layer::Stack                      layers = {};
+  glengine::Layer::Stack            layers = {};
 };
 
 void  RestoreViewPortToFrameBuffer();

@@ -23,7 +23,7 @@ public:
   void                         OnUpdate(float) const;
   void                         OnRender() const;
   void                         OnImGuiUpdate() const;
-  void                         OnEvent(const Event::Item &) const {}
+  void                         OnEvent(const glengine::Event::Item &) const {}
   void                         gen_verts() const;
 
   static constexpr std::size_t QUAD_COUNT = { 100U };

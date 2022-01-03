@@ -354,7 +354,7 @@ void ff8::Map::RenderTiles() const
   m_batch_renderer.OnRender();
   glengine::Window::DefaultBlend();
 }
-void ff8::Map::OnEvent(const Event::Item &e) const
+void ff8::Map::OnEvent(const glengine::Event::Item &e) const
 {
   camera.OnEvent(e);
   m_batch_renderer.OnEvent(e);

@@ -158,7 +158,7 @@ void ff8::Mim::SetUniforms() const
   }
   m_batch_renderer.Shader().SetUniform("u_Color", 1.F, 1.F, 1.F, 1.F);
 }
-void ff8::Mim::OnEvent(const Event::Item &e) const
+void ff8::Mim::OnEvent(const glengine::Event::Item &e) const
 {
   camera.OnEvent(e);
   m_batch_renderer.OnEvent(e);

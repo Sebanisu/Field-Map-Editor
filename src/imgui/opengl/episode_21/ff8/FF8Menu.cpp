@@ -22,7 +22,7 @@ void ff8::FF8Menu::OnUpdate(float delta_time) const
 {
   m_menu.OnUpdate(delta_time);
 }
-void ff8::FF8Menu::OnEvent(const Event::Item &e) const
+void ff8::FF8Menu::OnEvent(const glengine::Event::Item &e) const
 {
   m_menu.OnEvent(e);
 }

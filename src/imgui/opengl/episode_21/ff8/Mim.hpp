@@ -19,7 +19,7 @@ public:
   void                     OnUpdate(float) const;
   void                     OnRender() const;
   void                     OnImGuiUpdate() const;
-  void                     OnEvent(const Event::Item &) const;
+  void                     OnEvent(const glengine::Event::Item &) const;
   std::size_t              Index() const;
   const glengine::Texture &CurrentTexture() const;
   void                     Save() const;

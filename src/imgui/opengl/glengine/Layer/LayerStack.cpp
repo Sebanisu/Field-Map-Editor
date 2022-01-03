@@ -3,8 +3,8 @@
 //
 
 #include "LayerStack.hpp"
-
-static_assert(glengine::Renderable<Layer::Stack>);
+namespace glengine
+{
 void Layer::Stack::OnRender() const
 {
   for (const Item &layer : m_layers)
@@ -34,3 +34,4 @@ void Layer::Stack::OnEvent(const Event::Item &e) const
     layer.OnEvent(e);
   }
 }
+}// namespace glengine
