@@ -4,6 +4,8 @@
 
 #ifndef MYPROJECT_UNIQUE_VALUE_HPP
 #define MYPROJECT_UNIQUE_VALUE_HPP
+namespace glengine
+{
 template<typename T>
 class weak_value;
 template<typename T>
@@ -216,4 +218,5 @@ static_assert(
     weak_value<std::array<std::uint32_t, 1U>>{
       GLID_array<1U>([](typename GLID_array<1U>::ParameterT) {}, 1U) })
   == std::array{ 1U });
+}// namespace glengine
 #endif// MYPROJECT_UNIQUE_VALUE_HPP
