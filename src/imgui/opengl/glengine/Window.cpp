@@ -279,7 +279,7 @@ bool Window::WindowClosing() const
 }
 void Window::BindInputPollingToWindow() const
 {
-  Input::m_window = m_window.get();
+  glengine::Input::m_window = m_window.get();
 }
 void Window::EndFrame() const
 {

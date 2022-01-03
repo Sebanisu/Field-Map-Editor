@@ -6,9 +6,9 @@
 #define MYPROJECT_INPUT_HPP
 #include "KeyCodes.hpp"
 #include "MouseButtonCodes.hpp"
-
-
 class Window;
+namespace glengine
+{
 class Input
 {
 public:
@@ -23,4 +23,5 @@ private:
   Input()                            = default;
   inline static GLFWwindow *m_window = nullptr;
 };
+}// namespace glengine
 #endif// MYPROJECT_INPUT_HPP

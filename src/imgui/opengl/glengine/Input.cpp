@@ -4,6 +4,8 @@
 
 #include "Input.hpp"
 
+namespace glengine
+{
 template<typename T>
 static constexpr auto operator+(T e) noexcept
   -> std::enable_if_t<std::is_enum<T>::value, std::underlying_type_t<T>>
@@ -49,3 +51,4 @@ std::optional<const float> Input::GetMouseY()
   const auto [x, y] = *pos;
   return y;
 }
+}// namespace glengine
