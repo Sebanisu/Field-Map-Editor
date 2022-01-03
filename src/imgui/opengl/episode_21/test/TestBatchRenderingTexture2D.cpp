@@ -73,8 +73,7 @@ void test::TestBatchRenderingTexture2D::OnRender() const
 void test::TestBatchRenderingTexture2D::OnImGuiUpdate() const
 {
   int        id           = 0;
-  const auto pop          = scope_guard(&ImGui::PopID);
-  const auto pop2         = pop;
+  const auto pop          = glengine::scope_guard::array<2U>(&ImGui::PopID);
   int        window_width = 16;
   // glfwGetFramebufferSize(window, &window_width, &window_height);
 

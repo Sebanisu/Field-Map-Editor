@@ -4,8 +4,8 @@
 
 #ifndef MYPROJECT_SCOPE_GUARD_HPP
 #define MYPROJECT_SCOPE_GUARD_HPP
-
-
+namespace glengine
+{
 struct [[nodiscard]] scope_guard
 {
   constexpr scope_guard(void (*t)())
@@ -108,4 +108,5 @@ struct [[nodiscard]] scope_guard_expensive
 private:
   std::function<void()> func{};
 };
+}// namespace glengine
 #endif// MYPROJECT_SCOPE_GUARD_HPP

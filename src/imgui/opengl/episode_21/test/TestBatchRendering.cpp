@@ -20,7 +20,7 @@ static_assert(glengine::Renderable<test::TestBatchRendering>);
 void test::TestBatchRendering::OnImGuiUpdate() const
 {
   int        id           = 0;
-  const auto pop          = scope_guard::array<2U>(&ImGui::PopID);
+  const auto pop          = glengine::scope_guard::array<2U>(&ImGui::PopID);
   int        window_width = 16;
   // glfwGetFramebufferSize(window, &window_width, &window_height);
 

@@ -95,7 +95,7 @@ void test::TestBatchQuads::OnImGuiUpdate() const
   int        id           = 0;
 
   int        window_width = 16;
-  const auto pop          = scope_guard(&ImGui::PopID);
+  const auto pop          = glengine::scope_guard(&ImGui::PopID);
   ImGui::PushID(++id);
   if (ImGui::SliderFloat2(
         "View Offset",

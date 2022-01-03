@@ -78,17 +78,17 @@ bool ff8::Fields::OnImGuiUpdate() const
     const float w         = ImGui::CalcItemWidth();
     const float button_sz = ImGui::GetFrameHeight();
     ImGui::PushItemWidth(w - spacing * 2.0f - button_sz * 2.0f);
-    const auto popwidth = scope_guard{ &ImGui::PopItemWidth };
-    const auto disabled = scope_guard{ &ImGui::EndDisabled };
+    const auto popwidth = glengine::scope_guard{ &ImGui::PopItemWidth };
+    const auto disabled = glengine::scope_guard{ &ImGui::EndDisabled };
     ImGui::BeginDisabled(std::ranges::empty(m_map_data));
     if (ImGui::BeginCombo(
           "##Field", Map_Name().c_str(), ImGuiComboFlags_HeightLargest))
     {
-      const auto end = scope_guard{ &ImGui::EndCombo };
+      const auto end = glengine::scope_guard{ &ImGui::EndCombo };
       for (int i{}; const std::string &map : m_map_data)
       {
         const bool is_selected = i == current_index;
-        const auto pop         = scope_guard{ &ImGui::PopID };
+        const auto pop         = glengine::scope_guard{ &ImGui::PopID };
         ImGui::PushID(++id);
         if (ImGui::Selectable(map.c_str(), is_selected))
         {
@@ -105,10 +105,10 @@ bool ff8::Fields::OnImGuiUpdate() const
     }
   }
   {
-    const auto pop = scope_guard{ &ImGui::PopID };
+    const auto pop = glengine::scope_guard{ &ImGui::PopID };
     ImGui::PushID(++id);
     ImGui::SameLine(0, spacing);
-    const auto disabled = scope_guard{ &ImGui::EndDisabled };
+    const auto disabled = glengine::scope_guard{ &ImGui::EndDisabled };
     ImGui::BeginDisabled(std::cmp_less_equal(current_index, 0));
     if (ImGui::ArrowButton("##l", ImGuiDir_Left))
     {
@@ -118,10 +118,10 @@ bool ff8::Fields::OnImGuiUpdate() const
     }
   }
   {
-    const auto pop = scope_guard{ &ImGui::PopID };
+    const auto pop = glengine::scope_guard{ &ImGui::PopID };
     ImGui::PushID(++id);
     ImGui::SameLine(0, spacing);
-    const auto disabled = scope_guard{ &ImGui::EndDisabled };
+    const auto disabled = glengine::scope_guard{ &ImGui::EndDisabled };
     ImGui::BeginDisabled(
       std::cmp_greater_equal(current_index + 1, std::ranges::size(m_map_data)));
     if (ImGui::ArrowButton("##r", ImGuiDir_Right))

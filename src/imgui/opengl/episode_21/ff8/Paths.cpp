@@ -8,11 +8,11 @@ bool ff8::Paths::OnImGuiUpdate() const
   if (ImGui::BeginCombo("Path", Path().c_str()))
   {
     int        id  = {};
-    const auto end = scope_guard{ &ImGui::EndCombo };
+    const auto end = glengine::scope_guard{ &ImGui::EndCombo };
     for (int i{}; const std::string &path : m_paths)
     {
       const bool is_selected = i == m_current;
-      const auto pop         = scope_guard{ &ImGui::PopID };
+      const auto pop         = glengine::scope_guard{ &ImGui::PopID };
       ImGui::PushID(++id);
       if (ImGui::Selectable(path.c_str(), is_selected))
       {

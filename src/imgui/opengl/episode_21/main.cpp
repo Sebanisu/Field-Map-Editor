@@ -2,8 +2,9 @@
 #include "Application.hpp"
 int main(void)
 {
+  //todo attach this scope gaurd to the api somewhere
   // anything created in the window must be destroyed before the window.
-  const scope_guard_expensive end = { []() {
+  const glengine::scope_guard_expensive end = { []() {
     ImGui::DestroyContext(nullptr);
     glfwTerminate();
   } };

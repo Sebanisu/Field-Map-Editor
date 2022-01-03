@@ -64,7 +64,7 @@ void test::TestBatchRenderer::OnImGuiUpdate() const
   int id           = 0;
 
   {
-    const auto pop = scope_guard(&ImGui::PopID);
+    const auto pop = glengine::scope_guard(&ImGui::PopID);
     ImGui::PushID(++id);
     if (ImGui::SliderFloat2(
           "View Offset",
@@ -75,14 +75,14 @@ void test::TestBatchRenderer::OnImGuiUpdate() const
     }
   }
   {
-    const auto pop = scope_guard{ &ImGui::PopID };
+    const auto pop = glengine::scope_guard{ &ImGui::PopID };
     ImGui::PushID(++id);
     if (ImGui::SliderFloat("Zoom", &m_zoom, 4.F, .001F))
     {
     }
   }
   {
-    const auto pop = scope_guard{ &ImGui::PopID };
+    const auto pop = glengine::scope_guard{ &ImGui::PopID };
     ImGui::PushID(++id);
     if (ImGui::SliderInt2("Quad Axis Count (X, Y)", std::data(m_count), 0, 256))
     {

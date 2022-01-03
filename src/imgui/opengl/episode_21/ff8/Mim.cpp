@@ -58,7 +58,7 @@ void ff8::Mim::OnImGuiUpdate() const
 {
   const auto &local_texture = CurrentTexture();
   {
-    const auto disable = scope_guard(&ImGui::EndDisabled);
+    const auto disable = glengine::scope_guard(&ImGui::EndDisabled);
     ImGui::BeginDisabled(
       local_texture.height() == 0 || local_texture.width() == 0);
     ImGui::Checkbox("Draw Palette", &draw_palette);

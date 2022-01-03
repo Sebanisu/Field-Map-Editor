@@ -11,11 +11,11 @@ bool ff8::BPPs::OnImGuiUpdate() const
   if (ImGui::BeginCombo("BPP", String().data()))
   {
     int        id  = {};
-    const auto end = scope_guard{ &ImGui::EndCombo };
+    const auto end = glengine::scope_guard{ &ImGui::EndCombo };
     for (int i{}; const std::string_view &string : m_strings)
     {
       const bool is_selected = i == m_current;
-      const auto pop         = scope_guard{ &ImGui::PopID };
+      const auto pop         = glengine::scope_guard{ &ImGui::PopID };
       ImGui::PushID(++id);
       if (ImGui::Selectable(string.data(), is_selected))
       {

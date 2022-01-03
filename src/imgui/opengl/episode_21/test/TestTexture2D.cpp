@@ -34,7 +34,7 @@ test::TestTexture2D::TestTexture2D()
 void test::TestTexture2D::OnImGuiUpdate() const
 {
   int        id           = 0;
-  const auto pop          = scope_guard(&ImGui::PopID);
+  const auto pop          = glengine::scope_guard(&ImGui::PopID);
   const auto pop2         = pop;
   const auto pop3         = pop;
   int        window_width = 1280;

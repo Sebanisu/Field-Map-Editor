@@ -214,7 +214,7 @@ void ff8::Map::OnRender() const
   {
     offscreen_drawing = true;
     const auto not_offscreen_drawing =
-      scope_guard([]() { offscreen_drawing = false; });
+      glengine::scope_guard([]() { offscreen_drawing = false; });
     const auto fbb = glengine::FrameBufferBackup{};
     m_frame_buffer.Bind();
     GLCall{}(
@@ -398,7 +398,7 @@ void Blend_Combos(
 void ff8::Map::OnImGuiUpdate() const
 {
   {
-    const auto disable = scope_guard(&ImGui::EndDisabled);
+    const auto disable = glengine::scope_guard(&ImGui::EndDisabled);
     ImGui::BeginDisabled(
       std::ranges::empty(m_map_path) || std::ranges::empty(m_mim_path));
     ImGui::Checkbox("Snap Zoom to Height", &snap_zoom_to_height);
@@ -406,13 +406,13 @@ void ff8::Map::OnImGuiUpdate() const
     {
       ImGui::Checkbox("Percent Blends (50%,25%)", &enable_percent_blend);
       ImGui::PushID(1);
-      const auto pop = scope_guard(&ImGui::PopID);
+      const auto pop = glengine::scope_guard(&ImGui::PopID);
       Blend_Combos(add_parameter_selections, add_equation_selections);
     }
     if (ImGui::CollapsingHeader("Subtract Blend"))
     {
       ImGui::PushID(2);
-      const auto pop = scope_guard(&ImGui::PopID);
+      const auto pop = glengine::scope_guard(&ImGui::PopID);
       Blend_Combos(subtract_parameter_selections, subtract_equation_selections);
     }
     if (ImGui::Button("Save"))
@@ -429,7 +429,7 @@ void ff8::Map::OnImGuiUpdate() const
 void ff8::Map::Save() const
 {
   saving                = true;
-  const auto not_saving = scope_guard([]() { saving = false; });
+  const auto not_saving = glengine::scope_guard([]() { saving = false; });
   OnRender();
   const auto path = std::filesystem::path(m_map_path);
   auto       string =

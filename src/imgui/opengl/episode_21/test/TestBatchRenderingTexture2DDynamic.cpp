@@ -71,7 +71,7 @@ void test::TestBatchRenderingTexture2DDynamic::OnImGuiUpdate() const
 {
   int        id           = 0;
   int        window_width = 16;
-  const auto pop          = scope_guard(&ImGui::PopID);
+  const auto pop          = glengine::scope_guard(&ImGui::PopID);
   ImGui::PushID(++id);
   if (ImGui::SliderFloat3(
         "View Offset", &view_offset.x, 0.F, static_cast<float>(window_width)))

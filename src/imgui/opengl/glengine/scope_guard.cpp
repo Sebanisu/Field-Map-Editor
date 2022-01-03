@@ -2,7 +2,8 @@
 // Created by pcvii on 11/29/2021.
 //
 #include "scope_guard.hpp"
-
+namespace glengine
+{
 scope_guard_expensive::scope_guard_expensive(std::function<void()> t)
   : func(std::move(t))
 {
@@ -54,3 +55,4 @@ void swap(
   // the two objects are effectively swapped
   swap(first.func, second.func);
 }
+}// namespace glengine
