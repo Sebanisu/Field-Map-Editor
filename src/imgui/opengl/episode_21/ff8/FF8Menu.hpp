@@ -21,8 +21,8 @@ public:
   template<Renderable T>
   void push_back(std::string name) const
   {
-    m_menu.push_back(std::move(name), [this]() -> MenuItem {
-      return MenuItem(std::in_place_type_t<T>{}, m_fields);
+    m_menu.push_back(std::move(name), [this]() -> glengine::MenuItem {
+      return glengine::MenuItem(std::in_place_type_t<T>{}, m_fields);
     });
   }
 

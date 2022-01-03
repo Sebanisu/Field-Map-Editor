@@ -5,8 +5,8 @@
 #ifndef MYPROJECT_MenuItem_HPP
 #define MYPROJECT_MenuItem_HPP
 #include "Event/EventItem.hpp"
-
-
+namespace glengine
+{
 class MenuItem
 {
 private:
@@ -87,4 +87,5 @@ public:
 
             operator bool() const;
 };
+};// namespace glengine
 #endif// MYPROJECT_MenuItem_HPP

@@ -2,7 +2,8 @@
 // Created by pcvii on 11/29/2021.
 //
 #include "MenuItem.hpp"
-
+namespace glengine
+{
 void MenuItem::OnUpdate(float ts)
 {
   if (m_impl)
@@ -35,3 +36,4 @@ void MenuItem::OnEvent(const Event::Item &e)
     return m_impl->OnEvent(e);
   }
 }
+}// namespace glengine
