@@ -8,7 +8,8 @@
 #include "Renderer.hpp"
 #include "unique_value.hpp"
 #include "Vertex.hpp"
-
+namespace glengine
+{
 class IndexBufferDynamic
 {
 private:
@@ -57,4 +58,5 @@ public:
 };
 static_assert(
   Bindable<IndexBufferDynamic> && has_Type_for_IndexType<IndexBufferDynamic>);
+}// namespace glengine
 #endif// MYPROJECT_IndexBufferDynamic_HPP

@@ -31,7 +31,7 @@ public:
 
 private:
   VertexBufferDynamic            m_vertex_buffer   = { QUAD_COUNT };
-  IndexBufferDynamic             m_index_buffer    = { QUAD_COUNT };
+  glengine::IndexBufferDynamic   m_index_buffer    = { QUAD_COUNT };
   mutable IndexBufferDynamicSize index_buffer_size = {};
   Shader                         m_shader          = {};
   VertexArray                    m_vertex_array    = {};

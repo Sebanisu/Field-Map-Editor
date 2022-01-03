@@ -1,4 +1,6 @@
 #include "IndexBufferDynamic.hpp"
+namespace glengine
+{
 void IndexBufferDynamic::Bind() const
 {
   GLCall{}(glBindBuffer, GL_ELEMENT_ARRAY_BUFFER, m_renderer_id);
@@ -12,3 +14,4 @@ IndexType IndexBufferDynamic::Type() const
 {
   return m_type;
 }
+}// namespace glengine
