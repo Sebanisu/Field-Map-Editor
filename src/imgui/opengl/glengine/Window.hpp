@@ -6,8 +6,8 @@
 #define MYPROJECT_WINDOW_HPP
 #include "Event/EventItem.hpp"
 #include "Input.hpp"
-
-
+namespace glengine
+{
 class Window final
 {
 public:
@@ -107,7 +107,7 @@ private:
       ImGui_ImplOpenGL3_Shutdown();
       ImGui_ImplGlfw_Shutdown();
       // disable polling:
-      glengine::Input::m_window = nullptr;
+      Input::m_window = nullptr;
       glfwDestroyWindow(window);
     };
   std::unique_ptr<GLFWwindow, decltype(destroy_window)> m_window{
@@ -119,4 +119,5 @@ private:
   void               InitGLFW();
   static WindowData &GetWindowData(GLFWwindow *);
 };
+}// namespace glengine
 #endif// MYPROJECT_WINDOW_HPP

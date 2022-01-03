@@ -4,8 +4,8 @@
 #include "Window.hpp"
 #include "Event/Event.hpp"
 #include "Renderer.hpp"
-
-
+namespace glengine
+{
 static bool glfw_init  = false;
 static bool imgui_init = false;
 void        Window::BeginFrame() const
@@ -309,3 +309,4 @@ void Window::SubtractBlend()
   //    GL_ONE_MINUS_SRC_ALPHA);
   GLCall{}(glBlendEquationSeparate, GL_FUNC_REVERSE_SUBTRACT, GL_FUNC_ADD);
 }
+}// namespace glengine

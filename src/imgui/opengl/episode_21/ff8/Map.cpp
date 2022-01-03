@@ -250,7 +250,7 @@ void ff8::Map::RenderTiles() const
   using open_viii::graphics::background::BlendModeT;
   BlendModeT last_blend_mode{ BlendModeT::none };
   uniform_color = default_uniform_color;
-  Window::DefaultBlend();
+  glengine::Window::DefaultBlend();
   camera.OnRender();
   SetUniforms();
   m_batch_renderer.Clear();
@@ -340,7 +340,7 @@ void ff8::Map::RenderTiles() const
             }
             break;
             default:
-              Window::DefaultBlend();
+              glengine::Window::DefaultBlend();
           }
         }
         m_batch_renderer.DrawQuad(
@@ -352,7 +352,7 @@ void ff8::Map::RenderTiles() const
   });
   m_batch_renderer.Draw();
   m_batch_renderer.OnRender();
-  Window::DefaultBlend();
+  glengine::Window::DefaultBlend();
 }
 void ff8::Map::OnEvent(const Event::Item &e) const
 {

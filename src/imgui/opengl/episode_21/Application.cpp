@@ -12,10 +12,10 @@
 #include "test/LayerTests.hpp"
 #include "TimeStep.hpp"
 
-static Window *current_window = nullptr;
-static bool    running        = true;
-static bool    minimize       = false;
-static bool    OnWindowClose(const Event::WindowClose &)
+static glengine::Window *current_window = nullptr;
+static bool              running        = true;
+static bool              minimize       = false;
+static bool              OnWindowClose(const Event::WindowClose &)
 {
   running = false;
   return true;
@@ -27,7 +27,7 @@ static bool OnWindowResize(const Event::WindowResize &e)
 }
 
 Application::Application(std::string Title, int width, int height)
-  : window(Window::Create(Window::WindowData{
+  : window(glengine::Window::Create(glengine::Window::WindowData{
     .Title          = std::move(Title),
     .width          = std::move(width),
     .height         = std::move(height),
@@ -96,7 +96,7 @@ void Application::SetCurrentWindow() const
 {
   current_window = window.get();
 }
-const Window *Application::CurrentWindow()
+const glengine::Window *Application::CurrentWindow()
 {
   return current_window;
 }

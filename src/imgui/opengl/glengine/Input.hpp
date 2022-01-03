@@ -6,9 +6,9 @@
 #define MYPROJECT_INPUT_HPP
 #include "KeyCodes.hpp"
 #include "MouseButtonCodes.hpp"
-class Window;
 namespace glengine
 {
+class Window;
 class Input
 {
 public:
