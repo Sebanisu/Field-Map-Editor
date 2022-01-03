@@ -28,7 +28,6 @@ find_package(glfw3 REQUIRED)
 find_package(OpenGL REQUIRED)
 find_package(glm REQUIRED)
 find_package(imgui REQUIRED)
-add_subdirectory(stbi)
 add_executable(opengl_series_episode_21
         Application.cpp
         BatchRenderer.cpp
