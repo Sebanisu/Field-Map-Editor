@@ -4,8 +4,8 @@
 
 #ifndef MYPROJECT_ORTHOGRAPHICCAMERA_HPP
 #define MYPROJECT_ORTHOGRAPHICCAMERA_HPP
-
-
+namespace glengine
+{
 class OrthographicCamera
 {
 public:
@@ -62,4 +62,5 @@ private:
   glm::vec3 m_position               = {};
   float     m_rotation               = {};
 };
+}// namespace glengine
 #endif// MYPROJECT_ORTHOGRAPHICCAMERA_HPP

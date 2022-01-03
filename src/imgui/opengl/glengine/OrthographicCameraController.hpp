@@ -21,11 +21,11 @@ public:
   {
   }
 
-  void                      OnUpdate(float ts) const;
-  bool                      OnImGuiUpdate() const;
-  void                      OnRender() const {}
-  void                      OnEvent(const Event::Item &) const;
-  const OrthographicCamera &Camera() const
+  void                                OnUpdate(float ts) const;
+  bool                                OnImGuiUpdate() const;
+  void                                OnRender() const {}
+  void                                OnEvent(const Event::Item &) const;
+  const glengine::OrthographicCamera &Camera() const
   {
     return m_camera;
   }
@@ -42,9 +42,9 @@ public:
     float bottom{};
     float top{};
 
-          operator OrthographicCamera() const
+          operator glengine::OrthographicCamera() const
     {
-      return OrthographicCamera(left, right, bottom, top);
+      return glengine::OrthographicCamera(left, right, bottom, top);
     }
   };
   return_values                       CurrentBounds() const;
@@ -61,7 +61,7 @@ private:
   mutable float                        m_aspect_ratio      = {};
   mutable float                        m_zoom_level        = { 1.F };
   mutable float                        m_zoom_precision    = { 1.F };
-  mutable OrthographicCamera           m_camera            = {};
+  mutable glengine::OrthographicCamera m_camera            = {};
   mutable glm::vec3                    m_position          = {};
   mutable float                        m_rotation          = {};
   float                                m_translation_speed = { -128.F };
