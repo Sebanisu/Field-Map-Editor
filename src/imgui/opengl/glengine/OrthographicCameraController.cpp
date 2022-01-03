@@ -27,15 +27,17 @@ void OrthographicCameraController::OnUpdate(float ts) const
     m_position = {};
     SetZoom();
   }
+
+  const auto lateral_speed  = m_translation_speed * ts;
   const auto relative_speed = [&]() {
-    auto r = m_zoom_level;
+    auto r = lateral_speed * m_zoom_level;
     if (m_bounds)
     {
       const auto height = std::abs(m_bounds->top - m_bounds->bottom);
       if (height > 0 && r > 0)
       {
-        const auto default_zoom_level = height / 2;
-        r                             = r / default_zoom_level;
+        const auto default_zoom_level = height / 2.F;
+        r /= default_zoom_level;
       }
     }
     return r;
@@ -43,19 +45,19 @@ void OrthographicCameraController::OnUpdate(float ts) const
 
   if (Input::IsKeyPressed(KEY::A) || Input::IsKeyPressed(KEY::LEFT))
   {
-    m_position.x -= m_translation_speed * ts * relative_speed;
+    m_position.x -= relative_speed;
   }
   if (Input::IsKeyPressed(KEY::D) || Input::IsKeyPressed(KEY::RIGHT))
   {
-    m_position.x += m_translation_speed * ts * relative_speed;
+    m_position.x += relative_speed;
   }
   if (Input::IsKeyPressed(KEY::S) || Input::IsKeyPressed(KEY::DOWN))
   {
-    m_position.y -= m_translation_speed * ts * relative_speed;
+    m_position.y -= relative_speed;
   }
   if (Input::IsKeyPressed(KEY::W) || Input::IsKeyPressed(KEY::UP))
   {
-    m_position.y += m_translation_speed * ts * relative_speed;
+    m_position.y += relative_speed;
   }
   {
     if (Input::IsKeyPressed(KEY::Q) || Input::IsKeyPressed(KEY::PAGE_UP))
