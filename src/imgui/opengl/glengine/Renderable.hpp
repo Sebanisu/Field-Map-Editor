@@ -8,6 +8,8 @@ namespace Event
 {
 class Item;
 }
+namespace glengine
+{
 template<typename T>
 concept Renderable =
   std::default_initializable<T> && std::movable<T> &&(
@@ -63,4 +65,5 @@ inline auto OnEvent(const T &t, const Event::Item &e)
 {
   return t.OnEvent(e);
 }
+}// namespace glengine
 #endif// MYPROJECT_RENDERABLE_HPP

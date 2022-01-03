@@ -49,7 +49,7 @@ test::TestBatchRenderer::TestBatchRenderer()
 
 void test::TestBatchRenderer::OnUpdate(const float ts) const
 {
-  ::OnUpdate(m_batch_renderer, ts);
+  glengine::OnUpdate(m_batch_renderer, ts);
 }
 
 void test::TestBatchRenderer::OnRender() const
@@ -99,7 +99,7 @@ void test::TestBatchRenderer::OnImGuiUpdate() const
     "%s",
     fmt::format("Total Indices Rendered: {}", m_count[0] * m_count[1] * 6)
       .c_str());
-  ::OnImGuiUpdate(m_batch_renderer);
+  glengine::OnImGuiUpdate(m_batch_renderer);
 }
 void test::TestBatchRenderer::SetUniforms() const
 {

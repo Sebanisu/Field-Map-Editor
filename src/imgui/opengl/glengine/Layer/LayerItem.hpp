@@ -28,7 +28,7 @@ private:
     virtual void OnImGuiUpdate() const              = 0;
     virtual void OnEvent(const Event::Item &) const = 0;
   };
-  template<Renderable renderableT>
+  template<glengine::Renderable renderableT>
   class ItemModel final : public ItemConcept
   {
   public:
@@ -74,7 +74,7 @@ public:
     : m_impl(std::make_unique<ItemModel<std::decay_t<T>>>(
       std::forward<argsT>(args)...))
   {
-    static_assert(Renderable<T>);
+    static_assert(glengine::Renderable<T>);
   }
   template<typename T>
   Item(T t)

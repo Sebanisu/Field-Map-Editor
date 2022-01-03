@@ -22,7 +22,7 @@ private:
   test::TestMenu test_menu = {};
 };
 
-static_assert(Renderable<test::TestMenu>);
-static_assert(Renderable<Tests>);
+static_assert(glengine::Renderable<test::TestMenu>);
+static_assert(glengine::Renderable<Tests>);
 }// namespace Layer
 #endif// MYPROJECT_LAYERTESTS_HPP

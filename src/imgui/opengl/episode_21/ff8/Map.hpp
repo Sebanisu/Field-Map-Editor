@@ -47,6 +47,6 @@ private:
   void                                 RenderFrameBuffer() const;
   void                                 Save() const;
 };
-static_assert(Renderable<Map>);
+static_assert(glengine::Renderable<Map>);
 }// namespace ff8
 #endif// MYPROJECT_MAP_HPP

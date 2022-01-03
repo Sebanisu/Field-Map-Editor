@@ -7,7 +7,7 @@
 #include "Vertex.hpp"
 
 
-static_assert(Renderable<test::TestBatchRenderingTexture2D>);
+static_assert(glengine::Renderable<test::TestBatchRenderingTexture2D>);
 test::TestBatchRenderingTexture2D::TestBatchRenderingTexture2D()
   : m_shader(
     std::filesystem::current_path() / "res" / "shader" / "basic3.shader")

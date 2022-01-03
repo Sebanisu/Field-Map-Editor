@@ -5,11 +5,10 @@
 #include "TestBatchQuads.hpp"
 #include "Renderer.hpp"
 #include "scope_guard.hpp"
-#include "TestBatchQuads.hpp"
 #include "Vertex.hpp"
 
 
-static_assert(Renderable<test::TestBatchQuads>);
+static_assert(glengine::Renderable<test::TestBatchQuads>);
 test::TestBatchQuads::TestBatchQuads()
   : m_shader(
     std::filesystem::current_path() / "res" / "shader" / "basic3.shader")

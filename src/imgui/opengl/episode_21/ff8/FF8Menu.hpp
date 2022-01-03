@@ -18,7 +18,7 @@ public:
   void OnRender() const;
   void OnImGuiUpdate() const;
   void OnEvent(const Event::Item &) const;
-  template<Renderable T>
+  template<glengine::Renderable T>
   void push_back(std::string name) const
   {
     m_menu.push_back(std::move(name), [this]() -> glengine::MenuItem {

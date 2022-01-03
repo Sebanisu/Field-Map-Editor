@@ -16,7 +16,7 @@
 #include "TestBatchRendering.hpp"
 
 
-static_assert(Renderable<test::TestBatchRendering>);
+static_assert(glengine::Renderable<test::TestBatchRendering>);
 void test::TestBatchRendering::OnImGuiUpdate() const
 {
   int        id           = 0;

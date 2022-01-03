@@ -27,6 +27,6 @@ private:
   Coos                                 m_coos     = {};
   mutable open_viii::archive::Archives m_archives = {};
 };
-static_assert(Renderable<Archive>);
+static_assert(glengine::Renderable<Archive>);
 }// namespace ff8
 #endif// MYPROJECT_ARCHIVE_HPP

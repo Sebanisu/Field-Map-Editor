@@ -11,7 +11,7 @@
 #include "TestFF8Archive.hpp"
 #include "TestTexture2D.hpp"
 
-static_assert(Renderable<test::TestMenu>);
+static_assert(glengine::Renderable<test::TestMenu>);
 
 test::TestMenu::TestMenu()
   : m_menu(

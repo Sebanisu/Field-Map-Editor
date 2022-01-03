@@ -4,7 +4,7 @@
 #include "FF8Menu.hpp"
 #include "Map.hpp"
 #include "Mim.hpp"
-static_assert(Renderable<ff8::FF8Menu>);
+static_assert(glengine::Renderable<ff8::FF8Menu>);
 void ff8::FF8Menu::OnRender() const
 {
   m_menu.OnRender();

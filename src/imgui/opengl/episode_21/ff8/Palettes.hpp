@@ -33,6 +33,6 @@ private:
   }();
   mutable int m_current{};
 };
-static_assert(Renderable<Palettes>);
+static_assert(glengine::Renderable<Palettes>);
 }// namespace ff8
 #endif// MYPROJECT_PALETTES_HPP

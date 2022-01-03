@@ -4,12 +4,7 @@
 #include "TestTexture2D.hpp"
 #include "Renderer.hpp"
 #include "scope_guard.hpp"
-#include "Shader.hpp"
-
-#include "Texture.hpp"
-
-
-static_assert(Renderable<test::TestTexture2D>);
+static_assert(glengine::Renderable<test::TestTexture2D>);
 test::TestTexture2D::TestTexture2D()
   : m_vertex_buffer{ std::array{
     // clang-format off

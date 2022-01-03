@@ -34,6 +34,6 @@ private:
   glengine::BatchRenderer              m_batch_renderer   = {};
   void                                 Save_All() const;
 };
-static_assert(Renderable<Mim>);
+static_assert(glengine::Renderable<Mim>);
 }// namespace ff8
 #endif// MYPROJECT_MIM_HPP

@@ -28,6 +28,6 @@ private:
   mutable glm::vec3            view_offset      = { -2.F, -1.F, 0.F };
   mutable float                m_zoom           = { 0.078F };
 };
-static_assert(Renderable<TestBatchRenderer>);
+static_assert(glengine::Renderable<TestBatchRenderer>);
 }// namespace test
 #endif// MYPROJECT_TESTBATCHRENDERER_HPP

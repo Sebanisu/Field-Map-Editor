@@ -42,6 +42,6 @@ private:
   mutable std::chrono::steady_clock::time_point endtime =
     std::chrono::steady_clock::now();
 };
-static_assert(Renderable<Fields>);
+static_assert(glengine::Renderable<Fields>);
 }// namespace ff8
 #endif// MYPROJECT_FIELDS_HPP

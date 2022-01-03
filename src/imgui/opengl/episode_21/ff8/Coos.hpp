@@ -25,6 +25,6 @@ private:
   static constexpr auto m_coos = open_viii::LangCommon::to_string_array();
   mutable int           m_current{};
 };
-static_assert(Renderable<Coos>);
+static_assert(glengine::Renderable<Coos>);
 }// namespace ff8
 #endif// MYPROJECT_COOS_HPP

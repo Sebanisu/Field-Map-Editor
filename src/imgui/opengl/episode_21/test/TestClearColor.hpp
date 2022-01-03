@@ -36,5 +36,5 @@ private:
   static inline constinit Renderer::Clear_impl LocalClear = { DEFAULT_COLOR };
 };
 }// namespace test
-static_assert(Renderable<test::TestClearColor>);
+static_assert(glengine::Renderable<test::TestClearColor>);
 #endif// MYPROJECT_TESTCLEARCOLOR_HPP

@@ -39,6 +39,6 @@ private:
   }();
   mutable int m_current{};
 };
-static_assert(Renderable<BPPs>);
+static_assert(glengine::Renderable<BPPs>);
 }// namespace ff8
 #endif// MYPROJECT_BPPS_HPP
