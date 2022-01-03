@@ -40,7 +40,7 @@ inline void Draw(const Ts &...ts)
 {
   ::Bind<Ts...>(ts...);
   size_t size = ::size<Ts...>(ts...);
-  auto   type = ::Type<Ts...>(ts...);
+  auto   type = glengine::Type<Ts...>(ts...);
 
   assert(
     type == IndexType::UNSIGNED_INT || type == IndexType::UNSIGNED_SHORT

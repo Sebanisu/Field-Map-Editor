@@ -4,8 +4,8 @@
 
 #ifndef MYPROJECT_INDEXTYPE_HPP
 #define MYPROJECT_INDEXTYPE_HPP
-
-
+namespace glengine
+{
 enum class IndexType : GLenum
 {
   none           = 0,
@@ -92,6 +92,7 @@ template<typename... T>
   // clang-format on
   inline IndexType Type(const T &...typed)
 {
-  return (::Type<T>(typed) + ...);
+  return (glengine::Type<T>(typed) + ...);
 }
+}// namespace glengine
 #endif// MYPROJECT_INDEXTYPE_HPP
