@@ -31,7 +31,7 @@ test::TestBatchRenderingTexture2D::TestBatchRenderingTexture2D()
               + CreateQuad({ 4.F, 0.F, 0.F }, colors[1], 2)
               + CreateQuad({ 6.F, 0.F, 0.F }, colors[2], 3);
 
-  m_vertex_buffer           = VertexBuffer{ vertices };
+  m_vertex_buffer           = glengine::VertexBuffer{ vertices };
   constexpr auto quad_size  = std::size(Quad{});
   const auto     quad_count = std::size(vertices) / quad_size;
   m_index_buffer            = glengine::IndexBuffer{ QuadIndices(quad_count) };

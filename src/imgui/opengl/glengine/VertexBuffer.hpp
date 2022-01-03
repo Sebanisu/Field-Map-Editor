@@ -6,8 +6,8 @@
 #define MYPROJECT_VERTEXBUFFER_HPP
 #include "Renderer.hpp"
 #include "unique_value.hpp"
-
-
+namespace glengine
+{
 class VertexBuffer
 {
 private:
@@ -40,6 +40,5 @@ public:
   static void UnBind();
 };
 static_assert(Bindable<VertexBuffer>);
-
-
+}// namespace glengine
 #endif// MYPROJECT_VERTEXBUFFER_HPP

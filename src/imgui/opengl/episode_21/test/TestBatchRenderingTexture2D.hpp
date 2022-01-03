@@ -24,7 +24,7 @@ public:
   void OnEvent(const Event::Item &) const {}
 
 private:
-  VertexBuffer                   m_vertex_buffer = {};
+  glengine::VertexBuffer                   m_vertex_buffer = {};
   glengine::IndexBuffer          m_index_buffer  = {};
   glengine::Shader               m_shader        = {};
   glengine::VertexArray          m_vertex_array  = {};

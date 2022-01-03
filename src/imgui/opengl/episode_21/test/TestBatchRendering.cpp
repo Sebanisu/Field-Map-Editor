@@ -89,7 +89,7 @@ test::TestBatchRendering::TestBatchRendering()
         vertex.color = colors[i];
         return vertex;
       });
-  m_vertex_buffer       = VertexBuffer{ vertices };
+  m_vertex_buffer       = glengine::VertexBuffer{ vertices };
   auto       indices    = std::vector(indices_init.begin(), indices_init.end());
   const auto quad_count = std::size(vertices) / std::size(vertices_init);
   for (std::size_t i = 1U; i != quad_count; ++i)
