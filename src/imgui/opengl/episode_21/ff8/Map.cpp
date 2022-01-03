@@ -296,7 +296,7 @@ void ff8::Map::RenderTiles() const
           continue;
         const auto texture_dims =
           glm::vec2(m_mim.get_width(tile.depth()), m_mim.get_height());
-        SubTexture sub_texture = {
+        glengine::SubTexture sub_texture = {
           texture,
           glm::vec2{ tile.source_x() + texture_page_offset,
                      texture_dims.y - (tile.source_y() + 16) }
