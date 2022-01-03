@@ -15,12 +15,12 @@ FrameBuffer::FrameBuffer(FrameBufferSpecification spec)
                            &glTexParameteri,
                            GL_TEXTURE_2D,
                            GL_TEXTURE_MAG_FILTER,
-                           GL_LINEAR);
+                           GL_NEAREST);
                          GLCall{}(
                            &glTexParameteri,
                            GL_TEXTURE_2D,
                            GL_TEXTURE_MIN_FILTER,
-                           GL_LINEAR);
+                           GL_NEAREST_MIPMAP_NEAREST);
                          GLCall{}(
                            &glTexParameteri,
                            GL_TEXTURE_2D,
@@ -42,6 +42,7 @@ FrameBuffer::FrameBuffer(FrameBufferSpecification spec)
                            GL_RGBA,
                            GL_UNSIGNED_BYTE,
                            nullptr);
+                         GLCall{}(glGenerateMipmap, GL_TEXTURE_2D);
                          GLCall{}(glBindTexture, GL_TEXTURE_2D, 0);
                          return tmp;
                        }(),
@@ -130,6 +131,9 @@ const FrameBufferSpecification &FrameBuffer::Specification() const
 }
 SubTexture FrameBuffer::GetColorAttachment() const
 {
-  return SubTexture(m_color_attachment);
+  auto r = SubTexture(m_color_attachment);
+  r.Bind();
+  GLCall{}(glGenerateMipmap, GL_TEXTURE_2D);
+  return r;
 }
 }// namespace glengine

@@ -72,7 +72,7 @@ public:
     GLCall{}(&glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     GLCall{}(&glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
     GLCall{}(
-      &glTexImage2D,
+      glTexImage2D,
       GL_TEXTURE_2D,
       0,
       GL_RGBA8,
