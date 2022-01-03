@@ -5,7 +5,8 @@
 #include "BatchRenderer.hpp"
 #include "scope_guard.hpp"
 
-
+namespace glengine
+{
 static_assert(Renderable<BatchRenderer>);
 static std::uint32_t draw_count = 0U;
 BatchRenderer::BatchRenderer()
@@ -172,3 +173,4 @@ void BatchRenderer::UnBind()
 {
   ::Shader::UnBind();
 }
+}// namespace glengine

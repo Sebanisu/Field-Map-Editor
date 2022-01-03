@@ -41,7 +41,7 @@ private:
   // loads the textures overtime instead of forcing them to load at start.
   DelayedTextures<35U>                 m_delayed_textures = {};
   // takes quads and draws them to the frame buffer or screen.
-  BatchRenderer                        m_batch_renderer   = {};
+  glengine::BatchRenderer              m_batch_renderer   = {};
   // holds rendered image at 1:1 scale to prevent gaps when scaling.
   FrameBuffer                          m_frame_buffer     = {};
   void                                 RenderFrameBuffer() const;

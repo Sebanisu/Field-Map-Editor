@@ -11,7 +11,8 @@
 #include "Texture.hpp"
 #include "VertexArray.hpp"
 #include "VertexBufferDynamic.hpp"
-
+namespace glengine
+{
 
 class BatchRenderer
 {
@@ -73,4 +74,5 @@ private:
 };
 static_assert(Renderable<BatchRenderer>);
 static_assert(Bindable<BatchRenderer>);
+}
 #endif// MYPROJECT_BATCHRENDERER_HPP
