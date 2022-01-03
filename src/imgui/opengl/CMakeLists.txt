@@ -18,4 +18,5 @@ target_link_libraries(imgui_glfw
 
 target_include_directories(imgui_glfw PUBLIC ${CONAN_SRC_DIRS_IMGUI})
 add_subdirectory(stbi)
+add_subdirectory(glengine)
 add_subdirectory(episode_21)

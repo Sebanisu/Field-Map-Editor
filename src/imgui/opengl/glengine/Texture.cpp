@@ -13,7 +13,8 @@ Texture::Texture(std::filesystem::path path)
   const auto           deleter  = [](stbi_uc *ptr) { stbi_image_free(ptr); };
   auto                 png      = std::unique_ptr<stbi_uc, decltype(deleter)>(
     stbi_load(m_path.string().c_str(), &x, &y, &channels, 4));
-  m_width_height = { x, y };
+  m_width  = x;
+  m_height = y;
   init_texture(png.get());
 }
 void Texture::Bind(int slot) const

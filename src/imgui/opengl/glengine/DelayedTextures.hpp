@@ -8,10 +8,10 @@
 
 struct DelayedTexturesData
 {
-  std::vector<open_viii::graphics::Color32RGBA> colors{};
-  std::int32_t                                  width{};
-  std::int32_t                                  height{};
-  Texture                                      *out{};
+  std::vector<glm::vec<4,std::uint8_t>> colors{};
+  std::int32_t                           width{};
+  std::int32_t                           height{};
+  Texture                               *out{};
 };
 template<std::size_t sizeT>
 struct DelayedTextures

@@ -4,6 +4,7 @@
 
 #include "FF8LoadTextures.hpp"
 
+//static_assert(struct_of_color_byte<glm::vec<4, std::uint8_t>>);
 
 DelayedTextures<35U>
   ff8::LoadTextures(const open_viii::graphics::background::Mim &mim)
@@ -34,7 +35,7 @@ DelayedTextures<35U>
                    Texture *in_out) -> DelayedTexturesData {
     auto r = DelayedTexturesData{
       .colors =
-        in_mim.get_colors<open_viii::graphics::Color32RGBA>(in_bpp, in_palette),
+        in_mim.get_colors<glm::vec<4, std::uint8_t>>(in_bpp, in_palette),
       .width  = static_cast<int32_t>(in_mim.get_width(in_bpp)),
       .height = static_cast<int32_t>(in_mim.get_height()),
       .out    = in_out
@@ -93,7 +94,7 @@ DelayedTextures<35U>
         -> DelayedTexturesData {
         auto r = DelayedTexturesData{
           .colors =
-            in_mim.get_colors<open_viii::graphics::Color32RGBA>({}, {}, true),
+            in_mim.get_colors<glm::vec<4, std::uint8_t>>({}, {}, true),
           .width  = static_cast<std::int32_t>(in_mim.get_width({}, true)),
           .height = static_cast<std::int32_t>(in_mim.get_height(true)),
           .out    = in_out

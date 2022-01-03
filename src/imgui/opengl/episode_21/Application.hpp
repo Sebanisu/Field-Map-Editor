@@ -21,4 +21,7 @@ private:
   std::unique_ptr<Window> window = nullptr;
   Layer::Stack            layers = {};
 };
+
+void RestoreViewPortToFrameBuffer();
+float Get_Frame_Buffer_Aspect_Ratio();
 #endif// MYPROJECT_APPLICATION_HPP

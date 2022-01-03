@@ -7,9 +7,9 @@
 #include "Event/EventDispatcher.hpp"
 #include "FrameBuffer.hpp"
 #include "FrameBufferRenderer.hpp"
-#include "Layer/LayerTests.hpp"
 #include "PixelBuffer.hpp"
 #include "Renderer.hpp"
+#include "test/LayerTests.hpp"
 #include "TimeStep.hpp"
 
 static Window *current_window = nullptr;
@@ -99,4 +99,29 @@ void Application::SetCurrentWindow() const
 const Window *Application::CurrentWindow()
 {
   return current_window;
+}
+
+void RestoreViewPortToFrameBuffer()
+{
+  if (Application::CurrentWindow())
+  {
+    GLCall{}(
+      glViewport,
+      GLint{ 0 },
+      GLint{ 0 },
+      static_cast<GLsizei>(
+        Application::CurrentWindow()->ViewWindowData().frame_buffer_width),
+      static_cast<GLsizei>(
+        Application::CurrentWindow()->ViewWindowData().frame_buffer_height));
+  }
+}
+float Get_Frame_Buffer_Aspect_Ratio()
+{
+  if (Application::CurrentWindow())
+  {
+    const auto &window_data = Application::CurrentWindow()->ViewWindowData();
+    return static_cast<float>(window_data.frame_buffer_width)
+           / static_cast<float>(window_data.frame_buffer_height);
+  }
+  return (16.F / 9.F);
 }

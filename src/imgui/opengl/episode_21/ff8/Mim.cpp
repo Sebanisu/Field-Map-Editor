@@ -7,6 +7,7 @@
 #include "FrameBufferBackup.hpp"
 #include "OrthographicCameraController.hpp"
 #include "PixelBuffer.hpp"
+#include "Application.hpp"
 namespace ff8
 {
 static const BPPs                   bpp                 = {};

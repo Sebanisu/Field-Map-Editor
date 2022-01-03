@@ -12,9 +12,10 @@
 class Texture
 {
 private:
-  GLID                                     m_renderer_id  = {};
-  std::filesystem::path                    m_path         = {};
-  open_viii::graphics::Point<std::int32_t> m_width_height = {};
+  GLID                  m_renderer_id = {};
+  std::filesystem::path m_path        = {};
+  std::int32_t          m_width       = {};
+  std::int32_t          m_height      = {};
   // std::int32_t             m_bpp         = {};
   // std::vector<open_viii::graphics::Color32RGBA> m_colors       = {};
 
@@ -27,7 +28,8 @@ public:
   {
   }
   Texture(std::uint32_t color)
-    : m_width_height{ 1, 1 }
+    : m_width{ 1 }
+    , m_height{ 1 }
   {
 
     init_texture(&color);
@@ -38,7 +40,8 @@ public:
     std::int32_t in_width,
     std::int32_t in_height,
     bool         in_flip = false)
-    : m_width_height{ in_width, in_height }
+    : m_width{ in_width }
+    , m_height{ in_height }
   {
     if (in_flip)
     {
@@ -48,7 +51,7 @@ public:
   }
   void init_texture(const void *color)
   {
-    if (m_width_height.area() == 0)
+    if (std::cmp_equal(m_width * m_height, 0))
     {
       return;
     }
@@ -189,11 +192,11 @@ public:
   }
   constexpr std::int32_t width() const
   {
-    return m_width_height.x();
+    return m_width;
   }
   constexpr std::int32_t height() const
   {
-    return m_width_height.y();
+    return m_height;
   }
 };
 static_assert(Bindable<Texture>);

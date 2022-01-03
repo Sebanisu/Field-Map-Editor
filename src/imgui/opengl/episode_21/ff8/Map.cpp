@@ -6,7 +6,8 @@
 #include "FrameBufferBackup.hpp"
 #include "OrthographicCameraController.hpp"
 #include "PixelBuffer.hpp"
-
+#include "Window.hpp"
+#include "Application.hpp"
 static OrthographicCameraController camera               = { 16 / 9 };
 static OrthographicCamera           fixed_render_camera  = {};
 static bool                         snap_zoom_to_height  = true;

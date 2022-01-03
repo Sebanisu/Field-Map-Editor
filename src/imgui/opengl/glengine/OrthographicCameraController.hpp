@@ -4,21 +4,13 @@
 
 #ifndef MYPROJECT_ORTHOGRAPHICCAMERACONTROLLER_HPP
 #define MYPROJECT_ORTHOGRAPHICCAMERACONTROLLER_HPP
-#include "Application.hpp"
 #include "Event/EventItem.hpp"
 #include "OrthographicCamera.hpp"
-
 class OrthographicCameraController
 {
 public:
-  OrthographicCameraController()
-    : OrthographicCameraController(get_frame_buffer_aspect_ratio(), 1.F)
-  {
-  }
-  OrthographicCameraController(float zoom)
-    : OrthographicCameraController(get_frame_buffer_aspect_ratio(), zoom)
-  {
-  }
+  OrthographicCameraController();
+  OrthographicCameraController(float zoom);
   OrthographicCameraController(float aspect_ratio, float zoom)
     : m_aspect_ratio(aspect_ratio)
     , m_zoom_level(zoom)
@@ -65,7 +57,6 @@ public:
   [[maybe_unused]] void SetZoom(float new_zoom) const;
 
 private:
-  float                                get_frame_buffer_aspect_ratio() const;
   void                                 set_projection() const;
   mutable float                        m_aspect_ratio      = {};
   mutable float                        m_zoom_level        = { 1.F };
@@ -80,6 +71,5 @@ private:
 };
 void MakeViewPortMatchBounds(
   const OrthographicCameraController::return_values &bounds);
-void RestoreViewPortToFrameBuffer();
 static_assert(Renderable<OrthographicCameraController>);
 #endif// MYPROJECT_ORTHOGRAPHICCAMERACONTROLLER_HPP

@@ -30,31 +30,6 @@ find_package(glm REQUIRED)
 find_package(imgui REQUIRED)
 add_executable(opengl_series_episode_21
         Application.cpp
-        BatchRenderer.cpp
-        DelayedTextures.cpp
-        FrameBuffer.cpp
-        FrameBufferBackup.cpp
-        FrameBufferRenderer.cpp
-        GLCheck.cpp
-        IndexBuffer.cpp
-        IndexBufferDynamic.cpp
-        Input.cpp
-        Layer/LayerItem.cpp
-        Layer/LayerStack.cpp
-        Layer/LayerTests.cpp
-        Menu.cpp
-        MenuItem.cpp
-        OrthographicCameraController.cpp
-        PixelBuffer.cpp
-        Renderer.cpp
-        Shader.cpp
-        SubTexture.cpp
-        Texture.cpp
-        TimeStep.cpp
-        VertexArray.cpp
-        VertexBuffer.cpp
-        VertexBufferDynamic.cpp
-        Window.cpp
         ff8/Archive.cpp
         ff8/BPPs.cpp
         ff8/Coos.cpp
@@ -66,7 +41,7 @@ add_executable(opengl_series_episode_21
         ff8/Palettes.cpp
         ff8/Paths.cpp
         main.cpp
-        scope_guard.cpp
+        test/LayerTests.cpp
         test/TestBatchQuads.cpp
         test/TestBatchRenderer.cpp
         test/TestBatchRendering.cpp
@@ -78,21 +53,11 @@ add_executable(opengl_series_episode_21
         test/TestTexture2D.cpp
         )
 target_link_libraries(opengl_series_episode_21
+        PRIVATE glengine
         PRIVATE project_warnings
-        PRIVATE fmt::fmt
         PRIVATE Threads::Threads
-        PRIVATE glfw
-        PRIVATE OpenGL::GL
-        PRIVATE GLEW::GLEW
         PRIVATE OpenVIII_CPP_WIP_VIIIGraphics
         PRIVATE OpenVIII_CPP_WIP_VIIIArchive
-        PRIVATE glm::glm
-        PRIVATE stbi_wrapper
-        PRIVATE imgui::imgui
-        PRIVATE imgui_glfw
-        )
-target_compile_definitions(opengl_series_episode_21
-        PRIVATE GLEW_STATIC
         )
 target_include_directories(opengl_series_episode_21
         PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
@@ -115,42 +80,6 @@ endif ()
 
 target_precompile_headers(opengl_series_episode_21
         PRIVATE
-        <algorithm>
-        <array>
-        <cassert>
-        <concepts>
-        <cstdint>
-        <cstring>
-        <filesystem>
-        <fstream>
-        <functional>
-        <future>
-        <iterator>
-        <memory>
-        <optional>
-        <ranges>
-        <source_location>
-        <span>
-        <sstream>
-        <string>
-        <string_view>
-        <thread>
-        <type_traits>
-        <unordered_map>
-        <utility>
-        <variant>
-        <vector>
-        <GL/glew.h>
-        <GLFW/glfw3.h>
-        <fmt/format.h>
-        <fmt/chrono.h>
-        <stb_image.h>
-        <stb_image_write.h>
-        <glm/glm.hpp>
-        <glm/gtc/matrix_transform.hpp>
-        <imgui.h>
-        <imgui_impl_glfw.h>
-        <imgui_impl_opengl3.h>
         <open_viii/archive/Archives.hpp>
         <open_viii/graphics/BPPT.hpp>
         <open_viii/graphics/Rectangle.hpp>
@@ -159,8 +88,6 @@ target_precompile_headers(opengl_series_episode_21
         <open_viii/graphics/color/Color32.hpp>
         <open_viii/paths/Paths.hpp>
         <open_viii/strings/LangCommon.hpp>
-        [["concepts.hpp"]]
-        [["Renderable.hpp"]]
         )
 #target_include_directories(opengl_series_episode_21 PRIVATE
 #        $<$<CONFIG:Debug>:${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/opengl_series_episode_21.dir/Debug>

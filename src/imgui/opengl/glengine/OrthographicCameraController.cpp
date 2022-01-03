@@ -7,6 +7,7 @@
 #include "GLCheck.hpp"
 #include "Input.hpp"
 
+extern float Get_Frame_Buffer_Aspect_Ratio();
 void OrthographicCameraController::OnUpdate(float ts) const
 {
   if (Input::IsKeyPressed(KEY::EQUAL) || Input::IsKeyPressed(KEY::KP_ADD))
@@ -217,7 +218,7 @@ void OrthographicCameraController::DisableBounds() const
 }
 void OrthographicCameraController::RefreshAspectRatio() const
 {
-  RefreshAspectRatio(get_frame_buffer_aspect_ratio());
+  RefreshAspectRatio(Get_Frame_Buffer_Aspect_Ratio());
 }
 void OrthographicCameraController::RefreshAspectRatio(
   float new_aspect_ratio) const
@@ -238,16 +239,7 @@ void OrthographicCameraController::SetZoom(float new_zoom) const
   m_zoom_level = new_zoom;
   zoom(0.F);
 }
-float OrthographicCameraController::get_frame_buffer_aspect_ratio() const
-{
-  if (Application::CurrentWindow())
-  {
-    const auto &window_data = Application::CurrentWindow()->ViewWindowData();
-    return static_cast<float>(window_data.frame_buffer_width)
-           / static_cast<float>(window_data.frame_buffer_height);
-  }
-  return (16.F / 9.F);
-}
+
 void OrthographicCameraController::set_projection() const
 {
   m_camera.SetProjection(
@@ -255,6 +247,14 @@ void OrthographicCameraController::set_projection() const
     m_aspect_ratio * m_zoom_level,
     -m_zoom_level,
     m_zoom_level);
+}
+OrthographicCameraController::OrthographicCameraController()
+  : OrthographicCameraController(Get_Frame_Buffer_Aspect_Ratio(), 1.F)
+{
+}
+OrthographicCameraController::OrthographicCameraController(float zoom)
+  : OrthographicCameraController(Get_Frame_Buffer_Aspect_Ratio(), zoom)
+{
 }
 /**
  * Convert bounds to viewport.
@@ -272,18 +272,4 @@ void MakeViewPortMatchBounds(
       static_cast<GLsizei>(bounds.right) - static_cast<GLsizei>(bounds.left)),
     std::abs(
       static_cast<GLsizei>(bounds.top) - static_cast<GLsizei>(bounds.bottom)));
-}
-void RestoreViewPortToFrameBuffer()
-{
-  if (Application::CurrentWindow())
-  {
-    GLCall{}(
-      glViewport,
-      GLint{ 0 },
-      GLint{ 0 },
-      static_cast<GLsizei>(
-        Application::CurrentWindow()->ViewWindowData().frame_buffer_width),
-      static_cast<GLsizei>(
-        Application::CurrentWindow()->ViewWindowData().frame_buffer_height));
-  }
 }
