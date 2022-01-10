@@ -1,7 +1,7 @@
 from conans import ConanFile
 
 
-class CppStarterProject(ConanFile):
+class FieldMapEditor(ConanFile):
     # Note: options are copied from CMake boolean options.
     # When turned off, CMake sometimes passes them as empty strings.
     name = "Field-Map-Editor"
