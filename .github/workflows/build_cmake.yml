@@ -56,7 +56,6 @@ jobs:
         pip3 install breathe
         pip3 install myst_parser
         pip3 install linkify-it-py
-        sudo update-alternatives --remove-all gcc
         sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-11 90
         sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-11 90
         sudo update-alternatives --install /usr/bin/cc cc /usr/bin/gcc 30
