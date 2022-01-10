@@ -77,11 +77,11 @@ jobs:
 
     - name: Configure CMake
       run: |
-        cmake -S . -B ./build -DCMAKE_BUILD_TYPE=$BUILD_TYPE
+        cmake -S . -G "Ninja" -B ./build -DCMAKE_BUILD_TYPE=$BUILD_TYPE
 
     - name: Build
       # Execute the build.  You can specify a specific target with "--target <NAME>"
-      run: cmake --build ./build --config $BUILD_TYPE
+      run: ninja -C ./build
 
     - name: Test
       working-directory: ./build
