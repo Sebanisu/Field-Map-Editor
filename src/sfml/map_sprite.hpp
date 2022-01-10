@@ -222,7 +222,7 @@ private:
     mutable std::vector<open_viii::graphics::background::Map> m_maps{};
     mutable std::vector<bool>                                 m_history{};
   };
-  mutable std::vector<std::future<void>> m_futures               = {};
+
   mutable bool                           m_draw_swizzle          = { false };
   mutable bool    m_disable_texture_page_shift                   = { false };
   mutable bool    m_disable_blends                               = { false };

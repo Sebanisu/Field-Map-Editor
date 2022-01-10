@@ -129,7 +129,7 @@ inline static bool generic_combo(
         // want, outside or inside your objects
         const char *v           = string.data();
         {
-          const auto sc = scope_guard{ &ImGui::PopID };
+          const auto sc2 = scope_guard{ &ImGui::PopID };
           ImGui::PushID(++id);
           if (ImGui::Selectable(v, is_selected))
           {
@@ -161,15 +161,7 @@ template<
   returns_range_concept value_lambdaT,
   returns_range_concept string_lambdaT,
   typename valueT>
-requires requires(value_lambdaT v)
-{
-  {
-    *(v().begin())
-    } -> std::convertible_to<valueT>;
-  {
-    *(v().begin())
-    } -> std::equality_comparable_with<valueT>;
-}
+//requires std::same_as<std::decay<std::ranges::range_value_t<std::invoke_result_t<value_lambdaT>>>,valueT>
 inline static bool generic_combo(
   int             &id,
   std::string_view name,
@@ -226,7 +218,7 @@ inline static bool generic_combo(
         // want, outside or inside your objects
         const char *c_str_value = std::ranges::data(string);
         {
-          const auto sc = scope_guard{ &ImGui::PopID };
+          const auto sc2 = scope_guard{ &ImGui::PopID };
           ImGui::PushID(++id);
           if (ImGui::Selectable(c_str_value, is_selected))
           {

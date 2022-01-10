@@ -33,7 +33,7 @@ set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON) ## automatically create a module defini
 find_package(Threads REQUIRED)
 include(${CMAKE_SOURCE_DIR}/cmake/OpenVIII_CPP_WIP.cmake)
 include(${CMAKE_SOURCE_DIR}/cmake/ImGuiFileBrowser.cmake)
-add_executable(test_imgui
+add_executable(${PROJECT_NAME}_SFML
         test.cpp
         gui.cpp
         archives_group.cpp
@@ -43,12 +43,12 @@ add_executable(test_imgui
         upscales.cpp
         GuiBatch.cpp
         )
-#set_property(TARGET test_imgui PROPERTY CXX_STANDARD 20)
+#set_property(TARGET ${PROJECT_NAME}_SFML PROPERTY CXX_STANDARD 20)
 #find_package(ImGui-SFML REQUIRED)
 find_package(fmt)
 find_package(cppcoro)
 include(${CMAKE_SOURCE_DIR}/cmake/imgui-sfml.cmake)
-target_link_libraries(test_imgui
+target_link_libraries(${PROJECT_NAME}_SFML
         PRIVATE project_warnings
         PRIVATE project_options
         PRIVATE ImGui-SFML
@@ -60,12 +60,14 @@ target_link_libraries(test_imgui
         PRIVATE imgui_filebrowser
         PRIVATE cppcoro::cppcoro)
 
-target_compile_definitions(test_imgui
+target_compile_definitions(${PROJECT_NAME}_SFML
         PUBLIC NOMINMAX) # imgui uses unguarded min and max.
 if (MSVC)
-    target_compile_definitions(test_imgui
+    target_compile_definitions(${PROJECT_NAME}_SFML
             PUBLIC _CRT_SECURE_NO_WARNINGS) # required by libpng
-    target_link_options(test_imgui PRIVATE "/PROFILE")
+    target_link_options(${PROJECT_NAME}_SFML PRIVATE "/PROFILE")
+else ()
+target_compile_options(${PROJECT_NAME}_SFML PUBLIC "-fconcepts-diagnostics-depth=2")
 endif ()
-enable_sanitizers(test_imgui)
-SET_TARGET_PATHS(test_imgui)
+enable_sanitizers(${PROJECT_NAME}_SFML)
+SET_TARGET_PATHS(${PROJECT_NAME}_SFML)

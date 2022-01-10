@@ -8,5 +8,5 @@ int main(void)
     ImGui::DestroyContext(nullptr);
     glfwTerminate();
   } };
-  Application("OpenGL Test Application", 1280, 720).Run();
+  Application("Field-Map-Editor - OPENGL", 1280, 720).Run();
 }

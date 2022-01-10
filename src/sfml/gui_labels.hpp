@@ -7,7 +7,7 @@
 #include <string_view>
 struct gui_labels
 {
-  static constexpr const char      *window_title      = { "Field Map Editor" };
+  static constexpr const char      *window_title      = { "Field-Map-Editor - SFML" };
 
   static constexpr std::string_view palette           = { "Palette" };
   static constexpr std::string_view bpp               = { "BPP" };

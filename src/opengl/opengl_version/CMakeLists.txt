@@ -28,7 +28,7 @@ find_package(glfw3 REQUIRED)
 find_package(OpenGL REQUIRED)
 find_package(glm REQUIRED)
 find_package(imgui REQUIRED)
-add_executable(opengl_series_episode_21
+add_executable(${PROJECT_NAME}_OPENGL
         Application.cpp
         ff8/Archive.cpp
         ff8/BPPs.cpp
@@ -53,33 +53,33 @@ add_executable(opengl_series_episode_21
         test/TestMenu.cpp
         test/TestTexture2D.cpp
         )
-target_link_libraries(opengl_series_episode_21
+target_link_libraries(${PROJECT_NAME}_OPENGL
         PRIVATE glengine
         PRIVATE project_warnings
         PRIVATE Threads::Threads
         PRIVATE OpenVIII_CPP_WIP_VIIIGraphics
         PRIVATE OpenVIII_CPP_WIP_VIIIArchive
         )
-target_include_directories(opengl_series_episode_21
+target_include_directories(${PROJECT_NAME}_OPENGL
         PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
         )
-SET_TARGET_PATHS(opengl_series_episode_21)
+SET_TARGET_PATHS(${PROJECT_NAME}_OPENGL)
 
 
-add_custom_command(TARGET opengl_series_episode_21 POST_BUILD
+add_custom_command(TARGET ${PROJECT_NAME}_OPENGL POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E echo
-        "Copying ${CMAKE_CURRENT_SOURCE_DIR}/res to $<TARGET_FILE_DIR:opengl_series_episode_21>/res")
-add_custom_command(TARGET opengl_series_episode_21 POST_BUILD
+        "Copying ${CMAKE_CURRENT_SOURCE_DIR}/res to $<TARGET_FILE_DIR:${PROJECT_NAME}_OPENGL>/res")
+add_custom_command(TARGET ${PROJECT_NAME}_OPENGL POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_directory
-        ${CMAKE_CURRENT_SOURCE_DIR}/res $<TARGET_FILE_DIR:opengl_series_episode_21>/res)
+        ${CMAKE_CURRENT_SOURCE_DIR}/res $<TARGET_FILE_DIR:${PROJECT_NAME}_OPENGL>/res)
 
 if (MSVC)
-    target_compile_definitions(opengl_series_episode_21
+    target_compile_definitions(${PROJECT_NAME}_OPENGL
             PUBLIC _CRT_SECURE_NO_WARNINGS) # required by libpng
-    target_link_options(opengl_series_episode_21 PRIVATE "/PROFILE")
+    target_link_options(${PROJECT_NAME}_OPENGL PRIVATE "/PROFILE")
 endif ()
 
-target_precompile_headers(opengl_series_episode_21
+target_precompile_headers(${PROJECT_NAME}_OPENGL
         PRIVATE
         <open_viii/archive/Archives.hpp>
         <open_viii/graphics/BPPT.hpp>
@@ -90,9 +90,9 @@ target_precompile_headers(opengl_series_episode_21
         <open_viii/paths/Paths.hpp>
         <open_viii/strings/LangCommon.hpp>
         )
-#target_include_directories(opengl_series_episode_21 PRIVATE
-#        $<$<CONFIG:Debug>:${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/opengl_series_episode_21.dir/Debug>
-#        $<$<CONFIG:RelWithDebInfo>:${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/opengl_series_episode_21.dir/RelWithDebInfo>
-#        $<$<CONFIG:Release>:${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/opengl_series_episode_21.dir/Release>
-#        #$<$<CONFIG:MinSizeRel>:${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/opengl_series_episode_21.dir/MinSizeRel>
-#        ${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/opengl_series_episode_21.dir)
+#target_include_directories(${PROJECT_NAME}_OPENGL PRIVATE
+#        $<$<CONFIG:Debug>:${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/${PROJECT_NAME}_OPENGL.dir/Debug>
+#        $<$<CONFIG:RelWithDebInfo>:${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/${PROJECT_NAME}_OPENGL.dir/RelWithDebInfo>
+#        $<$<CONFIG:Release>:${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/${PROJECT_NAME}_OPENGL.dir/Release>
+#        #$<$<CONFIG:MinSizeRel>:${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/${PROJECT_NAME}_OPENGL.dir/MinSizeRel>
+#        ${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/${PROJECT_NAME}_OPENGL.dir)

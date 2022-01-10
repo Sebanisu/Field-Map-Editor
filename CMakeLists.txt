@@ -8,7 +8,7 @@ function(SET_TARGET_PATHS target)
           )
 endfunction()
 # Set the project name to your project name, my project isn't very descriptive
-project(myproject LANGUAGES C CXX)
+project(Field-Map-Editor LANGUAGES C CXX)
 include(cmake/StandardProjectSettings.cmake)
 include(cmake/PreventInSourceBuilds.cmake)
 

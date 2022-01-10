@@ -1,5 +1,4 @@
 #include "map_sprite.hpp"
-
 #include "append_inserter.hpp"
 #include "format_imgui_text.hpp"
 #include <bit>
@@ -10,7 +9,9 @@ using namespace open_viii::graphics::background;
 using namespace open_viii::graphics;
 using namespace open_viii::graphics::literals;
 using namespace std::string_literals;
-bool map_sprite::empty() const
+
+static std::vector<std::future<void>> m_futures = {};
+bool                                  map_sprite::empty() const
 {
   return m_maps.const_back().visit_tiles(
     [](const auto &tiles) { return std::empty(tiles); });

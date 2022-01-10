@@ -1501,7 +1501,7 @@ void gui::init_and_get_style() const
   //  static constexpr auto fps_lock = 360U;
   //  m_window.setFramerateLimit(fps_lock);
   m_window.setVerticalSyncEnabled(true);
-  ImGui::SFML::Init(m_window);
+  (void)ImGui::SFML::Init(m_window);
 }
 gui::gui(std::uint32_t width, std::uint32_t height)
   : m_window_width(width)
@@ -1849,22 +1849,22 @@ bool gui::combo_upscale_path(
   std::vector<std::string> paths = {};
   auto                     transform_paths =
     m_paths
-    | std::views::transform([this, &field_name, &coo](const std::string &path) {
+    | std::views::transform([this, &field_name, &coo](const std::string &in_path) {
         if (m_field)
-          return upscales(std::filesystem::path(path), field_name, coo)
+          return upscales(std::filesystem::path(in_path), field_name, coo)
             .get_paths();
         return upscales{}.get_paths();
       });
   // std::views::join; broken in msvc.
   auto process = [&paths](const auto &temp_paths) {
     auto filter_paths =
-      temp_paths | std::views::filter([](const std::filesystem::path &path) {
-        return std::filesystem::exists(path)
-               && std::filesystem::is_directory(path);
+      temp_paths | std::views::filter([](const std::filesystem::path &in_path) {
+        return std::filesystem::exists(in_path)
+               && std::filesystem::is_directory(in_path);
       });
-    for (auto &path : filter_paths)
+    for (auto &in_path : filter_paths)
     {
-      paths.emplace_back(path.string());
+      paths.emplace_back(in_path.string());
     }
   };
   for (auto temp_paths : transform_paths)
