@@ -7,46 +7,43 @@
 #include "Fields.hpp"
 #include "FrameBuffer.hpp"
 #include "Mim.hpp"
+#include "Map.hpp"
 #include "Texture.hpp"
 
 namespace ff8
+{struct TileFunctionsDeswizzle
 {
-class MapDeswizzle
-{
-public:
-  MapDeswizzle() = default;
-  MapDeswizzle(const Fields &fields);
-  void OnUpdate(float) const;
-  void OnRender() const;
-  void OnImGuiUpdate() const;
-  void OnEvent(const glengine::Event::Item &) const;
-
-private:
-  // set uniforms
-  void                                 SetUniforms() const;
-  // draws tiles
-  void                                 RenderTiles() const;
-  // internal mim file path
-  std::string                          m_mim_path         = {};
-  // internal map file path
-  std::string                          m_map_path         = {};
-  // if coo was chosen instead of default.
-  bool                                 m_mim_choose_coo   = {};
-  // if coo was chosen instead of default.
-  bool                                 m_map_choose_coo   = {};
-  // container for field textures
-  open_viii::graphics::background::Mim m_mim              = {};
-  // container for field tile information
-  open_viii::graphics::background::Map m_map              = {};
-  // loads the textures overtime instead of forcing them to load at start.
-  glengine::DelayedTextures<35U>       m_delayed_textures = {};
-  // takes quads and draws them to the frame buffer or screen.
-  glengine::BatchRenderer              m_batch_renderer   = {};
-  // holds rendered image at 1:1 scale to prevent gaps when scaling.
-  glengine::FrameBuffer                m_frame_buffer     = {};
-  void                                 RenderFrameBuffer() const;
-  void                                 Save() const;
+  template<typename T>
+  struct Bounds
+  {
+    [[nodiscard]] static constexpr auto x() noexcept
+    {
+      using tileT = std::decay_t<T>;
+      using xT    = typename std::invoke_result_t<decltype(&tileT::x), tileT>;
+      return [](const tileT &tile) -> xT { return tile.x(); };
+    }
+    [[nodiscard]] static constexpr auto y() noexcept
+    {
+      using tileT = std::decay_t<T>;
+      using yT    = typename std::invoke_result_t<decltype(&tileT::y), tileT>;
+      return [](const tileT &tile) -> yT { return tile.y(); };
+    }
+    [[nodiscard]] static constexpr auto texture_page() noexcept
+    {
+      using tileT = std::decay_t<T>;
+      using texture_pageT =
+        typename std::invoke_result_t<decltype(&tileT::texture_id), tileT>;
+      return [](const tileT &) -> texture_pageT {
+        return 0;// tile.texture_id();
+      };
+    }
+    static constexpr auto all() noexcept
+    {
+      return std::tuple(x(), y(), texture_page());
+    }
+  };
 };
+using MapDeswizzle = Map<TileFunctionsDeswizzle>;
 static_assert(glengine::Renderable<MapDeswizzle>);
 }// namespace ff8
 #endif// MYPROJECT_MAPDESWIZZLE_HPP
