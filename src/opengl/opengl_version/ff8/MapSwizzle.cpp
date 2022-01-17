@@ -135,9 +135,7 @@ ff8::MapSwizzle::MapSwizzle(const ff8::Fields &fields)
 
 void ff8::MapSwizzle::OnUpdate(float ts) const
 {
-  m_delayed_textures.check();
-
-
+  m_delayed_textures.OnUpdate();
   if (snap_zoom_to_height)
   {
     camera.SetZoom();

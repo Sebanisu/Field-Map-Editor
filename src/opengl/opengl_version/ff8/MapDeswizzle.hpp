@@ -11,11 +11,11 @@
 
 namespace ff8
 {
-class Map
+class MapDeswizzle
 {
 public:
-  Map() = default;
-  Map(const Fields &fields);
+  MapDeswizzle() = default;
+  MapDeswizzle(const Fields &fields);
   void OnUpdate(float) const;
   void OnRender() const;
   void OnImGuiUpdate() const;
@@ -47,6 +47,6 @@ private:
   void                                 RenderFrameBuffer() const;
   void                                 Save() const;
 };
-static_assert(glengine::Renderable<Map>);
+static_assert(glengine::Renderable<MapDeswizzle>);
 }// namespace ff8
-#endif// MYPROJECT_MAP_HPP
+#endif// MYPROJECT_MAPDESWIZZLE_HPP

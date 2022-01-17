@@ -33,7 +33,6 @@ public:
   }
   void        Bind(std::int32_t slot = 0) const;
   static void UnBind();
-  ;
 
 private:
   static constexpr auto Default_UV        = std::array{ glm::vec2{ 0.F, 0.F },

@@ -22,7 +22,7 @@ struct DelayedTextures
     std::make_unique<std::array<Texture, sizeT>>()
   };
   mutable std::vector<std::future<DelayedTexturesData>> futures{};
-  void                                                  check() const
+  void                                                  OnUpdate() const
   {
     for (std::future<DelayedTexturesData> &future : futures)
     {

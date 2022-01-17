@@ -2,7 +2,7 @@
 // Created by pcvii on 11/30/2021.
 //
 
-#include "Map.hpp"
+#include "MapDeswizzle.hpp"
 #include "Application.hpp"
 #include "FrameBufferBackup.hpp"
 #include "OrthographicCameraController.hpp"
@@ -77,7 +77,7 @@ static std::array<int, 2> add_equation_selections{};
 static std::array<int, 4> subtract_parameter_selections{ 4, 1, 6, 7 };
 static std::array<int, 2> subtract_equation_selections{ 2, 0 };
 
-ff8::Map::Map(const ff8::Fields &fields)
+ff8::MapDeswizzle::MapDeswizzle(const ff8::Fields &fields)
   : m_mim(LoadMim(fields.Field(), fields.Coo(), m_mim_path, m_mim_choose_coo))
   , m_map(LoadMap(
       fields.Field(),
@@ -130,11 +130,9 @@ ff8::Map::Map(const ff8::Fields &fields)
   });
 }
 
-void ff8::Map::OnUpdate(float ts) const
+void ff8::MapDeswizzle::OnUpdate(float ts) const
 {
-  m_delayed_textures.check();
-
-
+  m_delayed_textures.OnUpdate();
   if (snap_zoom_to_height)
   {
     camera.SetZoom();
@@ -142,7 +140,7 @@ void ff8::Map::OnUpdate(float ts) const
   camera.OnUpdate(ts);
   m_batch_renderer.OnUpdate(ts);
 }
-void ff8::Map::SetUniforms() const
+void ff8::MapDeswizzle::SetUniforms() const
 {
   m_batch_renderer.Bind();
   if (offscreen_drawing || saving)
@@ -205,7 +203,7 @@ static void set_blend_mode_selections(
     equations.at(static_cast<std::size_t>(equation_selections[0])),
     equations.at(static_cast<std::size_t>(equation_selections[1])));
 }
-void ff8::Map::OnRender() const
+void ff8::MapDeswizzle::OnRender() const
 {
   if (std::ranges::empty(m_map_path) || std::ranges::empty(m_mim_path))
   {
@@ -229,7 +227,7 @@ void ff8::Map::OnRender() const
   RestoreViewPortToFrameBuffer();
   RenderFrameBuffer();
 }
-void ff8::Map::RenderFrameBuffer() const
+void ff8::MapDeswizzle::RenderFrameBuffer() const
 {
   if (saving)
   {
@@ -245,7 +243,7 @@ void ff8::Map::RenderFrameBuffer() const
       m_frame_buffer.Specification().height));
   m_batch_renderer.OnRender();// flush buffer
 }
-void ff8::Map::RenderTiles() const
+void ff8::MapDeswizzle::RenderTiles() const
 {
   using open_viii::graphics::background::BlendModeT;
   BlendModeT last_blend_mode{ BlendModeT::none };
@@ -354,7 +352,7 @@ void ff8::Map::RenderTiles() const
   m_batch_renderer.OnRender();
   glengine::Window::DefaultBlend();
 }
-void ff8::Map::OnEvent(const glengine::Event::Item &e) const
+void ff8::MapDeswizzle::OnEvent(const glengine::Event::Item &e) const
 {
   camera.OnEvent(e);
   m_batch_renderer.OnEvent(e);
@@ -395,7 +393,7 @@ static void Blend_Combos(
     std::ranges::data(equations_string),
     static_cast<int>(std::ranges::ssize(equations_string)));
 }
-void ff8::Map::OnImGuiUpdate() const
+void ff8::MapDeswizzle::OnImGuiUpdate() const
 {
   {
     const auto disable = glengine::scope_guard(&ImGui::EndDisabled);
@@ -426,7 +424,7 @@ void ff8::Map::OnImGuiUpdate() const
   m_batch_renderer.OnImGuiUpdate();
   ImGui::Separator();
 }
-void ff8::Map::Save() const
+void ff8::MapDeswizzle::Save() const
 {
   saving                = true;
   const auto not_saving = glengine::scope_guard([]() { saving = false; });
