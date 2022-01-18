@@ -245,7 +245,7 @@ private:
           const auto bpp     = tile.depth();
           const auto palette = tile.palette_id();
           const auto [texture_index, texture_page_width] =
-            index_and_page_width(bpp, palette);
+            IndexAndPageWidth(bpp, palette);
 
           auto  texture_page_offset = tile.texture_id() * texture_page_width;
 
@@ -288,12 +288,12 @@ private:
               case BlendModeT::half_add:
               case BlendModeT::quarter_add:
               case BlendModeT::add: {
-                set_blend_mode_selections(
+                SetBlendModeSelections(
                   add_parameter_selections, add_equation_selections);
               }
               break;
               case BlendModeT ::subtract: {
-                set_blend_mode_selections(
+                SetBlendModeSelections(
                   subtract_parameter_selections, subtract_equation_selections);
               }
               break;
@@ -307,7 +307,7 @@ private:
           m_batch_renderer.DrawQuad(
             sub_texture,
             glm::vec3(
-              static_cast<float>(x(tile) + texture_page(tile) * 256),
+              static_cast<float>(x(tile) + texture_page(tile) * s_texture_page_width),
               m_offset_y - static_cast<float>(y(tile)),
               0.F),
             glm::vec2(16.F, 16.F));
@@ -318,7 +318,7 @@ private:
     m_batch_renderer.OnRender();
     glengine::Window::DefaultBlend();
   }
-  static void set_blend_mode_selections(
+  static void SetBlendModeSelections(
     const std::array<int, 4U> &parameters_selections,
     const std::array<int, 2U> &equation_selections)
   {
@@ -356,22 +356,22 @@ private:
       equations.at(static_cast<std::size_t>(equation_selections[1])));
   }
 
-  auto index_and_page_width(auto bpp, auto palette) const
+  auto IndexAndPageWidth(open_viii::graphics::BPPT bpp, std::uint8_t palette) const
   {
     struct
     {
       size_t texture_index      = {};
-      int    texture_page_width = { 256 };
+      int    texture_page_width = { s_texture_page_width };
     } r = { .texture_index = palette };
     if (bpp.bpp8())
     {
       r.texture_index      = 16 + palette;
-      r.texture_page_width = 128;
+      r.texture_page_width = s_texture_page_width/2;
     }
     else if (bpp.bpp16())
     {
       r.texture_index      = 16 * 2;
-      r.texture_page_width = 64;
+      r.texture_page_width = s_texture_page_width/4;
     }
     return r;
   }
@@ -411,7 +411,7 @@ private:
           const auto bpp     = tile.depth();
           const auto palette = tile.palette_id();
           const auto [texture_index, texture_page_width] =
-            index_and_page_width(bpp, palette);
+            IndexAndPageWidth(bpp, palette);
 
           auto  texture_page_offset = tile.texture_id() * texture_page_width;
 
@@ -454,12 +454,12 @@ private:
               case BlendModeT::half_add:
               case BlendModeT::quarter_add:
               case BlendModeT::add: {
-                set_blend_mode_selections(
+                SetBlendModeSelections(
                   add_parameter_selections, add_equation_selections);
               }
               break;
               case BlendModeT ::subtract: {
-                set_blend_mode_selections(
+                SetBlendModeSelections(
                   subtract_parameter_selections, subtract_equation_selections);
               }
               break;
@@ -476,7 +476,7 @@ private:
           m_batch_renderer.DrawQuad(
             sub_texture,
             glm::vec3(
-              static_cast<float>(x(tile) + texture_page(tile) * 256),
+              static_cast<float>(x(tile) + texture_page(tile) * s_texture_page_width),
               m_offset_y - static_cast<float>(y(tile)),
               0.F),
             glm::vec2(16.F, 16.F));
@@ -523,7 +523,7 @@ private:
         return;
       }
       const auto min_x  = x(*i_min_x);
-      const auto max_x  = x(*i_max_x) + texture_page(*i_max_texture_page) * 256;
+      const auto max_x  = x(*i_max_x) + texture_page(*i_max_texture_page) * s_texture_page_width;
       const auto min_y  = y(*i_min_y);
       const auto max_y  = y(*i_max_y);
       const auto width  = max_x - min_x + 16;
@@ -550,6 +550,8 @@ private:
   inline static bool                         s_snap_zoom_to_height = { true };
   inline static bool                         s_enable_percent_blend = { true };
   inline static bool                         s_draw_grid            = { false };
+
+  static constexpr int16_t s_texture_page_width = 256;
 
 
   static constexpr glm::vec4 s_default_uniform_color = { 1.F, 1.F, 1.F, 1.F };
