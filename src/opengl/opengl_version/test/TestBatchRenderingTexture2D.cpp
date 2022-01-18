@@ -2,10 +2,8 @@
 // Created by pcvii on 11/29/2021.
 //
 #include "TestBatchRenderingTexture2D.hpp"
-#include "scope_guard.hpp"
-
+#include "ImGuiPushID.hpp"
 #include "Vertex.hpp"
-
 
 static_assert(glengine::Renderable<test::TestBatchRenderingTexture2D>);
 test::TestBatchRenderingTexture2D::TestBatchRenderingTexture2D()
@@ -72,17 +70,14 @@ void test::TestBatchRenderingTexture2D::OnRender() const
 }
 void test::TestBatchRenderingTexture2D::OnImGuiUpdate() const
 {
-  int        id           = 0;
-  const auto pop          = glengine::scope_guard::array<2U>(&ImGui::PopID);
+  const auto pop          = glengine::ImGuiPushID();
   int        window_width = 16;
   // glfwGetFramebufferSize(window, &window_width, &window_height);
 
-  ImGui::PushID(++id);
   if (ImGui::SliderFloat3(
         "View Offset", &view_offset.x, 0.F, static_cast<float>(window_width)))
   {
   }
-  ImGui::PushID(++id);
   if (ImGui::SliderFloat3(
         "Model Offset", &model_offset.x, 0.F, static_cast<float>(window_width)))
   {

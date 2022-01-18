@@ -2,6 +2,7 @@
 // Created by pcvii on 11/29/2021.
 //
 #include "Menu.hpp"
+#include "ImGuiPushID.hpp"
 namespace glengine
 {
 static_assert(Renderable<Menu>);
@@ -14,20 +15,26 @@ void Menu::OnImGuiUpdate() const
   if (m_current)
   {
     m_current.OnImGuiUpdate();
-    if (ImGui::Button("Back"))
     {
-      m_current = MenuItem{};
+      const auto pop = ImGuiPushID();
+      if (ImGui::Button("Back"))
+      {
+        m_current = MenuItem{};
+      }
     }
   }
   else
   {
     for (std::size_t i = {}; const auto &[name, funt] : m_list)
     {
-      if (ImGui::Button(name.c_str()))
       {
-        m_current       = funt();
-        m_current_index = i;
-        break;
+        const auto pop = ImGuiPushID();
+        if (ImGui::Button(name.c_str()))
+        {
+          m_current       = funt();
+          m_current_index = i;
+          break;
+        }
       }
       ++i;
     }

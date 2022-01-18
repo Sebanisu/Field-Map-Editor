@@ -2,18 +2,17 @@
 // Created by pcvii on 11/30/2021.
 //
 #include "Paths.hpp"
+#include "ImGuiPushID.hpp"
 bool ff8::Paths::OnImGuiUpdate() const
 {
   bool changed = { false };
   if (ImGui::BeginCombo("Path", Path().c_str()))
   {
-    int        id  = {};
     const auto end = glengine::scope_guard{ &ImGui::EndCombo };
     for (int i{}; const std::string &path : m_paths)
     {
       const bool is_selected = i == m_current;
-      const auto pop         = glengine::scope_guard{ &ImGui::PopID };
-      ImGui::PushID(++id);
+      const auto pop         = glengine::ImGuiPushID();
       if (ImGui::Selectable(path.c_str(), is_selected))
       {
         m_current = i;

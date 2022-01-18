@@ -2,10 +2,10 @@
 // Created by pcvii on 11/29/2021.
 //
 #include "TestBatchRenderingTexture2DDynamic.hpp"
+#include "ImGuiPushID.hpp"
 #include "Renderer.hpp"
 #include "scope_guard.hpp"
 #include "Vertex.hpp"
-
 
 static_assert(glengine::Renderable<test::TestBatchRenderingTexture2DDynamic>);
 test::TestBatchRenderingTexture2DDynamic::TestBatchRenderingTexture2DDynamic()
@@ -69,42 +69,42 @@ void test::TestBatchRenderingTexture2DDynamic::OnRender() const
 }
 void test::TestBatchRenderingTexture2DDynamic::OnImGuiUpdate() const
 {
-  int        id           = 0;
-  int        window_width = 16;
-  const auto pop          = glengine::scope_guard(&ImGui::PopID);
-  ImGui::PushID(++id);
-  if (ImGui::SliderFloat3(
-        "View Offset", &view_offset.x, 0.F, static_cast<float>(window_width)))
+  int window_width = 16;
   {
+    const auto pop = glengine::ImGuiPushID();
+    if (ImGui::SliderFloat3(
+          "View Offset", &view_offset.x, 0.F, static_cast<float>(window_width)))
+    {
+    }
   }
-
-  const auto pop2 = pop;
-  ImGui::PushID(++id);
-  if (ImGui::SliderFloat2(
-        "Model Offset",
-        &model_offset1.x,
-        0.F,
-        static_cast<float>(window_width)))
   {
+    const auto pop2 = glengine::ImGuiPushID();
+    if (ImGui::SliderFloat2(
+          "Model Offset",
+          &model_offset1.x,
+          0.F,
+          static_cast<float>(window_width)))
+    {
+    }
   }
-
-  const auto pop3 = pop;
-  ImGui::PushID(++id);
-  if (ImGui::SliderFloat2(
-        "Model Offset",
-        &model_offset2.x,
-        0.F,
-        static_cast<float>(window_width)))
   {
+    const auto pop3 = glengine::ImGuiPushID();
+    if (ImGui::SliderFloat2(
+          "Model Offset",
+          &model_offset2.x,
+          0.F,
+          static_cast<float>(window_width)))
+    {
+    }
   }
-
-  const auto pop4 = pop;
-  ImGui::PushID(++id);
-  if (ImGui::SliderFloat2(
-        "Model Offset",
-        &model_offset3.x,
-        0.F,
-        static_cast<float>(window_width)))
   {
+    const auto pop4 = glengine::ImGuiPushID();
+    if (ImGui::SliderFloat2(
+          "Model Offset",
+          &model_offset3.x,
+          0.F,
+          static_cast<float>(window_width)))
+    {
+    }
   }
 }

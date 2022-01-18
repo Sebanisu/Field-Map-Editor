@@ -3,6 +3,7 @@
 //
 
 #include "Fields.hpp"
+#include "ImGuiPushID.hpp"
 namespace ff8
 {
 static int current_index = {};
@@ -61,7 +62,6 @@ static int current_index = {};
 
 bool ff8::Fields::OnImGuiUpdate() const
 {
-  int  id      = {};
   bool changed = { false };
   starttime    = std::chrono::steady_clock::now();
   if (m_archive.OnImGuiUpdate())
@@ -88,8 +88,7 @@ bool ff8::Fields::OnImGuiUpdate() const
       for (int i{}; const std::string &map : m_map_data)
       {
         const bool is_selected = i == current_index;
-        const auto pop         = glengine::scope_guard{ &ImGui::PopID };
-        ImGui::PushID(++id);
+        const auto pop         = glengine::ImGuiPushID();
         if (ImGui::Selectable(map.c_str(), is_selected))
         {
           current_index = i;
@@ -105,8 +104,7 @@ bool ff8::Fields::OnImGuiUpdate() const
     }
   }
   {
-    const auto pop = glengine::scope_guard{ &ImGui::PopID };
-    ImGui::PushID(++id);
+    const auto pop = glengine::ImGuiPushID();
     ImGui::SameLine(0, spacing);
     const auto disabled = glengine::scope_guard{ &ImGui::EndDisabled };
     ImGui::BeginDisabled(std::cmp_less_equal(current_index, 0));
@@ -118,8 +116,7 @@ bool ff8::Fields::OnImGuiUpdate() const
     }
   }
   {
-    const auto pop = glengine::scope_guard{ &ImGui::PopID };
-    ImGui::PushID(++id);
+    const auto pop = glengine::ImGuiPushID();
     ImGui::SameLine(0, spacing);
     const auto disabled = glengine::scope_guard{ &ImGui::EndDisabled };
     ImGui::BeginDisabled(

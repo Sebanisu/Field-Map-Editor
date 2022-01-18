@@ -1,35 +1,22 @@
 //
 // Created by pcvii on 11/29/2021.
 //
-//#include "IndexBuffer.hpp"
 #include "scope_guard.hpp"
-//#include "Shader.hpp"
-
 #include "Vertex.hpp"
-//#include "VertexArray.hpp"
-//#include "VertexBuffer.hpp"
-//#include "VertexBufferLayout.hpp"
-
-
-//
-//
+#include "ImGuiPushID.hpp"
 #include "TestBatchRendering.hpp"
-
 
 static_assert(glengine::Renderable<test::TestBatchRendering>);
 void test::TestBatchRendering::OnImGuiUpdate() const
 {
-  int        id           = 0;
-  const auto pop          = glengine::scope_guard::array<2U>(&ImGui::PopID);
+  const auto pop          = glengine::ImGuiPushID();
   int        window_width = 16;
   // glfwGetFramebufferSize(window, &window_width, &window_height);
 
-  ImGui::PushID(++id);
   if (ImGui::SliderFloat3(
         "View Offset", &view_offset.x, 0.F, static_cast<float>(window_width)))
   {
   }
-  ImGui::PushID(++id);
   if (ImGui::SliderFloat3(
         "Model Offset", &model_offset.x, 0.F, static_cast<float>(window_width)))
   {

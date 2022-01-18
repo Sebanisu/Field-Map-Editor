@@ -4,18 +4,17 @@
 #include "Palettes.hpp"
 #include "imgui.h"
 #include "scope_guard.hpp"
+#include "ImGuiPushID.hpp"
 bool ff8::Palettes::OnImGuiUpdate() const
 {
   bool changed = { false };
   if (ImGui::BeginCombo("Palette", String().data()))
   {
-    int        id  = {};
     const auto end = glengine::scope_guard{ &ImGui::EndCombo };
     for (int i{}; const std::string_view &string : m_strings)
     {
       const bool is_selected = i == m_current;
-      const auto pop         = glengine::scope_guard{ &ImGui::PopID };
-      ImGui::PushID(++id);
+      const auto pop         = glengine::ImGuiPushID();
       if (ImGui::Selectable(string.data(), is_selected))
       {
         m_current = i;

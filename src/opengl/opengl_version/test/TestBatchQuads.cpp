@@ -3,6 +3,7 @@
 //
 
 #include "TestBatchQuads.hpp"
+#include "ImGuiPushID.hpp"
 #include "Renderer.hpp"
 #include "scope_guard.hpp"
 #include "Vertex.hpp"
@@ -92,28 +93,28 @@ void test::TestBatchQuads::OnRender() const
 }
 void test::TestBatchQuads::OnImGuiUpdate() const
 {
-  int        id           = 0;
-
-  int        window_width = 16;
-  const auto pop          = glengine::scope_guard(&ImGui::PopID);
-  ImGui::PushID(++id);
-  if (ImGui::SliderFloat2(
-        "View Offset",
-        &view_offset.x,
-        -static_cast<float>(window_width),
-        static_cast<float>(window_width)))
+  int window_width = 16;
   {
+    const auto pop = glengine::ImGuiPushID();
+    if (ImGui::SliderFloat2(
+          "View Offset",
+          &view_offset.x,
+          -static_cast<float>(window_width),
+          static_cast<float>(window_width)))
+    {
+    }
   }
-  const auto pop2 = pop;
-  ImGui::PushID(++id);
-  if (ImGui::SliderFloat("Zoom", &m_zoom, 1.F, .001F))
   {
+    const auto pop2 = glengine::ImGuiPushID();
+    if (ImGui::SliderFloat("Zoom", &m_zoom, 1.F, .001F))
+    {
+    }
   }
-
-  const auto pop3 = pop;
-  ImGui::PushID(++id);
-  if (ImGui::SliderInt2("Quad (X, Y)", std::data(m_count), 0, 256))
   {
+    const auto pop3 = glengine::ImGuiPushID();
+    if (ImGui::SliderInt2("Quad (X, Y)", std::data(m_count), 0, 256))
+    {
+    }
   }
   ImGui::Text(
     "%s",

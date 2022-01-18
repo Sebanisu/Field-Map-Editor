@@ -16,6 +16,7 @@
 #include "PixelBuffer.hpp"
 #include "Window.hpp"
 #include <type_traits>
+#include "ImGuiPushID.hpp"
 namespace ff8
 {
 template<typename TileFunctions>
@@ -86,14 +87,12 @@ public:
       if (ImGui::CollapsingHeader("Add Blend"))
       {
         ImGui::Checkbox("Percent Blends (50%,25%)", &s_enable_percent_blend);
-        ImGui::PushID(1);
-        const auto pop = glengine::scope_guard(&ImGui::PopID);
+        const auto pop = glengine::ImGuiPushID();
         Blend_Combos(add_parameter_selections, add_equation_selections);
       }
       if (ImGui::CollapsingHeader("Subtract Blend"))
       {
-        ImGui::PushID(2);
-        const auto pop = glengine::scope_guard(&ImGui::PopID);
+        const auto pop = glengine::ImGuiPushID();
         Blend_Combos(
           subtract_parameter_selections, subtract_equation_selections);
       }

@@ -4,6 +4,7 @@
 #include "Window.hpp"
 #include "Event/Event.hpp"
 #include "Renderer.hpp"
+#include "ImGuiPushID.hpp"
 namespace glengine
 {
 static bool glfw_init  = false;
@@ -17,6 +18,7 @@ void        Window::BeginFrame() const
   ImGui_ImplOpenGL3_NewFrame();
   ImGui_ImplGlfw_NewFrame();
   ImGui::NewFrame();
+  glengine::ImGuiPushID.reset();
 }
 void Window::EndFrameRendered() const
 {

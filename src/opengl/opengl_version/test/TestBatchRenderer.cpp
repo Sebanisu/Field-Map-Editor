@@ -2,6 +2,7 @@
 // Created by pcvii on 11/30/2021.
 //
 #include "TestBatchRenderer.hpp"
+#include "ImGuiPushID.hpp"
 
 void test::TestBatchRenderer::GenerateQuads() const
 {
@@ -61,11 +62,8 @@ void test::TestBatchRenderer::OnRender() const
 void test::TestBatchRenderer::OnImGuiUpdate() const
 {
   int window_width = 16;
-  int id           = 0;
-
   {
-    const auto pop = glengine::scope_guard(&ImGui::PopID);
-    ImGui::PushID(++id);
+    const auto pop = glengine::ImGuiPushID();
     if (ImGui::SliderFloat2(
           "View Offset",
           &view_offset.x,
@@ -75,15 +73,13 @@ void test::TestBatchRenderer::OnImGuiUpdate() const
     }
   }
   {
-    const auto pop = glengine::scope_guard{ &ImGui::PopID };
-    ImGui::PushID(++id);
+    const auto pop = glengine::ImGuiPushID();
     if (ImGui::SliderFloat("Zoom", &m_zoom, 4.F, .001F))
     {
     }
   }
   {
-    const auto pop = glengine::scope_guard{ &ImGui::PopID };
-    ImGui::PushID(++id);
+    const auto pop = glengine::ImGuiPushID();
     if (ImGui::SliderInt2("Quad Axis Count (X, Y)", std::data(m_count), 0, 256))
     {
     }
