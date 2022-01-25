@@ -11,12 +11,13 @@
 #include "Fields.hpp"
 #include "FrameBuffer.hpp"
 #include "FrameBufferBackup.hpp"
+#include "ImGuiDisabled.hpp"
+#include "ImGuiPushID.hpp"
 #include "OrthographicCamera.hpp"
 #include "OrthographicCameraController.hpp"
 #include "PixelBuffer.hpp"
 #include "Window.hpp"
 #include <type_traits>
-#include "ImGuiPushID.hpp"
 namespace ff8
 {
 template<typename TileFunctions>
@@ -81,8 +82,7 @@ public:
   void OnImGuiUpdate() const
   {
     {
-      const auto disable = glengine::scope_guard(&ImGui::EndDisabled);
-      ImGui::BeginDisabled(
+      const auto disable = glengine::ImGuiDisabled(
         std::ranges::empty(m_map_path) || std::ranges::empty(m_mim_path));
       ImGui::Checkbox("Snap Zoom to Height", &s_snap_zoom_to_height);
       if (ImGui::CollapsingHeader("Add Blend"))
@@ -302,12 +302,14 @@ private:
             }
           }
 
-          using tileT             = std::ranges::range_value_t<decltype(tiles)>;
-          static const auto [x,y,texture_page] = TileFunctions::template Bounds<tileT>::all();
+          using tileT = std::ranges::range_value_t<decltype(tiles)>;
+          static const auto [x, y, texture_page] =
+            TileFunctions::template Bounds<tileT>::all();
           m_batch_renderer.DrawQuad(
             sub_texture,
             glm::vec3(
-              static_cast<float>(x(tile) + texture_page(tile) * s_texture_page_width),
+              static_cast<float>(
+                x(tile) + texture_page(tile) * s_texture_page_width),
               m_offset_y - static_cast<float>(y(tile)),
               0.F),
             glm::vec2(16.F, 16.F));
@@ -356,7 +358,8 @@ private:
       equations.at(static_cast<std::size_t>(equation_selections[1])));
   }
 
-  auto IndexAndPageWidth(open_viii::graphics::BPPT bpp, std::uint8_t palette) const
+  auto
+    IndexAndPageWidth(open_viii::graphics::BPPT bpp, std::uint8_t palette) const
   {
     struct
     {
@@ -366,12 +369,12 @@ private:
     if (bpp.bpp8())
     {
       r.texture_index      = 16 + palette;
-      r.texture_page_width = s_texture_page_width/2;
+      r.texture_page_width = s_texture_page_width / 2;
     }
     else if (bpp.bpp16())
     {
       r.texture_index      = 16 * 2;
-      r.texture_page_width = s_texture_page_width/4;
+      r.texture_page_width = s_texture_page_width / 4;
     }
     return r;
   }
@@ -476,7 +479,8 @@ private:
           m_batch_renderer.DrawQuad(
             sub_texture,
             glm::vec3(
-              static_cast<float>(x(tile) + texture_page(tile) * s_texture_page_width),
+              static_cast<float>(
+                x(tile) + texture_page(tile) * s_texture_page_width),
               m_offset_y - static_cast<float>(y(tile)),
               0.F),
             glm::vec2(16.F, 16.F));
@@ -522,8 +526,9 @@ private:
       {
         return;
       }
-      const auto min_x  = x(*i_min_x);
-      const auto max_x  = x(*i_max_x) + texture_page(*i_max_texture_page) * s_texture_page_width;
+      const auto min_x = x(*i_min_x);
+      const auto max_x =
+        x(*i_max_x) + texture_page(*i_max_texture_page) * s_texture_page_width;
       const auto min_y  = y(*i_min_y);
       const auto max_y  = y(*i_max_y);
       const auto width  = max_x - min_x + 16;
@@ -551,7 +556,7 @@ private:
   inline static bool                         s_enable_percent_blend = { true };
   inline static bool                         s_draw_grid            = { false };
 
-  static constexpr int16_t s_texture_page_width = 256;
+  static constexpr int16_t                   s_texture_page_width   = 256;
 
 
   static constexpr glm::vec4 s_default_uniform_color = { 1.F, 1.F, 1.F, 1.F };

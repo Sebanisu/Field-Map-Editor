@@ -6,6 +6,7 @@
 #include "Application.hpp"
 #include "FrameBuffer.hpp"
 #include "FrameBufferBackup.hpp"
+#include "ImGuiDisabled.hpp"
 #include "OrthographicCameraController.hpp"
 #include "PixelBuffer.hpp"
 namespace ff8
@@ -58,8 +59,7 @@ void ff8::Mim::OnImGuiUpdate() const
 {
   const auto &local_texture = CurrentTexture();
   {
-    const auto disable = glengine::scope_guard(&ImGui::EndDisabled);
-    ImGui::BeginDisabled(
+    const auto disable = glengine::ImGuiDisabled(
       local_texture.height() == 0 || local_texture.width() == 0);
     ImGui::Checkbox("Draw Palette", &draw_palette);
     ImGui::Checkbox("Draw Grid", &draw_grid);

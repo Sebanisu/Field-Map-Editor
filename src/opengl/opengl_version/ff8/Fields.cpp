@@ -3,6 +3,7 @@
 //
 
 #include "Fields.hpp"
+#include "ImGuiDisabled.hpp"
 #include "ImGuiPushID.hpp"
 namespace ff8
 {
@@ -79,8 +80,8 @@ bool ff8::Fields::OnImGuiUpdate() const
     const float button_sz = ImGui::GetFrameHeight();
     ImGui::PushItemWidth(w - spacing * 2.0f - button_sz * 2.0f);
     const auto popwidth = glengine::scope_guard{ &ImGui::PopItemWidth };
-    const auto disabled = glengine::scope_guard{ &ImGui::EndDisabled };
-    ImGui::BeginDisabled(std::ranges::empty(m_map_data));
+    const auto disabled =
+      glengine::ImGuiDisabled(std::ranges::empty(m_map_data));
     if (ImGui::BeginCombo(
           "##Field", Map_Name().c_str(), ImGuiComboFlags_HeightLargest))
     {
@@ -106,8 +107,8 @@ bool ff8::Fields::OnImGuiUpdate() const
   {
     const auto pop = glengine::ImGuiPushID();
     ImGui::SameLine(0, spacing);
-    const auto disabled = glengine::scope_guard{ &ImGui::EndDisabled };
-    ImGui::BeginDisabled(std::cmp_less_equal(current_index, 0));
+    const auto disabled =
+      glengine::ImGuiDisabled(std::cmp_less_equal(current_index, 0));
     if (ImGui::ArrowButton("##l", ImGuiDir_Left))
     {
       --current_index;
@@ -118,8 +119,7 @@ bool ff8::Fields::OnImGuiUpdate() const
   {
     const auto pop = glengine::ImGuiPushID();
     ImGui::SameLine(0, spacing);
-    const auto disabled = glengine::scope_guard{ &ImGui::EndDisabled };
-    ImGui::BeginDisabled(
+    const auto disabled = glengine::ImGuiDisabled(
       std::cmp_greater_equal(current_index + 1, std::ranges::size(m_map_data)));
     if (ImGui::ArrowButton("##r", ImGuiDir_Right))
     {
