@@ -3,6 +3,7 @@
 //
 #include "Menu.hpp"
 #include "ImGuiPushID.hpp"
+#include "ImGuiIndent.hpp"
 namespace glengine
 {
 static_assert(Renderable<Menu>);
@@ -14,7 +15,10 @@ void Menu::OnImGuiUpdate() const
 {
   if (m_current)
   {
-    m_current.OnImGuiUpdate();
+    {
+      const auto un_indent = ImGuiIndent();
+      m_current.OnImGuiUpdate();
+    }
     {
       const auto pop = ImGuiPushID();
       if (ImGui::Button("Back"))

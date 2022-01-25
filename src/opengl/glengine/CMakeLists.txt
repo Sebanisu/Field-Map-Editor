@@ -34,6 +34,7 @@ add_library(glengine STATIC
         FrameBufferBackup.cpp
         FrameBufferRenderer.cpp
         GLCheck.cpp
+        ImGuiIndent.cpp
         ImGuiPushID.cpp
         IndexBuffer.cpp
         IndexBufferDynamic.cpp
