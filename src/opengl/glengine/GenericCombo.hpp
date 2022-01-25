@@ -38,7 +38,15 @@ requires(
       }
       auto b = std::ranges::cbegin(data);
       std::ranges::advance(b, current_index);
-      return b->c_str();
+      const char * current_c_str = b->c_str();
+      const std::string & current_str = *b;
+      const auto pos = current_str.find_last_of("\\/");
+      if(pos != std::string::npos)
+      {
+        //show only end of long paths.
+        return current_c_str + pos+1;
+      }
+      return current_c_str;
     }();
     if (ImGui::BeginCombo(
           "##Empty", current_string, ImGuiComboFlags_HeightLargest))
