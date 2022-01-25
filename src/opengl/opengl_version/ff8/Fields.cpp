@@ -5,10 +5,13 @@
 #include "Fields.hpp"
 #include "ImGuiDisabled.hpp"
 #include "ImGuiPushID.hpp"
+#include "ImGuiPushItemWidth.hpp"
+
 namespace ff8
 {
 static int current_index = {};
 }
+
 [[nodiscard]] open_viii::graphics::background::Mim ff8::LoadMim(
   open_viii::archive::FIFLFS<false> field,
   std::string_view                  coo,
@@ -33,6 +36,7 @@ static int current_index = {};
   }
   return {};
 }
+
 [[nodiscard]] open_viii::graphics::background::Map ff8::LoadMap(
   open_viii::archive::FIFLFS<false>           field,
   std::string_view                            coo,
@@ -60,7 +64,6 @@ static int current_index = {};
   return {};
 }
 
-
 bool ff8::Fields::OnImGuiUpdate() const
 {
   bool changed = { false };
@@ -78,8 +81,8 @@ bool ff8::Fields::OnImGuiUpdate() const
   {
     const float w         = ImGui::CalcItemWidth();
     const float button_sz = ImGui::GetFrameHeight();
-    ImGui::PushItemWidth(w - spacing * 2.0f - button_sz * 2.0f);
-    const auto popwidth = glengine::scope_guard{ &ImGui::PopItemWidth };
+    const auto  popwidth =
+      glengine::ImGuiPushItemWidth(w - spacing * 2.0f - button_sz * 2.0f);
     const auto disabled =
       glengine::ImGuiDisabled(std::ranges::empty(m_map_data));
     if (ImGui::BeginCombo(
@@ -132,6 +135,7 @@ bool ff8::Fields::OnImGuiUpdate() const
   ImGui::Text("%s", "Field");
   return changed;
 }
+
 open_viii::archive::FIFLFS<false> ff8::Fields::load_field() const
 {
   open_viii::archive::FIFLFS<false> archive{};
@@ -158,10 +162,12 @@ open_viii::archive::FIFLFS<false> ff8::Fields::load_field() const
   }
   return archive;
 }
+
 std::string_view ff8::Fields::Coo() const
 {
   return m_archive.Coo();
 }
+
 const std::string &ff8::Fields::Map_Name() const
 {
   if (std::cmp_less(current_index, std::ranges::size(m_map_data)))
@@ -171,12 +177,14 @@ const std::string &ff8::Fields::Map_Name() const
   const static auto tmp = std::string("");
   return tmp;
 }
+
 ff8::Fields::Fields()
   : m_map_data(m_archive.Fields().map_data())
   , m_field(load_field())
 {
   fmt::print("time to load fields = {:%S} seconds\n", endtime - starttime);
 }
+
 const open_viii::archive::FIFLFS<false> &ff8::Fields::Field() const
 {
   return m_field;

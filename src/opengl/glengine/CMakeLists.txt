@@ -37,6 +37,7 @@ add_library(glengine STATIC
         ImGuiDisabled.cpp
         ImGuiIndent.cpp
         ImGuiPushID.cpp
+        ImGuiPushItemWidth.cpp
         IndexBuffer.cpp
         IndexBufferDynamic.cpp
         Input.cpp
