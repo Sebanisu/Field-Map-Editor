@@ -23,18 +23,20 @@ class Fields
 {
 public:
   Fields();
-  void OnUpdate(float) const {}
-  void OnRender() const {}
-  bool OnImGuiUpdate() const;
-  void OnEvent(const glengine::Event::Item &) const {}
+  void               OnUpdate(float) const {}
+  void               OnRender() const {}
+  [[nodiscard]] bool OnImGuiUpdate() const;
+  void               OnEvent(const glengine::Event::Item &) const {}
   [[nodiscard]] const open_viii::archive::FIFLFS<false> &Field() const;
   [[nodiscard]] const std::string                       &Map_Name() const;
   [[nodiscard]] std::string_view                         Coo() const;
 
 private:
-  open_viii::archive::FIFLFS<false>             load_field() const;
+  [[nodiscard]] open_viii::archive::FIFLFS<false> load_field() const;
+  [[nodiscard]] bool                              OnArchiveChange() const;
+  [[nodiscard]] bool                              OnFieldChange() const;
 
-  mutable std::chrono::steady_clock::time_point starttime =
+  mutable std::chrono::steady_clock::time_point   starttime =
     std::chrono::steady_clock::now();
   Archive                                       m_archive  = {};
   mutable std::vector<std::string>              m_map_data = {};

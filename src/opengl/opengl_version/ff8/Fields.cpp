@@ -3,16 +3,14 @@
 //
 
 #include "Fields.hpp"
-#include "ImGuiDisabled.hpp"
-#include "ImGuiPushID.hpp"
-#include "ImGuiPushItemWidth.hpp"
+#include "GenericCombo.hpp"
 
 namespace ff8
 {
 static int current_index = {};
 }
 
-[[nodiscard]] open_viii::graphics::background::Mim ff8::LoadMim(
+open_viii::graphics::background::Mim ff8::LoadMim(
   open_viii::archive::FIFLFS<false> field,
   std::string_view                  coo,
   std::string                      &out_path,
@@ -37,7 +35,7 @@ static int current_index = {};
   return {};
 }
 
-[[nodiscard]] open_viii::graphics::background::Map ff8::LoadMap(
+open_viii::graphics::background::Map ff8::LoadMap(
   open_viii::archive::FIFLFS<false>           field,
   std::string_view                            coo,
   const open_viii::graphics::background::Mim &mim,
@@ -64,76 +62,33 @@ static int current_index = {};
   return {};
 }
 
-bool ff8::Fields::OnImGuiUpdate() const
+bool ff8::Fields::OnArchiveChange() const
 {
-  bool changed = { false };
-  starttime    = std::chrono::steady_clock::now();
+  starttime = std::chrono::steady_clock::now();
   if (m_archive.OnImGuiUpdate())
   {
     m_map_data = m_archive.Fields().map_data();
     m_field    = load_field();
-    changed    = true;
     endtime    = std::chrono::steady_clock::now();
     fmt::print("time to load fields = {:%S} seconds\n", endtime - starttime);
+    return true;
   }
-  const ImGuiStyle &style   = ImGui::GetStyle();
-  const float       spacing = style.ItemInnerSpacing.x;
+  return false;
+}
+
+bool ff8::Fields::OnFieldChange() const
+{
+  if (glengine::GenericCombo("Field", current_index, m_map_data))
   {
-    const float w         = ImGui::CalcItemWidth();
-    const float button_sz = ImGui::GetFrameHeight();
-    const auto  popwidth =
-      glengine::ImGuiPushItemWidth(w - spacing * 2.0f - button_sz * 2.0f);
-    const auto disabled =
-      glengine::ImGuiDisabled(std::ranges::empty(m_map_data));
-    if (ImGui::BeginCombo(
-          "##Field", Map_Name().c_str(), ImGuiComboFlags_HeightLargest))
-    {
-      const auto end = glengine::scope_guard{ &ImGui::EndCombo };
-      for (int i{}; const std::string &map : m_map_data)
-      {
-        const bool is_selected = i == current_index;
-        const auto pop         = glengine::ImGuiPushID();
-        if (ImGui::Selectable(map.c_str(), is_selected))
-        {
-          current_index = i;
-          changed       = true;
-          m_field       = load_field();
-        }
-        if (is_selected)
-        {
-          ImGui::SetItemDefaultFocus();
-        }
-        ++i;
-      }
-    }
+    m_field = load_field();
+    return true;
   }
-  {
-    const auto pop = glengine::ImGuiPushID();
-    ImGui::SameLine(0, spacing);
-    const auto disabled =
-      glengine::ImGuiDisabled(std::cmp_less_equal(current_index, 0));
-    if (ImGui::ArrowButton("##l", ImGuiDir_Left))
-    {
-      --current_index;
-      changed = true;
-      m_field = load_field();
-    }
-  }
-  {
-    const auto pop = glengine::ImGuiPushID();
-    ImGui::SameLine(0, spacing);
-    const auto disabled = glengine::ImGuiDisabled(
-      std::cmp_greater_equal(current_index + 1, std::ranges::size(m_map_data)));
-    if (ImGui::ArrowButton("##r", ImGuiDir_Right))
-    {
-      ++current_index;
-      changed = true;
-      m_field = load_field();
-    }
-  }
-  ImGui::SameLine(0, spacing);
-  ImGui::Text("%s", "Field");
-  return changed;
+  return false;
+}
+
+bool ff8::Fields::OnImGuiUpdate() const
+{
+  return OnArchiveChange() | OnFieldChange();
 }
 
 open_viii::archive::FIFLFS<false> ff8::Fields::load_field() const
