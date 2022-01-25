@@ -7,17 +7,27 @@
 #include "scope_guard.hpp"
 namespace glengine
 {
+/**
+ * Wrapper for ImGui::PushID(int) that increments an int and returns a scope
+ * guarded ImGui::PopID() that will automatically Pop when the scope ends.
+ */
 class [[nodiscard]] ImGuiPushID_impl
 {
 public:
-  ImGuiPushID_impl() = default;
-  ImGuiPushID_impl(const ImGuiPushID_impl &) = delete;
-  ImGuiPushID_impl(ImGuiPushID_impl &&) noexcept = delete;
-  ImGuiPushID_impl & operator = (const ImGuiPushID_impl &) = delete;
-  ImGuiPushID_impl & operator = (ImGuiPushID_impl &&) noexcept = delete;
+  /**
+   * ImGui::PushID(int) and increment int.
+   * @return ImGui::PopID() wrapped in a scope guard.
+   */
   [[nodiscard]] scope_guard operator()() const noexcept;
-  void                                reset() const noexcept;
+  /**
+   * reset() must be called once per frame usually at the beginning or the end.
+   * It resets an int to 0.
+   */
+  void                      reset() const noexcept;
+
+private:
+  inline static constinit int s_id = {};
 };
 static constexpr inline ImGuiPushID_impl ImGuiPushID = {};
-}
+}// namespace glengine
 #endif// FIELD_MAP_EDITOR_IMGUIPUSHID_HPP
