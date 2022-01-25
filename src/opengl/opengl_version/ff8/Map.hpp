@@ -52,6 +52,7 @@ public:
       s_camera.SetZoom();
     }
     s_camera.OnUpdate(ts);
+    m_batch_renderer.OnUpdate(ts);
   }
   void OnRender() const
   {
