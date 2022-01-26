@@ -11,6 +11,7 @@
 #include "Fields.hpp"
 #include "FrameBuffer.hpp"
 #include "FrameBufferBackup.hpp"
+#include "GenericCombo.hpp"
 #include "ImGuiDisabled.hpp"
 #include "ImGuiPushID.hpp"
 #include "OrthographicCamera.hpp"
@@ -84,6 +85,7 @@ public:
     {
       const auto disable = glengine::ImGuiDisabled(
         std::ranges::empty(m_map_path) || std::ranges::empty(m_mim_path));
+      ImGui::Checkbox("Draw Grid", &s_draw_grid);
       ImGui::Checkbox("Snap Zoom to Height", &s_snap_zoom_to_height);
       if (ImGui::CollapsingHeader("Add Blend"))
       {
@@ -115,63 +117,46 @@ private:
     std::array<int, 4U> &parameters_selections,
     std::array<int, 2U> &equation_selections)
   {
+    using namespace std::string_view_literals;
     static constexpr auto parameters_string =
-      std::array{ "GL_ZERO",// 0
-                  "GL_ONE",// 1
-                  "GL_SRC_COLOR",// 2
-                  "GL_ONE_MINUS_SRC_COLOR",// 3
-                  "GL_DST_COLOR",// 4
-                  "GL_ONE_MINUS_DST_COLOR",// 5
-                  "GL_SRC_ALPHA",// 6
-                  "GL_ONE_MINUS_SRC_ALPHA",// 7
-                  "GL_DST_ALPHA",// 8
-                  "GL_ONE_MINUS_DST_ALPHA",// 9
-                  "GL_CONSTANT_COLOR",// 10
-                  "GL_ONE_MINUS_CONSTANT_COLOR",// 11
-                  "GL_CONSTANT_ALPHA",// 12
-                  "GL_ONE_MINUS_CONSTANT_ALPHA",// 13
-                  "GL_SRC_ALPHA_SATURATE",// 14
-                  "GL_SRC1_COLOR",// 15
-                  "GL_ONE_MINUS_SRC_COLOR",// 16
-                  "GL_SRC1_ALPHA",// 17
-                  "GL_ONE_MINUS_SRC1_ALPHA" };// 18
-    ImGui::Combo(
-      "srcRGB",
-      &parameters_selections[0],
-      std::ranges::data(parameters_string),
-      static_cast<int>(std::ranges::ssize(parameters_string)));
-    ImGui::Combo(
-      "dstRGB",
-      &parameters_selections[1],
-      std::ranges::data(parameters_string),
-      static_cast<int>(std::ranges::ssize(parameters_string)));
-    ImGui::Combo(
-      "srcAlpha",
-      &parameters_selections[2],
-      std::ranges::data(parameters_string),
-      static_cast<int>(std::ranges::ssize(parameters_string)));
-    ImGui::Combo(
-      "dstAlpha",
-      &parameters_selections[3],
-      std::ranges::data(parameters_string),
-      static_cast<int>(std::ranges::ssize(parameters_string)));
+      std::array{ "GL_ZERO"sv,// 0
+                  "GL_ONE"sv,// 1
+                  "GL_SRC_COLOR"sv,// 2
+                  "GL_ONE_MINUS_SRC_COLOR"sv,// 3
+                  "GL_DST_COLOR"sv,// 4
+                  "GL_ONE_MINUS_DST_COLOR"sv,// 5
+                  "GL_SRC_ALPHA"sv,// 6
+                  "GL_ONE_MINUS_SRC_ALPHA"sv,// 7
+                  "GL_DST_ALPHA"sv,// 8
+                  "GL_ONE_MINUS_DST_ALPHA"sv,// 9
+                  "GL_CONSTANT_COLOR"sv,// 10
+                  "GL_ONE_MINUS_CONSTANT_COLOR"sv,// 11
+                  "GL_CONSTANT_ALPHA"sv,// 12
+                  "GL_ONE_MINUS_CONSTANT_ALPHA"sv,// 13
+                  "GL_SRC_ALPHA_SATURATE"sv,// 14
+                  "GL_SRC1_COLOR"sv,// 15
+                  "GL_ONE_MINUS_SRC_COLOR"sv,// 16
+                  "GL_SRC1_ALPHA"sv,// 17
+                  "GL_ONE_MINUS_SRC1_ALPHA"sv };// 18
+    (void)glengine::GenericCombo(
+      "srcRGB", parameters_selections[0], parameters_string);
+    (void)glengine::GenericCombo(
+      "dstRGB", parameters_selections[1], parameters_string);
+    (void)glengine::GenericCombo(
+      "srcAlpha", parameters_selections[2], parameters_string);
+    (void)glengine::GenericCombo(
+      "dstAlpha", parameters_selections[3], parameters_string);
     ImGui::Separator();
     static constexpr auto equations_string =
-      std::array{ "GL_FUNC_ADD",// 0
-                  "GL_FUNC_SUBTRACT",// 1
-                  "GL_FUNC_REVERSE_SUBTRACT",// 2
-                  "GL_MIN",// 3
-                  "GL_MAX" };// 4
-    ImGui::Combo(
-      "modeRGB",
-      &equation_selections[0],
-      std::ranges::data(equations_string),
-      static_cast<int>(std::ranges::ssize(equations_string)));
-    ImGui::Combo(
-      "modeAlpha",
-      &equation_selections[1],
-      std::ranges::data(equations_string),
-      static_cast<int>(std::ranges::ssize(equations_string)));
+      std::array{ "GL_FUNC_ADD"sv,// 0
+                  "GL_FUNC_SUBTRACT"sv,// 1
+                  "GL_FUNC_REVERSE_SUBTRACT"sv,// 2
+                  "GL_MIN"sv,// 3
+                  "GL_MAX"sv };// 4
+    (void)glengine::GenericCombo(
+      "modeRGB", equation_selections[0], equations_string);
+    (void)glengine::GenericCombo(
+      "modeAlpha", equation_selections[1], equations_string);
   }
   // set uniforms
   void SetUniforms() const

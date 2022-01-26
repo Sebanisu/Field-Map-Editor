@@ -17,7 +17,7 @@ requires(
   std::is_same_v<
     std::decay_t<std::ranges::range_value_t<dataT>>, std::string_view>)
   // clang-format on
-  inline bool GenericCombo(
+  [[nodiscard]] inline bool GenericCombo(
     const char  *label,
     int         &current_index,
     const dataT &data)
@@ -31,16 +31,16 @@ requires(
     const float button_size = ImGui::GetFrameHeight();
     const auto  pop_width =
       glengine::ImGuiPushItemWidth(width - spacing * 2.0f - button_size * 2.0f);
-    const auto  disabled = glengine::ImGuiDisabled(std::ranges::empty(data));
+    const auto disabled = glengine::ImGuiDisabled(std::ranges::empty(data));
 
-    static constexpr auto c_str = [](auto &&v)
-    {
+    static constexpr auto c_str = [](auto &&v) {
       using vT = std::decay_t<decltype(v)>;
-      if constexpr (std::is_same_v<vT,std::string_view>)
+      if constexpr (std::is_same_v<vT, std::string_view>)
       {
         return std::ranges::data(v);
       }
-      else return v.c_str();
+      else
+        return v.c_str();
     };
     const char *current_string = [&]() {
       if (std::ranges::empty(data))
@@ -49,9 +49,9 @@ requires(
       }
       auto b = std::ranges::cbegin(data);
       std::ranges::advance(b, current_index);
-      const char        *current_c_str = c_str(*b);
+      const char *current_c_str = c_str(*b);
       const auto &current_str   = *b;
-      const auto         pos           = current_str.find_last_of("\\/");
+      const auto  pos           = current_str.find_last_of("\\/");
       if (pos != std::string::npos)
       {
         // show only end of long paths.
