@@ -13,6 +13,7 @@
 #include "FrameBufferBackup.hpp"
 #include "GenericCombo.hpp"
 #include "ImGuiDisabled.hpp"
+#include "ImGuiIndent.hpp"
 #include "ImGuiPushID.hpp"
 #include "OrthographicCamera.hpp"
 #include "OrthographicCameraController.hpp"
@@ -89,13 +90,15 @@ public:
       ImGui::Checkbox("Snap Zoom to Height", &s_snap_zoom_to_height);
       if (ImGui::CollapsingHeader("Add Blend"))
       {
+        const auto un_indent = glengine::ImGuiIndent();
         ImGui::Checkbox("Percent Blends (50%,25%)", &s_enable_percent_blend);
         const auto pop = glengine::ImGuiPushID();
         Blend_Combos(add_parameter_selections, add_equation_selections);
       }
       if (ImGui::CollapsingHeader("Subtract Blend"))
       {
-        const auto pop = glengine::ImGuiPushID();
+        const auto un_indent = glengine::ImGuiIndent();
+        const auto pop       = glengine::ImGuiPushID();
         Blend_Combos(
           subtract_parameter_selections, subtract_equation_selections);
       }
@@ -109,6 +112,78 @@ public:
     ImGui::Separator();
     m_batch_renderer.OnImGuiUpdate();
     ImGui::Separator();
+    if (ImGui::CollapsingHeader("Filters"))
+    {
+      const auto            un_indent0 = glengine::ImGuiIndent();
+      static constexpr auto common =
+        [](
+          const char                            *label,
+          std::ranges::random_access_range auto &bool_range,
+          int (*value_func)(int),
+          int line_count) {
+          if (ImGui::CollapsingHeader(label))
+          {
+            const auto un_indent1 = glengine::ImGuiIndent();
+
+            for (int i = 0; bool &value : bool_range)
+            {
+              const auto pop    = glengine::ImGuiPushID();
+              const auto string = fmt::format("{:>4}", value_func(i));
+              auto       size   = ImGui::CalcTextSize(string.c_str());
+              if (line_count > 0 && i % line_count != 0)
+                ImGui::SameLine();
+              ImGui::Dummy(ImVec2(2.F, 2.F));
+              if (line_count > 0 && i % line_count != 0)
+                ImGui::SameLine();
+              if (ImGui::Selectable(string.c_str(), value, 0, size))
+              {
+                value = !value;
+              }
+              ++i;
+            }
+            ImGui::Dummy(ImVec2(2.F, 2.F));
+            {
+              const auto pop = glengine::ImGuiPushID();
+              if (ImGui::Button("All"))
+              {
+                std::ranges::fill(bool_range, true);
+              }
+            }
+            ImGui::SameLine();
+            ImGui::Dummy(ImVec2(2.F, 2.F));
+            ImGui::SameLine();
+            {
+              const auto pop = glengine::ImGuiPushID();
+              if (ImGui::Button("None"))
+              {
+                std::ranges::fill(bool_range, false);
+              }
+            }
+            ImGui::Dummy(ImVec2(2.F, 2.F));
+          }
+        };
+      static constinit std::array<bool, 3U> bpp_values = []() {
+        std::array<bool, 3U> r = {};
+        std::ranges::fill(r, true);
+        return r;
+      }();
+
+      common(
+        "BPP",
+        bpp_values,
+        [](int i) {
+          static constexpr std::array types = { 4, 8, 16 };
+          return types[i];
+        },
+        3);
+      static constinit std::array<bool, 16U> palette_values = []() {
+        std::array<bool, 16U> r = {};
+        std::ranges::fill(r, true);
+        return r;
+      }();
+      common(
+        "Palettes", palette_values, [](int i) { return i; }, 8);
+    }
   }
   void OnEvent(const glengine::Event::Item &) const {}
 
