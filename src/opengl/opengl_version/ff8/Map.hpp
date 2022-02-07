@@ -20,7 +20,7 @@
 #include "OrthographicCamera.hpp"
 #include "OrthographicCameraController.hpp"
 #include "PixelBuffer.hpp"
-#include "SortUnique.hpp"
+#include "SortedUniqueCopy.hpp"
 #include "Window.hpp"
 #include <type_traits>
 namespace ff8

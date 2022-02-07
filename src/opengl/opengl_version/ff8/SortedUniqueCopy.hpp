@@ -2,8 +2,8 @@
 // Created by pcvii on 2/7/2022.
 //
 
-#ifndef FIELD_MAP_EDITOR_SORTUNIQUE_HPP
-#define FIELD_MAP_EDITOR_SORTUNIQUE_HPP
+#ifndef FIELD_MAP_EDITOR_SORTEDUNIQUECOPY_HPP
+#define FIELD_MAP_EDITOR_SORTEDUNIQUECOPY_HPP
 template<
   std::ranges::range rangeT,
   typename projectionT = std::identity,
@@ -21,4 +21,4 @@ static inline constexpr auto SortUnique(rangeT &&range, projectionT proj = {}, c
   out.erase(first, last);
   return out;
 }
-#endif// FIELD_MAP_EDITOR_SORTUNIQUE_HPP
+#endif// FIELD_MAP_EDITOR_SORTEDUNIQUECOPY_HPP
