@@ -20,7 +20,8 @@
 #include "OrthographicCamera.hpp"
 #include "OrthographicCameraController.hpp"
 #include "PixelBuffer.hpp"
-#include "SortedUniqueCopy.hpp"
+#include "TransformedSortedUniqueCopy.hpp"
+#include "UniqueValues.hpp"
 #include "Window.hpp"
 #include <type_traits>
 namespace ff8
@@ -530,7 +531,7 @@ private:
       auto f_tiles = tiles
                      | std::views::filter(
                        open_viii::graphics::background::Map::filter_invalid());
-      return SortUnique(
+      return TransformedSortedUniqueCopy(
         f_tiles, [](const auto &tile) { return tile.palette_id(); });
     });
     for (const auto &value : vector)
