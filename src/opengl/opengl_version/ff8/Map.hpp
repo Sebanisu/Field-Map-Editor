@@ -6,6 +6,8 @@
 #define FIELD_MAP_EDITOR_MAP_HPP
 #include "Application.hpp"
 #include "BatchRenderer.hpp"
+#include "BlendModeEquations.hpp"
+#include "BlendModeParameters.hpp"
 #include "DelayedTextures.hpp"
 #include "FF8LoadTextures.hpp"
 #include "Fields.hpp"
@@ -189,49 +191,19 @@ public:
 
 private:
   static void Blend_Combos(
-    std::array<int, 4U> &parameters_selections,
-    std::array<int, 2U> &equation_selections)
+    BlendModeParameters &parameters_selections,
+    BlendModeEquations  &equation_selections)
   {
     using namespace std::string_view_literals;
-    static constexpr auto parameters_string =
-      std::array{ "GL_ZERO"sv,// 0
-                  "GL_ONE"sv,// 1
-                  "GL_SRC_COLOR"sv,// 2
-                  "GL_ONE_MINUS_SRC_COLOR"sv,// 3
-                  "GL_DST_COLOR"sv,// 4
-                  "GL_ONE_MINUS_DST_COLOR"sv,// 5
-                  "GL_SRC_ALPHA"sv,// 6
-                  "GL_ONE_MINUS_SRC_ALPHA"sv,// 7
-                  "GL_DST_ALPHA"sv,// 8
-                  "GL_ONE_MINUS_DST_ALPHA"sv,// 9
-                  "GL_CONSTANT_COLOR"sv,// 10
-                  "GL_ONE_MINUS_CONSTANT_COLOR"sv,// 11
-                  "GL_CONSTANT_ALPHA"sv,// 12
-                  "GL_ONE_MINUS_CONSTANT_ALPHA"sv,// 13
-                  "GL_SRC_ALPHA_SATURATE"sv,// 14
-                  "GL_SRC1_COLOR"sv,// 15
-                  "GL_ONE_MINUS_SRC_COLOR"sv,// 16
-                  "GL_SRC1_ALPHA"sv,// 17
-                  "GL_ONE_MINUS_SRC1_ALPHA"sv };// 18
-    (void)glengine::GenericCombo(
-      "srcRGB", parameters_selections[0], parameters_string);
-    (void)glengine::GenericCombo(
-      "dstRGB", parameters_selections[1], parameters_string);
-    (void)glengine::GenericCombo(
-      "srcAlpha", parameters_selections[2], parameters_string);
-    (void)glengine::GenericCombo(
-      "dstAlpha", parameters_selections[3], parameters_string);
+    if (parameters_selections.OnImGuiUpdate())
+    {
+      // something changed
+    }
     ImGui::Separator();
-    static constexpr auto equations_string =
-      std::array{ "GL_FUNC_ADD"sv,// 0
-                  "GL_FUNC_SUBTRACT"sv,// 1
-                  "GL_FUNC_REVERSE_SUBTRACT"sv,// 2
-                  "GL_MIN"sv,// 3
-                  "GL_MAX"sv };// 4
-    (void)glengine::GenericCombo(
-      "modeRGB", equation_selections[0], equations_string);
-    (void)glengine::GenericCombo(
-      "modeAlpha", equation_selections[1], equations_string);
+    if (equation_selections.OnImGuiUpdate())
+    {
+      // something changed
+    }
   }
   // set uniforms
   void SetUniforms() const
@@ -381,41 +353,19 @@ private:
     glengine::Window::DefaultBlend();
   }
   static void SetBlendModeSelections(
-    const std::array<int, 4U> &parameters_selections,
-    const std::array<int, 2U> &equation_selections)
+    const BlendModeParameters &parameters_selections,
+    const BlendModeEquations  &equation_selections)
   {
-    static constexpr auto parameters = std::array{ GL_ZERO,
-                                                   GL_ONE,
-                                                   GL_SRC_COLOR,
-                                                   GL_ONE_MINUS_SRC_COLOR,
-                                                   GL_DST_COLOR,
-                                                   GL_ONE_MINUS_DST_COLOR,
-                                                   GL_SRC_ALPHA,
-                                                   GL_ONE_MINUS_SRC_ALPHA,
-                                                   GL_DST_ALPHA,
-                                                   GL_ONE_MINUS_DST_ALPHA,
-                                                   GL_CONSTANT_COLOR,
-                                                   GL_ONE_MINUS_CONSTANT_COLOR,
-                                                   GL_CONSTANT_ALPHA,
-                                                   GL_ONE_MINUS_CONSTANT_ALPHA,
-                                                   GL_SRC_ALPHA_SATURATE,
-                                                   GL_SRC1_COLOR,
-                                                   GL_ONE_MINUS_SRC_COLOR,
-                                                   GL_SRC1_ALPHA,
-                                                   GL_ONE_MINUS_SRC1_ALPHA };
-    static constexpr auto equations  = std::array{
-      GL_FUNC_ADD, GL_FUNC_SUBTRACT, GL_FUNC_REVERSE_SUBTRACT, GL_MIN, GL_MAX
-    };
     GLCall{}(
       glBlendFuncSeparate,
-      parameters.at(static_cast<std::size_t>(parameters_selections[0])),
-      parameters.at(static_cast<std::size_t>(parameters_selections[1])),
-      parameters.at(static_cast<std::size_t>(parameters_selections[2])),
-      parameters.at(static_cast<std::size_t>(parameters_selections[3])));
+      parameters_selections[0].current_value(),
+      parameters_selections[1].current_value(),
+      parameters_selections[2].current_value(),
+      parameters_selections[3].current_value());
     GLCall{}(
       glBlendEquationSeparate,
-      equations.at(static_cast<std::size_t>(equation_selections[0])),
-      equations.at(static_cast<std::size_t>(equation_selections[1])));
+      equation_selections[0].current_value(),
+      equation_selections[1].current_value());
   }
 
   auto
@@ -627,33 +577,41 @@ private:
                                                          .25F };
   inline static glm::vec4    s_uniform_color         = s_default_uniform_color;
 
-
-  inline static std::array<int, 4> add_parameter_selections{ 2, 1, 6, 7 };
-  inline static std::array<int, 2> add_equation_selections{};
-  inline static std::array<int, 4> subtract_parameter_selections{ 4, 1, 6, 7 };
-  inline static std::array<int, 2> subtract_equation_selections{ 2, 0 };
+  inline static constinit BlendModeParameters add_parameter_selections{ 2,
+                                                                        1,
+                                                                        6,
+                                                                        7 };
+  inline static constinit BlendModeEquations  add_equation_selections{};
+  inline static constinit BlendModeParameters
+    subtract_parameter_selections{ 4, 1, 6, 7 };
+  inline static constinit BlendModeEquations subtract_equation_selections{ 2,
+                                                                           0 };
+  // inline static std::array<int, 4> add_parameter_selections{ 2, 1, 6, 7 };
+  // inline static std::array<int, 2> add_equation_selections{};
+  //  inline static std::array<int, 4> subtract_parameter_selections{ 4, 1, 6, 7
+  //  }; inline static std::array<int, 2> subtract_equation_selections{ 2, 0 };
 
   // internal mim file path
-  std::string                      m_mim_path              = {};
+  std::string                                m_mim_path          = {};
   // internal map file path
-  std::string                      m_map_path              = {};
+  std::string                                m_map_path          = {};
   // if coo was chosen instead of default.
-  bool                             m_mim_choose_coo        = {};
+  bool                                       m_mim_choose_coo    = {};
   // if coo was chosen instead of default.
-  bool                             m_map_choose_coo        = {};
+  bool                                       m_map_choose_coo    = {};
   // container for field textures
-  open_viii::graphics::background::Mim m_mim               = {};
+  open_viii::graphics::background::Mim       m_mim               = {};
   // container for field tile information
-  open_viii::graphics::background::Map m_map               = {};
+  open_viii::graphics::background::Map       m_map               = {};
   // loads the textures overtime instead of forcing them to load at start.
-  glengine::DelayedTextures<35U>       m_delayed_textures  = {};
+  glengine::DelayedTextures<35U>             m_delayed_textures  = {};
   // takes quads and draws them to the frame buffer or screen.
-  glengine::BatchRenderer              m_batch_renderer    = {};
+  glengine::BatchRenderer                    m_batch_renderer    = {};
   // holds rendered image at 1:1 scale to prevent gaps when scaling.
-  glengine::FrameBuffer                m_frame_buffer      = {};
-  float                                m_offset_y          = {};
-  mutable bool                         m_offscreen_drawing = { false };
-  mutable bool                         m_saving            = { false };
+  glengine::FrameBuffer                      m_frame_buffer      = {};
+  float                                      m_offset_y          = {};
+  mutable bool                               m_offscreen_drawing = { false };
+  mutable bool                               m_saving            = { false };
 };
 }// namespace ff8
 #endif// FIELD_MAP_EDITOR_MAP_HPP
