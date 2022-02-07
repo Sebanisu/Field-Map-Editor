@@ -36,8 +36,6 @@ add_executable(${PROJECT_NAME}_OPENGL
         ff8/FF8LoadTextures.cpp
         ff8/FF8Menu.cpp
         ff8/Fields.cpp
-        ff8/MapDeswizzle.cpp
-        ff8/MapSwizzle.cpp
         ff8/Mim.cpp
         ff8/Palettes.cpp
         ff8/Paths.cpp
