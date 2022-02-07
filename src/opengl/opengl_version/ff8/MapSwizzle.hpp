@@ -17,32 +17,18 @@ struct TileFunctionsSwizzle
   template<typename T>
   struct Bounds
   {
-    [[nodiscard]] static constexpr auto x() noexcept
-    {
-      using tileT = std::decay_t<T>;
-      using xT =
-        typename std::invoke_result_t<decltype(&tileT::source_x), tileT>;
-      return [](const tileT &tile) -> xT { return tile.source_x(); };
-    }
-    [[nodiscard]] static constexpr auto y() noexcept
-    {
-      using tileT = std::decay_t<T>;
-      using yT =
-        typename std::invoke_result_t<decltype(&tileT::source_y), tileT>;
-      return [](const tileT &tile) -> yT { return tile.source_y(); };
-    }
-    [[nodiscard]] static constexpr auto texture_page() noexcept
-    {
-      using tileT = std::decay_t<T>;
-      using texture_pageT =
-        typename std::invoke_result_t<decltype(&tileT::texture_id), tileT>;
-      return
-        [](const tileT &tile) -> texture_pageT { return tile.texture_id(); };
-    }
-    static constexpr auto all() noexcept
-    {
-      return std::tuple(x(), y(), texture_page());
-    }
+  private:
+    using tileT = std::decay_t<T>;
+    using xT =
+      typename std::invoke_result_t<decltype(&tileT::source_x), tileT>;
+    using yT =
+      typename std::invoke_result_t<decltype(&tileT::source_y), tileT>;
+    using texture_pageT =
+      typename std::invoke_result_t<decltype(&tileT::texture_id), tileT>;
+  public:
+    using x = decltype([](const tileT &tile) -> xT { return tile.source_x(); });
+    using y = decltype([](const tileT &tile) -> yT { return tile.source_y(); });
+    using texture_page = decltype([](const tileT &tile) -> texture_pageT { return tile.texture_id(); });
   };
 };
 using MapSwizzle = Map<TileFunctionsSwizzle>;

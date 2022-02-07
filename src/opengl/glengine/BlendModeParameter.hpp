@@ -4,6 +4,9 @@
 
 #ifndef FIELD_MAP_EDITOR_BLENDMODEPARAMETER_HPP
 #define FIELD_MAP_EDITOR_BLENDMODEPARAMETER_HPP
+#include "BlendModeGeneric.hpp"
+namespace glengine
+{
 using BlendModeParameter = BlendModeGeneric<
   decltype([]() {
     using namespace std::string_view_literals;
@@ -48,6 +51,5 @@ using BlendModeParameter = BlendModeGeneric<
                        GL_SRC1_ALPHA,
                        GL_ONE_MINUS_SRC1_ALPHA };
   })>;
-
-
+}
 #endif// FIELD_MAP_EDITOR_BLENDMODEPARAMETER_HPP

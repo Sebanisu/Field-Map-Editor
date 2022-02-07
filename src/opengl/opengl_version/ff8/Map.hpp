@@ -20,6 +20,7 @@
 #include "OrthographicCamera.hpp"
 #include "OrthographicCameraController.hpp"
 #include "PixelBuffer.hpp"
+#include "SortUnique.hpp"
 #include "Window.hpp"
 #include <type_traits>
 namespace ff8
@@ -47,6 +48,7 @@ public:
     fmt::print("Loading Textures from Mim \n");
     m_delayed_textures = LoadTextures(m_mim);
     SetCameraBoundsToEdgesOfImage();
+    GetUniqueValues();
   }
   void OnUpdate(float ts) const
   {
@@ -175,7 +177,7 @@ public:
         bpp_values,
         [](int i) {
           static constexpr std::array types = { 4, 8, 16 };
-          return types[i];
+          return types.at(static_cast<std::size_t>(i));
         },
         3);
       static constinit std::array<bool, 16U> palette_values = []() {
@@ -191,10 +193,9 @@ public:
 
 private:
   static void Blend_Combos(
-    BlendModeParameters &parameters_selections,
-    BlendModeEquations  &equation_selections)
+    glengine::BlendModeParameters &parameters_selections,
+    glengine::BlendModeEquations  &equation_selections)
   {
-    using namespace std::string_view_literals;
     if (parameters_selections.OnImGuiUpdate())
     {
       // something changed
@@ -335,8 +336,13 @@ private:
           }
 
           using tileT = std::ranges::range_value_t<decltype(tiles)>;
-          static const auto [x, y, texture_page] =
-            TileFunctions::template Bounds<tileT>::all();
+          static constexpr
+            typename TileFunctions::template Bounds<tileT>::x x{};
+          static constexpr
+            typename TileFunctions::template Bounds<tileT>::y y{};
+          static constexpr
+            typename TileFunctions::template Bounds<tileT>::texture_page
+              texture_page{};
           m_batch_renderer.DrawQuad(
             sub_texture,
             glm::vec3(
@@ -353,8 +359,8 @@ private:
     glengine::Window::DefaultBlend();
   }
   static void SetBlendModeSelections(
-    const BlendModeParameters &parameters_selections,
-    const BlendModeEquations  &equation_selections)
+    const glengine::BlendModeParameters &parameters_selections,
+    const glengine::BlendModeEquations  &equation_selections)
   {
     GLCall{}(
       glBlendFuncSeparate,
@@ -481,11 +487,14 @@ private:
             }
           }
 
-          using tileT             = std::ranges::range_value_t<decltype(tiles)>;
-          static constexpr auto x = TileFunctions::template Bounds<tileT>::x();
-          static constexpr auto y = TileFunctions::template Bounds<tileT>::y();
-          static constexpr auto texture_page =
-            TileFunctions::template Bounds<tileT>::texture_page();
+          using tileT = std::ranges::range_value_t<decltype(tiles)>;
+          static constexpr
+            typename TileFunctions::template Bounds<tileT>::x x{};
+          static constexpr
+            typename TileFunctions::template Bounds<tileT>::y y{};
+          static constexpr
+            typename TileFunctions::template Bounds<tileT>::texture_page
+              texture_page{};
           m_batch_renderer.DrawQuad(
             sub_texture,
             glm::vec3(
@@ -515,15 +524,28 @@ private:
     while (pixel_buffer.operator()(&glengine::Texture::save))
       ;
   }
+  void GetUniqueValues()
+  {
+    auto vector = m_map.visit_tiles([&](const auto &tiles) {
+      auto f_tiles = tiles
+                     | std::views::filter(
+                       open_viii::graphics::background::Map::filter_invalid());
+      return SortUnique(
+        f_tiles, [](const auto &tile) { return tile.palette_id(); });
+    });
+    for (const auto &value : vector)
+      fmt::print("\t{}\n", value);
+  }
   void SetCameraBoundsToEdgesOfImage()
   {
     s_camera.RefreshAspectRatio();
     m_map.visit_tiles([&](const auto &tiles) {
-      using tileT             = std::ranges::range_value_t<decltype(tiles)>;
-      static constexpr auto x = TileFunctions::template Bounds<tileT>::x();
-      static constexpr auto y = TileFunctions::template Bounds<tileT>::y();
-      static constexpr auto texture_page =
-        TileFunctions::template Bounds<tileT>::texture_page();
+      using tileT = std::ranges::range_value_t<decltype(tiles)>;
+      static constexpr typename TileFunctions::template Bounds<tileT>::x x{};
+      static constexpr typename TileFunctions::template Bounds<tileT>::y y{};
+      static constexpr
+        typename TileFunctions::template Bounds<tileT>::texture_page
+           texture_page{};
       auto f_tiles = tiles
                      | std::views::filter(
                        open_viii::graphics::background::Map::filter_invalid());
@@ -577,41 +599,40 @@ private:
                                                          .25F };
   inline static glm::vec4    s_uniform_color         = s_default_uniform_color;
 
-  inline static constinit BlendModeParameters add_parameter_selections{ 2,
-                                                                        1,
-                                                                        6,
-                                                                        7 };
-  inline static constinit BlendModeEquations  add_equation_selections{};
-  inline static constinit BlendModeParameters
+  inline static constinit glengine::BlendModeParameters
+    add_parameter_selections{ 2, 1, 6, 7 };
+  inline static constinit glengine::BlendModeEquations
+    add_equation_selections{};
+  inline static constinit glengine::BlendModeParameters
     subtract_parameter_selections{ 4, 1, 6, 7 };
-  inline static constinit BlendModeEquations subtract_equation_selections{ 2,
-                                                                           0 };
+  inline static constinit glengine::BlendModeEquations
+                                       subtract_equation_selections{ 2, 0 };
   // inline static std::array<int, 4> add_parameter_selections{ 2, 1, 6, 7 };
   // inline static std::array<int, 2> add_equation_selections{};
   //  inline static std::array<int, 4> subtract_parameter_selections{ 4, 1, 6, 7
   //  }; inline static std::array<int, 2> subtract_equation_selections{ 2, 0 };
 
   // internal mim file path
-  std::string                                m_mim_path          = {};
+  std::string                          m_mim_path          = {};
   // internal map file path
-  std::string                                m_map_path          = {};
+  std::string                          m_map_path          = {};
   // if coo was chosen instead of default.
-  bool                                       m_mim_choose_coo    = {};
+  bool                                 m_mim_choose_coo    = {};
   // if coo was chosen instead of default.
-  bool                                       m_map_choose_coo    = {};
+  bool                                 m_map_choose_coo    = {};
   // container for field textures
-  open_viii::graphics::background::Mim       m_mim               = {};
+  open_viii::graphics::background::Mim m_mim               = {};
   // container for field tile information
-  open_viii::graphics::background::Map       m_map               = {};
+  open_viii::graphics::background::Map m_map               = {};
   // loads the textures overtime instead of forcing them to load at start.
-  glengine::DelayedTextures<35U>             m_delayed_textures  = {};
+  glengine::DelayedTextures<35U>       m_delayed_textures  = {};
   // takes quads and draws them to the frame buffer or screen.
-  glengine::BatchRenderer                    m_batch_renderer    = {};
+  glengine::BatchRenderer              m_batch_renderer    = {};
   // holds rendered image at 1:1 scale to prevent gaps when scaling.
-  glengine::FrameBuffer                      m_frame_buffer      = {};
-  float                                      m_offset_y          = {};
-  mutable bool                               m_offscreen_drawing = { false };
-  mutable bool                               m_saving            = { false };
+  glengine::FrameBuffer                m_frame_buffer      = {};
+  float                                m_offset_y          = {};
+  mutable bool                         m_offscreen_drawing = { false };
+  mutable bool                         m_saving            = { false };
 };
 }// namespace ff8
 #endif// FIELD_MAP_EDITOR_MAP_HPP
