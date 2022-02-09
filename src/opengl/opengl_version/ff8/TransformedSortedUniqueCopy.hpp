@@ -10,23 +10,25 @@ template<
   typename sort_compareT = std::ranges::less,
   std::indirect_equivalence_relation<
     std::projected<std::ranges::iterator_t<rangeT>, transformT>>
-    unique_compareT = std::ranges::equal_to>
-static inline constexpr std::vector<typename std::projected<
+    unique_compareT    = std::ranges::equal_to,
+  typename projectionT = std::identity>
+static inline std::vector<typename std::projected<
   std::ranges::iterator_t<rangeT>,
   transformT>::value_type>
   TransformedSortedUniqueCopy(
     rangeT        &&range,
     transformT      transform    = {},
     sort_compareT   sort_compare = {},
-    unique_compareT unique_comp  = {})
+    unique_compareT unique_comp  = {},
+    projectionT     projection   = {})
 {
   auto projected_range = range | std::views::transform(transform);
   std::vector<typename std::projected<
     std::ranges::iterator_t<rangeT>,
     transformT>::value_type>
     out = { projected_range.begin(), projected_range.end() };
-  std::ranges::sort(out, sort_compare);
-  const auto [first, last] = std::ranges::unique(out, unique_comp);
+  std::ranges::sort(out, sort_compare, projection);
+  const auto [first, last] = std::ranges::unique(out, unique_comp, projection);
   out.erase(first, last);
   return out;
 }

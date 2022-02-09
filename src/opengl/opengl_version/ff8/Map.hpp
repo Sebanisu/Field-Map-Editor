@@ -21,7 +21,7 @@
 #include "OrthographicCameraController.hpp"
 #include "PixelBuffer.hpp"
 #include "TransformedSortedUniqueCopy.hpp"
-#include "UniqueValues.hpp"
+#include "UniqueTileValues.hpp"
 #include "Window.hpp"
 #include <type_traits>
 namespace ff8
@@ -39,6 +39,7 @@ public:
         m_mim,
         m_map_path,
         m_map_choose_coo))
+    , m_unique_tile_values(m_map)
   {
     if (std::empty(m_mim_path))
     {
@@ -122,29 +123,54 @@ public:
       const auto            un_indent0 = glengine::ImGuiIndent();
       static constexpr auto common =
         [](
-          const char                            *label,
-          std::ranges::random_access_range auto &bool_range,
-          int (*value_func)(int),
-          int line_count) {
+          const char                             *label,
+          std::ranges::random_access_range auto  &bool_range,
+          std::ranges::random_access_range auto &&possible_value_range,
+          std::ranges::random_access_range auto &&possible_value_string_range,
+          std::ranges::random_access_range auto &&used_value_range,
+          std::uint32_t                           line_count) {
+          assert(
+            std::ranges::size(possible_value_range)
+            == std::ranges::size(possible_value_string_range));
+          assert(
+            std::ranges::size(bool_range)
+            == std::ranges::size(possible_value_range));
+          assert(
+            std::ranges::size(possible_value_range)
+            >= std::ranges::size(used_value_range));
           if (ImGui::CollapsingHeader(label))
           {
             const auto un_indent1 = glengine::ImGuiIndent();
 
-            for (int i = 0; bool &value : bool_range)
+            auto       boolptr    = std::ranges::begin(bool_range);
+            const auto boolsent   = std::ranges::end(bool_range);
+            auto current_value    = std::ranges::cbegin(possible_value_range);
+            auto current_string =
+              std::ranges::cbegin(possible_value_string_range);
+
+            for (std::uint32_t i = 0; boolptr != boolsent; ++i,
+                               (void)++boolptr,
+                               (void)++current_value,
+                               (void)++current_string)
             {
-              const auto pop    = glengine::ImGuiPushID();
-              const auto string = fmt::format("{:>4}", value_func(i));
-              auto       size   = ImGui::CalcTextSize(string.c_str());
-              if (line_count > 0 && i % line_count != 0)
+              auto found = std::ranges::find(used_value_range, *current_value);
+
+              const auto disabled = glengine::ImGuiDisabled(
+                found == std::ranges::end(used_value_range));
+
+              const auto pop       = glengine::ImGuiPushID();
+              const auto string    = fmt::format("{:>4}", *current_string);
+              auto       size      = ImGui::CalcTextSize(string.c_str());
+              bool       same_line = line_count > 0 && i % line_count != 0;
+              if (same_line)
                 ImGui::SameLine();
               ImGui::Dummy(ImVec2(2.F, 2.F));
-              if (line_count > 0 && i % line_count != 0)
+              if (same_line)
                 ImGui::SameLine();
-              if (ImGui::Selectable(string.c_str(), value, 0, size))
+              if (ImGui::Selectable(string.c_str(), *boolptr, 0, size))
               {
-                value = !value;
+                *boolptr = !*boolptr;
               }
-              ++i;
             }
             ImGui::Dummy(ImVec2(2.F, 2.F));
             {
@@ -167,27 +193,30 @@ public:
             ImGui::Dummy(ImVec2(2.F, 2.F));
           }
         };
-      static constinit std::array<bool, 3U> bpp_values = []() {
-        std::array<bool, 3U> r = {};
-        std::ranges::fill(r, true);
-        return r;
-      }();
 
       common(
         "BPP",
-        bpp_values,
-        [](int i) {
-          static constexpr std::array types = { 4, 8, 16 };
-          return types.at(static_cast<std::size_t>(i));
-        },
-        3);
-      static constinit std::array<bool, 16U> palette_values = []() {
-        std::array<bool, 16U> r = {};
-        std::ranges::fill(r, true);
-        return r;
-      }();
+        m_possible_tile_values.bpp_enabled,
+        m_possible_tile_values.bpp.values(),
+        m_possible_tile_values.bpp.strings(),
+        m_unique_tile_values.bpp.values(),
+        4);
+
       common(
-        "Palettes", palette_values, [](int i) { return i; }, 8);
+        "Palettes",
+        m_possible_tile_values.palette_id_enabled,
+        m_possible_tile_values.palette_id.values(),
+        m_possible_tile_values.palette_id.strings(),
+        m_unique_tile_values.palette_id.values(),
+        8);
+
+      common(
+        "Blend Mode",
+        m_possible_tile_values.blend_mode_enabled,
+        m_possible_tile_values.blend_mode.values(),
+        m_possible_tile_values.blend_mode.strings(),
+        m_unique_tile_values.blend_mode.values(),
+        3);
     }
   }
   void OnEvent(const glengine::Event::Item &) const {}
@@ -614,26 +643,28 @@ private:
   //  }; inline static std::array<int, 2> subtract_equation_selections{ 2, 0 };
 
   // internal mim file path
-  std::string                          m_mim_path          = {};
+  std::string                          m_mim_path             = {};
   // internal map file path
-  std::string                          m_map_path          = {};
+  std::string                          m_map_path             = {};
   // if coo was chosen instead of default.
-  bool                                 m_mim_choose_coo    = {};
+  bool                                 m_mim_choose_coo       = {};
   // if coo was chosen instead of default.
-  bool                                 m_map_choose_coo    = {};
+  bool                                 m_map_choose_coo       = {};
   // container for field textures
-  open_viii::graphics::background::Mim m_mim               = {};
+  open_viii::graphics::background::Mim m_mim                  = {};
   // container for field tile information
-  open_viii::graphics::background::Map m_map               = {};
+  open_viii::graphics::background::Map m_map                  = {};
   // loads the textures overtime instead of forcing them to load at start.
-  glengine::DelayedTextures<35U>       m_delayed_textures  = {};
+  glengine::DelayedTextures<35U>       m_delayed_textures     = {};
   // takes quads and draws them to the frame buffer or screen.
-  glengine::BatchRenderer              m_batch_renderer    = {};
+  glengine::BatchRenderer              m_batch_renderer       = {};
   // holds rendered image at 1:1 scale to prevent gaps when scaling.
-  glengine::FrameBuffer                m_frame_buffer      = {};
-  float                                m_offset_y          = {};
-  mutable bool                         m_offscreen_drawing = { false };
-  mutable bool                         m_saving            = { false };
+  glengine::FrameBuffer                m_frame_buffer         = {};
+  float                                m_offset_y             = {};
+  mutable bool                         m_offscreen_drawing    = { false };
+  mutable bool                         m_saving               = { false };
+  UniqueTileValues                     m_unique_tile_values   = { m_map };
+  TilePossibleValues                   m_possible_tile_values = {};
 };
 }// namespace ff8
 #endif// FIELD_MAP_EDITOR_MAP_HPP
