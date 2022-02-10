@@ -22,7 +22,7 @@ static glengine::OrthographicCameraController camera              = { 16 / 9 };
 }// namespace ff8
 void ff8::Mim::OnUpdate(float ts) const
 {
-  m_delayed_textures.OnUpdate();
+  (void)m_delayed_textures.OnUpdate();
   const auto &local_texture = CurrentTexture();
   camera.SetMaxBounds({ 0.F,
                         static_cast<float>(local_texture.width()),

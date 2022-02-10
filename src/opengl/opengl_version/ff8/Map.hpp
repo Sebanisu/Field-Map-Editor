@@ -56,7 +56,10 @@ public:
   void OnUpdate(float ts) const
   {
     s_camera.RefreshAspectRatio();
-    m_delayed_textures.OnUpdate();
+    if(m_delayed_textures.OnUpdate())
+    {
+      m_changed = true;
+    }
     if (s_snap_zoom_to_height)
     {
       s_camera.SetZoom();
@@ -70,6 +73,7 @@ public:
     {
       return;
     }
+    if (m_changed)
     {
       m_offscreen_drawing = true;
       const auto not_offscreen_drawing =
@@ -88,6 +92,7 @@ public:
     }
     RestoreViewPortToFrameBuffer();
     RenderFrameBuffer();
+    m_changed = false;
   }
   void OnImGuiUpdate() const
   {
@@ -99,16 +104,25 @@ public:
       if (ImGui::CollapsingHeader("Add Blend"))
       {
         const auto un_indent = glengine::ImGuiIndent();
-        ImGui::Checkbox("Percent Blends (50%,25%)", &s_enable_percent_blend);
+        if(ImGui::Checkbox("Percent Blends (50%,25%)", &s_enable_percent_blend))
+        {
+          m_changed = true;
+        }
         const auto pop = glengine::ImGuiPushID();
-        Blend_Combos(add_parameter_selections, add_equation_selections);
+        if (Blend_Combos(add_parameter_selections, add_equation_selections))
+        {
+          m_changed = true;
+        }
       }
       if (ImGui::CollapsingHeader("Subtract Blend"))
       {
         const auto un_indent = glengine::ImGuiIndent();
         const auto pop       = glengine::ImGuiPushID();
-        Blend_Combos(
-          subtract_parameter_selections, subtract_equation_selections);
+        if (Blend_Combos(
+              subtract_parameter_selections, subtract_equation_selections))
+        {
+          m_changed = true;
+        }
       }
       if (ImGui::Button("Save"))
       {
@@ -126,8 +140,8 @@ public:
       if (ImGui::CollapsingHeader("Filters"))
       {
         const auto            un_indent0 = glengine::ImGuiIndent();
-        static constexpr auto common =
-          [](
+        static const auto common =
+          [this](
             const char                             *label,
             std::ranges::random_access_range auto  &bool_range,
             std::ranges::random_access_range auto &&possible_value_range,
@@ -176,7 +190,8 @@ public:
                 if (ImGui::Selectable(
                       string.c_str(), static_cast<bool>(*boolptr), 0, size))
                 {
-                  *boolptr = !static_cast<bool>(*boolptr);
+                  *boolptr  = !static_cast<bool>(*boolptr);
+                  m_changed = true;
                 }
               }
               ImGui::Dummy(ImVec2(2.F, 2.F));
@@ -185,6 +200,7 @@ public:
                 if (ImGui::Button("All"))
                 {
                   std::ranges::fill(bool_range, true);
+                  m_changed = true;
                 }
               }
               ImGui::SameLine();
@@ -195,6 +211,7 @@ public:
                 if (ImGui::Button("None"))
                 {
                   std::ranges::fill(bool_range, false);
+                  m_changed = true;
                 }
               }
               ImGui::Dummy(ImVec2(2.F, 2.F));
@@ -280,19 +297,20 @@ private:
     }
     return false;
   }
-  static void Blend_Combos(
+  [[nodiscard]] static bool Blend_Combos(
     glengine::BlendModeParameters &parameters_selections,
     glengine::BlendModeEquations  &equation_selections)
   {
     if (parameters_selections.OnImGuiUpdate())
     {
-      // something changed
+      return true;
     }
     ImGui::Separator();
     if (equation_selections.OnImGuiUpdate())
     {
-      // something changed
+      return true;
     }
+    return false;
   }
   // set uniforms
   void SetUniforms() const
@@ -659,7 +677,7 @@ private:
   // loads the textures overtime instead of forcing them to load at start.
   glengine::DelayedTextures<35U>       m_delayed_textures     = {};
   // takes quads and draws them to the frame buffer or screen.
-  glengine::BatchRenderer              m_batch_renderer       = {1000};
+  glengine::BatchRenderer              m_batch_renderer       = { 1000 };
   // holds rendered image at 1:1 scale to prevent gaps when scaling.
   glengine::FrameBuffer                m_frame_buffer         = {};
   float                                m_offset_y             = {};
@@ -668,6 +686,7 @@ private:
   UniqueTileValues                     m_unique_tile_values   = { m_map };
   TilePossibleValues                   m_possible_tile_values = {};
   glm::vec3                            m_position             = {};
+  mutable bool                         m_changed              = { true };
 };
 }// namespace ff8
 #endif// FIELD_MAP_EDITOR_MAP_HPP

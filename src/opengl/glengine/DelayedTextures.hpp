@@ -22,7 +22,7 @@ struct DelayedTextures
     std::make_unique<std::array<Texture, sizeT>>()
   };
   mutable std::vector<std::future<DelayedTexturesData>> futures{};
-  void                                                  OnUpdate() const
+  [[nodiscard]] bool                                    OnUpdate() const
   {
     for (std::future<DelayedTexturesData> &future : futures)
     {
@@ -36,10 +36,11 @@ struct DelayedTextures
         fmt::print(
           "Finished Loading Texture: {:>2}\n",
           std::distance(textures->data(), rd.out));
-        return;
+        return true;
       }
     }
     remove_invalid();
+    return false;
   }
   void remove_invalid() const
   {
