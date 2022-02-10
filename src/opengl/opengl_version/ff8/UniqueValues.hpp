@@ -22,7 +22,12 @@ public:
       auto transform = m_values | std::views::transform(transform_to_string);
       return std::vector<std::string>{ transform.begin(), transform.end() };
     }())
+    , m_enable([&]() {
+      return std::vector<std::uint8_t>(
+        std::ranges::size(m_values), std::uint8_t{ true });
+    }())
   {
+
     for (const auto &string : m_strings)
     {
       fmt::print("\t{}\r", string);
