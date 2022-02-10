@@ -13,6 +13,7 @@
 #include "Fields.hpp"
 #include "FrameBuffer.hpp"
 #include "FrameBufferBackup.hpp"
+#include "FrameBufferRenderer.hpp"
 #include "GenericCombo.hpp"
 #include "ImGuiDisabled.hpp"
 #include "ImGuiIndent.hpp"
@@ -527,160 +528,18 @@ private:
 
   void RenderFrameBuffer() const
   {
-    using open_viii::graphics::background::BlendModeT;
-    BlendModeT last_blend_mode{ BlendModeT::none };
-    s_uniform_color = s_default_uniform_color;
     glengine::Window::DefaultBlend();
     s_camera.OnRender();
     SetUniforms();
     m_batch_renderer.Clear();
-    m_map.visit_tiles([&](const auto &tiles) {
-      auto f_tiles = tiles
-                     | std::views::filter(
-                       open_viii::graphics::background::Map::filter_invalid())
-                     | std::views::filter([&](const auto &tile) {
-                         return filter(
-                                  tile.layer_id(),
-                                  m_unique_tile_values.layer_id.enable(),
-                                  m_unique_tile_values.layer_id.values())
-                                && filter(
-                                  tile.z(),
-                                  m_unique_tile_values.z.enable(),
-                                  m_unique_tile_values.z.values())
-                                && filter(
-                                  tile.texture_id(),
-                                  m_unique_tile_values.texture_page_id.enable(),
-                                  m_unique_tile_values.texture_page_id.values())
-                                && filter(
-                                  tile.blend(),
-                                  m_unique_tile_values.blend_other.enable(),
-                                  m_unique_tile_values.blend_other.values())
-                                && filter(
-                                  tile.animation_id(),
-                                  m_unique_tile_values.animation_id.enable(),
-                                  m_unique_tile_values.animation_id.values())
-                                && filter(
-                                  tile.animation_state(),
-                                  m_unique_tile_values.animation_frame.enable(),
-                                  m_unique_tile_values.animation_frame.values())
-                                && filter(
-                                  tile.layer_id(),
-                                  m_unique_tile_values.layer_id.enable(),
-                                  m_unique_tile_values.layer_id.values())
-                                && filter(
-                                  tile.blend_mode(),
-                                  m_possible_tile_values.blend_mode.enable(),
-                                  m_possible_tile_values.blend_mode.values())
-                                && filter(
-                                  tile.depth(),
-                                  m_possible_tile_values.bpp.enable(),
-                                  m_possible_tile_values.bpp.values())
-                                && filter(
-                                  tile.palette_id(),
-                                  m_possible_tile_values.palette_id.enable(),
-                                  m_possible_tile_values.palette_id.values());
-                       });
-      std::vector<std::uint16_t> unique_z{};
-      {
-        unique_z.reserve(std::ranges::size(tiles));
-        std::ranges::transform(
-          f_tiles, std::back_inserter(unique_z), [](const auto &tile) {
-            return tile.z();
-          });
-        std::ranges::sort(unique_z);
-        auto [begin, end] = std::ranges::unique(unique_z);
-        unique_z.erase(begin, end);
-      }
-
-      for (const auto z : unique_z | std::views::reverse)
-      {
-        // fmt::print("z = {}\n", z);
-        for (const auto &tile :
-             f_tiles | std::views::reverse
-               | std::views::filter([z](const auto &t) { return z == t.z(); }))
-        {
-          const auto bpp     = tile.depth();
-          const auto palette = tile.palette_id();
-          const auto [texture_index, texture_page_width] =
-            IndexAndPageWidth(bpp, palette);
-
-          auto  texture_page_offset = tile.texture_id() * texture_page_width;
-
-          auto &texture = m_delayed_textures.textures->at(texture_index);
-          if (texture.width() == 0 || texture.height() == 0)
-            continue;
-          const auto texture_dims =
-            glm::vec2(m_mim.get_width(tile.depth()), m_mim.get_height());
-          glengine::SubTexture sub_texture = {
-            texture,
-            glm::vec2{ tile.source_x() + texture_page_offset,
-                       texture_dims.y - (tile.source_y() + 16) }
-              / texture_dims,
-            glm::vec2{ tile.source_x() + texture_page_offset + 16,
-                       texture_dims.y - tile.source_y() }
-              / texture_dims
-          };
-          auto blend_mode = tile.blend_mode();
-          if (blend_mode != last_blend_mode)
-          {
-            m_batch_renderer.Draw();// flush buffer.
-            last_blend_mode = blend_mode;
-            if (s_enable_percent_blend)
-            {
-              switch (blend_mode)
-              {
-                case BlendModeT::half_add:
-                  s_uniform_color = s_half_uniform_color;
-                  break;
-                case BlendModeT::quarter_add:
-                  s_uniform_color = s_quarter_uniform_color;
-                  break;
-                default:
-                  s_uniform_color = s_default_uniform_color;
-                  break;
-              }
-            }
-            switch (blend_mode)
-            {
-              case BlendModeT::half_add:
-              case BlendModeT::quarter_add:
-              case BlendModeT::add: {
-                SetBlendModeSelections(
-                  add_parameter_selections, add_equation_selections);
-              }
-              break;
-              case BlendModeT ::subtract: {
-                SetBlendModeSelections(
-                  subtract_parameter_selections, subtract_equation_selections);
-              }
-              break;
-              default:
-                glengine::Window::DefaultBlend();
-            }
-          }
-
-          using tileT = std::ranges::range_value_t<decltype(tiles)>;
-          static constexpr
-            typename TileFunctions::template Bounds<tileT>::x x{};
-          static constexpr
-            typename TileFunctions::template Bounds<tileT>::y y{};
-          static constexpr
-            typename TileFunctions::template Bounds<tileT>::texture_page
-              texture_page{};
-          m_batch_renderer.DrawQuad(
-            sub_texture,
-            glm::vec3(
-              static_cast<float>(
-                x(tile) + texture_page(tile) * s_texture_page_width),
-              m_offset_y - static_cast<float>(y(tile)),
-              0.F),
-            glm::vec2(16.F, 16.F));
-        }
-      }
-    });
+    m_batch_renderer.DrawQuad(
+      m_frame_buffer.GetColorAttachment(),
+      m_position,
+      glm::vec2(
+        m_frame_buffer.Specification().width,
+        m_frame_buffer.Specification().height));
     m_batch_renderer.Draw();
     m_batch_renderer.OnRender();
-    glengine::Window::DefaultBlend();
   }
   void Save() const
   {
@@ -738,6 +597,7 @@ private:
       const auto width  = max_x - min_x + 16;
       const auto height = max_y - min_y + 16;
       m_offset_y        = static_cast<float>(min_y + max_y);
+      m_position        = glm::vec3(min_x, min_y, 0.F);
 
       s_camera.SetMaxBounds({ static_cast<float>(min_x),
                               static_cast<float>(max_x + 16),
@@ -799,7 +659,7 @@ private:
   // loads the textures overtime instead of forcing them to load at start.
   glengine::DelayedTextures<35U>       m_delayed_textures     = {};
   // takes quads and draws them to the frame buffer or screen.
-  glengine::BatchRenderer              m_batch_renderer       = {};
+  glengine::BatchRenderer              m_batch_renderer       = {1000};
   // holds rendered image at 1:1 scale to prevent gaps when scaling.
   glengine::FrameBuffer                m_frame_buffer         = {};
   float                                m_offset_y             = {};
@@ -807,6 +667,7 @@ private:
   mutable bool                         m_saving               = { false };
   UniqueTileValues                     m_unique_tile_values   = { m_map };
   TilePossibleValues                   m_possible_tile_values = {};
+  glm::vec3                            m_position             = {};
 };
 }// namespace ff8
 #endif// FIELD_MAP_EDITOR_MAP_HPP
