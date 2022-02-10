@@ -104,20 +104,5 @@ struct TilePossibleValues
   UniqueValues<std::uint8_t> palette_id = {
     std::views::iota(std::uint8_t{ 0 }, std::uint8_t{ 16 })
   };
-  mutable std::array<bool, 4U> bpp_enabled = []() {
-    std::array<bool, 4U> r = {};
-    std::ranges::fill(r, true);
-    return r;
-  }();
-  mutable std::array<bool, 5U> blend_mode_enabled = []() {
-    std::array<bool, 5U> r = {};
-    std::ranges::fill(r, true);
-    return r;
-  }();
-  mutable std::array<bool, 16U> palette_id_enabled = []() {
-    std::array<bool, 16U> r = {};
-    std::ranges::fill(r, true);
-    return r;
-  }();
 };
 #endif// FIELD_MAP_EDITOR_UNIQUETILEVALUES_HPP

@@ -7,19 +7,19 @@
 template<typename T>
 class UniqueValues
 {
-  static constexpr auto default_conversion_function =
+  static constexpr auto default_transform_function =
     [](const auto &value) -> std::string { return fmt::format("{}", value); };
 
 public:
   UniqueValues() = default;
   template<
-    typename conversion_to_stringT = decltype(default_conversion_function)>
+    typename transform_to_stringT = decltype(default_transform_function)>
   UniqueValues(
     std::vector<T>          values,
-    conversion_to_stringT &&transform_to_string = {})
+    transform_to_stringT &&transform_to_string = {})
     : m_values(std::move(values))
     , m_strings([&]() {
-      auto transform = m_values | std::views::transform(transform_to_string);
+      auto transform = m_values | std::views::transform(std::forward<transform_to_stringT>(transform_to_string));
       return std::vector<std::string>{ transform.begin(), transform.end() };
     }())
     , m_enable([&]() {
@@ -35,20 +35,12 @@ public:
   }
   template<
     std::ranges::range rangeT,
-    typename conversion_to_stringT = decltype(default_conversion_function)>
+    typename transform_to_stringT = decltype(default_transform_function)>
   UniqueValues(
     rangeT                &&values,
-    conversion_to_stringT &&transform_to_string = {})
-    : m_values(std::ranges::cbegin(values), std::ranges::cend(values))
-    , m_strings([&]() {
-      auto transform = m_values | std::views::transform(transform_to_string);
-      return std::vector<std::string>{ transform.begin(), transform.end() };
-    }())
+    transform_to_stringT &&transform_to_string = {})
+    : UniqueValues(std::vector<T>(std::ranges::cbegin(values), std::ranges::cend(values)), std::forward<transform_to_stringT>(transform_to_string))
   {
-    for (const auto &string : m_strings)
-    {
-      fmt::print("\t{}\r", string);
-    }
   }
   std::pair<const T &, const std::string_view>
     operator[](std::size_t i) const noexcept

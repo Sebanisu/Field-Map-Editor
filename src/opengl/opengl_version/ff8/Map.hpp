@@ -75,6 +75,7 @@ public:
         glengine::scope_guard_expensive([&]() { m_offscreen_drawing = false; });
       const auto fbb = glengine::FrameBufferBackup{};
       m_frame_buffer.Bind();
+
       GLCall{}(
         glViewport,
         0,
@@ -211,7 +212,7 @@ public:
 
         common(
           "BPP",
-          m_possible_tile_values.bpp_enabled,
+          m_possible_tile_values.bpp.enable(),
           m_possible_tile_values.bpp.values(),
           m_possible_tile_values.bpp.strings(),
           m_unique_tile_values.bpp.values(),
@@ -219,7 +220,7 @@ public:
 
         common(
           "Palettes",
-          m_possible_tile_values.palette_id_enabled,
+          m_possible_tile_values.palette_id.enable(),
           m_possible_tile_values.palette_id.values(),
           m_possible_tile_values.palette_id.strings(),
           m_unique_tile_values.palette_id.values(),
@@ -227,7 +228,7 @@ public:
 
         common(
           "Blend Mode",
-          m_possible_tile_values.blend_mode_enabled,
+          m_possible_tile_values.blend_mode.enable(),
           m_possible_tile_values.blend_mode.values(),
           m_possible_tile_values.blend_mode.strings(),
           m_unique_tile_values.blend_mode.values(),
@@ -366,15 +367,15 @@ private:
                                   m_unique_tile_values.layer_id.values())
                                 && filter(
                                   tile.blend_mode(),
-                                  m_possible_tile_values.blend_mode_enabled,
+                                  m_possible_tile_values.blend_mode.enable(),
                                   m_possible_tile_values.blend_mode.values())
                                 && filter(
                                   tile.depth(),
-                                  m_possible_tile_values.bpp_enabled,
+                                  m_possible_tile_values.bpp.enable(),
                                   m_possible_tile_values.bpp.values())
                                 && filter(
                                   tile.palette_id(),
-                                  m_possible_tile_values.palette_id_enabled,
+                                  m_possible_tile_values.palette_id.enable(),
                                   m_possible_tile_values.palette_id.values());
                        });
 
@@ -568,15 +569,15 @@ private:
                                   m_unique_tile_values.layer_id.values())
                                 && filter(
                                   tile.blend_mode(),
-                                  m_possible_tile_values.blend_mode_enabled,
+                                  m_possible_tile_values.blend_mode.enable(),
                                   m_possible_tile_values.blend_mode.values())
                                 && filter(
                                   tile.depth(),
-                                  m_possible_tile_values.bpp_enabled,
+                                  m_possible_tile_values.bpp.enable(),
                                   m_possible_tile_values.bpp.values())
                                 && filter(
                                   tile.palette_id(),
-                                  m_possible_tile_values.palette_id_enabled,
+                                  m_possible_tile_values.palette_id.enable(),
                                   m_possible_tile_values.palette_id.values());
                        });
       std::vector<std::uint16_t> unique_z{};
