@@ -53,9 +53,10 @@ public:
   void push_back(std::string name, std::function<MenuItem()> funt) const;
   void reload() const
   {
-    if (m_current)
+    if (selected())
     {
-      m_current = m_list[m_current_index].second();
+      m_current        = m_list[m_current_index].second();
+      m_current_string = m_list[m_current_index].first;
     }
   }
   bool selected() const
@@ -64,8 +65,9 @@ public:
   }
 
 private:
-  mutable MenuItem    m_current       = {};
-  mutable std::size_t m_current_index = {};
+  mutable MenuItem         m_current        = {};
+  mutable std::string_view m_current_string = {};
+  mutable std::size_t      m_current_index  = {};
   mutable std::vector<std::pair<std::string, std::function<MenuItem()>>>
     m_list = {};
 };

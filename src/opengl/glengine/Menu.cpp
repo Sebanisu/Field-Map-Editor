@@ -2,8 +2,8 @@
 // Created by pcvii on 11/29/2021.
 //
 #include "Menu.hpp"
-#include "ImGuiPushID.hpp"
 #include "ImGuiIndent.hpp"
+#include "ImGuiPushID.hpp"
 namespace glengine
 {
 static_assert(Renderable<Menu>);
@@ -13,8 +13,10 @@ void Menu::OnRender() const
 }
 void Menu::OnImGuiUpdate() const
 {
-  if (m_current)
+  if (selected())
   {
+    //ImGui::SetNextItemOpen(true);
+    if(ImGui::CollapsingHeader(fmt::format("{}", m_current_string).c_str(),ImGuiTreeNodeFlags_DefaultOpen))
     {
       const auto un_indent = ImGuiIndent();
       m_current.OnImGuiUpdate();
@@ -23,7 +25,9 @@ void Menu::OnImGuiUpdate() const
       const auto pop = ImGuiPushID();
       if (ImGui::Button("Back"))
       {
-        m_current = MenuItem{};
+        m_current        = MenuItem{};
+        m_current_string = {};
+        m_current_index  = {};
       }
     }
   }
@@ -35,8 +39,9 @@ void Menu::OnImGuiUpdate() const
         const auto pop = ImGuiPushID();
         if (ImGui::Button(name.c_str()))
         {
-          m_current       = funt();
-          m_current_index = i;
+          m_current        = funt();
+          m_current_string = name;
+          m_current_index  = i;
           break;
         }
       }
