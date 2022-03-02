@@ -3,8 +3,8 @@
 //
 #include "FF8Menu.hpp"
 #include "MapDeswizzle.hpp"
-#include "Mim.hpp"
 #include "MapSwizzle.hpp"
+#include "Mim.hpp"
 static_assert(glengine::Renderable<ff8::FF8Menu>);
 void ff8::FF8Menu::OnRender() const
 {
@@ -29,7 +29,7 @@ void ff8::FF8Menu::OnEvent(const glengine::Event::Item &e) const
 }
 ff8::FF8Menu::FF8Menu()
 {
-  push_back<MapDeswizzle>("Test Map File");
   push_back<Mim>("Test Mim File");
   push_back<MapSwizzle>("Test Map File (Swizzled)");
+  push_back<MapDeswizzle>("Test Map File (Deswizzled)");
 }
