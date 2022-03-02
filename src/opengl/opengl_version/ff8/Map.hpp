@@ -124,6 +124,139 @@ public:
           m_changed = true;
         }
       }
+      {
+        const auto filter_disable = glengine::ImGuiDisabled(
+          std::ranges::empty(m_map_path) || std::ranges::empty(m_mim_path));
+        if (ImGui::CollapsingHeader("Filters"))
+        {
+          const auto            un_indent0 = glengine::ImGuiIndent();
+          static const auto common =
+            [this](
+              const char                             *label,
+              std::ranges::random_access_range auto  &bool_range,
+              std::ranges::random_access_range auto &&possible_value_range,
+              std::ranges::random_access_range auto &&possible_value_string_range,
+              std::ranges::random_access_range auto &&used_value_range,
+              std::uint32_t                           line_count) {
+              assert(
+                std::ranges::size(possible_value_range)
+                == std::ranges::size(possible_value_string_range));
+              assert(
+                std::ranges::size(bool_range)
+                == std::ranges::size(possible_value_range));
+              assert(
+                std::ranges::size(possible_value_range)
+                >= std::ranges::size(used_value_range));
+              if (ImGui::CollapsingHeader(label))
+              {
+                const auto un_indent1 = glengine::ImGuiIndent();
+
+                auto       boolptr    = std::ranges::begin(bool_range);
+                const auto boolsent   = std::ranges::end(bool_range);
+                auto current_value    = std::ranges::cbegin(possible_value_range);
+                auto current_string =
+                  std::ranges::cbegin(possible_value_string_range);
+
+                for (std::uint32_t i = 0; boolptr != boolsent; ++i,
+                                   (void)++boolptr,
+                                   (void)++current_value,
+                                   (void)++current_string)
+                {
+                  auto found =
+                    std::ranges::find(used_value_range, *current_value);
+
+                  const auto disabled = glengine::ImGuiDisabled(
+                    found == std::ranges::end(used_value_range));
+
+                  const auto pop       = glengine::ImGuiPushID();
+                  const auto string    = fmt::format("{:>4}", *current_string);
+                  auto       size      = ImGui::CalcTextSize(string.c_str());
+                  bool       same_line = line_count > 0 && i % line_count != 0;
+                  if (same_line)
+                    ImGui::SameLine();
+                  ImGui::Dummy(ImVec2(2.F, 2.F));
+                  if (same_line)
+                    ImGui::SameLine();
+                  if (ImGui::Selectable(
+                        string.c_str(), static_cast<bool>(*boolptr), 0, size))
+                  {
+                    *boolptr  = !static_cast<bool>(*boolptr);
+                    m_changed = true;
+                  }
+                }
+                ImGui::Dummy(ImVec2(2.F, 2.F));
+                {
+                  const auto pop = glengine::ImGuiPushID();
+                  if (ImGui::Button("All"))
+                  {
+                    std::ranges::fill(bool_range, true);
+                    m_changed = true;
+                  }
+                }
+                ImGui::SameLine();
+                ImGui::Dummy(ImVec2(2.F, 2.F));
+                ImGui::SameLine();
+                {
+                  const auto pop = glengine::ImGuiPushID();
+                  if (ImGui::Button("None"))
+                  {
+                    std::ranges::fill(bool_range, false);
+                    m_changed = true;
+                  }
+                }
+                ImGui::Dummy(ImVec2(2.F, 2.F));
+              }
+            };
+          static constexpr auto common_unique =
+            [](const char *label, auto &&unique, std::uint32_t row_size) {
+              common(
+                label,
+                unique.enable(),
+                unique.values(),
+                unique.strings(),
+                unique.values(),
+                row_size);
+            };
+
+          common(
+            "BPP",
+            m_possible_tile_values.bpp.enable(),
+            m_possible_tile_values.bpp.values(),
+            m_possible_tile_values.bpp.strings(),
+            m_unique_tile_values.bpp.values(),
+            4);
+
+          common(
+            "Palettes",
+            m_possible_tile_values.palette_id.enable(),
+            m_possible_tile_values.palette_id.values(),
+            m_possible_tile_values.palette_id.strings(),
+            m_unique_tile_values.palette_id.values(),
+            8);
+
+          common(
+            "Blend Mode",
+            m_possible_tile_values.blend_mode.enable(),
+            m_possible_tile_values.blend_mode.values(),
+            m_possible_tile_values.blend_mode.strings(),
+            m_unique_tile_values.blend_mode.values(),
+            3);
+
+          common_unique("Blend Other", m_unique_tile_values.blend_other, 8);
+
+          common_unique("Z", m_unique_tile_values.z, 4);
+
+          common_unique("Layer ID", m_unique_tile_values.layer_id, 8);
+
+          common_unique(
+            "Texture Page ID", m_unique_tile_values.texture_page_id, 8);
+
+          common_unique("Animation ID", m_unique_tile_values.animation_id, 8);
+
+          common_unique(
+            "Animation Frame", m_unique_tile_values.animation_frame, 8);
+        }
+      }
       if (ImGui::Button("Save"))
       {
         Save();
@@ -133,140 +266,6 @@ public:
     s_camera.OnImGuiUpdate();
     ImGui::Separator();
     m_batch_renderer.OnImGuiUpdate();
-    ImGui::Separator();
-    {
-      const auto filter_disable = glengine::ImGuiDisabled(
-        std::ranges::empty(m_map_path) || std::ranges::empty(m_mim_path));
-      if (ImGui::CollapsingHeader("Filters"))
-      {
-        const auto            un_indent0 = glengine::ImGuiIndent();
-        static const auto common =
-          [this](
-            const char                             *label,
-            std::ranges::random_access_range auto  &bool_range,
-            std::ranges::random_access_range auto &&possible_value_range,
-            std::ranges::random_access_range auto &&possible_value_string_range,
-            std::ranges::random_access_range auto &&used_value_range,
-            std::uint32_t                           line_count) {
-            assert(
-              std::ranges::size(possible_value_range)
-              == std::ranges::size(possible_value_string_range));
-            assert(
-              std::ranges::size(bool_range)
-              == std::ranges::size(possible_value_range));
-            assert(
-              std::ranges::size(possible_value_range)
-              >= std::ranges::size(used_value_range));
-            if (ImGui::CollapsingHeader(label))
-            {
-              const auto un_indent1 = glengine::ImGuiIndent();
-
-              auto       boolptr    = std::ranges::begin(bool_range);
-              const auto boolsent   = std::ranges::end(bool_range);
-              auto current_value    = std::ranges::cbegin(possible_value_range);
-              auto current_string =
-                std::ranges::cbegin(possible_value_string_range);
-
-              for (std::uint32_t i = 0; boolptr != boolsent; ++i,
-                                 (void)++boolptr,
-                                 (void)++current_value,
-                                 (void)++current_string)
-              {
-                auto found =
-                  std::ranges::find(used_value_range, *current_value);
-
-                const auto disabled = glengine::ImGuiDisabled(
-                  found == std::ranges::end(used_value_range));
-
-                const auto pop       = glengine::ImGuiPushID();
-                const auto string    = fmt::format("{:>4}", *current_string);
-                auto       size      = ImGui::CalcTextSize(string.c_str());
-                bool       same_line = line_count > 0 && i % line_count != 0;
-                if (same_line)
-                  ImGui::SameLine();
-                ImGui::Dummy(ImVec2(2.F, 2.F));
-                if (same_line)
-                  ImGui::SameLine();
-                if (ImGui::Selectable(
-                      string.c_str(), static_cast<bool>(*boolptr), 0, size))
-                {
-                  *boolptr  = !static_cast<bool>(*boolptr);
-                  m_changed = true;
-                }
-              }
-              ImGui::Dummy(ImVec2(2.F, 2.F));
-              {
-                const auto pop = glengine::ImGuiPushID();
-                if (ImGui::Button("All"))
-                {
-                  std::ranges::fill(bool_range, true);
-                  m_changed = true;
-                }
-              }
-              ImGui::SameLine();
-              ImGui::Dummy(ImVec2(2.F, 2.F));
-              ImGui::SameLine();
-              {
-                const auto pop = glengine::ImGuiPushID();
-                if (ImGui::Button("None"))
-                {
-                  std::ranges::fill(bool_range, false);
-                  m_changed = true;
-                }
-              }
-              ImGui::Dummy(ImVec2(2.F, 2.F));
-            }
-          };
-        static constexpr auto common_unique =
-          [](const char *label, auto &&unique, std::uint32_t row_size) {
-            common(
-              label,
-              unique.enable(),
-              unique.values(),
-              unique.strings(),
-              unique.values(),
-              row_size);
-          };
-
-        common(
-          "BPP",
-          m_possible_tile_values.bpp.enable(),
-          m_possible_tile_values.bpp.values(),
-          m_possible_tile_values.bpp.strings(),
-          m_unique_tile_values.bpp.values(),
-          4);
-
-        common(
-          "Palettes",
-          m_possible_tile_values.palette_id.enable(),
-          m_possible_tile_values.palette_id.values(),
-          m_possible_tile_values.palette_id.strings(),
-          m_unique_tile_values.palette_id.values(),
-          8);
-
-        common(
-          "Blend Mode",
-          m_possible_tile_values.blend_mode.enable(),
-          m_possible_tile_values.blend_mode.values(),
-          m_possible_tile_values.blend_mode.strings(),
-          m_unique_tile_values.blend_mode.values(),
-          3);
-
-        common_unique("Blend Other", m_unique_tile_values.blend_other, 8);
-
-        common_unique("Z", m_unique_tile_values.z, 4);
-
-        common_unique("Layer ID", m_unique_tile_values.layer_id, 8);
-
-        common_unique(
-          "Texture Page ID", m_unique_tile_values.texture_page_id, 8);
-
-        common_unique("Animation ID", m_unique_tile_values.animation_id, 8);
-
-        common_unique(
-          "Animation Frame", m_unique_tile_values.animation_frame, 8);
-      }
-    }
   }
   void OnEvent(const glengine::Event::Item &) const {}
 
