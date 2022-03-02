@@ -55,6 +55,7 @@ public:
       return "24"s;
     throw std::invalid_argument("Must be 4, 8, 16, or 24 bpp");
   };
+  UniqueTileValues() = default;
   UniqueTileValues(const open_viii::graphics::background::Map &map)
     : z(visit(map, [](const auto &tile) { return tile.z(); }))
     , layer_id(visit(map, [](const auto &tile) { return tile.layer_id(); }))
