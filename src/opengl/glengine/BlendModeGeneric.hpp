@@ -29,10 +29,9 @@ public:
     {
       return 0;
     }
-    return selection_values[static_cast<std::size_t>(std::clamp(
+    return selection_values[static_cast<int>(std::clamp(
       selection,
-      0,
-      static_cast<int>(std::ranges::ssize(selection_values) - 1)))];
+      int{},      static_cast<int>(std::ranges::ssize(selection_values) - 1)))];
   }
 
   auto &operator=(int new_selection) noexcept

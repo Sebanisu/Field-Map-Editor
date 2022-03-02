@@ -18,6 +18,7 @@
 #include "ImGuiDisabled.hpp"
 #include "ImGuiIndent.hpp"
 #include "ImGuiPushID.hpp"
+#include "MapBlends.hpp"
 #include "MapFilters.hpp"
 #include "OrthographicCamera.hpp"
 #include "OrthographicCameraController.hpp"
@@ -100,33 +101,14 @@ public:
     {
       const auto disable = glengine::ImGuiDisabled(
         std::ranges::empty(m_map_path) || std::ranges::empty(m_mim_path));
-      ImGui::Checkbox("Draw Grid", &s_draw_grid);
-      ImGui::Checkbox("Snap Zoom to Height", &s_snap_zoom_to_height);
-      if (ImGui::CollapsingHeader("Add Blend"))
-      {
-        const auto un_indent = glengine::ImGuiIndent();
-        if (ImGui::Checkbox(
-              "Percent Blends (50%,25%)", &s_enable_percent_blend))
-        {
-          m_changed = true;
-        }
-        const auto pop = glengine::ImGuiPushID();
-        if (Blend_Combos(add_parameter_selections, add_equation_selections))
-        {
-          m_changed = true;
-        }
-      }
-      if (ImGui::CollapsingHeader("Subtract Blend"))
-      {
-        const auto un_indent = glengine::ImGuiIndent();
-        const auto pop       = glengine::ImGuiPushID();
-        if (Blend_Combos(
-              subtract_parameter_selections, subtract_equation_selections))
-        {
-          m_changed = true;
-        }
-      }
-      m_changed = m_filters.OnImGuiUpdate();
+      m_changed = std::ranges::any_of(
+        std::array{
+          ImGui::Checkbox("Draw Grid", &s_draw_grid),
+          ImGui::Checkbox("Snap Zoom to Height", &s_snap_zoom_to_height),
+          s_blends.OnImGuiUpdate(),
+          m_filters.OnImGuiUpdate() },
+        std::identity{});
+
       if (ImGui::Button("Save"))
       {
         Save();
@@ -140,21 +122,6 @@ public:
   void OnEvent(const glengine::Event::Item &) const {}
 
 private:
-  [[nodiscard]] static bool Blend_Combos(
-    glengine::BlendModeParameters &parameters_selections,
-    glengine::BlendModeEquations  &equation_selections)
-  {
-    if (parameters_selections.OnImGuiUpdate())
-    {
-      return true;
-    }
-    ImGui::Separator();
-    if (equation_selections.OnImGuiUpdate())
-    {
-      return true;
-    }
-    return false;
-  }
   // set uniforms
   void SetUniforms() const
   {
@@ -252,7 +219,7 @@ private:
           {
             m_batch_renderer.Draw();// flush buffer.
             last_blend_mode = blend_mode;
-            if (s_enable_percent_blend)
+            if (s_blends.PercentBlendEnabled())
             {
               switch (blend_mode)
               {
@@ -272,13 +239,11 @@ private:
               case BlendModeT::half_add:
               case BlendModeT::quarter_add:
               case BlendModeT::add: {
-                SetBlendModeSelections(
-                  add_parameter_selections, add_equation_selections);
+                s_blends.SetAddBlend();
               }
               break;
               case BlendModeT ::subtract: {
-                SetBlendModeSelections(
-                  subtract_parameter_selections, subtract_equation_selections);
+                s_blends.SetSubtractBlend();
               }
               break;
               default:
@@ -308,22 +273,9 @@ private:
     m_batch_renderer.Draw();
     m_batch_renderer.OnRender();
     glengine::Window::DefaultBlend();
+    s_uniform_color = s_default_uniform_color;
   }
-  static void SetBlendModeSelections(
-    const glengine::BlendModeParameters &parameters_selections,
-    const glengine::BlendModeEquations  &equation_selections)
-  {
-    GLCall{}(
-      glBlendFuncSeparate,
-      parameters_selections[0].current_value(),
-      parameters_selections[1].current_value(),
-      parameters_selections[2].current_value(),
-      parameters_selections[3].current_value());
-    GLCall{}(
-      glBlendEquationSeparate,
-      equation_selections[0].current_value(),
-      equation_selections[1].current_value());
-  }
+
 
   auto
     IndexAndPageWidth(open_viii::graphics::BPPT bpp, std::uint8_t palette) const
@@ -437,10 +389,9 @@ private:
   inline static glengine::OrthographicCameraController s_camera    = { 16 / 9 };
   inline static glengine::OrthographicCamera s_fixed_render_camera = {};
   inline static bool                         s_snap_zoom_to_height = { true };
-  inline static bool                         s_enable_percent_blend = { true };
-  inline static bool                         s_draw_grid            = { false };
+  inline static bool                         s_draw_grid           = { false };
 
-  static constexpr int16_t                   s_texture_page_width   = 256;
+  static constexpr int16_t                   s_texture_page_width  = 256;
 
 
   static constexpr glm::vec4 s_default_uniform_color = { 1.F, 1.F, 1.F, 1.F };
@@ -451,43 +402,32 @@ private:
                                                          .25F };
   inline static glm::vec4    s_uniform_color         = s_default_uniform_color;
 
-  inline static constinit glengine::BlendModeParameters
-    add_parameter_selections{ 2, 1, 6, 7 };
-  inline static constinit glengine::BlendModeEquations
-    add_equation_selections{};
-  inline static constinit glengine::BlendModeParameters
-    subtract_parameter_selections{ 4, 1, 6, 7 };
-  inline static constinit glengine::BlendModeEquations
-                                       subtract_equation_selections{ 2, 0 };
-  // inline static std::array<int, 4> add_parameter_selections{ 2, 1, 6, 7 };
-  // inline static std::array<int, 2> add_equation_selections{};
-  //  inline static std::array<int, 4> subtract_parameter_selections{ 4, 1, 6, 7
-  //  }; inline static std::array<int, 2> subtract_equation_selections{ 2, 0 };
 
   // internal mim file path
-  std::string                          m_mim_path             = {};
+  std::string                m_mim_path              = {};
   // internal map file path
-  std::string                          m_map_path             = {};
+  std::string                m_map_path              = {};
   // if coo was chosen instead of default.
-  bool                                 m_mim_choose_coo       = {};
+  bool                       m_mim_choose_coo        = {};
   // if coo was chosen instead of default.
-  bool                                 m_map_choose_coo       = {};
+  bool                       m_map_choose_coo        = {};
   // container for field textures
-  open_viii::graphics::background::Mim m_mim                  = {};
+  open_viii::graphics::background::Mim m_mim         = {};
   // container for field tile information
-  open_viii::graphics::background::Map m_map                  = {};
+  open_viii::graphics::background::Map m_map         = {};
   // loads the textures overtime instead of forcing them to load at start.
-  glengine::DelayedTextures<35U>       m_delayed_textures     = {};
+  glengine::DelayedTextures<35U>       m_delayed_textures  = {};
   // takes quads and draws them to the frame buffer or screen.
-  glengine::BatchRenderer              m_batch_renderer       = { 1000 };
+  glengine::BatchRenderer              m_batch_renderer    = { 1000 };
   // holds rendered image at 1:1 scale to prevent gaps when scaling.
-  glengine::FrameBuffer                m_frame_buffer         = {};
-  float                                m_offset_y             = {};
-  mutable bool                         m_offscreen_drawing    = { false };
-  mutable bool                         m_saving               = { false };
-  glm::vec3                            m_position             = {};
-  MapFilters                           m_filters              = {m_map};
-  mutable bool                         m_changed              = { true };
+  glengine::FrameBuffer                m_frame_buffer      = {};
+  float                                m_offset_y          = {};
+  mutable bool                         m_offscreen_drawing = { false };
+  mutable bool                         m_saving            = { false };
+  glm::vec3                            m_position          = {};
+  inline constinit static MapBlends    s_blends            = {};
+  MapFilters                           m_filters           = { m_map };
+  mutable bool                         m_changed           = { true };
 };
 }// namespace ff8
 #endif// FIELD_MAP_EDITOR_MAP_HPP
