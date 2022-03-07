@@ -3,8 +3,8 @@
 //
 #include "Window.hpp"
 #include "Event/Event.hpp"
-#include "Renderer.hpp"
 #include "ImGuiPushID.hpp"
+#include "Renderer.hpp"
 namespace glengine
 {
 static bool glfw_init  = false;
@@ -63,7 +63,8 @@ Window::Window(Window::WindowData in_data)
 
   const char *glsl_version = "#version 130";
   InitGLFW();
-  const unsigned char *gl_version = GLCall{}(glGetString, GL_VERSION);
+  const char *gl_version =
+    reinterpret_cast<const char *>(GLCall{}(glGetString, GL_VERSION));
   if (gl_version != nullptr)
   {
     fmt::print("{}\n", gl_version);

@@ -7,17 +7,18 @@ class FieldMapEditor(ConanFile):
     name = "Field-Map-Editor"
     version = "0.1"
     requires = (
-        "catch2/2.13.7",
-        "docopt.cpp/0.6.3",
-        "fmt/8.0.1",
-        "spdlog/1.9.2",
-        "glfw/3.3.5",
-        "glew/2.2.0",
-        "glm/0.9.9.8",
-        "imgui/1.85",
-        "sfml/2.5.1",
-        "andreasbuhr-cppcoro/cci.20210113",
-        "stb/cci.20210713"
+        # "catch2/2.13.7",
+        # "docopt.cpp/0.6.3",
+        "fmt/8.1.1",  # formatting library
+        "spdlog/1.9.2",  # logging library
+        "glfw/3.3.5",  # opengl version
+        "glew/2.2.0",  # opengl version
+        "glm/0.9.9.8",  # opengl version
+        "imgui/1.87",  # UI used for both opengl and sfml
+        "sfml/2.5.1",  # sfml version
+        "andreasbuhr-cppcoro/cci.20210113",  # sfml version
+        "stb/cci.20210713",  # image loading and saving
+        "boost-ext-ut/1.1.8"  # unit testing library
     )
     generators = "cmake", "gcc", "txt", "cmake_find_package"
 # required for linux? sudo apt-get install -y pkg-config

@@ -94,3 +94,5 @@ target_precompile_headers(${PROJECT_NAME}_OPENGL
 #        $<$<CONFIG:Release>:${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/${PROJECT_NAME}_OPENGL.dir/Release>
 #        #$<$<CONFIG:MinSizeRel>:${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/${PROJECT_NAME}_OPENGL.dir/MinSizeRel>
 #        ${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/${PROJECT_NAME}_OPENGL.dir)
+
+add_subdirectory(unit_test)
