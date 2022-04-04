@@ -18,7 +18,7 @@ class FieldMapEditor(ConanFile):
         "sfml/2.5.1",  # sfml version
         "andreasbuhr-cppcoro/cci.20210113",  # sfml version
         "stb/cci.20210713",  # image loading and saving
-        "boost-ext-ut/1.1.8"  # unit testing library
+        "boost-ext-ut/1.1.9"  # unit testing library
     )
     generators = "cmake", "gcc", "txt", "cmake_find_package"
 # required for linux? sudo apt-get install -y pkg-config
