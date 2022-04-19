@@ -27,7 +27,7 @@ endif()
 add_library(project_warnings INTERFACE)
 
 # enable cache system
-include(cmake/Cache.cmake)
+#include(cmake/Cache.cmake)
 
 # Add linker configuration
 include(cmake/Linker.cmake)
