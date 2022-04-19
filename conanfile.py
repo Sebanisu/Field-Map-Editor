@@ -10,7 +10,7 @@ class FieldMapEditor(ConanFile):
         # "catch2/2.13.7",
         # "docopt.cpp/0.6.3",
         "fmt/8.1.1",  # formatting library
-        "spdlog/1.9.2",  # logging library
+        "spdlog/1.10.0",  # logging library
         "glfw/3.3.5",  # opengl version
         "glew/2.2.0",  # opengl version
         "glm/0.9.9.8",  # opengl version
@@ -21,6 +21,8 @@ class FieldMapEditor(ConanFile):
         "boost-ext-ut/1.1.9"  # unit testing library
     )
     generators = "cmake", "gcc", "txt", "cmake_find_package"
+    def configure(self):
+        self.options['boost-ext-ut'].disable_module = True
 # required for linux? sudo apt-get install -y pkg-config
 # required for WSL? error when ever conan tried to run sudo.
 # sudo -A apt-get update
