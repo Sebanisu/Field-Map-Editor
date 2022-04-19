@@ -7,10 +7,19 @@
 #include "BlendModeEquation.hpp"
 namespace glengine
 {
-using BlendModeEquations = BlendModeGenerics<
-  decltype([]() {
-    return std::array{ "modeRGB", "modeAlpha" };
-  }),
-  BlendModeEquation>;
-}
+inline namespace impl
+{
+  class BlendModeEquationsStrings
+  {
+  public:
+    constexpr auto operator()() const noexcept
+    {
+      using namespace std::string_view_literals;
+      return std::array{ "modeRGB"sv, "modeAlpha"sv };
+    }
+  };
+  using BlendModeEquations =
+    BlendModeGenerics<BlendModeEquationsStrings, BlendModeEquation>;
+}// namespace impl
+}// namespace glengine
 #endif// FIELD_MAP_EDITOR_BLENDMODEEQUATIONS_HPP

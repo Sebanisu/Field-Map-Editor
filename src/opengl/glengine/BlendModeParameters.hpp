@@ -7,10 +7,19 @@
 #include "BlendModeParameter.hpp"
 namespace glengine
 {
-using BlendModeParameters = BlendModeGenerics<
-  decltype([]() {
-    return std::array{ "srcRGB", "dstRGB", "srcAlpha", "dstAlpha" };
-  }),
-  BlendModeParameter>;
-}
+inline namespace impl
+{
+  class BlendModeParametersStrings
+  {
+  public:
+    constexpr auto operator()() const noexcept
+    {
+      using namespace std::string_view_literals;
+      return std::array{ "srcRGB"sv, "dstRGB"sv, "srcAlpha"sv, "dstAlpha"sv };
+    }
+  };
+  using BlendModeParameters =
+    BlendModeGenerics<BlendModeParametersStrings, BlendModeParameter>;
+}// namespace impl
+}// namespace glengine
 #endif// FIELD_MAP_EDITOR_BLENDMODEPARAMETERS_HPP

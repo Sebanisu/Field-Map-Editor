@@ -77,7 +77,7 @@ public:
     for (std::size_t i = 0U; i != std::ranges::size(labels); ++i)
     {
       if (glengine::GenericCombo(
-            labels[i], m_selections[i], UsedSelectionsT::selection_strings))
+            labels[i].data(), m_selections[i], UsedSelectionsT::selection_strings))
       {
         changed = true;
       }
