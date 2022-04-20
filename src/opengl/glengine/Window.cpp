@@ -295,7 +295,7 @@ void Window::InitGLFW()
   GLCall{}(glEnable, GL_BLEND);
   DefaultBlend();
 }
-void Window::InitImGui(const char *glsl_version) const
+void Window::InitImGui(const char * const glsl_version) const
 {
   if (!imgui_init)
   {
@@ -456,7 +456,7 @@ void Window::InitCallbacks() const
       auto    &data = GetWindowData(window);
       auto    &pos  = ImGui::GetMainViewport()->Pos;
       io.AddMousePosEvent(
-        static_cast<float>(x + pos.x), static_cast<float>(y + pos.y));
+        static_cast<float>(x + static_cast<double>(pos.x)), static_cast<float>(y + static_cast<double>(pos.y)));
       if (!io.WantCaptureMouse)
       {
         data.event_callback(

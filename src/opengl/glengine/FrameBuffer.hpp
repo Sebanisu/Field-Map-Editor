@@ -31,6 +31,11 @@ public:
   }
   const FrameBufferSpecification &Specification() const;
   SubTexture                      GetColorAttachment() const;
+                                  operator bool()
+  {
+    return m_color_attachment != 0U && m_renderer_id != 0U
+           && m_depth_attachment != 0U;
+  }
 
 private:
   FrameBufferSpecification m_specification    = {};

@@ -57,7 +57,8 @@ void Application::Run() const
   glengine::FrameBufferRenderer fbr       = {};
   auto                          last      = glengine::TimeStep::now();
   using namespace std::chrono_literals;
-
+  glengine::FrameBuffer fb;// needed to be inscope somewhere because texture was
+                           // being erased before it was drawn.
   while (running)
   {
     window->BeginFrame();// First thing you do on update;
@@ -65,31 +66,66 @@ void Application::Run() const
     {
       glengine::Renderer::Clear.Color({ 0.F, 0.F, 0.F, 0.F });
       glengine::Renderer::Clear();
-      static bool show_demo_window = true;
+
       window->RenderDockspace();
 #if 0
+      static bool show_demo_window = true;
       if (show_demo_window)
         ImGui::ShowDemoWindow(&show_demo_window);
 #else
       constinit static std::size_t test_number = 0U;
       layers.OnImGuiUpdate();
       layers.OnUpdate(time_step);
-      glengine::FrameBuffer fb(glengine::FrameBufferSpecification{
-        .width  = current_window->ViewWindowData().frame_buffer_width,
-        .height = current_window->ViewWindowData().frame_buffer_height });
-      fb.Bind();
-      glengine::Renderer::Clear();
-      layers.OnRender();
-      fb.UnBind();
-      if (glengine::TimeStep::now() - last > glengine::TimeStep::duration(5s))
+
+
+      ImGui::Begin("GameWindow");
       {
-        glengine::PixelBuffer pixel_buffer{ fb.Specification() };
-        pixel_buffer(fb, fmt::format("test ({}).png", test_number++));
-        while (pixel_buffer(&glengine::Texture::save))
-          ;
-        last = glengine::TimeStep::now();
+        // Using a Child allow to fill all the space of the window.
+        // It also alows customization
+        ImGui::BeginChild("GameRender");
+        // Get the size of the child (i.e. the whole draw size of the windows).
+        ImVec2 wsize = ImGui::GetContentRegionAvail();// ImGui::GetWindowSize();
+        fmt::print("ViewPort = {}, {}\n", wsize.x, wsize.y);
+        if(!fb || fb.Specification().height != static_cast<int>(wsize.y) || fb.Specification().width != wsize.x)
+        fb = glengine::FrameBuffer(glengine::FrameBufferSpecification{
+          .width = static_cast<int>(
+            wsize.x),// current_window->ViewWindowData().frame_buffer_width,
+          .height = static_cast<int>(
+            wsize.y)// current_window->ViewWindowData().frame_buffer_height
+        });
+        fb.Bind();
+        glengine::Renderer::Clear();
+        layers.OnRender();
+        fb.UnBind();
+        // Because I use the texture from OpenGL, I need to invert the V from
+        // the UV.
+        const auto convert = [](uint32_t r_id) -> ImTextureID {
+          return reinterpret_cast<ImTextureID>(static_cast<intptr_t>(r_id));
+        };
+        auto tmp = convert(fb.GetColorAttachment().ID());
+        fmt::print("{}\n", tmp);
+        ImGui::Image(
+          tmp,
+          ImVec2(
+            static_cast<float>(fb.Specification().width),
+            static_cast<float>(fb.Specification().height)),
+          ImVec2(0, 1),
+          ImVec2(1, 0));
+        //        if (glengine::TimeStep::now() - last >
+        //        glengine::TimeStep::duration(5s))
+        //        {
+        //          glengine::PixelBuffer pixel_buffer{ fb.Specification() };
+        //          pixel_buffer(fb, fmt::format("test ({}).png",
+        //          test_number++)); while
+        //          (pixel_buffer(&glengine::Texture::save))
+        //            ;
+        //          last = glengine::TimeStep::now();
+        //        }
+        //fbr.Draw(fb); //render frame buffer to screen.
+        ImGui::EndChild();
       }
-      fbr.Draw(fb);
+      ImGui::End();
+
 #endif
       window->EndFrameRendered();// Last thing you do on render;
       window->UpdateViewPorts();
