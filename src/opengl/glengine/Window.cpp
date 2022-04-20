@@ -5,6 +5,7 @@
 #include "Event/Event.hpp"
 #include "ImGuiPushID.hpp"
 #include "Renderer.hpp"
+
 namespace glengine
 {
 static bool glfw_init  = false;
@@ -130,8 +131,8 @@ void Window::InitImGui(const char *glsl_version) const
     // Setup Dear ImGui context
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
-    ImGuiIO &io = ImGui::GetIO();
-    (void)io;
+    //    ImGuiIO &io = ImGui::GetIO();
+    //    (void)io;
     // io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable
     // Keyboard Controls io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad; //
     // Enable Gamepad Controls
@@ -169,10 +170,12 @@ void Window::InitImGui(const char *glsl_version) const
   // io.Fonts->AddFontFromFileTTF("c:\\Windows\\Fonts\\ArialUni.ttf", 18.0f,
   // NULL, io.Fonts->GetGlyphRangesJapanese()); IM_ASSERT(font != NULL);
 }
+
 void Window::InitCallbacks() const
 {
   BeginErrorCallBack();
   // GLFW callBacks
+
   glfwSetErrorCallback([](int error, const char *description) {
     fmt::print(stderr, "Error GLFW {}: {}\n", error, description);
     throw;
@@ -208,20 +211,24 @@ void Window::InitCallbacks() const
       [[maybe_unused]] int scancode,
       int                  action,
       [[maybe_unused]] int mods) {
-      auto &data = GetWindowData(window);
-      switch (action)
+      ImGuiIO &io = ImGui::GetIO();
+      if (!io.WantCaptureKeyboard)
       {
-        case GLFW_PRESS: {
-          data.event_callback(Event::KeyPressed(glengine::KEY{ key }, false));
-          break;
-        }
-        case GLFW_RELEASE: {
-          data.event_callback(Event::KeyReleased(glengine::KEY{ key }));
-          break;
-        }
-        case GLFW_REPEAT: {
-          data.event_callback(Event::KeyPressed(glengine::KEY{ key }, true));
-          break;
+        auto &data = GetWindowData(window);
+        switch (action)
+        {
+          case GLFW_PRESS: {
+            data.event_callback(Event::KeyPressed(glengine::KEY{ key }, false));
+            break;
+          }
+          case GLFW_RELEASE: {
+            data.event_callback(Event::KeyReleased(glengine::KEY{ key }));
+            break;
+          }
+          case GLFW_REPEAT: {
+            data.event_callback(Event::KeyPressed(glengine::KEY{ key }, true));
+            break;
+          }
         }
       }
     });
@@ -230,28 +237,36 @@ void Window::InitCallbacks() const
     m_window.get(),
     [](GLFWwindow *window, int button, int action, [[maybe_unused]] int mods) {
       using glengine::MOUSE;
-      auto &data = GetWindowData(window);
+      ImGuiIO &io   = ImGui::GetIO();
+      auto    &data = GetWindowData(window);
       switch (action)
       {
         case GLFW_PRESS: {
-          data.event_callback(Event::MouseButtonPressed(MOUSE{ button }));
+          io.AddMouseButtonEvent(button, true);
+          if (!io.WantCaptureMouse)
+          {
+            data.event_callback(Event::MouseButtonPressed(MOUSE{ button }));
+          }
           break;
         }
         case GLFW_RELEASE: {
-          data.event_callback(Event::MouseButtonReleased(MOUSE{ button }));
+          io.AddMouseButtonEvent(button, false);
+          if (!io.WantCaptureMouse)
+          {
+            data.event_callback(Event::MouseButtonReleased(MOUSE{ button }));
+          }
           break;
         }
       }
     });
   glfwSetScrollCallback(
     m_window.get(), [](GLFWwindow *window, double x_offset, double y_offset) {
-      auto    &data = GetWindowData(window);
-
       ImGuiIO &io   = ImGui::GetIO();
+      auto    &data = GetWindowData(window);
       if (io.WantCaptureMouse)
       {
-        io.MouseWheelH += static_cast<float>(x_offset);
-        io.MouseWheel += static_cast<float>(y_offset);
+        io.AddMouseWheelEvent(
+          static_cast<float>(x_offset), static_cast<float>(y_offset));
       }
       else
       {
@@ -262,9 +277,14 @@ void Window::InitCallbacks() const
 
   glfwSetCursorPosCallback(
     m_window.get(), [](GLFWwindow *window, double x, double y) {
-      auto &data = GetWindowData(window);
-      data.event_callback(
-        Event::MouseMoved(static_cast<float>(x), static_cast<float>(y)));
+      ImGuiIO &io   = ImGui::GetIO();
+      auto    &data = GetWindowData(window);
+      io.AddMousePosEvent(static_cast<float>(x), static_cast<float>(y));
+      if (!io.WantCaptureMouse)
+      {
+        data.event_callback(
+          Event::MouseMoved(static_cast<float>(x), static_cast<float>(y)));
+      }
     });
 
   glfwSetWindowPosCallback(
