@@ -14,7 +14,8 @@ class FieldMapEditor(ConanFile):
         "glfw/3.3.5",  # opengl version
         "glew/2.2.0",  # opengl version
         "glm/0.9.9.8",  # opengl version
-        "imgui/1.87",  # UI used for both opengl and sfml
+        "imgui/cci.20220207+1.87.docking", #docking UI for opengl
+        #"imgui/1.87",  # UI used for both opengl and sfml
         "sfml/2.5.1",  # sfml version
         "andreasbuhr-cppcoro/cci.20210113",  # sfml version
         "stb/cci.20210713",  # image loading and saving
