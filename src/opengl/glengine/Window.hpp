@@ -99,6 +99,7 @@ public:
   static void SubtractBlend();
 
   void        UpdateViewPorts() const;
+  void        RenderDockspace() const;
 
 private:
   Window(WindowData);
