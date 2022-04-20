@@ -47,7 +47,7 @@ void Window::RenderDockspace() const
   // not dockable into, because it would be confusing to have two docking
   // targets within each others.
   ImGuiWindowFlags          window_flags =
-    ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoDocking;
+    ImGuiWindowFlags_NoDocking; //ImGuiWindowFlags_MenuBar
   if (opt_fullscreen)
   {
     const ImGuiViewport *viewport = ImGui::GetMainViewport();
