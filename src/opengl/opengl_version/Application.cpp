@@ -57,7 +57,7 @@ void Application::Run() const
   glengine::FrameBufferRenderer fbr       = {};
   auto                          last      = glengine::TimeStep::now();
   using namespace std::chrono_literals;
-  std::size_t test_number = 0;
+
   while (running)
   {
     window->BeginFrame();// First thing you do on update;
@@ -65,6 +65,13 @@ void Application::Run() const
     {
       glengine::Renderer::Clear.Color({ 0.F, 0.F, 0.F, 0.F });
       glengine::Renderer::Clear();
+      static bool show_demo_window = true;
+      window->RenderDockspace();
+#if 0
+      if (show_demo_window)
+        ImGui::ShowDemoWindow(&show_demo_window);
+#else
+      constinit static std::size_t test_number = 0U;
       layers.OnImGuiUpdate();
       layers.OnUpdate(time_step);
       glengine::FrameBuffer fb(glengine::FrameBufferSpecification{
@@ -83,7 +90,9 @@ void Application::Run() const
         last = glengine::TimeStep::now();
       }
       fbr.Draw(fb);
+#endif
       window->EndFrameRendered();// Last thing you do on render;
+      window->UpdateViewPorts();
     }
     else
     {
