@@ -32,6 +32,17 @@ void Window::EndFrameRendered() const
   /* Swap front and back buffers */
   glfwSwapBuffers(m_window.get());
 }
+void Window::UpdateViewPorts() const
+{
+  ImGuiIO &io = ImGui::GetIO();
+  if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
+  {
+    GLFWwindow* backup_current_context = glfwGetCurrentContext();
+    ImGui::UpdatePlatformWindows();
+    ImGui::RenderPlatformWindowsDefault();
+    glfwMakeContextCurrent(backup_current_context);
+  }
+}
 int Window::Width() const
 {
   return m_data.width;
@@ -131,11 +142,13 @@ void Window::InitImGui(const char *glsl_version) const
     // Setup Dear ImGui context
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
-    //    ImGuiIO &io = ImGui::GetIO();
+    ImGuiIO &io = ImGui::GetIO();
     //    (void)io;
     // io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable
     // Keyboard Controls io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad; //
     // Enable Gamepad Controls
+    io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+    io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
 
     // Setup Dear ImGui style
     ImGui::StyleColorsDark();
@@ -279,7 +292,8 @@ void Window::InitCallbacks() const
     m_window.get(), [](GLFWwindow *window, double x, double y) {
       ImGuiIO &io   = ImGui::GetIO();
       auto    &data = GetWindowData(window);
-      io.AddMousePosEvent(static_cast<float>(x), static_cast<float>(y));
+      auto & pos = ImGui::GetMainViewport()->Pos;
+      io.AddMousePosEvent(static_cast<float>(x+pos.x), static_cast<float>(y+pos.y));
       if (!io.WantCaptureMouse)
       {
         data.event_callback(

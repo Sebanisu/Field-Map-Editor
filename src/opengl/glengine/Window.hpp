@@ -98,6 +98,8 @@ public:
   static void AddBlend();
   static void SubtractBlend();
 
+  void        UpdateViewPorts() const;
+
 private:
   Window(WindowData);
   WindowData m_data = {};
