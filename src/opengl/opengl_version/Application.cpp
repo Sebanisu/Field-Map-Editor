@@ -14,8 +14,9 @@
 #include "TimeStep.hpp"
 
 static glengine::Window *current_window = nullptr;
-static bool              running        = true;
-static bool              minimize       = false;
+static constinit bool    running        = true;
+static constinit bool    minimize       = false;
+static ImVec2            viewport_size  = {};
 static bool              OnWindowClose(const glengine::Event::WindowClose &)
 {
   running = false;
@@ -55,7 +56,7 @@ void Application::Run() const
   SetCurrentWindow();
   const glengine::TimeStep      time_step = {};
   glengine::FrameBufferRenderer fbr       = {};
-  auto                          last      = glengine::TimeStep::now();
+  // auto                          last      = glengine::TimeStep::now();
   using namespace std::chrono_literals;
   glengine::FrameBuffer fb;// needed to be inscope somewhere because texture was
                            // being erased before it was drawn.
@@ -73,26 +74,34 @@ void Application::Run() const
       if (show_demo_window)
         ImGui::ShowDemoWindow(&show_demo_window);
 #else
-      constinit static std::size_t test_number = 0U;
+      // constinit static std::size_t test_number = 0U;
       layers.OnImGuiUpdate();
       layers.OnUpdate(time_step);
 
-
-      ImGui::Begin("GameWindow");
+      ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.F, 0.F));
+      if (ImGui::Begin("GameWindow"))
       {
+        bool parent_window_hovered = ImGui::IsWindowHovered();
+        bool parent_window_focused = ImGui::IsWindowFocused();
         // Using a Child allow to fill all the space of the window.
-        // It also alows customization
+        // It also allows customization
         ImGui::BeginChild("GameRender");
+        bool window_hovered = ImGui::IsWindowHovered();
+        bool window_focused = ImGui::IsWindowFocused();
         // Get the size of the child (i.e. the whole draw size of the windows).
-        ImVec2 wsize = ImGui::GetContentRegionAvail();// ImGui::GetWindowSize();
-        fmt::print("ViewPort = {}, {}\n", wsize.x, wsize.y);
-        if(!fb || fb.Specification().height != static_cast<int>(wsize.y) || fb.Specification().width != wsize.x)
-        fb = glengine::FrameBuffer(glengine::FrameBufferSpecification{
-          .width = static_cast<int>(
-            wsize.x),// current_window->ViewWindowData().frame_buffer_width,
-          .height = static_cast<int>(
-            wsize.y)// current_window->ViewWindowData().frame_buffer_height
-        });
+        viewport_size =
+          ImGui::GetContentRegionAvail();// ImGui::GetWindowSize();
+        if (
+          !fb || fb.Specification().height != static_cast<int>(viewport_size.y)
+          || fb.Specification().width != static_cast<int>(viewport_size.x))
+          fb = glengine::FrameBuffer(glengine::FrameBufferSpecification{
+            .width = static_cast<int>(
+              viewport_size
+                .x),// current_window->ViewWindowData().frame_buffer_width,
+            .height = static_cast<int>(
+              viewport_size
+                .y)// current_window->ViewWindowData().frame_buffer_height
+          });
         fb.Bind();
         glengine::Renderer::Clear();
         layers.OnRender();
@@ -102,15 +111,81 @@ void Application::Run() const
         const auto convert = [](uint32_t r_id) -> ImTextureID {
           return reinterpret_cast<ImTextureID>(static_cast<intptr_t>(r_id));
         };
-        auto tmp = convert(fb.GetColorAttachment().ID());
-        fmt::print("{}\n", tmp);
-        ImGui::Image(
-          tmp,
-          ImVec2(
-            static_cast<float>(fb.Specification().width),
-            static_cast<float>(fb.Specification().height)),
-          ImVec2(0, 1),
-          ImVec2(1, 0));
+        auto       tmp  = convert(fb.GetColorAttachment().ID());
+
+
+        const auto cPos = ImGui::GetCursorPos();
+        ImGui::SetItemAllowOverlap();
+        const auto color = ImVec4(0.F, 0.F, 0.F, 0.F);
+        ImGui::PushStyleColor(ImGuiCol_Button, color);
+        ImGui::PushStyleColor(ImGuiCol_ButtonActive, color);
+        ImGui::PushStyleColor(ImGuiCol_ButtonHovered, color);
+        if (ImGui::ImageButton(
+              tmp,
+              ImVec2(
+                static_cast<float>(fb.Specification().width),
+                static_cast<float>(fb.Specification().height)),
+              ImVec2(0, 1),
+              ImVec2(1, 0),
+              0))
+        {
+          glengine::Input::SetViewPortFocused();
+        }
+        bool button_hovered   = ImGui::IsItemHovered();
+        bool button_focused   = ImGui::IsItemFocused();
+        bool button_activated = ImGui::IsItemActivated();
+        if (button_focused || window_focused || parent_window_focused)
+        {
+          glengine::Input::SetViewPortFocused();
+        }
+        else
+        {
+          glengine::Input::SetViewPortNotFocused();
+        }
+        if (button_hovered || window_hovered || parent_window_hovered)
+        {
+          glengine::Input::SetViewPortHovered();
+        }
+        else
+        {
+          glengine::Input::SetViewPortNotHovered();
+        }
+        ImGui::PopStyleColor(3);
+        ImGui::SetCursorPos(cPos);
+        ImGui::Text(
+          "%s",
+          fmt::format(
+            "Window Frame Buffer - Width {}, Height: {}\n"
+            "ViewPort - Hovered: {}, Focused: {}, Width: {}, Height: {}, "
+            "Texture ID: {}\nButton - Hovered: {}, Focused: {}, Activated: "
+            "{}\nWindow - Hovered: {}, Focused: {}\nParent Window - Hovered: "
+            "{}, Focused: {}",
+            window->ViewWindowData().frame_buffer_width,
+            window->ViewWindowData().frame_buffer_height,
+            glengine::Input::ViewPortHovered(),
+            glengine::Input::ViewPortFocused(),
+            viewport_size.x,
+            viewport_size.y,
+            tmp,
+            button_hovered,
+            button_focused,
+            button_activated,
+            window_hovered,
+            window_focused,
+            parent_window_hovered,
+            parent_window_focused)
+            .c_str());
+        //        if(ImGui::InvisibleButton("##dummy",ImVec2(
+        //                                     static_cast<float>(fb.Specification().width),
+        //                                     static_cast<float>(fb.Specification().height))))
+        //        {
+        //
+        //        }
+
+        //        fmt::print("Focused = {}, Hovered =
+        //        {}\n",ImGui::IsAnyItemFocused(),ImGui::IsItemHovered());
+        //        glengine::Window::ViewPortFocused(ImGui::IsWindowFocused());
+        //        glengine::Window::ViewPortFocused(ImGui::IsWindowHovered());
         //        if (glengine::TimeStep::now() - last >
         //        glengine::TimeStep::duration(5s))
         //        {
@@ -121,19 +196,20 @@ void Application::Run() const
         //            ;
         //          last = glengine::TimeStep::now();
         //        }
-        //fbr.Draw(fb); //render frame buffer to screen.
+        // fbr.Draw(fb); //render frame buffer to screen.
         ImGui::EndChild();
       }
       ImGui::End();
+      ImGui::PopStyleVar();
 
 #endif
       window->EndFrameRendered();// Last thing you do on render;
-      window->UpdateViewPorts();
     }
     else
     {
       window->EndFrame();
     }
+    window->UpdateViewPorts(); //for multi viewports run after render loop.
     std::cout << std::flush;
   }
   running = true;
@@ -165,9 +241,11 @@ float Get_Frame_Buffer_Aspect_Ratio()
 {
   if (Application::CurrentWindow())
   {
-    const auto &window_data = Application::CurrentWindow()->ViewWindowData();
-    return static_cast<float>(window_data.frame_buffer_width)
-           / static_cast<float>(window_data.frame_buffer_height);
+    //    const auto &window_data =
+    //    Application::CurrentWindow()->ViewWindowData(); return
+    //    static_cast<float>(window_data.frame_buffer_width)
+    //           / static_cast<float>(window_data.frame_buffer_height);
+    return viewport_size.x / viewport_size.y;
   }
   return (16.F / 9.F);
 }
