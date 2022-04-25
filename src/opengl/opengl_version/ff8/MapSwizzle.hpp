@@ -29,6 +29,7 @@ struct TileFunctionsSwizzle
     using x = decltype([](const tileT &tile) -> xT { return tile.source_x(); });
     using y = decltype([](const tileT &tile) -> yT { return tile.source_y(); });
     using texture_page = decltype([](const tileT &tile) -> texture_pageT { return tile.texture_id(); });
+    using use_texture_page = std::false_type;
   };
 };
 using MapSwizzle = Map<TileFunctionsSwizzle>;

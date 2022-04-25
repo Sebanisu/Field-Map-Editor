@@ -293,7 +293,8 @@ private:
             sub_texture,
             glm::vec3(
               static_cast<float>(
-                x(tile) + texture_page(tile) * s_texture_page_width),
+                x(tile) + texture_page(tile) * s_texture_page_width)
+                - m_offset_x,
               m_offset_y - static_cast<float>(y(tile)),
               0.F),
             glm::vec2(16.F, 16.F));
@@ -377,6 +378,9 @@ private:
       static constexpr typename TileFunctions::template Bounds<tileT>::x x{};
       static constexpr typename TileFunctions::template Bounds<tileT>::y y{};
       static constexpr
+        typename TileFunctions::template Bounds<tileT>::use_texture_page
+          use_texture_page{};
+      static constexpr
         typename TileFunctions::template Bounds<tileT>::texture_page
            texture_page{};
       auto f_tiles = tiles
@@ -393,15 +397,17 @@ private:
       }
       min_x = x(*i_min_x);
       max_x = static_cast<float>(
-        x(*i_max_x) + texture_page(*i_max_texture_page) * s_texture_page_width);
+        use_texture_page
+          ? x(*i_max_x)
+          : (texture_page(*i_max_texture_page) + 1) * s_texture_page_width);
       min_y             = y(*i_min_y);
       max_y             = y(*i_max_y);
       const auto width  = max_x - min_x + 16;
       const auto height = max_y - min_y + 16;
 
       // m_offset_y        = static_cast<float>(min_y + max_y);
-      m_offset_x        = static_cast<float>(width / 2) + min_x - 16;
-      m_offset_y        = static_cast<float>(height / 2) + min_y - 16;
+      m_offset_x        = static_cast<float>(width / 2) + min_x;
+      m_offset_y        = static_cast<float>(height / 2) + min_y - 16.F;
       //  m_position        = glm::vec3(min_x, min_y, 0.F);
       m_position        = glm::vec3(-width / 2.F, -height / 2.F, 0.F);
 

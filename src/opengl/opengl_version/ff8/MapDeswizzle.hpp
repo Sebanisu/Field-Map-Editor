@@ -30,6 +30,7 @@ struct TileFunctionsDeswizzle
     using texture_page = decltype([](const tileT &) -> texture_pageT {
       return {};
     });
+    using use_texture_page = std::true_type;
   };
 };
 using MapDeswizzle = Map<TileFunctionsDeswizzle>;
