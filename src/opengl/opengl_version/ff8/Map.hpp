@@ -62,9 +62,17 @@ public:
     {
       m_changed = true;
     }
-    if (s_snap_zoom_to_height)
+    if (s_fit_height && s_fit_width)
     {
-      s_camera.SetZoom();
+      s_camera.FitBoth();
+    }
+    else if (s_fit_height)
+    {
+      s_camera.FitHeight();
+    }
+    else if (s_fit_width)
+    {
+      s_camera.FitWidth();
     }
     s_camera.OnUpdate(ts);
     m_batch_renderer.OnUpdate(ts);
@@ -102,11 +110,11 @@ public:
       const auto disable = glengine::ImGuiDisabled(
         std::ranges::empty(m_map_path) || std::ranges::empty(m_mim_path));
       m_changed = std::ranges::any_of(
-        std::array{
-          ImGui::Checkbox("Draw Grid", &s_draw_grid),
-          ImGui::Checkbox("Snap Zoom to Height", &s_snap_zoom_to_height),
-          s_blends.OnImGuiUpdate(),
-          m_filters.OnImGuiUpdate() },
+        std::array{ ImGui::Checkbox("Draw Grid", &s_draw_grid),
+                    ImGui::Checkbox("Fit Height", &s_fit_height),
+                    ImGui::Checkbox("Fit Width", &s_fit_width),
+                    s_blends.OnImGuiUpdate(),
+                    m_filters.OnImGuiUpdate() },
         std::identity{});
 
       if (ImGui::Button("Save"))
@@ -117,7 +125,20 @@ public:
     ImGui::Separator();
     s_camera.OnImGuiUpdate();
     ImGui::Separator();
+    ImGui::Text(
+      "%s",
+      fmt::format(
+        "DrawPos - X: {}, Y: {} Z: {}, Width {}, Height {}\n",
+        m_position.x,
+        m_position.y,
+        m_position.z,
+        m_frame_buffer.Specification().width,
+        m_frame_buffer.Specification().height)
+        .c_str());
     m_batch_renderer.OnImGuiUpdate();
+    ImGui::Separator();
+    ImGui::Text("%s", "Fixed Prerender Camera: ");
+    s_fixed_render_camera.OnImGuiUpdate();
   }
   void OnEvent(const glengine::Event::Item &) const {}
 
@@ -376,11 +397,7 @@ private:
                               static_cast<float>(min_y),
                               static_cast<float>(max_y + 16) });
 
-      s_fixed_render_camera.SetProjection(
-        static_cast<float>(min_x),
-        static_cast<float>(max_x + 16),
-        static_cast<float>(min_y),
-        static_cast<float>(max_y + 16));
+      s_fixed_render_camera.SetProjection(glm::vec2{ width, height });
       m_frame_buffer = glengine::FrameBuffer(glengine::FrameBufferSpecification{
         .width = abs(width), .height = abs(height) });
     });
@@ -388,7 +405,8 @@ private:
 
   inline static glengine::OrthographicCameraController s_camera    = { 16 / 9 };
   inline static glengine::OrthographicCamera s_fixed_render_camera = {};
-  inline static bool                         s_snap_zoom_to_height = { true };
+  inline static bool                         s_fit_height          = { true };
+  inline static bool                         s_fit_width           = { true };
   inline static bool                         s_draw_grid           = { false };
 
   static constexpr int16_t                   s_texture_page_width  = 256;

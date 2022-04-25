@@ -31,7 +31,7 @@ void ff8::Mim::OnUpdate(float ts) const
 
   if (snap_zoom_to_height)
   {
-    camera.SetZoom();
+    camera.FitHeight();
   }
   camera.OnUpdate(ts);
   m_batch_renderer.OnUpdate(ts);
@@ -132,8 +132,7 @@ void ff8::Mim::SetUniforms() const
   {
     m_batch_renderer.Shader().SetUniform(
       "u_MVP",
-      glengine::OrthographicCamera{ { 0, 0 },
-                                    { texture->width(), texture->height() } }
+      glengine::OrthographicCamera{ { texture->width(), texture->height() } }
         .ViewProjectionMatrix());
   }
   else

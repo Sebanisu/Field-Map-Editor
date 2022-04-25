@@ -1,7 +1,3 @@
-//
-// Created by pcvii on 12/2/2021.
-//
-
 #include "OrthographicCameraController.hpp"
 #include "Event/EventDispatcher.hpp"
 #include "GLCheck.hpp"
@@ -25,7 +21,7 @@ void OrthographicCameraController::OnUpdate(float ts) const
   if (Input::IsKeyPressed(KEY::Z))
   {
     m_position = {};
-    SetZoom();
+    FitHeight();
   }
 
   const auto lateral_speed  = m_translation_speed * ts;
@@ -77,31 +73,47 @@ void OrthographicCameraController::OnUpdate(float ts) const
   }
   if (m_bounds)
   {
-    const auto bounds = CurrentBounds();
+    const auto bounds     = CurrentBounds();
 
-    const auto fix_bounds =
-      [](float &pos, float low, float high, float low_max, float high_max) {
-        const bool  larger_span = high - low >= high_max - low_max;
-        const float span        = [=]() {
-          if (larger_span)
-            return (high - low) - (high_max - low_max);
-          return 0.F;
-        }();
-        const bool bottom = low < low_max - span;
-        const bool top    = high > high_max + span;
-        if (bottom)
-        {
-          pos += low_max - span - low;
-        }
-        if (top)
-        {
-          pos -= high - (high_max + span);
-        }
-      };
+    const auto fix_bounds = [](
+                              float                     &pos,
+                              [[maybe_unused]] glm::vec2 img_max,
+                              [[maybe_unused]] glm::vec2 viewport_scaled) {
+      float minpos = (std::min)(
+        viewport_scaled.x + img_max.y, viewport_scaled.y + img_max.x);
+      float maxpos = (std::max)(
+        viewport_scaled.x + img_max.y, viewport_scaled.y + img_max.x);
+      pos = std::clamp(pos, minpos, maxpos);
+      /*
+       * How to fix camera?
+       * Screenbounds? ViewPort -width/2 and -height/2 scaled to same as zoom.
+       * objectbounds? image width/2 and height/2;
+       * x =Clamp (x, screenbounds.x +objectbounds.x, screenbounds.x * -1 -
+       * objectbounds.x); y =Clamp (y, screenbounds.y +objectbounds.y,
+       * screenbounds.y * -1 - objectbounds.y);
+       */
+    };
+    //    float left       = (std::min)(bounds.left, bounds.right);
+    //    float right      = (std::max)(bounds.left, bounds.right);
+    //    float bottom     = (std::min)(bounds.bottom, bounds.top);
+    //    float top        = (std::max)(bounds.bottom, bounds.top);
+    float max_left      = (std::min)(m_bounds->left, m_bounds->right);
+    float max_right     = (std::max)(m_bounds->left, m_bounds->right);
+    float max_bottom    = (std::min)(m_bounds->bottom, m_bounds->top);
+    float max_top       = (std::max)(m_bounds->bottom, m_bounds->top);
+    float scaled_left   = m_camera.Bounds().x;
+    float scaled_right  = m_camera.Bounds().y;
+    float scaled_bottom = m_camera.Bounds().z;
+    float scaled_top    = m_camera.Bounds().w;
+
     fix_bounds(
-      m_position.x, bounds.left, bounds.right, m_bounds->left, m_bounds->right);
+      m_position.x,
+      glm::vec2(max_left, max_right),
+      glm::vec2(scaled_left, scaled_right));
     fix_bounds(
-      m_position.y, bounds.bottom, bounds.top, m_bounds->bottom, m_bounds->top);
+      m_position.y,
+      glm::vec2(max_bottom, max_top),
+      glm::vec2(scaled_bottom, scaled_top));
   }
   m_camera.SetPosition(m_position);
 }
@@ -113,6 +125,8 @@ bool OrthographicCameraController::OnImGuiUpdate() const
     fmt::format("X, Y: {:>4.4f}, {:>4.4f}", m_position.x, m_position.y)
       .c_str());
   ImGui::Text("%s", fmt::format("Rotation: {}", m_rotation).c_str());
+  ImGui::Text(
+    "%s", fmt::format("AspectRatio: {}", m_viewport_aspect_ratio).c_str());
   ImGui::Text("%s", fmt::format("Zoom: {}", m_zoom_level).c_str());
   ImGui::Text(
     "%s", fmt::format("Zoom Precision: {}", m_zoom_precision).c_str());
@@ -145,6 +159,18 @@ bool OrthographicCameraController::OnImGuiUpdate() const
           bounds.top)
           .c_str());
     }
+    ImGui::Text(
+      "%s",
+      fmt::format(
+        "Scaled Bounds:\nleft {:>4.4f}, right {:>4.4f}, bottom {:>4.4f}, top "
+        "{:>4.4f}",
+        m_camera.Bounds().x,
+        m_camera.Bounds().y,
+        m_camera.Bounds().z,
+        m_camera.Bounds().w)
+        .c_str());
+    ImGui::Separator();
+    m_camera.OnImGuiUpdate();
   }
   return false;
 }
@@ -163,9 +189,10 @@ void OrthographicCameraController::OnEvent(const Event::Item &e) const
       {
         return false;
       }
-      m_aspect_ratio =
-        static_cast<float>(fbr.Width()) / static_cast<float>(fbr.Height());
-      set_projection();
+      RefreshAspectRatio();
+      // m_aspect_ratio =
+      // static_cast<float>(fbr.Width()) / static_cast<float>(fbr.Height());
+      SetProjection();
       return true;
     });
 }
@@ -191,19 +218,21 @@ void OrthographicCameraController::zoom(const float offset) const
   if (m_zoom_precision - 1.F > std::numeric_limits<float>::epsilon())
     m_zoom_level = std::nearbyint(m_zoom_level);
   m_zoom_level = (std::max)(m_zoom_level, 0.0001F);
-  set_projection();
+  SetProjection();
 }
 OrthographicCameraController::return_values
   OrthographicCameraController::CurrentBounds() const
 {
-  return return_values{ .left   = -m_zoom_level * m_aspect_ratio + m_position.x,
-                        .right  = m_zoom_level * m_aspect_ratio + m_position.x,
-                        .bottom = -m_zoom_level + m_position.y,
-                        .top    = m_zoom_level + m_position.y };
+  return return_values{ .left   = m_camera.Bounds().x + m_position.x,
+                        .right  = m_camera.Bounds().y + m_position.x,
+                        .bottom = m_camera.Bounds().z + m_position.y,
+                        .top    = m_camera.Bounds().w + m_position.y };
 }
-const std::optional<OrthographicCameraController::return_values> &
+std::optional<OrthographicCameraController::return_values>
   OrthographicCameraController::MaxBounds() const
 {
+  //  if (m_bounds.has_value())
+  //    return m_bounds.value() * m_zoom_level;
   return m_bounds;
 }
 void OrthographicCameraController::SetMaxBounds(
@@ -214,9 +243,15 @@ void OrthographicCameraController::SetMaxBounds(
       > std::numeric_limits<float>::epsilon()
     && std::abs(bounds.bottom) + std::abs(bounds.top)
          > std::numeric_limits<float>::epsilon())
+  {
+    m_image_aspect_ratio = (std::abs(bounds.left) + std::abs(bounds.right))
+                           / (std::abs(bounds.bottom) + std::abs(bounds.top));
     m_bounds = std::move(bounds);
+  }
   else
+  {
     DisableBounds();
+  }
 }
 void OrthographicCameraController::DisableBounds() const
 {
@@ -226,18 +261,55 @@ void OrthographicCameraController::RefreshAspectRatio() const
 {
   RefreshAspectRatio(Get_Frame_Buffer_Aspect_Ratio());
 }
+template<class T>
+static bool almost_equal(T x, T y, int ulp = 5)
+{
+  // the machine epsilon has to be scaled to the magnitude of the values used
+  // and multiplied by the desired precision in ULPs (units in the last place)
+  return std::fabs(x - y)
+           <= std::numeric_limits<T>::epsilon() * std::fabs(x + y) * ulp
+         // unless the result is subnormal
+         || std::fabs(x - y) < std::numeric_limits<T>::min();
+}
 void OrthographicCameraController::RefreshAspectRatio(
   float new_aspect_ratio) const
 {
-  m_aspect_ratio = new_aspect_ratio;
-  set_projection();
+  if (!almost_equal(new_aspect_ratio, m_viewport_aspect_ratio))
+  {
+    m_viewport_aspect_ratio = new_aspect_ratio;
+    SetProjection();
+  }
 }
-void OrthographicCameraController::SetZoom() const
+void OrthographicCameraController::FitHeight() const
 {
   if (m_bounds)
   {
-    m_zoom_level = (m_bounds->top - m_bounds->bottom) / 2.F;
+    m_zoom_level = (m_bounds->top - m_bounds->bottom);
     zoom(0.F);
+    m_position.y = {};// center height
+    m_camera.SetPosition(m_position);
+  }
+}
+void OrthographicCameraController::FitWidth() const
+{
+  if (m_bounds)
+  {
+    m_zoom_level = (m_bounds->right - m_bounds->left) / m_viewport_aspect_ratio;
+    zoom(0.F);
+    m_position.x = {};// center width
+    m_camera.SetPosition(m_position);
+  }
+}
+void OrthographicCameraController::FitBoth() const
+{
+  if (m_bounds)
+  {
+    m_zoom_level = (std::max)(
+      m_bounds->top - m_bounds->bottom,
+      (m_bounds->right - m_bounds->left) / m_viewport_aspect_ratio);
+    zoom(0.F);
+    m_position = {};// center
+    m_camera.SetPosition(m_position);
   }
 }
 void OrthographicCameraController::SetZoom(float new_zoom) const
@@ -246,13 +318,9 @@ void OrthographicCameraController::SetZoom(float new_zoom) const
   zoom(0.F);
 }
 
-void OrthographicCameraController::set_projection() const
+void OrthographicCameraController::SetProjection() const
 {
-  m_camera.SetProjection(
-    -m_aspect_ratio * m_zoom_level,
-    m_aspect_ratio * m_zoom_level,
-    -m_zoom_level,
-    m_zoom_level);
+  m_camera.SetProjection(m_zoom_level, m_viewport_aspect_ratio);
 }
 OrthographicCameraController::OrthographicCameraController()
   : OrthographicCameraController(Get_Frame_Buffer_Aspect_Ratio(), 1.F)

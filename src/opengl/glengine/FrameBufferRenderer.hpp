@@ -39,7 +39,7 @@ class FrameBufferRenderer
     simple_vertex{ .location{ m_location + glm::vec2{ 0.F, m_size.y } },
                                                  .uv = m_uv[3] },// 3
   } };
-  OrthographicCamera m_camera = OrthographicCamera(m_location, m_size);
+  OrthographicCamera m_camera = OrthographicCamera(m_size);
   static constexpr VertexBufferLayout m_layout = VertexBufferLayout(
     VertexBufferElementType<float>{ 2U },
     VertexBufferElementType<float>{ 2U });
@@ -49,6 +49,10 @@ class FrameBufferRenderer
 
 public:
   void Draw(const glengine::FrameBuffer &frame_buffer) const;
+  void OnImGuiUpdate()
+  {
+    m_camera.OnImGuiUpdate();
+  }
 };
 }// namespace glengine
 #endif// MYPROJECT_FRAMEBUFFERRENDERER_HPP

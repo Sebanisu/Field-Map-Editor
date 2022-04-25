@@ -209,7 +209,7 @@ void Application::Run() const
     {
       window->EndFrame();
     }
-    window->UpdateViewPorts(); //for multi viewports run after render loop.
+    window->UpdateViewPorts();// for multi viewports run after render loop.
     std::cout << std::flush;
   }
   running = true;
@@ -227,14 +227,20 @@ void RestoreViewPortToFrameBuffer()
 {
   if (Application::CurrentWindow())
   {
+    //    GLCall{}(
+    //      glViewport,
+    //      GLint{ 0 },
+    //      GLint{ 0 },
+    //      static_cast<GLsizei>(
+    //        Application::CurrentWindow()->ViewWindowData().frame_buffer_width),
+    //      static_cast<GLsizei>(
+    //        Application::CurrentWindow()->ViewWindowData().frame_buffer_height));
     GLCall{}(
       glViewport,
-      GLint{ 0 },
-      GLint{ 0 },
-      static_cast<GLsizei>(
-        Application::CurrentWindow()->ViewWindowData().frame_buffer_width),
-      static_cast<GLsizei>(
-        Application::CurrentWindow()->ViewWindowData().frame_buffer_height));
+      GLint{},
+      GLint{},
+      static_cast<GLint>(viewport_size.x),
+      static_cast<GLint>(viewport_size.y));
   }
 }
 float Get_Frame_Buffer_Aspect_Ratio()

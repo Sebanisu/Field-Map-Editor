@@ -14,10 +14,10 @@ public:
   OrthographicCameraController();
   OrthographicCameraController(float zoom);
   OrthographicCameraController(float aspect_ratio, float zoom)
-    : m_aspect_ratio(aspect_ratio)
+    : m_viewport_aspect_ratio(aspect_ratio)
     , m_zoom_level(zoom)
-    , m_camera{ -m_aspect_ratio * m_zoom_level,
-                m_aspect_ratio * m_zoom_level,
+    , m_camera{ -m_viewport_aspect_ratio * m_zoom_level,
+                m_viewport_aspect_ratio * m_zoom_level,
                 -m_zoom_level,
                 m_zoom_level }
   {
@@ -48,27 +48,37 @@ public:
     {
       return glengine::OrthographicCamera(left, right, bottom, top);
     }
+    return_values operator*(float multiplier) const noexcept
+    {
+      return { left * multiplier,
+               right * multiplier,
+               bottom * multiplier,
+               top * multiplier };
+    }
   };
-  return_values                       CurrentBounds() const;
-  const std::optional<return_values> &MaxBounds() const;
-  void                                SetMaxBounds(return_values bounds) const;
-  void                                DisableBounds() const;
-  void                                RefreshAspectRatio() const;
-  void                  RefreshAspectRatio(float new_aspect_ratio) const;
-  void                  SetZoom() const;
-  [[maybe_unused]] void SetZoom(float new_zoom) const;
+  return_values                CurrentBounds() const;
+  std::optional<return_values> MaxBounds() const;
+  void                         SetMaxBounds(return_values bounds) const;
+  void                         DisableBounds() const;
+  void                         RefreshAspectRatio() const;
+  void                         RefreshAspectRatio(float new_aspect_ratio) const;
+  void                         FitBoth() const;
+  void                         FitHeight() const;
+  void                         FitWidth() const;
+  [[maybe_unused]] void        SetZoom(float new_zoom) const;
 
 private:
-  void                                 set_projection() const;
-  mutable float                        m_aspect_ratio      = {};
-  mutable float                        m_zoom_level        = { 1.F };
-  mutable float                        m_zoom_precision    = { 1.F };
-  mutable glengine::OrthographicCamera m_camera            = {};
-  mutable glm::vec3                    m_position          = {};
-  mutable float                        m_rotation          = {};
-  float                                m_translation_speed = { -2.5F };
-  float                                m_rotation_speed    = { 180.F };
-  mutable std::optional<return_values> m_bounds            = {};
+  void                                 SetProjection() const;
+  mutable float                        m_viewport_aspect_ratio = {};
+  mutable float                        m_image_aspect_ratio    = {};
+  mutable float                        m_zoom_level            = { 1.F };
+  mutable float                        m_zoom_precision        = { 1.F };
+  mutable glengine::OrthographicCamera m_camera                = {};
+  mutable glm::vec3                    m_position              = {};
+  mutable float                        m_rotation              = {};
+  float                                m_translation_speed     = { -2.5F };
+  float                                m_rotation_speed        = { 180.F };
+  mutable std::optional<return_values> m_bounds                = {};
   void                                 zoom(const float offset) const;
 };
 void MakeViewPortMatchBounds(

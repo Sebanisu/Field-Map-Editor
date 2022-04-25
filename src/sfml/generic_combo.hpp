@@ -92,7 +92,7 @@ inline static bool generic_combo(
         idx));
   };
   const auto            current_item = next(strings, current_idx);
-  static constexpr auto pattern      = "{}: \t{} \t{}\n";
+  //static constexpr auto pattern      = "{}: \t{} \t{}\n";
   {
     const auto sc = scope_guard{ &ImGui::PopID };
     ImGui::PushID(++id);
@@ -101,14 +101,14 @@ inline static bool generic_combo(
       if (checked)
       {
         filter.enable();
-        fmt::print(
-          pattern, gui_labels::enable, name, *next(values, current_idx));
+//        fmt::print(
+//          pattern, gui_labels::enable, name, *next(values, current_idx));
       }
       else
       {
         filter.disable();
-        fmt::print(
-          pattern, gui_labels::disable, name, *next(values, current_idx));
+//        fmt::print(
+//          pattern, gui_labels::disable, name, *next(values, current_idx));
       }
       changed = true;
     }
@@ -145,10 +145,10 @@ inline static bool generic_combo(
           // keyboard navigation support)
         }
       });
-      if (old != current_idx)
-      {
-        fmt::print(pattern, gui_labels::set, name, *next(values, current_idx));
-      }
+//      if (old != current_idx)
+//      {
+//        fmt::print(pattern, gui_labels::set, name, *next(values, current_idx));
+//      }
       ImGui::EndCombo();
     }
   }
