@@ -2,11 +2,12 @@
 // Created by pcvii on 11/29/2021.
 //
 #include "TestBatchRenderingTexture2DDynamic.hpp"
+#include "Application.hpp"
 #include "ImGuiPushID.hpp"
 #include "Renderer.hpp"
 #include "scope_guard.hpp"
 #include "Vertex.hpp"
-
+#include "Window.hpp"
 static_assert(glengine::Renderable<test::TestBatchRenderingTexture2DDynamic>);
 test::TestBatchRenderingTexture2DDynamic::TestBatchRenderingTexture2DDynamic()
   : m_shader(
@@ -28,6 +29,7 @@ test::TestBatchRenderingTexture2DDynamic::TestBatchRenderingTexture2DDynamic()
 }
 void test::TestBatchRenderingTexture2DDynamic::OnUpdate(float) const
 {
+  RestoreViewPortToFrameBuffer();
   constexpr auto      colors = std::array{ glm::vec4{ 1.F, 0.F, 0.F, 1.F },
                                       glm::vec4{ 0.F, 1.F, 0.F, 1.F },
                                       glm::vec4{ 0.F, 0.F, 1.F, 1.F } };
@@ -41,13 +43,12 @@ void test::TestBatchRenderingTexture2DDynamic::OnUpdate(float) const
 }
 void test::TestBatchRenderingTexture2DDynamic::OnRender() const
 {
-  const int window_width  = 16;
-  const int window_height = 9;
-  auto      proj          = glm::ortho(
+  const auto dims = GetFrameBufferDims();
+  auto       proj = glm::ortho(
     0.F,
-    static_cast<float>(window_width),
+    static_cast<float>(dims.x),
     0.F,
-    static_cast<float>(window_height),
+    static_cast<float>(dims.y),
     -1.F,
     1.F);
   const auto view = glm::translate(glm::mat4{ 1.F }, view_offset);

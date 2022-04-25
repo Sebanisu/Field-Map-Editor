@@ -3,7 +3,7 @@
 #include "GLCheck.hpp"
 #include "Input.hpp"
 
-extern float Get_Frame_Buffer_Aspect_Ratio();
+extern float GetFrameBufferAspectRatio();
 namespace glengine
 {
 void OrthographicCameraController::OnUpdate(float ts) const
@@ -264,7 +264,7 @@ void OrthographicCameraController::DisableBounds() const
 }
 void OrthographicCameraController::RefreshAspectRatio() const
 {
-  RefreshAspectRatio(Get_Frame_Buffer_Aspect_Ratio());
+  RefreshAspectRatio(GetFrameBufferAspectRatio());
 }
 template<class T>
 static bool almost_equal(T x, T y, int ulp = 5)
@@ -328,11 +328,11 @@ void OrthographicCameraController::SetProjection() const
   m_camera.SetProjection(m_zoom_level, m_viewport_aspect_ratio);
 }
 OrthographicCameraController::OrthographicCameraController()
-  : OrthographicCameraController(Get_Frame_Buffer_Aspect_Ratio(), 1.F)
+  : OrthographicCameraController(GetFrameBufferAspectRatio(), 1.F)
 {
 }
 OrthographicCameraController::OrthographicCameraController(float zoom)
-  : OrthographicCameraController(Get_Frame_Buffer_Aspect_Ratio(), zoom)
+  : OrthographicCameraController(GetFrameBufferAspectRatio(), zoom)
 {
 }
 /**

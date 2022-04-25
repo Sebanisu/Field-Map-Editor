@@ -22,6 +22,7 @@ private:
   glengine::Layer::Stack            layers = {};
 };
 
-void  RestoreViewPortToFrameBuffer();
-float Get_Frame_Buffer_Aspect_Ratio();
+glm::vec2 GetFrameBufferDims();
+void      RestoreViewPortToFrameBuffer();
+float     GetFrameBufferAspectRatio();
 #endif// MYPROJECT_APPLICATION_HPP

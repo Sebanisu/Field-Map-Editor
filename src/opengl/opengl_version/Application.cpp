@@ -243,7 +243,16 @@ void RestoreViewPortToFrameBuffer()
       static_cast<GLint>(viewport_size.y));
   }
 }
-float Get_Frame_Buffer_Aspect_Ratio()
+glm::vec2 GetFrameBufferDims()
+{
+
+  if (Application::CurrentWindow())
+  {
+    return {viewport_size.x, viewport_size.y};
+  }
+  return {16.F,9.F};
+}
+float GetFrameBufferAspectRatio()
 {
   if (Application::CurrentWindow())
   {
