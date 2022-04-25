@@ -58,7 +58,7 @@ public:
   };
   return_values                CurrentBounds() const;
   std::optional<return_values> MaxBounds() const;
-  void                         SetMaxBounds(return_values bounds) const;
+  void                         SetImageBounds(return_values bounds) const;
   void                         DisableBounds() const;
   void                         RefreshAspectRatio() const;
   void                         RefreshAspectRatio(float new_aspect_ratio) const;

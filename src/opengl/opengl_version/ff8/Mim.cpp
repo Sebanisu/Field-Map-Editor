@@ -11,27 +11,37 @@
 #include "PixelBuffer.hpp"
 namespace ff8
 {
-static const BPPs                             bpp                 = {};
-static const Palettes                         palette             = {};
-static bool                                   draw_palette        = false;
-static bool                                   draw_grid           = false;
-static bool                                   snap_zoom_to_height = true;
-static bool                                   saving              = false;
-static const glengine::Texture               *texture             = nullptr;
-static glengine::OrthographicCameraController camera              = { 16 / 9 };
+static const BPPs                             bpp          = {};
+static const Palettes                         palette      = {};
+static bool                                   draw_palette = false;
+static bool                                   draw_grid    = false;
+static bool                                   fit_height   = true;
+static bool                                   fit_width    = true;
+static bool                                   saving       = false;
+static const glengine::Texture               *texture      = nullptr;
+static glengine::OrthographicCameraController camera       = { 16.F / 9.F };
 }// namespace ff8
 void ff8::Mim::OnUpdate(float ts) const
 {
   (void)m_delayed_textures.OnUpdate();
   const auto &local_texture = CurrentTexture();
-  camera.SetMaxBounds({ 0.F,
-                        static_cast<float>(local_texture.width()),
-                        0.F,
-                        static_cast<float>(local_texture.height()) });
+  camera.SetImageBounds({ -local_texture.width() / 2.0F,
+                          local_texture.width() / 2.0F,
+                          -local_texture.height() / 2.0F,
+                          local_texture.height() / 2.0F });
+  camera.RefreshAspectRatio();
 
-  if (snap_zoom_to_height)
+  if (fit_height && fit_width)
+  {
+    camera.FitBoth();
+  }
+  else if (fit_height)
   {
     camera.FitHeight();
+  }
+  else if (fit_width)
+  {
+    camera.FitWidth();
   }
   camera.OnUpdate(ts);
   m_batch_renderer.OnUpdate(ts);
@@ -46,11 +56,14 @@ void ff8::Mim::OnRender() const
   {
     return;
   }
+  RestoreViewPortToFrameBuffer();
   camera.OnRender();
   SetUniforms();
-  glm::vec2 size = { texture->width(), texture->height() };
   m_batch_renderer.Clear();
-  m_batch_renderer.DrawQuad(*texture, glm::vec3{ 0.F }, size);
+  m_batch_renderer.DrawQuad(
+    *texture,
+    glm::vec3{ -texture->width() / 2.F, -texture->height() / 2.F, 0.F },
+    glm::vec2{ texture->width(), texture->height() });
   m_batch_renderer.Draw();
   m_batch_renderer.OnRender();
   texture = nullptr;
@@ -63,7 +76,8 @@ void ff8::Mim::OnImGuiUpdate() const
       local_texture.height() == 0 || local_texture.width() == 0);
     ImGui::Checkbox("Draw Palette", &draw_palette);
     ImGui::Checkbox("Draw Grid", &draw_grid);
-    ImGui::Checkbox("Snap Zoom to Height", &snap_zoom_to_height);
+    ImGui::Checkbox("Fit Height", &fit_height);
+    ImGui::Checkbox("Fit Width", &fit_width);
     if (bpp.OnImGuiUpdate() || palette.OnImGuiUpdate())
     {
     }

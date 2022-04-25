@@ -126,7 +126,12 @@ bool OrthographicCameraController::OnImGuiUpdate() const
       .c_str());
   ImGui::Text("%s", fmt::format("Rotation: {}", m_rotation).c_str());
   ImGui::Text(
-    "%s", fmt::format("AspectRatio: {}", m_viewport_aspect_ratio).c_str());
+    "%s",
+    fmt::format("Viewport AspectRatio: {}", m_viewport_aspect_ratio).c_str());
+  ImGui::Text(
+    "%s",
+    fmt::format("Image    AspectRatio: {}", m_image_aspect_ratio).c_str());
+
   ImGui::Text("%s", fmt::format("Zoom: {}", m_zoom_level).c_str());
   ImGui::Text(
     "%s", fmt::format("Zoom Precision: {}", m_zoom_precision).c_str());
@@ -235,7 +240,7 @@ std::optional<OrthographicCameraController::return_values>
   //    return m_bounds.value() * m_zoom_level;
   return m_bounds;
 }
-void OrthographicCameraController::SetMaxBounds(
+void OrthographicCameraController::SetImageBounds(
   OrthographicCameraController::return_values bounds) const
 {
   if (

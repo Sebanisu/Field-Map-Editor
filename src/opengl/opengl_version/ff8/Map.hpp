@@ -411,7 +411,7 @@ private:
       //  m_position        = glm::vec3(min_x, min_y, 0.F);
       m_position        = glm::vec3(-width / 2.F, -height / 2.F, 0.F);
 
-      s_camera.SetMaxBounds(
+      s_camera.SetImageBounds(
         { -width / 2.F, width / 2.F, -height / 2.F, height / 2.F });
 
       //      s_fixed_render_camera.SetProjection(
