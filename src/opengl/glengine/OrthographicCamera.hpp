@@ -44,7 +44,6 @@ public:
     recalculate_mvp();
   }
 
-private:
   void SetProjection(float left, float right, float bottom, float top)
   {
     m_projection_matrix = glm::ortho(left, right, bottom, top, near, far);
@@ -52,7 +51,6 @@ private:
     recalculate_mvp();
   }
 
-public:
   void SetProjection(float zoom, float aspect)
   {
     SetProjection(

@@ -138,6 +138,12 @@ ff8::Fields::Fields()
   , m_field(load_field())
 {
   fmt::print("time to load fields = {:%S} seconds\n", endtime - starttime);
+  auto pos = std::ranges::find(m_map_data, std::string("feopen2"));
+  if (pos != m_map_data.end())
+  {
+    current_index = static_cast<int>(std::distance(m_map_data.begin(), pos));
+    m_field = load_field();
+  }
 }
 
 const open_viii::archive::FIFLFS<false> &ff8::Fields::Field() const

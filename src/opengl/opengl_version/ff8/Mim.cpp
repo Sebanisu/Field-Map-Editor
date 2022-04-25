@@ -132,7 +132,10 @@ void ff8::Mim::SetUniforms() const
   {
     m_batch_renderer.Shader().SetUniform(
       "u_MVP",
-      glengine::OrthographicCamera{ { texture->width(), texture->height() } }
+      glengine::OrthographicCamera{ 0.F,
+                                    static_cast<float>(texture->width()),
+                                    0.F,
+                                    static_cast<float>(texture->height()) }
         .ViewProjectionMatrix());
   }
   else

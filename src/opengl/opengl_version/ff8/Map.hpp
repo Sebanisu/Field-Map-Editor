@@ -128,13 +128,22 @@ public:
     ImGui::Text(
       "%s",
       fmt::format(
-        "DrawPos - X: {}, Y: {} Z: {}, Width {}, Height {}\n",
+        "DrawPos - X: {}, Y: {} Z: {}, Width {}, Height {}"
+        "\n\tOffset X {} Offset Y {},\n\tMin X {}, Max X {}, Min Y {}, Max Y "
+        "{}\n",
         m_position.x,
         m_position.y,
         m_position.z,
         m_frame_buffer.Specification().width,
-        m_frame_buffer.Specification().height)
+        m_frame_buffer.Specification().height,
+        m_offset_x,
+        m_offset_y,
+        min_x,
+        max_x,
+        min_y,
+        max_y)
         .c_str());
+
     m_batch_renderer.OnImGuiUpdate();
     ImGui::Separator();
     ImGui::Text("%s", "Fixed Prerender Camera: ");
@@ -382,28 +391,37 @@ private:
       {
         return;
       }
-      const auto min_x = x(*i_min_x);
-      const auto max_x =
-        x(*i_max_x) + texture_page(*i_max_texture_page) * s_texture_page_width;
-      const auto min_y  = y(*i_min_y);
-      const auto max_y  = y(*i_max_y);
+      min_x = x(*i_min_x);
+      max_x = static_cast<float>(
+        x(*i_max_x) + texture_page(*i_max_texture_page) * s_texture_page_width);
+      min_y             = y(*i_min_y);
+      max_y             = y(*i_max_y);
       const auto width  = max_x - min_x + 16;
       const auto height = max_y - min_y + 16;
-      m_offset_y        = static_cast<float>(min_y + max_y);
-      m_position        = glm::vec3(min_x, min_y, 0.F);
 
-      s_camera.SetMaxBounds({ static_cast<float>(min_x),
-                              static_cast<float>(max_x + 16),
-                              static_cast<float>(min_y),
-                              static_cast<float>(max_y + 16) });
+      // m_offset_y        = static_cast<float>(min_y + max_y);
+      m_offset_x        = static_cast<float>(width / 2) + min_x - 16;
+      m_offset_y        = static_cast<float>(height / 2) + min_y - 16;
+      //  m_position        = glm::vec3(min_x, min_y, 0.F);
+      m_position        = glm::vec3(-width / 2.F, -height / 2.F, 0.F);
 
-      s_fixed_render_camera.SetProjection(glm::vec2{ width, height });
+      s_camera.SetMaxBounds(
+        { -width / 2.F, width / 2.F, -height / 2.F, height / 2.F });
+
+      //      s_fixed_render_camera.SetProjection(
+      //        static_cast<float>(min_x),
+      //        static_cast<float>(max_x + 16),
+      //        static_cast<float>(min_y),
+      //        static_cast<float>(max_y + 16));
+      s_fixed_render_camera.SetProjection({ width, height });
       m_frame_buffer = glengine::FrameBuffer(glengine::FrameBufferSpecification{
-        .width = abs(width), .height = abs(height) });
+        .width  = static_cast<int>(abs(width)),
+        .height = static_cast<int>(abs(height)) });
     });
   }
 
-  inline static glengine::OrthographicCameraController s_camera    = { 16 / 9 };
+  inline static glengine::OrthographicCameraController s_camera    = { 16.F
+                                                                       / 9.F };
   inline static glengine::OrthographicCamera s_fixed_render_camera = {};
   inline static bool                         s_fit_height          = { true };
   inline static bool                         s_fit_width           = { true };
@@ -439,13 +457,18 @@ private:
   glengine::BatchRenderer              m_batch_renderer    = { 1000 };
   // holds rendered image at 1:1 scale to prevent gaps when scaling.
   glengine::FrameBuffer                m_frame_buffer      = {};
-  float                                m_offset_y          = {};
+  inline static constinit float        m_offset_x          = 0.F;
+  inline static constinit float        m_offset_y          = -16.F;
   mutable bool                         m_offscreen_drawing = { false };
   mutable bool                         m_saving            = { false };
   glm::vec3                            m_position          = {};
   inline constinit static MapBlends    s_blends            = {};
   MapFilters                           m_filters           = { m_map };
   mutable bool                         m_changed           = { true };
+  inline static constinit float        min_x               = {};
+  inline static constinit float        min_y               = {};
+  inline static constinit float        max_x               = {};
+  inline static constinit float        max_y               = {};
 };
 }// namespace ff8
 #endif// FIELD_MAP_EDITOR_MAP_HPP
