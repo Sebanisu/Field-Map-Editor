@@ -14,6 +14,10 @@ static constexpr auto operator+(T e) noexcept
 }
 bool Input::IsKeyPressed(KEY keycode)
 {
+  if (!s_viewport_focused)
+  {
+    return false;
+  }
   if (!m_window || ImGui::GetIO().WantCaptureKeyboard)
     return false;
   const int state = glfwGetKey(m_window, +keycode);
@@ -21,15 +25,19 @@ bool Input::IsKeyPressed(KEY keycode)
 }
 bool Input::IsMouseButtonPressed(MOUSE button)
 {
-
-  if (!m_window || ImGui::GetIO().WantCaptureMouse)
+  if (!m_window)
     return false;
+  if (ImGui::GetIO().WantCaptureMouse && !s_viewport_hovered)
+    return false;
+
   const int state = glfwGetMouseButton(m_window, +button);
   return state == GLFW_PRESS;
 }
 std::optional<const std::array<float, 2U>> Input::GetMousePosition()
 {
-  if (!m_window || ImGui::GetIO().WantCaptureMouse)
+  if (!m_window)
+    return std::nullopt;
+  if (ImGui::GetIO().WantCaptureMouse && !s_viewport_hovered)
     return std::nullopt;
   std::array<double, 2U> pos{};
   glfwGetCursorPos(m_window, &pos[0], &pos[1]);

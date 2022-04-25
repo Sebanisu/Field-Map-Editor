@@ -47,7 +47,7 @@ void Window::RenderDockspace() const
   // not dockable into, because it would be confusing to have two docking
   // targets within each others.
   ImGuiWindowFlags          window_flags =
-    ImGuiWindowFlags_NoDocking; //ImGuiWindowFlags_MenuBar
+    ImGuiWindowFlags_NoDocking;// ImGuiWindowFlags_MenuBar
   if (opt_fullscreen)
   {
     const ImGuiViewport *viewport = ImGui::GetMainViewport();
@@ -91,7 +91,7 @@ void Window::RenderDockspace() const
   dockspace_flags |= ImGuiDockNodeFlags_PassthruCentralNode;
   dockspace_flags = dockspace_flags & (~ImGuiDockNodeFlags_NoResize);
   // Submit the DockSpace
-  ImGuiIO &io = ImGui::GetIO();
+  ImGuiIO &io     = ImGui::GetIO();
   if (io.ConfigFlags & ImGuiConfigFlags_DockingEnable)
   {
     ImGuiID dockspace_id = ImGui::GetID("MyDockSpace");
@@ -102,84 +102,90 @@ void Window::RenderDockspace() const
     // ShowDockingDisabledMessage();
   }
 
-//  if (ImGui::BeginMenuBar())
-//  {
-//    if (ImGui::BeginMenu("Options"))
-//    {
-//      // Disabling fullscreen would allow the window to be moved to the front of
-//      // other windows, which we can't undo at the moment without finer window
-//      // depth/z control.
-//      ImGui::MenuItem("Fullscreen", NULL, &opt_fullscreen);
-//      ImGui::MenuItem("Padding", NULL, &opt_padding);
-//      ImGui::Separator();
-//
-//      if (ImGui::MenuItem(
-//            "Flag: NoSplit",
-//            "",
-//            (dockspace_flags & ImGuiDockNodeFlags_NoSplit) != 0))
-//      {
-//        dockspace_flags ^= ImGuiDockNodeFlags_NoSplit;
-//      }
-////      if (ImGui::MenuItem(
-////            "Flag: NoResize",
-////            "",
-////            (dockspace_flags & ImGuiDockNodeFlags_NoResize) != 0))
-////      {
-////        dockspace_flags ^= ImGuiDockNodeFlags_NoResize;
-////      }
-//      if (ImGui::MenuItem(
-//            "Flag: NoDockingInCentralNode",
-//            "",
-//            (dockspace_flags & ImGuiDockNodeFlags_NoDockingInCentralNode) != 0))
-//      {
-//        dockspace_flags ^= ImGuiDockNodeFlags_NoDockingInCentralNode;
-//      }
-//      if (ImGui::MenuItem(
-//            "Flag: AutoHideTabBar",
-//            "",
-//            (dockspace_flags & ImGuiDockNodeFlags_AutoHideTabBar) != 0))
-//      {
-//        dockspace_flags ^= ImGuiDockNodeFlags_AutoHideTabBar;
-//      }
-//      //      if (ImGui::MenuItem(
-//      //            "Flag: PassthruCentralNode",
-//      //            "",
-//      //            (dockspace_flags & ImGuiDockNodeFlags_PassthruCentralNode)
-//      //            != 0, opt_fullscreen))
-//      //      {
-//      //        dockspace_flags ^= ImGuiDockNodeFlags_PassthruCentralNode;
-//      //      }
-//      ImGui::Separator();
-//
-//      //        if (ImGui::MenuItem("Close", NULL, false, p_open != NULL))
-//      //          *p_open = false;
-//      ImGui::EndMenu();
-//    }
-//    //    HelpMarker(
-//    //      "When docking is enabled, you can ALWAYS dock MOST window into
-//    //      another! " "Try it now!"
-//    //      "\n"
-//    //      "- Drag from window title bar or their tab to dock/undock."
-//    //      "\n"
-//    //      "- Drag from window menu button (upper-left button) to undock an
-//    //      entire " "node (all windows)."
-//    //      "\n"
-//    //      "- Hold SHIFT to disable docking (if io.ConfigDockingWithShift ==
-//    //      false, " "default)"
-//    //      "\n"
-//    //      "- Hold SHIFT to enable docking (if io.ConfigDockingWithShift ==
-//    //      true)"
-//    //      "\n"
-//    //      "This demo app has nothing to do with enabling docking!"
-//    //      "\n\n"
-//    //      "This demo app only demonstrate the use of ImGui::DockSpace() which
-//    //      " "allows you to manually create a docking node _within_ another
-//    //      window."
-//    //      "\n\n"
-//    //      "Read comments in ShowExampleAppDockSpace() for more details.");
-//
-//    ImGui::EndMenuBar();
-//  }
+  //  if (ImGui::BeginMenuBar())
+  //  {
+  //    if (ImGui::BeginMenu("Options"))
+  //    {
+  //      // Disabling fullscreen would allow the window to be moved to the
+  //      front of
+  //      // other windows, which we can't undo at the moment without finer
+  //      window
+  //      // depth/z control.
+  //      ImGui::MenuItem("Fullscreen", NULL, &opt_fullscreen);
+  //      ImGui::MenuItem("Padding", NULL, &opt_padding);
+  //      ImGui::Separator();
+  //
+  //      if (ImGui::MenuItem(
+  //            "Flag: NoSplit",
+  //            "",
+  //            (dockspace_flags & ImGuiDockNodeFlags_NoSplit) != 0))
+  //      {
+  //        dockspace_flags ^= ImGuiDockNodeFlags_NoSplit;
+  //      }
+  ////      if (ImGui::MenuItem(
+  ////            "Flag: NoResize",
+  ////            "",
+  ////            (dockspace_flags & ImGuiDockNodeFlags_NoResize) != 0))
+  ////      {
+  ////        dockspace_flags ^= ImGuiDockNodeFlags_NoResize;
+  ////      }
+  //      if (ImGui::MenuItem(
+  //            "Flag: NoDockingInCentralNode",
+  //            "",
+  //            (dockspace_flags & ImGuiDockNodeFlags_NoDockingInCentralNode) !=
+  //            0))
+  //      {
+  //        dockspace_flags ^= ImGuiDockNodeFlags_NoDockingInCentralNode;
+  //      }
+  //      if (ImGui::MenuItem(
+  //            "Flag: AutoHideTabBar",
+  //            "",
+  //            (dockspace_flags & ImGuiDockNodeFlags_AutoHideTabBar) != 0))
+  //      {
+  //        dockspace_flags ^= ImGuiDockNodeFlags_AutoHideTabBar;
+  //      }
+  //      //      if (ImGui::MenuItem(
+  //      //            "Flag: PassthruCentralNode",
+  //      //            "",
+  //      //            (dockspace_flags &
+  //      ImGuiDockNodeFlags_PassthruCentralNode)
+  //      //            != 0, opt_fullscreen))
+  //      //      {
+  //      //        dockspace_flags ^= ImGuiDockNodeFlags_PassthruCentralNode;
+  //      //      }
+  //      ImGui::Separator();
+  //
+  //      //        if (ImGui::MenuItem("Close", NULL, false, p_open != NULL))
+  //      //          *p_open = false;
+  //      ImGui::EndMenu();
+  //    }
+  //    //    HelpMarker(
+  //    //      "When docking is enabled, you can ALWAYS dock MOST window into
+  //    //      another! " "Try it now!"
+  //    //      "\n"
+  //    //      "- Drag from window title bar or their tab to dock/undock."
+  //    //      "\n"
+  //    //      "- Drag from window menu button (upper-left button) to undock an
+  //    //      entire " "node (all windows)."
+  //    //      "\n"
+  //    //      "- Hold SHIFT to disable docking (if io.ConfigDockingWithShift
+  //    ==
+  //    //      false, " "default)"
+  //    //      "\n"
+  //    //      "- Hold SHIFT to enable docking (if io.ConfigDockingWithShift ==
+  //    //      true)"
+  //    //      "\n"
+  //    //      "This demo app has nothing to do with enabling docking!"
+  //    //      "\n\n"
+  //    //      "This demo app only demonstrate the use of ImGui::DockSpace()
+  //    which
+  //    //      " "allows you to manually create a docking node _within_ another
+  //    //      window."
+  //    //      "\n\n"
+  //    //      "Read comments in ShowExampleAppDockSpace() for more details.");
+  //
+  //    ImGui::EndMenuBar();
+  //  }
 
   ImGui::End();
 }
@@ -295,7 +301,7 @@ void Window::InitGLFW()
   GLCall{}(glEnable, GL_BLEND);
   DefaultBlend();
 }
-void Window::InitImGui(const char * const glsl_version) const
+void Window::InitImGui(const char *const glsl_version) const
 {
   if (!imgui_init)
   {
@@ -386,8 +392,8 @@ void Window::InitCallbacks() const
       [[maybe_unused]] int scancode,
       int                  action,
       [[maybe_unused]] int mods) {
-      ImGuiIO &io = ImGui::GetIO();
-      if (!io.WantCaptureKeyboard)
+      //ImGuiIO &io = ImGui::GetIO();
+      if (Input::ViewPortFocused()) //!io.WantCaptureKeyboard
       {
         auto &data = GetWindowData(window);
         switch (action)
@@ -397,6 +403,10 @@ void Window::InitCallbacks() const
             break;
           }
           case GLFW_RELEASE: {
+            if (glengine::KEY{ key } == glengine::KEY::ESCAPE)
+            {
+              Input::SetViewPortNotFocused();
+            }
             data.event_callback(Event::KeyReleased(glengine::KEY{ key }));
             break;
           }
@@ -456,7 +466,8 @@ void Window::InitCallbacks() const
       auto    &data = GetWindowData(window);
       auto    &pos  = ImGui::GetMainViewport()->Pos;
       io.AddMousePosEvent(
-        static_cast<float>(x + static_cast<double>(pos.x)), static_cast<float>(y + static_cast<double>(pos.y)));
+        static_cast<float>(x + static_cast<double>(pos.x)),
+        static_cast<float>(y + static_cast<double>(pos.y)));
       if (!io.WantCaptureMouse)
       {
         data.event_callback(
