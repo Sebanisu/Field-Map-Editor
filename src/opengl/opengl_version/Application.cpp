@@ -13,11 +13,12 @@
 #include "test/LayerTests.hpp"
 #include "TimeStep.hpp"
 
-static glengine::Window *current_window = nullptr;
-static constinit bool    running        = true;
-static constinit bool    minimize       = false;
-static ImVec2            viewport_size  = {};
-static bool              OnWindowClose(const glengine::Event::WindowClose &)
+static glengine::Window   *current_window     = nullptr;
+static constinit bool      running            = true;
+static constinit bool      minimize           = false;
+static ImVec2              viewport_size      = {};
+static constinit glm::vec4 viewport_mouse_pos = {};
+static bool                OnWindowClose(const glengine::Event::WindowClose &)
 {
   running = false;
   return true;
@@ -77,7 +78,7 @@ void Application::Run() const
       // constinit static std::size_t test_number = 0U;
       layers.OnImGuiUpdate();
       layers.OnUpdate(time_step);
-
+      auto &io = ImGui::GetIO();
       ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.F, 0.F));
       if (ImGui::Begin("GameWindow"))
       {
@@ -152,6 +153,31 @@ void Application::Run() const
         }
         ImGui::PopStyleColor(3);
         ImGui::SetCursorPos(cPos);
+        ImVec2 vMin = ImGui::GetWindowContentRegionMin();
+        ImVec2 vMax = ImGui::GetWindowContentRegionMax();
+
+        vMin.x += ImGui::GetWindowPos().x;
+        vMin.y += ImGui::GetWindowPos().y;
+        vMax.x += ImGui::GetWindowPos().x;
+        vMax.y += ImGui::GetWindowPos().y;
+
+        auto ClampMouse          = io.MousePos;
+        ClampMouse.x             = std::clamp(ClampMouse.x, vMin.x, vMax.x);
+        ClampMouse.y             = std::clamp(ClampMouse.y, vMin.y, vMax.y);
+        const auto convert_range = [](
+                                     float       OldValue,
+                                     const float OldMin,
+                                     const float OldMax,
+                                     const float NewMin = -1.F,
+                                     const float NewMax = 1.F) {
+          return (((OldValue - OldMin) * (NewMax - NewMin)) / (OldMax - OldMin))
+                 + NewMin;
+        };
+        viewport_mouse_pos =
+          glm::vec4{ convert_range(ClampMouse.x, vMin.x, vMax.x),
+                     convert_range(ClampMouse.y, vMin.y, vMax.y),
+                     0.F,
+                     1.F };
         ImGui::Text(
           "%s",
           fmt::format(
@@ -159,7 +185,9 @@ void Application::Run() const
             "ViewPort - Hovered: {}, Focused: {}, Width: {}, Height: {}, "
             "Texture ID: {}\nButton - Hovered: {}, Focused: {}, Activated: "
             "{}\nWindow - Hovered: {}, Focused: {}\nParent Window - Hovered: "
-            "{}, Focused: {}",
+            "{}, Focused: {}\nMouse - X: {} Y: {}\nContent Region - Min X: {}, "
+            "Min Y: {}, Max X: {}, Max Y: {}\nClampMouse X: {}, Y: "
+            "{}\nviewport_mouse_pos X: {}, Y: {}, Z:{}, W:{}",
             window->ViewWindowData().frame_buffer_width,
             window->ViewWindowData().frame_buffer_height,
             glengine::Input::ViewPortHovered(),
@@ -173,7 +201,19 @@ void Application::Run() const
             window_hovered,
             window_focused,
             parent_window_hovered,
-            parent_window_focused)
+            parent_window_focused,
+            io.MousePos.x,
+            io.MousePos.y,
+            vMin.x,
+            vMin.y,
+            vMax.x,
+            vMax.y,
+            ClampMouse.x,
+            ClampMouse.y,
+            viewport_mouse_pos.x,
+            viewport_mouse_pos.y,
+            viewport_mouse_pos.z,
+            viewport_mouse_pos.w)
             .c_str());
         //        if(ImGui::InvisibleButton("##dummy",ImVec2(
         //                                     static_cast<float>(fb.Specification().width),
@@ -243,14 +283,18 @@ void RestoreViewPortToFrameBuffer()
       static_cast<GLint>(viewport_size.y));
   }
 }
+glm::vec4 GetViewPortMousePos() noexcept
+{
+  return viewport_mouse_pos;
+}
 glm::vec2 GetFrameBufferDims()
 {
 
   if (Application::CurrentWindow())
   {
-    return {viewport_size.x, viewport_size.y};
+    return { viewport_size.x, viewport_size.y };
   }
-  return {16.F,9.F};
+  return { 16.F, 9.F };
 }
 float GetFrameBufferAspectRatio()
 {

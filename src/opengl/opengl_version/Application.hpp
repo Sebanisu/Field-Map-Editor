@@ -21,7 +21,7 @@ private:
   std::unique_ptr<glengine::Window> window = nullptr;
   glengine::Layer::Stack            layers = {};
 };
-
+glm::vec4 GetViewPortMousePos() noexcept ;
 glm::vec2 GetFrameBufferDims();
 void      RestoreViewPortToFrameBuffer();
 float     GetFrameBufferAspectRatio();

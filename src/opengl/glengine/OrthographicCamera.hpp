@@ -4,6 +4,7 @@
 
 #ifndef MYPROJECT_ORTHOGRAPHICCAMERA_HPP
 #define MYPROJECT_ORTHOGRAPHICCAMERA_HPP
+//#include "Application.hpp"
 #include <fmt/ranges.h>
 namespace glengine
 {
@@ -82,6 +83,19 @@ public:
   {
     return m_view_projection_matrix;
   }
+  const glm::mat4 InverseViewProjectionMatrix() const
+  {
+    return glm::inverse(m_view_projection_matrix);
+  }
+  const auto ScreenSpaceToWorldSpace(glm::vec4 in) const
+  {
+    auto out = in * InverseViewProjectionMatrix();
+    out.w    = 1.F / out.w;
+    out.x *= out.w;
+    out.y *= out.w;
+    out.z *= out.w;
+    return out;
+  }
   const glm::vec4 &Bounds() const noexcept
   {
     return m_bounds;
@@ -108,12 +122,13 @@ public:
         in[3][2],
         in[3][3]);
     };
+    const glm::vec4 mouse_world_pos = {};//ScreenSpaceToWorldSpace(GetViewPortMousePos());
     ImGui::Text(
       "%s",
       fmt::format(
         "Projection: {}\nView: {}\nModel: {}\nMVP: {}\nPosition - X: {}, Y: "
         "{}, Z: {}\nRotation: {}\nPre-transform Bounds - left: {}, right: {}, "
-        "bottom: {}, top: {}\n",
+        "bottom: {}, top: {}\nMouse In WorldSpace - X: {}, Y: {}, Z: {}\n",
         fmt_mat4(m_projection_matrix),
         fmt_mat4(m_view_matrix),
         fmt_mat4(m_model_matrix),
@@ -125,7 +140,10 @@ public:
         m_bounds.x,
         m_bounds.y,
         m_bounds.z,
-        m_bounds.w)
+        m_bounds.w,
+        mouse_world_pos.x,
+        mouse_world_pos.y,
+        mouse_world_pos.z)
         .c_str());
   }
 
