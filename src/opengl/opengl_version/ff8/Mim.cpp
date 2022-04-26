@@ -56,7 +56,10 @@ void ff8::Mim::OnRender() const
   {
     return;
   }
-  RestoreViewPortToFrameBuffer();
+  if (!saving)
+  {
+    RestoreViewPortToFrameBuffer();
+  }
   camera.OnRender();
   SetUniforms();
   m_batch_renderer.Clear();
@@ -146,10 +149,7 @@ void ff8::Mim::SetUniforms() const
   {
     m_batch_renderer.Shader().SetUniform(
       "u_MVP",
-      glengine::OrthographicCamera{ 0.F,
-                                    static_cast<float>(texture->width()),
-                                    0.F,
-                                    static_cast<float>(texture->height()) }
+      glengine::OrthographicCamera{ { texture->width(), texture->height() } }
         .ViewProjectionMatrix());
   }
   else
@@ -192,11 +192,6 @@ void ff8::Mim::Save() const
     glViewport(0, 0, local_texture.width(), local_texture.height());
     OnRender();
   }
-  glViewport(
-    0,
-    0,
-    Application::CurrentWindow()->ViewWindowData().frame_buffer_width,
-    Application::CurrentWindow()->ViewWindowData().frame_buffer_height);
   auto fs_path = std::filesystem::path(m_path);
   auto string  = fmt::format(
     "{}_mim_{}_{}.png",
