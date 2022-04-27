@@ -3,7 +3,6 @@
 //
 #include "TestBatchRendering.hpp"
 #include "ImGuiPushID.hpp"
-#include "scope_guard.hpp"
 #include "Vertex.hpp"
 
 static_assert(glengine::Renderable<test::TestBatchRendering>);
