@@ -7,6 +7,7 @@
 #include "IndexBufferDynamic.hpp"
 #include "Shader.hpp"
 
+#include "ImGuiViewPortWindow.hpp"
 #include "Texture.hpp"
 #include "VertexArray.hpp"
 #include "VertexBufferDynamic.hpp"
@@ -30,15 +31,19 @@ public:
   static constexpr std::size_t VERT_COUNT = { QUAD_COUNT * 4U };
 
 private:
+  void Draw() const;
   glengine::VertexBufferDynamic            m_vertex_buffer   = { QUAD_COUNT };
   glengine::IndexBufferDynamic             m_index_buffer    = { QUAD_COUNT };
   mutable glengine::IndexBufferDynamicSize index_buffer_size = {};
   glengine::Shader                         m_shader          = {};
   glengine::VertexArray                    m_vertex_array    = {};
-  mutable glm::vec3                        view_offset = { -2.F, -1.F, 0.F };
+  mutable glm::vec3                        view_offset = { 0.F, 0.F, 0.F };
   mutable std::array<int, 2U>              m_count     = { 100, 100 };
-  mutable float                            m_zoom      = { 0.078F };
+  mutable float                            m_zoom      = { 1.F };
   glengine::Texture m_blank = { (std::numeric_limits<std::uint32_t>::max)() };
+  glengine::ImGuiViewPortWindow m_imgui_viewport_window = {
+               "Test Batch Quads"
+  };
 };
 }// namespace test
 #endif// MYPROJECT_TESTBATCHQUADS_HPP
