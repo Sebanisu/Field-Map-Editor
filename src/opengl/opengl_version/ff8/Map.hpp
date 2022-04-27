@@ -478,7 +478,7 @@ private:
   inline static constinit float        min_y                   = {};
   inline static constinit float        max_x                   = {};
   inline static constinit float        max_y                   = {};
-  glengine::ImGuiViewPortWindow        m_imgui_viewport_window = { "Map" };
+  glengine::ImGuiViewPortWindow        m_imgui_viewport_window = { TileFunctions::Label };
 };
 }// namespace ff8
 #endif// FIELD_MAP_EDITOR_MAP_HPP

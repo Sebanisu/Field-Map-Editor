@@ -27,11 +27,12 @@ struct TileFunctionsDeswizzle
   public:
     using x = decltype([](const tileT &tile) -> xT { return tile.x(); });
     using y = decltype([](const tileT &tile) -> yT { return tile.y(); });
-    using texture_page = decltype([](const tileT &) -> texture_pageT {
+    using texture_page     = decltype([](const tileT &) -> texture_pageT {
       return {};
     });
     using use_texture_page = std::true_type;
   };
+  static constexpr const char *Label = "Map (Deswizzle)";
 };
 using MapDeswizzle = Map<TileFunctionsDeswizzle>;
 static_assert(glengine::Renderable<MapDeswizzle>);
