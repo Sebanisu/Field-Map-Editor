@@ -10,13 +10,13 @@ namespace glengine
 {
 template<typename T>
 concept is_MenuElementType =
-  Renderable<typename std::decay_t<T>::value_type> && requires(const T &t)
-{
-  typename std::decay_t<T>::value_type;
-  {
-    t.name
-    } -> decay_same_as<std::string>;
-};
+  Renderable<typename std::decay_t<
+    T>::value_type> && requires(const T &t) {
+                         typename std::decay_t<T>::value_type;
+                         {
+                           t.name
+                           } -> decay_same_as<std::string>;
+                       };
 
 class Menu
 {
@@ -36,10 +36,10 @@ public:
     std::string name;
   };
 
-  Menu(const Menu &other) noexcept = delete;
+  Menu(const Menu &other) noexcept            = delete;
   Menu &operator=(const Menu &other) noexcept = delete;
   Menu(Menu &&other) noexcept                 = default;
-  Menu &operator=(Menu &&other) noexcept = default;
+  Menu &operator=(Menu &&other) noexcept      = default;
   void  OnUpdate(float) const;
   void  OnRender() const;
   void  OnImGuiUpdate() const;
@@ -51,23 +51,12 @@ public:
       std::move(name), []() -> MenuItem { return std::in_place_type_t<T>{}; });
   }
   void push_back(std::string name, std::function<MenuItem()> funt) const;
-  void reload() const
-  {
-    if (selected())
-    {
-      m_current        = m_list[m_current_index].second();
-      m_current_string = m_list[m_current_index].first;
-    }
-  }
-  bool selected() const
-  {
-    return m_current;
-  }
+  void reload() const;
 
 private:
-  mutable MenuItem         m_current        = {};
-  mutable std::string_view m_current_string = {};
-  mutable std::size_t      m_current_index  = {};
+  mutable std::vector<MenuItem> m_current = {};
+  //  mutable std::string_view m_current_string = {};
+  //  mutable std::size_t      m_current_index  = {};
   mutable std::vector<std::pair<std::string, std::function<MenuItem()>>>
     m_list = {};
 };
