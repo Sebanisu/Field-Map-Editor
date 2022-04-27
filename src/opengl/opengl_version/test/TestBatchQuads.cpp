@@ -85,7 +85,7 @@ void test::TestBatchQuads::OnImGuiUpdate() const
   }
   {
     const auto pop2 = glengine::ImGuiPushID();
-    if (ImGui::SliderFloat("Zoom", &m_zoom, 1.F, .001F))
+    if (ImGui::SliderFloat("Zoom", &m_zoom, 2.F, 100.F/256.F))
     {
     }
   }
