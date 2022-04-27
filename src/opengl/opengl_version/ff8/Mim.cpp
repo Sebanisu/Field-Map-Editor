@@ -25,10 +25,10 @@ void ff8::Mim::OnUpdate(float ts) const
 {
   (void)m_delayed_textures.OnUpdate();
   const auto &local_texture = CurrentTexture();
-  camera.SetImageBounds({ -local_texture.width() / 2.0F,
-                          local_texture.width() / 2.0F,
-                          -local_texture.height() / 2.0F,
-                          local_texture.height() / 2.0F });
+  camera.SetImageBounds({ -static_cast<float>(local_texture.width()) / 2.0F,
+                          static_cast<float>(local_texture.width()) / 2.0F,
+                          -static_cast<float>(local_texture.height()) / 2.0F,
+                          static_cast<float>(local_texture.height()) / 2.0F });
   camera.RefreshAspectRatio(m_imgui_viewport_window.ViewPortAspectRatio());
 
   if (fit_height && fit_width)
@@ -280,7 +280,9 @@ void ff8::Mim::RenderFrameBuffer() const
   m_batch_renderer.Clear();
   m_batch_renderer.DrawQuad(
     *texture,
-    glm::vec3{ -texture->width() / 2.F, -texture->height() / 2.F, 0.F },
+    glm::vec3{ -static_cast<float>(texture->width()) / 2.F,
+               -static_cast<float>(texture->height()) / 2.F,
+               0.F },
     glm::vec2{ texture->width(), texture->height() });
   m_batch_renderer.Draw();
   m_batch_renderer.OnRender();

@@ -405,12 +405,12 @@ private:
           : (texture_page(*i_max_texture_page) + 1) * s_texture_page_width);
       min_y             = y(*i_min_y);
       max_y             = y(*i_max_y);
-      const auto width  = max_x - min_x + 16;
-      const auto height = max_y - min_y + 16;
+      const auto width  = max_x - min_x + 16.F;
+      const auto height = max_y - min_y + 16.F;
 
       // m_offset_y        = static_cast<float>(min_y + max_y);
-      m_offset_x        = static_cast<float>(width / 2) + min_x;
-      m_offset_y        = static_cast<float>(height / 2) + min_y - 16.F;
+      m_offset_x        = width / 2.F + min_x;
+      m_offset_y        = height / 2.F + min_y - 16.F;
       //  m_position        = glm::vec3(min_x, min_y, 0.F);
       m_position        = glm::vec3(-width / 2.F, -height / 2.F, 0.F);
 
