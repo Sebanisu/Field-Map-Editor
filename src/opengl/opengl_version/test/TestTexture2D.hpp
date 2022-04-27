@@ -7,6 +7,7 @@
 #include "IndexBuffer.hpp"
 #include "Shader.hpp"
 
+#include "ImGuiViewPortWindow.hpp"
 #include "Texture.hpp"
 #include "VertexArray.hpp"
 #include "VertexBuffer.hpp"
@@ -30,11 +31,14 @@ private:
   glengine::Shader       m_shader               = {};
   glengine::VertexArray  m_vertex_array         = {};
   mutable glm::vec3      view_offset            = { 0.F, 0.F, 0.F };
-  mutable glm::vec3      model_offset           = { 200.F, 200.F, 0.F };
-  mutable glm::vec3      model2_offset          = { 400.F, 200.F, 0.F };
+  mutable glm::vec3      model_offset           = { 2.F, 2.F, 0.F };
+  mutable glm::vec3      model2_offset          = { 4.F, 2.F, 0.F };
   constexpr static auto  m_vertex_buffer_layout = glengine::VertexBufferLayout(
     glengine::VertexBufferElementType<float>{ 2U },
     glengine::VertexBufferElementType<float>{ 2U });
+  glengine::ImGuiViewPortWindow m_imgui_viewport_window = {
+    "Test Texture2D"
+  };
 };
 }// namespace test
 #endif// MYPROJECT_TestTexture2D_HPP

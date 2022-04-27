@@ -52,8 +52,9 @@ void test::TestBatchRenderingTexture2DDynamic::OnImGuiUpdate() const
     (window_width / m_imgui_viewport_window.ViewPortAspectRatio());
   {
     const auto pop = glengine::ImGuiPushID();
-    if (ImGui::SliderFloat3("View Offset", &view_offset.x, 0.F, window_width))
+    if (ImGui::SliderFloat2("View Offset", &view_offset.x, 0.F, window_width))
     {
+      view_offset.y = std::clamp(view_offset.y, 0.F, window_height);
     }
   }
   {
