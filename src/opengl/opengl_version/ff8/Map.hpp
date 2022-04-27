@@ -113,7 +113,7 @@ public:
     {
       const auto disable = glengine::ImGuiDisabled(
         std::ranges::empty(m_map_path) || std::ranges::empty(m_mim_path));
-      
+
       m_changed = std::ranges::any_of(
         std::array{ ImGui::Checkbox("Draw Grid", &s_draw_grid),
                     ImGui::Checkbox("Fit Height", &s_fit_height),
