@@ -15,14 +15,17 @@ inline namespace impl
   class ImGuiViewPortWindow
   {
   public:
-    ImGuiViewPortWindow() = default;
-    ImGuiViewPortWindow(std::string title)
+    constexpr ImGuiViewPortWindow() = default;
+    constexpr ImGuiViewPortWindow(const char *title)
       : m_title(std::move(title))
     {
     }
-    void OnEvent(const Event::Item &) const {}
-    void OnUpdate(float) const {}
-
+    constexpr void OnEvent(const Event::Item &) const {}
+    constexpr void OnUpdate(float) const {}
+    void           OnRender() const
+    {
+      OnRender([]() {});
+    }
     void OnRender(const std::invocable auto &&callable) const
     {
       ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.F, 0.F));
@@ -31,7 +34,7 @@ inline namespace impl
         const auto pop_id0   = ImGuiPushID();
         const auto pop_style = scope_guard([]() { ImGui::PopStyleVar(); });
         const auto pop_end   = scope_guard([]() { ImGui::End(); });
-        if (!ImGui::Begin(m_title.c_str()))
+        if (!ImGui::Begin(m_title))
         {
           return;
         }
@@ -42,14 +45,14 @@ inline namespace impl
           // Using a Child allow to fill all the space of the window.
           // It also allows customization
           const auto pop_id1      = ImGuiPushID();
-          ImGui::BeginChild(m_title.c_str());
+          ImGui::BeginChild(m_title);
           const auto pop_child = scope_guard([]() { ImGui::EndChild(); });
           m_window_hovered     = ImGui::IsWindowHovered();
           m_window_focused     = ImGui::IsWindowFocused();
           // Get the size of the child (i.e. the whole draw size of the
           // windows).
-          m_viewport_size =
-            ImGui::GetContentRegionAvail();// ImGui::GetWindowSize();
+          m_viewport_size      = ConvertImVec2(
+            ImGui::GetContentRegionAvail());// ImGui::GetWindowSize();
           if (
             !m_fb
             || (m_fb.Specification().height
@@ -108,9 +111,9 @@ inline namespace impl
         }
       }
     }
-    void OnImGuiUpdate() const {}
+    constexpr void OnImGuiUpdate() const {}
 
-    void SyncOpenGLViewPort() const
+    void           SyncOpenGLViewPort() const
     {
       GLCall{}(
         glViewport,
@@ -122,7 +125,7 @@ inline namespace impl
 
     glm::vec2 ViewPortDims() const
     {
-      return { m_viewport_size.x, m_viewport_size.y };
+      return m_viewport_size;
     }
     float ViewPortAspectRatio() const
     {
@@ -139,11 +142,15 @@ inline namespace impl
     }
 
   private:
+    glm::vec2 ConvertImVec2(ImVec2 in) const
+    {
+      return { in.x, in.y };
+    }
     void OnUpdateMouse() const
     {
 
-      m_min = ImGui::GetWindowContentRegionMin();
-      m_max = ImGui::GetWindowContentRegionMax();
+      m_min = ConvertImVec2(ImGui::GetWindowContentRegionMin());
+      m_max = ConvertImVec2(ImGui::GetWindowContentRegionMax());
 
       m_min.x += ImGui::GetWindowPos().x;
       m_min.y += ImGui::GetWindowPos().y;
@@ -151,7 +158,7 @@ inline namespace impl
       m_max.y += ImGui::GetWindowPos().y;
 
       auto &io            = ImGui::GetIO();
-      m_clamp_mouse_pos   = io.MousePos;
+      m_clamp_mouse_pos   = ConvertImVec2(io.MousePos);
       m_clamp_mouse_pos.x = std::clamp(m_clamp_mouse_pos.x, m_min.x, m_max.x);
       m_clamp_mouse_pos.y = std::clamp(m_clamp_mouse_pos.y, m_min.y, m_max.y);
       const auto convert_range = [](
@@ -218,7 +225,7 @@ inline namespace impl
           m_viewport_mouse_pos.w)
           .c_str());
     }
-    std::string                   m_title                 = {};
+    const char                   *m_title                 = {};
     mutable glengine::FrameBuffer m_fb                    = {};
     mutable bool                  m_focused               = { false };
     mutable bool                  m_hovered               = { false };
@@ -230,10 +237,10 @@ inline namespace impl
     mutable bool                  m_window_hovered        = { false };
     mutable bool                  m_parent_window_hovered = { false };
     mutable bool                  m_button_activated      = { false };
-    mutable ImVec2                m_min                   = {};
-    mutable ImVec2                m_max                   = {};
-    mutable ImVec2                m_viewport_size         = {};
-    mutable ImVec2                m_clamp_mouse_pos       = {};
+    mutable glm::vec2             m_min                   = {};
+    mutable glm::vec2             m_max                   = {};
+    mutable glm::vec2             m_viewport_size         = {};
+    mutable glm::vec2             m_clamp_mouse_pos       = {};
     mutable ImTextureID           m_imgui_texture_id_ref  = {};
     mutable glm::vec4             m_viewport_mouse_pos    = {};
   };

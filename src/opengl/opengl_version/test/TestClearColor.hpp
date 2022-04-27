@@ -6,6 +6,7 @@
 #define MYPROJECT_TESTCLEARCOLOR_HPP
 
 
+#include "ImGuiViewPortWindow.hpp"
 #include "Renderer.hpp"
 namespace test
 {
@@ -16,7 +17,11 @@ public:
   constexpr void OnUpdate(float) const {}
   constexpr void OnRender() const
   {
-    LocalClear();
+    if (!std::is_constant_evaluated())
+    {
+      m_imgui_viewport_window.SyncOpenGLViewPort();
+      m_imgui_viewport_window.OnRender([]() { LocalClear(); });
+    }
   }
   constexpr void OnImGuiUpdate() const
   {
@@ -35,6 +40,9 @@ private:
   static inline constinit glm::vec4 m_clear_color = { DEFAULT_COLOR };
   static inline constinit glengine::Renderer::Clear_impl LocalClear = {
     DEFAULT_COLOR
+  };
+  glengine::ImGuiViewPortWindow m_imgui_viewport_window = {
+    "Test Clear Color"
   };
 };
 }// namespace test
