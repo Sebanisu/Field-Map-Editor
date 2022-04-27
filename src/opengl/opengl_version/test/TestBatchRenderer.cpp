@@ -56,25 +56,25 @@ void test::TestBatchRenderer::OnUpdate(const float ts) const
 void test::TestBatchRenderer::OnRender() const
 {
   SetUniforms();
-  // OnRender(m_batch_renderer);
-  GenerateQuads();
+  m_imgui_viewport_window.SyncOpenGLViewPort();
+  m_imgui_viewport_window.OnRender([this]() { GenerateQuads(); });
 }
 void test::TestBatchRenderer::OnImGuiUpdate() const
 {
-  int window_width = 16;
+  const float window_width = 16.F;
+  float       window_height =
+    window_width / m_imgui_viewport_window.ViewPortAspectRatio();
   {
     const auto pop = glengine::ImGuiPushID();
     if (ImGui::SliderFloat2(
-          "View Offset",
-          &view_offset.x,
-          -static_cast<float>(window_width),
-          static_cast<float>(window_width)))
+          "View Offset", &view_offset.x, -window_width, window_width))
     {
+      view_offset.y = std::clamp(view_offset.y, -window_height, window_height);
     }
   }
   {
     const auto pop = glengine::ImGuiPushID();
-    if (ImGui::SliderFloat("Zoom", &m_zoom, 4.F, .001F))
+    if (ImGui::SliderFloat("Zoom", &m_zoom, 25.F, 100.F/256.F))
     {
     }
   }
@@ -99,9 +99,10 @@ void test::TestBatchRenderer::OnImGuiUpdate() const
 }
 void test::TestBatchRenderer::SetUniforms() const
 {
-  const float window_width  = 16.F;
-  const float window_height = 9.F;
-  const auto  proj          = glm::ortho(
+  const float window_width = 100.F;
+  float       window_height =
+    window_width / m_imgui_viewport_window.ViewPortAspectRatio();
+  const auto proj = glm::ortho(
     view_offset.x / m_zoom,
     (view_offset.x + window_width) / m_zoom,
     view_offset.y / m_zoom,
