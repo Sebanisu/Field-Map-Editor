@@ -72,14 +72,18 @@ void ff8::Mim::OnRender() const
 }
 void ff8::Mim::OnImGuiUpdate() const
 {
+  const auto  popid         = glengine::ImGuiPushID();
   const auto &local_texture = CurrentTexture();
   {
     const auto disable = glengine::ImGuiDisabled(
       local_texture.height() == 0 || local_texture.width() == 0);
+
+
     ImGui::Checkbox("Draw Palette", &draw_palette);
     ImGui::Checkbox("Draw Grid", &draw_grid);
     ImGui::Checkbox("Fit Height", &fit_height);
     ImGui::Checkbox("Fit Width", &fit_width);
+
     if (bpp.OnImGuiUpdate() || palette.OnImGuiUpdate())
     {
     }

@@ -109,9 +109,11 @@ public:
   }
   void OnImGuiUpdate() const
   {
+    const auto popid = glengine::ImGuiPushID();
     {
       const auto disable = glengine::ImGuiDisabled(
         std::ranges::empty(m_map_path) || std::ranges::empty(m_mim_path));
+      
       m_changed = std::ranges::any_of(
         std::array{ ImGui::Checkbox("Draw Grid", &s_draw_grid),
                     ImGui::Checkbox("Fit Height", &s_fit_height),
@@ -119,6 +121,7 @@ public:
                     s_blends.OnImGuiUpdate(),
                     m_filters.OnImGuiUpdate() },
         std::identity{});
+
 
       if (ImGui::Button("Save"))
       {
@@ -478,7 +481,9 @@ private:
   inline static constinit float        min_y                   = {};
   inline static constinit float        max_x                   = {};
   inline static constinit float        max_y                   = {};
-  glengine::ImGuiViewPortWindow        m_imgui_viewport_window = { TileFunctions::Label };
+  glengine::ImGuiViewPortWindow        m_imgui_viewport_window = {
+           TileFunctions::Label
+  };
 };
 }// namespace ff8
 #endif// FIELD_MAP_EDITOR_MAP_HPP
