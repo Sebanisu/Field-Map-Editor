@@ -122,7 +122,14 @@ inline namespace impl
         static_cast<GLint>(m_viewport_size.x),
         static_cast<GLint>(m_viewport_size.y));
     }
-
+    bool HasFocus() const
+    {
+      return m_focused;
+    }
+    bool HasHover() const
+    {
+      return m_hovered;
+    }
     glm::vec2 ViewPortDims() const
     {
       return m_viewport_size;

@@ -4,6 +4,7 @@
 
 #include "Mim.hpp"
 #include "Application.hpp"
+#include "Event/EventDispatcher.hpp"
 #include "FrameBuffer.hpp"
 #include "FrameBufferBackup.hpp"
 #include "ImGuiDisabled.hpp"
@@ -42,6 +43,10 @@ void ff8::Mim::OnUpdate(float ts) const
   else if (fit_width)
   {
     camera.FitWidth();
+  }
+  if (m_imgui_viewport_window.HasFocus())
+  {
+    camera.CheckInput(ts);
   }
   camera.OnUpdate(ts);
   m_batch_renderer.OnUpdate(ts);
@@ -177,10 +182,15 @@ void ff8::Mim::SetUniforms() const
   }
   m_batch_renderer.Shader().SetUniform("u_Color", 1.F, 1.F, 1.F, 1.F);
 }
-void ff8::Mim::OnEvent(const glengine::Event::Item &e) const
+void ff8::Mim::OnEvent(const glengine::Event::Item &event) const
 {
-  camera.OnEvent(e);
-  m_batch_renderer.OnEvent(e);
+  glengine::Event::Dispatcher::Filter(
+    event,
+    m_imgui_viewport_window.HasFocus(),
+    m_imgui_viewport_window.HasHover(),
+    [&event]() { camera.CheckEvent(event); });
+  camera.OnEvent(event);
+  m_batch_renderer.OnEvent(event);
 }
 void ff8::Mim::Save() const
 {

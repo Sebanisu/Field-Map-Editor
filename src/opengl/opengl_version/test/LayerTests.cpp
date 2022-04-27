@@ -14,7 +14,7 @@ void Layer::Tests::OnRender() const
 }
 void Layer::Tests::OnImGuiUpdate() const
 {
-  if (ImGui::Begin("Test Window", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
+  if (ImGui::Begin("Control Panel", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
   {
     test_menu.OnImGuiUpdate();
     ImGui::Text(

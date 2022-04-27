@@ -37,14 +37,14 @@ Application::Application(std::string Title, int width, int height)
     .height         = std::move(height),
     .event_callback = [&](const glengine::Event::Item &e) {
       const glengine::Event::Dispatcher dispatcher = { e };
-      const bool skip =(glengine::Event::HasFlag(e.category(),glengine::Event::Category::Mouse)
-                   && ImGui::GetIO().WantCaptureMouse)
-                  || (glengine::Event::HasFlag(e.category(),glengine::Event::Category::Keyboard)
-                      && ImGui::GetIO().WantCaptureKeyboard);
-      if (skip)
-      {
-        return;
-      }
+//      const bool skip =(glengine::Event::HasFlag(e.category(),glengine::Event::Category::Mouse)
+//                   && ImGui::GetIO().WantCaptureMouse)
+//                  || (glengine::Event::HasFlag(e.category(),glengine::Event::Category::Keyboard)
+//                      && ImGui::GetIO().WantCaptureKeyboard);
+//      if (skip)
+//      {
+//        return;
+//      }
       dispatcher.Dispatch<glengine::Event::WindowClose>(&OnWindowClose);
       dispatcher.Dispatch<glengine::Event::WindowResize>(&OnWindowResize);
       layers.OnEvent(e);

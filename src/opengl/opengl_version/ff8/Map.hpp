@@ -9,6 +9,7 @@
 #include "BlendModeEquations.hpp"
 #include "BlendModeParameters.hpp"
 #include "DelayedTextures.hpp"
+#include "Event/EventDispatcher.hpp"
 #include "FF8LoadTextures.hpp"
 #include "Fields.hpp"
 #include "FrameBuffer.hpp"
@@ -74,6 +75,10 @@ public:
     else if (s_fit_width)
     {
       s_camera.FitWidth();
+    }
+    if (m_imgui_viewport_window.HasFocus())
+    {
+      s_camera.CheckInput(ts);
     }
     s_camera.OnUpdate(ts);
     m_batch_renderer.OnUpdate(ts);
@@ -155,7 +160,16 @@ public:
     ImGui::Text("%s", "Fixed Prerender Camera: ");
     s_fixed_render_camera.OnImGuiUpdate();
   }
-  void OnEvent(const glengine::Event::Item &) const {}
+  void OnEvent(const glengine::Event::Item &event) const
+  {
+    glengine::Event::Dispatcher::Filter(
+      event,
+      m_imgui_viewport_window.HasFocus(),
+      m_imgui_viewport_window.HasHover(),
+      [&event]() { s_camera.CheckEvent(event); });
+    s_camera.OnEvent(event);
+    m_batch_renderer.OnEvent(event);
+  }
 
 private:
   // set uniforms

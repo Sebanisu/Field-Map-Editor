@@ -392,28 +392,20 @@ void Window::InitCallbacks() const
       [[maybe_unused]] int scancode,
       int                  action,
       [[maybe_unused]] int mods) {
-      //ImGuiIO &io = ImGui::GetIO();
-      if (Input::ViewPortFocused()) //!io.WantCaptureKeyboard
+      auto &data = GetWindowData(window);
+      switch (action)
       {
-        auto &data = GetWindowData(window);
-        switch (action)
-        {
-          case GLFW_PRESS: {
-            data.event_callback(Event::KeyPressed(glengine::KEY{ key }, false));
-            break;
-          }
-          case GLFW_RELEASE: {
-            if (glengine::KEY{ key } == glengine::KEY::ESCAPE)
-            {
-              Input::SetViewPortNotFocused();
-            }
-            data.event_callback(Event::KeyReleased(glengine::KEY{ key }));
-            break;
-          }
-          case GLFW_REPEAT: {
-            data.event_callback(Event::KeyPressed(glengine::KEY{ key }, true));
-            break;
-          }
+        case GLFW_PRESS: {
+          data.event_callback(Event::KeyPressed(glengine::KEY{ key }, false));
+          break;
+        }
+        case GLFW_RELEASE: {
+          data.event_callback(Event::KeyReleased(glengine::KEY{ key }));
+          break;
+        }
+        case GLFW_REPEAT: {
+          data.event_callback(Event::KeyPressed(glengine::KEY{ key }, true));
+          break;
         }
       }
     });
@@ -428,18 +420,12 @@ void Window::InitCallbacks() const
       {
         case GLFW_PRESS: {
           io.AddMouseButtonEvent(button, true);
-          if (!io.WantCaptureMouse)
-          {
-            data.event_callback(Event::MouseButtonPressed(MOUSE{ button }));
-          }
+          data.event_callback(Event::MouseButtonPressed(MOUSE{ button }));
           break;
         }
         case GLFW_RELEASE: {
           io.AddMouseButtonEvent(button, false);
-          if (!io.WantCaptureMouse)
-          {
-            data.event_callback(Event::MouseButtonReleased(MOUSE{ button }));
-          }
+          data.event_callback(Event::MouseButtonReleased(MOUSE{ button }));
           break;
         }
       }
@@ -448,16 +434,10 @@ void Window::InitCallbacks() const
     m_window.get(), [](GLFWwindow *window, double x_offset, double y_offset) {
       ImGuiIO &io   = ImGui::GetIO();
       auto    &data = GetWindowData(window);
-      if (io.WantCaptureMouse)
-      {
-        io.AddMouseWheelEvent(
-          static_cast<float>(x_offset), static_cast<float>(y_offset));
-      }
-      else
-      {
-        data.event_callback(Event::MouseScroll(
-          static_cast<float>(x_offset), static_cast<float>(y_offset)));
-      }
+      io.AddMouseWheelEvent(
+        static_cast<float>(x_offset), static_cast<float>(y_offset));
+      data.event_callback(Event::MouseScroll(
+        static_cast<float>(x_offset), static_cast<float>(y_offset)));
     });
 
   glfwSetCursorPosCallback(
@@ -468,11 +448,8 @@ void Window::InitCallbacks() const
       io.AddMousePosEvent(
         static_cast<float>(x + static_cast<double>(pos.x)),
         static_cast<float>(y + static_cast<double>(pos.y)));
-      if (!io.WantCaptureMouse)
-      {
-        data.event_callback(
-          Event::MouseMoved(static_cast<float>(x), static_cast<float>(y)));
-      }
+      data.event_callback(
+        Event::MouseMoved(static_cast<float>(x), static_cast<float>(y)));
     });
 
   glfwSetWindowPosCallback(

@@ -26,10 +26,15 @@ public:
   {
   }
 
-  void                                OnUpdate(float ts) const;
+  //should be after CheckInput and only have things that should trigger always.
+  void                      OnUpdate(float) const;
+  //check for keyboard or mouse inputs must recommend to check for focus first.
+  void                                CheckInput(float ts) const;
   bool                                OnImGuiUpdate() const;
-  void                                OnRender() const {}
-  void                                OnEvent(const Event::Item &) const;
+  constexpr void                      OnRender() const {}
+  void                      OnEvent(const Event::Item &) const;
+  //check for keyboard or mouse events. Use Dispatcher::Filter.
+  void                                CheckEvent(const Event::Item &) const;
   const glengine::OrthographicCamera &Camera() const
   {
     return m_camera;
