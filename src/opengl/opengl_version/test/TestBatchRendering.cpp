@@ -1,48 +1,52 @@
 //
 // Created by pcvii on 11/29/2021.
 //
+#include "TestBatchRendering.hpp"
+#include "ImGuiPushID.hpp"
 #include "scope_guard.hpp"
 #include "Vertex.hpp"
-#include "ImGuiPushID.hpp"
-#include "TestBatchRendering.hpp"
 
 static_assert(glengine::Renderable<test::TestBatchRendering>);
 void test::TestBatchRendering::OnImGuiUpdate() const
 {
-  const auto pop          = glengine::ImGuiPushID();
-  int        window_width = 16;
-  // glfwGetFramebufferSize(window, &window_width, &window_height);
+  const float window_width = 16.F;
+  float       window_height =
+    window_width / m_imgui_viewport_window.ViewPortAspectRatio();
 
-  if (ImGui::SliderFloat3(
-        "View Offset", &view_offset.x, 0.F, static_cast<float>(window_width)))
   {
+    const auto pop = glengine::ImGuiPushID();
+    if (ImGui::SliderFloat2("View Offset", &view_offset.x, 0.F, window_width))
+    {
+      view_offset.y = std::clamp(view_offset.y, 0.F, window_height);
+    }
   }
-  if (ImGui::SliderFloat3(
-        "Model Offset", &model_offset.x, 0.F, static_cast<float>(window_width)))
   {
+    const auto pop = glengine::ImGuiPushID();
+    if (ImGui::SliderFloat2("Model Offset", &model_offset.x, 0.F, window_width))
+    {
+      model_offset.y = std::clamp(model_offset.y, 0.F, window_height);
+    }
   }
 }
 void test::TestBatchRendering::OnRender() const
 {
-  const int window_width  = 16;
-  const int window_height = 9;
-  auto      proj          = glm::ortho(
-    0.F,
-    static_cast<float>(window_width),
-    0.F,
-    static_cast<float>(window_height),
-    -1.F,
-    1.F);
-  const auto view = glm::translate(glm::mat4{ 1.F }, view_offset);
-  m_shader.Bind();
-  {
-    const auto model = glm::translate(glm::mat4{ 1.F }, model_offset);
-    const auto mvp   = proj * view * model;
-    m_shader.SetUniform("u_MVP", mvp);
-    m_shader.SetUniform("u_Color", 1.F, 1.F, 1.F, 1.F);
-    // m_shader.SetUniform("u_Texture", 0);
-    glengine::Renderer::Draw(m_vertex_array, m_index_buffer);
-  }
+  m_imgui_viewport_window.SyncOpenGLViewPort();
+  m_imgui_viewport_window.OnRender([this]() {
+    const float window_width = 16.F;
+    float       window_height =
+      window_width / m_imgui_viewport_window.ViewPortAspectRatio();
+    auto proj = glm::ortho(0.F, window_width, 0.F, window_height, -1.F, 1.F);
+    const auto view = glm::translate(glm::mat4{ 1.F }, view_offset);
+    m_shader.Bind();
+    {
+      const auto model = glm::translate(glm::mat4{ 1.F }, model_offset);
+      const auto mvp   = proj * view * model;
+      m_shader.SetUniform("u_MVP", mvp);
+      m_shader.SetUniform("u_Color", 1.F, 1.F, 1.F, 1.F);
+      // m_shader.SetUniform("u_Texture", 0);
+      glengine::Renderer::Draw(m_vertex_array, m_index_buffer);
+    }
+  });
 }
 test::TestBatchRendering::TestBatchRendering()
   : m_shader(
