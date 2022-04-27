@@ -25,9 +25,9 @@ test::TestBatchRenderingTexture2D::TestBatchRenderingTexture2D()
 
   std::vector<Vertex> vertices{};
   vertices.reserve(12U);
-  vertices += CreateQuad({ 2.F, 0.F, 0.F }, colors[0], 1)
-              + CreateQuad({ 4.F, 0.F, 0.F }, colors[1], 2)
-              + CreateQuad({ 6.F, 0.F, 0.F }, colors[2], 3);
+  vertices += CreateQuad({ 0.F, 0.F, 0.F }, colors[0], 1)
+              + CreateQuad({ 2.F, 0.F, 0.F }, colors[1], 2)
+              + CreateQuad({ 4.F, 0.F, 0.F }, colors[2], 3);
 
   m_vertex_buffer           = glengine::VertexBuffer{ vertices };
   constexpr auto quad_size  = std::size(Quad{});
@@ -41,45 +41,49 @@ test::TestBatchRenderingTexture2D::TestBatchRenderingTexture2D()
 }
 void test::TestBatchRenderingTexture2D::OnRender() const
 {
-  const int window_width  = 16;
-  const int window_height = 9;
-  auto      proj          = glm::ortho(
-    0.F,
-    static_cast<float>(window_width),
-    0.F,
-    static_cast<float>(window_height),
-    -1.F,
-    1.F);
-  const auto view = glm::translate(glm::mat4{ 1.F }, view_offset);
-  {
-    const auto model = glm::translate(glm::mat4{ 1.F }, model_offset);
-    const auto mvp   = proj * view * model;
-    m_shader.Bind();
-    m_shader.SetUniform("u_MVP", mvp);
-    m_shader.SetUniform("u_Color", 1.F, 1.F, 1.F, 1.F);
-    std::vector<std::int32_t> slots{ 0 };
-    slots.reserve(std::size(m_textures) + 1U);
-    for (std::int32_t i{}; auto &texture : m_textures)
+  m_imgui_viewport_window.SyncOpenGLViewPort();
+  m_imgui_viewport_window.OnRender([this]() {
+    static constexpr float window_width = 16.F;
+    const float            window_height =
+      window_width / m_imgui_viewport_window.ViewPortAspectRatio();
+    auto proj = glm::ortho(
+      0.F, window_width, 0.F, static_cast<float>(window_height), -1.F, 1.F);
+    const auto view = glm::translate(glm::mat4{ 1.F }, view_offset);
     {
-      texture.Bind(slots.emplace_back(1 + i));
-      ++i;
+      const auto model = glm::translate(glm::mat4{ 1.F }, model_offset);
+      const auto mvp   = proj * view * model;
+      m_shader.Bind();
+      m_shader.SetUniform("u_MVP", mvp);
+      m_shader.SetUniform("u_Color", 1.F, 1.F, 1.F, 1.F);
+      std::vector<std::int32_t> slots{ 0 };
+      slots.reserve(std::size(m_textures) + 1U);
+      for (std::int32_t i{}; auto &texture : m_textures)
+      {
+        texture.Bind(slots.emplace_back(1 + i));
+        ++i;
+      }
+      m_shader.SetUniform("u_Textures", slots);
+      glengine::Renderer::Draw(m_vertex_array, m_index_buffer);
     }
-    m_shader.SetUniform("u_Textures", slots);
-    glengine::Renderer::Draw(m_vertex_array, m_index_buffer);
-  }
+  });
 }
 void test::TestBatchRenderingTexture2D::OnImGuiUpdate() const
 {
-  const auto pop          = glengine::ImGuiPushID();
-  int        window_width = 16;
-  // glfwGetFramebufferSize(window, &window_width, &window_height);
-
-  if (ImGui::SliderFloat3(
-        "View Offset", &view_offset.x, 0.F, static_cast<float>(window_width)))
+  static constexpr float window_width = 15.F;
+  const float            window_height =
+    window_width / m_imgui_viewport_window.ViewPortAspectRatio();
   {
+    const auto pop = glengine::ImGuiPushID();
+    if (ImGui::SliderFloat3("View Offset", &view_offset.x, 0.F, window_width))
+    {
+      view_offset.y = std::clamp(view_offset.y, 0.F, window_height);
+    }
   }
-  if (ImGui::SliderFloat3(
-        "Model Offset", &model_offset.x, 0.F, static_cast<float>(window_width)))
   {
+    const auto pop = glengine::ImGuiPushID();
+    if (ImGui::SliderFloat3("Model Offset", &model_offset.x, 0.F, window_width))
+    {
+      model_offset.y = std::clamp(model_offset.y, 0.F, window_height);
+    }
   }
 }

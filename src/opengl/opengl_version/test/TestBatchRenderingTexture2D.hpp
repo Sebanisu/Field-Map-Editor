@@ -7,6 +7,7 @@
 #include "IndexBuffer.hpp"
 #include "Shader.hpp"
 
+#include "ImGuiViewPortWindow.hpp"
 #include "Texture.hpp"
 #include "VertexArray.hpp"
 #include "VertexBuffer.hpp"
@@ -24,13 +25,16 @@ public:
   void OnEvent(const glengine::Event::Item &) const {}
 
 private:
-  glengine::VertexBuffer         m_vertex_buffer = {};
-  glengine::IndexBuffer          m_index_buffer  = {};
-  glengine::Shader               m_shader        = {};
-  glengine::VertexArray          m_vertex_array  = {};
-  std::vector<glengine::Texture> m_textures      = {};
-  mutable glm::vec3              view_offset     = { 0.F, 0.F, 0.F };
-  mutable glm::vec3              model_offset    = { 0.F, 0.F, 0.F };
+  glengine::VertexBuffer         m_vertex_buffer         = {};
+  glengine::IndexBuffer          m_index_buffer          = {};
+  glengine::Shader               m_shader                = {};
+  glengine::VertexArray          m_vertex_array          = {};
+  std::vector<glengine::Texture> m_textures              = {};
+  mutable glm::vec3              view_offset             = { 0.F, 0.F, 0.F };
+  mutable glm::vec3              model_offset            = { 0.F, 0.F, 0.F };
+  glengine::ImGuiViewPortWindow  m_imgui_viewport_window = {
+     "Test Batch Rendering W/ Texture2D"
+  };
 };
 }// namespace test
 #endif// MYPROJECT_TestBatchRenderingTexture2D_HPP
