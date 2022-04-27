@@ -13,7 +13,7 @@ public:
   Application() = default;
   Application(std::string Title, int width, int height);
   void                           Run() const;
-  static const glengine::Window *CurrentWindow();
+  //static const glengine::Window *CurrentWindow();
   void                           SetCurrentWindow() const;
 
 private:
@@ -21,8 +21,8 @@ private:
   std::unique_ptr<glengine::Window> window = nullptr;
   glengine::Layer::Stack            layers = {};
 };
-glm::vec4 GetViewPortMousePos() noexcept ;
-glm::vec2 GetFrameBufferDims();
-void      RestoreViewPortToFrameBuffer();
-float     GetFrameBufferAspectRatio();
+//glm::vec4 GetViewPortMousePos() noexcept ;
+//glm::vec2 GetFrameBufferDims();
+//void      RestoreViewPortToFrameBuffer();
+//float     GetFrameBufferAspectRatio();
 #endif// MYPROJECT_APPLICATION_HPP

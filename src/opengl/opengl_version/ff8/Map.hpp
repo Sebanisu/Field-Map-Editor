@@ -18,6 +18,7 @@
 #include "ImGuiDisabled.hpp"
 #include "ImGuiIndent.hpp"
 #include "ImGuiPushID.hpp"
+#include "ImGuiViewPortWindow.hpp"
 #include "MapBlends.hpp"
 #include "MapFilters.hpp"
 #include "OrthographicCamera.hpp"
@@ -57,7 +58,7 @@ public:
   }
   void OnUpdate(float ts) const
   {
-    s_camera.RefreshAspectRatio();
+    s_camera.RefreshAspectRatio(m_imgui_viewport_window.ViewPortAspectRatio());
     if (m_delayed_textures.OnUpdate())
     {
       m_changed = true;
@@ -100,8 +101,10 @@ public:
       glengine::Renderer::Clear();
       RenderTiles();
     }
-    RestoreViewPortToFrameBuffer();
-    RenderFrameBuffer();
+    // RestoreViewPortToFrameBuffer();
+    m_imgui_viewport_window.SyncOpenGLViewPort();
+    m_imgui_viewport_window.OnRender([this]() { RenderFrameBuffer(); });
+
     m_changed = false;
   }
   void OnImGuiUpdate() const
@@ -372,7 +375,7 @@ private:
   }
   void SetCameraBoundsToEdgesOfImage()
   {
-    s_camera.RefreshAspectRatio();
+    s_camera.RefreshAspectRatio(m_imgui_viewport_window.ViewPortAspectRatio());
     m_map.visit_tiles([&](const auto &tiles) {
       using tileT = std::ranges::range_value_t<decltype(tiles)>;
       static constexpr typename TileFunctions::template Bounds<tileT>::x x{};
@@ -458,23 +461,24 @@ private:
   // container for field tile information
   open_viii::graphics::background::Map m_map         = {};
   // loads the textures overtime instead of forcing them to load at start.
-  glengine::DelayedTextures<35U>       m_delayed_textures  = {};
+  glengine::DelayedTextures<35U>       m_delayed_textures      = {};
   // takes quads and draws them to the frame buffer or screen.
-  glengine::BatchRenderer              m_batch_renderer    = { 1000 };
+  glengine::BatchRenderer              m_batch_renderer        = { 1000 };
   // holds rendered image at 1:1 scale to prevent gaps when scaling.
-  glengine::FrameBuffer                m_frame_buffer      = {};
-  inline static constinit float        m_offset_x          = 0.F;
-  inline static constinit float        m_offset_y          = -16.F;
-  mutable bool                         m_offscreen_drawing = { false };
-  mutable bool                         m_saving            = { false };
-  glm::vec3                            m_position          = {};
-  inline constinit static MapBlends    s_blends            = {};
-  MapFilters                           m_filters           = { m_map };
-  mutable bool                         m_changed           = { true };
-  inline static constinit float        min_x               = {};
-  inline static constinit float        min_y               = {};
-  inline static constinit float        max_x               = {};
-  inline static constinit float        max_y               = {};
+  glengine::FrameBuffer                m_frame_buffer          = {};
+  inline static constinit float        m_offset_x              = 0.F;
+  inline static constinit float        m_offset_y              = -16.F;
+  mutable bool                         m_offscreen_drawing     = { false };
+  mutable bool                         m_saving                = { false };
+  glm::vec3                            m_position              = {};
+  inline constinit static MapBlends    s_blends                = {};
+  MapFilters                           m_filters               = { m_map };
+  mutable bool                         m_changed               = { true };
+  inline static constinit float        min_x                   = {};
+  inline static constinit float        min_y                   = {};
+  inline static constinit float        max_x                   = {};
+  inline static constinit float        max_y                   = {};
+  glengine::ImGuiViewPortWindow        m_imgui_viewport_window = { "Map" };
 };
 }// namespace ff8
 #endif// FIELD_MAP_EDITOR_MAP_HPP

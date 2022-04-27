@@ -8,6 +8,7 @@
 #include "BPPs.hpp"
 #include "FF8LoadTextures.hpp"
 #include "Fields.hpp"
+#include "ImGuiViewPortWindow.hpp"
 #include "Palettes.hpp"
 namespace ff8
 {
@@ -24,14 +25,17 @@ public:
   const glengine::Texture &CurrentTexture() const;
   void                     Save() const;
 
+
 private:
+  void                                 RenderFrameBuffer() const;
   void                                 SetUniforms() const;
-  std::string                          m_path             = {};
-  bool                                 m_choose_coo       = {};
-  open_viii::graphics::background::Mim m_mim              = {};
+  std::string                          m_path                  = {};
+  bool                                 m_choose_coo            = {};
+  open_viii::graphics::background::Mim m_mim                   = {};
   // 3 bpp x 16 palettes 48 possible textures + 1 for palette texture
-  glengine::DelayedTextures<35U>       m_delayed_textures = {};
-  glengine::BatchRenderer              m_batch_renderer   = {};
+  glengine::DelayedTextures<35U>       m_delayed_textures      = {};
+  glengine::BatchRenderer              m_batch_renderer        = {};
+  glengine::ImGuiViewPortWindow        m_imgui_viewport_window = { "Mim" };
   void                                 Save_All() const;
 };
 static_assert(glengine::Renderable<Mim>);

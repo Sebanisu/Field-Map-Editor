@@ -2,8 +2,6 @@
 #include "Event/EventDispatcher.hpp"
 #include "GLCheck.hpp"
 #include "Input.hpp"
-
-extern float GetFrameBufferAspectRatio();
 namespace glengine
 {
 void OrthographicCameraController::OnUpdate(float ts) const
@@ -194,9 +192,9 @@ void OrthographicCameraController::OnEvent(const Event::Item &e) const
       {
         return false;
       }
-      RefreshAspectRatio();
-      // m_aspect_ratio =
-      // static_cast<float>(fbr.Width()) / static_cast<float>(fbr.Height());
+      // RefreshAspectRatio();
+      //  m_aspect_ratio =
+      //  static_cast<float>(fbr.Width()) / static_cast<float>(fbr.Height());
       SetProjection();
       return true;
     });
@@ -262,10 +260,10 @@ void OrthographicCameraController::DisableBounds() const
 {
   m_bounds = std::nullopt;
 }
-void OrthographicCameraController::RefreshAspectRatio() const
-{
-  RefreshAspectRatio(GetFrameBufferAspectRatio());
-}
+// void OrthographicCameraController::RefreshAspectRatio() const
+//{
+//   RefreshAspectRatio(GetFrameBufferAspectRatio());
+// }
 template<class T>
 static bool almost_equal(T x, T y, int ulp = 5)
 {
@@ -326,14 +324,6 @@ void OrthographicCameraController::SetZoom(float new_zoom) const
 void OrthographicCameraController::SetProjection() const
 {
   m_camera.SetProjection(m_zoom_level, m_viewport_aspect_ratio);
-}
-OrthographicCameraController::OrthographicCameraController()
-  : OrthographicCameraController(GetFrameBufferAspectRatio(), 1.F)
-{
-}
-OrthographicCameraController::OrthographicCameraController(float zoom)
-  : OrthographicCameraController(GetFrameBufferAspectRatio(), zoom)
-{
 }
 /**
  * Convert bounds to viewport.

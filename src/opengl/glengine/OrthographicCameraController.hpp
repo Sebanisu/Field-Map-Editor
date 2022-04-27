@@ -11,8 +11,11 @@ namespace glengine
 class OrthographicCameraController
 {
 public:
-  OrthographicCameraController();
-  OrthographicCameraController(float zoom);
+  OrthographicCameraController() = default;
+  OrthographicCameraController(float aspect_ratio)
+    : OrthographicCameraController(aspect_ratio, 1.F)
+  {
+  }
   OrthographicCameraController(float aspect_ratio, float zoom)
     : m_viewport_aspect_ratio(aspect_ratio)
     , m_zoom_level(zoom)
@@ -60,7 +63,7 @@ public:
   std::optional<return_values> MaxBounds() const;
   void                         SetImageBounds(return_values bounds) const;
   void                         DisableBounds() const;
-  void                         RefreshAspectRatio() const;
+  // void                         RefreshAspectRatio() const;
   void                         RefreshAspectRatio(float new_aspect_ratio) const;
   void                         FitBoth() const;
   void                         FitHeight() const;

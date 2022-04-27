@@ -7,6 +7,7 @@
 #include "IndexBufferDynamic.hpp"
 #include "Shader.hpp"
 
+#include "ImGuiViewPortWindow.hpp"
 #include "Texture.hpp"
 #include "VertexArray.hpp"
 #include "VertexBufferDynamic.hpp"
@@ -24,6 +25,7 @@ public:
   void OnEvent(const glengine::Event::Item &) const {}
 
 private:
+  void                                     RenderFrameBuffer() const;
   glengine::VertexBufferDynamic            m_vertex_buffer   = { 1000 };
   glengine::IndexBufferDynamic             m_index_buffer    = { 1000 };
   mutable glengine::IndexBufferDynamicSize index_buffer_size = {};
@@ -34,6 +36,9 @@ private:
   mutable glm::vec3                        model_offset1 = { 2.F, 0.F, 0.F };
   mutable glm::vec3                        model_offset2 = { 4.F, 0.F, 0.F };
   mutable glm::vec3                        model_offset3 = { 6.F, 0.F, 0.F };
+  glengine::ImGuiViewPortWindow            m_imgui_viewport_window = {
+               "Test Batch Rendering w/ Texture2D Dynamic"
+  };
 };
 void OnUpdate(const TestBatchRenderingTexture2DDynamic &, float);
 void OnRender(const TestBatchRenderingTexture2DDynamic &);

@@ -29,7 +29,6 @@ test::TestBatchRenderingTexture2DDynamic::TestBatchRenderingTexture2DDynamic()
 }
 void test::TestBatchRenderingTexture2DDynamic::OnUpdate(float) const
 {
-  RestoreViewPortToFrameBuffer();
   constexpr auto      colors = std::array{ glm::vec4{ 1.F, 0.F, 0.F, 1.F },
                                       glm::vec4{ 0.F, 1.F, 0.F, 1.F },
                                       glm::vec4{ 0.F, 0.F, 1.F, 1.F } };
@@ -43,30 +42,8 @@ void test::TestBatchRenderingTexture2DDynamic::OnUpdate(float) const
 }
 void test::TestBatchRenderingTexture2DDynamic::OnRender() const
 {
-  const auto dims = GetFrameBufferDims();
-  auto       proj = glm::ortho(
-    0.F,
-    static_cast<float>(dims.x),
-    0.F,
-    static_cast<float>(dims.y),
-    -1.F,
-    1.F);
-  const auto view = glm::translate(glm::mat4{ 1.F }, view_offset);
-  {
-    const auto mvp = proj * view;
-    m_shader.Bind();
-    m_shader.SetUniform("u_MVP", mvp);
-    m_shader.SetUniform("u_Color", 1.F, 1.F, 1.F, 1.F);
-    std::vector<std::int32_t> slots{ 0 };
-    slots.reserve(std::size(m_textures) + 1U);
-    for (std::int32_t i{}; auto &texture : m_textures)
-    {
-      texture.Bind(slots.emplace_back(1 + i));
-      ++i;
-    }
-    m_shader.SetUniform("u_Textures", slots);
-    glengine::Renderer::Draw(index_buffer_size, m_vertex_array, m_index_buffer);
-  }
+  m_imgui_viewport_window.SyncOpenGLViewPort();
+  m_imgui_viewport_window.OnRender([this]() { RenderFrameBuffer(); });
 }
 void test::TestBatchRenderingTexture2DDynamic::OnImGuiUpdate() const
 {
@@ -107,5 +84,31 @@ void test::TestBatchRenderingTexture2DDynamic::OnImGuiUpdate() const
           static_cast<float>(window_width)))
     {
     }
+  }
+}
+void test::TestBatchRenderingTexture2DDynamic::RenderFrameBuffer() const {
+  const auto dims = m_imgui_viewport_window.ViewPortDims();
+  auto       proj = glm::ortho(
+    0.F,
+    static_cast<float>(dims.x),
+    0.F,
+    static_cast<float>(dims.y),
+    -1.F,
+    1.F);
+  const auto view = glm::translate(glm::mat4{ 1.F }, view_offset);
+  {
+    const auto mvp = proj * view;
+    m_shader.Bind();
+    m_shader.SetUniform("u_MVP", mvp);
+    m_shader.SetUniform("u_Color", 1.F, 1.F, 1.F, 1.F);
+    std::vector<std::int32_t> slots{ 0 };
+    slots.reserve(std::size(m_textures) + 1U);
+    for (std::int32_t i{}; auto &texture : m_textures)
+    {
+      texture.Bind(slots.emplace_back(1 + i));
+      ++i;
+    }
+    m_shader.SetUniform("u_Textures", slots);
+    glengine::Renderer::Draw(index_buffer_size, m_vertex_array, m_index_buffer);
   }
 }

@@ -29,7 +29,7 @@ void ff8::Mim::OnUpdate(float ts) const
                           local_texture.width() / 2.0F,
                           -local_texture.height() / 2.0F,
                           local_texture.height() / 2.0F });
-  camera.RefreshAspectRatio();
+  camera.RefreshAspectRatio(m_imgui_viewport_window.ViewPortAspectRatio());
 
   if (fit_height && fit_width)
   {
@@ -56,20 +56,19 @@ void ff8::Mim::OnRender() const
   {
     return;
   }
-  if (!saving)
-  {
-    RestoreViewPortToFrameBuffer();
-  }
+
+  glengine::Window::DefaultBlend();
   camera.OnRender();
   SetUniforms();
-  m_batch_renderer.Clear();
-  m_batch_renderer.DrawQuad(
-    *texture,
-    glm::vec3{ -texture->width() / 2.F, -texture->height() / 2.F, 0.F },
-    glm::vec2{ texture->width(), texture->height() });
-  m_batch_renderer.Draw();
-  m_batch_renderer.OnRender();
-  texture = nullptr;
+  if (!saving)
+  {
+    m_imgui_viewport_window.SyncOpenGLViewPort();
+    m_imgui_viewport_window.OnRender([this]() { RenderFrameBuffer(); });
+  }
+  else
+  {
+    RenderFrameBuffer();
+  }
 }
 void ff8::Mim::OnImGuiUpdate() const
 {
@@ -117,7 +116,7 @@ ff8::Mim::Mim(const ff8::Fields &fields)
     fmt::print("Loading Textures from Mim \n");
     m_delayed_textures = LoadTextures(m_mim);
   }
-  camera.RefreshAspectRatio();
+  camera.RefreshAspectRatio(m_imgui_viewport_window.ViewPortAspectRatio());
 }
 
 std::size_t ff8::Mim::Index() const
@@ -273,6 +272,17 @@ void ff8::Mim::Save_All() const
     while (pixel_buffer(&glengine::Texture::save))
       ;
   }
-  RestoreViewPortToFrameBuffer();
+  // RestoreViewPortToFrameBuffer();
   saving = false;
+}
+void ff8::Mim::RenderFrameBuffer() const
+{
+  m_batch_renderer.Clear();
+  m_batch_renderer.DrawQuad(
+    *texture,
+    glm::vec3{ -texture->width() / 2.F, -texture->height() / 2.F, 0.F },
+    glm::vec2{ texture->width(), texture->height() });
+  m_batch_renderer.Draw();
+  m_batch_renderer.OnRender();
+  texture = nullptr;
 }

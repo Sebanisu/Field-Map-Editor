@@ -12,6 +12,7 @@
 #include "Renderer.hpp"
 #include "test/LayerTests.hpp"
 #include "TimeStep.hpp"
+#include <ImGuiViewPortWindow.hpp>
 
 static glengine::Window   *current_window     = nullptr;
 static constinit bool      running            = true;
@@ -69,6 +70,7 @@ void Application::Run() const
       glengine::Renderer::Clear.Color({ 0.F, 0.F, 0.F, 0.F });
       glengine::Renderer::Clear();
 
+
       window->RenderDockspace();
 #if 0
       static bool show_demo_window = true;
@@ -78,170 +80,8 @@ void Application::Run() const
       // constinit static std::size_t test_number = 0U;
       layers.OnImGuiUpdate();
       layers.OnUpdate(time_step);
-      auto &io = ImGui::GetIO();
-      ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.F, 0.F));
-      if (ImGui::Begin("GameWindow"))
-      {
-        bool parent_window_hovered = ImGui::IsWindowHovered();
-        bool parent_window_focused = ImGui::IsWindowFocused();
-        // Using a Child allow to fill all the space of the window.
-        // It also allows customization
-        ImGui::BeginChild("GameRender");
-        bool window_hovered = ImGui::IsWindowHovered();
-        bool window_focused = ImGui::IsWindowFocused();
-        // Get the size of the child (i.e. the whole draw size of the windows).
-        viewport_size =
-          ImGui::GetContentRegionAvail();// ImGui::GetWindowSize();
-        if (
-          !fb || fb.Specification().height != static_cast<int>(viewport_size.y)
-          || fb.Specification().width != static_cast<int>(viewport_size.x))
-          fb = glengine::FrameBuffer(glengine::FrameBufferSpecification{
-            .width = static_cast<int>(
-              viewport_size
-                .x),// current_window->ViewWindowData().frame_buffer_width,
-            .height = static_cast<int>(
-              viewport_size
-                .y)// current_window->ViewWindowData().frame_buffer_height
-          });
-        fb.Bind();
-        glengine::Renderer::Clear();
-        layers.OnRender();
-        fb.UnBind();
-        // Because I use the texture from OpenGL, I need to invert the V from
-        // the UV.
-        const auto convert = [](uint32_t r_id) -> ImTextureID {
-          return reinterpret_cast<ImTextureID>(static_cast<intptr_t>(r_id));
-        };
-        auto       tmp  = convert(fb.GetColorAttachment().ID());
-
-
-        const auto cPos = ImGui::GetCursorPos();
-        ImGui::SetItemAllowOverlap();
-        const auto color = ImVec4(0.F, 0.F, 0.F, 0.F);
-        ImGui::PushStyleColor(ImGuiCol_Button, color);
-        ImGui::PushStyleColor(ImGuiCol_ButtonActive, color);
-        ImGui::PushStyleColor(ImGuiCol_ButtonHovered, color);
-        if (ImGui::ImageButton(
-              tmp,
-              ImVec2(
-                static_cast<float>(fb.Specification().width),
-                static_cast<float>(fb.Specification().height)),
-              ImVec2(0, 1),
-              ImVec2(1, 0),
-              0))
-        {
-          glengine::Input::SetViewPortFocused();
-        }
-        bool button_hovered   = ImGui::IsItemHovered();
-        bool button_focused   = ImGui::IsItemFocused();
-        bool button_activated = ImGui::IsItemActivated();
-        if (button_focused || window_focused || parent_window_focused)
-        {
-          glengine::Input::SetViewPortFocused();
-        }
-        else
-        {
-          glengine::Input::SetViewPortNotFocused();
-        }
-        if (button_hovered || window_hovered || parent_window_hovered)
-        {
-          glengine::Input::SetViewPortHovered();
-        }
-        else
-        {
-          glengine::Input::SetViewPortNotHovered();
-        }
-        ImGui::PopStyleColor(3);
-        ImGui::SetCursorPos(cPos);
-        ImVec2 vMin = ImGui::GetWindowContentRegionMin();
-        ImVec2 vMax = ImGui::GetWindowContentRegionMax();
-
-        vMin.x += ImGui::GetWindowPos().x;
-        vMin.y += ImGui::GetWindowPos().y;
-        vMax.x += ImGui::GetWindowPos().x;
-        vMax.y += ImGui::GetWindowPos().y;
-
-        auto ClampMouse          = io.MousePos;
-        ClampMouse.x             = std::clamp(ClampMouse.x, vMin.x, vMax.x);
-        ClampMouse.y             = std::clamp(ClampMouse.y, vMin.y, vMax.y);
-        const auto convert_range = [](
-                                     float       OldValue,
-                                     const float OldMin,
-                                     const float OldMax,
-                                     const float NewMin = -1.F,
-                                     const float NewMax = 1.F) {
-          return (((OldValue - OldMin) * (NewMax - NewMin)) / (OldMax - OldMin))
-                 + NewMin;
-        };
-        viewport_mouse_pos =
-          glm::vec4{ convert_range(ClampMouse.x, vMin.x, vMax.x),
-                     convert_range(ClampMouse.y, vMin.y, vMax.y),
-                     0.F,
-                     1.F };
-        ImGui::Text(
-          "%s",
-          fmt::format(
-            "Window Frame Buffer - Width {}, Height: {}\n"
-            "ViewPort - Hovered: {}, Focused: {}, Width: {}, Height: {}, "
-            "Texture ID: {}\nButton - Hovered: {}, Focused: {}, Activated: "
-            "{}\nWindow - Hovered: {}, Focused: {}\nParent Window - Hovered: "
-            "{}, Focused: {}\nMouse - X: {} Y: {}\nContent Region - Min X: {}, "
-            "Min Y: {}, Max X: {}, Max Y: {}\nClampMouse X: {}, Y: "
-            "{}\nviewport_mouse_pos X: {}, Y: {}, Z:{}, W:{}",
-            window->ViewWindowData().frame_buffer_width,
-            window->ViewWindowData().frame_buffer_height,
-            glengine::Input::ViewPortHovered(),
-            glengine::Input::ViewPortFocused(),
-            viewport_size.x,
-            viewport_size.y,
-            tmp,
-            button_hovered,
-            button_focused,
-            button_activated,
-            window_hovered,
-            window_focused,
-            parent_window_hovered,
-            parent_window_focused,
-            io.MousePos.x,
-            io.MousePos.y,
-            vMin.x,
-            vMin.y,
-            vMax.x,
-            vMax.y,
-            ClampMouse.x,
-            ClampMouse.y,
-            viewport_mouse_pos.x,
-            viewport_mouse_pos.y,
-            viewport_mouse_pos.z,
-            viewport_mouse_pos.w)
-            .c_str());
-        //        if(ImGui::InvisibleButton("##dummy",ImVec2(
-        //                                     static_cast<float>(fb.Specification().width),
-        //                                     static_cast<float>(fb.Specification().height))))
-        //        {
-        //
-        //        }
-
-        //        fmt::print("Focused = {}, Hovered =
-        //        {}\n",ImGui::IsAnyItemFocused(),ImGui::IsItemHovered());
-        //        glengine::Window::ViewPortFocused(ImGui::IsWindowFocused());
-        //        glengine::Window::ViewPortFocused(ImGui::IsWindowHovered());
-        //        if (glengine::TimeStep::now() - last >
-        //        glengine::TimeStep::duration(5s))
-        //        {
-        //          glengine::PixelBuffer pixel_buffer{ fb.Specification() };
-        //          pixel_buffer(fb, fmt::format("test ({}).png",
-        //          test_number++)); while
-        //          (pixel_buffer(&glengine::Texture::save))
-        //            ;
-        //          last = glengine::TimeStep::now();
-        //        }
-        // fbr.Draw(fb); //render frame buffer to screen.
-        ImGui::EndChild();
-      }
-      ImGui::End();
-      ImGui::PopStyleVar();
-
+      glengine::Renderer::Clear();
+      layers.OnRender();
 #endif
       window->EndFrameRendered();// Last thing you do on render;
     }
@@ -258,53 +98,53 @@ void Application::SetCurrentWindow() const
 {
   current_window = window.get();
 }
-const glengine::Window *Application::CurrentWindow()
-{
-  return current_window;
-}
-
-void RestoreViewPortToFrameBuffer()
-{
-  if (Application::CurrentWindow())
-  {
-    //    GLCall{}(
-    //      glViewport,
-    //      GLint{ 0 },
-    //      GLint{ 0 },
-    //      static_cast<GLsizei>(
-    //        Application::CurrentWindow()->ViewWindowData().frame_buffer_width),
-    //      static_cast<GLsizei>(
-    //        Application::CurrentWindow()->ViewWindowData().frame_buffer_height));
-    GLCall{}(
-      glViewport,
-      GLint{},
-      GLint{},
-      static_cast<GLint>(viewport_size.x),
-      static_cast<GLint>(viewport_size.y));
-  }
-}
-glm::vec4 GetViewPortMousePos() noexcept
-{
-  return viewport_mouse_pos;
-}
-glm::vec2 GetFrameBufferDims()
-{
-
-  if (Application::CurrentWindow())
-  {
-    return { viewport_size.x, viewport_size.y };
-  }
-  return { 16.F, 9.F };
-}
-float GetFrameBufferAspectRatio()
-{
-  if (Application::CurrentWindow())
-  {
-    //    const auto &window_data =
-    //    Application::CurrentWindow()->ViewWindowData(); return
-    //    static_cast<float>(window_data.frame_buffer_width)
-    //           / static_cast<float>(window_data.frame_buffer_height);
-    return viewport_size.x / viewport_size.y;
-  }
-  return (16.F / 9.F);
-}
+// const glengine::Window *Application::CurrentWindow()
+//{
+//   return current_window;
+// }
+//
+// void RestoreViewPortToFrameBuffer()
+//{
+//   if (Application::CurrentWindow())
+//   {
+//     //    GLCall{}(
+//     //      glViewport,
+//     //      GLint{ 0 },
+//     //      GLint{ 0 },
+//     //      static_cast<GLsizei>(
+//     // Application::CurrentWindow()->ViewWindowData().frame_buffer_width),
+//     //      static_cast<GLsizei>(
+//     // Application::CurrentWindow()->ViewWindowData().frame_buffer_height));
+//     GLCall{}(
+//       glViewport,
+//       GLint{},
+//       GLint{},
+//       static_cast<GLint>(viewport_size.x),
+//       static_cast<GLint>(viewport_size.y));
+//   }
+// }
+// glm::vec4 GetViewPortMousePos() noexcept
+//{
+//   return viewport_mouse_pos;
+// }
+// glm::vec2 GetFrameBufferDims()
+//{
+//
+//   if (Application::CurrentWindow())
+//   {
+//     return { viewport_size.x, viewport_size.y };
+//   }
+//   return { 16.F, 9.F };
+// }
+// float GetFrameBufferAspectRatio()
+//{
+//   if (Application::CurrentWindow())
+//   {
+//     //    const auto &window_data =
+//     //    Application::CurrentWindow()->ViewWindowData(); return
+//     //    static_cast<float>(window_data.frame_buffer_width)
+//     //           / static_cast<float>(window_data.frame_buffer_height);
+//     return viewport_size.x / viewport_size.y;
+//   }
+//   return (16.F / 9.F);
+// }
