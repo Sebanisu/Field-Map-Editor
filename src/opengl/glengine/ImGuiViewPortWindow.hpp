@@ -61,10 +61,13 @@ inline namespace impl
               .width  = static_cast<int>(m_viewport_size.x),
               .height = static_cast<int>(m_viewport_size.y) });
           }
-          else if(m_fb.Specification().height
-                   != static_cast<int>(m_viewport_size.y))
+          else if (
+            m_fb.Specification().height != static_cast<int>(m_viewport_size.y))
           {
             m_viewport_size.y = static_cast<float>(m_fb.Specification().height);
+            // Sometimes imgui would detect height as 4 px. I donno why. Seemed
+            // to be related to drawing more than once. I removed that extra
+            // draw but left this check here.
           }
           {
             const auto ffb = FrameBufferBackup();

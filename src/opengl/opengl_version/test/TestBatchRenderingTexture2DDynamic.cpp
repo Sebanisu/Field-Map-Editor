@@ -47,52 +47,47 @@ void test::TestBatchRenderingTexture2DDynamic::OnRender() const
 }
 void test::TestBatchRenderingTexture2DDynamic::OnImGuiUpdate() const
 {
-  int window_width = 16;
+  float window_width = 15.F;
+  float window_height =
+    (window_width / m_imgui_viewport_window.ViewPortAspectRatio());
   {
     const auto pop = glengine::ImGuiPushID();
-    if (ImGui::SliderFloat3(
-          "View Offset", &view_offset.x, 0.F, static_cast<float>(window_width)))
+    if (ImGui::SliderFloat3("View Offset", &view_offset.x, 0.F, window_width))
     {
     }
   }
   {
     const auto pop2 = glengine::ImGuiPushID();
     if (ImGui::SliderFloat2(
-          "Model Offset",
-          &model_offset1.x,
-          0.F,
-          static_cast<float>(window_width)))
+          "Model Offset 1", &model_offset1.x, 0.F, window_width))
     {
+      model_offset1.y = std::clamp(model_offset1.y, 0.F, window_height);
     }
   }
   {
     const auto pop3 = glengine::ImGuiPushID();
     if (ImGui::SliderFloat2(
-          "Model Offset",
-          &model_offset2.x,
-          0.F,
-          static_cast<float>(window_width)))
+          "Model Offset 2", &model_offset2.x, 0.F, window_width))
     {
+      model_offset2.y = std::clamp(model_offset2.y, 0.F, window_height);
     }
   }
   {
     const auto pop4 = glengine::ImGuiPushID();
     if (ImGui::SliderFloat2(
-          "Model Offset",
-          &model_offset3.x,
-          0.F,
-          static_cast<float>(window_width)))
+          "Model Offset 3", &model_offset3.x, 0.F, window_width))
     {
+      model_offset3.y = std::clamp(model_offset3.y, 0.F, window_height);
     }
   }
 }
-void test::TestBatchRenderingTexture2DDynamic::RenderFrameBuffer() const {
-  const auto dims = m_imgui_viewport_window.ViewPortDims();
-  auto       proj = glm::ortho(
+void test::TestBatchRenderingTexture2DDynamic::RenderFrameBuffer() const
+{
+  auto proj = glm::ortho(
     0.F,
-    static_cast<float>(dims.x),
+    16.F,
     0.F,
-    static_cast<float>(dims.y),
+    16.F / m_imgui_viewport_window.ViewPortAspectRatio(),
     -1.F,
     1.F);
   const auto view = glm::translate(glm::mat4{ 1.F }, view_offset);
