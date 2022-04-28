@@ -162,8 +162,7 @@ void OrthographicCameraController::zoom(float offset) const
   if (m_zoom_precision <= 10.F)
   {
     fmt::print("{}", offset);
-    const auto sign = std::signbit(offset) ? -1.F : 1.F;
-    offset          = std::copysign((std::max)(std::abs(offset), .1F), sign);
+    offset          = std::copysign((std::max)(std::abs(offset), .1F), offset);
     fmt::print(" >> {}\n", offset);
   }
   m_zoom_level -= offset * m_zoom_precision;
