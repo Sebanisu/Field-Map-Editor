@@ -10,11 +10,11 @@ void OrthographicCameraController::CheckInput(float ts) const
   using glengine::KEY;
   if (Input::IsKeyPressed(KEY::EQUAL) || Input::IsKeyPressed(KEY::KP_ADD))
   {
-    zoom(1.F);
+    zoom(2.F * ts);
   }
   if (Input::IsKeyPressed(KEY::MINUS) || Input::IsKeyPressed(KEY::KP_SUBTRACT))
   {
-    zoom(-1.F);
+    zoom(-2.F * ts);
   }
   if (Input::IsKeyPressed(KEY::Z))
   {
@@ -136,33 +136,41 @@ void OrthographicCameraController::CheckEvent(const Event::Item &e) const
 {
   Event::Dispatcher dispatcher(e);
   dispatcher.Dispatch<Event::MouseScroll>([this](const Event::MouseScroll &ms) {
-    zoom(ms.YOffset() * (m_zoom_precision < 1.F ? 1.F : 100.F));
+    zoom(ms.YOffset());
     return true;
   });
 }
-//todo fix precision so when you zoom in far it moves at smaller steps.
-void OrthographicCameraController::zoom(const float offset) const
+// todo fix precision so when you zoom in far it moves at smaller steps.
+void OrthographicCameraController::zoom(float offset) const
 {
-  if (
-    m_zoom_level - offset * m_zoom_precision
-    < std::numeric_limits<float>::epsilon())
+  m_zoom_precision = static_cast<float>(
+    std::pow(10.F, static_cast<int>(std::log10(m_zoom_level))));
+
+  if (m_zoom_level - offset * m_zoom_precision < m_zoom_precision)
   {
     m_zoom_precision /= 10.F;
   }
-  if (
-    m_zoom_level - offset * m_zoom_precision - m_zoom_precision * 10.F
-    > std::numeric_limits<float>::epsilon())
+  m_zoom_precision = (std::clamp)(m_zoom_precision, 0.1F, 100.F);
+  //  if (
+  //    m_zoom_level - offset * m_zoom_precision - m_zoom_precision * 10.F
+  //    > std::numeric_limits<float>::epsilon())
+  //  {
+  //    m_zoom_precision *= 10.F;
+  //    if (m_zoom_precision > 0.25F)
+  //      m_zoom_precision = std::nearbyint(m_zoom_precision);
+  //  }
+  if (m_zoom_precision <= 10.F)
   {
-    m_zoom_precision *= 10.F;
-    if (m_zoom_precision > 0.25F)
-      m_zoom_precision = std::nearbyint(m_zoom_precision);
+    fmt::print("{}", offset);
+    const auto sign = std::signbit(offset) ? -1.F : 1.F;
+    offset          = std::copysign((std::max)(std::abs(offset), .1F), sign);
+    fmt::print(" >> {}\n", offset);
   }
-  m_zoom_precision = (std::clamp)(m_zoom_precision, 0.0001F, 1.F);
-
   m_zoom_level -= offset * m_zoom_precision;
-  if (m_zoom_precision - 1.F > std::numeric_limits<float>::epsilon())
+  if (m_zoom_precision >= 1.F && offset >= 1.F)
     m_zoom_level = std::nearbyint(m_zoom_level);
-  m_zoom_level = (std::max)(m_zoom_level, 0.0001F);
+  else
+    m_zoom_level = (std::max)(m_zoom_level, 0.1F);
   SetProjection();
 }
 OrthographicCameraController::return_values
