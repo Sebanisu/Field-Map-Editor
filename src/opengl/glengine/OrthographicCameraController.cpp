@@ -140,7 +140,6 @@ void OrthographicCameraController::CheckEvent(const Event::Item &e) const
     return true;
   });
 }
-// todo fix precision so when you zoom in far it moves at smaller steps.
 void OrthographicCameraController::zoom(float offset) const
 {
   m_zoom_precision = static_cast<float>(
