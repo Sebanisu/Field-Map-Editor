@@ -136,12 +136,15 @@ public:
     ImGui::Separator();
     s_camera.OnImGuiUpdate();
     ImGui::Separator();
+    const glm::vec4 mouse_world_pos = s_camera.Camera().ScreenSpaceToWorldSpace(
+      m_imgui_viewport_window.ViewPortMousePos());
+
     ImGui::Text(
       "%s",
       fmt::format(
         "DrawPos - X: {}, Y: {} Z: {}, Width {}, Height {}"
         "\n\tOffset X {} Offset Y {},\n\tMin X {}, Max X {}, Min Y {}, Max Y "
-        "{}\n",
+        "{}\nMouse In WorldSpace - X: {}, Y: {}, Z: {}\n",
         m_position.x,
         m_position.y,
         m_position.z,
@@ -152,7 +155,10 @@ public:
         min_x,
         max_x,
         min_y,
-        max_y)
+        max_y,
+        mouse_world_pos.x,
+        mouse_world_pos.y,
+        mouse_world_pos.z)
         .c_str());
 
     m_batch_renderer.OnImGuiUpdate();

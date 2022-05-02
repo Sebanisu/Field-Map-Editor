@@ -102,12 +102,19 @@ void ff8::Mim::OnImGuiUpdate() const
     }
   }
   ImGui::Separator();
+
+  const glm::vec4 mouse_world_pos = camera.Camera().ScreenSpaceToWorldSpace(
+    m_imgui_viewport_window.ViewPortMousePos());
   ImGui::Text(
     "%s",
     fmt::format(
-      "Texture Width: {:>5}, Height: {:>5}",
+      "Texture Width: {:>5}, Height: {:>5}\nMouse In WorldSpace - X: {}, Y: "
+      "{}, Z: {}\n",
       local_texture.width(),
-      local_texture.height())
+      local_texture.height(),
+      mouse_world_pos.x,
+      mouse_world_pos.y,
+      mouse_world_pos.z)
       .c_str());
   ImGui::Separator();
   camera.OnImGuiUpdate();

@@ -122,13 +122,13 @@ public:
         in[3][2],
         in[3][3]);
     };
-    const glm::vec4 mouse_world_pos = {};//ScreenSpaceToWorldSpace(GetViewPortMousePos());
+
     ImGui::Text(
       "%s",
       fmt::format(
         "Projection: {}\nView: {}\nModel: {}\nMVP: {}\nPosition - X: {}, Y: "
         "{}, Z: {}\nRotation: {}\nPre-transform Bounds - left: {}, right: {}, "
-        "bottom: {}, top: {}\nMouse In WorldSpace - X: {}, Y: {}, Z: {}\n",
+        "bottom: {}, top: {}\n",
         fmt_mat4(m_projection_matrix),
         fmt_mat4(m_view_matrix),
         fmt_mat4(m_model_matrix),
@@ -140,10 +140,7 @@ public:
         m_bounds.x,
         m_bounds.y,
         m_bounds.z,
-        m_bounds.w,
-        mouse_world_pos.x,
-        mouse_world_pos.y,
-        mouse_world_pos.z)
+        m_bounds.w)
         .c_str());
   }
 
