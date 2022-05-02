@@ -109,7 +109,11 @@ public:
     // RestoreViewPortToFrameBuffer();
     m_imgui_viewport_window.SyncOpenGLViewPort();
     m_imgui_viewport_window.OnRender([this]() { RenderFrameBuffer(); });
-
+    GetViewPortPreview().OnRender(m_imgui_viewport_window.HasHover(), [this]() {
+      m_preview = true;
+      RenderFrameBuffer();
+      m_preview = false;
+    });
     m_changed = false;
   }
   void OnImGuiUpdate() const
@@ -186,6 +190,16 @@ private:
     {
       m_batch_renderer.Shader().SetUniform(
         "u_MVP", s_fixed_render_camera.ViewProjectionMatrix());
+    }
+    else if (m_preview)
+    {
+      m_batch_renderer.Shader().SetUniform(
+        "u_MVP",
+        GetViewPortPreview().SetPositionAndSizeAndGetMVP(
+          s_camera.Camera().ScreenSpaceToWorldSpace(
+            m_imgui_viewport_window.ViewPortMousePos()),
+          glm::vec2{ m_frame_buffer.Specification().width,
+                     m_frame_buffer.Specification().height }));
     }
     else
     {
@@ -493,6 +507,7 @@ private:
   inline static constinit float        m_offset_y              = -16.F;
   mutable bool                         m_offscreen_drawing     = { false };
   mutable bool                         m_saving                = { false };
+  mutable bool                         m_preview               = { false };
   glm::vec3                            m_position              = {};
   inline constinit static MapBlends    s_blends                = {};
   MapFilters                           m_filters               = { m_map };
