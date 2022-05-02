@@ -4,6 +4,7 @@
 
 #ifndef MYPROJECT_APPLICATION_HPP
 #define MYPROJECT_APPLICATION_HPP
+#include "ImGuiViewPortPreview.hpp"
 #include "Layer/LayerStack.hpp"
 #include "scope_guard.hpp"
 #include "Window.hpp"
@@ -21,6 +22,7 @@ private:
   std::unique_ptr<glengine::Window> window = nullptr;
   glengine::Layer::Stack            layers = {};
 };
+const  glengine::ImGuiViewPortPreview &GetViewPortPreview() noexcept;
 //glm::vec4 GetViewPortMousePos() noexcept ;
 //glm::vec2 GetFrameBufferDims();
 //void      RestoreViewPortToFrameBuffer();

@@ -160,9 +160,9 @@ void OrthographicCameraController::zoom(float offset) const
   //  }
   if (m_zoom_precision <= 10.F)
   {
-    fmt::print("{}", offset);
-    offset          = std::copysign((std::max)(std::abs(offset), .1F), offset);
-    fmt::print(" >> {}\n", offset);
+    // fmt::print("{}", offset);
+    offset = std::copysign((std::max)(std::abs(offset), .1F), offset);
+    // fmt::print(" >> {}\n", offset);
   }
   m_zoom_level -= offset * m_zoom_precision;
   if (m_zoom_precision >= 1.F && offset >= 1.F)
@@ -185,6 +185,10 @@ std::optional<OrthographicCameraController::return_values>
   //  if (m_bounds.has_value())
   //    return m_bounds.value() * m_zoom_level;
   return m_bounds;
+}
+void OrthographicCameraController::SetImageBounds(glm::vec2 dims) const
+{
+  SetImageBounds({ -dims.x / 2.F, dims.x / 2.F, -dims.y / 2.F, dims.y / 2.F });
 }
 void OrthographicCameraController::SetImageBounds(
   OrthographicCameraController::return_values bounds) const
@@ -336,6 +340,11 @@ void OrthographicCameraController::OnUpdate(float) const
       glm::vec2(scaled_bottom, scaled_top));
   }
   m_camera.SetPosition(m_position);
+}
+void OrthographicCameraController::SetPosition(glm::vec2 pos) const
+{
+  m_position = glm::vec3(pos.x, pos.y, 0.F);
+  OnUpdate(0.F);// fix bounds.
 }
 /**
  * Convert bounds to viewport.

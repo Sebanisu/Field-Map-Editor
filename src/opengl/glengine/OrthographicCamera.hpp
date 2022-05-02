@@ -91,7 +91,7 @@ public:
   {
     auto out = in * InverseViewProjectionMatrix();
     out.w    = 1.F / out.w;
-    out.x *= out.w;
+    out.x *= -out.w;
     out.y *= out.w;
     out.z *= out.w;
     return out;

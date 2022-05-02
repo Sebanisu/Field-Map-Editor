@@ -26,14 +26,14 @@ public:
   {
   }
 
-  //should be after CheckInput and only have things that should trigger always.
-  void                      OnUpdate(float) const;
-  //check for keyboard or mouse inputs must recommend to check for focus first.
+  // should be after CheckInput and only have things that should trigger always.
+  void                                OnUpdate(float) const;
+  // check for keyboard or mouse inputs must recommend to check for focus first.
   void                                CheckInput(float ts) const;
   bool                                OnImGuiUpdate() const;
   constexpr void                      OnRender() const {}
-  void                      OnEvent(const Event::Item &) const;
-  //check for keyboard or mouse events. Use Dispatcher::Filter.
+  void                                OnEvent(const Event::Item &) const;
+  // check for keyboard or mouse events. Use Dispatcher::Filter.
   void                                CheckEvent(const Event::Item &) const;
   const glengine::OrthographicCamera &Camera() const
   {
@@ -67,6 +67,7 @@ public:
   return_values                CurrentBounds() const;
   std::optional<return_values> MaxBounds() const;
   void                         SetImageBounds(return_values bounds) const;
+  void                         SetImageBounds(glm::vec2 dims) const;
   void                         DisableBounds() const;
   // void                         RefreshAspectRatio() const;
   void                         RefreshAspectRatio(float new_aspect_ratio) const;
@@ -74,6 +75,8 @@ public:
   void                         FitHeight() const;
   void                         FitWidth() const;
   [[maybe_unused]] void        SetZoom(float new_zoom) const;
+
+  void                         SetPosition(glm::vec2) const;
 
 private:
   void                                 SetProjection() const;

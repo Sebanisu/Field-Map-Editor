@@ -14,12 +14,13 @@
 #include "TimeStep.hpp"
 #include <ImGuiViewPortWindow.hpp>
 
-static glengine::Window   *current_window     = nullptr;
-static constinit bool      running            = true;
-static constinit bool      minimize           = false;
-static ImVec2              viewport_size      = {};
-static constinit glm::vec4 viewport_mouse_pos = {};
-static bool                OnWindowClose(const glengine::Event::WindowClose &)
+static glengine::Window       *current_window     = nullptr;
+glengine::ImGuiViewPortPreview * preview            = {};
+static constinit bool          running            = true;
+static constinit bool          minimize           = false;
+static ImVec2                  viewport_size      = {};
+static constinit glm::vec4     viewport_mouse_pos = {};
+static bool OnWindowClose(const glengine::Event::WindowClose &)
 {
   running = false;
   return true;
@@ -37,14 +38,16 @@ Application::Application(std::string Title, int width, int height)
     .height         = std::move(height),
     .event_callback = [&](const glengine::Event::Item &e) {
       const glengine::Event::Dispatcher dispatcher = { e };
-//      const bool skip =(glengine::Event::HasFlag(e.category(),glengine::Event::Category::Mouse)
-//                   && ImGui::GetIO().WantCaptureMouse)
-//                  || (glengine::Event::HasFlag(e.category(),glengine::Event::Category::Keyboard)
-//                      && ImGui::GetIO().WantCaptureKeyboard);
-//      if (skip)
-//      {
-//        return;
-//      }
+      //      const bool skip
+      //      =(glengine::Event::HasFlag(e.category(),glengine::Event::Category::Mouse)
+      //                   && ImGui::GetIO().WantCaptureMouse)
+      //                  ||
+      //                  (glengine::Event::HasFlag(e.category(),glengine::Event::Category::Keyboard)
+      //                      && ImGui::GetIO().WantCaptureKeyboard);
+      //      if (skip)
+      //      {
+      //        return;
+      //      }
       dispatcher.Dispatch<glengine::Event::WindowClose>(&OnWindowClose);
       dispatcher.Dispatch<glengine::Event::WindowResize>(&OnWindowResize);
       layers.OnEvent(e);
@@ -62,6 +65,8 @@ void Application::Run() const
   using namespace std::chrono_literals;
   glengine::FrameBuffer fb;// needed to be inscope somewhere because texture was
                            // being erased before it was drawn.
+  glengine::ImGuiViewPortPreview local_preview{};
+  preview = &local_preview;
   while (running)
   {
     window->BeginFrame();// First thing you do on update;
@@ -79,9 +84,11 @@ void Application::Run() const
 #else
       // constinit static std::size_t test_number = 0U;
       layers.OnImGuiUpdate();
+      preview->OnUpdate(time_step);
       layers.OnUpdate(time_step);
       glengine::Renderer::Clear();
       layers.OnRender();
+      preview->OnRender();
 #endif
       window->EndFrameRendered();// Last thing you do on render;
     }
@@ -148,3 +155,7 @@ void Application::SetCurrentWindow() const
 //   }
 //   return (16.F / 9.F);
 // }
+const glengine::ImGuiViewPortPreview &GetViewPortPreview() noexcept
+{
+  return *preview;
+}

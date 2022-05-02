@@ -19,6 +19,7 @@ static bool                                   draw_grid    = false;
 static bool                                   fit_height   = true;
 static bool                                   fit_width    = true;
 static bool                                   saving       = false;
+static bool                                   preview      = false;
 static const glengine::Texture               *texture      = nullptr;
 static glengine::OrthographicCameraController camera       = { 16.F / 9.F };
 }// namespace ff8
@@ -26,10 +27,8 @@ void ff8::Mim::OnUpdate(float ts) const
 {
   (void)m_delayed_textures.OnUpdate();
   const auto &local_texture = CurrentTexture();
-  camera.SetImageBounds({ -static_cast<float>(local_texture.width()) / 2.0F,
-                          static_cast<float>(local_texture.width()) / 2.0F,
-                          -static_cast<float>(local_texture.height()) / 2.0F,
-                          static_cast<float>(local_texture.height()) / 2.0F });
+  camera.SetImageBounds(
+    glm::vec2{ local_texture.width(), local_texture.height() });
   camera.RefreshAspectRatio(m_imgui_viewport_window.ViewPortAspectRatio());
 
   if (fit_height && fit_width)
@@ -69,11 +68,19 @@ void ff8::Mim::OnRender() const
   {
     m_imgui_viewport_window.SyncOpenGLViewPort();
     m_imgui_viewport_window.OnRender([this]() { RenderFrameBuffer(); });
+
+    GetViewPortPreview().OnRender(m_imgui_viewport_window.HasHover(), [this]() {
+      preview = true;
+      SetUniforms();
+      RenderFrameBuffer();
+      preview = false;
+    });
   }
   else
   {
     RenderFrameBuffer();
   }
+  texture = nullptr;
 }
 void ff8::Mim::OnImGuiUpdate() const
 {
@@ -160,12 +167,23 @@ const glengine::Texture &ff8::Mim::CurrentTexture() const
 void ff8::Mim::SetUniforms() const
 {
   m_batch_renderer.Bind();
+
   if (saving)
   {
     m_batch_renderer.Shader().SetUniform(
       "u_MVP",
       glengine::OrthographicCamera{ { texture->width(), texture->height() } }
         .ViewProjectionMatrix());
+  }
+  else if (preview)
+  {
+
+    m_batch_renderer.Shader().SetUniform(
+      "u_MVP",
+      GetViewPortPreview().SetPositionAndSizeAndGetMVP(
+        camera.Camera().ScreenSpaceToWorldSpace(
+          m_imgui_viewport_window.ViewPortMousePos()),
+        glm::vec2{ texture->width(), texture->height() }));
   }
   else
   {
@@ -307,5 +325,4 @@ void ff8::Mim::RenderFrameBuffer() const
     glm::vec2{ texture->width(), texture->height() });
   m_batch_renderer.Draw();
   m_batch_renderer.OnRender();
-  texture = nullptr;
 }

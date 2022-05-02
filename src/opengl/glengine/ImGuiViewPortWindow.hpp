@@ -107,7 +107,7 @@ inline namespace impl
           m_button_focused   = ImGui::IsItemFocused();
           m_button_activated = ImGui::IsItemActivated();
           OnUpdateFocusAndHover();
-          OnImGuiDebugInfo();
+          // OnImGuiDebugInfo();
         }
       }
     }
@@ -251,6 +251,7 @@ inline namespace impl
     mutable ImTextureID           m_imgui_texture_id_ref  = {};
     mutable glm::vec4             m_viewport_mouse_pos    = {};
   };
+  static_assert(Renderable<ImGuiViewPortWindow>);
 }// namespace impl
 }// namespace glengine
 #endif// FIELD_MAP_EDITOR_IMGUIVIEWPORTWINDOW_HPP
