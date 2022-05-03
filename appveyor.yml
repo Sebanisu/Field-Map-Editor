@@ -4,12 +4,12 @@ clone_folder: c:\projects\source
 
 environment:
     PYTHON: "C:\\Python38-x64\\python.exe"
-# conan==1.43.2
+# ==1.43.2
 build_script:
 - cmd: >-
     set PATH=%PATH%;C:\Users\appveyor\AppData\Roaming\Python\Python38\Scripts
 
-    "%PYTHON%" -m pip install --user
+    "%PYTHON%" -m pip install --user conan
 
     REM conan config install https://github.com/conan-io/conanclientcert.git
 
