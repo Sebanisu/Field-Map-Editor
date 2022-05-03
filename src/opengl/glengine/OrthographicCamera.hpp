@@ -85,7 +85,7 @@ public:
   }
   const glm::mat4 InverseViewProjectionMatrix() const
   {
-    return glm::inverse(m_view_projection_matrix);
+    return glm::inverse(glm::translate(m_view_projection_matrix, -m_position));
   }
   const auto ScreenSpaceToWorldSpace(glm::vec4 in) const
   {

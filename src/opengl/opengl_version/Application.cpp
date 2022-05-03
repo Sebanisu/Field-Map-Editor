@@ -85,8 +85,11 @@ void Application::Run() const
 #else
       // constinit static std::size_t test_number = 0U;
       layers.OnImGuiUpdate();
-      preview->OnUpdate(time_step);
-      layers.OnUpdate(time_step);
+      {
+        float step = time_step;// takes the current time when you get a float.
+        preview->OnUpdate(step);
+        layers.OnUpdate(step);
+      }
       glengine::Renderer::Clear();
       layers.OnRender();
       preview->OnRender();
