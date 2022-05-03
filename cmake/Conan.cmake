@@ -22,7 +22,7 @@ macro(run_conan)
 
     # Add (or remove) remotes as needed
     # conan_add_remote(NAME conan-center URL https://conan.bintray.com)
-    conan_add_remote(NAME cci URL https://center.conan.io INDEX 0)
+    # conan_add_remote(NAME cci URL https://center.conan.io INDEX 0)
     #    conan_add_remote(
     #            NAME bincrafters URL
     #            https://bincrafters.jfrog.io/artifactory/api/conan/public-conan)
