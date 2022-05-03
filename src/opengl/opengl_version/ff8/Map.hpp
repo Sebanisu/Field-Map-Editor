@@ -40,8 +40,8 @@ public:
     : Map(fields, {})
   {
   }
-  Map(const Fields &fields, const std::string &upscale_path)
-    : s_upscale_path(upscale_path)
+  Map(const Fields &fields, std::string upscale_path)
+    : m_upscale_path(std::move(upscale_path))
     , m_mim(LoadMim(fields.Field(), fields.Coo(), m_mim_path, m_mim_choose_coo))
     , m_map(LoadMap(
         fields.Field(),
@@ -55,9 +55,19 @@ public:
     {
       return;
     }
-    fmt::print("Loaded {}\n", m_mim_path);
-    fmt::print("Loaded {}\n", m_map_path);
-    fmt::print("Loading Textures from Mim \n");
+    if (!std::ranges::empty(m_upscale_path))
+    {
+      const auto stem = std::filesystem::path(m_map_path).parent_path().stem();
+      m_upscale_path  = (std::filesystem::path(m_upscale_path)
+                        / stem.string().substr(0, 2) / stem)
+                         .string();
+      fmt::print("Upscale Location: {}\n", m_upscale_path);
+    }
+    fmt::print(
+      "Loaded Map: {}\nLoaded Mim: {}\nBegin Loading "
+      "Textures from Mim.\n",
+      m_map_path,
+      m_mim_path);
     m_delayed_textures = LoadTextures(m_mim);
     SetCameraBoundsToEdgesOfImage();
     GetUniqueValues();
@@ -489,7 +499,7 @@ private:
                                                          .25F };
   inline static glm::vec4    s_uniform_color         = s_default_uniform_color;
 
-  std::string                s_upscale_path          = {};
+  std::string                m_upscale_path          = {};
   // internal mim file path
   std::string                m_mim_path              = {};
   // internal map file path
