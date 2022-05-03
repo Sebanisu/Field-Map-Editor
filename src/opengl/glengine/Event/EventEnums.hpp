@@ -2,8 +2,8 @@
 // Created by pcvii on 12/7/2021.
 //
 
-#ifndef MYPROJECT_EVENTENUMS_HPP
-#define MYPROJECT_EVENTENUMS_HPP
+#ifndef FIELD_MAP_EDITOR_EVENTENUMS_HPP
+#define FIELD_MAP_EDITOR_EVENTENUMS_HPP
 namespace glengine
 {
 namespace Event
@@ -52,4 +52,4 @@ namespace Event
   }
 }// namespace Event
 }// namespace glengine
-#endif// MYPROJECT_EVENTENUMS_HPP
+#endif// FIELD_MAP_EDITOR_EVENTENUMS_HPP

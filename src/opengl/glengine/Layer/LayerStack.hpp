@@ -2,8 +2,8 @@
 // Created by pcvii on 12/8/2021.
 //
 
-#ifndef MYPROJECT_LAYERSTACK_HPP
-#define MYPROJECT_LAYERSTACK_HPP
+#ifndef FIELD_MAP_EDITOR_LAYERSTACK_HPP
+#define FIELD_MAP_EDITOR_LAYERSTACK_HPP
 #include "LayerItem.hpp"
 namespace glengine
 {
@@ -47,4 +47,4 @@ namespace Layer
 }// namespace Layer
 }// namespace glengine
 static_assert(glengine::Renderable<glengine::Layer::Stack>);
-#endif// MYPROJECT_LAYERSTACK_HPP
+#endif// FIELD_MAP_EDITOR_LAYERSTACK_HPP

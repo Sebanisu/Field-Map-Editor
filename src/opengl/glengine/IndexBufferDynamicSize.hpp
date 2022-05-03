@@ -2,8 +2,8 @@
 // Created by pcvii on 12/6/2021.
 //
 
-#ifndef MYPROJECT_INDEXBUFFERDYNAMICSIZE_HPP
-#define MYPROJECT_INDEXBUFFERDYNAMICSIZE_HPP
+#ifndef FIELD_MAP_EDITOR_INDEXBUFFERDYNAMICSIZE_HPP
+#define FIELD_MAP_EDITOR_INDEXBUFFERDYNAMICSIZE_HPP
 namespace glengine
 {
 /**
@@ -33,4 +33,4 @@ static_assert(
   SizedBindable<
     IndexBufferDynamicSize> && std::copyable<IndexBufferDynamicSize>);
 }// namespace glengine
-#endif// MYPROJECT_INDEXBUFFERDYNAMICSIZE_HPP
+#endif// FIELD_MAP_EDITOR_INDEXBUFFERDYNAMICSIZE_HPP

@@ -2,8 +2,8 @@
 // Created by pcvii on 11/30/2021.
 //
 
-#ifndef MYPROJECT_SUBTEXTURE_HPP
-#define MYPROJECT_SUBTEXTURE_HPP
+#ifndef FIELD_MAP_EDITOR_SUBTEXTURE_HPP
+#define FIELD_MAP_EDITOR_SUBTEXTURE_HPP
 #include "Texture.hpp"
 namespace glengine
 {
@@ -44,4 +44,4 @@ private:
 };
 static_assert(Bindable<SubTexture>);
 }// namespace glengine
-#endif// MYPROJECT_SUBTEXTURE_HPP
+#endif// FIELD_MAP_EDITOR_SUBTEXTURE_HPP

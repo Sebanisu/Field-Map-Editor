@@ -2,8 +2,8 @@
 // Created by pcvii on 11/22/2021.
 //
 
-#ifndef MYPROJECT_SHADER_HPP
-#define MYPROJECT_SHADER_HPP
+#ifndef FIELD_MAP_EDITOR_SHADER_HPP
+#define FIELD_MAP_EDITOR_SHADER_HPP
 #include "Renderer.hpp"
 namespace glengine
 {
@@ -168,4 +168,4 @@ private:
 };
 static_assert(Bindable<Shader>);
 }// namespace glengine
-#endif// MYPROJECT_SHADER_HPP
+#endif// FIELD_MAP_EDITOR_SHADER_HPP

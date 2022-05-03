@@ -2,8 +2,8 @@
 // Created by pcvii on 11/21/2021.
 //
 
-#ifndef MYPROJECT_RENDERER_HPP
-#define MYPROJECT_RENDERER_HPP
+#ifndef FIELD_MAP_EDITOR_RENDERER_HPP
+#define FIELD_MAP_EDITOR_RENDERER_HPP
 #include "GLCheck.hpp"
 #include "IndexType.hpp"
 namespace glengine
@@ -56,4 +56,4 @@ namespace Renderer
   }
 }// namespace Renderer
 }// namespace glengine
-#endif// MYPROJECT_RENDERER_HPP
+#endif// FIELD_MAP_EDITOR_RENDERER_HPP

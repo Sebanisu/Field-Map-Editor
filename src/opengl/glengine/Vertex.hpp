@@ -2,8 +2,8 @@
 // Created by pcvii on 11/25/2021.
 //
 
-#ifndef MYPROJECT_VERTEX_HPP
-#define MYPROJECT_VERTEX_HPP
+#ifndef FIELD_MAP_EDITOR_VERTEX_HPP
+#define FIELD_MAP_EDITOR_VERTEX_HPP
 #include "VertexBufferLayout.hpp"
 
 
@@ -146,4 +146,4 @@ inline std::vector<Vertex> &operator+=(
   vertices_left += vertices_right;
   return vertices_left;
 }
-#endif// MYPROJECT_VERTEX_HPP
+#endif// FIELD_MAP_EDITOR_VERTEX_HPP

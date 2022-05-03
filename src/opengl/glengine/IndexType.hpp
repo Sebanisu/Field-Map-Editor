@@ -2,8 +2,8 @@
 // Created by pcvii on 12/6/2021.
 //
 
-#ifndef MYPROJECT_INDEXTYPE_HPP
-#define MYPROJECT_INDEXTYPE_HPP
+#ifndef FIELD_MAP_EDITOR_INDEXTYPE_HPP
+#define FIELD_MAP_EDITOR_INDEXTYPE_HPP
 namespace glengine
 {
 enum class IndexType : GLenum
@@ -95,4 +95,4 @@ template<typename... T>
   return (glengine::Type<T>(typed) + ...);
 }
 }// namespace glengine
-#endif// MYPROJECT_INDEXTYPE_HPP
+#endif// FIELD_MAP_EDITOR_INDEXTYPE_HPP

@@ -2,8 +2,8 @@
 // Created by pcvii on 11/22/2021.
 //
 
-#ifndef MYPROJECT_VERTEXARRAY_HPP
-#define MYPROJECT_VERTEXARRAY_HPP
+#ifndef FIELD_MAP_EDITOR_VERTEXARRAY_HPP
+#define FIELD_MAP_EDITOR_VERTEXARRAY_HPP
 #include "Renderer.hpp"
 #include "unique_value.hpp"
 #include "VertexBuffer.hpp"
@@ -57,4 +57,4 @@ public:
 };
 static_assert(Bindable<VertexArray>);
 }// namespace glengine
-#endif// MYPROJECT_VERTEXARRAY_HPP
+#endif// FIELD_MAP_EDITOR_VERTEXARRAY_HPP

@@ -2,8 +2,8 @@
 // Created by pcvii on 12/7/2021.
 //
 
-#ifndef MYPROJECT_EVENTDISPATCHER_HPP
-#define MYPROJECT_EVENTDISPATCHER_HPP
+#ifndef FIELD_MAP_EDITOR_EVENTDISPATCHER_HPP
+#define FIELD_MAP_EDITOR_EVENTDISPATCHER_HPP
 #include "EventItem.hpp"
 namespace glengine
 {
@@ -59,4 +59,4 @@ namespace Event
   };
 }// namespace Event
 }// namespace glengine
-#endif// MYPROJECT_EVENTDISPATCHER_HPP
+#endif// FIELD_MAP_EDITOR_EVENTDISPATCHER_HPP

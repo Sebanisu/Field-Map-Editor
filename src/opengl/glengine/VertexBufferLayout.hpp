@@ -2,8 +2,8 @@
 // Created by pcvii on 11/22/2021.
 //
 
-#ifndef MYPROJECT_VERTEXBUFFERLAYOUT_HPP
-#define MYPROJECT_VERTEXBUFFERLAYOUT_HPP
+#ifndef FIELD_MAP_EDITOR_VERTEXBUFFERLAYOUT_HPP
+#define FIELD_MAP_EDITOR_VERTEXBUFFERLAYOUT_HPP
 namespace glengine
 {
 template<typename T>
@@ -183,4 +183,4 @@ VertexBufferLayout(Ts &&...) -> VertexBufferLayout<sizeof...(Ts)>;
 static_assert(
   std::movable<VertexBufferLayout<1>> && std::copyable<VertexBufferLayout<1>>);
 }// namespace glengine
-#endif// MYPROJECT_VERTEXBUFFERLAYOUT_HPP
+#endif// FIELD_MAP_EDITOR_VERTEXBUFFERLAYOUT_HPP

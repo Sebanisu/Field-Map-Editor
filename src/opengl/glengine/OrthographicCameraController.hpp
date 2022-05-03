@@ -2,8 +2,8 @@
 // Created by pcvii on 12/2/2021.
 //
 
-#ifndef MYPROJECT_ORTHOGRAPHICCAMERACONTROLLER_HPP
-#define MYPROJECT_ORTHOGRAPHICCAMERACONTROLLER_HPP
+#ifndef FIELD_MAP_EDITOR_ORTHOGRAPHICCAMERACONTROLLER_HPP
+#define FIELD_MAP_EDITOR_ORTHOGRAPHICCAMERACONTROLLER_HPP
 #include "Event/EventItem.hpp"
 #include "OrthographicCamera.hpp"
 namespace glengine
@@ -96,4 +96,4 @@ void MakeViewPortMatchBounds(
   const OrthographicCameraController::return_values &bounds);
 static_assert(Renderable<OrthographicCameraController>);
 }// namespace glengine
-#endif// MYPROJECT_ORTHOGRAPHICCAMERACONTROLLER_HPP
+#endif// FIELD_MAP_EDITOR_ORTHOGRAPHICCAMERACONTROLLER_HPP

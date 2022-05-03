@@ -2,8 +2,8 @@
 // Created by pcvii on 12/8/2021.
 //
 
-#ifndef MYPROJECT_LAYERITEM_HPP
-#define MYPROJECT_LAYERITEM_HPP
+#ifndef FIELD_MAP_EDITOR_LAYERITEM_HPP
+#define FIELD_MAP_EDITOR_LAYERITEM_HPP
 #include "Event/EventItem.hpp"
 namespace glengine
 {
@@ -90,4 +90,4 @@ namespace Layer
   };
 }// namespace Layer
 }// namespace glengine
-#endif// MYPROJECT_LAYERITEM_HPP
+#endif// FIELD_MAP_EDITOR_LAYERITEM_HPP

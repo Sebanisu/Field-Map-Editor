@@ -2,8 +2,8 @@
 // Created by pcvii on 11/21/2021.
 //
 
-#ifndef MYPROJECT_VERTEXBUFFER_HPP
-#define MYPROJECT_VERTEXBUFFER_HPP
+#ifndef FIELD_MAP_EDITOR_VERTEXBUFFER_HPP
+#define FIELD_MAP_EDITOR_VERTEXBUFFER_HPP
 #include "Renderer.hpp"
 #include "unique_value.hpp"
 namespace glengine
@@ -41,4 +41,4 @@ public:
 };
 static_assert(Bindable<VertexBuffer>);
 }// namespace glengine
-#endif// MYPROJECT_VERTEXBUFFER_HPP
+#endif// FIELD_MAP_EDITOR_VERTEXBUFFER_HPP

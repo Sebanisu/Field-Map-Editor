@@ -2,8 +2,8 @@
 // Created by pcvii on 12/1/2021.
 //
 
-#ifndef MYPROJECT_DELAYEDTEXTURES_HPP
-#define MYPROJECT_DELAYEDTEXTURES_HPP
+#ifndef FIELD_MAP_EDITOR_DELAYEDTEXTURES_HPP
+#define FIELD_MAP_EDITOR_DELAYEDTEXTURES_HPP
 #include "Texture.hpp"
 namespace glengine
 {
@@ -55,4 +55,4 @@ struct DelayedTextures
   }
 };
 }// namespace glengine
-#endif// MYPROJECT_DELAYEDTEXTURES_HPP
+#endif// FIELD_MAP_EDITOR_DELAYEDTEXTURES_HPP

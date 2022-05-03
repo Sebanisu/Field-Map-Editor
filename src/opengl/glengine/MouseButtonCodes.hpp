@@ -2,8 +2,8 @@
 // Created by pcvii on 12/2/2021.
 //
 
-#ifndef MYPROJECT_MOUSEBUTTONCODES_HPP
-#define MYPROJECT_MOUSEBUTTONCODES_HPP
+#ifndef FIELD_MAP_EDITOR_MOUSEBUTTONCODES_HPP
+#define FIELD_MAP_EDITOR_MOUSEBUTTONCODES_HPP
 namespace glengine
 {
 enum class MOUSE : int
@@ -27,4 +27,4 @@ static constexpr auto operator+(MOUSE e) noexcept
   return static_cast<std::underlying_type_t<MOUSE>>(e);
 }
 }// namespace glengine
-#endif// MYPROJECT_MOUSEBUTTONCODES_HPP
+#endif// FIELD_MAP_EDITOR_MOUSEBUTTONCODES_HPP

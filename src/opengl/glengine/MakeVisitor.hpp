@@ -2,8 +2,8 @@
 // Created by pcvii on 12/7/2021.
 //
 
-#ifndef MYPROJECT_MAKEVISITOR_HPP
-#define MYPROJECT_MAKEVISITOR_HPP
+#ifndef FIELD_MAP_EDITOR_MAKEVISITOR_HPP
+#define FIELD_MAP_EDITOR_MAKEVISITOR_HPP
 namespace glengine
 {
 template<typename... B>
@@ -16,4 +16,4 @@ template<typename... B>
   return visitor{ std::forward<B>(b)... };
 }
 }// namespace glengine
-#endif// MYPROJECT_MAKEVISITOR_HPP
+#endif// FIELD_MAP_EDITOR_MAKEVISITOR_HPP

@@ -2,8 +2,8 @@
 // Created by pcvii on 11/21/2021.
 //
 
-#ifndef MYPROJECT_VertexBufferDynamic_HPP
-#define MYPROJECT_VertexBufferDynamic_HPP
+#ifndef FIELD_MAP_EDITOR_VertexBufferDynamic_HPP
+#define FIELD_MAP_EDITOR_VertexBufferDynamic_HPP
 #include "IndexBufferDynamicSize.hpp"
 #include "Renderer.hpp"
 #include "unique_value.hpp"
@@ -39,4 +39,4 @@ public:
 };
 static_assert(Bindable<VertexBufferDynamic>);
 }// namespace glengine
-#endif// MYPROJECT_VertexBufferDynamic_HPP
+#endif// FIELD_MAP_EDITOR_VertexBufferDynamic_HPP

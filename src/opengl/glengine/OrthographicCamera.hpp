@@ -2,8 +2,8 @@
 // Created by pcvii on 12/2/2021.
 //
 
-#ifndef MYPROJECT_ORTHOGRAPHICCAMERA_HPP
-#define MYPROJECT_ORTHOGRAPHICCAMERA_HPP
+#ifndef FIELD_MAP_EDITOR_ORTHOGRAPHICCAMERA_HPP
+#define FIELD_MAP_EDITOR_ORTHOGRAPHICCAMERA_HPP
 //#include "Application.hpp"
 #include <fmt/ranges.h>
 namespace glengine
@@ -161,4 +161,4 @@ private:
   glm::vec4 m_bounds                 = {};
 };
 }// namespace glengine
-#endif// MYPROJECT_ORTHOGRAPHICCAMERA_HPP
+#endif// FIELD_MAP_EDITOR_ORTHOGRAPHICCAMERA_HPP

@@ -2,8 +2,8 @@
 // Created by pcvii on 12/2/2021.
 //
 
-#ifndef MYPROJECT_KEYCODES_HPP
-#define MYPROJECT_KEYCODES_HPP
+#ifndef FIELD_MAP_EDITOR_KEYCODES_HPP
+#define FIELD_MAP_EDITOR_KEYCODES_HPP
 namespace glengine
 {
 // from glfw3.h
@@ -162,4 +162,4 @@ static constexpr auto operator+(KEY e) noexcept
   return static_cast<std::underlying_type_t<KEY>>(e);
 }
 }// namespace glengine
-#endif// MYPROJECT_KEYCODES_HPP
+#endif// FIELD_MAP_EDITOR_KEYCODES_HPP

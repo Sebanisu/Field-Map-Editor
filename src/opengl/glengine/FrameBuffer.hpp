@@ -2,8 +2,8 @@
 // Created by pcvii on 12/15/2021.
 //
 
-#ifndef MYPROJECT_FRAMEBUFFER_HPP
-#define MYPROJECT_FRAMEBUFFER_HPP
+#ifndef FIELD_MAP_EDITOR_FRAMEBUFFER_HPP
+#define FIELD_MAP_EDITOR_FRAMEBUFFER_HPP
 #include "Renderer.hpp"
 #include "SubTexture.hpp"
 #include "unique_value.hpp"
@@ -45,4 +45,4 @@ private:
 };
 static_assert(Bindable<FrameBuffer>);
 }// namespace glengine
-#endif// MYPROJECT_FRAMEBUFFER_HPP
+#endif// FIELD_MAP_EDITOR_FRAMEBUFFER_HPP

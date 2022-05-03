@@ -2,8 +2,8 @@
 // Created by pcvii on 11/23/2021.
 //
 
-#ifndef MYPROJECT_RENDERABLE_HPP
-#define MYPROJECT_RENDERABLE_HPP
+#ifndef FIELD_MAP_EDITOR_RENDERABLE_HPP
+#define FIELD_MAP_EDITOR_RENDERABLE_HPP
 namespace glengine
 {
 namespace Event
@@ -66,4 +66,4 @@ inline auto OnEvent(const T &t, const Event::Item &e)
   return t.OnEvent(e);
 }
 }// namespace glengine
-#endif// MYPROJECT_RENDERABLE_HPP
+#endif// FIELD_MAP_EDITOR_RENDERABLE_HPP

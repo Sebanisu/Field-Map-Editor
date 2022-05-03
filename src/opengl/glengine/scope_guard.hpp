@@ -2,8 +2,8 @@
 // Created by pcvii on 11/15/2021.
 //
 
-#ifndef MYPROJECT_SCOPE_GUARD_HPP
-#define MYPROJECT_SCOPE_GUARD_HPP
+#ifndef FIELD_MAP_EDITOR_SCOPE_GUARD_HPP
+#define FIELD_MAP_EDITOR_SCOPE_GUARD_HPP
 namespace glengine
 {
 struct [[nodiscard]] scope_guard
@@ -109,4 +109,4 @@ private:
   std::function<void()> func{};
 };
 }// namespace glengine
-#endif// MYPROJECT_SCOPE_GUARD_HPP
+#endif// FIELD_MAP_EDITOR_SCOPE_GUARD_HPP

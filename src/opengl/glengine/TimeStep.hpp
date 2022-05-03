@@ -2,8 +2,8 @@
 // Created by pcvii on 12/13/2021.
 //
 
-#ifndef MYPROJECT_TIMESTEP_HPP
-#define MYPROJECT_TIMESTEP_HPP
+#ifndef FIELD_MAP_EDITOR_TIMESTEP_HPP
+#define FIELD_MAP_EDITOR_TIMESTEP_HPP
 namespace glengine
 {
 class TimeStep
@@ -22,4 +22,4 @@ private:
   mutable time_point last = now();
 };
 }// namespace glengine
-#endif// MYPROJECT_TIMESTEP_HPP
+#endif// FIELD_MAP_EDITOR_TIMESTEP_HPP

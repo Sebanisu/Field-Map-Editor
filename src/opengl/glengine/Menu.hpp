@@ -2,8 +2,8 @@
 // Created by pcvii on 11/24/2021.
 //
 
-#ifndef MYPROJECT_MENU_HPP
-#define MYPROJECT_MENU_HPP
+#ifndef FIELD_MAP_EDITOR_MENU_HPP
+#define FIELD_MAP_EDITOR_MENU_HPP
 #include "Event/EventItem.hpp"
 #include "MenuItem.hpp"
 namespace glengine
@@ -61,4 +61,4 @@ private:
     m_list = {};
 };
 }// namespace glengine
-#endif// MYPROJECT_MENU_HPP
+#endif// FIELD_MAP_EDITOR_MENU_HPP

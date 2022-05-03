@@ -2,8 +2,8 @@
 // Created by pcvii on 12/5/2021.
 //
 
-#ifndef MYPROJECT_UNIQUE_VALUE_HPP
-#define MYPROJECT_UNIQUE_VALUE_HPP
+#ifndef FIELD_MAP_EDITOR_UNIQUE_VALUE_HPP
+#define FIELD_MAP_EDITOR_UNIQUE_VALUE_HPP
 namespace glengine
 {
 template<typename T>
@@ -219,4 +219,4 @@ static_assert(
       GLID_array<1U>([](typename GLID_array<1U>::ParameterT) {}, 1U) })
   == std::array{ 1U });
 }// namespace glengine
-#endif// MYPROJECT_UNIQUE_VALUE_HPP
+#endif// FIELD_MAP_EDITOR_UNIQUE_VALUE_HPP

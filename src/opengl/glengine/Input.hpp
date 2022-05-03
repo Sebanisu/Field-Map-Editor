@@ -2,8 +2,8 @@
 // Created by pcvii on 12/2/2021.
 //
 
-#ifndef MYPROJECT_INPUT_HPP
-#define MYPROJECT_INPUT_HPP
+#ifndef FIELD_MAP_EDITOR_INPUT_HPP
+#define FIELD_MAP_EDITOR_INPUT_HPP
 #include "KeyCodes.hpp"
 #include "MouseButtonCodes.hpp"
 namespace glengine
@@ -24,4 +24,4 @@ private:
   inline constinit static GLFWwindow *m_window = nullptr;
 };
 }// namespace glengine
-#endif// MYPROJECT_INPUT_HPP
+#endif// FIELD_MAP_EDITOR_INPUT_HPP

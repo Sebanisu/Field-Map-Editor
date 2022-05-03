@@ -2,8 +2,8 @@
 // Created by pcvii on 11/30/2021.
 //
 
-#ifndef MYPROJECT_BATCHRENDERER_HPP
-#define MYPROJECT_BATCHRENDERER_HPP
+#ifndef FIELD_MAP_EDITOR_BATCHRENDERER_HPP
+#define FIELD_MAP_EDITOR_BATCHRENDERER_HPP
 #include "IndexBufferDynamic.hpp"
 #include "Shader.hpp"
 #include "SubTexture.hpp"
@@ -75,4 +75,4 @@ private:
 static_assert(Renderable<BatchRenderer>);
 static_assert(Bindable<BatchRenderer>);
 }// namespace glengine
-#endif// MYPROJECT_BATCHRENDERER_HPP
+#endif// FIELD_MAP_EDITOR_BATCHRENDERER_HPP

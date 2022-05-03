@@ -2,8 +2,8 @@
 // Created by pcvii on 11/29/2021.
 //
 
-#ifndef MYPROJECT_EVENTITEM_HPP
-#define MYPROJECT_EVENTITEM_HPP
+#ifndef FIELD_MAP_EDITOR_EVENTITEM_HPP
+#define FIELD_MAP_EDITOR_EVENTITEM_HPP
 #include "Event.hpp"
 #include "MakeVisitor.hpp"
 namespace glengine
@@ -90,4 +90,4 @@ namespace Event
   static_assert(Event::is<Item>);
 }// namespace Event
 }// namespace glengine
-#endif// MYPROJECT_EVENTITEM_HPP
+#endif// FIELD_MAP_EDITOR_EVENTITEM_HPP

@@ -2,8 +2,8 @@
 // Created by pcvii on 11/21/2021.
 //
 
-#ifndef MYPROJECT_IndexBufferDynamic_HPP
-#define MYPROJECT_IndexBufferDynamic_HPP
+#ifndef FIELD_MAP_EDITOR_IndexBufferDynamic_HPP
+#define FIELD_MAP_EDITOR_IndexBufferDynamic_HPP
 #include "IndexType.hpp"
 #include "Renderer.hpp"
 #include "unique_value.hpp"
@@ -59,4 +59,4 @@ public:
 static_assert(
   Bindable<IndexBufferDynamic> && has_Type_for_IndexType<IndexBufferDynamic>);
 }// namespace glengine
-#endif// MYPROJECT_IndexBufferDynamic_HPP
+#endif// FIELD_MAP_EDITOR_IndexBufferDynamic_HPP

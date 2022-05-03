@@ -2,8 +2,8 @@
 // Created by pcvii on 11/21/2021.
 //
 
-#ifndef MYPROJECT_INDEXBUFFER_HPP
-#define MYPROJECT_INDEXBUFFER_HPP
+#ifndef FIELD_MAP_EDITOR_INDEXBUFFER_HPP
+#define FIELD_MAP_EDITOR_INDEXBUFFER_HPP
 #include "IndexType.hpp"
 #include "Renderer.hpp"
 #include "unique_value.hpp"
@@ -56,4 +56,4 @@ public:
 };
 static_assert(Bindable<IndexBuffer> && has_Type_for_IndexType<IndexBuffer>);
 }// namespace glengine
-#endif// MYPROJECT_INDEXBUFFER_HPP
+#endif// FIELD_MAP_EDITOR_INDEXBUFFER_HPP

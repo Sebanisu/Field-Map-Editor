@@ -2,8 +2,8 @@
 // Created by pcvii on 12/6/2021.
 //
 
-#ifndef MYPROJECT_WINDOW_HPP
-#define MYPROJECT_WINDOW_HPP
+#ifndef FIELD_MAP_EDITOR_WINDOW_HPP
+#define FIELD_MAP_EDITOR_WINDOW_HPP
 #include "Event/EventItem.hpp"
 #include "Input.hpp"
 namespace glengine
@@ -123,4 +123,4 @@ private:
   static WindowData &GetWindowData(GLFWwindow *);
 };
 }// namespace glengine
-#endif// MYPROJECT_WINDOW_HPP
+#endif// FIELD_MAP_EDITOR_WINDOW_HPP

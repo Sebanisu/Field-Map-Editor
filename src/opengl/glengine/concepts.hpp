@@ -2,8 +2,8 @@
 // Created by pcvii on 11/24/2021.
 //
 
-#ifndef MYPROJECT_CONCEPTS_HPP
-#define MYPROJECT_CONCEPTS_HPP
+#ifndef FIELD_MAP_EDITOR_CONCEPTS_HPP
+#define FIELD_MAP_EDITOR_CONCEPTS_HPP
 namespace glengine
 {
 template<typename T, typename U>
@@ -81,4 +81,4 @@ template<typename... T>
   return (glengine::size<T>(bindables) + ...);
 }
 }// namespace glengine
-#endif// MYPROJECT_CONCEPTS_HPP
+#endif// FIELD_MAP_EDITOR_CONCEPTS_HPP

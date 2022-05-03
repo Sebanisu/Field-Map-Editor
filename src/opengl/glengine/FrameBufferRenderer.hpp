@@ -2,8 +2,8 @@
 // Created by pcvii on 12/20/2021.
 //
 
-#ifndef MYPROJECT_FRAMEBUFFERRENDERER_HPP
-#define MYPROJECT_FRAMEBUFFERRENDERER_HPP
+#ifndef FIELD_MAP_EDITOR_FRAMEBUFFERRENDERER_HPP
+#define FIELD_MAP_EDITOR_FRAMEBUFFERRENDERER_HPP
 #include "FrameBuffer.hpp"
 #include "IndexBuffer.hpp"
 #include "OrthographicCamera.hpp"
@@ -55,4 +55,4 @@ public:
   }
 };
 }// namespace glengine
-#endif// MYPROJECT_FRAMEBUFFERRENDERER_HPP
+#endif// FIELD_MAP_EDITOR_FRAMEBUFFERRENDERER_HPP

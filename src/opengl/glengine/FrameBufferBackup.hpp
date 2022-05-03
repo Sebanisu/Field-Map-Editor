@@ -2,8 +2,8 @@
 // Created by pcvii on 12/27/2021.
 //
 
-#ifndef MYPROJECT_FRAMEBUFFERBACKUP_HPP
-#define MYPROJECT_FRAMEBUFFERBACKUP_HPP
+#ifndef FIELD_MAP_EDITOR_FRAMEBUFFERBACKUP_HPP
+#define FIELD_MAP_EDITOR_FRAMEBUFFERBACKUP_HPP
 #include "GLCheck.hpp"
 #include "unique_value.hpp"
 namespace glengine
@@ -19,4 +19,4 @@ public:
   FrameBufferBackup();
 };
 }// namespace glengine
-#endif// MYPROJECT_FRAMEBUFFERBACKUP_HPP
+#endif// FIELD_MAP_EDITOR_FRAMEBUFFERBACKUP_HPP

@@ -2,8 +2,8 @@
 // Created by pcvii on 11/22/2021.
 //
 
-#ifndef MYPROJECT_TEXTURE_HPP
-#define MYPROJECT_TEXTURE_HPP
+#ifndef FIELD_MAP_EDITOR_TEXTURE_HPP
+#define FIELD_MAP_EDITOR_TEXTURE_HPP
 #include "Renderer.hpp"
 #include "unique_value.hpp"
 #include <stb_image.h>
@@ -201,4 +201,4 @@ public:
 };
 static_assert(Bindable<Texture>);
 }// namespace glengine
-#endif// MYPROJECT_TEXTURE_HPP
+#endif// FIELD_MAP_EDITOR_TEXTURE_HPP

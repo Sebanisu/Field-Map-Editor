@@ -2,8 +2,8 @@
 // Created by pcvii on 12/19/2021.
 //
 
-#ifndef MYPROJECT_GLCHECK_HPP
-#define MYPROJECT_GLCHECK_HPP
+#ifndef FIELD_MAP_EDITOR_GLCHECK_HPP
+#define FIELD_MAP_EDITOR_GLCHECK_HPP
 
 void BeginErrorCallBack();
 void EndErrorCallback();
@@ -47,4 +47,4 @@ public:
 private:
   std::source_location m_source_location = {};
 };
-#endif// MYPROJECT_GLCHECK_HPP
+#endif// FIELD_MAP_EDITOR_GLCHECK_HPP

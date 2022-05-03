@@ -2,8 +2,8 @@
 // Created by pcvii on 12/6/2021.
 //
 
-#ifndef MYPROJECT_EVENT_HPP
-#define MYPROJECT_EVENT_HPP
+#ifndef FIELD_MAP_EDITOR_EVENT_HPP
+#define FIELD_MAP_EDITOR_EVENT_HPP
 #include "EventConcepts.hpp"
 namespace glengine
 {
@@ -344,4 +344,4 @@ public:                          \
 #undef EVENT_CLASS_TYPE
 }// namespace Event
 }// namespace glengine
-#endif// MYPROJECT_EVENT_HPP
+#endif// FIELD_MAP_EDITOR_EVENT_HPP

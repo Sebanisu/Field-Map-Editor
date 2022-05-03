@@ -2,8 +2,8 @@
 // Created by pcvii on 12/21/2021.
 //
 
-#ifndef MYPROJECT_PIXELBUFFER_HPP
-#define MYPROJECT_PIXELBUFFER_HPP
+#ifndef FIELD_MAP_EDITOR_PIXELBUFFER_HPP
+#define FIELD_MAP_EDITOR_PIXELBUFFER_HPP
 #include "FrameBuffer.hpp"
 #include "scope_guard.hpp"
 #include "unique_value.hpp"
@@ -164,4 +164,4 @@ private:
   ArrayT                                                pbos  = {};
 };
 }// namespace glengine
-#endif// MYPROJECT_PIXELBUFFER_HPP
+#endif// FIELD_MAP_EDITOR_PIXELBUFFER_HPP

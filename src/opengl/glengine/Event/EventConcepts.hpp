@@ -2,8 +2,8 @@
 // Created by pcvii on 12/7/2021.
 //
 
-#ifndef MYPROJECT_EVENTCONCEPTS_HPP
-#define MYPROJECT_EVENTCONCEPTS_HPP
+#ifndef FIELD_MAP_EDITOR_EVENTCONCEPTS_HPP
+#define FIELD_MAP_EDITOR_EVENTCONCEPTS_HPP
 #include "EventEnums.hpp"
 #include "KeyCodes.hpp"
 #include "MouseButtonCodes.hpp"
@@ -103,4 +103,4 @@ namespace Event
   };
 }// namespace Event
 }// namespace glengine
-#endif// MYPROJECT_EVENTCONCEPTS_HPP
+#endif// FIELD_MAP_EDITOR_EVENTCONCEPTS_HPP
