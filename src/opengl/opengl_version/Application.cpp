@@ -3,18 +3,16 @@
 //
 
 #include "Application.hpp"
-//#include "BatchRenderer.hpp"
 #include "Event/EventDispatcher.hpp"
+#include "ff8/Fields.hpp"
 #include "FrameBuffer.hpp"
 #include "FrameBufferRenderer.hpp"
-#include "ImGuiPushID.hpp"
-#include "PixelBuffer.hpp"
 #include "Renderer.hpp"
 #include "test/LayerTests.hpp"
 #include "TimeStep.hpp"
-#include <ImGuiViewPortWindow.hpp>
 
 static glengine::Window       *current_window     = nullptr;
+static ff8::Fields       *fields     = nullptr;
 glengine::ImGuiViewPortPreview * preview            = {};
 static constinit bool          running            = true;
 static constinit bool          minimize           = false;
@@ -66,7 +64,9 @@ void Application::Run() const
   glengine::FrameBuffer fb;// needed to be inscope somewhere because texture was
                            // being erased before it was drawn.
   glengine::ImGuiViewPortPreview local_preview{};
+  ff8::Fields local_fields{};
   preview = &local_preview;
+  fields = &local_fields;
   while (running)
   {
     window->BeginFrame();// First thing you do on update;
@@ -155,6 +155,10 @@ void Application::SetCurrentWindow() const
 //   }
 //   return (16.F / 9.F);
 // }
+const ff8::Fields & GetFields() noexcept
+{
+  return *fields;
+}
 const glengine::ImGuiViewPortPreview &GetViewPortPreview() noexcept
 {
   return *preview;

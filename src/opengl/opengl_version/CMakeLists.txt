@@ -35,10 +35,12 @@ add_executable(${PROJECT_NAME}_OPENGL
         ff8/Coos.cpp
         ff8/FF8LoadTextures.cpp
         ff8/FF8Menu.cpp
+        ff8/FF8UpscaleMenu.cpp
         ff8/Fields.cpp
         ff8/Mim.cpp
         ff8/Palettes.cpp
         ff8/Paths.cpp
+        ff8/Upscales.cpp
         main.cpp
         test/LayerTests.cpp
         test/TestBatchQuads.cpp

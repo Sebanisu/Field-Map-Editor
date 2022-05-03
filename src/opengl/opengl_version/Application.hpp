@@ -2,8 +2,9 @@
 // Created by pcvii on 12/9/2021.
 //
 
-#ifndef MYPROJECT_APPLICATION_HPP
-#define MYPROJECT_APPLICATION_HPP
+#ifndef FIELD_MAP_EDITOR_APPLICATION_HPP
+#define FIELD_MAP_EDITOR_APPLICATION_HPP
+#include "ff8/Fields.hpp"
 #include "ImGuiViewPortPreview.hpp"
 #include "Layer/LayerStack.hpp"
 #include "scope_guard.hpp"
@@ -22,9 +23,10 @@ private:
   std::unique_ptr<glengine::Window> window = nullptr;
   glengine::Layer::Stack            layers = {};
 };
+const ff8::Fields & GetFields() noexcept;
 const  glengine::ImGuiViewPortPreview &GetViewPortPreview() noexcept;
 //glm::vec4 GetViewPortMousePos() noexcept ;
 //glm::vec2 GetFrameBufferDims();
 //void      RestoreViewPortToFrameBuffer();
 //float     GetFrameBufferAspectRatio();
-#endif// MYPROJECT_APPLICATION_HPP
+#endif// FIELD_MAP_EDITOR_APPLICATION_HPP

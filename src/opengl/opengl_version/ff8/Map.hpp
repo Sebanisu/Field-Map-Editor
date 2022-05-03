@@ -37,7 +37,12 @@ class Map
 public:
   Map() = default;
   Map(const Fields &fields)
-    : m_mim(LoadMim(fields.Field(), fields.Coo(), m_mim_path, m_mim_choose_coo))
+    : Map(fields, {})
+  {
+  }
+  Map(const Fields &fields, const std::string &upscale_path)
+    : s_upscale_path(upscale_path)
+    , m_mim(LoadMim(fields.Field(), fields.Coo(), m_mim_path, m_mim_choose_coo))
     , m_map(LoadMap(
         fields.Field(),
         fields.Coo(),
@@ -484,7 +489,7 @@ private:
                                                          .25F };
   inline static glm::vec4    s_uniform_color         = s_default_uniform_color;
 
-
+  std::string                s_upscale_path          = {};
   // internal mim file path
   std::string                m_mim_path              = {};
   // internal map file path

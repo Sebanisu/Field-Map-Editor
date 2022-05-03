@@ -2,8 +2,8 @@
 // Created by pcvii on 11/29/2021.
 //
 
-#ifndef MYPROJECT_MenuItem_HPP
-#define MYPROJECT_MenuItem_HPP
+#ifndef FIELD_MAP_EDITOR_MenuItem_HPP
+#define FIELD_MAP_EDITOR_MenuItem_HPP
 #include "Event/EventItem.hpp"
 namespace glengine
 {
@@ -13,10 +13,10 @@ private:
   class MenuItemConcept
   {
   protected:
-    MenuItemConcept()                            = default;
-    MenuItemConcept(const MenuItemConcept &)     = default;
-    MenuItemConcept(MenuItemConcept &&) noexcept = default;
-    MenuItemConcept &operator=(const MenuItemConcept &) = default;
+    MenuItemConcept()                                       = default;
+    MenuItemConcept(const MenuItemConcept &)                = default;
+    MenuItemConcept(MenuItemConcept &&) noexcept            = default;
+    MenuItemConcept &operator=(const MenuItemConcept &)     = default;
     MenuItemConcept &operator=(MenuItemConcept &&) noexcept = default;
 
   public:
@@ -30,8 +30,13 @@ private:
   class MenuItemModel final : public MenuItemConcept
   {
   public:
-    MenuItemModel(renderableT t)
-      : m_renderable(std::move(t))
+//    MenuItemModel(renderableT t)
+//      : m_renderable(std::move(t))
+//    {
+//    }
+    template<typename... Ts>
+    MenuItemModel(Ts &&...ts)
+      : m_renderable(std::forward<Ts>(ts)...)
     {
     }
     void OnUpdate(float ts) const final
@@ -80,12 +85,12 @@ public:
     : MenuItem(std::in_place_type_t<T>{}, std::move(t))
   {
   }
-  MenuItem(const MenuItem &other) = delete;
-  MenuItem &operator=(const MenuItem &other) = delete;
-  MenuItem(MenuItem &&other) noexcept        = default;
+  MenuItem(const MenuItem &other)                = delete;
+  MenuItem &operator=(const MenuItem &other)     = delete;
+  MenuItem(MenuItem &&other) noexcept            = default;
   MenuItem &operator=(MenuItem &&other) noexcept = default;
 
             operator bool() const;
 };
 };// namespace glengine
-#endif// MYPROJECT_MenuItem_HPP
+#endif// FIELD_MAP_EDITOR_MenuItem_HPP

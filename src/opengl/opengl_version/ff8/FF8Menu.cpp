@@ -2,6 +2,7 @@
 // Created by pcvii on 11/29/2021.
 //
 #include "FF8Menu.hpp"
+#include "FF8UpscaleMenu.hpp"
 #include "MapDeswizzle.hpp"
 #include "MapSwizzle.hpp"
 #include "Mim.hpp"
@@ -12,7 +13,7 @@ void ff8::FF8Menu::OnRender() const
 }
 void ff8::FF8Menu::OnImGuiUpdate() const
 {
-  bool fields_changed = m_fields.OnImGuiUpdate();
+  bool fields_changed = GetFields().OnImGuiUpdate();
   if (fields_changed)
   {
     m_menu.reload();
@@ -29,7 +30,8 @@ void ff8::FF8Menu::OnEvent(const glengine::Event::Item &e) const
 }
 ff8::FF8Menu::FF8Menu()
 {
-  push_back<Mim>("Test Mim File");
-  push_back<MapSwizzle>("Test Map File (Swizzled)");
-  push_back<MapDeswizzle>("Test Map File (Deswizzled)");
+  push_back<FF8UpscaleMenu>("Upscales");
+  push_back<Mim>("Mim File");
+  push_back<MapSwizzle>("Map File (Swizzled)");
+  push_back<MapDeswizzle>("Map File (Deswizzled)");
 }
