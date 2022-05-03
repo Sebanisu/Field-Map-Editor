@@ -433,7 +433,7 @@ private:
   auto IndexAndPageWidth(std::uint8_t palette, std::uint8_t texture_page) const
   {
     IndexAndPageWidthReturn r = { .texture_index = static_cast<size_t>(
-                                    texture_page + 16U * (palette + 1U)) };
+                                    texture_page + 13U * (palette + 1U)) };
     if (!m_upscale_delayed_textures.textures->at(r.texture_index))
     {
       r.texture_index = texture_page;

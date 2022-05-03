@@ -4,6 +4,10 @@
 
 #ifndef FIELD_MAP_EDITOR_FF8LOADTEXTURES_HPP
 #define FIELD_MAP_EDITOR_FF8LOADTEXTURES_HPP
+static const unsigned int texture_page_count = 13U;
+static const unsigned int palette_count_plus_1 = 17U;
+static const unsigned int upscale_texture_count =
+  palette_count_plus_1 * texture_page_count;
 #include "DelayedTextures.hpp"
 
 namespace ff8
