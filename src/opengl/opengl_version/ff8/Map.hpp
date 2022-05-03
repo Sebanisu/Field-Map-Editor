@@ -85,14 +85,17 @@ public:
           {},
           [](const glengine::Texture &texture) { return texture.height(); });
         if (
-          m_mim.get_height() * m_tile_scale
+          static_cast<float>(m_mim.get_height()) * m_tile_scale
           < static_cast<float>(current_max->height()))
         {
 
           float old_height =
-            m_frame_buffer.Specification().height / m_tile_scale;
-          float old_width = m_frame_buffer.Specification().width / m_tile_scale;
-          m_tile_scale    = static_cast<float>(current_max->height())
+            static_cast<float>(m_frame_buffer.Specification().height)
+            / m_tile_scale;
+          float old_width =
+            static_cast<float>(m_frame_buffer.Specification().width)
+            / m_tile_scale;
+          m_tile_scale = static_cast<float>(current_max->height())
                          / static_cast<float>(m_mim.get_height());
           float height = old_height * m_tile_scale;
           float width  = old_width * m_tile_scale;
