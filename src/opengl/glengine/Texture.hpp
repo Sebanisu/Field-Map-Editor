@@ -21,6 +21,10 @@ private:
 
 
 public:
+  operator bool() const noexcept
+  {
+    return m_renderer_id != 0U;
+  }
   constexpr Texture() = default;
   Texture(std::filesystem::path path);
   Texture(std::array<std::uint8_t, 4U> color)

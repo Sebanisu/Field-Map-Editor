@@ -10,5 +10,8 @@ namespace ff8
 {
 glengine::DelayedTextures<35U>
   LoadTextures(const open_viii::graphics::background::Mim &mim);
+
+glengine::DelayedTextures<17U * 13U>
+  LoadTextures(const std::filesystem::path &upscale_path);
 }
 #endif// FIELD_MAP_EDITOR_FF8LOADTEXTURES_HPP

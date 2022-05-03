@@ -9,10 +9,11 @@ namespace glengine
 {
 struct DelayedTexturesData
 {
-  std::vector<glm::vec<4, std::uint8_t>> colors{};
-  std::int32_t                           width{};
-  std::int32_t                           height{};
-  Texture                               *out{};
+  std::filesystem::path                  path   = {};
+  std::vector<glm::vec<4, std::uint8_t>> colors = {};
+  std::int32_t                           width  = {};
+  std::int32_t                           height = {};
+  Texture                               *out    = {};
 };
 template<std::size_t sizeT>
 struct DelayedTextures
@@ -34,8 +35,8 @@ struct DelayedTextures
         DelayedTexturesData rd = future.get();
         *rd.out                = Texture(rd.colors, rd.width, rd.height);
         fmt::print(
-          "Finished Loading Texture: {:>2}\n",
-          std::distance(textures->data(), rd.out));
+          "Finished Loading Texture: {:>2}\t{}\n",
+          std::distance(textures->data(), rd.out), rd.path.string());
         return true;
       }
     }

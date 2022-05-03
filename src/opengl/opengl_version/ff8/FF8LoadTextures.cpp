@@ -3,9 +3,68 @@
 //
 
 #include "FF8LoadTextures.hpp"
+#include <stb_image.h>
 
 // static_assert(struct_of_color_byte<glm::vec<4, std::uint8_t>>);
+glengine::DelayedTextures<17U * 13U>
+  ff8::LoadTextures(const std::filesystem::path &upscale_path)
+{
+  glengine::DelayedTextures<17U * 13U> rdt{};
+  rdt.futures.reserve(17U * 13U);
+  auto process = [](
+                   const std::filesystem::path file_path,
+                   glengine::Texture *in_out) -> glengine::DelayedTexturesData {
+    stbi_set_flip_vertically_on_load(1);
 
+    int                  x        = {};
+    int                  y        = {};
+    [[maybe_unused]] int channels = {};
+
+    const auto           deleter  = [](stbi_uc *ptr) { stbi_image_free(ptr); };
+    auto                 png      = std::unique_ptr<stbi_uc, decltype(deleter)>(
+      stbi_load(file_path.string().c_str(), &x, &y, &channels, 4));
+    auto r = glengine::DelayedTexturesData{
+      .path = file_path, .width = x, .height = y, .out = in_out
+    };
+    r.colors.resize(static_cast<std::size_t>(x * y));
+    std::memcpy(
+      r.colors.data(), png.get(), static_cast<std::size_t>(x * y) * 4U);
+    return r;
+  };
+  auto texture_pages = std::views::iota(std::uint8_t{}, std::uint8_t{ 13 });
+  auto palettes      = std::views::iota(std::uint8_t{}, std::uint8_t{ 16 });
+  std::string current_file_prefix = upscale_path.stem().string();
+  for (const auto texture_page : texture_pages)
+  {
+    const auto current_file =
+      upscale_path
+      / fmt::format("{}_{}.png", current_file_prefix, +texture_page);
+    const auto index = texture_page;
+    if (!std::filesystem::exists(current_file))
+      continue;
+    fmt::print("Loading Texture: {}\n", current_file.string());
+    rdt.futures.emplace_back(std::async(
+      std::launch::async, process, current_file, &rdt.textures->at(index)));
+  }
+  for (const auto texture_page : texture_pages)
+    for (const auto palette : palettes)
+    {
+      const auto current_file =
+        upscale_path
+        / fmt::format(
+          "{}_{}_{}.png", current_file_prefix, +texture_page, +palette);
+      const auto index = texture_page * (palette + 1);
+      if (!std::filesystem::exists(current_file))
+        continue;
+      fmt::print("Loading Texture: {}\n", current_file.string());
+      rdt.futures.emplace_back(std::async(
+        std::launch::async,
+        process,
+        current_file,
+        &rdt.textures->at(static_cast<size_t>(index))));
+    }
+  return rdt;
+}
 glengine::DelayedTextures<35U>
   ff8::LoadTextures(const open_viii::graphics::background::Mim &mim)
 {

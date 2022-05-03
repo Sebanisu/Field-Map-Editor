@@ -68,15 +68,42 @@ public:
       "Textures from Mim.\n",
       m_map_path,
       m_mim_path);
-    m_delayed_textures = LoadTextures(m_mim);
+    m_delayed_textures         = LoadTextures(m_mim);
+    m_upscale_delayed_textures = LoadTextures(m_upscale_path);
     SetCameraBoundsToEdgesOfImage();
     GetUniqueValues();
   }
   void OnUpdate(float ts) const
   {
     s_camera.RefreshAspectRatio(m_imgui_viewport_window.ViewPortAspectRatio());
-    if (m_delayed_textures.OnUpdate())
+    if (m_delayed_textures.OnUpdate() || m_upscale_delayed_textures.OnUpdate())
     {
+      if (!std::ranges::empty(m_upscale_path))
+      {
+        const auto current_max = (std::ranges::max_element)(
+          *m_upscale_delayed_textures.textures,
+          {},
+          [](const glengine::Texture &texture) { return texture.height(); });
+        if (
+          m_mim.get_height() * m_tile_scale
+          < static_cast<float>(current_max->height()))
+        {
+
+          float old_height =
+            m_frame_buffer.Specification().height / m_tile_scale;
+          float old_width = m_frame_buffer.Specification().width / m_tile_scale;
+          m_tile_scale    = static_cast<float>(current_max->height())
+                         / static_cast<float>(m_mim.get_height());
+          float height = old_height * m_tile_scale;
+          float width  = old_width * m_tile_scale;
+          s_camera.SetImageBounds(glm::vec2{ width, height });
+          m_fixed_render_camera.SetProjection({ width, height });
+          m_frame_buffer =
+            glengine::FrameBuffer(glengine::FrameBufferSpecification{
+              .width  = static_cast<int>(width),
+              .height = static_cast<int>(height) });
+        }
+      }
       m_changed = true;
     }
     if (s_fit_height && s_fit_width)
@@ -183,7 +210,7 @@ public:
     m_batch_renderer.OnImGuiUpdate();
     ImGui::Separator();
     ImGui::Text("%s", "Fixed Prerender Camera: ");
-    s_fixed_render_camera.OnImGuiUpdate();
+    m_fixed_render_camera.OnImGuiUpdate();
   }
   void OnEvent(const glengine::Event::Item &event) const
   {
@@ -204,7 +231,7 @@ private:
     if (m_offscreen_drawing || m_saving)
     {
       m_batch_renderer.Shader().SetUniform(
-        "u_MVP", s_fixed_render_camera.ViewProjectionMatrix());
+        "u_MVP", m_fixed_render_camera.ViewProjectionMatrix());
     }
     else if (m_preview)
     {
@@ -278,25 +305,41 @@ private:
              f_tiles | std::views::reverse
                | std::views::filter([z](const auto &t) { return z == t.z(); }))
         {
-          const auto bpp     = tile.depth();
-          const auto palette = tile.palette_id();
+          const auto bpp             = tile.depth();
+          const auto palette         = tile.palette_id();
+          const auto texture_page_id = tile.texture_id();
           const auto [texture_index, texture_page_width] =
-            IndexAndPageWidth(bpp, palette);
+            std::ranges::empty(m_upscale_path)
+              ? IndexAndPageWidth(bpp, palette)
+              : IndexAndPageWidth(palette, texture_page_id);
 
-          auto  texture_page_offset = tile.texture_id() * texture_page_width;
 
-          auto &texture = m_delayed_textures.textures->at(texture_index);
+          auto        texture_page_offset = std::ranges::empty(m_upscale_path)
+                                              ? texture_page_id * texture_page_width
+                                              : 0;
+
+          const auto &texture =
+            std::ranges::empty(m_upscale_path)
+              ? m_delayed_textures.textures->at(texture_index)
+              : m_upscale_delayed_textures.textures->at(texture_index);
           if (texture.width() == 0 || texture.height() == 0)
             continue;
           const auto texture_dims =
-            glm::vec2(m_mim.get_width(tile.depth()), m_mim.get_height());
+            glm::vec2{ texture.width(), texture.height() };
+          const float tile_scale = static_cast<float>(texture.height())
+                                   / static_cast<float>(m_mim.get_height());
+          const float          tile_size   = tile_scale * 16.F;
+          // glm::vec2(m_mim.get_width(tile.depth()), m_mim.get_height());
           glengine::SubTexture sub_texture = {
             texture,
-            glm::vec2{ tile.source_x() + texture_page_offset,
-                       texture_dims.y - (tile.source_y() + 16) }
+            glm::vec2{ tile.source_x() * tile_scale
+                         + static_cast<float>(texture_page_offset),
+                       texture_dims.y
+                         - (tile.source_y() * tile_scale + tile_size) }
               / texture_dims,
-            glm::vec2{ tile.source_x() + texture_page_offset + 16,
-                       texture_dims.y - tile.source_y() }
+            glm::vec2{ tile.source_x() * tile_scale
+                         + static_cast<float>(texture_page_offset) + tile_size,
+                       texture_dims.y - tile.source_y() * tile_scale }
               / texture_dims
           };
           auto blend_mode = tile.blend_mode();
@@ -347,12 +390,13 @@ private:
           m_batch_renderer.DrawQuad(
             sub_texture,
             glm::vec3(
-              static_cast<float>(
-                x(tile) + texture_page(tile) * s_texture_page_width)
-                - m_offset_x,
-              m_offset_y - static_cast<float>(y(tile)),
+              (static_cast<float>(
+                 x(tile) + texture_page(tile) * s_texture_page_width)
+               - m_offset_x)
+                * tile_scale,
+              (m_offset_y - static_cast<float>(y(tile))) * tile_scale,
               0.F),
-            glm::vec2(16.F, 16.F));
+            glm::vec2(tile_size, tile_size));
         }
       }
     });
@@ -361,16 +405,16 @@ private:
     glengine::Window::DefaultBlend();
     s_uniform_color = s_default_uniform_color;
   }
-
+  struct IndexAndPageWidthReturn
+  {
+    size_t texture_index      = {};
+    int    texture_page_width = { s_texture_page_width };
+  };
 
   auto
     IndexAndPageWidth(open_viii::graphics::BPPT bpp, std::uint8_t palette) const
   {
-    struct
-    {
-      size_t texture_index      = {};
-      int    texture_page_width = { s_texture_page_width };
-    } r = { .texture_index = palette };
+    IndexAndPageWidthReturn r = { .texture_index = palette };
     if (bpp.bpp8())
     {
       r.texture_index      = 16 + palette;
@@ -383,6 +427,16 @@ private:
     }
     return r;
   }
+  auto IndexAndPageWidth(std::uint8_t palette, std::uint8_t texture_page) const
+  {
+    IndexAndPageWidthReturn r = { .texture_index = static_cast<size_t>(
+                                    texture_page + 16U * (palette + 1U)) };
+    if (!m_upscale_delayed_textures.textures->at(r.texture_index))
+    {
+      r.texture_index = texture_page;
+    }
+    return r;
+  }
 
   void RenderFrameBuffer() const
   {
@@ -392,7 +446,7 @@ private:
     m_batch_renderer.Clear();
     m_batch_renderer.DrawQuad(
       m_frame_buffer.GetColorAttachment(),
-      m_position,
+      m_position * m_tile_scale,
       glm::vec2(
         m_frame_buffer.Specification().width,
         m_frame_buffer.Specification().height));
@@ -466,29 +520,28 @@ private:
       //  m_position        = glm::vec3(min_x, min_y, 0.F);
       m_position        = glm::vec3(-width / 2.F, -height / 2.F, 0.F);
 
-      s_camera.SetImageBounds(
-        { -width / 2.F, width / 2.F, -height / 2.F, height / 2.F });
+      s_camera.SetImageBounds(glm::vec2{ width, height });
 
       //      s_fixed_render_camera.SetProjection(
       //        static_cast<float>(min_x),
       //        static_cast<float>(max_x + 16),
       //        static_cast<float>(min_y),
       //        static_cast<float>(max_y + 16));
-      s_fixed_render_camera.SetProjection({ width, height });
+      m_fixed_render_camera.SetProjection({ width, height });
       m_frame_buffer = glengine::FrameBuffer(glengine::FrameBufferSpecification{
         .width  = static_cast<int>(abs(width)),
         .height = static_cast<int>(abs(height)) });
     });
   }
 
-  inline static glengine::OrthographicCameraController s_camera    = { 16.F
-                                                                       / 9.F };
-  inline static glengine::OrthographicCamera s_fixed_render_camera = {};
-  inline static bool                         s_fit_height          = { true };
-  inline static bool                         s_fit_width           = { true };
-  inline static bool                         s_draw_grid           = { false };
+  inline static glengine::OrthographicCameraController s_camera = { 16.F
+                                                                    / 9.F };
+  mutable glengine::OrthographicCamera m_fixed_render_camera    = {};
+  inline static bool                   s_fit_height             = { true };
+  inline static bool                   s_fit_width              = { true };
+  inline static bool                   s_draw_grid              = { false };
 
-  static constexpr int16_t                   s_texture_page_width  = 256;
+  static constexpr int16_t             s_texture_page_width     = 256;
 
 
   static constexpr glm::vec4 s_default_uniform_color = { 1.F, 1.F, 1.F, 1.F };
@@ -513,26 +566,31 @@ private:
   // container for field tile information
   open_viii::graphics::background::Map m_map         = {};
   // loads the textures overtime instead of forcing them to load at start.
-  glengine::DelayedTextures<35U>       m_delayed_textures      = {};
+  glengine::DelayedTextures<35U>       m_delayed_textures = {};
+  glengine::DelayedTextures<17U * 13U>
+    m_upscale_delayed_textures = {};// 20 is detected max 16(+1)*13 is possible
+                                    // max. 0 being no palette and 1-17 being
+                                    // with palettes
   // takes quads and draws them to the frame buffer or screen.
-  glengine::BatchRenderer              m_batch_renderer        = { 1000 };
+  glengine::BatchRenderer           m_batch_renderer        = { 1000 };
   // holds rendered image at 1:1 scale to prevent gaps when scaling.
-  glengine::FrameBuffer                m_frame_buffer          = {};
-  inline static constinit float        m_offset_x              = 0.F;
-  inline static constinit float        m_offset_y              = -16.F;
-  mutable bool                         m_offscreen_drawing     = { false };
-  mutable bool                         m_saving                = { false };
-  mutable bool                         m_preview               = { false };
-  glm::vec3                            m_position              = {};
-  inline constinit static MapBlends    s_blends                = {};
-  MapFilters                           m_filters               = { m_map };
-  mutable bool                         m_changed               = { true };
-  inline static constinit float        min_x                   = {};
-  inline static constinit float        min_y                   = {};
-  inline static constinit float        max_x                   = {};
-  inline static constinit float        max_y                   = {};
-  glengine::ImGuiViewPortWindow        m_imgui_viewport_window = {
-           TileFunctions::Label
+  mutable glengine::FrameBuffer     m_frame_buffer          = {};
+  inline static constinit float     m_offset_x              = 0.F;
+  inline static constinit float     m_offset_y              = -16.F;
+  mutable bool                      m_offscreen_drawing     = { false };
+  mutable bool                      m_saving                = { false };
+  mutable bool                      m_preview               = { false };
+  glm::vec3                         m_position              = {};
+  inline constinit static MapBlends s_blends                = {};
+  MapFilters                        m_filters               = { m_map };
+  mutable bool                      m_changed               = { true };
+  inline static constinit float     min_x                   = {};
+  inline static constinit float     min_y                   = {};
+  inline static constinit float     max_x                   = {};
+  inline static constinit float     max_y                   = {};
+  mutable float                     m_tile_scale            = { 1.F };
+  glengine::ImGuiViewPortWindow     m_imgui_viewport_window = {
+        TileFunctions::Label
   };
 };
 }// namespace ff8

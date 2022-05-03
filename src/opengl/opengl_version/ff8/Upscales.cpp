@@ -104,6 +104,6 @@ ff8::Upscales::Upscales()
         }
       }
     }
-    fmt::print("max file count is: {}", max_count);
+    fmt::print("max file count is: {}\n", max_count);
   }
 }
