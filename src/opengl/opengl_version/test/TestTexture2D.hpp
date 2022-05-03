@@ -2,8 +2,8 @@
 // Created by pcvii on 11/24/2021.
 //
 
-#ifndef MYPROJECT_TestTexture2D_HPP
-#define MYPROJECT_TestTexture2D_HPP
+#ifndef FIELD_MAP_EDITOR_TestTexture2D_HPP
+#define FIELD_MAP_EDITOR_TestTexture2D_HPP
 #include "IndexBuffer.hpp"
 #include "Shader.hpp"
 
@@ -41,4 +41,4 @@ private:
   };
 };
 }// namespace test
-#endif// MYPROJECT_TestTexture2D_HPP
+#endif// FIELD_MAP_EDITOR_TestTexture2D_HPP

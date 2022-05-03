@@ -2,8 +2,8 @@
 // Created by pcvii on 10/4/2021.
 //
 
-#ifndef MYPROJECT_FILTER_HPP
-#define MYPROJECT_FILTER_HPP
+#ifndef FIELD_MAP_EDITOR_FILTER_HPP
+#define FIELD_MAP_EDITOR_FILTER_HPP
 #include "open_viii/graphics/background/BlendModeT.hpp"
 #include "open_viii/graphics/BPPT.hpp"
 #include "PupuID.hpp"
@@ -103,4 +103,4 @@ struct filters
   filter<std::filesystem::path> upscale   = {};
   filter<std::filesystem::path> deswizzle = {};
 };
-#endif// MYPROJECT_FILTER_HPP
+#endif// FIELD_MAP_EDITOR_FILTER_HPP

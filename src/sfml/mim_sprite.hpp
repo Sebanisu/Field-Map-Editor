@@ -2,8 +2,8 @@
 // Created by pcvii on 9/4/2021.
 //
 
-#ifndef MYPROJECT_MIM_SPRITE_HPP
-#define MYPROJECT_MIM_SPRITE_HPP
+#ifndef FIELD_MAP_EDITOR_MIM_SPRITE_HPP
+#define FIELD_MAP_EDITOR_MIM_SPRITE_HPP
 #include "format_imgui_text.hpp"
 #include "grid.hpp"
 #include "open_viii/archive/Archives.hpp"

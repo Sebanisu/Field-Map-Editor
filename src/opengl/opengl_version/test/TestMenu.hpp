@@ -2,8 +2,8 @@
 // Created by pcvii on 11/24/2021.
 //
 
-#ifndef MYPROJECT_TESTMENU_HPP
-#define MYPROJECT_TESTMENU_HPP
+#ifndef FIELD_MAP_EDITOR_TESTMENU_HPP
+#define FIELD_MAP_EDITOR_TESTMENU_HPP
 #include "Event/EventItem.hpp"
 #include "Menu.hpp"
 
@@ -22,4 +22,4 @@ private:
   glengine::Menu m_menu{};
 };
 }// namespace test
-#endif// MYPROJECT_TESTMENU_HPP
+#endif// FIELD_MAP_EDITOR_TESTMENU_HPP

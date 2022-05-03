@@ -2,8 +2,8 @@
 // Created by pcvii on 11/30/2021.
 //
 
-#ifndef MYPROJECT_FIELDS_HPP
-#define MYPROJECT_FIELDS_HPP
+#ifndef FIELD_MAP_EDITOR_FIELDS_HPP
+#define FIELD_MAP_EDITOR_FIELDS_HPP
 #include "Archive.hpp"
 #include "fmt/format.h"
 namespace ff8
@@ -46,4 +46,4 @@ private:
 };
 static_assert(glengine::Renderable<Fields>);
 }// namespace ff8
-#endif// MYPROJECT_FIELDS_HPP
+#endif// FIELD_MAP_EDITOR_FIELDS_HPP

@@ -2,8 +2,8 @@
 // Created by pcvii on 11/15/2021.
 //
 
-#ifndef MYPROJECT_GENERIC_COMBO_HPP
-#define MYPROJECT_GENERIC_COMBO_HPP
+#ifndef FIELD_MAP_EDITOR_GENERIC_COMBO_HPP
+#define FIELD_MAP_EDITOR_GENERIC_COMBO_HPP
 #include "gui_labels.hpp"
 #include "scope_guard.hpp"
 #include <algorithm>
@@ -245,4 +245,4 @@ inline static bool generic_combo(
   return old != current_idx || changed;
 }
 }// namespace fme
-#endif// MYPROJECT_GENERIC_COMBO_HPP
+#endif// FIELD_MAP_EDITOR_GENERIC_COMBO_HPP

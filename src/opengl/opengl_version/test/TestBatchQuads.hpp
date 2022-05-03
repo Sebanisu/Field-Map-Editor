@@ -2,8 +2,8 @@
 // Created by pcvii on 11/29/2021.
 //
 
-#ifndef MYPROJECT_TESTBATCHQUADS_HPP
-#define MYPROJECT_TESTBATCHQUADS_HPP
+#ifndef FIELD_MAP_EDITOR_TESTBATCHQUADS_HPP
+#define FIELD_MAP_EDITOR_TESTBATCHQUADS_HPP
 #include "IndexBufferDynamic.hpp"
 #include "Shader.hpp"
 
@@ -46,4 +46,4 @@ private:
   };
 };
 }// namespace test
-#endif// MYPROJECT_TESTBATCHQUADS_HPP
+#endif// FIELD_MAP_EDITOR_TESTBATCHQUADS_HPP

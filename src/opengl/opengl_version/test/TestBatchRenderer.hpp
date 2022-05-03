@@ -2,8 +2,8 @@
 // Created by pcvii on 11/30/2021.
 //
 
-#ifndef MYPROJECT_TESTBATCHRENDERER_HPP
-#define MYPROJECT_TESTBATCHRENDERER_HPP
+#ifndef FIELD_MAP_EDITOR_TESTBATCHRENDERER_HPP
+#define FIELD_MAP_EDITOR_TESTBATCHRENDERER_HPP
 #include "BatchRenderer.hpp"
 #include "ImGuiViewPortWindow.hpp"
 #include "scope_guard.hpp"
@@ -34,4 +34,4 @@ private:
 };
 static_assert(glengine::Renderable<TestBatchRenderer>);
 }// namespace test
-#endif// MYPROJECT_TESTBATCHRENDERER_HPP
+#endif// FIELD_MAP_EDITOR_TESTBATCHRENDERER_HPP

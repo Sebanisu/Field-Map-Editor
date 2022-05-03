@@ -2,8 +2,8 @@
 // Created by pcvii on 9/5/2021.
 //
 
-#ifndef MYPROJECT_ARCHIVES_GROUP_HPP
-#define MYPROJECT_ARCHIVES_GROUP_HPP
+#ifndef FIELD_MAP_EDITOR_ARCHIVES_GROUP_HPP
+#define FIELD_MAP_EDITOR_ARCHIVES_GROUP_HPP
 #include "map_sprite.hpp"
 #include "mim_sprite.hpp"
 #include "open_viii/archive/Archives.hpp"
@@ -60,4 +60,4 @@ public:
                     field(int current_map) const;
   [[nodiscard]] int find_field(std::string_view needle) const;
 };
-#endif// MYPROJECT_ARCHIVES_GROUP_HPP
+#endif// FIELD_MAP_EDITOR_ARCHIVES_GROUP_HPP

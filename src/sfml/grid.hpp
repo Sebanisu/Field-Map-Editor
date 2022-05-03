@@ -2,8 +2,8 @@
 // Created by pcvii on 9/28/2021.
 //
 
-#ifndef MYPROJECT_GRID_HPP
-#define MYPROJECT_GRID_HPP
+#ifndef FIELD_MAP_EDITOR_GRID_HPP
+#define FIELD_MAP_EDITOR_GRID_HPP
 #include <SFML/Graphics/Drawable.hpp>
 #include <SFML/Graphics/RenderTarget.hpp>
 #include <SFML/Graphics/Transformable.hpp>
@@ -41,4 +41,4 @@ public:
     return std::size(m_vertices);
   }
 };
-#endif// MYPROJECT_GRID_HPP
+#endif// FIELD_MAP_EDITOR_GRID_HPP

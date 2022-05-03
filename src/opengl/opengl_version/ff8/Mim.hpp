@@ -2,8 +2,8 @@
 // Created by pcvii on 11/30/2021.
 //
 
-#ifndef MYPROJECT_MIM_HPP
-#define MYPROJECT_MIM_HPP
+#ifndef FIELD_MAP_EDITOR_MIM_HPP
+#define FIELD_MAP_EDITOR_MIM_HPP
 #include "BatchRenderer.hpp"
 #include "BPPs.hpp"
 #include "FF8LoadTextures.hpp"
@@ -40,4 +40,4 @@ private:
 };
 static_assert(glengine::Renderable<Mim>);
 }// namespace ff8
-#endif// MYPROJECT_MIM_HPP
+#endif// FIELD_MAP_EDITOR_MIM_HPP

@@ -2,8 +2,8 @@
 // Created by pcvii on 11/30/2021.
 //
 
-#ifndef MYPROJECT_PATHS_HPP
-#define MYPROJECT_PATHS_HPP
+#ifndef FIELD_MAP_EDITOR_PATHS_HPP
+#define FIELD_MAP_EDITOR_PATHS_HPP
 #include "scope_guard.hpp"
 
 
@@ -25,4 +25,4 @@ private:
 };
 static_assert(glengine::Renderable<Paths>);
 }// namespace ff8
-#endif// MYPROJECT_PATHS_HPP
+#endif// FIELD_MAP_EDITOR_PATHS_HPP

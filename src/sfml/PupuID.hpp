@@ -2,8 +2,8 @@
 // Created by pcvii on 10/19/2021.
 //
 
-#ifndef MYPROJECT_PUPUID_HPP
-#define MYPROJECT_PUPUID_HPP
+#ifndef FIELD_MAP_EDITOR_PUPUID_HPP
+#define FIELD_MAP_EDITOR_PUPUID_HPP
 #include "open_viii/graphics/background/BlendModeT.hpp"
 #include <compare>
 #include <fmt/format.h>
@@ -131,4 +131,4 @@ struct fmt::formatter<PupuID>
     return format_to(ctx.out(), "{:08X}", p.raw());
   }
 };
-#endif// MYPROJECT_PUPUID_HPP
+#endif// FIELD_MAP_EDITOR_PUPUID_HPP

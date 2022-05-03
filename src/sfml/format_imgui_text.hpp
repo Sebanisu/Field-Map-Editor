@@ -2,8 +2,8 @@
 // Created by pcvii on 9/5/2021.
 //
 
-#ifndef MYPROJECT_FORMAT_IMGUI_TEXT_HPP
-#define MYPROJECT_FORMAT_IMGUI_TEXT_HPP
+#ifndef FIELD_MAP_EDITOR_FORMAT_IMGUI_TEXT_HPP
+#define FIELD_MAP_EDITOR_FORMAT_IMGUI_TEXT_HPP
 #include <array>
 #include <fmt/core.h>
 #include <imgui.h>
@@ -22,4 +22,4 @@ inline const auto format_imgui_text =
   ImGui::Text("%s", std::data(buffer));
   // it seems ImGui::Text is coping the values into it's own buffer.
 };
-#endif// MYPROJECT_FORMAT_IMGUI_TEXT_HPP
+#endif// FIELD_MAP_EDITOR_FORMAT_IMGUI_TEXT_HPP

@@ -2,8 +2,8 @@
 // Created by pcvii on 11/15/2021.
 //
 
-#ifndef MYPROJECT_GUIBATCH_HPP
-#define MYPROJECT_GUIBATCH_HPP
+#ifndef FIELD_MAP_EDITOR_GUIBATCH_HPP
+#define FIELD_MAP_EDITOR_GUIBATCH_HPP
 #include "archives_group.hpp"
 #include "filebrowser.hpp"
 #include "open_viii/paths/Paths.hpp"
@@ -90,4 +90,4 @@ private:
   [[nodiscard]] scope_guard PushPop() const;
 };
 }// namespace fme
-#endif// MYPROJECT_GUIBATCH_HPP
+#endif// FIELD_MAP_EDITOR_GUIBATCH_HPP

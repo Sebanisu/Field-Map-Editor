@@ -2,8 +2,8 @@
 // Created by pcvii on 9/6/2021.
 //
 
-#ifndef MYPROJECT_EVENTS_HPP
-#define MYPROJECT_EVENTS_HPP
+#ifndef FIELD_MAP_EDITOR_EVENTS_HPP
+#define FIELD_MAP_EDITOR_EVENTS_HPP
 #include <SFML/Window/Event.hpp>
 #include <utility>
 #include <variant>
@@ -117,4 +117,4 @@ using sf_event_variant = std::variant<
   }
 }
 }// namespace events
-#endif// MYPROJECT_EVENTS_HPP
+#endif// FIELD_MAP_EDITOR_EVENTS_HPP

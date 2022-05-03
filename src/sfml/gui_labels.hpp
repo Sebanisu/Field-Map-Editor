@@ -2,8 +2,8 @@
 // Created by pcvii on 11/2/2021.
 //
 
-#ifndef MYPROJECT_GUI_LABELS_HPP
-#define MYPROJECT_GUI_LABELS_HPP
+#ifndef FIELD_MAP_EDITOR_GUI_LABELS_HPP
+#define FIELD_MAP_EDITOR_GUI_LABELS_HPP
 #include <string_view>
 struct gui_labels
 {
@@ -57,4 +57,4 @@ struct gui_labels
 
   gui_labels() = delete;
 };
-#endif// MYPROJECT_GUI_LABELS_HPP
+#endif// FIELD_MAP_EDITOR_GUI_LABELS_HPP

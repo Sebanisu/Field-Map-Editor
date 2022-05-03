@@ -2,8 +2,8 @@
 // Created by pcvii on 11/24/2021.
 //
 
-#ifndef MYPROJECT_TESTCLEARCOLOR_HPP
-#define MYPROJECT_TESTCLEARCOLOR_HPP
+#ifndef FIELD_MAP_EDITOR_TESTCLEARCOLOR_HPP
+#define FIELD_MAP_EDITOR_TESTCLEARCOLOR_HPP
 
 
 #include "ImGuiViewPortWindow.hpp"
@@ -47,4 +47,4 @@ private:
 };
 }// namespace test
 static_assert(glengine::Renderable<test::TestClearColor>);
-#endif// MYPROJECT_TESTCLEARCOLOR_HPP
+#endif// FIELD_MAP_EDITOR_TESTCLEARCOLOR_HPP

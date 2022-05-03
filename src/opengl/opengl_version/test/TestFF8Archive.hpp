@@ -2,8 +2,8 @@
 // Created by pcvii on 11/30/2021.
 //
 
-#ifndef MYPROJECT_TESTFF8ARCHIVE_HPP
-#define MYPROJECT_TESTFF8ARCHIVE_HPP
+#ifndef FIELD_MAP_EDITOR_TESTFF8ARCHIVE_HPP
+#define FIELD_MAP_EDITOR_TESTFF8ARCHIVE_HPP
 #include "ff8/FF8Menu.hpp"
 namespace test
 {
@@ -19,4 +19,4 @@ private:
   ff8::FF8Menu ff8_menu = {};
 };
 }// namespace test
-#endif// MYPROJECT_TESTFF8ARCHIVE_HPP
+#endif// FIELD_MAP_EDITOR_TESTFF8ARCHIVE_HPP

@@ -2,8 +2,8 @@
 // Created by pcvii on 12/1/2021.
 //
 
-#ifndef MYPROJECT_PALETTES_HPP
-#define MYPROJECT_PALETTES_HPP
+#ifndef FIELD_MAP_EDITOR_PALETTES_HPP
+#define FIELD_MAP_EDITOR_PALETTES_HPP
 
 
 namespace ff8
@@ -35,4 +35,4 @@ private:
 };
 static_assert(glengine::Renderable<Palettes>);
 }// namespace ff8
-#endif// MYPROJECT_PALETTES_HPP
+#endif// FIELD_MAP_EDITOR_PALETTES_HPP

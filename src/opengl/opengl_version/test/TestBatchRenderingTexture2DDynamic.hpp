@@ -2,8 +2,8 @@
 // Created by pcvii on 11/24/2021.
 //
 
-#ifndef MYPROJECT_TestBatchRenderingTexture2DDynamic_HPP
-#define MYPROJECT_TestBatchRenderingTexture2DDynamic_HPP
+#ifndef FIELD_MAP_EDITOR_TestBatchRenderingTexture2DDynamic_HPP
+#define FIELD_MAP_EDITOR_TestBatchRenderingTexture2DDynamic_HPP
 #include "IndexBufferDynamic.hpp"
 #include "Shader.hpp"
 
@@ -45,4 +45,4 @@ void OnRender(const TestBatchRenderingTexture2DDynamic &);
 void OnImGuiUpdate(const TestBatchRenderingTexture2DDynamic &);
 
 }// namespace test
-#endif// MYPROJECT_TestBatchRenderingTexture2DDynamic_HPP
+#endif// FIELD_MAP_EDITOR_TestBatchRenderingTexture2DDynamic_HPP

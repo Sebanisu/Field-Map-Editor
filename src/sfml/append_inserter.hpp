@@ -5,8 +5,8 @@
  * I did this because SFML custom container doesn't have push_back.
  * I might not need something like this I thought I might.
  */
-#ifndef MYPROJECT_APPEND_INSERTER_HPP
-#define MYPROJECT_APPEND_INSERTER_HPP
+#ifndef FIELD_MAP_EDITOR_APPEND_INSERTER_HPP
+#define FIELD_MAP_EDITOR_APPEND_INSERTER_HPP
 
 #include <cstddef>
 #include <iterator>
@@ -64,4 +64,4 @@ template<class ContainerT>
 {
   return append_insert_iterator<ContainerT>(container);
 }
-#endif// MYPROJECT_APPEND_INSERTER_HPP
+#endif// FIELD_MAP_EDITOR_APPEND_INSERTER_HPP

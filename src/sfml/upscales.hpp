@@ -2,8 +2,8 @@
 // Created by pcvii on 9/29/2021.
 //
 
-#ifndef MYPROJECT_UPSCALES_HPP
-#define MYPROJECT_UPSCALES_HPP
+#ifndef FIELD_MAP_EDITOR_UPSCALES_HPP
+#define FIELD_MAP_EDITOR_UPSCALES_HPP
 #include "open_viii/strings/LangCommon.hpp"
 #include "open_viii/strings/LangT.hpp"
 #include "tl/string.hpp"
@@ -168,4 +168,4 @@ public:
    *
    */
 };
-#endif// MYPROJECT_UPSCALES_HPP
+#endif// FIELD_MAP_EDITOR_UPSCALES_HPP

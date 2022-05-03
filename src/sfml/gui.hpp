@@ -2,8 +2,8 @@
 // Created by pcvii on 9/7/2021.
 //
 
-#ifndef MYPROJECT_GUI_HPP
-#define MYPROJECT_GUI_HPP
+#ifndef FIELD_MAP_EDITOR_GUI_HPP
+#define FIELD_MAP_EDITOR_GUI_HPP
 #include "archives_group.hpp"
 #include "events.hpp"
 #include "filebrowser.hpp"
@@ -311,4 +311,4 @@ private:
   [[nodiscard]] scope_guard PushPop() const;
 };
 }// namespace fme
-#endif// MYPROJECT_GUI_HPP
+#endif// FIELD_MAP_EDITOR_GUI_HPP

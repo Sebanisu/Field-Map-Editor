@@ -2,8 +2,8 @@
 // Created by pcvii on 11/15/2021.
 //
 
-#ifndef MYPROJECT_FORMATTERS_HPP
-#define MYPROJECT_FORMATTERS_HPP
+#ifndef FIELD_MAP_EDITOR_FORMATTERS_HPP
+#define FIELD_MAP_EDITOR_FORMATTERS_HPP
 #include <filesystem>
 #include <fmt/format.h>
 #include <open_viii/graphics/background/BlendModeT.hpp>
@@ -169,4 +169,4 @@ struct fmt::formatter<std::filesystem::path>
     return fmt::format_to(ctx.out(), "{}", p.string());
   }
 };
-#endif// MYPROJECT_FORMATTERS_HPP
+#endif// FIELD_MAP_EDITOR_FORMATTERS_HPP

@@ -2,8 +2,8 @@
 // Created by pcvii on 9/7/2021.
 //
 
-#ifndef MYPROJECT_MAP_SPRITE_HPP
-#define MYPROJECT_MAP_SPRITE_HPP
+#ifndef FIELD_MAP_EDITOR_MAP_SPRITE_HPP
+#define FIELD_MAP_EDITOR_MAP_SPRITE_HPP
 #include "filter.hpp"
 #include "grid.hpp"
 #include "open_viii/archive/Archives.hpp"
@@ -411,4 +411,4 @@ private:
   bool
     save_png_image(const sf::Image &image, const std::string &filename) const;
 };
-#endif// MYPROJECT_MAP_SPRITE_HPP
+#endif// FIELD_MAP_EDITOR_MAP_SPRITE_HPP

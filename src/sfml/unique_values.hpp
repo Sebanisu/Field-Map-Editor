@@ -2,8 +2,8 @@
 // Created by pcvii on 10/5/2021.
 //
 
-#ifndef MYPROJECT_UNIQUE_VALUES_HPP
-#define MYPROJECT_UNIQUE_VALUES_HPP
+#ifndef FIELD_MAP_EDITOR_UNIQUE_VALUES_HPP
+#define FIELD_MAP_EDITOR_UNIQUE_VALUES_HPP
 #include "open_viii/graphics/background/BlendModeT.hpp"
 #include "open_viii/graphics/BPPT.hpp"
 #include "PupuID.hpp"
@@ -269,4 +269,4 @@ private:
     return ret;
   }
 };
-#endif// MYPROJECT_UNIQUE_VALUES_HPP
+#endif// FIELD_MAP_EDITOR_UNIQUE_VALUES_HPP

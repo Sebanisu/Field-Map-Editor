@@ -2,8 +2,8 @@
 // Created by pcvii on 12/1/2021.
 //
 
-#ifndef MYPROJECT_BPPS_HPP
-#define MYPROJECT_BPPS_HPP
+#ifndef FIELD_MAP_EDITOR_BPPS_HPP
+#define FIELD_MAP_EDITOR_BPPS_HPP
 
 
 namespace ff8
@@ -41,4 +41,4 @@ private:
 };
 static_assert(glengine::Renderable<BPPs>);
 }// namespace ff8
-#endif// MYPROJECT_BPPS_HPP
+#endif// FIELD_MAP_EDITOR_BPPS_HPP

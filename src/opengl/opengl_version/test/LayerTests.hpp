@@ -2,8 +2,8 @@
 // Created by pcvii on 12/8/2021.
 //
 
-#ifndef MYPROJECT_LAYERTESTS_HPP
-#define MYPROJECT_LAYERTESTS_HPP
+#ifndef FIELD_MAP_EDITOR_LAYERTESTS_HPP
+#define FIELD_MAP_EDITOR_LAYERTESTS_HPP
 
 #include "Event/EventItem.hpp"
 
@@ -25,4 +25,4 @@ private:
 static_assert(glengine::Renderable<test::TestMenu>);
 static_assert(glengine::Renderable<Tests>);
 }// namespace Layer
-#endif// MYPROJECT_LAYERTESTS_HPP
+#endif// FIELD_MAP_EDITOR_LAYERTESTS_HPP

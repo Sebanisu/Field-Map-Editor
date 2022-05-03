@@ -2,8 +2,8 @@
 // Created by pcvii on 11/24/2021.
 //
 
-#ifndef MYPROJECT_TESTBATCHRENDERING_HPP
-#define MYPROJECT_TESTBATCHRENDERING_HPP
+#ifndef FIELD_MAP_EDITOR_TESTBATCHRENDERING_HPP
+#define FIELD_MAP_EDITOR_TESTBATCHRENDERING_HPP
 #include "ImGuiViewPortWindow.hpp"
 #include "IndexBuffer.hpp"
 #include "Shader.hpp"
@@ -34,4 +34,4 @@ private:
 };
 }// namespace test
 
-#endif// MYPROJECT_TESTBATCHRENDERING_HPP
+#endif// FIELD_MAP_EDITOR_TESTBATCHRENDERING_HPP

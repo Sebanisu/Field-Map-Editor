@@ -2,8 +2,8 @@
 // Created by pcvii on 11/30/2021.
 //
 
-#ifndef MYPROJECT_ARCHIVE_HPP
-#define MYPROJECT_ARCHIVE_HPP
+#ifndef FIELD_MAP_EDITOR_ARCHIVE_HPP
+#define FIELD_MAP_EDITOR_ARCHIVE_HPP
 #include "Coos.hpp"
 #include "Paths.hpp"
 
@@ -29,4 +29,4 @@ private:
 };
 static_assert(glengine::Renderable<Archive>);
 }// namespace ff8
-#endif// MYPROJECT_ARCHIVE_HPP
+#endif// FIELD_MAP_EDITOR_ARCHIVE_HPP

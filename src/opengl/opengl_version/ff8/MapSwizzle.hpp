@@ -2,8 +2,8 @@
 // Created by pcvii on 1/3/2022.
 //
 
-#ifndef MYPROJECT_MAPSWIZZLE_HPP
-#define MYPROJECT_MAPSWIZZLE_HPP
+#ifndef FIELD_MAP_EDITOR_MAPSWIZZLE_HPP
+#define FIELD_MAP_EDITOR_MAPSWIZZLE_HPP
 #include "Fields.hpp"
 #include "FrameBuffer.hpp"
 #include "Map.hpp"
@@ -37,4 +37,4 @@ struct TileFunctionsSwizzle
 using MapSwizzle = Map<TileFunctionsSwizzle>;
 static_assert(glengine::Renderable<MapSwizzle>);
 }// namespace ff8
-#endif// MYPROJECT_MAPSWIZZLE_HPP
+#endif// FIELD_MAP_EDITOR_MAPSWIZZLE_HPP
