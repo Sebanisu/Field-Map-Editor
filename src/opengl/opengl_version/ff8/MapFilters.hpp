@@ -12,25 +12,27 @@ public:
   MapFilters() = default;
   MapFilters(const open_viii::graphics::background::Map &map)
     : m_unique_tile_values(map)
-    , m_disabled(map.visit_tiles(
-        [](auto &&tiles) { return std::ranges::empty(tiles); }))
+    , m_disabled(
+        map.visit_tiles([](auto &&tiles) { return std::ranges::empty(tiles); }))
   {
   }
   [[nodiscard]] bool OnImGuiUpdate() const
   {
-    bool       changed        = false;
+    bool       ret_changed    = false;
+    const auto push_id        = glengine::ImGuiPushID();
     const auto filter_disable = glengine::ImGuiDisabled(m_disabled);
     if (ImGui::CollapsingHeader("Filters"))
     {
       const auto        un_indent0 = glengine::ImGuiIndent();
       static const auto common =
-        [&changed](
+        [](
           const char                             *label,
           std::ranges::random_access_range auto  &bool_range,
           std::ranges::random_access_range auto &&possible_value_range,
           std::ranges::random_access_range auto &&possible_value_string_range,
           std::ranges::random_access_range auto &&used_value_range,
           std::uint32_t                           line_count) {
+          bool changed = false;
           assert(
             std::ranges::size(possible_value_range)
             == std::ranges::size(possible_value_string_range));
@@ -40,6 +42,7 @@ public:
           assert(
             std::ranges::size(possible_value_range)
             >= std::ranges::size(used_value_range));
+          const auto push_id0 = glengine::ImGuiPushID();
           if (ImGui::CollapsingHeader(label))
           {
             const auto un_indent1 = glengine::ImGuiIndent();
@@ -69,20 +72,28 @@ public:
               ImGui::Dummy(ImVec2(2.F, 2.F));
               if (same_line)
                 ImGui::SameLine();
-              if (ImGui::Selectable(
-                    string.c_str(), static_cast<bool>(*boolptr), 0, size))
               {
-                *boolptr = !static_cast<bool>(*boolptr);
-                changed  = true;
+                const auto push_id = glengine::ImGuiPushID();
+                if (ImGui::Selectable(
+                      string.c_str(), static_cast<bool>(*boolptr), 0, size))
+                {
+                  *boolptr = !static_cast<bool>(*boolptr);
+                  changed  = true;
+                  fmt::print("clicked {}\n", string);
+                }
               }
             }
             ImGui::Dummy(ImVec2(2.F, 2.F));
             {
               const auto pop = glengine::ImGuiPushID();
-              if (ImGui::Button("All"))
               {
-                std::ranges::fill(bool_range, true);
-                changed = true;
+                const auto push_id = glengine::ImGuiPushID();
+                if (ImGui::Button("All"))
+                {
+                  std::ranges::fill(bool_range, true);
+                  changed = true;
+                  fmt::print("clicked {}\n", "all");
+                }
               }
             }
             ImGui::SameLine();
@@ -90,63 +101,75 @@ public:
             ImGui::SameLine();
             {
               const auto pop = glengine::ImGuiPushID();
-              if (ImGui::Button("None"))
               {
-                std::ranges::fill(bool_range, false);
-                changed = true;
+                const auto push_id = glengine::ImGuiPushID();
+                if (ImGui::Button("None"))
+                {
+                  std::ranges::fill(bool_range, false);
+                  changed = true;
+                  fmt::print("clicked {}\n", "none");
+                }
               }
             }
             ImGui::Dummy(ImVec2(2.F, 2.F));
           }
+          return changed;
         };
       static constexpr auto common_unique =
-        [](const char *label, auto &&unique, std::uint32_t row_size) {
-          common(
-            label,
-            unique.enable(),
-            unique.values(),
-            unique.strings(),
-            unique.values(),
-            row_size);
-        };
+        [](const char *label, auto &&unique, std::uint32_t row_size) -> bool {
+        return common(
+          label,
+          unique.enable(),
+          unique.values(),
+          unique.strings(),
+          unique.values(),
+          row_size);
+      };
+      const auto changes = std::array{
+        common(
+          "BPP",
+          m_possible_tile_values.bpp.enable(),
+          m_possible_tile_values.bpp.values(),
+          m_possible_tile_values.bpp.strings(),
+          m_unique_tile_values.bpp.values(),
+          4),
 
-      common(
-        "BPP",
-        m_possible_tile_values.bpp.enable(),
-        m_possible_tile_values.bpp.values(),
-        m_possible_tile_values.bpp.strings(),
-        m_unique_tile_values.bpp.values(),
-        4);
+        common(
+          "Palettes",
+          m_possible_tile_values.palette_id.enable(),
+          m_possible_tile_values.palette_id.values(),
+          m_possible_tile_values.palette_id.strings(),
+          m_unique_tile_values.palette_id.values(),
+          8),
 
-      common(
-        "Palettes",
-        m_possible_tile_values.palette_id.enable(),
-        m_possible_tile_values.palette_id.values(),
-        m_possible_tile_values.palette_id.strings(),
-        m_unique_tile_values.palette_id.values(),
-        8);
+        common(
+          "Blend Mode",
+          m_possible_tile_values.blend_mode.enable(),
+          m_possible_tile_values.blend_mode.values(),
+          m_possible_tile_values.blend_mode.strings(),
+          m_unique_tile_values.blend_mode.values(),
+          3),
 
-      common(
-        "Blend Mode",
-        m_possible_tile_values.blend_mode.enable(),
-        m_possible_tile_values.blend_mode.values(),
-        m_possible_tile_values.blend_mode.strings(),
-        m_unique_tile_values.blend_mode.values(),
-        3);
+        common_unique("Blend Other", m_unique_tile_values.blend_other, 8),
 
-      common_unique("Blend Other", m_unique_tile_values.blend_other, 8);
+        common_unique("Z", m_unique_tile_values.z, 4),
 
-      common_unique("Z", m_unique_tile_values.z, 4);
+        common_unique("Layer ID", m_unique_tile_values.layer_id, 8),
 
-      common_unique("Layer ID", m_unique_tile_values.layer_id, 8);
+        common_unique(
+          "Texture Page ID", m_unique_tile_values.texture_page_id, 8),
 
-      common_unique("Texture Page ID", m_unique_tile_values.texture_page_id, 8);
+        common_unique("Animation ID", m_unique_tile_values.animation_id, 8),
 
-      common_unique("Animation ID", m_unique_tile_values.animation_id, 8);
-
-      common_unique("Animation Frame", m_unique_tile_values.animation_frame, 8);
+        common_unique(
+          "Animation Frame", m_unique_tile_values.animation_frame, 8)
+      };
+      ret_changed = std::ranges::any_of(changes, std::identity{});
     }
-    return changed;
+
+    if (ret_changed)
+      fmt::print("changed {}", ret_changed);
+    return ret_changed;
   }
   auto TestTile() const noexcept
   {
@@ -198,8 +221,8 @@ private:
   bool filter(
     auto                    &&value,
     std::ranges::range auto &&bool_range,
-    std::ranges::range auto &&value_range)
-    const noexcept requires std::equality_comparable_with<
+    std::ranges::range auto &&value_range) const noexcept
+    requires std::equality_comparable_with<
       decltype(value),
       std::ranges::range_value_t<decltype(value_range)>>
   {
