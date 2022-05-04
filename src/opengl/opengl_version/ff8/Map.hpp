@@ -138,7 +138,7 @@ public:
     {
       m_offscreen_drawing = true;
       const auto not_offscreen_drawing =
-        glengine::scope_guard_expensive([&]() { m_offscreen_drawing = false; });
+        glengine::scope_guard_captures([&]() { m_offscreen_drawing = false; });
       const auto fbb = glengine::FrameBufferBackup{};
       m_frame_buffer.Bind();
 
@@ -473,7 +473,7 @@ private:
   {
     m_saving = true;
     const auto not_saving =
-      glengine::scope_guard_expensive([&]() { m_saving = false; });
+      glengine::scope_guard_captures([&]() { m_saving = false; });
     OnRender();
     const auto path = std::filesystem::path(m_map_path);
     auto       string =
