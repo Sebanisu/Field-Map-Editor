@@ -7,6 +7,19 @@
 #include "scope_guard.hpp"
 namespace glengine
 {
-scope_guard_expensive ImGuiIndent (float width = 0.F) noexcept;
+auto ImGuiIndent(float width = 0.F) noexcept
+
+{
+  ImGui::Indent(width);
+  struct UnIndent
+  {
+    float width = { width };
+    ~UnIndent()
+    {
+      ImGui::Unindent(width);
+    }
+  } r{};
+  return r;
+}
 }// namespace glengine
 #endif// FIELD_MAP_EDITOR_IMGUIINDENT_HPP

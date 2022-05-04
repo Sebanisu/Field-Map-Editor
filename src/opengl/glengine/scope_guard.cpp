@@ -33,9 +33,16 @@ scope_guard_expensive &
 }
 scope_guard_expensive::~scope_guard_expensive()
 {
-  if (func != nullptr)
+  if (func)
   {
-    func();
+    try
+    {
+      func();
+    }
+    catch (std::exception &e)
+    {
+      fmt::print("{}:{} - exception is {}", __FILE__, __LINE__, e.what());
+    }
   }
 }
 scope_guard_expensive &scope_guard_expensive::operator=(std::function<void()> t)

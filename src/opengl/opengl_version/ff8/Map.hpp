@@ -187,13 +187,18 @@ public:
     ImGui::Separator();
     const glm::vec4 mouse_world_pos = s_camera.Camera().ScreenSpaceToWorldSpace(
       m_imgui_viewport_window.ViewPortMousePos());
-
+    const glm::vec2 topright   = s_camera.TopRightScreenSpace();
+    const glm::vec2 bottomleft = s_camera.BottomLeftScreenSpace();
+    const glm::vec4 mouse_world_pos2 =
+      m_imgui_viewport_window.adjust_mouse_pos(topright, bottomleft);
     ImGui::Text(
       "%s",
       fmt::format(
         "DrawPos - X: {}, Y: {} Z: {}, Width {}, Height {}"
         "\n\tOffset X {} Offset Y {},\n\tMin X {}, Max X {}, Min Y {}, Max Y "
-        "{}\nMouse In WorldSpace - X: {}, Y: {}, Z: {}\n",
+        "{}\nTR X {}, TR X {}, BL Y {}, BL Y {}\n"
+        "Mouse In WorldSpace - X: {}, Y: {}, Z: {}\nMouse In "
+        "WorldSpace 2 - X: {}, Y: {}, Z: {}\n",
         m_position.x,
         m_position.y,
         m_position.z,
@@ -207,7 +212,14 @@ public:
         max_y,
         mouse_world_pos.x,
         mouse_world_pos.y,
-        mouse_world_pos.z)
+        mouse_world_pos.z,
+        topright.x,
+        topright.y,
+        bottomleft.x,
+        bottomleft.y,
+        mouse_world_pos2.x,
+        mouse_world_pos2.y,
+        mouse_world_pos2.z)
         .c_str());
 
     m_batch_renderer.OnImGuiUpdate();
@@ -390,16 +402,17 @@ private:
           static constexpr
             typename TileFunctions::template Bounds<tileT>::texture_page
               texture_page{};
+          const auto tile_size2 = m_tile_scale * 16.F;
           m_batch_renderer.DrawQuad(
             sub_texture,
             glm::vec3(
               (static_cast<float>(
                  x(tile) + texture_page(tile) * s_texture_page_width)
                - m_offset_x)
-                * tile_scale,
-              (m_offset_y - static_cast<float>(y(tile))) * tile_scale,
+                * m_tile_scale,
+              (m_offset_y - static_cast<float>(y(tile))) * m_tile_scale,
               0.F),
-            glm::vec2(tile_size, tile_size));
+            glm::vec2(tile_size2, tile_size2));
         }
       }
     });

@@ -77,6 +77,29 @@ public:
   [[maybe_unused]] void        SetZoom(float new_zoom) const;
 
   void                         SetPosition(glm::vec2) const;
+  glm::vec2                    TopRightScreenSpace() const
+  {
+    auto clipSpacePos =
+      m_camera.ProjectionMatrix()
+      * (m_camera.ViewMatrix() * glm::vec4{ m_bounds->right, m_bounds->top, 0.F, 1.F });
+    glm::vec2 ndcSpacePos{ clipSpacePos.x, clipSpacePos.y };
+    ndcSpacePos /= clipSpacePos.w;
+    return ndcSpacePos;
+    // vec2 windowSpacePos = ((ndcSpacePos.xy + 1.0) / 2.0) * viewSize +
+    // viewOffset;
+  }
+  glm::vec2 BottomLeftScreenSpace() const
+  {
+    auto clipSpacePos =
+      m_camera.ProjectionMatrix()
+      * (m_camera.ViewMatrix() * glm::vec4{ m_bounds->left, m_bounds->bottom, 0.F, 1.F });
+    glm::vec2 ndcSpacePos{ clipSpacePos.x, clipSpacePos.y };
+    ndcSpacePos /= clipSpacePos.w;
+    return ndcSpacePos;
+    // vec2 windowSpacePos = ((ndcSpacePos.xy + 1.0) / 2.0) * viewSize +
+    // viewOffset;
+  }
+
 
 private:
   void                                 SetProjection() const;

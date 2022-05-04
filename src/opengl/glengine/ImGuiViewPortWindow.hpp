@@ -107,7 +107,7 @@ inline namespace impl
           m_button_focused   = ImGui::IsItemFocused();
           m_button_activated = ImGui::IsItemActivated();
           OnUpdateFocusAndHover();
-          // OnImGuiDebugInfo();
+          OnImGuiDebugInfo();
         }
       }
     }
@@ -146,6 +146,25 @@ inline namespace impl
     glm::vec4 ViewPortMousePos() const
     {
       return m_viewport_mouse_pos;
+    }
+
+    glm::vec4 adjust_mouse_pos(glm::vec2 topright, glm::vec2 bottomleft) const
+    {
+      const auto convert_range = [](
+                                   float       OldValue,
+                                   const float OldMin,
+                                   const float OldMax,
+                                   const float NewMin = -1.F,
+                                   const float NewMax = 1.F) {
+        return (((OldValue - OldMin) * (NewMax - NewMin)) / (OldMax - OldMin))
+               + NewMin;
+      };
+      return glm::vec4{
+        convert_range(m_clamp_mouse_pos.x, bottomleft.x, topright.x),
+        convert_range(m_clamp_mouse_pos.y, bottomleft.y, topright.y),
+        0.F,
+        1.F
+      };
     }
 
   private:
