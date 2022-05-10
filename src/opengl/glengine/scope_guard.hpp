@@ -117,6 +117,7 @@ struct [[nodiscard]] scope_guard_captures
   constexpr scope_guard_captures &
     operator=(scope_guard_captures &&other) noexcept
   {
+    exec();
     swap(*this, other);
     return *this;
   }
