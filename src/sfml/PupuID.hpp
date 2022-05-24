@@ -128,7 +128,7 @@ struct fmt::formatter<PupuID>
   auto format(const PupuID &p, FormatContext &ctx) -> decltype(ctx.out())
   {
     // ctx.out() is an output iterator to write to.
-    return format_to(ctx.out(), "{:08X}", p.raw());
+    return fmt::format_to(ctx.out(), "{:08X}", p.raw());
   }
 };
 #endif// FIELD_MAP_EDITOR_PUPUID_HPP
