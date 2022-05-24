@@ -19,7 +19,7 @@ public:
   [[nodiscard]] bool OnImGuiUpdate() const
   {
     bool       ret_changed    = false;
-    const auto push_id        = glengine::ImGuiPushID();
+    const auto push_id0        = glengine::ImGuiPushID();
     const auto filter_disable = glengine::ImGuiDisabled(m_disabled);
     if (ImGui::CollapsingHeader("Filters"))
     {
@@ -73,7 +73,7 @@ public:
               if (same_line)
                 ImGui::SameLine();
               {
-                const auto push_id = glengine::ImGuiPushID();
+                const auto push_id1 = glengine::ImGuiPushID();
                 if (ImGui::Selectable(
                       string.c_str(), static_cast<bool>(*boolptr), 0, size))
                 {
@@ -87,7 +87,7 @@ public:
             {
               const auto pop = glengine::ImGuiPushID();
               {
-                const auto push_id = glengine::ImGuiPushID();
+                const auto push_id2 = glengine::ImGuiPushID();
                 if (ImGui::Button("All"))
                 {
                   std::ranges::fill(bool_range, true);
@@ -102,7 +102,7 @@ public:
             {
               const auto pop = glengine::ImGuiPushID();
               {
-                const auto push_id = glengine::ImGuiPushID();
+                const auto push_id3 = glengine::ImGuiPushID();
                 if (ImGui::Button("None"))
                 {
                   std::ranges::fill(bool_range, false);
