@@ -11,7 +11,7 @@ namespace glengine
 class OrthographicCameraController
 {
 public:
-  OrthographicCameraController() = default;
+  constexpr OrthographicCameraController() = default;
   OrthographicCameraController(float aspect_ratio)
     : OrthographicCameraController(aspect_ratio, 1.F)
   {
