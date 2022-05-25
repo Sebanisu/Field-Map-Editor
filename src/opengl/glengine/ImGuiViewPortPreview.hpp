@@ -13,9 +13,17 @@ inline namespace impl
   class ImGuiViewPortPreview
   {
   public:
+    ImGuiViewPortPreview()
+    {
+      m_preview_view_port.DisableDebugText();
+    }
     [[nodiscard]] const OrthographicCameraController &CameraController() const
     {
       return m_camera_controller;
+    }
+    [[nodiscard]] float ViewPortAspectRatio() const
+    {
+      return m_preview_view_port.ViewPortAspectRatio();
     }
     [[nodiscard]] const glm::mat4 &SetPositionAndSizeAndGetMVP(
       glm::vec3 position,

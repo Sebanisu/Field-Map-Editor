@@ -95,9 +95,9 @@ public:
   {
     return m_projection_matrix;
   }
-  const auto ScreenSpaceToWorldSpace(glm::vec4 in) const
+  const glm::vec3 ScreenSpaceToWorldSpace(glm::vec4 in) const
   {
-    auto out = in * InverseViewProjectionMatrix();
+    glm::vec4 out = in * InverseViewProjectionMatrix();
     out.w    = 1.F / out.w;
     out.x *= -out.w;
     out.y *= out.w;

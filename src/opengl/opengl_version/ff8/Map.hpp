@@ -75,7 +75,7 @@ public:
   }
   void OnUpdate(float ts) const
   {
-    s_camera.RefreshAspectRatio(m_imgui_viewport_window.ViewPortAspectRatio());
+
     if (m_delayed_textures.OnUpdate() || m_upscale_delayed_textures.OnUpdate())
     {
       if (!std::ranges::empty(m_upscale_path))
@@ -99,7 +99,7 @@ public:
                          / static_cast<float>(m_mim.get_height());
           float height = old_height * m_tile_scale;
           float width  = old_width * m_tile_scale;
-          s_camera.SetImageBounds(glm::vec2{ width, height });
+          m_imgui_viewport_window.SetImageBounds(glm::vec2{ width, height });
           m_fixed_render_camera.SetProjection({ width, height });
           m_frame_buffer =
             glengine::FrameBuffer(glengine::FrameBufferSpecification{
@@ -109,23 +109,19 @@ public:
       }
       m_changed = true;
     }
+    m_imgui_viewport_window.OnUpdate(ts);
     if (s_fit_height && s_fit_width)
     {
-      s_camera.FitBoth();
+      m_imgui_viewport_window.FitBoth();
     }
     else if (s_fit_height)
     {
-      s_camera.FitHeight();
+      m_imgui_viewport_window.FitHeight();
     }
     else if (s_fit_width)
     {
-      s_camera.FitWidth();
+      m_imgui_viewport_window.FitWidth();
     }
-    if (m_imgui_viewport_window.HasFocus())
-    {
-      s_camera.CheckInput(ts);
-    }
-    s_camera.OnUpdate(ts);
     m_batch_renderer.OnUpdate(ts);
   }
   void OnRender() const
@@ -183,22 +179,15 @@ public:
       }
     }
     ImGui::Separator();
-    s_camera.OnImGuiUpdate();
+    m_imgui_viewport_window.OnImGuiUpdate();
     ImGui::Separator();
-    const glm::vec4 mouse_world_pos = s_camera.Camera().ScreenSpaceToWorldSpace(
-      m_imgui_viewport_window.ViewPortMousePos());
-    const glm::vec2 topright   = s_camera.TopRightScreenSpace();
-    const glm::vec2 bottomleft = s_camera.BottomLeftScreenSpace();
-    const glm::vec4 mouse_world_pos2 =
-      m_imgui_viewport_window.adjust_mouse_pos(topright, bottomleft);
+
     ImGui::Text(
       "%s",
       fmt::format(
         "DrawPos - X: {}, Y: {} Z: {}, Width {}, Height {}"
         "\n\tOffset X {} Offset Y {},\n\tMin X {}, Max X {}, Min Y {}, Max Y "
-        "{}\nTR X {}, TR X {}, BL Y {}, BL Y {}\n"
-        "Mouse In WorldSpace - X: {}, Y: {}, Z: {}\nMouse In "
-        "WorldSpace 2 - X: {}, Y: {}, Z: {}\n",
+        "{}\n",
         m_position.x,
         m_position.y,
         m_position.z,
@@ -209,17 +198,7 @@ public:
         min_x,
         max_x,
         min_y,
-        max_y,
-        mouse_world_pos.x,
-        mouse_world_pos.y,
-        mouse_world_pos.z,
-        topright.x,
-        topright.y,
-        bottomleft.x,
-        bottomleft.y,
-        mouse_world_pos2.x,
-        mouse_world_pos2.y,
-        mouse_world_pos2.z)
+        max_y)
         .c_str());
 
     m_batch_renderer.OnImGuiUpdate();
@@ -229,12 +208,7 @@ public:
   }
   void OnEvent(const glengine::Event::Item &event) const
   {
-    glengine::Event::Dispatcher::Filter(
-      event,
-      m_imgui_viewport_window.HasFocus(),
-      m_imgui_viewport_window.HasHover(),
-      [&event]() { s_camera.CheckEvent(event); });
-    s_camera.OnEvent(event);
+    m_imgui_viewport_window.OnEvent(event);
     m_batch_renderer.OnEvent(event);
   }
 
@@ -251,17 +225,19 @@ private:
     else if (m_preview)
     {
       m_batch_renderer.Shader().SetUniform(
-        "u_MVP",
-        GetViewPortPreview().SetPositionAndSizeAndGetMVP(
-          s_camera.Camera().ScreenSpaceToWorldSpace(
-            m_imgui_viewport_window.ViewPortMousePos()),
-          glm::vec2{ m_frame_buffer.Specification().width,
-                     m_frame_buffer.Specification().height }));
+        "u_MVP", m_imgui_viewport_window.PreviewViewProjectionMatrix(GetViewPortPreview().ViewPortAspectRatio()));
+      //      m_batch_renderer.Shader().SetUniform(
+      //        "u_MVP",
+      //        GetViewPortPreview().SetPositionAndSizeAndGetMVP(
+      //          s_camera.Camera().ScreenSpaceToWorldSpace(
+      //            m_imgui_viewport_window.ViewPortMousePos()),
+      //          glm::vec2{ m_frame_buffer.Specification().width,
+      //                     m_frame_buffer.Specification().height }));
     }
     else
     {
       m_batch_renderer.Shader().SetUniform(
-        "u_MVP", s_camera.Camera().ViewProjectionMatrix());
+        "u_MVP", m_imgui_viewport_window.ViewProjectionMatrix());
     }
     if (!s_draw_grid || m_offscreen_drawing || m_saving)
     {
@@ -285,7 +261,7 @@ private:
     BlendModeT last_blend_mode{ BlendModeT::none };
     s_uniform_color = s_default_uniform_color;
     glengine::Window::DefaultBlend();
-    s_camera.OnRender();
+    m_imgui_viewport_window.OnRender();
     SetUniforms();
     m_batch_renderer.Clear();
     m_map.visit_tiles([&](const auto &tiles) {
@@ -459,7 +435,7 @@ private:
   void RenderFrameBuffer() const
   {
     glengine::Window::DefaultBlend();
-    s_camera.OnRender();
+    m_imgui_viewport_window.OnRender();
     SetUniforms();
     m_batch_renderer.Clear();
     m_batch_renderer.DrawQuad(
@@ -499,7 +475,7 @@ private:
   }
   void SetCameraBoundsToEdgesOfImage()
   {
-    s_camera.RefreshAspectRatio(m_imgui_viewport_window.ViewPortAspectRatio());
+    //s_camera.RefreshAspectRatio(m_imgui_viewport_window.ViewPortAspectRatio());
     m_map.visit_tiles([&](const auto &tiles) {
       using tileT = std::ranges::range_value_t<decltype(tiles)>;
       static constexpr typename TileFunctions::template Bounds<tileT>::x x{};
@@ -538,7 +514,7 @@ private:
       //  m_position        = glm::vec3(min_x, min_y, 0.F);
       m_position        = glm::vec3(-width / 2.F, -height / 2.F, 0.F);
 
-      s_camera.SetImageBounds(glm::vec2{ width, height });
+      m_imgui_viewport_window.SetImageBounds(glm::vec2{ width, height });
 
       //      s_fixed_render_camera.SetProjection(
       //        static_cast<float>(min_x),
@@ -551,15 +527,12 @@ private:
         .height = static_cast<int>(abs(height)) });
     });
   }
+  mutable glengine::OrthographicCamera m_fixed_render_camera = {};
+  inline static bool                   s_fit_height          = { true };
+  inline static bool                   s_fit_width           = { true };
+  inline static bool                   s_draw_grid           = { false };
 
-  inline static glengine::OrthographicCameraController s_camera = { 16.F
-                                                                    / 9.F };
-  mutable glengine::OrthographicCamera m_fixed_render_camera    = {};
-  inline static bool                   s_fit_height             = { true };
-  inline static bool                   s_fit_width              = { true };
-  inline static bool                   s_draw_grid              = { false };
-
-  static constexpr int16_t             s_texture_page_width     = 256;
+  static constexpr int16_t             s_texture_page_width  = 256;
 
 
   static constexpr glm::vec4 s_default_uniform_color = { 1.F, 1.F, 1.F, 1.F };

@@ -74,10 +74,18 @@ public:
   void                         FitBoth() const;
   void                         FitHeight() const;
   void                         FitWidth() const;
-  [[maybe_unused]] void        SetZoom(float new_zoom) const;
+  [[nodiscard]] float          ZoomLevel() const
+  {
+    return m_zoom_level;
+  }
+  [[maybe_unused]] void   SetZoom(float new_zoom) const;
 
-  void                         SetPosition(glm::vec2) const;
-  glm::vec2                    TopRightScreenSpace() const
+  void                    SetPosition(glm::vec2) const;
+  [[nodiscard]] glm::vec2 Position() const
+  {
+    return m_position;
+  }
+  [[nodiscard]] glm::vec2 TopRightScreenSpace() const
   {
     auto clipSpacePos =
       m_camera.ProjectionMatrix()
@@ -113,7 +121,7 @@ private:
   float                                m_translation_speed     = { -2.5F };
   float                                m_rotation_speed        = { 180.F };
   mutable std::optional<return_values> m_bounds                = {};
-  void                                 zoom(const float offset) const;
+  void                                 zoom(const float offset = 0.F) const;
 };
 void MakeViewPortMatchBounds(
   const OrthographicCameraController::return_values &bounds);

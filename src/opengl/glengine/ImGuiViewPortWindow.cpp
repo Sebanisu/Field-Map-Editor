@@ -3,13 +3,23 @@
 //
 
 #include "ImGuiViewPortWindow.hpp"
+#include "Event/EventDispatcher.hpp"
 namespace glengine
 {
 inline namespace impl
 {
   void ImGuiViewPortWindow::OnImGuiDebugInfo() const
   {
-    auto &io = ImGui::GetIO();
+    if (!m_debug_text)
+    {
+      return;
+    }
+    auto           &io = ImGui::GetIO();
+    const glm::vec3 mouse_world_pos =
+      m_main_camera.Camera().ScreenSpaceToWorldSpace(ViewPortMousePos());
+    const glm::vec2 topright         = m_main_camera.TopRightScreenSpace();
+    const glm::vec2 bottomleft       = m_main_camera.BottomLeftScreenSpace();
+    const glm::vec3 mouse_world_pos2 = adjust_mouse_pos(topright, bottomleft);
     ImGui::Text(
       "%s",
       fmt::format(
@@ -20,7 +30,9 @@ inline namespace impl
         "{}, Focused: {}\nMouse - X: {} Y: {}\nContent Region - Min X: "
         "{}, "
         "Min Y: {}, Max X: {}, Max Y: {}\nClampMouse X: {}, Y: "
-        "{}\nviewport_mouse_pos X: {}, Y: {}, Z:{}, W:{}",
+        "{}\nviewport_mouse_pos X: {}, Y: {}, Z:{}\n"
+        "Mouse In WorldSpace - X: {}, Y: {}, Z: {}\nTR X {}, TR X {}, BL Y {}, "
+        "BL Y {}\nMouse In WorldSpace 2 - X: {}, Y: {}, Z: {}\n",
         // window->ViewWindowData().frame_buffer_width,
         // window->ViewWindowData().frame_buffer_height,
         +m_packed.hovered,
@@ -46,16 +58,73 @@ inline namespace impl
         m_viewport_mouse_pos.x,
         m_viewport_mouse_pos.y,
         m_viewport_mouse_pos.z,
-        m_viewport_mouse_pos.w)
+        mouse_world_pos.x,
+        mouse_world_pos.y,
+        mouse_world_pos.z,
+        topright.x,
+        topright.y,
+        bottomleft.x,
+        bottomleft.y,
+        mouse_world_pos2.x,
+        mouse_world_pos2.y,
+        mouse_world_pos2.z)
         .c_str());
   }
   void ImGuiViewPortWindow::OnRender() const
   {
-    OnRender([]() {});
+    m_main_camera.OnRender();
+    m_mouse_camera.OnRender();
+    // OnRender([]() {});
   }
-  void ImGuiViewPortWindow::OnEvent(const Event::Item &) const {}
-  void ImGuiViewPortWindow::OnUpdate(float) const {}
-  void ImGuiViewPortWindow::OnImGuiUpdate() const {}
+  void ImGuiViewPortWindow::SetImageBounds(const glm::vec2 &dims) const
+  {
+    m_main_camera.SetImageBounds(dims);
+    m_mouse_camera.SetImageBounds(dims);
+  }
+  void ImGuiViewPortWindow::FitBoth() const
+  {
+    m_main_camera.FitBoth();
+  }
+  void ImGuiViewPortWindow::FitHeight() const
+  {
+    m_main_camera.FitHeight();
+  }
+  void ImGuiViewPortWindow::FitWidth() const
+  {
+    m_main_camera.FitWidth();
+  }
+  void ImGuiViewPortWindow::OnEvent(const Event::Item &event) const
+  {
+    glengine::Event::Dispatcher::Filter(
+      event, HasFocus(), HasHover(), [&event, this]() {
+        m_main_camera.CheckEvent(event);
+      });
+    m_main_camera.OnEvent(event);
+    m_mouse_camera.OnEvent(event);
+  }
+
+  void ImGuiViewPortWindow::OnUpdate(float ts) const
+  {
+    m_main_camera.RefreshAspectRatio(ViewPortAspectRatio());
+    if (m_packed.focused)
+    {
+      m_main_camera.CheckInput(ts);
+    }
+    m_main_camera.OnUpdate(ts);
+    m_mouse_camera.OnUpdate(ts);
+  }
+  void ImGuiViewPortWindow::OnImGuiUpdate() const
+  {
+    const auto pushid = ImGuiPushID();
+    if (ImGui::Checkbox("Enable Debug Text", &m_debug_text))
+    {
+      // changed
+    }
+    ImGui::Separator();
+    m_main_camera.OnImGuiUpdate();
+    ImGui::Separator();
+    m_mouse_camera.OnImGuiUpdate();
+  }
   void ImGuiViewPortWindow::SyncOpenGLViewPort() const
   {
     GLCall{}(
@@ -150,6 +219,19 @@ inline namespace impl
                        || m_packed.parent_window_focused;
     m_packed.hovered = m_packed.button_hovered || m_packed.window_hovered
                        || m_packed.parent_window_hovered;
+  }
+  glm::mat4 ImGuiViewPortWindow::ViewProjectionMatrix() const
+  {
+    return m_main_camera.Camera().ViewProjectionMatrix();
+  }
+  glm::mat4 ImGuiViewPortWindow::PreviewViewProjectionMatrix(float preview_aspect_ratio) const
+  {
+    m_mouse_camera.RefreshAspectRatio(preview_aspect_ratio);
+    const glm::vec2 position = m_main_camera.Camera().ScreenSpaceToWorldSpace(ViewPortMousePos());
+
+    m_mouse_camera.SetZoom(m_main_camera.ZoomLevel()/8.F);
+    m_mouse_camera.SetPosition(position+m_main_camera.Position());
+    return m_mouse_camera.Camera().ViewProjectionMatrix();
   }
 }// namespace impl
 }// namespace glengine

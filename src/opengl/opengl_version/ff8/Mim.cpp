@@ -110,7 +110,7 @@ void ff8::Mim::OnImGuiUpdate() const
   }
   ImGui::Separator();
 
-  const glm::vec4 mouse_world_pos = camera.Camera().ScreenSpaceToWorldSpace(
+  const glm::vec3 mouse_world_pos = camera.Camera().ScreenSpaceToWorldSpace(
     m_imgui_viewport_window.ViewPortMousePos());
   ImGui::Text(
     "%s",

@@ -240,7 +240,7 @@ void OrthographicCameraController::FitHeight() const
   if (m_bounds)
   {
     m_zoom_level = (m_bounds->top - m_bounds->bottom);
-    zoom(0.F);
+    zoom();
     m_position.y = {};// center height
     m_camera.SetPosition(m_position);
   }
@@ -250,7 +250,7 @@ void OrthographicCameraController::FitWidth() const
   if (m_bounds)
   {
     m_zoom_level = (m_bounds->right - m_bounds->left) / m_viewport_aspect_ratio;
-    zoom(0.F);
+    zoom();
     m_position.x = {};// center width
     m_camera.SetPosition(m_position);
   }
@@ -262,7 +262,7 @@ void OrthographicCameraController::FitBoth() const
     m_zoom_level = (std::max)(
       m_bounds->top - m_bounds->bottom,
       (m_bounds->right - m_bounds->left) / m_viewport_aspect_ratio);
-    zoom(0.F);
+    zoom();
     m_position = {};// center
     m_camera.SetPosition(m_position);
   }
@@ -270,7 +270,7 @@ void OrthographicCameraController::FitBoth() const
 void OrthographicCameraController::SetZoom(float new_zoom) const
 {
   m_zoom_level = new_zoom;
-  zoom(0.F);
+  zoom();
 }
 
 void OrthographicCameraController::SetProjection() const

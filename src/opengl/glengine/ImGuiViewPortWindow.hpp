@@ -109,6 +109,12 @@ inline namespace impl
         }
       }
     }
+    glm::mat4                  ViewProjectionMatrix() const;
+    glm::mat4                  PreviewViewProjectionMatrix(float) const;
+    void                       SetImageBounds(const glm::vec2 &) const;
+    void                       FitBoth() const;
+    void                       FitHeight() const;
+    void                       FitWidth() const;
     void                       OnImGuiUpdate() const;
     void                       SyncOpenGLViewPort() const;
     bool                       HasFocus() const;
@@ -117,6 +123,14 @@ inline namespace impl
     float                      ViewPortAspectRatio() const;
     glm::vec4                  ViewPortMousePos() const;
     glm::vec4 adjust_mouse_pos(glm::vec2 topright, glm::vec2 bottomleft) const;
+    void      DisableDebugText()
+    {
+      m_debug_text = false;
+    }
+    void EnableDebugText()
+    {
+      m_debug_text = true;
+    }
 
   private:
     glm::vec2 ConvertImVec2(ImVec2 in) const;
@@ -137,13 +151,14 @@ inline namespace impl
       bool parent_window_hovered : 1 = { false };
       bool button_activated : 1      = { false };
     };
-    const char                                    *m_title                = {};
-    mutable glengine::FrameBuffer                  m_fb                   = {};
-    mutable PackedSettings                         m_packed               = {};
-    mutable glm::vec2                              m_min                  = {};
-    mutable glm::vec2                              m_max                  = {};
-    mutable glm::vec2                              m_viewport_size        = {};
-    mutable glm::vec2                              m_clamp_mouse_pos      = {};
+    const char                                    *m_title           = {};
+    mutable glengine::FrameBuffer                  m_fb              = {};
+    mutable PackedSettings                         m_packed          = {};
+    mutable bool                                   m_debug_text      = { true };
+    mutable glm::vec2                              m_min             = {};
+    mutable glm::vec2                              m_max             = {};
+    mutable glm::vec2                              m_viewport_size   = {};
+    mutable glm::vec2                              m_clamp_mouse_pos = {};
     mutable ImTextureID                            m_imgui_texture_id_ref = {};
     mutable glm::vec4                              m_viewport_mouse_pos   = {};
     mutable glengine::OrthographicCameraController m_main_camera          = {};
