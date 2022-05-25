@@ -313,12 +313,13 @@ private:
         unique_z.erase(begin, end);
       }
 
-      for (const auto z : unique_z | std::views::reverse)
+      auto unique_z_reverse = unique_z | std::views::reverse;
+      for (const auto z : unique_z_reverse)
       {
-        // fmt::print("z = {}\n", z);
-        for (const auto &tile :
-             f_tiles | std::views::reverse
-               | std::views::filter([z](const auto &t) { return z == t.z(); }))
+        auto f_tiles_reverse_filter_z =
+          f_tiles | std::views::reverse
+          | std::views::filter([z](const auto &t) { return z == t.z(); });
+        for (const auto &tile : f_tiles_reverse_filter_z)
         {
           const auto bpp             = tile.depth();
           const auto palette         = tile.palette_id();
@@ -401,7 +402,7 @@ private:
             typename TileFunctions::template Bounds<tileT>::y y{};
           static constexpr
             typename TileFunctions::template Bounds<tileT>::texture_page
-              texture_page{};
+                     texture_page{};
           const auto tile_size2 = m_tile_scale * 16.F;
           m_batch_renderer.DrawQuad(
             sub_texture,
