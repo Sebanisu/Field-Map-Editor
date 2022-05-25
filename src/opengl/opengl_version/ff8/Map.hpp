@@ -321,19 +321,20 @@ private:
           | std::views::filter([z](const auto &t) { return z == t.z(); });
         for (const auto &tile : f_tiles_reverse_filter_z)
         {
-          const auto bpp             = tile.depth();
-          const auto palette         = tile.palette_id();
-          const auto texture_page_id = tile.texture_id();
-          const auto [texture_index, texture_page_width] =
-            std::ranges::empty(m_upscale_path)
-              ? IndexAndPageWidth(bpp, palette)
-              : IndexAndPageWidth(palette, texture_page_id);
-
-
-          auto        texture_page_offset = std::ranges::empty(m_upscale_path)
-                                              ? texture_page_id * texture_page_width
-                                              : 0;
-
+          const auto bpp                                 = tile.depth();
+          const auto palette                             = tile.palette_id();
+          const auto texture_page_id                     = tile.texture_id();
+          const auto [texture_index, texture_page_width] = [&]() {
+            if (std::ranges::empty(m_upscale_path))
+              return IndexAndPageWidth(bpp, palette);
+            return IndexAndPageWidth(palette, texture_page_id);
+          }();
+          const auto texture_page_offset =
+            [&, texture_page_width_copy = texture_page_width]() {
+              if (std::ranges::empty(m_upscale_path))
+                return texture_page_id * texture_page_width_copy;
+              return 0;
+            }();
           const auto &texture =
             std::ranges::empty(m_upscale_path)
               ? m_delayed_textures.textures->at(texture_index)
@@ -424,8 +425,8 @@ private:
   }
   struct IndexAndPageWidthReturn
   {
-    size_t texture_index      = {};
-    int    texture_page_width = { s_texture_page_width };
+    std::size_t  texture_index      = {};
+    std::int16_t texture_page_width = { s_texture_page_width };
   };
 
   auto
