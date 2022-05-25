@@ -19,7 +19,7 @@ public:
   [[nodiscard]] bool OnImGuiUpdate() const
   {
     bool       ret_changed    = false;
-    const auto push_id0        = glengine::ImGuiPushID();
+    const auto push_id        = glengine::ImGuiPushID();
     const auto filter_disable = glengine::ImGuiDisabled(m_disabled);
     if (ImGui::CollapsingHeader("Filters"))
     {

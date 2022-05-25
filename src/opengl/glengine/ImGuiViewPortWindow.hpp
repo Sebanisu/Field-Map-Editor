@@ -7,6 +7,8 @@
 #include "FrameBuffer.hpp"
 #include "FrameBufferBackup.hpp"
 #include "ImGuiPushID.hpp"
+#include "ImGuiPushStyleVar.hpp"
+#include "OrthographicCameraController.hpp"
 #include "scope_guard.hpp"
 namespace glengine
 {
@@ -20,43 +22,39 @@ inline namespace impl
       : m_title(std::move(title))
     {
     }
-    constexpr void OnEvent(const Event::Item &) const {}
-    constexpr void OnUpdate(float) const {}
-    void           OnRender() const
-    {
-      OnRender([]() {});
-    }
+    void OnEvent(const Event::Item &) const;
+    void OnUpdate(float) const;
+    void OnRender() const;
     void OnRender(const std::invocable auto &&callable) const
     {
-      ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.F, 0.F));
+      const auto pop_style =
+        ImGuiPushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.F, 0.F));
       {
-
-        const auto pop_id0   = ImGuiPushID();
-        const auto pop_style = scope_guard([]() { ImGui::PopStyleVar(); });
-        const auto pop_end   = scope_guard([]() { ImGui::End(); });
+        const auto pop_id0 = ImGuiPushID();
+        const auto pop_end = scope_guard([]() { ImGui::End(); });
         if (!ImGui::Begin(m_title))
         {
           return;
         }
         // do any rendering here.
         {
-          m_parent_window_hovered = ImGui::IsWindowHovered();
-          m_parent_window_focused = ImGui::IsWindowFocused();
+          m_packed.parent_window_hovered = ImGui::IsWindowHovered();
+          m_packed.parent_window_focused = ImGui::IsWindowFocused();
           // Using a Child allow to fill all the space of the window.
           // It also allows customization
-          const auto pop_id1      = ImGuiPushID();
+          const auto pop_id1             = ImGuiPushID();
           ImGui::BeginChild(m_title);
-          const auto pop_child = scope_guard([]() { ImGui::EndChild(); });
-          m_window_hovered     = ImGui::IsWindowHovered();
-          m_window_focused     = ImGui::IsWindowFocused();
+          const auto pop_child    = scope_guard([]() { ImGui::EndChild(); });
+          m_packed.window_hovered = ImGui::IsWindowHovered();
+          m_packed.window_focused = ImGui::IsWindowFocused();
           // Get the size of the child (i.e. the whole draw size of the
           // windows).
-          m_viewport_size      = ConvertImVec2(
+          m_viewport_size         = ConvertImVec2(
             ImGui::GetContentRegionAvail());// ImGui::GetWindowSize();
           if (
             !m_fb
             || (m_fb.Specification().height
-                 != static_cast<int>(m_viewport_size.y) && m_viewport_size.y > 5.0F)
+                  != static_cast<int>(m_viewport_size.y) && m_viewport_size.y > 5.0F)
             || m_fb.Specification().width
                  != static_cast<int>(m_viewport_size.x))
           {
@@ -91,7 +89,7 @@ inline namespace impl
           ImGui::PushStyleColor(ImGuiCol_Button, color);
           ImGui::PushStyleColor(ImGuiCol_ButtonActive, color);
           ImGui::PushStyleColor(ImGuiCol_ButtonHovered, color);
-          m_button_clicked = ImGui::ImageButton(
+          m_packed.button_clicked = ImGui::ImageButton(
             m_imgui_texture_id_ref,
             ImVec2(
               static_cast<float>(m_fb.Specification().width),
@@ -103,172 +101,53 @@ inline namespace impl
           ImGui::PopStyleColor(3);
           ImGui::SetCursorPos(cPos);
           OnUpdateMouse();
-          m_button_hovered   = ImGui::IsItemHovered();
-          m_button_focused   = ImGui::IsItemFocused();
-          m_button_activated = ImGui::IsItemActivated();
+          m_packed.button_hovered   = ImGui::IsItemHovered();
+          m_packed.button_focused   = ImGui::IsItemFocused();
+          m_packed.button_activated = ImGui::IsItemActivated();
           OnUpdateFocusAndHover();
           OnImGuiDebugInfo();
         }
       }
     }
-    constexpr void OnImGuiUpdate() const {}
-
-    void           SyncOpenGLViewPort() const
-    {
-      GLCall{}(
-        glViewport,
-        GLint{},
-        GLint{},
-        static_cast<GLint>(m_viewport_size.x),
-        static_cast<GLint>(m_viewport_size.y));
-    }
-    bool HasFocus() const
-    {
-      return m_focused;
-    }
-    bool HasHover() const
-    {
-      return m_hovered;
-    }
-    glm::vec2 ViewPortDims() const
-    {
-      return m_viewport_size;
-    }
-    float ViewPortAspectRatio() const
-    {
-      float ret = m_viewport_size.x / m_viewport_size.y;
-      if (std::isnan(ret))
-      {
-        return 16.F / 9.F;
-      }
-      return ret;
-    }
-    glm::vec4 ViewPortMousePos() const
-    {
-      return m_viewport_mouse_pos;
-    }
-
-    glm::vec4 adjust_mouse_pos(glm::vec2 topright, glm::vec2 bottomleft) const
-    {
-      const auto convert_range = [](
-                                   float       OldValue,
-                                   const float OldMin,
-                                   const float OldMax,
-                                   const float NewMin = -1.F,
-                                   const float NewMax = 1.F) {
-        return (((OldValue - OldMin) * (NewMax - NewMin)) / (OldMax - OldMin))
-               + NewMin;
-      };
-      return glm::vec4{
-        convert_range(m_clamp_mouse_pos.x, bottomleft.x, topright.x),
-        convert_range(m_clamp_mouse_pos.y, bottomleft.y, topright.y),
-        0.F,
-        1.F
-      };
-    }
+    void                       OnImGuiUpdate() const;
+    void                       SyncOpenGLViewPort() const;
+    bool                       HasFocus() const;
+    bool                       HasHover() const;
+    [[maybe_unused]] glm::vec2 ViewPortDims() const;
+    float                      ViewPortAspectRatio() const;
+    glm::vec4                  ViewPortMousePos() const;
+    glm::vec4 adjust_mouse_pos(glm::vec2 topright, glm::vec2 bottomleft) const;
 
   private:
-    glm::vec2 ConvertImVec2(ImVec2 in) const
-    {
-      return { in.x, in.y };
-    }
-    void OnUpdateMouse() const
-    {
+    glm::vec2 ConvertImVec2(ImVec2 in) const;
+    void      OnUpdateMouse() const;
+    void      OnUpdateFocusAndHover() const;
+    void      OnImGuiDebugInfo() const;
 
-      m_min = ConvertImVec2(ImGui::GetWindowContentRegionMin());
-      m_max = ConvertImVec2(ImGui::GetWindowContentRegionMax());
-
-      m_min.x += ImGui::GetWindowPos().x;
-      m_min.y += ImGui::GetWindowPos().y;
-      m_max.x += ImGui::GetWindowPos().x;
-      m_max.y += ImGui::GetWindowPos().y;
-
-      auto &io            = ImGui::GetIO();
-      m_clamp_mouse_pos   = ConvertImVec2(io.MousePos);
-      m_clamp_mouse_pos.x = std::clamp(m_clamp_mouse_pos.x, m_min.x, m_max.x);
-      m_clamp_mouse_pos.y = std::clamp(m_clamp_mouse_pos.y, m_min.y, m_max.y);
-      const auto convert_range = [](
-                                   float       OldValue,
-                                   const float OldMin,
-                                   const float OldMax,
-                                   const float NewMin = -1.F,
-                                   const float NewMax = 1.F) {
-        return (((OldValue - OldMin) * (NewMax - NewMin)) / (OldMax - OldMin))
-               + NewMin;
-      };
-      m_viewport_mouse_pos =
-        glm::vec4{ convert_range(m_clamp_mouse_pos.x, m_min.x, m_max.x),
-                   convert_range(m_clamp_mouse_pos.y, m_min.y, m_max.y),
-                   0.F,
-                   1.F };
-    }
-    void OnUpdateFocusAndHover() const
+    struct PackedSettings
     {
-      m_focused =
-        m_button_focused || m_window_focused || m_parent_window_focused;
-      m_hovered =
-        m_button_hovered || m_window_hovered || m_parent_window_hovered;
-    }
-    void OnImGuiDebugInfo() const
-    {
-      auto &io = ImGui::GetIO();
-      ImGui::Text(
-        "%s",
-        fmt::format(
-          //"Window Frame Buffer - Width {}, Height: {}\n"
-          "ViewPort - Hovered: {}, Focused: {}, Width: {}, Height: {}, "
-          "Texture ID: {}\nButton - Hovered: {}, Focused: {}, Activated: "
-          "{}\nWindow - Hovered: {}, Focused: {}\nParent Window - Hovered: "
-          "{}, Focused: {}\nMouse - X: {} Y: {}\nContent Region - Min X: "
-          "{}, "
-          "Min Y: {}, Max X: {}, Max Y: {}\nClampMouse X: {}, Y: "
-          "{}\nviewport_mouse_pos X: {}, Y: {}, Z:{}, W:{}",
-          // window->ViewWindowData().frame_buffer_width,
-          // window->ViewWindowData().frame_buffer_height,
-          m_hovered,
-          m_focused,
-          m_viewport_size.x,
-          m_viewport_size.y,
-          m_imgui_texture_id_ref,
-          m_button_hovered,
-          m_button_focused,
-          m_button_activated,
-          m_window_hovered,
-          m_window_focused,
-          m_parent_window_hovered,
-          m_parent_window_focused,
-          io.MousePos.x,
-          io.MousePos.y,
-          m_min.x,
-          m_min.y,
-          m_max.x,
-          m_max.y,
-          m_clamp_mouse_pos.x,
-          m_clamp_mouse_pos.y,
-          m_viewport_mouse_pos.x,
-          m_viewport_mouse_pos.y,
-          m_viewport_mouse_pos.z,
-          m_viewport_mouse_pos.w)
-          .c_str());
-    }
-    const char                   *m_title                 = {};
-    mutable glengine::FrameBuffer m_fb                    = {};
-    mutable bool                  m_focused               = { false };
-    mutable bool                  m_hovered               = { false };
-    mutable bool                  m_button_clicked        = { false };
-    mutable bool                  m_button_focused        = { false };
-    mutable bool                  m_window_focused        = { false };
-    mutable bool                  m_parent_window_focused = { false };
-    mutable bool                  m_button_hovered        = { false };
-    mutable bool                  m_window_hovered        = { false };
-    mutable bool                  m_parent_window_hovered = { false };
-    mutable bool                  m_button_activated      = { false };
-    mutable glm::vec2             m_min                   = {};
-    mutable glm::vec2             m_max                   = {};
-    mutable glm::vec2             m_viewport_size         = {};
-    mutable glm::vec2             m_clamp_mouse_pos       = {};
-    mutable ImTextureID           m_imgui_texture_id_ref  = {};
-    mutable glm::vec4             m_viewport_mouse_pos    = {};
+      bool focused : 1               = { false };
+      bool hovered : 1               = { false };
+      bool button_clicked : 1        = { false };
+      bool button_focused : 1        = { false };
+      bool window_focused : 1        = { false };
+      bool parent_window_focused : 1 = { false };
+      bool button_hovered : 1        = { false };
+      bool window_hovered : 1        = { false };
+      bool parent_window_hovered : 1 = { false };
+      bool button_activated : 1      = { false };
+    };
+    const char                                    *m_title                = {};
+    mutable glengine::FrameBuffer                  m_fb                   = {};
+    mutable PackedSettings                         m_packed               = {};
+    mutable glm::vec2                              m_min                  = {};
+    mutable glm::vec2                              m_max                  = {};
+    mutable glm::vec2                              m_viewport_size        = {};
+    mutable glm::vec2                              m_clamp_mouse_pos      = {};
+    mutable ImTextureID                            m_imgui_texture_id_ref = {};
+    mutable glm::vec4                              m_viewport_mouse_pos   = {};
+    mutable glengine::OrthographicCameraController m_main_camera          = {};
+    mutable glengine::OrthographicCameraController m_mouse_camera         = {};
   };
   static_assert(Renderable<ImGuiViewPortWindow>);
 }// namespace impl

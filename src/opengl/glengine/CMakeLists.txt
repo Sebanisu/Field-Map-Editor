@@ -38,6 +38,7 @@ add_library(glengine STATIC
         ImGuiIndent.cpp
         ImGuiPushID.cpp
         ImGuiPushItemWidth.cpp
+        ImGuiPushStyleVar.cpp
         ImGuiViewPortPreview.cpp
         ImGuiViewPortWindow.cpp
         IndexBuffer.cpp
