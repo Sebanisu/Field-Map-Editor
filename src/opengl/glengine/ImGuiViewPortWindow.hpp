@@ -131,6 +131,21 @@ inline namespace impl
     {
       m_debug_text = true;
     }
+    void Fit(const bool width, const bool height) const
+    {
+      if (height && width)
+      {
+        FitBoth();
+      }
+      else if (height)
+      {
+        FitHeight();
+      }
+      else if (width)
+      {
+        FitWidth();
+      }
+    }
 
   private:
     glm::vec2 ConvertImVec2(ImVec2 in) const;

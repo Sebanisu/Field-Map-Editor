@@ -110,18 +110,7 @@ public:
       m_changed = true;
     }
     m_imgui_viewport_window.OnUpdate(ts);
-    if (s_fit_height && s_fit_width)
-    {
-      m_imgui_viewport_window.FitBoth();
-    }
-    else if (s_fit_height)
-    {
-      m_imgui_viewport_window.FitHeight();
-    }
-    else if (s_fit_width)
-    {
-      m_imgui_viewport_window.FitWidth();
-    }
+    m_imgui_viewport_window.Fit(s_fit_width,s_fit_height);
     m_batch_renderer.OnUpdate(ts);
   }
   void OnRender() const

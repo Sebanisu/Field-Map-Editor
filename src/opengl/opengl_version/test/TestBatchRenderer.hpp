@@ -18,7 +18,9 @@ public:
   void OnUpdate(float) const;
   void OnRender() const;
   void OnImGuiUpdate() const;
-  void OnEvent(const glengine::Event::Item &) const {}
+  void OnEvent(const glengine::Event::Item & event) const {
+    m_imgui_viewport_window.OnEvent(event);
+  }
 
 private:
   void                                   GenerateQuads() const;

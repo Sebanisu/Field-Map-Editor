@@ -21,33 +21,15 @@ static bool                                   fit_width    = true;
 static bool                                   saving       = false;
 static bool                                   preview      = false;
 static const glengine::Texture               *texture      = nullptr;
-static glengine::OrthographicCameraController camera       = { 16.F / 9.F };
 }// namespace ff8
 void ff8::Mim::OnUpdate(float ts) const
 {
   (void)m_delayed_textures.OnUpdate();
   const auto &local_texture = CurrentTexture();
-  camera.SetImageBounds(
+  m_imgui_viewport_window.SetImageBounds(
     glm::vec2{ local_texture.width(), local_texture.height() });
-  camera.RefreshAspectRatio(m_imgui_viewport_window.ViewPortAspectRatio());
-
-  if (fit_height && fit_width)
-  {
-    camera.FitBoth();
-  }
-  else if (fit_height)
-  {
-    camera.FitHeight();
-  }
-  else if (fit_width)
-  {
-    camera.FitWidth();
-  }
-  if (m_imgui_viewport_window.HasFocus())
-  {
-    camera.CheckInput(ts);
-  }
-  camera.OnUpdate(ts);
+  m_imgui_viewport_window.OnUpdate(ts);
+  m_imgui_viewport_window.Fit(fit_width,fit_height);
   m_batch_renderer.OnUpdate(ts);
 }
 
@@ -62,7 +44,7 @@ void ff8::Mim::OnRender() const
   }
 
   glengine::Window::DefaultBlend();
-  camera.OnRender();
+  m_imgui_viewport_window.OnRender();
   SetUniforms();
   if (!saving)
   {
@@ -110,21 +92,16 @@ void ff8::Mim::OnImGuiUpdate() const
   }
   ImGui::Separator();
 
-  const glm::vec3 mouse_world_pos = camera.Camera().ScreenSpaceToWorldSpace(
-    m_imgui_viewport_window.ViewPortMousePos());
+
   ImGui::Text(
     "%s",
     fmt::format(
-      "Texture Width: {:>5}, Height: {:>5}\nMouse In WorldSpace - X: {}, Y: "
-      "{}, Z: {}\n",
+      "Texture Width: {:>5}, Height: {:>5}\n",
       local_texture.width(),
-      local_texture.height(),
-      mouse_world_pos.x,
-      mouse_world_pos.y,
-      mouse_world_pos.z)
+      local_texture.height())
       .c_str());
   ImGui::Separator();
-  camera.OnImGuiUpdate();
+  m_imgui_viewport_window.OnImGuiUpdate();
   ImGui::Separator();
   m_batch_renderer.OnImGuiUpdate();
 }
@@ -139,7 +116,6 @@ ff8::Mim::Mim(const ff8::Fields &fields)
     fmt::print("Loading Textures from Mim \n");
     m_delayed_textures = LoadTextures(m_mim);
   }
-  camera.RefreshAspectRatio(m_imgui_viewport_window.ViewPortAspectRatio());
 }
 
 std::size_t ff8::Mim::Index() const
@@ -178,17 +154,13 @@ void ff8::Mim::SetUniforms() const
   else if (preview)
   {
 
-    m_batch_renderer.Shader().SetUniform(
-      "u_MVP",
-      GetViewPortPreview().SetPositionAndSizeAndGetMVP(
-        camera.Camera().ScreenSpaceToWorldSpace(
-          m_imgui_viewport_window.ViewPortMousePos()),
-        glm::vec2{ texture->width(), texture->height() }));
+        m_batch_renderer.Shader().SetUniform(
+          "u_MVP", m_imgui_viewport_window.PreviewViewProjectionMatrix(GetViewPortPreview().ViewPortAspectRatio()));
   }
   else
   {
     m_batch_renderer.Shader().SetUniform(
-      "u_MVP", camera.Camera().ViewProjectionMatrix());
+      "u_MVP", m_imgui_viewport_window.ViewProjectionMatrix());
   }
   if (!draw_grid || saving)
   {
@@ -209,12 +181,7 @@ void ff8::Mim::SetUniforms() const
 }
 void ff8::Mim::OnEvent(const glengine::Event::Item &event) const
 {
-  glengine::Event::Dispatcher::Filter(
-    event,
-    m_imgui_viewport_window.HasFocus(),
-    m_imgui_viewport_window.HasHover(),
-    [&event]() { camera.CheckEvent(event); });
-  camera.OnEvent(event);
+  m_imgui_viewport_window.OnEvent(event);
   m_batch_renderer.OnEvent(event);
 }
 void ff8::Mim::Save() const

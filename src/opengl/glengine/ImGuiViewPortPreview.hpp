@@ -17,29 +17,14 @@ inline namespace impl
     {
       m_preview_view_port.DisableDebugText();
     }
-    [[nodiscard]] const OrthographicCameraController &CameraController() const
-    {
-      return m_camera_controller;
-    }
     [[nodiscard]] float ViewPortAspectRatio() const
     {
       return m_preview_view_port.ViewPortAspectRatio();
     }
-    [[nodiscard]] const glm::mat4 &SetPositionAndSizeAndGetMVP(
-      glm::vec3 position,
-      glm::vec2 size,
-      float     zoom_in = 4.F) const
-    {
-      m_camera_controller.SetImageBounds(glm::vec2{ size.x, size.y });
-      m_camera_controller.SetZoom(size.y / zoom_in);
-      m_camera_controller.SetPosition(position);
-      return m_camera_controller.Camera().ViewProjectionMatrix();
-    }
+
     void OnUpdate(float) const
     {
       m_drawn = false;
-      m_camera_controller.RefreshAspectRatio(
-        m_preview_view_port.ViewPortAspectRatio());
       // m_camera_controller.SetZoom(m_preview_view_port.ViewPortDims().y);
     }
     // A way to hand a ImGuiViewPortWindow, and a OrthographicCamera or
@@ -69,7 +54,6 @@ inline namespace impl
 
   private:
     ImGuiViewPortWindow                  m_preview_view_port = { "Preview" };
-    mutable OrthographicCameraController m_camera_controller = {};
     mutable bool                         m_drawn             = false;
   };
   static_assert(Renderable<ImGuiViewPortPreview>);

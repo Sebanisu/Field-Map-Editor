@@ -2,13 +2,16 @@
 // Created by pcvii on 11/30/2021.
 //
 #include "TestBatchRenderer.hpp"
+#include "Application.hpp"
 #include "ImGuiPushID.hpp"
-
+bool preview    = false;
+bool fit_height = true;
+bool fit_width  = true;
 void test::TestBatchRenderer::GenerateQuads() const
 {
   m_batch_renderer.Clear();
-  auto x_rng = std::views::iota(uint32_t{}, static_cast<uint32_t>(m_count[0]));
-  auto y_rng = std::views::iota(uint32_t{}, static_cast<uint32_t>(m_count[1]));
+  auto x_rng = std::views::iota(int32_t{}, static_cast<int32_t>(m_count[0]));
+  auto y_rng = std::views::iota(int32_t{}, static_cast<int32_t>(m_count[1]));
   auto text_index_rng =
     std::views::iota(uint32_t{}) | std::views::transform([this](const auto i) {
       return i % std::ranges::size(m_textures);
@@ -22,7 +25,9 @@ void test::TestBatchRenderer::GenerateQuads() const
       float g = static_cast<float>(y) / static_cast<float>(m_count[1]);
 
       m_batch_renderer.DrawQuad(
-        { static_cast<float>(x), static_cast<float>(y), 0.F },
+        { static_cast<float>(x) - static_cast<float>(m_count[0]) / 2.F,
+          static_cast<float>(y) - static_cast<float>(m_count[1]) / 2.F,
+          0.F },
         { r, g, 1.F, 1.F },
         m_textures.at(*text_index),
         static_cast<float>(1U << (*text_index)));
@@ -50,7 +55,10 @@ test::TestBatchRenderer::TestBatchRenderer()
 
 void test::TestBatchRenderer::OnUpdate(const float ts) const
 {
-  glengine::OnUpdate(m_batch_renderer, ts);
+  m_batch_renderer.OnUpdate(ts);
+  m_imgui_viewport_window.SetImageBounds({ m_count[0], m_count[1] });
+  m_imgui_viewport_window.OnUpdate(ts);
+  m_imgui_viewport_window.Fit(fit_width,fit_height);
 }
 
 void test::TestBatchRenderer::OnRender() const
@@ -58,6 +66,12 @@ void test::TestBatchRenderer::OnRender() const
   SetUniforms();
   m_imgui_viewport_window.SyncOpenGLViewPort();
   m_imgui_viewport_window.OnRender([this]() { GenerateQuads(); });
+  GetViewPortPreview().OnRender(m_imgui_viewport_window.HasHover(), [this]() {
+    preview = true;
+    SetUniforms();
+    GenerateQuads();
+    preview = false;
+  });
 }
 void test::TestBatchRenderer::OnImGuiUpdate() const
 {
@@ -66,18 +80,24 @@ void test::TestBatchRenderer::OnImGuiUpdate() const
     window_width / m_imgui_viewport_window.ViewPortAspectRatio();
   {
     const auto pop = glengine::ImGuiPushID();
+
+    ImGui::Checkbox("Fit Height", &fit_height);
+    ImGui::Checkbox("Fit Width", &fit_width);
+  }
+  {
+    const auto pop = glengine::ImGuiPushID();
     if (ImGui::SliderFloat2(
           "View Offset", &view_offset.x, -window_width, window_width))
     {
       view_offset.y = std::clamp(view_offset.y, -window_height, window_height);
     }
   }
-  {
-    const auto pop = glengine::ImGuiPushID();
-    if (ImGui::SliderFloat("Zoom", &m_zoom, 25.F, 100.F/256.F))
-    {
-    }
-  }
+//  {
+//    const auto pop = glengine::ImGuiPushID();
+//    if (ImGui::SliderFloat("Zoom", &m_zoom, 25.F, 100.F / 256.F))
+//    {
+//    }
+//  }
   {
     const auto pop = glengine::ImGuiPushID();
     if (ImGui::SliderInt2("Quad Axis Count (X, Y)", std::data(m_count), 0, 256))
@@ -96,22 +116,33 @@ void test::TestBatchRenderer::OnImGuiUpdate() const
     fmt::format("Total Indices Rendered: {}", m_count[0] * m_count[1] * 6)
       .c_str());
   glengine::OnImGuiUpdate(m_batch_renderer);
+  ImGui::Separator();
+  m_imgui_viewport_window.OnImGuiUpdate();
 }
+
 void test::TestBatchRenderer::SetUniforms() const
 {
-  const float window_width = 100.F;
-  float       window_height =
-    window_width / m_imgui_viewport_window.ViewPortAspectRatio();
-  const auto proj = glm::ortho(
-    view_offset.x / m_zoom,
-    (view_offset.x + window_width) / m_zoom,
-    view_offset.y / m_zoom,
-    (view_offset.y + window_height) / m_zoom,
-    -1.F,
-    1.F);
+  const glm::mat4 mvp = [&]() {
+    if (preview)
+    {
+      return m_imgui_viewport_window.PreviewViewProjectionMatrix(
+        GetViewPortPreview().ViewPortAspectRatio());
+    }
+    return m_imgui_viewport_window.ViewProjectionMatrix();
+  }();
 
-  const auto mvp = proj;
+  //  const float window_width  = 100.F;
+  //  float       window_height = window_width / aspect_ratio;
+  //  const auto  proj          = glm::ortho(
+  //    view_offset.x / m_zoom,
+  //    (view_offset.x + window_width) / m_zoom,
+  //    view_offset.y / m_zoom,
+  //    (view_offset.y + window_height) / m_zoom,
+  //    -1.F,
+  //    1.F);
+
   m_batch_renderer.Shader().Bind();
-  m_batch_renderer.Shader().SetUniform("u_MVP", mvp);
+  m_batch_renderer.Shader().SetUniform(
+    "u_MVP", glm::translate(mvp, view_offset));
   m_batch_renderer.Shader().SetUniform("u_Color", 1.F, 1.F, 1.F, 1.F);
 }
