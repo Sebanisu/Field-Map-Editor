@@ -109,8 +109,9 @@ inline namespace impl
         }
       }
     }
+    static void                SetPreviewAspectRatio(float) noexcept;
     glm::mat4                  ViewProjectionMatrix() const;
-    glm::mat4                  PreviewViewProjectionMatrix(float) const;
+    glm::mat4                  PreviewViewProjectionMatrix() const;
     void                       SetImageBounds(const glm::vec2 &) const;
     void                       FitBoth() const;
     void                       FitHeight() const;

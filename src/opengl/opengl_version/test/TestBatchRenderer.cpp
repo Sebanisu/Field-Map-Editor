@@ -4,9 +4,9 @@
 #include "TestBatchRenderer.hpp"
 #include "Application.hpp"
 #include "ImGuiPushID.hpp"
-bool preview    = false;
-bool fit_height = true;
-bool fit_width  = true;
+static constinit bool fit_width = true;
+static constinit bool fit_height = true;
+static constinit bool preview = false;
 void test::TestBatchRenderer::GenerateQuads() const
 {
   m_batch_renderer.Clear();
@@ -58,7 +58,7 @@ void test::TestBatchRenderer::OnUpdate(const float ts) const
   m_batch_renderer.OnUpdate(ts);
   m_imgui_viewport_window.SetImageBounds({ m_count[0], m_count[1] });
   m_imgui_viewport_window.OnUpdate(ts);
-  m_imgui_viewport_window.Fit(fit_width,fit_height);
+  m_imgui_viewport_window.Fit(fit_width, fit_height);
 }
 
 void test::TestBatchRenderer::OnRender() const
@@ -75,7 +75,7 @@ void test::TestBatchRenderer::OnRender() const
 }
 void test::TestBatchRenderer::OnImGuiUpdate() const
 {
-  const float window_width = 16.F;
+  const float window_width = 100.F;
   float       window_height =
     window_width / m_imgui_viewport_window.ViewPortAspectRatio();
   {
@@ -92,12 +92,7 @@ void test::TestBatchRenderer::OnImGuiUpdate() const
       view_offset.y = std::clamp(view_offset.y, -window_height, window_height);
     }
   }
-//  {
-//    const auto pop = glengine::ImGuiPushID();
-//    if (ImGui::SliderFloat("Zoom", &m_zoom, 25.F, 100.F / 256.F))
-//    {
-//    }
-//  }
+
   {
     const auto pop = glengine::ImGuiPushID();
     if (ImGui::SliderInt2("Quad Axis Count (X, Y)", std::data(m_count), 0, 256))
@@ -125,21 +120,10 @@ void test::TestBatchRenderer::SetUniforms() const
   const glm::mat4 mvp = [&]() {
     if (preview)
     {
-      return m_imgui_viewport_window.PreviewViewProjectionMatrix(
-        GetViewPortPreview().ViewPortAspectRatio());
+      return m_imgui_viewport_window.PreviewViewProjectionMatrix();
     }
     return m_imgui_viewport_window.ViewProjectionMatrix();
   }();
-
-  //  const float window_width  = 100.F;
-  //  float       window_height = window_width / aspect_ratio;
-  //  const auto  proj          = glm::ortho(
-  //    view_offset.x / m_zoom,
-  //    (view_offset.x + window_width) / m_zoom,
-  //    view_offset.y / m_zoom,
-  //    (view_offset.y + window_height) / m_zoom,
-  //    -1.F,
-  //    1.F);
 
   m_batch_renderer.Shader().Bind();
   m_batch_renderer.Shader().SetUniform(

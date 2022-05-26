@@ -214,7 +214,7 @@ private:
     else if (m_preview)
     {
       m_batch_renderer.Shader().SetUniform(
-        "u_MVP", m_imgui_viewport_window.PreviewViewProjectionMatrix(GetViewPortPreview().ViewPortAspectRatio()));
+        "u_MVP", m_imgui_viewport_window.PreviewViewProjectionMatrix());
       //      m_batch_renderer.Shader().SetUniform(
       //        "u_MVP",
       //        GetViewPortPreview().SetPositionAndSizeAndGetMVP(

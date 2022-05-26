@@ -8,6 +8,7 @@ namespace glengine
 {
 inline namespace impl
 {
+  static constinit float preview_aspect_ratio = 16.F/9.F;
   void ImGuiViewPortWindow::OnImGuiDebugInfo() const
   {
     if (!m_debug_text)
@@ -224,7 +225,7 @@ inline namespace impl
   {
     return m_main_camera.Camera().ViewProjectionMatrix();
   }
-  glm::mat4 ImGuiViewPortWindow::PreviewViewProjectionMatrix(float preview_aspect_ratio) const
+  glm::mat4 ImGuiViewPortWindow::PreviewViewProjectionMatrix() const
   {
     m_mouse_camera.RefreshAspectRatio(preview_aspect_ratio);
     const glm::vec2 position = m_main_camera.Camera().ScreenSpaceToWorldSpace(ViewPortMousePos());
@@ -232,6 +233,9 @@ inline namespace impl
     m_mouse_camera.SetZoom(m_main_camera.ZoomLevel()/8.F);
     m_mouse_camera.SetPosition(position+m_main_camera.Position());
     return m_mouse_camera.Camera().ViewProjectionMatrix();
+  }
+  void ImGuiViewPortWindow::SetPreviewAspectRatio(float aspect_ratio) noexcept {
+    preview_aspect_ratio = aspect_ratio;
   }
 }// namespace impl
 }// namespace glengine

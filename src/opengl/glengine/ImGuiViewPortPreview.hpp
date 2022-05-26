@@ -25,6 +25,7 @@ inline namespace impl
     void OnUpdate(float) const
     {
       m_drawn = false;
+      ImGuiViewPortWindow::SetPreviewAspectRatio(ViewPortAspectRatio());
       // m_camera_controller.SetZoom(m_preview_view_port.ViewPortDims().y);
     }
     // A way to hand a ImGuiViewPortWindow, and a OrthographicCamera or

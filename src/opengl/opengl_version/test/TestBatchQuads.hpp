@@ -24,8 +24,8 @@ public:
   void                         OnUpdate(float) const;
   void                         OnRender() const;
   void                         OnImGuiUpdate() const;
-  void                         OnEvent(const glengine::Event::Item &) const {}
-  void                         gen_verts() const;
+  void                         OnEvent(const glengine::Event::Item &) const;
+  void                         GenerateQuads() const;
 
   static constexpr std::size_t QUAD_COUNT = { 100U };
   static constexpr std::size_t VERT_COUNT = { QUAD_COUNT * 4U };
@@ -39,11 +39,11 @@ private:
   glengine::VertexArray                    m_vertex_array    = {};
   mutable glm::vec3                        view_offset = { 0.F, 0.F, 0.F };
   mutable std::array<int, 2U>              m_count     = { 100, 100 };
-  mutable float                            m_zoom      = { 1.F };
   glengine::Texture m_blank = { (std::numeric_limits<std::uint32_t>::max)() };
   glengine::ImGuiViewPortWindow m_imgui_viewport_window = {
                "Test Batch Quads"
   };
+  void SetUniforms() const;
 };
 }// namespace test
 #endif// FIELD_MAP_EDITOR_TESTBATCHQUADS_HPP

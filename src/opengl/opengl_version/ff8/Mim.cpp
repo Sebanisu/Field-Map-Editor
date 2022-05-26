@@ -12,15 +12,15 @@
 #include "PixelBuffer.hpp"
 namespace ff8
 {
-static const BPPs                             bpp          = {};
-static const Palettes                         palette      = {};
-static bool                                   draw_palette = false;
-static bool                                   draw_grid    = false;
-static bool                                   fit_height   = true;
-static bool                                   fit_width    = true;
-static bool                                   saving       = false;
-static bool                                   preview      = false;
-static const glengine::Texture               *texture      = nullptr;
+static const BPPs               bpp          = {};
+static const Palettes           palette      = {};
+static bool                     draw_palette = false;
+static bool                     draw_grid    = false;
+static bool                     fit_height   = true;
+static bool                     fit_width    = true;
+static bool                     saving       = false;
+static bool                     preview      = false;
+static const glengine::Texture *texture      = nullptr;
 }// namespace ff8
 void ff8::Mim::OnUpdate(float ts) const
 {
@@ -29,7 +29,7 @@ void ff8::Mim::OnUpdate(float ts) const
   m_imgui_viewport_window.SetImageBounds(
     glm::vec2{ local_texture.width(), local_texture.height() });
   m_imgui_viewport_window.OnUpdate(ts);
-  m_imgui_viewport_window.Fit(fit_width,fit_height);
+  m_imgui_viewport_window.Fit(fit_width, fit_height);
   m_batch_renderer.OnUpdate(ts);
 }
 
@@ -154,8 +154,8 @@ void ff8::Mim::SetUniforms() const
   else if (preview)
   {
 
-        m_batch_renderer.Shader().SetUniform(
-          "u_MVP", m_imgui_viewport_window.PreviewViewProjectionMatrix(GetViewPortPreview().ViewPortAspectRatio()));
+    m_batch_renderer.Shader().SetUniform(
+      "u_MVP", m_imgui_viewport_window.PreviewViewProjectionMatrix());
   }
   else
   {
