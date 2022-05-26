@@ -8,8 +8,8 @@ namespace glengine
 {
 inline namespace impl
 {
-  static constinit float preview_aspect_ratio = 16.F/9.F;
-  void ImGuiViewPortWindow::OnImGuiDebugInfo() const
+  static constinit float preview_aspect_ratio = 16.F / 9.F;
+  void                   ImGuiViewPortWindow::OnImGuiDebugInfo() const
   {
     if (!m_debug_text)
     {
@@ -228,14 +228,39 @@ inline namespace impl
   glm::mat4 ImGuiViewPortWindow::PreviewViewProjectionMatrix() const
   {
     m_mouse_camera.RefreshAspectRatio(preview_aspect_ratio);
-    const glm::vec2 position = m_main_camera.Camera().ScreenSpaceToWorldSpace(ViewPortMousePos());
+    const glm::vec2 position =
+      m_main_camera.Camera().ScreenSpaceToWorldSpace(ViewPortMousePos());
 
-    m_mouse_camera.SetZoom(m_main_camera.ZoomLevel()/8.F);
-    m_mouse_camera.SetPosition(position+m_main_camera.Position());
+    m_mouse_camera.SetZoom(m_main_camera.ZoomLevel() / 8.F);
+    m_mouse_camera.SetPosition(position + m_main_camera.Position());
     return m_mouse_camera.Camera().ViewProjectionMatrix();
   }
-  void ImGuiViewPortWindow::SetPreviewAspectRatio(float aspect_ratio) noexcept {
+  void ImGuiViewPortWindow::SetPreviewAspectRatio(float aspect_ratio) noexcept
+  {
     preview_aspect_ratio = aspect_ratio;
+  }
+  void ImGuiViewPortWindow::Fit(const bool width, const bool height) const
+  {
+    if (height && width)
+    {
+      FitBoth();
+    }
+    else if (height)
+    {
+      FitHeight();
+    }
+    else if (width)
+    {
+      FitWidth();
+    }
+  }
+  void ImGuiViewPortWindow::EnableDebugText()
+  {
+    m_debug_text = true;
+  }
+  void ImGuiViewPortWindow::DisableDebugText()
+  {
+    m_debug_text = false;
   }
 }// namespace impl
 }// namespace glengine

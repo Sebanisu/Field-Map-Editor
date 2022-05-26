@@ -19,7 +19,6 @@ public:
   {
     if (!std::is_constant_evaluated())
     {
-      m_imgui_viewport_window.SyncOpenGLViewPort();
       m_imgui_viewport_window.OnRender([]() { LocalClear(); });
     }
   }

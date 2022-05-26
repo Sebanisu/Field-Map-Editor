@@ -65,7 +65,6 @@ void test::TestTexture2D::OnImGuiUpdate() const
 }
 void test::TestTexture2D::OnRender() const
 {
-  m_imgui_viewport_window.SyncOpenGLViewPort();
   m_imgui_viewport_window.OnRender([this]() {
     auto proj = glm::ortho(
       0.F,

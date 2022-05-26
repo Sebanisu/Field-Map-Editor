@@ -30,6 +30,7 @@ public:
 
 private:
   void                                     RenderFrameBuffer() const;
+  void                                     SetUniforms() const;
   glengine::VertexBufferDynamic            m_vertex_buffer   = { 1000 };
   glengine::IndexBufferDynamic             m_index_buffer    = { 1000 };
   mutable glengine::IndexBufferDynamicSize index_buffer_size = {};
@@ -43,7 +44,6 @@ private:
   glengine::ImGuiViewPortWindow            m_imgui_viewport_window = {
                "Test Batch Rendering w/ Texture2D Dynamic"
   };
-  void SetUniforms() const;
 };
 void OnUpdate(const TestBatchRenderingTexture2DDynamic &, float);
 void OnRender(const TestBatchRenderingTexture2DDynamic &);

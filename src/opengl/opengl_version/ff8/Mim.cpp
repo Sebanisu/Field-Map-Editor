@@ -48,9 +48,7 @@ void ff8::Mim::OnRender() const
   SetUniforms();
   if (!saving)
   {
-    m_imgui_viewport_window.SyncOpenGLViewPort();
     m_imgui_viewport_window.OnRender([this]() { RenderFrameBuffer(); });
-
     GetViewPortPreview().OnRender(m_imgui_viewport_window.HasHover(), [this]() {
       preview = true;
       SetUniforms();

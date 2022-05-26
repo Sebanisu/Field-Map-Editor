@@ -29,7 +29,6 @@ void test::TestBatchRendering::OnImGuiUpdate() const
 }
 void test::TestBatchRendering::OnRender() const
 {
-  m_imgui_viewport_window.SyncOpenGLViewPort();
   m_imgui_viewport_window.OnRender([this]() {
     const float window_width = 16.F;
     float       window_height =

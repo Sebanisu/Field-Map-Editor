@@ -14,6 +14,7 @@ namespace glengine
 {
 inline namespace impl
 {
+  class ImGuiViewPortPreview;
   class ImGuiViewPortWindow
   {
   public:
@@ -22,9 +23,7 @@ inline namespace impl
       : m_title(std::move(title))
     {
     }
-    void OnEvent(const Event::Item &) const;
-    void OnUpdate(float) const;
-    void OnRender() const;
+
     void OnRender(const std::invocable auto &&callable) const
     {
       const auto pop_style =
@@ -36,6 +35,7 @@ inline namespace impl
         {
           return;
         }
+        SyncOpenGLViewPort();
         // do any rendering here.
         {
           m_packed.parent_window_hovered = ImGui::IsWindowHovered();
@@ -109,50 +109,35 @@ inline namespace impl
         }
       }
     }
-    static void                SetPreviewAspectRatio(float) noexcept;
-    glm::mat4                  ViewProjectionMatrix() const;
-    glm::mat4                  PreviewViewProjectionMatrix() const;
-    void                       SetImageBounds(const glm::vec2 &) const;
+    void                  OnEvent(const Event::Item &) const;
+    void                  OnUpdate(float) const;
+    void                  OnRender() const;
+    glm::mat4             ViewProjectionMatrix() const;
+    glm::mat4             PreviewViewProjectionMatrix() const;
+    void                  SetImageBounds(const glm::vec2 &) const;
+    void                  OnImGuiUpdate() const;
+    bool                  HasFocus() const;
+    bool                  HasHover() const;
+    float                 ViewPortAspectRatio() const;
+    void                  DisableDebugText();
+    [[maybe_unused]] void EnableDebugText();
+    void                  Fit(const bool width, const bool height) const;
+
+    friend ImGuiViewPortPreview;
+
+  private:
+    static void SetPreviewAspectRatio(float) noexcept;
+    glm::vec4 adjust_mouse_pos(glm::vec2 topright, glm::vec2 bottomleft) const;
+    [[maybe_unused]] glm::vec2 ViewPortDims() const;
+    glm::vec4                  ViewPortMousePos() const;
     void                       FitBoth() const;
     void                       FitHeight() const;
     void                       FitWidth() const;
-    void                       OnImGuiUpdate() const;
     void                       SyncOpenGLViewPort() const;
-    bool                       HasFocus() const;
-    bool                       HasHover() const;
-    [[maybe_unused]] glm::vec2 ViewPortDims() const;
-    float                      ViewPortAspectRatio() const;
-    glm::vec4                  ViewPortMousePos() const;
-    glm::vec4 adjust_mouse_pos(glm::vec2 topright, glm::vec2 bottomleft) const;
-    void      DisableDebugText()
-    {
-      m_debug_text = false;
-    }
-    void EnableDebugText()
-    {
-      m_debug_text = true;
-    }
-    void Fit(const bool width, const bool height) const
-    {
-      if (height && width)
-      {
-        FitBoth();
-      }
-      else if (height)
-      {
-        FitHeight();
-      }
-      else if (width)
-      {
-        FitWidth();
-      }
-    }
-
-  private:
-    glm::vec2 ConvertImVec2(ImVec2 in) const;
-    void      OnUpdateMouse() const;
-    void      OnUpdateFocusAndHover() const;
-    void      OnImGuiDebugInfo() const;
+    glm::vec2                  ConvertImVec2(ImVec2 in) const;
+    void                       OnUpdateMouse() const;
+    void                       OnUpdateFocusAndHover() const;
+    void                       OnImGuiDebugInfo() const;
 
     struct PackedSettings
     {

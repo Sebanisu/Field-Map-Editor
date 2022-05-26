@@ -64,7 +64,6 @@ void test::TestBatchRenderer::OnUpdate(const float ts) const
 void test::TestBatchRenderer::OnRender() const
 {
   SetUniforms();
-  m_imgui_viewport_window.SyncOpenGLViewPort();
   m_imgui_viewport_window.OnRender([this]() { GenerateQuads(); });
   GetViewPortPreview().OnRender(m_imgui_viewport_window.HasHover(), [this]() {
     preview = true;

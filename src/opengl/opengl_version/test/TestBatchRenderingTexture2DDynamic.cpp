@@ -39,8 +39,6 @@ void test::TestBatchRenderingTexture2DDynamic::OnUpdate(float ts) const
   vertices += CreateQuad(model_offset1 + offset, colors[0], 1)
               + CreateQuad(model_offset2 + offset, colors[1], 2)
               + CreateQuad(model_offset3 + offset, colors[2], 3);
-
-
   m_imgui_viewport_window.OnUpdate(ts);
   m_imgui_viewport_window.Fit(fit_width, fit_height);
   index_buffer_size = m_vertex_buffer.Update(vertices);
@@ -48,7 +46,6 @@ void test::TestBatchRenderingTexture2DDynamic::OnUpdate(float ts) const
 void test::TestBatchRenderingTexture2DDynamic::OnRender() const
 {
   SetUniforms();
-  m_imgui_viewport_window.SyncOpenGLViewPort();
   m_imgui_viewport_window.OnRender([this]() { RenderFrameBuffer(); });
   GetViewPortPreview().OnRender(m_imgui_viewport_window.HasHover(), [this]() {
     preview = true;
@@ -60,7 +57,7 @@ void test::TestBatchRenderingTexture2DDynamic::OnRender() const
 void test::TestBatchRenderingTexture2DDynamic::OnImGuiUpdate() const
 {
 
-  const float window_width = 15.F;
+  const float window_width = 16.F;
   const float window_height =
     (window_width / m_imgui_viewport_window.ViewPortAspectRatio());
   m_imgui_viewport_window.SetImageBounds({ window_width, window_height });
@@ -107,6 +104,8 @@ void test::TestBatchRenderingTexture2DDynamic::OnImGuiUpdate() const
         std::clamp(model_offset3.y, -clamp_height, clamp_height);
     }
   }
+  ImGui::Separator();
+  m_imgui_viewport_window.OnImGuiUpdate();
 }
 void test::TestBatchRenderingTexture2DDynamic::RenderFrameBuffer() const
 {
