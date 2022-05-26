@@ -22,7 +22,11 @@ public:
   void OnUpdate(float) const;
   void OnRender() const;
   void OnImGuiUpdate() const;
-  void OnEvent(const glengine::Event::Item &) const {}
+  void OnEvent(const glengine::Event::Item &event) const
+  {
+    m_imgui_viewport_window.OnEvent(event);
+  }
+
 
 private:
   void                                     RenderFrameBuffer() const;
@@ -33,12 +37,13 @@ private:
   glengine::VertexArray                    m_vertex_array    = {};
   std::vector<glengine::Texture>           m_textures        = {};
   mutable glm::vec3                        view_offset   = { 0.F, 0.F, 0.F };
-  mutable glm::vec3                        model_offset1 = { 2.F, 0.F, 0.F };
-  mutable glm::vec3                        model_offset2 = { 4.F, 0.F, 0.F };
-  mutable glm::vec3                        model_offset3 = { 6.F, 0.F, 0.F };
+  mutable glm::vec3                        model_offset1 = { -4.F, 0.F, 0.F };
+  mutable glm::vec3                        model_offset2 = { 0.F, 0.F, 0.F };
+  mutable glm::vec3                        model_offset3 = { 4.F, 0.F, 0.F };
   glengine::ImGuiViewPortWindow            m_imgui_viewport_window = {
                "Test Batch Rendering w/ Texture2D Dynamic"
   };
+  void SetUniforms() const;
 };
 void OnUpdate(const TestBatchRenderingTexture2DDynamic &, float);
 void OnRender(const TestBatchRenderingTexture2DDynamic &);
