@@ -203,6 +203,7 @@ public:
     return m_height;
   }
 };
+ImTextureID ConvertGLIDtoImTextureID(GLID_copy r_id);
 static_assert(Bindable<Texture>);
 }// namespace glengine
 #endif// FIELD_MAP_EDITOR_TEXTURE_HPP

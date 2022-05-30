@@ -79,10 +79,7 @@ inline namespace impl
           }
           // Because I use the texture from OpenGL, I need to invert the V from
           // the UV.
-          const auto convert = [](uint32_t r_id) -> ImTextureID {
-            return reinterpret_cast<ImTextureID>(static_cast<intptr_t>(r_id));
-          };
-          m_imgui_texture_id_ref = convert(m_fb.GetColorAttachment().ID());
+          m_imgui_texture_id_ref = ConvertGLIDtoImTextureID(m_fb.GetColorAttachment().ID());
           const auto cPos        = ImGui::GetCursorPos();
           ImGui::SetItemAllowOverlap();
           const auto color = ImVec4(0.F, 0.F, 0.F, 0.F);

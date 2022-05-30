@@ -30,6 +30,7 @@ find_package(glm REQUIRED)
 find_package(imgui REQUIRED)
 add_library(glengine STATIC
         BatchRenderer.cpp
+        Counter.cpp
         FrameBuffer.cpp
         FrameBufferBackup.cpp
         FrameBufferRenderer.cpp

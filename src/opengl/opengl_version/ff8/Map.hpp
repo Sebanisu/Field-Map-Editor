@@ -19,6 +19,7 @@
 #include "ImGuiDisabled.hpp"
 #include "ImGuiIndent.hpp"
 #include "ImGuiPushID.hpp"
+#include "ImGuiTileDisplayWindow.hpp"
 #include "ImGuiViewPortWindow.hpp"
 #include "MapBlends.hpp"
 #include "MapFilters.hpp"
@@ -28,6 +29,7 @@
 #include "TransformedSortedUniqueCopy.hpp"
 #include "UniqueTileValues.hpp"
 #include "Window.hpp"
+#include <Counter.hpp>
 #include <type_traits>
 namespace ff8
 {
@@ -110,7 +112,7 @@ public:
       m_changed = true;
     }
     m_imgui_viewport_window.OnUpdate(ts);
-    m_imgui_viewport_window.Fit(s_fit_width,s_fit_height);
+    m_imgui_viewport_window.Fit(s_fit_width, s_fit_height);
     m_batch_renderer.OnUpdate(ts);
   }
   void OnRender() const
@@ -143,6 +145,8 @@ public:
       RenderFrameBuffer();
       m_preview = false;
     });
+    ff8::ImGuiTileDisplayWindow::TakeControl(
+      m_imgui_viewport_window.HasHover(), m_id);
     m_changed = false;
   }
   void OnImGuiUpdate() const
@@ -193,6 +197,19 @@ public:
     ImGui::Separator();
     ImGui::Text("%s", "Fixed Prerender Camera: ");
     m_fixed_render_camera.OnImGuiUpdate();
+    ff8::ImGuiTileDisplayWindow::OnImGuiUpdateForward(m_id, [this]() {
+      ImGui::Text(
+        "%s", fmt::format("Map {}", static_cast<uint32_t>(m_id)).c_str());
+      //      const auto *imgui_texture_id_ref = ConvertGLIDtoImTextureID();
+      //      m_packed.button_clicked          = ImGui::ImageButton(
+      //        m_imgui_texture_id_ref,
+      //        ImVec2(
+      //          static_cast<float>(m_fb.Specification().width),
+      //          static_cast<float>(m_fb.Specification().height)),
+      //        ImVec2(0, 1),
+      //        ImVec2(1, 0),
+      //        0);
+    });
   }
   void OnEvent(const glengine::Event::Item &event) const
   {
@@ -242,32 +259,78 @@ private:
       s_uniform_color.b,
       s_uniform_color.a);
   }
-  // draws tiles
-  void RenderTiles() const
+  std::optional<glengine::SubTexture> TileToSubTexture(const auto &tile) const
   {
-    using open_viii::graphics::background::BlendModeT;
-    BlendModeT last_blend_mode{ BlendModeT::none };
-    s_uniform_color = s_default_uniform_color;
-    glengine::Window::DefaultBlend();
-    m_imgui_viewport_window.OnRender();
-    SetUniforms();
-    m_batch_renderer.Clear();
-    m_map.visit_tiles([&](const auto &tiles) {
+    const auto bpp                                 = tile.depth();
+    const auto palette                             = tile.palette_id();
+    const auto texture_page_id                     = tile.texture_id();
+    const auto [texture_index, texture_page_width] = [&]() {
+      if (std::ranges::empty(m_upscale_path))
+        return IndexAndPageWidth(bpp, palette);
+      return IndexAndPageWidth(palette, texture_page_id);
+    }();
+
+    const auto texture_page_offset =
+      [&, texture_page_width_copy = texture_page_width]() {
+        if (std::ranges::empty(m_upscale_path))
+          return texture_page_id * texture_page_width_copy;
+        return 0;
+      }();
+    const auto &texture =
+      std::ranges::empty(m_upscale_path)
+        ? m_delayed_textures.textures->at(texture_index)
+        : m_upscale_delayed_textures.textures->at(texture_index);
+    if (texture.width() == 0 || texture.height() == 0)
+      return std::nullopt;
+    const auto  texture_dims = glm::vec2{ texture.width(), texture.height() };
+    const float tile_scale   = static_cast<float>(texture.height())
+                             / static_cast<float>(m_mim.get_height());
+    const float tile_size = tile_scale * 16.F;
+    // glm::vec2(m_mim.get_width(tile.depth()), m_mim.get_height());
+    return std::optional<glengine::SubTexture>{
+      std::in_place_t{},
+      texture,
+      glm::vec2{ tile.source_x() * tile_scale
+                   + static_cast<float>(texture_page_offset),
+                 texture_dims.y - (tile.source_y() * tile_scale + tile_size) }
+        / texture_dims,
+      glm::vec2{ tile.source_x() * tile_scale
+                   + static_cast<float>(texture_page_offset) + tile_size,
+                 texture_dims.y - tile.source_y() * tile_scale }
+        / texture_dims
+    };
+  }
+  glm::vec3 TileToDrawPos(const auto &tile) const
+  {
+    using tileT = std::decay_t<decltype(tile)>;
+    static constexpr typename TileFunctions::template Bounds<tileT>::x x{};
+    static constexpr typename TileFunctions::template Bounds<tileT>::y y{};
+    static constexpr
+      typename TileFunctions::template Bounds<tileT>::texture_page
+        texture_page{};
+    return { (static_cast<float>(
+                x(tile) + texture_page(tile) * s_texture_page_width)
+              - m_offset_x)
+               * m_tile_scale,
+             (m_offset_y - static_cast<float>(y(tile))) * m_tile_scale,
+             0.F };
+  }
+  glm::vec2 TileSize() const
+  {
+    const auto scaled_size = m_tile_scale * 16.F;
+    return { scaled_size, scaled_size };
+  }
+  auto VisitTiles(auto &&lambda) const
+  {
+    return m_map.visit_tiles([&](const auto &tiles) {
       auto f_tiles = tiles
                      | std::views::filter(
                        open_viii::graphics::background::Map::filter_invalid())
                      | std::views::filter(m_filters.TestTile());
 
-      //    const auto i_max_z = std::ranges::max_element(
-      //      tiles, {}, [](const auto &tile) { return tile.z(); });
-      //    if (i_max_z == std::ranges::end(tiles))
-      //    {
-      //      return;
-      //    }
-      //    const float                max_z = static_cast<float>(i_max_z->z());
       std::vector<std::uint16_t> unique_z{};
       {
-        unique_z.reserve(std::ranges::size(tiles));
+        // unique_z.reserve(std::ranges::size(tiles));
         std::ranges::transform(
           f_tiles, std::back_inserter(unique_z), [](const auto &tile) {
             return tile.z();
@@ -285,107 +348,73 @@ private:
           | std::views::filter([z](const auto &t) { return z == t.z(); });
         for (const auto &tile : f_tiles_reverse_filter_z)
         {
-          const auto bpp                                 = tile.depth();
-          const auto palette                             = tile.palette_id();
-          const auto texture_page_id                     = tile.texture_id();
-          const auto [texture_index, texture_page_width] = [&]() {
-            if (std::ranges::empty(m_upscale_path))
-              return IndexAndPageWidth(bpp, palette);
-            return IndexAndPageWidth(palette, texture_page_id);
-          }();
-          const auto texture_page_offset =
-            [&, texture_page_width_copy = texture_page_width]() {
-              if (std::ranges::empty(m_upscale_path))
-                return texture_page_id * texture_page_width_copy;
-              return 0;
-            }();
-          const auto &texture =
-            std::ranges::empty(m_upscale_path)
-              ? m_delayed_textures.textures->at(texture_index)
-              : m_upscale_delayed_textures.textures->at(texture_index);
-          if (texture.width() == 0 || texture.height() == 0)
-            continue;
-          const auto texture_dims =
-            glm::vec2{ texture.width(), texture.height() };
-          const float tile_scale = static_cast<float>(texture.height())
-                                   / static_cast<float>(m_mim.get_height());
-          const float          tile_size   = tile_scale * 16.F;
-          // glm::vec2(m_mim.get_width(tile.depth()), m_mim.get_height());
-          glengine::SubTexture sub_texture = {
-            texture,
-            glm::vec2{ tile.source_x() * tile_scale
-                         + static_cast<float>(texture_page_offset),
-                       texture_dims.y
-                         - (tile.source_y() * tile_scale + tile_size) }
-              / texture_dims,
-            glm::vec2{ tile.source_x() * tile_scale
-                         + static_cast<float>(texture_page_offset) + tile_size,
-                       texture_dims.y - tile.source_y() * tile_scale }
-              / texture_dims
-          };
-          auto blend_mode = tile.blend_mode();
-          if (blend_mode != last_blend_mode)
-          {
-            m_batch_renderer.Draw();// flush buffer.
-            last_blend_mode = blend_mode;
-            if (s_blends.PercentBlendEnabled())
-            {
-              switch (blend_mode)
-              {
-                case BlendModeT::half_add:
-                  s_uniform_color = s_half_uniform_color;
-                  break;
-                case BlendModeT::quarter_add:
-                  s_uniform_color = s_quarter_uniform_color;
-                  break;
-                default:
-                  s_uniform_color = s_default_uniform_color;
-                  break;
-              }
-            }
-            switch (blend_mode)
-            {
-              case BlendModeT::half_add:
-              case BlendModeT::quarter_add:
-              case BlendModeT::add: {
-                s_blends.SetAddBlend();
-              }
-              break;
-              case BlendModeT ::subtract: {
-                s_blends.SetSubtractBlend();
-              }
-              break;
-              default:
-                glengine::Window::DefaultBlend();
-            }
-          }
-
-          using tileT = std::ranges::range_value_t<decltype(tiles)>;
-          static constexpr
-            typename TileFunctions::template Bounds<tileT>::x x{};
-          static constexpr
-            typename TileFunctions::template Bounds<tileT>::y y{};
-          static constexpr
-            typename TileFunctions::template Bounds<tileT>::texture_page
-                     texture_page{};
-          const auto tile_size2 = m_tile_scale * 16.F;
-          m_batch_renderer.DrawQuad(
-            sub_texture,
-            glm::vec3(
-              (static_cast<float>(
-                 x(tile) + texture_page(tile) * s_texture_page_width)
-               - m_offset_x)
-                * m_tile_scale,
-              (m_offset_y - static_cast<float>(y(tile))) * m_tile_scale,
-              0.F),
-            glm::vec2(tile_size2, tile_size2));
+          lambda(tile);
         }
       }
+    });
+  }
+  // draws tiles
+  void RenderTiles() const
+  {
+    using open_viii::graphics::background::BlendModeT;
+    BlendModeT last_blend_mode{ BlendModeT::none };
+    s_uniform_color = s_default_uniform_color;
+    glengine::Window::DefaultBlend();
+    m_imgui_viewport_window.OnRender();
+    SetUniforms();
+    m_batch_renderer.Clear();
+    VisitTiles([this, &last_blend_mode](const auto &tile) {
+      auto sub_texture = TileToSubTexture(tile);
+      if (!sub_texture)
+        return;
+      UpdateBlendMode(tile, last_blend_mode);
+      m_batch_renderer.DrawQuad(*sub_texture, TileToDrawPos(tile), TileSize());
     });
     m_batch_renderer.Draw();
     m_batch_renderer.OnRender();
     glengine::Window::DefaultBlend();
     s_uniform_color = s_default_uniform_color;
+  }
+  void UpdateBlendMode(
+    const auto                                  &tile,
+    open_viii::graphics::background::BlendModeT &last_blend_mode) const
+  {
+    auto blend_mode = tile.blend_mode();
+    if (blend_mode != last_blend_mode)
+    {
+      m_batch_renderer.Draw();// flush buffer.
+      last_blend_mode = blend_mode;
+      if (s_blends.PercentBlendEnabled())
+      {
+        switch (blend_mode)
+        {
+          case open_viii::graphics::background::BlendModeT::half_add:
+            s_uniform_color = s_half_uniform_color;
+            break;
+          case open_viii::graphics::background::BlendModeT::quarter_add:
+            s_uniform_color = s_quarter_uniform_color;
+            break;
+          default:
+            s_uniform_color = s_default_uniform_color;
+            break;
+        }
+      }
+      switch (blend_mode)
+      {
+        case open_viii::graphics::background::BlendModeT::half_add:
+        case open_viii::graphics::background::BlendModeT::quarter_add:
+        case open_viii::graphics::background::BlendModeT::add: {
+          s_blends.SetAddBlend();
+        }
+        break;
+        case open_viii::graphics::background::BlendModeT ::subtract: {
+          s_blends.SetSubtractBlend();
+        }
+        break;
+        default:
+          glengine::Window::DefaultBlend();
+      }
+    }
   }
   struct IndexAndPageWidthReturn
   {
@@ -463,7 +492,7 @@ private:
   }
   void SetCameraBoundsToEdgesOfImage()
   {
-    //s_camera.RefreshAspectRatio(m_imgui_viewport_window.ViewPortAspectRatio());
+    // s_camera.RefreshAspectRatio(m_imgui_viewport_window.ViewPortAspectRatio());
     m_map.visit_tiles([&](const auto &tiles) {
       using tileT = std::ranges::range_value_t<decltype(tiles)>;
       static constexpr typename TileFunctions::template Bounds<tileT>::x x{};
@@ -568,6 +597,7 @@ private:
   inline static constinit float     max_x                   = {};
   inline static constinit float     max_y                   = {};
   mutable float                     m_tile_scale            = { 1.F };
+  glengine::Counter                 m_id                    = {};
   glengine::ImGuiViewPortWindow     m_imgui_viewport_window = {
         TileFunctions::Label
   };

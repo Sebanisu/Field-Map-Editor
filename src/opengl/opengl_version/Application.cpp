@@ -10,6 +10,7 @@
 #include "Renderer.hpp"
 #include "test/LayerTests.hpp"
 #include "TimeStep.hpp"
+#include <ff8/ImGuiTileDisplayWindow.hpp>
 
 static glengine::Window        *current_window     = nullptr;
 static ff8::Fields             *fields             = nullptr;
@@ -46,6 +47,8 @@ Application::Application(std::string Title, int width, int height)
       dispatcher.Dispatch<glengine::Event::WindowClose>(&OnWindowClose);
       dispatcher.Dispatch<glengine::Event::WindowResize>(&OnWindowResize);
       layers.OnEvent(e);
+      local_preview.OnEvent(e);
+      local_tile_display.OnEvent(e);
       if (skip)
       {
         return;
@@ -54,6 +57,8 @@ Application::Application(std::string Title, int width, int height)
     } }))
 {
   layers.emplace_layers(std::in_place_type_t<Layer::Tests>{});
+  preview = &local_preview;
+  fields  = &local_fields;
 }
 void Application::Run() const
 {
@@ -64,10 +69,6 @@ void Application::Run() const
   using namespace std::chrono_literals;
   glengine::FrameBuffer fb;// needed to be inscope somewhere because texture was
                            // being erased before it was drawn.
-  glengine::ImGuiViewPortPreview local_preview{};
-  ff8::Fields                    local_fields{};
-  preview = &local_preview;
-  fields  = &local_fields;
   while (running)
   {
     window->BeginFrame();// First thing you do on update;
@@ -84,15 +85,19 @@ void Application::Run() const
         ImGui::ShowDemoWindow(&show_demo_window);
 #else
       // constinit static std::size_t test_number = 0U;
-      layers.OnImGuiUpdate();
       {
         float step = time_step;// takes the current time when you get a float.
-        preview->OnUpdate(step);
+        local_tile_display.OnUpdate(step);
+        local_preview.OnUpdate(step);
+        layers.OnImGuiUpdate();
+        local_preview.OnImGuiUpdate();
+        local_tile_display.OnImGuiUpdate();
         layers.OnUpdate(step);
       }
       glengine::Renderer::Clear();
       layers.OnRender();
       preview->OnRender();
+      local_tile_display.OnRender();
 #endif
       window->EndFrameRendered();// Last thing you do on render;
     }

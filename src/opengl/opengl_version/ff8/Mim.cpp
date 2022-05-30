@@ -8,6 +8,7 @@
 #include "FrameBuffer.hpp"
 #include "FrameBufferBackup.hpp"
 #include "ImGuiDisabled.hpp"
+#include "ImGuiTileDisplayWindow.hpp"
 #include "OrthographicCameraController.hpp"
 #include "PixelBuffer.hpp"
 namespace ff8
@@ -60,6 +61,7 @@ void ff8::Mim::OnRender() const
   {
     RenderFrameBuffer();
   }
+  ff8::ImGuiTileDisplayWindow::TakeControl(m_imgui_viewport_window.HasHover(),m_id);
   texture = nullptr;
 }
 void ff8::Mim::OnImGuiUpdate() const
@@ -102,6 +104,10 @@ void ff8::Mim::OnImGuiUpdate() const
   m_imgui_viewport_window.OnImGuiUpdate();
   ImGui::Separator();
   m_batch_renderer.OnImGuiUpdate();
+  ff8::ImGuiTileDisplayWindow::OnImGuiUpdateForward(m_id, [this]() {
+    ImGui::Text(
+      "%s", fmt::format("Mim {}", static_cast<uint32_t>(m_id)).c_str());
+  });
 }
 
 ff8::Mim::Mim(const ff8::Fields &fields)

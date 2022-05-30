@@ -31,4 +31,9 @@ GLID_copy Texture::ID() const noexcept
 {
   return m_renderer_id;
 }
+ImTextureID ConvertGLIDtoImTextureID(GLID_copy r_id)
+{
+  return reinterpret_cast<ImTextureID>(
+    static_cast<intptr_t>(std::uint32_t(r_id)));
+}
 }// namespace glengine

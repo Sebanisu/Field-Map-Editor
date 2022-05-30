@@ -10,6 +10,7 @@
 #include "Fields.hpp"
 #include "ImGuiViewPortWindow.hpp"
 #include "Palettes.hpp"
+#include <Counter.hpp>
 namespace ff8
 {
 class Mim
@@ -29,6 +30,7 @@ public:
 private:
   void                                 RenderFrameBuffer() const;
   void                                 SetUniforms() const;
+  void                                 Save_All() const;
   std::string                          m_path                  = {};
   bool                                 m_choose_coo            = {};
   open_viii::graphics::background::Mim m_mim                   = {};
@@ -36,7 +38,7 @@ private:
   glengine::DelayedTextures<35U>       m_delayed_textures      = {};
   glengine::BatchRenderer              m_batch_renderer        = {};
   glengine::ImGuiViewPortWindow        m_imgui_viewport_window = { "Mim" };
-  void                                 Save_All() const;
+  glengine::Counter                    m_id                    = {};
 };
 static_assert(glengine::Renderable<Mim>);
 }// namespace ff8
