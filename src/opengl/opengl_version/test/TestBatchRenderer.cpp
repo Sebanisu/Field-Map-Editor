@@ -10,8 +10,8 @@ static constinit bool preview = false;
 void test::TestBatchRenderer::GenerateQuads() const
 {
   m_batch_renderer.Clear();
-  auto x_rng = std::views::iota(int32_t{}, static_cast<int32_t>(m_count[0]));
-  auto y_rng = std::views::iota(int32_t{}, static_cast<int32_t>(m_count[1]));
+  auto x_rng = std::views::iota(int32_t{}, m_count[0]);
+  auto y_rng = std::views::iota(int32_t{}, m_count[1]);
   auto text_index_rng =
     std::views::iota(uint32_t{}) | std::views::transform([this](const auto i) {
       return i % std::ranges::size(m_textures);

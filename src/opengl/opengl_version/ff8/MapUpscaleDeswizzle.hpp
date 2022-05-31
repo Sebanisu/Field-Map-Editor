@@ -31,6 +31,7 @@ struct TileFunctionsUpscaleDeswizzle
       return {};
     });
     using use_texture_page = std::true_type;
+    using use_blending     = std::true_type;
   };
   static constexpr const char *Label = "Map (Upscale Deswizzle)";
 };

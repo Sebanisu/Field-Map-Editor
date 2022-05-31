@@ -31,6 +31,14 @@ public:
   {
     return m_uv;
   }
+  /**
+   * Only get the UV ImGui uses it's a min and max but with swapped y values.
+   * @return array of two ImVec2
+   */
+  std::array<ImVec2, 2U> ImGuiUV() const
+  {
+    return { ImVec2{ m_uv[0].x, m_uv[2].y }, ImVec2{ m_uv[2].x, m_uv[0].y } };
+  }
   void        Bind(std::int32_t slot = 0) const;
   static void UnBind();
 
@@ -41,6 +49,8 @@ private:
                                                  glm::vec2{ 1.F, 1.F },
                                                  glm::vec2{ 0.F, 1.F } };
   GLID_copy             m_render_id       = {};
+  GLint                 m_width           = {};
+  GLint                 m_height          = {};
   std::decay_t<decltype(Default_UV)> m_uv = { Default_UV };
 };
 static_assert(Bindable<SubTexture>);

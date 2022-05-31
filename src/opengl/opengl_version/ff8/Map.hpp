@@ -74,6 +74,8 @@ public:
     m_upscale_delayed_textures = LoadTextures(m_upscale_path);
     SetCameraBoundsToEdgesOfImage();
     GetUniqueValues();
+    m_tile_button_state =
+      std::vector<bool>(VisitUnSortedUnFilteredTilesCount(), false);
   }
   void OnUpdate(float ts) const
   {
@@ -157,11 +159,24 @@ public:
         std::ranges::empty(m_map_path) || std::ranges::empty(m_mim_path));
 
       m_changed = std::ranges::any_of(
-        std::array{ ImGui::Checkbox("Draw Grid", &s_draw_grid),
-                    ImGui::Checkbox("Fit Height", &s_fit_height),
-                    ImGui::Checkbox("Fit Width", &s_fit_width),
-                    s_blends.OnImGuiUpdate(),
-                    m_filters.OnImGuiUpdate() },
+        std::array{
+          ImGui::Checkbox("Draw Grid", &s_draw_grid),
+          ImGui::Checkbox("Fit Height", &s_fit_height),
+          ImGui::Checkbox("Fit Width", &s_fit_width),
+          [&]() -> bool {
+            return m_map.visit_tiles([](auto &&tiles) -> bool {
+              using tileT = std::ranges::range_value_t<decltype(tiles)>;
+              static constexpr typename TileFunctions::template Bounds<
+                std::decay_t<tileT>>::use_blending use_blending{};
+              if (!use_blending)
+                return true;
+              const bool checkbox_changed =
+                ImGui::Checkbox("Blending", &s_blending);
+              const bool blend_options_changed = s_blends.OnImGuiUpdate();
+              return checkbox_changed || blend_options_changed;
+            });
+          }(),
+          m_filters.OnImGuiUpdate() },
         std::identity{});
 
 
@@ -197,18 +212,122 @@ public:
     ImGui::Separator();
     ImGui::Text("%s", "Fixed Prerender Camera: ");
     m_fixed_render_camera.OnImGuiUpdate();
+
     ff8::ImGuiTileDisplayWindow::OnImGuiUpdateForward(m_id, [this]() {
       ImGui::Text(
         "%s", fmt::format("Map {}", static_cast<uint32_t>(m_id)).c_str());
-      //      const auto *imgui_texture_id_ref = ConvertGLIDtoImTextureID();
-      //      m_packed.button_clicked          = ImGui::ImageButton(
-      //        m_imgui_texture_id_ref,
-      //        ImVec2(
-      //          static_cast<float>(m_fb.Specification().width),
-      //          static_cast<float>(m_fb.Specification().height)),
-      //        ImVec2(0, 1),
-      //        ImVec2(1, 0),
-      //        0);
+      float      text_width = 0.F;
+      ImVec2     last_pos   = {};
+      const auto render_sub_texture =
+        [&text_width,
+         &last_pos](const glengine::SubTexture &sub_texture) -> bool {
+        text_width = 0.F;
+        const auto imgui_texture_id_ref =
+          ConvertGLIDtoImTextureID(sub_texture.ID());
+        const auto uv     = sub_texture.ImGuiUV();
+        const auto id_pop = glengine::ImGuiPushID();
+        const auto color  = ImVec4(0.F, 0.F, 0.F, 0.F);
+        last_pos          = ImGui::GetCursorPos();
+        text_width        = ImGui::GetItemRectMax().x;
+        ImGui::PushStyleColor(ImGuiCol_Button, color);
+        // ImGui::PushStyleColor(ImGuiCol_ButtonActive, color);
+        // ImGui::PushStyleColor(ImGuiCol_ButtonHovered, color);
+        bool value = ImGui::ImageButton(
+          imgui_texture_id_ref, ImVec2(16, 16), uv[0], uv[1]);
+        text_width = ImGui::GetStyle().ItemSpacing.x + ImGui::GetItemRectMax().x
+                     - text_width;
+        return value;
+      };
+      const auto  dims = ImGui::GetContentRegionAvail();
+      std::size_t i    = {};
+      VisitUnSortedUnFilteredTiles([&](const auto &tile) -> bool {
+        const auto sub_texture = TileToSubTexture(tile);
+        const auto increment   = glengine::scope_guard_captures([&]() { ++i; });
+        if (!sub_texture)
+        {
+          return true;
+        }
+        if (render_sub_texture(*sub_texture))
+        {
+          m_tile_button_state.at(i).flip();
+        }
+
+        if (m_tile_button_state.at(i))
+        {
+          ImGui::Text(
+            "%s",
+            fmt::format(
+              "Index: {}, OpenGL Texture ID: {}\n"
+              "Width: {}, Height: {}\n"
+              "Source X: {}, Source Y: {}\n"
+              "Texture Page ID: {}, Layer ID: {}\n"
+              "X: {}, Y: {}, Z: {}\n"
+              "Draw?: {}, BPP: {}, Palette: {}\n"
+              "Blend Mode: {}, Blend Other: {}\n"
+              "Animation ID: {}, Animation State: {}\n"
+              "Raw Hex: {}\n",
+              i,
+              static_cast<uint32_t>(sub_texture->ID()),
+              tile.width(),
+              tile.height(),
+              tile.source_xy().x(),
+              tile.source_xy().y(),
+              tile.texture_id(),
+              tile.layer_id(),
+              tile.xy().x(),
+              tile.xy().y(),
+              tile.z(),
+              tile.draw(),
+              tile.palette_id(),
+              static_cast<int>(tile.depth()),
+              [&]() -> const char * {
+                switch (tile.blend_mode())
+                {
+                  case open_viii::graphics::background::BlendModeT::half_add:
+                    return "half_add";
+                  case open_viii::graphics::background::BlendModeT::quarter_add:
+                    return "quarter_add";
+                  case open_viii::graphics::background::BlendModeT::add:
+                    return "add";
+                  case open_viii::graphics::background::BlendModeT::subtract:
+                    return "subtract";
+                  default:
+                    return "none";
+                }
+              }(),
+              tile.blend(),
+              tile.animation_id(),
+              tile.animation_state(),
+              [&]() -> std::string{
+                std::stringstream ss = {};
+                tile.to_hex(ss);
+                return ss.str();
+              }())
+              .c_str());
+        }
+        else if (
+          dims.x - (last_pos.x + text_width - ImGui::GetCursorPos().x)
+          > text_width)
+        {
+          ImGui::SameLine();
+        }
+        //        else
+        //        {
+        //          ImGui::Text(
+        //            "%s",
+        //            fmt::format(
+        //              "dims.x = {}, last_pos.x = {}, text_width = {}, dims.x -
+        //              " "dims.x - (last_pos.x + text_width -
+        //              ImGui::GetCursorPos().x) = "
+        //              "{}",
+        //              dims.x,
+        //              last_pos.x,
+        //              text_width,
+        //              dims.x - (last_pos.x + text_width -
+        //              ImGui::GetCursorPos().x)) .c_str());
+        //        }
+        return true;
+      });
     });
   }
   void OnEvent(const glengine::Event::Item &event) const
@@ -348,7 +467,8 @@ private:
           | std::views::filter([z](const auto &t) { return z == t.z(); });
         for (const auto &tile : f_tiles_reverse_filter_z)
         {
-          lambda(tile);
+          if (!lambda(tile))
+            return;
         }
       }
     });
@@ -363,12 +483,13 @@ private:
     m_imgui_viewport_window.OnRender();
     SetUniforms();
     m_batch_renderer.Clear();
-    VisitTiles([this, &last_blend_mode](const auto &tile) {
+    VisitTiles([this, &last_blend_mode](const auto &tile) -> bool {
       auto sub_texture = TileToSubTexture(tile);
       if (!sub_texture)
-        return;
+        return true;
       UpdateBlendMode(tile, last_blend_mode);
       m_batch_renderer.DrawQuad(*sub_texture, TileToDrawPos(tile), TileSize());
+      return true;
     });
     m_batch_renderer.Draw();
     m_batch_renderer.OnRender();
@@ -379,6 +500,10 @@ private:
     const auto                                  &tile,
     open_viii::graphics::background::BlendModeT &last_blend_mode) const
   {
+    static constexpr typename TileFunctions::template Bounds<
+      std::decay_t<decltype(tile)>>::use_blending use_blending{};
+    if (!use_blending || !s_blending)
+      return;
     auto blend_mode = tile.blend_mode();
     if (blend_mode != last_blend_mode)
     {
@@ -478,6 +603,31 @@ private:
     while (pixel_buffer.operator()(&glengine::Texture::save))
       ;
   }
+  auto VisitUnSortedUnFilteredTilesCount() const
+  {
+    return m_map.visit_tiles([&](const auto &tiles) -> std::size_t {
+      auto f_tiles = tiles
+                     | std::views::filter(
+                       open_viii::graphics::background::Map::filter_invalid());
+      return static_cast<std::size_t>(
+        std::ranges::count_if(f_tiles, [](auto &&) { return true; }));
+    });
+  }
+  auto VisitUnSortedUnFilteredTiles(auto &&lamda) const
+  {
+    return m_map.visit_tiles([&](const auto &tiles) {
+      auto f_tiles = tiles
+                     | std::views::filter(
+                       open_viii::graphics::background::Map::filter_invalid());
+      for (const auto &tile : f_tiles)
+      {
+        if (!lamda(tile))
+        {
+          return;
+        }
+      }
+    });
+  }
   void GetUniqueValues()
   {
     auto vector = m_map.visit_tiles([&](const auto &tiles) {
@@ -548,6 +698,7 @@ private:
   inline static bool                   s_fit_height          = { true };
   inline static bool                   s_fit_width           = { true };
   inline static bool                   s_draw_grid           = { false };
+  inline static bool                   s_blending            = { true };
 
   static constexpr int16_t             s_texture_page_width  = 256;
 
@@ -598,6 +749,7 @@ private:
   inline static constinit float     max_y                   = {};
   mutable float                     m_tile_scale            = { 1.F };
   glengine::Counter                 m_id                    = {};
+  mutable std::vector<bool>         m_tile_button_state     = {};
   glengine::ImGuiViewPortWindow     m_imgui_viewport_window = {
         TileFunctions::Label
   };

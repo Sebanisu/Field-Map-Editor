@@ -34,17 +34,38 @@ glengine::SubTexture::SubTexture(
   const glm::vec2 &min,
   const glm::vec2 &max)
   : m_render_id(texture.ID())
+  , m_width(texture.width())
+  , m_height(texture.height())
+  , m_uv{ (glm::vec2{ min.x, min.y }),
+          (glm::vec2{ max.x, min.y }),
+          (glm::vec2{ max.x, max.y }),
+          (glm::vec2{ min.x, max.y }) }
 {
-  m_uv = { (glm::vec2{ min.x, min.y }),
-           (glm::vec2{ max.x, min.y }),
-           (glm::vec2{ max.x, max.y }),
-           (glm::vec2{ min.x, max.y }) };
 }
+
+static constexpr GLint miplevel = {};
 glengine::SubTexture::SubTexture(const Texture &texture)
   : m_render_id(texture.ID())
+  , m_width(texture.width())
+  , m_height(texture.height())
 {
 }
 glengine::SubTexture::SubTexture(GLID_copy id)
   : m_render_id(std::move(id))
 {
+  Bind();
+  GLCall{}(
+    glGetTexLevelParameteriv,
+    GL_TEXTURE_2D,
+    miplevel,
+    GL_TEXTURE_WIDTH,
+    &m_width);
+  GLCall{}(
+    glGetTexLevelParameteriv,
+    GL_TEXTURE_2D,
+    miplevel,
+    GL_TEXTURE_HEIGHT,
+    &m_height);
 }
+// TODO make a funciton that returns the min and max uv normalized to between 0
+// and 1.

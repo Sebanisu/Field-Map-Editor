@@ -31,6 +31,7 @@ struct TileFunctionsSwizzle
       return tile.texture_id();
     });
     using use_texture_page = std::false_type;
+    using use_blending = std::false_type;
   };
   static constexpr const char *Label = "Map (Swizzle)";
 };

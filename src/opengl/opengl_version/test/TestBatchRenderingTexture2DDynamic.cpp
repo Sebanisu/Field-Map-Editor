@@ -110,7 +110,7 @@ void test::TestBatchRenderingTexture2DDynamic::OnImGuiUpdate() const
 void test::TestBatchRenderingTexture2DDynamic::RenderFrameBuffer() const
 {
 
-  const auto view = glm::translate(glm::mat4{ 1.F }, view_offset);
+  //const auto view = glm::translate(glm::mat4{ 1.F }, view_offset);
   {
     std::vector<std::int32_t> slots{ 0 };
     slots.reserve(std::size(m_textures) + 1U);
