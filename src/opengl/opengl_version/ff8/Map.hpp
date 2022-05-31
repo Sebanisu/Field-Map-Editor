@@ -230,6 +230,8 @@ public:
         last_pos          = ImGui::GetCursorPos();
         text_width        = ImGui::GetItemRectMax().x;
         ImGui::PushStyleColor(ImGuiCol_Button, color);
+        const auto pop_color =
+          glengine::scope_guard([]() { ImGui::PopStyleColor(1); });
         // ImGui::PushStyleColor(ImGuiCol_ButtonActive, color);
         // ImGui::PushStyleColor(ImGuiCol_ButtonHovered, color);
         bool value = ImGui::ImageButton(
@@ -240,94 +242,302 @@ public:
       };
       const auto  dims = ImGui::GetContentRegionAvail();
       std::size_t i    = {};
-      VisitUnSortedUnFilteredTiles([&](const auto &tile) -> bool {
-        const auto sub_texture = TileToSubTexture(tile);
-        const auto increment   = glengine::scope_guard_captures([&]() { ++i; });
-        if (!sub_texture)
-        {
-          return true;
-        }
-        if (render_sub_texture(*sub_texture))
-        {
-          m_tile_button_state.at(i).flip();
-        }
-
-        if (m_tile_button_state.at(i))
-        {
-          ImGui::Text(
-            "%s",
-            fmt::format(
-              "Index: {}, OpenGL Texture ID: {}\n"
-              "Width: {}, Height: {}\n"
-              "Source X: {}, Source Y: {}\n"
-              "Texture Page ID: {}, Layer ID: {}\n"
-              "X: {}, Y: {}, Z: {}\n"
-              "Draw?: {}, BPP: {}, Palette: {}\n"
-              "Blend Mode: {}, Blend Other: {}\n"
-              "Animation ID: {}, Animation State: {}\n"
-              "Raw Hex: {}\n",
-              i,
-              static_cast<uint32_t>(sub_texture->ID()),
-              tile.width(),
-              tile.height(),
-              tile.source_xy().x(),
-              tile.source_xy().y(),
-              tile.texture_id(),
-              tile.layer_id(),
-              tile.xy().x(),
-              tile.xy().y(),
-              tile.z(),
-              tile.draw(),
-              tile.palette_id(),
-              static_cast<int>(tile.depth()),
-              [&]() -> const char * {
-                switch (tile.blend_mode())
+      if (VisitUnSortedUnFilteredTiles([&](auto &tile) -> bool {
+            const auto sub_texture = TileToSubTexture(tile);
+            const auto increment =
+              glengine::scope_guard_captures([&]() { ++i; });
+            if (!sub_texture)
+            {
+              return false;
+            }
+            if (render_sub_texture(*sub_texture))
+            {
+              m_tile_button_state.at(i).flip();
+            }
+            bool changed = false;
+            if (m_tile_button_state.at(i))
+            {
+              std::array<const char *, 3> bpp_options = { "4", "8", "16" };
+              int                         current_bpp_selection = [&]() -> int {
+                switch (static_cast<int>(tile.depth()))
                 {
-                  case open_viii::graphics::background::BlendModeT::half_add:
-                    return "half_add";
-                  case open_viii::graphics::background::BlendModeT::quarter_add:
-                    return "quarter_add";
-                  case open_viii::graphics::background::BlendModeT::add:
-                    return "add";
-                  case open_viii::graphics::background::BlendModeT::subtract:
-                    return "subtract";
+                  case 4:
                   default:
-                    return "none";
+                    return 0;
+                  case 8:
+                    return 1;
+                  case 16:
+                    return 2;
                 }
-              }(),
-              tile.blend(),
-              tile.animation_id(),
-              tile.animation_state(),
-              [&]() -> std::string{
-                std::stringstream ss = {};
-                tile.to_hex(ss);
-                return ss.str();
-              }())
-              .c_str());
-        }
-        else if (
-          dims.x - (last_pos.x + text_width - ImGui::GetCursorPos().x)
-          > text_width)
-        {
-          ImGui::SameLine();
-        }
-        //        else
-        //        {
-        //          ImGui::Text(
-        //            "%s",
-        //            fmt::format(
-        //              "dims.x = {}, last_pos.x = {}, text_width = {}, dims.x -
-        //              " "dims.x - (last_pos.x + text_width -
-        //              ImGui::GetCursorPos().x) = "
-        //              "{}",
-        //              dims.x,
-        //              last_pos.x,
-        //              text_width,
-        //              dims.x - (last_pos.x + text_width -
-        //              ImGui::GetCursorPos().x)) .c_str());
-        //        }
-        return true;
-      });
+              }();
+              if (ImGui::Combo(
+                    "BPP", &current_bpp_selection, bpp_options.data(), 3))
+              {
+                switch (current_bpp_selection)
+                {
+                  case 0:
+                  default:
+                    tile = tile.with_depth(
+                      open_viii::graphics::BPPT(false, false, true));
+                    break;
+                  case 1:
+                    tile = tile.with_depth(
+                      open_viii::graphics::BPPT(true, false, true));
+                    break;
+                  case 2:
+                    tile = tile.with_depth(
+                      open_viii::graphics::BPPT(false, true, false));
+                    break;
+                }
+                changed = true;
+              }
+
+              const auto generate_inner_width =
+                [](int components) -> std::pair<float, float> {
+                components =
+                  std::clamp(components, 1, std::numeric_limits<int>::max());
+                const float f_count    = static_cast<float>(components);
+                const auto &style      = ImGui::GetStyle();
+                const float w_full     = ImGui::CalcItemWidth();
+                const float w_item_one = (std::max)(
+                  1.0f,
+                  std::floor(
+                    (w_full
+                     - (style.ItemInnerSpacing.x)
+                         * static_cast<float>(components - 1))
+                    / f_count));
+                const float w_item_last = (std::max)(
+                  1.0f,
+                  std::floor(
+                    w_full
+                    - (w_item_one + style.ItemInnerSpacing.x)
+                        * static_cast<float>(components - 1)));
+                return { w_item_one, w_item_last };
+              };
+              {
+                std::array<int, 2> source_xy = {
+                  static_cast<int>(tile.source_xy().x() / tile.width()),
+                  static_cast<int>(tile.source_xy().y() / tile.height())
+                };
+                const std::pair<float, float> item_width =
+                  generate_inner_width(2);
+                bool slider_changed = false;
+                {
+                  const auto pop_width =
+                    glengine::ImGuiPushItemWidth(item_width.first);
+                  if (ImGui::SliderInt(
+                        "##Source (X)",
+                        &source_xy[0],
+                        0,
+                        (static_cast<int>(
+                          std::pow(2, (2-current_bpp_selection) + 2)-1))))
+                  {
+                    slider_changed = true;
+                  }
+                }
+                ImGui::SameLine(0, ImGui::GetStyle().ItemInnerSpacing.x);
+                {
+                  const auto pop_width =
+                    glengine::ImGuiPushItemWidth(item_width.second);
+                  if (ImGui::SliderInt(
+                        "##Source (Y)",
+                        &source_xy[1],
+                        std::numeric_limits<
+                          std::decay_t<decltype(tile.source_xy().y())>>::min()
+                          / tile.height(),
+                        std::numeric_limits<
+                          std::decay_t<decltype(tile.source_xy().y())>>::max()
+                          / tile.height()))
+                  {
+                    slider_changed = true;
+                  }
+                }
+                source_xy[0] *= tile.width();
+                source_xy[1] *= tile.height();
+                ImGui::SameLine(0, ImGui::GetStyle().ItemInnerSpacing.x);
+                ImGui::Text(
+                  "%s",
+                  fmt::format(
+                    "Source Pos: ({}, {})", source_xy[0], source_xy[1])
+                    .c_str());
+                if (slider_changed)
+                {
+                  tile = tile.with_source_x(
+                    static_cast<decltype(tile.source_xy().x())>(source_xy[0]));
+                  tile = tile.with_source_y(
+                    static_cast<decltype(tile.source_xy().y())>(source_xy[1]));
+                  changed = true;
+                }
+              }
+              {
+                std::array<int, 3> xyz = {
+                  static_cast<int>(tile.xy().x() / tile.width()),
+                  static_cast<int>(tile.xy().y() / tile.height()),
+                  static_cast<int>(tile.z())
+                };
+
+
+                const std::pair<float, float> item_width =
+                  generate_inner_width(3);
+                {
+                  const auto pop_width =
+                    glengine::ImGuiPushItemWidth(item_width.first);
+                  ImGui::SliderInt(
+                    "##Destination (X)",
+                    &xyz[0],
+                    static_cast<int>(true_min_xy.x / tile.width()),
+                    static_cast<int>(true_max_xy.x / tile.width()));
+                }
+                ImGui::SameLine(0, ImGui::GetStyle().ItemInnerSpacing.x);
+                {
+                  const auto pop_width =
+                    glengine::ImGuiPushItemWidth(item_width.first);
+                  ImGui::SliderInt(
+                    "##Destination (Y)",
+                    &xyz[1],
+                    static_cast<int>(true_min_xy.y / tile.height()),
+                    static_cast<int>(true_max_xy.y / tile.height()));
+                }
+                ImGui::SameLine(0, ImGui::GetStyle().ItemInnerSpacing.x);
+                {
+                  const auto pop_width =
+                    glengine::ImGuiPushItemWidth(item_width.second);
+                  ImGui::SliderInt("##Destination (Z)", &xyz[2], 0, 0xFFF);
+                }
+                ImGui::SameLine(0, ImGui::GetStyle().ItemInnerSpacing.x);
+                xyz[0] *= tile.width();
+                xyz[1] *= tile.height();
+                ImGui::Text(
+                  "%s",
+                  fmt::format(
+                    "Destination Pos: ({}, {}, {})", xyz[0], xyz[1], xyz[2])
+                    .c_str());
+              }
+              {
+                int layer_id = tile.layer_id();
+                ImGui::SliderInt(
+                  "Layer ID",
+                  &layer_id,
+                  std::numeric_limits<
+                    std::decay_t<decltype(tile.layer_id())>>::min(),
+                  std::numeric_limits<
+                    std::decay_t<decltype(tile.layer_id())>>::max());
+              }
+              {
+                int blend = tile.blend();
+                ImGui::SliderInt(
+                  "Blend Other",
+                  &blend,
+                  std::numeric_limits<
+                    std::decay_t<decltype(tile.blend())>>::min(),
+                  std::numeric_limits<
+                    std::decay_t<decltype(tile.blend())>>::max());
+              }
+              {
+                int palette_id = static_cast<int>(tile.palette_id());
+                ImGui::SliderInt("Palette ID", &palette_id, 0, 16);
+              }
+              {
+                int texture_page_id = static_cast<int>(tile.texture_id());
+                ImGui::SliderInt("Texture Page ID", &texture_page_id, 0, 13);
+              }
+              {
+                bool draw = tile.draw();
+                ImGui::Checkbox("Draw?", &draw);
+              }
+              {
+                int animation_id    = tile.animation_id();
+                int animation_state = tile.animation_state();
+                const std::pair<float, float> item_width =
+                  generate_inner_width(2);
+                {
+                  const auto pop_width =
+                    glengine::ImGuiPushItemWidth(item_width.first);
+                  ImGui::SliderInt(
+                    "##Animation ID",
+                    &animation_id,
+                    std::numeric_limits<
+                      std::decay_t<decltype(tile.animation_id())>>::min(),
+                    std::numeric_limits<
+                      std::decay_t<decltype(tile.animation_id())>>::max());
+                }
+                ImGui::SameLine(0, ImGui::GetStyle().ItemInnerSpacing.x);
+                {
+                  const auto pop_width =
+                    glengine::ImGuiPushItemWidth(item_width.second);
+                  ImGui::SliderInt(
+                    "##Animation State",
+                    &animation_state,
+                    std::numeric_limits<
+                      std::decay_t<decltype(tile.animation_state())>>::min(),
+                    std::numeric_limits<
+                      std::decay_t<decltype(tile.animation_state())>>::max());
+                }
+                ImGui::SameLine(0, ImGui::GetStyle().ItemInnerSpacing.x);
+                ImGui::Text(
+                  "%s",
+                  fmt::format(
+                    "Animation: ({}, {})", animation_id, animation_state)
+                    .c_str());
+              }
+              {
+                auto blend_mode                  = tile.blend_mode();
+                int current_blend_mode_selection = static_cast<int>(blend_mode);
+                const std::array<std::string_view, 5> blend_mode_str = {
+                  "half_add", "add", "subtract", "quarter_add", "none",
+                };
+                (void)glengine::GenericCombo(
+                  "Blend Mode", current_blend_mode_selection, blend_mode_str);
+              }
+              {
+                const auto         disabled  = glengine::ImGuiDisabled(true);
+                std::array<int, 2> tile_dims = { static_cast<int>(tile.width()),
+                                                 static_cast<int>(
+                                                   tile.height()) };
+                ImGui::InputInt2("Tile Dimensions", tile_dims.data());
+              }
+              {
+                ImGui::Text(
+                  "%s",
+                  fmt::format(
+                    "Index: {}, OpenGL Texture ID: {}\n"
+                    "Raw Hex: {}\n",
+                    i,
+                    static_cast<uint32_t>(sub_texture->ID()),
+                    [&]() -> std::string {
+                      std::stringstream ss = {};
+                      tile.to_hex(ss);
+                      return ss.str();
+                    }())
+                    .c_str());
+              }
+            }
+            else if (
+              dims.x - (last_pos.x + text_width - ImGui::GetCursorPos().x)
+              > text_width)
+            {
+              ImGui::SameLine();
+            }
+            //        else
+            //        {
+            //          ImGui::Text(
+            //            "%s",
+            //            fmt::format(
+            //              "dims.x = {}, last_pos.x = {}, text_width = {},
+            //              dims.x - " "dims.x - (last_pos.x + text_width -
+            //              ImGui::GetCursorPos().x) = "
+            //              "{}",
+            //              dims.x,
+            //              last_pos.x,
+            //              text_width,
+            //              dims.x - (last_pos.x + text_width -
+            //              ImGui::GetCursorPos().x)) .c_str());
+            //        }
+            return changed;
+          }))
+      {
+        m_changed = true;
+      }
     });
   }
   void OnEvent(const glengine::Event::Item &event) const
@@ -613,19 +823,18 @@ private:
         std::ranges::count_if(f_tiles, [](auto &&) { return true; }));
     });
   }
-  auto VisitUnSortedUnFilteredTiles(auto &&lamda) const
+  bool VisitUnSortedUnFilteredTiles(auto &&lamda) const
   {
-    return m_map.visit_tiles([&](const auto &tiles) {
+    return m_map.visit_tiles([&](auto &&tiles) -> bool{
       auto f_tiles = tiles
                      | std::views::filter(
                        open_viii::graphics::background::Map::filter_invalid());
-      for (const auto &tile : f_tiles)
+      bool changed = false;
+      for (auto &tile : f_tiles)
       {
-        if (!lamda(tile))
-        {
-          return;
-        }
+        changed = lamda(tile) || changed;
       }
+      return changed;
     });
   }
   void GetUniqueValues()
@@ -652,12 +861,18 @@ private:
           use_texture_page{};
       static constexpr
         typename TileFunctions::template Bounds<tileT>::texture_page
-           texture_page{};
-      auto f_tiles = tiles
+                            texture_page{};
+      static constexpr auto true_x  = [](const auto &tile) { return tile.x(); };
+      static constexpr auto true_y  = [](const auto &tile) { return tile.y(); };
+      auto                  f_tiles = tiles
                      | std::views::filter(
                        open_viii::graphics::background::Map::filter_invalid());
       auto [i_min_x, i_max_x] = std::ranges::minmax_element(f_tiles, {}, x);
       auto [i_min_y, i_max_y] = std::ranges::minmax_element(f_tiles, {}, y);
+      auto [true_i_min_x, true_i_max_x] =
+        std::ranges::minmax_element(f_tiles, {}, true_x);
+      auto [true_i_min_y, true_i_max_y] =
+        std::ranges::minmax_element(f_tiles, {}, true_y);
       auto i_max_texture_page =
         std::ranges::max_element(f_tiles, {}, texture_page);
 
@@ -665,11 +880,13 @@ private:
       {
         return;
       }
-      min_x = x(*i_min_x);
-      max_x = static_cast<float>(
+      true_min_xy = glm::vec2(true_x(*true_i_min_x), true_y(*true_i_min_x));
+      true_max_xy = glm::vec2(true_x(*true_i_max_x), true_y(*true_i_max_x));
+      min_x       = x(*i_min_x);
+      max_x       = static_cast<float>(
         use_texture_page
-          ? x(*i_max_x)
-          : (texture_page(*i_max_texture_page) + 1) * s_texture_page_width);
+                ? x(*i_max_x)
+                : (texture_page(*i_max_texture_page) + 1) * s_texture_page_width);
       min_y             = y(*i_min_y);
       max_y             = y(*i_max_y);
       const auto width  = max_x - min_x + 16.F;
@@ -721,11 +938,11 @@ private:
   // if coo was chosen instead of default.
   bool                       m_map_choose_coo        = {};
   // container for field textures
-  open_viii::graphics::background::Mim m_mim         = {};
+  open_viii::graphics::background::Mim         m_mim = {};
   // container for field tile information
-  open_viii::graphics::background::Map m_map         = {};
+  mutable open_viii::graphics::background::Map m_map = {};
   // loads the textures overtime instead of forcing them to load at start.
-  glengine::DelayedTextures<35U>       m_delayed_textures = {};
+  glengine::DelayedTextures<35U>               m_delayed_textures = {};
   glengine::DelayedTextures<17U * 13U>
     m_upscale_delayed_textures = {};// 20 is detected max 16(+1)*13 is possible
                                     // max. 0 being no palette and 1-17 being
@@ -734,8 +951,8 @@ private:
   glengine::BatchRenderer           m_batch_renderer        = { 1000 };
   // holds rendered image at 1:1 scale to prevent gaps when scaling.
   mutable glengine::FrameBuffer     m_frame_buffer          = {};
-  inline static constinit float     m_offset_x              = 0.F;
-  inline static constinit float     m_offset_y              = -16.F;
+  mutable float                     m_offset_x              = 0.F;
+  mutable float                     m_offset_y              = -16.F;
   mutable bool                      m_offscreen_drawing     = { false };
   mutable bool                      m_saving                = { false };
   mutable bool                      m_preview               = { false };
@@ -743,10 +960,12 @@ private:
   inline constinit static MapBlends s_blends                = {};
   MapFilters                        m_filters               = { m_map };
   mutable bool                      m_changed               = { true };
-  inline static constinit float     min_x                   = {};
-  inline static constinit float     min_y                   = {};
-  inline static constinit float     max_x                   = {};
-  inline static constinit float     max_y                   = {};
+  mutable glm::vec2                 true_min_xy             = {};
+  mutable glm::vec2                 true_max_xy             = {};
+  mutable float                     min_x                   = {};
+  mutable float                     min_y                   = {};
+  mutable float                     max_x                   = {};
+  mutable float                     max_y                   = {};
   mutable float                     m_tile_scale            = { 1.F };
   glengine::Counter                 m_id                    = {};
   mutable std::vector<bool>         m_tile_button_state     = {};
