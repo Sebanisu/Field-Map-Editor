@@ -159,8 +159,12 @@ public:                          \
     EVENT_CLASS_CATEGORY(Category::Input | Category::Keyboard)
     EVENT_HANDLED
     constexpr KeyPressed() = default;
-    constexpr KeyPressed(glengine::KEY code, bool repeat = false)
+    constexpr KeyPressed(
+      glengine::KEY  code,
+      glengine::MODS mods,
+      bool           repeat = false)
       : m_key(code)
+      , m_mods(mods)
       , m_repeat(repeat)
     {
     }
@@ -168,18 +172,27 @@ public:                          \
     {
       return m_key;
     }
-    constexpr bool Repeat() const
+    constexpr glengine::MODS Mods() const
+    {
+      return m_mods;
+    }
+    [[maybe_unused]] constexpr bool Repeat() const
     {
       return m_repeat;
     }
     std::string Data() const
     {
-      return fmt::format("{:>3}, {}", +m_key, m_repeat);
+      if (m_mods == glengine::MODS::NONE)
+      {
+        return fmt::format("{:>3}, {}", +m_key, m_repeat);
+      }
+      return fmt::format("{:>3} + {:>2},  {}", +m_key, +m_mods, m_repeat);
     }
 
   private:
-    glengine::KEY m_key{};
-    bool          m_repeat{};
+    glengine::KEY  m_key{};
+    glengine::MODS m_mods{};
+    bool           m_repeat{};
   };
   static_assert(is_Key<KeyPressed>);
 
@@ -189,21 +202,31 @@ public:                          \
     EVENT_CLASS_CATEGORY(Category::Input | Category::Keyboard)
     EVENT_HANDLED
     constexpr KeyReleased() = default;
-    constexpr KeyReleased(glengine::KEY code)
+    constexpr KeyReleased(glengine::KEY code, glengine::MODS mods)
       : m_key(code)
+      , m_mods(mods)
     {
     }
     constexpr glengine::KEY Key() const
     {
       return m_key;
     }
+    constexpr glengine::MODS Mods() const
+    {
+      return m_mods;
+    }
     std::string Data() const
     {
-      return fmt::format("{:>3}", +m_key);
+      if (m_mods == glengine::MODS::NONE)
+      {
+        return fmt::format("{:>3}", +m_key);
+      }
+      return fmt::format("{:>3} + {:>2}", +m_key, +m_mods);
     }
 
   private:
-    glengine::KEY m_key{};
+    glengine::KEY  m_key{};
+    glengine::MODS m_mods{};
   };
   static_assert(is_Key<KeyReleased>);
 
@@ -214,21 +237,31 @@ public:                          \
       Category::Input | Category::Mouse | Category::MouseButton)
     EVENT_HANDLED
     constexpr MouseButtonPressed() = default;
-    constexpr MouseButtonPressed(glengine::MOUSE code)
+    constexpr MouseButtonPressed(glengine::MOUSE code, glengine::MODS mods)
       : m_button(code)
+      , m_mods(mods)
     {
     }
     constexpr glengine::MOUSE Button() const
     {
       return m_button;
     }
+    constexpr glengine::MODS Mods() const
+    {
+      return m_mods;
+    }
     std::string Data() const
     {
-      return fmt::format("{:>2}", +m_button);
+      if (m_mods == glengine::MODS::NONE)
+      {
+        return fmt::format("{:>3}", +m_button);
+      }
+      return fmt::format("{:>3} + {:>2}", +m_button, +m_mods);
     }
 
   private:
     glengine::MOUSE m_button{};
+    glengine::MODS  m_mods{};
   };
   static_assert(is_MouseButton<MouseButtonPressed>);
 
@@ -239,21 +272,31 @@ public:                          \
       Category::Input | Category::Mouse | Category::MouseButton)
     EVENT_HANDLED
     constexpr MouseButtonReleased() = default;
-    constexpr MouseButtonReleased(glengine::MOUSE code)
+    constexpr MouseButtonReleased(glengine::MOUSE code, glengine::MODS mods)
       : m_button(code)
+      , m_mods(mods)
     {
     }
     constexpr glengine::MOUSE Button() const
     {
       return m_button;
     }
+    constexpr glengine::MODS Mods() const
+    {
+      return m_mods;
+    }
     std::string Data() const
     {
-      return fmt::format("{:>2}", +m_button);
+      if (m_mods == glengine::MODS::NONE)
+      {
+        return fmt::format("{:>3}", +m_button);
+      }
+      return fmt::format("{:>3} + {:>2}", +m_button, +m_mods);
     }
 
   private:
     glengine::MOUSE m_button{};
+    glengine::MODS  m_mods{};
   };
   static_assert(is_MouseButton<MouseButtonReleased>);
 

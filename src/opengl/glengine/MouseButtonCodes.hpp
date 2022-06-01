@@ -20,6 +20,8 @@ enum class MOUSE : int
   BUTTON_LEFT   = BUTTON_1,
   BUTTON_RIGHT  = BUTTON_2,
   BUTTON_MIDDLE = BUTTON_3,
+  RELEASE       = 0,
+  PRESS         = 1
 };
 static constexpr auto operator+(MOUSE e) noexcept
   -> std::enable_if_t<std::is_enum<MOUSE>::value, std::underlying_type_t<MOUSE>>

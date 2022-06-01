@@ -7,6 +7,16 @@
 namespace glengine
 {
 // from glfw3.h
+enum class MODS : int
+{
+  NONE      = 0x0000,
+  SHIFT     = 0x0001,
+  CONTROL   = 0x0002,
+  ALT       = 0x0004,
+  SUPER     = 0x0008,
+  CAPS_LOCK = 0x0010,
+  NUM_LOCK  = 0x0020
+};
 enum class KEY : int
 {
 
@@ -155,11 +165,19 @@ enum class KEY : int
   MENU          = 348,
 
   LAST          = MENU,
+  RELEASE       = 0,
+  PRESS         = 1,
+  REPEAT        = 2,
 };
 static constexpr auto operator+(KEY e) noexcept
   -> std::enable_if_t<std::is_enum<KEY>::value, std::underlying_type_t<KEY>>
 {
   return static_cast<std::underlying_type_t<KEY>>(e);
+}
+static constexpr auto operator+(MODS e) noexcept
+  -> std::enable_if_t<std::is_enum<MODS>::value, std::underlying_type_t<MODS>>
+{
+  return static_cast<std::underlying_type_t<MODS>>(e);
 }
 }// namespace glengine
 #endif// FIELD_MAP_EDITOR_KEYCODES_HPP

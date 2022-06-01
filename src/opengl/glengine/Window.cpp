@@ -101,92 +101,6 @@ void Window::RenderDockspace() const
   {
     // ShowDockingDisabledMessage();
   }
-
-  //  if (ImGui::BeginMenuBar())
-  //  {
-  //    if (ImGui::BeginMenu("Options"))
-  //    {
-  //      // Disabling fullscreen would allow the window to be moved to the
-  //      front of
-  //      // other windows, which we can't undo at the moment without finer
-  //      window
-  //      // depth/z control.
-  //      ImGui::MenuItem("Fullscreen", NULL, &opt_fullscreen);
-  //      ImGui::MenuItem("Padding", NULL, &opt_padding);
-  //      ImGui::Separator();
-  //
-  //      if (ImGui::MenuItem(
-  //            "Flag: NoSplit",
-  //            "",
-  //            (dockspace_flags & ImGuiDockNodeFlags_NoSplit) != 0))
-  //      {
-  //        dockspace_flags ^= ImGuiDockNodeFlags_NoSplit;
-  //      }
-  ////      if (ImGui::MenuItem(
-  ////            "Flag: NoResize",
-  ////            "",
-  ////            (dockspace_flags & ImGuiDockNodeFlags_NoResize) != 0))
-  ////      {
-  ////        dockspace_flags ^= ImGuiDockNodeFlags_NoResize;
-  ////      }
-  //      if (ImGui::MenuItem(
-  //            "Flag: NoDockingInCentralNode",
-  //            "",
-  //            (dockspace_flags & ImGuiDockNodeFlags_NoDockingInCentralNode) !=
-  //            0))
-  //      {
-  //        dockspace_flags ^= ImGuiDockNodeFlags_NoDockingInCentralNode;
-  //      }
-  //      if (ImGui::MenuItem(
-  //            "Flag: AutoHideTabBar",
-  //            "",
-  //            (dockspace_flags & ImGuiDockNodeFlags_AutoHideTabBar) != 0))
-  //      {
-  //        dockspace_flags ^= ImGuiDockNodeFlags_AutoHideTabBar;
-  //      }
-  //      //      if (ImGui::MenuItem(
-  //      //            "Flag: PassthruCentralNode",
-  //      //            "",
-  //      //            (dockspace_flags &
-  //      ImGuiDockNodeFlags_PassthruCentralNode)
-  //      //            != 0, opt_fullscreen))
-  //      //      {
-  //      //        dockspace_flags ^= ImGuiDockNodeFlags_PassthruCentralNode;
-  //      //      }
-  //      ImGui::Separator();
-  //
-  //      //        if (ImGui::MenuItem("Close", NULL, false, p_open != NULL))
-  //      //          *p_open = false;
-  //      ImGui::EndMenu();
-  //    }
-  //    //    HelpMarker(
-  //    //      "When docking is enabled, you can ALWAYS dock MOST window into
-  //    //      another! " "Try it now!"
-  //    //      "\n"
-  //    //      "- Drag from window title bar or their tab to dock/undock."
-  //    //      "\n"
-  //    //      "- Drag from window menu button (upper-left button) to undock an
-  //    //      entire " "node (all windows)."
-  //    //      "\n"
-  //    //      "- Hold SHIFT to disable docking (if io.ConfigDockingWithShift
-  //    ==
-  //    //      false, " "default)"
-  //    //      "\n"
-  //    //      "- Hold SHIFT to enable docking (if io.ConfigDockingWithShift ==
-  //    //      true)"
-  //    //      "\n"
-  //    //      "This demo app has nothing to do with enabling docking!"
-  //    //      "\n\n"
-  //    //      "This demo app only demonstrate the use of ImGui::DockSpace()
-  //    which
-  //    //      " "allows you to manually create a docking node _within_ another
-  //    //      window."
-  //    //      "\n\n"
-  //    //      "Read comments in ShowExampleAppDockSpace() for more details.");
-  //
-  //    ImGui::EndMenuBar();
-  //  }
-
   ImGui::End();
 }
 void Window::EndFrameRendered() const
@@ -311,7 +225,6 @@ void Window::InitImGui(const char *const glsl_version) const
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
     ImGuiIO &io = ImGui::GetIO();
-    //    (void)io;
     // io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable
     // Keyboard Controls io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad; //
     // Enable Gamepad Controls
@@ -323,7 +236,7 @@ void Window::InitImGui(const char *const glsl_version) const
     // ImGui::StyleColorsClassic();
   }
   // Setup Platform/Renderer backends
-  ImGui_ImplGlfw_InitForOpenGL(m_window.get(), true);
+  ImGui_ImplGlfw_InitForOpenGL(m_window.get(), false);
   ImGui_ImplOpenGL3_Init(glsl_version);
 
   // Load Fonts
@@ -354,6 +267,7 @@ void Window::InitImGui(const char *const glsl_version) const
 
 void Window::InitCallbacks() const
 {
+
   BeginErrorCallBack();
   // GLFW callBacks
 
@@ -391,63 +305,59 @@ void Window::InitCallbacks() const
       int                  key,
       [[maybe_unused]] int scancode,
       int                  action,
-      [[maybe_unused]] int mods) {
+      int                  mods) {
+      ImGui_ImplGlfw_KeyCallback(window, key, scancode, action, mods);
       auto &data = GetWindowData(window);
       switch (action)
       {
-        case GLFW_PRESS: {
-          data.event_callback(Event::KeyPressed(glengine::KEY{ key }, false));
+        case +KEY::PRESS: {
+          data.event_callback(Event::KeyPressed(
+            glengine::KEY{ key }, glengine::MODS{ mods }, false));
           break;
         }
-        case GLFW_RELEASE: {
-          data.event_callback(Event::KeyReleased(glengine::KEY{ key }));
+        case +KEY::RELEASE: {
+          data.event_callback(
+            Event::KeyReleased(glengine::KEY{ key }, glengine::MODS{ mods }));
           break;
         }
-        case GLFW_REPEAT: {
-          data.event_callback(Event::KeyPressed(glengine::KEY{ key }, true));
+        case +KEY::REPEAT: {
+          data.event_callback(Event::KeyPressed(
+            glengine::KEY{ key }, glengine::MODS{ mods }, true));
           break;
         }
       }
     });
-
   glfwSetMouseButtonCallback(
-    m_window.get(),
-    [](GLFWwindow *window, int button, int action, [[maybe_unused]] int mods) {
+    m_window.get(), [](GLFWwindow *window, int button, int action, int mods) {
+      ImGui_ImplGlfw_MouseButtonCallback(window, button, action, mods);
       using glengine::MOUSE;
-      ImGuiIO &io   = ImGui::GetIO();
-      auto    &data = GetWindowData(window);
+      auto &data = GetWindowData(window);
       switch (action)
       {
-        case GLFW_PRESS: {
-          io.AddMouseButtonEvent(button, true);
-          data.event_callback(Event::MouseButtonPressed(MOUSE{ button }));
+        case +MOUSE::PRESS: {
+          data.event_callback(
+            Event::MouseButtonPressed(MOUSE{ button }, MODS{ mods }));
           break;
         }
-        case GLFW_RELEASE: {
-          io.AddMouseButtonEvent(button, false);
-          data.event_callback(Event::MouseButtonReleased(MOUSE{ button }));
+        case +MOUSE::RELEASE: {
+          data.event_callback(
+            Event::MouseButtonReleased(MOUSE{ button }, MODS{ mods }));
           break;
         }
       }
     });
   glfwSetScrollCallback(
     m_window.get(), [](GLFWwindow *window, double x_offset, double y_offset) {
-      ImGuiIO &io   = ImGui::GetIO();
-      auto    &data = GetWindowData(window);
-      io.AddMouseWheelEvent(
-        static_cast<float>(x_offset), static_cast<float>(y_offset));
+      ImGui_ImplGlfw_ScrollCallback(window, x_offset, y_offset);
+      auto &data = GetWindowData(window);
       data.event_callback(Event::MouseScroll(
         static_cast<float>(x_offset), static_cast<float>(y_offset)));
     });
 
   glfwSetCursorPosCallback(
     m_window.get(), [](GLFWwindow *window, double x, double y) {
-      ImGuiIO &io   = ImGui::GetIO();
-      auto    &data = GetWindowData(window);
-      auto    &pos  = ImGui::GetMainViewport()->Pos;
-      io.AddMousePosEvent(
-        static_cast<float>(x + static_cast<double>(pos.x)),
-        static_cast<float>(y + static_cast<double>(pos.y)));
+      ImGui_ImplGlfw_CursorPosCallback(window, x, y);
+      auto &data = GetWindowData(window);
       data.event_callback(
         Event::MouseMoved(static_cast<float>(x), static_cast<float>(y)));
     });
@@ -457,6 +367,12 @@ void Window::InitCallbacks() const
       auto &data = GetWindowData(window);
       data.event_callback(Event::WindowMoved(x, y));
     });
+  glfwSetWindowFocusCallback(
+    m_window.get(), ImGui_ImplGlfw_WindowFocusCallback);
+  glfwSetCursorEnterCallback(
+    m_window.get(), ImGui_ImplGlfw_CursorEnterCallback);
+  glfwSetCharCallback(m_window.get(), ImGui_ImplGlfw_CharCallback);
+  glfwSetMonitorCallback(ImGui_ImplGlfw_MonitorCallback);
 }
 Window::WindowData &Window::GetWindowData(GLFWwindow *window)
 {
@@ -483,18 +399,11 @@ void Window::DefaultBlend()
 
 void Window::AddBlend()
 {
-  // GLCall{}(glBlendFuncSeparate, GL_SRC_ALPHA, GL_ONE, GL_ONE, GL_ONE);
   GLCall{}(glBlendEquationSeparate, GL_FUNC_ADD, GL_FUNC_ADD);
 }
 
 void Window::SubtractBlend()
 {
-  //  GLCall{}(
-  //    glBlendFuncSeparate,
-  //    GL_SRC_COLOR,
-  //    GL_DST_COLOR,
-  //    GL_SRC_ALPHA,
-  //    GL_ONE_MINUS_SRC_ALPHA);
   GLCall{}(glBlendEquationSeparate, GL_FUNC_REVERSE_SUBTRACT, GL_FUNC_ADD);
 }
 }// namespace glengine
