@@ -321,7 +321,6 @@ public:
                 };
                 const std::pair<float, float> item_width =
                   generate_inner_width(2);
-                bool slider_changed = false;
                 {
                   const auto pop_width =
                     glengine::ImGuiPushItemWidth(item_width.first);
@@ -330,9 +329,13 @@ public:
                         &source_xy[0],
                         0,
                         (static_cast<int>(
-                          std::pow(2, (2-current_bpp_selection) + 2)-1))))
+                          std::pow(2, (2 - current_bpp_selection) + 2) - 1))))
                   {
-                    slider_changed = true;
+                    source_xy[0] *= tile.width();
+                    changed = true;
+                    tile    = tile.with_source_x(
+                      static_cast<decltype(tile.source_xy().x())>(
+                        source_xy[0]));
                   }
                 }
                 ImGui::SameLine(0, ImGui::GetStyle().ItemInnerSpacing.x);
@@ -349,25 +352,23 @@ public:
                           std::decay_t<decltype(tile.source_xy().y())>>::max()
                           / tile.height()))
                   {
-                    slider_changed = true;
+                    changed = true;
+                    source_xy[1] *= tile.height();
+                    tile = tile.with_source_y(
+                      static_cast<decltype(tile.source_xy().y())>(
+                        source_xy[1]));
                   }
                 }
-                source_xy[0] *= tile.width();
-                source_xy[1] *= tile.height();
                 ImGui::SameLine(0, ImGui::GetStyle().ItemInnerSpacing.x);
                 ImGui::Text(
                   "%s",
                   fmt::format(
-                    "Source Pos: ({}, {})", source_xy[0], source_xy[1])
+                    "Source Pos: ({}, {})",
+                    tile.source_xy().x(),
+                    tile.source_xy().y())
                     .c_str());
-                if (slider_changed)
-                {
-                  tile = tile.with_source_x(
-                    static_cast<decltype(tile.source_xy().x())>(source_xy[0]));
-                  tile = tile.with_source_y(
-                    static_cast<decltype(tile.source_xy().y())>(source_xy[1]));
-                  changed = true;
-                }
+                // todo add second source for moving a tile to a new location in
+                // the mim / swizzled map. Without changing the image.
               }
               {
                 std::array<int, 3> xyz = {
@@ -376,41 +377,57 @@ public:
                   static_cast<int>(tile.z())
                 };
 
-
                 const std::pair<float, float> item_width =
                   generate_inner_width(3);
                 {
                   const auto pop_width =
                     glengine::ImGuiPushItemWidth(item_width.first);
-                  ImGui::SliderInt(
-                    "##Destination (X)",
-                    &xyz[0],
-                    static_cast<int>(true_min_xy.x / tile.width()),
-                    static_cast<int>(true_max_xy.x / tile.width()));
+                  if (ImGui::SliderInt(
+                        "##Destination (X)",
+                        &xyz[0],
+                        static_cast<int>(true_min_xy.x / tile.width()),
+                        static_cast<int>(true_max_xy.x / tile.width())))
+                  {
+                    changed = true;
+                    xyz[0] *= tile.width();
+                    tile =
+                      tile.with_x(static_cast<decltype(tile.xy().x())>(xyz[0]));
+                  }
                 }
                 ImGui::SameLine(0, ImGui::GetStyle().ItemInnerSpacing.x);
                 {
                   const auto pop_width =
                     glengine::ImGuiPushItemWidth(item_width.first);
-                  ImGui::SliderInt(
-                    "##Destination (Y)",
-                    &xyz[1],
-                    static_cast<int>(true_min_xy.y / tile.height()),
-                    static_cast<int>(true_max_xy.y / tile.height()));
+                  if (ImGui::SliderInt(
+                        "##Destination (Y)",
+                        &xyz[1],
+                        static_cast<int>(true_min_xy.y / tile.height()),
+                        static_cast<int>(true_max_xy.y / tile.height())))
+                  {
+                    changed = true;
+                    xyz[1] *= tile.height();
+                    tile =
+                      tile.with_y(static_cast<decltype(tile.xy().y())>(xyz[1]));
+                  }
                 }
                 ImGui::SameLine(0, ImGui::GetStyle().ItemInnerSpacing.x);
                 {
                   const auto pop_width =
                     glengine::ImGuiPushItemWidth(item_width.second);
-                  ImGui::SliderInt("##Destination (Z)", &xyz[2], 0, 0xFFF);
+                  if (ImGui::SliderInt("##Destination (Z)", &xyz[2], 0, 0xFFF))
+                  {
+                    changed = true;
+                    tile = tile.with_z(static_cast<decltype(tile.z())>(xyz[2]));
+                  }
                 }
                 ImGui::SameLine(0, ImGui::GetStyle().ItemInnerSpacing.x);
-                xyz[0] *= tile.width();
-                xyz[1] *= tile.height();
                 ImGui::Text(
                   "%s",
                   fmt::format(
-                    "Destination Pos: ({}, {}, {})", xyz[0], xyz[1], xyz[2])
+                    "Destination Pos: ({}, {}, {})",
+                    tile.xy().x(),
+                    tile.xy().y(),
+                    tile.z())
                     .c_str());
               }
               {
@@ -825,7 +842,7 @@ private:
   }
   bool VisitUnSortedUnFilteredTiles(auto &&lamda) const
   {
-    return m_map.visit_tiles([&](auto &&tiles) -> bool{
+    return m_map.visit_tiles([&](auto &&tiles) -> bool {
       auto f_tiles = tiles
                      | std::views::filter(
                        open_viii::graphics::background::Map::filter_invalid());
@@ -880,8 +897,8 @@ private:
       {
         return;
       }
-      true_min_xy = glm::vec2(true_x(*true_i_min_x), true_y(*true_i_min_x));
-      true_max_xy = glm::vec2(true_x(*true_i_max_x), true_y(*true_i_max_x));
+      true_min_xy = glm::vec2(true_x(*true_i_min_x), true_y(*true_i_min_y));
+      true_max_xy = glm::vec2(true_x(*true_i_max_x), true_y(*true_i_max_y));
       min_x       = x(*i_min_x);
       max_x       = static_cast<float>(
         use_texture_page
