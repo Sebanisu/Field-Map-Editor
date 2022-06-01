@@ -243,6 +243,7 @@ public:
       const auto  dims = ImGui::GetContentRegionAvail();
       std::size_t i    = {};
       if (VisitUnSortedUnFilteredTiles([&](auto &tile) -> bool {
+            const auto id_pop_2    = glengine::ImGuiPushID();
             const auto sub_texture = TileToSubTexture(tile);
             const auto increment =
               glengine::scope_guard_captures([&]() { ++i; });
@@ -418,6 +419,10 @@ public:
                   {
                     changed = true;
                     tile = tile.with_z(static_cast<decltype(tile.z())>(xyz[2]));
+                    // TODO update filters may need to split up updates to own
+                    // functions as could be alot of overhead.
+                    // So I also need to be able to maintain state.
+                    m_filters.unique_tile_values().refresh_z(m_map);
                   }
                 }
                 ImGui::SameLine(0, ImGui::GetStyle().ItemInnerSpacing.x);
@@ -673,6 +678,7 @@ private:
                      | std::views::filter(
                        open_viii::graphics::background::Map::filter_invalid())
                      | std::views::filter(m_filters.TestTile());
+
 
       std::vector<std::uint16_t> unique_z{};
       {
@@ -975,7 +981,7 @@ private:
   mutable bool                      m_preview               = { false };
   glm::vec3                         m_position              = {};
   inline constinit static MapBlends s_blends                = {};
-  MapFilters                        m_filters               = { m_map };
+  mutable MapFilters                m_filters               = { m_map };
   mutable bool                      m_changed               = { true };
   mutable glm::vec2                 true_min_xy             = {};
   mutable glm::vec2                 true_max_xy             = {};

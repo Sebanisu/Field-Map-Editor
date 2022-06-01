@@ -12,14 +12,16 @@ class UniqueValues
 
 public:
   UniqueValues() = default;
-  template<
-    typename transform_to_stringT = decltype(default_transform_function)>
+  template<typename transform_to_stringT = decltype(default_transform_function)>
   UniqueValues(
-    std::vector<T>          values,
+    std::vector<T>         values,
     transform_to_stringT &&transform_to_string = {})
     : m_values(std::move(values))
     , m_strings([&]() {
-      auto transform = m_values | std::views::transform(std::forward<transform_to_stringT>(transform_to_string));
+      auto transform =
+        m_values
+        | std::views::transform(
+          std::forward<transform_to_stringT>(transform_to_string));
       return std::vector<std::string>{ transform.begin(), transform.end() };
     }())
     , m_enable([&]() {
@@ -27,19 +29,18 @@ public:
         std::ranges::size(m_values), std::uint8_t{ true });
     }())
   {
-
-    for (const auto &string : m_strings)
-    {
-      fmt::print("\t{}\r", string);
-    }
+    //    for (const auto &string : m_strings)
+    //    {
+    //      fmt::print("\t{}\r", string);
+    //    }
   }
   template<
     std::ranges::range rangeT,
     typename transform_to_stringT = decltype(default_transform_function)>
-  UniqueValues(
-    rangeT                &&values,
-    transform_to_stringT &&transform_to_string = {})
-    : UniqueValues(std::vector<T>(std::ranges::cbegin(values), std::ranges::cend(values)), std::forward<transform_to_stringT>(transform_to_string))
+  UniqueValues(rangeT &&values, transform_to_stringT &&transform_to_string = {})
+    : UniqueValues(
+      std::vector<T>(std::ranges::cbegin(values), std::ranges::cend(values)),
+      std::forward<transform_to_stringT>(transform_to_string))
   {
   }
   std::pair<const T &, const std::string_view>
@@ -65,6 +66,23 @@ public:
   std::vector<std::uint8_t> &enable() const noexcept
   {
     return m_enable;
+  }
+  /**
+   * This just takes the values of old sees what matches this and copies the
+   * bool values over
+   * @param old
+   */
+  void Update(const UniqueValues<T> &old)
+  {
+    for (const auto i : std::views::iota(size_t{}, std::ranges::size(m_values)))
+    {
+      if (const auto location = std::ranges::find(old.values(), m_values[i]);
+          location != old.values().end())
+      {
+        m_enable[i] = old.enable()[static_cast<size_t>(
+          std::distance(old.values().begin(), location))];
+      }
+    }
   }
 
 private:

@@ -216,6 +216,14 @@ public:
                m_possible_tile_values.palette_id.values());
     };
   }
+  const auto &unique_tile_values() const
+  {
+    return m_unique_tile_values;
+  }
+  auto &unique_tile_values()
+  {
+    return m_unique_tile_values;
+  }
 
 private:
   bool filter(
