@@ -259,6 +259,8 @@ public:
             bool changed = false;
             if (m_tile_button_state.at(i))
             {
+              ImGui::SameLine();
+              CheckBoxDraw(tile, changed);
               int current_bpp_selection = ComboBPP(tile, changed);
               SliderInt2SourceXY(tile, changed, current_bpp_selection);
               SliderInt3XYZ(tile, changed);
@@ -266,7 +268,6 @@ public:
               SliderIntBlendOther(tile, changed);
               SliderIntPaletteID(tile, changed);
               SliderIntTexturePageID(tile, changed);
-              CheckBoxDraw(tile, changed);
               SliderInt2Animation(tile, changed);
               ComboBlendModes(tile, changed);
               InputsReadOnly(
@@ -278,7 +279,15 @@ public:
               dims.x - (last_pos.x + text_width - ImGui::GetCursorPos().x)
               > text_width)
             {
-              ImGui::SameLine();
+              if (
+                m_tile_button_state.size() != i + 1
+                && m_tile_button_state.at(i + 1))
+              {
+              }
+              else
+              {
+                ImGui::SameLine();
+              }
             }
             return changed;
           }))
@@ -331,20 +340,32 @@ private:
       tile = tile.with_draw(static_cast<decltype(tile.draw())>(draw));
     }
   }
-  void InputsReadOnly(const auto &tile, int index, int id) const
+  void InputsReadOnly(const auto &tile, const int index, const int id) const
   {
-    const auto         disabled  = glengine::ImGuiDisabled(true);
+    // const auto         disabled  = glengine::ImGuiDisabled(true);
     std::array<int, 2> tile_dims = { static_cast<int>(tile.width()),
                                      static_cast<int>(tile.height()) };
-    ImGui::InputInt2("Tile Dimensions", tile_dims.data());
-    ImGui::InputInt("Index", &index);
-    ImGui::InputInt("OpenGL Texture ID", &id);
-    std::string hex = fmt::format("Raw Hex: {}\n", [&]() -> std::string {
+    ImGui::InputInt2(
+      "Tile Dimensions", tile_dims.data(), ImGuiInputTextFlags_ReadOnly);
+    std::string index_str = fmt::format("{}", index);
+    ImGui::InputText(
+      "Index",
+      index_str.data(),
+      index_str.size(),
+      ImGuiInputTextFlags_ReadOnly);
+    std::string id_str = fmt::format("{}", id);
+    ImGui::InputText(
+      "OpenGL Texture ID",
+      id_str.data(),
+      id_str.size(),
+      ImGuiInputTextFlags_ReadOnly);
+    std::string hex = [&]() -> std::string {
       std::stringstream ss = {};
       tile.to_hex(ss);
       return ss.str();
-    }());
-    ImGui::InputText("Raw Hex", hex.data(), hex.size());
+    }();
+    ImGui::InputText(
+      "Raw Hex", hex.data(), hex.size(), ImGuiInputTextFlags_ReadOnly);
   }
   int ComboBPP(auto &tile, bool &changed) const
   {
