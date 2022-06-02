@@ -34,7 +34,7 @@ private:
   {
     return visit(map, [](const auto &tile) { return tile.palette_id(); });
   }
-  static auto gen_texture_id(const MapT &map)
+  static auto gen_texture_page_id(const MapT &map)
   {
     return visit(map, [](const auto &tile) { return tile.texture_id(); });
   }
@@ -131,7 +131,7 @@ public:
     : z(gen_z(map))
     , layer_id(gen_layer_id(map))
     , palette_id(gen_palette_id(map))
-    , texture_page_id(gen_texture_id(map))
+    , texture_page_id(gen_texture_page_id(map))
     , animation_id(gen_animation_id(map))
     , animation_frame(gen_animation_frame(map))
     , blend_other(gen_blend_other(map))
@@ -143,6 +143,39 @@ public:
   {
     refresh(map, z, &gen_z);
   }
+  void refresh_layer_id(const MapT &map)
+  {
+    refresh(map, layer_id, &gen_layer_id);
+  }
+  void refresh_palette_id(const MapT &map)
+  {
+    refresh(map, palette_id, &gen_palette_id);
+  }
+  void refresh_texture_page_id(const MapT &map)
+  {
+    refresh(map, texture_page_id, &gen_texture_page_id);
+  }
+  void refresh_animation_id(const MapT &map)
+  {
+    refresh(map, animation_id, &gen_animation_id);
+  }
+  void refresh_animation_frame(const MapT &map)
+  {
+    refresh(map, animation_frame, &gen_animation_frame);
+  }
+  void refresh_blend_other(const MapT &map)
+  {
+    refresh(map, blend_other, &gen_blend_other);
+  }
+  void refresh_blend_mode(const MapT &map)
+  {
+    refresh(map, blend_mode, &gen_blend_mode);
+  }
+  void refresh_bpp(const MapT &map)
+  {
+    refresh(map, bpp, &gen_bpp);
+  }
+
   UniqueValues<std::uint16_t> z                                        = {};
   UniqueValues<std::uint8_t>  layer_id                                 = {};
   UniqueValues<std::uint8_t>  palette_id                               = {};

@@ -242,321 +242,378 @@ public:
       };
       const auto  dims = ImGui::GetContentRegionAvail();
       std::size_t i    = {};
-      if (VisitUnSortedUnFilteredTiles([&](auto &tile) -> bool {
-            const auto id_pop_2    = glengine::ImGuiPushID();
-            const auto sub_texture = TileToSubTexture(tile);
-            const auto increment =
-              glengine::scope_guard_captures([&]() { ++i; });
-            if (!sub_texture)
-            {
-              return false;
-            }
-            if (render_sub_texture(*sub_texture))
-            {
-              m_tile_button_state.at(i).flip();
-            }
-            bool changed = false;
-            if (m_tile_button_state.at(i))
-            {
-              std::array<const char *, 3> bpp_options = { "4", "8", "16" };
-              int                         current_bpp_selection = [&]() -> int {
-                switch (static_cast<int>(tile.depth()))
-                {
-                  case 4:
-                  default:
-                    return 0;
-                  case 8:
-                    return 1;
-                  case 16:
-                    return 2;
-                }
-              }();
-              if (ImGui::Combo(
-                    "BPP", &current_bpp_selection, bpp_options.data(), 3))
+      if (
+        VisitUnSortedUnFilteredTiles([&](auto &tile) -> bool {
+          using namespace open_viii::graphics::background;
+          using TileT            = std::decay_t<decltype(tile)>;
+          const auto id_pop_2    = glengine::ImGuiPushID();
+          const auto sub_texture = TileToSubTexture(tile);
+          const auto increment = glengine::scope_guard_captures([&]() { ++i; });
+          if (!sub_texture)
+          {
+            return false;
+          }
+          if (render_sub_texture(*sub_texture))
+          {
+            m_tile_button_state.at(i).flip();
+          }
+          bool changed = false;
+          if (m_tile_button_state.at(i))
+          {
+            std::array<const char *, 3> bpp_options = { "4", "8", "16" };
+            int                         current_bpp_selection = [&]() -> int {
+              switch (static_cast<int>(tile.depth()))
               {
-                switch (current_bpp_selection)
-                {
-                  case 0:
-                  default:
-                    tile = tile.with_depth(
-                      open_viii::graphics::BPPT(false, false, true));
-                    break;
-                  case 1:
-                    tile = tile.with_depth(
-                      open_viii::graphics::BPPT(true, false, true));
-                    break;
-                  case 2:
-                    tile = tile.with_depth(
-                      open_viii::graphics::BPPT(false, true, false));
-                    break;
-                }
-                changed = true;
+                case 4:
+                default:
+                  return 0;
+                case 8:
+                  return 1;
+                case 16:
+                  return 2;
               }
+            }();
+            if (ImGui::Combo(
+                  "BPP", &current_bpp_selection, bpp_options.data(), 3))
+            {
+              switch (current_bpp_selection)
+              {
+                case 0:
+                default:
+                  tile = tile.with_depth(
+                    open_viii::graphics::BPPT(false, false, true));
+                  break;
+                case 1:
+                  tile = tile.with_depth(
+                    open_viii::graphics::BPPT(true, false, true));
+                  break;
+                case 2:
+                  tile = tile.with_depth(
+                    open_viii::graphics::BPPT(false, true, false));
+                  break;
+              }
+              m_filters.unique_tile_values().refresh_bpp(m_map);
+              changed = true;
+            }
 
-              const auto generate_inner_width =
-                [](int components) -> std::pair<float, float> {
-                components =
-                  std::clamp(components, 1, std::numeric_limits<int>::max());
-                const float f_count    = static_cast<float>(components);
-                const auto &style      = ImGui::GetStyle();
-                const float w_full     = ImGui::CalcItemWidth();
-                const float w_item_one = (std::max)(
-                  1.0f,
-                  std::floor(
-                    (w_full
-                     - (style.ItemInnerSpacing.x)
-                         * static_cast<float>(components - 1))
-                    / f_count));
-                const float w_item_last = (std::max)(
-                  1.0f,
-                  std::floor(
-                    w_full
-                    - (w_item_one + style.ItemInnerSpacing.x)
-                        * static_cast<float>(components - 1)));
-                return { w_item_one, w_item_last };
+            const auto generate_inner_width =
+              [](int components) -> std::pair<float, float> {
+              components =
+                std::clamp(components, 1, std::numeric_limits<int>::max());
+              const float f_count    = static_cast<float>(components);
+              const auto &style      = ImGui::GetStyle();
+              const float w_full     = ImGui::CalcItemWidth();
+              const float w_item_one = (std::max)(
+                1.0f,
+                std::floor(
+                  (w_full
+                   - (style.ItemInnerSpacing.x)
+                       * static_cast<float>(components - 1))
+                  / f_count));
+              const float w_item_last = (std::max)(
+                1.0f,
+                std::floor(
+                  w_full
+                  - (w_item_one + style.ItemInnerSpacing.x)
+                      * static_cast<float>(components - 1)));
+              return { w_item_one, w_item_last };
+            };
+            {
+              std::array<int, 2> source_xy = {
+                static_cast<int>(tile.source_xy().x() / tile.width()),
+                static_cast<int>(tile.source_xy().y() / tile.height())
               };
+              const std::pair<float, float> item_width =
+                generate_inner_width(2);
               {
-                std::array<int, 2> source_xy = {
-                  static_cast<int>(tile.source_xy().x() / tile.width()),
-                  static_cast<int>(tile.source_xy().y() / tile.height())
-                };
-                const std::pair<float, float> item_width =
-                  generate_inner_width(2);
+                const auto pop_width =
+                  glengine::ImGuiPushItemWidth(item_width.first);
+                if (ImGui::SliderInt(
+                      "##Source (X)",
+                      &source_xy[0],
+                      0,
+                      (static_cast<int>(
+                        std::pow(2, (2 - current_bpp_selection) + 2) - 1))))
                 {
-                  const auto pop_width =
-                    glengine::ImGuiPushItemWidth(item_width.first);
-                  if (ImGui::SliderInt(
-                        "##Source (X)",
-                        &source_xy[0],
-                        0,
-                        (static_cast<int>(
-                          std::pow(2, (2 - current_bpp_selection) + 2) - 1))))
-                  {
-                    source_xy[0] *= tile.width();
-                    changed = true;
-                    tile    = tile.with_source_x(
-                      static_cast<decltype(tile.source_xy().x())>(
-                        source_xy[0]));
-                  }
+                  source_xy[0] *= tile.width();
+                  changed = true;
+                  tile    = tile.with_source_x(
+                    static_cast<decltype(tile.source_xy().x())>(source_xy[0]));
                 }
-                ImGui::SameLine(0, ImGui::GetStyle().ItemInnerSpacing.x);
+              }
+              ImGui::SameLine(0, ImGui::GetStyle().ItemInnerSpacing.x);
+              {
+                const auto pop_width =
+                  glengine::ImGuiPushItemWidth(item_width.second);
+                if (ImGui::SliderInt(
+                      "##Source (Y)",
+                      &source_xy[1],
+                      std::numeric_limits<
+                        std::decay_t<decltype(tile.source_xy().y())>>::min()
+                        / tile.height(),
+                      std::numeric_limits<
+                        std::decay_t<decltype(tile.source_xy().y())>>::max()
+                        / tile.height()))
                 {
-                  const auto pop_width =
-                    glengine::ImGuiPushItemWidth(item_width.second);
-                  if (ImGui::SliderInt(
-                        "##Source (Y)",
-                        &source_xy[1],
-                        std::numeric_limits<
-                          std::decay_t<decltype(tile.source_xy().y())>>::min()
-                          / tile.height(),
-                        std::numeric_limits<
-                          std::decay_t<decltype(tile.source_xy().y())>>::max()
-                          / tile.height()))
-                  {
-                    changed = true;
-                    source_xy[1] *= tile.height();
-                    tile = tile.with_source_y(
-                      static_cast<decltype(tile.source_xy().y())>(
-                        source_xy[1]));
-                  }
+                  changed = true;
+                  source_xy[1] *= tile.height();
+                  tile = tile.with_source_y(
+                    static_cast<decltype(tile.source_xy().y())>(source_xy[1]));
                 }
-                ImGui::SameLine(0, ImGui::GetStyle().ItemInnerSpacing.x);
-                ImGui::Text(
-                  "%s",
-                  fmt::format(
-                    "Source Pos: ({}, {})",
-                    tile.source_xy().x(),
-                    tile.source_xy().y())
-                    .c_str());
-                // todo add second source for moving a tile to a new location in
-                // the mim / swizzled map. Without changing the image.
               }
-              {
-                std::array<int, 3> xyz = {
-                  static_cast<int>(tile.xy().x() / tile.width()),
-                  static_cast<int>(tile.xy().y() / tile.height()),
-                  static_cast<int>(tile.z())
-                };
-
-                const std::pair<float, float> item_width =
-                  generate_inner_width(3);
-                {
-                  const auto pop_width =
-                    glengine::ImGuiPushItemWidth(item_width.first);
-                  if (ImGui::SliderInt(
-                        "##Destination (X)",
-                        &xyz[0],
-                        static_cast<int>(true_min_xy.x / tile.width()),
-                        static_cast<int>(true_max_xy.x / tile.width())))
-                  {
-                    changed = true;
-                    xyz[0] *= tile.width();
-                    tile =
-                      tile.with_x(static_cast<decltype(tile.xy().x())>(xyz[0]));
-                  }
-                }
-                ImGui::SameLine(0, ImGui::GetStyle().ItemInnerSpacing.x);
-                {
-                  const auto pop_width =
-                    glengine::ImGuiPushItemWidth(item_width.first);
-                  if (ImGui::SliderInt(
-                        "##Destination (Y)",
-                        &xyz[1],
-                        static_cast<int>(true_min_xy.y / tile.height()),
-                        static_cast<int>(true_max_xy.y / tile.height())))
-                  {
-                    changed = true;
-                    xyz[1] *= tile.height();
-                    tile =
-                      tile.with_y(static_cast<decltype(tile.xy().y())>(xyz[1]));
-                  }
-                }
-                ImGui::SameLine(0, ImGui::GetStyle().ItemInnerSpacing.x);
-                {
-                  const auto pop_width =
-                    glengine::ImGuiPushItemWidth(item_width.second);
-                  if (ImGui::SliderInt("##Destination (Z)", &xyz[2], 0, 0xFFF))
-                  {
-                    changed = true;
-                    tile = tile.with_z(static_cast<decltype(tile.z())>(xyz[2]));
-                    // TODO update filters may need to split up updates to own
-                    // functions as could be alot of overhead.
-                    // So I also need to be able to maintain state.
-                    m_filters.unique_tile_values().refresh_z(m_map);
-                  }
-                }
-                ImGui::SameLine(0, ImGui::GetStyle().ItemInnerSpacing.x);
-                ImGui::Text(
-                  "%s",
-                  fmt::format(
-                    "Destination Pos: ({}, {}, {})",
-                    tile.xy().x(),
-                    tile.xy().y(),
-                    tile.z())
-                    .c_str());
-              }
-              {
-                int layer_id = tile.layer_id();
-                ImGui::SliderInt(
-                  "Layer ID",
-                  &layer_id,
-                  std::numeric_limits<
-                    std::decay_t<decltype(tile.layer_id())>>::min(),
-                  std::numeric_limits<
-                    std::decay_t<decltype(tile.layer_id())>>::max());
-              }
-              {
-                int blend = tile.blend();
-                ImGui::SliderInt(
-                  "Blend Other",
-                  &blend,
-                  std::numeric_limits<
-                    std::decay_t<decltype(tile.blend())>>::min(),
-                  std::numeric_limits<
-                    std::decay_t<decltype(tile.blend())>>::max());
-              }
-              {
-                int palette_id = static_cast<int>(tile.palette_id());
-                ImGui::SliderInt("Palette ID", &palette_id, 0, 16);
-              }
-              {
-                int texture_page_id = static_cast<int>(tile.texture_id());
-                ImGui::SliderInt("Texture Page ID", &texture_page_id, 0, 13);
-              }
-              {
-                bool draw = tile.draw();
-                ImGui::Checkbox("Draw?", &draw);
-              }
-              {
-                int animation_id    = tile.animation_id();
-                int animation_state = tile.animation_state();
-                const std::pair<float, float> item_width =
-                  generate_inner_width(2);
-                {
-                  const auto pop_width =
-                    glengine::ImGuiPushItemWidth(item_width.first);
-                  ImGui::SliderInt(
-                    "##Animation ID",
-                    &animation_id,
-                    std::numeric_limits<
-                      std::decay_t<decltype(tile.animation_id())>>::min(),
-                    std::numeric_limits<
-                      std::decay_t<decltype(tile.animation_id())>>::max());
-                }
-                ImGui::SameLine(0, ImGui::GetStyle().ItemInnerSpacing.x);
-                {
-                  const auto pop_width =
-                    glengine::ImGuiPushItemWidth(item_width.second);
-                  ImGui::SliderInt(
-                    "##Animation State",
-                    &animation_state,
-                    std::numeric_limits<
-                      std::decay_t<decltype(tile.animation_state())>>::min(),
-                    std::numeric_limits<
-                      std::decay_t<decltype(tile.animation_state())>>::max());
-                }
-                ImGui::SameLine(0, ImGui::GetStyle().ItemInnerSpacing.x);
-                ImGui::Text(
-                  "%s",
-                  fmt::format(
-                    "Animation: ({}, {})", animation_id, animation_state)
-                    .c_str());
-              }
-              {
-                auto blend_mode                  = tile.blend_mode();
-                int current_blend_mode_selection = static_cast<int>(blend_mode);
-                const std::array<std::string_view, 5> blend_mode_str = {
-                  "half_add", "add", "subtract", "quarter_add", "none",
-                };
-                (void)glengine::GenericCombo(
-                  "Blend Mode", current_blend_mode_selection, blend_mode_str);
-              }
-              {
-                const auto         disabled  = glengine::ImGuiDisabled(true);
-                std::array<int, 2> tile_dims = { static_cast<int>(tile.width()),
-                                                 static_cast<int>(
-                                                   tile.height()) };
-                ImGui::InputInt2("Tile Dimensions", tile_dims.data());
-              }
-              {
-                ImGui::Text(
-                  "%s",
-                  fmt::format(
-                    "Index: {}, OpenGL Texture ID: {}\n"
-                    "Raw Hex: {}\n",
-                    i,
-                    static_cast<uint32_t>(sub_texture->ID()),
-                    [&]() -> std::string {
-                      std::stringstream ss = {};
-                      tile.to_hex(ss);
-                      return ss.str();
-                    }())
-                    .c_str());
-              }
+              ImGui::SameLine(0, ImGui::GetStyle().ItemInnerSpacing.x);
+              ImGui::Text(
+                "%s",
+                fmt::format(
+                  "Source Pos: ({}, {})",
+                  tile.source_xy().x(),
+                  tile.source_xy().y())
+                  .c_str());
+              // todo add second source for moving a tile to a new location in
+              // the mim / swizzled map. Without changing the image.
             }
-            else if (
-              dims.x - (last_pos.x + text_width - ImGui::GetCursorPos().x)
-              > text_width)
             {
-              ImGui::SameLine();
+              std::array<int, 3> xyz = {
+                static_cast<int>(tile.xy().x() / tile.width()),
+                static_cast<int>(tile.xy().y() / tile.height()),
+                static_cast<int>(tile.z())
+              };
+
+              const std::pair<float, float> item_width =
+                generate_inner_width(3);
+              {
+                const auto pop_width =
+                  glengine::ImGuiPushItemWidth(item_width.first);
+                if (ImGui::SliderInt(
+                      "##Destination (X)",
+                      &xyz[0],
+                      static_cast<int>(true_min_xy.x / tile.width()),
+                      static_cast<int>(true_max_xy.x / tile.width())))
+                {
+                  changed = true;
+                  xyz[0] *= tile.width();
+                  tile =
+                    tile.with_x(static_cast<decltype(tile.xy().x())>(xyz[0]));
+                }
+              }
+              ImGui::SameLine(0, ImGui::GetStyle().ItemInnerSpacing.x);
+              {
+                const auto pop_width =
+                  glengine::ImGuiPushItemWidth(item_width.first);
+                if (ImGui::SliderInt(
+                      "##Destination (Y)",
+                      &xyz[1],
+                      static_cast<int>(true_min_xy.y / tile.height()),
+                      static_cast<int>(true_max_xy.y / tile.height())))
+                {
+                  changed = true;
+                  xyz[1] *= tile.height();
+                  tile =
+                    tile.with_y(static_cast<decltype(tile.xy().y())>(xyz[1]));
+                }
+              }
+              ImGui::SameLine(0, ImGui::GetStyle().ItemInnerSpacing.x);
+              {
+                const auto pop_width =
+                  glengine::ImGuiPushItemWidth(item_width.second);
+                if (ImGui::SliderInt("##Destination (Z)", &xyz[2], 0, 0xFFF))
+                {
+                  changed = true;
+                  tile = tile.with_z(static_cast<decltype(tile.z())>(xyz[2]));
+                  m_filters.unique_tile_values().refresh_z(m_map);
+                }
+              }
+              ImGui::SameLine(0, ImGui::GetStyle().ItemInnerSpacing.x);
+              ImGui::Text(
+                "%s",
+                fmt::format(
+                  "Destination Pos: ({}, {}, {})",
+                  tile.xy().x(),
+                  tile.xy().y(),
+                  tile.z())
+                  .c_str());
             }
-            //        else
-            //        {
-            //          ImGui::Text(
-            //            "%s",
-            //            fmt::format(
-            //              "dims.x = {}, last_pos.x = {}, text_width = {},
-            //              dims.x - " "dims.x - (last_pos.x + text_width -
-            //              ImGui::GetCursorPos().x) = "
-            //              "{}",
-            //              dims.x,
-            //              last_pos.x,
-            //              text_width,
-            //              dims.x - (last_pos.x + text_width -
-            //              ImGui::GetCursorPos().x)) .c_str());
-            //        }
-            return changed;
-          }))
+            {
+              int        layer_id = tile.layer_id();
+              const auto disabled =
+                glengine::ImGuiDisabled(!has_with_layer_id<TileT>);
+              if (ImGui::SliderInt(
+                    "Layer ID",
+                    &layer_id,
+                    std::numeric_limits<
+                      std::decay_t<decltype(tile.layer_id())>>::min(),
+                    std::numeric_limits<
+                      std::decay_t<decltype(tile.layer_id())>>::max()))
+              {
+                if constexpr (has_with_layer_id<TileT>)
+                {
+                  changed = true;
+                  tile    = tile.with_layer_id(
+                    static_cast<decltype(tile.layer_id())>(layer_id));
+                  m_filters.unique_tile_values().refresh_layer_id(m_map);
+                }
+              }
+            }
+            {
+              int blend = tile.blend();
+              if (ImGui::SliderInt(
+                    "Blend Other",
+                    &blend,
+                    std::numeric_limits<
+                      std::decay_t<decltype(tile.blend())>>::min(),
+                    std::numeric_limits<
+                      std::decay_t<decltype(tile.blend())>>::max()))
+              {
+                changed = true;
+                tile =
+                  tile.with_blend(static_cast<decltype(tile.blend())>(blend));
+                m_filters.unique_tile_values().refresh_blend_other(m_map);
+              }
+            }
+            {
+              int palette_id = static_cast<int>(tile.palette_id());
+              if (ImGui::SliderInt("Palette ID", &palette_id, 0, 16))
+              {
+                changed = true;
+                tile    = tile.with_palette_id(
+                  static_cast<decltype(tile.palette_id())>(palette_id));
+                m_filters.unique_tile_values().refresh_palette_id(m_map);
+              }
+            }
+            {
+              int texture_page_id = static_cast<int>(tile.texture_id());
+              if (ImGui::SliderInt("Texture Page ID", &texture_page_id, 0, 13))
+              {
+                changed = true;
+                tile    = tile.with_texture_id(
+                  static_cast<decltype(tile.texture_id())>(texture_page_id));
+                m_filters.unique_tile_values().refresh_texture_page_id(m_map);
+              }
+            }
+            CheckBoxDraw(tile, changed);
+            {
+              int animation_id    = tile.animation_id();
+              int animation_state = tile.animation_state();
+              const std::pair<float, float> item_width =
+                generate_inner_width(2);
+              {
+                const auto disabled =
+                  glengine::ImGuiDisabled(!has_with_animation_id<TileT>);
+                const auto pop_width =
+                  glengine::ImGuiPushItemWidth(item_width.first);
+                if (ImGui::SliderInt(
+                      "##Animation ID",
+                      &animation_id,
+                      std::numeric_limits<
+                        std::decay_t<decltype(tile.animation_id())>>::min(),
+                      std::numeric_limits<
+                        std::decay_t<decltype(tile.animation_id())>>::max()))
+                {
+                  if constexpr (has_with_animation_id<TileT>)
+                  {
+                    changed = true;
+                    tile    = tile.with_animation_id(
+                      static_cast<decltype(tile.animation_id())>(animation_id));
+                    m_filters.unique_tile_values().refresh_animation_id(m_map);
+                  }
+                }
+              }
+              ImGui::SameLine(0, ImGui::GetStyle().ItemInnerSpacing.x);
+              {
+                const auto disabled =
+                  glengine::ImGuiDisabled(!has_with_animation_state<TileT>);
+                const auto pop_width =
+                  glengine::ImGuiPushItemWidth(item_width.second);
+                if (ImGui::SliderInt(
+                      "##Animation State",
+                      &animation_state,
+                      std::numeric_limits<
+                        std::decay_t<decltype(tile.animation_state())>>::min(),
+                      std::numeric_limits<
+                        std::decay_t<decltype(tile.animation_state())>>::max()))
+                {
+                  if constexpr (has_with_animation_state<TileT>)
+                  {
+                    changed = true;
+                    tile    = tile.with_animation_state(
+                      static_cast<decltype(tile.animation_state())>(
+                        animation_state));
+                    m_filters.unique_tile_values().refresh_animation_frame(
+                      m_map);
+                  }
+                }
+              }
+              ImGui::SameLine(0, ImGui::GetStyle().ItemInnerSpacing.x);
+              ImGui::Text(
+                "%s",
+                fmt::format(
+                  "Animation: ({}, {})", animation_id, animation_state)
+                  .c_str());
+            }
+            {
+              const auto disabled =
+                glengine::ImGuiDisabled(!has_with_blend_mode<TileT>);
+              const auto blend_mode            = tile.blend_mode();
+              int current_blend_mode_selection = static_cast<int>(blend_mode);
+              const std::array<std::string_view, 5> blend_mode_str = {
+                "half_add", "add", "subtract", "quarter_add", "none",
+              };
+              if (glengine::GenericCombo(
+                    "Blend Mode", current_blend_mode_selection, blend_mode_str))
+              {
+                if constexpr (has_with_blend_mode<TileT>)
+                {
+                  changed = true;
+                  tile    = tile.with_blend_mode(
+                    static_cast<decltype(tile.blend_mode())>(
+                      current_blend_mode_selection));
+                  m_filters.unique_tile_values().refresh_blend_mode(m_map);
+                }
+              }
+            }
+            {
+              const auto         disabled  = glengine::ImGuiDisabled(true);
+              std::array<int, 2> tile_dims = {
+                static_cast<int>(tile.width()), static_cast<int>(tile.height())
+              };
+              ImGui::InputInt2("Tile Dimensions", tile_dims.data());
+              int index = static_cast<int>(i);
+              ImGui::InputInt("Index", &index);
+              int id =
+                static_cast<int>(static_cast<uint32_t>(sub_texture->ID()));
+              ImGui::InputInt("OpenGL Texture ID", &id);
+              std::string hex =
+                fmt::format("Raw Hex: {}\n", [&]() -> std::string {
+                  std::stringstream ss = {};
+                  tile.to_hex(ss);
+                  return ss.str();
+                }());
+              ImGui::InputText("Raw Hex", hex.data(), hex.size());
+            }
+          }
+          else if (
+            dims.x - (last_pos.x + text_width - ImGui::GetCursorPos().x)
+            > text_width)
+          {
+            ImGui::SameLine();
+          }
+          //        else
+          //        {
+          //          ImGui::Text(
+          //            "%s",
+          //            fmt::format(
+          //              "dims.x = {}, last_pos.x = {}, text_width = {},
+          //              dims.x - " "dims.x - (last_pos.x + text_width -
+          //              ImGui::GetCursorPos().x) = "
+          //              "{}",
+          //              dims.x,
+          //              last_pos.x,
+          //              text_width,
+          //              dims.x - (last_pos.x + text_width -
+          //              ImGui::GetCursorPos().x)) .c_str());
+          //        }
+          return changed;
+        }))
       {
         m_changed = true;
       }
@@ -569,6 +626,22 @@ public:
   }
 
 private:
+  void CheckBoxDraw(auto &tile, bool &changed) const
+  {
+    bool draw = tile.draw();
+    if (ImGui::Checkbox("Draw?", &draw))
+    {
+      static constexpr typename TileFunctions::template Bounds<
+        std::decay_t<decltype(tile)>>::use_blending use_blending{};
+      if (use_blending)
+      {
+        // this won't display change on swizzle because if we skip
+        // those tiles they won't output to the image file.
+        changed = true;
+      }
+      tile = tile.with_draw(static_cast<decltype(tile.draw())>(draw));
+    }
+  }
   // set uniforms
   void SetUniforms() const
   {
@@ -674,12 +747,20 @@ private:
   auto VisitTiles(auto &&lambda) const
   {
     return m_map.visit_tiles([&](const auto &tiles) {
-      auto f_tiles = tiles
-                     | std::views::filter(
-                       open_viii::graphics::background::Map::filter_invalid())
-                     | std::views::filter(m_filters.TestTile());
-
-
+      auto f_tiles =
+        tiles
+        | std::views::filter(
+          open_viii::graphics::background::Map::filter_invalid())
+        | std::views::filter([](const auto &tile) -> bool {
+            static constexpr typename TileFunctions::template Bounds<
+              std::decay_t<decltype(tile)>>::use_blending use_blending{};
+            if (use_blending)
+            {
+              return tile.draw();
+            }
+            return true;
+          })
+        | std::views::filter(m_filters.TestTile());
       std::vector<std::uint16_t> unique_z{};
       {
         // unique_z.reserve(std::ranges::size(tiles));
