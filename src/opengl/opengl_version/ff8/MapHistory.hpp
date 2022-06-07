@@ -6,6 +6,31 @@
 #define FIELD_MAP_EDITOR_MAPHISTORY_HPP
 namespace ff8
 {
+template<typename TileT>
+struct [[nodiscard]] pair_of_tiles
+{
+  pair_of_tiles(const TileT &front, TileT &back)
+    : m_front_tile(&front)
+    , m_back_tile(&back)
+  {
+  }
+  [[nodiscard]] const TileT &front_tile() const noexcept
+  {
+    return *m_front_tile;
+  }
+  [[nodiscard]] TileT &back_tile() noexcept
+  {
+    return *m_back_tile;
+  }
+  [[nodiscard]] const TileT &back_tile() const noexcept
+  {
+    return *m_back_tile;
+  }
+
+private:
+  const TileT *m_front_tile;
+  TileT       *m_back_tile;
+};
 class [[nodiscard]] MapHistory
 {
   using MapT                       = open_viii::graphics::background::Map;
@@ -35,6 +60,7 @@ class [[nodiscard]] MapHistory
   }
 
 public:
+  MapHistory() = default;
   MapHistory(MapT map)
   {
     m_maps.push_back(map);
@@ -115,38 +141,59 @@ public:
   {
     return m_maps.size() > 2U;
   }
-  [[nodiscard]] auto VisitBoth(std::invocable auto &&function)
+  [[nodiscard]] auto VisitBoth(auto &&function) const
+  {
+    return VisitBoth(function, std::identity{});
+  }
+  [[nodiscard]] auto VisitBoth(auto &&function, auto &&filter) const
   {
     return front().visit_tiles(
-      [this, &function](const std::ranges::contiguous_range auto &front_tiles) {
-        back().visit_tiles([&front_tiles, &function](
+      [this, &function, &filter](
+        const std::ranges::contiguous_range auto &front_tiles) {
+        back().visit_tiles([&front_tiles, &function, &filter](
                              std::ranges::contiguous_range auto &&back_tiles) {
-          return function(
-            front_tiles, std::forward<decltype(back_tiles)>(back_tiles));
+          using TileT  = std::ranges::range_value_t<decltype(front_tiles)>;
+          using BTileT = std::ranges::range_value_t<decltype(back_tiles)>;
+          if constexpr (!std::is_same_v<TileT, BTileT>)
+          {
+            std::vector<pair_of_tiles<TileT>> temp_mux = {};
+            auto temp_mux_filter                       = filter(temp_mux);
+            return function(temp_mux_filter);
+          }
+          else
+          {
+            std::vector<pair_of_tiles<TileT>> temp_mux = {};
+            temp_mux.reserve(std::ranges::size(front_tiles));
+            std::ranges::transform(
+              front_tiles,
+              back_tiles,
+              std::back_inserter(temp_mux),
+              [](const auto &front_tile, auto &back_tile) {
+                return pair_of_tiles<TileT>(front_tile, back_tile);
+              });
+            auto temp_mux_filter = filter(temp_mux);
+            return function(temp_mux_filter);
+          }
         });
       });
   }
-  [[nodiscard]] bool VisitBothTiles(std::invocable auto &&function)
+  [[nodiscard]] bool VisitBothTiles(
+    std::invocable auto &&function,
+    std::invocable auto &&filter = std::identity{})
   {
     return VisitBoth(
-      [&function](
-        const std::ranges::contiguous_range auto &front_tiles,
-        std::ranges::contiguous_range auto      &&back_tiles) -> bool {
-        bool       changed     = false;
-        auto       front_begin = std::ranges::cbegin(front_tiles);
-        auto       back_begin  = std::ranges::begin(back_tiles);
-        const auto front_end   = std::ranges::cend(front_tiles);
-        const auto back_end    = std::ranges::end(back_tiles);
-        for (; front_begin != front_end && back_begin != back_end;
-             (void)++front_begin, ++back_begin)
+      [&function](std::ranges::contiguous_range auto &&mux_tiles) -> bool {
+        bool changed = false;
+        for (auto &pair : mux_tiles)
         {
-          if (function(*front_begin, *back_begin))
+          if (function(std::as_const(pair.front_tile), pair.back_tile))
           {
             changed = true;
           }
         }
         return changed;
-      });
+      },
+      filter);
   }
 };
 }// namespace ff8
