@@ -18,7 +18,7 @@ struct TileFunctionsUpscaleDeswizzle
   struct Bounds
   {
   private:
-    using tileT = std::decay_t<T>;
+    using tileT = std::remove_cvref_t<T>;
     using xT    = typename std::invoke_result_t<decltype(&tileT::x), tileT>;
     using yT    = typename std::invoke_result_t<decltype(&tileT::y), tileT>;
     using texture_pageT =

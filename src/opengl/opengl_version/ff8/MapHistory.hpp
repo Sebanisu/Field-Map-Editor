@@ -9,6 +9,7 @@ namespace ff8
 template<typename TileT>
 struct [[nodiscard]] pair_of_tiles
 {
+  pair_of_tiles() = default;
   pair_of_tiles(const TileT &front, TileT &back)
     : m_front_tile(&front)
     , m_back_tile(&back)

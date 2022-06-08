@@ -63,7 +63,7 @@ private:
   }
   static void refresh(const MapT &map, auto &old, auto &&func)
   {
-    std::decay_t<decltype(old)> new_value = func(map);
+    std::remove_cvref_t<decltype(old)> new_value = func(map);
     new_value.Update(old);
     old = new_value;
   }

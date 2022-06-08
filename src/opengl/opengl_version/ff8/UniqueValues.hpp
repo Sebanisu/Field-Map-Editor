@@ -92,8 +92,8 @@ private:
 };
 template<std::ranges::range rangeT>
 UniqueValues(rangeT &&a)
-  -> UniqueValues<std::decay_t<std::ranges::range_value_t<rangeT>>>;
+  -> UniqueValues<std::remove_cvref_t<std::ranges::range_value_t<rangeT>>>;
 template<std::ranges::range rangeT, typename funcT>
 UniqueValues(rangeT &&a, funcT &&)
-  -> UniqueValues<std::decay_t<std::ranges::range_value_t<rangeT>>>;
+  -> UniqueValues<std::remove_cvref_t<std::ranges::range_value_t<rangeT>>>;
 #endif// FIELD_MAP_EDITOR_UNIQUEVALUES_HPP
