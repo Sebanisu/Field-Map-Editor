@@ -4,6 +4,11 @@
 
 #ifndef FIELD_MAP_EDITOR_SCOPE_GUARD_HPP
 #define FIELD_MAP_EDITOR_SCOPE_GUARD_HPP
+#include <array>
+#include <cstdint>
+#include <utility>
+#include <ranges>
+#include <algorithm>
 namespace glengine
 {
 struct [[nodiscard]] scope_guard
@@ -57,7 +62,7 @@ struct [[nodiscard]] scope_guard
     // the two objects are effectively swapped
     swap(first.func, second.func);
   }
-  template<size_t count>
+  template<std::size_t count>
   [[nodiscard]] static constexpr auto array(void (*t)())
   {
     std::array<scope_guard, count> r{};
@@ -134,7 +139,7 @@ struct [[nodiscard]] scope_guard_captures
     swap(first.func, second.func);
     swap(first.enabled, second.enabled);
   }
-  template<size_t count>
+  template<std::size_t count>
   [[nodiscard]] static constexpr auto array(void (*t)())
   {
     std::array<scope_guard_captures, count> r{};
@@ -175,7 +180,7 @@ private:
 //     swap(scope_guard_expensive &first, scope_guard_expensive &second)
 //     noexcept;
 //
-//   template<std::convertible_to<std::function<void()>> T, size_t count>
+//   template<std::convertible_to<std::function<void()>> T, std::size_t count>
 //   [[nodiscard]] static std::array<scope_guard_expensive, count> array(T t)
 //   {
 //     std::array<scope_guard_expensive, count> r{};

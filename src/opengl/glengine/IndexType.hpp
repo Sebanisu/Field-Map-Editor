@@ -4,6 +4,12 @@
 
 #ifndef FIELD_MAP_EDITOR_INDEXTYPE_HPP
 #define FIELD_MAP_EDITOR_INDEXTYPE_HPP
+#include <cassert>
+#include <cstddef>
+#include <cstdint>
+#include <GL/glew.h>
+#include <GLFW/glfw3.h>
+#include <iosfwd>
 namespace glengine
 {
 enum class IndexType : GLenum
@@ -44,15 +50,13 @@ inline constexpr IndexType GetIndexType<GLuint>()
   return IndexType::UNSIGNED_INT;
 }
 template<typename T>
-concept has_Type_for_IndexType = requires(const T &t)
-{
-  t.Type() + IndexType::none;
-};
+concept has_Type_for_IndexType =
+  requires(const T &t) { t.Type() + IndexType::none; };
 template<typename T>
 // clang-format off
   requires(!has_Type_for_IndexType<T>)
-  // clang-format on
-  inline IndexType Type(const T &) noexcept
+// clang-format on
+inline IndexType Type(const T &) noexcept
 {
   return IndexType::none;
 }
@@ -64,8 +68,8 @@ inline IndexType Type(const T &typed) noexcept
 template<typename T>
 // clang-format off
   requires(!has_Type_for_IndexType<T>)
-  // clang-format on
-  consteval inline std::size_t CountType() noexcept
+// clang-format on
+consteval inline std::size_t CountType() noexcept
 {
   return {};
 }
@@ -89,8 +93,8 @@ inline consteval bool check_has_Type_for_IndexType()
 template<typename... T>
 // clang-format off
   requires(sizeof...(T) > 1U && check_has_Type_for_IndexType<T...>())
-  // clang-format on
-  inline IndexType Type(const T &...typed)
+// clang-format on
+inline IndexType Type(const T &...typed)
 {
   return (glengine::Type<T>(typed) + ...);
 }

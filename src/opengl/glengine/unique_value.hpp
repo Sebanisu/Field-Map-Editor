@@ -4,6 +4,9 @@
 
 #ifndef FIELD_MAP_EDITOR_UNIQUE_VALUE_HPP
 #define FIELD_MAP_EDITOR_UNIQUE_VALUE_HPP
+#include <array>
+#include <cstdint>
+#include <ranges>
 namespace glengine
 {
 template<typename T>
@@ -73,7 +76,7 @@ public:
   {
   }
   template<std::invocable createT>
-  requires decay_same_as<ValueT, std::invoke_result_t<createT>>
+    requires decay_same_as<ValueT, std::invoke_result_t<createT>>
   constexpr unique_value_array(void (*destroy)(ParameterT), createT &&create)
     : m_value(std::invoke(create))
     , m_function(move(destroy))
@@ -86,7 +89,7 @@ public:
       std::invoke(m_function, m_value);
     }
   }
-  unique_value_array(const unique_value_array &) = delete;
+  unique_value_array(const unique_value_array &)            = delete;
   unique_value_array &operator=(const unique_value_array &) = delete;
   constexpr unique_value_array(unique_value_array &&other) noexcept
     : unique_value_array()
@@ -185,8 +188,8 @@ template<typename T, std::invocable<T> F>
 unique_value(T t, F f) -> unique_value<T>;
 template<typename T, typename U, std::size_t Usz>
 concept array_type_and_size_are_same =
-  decay_same_as<std::ranges::range_value_t<T>, U> && std::ranges::size(T{})
-== Usz;
+  decay_same_as < std::ranges::range_value_t<T>,
+U > &&std::ranges::size(T{}) == Usz;
 template<typename T>
 class weak_value
 {
@@ -197,7 +200,7 @@ public:
   {
   }
   template<typename U, std::size_t Usz>
-  requires array_type_and_size_are_same<T, U, Usz>
+    requires array_type_and_size_are_same<T, U, Usz>
   constexpr weak_value(const unique_value_array<U, Usz> &t)
     : m_value(t.m_value)
   {

@@ -3,6 +3,10 @@
 //
 
 #include "GLCheck.hpp"
+#include <GL/glew.h>
+#include <GLFW/glfw3.h>
+#include <string_view>
+#include <fmt/format.h>
 bool GLCheckError(std::string_view prefix, const std::source_location location)
 {
   if (GLenum error = glGetError(); error != GL_NO_ERROR)

@@ -3,6 +3,7 @@
 //
 
 #include "ImGuiDisabled.hpp"
+#include <imgui.h>
 glengine::scope_guard glengine::ImGuiDisabled(bool disabled) noexcept
 {
   if (disabled)

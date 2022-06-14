@@ -5,6 +5,7 @@
 #ifndef FIELD_MAP_EDITOR_SHADER_HPP
 #define FIELD_MAP_EDITOR_SHADER_HPP
 #include "Renderer.hpp"
+#include <filesystem>
 namespace glengine
 {
 class Shader
@@ -20,7 +21,7 @@ public:
   Shader(std::filesystem::path file_path);
   ~Shader();
 
-  Shader(const Shader &) = delete;
+  Shader(const Shader &)            = delete;
   Shader &operator=(const Shader &) = delete;
 
   Shader(Shader &&other) noexcept;
@@ -40,8 +41,8 @@ public:
     && ((std::floating_point<T> && ...)
       || (std::unsigned_integral<T> && ...)
       || (std::signed_integral<T> && ...))
-    // clang-format on
-    void SetUniform(std::string_view name, T... v) const
+  // clang-format on
+  void SetUniform(std::string_view name, T... v) const
   {
     const auto perform = [&]<typename NT>(auto &&fun) {
       GLCall{}(
@@ -109,12 +110,11 @@ public:
   }
   // Set Uniforms
   template<std::ranges::contiguous_range T>
-  requires(
-    (decay_same_as<std::ranges::range_value_t<T>, float>)
-    || (decay_same_as<std::ranges::range_value_t<T>, std::uint32_t>)
-    || (decay_same_as<
-        std::ranges::range_value_t<T>,
-        std::int32_t>)) void SetUniform(std::string_view name, T v) const
+    requires(
+      (decay_same_as<std::ranges::range_value_t<T>, float>)
+      || (decay_same_as<std::ranges::range_value_t<T>, std::uint32_t>)
+      || (decay_same_as<std::ranges::range_value_t<T>, std::int32_t>))
+  void SetUniform(std::string_view name, T v) const
   {
     const auto perform = [&]<typename NT>(auto &&fun) {
       GLCall{}(

@@ -6,7 +6,15 @@
 #define FIELD_MAP_EDITOR_TEXTURE_HPP
 #include "Renderer.hpp"
 #include "unique_value.hpp"
+#include <algorithm>
+#include <bit>
+#include <filesystem>
+#include <fmt/format.h>
+#include <imgui.h>
+#include <ranges>
+#include <span>
 #include <stb_image.h>
+#include <stb_image_write.h>
 namespace glengine
 {
 class Texture
@@ -91,7 +99,7 @@ public:
     GLCall{}(glBindTexture, GL_TEXTURE_2D, 0);
   }
   template<std::ranges::random_access_range R>
-  requires std::permutable<std::ranges::iterator_t<R>>
+    requires std::permutable<std::ranges::iterator_t<R>>
   static constexpr void
     flip_slow(R &range, const std::ranges::range_difference_t<R> stride)
   {
@@ -144,7 +152,7 @@ public:
   }
 
   template<std::ranges::contiguous_range R>
-  requires std::permutable<std::ranges::iterator_t<R>>
+    requires std::permutable<std::ranges::iterator_t<R>>
   static void flip(R &range, const std::ranges::range_difference_t<R> stride)
   {
     if (std::ranges::empty(range))

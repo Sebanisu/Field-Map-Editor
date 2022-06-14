@@ -4,6 +4,7 @@
 
 #ifndef FIELD_MAP_EDITOR_VERTEXBUFFERLAYOUT_HPP
 #define FIELD_MAP_EDITOR_VERTEXBUFFERLAYOUT_HPP
+#include <numeric>
 namespace glengine
 {
 template<typename T>

@@ -5,18 +5,18 @@
 #ifndef FIELD_MAP_EDITOR_PIXELBUFFER_HPP
 #define FIELD_MAP_EDITOR_PIXELBUFFER_HPP
 #include "FrameBuffer.hpp"
-#include "scope_guard.hpp"
 #include "unique_value.hpp"
+#include "scope_guard.hpp"
 namespace glengine
 {
 class PixelBuffer
 {
   // todo make array_size a template argument?
-  constexpr static inline std::size_t ARRAY_SIZE = { 2U };
+#define ARRAY_SIZE 2U
 
-  using ArrayT                                   = GLID_array<ARRAY_SIZE>;
-  using ValueT                                   = typename ArrayT::ValueT;
-  using ParameterT                               = typename ArrayT::ParameterT;
+  using ArrayT     = GLID_array<ARRAY_SIZE>;
+  using ValueT     = typename ArrayT::ValueT;
+  using ParameterT = typename ArrayT::ParameterT;
   // wrapping this pointer to force it to call glUnmapBuffer. Should scope this.
   using unique_glubyte =
     std::unique_ptr<uint8_t, decltype([](const GLubyte *const) {
@@ -37,7 +37,7 @@ public:
                std::ranges::data(ids));
            },
             [&]() {
-              auto ids = ValueT{};
+              ValueT ids = {};
               // create 2 pixel buffer objects, you need to delete them when
               // program exits. glBufferData() with NULL pointer reserves only
               // memory space.
@@ -86,10 +86,9 @@ public:
    * @param call_back accepts image data and does something
    * @return true if any values are still present
    */
-  bool operator()(
-    std::
-      invocable<std::span<std::uint8_t>, std::filesystem::path, int, int> auto
-        &&call_back) const
+  template<
+    std::invocable<std::span<std::uint8_t>, std::filesystem::path, int, int> T>
+  bool operator()(T &&call_back) const
   {
     Next();
     FromPBO(std::forward<decltype(call_back)>(call_back));
@@ -97,10 +96,9 @@ public:
   }
 
 private:
-  void FromPBO(
-    std::
-      invocable<std::span<std::uint8_t>, std::filesystem::path, int, int> auto
-        &&call_back) const
+  template<
+    std::invocable<std::span<std::uint8_t>, std::filesystem::path, int, int> T>
+  void FromPBO(T &&call_back) const
   {
     // map the PBO to process its data by CPU
     const scope_guard unbind_pbo_buffer = (&UnBind);
@@ -162,6 +160,7 @@ private:
   mutable std::array<bool, ARRAY_SIZE>                  set   = {};
   mutable std::array<std::filesystem::path, ARRAY_SIZE> paths = {};
   ArrayT                                                pbos  = {};
+#undef ARRAY_SIZE
 };
 }// namespace glengine
 #endif// FIELD_MAP_EDITOR_PIXELBUFFER_HPP

@@ -4,6 +4,8 @@
 
 #ifndef FIELD_MAP_EDITOR_INDEXBUFFERDYNAMICSIZE_HPP
 #define FIELD_MAP_EDITOR_INDEXBUFFERDYNAMICSIZE_HPP
+#include "concepts.hpp"
+#include <cstdint>
 namespace glengine
 {
 /**

@@ -8,6 +8,8 @@
 #include "unique_value.hpp"
 #include "VertexBuffer.hpp"
 #include "VertexBufferLayout.hpp"
+#include <algorithm>
+#include <ranges>
 namespace glengine
 {
 class VertexArray

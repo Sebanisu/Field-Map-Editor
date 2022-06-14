@@ -5,6 +5,9 @@
 #ifndef FIELD_MAP_EDITOR_IMGUITILEDISPLAYWINDOW_HPP
 #define FIELD_MAP_EDITOR_IMGUITILEDISPLAYWINDOW_HPP
 #include <Counter.hpp>
+#include <Event/EventItem.hpp>
+#include <imgui.h>
+#include <Renderable.hpp>
 #include <scope_guard.hpp>
 namespace ff8
 {

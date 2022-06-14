@@ -1,6 +1,8 @@
 //
 // Created by pcvii on 11/29/2021.
 //
+#include "PixelBuffer.hpp"
+#include "MapChild.hpp"
 #include "FF8Menu.hpp"
 #include "FF8UpscaleMenu.hpp"
 #include "MapDeswizzle.hpp"

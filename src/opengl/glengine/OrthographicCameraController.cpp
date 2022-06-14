@@ -2,6 +2,7 @@
 #include "Event/EventDispatcher.hpp"
 #include "GLCheck.hpp"
 #include "Input.hpp"
+#include <algorithm>
 namespace glengine
 {
 void OrthographicCameraController::CheckInput(float ts) const

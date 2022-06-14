@@ -5,6 +5,10 @@
 #ifndef FIELD_MAP_EDITOR_LAYERSTACK_HPP
 #define FIELD_MAP_EDITOR_LAYERSTACK_HPP
 #include "LayerItem.hpp"
+#include <algorithm>
+#include <ranges>
+#include <span>
+#include <vector>
 namespace glengine
 {
 namespace Layer
@@ -20,7 +24,7 @@ namespace Layer
       end_of_layers = std::ranges::end(m_layers);
       std::ranges::move(overlays, std::back_inserter(m_layers));
     }
-    Stack(Stack &&other) noexcept = default;
+    Stack(Stack &&other) noexcept            = default;
     Stack &operator=(Stack &&other) noexcept = default;
     void   OnUpdate(float) const;
     void   OnRender() const;

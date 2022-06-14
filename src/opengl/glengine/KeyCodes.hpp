@@ -4,6 +4,7 @@
 
 #ifndef FIELD_MAP_EDITOR_KEYCODES_HPP
 #define FIELD_MAP_EDITOR_KEYCODES_HPP
+#include <type_traits>
 namespace glengine
 {
 // from glfw3.h

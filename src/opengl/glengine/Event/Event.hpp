@@ -5,6 +5,9 @@
 #ifndef FIELD_MAP_EDITOR_EVENT_HPP
 #define FIELD_MAP_EDITOR_EVENT_HPP
 #include "EventConcepts.hpp"
+#include <fmt/format.h>
+#include <string>
+#include <variant>
 namespace glengine
 {
 namespace Event

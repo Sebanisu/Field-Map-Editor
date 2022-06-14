@@ -4,9 +4,12 @@
 
 #ifndef FIELD_MAP_EDITOR_EVENTCONCEPTS_HPP
 #define FIELD_MAP_EDITOR_EVENTCONCEPTS_HPP
+#include "concepts.hpp"
 #include "EventEnums.hpp"
 #include "KeyCodes.hpp"
 #include "MouseButtonCodes.hpp"
+#include <array>
+#include <string_view>
 namespace glengine
 {
 namespace Event

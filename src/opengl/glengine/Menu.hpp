@@ -6,6 +6,7 @@
 #define FIELD_MAP_EDITOR_MENU_HPP
 #include "Event/EventItem.hpp"
 #include "MenuItem.hpp"
+#include <functional>
 namespace glengine
 {
 template<typename T>

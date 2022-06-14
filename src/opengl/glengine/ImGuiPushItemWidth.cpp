@@ -3,6 +3,7 @@
 //
 
 #include "ImGuiPushItemWidth.hpp"
+#include <imgui.h>
 glengine::scope_guard glengine::ImGuiPushItemWidth(float item_width) noexcept
 {
   ImGui::PushItemWidth(item_width);
