@@ -23,7 +23,6 @@
 #include "ImGuiViewPortWindow.hpp"
 #include "MapBlends.hpp"
 #include "MapFilters.hpp"
-#include "MapHistory.hpp"
 #include "OrthographicCamera.hpp"
 #include "OrthographicCameraController.hpp"
 #include "PixelBuffer.hpp"
@@ -52,7 +51,7 @@ public:
         m_mim,
         m_map_path,
         m_map_choose_coo))
-    , m_filters(m_map.front())
+    , m_filters(m_map)
   {
     if (std::empty(m_mim_path))
     {
@@ -74,18 +73,21 @@ public:
     m_delayed_textures         = LoadTextures(m_mim);
     m_upscale_delayed_textures = LoadTextures(m_upscale_path);
     SetCameraBoundsToEdgesOfImage();
-    // GetUniqueValues();
+    GetUniqueValues();
     m_tile_button_state =
       std::vector<bool>(VisitUnSortedUnFilteredTilesCount(), false);
   }
   void OnUpdate(float ts) const
   {
+
     if (m_delayed_textures.OnUpdate() || m_upscale_delayed_textures.OnUpdate())
     {
       if (!std::ranges::empty(m_upscale_path))
       {
         const auto current_max = (std::ranges::max_element)(
-          *m_upscale_delayed_textures.textures, {}, get_texture_height);
+          *m_upscale_delayed_textures.textures,
+          {},
+          [](const glengine::Texture &texture) { return texture.height(); });
         if (
           static_cast<float>(m_mim.get_height()) * m_tile_scale
           < static_cast<float>(current_max->height()))
@@ -157,18 +159,24 @@ public:
         std::ranges::empty(m_map_path) || std::ranges::empty(m_mim_path));
 
       m_changed = std::ranges::any_of(
-        std::array{ ImGui::Checkbox("Draw Grid", &s_draw_grid),
-                    ImGui::Checkbox("Fit Height", &s_fit_height),
-                    ImGui::Checkbox("Fit Width", &s_fit_width),
-                    [&]() -> bool {
-                      return !do_we_use_blending()
-                             || std::ranges::any_of(
-                               std::array{
-                                 ImGui::Checkbox("Blending", &s_blending),
-                                 s_blends.OnImGuiUpdate() },
-                               std::identity{});
-                    }(),
-                    m_filters.OnImGuiUpdate() },
+        std::array{
+          ImGui::Checkbox("Draw Grid", &s_draw_grid),
+          ImGui::Checkbox("Fit Height", &s_fit_height),
+          ImGui::Checkbox("Fit Width", &s_fit_width),
+          [&]() -> bool {
+            return m_map.visit_tiles([](auto &&tiles) -> bool {
+              using tileT = std::ranges::range_value_t<decltype(tiles)>;
+              static constexpr typename TileFunctions::template Bounds<
+                std::decay_t<tileT>>::use_blending use_blending{};
+              if (!use_blending)
+                return true;
+              const bool checkbox_changed =
+                ImGui::Checkbox("Blending", &s_blending);
+              const bool blend_options_changed = s_blends.OnImGuiUpdate();
+              return checkbox_changed || blend_options_changed;
+            });
+          }(),
+          m_filters.OnImGuiUpdate() },
         std::identity{});
 
 
@@ -211,18 +219,22 @@ public:
       float      text_width = 0.F;
       ImVec2     last_pos   = {};
       const auto render_sub_texture =
-        [&text_width, &last_pos, this](
-          const glengine::SubTexture &sub_texture) -> bool {
+        [&text_width,
+         &last_pos](const glengine::SubTexture &sub_texture) -> bool {
         text_width = 0.F;
         const auto imgui_texture_id_ref =
           ConvertGLIDtoImTextureID(sub_texture.ID());
-        const auto uv        = sub_texture.ImGuiUV();
-        const auto id_pop    = glengine::ImGuiPushID();
-        const auto color     = ImVec4(0.F, 0.F, 0.F, 0.F);
-        last_pos             = ImGui::GetCursorPos();
-        text_width           = ImGui::GetItemRectMax().x;
-        const auto pop_color = PushColor(color);
-        bool       value     = ImGui::ImageButton(
+        const auto uv     = sub_texture.ImGuiUV();
+        const auto id_pop = glengine::ImGuiPushID();
+        const auto color  = ImVec4(0.F, 0.F, 0.F, 0.F);
+        last_pos          = ImGui::GetCursorPos();
+        text_width        = ImGui::GetItemRectMax().x;
+        ImGui::PushStyleColor(ImGuiCol_Button, color);
+        const auto pop_color =
+          glengine::scope_guard([]() { ImGui::PopStyleColor(1); });
+        // ImGui::PushStyleColor(ImGuiCol_ButtonActive, color);
+        // ImGui::PushStyleColor(ImGuiCol_ButtonHovered, color);
+        bool value = ImGui::ImageButton(
           imgui_texture_id_ref, ImVec2(16, 16), uv[0], uv[1]);
         text_width = ImGui::GetStyle().ItemSpacing.x + ImGui::GetItemRectMax().x
                      - text_width;
@@ -317,7 +329,9 @@ private:
     bool draw = tile.draw();
     if (ImGui::Checkbox("Draw?", &draw))
     {
-      if (do_we_use_blending())
+      static constexpr typename TileFunctions::template Bounds<
+        std::decay_t<decltype(tile)>>::use_blending use_blending{};
+      if (use_blending)
       {
         // this won't display change on swizzle because if we skip
         // those tiles they won't output to the image file.
@@ -383,7 +397,7 @@ private:
           tile = tile.with_depth(open_viii::graphics::BPPT(false, true, false));
           break;
       }
-      m_filters.unique_tile_values().refresh_bpp(m_map.back());
+      m_filters.unique_tile_values().refresh_bpp(m_map);
       changed = true;
     }
     return current_bpp_selection;
@@ -420,10 +434,10 @@ private:
             "##Source (Y)",
             &source_xy[1],
             std::numeric_limits<
-              std::remove_cvref_t<decltype(tile.source_xy().y())>>::min()
+              std::decay_t<decltype(tile.source_xy().y())>>::min()
               / tile.height(),
             std::numeric_limits<
-              std::remove_cvref_t<decltype(tile.source_xy().y())>>::max()
+              std::decay_t<decltype(tile.source_xy().y())>>::max()
               / tile.height()))
       {
         changed = true;
@@ -482,7 +496,7 @@ private:
       {
         changed = true;
         tile    = tile.with_z(static_cast<decltype(tile.z())>(xyz[2]));
-        m_filters.unique_tile_values().refresh_z(m_map.back());
+        m_filters.unique_tile_values().refresh_z(m_map);
       }
     }
     ImGui::SameLine(0, ImGui::GetStyle().ItemInnerSpacing.x);
@@ -495,7 +509,7 @@ private:
   void ComboBlendModes(auto &tile, bool &changed) const
   {
     using namespace open_viii::graphics::background;
-    using TileT         = std::remove_cvref_t<decltype(tile)>;
+    using TileT         = std::decay_t<decltype(tile)>;
     const auto disabled = glengine::ImGuiDisabled(!has_with_blend_mode<TileT>);
     const auto blend_mode                   = tile.blend_mode();
     int        current_blend_mode_selection = static_cast<int>(blend_mode);
@@ -510,7 +524,7 @@ private:
         changed = true;
         tile    = tile.with_blend_mode(static_cast<decltype(tile.blend_mode())>(
           current_blend_mode_selection));
-        m_filters.unique_tile_values().refresh_blend_mode(m_map.back());
+        m_filters.unique_tile_values().refresh_blend_mode(m_map);
       }
     }
   }
@@ -518,22 +532,20 @@ private:
   {
     using namespace open_viii::graphics::background;
     int        layer_id = tile.layer_id();
-    const auto disabled = glengine::ImGuiDisabled(
-      !has_with_layer_id<std::remove_cvref_t<decltype(tile)>>);
+    const auto disabled =
+      glengine::ImGuiDisabled(!has_with_layer_id<std::decay_t<decltype(tile)>>);
     if (ImGui::SliderInt(
           "Layer ID",
           &layer_id,
-          std::numeric_limits<
-            std::remove_cvref_t<decltype(tile.layer_id())>>::min(),
-          std::numeric_limits<
-            std::remove_cvref_t<decltype(tile.layer_id())>>::max()))
+          std::numeric_limits<std::decay_t<decltype(tile.layer_id())>>::min(),
+          std::numeric_limits<std::decay_t<decltype(tile.layer_id())>>::max()))
     {
-      if constexpr (has_with_layer_id<std::remove_cvref_t<decltype(tile)>>)
+      if constexpr (has_with_layer_id<std::decay_t<decltype(tile)>>)
       {
         changed = true;
         tile =
           tile.with_layer_id(static_cast<decltype(tile.layer_id())>(layer_id));
-        m_filters.unique_tile_values().refresh_layer_id(m_map.back());
+        m_filters.unique_tile_values().refresh_layer_id(m_map);
       }
     }
   }
@@ -545,7 +557,7 @@ private:
       changed = true;
       tile    = tile.with_texture_id(
         static_cast<decltype(tile.texture_id())>(texture_page_id));
-      m_filters.unique_tile_values().refresh_texture_page_id(m_map.back());
+      m_filters.unique_tile_values().refresh_texture_page_id(m_map);
     }
   }
   void SliderIntPaletteID(auto &tile, bool &changed) const
@@ -556,7 +568,7 @@ private:
       changed = true;
       tile    = tile.with_palette_id(
         static_cast<decltype(tile.palette_id())>(palette_id));
-      m_filters.unique_tile_values().refresh_palette_id(m_map.back());
+      m_filters.unique_tile_values().refresh_palette_id(m_map);
     }
   }
   void SliderIntBlendOther(auto &tile, bool &changed) const
@@ -565,14 +577,12 @@ private:
     if (ImGui::SliderInt(
           "Blend Other",
           &blend,
-          std::numeric_limits<
-            std::remove_cvref_t<decltype(tile.blend())>>::min(),
-          std::numeric_limits<
-            std::remove_cvref_t<decltype(tile.blend())>>::max()))
+          std::numeric_limits<std::decay_t<decltype(tile.blend())>>::min(),
+          std::numeric_limits<std::decay_t<decltype(tile.blend())>>::max()))
     {
       changed = true;
       tile    = tile.with_blend(static_cast<decltype(tile.blend())>(blend));
-      m_filters.unique_tile_values().refresh_blend_other(m_map.back());
+      m_filters.unique_tile_values().refresh_blend_other(m_map);
     }
   }
   void SliderInt2Animation(auto &tile, bool &changed) const
@@ -581,7 +591,7 @@ private:
     int                           animation_state = tile.animation_state();
     const std::pair<float, float> item_width      = generate_inner_width(2);
     using namespace open_viii::graphics::background;
-    using TileT = std::remove_cvref_t<decltype(tile)>;
+    using TileT = std::decay_t<decltype(tile)>;
     {
       const auto disabled =
         glengine::ImGuiDisabled(!has_with_animation_id<TileT>);
@@ -590,16 +600,16 @@ private:
             "##Animation ID",
             &animation_id,
             std::numeric_limits<
-              std::remove_cvref_t<decltype(tile.animation_id())>>::min(),
+              std::decay_t<decltype(tile.animation_id())>>::min(),
             std::numeric_limits<
-              std::remove_cvref_t<decltype(tile.animation_id())>>::max()))
+              std::decay_t<decltype(tile.animation_id())>>::max()))
       {
         if constexpr (has_with_animation_id<TileT>)
         {
           changed = true;
           tile    = tile.with_animation_id(
             static_cast<decltype(tile.animation_id())>(animation_id));
-          m_filters.unique_tile_values().refresh_animation_id(m_map.back());
+          m_filters.unique_tile_values().refresh_animation_id(m_map);
         }
       }
     }
@@ -612,16 +622,16 @@ private:
             "##Animation State",
             &animation_state,
             std::numeric_limits<
-              std::remove_cvref_t<decltype(tile.animation_state())>>::min(),
+              std::decay_t<decltype(tile.animation_state())>>::min(),
             std::numeric_limits<
-              std::remove_cvref_t<decltype(tile.animation_state())>>::max()))
+              std::decay_t<decltype(tile.animation_state())>>::max()))
       {
         if constexpr (has_with_animation_state<TileT>)
         {
           changed = true;
           tile    = tile.with_animation_state(
             static_cast<decltype(tile.animation_state())>(animation_state));
-          m_filters.unique_tile_values().refresh_animation_frame(m_map.back());
+          m_filters.unique_tile_values().refresh_animation_frame(m_map);
         }
       }
     }
@@ -713,12 +723,14 @@ private:
         / texture_dims
     };
   }
-  template<typename TileT>
-  glm::vec3 TileToDrawPos(const TileT &tile) const
+  glm::vec3 TileToDrawPos(const auto &tile) const
   {
-    static constexpr auto x            = get_x<TileT>();
-    static constexpr auto y            = get_y<TileT>();
-    static constexpr auto texture_page = get_texture_page<TileT>();
+    using tileT = std::decay_t<decltype(tile)>;
+    static constexpr typename TileFunctions::template Bounds<tileT>::x x{};
+    static constexpr typename TileFunctions::template Bounds<tileT>::y y{};
+    static constexpr
+      typename TileFunctions::template Bounds<tileT>::texture_page
+        texture_page{};
     return { (static_cast<float>(
                 x(tile) + texture_page(tile) * s_texture_page_width)
               - m_offset_x)
@@ -733,14 +745,28 @@ private:
   }
   auto VisitTiles(auto &&lambda) const
   {
-    return m_map.back().visit_tiles([&](const auto &tiles) {
-      auto f_tiles = tiles | std::views::filter(filter_invalid)
-                     | std::views::filter(filter_use_blending_and_draw)
-                     | std::views::filter(m_filters.TestTile());
+    return m_map.visit_tiles([&](const auto &tiles) {
+      auto f_tiles =
+        tiles
+        | std::views::filter(
+          open_viii::graphics::background::Map::filter_invalid())
+        | std::views::filter([](const auto &tile) -> bool {
+            static constexpr typename TileFunctions::template Bounds<
+              std::decay_t<decltype(tile)>>::use_blending use_blending{};
+            if (use_blending)
+            {
+              return tile.draw();
+            }
+            return true;
+          })
+        | std::views::filter(m_filters.TestTile());
       std::vector<std::uint16_t> unique_z{};
       {
         // unique_z.reserve(std::ranges::size(tiles));
-        std::ranges::transform(f_tiles, std::back_inserter(unique_z), get_z);
+        std::ranges::transform(
+          f_tiles, std::back_inserter(unique_z), [](const auto &tile) {
+            return tile.z();
+          });
         std::ranges::sort(unique_z);
         auto [begin, end] = std::ranges::unique(unique_z);
         unique_z.erase(begin, end);
@@ -750,7 +776,8 @@ private:
       for (const auto z : unique_z_reverse)
       {
         auto f_tiles_reverse_filter_z =
-          f_tiles | std::views::reverse | std::views::filter(get_match_z(z));
+          f_tiles | std::views::reverse
+          | std::views::filter([z](const auto &t) { return z == t.z(); });
         for (const auto &tile : f_tiles_reverse_filter_z)
         {
           if (!lambda(tile))
@@ -763,22 +790,20 @@ private:
   void RenderTiles() const
   {
     using open_viii::graphics::background::BlendModeT;
+    BlendModeT last_blend_mode{ BlendModeT::none };
     s_uniform_color = s_default_uniform_color;
     glengine::Window::DefaultBlend();
     m_imgui_viewport_window.OnRender();
     SetUniforms();
     m_batch_renderer.Clear();
-    VisitTiles(
-      [this,
-       last_blend_mode{ BlendModeT::none }](const auto &tile) mutable -> bool {
-        if (const auto sub_texture = TileToSubTexture(tile); sub_texture)
-        {
-          UpdateBlendMode(tile, last_blend_mode);
-          m_batch_renderer.DrawQuad(
-            *sub_texture, TileToDrawPos(tile), TileSize());
-        }
+    VisitTiles([this, &last_blend_mode](const auto &tile) -> bool {
+      auto sub_texture = TileToSubTexture(tile);
+      if (!sub_texture)
         return true;
-      });
+      UpdateBlendMode(tile, last_blend_mode);
+      m_batch_renderer.DrawQuad(*sub_texture, TileToDrawPos(tile), TileSize());
+      return true;
+    });
     m_batch_renderer.Draw();
     m_batch_renderer.OnRender();
     glengine::Window::DefaultBlend();
@@ -788,7 +813,9 @@ private:
     const auto                                  &tile,
     open_viii::graphics::background::BlendModeT &last_blend_mode) const
   {
-    if (!do_we_use_blending() || !s_blending)
+    static constexpr typename TileFunctions::template Bounds<
+      std::decay_t<decltype(tile)>>::use_blending use_blending{};
+    if (!use_blending || !s_blending)
       return;
     auto blend_mode = tile.blend_mode();
     if (blend_mode != last_blend_mode)
@@ -877,7 +904,9 @@ private:
   }
   void Save() const
   {
-    const auto stop_saving = start_saving();
+    m_saving = true;
+    const auto not_saving =
+      glengine::scope_guard_captures([&]() { m_saving = false; });
     OnRender();
     const auto path = std::filesystem::path(m_map_path);
     auto       string =
@@ -887,29 +916,22 @@ private:
     while (pixel_buffer.operator()(&glengine::Texture::save))
       ;
   }
-  [[nodiscard]] auto PushColor(const ImVec4 &color) const
+  auto VisitUnSortedUnFilteredTilesCount() const
   {
-    ImGui::PushStyleColor(ImGuiCol_Button, color);
-    // ImGui::PushStyleColor(ImGuiCol_ButtonActive, color);
-    // ImGui::PushStyleColor(ImGuiCol_ButtonHovered, color);
-    return glengine::scope_guard([]() { ImGui::PopStyleColor(1); });
-  }
-  [[nodiscard]] auto start_saving() const
-  {
-    m_saving = true;
-    return glengine::scope_guard_captures([&]() { m_saving = false; });
-  }
-  [[nodiscard]] auto VisitUnSortedUnFilteredTilesCount() const
-  {
-    return m_map.back().visit_tiles([&](const auto &tiles) -> std::size_t {
-      auto f_tiles = tiles | std::views::filter(filter_invalid);
-      return static_cast<std::size_t>(std::ranges::count_if(f_tiles, all_true));
+    return m_map.visit_tiles([&](const auto &tiles) -> std::size_t {
+      auto f_tiles = tiles
+                     | std::views::filter(
+                       open_viii::graphics::background::Map::filter_invalid());
+      return static_cast<std::size_t>(
+        std::ranges::count_if(f_tiles, [](auto &&) { return true; }));
     });
   }
   bool VisitUnSortedUnFilteredTiles(auto &&lamda) const
   {
-    return m_map.back().visit_tiles([&](auto &&tiles) -> bool {
-      auto f_tiles = tiles | std::views::filter(filter_invalid);
+    return m_map.visit_tiles([&](auto &&tiles) -> bool {
+      auto f_tiles = tiles
+                     | std::views::filter(
+                       open_viii::graphics::background::Map::filter_invalid());
       bool changed = false;
       for (auto &tile : f_tiles)
       {
@@ -918,14 +940,36 @@ private:
       return changed;
     });
   }
+  void GetUniqueValues()
+  {
+    auto vector = m_map.visit_tiles([&](const auto &tiles) {
+      auto f_tiles = tiles
+                     | std::views::filter(
+                       open_viii::graphics::background::Map::filter_invalid());
+      return TransformedSortedUniqueCopy(
+        f_tiles, [](const auto &tile) { return tile.palette_id(); });
+    });
+    for (const auto &value : vector)
+      fmt::print("\t{}\n", value);
+  }
   void SetCameraBoundsToEdgesOfImage()
   {
-    m_map.back().visit_tiles([&]<typename TilesT>(const TilesT &tiles) {
-      static constexpr auto x            = get_x<TilesT>();
-      static constexpr auto y            = get_y<TilesT>();
-      static constexpr auto texture_page = get_texture_page<TilesT>();
-
-      auto f_tiles            = tiles | std::views::filter(filter_invalid);
+    // s_camera.RefreshAspectRatio(m_imgui_viewport_window.ViewPortAspectRatio());
+    m_map.visit_tiles([&](const auto &tiles) {
+      using tileT = std::ranges::range_value_t<decltype(tiles)>;
+      static constexpr typename TileFunctions::template Bounds<tileT>::x x{};
+      static constexpr typename TileFunctions::template Bounds<tileT>::y y{};
+      static constexpr
+        typename TileFunctions::template Bounds<tileT>::use_texture_page
+          use_texture_page{};
+      static constexpr
+        typename TileFunctions::template Bounds<tileT>::texture_page
+                            texture_page{};
+      static constexpr auto true_x  = [](const auto &tile) { return tile.x(); };
+      static constexpr auto true_y  = [](const auto &tile) { return tile.y(); };
+      auto                  f_tiles = tiles
+                     | std::views::filter(
+                       open_viii::graphics::background::Map::filter_invalid());
       auto [i_min_x, i_max_x] = std::ranges::minmax_element(f_tiles, {}, x);
       auto [i_min_y, i_max_y] = std::ranges::minmax_element(f_tiles, {}, y);
       auto [true_i_min_x, true_i_max_x] =
@@ -943,110 +987,31 @@ private:
       true_max_xy = glm::vec2(true_x(*true_i_max_x), true_y(*true_i_max_y));
       min_x       = x(*i_min_x);
       max_x       = static_cast<float>(
-        do_we_use_texture_page()
+        use_texture_page
                 ? x(*i_max_x)
                 : (texture_page(*i_max_texture_page) + 1) * s_texture_page_width);
       min_y             = y(*i_min_y);
       max_y             = y(*i_max_y);
       const auto width  = max_x - min_x + 16.F;
       const auto height = max_y - min_y + 16.F;
+
+      // m_offset_y        = static_cast<float>(min_y + max_y);
       m_offset_x        = width / 2.F + min_x;
       m_offset_y        = height / 2.F + min_y - 16.F;
+      //  m_position        = glm::vec3(min_x, min_y, 0.F);
       m_position        = glm::vec3(-width / 2.F, -height / 2.F, 0.F);
+
       m_imgui_viewport_window.SetImageBounds(glm::vec2{ width, height });
+
+      //      s_fixed_render_camera.SetProjection(
+      //        static_cast<float>(min_x),
+      //        static_cast<float>(max_x + 16),
+      //        static_cast<float>(min_y),
+      //        static_cast<float>(max_y + 16));
       m_fixed_render_camera.SetProjection({ width, height });
       m_frame_buffer = glengine::FrameBuffer(glengine::FrameBufferSpecification{
         .width  = static_cast<int>(abs(width)),
         .height = static_cast<int>(abs(height)) });
-    });
-  }
-  constexpr static auto filter_invalid =
-    open_viii::graphics::background::Map::filter_invalid();
-  constexpr static auto filter_use_blending_and_draw =
-    [](const auto &tile) -> bool {
-    static constexpr typename TileFunctions::template Bounds<
-      std::remove_cvref_t<decltype(tile)>>::use_blending use_blending{};
-    if (use_blending)
-    {
-      return tile.draw();
-    }
-    return true;
-  };
-  constexpr static auto all_true       = [](auto &&) { return true; };
-  constexpr static auto get_palette_id = [](const auto &tile) {
-    return tile.palette_id();
-  };
-  constexpr static auto get_z = [](const auto &tile) { return tile.z(); };
-  template<typename T>
-    requires(std::ranges::range<std::remove_cvref_t<T>>)
-  static constexpr auto get_x()
-  {
-    using function_t =
-      typename TileFunctions::template Bounds<std::ranges::range_value_t<T>>::x;
-    return function_t{};
-  }
-  template<typename T>
-    requires(!std::ranges::range<std::remove_cvref_t<T>>)
-  static constexpr auto get_x()
-  {
-    using function_t =
-      typename TileFunctions::template Bounds<std::remove_cvref_t<T>>::x;
-    return function_t{};
-  }
-  template<typename T>
-    requires(std::ranges::range<std::remove_cvref_t<T>>)
-  static constexpr auto get_y()
-  {
-    using function_t =
-      typename TileFunctions::template Bounds<std::ranges::range_value_t<T>>::y;
-    return function_t{};
-  }
-  template<typename T>
-    requires(!std::ranges::range<std::remove_cvref_t<T>>)
-  static constexpr auto get_y()
-  {
-    using function_t =
-      typename TileFunctions::template Bounds<std::remove_cvref_t<T>>::y;
-    return function_t{};
-  }
-
-  template<typename T>
-    requires(std::ranges::range<std::remove_cvref_t<T>>)
-  static constexpr auto get_texture_page()
-  {
-    using function_t = typename TileFunctions::template Bounds<
-      std::ranges::range_value_t<T>>::texture_page;
-    return function_t{};
-  }
-  template<typename T>
-    requires(!std::ranges::range<std::remove_cvref_t<T>>)
-  static constexpr auto get_texture_page()
-  {
-    using function_t = typename TileFunctions::template Bounds<
-      std::remove_cvref_t<T>>::texture_page;
-    return function_t{};
-  }
-  constexpr static auto get_match_z(auto z)
-  {
-    return [z](const auto &tile) { return z == get_z(tile); };
-  }
-  constexpr static auto get_texture_height =
-    [](const glengine::Texture &texture) { return texture.height(); };
-  static constexpr auto true_x = [](const auto &tile) { return tile.x(); };
-  static constexpr auto true_y = [](const auto &tile) { return tile.y(); };
-  bool                  do_we_use_blending() const
-  {
-    return m_map.back().visit_tiles([](auto &&tiles) -> bool {
-      using tileT = std::ranges::range_value_t<decltype(tiles)>;
-      return typename TileFunctions::template Bounds<
-        std::remove_cvref_t<tileT>>::use_blending{};
-    });
-  }
-  bool do_we_use_texture_page() const
-  {
-    return m_map.back().visit_tiles([](auto &&tiles) -> bool {
-      using tileT = std::ranges::range_value_t<decltype(tiles)>;
-      return typename TileFunctions::template Bounds<tileT>::use_texture_page{};
     });
   }
   mutable glengine::OrthographicCamera m_fixed_render_camera = {};
@@ -1076,11 +1041,11 @@ private:
   // if coo was chosen instead of default.
   bool                       m_map_choose_coo        = {};
   // container for field textures
-  open_viii::graphics::background::Mim m_mim         = {};
+  open_viii::graphics::background::Mim         m_mim = {};
   // container for field tile information
-  mutable MapHistory                   m_map         = {};
+  mutable open_viii::graphics::background::Map m_map = {};
   // loads the textures overtime instead of forcing them to load at start.
-  glengine::DelayedTextures<35U>       m_delayed_textures = {};
+  glengine::DelayedTextures<35U>               m_delayed_textures = {};
   glengine::DelayedTextures<17U * 13U>
     m_upscale_delayed_textures = {};// 20 is detected max 16(+1)*13 is possible
                                     // max. 0 being no palette and 1-17 being
@@ -1096,7 +1061,7 @@ private:
   mutable bool                      m_preview               = { false };
   glm::vec3                         m_position              = {};
   inline constinit static MapBlends s_blends                = {};
-  mutable MapFilters                m_filters               = { m_map.front() };
+  mutable MapFilters                m_filters               = { m_map };
   mutable bool                      m_changed               = { true };
   mutable glm::vec2                 true_min_xy             = {};
   mutable glm::vec2                 true_max_xy             = {};
