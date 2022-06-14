@@ -159,24 +159,26 @@ public:
         std::ranges::empty(m_map_path) || std::ranges::empty(m_mim_path));
 
       m_changed = std::ranges::any_of(
-        std::array{
-          ImGui::Checkbox("Draw Grid", &s_draw_grid),
-          ImGui::Checkbox("Fit Height", &s_fit_height),
-          ImGui::Checkbox("Fit Width", &s_fit_width),
-          [&]() -> bool {
-            return m_map.visit_tiles([](auto &&tiles) -> bool {
-              using tileT = std::ranges::range_value_t<decltype(tiles)>;
-              static constexpr typename TileFunctions::template Bounds<
-                std::decay_t<tileT>>::use_blending use_blending{};
-              if (!use_blending)
-                return true;
-              const bool checkbox_changed =
-                ImGui::Checkbox("Blending", &s_blending);
-              const bool blend_options_changed = s_blends.OnImGuiUpdate();
-              return checkbox_changed || blend_options_changed;
-            });
-          }(),
-          m_filters.OnImGuiUpdate() },
+        std::array{ ImGui::Checkbox("Draw Grid", &s_draw_grid),
+                    ImGui::Checkbox("Fit Height", &s_fit_height),
+                    ImGui::Checkbox("Fit Width", &s_fit_width),
+                    [&]() -> bool {
+                      return m_map.visit_tiles([](auto &&) -> bool {
+                        if constexpr (!typename TileFunctions::use_blending{})
+                        {
+                          return true;
+                        }
+                        else
+                        {
+                          const bool checkbox_changed =
+                            ImGui::Checkbox("Blending", &s_blending);
+                          const bool blend_options_changed =
+                            s_blends.OnImGuiUpdate();
+                          return checkbox_changed || blend_options_changed;
+                        }
+                      });
+                    }(),
+                    m_filters.OnImGuiUpdate() },
         std::identity{});
 
 
@@ -329,9 +331,7 @@ private:
     bool draw = tile.draw();
     if (ImGui::Checkbox("Draw?", &draw))
     {
-      static constexpr typename TileFunctions::template Bounds<
-        std::decay_t<decltype(tile)>>::use_blending use_blending{};
-      if (use_blending)
+      if constexpr (typename TileFunctions::use_blending{})
       {
         // this won't display change on swizzle because if we skip
         // those tiles they won't output to the image file.
@@ -677,10 +677,10 @@ private:
     }
     m_batch_renderer.Shader().SetUniform(
       "u_Color",
-      s_uniform_color.r,
-      s_uniform_color.g,
-      s_uniform_color.b,
-      s_uniform_color.a);
+      m_uniform_color.r,
+      m_uniform_color.g,
+      m_uniform_color.b,
+      m_uniform_color.a);
   }
   std::optional<glengine::SubTexture> TileToSubTexture(const auto &tile) const
   {
@@ -725,12 +725,9 @@ private:
   }
   glm::vec3 TileToDrawPos(const auto &tile) const
   {
-    using tileT = std::decay_t<decltype(tile)>;
-    static constexpr typename TileFunctions::template Bounds<tileT>::x x{};
-    static constexpr typename TileFunctions::template Bounds<tileT>::y y{};
-    static constexpr
-      typename TileFunctions::template Bounds<tileT>::texture_page
-        texture_page{};
+    static constexpr typename TileFunctions::x            x{};
+    static constexpr typename TileFunctions::y            y{};
+    static constexpr typename TileFunctions::texture_page texture_page{};
     return { (static_cast<float>(
                 x(tile) + texture_page(tile) * s_texture_page_width)
               - m_offset_x)
@@ -746,20 +743,19 @@ private:
   auto VisitTiles(auto &&lambda) const
   {
     return m_map.visit_tiles([&](const auto &tiles) {
-      auto f_tiles =
-        tiles
-        | std::views::filter(
-          open_viii::graphics::background::Map::filter_invalid())
-        | std::views::filter([](const auto &tile) -> bool {
-            static constexpr typename TileFunctions::template Bounds<
-              std::decay_t<decltype(tile)>>::use_blending use_blending{};
-            if (use_blending)
-            {
-              return tile.draw();
-            }
-            return true;
-          })
-        | std::views::filter(m_filters.TestTile());
+      auto f_tiles = tiles
+                     | std::views::filter(
+                       open_viii::graphics::background::Map::filter_invalid())
+                     | std::views::filter([](const auto &tile) -> bool {
+                         static constexpr
+                           typename TileFunctions::use_blending use_blending{};
+                         if (use_blending)
+                         {
+                           return tile.draw();
+                         }
+                         return true;
+                       })
+                     | std::views::filter(m_filters.TestTile());
       std::vector<std::uint16_t> unique_z{};
       {
         // unique_z.reserve(std::ranges::size(tiles));
@@ -791,7 +787,7 @@ private:
   {
     using open_viii::graphics::background::BlendModeT;
     BlendModeT last_blend_mode{ BlendModeT::none };
-    s_uniform_color = s_default_uniform_color;
+    m_uniform_color = s_default_uniform_color;
     glengine::Window::DefaultBlend();
     m_imgui_viewport_window.OnRender();
     SetUniforms();
@@ -799,7 +795,9 @@ private:
     VisitTiles([this, &last_blend_mode](const auto &tile) -> bool {
       auto sub_texture = TileToSubTexture(tile);
       if (!sub_texture)
+      {
         return true;
+      }
       UpdateBlendMode(tile, last_blend_mode);
       m_batch_renderer.DrawQuad(*sub_texture, TileToDrawPos(tile), TileSize());
       return true;
@@ -807,50 +805,54 @@ private:
     m_batch_renderer.Draw();
     m_batch_renderer.OnRender();
     glengine::Window::DefaultBlend();
-    s_uniform_color = s_default_uniform_color;
+    m_uniform_color = s_default_uniform_color;
   }
   void UpdateBlendMode(
-    const auto                                  &tile,
-    open_viii::graphics::background::BlendModeT &last_blend_mode) const
+    [[maybe_unused]] const auto &tile,
+    [[maybe_unused]] open_viii::graphics::background::BlendModeT
+      &last_blend_mode) const
   {
-    static constexpr typename TileFunctions::template Bounds<
-      std::decay_t<decltype(tile)>>::use_blending use_blending{};
-    if (!use_blending || !s_blending)
-      return;
-    auto blend_mode = tile.blend_mode();
-    if (blend_mode != last_blend_mode)
+    if constexpr (typename TileFunctions::use_blending{})
     {
-      m_batch_renderer.Draw();// flush buffer.
-      last_blend_mode = blend_mode;
-      if (s_blends.PercentBlendEnabled())
+      if (!s_blending)
       {
+        return;
+      }
+      auto blend_mode = tile.blend_mode();
+      if (blend_mode != last_blend_mode)
+      {
+        m_batch_renderer.Draw();// flush buffer.
+        last_blend_mode = blend_mode;
+        if (s_blends.PercentBlendEnabled())
+        {
+          switch (blend_mode)
+          {
+            case open_viii::graphics::background::BlendModeT::half_add:
+              m_uniform_color = s_half_uniform_color;
+              break;
+            case open_viii::graphics::background::BlendModeT::quarter_add:
+              m_uniform_color = s_quarter_uniform_color;
+              break;
+            default:
+              m_uniform_color = s_default_uniform_color;
+              break;
+          }
+        }
         switch (blend_mode)
         {
           case open_viii::graphics::background::BlendModeT::half_add:
-            s_uniform_color = s_half_uniform_color;
-            break;
           case open_viii::graphics::background::BlendModeT::quarter_add:
-            s_uniform_color = s_quarter_uniform_color;
-            break;
+          case open_viii::graphics::background::BlendModeT::add: {
+            s_blends.SetAddBlend();
+          }
+          break;
+          case open_viii::graphics::background::BlendModeT ::subtract: {
+            s_blends.SetSubtractBlend();
+          }
+          break;
           default:
-            s_uniform_color = s_default_uniform_color;
-            break;
+            glengine::Window::DefaultBlend();
         }
-      }
-      switch (blend_mode)
-      {
-        case open_viii::graphics::background::BlendModeT::half_add:
-        case open_viii::graphics::background::BlendModeT::quarter_add:
-        case open_viii::graphics::background::BlendModeT::add: {
-          s_blends.SetAddBlend();
-        }
-        break;
-        case open_viii::graphics::background::BlendModeT ::subtract: {
-          s_blends.SetSubtractBlend();
-        }
-        break;
-        default:
-          glengine::Window::DefaultBlend();
       }
     }
   }
@@ -956,15 +958,9 @@ private:
   {
     // s_camera.RefreshAspectRatio(m_imgui_viewport_window.ViewPortAspectRatio());
     m_map.visit_tiles([&](const auto &tiles) {
-      using tileT = std::ranges::range_value_t<decltype(tiles)>;
-      static constexpr typename TileFunctions::template Bounds<tileT>::x x{};
-      static constexpr typename TileFunctions::template Bounds<tileT>::y y{};
-      static constexpr
-        typename TileFunctions::template Bounds<tileT>::use_texture_page
-          use_texture_page{};
-      static constexpr
-        typename TileFunctions::template Bounds<tileT>::texture_page
-                            texture_page{};
+      static constexpr typename TileFunctions::x            x{};
+      static constexpr typename TileFunctions::y            y{};
+      static constexpr typename TileFunctions::texture_page texture_page{};
       static constexpr auto true_x  = [](const auto &tile) { return tile.x(); };
       static constexpr auto true_y  = [](const auto &tile) { return tile.y(); };
       auto                  f_tiles = tiles
@@ -986,12 +982,19 @@ private:
       true_min_xy = glm::vec2(true_x(*true_i_min_x), true_y(*true_i_min_y));
       true_max_xy = glm::vec2(true_x(*true_i_max_x), true_y(*true_i_max_y));
       min_x       = x(*i_min_x);
-      max_x       = static_cast<float>(
-        use_texture_page
-                ? x(*i_max_x)
-                : (texture_page(*i_max_texture_page) + 1) * s_texture_page_width);
-      min_y             = y(*i_min_y);
-      max_y             = y(*i_max_y);
+
+      max_x       = static_cast<float>([&, i_max_x = i_max_x]() {
+        if constexpr (typename TileFunctions::use_texture_page{})
+        {
+          return x(*i_max_x);
+        }
+        else
+        {
+          return (texture_page(*i_max_texture_page) + 1) * s_texture_page_width;
+        }
+      }());
+      min_y       = y(*i_min_y);
+      max_y       = y(*i_max_y);
       const auto width  = max_x - min_x + 16.F;
       const auto height = max_y - min_y + 16.F;
 
@@ -1029,7 +1032,7 @@ private:
                                                          .25F,
                                                          .25F,
                                                          .25F };
-  inline static glm::vec4    s_uniform_color         = s_default_uniform_color;
+  mutable glm::vec4          m_uniform_color         = s_default_uniform_color;
 
   std::string                m_upscale_path          = {};
   // internal mim file path

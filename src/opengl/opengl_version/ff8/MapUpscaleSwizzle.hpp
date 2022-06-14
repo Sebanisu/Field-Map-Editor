@@ -9,30 +9,16 @@
 #include "Map.hpp"
 #include "Mim.hpp"
 #include "Texture.hpp"
-
+#include "tile_operations.hpp"
 namespace ff8
 {
 struct TileFunctionsUpscaleSwizzle
 {
-  template<typename T>
-  struct Bounds
-  {
-  private:
-    using tileT = std::remove_cvref_t<T>;
-    using xT = typename std::invoke_result_t<decltype(&tileT::source_x), tileT>;
-    using yT = typename std::invoke_result_t<decltype(&tileT::source_y), tileT>;
-    using texture_pageT =
-      typename std::invoke_result_t<decltype(&tileT::texture_id), tileT>;
-
-  public:
-    using x = decltype([](const tileT &tile) -> xT { return tile.source_x(); });
-    using y = decltype([](const tileT &tile) -> yT { return tile.source_y(); });
-    using texture_page     = decltype([](const tileT &tile) -> texture_pageT {
-      return tile.texture_id();
-    });
-    using use_texture_page = std::false_type;
-    using use_blending     = std::false_type;
-  };
+  using x                            = tile_operations::source_x;
+  using y                            = tile_operations::source_y;
+  using texture_page                 = tile_operations::texture_id;
+  using use_texture_page             = std::false_type;
+  using use_blending                 = std::false_type;
   static constexpr const char *Label = "Map (Upscale Swizzle)";
 };
 using MapUpscaleSwizzle = Map<TileFunctionsUpscaleSwizzle>;
