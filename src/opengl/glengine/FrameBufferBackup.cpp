@@ -3,8 +3,6 @@
 //
 
 #include "FrameBufferBackup.hpp"
-#include <GL/glew.h>
-#include <GLFW/glfw3.h>
 glengine::FrameBufferBackup::FrameBufferBackup()
   : m_render_id{ []() -> std::uint32_t {
                   int32_t id = {};

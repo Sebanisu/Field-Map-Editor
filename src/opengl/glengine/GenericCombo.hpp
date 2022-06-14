@@ -7,7 +7,6 @@
 #include "ImGuiDisabled.hpp"
 #include "ImGuiPushID.hpp"
 #include "ImGuiPushItemWidth.hpp"
-#include <imgui.h>
 namespace glengine
 {
 template<std::ranges::random_access_range dataT>
@@ -18,8 +17,10 @@ requires(
   std::is_same_v<
     std::decay_t<std::ranges::range_value_t<dataT>>, std::string_view>)
   // clang-format on
-  [
-    [nodiscard]] inline bool GenericCombo(const char *label, int &current_index, const dataT &data)
+  [[nodiscard]] inline bool GenericCombo(
+    const char  *label,
+    int         &current_index,
+    const dataT &data)
 {
   bool              changed = false;
   const ImGuiStyle &style   = ImGui::GetStyle();

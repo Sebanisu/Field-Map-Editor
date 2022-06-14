@@ -4,7 +4,6 @@
 
 #ifndef FIELD_MAP_EDITOR_TIMESTEP_HPP
 #define FIELD_MAP_EDITOR_TIMESTEP_HPP
-#include <chrono>
 namespace glengine
 {
 class TimeStep

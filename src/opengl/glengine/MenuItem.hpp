@@ -5,7 +5,6 @@
 #ifndef FIELD_MAP_EDITOR_MenuItem_HPP
 #define FIELD_MAP_EDITOR_MenuItem_HPP
 #include "Event/EventItem.hpp"
-#include <Renderable.hpp>
 namespace glengine
 {
 class MenuItem
@@ -31,10 +30,10 @@ private:
   class MenuItemModel final : public MenuItemConcept
   {
   public:
-    //    MenuItemModel(renderableT t)
-    //      : m_renderable(std::move(t))
-    //    {
-    //    }
+//    MenuItemModel(renderableT t)
+//      : m_renderable(std::move(t))
+//    {
+//    }
     template<typename... Ts>
     MenuItemModel(Ts &&...ts)
       : m_renderable(std::forward<Ts>(ts)...)

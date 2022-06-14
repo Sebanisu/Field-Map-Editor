@@ -5,7 +5,6 @@
 #ifndef FIELD_MAP_EDITOR_EVENTDISPATCHER_HPP
 #define FIELD_MAP_EDITOR_EVENTDISPATCHER_HPP
 #include "EventItem.hpp"
-#include <functional>
 namespace glengine
 {
 namespace Event

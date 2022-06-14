@@ -4,10 +4,7 @@
 
 #ifndef FIELD_MAP_EDITOR_GLCHECK_HPP
 #define FIELD_MAP_EDITOR_GLCHECK_HPP
-#include "concepts.hpp"
-#include <functional>
-#include <source_location>
-#include <utility>
+
 void BeginErrorCallBack();
 void EndErrorCallback();
 void GLClearError(
@@ -27,9 +24,8 @@ public:
   {
   }
   template<typename FuncT, typename... ArgsT>
-    requires std::invocable<FuncT, ArgsT...> [
-      [nodiscard]] auto
-    operator()(FuncT &&func, ArgsT &&...args) &&
+  requires std::invocable<FuncT, ArgsT...>
+  [[nodiscard]] auto operator()(FuncT &&func, ArgsT &&...args) &&
   {
     using return_value_type =
       std::decay_t<std::invoke_result_t<FuncT, ArgsT...>>;

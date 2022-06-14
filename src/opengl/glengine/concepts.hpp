@@ -4,11 +4,10 @@
 
 #ifndef FIELD_MAP_EDITOR_CONCEPTS_HPP
 #define FIELD_MAP_EDITOR_CONCEPTS_HPP
-#include <concepts>
 namespace glengine
 {
 template<typename T, typename U>
-concept decay_same_as = std::is_same_v<std::remove_cvref_t<T>, std::remove_cvref_t<U>>;
+concept decay_same_as = std::is_same_v<std::decay_t<T>, std::decay_t<U>>;
 template<typename T>
 concept Void = std::is_void_v<T>;
 template<typename T>

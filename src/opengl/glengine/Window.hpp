@@ -6,12 +6,6 @@
 #define FIELD_MAP_EDITOR_WINDOW_HPP
 #include "Event/EventItem.hpp"
 #include "Input.hpp"
-#include <functional>
-#include <imgui.h>
-#include <imgui_impl_glfw.h>
-#include <imgui_impl_opengl3.h>
-#include <span>
-#include <thread>
 namespace glengine
 {
 class Window final

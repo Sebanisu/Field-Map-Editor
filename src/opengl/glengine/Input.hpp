@@ -6,10 +6,6 @@
 #define FIELD_MAP_EDITOR_INPUT_HPP
 #include "KeyCodes.hpp"
 #include "MouseButtonCodes.hpp"
-#include <array>
-#include <GL/glew.h>
-#include <GLFW/glfw3.h>
-#include <optional>
 namespace glengine
 {
 class Window;

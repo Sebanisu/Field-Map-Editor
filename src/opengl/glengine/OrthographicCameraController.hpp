@@ -6,8 +6,6 @@
 #define FIELD_MAP_EDITOR_ORTHOGRAPHICCAMERACONTROLLER_HPP
 #include "Event/EventItem.hpp"
 #include "OrthographicCamera.hpp"
-#include <optional>
-#include <Renderable.hpp>
 namespace glengine
 {
 class OrthographicCameraController

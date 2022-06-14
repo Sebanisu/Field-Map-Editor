@@ -82,55 +82,53 @@ target_include_directories(glengine
 if (MSVC)
     target_compile_definitions(glengine
             PUBLIC _CRT_SECURE_NO_WARNINGS) # required by libpng
-    target_compile_options(glengine PUBLIC "/FS")
     target_link_options(glengine PRIVATE "/PROFILE")
 else ()
     target_compile_options(glengine PUBLIC "-fconcepts-diagnostics-depth=2")
 endif ()
 
-#target_precompile_headers(glengine
-#        PUBLIC
-#        <algorithm>
-#        <array>
-#        <cassert>
-#        <concepts>
-#        <cstdint>
-#        <cstring>
-#        <filesystem>
-#        <fstream>
-#        <functional>
-#        <future>
-#        <iterator>
-#        <memory>
-#        <numeric>
-#        <optional>
-#        <ranges>
-#        <source_location>
-#        <span>
-#        <sstream>
-#        <string>
-#        <string_view>
-#        <thread>
-#        <type_traits>
-#        <unordered_map>
-#        <utility>
-#        <variant>
-#        <vector>
-#        <GL/glew.h>
-#        <GLFW/glfw3.h>
-#        <fmt/format.h>
-#        <fmt/chrono.h>
-#        <stb_image.h>
-#        <stb_image_write.h>
-#        <glm/glm.hpp>
-#        <glm/gtc/matrix_transform.hpp>
-#        <imgui.h>
-#        <imgui_impl_glfw.h>
-#        <imgui_impl_opengl3.h>
-#        [["concepts.hpp"]]
-#        [["Renderable.hpp"]]
-#        )
-
+target_precompile_headers(glengine
+        PUBLIC
+        <algorithm>
+        <array>
+        <cassert>
+        <concepts>
+        <cstdint>
+        <cstring>
+        <filesystem>
+        <fstream>
+        <functional>
+        <future>
+        <iterator>
+        <memory>
+        <numeric>
+        <optional>
+        <ranges>
+        <source_location>
+        <span>
+        <sstream>
+        <string>
+        <string_view>
+        <thread>
+        <type_traits>
+        <unordered_map>
+        <utility>
+        <variant>
+        <vector>
+        <GL/glew.h>
+        <GLFW/glfw3.h>
+        <fmt/format.h>
+        <fmt/chrono.h>
+        <stb_image.h>
+        <stb_image_write.h>
+        <glm/glm.hpp>
+        <glm/gtc/matrix_transform.hpp>
+        <imgui.h>
+        <imgui_impl_glfw.h>
+        <imgui_impl_opengl3.h>
+        [["concepts.hpp"]]
+        [["Renderable.hpp"]]
+        )
 #target_include_directories(glengine PRIVATE
 #        $<$<CONFIG:Debug>:${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/glengine.dir/Debug>
 #        $<$<CONFIG:RelWithDebInfo>:${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/glengine.dir/RelWithDebInfo>

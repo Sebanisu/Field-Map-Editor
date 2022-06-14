@@ -6,7 +6,6 @@
 #define FIELD_MAP_EDITOR_RENDERER_HPP
 #include "GLCheck.hpp"
 #include "IndexType.hpp"
-#include <glm/glm.hpp>
 namespace glengine
 {
 namespace Renderer

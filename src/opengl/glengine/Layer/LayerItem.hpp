@@ -5,7 +5,6 @@
 #ifndef FIELD_MAP_EDITOR_LAYERITEM_HPP
 #define FIELD_MAP_EDITOR_LAYERITEM_HPP
 #include "Event/EventItem.hpp"
-#include "Renderable.hpp"
 namespace glengine
 {
 namespace Layer
@@ -16,10 +15,10 @@ namespace Layer
     class ItemConcept
     {
     protected:
-      ItemConcept()                                   = default;
-      ItemConcept(const ItemConcept &)                = default;
-      ItemConcept(ItemConcept &&) noexcept            = default;
-      ItemConcept &operator=(const ItemConcept &)     = default;
+      ItemConcept()                        = default;
+      ItemConcept(const ItemConcept &)     = default;
+      ItemConcept(ItemConcept &&) noexcept = default;
+      ItemConcept &operator=(const ItemConcept &) = default;
       ItemConcept &operator=(ItemConcept &&) noexcept = default;
 
     public:
@@ -82,9 +81,9 @@ namespace Layer
       : Item(std::in_place_type_t<T>{}, std::move(t))
     {
     }
-    Item(const Item &other)                = delete;
-    Item &operator=(const Item &other)     = delete;
-    Item(Item &&other) noexcept            = default;
+    Item(const Item &other) = delete;
+    Item &operator=(const Item &other) = delete;
+    Item(Item &&other) noexcept        = default;
     Item &operator=(Item &&other) noexcept = default;
 
           operator bool() const;

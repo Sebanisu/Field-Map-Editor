@@ -4,7 +4,6 @@
 
 #ifndef FIELD_MAP_EDITOR_EVENTENUMS_HPP
 #define FIELD_MAP_EDITOR_EVENTENUMS_HPP
-#include <cstdint>
 namespace glengine
 {
 namespace Event

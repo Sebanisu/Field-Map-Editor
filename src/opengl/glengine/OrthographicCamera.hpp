@@ -6,9 +6,6 @@
 #define FIELD_MAP_EDITOR_ORTHOGRAPHICCAMERA_HPP
 //#include "Application.hpp"
 #include <fmt/ranges.h>
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-#include <imgui.h>
 namespace glengine
 {
 static const float half = 2.F;
@@ -101,7 +98,7 @@ public:
   const glm::vec3 ScreenSpaceToWorldSpace(glm::vec4 in) const
   {
     glm::vec4 out = in * InverseViewProjectionMatrix();
-    out.w         = 1.F / out.w;
+    out.w    = 1.F / out.w;
     out.x *= -out.w;
     out.y *= out.w;
     out.z *= out.w;

@@ -2,8 +2,6 @@
 // Created by pcvii on 11/22/2021.
 //
 #include "Shader.hpp"
-#include <fmt/format.h>
-#include <fstream>
 namespace glengine
 {
 Shader::Shader(std::filesystem::path file_path)

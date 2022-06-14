@@ -5,8 +5,7 @@
 #ifndef FIELD_MAP_EDITOR_COOS_HPP
 #define FIELD_MAP_EDITOR_COOS_HPP
 #include "scope_guard.hpp"
-#include <Event/EventItem.hpp>
-#include <Renderable.hpp>
+
 
 namespace ff8
 {

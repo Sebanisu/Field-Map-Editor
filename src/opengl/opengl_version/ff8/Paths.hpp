@@ -5,8 +5,8 @@
 #ifndef FIELD_MAP_EDITOR_PATHS_HPP
 #define FIELD_MAP_EDITOR_PATHS_HPP
 #include "scope_guard.hpp"
-#include <Event/EventItem.hpp>
-#include <Renderable.hpp>
+
+
 namespace ff8
 {
 class Paths

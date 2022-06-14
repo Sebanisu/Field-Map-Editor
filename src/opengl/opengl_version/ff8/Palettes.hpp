@@ -4,8 +4,8 @@
 
 #ifndef FIELD_MAP_EDITOR_PALETTES_HPP
 #define FIELD_MAP_EDITOR_PALETTES_HPP
-#include <Event/EventItem.hpp>
-#include <Renderable.hpp>
+
+
 namespace ff8
 {
 class Palettes
