@@ -131,6 +131,7 @@ const FrameBufferSpecification &FrameBuffer::Specification() const
 }
 SubTexture FrameBuffer::GetColorAttachment() const
 {
+  // called here to update mipmaps after texture changed.
   auto r = SubTexture(m_color_attachment);
   r.Bind();
   GLCall{}(glGenerateMipmap, GL_TEXTURE_2D);

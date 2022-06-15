@@ -111,6 +111,8 @@ public:
     {
       return;
     }
+    const auto not_changed =
+      glengine::scope_guard_captures([&]() { m_changed = false; });
     if (m_changed)
     {
       m_offscreen_drawing = true;
@@ -127,6 +129,10 @@ public:
         m_frame_buffer.Specification().height);
       glengine::Renderer::Clear();
       RenderTiles();
+      if (!m_saving)
+      {
+        RenderFrameBufferGrid();
+      }
     }
     // RestoreViewPortToFrameBuffer();
     m_imgui_viewport_window.OnRender([this]() { RenderFrameBuffer(); });
@@ -137,7 +143,6 @@ public:
     });
     ff8::ImGuiTileDisplayWindow::TakeControl(
       m_imgui_viewport_window.HasHover(), m_id);
-    m_changed = false;
   }
   void OnImGuiUpdate() const
   {
@@ -674,15 +679,16 @@ private:
       m_batch_renderer.Shader().SetUniform(
         "u_MVP", m_imgui_viewport_window.ViewProjectionMatrix());
     }
-    if (!s_draw_grid || m_offscreen_drawing || m_saving)
-    {
-      m_batch_renderer.Shader().SetUniform("u_Grid", 0.F, 0.F);
-    }
-    else
-    {
-      m_batch_renderer.Shader().SetUniform(
-        "u_Grid", m_map_dims.scaled_tile_size());
-    }
+    m_batch_renderer.Shader().SetUniform("u_Grid", 0.F, 0.F);
+    //    if (!s_draw_grid || m_offscreen_drawing || m_saving)
+    //    {
+    //      m_batch_renderer.Shader().SetUniform("u_Grid", 0.F, 0.F);
+    //    }
+    //    else
+    //    {
+    //      m_batch_renderer.Shader().SetUniform(
+    //        "u_Grid", m_map_dims.scaled_tile_size());
+    //    }
     m_batch_renderer.Shader().SetUniform("u_Color", m_uniform_color);
   }
   std::optional<glengine::SubTexture> TileToSubTexture(const auto &tile) const
@@ -911,11 +917,54 @@ private:
     m_batch_renderer.Draw();
     m_batch_renderer.OnRender();
   }
+
+  void RenderFrameBufferGrid() const
+  {
+    if (!s_draw_grid)
+    {
+      return;
+    }
+    const auto fbb = glengine::FrameBufferBackup{};
+    const auto offscreen_pop =
+      glengine::scope_guard_captures([&]() { m_offscreen_drawing = false; });
+    m_offscreen_drawing = true;
+    glengine::Window::DefaultBlend();
+    m_imgui_viewport_window.OnRender();
+    SetUniforms();
+    m_frame_buffer.Bind();
+    GLCall{}(
+      glViewport,
+      0,
+      0,
+      m_frame_buffer.Specification().width,
+      m_frame_buffer.Specification().height);
+    m_batch_renderer.Shader().SetUniform(
+      "u_Grid", m_map_dims.scaled_tile_size());
+    m_batch_renderer.Clear();
+    m_batch_renderer.DrawQuad(
+      m_frame_buffer.GetColorAttachment(),
+      m_map_dims.scaled_position(),
+      glm::vec2(
+        m_frame_buffer.Specification().width,
+        m_frame_buffer.Specification().height));
+    m_batch_renderer.Draw();
+    m_batch_renderer.OnRender();
+  }
   void Save() const
   {
     m_saving = true;
     const auto not_saving =
       glengine::scope_guard_captures([&]() { m_saving = false; });
+    if (s_draw_grid)
+    {
+      m_changed = true;
+    }
+    const auto changed = glengine::scope_guard_captures([&]() {
+      if (s_draw_grid)
+      {
+        m_changed = true;
+      }
+    });
     OnRender();
     const auto path = std::filesystem::path(m_map_path);
     auto       string =
