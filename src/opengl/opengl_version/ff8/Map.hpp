@@ -681,7 +681,7 @@ private:
     else
     {
       m_batch_renderer.Shader().SetUniform(
-        "u_Grid", MapDimsStatics::tile_size, MapDimsStatics::tile_size);
+        "u_Grid", m_map_dims.scaled_tile_size());
     }
     m_batch_renderer.Shader().SetUniform("u_Color", m_uniform_color);
   }
@@ -803,7 +803,7 @@ private:
       }
       UpdateBlendMode(tile, last_blend_mode);
       m_batch_renderer.DrawQuad(
-        *sub_texture, TileToDrawPos(tile), m_map_dims.scaled_tile_size_vec2());
+        *sub_texture, TileToDrawPos(tile), m_map_dims.scaled_tile_size());
       return true;
     });
     m_batch_renderer.Draw();

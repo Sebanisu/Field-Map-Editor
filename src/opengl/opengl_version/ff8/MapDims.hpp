@@ -30,13 +30,9 @@ public:
   {
     return offset * tile_scale;
   }
-  float scaled_tile_size() const noexcept
+  glm::vec2 scaled_tile_size() const noexcept
   {
-    return MapDimsStatics::tile_size * tile_scale;
-  }
-  glm::vec2 scaled_tile_size_vec2() const noexcept
-  {
-    return glm::vec2{ scaled_tile_size() };
+    return glm::vec2{ MapDimsStatics::tile_size * tile_scale };
   }
   glm::vec2     offset     = { 0.F, -MapDimsStatics::tile_size };
   glm::vec3     position   = {};
