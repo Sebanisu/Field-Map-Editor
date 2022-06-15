@@ -195,20 +195,19 @@ public:
     ImGui::Text(
       "%s",
       fmt::format(
-        "DrawPos - X: {}, Y: {} Z: {}, Width {}, Height {}"
-        "\n\tOffset X {} Offset Y {},\n\tMin X {}, Max X {}, Min Y {}, Max Y "
-        "{}\n",
+        "DrawPos ({}, {}, {}), Width {}, Height {}"
+        "\n\tOffset ({}, {}),\n\tMin ({}, {}), Max ({},{})\n",
         m_position.x,
         m_position.y,
         m_position.z,
         m_frame_buffer.Specification().width,
         m_frame_buffer.Specification().height,
-        m_offset_x,
-        m_offset_y,
-        min_x,
-        max_x,
-        min_y,
-        max_y)
+        m_offset_xy.x,
+        m_offset_xy.y,
+        min_xy.x,
+        min_xy.y,
+        max_xy.x,
+        max_xy.y)
         .c_str());
 
     m_batch_renderer.OnImGuiUpdate();
@@ -701,7 +700,8 @@ private:
     }
     else
     {
-      m_batch_renderer.Shader().SetUniform("u_Grid", 16.F, 16.F);
+      m_batch_renderer.Shader().SetUniform(
+        "u_Grid", s_tile_size_f, s_tile_size_f);
     }
     m_batch_renderer.Shader().SetUniform(
       "u_Color",
@@ -736,7 +736,7 @@ private:
     const auto  texture_dims = glm::vec2{ texture.width(), texture.height() };
     const float tile_scale   = static_cast<float>(texture.height())
                              / static_cast<float>(m_mim.get_height());
-    const float tile_size = tile_scale * 16.F;
+    const float tile_size = tile_scale * s_tile_size_f;
     // glm::vec2(m_mim.get_width(tile.depth()), m_mim.get_height());
     return std::optional<glengine::SubTexture>{
       std::in_place_t{},
@@ -758,22 +758,20 @@ private:
     static constexpr typename TileFunctions::texture_page texture_page{};
     return { (static_cast<float>(
                 x(tile) + texture_page(tile) * s_texture_page_width)
-              - m_offset_x)
+              - m_offset_xy.x)
                * m_tile_scale,
-             (m_offset_y - static_cast<float>(y(tile))) * m_tile_scale,
+             (m_offset_xy.y - static_cast<float>(y(tile))) * m_tile_scale,
              0.F };
   }
   glm::vec2 TileSize() const
   {
-    const auto scaled_size = m_tile_scale * 16.F;
+    const auto scaled_size = m_tile_scale * s_tile_size_f;
     return { scaled_size, scaled_size };
   }
   auto VisitTiles(auto &&lambda) const
   {
     return m_map.visit_tiles([&](const auto &tiles) {
-      auto f_tiles = tiles
-                     | std::views::filter(
-                       open_viii::graphics::background::Map::filter_invalid())
+      auto f_tiles = tiles | std::views::filter(tile_operations::invalid_tile{})
                      | std::views::filter([](const auto &tile) -> bool {
                          static constexpr
                            typename TileFunctions::use_blending use_blending{};
@@ -813,7 +811,7 @@ private:
   {
     using open_viii::graphics::background::BlendModeT;
     BlendModeT last_blend_mode{ BlendModeT::none };
-    m_uniform_color = s_default_uniform_color;
+    m_uniform_color = s_default_color;
     glengine::Window::DefaultBlend();
     m_imgui_viewport_window.OnRender();
     SetUniforms();
@@ -831,7 +829,7 @@ private:
     m_batch_renderer.Draw();
     m_batch_renderer.OnRender();
     glengine::Window::DefaultBlend();
-    m_uniform_color = s_default_uniform_color;
+    m_uniform_color = s_default_color;
   }
   void UpdateBlendMode(
     [[maybe_unused]] const auto &tile,
@@ -854,13 +852,13 @@ private:
           switch (blend_mode)
           {
             case open_viii::graphics::background::BlendModeT::half_add:
-              m_uniform_color = s_half_uniform_color;
+              m_uniform_color = s_half_color;
               break;
             case open_viii::graphics::background::BlendModeT::quarter_add:
-              m_uniform_color = s_quarter_uniform_color;
+              m_uniform_color = s_quarter_color;
               break;
             default:
-              m_uniform_color = s_default_uniform_color;
+              m_uniform_color = s_default_color;
               break;
           }
         }
@@ -947,9 +945,8 @@ private:
   auto VisitUnSortedUnFilteredTilesCount() const
   {
     return m_map.visit_tiles([&](const auto &tiles) -> std::size_t {
-      auto f_tiles = tiles
-                     | std::views::filter(
-                       open_viii::graphics::background::Map::filter_invalid());
+      auto f_tiles =
+        tiles | std::views::filter(tile_operations::invalid_tile{});
       return static_cast<std::size_t>(
         std::ranges::count_if(f_tiles, [](auto &&) { return true; }));
     });
@@ -957,9 +954,8 @@ private:
   bool VisitUnSortedUnFilteredTiles(auto &&lambda) const
   {
     return m_map.visit_tiles([&](auto &&tiles) -> bool {
-      auto f_tiles = tiles
-                     | std::views::filter(
-                       open_viii::graphics::background::Map::filter_invalid());
+      auto f_tiles =
+        tiles | std::views::filter(tile_operations::invalid_tile{});
       bool changed = false;
       for (auto &tile : f_tiles)
       {
@@ -971,9 +967,8 @@ private:
   void GetUniqueValues()
   {
     auto vector = m_map.visit_tiles([&](const auto &tiles) {
-      auto f_tiles = tiles
-                     | std::views::filter(
-                       open_viii::graphics::background::Map::filter_invalid());
+      auto f_tiles =
+        tiles | std::views::filter(tile_operations::invalid_tile{});
       return TransformedSortedUniqueCopy(
         f_tiles, [](const auto &tile) { return tile.palette_id(); });
     });
@@ -989,9 +984,8 @@ private:
       static constexpr typename TileFunctions::texture_page texture_page = {};
       static constexpr tile_operations::x                   true_x       = {};
       static constexpr tile_operations::y                   true_y       = {};
-      auto                                                  f_tiles      = tiles
-                     | std::views::filter(
-                       open_viii::graphics::background::Map::filter_invalid());
+      auto                                                  f_tiles =
+        tiles | std::views::filter(tile_operations::invalid_tile{});
       auto [i_min_x, i_max_x] = std::ranges::minmax_element(f_tiles, {}, x);
       auto [i_min_y, i_max_y] = std::ranges::minmax_element(f_tiles, {}, y);
       auto [true_i_min_x, true_i_max_x] =
@@ -1007,9 +1001,9 @@ private:
       }
       true_min_xy = glm::vec2(true_x(*true_i_min_x), true_y(*true_i_min_y));
       true_max_xy = glm::vec2(true_x(*true_i_max_x), true_y(*true_i_max_y));
-      min_x       = x(*i_min_x);
+      min_xy.x    = x(*i_min_x);
 
-      max_x       = static_cast<float>([&, i_max_x = i_max_x]() {
+      max_xy.x    = static_cast<float>([&, i_max_x = i_max_x]() {
         if constexpr (typename TileFunctions::use_texture_page{})
         {
           return x(*i_max_x);
@@ -1019,16 +1013,14 @@ private:
           return (texture_page(*i_max_texture_page) + 1) * s_texture_page_width;
         }
       }());
-      min_y       = y(*i_min_y);
-      max_y       = y(*i_max_y);
-      const auto width  = max_x - min_x + 16.F;
-      const auto height = max_y - min_y + 16.F;
-
-      // m_offset_y        = static_cast<float>(min_y + max_y);
-      m_offset_x        = width / 2.F + min_x;
-      m_offset_y        = height / 2.F + min_y - 16.F;
-      //  m_position        = glm::vec3(min_x, min_y, 0.F);
+      min_xy.y    = y(*i_min_y);
+      max_xy.y    = y(*i_max_y);
+      const auto width  = max_xy.x - min_xy.x + s_tile_size_f;
+      const auto height = max_xy.y - min_xy.y + s_tile_size_f;
+      m_offset_xy.x     = width / 2.F + min_xy.x;
+      m_offset_xy.y     = height / 2.F + min_xy.y - s_tile_size_f;
       m_position        = glm::vec3(-width / 2.F, -height / 2.F, 0.F);
+
 
       m_imgui_viewport_window.SetImageBounds(glm::vec2{ width, height });
 
@@ -1044,31 +1036,28 @@ private:
     });
   }
   mutable glengine::OrthographicCamera m_fixed_render_camera = {};
-  inline static bool                   s_fit_height          = { true };
-  inline static bool                   s_fit_width           = { true };
-  inline static bool                   s_draw_grid           = { false };
-  inline static bool                   s_blending            = { true };
+  inline constinit static auto         s_fit_height          = bool{ true };
+  inline constinit static auto         s_fit_width           = bool{ true };
+  inline constinit static auto         s_draw_grid           = bool{ false };
+  inline constinit static auto         s_blending            = bool{ true };
 
-  static constexpr int16_t             s_texture_page_width  = 256;
+  static constexpr auto s_texture_page_width         = std::int16_t{ 256 };
+  static constexpr auto s_tile_size_f                = float{ 16.F };
 
+  static constexpr auto s_default_color              = glm::vec4{ 1.F };
+  static constexpr auto s_half_color                 = s_default_color / 2.F;
+  static constexpr auto s_quarter_color              = s_half_color / 2.F;
+  mutable glm::vec4     m_uniform_color              = s_default_color;
 
-  static constexpr glm::vec4 s_default_uniform_color = { 1.F, 1.F, 1.F, 1.F };
-  static constexpr glm::vec4 s_half_uniform_color    = { .5F, .5F, .5F, .5F };
-  static constexpr glm::vec4 s_quarter_uniform_color = { .25F,
-                                                         .25F,
-                                                         .25F,
-                                                         .25F };
-  mutable glm::vec4          m_uniform_color         = s_default_uniform_color;
-
-  std::string                m_upscale_path          = {};
+  std::string           m_upscale_path               = {};
   // internal mim file path
-  std::string                m_mim_path              = {};
+  std::string           m_mim_path                   = {};
   // internal map file path
-  std::string                m_map_path              = {};
+  std::string           m_map_path                   = {};
   // if coo was chosen instead of default.
-  bool                       m_mim_choose_coo        = {};
+  bool                  m_mim_choose_coo             = {};
   // if coo was chosen instead of default.
-  bool                       m_map_choose_coo        = {};
+  bool                  m_map_choose_coo             = {};
   // container for field textures
   open_viii::graphics::background::Mim         m_mim = {};
   // container for field tile information
@@ -1080,11 +1069,10 @@ private:
                                     // max. 0 being no palette and 1-17 being
                                     // with palettes
   // takes quads and draws them to the frame buffer or screen.
-  glengine::BatchRenderer           m_batch_renderer        = { 1000 };
+  glengine::BatchRenderer           m_batch_renderer = { 1000 };
   // holds rendered image at 1:1 scale to prevent gaps when scaling.
-  mutable glengine::FrameBuffer     m_frame_buffer          = {};
-  mutable float                     m_offset_x              = 0.F;
-  mutable float                     m_offset_y              = -16.F;
+  mutable glengine::FrameBuffer     m_frame_buffer   = {};
+  mutable glm::vec2                 m_offset_xy      = { 0.F, -s_tile_size_f };
   mutable bool                      m_offscreen_drawing     = { false };
   mutable bool                      m_saving                = { false };
   mutable bool                      m_preview               = { false };
@@ -1092,12 +1080,10 @@ private:
   inline constinit static MapBlends s_blends                = {};
   mutable MapFilters                m_filters               = { m_map };
   mutable bool                      m_changed               = { true };
-  mutable glm::vec2                 true_min_xy             = {};
-  mutable glm::vec2                 true_max_xy             = {};
-  mutable float                     min_x                   = {};
-  mutable float                     min_y                   = {};
-  mutable float                     max_x                   = {};
-  mutable float                     max_y                   = {};
+  glm::vec2                         true_min_xy             = {};
+  glm::vec2                         true_max_xy             = {};
+  glm::vec2                         min_xy                  = {};
+  glm::vec2                         max_xy                  = {};
   mutable float                     m_tile_scale            = { 1.F };
   glengine::Counter                 m_id                    = {};
   mutable std::vector<bool>         m_tile_button_state     = {};

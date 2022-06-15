@@ -67,6 +67,17 @@ namespace tile_operations
   TILE_OPERATION(animation_id);
   TILE_OPERATION(animation_state);
 #undef TILE_OPERATION
+  struct invalid_tile
+  {
+    template<open_viii::graphics::background::is_tile T>
+    constexpr bool operator()(const T &tile) const noexcept
+    {
+      return (std::cmp_not_equal(tile.x(), s_end_x));
+    }
+
+  private:
+    static constexpr std::uint16_t s_end_x = { 0x7FFFU };
+  };
 }// namespace tile_operations
 }// namespace ff8
 #endif// FIELD_MAP_EDITOR_TILE_OPERATIONS_HPP
