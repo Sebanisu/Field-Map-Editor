@@ -747,11 +747,6 @@ private:
                * m_map_dims.tile_scale,
              0.F };
   }
-  glm::vec2 TileSize() const
-  {
-    const auto scaled_size = m_map_dims.tile_scale * MapDimsStatics::tile_size;
-    return { scaled_size, scaled_size };
-  }
   auto VisitTiles(auto &&lambda) const
   {
     return m_map.visit_tiles([&](const auto &tiles) {
@@ -807,7 +802,8 @@ private:
         return true;
       }
       UpdateBlendMode(tile, last_blend_mode);
-      m_batch_renderer.DrawQuad(*sub_texture, TileToDrawPos(tile), TileSize());
+      m_batch_renderer.DrawQuad(
+        *sub_texture, TileToDrawPos(tile), m_map_dims.scaled_tile_size_vec2());
       return true;
     });
     m_batch_renderer.Draw();
@@ -908,7 +904,7 @@ private:
     m_batch_renderer.Clear();
     m_batch_renderer.DrawQuad(
       m_frame_buffer.GetColorAttachment(),
-      m_map_dims.position * m_map_dims.tile_scale,
+      m_map_dims.scaled_position(),
       glm::vec2(
         m_frame_buffer.Specification().width,
         m_frame_buffer.Specification().height));
