@@ -96,7 +96,7 @@ public:
         {
           m_map_dims.tile_scale = static_cast<float>(current_max->height())
                                   / static_cast<float>(m_mim.get_height());
-          SetCameraBoundsToEdgesOfImage();          
+          SetCameraBoundsToEdgesOfImage();
         }
       }
       m_changed = true;
@@ -692,20 +692,27 @@ private:
     const auto texture_page_id                     = tile.texture_id();
     const auto [texture_index, texture_page_width] = [&]() {
       if (std::ranges::empty(m_upscale_path))
+      {
         return IndexAndPageWidth(bpp, palette);
+      }
       return IndexAndPageWidth(palette, texture_page_id);
     }();
-
     const auto texture_page_offset =
       [&, texture_page_width_copy = texture_page_width]() {
         if (std::ranges::empty(m_upscale_path))
+        {
           return texture_page_id * texture_page_width_copy;
+        }
         return 0;
       }();
     const auto &texture =
-      std::ranges::empty(m_upscale_path)
-        ? m_delayed_textures.textures->at(texture_index)
-        : m_upscale_delayed_textures.textures->at(texture_index);
+      [&, texture_index = texture_index]() -> decltype(auto) {
+      if (std::ranges::empty(m_upscale_path))
+      {
+        return m_delayed_textures.textures->at(texture_index);
+      }
+      return m_upscale_delayed_textures.textures->at(texture_index);
+    }();
     if (texture.width() == 0 || texture.height() == 0)
       return std::nullopt;
     const auto  texture_dims = glm::vec2{ texture.width(), texture.height() };
@@ -863,8 +870,8 @@ private:
     std::int16_t texture_page_width = { MapDimsStatics::texture_page_width };
   };
 
-  auto
-    IndexAndPageWidth(open_viii::graphics::BPPT bpp, std::uint8_t palette) const
+  static auto
+    IndexAndPageWidth(open_viii::graphics::BPPT bpp, std::uint8_t palette)
   {
     IndexAndPageWidthReturn r = { .texture_index = palette };
     if (bpp.bpp8())
