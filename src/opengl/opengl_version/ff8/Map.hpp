@@ -705,8 +705,8 @@ private:
         }
         return 0;
       }();
-    const auto &texture =
-      [&, texture_index = texture_index]() -> decltype(auto) {
+    const auto &texture = [&,
+                           texture_index = texture_index]() -> decltype(auto) {
       if (std::ranges::empty(m_upscale_path))
       {
         return m_delayed_textures.textures->at(texture_index);
@@ -864,13 +864,13 @@ private:
       }
     }
   }
-  struct IndexAndPageWidthReturn
+  struct [[nodiscard]] IndexAndPageWidthReturn
   {
     std::size_t  texture_index      = {};
     std::int16_t texture_page_width = { MapDimsStatics::texture_page_width };
   };
 
-  static auto
+  [[nodiscard]] static auto
     IndexAndPageWidth(open_viii::graphics::BPPT bpp, std::uint8_t palette)
   {
     IndexAndPageWidthReturn r = { .texture_index = palette };
@@ -886,12 +886,14 @@ private:
     }
     return r;
   }
-  auto IndexAndPageWidth(std::uint8_t palette, std::uint8_t texture_page) const
+  [[nodiscard]] auto
+    IndexAndPageWidth(std::uint8_t palette, std::uint8_t texture_page) const
   {
     IndexAndPageWidthReturn r = { .texture_index = static_cast<size_t>(
                                     texture_page + 13U * (palette + 1U)) };
     if (!m_upscale_delayed_textures.textures->at(r.texture_index))
     {
+      // I don't remember why this is here.
       r.texture_index = texture_page;
     }
     return r;
