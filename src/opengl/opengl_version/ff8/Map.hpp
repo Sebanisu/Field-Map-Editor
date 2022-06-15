@@ -467,8 +467,7 @@ private:
     ImGui::SameLine(0, ImGui::GetStyle().ItemInnerSpacing.x);
     ImGui::Text(
       "%s",
-      fmt::format(
-        "Source Pos: ({}, {})", tile.source_x(), tile.source_y())
+      fmt::format("Source Pos: ({}, {})", tile.source_x(), tile.source_y())
         .c_str());
     // todo add second source for moving a tile to a new location in
     // the mim / swizzled map. Without changing the image.
@@ -521,8 +520,7 @@ private:
     ImGui::SameLine(0, ImGui::GetStyle().ItemInnerSpacing.x);
     ImGui::Text(
       "%s",
-      fmt::format(
-        "Destination Pos: ({}, {}, {})", tile.x(), tile.y(), tile.z())
+      fmt::format("Destination Pos: ({}, {}, {})", tile.x(), tile.y(), tile.z())
         .c_str());
   }
   template<typename TileT>
@@ -986,12 +984,12 @@ private:
   {
     // s_camera.RefreshAspectRatio(m_imgui_viewport_window.ViewPortAspectRatio());
     m_map.visit_tiles([&](const auto &tiles) {
-      static constexpr typename TileFunctions::x            x{};
-      static constexpr typename TileFunctions::y            y{};
-      static constexpr typename TileFunctions::texture_page texture_page{};
-      static constexpr auto true_x  = [](const auto &tile) { return tile.x(); };
-      static constexpr auto true_y  = [](const auto &tile) { return tile.y(); };
-      auto                  f_tiles = tiles
+      static constexpr typename TileFunctions::x            x            = {};
+      static constexpr typename TileFunctions::y            y            = {};
+      static constexpr typename TileFunctions::texture_page texture_page = {};
+      static constexpr tile_operations::x                   true_x       = {};
+      static constexpr tile_operations::y                   true_y       = {};
+      auto                                                  f_tiles      = tiles
                      | std::views::filter(
                        open_viii::graphics::background::Map::filter_invalid());
       auto [i_min_x, i_max_x] = std::ranges::minmax_element(f_tiles, {}, x);
