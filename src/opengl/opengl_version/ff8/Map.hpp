@@ -22,6 +22,7 @@
 #include "ImGuiTileDisplayWindow.hpp"
 #include "ImGuiViewPortWindow.hpp"
 #include "MapBlends.hpp"
+#include "MapDims.hpp"
 #include "MapFilters.hpp"
 #include "OrthographicCamera.hpp"
 #include "OrthographicCameraController.hpp"
@@ -90,26 +91,12 @@ public:
           {},
           [](const glengine::Texture &texture) { return texture.height(); });
         if (
-          static_cast<float>(m_mim.get_height()) * m_tile_scale
+          static_cast<float>(m_mim.get_height()) * m_map_dims.tile_scale
           < static_cast<float>(current_max->height()))
         {
-
-          float old_height =
-            static_cast<float>(m_frame_buffer.Specification().height)
-            / m_tile_scale;
-          float old_width =
-            static_cast<float>(m_frame_buffer.Specification().width)
-            / m_tile_scale;
-          m_tile_scale = static_cast<float>(current_max->height())
-                         / static_cast<float>(m_mim.get_height());
-          float height = old_height * m_tile_scale;
-          float width  = old_width * m_tile_scale;
-          m_imgui_viewport_window.SetImageBounds(glm::vec2{ width, height });
-          m_fixed_render_camera.SetProjection({ width, height });
-          m_frame_buffer =
-            glengine::FrameBuffer(glengine::FrameBufferSpecification{
-              .width  = static_cast<int>(width),
-              .height = static_cast<int>(height) });
+          m_map_dims.tile_scale = static_cast<float>(current_max->height())
+                                  / static_cast<float>(m_mim.get_height());
+          SetCameraBoundsToEdgesOfImage();          
         }
       }
       m_changed = true;
@@ -197,17 +184,17 @@ public:
       fmt::format(
         "DrawPos ({}, {}, {}), Width {}, Height {}"
         "\n\tOffset ({}, {}),\n\tMin ({}, {}), Max ({},{})\n",
-        m_position.x,
-        m_position.y,
-        m_position.z,
+        m_map_dims.position.x,
+        m_map_dims.position.y,
+        m_map_dims.position.z,
         m_frame_buffer.Specification().width,
         m_frame_buffer.Specification().height,
-        m_offset_xy.x,
-        m_offset_xy.y,
-        min_xy.x,
-        min_xy.y,
-        max_xy.x,
-        max_xy.y)
+        m_map_dims.offset.x,
+        m_map_dims.offset.y,
+        m_map_dims.min.x,
+        m_map_dims.min.y,
+        m_map_dims.max.x,
+        m_map_dims.max.y)
         .c_str());
 
     m_batch_renderer.OnImGuiUpdate();
@@ -484,8 +471,8 @@ private:
       if (ImGui::SliderInt(
             "##Destination (X)",
             &xyz[0],
-            static_cast<int>(true_min_xy.x / tile.width()),
-            static_cast<int>(true_max_xy.x / tile.width())))
+            static_cast<int>(m_map_dims.true_min.x / tile.width()),
+            static_cast<int>(m_map_dims.true_max.x / tile.width())))
       {
         changed = true;
         xyz[0] *= tile.width();
@@ -498,8 +485,8 @@ private:
       if (ImGui::SliderInt(
             "##Destination (Y)",
             &xyz[1],
-            static_cast<int>(true_min_xy.y / tile.height()),
-            static_cast<int>(true_max_xy.y / tile.height())))
+            static_cast<int>(m_map_dims.true_min.y / tile.height()),
+            static_cast<int>(m_map_dims.true_max.y / tile.height())))
       {
         changed = true;
         xyz[1] *= tile.height();
@@ -681,13 +668,6 @@ private:
     {
       m_batch_renderer.Shader().SetUniform(
         "u_MVP", m_imgui_viewport_window.PreviewViewProjectionMatrix());
-      //      m_batch_renderer.Shader().SetUniform(
-      //        "u_MVP",
-      //        GetViewPortPreview().SetPositionAndSizeAndGetMVP(
-      //          s_camera.Camera().ScreenSpaceToWorldSpace(
-      //            m_imgui_viewport_window.ViewPortMousePos()),
-      //          glm::vec2{ m_frame_buffer.Specification().width,
-      //                     m_frame_buffer.Specification().height }));
     }
     else
     {
@@ -701,14 +681,9 @@ private:
     else
     {
       m_batch_renderer.Shader().SetUniform(
-        "u_Grid", s_tile_size_f, s_tile_size_f);
+        "u_Grid", MapDimsStatics::tile_size, MapDimsStatics::tile_size);
     }
-    m_batch_renderer.Shader().SetUniform(
-      "u_Color",
-      m_uniform_color.r,
-      m_uniform_color.g,
-      m_uniform_color.b,
-      m_uniform_color.a);
+    m_batch_renderer.Shader().SetUniform("u_Color", m_uniform_color);
   }
   std::optional<glengine::SubTexture> TileToSubTexture(const auto &tile) const
   {
@@ -736,7 +711,7 @@ private:
     const auto  texture_dims = glm::vec2{ texture.width(), texture.height() };
     const float tile_scale   = static_cast<float>(texture.height())
                              / static_cast<float>(m_mim.get_height());
-    const float tile_size = tile_scale * s_tile_size_f;
+    const float tile_size = tile_scale * MapDimsStatics::tile_size;
     // glm::vec2(m_mim.get_width(tile.depth()), m_mim.get_height());
     return std::optional<glengine::SubTexture>{
       std::in_place_t{},
@@ -757,15 +732,17 @@ private:
     static constexpr typename TileFunctions::y            y{};
     static constexpr typename TileFunctions::texture_page texture_page{};
     return { (static_cast<float>(
-                x(tile) + texture_page(tile) * s_texture_page_width)
-              - m_offset_xy.x)
-               * m_tile_scale,
-             (m_offset_xy.y - static_cast<float>(y(tile))) * m_tile_scale,
+                x(tile)
+                + texture_page(tile) * MapDimsStatics::texture_page_width)
+              - m_map_dims.offset.x)
+               * m_map_dims.tile_scale,
+             (m_map_dims.offset.y - static_cast<float>(y(tile)))
+               * m_map_dims.tile_scale,
              0.F };
   }
   glm::vec2 TileSize() const
   {
-    const auto scaled_size = m_tile_scale * s_tile_size_f;
+    const auto scaled_size = m_map_dims.tile_scale * MapDimsStatics::tile_size;
     return { scaled_size, scaled_size };
   }
   auto VisitTiles(auto &&lambda) const
@@ -883,7 +860,7 @@ private:
   struct IndexAndPageWidthReturn
   {
     std::size_t  texture_index      = {};
-    std::int16_t texture_page_width = { s_texture_page_width };
+    std::int16_t texture_page_width = { MapDimsStatics::texture_page_width };
   };
 
   auto
@@ -893,12 +870,12 @@ private:
     if (bpp.bpp8())
     {
       r.texture_index      = 16 + palette;
-      r.texture_page_width = s_texture_page_width / 2;
+      r.texture_page_width = MapDimsStatics::texture_page_width / 2;
     }
     else if (bpp.bpp16())
     {
       r.texture_index      = 16 * 2;
-      r.texture_page_width = s_texture_page_width / 4;
+      r.texture_page_width = MapDimsStatics::texture_page_width / 4;
     }
     return r;
   }
@@ -921,7 +898,7 @@ private:
     m_batch_renderer.Clear();
     m_batch_renderer.DrawQuad(
       m_frame_buffer.GetColorAttachment(),
-      m_position * m_tile_scale,
+      m_map_dims.position * m_map_dims.tile_scale,
       glm::vec2(
         m_frame_buffer.Specification().width,
         m_frame_buffer.Specification().height));
@@ -978,62 +955,12 @@ private:
   void SetCameraBoundsToEdgesOfImage()
   {
     // s_camera.RefreshAspectRatio(m_imgui_viewport_window.ViewPortAspectRatio());
-    m_map.visit_tiles([&](const auto &tiles) {
-      static constexpr typename TileFunctions::x            x            = {};
-      static constexpr typename TileFunctions::y            y            = {};
-      static constexpr typename TileFunctions::texture_page texture_page = {};
-      static constexpr tile_operations::x                   true_x       = {};
-      static constexpr tile_operations::y                   true_y       = {};
-      auto                                                  f_tiles =
-        tiles | std::views::filter(tile_operations::invalid_tile{});
-      auto [i_min_x, i_max_x] = std::ranges::minmax_element(f_tiles, {}, x);
-      auto [i_min_y, i_max_y] = std::ranges::minmax_element(f_tiles, {}, y);
-      auto [true_i_min_x, true_i_max_x] =
-        std::ranges::minmax_element(f_tiles, {}, true_x);
-      auto [true_i_min_y, true_i_max_y] =
-        std::ranges::minmax_element(f_tiles, {}, true_y);
-      auto i_max_texture_page =
-        std::ranges::max_element(f_tiles, {}, texture_page);
-
-      if (i_min_x == i_max_x || i_min_y == i_max_y)
-      {
-        return;
-      }
-      true_min_xy = glm::vec2(true_x(*true_i_min_x), true_y(*true_i_min_y));
-      true_max_xy = glm::vec2(true_x(*true_i_max_x), true_y(*true_i_max_y));
-      min_xy.x    = x(*i_min_x);
-
-      max_xy.x    = static_cast<float>([&, i_max_x = i_max_x]() {
-        if constexpr (typename TileFunctions::use_texture_page{})
-        {
-          return x(*i_max_x);
-        }
-        else
-        {
-          return (texture_page(*i_max_texture_page) + 1) * s_texture_page_width;
-        }
-      }());
-      min_xy.y    = y(*i_min_y);
-      max_xy.y    = y(*i_max_y);
-      const auto width  = max_xy.x - min_xy.x + s_tile_size_f;
-      const auto height = max_xy.y - min_xy.y + s_tile_size_f;
-      m_offset_xy.x     = width / 2.F + min_xy.x;
-      m_offset_xy.y     = height / 2.F + min_xy.y - s_tile_size_f;
-      m_position        = glm::vec3(-width / 2.F, -height / 2.F, 0.F);
-
-
-      m_imgui_viewport_window.SetImageBounds(glm::vec2{ width, height });
-
-      //      s_fixed_render_camera.SetProjection(
-      //        static_cast<float>(min_x),
-      //        static_cast<float>(max_x + 16),
-      //        static_cast<float>(min_y),
-      //        static_cast<float>(max_y + 16));
-      m_fixed_render_camera.SetProjection({ width, height });
-      m_frame_buffer = glengine::FrameBuffer(glengine::FrameBufferSpecification{
-        .width  = static_cast<int>(abs(width)),
-        .height = static_cast<int>(abs(height)) });
-    });
+    const glm::vec2 size = m_map_dims.scaled_size();
+    m_imgui_viewport_window.SetImageBounds(size);
+    m_fixed_render_camera.SetProjection(size);
+    m_frame_buffer = glengine::FrameBuffer(glengine::FrameBufferSpecification{
+      .width  = static_cast<int>(abs(size.x)),
+      .height = static_cast<int>(abs(size.y)) });
   }
   mutable glengine::OrthographicCamera m_fixed_render_camera = {};
   inline constinit static auto         s_fit_height          = bool{ true };
@@ -1041,27 +968,26 @@ private:
   inline constinit static auto         s_draw_grid           = bool{ false };
   inline constinit static auto         s_blending            = bool{ true };
 
-  static constexpr auto s_texture_page_width         = std::int16_t{ 256 };
-  static constexpr auto s_tile_size_f                = float{ 16.F };
+  static constexpr auto                s_default_color       = glm::vec4{ 1.F };
+  static constexpr auto                s_half_color     = s_default_color / 2.F;
+  static constexpr auto                s_quarter_color  = s_half_color / 2.F;
+  mutable glm::vec4                    m_uniform_color  = s_default_color;
 
-  static constexpr auto s_default_color              = glm::vec4{ 1.F };
-  static constexpr auto s_half_color                 = s_default_color / 2.F;
-  static constexpr auto s_quarter_color              = s_half_color / 2.F;
-  mutable glm::vec4     m_uniform_color              = s_default_color;
-
-  std::string           m_upscale_path               = {};
+  std::string                          m_upscale_path   = {};
   // internal mim file path
-  std::string           m_mim_path                   = {};
+  std::string                          m_mim_path       = {};
   // internal map file path
-  std::string           m_map_path                   = {};
+  std::string                          m_map_path       = {};
   // if coo was chosen instead of default.
-  bool                  m_mim_choose_coo             = {};
+  bool                                 m_mim_choose_coo = {};
   // if coo was chosen instead of default.
-  bool                  m_map_choose_coo             = {};
+  bool                                 m_map_choose_coo = {};
   // container for field textures
-  open_viii::graphics::background::Mim         m_mim = {};
+  open_viii::graphics::background::Mim m_mim            = {};
   // container for field tile information
-  mutable open_viii::graphics::background::Map m_map = {};
+  mutable open_viii::graphics::background::Map m_map    = {};
+  // dimensions of map
+  MapDims<TileFunctions>                       m_map_dims         = { m_map };
   // loads the textures overtime instead of forcing them to load at start.
   glengine::DelayedTextures<35U>               m_delayed_textures = {};
   glengine::DelayedTextures<17U * 13U>
@@ -1069,22 +995,15 @@ private:
                                     // max. 0 being no palette and 1-17 being
                                     // with palettes
   // takes quads and draws them to the frame buffer or screen.
-  glengine::BatchRenderer           m_batch_renderer = { 1000 };
+  glengine::BatchRenderer           m_batch_renderer        = { 1000 };
   // holds rendered image at 1:1 scale to prevent gaps when scaling.
-  mutable glengine::FrameBuffer     m_frame_buffer   = {};
-  mutable glm::vec2                 m_offset_xy      = { 0.F, -s_tile_size_f };
+  mutable glengine::FrameBuffer     m_frame_buffer          = {};
   mutable bool                      m_offscreen_drawing     = { false };
   mutable bool                      m_saving                = { false };
   mutable bool                      m_preview               = { false };
-  glm::vec3                         m_position              = {};
   inline constinit static MapBlends s_blends                = {};
   mutable MapFilters                m_filters               = { m_map };
   mutable bool                      m_changed               = { true };
-  glm::vec2                         true_min_xy             = {};
-  glm::vec2                         true_max_xy             = {};
-  glm::vec2                         min_xy                  = {};
-  glm::vec2                         max_xy                  = {};
-  mutable float                     m_tile_scale            = { 1.F };
   glengine::Counter                 m_id                    = {};
   mutable std::vector<bool>         m_tile_button_state     = {};
   glengine::ImGuiViewPortWindow     m_imgui_viewport_window = {

@@ -168,4 +168,20 @@ std::int32_t Shader::get_uniform_location(std::string_view name) const
 
   return location;
 }
+void Shader::SetUniform(std::string_view name, glm::vec1 v) const
+{
+  SetUniform(name, v.x);
+}
+void Shader::SetUniform(std::string_view name, glm::vec2 v) const
+{
+  SetUniform(name, v.x, v.y);
+}
+void Shader::SetUniform(std::string_view name, glm::vec3 v) const
+{
+  SetUniform(name, v.x, v.y, v.z);
+}
+void Shader::SetUniform(std::string_view name, glm::vec4 v) const
+{
+  SetUniform(name, v.r, v.g, v.b, v.a);
+}
 }// namespace glengine
