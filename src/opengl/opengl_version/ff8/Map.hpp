@@ -151,10 +151,10 @@ public:
       const auto disable = glengine::ImGuiDisabled(
         std::ranges::empty(m_map_path) || std::ranges::empty(m_mim_path));
 
+      (void)ImGui::Checkbox("Fit Height", &s_fit_height);
+      (void)ImGui::Checkbox("Fit Width", &s_fit_width);
       m_changed = std::ranges::any_of(
         std::array{ ImGui::Checkbox("Draw Grid", &s_draw_grid),
-                    ImGui::Checkbox("Fit Height", &s_fit_height),
-                    ImGui::Checkbox("Fit Width", &s_fit_width),
                     [&]() -> bool {
                       return m_map.visit_tiles([](auto &&) -> bool {
                         if constexpr (!typename TileFunctions::use_blending{})
