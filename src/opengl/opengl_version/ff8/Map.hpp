@@ -952,7 +952,7 @@ private:
     for (const auto &value : vector)
       fmt::print("\t{}\n", value);
   }
-  void SetCameraBoundsToEdgesOfImage()
+  void SetCameraBoundsToEdgesOfImage() const
   {
     // s_camera.RefreshAspectRatio(m_imgui_viewport_window.ViewPortAspectRatio());
     const glm::vec2 size = m_map_dims.scaled_size();

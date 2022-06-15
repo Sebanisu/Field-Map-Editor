@@ -22,13 +22,13 @@ public:
   {
     return size * tile_scale;
   }
-  glm::vec2 offset         = { 0.F, -MapDimsStatics::tile_size };
-  glm::vec3 position       = {};
-  glm::vec2 true_min       = {};
-  glm::vec2 true_max       = {};
-  glm::vec2 size           = {};
-  glm::vec2(min)           = {};
-  glm::vec2(max)           = {};
+  glm::vec2     offset     = { 0.F, -MapDimsStatics::tile_size };
+  glm::vec3     position   = {};
+  glm::vec2     true_min   = {};
+  glm::vec2     true_max   = {};
+  glm::vec2     size       = {};
+  glm::vec2     min        = {};
+  glm::vec2     max        = {};
   mutable float tile_scale = { 1.F };
   MapDims(const MapT &map)
   {
