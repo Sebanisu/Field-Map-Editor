@@ -348,34 +348,42 @@ private:
     // ReadOnly flag is set on the functions. It's ment to display the data in a
     // way that can be copied into the clipboard. That is why I'm using
     // const_cast
-    const std::array<int, 2> tile_dims = { static_cast<int>(tile.width()),
-                                           static_cast<int>(tile.height()) };
-    ImGui::InputInt2(
-      "Tile Dimensions",
-      const_cast<int *>(tile_dims.data()),
-      ImGuiInputTextFlags_ReadOnly);
-    const std::string index_str = fmt::format("{}", index);
-    ImGui::InputText(
-      "Index",
-      const_cast<char *>(index_str.data()),
-      index_str.size(),
-      ImGuiInputTextFlags_ReadOnly);
-    const std::string id_str = fmt::format("{}", id);
-    ImGui::InputText(
-      "OpenGL Texture ID",
-      const_cast<char *>(id_str.data()),
-      id_str.size(),
-      ImGuiInputTextFlags_ReadOnly);
-    const std::string hex = [&]() -> std::string {
-      std::stringstream ss = {};
-      tile.to_hex(ss);
-      return ss.str();
-    }();
-    ImGui::InputText(
-      "Raw Hex",
-      const_cast<char *>(hex.data()),
-      hex.size(),
-      ImGuiInputTextFlags_ReadOnly);
+    {
+      const std::array<int, 2> tile_dims = { static_cast<int>(tile.width()),
+                                             static_cast<int>(tile.height()) };
+      ImGui::InputInt2(
+        "Tile Dimensions",
+        const_cast<int *>(tile_dims.data()),
+        ImGuiInputTextFlags_ReadOnly);
+    }
+    {
+      const std::string index_str = fmt::format("{}", index);
+      ImGui::InputText(
+        "Index",
+        const_cast<char *>(index_str.data()),
+        index_str.size(),
+        ImGuiInputTextFlags_ReadOnly);
+    }
+    {
+      const std::string id_str = fmt::format("{}", id);
+      ImGui::InputText(
+        "OpenGL Texture ID",
+        const_cast<char *>(id_str.data()),
+        id_str.size(),
+        ImGuiInputTextFlags_ReadOnly);
+    }
+    {
+      const std::string hex = [&]() -> std::string {
+        std::stringstream ss = {};
+        tile.to_hex(ss);
+        return ss.str();
+      }();
+      ImGui::InputText(
+        "Raw Hex",
+        const_cast<char *>(hex.data()),
+        hex.size(),
+        ImGuiInputTextFlags_ReadOnly);
+    }
   }
   int ComboBPP(auto &tile, bool &changed) const
   {
