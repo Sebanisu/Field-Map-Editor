@@ -893,7 +893,8 @@ private:
                                     texture_page + 13U * (palette + 1U)) };
     if (!m_upscale_delayed_textures.textures->at(r.texture_index))
     {
-      // I don't remember why this is here.
+      // no palette with texture page combo was found. So attempt to load
+      // texture page without palette.
       r.texture_index = texture_page;
     }
     return r;
