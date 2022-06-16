@@ -5,9 +5,11 @@
 #ifndef FIELD_MAP_EDITOR_MAPFILTERS_HPP
 #define FIELD_MAP_EDITOR_MAPFILTERS_HPP
 #include "UniqueTileValues.hpp"
+#include <ImGuiDisabled.hpp>
+#include <ImGuiPushID.hpp>
+#include <ImGuiIndent.hpp>
 class MapFilters
 {
-
 public:
   MapFilters() = default;
   MapFilters(const open_viii::graphics::background::Map &map)

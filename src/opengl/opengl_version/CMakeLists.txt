@@ -52,7 +52,7 @@ add_executable(${PROJECT_NAME}_OPENGL
         test/TestFF8Archive.cpp
         test/TestMenu.cpp
         test/TestTexture2D.cpp
-        ff8/ImGuiTileDisplayWindow.cpp ff8/ImGuiTileDisplayWindow.hpp ff8/MapHistory.cpp ff8/MapHistory.hpp)
+        ff8/ImGuiTileDisplayWindow.cpp ff8/ImGuiTileDisplayWindow.hpp ff8/MapHistory.cpp ff8/MapHistory.hpp ff8/MapTileAdjustments.cpp ff8/MapTileAdjustments.hpp)
 target_link_libraries(${PROJECT_NAME}_OPENGL
         PRIVATE glengine
         PRIVATE project_warnings
