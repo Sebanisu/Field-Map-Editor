@@ -3,11 +3,11 @@
 //
 #include "Paths.hpp"
 #include "GenericCombo.hpp"
-bool ff8::Paths::OnImGuiUpdate() const
+bool ff_8::Paths::on_im_gui_update() const
 {
-  return glengine::GenericCombo("Path",m_current,m_paths);
+  return glengine::GenericCombo("Path", m_current, m_paths);
 }
-const std::string &ff8::Paths::Path() const
+const std::string &ff_8::Paths::Path() const
 {
   if (std::cmp_less(m_current, std::ranges::size(m_paths)))
   {
@@ -16,7 +16,7 @@ const std::string &ff8::Paths::Path() const
   const static auto empty = std::string("");
   return empty;
 }
-ff8::Paths::Paths()
+ff_8::Paths::Paths()
 {
   m_paths = open_viii::Paths::get();
 }

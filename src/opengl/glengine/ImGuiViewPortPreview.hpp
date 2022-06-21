@@ -15,47 +15,47 @@ inline namespace impl
   public:
     ImGuiViewPortPreview()
     {
-      m_preview_view_port.DisableDebugText();
+      m_preview_view_port.disable_debug_text();
     }
-    [[nodiscard]] float ViewPortAspectRatio() const
+    [[nodiscard]] float view_port_aspect_ratio() const
     {
-      return m_preview_view_port.ViewPortAspectRatio();
+      return m_preview_view_port.view_port_aspect_ratio();
     }
 
-    void OnUpdate(float) const
+    void on_update(float) const
     {
       m_drawn = false;
-      ImGuiViewPortWindow::SetPreviewAspectRatio(ViewPortAspectRatio());
+      ImGuiViewPortWindow::set_preview_aspect_ratio(view_port_aspect_ratio());
       // m_camera_controller.SetZoom(m_preview_view_port.ViewPortDims().y);
     }
     // A way to hand a ImGuiViewPortWindow, and a OrthographicCamera or
     // OrthographicCameraController and draw a preview window.
-    void OnRender(
+    void on_render(
       const bool            current_view_port_has_hover,
       std::invocable auto &&callable) const
     {
       if (!m_drawn && current_view_port_has_hover)
       {
-        m_preview_view_port.SyncOpenGLViewPort();
-        m_preview_view_port.OnRender(
+        m_preview_view_port.sync_open_gl_view_port();
+        m_preview_view_port.on_render(
           std::forward<decltype(callable)>(callable));
         m_drawn = true;
       }
     }
-    constexpr void OnImGuiUpdate() const {}
-    void           OnRender() const
+    constexpr void on_im_gui_update() const {}
+    void           on_render() const
     {
       if (!m_drawn)
       {
-        m_preview_view_port.OnRender(
+        m_preview_view_port.on_render(
           []() {});// might need a function to draw the empty window.
       }
     }
-    void OnEvent(const Event::Item &) const {}
+    void on_event(const event::Item &) const {}
 
   private:
-    ImGuiViewPortWindow                  m_preview_view_port = { "Preview" };
-    mutable bool                         m_drawn             = false;
+    ImGuiViewPortWindow m_preview_view_port = { "Preview" };
+    mutable bool        m_drawn             = false;
   };
   static_assert(Renderable<ImGuiViewPortPreview>);
 }// namespace impl

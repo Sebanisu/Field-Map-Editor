@@ -9,7 +9,7 @@ namespace glengine
 inline namespace impl
 {
   static constinit float preview_aspect_ratio = 16.F / 9.F;
-  void                   ImGuiViewPortWindow::OnImGuiDebugInfo() const
+  void                   ImGuiViewPortWindow::on_im_gui_debug_info() const
   {
     if (!m_debug_text)
     {
@@ -17,9 +17,9 @@ inline namespace impl
     }
     auto           &io = ImGui::GetIO();
     const glm::vec3 mouse_world_pos =
-      m_main_camera.Camera().ScreenSpaceToWorldSpace(ViewPortMousePos());
-    const glm::vec2 topright         = m_main_camera.TopRightScreenSpace();
-    const glm::vec2 bottomleft       = m_main_camera.BottomLeftScreenSpace();
+      m_main_camera.camera().screen_space_to_world_space(view_port_mouse_pos());
+    const glm::vec2 topright         = m_main_camera.top_right_screen_space();
+    const glm::vec2 bottomleft       = m_main_camera.bottom_left_screen_space();
     const glm::vec3 mouse_world_pos2 = adjust_mouse_pos(topright, bottomleft);
     ImGui::Text(
       "%s",
@@ -71,83 +71,95 @@ inline namespace impl
         mouse_world_pos2.z)
         .c_str());
   }
-  void ImGuiViewPortWindow::OnRender() const
+  void ImGuiViewPortWindow::on_render() const
   {
-    m_main_camera.OnRender();
-    m_mouse_camera.OnRender();
-    // OnRender([]() {});
+    m_main_camera.on_render();
+    m_mouse_camera.on_render();
+    // on_render([]() {});
   }
-  void ImGuiViewPortWindow::SetImageBounds(const glm::vec2 &dims) const
+  void ImGuiViewPortWindow::set_image_bounds(const glm::vec2 &dims) const
   {
-    m_main_camera.SetImageBounds(dims);
-    m_mouse_camera.SetImageBounds(dims);
+    m_main_camera.set_image_bounds(dims);
+    m_mouse_camera.set_image_bounds(dims);
   }
-  void ImGuiViewPortWindow::FitBoth() const
+  void ImGuiViewPortWindow::fit_both() const
   {
-    m_main_camera.FitBoth();
+    m_main_camera.fit_both();
   }
-  void ImGuiViewPortWindow::FitHeight() const
+  void ImGuiViewPortWindow::fit_height() const
   {
-    m_main_camera.FitHeight();
+    m_main_camera.fit_height();
   }
-  void ImGuiViewPortWindow::FitWidth() const
+  void ImGuiViewPortWindow::fit_width() const
   {
-    m_main_camera.FitWidth();
+    m_main_camera.fit_width();
   }
-  void ImGuiViewPortWindow::OnEvent(const Event::Item &event) const
+  void ImGuiViewPortWindow::on_event(const event::Item &event) const
   {
-    glengine::Event::Dispatcher::Filter(
-      event, HasFocus(), HasHover(), [&event, this]() {
-        m_main_camera.CheckEvent(event);
+    glengine::event::Dispatcher::Filter(
+      event, has_focus(), has_hover(), [&event, this]() {
+        m_main_camera.check_event(event);
       });
-    m_main_camera.OnEvent(event);
-    m_mouse_camera.OnEvent(event);
+    m_main_camera.on_event(event);
+    m_mouse_camera.on_event(event);
   }
 
-  void ImGuiViewPortWindow::OnUpdate(float ts) const
+  void ImGuiViewPortWindow::on_update(float ts) const
   {
-    m_main_camera.RefreshAspectRatio(ViewPortAspectRatio());
+    m_main_camera.refresh_aspect_ratio(view_port_aspect_ratio());
     if (m_packed.focused)
     {
-      m_main_camera.CheckInput(ts);
+      m_main_camera.check_input(ts);
     }
-    m_main_camera.OnUpdate(ts);
-    m_mouse_camera.OnUpdate(ts);
+    m_main_camera.on_update(ts);
+    m_mouse_camera.on_update(ts);
+    if (m_packed.fit_width && m_packed.fit_height)
+    {
+      fit_both();
+    }
+    else if (m_packed.fit_height)
+    {
+      fit_height();
+    }
+    else if (m_packed.fit_width)
+    {
+      fit_width();
+    }
   }
-  void ImGuiViewPortWindow::OnImGuiUpdate() const
+  void ImGuiViewPortWindow::on_im_gui_update() const
   {
-    const auto pushid = ImGuiPushID();
+    const auto pushid = ImGuiPushId();
     if (ImGui::Checkbox("Enable Debug Text", &m_debug_text))
     {
       // changed
     }
     ImGui::Separator();
-    m_main_camera.OnImGuiUpdate();
+    m_main_camera.on_im_gui_update();
     ImGui::Separator();
-    m_mouse_camera.OnImGuiUpdate();
+    m_mouse_camera.on_im_gui_update();
   }
-  void ImGuiViewPortWindow::SyncOpenGLViewPort() const
+  void ImGuiViewPortWindow::sync_open_gl_view_port() const
   {
-    GLCall{}(
+    GlCall{}(
       glViewport,
       GLint{},
       GLint{},
       static_cast<GLint>(m_viewport_size.x),
       static_cast<GLint>(m_viewport_size.y));
   }
-  bool ImGuiViewPortWindow::HasFocus() const
+  bool ImGuiViewPortWindow::has_focus() const
   {
     return m_packed.focused;
   }
-  bool ImGuiViewPortWindow::HasHover() const
+  bool ImGuiViewPortWindow::has_hover() const
   {
     return m_packed.hovered;
   }
-  [[maybe_unused]] glm::vec2 ImGuiViewPortWindow::ViewPortDims() const
+  [[maybe_unused]] glm::vec2 ImGuiViewPortWindow::view_port_dims() const
   {
     return m_viewport_size;
   }
-  float ImGuiViewPortWindow::ViewPortAspectRatio() const
+  float ImGuiViewPortWindow::view_port_aspect_ratio() const
   {
     float ret = m_viewport_size.x / m_viewport_size.y;
     if (std::isnan(ret))
@@ -156,7 +168,7 @@ inline namespace impl
     }
     return ret;
   }
-  glm::vec4 ImGuiViewPortWindow::ViewPortMousePos() const
+  glm::vec4 ImGuiViewPortWindow::view_port_mouse_pos() const
   {
     return m_viewport_mouse_pos;
   }
@@ -180,14 +192,14 @@ inline namespace impl
       1.F
     };
   }
-  glm::vec2 ImGuiViewPortWindow::ConvertImVec2(ImVec2 in) const
+  glm::vec2 ImGuiViewPortWindow::convert_im_vec_2(ImVec2 in) const
   {
     return { in.x, in.y };
   }
-  void ImGuiViewPortWindow::OnUpdateMouse() const
+  void ImGuiViewPortWindow::on_update_mouse() const
   {
-    m_min = ConvertImVec2(ImGui::GetWindowContentRegionMin());
-    m_max = ConvertImVec2(ImGui::GetWindowContentRegionMax());
+    m_min = convert_im_vec_2(ImGui::GetWindowContentRegionMin());
+    m_max = convert_im_vec_2(ImGui::GetWindowContentRegionMax());
 
     m_min.x += ImGui::GetWindowPos().x;
     m_min.y += ImGui::GetWindowPos().y;
@@ -195,7 +207,7 @@ inline namespace impl
     m_max.y += ImGui::GetWindowPos().y;
 
     auto &io            = ImGui::GetIO();
-    m_clamp_mouse_pos   = ConvertImVec2(io.MousePos);
+    m_clamp_mouse_pos   = convert_im_vec_2(io.MousePos);
     m_clamp_mouse_pos.x = std::clamp(m_clamp_mouse_pos.x, m_min.x, m_max.x);
     m_clamp_mouse_pos.y = std::clamp(m_clamp_mouse_pos.y, m_min.y, m_max.y);
     const auto convert_range = [](
@@ -213,7 +225,7 @@ inline namespace impl
                  0.F,
                  1.F };
   }
-  void ImGuiViewPortWindow::OnUpdateFocusAndHover() const
+  void ImGuiViewPortWindow::on_update_focus_and_hover() const
   {
 
     m_packed.focused = m_packed.button_focused || m_packed.window_focused
@@ -221,44 +233,35 @@ inline namespace impl
     m_packed.hovered = m_packed.button_hovered || m_packed.window_hovered
                        || m_packed.parent_window_hovered;
   }
-  glm::mat4 ImGuiViewPortWindow::ViewProjectionMatrix() const
+  glm::mat4 ImGuiViewPortWindow::view_projection_matrix() const
   {
-    return m_main_camera.Camera().ViewProjectionMatrix();
+    return m_main_camera.camera().view_projection_matrix();
   }
-  glm::mat4 ImGuiViewPortWindow::PreviewViewProjectionMatrix() const
+  glm::mat4 ImGuiViewPortWindow::preview_view_projection_matrix() const
   {
-    m_mouse_camera.RefreshAspectRatio(preview_aspect_ratio);
+    m_mouse_camera.refresh_aspect_ratio(preview_aspect_ratio);
     const glm::vec2 position =
-      m_main_camera.Camera().ScreenSpaceToWorldSpace(ViewPortMousePos());
+      m_main_camera.camera().screen_space_to_world_space(view_port_mouse_pos());
 
-    m_mouse_camera.SetZoom(m_main_camera.ZoomLevel() / 8.F);
-    m_mouse_camera.SetPosition(position + m_main_camera.Position());
-    return m_mouse_camera.Camera().ViewProjectionMatrix();
+    m_mouse_camera.set_zoom(m_main_camera.zoom_level() / 8.F);
+    m_mouse_camera.set_position(position + m_main_camera.position());
+    return m_mouse_camera.camera().view_projection_matrix();
   }
-  void ImGuiViewPortWindow::SetPreviewAspectRatio(float aspect_ratio) noexcept
+  void
+    ImGuiViewPortWindow::set_preview_aspect_ratio(float aspect_ratio) noexcept
   {
     preview_aspect_ratio = aspect_ratio;
   }
-  void ImGuiViewPortWindow::Fit(const bool width, const bool height) const
+  void ImGuiViewPortWindow::fit(const bool width, const bool height) const
   {
-    if (height && width)
-    {
-      FitBoth();
-    }
-    else if (height)
-    {
-      FitHeight();
-    }
-    else if (width)
-    {
-      FitWidth();
-    }
+    m_packed.fit_width  = width;
+    m_packed.fit_height = height;
   }
-  void ImGuiViewPortWindow::EnableDebugText()
+  void ImGuiViewPortWindow::enable_debug_text()
   {
     m_debug_text = true;
   }
-  void ImGuiViewPortWindow::DisableDebugText()
+  void ImGuiViewPortWindow::disable_debug_text()
   {
     m_debug_text = false;
   }

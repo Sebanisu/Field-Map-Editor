@@ -2,53 +2,53 @@
 // Created by pcvii on 11/15/2021.
 //
 
-#ifndef FIELD_MAP_EDITOR_SCOPE_GUARD_HPP
-#define FIELD_MAP_EDITOR_SCOPE_GUARD_HPP
+#ifndef FIELD_MAP_EDITOR_SCOPEGUARD_HPP
+#define FIELD_MAP_EDITOR_SCOPEGUARD_HPP
 namespace glengine
 {
-struct [[nodiscard]] scope_guard
+struct [[nodiscard]] ScopeGuard
 {
-  constexpr scope_guard(void (*t)())
+  constexpr ScopeGuard(void (*t)())
     : func(std::move(t))
   {
   }
 
-  ~scope_guard()
+  constexpr ~ScopeGuard()
   {// bug in gcc making this not constexpr with -Werror=useless-cast
     exec();
   }
 
-  constexpr scope_guard &operator=(void (*t)())
+  constexpr ScopeGuard &operator=(void (*t)())
   {
     exec();
     func = std::move(t);
     return *this;
   }
 
-  constexpr scope_guard(const scope_guard &other)
+  constexpr ScopeGuard(const ScopeGuard &other)
     : func(other.func)
   {
   }
-  constexpr scope_guard &operator=(const scope_guard &other)
+  constexpr ScopeGuard &operator=(const ScopeGuard &other)
   {
     exec();
     func = other.func;
     return *this;
   }
-  constexpr scope_guard(scope_guard &&other) noexcept
-    : scope_guard()
+  constexpr ScopeGuard(ScopeGuard &&other) noexcept
+    : ScopeGuard()
   {
     swap(*this, other);
   }
-  constexpr scope_guard &operator=(scope_guard &&other) noexcept
+  constexpr ScopeGuard &operator=(ScopeGuard &&other) noexcept
   {
     swap(*this, other);
     return *this;
   }
 
   constexpr friend void swap(
-    scope_guard &first,
-    scope_guard &second) noexcept// nothrow
+    ScopeGuard &first,
+    ScopeGuard &second) noexcept// nothrow
   {
     // enable ADL (not necessary in our case, but good practice)
     using std::swap;
@@ -60,11 +60,11 @@ struct [[nodiscard]] scope_guard
   template<size_t count>
   [[nodiscard]] static constexpr auto array(void (*t)())
   {
-    std::array<scope_guard, count> r{};
-    std::ranges::for_each(r, [&t](scope_guard &guard) { guard = t; });
+    std::array<ScopeGuard, count> r{};
+    std::ranges::for_each(r, [&t](ScopeGuard &guard) { guard = t; });
     return r;
   }
-  constexpr scope_guard() = default;
+  constexpr ScopeGuard() = default;
 
 private:
   constexpr void exec() const
@@ -77,20 +77,20 @@ private:
   void (*func)() = nullptr;
 };
 template<std::invocable functT>
-struct [[nodiscard]] scope_guard_captures
+struct [[nodiscard]] ScopeGuardCaptures
 {
-  constexpr scope_guard_captures(functT &&in_funct)
+  constexpr ScopeGuardCaptures(functT &&in_funct)
     : func(std::forward<functT>(in_funct))
     , enabled(true)
   {
   }
 
-  ~scope_guard_captures()
+  ~ScopeGuardCaptures()
   {// bug in gcc making this not constexpr with -Werror=useless-cast
     exec();
   }
 
-  constexpr scope_guard_captures &operator=(functT &&in_funct)
+  constexpr ScopeGuardCaptures &operator=(functT &&in_funct)
   {
     exec();
     func    = std::forward<functT>(in_funct);
@@ -98,24 +98,23 @@ struct [[nodiscard]] scope_guard_captures
     return *this;
   }
 
-  constexpr scope_guard_captures(const scope_guard_captures &other)
+  constexpr ScopeGuardCaptures(const ScopeGuardCaptures &other)
     : func(other.func)
   {
   }
-  constexpr scope_guard_captures &operator=(const scope_guard_captures &other)
+  constexpr ScopeGuardCaptures &operator=(const ScopeGuardCaptures &other)
   {
     exec();
     func    = other.func;
     enabled = other.enabled;
     return *this;
   }
-  constexpr scope_guard_captures(scope_guard_captures &&other) noexcept
-    : scope_guard_captures()
+  constexpr ScopeGuardCaptures(ScopeGuardCaptures &&other) noexcept
+    : ScopeGuardCaptures()
   {
     swap(*this, other);
   }
-  constexpr scope_guard_captures &
-    operator=(scope_guard_captures &&other) noexcept
+  constexpr ScopeGuardCaptures &operator=(ScopeGuardCaptures &&other) noexcept
   {
     exec();
     swap(*this, other);
@@ -123,8 +122,8 @@ struct [[nodiscard]] scope_guard_captures
   }
 
   constexpr friend void swap(
-    scope_guard_captures &first,
-    scope_guard_captures &second) noexcept// nothrow
+    ScopeGuardCaptures &first,
+    ScopeGuardCaptures &second) noexcept// nothrow
   {
     // enable ADL (not necessary in our case, but good practice)
     using std::swap;
@@ -137,11 +136,11 @@ struct [[nodiscard]] scope_guard_captures
   template<size_t count>
   [[nodiscard]] static constexpr auto array(void (*t)())
   {
-    std::array<scope_guard_captures, count> r{};
-    std::ranges::for_each(r, [&t](scope_guard_captures &guard) { guard = t; });
+    std::array<ScopeGuardCaptures, count> r{};
+    std::ranges::for_each(r, [&t](ScopeGuardCaptures &guard) { guard = t; });
     return r;
   }
-  constexpr scope_guard_captures() = default;
+  constexpr ScopeGuardCaptures() = default;
 
 private:
   constexpr void exec() const
@@ -189,4 +188,4 @@ private:
 //   std::function<void()> func{};
 // };
 }// namespace glengine
-#endif// FIELD_MAP_EDITOR_SCOPE_GUARD_HPP
+#endif// FIELD_MAP_EDITOR_SCOPEGUARD_HPP

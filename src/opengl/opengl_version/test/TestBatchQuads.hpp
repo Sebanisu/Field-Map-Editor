@@ -21,17 +21,17 @@ public:
   TestBatchQuads();
 
 
-  void                         OnUpdate(float) const;
-  void                         OnRender() const;
-  void                         OnImGuiUpdate() const;
-  void                         OnEvent(const glengine::Event::Item &) const;
+  void                         on_update(float) const;
+  void                         on_render() const;
+  void                         on_im_gui_update() const;
+  void                         on_event(const glengine::event::Item &) const;
   void                         GenerateQuads() const;
 
   static constexpr std::size_t QUAD_COUNT = { 100U };
   static constexpr std::size_t VERT_COUNT = { QUAD_COUNT * 4U };
 
 private:
-  void Draw() const;
+  void                                     Draw() const;
   glengine::VertexBufferDynamic            m_vertex_buffer   = { QUAD_COUNT };
   glengine::IndexBufferDynamic             m_index_buffer    = { QUAD_COUNT };
   mutable glengine::IndexBufferDynamicSize index_buffer_size = {};
@@ -41,9 +41,9 @@ private:
   mutable std::array<int, 2U>              m_count     = { 100, 100 };
   glengine::Texture m_blank = { (std::numeric_limits<std::uint32_t>::max)() };
   glengine::ImGuiViewPortWindow m_imgui_viewport_window = {
-               "Test Batch Quads"
+    "Test Batch Quads"
   };
-  void SetUniforms() const;
+  void set_uniforms() const;
 };
 }// namespace test
 #endif// FIELD_MAP_EDITOR_TESTBATCHQUADS_HPP

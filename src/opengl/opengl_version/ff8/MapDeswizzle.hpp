@@ -11,7 +11,7 @@
 #include "Texture.hpp"
 #include "tile_operations.hpp"
 
-namespace ff8
+namespace ff_8
 {
 struct TileFunctionsDeswizzle
 {
@@ -24,5 +24,5 @@ struct TileFunctionsDeswizzle
 };
 using MapDeswizzle = Map<TileFunctionsDeswizzle>;
 static_assert(glengine::Renderable<MapDeswizzle>);
-}// namespace ff8
+}// namespace ff_8
 #endif// FIELD_MAP_EDITOR_MAPDESWIZZLE_HPP

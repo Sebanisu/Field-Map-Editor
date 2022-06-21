@@ -7,7 +7,7 @@
 class MapBlends
 {
 public:
-  [[nodiscard]] bool OnImGuiUpdate() const
+  [[nodiscard]] bool on_im_gui_update() const
   {
     bool changed = false;
     if (ImGui::CollapsingHeader("Add Blend"))
@@ -17,7 +17,7 @@ public:
       {
         changed = true;
       }
-      const auto pop = glengine::ImGuiPushID();
+      const auto pop = glengine::ImGuiPushId();
       if (Blend_Combos(m_add_parameter_selections, m_add_equation_selections))
       {
         changed = true;
@@ -26,7 +26,7 @@ public:
     if (ImGui::CollapsingHeader("Subtract Blend"))
     {
       const auto un_indent = glengine::ImGuiIndent();
-      const auto pop       = glengine::ImGuiPushID();
+      const auto pop       = glengine::ImGuiPushId();
       if (Blend_Combos(
             m_subtract_parameter_selections, m_subtract_equation_selections))
       {
@@ -55,13 +55,13 @@ private:
     const glengine::BlendModeParameters &parameters_selections,
     const glengine::BlendModeEquations  &equation_selections)
   {
-    GLCall{}(
+    GlCall{}(
       glBlendFuncSeparate,
       parameters_selections[0].current_value(),
       parameters_selections[1].current_value(),
       parameters_selections[2].current_value(),
       parameters_selections[3].current_value());
-    GLCall{}(
+    GlCall{}(
       glBlendEquationSeparate,
       equation_selections[0].current_value(),
       equation_selections[1].current_value());
@@ -70,12 +70,12 @@ private:
     glengine::BlendModeParameters &parameters_selections,
     glengine::BlendModeEquations  &equation_selections)
   {
-    if (parameters_selections.OnImGuiUpdate())
+    if (parameters_selections.on_im_gui_update())
     {
       return true;
     }
     ImGui::Separator();
-    if (equation_selections.OnImGuiUpdate())
+    if (equation_selections.on_im_gui_update())
     {
       return true;
     }
@@ -84,23 +84,24 @@ private:
 
   mutable bool                          m_enable_percent_blend     = { true };
   mutable glengine::BlendModeParameters m_add_parameter_selections = {
-    +glengine::BlendModeParameterEnum::SRC_COLOR,
-    +glengine::BlendModeParameterEnum::ONE,
-    +glengine::BlendModeParameterEnum::SRC_ALPHA,
-    +glengine::BlendModeParameterEnum::ONE_MINUS_SRC_ALPHA
+    +glengine::BlendModeParameterEnum::SrcColor,
+    +glengine::BlendModeParameterEnum::One,
+    +glengine::BlendModeParameterEnum::SrcAlpha,
+    +glengine::BlendModeParameterEnum::OneMinusSrcAlpha
   };
   mutable glengine::BlendModeEquations m_add_equation_selections = {
-    +glengine::BlendModeEquationEnum::FUNC_ADD,
-    +glengine::BlendModeEquationEnum::FUNC_ADD
+    +glengine::BlendModeEquationEnum::FuncAdd,
+    +glengine::BlendModeEquationEnum::FuncAdd
   };
   mutable glengine::BlendModeParameters m_subtract_parameter_selections = {
-    +glengine::BlendModeParameterEnum::DST_COLOR,
-    +glengine::BlendModeParameterEnum::ONE,
-    +glengine::BlendModeParameterEnum::SRC_ALPHA,
-    +glengine::BlendModeParameterEnum::ONE_MINUS_SRC_ALPHA
+    +glengine::BlendModeParameterEnum::DstColor,
+    +glengine::BlendModeParameterEnum::One,
+    +glengine::BlendModeParameterEnum::SrcAlpha,
+    +glengine::BlendModeParameterEnum::OneMinusSrcAlpha
   };
   mutable glengine::BlendModeEquations m_subtract_equation_selections = {
-    +glengine::BlendModeEquationEnum::FUNC_REVERSE_SUBTRACT,
-    +glengine::BlendModeEquationEnum::FUNC_ADD };
+    +glengine::BlendModeEquationEnum::FuncReverseSubtract,
+    +glengine::BlendModeEquationEnum::FuncAdd
+  };
 };
 #endif// FIELD_MAP_EDITOR_MAPBLENDS_HPP

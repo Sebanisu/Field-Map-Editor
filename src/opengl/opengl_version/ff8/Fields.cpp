@@ -5,12 +5,12 @@
 #include "Fields.hpp"
 #include "GenericCombo.hpp"
 
-namespace ff8
+namespace ff_8
 {
 static int current_index = {};
 }
 
-open_viii::graphics::background::Mim ff8::LoadMim(
+open_viii::graphics::background::Mim ff_8::LoadMim(
   open_viii::archive::FIFLFS<false> field,
   std::string_view                  coo,
   std::string                      &out_path,
@@ -27,7 +27,7 @@ open_viii::graphics::background::Mim ff8::LoadMim(
   coo_was_used = out_path_pos == 0U;
   if (!std::ranges::empty(buffer))
   {
-    fmt::print("loaded: {}\n", out_path);
+    spdlog::debug("loaded: {}", out_path);
     auto mim =
       open_viii::graphics::background::Mim{ buffer, field.get_base_name() };
     return mim;
@@ -35,7 +35,7 @@ open_viii::graphics::background::Mim ff8::LoadMim(
   return {};
 }
 
-open_viii::graphics::background::Map ff8::LoadMap(
+open_viii::graphics::background::Map ff_8::LoadMap(
   open_viii::archive::FIFLFS<false>           field,
   std::string_view                            coo,
   const open_viii::graphics::background::Mim &mim,
@@ -54,7 +54,7 @@ open_viii::graphics::background::Map ff8::LoadMap(
   coo_was_used = out_path_pos == 0U;// if true then the coo was picked.
   if (!std::ranges::empty(buffer))
   {
-    fmt::print("loaded: {}\n", out_path);
+    spdlog::debug("loaded: {}", out_path);
     auto map =
       open_viii::graphics::background::Map{ mim.mim_type(), buffer, shift };
     return map;
@@ -62,21 +62,21 @@ open_viii::graphics::background::Map ff8::LoadMap(
   return {};
 }
 
-bool ff8::Fields::OnArchiveChange() const
+bool ff_8::Fields::OnArchiveChange() const
 {
   starttime = std::chrono::steady_clock::now();
-  if (m_archive.OnImGuiUpdate())
+  if (m_archive.on_im_gui_update())
   {
     m_map_data = m_archive.Fields().map_data();
     m_field    = load_field();
     endtime    = std::chrono::steady_clock::now();
-    fmt::print("time to load fields = {:%S} seconds\n", endtime - starttime);
+    spdlog::debug("time to load fields = {:%S} seconds", endtime - starttime);
     return true;
   }
   return false;
 }
 
-bool ff8::Fields::OnFieldChange() const
+bool ff_8::Fields::OnFieldChange() const
 {
   if (glengine::GenericCombo("Field", current_index, m_map_data))
   {
@@ -86,12 +86,12 @@ bool ff8::Fields::OnFieldChange() const
   return false;
 }
 
-bool ff8::Fields::OnImGuiUpdate() const
+bool ff_8::Fields::on_im_gui_update() const
 {
   return OnArchiveChange() | OnFieldChange();
 }
 
-open_viii::archive::FIFLFS<false> ff8::Fields::load_field() const
+open_viii::archive::FIFLFS<false> ff_8::Fields::load_field() const
 {
   open_viii::archive::FIFLFS<false> archive{};
   if (!m_map_data.empty() && std::cmp_less(current_index, m_map_data.size()))
@@ -107,9 +107,8 @@ open_viii::archive::FIFLFS<false> ff8::Fields::load_field() const
   }
   else
   {
-    fmt::print(
-      stderr,
-      "{}:{} - Index out of range {} / {}\n",
+    spdlog::warn(
+      "{}:{} - Index out of range {} / {}",
       __FILE__,
       __LINE__,
       current_index,
@@ -118,12 +117,12 @@ open_viii::archive::FIFLFS<false> ff8::Fields::load_field() const
   return archive;
 }
 
-std::string_view ff8::Fields::Coo() const
+std::string_view ff_8::Fields::Coo() const
 {
   return m_archive.Coo();
 }
 
-const std::string &ff8::Fields::Map_Name() const
+const std::string &ff_8::Fields::Map_Name() const
 {
   if (std::cmp_less(current_index, std::ranges::size(m_map_data)))
   {
@@ -133,20 +132,21 @@ const std::string &ff8::Fields::Map_Name() const
   return tmp;
 }
 
-ff8::Fields::Fields()
+ff_8::Fields::Fields()
   : m_map_data(m_archive.Fields().map_data())
   , m_field(load_field())
 {
-  fmt::print("time to load fields = {:%S} seconds\n", endtime - starttime);
-  auto pos = std::ranges::find(m_map_data, std::string("bgmdele1"));//"feopen2" //crtower3
+  spdlog::debug("time to load fields = {:%S} seconds", endtime - starttime);
+  auto pos = std::ranges::find(
+    m_map_data, std::string("bgmdele1"));//"feopen2" //crtower3
   if (pos != m_map_data.end())
   {
     current_index = static_cast<int>(std::distance(m_map_data.begin(), pos));
-    m_field = load_field();
+    m_field       = load_field();
   }
 }
 
-const open_viii::archive::FIFLFS<false> &ff8::Fields::Field() const
+const open_viii::archive::FIFLFS<false> &ff_8::Fields::Field() const
 {
   return m_field;
 }

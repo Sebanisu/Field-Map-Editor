@@ -1,16 +1,16 @@
 #include "IndexBufferDynamic.hpp"
 namespace glengine
 {
-void IndexBufferDynamic::Bind() const
+void IndexBufferDynamic::bind() const
 {
-  GLCall{}(glBindBuffer, GL_ELEMENT_ARRAY_BUFFER, m_renderer_id);
+  GlCall{}(glBindBuffer, GL_ELEMENT_ARRAY_BUFFER, m_renderer_id);
 }
 
-void IndexBufferDynamic::UnBind()
+void IndexBufferDynamic::unbind()
 {
-  GLCall{}(glBindBuffer, GL_ELEMENT_ARRAY_BUFFER, 0U);
+  GlCall{}(glBindBuffer, GL_ELEMENT_ARRAY_BUFFER, 0U);
 }
-IndexType IndexBufferDynamic::Type() const
+IndexType IndexBufferDynamic::type() const
 {
   return m_type;
 }

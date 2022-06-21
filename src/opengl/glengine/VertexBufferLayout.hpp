@@ -7,23 +7,23 @@
 namespace glengine
 {
 template<typename T>
-concept is_VertexBufferElementType = requires(T t)
-{
-  typename std::decay_t<T>::value_type;
-  {
-    t.Count()
-    } -> decay_same_as<std::uint32_t>;
-};
+concept is_VertexBufferElementType =
+  requires(T t) {
+    typename std::remove_cvref_t<T>::ValueType;
+    {
+      t.count()
+      } -> decay_same_as<std::uint32_t>;
+  };
 
 struct VertexBufferElement
 {
-  std::uint32_t                type       = {};
-  std::uint32_t                count      = {};
-  std::uint8_t                 normalized = {};
+  std::uint32_t                m_type       = {};
+  std::uint32_t                m_count      = {};
+  std::uint8_t                 m_normalized = {};
 
-  constexpr static std::size_t size_of_type(std::uint32_t type)
+  constexpr static std::size_t size_of_type(const std::uint32_t in_type)
   {
-    switch (type)
+    switch (in_type)
     {
         // glVertexAttribPointer and glVertexAttribIPointer
       case GL_BYTE:
@@ -55,7 +55,7 @@ struct VertexBufferElement
   }
   constexpr std::size_t size() const
   {
-    return count * size_of_type(type);
+    return m_count * size_of_type(m_type);
   }
   constexpr std::size_t operator+(const VertexBufferElement &other)
   {
@@ -71,59 +71,59 @@ template<typename T>
 struct VertexBufferElementType
 {
   constexpr VertexBufferElementType(std::uint32_t in_count)
-    : count(in_count)
+    : m_count(in_count)
   {
   }
-  using value_type = T;
+  using ValueType = T;
   constexpr operator VertexBufferElement() const
   {
-    if constexpr (std::is_same_v<value_type, std::uint8_t>)
+    if constexpr (std::is_same_v<ValueType, std::uint8_t>)
     {
-      return { type, count, std::uint8_t{ GL_TRUE } };
+      return { m_type, m_count, std::uint8_t{ GL_TRUE } };
     }
     else
     {
-      return { type, count, std::uint8_t{ GL_FALSE } };
+      return { m_type, m_count, std::uint8_t{ GL_FALSE } };
     }
   };
 
-  constexpr std::uint32_t Count() const noexcept
+  constexpr std::uint32_t count() const noexcept
   {
-    return count;
+    return m_count;
   }
 
 private:
-  std::uint32_t count = {};
-  std::uint32_t type  = []() {
-    if constexpr (std::is_same_v<value_type, GLdouble>)
+  std::uint32_t m_count = {};
+  std::uint32_t m_type  = []() {
+    if constexpr (std::is_same_v<ValueType, GLdouble>)
     {
       return GL_DOUBLE;
     }
-    if constexpr (std::is_same_v<value_type, GLfloat>)
+    if constexpr (std::is_same_v<ValueType, GLfloat>)
     {
       return GL_FLOAT;
     }
-    else if constexpr (std::is_same_v<value_type, GLint>)
+    else if constexpr (std::is_same_v<ValueType, GLint>)
     {
       return GL_INT;
     }
-    else if constexpr (std::is_same_v<value_type, GLuint>)
+    else if constexpr (std::is_same_v<ValueType, GLuint>)
     {
       return GL_UNSIGNED_INT;
     }
-    else if constexpr (std::is_same_v<value_type, GLshort>)
+    else if constexpr (std::is_same_v<ValueType, GLshort>)
     {
       return GL_SHORT;
     }
-    else if constexpr (std::is_same_v<value_type, GLushort>)
+    else if constexpr (std::is_same_v<ValueType, GLushort>)
     {
       return GL_UNSIGNED_SHORT;
     }
-    else if constexpr (std::is_same_v<value_type, GLubyte>)
+    else if constexpr (std::is_same_v<ValueType, GLubyte>)
     {
       return GL_UNSIGNED_BYTE;
     }
-    else if constexpr (std::is_same_v<value_type, GLbyte>)
+    else if constexpr (std::is_same_v<ValueType, GLbyte>)
     {
       return GL_BYTE;
     }

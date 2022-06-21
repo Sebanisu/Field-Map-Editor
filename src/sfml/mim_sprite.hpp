@@ -64,31 +64,31 @@ public:
   //      m_sprite(get_sprite())
   //  {}
   /**
-   * Create a new object with a new field and the same settings
+   * create a new object with a new field and the same settings
    * @param in_field
    * @return mim_sprite object
    */
   [[nodiscard]] mim_sprite with_field(
     std::shared_ptr<open_viii::archive::FIFLFS<false>> in_field) const;
   /**
-   * Create a new object with a new bits per pixel and the same settings
+   * create a new object with a new bits per pixel and the same settings
    * @param in_bpp
    * @return mim_sprite object
    */
   [[nodiscard]] mim_sprite
     with_bpp(const open_viii::graphics::BPPT &in_bpp) const;
   /**
-   * Create a new object with a new palette and the same settings
+   * create a new object with a new palette and the same settings
    * @param in_bpp
    * @return mim_sprite object
    */
   [[nodiscard]] mim_sprite with_palette(const std::uint8_t &in_palette) const;
   /**
-   * Create a new object and change coo.
+   * create a new object and change coo.
    */
   [[nodiscard]] mim_sprite with_coo(open_viii::LangT in_coo) const;
   /**
-   * Create a new object and Toggle drawing palette.
+   * create a new object and Toggle drawing palette.
    */
   [[nodiscard]] mim_sprite with_draw_palette(bool in_draw_palette) const;
   //  /**

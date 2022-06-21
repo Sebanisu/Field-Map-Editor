@@ -28,13 +28,13 @@ public:
 
   friend void swap(Shader &first, Shader &second) noexcept;
 
-  void        Bind() const;
-  static void UnBind();
+  void        bind() const;
+  static void unbind();
 
-  void        SetUniform(std::string_view name, glm::vec1 v) const;
-  void        SetUniform(std::string_view name, glm::vec2 v) const;
-  void        SetUniform(std::string_view name, glm::vec3 v) const;
-  void        SetUniform(std::string_view name, glm::vec4 v) const;
+  void        set_uniform(std::string_view name, glm::vec1 v) const;
+  void        set_uniform(std::string_view name, glm::vec2 v) const;
+  void        set_uniform(std::string_view name, glm::vec3 v) const;
+  void        set_uniform(std::string_view name, glm::vec4 v) const;
   // Set Uniforms
   template<typename... T>
   // clang-format off
@@ -45,10 +45,10 @@ public:
       || (std::unsigned_integral<T> && ...)
       || (std::signed_integral<T> && ...))
   // clang-format on
-  void SetUniform(std::string_view name, T... v) const
+  void set_uniform(std::string_view name, T... v) const
   {
     const auto perform = [&]<typename NT>(auto &&fun) {
-      GLCall{}(
+      GlCall{}(
         std::forward<decltype(fun)>(fun),
         get_uniform_location(name),
         static_cast<NT>(v)...);
@@ -117,10 +117,10 @@ public:
       (decay_same_as<std::ranges::range_value_t<T>, float>)
       || (decay_same_as<std::ranges::range_value_t<T>, std::uint32_t>)
       || (decay_same_as<std::ranges::range_value_t<T>, std::int32_t>))
-  void SetUniform(std::string_view name, T v) const
+  void set_uniform(std::string_view name, T v) const
   {
-    const auto perform = [&]<typename NT>(auto &&fun) {
-      GLCall{}(
+    const auto perform = [&](auto &&fun) {
+      GlCall{}(
         std::forward<decltype(fun)>(fun),
         get_uniform_location(name),
         static_cast<GLsizei>(std::ranges::ssize(v)),
@@ -130,24 +130,24 @@ public:
     assert(!std::ranges::empty(v));
     if constexpr (decay_same_as<std::ranges::range_value_t<T>, float>)
     {
-      perform.template operator()<float>(glUniform1fv);
+      perform(glUniform1fv);
     }
     else if constexpr (decay_same_as<
                          std::ranges::range_value_t<T>,
                          std::uint32_t>)
     {
-      perform.template operator()<float>(glUniform1uiv);
+      perform(glUniform1uiv);
     }
     else if constexpr (decay_same_as<
                          std::ranges::range_value_t<T>,
                          std::int32_t>)
     {
-      perform.template operator()<float>(glUniform1iv);
+      perform(glUniform1iv);
     }
   }
-  void SetUniform(std::string_view name, const glm::mat4 &matrix) const
+  void set_uniform(std::string_view name, const glm::mat4 &matrix) const
   {
-    GLCall{}(
+    GlCall{}(
       glUniformMatrix4fv,
       get_uniform_location(name),
       1,
@@ -161,13 +161,11 @@ private:
     std::string vertex_shader{};
     std::string fragment_shader{};
   };
-  [[nodiscard]] ShaderProgramSource ParseShader();
+  [[nodiscard]] ShaderProgramSource parse_shader();
   [[nodiscard]] std::uint32_t
-    CompileShader(const std::uint32_t type, const std::string_view source);
-  std::uint32_t CreateShader(
-    const std::string_view vertexShader,
-    const std::string_view fragmentShader);
-  std::int32_t get_uniform_location(std::string_view name) const;
+    compile_shader(const std::uint32_t type, const std::string_view source);
+  std::uint32_t create_shader(const std::string_view, const std::string_view);
+  std::int32_t  get_uniform_location(std::string_view name) const;
 };
 static_assert(Bindable<Shader>);
 }// namespace glengine

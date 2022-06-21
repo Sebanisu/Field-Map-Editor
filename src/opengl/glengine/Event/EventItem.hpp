@@ -8,7 +8,7 @@
 #include "MakeVisitor.hpp"
 namespace glengine
 {
-namespace Event
+namespace event
 {
   class Item
   {
@@ -17,67 +17,67 @@ namespace Event
 
   public:
     Item() = default;
-    template<Event::is T, typename... argsT>
+    template<event::is T, typename... argsT>
     Item(std::in_place_type_t<T> type, argsT &&...args) noexcept
       : m_impl(std::move(type), std::forward<argsT>(args)...)
     {
     }
-    template<Event::is T>
+    template<event::is T>
     Item(T t)
       : Item(std::in_place_type_t<T>{}, std::move(t))
     {
     }
 
-    using value_type = Event::Item;
-    std::string_view Name() const
+    using ValueType = event::Item;
+    std::string_view name() const
     {
       return std::visit(
-        glengine::make_visitor(
-          [](const Event::is auto &value) { return value.Name(); },
+        glengine::MakeVisitor(
+          [](const event::is auto &value) { return value.name(); },
           [](std::monostate) { return std::string_view(""); }),
         m_impl);
     }
-    Event::Category category() const
+    event::Category category() const
     {
       return std::visit(
-        glengine::make_visitor(
-          [](const Event::is auto &value) { return value.category(); },
-          [](std::monostate) { return Event::Category::None; }),
+        glengine::MakeVisitor(
+          [](const event::is auto &value) { return value.category(); },
+          [](std::monostate) { return event::Category::None; }),
         m_impl);
     }
-    std::string_view CategoryName() const
+    std::string_view category_name() const
     {
       return std::visit(
-        glengine::make_visitor(
-          [](const Event::is auto &value) { return value.CategoryName(); },
+        glengine::MakeVisitor(
+          [](const event::is auto &value) { return value.category_name(); },
           [](std::monostate) { return std::string_view(""); }),
         m_impl);
     }
-    bool Handled() const
+    bool handled() const
     {
       return std::visit(
-        glengine::make_visitor(
-          [](const Event::is auto &value) { return value.Handled(); },
+        glengine::MakeVisitor(
+          [](const event::is auto &value) { return value.handled(); },
           [](std::monostate) { return false; }),
         m_impl);
     }
 
-    std::string Data() const
+    std::string data() const
     {
       return std::visit(
-        glengine::make_visitor(
-          [](const Event::is auto &value) { return value.Data(); },
+        glengine::MakeVisitor(
+          [](const event::is auto &value) { return value.data(); },
           [](std::monostate) { return std::string{}; }),
         m_impl);
     }
-    template<Event::is eventT>
+    template<event::is eventT>
     bool contains() const
     {
       return std::get_if<eventT>(&m_impl) == nullptr ? false : true;
     }
 
-    template<Event::is eventT>
-    const eventT *Get() const
+    template<event::is eventT>
+    const eventT *get() const
     {
       return std::get_if<eventT>(&m_impl);
     }
@@ -87,7 +87,7 @@ namespace Event
       return m_impl.index() != 0U;
     }
   };
-  static_assert(Event::is<Item>);
-}// namespace Event
+  static_assert(event::is<Item>);
+}// namespace event
 }// namespace glengine
 #endif// FIELD_MAP_EDITOR_EVENTITEM_HPP

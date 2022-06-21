@@ -6,41 +6,41 @@
 #define FIELD_MAP_EDITOR_RENDERABLE_HPP
 namespace glengine
 {
-namespace Event
+namespace event
 {
   class Item;
 }
 template<typename T>
 concept Renderable =
   std::default_initializable<T> && std::movable<T> &&(
-    requires(const T &t, const Event::Item & e)
+    requires(const T &t, const event::Item & e)
     {
       {
-        t.OnImGuiUpdate()
+        t.on_im_gui_update()
         } -> std::same_as<bool>;
       {
-        t.OnUpdate(float{})
+        t.on_update(float{})
         } -> Void;
       {
-        t.OnRender()
+        t.on_render()
         } -> Void;
       {
-        t.OnEvent(e)
+        t.on_event(e)
         } -> Void;
     } ||
-    requires(const T &t, const Event::Item & e)
+    requires(const T &t, const event::Item & e)
     {
       {
-        t.OnImGuiUpdate()
+        t.on_im_gui_update()
         } -> Void;
       {
-        t.OnUpdate(float{})
+        t.on_update(float{})
         } -> Void;
       {
-        t.OnRender()
+        t.on_render()
         } -> Void;
       {
-        t.OnEvent(e)
+        t.on_event(e)
         } -> Void;
     });
 
@@ -48,22 +48,22 @@ concept Renderable =
 template<Renderable T>
 inline auto OnImGuiUpdate(const T &t)
 {
-  return t.OnImGuiUpdate();
+  return t.on_im_gui_update();
 }
 template<Renderable T>
 inline auto OnUpdate(const T &t, const float ts)
 {
-  return t.OnUpdate(ts);
+  return t.on_update(ts);
 }
 template<Renderable T>
 inline auto OnRender(const T &t)
 {
-  return t.OnRender();
+  return t.on_render();
 }
 template<Renderable T>
-inline auto OnEvent(const T &t, const Event::Item &e)
+inline auto OnEvent(const T &t, const event::Item &e)
 {
-  return t.OnEvent(e);
+  return t.on_event(e);
 }
 }// namespace glengine
 #endif// FIELD_MAP_EDITOR_RENDERABLE_HPP

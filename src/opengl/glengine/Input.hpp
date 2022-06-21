@@ -12,11 +12,11 @@ class Window;
 class Input
 {
 public:
-  static bool IsKeyPressed(KEY keycode);
-  static bool IsMouseButtonPressed(MOUSE button);
-  static std::optional<const std::array<float, 2U>> GetMousePosition();
-  static std::optional<const float>                 GetMouseX();
-  static std::optional<const float>                 GetMouseY();
+  static bool is_key_pressed(Key keycode);
+  static bool is_mouse_button_pressed(Mouse button);
+  static std::optional<const std::array<float, 2U>> get_mouse_position();
+  static std::optional<const float>                 get_mouse_x();
+  static std::optional<const float>                 get_mouse_y();
   friend Window;
 
 private:

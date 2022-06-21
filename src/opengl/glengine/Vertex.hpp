@@ -14,7 +14,7 @@ struct Vertex
   glm::vec2   uv{};
   float       texture_slot{};
   float       tiling_factor{ 1.F };
-  static auto Layout()
+  static auto layout()
   {
     return glengine::VertexBufferLayout{
       glengine::VertexBufferElementType<float>{ 3U },
@@ -35,9 +35,9 @@ constexpr inline Quad CreateQuad(
   const int                       texture_id    = {},
   const float                     tiling_factor = 1.F,
   const std::array<glm::vec2, 4U> uv            = { glm::vec2{ 0.F, 0.F },
-                                         glm::vec2{ 1.F, 0.F },
-                                         glm::vec2{ 1.F, 1.F },
-                                         glm::vec2{ 0.F, 1.F } },
+                                                    glm::vec2{ 1.F, 0.F },
+                                                    glm::vec2{ 1.F, 1.F },
+                                                    glm::vec2{ 0.F, 1.F } },
   const glm::vec2                 size          = { 1.F, 1.F })
 {
   const auto f_texture_id = static_cast<float>(texture_id);

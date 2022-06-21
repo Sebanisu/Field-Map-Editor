@@ -20,49 +20,49 @@ public:
   BatchRenderer();
   BatchRenderer(std::size_t quad_count);
 
-  void                      OnUpdate(float) const;
-  void                      OnRender() const;
-  void                      OnImGuiUpdate() const;
-  void                      OnEvent(const Event::Item &e) const;
+  void                      on_update(float) const;
+  void                      on_render() const;
+  void                      on_im_gui_update() const;
+  void                      on_event(const event::Item &e) const;
 
-  [[nodiscard]] std::size_t QUAD_COUNT() const noexcept;
-  [[nodiscard]] std::size_t VERT_COUNT() const noexcept;
-  [[nodiscard]] [[maybe_unused]] std::size_t INDEX_COUNT() const noexcept;
-  [[nodiscard]] static const std::int32_t   &Max_Texture_Image_Units();
-  void                                       Clear() const;
-  void                                       DrawQuad(
+  [[nodiscard]] std::size_t quad_count() const noexcept;
+  [[nodiscard]] std::size_t vert_count() const noexcept;
+  [[nodiscard]] [[maybe_unused]] std::size_t index_count() const noexcept;
+  [[nodiscard]] static const std::int32_t   &max_texture_image_units();
+  void                                       clear() const;
+  void                                       draw_quad(
                                           const Texture &texture,
                                           glm::vec3      offset,
                                           glm::vec2      size = glm::vec2{ 1.F }) const;
-  void DrawQuad(
+  void draw_quad(
     const SubTexture &texture,
     glm::vec3         offset,
     glm::vec2         size = glm::vec2{ 1.F }) const;
-  void DrawQuad(
+  void draw_quad(
     glm::vec3         offset,
     glm::vec4         color,
     const SubTexture &texture,
     const float       tiling_factor = 1.F,
     glm::vec2         size          = glm::vec2{ 1.F }) const;
-  [[maybe_unused]] void   DrawQuad(glm::vec3 offset, glm::vec4 color) const;
-  void                    Draw(Quad quad) const;
-  void                    Draw() const;
+  [[maybe_unused]] void   draw_quad(glm::vec3 offset, glm::vec4 color) const;
+  void                    draw(Quad quad) const;
+  void                    draw() const;
 
-  const glengine::Shader &Shader() const;
-  const std::vector<std::uint32_t> &TextureSlots() const;
-  void                              Bind() const;
-  static void                       UnBind();
+  const glengine::Shader &shader() const;
+  [[maybe_unused]] const std::vector<std::uint32_t> &texture_slots() const;
+  void                                               bind() const;
+  static void                                        unbind();
 
 private:
-  void                        FlushVertices() const;
-  void                        DrawVertices() const;
-  void                        BindTextures() const;
+  void                        flush_vertices() const;
+  void                        draw_vertices() const;
+  void                        bind_textures() const;
   std::size_t                 m_quad_count    = { 100U };
-  VertexBufferDynamic         m_vertex_buffer = { QUAD_COUNT() };
-  IndexBufferDynamic          m_index_buffer  = { QUAD_COUNT() };
+  VertexBufferDynamic         m_vertex_buffer = { quad_count() };
+  IndexBufferDynamic          m_index_buffer  = { quad_count() };
   mutable std::vector<Vertex> m_vertices      = { [this]() {
     std::vector<Vertex>       r{};
-    r.reserve(VERT_COUNT());
+    r.reserve(vert_count());
     return r;
   }() };
   mutable IndexBufferDynamicSize     index_buffer_size       = {};

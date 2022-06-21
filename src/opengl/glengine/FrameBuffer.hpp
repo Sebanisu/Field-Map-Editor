@@ -6,7 +6,7 @@
 #define FIELD_MAP_EDITOR_FRAMEBUFFER_HPP
 #include "Renderer.hpp"
 #include "SubTexture.hpp"
-#include "unique_value.hpp"
+#include "UniqueValue.hpp"
 namespace glengine
 {
 struct FrameBufferSpecification
@@ -21,16 +21,16 @@ class FrameBuffer
 public:
   FrameBuffer() = default;
   FrameBuffer(FrameBufferSpecification spec);
-  void                  Bind() const;
-  constexpr static void UnBind()
+  void                  bind() const;
+  constexpr static void unbind()
   {
     if (!std::is_constant_evaluated())
     {
       glBindFramebuffer(GL_FRAMEBUFFER, 0);
     }
   }
-  const FrameBufferSpecification &Specification() const;
-  SubTexture                      GetColorAttachment() const;
+  const FrameBufferSpecification &specification() const;
+  SubTexture                      get_color_attachment() const;
                                   operator bool()
   {
     return m_color_attachment != 0U && m_renderer_id != 0U
@@ -39,9 +39,9 @@ public:
 
 private:
   FrameBufferSpecification m_specification    = {};
-  GLID                     m_color_attachment = {};
-  GLID                     m_depth_attachment = {};
-  GLID                     m_renderer_id      = {};
+  Glid                     m_color_attachment = {};
+  Glid                     m_depth_attachment = {};
+  Glid                     m_renderer_id      = {};
 };
 static_assert(Bindable<FrameBuffer>);
 }// namespace glengine

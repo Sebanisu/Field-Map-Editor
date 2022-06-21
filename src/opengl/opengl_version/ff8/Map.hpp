@@ -34,7 +34,7 @@
 #include "Window.hpp"
 #include <Counter.hpp>
 #include <type_traits>
-namespace ff8
+namespace ff_8
 {
 template<typename TileFunctions>
 class Map
@@ -66,23 +66,22 @@ public:
       m_upscale_path  = (std::filesystem::path(m_upscale_path)
                         / stem.string().substr(0, 2) / stem)
                          .string();
-      fmt::print("Upscale Location: {}\n", m_upscale_path);
+      spdlog::debug("Upscale Location: {}", m_upscale_path);
     }
-    fmt::print(
-      "Loaded Map: {}\nLoaded Mim: {}\nBegin Loading "
-      "Textures from Mim.\n",
-      m_map_path,
-      m_mim_path);
+    spdlog::debug("Loaded Map: {}", m_map_path);
+    spdlog::debug("Loaded Mim: {}", m_mim_path);
+    spdlog::debug("Begin Loading Textures from Mim.");
     m_delayed_textures         = LoadTextures(m_mim);
     m_upscale_delayed_textures = LoadTextures(m_upscale_path);
-    SetCameraBoundsToEdgesOfImage();
+    visit_unsorted_unfiltered_tiles();
     m_tile_button_state =
-      std::vector<bool>(VisitUnSortedUnFilteredTilesCount(), false);
+      std::vector<bool>(visit_unsorted_unfiltered_tiles_count(), false);
   }
-  void OnUpdate(float ts) const
+  void on_update(float ts) const
   {
 
-    if (m_delayed_textures.OnUpdate() || m_upscale_delayed_textures.OnUpdate())
+    if (
+      m_delayed_textures.on_update() || m_upscale_delayed_textures.on_update())
     {
       if (!std::ranges::empty(m_upscale_path))
       {
@@ -96,63 +95,64 @@ public:
         {
           m_map_dims.tile_scale = static_cast<float>(current_max->height())
                                   / static_cast<float>(m_mim.get_height());
-          SetCameraBoundsToEdgesOfImage();
+          visit_unsorted_unfiltered_tiles();
         }
       }
       m_changed = true;
     }
-    m_imgui_viewport_window.OnUpdate(ts);
-    m_imgui_viewport_window.Fit(s_fit_width, s_fit_height);
-    m_batch_renderer.OnUpdate(ts);
+    m_imgui_viewport_window.on_update(ts);
+    m_imgui_viewport_window.fit(s_fit_width, s_fit_height);
+    m_batch_renderer.on_update(ts);
   }
-  void OnRender() const
+  void on_render() const
   {
     if (std::ranges::empty(m_map_path) || std::ranges::empty(m_mim_path))
     {
       return;
     }
     const auto not_changed =
-      glengine::scope_guard_captures([&]() { m_changed = false; });
+      glengine::ScopeGuardCaptures([&]() { m_changed = false; });
     if (m_changed)
     {
       m_offscreen_drawing = true;
       const auto not_offscreen_drawing =
-        glengine::scope_guard_captures([&]() { m_offscreen_drawing = false; });
+        glengine::ScopeGuardCaptures([&]() { m_offscreen_drawing = false; });
       const auto fbb = glengine::FrameBufferBackup{};
-      m_frame_buffer.Bind();
+      m_frame_buffer.bind();
 
-      GLCall{}(
+      GlCall{}(
         glViewport,
         0,
         0,
-        m_frame_buffer.Specification().width,
-        m_frame_buffer.Specification().height);
+        m_frame_buffer.specification().width,
+        m_frame_buffer.specification().height);
       glengine::Renderer::Clear();
-      RenderTiles();
+      render_tiles();
       if (!m_saving)
       {
-        RenderFrameBufferGrid();
+        render_frame_buffer_grid();
       }
     }
     // RestoreViewPortToFrameBuffer();
-    m_imgui_viewport_window.OnRender([this]() { RenderFrameBuffer(); });
-    GetViewPortPreview().OnRender(m_imgui_viewport_window.HasHover(), [this]() {
-      m_preview = true;
-      RenderFrameBuffer();
-      m_preview = false;
-    });
-    ff8::ImGuiTileDisplayWindow::TakeControl(
-      m_imgui_viewport_window.HasHover(), m_id);
+    m_imgui_viewport_window.on_render([this]() { render_frame_buffer(); });
+    GetViewPortPreview().on_render(
+      m_imgui_viewport_window.has_hover(), [this]() {
+        m_preview = true;
+        render_frame_buffer();
+        m_preview = false;
+      });
+    ff_8::ImGuiTileDisplayWindow::TakeControl(
+      m_imgui_viewport_window.has_hover(), m_id);
   }
-  void OnImGuiUpdate() const
+  void on_im_gui_update() const
   {
-    const auto popid = glengine::ImGuiPushID();
+    const auto popid = glengine::ImGuiPushId();
     {
       const auto disable = glengine::ImGuiDisabled(
         std::ranges::empty(m_map_path) || std::ranges::empty(m_mim_path));
 
-      (void)ImGui::Checkbox("Fit Height", &s_fit_height);
-      (void)ImGui::Checkbox("Fit Width", &s_fit_width);
+      (void)ImGui::Checkbox("fit Height", &s_fit_height);
+      (void)ImGui::Checkbox("fit Width", &s_fit_width);
       m_changed = std::ranges::any_of(
         std::array{ ImGui::Checkbox("Draw Grid", &s_draw_grid),
                     [&]() -> bool {
@@ -166,22 +166,22 @@ public:
                           const bool checkbox_changed =
                             ImGui::Checkbox("Blending", &s_blending);
                           const bool blend_options_changed =
-                            s_blends.OnImGuiUpdate();
+                            s_blends.on_im_gui_update();
                           return checkbox_changed || blend_options_changed;
                         }
                       });
                     }(),
-                    m_filters.OnImGuiUpdate() },
+                    m_filters.on_im_gui_update() },
         std::identity{});
 
 
       if (ImGui::Button("Save"))
       {
-        Save();
+        save();
       }
     }
     ImGui::Separator();
-    m_imgui_viewport_window.OnImGuiUpdate();
+    m_imgui_viewport_window.on_im_gui_update();
     ImGui::Separator();
 
     ImGui::Text(
@@ -192,8 +192,8 @@ public:
         m_map_dims.position.x,
         m_map_dims.position.y,
         m_map_dims.position.z,
-        m_frame_buffer.Specification().width,
-        m_frame_buffer.Specification().height,
+        m_frame_buffer.specification().width,
+        m_frame_buffer.specification().height,
         m_map_dims.offset.x,
         m_map_dims.offset.y,
         m_map_dims.min.x,
@@ -202,12 +202,12 @@ public:
         m_map_dims.max.y)
         .c_str());
 
-    m_batch_renderer.OnImGuiUpdate();
+    m_batch_renderer.on_im_gui_update();
     ImGui::Separator();
-    ImGui::Text("%s", "Fixed Prerender Camera: ");
-    m_fixed_render_camera.OnImGuiUpdate();
+    ImGui::Text("%s", "Fixed Prerender camera: ");
+    m_fixed_render_camera.on_im_gui_update();
 
-    ff8::ImGuiTileDisplayWindow::OnImGuiUpdateForward(m_id, [this]() {
+    ff_8::ImGuiTileDisplayWindow::OnImGuiUpdateForward(m_id, [this]() {
       ImGui::Text(
         "%s", fmt::format("Map {}", static_cast<uint32_t>(m_id)).c_str());
       float      text_width = 0.F;
@@ -217,15 +217,15 @@ public:
          &last_pos](const glengine::SubTexture &sub_texture) -> bool {
         text_width = 0.F;
         const auto imgui_texture_id_ref =
-          ConvertGLIDtoImTextureID(sub_texture.ID());
-        const auto uv     = sub_texture.ImGuiUV();
-        const auto id_pop = glengine::ImGuiPushID();
+          ConvertGliDtoImTextureId(sub_texture.id());
+        const auto uv     = sub_texture.im_gui_uv();
+        const auto id_pop = glengine::ImGuiPushId();
         const auto color  = ImVec4(0.F, 0.F, 0.F, 0.F);
         last_pos          = ImGui::GetCursorPos();
         text_width        = ImGui::GetItemRectMax().x;
         ImGui::PushStyleColor(ImGuiCol_Button, color);
         const auto pop_color =
-          glengine::scope_guard([]() { ImGui::PopStyleColor(1); });
+          glengine::ScopeGuard([]() { ImGui::PopStyleColor(1); });
         // ImGui::PushStyleColor(ImGuiCol_ButtonActive, color);
         // ImGui::PushStyleColor(ImGuiCol_ButtonHovered, color);
         bool value = ImGui::ImageButton(
@@ -234,15 +234,16 @@ public:
                      - text_width;
         return value;
       };
-      const auto                        dims = ImGui::GetContentRegionAvail();
-      std::size_t                       i    = {};
-      const MapTileAdjustments<TileFunctions> mta  = { m_map, m_filters, m_map_dims };
-      if (VisitUnSortedUnFilteredTiles([&](auto &tile) -> bool {
+      const auto  dims = ImGui::GetContentRegionAvail();
+      std::size_t i    = {};
+      const MapTileAdjustments<TileFunctions> mta = { m_map,
+                                                      m_filters,
+                                                      m_map_dims };
+      if (visit_unsorted_unfiltered_tiles([&](auto &tile) -> bool {
             using namespace open_viii::graphics::background;
-            const auto id_pop_2    = glengine::ImGuiPushID();
-            const auto sub_texture = TileToSubTexture(tile);
-            const auto increment =
-              glengine::scope_guard_captures([&]() { ++i; });
+            const auto id_pop_2    = glengine::ImGuiPushId();
+            const auto sub_texture = tile_to_sub_texture(tile);
+            const auto increment = glengine::ScopeGuardCaptures([&]() { ++i; });
             if (!sub_texture)
             {
               return false;
@@ -255,7 +256,7 @@ public:
             if (m_tile_button_state.at(i))
             {
               ImGui::SameLine();
-              mta(tile,changed,i,sub_texture);
+              mta(tile, changed, i, sub_texture);
             }
             else if (
               dims.x - (last_pos.x + text_width - ImGui::GetCursorPos().x)
@@ -278,45 +279,46 @@ public:
       }
     });
   }
-  void OnEvent(const glengine::Event::Item &event) const
+  void on_event(const glengine::event::Item &event) const
   {
-    m_imgui_viewport_window.OnEvent(event);
-    m_batch_renderer.OnEvent(event);
+    m_imgui_viewport_window.on_event(event);
+    m_batch_renderer.on_event(event);
   }
 
 private:
   // set uniforms
-  void SetUniforms() const
+  void set_uniforms() const
   {
-    m_batch_renderer.Bind();
+    m_batch_renderer.bind();
     if (m_offscreen_drawing || m_saving)
     {
-      m_batch_renderer.Shader().SetUniform(
-        "u_MVP", m_fixed_render_camera.ViewProjectionMatrix());
+      m_batch_renderer.shader().set_uniform(
+        "u_MVP", m_fixed_render_camera.view_projection_matrix());
     }
     else if (m_preview)
     {
-      m_batch_renderer.Shader().SetUniform(
-        "u_MVP", m_imgui_viewport_window.PreviewViewProjectionMatrix());
+      m_batch_renderer.shader().set_uniform(
+        "u_MVP", m_imgui_viewport_window.preview_view_projection_matrix());
     }
     else
     {
-      m_batch_renderer.Shader().SetUniform(
-        "u_MVP", m_imgui_viewport_window.ViewProjectionMatrix());
+      m_batch_renderer.shader().set_uniform(
+        "u_MVP", m_imgui_viewport_window.view_projection_matrix());
     }
-    m_batch_renderer.Shader().SetUniform("u_Grid", 0.F, 0.F);
+    m_batch_renderer.shader().set_uniform("u_Grid", 0.F, 0.F);
     //    if (!s_draw_grid || m_offscreen_drawing || m_saving)
     //    {
-    //      m_batch_renderer.Shader().SetUniform("u_Grid", 0.F, 0.F);
+    //      m_batch_renderer.shader().set_uniform("u_Grid", 0.F, 0.F);
     //    }
     //    else
     //    {
-    //      m_batch_renderer.Shader().SetUniform(
+    //      m_batch_renderer.shader().set_uniform(
     //        "u_Grid", m_map_dims.scaled_tile_size());
     //    }
-    m_batch_renderer.Shader().SetUniform("u_Color", m_uniform_color);
+    m_batch_renderer.shader().set_uniform("u_Color", m_uniform_color);
   }
-  std::optional<glengine::SubTexture> TileToSubTexture(const auto &tile) const
+  std::optional<glengine::SubTexture>
+    tile_to_sub_texture(const auto &tile) const
   {
     const auto bpp                                 = tile.depth();
     const auto palette                             = tile.palette_id();
@@ -324,9 +326,9 @@ private:
     const auto [texture_index, texture_page_width] = [&]() {
       if (std::ranges::empty(m_upscale_path))
       {
-        return IndexAndPageWidth(bpp, palette);
+        return index_and_page_width(bpp, palette);
       }
-      return IndexAndPageWidth(palette, texture_page_id);
+      return index_and_page_width(palette, texture_page_id);
     }();
     const auto texture_page_offset =
       [&, texture_page_width_copy = texture_page_width]() {
@@ -364,7 +366,7 @@ private:
         / texture_dims
     };
   }
-  glm::vec3 TileToDrawPos(const auto &tile) const
+  glm::vec3 tile_to_draw_pos(const auto &tile) const
   {
     static constexpr typename TileFunctions::x            x{};
     static constexpr typename TileFunctions::y            y{};
@@ -378,7 +380,7 @@ private:
                * m_map_dims.tile_scale,
              0.F };
   }
-  auto VisitTiles(auto &&lambda) const
+  auto visit_tiles(auto &&lambda) const
   {
     return m_map.visit_tiles([&](const auto &tiles) {
       auto f_tiles = tiles | std::views::filter(tile_operations::invalid_tile{})
@@ -391,7 +393,7 @@ private:
                          }
                          return true;
                        })
-                     | std::views::filter(m_filters.TestTile());
+                     | std::views::filter(m_filters);
       std::vector<std::uint16_t> unique_z{};
       {
         // unique_z.reserve(std::ranges::size(tiles));
@@ -417,32 +419,32 @@ private:
     });
   }
   // draws tiles
-  void RenderTiles() const
+  void render_tiles() const
   {
     using open_viii::graphics::background::BlendModeT;
     BlendModeT last_blend_mode{ BlendModeT::none };
     m_uniform_color = s_default_color;
-    glengine::Window::DefaultBlend();
-    m_imgui_viewport_window.OnRender();
-    SetUniforms();
-    m_batch_renderer.Clear();
-    VisitTiles([this, &last_blend_mode](const auto &tile) -> bool {
-      auto sub_texture = TileToSubTexture(tile);
+    glengine::Window::default_blend();
+    m_imgui_viewport_window.on_render();
+    set_uniforms();
+    m_batch_renderer.clear();
+    visit_tiles([this, &last_blend_mode](const auto &tile) -> bool {
+      auto sub_texture = tile_to_sub_texture(tile);
       if (!sub_texture)
       {
         return true;
       }
-      UpdateBlendMode(tile, last_blend_mode);
-      m_batch_renderer.DrawQuad(
-        *sub_texture, TileToDrawPos(tile), m_map_dims.scaled_tile_size());
+      update_blend_mode(tile, last_blend_mode);
+      m_batch_renderer.draw_quad(
+        *sub_texture, tile_to_draw_pos(tile), m_map_dims.scaled_tile_size());
       return true;
     });
-    m_batch_renderer.Draw();
-    m_batch_renderer.OnRender();
-    glengine::Window::DefaultBlend();
+    m_batch_renderer.draw();
+    m_batch_renderer.on_render();
+    glengine::Window::default_blend();
     m_uniform_color = s_default_color;
   }
-  void UpdateBlendMode(
+  void update_blend_mode(
     [[maybe_unused]] const auto &tile,
     [[maybe_unused]] open_viii::graphics::background::BlendModeT
       &last_blend_mode) const
@@ -456,7 +458,7 @@ private:
       auto blend_mode = tile.blend_mode();
       if (blend_mode != last_blend_mode)
       {
-        m_batch_renderer.Draw();// flush buffer.
+        m_batch_renderer.draw();// flush buffer.
         last_blend_mode = blend_mode;
         if (s_blends.PercentBlendEnabled())
         {
@@ -486,7 +488,7 @@ private:
           }
           break;
           default:
-            glengine::Window::DefaultBlend();
+            glengine::Window::default_blend();
         }
       }
     }
@@ -498,7 +500,7 @@ private:
   };
 
   [[nodiscard]] static auto
-    IndexAndPageWidth(open_viii::graphics::BPPT bpp, std::uint8_t palette)
+    index_and_page_width(open_viii::graphics::BPPT bpp, std::uint8_t palette)
   {
     IndexAndPageWidthReturn r = { .texture_index = palette };
     if (bpp.bpp8())
@@ -513,8 +515,8 @@ private:
     }
     return r;
   }
-  [[nodiscard]] auto
-    IndexAndPageWidth(std::uint8_t palette, std::uint8_t texture_page) const
+  [[maybe_unused]] [[nodiscard]] auto
+    index_and_page_width(std::uint8_t palette, std::uint8_t texture_page) const
   {
     IndexAndPageWidthReturn r = { .texture_index = static_cast<size_t>(
                                     texture_page + 13U * (palette + 1U)) };
@@ -527,79 +529,81 @@ private:
     return r;
   }
 
-  void RenderFrameBuffer() const
+  void render_frame_buffer() const
   {
-    glengine::Window::DefaultBlend();
-    m_imgui_viewport_window.OnRender();
-    SetUniforms();
-    m_batch_renderer.Clear();
-    m_batch_renderer.DrawQuad(
-      m_frame_buffer.GetColorAttachment(),
+    glengine::Window::default_blend();
+    m_imgui_viewport_window.on_render();
+    set_uniforms();
+    m_batch_renderer.clear();
+    m_batch_renderer.draw_quad(
+      m_frame_buffer.get_color_attachment(),
       m_map_dims.scaled_position(),
       glm::vec2(
-        m_frame_buffer.Specification().width,
-        m_frame_buffer.Specification().height));
-    m_batch_renderer.Draw();
-    m_batch_renderer.OnRender();
+        m_frame_buffer.specification().width,
+        m_frame_buffer.specification().height));
+    m_batch_renderer.draw();
+    m_batch_renderer.on_render();
   }
 
-  void RenderFrameBufferGrid() const
+  void render_frame_buffer_grid() const
   {
+    // todo remove unneeded code
+    // todo maybe use transparent texture to render grid
     if (!s_draw_grid)
     {
       return;
     }
     const auto fbb = glengine::FrameBufferBackup{};
     const auto offscreen_pop =
-      glengine::scope_guard_captures([&]() { m_offscreen_drawing = false; });
+      glengine::ScopeGuardCaptures([&]() { m_offscreen_drawing = false; });
     m_offscreen_drawing = true;
-    glengine::Window::DefaultBlend();
-    m_imgui_viewport_window.OnRender();
-    SetUniforms();
-    m_frame_buffer.Bind();
-    GLCall{}(
+    glengine::Window::default_blend();
+    m_imgui_viewport_window.on_render();
+    set_uniforms();
+    m_frame_buffer.bind();
+    GlCall{}(
       glViewport,
       0,
       0,
-      m_frame_buffer.Specification().width,
-      m_frame_buffer.Specification().height);
-    m_batch_renderer.Shader().SetUniform(
+      m_frame_buffer.specification().width,
+      m_frame_buffer.specification().height);
+    m_batch_renderer.shader().set_uniform(
       "u_Grid", m_map_dims.scaled_tile_size());
-    m_batch_renderer.Clear();
-    m_batch_renderer.DrawQuad(
-      m_frame_buffer.GetColorAttachment(),
+    m_batch_renderer.clear();
+    m_batch_renderer.draw_quad(
+      m_frame_buffer.get_color_attachment(),
       m_map_dims.scaled_position(),
       glm::vec2(
-        m_frame_buffer.Specification().width,
-        m_frame_buffer.Specification().height));
-    m_batch_renderer.Draw();
-    m_batch_renderer.OnRender();
+        m_frame_buffer.specification().width,
+        m_frame_buffer.specification().height));
+    m_batch_renderer.draw();
+    m_batch_renderer.on_render();
   }
-  void Save() const
+  void save() const
   {
     m_saving = true;
     const auto not_saving =
-      glengine::scope_guard_captures([&]() { m_saving = false; });
+      glengine::ScopeGuardCaptures([&]() { m_saving = false; });
     if (s_draw_grid)
     {
       m_changed = true;
     }
-    const auto changed = glengine::scope_guard_captures([&]() {
+    const auto changed = glengine::ScopeGuardCaptures([&]() {
       if (s_draw_grid)
       {
         m_changed = true;
       }
     });
-    OnRender();
+    on_render();
     const auto path = std::filesystem::path(m_map_path);
     auto       string =
       fmt::format("{}_map.png", (path.parent_path() / path.stem()).string());
-    glengine::PixelBuffer pixel_buffer{ m_frame_buffer.Specification() };
+    glengine::PixelBuffer pixel_buffer{ m_frame_buffer.specification() };
     pixel_buffer.         operator()(m_frame_buffer, string);
     while (pixel_buffer.operator()(&glengine::Texture::save))
       ;
   }
-  auto VisitUnSortedUnFilteredTilesCount() const
+  auto visit_unsorted_unfiltered_tiles_count() const
   {
     return m_map.visit_tiles([&](const auto &tiles) -> std::size_t {
       auto f_tiles =
@@ -608,7 +612,7 @@ private:
         std::ranges::count_if(f_tiles, [](auto &&) { return true; }));
     });
   }
-  bool VisitUnSortedUnFilteredTiles(auto &&lambda) const
+  bool visit_unsorted_unfiltered_tiles(auto &&lambda) const
   {
     return m_map.visit_tiles([&](auto &&tiles) -> bool {
       auto f_tiles =
@@ -621,12 +625,12 @@ private:
       return changed;
     });
   }
-  void SetCameraBoundsToEdgesOfImage() const
+  void visit_unsorted_unfiltered_tiles() const
   {
     // s_camera.RefreshAspectRatio(m_imgui_viewport_window.ViewPortAspectRatio());
     const glm::vec2 size = m_map_dims.scaled_size();
-    m_imgui_viewport_window.SetImageBounds(size);
-    m_fixed_render_camera.SetProjection(size);
+    m_imgui_viewport_window.set_image_bounds(size);
+    m_fixed_render_camera.set_projection(size);
     m_frame_buffer = glengine::FrameBuffer(glengine::FrameBufferSpecification{
       .width  = static_cast<int>(abs(size.x)),
       .height = static_cast<int>(abs(size.y)) });
@@ -679,5 +683,5 @@ private:
         TileFunctions::Label
   };
 };
-}// namespace ff8
+}// namespace ff_8
 #endif// FIELD_MAP_EDITOR_MAP_HPP

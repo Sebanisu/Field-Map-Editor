@@ -7,13 +7,13 @@
 #include "EventConcepts.hpp"
 namespace glengine
 {
-namespace Event
+namespace event
 {
 #define EVENT_CLASS_TYPE(in_type)                                     \
 public:                                                               \
-  using value_type                      = in_type;                    \
+  using ValueType                       = in_type;                    \
   constexpr static auto      StaticName = std::string_view(#in_type); \
-  constexpr std::string_view Name() const                             \
+  constexpr std::string_view name() const                             \
   {                                                                   \
     return StaticName;                                                \
   }
@@ -26,7 +26,7 @@ public:                                                                      \
   {                                                                          \
     return StaticCategory;                                                   \
   }                                                                          \
-  constexpr auto CategoryName() const                                        \
+  constexpr auto category_name() const                                       \
   {                                                                          \
     return StaticCategoryName;                                               \
   }
@@ -37,7 +37,7 @@ private:                         \
   friend Dispatcher;             \
                                  \
 public:                          \
-  constexpr bool Handled() const \
+  constexpr bool handled() const \
   {                              \
     return m_handled;            \
   }
@@ -56,15 +56,15 @@ public:                          \
     {
     }
 
-    constexpr int Width() const
+    constexpr int width() const
     {
       return m_width;
     }
-    constexpr int Height() const
+    constexpr int height() const
     {
       return m_height;
     }
-    std::string Data() const
+    std::string data() const
     {
       return fmt::format("{:>5}, {:>5}", m_width, m_height);
     }
@@ -88,15 +88,15 @@ public:                          \
     {
     }
 
-    constexpr int Width() const
+    constexpr int width() const
     {
       return m_width;
     }
-    constexpr int Height() const
+    constexpr int height() const
     {
       return m_height;
     }
-    std::string Data() const
+    std::string data() const
     {
       return fmt::format("{:>5}, {:>5}", m_width, m_height);
     }
@@ -113,7 +113,7 @@ public:                          \
     EVENT_CLASS_CATEGORY(Category::Application)
     EVENT_HANDLED
 
-    std::string Data() const
+    std::string data() const
     {
       return {};
     }
@@ -130,20 +130,20 @@ public:                          \
       : m_offset{ std::move(x), std::move(y) }
     {
     }
-    constexpr std::array<int, 2U> Position() const
+    constexpr std::array<int, 2U> position() const
     {
       return m_offset;
     }
 
-    constexpr int X() const
+    constexpr int x() const
     {
       return m_offset[0];
     }
-    constexpr int Y() const
+    constexpr int y() const
     {
       return m_offset[1];
     }
-    std::string Data() const
+    std::string data() const
     {
       return fmt::format("{:>5}, {:>5}", m_offset[0], m_offset[1]);
     }
@@ -160,29 +160,29 @@ public:                          \
     EVENT_HANDLED
     constexpr KeyPressed() = default;
     constexpr KeyPressed(
-      glengine::KEY  code,
-      glengine::MODS mods,
+      glengine::Key  code,
+      glengine::Mods mods,
       bool           repeat = false)
       : m_key(code)
       , m_mods(mods)
       , m_repeat(repeat)
     {
     }
-    constexpr glengine::KEY Key() const
+    constexpr glengine::Key key() const
     {
       return m_key;
     }
-    constexpr glengine::MODS Mods() const
+    constexpr glengine::Mods mods() const
     {
       return m_mods;
     }
-    [[maybe_unused]] constexpr bool Repeat() const
+    [[maybe_unused]] constexpr bool repeat() const
     {
       return m_repeat;
     }
-    std::string Data() const
+    std::string data() const
     {
-      if (m_mods == glengine::MODS::NONE)
+      if (m_mods == glengine::Mods::None)
       {
         return fmt::format("{:>3}, {}", +m_key, m_repeat);
       }
@@ -190,8 +190,8 @@ public:                          \
     }
 
   private:
-    glengine::KEY  m_key{};
-    glengine::MODS m_mods{};
+    glengine::Key  m_key{};
+    glengine::Mods m_mods{};
     bool           m_repeat{};
   };
   static_assert(is_Key<KeyPressed>);
@@ -202,22 +202,22 @@ public:                          \
     EVENT_CLASS_CATEGORY(Category::Input | Category::Keyboard)
     EVENT_HANDLED
     constexpr KeyReleased() = default;
-    constexpr KeyReleased(glengine::KEY code, glengine::MODS mods)
+    constexpr KeyReleased(glengine::Key code, glengine::Mods mods)
       : m_key(code)
       , m_mods(mods)
     {
     }
-    constexpr glengine::KEY Key() const
+    constexpr glengine::Key key() const
     {
       return m_key;
     }
-    constexpr glengine::MODS Mods() const
+    constexpr glengine::Mods mods() const
     {
       return m_mods;
     }
-    std::string Data() const
+    std::string data() const
     {
-      if (m_mods == glengine::MODS::NONE)
+      if (m_mods == glengine::Mods::None)
       {
         return fmt::format("{:>3}", +m_key);
       }
@@ -225,8 +225,8 @@ public:                          \
     }
 
   private:
-    glengine::KEY  m_key{};
-    glengine::MODS m_mods{};
+    glengine::Key  m_key{};
+    glengine::Mods m_mods{};
   };
   static_assert(is_Key<KeyReleased>);
 
@@ -237,22 +237,22 @@ public:                          \
       Category::Input | Category::Mouse | Category::MouseButton)
     EVENT_HANDLED
     constexpr MouseButtonPressed() = default;
-    constexpr MouseButtonPressed(glengine::MOUSE code, glengine::MODS mods)
+    constexpr MouseButtonPressed(glengine::Mouse code, glengine::Mods mods)
       : m_button(code)
       , m_mods(mods)
     {
     }
-    constexpr glengine::MOUSE Button() const
+    constexpr glengine::Mouse button() const
     {
       return m_button;
     }
-    constexpr glengine::MODS Mods() const
+    constexpr glengine::Mods mods() const
     {
       return m_mods;
     }
-    std::string Data() const
+    std::string data() const
     {
-      if (m_mods == glengine::MODS::NONE)
+      if (m_mods == glengine::Mods::None)
       {
         return fmt::format("{:>3}", +m_button);
       }
@@ -260,8 +260,8 @@ public:                          \
     }
 
   private:
-    glengine::MOUSE m_button{};
-    glengine::MODS  m_mods{};
+    glengine::Mouse m_button{};
+    glengine::Mods  m_mods{};
   };
   static_assert(is_MouseButton<MouseButtonPressed>);
 
@@ -272,22 +272,22 @@ public:                          \
       Category::Input | Category::Mouse | Category::MouseButton)
     EVENT_HANDLED
     constexpr MouseButtonReleased() = default;
-    constexpr MouseButtonReleased(glengine::MOUSE code, glengine::MODS mods)
+    constexpr MouseButtonReleased(glengine::Mouse code, glengine::Mods mods)
       : m_button(code)
       , m_mods(mods)
     {
     }
-    constexpr glengine::MOUSE Button() const
+    constexpr glengine::Mouse button() const
     {
       return m_button;
     }
-    constexpr glengine::MODS Mods() const
+    constexpr glengine::Mods mods() const
     {
       return m_mods;
     }
-    std::string Data() const
+    std::string data() const
     {
-      if (m_mods == glengine::MODS::NONE)
+      if (m_mods == glengine::Mods::None)
       {
         return fmt::format("{:>3}", +m_button);
       }
@@ -295,8 +295,8 @@ public:                          \
     }
 
   private:
-    glengine::MOUSE m_button{};
-    glengine::MODS  m_mods{};
+    glengine::Mouse m_button{};
+    glengine::Mods  m_mods{};
   };
   static_assert(is_MouseButton<MouseButtonReleased>);
 
@@ -311,21 +311,21 @@ public:                          \
       : m_offset{ std::move(x_offset), std::move(y_offset) }
     {
     }
-    constexpr std::array<float, 2U> Offsets() const
+    constexpr std::array<float, 2U> offsets() const
     {
       return m_offset;
     }
 
-    constexpr float XOffset() const
+    constexpr float x_offset() const
     {
       return m_offset[0];
     }
-    constexpr float YOffset() const
+    constexpr float y_offset() const
     {
       return m_offset[1];
     }
 
-    std::string Data() const
+    std::string data() const
     {
       return fmt::format("{:>5.2f}, {:>5.2f}", m_offset[0], m_offset[1]);
     }
@@ -346,20 +346,20 @@ public:                          \
       : m_position{ std::move(x), std::move(y) }
     {
     }
-    constexpr std::array<float, 2U> Position() const
+    constexpr std::array<float, 2U> position() const
     {
       return m_position;
     }
 
-    constexpr float X() const
+    constexpr float x() const
     {
       return m_position[0];
     }
-    constexpr float Y() const
+    constexpr float y() const
     {
       return m_position[1];
     }
-    std::string Data() const
+    std::string data() const
     {
       return fmt::format("{:>5.2f}, {:>5.2f}", m_position[0], m_position[1]);
     }
@@ -385,6 +385,6 @@ public:                          \
 #undef EVENT_HANDLED
 #undef EVENT_CLASS_CATEGORY
 #undef EVENT_CLASS_TYPE
-}// namespace Event
+}// namespace event
 }// namespace glengine
 #endif// FIELD_MAP_EDITOR_EVENT_HPP

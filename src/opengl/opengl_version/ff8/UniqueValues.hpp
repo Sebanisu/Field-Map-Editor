@@ -31,7 +31,7 @@ public:
   {
     //    for (const auto &string : m_strings)
     //    {
-    //      fmt::print("\t{}\r", string);
+    //      spdlog::debug("\t{}\r", string);
     //    }
   }
   template<

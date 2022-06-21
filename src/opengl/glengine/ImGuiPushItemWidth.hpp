@@ -4,9 +4,9 @@
 
 #ifndef FIELD_MAP_EDITOR_IMGUIPUSHITEMWIDTH_HPP
 #define FIELD_MAP_EDITOR_IMGUIPUSHITEMWIDTH_HPP
-#include "scope_guard.hpp"
+#include "ScopeGuard.hpp"
 namespace glengine
 {
-[[nodiscard]] scope_guard ImGuiPushItemWidth(float item_width) noexcept;
+[[nodiscard]] ScopeGuard ImGuiPushItemWidth(float item_width) noexcept;
 }// namespace glengine
 #endif// FIELD_MAP_EDITOR_IMGUIPUSHITEMWIDTH_HPP

@@ -4,7 +4,7 @@
 
 #include "Coos.hpp"
 #include "GenericCombo.hpp"
-bool ff8::Coos::OnImGuiUpdate() const
+bool ff_8::Coos::on_im_gui_update() const
 {
-  return glengine::GenericCombo("Language",m_current,m_coos);
+  return glengine::GenericCombo("Language", m_current, m_coos);
 }

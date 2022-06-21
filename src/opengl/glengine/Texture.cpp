@@ -19,19 +19,19 @@ Texture::Texture(std::filesystem::path path)
   m_height = y;
   init_texture(png.get());
 }
-void Texture::Bind(int slot) const
+void Texture::bind(int slot) const
 {
-  GLCall{}(glActiveTexture, static_cast<GLenum>(GL_TEXTURE0 + slot));
-  GLCall{}(glBindTexture, GL_TEXTURE_2D, m_renderer_id);
+  GlCall{}(glActiveTexture, static_cast<GLenum>(GL_TEXTURE0 + slot));
+  GlCall{}(glBindTexture, GL_TEXTURE_2D, m_renderer_id);
   // GLCall{}( glBindTextureUnit, slot, m_renderer_id );
 }
 
 
-GLID_copy Texture::ID() const noexcept
+GlidCopy Texture::id() const noexcept
 {
   return m_renderer_id;
 }
-ImTextureID ConvertGLIDtoImTextureID(GLID_copy r_id)
+ImTextureID ConvertGliDtoImTextureId(GlidCopy r_id)
 {
   return reinterpret_cast<ImTextureID>(
     static_cast<intptr_t>(std::uint32_t(r_id)));

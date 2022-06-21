@@ -9,17 +9,17 @@ namespace glengine
 class TimeStep
 {
 private:
-  using Clock = std::chrono::steady_clock;
+  using LocalClockT = std::chrono::steady_clock;
 
 public:
-  using duration   = std::chrono::duration<float>;
-  using time_point = std::chrono::time_point<Clock, duration>;
+  using Duration  = std::chrono::duration<float>;
+  using TimePoint = std::chrono::time_point<LocalClockT, Duration>;
 
-                    operator float() const;
-  static time_point now();
+                   operator float() const;
+  static TimePoint now();
 
 private:
-  mutable time_point last = now();
+  mutable TimePoint last = now();
 };
 }// namespace glengine
 #endif// FIELD_MAP_EDITOR_TIMESTEP_HPP

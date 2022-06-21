@@ -8,22 +8,22 @@ namespace glengine
 VertexArray::VertexArray()
   : m_renderer_id{ []() -> std::uint32_t {
                     std::uint32_t tmp{};
-                    GLCall{}(glGenVertexArrays, 1, &tmp);
+                    GlCall{}(glGenVertexArrays, 1, &tmp);
                     return tmp;
                   }(),
                    [](const std::uint32_t id) {
-                     GLCall{}(glDeleteVertexArrays, 1, &id);
-                     VertexArray::UnBind();
+                     GlCall{}(glDeleteVertexArrays, 1, &id);
+                     VertexArray::unbind();
                    } }
 {
 }
-void VertexArray::Bind() const
+void VertexArray::bind() const
 {
-  GLCall{}(glBindVertexArray, m_renderer_id);
+  GlCall{}(glBindVertexArray, m_renderer_id);
 }
-void VertexArray::UnBind()
+void VertexArray::unbind()
 {
 
-  GLCall{}(glBindVertexArray, 0U);
+  GlCall{}(glBindVertexArray, 0U);
 }
 }// namespace glengine

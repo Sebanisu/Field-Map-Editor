@@ -6,29 +6,29 @@
 #include "MapDeswizzle.hpp"
 #include "MapSwizzle.hpp"
 #include "Mim.hpp"
-static_assert(glengine::Renderable<ff8::FF8Menu>);
-void ff8::FF8Menu::OnRender() const
+static_assert(glengine::Renderable<ff_8::FF8Menu>);
+void ff_8::FF8Menu::on_render() const
 {
-  m_menu.OnRender();
+  m_menu.on_render();
 }
-void ff8::FF8Menu::OnImGuiUpdate() const
+void ff_8::FF8Menu::on_im_gui_update() const
 {
-  bool fields_changed = GetFields().OnImGuiUpdate();
+  bool fields_changed = GetFields().on_im_gui_update();
   if (fields_changed)
   {
     m_menu.reload();
   }
-  m_menu.OnImGuiUpdate();
+  m_menu.on_im_gui_update();
 }
-void ff8::FF8Menu::OnUpdate(float delta_time) const
+void ff_8::FF8Menu::on_update(float delta_time) const
 {
-  m_menu.OnUpdate(delta_time);
+  m_menu.on_update(delta_time);
 }
-void ff8::FF8Menu::OnEvent(const glengine::Event::Item &e) const
+void ff_8::FF8Menu::on_event(const glengine::event::Item &e) const
 {
-  m_menu.OnEvent(e);
+  m_menu.on_event(e);
 }
-ff8::FF8Menu::FF8Menu()
+ff_8::FF8Menu::FF8Menu()
 {
   push_back<FF8UpscaleMenu>("Upscales");
   push_back<Mim>("Mim File");

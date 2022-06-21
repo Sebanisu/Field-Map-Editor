@@ -4,7 +4,7 @@
 
 #ifndef FIELD_MAP_EDITOR_MAPHISTORY_HPP
 #define FIELD_MAP_EDITOR_MAPHISTORY_HPP
-namespace ff8
+namespace ff_8
 {
 template<typename TileT>
 struct [[nodiscard]] pair_of_tiles
@@ -197,5 +197,5 @@ public:
       filter);
   }
 };
-}// namespace ff8
+}// namespace ff_8
 #endif// FIELD_MAP_EDITOR_MAPHISTORY_HPP

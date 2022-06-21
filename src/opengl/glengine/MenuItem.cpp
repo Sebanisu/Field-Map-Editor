@@ -4,36 +4,36 @@
 #include "MenuItem.hpp"
 namespace glengine
 {
-void MenuItem::OnUpdate(float ts)
+void MenuItem::on_update(float ts)
 {
   if (m_impl)
   {
-    return m_impl->OnUpdate(ts);
+    return m_impl->on_update(ts);
   }
 }
-void MenuItem::OnRender()
+void MenuItem::on_render()
 {
   if (m_impl)
   {
-    return m_impl->OnRender();
+    return m_impl->on_render();
   }
 }
-void MenuItem::OnImGuiUpdate()
+void MenuItem::on_im_gui_update()
 {
   if (m_impl)
   {
-    return m_impl->OnImGuiUpdate();
+    return m_impl->on_im_gui_update();
   }
 }
 MenuItem::operator bool() const
 {
   return bool{ m_impl };
 }
-void MenuItem::OnEvent(const Event::Item &e)
+void MenuItem::on_event(const event::Item &e)
 {
   if (m_impl)
   {
-    return m_impl->OnEvent(e);
+    return m_impl->on_event(e);
   }
 }
 }// namespace glengine

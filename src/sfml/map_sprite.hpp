@@ -338,7 +338,7 @@ private:
     value_lambdaT &&value_lambda,
     filterT       &&filter = {}) const
   {
-    using tileT  = std::decay_t<typename std::decay_t<tilesT>::value_type>;
+    using tileT  = std::remove_cvref_t<typename std::remove_cvref_t<tilesT>::value_type>;
     using keyT   = decltype(key_lambda(tileT{}));
     using valueT = decltype(value_lambda(tileT{}));
     std::map<keyT, std::vector<valueT>> r{};

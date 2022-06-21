@@ -9,7 +9,7 @@
 #include "ImGuiPushID.hpp"
 #include "ImGuiPushStyleVar.hpp"
 #include "OrthographicCameraController.hpp"
-#include "scope_guard.hpp"
+#include "ScopeGuard.hpp"
 namespace glengine
 {
 inline namespace impl
@@ -24,38 +24,38 @@ inline namespace impl
     {
     }
 
-    void OnRender(const std::invocable auto &&callable) const
+    void on_render(const std::invocable auto &&callable) const
     {
       const auto pop_style =
         ImGuiPushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.F, 0.F));
       {
-        const auto pop_id0 = ImGuiPushID();
-        const auto pop_end = scope_guard([]() { ImGui::End(); });
+        const auto pop_id_0 = ImGuiPushId();
+        const auto pop_end  = ScopeGuard([]() { ImGui::End(); });
         if (!ImGui::Begin(m_title))
         {
           return;
         }
-        SyncOpenGLViewPort();
+        sync_open_gl_view_port();
         // do any rendering here.
         {
           m_packed.parent_window_hovered = ImGui::IsWindowHovered();
           m_packed.parent_window_focused = ImGui::IsWindowFocused();
           // Using a Child allow to fill all the space of the window.
           // It also allows customization
-          const auto pop_id1             = ImGuiPushID();
+          const auto pop_id_1            = ImGuiPushId();
           ImGui::BeginChild(m_title);
-          const auto pop_child    = scope_guard([]() { ImGui::EndChild(); });
+          const auto pop_child    = ScopeGuard([]() { ImGui::EndChild(); });
           m_packed.window_hovered = ImGui::IsWindowHovered();
           m_packed.window_focused = ImGui::IsWindowFocused();
           // Get the size of the child (i.e. the whole draw size of the
           // windows).
-          m_viewport_size         = ConvertImVec2(
+          m_viewport_size         = convert_im_vec_2(
             ImGui::GetContentRegionAvail());// ImGui::GetWindowSize();
           if (
             !m_fb
-            || (m_fb.Specification().height
+            || (m_fb.specification().height
                   != static_cast<int>(m_viewport_size.y) && m_viewport_size.y > 5.0F)
-            || m_fb.Specification().width
+            || m_fb.specification().width
                  != static_cast<int>(m_viewport_size.x))
           {
             m_fb = glengine::FrameBuffer(glengine::FrameBufferSpecification{
@@ -63,24 +63,25 @@ inline namespace impl
               .height = static_cast<int>(m_viewport_size.y) });
           }
           else if (
-            m_fb.Specification().height != static_cast<int>(m_viewport_size.y))
+            m_fb.specification().height != static_cast<int>(m_viewport_size.y))
           {
-            m_viewport_size.y = static_cast<float>(m_fb.Specification().height);
+            m_viewport_size.y = static_cast<float>(m_fb.specification().height);
             // Sometimes imgui would detect height as 4 px. I donno why. Seemed
             // to be related to drawing more than once. I removed that extra
             // draw but left this check here.
           }
           {
             const auto ffb = FrameBufferBackup();
-            m_fb.Bind();
+            m_fb.bind();
             glengine::Renderer::Clear();
             callable();
-            m_fb.UnBind();
+            m_fb.unbind();
           }
           // Because I use the texture from OpenGL, I need to invert the V from
           // the UV.
-          m_imgui_texture_id_ref = ConvertGLIDtoImTextureID(m_fb.GetColorAttachment().ID());
-          const auto cPos        = ImGui::GetCursorPos();
+          m_imgui_texture_id_ref =
+            ConvertGliDtoImTextureId(m_fb.get_color_attachment().id());
+          const auto c_pos = ImGui::GetCursorPos();
           ImGui::SetItemAllowOverlap();
           const auto color = ImVec4(0.F, 0.F, 0.F, 0.F);
           ImGui::PushStyleColor(ImGuiCol_Button, color);
@@ -89,52 +90,52 @@ inline namespace impl
           m_packed.button_clicked = ImGui::ImageButton(
             m_imgui_texture_id_ref,
             ImVec2(
-              static_cast<float>(m_fb.Specification().width),
-              static_cast<float>(m_fb.Specification().height)),
+              static_cast<float>(m_fb.specification().width),
+              static_cast<float>(m_fb.specification().height)),
             ImVec2(0, 1),
             ImVec2(1, 0),
             0);
 
           ImGui::PopStyleColor(3);
-          ImGui::SetCursorPos(cPos);
-          OnUpdateMouse();
+          ImGui::SetCursorPos(c_pos);
+          on_update_mouse();
           m_packed.button_hovered   = ImGui::IsItemHovered();
           m_packed.button_focused   = ImGui::IsItemFocused();
           m_packed.button_activated = ImGui::IsItemActivated();
-          OnUpdateFocusAndHover();
-          OnImGuiDebugInfo();
+          on_update_focus_and_hover();
+          on_im_gui_debug_info();
         }
       }
     }
-    void                  OnEvent(const Event::Item &) const;
-    void                  OnUpdate(float) const;
-    void                  OnRender() const;
-    glm::mat4             ViewProjectionMatrix() const;
-    glm::mat4             PreviewViewProjectionMatrix() const;
-    void                  SetImageBounds(const glm::vec2 &) const;
-    void                  OnImGuiUpdate() const;
-    bool                  HasFocus() const;
-    bool                  HasHover() const;
-    float                 ViewPortAspectRatio() const;
-    void                  DisableDebugText();
-    [[maybe_unused]] void EnableDebugText();
-    void                  Fit(const bool width, const bool height) const;
+    void                  on_event(const event::Item &) const;
+    void                  on_update(float) const;
+    void                  on_render() const;
+    glm::mat4             view_projection_matrix() const;
+    glm::mat4             preview_view_projection_matrix() const;
+    void                  set_image_bounds(const glm::vec2 &) const;
+    void                  on_im_gui_update() const;
+    bool                  has_focus() const;
+    bool                  has_hover() const;
+    float                 view_port_aspect_ratio() const;
+    void                  disable_debug_text();
+    [[maybe_unused]] void enable_debug_text();
+    void                  fit(const bool width, const bool height) const;
 
     friend ImGuiViewPortPreview;
 
   private:
-    static void SetPreviewAspectRatio(float) noexcept;
+    static void set_preview_aspect_ratio(float) noexcept;
     glm::vec4 adjust_mouse_pos(glm::vec2 topright, glm::vec2 bottomleft) const;
-    [[maybe_unused]] glm::vec2 ViewPortDims() const;
-    glm::vec4                  ViewPortMousePos() const;
-    void                       FitBoth() const;
-    void                       FitHeight() const;
-    void                       FitWidth() const;
-    void                       SyncOpenGLViewPort() const;
-    glm::vec2                  ConvertImVec2(ImVec2 in) const;
-    void                       OnUpdateMouse() const;
-    void                       OnUpdateFocusAndHover() const;
-    void                       OnImGuiDebugInfo() const;
+    [[maybe_unused]] glm::vec2 view_port_dims() const;
+    glm::vec4                  view_port_mouse_pos() const;
+    void                       fit_both() const;
+    void                       fit_height() const;
+    void                       fit_width() const;
+    void                       sync_open_gl_view_port() const;
+    glm::vec2                  convert_im_vec_2(ImVec2 in) const;
+    void                       on_update_mouse() const;
+    void                       on_update_focus_and_hover() const;
+    void                       on_im_gui_debug_info() const;
 
     struct PackedSettings
     {
@@ -148,6 +149,8 @@ inline namespace impl
       bool window_hovered : 1        = { false };
       bool parent_window_hovered : 1 = { false };
       bool button_activated : 1      = { false };
+      bool fit_width : 1             = { true };
+      bool fit_height : 1            = { true };
     };
     const char                                    *m_title           = {};
     mutable glengine::FrameBuffer                  m_fb              = {};

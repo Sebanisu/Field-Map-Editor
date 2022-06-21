@@ -2,31 +2,31 @@
 // Created by pcvii on 11/21/2021.
 //
 
-#ifndef FIELD_MAP_EDITOR_VertexBufferDynamic_HPP
-#define FIELD_MAP_EDITOR_VertexBufferDynamic_HPP
+#ifndef FIELD_MAP_EDITOR_VERTEXBUFFERDYNAMIC_HPP
+#define FIELD_MAP_EDITOR_VERTEXBUFFERDYNAMIC_HPP
 #include "IndexBufferDynamicSize.hpp"
 #include "Renderer.hpp"
-#include "unique_value.hpp"
+#include "UniqueValue.hpp"
 #include "Vertex.hpp"
 namespace glengine
 {
 class VertexBufferDynamic
 {
 private:
-  GLID        m_renderer_id = {};
+  Glid        m_renderer_id = {};
   std::size_t m_max_size{};
 
 public:
   VertexBufferDynamic() = default;
   VertexBufferDynamic(size_t count);
-  void        Bind() const;
-  static void UnBind();
+  void        bind() const;
+  static void unbind();
   template<std::ranges::contiguous_range T>
-  [[nodiscard]] glengine::IndexBufferDynamicSize Update(const T &vertices) const
+  [[nodiscard]] glengine::IndexBufferDynamicSize update(const T &vertices) const
   {
     assert(std::ranges::size(vertices) <= m_max_size);
-    Bind();
-    GLCall{}(
+    bind();
+    GlCall{}(
       glBufferSubData,
       GL_ARRAY_BUFFER,
       0,
@@ -39,4 +39,4 @@ public:
 };
 static_assert(Bindable<VertexBufferDynamic>);
 }// namespace glengine
-#endif// FIELD_MAP_EDITOR_VertexBufferDynamic_HPP
+#endif// FIELD_MAP_EDITOR_VERTEXBUFFERDYNAMIC_HPP

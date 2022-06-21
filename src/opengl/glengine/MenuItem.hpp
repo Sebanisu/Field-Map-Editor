@@ -2,8 +2,8 @@
 // Created by pcvii on 11/29/2021.
 //
 
-#ifndef FIELD_MAP_EDITOR_MenuItem_HPP
-#define FIELD_MAP_EDITOR_MenuItem_HPP
+#ifndef FIELD_MAP_EDITOR_MENUITEM_HPP
+#define FIELD_MAP_EDITOR_MENUITEM_HPP
 #include "Event/EventItem.hpp"
 namespace glengine
 {
@@ -21,39 +21,39 @@ private:
 
   public:
     virtual ~MenuItemConcept(){};
-    virtual void OnUpdate(float) const              = 0;
-    virtual void OnRender() const                   = 0;
-    virtual void OnImGuiUpdate() const              = 0;
-    virtual void OnEvent(const Event::Item &) const = 0;
+    virtual void on_update(float) const              = 0;
+    virtual void on_render() const                   = 0;
+    virtual void on_im_gui_update() const            = 0;
+    virtual void on_event(const event::Item &) const = 0;
   };
   template<Renderable renderableT>
   class MenuItemModel final : public MenuItemConcept
   {
   public:
-//    MenuItemModel(renderableT t)
-//      : m_renderable(std::move(t))
-//    {
-//    }
+    //    MenuItemModel(renderableT t)
+    //      : m_renderable(std::move(t))
+    //    {
+    //    }
     template<typename... Ts>
     MenuItemModel(Ts &&...ts)
       : m_renderable(std::forward<Ts>(ts)...)
     {
     }
-    void OnUpdate(float ts) const final
+    void on_update(float ts) const final
     {
-      return m_renderable.OnUpdate(ts);
+      return m_renderable.on_update(ts);
     }
-    void OnRender() const final
+    void on_render() const final
     {
-      return m_renderable.OnRender();
+      return m_renderable.on_render();
     }
-    void OnImGuiUpdate() const final
+    void on_im_gui_update() const final
     {
-      return m_renderable.OnImGuiUpdate();
+      return m_renderable.on_im_gui_update();
     }
-    void OnEvent(const Event::Item &e) const final
+    void on_event(const event::Item &e) const final
     {
-      return m_renderable.OnEvent(e);
+      return m_renderable.on_event(e);
     }
 
     MenuItemModel() = default;
@@ -65,17 +65,17 @@ private:
   mutable std::unique_ptr<const MenuItemConcept> m_impl{ nullptr };
 
 public:
-  void OnUpdate(float ts);
-  void OnRender();
-  void OnImGuiUpdate();
-  void OnEvent(const Event::Item &);
+  void on_update(float ts);
+  void on_render();
+  void on_im_gui_update();
+  void on_event(const event::Item &);
   MenuItem()
     : m_impl(nullptr)
   {
   }
   template<typename T, typename... argsT>
   MenuItem(std::in_place_type_t<T>, argsT &&...args) noexcept
-    : m_impl(std::make_unique<MenuItemModel<std::decay_t<T>>>(
+    : m_impl(std::make_unique<MenuItemModel<std::remove_cvref_t<T>>>(
       std::forward<argsT>(args)...))
   {
     static_assert(Renderable<T>);
@@ -92,5 +92,5 @@ public:
 
             operator bool() const;
 };
-};// namespace glengine
-#endif// FIELD_MAP_EDITOR_MenuItem_HPP
+}// namespace glengine
+#endif// FIELD_MAP_EDITOR_MENUITEM_HPP

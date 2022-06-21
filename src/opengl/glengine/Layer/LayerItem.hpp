@@ -15,18 +15,18 @@ namespace Layer
     class ItemConcept
     {
     protected:
-      ItemConcept()                        = default;
-      ItemConcept(const ItemConcept &)     = default;
-      ItemConcept(ItemConcept &&) noexcept = default;
-      ItemConcept &operator=(const ItemConcept &) = default;
+      ItemConcept()                                   = default;
+      ItemConcept(const ItemConcept &)                = default;
+      ItemConcept(ItemConcept &&) noexcept            = default;
+      ItemConcept &operator=(const ItemConcept &)     = default;
       ItemConcept &operator=(ItemConcept &&) noexcept = default;
 
     public:
       virtual ~ItemConcept(){};
-      virtual void OnUpdate(float) const              = 0;
-      virtual void OnRender() const                   = 0;
-      virtual void OnImGuiUpdate() const              = 0;
-      virtual void OnEvent(const Event::Item &) const = 0;
+      virtual void on_update(float) const              = 0;
+      virtual void on_render() const                   = 0;
+      virtual void on_im_gui_update() const            = 0;
+      virtual void on_event(const event::Item &) const = 0;
     };
     template<glengine::Renderable renderableT>
     class ItemModel final : public ItemConcept
@@ -36,21 +36,21 @@ namespace Layer
         : m_renderable(std::move(t))
       {
       }
-      void OnUpdate(float ts) const final
+      void on_update(float ts) const final
       {
-        return m_renderable.OnUpdate(ts);
+        return m_renderable.on_update(ts);
       }
-      void OnRender() const final
+      void on_render() const final
       {
-        return m_renderable.OnRender();
+        return m_renderable.on_render();
       }
-      void OnImGuiUpdate() const final
+      void on_im_gui_update() const final
       {
-        return m_renderable.OnImGuiUpdate();
+        return m_renderable.on_im_gui_update();
       }
-      void OnEvent(const Event::Item &e) const final
+      void on_event(const event::Item &e) const final
       {
-        return m_renderable.OnEvent(e);
+        return m_renderable.on_event(e);
       }
       ItemModel() = default;
 
@@ -61,17 +61,17 @@ namespace Layer
     mutable std::unique_ptr<const ItemConcept> m_impl{ nullptr };
 
   public:
-    void OnUpdate(float) const;
-    void OnRender() const;
-    void OnImGuiUpdate() const;
-    void OnEvent(const Event::Item &e) const;
+    void on_update(float) const;
+    void on_render() const;
+    void on_im_gui_update() const;
+    void on_event(const event::Item &e) const;
     Item()
       : m_impl(nullptr)
     {
     }
     template<typename T, typename... argsT>
     Item(std::in_place_type_t<T>, argsT &&...args)
-      : m_impl(std::make_unique<ItemModel<std::decay_t<T>>>(
+      : m_impl(std::make_unique<ItemModel<std::remove_cvref_t<T>>>(
         std::forward<argsT>(args)...))
     {
       static_assert(glengine::Renderable<T>);
@@ -81,9 +81,9 @@ namespace Layer
       : Item(std::in_place_type_t<T>{}, std::move(t))
     {
     }
-    Item(const Item &other) = delete;
-    Item &operator=(const Item &other) = delete;
-    Item(Item &&other) noexcept        = default;
+    Item(const Item &other)                = delete;
+    Item &operator=(const Item &other)     = delete;
+    Item(Item &&other) noexcept            = default;
     Item &operator=(Item &&other) noexcept = default;
 
           operator bool() const;

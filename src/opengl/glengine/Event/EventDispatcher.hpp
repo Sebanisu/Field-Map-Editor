@@ -7,12 +7,12 @@
 #include "EventItem.hpp"
 namespace glengine
 {
-namespace Event
+namespace event
 {
   class Dispatcher
   {
-    template<Event::is... Es>
-    static bool check(const Event::Item &e, bool value)
+    template<event::is... Es>
+    static bool check(const event::Item &e, bool value)
     {
       if (!value)
         return false;
@@ -25,18 +25,18 @@ namespace Event
     {
     }
     static void Filter(
-      const Event::Item    &e,
+      const event::Item    &e,
       bool                  focused,
       bool                  hovered,
       std::invocable auto &&callable)
     {
       if (
         check<
-          Event::MouseButtonPressed,
-          Event::MouseButtonReleased,
-          Event::MouseMoved,
-          Event::MouseScroll>(e, hovered)
-        || check<Event::KeyPressed, Event::KeyReleased>(e, focused))
+          event::MouseButtonPressed,
+          event::MouseButtonReleased,
+          event::MouseMoved,
+          event::MouseScroll>(e, hovered)
+        || check<event::KeyPressed, event::KeyReleased>(e, focused))
       {
         callable();
       }
@@ -47,7 +47,7 @@ namespace Event
     {
       if (m_event.contains<T>())
       {
-        const T *true_event   = m_event.Get<T>();
+        const T *true_event   = m_event.get<T>();
         true_event->m_handled = std::invoke(func, *true_event);
         return true;
       }
@@ -57,6 +57,6 @@ namespace Event
   private:
     Item m_event;
   };
-}// namespace Event
+}// namespace event
 }// namespace glengine
 #endif// FIELD_MAP_EDITOR_EVENTDISPATCHER_HPP

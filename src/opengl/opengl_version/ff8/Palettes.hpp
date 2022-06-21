@@ -6,15 +6,15 @@
 #define FIELD_MAP_EDITOR_PALETTES_HPP
 
 
-namespace ff8
+namespace ff_8
 {
 class Palettes
 {
 public:
-  void             OnUpdate(float) const {}
-  void             OnRender() const {}
-  bool             OnImGuiUpdate() const;
-  void             OnEvent(const glengine::Event::Item &) const {}
+  void             on_update(float) const {}
+  void             on_render() const {}
+  bool             on_im_gui_update() const;
+  void             on_event(const glengine::event::Item &) const {}
   std::uint8_t     Palette() const;
   std::string_view String() const;
   int              Index() const;
@@ -34,5 +34,5 @@ private:
   mutable int m_current{};
 };
 static_assert(glengine::Renderable<Palettes>);
-}// namespace ff8
+}// namespace ff_8
 #endif// FIELD_MAP_EDITOR_PALETTES_HPP

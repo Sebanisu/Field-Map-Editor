@@ -27,15 +27,15 @@ public:
   }
 
   // should be after CheckInput and only have things that should trigger always.
-  void                                OnUpdate(float) const;
+  void                                on_update(float) const;
   // check for keyboard or mouse inputs must recommend to check for focus first.
-  void                                CheckInput(float ts) const;
-  bool                                OnImGuiUpdate() const;
-  constexpr void                      OnRender() const {}
-  void                                OnEvent(const Event::Item &) const;
+  void                                check_input(float ts) const;
+  bool                                on_im_gui_update() const;
+  constexpr void                      on_render() const {}
+  void                                on_event(const event::Item &) const;
   // check for keyboard or mouse events. Use Dispatcher::Filter.
-  void                                CheckEvent(const Event::Item &) const;
-  const glengine::OrthographicCamera &Camera() const
+  void                                check_event(const event::Item &e) const;
+  const glengine::OrthographicCamera &camera() const
   {
     return m_camera;
   }
@@ -45,7 +45,7 @@ public:
   //
 
 
-  struct return_values
+  struct ReturnValues
   {
     float left{};
     float right{};
@@ -56,7 +56,7 @@ public:
     {
       return glengine::OrthographicCamera(left, right, bottom, top);
     }
-    return_values operator*(float multiplier) const noexcept
+    ReturnValues operator*(float multiplier) const noexcept
     {
       return { left * multiplier,
                right * multiplier,
@@ -64,53 +64,53 @@ public:
                top * multiplier };
     }
   };
-  return_values                CurrentBounds() const;
-  std::optional<return_values> MaxBounds() const;
-  void                         SetImageBounds(return_values bounds) const;
-  void                         SetImageBounds(glm::vec2 dims) const;
-  void                         DisableBounds() const;
+  ReturnValues                current_bounds() const;
+  std::optional<ReturnValues> max_bounds() const;
+  void                        set_image_bounds(ReturnValues bounds) const;
+  void                        set_image_bounds(glm::vec2 dims) const;
+  void                        disable_bounds() const;
   // void                         RefreshAspectRatio() const;
-  void                         RefreshAspectRatio(float new_aspect_ratio) const;
-  void                         FitBoth() const;
-  void                         FitHeight() const;
-  void                         FitWidth() const;
-  [[nodiscard]] float          ZoomLevel() const
+  void                refresh_aspect_ratio(float new_aspect_ratio) const;
+  void                fit_both() const;
+  void                fit_height() const;
+  void                fit_width() const;
+  [[nodiscard]] float zoom_level() const
   {
     return m_zoom_level;
   }
-  [[maybe_unused]] void   SetZoom(float new_zoom) const;
+  [[maybe_unused]] void   set_zoom(float new_zoom) const;
 
-  void                    SetPosition(glm::vec2) const;
-  [[nodiscard]] glm::vec2 Position() const
+  void                    set_position(glm::vec2) const;
+  [[nodiscard]] glm::vec2 position() const
   {
     return m_position;
   }
-  [[nodiscard]] glm::vec2 TopRightScreenSpace() const
+  [[nodiscard]] glm::vec2 top_right_screen_space() const
   {
-    auto clipSpacePos =
-      m_camera.ProjectionMatrix()
-      * (m_camera.ViewMatrix() * glm::vec4{ m_bounds->right, m_bounds->top, 0.F, 1.F });
-    glm::vec2 ndcSpacePos{ clipSpacePos.x, clipSpacePos.y };
-    ndcSpacePos /= clipSpacePos.w;
-    return ndcSpacePos;
+    auto clip_space_pos =
+      m_camera.projection_matrix()
+      * (m_camera.view_matrix() * glm::vec4{ m_bounds->right, m_bounds->top, 0.F, 1.F });
+    glm::vec2 ndc_space_pos{ clip_space_pos.x, clip_space_pos.y };
+    ndc_space_pos /= clip_space_pos.w;
+    return ndc_space_pos;
     // vec2 windowSpacePos = ((ndcSpacePos.xy + 1.0) / 2.0) * viewSize +
     // viewOffset;
   }
-  glm::vec2 BottomLeftScreenSpace() const
+  glm::vec2 bottom_left_screen_space() const
   {
-    auto clipSpacePos =
-      m_camera.ProjectionMatrix()
-      * (m_camera.ViewMatrix() * glm::vec4{ m_bounds->left, m_bounds->bottom, 0.F, 1.F });
-    glm::vec2 ndcSpacePos{ clipSpacePos.x, clipSpacePos.y };
-    ndcSpacePos /= clipSpacePos.w;
-    return ndcSpacePos;
+    auto clip_space_pos =
+      m_camera.projection_matrix()
+      * (m_camera.view_matrix() * glm::vec4{ m_bounds->left, m_bounds->bottom, 0.F, 1.F });
+    glm::vec2 ndc_space_pos{ clip_space_pos.x, clip_space_pos.y };
+    ndc_space_pos /= clip_space_pos.w;
+    return ndc_space_pos;
     // vec2 windowSpacePos = ((ndcSpacePos.xy + 1.0) / 2.0) * viewSize +
     // viewOffset;
   }
 
 
 private:
-  void                                 SetProjection() const;
+  void                                 set_projection() const;
   mutable float                        m_viewport_aspect_ratio = {};
   mutable float                        m_image_aspect_ratio    = {};
   mutable float                        m_zoom_level            = { 1.F };
@@ -120,11 +120,11 @@ private:
   mutable float                        m_rotation              = {};
   float                                m_translation_speed     = { -2.5F };
   float                                m_rotation_speed        = { 180.F };
-  mutable std::optional<return_values> m_bounds                = {};
+  mutable std::optional<ReturnValues>  m_bounds                = {};
   void                                 zoom(const float offset = 0.F) const;
 };
 void MakeViewPortMatchBounds(
-  const OrthographicCameraController::return_values &bounds);
+  const OrthographicCameraController::ReturnValues &bounds);
 static_assert(Renderable<OrthographicCameraController>);
 }// namespace glengine
 #endif// FIELD_MAP_EDITOR_ORTHOGRAPHICCAMERACONTROLLER_HPP

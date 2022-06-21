@@ -11,11 +11,11 @@ inline namespace impl
 {
   enum class BlendModeEquationEnum
   {
-    FUNC_ADD,
-    FUNC_SUBTRACT,
-    FUNC_REVERSE_SUBTRACT,
-    MIN,
-    MAX
+    FuncAdd,
+    FuncSubtract,
+    FuncReverseSubtract,
+    Min,
+    Max
   };
   consteval inline int operator+(BlendModeEquationEnum value)
   {
@@ -23,26 +23,34 @@ inline namespace impl
   }
   class BlendModeEquationStrings
   {
-  public:
-    constexpr auto operator()() const noexcept
-    {
+    static constexpr auto strings = []() {
       using namespace std::string_view_literals;
       return std::array{ "GL_FUNC_ADD"sv,// 0
                          "GL_FUNC_SUBTRACT"sv,// 1
                          "GL_FUNC_REVERSE_SUBTRACT"sv,// 2
                          "GL_MIN"sv,// 3
                          "GL_MAX"sv };// 4
+    }();
+
+  public:
+    constexpr const auto &operator()() const noexcept
+    {
+      return strings;
     }
   };
 
   class BlendModeEquationValues
   {
+    constexpr static auto values = std::array{ GL_FUNC_ADD,
+                                               GL_FUNC_SUBTRACT,
+                                               GL_FUNC_REVERSE_SUBTRACT,
+                                               GL_MIN,
+                                               GL_MAX };
+
   public:
-    constexpr auto operator()() const noexcept
+    constexpr const auto &operator()() const noexcept
     {
-      return std::array{
-        GL_FUNC_ADD, GL_FUNC_SUBTRACT, GL_FUNC_REVERSE_SUBTRACT, GL_MIN, GL_MAX
-      };
+      return values;
     }
   };
   using BlendModeEquation =

@@ -19,14 +19,14 @@ class TestBatchRenderingTexture2D
 {
 public:
   TestBatchRenderingTexture2D();
-  void OnUpdate(float) const;
-  void OnRender() const;
-  void OnImGuiUpdate() const;
-  void OnEvent(const glengine::Event::Item &event) const;
+  void on_update(float) const;
+  void on_render() const;
+  void on_im_gui_update() const;
+  void on_event(const glengine::event::Item &event) const;
 
 
 private:
-  void                           SetUniforms() const;
+  void                           set_uniforms() const;
   glengine::VertexBuffer         m_vertex_buffer         = {};
   glengine::IndexBuffer          m_index_buffer          = {};
   glengine::Shader               m_shader                = {};
@@ -36,7 +36,7 @@ private:
   glengine::ImGuiViewPortWindow  m_imgui_viewport_window = {
      "Test Batch Rendering W/ Texture2D"
   };
-  void RenderFrameBuffer() const;
+  void render_frame_buffer() const;
 };
 }// namespace test
 #endif// FIELD_MAP_EDITOR_TestBatchRenderingTexture2D_HPP

@@ -3,15 +3,15 @@
 //
 
 #include "FrameBufferRenderer.hpp"
-void glengine::FrameBufferRenderer::Draw(
+void glengine::FrameBufferRenderer::draw(
   const glengine::FrameBuffer &frame_buffer) const
 {
-  SetUniform();
+  set_uniform();
   Renderer::Draw(
-    frame_buffer.GetColorAttachment(), m_vertex_array, m_index_buffer);
+    frame_buffer.get_color_attachment(), m_vertex_array, m_index_buffer);
 }
-void glengine::FrameBufferRenderer::SetUniform() const
+void glengine::FrameBufferRenderer::set_uniform() const
 {
-  m_shader.Bind();
-  m_shader.SetUniform("u_MVP", m_camera.ViewProjectionMatrix());
+  m_shader.bind();
+  m_shader.set_uniform("u_MVP", m_camera.view_projection_matrix());
 }

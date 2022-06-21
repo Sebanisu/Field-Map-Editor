@@ -20,12 +20,12 @@ namespace Layer
       end_of_layers = std::ranges::end(m_layers);
       std::ranges::move(overlays, std::back_inserter(m_layers));
     }
-    Stack(Stack &&other) noexcept = default;
+    Stack(Stack &&other) noexcept            = default;
     Stack &operator=(Stack &&other) noexcept = default;
-    void   OnUpdate(float) const;
-    void   OnRender() const;
-    void   OnImGuiUpdate() const;
-    void   OnEvent(const Event::Item &) const;
+    void   on_update(float) const;
+    void   on_render() const;
+    void   on_im_gui_update() const;
+    void   on_event(const event::Item &) const;
     template<typename... T>
     void emplace_layers(T &&...args) const
     {

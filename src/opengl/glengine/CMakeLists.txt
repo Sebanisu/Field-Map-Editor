@@ -21,6 +21,8 @@ endif ()
 
 
 include(${CMAKE_SOURCE_DIR}/cmake/OpenVIII_CPP_WIP.cmake)
+include(CheckIPOSupported)
+check_ipo_supported(RESULT supported OUTPUT error)
 find_package(Threads REQUIRED)
 find_package(fmt REQUIRED)
 find_package(GLEW REQUIRED)
@@ -28,6 +30,7 @@ find_package(glfw3 REQUIRED)
 find_package(OpenGL REQUIRED)
 find_package(glm REQUIRED)
 find_package(imgui REQUIRED)
+find_package(spdlog REQUIRED)
 add_library(glengine STATIC
         BatchRenderer.cpp
         Counter.cpp
@@ -36,11 +39,9 @@ add_library(glengine STATIC
         FrameBufferRenderer.cpp
         GLCheck.cpp
         ImGuiDisabled.cpp
-        ImGuiIndent.cpp
-        ImGuiPushID.cpp
         ImGuiPushItemWidth.cpp
+        ImGuiPushID.cpp
         ImGuiPushStyleVar.cpp
-        ImGuiViewPortPreview.cpp
         ImGuiViewPortWindow.cpp
         IndexBuffer.cpp
         IndexBufferDynamic.cpp
@@ -58,11 +59,10 @@ add_library(glengine STATIC
         VertexBuffer.cpp
         VertexBufferDynamic.cpp
         Window.cpp
-        scope_guard.cpp
         )
 target_link_libraries(glengine
         PUBLIC project_warnings
-        PUBLIC fmt::fmt
+        PUBLIC spdlog::spdlog
         PUBLIC Threads::Threads
         PUBLIC glfw
         PUBLIC OpenGL::GL
@@ -85,6 +85,13 @@ if (MSVC)
     target_link_options(glengine PRIVATE "/PROFILE")
 else ()
     target_compile_options(glengine PUBLIC "-fconcepts-diagnostics-depth=2")
+endif ()
+
+if (supported)
+    message(STATUS "IPO / LTO enabled")
+    set_target_properties(glengine PROPERTIES INTERPROCEDURAL_OPTIMIZATION TRUE)
+else ()
+    message(STATUS "IPO / LTO not supported: <${error}>")
 endif ()
 
 target_precompile_headers(glengine
@@ -119,6 +126,7 @@ target_precompile_headers(glengine
         <GLFW/glfw3.h>
         <fmt/format.h>
         <fmt/chrono.h>
+        <spdlog/spdlog.h>
         <stb_image.h>
         <stb_image_write.h>
         <glm/glm.hpp>

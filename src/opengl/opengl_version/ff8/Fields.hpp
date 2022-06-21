@@ -6,7 +6,7 @@
 #define FIELD_MAP_EDITOR_FIELDS_HPP
 #include "Archive.hpp"
 #include "fmt/format.h"
-namespace ff8
+namespace ff_8
 {
 [[nodiscard]] open_viii::graphics::background::Mim LoadMim(
   open_viii::archive::FIFLFS<false> field,
@@ -23,10 +23,10 @@ class Fields
 {
 public:
   Fields();
-  void               OnUpdate(float) const {}
-  void               OnRender() const {}
-  [[nodiscard]] bool OnImGuiUpdate() const;
-  void               OnEvent(const glengine::Event::Item &) const {}
+  void               on_update(float) const {}
+  void               on_render() const {}
+  [[nodiscard]] bool on_im_gui_update() const;
+  void               on_event(const glengine::event::Item &) const {}
   [[nodiscard]] const open_viii::archive::FIFLFS<false> &Field() const;
   [[nodiscard]] const std::string                       &Map_Name() const;
   [[nodiscard]] std::string_view                         Coo() const;
@@ -45,5 +45,5 @@ private:
     std::chrono::steady_clock::now();
 };
 static_assert(glengine::Renderable<Fields>);
-}// namespace ff8
+}// namespace ff_8
 #endif// FIELD_MAP_EDITOR_FIELDS_HPP

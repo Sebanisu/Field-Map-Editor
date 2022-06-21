@@ -5,14 +5,19 @@
 #ifndef FIELD_MAP_EDITOR_TEXTURE_HPP
 #define FIELD_MAP_EDITOR_TEXTURE_HPP
 #include "Renderer.hpp"
-#include "unique_value.hpp"
+#include "UniqueValue.hpp"
 #include <stb_image.h>
 namespace glengine
 {
+#if __cpp_if_consteval
+#define FME_NOT_CONSTEVAL !consteval// c++23
+#else
+#define FME_NOT_CONSTEVAL (!std::is_constant_evaluated())// c++20
+#endif
 class Texture
 {
 private:
-  GLID                  m_renderer_id = {};
+  Glid                  m_renderer_id = {};
   std::filesystem::path m_path        = {};
   std::int32_t          m_width       = {};
   std::int32_t          m_height      = {};
@@ -59,23 +64,23 @@ public:
     {
       return;
     }
-    m_renderer_id = GLID{ []() -> std::uint32_t {
+    m_renderer_id = Glid{ []() -> std::uint32_t {
                            std::uint32_t tmp;
-                           GLCall{}(glGenTextures, 1, &tmp);
-                           GLCall{}(glBindTexture, GL_TEXTURE_2D, tmp);
+                           GlCall{}(glGenTextures, 1, &tmp);
+                           GlCall{}(glBindTexture, GL_TEXTURE_2D, tmp);
                            return tmp;
                          }(),
-                          Destroy };
-    GLCall{}(
+                          destroy };
+    GlCall{}(
       &glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    GLCall{}(
+    GlCall{}(
       &glTexParameteri,
       GL_TEXTURE_2D,
       GL_TEXTURE_MIN_FILTER,
       GL_NEAREST_MIPMAP_NEAREST);
-    GLCall{}(&glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    GLCall{}(&glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    GLCall{}(
+    GlCall{}(&glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    GlCall{}(&glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    GlCall{}(
       glTexImage2D,
       GL_TEXTURE_2D,
       0,
@@ -87,11 +92,11 @@ public:
       GL_UNSIGNED_BYTE,
       color);
     // Unavailable in OpenGL 2.1, use gluBuild2DMipmaps() instead
-    GLCall{}(glGenerateMipmap, GL_TEXTURE_2D);
-    GLCall{}(glBindTexture, GL_TEXTURE_2D, 0);
+    GlCall{}(glGenerateMipmap, GL_TEXTURE_2D);
+    GlCall{}(glBindTexture, GL_TEXTURE_2D, 0);
   }
   template<std::ranges::random_access_range R>
-  requires std::permutable<std::ranges::iterator_t<R>>
+    requires std::permutable<std::ranges::iterator_t<R>>
   static constexpr void
     flip_slow(R &range, const std::ranges::range_difference_t<R> stride)
   {
@@ -115,8 +120,8 @@ public:
     int                   width,
     int                   height)
   {
-    fmt::print(
-      "{}\t{} bytes\twidth {}\theight {}\n",
+    spdlog::debug(
+      "{}\t{} bytes\twidth {}\theight {}",
       std::filesystem::absolute(path).string().c_str(),
       std::ranges::size(data),
       width,
@@ -128,9 +133,8 @@ public:
       std::filesystem::create_directories(path.parent_path(), ec);
       if (ec)
       {
-        fmt::print(
-          stderr,
-          "error {}:{} - {}: {} - path: {}\n",
+        spdlog::error(
+          "{}:{} - {}: {} - path: {}",
           __FILE__,
           __LINE__,
           ec.value(),
@@ -144,7 +148,7 @@ public:
   }
 
   template<std::ranges::contiguous_range R>
-  requires std::permutable<std::ranges::iterator_t<R>>
+    requires std::permutable<std::ranges::iterator_t<R>>
   static void flip(R &range, const std::ranges::range_difference_t<R> stride)
   {
     if (std::ranges::empty(range))
@@ -177,21 +181,21 @@ public:
     }
   }
 
-  GLID_copy             ID() const noexcept;
-  void                  Bind(int slot = 0) const;
-  constexpr static void Destroy(const std::uint32_t id)
+  GlidCopy              id() const noexcept;
+  void                  bind(int slot = 0) const;
+  constexpr static void destroy(const std::uint32_t id)
   {
-    if (!std::is_constant_evaluated())
+    if FME_NOT_CONSTEVAL
     {
-      GLCall{}(glDeleteTextures, 1, &id);
+      GlCall{}(glDeleteTextures, 1, &id);
     }
-    Texture::UnBind();
+    Texture::unbind();
   }
-  constexpr static void UnBind()
+  constexpr static void unbind()
   {
-    if (!std::is_constant_evaluated())
+    if FME_NOT_CONSTEVAL
     {
-      GLCall{}(glBindTexture, GL_TEXTURE_2D, 0U);
+      GlCall{}(glBindTexture, GL_TEXTURE_2D, 0U);
     }
   }
   constexpr std::int32_t width() const
@@ -203,7 +207,8 @@ public:
     return m_height;
   }
 };
-ImTextureID ConvertGLIDtoImTextureID(GLID_copy r_id);
+#undef FME_NOT_CONSTEVAL
+ImTextureID ConvertGliDtoImTextureId(GlidCopy r_id);
 static_assert(Bindable<Texture>);
 }// namespace glengine
 #endif// FIELD_MAP_EDITOR_TEXTURE_HPP

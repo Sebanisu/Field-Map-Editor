@@ -7,7 +7,7 @@
 
 // static_assert(struct_of_color_byte<glm::vec<4, std::uint8_t>>);
 glengine::DelayedTextures<upscale_texture_count>
-  ff8::LoadTextures(const std::filesystem::path &upscale_path)
+  ff_8::LoadTextures(const std::filesystem::path &upscale_path)
 {
   glengine::DelayedTextures<upscale_texture_count> rdt{};
   rdt.futures.reserve(upscale_texture_count);
@@ -42,7 +42,7 @@ glengine::DelayedTextures<upscale_texture_count>
     const auto index = texture_page;
     if (!std::filesystem::exists(current_file))
       continue;
-    fmt::print("Loading Texture: {}\n", current_file.string());
+    spdlog::debug("Loading Texture: {}", current_file.string());
     rdt.futures.emplace_back(std::async(
       std::launch::async, process, current_file, &rdt.textures->at(index)));
   }
@@ -56,14 +56,14 @@ glengine::DelayedTextures<upscale_texture_count>
       const auto index = texture_page + texture_page_count * (palette + 1U);
       if (!std::filesystem::exists(current_file))
         continue;
-      fmt::print("Loading Texture: {}\n", current_file.string());
+      spdlog::debug("Loading Texture: {}", current_file.string());
       rdt.futures.emplace_back(std::async(
         std::launch::async, process, current_file, &rdt.textures->at(index)));
     }
   return rdt;
 }
 glengine::DelayedTextures<35U>
-  ff8::LoadTextures(const open_viii::graphics::background::Mim &mim)
+  ff_8::LoadTextures(const open_viii::graphics::background::Mim &mim)
 {
   glengine::DelayedTextures<35U> rdt{};
   rdt.futures.reserve(35U);
@@ -107,10 +107,8 @@ glengine::DelayedTextures<35U>
       return rdt;
     for (const std::uint8_t palette : palettes)
     {
-      fmt::print(
-        "Loading BPP {}, Palette {} Texture\n",
-        1U << (bpp_offset + 2U),
-        palette);
+      spdlog::debug(
+        "Loading BPP {}, Palette {} Texture", 1U << (bpp_offset + 2U), palette);
       rdt.futures.emplace_back(std::async(
         std::launch::async,
         process,
@@ -123,7 +121,7 @@ glengine::DelayedTextures<35U>
   }
   {
     using namespace open_viii::graphics::literals;
-    fmt::print("Loading BPP 16 Texture\n");
+    spdlog::debug("Loading BPP 16 Texture");
     rdt.futures.emplace_back(std::async(
       std::launch::async,
       process,
@@ -132,7 +130,7 @@ glengine::DelayedTextures<35U>
       std::uint8_t{ 0 },
       &rdt.textures->at(2 * 16)));
 
-    fmt::print("Loading BPP 24 Texture\n");
+    spdlog::debug("Loading BPP 24 Texture");
     rdt.futures.emplace_back(std::async(
       std::launch::async,
       process,
@@ -142,7 +140,7 @@ glengine::DelayedTextures<35U>
       &rdt.textures->at(2 * 16 + 1)));
   }
   {
-    fmt::print("Loading Palette Texture\n");
+    spdlog::debug("Loading Palette Texture");
 
     rdt.futures.emplace_back(std::async(
       std::launch::async,

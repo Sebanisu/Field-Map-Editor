@@ -11,7 +11,7 @@
 #include <ImGuiDisabled.hpp>
 #include <ImGuiPushItemWidth.hpp>
 #include <SubTexture.hpp>
-namespace ff8
+namespace ff_8
 {
 template<typename TileFunctions>
 class MapTileAdjustments
@@ -46,7 +46,7 @@ public:
     InputsReadOnly(
       tile,
       static_cast<int>(i),
-      static_cast<int>(static_cast<uint32_t>(sub_texture->ID())));
+      static_cast<int>(static_cast<uint32_t>(sub_texture->id())));
   }
 
 private:
@@ -416,5 +416,5 @@ private:
         .c_str());
   }
 };
-}// namespace ff8
+}// namespace ff_8
 #endif// FIELD_MAP_EDITOR_MAPTILEADJUSTMENTS_HPP

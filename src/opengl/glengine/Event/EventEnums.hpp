@@ -6,7 +6,7 @@
 #define FIELD_MAP_EDITOR_EVENTENUMS_HPP
 namespace glengine
 {
-namespace Event
+namespace event
 {
   // enum class Type : std::uint32_t
   //{
@@ -50,6 +50,6 @@ namespace Event
   {
     return (l & r) != Category::None;
   }
-}// namespace Event
+}// namespace event
 }// namespace glengine
 #endif// FIELD_MAP_EDITOR_EVENTENUMS_HPP

@@ -31,19 +31,19 @@ test::TestMenu::TestMenu()
       "Test FF8 Archive Loading" })
 {
 }
-void test::TestMenu::OnRender() const
+void test::TestMenu::on_render() const
 {
-  m_menu.OnRender();
+  m_menu.on_render();
 }
-void test::TestMenu::OnImGuiUpdate() const
+void test::TestMenu::on_im_gui_update() const
 {
-  m_menu.OnImGuiUpdate();
+  m_menu.on_im_gui_update();
 }
-void test::TestMenu::OnUpdate(float delta_time) const
+void test::TestMenu::on_update(float delta_time) const
 {
-  m_menu.OnUpdate(delta_time);
+  m_menu.on_update(delta_time);
 }
-void test::TestMenu::OnEvent(const glengine::Event::Item &e) const
+void test::TestMenu::on_event(const glengine::event::Item &e) const
 {
-  m_menu.OnEvent(e);
+  m_menu.on_event(e);
 }

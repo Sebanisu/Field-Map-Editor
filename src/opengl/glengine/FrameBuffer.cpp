@@ -9,24 +9,24 @@ FrameBuffer::FrameBuffer(FrameBufferSpecification spec)
   : m_specification{ std::move(spec) }
   , m_color_attachment{ [this]() {
                          std::uint32_t tmp{};
-                         GLCall{}(glGenTextures, 1, &tmp);
-                         GLCall{}(glBindTexture, GL_TEXTURE_2D, tmp);
-                         GLCall{}(
+                         GlCall{}(glGenTextures, 1, &tmp);
+                         GlCall{}(glBindTexture, GL_TEXTURE_2D, tmp);
+                         GlCall{}(
                            &glTexParameteri,
                            GL_TEXTURE_2D,
                            GL_TEXTURE_MAG_FILTER,
                            GL_NEAREST);
-                         GLCall{}(
+                         GlCall{}(
                            &glTexParameteri,
                            GL_TEXTURE_2D,
                            GL_TEXTURE_MIN_FILTER,
                            GL_NEAREST_MIPMAP_NEAREST);
-                         GLCall{}(
+                         GlCall{}(
                            &glTexParameteri,
                            GL_TEXTURE_2D,
                            GL_TEXTURE_WRAP_S,
                            GL_CLAMP_TO_BORDER);
-                         GLCall{}(
+                         GlCall{}(
                            &glTexParameteri,
                            GL_TEXTURE_2D,
                            GL_TEXTURE_WRAP_T,
@@ -42,26 +42,26 @@ FrameBuffer::FrameBuffer(FrameBufferSpecification spec)
                            GL_RGBA,
                            GL_UNSIGNED_BYTE,
                            nullptr);
-                         GLCall{}(glGenerateMipmap, GL_TEXTURE_2D);
-                         GLCall{}(glBindTexture, GL_TEXTURE_2D, 0);
+                         GlCall{}(glGenerateMipmap, GL_TEXTURE_2D);
+                         GlCall{}(glBindTexture, GL_TEXTURE_2D, 0);
                          return tmp;
                        }(),
-                        Texture::Destroy }
+                        Texture::destroy }
   , m_depth_attachment{
     [this]() {
       std::uint32_t tmp{};
-      GLCall{}(glGenTextures, 1, &tmp);
-      GLCall{}(glBindTexture, GL_TEXTURE_2D, tmp);
+      GlCall{}(glGenTextures, 1, &tmp);
+      GlCall{}(glBindTexture, GL_TEXTURE_2D, tmp);
 
-      GLCall{}(
+      GlCall{}(
         &glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-      GLCall{}(
+      GlCall{}(
         &glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-      GLCall{}(
+      GlCall{}(
         &glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-      GLCall{}(
+      GlCall{}(
         &glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-      GLCall{}(
+      GlCall{}(
         glTexImage2D,
         GL_TEXTURE_2D,
         0,
@@ -72,30 +72,30 @@ FrameBuffer::FrameBuffer(FrameBufferSpecification spec)
         GL_DEPTH_COMPONENT,
         GL_UNSIGNED_BYTE,
         nullptr);
-      GLCall{}(glBindTexture, GL_TEXTURE_2D, 0);
+      GlCall{}(glBindTexture, GL_TEXTURE_2D, 0);
       return tmp;
     }(),
-    Texture::Destroy
+    Texture::destroy
   }
 {
   // Sometimes the textures wouldn't be defined before defining m_renderer_id
   // So I moved this code inside here.
-  m_renderer_id = GLID(
+  m_renderer_id = Glid(
     [this]() {
       std::uint32_t tmp{};
-      GLCall{}(glCreateFramebuffers, 1, &tmp);
-      GLCall{}(glBindFramebuffer, GL_FRAMEBUFFER, tmp);
-      //        fmt::print(
+      GlCall{}(glCreateFramebuffers, 1, &tmp);
+      GlCall{}(glBindFramebuffer, GL_FRAMEBUFFER, tmp);
+      //        spdlog::debug(
       //          "m_color_attachment {}\n",
       //          static_cast<uint32_t>(m_color_attachment));
-      GLCall{}(
+      GlCall{}(
         glFramebufferTexture2D,
         GL_FRAMEBUFFER,
         GL_COLOR_ATTACHMENT0,
         GL_TEXTURE_2D,
         m_color_attachment,
         0);
-      GLCall{}(
+      GlCall{}(
         glFramebufferTexture2D,
         GL_FRAMEBUFFER,
         GL_DEPTH_ATTACHMENT,
@@ -103,38 +103,34 @@ FrameBuffer::FrameBuffer(FrameBufferSpecification spec)
         m_depth_attachment,
         0);
 
-      GLenum status = GLCall{}(glCheckFramebufferStatus, GL_FRAMEBUFFER);
+      GLenum status = GlCall{}(glCheckFramebufferStatus, GL_FRAMEBUFFER);
       if (status != GL_FRAMEBUFFER_COMPLETE)
       {
-        fmt::print(
-          stderr,
-          "Error {}:{} NOT GL_FRAMEBUFFER_COMPLETE - {}",
-          __FILE__,
-          __LINE__,
-          status);
+        spdlog::critical(
+          "{}:{} NOT GL_FRAMEBUFFER_COMPLETE - {}", __FILE__, __LINE__, status);
       }
       return tmp;
     }(),
     [](std::uint32_t id) {
-      GLCall{}(glDeleteFramebuffers, 1, &id);
-      UnBind();
+      GlCall{}(glDeleteFramebuffers, 1, &id);
+      unbind();
     });
-  UnBind();
+  unbind();
 }
-void FrameBuffer::Bind() const
+void FrameBuffer::bind() const
 {
-  GLCall{}(glBindFramebuffer, GL_FRAMEBUFFER, m_renderer_id);
+  GlCall{}(glBindFramebuffer, GL_FRAMEBUFFER, m_renderer_id);
 }
-const FrameBufferSpecification &FrameBuffer::Specification() const
+const FrameBufferSpecification &FrameBuffer::specification() const
 {
   return m_specification;
 }
-SubTexture FrameBuffer::GetColorAttachment() const
+SubTexture FrameBuffer::get_color_attachment() const
 {
   // called here to update mipmaps after texture changed.
   auto r = SubTexture(m_color_attachment);
-  r.Bind();
-  GLCall{}(glGenerateMipmap, GL_TEXTURE_2D);
+  r.bind();
+  GlCall{}(glGenerateMipmap, GL_TEXTURE_2D);
   return r;
 }
 }// namespace glengine

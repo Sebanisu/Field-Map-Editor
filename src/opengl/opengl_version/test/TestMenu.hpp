@@ -13,10 +13,10 @@ class TestMenu
 {
 public:
   TestMenu();
-  void OnUpdate(float) const;
-  void OnRender() const;
-  void OnImGuiUpdate() const;
-  void OnEvent(const glengine::Event::Item &) const;
+  void on_update(float) const;
+  void on_render() const;
+  void on_im_gui_update() const;
+  void on_event(const glengine::event::Item &) const;
 
 private:
   glengine::Menu m_menu{};

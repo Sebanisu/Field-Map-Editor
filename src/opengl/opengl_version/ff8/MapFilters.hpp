@@ -6,8 +6,8 @@
 #define FIELD_MAP_EDITOR_MAPFILTERS_HPP
 #include "UniqueTileValues.hpp"
 #include <ImGuiDisabled.hpp>
-#include <ImGuiPushID.hpp>
 #include <ImGuiIndent.hpp>
+#include <ImGuiPushID.hpp>
 class MapFilters
 {
 public:
@@ -18,14 +18,14 @@ public:
         map.visit_tiles([](auto &&tiles) { return std::ranges::empty(tiles); }))
   {
   }
-  [[nodiscard]] bool OnImGuiUpdate() const
+  [[nodiscard]] bool on_im_gui_update() const
   {
     bool       ret_changed    = false;
-    const auto push_id        = glengine::ImGuiPushID();
+    const auto push_id        = glengine::ImGuiPushId();
     const auto filter_disable = glengine::ImGuiDisabled(m_disabled);
     if (ImGui::CollapsingHeader("Filters"))
     {
-      const auto        un_indent0 = glengine::ImGuiIndent();
+      const auto        un_indent_0 = glengine::ImGuiIndent();
       static const auto common =
         [](
           const char                             *label,
@@ -44,17 +44,18 @@ public:
           assert(
             std::ranges::size(possible_value_range)
             >= std::ranges::size(used_value_range));
-          const auto push_id0 = glengine::ImGuiPushID();
+          const auto push_id_0 = glengine::ImGuiPushId();
           if (ImGui::CollapsingHeader(label))
           {
-            const auto un_indent1 = glengine::ImGuiIndent();
+            const auto un_indent_1 = glengine::ImGuiIndent();
 
-            auto       boolptr    = std::ranges::begin(bool_range);
-            const auto boolsent   = std::ranges::end(bool_range);
-            auto current_value    = std::ranges::cbegin(possible_value_range);
+            auto       boolptr     = std::ranges::begin(bool_range);
+            const auto boolsent    = std::ranges::end(bool_range);
+            auto current_value     = std::ranges::cbegin(possible_value_range);
             auto current_string =
               std::ranges::cbegin(possible_value_string_range);
 
+            static constexpr const char *clicked_pattern = "Clicked {}";
             for (std::uint32_t i = 0; boolptr != boolsent; ++i,
                                (void)++boolptr,
                                (void)++current_value,
@@ -65,7 +66,7 @@ public:
               const auto disabled = glengine::ImGuiDisabled(
                 found == std::ranges::end(used_value_range));
 
-              const auto pop       = glengine::ImGuiPushID();
+              const auto pop       = glengine::ImGuiPushId();
               const auto string    = fmt::format("{:>4}", *current_string);
               auto       size      = ImGui::CalcTextSize(string.c_str());
               bool       same_line = line_count > 0 && i % line_count != 0;
@@ -75,26 +76,26 @@ public:
               if (same_line)
                 ImGui::SameLine();
               {
-                const auto push_id1 = glengine::ImGuiPushID();
+                const auto push_id_1 = glengine::ImGuiPushId();
                 if (ImGui::Selectable(
                       string.c_str(), static_cast<bool>(*boolptr), 0, size))
                 {
                   *boolptr = !static_cast<bool>(*boolptr);
                   changed  = true;
-                  fmt::print("clicked {}\n", string);
+                  spdlog::debug(clicked_pattern, string);
                 }
               }
             }
             ImGui::Dummy(ImVec2(2.F, 2.F));
             {
-              const auto pop = glengine::ImGuiPushID();
+              const auto pop = glengine::ImGuiPushId();
               {
-                const auto push_id2 = glengine::ImGuiPushID();
+                const auto push_id_2 = glengine::ImGuiPushId();
                 if (ImGui::Button("All"))
                 {
                   std::ranges::fill(bool_range, true);
                   changed = true;
-                  fmt::print("clicked {}\n", "all");
+                  spdlog::debug(clicked_pattern, "all");
                 }
               }
             }
@@ -102,14 +103,14 @@ public:
             ImGui::Dummy(ImVec2(2.F, 2.F));
             ImGui::SameLine();
             {
-              const auto pop = glengine::ImGuiPushID();
+              const auto pop = glengine::ImGuiPushId();
               {
-                const auto push_id3 = glengine::ImGuiPushID();
+                const auto push_id_3 = glengine::ImGuiPushId();
                 if (ImGui::Button("None"))
                 {
                   std::ranges::fill(bool_range, false);
                   changed = true;
-                  fmt::print("clicked {}\n", "none");
+                  spdlog::debug(clicked_pattern, "none");
                 }
               }
             }
@@ -170,53 +171,52 @@ public:
     }
 
     if (ret_changed)
-      fmt::print("changed {}", ret_changed);
+      spdlog::debug("Changed {}", ret_changed);
     return ret_changed;
   }
-  auto TestTile() const noexcept
+  template<typename TileT>
+  bool operator()(const TileT &tile) const
   {
-    return [&](const auto &tile) -> bool {
-      return filter(
-               tile.layer_id(),
-               m_unique_tile_values.layer_id.enable(),
-               m_unique_tile_values.layer_id.values())
-             && filter(
-               tile.z(),
-               m_unique_tile_values.z.enable(),
-               m_unique_tile_values.z.values())
-             && filter(
-               tile.texture_id(),
-               m_unique_tile_values.texture_page_id.enable(),
-               m_unique_tile_values.texture_page_id.values())
-             && filter(
-               tile.blend(),
-               m_unique_tile_values.blend_other.enable(),
-               m_unique_tile_values.blend_other.values())
-             && filter(
-               tile.animation_id(),
-               m_unique_tile_values.animation_id.enable(),
-               m_unique_tile_values.animation_id.values())
-             && filter(
-               tile.animation_state(),
-               m_unique_tile_values.animation_frame.enable(),
-               m_unique_tile_values.animation_frame.values())
-             && filter(
-               tile.layer_id(),
-               m_unique_tile_values.layer_id.enable(),
-               m_unique_tile_values.layer_id.values())
-             && filter(
-               tile.blend_mode(),
-               m_possible_tile_values.blend_mode.enable(),
-               m_possible_tile_values.blend_mode.values())
-             && filter(
-               tile.depth(),
-               m_possible_tile_values.bpp.enable(),
-               m_possible_tile_values.bpp.values())
-             && filter(
-               tile.palette_id(),
-               m_possible_tile_values.palette_id.enable(),
-               m_possible_tile_values.palette_id.values());
-    };
+    return filter(
+             tile.layer_id(),
+             m_unique_tile_values.layer_id.enable(),
+             m_unique_tile_values.layer_id.values())
+           && filter(
+             tile.z(),
+             m_unique_tile_values.z.enable(),
+             m_unique_tile_values.z.values())
+           && filter(
+             tile.texture_id(),
+             m_unique_tile_values.texture_page_id.enable(),
+             m_unique_tile_values.texture_page_id.values())
+           && filter(
+             tile.blend(),
+             m_unique_tile_values.blend_other.enable(),
+             m_unique_tile_values.blend_other.values())
+           && filter(
+             tile.animation_id(),
+             m_unique_tile_values.animation_id.enable(),
+             m_unique_tile_values.animation_id.values())
+           && filter(
+             tile.animation_state(),
+             m_unique_tile_values.animation_frame.enable(),
+             m_unique_tile_values.animation_frame.values())
+           && filter(
+             tile.layer_id(),
+             m_unique_tile_values.layer_id.enable(),
+             m_unique_tile_values.layer_id.values())
+           && filter(
+             tile.blend_mode(),
+             m_possible_tile_values.blend_mode.enable(),
+             m_possible_tile_values.blend_mode.values())
+           && filter(
+             tile.depth(),
+             m_possible_tile_values.bpp.enable(),
+             m_possible_tile_values.bpp.values())
+           && filter(
+             tile.palette_id(),
+             m_possible_tile_values.palette_id.enable(),
+             m_possible_tile_values.palette_id.values());
   }
   const auto &unique_tile_values() const
   {

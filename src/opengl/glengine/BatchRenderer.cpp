@@ -3,7 +3,6 @@
 //
 
 #include "BatchRenderer.hpp"
-#include "scope_guard.hpp"
 
 namespace glengine
 {
@@ -18,40 +17,40 @@ BatchRenderer::BatchRenderer(std::size_t quad_count)
   , m_shader(
       std::filesystem::current_path() / "res" / "shader" / "basic3.shader")
 {
-  m_vertex_array.Bind();
-  m_vertex_array.push_back(m_vertex_buffer, Vertex::Layout());
+  m_vertex_array.bind();
+  m_vertex_array.push_back(m_vertex_buffer, Vertex::layout());
   m_texture_slots.reserve(
-    static_cast<std::uint32_t>(Max_Texture_Image_Units()));
+    static_cast<std::uint32_t>(max_texture_image_units()));
 }
 
-void BatchRenderer::OnUpdate(float) const
+void BatchRenderer::on_update(float) const
 {
   draw_count = 0U;
 }
-void BatchRenderer::Draw() const
+void BatchRenderer::draw() const
 {
-  FlushVertices();
+  flush_vertices();
 }
-void BatchRenderer::Draw(Quad quad) const
+void BatchRenderer::draw(Quad quad) const
 {
-  if (std::ranges::size(m_vertices) == VERT_COUNT())
+  if (std::ranges::size(m_vertices) == vert_count())
   {
-    FlushVertices();
+    flush_vertices();
   }
   m_vertices += std::move(quad);
 }
-void BatchRenderer::OnImGuiUpdate() const
+void BatchRenderer::on_im_gui_update() const
 {
   ImGui::Text("%s", fmt::format("Total Draws: {}", draw_count).c_str());
 }
-void BatchRenderer::FlushVertices() const
+void BatchRenderer::flush_vertices() const
 {
-  index_buffer_size = m_vertex_buffer.Update(m_vertices);
-  BindTextures();
-  DrawVertices();
+  index_buffer_size = m_vertex_buffer.update(m_vertices);
+  bind_textures();
+  draw_vertices();
   m_vertices.clear();
 }
-void BatchRenderer::DrawVertices() const
+void BatchRenderer::draw_vertices() const
 {
   if (std::ranges::empty(m_vertices))
   {
@@ -60,117 +59,118 @@ void BatchRenderer::DrawVertices() const
   Renderer::Draw(index_buffer_size, m_vertex_array, m_index_buffer, m_shader);
   ++draw_count;
 }
-void BatchRenderer::Clear() const
+void BatchRenderer::clear() const
 {
   m_texture_slots.clear();
-  m_texture_slots.push_back(m_blank.ID());
+  m_texture_slots.push_back(m_blank.id());
   m_vertices.clear();
 }
-std::size_t BatchRenderer::QUAD_COUNT() const noexcept
+std::size_t BatchRenderer::quad_count() const noexcept
 {
   return m_quad_count;
 }
-std::size_t BatchRenderer::VERT_COUNT() const noexcept
+std::size_t BatchRenderer::vert_count() const noexcept
 {
   return m_quad_count * 4U;
 }
-std::size_t BatchRenderer::INDEX_COUNT() const noexcept
+std::size_t BatchRenderer::index_count() const noexcept
 {
   return m_quad_count * 6U;
 }
-const std::int32_t &BatchRenderer::Max_Texture_Image_Units()
+const std::int32_t &BatchRenderer::max_texture_image_units()
 {
   static const std::int32_t number = []() {
     std::int32_t texture_units{};
-    GLCall{}(glGetIntegerv, GL_MAX_TEXTURE_IMAGE_UNITS, &texture_units);
+    GlCall{}(glGetIntegerv, GL_MAX_TEXTURE_IMAGE_UNITS, &texture_units);
     return texture_units;
   }();
   return number;
 }
-void BatchRenderer::DrawQuad(
+void BatchRenderer::draw_quad(
   const Texture &texture,
   glm::vec3      offset,
   glm::vec2      size) const
 {
-  DrawQuad(offset, { 1.F, 1.F, 1.F, 1.F }, texture, 1.F, size);
+  draw_quad(offset, { 1.F, 1.F, 1.F, 1.F }, texture, 1.F, size);
 }
-void BatchRenderer::DrawQuad(
+void BatchRenderer::draw_quad(
   const SubTexture &texture,
   glm::vec3         offset,
   glm::vec2         size) const
 {
-  DrawQuad(offset, { 1.F, 1.F, 1.F, 1.F }, texture, 1.F, size);
+  draw_quad(offset, { 1.F, 1.F, 1.F, 1.F }, texture, 1.F, size);
 }
-void BatchRenderer::DrawQuad(
+void BatchRenderer::draw_quad(
   glm::vec3         offset,
   glm::vec4         color,
   const SubTexture &texture,
   const float       tiling_factor,
   glm::vec2         size) const
 {
-  if (const auto result = std::ranges::find(m_texture_slots, texture.ID());
+  if (const auto result = std::ranges::find(m_texture_slots, texture.id());
       result != std::ranges::end(m_texture_slots))
   {
-    Draw(CreateQuad(
+    draw(CreateQuad(
       offset,
       color,
       static_cast<int>(result - std::ranges::begin(m_texture_slots)),
       tiling_factor,
-      texture.UV(),
+      texture.uv(),
       size));
   }
   else
   {
     if (std::cmp_equal(
-          std::ranges::size(m_texture_slots), Max_Texture_Image_Units()))
+          std::ranges::size(m_texture_slots), max_texture_image_units()))
     {
-      FlushVertices();
+      flush_vertices();
     }
-    m_texture_slots.push_back(texture.ID());
-    Draw(CreateQuad(
+    m_texture_slots.push_back(texture.id());
+    draw(CreateQuad(
       offset,
       color,
       static_cast<int>(std::ranges::size(m_texture_slots) - 1U),
       tiling_factor,
-      texture.UV(),
+      texture.uv(),
       size));
   }
 }
-void BatchRenderer::DrawQuad(glm::vec3 offset, glm::vec4 color) const
+void BatchRenderer::draw_quad(glm::vec3 offset, glm::vec4 color) const
 {
-  Draw(CreateQuad(offset, color, 0));
+  draw(CreateQuad(offset, color, 0));
 }
-const Shader &BatchRenderer::Shader() const
+const Shader &BatchRenderer::shader() const
 {
   return m_shader;
 }
-const std::vector<std::uint32_t> &BatchRenderer::TextureSlots() const
+[[maybe_unused]] const std::vector<std::uint32_t> &
+  BatchRenderer::texture_slots() const
 {
   return m_texture_slots;
 }
-void BatchRenderer::OnRender() const
+void BatchRenderer::on_render() const
 {
-  FlushVertices();
+  flush_vertices();
 }
-void BatchRenderer::BindTextures() const
+void BatchRenderer::bind_textures() const
 {
-  m_shader.Bind();
+  m_shader.bind();
   m_uniform_texture_slots.clear();
   for (std::int32_t i{}; const std::uint32_t id : m_texture_slots)
   {
-    GLCall{}(glActiveTexture, static_cast<GLenum>(GL_TEXTURE0 + i));
-    GLCall{}(glBindTexture, GL_TEXTURE_2D, id);
+    GlCall{}(glActiveTexture, static_cast<GLenum>(GL_TEXTURE0 + i));
+    GlCall{}(glBindTexture, GL_TEXTURE_2D, id);
     m_uniform_texture_slots.push_back(i++);
   }
-  m_shader.SetUniform("u_Textures", m_uniform_texture_slots);
+  m_shader.set_uniform("u_Textures", m_uniform_texture_slots);
 }
-void BatchRenderer::OnEvent(const Event::Item &) const {}
-void BatchRenderer::Bind() const
+void BatchRenderer::on_event(const event::Item &) const {}
+void BatchRenderer::bind() const
 {
-  m_shader.Bind();
+  m_shader.bind();
 }
-void BatchRenderer::UnBind()
+void BatchRenderer::unbind()
 {
-  glengine::Shader::UnBind();
+  glengine::Shader::unbind();
 }
 }// namespace glengine

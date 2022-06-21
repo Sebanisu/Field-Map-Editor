@@ -5,13 +5,13 @@
 #ifndef FIELD_MAP_EDITOR_VERTEXBUFFER_HPP
 #define FIELD_MAP_EDITOR_VERTEXBUFFER_HPP
 #include "Renderer.hpp"
-#include "unique_value.hpp"
+#include "UniqueValue.hpp"
 namespace glengine
 {
 class VertexBuffer
 {
 private:
-  GLID m_renderer_id = {};
+  Glid m_renderer_id = {};
 
 public:
   VertexBuffer() = default;
@@ -23,21 +23,21 @@ public:
           std::ranges::size(buffer)
           * sizeof(std::ranges::range_value_t<decltype(buffer)>));
         const void *data = std::ranges::data(buffer);
-        GLCall{}(glGenBuffers, 1, &tmp);
-        GLCall{}(glBindBuffer, GL_ARRAY_BUFFER, tmp);
-        GLCall{}(
+        GlCall{}(glGenBuffers, 1, &tmp);
+        GlCall{}(glBindBuffer, GL_ARRAY_BUFFER, tmp);
+        GlCall{}(
           glBufferData, GL_ARRAY_BUFFER, size_in_bytes, data, GL_STATIC_DRAW);
         return tmp;
       }(),
       [](const std::uint32_t id) {
-        GLCall{}(glDeleteBuffers, 1, &id);
-        VertexBuffer::UnBind();
+        GlCall{}(glDeleteBuffers, 1, &id);
+        VertexBuffer::unbind();
       })
   {
   }
 
-  void        Bind() const;
-  static void UnBind();
+  void        bind() const;
+  static void unbind();
 };
 static_assert(Bindable<VertexBuffer>);
 }// namespace glengine

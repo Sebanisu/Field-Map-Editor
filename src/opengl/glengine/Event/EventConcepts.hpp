@@ -9,50 +9,50 @@
 #include "MouseButtonCodes.hpp"
 namespace glengine
 {
-namespace Event
+namespace event
 {
   template<typename T>
   concept is = glengine::decay_same_as<
-                 typename T::value_type,
+                 typename T::ValueType,
                  T> && requires(const T &t) {
                          {
-                           t.Name()
+                           t.name()
                            } -> glengine::decay_same_as<std::string_view>;
                          {
                            t.category()
                            } -> glengine::decay_same_as<Category>;
                          {
-                           t.CategoryName()
+                           t.category_name()
                            } -> glengine::decay_same_as<std::string_view>;
                          {
-                           t.Handled()
+                           t.handled()
                            } -> glengine::decay_same_as<bool>;
                          {
-                           t.Data()
+                           t.data()
                            } -> glengine::decay_same_as<std::string>;
                        };
   template<typename T>
   concept is_Key = is<T> && requires(const T &t) {
-                              T(glengine::KEY::A, glengine::MODS::NONE);
+                              T(glengine::Key::A, glengine::Mods::None);
                               {
-                                t.Key()
-                                } -> glengine::decay_same_as<glengine::KEY>;
+                                t.key()
+                                } -> glengine::decay_same_as<glengine::Key>;
                               {
-                                t.Mods()
-                                } -> glengine::decay_same_as<glengine::MODS>;
+                                t.mods()
+                                } -> glengine::decay_same_as<glengine::Mods>;
                             };
   template<typename T>
   concept is_MouseMove =
     is<T> && requires(const T &t) {
                T(0.F, 0.F);
                {
-                 t.Position()
+                 t.position()
                  } -> glengine::decay_same_as<std::array<float, 2U>>;
                {
-                 t.X()
+                 t.x()
                  } -> glengine::decay_same_as<float>;
                {
-                 t.Y()
+                 t.y()
                  } -> glengine::decay_same_as<float>;
              };
   template<typename T>
@@ -60,38 +60,38 @@ namespace Event
     is<T> && requires(const T &t) {
                T(0, 0);
                {
-                 t.Position()
+                 t.position()
                  } -> glengine::decay_same_as<std::array<int, 2U>>;
                {
-                 t.X()
+                 t.x()
                  } -> glengine::decay_same_as<int>;
                {
-                 t.Y()
+                 t.y()
                  } -> glengine::decay_same_as<int>;
              };
   template<typename T>
   concept is_MouseButton =
     is<T> && requires(const T &t) {
-               T(glengine::MOUSE::BUTTON_1, glengine::MODS::NONE);
+               T(glengine::Mouse::Button1, glengine::Mods::None);
                {
-                 t.Button()
-                 } -> glengine::decay_same_as<glengine::MOUSE>;
+                 t.button()
+                 } -> glengine::decay_same_as<glengine::Mouse>;
                {
-                 t.Mods()
-                 } -> glengine::decay_same_as<glengine::MODS>;
+                 t.mods()
+                 } -> glengine::decay_same_as<glengine::Mods>;
              };
   template<typename T>
   concept is_MouseScroll =
     is<T> && requires(const T &t) {
                T(0.F, 0.F);
                {
-                 t.Offsets()
+                 t.offsets()
                  } -> glengine::decay_same_as<std::array<float, 2U>>;
                {
-                 t.XOffset()
+                 t.x_offset()
                  } -> glengine::decay_same_as<float>;
                {
-                 t.YOffset()
+                 t.y_offset()
                  } -> glengine::decay_same_as<float>;
              };
 
@@ -99,12 +99,12 @@ namespace Event
   concept is_WindowResize = is<T> && requires(const T &t) {
                                        T(0, 0);
                                        {
-                                         t.Width()
+                                         t.width()
                                          } -> glengine::decay_same_as<int>;
                                        {
-                                         t.Height()
+                                         t.height()
                                          } -> glengine::decay_same_as<int>;
                                      };
-}// namespace Event
+}// namespace event
 }// namespace glengine
 #endif// FIELD_MAP_EDITOR_EVENTCONCEPTS_HPP

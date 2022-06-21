@@ -1,12 +1,13 @@
 //#include <cmake_pch.hxx>
 #include "Application.hpp"
-int main(void)
+int main()
 {
   // todo attach this scope gaurd to the api somewhere
   //  anything created in the window must be destroyed before the window.
-  const auto end = glengine::scope_guard{ []() {
+  spdlog::set_level(spdlog::level::debug);// Set global log level to debug
+  const auto end = glengine::ScopeGuard{ []() {
     ImGui::DestroyContext(nullptr);
     glfwTerminate();
   } };
-  Application("Field-Map-Editor - OPENGL", 1280, 720).Run();
+  Application("Field-Map-Editor - OPENGL", 1280, 720).run();
 }

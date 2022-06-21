@@ -5,33 +5,33 @@
 #include "LayerStack.hpp"
 namespace glengine
 {
-void Layer::Stack::OnRender() const
+void Layer::Stack::on_render() const
 {
   for (const Item &layer : m_layers)
   {
-    layer.OnRender();
+    layer.on_render();
   }
 }
-void Layer::Stack::OnImGuiUpdate() const
+void Layer::Stack::on_im_gui_update() const
 {
   for (const Item &layer : m_layers)
   {
-    layer.OnImGuiUpdate();
+    layer.on_im_gui_update();
   }
 }
-void Layer::Stack::OnUpdate(float delta_time) const
+void Layer::Stack::on_update(float delta_time) const
 {
   for (const Item &layer : m_layers)
   {
-    layer.OnUpdate(delta_time);
+    layer.on_update(delta_time);
   }
 }
-void Layer::Stack::OnEvent(const Event::Item &e) const
+void Layer::Stack::on_event(const event::Item &e) const
 {
   auto reversed = m_layers | std::views::reverse;
   for (const Item &layer : reversed)
   {
-    layer.OnEvent(e);
+    layer.on_event(e);
   }
 }
 }// namespace glengine

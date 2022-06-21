@@ -24,9 +24,9 @@ using namespace std::string_literals;
  * @return lhs + rhs
  */
 template<typename T, typename U>
-requires std::same_as<std::decay_t<T>, std::filesystem::path> &&(
-  !std::same_as<std::decay_t<U>, std::filesystem::path>)&&std::
-  convertible_to<std::decay_t<U>, std::filesystem::path> inline std::
+requires std::same_as<std::remove_cvref_t<T>, std::filesystem::path> &&(
+  !std::same_as<std::remove_cvref_t<U>, std::filesystem::path>)&&std::
+  convertible_to<std::remove_cvref_t<U>, std::filesystem::path> inline std::
     filesystem::path
   operator+(const T &lhs, const U &rhs)
 {
@@ -42,8 +42,8 @@ requires std::same_as<std::decay_t<T>, std::filesystem::path> &&(
  * @return lhs + rhs
  */
 template<typename T>
-requires std::same_as<std::decay_t<T>, std::filesystem::path> || std::
-  same_as<std::decay_t<T>, std::filesystem::directory_entry>
+requires std::same_as<std::remove_cvref_t<T>, std::filesystem::path> || std::
+  same_as<std::remove_cvref_t<T>, std::filesystem::directory_entry>
 inline std::filesystem::path
   operator+(const std::filesystem::path &lhs, const T &rhs)
 {

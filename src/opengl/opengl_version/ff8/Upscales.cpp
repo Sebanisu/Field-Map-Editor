@@ -4,11 +4,11 @@
 
 #include "Upscales.hpp"
 #include "GenericCombo.hpp"
-bool ff8::Upscales::OnImGuiUpdate() const
+bool ff_8::Upscales::on_im_gui_update() const
 {
   return glengine::GenericCombo("Upscale Path", m_current, m_paths);
 }
-const std::string &ff8::Upscales::Path() const
+const std::string &ff_8::Upscales::Path() const
 {
   if (std::cmp_less(m_current, std::ranges::size(m_paths)))
   {
@@ -17,7 +17,7 @@ const std::string &ff8::Upscales::Path() const
   const static auto empty = std::string("");
   return empty;
 }
-ff8::Upscales::Upscales()
+ff_8::Upscales::Upscales()
 {
   using namespace std::literals::string_literals;
   m_paths =
@@ -56,9 +56,8 @@ ff8::Upscales::Upscales()
     const auto      handle_error = [&ec](int line, const auto &extra) {
       if (ec)
       {
-        fmt::print(
-          stderr,
-          "error {}:{} - {}: {}, - \"{}\"\n",
+        spdlog::error(
+          "{}:{} - {}: {}, - \"{}\"",
           __FILE__,
           line,
           ec.value(),
@@ -97,13 +96,13 @@ ff8::Upscales::Upscales()
           });
         if (count > 0)
         {
-          fmt::print(
-            "path: \"{}\",\tfile count: {}\n", sub_path.path().string(), count);
+          spdlog::debug(
+            "path: \"{}\",\tfile count: {}", sub_path.path().string(), count);
           if (max_count < count)
             max_count = count;
         }
       }
     }
-    fmt::print("max file count is: {}\n", max_count);
+    spdlog::debug("max file count is: {}", max_count);
   }
 }

@@ -1,10 +1,10 @@
 #include "VertexBuffer.hpp"
-void glengine::VertexBuffer::Bind() const
+void glengine::VertexBuffer::bind() const
 {
-  GLCall{}(glBindBuffer, GL_ARRAY_BUFFER, m_renderer_id);
+  GlCall{}(glBindBuffer, GL_ARRAY_BUFFER, m_renderer_id);
 }
 
-void glengine::VertexBuffer::UnBind()
+void glengine::VertexBuffer::unbind()
 {
-  GLCall{}(glBindBuffer, GL_ARRAY_BUFFER, 0U);
+  GlCall{}(glBindBuffer, GL_ARRAY_BUFFER, 0U);
 }

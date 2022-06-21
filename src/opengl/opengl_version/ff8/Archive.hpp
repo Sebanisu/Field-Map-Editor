@@ -7,16 +7,16 @@
 #include "Coos.hpp"
 #include "Paths.hpp"
 
-namespace ff8
+namespace ff_8
 {
 class Archive
 {
 public:
   Archive();
-  void OnUpdate(float) const {}
-  void OnRender() const {}
-  bool OnImGuiUpdate() const;
-  void OnEvent(const glengine::Event::Item &) const {}
+  void               on_update(float) const {}
+  void               on_render() const {}
+  [[nodiscard]] bool on_im_gui_update() const;
+  void               on_event(const glengine::event::Item &) const {}
 
   [[nodiscard]] const open_viii::archive::Archives     &Archives() const;
   [[nodiscard]] const open_viii::archive::FIFLFS<true> &Fields() const;
@@ -28,5 +28,5 @@ private:
   mutable open_viii::archive::Archives m_archives = {};
 };
 static_assert(glengine::Renderable<Archive>);
-}// namespace ff8
+}// namespace ff_8
 #endif// FIELD_MAP_EDITOR_ARCHIVE_HPP

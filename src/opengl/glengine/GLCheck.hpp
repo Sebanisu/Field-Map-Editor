@@ -4,43 +4,44 @@
 
 #ifndef FIELD_MAP_EDITOR_GLCHECK_HPP
 #define FIELD_MAP_EDITOR_GLCHECK_HPP
+#include <source_location>
+void                  BeginErrorCallBack();
+[[maybe_unused]] void EndErrorCallback();
+void                  GlClearError(
+                   const std::source_location location = std::source_location::current());
 
-void BeginErrorCallBack();
-void EndErrorCallback();
-void GLClearError(
+bool GlCheckError(
   const std::source_location location = std::source_location::current());
 
-bool GLCheckError(
+void GlGetError(
   const std::source_location location = std::source_location::current());
 
-void GLGetError(
-  const std::source_location location = std::source_location::current());
-
-struct GLCall
+struct GlCall
 {
 public:
-  GLCall(std::source_location location = std::source_location::current())
+  GlCall(std::source_location location = std::source_location::current())
     : m_source_location(std::move(location))
   {
   }
   template<typename FuncT, typename... ArgsT>
-  requires std::invocable<FuncT, ArgsT...>
-  [[nodiscard]] auto operator()(FuncT &&func, ArgsT &&...args) &&
+    requires std::invocable<FuncT, ArgsT...> [
+      [nodiscard]] auto
+    operator()(FuncT &&func, ArgsT &&...args) &&
   {
-    using return_value_type =
-      std::decay_t<std::invoke_result_t<FuncT, ArgsT...>>;
-    GLClearError(m_source_location);
-    if constexpr (!glengine::Void<return_value_type>)
+    using ReturnValueT =
+      std::remove_cvref_t<std::invoke_result_t<FuncT, ArgsT...>>;
+    GlClearError(m_source_location);
+    if constexpr (!glengine::Void<ReturnValueT>)
     {
-      return_value_type return_value =
+      ReturnValueT return_value =
         std::invoke(std::forward<FuncT>(func), std::forward<ArgsT>(args)...);
-      GLGetError(m_source_location);
+      GlGetError(m_source_location);
       return return_value;
     }
     else
     {
       std::invoke(std::forward<FuncT>(func), std::forward<ArgsT>(args)...);
-      GLGetError(m_source_location);
+      GlGetError(m_source_location);
     }
   }
 

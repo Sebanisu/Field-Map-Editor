@@ -5,7 +5,7 @@
 #ifndef FIELD_MAP_EDITOR_MAPDIMS_HPP
 #define FIELD_MAP_EDITOR_MAPDIMS_HPP
 #include "tile_operations.hpp"
-namespace ff8
+namespace ff_8
 {
 namespace MapDimsStatics
 {
@@ -133,5 +133,5 @@ private:
     true_max.y = true_y(*true_i_max_y);
   }
 };
-}// namespace ff8
+}// namespace ff_8
 #endif// FIELD_MAP_EDITOR_MAPDIMS_HPP

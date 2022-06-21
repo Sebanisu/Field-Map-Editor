@@ -9,7 +9,7 @@ class FieldMapEditor(ConanFile):
     requires = (
         # "catch2/2.13.7",
         # "docopt.cpp/0.6.3",
-        "fmt/8.1.1",  # formatting library
+        #"fmt/8.1.1",  # formatting library
         "spdlog/1.10.0",  # logging library
         "glfw/3.3.5",  # opengl version
         "glew/2.2.0",  # opengl version

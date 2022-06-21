@@ -23,7 +23,7 @@ struct DelayedTextures
     std::make_unique<std::array<Texture, sizeT>>()
   };
   mutable std::vector<std::future<DelayedTexturesData>> futures{};
-  [[nodiscard]] bool                                    OnUpdate() const
+  [[nodiscard]] bool                                    on_update() const
   {
     for (std::future<DelayedTexturesData> &future : futures)
     {
@@ -34,9 +34,10 @@ struct DelayedTextures
       {
         DelayedTexturesData rd = future.get();
         *rd.out                = Texture(rd.colors, rd.width, rd.height);
-        fmt::print(
-          "Finished Loading Texture: {:>2}\t{}\n",
-          std::distance(textures->data(), rd.out), rd.path.string());
+        spdlog::debug(
+          "Finished Loading Texture: {:>2}\t{}",
+          std::distance(textures->data(), rd.out),
+          rd.path.string());
         return true;
       }
     }

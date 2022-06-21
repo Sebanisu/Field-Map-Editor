@@ -4,18 +4,18 @@
 
 #ifndef FIELD_MAP_EDITOR_COOS_HPP
 #define FIELD_MAP_EDITOR_COOS_HPP
-#include "scope_guard.hpp"
+#include "ScopeGuard.hpp"
 
 
-namespace ff8
+namespace ff_8
 {
 class Coos
 {
 public:
-  void                           OnUpdate(float) const {}
-  void                           OnRender() const {}
-  bool                           OnImGuiUpdate() const;
-  void                           OnEvent(const glengine::Event::Item &) const {}
+  void on_update(float) const {}
+  void on_render() const {}
+  bool on_im_gui_update() const;
+  void on_event(const glengine::event::Item &) const {}
   [[nodiscard]] std::string_view Coo() const
   {
     return m_coos.at(static_cast<std::size_t>(m_current));
@@ -26,5 +26,5 @@ private:
   mutable int           m_current{};
 };
 static_assert(glengine::Renderable<Coos>);
-}// namespace ff8
+}// namespace ff_8
 #endif// FIELD_MAP_EDITOR_COOS_HPP

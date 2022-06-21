@@ -1,22 +1,22 @@
 #include "VertexBufferDynamic.hpp"
 namespace glengine
 {
-void VertexBufferDynamic::Bind() const
+void VertexBufferDynamic::bind() const
 {
-  GLCall{}(glBindBuffer, GL_ARRAY_BUFFER, m_renderer_id);
+  GlCall{}(glBindBuffer, GL_ARRAY_BUFFER, m_renderer_id);
 }
 
-void VertexBufferDynamic::UnBind()
+void VertexBufferDynamic::unbind()
 {
-  GLCall{}(glBindBuffer, GL_ARRAY_BUFFER, 0U);
+  GlCall{}(glBindBuffer, GL_ARRAY_BUFFER, 0U);
 }
 
 VertexBufferDynamic::VertexBufferDynamic(size_t count)
   : m_renderer_id{ [&count]() -> std::uint32_t {
                     std::uint32_t tmp;
-                    GLCall{}(glGenBuffers, 1, &tmp);
-                    GLCall{}(glBindBuffer, GL_ARRAY_BUFFER, tmp);
-                    GLCall{}(
+                    GlCall{}(glGenBuffers, 1, &tmp);
+                    GlCall{}(glBindBuffer, GL_ARRAY_BUFFER, tmp);
+                    GlCall{}(
                       glBufferData,
                       GL_ARRAY_BUFFER,
                       static_cast<std::ptrdiff_t>(count * sizeof(Quad)),
@@ -25,8 +25,8 @@ VertexBufferDynamic::VertexBufferDynamic(size_t count)
                     return tmp;
                   }(),
                    [](const std::uint32_t id) {
-                     GLCall{}(glDeleteBuffers, 1, &id);
-                     VertexBufferDynamic::UnBind();
+                     GlCall{}(glDeleteBuffers, 1, &id);
+                     VertexBufferDynamic::unbind();
                    } }
   , m_max_size(count * 4U)
 {

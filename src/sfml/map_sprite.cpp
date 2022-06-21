@@ -397,7 +397,7 @@ void map_sprite::wait_for_futures() const
   auto              &&tile) const
 {
   using namespace open_viii::graphics::literals;
-  using tile_type    = std::decay_t<decltype(tile)>;
+  using tile_type    = std::remove_cvref_t<decltype(tile)>;
   auto       src_tpw = tile_type::texture_page_width(tile_const.depth());
   const auto x       = [this, &tile_const, &src_tpw]() -> std::uint32_t {
     if (m_filters.upscale.enabled())
@@ -517,7 +517,7 @@ template<typename key_lambdaT, typename weight_lambdaT>
         }
 
         using tileT =
-          std::decay_t<typename std::decay_t<decltype(tiles)>::value_type>;
+          std::remove_cvref_t<typename std::remove_cvref_t<decltype(tiles)>::value_type>;
         for (tileT *const tp : tps)
         {
           *tp = tp->with_source_xy(
@@ -1684,8 +1684,8 @@ std::vector<std::uint8_t>
   const auto palettes =
     m_maps.front().visit_tiles([&texture_page, this](const auto &tiles) {
       //        using tileT =
-      //          std::decay_t<typename
-      //          std::decay_t<decltype(tiles)>::value_type>;
+      //          std::remove_cvref_t<typename
+      //          std::remove_cvref_t<decltype(tiles)>::value_type>;
 
       auto map_xy_palette = generate_map(
         tiles,
@@ -2015,7 +2015,7 @@ void map_sprite::load_map(const std::filesystem::path &src_path) const
 {
   const auto filesize  = std::filesystem::file_size(src_path);
   const auto tilesize  = m_maps.const_back().visit_tiles([](auto &&tiles) {
-    return sizeof(typename std::decay_t<decltype(tiles)>::value_type);
+    return sizeof(typename std::remove_cvref_t<decltype(tiles)>::value_type);
   });
   const auto tilecount = m_maps.front().visit_tiles(
     [](const auto &tiles) { return std::size(tiles); });
@@ -2039,7 +2039,7 @@ void map_sprite::load_map(const std::filesystem::path &src_path) const
             // load tile
             std::array<char, sizeof(t)> data = {};
             os.read(data.data(), data.size());
-            t = std::bit_cast<std::decay_t<decltype(t)>>(data);
+            t = std::bit_cast<std::remove_cvref_t<decltype(t)>>(data);
 
             // shift to origin
             t = t.shift_xy(m_maps.const_back().offset().abs());
@@ -2138,7 +2138,7 @@ void map_sprite::save_modified_map(const std::filesystem::path &dest_path) const
 std::size_t map_sprite::size_of_map() const
 {
   return m_maps.back().visit_tiles([](const auto &tiles) {
-    using tile_type = typename std::decay_t<decltype(tiles)>::value_type;
+    using tile_type = typename std::remove_cvref_t<decltype(tiles)>::value_type;
     return std::ranges::size(tiles) * sizeof(tile_type);
   });
 };

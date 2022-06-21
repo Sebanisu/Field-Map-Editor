@@ -11,25 +11,25 @@ inline namespace impl
 {
   enum class BlendModeParameterEnum
   {
-    ZERO,
-    ONE,
-    SRC_COLOR,
-    ONE_MINUS_SRC_COLOR,
-    DST_COLOR,
-    ONE_MINUS_DST_COLOR,
-    SRC_ALPHA,
-    ONE_MINUS_SRC_ALPHA,
-    DST_ALPHA,
-    ONE_MINUS_DST_ALPHA,
-    CONSTANT_COLOR,
-    ONE_MINUS_CONSTANT_COLOR,
-    CONSTANT_ALPHA,
-    ONE_MINUS_CONSTANT_ALPHA,
-    SRC_ALPHA_SATURATE,
-    SRC1_COLOR,
-    ONE_MINUS_SRC_COLOR_,
-    SRC1_ALPHA,
-    ONE_MINUS_SRC1_ALPHA
+    Zero,
+    One,
+    SrcColor,
+    OneMinusSrcColor,
+    DstColor,
+    OneMinusDstColor,
+    SrcAlpha,
+    OneMinusSrcAlpha,
+    DstAlpha,
+    OneMinusDstAlpha,
+    ConstantColor,
+    OneMinusConstantColor,
+    ConstantAlpha,
+    OneMinusConstantAlpha,
+    SrcAlphaSaturate,
+    Src1Color,
+    OneMinusSrc1Color,
+    Src1Alpha,
+    OneMinusSrc1Alpha
   };
   consteval inline int operator+(BlendModeParameterEnum value)
   {
@@ -37,9 +37,7 @@ inline namespace impl
   }
   class BlendModeParameterStrings
   {
-  public:
-    constexpr auto operator()() const noexcept
-    {
+    static constexpr auto strings = []() {
       using namespace std::string_view_literals;
       return std::array{ "GL_ZERO"sv,// 0
                          "GL_ONE"sv,// 1
@@ -57,35 +55,43 @@ inline namespace impl
                          "GL_ONE_MINUS_CONSTANT_ALPHA"sv,// 13
                          "GL_SRC_ALPHA_SATURATE"sv,// 14
                          "GL_SRC1_COLOR"sv,// 15
-                         "GL_ONE_MINUS_SRC_COLOR"sv,// 16
+                         "GL_ONE_MINUS_SRC1_COLOR"sv,// 16
                          "GL_SRC1_ALPHA"sv,// 17
                          "GL_ONE_MINUS_SRC1_ALPHA"sv };// 18
+    }();
+
+  public:
+    constexpr const auto &operator()() const noexcept
+    {
+      return strings;
     }
   };
   class BlendModeParameterValues
   {
+    static constexpr auto values = std::array{ GL_ZERO,
+                                               GL_ONE,
+                                               GL_SRC_COLOR,
+                                               GL_ONE_MINUS_SRC_COLOR,
+                                               GL_DST_COLOR,
+                                               GL_ONE_MINUS_DST_COLOR,
+                                               GL_SRC_ALPHA,
+                                               GL_ONE_MINUS_SRC_ALPHA,
+                                               GL_DST_ALPHA,
+                                               GL_ONE_MINUS_DST_ALPHA,
+                                               GL_CONSTANT_COLOR,
+                                               GL_ONE_MINUS_CONSTANT_COLOR,
+                                               GL_CONSTANT_ALPHA,
+                                               GL_ONE_MINUS_CONSTANT_ALPHA,
+                                               GL_SRC_ALPHA_SATURATE,
+                                               GL_SRC1_COLOR,
+                                               GL_ONE_MINUS_SRC1_COLOR,
+                                               GL_SRC1_ALPHA,
+                                               GL_ONE_MINUS_SRC1_ALPHA };
+
   public:
-    constexpr auto operator()() const noexcept
+    constexpr const auto &operator()() const noexcept
     {
-      return std::array{ GL_ZERO,
-                         GL_ONE,
-                         GL_SRC_COLOR,
-                         GL_ONE_MINUS_SRC_COLOR,
-                         GL_DST_COLOR,
-                         GL_ONE_MINUS_DST_COLOR,
-                         GL_SRC_ALPHA,
-                         GL_ONE_MINUS_SRC_ALPHA,
-                         GL_DST_ALPHA,
-                         GL_ONE_MINUS_DST_ALPHA,
-                         GL_CONSTANT_COLOR,
-                         GL_ONE_MINUS_CONSTANT_COLOR,
-                         GL_CONSTANT_ALPHA,
-                         GL_ONE_MINUS_CONSTANT_ALPHA,
-                         GL_SRC_ALPHA_SATURATE,
-                         GL_SRC1_COLOR,
-                         GL_ONE_MINUS_SRC_COLOR,
-                         GL_SRC1_ALPHA,
-                         GL_ONE_MINUS_SRC1_ALPHA };
+      return values;
     }
   };
 }// namespace impl

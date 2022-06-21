@@ -2,50 +2,61 @@
 // Created by pcvii on 11/29/2021.
 //
 #include "TestBatchRendering.hpp"
+#include "Application.hpp"
 #include "ImGuiPushID.hpp"
 #include "Vertex.hpp"
-
+static constinit bool Preview = false;
 static_assert(glengine::Renderable<test::TestBatchRendering>);
-void test::TestBatchRendering::OnImGuiUpdate() const
+void test::TestBatchRendering::on_im_gui_update() const
 {
-  const float window_width = 16.F;
-  float       window_height =
-    window_width / m_imgui_viewport_window.ViewPortAspectRatio();
-
+  constexpr float window_width = 16.F;
+  float           window_height =
+    window_width / m_imgui_viewport_window.view_port_aspect_ratio();
+  m_imgui_viewport_window.set_image_bounds({ window_width, window_height });
+  constexpr float clamp_width  = window_width / 2.F - 1.F;
+  const float     clamp_height = window_height / 2.F - 1.F;
   {
-    const auto pop = glengine::ImGuiPushID();
-    if (ImGui::SliderFloat2("View Offset", &view_offset.x, 0.F, window_width))
+    const auto pop = glengine::ImGuiPushId();
+    if (ImGui::SliderFloat2(
+          "View Offset", &view_offset.x, -clamp_width, clamp_width))
     {
-      view_offset.y = std::clamp(view_offset.y, 0.F, window_height);
-    }
-  }
-  {
-    const auto pop = glengine::ImGuiPushID();
-    if (ImGui::SliderFloat2("Model Offset", &model_offset.x, 0.F, window_width))
-    {
-      model_offset.y = std::clamp(model_offset.y, 0.F, window_height);
+      view_offset.y = std::clamp(view_offset.y, -clamp_height, clamp_height);
     }
   }
 }
-void test::TestBatchRendering::OnRender() const
+void test::TestBatchRendering::on_render() const
 {
-  m_imgui_viewport_window.OnRender([this]() {
-    const float window_width = 16.F;
-    float       window_height =
-      window_width / m_imgui_viewport_window.ViewPortAspectRatio();
-    auto proj = glm::ortho(0.F, window_width, 0.F, window_height, -1.F, 1.F);
-    const auto view = glm::translate(glm::mat4{ 1.F }, view_offset);
-    m_shader.Bind();
-    {
-      const auto model = glm::translate(glm::mat4{ 1.F }, model_offset);
-      const auto mvp   = proj * view * model;
-      m_shader.SetUniform("u_MVP", mvp);
-      m_shader.SetUniform("u_Color", 1.F, 1.F, 1.F, 1.F);
-      // m_shader.SetUniform("u_Texture", 0);
-      glengine::Renderer::Draw(m_vertex_array, m_index_buffer);
-    }
+  m_imgui_viewport_window.on_render([this]() {
+    set_uniforms();
+    render_frame_buffer();
+  });
+
+  GetViewPortPreview().on_render(m_imgui_viewport_window.has_hover(), [this]() {
+    const auto pop_preview = glengine::ScopeGuard([]() { Preview = false; });
+    Preview                = true;
+    set_uniforms();
+    render_frame_buffer();
   });
 }
+void test::TestBatchRendering::set_uniforms() const
+{
+  const glm::mat4 mvp = [&]() {
+    if (Preview)
+    {
+      return m_imgui_viewport_window.preview_view_projection_matrix();
+    }
+    return m_imgui_viewport_window.view_projection_matrix();
+  }();
+  m_shader.bind();
+  m_shader.set_uniform("u_MVP", glm::translate(mvp, view_offset));
+  m_shader.set_uniform("u_Color", 1.F, 1.F, 1.F, 1.F);
+}
+void test::TestBatchRendering::render_frame_buffer() const
+{
+
+  glengine::Renderer::Draw(m_vertex_array, m_index_buffer);
+}
+
 test::TestBatchRendering::TestBatchRendering()
   : m_shader(
     std::filesystem::current_path() / "res" / "shader" / "basic2.shader")
@@ -68,16 +79,16 @@ test::TestBatchRendering::TestBatchRendering()
   auto vertices = std::vector(vertices_init.begin(), vertices_init.end());
   //    auto translate =
   //      glm::translate(glm::mat4{ 1.F }, glm::vec3{ 2.F, 0.F, 0.F });
-  for (std::size_t i = 1U; i != 3U; ++i)
+  for (int i = -1; const auto &color : colors)
+  {
     std::ranges::transform(
-      vertices_init.cbegin(),
-      vertices_init.cend(),
-      std::back_inserter(vertices),
-      [&colors, &i](Vertex vertex) {
+      vertices_init, std::back_inserter(vertices), [&i, &color](Vertex vertex) {
         vertex.location.x += 2.F * static_cast<float>(i);
-        vertex.color = colors[i];
+        vertex.color = color;
         return vertex;
       });
+    ++i;
+  }
   m_vertex_buffer       = glengine::VertexBuffer{ vertices };
   auto       indices    = std::vector(indices_init.begin(), indices_init.end());
   const auto quad_count = std::size(vertices) / std::size(vertices_init);
@@ -93,10 +104,10 @@ test::TestBatchRendering::TestBatchRendering()
   m_index_buffer = glengine::IndexBuffer{ indices };
 
 
-  m_vertex_array.Bind();
-  m_vertex_array.push_back(m_vertex_buffer, Vertex::Layout());
-  m_shader.Bind();
-  m_shader.SetUniform("u_Color", 1.F, 1.F, 1.F, 1.F);
-  // m_shader.SetUniform("u_Texture", 0);
+  m_vertex_array.bind();
+  m_vertex_array.push_back(m_vertex_buffer, Vertex::layout());
+  m_shader.bind();
+  m_shader.set_uniform("u_Color", 1.F, 1.F, 1.F, 1.F);
+  // m_shader.set_uniform("u_Texture", 0);
 }
 //#include "TestBatchRendering.hpp"

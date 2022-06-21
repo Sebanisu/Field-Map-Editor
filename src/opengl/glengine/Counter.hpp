@@ -18,7 +18,7 @@ inline namespace impl
     Counter() = default;
     explicit Counter(std::uint32_t);
     explicit operator std::uint32_t() const noexcept;
-    auto operator<=>(const Counter&) const = default;
+    auto     operator<=>(const Counter &) const = default;
 
   private:
     std::uint32_t                         m_counter = ++s_counter;

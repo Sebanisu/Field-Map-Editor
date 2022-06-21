@@ -12,21 +12,21 @@ static constexpr auto operator+(T e) noexcept
 {
   return static_cast<std::underlying_type_t<T>>(e);
 }
-bool Input::IsKeyPressed(KEY keycode)
+bool Input::is_key_pressed(Key keycode)
 {
   if (!m_window)
     return false;
   const int state = glfwGetKey(m_window, +keycode);
   return state == GLFW_PRESS || state == GLFW_REPEAT;
 }
-bool Input::IsMouseButtonPressed(MOUSE button)
+bool Input::is_mouse_button_pressed(Mouse button)
 {
   if (!m_window)
     return false;
   const int state = glfwGetMouseButton(m_window, +button);
   return state == GLFW_PRESS;
 }
-std::optional<const std::array<float, 2U>> Input::GetMousePosition()
+std::optional<const std::array<float, 2U>> Input::get_mouse_position()
 {
   if (!m_window)
     return std::nullopt;
@@ -34,17 +34,17 @@ std::optional<const std::array<float, 2U>> Input::GetMousePosition()
   glfwGetCursorPos(m_window, &pos[0], &pos[1]);
   return std::array{ static_cast<float>(pos[0]), static_cast<float>(pos[1]) };
 }
-std::optional<const float> Input::GetMouseX()
+std::optional<const float> Input::get_mouse_x()
 {
-  const auto pos = GetMousePosition();
+  const auto pos = get_mouse_position();
   if (!pos)
     return std::nullopt;
   const auto [x, y] = *pos;
   return x;
 }
-std::optional<const float> Input::GetMouseY()
+std::optional<const float> Input::get_mouse_y()
 {
-  const auto pos = GetMousePosition();
+  const auto pos = get_mouse_position();
   if (!pos)
     return std::nullopt;
   const auto [x, y] = *pos;

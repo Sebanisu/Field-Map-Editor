@@ -2,42 +2,42 @@
 // Created by pcvii on 12/5/2021.
 //
 
-#ifndef FIELD_MAP_EDITOR_UNIQUE_VALUE_HPP
-#define FIELD_MAP_EDITOR_UNIQUE_VALUE_HPP
+#ifndef FIELD_MAP_EDITOR_UNIQUEVALUE_HPP
+#define FIELD_MAP_EDITOR_UNIQUEVALUE_HPP
 namespace glengine
 {
 template<typename T>
-class weak_value;
+class WeakValue;
 template<typename T>
-class unique_value
+class UniqueValue
 {
 public:
-  constexpr unique_value() = default;
-  constexpr unique_value(T t, void (*f)(T))
+  constexpr UniqueValue() = default;
+  constexpr UniqueValue(T t, void (*f)(T))
     : m_value(std::move(t))
     , m_function(std::move(f))
   {
   }
-  unique_value(const unique_value &) = delete;
-  constexpr ~unique_value() noexcept
+  UniqueValue(const UniqueValue &) = delete;
+  constexpr ~UniqueValue() noexcept
   {
     if (m_function != nullptr)
     {
       std::invoke(m_function, std::move(m_value));
     }
   }
-  constexpr unique_value(unique_value &&other) noexcept
-    : unique_value()
+  constexpr UniqueValue(UniqueValue &&other) noexcept
+    : UniqueValue()
   {
     swap(*this, other);
   }
-  constexpr unique_value &operator=(const unique_value &) = delete;
-  constexpr unique_value &operator=(unique_value &&other) noexcept
+  constexpr UniqueValue &operator=(const UniqueValue &) = delete;
+  constexpr UniqueValue &operator=(UniqueValue &&other) noexcept
   {
     swap(*this, other);
     return *this;
   }
-  friend constexpr void swap(unique_value &left, unique_value &right) noexcept
+  friend constexpr void swap(UniqueValue &left, UniqueValue &right) noexcept
   {
     using std::swap;
     swap(left.m_value, right.m_value);
@@ -48,58 +48,58 @@ public:
   {
     return m_value;
   }
-  friend weak_value<T>;
+  friend WeakValue<T>;
 
 private:
   T m_value             = {};
   void (*m_function)(T) = nullptr;
 };
-using GLID = unique_value<std::uint32_t>;
-static_assert(std::movable<GLID> && !std::copyable<GLID>);
-static_assert(GLID(1, [](std::uint32_t) {}) == std::uint32_t{ 1 });
+using Glid = UniqueValue<std::uint32_t>;
+static_assert(std::movable<Glid> && !std::copyable<Glid>);
+static_assert(Glid(1, [](std::uint32_t) {}) == std::uint32_t{ 1 });
 
 template<typename T, std::size_t sizeT>
-class unique_value_array
+class UniqueValueArray
 {
 public:
   using ValueT          = std::array<T, sizeT>;
   using ParameterT      = ValueT &;
   using ConstParameterT = const ValueT &;
-  unique_value_array()  = default;
+  UniqueValueArray()    = default;
   template<decay_same_as<T>... Us>
-  constexpr unique_value_array(void (*destroy)(ParameterT), Us... ts)
+  constexpr UniqueValueArray(void (*destroy)(ParameterT), Us... ts)
     : m_value{ std::forward<Us>(ts)... }
     , m_function(std::move(destroy))
   {
   }
   template<std::invocable createT>
-  requires decay_same_as<ValueT, std::invoke_result_t<createT>>
-  constexpr unique_value_array(void (*destroy)(ParameterT), createT &&create)
+    requires decay_same_as<ValueT, std::invoke_result_t<createT>>
+  constexpr UniqueValueArray(void (*destroy)(ParameterT), createT &&create)
     : m_value(std::invoke(create))
     , m_function(move(destroy))
   {
   }
-  constexpr ~unique_value_array() noexcept
+  constexpr ~UniqueValueArray() noexcept
   {
     if (m_function != nullptr)
     {
       std::invoke(m_function, m_value);
     }
   }
-  unique_value_array(const unique_value_array &) = delete;
-  unique_value_array &operator=(const unique_value_array &) = delete;
-  constexpr unique_value_array(unique_value_array &&other) noexcept
-    : unique_value_array()
+  UniqueValueArray(const UniqueValueArray &)            = delete;
+  UniqueValueArray &operator=(const UniqueValueArray &) = delete;
+  constexpr UniqueValueArray(UniqueValueArray &&other) noexcept
+    : UniqueValueArray()
   {
     swap(*this, other);
   }
-  constexpr unique_value_array &operator=(unique_value_array &&other) noexcept
+  constexpr UniqueValueArray &operator=(UniqueValueArray &&other) noexcept
   {
     swap(*this, other);
     return *this;
   }
   constexpr friend void
-    swap(unique_value_array &left, unique_value_array &right) noexcept
+    swap(UniqueValueArray &left, UniqueValueArray &right) noexcept
   {
     using std::swap;
     swap(left.m_value, right.m_value);
@@ -141,64 +141,64 @@ public:
   {
     return m_value;
   }
-  friend weak_value<ValueT>;
+  friend WeakValue<ValueT>;
 
 private:
   ValueT m_value                 = {};
   void (*m_function)(ParameterT) = nullptr;
 };
 template<typename T, decay_same_as<T>... Ts>
-unique_value_array(void (*)(std::array<T, sizeof...(Ts) + 1U> &), T, Ts...)
-  -> unique_value_array<T, sizeof...(Ts) + 1U>;
+UniqueValueArray(void (*)(std::array<T, sizeof...(Ts) + 1U> &), T, Ts...)
+  -> UniqueValueArray<T, sizeof...(Ts) + 1U>;
 
 template<std::invocable CreatorT>
-unique_value_array(void (*)(std::invoke_result_t<CreatorT> &), CreatorT)
-  -> unique_value_array<
+UniqueValueArray(void (*)(std::invoke_result_t<CreatorT> &), CreatorT)
+  -> UniqueValueArray<
     typename std::invoke_result_t<CreatorT>::value_type,
     std::ranges::size(typename std::invoke_result_t<CreatorT>{})>;
 template<std::size_t sizeT>
-using GLID_array = unique_value_array<std::uint32_t, sizeT>;
-static_assert(std::movable<GLID_array<1>> && !std::copyable<GLID_array<1>>);
+using GlidArray = UniqueValueArray<std::uint32_t, sizeT>;
+static_assert(std::movable<GlidArray<1>> && !std::copyable<GlidArray<1>>);
 static_assert(
   static_cast<std::array<std::uint32_t, 1>>(
-    GLID_array<1>([](GLID_array<1>::ParameterT) {}, 1U))
+    GlidArray<1>([](GlidArray<1>::ParameterT) {}, 1U))
   == std::array{ 1U });
 static_assert(
-  static_cast<std::array<std::uint32_t, 1>>(GLID_array<1>(
-    [](GLID_array<1>::ParameterT) {},
+  static_cast<std::array<std::uint32_t, 1>>(GlidArray<1>(
+    [](GlidArray<1>::ParameterT) {},
     []() {
-      GLID_array<1>::ValueT out{};
+      GlidArray<1>::ValueT out{};
       out[0] = 1U;
       return out;
     }))
   == std::array{ 1U });
 static_assert(
-  static_cast<std::array<std::uint32_t, 1>>(unique_value_array(
-    [](GLID_array<1>::ParameterT) {},
+  static_cast<std::array<std::uint32_t, 1>>(UniqueValueArray(
+    [](GlidArray<1>::ParameterT) {},
     []() {
-      GLID_array<1>::ValueT out{};
+      GlidArray<1>::ValueT out{};
       out[0] = 1U;
       return out;
     }))
   == std::array{ 1U });
 template<typename T, std::invocable<T> F>
-unique_value(T t, F f) -> unique_value<T>;
+UniqueValue(T t, F f) -> UniqueValue<T>;
 template<typename T, typename U, std::size_t Usz>
 concept array_type_and_size_are_same =
-  decay_same_as<std::ranges::range_value_t<T>, U> && std::ranges::size(T{})
-== Usz;
+  decay_same_as < std::ranges::range_value_t<T>,
+U > &&std::ranges::size(T{}) == Usz;
 template<typename T>
-class weak_value
+class WeakValue
 {
 public:
-  constexpr weak_value() = default;
-  constexpr weak_value(const unique_value<T> &t)
+  constexpr WeakValue() = default;
+  constexpr WeakValue(const UniqueValue<T> &t)
     : m_value(t.m_value)
   {
   }
   template<typename U, std::size_t Usz>
-  requires array_type_and_size_are_same<T, U, Usz>
-  constexpr weak_value(const unique_value_array<U, Usz> &t)
+    requires array_type_and_size_are_same<T, U, Usz>
+  constexpr WeakValue(const UniqueValueArray<U, Usz> &t)
     : m_value(t.m_value)
   {
   }
@@ -210,13 +210,13 @@ public:
 private:
   T m_value = {};
 };
-using GLID_copy = weak_value<std::uint32_t>;
-static_assert(std::movable<GLID_copy> && std::copyable<GLID_copy>);
-static_assert(GLID_copy{ GLID(1, [](std::uint32_t) {}) } == std::uint32_t{ 1 });
+using GlidCopy = WeakValue<std::uint32_t>;
+static_assert(std::movable<GlidCopy> && std::copyable<GlidCopy>);
+static_assert(GlidCopy{ Glid(1, [](std::uint32_t) {}) } == std::uint32_t{ 1 });
 static_assert(
   static_cast<std::array<std::uint32_t, 1U>>(
-    weak_value<std::array<std::uint32_t, 1U>>{
-      GLID_array<1U>([](typename GLID_array<1U>::ParameterT) {}, 1U) })
+    WeakValue<std::array<std::uint32_t, 1U>>{
+      GlidArray<1U>([](typename GlidArray<1U>::ParameterT) {}, 1U) })
   == std::array{ 1U });
 }// namespace glengine
-#endif// FIELD_MAP_EDITOR_UNIQUE_VALUE_HPP
+#endif// FIELD_MAP_EDITOR_UNIQUEVALUE_HPP

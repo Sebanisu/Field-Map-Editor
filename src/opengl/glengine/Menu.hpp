@@ -10,13 +10,13 @@ namespace glengine
 {
 template<typename T>
 concept is_MenuElementType =
-  Renderable<typename std::decay_t<
-    T>::value_type> && requires(const T &t) {
-                         typename std::decay_t<T>::value_type;
-                         {
-                           t.name
-                           } -> decay_same_as<std::string>;
-                       };
+  Renderable<typename std::remove_cvref_t<
+    T>::ValueType> && requires(const T &t) {
+                        typename std::remove_cvref_t<T>::ValueType;
+                        {
+                          t.name
+                          } -> decay_same_as<std::string>;
+                      };
 
 class Menu
 {
@@ -26,13 +26,14 @@ public:
   Menu(T &&...t)
     : Menu()
   {
-    ((void)push_back<typename std::decay_t<T>::value_type>(std::move(t.name)),
+    ((void)push_back<typename std::remove_cvref_t<T>::ValueType>(
+       std::move(t.name)),
      ...);
   }
   template<Renderable T>
   struct MenuElementType
   {
-    using value_type = T;
+    using ValueType = T;
     std::string name;
   };
 
@@ -40,10 +41,10 @@ public:
   Menu &operator=(const Menu &other) noexcept = delete;
   Menu(Menu &&other) noexcept                 = default;
   Menu &operator=(Menu &&other) noexcept      = default;
-  void  OnUpdate(float) const;
-  void  OnRender() const;
-  void  OnImGuiUpdate() const;
-  void  OnEvent(const Event::Item &) const;
+  void  on_update(float) const;
+  void  on_render() const;
+  void  on_im_gui_update() const;
+  void  on_event(const event::Item &) const;
   template<Renderable T>
   void push_back(std::string name) const
   {

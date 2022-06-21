@@ -3,21 +3,20 @@
 //
 #include "Menu.hpp"
 #include "ImGuiIndent.hpp"
-#include "ImGuiPushID.hpp"
 namespace glengine
 {
 static_assert(Renderable<Menu>);
-void Menu::OnRender() const
+void Menu::on_render() const
 {
   for (auto &current : m_current)
   {
     if (current)
     {
-      current.OnRender();
+      current.on_render();
     }
   }
 }
-void Menu::OnImGuiUpdate() const
+void Menu::on_im_gui_update() const
 {
   for (std::size_t i = {}; const auto &[name, funt] : m_list)
   {
@@ -27,7 +26,7 @@ void Menu::OnImGuiUpdate() const
       if (!m_current[i])
         m_current[i] = funt();
       const auto un_indent = ImGuiIndent();
-      m_current[i].OnImGuiUpdate();
+      m_current[i].on_im_gui_update();
     }
     else if (m_current[i])
     {
@@ -37,13 +36,13 @@ void Menu::OnImGuiUpdate() const
   }
 }
 
-void Menu::OnUpdate(float delta_time) const
+void Menu::on_update(float delta_time) const
 {
   for (auto &current : m_current)
   {
     if (current)
     {
-      current.OnUpdate(delta_time);
+      current.on_update(delta_time);
     }
   }
 }
@@ -59,13 +58,13 @@ Menu::Menu()
 {
 }
 
-void Menu::OnEvent(const Event::Item &e) const
+void Menu::on_event(const event::Item &e) const
 {
   for (auto &current : m_current)
   {
     if (current)
     {
-      current.OnEvent(e);
+      current.on_event(e);
     }
   }
 }

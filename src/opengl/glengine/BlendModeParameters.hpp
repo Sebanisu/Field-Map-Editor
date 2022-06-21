@@ -11,11 +11,15 @@ inline namespace impl
 {
   class BlendModeParametersStrings
   {
-  public:
-    constexpr auto operator()() const noexcept
-    {
+    static constexpr auto strings = []() {
       using namespace std::string_view_literals;
       return std::array{ "srcRGB"sv, "dstRGB"sv, "srcAlpha"sv, "dstAlpha"sv };
+    }();
+
+  public:
+    constexpr const auto &operator()() const noexcept
+    {
+      return strings;
     }
   };
   using BlendModeParameters =

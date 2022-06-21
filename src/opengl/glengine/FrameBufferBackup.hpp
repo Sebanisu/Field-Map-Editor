@@ -5,7 +5,7 @@
 #ifndef FIELD_MAP_EDITOR_FRAMEBUFFERBACKUP_HPP
 #define FIELD_MAP_EDITOR_FRAMEBUFFERBACKUP_HPP
 #include "GLCheck.hpp"
-#include "unique_value.hpp"
+#include "UniqueValue.hpp"
 namespace glengine
 {
 /**
@@ -13,7 +13,7 @@ namespace glengine
  */
 class [[nodiscard]] FrameBufferBackup
 {
-  GLID m_render_id = {};
+  Glid m_render_id = {};
 
 public:
   FrameBufferBackup();

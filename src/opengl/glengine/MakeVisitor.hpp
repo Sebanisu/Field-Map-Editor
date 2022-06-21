@@ -7,9 +7,9 @@
 namespace glengine
 {
 template<typename... B>
-[[nodiscard]] inline constexpr auto make_visitor(B &&...b) noexcept
+[[nodiscard]] inline constexpr auto MakeVisitor(B &&...b) noexcept
 {
-  struct visitor final : public std::decay_t<B>...
+  struct visitor final : public std::remove_cvref_t<B>...
   {
     using B::operator()...;
   };

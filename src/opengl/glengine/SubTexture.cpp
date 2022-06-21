@@ -3,16 +3,16 @@
 //
 
 #include "SubTexture.hpp"
-void glengine::SubTexture::Bind(std::int32_t slot) const
+void glengine::SubTexture::bind(std::int32_t slot) const
 {
-  GLCall{}(glActiveTexture, static_cast<GLenum>(GL_TEXTURE0 + slot));
-  GLCall{}(glBindTexture, GL_TEXTURE_2D, m_render_id);
+  GlCall{}(glActiveTexture, static_cast<GLenum>(GL_TEXTURE0 + slot));
+  GlCall{}(glBindTexture, GL_TEXTURE_2D, m_render_id);
 }
-void glengine::SubTexture::UnBind()
+void glengine::SubTexture::unbind()
 {
-  Texture::UnBind();
+  Texture::unbind();
 }
-glengine::SubTexture glengine::SubTexture::CreateFromCoords(
+glengine::SubTexture glengine::SubTexture::create_from_coords(
   const Texture   &texture,
   const glm::vec2 &coords,
   const glm::vec2 &cell_size,
@@ -33,7 +33,7 @@ glengine::SubTexture::SubTexture(
   const Texture   &texture,
   const glm::vec2 &min,
   const glm::vec2 &max)
-  : m_render_id(texture.ID())
+  : m_render_id(texture.id())
   , m_width(texture.width())
   , m_height(texture.height())
   , m_uv{ (glm::vec2{ min.x, min.y }),
@@ -43,27 +43,27 @@ glengine::SubTexture::SubTexture(
 {
 }
 
-static constexpr GLint miplevel = {};
+static constexpr GLint Miplevel = {};
 glengine::SubTexture::SubTexture(const Texture &texture)
-  : m_render_id(texture.ID())
+  : m_render_id(texture.id())
   , m_width(texture.width())
   , m_height(texture.height())
 {
 }
-glengine::SubTexture::SubTexture(GLID_copy id)
+glengine::SubTexture::SubTexture(GlidCopy id)
   : m_render_id(std::move(id))
 {
-  Bind();
-  GLCall{}(
+  bind();
+  GlCall{}(
     glGetTexLevelParameteriv,
     GL_TEXTURE_2D,
-    miplevel,
+    Miplevel,
     GL_TEXTURE_WIDTH,
     &m_width);
-  GLCall{}(
+  GlCall{}(
     glGetTexLevelParameteriv,
     GL_TEXTURE_2D,
-    miplevel,
+    Miplevel,
     GL_TEXTURE_HEIGHT,
     &m_height);
 }

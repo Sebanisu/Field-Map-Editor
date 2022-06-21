@@ -17,10 +17,10 @@ test::TestBatchQuads::TestBatchQuads()
   : m_shader(
     std::filesystem::current_path() / "res" / "shader" / "basic3.shader")
 {
-  m_vertex_array.Bind();
-  m_vertex_array.push_back(m_vertex_buffer, Vertex::Layout());
-  m_shader.Bind();
-  m_shader.SetUniform("u_Color", 1.F, 1.F, 1.F, 1.F);
+  m_vertex_array.bind();
+  m_vertex_array.push_back(m_vertex_buffer, Vertex::layout());
+  m_shader.bind();
+  m_shader.set_uniform("u_Color", 1.F, 1.F, 1.F, 1.F);
 }
 namespace test
 {
@@ -31,17 +31,17 @@ static std::vector<Vertex> vertices = []() {
 }();
 static std::uint32_t draw_count = 0U;
 }// namespace test
-void test::TestBatchQuads::OnUpdate(float ts) const
+void test::TestBatchQuads::on_update(float ts) const
 {
   draw_count = 0U;
-  m_imgui_viewport_window.SetImageBounds({ m_count[0], m_count[1] });
-  m_imgui_viewport_window.OnUpdate(ts);
-  m_imgui_viewport_window.Fit(fit_width, fit_height);
+  m_imgui_viewport_window.set_image_bounds({ m_count[0], m_count[1] });
+  m_imgui_viewport_window.on_update(ts);
+  m_imgui_viewport_window.fit(fit_width, fit_height);
 }
 void test::TestBatchQuads::GenerateQuads() const
 {
   const auto flush = [this]() {
-    index_buffer_size = m_vertex_buffer.Update(vertices);
+    index_buffer_size = m_vertex_buffer.update(vertices);
     Draw();
     vertices.clear();
   };
@@ -68,32 +68,32 @@ void test::TestBatchQuads::GenerateQuads() const
     }
   }
 
-  index_buffer_size = m_vertex_buffer.Update(vertices);
+  index_buffer_size = m_vertex_buffer.update(vertices);
 }
-void test::TestBatchQuads::OnRender() const
+void test::TestBatchQuads::on_render() const
 {
-  SetUniforms();
-  m_imgui_viewport_window.OnRender([&]() { GenerateQuads(); });
-  GetViewPortPreview().OnRender(m_imgui_viewport_window.HasHover(), [this]() {
+  set_uniforms();
+  m_imgui_viewport_window.on_render([&]() { GenerateQuads(); });
+  GetViewPortPreview().on_render(m_imgui_viewport_window.has_hover(), [this]() {
     preview = true;
-    SetUniforms();
+    set_uniforms();
     GenerateQuads();
     preview = false;
   });
 }
-void test::TestBatchQuads::OnImGuiUpdate() const
+void test::TestBatchQuads::on_im_gui_update() const
 {
   static constexpr float window_width = 100.F;
   const float            window_height =
-    window_width / m_imgui_viewport_window.ViewPortAspectRatio();
+    window_width / m_imgui_viewport_window.view_port_aspect_ratio();
   {
-    const auto pop = glengine::ImGuiPushID();
+    const auto pop = glengine::ImGuiPushId();
 
-    ImGui::Checkbox("Fit Height", &fit_height);
-    ImGui::Checkbox("Fit Width", &fit_width);
+    ImGui::Checkbox("fit Height", &fit_height);
+    ImGui::Checkbox("fit Width", &fit_width);
   }
   {
-    const auto pop = glengine::ImGuiPushID();
+    const auto pop = glengine::ImGuiPushId();
     if (ImGui::SliderFloat2(
           "View Offset", &view_offset.x, -window_width, window_width))
     {
@@ -101,7 +101,7 @@ void test::TestBatchQuads::OnImGuiUpdate() const
     }
   }
   {
-    const auto pop3 = glengine::ImGuiPushID();
+    const auto pop3 = glengine::ImGuiPushId();
     if (ImGui::SliderInt2("Quad (X, Y)", std::data(m_count), 0, 256))
     {
     }
@@ -119,7 +119,7 @@ void test::TestBatchQuads::OnImGuiUpdate() const
       .c_str());
   ImGui::Text("%s", fmt::format("Total Draws: {}", test::draw_count).c_str());
   ImGui::Separator();
-  m_imgui_viewport_window.OnImGuiUpdate();
+  m_imgui_viewport_window.on_im_gui_update();
 }
 void test::TestBatchQuads::Draw() const
 {
@@ -127,22 +127,22 @@ void test::TestBatchQuads::Draw() const
   {
     return;
   }
-  m_blank.Bind(0);
-  m_shader.SetUniform("u_Textures", std::array{ 0 });
+  m_blank.bind(0);
+  m_shader.set_uniform("u_Textures", std::array{ 0 });
   glengine::Renderer::Draw(index_buffer_size, m_vertex_array, m_index_buffer);
   ++draw_count;
 }
-void test::TestBatchQuads::OnEvent(const glengine::Event::Item &) const {}
-void test::TestBatchQuads::SetUniforms() const
+void test::TestBatchQuads::on_event(const glengine::event::Item &) const {}
+void test::TestBatchQuads::set_uniforms() const
 {
   const glm::mat4 mvp = [&]() {
     if (preview)
     {
-      return m_imgui_viewport_window.PreviewViewProjectionMatrix();
+      return m_imgui_viewport_window.preview_view_projection_matrix();
     }
-    return m_imgui_viewport_window.ViewProjectionMatrix();
+    return m_imgui_viewport_window.view_projection_matrix();
   }();
-  m_shader.Bind();
-  m_shader.SetUniform("u_MVP", glm::translate(mvp,view_offset));
-  m_shader.SetUniform("u_Color", 1.F, 1.F, 1.F, 1.F);
+  m_shader.bind();
+  m_shader.set_uniform("u_MVP", glm::translate(mvp, view_offset));
+  m_shader.set_uniform("u_Color", 1.F, 1.F, 1.F, 1.F);
 }

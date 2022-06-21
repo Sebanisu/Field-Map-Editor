@@ -10,7 +10,7 @@
 #include "Mim.hpp"
 #include "Texture.hpp"
 #include "tile_operations.hpp"
-namespace ff8
+namespace ff_8
 {
 struct TileFunctionsUpscaleSwizzle
 {
@@ -23,5 +23,5 @@ struct TileFunctionsUpscaleSwizzle
 };
 using MapUpscaleSwizzle = Map<TileFunctionsUpscaleSwizzle>;
 static_assert(glengine::Renderable<MapUpscaleSwizzle>);
-}// namespace ff8
+}// namespace ff_8
 #endif// FIELD_MAP_EDITOR_MAPUPSCALESWIZZLE_HPP

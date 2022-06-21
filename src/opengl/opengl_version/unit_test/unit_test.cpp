@@ -2,7 +2,5 @@
 int main()
 {
   using namespace boost::ut;
-  "boo"_test = []()
-  {
-  };
+  "boo"_test = []() {};
 }

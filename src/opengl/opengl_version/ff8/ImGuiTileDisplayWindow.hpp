@@ -5,8 +5,8 @@
 #ifndef FIELD_MAP_EDITOR_IMGUITILEDISPLAYWINDOW_HPP
 #define FIELD_MAP_EDITOR_IMGUITILEDISPLAYWINDOW_HPP
 #include <Counter.hpp>
-#include <scope_guard.hpp>
-namespace ff8
+#include <ScopeGuard.hpp>
+namespace ff_8
 {
 /**
  * ImGui Tile Display Window
@@ -22,26 +22,27 @@ public:
   ImGuiTileDisplayWindow &
     operator=(ImGuiTileDisplayWindow &&) noexcept = default;
   ~ImGuiTileDisplayWindow();
-  void        OnUpdate(float) const;
-  void        OnImGuiUpdate() const;
-  void        OnEvent(const glengine::Event::Item &) const;
-  void        OnRender() const;
+  void        on_update(float) const;
+  void        on_im_gui_update() const;
+  void        on_event(const glengine::event::Item &) const;
+  void        on_render() const;
   static void TakeControl(const bool has_hover, const glengine::Counter id);
   static bool OnImGuiUpdateForward(auto &&...params)
   {
     if (GetWindow())
     {
-      return GetWindow()->OnImGuiUpdate(
+      return GetWindow()->on_im_gui_update(
         std::forward<decltype(params)>(params)...);
     }
     return false;
   }
-  bool OnImGuiUpdate(const glengine::Counter id, std::invocable auto &&function)
-    const
+  bool on_im_gui_update(
+    const glengine::Counter id,
+    std::invocable auto   &&function) const
   {
     if (m_drawn || m_current_id != id)
       return false;
-    const auto the_end = glengine::scope_guard{ []() { ImGui::End(); } };
+    const auto the_end = glengine::ScopeGuard{ []() { ImGui::End(); } };
     if (ImGui::Begin(s_title))
     {
       m_drawn = true;
@@ -58,5 +59,5 @@ private:
   mutable glengine::Counter       m_current_id = glengine::Counter{ 0U };
 };
 static_assert(glengine::Renderable<ImGuiTileDisplayWindow>);
-}// namespace ff8
+}// namespace ff_8
 #endif// FIELD_MAP_EDITOR_IMGUITILEDISPLAYWINDOW_HPP

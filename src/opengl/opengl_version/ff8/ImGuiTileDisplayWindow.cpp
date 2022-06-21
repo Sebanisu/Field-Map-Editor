@@ -3,20 +3,20 @@
 //
 
 #include "ImGuiTileDisplayWindow.hpp"
-static constinit ff8::ImGuiTileDisplayWindow *current_window = nullptr;
-void ff8::ImGuiTileDisplayWindow::OnUpdate(float) const
+static constinit ff_8::ImGuiTileDisplayWindow *current_window = nullptr;
+void ff_8::ImGuiTileDisplayWindow::on_update(float) const
 {
   m_drawn = false;
 }
-void ff8::ImGuiTileDisplayWindow::OnRender() const {}
-void ff8::ImGuiTileDisplayWindow::OnImGuiUpdate() const
+void ff_8::ImGuiTileDisplayWindow::on_render() const {}
+void ff_8::ImGuiTileDisplayWindow::on_im_gui_update() const
 {
-  OnImGuiUpdate(m_current_id, []() {});
+  on_im_gui_update(m_current_id, []() {});
 }
-void ff8::ImGuiTileDisplayWindow::OnEvent(const glengine::Event::Item &) const
+void ff_8::ImGuiTileDisplayWindow::on_event(const glengine::event::Item &) const
 {
 }
-void ff8::ImGuiTileDisplayWindow::TakeControl(
+void ff_8::ImGuiTileDisplayWindow::TakeControl(
   const bool              has_hover,
   const glengine::Counter id)
 {
@@ -25,15 +25,15 @@ void ff8::ImGuiTileDisplayWindow::TakeControl(
     current_window->m_current_id = id;
   }
 }
-ff8::ImGuiTileDisplayWindow::~ImGuiTileDisplayWindow()
+ff_8::ImGuiTileDisplayWindow::~ImGuiTileDisplayWindow()
 {
   current_window = nullptr;
 }
-ff8::ImGuiTileDisplayWindow::ImGuiTileDisplayWindow()
+ff_8::ImGuiTileDisplayWindow::ImGuiTileDisplayWindow()
 {
   current_window = this;
 }
-ff8::ImGuiTileDisplayWindow *ff8::ImGuiTileDisplayWindow::GetWindow()
+ff_8::ImGuiTileDisplayWindow *ff_8::ImGuiTileDisplayWindow::GetWindow()
 {
   return current_window;
 }

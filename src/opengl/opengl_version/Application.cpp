@@ -10,75 +10,75 @@
 #include "Renderer.hpp"
 #include "test/LayerTests.hpp"
 #include "TimeStep.hpp"
-#include <ff8/ImGuiTileDisplayWindow.hpp>
 
-static glengine::Window        *current_window     = nullptr;
-static ff8::Fields             *fields             = nullptr;
-glengine::ImGuiViewPortPreview *preview            = {};
-static constinit bool           running            = true;
-static constinit bool           minimize           = false;
-static ImVec2                   viewport_size      = {};
-static constinit glm::vec4      viewport_mouse_pos = {};
-static bool OnWindowClose(const glengine::Event::WindowClose &)
+[[maybe_unused]] static constinit glengine::Window *GlobalCurrentWindow =
+  nullptr;
+static constinit ff_8::Fields                   *GlobalFields       = nullptr;
+static constinit glengine::ImGuiViewPortPreview *GlobalPreview      = {};
+static constinit bool                            GlobalRunning      = true;
+static constinit bool                            GlobalMinimize     = false;
+[[maybe_unused]] static ImVec2                   GlobalViewportSize = {};
+[[maybe_unused]] static constinit glm::vec4      GlobalViewportMousePos = {};
+static bool OnWindowClose(const glengine::event::WindowClose &)
 {
-  running = false;
+  GlobalRunning = false;
   return true;
 }
-static bool OnWindowResize(const glengine::Event::WindowResize &e)
+static bool OnWindowResize(const glengine::event::WindowResize &e)
 {
-  minimize = e.Width() == 0 or e.Height() == 0;
+  GlobalMinimize = e.width() == 0 or e.height() == 0;
   return true;
 }
 
-Application::Application(std::string Title, int width, int height)
-  : window(glengine::Window::Create(glengine::Window::WindowData{
-    .Title          = std::move(Title),
+Application::Application(std::string title, int width, int height)
+  : window(glengine::Window::create(glengine::Window::WindowData{
+    .title          = std::move(title),
     .width          = std::move(width),
     .height         = std::move(height),
-    .event_callback = [&](const glengine::Event::Item &e) {
-      const glengine::Event::Dispatcher dispatcher = { e };
+    .event_callback = [&](const glengine::event::Item &e) {
+      const glengine::event::Dispatcher dispatcher = { e };
       [[maybe_unused]]const bool skip
-            =(glengine::Event::HasFlag(e.category(),glengine::Event::Category::Mouse)
+            =(glengine::event::HasFlag(e.category(),glengine::event::Category::Mouse)
                          && ImGui::GetIO().WantCaptureMouse)
                         ||
-                        (glengine::Event::HasFlag(e.category(),glengine::Event::Category::Keyboard)
+                        (glengine::event::HasFlag(e.category(),glengine::event::Category::Keyboard)
                             && ImGui::GetIO().WantCaptureKeyboard);
 
-      dispatcher.Dispatch<glengine::Event::WindowClose>(&OnWindowClose);
-      dispatcher.Dispatch<glengine::Event::WindowResize>(&OnWindowResize);
-      layers.OnEvent(e);
-      local_preview.OnEvent(e);
-      local_tile_display.OnEvent(e);
+      dispatcher.Dispatch<glengine::event::WindowClose>(&OnWindowClose);
+      dispatcher.Dispatch<glengine::event::WindowResize>(&OnWindowResize);
+      layers.on_event(e);
+      local_preview.on_event(e);
+      local_tile_display.on_event(e);
       if (skip)
       {
         return;
       }
-      fmt::print("Event::{}\t{}\t{}\n", e.Name(), e.CategoryName(), e.Data());
+      spdlog::debug("event::{}\t{}\t{}", e.name(), e.category_name(), e.data());
     } }))
 {
   layers.emplace_layers(std::in_place_type_t<Layer::Tests>{});
-  preview = &local_preview;
-  fields  = &local_fields;
+  GlobalPreview = &local_preview;
+  GlobalFields  = &local_fields;
 }
-void Application::Run() const
+void Application::run() const
 {
-  SetCurrentWindow();
+  set_current_window();
   const glengine::TimeStep      time_step = {};
   glengine::FrameBufferRenderer fbr       = {};
   // auto                          last      = glengine::TimeStep::now();
   using namespace std::chrono_literals;
   glengine::FrameBuffer fb;// needed to be inscope somewhere because texture was
                            // being erased before it was drawn.
-  while (running)
+  while (GlobalRunning)
   {
-    window->BeginFrame();// First thing you do on update;
-    if (!minimize)
+    window->begin_frame();// First thing you do on update;
+    if (!GlobalMinimize)
     {
       glengine::Renderer::Clear.Color({ 0.F, 0.F, 0.F, 0.F });
       glengine::Renderer::Clear();
 
 
-      window->RenderDockspace();
+      window->render_dockspace();
 #if 0
       static bool show_demo_window = true;
       if (show_demo_window)
@@ -87,36 +87,36 @@ void Application::Run() const
       // constinit static std::size_t test_number = 0U;
       {
         float step = time_step;// takes the current time when you get a float.
-        local_tile_display.OnUpdate(step);
-        local_preview.OnUpdate(step);
-        layers.OnImGuiUpdate();
-        local_preview.OnImGuiUpdate();
-        local_tile_display.OnImGuiUpdate();
-        layers.OnUpdate(step);
+        local_tile_display.on_update(step);
+        local_preview.on_update(step);
+        layers.on_im_gui_update();
+        local_preview.on_im_gui_update();
+        local_tile_display.on_im_gui_update();
+        layers.on_update(step);
       }
       glengine::Renderer::Clear();
-      layers.OnRender();
-      preview->OnRender();
-      local_tile_display.OnRender();
+      layers.on_render();
+      GlobalPreview->on_render();
+      local_tile_display.on_render();
 #endif
-      window->EndFrameRendered();// Last thing you do on render;
+      window->end_frame_rendered();// Last thing you do on render;
     }
     else
     {
-      window->EndFrame();
+      window->end_frame();
     }
-    window->UpdateViewPorts();// for multi viewports run after render loop.
+    window->update_view_ports();// for multi viewports run after render loop.
     std::cout << std::flush;
   }
-  running = true;
+  GlobalRunning = true;
 }
-void Application::SetCurrentWindow() const
+void Application::set_current_window() const
 {
-  current_window = window.get();
+  GlobalCurrentWindow = window.get();
 }
 // const glengine::Window *Application::CurrentWindow()
 //{
-//   return current_window;
+//   return GlobalCurrentWindow;
 // }
 //
 // void RestoreViewPortToFrameBuffer()
@@ -135,20 +135,20 @@ void Application::SetCurrentWindow() const
 //       glViewport,
 //       GLint{},
 //       GLint{},
-//       static_cast<GLint>(viewport_size.x),
-//       static_cast<GLint>(viewport_size.y));
+//       static_cast<GLint>(GlobalViewportSize.x),
+//       static_cast<GLint>(GlobalViewportSize.y));
 //   }
 // }
 // glm::vec4 GetViewPortMousePos() noexcept
 //{
-//   return viewport_mouse_pos;
+//   return GlobalViewportMousePos;
 // }
 // glm::vec2 GetFrameBufferDims()
 //{
 //
 //   if (Application::CurrentWindow())
 //   {
-//     return { viewport_size.x, viewport_size.y };
+//     return { GlobalViewportSize.x, GlobalViewportSize.y };
 //   }
 //   return { 16.F, 9.F };
 // }
@@ -160,15 +160,15 @@ void Application::SetCurrentWindow() const
 //     //    Application::CurrentWindow()->ViewWindowData(); return
 //     //    static_cast<float>(window_data.frame_buffer_width)
 //     //           / static_cast<float>(window_data.frame_buffer_height);
-//     return viewport_size.x / viewport_size.y;
+//     return GlobalViewportSize.x / GlobalViewportSize.y;
 //   }
 //   return (16.F / 9.F);
 // }
-const ff8::Fields &GetFields() noexcept
+const ff_8::Fields &GetFields() noexcept
 {
-  return *fields;
+  return *GlobalFields;
 }
 const glengine::ImGuiViewPortPreview &GetViewPortPreview() noexcept
 {
-  return *preview;
+  return *GlobalPreview;
 }

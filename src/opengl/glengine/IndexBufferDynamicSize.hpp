@@ -25,9 +25,9 @@ public:
   {
     return m_size;
   }
-  constexpr void        Bind() const noexcept {}
+  constexpr void        bind() const noexcept {}
 
-  static constexpr void UnBind() noexcept {}
+  static constexpr void unbind() noexcept {}
 };
 static_assert(
   SizedBindable<

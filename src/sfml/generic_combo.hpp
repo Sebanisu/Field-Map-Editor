@@ -14,14 +14,14 @@
 namespace fme
 {
 template<typename T>
-concept returns_range_concept = requires(std::decay_t<T> t)
+concept returns_range_concept = requires(std::remove_cvref_t<T> t)
 {
   {
     t()
     } -> std::ranges::range;
 };
 template<typename T>
-concept filter_concept = requires(std::decay_t<T> t)
+concept filter_concept = requires(std::remove_cvref_t<T> t)
 {
   {
     t.enabled()
@@ -37,7 +37,7 @@ concept filter_concept = requires(std::decay_t<T> t)
     } -> std::convertible_to<T>;
 };
 template<typename T>
-concept returns_filter_concept = requires(std::decay_t<T> t)
+concept returns_filter_concept = requires(std::remove_cvref_t<T> t)
 {
   {
     t()

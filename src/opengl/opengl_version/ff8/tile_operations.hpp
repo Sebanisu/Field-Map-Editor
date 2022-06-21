@@ -4,7 +4,7 @@
 
 #ifndef FIELD_MAP_EDITOR_TILE_OPERATIONS_HPP
 #define FIELD_MAP_EDITOR_TILE_OPERATIONS_HPP
-namespace ff8
+namespace ff_8
 {
 namespace tile_operations
 {
@@ -79,5 +79,5 @@ namespace tile_operations
     static constexpr std::uint16_t s_end_x = { 0x7FFFU };
   };
 }// namespace tile_operations
-}// namespace ff8
+}// namespace ff_8
 #endif// FIELD_MAP_EDITOR_TILE_OPERATIONS_HPP

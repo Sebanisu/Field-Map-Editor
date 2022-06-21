@@ -4,20 +4,20 @@
 
 #ifndef FIELD_MAP_EDITOR_FF8MENU_HPP
 #define FIELD_MAP_EDITOR_FF8MENU_HPP
+#include "Application.hpp"
 #include "Fields.hpp"
 #include "Menu.hpp"
-#include "Application.hpp"
 
-namespace ff8
+namespace ff_8
 {
 class FF8Menu
 {
 public:
   FF8Menu();
-  void OnUpdate(float) const;
-  void OnRender() const;
-  void OnImGuiUpdate() const;
-  void OnEvent(const glengine::Event::Item &) const;
+  void on_update(float) const;
+  void on_render() const;
+  void on_im_gui_update() const;
+  void on_event(const glengine::event::Item &) const;
   template<glengine::Renderable T>
   void push_back(std::string name) const
   {
@@ -27,7 +27,7 @@ public:
   }
 
 private:
-  glengine::Menu          m_menu{};
+  glengine::Menu m_menu{};
 };
-}// namespace ff8
+}// namespace ff_8
 #endif// FIELD_MAP_EDITOR_FF8MENU_HPP

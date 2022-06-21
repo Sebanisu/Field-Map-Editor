@@ -11,25 +11,25 @@ namespace glengine
 class Window final
 {
 public:
-  void BindInputPollingToWindow() const;
-  void BeginFrame() const;
-  void EndFrameRendered() const;
+  void bind_input_polling_to_window() const;
+  void begin_frame() const;
+  void end_frame_rendered() const;
   // When not rendering Call this.
-  void EndFrame() const;
-  int  Width() const;
-  int  Height() const;
-  void EnableVSync();
-  void DisableVSync();
-  bool VSync() const;
-  using EventCallbackFn = std::function<void(const Event::Item &)>;
-  void SetEventCallback(EventCallbackFn function) const
+  void end_frame() const;
+  int  width() const;
+  int  height() const;
+  void enable_v_sync();
+  void disable_v_sync();
+  bool v_sync() const;
+  using EventCallbackFn = std::function<void(const event::Item &)>;
+  void set_event_callback(EventCallbackFn function) const
   {
-    auto &window_data          = GetWindowData(m_window.get());
+    auto &window_data          = get_window_data(m_window.get());
     window_data.event_callback = std::move(function);
   }
   struct WindowData
   {
-    std::string     Title               = {};
+    std::string     title               = {};
     int             width               = {};
     int             height              = {};
     int             frame_buffer_width  = {};
@@ -38,46 +38,46 @@ public:
     EventCallbackFn event_callback      = {};
     GLFWmonitor    *monitor             = nullptr;
   };
-  static std::unique_ptr<Window>  Create(WindowData);
+  static std::unique_ptr<Window>  create(WindowData data);
 
-  bool                            WindowClosing() const;
-  static std::span<GLFWmonitor *> GetMonitors()
+  bool                            window_closing() const;
+  static std::span<GLFWmonitor *> get_monitors()
   {
     int           count    = {};
     GLFWmonitor **monitors = glfwGetMonitors(&count);
     return { monitors, static_cast<size_t>(count) };
   }
-  static std::span<const GLFWvidmode> GetVideoModes(GLFWmonitor *monitor)
+  static std::span<const GLFWvidmode> get_video_modes(GLFWmonitor *monitor)
   {
     int                count        = {};
     const GLFWvidmode *glfw_vidmode = glfwGetVideoModes(monitor, &count);
     return { glfw_vidmode, static_cast<size_t>(count) };
   }
-  void FullScreenMode(GLFWmonitor *monitor) const
+  void full_screen_mode(GLFWmonitor *monitor) const
   {
     const auto *current_mode = glfwGetVideoMode(monitor);
-    FullScreenMode(
+    full_screen_mode(
       monitor,
       current_mode->width,
       current_mode->height,
       current_mode->refreshRate);
   }
-  void FullScreenMode(
+  void full_screen_mode(
     GLFWmonitor *monitor,
     int          width,
     int          height,
-    int          refreshRate = GLFW_DONT_CARE) const
+    int          refresh_rate = GLFW_DONT_CARE) const
   {
     glfwSetWindowMonitor(
-      m_window.get(), monitor, 0, 0, width, height, refreshRate);
+      m_window.get(), monitor, 0, 0, width, height, refresh_rate);
 
-    auto &data   = GetWindowData(m_window.get());
+    auto &data   = get_window_data(m_window.get());
     data.monitor = monitor;
   }
-  void WindowedMode() const
+  void windowed_mode() const
   {
-    auto       &data         = GetWindowData(m_window.get());
-    const auto *current_mode = glfwGetVideoMode(GetMonitors().front());
+    auto       &data         = get_window_data(m_window.get());
+    const auto *current_mode = glfwGetVideoMode(get_monitors().front());
 
     glfwSetWindowMonitor(
       m_window.get(),
@@ -89,17 +89,17 @@ public:
       GLFW_DONT_CARE);
     data.monitor = nullptr;
   }
-  const WindowData &ViewWindowData() const
+  const WindowData &view_window_data() const
   {
-    return GetWindowData(m_window.get());
+    return get_window_data(m_window.get());
   }
 
-  static void DefaultBlend();
-  static void AddBlend();
-  static void SubtractBlend();
+  static void default_blend();
+  static void add_blend();
+  static void subtract_blend();
 
-  void        UpdateViewPorts() const;
-  void        RenderDockspace() const;
+  void        update_view_ports() const;
+  void        render_dockspace() const;
 
 private:
   Window(WindowData);
@@ -117,10 +117,10 @@ private:
     nullptr,
     destroy_window
   };
-  void               InitCallbacks() const;
-  void               InitImGui(const char *glsl_version) const;
-  void               InitGLFW();
-  static WindowData &GetWindowData(GLFWwindow *);
+  void               init_callbacks() const;
+  void               init_im_gui(const char *glsl_version) const;
+  void               init_glfw();
+  static WindowData &get_window_data(GLFWwindow *window);
 };
 }// namespace glengine
 #endif// FIELD_MAP_EDITOR_WINDOW_HPP

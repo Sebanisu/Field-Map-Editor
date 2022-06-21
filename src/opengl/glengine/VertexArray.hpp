@@ -5,7 +5,7 @@
 #ifndef FIELD_MAP_EDITOR_VERTEXARRAY_HPP
 #define FIELD_MAP_EDITOR_VERTEXARRAY_HPP
 #include "Renderer.hpp"
-#include "unique_value.hpp"
+#include "UniqueValue.hpp"
 #include "VertexBuffer.hpp"
 #include "VertexBufferLayout.hpp"
 namespace glengine
@@ -13,7 +13,7 @@ namespace glengine
 class VertexArray
 {
 private:
-  GLID m_renderer_id{};
+  Glid m_renderer_id{};
 
 public:
   VertexArray();
@@ -25,28 +25,28 @@ public:
   {
     push_back(vertex_buffer, layout);
   }
-  void        Bind() const;
-  static void UnBind();
+  void        bind() const;
+  static void unbind();
   template<Bindable bindableT, size_t ElementCount>
   void push_back(
     const bindableT                        &vertex_buffer,
     const VertexBufferLayout<ElementCount> &layout)
   {// todo tag vertex_buffers so we can exclude other types.
-    Bind();
-    vertex_buffer.Bind();
+    bind();
+    vertex_buffer.bind();
     std::ranges::for_each(
       layout,
       [i      = std::uint32_t{},
        offset = static_cast<const std::uint8_t *>(nullptr),
        &layout](const VertexBufferElement &element) mutable {
-        GLCall{}(glEnableVertexAttribArray, i);
+        GlCall{}(glEnableVertexAttribArray, i);
 
-        GLCall{}(
+        GlCall{}(
           glVertexAttribPointer,
           i,
-          element.count,
-          element.type,
-          element.normalized,
+          element.m_count,
+          element.m_type,
+          element.m_normalized,
           layout.stride(),
           offset);
 

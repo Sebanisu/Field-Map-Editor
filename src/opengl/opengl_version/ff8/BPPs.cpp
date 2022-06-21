@@ -3,7 +3,7 @@
 //
 #include "BPPs.hpp"
 #include "GenericCombo.hpp"
-bool ff8::BPPs::OnImGuiUpdate() const
+bool ff_8::BPPs::on_im_gui_update() const
 {
-  return glengine::GenericCombo("BPP",m_current,m_strings);
+  return glengine::GenericCombo("BPP", m_current, m_strings);
 }

@@ -6,7 +6,7 @@
 #define FIELD_MAP_EDITOR_TESTBATCHRENDERER_HPP
 #include "BatchRenderer.hpp"
 #include "ImGuiViewPortWindow.hpp"
-#include "scope_guard.hpp"
+#include "ScopeGuard.hpp"
 
 
 namespace test
@@ -15,16 +15,17 @@ class TestBatchRenderer
 {
 public:
   TestBatchRenderer();
-  void OnUpdate(float) const;
-  void OnRender() const;
-  void OnImGuiUpdate() const;
-  void OnEvent(const glengine::Event::Item & event) const {
-    m_imgui_viewport_window.OnEvent(event);
+  void on_update(float) const;
+  void on_render() const;
+  void on_im_gui_update() const;
+  void on_event(const glengine::event::Item &event) const
+  {
+    m_imgui_viewport_window.on_event(event);
   }
 
 private:
   void                                   GenerateQuads() const;
-  void                                   SetUniforms() const;
+  void                                   set_uniforms() const;
   glengine::BatchRenderer                m_batch_renderer = { 10000 };
   mutable std::vector<glengine::Texture> m_textures       = {};
   mutable std::array<int, 2U>            m_count          = { 100, 100 };

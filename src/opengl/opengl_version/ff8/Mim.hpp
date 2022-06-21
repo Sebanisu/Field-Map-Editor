@@ -11,25 +11,25 @@
 #include "ImGuiViewPortWindow.hpp"
 #include "Palettes.hpp"
 #include <Counter.hpp>
-namespace ff8
+namespace ff_8
 {
 class Mim
 {
 public:
   Mim() = default;
   Mim(const Fields &fields);
-  void                     OnUpdate(float) const;
-  void                     OnRender() const;
-  void                     OnImGuiUpdate() const;
-  void                     OnEvent(const glengine::Event::Item &) const;
+  void                     on_update(float) const;
+  void                     on_render() const;
+  void                     on_im_gui_update() const;
+  void                     on_event(const glengine::event::Item &) const;
   std::size_t              Index() const;
   const glengine::Texture &CurrentTexture() const;
-  void                     Save() const;
+  void                     save() const;
 
 
 private:
-  void                                 RenderFrameBuffer() const;
-  void                                 SetUniforms() const;
+  void                                 render_frame_buffer() const;
+  void                                 set_uniforms() const;
   void                                 Save_All() const;
   std::string                          m_path                  = {};
   bool                                 m_choose_coo            = {};
@@ -41,5 +41,5 @@ private:
   glengine::Counter                    m_id                    = {};
 };
 static_assert(glengine::Renderable<Mim>);
-}// namespace ff8
+}// namespace ff_8
 #endif// FIELD_MAP_EDITOR_MIM_HPP

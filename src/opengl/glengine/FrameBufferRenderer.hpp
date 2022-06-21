@@ -39,19 +39,19 @@ class FrameBufferRenderer
     simple_vertex{ .location{ m_location + glm::vec2{ 0.F, m_size.y } },
                                                  .uv = m_uv[3] },// 3
   } };
-  OrthographicCamera m_camera = OrthographicCamera(m_size);
+  OrthographicCamera                  m_camera = OrthographicCamera(m_size);
   static constexpr VertexBufferLayout m_layout = VertexBufferLayout(
     VertexBufferElementType<float>{ 2U },
     VertexBufferElementType<float>{ 2U });
   VertexArray m_vertex_array = { m_vertex_buffer, m_layout };
   IndexBuffer m_index_buffer{ QuadIndicesInit };
-  void        SetUniform() const;
+  void        set_uniform() const;
 
 public:
-  void Draw(const glengine::FrameBuffer &frame_buffer) const;
-  void OnImGuiUpdate()
+  void draw(const glengine::FrameBuffer &frame_buffer) const;
+  void on_im_gui_update()
   {
-    m_camera.OnImGuiUpdate();
+    m_camera.on_im_gui_update();
   }
 };
 }// namespace glengine

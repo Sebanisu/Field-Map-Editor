@@ -21,6 +21,8 @@ endif ()
 
 
 include(${CMAKE_SOURCE_DIR}/cmake/OpenVIII_CPP_WIP.cmake)
+include(CheckIPOSupported)
+check_ipo_supported(RESULT supported OUTPUT error)
 find_package(Threads REQUIRED)
 find_package(fmt REQUIRED)
 find_package(GLEW REQUIRED)
@@ -48,11 +50,10 @@ add_executable(${PROJECT_NAME}_OPENGL
         test/TestBatchRendering.cpp
         test/TestBatchRenderingTexture2D.cpp
         test/TestBatchRenderingTexture2DDynamic.cpp
-        test/TestClearColor.cpp
         test/TestFF8Archive.cpp
         test/TestMenu.cpp
         test/TestTexture2D.cpp
-        ff8/ImGuiTileDisplayWindow.cpp ff8/ImGuiTileDisplayWindow.hpp ff8/MapHistory.cpp ff8/MapHistory.hpp ff8/MapTileAdjustments.cpp ff8/MapTileAdjustments.hpp)
+        ff8/ImGuiTileDisplayWindow.cpp ff8/ImGuiTileDisplayWindow.hpp ff8/MapHistory.cpp ff8/MapHistory.hpp ff8/MapTileAdjustments.hpp)
 target_link_libraries(${PROJECT_NAME}_OPENGL
         PRIVATE glengine
         PRIVATE project_warnings
@@ -79,6 +80,12 @@ if (MSVC)
     target_link_options(${PROJECT_NAME}_OPENGL PRIVATE "/PROFILE")
 endif ()
 
+if (supported)
+    message(STATUS "IPO / LTO enabled")
+    set_target_properties(${PROJECT_NAME}_OPENGL PROPERTIES INTERPROCEDURAL_OPTIMIZATION TRUE)
+else ()
+    message(STATUS "IPO / LTO not supported: <${error}>")
+endif ()
 target_precompile_headers(${PROJECT_NAME}_OPENGL
         PRIVATE
         <open_viii/archive/Archives.hpp>

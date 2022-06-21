@@ -13,7 +13,7 @@ namespace events
 template<typename... B>
 [[nodiscard]] inline auto make_visitor(B &&...b) noexcept
 {
-  struct visitor : public std::decay_t<B>...
+  struct visitor : public std::remove_cvref_t<B>...
   {
     using B::operator()...;
   };
@@ -22,7 +22,7 @@ template<typename... B>
 // template<typename... B>
 //[[nodiscard]] inline auto make_scope_guard(B &&...b) noexcept
 //{
-//   struct scope_gaurd : std::decay_t<B>...
+//   struct scope_gaurd : std::remove_cvref_t<B>...
 //   {// disreguard rule of 5.
 //     //    scope_gaurd(B &&...t) : B(std::forward<B>(t))...{}
 //     //    scope_gaurd()                        = delete;

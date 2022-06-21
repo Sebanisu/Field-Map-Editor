@@ -3,19 +3,19 @@
 //
 #include "TestFF8Archive.hpp"
 
-void test::TestFF8Archive::OnUpdate(float ts) const
+void test::TestFF8Archive::on_update(float ts) const
 {
-  ff8_menu.OnUpdate(ts);
+  ff_8_menu.on_update(ts);
 }
-void test::TestFF8Archive::OnRender() const
+void test::TestFF8Archive::on_render() const
 {
-  ff8_menu.OnRender();
+  ff_8_menu.on_render();
 }
-void test::TestFF8Archive::OnImGuiUpdate() const
+void test::TestFF8Archive::on_im_gui_update() const
 {
-  ff8_menu.OnImGuiUpdate();
+  ff_8_menu.on_im_gui_update();
 }
-void test::TestFF8Archive::OnEvent(const glengine::Event::Item &e) const
+void test::TestFF8Archive::on_event(const glengine::event::Item &e) const
 {
-  ff8_menu.OnEvent(e);
+  ff_8_menu.on_event(e);
 }

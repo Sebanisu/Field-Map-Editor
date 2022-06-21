@@ -13,20 +13,18 @@ template<std::ranges::random_access_range dataT>
 // clang-format off
 requires(
   std::is_same_v<
-    std::decay_t<std::ranges::range_value_t<dataT>>, std::string> ||
+    std::remove_cvref_t<std::ranges::range_value_t<dataT>>, std::string> ||
   std::is_same_v<
-    std::decay_t<std::ranges::range_value_t<dataT>>, std::string_view>)
+    std::remove_cvref_t<std::ranges::range_value_t<dataT>>, std::string_view>)
   // clang-format on
-  [[nodiscard]] inline bool GenericCombo(
-    const char  *label,
-    int         &current_index,
-    const dataT &data)
+  [
+    [nodiscard]] inline bool GenericCombo(const char *label, int &current_index, const dataT &data)
 {
   bool              changed = false;
   const ImGuiStyle &style   = ImGui::GetStyle();
   const float       spacing = style.ItemInnerSpacing.x;
   {
-    const auto  pop0        = glengine::ImGuiPushID();
+    const auto  pop_0       = glengine::ImGuiPushId();
     const float width       = ImGui::CalcItemWidth();
     const float button_size = ImGui::GetFrameHeight();
     const auto  pop_width =
@@ -34,8 +32,8 @@ requires(
     const auto disabled = glengine::ImGuiDisabled(std::ranges::empty(data));
 
     static constexpr auto c_str = [](auto &&v) {
-      using vT = std::decay_t<decltype(v)>;
-      if constexpr (std::is_same_v<vT, std::string_view>)
+      using StrT = std::remove_cvref_t<decltype(v)>;
+      if constexpr (std::is_same_v<StrT, std::string_view>)
       {
         return std::ranges::data(v);
       }
@@ -62,11 +60,11 @@ requires(
     if (ImGui::BeginCombo(
           "##Empty", current_string, ImGuiComboFlags_HeightLargest))
     {
-      const auto end = glengine::scope_guard{ &ImGui::EndCombo };
+      const auto end = glengine::ScopeGuard{ &ImGui::EndCombo };
       for (int i{}; const auto &map : data)
       {
         const bool is_selected = i == current_index;
-        const auto pop1        = glengine::ImGuiPushID();
+        const auto pop_1       = glengine::ImGuiPushId();
         if (ImGui::Selectable(c_str(map), is_selected))
         {
           current_index = i;
@@ -81,7 +79,7 @@ requires(
     }
   }
   {
-    const auto pop = glengine::ImGuiPushID();
+    const auto pop = glengine::ImGuiPushId();
     ImGui::SameLine(0, spacing);
     const auto disabled =
       glengine::ImGuiDisabled(std::cmp_less_equal(current_index, 0));
@@ -92,7 +90,7 @@ requires(
     }
   }
   {
-    const auto pop = glengine::ImGuiPushID();
+    const auto pop = glengine::ImGuiPushId();
     ImGui::SameLine(0, spacing);
     const auto disabled = glengine::ImGuiDisabled(
       std::cmp_greater_equal(current_index + 1, std::ranges::size(data)));

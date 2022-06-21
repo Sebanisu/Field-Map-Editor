@@ -4,32 +4,32 @@
 #include "LayerItem.hpp"
 namespace glengine
 {
-void Layer::Item::OnUpdate(float ts) const
+void Layer::Item::on_update(float ts) const
 {
   if (m_impl)
   {
-    return m_impl->OnUpdate(ts);
+    return m_impl->on_update(ts);
   }
 }
-void Layer::Item::OnRender() const
+void Layer::Item::on_render() const
 {
   if (m_impl)
   {
-    return m_impl->OnRender();
+    return m_impl->on_render();
   }
 }
-void Layer::Item::OnImGuiUpdate() const
+void Layer::Item::on_im_gui_update() const
 {
   if (m_impl)
   {
-    return m_impl->OnImGuiUpdate();
+    return m_impl->on_im_gui_update();
   }
 }
-void Layer::Item::OnEvent(const Event::Item &e) const
+void Layer::Item::on_event(const event::Item &e) const
 {
   if (m_impl)
   {
-    return m_impl->OnEvent(e);
+    return m_impl->on_event(e);
   }
 }
 Layer::Item::operator bool() const
