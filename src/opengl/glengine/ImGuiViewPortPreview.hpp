@@ -31,12 +31,14 @@ inline namespace impl
     // A way to hand a ImGuiViewPortWindow, and a OrthographicCamera or
     // OrthographicCameraController and draw a preview window.
     void on_render(
-      const bool            current_view_port_has_hover,
-      std::invocable auto &&callable) const
+      const ImGuiViewPortWindow &window,
+      std::invocable auto      &&callable) const
     {
-      if (!m_drawn && current_view_port_has_hover)
+      if (!m_drawn && window.has_hover())
       {
         m_preview_view_port.sync_open_gl_view_port();
+        m_preview_view_port.m_clear_impl.Color(window.get_background_color());
+        m_preview_view_port.m_background_color = window.get_background_color();
         m_preview_view_port.on_render(
           std::forward<decltype(callable)>(callable));
         m_drawn = true;
@@ -47,6 +49,8 @@ inline namespace impl
     {
       if (!m_drawn)
       {
+        m_preview_view_port.m_background_color = {};
+        m_preview_view_port.m_clear_impl.Color({});
         m_preview_view_port.on_render(
           []() {});// might need a function to draw the empty window.
       }

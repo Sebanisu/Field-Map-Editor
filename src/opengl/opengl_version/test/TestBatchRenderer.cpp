@@ -65,7 +65,7 @@ void test::TestBatchRenderer::on_render() const
 {
   set_uniforms();
   m_imgui_viewport_window.on_render([this]() { GenerateQuads(); });
-  GetViewPortPreview().on_render(m_imgui_viewport_window.has_hover(), [this]() {
+  GetViewPortPreview().on_render(m_imgui_viewport_window, [this]() {
     preview = true;
     set_uniforms();
     GenerateQuads();

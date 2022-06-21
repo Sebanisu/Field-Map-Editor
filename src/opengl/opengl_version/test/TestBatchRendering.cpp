@@ -31,7 +31,7 @@ void test::TestBatchRendering::on_render() const
     render_frame_buffer();
   });
 
-  GetViewPortPreview().on_render(m_imgui_viewport_window.has_hover(), [this]() {
+  GetViewPortPreview().on_render(m_imgui_viewport_window, [this]() {
     const auto pop_preview = glengine::ScopeGuard([]() { Preview = false; });
     Preview                = true;
     set_uniforms();

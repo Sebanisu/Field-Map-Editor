@@ -27,7 +27,7 @@ public:
     if FME_NOT_CONSTEVAL
     {
       m_imgui_viewport_window.on_render([]() { local_clear(); });
-      GetViewPortPreview().on_render(m_imgui_viewport_window.has_hover(), []() {
+      GetViewPortPreview().on_render(m_imgui_viewport_window, []() {
         const auto pop_preview =
           glengine::ScopeGuard([]() { Preview = false; });
         Preview = true;

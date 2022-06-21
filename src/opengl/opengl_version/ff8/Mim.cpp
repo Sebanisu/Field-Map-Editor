@@ -51,7 +51,7 @@ void ff_8::Mim::on_render() const
   {
     m_imgui_viewport_window.on_render([this]() { render_frame_buffer(); });
     GetViewPortPreview().on_render(
-      m_imgui_viewport_window.has_hover(), [this]() {
+      m_imgui_viewport_window, [this]() {
         preview = true;
         set_uniforms();
         render_frame_buffer();

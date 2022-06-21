@@ -47,7 +47,7 @@ void test::TestBatchRenderingTexture2D::on_render() const
 {
   set_uniforms();
   m_imgui_viewport_window.on_render([this]() { render_frame_buffer(); });
-  GetViewPortPreview().on_render(m_imgui_viewport_window.has_hover(), [this]() {
+  GetViewPortPreview().on_render(m_imgui_viewport_window, [this]() {
     const auto pop_preview = glengine::ScopeGuard([]() { Preview = false; });
     Preview                = true;
     set_uniforms();

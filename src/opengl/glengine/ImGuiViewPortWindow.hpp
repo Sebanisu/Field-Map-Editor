@@ -73,7 +73,7 @@ inline namespace impl
           {
             const auto ffb = FrameBufferBackup();
             m_fb.bind();
-            glengine::Renderer::Clear();
+            m_clear_impl();
             callable();
             m_fb.unbind();
           }
@@ -164,6 +164,9 @@ inline namespace impl
     mutable glm::vec4                              m_viewport_mouse_pos   = {};
     mutable glengine::OrthographicCameraController m_main_camera          = {};
     mutable glengine::OrthographicCameraController m_mouse_camera         = {};
+    mutable glm::vec4            m_background_color = { 0.F, 0.F, 0.F, 255.F };
+    mutable glengine::Clear_impl m_clear_impl       = { m_background_color };
+    glm::vec4                    get_background_color() const noexcept;
   };
   static_assert(Renderable<ImGuiViewPortWindow>);
 }// namespace impl

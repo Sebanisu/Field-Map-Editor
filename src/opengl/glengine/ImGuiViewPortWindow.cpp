@@ -128,10 +128,19 @@ inline namespace impl
   }
   void ImGuiViewPortWindow::on_im_gui_update() const
   {
-    const auto pushid = ImGuiPushId();
-    if (ImGui::Checkbox("Enable Debug Text", &m_debug_text))
     {
-      // changed
+      const auto push_id = ImGuiPushId();
+      if (ImGui::Checkbox("Enable Debug Text", &m_debug_text))
+      {
+        // changed
+      }
+    }
+    {
+      const auto pop_id = glengine::ImGuiPushId();
+      if (ImGui::ColorEdit3("Clear Color", &m_background_color.r))
+      {
+        m_clear_impl.Color(m_background_color);
+      }
     }
     ImGui::Separator();
     m_main_camera.on_im_gui_update();
@@ -251,6 +260,10 @@ inline namespace impl
     ImGuiViewPortWindow::set_preview_aspect_ratio(float aspect_ratio) noexcept
   {
     preview_aspect_ratio = aspect_ratio;
+  }
+  glm::vec4 ImGuiViewPortWindow::get_background_color() const noexcept
+  {
+    return m_background_color;
   }
   void ImGuiViewPortWindow::fit(const bool width, const bool height) const
   {
