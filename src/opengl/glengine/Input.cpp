@@ -17,14 +17,14 @@ bool Input::is_key_pressed(Key keycode)
   if (!m_window)
     return false;
   const int state = glfwGetKey(m_window, +keycode);
-  return state == GLFW_PRESS || state == GLFW_REPEAT;
+  return state == +Key::Press;
 }
 bool Input::is_mouse_button_pressed(Mouse button)
 {
   if (!m_window)
     return false;
   const int state = glfwGetMouseButton(m_window, +button);
-  return state == GLFW_PRESS;
+  return state == +Mouse::Press;
 }
 std::optional<const std::array<float, 2U>> Input::get_mouse_position()
 {
