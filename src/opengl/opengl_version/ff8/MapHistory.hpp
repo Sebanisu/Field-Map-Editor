@@ -64,8 +64,8 @@ public:
   MapHistory() = default;
   MapHistory(MapT map)
   {
-    m_maps.push_back(map);
     m_maps.emplace_back(std::move(map));
+    m_maps.push_back(m_maps.front());
   }
   [[nodiscard]] const MapT &front() const
   {
@@ -98,22 +98,26 @@ public:
   }
   [[nodiscard]] MapT &copy_back() const
   {
+
     if (preemptive_copy_mode)
     {// someone already copied
       end_preemptive_copy_mode();
       return back();
     }
+    spdlog::debug("Map History Count: {}", m_maps.size());
     m_front_or_back.push_back(pushed_back);
     return m_maps.emplace_back(back());
   }
   [[nodiscard]] const MapT &copy_back_to_front() const
   {
+    spdlog::debug("Map History Count: {}", m_maps.size());
     m_maps.insert(m_maps.begin(), back());
     m_front_or_back.push_back(pushed_front);
     return front();
   }
   [[nodiscard]] const MapT &copy_front() const
   {
+    spdlog::debug("Map History Count: {}", m_maps.size());
     m_maps.insert(m_maps.begin(), front());
     m_front_or_back.push_back(pushed_front);
     return front();
@@ -129,6 +133,7 @@ public:
       return false;
     }
     bool last = m_front_or_back.back();
+    spdlog::debug("Map History Count: {}", m_maps.size());
     m_front_or_back.pop_back();
     if (last == pushed_back)
     {

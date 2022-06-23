@@ -24,6 +24,7 @@
 #include "MapBlends.hpp"
 #include "MapDims.hpp"
 #include "MapFilters.hpp"
+#include "MapHistory.hpp"
 #include "MapTileAdjustments.hpp"
 #include "OrthographicCamera.hpp"
 #include "OrthographicCameraController.hpp"
@@ -49,7 +50,7 @@ public:
     : m_upscale_path(std::move(upscale_path))
     , m_mim(LoadMim(fields, fields.coo(), m_mim_path, m_mim_choose_coo))
     , m_map(LoadMap(fields, fields.coo(), m_mim, m_map_path, m_map_choose_coo))
-    , m_filters(m_map)
+    , m_filters(m_map.back())
   {
     if (std::empty(m_mim_path))
     {
@@ -105,8 +106,17 @@ public:
     {
       return;
     }
-    const auto not_changed =
-      glengine::ScopeGuardCaptures([&]() { m_changed = false; });
+    const auto not_changed = glengine::ScopeGuardCaptures([&]() {
+      if (m_changed)
+      {
+        m_changed          = false;
+        m_previous_changed = true;
+      }
+      else
+      {
+        m_previous_changed = false;
+      }
+    });
     if (m_changed)
     {
       m_offscreen_drawing = true;
@@ -141,7 +151,7 @@ public:
   }
   void on_im_gui_update() const
   {
-    const auto popid = glengine::ImGuiPushId();
+    const auto pop_id = glengine::ImGuiPushId();
     {
       const auto disable = glengine::ImGuiDisabled(
         std::ranges::empty(m_map_path) || std::ranges::empty(m_mim_path));
@@ -151,20 +161,18 @@ public:
       m_changed = std::ranges::any_of(
         std::array{ ImGui::Checkbox("draw Grid", &s_draw_grid),
                     [&]() -> bool {
-                      return m_map.visit_tiles([](auto &&) -> bool {
-                        if constexpr (!typename TileFunctions::UseBlending{})
-                        {
-                          return true;
-                        }
-                        else
-                        {
-                          const bool checkbox_changed =
-                            ImGui::Checkbox("Blending", &s_blending);
-                          const bool blend_options_changed =
-                            s_blends.on_im_gui_update();
-                          return checkbox_changed || blend_options_changed;
-                        }
-                      });
+                      if constexpr (!typename TileFunctions::UseBlending{})
+                      {
+                        return true;
+                      }
+                      else
+                      {
+                        const bool checkbox_changed =
+                          ImGui::Checkbox("Blending", &s_blending);
+                        const bool blend_options_changed =
+                          s_blends.on_im_gui_update();
+                        return checkbox_changed || blend_options_changed;
+                      }
                     }(),
                     m_filters.on_im_gui_update() },
         std::identity{});
@@ -231,9 +239,15 @@ public:
       };
       const auto  dims = ImGui::GetContentRegionAvail();
       std::size_t i    = {};
-      const MapTileAdjustments<TileFunctions> mta = { m_map,
+
+      if (!m_previous_changed)
+      {
+        (void)m_map.copy_back_preemptive();
+      }
+      const MapTileAdjustments<TileFunctions> mta = { m_map.back(),
                                                       m_filters,
                                                       m_map_dims };
+
       if (visit_unsorted_unfiltered_tiles([&](auto &tile) -> bool {
             using namespace open_viii::graphics::background;
             const auto id_pop_2    = glengine::ImGuiPushId();
@@ -271,6 +285,10 @@ public:
           }))
       {
         m_changed = true;
+      }
+      else if (m_previous_changed)
+      {
+        m_map.end_preemptive_copy_mode();
       }
     });
   }
@@ -377,7 +395,7 @@ private:
   }
   auto visit_tiles(auto &&lambda) const
   {
-    return m_map.visit_tiles([&](const auto &tiles) {
+    return m_map.back().visit_tiles([&](const auto &tiles) {
       auto f_tiles =
         tiles | std::views::filter(tile_operations::InvalidTile{})
         | std::views::filter([]([[maybe_unused]] const auto &tile) -> bool {
@@ -602,7 +620,7 @@ private:
   }
   auto visit_unsorted_unfiltered_tiles_count() const
   {
-    return m_map.visit_tiles([&](const auto &tiles) -> std::size_t {
+    return m_map.back().visit_tiles([&](const auto &tiles) -> std::size_t {
       auto f_tiles = tiles | std::views::filter(tile_operations::InvalidTile{});
       return static_cast<std::size_t>(
         std::ranges::count_if(f_tiles, [](auto &&) { return true; }));
@@ -610,7 +628,7 @@ private:
   }
   bool visit_unsorted_unfiltered_tiles(auto &&lambda) const
   {
-    return m_map.visit_tiles([&](auto &&tiles) -> bool {
+    return m_map.back().visit_tiles([&](auto &&tiles) -> bool {
       auto f_tiles = tiles | std::views::filter(tile_operations::InvalidTile{});
       bool changed = false;
       for (auto &tile : f_tiles)
@@ -653,11 +671,11 @@ private:
   // container for field textures
   open_viii::graphics::background::Mim m_mim            = {};
   // container for field tile information
-  mutable open_viii::graphics::background::Map m_map    = {};
+  MapHistory                           m_map            = {};
   // dimensions of map
-  MapDims<TileFunctions>                       m_map_dims         = { m_map };
+  MapDims<TileFunctions>               m_map_dims       = { m_map.back() };
   // loads the textures overtime instead of forcing them to load at start.
-  glengine::DelayedTextures<35U>               m_delayed_textures = {};
+  glengine::DelayedTextures<35U>       m_delayed_textures = {};
   glengine::DelayedTextures<17U * 13U>
     m_upscale_delayed_textures = {};// 20 is detected max 16(+1)*13 is possible
                                     // max. 0 being no palette and 1-17 being
@@ -670,8 +688,9 @@ private:
   mutable bool                      m_saving                = { false };
   mutable bool                      m_preview               = { false };
   inline constinit static MapBlends s_blends                = {};
-  mutable MapFilters                m_filters               = { m_map };
+  mutable MapFilters                m_filters               = { m_map.back() };
   mutable bool                      m_changed               = { true };
+  mutable bool                      m_previous_changed      = { false };
   glengine::Counter                 m_id                    = {};
   mutable std::vector<bool>         m_tile_button_state     = {};
   glengine::ImGuiViewPortWindow     m_imgui_viewport_window = {
