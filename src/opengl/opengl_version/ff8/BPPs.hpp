@@ -4,29 +4,18 @@
 
 #ifndef FIELD_MAP_EDITOR_BPPS_HPP
 #define FIELD_MAP_EDITOR_BPPS_HPP
-
-
 namespace ff_8
 {
-class BPPs
+class Bpps
 {
 public:
-  void                      on_update(float) const {}
-  void                      on_render() const {}
-  bool                      on_im_gui_update() const;
-  void                      on_event(const glengine::event::Item &) const {}
-  open_viii::graphics::BPPT BPP() const
-  {
-    return m_values.at(static_cast<std::size_t>(m_current));
-  }
-  std::string_view String() const
-  {
-    return m_strings.at(static_cast<std::size_t>(m_current));
-  }
-  int Index() const
-  {
-    return m_current;
-  }
+  void on_update(float) const {}
+  void on_render() const {}
+  bool on_im_gui_update() const;
+  void on_event(const glengine::event::Item &) const {}
+  const open_viii::graphics::BPPT *operator->() const;
+  std::string_view                 string() const;
+  int                              index() const;
 
 private:
   static constexpr auto m_values = []() {
@@ -39,6 +28,6 @@ private:
   }();
   mutable int m_current{};
 };
-static_assert(glengine::Renderable<BPPs>);
+static_assert(glengine::Renderable<Bpps>);
 }// namespace ff_8
 #endif// FIELD_MAP_EDITOR_BPPS_HPP

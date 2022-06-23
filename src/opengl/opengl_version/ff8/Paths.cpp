@@ -7,7 +7,7 @@ bool ff_8::Paths::on_im_gui_update() const
 {
   return glengine::GenericCombo("Path", m_current, m_paths);
 }
-const std::string &ff_8::Paths::Path() const
+const std::string &ff_8::Paths::string() const
 {
   if (std::cmp_less(m_current, std::ranges::size(m_paths)))
   {
@@ -19,4 +19,8 @@ const std::string &ff_8::Paths::Path() const
 ff_8::Paths::Paths()
 {
   m_paths = open_viii::Paths::get();
+}
+ff_8::Paths::operator std::filesystem::path() const
+{
+  return string();
 }

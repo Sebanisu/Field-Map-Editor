@@ -45,15 +45,10 @@ public:
     : Map(fields, {})
   {
   }
-  Map(const Fields &fields, std::string upscale_path)
+  Map(const Fields &fields, std::filesystem::path upscale_path)
     : m_upscale_path(std::move(upscale_path))
-    , m_mim(LoadMim(fields.Field(), fields.Coo(), m_mim_path, m_mim_choose_coo))
-    , m_map(LoadMap(
-        fields.Field(),
-        fields.Coo(),
-        m_mim,
-        m_map_path,
-        m_map_choose_coo))
+    , m_mim(LoadMim(fields, fields.coo(), m_mim_path, m_mim_choose_coo))
+    , m_map(LoadMap(fields, fields.coo(), m_mim, m_map_path, m_map_choose_coo))
     , m_filters(m_map)
   {
     if (std::empty(m_mim_path))
@@ -66,10 +61,10 @@ public:
       m_upscale_path  = (std::filesystem::path(m_upscale_path)
                         / stem.string().substr(0, 2) / stem)
                          .string();
-      spdlog::debug("Upscale Location: {}", m_upscale_path);
+      spdlog::debug("Upscale Location: \"{}\"", m_upscale_path.string());
     }
-    spdlog::debug("Loaded Map: {}", m_map_path);
-    spdlog::debug("Loaded Mim: {}", m_mim_path);
+    spdlog::debug("Loaded Map: \"{}\"", m_map_path);
+    spdlog::debug("Loaded Mim: \"{}\"", m_mim_path);
     spdlog::debug("Begin Loading Textures from Mim.");
     m_delayed_textures         = LoadTextures(m_mim);
     m_upscale_delayed_textures = LoadTextures(m_upscale_path);
@@ -135,13 +130,13 @@ public:
     }
     // RestoreViewPortToFrameBuffer();
     m_imgui_viewport_window.on_render([this]() { render_frame_buffer(); });
-    GetViewPortPreview().on_render(
-      m_imgui_viewport_window, [this]() {
-        m_preview = true;
-        render_frame_buffer();
-        m_preview = false;
-      });
-    ff_8::ImGuiTileDisplayWindow::TakeControl(
+    GetViewPortPreview().on_render(m_imgui_viewport_window, [this]() {
+      m_preview = true;
+      const auto pop_preview =
+        glengine::ScopeGuardCaptures([&]() { m_preview = false; });
+      render_frame_buffer();
+    });
+    ff_8::ImGuiTileDisplayWindow::take_control(
       m_imgui_viewport_window.has_hover(), m_id);
   }
   void on_im_gui_update() const
@@ -154,10 +149,10 @@ public:
       (void)ImGui::Checkbox("fit Height", &s_fit_height);
       (void)ImGui::Checkbox("fit Width", &s_fit_width);
       m_changed = std::ranges::any_of(
-        std::array{ ImGui::Checkbox("Draw Grid", &s_draw_grid),
+        std::array{ ImGui::Checkbox("draw Grid", &s_draw_grid),
                     [&]() -> bool {
                       return m_map.visit_tiles([](auto &&) -> bool {
-                        if constexpr (!typename TileFunctions::use_blending{})
+                        if constexpr (!typename TileFunctions::UseBlending{})
                         {
                           return true;
                         }
@@ -207,7 +202,7 @@ public:
     ImGui::Text("%s", "Fixed Prerender camera: ");
     m_fixed_render_camera.on_im_gui_update();
 
-    ff_8::ImGuiTileDisplayWindow::OnImGuiUpdateForward(m_id, [this]() {
+    ff_8::ImGuiTileDisplayWindow::on_im_gui_update_forward(m_id, [this]() {
       ImGui::Text(
         "%s", fmt::format("Map {}", static_cast<uint32_t>(m_id)).c_str());
       float      text_width = 0.F;
@@ -351,7 +346,7 @@ private:
     const auto  texture_dims = glm::vec2{ texture.width(), texture.height() };
     const float tile_scale   = static_cast<float>(texture.height())
                              / static_cast<float>(m_mim.get_height());
-    const float tile_size = tile_scale * MapDimsStatics::tile_size;
+    const float tile_size = tile_scale * map_dims_statics::TileSize;
     // glm::vec2(m_mim.get_width(tile.depth()), m_mim.get_height());
     return std::optional<glengine::SubTexture>{
       std::in_place_t{},
@@ -368,12 +363,12 @@ private:
   }
   glm::vec3 tile_to_draw_pos(const auto &tile) const
   {
-    static constexpr typename TileFunctions::x            x{};
-    static constexpr typename TileFunctions::y            y{};
-    static constexpr typename TileFunctions::texture_page texture_page{};
+    static constexpr typename TileFunctions::X           x{};
+    static constexpr typename TileFunctions::Y           y{};
+    static constexpr typename TileFunctions::TexturePage texture_page{};
     return { (static_cast<float>(
                 x(tile)
-                + texture_page(tile) * MapDimsStatics::texture_page_width)
+                + texture_page(tile) * map_dims_statics::TexturePageWidth)
               - m_map_dims.offset.x)
                * m_map_dims.tile_scale,
              (m_map_dims.offset.y - static_cast<float>(y(tile)))
@@ -383,22 +378,24 @@ private:
   auto visit_tiles(auto &&lambda) const
   {
     return m_map.visit_tiles([&](const auto &tiles) {
-      auto f_tiles = tiles | std::views::filter(tile_operations::invalid_tile{})
-                     | std::views::filter([](const auto &tile) -> bool {
-                         static constexpr
-                           typename TileFunctions::use_blending use_blending{};
-                         if (use_blending)
-                         {
-                           return tile.draw();
-                         }
-                         return true;
-                       })
-                     | std::views::filter(m_filters);
+      auto f_tiles =
+        tiles | std::views::filter(tile_operations::InvalidTile{})
+        | std::views::filter([]([[maybe_unused]] const auto &tile) -> bool {
+            if constexpr (typename TileFunctions::UseBlending{})
+            {
+              return tile.draw();
+            }
+            else
+            {
+              return true;
+            }
+          })
+        | std::views::filter(m_filters);
       std::vector<std::uint16_t> unique_z{};
       {
         // unique_z.reserve(std::ranges::size(tiles));
         std::ranges::transform(
-          f_tiles, std::back_inserter(unique_z), tile_operations::z{});
+          f_tiles, std::back_inserter(unique_z), tile_operations::Z{});
         std::ranges::sort(unique_z);
         auto [begin, end] = std::ranges::unique(unique_z);
         unique_z.erase(begin, end);
@@ -409,7 +406,7 @@ private:
       {
         auto f_tiles_reverse_filter_z =
           f_tiles | std::views::reverse
-          | std::views::filter(tile_operations::z_match{ z });
+          | std::views::filter(tile_operations::ZMatch{ z });
         for (const auto &tile : f_tiles_reverse_filter_z)
         {
           if (!lambda(tile))
@@ -449,7 +446,7 @@ private:
     [[maybe_unused]] open_viii::graphics::background::BlendModeT
       &last_blend_mode) const
   {
-    if constexpr (typename TileFunctions::use_blending{})
+    if constexpr (typename TileFunctions::UseBlending{})
     {
       if (!s_blending)
       {
@@ -460,7 +457,7 @@ private:
       {
         m_batch_renderer.draw();// flush buffer.
         last_blend_mode = blend_mode;
-        if (s_blends.PercentBlendEnabled())
+        if (s_blends.percent_blend_enabled())
         {
           switch (blend_mode)
           {
@@ -480,11 +477,11 @@ private:
           case open_viii::graphics::background::BlendModeT::half_add:
           case open_viii::graphics::background::BlendModeT::quarter_add:
           case open_viii::graphics::background::BlendModeT::add: {
-            s_blends.SetAddBlend();
+            s_blends.set_add_blend();
           }
           break;
           case open_viii::graphics::background::BlendModeT ::subtract: {
-            s_blends.SetSubtractBlend();
+            s_blends.set_subtract_blend();
           }
           break;
           default:
@@ -496,7 +493,7 @@ private:
   struct [[nodiscard]] IndexAndPageWidthReturn
   {
     std::size_t  texture_index      = {};
-    std::int16_t texture_page_width = { MapDimsStatics::texture_page_width };
+    std::int16_t texture_page_width = { map_dims_statics::TexturePageWidth };
   };
 
   [[nodiscard]] static auto
@@ -506,12 +503,12 @@ private:
     if (bpp.bpp8())
     {
       r.texture_index      = 16 + palette;
-      r.texture_page_width = MapDimsStatics::texture_page_width / 2;
+      r.texture_page_width = map_dims_statics::TexturePageWidth / 2;
     }
     else if (bpp.bpp16())
     {
       r.texture_index      = 16 * 2;
-      r.texture_page_width = MapDimsStatics::texture_page_width / 4;
+      r.texture_page_width = map_dims_statics::TexturePageWidth / 4;
     }
     return r;
   }
@@ -606,8 +603,7 @@ private:
   auto visit_unsorted_unfiltered_tiles_count() const
   {
     return m_map.visit_tiles([&](const auto &tiles) -> std::size_t {
-      auto f_tiles =
-        tiles | std::views::filter(tile_operations::invalid_tile{});
+      auto f_tiles = tiles | std::views::filter(tile_operations::InvalidTile{});
       return static_cast<std::size_t>(
         std::ranges::count_if(f_tiles, [](auto &&) { return true; }));
     });
@@ -615,8 +611,7 @@ private:
   bool visit_unsorted_unfiltered_tiles(auto &&lambda) const
   {
     return m_map.visit_tiles([&](auto &&tiles) -> bool {
-      auto f_tiles =
-        tiles | std::views::filter(tile_operations::invalid_tile{});
+      auto f_tiles = tiles | std::views::filter(tile_operations::InvalidTile{});
       bool changed = false;
       for (auto &tile : f_tiles)
       {
@@ -646,7 +641,7 @@ private:
   static constexpr auto                s_quarter_color  = s_half_color / 2.F;
   mutable glm::vec4                    m_uniform_color  = s_default_color;
 
-  std::string                          m_upscale_path   = {};
+  std::filesystem::path                m_upscale_path   = {};
   // internal mim file path
   std::string                          m_mim_path       = {};
   // internal map file path
@@ -680,7 +675,7 @@ private:
   glengine::Counter                 m_id                    = {};
   mutable std::vector<bool>         m_tile_button_state     = {};
   glengine::ImGuiViewPortWindow     m_imgui_viewport_window = {
-        TileFunctions::Label
+        TileFunctions::label
   };
 };
 }// namespace ff_8

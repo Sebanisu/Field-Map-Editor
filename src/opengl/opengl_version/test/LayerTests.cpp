@@ -4,15 +4,15 @@
 
 #include "LayerTests.hpp"
 
-void Layer::Tests::on_update(float ts) const
+void layer::Tests::on_update(float ts) const
 {
   test_menu.on_update(ts);
 }
-void Layer::Tests::on_render() const
+void layer::Tests::on_render() const
 {
   test_menu.on_render();
 }
-void Layer::Tests::on_im_gui_update() const
+void layer::Tests::on_im_gui_update() const
 {
   if (ImGui::Begin("Control Panel", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
   {
@@ -27,7 +27,7 @@ void Layer::Tests::on_im_gui_update() const
   }
   ImGui::End();
 }
-void Layer::Tests::on_event(const glengine::event::Item &e) const
+void layer::Tests::on_event(const glengine::event::Item &e) const
 {
   test_menu.on_event(e);
 }

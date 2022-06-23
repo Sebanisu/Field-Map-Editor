@@ -10,10 +10,10 @@
 
 namespace ff_8
 {
-class FF8Menu
+class Ff8Menu
 {
 public:
-  FF8Menu();
+  Ff8Menu();
   void on_update(float) const;
   void on_render() const;
   void on_im_gui_update() const;

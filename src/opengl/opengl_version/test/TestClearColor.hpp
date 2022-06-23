@@ -29,8 +29,8 @@ public:
       m_imgui_viewport_window.on_render([]() { local_clear(); });
       GetViewPortPreview().on_render(m_imgui_viewport_window, []() {
         const auto pop_preview =
-          glengine::ScopeGuard([]() { Preview = false; });
-        Preview = true;
+          glengine::ScopeGuard([]() { preview = false; });
+        preview = true;
         local_clear();
       });
     }
@@ -51,7 +51,7 @@ private:
   static constexpr glm::vec4        default_color = { 0.2F, 0.3F, 0.8F, 1.F };
   static inline constinit glm::vec4 m_clear_color = { default_color };
   static inline constinit glengine::Clear_impl local_clear = { default_color };
-  static inline constinit bool                 Preview     = false;
+  static inline constinit bool                 preview     = false;
   glengine::ImGuiViewPortWindow                m_imgui_viewport_window = {
                    "Test Clear Color"
   };

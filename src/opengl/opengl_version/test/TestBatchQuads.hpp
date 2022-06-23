@@ -25,15 +25,15 @@ public:
   void                         on_render() const;
   void                         on_im_gui_update() const;
   void                         on_event(const glengine::event::Item &) const;
-  void                         GenerateQuads() const;
+  void                         generate_quads() const;
 
-  static constexpr std::size_t QUAD_COUNT = { 100U };
-  static constexpr std::size_t VERT_COUNT = { QUAD_COUNT * 4U };
+  static constexpr std::size_t quad_count = { 100U };
+  static constexpr std::size_t vert_count = { quad_count * 4U };
 
 private:
-  void                                     Draw() const;
-  glengine::VertexBufferDynamic            m_vertex_buffer   = { QUAD_COUNT };
-  glengine::IndexBufferDynamic             m_index_buffer    = { QUAD_COUNT };
+  void                                     draw() const;
+  glengine::VertexBufferDynamic            m_vertex_buffer   = { quad_count };
+  glengine::IndexBufferDynamic             m_index_buffer    = { quad_count };
   mutable glengine::IndexBufferDynamicSize index_buffer_size = {};
   glengine::Shader                         m_shader          = {};
   glengine::VertexArray                    m_vertex_array    = {};

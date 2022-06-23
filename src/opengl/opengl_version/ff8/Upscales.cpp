@@ -8,7 +8,7 @@ bool ff_8::Upscales::on_im_gui_update() const
 {
   return glengine::GenericCombo("Upscale Path", m_current, m_paths);
 }
-const std::string &ff_8::Upscales::Path() const
+const std::string &ff_8::Upscales::string() const
 {
   if (std::cmp_less(m_current, std::ranges::size(m_paths)))
   {
@@ -72,10 +72,10 @@ ff_8::Upscales::Upscales()
       handle_error(__LINE__, path);
       return;
     }
-    using count_t =
+    using CountT =
       std::iter_difference_t<decltype(std::filesystem::directory_iterator(
         path, ec))>;
-    count_t max_count = {};
+    CountT max_count = {};
     for (const auto &sub_path : recursive_dir)
     {
       const bool is_dir = std::filesystem::is_directory(sub_path, ec);
@@ -105,4 +105,8 @@ ff_8::Upscales::Upscales()
     }
     spdlog::debug("max file count is: {}", max_count);
   }
+}
+ff_8::Upscales::operator std::filesystem::path() const
+{
+  return string();
 }

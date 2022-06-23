@@ -3,7 +3,7 @@
 //
 
 #include "ImGuiTileDisplayWindow.hpp"
-static constinit ff_8::ImGuiTileDisplayWindow *current_window = nullptr;
+static constinit ff_8::ImGuiTileDisplayWindow *CurrentWindow = nullptr;
 void ff_8::ImGuiTileDisplayWindow::on_update(float) const
 {
   m_drawn = false;
@@ -16,24 +16,24 @@ void ff_8::ImGuiTileDisplayWindow::on_im_gui_update() const
 void ff_8::ImGuiTileDisplayWindow::on_event(const glengine::event::Item &) const
 {
 }
-void ff_8::ImGuiTileDisplayWindow::TakeControl(
+void ff_8::ImGuiTileDisplayWindow::take_control(
   const bool              has_hover,
   const glengine::Counter id)
 {
-  if (current_window && has_hover)
+  if (CurrentWindow && has_hover)
   {
-    current_window->m_current_id = id;
+    CurrentWindow->m_current_id = id;
   }
 }
 ff_8::ImGuiTileDisplayWindow::~ImGuiTileDisplayWindow()
 {
-  current_window = nullptr;
+  CurrentWindow = nullptr;
 }
 ff_8::ImGuiTileDisplayWindow::ImGuiTileDisplayWindow()
 {
-  current_window = this;
+  CurrentWindow = this;
 }
-ff_8::ImGuiTileDisplayWindow *ff_8::ImGuiTileDisplayWindow::GetWindow()
+ff_8::ImGuiTileDisplayWindow *ff_8::ImGuiTileDisplayWindow::get_window()
 {
-  return current_window;
+  return CurrentWindow;
 }

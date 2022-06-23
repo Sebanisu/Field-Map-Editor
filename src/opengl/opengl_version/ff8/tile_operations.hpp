@@ -8,66 +8,73 @@ namespace ff_8
 {
 namespace tile_operations
 {
-#define TILE_OPERATION(STRING)                                                \
-  template<open_viii::graphics::background::is_tile T>                        \
-  using STRING##_t = typename std::invoke_result_t<decltype(&T::STRING), T>;  \
-  struct STRING                                                               \
-  {                                                                           \
-    template<open_viii::graphics::background::is_tile T>                      \
-    constexpr STRING##_t<T> operator()(const T &tile) const noexcept          \
-    {                                                                         \
-      return tile.STRING();                                                   \
-    }                                                                         \
-  };                                                                          \
-  template<typename V>                                                        \
-  struct STRING##_match                                                       \
-  {                                                                           \
-    constexpr STRING##_match(V value)                                         \
-      : m_value(std::move(value))                                             \
-    {                                                                         \
-    }                                                                         \
-    template<open_viii::graphics::background::is_tile T>                      \
-    constexpr bool operator()(const T &tile) const noexcept                   \
-    {                                                                         \
-      return static_cast<STRING##_t<T>>(m_value) == tile.STRING();            \
-    }                                                                         \
-    auto                 operator<=>(const STRING##_match &) const = default; \
-    std::strong_ordering operator<=>(const V &that) const                     \
-    {                                                                         \
-      return m_value <=> that;                                                \
-    }                                                                         \
-    template<open_viii::graphics::background::is_tile T>                      \
-    std::strong_ordering operator<=>(const T &tile) const                     \
-    {                                                                         \
-      return static_cast<STRING##_t<T>>(m_value) <=> tile.STRING();           \
-    }                                                                         \
-                                                                              \
-  private:                                                                    \
-    V m_value = {};                                                           \
-  };                                                                          \
-  struct STRING##_default_value                                               \
-  {                                                                           \
-    template<open_viii::graphics::background::is_tile T>                      \
-    constexpr STRING##_t<T> operator()(const T &) const noexcept              \
-    {                                                                         \
-      return {};                                                              \
-    }                                                                         \
+#define TILE_OPERATION(STRING, FUNCTION)                                     \
+  template<open_viii::graphics::background::is_tile T>                       \
+  using STRING##T = typename std::remove_cvref_t<                            \
+    std::invoke_result_t<decltype(&T::FUNCTION), T>>;                        \
+  struct STRING                                                              \
+  {                                                                          \
+    template<open_viii::graphics::background::is_tile T>                     \
+    constexpr STRING##T<T> operator()(const T &tile) const noexcept          \
+    {                                                                        \
+      return tile.FUNCTION();                                                \
+    }                                                                        \
+  };                                                                         \
+  template<typename V>                                                       \
+  struct STRING##Match                                                       \
+  {                                                                          \
+    constexpr STRING##Match(V value)                                         \
+      : m_value(std::move(value))                                            \
+    {                                                                        \
+    }                                                                        \
+    template<open_viii::graphics::background::is_tile T>                     \
+    constexpr bool operator()(const T &tile) const noexcept                  \
+    {                                                                        \
+      return static_cast<STRING##T<T>>(m_value) == tile.FUNCTION();          \
+    }                                                                        \
+    auto                 operator<=>(const STRING##Match &) const = default; \
+    std::strong_ordering operator<=>(const V &that) const                    \
+    {                                                                        \
+      return m_value <=> that;                                               \
+    }                                                                        \
+    template<open_viii::graphics::background::is_tile T>                     \
+    std::strong_ordering operator<=>(const T &tile) const                    \
+    {                                                                        \
+      return static_cast<STRING##T<T>>(m_value) <=> tile.FUNCTION();         \
+    }                                                                        \
+                                                                             \
+  private:                                                                   \
+    V m_value = {};                                                          \
+  };                                                                         \
+  struct STRING##DefaultValue                                                \
+  {                                                                          \
+    template<open_viii::graphics::background::is_tile T>                     \
+    constexpr STRING##T<T> operator()(const T &) const noexcept              \
+    {                                                                        \
+      return {};                                                             \
+    }                                                                        \
+  };                                                                         \
+  template<typename T>                                                       \
+  concept has_with_##FUNCTION =                                              \
+    requires(std::remove_cvref_t<T> t)                                       \
+  {                                                                          \
+    t = t.with_##FUNCTION(STRING##T<T>{});                                   \
   }
-  TILE_OPERATION(x);
-  TILE_OPERATION(y);
-  TILE_OPERATION(z);
-  TILE_OPERATION(source_x);
-  TILE_OPERATION(source_y);
-  TILE_OPERATION(texture_id);
-  TILE_OPERATION(blend_mode);
-  TILE_OPERATION(blend);
-  TILE_OPERATION(draw);
-  TILE_OPERATION(layer_id);
-  TILE_OPERATION(palette_id);
-  TILE_OPERATION(animation_id);
-  TILE_OPERATION(animation_state);
+  TILE_OPERATION(X, x);
+  TILE_OPERATION(Y, y);
+  TILE_OPERATION(Z, z);
+  TILE_OPERATION(SourceX, source_x);
+  TILE_OPERATION(SourceY, source_y);
+  TILE_OPERATION(TextureId, texture_id);
+  TILE_OPERATION(BlendMode, blend_mode);
+  TILE_OPERATION(Blend, blend);
+  TILE_OPERATION(Draw, draw);
+  TILE_OPERATION(LayerId, layer_id);
+  TILE_OPERATION(PaletteId, palette_id);
+  TILE_OPERATION(AnimationId, animation_id);
+  TILE_OPERATION(AnimationState, animation_state);
 #undef TILE_OPERATION
-  struct invalid_tile
+  struct InvalidTile
   {
     template<open_viii::graphics::background::is_tile T>
     constexpr bool operator()(const T &tile) const noexcept

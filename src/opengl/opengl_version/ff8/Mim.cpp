@@ -13,33 +13,34 @@
 #include "PixelBuffer.hpp"
 namespace ff_8
 {
-static const BPPs               bpp          = {};
-static const Palettes           palette      = {};
-static bool                     draw_palette = false;
-static bool                     draw_grid    = false;
-static bool                     fit_height   = true;
-static bool                     fit_width    = true;
-static bool                     saving       = false;
-static bool                     preview      = false;
-static const glengine::Texture *texture      = nullptr;
+static const Bpps               Bpp         = {};
+static const Palettes           Palette     = {};
+static bool                     DrawPalette = false;
+static bool                     DrawGrid    = false;
+static bool                     FitHeight   = true;
+static bool                     FitWidth    = true;
+static bool                     Saving      = false;
+static bool                     Preview     = false;
+static const glengine::Texture *Texture     = nullptr;
 }// namespace ff_8
 void ff_8::Mim::on_update(float ts) const
 {
   (void)m_delayed_textures.on_update();
-  const auto &local_texture = CurrentTexture();
+  const auto &local_texture = current_texture();
   m_imgui_viewport_window.set_image_bounds(
     glm::vec2{ local_texture.width(), local_texture.height() });
   m_imgui_viewport_window.on_update(ts);
-  m_imgui_viewport_window.fit(fit_width, fit_height);
+  m_imgui_viewport_window.fit(FitWidth, FitHeight);
   m_batch_renderer.on_update(ts);
 }
 
 void ff_8::Mim::on_render() const
 {
-  if (texture == nullptr)
-    texture = &CurrentTexture();
+  const auto null_texture = glengine::ScopeGuard([]() { Texture = nullptr; });
+  if (Texture == nullptr)
+    Texture = &current_texture();
 
-  if (texture->width() == 0 || texture->height() == 0)
+  if (Texture->width() == 0 || Texture->height() == 0)
   {
     return;
   }
@@ -47,40 +48,38 @@ void ff_8::Mim::on_render() const
   glengine::Window::default_blend();
   m_imgui_viewport_window.on_render();
   set_uniforms();
-  if (!saving)
+  if (!Saving)
   {
     m_imgui_viewport_window.on_render([this]() { render_frame_buffer(); });
-    GetViewPortPreview().on_render(
-      m_imgui_viewport_window, [this]() {
-        preview = true;
-        set_uniforms();
-        render_frame_buffer();
-        preview = false;
-      });
+    GetViewPortPreview().on_render(m_imgui_viewport_window, [this]() {
+      Preview                = true;
+      const auto pop_preview = glengine::ScopeGuard([]() { Preview = false; });
+      set_uniforms();
+      render_frame_buffer();
+    });
   }
   else
   {
     render_frame_buffer();
   }
-  ff_8::ImGuiTileDisplayWindow::TakeControl(
+  ff_8::ImGuiTileDisplayWindow::take_control(
     m_imgui_viewport_window.has_hover(), m_id);
-  texture = nullptr;
 }
 void ff_8::Mim::on_im_gui_update() const
 {
-  const auto  popid         = glengine::ImGuiPushId();
-  const auto &local_texture = CurrentTexture();
+  const auto  pop_id        = glengine::ImGuiPushId();
+  const auto &local_texture = current_texture();
   {
     const auto disable = glengine::ImGuiDisabled(
       local_texture.height() == 0 || local_texture.width() == 0);
 
 
-    ImGui::Checkbox("Draw Palette", &draw_palette);
-    ImGui::Checkbox("Draw Grid", &draw_grid);
-    ImGui::Checkbox("fit Height", &fit_height);
-    ImGui::Checkbox("fit Width", &fit_width);
+    ImGui::Checkbox("draw Palette", &DrawPalette);
+    ImGui::Checkbox("draw Grid", &DrawGrid);
+    ImGui::Checkbox("fit Height", &FitHeight);
+    ImGui::Checkbox("fit Width", &FitWidth);
 
-    if (bpp.on_im_gui_update() || palette.on_im_gui_update())
+    if (Bpp.on_im_gui_update() || Palette.on_im_gui_update())
     {
     }
     if (ImGui::Button("Save"))
@@ -89,7 +88,7 @@ void ff_8::Mim::on_im_gui_update() const
     }
     if (ImGui::Button("Save All"))
     {
-      Save_All();
+      save_all();
     }
   }
   ImGui::Separator();
@@ -106,16 +105,16 @@ void ff_8::Mim::on_im_gui_update() const
   m_imgui_viewport_window.on_im_gui_update();
   ImGui::Separator();
   m_batch_renderer.on_im_gui_update();
-  ff_8::ImGuiTileDisplayWindow::OnImGuiUpdateForward(m_id, [this]() {
+  ff_8::ImGuiTileDisplayWindow::on_im_gui_update_forward(m_id, [this]() {
     ImGui::Text(
       "%s", fmt::format("Mim {}", static_cast<uint32_t>(m_id)).c_str());
   });
 }
 
 ff_8::Mim::Mim(const ff_8::Fields &fields)
-  : m_mim(LoadMim(fields.Field(), fields.Coo(), m_path, m_choose_coo))
+  : m_mim(LoadMim(fields, fields.coo(), m_path, m_choose_coo))
 {
-  texture = nullptr;
+  Texture = nullptr;
   if (!std::empty(m_path))
   {
     spdlog::debug("Loaded {}", m_path);
@@ -124,40 +123,40 @@ ff_8::Mim::Mim(const ff_8::Fields &fields)
   }
 }
 
-std::size_t ff_8::Mim::Index() const
+std::size_t ff_8::Mim::index() const
 {
-  if (bpp.BPP().bpp24())
+  if (Bpp->bpp24())
   {
     return static_cast<std::size_t>(2) * 16U + 1;
   }
-  if (bpp.BPP().bpp16())
+  if (Bpp->bpp16())
   {
     return static_cast<std::size_t>(2) * 16U;
   }
-  return static_cast<std::size_t>(bpp.Index()) * 16U + palette.Palette();
+  return static_cast<std::size_t>(Bpp.index()) * 16U + Palette;
 }
 
-const glengine::Texture &ff_8::Mim::CurrentTexture() const
+const glengine::Texture &ff_8::Mim::current_texture() const
 {
-  if (draw_palette)
+  if (DrawPalette)
   {
     return m_delayed_textures.textures->back();
   }
-  return m_delayed_textures.textures->at(Index());
+  return m_delayed_textures.textures->at(index());
 }
 
 void ff_8::Mim::set_uniforms() const
 {
   m_batch_renderer.bind();
 
-  if (saving)
+  if (Saving)
   {
     m_batch_renderer.shader().set_uniform(
       "u_MVP",
-      glengine::OrthographicCamera{ { texture->width(), texture->height() } }
+      glengine::OrthographicCamera{ { Texture->width(), Texture->height() } }
         .view_projection_matrix());
   }
-  else if (preview)
+  else if (Preview)
   {
 
     m_batch_renderer.shader().set_uniform(
@@ -168,13 +167,13 @@ void ff_8::Mim::set_uniforms() const
     m_batch_renderer.shader().set_uniform(
       "u_MVP", m_imgui_viewport_window.view_projection_matrix());
   }
-  if (!draw_grid || saving)
+  if (!DrawGrid || Saving)
   {
     m_batch_renderer.shader().set_uniform("u_Grid", 0.F, 0.F);
   }
   else
   {
-    if (!draw_palette)
+    if (!DrawPalette)
     {
       m_batch_renderer.shader().set_uniform("u_Grid", 16.F, 16.F);
     }
@@ -192,8 +191,8 @@ void ff_8::Mim::on_event(const glengine::event::Item &event) const
 }
 void ff_8::Mim::save() const
 {
-  saving                                 = true;
-  const glengine::Texture &local_texture = CurrentTexture();
+  Saving                                 = true;
+  const glengine::Texture &local_texture = current_texture();
   glengine::FrameBuffer    fb(
     { .width = local_texture.width(), .height = local_texture.height() });
   {
@@ -207,14 +206,14 @@ void ff_8::Mim::save() const
   auto string  = fmt::format(
     "{}_mim_{}_{}.png",
     fs_path.stem().string(),
-    bpp.String(),
-    palette.String());
-  if (bpp.BPP().bpp16() || bpp.BPP().bpp24())
+    Bpp.string(),
+    Palette.string());
+  if (Bpp->bpp16() || Bpp->bpp24())
   {
     string =
-      fmt::format("{}_mim_{}.png", fs_path.stem().string(), bpp.String());
+      fmt::format("{}_mim_{}.png", fs_path.stem().string(), Bpp.string());
   }
-  if (draw_palette)
+  if (DrawPalette)
   {
     string = fmt::format("{}_mim_clut.png", fs_path.stem().string());
   }
@@ -222,16 +221,16 @@ void ff_8::Mim::save() const
   pixel_buffer.         operator()(fb, fs_path.parent_path() / string);
   while (pixel_buffer.operator()(&glengine::Texture::save))
     ;
-  saving = false;
+  Saving = false;
 }
-void ff_8::Mim::Save_All() const
+void ff_8::Mim::save_all() const
 {
-  saving = true;
+  Saving = true;
   for (int index = 0;
        index < static_cast<int>(m_delayed_textures.textures->size());
        ++index)
   {
-    texture = &m_delayed_textures.textures->at(static_cast<std::size_t>(index));
+    Texture = &m_delayed_textures.textures->at(static_cast<std::size_t>(index));
     int local_bpp     = index / 16;
     int local_palette = index % 16;
     if (local_bpp == 2)
@@ -259,17 +258,17 @@ void ff_8::Mim::Save_All() const
     {
       local_bpp = 4;
     }
-    if (texture->width() == 0 || texture->height() == 0)
+    if (Texture->width() == 0 || Texture->height() == 0)
     {
       continue;
     }
     glengine::FrameBuffer fb(
-      { .width = texture->width(), .height = texture->height() });
+      { .width = Texture->width(), .height = Texture->height() });
     {
       const auto fbb = glengine::FrameBufferBackup{};
       fb.bind();
       glengine::Renderer::Clear();
-      GlCall{}(glViewport, 0, 0, texture->width(), texture->height());
+      GlCall{}(glViewport, 0, 0, Texture->width(), Texture->height());
       on_render();
     }
     glengine::PixelBuffer pixel_buffer{ fb.specification() };
@@ -285,17 +284,17 @@ void ff_8::Mim::Save_All() const
       ;
   }
   // RestoreViewPortToFrameBuffer();
-  saving = false;
+  Saving = false;
 }
 void ff_8::Mim::render_frame_buffer() const
 {
   m_batch_renderer.clear();
   m_batch_renderer.draw_quad(
-    *texture,
-    glm::vec3{ -static_cast<float>(texture->width()) / 2.F,
-               -static_cast<float>(texture->height()) / 2.F,
+    *Texture,
+    glm::vec3{ -static_cast<float>(Texture->width()) / 2.F,
+               -static_cast<float>(Texture->height()) / 2.F,
                0.F },
-    glm::vec2{ texture->width(), texture->height() });
+    glm::vec2{ Texture->width(), Texture->height() });
   m_batch_renderer.draw();
   m_batch_renderer.on_render();
 }

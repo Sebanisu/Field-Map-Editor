@@ -12,14 +12,12 @@ namespace ff_8
 class Coos
 {
 public:
-  void on_update(float) const {}
-  void on_render() const {}
-  bool on_im_gui_update() const;
-  void on_event(const glengine::event::Item &) const {}
-  [[nodiscard]] std::string_view Coo() const
-  {
-    return m_coos.at(static_cast<std::size_t>(m_current));
-  }
+  void          on_update(float) const {}
+  void          on_render() const {}
+  bool          on_im_gui_update() const;
+  void          on_event(const glengine::event::Item &) const {}
+  //[[nodiscard]] std::string_view operator*() const;
+  [[nodiscard]] operator std::string_view() const;
 
 private:
   static constexpr auto m_coos = open_viii::LangCommon::to_string_array();

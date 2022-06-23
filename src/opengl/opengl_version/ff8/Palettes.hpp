@@ -15,9 +15,9 @@ public:
   void             on_render() const {}
   bool             on_im_gui_update() const;
   void             on_event(const glengine::event::Item &) const {}
-  std::uint8_t     Palette() const;
-  std::string_view String() const;
-  int              Index() const;
+                   operator std::uint8_t() const;
+  std::string_view string() const;
+  int              index() const;
 
 private:
   static constexpr auto m_values = []() {

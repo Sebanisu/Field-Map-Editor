@@ -33,17 +33,17 @@ public:
     std::size_t                                i,
     const std::optional<glengine::SubTexture> &sub_texture) const
   {
-    CheckBoxDraw(tile, changed);
-    int current_bpp_selection = ComboBPP(tile, changed);
-    SliderInt2SourceXY(tile, changed, current_bpp_selection);
-    SliderInt3XYZ(tile, changed);
-    SliderIntLayerID(tile, changed);
-    SliderIntBlendOther(tile, changed);
-    SliderIntPaletteID(tile, changed);
-    SliderIntTexturePageID(tile, changed);
-    SliderInt2Animation(tile, changed);
-    ComboBlendModes(tile, changed);
-    InputsReadOnly(
+    check_box_draw(tile, changed);
+    int current_bpp_selection = combo_bpp(tile, changed);
+    slider_int_2_source_xy(tile, changed, current_bpp_selection);
+    slider_int_3_xyz(tile, changed);
+    slider_int_layer_id(tile, changed);
+    slider_int_blend_other(tile, changed);
+    slider_int_palette_id(tile, changed);
+    slider_int_texture_page_id(tile, changed);
+    slider_int_2_animation(tile, changed);
+    combo_blend_modes(tile, changed);
+    inputs_read_only(
       tile,
       static_cast<int>(i),
       static_cast<int>(static_cast<uint32_t>(sub_texture->id())));
@@ -74,21 +74,22 @@ private:
     return { w_item_one, w_item_last };
   }
   template<typename TileT>
-  void CheckBoxDraw(TileT &tile, bool &changed) const
+  void check_box_draw(TileT &tile, bool &changed) const
   {
+    using namespace tile_operations;
     bool draw = tile.draw();
-    if (ImGui::Checkbox("Draw?", &draw))
+    if (ImGui::Checkbox("draw?", &draw))
     {
-      if constexpr (typename TileFunctions::use_blending{})
+      if constexpr (typename TileFunctions::UseBlending{})
       {
         // this won't display change on swizzle because if we skip
         // those tiles they won't output to the image file.
         changed = true;
       }
-      tile = tile.with_draw(static_cast<tile_operations::draw_t<TileT>>(draw));
+      tile = tile.with_draw(static_cast<DrawT<TileT>>(draw));
     }
   }
-  void InputsReadOnly(const auto &tile, const int index, const int id) const
+  void inputs_read_only(const auto &tile, const int index, const int id) const
   {
     // ImGui doesn't seem to have const pointer versions of their functions,
     // ReadOnly flag is set on the functions. It's ment to display the data in a
@@ -131,7 +132,7 @@ private:
         ImGuiInputTextFlags_ReadOnly);
     }
   }
-  int ComboBPP(auto &tile, bool &changed) const
+  int combo_bpp(auto &tile, bool &changed) const
   {
     std::array<const char *, 3> bpp_options           = { "4", "8", "16" };
     int                         current_bpp_selection = [&]() -> int {
@@ -168,11 +169,12 @@ private:
     return current_bpp_selection;
   }
   template<typename TileT>
-  void SliderInt2SourceXY(
+  void slider_int_2_source_xy(
     TileT    &tile,
     bool     &changed,
     const int current_bpp_selection) const
   {
+    using namespace tile_operations;
     std::array<int, 2> source_xy = {
       static_cast<int>(tile.source_x() / tile.width()),
       static_cast<int>(tile.source_y() / tile.height())
@@ -189,8 +191,7 @@ private:
       {
         source_xy[0] *= tile.width();
         changed = true;
-        tile    = tile.with_source_x(
-          static_cast<tile_operations::source_x_t<TileT>>(source_xy[0]));
+        tile = tile.with_source_x(static_cast<SourceXT<TileT>>(source_xy[0]));
       }
     }
     ImGui::SameLine(0, ImGui::GetStyle().ItemInnerSpacing.x);
@@ -199,15 +200,12 @@ private:
       if (ImGui::SliderInt(
             "##Source (Y)",
             &source_xy[1],
-            std::numeric_limits<tile_operations::source_y_t<TileT>>::min()
-              / tile.height(),
-            std::numeric_limits<tile_operations::source_y_t<TileT>>::max()
-              / tile.height()))
+            std::numeric_limits<SourceYT<TileT>>::min() / tile.height(),
+            std::numeric_limits<SourceYT<TileT>>::max() / tile.height()))
       {
         changed = true;
         source_xy[1] *= tile.height();
-        tile = tile.with_source_y(
-          static_cast<tile_operations::source_y_t<TileT>>(source_xy[1]));
+        tile = tile.with_source_y(static_cast<SourceYT<TileT>>(source_xy[1]));
       }
     }
     ImGui::SameLine(0, ImGui::GetStyle().ItemInnerSpacing.x);
@@ -219,8 +217,9 @@ private:
     // the mim / swizzled map. Without changing the image.
   }
   template<typename TileT>
-  void SliderInt3XYZ(TileT &tile, bool &changed) const
+  void slider_int_3_xyz(TileT &tile, bool &changed) const
   {
+    using namespace tile_operations;
     std::array<int, 3> xyz = { static_cast<int>(tile.x() / tile.width()),
                                static_cast<int>(tile.y() / tile.height()),
                                static_cast<int>(tile.z()) };
@@ -236,7 +235,7 @@ private:
       {
         changed = true;
         xyz[0] *= tile.width();
-        tile = tile.with_x(static_cast<tile_operations::x_t<TileT>>(xyz[0]));
+        tile = tile.with_x(static_cast<XT<TileT>>(xyz[0]));
       }
     }
     ImGui::SameLine(0, ImGui::GetStyle().ItemInnerSpacing.x);
@@ -250,7 +249,7 @@ private:
       {
         changed = true;
         xyz[1] *= tile.height();
-        tile = tile.with_y(static_cast<tile_operations::y_t<TileT>>(xyz[1]));
+        tile = tile.with_y(static_cast<YT<TileT>>(xyz[1]));
       }
     }
     ImGui::SameLine(0, ImGui::GetStyle().ItemInnerSpacing.x);
@@ -259,7 +258,7 @@ private:
       if (ImGui::SliderInt("##Destination (Z)", &xyz[2], 0, 0xFFF))
       {
         changed = true;
-        tile    = tile.with_z(static_cast<tile_operations::z_t<TileT>>(xyz[2]));
+        tile    = tile.with_z(static_cast<ZT<TileT>>(xyz[2]));
         m_filters.unique_tile_values().refresh_z(m_map);
       }
     }
@@ -270,9 +269,9 @@ private:
         .c_str());
   }
   template<typename TileT>
-  void ComboBlendModes(TileT &tile, bool &changed) const
+  void combo_blend_modes(TileT &tile, bool &changed) const
   {
-    using namespace open_viii::graphics::background;
+    using namespace tile_operations;
     const auto disabled = glengine::ImGuiDisabled(!has_with_blend_mode<TileT>);
     const auto blend_mode                   = tile.blend_mode();
     int        current_blend_mode_selection = static_cast<int>(blend_mode);
@@ -286,85 +285,81 @@ private:
       {
         changed = true;
         tile    = tile.with_blend_mode(
-          static_cast<tile_operations::blend_mode_t<TileT>>(
-            current_blend_mode_selection));
+          static_cast<BlendModeT<TileT>>(current_blend_mode_selection));
         m_filters.unique_tile_values().refresh_blend_mode(m_map);
       }
     }
   }
   template<typename TileT>
-  void SliderIntLayerID(TileT &tile, bool &changed) const
+  void slider_int_layer_id(TileT &tile, bool &changed) const
   {
+    using namespace tile_operations;
     using namespace open_viii::graphics::background;
     int        layer_id = tile.layer_id();
-    const auto disabled =
-      glengine::ImGuiDisabled(!has_with_layer_id<std::remove_cvref_t<TileT>>);
+    const auto disabled = glengine::ImGuiDisabled(!has_with_layer_id<TileT>);
     if (ImGui::SliderInt(
           "Layer ID",
           &layer_id,
-          std::numeric_limits<
-            std::remove_cvref_t<tile_operations::layer_id_t<TileT>>>::min(),
-          std::numeric_limits<
-            std::remove_cvref_t<tile_operations::layer_id_t<TileT>>>::max()))
+          std::numeric_limits<LayerIdT<TileT>>::min(),
+          std::numeric_limits<LayerIdT<TileT>>::max()))
     {
-      if constexpr (has_with_layer_id<std::remove_cvref_t<TileT>>)
+      if constexpr (has_with_layer_id<TileT>)
       {
         changed = true;
-        tile    = tile.with_layer_id(
-          static_cast<tile_operations::layer_id_t<TileT>>(layer_id));
+        tile    = tile.with_layer_id(static_cast<LayerIdT<TileT>>(layer_id));
         m_filters.unique_tile_values().refresh_layer_id(m_map);
       }
     }
   }
   template<typename TileT>
-  void SliderIntTexturePageID(TileT &tile, bool &changed) const
+  void slider_int_texture_page_id(TileT &tile, bool &changed) const
   {
+    using namespace tile_operations;
     int texture_page_id = static_cast<int>(tile.texture_id());
     if (ImGui::SliderInt("Texture Page ID", &texture_page_id, 0, 13))
     {
       changed = true;
-      tile    = tile.with_texture_id(
-        static_cast<tile_operations::texture_id_t<TileT>>(texture_page_id));
+      tile =
+        tile.with_texture_id(static_cast<TextureIdT<TileT>>(texture_page_id));
       m_filters.unique_tile_values().refresh_texture_page_id(m_map);
     }
   }
   template<typename TileT>
-  void SliderIntPaletteID(TileT &tile, bool &changed) const
+  void slider_int_palette_id(TileT &tile, bool &changed) const
   {
+    using namespace tile_operations;
     int palette_id = static_cast<int>(tile.palette_id());
     if (ImGui::SliderInt("Palette ID", &palette_id, 0, 16))
     {
       changed = true;
-      tile    = tile.with_palette_id(
-        static_cast<tile_operations::palette_id_t<TileT>>(palette_id));
+      tile = tile.with_palette_id(static_cast<PaletteIdT<TileT>>(palette_id));
       m_filters.unique_tile_values().refresh_palette_id(m_map);
     }
   }
   template<typename TileT>
-  void SliderIntBlendOther(TileT &tile, bool &changed) const
+  void slider_int_blend_other(TileT &tile, bool &changed) const
   {
+    using namespace tile_operations;
     int blend = tile.blend();
     if (ImGui::SliderInt(
           "Blend Other",
           &blend,
-          std::numeric_limits<
-            std::remove_cvref_t<tile_operations::blend_t<TileT>>>::min(),
-          std::numeric_limits<
-            std::remove_cvref_t<tile_operations::blend_t<TileT>>>::max()))
+          std::numeric_limits<BlendT<TileT>>::min(),
+          std::numeric_limits<BlendT<TileT>>::max()))
     {
       changed = true;
-      tile =
-        tile.with_blend(static_cast<tile_operations::blend_t<TileT>>(blend));
+      tile    = tile.with_blend(static_cast<BlendT<TileT>>(blend));
       m_filters.unique_tile_values().refresh_blend_other(m_map);
     }
   }
   template<typename TileT>
-  void SliderInt2Animation(TileT &tile, bool &changed) const
+  void slider_int_2_animation(TileT &tile, bool &changed) const
   {
+    using namespace tile_operations;
+    using namespace open_viii::graphics::background;
     int                           animation_id    = tile.animation_id();
     int                           animation_state = tile.animation_state();
     const std::pair<float, float> item_width      = generate_inner_width(2);
-    using namespace open_viii::graphics::background;
     {
       const auto disabled =
         glengine::ImGuiDisabled(!has_with_animation_id<TileT>);
@@ -372,16 +367,14 @@ private:
       if (ImGui::SliderInt(
             "##Animation ID",
             &animation_id,
-            std::numeric_limits<std::remove_cvref_t<
-              tile_operations::animation_id_t<TileT>>>::min(),
-            std::numeric_limits<std::remove_cvref_t<
-              tile_operations::animation_id_t<TileT>>>::max()))
+            std::numeric_limits<AnimationIdT<TileT>>::min(),
+            std::numeric_limits<AnimationIdT<TileT>>::max()))
       {
         if constexpr (has_with_animation_id<TileT>)
         {
           changed = true;
           tile    = tile.with_animation_id(
-            static_cast<tile_operations::animation_id_t<TileT>>(animation_id));
+            static_cast<AnimationIdT<TileT>>(animation_id));
           m_filters.unique_tile_values().refresh_animation_id(m_map);
         }
       }
@@ -394,17 +387,14 @@ private:
       if (ImGui::SliderInt(
             "##Animation State",
             &animation_state,
-            std::numeric_limits<std::remove_cvref_t<
-              tile_operations::animation_state_t<TileT>>>::min(),
-            std::numeric_limits<std::remove_cvref_t<
-              tile_operations::animation_state_t<TileT>>>::max()))
+            std::numeric_limits<AnimationStateT<TileT>>::min(),
+            std::numeric_limits<AnimationStateT<TileT>>::max()))
       {
         if constexpr (has_with_animation_state<TileT>)
         {
           changed = true;
           tile    = tile.with_animation_state(
-            static_cast<tile_operations::animation_state_t<TileT>>(
-              animation_state));
+            static_cast<AnimationStateT<TileT>>(animation_state));
           m_filters.unique_tile_values().refresh_animation_frame(m_map);
         }
       }

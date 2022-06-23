@@ -54,22 +54,22 @@ private:
   {
     return UniqueValues<open_viii::graphics::background::BlendModeT>(
       visit(map, [](const auto &tile) { return tile.blend_mode(); }),
-      BLENDMODE_TO_STRING);
+      blendmode_to_string);
   }
   static auto gen_bpp(const MapT &map)
   {
     return UniqueValues<open_viii::graphics::BPPT>(
-      visit(map, [](const auto &tile) { return tile.depth(); }), BPP_TO_STRING);
+      visit(map, [](const auto &tile) { return tile.depth(); }), bpp_to_string);
   }
   static void refresh(const MapT &map, auto &old, auto &&func)
   {
     std::remove_cvref_t<decltype(old)> new_value = func(map);
-    new_value.Update(old);
+    new_value.update(old);
     old = new_value;
   }
 
 public:
-  static constexpr auto BLENDMODE_TO_STRING =
+  static constexpr auto blendmode_to_string =
     [](open_viii::graphics::background::BlendModeT in_blend_mode)
     -> const std::string & {
     using namespace std::string_literals;
@@ -101,7 +101,7 @@ public:
     }
     throw std::invalid_argument("Invalid blend mode!");
   };
-  static constexpr auto BPP_TO_STRING =
+  static constexpr auto bpp_to_string =
     [](open_viii::graphics::BPPT in_bpp) -> const std::string & {
     using namespace std::string_literals;
     if (in_bpp.bpp4())
@@ -193,7 +193,7 @@ struct TilePossibleValues
                 open_viii::graphics::BPPT::BPP8_CONST(),
                 open_viii::graphics::BPPT::BPP16_CONST(),
                 open_viii::graphics::BPPT::BPP24_CONST() },
-    UniqueTileValues::BPP_TO_STRING
+    UniqueTileValues::bpp_to_string
   };
   UniqueValues<open_viii::graphics::background::BlendModeT> blend_mode = {
     std::array{ open_viii::graphics::background::BlendModeT::none,
@@ -201,7 +201,7 @@ struct TilePossibleValues
                 open_viii::graphics::background::BlendModeT::half_add,
                 open_viii::graphics::background::BlendModeT::quarter_add,
                 open_viii::graphics::background::BlendModeT::subtract },
-    UniqueTileValues::BLENDMODE_TO_STRING
+    UniqueTileValues::blendmode_to_string
   };
   UniqueValues<std::uint8_t> palette_id = {
     std::views::iota(std::uint8_t{ 0 }, std::uint8_t{ 16 })

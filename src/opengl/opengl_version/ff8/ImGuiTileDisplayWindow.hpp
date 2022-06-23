@@ -26,12 +26,12 @@ public:
   void        on_im_gui_update() const;
   void        on_event(const glengine::event::Item &) const;
   void        on_render() const;
-  static void TakeControl(const bool has_hover, const glengine::Counter id);
-  static bool OnImGuiUpdateForward(auto &&...params)
+  static void take_control(const bool has_hover, const glengine::Counter id);
+  static bool on_im_gui_update_forward(auto &&...params)
   {
-    if (GetWindow())
+    if (get_window())
     {
-      return GetWindow()->on_im_gui_update(
+      return get_window()->on_im_gui_update(
         std::forward<decltype(params)>(params)...);
     }
     return false;
@@ -53,10 +53,10 @@ public:
   }
 
 private:
-  static ImGuiTileDisplayWindow  *GetWindow();
-  static inline const char *const s_title      = "Tile Display Window";
-  mutable bool                    m_drawn      = { false };
-  mutable glengine::Counter       m_current_id = glengine::Counter{ 0U };
+  static ImGuiTileDisplayWindow            *get_window();
+  static constexpr inline const char *const s_title = "Tile Display Window";
+  mutable bool                              m_drawn = { false };
+  mutable glengine::Counter m_current_id            = glengine::Counter{ 0U };
 };
 static_assert(glengine::Renderable<ImGuiTileDisplayWindow>);
 }// namespace ff_8

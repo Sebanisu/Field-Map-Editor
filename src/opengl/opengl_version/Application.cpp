@@ -56,7 +56,7 @@ Application::Application(std::string title, int width, int height)
       spdlog::debug("event::{}\t{}\t{}", e.name(), e.category_name(), e.data());
     } }))
 {
-  layers.emplace_layers(std::in_place_type_t<Layer::Tests>{});
+  layers.emplace_layers(std::in_place_type_t<layer::Tests>{});
   GlobalPreview = &local_preview;
   GlobalFields  = &local_fields;
 }

@@ -11,11 +11,11 @@
 
 namespace ff_8
 {
-class FF8UpscaleMenu
+class Ff8UpscaleMenu
 {
 public:
-  FF8UpscaleMenu() = default;
-  FF8UpscaleMenu(const Fields &);// discards the value passed in.
+  Ff8UpscaleMenu() = default;
+  Ff8UpscaleMenu(const Fields &);// discards the value passed in.
   void on_update(float) const;
   void on_render() const;
   void on_im_gui_update() const;
@@ -25,7 +25,7 @@ public:
   {
     m_menu.push_back(std::move(name), [this]() -> glengine::MenuItem {
       return glengine::MenuItem(
-        std::in_place_type_t<T>{}, GetFields(), m_upscales.Path());
+        std::in_place_type_t<T>{}, GetFields(), m_upscales);
     });
   }
 

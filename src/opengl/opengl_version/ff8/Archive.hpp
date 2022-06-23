@@ -18,9 +18,9 @@ public:
   [[nodiscard]] bool on_im_gui_update() const;
   void               on_event(const glengine::event::Item &) const {}
 
-  [[nodiscard]] const open_viii::archive::Archives     &Archives() const;
-  [[nodiscard]] const open_viii::archive::FIFLFS<true> &Fields() const;
-  [[nodiscard]] std::string_view                        Coo() const;
+  [[nodiscard]] const open_viii::archive::Archives     *operator->() const;
+  [[nodiscard]] const open_viii::archive::FIFLFS<true> &fields() const;
+  [[nodiscard]] std::string_view                        coo() const;
 
 private:
   Paths                                m_paths    = {};

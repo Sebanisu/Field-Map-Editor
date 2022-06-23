@@ -6,11 +6,11 @@
 #include <stb_image.h>
 
 // static_assert(struct_of_color_byte<glm::vec<4, std::uint8_t>>);
-glengine::DelayedTextures<upscale_texture_count>
+glengine::DelayedTextures<ff_8::UpscaleTextureCount>
   ff_8::LoadTextures(const std::filesystem::path &upscale_path)
 {
-  glengine::DelayedTextures<upscale_texture_count> rdt{};
-  rdt.futures.reserve(upscale_texture_count);
+  glengine::DelayedTextures<UpscaleTextureCount> rdt{};
+  rdt.futures.reserve(UpscaleTextureCount);
   auto process = [](
                    const std::filesystem::path file_path,
                    glengine::Texture *in_out) -> glengine::DelayedTexturesData {
@@ -53,7 +53,7 @@ glengine::DelayedTextures<upscale_texture_count>
         upscale_path
         / fmt::format(
           "{}_{}_{}.png", current_file_prefix, +texture_page, +palette);
-      const auto index = texture_page + texture_page_count * (palette + 1U);
+      const auto index = texture_page + TexturePageCount * (palette + 1U);
       if (!std::filesystem::exists(current_file))
         continue;
       spdlog::debug("Loading Texture: {}", current_file.string());

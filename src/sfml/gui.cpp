@@ -700,7 +700,7 @@ void gui::checkbox_map_disable_blending() const
 }
 void gui::checkbox_mim_palette_texture() const
 {
-  if (ImGui::Checkbox("Draw Palette Texture", &m_selections.draw_palette))
+  if (ImGui::Checkbox("draw Palette Texture", &m_selections.draw_palette))
   {
     m_mim_sprite = m_mim_sprite.with_draw_palette(m_selections.draw_palette);
     m_changed    = true;
@@ -879,9 +879,9 @@ void gui::menu_bar() const
     }
     if (ImGui::BeginMenu("Grid"))
     {
-      ImGui::MenuItem("Draw Tile Grid", nullptr, &m_selections.draw_grid);
+      ImGui::MenuItem("draw Tile Grid", nullptr, &m_selections.draw_grid);
       ImGui::MenuItem(
-        "Draw Texture Page Grid",
+        "draw Texture Page Grid",
         nullptr,
         &m_selections.draw_texture_page_grid);
       ImGui::EndMenu();

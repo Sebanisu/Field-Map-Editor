@@ -7,7 +7,7 @@
 #include "ff8/FF8Menu.hpp"
 namespace test
 {
-class TestFF8Archive
+class TestFf8Archive
 {
 public:
   void on_update(float) const;
@@ -16,7 +16,7 @@ public:
   void on_event(const glengine::event::Item &) const;
 
 private:
-  ff_8::FF8Menu ff_8_menu = {};
+  ff_8::Ff8Menu ff_8_menu = {};
 };
 }// namespace test
 #endif// FIELD_MAP_EDITOR_TESTFF8ARCHIVE_HPP

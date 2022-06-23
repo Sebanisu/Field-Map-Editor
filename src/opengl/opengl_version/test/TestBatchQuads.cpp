@@ -8,9 +8,9 @@
 #include "Renderer.hpp"
 #include "Vertex.hpp"
 
-static constinit bool fit_width  = true;
-static constinit bool fit_height = true;
-static constinit bool preview    = false;
+static constinit bool FitWidth  = true;
+static constinit bool FitHeight = true;
+static constinit bool Preview   = false;
 
 static_assert(glengine::Renderable<test::TestBatchQuads>);
 test::TestBatchQuads::TestBatchQuads()
@@ -24,29 +24,29 @@ test::TestBatchQuads::TestBatchQuads()
 }
 namespace test
 {
-static std::vector<Vertex> vertices = []() {
+static std::vector<Vertex> Vertices = []() {
   std::vector<Vertex> r{};
-  r.reserve(TestBatchQuads::VERT_COUNT);
+  r.reserve(TestBatchQuads::vert_count);
   return r;
 }();
-static std::uint32_t draw_count = 0U;
+static std::uint32_t DrawCount = 0U;
 }// namespace test
 void test::TestBatchQuads::on_update(float ts) const
 {
-  draw_count = 0U;
+  DrawCount = 0U;
   m_imgui_viewport_window.set_image_bounds({ m_count[0], m_count[1] });
   m_imgui_viewport_window.on_update(ts);
-  m_imgui_viewport_window.fit(fit_width, fit_height);
+  m_imgui_viewport_window.fit(FitWidth, FitHeight);
 }
-void test::TestBatchQuads::GenerateQuads() const
+void test::TestBatchQuads::generate_quads() const
 {
   const auto flush = [this]() {
-    index_buffer_size = m_vertex_buffer.update(vertices);
-    Draw();
-    vertices.clear();
+    index_buffer_size = m_vertex_buffer.update(Vertices);
+    draw();
+    Vertices.clear();
   };
-  const auto max_count = TestBatchQuads::VERT_COUNT;
-  vertices.clear();
+  const auto max_count = TestBatchQuads::vert_count;
+  Vertices.clear();
   auto x_rng = std::views::iota(uint32_t{}, static_cast<uint32_t>(m_count[0]));
   auto y_rng = std::views::iota(uint32_t{}, static_cast<uint32_t>(m_count[1]));
   for (const auto x : x_rng)
@@ -55,30 +55,30 @@ void test::TestBatchQuads::GenerateQuads() const
     {
       float r = static_cast<float>(x) / static_cast<float>(m_count[0]);
       float g = static_cast<float>(y) / static_cast<float>(m_count[1]);
-      vertices += CreateQuad(
+      Vertices += CreateQuad(
         { static_cast<float>(x) - static_cast<float>(m_count[0]) / 2.F,
           static_cast<float>(y) - static_cast<float>(m_count[1]) / 2.F,
           0.F },
         { r, g, 1.F, 1.F },
         0);
-      if (std::ranges::size(vertices) == max_count)
+      if (std::ranges::size(Vertices) == max_count)
       {
         flush();
       }
     }
   }
 
-  index_buffer_size = m_vertex_buffer.update(vertices);
+  index_buffer_size = m_vertex_buffer.update(Vertices);
 }
 void test::TestBatchQuads::on_render() const
 {
   set_uniforms();
-  m_imgui_viewport_window.on_render([&]() { GenerateQuads(); });
+  m_imgui_viewport_window.on_render([&]() { generate_quads(); });
   GetViewPortPreview().on_render(m_imgui_viewport_window, [this]() {
-    preview = true;
+    Preview                = true;
+    const auto pop_preview = glengine::ScopeGuard([]() { Preview = false; });
     set_uniforms();
-    GenerateQuads();
-    preview = false;
+    generate_quads();
   });
 }
 void test::TestBatchQuads::on_im_gui_update() const
@@ -89,8 +89,8 @@ void test::TestBatchQuads::on_im_gui_update() const
   {
     const auto pop = glengine::ImGuiPushId();
 
-    ImGui::Checkbox("fit Height", &fit_height);
-    ImGui::Checkbox("fit Width", &fit_width);
+    ImGui::Checkbox("fit Height", &FitHeight);
+    ImGui::Checkbox("fit Width", &FitWidth);
   }
   {
     const auto pop = glengine::ImGuiPushId();
@@ -101,7 +101,7 @@ void test::TestBatchQuads::on_im_gui_update() const
     }
   }
   {
-    const auto pop3 = glengine::ImGuiPushId();
+    const auto pop_3 = glengine::ImGuiPushId();
     if (ImGui::SliderInt2("Quad (X, Y)", std::data(m_count), 0, 256))
     {
     }
@@ -117,26 +117,26 @@ void test::TestBatchQuads::on_im_gui_update() const
     "%s",
     fmt::format("Total Indices Rendered: {}", m_count[0] * m_count[1] * 6)
       .c_str());
-  ImGui::Text("%s", fmt::format("Total Draws: {}", test::draw_count).c_str());
+  ImGui::Text("%s", fmt::format("Total Draws: {}", test::DrawCount).c_str());
   ImGui::Separator();
   m_imgui_viewport_window.on_im_gui_update();
 }
-void test::TestBatchQuads::Draw() const
+void test::TestBatchQuads::draw() const
 {
-  if (std::ranges::empty(vertices))
+  if (std::ranges::empty(Vertices))
   {
     return;
   }
   m_blank.bind(0);
   m_shader.set_uniform("u_Textures", std::array{ 0 });
   glengine::Renderer::Draw(index_buffer_size, m_vertex_array, m_index_buffer);
-  ++draw_count;
+  ++DrawCount;
 }
 void test::TestBatchQuads::on_event(const glengine::event::Item &) const {}
 void test::TestBatchQuads::set_uniforms() const
 {
   const glm::mat4 mvp = [&]() {
-    if (preview)
+    if (Preview)
     {
       return m_imgui_viewport_window.preview_view_projection_matrix();
     }

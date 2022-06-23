@@ -7,10 +7,10 @@
 namespace ff_8
 {
 template<typename TileT>
-struct [[nodiscard]] pair_of_tiles
+struct [[nodiscard]] PairOfTiles
 {
-  pair_of_tiles() = default;
-  pair_of_tiles(const TileT &front, TileT &back)
+  PairOfTiles() = default;
+  PairOfTiles(const TileT &front, TileT &back)
     : m_front_tile(&front)
     , m_back_tile(&back)
   {
@@ -142,11 +142,11 @@ public:
   {
     return m_maps.size() > 2U;
   }
-  [[nodiscard]] auto VisitBoth(auto &&function) const
+  [[nodiscard]] auto visit_both(auto &&function) const
   {
-    return VisitBoth(function, std::identity{});
+    return visit_both(function, std::identity{});
   }
-  [[nodiscard]] auto VisitBoth(auto &&function, auto &&filter) const
+  [[nodiscard]] auto visit_both(auto &&function, auto &&filter) const
   {
     return front().visit_tiles(
       [this, &function, &filter](
@@ -157,20 +157,20 @@ public:
           using BTileT = std::ranges::range_value_t<decltype(back_tiles)>;
           if constexpr (!std::is_same_v<TileT, BTileT>)
           {
-            std::vector<pair_of_tiles<TileT>> temp_mux = {};
-            auto temp_mux_filter                       = filter(temp_mux);
+            std::vector<PairOfTiles<TileT>> temp_mux        = {};
+            auto                            temp_mux_filter = filter(temp_mux);
             return function(temp_mux_filter);
           }
           else
           {
-            std::vector<pair_of_tiles<TileT>> temp_mux = {};
+            std::vector<PairOfTiles<TileT>> temp_mux = {};
             temp_mux.reserve(std::ranges::size(front_tiles));
             std::ranges::transform(
               front_tiles,
               back_tiles,
               std::back_inserter(temp_mux),
               [](const auto &front_tile, auto &back_tile) {
-                return pair_of_tiles<TileT>(front_tile, back_tile);
+                return PairOfTiles<TileT>(front_tile, back_tile);
               });
             auto temp_mux_filter = filter(temp_mux);
             return function(temp_mux_filter);
@@ -178,11 +178,11 @@ public:
         });
       });
   }
-  [[nodiscard]] bool VisitBothTiles(
+  [[nodiscard]] bool visit_both_tiles(
     std::invocable auto &&function,
     std::invocable auto &&filter = std::identity{})
   {
-    return VisitBoth(
+    return visit_both(
       [&function](std::ranges::contiguous_range auto &&mux_tiles) -> bool {
         bool changed = false;
         for (auto &pair : mux_tiles)

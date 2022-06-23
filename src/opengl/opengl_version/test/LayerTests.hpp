@@ -8,7 +8,7 @@
 #include "Event/EventItem.hpp"
 
 #include "test/TestMenu.hpp"
-namespace Layer
+namespace layer
 {
 class Tests
 {
@@ -24,5 +24,5 @@ private:
 
 static_assert(glengine::Renderable<test::TestMenu>);
 static_assert(glengine::Renderable<Tests>);
-}// namespace Layer
+}// namespace layer
 #endif// FIELD_MAP_EDITOR_LAYERTESTS_HPP

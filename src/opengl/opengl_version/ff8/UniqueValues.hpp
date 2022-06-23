@@ -72,7 +72,7 @@ public:
    * bool values over
    * @param old
    */
-  void Update(const UniqueValues<T> &old)
+  void update(const UniqueValues<T> &old)
   {
     for (const auto i : std::views::iota(size_t{}, std::ranges::size(m_values)))
     {

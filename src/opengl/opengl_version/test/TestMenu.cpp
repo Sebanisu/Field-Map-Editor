@@ -27,7 +27,7 @@ test::TestMenu::TestMenu()
       "Test Batch Rendering with Quads" },
     glengine::Menu::MenuElementType<TestBatchRenderer>{
       "Test Batch Renderer Class" },
-    glengine::Menu::MenuElementType<TestFF8Archive>{
+    glengine::Menu::MenuElementType<TestFf8Archive>{
       "Test FF8 Archive Loading" })
 {
 }

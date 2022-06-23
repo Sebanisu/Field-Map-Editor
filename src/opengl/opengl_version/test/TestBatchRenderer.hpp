@@ -24,7 +24,7 @@ public:
   }
 
 private:
-  void                                   GenerateQuads() const;
+  void                                   generate_quads() const;
   void                                   set_uniforms() const;
   glengine::BatchRenderer                m_batch_renderer = { 10000 };
   mutable std::vector<glengine::Texture> m_textures       = {};

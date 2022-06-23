@@ -4,10 +4,10 @@
 #include "TestBatchRenderer.hpp"
 #include "Application.hpp"
 #include "ImGuiPushID.hpp"
-static constinit bool fit_width  = true;
-static constinit bool fit_height = true;
-static constinit bool preview    = false;
-void                  test::TestBatchRenderer::GenerateQuads() const
+static constinit bool FitWidth  = true;
+static constinit bool FitHeight = true;
+static constinit bool Preview   = false;
+void                  test::TestBatchRenderer::generate_quads() const
 {
   m_batch_renderer.clear();
   auto x_rng = std::views::iota(int32_t{}, m_count[0]);
@@ -58,18 +58,18 @@ void test::TestBatchRenderer::on_update(const float ts) const
   m_batch_renderer.on_update(ts);
   m_imgui_viewport_window.set_image_bounds({ m_count[0], m_count[1] });
   m_imgui_viewport_window.on_update(ts);
-  m_imgui_viewport_window.fit(fit_width, fit_height);
+  m_imgui_viewport_window.fit(FitWidth, FitHeight);
 }
 
 void test::TestBatchRenderer::on_render() const
 {
   set_uniforms();
-  m_imgui_viewport_window.on_render([this]() { GenerateQuads(); });
+  m_imgui_viewport_window.on_render([this]() { generate_quads(); });
   GetViewPortPreview().on_render(m_imgui_viewport_window, [this]() {
-    preview = true;
+    Preview                = true;
+    const auto pop_preview = glengine::ScopeGuard([]() { Preview = false; });
     set_uniforms();
-    GenerateQuads();
-    preview = false;
+    generate_quads();
   });
 }
 void test::TestBatchRenderer::on_im_gui_update() const
@@ -80,8 +80,8 @@ void test::TestBatchRenderer::on_im_gui_update() const
   {
     const auto pop = glengine::ImGuiPushId();
 
-    ImGui::Checkbox("fit Height", &fit_height);
-    ImGui::Checkbox("fit Width", &fit_width);
+    ImGui::Checkbox("fit Height", &FitHeight);
+    ImGui::Checkbox("fit Width", &FitWidth);
   }
   {
     const auto pop = glengine::ImGuiPushId();
@@ -117,7 +117,7 @@ void test::TestBatchRenderer::on_im_gui_update() const
 void test::TestBatchRenderer::set_uniforms() const
 {
   const glm::mat4 mvp = [&]() {
-    if (preview)
+    if (Preview)
     {
       return m_imgui_viewport_window.preview_view_projection_matrix();
     }

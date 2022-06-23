@@ -7,11 +7,11 @@
 #include "tile_operations.hpp"
 namespace ff_8
 {
-namespace MapDimsStatics
+namespace map_dims_statics
 {
-  static constexpr auto texture_page_width = std::int16_t{ 256 };
-  static constexpr auto tile_size          = float{ 16.F };
-};// namespace MapDimsStatics
+  static constexpr auto TexturePageWidth = std::int16_t{ 256 };
+  static constexpr auto TileSize         = float{ 16.F };
+};// namespace map_dims_statics
 template<typename TileFunctions>
 class MapDims
 {
@@ -32,9 +32,9 @@ public:
   }
   glm::vec2 scaled_tile_size() const noexcept
   {
-    return glm::vec2{ MapDimsStatics::tile_size * tile_scale };
+    return glm::vec2{ map_dims_statics::TileSize * tile_scale };
   }
-  glm::vec2     offset     = { 0.F, -MapDimsStatics::tile_size };
+  glm::vec2     offset     = { 0.F, -map_dims_statics::TileSize };
   glm::vec3     position   = {};
   glm::vec2     true_min   = {};
   glm::vec2     true_max   = {};
@@ -47,34 +47,34 @@ public:
     map.visit_tiles([&](const auto &tiles) {
       {
         auto f_tiles =
-          tiles | std::views::filter(tile_operations::invalid_tile{});
-        GetX(f_tiles);
-        GetY(f_tiles);
-        GetTrueX(f_tiles);
-        GetTrueY(f_tiles);
+          tiles | std::views::filter(tile_operations::InvalidTile{});
+        get_x(f_tiles);
+        get_y(f_tiles);
+        get_true_x(f_tiles);
+        get_true_y(f_tiles);
       }
     });
-    size     = glm::vec2{ max.x - min.x + MapDimsStatics::tile_size,
-                      max.y - min.y + MapDimsStatics::tile_size };
+    size     = glm::vec2{ max.x - min.x + map_dims_statics::TileSize,
+                      max.y - min.y + map_dims_statics::TileSize };
     offset   = glm::vec2{ size.x / 2.F + min.x,
-                        size.y / 2.F + min.y - MapDimsStatics::tile_size };
+                        size.y / 2.F + min.y - map_dims_statics::TileSize };
     position = glm::vec3{ -size.x / 2.F, -size.y / 2.F, 0.F };
   }
 
 private:
   template<std::ranges::range TilesR>
-  void GetX(TilesR &&f_tiles)
+  void get_x(TilesR &&f_tiles)
   {
     {
-      static constexpr typename TileFunctions::x x = {};
+      static constexpr typename TileFunctions::X x = {};
       const auto [i_min_x, i_max_x] =
         std::ranges::minmax_element(f_tiles, {}, x);
       if (i_min_x == i_max_x)
       {
         return;
       }
-      static constexpr typename TileFunctions::texture_page texture_page = {};
-      const auto                                            i_max_texture_page =
+      static constexpr typename TileFunctions::TexturePage texture_page = {};
+      const auto                                           i_max_texture_page =
         std::ranges::max_element(f_tiles, {}, texture_page);
       if (i_max_texture_page == std::ranges::end(f_tiles))
       {
@@ -82,22 +82,22 @@ private:
       }
       min.x = x(*i_min_x);
       max.x = static_cast<float>([&, i_max_x = i_max_x]() {
-        if constexpr (typename TileFunctions::use_texture_page{})
+        if constexpr (typename TileFunctions::UseTexturePage{})
         {
           return x(*i_max_x);
         }
         else
         {
           return (texture_page(*i_max_texture_page) + 1)
-                 * MapDimsStatics::texture_page_width;
+                 * map_dims_statics::TexturePageWidth;
         }
       }());
     }
   }
   template<std::ranges::range TilesR>
-  void GetY(TilesR &&f_tiles)
+  void get_y(TilesR &&f_tiles)
   {
-    static constexpr typename TileFunctions::y y = {};
+    static constexpr typename TileFunctions::Y y = {};
     const auto [i_min_y, i_max_y] = std::ranges::minmax_element(f_tiles, {}, y);
     if (i_min_y == i_max_y)
     {
@@ -107,9 +107,9 @@ private:
     max.y = y(*i_max_y);
   }
   template<std::ranges::range TilesR>
-  void GetTrueX(TilesR &&f_tiles)
+  void get_true_x(TilesR &&f_tiles)
   {
-    static constexpr tile_operations::x true_x = {};
+    static constexpr tile_operations::X true_x = {};
     const auto [true_i_min_x, true_i_max_x] =
       std::ranges::minmax_element(f_tiles, {}, true_x);
     if (true_i_min_x == true_i_max_x)
@@ -120,9 +120,9 @@ private:
     true_max.x = true_x(*true_i_max_x);
   }
   template<std::ranges::range TilesR>
-  void GetTrueY(TilesR &&f_tiles)
+  void get_true_y(TilesR &&f_tiles)
   {
-    static constexpr tile_operations::y true_y = {};
+    static constexpr tile_operations::Y true_y = {};
     const auto [true_i_min_y, true_i_max_y] =
       std::ranges::minmax_element(f_tiles, {}, true_y);
     if (true_i_min_y == true_i_max_y)

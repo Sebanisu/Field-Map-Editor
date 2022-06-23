@@ -22,15 +22,15 @@ public:
   void                     on_render() const;
   void                     on_im_gui_update() const;
   void                     on_event(const glengine::event::Item &) const;
-  std::size_t              Index() const;
-  const glengine::Texture &CurrentTexture() const;
-  void                     save() const;
+  std::size_t              index() const;
+  const glengine::Texture &current_texture() const;
 
 
 private:
   void                                 render_frame_buffer() const;
   void                                 set_uniforms() const;
-  void                                 Save_All() const;
+  void                                 save() const;
+  void                                 save_all() const;
   std::string                          m_path                  = {};
   bool                                 m_choose_coo            = {};
   open_viii::graphics::background::Mim m_mim                   = {};

@@ -18,7 +18,7 @@ public:
         changed = true;
       }
       const auto pop = glengine::ImGuiPushId();
-      if (Blend_Combos(m_add_parameter_selections, m_add_equation_selections))
+      if (blend_combos(m_add_parameter_selections, m_add_equation_selections))
       {
         changed = true;
       }
@@ -27,7 +27,7 @@ public:
     {
       const auto un_indent = glengine::ImGuiIndent();
       const auto pop       = glengine::ImGuiPushId();
-      if (Blend_Combos(
+      if (blend_combos(
             m_subtract_parameter_selections, m_subtract_equation_selections))
       {
         changed = true;
@@ -35,23 +35,23 @@ public:
     }
     return changed;
   }
-  bool PercentBlendEnabled() const noexcept
+  bool percent_blend_enabled() const noexcept
   {
     return m_enable_percent_blend;
   }
-  void SetAddBlend() const noexcept
+  void set_add_blend() const noexcept
   {
-    SetBlendModeSelections(
+    set_blend_mode_selections(
       m_add_parameter_selections, m_add_equation_selections);
   }
-  void SetSubtractBlend() const noexcept
+  void set_subtract_blend() const noexcept
   {
-    SetBlendModeSelections(
+    set_blend_mode_selections(
       m_subtract_parameter_selections, m_subtract_equation_selections);
   }
 
 private:
-  static void SetBlendModeSelections(
+  static void set_blend_mode_selections(
     const glengine::BlendModeParameters &parameters_selections,
     const glengine::BlendModeEquations  &equation_selections)
   {
@@ -66,7 +66,7 @@ private:
       equation_selections[0].current_value(),
       equation_selections[1].current_value());
   }
-  [[nodiscard]] static bool Blend_Combos(
+  [[nodiscard]] static bool blend_combos(
     glengine::BlendModeParameters &parameters_selections,
     glengine::BlendModeEquations  &equation_selections)
   {

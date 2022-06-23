@@ -2,8 +2,8 @@
 // Created by pcvii on 11/24/2021.
 //
 
-#ifndef FIELD_MAP_EDITOR_TestBatchRenderingTexture2D_HPP
-#define FIELD_MAP_EDITOR_TestBatchRenderingTexture2D_HPP
+#ifndef FIELD_MAP_EDITOR_TESTBATCHRENDERINGTEXTURE2D_HPP
+#define FIELD_MAP_EDITOR_TESTBATCHRENDERINGTEXTURE2D_HPP
 #include "IndexBuffer.hpp"
 #include "Shader.hpp"
 
@@ -39,4 +39,4 @@ private:
   void render_frame_buffer() const;
 };
 }// namespace test
-#endif// FIELD_MAP_EDITOR_TestBatchRenderingTexture2D_HPP
+#endif// FIELD_MAP_EDITOR_TESTBATCHRENDERINGTEXTURE2D_HPP
