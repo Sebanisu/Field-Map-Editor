@@ -34,18 +34,21 @@ private:
 };
 class [[nodiscard]] MapHistory
 {
-  using MapT                       = open_viii::graphics::background::Map;
-  mutable std::vector<MapT> m_maps = {};
-  mutable std::vector<bool> m_front_or_back      = {};
+  enum class Pushed : std::uint8_t
+  {
+    Front,
+    Back
+  };
+  using MapT                         = open_viii::graphics::background::Map;
+  mutable std::vector<MapT>   m_maps = {};
+  mutable std::vector<Pushed> m_front_or_back      = {};
   // mutable std::vector<std::string> m_changes       = {};
-  static constexpr bool     pushed_front         = false;
-  static constexpr bool     pushed_back          = !pushed_front;
-  mutable bool              preemptive_copy_mode = false;
+  mutable bool                preemptive_copy_mode = false;
   /**
    * Should only be called by undo() pops back
    * @return returns new back
    */
-  [[nodiscard]] MapT       &pop_back() const
+  [[nodiscard]] MapT         &pop_back() const
   {
     m_maps.pop_back();
     return back();
@@ -105,21 +108,21 @@ public:
       return back();
     }
     spdlog::debug("Map History Count: {}", m_maps.size());
-    m_front_or_back.push_back(pushed_back);
+    m_front_or_back.push_back(Pushed::Back);
     return m_maps.emplace_back(back());
   }
   [[nodiscard]] const MapT &copy_back_to_front() const
   {
     spdlog::debug("Map History Count: {}", m_maps.size());
     m_maps.insert(m_maps.begin(), back());
-    m_front_or_back.push_back(pushed_front);
+    m_front_or_back.push_back(Pushed::Front);
     return front();
   }
   [[nodiscard]] const MapT &copy_front() const
   {
     spdlog::debug("Map History Count: {}", m_maps.size());
     m_maps.insert(m_maps.begin(), front());
-    m_front_or_back.push_back(pushed_front);
+    m_front_or_back.push_back(Pushed::Front);
     return front();
   }
   /**
@@ -132,10 +135,10 @@ public:
     {
       return false;
     }
-    bool last = m_front_or_back.back();
+    Pushed last = m_front_or_back.back();
     spdlog::debug("Map History Count: {}", m_maps.size());
     m_front_or_back.pop_back();
-    if (last == pushed_back)
+    if (last == Pushed::Back)
     {
       (void)pop_back();
       return true;
