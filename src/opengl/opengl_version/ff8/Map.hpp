@@ -34,6 +34,7 @@
 #include "UniqueTileValues.hpp"
 #include "Window.hpp"
 #include <Counter.hpp>
+#include <source_location>
 #include <type_traits>
 namespace ff_8
 {
@@ -94,7 +95,7 @@ public:
           visit_unsorted_unfiltered_tiles();
         }
       }
-      m_changed = true;
+      m_changed();
     }
     m_imgui_viewport_window.on_update(ts);
     m_imgui_viewport_window.fit(s_fit_width, s_fit_height);
@@ -106,17 +107,7 @@ public:
     {
       return;
     }
-    const auto not_changed = glengine::ScopeGuardCaptures([&]() {
-      if (m_changed)
-      {
-        m_changed          = false;
-        m_previous_changed = true;
-      }
-      else
-      {
-        m_previous_changed = false;
-      }
-    });
+    const auto not_changed = m_changed.unset();
     if (m_changed)
     {
       m_offscreen_drawing = true;
@@ -158,12 +149,12 @@ public:
 
       (void)ImGui::Checkbox("fit Height", &s_fit_height);
       (void)ImGui::Checkbox("fit Width", &s_fit_width);
-      m_changed = std::ranges::any_of(
+      m_changed.set_if_true(std::ranges::any_of(
         std::array{ ImGui::Checkbox("draw Grid", &s_draw_grid),
                     [&]() -> bool {
                       if constexpr (!typename TileFunctions::UseBlending{})
                       {
-                        return true;
+                        return false;
                       }
                       else
                       {
@@ -175,7 +166,7 @@ public:
                       }
                     }(),
                     m_filters.on_im_gui_update() },
-        std::identity{});
+        std::identity{}));
 
 
       if (ImGui::Button("Save"))
@@ -240,53 +231,54 @@ public:
       const auto  dims = ImGui::GetContentRegionAvail();
       std::size_t i    = {};
 
-      if (!m_previous_changed)
+      if (!m_changed.previous())
       {
         (void)m_map.copy_back_preemptive();
       }
-      const MapTileAdjustments<TileFunctions> mta = { m_map.back(),
-                                                      m_filters,
-                                                      m_map_dims };
+      const auto mta =
+        MapTileAdjustments<TileFunctions>(m_map, m_filters, m_map_dims);
 
-      if (visit_unsorted_unfiltered_tiles([&](auto &tile) -> bool {
-            using namespace open_viii::graphics::background;
-            const auto id_pop_2    = glengine::ImGuiPushId();
-            const auto sub_texture = tile_to_sub_texture(tile);
-            const auto increment = glengine::ScopeGuardCaptures([&]() { ++i; });
-            if (!sub_texture)
-            {
-              return false;
-            }
-            if (render_sub_texture(*sub_texture))
-            {
-              m_tile_button_state.at(i).flip();
-            }
-            bool changed = false;
-            if (m_tile_button_state.at(i))
-            {
-              ImGui::SameLine();
-              mta(tile, changed, i, sub_texture);
-            }
-            else if (
-              dims.x - (last_pos.x + text_width - ImGui::GetCursorPos().x)
-              > text_width)
-            {
-              if (
-                m_tile_button_state.size() != i + 1
-                && m_tile_button_state.at(i + 1))
+      if (visit_unsorted_unfiltered_tiles(
+            [&](auto &tile, bool &short_circuit) -> bool {
+              using namespace open_viii::graphics::background;
+              const auto id_pop_2    = glengine::ImGuiPushId();
+              const auto sub_texture = tile_to_sub_texture(tile);
+              const auto increment =
+                glengine::ScopeGuardCaptures([&]() { ++i; });
+              if (!sub_texture)
               {
+                return false;
               }
-              else
+              if (render_sub_texture(*sub_texture))
+              {
+                m_tile_button_state.at(i).flip();
+              }
+              bool changed = false;
+              if (m_tile_button_state.at(i))
               {
                 ImGui::SameLine();
+                short_circuit = mta(tile, changed, i, sub_texture);
               }
-            }
-            return changed;
-          }))
+              else if (
+                dims.x - (last_pos.x + text_width - ImGui::GetCursorPos().x)
+                > text_width)
+              {
+                if (
+                  m_tile_button_state.size() != i + 1
+                  && m_tile_button_state.at(i + 1))
+                {
+                }
+                else
+                {
+                  ImGui::SameLine();
+                }
+              }
+              return changed;
+            }))
       {
-        m_changed = true;
+        m_changed();
       }
-      else if (m_previous_changed)
+      else if (m_changed.previous())
       {
         m_map.end_preemptive_copy_mode();
       }
@@ -601,12 +593,12 @@ private:
       glengine::ScopeGuardCaptures([&]() { m_saving = false; });
     if (s_draw_grid)
     {
-      m_changed = true;
+      m_changed();
     }
     const auto changed = glengine::ScopeGuardCaptures([&]() {
       if (s_draw_grid)
       {
-        m_changed = true;
+        m_changed();
       }
     });
     on_render();
@@ -631,9 +623,14 @@ private:
     return m_map.back().visit_tiles([&](auto &&tiles) -> bool {
       auto f_tiles = tiles | std::views::filter(tile_operations::InvalidTile{});
       bool changed = false;
+      bool short_circuit = false;
       for (auto &tile : f_tiles)
       {
-        changed = lambda(tile) || changed;
+        changed = lambda(tile, short_circuit) || changed;
+        if (short_circuit)
+        {
+          break;
+        }
       }
       return changed;
     });
@@ -681,20 +678,63 @@ private:
                                     // max. 0 being no palette and 1-17 being
                                     // with palettes
   // takes quads and draws them to the frame buffer or screen.
-  glengine::BatchRenderer           m_batch_renderer        = { 1000 };
+  glengine::BatchRenderer           m_batch_renderer    = { 1000 };
   // holds rendered image at 1:1 scale to prevent gaps when scaling.
-  mutable glengine::FrameBuffer     m_frame_buffer          = {};
-  mutable bool                      m_offscreen_drawing     = { false };
-  mutable bool                      m_saving                = { false };
-  mutable bool                      m_preview               = { false };
-  inline constinit static MapBlends s_blends                = {};
-  mutable MapFilters                m_filters               = { m_map.back() };
-  mutable bool                      m_changed               = { true };
-  mutable bool                      m_previous_changed      = { false };
-  glengine::Counter                 m_id                    = {};
-  mutable std::vector<bool>         m_tile_button_state     = {};
-  glengine::ImGuiViewPortWindow     m_imgui_viewport_window = {
-        TileFunctions::label
+  mutable glengine::FrameBuffer     m_frame_buffer      = {};
+  mutable bool                      m_offscreen_drawing = { false };
+  mutable bool                      m_saving            = { false };
+  mutable bool                      m_preview           = { false };
+  inline constinit static MapBlends s_blends            = {};
+  mutable MapFilters                m_filters           = { m_map.back() };
+  struct Changed
+  {
+    void operator=(bool) const = delete;
+    void set_if_true(
+      bool                 in,
+      std::source_location source_location =
+        std::source_location::current()) const
+    {
+      if (in)
+        operator()(source_location);
+    }
+    void operator()(
+      std::source_location source_location =
+        std::source_location::current()) const
+    {
+      if (!m_current)
+      {
+        spdlog::debug(
+          "Changed {}:{}", source_location.file_name(), source_location.line());
+        m_previous = m_current;
+        m_current  = true;
+      }
+    }
+    [[nodiscard]] operator bool() const
+    {
+      return m_current;
+    }
+    [[nodiscard]] bool previous() const
+    {
+      return m_previous;
+    }
+    [[nodiscard]] auto unset() const
+    {
+      return glengine::ScopeGuardCaptures([this] {
+        m_previous = m_current;
+        m_current  = false;
+      });
+    }
+
+  private:
+    mutable bool m_current        = { true };
+    mutable bool m_previous       = { false };
+    mutable bool m_was_mouse_down = { false };
+  };
+  Changed                       m_changed               = {};
+  glengine::Counter             m_id                    = {};
+  mutable std::vector<bool>     m_tile_button_state     = {};
+  glengine::ImGuiViewPortWindow m_imgui_viewport_window = {
+    TileFunctions::label
   };
 };
 }// namespace ff_8

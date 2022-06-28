@@ -82,12 +82,21 @@ public:
    * For when a change could happen. we make a copy ahead of time.
    * @return back map
    */
-  [[nodiscard]] MapT &copy_back_preemptive() const
+  [[nodiscard]] MapT &copy_back_preemptive(
+    std::source_location source_location =
+      std::source_location::current()) const
   {
     if (!preemptive_copy_mode)
     {
+      ;
+      auto &temp           = copy_back();
       preemptive_copy_mode = true;
-      return copy_back();
+      spdlog::debug(
+        "Map History preemptive_copy_mode: {}\n\t{}:{}",
+        preemptive_copy_mode,
+        source_location.file_name(),
+        source_location.line());
+      return temp;
     }
     return back();
   }
@@ -95,16 +104,28 @@ public:
    * After copy_mode is returned to normal copy_back_preemptive will resume
    * making copies.
    */
-  void end_preemptive_copy_mode() const
+  void end_preemptive_copy_mode(
+    std::source_location source_location =
+      std::source_location::current()) const
   {
-    preemptive_copy_mode = false;
+    if (preemptive_copy_mode)
+    {
+      preemptive_copy_mode = false;
+      spdlog::debug(
+        "Map History preemptive_copy_mode: {}\n\t{}:{}",
+        preemptive_copy_mode,
+        source_location.file_name(),
+        source_location.line());
+    }
   }
-  [[nodiscard]] MapT &copy_back() const
+  [[nodiscard]] MapT &copy_back(
+    std::source_location source_location =
+      std::source_location::current()) const
   {
 
     if (preemptive_copy_mode)
     {// someone already copied
-      end_preemptive_copy_mode();
+      end_preemptive_copy_mode(source_location);
       return back();
     }
     spdlog::debug("Map History Count: {}", m_maps.size());

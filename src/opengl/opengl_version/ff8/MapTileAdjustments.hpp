@@ -20,20 +20,32 @@ class MapTileAdjustments
   using DimsT = MapDims<TileFunctions>;
 
 public:
-  MapTileAdjustments(MapT &map, MapFilters &filters, const DimsT &dims)
-    : m_map(map)
+  MapTileAdjustments(
+    const MapHistory &map,
+    MapFilters       &filters,
+    const DimsT      &dims)
+    : m_map_history(map)
     , m_filters(filters)
     , m_map_dims(dims)
   {
   }
   template<typename TileT>
-  void operator()(
+  [[nodiscard]] bool operator()(
     TileT                                     &tile,
     bool                                      &changed,
     std::size_t                                i,
     const std::optional<glengine::SubTexture> &sub_texture) const
   {
     check_box_draw(tile, changed);
+    ImGui::SameLine();
+    {
+      const auto disabled =
+        glengine::ImGuiDisabled(!m_map_history.undo_enabled());
+      if (ImGui::Button("Undo"))
+      {
+        return changed = m_map_history.undo();
+      }
+    }
     int current_bpp_selection = combo_bpp(tile, changed);
     slider_int_2_source_xy(tile, changed, current_bpp_selection);
     slider_int_3_xyz(tile, changed);
@@ -47,13 +59,14 @@ public:
       tile,
       static_cast<int>(i),
       static_cast<int>(static_cast<uint32_t>(sub_texture->id())));
+    return false;
   }
 
 private:
-  MapT        &m_map;
-  MapFilters  &m_filters;
-  const DimsT &m_map_dims;
-  static auto  generate_inner_width(int components) -> std::pair<float, float>
+  const MapHistory &m_map_history;
+  MapFilters       &m_filters;
+  const DimsT      &m_map_dims;
+  static auto generate_inner_width(int components) -> std::pair<float, float>
   {
     components = std::clamp(components, 1, std::numeric_limits<int>::max());
     const float f_count    = static_cast<float>(components);
@@ -163,7 +176,7 @@ private:
           tile = tile.with_depth(16_bpp);
           break;
       }
-      m_filters.unique_tile_values().refresh_bpp(m_map);
+      m_filters.unique_tile_values().refresh_bpp(m_map_history.back());
       changed = true;
     }
     return current_bpp_selection;
@@ -259,7 +272,7 @@ private:
       {
         changed = true;
         tile    = tile.with_z(static_cast<ZT<TileT>>(xyz[2]));
-        m_filters.unique_tile_values().refresh_z(m_map);
+        m_filters.unique_tile_values().refresh_z(m_map_history.back());
       }
     }
     ImGui::SameLine(0, ImGui::GetStyle().ItemInnerSpacing.x);
@@ -286,7 +299,7 @@ private:
         changed = true;
         tile    = tile.with_blend_mode(
           static_cast<BlendModeT<TileT>>(current_blend_mode_selection));
-        m_filters.unique_tile_values().refresh_blend_mode(m_map);
+        m_filters.unique_tile_values().refresh_blend_mode(m_map_history.back());
       }
     }
   }
@@ -307,7 +320,7 @@ private:
       {
         changed = true;
         tile    = tile.with_layer_id(static_cast<LayerIdT<TileT>>(layer_id));
-        m_filters.unique_tile_values().refresh_layer_id(m_map);
+        m_filters.unique_tile_values().refresh_layer_id(m_map_history.back());
       }
     }
   }
@@ -321,7 +334,8 @@ private:
       changed = true;
       tile =
         tile.with_texture_id(static_cast<TextureIdT<TileT>>(texture_page_id));
-      m_filters.unique_tile_values().refresh_texture_page_id(m_map);
+      m_filters.unique_tile_values().refresh_texture_page_id(
+        m_map_history.back());
     }
   }
   template<typename TileT>
@@ -333,7 +347,7 @@ private:
     {
       changed = true;
       tile = tile.with_palette_id(static_cast<PaletteIdT<TileT>>(palette_id));
-      m_filters.unique_tile_values().refresh_palette_id(m_map);
+      m_filters.unique_tile_values().refresh_palette_id(m_map_history.back());
     }
   }
   template<typename TileT>
@@ -349,7 +363,7 @@ private:
     {
       changed = true;
       tile    = tile.with_blend(static_cast<BlendT<TileT>>(blend));
-      m_filters.unique_tile_values().refresh_blend_other(m_map);
+      m_filters.unique_tile_values().refresh_blend_other(m_map_history.back());
     }
   }
   template<typename TileT>
@@ -375,7 +389,8 @@ private:
           changed = true;
           tile    = tile.with_animation_id(
             static_cast<AnimationIdT<TileT>>(animation_id));
-          m_filters.unique_tile_values().refresh_animation_id(m_map);
+          m_filters.unique_tile_values().refresh_animation_id(
+            m_map_history.back());
         }
       }
     }
@@ -395,7 +410,8 @@ private:
           changed = true;
           tile    = tile.with_animation_state(
             static_cast<AnimationStateT<TileT>>(animation_state));
-          m_filters.unique_tile_values().refresh_animation_frame(m_map);
+          m_filters.unique_tile_values().refresh_animation_frame(
+            m_map_history.back());
         }
       }
     }
