@@ -268,7 +268,7 @@ void Window::init_callbacks() const
   // GLFW callBacks
 
   glfwSetErrorCallback([](int error, const char *description) {
-    spdlog::error("GLFW {}: {}", error, description);
+    spdlog::error("GLFW {:X}: {}", error, description);
     throw;
   });
 
@@ -302,6 +302,11 @@ void Window::init_callbacks() const
       [[maybe_unused]] int scancode,
       int                  action,
       int                  mods) {
+      if (key == +Key::Unknown)
+      {
+        //        spdlog::warn("glfwSetKeyCallback Unsupported Scan Code");
+        return;
+      }
       ImGui_ImplGlfw_KeyCallback(window, key, scancode, action, mods);
       auto &data = get_window_data(window);
       switch (action)
