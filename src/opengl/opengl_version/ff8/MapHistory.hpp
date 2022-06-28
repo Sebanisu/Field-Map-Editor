@@ -39,7 +39,7 @@ class [[nodiscard]] MapHistory
   mutable std::vector<bool> m_front_or_back      = {};
   // mutable std::vector<std::string> m_changes       = {};
   static constexpr bool     pushed_front         = false;
-  static constexpr bool     pushed_back          = false;
+  static constexpr bool     pushed_back          = !pushed_front;
   mutable bool              preemptive_copy_mode = false;
   /**
    * Should only be called by undo() pops back
