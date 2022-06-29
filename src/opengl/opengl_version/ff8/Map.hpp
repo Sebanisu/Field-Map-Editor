@@ -237,9 +237,9 @@ public:
       }
       const auto mta =
         MapTileAdjustments<TileFunctions>(m_map, m_filters, m_map_dims);
-
       if (visit_unsorted_unfiltered_tiles(
-            [&](auto &tile, bool &short_circuit) -> bool {
+            [&](auto &tile, [[maybe_unused]] bool &short_circuit, bool &undo)
+              -> bool {
               using namespace open_viii::graphics::background;
               const auto id_pop_2    = glengine::ImGuiPushId();
               const auto sub_texture = tile_to_sub_texture(tile);
@@ -257,7 +257,7 @@ public:
               if (m_tile_button_state.at(i))
               {
                 ImGui::SameLine();
-                short_circuit = mta(tile, changed, i, sub_texture);
+                undo = mta(tile, changed, i, sub_texture);
               }
               else if (
                 dims.x - (last_pos.x + text_width - ImGui::GetCursorPos().x)
@@ -278,9 +278,13 @@ public:
       {
         m_changed();
       }
-      else if (m_changed.previous())
+      else if (m_changed.previous() && !m_changed.undo())
       {
         m_map.end_preemptive_copy_mode();
+      }
+      else
+      {
+        m_changed.disable_undo();
       }
     });
   }
@@ -624,13 +628,19 @@ private:
       auto f_tiles = tiles | std::views::filter(tile_operations::InvalidTile{});
       bool changed = false;
       bool short_circuit = false;
+      bool undo          = false;
       for (auto &tile : f_tiles)
       {
-        changed = lambda(tile, short_circuit) || changed;
+        changed = lambda(tile, short_circuit, undo) || changed;
         if (short_circuit)
         {
           break;
         }
+      }
+      if (undo)
+      {
+        changed = m_map.undo();
+        m_changed.enable_undo();
       }
       return changed;
     });
@@ -724,11 +734,25 @@ private:
         m_current  = false;
       });
     }
+    void enable_undo() const
+    {
+      m_undo = true;
+    }
+    [[nodiscard]] bool undo() const
+    {
+      return m_undo;
+    }
+    void disable_undo() const
+    {
+      m_undo = false;
+      // return glengine::ScopeGuardCaptures([this] { m_undo = false; });
+    }
 
   private:
     mutable bool m_current        = { true };
     mutable bool m_previous       = { false };
     mutable bool m_was_mouse_down = { false };
+    mutable bool m_undo           = { false };
   };
   Changed                       m_changed               = {};
   glengine::Counter             m_id                    = {};

@@ -43,7 +43,7 @@ public:
         glengine::ImGuiDisabled(!m_map_history.undo_enabled());
       if (ImGui::Button("Undo"))
       {
-        return changed = m_map_history.undo();
+        return true;
       }
     }
     int current_bpp_selection = combo_bpp(tile, changed);
