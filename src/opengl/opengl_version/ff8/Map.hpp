@@ -238,7 +238,7 @@ public:
       const auto  mta =
         MapTileAdjustments<TileFunctions>(m_map, m_filters, m_map_dims);
       if (visit_unsorted_unfiltered_tiles(
-            [&](auto &tile, VisitState & visit_state) -> bool {
+            [&](auto &tile, VisitState &visit_state) -> bool {
               using namespace open_viii::graphics::background;
               const auto id_pop_2    = glengine::ImGuiPushId();
               const auto sub_texture = tile_to_sub_texture(tile);
@@ -361,18 +361,23 @@ private:
                              / static_cast<float>(m_mim.get_height());
     const float tile_size = tile_scale * map_dims_statics::TileSize;
     // glm::vec2(m_mim.get_width(tile.depth()), m_mim.get_height());
-    return std::optional<glengine::SubTexture>{
-      std::in_place_t{},
-      texture,
-      glm::vec2{ tile.source_x() * tile_scale
-                   + static_cast<float>(texture_page_offset),
-                 texture_dims.y - (tile.source_y() * tile_scale + tile_size) }
-        / texture_dims,
-      glm::vec2{ tile.source_x() * tile_scale
-                   + static_cast<float>(texture_page_offset) + tile_size,
-                 texture_dims.y - tile.source_y() * tile_scale }
-        / texture_dims
-    };
+    return m_map.get_front_version_of_back_tile(
+      tile, [&](const auto &front_tile) {
+        // todo maybe should have a toggle to force back tile.
+        return std::optional<glengine::SubTexture>{
+          std::in_place_t{},
+          texture,
+          glm::vec2{ front_tile.source_x() * tile_scale
+                       + static_cast<float>(texture_page_offset),
+                     texture_dims.y
+                       - (front_tile.source_y() * tile_scale + tile_size) }
+            / texture_dims,
+          glm::vec2{ front_tile.source_x() * tile_scale
+                       + static_cast<float>(texture_page_offset) + tile_size,
+                     texture_dims.y - front_tile.source_y() * tile_scale }
+            / texture_dims
+        };
+      });
   }
   glm::vec3 tile_to_draw_pos(const auto &tile) const
   {
@@ -687,9 +692,9 @@ private:
   // loads the textures overtime instead of forcing them to load at start.
   glengine::DelayedTextures<35U>       m_delayed_textures = {};
   glengine::DelayedTextures<17U * 13U>
-    m_upscale_delayed_textures = {};// 20 is detected max 16(+1)*13 is possible
-                                    // max. 0 being no palette and 1-17 being
-                                    // with palettes
+    m_upscale_delayed_textures = {};// 20 is detected max 16(+1)*13 is
+                                    // possible max. 0 being no palette and
+                                    // 1-17 being with palettes
   // takes quads and draws them to the frame buffer or screen.
   glengine::BatchRenderer           m_batch_renderer    = { 1000 };
   // holds rendered image at 1:1 scale to prevent gaps when scaling.
@@ -717,7 +722,9 @@ private:
       if (!m_current)
       {
         spdlog::debug(
-          "Changed {}:{}", source_location.file_name(), source_location.line());
+          "Changed\n\r{}:{}",
+          source_location.file_name(),
+          source_location.line());
         m_previous = m_current;
         m_current  = true;
       }
@@ -748,7 +755,8 @@ private:
     //    void disable_undo() const
     //    {
     //      m_undo = false;
-    //      // return glengine::ScopeGuardCaptures([this] { m_undo = false; });
+    //      // return glengine::ScopeGuardCaptures([this] { m_undo = false;
+    //      });
     //    }
 
   private:

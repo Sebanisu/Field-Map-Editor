@@ -106,17 +106,15 @@ private:
     bool draw = tile.draw();
     if (ImGui::Checkbox("draw?", &draw))
     {
-      auto *const new_tile = m_map_history.copy_back_and_get_new_tile(tile);
-      if (new_tile != nullptr)
-      {
+      m_map_history.copy_back_and_get_new_tile(tile, [&](TileT &new_tile) {
         if constexpr (typename TileFunctions::UseBlending{})
         {
           // this won't display change on swizzle because if we skip
           // those tiles they won't output to the image file.
           changed = true;
         }
-        *new_tile = new_tile->with_draw(static_cast<DrawT<TileT>>(draw));
-      }
+        new_tile = new_tile.with_draw(static_cast<DrawT<TileT>>(draw));
+      });
     }
   }
   void inputs_read_only(const auto &tile, const int index, const int id) const
@@ -162,7 +160,8 @@ private:
         ImGuiInputTextFlags_ReadOnly);
     }
   }
-  int combo_bpp(const auto &tile, bool &changed) const
+  template<typename TileT>
+  int combo_bpp(const TileT &tile, bool &changed) const
   {
     std::array<const char *, 3> bpp_options           = { "4", "8", "16" };
     int                         current_bpp_selection = [&]() -> int {
@@ -179,27 +178,24 @@ private:
     }();
     if (ImGui::Combo("BPP", &current_bpp_selection, bpp_options.data(), 3))
     {
-
-      auto *const new_tile = m_map_history.copy_back_and_get_new_tile(tile);
-      if (new_tile != nullptr)
-      {
+      m_map_history.copy_back_and_get_new_tile(tile, [&](TileT &new_tile) {
         using namespace open_viii::graphics::literals;
         switch (current_bpp_selection)
         {
           case 0:
           default:
-            *new_tile = new_tile->with_depth(4_bpp);
+            new_tile = new_tile.with_depth(4_bpp);
             break;
           case 1:
-            *new_tile = new_tile->with_depth(8_bpp);
+            new_tile = new_tile.with_depth(8_bpp);
             break;
           case 2:
-            *new_tile = new_tile->with_depth(16_bpp);
+            new_tile = new_tile.with_depth(16_bpp);
             break;
         }
-      }
-      m_filters.unique_tile_values().refresh_bpp(m_map_history.back());
-      changed = true;
+        m_filters.unique_tile_values().refresh_bpp(m_map_history.back());
+        changed = true;
+      });
     }
     return current_bpp_selection;
   }
@@ -226,14 +222,12 @@ private:
             {},
             ImGuiSliderFlags_AlwaysClamp))
       {
-        auto *const new_tile = m_map_history.copy_back_and_get_new_tile(tile);
-        if (new_tile != nullptr)
-        {
+        m_map_history.copy_back_and_get_new_tile(tile, [&](TileT &new_tile) {
           source_xy[0] *= tile.width();
           changed = true;
-          *new_tile =
-            new_tile->with_source_x(static_cast<SourceXT<TileT>>(source_xy[0]));
-        }
+          new_tile =
+            new_tile.with_source_x(static_cast<SourceXT<TileT>>(source_xy[0]));
+        });
       }
     }
     ImGui::SameLine(0, ImGui::GetStyle().ItemInnerSpacing.x);
@@ -247,14 +241,12 @@ private:
             {},
             ImGuiSliderFlags_AlwaysClamp))
       {
-        auto *const new_tile = m_map_history.copy_back_and_get_new_tile(tile);
-        if (new_tile != nullptr)
-        {
+        m_map_history.copy_back_and_get_new_tile(tile, [&](TileT &new_tile) {
           changed = true;
           source_xy[1] *= tile.height();
-          *new_tile =
-            new_tile->with_source_y(static_cast<SourceYT<TileT>>(source_xy[1]));
-        }
+          new_tile =
+            new_tile.with_source_y(static_cast<SourceYT<TileT>>(source_xy[1]));
+        });
       }
     }
     ImGui::SameLine(0, ImGui::GetStyle().ItemInnerSpacing.x);
@@ -284,13 +276,11 @@ private:
             {},
             ImGuiSliderFlags_AlwaysClamp))
       {
-        auto *const new_tile = m_map_history.copy_back_and_get_new_tile(tile);
-        if (new_tile != nullptr)
-        {
+        m_map_history.copy_back_and_get_new_tile(tile, [&](TileT &new_tile) {
           changed = true;
           xyz[0] *= tile.width();
-          *new_tile = new_tile->with_x(static_cast<XT<TileT>>(xyz[0]));
-        }
+          new_tile = new_tile.with_x(static_cast<XT<TileT>>(xyz[0]));
+        });
       }
     }
     ImGui::SameLine(0, ImGui::GetStyle().ItemInnerSpacing.x);
@@ -304,13 +294,11 @@ private:
             {},
             ImGuiSliderFlags_AlwaysClamp))
       {
-        auto *const new_tile = m_map_history.copy_back_and_get_new_tile(tile);
-        if (new_tile != nullptr)
-        {
+        m_map_history.copy_back_and_get_new_tile(tile, [&](TileT &new_tile) {
           changed = true;
           xyz[1] *= tile.height();
-          *new_tile = new_tile->with_y(static_cast<YT<TileT>>(xyz[1]));
-        }
+          new_tile = new_tile.with_y(static_cast<YT<TileT>>(xyz[1]));
+        });
       }
     }
     ImGui::SameLine(0, ImGui::GetStyle().ItemInnerSpacing.x);
@@ -324,13 +312,11 @@ private:
             {},
             ImGuiSliderFlags_AlwaysClamp))
       {
-        auto *const new_tile = m_map_history.copy_back_and_get_new_tile(tile);
-        if (new_tile != nullptr)
-        {
-          changed   = true;
-          *new_tile = new_tile->with_z(static_cast<ZT<TileT>>(xyz[2]));
+        m_map_history.copy_back_and_get_new_tile(tile, [&](TileT &new_tile) {
+          changed  = true;
+          new_tile = new_tile.with_z(static_cast<ZT<TileT>>(xyz[2]));
           m_filters.unique_tile_values().refresh_z(m_map_history.back());
-        }
+        });
       }
     }
     ImGui::SameLine(0, ImGui::GetStyle().ItemInnerSpacing.x);
@@ -354,15 +340,13 @@ private:
     {
       if constexpr (has_with_blend_mode<TileT>)
       {
-        auto *const new_tile = m_map_history.copy_back_and_get_new_tile(tile);
-        if (new_tile != nullptr)
-        {
-          changed   = true;
-          *new_tile = new_tile->with_blend_mode(
+        m_map_history.copy_back_and_get_new_tile(tile, [&](TileT &new_tile) {
+          changed  = true;
+          new_tile = new_tile.with_blend_mode(
             static_cast<BlendModeT<TileT>>(current_blend_mode_selection));
           m_filters.unique_tile_values().refresh_blend_mode(
             m_map_history.back());
-        }
+        });
       }
     }
   }
@@ -383,14 +367,12 @@ private:
     {
       if constexpr (has_with_layer_id<TileT>)
       {
-        auto *const new_tile = m_map_history.copy_back_and_get_new_tile(tile);
-        if (new_tile != nullptr)
-        {
+        m_map_history.copy_back_and_get_new_tile(tile, [&](TileT &new_tile) {
           changed = true;
-          *new_tile =
-            new_tile->with_layer_id(static_cast<LayerIdT<TileT>>(layer_id));
+          new_tile =
+            new_tile.with_layer_id(static_cast<LayerIdT<TileT>>(layer_id));
           m_filters.unique_tile_values().refresh_layer_id(m_map_history.back());
-        }
+        });
       }
     }
   }
@@ -407,16 +389,13 @@ private:
           {},
           ImGuiSliderFlags_AlwaysClamp))
     {
-
-      auto *const new_tile = m_map_history.copy_back_and_get_new_tile(tile);
-      if (new_tile != nullptr)
-      {
-        changed   = true;
-        *new_tile = new_tile->with_texture_id(
+      m_map_history.copy_back_and_get_new_tile(tile, [&](TileT &new_tile) {
+        changed  = true;
+        new_tile = new_tile.with_texture_id(
           static_cast<TextureIdT<TileT>>(texture_page_id));
         m_filters.unique_tile_values().refresh_texture_page_id(
           m_map_history.back());
-      }
+      });
     }
   }
   template<typename TileT>
@@ -433,15 +412,12 @@ private:
           ImGuiSliderFlags_AlwaysClamp))
 
     {
-
-      auto *const new_tile = m_map_history.copy_back_and_get_new_tile(tile);
-      if (new_tile != nullptr)
-      {
+      m_map_history.copy_back_and_get_new_tile(tile, [&](TileT &new_tile) {
         changed = true;
-        *new_tile =
-          new_tile->with_palette_id(static_cast<PaletteIdT<TileT>>(palette_id));
+        new_tile =
+          new_tile.with_palette_id(static_cast<PaletteIdT<TileT>>(palette_id));
         m_filters.unique_tile_values().refresh_palette_id(m_map_history.back());
-      }
+      });
     }
   }
   template<typename TileT>
@@ -457,14 +433,12 @@ private:
           {},
           ImGuiSliderFlags_AlwaysClamp))
     {
-      auto *const new_tile = m_map_history.copy_back_and_get_new_tile(tile);
-      if (new_tile != nullptr)
-      {
-        changed   = true;
-        *new_tile = new_tile->with_blend(static_cast<BlendT<TileT>>(blend));
+      m_map_history.copy_back_and_get_new_tile(tile, [&](TileT &new_tile) {
+        changed  = true;
+        new_tile = new_tile.with_blend(static_cast<BlendT<TileT>>(blend));
         m_filters.unique_tile_values().refresh_blend_other(
           m_map_history.back());
-      }
+      });
     }
   }
   template<typename TileT>
@@ -489,16 +463,13 @@ private:
       {
         if constexpr (has_with_animation_id<TileT>)
         {
-
-          auto *const new_tile = m_map_history.copy_back_and_get_new_tile(tile);
-          if (new_tile != nullptr)
-          {
-            changed   = true;
-            *new_tile = new_tile->with_animation_id(
+          m_map_history.copy_back_and_get_new_tile(tile, [&](TileT &new_tile) {
+            changed  = true;
+            new_tile = new_tile.with_animation_id(
               static_cast<AnimationIdT<TileT>>(animation_id));
             m_filters.unique_tile_values().refresh_animation_id(
               m_map_history.back());
-          }
+          });
         }
       }
     }
@@ -517,15 +488,13 @@ private:
       {
         if constexpr (has_with_animation_state<TileT>)
         {
-          auto *const new_tile = m_map_history.copy_back_and_get_new_tile(tile);
-          if (new_tile != nullptr)
-          {
-            changed   = true;
-            *new_tile = new_tile->with_animation_state(
+          m_map_history.copy_back_and_get_new_tile(tile, [&](TileT &new_tile) {
+            changed  = true;
+            new_tile = new_tile.with_animation_state(
               static_cast<AnimationStateT<TileT>>(animation_state));
             m_filters.unique_tile_values().refresh_animation_frame(
               m_map_history.back());
-          }
+          });
         }
       }
     }

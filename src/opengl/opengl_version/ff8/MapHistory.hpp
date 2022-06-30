@@ -83,7 +83,7 @@ public:
     m_maps.emplace_back(std::move(map));
     m_maps.push_back(m_maps.front());
   }
-  [[nodiscard]] const std::size_t count() const
+  [[nodiscard]] std::size_t count() const
   {
     return m_maps.size() - 2U;
   }
@@ -113,28 +113,75 @@ public:
       }
     });
   }
-  template<typename TileT, std::integral PosT>
-  [[nodiscard]] TileT *get_tile_at_offset(PosT pos) const
+
+  template<typename TileT, std::integral PosT, typename LambdaT>
+  [[nodiscard]] auto
+    front_get_tile_at_offset(const PosT pos, LambdaT &&lambda) const
   {
-    TileT *ptr = nullptr;
-    back().visit_tiles([&](auto &tiles) {
+    return front().visit_tiles([&](auto &tiles) {
       if constexpr (std::is_same_v<
                       std::ranges::range_value_t<
                         std::remove_cvref_t<decltype(tiles)>>,
                       TileT>)
       {
-        ptr = &tiles.front();
-        std::ranges::advance(ptr, pos);
+        auto front_tile = tiles.cbegin();
+        std::ranges::advance(front_tile, pos);
+        return lambda(*front_tile);
+      }
+      else
+      {
+        if constexpr (!requires(TileT tile_t) {
+                         {
+                           lambda(tile_t)
+                           } -> std::same_as<void>;
+                       })
+        {
+          return typename std::remove_cvref_t<
+            std::invoke_result_t<decltype(lambda), TileT>>{};
+        }
       }
     });
-    return ptr;
   }
-  template<typename TileT>
-  TileT *copy_back_and_get_new_tile(const TileT &tile) const
+  template<typename TileT, std::integral PosT, typename LambdaT>
+  [[nodiscard]] auto
+    back_get_tile_at_offset(const PosT pos, LambdaT &&lambda) const
+  {
+    return back().visit_tiles([&](auto &tiles) {
+      if constexpr (std::is_same_v<
+                      std::ranges::range_value_t<
+                        std::remove_cvref_t<decltype(tiles)>>,
+                      TileT>)
+      {
+        auto tile = tiles.begin();
+        std::ranges::advance(tile, pos);
+        return lambda(*tile);
+      }
+      else
+      {
+        if constexpr (!requires(TileT tile_t) {
+                         {
+                           lambda(tile_t)
+                           } -> std::same_as<void>;
+                       })
+        {
+          return typename std::remove_cvref_t<
+            std::invoke_result_t<decltype(lambda), TileT>>{};
+        }
+      }
+    });
+  }
+  template<typename TileT, typename LambdaT>
+  auto copy_back_and_get_new_tile(const TileT &tile, LambdaT &&lambda) const
   {
     const auto pos = get_offset_from_back(tile);
     (void)copy_back();
-    return get_tile_at_offset<TileT>(pos);
+    return back_get_tile_at_offset<TileT>(pos, std::forward<LambdaT>(lambda));
+  }
+  template<typename TileT, typename LambdaT>
+  auto get_front_version_of_back_tile(const TileT &tile, LambdaT &&lambda) const
+  {
+    return front_get_tile_at_offset<TileT>(
+      get_offset_from_back(tile), std::forward<LambdaT>(lambda));
   }
   //  /**
   //   * For when a change could happen. we make a copy ahead of time.
