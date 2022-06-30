@@ -29,6 +29,7 @@
 #include "OrthographicCamera.hpp"
 #include "OrthographicCameraController.hpp"
 #include "PixelBuffer.hpp"
+#include "SimilarAdjustments.hpp"
 #include "tile_operations.hpp"
 #include "TransformedSortedUniqueCopy.hpp"
 #include "UniqueTileValues.hpp"
@@ -235,8 +236,8 @@ public:
       //      {
       //        (void)m_map.copy_back_preemptive();
       //      }
-      const auto  mta =
-        MapTileAdjustments<TileFunctions>(m_map, m_filters, m_map_dims);
+      const auto  mta  = MapTileAdjustments<TileFunctions>(
+        m_map, m_filters, m_map_dims, m_similar);
       if (visit_unsorted_unfiltered_tiles(
             [&](auto &tile, VisitState &visit_state) -> bool {
               using namespace open_viii::graphics::background;
@@ -771,6 +772,7 @@ private:
   glengine::ImGuiViewPortWindow m_imgui_viewport_window = {
     TileFunctions::label
   };
+  mutable SimilarAdjustments m_similar = {};
 };
 }// namespace ff_8
 #endif// FIELD_MAP_EDITOR_MAP_HPP

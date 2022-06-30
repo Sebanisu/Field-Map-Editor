@@ -65,6 +65,7 @@ namespace tile_operations
   TILE_OPERATION(Z, z);
   TILE_OPERATION(SourceX, source_x);
   TILE_OPERATION(SourceY, source_y);
+  TILE_OPERATION(SourceXY, source_xy);
   TILE_OPERATION(TextureId, texture_id);
   TILE_OPERATION(BlendMode, blend_mode);
   TILE_OPERATION(Blend, blend);

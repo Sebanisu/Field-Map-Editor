@@ -6,6 +6,7 @@
 #define FIELD_MAP_EDITOR_MAPTILEADJUSTMENTS_HPP
 #include "MapDims.hpp"
 #include "MapFilters.hpp"
+#include "SimilarAdjustments.hpp"
 #include "tile_operations.hpp"
 #include "VisitState.hpp"
 #include <GenericCombo.hpp>
@@ -22,12 +23,14 @@ class MapTileAdjustments
 
 public:
   MapTileAdjustments(
-    const MapHistory &map,
-    MapFilters       &filters,
-    const DimsT      &dims)
+    const MapHistory   &map,
+    MapFilters         &filters,
+    const DimsT        &dims,
+    SimilarAdjustments &similar_adjustments)
     : m_map_history(map)
     , m_filters(filters)
     , m_map_dims(dims)
+    , m_similar(similar_adjustments)
   {
   }
   template<typename TileT>
@@ -76,9 +79,10 @@ public:
   }
 
 private:
-  const MapHistory &m_map_history;
-  MapFilters       &m_filters;
-  const DimsT      &m_map_dims;
+  const MapHistory   &m_map_history;
+  MapFilters         &m_filters;
+  const DimsT        &m_map_dims;
+  SimilarAdjustments &m_similar;
   static auto generate_inner_width(int components) -> std::pair<float, float>
   {
     components = std::clamp(components, 1, std::numeric_limits<int>::max());
@@ -210,9 +214,15 @@ private:
       static_cast<int>(tile.source_x() / tile.width()),
       static_cast<int>(tile.source_y() / tile.height())
     };
+
+    const float button_size = ImGui::GetFrameHeight() / 2.F;
+    ImGui::Checkbox("##SimilarXY", &m_similar.source_xy);
+    ImGui::SameLine(0, ImGui::GetStyle().ItemInnerSpacing.x);
+
     const std::pair<float, float> item_width = generate_inner_width(2);
     {
-      const auto pop_width = glengine::ImGuiPushItemWidth(item_width.first);
+      const auto pop_width = glengine::ImGuiPushItemWidth(
+        item_width.first - ImGui::GetStyle().ItemInnerSpacing.x - button_size);
       if (ImGui::SliderInt(
             "##Source (X)",
             &source_xy[0],
@@ -222,17 +232,19 @@ private:
             {},
             ImGuiSliderFlags_AlwaysClamp))
       {
-        m_map_history.copy_back_and_get_new_tile(tile, [&](TileT &new_tile) {
-          source_xy[0] *= tile.width();
-          changed = true;
+        source_xy[0] *= tile.width();
+        changed       = true;
+        const auto op = [&](TileT &new_tile) {
           new_tile =
             new_tile.with_source_x(static_cast<SourceXT<TileT>>(source_xy[0]));
-        });
+        };
+        m_map_history.copy_back_perform_operation(tile, m_similar, op);
       }
     }
     ImGui::SameLine(0, ImGui::GetStyle().ItemInnerSpacing.x);
     {
-      const auto pop_width = glengine::ImGuiPushItemWidth(item_width.second);
+      const auto pop_width =
+        glengine::ImGuiPushItemWidth(item_width.second - button_size);
       if (ImGui::SliderInt(
             "##Source (Y)",
             &source_xy[1],
@@ -241,12 +253,14 @@ private:
             {},
             ImGuiSliderFlags_AlwaysClamp))
       {
-        m_map_history.copy_back_and_get_new_tile(tile, [&](TileT &new_tile) {
-          changed = true;
-          source_xy[1] *= tile.height();
+
+        source_xy[1] *= tile.height();
+        changed       = true;
+        const auto op = [&](TileT &new_tile) {
           new_tile =
             new_tile.with_source_y(static_cast<SourceYT<TileT>>(source_xy[1]));
-        });
+        };
+        m_map_history.copy_back_perform_operation(tile, m_similar, op);
       }
     }
     ImGui::SameLine(0, ImGui::GetStyle().ItemInnerSpacing.x);
@@ -276,11 +290,12 @@ private:
             {},
             ImGuiSliderFlags_AlwaysClamp))
       {
-        m_map_history.copy_back_and_get_new_tile(tile, [&](TileT &new_tile) {
-          changed = true;
-          xyz[0] *= tile.width();
-          new_tile = new_tile.with_x(static_cast<XT<TileT>>(xyz[0]));
-        });
+        changed = true;
+        xyz[0] *= tile.width();
+        m_map_history.copy_back_perform_operation(
+          tile, m_similar, [&](TileT &new_tile) {
+            new_tile = new_tile.with_x(static_cast<XT<TileT>>(xyz[0]));
+          });
       }
     }
     ImGui::SameLine(0, ImGui::GetStyle().ItemInnerSpacing.x);
