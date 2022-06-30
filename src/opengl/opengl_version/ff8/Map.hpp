@@ -231,15 +231,14 @@ public:
       const auto  dims = ImGui::GetContentRegionAvail();
       std::size_t i    = {};
 
-//      if (!m_changed.previous())
-//      {
-//        (void)m_map.copy_back_preemptive();
-//      }
-      const auto mta =
+      //      if (!m_changed.previous())
+      //      {
+      //        (void)m_map.copy_back_preemptive();
+      //      }
+      const auto  mta =
         MapTileAdjustments<TileFunctions>(m_map, m_filters, m_map_dims);
       if (visit_unsorted_unfiltered_tiles(
-            [&](auto &tile, [[maybe_unused]] bool &short_circuit, bool &undo)
-              -> bool {
+            [&](auto &tile, VisitState & visit_state) -> bool {
               using namespace open_viii::graphics::background;
               const auto id_pop_2    = glengine::ImGuiPushId();
               const auto sub_texture = tile_to_sub_texture(tile);
@@ -257,7 +256,7 @@ public:
               if (m_tile_button_state.at(i))
               {
                 ImGui::SameLine();
-                undo = mta(tile, changed, i, sub_texture);
+                visit_state = mta(tile, changed, i, sub_texture);
               }
               else if (
                 dims.x - (last_pos.x + text_width - ImGui::GetCursorPos().x)
@@ -278,14 +277,14 @@ public:
       {
         m_changed();
       }
-//      else if (m_changed.previous() && !m_changed.undo())
-//      {
-//        m_map.end_preemptive_copy_mode();
-//      }
-//      else
-//      {
-//        m_changed.disable_undo();
-//      }
+      //      else if (m_changed.previous() && !m_changed.undo())
+      //      {
+      //        m_map.end_preemptive_copy_mode();
+      //      }
+      //      else
+      //      {
+      //        m_changed.disable_undo();
+      //      }
     });
   }
   void on_event(const glengine::event::Item &event) const
@@ -627,20 +626,24 @@ private:
     return m_map.back().visit_tiles([&](auto &&tiles) -> bool {
       auto f_tiles = tiles | std::views::filter(tile_operations::InvalidTile{});
       bool changed = false;
-      bool short_circuit = false;
-      bool undo          = false;
+      VisitState visit_state = {};
       for (auto &tile : f_tiles)
       {
-        changed = lambda(tile, short_circuit, undo) || changed;
-        if (short_circuit)
+        changed = lambda(tile, visit_state) || changed;
+        if (visit_state == VisitState::ShortCircuit)
         {
           break;
         }
       }
-      if (undo)
+      if (visit_state == VisitState::Undo)
       {
         changed = m_map.undo();
-//        m_changed.enable_undo();
+        //        m_changed.enable_undo();
+      }
+      if (visit_state == VisitState::UndoAll)
+      {
+        changed = true;
+        m_map.undo_all();
       }
       return changed;
     });
@@ -734,19 +737,19 @@ private:
         m_current  = false;
       });
     }
-//    void enable_undo() const
-//    {
-//      m_undo = true;
-//    }
-//    [[nodiscard]] bool undo() const
-//    {
-//      return m_undo;
-//    }
-//    void disable_undo() const
-//    {
-//      m_undo = false;
-//      // return glengine::ScopeGuardCaptures([this] { m_undo = false; });
-//    }
+    //    void enable_undo() const
+    //    {
+    //      m_undo = true;
+    //    }
+    //    [[nodiscard]] bool undo() const
+    //    {
+    //      return m_undo;
+    //    }
+    //    void disable_undo() const
+    //    {
+    //      m_undo = false;
+    //      // return glengine::ScopeGuardCaptures([this] { m_undo = false; });
+    //    }
 
   private:
     mutable bool m_current        = { true };

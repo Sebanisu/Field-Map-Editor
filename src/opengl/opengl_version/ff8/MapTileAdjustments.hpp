@@ -7,6 +7,7 @@
 #include "MapDims.hpp"
 #include "MapFilters.hpp"
 #include "tile_operations.hpp"
+#include "VisitState.hpp"
 #include <GenericCombo.hpp>
 #include <ImGuiDisabled.hpp>
 #include <ImGuiPushItemWidth.hpp>
@@ -30,13 +31,13 @@ public:
   {
   }
   template<typename TileT>
-  [[nodiscard]] bool operator()(
+  [[nodiscard]] VisitState operator()(
     const TileT                               &tile,
     bool                                      &changed,
     std::size_t                                i,
     const std::optional<glengine::SubTexture> &sub_texture) const
   {
-    bool undo = false;
+    VisitState visit_state = {};
     check_box_draw(tile, changed);
     ImGui::SameLine();
     {
@@ -44,7 +45,18 @@ public:
         glengine::ImGuiDisabled(!m_map_history.undo_enabled());
       if (ImGui::Button("Undo"))
       {
-        undo = true;
+        visit_state = VisitState::Undo;
+      }
+      ImGui::SameLine();
+      if (ImGui::Button("Undo All"))
+      {
+        visit_state = VisitState::UndoAll;
+      }
+      const auto count = m_map_history.count();
+      if (count != 0U)
+      {
+        ImGui::SameLine();
+        ImGui::Text("%s", fmt::format("{} states.", count).c_str());
       }
     }
     int current_bpp_selection = combo_bpp(tile, changed);
@@ -60,7 +72,7 @@ public:
       tile,
       static_cast<int>(i),
       static_cast<int>(static_cast<uint32_t>(sub_texture->id())));
-    return undo;
+    return visit_state;
   }
 
 private:
@@ -210,7 +222,9 @@ private:
             &source_xy[0],
             0,
             (static_cast<int>(
-              std::pow(2, (2 - current_bpp_selection) + 2) - 1))))
+              std::pow(2, (2 - current_bpp_selection) + 2) - 1)),
+            {},
+            ImGuiSliderFlags_AlwaysClamp))
       {
         auto *const new_tile = m_map_history.copy_back_and_get_new_tile(tile);
         if (new_tile != nullptr)
@@ -229,7 +243,9 @@ private:
             "##Source (Y)",
             &source_xy[1],
             std::numeric_limits<SourceYT<TileT>>::min() / tile.height(),
-            std::numeric_limits<SourceYT<TileT>>::max() / tile.height()))
+            std::numeric_limits<SourceYT<TileT>>::max() / tile.height(),
+            {},
+            ImGuiSliderFlags_AlwaysClamp))
       {
         auto *const new_tile = m_map_history.copy_back_and_get_new_tile(tile);
         if (new_tile != nullptr)
@@ -264,7 +280,9 @@ private:
             "##Destination (X)",
             &xyz[0],
             static_cast<int>(m_map_dims.true_min.x / tile.width()),
-            static_cast<int>(m_map_dims.true_max.x / tile.width())))
+            static_cast<int>(m_map_dims.true_max.x / tile.width()),
+            {},
+            ImGuiSliderFlags_AlwaysClamp))
       {
         auto *const new_tile = m_map_history.copy_back_and_get_new_tile(tile);
         if (new_tile != nullptr)
@@ -282,7 +300,9 @@ private:
             "##Destination (Y)",
             &xyz[1],
             static_cast<int>(m_map_dims.true_min.y / tile.height()),
-            static_cast<int>(m_map_dims.true_max.y / tile.height())))
+            static_cast<int>(m_map_dims.true_max.y / tile.height()),
+            {},
+            ImGuiSliderFlags_AlwaysClamp))
       {
         auto *const new_tile = m_map_history.copy_back_and_get_new_tile(tile);
         if (new_tile != nullptr)
@@ -296,7 +316,13 @@ private:
     ImGui::SameLine(0, ImGui::GetStyle().ItemInnerSpacing.x);
     {
       const auto pop_width = glengine::ImGuiPushItemWidth(item_width.second);
-      if (ImGui::SliderInt("##Destination (Z)", &xyz[2], 0, 0xFFF))
+      if (ImGui::SliderInt(
+            "##Destination (Z)",
+            &xyz[2],
+            0,
+            0xFFF,
+            {},
+            ImGuiSliderFlags_AlwaysClamp))
       {
         auto *const new_tile = m_map_history.copy_back_and_get_new_tile(tile);
         if (new_tile != nullptr)
@@ -350,8 +376,10 @@ private:
     if (ImGui::SliderInt(
           "Layer ID",
           &layer_id,
-          std::numeric_limits<LayerIdT<TileT>>::min(),
-          std::numeric_limits<LayerIdT<TileT>>::max()))
+          LayerIdT<TileT>{},
+          LayerIdT<TileT>{ 0b0111'1111U },
+          {},
+          ImGuiSliderFlags_AlwaysClamp))
     {
       if constexpr (has_with_layer_id<TileT>)
       {
@@ -371,7 +399,13 @@ private:
   {
     using namespace tile_operations;
     int texture_page_id = static_cast<int>(tile.texture_id());
-    if (ImGui::SliderInt("Texture Page ID", &texture_page_id, 0, 13))
+    if (ImGui::SliderInt(
+          "Texture Page ID",
+          &texture_page_id,
+          TextureIdT<TileT>{},
+          TextureIdT<TileT>{ 12U },// 15 is max val but 12 or 11 is max used
+          {},
+          ImGuiSliderFlags_AlwaysClamp))
     {
 
       auto *const new_tile = m_map_history.copy_back_and_get_new_tile(tile);
@@ -390,7 +424,14 @@ private:
   {
     using namespace tile_operations;
     int palette_id = static_cast<int>(tile.palette_id());
-    if (ImGui::SliderInt("Palette ID", &palette_id, 0, 16))
+    if (ImGui::SliderInt(
+          "Palette ID",
+          &palette_id,
+          PaletteIdT<TileT>{},
+          PaletteIdT<TileT>{ 0b1111U },
+          {},
+          ImGuiSliderFlags_AlwaysClamp))
+
     {
 
       auto *const new_tile = m_map_history.copy_back_and_get_new_tile(tile);
@@ -411,8 +452,10 @@ private:
     if (ImGui::SliderInt(
           "Blend Other",
           &blend,
-          std::numeric_limits<BlendT<TileT>>::min(),
-          std::numeric_limits<BlendT<TileT>>::max()))
+          BlendT<TileT>{},
+          BlendT<TileT>{ 0b0011U },
+          {},
+          ImGuiSliderFlags_AlwaysClamp))
     {
       auto *const new_tile = m_map_history.copy_back_and_get_new_tile(tile);
       if (new_tile != nullptr)
@@ -440,7 +483,9 @@ private:
             "##Animation ID",
             &animation_id,
             std::numeric_limits<AnimationIdT<TileT>>::min(),
-            std::numeric_limits<AnimationIdT<TileT>>::max()))
+            std::numeric_limits<AnimationIdT<TileT>>::max(),
+            {},
+            ImGuiSliderFlags_AlwaysClamp))
       {
         if constexpr (has_with_animation_id<TileT>)
         {
@@ -466,7 +511,9 @@ private:
             "##Animation State",
             &animation_state,
             std::numeric_limits<AnimationStateT<TileT>>::min(),
-            std::numeric_limits<AnimationStateT<TileT>>::max()))
+            std::numeric_limits<AnimationStateT<TileT>>::max(),
+            {},
+            ImGuiSliderFlags_AlwaysClamp))
       {
         if constexpr (has_with_animation_state<TileT>)
         {

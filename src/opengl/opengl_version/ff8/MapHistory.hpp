@@ -83,6 +83,10 @@ public:
     m_maps.emplace_back(std::move(map));
     m_maps.push_back(m_maps.front());
   }
+  [[nodiscard]] const std::size_t count() const
+  {
+    return m_maps.size() - 2U;
+  }
   [[nodiscard]] const MapT &front() const
   {
     return m_maps.front();
@@ -202,9 +206,11 @@ public:
    * Deletes the most recent back or front
    * @return
    */
-  [[nodiscard]] bool undo() const
+  [[nodiscard]] bool
+    undo(std::source_location source_location = std::source_location::current())
+      const
   {
-    const auto count = debug_count_print();
+    const auto count = debug_count_print(source_location);
     if (!undo_enabled())
     {
       return false;
@@ -218,6 +224,14 @@ public:
     }
     (void)pop_front();
     return true;
+  }
+  void undo_all(
+    std::source_location source_location =
+      std::source_location::current()) const
+  {
+    while (undo(source_location))
+    {
+    }
   }
   [[nodiscard]] bool undo_enabled() const
   {
