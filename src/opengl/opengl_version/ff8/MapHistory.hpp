@@ -4,6 +4,7 @@
 
 #ifndef FIELD_MAP_EDITOR_MAPHISTORY_HPP
 #define FIELD_MAP_EDITOR_MAPHISTORY_HPP
+#include <ScopeGuard.hpp>
 namespace ff_8
 {
 template<typename TileT>
@@ -62,6 +63,18 @@ class [[nodiscard]] MapHistory
     m_maps.erase(m_maps.begin());
     return front();
   }
+  const auto debug_count_print(
+    std::source_location source_location =
+      std::source_location::current()) const
+  {
+    return glengine::ScopeGuardCaptures([=, this]() {
+      spdlog::debug(
+        "Map History Count: {}\n\t{}:{}",
+        m_maps.size(),
+        source_location.file_name(),
+        source_location.line());
+    });
+  }
 
 public:
   MapHistory() = default;
@@ -78,28 +91,68 @@ public:
   {
     return m_maps.back();
   }
-  /**
-   * For when a change could happen. we make a copy ahead of time.
-   * @return back map
-   */
-  [[nodiscard]] MapT &copy_back_preemptive(
-    std::source_location source_location =
-      std::source_location::current()) const
+  template<typename TileT>
+  [[nodiscard]] auto get_offset_from_back(const TileT &tile) const
   {
-    if (!preemptive_copy_mode)
-    {
-      ;
-      auto &temp           = copy_back();
-      preemptive_copy_mode = true;
-      spdlog::debug(
-        "Map History preemptive_copy_mode: {}\n\t{}:{}",
-        preemptive_copy_mode,
-        source_location.file_name(),
-        source_location.line());
-      return temp;
-    }
-    return back();
+    return back().visit_tiles([&](const auto &tiles) {
+      if constexpr (std::is_same_v<
+                      std::ranges::range_value_t<
+                        std::remove_cvref_t<decltype(tiles)>>,
+                      TileT>)
+      {
+        return std::ranges::distance(&tiles.front(), &tile);
+      }
+      else
+      {
+        return std::ranges::range_difference_t<
+          std::remove_cvref_t<decltype(tiles)>>{};
+      }
+    });
   }
+  template<typename TileT, std::integral PosT>
+  [[nodiscard]] TileT *get_tile_at_offset(PosT pos) const
+  {
+    TileT *ptr = nullptr;
+    back().visit_tiles([&](auto &tiles) {
+      if constexpr (std::is_same_v<
+                      std::ranges::range_value_t<
+                        std::remove_cvref_t<decltype(tiles)>>,
+                      TileT>)
+      {
+        ptr = &tiles.front();
+        std::ranges::advance(ptr, pos);
+      }
+    });
+    return ptr;
+  }
+  template<typename TileT>
+  TileT *copy_back_and_get_new_tile(const TileT &tile) const
+  {
+    const auto pos = get_offset_from_back(tile);
+    (void)copy_back();
+    return get_tile_at_offset<TileT>(pos);
+  }
+  //  /**
+  //   * For when a change could happen. we make a copy ahead of time.
+  //   * @return back map
+  //   */
+  //  [[nodiscard]] MapT &copy_back_preemptive(
+  //    std::source_location source_location =
+  //      std::source_location::current()) const
+  //  {
+  //    if (!preemptive_copy_mode)
+  //    {
+  //      auto &temp           = copy_back();
+  //      preemptive_copy_mode = true;
+  //      spdlog::debug(
+  //        "Map History preemptive_copy_mode: {}\n\t{}:{}",
+  //        preemptive_copy_mode,
+  //        source_location.file_name(),
+  //        source_location.line());
+  //      return temp;
+  //    }
+  //    return back();
+  //  }
   /**
    * After copy_mode is returned to normal copy_back_preemptive will resume
    * making copies.
@@ -122,26 +175,25 @@ public:
     std::source_location source_location =
       std::source_location::current()) const
   {
-
+    const auto count = debug_count_print();
     if (preemptive_copy_mode)
     {// someone already copied
       end_preemptive_copy_mode(source_location);
       return back();
     }
-    spdlog::debug("Map History Count: {}", m_maps.size());
     m_front_or_back.push_back(Pushed::Back);
     return m_maps.emplace_back(back());
   }
   [[nodiscard]] const MapT &copy_back_to_front() const
   {
-    spdlog::debug("Map History Count: {}", m_maps.size());
+    const auto count = debug_count_print();
     m_maps.insert(m_maps.begin(), back());
     m_front_or_back.push_back(Pushed::Front);
     return front();
   }
   [[nodiscard]] const MapT &copy_front() const
   {
-    spdlog::debug("Map History Count: {}", m_maps.size());
+    const auto count = debug_count_print();
     m_maps.insert(m_maps.begin(), front());
     m_front_or_back.push_back(Pushed::Front);
     return front();
@@ -152,12 +204,12 @@ public:
    */
   [[nodiscard]] bool undo() const
   {
+    const auto count = debug_count_print();
     if (!undo_enabled())
     {
       return false;
     }
     Pushed last = m_front_or_back.back();
-    spdlog::debug("Map History Count: {}", m_maps.size());
     m_front_or_back.pop_back();
     if (last == Pushed::Back)
     {

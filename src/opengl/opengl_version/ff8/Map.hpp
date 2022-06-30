@@ -231,10 +231,10 @@ public:
       const auto  dims = ImGui::GetContentRegionAvail();
       std::size_t i    = {};
 
-      if (!m_changed.previous())
-      {
-        (void)m_map.copy_back_preemptive();
-      }
+//      if (!m_changed.previous())
+//      {
+//        (void)m_map.copy_back_preemptive();
+//      }
       const auto mta =
         MapTileAdjustments<TileFunctions>(m_map, m_filters, m_map_dims);
       if (visit_unsorted_unfiltered_tiles(
@@ -278,14 +278,14 @@ public:
       {
         m_changed();
       }
-      else if (m_changed.previous() && !m_changed.undo())
-      {
-        m_map.end_preemptive_copy_mode();
-      }
-      else
-      {
-        m_changed.disable_undo();
-      }
+//      else if (m_changed.previous() && !m_changed.undo())
+//      {
+//        m_map.end_preemptive_copy_mode();
+//      }
+//      else
+//      {
+//        m_changed.disable_undo();
+//      }
     });
   }
   void on_event(const glengine::event::Item &event) const
@@ -640,7 +640,7 @@ private:
       if (undo)
       {
         changed = m_map.undo();
-        m_changed.enable_undo();
+//        m_changed.enable_undo();
       }
       return changed;
     });
@@ -734,19 +734,19 @@ private:
         m_current  = false;
       });
     }
-    void enable_undo() const
-    {
-      m_undo = true;
-    }
-    [[nodiscard]] bool undo() const
-    {
-      return m_undo;
-    }
-    void disable_undo() const
-    {
-      m_undo = false;
-      // return glengine::ScopeGuardCaptures([this] { m_undo = false; });
-    }
+//    void enable_undo() const
+//    {
+//      m_undo = true;
+//    }
+//    [[nodiscard]] bool undo() const
+//    {
+//      return m_undo;
+//    }
+//    void disable_undo() const
+//    {
+//      m_undo = false;
+//      // return glengine::ScopeGuardCaptures([this] { m_undo = false; });
+//    }
 
   private:
     mutable bool m_current        = { true };
