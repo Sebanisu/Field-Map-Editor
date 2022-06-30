@@ -4,6 +4,7 @@
 
 #ifndef FIELD_MAP_EDITOR_MAPHISTORY_HPP
 #define FIELD_MAP_EDITOR_MAPHISTORY_HPP
+#include "SimilarAdjustments.hpp"
 #include <ScopeGuard.hpp>
 namespace ff_8
 {
@@ -40,8 +41,9 @@ class [[nodiscard]] MapHistory
     Front,
     Back
   };
-  using MapT                         = open_viii::graphics::background::Map;
-  mutable std::vector<MapT>   m_maps = {};
+  using MapT = open_viii::graphics::background::Map;
+  mutable std::vector<MapT>   m_front_maps         = {};
+  mutable std::vector<MapT>   m_back_maps          = {};
   mutable std::vector<Pushed> m_front_or_back      = {};
   // mutable std::vector<std::string> m_changes       = {};
   mutable bool                preemptive_copy_mode = false;
@@ -51,7 +53,7 @@ class [[nodiscard]] MapHistory
    */
   [[nodiscard]] MapT         &pop_back() const
   {
-    m_maps.pop_back();
+    m_back_maps.pop_back();
     return back();
   }
   /**
@@ -60,7 +62,7 @@ class [[nodiscard]] MapHistory
    */
   [[nodiscard]] const MapT &pop_front() const
   {
-    m_maps.erase(m_maps.begin());
+    m_front_maps.pop_back();
     return front();
   }
   const auto debug_count_print(
@@ -70,7 +72,7 @@ class [[nodiscard]] MapHistory
     return glengine::ScopeGuardCaptures([=, this]() {
       spdlog::debug(
         "Map History Count: {}\n\t{}:{}",
-        m_maps.size(),
+        m_back_maps.size() + m_front_maps.size(),
         source_location.file_name(),
         source_location.line());
     });
@@ -78,7 +80,7 @@ class [[nodiscard]] MapHistory
 
   [[nodiscard]] const MapT &front() const
   {
-    return m_maps.front();
+    return m_front_maps.back();
   }
   template<typename TileT>
   [[nodiscard]] auto get_offset_from_back(const TileT &tile) const
@@ -159,16 +161,15 @@ public:
   MapHistory() = default;
   MapHistory(MapT map)
   {
-    m_maps.emplace_back(std::move(map));
-    m_maps.push_back(m_maps.front());
+    m_back_maps.push_back(m_front_maps.emplace_back(std::move(map)));
   }
   [[nodiscard]] std::size_t count() const
   {
-    return m_maps.size() - 2U;
+    return m_front_maps.size() + m_back_maps.size() - 2U;
   }
   [[nodiscard]] MapT &back() const
   {
-    return m_maps.back();
+    return m_back_maps.back();
   }
   template<typename TileT, typename LambdaT>
   auto copy_back_and_get_new_tile(const TileT &tile, LambdaT &&lambda) const
@@ -177,6 +178,42 @@ public:
     (void)copy_back();
     return back_get_tile_at_offset<TileT>(pos, std::forward<LambdaT>(lambda));
   }
+  template<typename TileT, typename FilterLambdaT, typename LambdaT>
+  void
+    copy_back_perform_operation(FilterLambdaT &&filter, LambdaT &&lambda) const
+  {
+    (void)copy_back();
+    back().visit_tiles([&](auto &tiles) {
+      if constexpr (std::is_same_v<
+                      std::ranges::range_value_t<
+                        std::remove_cvref_t<decltype(tiles)>>,
+                      TileT>)
+      {
+        auto filtered_tiles = tiles | std::views::filter(filter);
+        for (auto &tile : filtered_tiles)
+        {
+          lambda(tile);
+        }
+      }
+    });
+  }
+  template<typename TileT, typename LambdaT>
+  void copy_back_perform_operation(
+    const TileT              &tile,
+    const SimilarAdjustments &similar,
+    LambdaT                 &&lambda) const
+  {
+    if (similar)
+    {
+      copy_back_perform_operation<TileT>(
+        similar(tile), std::forward<LambdaT>(lambda));
+    }
+    else
+    {
+      copy_back_and_get_new_tile<TileT>(tile, std::forward<LambdaT>(lambda));
+    }
+  }
+
   template<typename TileT, typename LambdaT>
   auto get_front_version_of_back_tile(const TileT &tile, LambdaT &&lambda) const
   {
@@ -233,7 +270,7 @@ public:
       return back();
     }
     m_front_or_back.push_back(Pushed::Back);
-    return m_maps.emplace_back(back());
+    return m_back_maps.emplace_back(back());
   }
   //  [[nodiscard]] const MapT &copy_back_to_front() const
   //  {
@@ -282,7 +319,7 @@ public:
   }
   [[nodiscard]] bool undo_enabled() const
   {
-    return m_maps.size() > 2U;
+    return count() != 0U;
   }
   //  [[nodiscard]] auto visit_both(auto &&function) const
   //  {
