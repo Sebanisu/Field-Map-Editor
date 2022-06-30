@@ -43,6 +43,10 @@ add_executable(${PROJECT_NAME}_OPENGL
         ff8/Palettes.cpp
         ff8/Paths.cpp
         ff8/Upscales.cpp
+        ff8/ImGuiTileDisplayWindow.cpp
+        ff8/MapHistory.cpp
+        ff8/MapTileAdjustments.hpp
+        ff8/SimilarAdjustments.cpp
         main.cpp
         test/LayerTests.cpp
         test/TestBatchQuads.cpp
@@ -52,8 +56,7 @@ add_executable(${PROJECT_NAME}_OPENGL
         test/TestBatchRenderingTexture2DDynamic.cpp
         test/TestFF8Archive.cpp
         test/TestMenu.cpp
-        test/TestTexture2D.cpp
-        ff8/ImGuiTileDisplayWindow.cpp ff8/ImGuiTileDisplayWindow.hpp ff8/MapHistory.cpp ff8/MapHistory.hpp ff8/MapTileAdjustments.hpp)
+        test/TestTexture2D.cpp)
 target_link_libraries(${PROJECT_NAME}_OPENGL
         PRIVATE glengine
         PRIVATE project_warnings
