@@ -41,9 +41,11 @@ class [[nodiscard]] MapHistory
     Front,
     Back
   };
-  using MapT = open_viii::graphics::background::Map;
-  mutable std::vector<MapT>   m_front_maps         = {};
-  mutable std::vector<MapT>   m_back_maps          = {};
+  using MapT                          = open_viii::graphics::background::Map;
+  mutable MapT                m_front = {};
+  mutable MapT                m_back  = {};
+  mutable std::vector<MapT>   m_front_history      = {};
+  mutable std::vector<MapT>   m_back_history       = {};
   mutable std::vector<Pushed> m_front_or_back      = {};
   // mutable std::vector<std::string> m_changes       = {};
   mutable bool                preemptive_copy_mode = false;
@@ -53,7 +55,8 @@ class [[nodiscard]] MapHistory
    */
   [[nodiscard]] MapT         &pop_back() const
   {
-    m_back_maps.pop_back();
+    m_back = std::move(m_back_history.back());
+    m_back_history.pop_back();
     return back();
   }
   /**
@@ -62,7 +65,8 @@ class [[nodiscard]] MapHistory
    */
   [[nodiscard]] const MapT &pop_front() const
   {
-    m_front_maps.pop_back();
+    m_front = std::move(m_front_history.back());
+    m_front_history.pop_back();
     return front();
   }
   const auto debug_count_print(
@@ -72,7 +76,7 @@ class [[nodiscard]] MapHistory
     return glengine::ScopeGuardCaptures([=, this]() {
       spdlog::debug(
         "Map History Count: {}\n\t{}:{}",
-        m_back_maps.size() + m_front_maps.size(),
+        m_back_history.size() + m_front_history.size() + 2U,
         source_location.file_name(),
         source_location.line());
     });
@@ -108,12 +112,12 @@ class [[nodiscard]] MapHistory
       {
         auto front_tile = tiles.cbegin();
 
-        spdlog::debug(
-          "{}:{} pos in front to be 0 < {} < {} ",
-          __FILE__,
-          __LINE__,
-          pos,
-          std::cmp_greater_equal(pos, std::ranges::size(tiles)));
+//        spdlog::debug(
+//          "{}:{} pos in front to be 0 < {} < {} ",
+//          __FILE__,
+//          __LINE__,
+//          pos,
+//          std::ranges::size(tiles));
 
         if (pos < 0 || std::cmp_greater_equal(pos, std::ranges::size(tiles)))
         {
@@ -122,21 +126,21 @@ class [[nodiscard]] MapHistory
             __FILE__,
             __LINE__,
             pos,
-            std::cmp_greater_equal(pos, std::ranges::size(tiles)));
+            std::ranges::size(tiles));
           throw std::exception();
-//          if constexpr (!requires(TileT tile_t) {
-//                           {
-//                             lambda(tile_t)
-//                             } -> std::same_as<void>;
-//                         })
-//          {
-//            return typename std::remove_cvref_t<
-//              std::invoke_result_t<decltype(lambda), TileT>>{};
-//          }
-//          else
-//          {
-//            return;
-//          }
+          //          if constexpr (!requires(TileT tile_t) {
+          //                           {
+          //                             lambda(tile_t)
+          //                             } -> std::same_as<void>;
+          //                         })
+          //          {
+          //            return typename std::remove_cvref_t<
+          //              std::invoke_result_t<decltype(lambda), TileT>>{};
+          //          }
+          //          else
+          //          {
+          //            return;
+          //          }
         }
         std::ranges::advance(front_tile, pos);
         return lambda(*front_tile);
@@ -187,20 +191,21 @@ class [[nodiscard]] MapHistory
 public:
   MapHistory() = default;
   explicit MapHistory(MapT map)
+    : m_front(std::move(map))
+    , m_back(m_front)
   {
-    m_back_maps.push_back(m_front_maps.emplace_back(std::move(map)));
   }
   [[nodiscard]] std::size_t count() const
   {
-    return m_front_maps.size() + m_back_maps.size() - 2U;
+    return m_front_history.size() + m_back_history.size();
   }
   [[nodiscard]] const MapT &front() const
   {
-    return m_front_maps.back();
+    return m_front;
   }
   [[nodiscard]] MapT &back() const
   {
-    return m_back_maps.back();
+    return m_back;
   }
   template<typename TileT, typename LambdaT>
   auto copy_back_and_get_new_tile(const TileT &tile, LambdaT &&lambda) const
@@ -301,7 +306,7 @@ public:
       return back();
     }
     m_front_or_back.push_back(Pushed::Back);
-    return m_back_maps.emplace_back(back());
+    return m_back_history.emplace_back(back());
   }
   //  [[nodiscard]] const MapT &copy_back_to_front() const
   //  {
