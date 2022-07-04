@@ -8,6 +8,7 @@
 #include "BatchRenderer.hpp"
 #include "BlendModeEquations.hpp"
 #include "BlendModeParameters.hpp"
+#include "Changed.hpp"
 #include "DelayedTextures.hpp"
 #include "Event/EventDispatcher.hpp"
 #include "FF8LoadTextures.hpp"
@@ -52,7 +53,7 @@ public:
     : m_upscale_path(std::move(upscale_path))
     , m_mim(LoadMim(fields, fields.coo(), m_mim_path, m_mim_choose_coo))
     , m_map(LoadMap(fields, fields.coo(), m_mim, m_map_path, m_map_choose_coo))
-    , m_filters(m_map.back())
+    , m_filters(m_map)
   {
     if (std::empty(m_mim_path))
     {
@@ -697,80 +698,19 @@ private:
                                     // possible max. 0 being no palette and
                                     // 1-17 being with palettes
   // takes quads and draws them to the frame buffer or screen.
-  glengine::BatchRenderer           m_batch_renderer    = { 1000 };
+  glengine::BatchRenderer           m_batch_renderer        = { 1000 };
   // holds rendered image at 1:1 scale to prevent gaps when scaling.
-  mutable glengine::FrameBuffer     m_frame_buffer      = {};
-  mutable bool                      m_offscreen_drawing = { false };
-  mutable bool                      m_saving            = { false };
-  mutable bool                      m_preview           = { false };
-  inline constinit static MapBlends s_blends            = {};
-  mutable MapFilters                m_filters           = { m_map.back() };
-  struct Changed
-  {
-    void operator=(bool) const = delete;
-    void set_if_true(
-      bool                 in,
-      std::source_location source_location =
-        std::source_location::current()) const
-    {
-      if (in)
-        operator()(source_location);
-    }
-    void operator()(
-      std::source_location source_location =
-        std::source_location::current()) const
-    {
-      if (!m_current)
-      {
-        spdlog::debug(
-          "Changed\n\r{}:{}",
-          source_location.file_name(),
-          source_location.line());
-        m_previous = m_current;
-        m_current  = true;
-      }
-    }
-    [[nodiscard]] operator bool() const
-    {
-      return m_current;
-    }
-    [[nodiscard]] bool previous() const
-    {
-      return m_previous;
-    }
-    [[nodiscard]] auto unset() const
-    {
-      return glengine::ScopeGuardCaptures([this] {
-        m_previous = m_current;
-        m_current  = false;
-      });
-    }
-    //    void enable_undo() const
-    //    {
-    //      m_undo = true;
-    //    }
-    //    [[nodiscard]] bool undo() const
-    //    {
-    //      return m_undo;
-    //    }
-    //    void disable_undo() const
-    //    {
-    //      m_undo = false;
-    //      // return glengine::ScopeGuardCaptures([this] { m_undo = false;
-    //      });
-    //    }
-
-  private:
-    mutable bool m_current        = { true };
-    mutable bool m_previous       = { false };
-    mutable bool m_was_mouse_down = { false };
-    mutable bool m_undo           = { false };
-  };
-  Changed                       m_changed               = {};
-  glengine::Counter             m_id                    = {};
-  mutable std::vector<bool>     m_tile_button_state     = {};
-  glengine::ImGuiViewPortWindow m_imgui_viewport_window = {
-    TileFunctions::label
+  mutable glengine::FrameBuffer     m_frame_buffer          = {};
+  mutable bool                      m_offscreen_drawing     = { false };
+  mutable bool                      m_saving                = { false };
+  mutable bool                      m_preview               = { false };
+  inline constinit static MapBlends s_blends                = {};
+  mutable MapFilters                m_filters               = { m_map };
+  Changed                           m_changed               = {};
+  glengine::Counter                 m_id                    = {};
+  mutable std::vector<bool>         m_tile_button_state     = {};
+  glengine::ImGuiViewPortWindow     m_imgui_viewport_window = {
+        TileFunctions::label
   };
   mutable SimilarAdjustments m_similar = {};
 };

@@ -18,7 +18,6 @@ namespace ff_8
 template<typename TileFunctions>
 class MapTileAdjustments
 {
-  using MapT  = open_viii::graphics::background::Map;
   using DimsT = MapDims<TileFunctions>;
 
 public:
@@ -200,7 +199,7 @@ private:
               break;
           }
         });
-      m_filters.unique_tile_values().refresh_bpp(m_map_history.back());
+      m_filters.unique_tile_values().refresh_bpp(m_map_history);
       changed = true;
     }
     return current_bpp_selection;
@@ -335,7 +334,7 @@ private:
           tile, m_similar, [&](TileT &new_tile) {
             new_tile = new_tile.with_z(static_cast<ZT<TileT>>(xyz[2]));
           });
-        m_filters.unique_tile_values().refresh_z(m_map_history.back());
+        m_filters.unique_tile_values().refresh_z(m_map_history);
       }
     }
     ImGui::SameLine(0, ImGui::GetStyle().ItemInnerSpacing.x);
@@ -365,7 +364,7 @@ private:
             new_tile = new_tile.with_blend_mode(
               static_cast<BlendModeT<TileT>>(current_blend_mode_selection));
           });
-        m_filters.unique_tile_values().refresh_blend_mode(m_map_history.back());
+        m_filters.unique_tile_values().refresh_blend_mode(m_map_history);
       }
     }
   }
@@ -392,7 +391,7 @@ private:
             new_tile =
               new_tile.with_layer_id(static_cast<LayerIdT<TileT>>(layer_id));
           });
-        m_filters.unique_tile_values().refresh_layer_id(m_map_history.back());
+        m_filters.unique_tile_values().refresh_layer_id(m_map_history);
       }
     }
   }
@@ -415,8 +414,7 @@ private:
           new_tile = new_tile.with_texture_id(
             static_cast<TextureIdT<TileT>>(texture_page_id));
         });
-      m_filters.unique_tile_values().refresh_texture_page_id(
-        m_map_history.back());
+      m_filters.unique_tile_values().refresh_texture_page_id(m_map_history);
     }
   }
   template<typename TileT>
@@ -439,7 +437,7 @@ private:
           new_tile = new_tile.with_palette_id(
             static_cast<PaletteIdT<TileT>>(palette_id));
         });
-      m_filters.unique_tile_values().refresh_palette_id(m_map_history.back());
+      m_filters.unique_tile_values().refresh_palette_id(m_map_history);
     }
   }
   template<typename TileT>
@@ -460,7 +458,7 @@ private:
         tile, m_similar, [&](TileT &new_tile) {
           new_tile = new_tile.with_blend(static_cast<BlendT<TileT>>(blend));
         });
-      m_filters.unique_tile_values().refresh_blend_other(m_map_history.back());
+      m_filters.unique_tile_values().refresh_blend_other(m_map_history);
     }
   }
   template<typename TileT>
@@ -491,8 +489,7 @@ private:
               new_tile = new_tile.with_animation_id(
                 static_cast<AnimationIdT<TileT>>(animation_id));
             });
-          m_filters.unique_tile_values().refresh_animation_id(
-            m_map_history.back());
+          m_filters.unique_tile_values().refresh_animation_id(m_map_history);
         }
       }
     }
@@ -517,8 +514,7 @@ private:
               new_tile = new_tile.with_animation_state(
                 static_cast<AnimationStateT<TileT>>(animation_state));
             });
-          m_filters.unique_tile_values().refresh_animation_frame(
-            m_map_history.back());
+          m_filters.unique_tile_values().refresh_animation_frame(m_map_history);
         }
       }
     }

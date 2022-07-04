@@ -4,22 +4,33 @@
 
 #ifndef FIELD_MAP_EDITOR_UNIQUETILEVALUES_HPP
 #define FIELD_MAP_EDITOR_UNIQUETILEVALUES_HPP
+#include "MapHistory.hpp"
+#include "tile_operations.hpp"
 #include "TransformedSortedUniqueCopy.hpp"
 #include "UniqueValues.hpp"
 #include <open_viii/graphics/background/Map.hpp>
+namespace ff_8
+{
 struct UniqueTileValues
 {
 private:
-  using MapT = open_viii::graphics::background::Map;
+  using MapT = MapHistory;
   static auto filtered(const auto &tiles)
   {
-    return tiles | std::views::filter(MapT::filter_invalid());
+    return tiles | std::views::filter(tile_operations::InvalidTile{});
   };
   static auto visit(const MapT &map, auto &&transform)
   {
-    return map.visit_tiles([&](const auto &tiles) {
-      return TransformedSortedUniqueCopy(
-        filtered(tiles), std::forward<decltype(transform)>(transform));
+    return map.front().visit_tiles([&](const auto &f_tiles) {
+      return map.back().visit_tiles([&](const auto &b_tiles) {
+        return TransformedSortedUniqueCopy(
+          std::forward<decltype(transform)>(transform),
+          {},
+          {},
+          {},
+          filtered(f_tiles),
+          filtered(b_tiles));
+      });
     });
   }
   static auto gen_z(const MapT &map)
@@ -207,4 +218,5 @@ struct TilePossibleValues
     std::views::iota(std::uint8_t{ 0 }, std::uint8_t{ 16 })
   };
 };
+}// namespace ff_8
 #endif// FIELD_MAP_EDITOR_UNIQUETILEVALUES_HPP

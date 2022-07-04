@@ -78,10 +78,6 @@ class [[nodiscard]] MapHistory
     });
   }
 
-  [[nodiscard]] const MapT &front() const
-  {
-    return m_front_maps.back();
-  }
   template<typename TileT>
   [[nodiscard]] auto get_offset_from_back(const TileT &tile) const
   {
@@ -159,13 +155,17 @@ class [[nodiscard]] MapHistory
 
 public:
   MapHistory() = default;
-  MapHistory(MapT map)
+  explicit MapHistory(MapT map)
   {
     m_back_maps.push_back(m_front_maps.emplace_back(std::move(map)));
   }
   [[nodiscard]] std::size_t count() const
   {
     return m_front_maps.size() + m_back_maps.size() - 2U;
+  }
+  [[nodiscard]] const MapT &front() const
+  {
+    return m_front_maps.back();
   }
   [[nodiscard]] MapT &back() const
   {

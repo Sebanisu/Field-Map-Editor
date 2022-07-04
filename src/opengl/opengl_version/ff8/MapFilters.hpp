@@ -8,14 +8,25 @@
 #include <ImGuiDisabled.hpp>
 #include <ImGuiIndent.hpp>
 #include <ImGuiPushID.hpp>
+namespace ff_8
+{
 class MapFilters
 {
+  static auto visit(const MapHistory &map, auto &&lambda)
+  {
+    return map.front().visit_tiles([&](const auto &f_tiles) {
+      return map.back().visit_tiles(
+        [&](const auto &b_tiles) { return lambda(f_tiles, b_tiles); });
+    });
+  }
+
 public:
   MapFilters() = default;
-  MapFilters(const open_viii::graphics::background::Map &map)
+  MapFilters(const MapHistory &map)
     : m_unique_tile_values(map)
-    , m_disabled(
-        map.visit_tiles([](auto &&tiles) { return std::ranges::empty(tiles); }))
+    , m_disabled(visit(map, [](auto &&f_tiles, auto &&b_tiles) {
+      return std::ranges::empty(f_tiles) || std::ranges::empty(b_tiles);
+    }))
   {
   }
   [[nodiscard]] bool on_im_gui_update() const
@@ -258,4 +269,5 @@ private:
   TilePossibleValues m_possible_tile_values = {};
   bool               m_disabled             = true;
 };
+}// namespace ff_8
 #endif// FIELD_MAP_EDITOR_MAPFILTERS_HPP

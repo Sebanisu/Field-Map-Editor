@@ -13,16 +13,14 @@ struct SimilarAdjustments
   template<typename TileT>
   auto operator()(const TileT &tile) const
   {
-    return
-      [=,this](
-        const TileT &other_tile) -> bool {
-        const auto compare = [&](bool toggle, auto &&op) -> bool {
-          return !toggle || op(tile) == op(other_tile);
-        };
-        using namespace tile_operations;
-        return std::ranges::all_of(
-          std::array{ compare(source_xy, SourceXY{}) }, std::identity{});
+    return [=, this](const TileT &other_tile) -> bool {
+      const auto compare = [&](bool toggle, auto &&op) -> bool {
+        return !toggle || op(tile) == op(other_tile);
       };
+      using namespace tile_operations;
+      return std::ranges::all_of(
+        std::array{ compare(source_xy, SourceXY{}) }, std::identity{});
+    };
   }
   operator bool() const
   {
