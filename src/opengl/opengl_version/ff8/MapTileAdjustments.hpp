@@ -181,6 +181,14 @@ private:
           return 2;
       }
     }();
+    const float   checkbox_width = get_checkbox_width(1U);
+    checkbox_tool_tip(
+      "##matching bpp",
+      "Matching BPP",
+      m_similar.depth);
+    const float width       = ImGui::CalcItemWidth();
+    const auto  pop_width   = glengine::ImGuiPushItemWidth(
+      width - checkbox_width);
     if (ImGui::Combo("BPP", &current_bpp_selection, bpp_options.data(), 3))
     {
       m_map_history.copy_back_perform_operation(
@@ -232,8 +240,7 @@ private:
       static_cast<int>(tile.source_y() / tile.height())
     };
 
-    const uint8_t count          = 3U;
-    const float   checkbox_width = get_checkbox_width(count);
+    const float   checkbox_width = get_checkbox_width(3U);
     checkbox_tool_tip(
       "##matching source_xy",
       "Matching Source X and Source Y",
@@ -265,7 +272,7 @@ private:
     }
     ImGui::SameLine(0, ImGui::GetStyle().ItemInnerSpacing.x);
     checkbox_tool_tip(
-      "##matching source_y", "Matching source y", m_similar.source_y);
+      "##matching source_y", "Matching Source Y", m_similar.source_y);
     {
       const auto pop_width = glengine::ImGuiPushItemWidth(item_width.second);
       if (ImGui::SliderInt(

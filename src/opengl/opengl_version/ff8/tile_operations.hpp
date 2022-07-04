@@ -71,6 +71,7 @@ namespace tile_operations
   TILE_OPERATION(BlendMode, blend_mode);
   TILE_OPERATION(Blend, blend);
   TILE_OPERATION(Draw, draw);
+  TILE_OPERATION(Depth, depth);
   TILE_OPERATION(LayerId, layer_id);
   TILE_OPERATION(PaletteId, palette_id);
   TILE_OPERATION(AnimationId, animation_id);

@@ -21,6 +21,7 @@ struct SimilarAdjustments
   bool blend_mode      = { false };
   bool blend           = { false };
   bool draw            = { false };
+  bool depth            = { false };
   bool layer_id        = { false };
   bool palette_id      = { false };
   bool animation_id    = { false };
@@ -51,6 +52,7 @@ struct SimilarAdjustments
           compare(blend_mode, BlendMode{}),
           compare(blend, Blend{}),
           compare(draw, Draw{}),
+          compare(depth, Depth{}),
           compare(layer_id, LayerId{}),
           compare(palette_id, PaletteId{}),
           compare(animation_id, AnimationId{}),
