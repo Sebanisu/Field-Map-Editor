@@ -181,14 +181,10 @@ private:
           return 2;
       }
     }();
-    const float   checkbox_width = get_checkbox_width(1U);
-    checkbox_tool_tip(
-      "##matching bpp",
-      "Matching BPP",
-      m_similar.depth);
-    const float width       = ImGui::CalcItemWidth();
-    const auto  pop_width   = glengine::ImGuiPushItemWidth(
-      width - checkbox_width);
+    const float checkbox_width = get_checkbox_width(1U);
+    checkbox_tool_tip("##matching bpp", "Matching BPP", m_similar.depth);
+    const float width    = ImGui::CalcItemWidth();
+    const auto pop_width = glengine::ImGuiPushItemWidth(width - checkbox_width);
     if (ImGui::Combo("BPP", &current_bpp_selection, bpp_options.data(), 3))
     {
       m_map_history.copy_back_perform_operation(
@@ -240,7 +236,7 @@ private:
       static_cast<int>(tile.source_y() / tile.height())
     };
 
-    const float   checkbox_width = get_checkbox_width(3U);
+    const float checkbox_width = get_checkbox_width(3U);
     checkbox_tool_tip(
       "##matching source_xy",
       "Matching Source X and Source Y",
@@ -400,8 +396,14 @@ private:
     const std::array<std::string_view, 5> blend_mode_str = {
       "half_add", "add", "subtract", "quarter_add", "none",
     };
+    const float checkbox_width = get_checkbox_width(1U);
+    checkbox_tool_tip(
+      "##matching blend mode", "Matching Blend Mode", m_similar.blend_mode);
     if (glengine::GenericCombo(
-          "Blend Mode", current_blend_mode_selection, blend_mode_str))
+          "Blend Mode",
+          current_blend_mode_selection,
+          blend_mode_str,
+          checkbox_width))
     {
       if constexpr (has_with_blend_mode<TileT>)
       {
@@ -420,8 +422,13 @@ private:
   {
     using namespace tile_operations;
     using namespace open_viii::graphics::background;
-    int        layer_id = tile.layer_id();
-    const auto disabled = glengine::ImGuiDisabled(!has_with_layer_id<TileT>);
+    int         layer_id = tile.layer_id();
+    const auto  disabled = glengine::ImGuiDisabled(!has_with_layer_id<TileT>);
+    const float checkbox_width = get_checkbox_width(1U);
+    const float width          = ImGui::CalcItemWidth();
+    const auto pop_width = glengine::ImGuiPushItemWidth(width - checkbox_width);
+    checkbox_tool_tip(
+      "##matching layer_id", "Matching Layer ID", m_similar.layer_id);
     if (ImGui::SliderInt(
           "Layer ID",
           &layer_id,
@@ -446,7 +453,14 @@ private:
   void slider_int_texture_page_id(const TileT &tile, bool &changed) const
   {
     using namespace tile_operations;
-    int texture_page_id = static_cast<int>(tile.texture_id());
+    int         texture_page_id = static_cast<int>(tile.texture_id());
+    const float checkbox_width  = get_checkbox_width(1U);
+    const float width           = ImGui::CalcItemWidth();
+    const auto pop_width = glengine::ImGuiPushItemWidth(width - checkbox_width);
+    checkbox_tool_tip(
+      "##matching texture_page_id",
+      "Matching Texture Page ID",
+      m_similar.texture_id);
     if (ImGui::SliderInt(
           "Texture Page ID",
           &texture_page_id,
@@ -468,6 +482,11 @@ private:
   void slider_int_palette_id(const TileT &tile, bool &changed) const
   {
     using namespace tile_operations;
+    const float checkbox_width = get_checkbox_width(1U);
+    const float width          = ImGui::CalcItemWidth();
+    const auto pop_width = glengine::ImGuiPushItemWidth(width - checkbox_width);
+    checkbox_tool_tip(
+      "##matching palette_id", "Matching Palette ID", m_similar.palette_id);
     int palette_id = static_cast<int>(tile.palette_id());
     if (ImGui::SliderInt(
           "Palette ID",
@@ -491,7 +510,12 @@ private:
   void slider_int_blend_other(const TileT &tile, bool &changed) const
   {
     using namespace tile_operations;
-    int blend = tile.blend();
+    int         blend          = tile.blend();
+    const float checkbox_width = get_checkbox_width(1U);
+    const float width          = ImGui::CalcItemWidth();
+    checkbox_tool_tip(
+      "##matching blend other", "Matching Blend Other", m_similar.blend);
+    const auto pop_width = glengine::ImGuiPushItemWidth(width - checkbox_width);
     if (ImGui::SliderInt(
           "Blend Other",
           &blend,
@@ -513,9 +537,15 @@ private:
   {
     using namespace tile_operations;
     using namespace open_viii::graphics::background;
-    int                           animation_id    = tile.animation_id();
-    int                           animation_state = tile.animation_state();
-    const std::pair<float, float> item_width      = generate_inner_width(2);
+    int         animation_id    = tile.animation_id();
+    int         animation_state = tile.animation_state();
+    const float checkbox_width  = get_checkbox_width(2U);
+    checkbox_tool_tip(
+      "##matching animation_id",
+      "Matching Animation ID",
+      m_similar.animation_id);
+    const std::pair<float, float> item_width =
+      generate_inner_width(2, checkbox_width);
     {
       const auto disabled =
         glengine::ImGuiDisabled(!has_with_animation_id<TileT>);
@@ -541,6 +571,10 @@ private:
       }
     }
     ImGui::SameLine(0, ImGui::GetStyle().ItemInnerSpacing.x);
+    checkbox_tool_tip(
+      "##matching animation_state",
+      "Matching Animation State",
+      m_similar.animation_state);
     {
       const auto disabled =
         glengine::ImGuiDisabled(!has_with_animation_state<TileT>);

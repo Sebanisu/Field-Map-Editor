@@ -25,10 +25,10 @@ template<std::ranges::random_access_range dataT>
   const float       spacing = style.ItemInnerSpacing.x;
   {
     const auto  pop_0       = glengine::ImGuiPushId();
-    const float width       = ImGui::CalcItemWidth();
+    const float width       = ImGui::CalcItemWidth() - sub_width;
     const float button_size = ImGui::GetFrameHeight();
-    const auto  pop_width   = glengine::ImGuiPushItemWidth(
-      width - spacing * 2.0f - button_size * 2.0f - sub_width);
+    const auto  pop_width =
+      glengine::ImGuiPushItemWidth(width - spacing * 2.0f - button_size * 2.0f);
     const auto disabled = glengine::ImGuiDisabled(std::ranges::empty(data));
 
     static constexpr auto c_str = [](auto &&v) {
