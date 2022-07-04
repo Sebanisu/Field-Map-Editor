@@ -107,6 +107,37 @@ class [[nodiscard]] MapHistory
                       TileT>)
       {
         auto front_tile = tiles.cbegin();
+
+        spdlog::debug(
+          "{}:{} pos in front to be 0 < {} < {} ",
+          __FILE__,
+          __LINE__,
+          pos,
+          std::cmp_greater_equal(pos, std::ranges::size(tiles)));
+
+        if (pos < 0 || std::cmp_greater_equal(pos, std::ranges::size(tiles)))
+        {
+          spdlog::error(
+            "{}:{} pos in front to be 0 < {} < {} ",
+            __FILE__,
+            __LINE__,
+            pos,
+            std::cmp_greater_equal(pos, std::ranges::size(tiles)));
+          throw std::exception();
+//          if constexpr (!requires(TileT tile_t) {
+//                           {
+//                             lambda(tile_t)
+//                             } -> std::same_as<void>;
+//                         })
+//          {
+//            return typename std::remove_cvref_t<
+//              std::invoke_result_t<decltype(lambda), TileT>>{};
+//          }
+//          else
+//          {
+//            return;
+//          }
+        }
         std::ranges::advance(front_tile, pos);
         return lambda(*front_tile);
       }

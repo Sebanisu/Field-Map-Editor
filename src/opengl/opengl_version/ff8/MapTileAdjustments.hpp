@@ -82,7 +82,8 @@ private:
   MapFilters         &m_filters;
   const DimsT        &m_map_dims;
   SimilarAdjustments &m_similar;
-  static auto generate_inner_width(int components) -> std::pair<float, float>
+  static auto         generate_inner_width(int components, float neg_width = {})
+    -> std::pair<float, float>
   {
     components = std::clamp(components, 1, std::numeric_limits<int>::max());
     const float f_count    = static_cast<float>(components);
@@ -91,13 +92,13 @@ private:
     const float w_item_one = (std::max)(
       1.0f,
       std::floor(
-        (w_full
+        (w_full - neg_width
          - (style.ItemInnerSpacing.x) * static_cast<float>(components - 1))
         / f_count));
     const float w_item_last = (std::max)(
       1.0f,
       std::floor(
-        w_full
+        w_full - neg_width
         - (w_item_one + style.ItemInnerSpacing.x)
             * static_cast<float>(components - 1)));
     return { w_item_one, w_item_last };
@@ -204,6 +205,21 @@ private:
     }
     return current_bpp_selection;
   }
+  void tool_tip(const char *tooltip) const
+  {
+    if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled))
+    {
+      ImGui::SetTooltip(tooltip);
+    }
+  }
+  bool checkbox_tool_tip(const char *label, const char *tooltip, bool &toggle)
+    const
+  {
+    bool ret = ImGui::Checkbox(label, &toggle);
+    tool_tip(tooltip);
+    ImGui::SameLine(0, ImGui::GetStyle().ItemInnerSpacing.x);
+    return ret;
+  }
   template<typename TileT>
   void slider_int_2_source_xy(
     const TileT &tile,
@@ -216,14 +232,19 @@ private:
       static_cast<int>(tile.source_y() / tile.height())
     };
 
-    const float button_size = ImGui::GetFrameHeight() / 2.F;
-    ImGui::Checkbox("##SimilarXY", &m_similar.source_xy);
-    ImGui::SameLine(0, ImGui::GetStyle().ItemInnerSpacing.x);
+    const uint8_t count          = 3U;
+    const float   checkbox_width = get_checkbox_width(count);
+    checkbox_tool_tip(
+      "##matching source_xy",
+      "Matching Source X and Source Y",
+      m_similar.source_xy);
+    checkbox_tool_tip(
+      "##matching source_x", "Matching Source X", m_similar.source_x);
 
-    const std::pair<float, float> item_width = generate_inner_width(2);
+    const std::pair<float, float> item_width =
+      generate_inner_width(2, checkbox_width);
     {
-      const auto pop_width = glengine::ImGuiPushItemWidth(
-        item_width.first - ImGui::GetStyle().ItemInnerSpacing.x - button_size);
+      const auto pop_width = glengine::ImGuiPushItemWidth(item_width.first);
       if (ImGui::SliderInt(
             "##Source (X)",
             &source_xy[0],
@@ -243,9 +264,10 @@ private:
       }
     }
     ImGui::SameLine(0, ImGui::GetStyle().ItemInnerSpacing.x);
+    checkbox_tool_tip(
+      "##matching source_y", "Matching source y", m_similar.source_y);
     {
-      const auto pop_width =
-        glengine::ImGuiPushItemWidth(item_width.second - button_size);
+      const auto pop_width = glengine::ImGuiPushItemWidth(item_width.second);
       if (ImGui::SliderInt(
             "##Source (Y)",
             &source_xy[1],
@@ -272,15 +294,31 @@ private:
     // todo add second source for moving a tile to a new location in
     // the mim / swizzled map. Without changing the image.
   }
+  float get_checkbox_width(const uint8_t count) const
+  {
+    return (ImGui::GetStyle().ItemInnerSpacing.x + ImGui::GetFrameHeight())
+           * static_cast<float>(count);
+  }
   template<typename TileT>
   void slider_int_3_xyz(const TileT &tile, bool &changed) const
   {
     using namespace tile_operations;
-    std::array<int, 3> xyz = { static_cast<int>(tile.x() / tile.width()),
-                               static_cast<int>(tile.y() / tile.height()),
-                               static_cast<int>(tile.z()) };
-
-    const std::pair<float, float> item_width = generate_inner_width(3);
+    std::array<int, 3> xyz   = { static_cast<int>(tile.x() / tile.width()),
+                                 static_cast<int>(tile.y() / tile.height()),
+                                 static_cast<int>(tile.z()) };
+    const uint8_t      count = 5U;
+    const float        checkbox_width = get_checkbox_width(count);
+    checkbox_tool_tip(
+      "##matching xyz",
+      "Matching Destination X, Destination Y and Destination Z",
+      m_similar.xyz);
+    checkbox_tool_tip(
+      "##matching xy",
+      "Matching Destination X and Destination Y",
+      m_similar.xy);
+    checkbox_tool_tip("##matching x", "Matching Destination X", m_similar.x);
+    const std::pair<float, float> item_width =
+      generate_inner_width(3, checkbox_width);
     {
       const auto pop_width = glengine::ImGuiPushItemWidth(item_width.first);
       if (ImGui::SliderInt(
@@ -300,6 +338,7 @@ private:
       }
     }
     ImGui::SameLine(0, ImGui::GetStyle().ItemInnerSpacing.x);
+    checkbox_tool_tip("##matching y", "Matching Destination Y", m_similar.y);
     {
       const auto pop_width = glengine::ImGuiPushItemWidth(item_width.first);
       if (ImGui::SliderInt(
@@ -319,6 +358,7 @@ private:
       }
     }
     ImGui::SameLine(0, ImGui::GetStyle().ItemInnerSpacing.x);
+    checkbox_tool_tip("##matching z", "Matching Destination Z", m_similar.z);
     {
       const auto pop_width = glengine::ImGuiPushItemWidth(item_width.second);
       if (ImGui::SliderInt(
