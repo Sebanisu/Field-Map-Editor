@@ -62,6 +62,7 @@ namespace tile_operations
   }
   TILE_OPERATION(X, x);
   TILE_OPERATION(Y, y);
+  TILE_OPERATION(XY, xy);
   TILE_OPERATION(Z, z);
   TILE_OPERATION(SourceX, source_x);
   TILE_OPERATION(SourceY, source_y);
