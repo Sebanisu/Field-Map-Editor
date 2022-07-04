@@ -10,15 +10,15 @@
 namespace glengine
 {
 template<std::ranges::random_access_range dataT>
-// clang-format off
-requires(
-  std::is_same_v<
-    std::remove_cvref_t<std::ranges::range_value_t<dataT>>, std::string> ||
-  std::is_same_v<
-    std::remove_cvref_t<std::ranges::range_value_t<dataT>>, std::string_view>)
-  // clang-format on
-  [
-    [nodiscard]] inline bool GenericCombo(const char *label, int &current_index, const dataT &data)
+
+  requires(
+    std::is_same_v<
+      std::remove_cvref_t<std::ranges::range_value_t<dataT>>,
+      std::
+        string> || std::is_same_v<std::remove_cvref_t<std::ranges::range_value_t<dataT>>, std::string_view>)
+
+    [
+      [nodiscard]] inline bool GenericCombo(const char *label, int &current_index, const dataT &data, float sub_width = 0.F)
 {
   bool              changed = false;
   const ImGuiStyle &style   = ImGui::GetStyle();
@@ -27,8 +27,8 @@ requires(
     const auto  pop_0       = glengine::ImGuiPushId();
     const float width       = ImGui::CalcItemWidth();
     const float button_size = ImGui::GetFrameHeight();
-    const auto  pop_width =
-      glengine::ImGuiPushItemWidth(width - spacing * 2.0f - button_size * 2.0f);
+    const auto  pop_width   = glengine::ImGuiPushItemWidth(
+      width - spacing * 2.0f - button_size * 2.0f - sub_width);
     const auto disabled = glengine::ImGuiDisabled(std::ranges::empty(data));
 
     static constexpr auto c_str = [](auto &&v) {
