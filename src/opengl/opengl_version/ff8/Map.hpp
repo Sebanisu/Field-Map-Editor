@@ -239,6 +239,51 @@ public:
       //      }
       const auto  mta  = MapTileAdjustments<TileFunctions>(
         m_map, m_filters, m_map_dims, m_similar);
+      if (m_imgui_viewport_window.has_hover())
+      {
+        const auto offset_mouse_pos =
+          m_imgui_viewport_window.offset_mouse_pos();
+
+        static constexpr bool has_texture_page = std::
+          is_same_v<TileFunctions::TexturePage, tile_operations::TextureId>;
+        int texture_page_offset = [&]() -> int {
+          if constexpr (has_texture_page)
+          {
+            return static_cast<int>(
+              (m_map_dims.offset.x - offset_mouse_pos.x / m_map_dims.tile_scale)
+              / map_dims_statics::TexturePageWidth);
+          }
+          else
+          {
+            return 0;
+          }
+        }() * map_dims_statics::TexturePageWidth;
+        //(x+texture_page*texture_page_width-offset_x)*tile_scale
+        int x =
+          static_cast<int>(
+            (m_map_dims.offset.x - offset_mouse_pos.x / m_map_dims.tile_scale
+             - texture_page_offset)
+            / map_dims_statics::TileSize)
+          * static_cast<int>(map_dims_statics::TileSize);
+        int y =
+          static_cast<int>(
+            (offset_mouse_pos.y / m_map_dims.tile_scale + m_map_dims.offset.y)
+            / map_dims_statics::TileSize)
+          * static_cast<int>(map_dims_statics::TileSize);
+
+        ImGui::Text(
+          "%s",
+          fmt::format(
+            "({},{})\n"
+            "{}\n"
+            "({},{})",
+            offset_mouse_pos.x,
+            offset_mouse_pos.y,
+            texture_page_offset,
+            x,
+            y)
+            .c_str());
+      }
       if (visit_unsorted_unfiltered_tiles(
             [&](auto &tile, VisitState &visit_state) -> bool {
               using namespace open_viii::graphics::background;

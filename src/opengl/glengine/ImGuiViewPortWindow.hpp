@@ -120,6 +120,7 @@ inline namespace impl
     void                  disable_debug_text();
     [[maybe_unused]] void enable_debug_text();
     void                  fit(const bool width, const bool height) const;
+    glm::vec2             offset_mouse_pos() const;
 
     friend ImGuiViewPortPreview;
 
@@ -136,6 +137,7 @@ inline namespace impl
     void                       on_update_mouse() const;
     void                       on_update_focus_and_hover() const;
     void                       on_im_gui_debug_info() const;
+    glm::vec4                  get_background_color() const noexcept;
 
     struct PackedSettings
     {
@@ -166,7 +168,6 @@ inline namespace impl
     mutable glengine::OrthographicCameraController m_mouse_camera         = {};
     mutable glm::vec4            m_background_color = { 0.F, 0.F, 0.F, 255.F };
     mutable glengine::Clear_impl m_clear_impl       = { m_background_color };
-    glm::vec4                    get_background_color() const noexcept;
   };
   static_assert(Renderable<ImGuiViewPortWindow>);
 }// namespace impl

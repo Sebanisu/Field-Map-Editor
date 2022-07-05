@@ -246,14 +246,19 @@ inline namespace impl
   {
     return m_main_camera.camera().view_projection_matrix();
   }
+  glm::vec2 ImGuiViewPortWindow::offset_mouse_pos() const
+  {
+
+    return static_cast<glm::vec2>(
+             m_main_camera.camera().screen_space_to_world_space(
+               view_port_mouse_pos()))
+           + m_main_camera.position();
+  }
   glm::mat4 ImGuiViewPortWindow::preview_view_projection_matrix() const
   {
     m_mouse_camera.refresh_aspect_ratio(preview_aspect_ratio);
-    const glm::vec2 position =
-      m_main_camera.camera().screen_space_to_world_space(view_port_mouse_pos());
-
     m_mouse_camera.set_zoom(m_main_camera.zoom_level() / 8.F);
-    m_mouse_camera.set_position(position + m_main_camera.position());
+    m_mouse_camera.set_position(offset_mouse_pos());
     return m_mouse_camera.camera().view_projection_matrix();
   }
   void
