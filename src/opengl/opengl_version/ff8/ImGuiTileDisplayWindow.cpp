@@ -8,11 +8,11 @@ void ff_8::ImGuiTileDisplayWindow::on_update(float) const
 {
   m_drawn = false;
 }
-void ff_8::ImGuiTileDisplayWindow::on_render() const {}
-void ff_8::ImGuiTileDisplayWindow::on_im_gui_update() const
+void ff_8::ImGuiTileDisplayWindow::on_render() const
 {
-  on_im_gui_update(m_current_id, []() {});
+  on_render(m_current_id, []() {});
 }
+void ff_8::ImGuiTileDisplayWindow::on_im_gui_update() const {}
 void ff_8::ImGuiTileDisplayWindow::on_event(const glengine::event::Item &) const
 {
 }

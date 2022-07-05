@@ -27,18 +27,17 @@ public:
   void        on_event(const glengine::event::Item &) const;
   void        on_render() const;
   static void take_control(const bool has_hover, const glengine::Counter id);
-  static bool on_im_gui_update_forward(auto &&...params)
+  static bool on_render_forward(auto &&...params)
   {
     if (get_window())
     {
-      return get_window()->on_im_gui_update(
+      return get_window()->on_render(
         std::forward<decltype(params)>(params)...);
     }
     return false;
   }
-  bool on_im_gui_update(
-    const glengine::Counter id,
-    std::invocable auto   &&function) const
+  bool
+    on_render(const glengine::Counter id, std::invocable auto &&function) const
   {
     if (m_drawn || m_current_id != id)
       return false;

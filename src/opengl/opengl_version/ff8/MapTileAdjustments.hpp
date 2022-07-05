@@ -213,7 +213,7 @@ private:
   {
     if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled))
     {
-      ImGui::SetTooltip(tooltip);
+      ImGui::SetTooltip("%s",tooltip);
     }
   }
   bool checkbox_tool_tip(const char *label, const char *tooltip, bool &toggle)

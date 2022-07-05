@@ -105,7 +105,7 @@ void ff_8::Mim::on_im_gui_update() const
   m_imgui_viewport_window.on_im_gui_update();
   ImGui::Separator();
   m_batch_renderer.on_im_gui_update();
-  ff_8::ImGuiTileDisplayWindow::on_im_gui_update_forward(m_id, [this]() {
+  ff_8::ImGuiTileDisplayWindow::on_render_forward(m_id, [this]() {
     ImGui::Text(
       "%s", fmt::format("Mim {}", static_cast<uint32_t>(m_id)).c_str());
   });
