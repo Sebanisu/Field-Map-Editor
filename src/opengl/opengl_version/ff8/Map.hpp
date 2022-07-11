@@ -110,26 +110,28 @@ public:
     {
       return;
     }
-    const auto not_changed = m_changed.unset();
-    if (m_changed)
     {
-      m_offscreen_drawing = true;
-      const auto not_offscreen_drawing =
-        glengine::ScopeGuardCaptures([&]() { m_offscreen_drawing = false; });
-      const auto fbb = glengine::FrameBufferBackup{};
-      m_frame_buffer.bind();
-
-      GlCall{}(
-        glViewport,
-        0,
-        0,
-        m_frame_buffer.specification().width,
-        m_frame_buffer.specification().height);
-      glengine::Renderer::Clear();
-      render_tiles();
-      if (!m_saving)
+      const auto not_changed = m_changed.unset();
+      if (m_changed)
       {
-        render_frame_buffer_grid();
+        m_offscreen_drawing = true;
+        const auto not_offscreen_drawing =
+          glengine::ScopeGuardCaptures([&]() { m_offscreen_drawing = false; });
+        const auto fbb = glengine::FrameBufferBackup{};
+        m_frame_buffer.bind();
+
+        GlCall{}(
+          glViewport,
+          0,
+          0,
+          m_frame_buffer.specification().width,
+          m_frame_buffer.specification().height);
+        glengine::Renderer::Clear();
+        render_tiles();
+        if (!m_saving)
+        {
+          render_frame_buffer_grid();
+        }
       }
     }
     // RestoreViewPortToFrameBuffer();
