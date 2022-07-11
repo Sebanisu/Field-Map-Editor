@@ -8,43 +8,55 @@ namespace ff_8
 {
 namespace tile_operations
 {
+  template<open_viii::graphics::background::is_tile TileT>
+  static constexpr TileT MaxTile = []() {
+    std::array<std::uint8_t, sizeof(TileT)> tmp{};
+    std::ranges::fill(tmp, 0xFFU);
+    return std::bit_cast<TileT>(tmp);
+  }();
 #define TILE_OPERATION(STRING, FUNCTION)                                     \
-  template<open_viii::graphics::background::is_tile T>                       \
+  template<open_viii::graphics::background::is_tile TileT>                   \
   using STRING##T = typename std::remove_cvref_t<                            \
-    std::invoke_result_t<decltype(&T::FUNCTION), T>>;                        \
+    std::invoke_result_t<decltype(&TileT::FUNCTION), TileT>>;                \
   struct STRING                                                              \
   {                                                                          \
-    template<open_viii::graphics::background::is_tile T>                     \
-    constexpr STRING##T<T> operator()(const T &tile) const noexcept          \
+    template<open_viii::graphics::background::is_tile TileT>                 \
+    constexpr STRING##T<TileT> operator()(const TileT &tile) const noexcept  \
     {                                                                        \
       return tile.FUNCTION();                                                \
     }                                                                        \
   };                                                                         \
-  template<typename V>                                                       \
+  template<typename ValueT>                                                  \
   struct STRING##Match                                                       \
   {                                                                          \
-    constexpr STRING##Match(V value)                                         \
-      : m_value(std::move(value))                                            \
+    template<open_viii::graphics::background::is_tile TileT>                 \
+    constexpr STRING##Match(TileT tile)                                      \
+      : STRING##Match(tile.FUNCTION())                                       \
     {                                                                        \
     }                                                                        \
-    template<open_viii::graphics::background::is_tile T>                     \
-    constexpr bool operator()(const T &tile) const noexcept                  \
+    constexpr STRING##Match(ValueT value)                                    \
+      requires(!open_viii::graphics::background::is_tile<ValueT>)            \
+    : m_value(std::move(value))                                              \
     {                                                                        \
-      return static_cast<STRING##T<T>>(m_value) == tile.FUNCTION();          \
+    }                                                                        \
+    template<open_viii::graphics::background::is_tile TileT>                 \
+    constexpr bool operator()(const TileT &tile) const noexcept              \
+    {                                                                        \
+      return static_cast<STRING##T<TileT>>(m_value) == tile.FUNCTION();      \
     }                                                                        \
     auto                 operator<=>(const STRING##Match &) const = default; \
-    std::strong_ordering operator<=>(const V &that) const                    \
+    std::strong_ordering operator<=>(const ValueT &that) const               \
     {                                                                        \
       return m_value <=> that;                                               \
     }                                                                        \
-    template<open_viii::graphics::background::is_tile T>                     \
-    std::strong_ordering operator<=>(const T &tile) const                    \
+    template<open_viii::graphics::background::is_tile TileT>                 \
+    std::strong_ordering operator<=>(const TileT &tile) const                \
     {                                                                        \
-      return static_cast<STRING##T<T>>(m_value) <=> tile.FUNCTION();         \
+      return static_cast<STRING##T<TileT>>(m_value) <=> tile.FUNCTION();     \
     }                                                                        \
                                                                              \
   private:                                                                   \
-    V m_value = {};                                                          \
+    ValueT m_value = {};                                                     \
   };                                                                         \
   struct STRING##DefaultValue                                                \
   {                                                                          \
@@ -59,7 +71,61 @@ namespace tile_operations
     requires(std::remove_cvref_t<T> t)                                       \
   {                                                                          \
     t = t.with_##FUNCTION(STRING##T<T>{});                                   \
+  };                                                                         \
+  template<typename ValueT>                                                  \
+  struct With##STRING                                                        \
+  {                                                                          \
+    constexpr With##STRING(ValueT value)                                     \
+      : m_value(std::move(value))                                            \
+    {                                                                        \
+    }                                                                        \
+    template<open_viii::graphics::background::is_tile TileT>                 \
+    constexpr decltype(auto) operator()(TileT &&tile) const noexcept         \
+    {                                                                        \
+      if constexpr (has_with_##FUNCTION<TileT>)                              \
+      {                                                                      \
+        return tile.with_##FUNCTION(static_cast<STRING##T<TileT>>(m_value)); \
+      }                                                                      \
+      else                                                                   \
+      {                                                                      \
+        return std::forward<TileT>(tile);                                    \
+      }                                                                      \
+    }                                                                        \
+                                                                             \
+  private:                                                                   \
+    ValueT m_value = {};                                                     \
+  };                                                                         \
+  template<open_viii::graphics::background::is_tile TileT>                   \
+  struct STRING##Group                                                       \
+  {                                                                          \
+    using value_type                      = STRING##T<TileT>;                \
+    static constexpr value_type min_value = []() -> value_type {             \
+      if constexpr (std::signed_integral<value_type>)                        \
+      {                                                                      \
+        return (std::numeric_limits<value_type>::min)();                     \
+      }                                                                      \
+      else                                                                   \
+      {                                                                      \
+        return get(TileT{});                                                 \
+      }                                                                      \
+    }();                                                                     \
+    static constexpr value_type max_value = []() -> value_type {             \
+      if constexpr (std::signed_integral<value_type>)                        \
+      {                                                                      \
+        return (std::numeric_limits<value_type>::max)();                     \
+      }                                                                      \
+      else                                                                   \
+      {                                                                      \
+        return get(MaxTile<TileT>);                                          \
+      }                                                                      \
+    }();                                                                     \
+    constexpr static auto get         = STRING{};                            \
+    constexpr static auto get_defualt = STRING##DefaultValue{};              \
+    constexpr static bool read_only   = !has_with_##FUNCTION<TileT>;         \
+    using transform_with              = With##STRING<value_type>;            \
+    using match_with                  = STRING##Match<value_type>;           \
   }
+
   TILE_OPERATION(X, x);
   TILE_OPERATION(Y, y);
   TILE_OPERATION(XY, xy);
