@@ -20,6 +20,7 @@ struct Changed
     std::source_location source_location =
       std::source_location::current()) const
   {
+
     if (!m_current)
     {
       spdlog::debug(
@@ -32,11 +33,7 @@ struct Changed
   }
   [[nodiscard]] operator bool() const
   {
-    return m_current;
-  }
-  [[nodiscard]] bool previous() const
-  {
-    return m_previous;
+    return m_current;// || m_previous;
   }
   [[nodiscard]] auto unset() const
   {
@@ -45,25 +42,14 @@ struct Changed
       m_current  = false;
     });
   }
-  //    void enable_undo() const
-  //    {
-  //      m_undo = true;
-  //    }
-  //    [[nodiscard]] bool undo() const
-  //    {
-  //      return m_undo;
-  //    }
-  //    void disable_undo() const
-  //    {
-  //      m_undo = false;
-  //      // return glengine::ScopeGuardCaptures([this] { m_undo = false;
-  //      });
-  //    }
-
 private:
-  mutable bool m_current        = { true };
-  mutable bool m_previous       = { false };
-  mutable bool m_was_mouse_down = { false };
-  mutable bool m_undo           = { false };
+  /**
+   * if Current is true redrawn scene.
+   */
+  mutable bool m_current  = { true };
+  /**
+   * if True Previous Currently was true;
+   */
+  mutable bool m_previous = { false };
 };
 #endif// FIELD_MAP_EDITOR_CHANGED_HPP
