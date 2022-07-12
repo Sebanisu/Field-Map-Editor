@@ -5,13 +5,17 @@
 #ifndef FIELD_MAP_EDITOR_MOUSETOTILEPOS_H
 #define FIELD_MAP_EDITOR_MOUSETOTILEPOS_H
 #include "MapDims.hpp"
+#include "tile_operations.hpp"
 namespace ff_8
 {
-template<typename TileFunctions>
 class MouseToTilePos
 {
+
 public:
-  MouseToTilePos(const glm::vec2 offset_mouse_pos, const auto m_map_dims)
+  template<typename TileFunctions>
+  MouseToTilePos(
+    const glm::vec2               offset_mouse_pos,
+    const MapDims<TileFunctions> &m_map_dims)
   {
     static constexpr bool has_texture_page = std::is_same_v<
       typename TileFunctions::TexturePage,

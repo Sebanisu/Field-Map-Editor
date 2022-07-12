@@ -226,7 +226,7 @@ public:
       };
       if (m_has_hover)
       {
-        const auto tp = MouseToTilePos<TileFunctions>(
+        const auto tp = MouseToTilePos(
           m_imgui_viewport_window.offset_mouse_pos(), m_map_dims);
 
         ImGui::Text(
