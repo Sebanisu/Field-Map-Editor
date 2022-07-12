@@ -41,6 +41,8 @@ public:
   glm::vec2     size       = {};
   glm::vec2     min        = {};
   glm::vec2     max        = {};
+  mutable std::optional<glm::ivec3> pressed_mouse_location  = std::nullopt;
+  mutable std::optional<glm::ivec3> released_mouse_location = std::nullopt;
   mutable float tile_scale = { 1.F };
   MapDims(const MapT &map)
   {

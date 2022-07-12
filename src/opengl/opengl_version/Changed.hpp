@@ -27,7 +27,6 @@ struct Changed
         "Changed\n\r{}:{}",
         source_location.file_name(),
         source_location.line());
-      m_previous = m_current;
       m_current  = true;
     }
   }
@@ -38,7 +37,6 @@ struct Changed
   [[nodiscard]] auto unset() const
   {
     return glengine::ScopeGuardCaptures([this] {
-      m_previous = m_current;
       m_current  = false;
     });
   }
@@ -47,9 +45,5 @@ private:
    * if Current is true redrawn scene.
    */
   mutable bool m_current  = { true };
-  /**
-   * if True Previous Currently was true;
-   */
-  mutable bool m_previous = { false };
 };
 #endif// FIELD_MAP_EDITOR_CHANGED_HPP
