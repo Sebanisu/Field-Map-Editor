@@ -184,7 +184,7 @@ public:
       //      {
       //        (void)m_map.copy_back_preemptive();
       //      }
-      const auto  mta  = MapTileAdjustments<TileFunctions>(
+      const auto  mta  = MapTileAdjustments(
         m_map, m_filters, m_map_dims, m_similar);
       auto      *tile_button_state = &m_tile_button_state;
       const auto common_operation =
@@ -374,7 +374,7 @@ public:
       [this](const MouseButtonPressed &pressed) {
         if (pressed.button() == Mouse::ButtonLeft)
         {
-          m_map_dims.pressed_mouse_location = MouseToTilePos<TileFunctions>(
+          m_map_dims.pressed_mouse_location = MouseToTilePos(
             m_imgui_viewport_window.offset_mouse_pos(), m_map_dims);
           spdlog::debug(
             "Mouse Pressed: x:{}, y:{}, texture_page:{}",
@@ -392,7 +392,7 @@ public:
       [this](const MouseButtonReleased &pressed) {
         if (pressed.button() == Mouse::ButtonLeft)
         {
-          m_map_dims.released_mouse_location = MouseToTilePos<TileFunctions>(
+          m_map_dims.released_mouse_location = MouseToTilePos(
             m_imgui_viewport_window.offset_mouse_pos(), m_map_dims);
           spdlog::debug(
             "Mouse Released: x:{}, y:{}, texture_page:{}",
