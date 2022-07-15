@@ -11,7 +11,8 @@ namespace tile_operations
   template<open_viii::graphics::background::is_tile TileT>
   static constexpr TileT MaxTile = []() {
     std::array<std::uint8_t, sizeof(TileT)> tmp{};
-    std::ranges::fill(tmp, 0xFFU);
+    //std::fill(tmp.begin(), tmp.end(), 0xFFU);
+    tmp.fill(0xFFU);
     return std::bit_cast<TileT>(tmp);
   }();
 #define TILE_OPERATION(STRING, FUNCTION)                                     \
@@ -98,7 +99,18 @@ namespace tile_operations
   template<open_viii::graphics::background::is_tile TileT>                   \
   struct STRING##Group                                                       \
   {                                                                          \
-    using value_type                      = STRING##T<TileT>;                \
+    using value_type          = STRING##T<TileT>;                            \
+    using get                 = STRING;                                      \
+    using get_default         = STRING##DefaultValue;                        \
+    constexpr STRING##Group() = default;                                     \
+    constexpr STRING##Group(value_type value)                                \
+      : current(std::move(value))                                            \
+    {                                                                        \
+    }                                                                        \
+    constexpr STRING##Group(TileT tile)                                      \
+      : current(get{}(tile))                                                 \
+    {                                                                        \
+    }                                                                        \
     static constexpr value_type min_value = []() -> value_type {             \
       if constexpr (std::signed_integral<value_type>)                        \
       {                                                                      \
@@ -106,7 +118,8 @@ namespace tile_operations
       }                                                                      \
       else                                                                   \
       {                                                                      \
-        return get(TileT{});                                                 \
+        const auto get_f = get{};                                            \
+        return get_f(TileT{});                                               \
       }                                                                      \
     }();                                                                     \
     static constexpr value_type max_value = []() -> value_type {             \
@@ -116,14 +129,14 @@ namespace tile_operations
       }                                                                      \
       else                                                                   \
       {                                                                      \
-        return get(MaxTile<TileT>);                                          \
+        const auto get_f = get{};                                            \
+        return get_f(MaxTile<TileT>);                                        \
       }                                                                      \
     }();                                                                     \
-    constexpr static auto get         = STRING{};                            \
-    constexpr static auto get_defualt = STRING##DefaultValue{};              \
-    constexpr static bool read_only   = !has_with_##FUNCTION<TileT>;         \
-    using transform_with              = With##STRING<value_type>;            \
-    using match_with                  = STRING##Match<value_type>;           \
+    value_type            current   = {};                                    \
+    constexpr static bool read_only = !has_with_##FUNCTION<TileT>;           \
+    using transform_with            = With##STRING<value_type>;              \
+    using match_with                = STRING##Match<value_type>;             \
   }
 
   TILE_OPERATION(X, x);
