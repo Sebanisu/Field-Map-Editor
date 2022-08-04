@@ -184,8 +184,8 @@ public:
       //      {
       //        (void)m_map.copy_back_preemptive();
       //      }
-      const auto  mta  = MapTileAdjustments(
-        m_map, m_filters, m_map_dims, m_similar);
+      const auto  mta =
+        MapTileAdjustments<TileFunctions>(m_map, m_filters, m_similar);
       auto      *tile_button_state = &m_tile_button_state;
       const auto common_operation =
         [&](auto &tile, VisitState &visit_state) -> bool {
@@ -372,6 +372,8 @@ public:
     Dispatcher dispatcher(event);
     dispatcher.Dispatch<MouseButtonPressed>(
       [this](const MouseButtonPressed &pressed) {
+        if (!m_has_hover)
+          return true;
         if (pressed.button() == Mouse::ButtonLeft)
         {
           m_map_dims.pressed_mouse_location = MouseToTilePos(
@@ -389,16 +391,17 @@ public:
         return true;
       });
     dispatcher.Dispatch<MouseButtonReleased>(
-      [this](const MouseButtonReleased &pressed) {
-        if (pressed.button() == Mouse::ButtonLeft)
+      [this](const MouseButtonReleased &released) {
+        if (released.button() == Mouse::ButtonLeft)
         {
           m_map_dims.released_mouse_location = MouseToTilePos(
             m_imgui_viewport_window.offset_mouse_pos(), m_map_dims);
           spdlog::debug(
-            "Mouse Released: x:{}, y:{}, texture_page:{}",
+            "Mouse Released: x:{}, y:{}, texture_page:{}, hovered:{}",
             m_map_dims.released_mouse_location->x,
             m_map_dims.released_mouse_location->y,
-            m_map_dims.released_mouse_location->z);
+            m_map_dims.released_mouse_location->z,
+            m_has_hover);
           //          std::fill(
           //            m_tile_button_state_clicked.begin(),
           //            m_tile_button_state_clicked.end(),
@@ -826,7 +829,7 @@ private:
   mutable std::vector<bool>         m_tile_button_state_hover   = {};
   mutable std::vector<bool>         m_tile_button_state_pressed = {};
   glengine::ImGuiViewPortWindow     m_imgui_viewport_window     = {
-            TileFunctions::label
+    TileFunctions::label
   };
   mutable bool               m_has_hover = false;
   mutable SimilarAdjustments m_similar   = {};

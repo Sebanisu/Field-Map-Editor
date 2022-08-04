@@ -24,11 +24,9 @@ public:
   MapTileAdjustments(
     const MapHistory   &map,
     MapFilters         &filters,
-    const DimsT        &dims,
     SimilarAdjustments &similar_adjustments)
     : m_map_history(map)
     , m_filters(filters)
-    , m_map_dims(dims)
     , m_matching(similar_adjustments)
   {
   }
@@ -80,7 +78,6 @@ public:
 private:
   const MapHistory   &m_map_history;
   MapFilters         &m_filters;
-  const DimsT        &m_map_dims;
   SimilarAdjustments &m_matching;
   static auto         generate_inner_width(int components, float neg_width = {})
     -> std::pair<float, float>
