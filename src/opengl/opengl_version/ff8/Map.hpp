@@ -371,7 +371,7 @@ public:
     m_batch_renderer.on_event(event);
     Dispatcher dispatcher(event);
     dispatcher.Dispatch<MouseButtonPressed>(
-      [this](const MouseButtonPressed &pressed) {
+      [this](const MouseButtonPressed &pressed) -> bool {
         if (!m_has_hover)
           return true;
         if (pressed.button() == Mouse::ButtonLeft)
@@ -387,25 +387,109 @@ public:
             m_tile_button_state_pressed.begin(),
             m_tile_button_state_pressed.end(),
             false);
+          m_dragging = true;
         }
         return true;
       });
     dispatcher.Dispatch<MouseButtonReleased>(
-      [this](const MouseButtonReleased &released) {
+      [this](const MouseButtonReleased &released) -> bool {
         if (released.button() == Mouse::ButtonLeft)
         {
+          const auto unset_dragging =
+            glengine::ScopeGuardCaptures([this]() { m_dragging = false; });
           m_map_dims.released_mouse_location = MouseToTilePos(
             m_imgui_viewport_window.offset_mouse_pos(), m_map_dims);
+          const bool moved = m_map_dims.released_mouse_location
+                             != m_map_dims.pressed_mouse_location;
           spdlog::debug(
-            "Mouse Released: x:{}, y:{}, texture_page:{}, hovered:{}",
+            "Mouse Released: x:{}, y:{}, texture_page:{}, hovered:{}, "
+            "dragging:{}, moved:{}",
             m_map_dims.released_mouse_location->x,
             m_map_dims.released_mouse_location->y,
             m_map_dims.released_mouse_location->z,
-            m_has_hover);
-          //          std::fill(
-          //            m_tile_button_state_clicked.begin(),
-          //            m_tile_button_state_clicked.end(),
-          //            false);
+            m_has_hover,
+            m_dragging,
+            moved);
+          if (!moved || !m_dragging || !m_has_hover)
+            return true;
+          m_map.back().visit_tiles([this](const auto &tiles) {
+            auto sa = SimilarAdjustments{};
+            using TileT =
+              std::ranges::range_value_t<std::remove_cvref_t<decltype(tiles)>>;
+            TileT                                            tmp = {};
+            std::vector<std::function<TileT(const TileT &)>> operations{};
+            if constexpr (std::is_same_v<
+                            typename TileFunctions::X,
+                            tile_operations::X>)
+            {
+              auto with_x =
+                tile_operations::WithX{ m_map_dims.pressed_mouse_location->x };
+              tmp = with_x(tmp);
+              operations.push_back(
+                with_x = m_map_dims.released_mouse_location->x);
+              sa.x = true;
+            }
+            if constexpr (std::is_same_v<
+                            typename TileFunctions::Y,
+                            tile_operations::Y>)
+            {
+              auto with_y =
+                tile_operations::WithX{ m_map_dims.pressed_mouse_location->y };
+              tmp = with_y(tmp);
+              operations.push_back(
+                with_y = m_map_dims.released_mouse_location->y);
+              sa.y = true;
+            }
+            if constexpr (std::is_same_v<
+                            typename TileFunctions::X,
+                            tile_operations::SourceX>)
+            {
+              auto with_source_x = tile_operations::WithSourceX{
+                m_map_dims.pressed_mouse_location->x
+
+              };
+              tmp = with_source_x(tmp);
+              operations.push_back(
+                with_source_x = m_map_dims.released_mouse_location->x);
+              sa.source_x = true;
+            }
+            if constexpr (std::is_same_v<
+                            typename TileFunctions::Y,
+                            tile_operations::SourceY>)
+            {
+              auto with_source_y = tile_operations::WithSourceY{
+                m_map_dims.pressed_mouse_location->y
+
+              };
+              tmp = with_source_y(tmp);
+              operations.push_back(
+                with_source_y = m_map_dims.released_mouse_location->y);
+              sa.source_y = true;
+            }
+
+            if constexpr (std::is_same_v<
+                            typename TileFunctions::TexturePage,
+                            tile_operations::TextureId>)
+            {
+              auto with_texture_id = tile_operations::WithTextureId{
+                m_map_dims.pressed_mouse_location->z
+              };
+              tmp = with_texture_id(tmp);
+              operations.push_back(
+                with_texture_id = m_map_dims.released_mouse_location->z);
+              sa.texture_id = true;
+            }
+            std::cout << tmp << std::endl;
+            m_map.copy_back_perform_operation(tmp, sa, [&](TileT &new_tile) {
+              int i = {};
+              for (const auto &op : operations)
+              {
+                new_tile = op(new_tile);
+                spdlog::debug("Performed operation {}", i++);
+              }
+            });
+            m_changed();
+          });
         }
         return true;
       });
@@ -446,9 +530,10 @@ private:
   std::optional<glengine::SubTexture>
     tile_to_sub_texture(const auto &tile) const
   {
-    const auto bpp                                 = tile.depth();
-    const auto palette                             = tile.palette_id();
-    const auto texture_page_id                     = tile.texture_id();
+    const auto bpp             = tile.depth();
+    const auto palette         = tile.palette_id();
+    const auto texture_page_id = m_map.get_front_version_of_back_tile(
+      tile, [&](const auto &front_tile) { return front_tile.texture_id(); });
     const auto [texture_index, texture_page_width] = [&]() {
       if (std::ranges::empty(m_upscale_path))
       {
@@ -831,7 +916,8 @@ private:
   glengine::ImGuiViewPortWindow     m_imgui_viewport_window     = {
     TileFunctions::label
   };
-  mutable bool               m_has_hover = false;
+  mutable bool               m_has_hover = { false };
+  mutable bool               m_dragging  = { false };
   mutable SimilarAdjustments m_similar   = {};
 };
 }// namespace ff_8
