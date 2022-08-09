@@ -847,8 +847,8 @@ void map_sprite::for_all_tiles(
         tile_const.blend_mode(),
         tile_const.animation_id(),
         tile_const.animation_state()),
-      std::int32_t{ tile_const.x() },
-      std::int32_t{ tile_const.y() });
+      std::int32_t{ tile_const.x()/16 },
+      std::int32_t{ tile_const.y()/16 });
 
     if (pupu_map.contains(tuple))
     {

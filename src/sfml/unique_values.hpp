@@ -137,8 +137,8 @@ public:
             tile.blend_mode(),
             tile.animation_id(),
             tile.animation_state()),
-          std::int32_t{ tile.x() },
-          std::int32_t{ tile.y() });
+          std::int32_t{ tile.x()/16 },
+          std::int32_t{ tile.y()/16 });
 
         if (pupu_map.contains(tuple))
         {
