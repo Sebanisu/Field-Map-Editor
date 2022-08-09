@@ -15,6 +15,56 @@
 #include <string>
 #include <utility>
 #include <vector>
+class UniquifyPupu
+{
+public:
+  struct PupuKey
+  {
+    PupuID       pupu_id                            = {};
+    std::int16_t x                                  = {};
+    std::int16_t y                                  = {};
+    auto         operator<=>(const PupuKey &) const = default;
+  };
+  std::map<PupuKey, std::uint8_t> m_pupu_map = {};
+  PupuID                          operator()(const auto &tile_const)
+  {
+    const auto t    = 16;
+    const auto x    = static_cast<int16_t>(tile_const.x() / t);
+    const auto y    = static_cast<int16_t>(tile_const.y() / t);
+    const auto pupu = PupuID(
+      tile_const.layer_id(),
+      tile_const.blend_mode(),
+      tile_const.animation_id(),
+      tile_const.animation_state());
+    const auto input_value = PupuKey{ pupu, x, y };
+    auto       insert_key  = [&](PupuKey key) -> PupuID {
+      if (m_pupu_map.contains(key))
+      {
+        ++(m_pupu_map.at(key));
+        return key.pupu_id + m_pupu_map.at(key);
+      }
+      else
+      {
+        m_pupu_map.emplace(key, std::uint8_t{});
+        return key.pupu_id + m_pupu_map.at(key);
+      }
+    };
+    auto ret = insert_key(input_value);
+    if (tile_const.x() % t != 0 && tile_const.y() % t != 0)
+    {
+      ret += 0x30;
+    }
+    else if (tile_const.x() % t != 0)
+    {
+      ret += 0x10;
+    }
+    else if (tile_const.y() % t != 0)
+    {
+      ret += 0x20;
+    }
+    return ret;
+  }
+};
 template<typename T>
 struct unique_values_and_strings
 {
@@ -130,26 +180,7 @@ public:
   explicit all_unique_values_and_strings(const tilesT &tiles)
     : m_pupu(
       tiles,
-      [this](const auto &tile) {
-        const auto tuple = std::make_tuple(
-          PupuID(
-            tile.layer_id(),
-            tile.blend_mode(),
-            tile.animation_id(),
-            tile.animation_state()),
-          std::int32_t{ tile.x()/16 },
-          std::int32_t{ tile.y()/16 });
-
-        if (pupu_map.contains(tuple))
-        {
-          ++(pupu_map.at(tuple));
-        }
-        else
-        {
-          pupu_map.emplace(tuple, std::uint8_t{});
-        }
-        return std::get<0>(tuple) + pupu_map.at(tuple);
-      },
+      m_pupu_map,
       [](const PupuID &left, const PupuID &right) {
         return left.raw() < right.raw();
       })
@@ -225,8 +256,7 @@ public:
   }
 
 private:
-  std::map<std::tuple<PupuID, std::int32_t, std::int32_t>, std::uint8_t>
-                                           pupu_map          = {};
+  UniquifyPupu                             m_pupu_map        = {};
   unique_values_and_strings<PupuID>        m_pupu            = {};
   unique_values_and_strings<std::uint16_t> m_z               = {};
   unique_values_and_strings<std::uint8_t>  m_layer_id        = {};

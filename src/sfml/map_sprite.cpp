@@ -4,7 +4,7 @@
 #include <bit>
 #include <open_viii/graphics/Png.hpp>
 #include <utility>
-//#define USE_THREADS
+// #define USE_THREADS
 using namespace open_viii::graphics::background;
 using namespace open_viii::graphics;
 using namespace open_viii::graphics::literals;
@@ -354,14 +354,12 @@ void map_sprite::wait_for_futures() const
   auto                x,
   auto                y) const
 {
-  constexpr static auto tile_size = 16U;
-  auto i = static_cast<std::uint32_t>(x / static_cast<decltype(x)>(tile_size));
-  auto j = static_cast<std::uint32_t>(y / static_cast<decltype(y)>(tile_size));
-  std::uint32_t tu = static_cast<std::uint32_t>(
-    source_x / static_cast<decltype(source_x)>(tile_size));
-  std::uint32_t tv = static_cast<std::uint32_t>(
-    source_y / static_cast<decltype(source_y)>(tile_size));
-  const auto tovec = [](auto &&in_x, auto &&in_y) {
+  constexpr static float tile_size = 16.0F;
+  auto                   i         = static_cast<float>(x / tile_size);
+  auto                   j         = static_cast<float>(y / tile_size);
+  float                  tu        = static_cast<float>(source_x / tile_size);
+  float                  tv        = static_cast<float>(source_y / tile_size);
+  const auto             tovec     = [](auto &&in_x, auto &&in_y) {
     return sf::Vector2f{ static_cast<float>(in_x), static_cast<float>(in_y) };
   };
   const auto tovert =
@@ -516,8 +514,8 @@ template<typename key_lambdaT, typename weight_lambdaT>
           row = {};
         }
 
-        using tileT =
-          std::remove_cvref_t<typename std::remove_cvref_t<decltype(tiles)>::value_type>;
+        using tileT = std::remove_cvref_t<
+          typename std::remove_cvref_t<decltype(tiles)>::value_type>;
         for (tileT *const tp : tps)
         {
           *tp = tp->with_source_xy(
@@ -836,31 +834,10 @@ void map_sprite::for_all_tiles(
   bool        regular_order) const
 {
   // todo move pupu generation to constructor
-  std::map<std::tuple<PupuID, std::int32_t, std::int32_t>, std::uint8_t>
-                      pupu_map{};
-  std::vector<PupuID> pupu_ids = {};
+  UniquifyPupu        m_pupu_map = {};
+  std::vector<PupuID> pupu_ids   = {};
   pupu_ids.reserve(std::size(tiles_const));
-  const auto get_pupu = [&pupu_map](const auto &tile_const) {
-    const auto tuple = std::make_tuple(
-      PupuID(
-        tile_const.layer_id(),
-        tile_const.blend_mode(),
-        tile_const.animation_id(),
-        tile_const.animation_state()),
-      std::int32_t{ tile_const.x()/16 },
-      std::int32_t{ tile_const.y()/16 });
-
-    if (pupu_map.contains(tuple))
-    {
-      ++(pupu_map.at(tuple));
-    }
-    else
-    {
-      pupu_map.emplace(tuple, std::uint8_t{});
-    }
-    return std::get<0>(tuple) + pupu_map.at(tuple);
-  };
-  std::ranges::transform(tiles_const, std::back_inserter(pupu_ids), get_pupu);
+  std::ranges::transform(tiles_const, std::back_inserter(pupu_ids), m_pupu_map);
   assert(std::size(tiles_const) == std::size(tiles));
   assert(std::size(tiles_const) == std::size(pupu_ids));
   const auto process = [this, &skip_invalid, &lambda](
@@ -980,16 +957,15 @@ void map_sprite::for_all_tiles(
       {
         return;
       }
-      const auto draw_size = sf::Vector2u{ 16U * m_scale, 16U * m_scale };
-      const auto raw_texture_size = states.texture->getSize();
-      const auto i                = raw_texture_size.y / 16U;
-      const auto texture_size = [this, &i, &draw_size, &raw_texture_size]() {
+      const auto draw_size    = sf::Vector2u{ 16U * m_scale, 16U * m_scale };
+      const auto texture_size = [this, &states]() {
+        const auto raw_texture_size = states.texture->getSize();
         if (m_filters.deswizzle.enabled())
         {
           const auto local_scale = raw_texture_size.y / m_canvas.height();
           return sf::Vector2u{ 16U * local_scale, 16U * local_scale };
-          ;
         }
+        const auto i = raw_texture_size.y / 16U;
         return sf::Vector2u{ i, i };
       }();
       auto quad = get_triangle_strip(draw_size, texture_size, tile_const, tile);
