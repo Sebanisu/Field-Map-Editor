@@ -4,7 +4,7 @@
 
 #ifndef FIELD_MAP_EDITOR_PUPUID_HPP
 #define FIELD_MAP_EDITOR_PUPUID_HPP
-#include "open_viii/graphics/background/BlendModeT.hpp"
+#include "open_viii/graphics/background/Map.hpp"
 #include <compare>
 #include <fmt/format.h>
 struct PupuID
@@ -23,18 +23,28 @@ struct PupuID
   static constexpr std::uint32_t animation_state_offset = 4U;
   // leaves 3 bits for offset markers and 3 bits for offset increment
   constexpr PupuID(
-    std::uint16_t                               layer_id,
-    open_viii::graphics::background::BlendModeT blend_mode,
-    std::uint8_t                                animation_id,
-    std::uint8_t                                animation_state,
-    std::uint8_t                                offset = 0U)
+    const open_viii::graphics::background::is_tile auto &tile,
+    std::uint8_t                                         offset = 0U)
     : PupuID(std::uint32_t{
-      static_cast<std::uint32_t>(layer_id << layer_offset)
-      + (static_cast<std::uint32_t>(blend_mode) << blend_offset)
-      + static_cast<std::uint32_t>(animation_id << animation_offset)
-      + static_cast<std::uint32_t>(animation_state << animation_state_offset)
-      + offset })
+      ((static_cast<std::uint32_t>(tile.layer_id()) & 0x7FU) << layer_offset)
+      | ((static_cast<std::uint32_t>(tile.blend_mode()) & 0x07U) << blend_offset)
+      | static_cast<std::uint32_t>(tile.animation_id() << animation_offset)
+      | static_cast<std::uint32_t>(
+        tile.animation_state() << animation_state_offset)
+      | static_cast<std::uint32_t>(offset & 0xF) })
   {
+    if (tile.x() % 16 != 0 && tile.y() % 16 != 0)
+    {
+      m_raw |= 0x8080'0000;
+    }
+    if (tile.x() % 16 != 0)
+    {
+      m_raw |= 0x8000'0000;
+    }
+    if (tile.y() % 16 != 0)
+    {
+      m_raw |= 0x0080'0000;
+    }
   }
   constexpr auto operator+=(std::uint32_t right)
   {
@@ -75,7 +85,7 @@ struct PupuID
   }
   [[nodiscard]] bool constexpr same_base(PupuID right) const
   {
-    constexpr auto mask = 0xFFFFFFF0U;
+    constexpr auto mask = 0xFFFF'FFF0U;
     return (m_raw & mask) == (right.raw() & mask);
   }
 

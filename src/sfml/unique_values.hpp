@@ -26,16 +26,13 @@ public:
     auto         operator<=>(const PupuKey &) const = default;
   };
   std::map<PupuKey, std::uint8_t> m_pupu_map = {};
-  PupuID                          operator()(const auto &tile_const)
+  PupuID
+    operator()(const open_viii::graphics::background::is_tile auto &tile_const)
   {
-    const auto t    = 16;
-    const auto x    = static_cast<int16_t>(tile_const.x() / t);
-    const auto y    = static_cast<int16_t>(tile_const.y() / t);
-    const auto pupu = PupuID(
-      tile_const.layer_id(),
-      tile_const.blend_mode(),
-      tile_const.animation_id(),
-      tile_const.animation_state());
+    const auto t           = 16;
+    const auto x           = static_cast<int16_t>(tile_const.x() / t);
+    const auto y           = static_cast<int16_t>(tile_const.y() / t);
+    const auto pupu        = PupuID(tile_const);
     const auto input_value = PupuKey{ pupu, x, y };
     auto       insert_key  = [&](PupuKey key) -> PupuID {
       if (m_pupu_map.contains(key))
@@ -49,20 +46,7 @@ public:
         return key.pupu_id + m_pupu_map.at(key);
       }
     };
-    auto ret = insert_key(input_value);
-    if (tile_const.x() % t != 0 && tile_const.y() % t != 0)
-    {
-      ret |= 0x8080'0000U;
-    }
-    else if (tile_const.x() % t != 0)
-    {
-      ret |= 0x8000'0000U;
-    }
-    else if (tile_const.y() % t != 0)
-    {
-      ret |= 0x0080'0000U;
-    }
-    return ret;
+    return insert_key(input_value);
   }
 };
 template<typename T>
