@@ -52,15 +52,15 @@ public:
     auto ret = insert_key(input_value);
     if (tile_const.x() % t != 0 && tile_const.y() % t != 0)
     {
-      ret += 0x30;
+      ret |= 0x8080'0000U;
     }
     else if (tile_const.x() % t != 0)
     {
-      ret += 0x10;
+      ret |= 0x8000'0000U;
     }
     else if (tile_const.y() % t != 0)
     {
-      ret += 0x20;
+      ret |= 0x0080'0000U;
     }
     return ret;
   }

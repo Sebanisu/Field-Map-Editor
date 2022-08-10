@@ -14,10 +14,14 @@ struct PupuID
     : m_raw(raw)
   {
   }
+  // layer is 7 bits
   static constexpr std::uint32_t layer_offset           = 24U;
+  // blend is only 0,1,2,3,4. So 3 bits
   static constexpr std::uint32_t blend_offset           = 20U;
+  // animation id and state is 8 bits
   static constexpr std::uint32_t animation_offset       = 12U;
   static constexpr std::uint32_t animation_state_offset = 4U;
+  // leaves 3 bits for offset markers and 3 bits for offset increment
   constexpr PupuID(
     std::uint16_t                               layer_id,
     open_viii::graphics::background::BlendModeT blend_mode,
@@ -41,6 +45,17 @@ struct PupuID
   {
     auto cpy = *this;
     cpy += right;
+    return cpy;
+  }
+  constexpr auto operator|=(std::uint32_t right)
+  {
+    m_raw |= right;
+    return *this;
+  }
+  [[nodiscard]] constexpr auto operator|(std::uint32_t right) const
+  {
+    auto cpy = *this;
+    cpy |= right;
     return cpy;
   }
   constexpr auto operator+=(PupuID right)
