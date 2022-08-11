@@ -674,18 +674,23 @@ void gui::checkbox_map_swizzle() const
   {
     if (m_selections.draw_swizzle)
     {
+      m_map_sprite.enable_disable_blends();
       m_map_sprite.enable_draw_swizzle();
     }
     else
     {
       m_map_sprite.disable_draw_swizzle();
+      if(!m_selections.draw_disable_blending)
+      {
+        m_map_sprite.disable_disable_blends();
+      }
     }
     m_changed = true;
   }
 }
 void gui::checkbox_map_disable_blending() const
 {
-  if (ImGui::Checkbox("Disable Blending", &m_selections.draw_disable_blending))
+  if (!m_selections.draw_swizzle && ImGui::Checkbox("Disable Blending", &m_selections.draw_disable_blending))
   {
     if (m_selections.draw_disable_blending)
     {
