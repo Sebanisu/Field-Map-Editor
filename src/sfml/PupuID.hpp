@@ -33,10 +33,6 @@ struct PupuID
         tile.animation_state() << animation_state_offset)
       | static_cast<std::uint32_t>(offset & 0xF) })
   {
-    if (tile.x() % 16 != 0 && tile.y() % 16 != 0)
-    {
-      m_raw |= 0x8080'0000;
-    }
     if (tile.x() % 16 != 0)
     {
       m_raw |= 0x8000'0000;
