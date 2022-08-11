@@ -1666,14 +1666,15 @@ std::vector<std::uint8_t>
       auto map_xy_palette = generate_map(
         tiles,
         [](const auto &tile) {
-          return std::make_tuple(tile.source_x(), tile.source_y());
+          return std::make_tuple(
+            tile.source_x() / tile.width(), tile.source_y() / tile.height());
         },
         [](const auto &tile) { return tile.palette_id(); },
         [&texture_page](const auto &tile) {
           return std::cmp_equal(texture_page, tile.texture_id());
         });
       std::vector<uint8_t> conflict_palettes{};
-
+      std::vector<std::string> conflict_xy{};
       for (auto &kvp : map_xy_palette)
       {
         // const auto& xy = kvp.first;
@@ -1687,18 +1688,27 @@ std::vector<std::uint8_t>
         }
         else
         {
+          conflict_xy.emplace_back(fmt::format("\tx,y: ({},{})\n", std::get<0>(kvp.first),std::get<1>(kvp.first)));
           conflict_palettes.insert(
             conflict_palettes.end(),
             palette_vector.begin(),
             palette_vector.end());
         }
       }
-      std::ranges::sort(conflict_palettes);
-      auto [first, last] = std::ranges::unique(conflict_palettes);
-      conflict_palettes.erase(first, last);
-      for (auto p : conflict_palettes)
+      if(!conflict_xy.empty())
       {
-        fmt::print("{}\n", p);
+        fmt::print("Conflicting Palettes:\n");
+        for(const auto &  cxy : conflict_xy)
+        {
+          fmt::print("{}",cxy);
+        }
+        std::ranges::sort(conflict_palettes);
+        auto [first, last] = std::ranges::unique(conflict_palettes);
+        conflict_palettes.erase(first, last);
+        for (auto p : conflict_palettes)
+        {
+          fmt::print("\tpalette: {}\n", p);
+        }
       }
       return conflict_palettes;
     });
