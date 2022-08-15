@@ -4,6 +4,7 @@
 
 #ifndef FIELD_MAP_EDITOR_MAPHISTORY_HPP
 #define FIELD_MAP_EDITOR_MAPHISTORY_HPP
+#include "MouseToTilePos.h"
 #include "SimilarAdjustments.hpp"
 #include <ScopeGuard.hpp>
 namespace ff_8
@@ -112,12 +113,12 @@ class [[nodiscard]] MapHistory
       {
         auto front_tile = tiles.cbegin();
 
-//        spdlog::debug(
-//          "{}:{} pos in front to be 0 < {} < {} ",
-//          __FILE__,
-//          __LINE__,
-//          pos,
-//          std::ranges::size(tiles));
+        //        spdlog::debug(
+        //          "{}:{} pos in front to be 0 < {} < {} ",
+        //          __FILE__,
+        //          __LINE__,
+        //          pos,
+        //          std::ranges::size(tiles));
 
         if (pos < 0 || std::cmp_greater_equal(pos, std::ranges::size(tiles)))
         {
@@ -250,6 +251,16 @@ public:
     }
   }
 
+  template<typename TileT, typename LambdaT, typename T>
+  void copy_back_perform_operation(
+    const TileT &,
+    const MouseTileOverlap<T> &overlap,
+    LambdaT                  &&lambda) const
+  {
+
+    copy_back_perform_operation<TileT>(overlap, std::forward<LambdaT>(lambda));
+  }
+
   template<typename TileT, typename LambdaT>
   auto get_front_version_of_back_tile(const TileT &tile, LambdaT &&lambda) const
   {
@@ -369,9 +380,10 @@ public:
   //        back().visit_tiles([&front_tiles, &function, &filter](
   //                             std::ranges::contiguous_range auto
   //                             &&back_tiles) {
-  //          using TileT  = std::ranges::range_value_t<decltype(front_tiles)>;
-  //          using BTileT = std::ranges::range_value_t<decltype(back_tiles)>;
-  //          if constexpr (!std::is_same_v<TileT, BTileT>)
+  //          using TileT  =
+  //          std::ranges::range_value_t<decltype(front_tiles)>; using BTileT
+  //          = std::ranges::range_value_t<decltype(back_tiles)>; if constexpr
+  //          (!std::is_same_v<TileT, BTileT>)
   //          {
   //            std::vector<PairOfTiles<TileT>> temp_mux        = {};
   //            auto                            temp_mux_filter =
@@ -399,7 +411,8 @@ public:
   //    std::invocable auto &&filter = std::identity{})
   //  {
   //    return visit_both(
-  //      [&function](std::ranges::contiguous_range auto &&mux_tiles) -> bool {
+  //      [&function](std::ranges::contiguous_range auto &&mux_tiles) -> bool
+  //      {
   //        bool changed = false;
   //        for (auto &pair : mux_tiles)
   //        {

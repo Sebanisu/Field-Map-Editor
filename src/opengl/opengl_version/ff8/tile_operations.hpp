@@ -94,14 +94,38 @@ namespace tile_operations
       spdlog::debug("Has no with_" #FUNCTION);                                 \
       return tile;                                                             \
     }                                                                          \
-    constexpr With##STRING &operator=(ValueT v)                                \
-    {                                                                          \
-      m_value = std::move(v);                                                  \
-      return *this;                                                            \
-    }                                                                          \
                                                                                \
   private:                                                                     \
     ValueT m_value = {};                                                       \
+  };                                                                           \
+  template<typename ValueT>                                                    \
+  struct TranslateWith##STRING                                                 \
+  {                                                                            \
+    constexpr TranslateWith##STRING(ValueT to, ValueT from)                    \
+      : m_to(std::move(to))                                                    \
+      , m_from(std::move(from))                                                \
+    {                                                                          \
+    }                                                                          \
+    template<open_viii::graphics::background::is_tile TileT>                   \
+      requires(has_with_##FUNCTION<TileT>)                                     \
+    [[nodiscard]] constexpr TileT operator()(const TileT &tile) const noexcept \
+    {                                                                          \
+      const auto current = m_to + tile.FUNCTION() - m_from;                    \
+      spdlog::debug("Used with_" #FUNCTION " to assign: {}", current);         \
+      return tile.with_##FUNCTION(static_cast<STRING##T<TileT>>(current));     \
+    }                                                                          \
+                                                                               \
+    template<open_viii::graphics::background::is_tile TileT>                   \
+      requires(!has_with_##FUNCTION<TileT>)                                    \
+    constexpr decltype(auto) operator()(const TileT &tile) const noexcept      \
+    { /*donno why I can not forward or move when not has_with*/                \
+      spdlog::debug("Has no with_" #FUNCTION);                                 \
+      return tile;                                                             \
+    }                                                                          \
+                                                                               \
+  private:                                                                     \
+    ValueT m_to   = {};                                                        \
+    ValueT m_from = {}; /*used to calc offset using original*/                 \
   };                                                                           \
   template<open_viii::graphics::background::is_tile TileT>                     \
   struct STRING##Group                                                         \
