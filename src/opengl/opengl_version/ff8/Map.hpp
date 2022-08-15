@@ -239,17 +239,9 @@ public:
             tp.y)
             .c_str());
 
-
         tile_button_state = &m_tile_button_state_hover;
         if (visit_unsorted_unfiltered_tiles(
-              common_operation, [&](const auto &tile) {
-                typename TileFunctions::X           x_f{};
-                typename TileFunctions::Y           y_f{};
-                typename TileFunctions::TexturePage texture_page_f{};
-                return std::cmp_equal(x_f(tile), tp.x)
-                       && std::cmp_equal(y_f(tile), tp.y)
-                       && std::cmp_equal(texture_page_f(tile), tp.texture_page);
-              }))
+              common_operation, MouseTileOverlap<TileFunctions>(tp)))
         {
           m_changed();
         }
@@ -271,18 +263,9 @@ public:
             m_map_dims.pressed_mouse_location->y)
             .c_str());
         if (visit_unsorted_unfiltered_tiles(
-              common_operation, [&](const auto &tile) {
-                typename TileFunctions::X           x_f{};
-                typename TileFunctions::Y           y_f{};
-                typename TileFunctions::TexturePage texture_page_f{};
-                return std::cmp_equal(
-                         x_f(tile), m_map_dims.pressed_mouse_location->x)
-                       && std::cmp_equal(
-                         y_f(tile), m_map_dims.pressed_mouse_location->y)
-                       && std::cmp_equal(
-                         texture_page_f(tile),
-                         m_map_dims.pressed_mouse_location->z);
-              }))
+              common_operation,
+              MouseTileOverlap<TileFunctions>(
+                MouseToTilePos{*(m_map_dims.pressed_mouse_location)})))
         {
           m_changed();
         }

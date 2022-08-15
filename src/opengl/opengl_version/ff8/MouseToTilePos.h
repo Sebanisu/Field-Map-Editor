@@ -19,6 +19,12 @@ private:
   }
 
 public:
+  explicit MouseToTilePos(const glm::ivec3 input)
+    : x(static_cast<std::int16_t>(input.x))
+    , y(static_cast<std::int16_t>(input.y))
+    , texture_page(static_cast<std::uint8_t>(input.z))
+  {
+  }
   template<typename TileFunctions>
   MouseToTilePos(
     const glm::vec2               offset_mouse_pos,
@@ -60,7 +66,39 @@ public:
   }
   std::int16_t x            = {};
   std::int16_t y            = {};
-  std::uint8_t  texture_page = {};
+  std::uint8_t texture_page = {};
+};
+template<typename TileFunctions>
+class MouseTileOverlap
+{
+private:
+  static constexpr bool cmp_overlap(
+    const std::integral auto tilepos,
+    const std::integral auto otherpos) noexcept
+  {
+    auto const size =
+      static_cast<decltype(tilepos)>(map_dims_statics::TileSize);
+    return std::cmp_greater_equal(otherpos, tilepos)
+           && std::cmp_less(otherpos, tilepos + size);
+  };
+  MouseToTilePos m_compare_value;
+
+public:
+  MouseTileOverlap(MouseToTilePos compare_value)
+  : m_compare_value(std::move(compare_value))
+  {
+  }
+  bool operator()(const auto &tile) noexcept
+  {
+    typename TileFunctions::X           x_f{};
+    typename TileFunctions::Y           y_f{};
+    typename TileFunctions::TexturePage texture_page_f{};
+
+    return cmp_overlap(x_f(tile), m_compare_value.x)
+           && cmp_overlap(y_f(tile), m_compare_value.y)
+           && std::cmp_equal(
+             texture_page_f(tile), m_compare_value.texture_page);
+  }
 };
 }// namespace ff_8
 #endif// FIELD_MAP_EDITOR_MOUSETOTILEPOS_H
