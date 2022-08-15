@@ -275,16 +275,16 @@ private:
   [[nodiscard]] std::array<sf::Vertex, 4U> get_triangle_strip(
     const sf::Vector2u &draw_size,
     const sf::Vector2u &texture_size,
-    auto                source_x,
-    auto                source_y,
-    auto                x,
-    auto                y) const;
+    std::integral auto                source_x,
+    std::integral auto                source_y,
+    std::integral auto                x,
+    std::integral auto                y) const;
 
   [[nodiscard]] std::array<sf::Vertex, 4U> get_triangle_strip(
     const sf::Vector2u &draw_size,
     const sf::Vector2u &texture_size,
-    const auto         &tile_const,
-    auto              &&tile) const;
+    const open_viii::graphics::background::is_tile auto         &tile_const,
+    open_viii::graphics::background::is_tile auto              &&tile) const;
 
   static const sf::BlendMode &GetBlendSubtract();
   [[nodiscard]] bool

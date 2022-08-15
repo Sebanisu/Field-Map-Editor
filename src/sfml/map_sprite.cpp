@@ -349,17 +349,19 @@ void map_sprite::wait_for_futures() const
 [[nodiscard]] std::array<sf::Vertex, 4U> map_sprite::get_triangle_strip(
   const sf::Vector2u &draw_size,
   const sf::Vector2u &texture_size,
-  auto                source_x,
-  auto                source_y,
-  auto                x,
-  auto                y) const
+  std::integral auto                source_x,
+  std::integral auto                source_y,
+  std::integral auto                x,
+  std::integral auto                y) const
 {
-  constexpr static float tile_size = 16.0F;
-  auto                   i         = static_cast<float>(x / tile_size);
-  auto                   j         = static_cast<float>(y / tile_size);
-  float                  tu        = static_cast<float>(source_x / tile_size);
-  float                  tv        = static_cast<float>(source_y / tile_size);
-  const auto             tovec     = [](auto &&in_x, auto &&in_y) {
+  const sf::Vector2f     draw_size_f = { static_cast<float>(draw_size.x), static_cast<float>(draw_size.y) };
+  const sf::Vector2f     texture_size_f = { static_cast<float>(texture_size.x), static_cast<float>(texture_size.y) };
+  constexpr static float tile_size   = 16.0F;
+  auto                   i           = static_cast<float>(x) / tile_size;
+  auto                   j           = static_cast<float>(y) / tile_size;
+  float                  tu          = static_cast<float>(source_x) / tile_size;
+  float                  tv          = static_cast<float>(source_y) / tile_size;
+  const auto             tovec       = [](auto &&in_x, auto &&in_y) {
     return sf::Vector2f{ static_cast<float>(in_x), static_cast<float>(in_y) };
   };
   const auto tovert =
@@ -367,32 +369,32 @@ void map_sprite::wait_for_futures() const
       return sf::Vertex{ tovec(in_x, in_y), tovec(texx, texy) };
     };
   return std::array{ tovert(
-                       (i + 1) * draw_size.x,
-                       j * draw_size.y,
-                       (tu + 1) * texture_size.x,
-                       tv * texture_size.y),
+                       (i + 1) * draw_size_f.x,
+                       j * draw_size_f.y,
+                       (tu + 1) * texture_size_f.x,
+                       tv * texture_size_f.y),
                      tovert(
-                       i * draw_size.x,
-                       j * draw_size.y,
-                       tu * texture_size.x,
-                       tv * texture_size.y),
+                       i * draw_size_f.x,
+                       j * draw_size_f.y,
+                       tu * texture_size_f.x,
+                       tv * texture_size_f.y),
                      tovert(
-                       (i + 1) * draw_size.x,
-                       (j + 1) * draw_size.y,
-                       (tu + 1) * texture_size.x,
-                       (tv + 1) * texture_size.y),
+                       (i + 1) * draw_size_f.x,
+                       (j + 1) * draw_size_f.y,
+                       (tu + 1) * texture_size_f.x,
+                       (tv + 1) * texture_size_f.y),
                      tovert(
-                       i * draw_size.x,
-                       (j + 1) * draw_size.y,
-                       tu * texture_size.x,
-                       (tv + 1) * texture_size.y) };
+                       i * draw_size_f.x,
+                       (j + 1) * draw_size_f.y,
+                       tu * texture_size_f.x,
+                       (tv + 1) * texture_size_f.y) };
 }
 
 [[nodiscard]] std::array<sf::Vertex, 4U> map_sprite::get_triangle_strip(
   const sf::Vector2u &draw_size,
   const sf::Vector2u &texture_size,
-  const auto         &tile_const,
-  auto              &&tile) const
+  const open_viii::graphics::background::is_tile auto         &tile_const,
+  open_viii::graphics::background::is_tile auto              &&tile) const
 {
   using namespace open_viii::graphics::literals;
   using tile_type    = std::remove_cvref_t<decltype(tile)>;
@@ -1657,61 +1659,62 @@ std::string map_sprite::get_base_name() const
 std::vector<std::uint8_t>
   map_sprite::get_conflicting_palettes(const std::uint8_t &texture_page) const
 {
-  const auto palettes =
-    m_maps.front().visit_tiles([&texture_page, this](const auto &tiles) {
-      //        using tileT =
-      //          std::remove_cvref_t<typename
-      //          std::remove_cvref_t<decltype(tiles)>::value_type>;
+  const auto palettes = m_maps.front().visit_tiles([&texture_page,
+                                                    this](const auto &tiles) {
+    //        using tileT =
+    //          std::remove_cvref_t<typename
+    //          std::remove_cvref_t<decltype(tiles)>::value_type>;
 
-      auto map_xy_palette = generate_map(
-        tiles,
-        [](const auto &tile) {
-          return std::make_tuple(
-            tile.source_x() / tile.width(), tile.source_y() / tile.height());
-        },
-        [](const auto &tile) { return tile.palette_id(); },
-        [&texture_page](const auto &tile) {
-          return std::cmp_equal(texture_page, tile.texture_id());
-        });
-      std::vector<uint8_t> conflict_palettes{};
-      std::vector<std::string> conflict_xy{};
-      for (auto &kvp : map_xy_palette)
+    auto map_xy_palette = generate_map(
+      tiles,
+      [](const auto &tile) {
+        return std::make_tuple(
+          tile.source_x() / tile.width(), tile.source_y() / tile.height());
+      },
+      [](const auto &tile) { return tile.palette_id(); },
+      [&texture_page](const auto &tile) {
+        return std::cmp_equal(texture_page, tile.texture_id());
+      });
+    std::vector<uint8_t>     conflict_palettes{};
+    std::vector<std::string> conflict_xy{};
+    for (auto &kvp : map_xy_palette)
+    {
+      // const auto& xy = kvp.first;
+      std::vector<std::uint8_t> &palette_vector = kvp.second;
+      std::ranges::sort(palette_vector);
+      auto [first, last] = std::ranges::unique(palette_vector);
+      palette_vector.erase(first, last);
+      if (palette_vector.size() <= 1U)
       {
-        // const auto& xy = kvp.first;
-        std::vector<std::uint8_t> &palette_vector = kvp.second;
-        std::ranges::sort(palette_vector);
-        auto [first, last] = std::ranges::unique(palette_vector);
-        palette_vector.erase(first, last);
-        if (palette_vector.size() <= 1U)
-        {
-          // map_xy_palette.erase(xy);
-        }
-        else
-        {
-          conflict_xy.emplace_back(fmt::format("\tx,y: ({},{})\n", std::get<0>(kvp.first),std::get<1>(kvp.first)));
-          conflict_palettes.insert(
-            conflict_palettes.end(),
-            palette_vector.begin(),
-            palette_vector.end());
-        }
+        // map_xy_palette.erase(xy);
       }
-      if(!conflict_xy.empty())
+      else
       {
-        fmt::print("Conflicting Palettes:\n");
-        for(const auto &  cxy : conflict_xy)
-        {
-          fmt::print("{}",cxy);
-        }
-        std::ranges::sort(conflict_palettes);
-        auto [first, last] = std::ranges::unique(conflict_palettes);
-        conflict_palettes.erase(first, last);
-        for (auto p : conflict_palettes)
-        {
-          fmt::print("\tpalette: {}\n", p);
-        }
+        conflict_xy.emplace_back(fmt::format(
+          "\tx,y: ({},{})\n", std::get<0>(kvp.first), std::get<1>(kvp.first)));
+        conflict_palettes.insert(
+          conflict_palettes.end(),
+          palette_vector.begin(),
+          palette_vector.end());
       }
-      return conflict_palettes;
-    });
+    }
+    if (!conflict_xy.empty())
+    {
+      fmt::print("Conflicting Palettes:\n");
+      for (const auto &cxy : conflict_xy)
+      {
+        fmt::print("{}", cxy);
+      }
+      std::ranges::sort(conflict_palettes);
+      auto [first, last] = std::ranges::unique(conflict_palettes);
+      conflict_palettes.erase(first, last);
+      for (auto p : conflict_palettes)
+      {
+        fmt::print("\tpalette: {}\n", p);
+      }
+    }
+    return conflict_palettes;
+  });
   return palettes;
 }
 
