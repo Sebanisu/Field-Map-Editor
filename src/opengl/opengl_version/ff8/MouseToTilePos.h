@@ -88,7 +88,7 @@ public:
   : m_compare_value(std::move(compare_value))
   {
   }
-  bool operator()(const auto &tile) noexcept
+  bool operator()(const auto &tile) const noexcept
   {
     typename TileFunctions::X           x_f{};
     typename TileFunctions::Y           y_f{};
