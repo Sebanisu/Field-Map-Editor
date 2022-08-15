@@ -251,16 +251,6 @@ public:
     }
   }
 
-  template<typename TileT, typename LambdaT, typename T>
-  void copy_back_perform_operation(
-    const TileT &,
-    const MouseTileOverlap<T> &overlap,
-    LambdaT                  &&lambda) const
-  {
-
-    copy_back_perform_operation<TileT>(overlap, std::forward<LambdaT>(lambda));
-  }
-
   template<typename TileT, typename LambdaT>
   auto get_front_version_of_back_tile(const TileT &tile, LambdaT &&lambda) const
   {

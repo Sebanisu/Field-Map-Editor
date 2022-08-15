@@ -68,7 +68,7 @@ public:
   std::int16_t y            = {};
   std::uint8_t texture_page = {};
 };
-template<typename TileFunctions>
+template<typename TileFunctions, typename FiltersT>
 class MouseTileOverlap
 {
 private:
@@ -82,10 +82,12 @@ private:
            && std::cmp_less(otherpos, tilepos + size);
   };
   MouseToTilePos m_compare_value;
+  FiltersT      &m_filters;
 
 public:
-  MouseTileOverlap(MouseToTilePos compare_value)
-  : m_compare_value(std::move(compare_value))
+  MouseTileOverlap(MouseToTilePos compare_value, FiltersT &filters)
+    : m_compare_value(std::move(compare_value))
+    , m_filters(filters)
   {
   }
   bool operator()(const auto &tile) const noexcept
@@ -94,7 +96,7 @@ public:
     typename TileFunctions::Y           y_f{};
     typename TileFunctions::TexturePage texture_page_f{};
 
-    return cmp_overlap(x_f(tile), m_compare_value.x)
+    return m_filters(tile) && cmp_overlap(x_f(tile), m_compare_value.x)
            && cmp_overlap(y_f(tile), m_compare_value.y)
            && std::cmp_equal(
              texture_page_f(tile), m_compare_value.texture_page);

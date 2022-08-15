@@ -241,7 +241,7 @@ public:
 
         tile_button_state = &m_tile_button_state_hover;
         if (visit_unsorted_unfiltered_tiles(
-              common_operation, MouseTileOverlap<TileFunctions>(tp)))
+              common_operation, MouseTileOverlap<TileFunctions, MapFilters>(tp, m_filters)))
         {
           m_changed();
         }
@@ -264,8 +264,8 @@ public:
             .c_str());
         if (visit_unsorted_unfiltered_tiles(
               common_operation,
-              MouseTileOverlap<TileFunctions>(
-                MouseToTilePos{ *(m_map_dims.pressed_mouse_location) })))
+              MouseTileOverlap<TileFunctions,MapFilters>(
+                MouseToTilePos{ *(m_map_dims.pressed_mouse_location) },m_filters)))
         {
           m_changed();
         }
@@ -439,10 +439,9 @@ public:
               operations.push_back(tile_operations::WithTextureId{
                 m_map_dims.released_mouse_location->z });
             }
-            m_map.copy_back_perform_operation(
-              TileT{},
-              MouseTileOverlap<TileFunctions>(
-                MouseToTilePos{ *(m_map_dims.pressed_mouse_location) }),
+            m_map.copy_back_perform_operation<TileT>(
+              MouseTileOverlap<TileFunctions,MapFilters>(
+                MouseToTilePos{ *(m_map_dims.pressed_mouse_location) },m_filters),
               [&](TileT &new_tile) {
                 int i = {};
                 for (const auto &op : operations)
