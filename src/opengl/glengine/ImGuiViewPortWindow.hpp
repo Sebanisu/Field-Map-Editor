@@ -157,7 +157,7 @@ inline namespace impl
     const char                                    *m_title           = {};
     mutable glengine::FrameBuffer                  m_fb              = {};
     mutable PackedSettings                         m_packed          = {};
-    mutable bool                                   m_debug_text      = { true };
+    mutable bool                                   m_debug_text      = { false };
     mutable glm::vec2                              m_min             = {};
     mutable glm::vec2                              m_max             = {};
     mutable glm::vec2                              m_viewport_size   = {};

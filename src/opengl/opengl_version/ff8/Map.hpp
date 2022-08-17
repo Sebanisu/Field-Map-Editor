@@ -50,24 +50,23 @@ public:
     : Map(fields, {})
   {
   }
-  Map(const Fields &fields, std::filesystem::path upscale_path)
+  Map(const Fields &, std::filesystem::path upscale_path)
     : m_upscale_path(std::move(upscale_path))
-    , m_map(LoadMap(fields, fields.coo(), GetMim(), m_map_path, m_map_choose_coo))
-    , m_filters(m_map)
+    , m_filters(GetMapHistory())
   {
-    if (std::empty(GetMim().path))
+    if (std::empty(GetMim().path) || std::empty(GetMapHistory().path))
     {
       return;
     }
     if (!std::ranges::empty(m_upscale_path))
     {
-      const auto stem = std::filesystem::path(m_map_path).parent_path().stem();
+      const auto stem = std::filesystem::path(GetMapHistory().path).parent_path().stem();
       m_upscale_path  = (std::filesystem::path(m_upscale_path)
                         / stem.string().substr(0, 2) / stem)
                          .string();
       spdlog::debug("Upscale Location: \"{}\"", m_upscale_path.string());
     }
-    spdlog::debug("Loaded Map: \"{}\"", m_map_path);
+    spdlog::debug("Loaded Map: \"{}\"", GetMapHistory().path);
     spdlog::debug("Begin Loading Textures from Mim.");
     m_upscale_delayed_textures = LoadTextures(m_upscale_path);
     visit_unsorted_unfiltered_tiles();
@@ -104,7 +103,7 @@ public:
   }
   void on_render() const
   {
-    if (std::ranges::empty(m_map_path) || std::ranges::empty(GetMim().path))
+    if (std::ranges::empty(GetMapHistory().path) || std::ranges::empty(GetMim().path))
     {
       return;
     }
@@ -182,7 +181,7 @@ public:
       //        (void)m_map.copy_back_preemptive();
       //      }
       const auto  mta =
-        MapTileAdjustments<TileFunctions>(m_map, m_filters, m_similar);
+        MapTileAdjustments<TileFunctions>(GetMapHistory(), m_filters, m_similar);
       auto      *tile_button_state = &m_tile_button_state;
       const auto common_operation =
         [&](auto &tile, VisitState &visit_state) -> bool {
@@ -289,7 +288,7 @@ public:
     const auto pop_id = glengine::ImGuiPushId();
     {
       const auto disable = glengine::ImGuiDisabled(
-        std::ranges::empty(m_map_path) || std::ranges::empty(GetMim().path));
+        std::ranges::empty(GetMapHistory().path) || std::ranges::empty(GetMim().path));
 
       (void)ImGui::Checkbox("fit Height", &s_fit_height);
       (void)ImGui::Checkbox("fit Width", &s_fit_width);
@@ -394,7 +393,7 @@ public:
             moved);
           if (!moved || !m_dragging || !m_has_hover)
             return true;
-          m_map.back().visit_tiles([this](const auto &tiles) {
+          GetMapHistory()->back().visit_tiles([this](const auto &tiles) {
             using TileT =
               std::ranges::range_value_t<std::remove_cvref_t<decltype(tiles)>>;
             std::vector<std::function<TileT(const TileT &)>> operations{};
@@ -438,7 +437,7 @@ public:
               operations.push_back(tile_operations::WithTextureId{
                 m_map_dims.released_mouse_location->z });
             }
-            m_map.copy_back_perform_operation<TileT>(
+            GetMapHistory()->copy_back_perform_operation<TileT>(
               MouseTileOverlap<TileFunctions, MapFilters>(
                 MouseToTilePos{ *(m_map_dims.pressed_mouse_location) },
                 m_filters),
@@ -494,7 +493,7 @@ private:
   {
     const auto bpp             = tile.depth();
     const auto palette         = tile.palette_id();
-    const auto texture_page_id = m_map.get_front_version_of_back_tile(
+    const auto texture_page_id = GetMapHistory()->get_front_version_of_back_tile(
       tile, [&](const auto &front_tile) { return front_tile.texture_id(); });
     const auto [texture_index, texture_page_width] = [&]() {
       if (std::ranges::empty(m_upscale_path))
@@ -526,7 +525,7 @@ private:
                              / static_cast<float>(GetMim()->get_height());
     const float tile_size = tile_scale * map_dims_statics::TileSize;
     // glm::vec2(m_mim.get_width(tile.depth()), m_mim.get_height());
-    return m_map.get_front_version_of_back_tile(
+    return GetMapHistory()->get_front_version_of_back_tile(
       tile, [&](const auto &front_tile) {
         // todo maybe should have a toggle to force back tile.
         return std::optional<glengine::SubTexture>{
@@ -560,7 +559,7 @@ private:
   }
   auto visit_tiles(auto &&lambda) const
   {
-    return m_map.back().visit_tiles([&](const auto &tiles) {
+    return GetMapHistory()->back().visit_tiles([&](const auto &tiles) {
       auto f_tiles =
         tiles | std::views::filter(tile_operations::InvalidTile{})
         | std::views::filter([]([[maybe_unused]] const auto &tile) -> bool {
@@ -775,7 +774,7 @@ private:
       }
     });
     on_render();
-    const auto path = std::filesystem::path(m_map_path);
+    const auto path = std::filesystem::path(GetMapHistory().path);
     auto       string =
       fmt::format("{}_map.png", (path.parent_path() / path.stem()).string());
     glengine::PixelBuffer pixel_buffer{ m_frame_buffer.specification() };
@@ -785,7 +784,7 @@ private:
   }
   auto visit_unsorted_unfiltered_tiles_count() const
   {
-    return m_map.back().visit_tiles([&](const auto &tiles) -> std::size_t {
+    return GetMapHistory()->back().visit_tiles([&](const auto &tiles) -> std::size_t {
       auto f_tiles = tiles | std::views::filter(tile_operations::InvalidTile{});
       return static_cast<std::size_t>(
         std::ranges::count_if(f_tiles, [](auto &&) { return true; }));
@@ -793,7 +792,7 @@ private:
   }
   bool visit_unsorted_unfiltered_tiles(auto &&lambda, auto &&filter) const
   {
-    return m_map.back().visit_tiles([&](auto &&tiles) -> bool {
+    return GetMapHistory()->back().visit_tiles([&](auto &&tiles) -> bool {
       auto f_tiles = tiles | std::views::filter(tile_operations::InvalidTile{})
                      | std::views::filter(filter);
       bool       changed     = false;
@@ -808,13 +807,13 @@ private:
       }
       if (visit_state == VisitState::Undo)
       {
-        changed = m_map.undo();
+        changed = GetMapHistory()->undo();
         //        m_changed.enable_undo();
       }
       if (visit_state == VisitState::UndoAll)
       {
         changed = true;
-        m_map.undo_all();
+        GetMapHistory()->undo_all();
       }
       return changed;
     });
@@ -841,16 +840,8 @@ private:
   mutable glm::vec4                    m_uniform_color  = s_default_color;
 
   std::filesystem::path                m_upscale_path   = {};
-  // internal map file path
-  std::string                          m_map_path       = {};
-  // if coo was chosen instead of default.
-  bool                                 m_mim_choose_coo = {};
-  // if coo was chosen instead of default.
-  bool                                 m_map_choose_coo = {};
-  // container for field tile information
-  MapHistory                           m_map            = {};
   // dimensions of map
-  MapDims<TileFunctions>               m_map_dims       = { m_map.back() };
+  MapDims<TileFunctions>               m_map_dims       = { GetMapHistory()->back() };
   // loads the textures overtime instead of forcing them to load at start.
   glengine::DelayedTextures<17U * 13U>
     m_upscale_delayed_textures = {};// 20 is detected max 16(+1)*13 is
@@ -864,7 +855,7 @@ private:
   mutable bool                      m_saving                    = { false };
   mutable bool                      m_preview                   = { false };
   inline constinit static MapBlends s_blends                    = {};
-  mutable MapFilters                m_filters                   = { m_map };
+  mutable MapFilters                m_filters                   = { GetMapHistory() };
   Changed                           m_changed                   = {};
   glengine::Counter                 m_id                        = {};
   mutable std::vector<bool>         m_tile_button_state         = {};

@@ -61,9 +61,9 @@ struct MimData
   {
     return delayed_textures.on_update();
   }
-  bool                                        coo_chosen = { false };
-  std::string                                 path       = {};
-  open_viii::graphics::background::Mim        mim        = {};
+  bool                                        coo_chosen       = { false };
+  std::string                                 path             = {};
+  open_viii::graphics::background::Mim        mim              = {};
   glengine::DelayedTextures<35U>              delayed_textures = {};
   const open_viii::graphics::background::Mim *operator->() const noexcept
   {
@@ -88,9 +88,18 @@ struct MapHistoryData
     : map(LoadMap(fields, fields.coo(), mim, path, coo_chosen))
   {
   }
-  bool        coo_chosen = { false };
-  std::string path       = {};
-  MapHistory  map        = {};
+  bool              coo_chosen = { false };
+  std::string       path       = {};
+  MapHistory        map        = {};
+  const MapHistory *operator->() const noexcept
+  {
+    return &map;
+  }
+
+  operator const MapHistory &() const noexcept
+  {
+    return map;
+  }
 };
 }// namespace ff_8
 #endif// FIELD_MAP_EDITOR_FIELDS_HPP
