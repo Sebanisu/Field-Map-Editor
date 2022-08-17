@@ -14,11 +14,14 @@ namespace ff_8
 class Ff8UpscaleMenu
 {
 public:
-  Ff8UpscaleMenu() = default;
+  Ff8UpscaleMenu();
   Ff8UpscaleMenu(const Fields &);// discards the value passed in.
   void on_update(float) const;
   void on_render() const;
   void on_im_gui_update() const;
+  void on_im_gui_update_children() const;
+  void reload() const;
+  void on_im_gui_menu() const;
   void on_event(const glengine::event::Item &) const;
   template<glengine::Renderable T>
   void push_back(std::string name) const
@@ -30,8 +33,8 @@ public:
   }
 
 private:
-  glengine::Menu m_menu     = {};
   Upscales       m_upscales = {};
+  glengine::Menu m_menu     = {"Upscales"};
 };
 }// namespace ff_8
 #endif// FIELD_MAP_EDITOR_FF8UPSCALEMENU_HPP

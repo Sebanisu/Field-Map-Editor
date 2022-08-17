@@ -3,31 +3,63 @@
 //
 
 #include "LayerTests.hpp"
+#include <ScopeGuard.hpp>
 
 void layer::Tests::on_update(float ts) const
 {
   test_menu.on_update(ts);
+  ff_8_menu.on_update(ts);
 }
 void layer::Tests::on_render() const
 {
   test_menu.on_render();
+  ff_8_menu.on_render();
 }
 void layer::Tests::on_im_gui_update() const
 {
-  if (ImGui::Begin("Control Panel", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
+  ImVec2 vWindowSize = ImGui::GetMainViewport()->Size;
+  ImVec2 vPos0       = ImGui::GetMainViewport()->Pos;
+
+  ImGui::SetNextWindowPos(
+    ImVec2((float)vPos0.x, (float)vPos0.y), ImGuiCond_Always);
+  ImGui::SetNextWindowSize(
+    ImVec2((float)vWindowSize.x, (float)vWindowSize.y), ImGuiCond_Always);
+  auto const window_end = glengine::ScopeGuard{ []() { ImGui::End(); } };
+  if (ImGui::Begin(
+        "Control Panel",
+        nullptr,
+        ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoResize
+          | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse
+          | ImGuiWindowFlags_NoBringToFrontOnFocus
+          | ImGuiWindowFlags_NoTitleBar))
   {
+    static const ImGuiDockNodeFlags dockspaceFlags = ImGuiDockNodeFlags_None;
+    ImGuiID dockSpace = ImGui::GetID("MainWindowDockspace");
+    ImGui::DockSpace(dockSpace, ImVec2(0.0f, 0.0f), dockspaceFlags);
+
+    if (ImGui::BeginMainMenuBar())
+    {
+      const auto end_menubar =
+        glengine::ScopeGuard{ []() { ImGui::EndMainMenuBar(); } };
+      ff_8_menu.on_im_gui_menu();
+      test_menu.on_im_gui_menu();
+    }
+    if (ImGui::Begin("FPS"))
+    {
+      ImGui::Text(
+        "%s",
+        fmt::format(
+          "Application average {:.3f} ms/frame ({:.3f} FPS)",
+          1000.0f / ImGui::GetIO().Framerate,
+          ImGui::GetIO().Framerate)
+          .c_str());
+    }
     test_menu.on_im_gui_update();
-    ImGui::Text(
-      "%s",
-      fmt::format(
-        "Application average {:.3f} ms/frame ({:.3f} FPS)",
-        1000.0f / ImGui::GetIO().Framerate,
-        ImGui::GetIO().Framerate)
-        .c_str());
+    ff_8_menu.on_im_gui_update();
   }
-  ImGui::End();
 }
 void layer::Tests::on_event(const glengine::event::Item &e) const
 {
   test_menu.on_event(e);
+  ff_8_menu.on_event(e);
 }

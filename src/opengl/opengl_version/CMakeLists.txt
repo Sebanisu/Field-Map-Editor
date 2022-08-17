@@ -54,7 +54,6 @@ add_executable(${PROJECT_NAME}_OPENGL
         test/TestBatchRendering.cpp
         test/TestBatchRenderingTexture2D.cpp
         test/TestBatchRenderingTexture2DDynamic.cpp
-        test/TestFF8Archive.cpp
         test/TestMenu.cpp
         test/TestTexture2D.cpp)
 target_link_libraries(${PROJECT_NAME}_OPENGL

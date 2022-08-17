@@ -10,21 +10,25 @@ namespace glengine
 {
 template<typename T>
 concept is_MenuElementType =
-  Renderable<typename std::remove_cvref_t<
-    T>::ValueType> && requires(const T &t) {
-                        typename std::remove_cvref_t<T>::ValueType;
-                        {
-                          t.name
-                          } -> decay_same_as<std::string>;
-                      };
+  Renderable<typename std::remove_cvref_t<T>::ValueType>
+  && requires(const T &t) {
+       typename std::remove_cvref_t<T>::ValueType;
+       {
+         t.name
+         } -> decay_same_as<std::string>;
+     };
 
 class Menu
 {
 public:
-  Menu();
+  Menu() = default;
+  Menu(const char *const title)
+    : m_title(title)
+  {
+  }
   template<is_MenuElementType... T>
-  Menu(T &&...t)
-    : Menu()
+  Menu(const char *const title, T &&...t)
+    : Menu(title)
   {
     ((void)push_back<typename std::remove_cvref_t<T>::ValueType>(
        std::move(t.name)),
@@ -44,6 +48,7 @@ public:
   void  on_update(float) const;
   void  on_render() const;
   void  on_im_gui_update() const;
+  void  on_im_gui_menu() const;
   void  on_event(const event::Item &) const;
   template<Renderable T>
   void push_back(std::string name) const
@@ -51,10 +56,11 @@ public:
     push_back(
       std::move(name), []() -> MenuItem { return std::in_place_type_t<T>{}; });
   }
-  void push_back(std::string name, std::function<MenuItem()> funt) const;
+  void push_back(std::string name, std::function<MenuItem()> function) const;
   void reload() const;
 
 private:
+  const char                   *m_title   = {};
   mutable std::vector<MenuItem> m_current = {};
   //  mutable std::string_view m_current_string = {};
   //  mutable std::size_t      m_current_index  = {};

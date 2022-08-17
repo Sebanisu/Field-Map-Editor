@@ -16,6 +16,7 @@ public:
   void on_update(float) const;
   void on_render() const;
   void on_im_gui_update() const;
+  void on_im_gui_menu() const;
   void on_event(const glengine::event::Item &) const;
 
 private:

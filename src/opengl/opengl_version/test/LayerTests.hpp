@@ -8,6 +8,7 @@
 #include "Event/EventItem.hpp"
 
 #include "test/TestMenu.hpp"
+#include "ff8/FF8Menu.hpp"
 namespace layer
 {
 class Tests
@@ -20,6 +21,7 @@ public:
 
 private:
   test::TestMenu test_menu = {};
+  ff_8::Ff8Menu ff_8_menu = {};
 };
 
 static_assert(glengine::Renderable<test::TestMenu>);

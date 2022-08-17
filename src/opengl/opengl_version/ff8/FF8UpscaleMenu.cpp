@@ -11,12 +11,18 @@ void ff_8::Ff8UpscaleMenu::on_render() const
 }
 void ff_8::Ff8UpscaleMenu::on_im_gui_update() const
 {
-  bool fields_changed = m_upscales.on_im_gui_update();
-  if (fields_changed)
+  if (m_upscales.on_im_gui_update())// upscale_path_changed
   {
     m_menu.reload();
   }
+}
+void ff_8::Ff8UpscaleMenu::on_im_gui_update_children() const
+{
   m_menu.on_im_gui_update();
+}
+void ff_8::Ff8UpscaleMenu::on_im_gui_menu() const
+{
+  m_menu.on_im_gui_menu();
 }
 void ff_8::Ff8UpscaleMenu::on_update(float delta_time) const
 {
@@ -29,7 +35,13 @@ void ff_8::Ff8UpscaleMenu::on_event(const glengine::event::Item &e) const
   m_menu.on_event(e);
 }
 ff_8::Ff8UpscaleMenu::Ff8UpscaleMenu(const Fields &)
+:Ff8UpscaleMenu()
 {
+}
+ff_8::Ff8UpscaleMenu::Ff8UpscaleMenu() {
   push_back<MapUpscaleSwizzle>("Map File (Upscale Swizzled)");
   push_back<MapUpscaleDeswizzle>("Map File (Upscale Deswizzled)");
+}
+void ff_8::Ff8UpscaleMenu::reload() const {
+  m_menu.reload();
 }

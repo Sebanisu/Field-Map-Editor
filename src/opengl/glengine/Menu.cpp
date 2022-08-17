@@ -18,21 +18,41 @@ void Menu::on_render() const
 }
 void Menu::on_im_gui_update() const
 {
-  for (std::size_t i = {}; const auto &[name, funt] : m_list)
+  for (std::size_t i = {}; const auto &[name, function] : m_list)
   {
-    if (ImGui::CollapsingHeader(
-          fmt::format("{}", name).c_str(), ImGuiTreeNodeFlags_None))
+    if (m_current[i])
     {
-      if (!m_current[i])
-        m_current[i] = funt();
-      const auto un_indent = ImGuiIndent();
-      m_current[i].on_im_gui_update();
-    }
-    else if (m_current[i])
-    {
-      m_current[i] = MenuItem{};
+      auto const window_end = glengine::ScopeGuard{ []() { ImGui::End(); } };
+      if (ImGui::Begin(fmt::format("{} - Controls", name).c_str()))
+      {
+        m_current[i].on_im_gui_update();
+      }
     }
     ++i;
+  }
+}
+void Menu::on_im_gui_menu() const
+{
+  if (ImGui::BeginMenu(m_title))
+  {
+    const auto end_menu = ScopeGuard{ []() { ImGui::EndMenu(); } };
+    for (std::size_t i = {}; const auto &[name, function] : m_list)
+    {
+      bool current_enabled = static_cast<bool>(m_current[i]);
+      if (ImGui::MenuItem(
+            fmt::format("{}", name).c_str(), nullptr, current_enabled))
+      {
+        if (!m_current[i])
+        {
+          m_current[i] = function();
+        }
+        else
+        {
+          m_current[i] = MenuItem{};
+        }
+      }
+      ++i;
+    }
   }
 }
 
@@ -53,10 +73,6 @@ void Menu::push_back(std::string name, std::function<MenuItem()> funt) const
   m_current.push_back({});
 }
 
-Menu::Menu()
-  : m_current(MenuItem{})
-{
-}
 
 void Menu::on_event(const event::Item &e) const
 {
