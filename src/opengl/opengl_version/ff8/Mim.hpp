@@ -27,18 +27,14 @@ public:
 
 
 private:
-  void                                 render_frame_buffer() const;
-  void                                 set_uniforms() const;
-  void                                 save() const;
-  void                                 save_all() const;
-  std::string                          m_path                  = {};
-  bool                                 m_choose_coo            = {};
-  open_viii::graphics::background::Mim m_mim                   = {};
+  void                           render_frame_buffer() const;
+  void                           set_uniforms() const;
+  void                           save() const;
+  void                           save_all() const;
   // 3 bpp x 16 palettes 48 possible textures + 1 for palette texture
-  glengine::DelayedTextures<35U>       m_delayed_textures      = {};
-  glengine::BatchRenderer              m_batch_renderer        = {};
-  glengine::ImGuiViewPortWindow        m_imgui_viewport_window = { "Mim" };
-  glengine::Counter                    m_id                    = {};
+  glengine::BatchRenderer        m_batch_renderer        = {};
+  glengine::ImGuiViewPortWindow  m_imgui_viewport_window = { "Mim" };
+  glengine::Counter              m_id                    = {};
 };
 static_assert(glengine::Renderable<Mim>);
 }// namespace ff_8

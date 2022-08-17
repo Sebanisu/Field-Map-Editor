@@ -9,7 +9,6 @@ namespace ff_8
 {
 static int CurrentIndex = {};
 }
-
 open_viii::graphics::background::Mim ff_8::LoadMim(
   open_viii::archive::FIFLFS<false> in_field,
   std::string_view                  coo,
@@ -36,11 +35,11 @@ open_viii::graphics::background::Mim ff_8::LoadMim(
 }
 
 open_viii::graphics::background::Map ff_8::LoadMap(
-  open_viii::archive::FIFLFS<false>           in_field,
-  std::string_view                            coo,
-  const open_viii::graphics::background::Mim &mim,
-  std::string                                &out_path,
-  bool                                       &coo_was_used)
+  open_viii::archive::FIFLFS<false> in_field,
+  std::string_view                  coo,
+  const MimData                    &mim,
+  std::string                      &out_path,
+  bool                             &coo_was_used)
 {
   bool        shift        = false;
   std::size_t out_path_pos = {};
@@ -56,7 +55,7 @@ open_viii::graphics::background::Map ff_8::LoadMap(
   {
     spdlog::debug("loaded: {}", out_path);
     auto map =
-      open_viii::graphics::background::Map{ mim.mim_type(), buffer, shift };
+      open_viii::graphics::background::Map{ mim->mim_type(), buffer, shift };
     return map;
   }
   return {};

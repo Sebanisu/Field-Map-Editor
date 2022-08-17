@@ -18,6 +18,7 @@ void ff_8::Ff8Menu::on_im_gui_update() const
   {
     if (GetFields().on_im_gui_update())
     {
+      ReloadMimAndMap();
       m_menu.reload();
       m_upscales.reload();
     }

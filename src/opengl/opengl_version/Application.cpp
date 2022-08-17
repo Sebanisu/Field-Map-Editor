@@ -10,10 +10,13 @@
 #include "Renderer.hpp"
 #include "test/LayerTests.hpp"
 #include "TimeStep.hpp"
+#include <ff8/MapHistory.hpp>
 
 [[maybe_unused]] static constinit glengine::Window *GlobalCurrentWindow =
   nullptr;
 static constinit ff_8::Fields                   *GlobalFields       = nullptr;
+static constinit ff_8::MapHistoryData           *GlobalMapHistory   = nullptr;
+static constinit ff_8::MimData                  *GlobalMim          = nullptr;
 static constinit glengine::ImGuiViewPortPreview *GlobalPreview      = {};
 static constinit bool                            GlobalRunning      = true;
 static constinit bool                            GlobalMinimize     = false;
@@ -57,8 +60,12 @@ Application::Application(std::string title, int width, int height)
     } }))
 {
   layers.emplace_layers(std::in_place_type_t<layer::Tests>{});
-  GlobalPreview = &local_preview;
-  GlobalFields  = &local_fields;
+  local_mim        = ff_8::MimData(local_fields);
+  local_map        = ff_8::MapHistoryData(local_fields, local_mim);
+  GlobalPreview    = &local_preview;
+  GlobalFields     = &local_fields;
+  GlobalMim        = &local_mim;
+  GlobalMapHistory = &local_map;
 }
 void Application::run() const
 {
@@ -164,9 +171,22 @@ void Application::set_current_window() const
 //   }
 //   return (16.F / 9.F);
 // }
+const void ReloadMimAndMap()
+{
+  *GlobalMim        = ff_8::MimData(*GlobalFields);
+  *GlobalMapHistory = ff_8::MapHistoryData(*GlobalFields, *GlobalMim);
+}
 const ff_8::Fields &GetFields() noexcept
 {
   return *GlobalFields;
+}
+const ff_8::MapHistoryData &GetMapHistory() noexcept
+{
+  return *GlobalMapHistory;
+}
+const ff_8::MimData &GetMim() noexcept
+{
+  return *GlobalMim;
 }
 const glengine::ImGuiViewPortPreview &GetViewPortPreview() noexcept
 {

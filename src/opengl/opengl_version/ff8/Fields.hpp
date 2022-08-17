@@ -5,20 +5,12 @@
 #ifndef FIELD_MAP_EDITOR_FIELDS_HPP
 #define FIELD_MAP_EDITOR_FIELDS_HPP
 #include "Archive.hpp"
+#include "FF8LoadTextures.hpp"
 #include "fmt/format.h"
+#include "MapHistory.hpp"
+#include <DelayedTextures.hpp>
 namespace ff_8
 {
-[[nodiscard]] open_viii::graphics::background::Mim LoadMim(
-  open_viii::archive::FIFLFS<false> in_field,
-  std::string_view                  coo,
-  std::string                      &out_path,
-  bool                             &coo_was_used);
-[[nodiscard]] open_viii::graphics::background::Map LoadMap(
-  open_viii::archive::FIFLFS<false>           in_field,
-  std::string_view                            coo,
-  const open_viii::graphics::background::Mim &mim,
-  std::string                                &out_path,
-  bool                                       &coo_was_used);
 class Fields
 {
 public:
@@ -46,5 +38,59 @@ private:
     std::chrono::steady_clock::now();
 };
 static_assert(glengine::Renderable<Fields>);
+
+[[nodiscard]] open_viii::graphics::background::Mim LoadMim(
+  open_viii::archive::FIFLFS<false> in_field,
+  std::string_view                  coo,
+  std::string                      &out_path,
+  bool                             &coo_was_used);
+struct MimData
+{
+  MimData() = default;
+  MimData(const Fields &fields)
+    : mim(LoadMim(fields, fields.coo(), path, coo_chosen))
+  {
+    if (!std::empty(path))
+    {
+      spdlog::debug("Loaded Mim {}", path);
+      spdlog::debug("Loading Textures from Mim");
+      delayed_textures = LoadTextures(mim);
+    }
+  }
+  bool on_update() const
+  {
+    return delayed_textures.on_update();
+  }
+  bool                                        coo_chosen = { false };
+  std::string                                 path       = {};
+  open_viii::graphics::background::Mim        mim        = {};
+  glengine::DelayedTextures<35U>              delayed_textures = {};
+  const open_viii::graphics::background::Mim *operator->() const noexcept
+  {
+    return &mim;
+  }
+
+  operator const open_viii::graphics::background::Mim &() const noexcept
+  {
+    return mim;
+  }
+};
+[[nodiscard]] open_viii::graphics::background::Map LoadMap(
+  open_viii::archive::FIFLFS<false> in_field,
+  std::string_view                  coo,
+  const MimData                    &mim,
+  std::string                      &out_path,
+  bool                             &coo_was_used);
+struct MapHistoryData
+{
+  MapHistoryData() = default;
+  MapHistoryData(const Fields &fields, const MimData &mim)
+    : map(LoadMap(fields, fields.coo(), mim, path, coo_chosen))
+  {
+  }
+  bool        coo_chosen = { false };
+  std::string path       = {};
+  MapHistory  map        = {};
+};
 }// namespace ff_8
 #endif// FIELD_MAP_EDITOR_FIELDS_HPP

@@ -10,6 +10,7 @@
 #include "Layer/LayerStack.hpp"
 #include "ScopeGuard.hpp"
 #include "Window.hpp"
+#include <ff8/MapHistory.hpp>
 class Application
 {
 public:
@@ -27,9 +28,14 @@ private:
   mutable glengine::ImGuiViewPortPreview local_preview{};
   mutable ff_8::ImGuiTileDisplayWindow   local_tile_display{};
   mutable ff_8::Fields                   local_fields{};
+  mutable ff_8::MimData                  local_mim = {};
+  mutable ff_8::MapHistoryData           local_map = {};
 };
-const ff_8::Fields                   &GetFields() noexcept;
-const glengine::ImGuiViewPortPreview &GetViewPortPreview() noexcept;
+const void                                ReloadMimAndMap();
+[[nodiscard]] const ff_8::Fields         &GetFields() noexcept;
+[[nodiscard]] const ff_8::MapHistoryData &GetMapHistory() noexcept;
+[[nodiscard]] const ff_8::MimData        &GetMim() noexcept;
+const glengine::ImGuiViewPortPreview     &GetViewPortPreview() noexcept;
 // glm::vec4 GetViewPortMousePos() noexcept ;
 // glm::vec2 GetFrameBufferDims();
 // void      RestoreViewPortToFrameBuffer();

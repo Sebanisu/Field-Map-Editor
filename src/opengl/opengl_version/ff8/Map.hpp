@@ -52,11 +52,10 @@ public:
   }
   Map(const Fields &fields, std::filesystem::path upscale_path)
     : m_upscale_path(std::move(upscale_path))
-    , m_mim(LoadMim(fields, fields.coo(), m_mim_path, m_mim_choose_coo))
-    , m_map(LoadMap(fields, fields.coo(), m_mim, m_map_path, m_map_choose_coo))
+    , m_map(LoadMap(fields, fields.coo(), GetMim(), m_map_path, m_map_choose_coo))
     , m_filters(m_map)
   {
-    if (std::empty(m_mim_path))
+    if (std::empty(GetMim().path))
     {
       return;
     }
@@ -69,9 +68,7 @@ public:
       spdlog::debug("Upscale Location: \"{}\"", m_upscale_path.string());
     }
     spdlog::debug("Loaded Map: \"{}\"", m_map_path);
-    spdlog::debug("Loaded Mim: \"{}\"", m_mim_path);
     spdlog::debug("Begin Loading Textures from Mim.");
-    m_delayed_textures         = LoadTextures(m_mim);
     m_upscale_delayed_textures = LoadTextures(m_upscale_path);
     visit_unsorted_unfiltered_tiles();
     const auto count            = visit_unsorted_unfiltered_tiles_count();
@@ -82,7 +79,7 @@ public:
   void on_update(float ts) const
   {
     if (
-      m_delayed_textures.on_update() || m_upscale_delayed_textures.on_update())
+      GetMim().on_update() || m_upscale_delayed_textures.on_update())
     {
       if (!std::ranges::empty(m_upscale_path))
       {
@@ -91,11 +88,11 @@ public:
           {},
           [](const glengine::Texture &texture) { return texture.height(); });
         if (
-          static_cast<float>(m_mim.get_height()) * m_map_dims.tile_scale
+          static_cast<float>(GetMim()->get_height()) * m_map_dims.tile_scale
           < static_cast<float>(current_max->height()))
         {
           m_map_dims.tile_scale = static_cast<float>(current_max->height())
-                                  / static_cast<float>(m_mim.get_height());
+                                  / static_cast<float>(GetMim()->get_height());
           visit_unsorted_unfiltered_tiles();
         }
       }
@@ -107,7 +104,7 @@ public:
   }
   void on_render() const
   {
-    if (std::ranges::empty(m_map_path) || std::ranges::empty(m_mim_path))
+    if (std::ranges::empty(m_map_path) || std::ranges::empty(GetMim().path))
     {
       return;
     }
@@ -241,7 +238,8 @@ public:
 
         tile_button_state = &m_tile_button_state_hover;
         if (visit_unsorted_unfiltered_tiles(
-              common_operation, MouseTileOverlap<TileFunctions, MapFilters>(tp, m_filters)))
+              common_operation,
+              MouseTileOverlap<TileFunctions, MapFilters>(tp, m_filters)))
         {
           m_changed();
         }
@@ -264,8 +262,9 @@ public:
             .c_str());
         if (visit_unsorted_unfiltered_tiles(
               common_operation,
-              MouseTileOverlap<TileFunctions,MapFilters>(
-                MouseToTilePos{ *(m_map_dims.pressed_mouse_location) },m_filters)))
+              MouseTileOverlap<TileFunctions, MapFilters>(
+                MouseToTilePos{ *(m_map_dims.pressed_mouse_location) },
+                m_filters)))
         {
           m_changed();
         }
@@ -290,7 +289,7 @@ public:
     const auto pop_id = glengine::ImGuiPushId();
     {
       const auto disable = glengine::ImGuiDisabled(
-        std::ranges::empty(m_map_path) || std::ranges::empty(m_mim_path));
+        std::ranges::empty(m_map_path) || std::ranges::empty(GetMim().path));
 
       (void)ImGui::Checkbox("fit Height", &s_fit_height);
       (void)ImGui::Checkbox("fit Width", &s_fit_width);
@@ -440,8 +439,9 @@ public:
                 m_map_dims.released_mouse_location->z });
             }
             m_map.copy_back_perform_operation<TileT>(
-              MouseTileOverlap<TileFunctions,MapFilters>(
-                MouseToTilePos{ *(m_map_dims.pressed_mouse_location) },m_filters),
+              MouseTileOverlap<TileFunctions, MapFilters>(
+                MouseToTilePos{ *(m_map_dims.pressed_mouse_location) },
+                m_filters),
               [&](TileT &new_tile) {
                 int i = {};
                 for (const auto &op : operations)
@@ -515,7 +515,7 @@ private:
                            texture_index = texture_index]() -> decltype(auto) {
       if (std::ranges::empty(m_upscale_path))
       {
-        return m_delayed_textures.textures->at(texture_index);
+        return GetMim().delayed_textures.textures->at(texture_index);
       }
       return m_upscale_delayed_textures.textures->at(texture_index);
     }();
@@ -523,7 +523,7 @@ private:
       return std::nullopt;
     const auto  texture_dims = glm::vec2{ texture.width(), texture.height() };
     const float tile_scale   = static_cast<float>(texture.height())
-                             / static_cast<float>(m_mim.get_height());
+                             / static_cast<float>(GetMim()->get_height());
     const float tile_size = tile_scale * map_dims_statics::TileSize;
     // glm::vec2(m_mim.get_width(tile.depth()), m_mim.get_height());
     return m_map.get_front_version_of_back_tile(
@@ -841,22 +841,17 @@ private:
   mutable glm::vec4                    m_uniform_color  = s_default_color;
 
   std::filesystem::path                m_upscale_path   = {};
-  // internal mim file path
-  std::string                          m_mim_path       = {};
   // internal map file path
   std::string                          m_map_path       = {};
   // if coo was chosen instead of default.
   bool                                 m_mim_choose_coo = {};
   // if coo was chosen instead of default.
   bool                                 m_map_choose_coo = {};
-  // container for field textures
-  open_viii::graphics::background::Mim m_mim            = {};
   // container for field tile information
   MapHistory                           m_map            = {};
   // dimensions of map
   MapDims<TileFunctions>               m_map_dims       = { m_map.back() };
   // loads the textures overtime instead of forcing them to load at start.
-  glengine::DelayedTextures<35U>       m_delayed_textures = {};
   glengine::DelayedTextures<17U * 13U>
     m_upscale_delayed_textures = {};// 20 is detected max 16(+1)*13 is
                                     // possible max. 0 being no palette and

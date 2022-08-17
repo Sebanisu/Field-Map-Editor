@@ -25,7 +25,7 @@ static const glengine::Texture *Texture     = nullptr;
 }// namespace ff_8
 void ff_8::Mim::on_update(float ts) const
 {
-  (void)m_delayed_textures.on_update();
+  (void)GetMim().on_update();
   const auto &local_texture = current_texture();
   m_imgui_viewport_window.set_image_bounds(
     glm::vec2{ local_texture.width(), local_texture.height() });
@@ -111,16 +111,9 @@ void ff_8::Mim::on_im_gui_update() const
   });
 }
 
-ff_8::Mim::Mim(const ff_8::Fields &fields)
-  : m_mim(LoadMim(fields, fields.coo(), m_path, m_choose_coo))
+ff_8::Mim::Mim(const ff_8::Fields &)
+:Mim()
 {
-  Texture = nullptr;
-  if (!std::empty(m_path))
-  {
-    spdlog::debug("Loaded {}", m_path);
-    spdlog::debug("Loading Textures from Mim");
-    m_delayed_textures = LoadTextures(m_mim);
-  }
 }
 
 std::size_t ff_8::Mim::index() const
@@ -140,9 +133,9 @@ const glengine::Texture &ff_8::Mim::current_texture() const
 {
   if (DrawPalette)
   {
-    return m_delayed_textures.textures->back();
+    return GetMim().delayed_textures.textures->back();
   }
-  return m_delayed_textures.textures->at(index());
+  return GetMim().delayed_textures.textures->at(index());
 }
 
 void ff_8::Mim::set_uniforms() const
@@ -202,7 +195,7 @@ void ff_8::Mim::save() const
     glViewport(0, 0, local_texture.width(), local_texture.height());
     on_render();
   }
-  auto fs_path = std::filesystem::path(m_path);
+  auto fs_path = std::filesystem::path(GetMim().path);
   auto string  = fmt::format(
     "{}_mim_{}_{}.png",
     fs_path.stem().string(),
@@ -227,10 +220,10 @@ void ff_8::Mim::save_all() const
 {
   Saving = true;
   for (int index = 0;
-       index < static_cast<int>(m_delayed_textures.textures->size());
+       index < static_cast<int>(GetMim().delayed_textures.textures->size());
        ++index)
   {
-    Texture = &m_delayed_textures.textures->at(static_cast<std::size_t>(index));
+    Texture = &GetMim().delayed_textures.textures->at(static_cast<std::size_t>(index));
     int local_bpp     = index / 16;
     int local_palette = index % 16;
     if (local_bpp == 2)
@@ -272,7 +265,7 @@ void ff_8::Mim::save_all() const
       on_render();
     }
     glengine::PixelBuffer pixel_buffer{ fb.specification() };
-    auto                  fs_path = std::filesystem::path(m_path);
+    auto                  fs_path = std::filesystem::path(GetMim().path);
     auto                  string  = fmt::format(
       "{}_mim_{}_{}.png", fs_path.stem().string(), local_bpp, local_palette);
     if (local_bpp == 16 || local_bpp == 24)
