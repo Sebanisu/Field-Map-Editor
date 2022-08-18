@@ -41,6 +41,25 @@ void layer::Tests::on_im_gui_update() const
     {
       const auto end_menubar =
         glengine::ScopeGuard{ []() { ImGui::EndMainMenuBar(); } };
+      if (ImGui::BeginMenu("Edit"))
+      {
+        auto const menu_end = glengine::ScopeGuard{ []() { ImGui::End(); } };
+        if (ImGui::MenuItem(
+              "Undo", "CTRL+Z", false, GetMapHistory()->undo_enabled()))
+        {
+          (void)GetMapHistory()->undo();
+          GetWindow().trigger_refresh_image();
+        }
+        if (ImGui::MenuItem(
+              fmt::format("Undo All ({})", GetMapHistory()->count()).c_str(),
+              "SHIFT+CTRL+Z",
+              false,
+              GetMapHistory()->undo_enabled()))
+        {
+          GetMapHistory()->undo_all();
+          GetWindow().trigger_refresh_image();
+        }
+      }
       ff_8_menu.on_im_gui_menu();
       test_menu.on_im_gui_menu();
     }
