@@ -367,6 +367,66 @@ public:                          \
   private:
     std::array<float, 2U> m_position = {};
   };
+  class RefreshImage
+  {
+    EVENT_CLASS_TYPE(RefreshImage)
+    EVENT_CLASS_CATEGORY(Category::Application)
+    EVENT_HANDLED
+  public:
+    constexpr RefreshImage()
+      : RefreshImage(true)
+    {
+    }
+    constexpr RefreshImage(bool change)
+      : m_changed{ std::move(change) }
+    {
+    }
+    constexpr bool changed() const noexcept
+    {
+      return m_changed;
+    }
+    constexpr operator bool() const noexcept
+    {
+      return m_changed;
+    }
+    std::string data() const noexcept
+    {
+      return fmt::format("{}", m_changed);
+    }
+
+  private:
+    bool m_changed = {};
+  };
+  class Reload
+  {
+    EVENT_CLASS_TYPE(Reload)
+    EVENT_CLASS_CATEGORY(Category::Application)
+    EVENT_HANDLED
+  public:
+    constexpr Reload()
+      : Reload(true)
+    {
+    }
+    constexpr Reload(bool change)
+      : m_changed{ std::move(change) }
+    {
+    }
+    constexpr bool changed() const noexcept
+    {
+      return m_changed;
+    }
+    constexpr operator bool() const noexcept
+    {
+      return m_changed;
+    }
+    std::string data() const noexcept
+    {
+      return fmt::format("{}", m_changed);
+    }
+
+  private:
+    bool m_changed = {};
+  };
   static_assert(is_MouseMove<MouseMoved>);
 
   using Types = std::variant<
@@ -380,7 +440,9 @@ public:                          \
     MouseButtonPressed,
     MouseButtonReleased,
     MouseScroll,
-    MouseMoved>;
+    MouseMoved,
+    RefreshImage,
+    Reload>;
 
 #undef EVENT_HANDLED
 #undef EVENT_CLASS_CATEGORY

@@ -41,7 +41,7 @@ void ff_8::Ff8Menu::on_update(float delta_time) const
 void ff_8::Ff8Menu::on_event(const glengine::event::Item &e) const
 {
   m_menu.on_event(e);
-  m_upscales.on_update(e);
+  m_upscales.on_event(e);
 }
 ff_8::Ff8Menu::Ff8Menu()
 {

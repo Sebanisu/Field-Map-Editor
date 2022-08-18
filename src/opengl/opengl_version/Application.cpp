@@ -121,6 +121,10 @@ void Application::set_current_window() const
 {
   GlobalCurrentWindow = window.get();
 }
+const glengine::Window & GetWindow() noexcept
+{
+  return *GlobalCurrentWindow;
+}
 // const glengine::Window *Application::CurrentWindow()
 //{
 //   return GlobalCurrentWindow;

@@ -22,11 +22,11 @@ public:
   void disable_v_sync();
   bool v_sync() const;
   using EventCallbackFn = std::function<void(const event::Item &)>;
-  void set_event_callback(EventCallbackFn function) const
-  {
-    auto &window_data          = get_window_data(m_window.get());
-    window_data.event_callback = std::move(function);
-  }
+  //  void set_event_callback(EventCallbackFn function) const
+  //  {
+  //    auto &window_data          = get_window_data(m_window.get());
+  //    window_data.event_callback = std::move(function);
+  //  }
   struct WindowData
   {
     std::string     title               = {};
@@ -39,7 +39,6 @@ public:
     GLFWmonitor    *monitor             = nullptr;
   };
   static std::unique_ptr<Window>  create(WindowData data);
-
   bool                            window_closing() const;
   static std::span<GLFWmonitor *> get_monitors()
   {
@@ -88,6 +87,16 @@ public:
       data.height,
       GLFW_DONT_CARE);
     data.monitor = nullptr;
+  }
+  void trigger_refresh_image() const
+  {
+    auto &data = get_window_data(m_window.get());
+    data.event_callback(event::RefreshImage());
+  }
+  void trigger_reload() const
+  {
+    auto &data = get_window_data(m_window.get());
+    data.event_callback(event::Reload());
   }
   const WindowData &view_window_data() const
   {

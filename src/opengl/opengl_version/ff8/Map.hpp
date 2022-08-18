@@ -60,8 +60,9 @@ public:
     }
     if (!std::ranges::empty(m_upscale_path))
     {
-      const auto stem = std::filesystem::path(GetMapHistory().path).parent_path().stem();
-      m_upscale_path  = (std::filesystem::path(m_upscale_path)
+      const auto stem =
+        std::filesystem::path(GetMapHistory().path).parent_path().stem();
+      m_upscale_path = (std::filesystem::path(m_upscale_path)
                         / stem.string().substr(0, 2) / stem)
                          .string();
       spdlog::debug("Upscale Location: \"{}\"", m_upscale_path.string());
@@ -77,8 +78,7 @@ public:
   }
   void on_update(float ts) const
   {
-    if (
-      GetMim().on_update() || m_upscale_delayed_textures.on_update())
+    if (GetMim().on_update() || m_upscale_delayed_textures.on_update())
     {
       if (!std::ranges::empty(m_upscale_path))
       {
@@ -103,7 +103,9 @@ public:
   }
   void on_render() const
   {
-    if (std::ranges::empty(GetMapHistory().path) || std::ranges::empty(GetMim().path))
+    if (
+      std::ranges::empty(GetMapHistory().path)
+      || std::ranges::empty(GetMim().path))
     {
       return;
     }
@@ -180,8 +182,8 @@ public:
       //      {
       //        (void)m_map.copy_back_preemptive();
       //      }
-      const auto  mta =
-        MapTileAdjustments<TileFunctions>(GetMapHistory(), m_filters, m_similar);
+      const auto  mta  = MapTileAdjustments<TileFunctions>(
+        GetMapHistory(), m_filters, m_similar);
       auto      *tile_button_state = &m_tile_button_state;
       const auto common_operation =
         [&](auto &tile, VisitState &visit_state) -> bool {
@@ -240,7 +242,8 @@ public:
               common_operation,
               MouseTileOverlap<TileFunctions, MapFilters>(tp, m_filters)))
         {
-          m_changed();
+          GetWindow().trigger_refresh_image();
+          // m_changed();
         }
         ImGui::Text("%s", " ");
       }
@@ -265,7 +268,8 @@ public:
                 MouseToTilePos{ *(m_map_dims.pressed_mouse_location) },
                 m_filters)))
         {
-          m_changed();
+          GetWindow().trigger_refresh_image();
+          // m_changed();
         }
         ImGui::Text("%s", " ");
       }
@@ -278,7 +282,8 @@ public:
         if (visit_unsorted_unfiltered_tiles(
               common_operation, [](const auto &...) { return true; }))
         {
-          m_changed();
+          GetWindow().trigger_refresh_image();
+          // m_changed();
         }
       }
     });
@@ -288,7 +293,8 @@ public:
     const auto pop_id = glengine::ImGuiPushId();
     {
       const auto disable = glengine::ImGuiDisabled(
-        std::ranges::empty(GetMapHistory().path) || std::ranges::empty(GetMim().path));
+        std::ranges::empty(GetMapHistory().path)
+        || std::ranges::empty(GetMim().path));
 
       (void)ImGui::Checkbox("fit Height", &s_fit_height);
       (void)ImGui::Checkbox("fit Width", &s_fit_width);
@@ -351,6 +357,15 @@ public:
     m_imgui_viewport_window.on_event(event);
     m_batch_renderer.on_event(event);
     Dispatcher dispatcher(event);
+    dispatcher.Dispatch<RefreshImage>(
+      [this](const RefreshImage &refresh_image) -> bool {
+        spdlog::debug("Refresh Image:{}", refresh_image.changed());
+        if (refresh_image)
+        {
+          m_changed();
+        }
+        return false;
+      });
     dispatcher.Dispatch<MouseButtonPressed>(
       [this](const MouseButtonPressed &pressed) -> bool {
         if (!m_has_hover)
@@ -449,7 +464,8 @@ public:
                   spdlog::debug("Performed operation {}", i++);
                 }
               });
-            m_changed();
+            GetWindow().trigger_refresh_image();
+            // m_changed();
           });
         }
         return true;
@@ -491,10 +507,11 @@ private:
   std::optional<glengine::SubTexture>
     tile_to_sub_texture(const auto &tile) const
   {
-    const auto bpp             = tile.depth();
-    const auto palette         = tile.palette_id();
-    const auto texture_page_id = GetMapHistory()->get_front_version_of_back_tile(
-      tile, [&](const auto &front_tile) { return front_tile.texture_id(); });
+    const auto bpp     = tile.depth();
+    const auto palette = tile.palette_id();
+    const auto texture_page_id =
+      GetMapHistory()->get_front_version_of_back_tile(
+        tile, [&](const auto &front_tile) { return front_tile.texture_id(); });
     const auto [texture_index, texture_page_width] = [&]() {
       if (std::ranges::empty(m_upscale_path))
       {
@@ -784,11 +801,13 @@ private:
   }
   auto visit_unsorted_unfiltered_tiles_count() const
   {
-    return GetMapHistory()->back().visit_tiles([&](const auto &tiles) -> std::size_t {
-      auto f_tiles = tiles | std::views::filter(tile_operations::InvalidTile{});
-      return static_cast<std::size_t>(
-        std::ranges::count_if(f_tiles, [](auto &&) { return true; }));
-    });
+    return GetMapHistory()->back().visit_tiles(
+      [&](const auto &tiles) -> std::size_t {
+        auto f_tiles =
+          tiles | std::views::filter(tile_operations::InvalidTile{});
+        return static_cast<std::size_t>(
+          std::ranges::count_if(f_tiles, [](auto &&) { return true; }));
+      });
   }
   bool visit_unsorted_unfiltered_tiles(auto &&lambda, auto &&filter) const
   {
@@ -835,30 +854,30 @@ private:
   inline constinit static auto         s_blending            = bool{ true };
 
   static constexpr auto                s_default_color       = glm::vec4{ 1.F };
-  static constexpr auto                s_half_color     = s_default_color / 2.F;
-  static constexpr auto                s_quarter_color  = s_half_color / 2.F;
-  mutable glm::vec4                    m_uniform_color  = s_default_color;
+  static constexpr auto                s_half_color    = s_default_color / 2.F;
+  static constexpr auto                s_quarter_color = s_half_color / 2.F;
+  mutable glm::vec4                    m_uniform_color = s_default_color;
 
-  std::filesystem::path                m_upscale_path   = {};
+  std::filesystem::path                m_upscale_path  = {};
   // dimensions of map
-  MapDims<TileFunctions>               m_map_dims       = { GetMapHistory()->back() };
+  MapDims<TileFunctions>               m_map_dims = { GetMapHistory()->back() };
   // loads the textures overtime instead of forcing them to load at start.
   glengine::DelayedTextures<17U * 13U>
     m_upscale_delayed_textures = {};// 20 is detected max 16(+1)*13 is
                                     // possible max. 0 being no palette and
                                     // 1-17 being with palettes
   // takes quads and draws them to the frame buffer or screen.
-  glengine::BatchRenderer           m_batch_renderer            = { 1000 };
+  glengine::BatchRenderer           m_batch_renderer    = { 1000 };
   // holds rendered image at 1:1 scale to prevent gaps when scaling.
-  mutable glengine::FrameBuffer     m_frame_buffer              = {};
-  mutable bool                      m_offscreen_drawing         = { false };
-  mutable bool                      m_saving                    = { false };
-  mutable bool                      m_preview                   = { false };
-  inline constinit static MapBlends s_blends                    = {};
-  mutable MapFilters                m_filters                   = { GetMapHistory() };
-  Changed                           m_changed                   = {};
-  glengine::Counter                 m_id                        = {};
-  mutable std::vector<bool>         m_tile_button_state         = {};
+  mutable glengine::FrameBuffer     m_frame_buffer      = {};
+  mutable bool                      m_offscreen_drawing = { false };
+  mutable bool                      m_saving            = { false };
+  mutable bool                      m_preview           = { false };
+  inline constinit static MapBlends s_blends            = {};
+  mutable MapFilters                m_filters           = { GetMapHistory() };
+  Changed                           m_changed           = {};
+  glengine::Counter                 m_id                = {};
+  mutable std::vector<bool>         m_tile_button_state = {};
   mutable std::vector<bool>         m_tile_button_state_hover   = {};
   mutable std::vector<bool>         m_tile_button_state_pressed = {};
   glengine::ImGuiViewPortWindow     m_imgui_viewport_window     = {

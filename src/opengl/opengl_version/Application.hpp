@@ -35,6 +35,7 @@ const void                                ReloadMimAndMap();
 [[nodiscard]] const ff_8::Fields         &GetFields() noexcept;
 [[nodiscard]] const ff_8::MapHistoryData &GetMapHistory() noexcept;
 [[nodiscard]] const ff_8::MimData        &GetMim() noexcept;
+[[nodiscard]] const glengine::Window     &GetWindow() noexcept;
 const glengine::ImGuiViewPortPreview     &GetViewPortPreview() noexcept;
 // glm::vec4 GetViewPortMousePos() noexcept ;
 // glm::vec2 GetFrameBufferDims();
