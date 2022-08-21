@@ -3,6 +3,7 @@
 //
 
 #include "LayerTests.hpp"
+#include <Event/EventDispatcher.hpp>
 #include <ScopeGuard.hpp>
 
 void layer::Tests::on_update(float ts) const
@@ -81,4 +82,25 @@ void layer::Tests::on_event(const glengine::event::Item &e) const
 {
   test_menu.on_event(e);
   ff_8_menu.on_event(e);
+  const auto dispatcher = glengine::event::Dispatcher(e);
+  dispatcher.Dispatch<glengine::event::KeyPressed>(
+    [](glengine::event::KeyPressed key_pressed) -> bool {
+      if (
+        (key_pressed.key() == glengine::Key::Z)
+        && (+key_pressed.mods() & +glengine::Mods::Control) != 0)
+      {
+        if ((+key_pressed.mods() & +glengine::Mods::Shift) != 0)
+        {
+          GetMapHistory()->undo_all();
+          GetWindow().trigger_refresh_image();
+        }
+        else
+        {
+          (void)GetMapHistory()->undo();
+          GetWindow().trigger_refresh_image();
+        }
+      }
+
+      return true;
+    });
 }
