@@ -45,8 +45,6 @@ void layer::Tests::on_im_gui_update() const
       if (ImGui::BeginMenu("Edit"))
       {
         auto const menu_end = glengine::ScopeGuard{ []() { ImGui::End(); } };
-
-
         if (ImGui::MenuItem(
               "Undo", "CTRL+Z", false, GetMapHistory()->undo_enabled()))
         {
