@@ -47,15 +47,40 @@ class [[nodiscard]] MapHistory
   mutable MapT                m_back  = {};
   mutable std::vector<MapT>   m_front_history      = {};
   mutable std::vector<MapT>   m_back_history       = {};
+  mutable std::vector<MapT>   m_redo_history       = {};
   mutable std::vector<Pushed> m_front_or_back      = {};
+  mutable std::vector<Pushed> m_redo_front_or_back = {};
   // mutable std::vector<std::string> m_changes       = {};
   mutable bool                preemptive_copy_mode = false;
   /**
    * Should only be called by undo() pops back
    * @return returns new back
    */
-  [[nodiscard]] MapT         &pop_back() const
+  [[nodiscard]] MapT         &redo_back() const
   {
+    m_back_history.emplace_back(std::move(m_back));
+    m_back = std::move(m_redo_history.back());
+    m_redo_history.pop_back();
+    return back();
+  }
+  /**
+   * Should only be called by undo() pops front
+   * @return returns new front
+   */
+  [[nodiscard]] const MapT &redo_front() const
+  {
+    m_front_history.emplace_back(std::move(m_front));
+    m_front = std::move(m_redo_history.back());
+    m_redo_history.pop_back();
+    return front();
+  }
+  /**
+   * Should only be called by undo() pops back
+   * @return returns new back
+   */
+  [[nodiscard]] MapT &undo_back() const
+  {
+    m_redo_history.emplace_back(std::move(m_back));
     m_back = std::move(m_back_history.back());
     m_back_history.pop_back();
     return back();
@@ -64,8 +89,9 @@ class [[nodiscard]] MapHistory
    * Should only be called by undo() pops front
    * @return returns new front
    */
-  [[nodiscard]] const MapT &pop_front() const
+  [[nodiscard]] const MapT &undo_front() const
   {
+    m_redo_history.emplace_back(std::move(m_front));
     m_front = std::move(m_front_history.back());
     m_front_history.pop_back();
     return front();
@@ -200,6 +226,10 @@ public:
   {
     return m_front_history.size() + m_back_history.size();
   }
+  [[nodiscard]] std::size_t redo_count() const
+  {
+    return m_redo_history.size();
+  }
   [[nodiscard]] const MapT &front() const
   {
     return m_front;
@@ -323,6 +353,31 @@ public:
   //    m_front_or_back.push_back(Pushed::Front);
   //    return front();
   //  }
+
+  /**
+   * Deletes the most recent back or front
+   * @return
+   */
+  [[nodiscard]] bool
+    redo(std::source_location source_location = std::source_location::current())
+      const
+  {
+    const auto count = debug_count_print(source_location);
+    if (!redo_enabled())
+    {
+      return false;
+    }
+    Pushed last = m_redo_front_or_back.back();
+    m_front_or_back.push_back(last);
+    m_redo_front_or_back.pop_back();
+    if (last == Pushed::Back)
+    {
+      (void)redo_back();
+      return true;
+    }
+    (void)redo_front();
+    return true;
+  }
   /**
    * Deletes the most recent back or front
    * @return
@@ -337,13 +392,14 @@ public:
       return false;
     }
     Pushed last = m_front_or_back.back();
+    m_redo_front_or_back.push_back(last);
     m_front_or_back.pop_back();
     if (last == Pushed::Back)
     {
-      (void)pop_back();
+      (void)undo_back();
       return true;
     }
-    (void)pop_front();
+    (void)undo_front();
     return true;
   }
   void undo_all(
@@ -353,6 +409,10 @@ public:
     while (undo(source_location))
     {
     }
+  }
+  [[nodiscard]] bool redo_enabled() const
+  {
+    return !m_redo_history.empty();
   }
   [[nodiscard]] bool undo_enabled() const
   {

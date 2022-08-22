@@ -46,6 +46,15 @@ void layer::Tests::on_im_gui_update() const
       {
         auto const menu_end = glengine::ScopeGuard{ []() { ImGui::End(); } };
         if (ImGui::MenuItem(
+              fmt::format("Redo ({})", GetMapHistory()->redo_count()).c_str(),
+              "CTRL+Y",
+              false,
+              GetMapHistory()->redo_enabled()))
+        {
+          (void)GetMapHistory()->redo();
+          GetWindow().trigger_refresh_image();
+        }
+        if (ImGui::MenuItem(
               "Undo", "CTRL+Z", false, GetMapHistory()->undo_enabled()))
         {
           (void)GetMapHistory()->undo();
@@ -99,6 +108,13 @@ void layer::Tests::on_event(const glengine::event::Item &e) const
           (void)GetMapHistory()->undo();
           GetWindow().trigger_refresh_image();
         }
+      }
+      if (
+        (key_pressed.key() == glengine::Key::Y)
+        && (+key_pressed.mods() & +glengine::Mods::Control) != 0)
+      {
+        (void)GetMapHistory()->redo();
+        GetWindow().trigger_refresh_image();
       }
 
       return true;
