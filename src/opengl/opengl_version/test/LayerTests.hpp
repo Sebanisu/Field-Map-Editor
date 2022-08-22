@@ -23,6 +23,9 @@ public:
 private:
   test::TestMenu test_menu = {};
   ff_8::Ff8Menu ff_8_menu = {};
+  void           main_menu() const;
+  void           fps() const;
+//  void           dock_window() const;
 };
 
 static_assert(glengine::Renderable<test::TestMenu>);

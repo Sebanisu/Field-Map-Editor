@@ -18,38 +18,67 @@ void layer::Tests::on_render() const
 }
 void layer::Tests::on_im_gui_update() const
 {
-  ImVec2 vWindowSize = ImGui::GetMainViewport()->Size;
-  ImVec2 vPos0       = ImGui::GetMainViewport()->Pos;
+  //dock_window();
+  main_menu();
+  fps();
 
-  ImGui::SetNextWindowPos(
-    ImVec2((float)vPos0.x, (float)vPos0.y), ImGuiCond_Always);
-  ImGui::SetNextWindowSize(
-    ImVec2((float)vWindowSize.x, (float)vWindowSize.y), ImGuiCond_Always);
+  test_menu.on_im_gui_update();
+  ff_8_menu.on_im_gui_update();
+}
+//void layer::Tests::dock_window() const
+//{
+//  {
+//    ImVec2 vWindowSize = ImGui::GetMainViewport()->Size;
+//    ImVec2 vPos0       = ImGui::GetMainViewport()->Pos;
+//
+//    ImGui::SetNextWindowPos(
+//      ImVec2((float)vPos0.x, (float)vPos0.y), ImGuiCond_Always);
+//    ImGui::SetNextWindowSize(
+//      ImVec2((float)vWindowSize.x, (float)vWindowSize.y), ImGuiCond_Always);
+//
+//    auto const window_end = glengine::ScopeGuard{ []() { ImGui::End(); } };
+//    {
+//      const auto pop_style = glengine::ImGuiPushStyleVar(
+//        ImGuiStyleVar_WindowPadding, ImVec2(0.F, 0.F));
+//      if (!ImGui::Begin(
+//            "Control Panel",
+//            nullptr,
+//            ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoResize
+//              | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse
+//              | ImGuiWindowFlags_NoBringToFrontOnFocus
+//              | ImGuiWindowFlags_NoTitleBar))
+//      {
+//        return;
+//      }
+//      static const ImGuiDockNodeFlags dockspaceFlags = ImGuiDockNodeFlags_None;
+//      ImGuiID dockSpace = ImGui::GetID("MainWindowDockspace");
+//      ImGui::DockSpace(dockSpace, ImVec2(0.0f, 0.0f), dockspaceFlags);
+//    }
+//  }
+//}
+void layer::Tests::fps() const
+{
+  auto const fps_window_end = glengine::ScopeGuard{ []() { ImGui::End(); } };
+  if (ImGui::Begin("FPS"))
   {
-    const auto pop_style = glengine::ImGuiPushStyleVar(
-      ImGuiStyleVar_WindowPadding, ImVec2(0.F, 0.F));
-    if (!ImGui::Begin(
-          "Control Panel",
-          nullptr,
-          ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoResize
-            | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse
-            | ImGuiWindowFlags_NoBringToFrontOnFocus
-            | ImGuiWindowFlags_NoTitleBar))
-    {
-      return;
-    }
-    static const ImGuiDockNodeFlags dockspaceFlags = ImGuiDockNodeFlags_None;
-    ImGuiID dockSpace = ImGui::GetID("MainWindowDockspace");
-    ImGui::DockSpace(dockSpace, ImVec2(0.0f, 0.0f), dockspaceFlags);
+    ImGui::Text(
+      "%s",
+      fmt::format(
+        "Application average {:.3f} ms/frame ({:.3f} FPS)",
+        1000.0f / ImGui::GetIO().Framerate,
+        ImGui::GetIO().Framerate)
+        .c_str());
   }
-  auto const window_end = glengine::ScopeGuard{ []() { ImGui::End(); } };
+}
+void layer::Tests::main_menu() const
+{
   if (ImGui::BeginMainMenuBar())
   {
     const auto end_menubar =
       glengine::ScopeGuard{ []() { ImGui::EndMainMenuBar(); } };
     if (ImGui::BeginMenu("Edit"))
     {
-      auto const menu_end = glengine::ScopeGuard{ []() { ImGui::End(); } };
+      auto const menu_end = glengine::ScopeGuard{ []() { ImGui::EndMenu(); } };
       if (ImGui::MenuItem(
             "Undo", "CTRL+Z", false, GetMapHistory()->undo_enabled()))
       {
@@ -84,18 +113,6 @@ void layer::Tests::on_im_gui_update() const
     ff_8_menu.on_im_gui_menu();
     test_menu.on_im_gui_menu();
   }
-  if (ImGui::Begin("FPS"))
-  {
-    ImGui::Text(
-      "%s",
-      fmt::format(
-        "Application average {:.3f} ms/frame ({:.3f} FPS)",
-        1000.0f / ImGui::GetIO().Framerate,
-        ImGui::GetIO().Framerate)
-        .c_str());
-  }
-  test_menu.on_im_gui_update();
-  ff_8_menu.on_im_gui_update();
 }
 void layer::Tests::on_event(const glengine::event::Item &e) const
 {

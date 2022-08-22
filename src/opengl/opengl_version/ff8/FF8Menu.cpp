@@ -14,15 +14,17 @@ void ff_8::Ff8Menu::on_render() const
 }
 void ff_8::Ff8Menu::on_im_gui_update() const
 {
-  if (ImGui::Begin("FF8 Controls"))
   {
-    if (GetFields().on_im_gui_update())
+    auto const window_end = glengine::ScopeGuard{ []() { ImGui::End(); } };
+    if (ImGui::Begin("FF8 Controls"))
     {
-      GetWindow().trigger_reload();
+      if (GetFields().on_im_gui_update())
+      {
+        GetWindow().trigger_reload();
+      }
+      m_upscales.on_im_gui_update();
     }
-    m_upscales.on_im_gui_update();
   }
-  ImGui::End();
   m_menu.on_im_gui_update();
   m_upscales.on_im_gui_update_children();
 }
