@@ -310,7 +310,7 @@ public:
   {
     if (!preemptive_copy_mode)
     {
-      auto &temp           = copy_back();
+      auto &temp           = safe_copy_back();
       preemptive_copy_mode = true;
       spdlog::debug(
         "Map History preemptive_copy_mode: {}\n\t{}:{}",
@@ -341,28 +341,51 @@ public:
   }
   [[nodiscard]] MapT &copy_back() const
   {
+    auto &temp = safe_copy_back();
+    if (!preemptive_copy_mode)
+    {
+      clear_redo();
+    }
+    return temp;
+  }
+  [[nodiscard]] MapT &safe_copy_back() const
+  {
     const auto count = debug_count_print();
     if (preemptive_copy_mode)
     {// someone already copied
       return back();
     }
-    m_redo_history.clear();
-    m_redo_front_or_back.clear();
     m_front_or_back.push_back(Pushed::Back);
     return m_back_history.emplace_back(back());
   }
+  void clear_redo() const
+  {
+    m_redo_history.clear();
+    m_redo_front_or_back.clear();
+  }
   void remove_duplicate() const
   {
-    if (
-      m_front_or_back.back() == Pushed::Back && m_back_history.back() == m_back)
+    if (m_front_or_back.back() == Pushed::Back)
     {
-      m_back_history.pop_back();
+      if (m_back_history.back() == m_back)
+      {
+        m_back_history.pop_back();
+      }
+      else
+      {
+        clear_redo();
+      }
     }
-    if (
-      m_front_or_back.back() == Pushed::Front
-      && m_front_history.back() == m_front)
+    if (m_front_or_back.back() == Pushed::Front)
     {
-      m_front_history.pop_back();
+      if (m_front_history.back() == m_front)
+      {
+        m_front_history.pop_back();
+      }
+      else
+      {
+        clear_redo();
+      }
     }
   }
   //  [[nodiscard]] const MapT &copy_back_to_front() const
