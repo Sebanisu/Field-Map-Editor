@@ -49,6 +49,14 @@ Application::Application(std::string title, int width, int height)
 
       dispatcher.Dispatch<glengine::event::WindowClose>(&OnWindowClose);
       dispatcher.Dispatch<glengine::event::WindowResize>(&OnWindowResize);
+      dispatcher.Dispatch<glengine::event::Reload>(
+        [](const glengine::event::Reload &reload) -> bool {
+          if (reload)
+          {
+            ReloadMimAndMap();
+          }
+          return true;
+        });
       layers.on_event(e);
       local_preview.on_event(e);
       local_tile_display.on_event(e);

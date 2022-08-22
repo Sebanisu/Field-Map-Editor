@@ -18,9 +18,7 @@ void ff_8::Ff8Menu::on_im_gui_update() const
   {
     if (GetFields().on_im_gui_update())
     {
-      ReloadMimAndMap();
-      m_menu.reload();
-      m_upscales.reload();
+      GetWindow().trigger_reload();
     }
     m_upscales.on_im_gui_update();
   }
@@ -40,6 +38,16 @@ void ff_8::Ff8Menu::on_update(float delta_time) const
 }
 void ff_8::Ff8Menu::on_event(const glengine::event::Item &e) const
 {
+  const auto dispatcher = glengine::event::Dispatcher(e);
+  dispatcher.Dispatch<glengine::event::Reload>(
+    [this](const glengine::event::Reload &reload) -> bool {
+      if (reload)
+      {
+        m_menu.reload();
+        m_upscales.reload();
+      }
+      return true;
+    });
   m_menu.on_event(e);
   m_upscales.on_event(e);
 }
