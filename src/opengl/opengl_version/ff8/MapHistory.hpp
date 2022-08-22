@@ -109,24 +109,7 @@ class [[nodiscard]] MapHistory
     });
   }
 
-  template<typename TileT>
-  [[nodiscard]] auto get_offset_from_back(const TileT &tile) const
-  {
-    return back().visit_tiles([&](const auto &tiles) {
-      if constexpr (std::is_same_v<
-                      std::ranges::range_value_t<
-                        std::remove_cvref_t<decltype(tiles)>>,
-                      TileT>)
-      {
-        return std::ranges::distance(&tiles.front(), &tile);
-      }
-      else
-      {
-        return std::ranges::range_difference_t<
-          std::remove_cvref_t<decltype(tiles)>>{};
-      }
-    });
-  }
+
   template<typename TileT, std::integral PosT, typename LambdaT>
   [[nodiscard]] auto
     front_get_tile_at_offset(const PosT pos, LambdaT &&lambda) const
@@ -222,6 +205,24 @@ public:
     , m_back(m_front)
   {
   }
+  template<typename TileT>
+  [[nodiscard]] auto get_offset_from_back(const TileT &tile) const
+  {
+    return back().visit_tiles([&](const auto &tiles) {
+      if constexpr (std::is_same_v<
+                      std::ranges::range_value_t<
+                        std::remove_cvref_t<decltype(tiles)>>,
+                      TileT>)
+      {
+        return std::ranges::distance(&tiles.front(), &tile);
+      }
+      else
+      {
+        return std::ranges::range_difference_t<
+          std::remove_cvref_t<decltype(tiles)>>{};
+      }
+    });
+  }
   [[nodiscard]] std::size_t count() const
   {
     return m_front_history.size() + m_back_history.size();
@@ -245,9 +246,21 @@ public:
     (void)copy_back();
     return back_get_tile_at_offset<TileT>(pos, std::forward<LambdaT>(lambda));
   }
+  template<typename TileT, typename LambdaT>
+  void copy_back_perform_operation(
+    const std::vector<std::intmax_t> &indexes,
+    LambdaT                         &&lambda) const
+  {
+    (void)copy_back();
+    for (const auto i : indexes)
+    {
+      back_get_tile_at_offset<TileT>(i, lambda);
+    }
+  }
   template<typename TileT, typename FilterLambdaT, typename LambdaT>
-  void
-    copy_back_perform_operation(FilterLambdaT &&filter, LambdaT &&lambda) const
+    requires(std::is_invocable_r_v<bool, FilterLambdaT, const TileT &>)
+  void copy_back_perform_operation(FilterLambdaT &&filter, LambdaT &&lambda)
+    const
   {
     (void)copy_back();
     back().visit_tiles([&](auto &tiles) {
@@ -287,27 +300,27 @@ public:
     return front_get_tile_at_offset<TileT>(
       get_offset_from_back(tile), std::forward<LambdaT>(lambda));
   }
-  //  /**
-  //   * For when a change could happen. we make a copy ahead of time.
-  //   * @return back map
-  //   */
-  //  [[nodiscard]] MapT &copy_back_preemptive(
-  //    std::source_location source_location =
-  //      std::source_location::current()) const
-  //  {
-  //    if (!preemptive_copy_mode)
-  //    {
-  //      auto &temp           = copy_back();
-  //      preemptive_copy_mode = true;
-  //      spdlog::debug(
-  //        "Map History preemptive_copy_mode: {}\n\t{}:{}",
-  //        preemptive_copy_mode,
-  //        source_location.file_name(),
-  //        source_location.line());
-  //      return temp;
-  //    }
-  //    return back();
-  //  }
+  /**
+   * For when a change could happen. we make a copy ahead of time.
+   * @return back map
+   */
+  [[nodiscard]] MapT &copy_back_preemptive(
+    std::source_location source_location =
+      std::source_location::current()) const
+  {
+    if (!preemptive_copy_mode)
+    {
+      auto &temp           = copy_back();
+      preemptive_copy_mode = true;
+      spdlog::debug(
+        "Map History preemptive_copy_mode: {}\n\t{}:{}",
+        preemptive_copy_mode,
+        source_location.file_name(),
+        source_location.line());
+      return temp;
+    }
+    return back();
+  }
   /**
    * After copy_mode is returned to normal copy_back_preemptive will resume
    * making copies.
@@ -326,20 +339,31 @@ public:
         source_location.line());
     }
   }
-  [[nodiscard]] MapT &copy_back(
-    std::source_location source_location =
-      std::source_location::current()) const
+  [[nodiscard]] MapT &copy_back() const
   {
     const auto count = debug_count_print();
     if (preemptive_copy_mode)
     {// someone already copied
-      end_preemptive_copy_mode(source_location);
       return back();
     }
     m_redo_history.clear();
     m_redo_front_or_back.clear();
     m_front_or_back.push_back(Pushed::Back);
     return m_back_history.emplace_back(back());
+  }
+  void remove_duplicate() const
+  {
+    if (
+      m_front_or_back.back() == Pushed::Back && m_back_history.back() == m_back)
+    {
+      m_back_history.pop_back();
+    }
+    if (
+      m_front_or_back.back() == Pushed::Front
+      && m_front_history.back() == m_front)
+    {
+      m_front_history.pop_back();
+    }
   }
   //  [[nodiscard]] const MapT &copy_back_to_front() const
   //  {

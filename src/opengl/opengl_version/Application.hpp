@@ -31,7 +31,7 @@ private:
   mutable ff_8::MimData                  local_mim = {};
   mutable ff_8::MapHistoryData           local_map = {};
 };
-const void                                ReloadMimAndMap();
+void                                      ReloadMimAndMap();
 [[nodiscard]] const ff_8::Fields         &GetFields() noexcept;
 [[nodiscard]] const ff_8::MapHistoryData &GetMapHistory() noexcept;
 [[nodiscard]] const ff_8::MimData        &GetMim() noexcept;

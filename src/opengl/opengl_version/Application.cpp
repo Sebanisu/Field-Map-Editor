@@ -183,7 +183,7 @@ const glengine::Window & GetWindow() noexcept
 //   }
 //   return (16.F / 9.F);
 // }
-const void ReloadMimAndMap()
+void ReloadMimAndMap()
 {
   *GlobalMim        = ff_8::MimData(*GlobalFields);
   *GlobalMapHistory = ff_8::MapHistoryData(*GlobalFields, *GlobalMim);

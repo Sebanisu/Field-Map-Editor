@@ -109,7 +109,7 @@ void layer::Tests::main_menu() const
             false,
             GetMapHistory()->redo_enabled()))
       {
-        (void)GetMapHistory()->redo_all();
+        GetMapHistory()->redo_all();
         GetWindow().trigger_refresh_image();
       }
     }

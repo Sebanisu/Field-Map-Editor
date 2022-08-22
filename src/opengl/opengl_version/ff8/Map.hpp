@@ -42,6 +42,79 @@
 namespace ff_8
 {
 template<typename TileFunctions>
+class [[nodiscard]] MoveTiles
+{
+  const std::vector<std::intmax_t> &m_indexes;
+  glm::ivec3                        m_pressed  = {};
+  glm::ivec3                        m_released = {};
+
+public:
+  MoveTiles(
+    const std::vector<std::intmax_t> &indexes,
+    glm::ivec3                        pressed,
+    glm::ivec3                        released)
+    : m_indexes(indexes)
+    , m_pressed(pressed)
+    , m_released(released)
+  {
+  }
+  void operator()() const
+  {
+    GetMapHistory()->back().visit_tiles(*this);
+  }
+  void operator()(const auto &tiles) const
+  {
+    using TileT =
+      std::ranges::range_value_t<std::remove_cvref_t<decltype(tiles)>>;
+    std::vector<std::function<TileT(const TileT &)>> operations{};
+    if constexpr (std::is_same_v<typename TileFunctions::X, tile_operations::X>)
+    {
+      operations.push_back(
+        tile_operations::TranslateWithX{ m_released.x, m_pressed.x });
+    }
+    if constexpr (std::is_same_v<typename TileFunctions::Y, tile_operations::Y>)
+    {
+      operations.push_back(
+        tile_operations::TranslateWithY{ m_released.y, m_pressed.y });
+    }
+    if constexpr (std::is_same_v<
+                    typename TileFunctions::X,
+                    tile_operations::SourceX>)
+    {
+      operations.push_back(
+        tile_operations::TranslateWithSourceX{ m_released.x, m_pressed.x });
+    }
+    if constexpr (std::is_same_v<
+                    typename TileFunctions::Y,
+                    tile_operations::SourceY>)
+    {
+      operations.push_back(
+        tile_operations::TranslateWithSourceY{ m_released.y, m_pressed.y });
+    }
+
+    if constexpr (std::is_same_v<
+                    typename TileFunctions::TexturePage,
+                    tile_operations::TextureId>)
+    {
+      operations.push_back(tile_operations::WithTextureId{ m_released.z });
+    }
+    GetMapHistory()->copy_back_perform_operation<TileT>(
+      m_indexes, [&](TileT &new_tile) {
+        int i = {};
+        for (const auto &op : operations)
+        {
+          new_tile = op(new_tile);
+          spdlog::debug("Performed operation {}", i++);
+        }
+      });
+    GetWindow().trigger_refresh_image();
+  }
+  [[nodiscard]] operator bool() const noexcept
+  {
+    return m_released != m_pressed;
+  }
+};
+template<typename TileFunctions>
 class Map
 {
 public:
@@ -239,7 +312,8 @@ public:
         tile_button_state = &m_tile_button_state_hover;
         if (visit_unsorted_unfiltered_tiles(
               common_operation,
-              MouseTileOverlap<TileFunctions, MapFilters>(tp, GetMapHistory().filters)))
+              MouseTileOverlap<TileFunctions, MapFilters>(
+                tp, GetMapHistory().filters)))
         {
           GetWindow().trigger_refresh_image();
           // m_changed();
@@ -312,7 +386,7 @@ public:
                           s_blends.on_im_gui_update();
                         return checkbox_changed || blend_options_changed;
                       }
-                    }()},
+                    }() },
         std::identity{}));
 
 
@@ -367,34 +441,101 @@ public:
     dispatcher.Dispatch<MouseButtonPressed>(
       [this](const MouseButtonPressed &pressed) -> bool {
         if (!m_has_hover)
+        {
           return true;
+        }
         if (pressed.button() == Mouse::ButtonLeft)
         {
           m_map_dims.pressed_mouse_location = MouseToTilePos(
             m_imgui_viewport_window.offset_mouse_pos(), m_map_dims);
+          m_clicked_indexes.clear();
+          visit_unsorted_unfiltered_tiles(
+            [this](const auto &tile, VisitState &) -> bool {
+              m_clicked_indexes.push_back(static_cast<std::intmax_t>(
+                GetMapHistory()->get_offset_from_back(tile)));
+              return false;
+            },
+            MouseTileOverlap<TileFunctions, MapFilters>(
+              MouseToTilePos{ *(m_map_dims.pressed_mouse_location) },
+              GetMapHistory().filters));
           spdlog::debug(
-            "Mouse Pressed: x:{}, y:{}, texture_page:{}",
+            "Mouse Pressed: x:{}, y:{}, texture_page:{}, tile count:{}",
             m_map_dims.pressed_mouse_location->x,
             m_map_dims.pressed_mouse_location->y,
-            m_map_dims.pressed_mouse_location->z);
+            m_map_dims.pressed_mouse_location->z,
+            m_clicked_indexes.size());
+
           std::fill(
             m_tile_button_state_pressed.begin(),
             m_tile_button_state_pressed.end(),
             false);
-          m_dragging = true;
+          if (!m_clicked_indexes.empty())
+          {
+            m_dragging = true;
+            (void)GetMapHistory()->copy_back_preemptive();
+          }
         }
         return true;
       });
+
+    dispatcher.Dispatch<MouseMoved>([this](const MouseMoved &) -> bool {
+      if (!m_dragging || !m_has_hover || m_clicked_indexes.empty())// dragging
+                                                                   // set by
+                                                                   // another
+                                                                   // event
+      {
+        return false;
+      }
+      glm::ivec3 temp =
+        MouseToTilePos(m_imgui_viewport_window.offset_mouse_pos(), m_map_dims);
+      const auto move_tiles = MoveTiles<TileFunctions>(
+        m_clicked_indexes,
+        (m_map_dims.dragging_mouse_location.has_value()
+           ? *m_map_dims.dragging_mouse_location
+           : *m_map_dims.pressed_mouse_location),
+        temp);
+      const bool has_moved               = move_tiles;
+      m_map_dims.dragging_mouse_location = temp;
+      if (!has_moved)
+      {
+        return true;
+      }
+      spdlog::debug(
+        "Mouse Dragging: x:{}, y:{}, texture_page:{}, hovered:{}, "
+        "dragging:{}, moved:{}",
+        m_map_dims.dragging_mouse_location->x,
+        m_map_dims.dragging_mouse_location->y,
+        m_map_dims.dragging_mouse_location->z,
+        m_has_hover,
+        m_dragging,
+        has_moved);
+      move_tiles();
+      return true;
+    });
+
     dispatcher.Dispatch<MouseButtonReleased>(
       [this](const MouseButtonReleased &released) -> bool {
+        if (!m_dragging || !m_has_hover || m_clicked_indexes.empty())
+        {
+          return true;
+        }
         if (released.button() == Mouse::ButtonLeft)
         {
-          const auto unset_dragging =
-            glengine::ScopeGuardCaptures([this]() { m_dragging = false; });
+          const auto unset_dragging = glengine::ScopeGuardCaptures([this]() {
+            m_dragging                         = false;
+            m_map_dims.dragging_mouse_location = std::nullopt;
+            GetMapHistory()->end_preemptive_copy_mode();
+            // todo check to see if change occurred.
+          });
           m_map_dims.released_mouse_location = MouseToTilePos(
             m_imgui_viewport_window.offset_mouse_pos(), m_map_dims);
-          const bool moved = m_map_dims.released_mouse_location
-                             != m_map_dims.pressed_mouse_location;
+          const auto move_tiles = MoveTiles<TileFunctions>(
+            m_clicked_indexes,
+            (m_map_dims.dragging_mouse_location.has_value()
+               ? *m_map_dims.dragging_mouse_location
+               : *m_map_dims.pressed_mouse_location),
+            *m_map_dims.released_mouse_location);
+          const bool moved = move_tiles;
           spdlog::debug(
             "Mouse Released: x:{}, y:{}, texture_page:{}, hovered:{}, "
             "dragging:{}, moved:{}",
@@ -404,67 +545,12 @@ public:
             m_has_hover,
             m_dragging,
             moved);
-          if (!moved || !m_dragging || !m_has_hover)
-            return true;
-          GetMapHistory()->back().visit_tiles([this](const auto &tiles) {
-            using TileT =
-              std::ranges::range_value_t<std::remove_cvref_t<decltype(tiles)>>;
-            std::vector<std::function<TileT(const TileT &)>> operations{};
-            if constexpr (std::is_same_v<
-                            typename TileFunctions::X,
-                            tile_operations::X>)
-            {
-              operations.push_back(tile_operations::TranslateWithX{
-                m_map_dims.released_mouse_location->x,
-                m_map_dims.pressed_mouse_location->x });
-            }
-            if constexpr (std::is_same_v<
-                            typename TileFunctions::Y,
-                            tile_operations::Y>)
-            {
-              operations.push_back(tile_operations::TranslateWithY{
-                m_map_dims.released_mouse_location->y,
-                m_map_dims.pressed_mouse_location->y });
-            }
-            if constexpr (std::is_same_v<
-                            typename TileFunctions::X,
-                            tile_operations::SourceX>)
-            {
-              operations.push_back(tile_operations::TranslateWithSourceX{
-                m_map_dims.released_mouse_location->x,
-                m_map_dims.pressed_mouse_location->x });
-            }
-            if constexpr (std::is_same_v<
-                            typename TileFunctions::Y,
-                            tile_operations::SourceY>)
-            {
-              operations.push_back(tile_operations::TranslateWithSourceY{
-                m_map_dims.released_mouse_location->y,
-                m_map_dims.pressed_mouse_location->y });
-            }
-
-            if constexpr (std::is_same_v<
-                            typename TileFunctions::TexturePage,
-                            tile_operations::TextureId>)
-            {
-              operations.push_back(tile_operations::WithTextureId{
-                m_map_dims.released_mouse_location->z });
-            }
-            GetMapHistory()->copy_back_perform_operation<TileT>(
-              MouseTileOverlap<TileFunctions, MapFilters>(
-                MouseToTilePos{ *(m_map_dims.pressed_mouse_location) },
-                GetMapHistory().filters),
-              [&](TileT &new_tile) {
-                int i = {};
-                for (const auto &op : operations)
-                {
-                  new_tile = op(new_tile);
-                  spdlog::debug("Performed operation {}", i++);
-                }
-              });
-            GetWindow().trigger_refresh_image();
-            // m_changed();
-          });
+//          if (!moved)
+//          {
+//            return true;
+//          }
+          //move_tiles(); //seems to move the tiles extra here for some reason.
+          GetMapHistory()->remove_duplicate(); //checks most recent for duplicate
         }
         return true;
       });
@@ -865,19 +951,20 @@ private:
                                     // possible max. 0 being no palette and
                                     // 1-17 being with palettes
   // takes quads and draws them to the frame buffer or screen.
-  glengine::BatchRenderer           m_batch_renderer    = { 1000 };
+  glengine::BatchRenderer            m_batch_renderer            = { 1000 };
   // holds rendered image at 1:1 scale to prevent gaps when scaling.
-  mutable glengine::FrameBuffer     m_frame_buffer      = {};
-  mutable bool                      m_offscreen_drawing = { false };
-  mutable bool                      m_saving            = { false };
-  mutable bool                      m_preview           = { false };
-  inline constinit static MapBlends s_blends            = {};
-  Changed                           m_changed           = {};
-  glengine::Counter                 m_id                = {};
-  mutable std::vector<bool>         m_tile_button_state = {};
-  mutable std::vector<bool>         m_tile_button_state_hover   = {};
-  mutable std::vector<bool>         m_tile_button_state_pressed = {};
-  glengine::ImGuiViewPortWindow     m_imgui_viewport_window     = {
+  mutable glengine::FrameBuffer      m_frame_buffer              = {};
+  mutable bool                       m_offscreen_drawing         = { false };
+  mutable bool                       m_saving                    = { false };
+  mutable bool                       m_preview                   = { false };
+  inline constinit static MapBlends  s_blends                    = {};
+  Changed                            m_changed                   = {};
+  glengine::Counter                  m_id                        = {};
+  mutable std::vector<bool>          m_tile_button_state         = {};
+  mutable std::vector<bool>          m_tile_button_state_hover   = {};
+  mutable std::vector<bool>          m_tile_button_state_pressed = {};
+  mutable std::vector<std::intmax_t> m_clicked_indexes           = {};
+  glengine::ImGuiViewPortWindow      m_imgui_viewport_window     = {
     TileFunctions::label
   };
   mutable bool               m_has_hover = { false };
