@@ -336,11 +336,15 @@ public:
       end_preemptive_copy_mode(source_location);
       return back();
     }
+    m_redo_history.clear();
+    m_redo_front_or_back.clear();
     m_front_or_back.push_back(Pushed::Back);
     return m_back_history.emplace_back(back());
   }
   //  [[nodiscard]] const MapT &copy_back_to_front() const
   //  {
+  //    m_redo_history.clear();
+  //    m_redo_front_or_back.clear();
   //    const auto count = debug_count_print();
   //    m_maps.insert(m_maps.begin(), back());
   //    m_front_or_back.push_back(Pushed::Front);
@@ -348,6 +352,8 @@ public:
   //  }
   //  [[nodiscard]] const MapT &copy_front() const
   //  {
+  //    m_redo_history.clear();
+  //    m_redo_front_or_back.clear();
   //    const auto count = debug_count_print();
   //    m_maps.insert(m_maps.begin(), front());
   //    m_front_or_back.push_back(Pushed::Front);
@@ -407,6 +413,14 @@ public:
       std::source_location::current()) const
   {
     while (undo(source_location))
+    {
+    }
+  }
+  void redo_all(
+    std::source_location source_location =
+      std::source_location::current()) const
+  {
+    while (redo(source_location))
     {
     }
   }

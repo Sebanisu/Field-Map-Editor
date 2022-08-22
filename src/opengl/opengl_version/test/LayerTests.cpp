@@ -45,19 +45,18 @@ void layer::Tests::on_im_gui_update() const
       if (ImGui::BeginMenu("Edit"))
       {
         auto const menu_end = glengine::ScopeGuard{ []() { ImGui::End(); } };
-        if (ImGui::MenuItem(
-              fmt::format("Redo ({})", GetMapHistory()->redo_count()).c_str(),
-              "CTRL+Y",
-              false,
-              GetMapHistory()->redo_enabled()))
-        {
-          (void)GetMapHistory()->redo();
-          GetWindow().trigger_refresh_image();
-        }
+
+
         if (ImGui::MenuItem(
               "Undo", "CTRL+Z", false, GetMapHistory()->undo_enabled()))
         {
           (void)GetMapHistory()->undo();
+          GetWindow().trigger_refresh_image();
+        }
+        if (ImGui::MenuItem(
+              "Redo", "CTRL+Y", false, GetMapHistory()->redo_enabled()))
+        {
+          (void)GetMapHistory()->redo();
           GetWindow().trigger_refresh_image();
         }
         if (ImGui::MenuItem(
@@ -67,6 +66,16 @@ void layer::Tests::on_im_gui_update() const
               GetMapHistory()->undo_enabled()))
         {
           GetMapHistory()->undo_all();
+          GetWindow().trigger_refresh_image();
+        }
+        if (ImGui::MenuItem(
+              fmt::format("Redo All ({})", GetMapHistory()->redo_count())
+                .c_str(),
+              "SHIFT+CTRL+Y",
+              false,
+              GetMapHistory()->redo_enabled()))
+        {
+          (void)GetMapHistory()->redo_all();
           GetWindow().trigger_refresh_image();
         }
       }
@@ -113,8 +122,16 @@ void layer::Tests::on_event(const glengine::event::Item &e) const
         (key_pressed.key() == glengine::Key::Y)
         && (+key_pressed.mods() & +glengine::Mods::Control) != 0)
       {
-        (void)GetMapHistory()->redo();
-        GetWindow().trigger_refresh_image();
+        if ((+key_pressed.mods() & +glengine::Mods::Shift) != 0)
+        {
+          GetMapHistory()->redo_all();
+          GetWindow().trigger_refresh_image();
+        }
+        else
+        {
+          (void)GetMapHistory()->redo();
+          GetWindow().trigger_refresh_image();
+        }
       }
 
       return true;
