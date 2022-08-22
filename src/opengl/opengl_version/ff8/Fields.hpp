@@ -7,6 +7,7 @@
 #include "Archive.hpp"
 #include "FF8LoadTextures.hpp"
 #include "fmt/format.h"
+#include "MapFilters.hpp"
 #include "MapHistory.hpp"
 #include <DelayedTextures.hpp>
 namespace ff_8
@@ -86,12 +87,14 @@ struct MapHistoryData
   MapHistoryData() = default;
   MapHistoryData(const Fields &fields, const MimData &mim)
     : map(LoadMap(fields, fields.coo(), mim, path, coo_chosen))
+    , filters(map)
   {
   }
-  bool              coo_chosen = { false };
-  std::string       path       = {};
-  MapHistory        map        = {};
-  const MapHistory *operator->() const noexcept
+  bool               coo_chosen = { false };
+  std::string        path       = {};
+  MapHistory         map        = {};
+  mutable MapFilters filters    = {};
+  const MapHistory  *operator->() const noexcept
   {
     return &map;
   }

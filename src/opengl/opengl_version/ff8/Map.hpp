@@ -52,7 +52,6 @@ public:
   }
   Map(const Fields &, std::filesystem::path upscale_path)
     : m_upscale_path(std::move(upscale_path))
-    , m_filters(GetMapHistory())
   {
     if (std::empty(GetMim().path) || std::empty(GetMapHistory().path))
     {
@@ -183,7 +182,7 @@ public:
       //        (void)m_map.copy_back_preemptive();
       //      }
       const auto  mta  = MapTileAdjustments<TileFunctions>(
-        GetMapHistory(), m_filters, m_similar);
+        GetMapHistory(), GetMapHistory().filters, m_similar);
       auto      *tile_button_state = &m_tile_button_state;
       const auto common_operation =
         [&](auto &tile, VisitState &visit_state) -> bool {
@@ -240,7 +239,7 @@ public:
         tile_button_state = &m_tile_button_state_hover;
         if (visit_unsorted_unfiltered_tiles(
               common_operation,
-              MouseTileOverlap<TileFunctions, MapFilters>(tp, m_filters)))
+              MouseTileOverlap<TileFunctions, MapFilters>(tp, GetMapHistory().filters)))
         {
           GetWindow().trigger_refresh_image();
           // m_changed();
@@ -266,7 +265,7 @@ public:
               common_operation,
               MouseTileOverlap<TileFunctions, MapFilters>(
                 MouseToTilePos{ *(m_map_dims.pressed_mouse_location) },
-                m_filters)))
+                GetMapHistory().filters)))
         {
           GetWindow().trigger_refresh_image();
           // m_changed();
@@ -313,8 +312,7 @@ public:
                           s_blends.on_im_gui_update();
                         return checkbox_changed || blend_options_changed;
                       }
-                    }(),
-                    m_filters.on_im_gui_update() },
+                    }()},
         std::identity{}));
 
 
@@ -455,7 +453,7 @@ public:
             GetMapHistory()->copy_back_perform_operation<TileT>(
               MouseTileOverlap<TileFunctions, MapFilters>(
                 MouseToTilePos{ *(m_map_dims.pressed_mouse_location) },
-                m_filters),
+                GetMapHistory().filters),
               [&](TileT &new_tile) {
                 int i = {};
                 for (const auto &op : operations)
@@ -589,7 +587,7 @@ private:
               return true;
             }
           })
-        | std::views::filter(m_filters);
+        | std::views::filter(GetMapHistory().filters);
       std::vector<std::uint16_t> unique_z{};
       {
         // unique_z.reserve(std::ranges::size(tiles));
@@ -874,7 +872,6 @@ private:
   mutable bool                      m_saving            = { false };
   mutable bool                      m_preview           = { false };
   inline constinit static MapBlends s_blends            = {};
-  mutable MapFilters                m_filters           = { GetMapHistory() };
   Changed                           m_changed           = {};
   glengine::Counter                 m_id                = {};
   mutable std::vector<bool>         m_tile_button_state = {};
