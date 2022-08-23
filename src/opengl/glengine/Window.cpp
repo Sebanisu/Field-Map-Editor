@@ -225,7 +225,8 @@ void Window::init_im_gui(const char *const glsl_version) const
     // Keyboard Controls io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad; //
     // Enable Gamepad Controls
     io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
-    io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
+    // io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable; //events don't work
+    // with viewports
 
     // Setup Dear ImGui style
     ImGui::StyleColorsDark();
@@ -307,7 +308,6 @@ void Window::init_callbacks() const
         //        spdlog::warn("glfwSetKeyCallback Unsupported Scan Code");
         return;
       }
-      ImGui_ImplGlfw_KeyCallback(window, key, scancode, action, mods);
       auto &data = get_window_data(window);
       switch (action)
       {
@@ -330,7 +330,6 @@ void Window::init_callbacks() const
     });
   glfwSetMouseButtonCallback(
     m_window.get(), [](GLFWwindow *window, int button, int action, int mods) {
-      ImGui_ImplGlfw_MouseButtonCallback(window, button, action, mods);
       using glengine::Mouse;
       auto &data = get_window_data(window);
       switch (action)
@@ -349,7 +348,6 @@ void Window::init_callbacks() const
     });
   glfwSetScrollCallback(
     m_window.get(), [](GLFWwindow *window, double x_offset, double y_offset) {
-      ImGui_ImplGlfw_ScrollCallback(window, x_offset, y_offset);
       auto &data = get_window_data(window);
       data.event_callback(event::MouseScroll(
         static_cast<float>(x_offset), static_cast<float>(y_offset)));
@@ -357,7 +355,6 @@ void Window::init_callbacks() const
 
   glfwSetCursorPosCallback(
     m_window.get(), [](GLFWwindow *window, double x, double y) {
-      ImGui_ImplGlfw_CursorPosCallback(window, x, y);
       auto &data = get_window_data(window);
       data.event_callback(
         event::MouseMoved(static_cast<float>(x), static_cast<float>(y)));
@@ -368,12 +365,8 @@ void Window::init_callbacks() const
       auto &data = get_window_data(window);
       data.event_callback(event::WindowMoved(x, y));
     });
-  glfwSetWindowFocusCallback(
-    m_window.get(), ImGui_ImplGlfw_WindowFocusCallback);
-  glfwSetCursorEnterCallback(
-    m_window.get(), ImGui_ImplGlfw_CursorEnterCallback);
-  glfwSetCharCallback(m_window.get(), ImGui_ImplGlfw_CharCallback);
-  glfwSetMonitorCallback(ImGui_ImplGlfw_MonitorCallback);
+
+  ImGui_ImplGlfw_InstallCallbacks(m_window.get());
 }
 Window::WindowData &Window::get_window_data(GLFWwindow *window)
 {

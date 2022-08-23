@@ -40,12 +40,12 @@ Application::Application(std::string title, int width, int height)
     .height         = std::move(height),
     .event_callback = [&](const glengine::event::Item &e) {
       const glengine::event::Dispatcher dispatcher = { e };
-      [[maybe_unused]]const bool skip
-            =(glengine::event::HasFlag(e.category(),glengine::event::Category::Mouse)
-                         && ImGui::GetIO().WantCaptureMouse)
-                        ||
-                        (glengine::event::HasFlag(e.category(),glengine::event::Category::Keyboard)
-                            && ImGui::GetIO().WantCaptureKeyboard);
+//      [[maybe_unused]]const bool skip
+//            =(glengine::event::HasFlag(e.category(),glengine::event::Category::Mouse)
+//                         && ImGui::GetIO().WantCaptureMouse)
+//                        ||
+//                        (glengine::event::HasFlag(e.category(),glengine::event::Category::Keyboard)
+//                            && ImGui::GetIO().WantCaptureKeyboard);
 
       dispatcher.Dispatch<glengine::event::WindowClose>(&OnWindowClose);
       dispatcher.Dispatch<glengine::event::WindowResize>(&OnWindowResize);
@@ -60,10 +60,10 @@ Application::Application(std::string title, int width, int height)
       layers.on_event(e);
       local_preview.on_event(e);
       local_tile_display.on_event(e);
-      if (skip)
-      {
-        return;
-      }
+//      if (skip)
+//      {
+//        return;
+//      }
       spdlog::debug("event::{}\t{}\t{}", e.name(), e.category_name(), e.data());
     } }))
 {
