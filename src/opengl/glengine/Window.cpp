@@ -221,6 +221,8 @@ void Window::init_im_gui(const char *const glsl_version) const
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
     ImGuiIO &io = ImGui::GetIO();
+    static const auto path = (std::filesystem::current_path()/"res"/"imgui.ini").string();
+    io.IniFilename=path.c_str();
     // io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable
     // Keyboard Controls io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad; //
     // Enable Gamepad Controls
