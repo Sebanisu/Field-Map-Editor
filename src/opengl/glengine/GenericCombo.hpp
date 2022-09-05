@@ -14,11 +14,16 @@ template<std::ranges::random_access_range dataT>
   requires(
     std::is_same_v<
       std::remove_cvref_t<std::ranges::range_value_t<dataT>>,
-      std::
-        string> || std::is_same_v<std::remove_cvref_t<std::ranges::range_value_t<dataT>>, std::string_view>)
+      std::string>
+    || std::is_same_v<
+      std::remove_cvref_t<std::ranges::range_value_t<dataT>>,
+      std::string_view>)
 
-    [
-      [nodiscard]] inline bool GenericCombo(const char *label, int &current_index, const dataT &data, float sub_width = 0.F)
+[[nodiscard]] inline bool GenericCombo(
+  const char  *label,
+  int         &current_index,
+  const dataT &data,
+  float        sub_width = 0.F)
 {
   bool              changed = false;
   const ImGuiStyle &style   = ImGui::GetStyle();
@@ -47,10 +52,14 @@ template<std::ranges::random_access_range dataT>
       }
       auto b = std::ranges::cbegin(data);
       std::ranges::advance(b, current_index);
+
       const char *current_c_str = c_str(*b);
       const auto &current_str   = *b;
       const auto  pos           = current_str.find_last_of("\\/");
-      if (pos != std::string::npos)
+      auto        length        = std::string_view(*b).size();
+      if (
+        std::cmp_not_equal(pos, std::string::npos)
+        && std::cmp_not_equal(pos, length - 1))
       {
         // show only end of long paths.
         return current_c_str + pos + 1;
