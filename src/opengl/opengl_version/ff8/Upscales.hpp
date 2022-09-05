@@ -4,7 +4,7 @@
 
 #ifndef FIELD_MAP_EDITOR_UPSCALES_HPP
 #define FIELD_MAP_EDITOR_UPSCALES_HPP
-
+#include "Configuration.hpp"
 namespace ff_8
 {
 class Upscales
@@ -16,11 +16,11 @@ public:
   void               on_event(const glengine::event::Item &) const {}
                      operator std::filesystem::path() const;
   Upscales();
-
+  Upscales(Configuration);
 private:
   [[nodiscard]] const std::string &string() const;
-  mutable std::vector<std::string> m_paths   = {};
   mutable int                      m_current = {};
+  mutable toml::array              m_paths   = {};
 };
 static_assert(glengine::Renderable<Upscales>);
 }// namespace ff_8

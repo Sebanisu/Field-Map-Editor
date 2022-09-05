@@ -4,54 +4,74 @@
 
 #include "Upscales.hpp"
 #include "GenericCombo.hpp"
+static constexpr auto upscale_paths_index =
+  std::string_view("upscale_paths_index");
+static constexpr auto upscale_paths_vector =
+  std::string_view("upscale_paths_vector");
 bool ff_8::Upscales::on_im_gui_update() const
 {
-  return glengine::GenericCombo("Upscale Path", m_current, m_paths);
+  if (glengine::GenericCombo(
+        "Upscale Path",
+        m_current,
+        m_paths
+          | std::ranges::views::transform([](auto &&value) -> decltype(auto) {
+              return value.template ref<std::string>();
+            })))
+  {
+    auto config = Configuration{};
+    config->insert_or_assign(upscale_paths_index, m_current);
+    config.save();
+    return true;
+  }
+  return false;
 }
 const std::string &ff_8::Upscales::string() const
 {
   if (std::cmp_less(m_current, std::ranges::size(m_paths)))
   {
-    return m_paths.at(static_cast<std::size_t>(m_current));
+    return m_paths.get(static_cast<std::size_t>(m_current))->ref<std::string>();
   }
   const static auto empty = std::string("");
   return empty;
 }
-ff_8::Upscales::Upscales()
+static void remove_unreachable_paths(std::vector<std::string> &paths)
 {
-  using namespace std::literals::string_literals;
-  m_paths =
-    std::vector{ tl::string::replace_slashes(
-                   R"(D:\Angelwing-Ultima_Remastered_v1-0-a\field_bg)"s),
-                 tl::string::replace_slashes(
-                   R"(/mnt/D/Angelwing-Ultima_Remastered_v1-0-a/field_bg)"s)
-
-    };
   const auto [first, last] =
-    std::ranges::remove_if(m_paths, [](const std::filesystem::path path) {
+    std::ranges::remove_if(paths, [](const std::filesystem::path path) {
       std::error_code ec{};
       const bool      found = std::filesystem::exists(path, ec);
       if (ec)
       {
-        std::cerr << "error " << __FILE__ << ":" << __LINE__ << " - "
-                  << ec.value() << ": " << ec.message() << ec.value()
-                  << " - path: " << path << std::endl;
+        spdlog::error(
+          "{}:{} - {}: {} - \"{}\"",
+          __FILE__,
+          __LINE__,
+          ec.value(),
+          ec.message(),
+          path.string());
         ec.clear();
       }
       const bool is_dir = std::filesystem::is_directory(path, ec);
       if (ec)
       {
-        std::cerr << "error " << __FILE__ << ":" << __LINE__ << " - "
-                  << ec.value() << ": " << ec.message() << " - path: " << path
-                  << std::endl;
+        spdlog::error(
+          "{}:{} - {}: {} - \"{}\"",
+          __FILE__,
+          __LINE__,
+          ec.value(),
+          ec.message(),
+          path.string());
         ec.clear();
       }
       return !found || !is_dir;
     });
-  m_paths.erase(first, last);
-  if (!std::ranges::empty(m_paths))
+  paths.erase(first, last);
+}
+static void check_paths(std::vector<std::string> &paths)
+{
+  if (!std::ranges::empty(paths))
   {
-    const auto     &path = m_paths.front();
+    const auto     &path = paths.front();
     std::error_code ec{};
     const auto      handle_error = [&ec](int line, const auto &extra) {
       if (ec)
@@ -106,6 +126,45 @@ ff_8::Upscales::Upscales()
     spdlog::debug("max file count is: {}", max_count);
   }
 }
+static std::vector<std::string> get_default_paths()
+{
+  using namespace std::literals::string_literals;
+  auto paths =
+    std::vector{ tl::string::replace_slashes(
+                   R"(D:\Angelwing-Ultima_Remastered_v1-0-a\field_bg)"s),
+                 tl::string::replace_slashes(
+                   R"(/mnt/D/Angelwing-Ultima_Remastered_v1-0-a/field_bg)"s)
+
+    };
+  remove_unreachable_paths(paths);
+  check_paths(paths);
+  return paths;
+}
+ff_8::Upscales::Upscales()
+  : Upscales(Configuration{})
+{
+}
+ff_8::Upscales::Upscales(Configuration config)
+  : m_current(config[upscale_paths_index].value_or(int{}))
+  , m_paths([&]() -> toml::array {
+    if (!config->contains(upscale_paths_vector))
+    {
+      static const auto default_paths = get_default_paths();
+      // todo get all default paths for linux and windows.
+      toml::array       paths_array{};
+      paths_array.reserve(default_paths.size());
+      for (const auto &path : default_paths)
+      {
+        paths_array.push_back(path);
+      }
+      config->insert_or_assign(upscale_paths_vector, std::move(paths_array));
+      config.save();
+    }
+    return *(config->get_as<toml::array>(upscale_paths_vector));
+  }())
+{
+}
+
 ff_8::Upscales::operator std::filesystem::path() const
 {
   return string();
