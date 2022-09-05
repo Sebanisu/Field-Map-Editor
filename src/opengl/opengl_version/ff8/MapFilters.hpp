@@ -4,9 +4,6 @@
 
 #ifndef FIELD_MAP_EDITOR_MAPFILTERS_HPP
 #define FIELD_MAP_EDITOR_MAPFILTERS_HPP
-#include "../../../../cmake-build-debug-wsl/src/opengl/glengine/CMakeFiles/glengine.dir/cmake_pch.hxx"
-#include "../../../sfml/append_inserter.hpp"
-#include "../../../sfml/generic_combo.hpp"
 #include "UniqueTileValues.hpp"
 #include <ImGuiDisabled.hpp>
 #include <ImGuiIndent.hpp>
