@@ -4,6 +4,7 @@
 
 #ifndef FIELD_MAP_EDITOR_PATHS_HPP
 #define FIELD_MAP_EDITOR_PATHS_HPP
+#include "Configuration.hpp"
 #include "ScopeGuard.hpp"
 
 
@@ -18,10 +19,11 @@ public:
   void               on_event(const glengine::event::Item &) const {}
   [[nodiscard]]      operator std::filesystem::path() const;
   Paths();
+  explicit Paths(Configuration);
 
 private:
   [[nodiscard]] const std::string &string() const;
-  mutable std::vector<std::string> m_paths   = {};
+  mutable toml::array              m_paths   = {};
   mutable int                      m_current = {};
 };
 static_assert(glengine::Renderable<Paths>);
