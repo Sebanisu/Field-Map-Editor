@@ -30,6 +30,7 @@ find_package(glfw3 REQUIRED)
 find_package(OpenGL REQUIRED)
 find_package(glm REQUIRED)
 find_package(imgui REQUIRED)
+find_package(tomlplusplus REQUIRED)
 add_executable(${PROJECT_NAME}_OPENGL
         Application.cpp
         ff8/Archive.cpp
@@ -47,6 +48,7 @@ add_executable(${PROJECT_NAME}_OPENGL
         ff8/MapHistory.cpp
         ff8/MapTileAdjustments.hpp
         ff8/SimilarAdjustments.cpp
+        ff8/Configuration.cpp
         main.cpp
         test/LayerTests.cpp
         test/TestBatchQuads.cpp
@@ -62,6 +64,7 @@ target_link_libraries(${PROJECT_NAME}_OPENGL
         PRIVATE Threads::Threads
         PRIVATE OpenVIII_CPP_WIP_VIIIGraphics
         PRIVATE OpenVIII_CPP_WIP_VIIIArchive
+        PRIVATE tomlplusplus::tomlplusplus
         )
 target_include_directories(${PROJECT_NAME}_OPENGL
         PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
@@ -76,6 +79,8 @@ add_custom_command(TARGET ${PROJECT_NAME}_OPENGL POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_directory
         ${CMAKE_CURRENT_SOURCE_DIR}/res $<TARGET_FILE_DIR:${PROJECT_NAME}_OPENGL>/res)
 
+target_compile_definitions(${PROJECT_NAME}_OPENGL
+        PUBLIC TOML_EXCEPTIONS=0)
 if (MSVC)
     target_compile_definitions(${PROJECT_NAME}_OPENGL
             PUBLIC _CRT_SECURE_NO_WARNINGS) # required by libpng

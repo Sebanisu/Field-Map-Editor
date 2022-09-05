@@ -7,19 +7,20 @@ class FieldMapEditor(ConanFile):
     name = "Field-Map-Editor"
     version = "0.1"
     requires = (
-        # "catch2/2.13.7",
-        # "docopt.cpp/0.6.3",
-        #"fmt/8.1.1",  # formatting library
+        # "catch2/2.13.7", another unit testing library.
+        # "docopt.cpp/0.6.3", command line library.
+        #"fmt/8.1.1",  # formatting library, included with spdlog
         "spdlog/1.10.0",  # logging library
-        "glfw/3.3.5",  # opengl version
-        "glew/2.2.0",  # opengl version
-        "glm/0.9.9.8",  # opengl version
+        "glfw/3.3.5",  # opengl version opengl library.
+        "glew/2.2.0",  # opengl version opengl extension library
+        "glm/0.9.9.8",  # opengl version opengl math library
         "imgui/cci.20220207+1.87.docking", #docking UI for opengl
         #"imgui/1.87",  # UI used for both opengl and sfml
-        "sfml/2.5.1",  # sfml version
+        "sfml/2.5.1",  # sfml version simplified c++98 gaming library
         "andreasbuhr-cppcoro/cci.20210113",  # sfml version
         "stb/cci.20210713",  # image loading and saving
-        "boost-ext-ut/1.1.9"  # unit testing library
+        "boost-ext-ut/1.1.9",  # unit testing library / wip
+        "tomlplusplus/3.1.0"  #toml++  c++17 configuration library
     )
     generators = "cmake", "gcc", "txt", "cmake_find_package"
     def configure(self):

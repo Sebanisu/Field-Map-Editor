@@ -5,13 +5,14 @@
 #ifndef FIELD_MAP_EDITOR_COOS_HPP
 #define FIELD_MAP_EDITOR_COOS_HPP
 #include "ScopeGuard.hpp"
-
+#include "Configuration.hpp"
 
 namespace ff_8
 {
 class Coos
 {
 public:
+  Coos();
   void          on_update(float) const {}
   void          on_render() const {}
   bool          on_im_gui_update() const;
