@@ -3,13 +3,24 @@
 //
 
 #include "Fields.hpp"
+#include "Configuration.hpp"
 #include "GenericCombo.hpp"
 
 namespace ff_8
 {
-static int CurrentIndex = {};
+static constexpr auto fields_index  = std::string_view("fields_index");
+static constexpr auto fields_string = std::string_view("fields_string");
+MimData::MimData(const Fields &fields)
+  : mim(LoadMim(fields, fields.coo(), path, coo_chosen))
+{
+  if (!std::empty(path))
+  {
+    spdlog::debug("Loaded Mim {}", path);
+    spdlog::debug("Loading Textures from Mim");
+    delayed_textures = LoadTextures(mim);
+  }
 }
-open_viii::graphics::background::Mim ff_8::LoadMim(
+open_viii::graphics::background::Mim LoadMim(
   open_viii::archive::FIFLFS<false> in_field,
   std::string_view                  coo,
   std::string                      &out_path,
@@ -34,7 +45,7 @@ open_viii::graphics::background::Mim ff_8::LoadMim(
   return {};
 }
 
-open_viii::graphics::background::Map ff_8::LoadMap(
+open_viii::graphics::background::Map LoadMap(
   open_viii::archive::FIFLFS<false> in_field,
   std::string_view                  coo,
   const MimData                    &mim,
@@ -61,7 +72,7 @@ open_viii::graphics::background::Map ff_8::LoadMap(
   return {};
 }
 
-bool ff_8::Fields::on_archive_change() const
+bool Fields::on_archive_change() const
 {
   m_start_time = std::chrono::steady_clock::now();
   if (m_archive.on_im_gui_update())
@@ -76,25 +87,30 @@ bool ff_8::Fields::on_archive_change() const
   return false;
 }
 
-bool ff_8::Fields::on_field_change() const
+bool Fields::on_field_change() const
 {
-  if (glengine::GenericCombo("Field", CurrentIndex, m_map_data))
+  if (glengine::GenericCombo("Field", m_current_index, m_map_data))
   {
-    m_field = load_field();
+    m_field     = load_field();
+    auto config = Configuration{};
+    config->insert_or_assign(fields_index, m_current_index);
+    config->insert_or_assign(
+      fields_string, m_map_data[static_cast<std::size_t>(m_current_index)]);
+    config.save();
     return true;
   }
   return false;
 }
 
-bool ff_8::Fields::on_im_gui_update() const
+bool Fields::on_im_gui_update() const
 {
   return on_archive_change() | on_field_change();
 }
 
-open_viii::archive::FIFLFS<false> ff_8::Fields::load_field() const
+open_viii::archive::FIFLFS<false> Fields::load_field() const
 {
   open_viii::archive::FIFLFS<false> archive{};
-  if (!m_map_data.empty() && std::cmp_less(CurrentIndex, m_map_data.size()))
+  if (!m_map_data.empty() && std::cmp_less(m_current_index, m_map_data.size()))
   {
     m_archive.fields().execute_with_nested(
       { map_name() },
@@ -111,47 +127,49 @@ open_viii::archive::FIFLFS<false> ff_8::Fields::load_field() const
       "{}:{} - Index out of range {} / {}",
       __FILE__,
       __LINE__,
-      CurrentIndex,
+      m_current_index,
       m_map_data.size());
   }
   return archive;
 }
 
-std::string_view ff_8::Fields::coo() const
+std::string_view Fields::coo() const
 {
   return m_archive.coo();
 }
 
-std::string_view ff_8::Fields::map_name() const
+std::string_view Fields::map_name() const
 {
-  if (std::cmp_less(CurrentIndex, std::ranges::size(m_map_data)))
+  if (std::cmp_less(m_current_index, std::ranges::size(m_map_data)))
   {
-    return m_map_data[static_cast<std::size_t>(CurrentIndex)];
+    return m_map_data[static_cast<std::size_t>(m_current_index)];
   }
   const static auto tmp = std::string("");
   return tmp;
 }
-
-ff_8::Fields::Fields()
-  : m_map_data(m_archive.fields().map_data())
+Fields::Fields()
+  : m_current_index(Configuration{}[fields_index].value_or(int{}))
+  , m_map_data(m_archive.fields().map_data())
   , m_field(load_field())
 {
   spdlog::debug(
     "time to load fields = {:%S} seconds", m_end_time - m_start_time);
-  auto pos = std::ranges::find(
-    m_map_data, std::string("bgmdele1"));//"feopen2" //crtower3
-  if (pos != m_map_data.end())
-  {
-    CurrentIndex = static_cast<int>(std::distance(m_map_data.begin(), pos));
-    m_field      = load_field();
-  }
+  //  auto pos = std::ranges::find(
+  //    m_map_data, std::string("bgmdele1"));//"feopen2" //crtower3
+  //  if (pos != m_map_data.end())
+  //  {
+  //    m_current_index = static_cast<int>(std::distance(m_map_data.begin(),
+  //    pos)); m_field         = load_field();
+  //  }
 }
 
-const open_viii::archive::FIFLFS<false> *ff_8::Fields::operator->() const
+const open_viii::archive::FIFLFS<false> *Fields::operator->() const
 {
   return &m_field;
 }
-ff_8::Fields::operator const open_viii::archive::FIFLFS<false> &() const
+Fields::operator const open_viii::archive::FIFLFS<false> &() const
 {
   return m_field;
 }
+
+}// namespace ff_8

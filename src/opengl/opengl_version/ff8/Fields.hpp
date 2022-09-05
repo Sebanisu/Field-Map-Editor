@@ -32,9 +32,10 @@ private:
 
   mutable std::chrono::steady_clock::time_point   m_start_time =
     std::chrono::steady_clock::now();
-  Archive                                       m_archive  = {};
-  mutable std::vector<std::string>              m_map_data = {};
-  mutable open_viii::archive::FIFLFS<false>     m_field    = {};
+  mutable int                                   m_current_index = {};
+  Archive                                       m_archive       = {};
+  mutable std::vector<std::string>              m_map_data      = {};
+  mutable open_viii::archive::FIFLFS<false>     m_field         = {};
   mutable std::chrono::steady_clock::time_point m_end_time =
     std::chrono::steady_clock::now();
 };
@@ -48,16 +49,8 @@ static_assert(glengine::Renderable<Fields>);
 struct MimData
 {
   MimData() = default;
-  MimData(const Fields &fields)
-    : mim(LoadMim(fields, fields.coo(), path, coo_chosen))
-  {
-    if (!std::empty(path))
-    {
-      spdlog::debug("Loaded Mim {}", path);
-      spdlog::debug("Loading Textures from Mim");
-      delayed_textures = LoadTextures(mim);
-    }
-  }
+  MimData(const Fields &fields);
+
   bool on_update() const
   {
     return delayed_textures.on_update();
