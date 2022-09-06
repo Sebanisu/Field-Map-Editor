@@ -49,6 +49,7 @@ add_executable(${PROJECT_NAME}_OPENGL
         ff8/MapTileAdjustments.hpp
         ff8/SimilarAdjustments.cpp
         ff8/Configuration.cpp
+        ff8/MenuSaveToggles.hpp
         main.cpp
         test/LayerTests.cpp
         test/TestBatchQuads.cpp

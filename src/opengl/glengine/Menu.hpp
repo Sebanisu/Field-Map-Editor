@@ -48,7 +48,7 @@ public:
   void  on_update(float) const;
   void  on_render() const;
   void  on_im_gui_update() const;
-  void  on_im_gui_menu() const;
+  bool  on_im_gui_menu() const;
   void  on_event(const event::Item &) const;
   template<Renderable T>
   void push_back(std::string name) const
@@ -58,6 +58,43 @@ public:
   }
   void push_back(std::string name, std::function<MenuItem()> function) const;
   void reload() const;
+  std::size_t size() const noexcept
+  {
+    return std::size(m_current);
+  }
+  const char *title() const noexcept
+  {
+    return m_title;
+  }
+  void toggle_items(std::ranges::range auto &&toggles) const
+  {
+    if (std::ranges::size(toggles) != size())
+    {
+      return;
+    }
+    for (std::size_t i = {}; const auto &[name, function] : m_list)
+    {
+      if (toggles[i] && !m_current[i])
+      {
+        m_current[i] = function();
+      }
+      else
+      {
+        m_current[i] = MenuItem{};
+      }
+      ++i;
+    }
+  }
+  std::vector<bool> get_toggles() const
+  {
+    std::vector<bool> ret{};
+    ret.reserve(size());
+    std::ranges::transform(
+      m_current, std::back_inserter(ret), [](auto &&val) -> bool {
+        return val;
+      });
+    return ret;
+  };
 
 private:
   const char                   *m_title   = {};

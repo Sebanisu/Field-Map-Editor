@@ -31,8 +31,9 @@ void Menu::on_im_gui_update() const
     ++i;
   }
 }
-void Menu::on_im_gui_menu() const
+bool Menu::on_im_gui_menu() const
 {
+  bool changed = false;
   if (ImGui::BeginMenu(m_title))
   {
     const auto end_menu = ScopeGuard{ []() { ImGui::EndMenu(); } };
@@ -50,10 +51,12 @@ void Menu::on_im_gui_menu() const
         {
           m_current[i] = MenuItem{};
         }
+        changed = true;
       }
       ++i;
     }
   }
+  return changed;
 }
 
 void Menu::on_update(float delta_time) const
