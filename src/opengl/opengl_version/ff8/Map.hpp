@@ -250,10 +250,6 @@ public:
       const auto  dims = ImGui::GetContentRegionAvail();
       std::size_t i    = {};
 
-      //      if (!m_changed.previous())
-      //      {
-      //        (void)m_map.copy_back_preemptive();
-      //      }
       const auto  mta  = MapTileAdjustments<TileFunctions>(
         GetMapHistory(), GetMapHistory().filters, m_similar);
       auto      *tile_button_state = &m_tile_button_state;
@@ -336,10 +332,19 @@ public:
             m_map_dims.pressed_mouse_location->y)
             .c_str());
         if (visit_unsorted_unfiltered_tiles(
-              common_operation,
-              MouseTileOverlap<TileFunctions, MapFilters>(
-                MouseToTilePos{ *(m_map_dims.pressed_mouse_location) },
-                GetMapHistory().filters)))
+              common_operation,// todo fix this to use the stored tile indexes
+              //              MouseTileOverlap<TileFunctions, MapFilters>(
+              //                MouseToTilePos{
+              //                *(m_map_dims.pressed_mouse_location) },
+              //
+              //                GetMapHistory().filters)
+              [this](auto &&tile) -> bool {
+                return std::ranges::any_of(
+                  m_clicked_indexes, [&](auto &&i) -> bool {
+                    return std::cmp_equal(
+                      i, GetMapHistory()->get_offset_from_back(tile));
+                  });
+              }))
         {
           GetWindow().trigger_refresh_image();
           // m_changed();
@@ -353,7 +358,7 @@ public:
         last_pos          = ImGui::GetCursorPos();
         text_width        = ImGui::GetItemRectMax().x;
         if (visit_unsorted_unfiltered_tiles(
-              common_operation, [](const auto &...) { return true; }))
+              common_operation, GetMapHistory().filters))
         {
           GetWindow().trigger_refresh_image();
           // m_changed();
@@ -545,12 +550,13 @@ public:
             m_has_hover,
             m_dragging,
             moved);
-//          if (!moved)
-//          {
-//            return true;
-//          }
-          //move_tiles(); //seems to move the tiles extra here for some reason.
-          GetMapHistory()->remove_duplicate(); //checks most recent for duplicate
+          //          if (!moved)
+          //          {
+          //            return true;
+          //          }
+          // move_tiles(); //seems to move the tiles extra here for some reason.
+          GetMapHistory()->remove_duplicate();// checks most recent for
+                                              // duplicate
         }
         return true;
       });

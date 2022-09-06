@@ -25,16 +25,17 @@ public:
   std::size_t              index() const;
   const glengine::Texture &current_texture() const;
 
+  constexpr static const char *const label = "Mim";
 
 private:
-  void                           render_frame_buffer() const;
-  void                           set_uniforms() const;
-  void                           save() const;
-  void                           save_all() const;
+  void                          render_frame_buffer() const;
+  void                          set_uniforms() const;
+  void                          save() const;
+  void                          save_all() const;
   // 3 bpp x 16 palettes 48 possible textures + 1 for palette texture
-  glengine::BatchRenderer        m_batch_renderer        = {};
-  glengine::ImGuiViewPortWindow  m_imgui_viewport_window = { "Mim" };
-  glengine::Counter              m_id                    = {};
+  glengine::BatchRenderer       m_batch_renderer        = {};
+  glengine::ImGuiViewPortWindow m_imgui_viewport_window = { label };
+  glengine::Counter             m_id                    = {};
 };
 static_assert(glengine::Renderable<Mim>);
 }// namespace ff_8

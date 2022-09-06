@@ -31,7 +31,7 @@ void ff_8::Ff8Menu::on_im_gui_update() const
 }
 void ff_8::Ff8Menu::on_im_gui_menu() const
 {
-  if(m_menu.on_im_gui_menu())
+  if (m_menu.on_im_gui_menu())
   {
     MenuSaveToggles(m_menu);
   }
@@ -59,8 +59,8 @@ void ff_8::Ff8Menu::on_event(const glengine::event::Item &e) const
 }
 ff_8::Ff8Menu::Ff8Menu()
 {
-  push_back<Mim>("Mim File");
-  push_back<MapSwizzle>("Map File (Swizzled)");
-  push_back<MapDeswizzle>("Map File (Deswizzled)");
+  push_back<Mim>(Mim::label);
+  push_back<MapSwizzle>(TileFunctionsSwizzle::label);
+  push_back<MapDeswizzle>(TileFunctionsDeswizzle::label);
   MenuLoadToggles(m_menu);
 }

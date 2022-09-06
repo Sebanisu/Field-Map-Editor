@@ -43,8 +43,8 @@ ff_8::Ff8UpscaleMenu::Ff8UpscaleMenu(const Fields &)
 {
 }
 ff_8::Ff8UpscaleMenu::Ff8UpscaleMenu() {
-  push_back<MapUpscaleSwizzle>("Map File (Upscale Swizzled)");
-  push_back<MapUpscaleDeswizzle>("Map File (Upscale Deswizzled)");
+  push_back<MapUpscaleSwizzle>(TileFunctionsUpscaleSwizzle::label);
+  push_back<MapUpscaleDeswizzle>(TileFunctionsUpscaleDeswizzle::label);
   MenuLoadToggles(m_menu);
 }
 void ff_8::Ff8UpscaleMenu::reload() const {
