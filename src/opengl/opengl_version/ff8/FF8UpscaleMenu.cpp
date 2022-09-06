@@ -4,6 +4,7 @@
 #include "FF8UpscaleMenu.hpp"
 #include "MapUpscaleDeswizzle.hpp"
 #include "MapUpscaleSwizzle.hpp"
+#include "MenuSaveToggles.hpp"
 static_assert(glengine::Renderable<ff_8::Ff8UpscaleMenu>);
 void ff_8::Ff8UpscaleMenu::on_render() const
 {
@@ -22,7 +23,10 @@ void ff_8::Ff8UpscaleMenu::on_im_gui_update_children() const
 }
 void ff_8::Ff8UpscaleMenu::on_im_gui_menu() const
 {
-  m_menu.on_im_gui_menu();
+  if(m_menu.on_im_gui_menu())
+  {
+    MenuSaveToggles(m_menu);
+  }
 }
 void ff_8::Ff8UpscaleMenu::on_update(float delta_time) const
 {
@@ -41,6 +45,7 @@ ff_8::Ff8UpscaleMenu::Ff8UpscaleMenu(const Fields &)
 ff_8::Ff8UpscaleMenu::Ff8UpscaleMenu() {
   push_back<MapUpscaleSwizzle>("Map File (Upscale Swizzled)");
   push_back<MapUpscaleDeswizzle>("Map File (Upscale Deswizzled)");
+  MenuLoadToggles(m_menu);
 }
 void ff_8::Ff8UpscaleMenu::reload() const {
   m_menu.reload();

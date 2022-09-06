@@ -9,6 +9,7 @@
 #include "TestBatchRenderingTexture2DDynamic.hpp"
 #include "TestClearColor.hpp"
 #include "TestTexture2D.hpp"
+#include "ff8/MenuSaveToggles.hpp"
 
 static_assert(glengine::Renderable<test::TestMenu>);
 
@@ -28,6 +29,7 @@ test::TestMenu::TestMenu()
     glengine::Menu::MenuElementType<TestBatchRenderer>{
       "Test Batch Renderer Class" })
 {
+  MenuLoadToggles(m_menu);
 }
 void test::TestMenu::on_render() const
 {
@@ -39,7 +41,10 @@ void test::TestMenu::on_im_gui_update() const
 }
 void test::TestMenu::on_im_gui_menu() const
 {
-  m_menu.on_im_gui_menu();
+  if(m_menu.on_im_gui_menu())
+  {
+    MenuSaveToggles(m_menu);
+  }
 };
 void test::TestMenu::on_update(float delta_time) const
 {
