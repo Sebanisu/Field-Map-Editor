@@ -67,13 +67,13 @@ Application::Application(std::string title, int width, int height)
       spdlog::debug("event::{}\t{}\t{}", e.name(), e.category_name(), e.data());
     } }))
 {
-  layers.emplace_layers(std::in_place_type_t<layer::Tests>{});
   local_mim        = ff_8::MimData(local_fields);
   local_map        = ff_8::MapHistoryData(local_fields, local_mim);
   GlobalPreview    = &local_preview;
   GlobalFields     = &local_fields;
   GlobalMim        = &local_mim;
   GlobalMapHistory = &local_map;
+  layers.emplace_layers(std::in_place_type_t<layer::Tests>{});
 }
 void Application::run() const
 {
