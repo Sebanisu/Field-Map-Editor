@@ -80,14 +80,22 @@ struct MapHistoryData
   MapHistoryData() = default;
   MapHistoryData(const Fields &fields, const MimData &mim)
     : map(LoadMap(fields, fields.coo(), mim, path, coo_chosen))
-    , filters(map)
+    , m_filters(map)
   {
   }
-  bool               coo_chosen = { false };
-  std::string        path       = {};
-  MapHistory         map        = {};
-  mutable MapFilters filters    = {};
-  const MapHistory  *operator->() const noexcept
+  MapFilters &filters() const
+  {
+    return m_filters;
+  }
+  MapFilters &filters_reset_pupu() const
+  {
+//    m_filters.reset_pupu_filter();
+    return m_filters;
+  }
+  bool              coo_chosen = { false };
+  std::string       path       = {};
+  MapHistory        map        = {};
+  const MapHistory *operator->() const noexcept
   {
     return &map;
   }
@@ -96,6 +104,9 @@ struct MapHistoryData
   {
     return map;
   }
+
+private:
+  mutable MapFilters m_filters = {};
 };
 }// namespace ff_8
 #endif// FIELD_MAP_EDITOR_FIELDS_HPP

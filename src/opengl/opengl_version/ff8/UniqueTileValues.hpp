@@ -8,6 +8,7 @@
 #include "tile_operations.hpp"
 #include "TransformedSortedUniqueCopy.hpp"
 #include "UniqueValues.hpp"
+#include "UniquifyPupu.hpp"
 #include <open_viii/graphics/background/Map.hpp>
 namespace ff_8
 {
@@ -33,44 +34,58 @@ private:
       });
     });
   }
+  static auto visit_back_only(const MapT &map, auto &&transform)
+  {
+    return map.back().visit_tiles([&](const auto &b_tiles) {
+      return TransformedSortedUniqueCopy(
+        std::forward<decltype(transform)>(transform),
+        {},
+        {},
+        {},
+        filtered(b_tiles));
+    });
+  }
+  auto gen_pupu(const MapT &map)
+  {
+    return visit_back_only(map, m_pupu_map);
+  }
   static auto gen_z(const MapT &map)
   {
-    return visit(map, [](const auto &tile) { return tile.z(); });
+    return visit(map, tile_operations::Z{});
   }
   static auto gen_layer_id(const MapT &map)
   {
-    return visit(map, [](const auto &tile) { return tile.layer_id(); });
+    return visit(map, tile_operations::LayerId{});
   }
   static auto gen_palette_id(const MapT &map)
   {
-    return visit(map, [](const auto &tile) { return tile.palette_id(); });
+    return visit(map, tile_operations::PaletteId{});
   }
   static auto gen_texture_page_id(const MapT &map)
   {
-    return visit(map, [](const auto &tile) { return tile.texture_id(); });
+    return visit(map, tile_operations::TextureId{});
   }
   static auto gen_animation_id(const MapT &map)
   {
-    return visit(map, [](const auto &tile) { return tile.animation_id(); });
+    return visit(map, tile_operations::AnimationId{});
   }
   static auto gen_animation_frame(const MapT &map)
   {
-    return visit(map, [](const auto &tile) { return tile.animation_state(); });
+    return visit(map, tile_operations::AnimationState{});
   }
   static auto gen_blend_other(const MapT &map)
   {
-    return visit(map, [](const auto &tile) { return tile.blend(); });
+    return visit(map, tile_operations::Blend{});
   }
   static auto gen_blend_mode(const MapT &map)
   {
     return UniqueValues<open_viii::graphics::background::BlendModeT>(
-      visit(map, [](const auto &tile) { return tile.blend_mode(); }),
-      blendmode_to_string);
+      visit(map, tile_operations::BlendMode{}), blendmode_to_string);
   }
   static auto gen_bpp(const MapT &map)
   {
     return UniqueValues<open_viii::graphics::BPPT>(
-      visit(map, [](const auto &tile) { return tile.depth(); }), bpp_to_string);
+      visit(map, tile_operations::Depth{}), bpp_to_string);
   }
   static void refresh(const MapT &map, auto &old, auto &&func)
   {
@@ -148,6 +163,7 @@ public:
     , blend_other(gen_blend_other(map))
     , blend_mode(gen_blend_mode(map))
     , bpp(gen_bpp(map))
+    , pupu(gen_pupu(map))
   {
   }
   void refresh_z(const MapT &map)
@@ -187,6 +203,10 @@ public:
     refresh(map, bpp, &gen_bpp);
   }
 
+private:
+  UniquifyPupu m_pupu_map = {};
+
+public:
   UniqueValues<std::uint16_t> z                                        = {};
   UniqueValues<std::uint8_t>  layer_id                                 = {};
   UniqueValues<std::uint8_t>  palette_id                               = {};
@@ -196,6 +216,7 @@ public:
   UniqueValues<std::uint8_t>  blend_other                              = {};
   UniqueValues<open_viii::graphics::background::BlendModeT> blend_mode = {};
   UniqueValues<open_viii::graphics::BPPT>                   bpp        = {};
+  UniqueValues<PupuID>                                      pupu       = {};
 };
 struct TilePossibleValues
 {
