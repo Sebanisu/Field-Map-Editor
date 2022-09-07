@@ -50,6 +50,7 @@ add_executable(${PROJECT_NAME}_OPENGL
         ff8/SimilarAdjustments.cpp
         ff8/Configuration.cpp
         ff8/MenuSaveToggles.hpp
+        ff8/PupuID.hpp
         main.cpp
         test/LayerTests.cpp
         test/TestBatchQuads.cpp
@@ -58,7 +59,7 @@ add_executable(${PROJECT_NAME}_OPENGL
         test/TestBatchRenderingTexture2D.cpp
         test/TestBatchRenderingTexture2DDynamic.cpp
         test/TestMenu.cpp
-        test/TestTexture2D.cpp)
+        test/TestTexture2D.cpp ff8/UniquifyPupu.hpp)
 target_link_libraries(${PROJECT_NAME}_OPENGL
         PRIVATE glengine
         PRIVATE project_warnings

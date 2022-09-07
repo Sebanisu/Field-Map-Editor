@@ -4,6 +4,7 @@
 
 #ifndef FIELD_MAP_EDITOR_MAPFILTERS_HPP
 #define FIELD_MAP_EDITOR_MAPFILTERS_HPP
+#include "Application.hpp"
 #include "UniqueTileValues.hpp"
 #include <ImGuiDisabled.hpp>
 #include <ImGuiIndent.hpp>
@@ -19,15 +20,23 @@ class MapFilters
         [&](const auto &b_tiles) { return lambda(f_tiles, b_tiles); });
     });
   }
+  //const MapHistory *map_history = { nullptr };
 
 public:
   MapFilters() = default;
   MapFilters(const MapHistory &map)
-    : m_unique_tile_values(map)
+    : //map_history(&map)
+     m_unique_tile_values(map)
     , m_disabled(visit(map, [](auto &&f_tiles, auto &&b_tiles) {
       return std::ranges::empty(f_tiles) || std::ranges::empty(b_tiles);
     }))
   {
+    map.back().visit_tiles([this](const auto &tiles) {
+      UniquifyPupu pupu_map{};
+      pupu_ids.reserve(std::ranges::size(tiles));
+      std::ranges::transform(
+        tiles, std::back_insert_iterator(pupu_ids), pupu_map);
+    });
   }
   [[nodiscard]] bool on_im_gui_update() const
   {
@@ -55,7 +64,7 @@ public:
             std::ranges::random_access_range auto &&possible_value_range,
             std::ranges::random_access_range auto &&possible_value_string_range,
             std::ranges::random_access_range auto &&used_value_range,
-            uint32_t                           line_count) {
+            uint32_t                                line_count) {
             bool changed = false;
             assert(
               std::ranges::size(possible_value_range)
@@ -79,9 +88,9 @@ public:
 
               static constexpr const char *clicked_pattern = "Clicked {}";
               for (uint32_t i = 0; boolptr != boolsent; ++i,
-                                 (void)++boolptr,
-                                 (void)++current_value,
-                                 (void)++current_string)
+                            (void)++boolptr,
+                            (void)++current_value,
+                            (void)++current_string)
               {
                 auto found =
                   std::ranges::find(used_value_range, *current_value);
@@ -188,7 +197,9 @@ public:
           common_unique("Animation ID", m_unique_tile_values.animation_id, 8),
 
           common_unique(
-            "Animation Frame", m_unique_tile_values.animation_frame, 8)
+            "Animation Frame", m_unique_tile_values.animation_frame, 8),
+
+          common_unique("Pupu ID", m_unique_tile_values.pupu, 2)
         };
         ret_changed = std::ranges::any_of(changes, std::identity{});
       }
@@ -198,46 +209,56 @@ public:
   template<typename TileT>
   bool operator()(const TileT &tile) const
   {
-    return filter(
-             tile.layer_id(),
-             m_unique_tile_values.layer_id.enable(),
-             m_unique_tile_values.layer_id.values())
-           && filter(
-             tile.z(),
-             m_unique_tile_values.z.enable(),
-             m_unique_tile_values.z.values())
-           && filter(
-             tile.texture_id(),
-             m_unique_tile_values.texture_page_id.enable(),
-             m_unique_tile_values.texture_page_id.values())
-           && filter(
-             tile.blend(),
-             m_unique_tile_values.blend_other.enable(),
-             m_unique_tile_values.blend_other.values())
-           && filter(
-             tile.animation_id(),
-             m_unique_tile_values.animation_id.enable(),
-             m_unique_tile_values.animation_id.values())
-           && filter(
-             tile.animation_state(),
-             m_unique_tile_values.animation_frame.enable(),
-             m_unique_tile_values.animation_frame.values())
-           && filter(
-             tile.layer_id(),
-             m_unique_tile_values.layer_id.enable(),
-             m_unique_tile_values.layer_id.values())
-           && filter(
-             tile.blend_mode(),
-             m_possible_tile_values.blend_mode.enable(),
-             m_possible_tile_values.blend_mode.values())
-           && filter(
-             tile.depth(),
-             m_possible_tile_values.bpp.enable(),
-             m_possible_tile_values.bpp.values())
-           && filter(
-             tile.palette_id(),
-             m_possible_tile_values.palette_id.enable(),
-             m_possible_tile_values.palette_id.values());
+    // todo fix pupu filter
+
+    bool blah = filter(
+      // pupu_map(tile),
+      pupu_ids[static_cast<size_t>(GetMapHistory()->get_offset_from_back(tile))],
+      m_unique_tile_values.pupu.enable(),
+      m_unique_tile_values.pupu.values());
+    return std::ranges::all_of(
+      std::array{ blah,
+                  filter(
+                    tile.layer_id(),
+                    m_unique_tile_values.layer_id.enable(),
+                    m_unique_tile_values.layer_id.values()),
+                  filter(
+                    tile.z(),
+                    m_unique_tile_values.z.enable(),
+                    m_unique_tile_values.z.values()),
+                  filter(
+                    tile.texture_id(),
+                    m_unique_tile_values.texture_page_id.enable(),
+                    m_unique_tile_values.texture_page_id.values()),
+                  filter(
+                    tile.blend(),
+                    m_unique_tile_values.blend_other.enable(),
+                    m_unique_tile_values.blend_other.values()),
+                  filter(
+                    tile.animation_id(),
+                    m_unique_tile_values.animation_id.enable(),
+                    m_unique_tile_values.animation_id.values()),
+                  filter(
+                    tile.animation_state(),
+                    m_unique_tile_values.animation_frame.enable(),
+                    m_unique_tile_values.animation_frame.values()),
+                  filter(
+                    tile.layer_id(),
+                    m_unique_tile_values.layer_id.enable(),
+                    m_unique_tile_values.layer_id.values()),
+                  filter(
+                    tile.blend_mode(),
+                    m_possible_tile_values.blend_mode.enable(),
+                    m_possible_tile_values.blend_mode.values()),
+                  filter(
+                    tile.depth(),
+                    m_possible_tile_values.bpp.enable(),
+                    m_possible_tile_values.bpp.values()),
+                  filter(
+                    tile.palette_id(),
+                    m_possible_tile_values.palette_id.enable(),
+                    m_possible_tile_values.palette_id.values()) },
+      std::identity{});
   }
   const auto &unique_tile_values() const
   {
@@ -249,15 +270,18 @@ public:
   }
 
 private:
-  bool filter(
-    auto                    &&value,
-    std::ranges::range auto &&bool_range,
-    std::ranges::range auto &&value_range) const noexcept
+  std::vector<PupuID> pupu_ids{};
+  bool                filter(
+                   auto                    &&value,
+                   std::ranges::range auto &&bool_range,
+                   std::ranges::range auto &&value_range) const noexcept
     requires std::equality_comparable_with<
       decltype(value),
       std::ranges::range_value_t<decltype(value_range)>>
   {
     assert(std::ranges::size(bool_range) == std::ranges::size(value_range));
+    assert(std::ranges::size(bool_range) != 0);
+    assert(std::ranges::size(value_range) != 0);
     auto       current_value  = std::ranges::cbegin(value_range);
     const auto value_sentinal = std::ranges::cend(value_range);
     auto       current_bool   = std::ranges::cbegin(bool_range);

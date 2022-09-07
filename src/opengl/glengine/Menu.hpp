@@ -74,7 +74,10 @@ public:
     }
     for (std::size_t i = {}; const auto &[name, function] : m_list)
     {
-      if (toggles[i] && !m_current[i])
+      auto b = std::ranges::cbegin(toggles);
+      std::ranges::advance(
+        b, static_cast<std::ranges::range_difference_t<decltype(toggles)>>(i));
+      if (*b && !m_current[i])
       {
         m_current[i] = function();
       }

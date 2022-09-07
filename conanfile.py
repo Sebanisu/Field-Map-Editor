@@ -20,7 +20,8 @@ class FieldMapEditor(ConanFile):
         "andreasbuhr-cppcoro/cci.20210113",  # sfml version
         "stb/cci.20210713",  # image loading and saving
         "boost-ext-ut/1.1.9",  # unit testing library / wip
-        "tomlplusplus/3.1.0"  #toml++  c++17 configuration library
+        #"tomlplusplus/3.1.0"  #toml++  c++17 configuration library
+        "tomlplusplus/3.0.1"
     )
     generators = "cmake", "gcc", "txt", "cmake_find_package"
     def configure(self):

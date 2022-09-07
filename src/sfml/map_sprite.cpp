@@ -842,7 +842,7 @@ void map_sprite::for_all_tiles(
   std::ranges::transform(tiles_const, std::back_inserter(pupu_ids), m_pupu_map);
   assert(std::size(tiles_const) == std::size(tiles));
   assert(std::size(tiles_const) == std::size(pupu_ids));
-  const auto process = [this, &skip_invalid, &lambda](
+  const auto process = [&skip_invalid, &lambda](
                          auto tc, const auto tce, auto t, auto pupu_t) {
     for (; /*t != te &&*/ tc != tce; (void)++tc, ++t, ++pupu_t)
     {
