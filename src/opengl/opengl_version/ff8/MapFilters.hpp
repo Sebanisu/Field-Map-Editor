@@ -4,7 +4,6 @@
 
 #ifndef FIELD_MAP_EDITOR_MAPFILTERS_HPP
 #define FIELD_MAP_EDITOR_MAPFILTERS_HPP
-#include "Application.hpp"
 #include "UniqueTileValues.hpp"
 #include <ImGuiDisabled.hpp>
 #include <ImGuiIndent.hpp>
@@ -31,12 +30,6 @@ public:
       return std::ranges::empty(f_tiles) || std::ranges::empty(b_tiles);
     }))
   {
-    map.back().visit_tiles([this](const auto &tiles) {
-      UniquifyPupu pupu_map{};
-      pupu_ids.reserve(std::ranges::size(tiles));
-      std::ranges::transform(
-        tiles, std::back_insert_iterator(pupu_ids), pupu_map);
-    });
   }
   [[nodiscard]] bool on_im_gui_update() const
   {
@@ -206,18 +199,21 @@ public:
     }
     return ret_changed;
   }
-  template<typename TileT>
-  bool operator()(const TileT &tile) const
+  bool operator()(const PupuID & pupu_id) const
   {
     // todo fix pupu filter
 
-    bool blah = filter(
-      // pupu_map(tile),
-      pupu_ids[static_cast<size_t>(GetMapHistory()->get_offset_from_back(tile))],
+    return filter(
+      // todo get pupu ID from map history? Map filters currently has no access.
+      pupu_id,
       m_unique_tile_values.pupu.enable(),
       m_unique_tile_values.pupu.values());
+  }
+  template<typename TileT>
+  bool operator()(const TileT &tile) const
+  {
     return std::ranges::all_of(
-      std::array{ blah,
+      std::array{
                   filter(
                     tile.layer_id(),
                     m_unique_tile_values.layer_id.enable(),
@@ -270,7 +266,6 @@ public:
   }
 
 private:
-  std::vector<PupuID> pupu_ids{};
   bool                filter(
                    auto                    &&value,
                    std::ranges::range auto &&bool_range,

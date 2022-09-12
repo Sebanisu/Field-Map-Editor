@@ -251,7 +251,7 @@ public:
       std::size_t i    = {};
 
       const auto  mta  = MapTileAdjustments<TileFunctions>(
-        GetMapHistory(), GetMapHistory().filters(), m_similar);
+        GetMapHistory(),GetMapHistory().filters, m_similar);
       auto      *tile_button_state = &m_tile_button_state;
       const auto common_operation =
         [&](auto &tile, VisitState &visit_state) -> bool {
@@ -308,8 +308,8 @@ public:
         tile_button_state = &m_tile_button_state_hover;
         if (visit_unsorted_unfiltered_tiles(
               common_operation,
-              MouseTileOverlap<TileFunctions, MapFilters>(
-                tp, GetMapHistory().filters_reset_pupu())))
+              MouseTileOverlap<TileFunctions, decltype(m_filters)>(
+                tp,m_filters)))
         {
           GetWindow().trigger_refresh_image();
           // m_changed();
@@ -358,7 +358,7 @@ public:
         last_pos          = ImGui::GetCursorPos();
         text_width        = ImGui::GetItemRectMax().x;
         if (visit_unsorted_unfiltered_tiles(
-              common_operation, GetMapHistory().filters_reset_pupu()))
+              common_operation,m_filters))
         {
           GetWindow().trigger_refresh_image();
           // m_changed();
@@ -460,9 +460,9 @@ public:
                 GetMapHistory()->get_offset_from_back(tile)));
               return false;
             },
-            MouseTileOverlap<TileFunctions, MapFilters>(
+            MouseTileOverlap<TileFunctions, decltype(m_filters)>(
               MouseToTilePos{ *(m_map_dims.pressed_mouse_location) },
-              GetMapHistory().filters_reset_pupu()));
+             m_filters));
           spdlog::debug(
             "Mouse Pressed: x:{}, y:{}, texture_page:{}, tile count:{}",
             m_map_dims.pressed_mouse_location->x,
@@ -679,7 +679,7 @@ private:
               return true;
             }
           })
-        | std::views::filter(GetMapHistory().filters_reset_pupu());
+        | std::views::filter(m_filters);
       std::vector<std::uint16_t> unique_z{};
       {
         // unique_z.reserve(std::ranges::size(tiles));
@@ -971,6 +971,9 @@ private:
   mutable bool               m_has_hover = { false };
   mutable bool               m_dragging  = { false };
   mutable SimilarAdjustments m_similar   = {};
+  static inline const auto m_filters = [](const auto &tile)->bool{
+    return GetMapHistory().filters(tile) && GetMapHistory().filters(GetMapHistory()->get_pupu_from_back(tile));
+  };
 };
 }// namespace ff_8
 #endif// FIELD_MAP_EDITOR_MAP_HPP

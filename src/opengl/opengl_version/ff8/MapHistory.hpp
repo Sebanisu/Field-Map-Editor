@@ -6,6 +6,7 @@
 #define FIELD_MAP_EDITOR_MAPHISTORY_HPP
 #include "MouseToTilePos.h"
 #include "SimilarAdjustments.hpp"
+#include "UniquifyPupu.hpp"
 #include <ScopeGuard.hpp>
 namespace ff_8
 {
@@ -45,6 +46,7 @@ class [[nodiscard]] MapHistory
   using MapT                          = open_viii::graphics::background::Map;
   mutable MapT                m_front = {};
   mutable MapT                m_back  = {};
+  mutable std::vector<PupuID> m_front_pupu         = {};
   mutable std::vector<MapT>   m_front_history      = {};
   mutable std::vector<MapT>   m_back_history       = {};
   mutable std::vector<MapT>   m_redo_history       = {};
@@ -198,12 +200,30 @@ class [[nodiscard]] MapHistory
     });
   }
 
+  static std::vector<PupuID> calculate_pupu(const MapT &map)
+  {
+    return map.visit_tiles([](const auto &tiles) {
+      std::vector<PupuID> pupu_ids = {};
+      UniquifyPupu        pupu_map = {};
+      pupu_ids.reserve(std::ranges::size(tiles));
+      std::ranges::transform(
+        tiles, std::back_insert_iterator(pupu_ids), pupu_map);
+      return pupu_ids;
+    });
+  }
+
 public:
   MapHistory() = default;
   explicit MapHistory(MapT map)
     : m_front(std::move(map))
     , m_back(m_front)
+    , m_front_pupu(calculate_pupu(m_front))
   {
+  }
+  template<typename TileT>
+  [[nodiscard]] PupuID get_pupu_from_back(const TileT &tile) const
+  {
+    return m_front_pupu[static_cast<std::size_t>(get_offset_from_back(tile))];
   }
   template<typename TileT>
   [[nodiscard]] auto get_offset_from_back(const TileT &tile) const

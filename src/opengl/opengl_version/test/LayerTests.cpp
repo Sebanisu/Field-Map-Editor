@@ -21,7 +21,7 @@ void layer::Tests::on_im_gui_update() const
   //dock_window();
   main_menu();
   fps();
-  if(GetMapHistory().filters().on_im_gui_update())
+  if(GetMapHistory().filters.on_im_gui_update())
   {
     GetWindow().trigger_refresh_image();
   }
