@@ -8,7 +8,6 @@
 #include "tile_operations.hpp"
 #include "TransformedSortedUniqueCopy.hpp"
 #include "UniqueValues.hpp"
-#include "UniquifyPupu.hpp"
 #include <open_viii/graphics/background/Map.hpp>
 namespace ff_8
 {
@@ -34,20 +33,26 @@ private:
       });
     });
   }
-  static auto visit_back_only(const MapT &map, auto &&transform)
+//  static auto visit_back_only(const MapT &map, auto &&transform)
+//  {
+//    return map.back().visit_tiles([&](const auto &b_tiles) {
+//      return TransformedSortedUniqueCopy(
+//        std::forward<decltype(transform)>(transform),
+//        {},
+//        {},
+//        {},
+//        filtered(b_tiles));
+//    });
+//  }
+  auto gen_pupu(const MapT & map)
   {
-    return map.back().visit_tiles([&](const auto &b_tiles) {
-      return TransformedSortedUniqueCopy(
-        std::forward<decltype(transform)>(transform),
-        {},
-        {},
-        {},
-        filtered(b_tiles));
-    });
-  }
-  auto gen_pupu(const MapT &map)
-  {
-    return visit_back_only(map, m_pupu_map);
+    auto pupu_values = map.pupu();
+    std::ranges::sort(pupu_values);
+    const auto not_unique = std::ranges::unique(pupu_values);
+    pupu_values.erase(not_unique.begin(), not_unique.end());
+    const auto removal = std::ranges::remove(pupu_values,PupuID{0x8000'0000});
+    pupu_values.erase(removal.begin(), removal.end());
+    return pupu_values;
   }
   static auto gen_z(const MapT &map)
   {
@@ -203,8 +208,6 @@ public:
     refresh(map, bpp, &gen_bpp);
   }
 
-private:
-  UniquifyPupu m_pupu_map = {};
 
 public:
   UniqueValues<std::uint16_t> z                                        = {};

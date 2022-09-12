@@ -225,6 +225,10 @@ public:
   {
     return m_front_pupu[static_cast<std::size_t>(get_offset_from_back(tile))];
   }
+  [[nodiscard]] const auto &pupu() const noexcept
+  {
+    return m_front_pupu;
+  }
   template<typename TileT>
   [[nodiscard]] auto get_offset_from_back(const TileT &tile) const
   {
