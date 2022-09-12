@@ -36,7 +36,6 @@ add_library(glengine STATIC
         Counter.cpp
         FrameBuffer.cpp
         FrameBufferBackup.cpp
-        FrameBufferRenderer.cpp
         GLCheck.cpp
         ImGuiDisabled.cpp
         ImGuiPushItemWidth.cpp

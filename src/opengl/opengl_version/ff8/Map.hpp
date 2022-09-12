@@ -15,7 +15,6 @@
 #include "Fields.hpp"
 #include "FrameBuffer.hpp"
 #include "FrameBufferBackup.hpp"
-#include "FrameBufferRenderer.hpp"
 #include "GenericCombo.hpp"
 #include "ImGuiDisabled.hpp"
 #include "ImGuiIndent.hpp"

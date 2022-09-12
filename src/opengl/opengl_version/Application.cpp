@@ -6,7 +6,6 @@
 #include "Event/EventDispatcher.hpp"
 #include "ff8/Fields.hpp"
 #include "FrameBuffer.hpp"
-#include "FrameBufferRenderer.hpp"
 #include "Renderer.hpp"
 #include "test/LayerTests.hpp"
 #include "TimeStep.hpp"
@@ -79,7 +78,6 @@ void Application::run() const
 {
   set_current_window();
   const glengine::TimeStep      time_step = {};
-  glengine::FrameBufferRenderer fbr       = {};
   // auto                          last      = glengine::TimeStep::now();
   using namespace std::chrono_literals;
   glengine::FrameBuffer fb;// needed to be inscope somewhere because texture was
