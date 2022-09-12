@@ -96,7 +96,7 @@ class [[nodiscard]] MapHistory
     m_front_history.pop_back();
     return front();
   }
-  const auto debug_count_print(
+  auto debug_count_print(
     std::source_location source_location =
       std::source_location::current()) const
   {
