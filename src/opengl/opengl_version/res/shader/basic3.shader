@@ -25,6 +25,7 @@ void main()
   #version 330 core
 
 layout(location = 0) out vec4 color;
+layout(location = 1) out vec4 color2;
 
 in float v_texture;
 in vec2 v_TexCoord;
@@ -64,4 +65,5 @@ void main()
   {
     color = texColor * u_Color * v_color;
   }
+  color2 = vec4(1.0,0.0,0.0,1.0);
 }
