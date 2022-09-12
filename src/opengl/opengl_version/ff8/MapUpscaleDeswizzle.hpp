@@ -4,13 +4,8 @@
 
 #ifndef FIELD_MAP_EDITOR_MAPUPSCALEDESWIZZLE_HPP
 #define FIELD_MAP_EDITOR_MAPUPSCALEDESWIZZLE_HPP
-#include "Fields.hpp"
-#include "FrameBuffer.hpp"
 #include "Map.hpp"
-#include "Mim.hpp"
-#include "Texture.hpp"
 #include "tile_operations.hpp"
-
 namespace ff_8
 {
 struct TileFunctionsUpscaleDeswizzle

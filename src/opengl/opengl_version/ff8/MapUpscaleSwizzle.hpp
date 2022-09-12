@@ -4,11 +4,7 @@
 
 #ifndef FIELD_MAP_EDITOR_MAPUPSCALESWIZZLE_HPP
 #define FIELD_MAP_EDITOR_MAPUPSCALESWIZZLE_HPP
-#include "Fields.hpp"
-#include "FrameBuffer.hpp"
 #include "Map.hpp"
-#include "Mim.hpp"
-#include "Texture.hpp"
 #include "tile_operations.hpp"
 namespace ff_8
 {
