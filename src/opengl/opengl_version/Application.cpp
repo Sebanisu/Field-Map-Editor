@@ -3,13 +3,9 @@
 //
 
 #include "Application.hpp"
-#include "Event/EventDispatcher.hpp"
-#include "ff8/Fields.hpp"
-#include "FrameBuffer.hpp"
-#include "Renderer.hpp"
-#include "test/LayerTests.hpp"
-#include "TimeStep.hpp"
-#include <ff8/MapHistory.hpp>
+#include <Event/EventDispatcher.hpp>
+#include <test/LayerTests.hpp>
+#include <TimeStep.hpp>
 
 [[maybe_unused]] static constinit glengine::Window *GlobalCurrentWindow =
   nullptr;
@@ -39,12 +35,12 @@ Application::Application(std::string title, int width, int height)
     .height         = std::move(height),
     .event_callback = [&](const glengine::event::Item &e) {
       const glengine::event::Dispatcher dispatcher = { e };
-//      [[maybe_unused]]const bool skip
-//            =(glengine::event::HasFlag(e.category(),glengine::event::Category::Mouse)
-//                         && ImGui::GetIO().WantCaptureMouse)
-//                        ||
-//                        (glengine::event::HasFlag(e.category(),glengine::event::Category::Keyboard)
-//                            && ImGui::GetIO().WantCaptureKeyboard);
+      //      [[maybe_unused]]const bool skip
+      //            =(glengine::event::HasFlag(e.category(),glengine::event::Category::Mouse)
+      //                         && ImGui::GetIO().WantCaptureMouse)
+      //                        ||
+      //                        (glengine::event::HasFlag(e.category(),glengine::event::Category::Keyboard)
+      //                            && ImGui::GetIO().WantCaptureKeyboard);
 
       dispatcher.Dispatch<glengine::event::WindowClose>(&OnWindowClose);
       dispatcher.Dispatch<glengine::event::WindowResize>(&OnWindowResize);
@@ -59,10 +55,10 @@ Application::Application(std::string title, int width, int height)
       layers.on_event(e);
       local_preview.on_event(e);
       local_tile_display.on_event(e);
-//      if (skip)
-//      {
-//        return;
-//      }
+      //      if (skip)
+      //      {
+      //        return;
+      //      }
       spdlog::debug("event::{}\t{}\t{}", e.name(), e.category_name(), e.data());
     } }))
 {
@@ -77,11 +73,9 @@ Application::Application(std::string title, int width, int height)
 void Application::run() const
 {
   set_current_window();
-  const glengine::TimeStep      time_step = {};
+  const glengine::TimeStep time_step = {};
   // auto                          last      = glengine::TimeStep::now();
   using namespace std::chrono_literals;
-  glengine::FrameBuffer fb;// needed to be inscope somewhere because texture was
-                           // being erased before it was drawn.
   while (GlobalRunning)
   {
     window->begin_frame();// First thing you do on update;
@@ -127,7 +121,7 @@ void Application::set_current_window() const
 {
   GlobalCurrentWindow = window.get();
 }
-const glengine::Window & GetWindow() noexcept
+const glengine::Window &GetWindow() noexcept
 {
   return *GlobalCurrentWindow;
 }

@@ -4,13 +4,11 @@
 
 #ifndef FIELD_MAP_EDITOR_APPLICATION_HPP
 #define FIELD_MAP_EDITOR_APPLICATION_HPP
-#include "ff8/Fields.hpp"
-#include "ff8/ImGuiTileDisplayWindow.hpp"
-#include "ImGuiViewPortPreview.hpp"
-#include "Layer/LayerStack.hpp"
-#include "ScopeGuard.hpp"
-#include "Window.hpp"
-#include <ff8/MapHistory.hpp>
+#include <ff8/Fields.hpp>
+#include <ff8/ImGuiTileDisplayWindow.hpp>
+#include <ImGuiViewPortPreview.hpp>
+#include <Layer/LayerStack.hpp>
+#include <Window.hpp>
 class Application
 {
 public:
