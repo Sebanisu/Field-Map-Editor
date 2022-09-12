@@ -9,10 +9,17 @@
 #include "UniqueValue.hpp"
 namespace glengine
 {
+enum class FrameBufferTextureFormat
+{
+  None,
+  RGBA8
+};
 struct FrameBufferSpecification
 {
-  int width  = {};
-  int height = {};
+  std::array<FrameBufferTextureFormat, 4U>
+      attachments = { FrameBufferTextureFormat::RGBA8, {}, {}, {} };
+  int width       = {};
+  int height      = {};
   // uint32_t samples           = { 1 };
   //  bool     swap_chain_target = { false };
 };
@@ -30,13 +37,15 @@ public:
     }
   }
   const FrameBufferSpecification &specification() const;
-  SubTexture                      get_color_attachment() const;
+  SubTexture                      get_color_attachment(std::uint32_t index = 0U) const;
                                   operator bool()
   {
     return std::ranges::any_of(
              m_color_attachment, [](const auto &id) { return id != 0U; })
            && m_renderer_id != 0U && m_depth_attachment != 0U;
   }
+  int ReadPixel(uint32_t attachment_index, int x, int y) const;
+
 
 private:
   FrameBufferSpecification m_specification    = {};

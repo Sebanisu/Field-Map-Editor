@@ -107,13 +107,29 @@ static std::uint32_t GenerateFramebuffer(
   }
   return tmp;
 }
+static std::array<Glid, 4U>
+  GenerateColorAttachments(const FrameBufferSpecification &spec)
+{
+  std::array<Glid, 4U> ret = {};
+  std::ranges::transform(
+    spec.attachments,
+    std::ranges::begin(ret),
+    [&spec](FrameBufferTextureFormat format) -> Glid {
+      switch (format)
+      {
+        case FrameBufferTextureFormat::RGBA8: {
+          return Glid{ AttachColorTexture(spec), Texture::destroy };
+        }
+        case FrameBufferTextureFormat::None:
+          break;
+      }
+      return {};
+    });
+  return ret;
+}
 FrameBuffer::FrameBuffer(FrameBufferSpecification spec)
   : m_specification{ std::move(spec) }
-  , m_color_attachment{ Glid{ AttachColorTexture(m_specification),
-                              Texture::destroy },
-                        {},
-                        {},
-                        {} }
+  , m_color_attachment{ GenerateColorAttachments(spec) }
   , m_depth_attachment{ AttachDepthTexture(m_specification), Texture::destroy }
 {
   // Sometimes the textures wouldn't be defined before defining m_renderer_id
@@ -134,12 +150,26 @@ const FrameBufferSpecification &FrameBuffer::specification() const
 {
   return m_specification;
 }
-SubTexture FrameBuffer::get_color_attachment() const
+SubTexture FrameBuffer::get_color_attachment(std::uint32_t index) const
 {
+  assert(index < 4U);
+  assert(m_color_attachment[index]!=0U);
   // called here to update mipmaps after texture changed.
-  auto r = SubTexture(m_color_attachment.front());
-  r.bind();
-  GlCall{}(glGenerateMipmap, GL_TEXTURE_2D);
+  auto r = SubTexture(m_color_attachment[index]);
+  if(m_specification.attachments[index] == FrameBufferTextureFormat::RGBA8)
+  {
+    r.bind();
+    GlCall{}(glGenerateMipmap, GL_TEXTURE_2D);
+  }
   return r;
+}
+int FrameBuffer::ReadPixel(uint32_t attachment_index, int x, int y) const
+{
+  int pixel_data = {};
+  assert(attachment_index < 4);
+  assert(m_color_attachment[attachment_index] != 0);
+  GlCall{}(glReadBuffer,GL_COLOR_ATTACHMENT0 + attachment_index);
+  GlCall{}(glReadPixels,x, y, 1, 1, GL_RED_INTEGER, GL_INT, &pixel_data);
+  return pixel_data;
 }
 }// namespace glengine
