@@ -251,7 +251,7 @@ public:
       std::size_t i    = {};
 
       const auto  mta  = MapTileAdjustments<TileFunctions>(
-        GetMapHistory(),GetMapHistory().filters, m_similar);
+        GetMapHistory(), GetMapHistory().filters, m_similar);
       auto      *tile_button_state = &m_tile_button_state;
       const auto common_operation =
         [&](auto &tile, VisitState &visit_state) -> bool {
@@ -309,7 +309,7 @@ public:
         if (visit_unsorted_unfiltered_tiles(
               common_operation,
               MouseTileOverlap<TileFunctions, decltype(m_filters)>(
-                tp,m_filters)))
+                tp, m_filters)))
         {
           GetWindow().trigger_refresh_image();
           // m_changed();
@@ -357,8 +357,7 @@ public:
         tile_button_state = &m_tile_button_state;
         last_pos          = ImGui::GetCursorPos();
         text_width        = ImGui::GetItemRectMax().x;
-        if (visit_unsorted_unfiltered_tiles(
-              common_operation,m_filters))
+        if (visit_unsorted_unfiltered_tiles(common_operation, m_filters))
         {
           GetWindow().trigger_refresh_image();
           // m_changed();
@@ -431,6 +430,7 @@ public:
   {
     using namespace glengine::event;
     using glengine::Mouse;
+    using glengine::Mods;
     m_imgui_viewport_window.on_event(event);
     m_batch_renderer.on_event(event);
     Dispatcher dispatcher(event);
@@ -453,16 +453,46 @@ public:
         {
           m_map_dims.pressed_mouse_location = MouseToTilePos(
             m_imgui_viewport_window.offset_mouse_pos(), m_map_dims);
-          m_clicked_indexes.clear();
-          visit_unsorted_unfiltered_tiles(
-            [this](const auto &tile, VisitState &) -> bool {
-              m_clicked_indexes.push_back(static_cast<std::intmax_t>(
-                GetMapHistory()->get_offset_from_back(tile)));
-              return false;
-            },
+          if ((+pressed.mods() & (+Mods::Shift | +Mods::Alt)) == 0)
+          {
+            m_clicked_indexes.clear();
+          }
+          const MouseTileOverlap overlap =
             MouseTileOverlap<TileFunctions, decltype(m_filters)>(
               MouseToTilePos{ *(m_map_dims.pressed_mouse_location) },
-             m_filters));
+              m_filters);
+          if (pressed.mods() == Mods::Alt)
+          {
+            decltype(m_clicked_indexes) tmp{};
+            visit_unsorted_unfiltered_tiles(
+              [&](const auto &tile, VisitState &) -> bool {
+                tmp.push_back(static_cast<std::intmax_t>(
+                  GetMapHistory()->get_offset_from_back(tile)));
+                return false;
+              },
+              overlap);
+            const auto removal =
+              std::ranges::remove_if(m_clicked_indexes, [&](auto item) -> bool {
+                return std::ranges::any_of(
+                  tmp, [=](auto other) -> bool { return item == other; });
+              });
+            m_clicked_indexes.erase(removal.begin(), removal.end());
+          }
+          else
+          {
+            visit_unsorted_unfiltered_tiles(
+              [this](const auto &tile, VisitState &) -> bool {
+                m_clicked_indexes.push_back(static_cast<std::intmax_t>(
+                  GetMapHistory()->get_offset_from_back(tile)));
+                return false;
+              },
+              overlap);
+          }
+          {// sort and remove duplicates
+            std::ranges::sort(m_clicked_indexes);
+            const auto not_unique = std::ranges::unique(m_clicked_indexes);
+            m_clicked_indexes.erase(not_unique.begin(), not_unique.end());
+          }
           spdlog::debug(
             "Mouse Pressed: x:{}, y:{}, texture_page:{}, tile count:{}",
             m_map_dims.pressed_mouse_location->x,
@@ -691,12 +721,13 @@ private:
       }
 
       auto unique_z_reverse = unique_z | std::views::reverse;
-      (void)std::ranges::all_of(unique_z_reverse, [&f_tiles, &lambda](const auto z) {
-        auto f_tiles_reverse_filter_z =
-          f_tiles | std::views::filter(tile_operations::ZMatch{ z })
-          | std::views::reverse;
-        return std::ranges::all_of(f_tiles_reverse_filter_z, lambda);
-      });
+      (void)std::ranges::all_of(
+        unique_z_reverse, [&f_tiles, &lambda](const auto z) {
+          auto f_tiles_reverse_filter_z =
+            f_tiles | std::views::filter(tile_operations::ZMatch{ z })
+            | std::views::reverse;
+          return std::ranges::all_of(f_tiles_reverse_filter_z, lambda);
+        });
     });
   }
   // draws tiles
@@ -971,8 +1002,10 @@ private:
   mutable bool               m_has_hover = { false };
   mutable bool               m_dragging  = { false };
   mutable SimilarAdjustments m_similar   = {};
-  static inline const auto m_filters = [](const auto &tile)->bool{
-    return GetMapHistory().filters(tile) && GetMapHistory().filters(GetMapHistory()->get_pupu_from_back(tile));
+  static inline const auto   m_filters   = [](const auto &tile) -> bool {
+    return GetMapHistory().filters(tile)
+           && GetMapHistory().filters(
+             GetMapHistory()->get_pupu_from_back(tile));
   };
 };
 }// namespace ff_8
