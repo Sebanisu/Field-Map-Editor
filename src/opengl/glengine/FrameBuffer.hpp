@@ -40,7 +40,7 @@ class FrameBuffer
 public:
   FrameBuffer() = default;
   FrameBuffer(FrameBufferSpecification spec);
-  void                  bind() const;
+  void                  bind(bool first = false) const;
   constexpr static void unbind()
   {
     if (!std::is_constant_evaluated())
@@ -80,10 +80,11 @@ public:
   }
 
 private:
-  FrameBufferSpecification m_specification    = {};
-  std::array<Glid, 4U>     m_color_attachment = {};
-  Glid                     m_depth_attachment = {};
-  Glid                     m_renderer_id      = {};
+  FrameBufferSpecification m_specification     = {};
+  std::array<Glid, 4U>     m_color_attachment  = {};
+  Glid                     m_depth_attachment  = {};
+  Glid                     m_renderer_id       = {};
+  Glid                     m_renderer_id_first = {};
 };
 static_assert(Bindable<FrameBuffer>);
 }// namespace glengine

@@ -882,7 +882,7 @@ private:
     m_imgui_viewport_window.on_render();
     m_batch_renderer.bind();
     set_uniforms(m_batch_renderer.shader());
-    m_frame_buffer.bind();
+    m_frame_buffer.bind(true);
     GlCall{}(
       glViewport,
       0,

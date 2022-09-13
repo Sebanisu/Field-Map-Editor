@@ -70,7 +70,7 @@ static std::uint32_t AttachColorTexture(
     format,
     type,
     nullptr);
-  if(type != GL_INT)
+  if (type != GL_INT)
   {
     GlCall{}(glGenerateMipmap, GL_TEXTURE_2D);
   }
@@ -79,8 +79,9 @@ static std::uint32_t AttachColorTexture(
 }
 
 static std::uint32_t GenerateFramebuffer(
-  const std::array<Glid, 4U> &color_attachments,
-  const Glid                 &depth_attachment)
+  const std::array<Glid, 4U>  &color_attachments,
+  [[maybe_unused]] const Glid &depth_attachment,
+  bool                         first = false)
 {
 
   std::uint32_t tmp{};
@@ -90,12 +91,8 @@ static std::uint32_t GenerateFramebuffer(
   //          "m_color_attachment {}\n",
   //          static_cast<uint32_t>(m_color_attachment));
   std::uint8_t i{};
-  for (; i != 4U; ++i)
+  if (first)
   {
-    if (color_attachments[i] == 0U)
-    {
-      continue;
-    }
     GlCall{}(
       glFramebufferTexture2D,
       GL_FRAMEBUFFER,
@@ -103,14 +100,32 @@ static std::uint32_t GenerateFramebuffer(
       GL_TEXTURE_2D,
       color_attachments[i],
       0);
+    ++i;
   }
-  GlCall{}(
-    glFramebufferTexture2D,
-    GL_FRAMEBUFFER,
-    GL_DEPTH_ATTACHMENT,
-    GL_TEXTURE_2D,
-    depth_attachment,
-    0);
+  else
+  {
+    for (; i != 4U; ++i)
+    {
+      if (color_attachments[i] == 0U)
+      {
+        continue;
+      }
+      GlCall{}(
+        glFramebufferTexture2D,
+        GL_FRAMEBUFFER,
+        attachments[i],
+        GL_TEXTURE_2D,
+        color_attachments[i],
+        0);
+    }
+    GlCall{}(
+      glFramebufferTexture2D,
+      GL_FRAMEBUFFER,
+      GL_DEPTH_ATTACHMENT,
+      GL_TEXTURE_2D,
+      depth_attachment,
+      0);
+  }
 
   GLenum status = GlCall{}(glCheckFramebufferStatus, GL_FRAMEBUFFER);
   if (status != GL_FRAMEBUFFER_COMPLETE)
@@ -163,11 +178,20 @@ FrameBuffer::FrameBuffer(FrameBufferSpecification spec)
             GlCall{}(glDeleteFramebuffers, 1, &id);
             FrameBuffer::unbind();
           } };
+  m_renderer_id_first =
+    Glid{ GenerateFramebuffer(m_color_attachment, m_depth_attachment, true),
+          [](std::uint32_t id) {
+            GlCall{}(glDeleteFramebuffers, 1, &id);
+            FrameBuffer::unbind();
+          } };
   unbind();
 }
-void FrameBuffer::bind() const
+void FrameBuffer::bind(bool first) const
 {
-  GlCall{}(glBindFramebuffer, GL_FRAMEBUFFER, m_renderer_id);
+  GlCall{}(
+    glBindFramebuffer,
+    GL_FRAMEBUFFER,
+    first ? m_renderer_id_first : m_renderer_id);
 }
 const FrameBufferSpecification &FrameBuffer::specification() const
 {
@@ -180,8 +204,8 @@ SubTexture FrameBuffer::get_color_attachment(std::uint32_t index) const
   // called here to update mipmaps after texture changed.
   auto r = SubTexture(m_color_attachment[index]);
   r.bind();
-  if(m_specification.attachments[index] == FrameBufferTextureFormat::RGBA8)
-  GlCall{}(glGenerateMipmap, GL_TEXTURE_2D);
+  if (m_specification.attachments[index] == FrameBufferTextureFormat::RGBA8)
+    GlCall{}(glGenerateMipmap, GL_TEXTURE_2D);
   return r;
 }
 int FrameBuffer::read_pixel(uint32_t attachment_index, int x, int y) const
