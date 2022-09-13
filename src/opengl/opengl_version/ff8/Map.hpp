@@ -399,32 +399,39 @@ public:
         save();
       }
     }
-    ImGui::Separator();
-    m_imgui_viewport_window.on_im_gui_update();
-    ImGui::Separator();
-
-    ImGui::Text(
-      "%s",
-      fmt::format(
-        "DrawPos ({}, {}, {}), Width {}, Height {}"
-        "\n\tOffset ({}, {}),\n\tMin ({}, {}), Max ({},{})\n",
-        m_map_dims.position.x,
-        m_map_dims.position.y,
-        m_map_dims.position.z,
-        m_frame_buffer.specification().width,
-        m_frame_buffer.specification().height,
-        m_map_dims.offset.x,
-        m_map_dims.offset.y,
-        m_map_dims.min.x,
-        m_map_dims.min.y,
-        m_map_dims.max.x,
-        m_map_dims.max.y)
-        .c_str());
-
-    m_batch_renderer.on_im_gui_update();
-    ImGui::Separator();
-    ImGui::Text("%s", "Fixed Prerender camera: ");
-    m_fixed_render_camera.on_im_gui_update();
+    if (ImGui::CollapsingHeader("Viewport"))
+    {
+      m_imgui_viewport_window.on_im_gui_update();
+    }
+    if (ImGui::CollapsingHeader("Map Dims"))
+    {
+      ImGui::Text(
+        "%s",
+        fmt::format(
+          "DrawPos ({}, {}, {}), Width {}, Height {}"
+          "\n\tOffset ({}, {}),\n\tMin ({}, {}), Max ({},{})\n",
+          m_map_dims.position.x,
+          m_map_dims.position.y,
+          m_map_dims.position.z,
+          m_frame_buffer.specification().width,
+          m_frame_buffer.specification().height,
+          m_map_dims.offset.x,
+          m_map_dims.offset.y,
+          m_map_dims.min.x,
+          m_map_dims.min.y,
+          m_map_dims.max.x,
+          m_map_dims.max.y)
+          .c_str());
+    }
+    if (ImGui::CollapsingHeader("Batch Renderer"))
+    {
+      m_batch_renderer.on_im_gui_update();
+      m_batch_renderer_red_integer.on_im_gui_update();
+    }
+    if (ImGui::CollapsingHeader("Fixed Prerender Camera"))
+    {
+      m_fixed_render_camera.on_im_gui_update();
+    }
   }
   void on_event(const glengine::event::Item &event) const
   {
@@ -594,7 +601,7 @@ public:
 
 private:
   // set uniforms
-  void set_uniforms(const glengine::Shader & shader) const
+  void set_uniforms(const glengine::Shader &shader) const
   {
     if (m_offscreen_drawing || m_saving)
     {
@@ -848,22 +855,23 @@ private:
   {
     glengine::Window::default_blend();
     m_imgui_viewport_window.on_render();
-    const auto draw_batch_render=[this](const glengine::BatchRenderer & batch_renderer, uint32_t index = 0)
-    {
-      batch_renderer.clear();
-      batch_renderer.bind();
-      set_uniforms(batch_renderer.shader());
-      batch_renderer.draw_quad(
-        m_frame_buffer.get_color_attachment(index),
-        m_map_dims.scaled_position(),
-        glm::vec2(
-          m_frame_buffer.specification().width,
-          m_frame_buffer.specification().height));
-      batch_renderer.draw();
-      batch_renderer.on_render();
-    };
+    const auto draw_batch_render =
+      [this](
+        const glengine::BatchRenderer &batch_renderer, uint32_t index = 0) {
+        batch_renderer.clear();
+        batch_renderer.bind();
+        set_uniforms(batch_renderer.shader());
+        batch_renderer.draw_quad(
+          m_frame_buffer.get_color_attachment(index),
+          m_map_dims.scaled_position(),
+          glm::vec2(
+            m_frame_buffer.specification().width,
+            m_frame_buffer.specification().height));
+        batch_renderer.draw();
+        batch_renderer.on_render();
+      };
     draw_batch_render(m_batch_renderer);
-    draw_batch_render(m_batch_renderer_red_integer,1);
+    draw_batch_render(m_batch_renderer_red_integer, 1);
   }
 
   void render_frame_buffer_grid() const
