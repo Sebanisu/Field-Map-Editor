@@ -30,7 +30,9 @@ void                  test::TestBatchRenderer::generate_quads() const
           0.F },
         { r, g, 1.F, 1.F },
         m_textures.at(*text_index),
-        static_cast<float>(1U << (*text_index)));
+        static_cast<float>(1U << (*text_index)),
+        { 1.F, 1.F },
+        static_cast<int>(*text_index));
       ++text_index;
     }
   }
