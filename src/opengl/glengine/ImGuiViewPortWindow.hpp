@@ -58,9 +58,9 @@ inline namespace impl
             || m_fb.specification().width
                  != static_cast<int>(m_viewport_size.x))
           {
-            m_fb = glengine::FrameBuffer(glengine::FrameBufferSpecification{
-              .width  = static_cast<int>(m_viewport_size.x),
-              .height = static_cast<int>(m_viewport_size.y) });
+            m_fb = glengine::FrameBuffer(m_fb.specification().resize(
+              static_cast<int>(m_viewport_size.x),
+              static_cast<int>(m_viewport_size.y)));
           }
           else if (
             m_fb.specification().height != static_cast<int>(m_viewport_size.y))
@@ -154,20 +154,21 @@ inline namespace impl
       bool fit_width : 1             = { true };
       bool fit_height : 1            = { true };
     };
-    const char                                    *m_title           = {};
-    mutable glengine::FrameBuffer                  m_fb              = {};
-    mutable PackedSettings                         m_packed          = {};
-    mutable bool                                   m_debug_text      = { false };
-    mutable glm::vec2                              m_min             = {};
-    mutable glm::vec2                              m_max             = {};
-    mutable glm::vec2                              m_viewport_size   = {};
-    mutable glm::vec2                              m_clamp_mouse_pos = {};
+    const char                                    *m_title         = {};
+    mutable glengine::FrameBuffer                  m_fb            = {};
+    mutable PackedSettings                         m_packed        = {};
+    mutable bool                                   m_debug_text    = { false };
+    mutable glm::vec2                              m_min           = {};
+    mutable glm::vec2                              m_max           = {};
+    mutable glm::vec2                              m_viewport_size = {};
+    mutable glm::vec2                              m_clamp_mouse_pos      = {};
     mutable ImTextureID                            m_imgui_texture_id_ref = {};
     mutable glm::vec4                              m_viewport_mouse_pos   = {};
     mutable glengine::OrthographicCameraController m_main_camera          = {};
     mutable glengine::OrthographicCameraController m_mouse_camera         = {};
     mutable glm::vec4            m_background_color = { 0.F, 0.F, 0.F, 255.F };
     mutable glengine::Clear_impl m_clear_impl       = { m_background_color };
+    mutable glm::vec4                    m_viewport_int_mouse_pos = {};
   };
   static_assert(Renderable<ImGuiViewPortWindow>);
 }// namespace impl

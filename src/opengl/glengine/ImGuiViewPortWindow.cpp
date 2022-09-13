@@ -26,14 +26,18 @@ inline namespace impl
       fmt::format(
         //"Window Frame Buffer - Width {}, Height: {}\n"
         "ViewPort - Hovered: {}, Focused: {}, Width: {}, Height: {}, "
-        "Texture ID: {}\nButton - Hovered: {}, Focused: {}, Activated: "
-        "{}\nWindow - Hovered: {}, Focused: {}\nParent Window - Hovered: "
-        "{}, Focused: {}\nMouse - X: {} Y: {}\nContent Region - Min X: "
-        "{}, "
-        "Min Y: {}, Max X: {}, Max Y: {}\nClampMouse X: {}, Y: "
-        "{}\nviewport_mouse_pos X: {}, Y: {}, Z:{}\n"
-        "Mouse In WorldSpace - X: {}, Y: {}, Z: {}\nTR X {}, TR X {}, BL Y {}, "
-        "BL Y {}\nMouse In WorldSpace 2 - X: {}, Y: {}, Z: {}\n",
+        "Texture ID: {}\n"
+        "Button - Hovered: {}, Focused: {}, Activated: {}\n"
+        "Window - Hovered: {}, Focused: {}\n"
+        "Parent Window - Hovered: {}, Focused: {}\n"
+        "Mouse - X: {} Y: {}\n"
+        "Content Region - Min X: {}, Min Y: {}, Max X: {}, Max Y: {}\n"
+        "ClampMouse X: {}, Y: {}\n"
+        "Mouse limited X: {}, Y: {}\n"
+        "viewport_mouse_pos X: {}, Y: {}, Z:{}\n"
+        "Mouse In WorldSpace - X: {}, Y: {}, Z: {}\n"
+        "TR X {}, TR X {}, BL Y {}, BL Y {}\n"
+        "Mouse In WorldSpace 2 - X: {}, Y: {}, Z: {}\n",
         // window->ViewWindowData().frame_buffer_width,
         // window->ViewWindowData().frame_buffer_height,
         +m_packed.hovered,
@@ -56,6 +60,8 @@ inline namespace impl
         m_max.y,
         m_clamp_mouse_pos.x,
         m_clamp_mouse_pos.y,
+        m_viewport_int_mouse_pos.x,
+        m_viewport_int_mouse_pos.y,
         m_viewport_mouse_pos.x,
         m_viewport_mouse_pos.y,
         m_viewport_mouse_pos.z,
@@ -233,6 +239,15 @@ inline namespace impl
                  convert_range(m_clamp_mouse_pos.y, m_min.y, m_max.y),
                  0.F,
                  1.F };
+    m_viewport_int_mouse_pos = glm::vec4{
+      convert_range(
+        m_clamp_mouse_pos.x, m_min.x, m_max.x, 0.F, m_viewport_size.x),
+      m_viewport_size.y
+        - convert_range(
+          m_clamp_mouse_pos.y, m_min.y, m_max.y, 0.F, m_viewport_size.y),
+      0.F,
+      1.F
+    };
   }
   void ImGuiViewPortWindow::on_update_focus_and_hover() const
   {
