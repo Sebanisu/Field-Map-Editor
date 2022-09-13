@@ -594,35 +594,34 @@ public:
 
 private:
   // set uniforms
-  void set_uniforms() const
+  void set_uniforms(const glengine::Shader & shader) const
   {
-    m_batch_renderer.bind();
     if (m_offscreen_drawing || m_saving)
     {
-      m_batch_renderer.shader().set_uniform(
+      shader.set_uniform(
         "u_MVP", m_fixed_render_camera.view_projection_matrix());
     }
     else if (m_preview)
     {
-      m_batch_renderer.shader().set_uniform(
+      shader.set_uniform(
         "u_MVP", m_imgui_viewport_window.preview_view_projection_matrix());
     }
     else
     {
-      m_batch_renderer.shader().set_uniform(
+      shader.set_uniform(
         "u_MVP", m_imgui_viewport_window.view_projection_matrix());
     }
-    m_batch_renderer.shader().set_uniform("u_Grid", 0.F, 0.F);
+    shader.set_uniform("u_Grid", 0.F, 0.F);
     //    if (!s_draw_grid || m_offscreen_drawing || m_saving)
     //    {
-    //      m_batch_renderer.shader().set_uniform("u_Grid", 0.F, 0.F);
+    //      shader.set_uniform("u_Grid", 0.F, 0.F);
     //    }
     //    else
     //    {
-    //      m_batch_renderer.shader().set_uniform(
+    //      shader.set_uniform(
     //        "u_Grid", m_map_dims.scaled_tile_size());
     //    }
-    m_batch_renderer.shader().set_uniform("u_Color", m_uniform_color);
+    shader.set_uniform("u_Color", m_uniform_color);
   }
   std::optional<glengine::SubTexture>
     tile_to_sub_texture(const auto &tile) const
@@ -738,7 +737,8 @@ private:
     m_uniform_color = s_default_color;
     glengine::Window::default_blend();
     m_imgui_viewport_window.on_render();
-    set_uniforms();
+    m_batch_renderer.bind();
+    set_uniforms(m_batch_renderer.shader());
     m_batch_renderer.clear();
     visit_tiles([this, &last_blend_mode](const auto &tile) -> bool {
       auto sub_texture = tile_to_sub_texture(tile);
@@ -748,7 +748,9 @@ private:
       }
       update_blend_mode(tile, last_blend_mode);
       m_batch_renderer.draw_quad(
-        *sub_texture, tile_to_draw_pos(tile), m_map_dims.scaled_tile_size(),
+        *sub_texture,
+        tile_to_draw_pos(tile),
+        m_map_dims.scaled_tile_size(),
         static_cast<int>(GetMapHistory()->get_offset_from_back(tile)));
       return true;
     });
@@ -846,16 +848,22 @@ private:
   {
     glengine::Window::default_blend();
     m_imgui_viewport_window.on_render();
-    set_uniforms();
-    m_batch_renderer.clear();
-    m_batch_renderer.draw_quad(
-      m_frame_buffer.get_color_attachment(),
-      m_map_dims.scaled_position(),
-      glm::vec2(
-        m_frame_buffer.specification().width,
-        m_frame_buffer.specification().height));
-    m_batch_renderer.draw();
-    m_batch_renderer.on_render();
+    const auto draw_batch_render=[this](const glengine::BatchRenderer & batch_renderer, uint32_t index = 0)
+    {
+      batch_renderer.clear();
+      batch_renderer.bind();
+      set_uniforms(batch_renderer.shader());
+      batch_renderer.draw_quad(
+        m_frame_buffer.get_color_attachment(index),
+        m_map_dims.scaled_position(),
+        glm::vec2(
+          m_frame_buffer.specification().width,
+          m_frame_buffer.specification().height));
+      batch_renderer.draw();
+      batch_renderer.on_render();
+    };
+    draw_batch_render(m_batch_renderer);
+    draw_batch_render(m_batch_renderer_red_integer,1);
   }
 
   void render_frame_buffer_grid() const
@@ -872,7 +880,8 @@ private:
     m_offscreen_drawing = true;
     glengine::Window::default_blend();
     m_imgui_viewport_window.on_render();
-    set_uniforms();
+    m_batch_renderer.bind();
+    set_uniforms(m_batch_renderer.shader());
     m_frame_buffer.bind();
     GlCall{}(
       glViewport,
@@ -984,7 +993,12 @@ private:
                                     // possible max. 0 being no palette and
                                     // 1-17 being with palettes
   // takes quads and draws them to the frame buffer or screen.
-  glengine::BatchRenderer            m_batch_renderer            = { 1000 };
+  glengine::BatchRenderer m_batch_renderer             = { 1000 };
+  glengine::BatchRenderer m_batch_renderer_red_integer = {
+    1,
+    { std::filesystem::current_path() / "res" / "shader"
+      / "red_integer.shader" }
+  };
   // holds rendered image at 1:1 scale to prevent gaps when scaling.
   mutable glengine::FrameBuffer      m_frame_buffer              = {};
   mutable bool                       m_offscreen_drawing         = { false };
