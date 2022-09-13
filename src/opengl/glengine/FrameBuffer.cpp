@@ -51,8 +51,8 @@ static std::uint32_t AttachColorTexture(
   GlCall{}(
     &glTexParameteri,
     GL_TEXTURE_2D,
-    GL_TEXTURE_MIN_FILTER,// GL_NEAREST);
-    GL_NEAREST_MIPMAP_NEAREST);
+    GL_TEXTURE_MIN_FILTER,
+    (type == GL_INT) ? GL_NEAREST : GL_NEAREST_MIPMAP_NEAREST);
   GlCall{}(
     &glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
   GlCall{}(
@@ -70,7 +70,10 @@ static std::uint32_t AttachColorTexture(
     format,
     type,
     nullptr);
-  GlCall{}(glGenerateMipmap, GL_TEXTURE_2D);
+  if(type != GL_INT)
+  {
+    GlCall{}(glGenerateMipmap, GL_TEXTURE_2D);
+  }
   Texture::unbind();
   return tmp;
 }
@@ -177,6 +180,7 @@ SubTexture FrameBuffer::get_color_attachment(std::uint32_t index) const
   // called here to update mipmaps after texture changed.
   auto r = SubTexture(m_color_attachment[index]);
   r.bind();
+  if(m_specification.attachments[index] == FrameBufferTextureFormat::RGBA8)
   GlCall{}(glGenerateMipmap, GL_TEXTURE_2D);
   return r;
 }
@@ -185,9 +189,6 @@ int FrameBuffer::read_pixel(uint32_t attachment_index, int x, int y) const
   int pixel_data = { -1 };
   assert(attachment_index < 4);
   assert(m_color_attachment[attachment_index] != 0);
-  auto r = SubTexture(m_color_attachment[attachment_index]);
-  r.bind();
-  GlCall{}(glGenerateMipmap, GL_TEXTURE_2D);
   if (
     m_specification.attachments[attachment_index]
     == FrameBufferTextureFormat::RGBA8)
