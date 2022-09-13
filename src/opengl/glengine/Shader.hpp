@@ -5,6 +5,7 @@
 #ifndef FIELD_MAP_EDITOR_SHADER_HPP
 #define FIELD_MAP_EDITOR_SHADER_HPP
 #include "Renderer.hpp"
+#include <glm/gtc/type_ptr.hpp>
 namespace glengine
 {
 class Shader
@@ -47,11 +48,12 @@ public:
   // clang-format on
   void set_uniform(std::string_view name, T... v) const
   {
+    const int32_t location = get_uniform_location(name);
+    if (location == -1)
+      return;
     const auto perform = [&]<typename NT>(auto &&fun) {
       GlCall{}(
-        std::forward<decltype(fun)>(fun),
-        get_uniform_location(name),
-        static_cast<NT>(v)...);
+        std::forward<decltype(fun)>(fun), location, static_cast<NT>(v)...);
     };
     if constexpr ((std::floating_point<T> && ...))
     {
@@ -119,10 +121,13 @@ public:
       || (decay_same_as<std::ranges::range_value_t<T>, std::int32_t>))
   void set_uniform(std::string_view name, T v) const
   {
+    const int32_t location = get_uniform_location(name);
+    if (location == -1)
+      return;
     const auto perform = [&](auto &&fun) {
       GlCall{}(
         std::forward<decltype(fun)>(fun),
-        get_uniform_location(name),
+        location,
         static_cast<GLsizei>(std::ranges::ssize(v)),
         std::ranges::data(v));
     };
@@ -147,12 +152,15 @@ public:
   }
   void set_uniform(std::string_view name, const glm::mat4 &matrix) const
   {
+    const int32_t location = get_uniform_location(name);
+    if (location == -1)
+      return;
     GlCall{}(
       glUniformMatrix4fv,
-      get_uniform_location(name),
+      location,
       1,
       GLboolean{ GL_FALSE },
-      &matrix[0][0]);
+      glm::value_ptr(matrix));
   }
 
 private:
