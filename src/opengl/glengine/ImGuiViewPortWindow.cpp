@@ -37,7 +37,8 @@ inline namespace impl
         "viewport_mouse_pos X: {}, Y: {}, Z:{}\n"
         "Mouse In WorldSpace - X: {}, Y: {}, Z: {}\n"
         "TR X {}, TR X {}, BL Y {}, BL Y {}\n"
-        "Mouse In WorldSpace 2 - X: {}, Y: {}, Z: {}\n",
+        "Mouse In WorldSpace 2 - X: {}, Y: {}, Z: {}\n"
+        "tile id: {}",
         // window->ViewWindowData().frame_buffer_width,
         // window->ViewWindowData().frame_buffer_height,
         +m_packed.hovered,
@@ -74,7 +75,8 @@ inline namespace impl
         bottomleft.y,
         mouse_world_pos2.x,
         mouse_world_pos2.y,
-        mouse_world_pos2.z)
+        mouse_world_pos2.z,
+        m_tile_id)
         .c_str());
   }
   void ImGuiViewPortWindow::on_render() const

@@ -74,13 +74,23 @@ inline namespace impl
             const auto ffb = FrameBufferBackup();
             m_fb.bind();
             m_clear_impl();
+            m_fb.clear_red_integer_color_attachment();
             callable();
+            if(m_debug_text)
+            {
+              m_tile_id = m_fb.read_pixel(
+                1,
+                static_cast<int>(m_viewport_int_mouse_pos.x),
+                static_cast<int>(m_viewport_int_mouse_pos.y));
+
+            }
             m_fb.unbind();
+
           }
           // Because I use the texture from OpenGL, I need to invert the V from
           // the UV.
           m_imgui_texture_id_ref =
-            ConvertGliDtoImTextureId(m_fb.get_color_attachment().id());
+            ConvertGliDtoImTextureId(m_fb.get_color_attachment(0).id());
           const auto c_pos = ImGui::GetCursorPos();
           ImGui::SetItemAllowOverlap();
           const auto color = ImVec4(0.F, 0.F, 0.F, 0.F);
@@ -168,7 +178,8 @@ inline namespace impl
     mutable glengine::OrthographicCameraController m_mouse_camera         = {};
     mutable glm::vec4            m_background_color = { 0.F, 0.F, 0.F, 255.F };
     mutable glengine::Clear_impl m_clear_impl       = { m_background_color };
-    mutable glm::vec4                    m_viewport_int_mouse_pos = {};
+    mutable glm::vec4            m_viewport_int_mouse_pos = {};
+    mutable int                  m_tile_id                = {};
   };
   static_assert(Renderable<ImGuiViewPortWindow>);
 }// namespace impl

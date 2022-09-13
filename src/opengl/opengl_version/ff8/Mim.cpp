@@ -192,6 +192,7 @@ void ff_8::Mim::save() const
     const auto fbb = glengine::FrameBufferBackup{};
     fb.bind();
     glengine::Renderer::Clear();
+    fb.clear_red_integer_color_attachment();
     glViewport(0, 0, local_texture.width(), local_texture.height());
     on_render();
   }
@@ -261,6 +262,7 @@ void ff_8::Mim::save_all() const
       const auto fbb = glengine::FrameBufferBackup{};
       fb.bind();
       glengine::Renderer::Clear();
+      fb.clear_red_integer_color_attachment();
       GlCall{}(glViewport, 0, 0, Texture->width(), Texture->height());
       on_render();
     }

@@ -197,6 +197,7 @@ public:
           m_frame_buffer.specification().width,
           m_frame_buffer.specification().height);
         glengine::Renderer::Clear();
+        m_frame_buffer.clear_red_integer_color_attachment();
         render_tiles();
         if (!m_saving)
         {
@@ -958,9 +959,9 @@ private:
     const glm::vec2 size = m_map_dims.scaled_size();
     m_imgui_viewport_window.set_image_bounds(size);
     m_fixed_render_camera.set_projection(size);
-    m_frame_buffer = glengine::FrameBuffer(glengine::FrameBufferSpecification{
-      .width  = static_cast<int>(abs(size.x)),
-      .height = static_cast<int>(abs(size.y)) });
+    m_frame_buffer =
+      glengine::FrameBuffer(m_frame_buffer.specification().resize(
+        static_cast<int>(abs(size.x)), static_cast<int>(abs(size.y))));
   }
   mutable glengine::OrthographicCamera m_fixed_render_camera = {};
   inline constinit static auto         s_fit_height          = bool{ true };

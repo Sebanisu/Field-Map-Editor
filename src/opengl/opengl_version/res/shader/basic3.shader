@@ -25,7 +25,7 @@ void main()
   #version 330 core
 
 layout(location = 0) out vec4 color;
-layout(location = 1) out vec4 color2;
+layout(location = 1) out int tile_id;
 
 in float v_texture;
 in vec2 v_TexCoord;
@@ -40,6 +40,10 @@ uniform vec2 u_Grid;
 
 void main()
 {
+  tile_id = 50;
+  //color = vec4(1.0);
+  //color2 = vec4(1.0, 0.0, 0.0, 1.0);
+
   int index = int(v_texture);
   vec4 texColor = texture(u_Textures[index], v_TexCoord * v_tiling_factor);
   ivec2 textureSize2d = textureSize(u_Textures[index], 0);
@@ -65,5 +69,4 @@ void main()
   {
     color = texColor * u_Color * v_color;
   }
-  color2 = vec4(1.0,0.0,0.0,1.0);
 }

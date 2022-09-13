@@ -45,7 +45,7 @@ public:
   {
     if (!std::is_constant_evaluated())
     {
-      glBindFramebuffer(GL_FRAMEBUFFER, 0);
+      GlCall{}(glBindFramebuffer, GL_FRAMEBUFFER, 0);
     }
   }
   const FrameBufferSpecification &specification() const;
@@ -56,8 +56,28 @@ public:
              m_color_attachment, [](const auto &id) { return id != 0U; })
            && m_renderer_id != 0U && m_depth_attachment != 0U;
   }
-  int ReadPixel(uint32_t attachment_index, int x, int y) const;
+  int  read_pixel(uint32_t attachment_index, int x, int y) const;
 
+  void clear_red_integer_color_attachment() const
+  {
+    for (uint8_t i{}; i != 4U; ++i)
+    {
+      if (
+        m_specification.attachments[i] != FrameBufferTextureFormat::RED_INTEGER)
+      {
+        continue;
+      }
+      const int value = -1;
+
+      GlCall{}(
+        glClearTexImage,
+        m_color_attachment[i],
+        0,
+        GL_RED_INTEGER,
+        GL_INT,
+        &value);
+    }
+  }
 
 private:
   FrameBufferSpecification m_specification    = {};
