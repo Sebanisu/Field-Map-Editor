@@ -32,7 +32,11 @@ static std::uint32_t AttachDepthTexture(const FrameBufferSpecification &spec)
   return tmp;
 }
 
-static std::uint32_t AttachColorTexture(const FrameBufferSpecification &spec)
+static std::uint32_t AttachColorTexture(
+  int    width,
+  int    height,
+  GLint  internal_format,
+  GLenum format)
 {
   std::uint32_t tmp{};
   GlCall{}(glGenTextures, 1, &tmp);
@@ -51,17 +55,18 @@ static std::uint32_t AttachColorTexture(const FrameBufferSpecification &spec)
   glTexImage2D(
     GL_TEXTURE_2D,
     0,
-    GL_RGBA8,
-    spec.width,
-    spec.height,
+    internal_format,
+    width,
+    height,
     0,
-    GL_RGBA,
+    format,
     GL_UNSIGNED_BYTE,
     nullptr);
   GlCall{}(glGenerateMipmap, GL_TEXTURE_2D);
   Texture::unbind();
   return tmp;
 }
+
 static std::uint32_t GenerateFramebuffer(
   const std::array<Glid, 4U> &color_attachments,
   const Glid                 &depth_attachment)
@@ -118,7 +123,10 @@ static std::array<Glid, 4U>
       switch (format)
       {
         case FrameBufferTextureFormat::RGBA8: {
-          return Glid{ AttachColorTexture(spec), Texture::destroy };
+          return Glid{ AttachColorTexture(spec.width,spec.height,GL_RGBA8,GL_RGBA), Texture::destroy };
+        }
+        case FrameBufferTextureFormat::RED_INTEGER: {
+          return Glid{ AttachColorTexture(spec.width,spec.height,GL_R8I,GL_RED_INTEGER), Texture::destroy };
         }
         case FrameBufferTextureFormat::None:
           break;
@@ -153,14 +161,14 @@ const FrameBufferSpecification &FrameBuffer::specification() const
 SubTexture FrameBuffer::get_color_attachment(std::uint32_t index) const
 {
   assert(index < 4U);
-  assert(m_color_attachment[index]!=0U);
+  assert(m_color_attachment[index] != 0U);
   // called here to update mipmaps after texture changed.
   auto r = SubTexture(m_color_attachment[index]);
-  if(m_specification.attachments[index] == FrameBufferTextureFormat::RGBA8)
-  {
-    r.bind();
-    GlCall{}(glGenerateMipmap, GL_TEXTURE_2D);
-  }
+  // if(m_specification.attachments[index] == FrameBufferTextureFormat::RGBA8)
+  //{
+  r.bind();
+  GlCall{}(glGenerateMipmap, GL_TEXTURE_2D);
+  //}
   return r;
 }
 int FrameBuffer::ReadPixel(uint32_t attachment_index, int x, int y) const
@@ -168,8 +176,8 @@ int FrameBuffer::ReadPixel(uint32_t attachment_index, int x, int y) const
   int pixel_data = {};
   assert(attachment_index < 4);
   assert(m_color_attachment[attachment_index] != 0);
-  GlCall{}(glReadBuffer,GL_COLOR_ATTACHMENT0 + attachment_index);
-  GlCall{}(glReadPixels,x, y, 1, 1, GL_RED_INTEGER, GL_INT, &pixel_data);
+  GlCall{}(glReadBuffer, GL_COLOR_ATTACHMENT0 + attachment_index);
+  GlCall{}(glReadPixels, x, y, 1, 1, GL_RED_INTEGER, GL_INT, &pixel_data);
   return pixel_data;
 }
 }// namespace glengine
