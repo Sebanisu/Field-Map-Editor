@@ -40,15 +40,27 @@ public:
        offset = static_cast<const std::uint8_t *>(nullptr),
        &layout](const VertexBufferElement &element) mutable {
         GlCall{}(glEnableVertexAttribArray, i);
-
-        GlCall{}(
-          glVertexAttribPointer,
-          i,
-          element.m_count,
-          element.m_type,
-          element.m_normalized,
-          layout.stride(),
-          offset);
+        if(element.m_type == GL_INT)
+        {
+          GlCall{}(
+            glVertexAttribIPointer,
+            i,
+            element.m_count,
+            element.m_type,
+            layout.stride(),
+            offset);
+        }
+        else
+        {
+          GlCall{}(
+            glVertexAttribPointer,
+            i,
+            element.m_count,
+            element.m_type,
+            element.m_normalized,
+            layout.stride(),
+            offset);
+        }
 
         offset += element.size();
         ++i;

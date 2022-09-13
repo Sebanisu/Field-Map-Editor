@@ -748,7 +748,8 @@ private:
       }
       update_blend_mode(tile, last_blend_mode);
       m_batch_renderer.draw_quad(
-        *sub_texture, tile_to_draw_pos(tile), m_map_dims.scaled_tile_size());
+        *sub_texture, tile_to_draw_pos(tile), m_map_dims.scaled_tile_size(),
+        static_cast<int>(GetMapHistory()->get_offset_from_back(tile)));
       return true;
     });
     m_batch_renderer.draw();

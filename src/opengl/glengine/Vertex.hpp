@@ -9,11 +9,12 @@
 
 struct Vertex
 {
-  glm::vec3   location{};
-  glm::vec4   color{ 1.F, 1.F, 1.F, 1.F };
-  glm::vec2   uv{};
-  float       texture_slot{};
-  float       tiling_factor{ 1.F };
+  glm::vec3   location      = {};
+  glm::vec4   color         = { 1.F, 1.F, 1.F, 1.F };
+  glm::vec2   uv            = {};
+  float       texture_slot  = {};
+  float       tiling_factor = { 1.F };
+  int         tile_id       = { -1 };
   static auto layout()
   {
     return glengine::VertexBufferLayout{
@@ -21,13 +22,14 @@ struct Vertex
       glengine::VertexBufferElementType<float>{ 4U },
       glengine::VertexBufferElementType<float>{ 2U },
       glengine::VertexBufferElementType<float>{ 1U },
-      glengine::VertexBufferElementType<float>{ 1U }
+      glengine::VertexBufferElementType<float>{ 1U },
+      glengine::VertexBufferElementType<int>{ 1U },
     };
   }
 };
 static_assert(
-  std::movable<
-    Vertex> && std::copyable<Vertex> && std::default_initializable<Vertex>);
+  std::movable<Vertex> && std::copyable<Vertex>
+  && std::default_initializable<Vertex>);
 using Quad = std::array<Vertex, 4U>;
 constexpr inline Quad CreateQuad(
   const glm::vec3                 offset,
@@ -38,7 +40,8 @@ constexpr inline Quad CreateQuad(
                                                     glm::vec2{ 1.F, 0.F },
                                                     glm::vec2{ 1.F, 1.F },
                                                     glm::vec2{ 0.F, 1.F } },
-  const glm::vec2                 size          = { 1.F, 1.F })
+  const glm::vec2                 size          = { 1.F, 1.F },
+  const int                       id            = -1)
 {
   const auto f_texture_id = static_cast<float>(texture_id);
   return {
@@ -46,22 +49,26 @@ constexpr inline Quad CreateQuad(
             .color         = { color },
             .uv            = uv[0],
             .texture_slot  = f_texture_id,
-            .tiling_factor = tiling_factor },// 0
+            .tiling_factor = tiling_factor,
+            .tile_id       = id },// 0
     Vertex{ .location      = { offset + glm::vec3{ size.x, 0.F, 0.F } },
             .color         = { color },
             .uv            = uv[1],
             .texture_slot  = f_texture_id,
-            .tiling_factor = tiling_factor },// 1
+            .tiling_factor = tiling_factor,
+            .tile_id       = id },// 1
     Vertex{ .location      = { offset + glm::vec3{ size.x, size.y, 0.F } },
             .color         = { color },
             .uv            = uv[2],
             .texture_slot  = f_texture_id,
-            .tiling_factor = tiling_factor },// 2
+            .tiling_factor = tiling_factor,
+            .tile_id       = id },// 2
     Vertex{ .location{ offset + glm::vec3{ 0.F, size.y, 0.F } },
             .color         = { color },
             .uv            = uv[3],
             .texture_slot  = f_texture_id,
-            .tiling_factor = tiling_factor },// 3
+            .tiling_factor = tiling_factor,
+            .tile_id       = id },// 3
   };
 }
 static constexpr auto QuadIndicesInit =

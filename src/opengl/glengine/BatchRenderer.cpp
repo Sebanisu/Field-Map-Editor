@@ -101,11 +101,20 @@ void BatchRenderer::draw_quad(
   draw_quad(offset, { 1.F, 1.F, 1.F, 1.F }, texture, 1.F, size);
 }
 void BatchRenderer::draw_quad(
+  const SubTexture &texture,
+  glm::vec3         offset,
+  glm::vec2         size,
+  int               id) const
+{
+  draw_quad(offset, { 1.F, 1.F, 1.F, 1.F }, texture, 1.F, size, id);
+}
+void BatchRenderer::draw_quad(
   glm::vec3         offset,
   glm::vec4         color,
   const SubTexture &texture,
   const float       tiling_factor,
-  glm::vec2         size) const
+  glm::vec2         size,
+  int               id) const
 {
   if (const auto result = std::ranges::find(m_texture_slots, texture.id());
       result != std::ranges::end(m_texture_slots))
@@ -116,7 +125,8 @@ void BatchRenderer::draw_quad(
       static_cast<int>(result - std::ranges::begin(m_texture_slots)),
       tiling_factor,
       texture.uv(),
-      size));
+      size,
+      id));
   }
   else
   {

@@ -34,6 +34,11 @@ public:
                                           const Texture &texture,
                                           glm::vec3      offset,
                                           glm::vec2      size = glm::vec2{ 1.F }) const;
+  void    draw_quad(
+    const SubTexture &texture,
+    glm::vec3         offset,
+    glm::vec2         size,
+    int               id) const;
   void draw_quad(
     const SubTexture &texture,
     glm::vec3         offset,
@@ -43,7 +48,8 @@ public:
     glm::vec4         color,
     const SubTexture &texture,
     const float       tiling_factor = 1.F,
-    glm::vec2         size          = glm::vec2{ 1.F }) const;
+    glm::vec2         size          = glm::vec2{ 1.F },
+    int               id            = -1) const;
   [[maybe_unused]] void   draw_quad(glm::vec3 offset, glm::vec4 color) const;
   void                    draw(Quad quad) const;
   void                    draw() const;
