@@ -12,16 +12,28 @@ namespace glengine
 enum class FrameBufferTextureFormat
 {
   None,
-  RGBA8
+  RGBA8,
+  RED_INTEGER,
 };
 struct FrameBufferSpecification
 {
-  std::array<FrameBufferTextureFormat, 4U>
-      attachments = { FrameBufferTextureFormat::RGBA8, {}, {}, {} };
-  int width       = {};
-  int height      = {};
+  std::array<FrameBufferTextureFormat, 4U> attachments = {
+    FrameBufferTextureFormat::RGBA8,
+    FrameBufferTextureFormat::RED_INTEGER,
+    {},
+    {}
+  };
+  int                      width  = {};
+  int                      height = {};
   // uint32_t samples           = { 1 };
   //  bool     swap_chain_target = { false };
+  FrameBufferSpecification resize(int in_width, int in_height) const
+  {
+    auto ret   = *this;
+    ret.width  = in_width;
+    ret.height = in_height;
+    return ret;
+  }
 };
 class FrameBuffer
 {
@@ -37,8 +49,8 @@ public:
     }
   }
   const FrameBufferSpecification &specification() const;
-  SubTexture                      get_color_attachment(std::uint32_t index = 0U) const;
-                                  operator bool()
+  SubTexture get_color_attachment(std::uint32_t index = 0U) const;
+             operator bool()
   {
     return std::ranges::any_of(
              m_color_attachment, [](const auto &id) { return id != 0U; })
