@@ -12,10 +12,11 @@ BatchRenderer::BatchRenderer()
   : BatchRenderer(100U)
 {
 }
-BatchRenderer::BatchRenderer(std::size_t quad_count)
+BatchRenderer::BatchRenderer(
+  std::size_t quad_count,
+  Shader      shader)
   : m_quad_count(quad_count)
-  , m_shader(
-      std::filesystem::current_path() / "res" / "shader" / "basic3.shader")
+  , m_shader(std::move(shader))
 {
   m_vertex_array.bind();
   m_vertex_array.push_back(m_vertex_buffer, Vertex::layout());

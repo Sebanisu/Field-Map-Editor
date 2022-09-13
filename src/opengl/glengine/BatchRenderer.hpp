@@ -18,7 +18,10 @@ class BatchRenderer
 {
 public:
   BatchRenderer();
-  BatchRenderer(std::size_t quad_count);
+  BatchRenderer(
+    std::size_t quad_count,
+    Shader      shader = { std::filesystem::current_path() / "res" / "shader"
+                           / "basic3.shader" });
 
   void                      on_update(float) const;
   void                      on_render() const;
@@ -34,7 +37,7 @@ public:
                                           const Texture &texture,
                                           glm::vec3      offset,
                                           glm::vec2      size = glm::vec2{ 1.F }) const;
-  void    draw_quad(
+  void draw_quad(
     const SubTexture &texture,
     glm::vec3         offset,
     glm::vec2         size,
