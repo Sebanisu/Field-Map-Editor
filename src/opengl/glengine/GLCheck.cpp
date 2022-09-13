@@ -53,7 +53,7 @@ void GlGetError(const std::source_location location)
 {
   while (GlCheckError("Error", location))
   {
-    // throw std::exception{};
+    assert(false);
   }
 }
 
