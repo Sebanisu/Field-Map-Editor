@@ -91,12 +91,16 @@ bool Fields::on_field_change() const
 {
   if (glengine::GenericCombo("Field", m_current_index, m_map_data))
   {
-    m_field     = load_field();
-    auto config = Configuration{};
-    config->insert_or_assign(fields_index, m_current_index);
-    config->insert_or_assign(
-      fields_string, m_map_data[static_cast<std::size_t>(m_current_index)]);
-    config.save();
+    m_field = load_field();
+    if (std::cmp_less(m_current_index, std::ranges::size(m_map_data)))
+    {
+      auto config = Configuration{};
+      config->insert_or_assign(fields_index, m_current_index);
+
+      config->insert_or_assign(
+        fields_string, m_map_data[static_cast<std::size_t>(m_current_index)]);
+      config.save();
+    }
     return true;
   }
   return false;

@@ -90,8 +90,9 @@ template<std::ranges::random_access_range dataT>
   {
     const auto pop = glengine::ImGuiPushId();
     ImGui::SameLine(0, spacing);
-    const auto disabled =
-      glengine::ImGuiDisabled(std::cmp_less_equal(current_index, 0));
+    const auto disabled = glengine::ImGuiDisabled(
+      std::cmp_less_equal(current_index, 0)
+      || std::cmp_greater_equal(current_index - 1, std::ranges::size(data)));
     if (ImGui::ArrowButton("##l", ImGuiDir_Left))
     {
       --current_index;
