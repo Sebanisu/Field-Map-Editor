@@ -171,7 +171,7 @@ class [[nodiscard]] MapHistory
       }
     });
   }
-  template<typename TileT, std::integral PosT, typename LambdaT>
+  template<open_viii::graphics::background::is_tile TileT, std::integral PosT, typename LambdaT>
   [[nodiscard]] auto
     back_get_tile_at_offset(const PosT pos, LambdaT &&lambda) const
   {
@@ -193,8 +193,9 @@ class [[nodiscard]] MapHistory
                            } -> std::same_as<void>;
                        })
         {
-          return typename std::remove_cvref_t<
-            std::invoke_result_t<decltype(lambda), TileT>>{};
+          TileT v{};
+          using T = std::remove_cvref_t<decltype(lambda(v))>;
+          return T{};
         }
       }
     });
