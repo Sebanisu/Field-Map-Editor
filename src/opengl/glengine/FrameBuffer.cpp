@@ -136,34 +136,33 @@ static std::uint32_t GenerateFramebuffer(
   glDrawBuffers(i, attachments.data());
   return tmp;
 }
-static std::array<Glid, 4U>
+static decltype(auto)
   GenerateColorAttachments(const FrameBufferSpecification &spec)
 {
-  std::array<Glid, 4U> ret = {};
-  std::ranges::transform(
-    spec.attachments,
-    std::ranges::begin(ret),
-    [&spec](FrameBufferTextureFormat format) -> Glid {
-      switch (format)
-      {
-        case FrameBufferTextureFormat::RGBA8: {
-          return Glid{ AttachColorTexture(
-                         spec.width, spec.height, GL_RGBA8, GL_RGBA),
-                       Texture::destroy };
-        }
-        case FrameBufferTextureFormat::RED_INTEGER: {
-          return Glid{
-            AttachColorTexture(
-              spec.width, spec.height, GL_R32I, GL_RED_INTEGER, GL_INT),
-            Texture::destroy
-          };
-        }
-        case FrameBufferTextureFormat::None:
-          break;
+  auto convert = [&spec](FrameBufferTextureFormat format) -> decltype(auto) {
+    switch (format)
+    {
+      case FrameBufferTextureFormat::RGBA8: {
+        return Glid{ AttachColorTexture(
+                       spec.width, spec.height, GL_RGBA8, GL_RGBA),
+                     Texture::destroy };
       }
-      return {};
-    });
-  return ret;
+      case FrameBufferTextureFormat::RED_INTEGER: {
+        return Glid{
+          AttachColorTexture(
+            spec.width, spec.height, GL_R32I, GL_RED_INTEGER, GL_INT),
+          Texture::destroy
+        };
+      }
+      case FrameBufferTextureFormat::None:
+        break;
+    }
+    return Glid{};
+  };
+  return std::array<Glid, 4U>{ convert(spec.attachments[0]),
+                               convert(spec.attachments[1]),
+                               convert(spec.attachments[2]),
+                               convert(spec.attachments[3]) };
 }
 FrameBuffer::FrameBuffer(FrameBufferSpecification spec)
   : m_specification{ std::move(spec) }

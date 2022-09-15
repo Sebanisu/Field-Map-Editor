@@ -727,13 +727,17 @@ private:
       }
 
       auto unique_z_reverse = unique_z | std::views::reverse;
-      (void)std::ranges::all_of(
-        unique_z_reverse, [&f_tiles, &lambda](const auto z) {
-          auto f_tiles_reverse_filter_z =
-            f_tiles | std::views::filter(tile_operations::ZMatch{ z })
-            | std::views::reverse;
-          return std::ranges::all_of(f_tiles_reverse_filter_z, lambda);
-        });
+      for (const auto z : unique_z_reverse)
+      {
+        auto f_tiles_reverse_filter_z =
+          f_tiles | std::views::reverse
+          | std::views::filter(tile_operations::ZMatch{ z });
+        for (const auto &tile : f_tiles_reverse_filter_z)
+        {
+          if (!lambda(tile))
+            return;
+        }
+      }
     });
   }
   // draws tiles
