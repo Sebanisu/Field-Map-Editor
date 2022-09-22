@@ -29,9 +29,22 @@ open_viii::graphics::background::Mim LoadMim(
   std::size_t out_path_pos = {};
   auto        lang_name =
     fmt::format("_{}{}", coo, open_viii::graphics::background::Mim::EXT);
+  auto long_lang_name = fmt::format(
+    "{}_{}{}",
+    in_field.get_base_name(),
+    coo,
+    open_viii::graphics::background::Mim::EXT);
+  auto long_name = fmt::format(
+    "{}{}",
+    in_field.get_base_name(),
+    open_viii::graphics::background::Mim::EXT);
+
 
   auto buffer = in_field.get_entry_data(
-    { std::string_view(lang_name), open_viii::graphics::background::Mim::EXT },
+    { std::string_view(long_lang_name),
+      std::string_view(long_name),
+      std::string_view(lang_name),
+      open_viii::graphics::background::Mim::EXT },
     &out_path,
     &out_path_pos);
   coo_was_used = out_path_pos == 0U;
@@ -56,8 +69,19 @@ open_viii::graphics::background::Map LoadMap(
   std::size_t out_path_pos = {};
   auto        lang_name =
     fmt::format("_{}{}", coo, open_viii::graphics::background::Map::EXT);
+  auto long_lang_name = fmt::format(
+    "{}_{}{}",
+    in_field.get_base_name(),
+    coo,
+    open_viii::graphics::background::Map::EXT);
+  auto long_name = fmt::format(
+    "{}{}",
+    in_field.get_base_name(),
+    open_viii::graphics::background::Map::EXT);
   auto buffer = in_field.get_entry_data(
-    { std::string_view(lang_name),
+    { std::string_view(long_lang_name),
+      std::string_view(long_name),
+      std::string_view(lang_name),
       open_viii::graphics::background::Map::Map::EXT },
     &out_path,
     &out_path_pos);

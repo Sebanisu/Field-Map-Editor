@@ -23,7 +23,19 @@ Mim map_sprite::get_mim() const
   {
     auto lang_name =
       fmt::format("_{}{}", open_viii::LangCommon::to_string(m_coo), Mim::EXT);
-    return { m_field->get_entry_data({ std::string_view(lang_name), Mim::EXT }),
+    auto long_lang_name = fmt::format(
+      "{}_{}{}",
+      m_field->get_base_name(),
+      m_coo,
+      open_viii::graphics::background::Mim::EXT);
+    auto long_name = fmt::format(
+      "{}{}",
+      m_field->get_base_name(),
+      open_viii::graphics::background::Mim::EXT);
+    return { m_field->get_entry_data({ std::string_view(long_lang_name),
+                                       std::string_view(long_name),
+                                       std::string_view(lang_name),
+                                       Mim::EXT }),
              str_to_lower(m_field->get_base_name()) };
   }
   return {};
@@ -36,13 +48,25 @@ Map map_sprite::get_map(std::string *out_path, bool shift, bool &coo) const
     std::size_t out_path_pos = {};
     auto        lang_name =
       fmt::format("_{}{}", open_viii::LangCommon::to_string(m_coo), Map::EXT);
-    auto map = Map{
-      m_mim.mim_type(),
-      m_field->get_entry_data(
-        { std::string_view(lang_name), Map::EXT }, out_path, &out_path_pos),
-      shift
-    };
-    coo = out_path_pos == 0U;
+    auto long_lang_name = fmt::format(
+      "{}_{}{}",
+      m_field->get_base_name(),
+      m_coo,
+      open_viii::graphics::background::Map::EXT);
+    auto long_name = fmt::format(
+      "{}{}",
+      m_field->get_base_name(),
+      open_viii::graphics::background::Map::EXT);
+    auto map = Map{ m_mim.mim_type(),
+                    m_field->get_entry_data(
+                      { std::string_view(long_lang_name),
+                        std::string_view(long_name),
+                        std::string_view(lang_name),
+                        Map::EXT },
+                      out_path,
+                      &out_path_pos),
+                    shift };
+    coo      = out_path_pos == 0U;
     return map;
   }
   return {};
@@ -77,7 +101,7 @@ std::size_t map_sprite::get_texture_pos(
 
   if (m_texture->at(j).getSize().y == 0)
   {
-    return START_OF_NO_PALETTE_INDEX+texture_page;
+    return START_OF_NO_PALETTE_INDEX + texture_page;
   }
   return j;
 }
@@ -91,8 +115,7 @@ const sf::Texture *map_sprite::get_texture(
   const size_t size  = m_texture->size();
   if (index >= size)
   {
-    std::cout << "Increase texture array size. it is too small! "
-              << index
+    std::cout << "Increase texture array size. it is too small! " << index
               << ">=" << size << std::endl;
     std::cout << "bpp: " << bpp << ", palette: " << +palette
               << ", texture page: " << +texture_page << std::endl;
@@ -369,7 +392,7 @@ void map_sprite::wait_for_futures() const
                                             static_cast<float>(draw_size.y) };
   const sf::Vector2f     texture_size_f = { static_cast<float>(texture_size.x),
                                             static_cast<float>(texture_size.y) };
-  constexpr static float tile_size_f      = static_cast<float>(TILE_SIZE);
+  constexpr static float tile_size_f    = static_cast<float>(TILE_SIZE);
   auto                   i              = static_cast<float>(x) / tile_size_f;
   auto                   j              = static_cast<float>(y) / tile_size_f;
   float                  tu    = static_cast<float>(source_x) / tile_size_f;
@@ -464,22 +487,23 @@ std::uint8_t map_sprite::max_x_for_saved() const
 {
   return m_maps.const_back().visit_tiles([this](const auto &tiles) {
     auto transform_range =
-      m_saved_indicies | std::views::transform([this, &tiles](std::size_t i)->std::size_t {
-        auto &tile = tiles[i];
-        if (m_draw_swizzle)
-        {
-          if (tile.depth().bpp4())
+      m_saved_indicies
+      | std::views::transform([this, &tiles](std::size_t i) -> std::size_t {
+          auto &tile = tiles[i];
+          if (m_draw_swizzle)
           {
-            return 256U;
+            if (tile.depth().bpp4())
+            {
+              return 256U;
+            }
+            if (tile.depth().bpp16())
+            {
+              return 64U;
+            }
+            return 128U;
           }
-          if (tile.depth().bpp16())
-          {
-            return 64U;
-          }
-          return 128U;
-        }
-        return TILE_SIZE;
-      });
+          return TILE_SIZE;
+        });
 
     const auto it =
       std::min_element(transform_range.begin(), transform_range.end());
@@ -631,7 +655,7 @@ std::size_t map_sprite::row_empties(
       std::ranges::sort(values);
       const auto [first, last] = std::ranges::unique(values);
       values.erase(first, last);
-      auto                  transform_values =
+      auto transform_values =
         values | std::views::transform([](const auto &pair) -> std::size_t {
           return pair.first;
         });
@@ -658,7 +682,7 @@ void map_sprite::update_position(
   }
   m_maps.copy_back().visit_tiles([this, &tile_pos, &texture_page, &pixel_pos](
                                    auto &&tiles) {
-    std::uint8_t                  max_x     = max_x_for_saved() * TILE_SIZE;
+    std::uint8_t max_x = max_x_for_saved() * TILE_SIZE;
     if (m_draw_swizzle)
     {
       if (auto intersecting =
@@ -964,13 +988,15 @@ void map_sprite::for_all_tiles(
       {
         return;
       }
-      const auto draw_size    = sf::Vector2u{ TILE_SIZE * m_scale, TILE_SIZE * m_scale };
+      const auto draw_size =
+        sf::Vector2u{ TILE_SIZE * m_scale, TILE_SIZE * m_scale };
       const auto texture_size = [this, &states]() {
         const auto raw_texture_size = states.texture->getSize();
         if (m_filters.deswizzle.enabled())
         {
           const auto local_scale = raw_texture_size.y / m_canvas.height();
-          return sf::Vector2u{ TILE_SIZE * local_scale, TILE_SIZE * local_scale };
+          return sf::Vector2u{ TILE_SIZE * local_scale,
+                               TILE_SIZE * local_scale };
         }
         const auto i = raw_texture_size.y / TILE_SIZE;
         return sf::Vector2u{ i, i };
