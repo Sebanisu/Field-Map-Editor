@@ -1550,7 +1550,7 @@ int gui::get_selected_field()
 }
 std::string_view gui::starter_field() const
 {
-  return "crtower3";
+  return "ecenter3";
 }
 
 

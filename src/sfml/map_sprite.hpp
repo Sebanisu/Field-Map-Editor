@@ -223,24 +223,31 @@ private:
     mutable std::vector<bool>                                 m_history{};
   };
 
-  mutable bool                           m_draw_swizzle          = { false };
-  mutable bool    m_disable_texture_page_shift                   = { false };
-  mutable bool    m_disable_blends                               = { false };
-  mutable filters m_filters                                      = {};
-  std::shared_ptr<open_viii::archive::FIFLFS<false>> m_field     = {};
-  open_viii::LangT                                   m_coo       = {};
-  ::upscales                                         m_upscales  = {};
-  open_viii::graphics::background::Mim               m_mim       = {};
-  mutable std::string                                m_map_path  = {};
-  bool                                               m_using_coo = {};
-  maps                                               m_maps      = {};
-  all_unique_values_and_strings m_all_unique_values_and_strings  = {};
-  open_viii::graphics::Rectangle<std::uint32_t> m_canvas         = {};
-  static constexpr std::size_t                  MAX_TEXTURES =
-    250U;// glgate1 had 238
-         // 16 * 14;// 14*16 for texture page / palette combos. 16*2+1 for
-         // palette
-         // bpp combos.
+  mutable bool    m_draw_swizzle                                  = { false };
+  mutable bool    m_disable_texture_page_shift                    = { false };
+  mutable bool    m_disable_blends                                = { false };
+  mutable filters m_filters                                       = {};
+  std::shared_ptr<open_viii::archive::FIFLFS<false>> m_field      = {};
+  open_viii::LangT                                   m_coo        = {};
+  ::upscales                                         m_upscales   = {};
+  open_viii::graphics::background::Mim               m_mim        = {};
+  mutable std::string                                m_map_path   = {};
+  bool                                               m_using_coo  = {};
+  maps                                               m_maps       = {};
+  all_unique_values_and_strings m_all_unique_values_and_strings   = {};
+  open_viii::graphics::Rectangle<std::uint32_t> m_canvas          = {};
+  static constexpr std::uint8_t                 TILE_SIZE         = 16U;
+  static constexpr std::uint8_t                 MAX_TEXTURE_PAGES = 14U;
+  static constexpr std::uint8_t                 MAX_PALETTES      = 16U;
+  static constexpr std::uint8_t                 BPP_COMBOS        = 2U;
+  static constexpr std::uint16_t                START_OF_NO_PALETTE_INDEX =
+    MAX_PALETTES * MAX_TEXTURE_PAGES;
+  static constexpr std::uint16_t BPP16_INDEX  = MAX_PALETTES * BPP_COMBOS + 1;
+  static constexpr auto          MAX_TEXTURES = (std::max)(
+    static_cast<std::uint16_t>(START_OF_NO_PALETTE_INDEX + MAX_TEXTURE_PAGES),
+    static_cast<std::uint16_t>(BPP16_INDEX+1U));
+  // todo ecenter3 shows different images for remaster and 2013. Fix?
+
   mutable std::shared_ptr<std::array<sf::Texture, MAX_TEXTURES>> m_texture = {};
   mutable std::shared_ptr<sf::RenderTexture> m_render_texture              = {};
   mutable grid                               m_grid                        = {};
@@ -275,16 +282,16 @@ private:
   [[nodiscard]] std::array<sf::Vertex, 4U> get_triangle_strip(
     const sf::Vector2u &draw_size,
     const sf::Vector2u &texture_size,
-    std::integral auto                source_x,
-    std::integral auto                source_y,
-    std::integral auto                x,
-    std::integral auto                y) const;
+    std::integral auto  source_x,
+    std::integral auto  source_y,
+    std::integral auto  x,
+    std::integral auto  y) const;
 
   [[nodiscard]] std::array<sf::Vertex, 4U> get_triangle_strip(
-    const sf::Vector2u &draw_size,
-    const sf::Vector2u &texture_size,
-    const open_viii::graphics::background::is_tile auto         &tile_const,
-    open_viii::graphics::background::is_tile auto              &&tile) const;
+    const sf::Vector2u                                  &draw_size,
+    const sf::Vector2u                                  &texture_size,
+    const open_viii::graphics::background::is_tile auto &tile_const,
+    open_viii::graphics::background::is_tile auto      &&tile) const;
 
   static const sf::BlendMode &GetBlendSubtract();
   [[nodiscard]] bool
@@ -338,7 +345,8 @@ private:
     value_lambdaT &&value_lambda,
     filterT       &&filter = {}) const
   {
-    using tileT  = std::remove_cvref_t<typename std::remove_cvref_t<tilesT>::value_type>;
+    using tileT =
+      std::remove_cvref_t<typename std::remove_cvref_t<tilesT>::value_type>;
     using keyT   = decltype(key_lambda(tileT{}));
     using valueT = decltype(value_lambda(tileT{}));
     std::map<keyT, std::vector<valueT>> r{};

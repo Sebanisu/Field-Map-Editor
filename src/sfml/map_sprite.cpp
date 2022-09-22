@@ -71,12 +71,13 @@ std::size_t map_sprite::get_texture_pos(
     {
       return palette + std::size(Mim::palette_selections());
     }
-    return MAX_TEXTURES - 1;// 16bpp doesn't have palettes.
+    return BPP16_INDEX;// 16bpp doesn't have palettes.
   }
-  const size_t j = static_cast<size_t>(texture_page) * 16U + palette;
+  const size_t j = static_cast<size_t>(texture_page) * MAX_PALETTES + palette;
+
   if (m_texture->at(j).getSize().y == 0)
   {
-    return MAX_TEXTURES - 13U + texture_page;
+    return START_OF_NO_PALETTE_INDEX+texture_page;
   }
   return j;
 }
@@ -86,7 +87,17 @@ const sf::Texture *map_sprite::get_texture(
   const std::uint8_t              palette,
   const std::uint8_t              texture_page) const
 {
-  return &m_texture->at(get_texture_pos(bpp, palette, texture_page));
+  const size_t index = get_texture_pos(bpp, palette, texture_page);
+  const size_t size  = m_texture->size();
+  if (index >= size)
+  {
+    std::cout << "Increase texture array size. it is too small! "
+              << index
+              << ">=" << size << std::endl;
+    std::cout << "bpp: " << bpp << ", palette: " << +palette
+              << ", texture page: " << +texture_page << std::endl;
+  }
+  return &m_texture->at(index);
 }
 const sf::Texture *map_sprite::get_texture(const ::PupuID &pupu) const
 {
@@ -210,7 +221,7 @@ void map_sprite::find_upscale_path(
   for (const auto &texture_page :
        m_all_unique_values_and_strings.texture_page_id().values())
   {
-    const size_t i  = MAX_TEXTURES - 13 + texture_page;
+    const size_t i  = START_OF_NO_PALETTE_INDEX + texture_page;
     const auto   fn = [this, texture_page](sf::Texture *texture) -> void {
       const auto &root  = m_filters.upscale.value();
       const auto  paths = m_upscales.get_file_paths(root, texture_page);
@@ -287,7 +298,7 @@ void map_sprite::find_deswizzle_path(
   /*for (const auto& texture_page :
       m_all_unique_values_and_strings.texture_page_id().values())
   {
-      const size_t i = MAX_TEXTURES - 13 + texture_page;
+      const size_t i = MAX_TEXTURES - MAX_TEXTURE_PAGES + texture_page;
       const auto   fn = [this, texture_page](sf::Texture* texture) -> void
       {
           const auto& root = m_filters.upscale.value();
@@ -318,7 +329,7 @@ void map_sprite::find_upscale_path(
   for (const auto &texture_page :
        m_all_unique_values_and_strings.texture_page_id().values())
   {
-    const size_t i = size_t{ texture_page } * 16U + palette;
+    const size_t i = size_t{ texture_page } * MAX_PALETTES + palette;
     auto const fn  = [texture_page, palette, this](sf::Texture *const texture) {
       const auto &root = m_filters.upscale.value();
       const auto paths = m_upscales.get_file_paths(root, texture_page, palette);
@@ -349,19 +360,21 @@ void map_sprite::wait_for_futures() const
 [[nodiscard]] std::array<sf::Vertex, 4U> map_sprite::get_triangle_strip(
   const sf::Vector2u &draw_size,
   const sf::Vector2u &texture_size,
-  std::integral auto                source_x,
-  std::integral auto                source_y,
-  std::integral auto                x,
-  std::integral auto                y) const
+  std::integral auto  source_x,
+  std::integral auto  source_y,
+  std::integral auto  x,
+  std::integral auto  y) const
 {
-  const sf::Vector2f     draw_size_f = { static_cast<float>(draw_size.x), static_cast<float>(draw_size.y) };
-  const sf::Vector2f     texture_size_f = { static_cast<float>(texture_size.x), static_cast<float>(texture_size.y) };
-  constexpr static float tile_size   = 16.0F;
-  auto                   i           = static_cast<float>(x) / tile_size;
-  auto                   j           = static_cast<float>(y) / tile_size;
-  float                  tu          = static_cast<float>(source_x) / tile_size;
-  float                  tv          = static_cast<float>(source_y) / tile_size;
-  const auto             tovec       = [](auto &&in_x, auto &&in_y) {
+  const sf::Vector2f     draw_size_f    = { static_cast<float>(draw_size.x),
+                                            static_cast<float>(draw_size.y) };
+  const sf::Vector2f     texture_size_f = { static_cast<float>(texture_size.x),
+                                            static_cast<float>(texture_size.y) };
+  constexpr static float tile_size_f      = static_cast<float>(TILE_SIZE);
+  auto                   i              = static_cast<float>(x) / tile_size_f;
+  auto                   j              = static_cast<float>(y) / tile_size_f;
+  float                  tu    = static_cast<float>(source_x) / tile_size_f;
+  float                  tv    = static_cast<float>(source_y) / tile_size_f;
+  const auto             tovec = [](auto &&in_x, auto &&in_y) {
     return sf::Vector2f{ static_cast<float>(in_x), static_cast<float>(in_y) };
   };
   const auto tovert =
@@ -391,10 +404,10 @@ void map_sprite::wait_for_futures() const
 }
 
 [[nodiscard]] std::array<sf::Vertex, 4U> map_sprite::get_triangle_strip(
-  const sf::Vector2u &draw_size,
-  const sf::Vector2u &texture_size,
-  const open_viii::graphics::background::is_tile auto         &tile_const,
-  open_viii::graphics::background::is_tile auto              &&tile) const
+  const sf::Vector2u                                  &draw_size,
+  const sf::Vector2u                                  &texture_size,
+  const open_viii::graphics::background::is_tile auto &tile_const,
+  open_viii::graphics::background::is_tile auto      &&tile) const
 {
   using namespace open_viii::graphics::literals;
   using tile_type    = std::remove_cvref_t<decltype(tile)>;
@@ -449,10 +462,9 @@ void set_color(std::array<sf::Vertex, 4U> &vertices, const sf::Color &color)
 
 std::uint8_t map_sprite::max_x_for_saved() const
 {
-  static constexpr std::uint8_t tile_size = 16U;
   return m_maps.const_back().visit_tiles([this](const auto &tiles) {
     auto transform_range =
-      m_saved_indicies | std::views::transform([this, &tiles](std::size_t i) {
+      m_saved_indicies | std::views::transform([this, &tiles](std::size_t i)->std::size_t {
         auto &tile = tiles[i];
         if (m_draw_swizzle)
         {
@@ -466,13 +478,13 @@ std::uint8_t map_sprite::max_x_for_saved() const
           }
           return 128U;
         }
-        return std::uint32_t{ tile_size };
+        return TILE_SIZE;
       });
 
     const auto it =
       std::min_element(transform_range.begin(), transform_range.end());
     if (it != std::end(transform_range))
-      return static_cast<std::uint8_t>((*it - tile_size) / tile_size);
+      return static_cast<std::uint8_t>((*it - TILE_SIZE) / TILE_SIZE);
     return std::uint8_t(255U);
   });
 }
@@ -483,7 +495,6 @@ template<typename key_lambdaT, typename weight_lambdaT>
   weight_lambdaT &&weight_lambda,
   const int        passes) const
 {
-  static constexpr auto tile_size = 16U;
   m_maps.copy_back().visit_tiles([&key_lambda, &weight_lambda, &passes, this](
                                    auto &&tiles) {
     for (int pass = passes; pass != 0;
@@ -501,16 +512,16 @@ template<typename key_lambdaT, typename weight_lambdaT>
         const auto weight = weight_lambda(key, tps);
 
         if (
-          std::cmp_greater_equal(col, tile_size)
-          || std::cmp_greater_equal(row_weight, tile_size)
-          || std::cmp_greater(row_weight + weight, tile_size))
+          std::cmp_greater_equal(col, TILE_SIZE)
+          || std::cmp_greater_equal(row_weight, TILE_SIZE)
+          || std::cmp_greater(row_weight + weight, TILE_SIZE))
         {
           ++row;
           col        = {};
           row_weight = {};
         }
 
-        if (std::cmp_greater_equal(row, tile_size))
+        if (std::cmp_greater_equal(row, TILE_SIZE))
         {
           ++page;
           row = {};
@@ -521,8 +532,8 @@ template<typename key_lambdaT, typename weight_lambdaT>
         for (tileT *const tp : tps)
         {
           *tp = tp->with_source_xy(
-                    static_cast<decltype(tileT{}.source_x())>(col * tile_size),
-                    static_cast<decltype(tileT{}.source_y())>(row * tile_size))
+                    static_cast<decltype(tileT{}.source_x())>(col * TILE_SIZE),
+                    static_cast<decltype(tileT{}.source_y())>(row * TILE_SIZE))
                   .with_texture_id(
                     static_cast<decltype(tileT{}.texture_id())>(page));
         }
@@ -605,8 +616,7 @@ std::size_t map_sprite::row_empties(
         tiles
         | std::views::filter(
           [&tile_y, &texture_page](const auto &tile) -> bool {
-            static constexpr auto tile_size = 16U;
-            return std::cmp_equal((tile.source_y() / tile_size), tile_y)
+            return std::cmp_equal((tile.source_y() / TILE_SIZE), tile_y)
                    && std::cmp_equal(texture_page, tile.texture_id());
           });
       std::transform(
@@ -614,21 +624,19 @@ std::size_t map_sprite::row_empties(
         std::ranges::end(filtered_range),
         std::back_inserter(values),
         [](const auto &tile) {
-          static constexpr auto tile_size = 16U;
           return std::make_pair(
             static_cast<std::uint8_t>(1U << (tile.depth().raw() & 3U)),
-            static_cast<std::uint8_t>(tile.source_x() / tile_size));
+            static_cast<std::uint8_t>(tile.source_x() / TILE_SIZE));
         });
       std::ranges::sort(values);
       const auto [first, last] = std::ranges::unique(values);
       values.erase(first, last);
-      static constexpr auto tile_size = 16U;
       auto                  transform_values =
         values | std::views::transform([](const auto &pair) -> std::size_t {
           return pair.first;
         });
       std::size_t total =
-        tile_size
+        TILE_SIZE
         - std::reduce(
           transform_values.begin(), transform_values.end(), std::size_t{});
       if (move_from_row)
@@ -650,8 +658,7 @@ void map_sprite::update_position(
   }
   m_maps.copy_back().visit_tiles([this, &tile_pos, &texture_page, &pixel_pos](
                                    auto &&tiles) {
-    static constexpr std::uint8_t tile_size = 16U;
-    std::uint8_t                  max_x     = max_x_for_saved() * tile_size;
+    std::uint8_t                  max_x     = max_x_for_saved() * TILE_SIZE;
     if (m_draw_swizzle)
     {
       if (auto intersecting =
@@ -668,10 +675,10 @@ void map_sprite::update_position(
         return;
       }
       const auto &tile     = tiles[m_saved_indicies.front()];
-      bool        same_row = ((tile.source_y() / tile_size) == tile_pos.y)
+      bool        same_row = ((tile.source_y() / TILE_SIZE) == tile_pos.y)
                       && (texture_page == tile.texture_id());
       //        fmt::print("{} == {} && {} == {}\n",
-      //          (tile.source_y() / tile_size),
+      //          (tile.source_y() / TILE_SIZE),
       //          tile_pos.y,
       //          texture_page,
       //          tile.texture_id());
@@ -706,15 +713,15 @@ void map_sprite::update_position(
         tile = tile
                  .with_source_xy(
                    (std::min)(
-                     static_cast<std::uint8_t>(tile_pos.x * tile_size), max_x),
-                   static_cast<std::uint8_t>(tile_pos.y * tile_size))
+                     static_cast<std::uint8_t>(tile_pos.x * TILE_SIZE), max_x),
+                   static_cast<std::uint8_t>(tile_pos.y * TILE_SIZE))
                  .with_texture_id(texture_page);
       }
       else
       {
         tile = tile.with_xy(
-          static_cast<std::int16_t>((pixel_pos.x / tile_size) * tile_size),
-          static_cast<std::int16_t>((pixel_pos.y / tile_size) * tile_size));
+          static_cast<std::int16_t>((pixel_pos.x / TILE_SIZE) * TILE_SIZE),
+          static_cast<std::int16_t>((pixel_pos.y / TILE_SIZE) * TILE_SIZE));
       }
     }
   });
@@ -726,20 +733,19 @@ sf::Sprite map_sprite::save_intersecting(
   const sf::Vector2i &tile_pos,
   const std::uint8_t &texture_page)
 {
-  static constexpr auto tile_size       = 16;
-  static constexpr auto tile_size_float = 16.F;
+  static constexpr auto tile_size_float = static_cast<float>(TILE_SIZE);
   sf::Sprite            sprite          = {};
   sprite.setTexture(m_render_texture->getTexture());
   sprite.setTextureRect(
-    { (pixel_pos.x / static_cast<int>(tile_size)) * static_cast<int>(tile_size)
+    { (pixel_pos.x / static_cast<int>(TILE_SIZE)) * static_cast<int>(TILE_SIZE)
         * static_cast<int>(m_scale),
 
-      tile_pos.y * static_cast<int>(tile_size) * static_cast<int>(m_scale),
-      static_cast<int>(tile_size) * static_cast<int>(m_scale),
+      tile_pos.y * static_cast<int>(TILE_SIZE) * static_cast<int>(m_scale),
+      static_cast<int>(TILE_SIZE) * static_cast<int>(m_scale),
 
-      static_cast<int>(tile_size) * static_cast<int>(m_scale) });
+      static_cast<int>(TILE_SIZE) * static_cast<int>(m_scale) });
   sprite.setPosition(
-    static_cast<float>(pixel_pos.x / tile_size) * tile_size_float,
+    static_cast<float>(pixel_pos.x / TILE_SIZE) * tile_size_float,
     static_cast<float>(tile_pos.y) * tile_size_float);
   sprite.setScale(
     1.F / static_cast<float>(m_scale), 1.F / static_cast<float>(m_scale));
@@ -766,16 +772,15 @@ std::vector<size_t> map_sprite::find_intersecting(
               return std::cmp_greater_equal(i, low)
                      && std::cmp_less_equal(i, high);
             };
-            static constexpr auto tile_size = 16U;
             if (!skip_filters && fail_filter(tile))
             {
               return false;
             }
             if (m_draw_swizzle)
             {
-              if (std::cmp_equal(tile_pos.x, tile.source_x() / tile_size))
+              if (std::cmp_equal(tile_pos.x, tile.source_x() / TILE_SIZE))
               {
-                if (std::cmp_equal(tile_pos.y, tile.source_y() / tile_size))
+                if (std::cmp_equal(tile_pos.y, tile.source_y() / TILE_SIZE))
                 {
                   if (std::cmp_equal(tile.texture_id(), texture_page))
                   {
@@ -787,12 +792,12 @@ std::vector<size_t> map_sprite::find_intersecting(
             else if (in_bounds(
                        pixel_pos.x,
                        tile.x(),
-                       tile.x() + static_cast<int>(tile_size)))
+                       tile.x() + static_cast<int>(TILE_SIZE)))
             {
               if (in_bounds(
                     pixel_pos.y,
                     tile.y(),
-                    tile.y() + static_cast<int>(tile_size)))
+                    tile.y() + static_cast<int>(TILE_SIZE)))
               {
                 return true;
               }
@@ -842,8 +847,8 @@ void map_sprite::for_all_tiles(
   std::ranges::transform(tiles_const, std::back_inserter(pupu_ids), m_pupu_map);
   assert(std::size(tiles_const) == std::size(tiles));
   assert(std::size(tiles_const) == std::size(pupu_ids));
-  const auto process = [&skip_invalid, &lambda](
-                         auto tc, const auto tce, auto t, auto pupu_t) {
+  const auto process = [&skip_invalid,
+                        &lambda](auto tc, const auto tce, auto t, auto pupu_t) {
     for (; /*t != te &&*/ tc != tce; (void)++tc, ++t, ++pupu_t)
     {
       const is_tile auto &tile_const = *tc;
@@ -959,15 +964,15 @@ void map_sprite::for_all_tiles(
       {
         return;
       }
-      const auto draw_size    = sf::Vector2u{ 16U * m_scale, 16U * m_scale };
+      const auto draw_size    = sf::Vector2u{ TILE_SIZE * m_scale, TILE_SIZE * m_scale };
       const auto texture_size = [this, &states]() {
         const auto raw_texture_size = states.texture->getSize();
         if (m_filters.deswizzle.enabled())
         {
           const auto local_scale = raw_texture_size.y / m_canvas.height();
-          return sf::Vector2u{ 16U * local_scale, 16U * local_scale };
+          return sf::Vector2u{ TILE_SIZE * local_scale, TILE_SIZE * local_scale };
         }
-        const auto i = raw_texture_size.y / 16U;
+        const auto i = raw_texture_size.y / TILE_SIZE;
         return sf::Vector2u{ i, i };
       }();
       auto quad = get_triangle_strip(draw_size, texture_size, tile_const, tile);
@@ -1266,7 +1271,7 @@ std::uint32_t map_sprite::height() const
 }
 grid map_sprite::get_grid() const
 {
-  return { { 16U, 16U }, { width(), height() } };
+  return { { TILE_SIZE, TILE_SIZE }, { width(), height() } };
 }
 grid map_sprite::get_texture_page_grid() const
 {
