@@ -26,7 +26,7 @@ Mim map_sprite::get_mim() const
     auto long_lang_name = fmt::format(
       "{}_{}{}",
       m_field->get_base_name(),
-      m_coo,
+      open_viii::LangCommon::to_string(m_coo),
       open_viii::graphics::background::Mim::EXT);
     auto long_name = fmt::format(
       "{}{}",
@@ -51,7 +51,7 @@ Map map_sprite::get_map(std::string *out_path, bool shift, bool &coo) const
     auto long_lang_name = fmt::format(
       "{}_{}{}",
       m_field->get_base_name(),
-      m_coo,
+      open_viii::LangCommon::to_string(m_coo),
       open_viii::graphics::background::Map::EXT);
     auto long_name = fmt::format(
       "{}{}",
