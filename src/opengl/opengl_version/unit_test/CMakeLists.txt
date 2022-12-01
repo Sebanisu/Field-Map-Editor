@@ -9,7 +9,7 @@ target_link_libraries(${PROJECT_NAME}_OPENGL_UNIT_TEST
         PRIVATE Threads::Threads
         PRIVATE OpenVIII_CPP_WIP_VIIIGraphics
         PRIVATE OpenVIII_CPP_WIP_VIIIArchive
-        PRIVATE boost::ut
+        PRIVATE Boost::ut
         )
 target_include_directories(${PROJECT_NAME}_OPENGL_UNIT_TEST
         PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
