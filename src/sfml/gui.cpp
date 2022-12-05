@@ -10,7 +10,7 @@
 #include <imgui.h>
 #include <SFML/Window/Mouse.hpp>
 #include <utility>
-//#define USE_THREADS
+// #define USE_THREADS
 using namespace open_viii::graphics::background;
 using namespace open_viii::graphics;
 using namespace open_viii::graphics::literals;
@@ -24,11 +24,10 @@ using namespace std::string_literals;
  * @return lhs + rhs
  */
 template<typename T, typename U>
-requires std::same_as<std::remove_cvref_t<T>, std::filesystem::path> &&(
-  !std::same_as<std::remove_cvref_t<U>, std::filesystem::path>)&&std::
-  convertible_to<std::remove_cvref_t<U>, std::filesystem::path> inline std::
-    filesystem::path
-  operator+(const T &lhs, const U &rhs)
+  requires std::same_as<std::remove_cvref_t<T>, std::filesystem::path>
+           && (!std::same_as<std::remove_cvref_t<U>, std::filesystem::path>)
+           && std::convertible_to<std::remove_cvref_t<U>, std::filesystem::path>
+inline std::filesystem::path operator+(const T &lhs, const U &rhs)
 {
   auto tmp = lhs;
   tmp += rhs;
@@ -42,8 +41,9 @@ requires std::same_as<std::remove_cvref_t<T>, std::filesystem::path> &&(
  * @return lhs + rhs
  */
 template<typename T>
-requires std::same_as<std::remove_cvref_t<T>, std::filesystem::path> || std::
-  same_as<std::remove_cvref_t<T>, std::filesystem::directory_entry>
+  requires std::same_as<std::remove_cvref_t<T>, std::filesystem::path>
+           || std::
+             same_as<std::remove_cvref_t<T>, std::filesystem::directory_entry>
 inline std::filesystem::path
   operator+(const std::filesystem::path &lhs, const T &rhs)
 {
@@ -680,7 +680,7 @@ void gui::checkbox_map_swizzle() const
     else
     {
       m_map_sprite.disable_draw_swizzle();
-      if(!m_selections.draw_disable_blending)
+      if (!m_selections.draw_disable_blending)
       {
         m_map_sprite.disable_disable_blends();
       }
@@ -690,7 +690,9 @@ void gui::checkbox_map_swizzle() const
 }
 void gui::checkbox_map_disable_blending() const
 {
-  if (!m_selections.draw_swizzle && ImGui::Checkbox("Disable Blending", &m_selections.draw_disable_blending))
+  if (
+    !m_selections.draw_swizzle
+    && ImGui::Checkbox("Disable Blending", &m_selections.draw_disable_blending))
   {
     if (m_selections.draw_disable_blending)
     {
@@ -1384,7 +1386,7 @@ void gui::loop_events() const
                 {
                   case sf::Mouse::Button::Left: {
                     m_mouse_positions.left = true;
-                    std::cout << "Left Mouse Button Down" << std::endl;
+                    spdlog::trace("{}", "Left Mouse Button Down");
                   }
                   break;
                   default:
@@ -1400,7 +1402,7 @@ void gui::loop_events() const
                 {
                   case sf::Mouse::Button::Left: {
                     m_mouse_positions.left = false;
-                    std::cout << "Left Mouse Button Up" << std::endl;
+                    spdlog::trace("{}", "Left Mouse Button Up");
                   }
                   break;
                   default:
@@ -1854,7 +1856,8 @@ bool gui::combo_upscale_path(
   std::vector<std::string> paths = {};
   auto                     transform_paths =
     m_paths
-    | std::views::transform([this, &field_name, &coo](const std::string &in_path) {
+    | std::views::transform(
+      [this, &field_name, &coo](const std::string &in_path) {
         if (m_field)
           return upscales(std::filesystem::path(in_path), field_name, coo)
             .get_paths();
@@ -1970,7 +1973,7 @@ bool gui::mouse_positions::left_changed() const
   const auto condition = old_left != left;
   if (!mouse_enabled && condition)
   {
-    std::cout << "Warning! mouse up off screen!" << std::endl;
+    spdlog::trace("Warning! mouse up off screen!");
   }
   return condition;
 }

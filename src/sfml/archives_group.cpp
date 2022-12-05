@@ -10,7 +10,7 @@ open_viii::archive::Archives archives_group::get_archives() const
 {
   // todo need a way to filter out versions of game that don't have a
   // language.
-  std::cout << m_path << std::endl;
+  spdlog::info("{}",m_path);
   auto archives = open_viii::archive::Archives(
     m_path, open_viii::LangCommon::to_string(m_coo));
   if (!static_cast<bool>(archives))

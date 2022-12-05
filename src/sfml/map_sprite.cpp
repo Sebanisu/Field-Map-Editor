@@ -116,10 +116,15 @@ const sf::Texture *map_sprite::get_texture(
   const size_t size  = m_texture->size();
   if (index >= size)
   {
-    std::cout << "Increase texture array size. it is too small! " << index
-              << ">=" << size << std::endl;
-    std::cout << "bpp: " << bpp << ", palette: " << +palette
-              << ", texture page: " << +texture_page << std::endl;
+    spdlog::debug(
+      "Increase texture array size. it is too small! index {} >= size {}",
+      index,
+      size);
+    spdlog::debug(
+      "bpp: {}, palette: {}, texture page: {}",
+      static_cast<int>(bpp),
+      palette,
+      texture_page);
   }
   return &m_texture->at(index);
 }
@@ -223,7 +228,7 @@ void map_sprite::load_mim_textures(
   std::shared_ptr<std::array<sf::Texture, MAX_TEXTURES>> &ret,
   open_viii::graphics::BPPT                               bpp,
   std::uint8_t                                            palette) const
-{// std::cout << bpp << '\t' << +palette << '\t' << '\t';
+{
   if (m_mim.get_width(bpp) != 0U)
   {
     size_t     pos  = get_texture_pos(bpp, palette, 0);
@@ -775,6 +780,58 @@ sf::Sprite map_sprite::save_intersecting(
   return sprite;
 }
 
+template<typename T>
+auto to_hex(const T &test)
+{
+  std::array<std::uint8_t, sizeof(T)>  raw;
+  std::array<char, sizeof(T) * 2U + 1> raw_hex;
+  raw_hex.back() = 0;
+  std::memcpy(raw.data(), &test, sizeof(T));
+
+  std::size_t rhi{};
+  for (const std::uint8_t r : raw)
+  {
+    char right     = r % 16U < 10 ? r % 16U + '0' : r % 16U - 10 + 'A';
+    char left      = r / 16U < 10 ? r / 16U + '0' : r / 16U - 10 + 'A';
+    raw_hex[rhi++] = left;
+    raw_hex[rhi++] = right;
+  }
+  return raw_hex;
+}
+
+template<typename this_type, typename T>
+void format(const this_type &tile, T &&format_function)
+{
+  const auto raw_hex = to_hex(tile);
+  format_function("Hex", std::string_view(raw_hex.data(), raw_hex.size()));
+  format_function(
+    "Source",
+    fmt::format(
+      "({}, {}) ({}, {})",
+      tile.source_rectangle().x(),
+      tile.source_rectangle().y(),
+      tile.source_rectangle().width(),
+      tile.source_rectangle().height()));
+  format_function(
+    "Output",
+    fmt::format(
+      "({}, {}) ({}, {})",
+      tile.output_rectangle().x(),
+      tile.output_rectangle().y(),
+      tile.output_rectangle().width(),
+      tile.output_rectangle().height()));
+  format_function("Z", tile.z());
+  format_function("Depth", static_cast<int>(tile.depth()));
+  format_function("Palette ID", tile.palette_id());
+  format_function("Texture ID", tile.texture_id());
+  format_function("Layer ID", tile.layer_id());
+  format_function("Blend Mode", static_cast<std::uint16_t>(tile.blend_mode()));
+  format_function("Blend Other", tile.blend());
+  format_function("Animation ID", tile.animation_id());
+  format_function("Animation State", tile.animation_state());
+  format_function("Draw", tile.draw());
+}
+
 std::vector<size_t> map_sprite::find_intersecting(
   const sf::Vector2i &pixel_pos,
   const sf::Vector2i &tile_pos,
@@ -833,7 +890,9 @@ std::vector<size_t> map_sprite::find_intersecting(
         [&tiles](const auto &tile) {
           const auto *const start = tiles.data();
           const auto *const curr  = &tile;
-          std::cout << tile << std::endl;
+          format(tile, [](std::string_view name, const auto &value) {
+            spdlog::info("tile {}: {}", name, value);
+          });
           return static_cast<std::size_t>(std::distance(start, curr));
         });
       spdlog::info("Found {:3} intersecting tiles", out.size());
@@ -1134,7 +1193,7 @@ bool map_sprite::fail() const
   {
     if (once)
     {
-      std::cout << "m_render_texture is null" << std::endl;
+      spdlog::warn("{}", "m_render_texture is null");
       once = false;
     }
     return true;
@@ -1143,7 +1202,7 @@ bool map_sprite::fail() const
   {
     if (once)
     {
-      std::cout << "m_texture is null" << std::endl;
+      spdlog::warn("{}", "m_texture is null");
       once = false;
     }
     return true;
@@ -1152,7 +1211,7 @@ bool map_sprite::fail() const
   {
     if (once)
     {
-      std::cout << "m_mim width is 0" << std::endl;
+      spdlog::warn("{}", "m_mim width is 0");
       once = false;
     }
     return true;
@@ -1161,7 +1220,7 @@ bool map_sprite::fail() const
   {
     if (once)
     {
-      std::cout << "m_map is empty" << std::endl;
+      spdlog::warn("{}", "m_map is empty");
       once = false;
     }
     return true;
@@ -1209,7 +1268,7 @@ const map_sprite &
 
   if (enable_texture_page_grid)
   {
-    // std::cout << "enabled: " << m_texture_page_grid.count() << '\n';
+    // spdlog::info("enabled: {}",m_texture_page_grid.count());
     m_texture_page_grid.enable();
   }
   else
@@ -1688,62 +1747,62 @@ std::string map_sprite::get_base_name() const
 std::vector<std::uint8_t>
   map_sprite::get_conflicting_palettes(const std::uint8_t &texture_page) const
 {
-  const auto palettes = m_maps.front().visit_tiles([&texture_page,
-                                                    this](const auto &tiles) {
-    //        using tileT =
-    //          std::remove_cvref_t<typename
-    //          std::remove_cvref_t<decltype(tiles)>::value_type>;
+  const auto palettes =
+    m_maps.front().visit_tiles([&texture_page, this](const auto &tiles) {
+      //        using tileT =
+      //          std::remove_cvref_t<typename
+      //          std::remove_cvref_t<decltype(tiles)>::value_type>;
 
-    auto map_xy_palette = generate_map(
-      tiles,
-      [](const auto &tile) {
-        return std::make_tuple(
-          tile.source_x() / tile.width(), tile.source_y() / tile.height());
-      },
-      [](const auto &tile) { return tile.palette_id(); },
-      [&texture_page](const auto &tile) {
-        return std::cmp_equal(texture_page, tile.texture_id());
-      });
-    std::vector<uint8_t>     conflict_palettes{};
-    std::vector<std::string> conflict_xy{};
-    for (auto &kvp : map_xy_palette)
-    {
-      // const auto& xy = kvp.first;
-      std::vector<std::uint8_t> &palette_vector = kvp.second;
-      std::ranges::sort(palette_vector);
-      auto [first, last] = std::ranges::unique(palette_vector);
-      palette_vector.erase(first, last);
-      if (palette_vector.size() <= 1U)
+      auto map_xy_palette = generate_map(
+        tiles,
+        [](const auto &tile) {
+          return std::make_tuple(
+            tile.source_x() / tile.width(), tile.source_y() / tile.height());
+        },
+        [](const auto &tile) { return tile.palette_id(); },
+        [&texture_page](const auto &tile) {
+          return std::cmp_equal(texture_page, tile.texture_id());
+        });
+      std::vector<uint8_t>     conflict_palettes{};
+      std::vector<std::string> conflict_xy{};
+      for (auto &kvp : map_xy_palette)
       {
-        // map_xy_palette.erase(xy);
+        // const auto& xy = kvp.first;
+        std::vector<std::uint8_t> &palette_vector = kvp.second;
+        std::ranges::sort(palette_vector);
+        auto [first, last] = std::ranges::unique(palette_vector);
+        palette_vector.erase(first, last);
+        if (palette_vector.size() <= 1U)
+        {
+          // map_xy_palette.erase(xy);
+        }
+        else
+        {
+          conflict_xy.emplace_back(fmt::format(
+            "({},{})", std::get<0>(kvp.first), std::get<1>(kvp.first)));
+          conflict_palettes.insert(
+            conflict_palettes.end(),
+            palette_vector.begin(),
+            palette_vector.end());
+        }
       }
-      else
+      if (!conflict_xy.empty())
       {
-        conflict_xy.emplace_back(fmt::format(
-          "({},{})", std::get<0>(kvp.first), std::get<1>(kvp.first)));
-        conflict_palettes.insert(
-          conflict_palettes.end(),
-          palette_vector.begin(),
-          palette_vector.end());
+        spdlog::info("Conflicting Palettes:");
+        for (const auto &cxy : conflict_xy)
+        {
+          spdlog::info("conflict xy: {}", cxy);
+        }
+        std::ranges::sort(conflict_palettes);
+        auto [first, last] = std::ranges::unique(conflict_palettes);
+        conflict_palettes.erase(first, last);
+        for (auto p : conflict_palettes)
+        {
+          spdlog::info("conflict palette: {}", p);
+        }
       }
-    }
-    if (!conflict_xy.empty())
-    {
-      spdlog::info("Conflicting Palettes:");
-      for (const auto &cxy : conflict_xy)
-      {
-        spdlog::info("conflict xy: {}", cxy);
-      }
-      std::ranges::sort(conflict_palettes);
-      auto [first, last] = std::ranges::unique(conflict_palettes);
-      conflict_palettes.erase(first, last);
-      for (auto p : conflict_palettes)
-      {
-        spdlog::info("conflict palette: {}", p);
-      }
-    }
-    return conflict_palettes;
-  });
+      return conflict_palettes;
+    });
   return palettes;
 }
 
@@ -2107,9 +2166,12 @@ void map_sprite::test_map(const std::filesystem::path &saved_path) const
             pairs.begin(), pairs.end(), pair_type{ nullptr, nullptr }),
           pairs.end());
         std::ranges::for_each(pairs, [](const pair_type &pair) {
-          std::cout << *pair.first << std::endl
-                    << *pair.second << std::endl
-                    << std::endl;
+          format(*pair.first, [](std::string_view name, const auto &value) {
+            spdlog::info("tile {}: {}", name, value);
+          });
+          format(*pair.second, [](std::string_view name, const auto &value) {
+            spdlog::info("tile {}: {}", name, value);
+          });
         });
       }
     });
