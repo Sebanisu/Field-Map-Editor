@@ -3,6 +3,7 @@
 //
 
 #include "gui.hpp"
+#include "Configuration.hpp"
 #include "gui_labels.hpp"
 #include "GuiBatch.hpp"
 #include "open_viii/paths/Paths.hpp"
@@ -646,6 +647,11 @@ void gui::combo_field() const
   //        static_cast<int>(m_archives_group.mapdata_c_str().size()),
   //        items))
   {
+    Configuration config{};
+    const auto   &maps = m_archives_group.mapdata();
+    config->insert_or_assign(
+      "starter_field", *std::next(maps.begin(), m_selections.field));
+    config.save();
     update_field();
   }
 }
@@ -1550,9 +1556,9 @@ int gui::get_selected_field()
   }
   return 0;
 }
-std::string_view gui::starter_field() const
+std::string gui::starter_field() const
 {
-  return "ecenter3";
+  return Configuration{}["starter_field"].value_or(std::string("ecenter3"));
 }
 
 

@@ -274,7 +274,7 @@ private:
   void             combo_compact_type(filter<compact_type> &) const;
   void             popup_batch_reswizzle() const;
   void             popup_batch_deswizzle() const;
-  std::string_view starter_field() const;
+  std::string starter_field() const;
   void             popup_batch_common_filter_start(
                 ::filter<std::filesystem::path> &filter,
                 std::string_view                 prefix,
