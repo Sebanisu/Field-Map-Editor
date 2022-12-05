@@ -335,8 +335,8 @@ void gui::popup_batch_common(
 
           if (map_pairs.size() > 1U)
           {
-            fmt::print(
-              "{}:{} - {}: {}\t {}: {}\n",
+            spdlog::debug(
+              "{}:{} - {}: {}\t {}: {}",
               __FILE__,
               __LINE__,
               gui_labels::count_of_maps,
@@ -366,7 +366,7 @@ void gui::popup_batch_common(
               }
               const auto coo_view =
                 filename_view.substr(std::size(basename_view) + 1U, 2U);
-              fmt::print("\t{}\t{}\n", filename, coo_view);
+              spdlog::info("Filename and coo: {}\t{}", filename, coo_view);
               map = map.with_coo(open_viii::LangCommon::from_string(coo_view));
               process(selected_path, map, rest...);
             }
@@ -1933,8 +1933,8 @@ bool gui::batch_deswizzle::operator()(
     if (fields.size() <= pos)
     {
       auto current = std::chrono::high_resolution_clock::now();
-      fmt::print(
-        "{:%H:%M:%S} - {}\n",
+      spdlog::info(
+        "{:%H:%M:%S} - {}",
         current - start,
         gui_labels::batch_deswizzle_finish);
       disable();
@@ -2007,7 +2007,7 @@ bool gui::scrolling::scroll(std::array<float, 2U> &in_xy, const sf::Time &time)
   else
   {
     float total_time = (in_xy[0] + 1.F) * total_scroll_time[0];
-    //        fmt::print("{:.2f} = ({:.2f} + 1.00) * {:.2f}\n",
+    //        spdlog::info("{:.2f} = ({:.2f} + 1.00) * {:.2f}",
     //          total_time,
     //          in_xy[0],
     //          total_scroll_time[0]);
@@ -2082,8 +2082,8 @@ bool gui::batch_reswizzle::operator()(
     if (fields.size() <= pos)
     {
       auto current = std::chrono::high_resolution_clock::now();
-      fmt::print(
-        "{:%H:%M:%S} - Finished the batch swizzle...\n", current - start);
+      spdlog::info(
+        "{:%H:%M:%S} - Finished the batch swizzle...", current - start);
       disable();
       return pos > 0U;
     }
@@ -2175,8 +2175,8 @@ bool gui::batch_embed::operator()(
     if (fields.size() <= m_pos)
     {
       auto current = std::chrono::high_resolution_clock::now();
-      fmt::print(
-        "{:%H:%M:%S} - Finished the batch embed operation...\n",
+      spdlog::info(
+        "{:%H:%M:%S} - Finished the batch embed operation...",
         current - m_start);
       disable();
       return m_pos > 0U;
@@ -2364,7 +2364,7 @@ void gui::popup_batch_embed() const
                //                   auto        dst  = src;// copy
                //                   const auto &path = zzzmain.path();
                //
-               //                   fmt::print("Attempting to work: \"{}\"\n",
+               //                   spdlog::info("Attempting to work: \"{}\"",
                //                   path.string()); if (!any_matches(results,
                //                   dst))
                //                   {
@@ -2415,7 +2415,7 @@ void gui::popup_batch_embed() const
                //                     out_path,
                //                     std::ios::out | std::ios::binary |
                //                     std::ios::trunc);
-               //                   fmt::print("Creating: \"{}\"\n",
+               //                   spdlog::info("Creating: \"{}\"",
                //                   out_path.string()); const auto count =
                //                     std::bit_cast<std::array<char,
                //                     sizeof(std::uint32_t)>>(

@@ -147,7 +147,7 @@ inline static bool generic_combo(
       });
       //      if (old != current_idx)
       //      {
-      //        fmt::print(pattern, gui_labels::set, name, *next(values,
+      //        spdlog::info(pattern, gui_labels::set, name, *next(values,
       //        current_idx));
       //      }
       ImGui::EndCombo();
@@ -204,7 +204,7 @@ inline static bool generic_combo(
         idx));
   };
   const auto            current_item = next(strings, current_idx);
-  static constexpr auto pattern      = "{}: \t{} \t{}";
+  static constexpr auto pattern      = "{}: \t{}\t{}\t{}";
   const auto            old          = current_idx;
   {
     const auto sc = scope_guard{ &ImGui::PopID };
@@ -238,7 +238,12 @@ inline static bool generic_combo(
       });
       if (old != current_idx)
       {
-        spdlog::info(pattern, gui_labels::set, name, *next(values, current_idx));
+        spdlog::info(
+          pattern,
+          gui_labels::set,
+          name,
+          *next(values, current_idx),
+          *next(strings, current_idx));
       }
       ImGui::EndCombo();
     }

@@ -334,7 +334,7 @@ void map_sprite::find_deswizzle_path(
           if (filtered_paths.begin() != filtered_paths.end())
           {
               const auto& path = *(filtered_paths.begin());
-              fmt::print("{}\n", path.string());
+              spdlog::info("{}", path.string());
               texture->loadFromFile(path.string());
               texture->setSmooth(false);
               texture->generateMipmap();
@@ -692,21 +692,21 @@ void map_sprite::update_position(
         // but this should catch obvious problems.
         spdlog::info(
           "There are {} tiles at this location. Choose an empty "
-          "location!\n",
+          "location!",
           intersecting.size());
         return;
       }
       const auto &tile     = tiles[m_saved_indicies.front()];
       bool        same_row = ((tile.source_y() / TILE_SIZE) == tile_pos.y)
                       && (texture_page == tile.texture_id());
-      //        fmt::print("{} == {} && {} == {}\n",
+      //        spdlog::info("{} == {} && {} == {}",
       //          (tile.source_y() / TILE_SIZE),
       //          tile_pos.y,
       //          texture_page,
       //          tile.texture_id());
       const auto empty_count = row_empties(
         static_cast<std::uint8_t>(tile_pos.y), texture_page, same_row);
-      fmt::print("Empty cells in row = {}\n", empty_count);
+      spdlog::info("Empty cells in row = {}", empty_count);
       if (empty_count == 0)
       {
         return;
@@ -836,12 +836,11 @@ std::vector<size_t> map_sprite::find_intersecting(
           std::cout << tile << std::endl;
           return static_cast<std::size_t>(std::distance(start, curr));
         });
-      fmt::print("\n\tFound {:3}\n", out.size());
+      spdlog::info("Found {:3} intersecting tiles", out.size());
       for (const auto &i : out)
       {
-        fmt::print("{:4} ", i);
+        spdlog::info("Tile index: {:4} ", i);
       }
-      puts("\n");
       return out;
     });
 }
@@ -1030,7 +1029,7 @@ void map_sprite::for_all_tiles(
       // apply the tileset texture
 
       // std::lock_guard<std::mutex> lock(mutex_texture);
-      // fmt::print("({}, {})\t", raw_texture_size.x, raw_texture_size.y);
+      // spdlog::info("({}, {})\t", raw_texture_size.x, raw_texture_size.y);
       // draw the vertex array
       target.draw(quad.data(), quad.size(), sf::TriangleStrip, states);
       drew = true;
@@ -1246,14 +1245,14 @@ void map_sprite::resize_render_texture() const
           break;
         }
       }
-      // fmt::print(
-      //   "{}, ({}, {})\n", m_scale, width() * m_scale, height() * m_scale);
+      // spdlog::info(
+      //   "{}, ({}, {})", m_scale, width() * m_scale, height() * m_scale);
       m_render_texture->create(width() * m_scale, height() * m_scale);
     }
     else
     {
       m_scale = 1;
-      // fmt::print("{}, ({}, {})\n", m_scale, width(), height());
+      // spdlog::info("{}, ({}, {})", m_scale, width(), height());
       m_render_texture->create(width(), height());
     }
   }
@@ -1555,7 +1554,8 @@ bool map_sprite::check_if_one_palette(const std::uint8_t &texture_page) const
         filtered_tiles, {}, [](const auto &tile) { return tile.palette_id(); });
       if (min != filtered_tiles.end() && max != filtered_tiles.end())
       {
-        fmt::print("{}\t{}\n", min->palette_id(), max->palette_id());
+        spdlog::info(
+          "Unmatched Palettes {}\t{}", min->palette_id(), max->palette_id());
         return !std::cmp_equal(min->palette_id(), max->palette_id());
       }
       return false;
@@ -1720,7 +1720,7 @@ std::vector<std::uint8_t>
       else
       {
         conflict_xy.emplace_back(fmt::format(
-          "\tx,y: ({},{})\n", std::get<0>(kvp.first), std::get<1>(kvp.first)));
+          "({},{})", std::get<0>(kvp.first), std::get<1>(kvp.first)));
         conflict_palettes.insert(
           conflict_palettes.end(),
           palette_vector.begin(),
@@ -1729,17 +1729,17 @@ std::vector<std::uint8_t>
     }
     if (!conflict_xy.empty())
     {
-      fmt::print("Conflicting Palettes:\n");
+      spdlog::info("Conflicting Palettes:");
       for (const auto &cxy : conflict_xy)
       {
-        fmt::print("{}", cxy);
+        spdlog::info("conflict xy: {}", cxy);
       }
       std::ranges::sort(conflict_palettes);
       auto [first, last] = std::ranges::unique(conflict_palettes);
       conflict_palettes.erase(first, last);
       for (auto p : conflict_palettes)
       {
-        fmt::print("\tpalette: {}\n", p);
+        spdlog::info("conflict palette: {}", p);
       }
     }
     return conflict_palettes;
@@ -1817,9 +1817,8 @@ void map_sprite::async_save(
       std::filesystem::create_directories(op.parent_path(), ec);
       if (ec)
       {
-        fmt::print(
-          stderr,
-          "error {}:{} - {}: {} - path: {}\n",
+        spdlog::error(
+          "error {}:{} - {}: {} - path: {}",
           __FILE__,
           __LINE__,
           ec.value(),
@@ -1831,9 +1830,8 @@ void map_sprite::async_save(
         image.getSize().x == 0 || image.getSize().y == 0
         || image.getPixelsPtr() == nullptr)
       {
-        fmt::print(
-          stderr,
-          "error {}:{} Invalid image: \"{}\" - ({},{})\n",
+        spdlog::error(
+          "error {}:{} Invalid image: \"{}\" - ({},{})",
           __FILE__,
           __LINE__,
           op.string(),
@@ -1847,12 +1845,12 @@ void map_sprite::async_save(
       {
         if (!save_png_image(image, filename))
         {
-          fmt::print(stderr, "Looping on fail {:>2} times\n", i++);
+          spdlog::error("Looping on fail {:>2} times", i++);
           std::this_thread::sleep_for(std::chrono::milliseconds{ 1000 });
         }
         else
         {
-          fmt::print("Saved \"{}\"\n", filename);
+          spdlog::info("Saved \"{}\"", filename);
           break;
         }
       }
@@ -2040,8 +2038,8 @@ void map_sprite::load_map(const std::filesystem::path &src_path) const
   assert(std::cmp_equal(tilecount, filesize / tilesize));
   if (!std::cmp_equal(tilecount, filesize / tilesize))
   {
-    fmt::print(
-      "Error wrong size map file, {} != {} / {}\n",
+    spdlog::error(
+      "Error wrong size map file, {} != {} / {}",
       tilecount,
       filesize,
       tilesize);
@@ -2120,7 +2118,7 @@ void map_sprite::test_map(const std::filesystem::path &saved_path) const
 void map_sprite::save_modified_map(const std::filesystem::path &dest_path) const
 {
   const auto path = dest_path.string();
-  fmt::print("Saving modified map: {}\n", path);
+  spdlog::info("Saving modified map: {}", path);
   open_viii::tools::write_buffer(
     [this](std::ostream &os) {
       for_all_tiles(

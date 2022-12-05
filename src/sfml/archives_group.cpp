@@ -3,6 +3,7 @@
 //
 #include "archives_group.hpp"
 #include <ranges>
+#include <spdlog/spdlog.h>
 #include <string_view>
 #include <vector>
 open_viii::archive::Archives archives_group::get_archives() const
@@ -85,8 +86,7 @@ std::shared_ptr<open_viii::archive::FIFLFS<false>>
   }
   else
   {
-    fmt::print(
-      stderr,
+    spdlog::error(
       "{}:{} - Index out of range {} / {}\n",
       __FILE__,
       __LINE__,
