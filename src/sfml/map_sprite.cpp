@@ -3,6 +3,7 @@
 #include "format_imgui_text.hpp"
 #include <bit>
 #include <open_viii/graphics/Png.hpp>
+#include <spdlog/spdlog.h>
 #include <utility>
 // #define USE_THREADS
 using namespace open_viii::graphics::background;
@@ -131,9 +132,8 @@ const sf::Texture *map_sprite::get_texture(const ::PupuID &pupu) const
     auto i = static_cast<std::size_t>(std::distance(values.begin(), it));
     if (i >= MAX_TEXTURES)
     {
-      fmt::print(
-        stderr,
-        "{}:{} - Index out of range {} / {}\n",
+      spdlog::error(
+        "{}:{} - Index out of range {} / {}",
         __FILE__,
         __LINE__,
         i,
@@ -256,7 +256,7 @@ void map_sprite::find_upscale_path(
       if (filtered_paths.begin() != filtered_paths.end())
       {
         const auto &path = *(filtered_paths.begin());
-        fmt::print("{}\n", path.string());
+        spdlog::info("upscale path: {}", path.string());
         texture->loadFromFile(path.string());
         texture->setSmooth(false);
         texture->generateMipmap();
@@ -264,9 +264,8 @@ void map_sprite::find_upscale_path(
     };
     if (i >= MAX_TEXTURES)
     {
-      fmt::print(
-        stderr,
-        "{}:{} - Index out of range {} / {}\n",
+      spdlog::error(
+        "{}:{} - Index out of range {} / {}",
         __FILE__,
         __LINE__,
         i,
@@ -299,7 +298,7 @@ void map_sprite::find_deswizzle_path(
       const auto fn = [in_path](sf::Texture *texture) -> void {
         if (std::filesystem::exists(in_path))
         {
-          fmt::print("{}\n", in_path.string());
+          spdlog::info("texture path: \"{}\"", in_path.string());
           texture->loadFromFile(in_path.string());
           texture->setSmooth(false);
           texture->generateMipmap();
@@ -307,9 +306,8 @@ void map_sprite::find_deswizzle_path(
       };
       if (i >= MAX_TEXTURES)
       {
-        fmt::print(
-          stderr,
-          "{}:{} - Index out of range {} / {}\n",
+        spdlog::error(
+          "{}:{} - Index out of range {} / {}",
           __FILE__,
           __LINE__,
           i,
@@ -365,7 +363,7 @@ void map_sprite::find_upscale_path(
       if (filtered_paths.begin() != filtered_paths.end())
       {
         const auto &path = *(filtered_paths.begin());
-        fmt::print("{}\n", path.string());
+        spdlog::info("texture path: \"{}\"", path.string());
         texture->loadFromFile(path.string());
         texture->setSmooth(false);
         texture->generateMipmap();
@@ -692,7 +690,7 @@ void map_sprite::update_position(
         // this might not be good enough as two 4 bpp tiles fit in the
         // same location as 8 bpp. and two 8 bpp fit in space for 16 bpp.
         // but this should catch obvious problems.
-        fmt::print(
+        spdlog::info(
           "There are {} tiles at this location. Choose an empty "
           "location!\n",
           intersecting.size());

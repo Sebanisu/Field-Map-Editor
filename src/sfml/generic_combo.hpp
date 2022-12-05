@@ -10,39 +10,37 @@
 #include <fmt/format.h>
 #include <imgui.h>
 #include <ranges>
+#include <spdlog/spdlog.h>
 #include <utility>
 namespace fme
 {
 template<typename T>
-concept returns_range_concept = requires(std::remove_cvref_t<T> t)
-{
-  {
-    t()
-    } -> std::ranges::range;
-};
+concept returns_range_concept = requires(std::remove_cvref_t<T> t) {
+                                  {
+                                    t()
+                                    } -> std::ranges::range;
+                                };
 template<typename T>
-concept filter_concept = requires(std::remove_cvref_t<T> t)
-{
-  {
-    t.enabled()
-    } -> std::convertible_to<bool>;
-  {
-    t.update(t.value())
-    } -> std::convertible_to<T>;
-  {
-    t.enable()
-    } -> std::convertible_to<T>;
-  {
-    t.disable()
-    } -> std::convertible_to<T>;
-};
+concept filter_concept = requires(std::remove_cvref_t<T> t) {
+                           {
+                             t.enabled()
+                             } -> std::convertible_to<bool>;
+                           {
+                             t.update(t.value())
+                             } -> std::convertible_to<T>;
+                           {
+                             t.enable()
+                             } -> std::convertible_to<T>;
+                           {
+                             t.disable()
+                             } -> std::convertible_to<T>;
+                         };
 template<typename T>
-concept returns_filter_concept = requires(std::remove_cvref_t<T> t)
-{
-  {
-    t()
-    } -> filter_concept;
-};
+concept returns_filter_concept = requires(std::remove_cvref_t<T> t) {
+                                   {
+                                     t()
+                                     } -> filter_concept;
+                                 };
 template<
   returns_range_concept  value_lambdaT,
   returns_range_concept  string_lambdaT,
@@ -91,8 +89,8 @@ inline static bool generic_combo(
       static_cast<std::iter_difference_t<decltype(std::ranges::cbegin(r))>>(
         idx));
   };
-  const auto            current_item = next(strings, current_idx);
-  //static constexpr auto pattern      = "{}: \t{} \t{}\n";
+  const auto current_item = next(strings, current_idx);
+  //  static constexpr auto pattern      = "{}: \t{} \t{}";
   {
     const auto sc = scope_guard{ &ImGui::PopID };
     ImGui::PushID(++id);
@@ -101,14 +99,16 @@ inline static bool generic_combo(
       if (checked)
       {
         filter.enable();
-//        fmt::print(
-//          pattern, gui_labels::enable, name, *next(values, current_idx));
+        //        spdlog::info(
+        //          pattern, gui_labels::enable, name, *next(values,
+        //          current_idx));
       }
       else
       {
         filter.disable();
-//        fmt::print(
-//          pattern, gui_labels::disable, name, *next(values, current_idx));
+        //        spdlog::info(
+        //          pattern, gui_labels::disable, name, *next(values,
+        //          current_idx));
       }
       changed = true;
     }
@@ -145,10 +145,11 @@ inline static bool generic_combo(
           // keyboard navigation support)
         }
       });
-//      if (old != current_idx)
-//      {
-//        fmt::print(pattern, gui_labels::set, name, *next(values, current_idx));
-//      }
+      //      if (old != current_idx)
+      //      {
+      //        fmt::print(pattern, gui_labels::set, name, *next(values,
+      //        current_idx));
+      //      }
       ImGui::EndCombo();
     }
   }
@@ -161,7 +162,8 @@ template<
   returns_range_concept value_lambdaT,
   returns_range_concept string_lambdaT,
   typename valueT>
-//requires std::same_as<std::decay<std::ranges::range_value_t<std::invoke_result_t<value_lambdaT>>>,valueT>
+// requires
+// std::same_as<std::decay<std::ranges::range_value_t<std::invoke_result_t<value_lambdaT>>>,valueT>
 inline static bool generic_combo(
   int             &id,
   std::string_view name,
@@ -202,7 +204,7 @@ inline static bool generic_combo(
         idx));
   };
   const auto            current_item = next(strings, current_idx);
-  static constexpr auto pattern      = "{}: \t{} \t{}\n";
+  static constexpr auto pattern      = "{}: \t{} \t{}";
   const auto            old          = current_idx;
   {
     const auto sc = scope_guard{ &ImGui::PopID };
@@ -236,7 +238,7 @@ inline static bool generic_combo(
       });
       if (old != current_idx)
       {
-        fmt::print(pattern, gui_labels::set, name, *next(values, current_idx));
+        spdlog::info(pattern, gui_labels::set, name, *next(values, current_idx));
       }
       ImGui::EndCombo();
     }

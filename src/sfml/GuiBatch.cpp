@@ -301,7 +301,7 @@ bool fme::GuiBatch::ask_transformation() const
             BatchOperationTransformation::FlattenPalette));
     }
     if (old != m_transformation_type)
-      fmt::print(
+      spdlog::info(
         "0b{:0>6b}U\n", static_cast<std::uint32_t>(m_transformation_type));
   }
   return !(
@@ -483,7 +483,7 @@ cppcoro::generator<::map_sprite> fme::GuiBatch::get_map_sprite(
 
   popup_batch_common_filter_start(local_filters, base_name);
 
-  fmt::print("{}\n", base_name);
+  spdlog::info("base name: {}", base_name);
   auto sprite =
     map_sprite{ field, open_viii::LangT::generic, {}, local_filters, {} };
   const auto load_map_file =
@@ -500,8 +500,9 @@ cppcoro::generator<::map_sprite> fme::GuiBatch::get_map_sprite(
   {
     load_map_file(local_filters.upscale);
     load_map_file(local_filters.deswizzle);
-    fmt::print(
-      "{}\n", open_viii::LangCommon::to_string(open_viii::LangT::generic));
+    spdlog::info(
+      "language code: {}",
+      open_viii::LangCommon::to_string(open_viii::LangT::generic));
     co_yield std::move(sprite);
   }
   auto gen_field_coo = get_field_coos(field);
@@ -510,7 +511,7 @@ cppcoro::generator<::map_sprite> fme::GuiBatch::get_map_sprite(
     sprite = map_sprite{ field, coo, {}, local_filters, {} };
     if (!sprite.fail())
     {
-      fmt::print("{}\n", open_viii::LangCommon::to_string(coo));
+      spdlog::info("language code: {}", open_viii::LangCommon::to_string(coo));
       load_map_file(local_filters.upscale);
       load_map_file(local_filters.deswizzle);
       co_yield std::move(sprite);
@@ -549,7 +550,7 @@ cppcoro::generator<std::shared_ptr<open_viii::archive::FIFLFS<false>>>
   auto gen_fields = get_field_id_and_name(archives_group.mapdata());
   for (const auto &[i, name] : gen_fields)
   {
-    fmt::print("{:>3}: {}\n", i, name);
+    spdlog::info("field id: {:>3}\tname: {}", i, name);
     if (auto f = archives_group.field(i); f)
     {
       co_yield std::move(f);
@@ -579,7 +580,7 @@ void fme::GuiBatch::operator()(int *id)
   }
   if (asked)
   {
-    static std::optional<decltype(source())> gen_source{};
+    static std::optional<decltype(source())>      gen_source{};
     static decltype(decltype(source()){}.begin()) gen_current{};
     if (!gen_source.has_value())
     {

@@ -42,26 +42,31 @@ add_executable(${PROJECT_NAME}_SFML
         grid.cpp
         upscales.cpp
         GuiBatch.cpp
+        Configuration.cpp
         )
 #set_property(TARGET ${PROJECT_NAME}_SFML PROPERTY CXX_STANDARD 20)
 #find_package(ImGui-SFML REQUIRED)
-find_package(fmt)
-find_package(cppcoro)
+find_package(cppcoro) # todo will probably remove at some point.
+find_package(tomlplusplus REQUIRED)
+find_package(spdlog REQUIRED)
 include(${CMAKE_SOURCE_DIR}/cmake/imgui-sfml.cmake)
 target_link_libraries(${PROJECT_NAME}_SFML
         PRIVATE project_warnings
         PRIVATE project_options
         PRIVATE ImGui-SFML
-        PRIVATE fmt::fmt
         PRIVATE OpenVIII_CPP_WIP_VIIIPaths
         PRIVATE OpenVIII_CPP_WIP_VIIIArchive
         PRIVATE OpenVIII_CPP_WIP_VIIIGraphics
         PRIVATE Threads::Threads
         PRIVATE imgui_filebrowser
-        PRIVATE cppcoro::cppcoro)
+        PRIVATE cppcoro::cppcoro
+        PRIVATE tomlplusplus::tomlplusplus
+        PRIVATE spdlog::spdlog
+        )
 
 target_compile_definitions(${PROJECT_NAME}_SFML
-        PUBLIC NOMINMAX) # imgui uses unguarded min and max.
+        PUBLIC NOMINMAX # imgui uses unguarded min and max.
+        PUBLIC TOML_EXCEPTIONS=0)
 if (MSVC)
     target_compile_definitions(${PROJECT_NAME}_SFML
             PUBLIC _CRT_SECURE_NO_WARNINGS) # required by libpng
