@@ -160,7 +160,7 @@ inline static bool generic_combo(
 }
 template<
   returns_range_concept value_lambdaT,
-  returns_range_concept string_lambdaT,
+  typename string_lambdaT,
   typename valueT>
 // requires
 // std::same_as<std::decay<std::ranges::range_value_t<std::invoke_result_t<value_lambdaT>>>,valueT>
@@ -173,7 +173,7 @@ inline static bool generic_combo(
 {
   bool        changed = false;
   const auto &values  = value_lambda();
-  const auto &strings = string_lambda();
+  auto        strings = string_lambda() | std::ranges::views::all;
   static std::ranges::range_difference_t<decltype(values)> current_idx = {};
   {
     if (const auto it = std::find(values.begin(), values.end(), value);
@@ -203,19 +203,19 @@ inline static bool generic_combo(
       static_cast<std::iter_difference_t<decltype(std::ranges::cbegin(r))>>(
         idx));
   };
-  const auto            current_item = next(strings, current_idx);
+  const auto           &current_item = *next(strings, current_idx);
   static constexpr auto pattern      = "{}: \t{}\t{}\t{}";
   const auto            old          = current_idx;
   {
     const auto sc = scope_guard{ &ImGui::PopID };
     ImGui::PushID(++id);
     if (ImGui::BeginCombo(
-          name.data(), current_item->data(), ImGuiComboFlags_HeightLarge))
+          name.data(), current_item.data(), ImGuiComboFlags_HeightLarge))
     // The second parameter is the label previewed
     // before opening the combo.
     {
       std::ranges::for_each(strings, [&](const auto &string) {
-        const bool  is_selected = (*current_item == string);
+        const bool  is_selected = (current_item == string);
         // You can store your selection however you
         // want, outside or inside your objects
         const char *c_str_value = std::ranges::data(string);
@@ -224,8 +224,18 @@ inline static bool generic_combo(
           ImGui::PushID(++id);
           if (ImGui::Selectable(c_str_value, is_selected))
           {
-            current_idx = std::distance(std::ranges::data(strings), &string);
-            changed     = true;
+            for (current_idx = 0; const auto &temp : strings)
+            {
+              if (std::ranges::equal(temp, string))
+              {
+                changed = true;
+                break;
+              }
+              ++current_idx;
+            }
+            //            current_idx =
+            //            std::distance(std::ranges::data(strings), &string);
+            //            changed     = true;
           }
         }
         if (is_selected)

@@ -3,7 +3,6 @@
 //
 
 #include "gui.hpp"
-#include "Configuration.hpp"
 #include "gui_labels.hpp"
 #include "GuiBatch.hpp"
 #include "open_viii/paths/Paths.hpp"
@@ -981,9 +980,10 @@ void gui::file_browser_locate_ff8() const
     auto selected_path = m_directory_browser.GetSelected();
     if (m_modified_directory_map == map_directory_mode::ff8_install_directory)
     {
-      m_paths.emplace_back(selected_path.string());
-      m_paths_c_str = archives_group::get_c_str(
-        m_paths);// seems the pointers move when you push back above
+      m_paths.push_back(selected_path.string());
+      Configuration config{};
+      config->insert_or_assign("paths_vector", m_paths);
+      config.save();
       m_selections.path = static_cast<int>(m_paths.size()) - 1;
       update_path();
     }
@@ -1291,7 +1291,13 @@ bool gui::combo_path() const
         [this]() {
           return std::views::iota(0, static_cast<int>(std::size(m_paths)));
         },
-        [this]() { return m_paths; },
+        [this]() {
+          return m_paths
+                 | std::ranges::views::transform(
+                   [](toml::node &item) -> std::string {
+                     return item.value_or<std::string>({});
+                   });
+        },
         m_selections.path))
   {
     update_path();
@@ -1299,13 +1305,30 @@ bool gui::combo_path() const
   }
   return false;
 }
-std::vector<std::string> gui::get_paths()
+toml::array gui::get_paths()
 {
-  std::vector<std::string> paths{};
-  open_viii::Paths::for_each_path([&paths](const std::filesystem::path &p) {
-    paths.emplace_back(p.string());
-  });
-  return paths;
+  const char   *paths_vector = "paths_vector";
+  Configuration config{};
+  if (!config->contains(paths_vector))
+  {
+    const auto &default_paths = open_viii::Paths::get();
+    // todo get all default paths for linux and windows.
+    toml::array paths_array{};
+    paths_array.reserve(default_paths.size());
+    for (const auto &path : default_paths)
+    {
+      paths_array.push_back(path);
+    }
+    config->insert_or_assign(paths_vector, std::move(paths_array));
+    config.save();
+  }
+  return *(config->get_as<toml::array>(paths_vector));
+
+  //  std::vector<std::string> paths{};
+  //  open_viii::Paths::for_each_path([&paths](const std::filesystem::path &p) {
+  //    paths.emplace_back(p.string());
+  //  });
+  //  return paths;
 }
 void gui::loop_events() const
 {
@@ -1475,7 +1498,8 @@ archives_group gui::get_archives_group() const
 {
   if (!m_paths.empty())
   {
-    return { open_viii::LangCommon::to_array().front(), m_paths.front() };
+    return { open_viii::LangCommon::to_array().front(),
+             m_paths.front().value_or(std::string{}) };
   }
   return {};
 }
@@ -1487,18 +1511,16 @@ sf::RenderWindow gui::get_render_window() const
 void gui::update_path() const
 {
   m_archives_group = m_archives_group.with_path(
-    m_paths.at(static_cast<std::size_t>(m_selections.path)));
+    m_paths.at(static_cast<std::size_t>(m_selections.path))
+      .value_or(std::string{}));
   update_field();
   if (m_batch_embed4.enabled())
   {
     m_batch_embed4.enable(
-      m_paths.at(static_cast<std::size_t>(m_selections.path)),
+      m_paths.at(static_cast<std::size_t>(m_selections.path))
+        .value_or(std::string{}),
       m_batch_embed4.start());
   }
-}
-std::vector<const char *> gui::get_paths_c_str() const
-{
-  return archives_group::get_c_str(m_paths);
 }
 mim_sprite gui::get_mim_sprite() const
 {
@@ -1521,7 +1543,6 @@ gui::gui(std::uint32_t width, std::uint32_t height)
   , m_window_height(height)
   , m_window(get_render_window())
   , m_paths(get_paths())
-  , m_paths_c_str(get_paths_c_str())
   , m_archives_group(get_archives_group())
   , m_field(init_field())
   , m_mim_sprite(get_mim_sprite())
@@ -1809,7 +1830,9 @@ bool gui::combo_upscale_path(
 {
   std::vector<std::string> paths = {};
   auto                     transform_paths =
-    m_paths
+    m_paths | std::views::transform([](const toml::node &item) -> std::string {
+      return item.value_or(std::string{});
+    })
     | std::views::transform([this, &field_name, &coo](const std::string &path) {
         if (m_field)
           return upscales(std::filesystem::path(path), field_name, coo)
@@ -1861,7 +1884,9 @@ bool gui::combo_upscale_path(
 {
   std::vector<std::string> paths = {};
   auto                     transform_paths =
-    m_paths
+    m_paths | std::views::transform([](const toml::node &item) -> std::string {
+      return item.value_or(std::string{});
+    })
     | std::views::transform(
       [this, &field_name, &coo](const std::string &in_path) {
         if (m_field)
@@ -2335,7 +2360,8 @@ void gui::popup_batch_embed() const
     else
     {
       m_batch_embed4.enable(
-        m_paths.at(static_cast<std::size_t>(m_selections.path)),
+        m_paths.at(static_cast<std::size_t>(m_selections.path))
+          .value_or(std::string{}),
         m_batch_embed2.start());
     }
   }
@@ -2511,7 +2537,8 @@ void gui::popup_batch_embed() const
              }))
   {
     m_batch_embed4.enable(
-      m_paths.at(static_cast<std::size_t>(m_selections.path)),
+      m_paths.at(static_cast<std::size_t>(m_selections.path))
+        .value_or(std::string{}),
       m_batch_embed3.start());
   }
   else if (m_batch_embed4(

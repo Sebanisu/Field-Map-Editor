@@ -5,6 +5,7 @@
 #ifndef FIELD_MAP_EDITOR_GUI_HPP
 #define FIELD_MAP_EDITOR_GUI_HPP
 #include "archives_group.hpp"
+#include "Configuration.hpp"
 #include "events.hpp"
 #include "filebrowser.hpp"
 #include "formatters.hpp"
@@ -169,8 +170,7 @@ private:
   std::uint32_t                     m_window_height = { default_window_height };
   mutable sf::RenderWindow          m_window        = {};
   mutable sf::Clock                 m_delta_clock   = {};
-  mutable std::vector<std::string>  m_paths         = {};
-  mutable std::vector<const char *> m_paths_c_str   = {};
+  mutable toml::array               m_paths         = {};
   mutable archives_group            m_archives_group                      = {};
   mutable std::shared_ptr<open_viii::archive::FIFLFS<false>> m_field      = {};
   mutable std::array<float, 2>                               xy           = {};
@@ -196,42 +196,41 @@ private:
       static_cast<std::uint32_t>(ImGuiFileBrowserFlags_SelectDirectory)
       | static_cast<std::uint32_t>(ImGuiFileBrowserFlags_CreateNewDir))
   };
-  static std::vector<std::string> get_paths();
+  static toml::array        get_paths();
   // imgui doesn't support std::string or std::string_view or
   // std::filesystem::path, only const char *
-  std::vector<const char *>       get_paths_c_str() const;
-  archives_group                  get_archives_group() const;
-  sf::RenderWindow                get_render_window() const;
-  void                            update_path() const;
-  mim_sprite                      get_mim_sprite() const;
-  map_sprite                      get_map_sprite() const;
-  void                            init_and_get_style() const;
-  void                            loop_events() const;
-  void                            loop() const;
-  bool                            combo_path() const;
-  void                            combo_draw() const;
-  void                            file_browser_save_texture() const;
-  void                            file_browser_locate_ff8() const;
-  void                            menu_bar() const;
-  void                            slider_xy_sprite(auto &sprite) const;
-  void                            combo_pupu() const;
-  void                            combo_palette() const;
-  void                            combo_bpp() const;
-  void                            checkbox_mim_palette_texture() const;
-  void                            combo_field() const;
-  void                            combo_coo() const;
-  void                            combo_draw_bit() const;
-  std::string                     save_texture_path() const;
-  void                            update_field() const;
-  bool                            mim_test() const;
-  bool                            map_test() const;
-  void                            checkbox_map_swizzle() const;
-  void                            checkbox_map_disable_blending() const;
-  void                            menuitem_locate_ff8() const;
-  void                            menuitem_save_swizzle_textures() const;
-  void                            menuitem_save_deswizzle_textures() const;
-  void                            menuitem_load_swizzle_textures() const;
-  void                            menuitem_load_deswizzle_textures() const;
+  archives_group            get_archives_group() const;
+  sf::RenderWindow          get_render_window() const;
+  void                      update_path() const;
+  mim_sprite                get_mim_sprite() const;
+  map_sprite                get_map_sprite() const;
+  void                      init_and_get_style() const;
+  void                      loop_events() const;
+  void                      loop() const;
+  bool                      combo_path() const;
+  void                      combo_draw() const;
+  void                      file_browser_save_texture() const;
+  void                      file_browser_locate_ff8() const;
+  void                      menu_bar() const;
+  void                      slider_xy_sprite(auto &sprite) const;
+  void                      combo_pupu() const;
+  void                      combo_palette() const;
+  void                      combo_bpp() const;
+  void                      checkbox_mim_palette_texture() const;
+  void                      combo_field() const;
+  void                      combo_coo() const;
+  void                      combo_draw_bit() const;
+  std::string               save_texture_path() const;
+  void                      update_field() const;
+  bool                      mim_test() const;
+  bool                      map_test() const;
+  void                      checkbox_map_swizzle() const;
+  void                      checkbox_map_disable_blending() const;
+  void                      menuitem_locate_ff8() const;
+  void                      menuitem_save_swizzle_textures() const;
+  void                      menuitem_save_deswizzle_textures() const;
+  void                      menuitem_load_swizzle_textures() const;
+  void                      menuitem_load_deswizzle_textures() const;
   void
     menuitem_save_texture(const std::string &path, bool enabled = true) const;
   void
@@ -271,14 +270,14 @@ private:
   mutable map_directory_mode    m_modified_directory_map = {};
   mutable std::filesystem::path m_loaded_swizzle_texture_path{};
   mutable std::filesystem::path m_loaded_deswizzle_texture_path{};
-  void             combo_compact_type(filter<compact_type> &) const;
-  void             popup_batch_reswizzle() const;
-  void             popup_batch_deswizzle() const;
+  void        combo_compact_type(filter<compact_type> &) const;
+  void        popup_batch_reswizzle() const;
+  void        popup_batch_deswizzle() const;
   std::string starter_field() const;
-  void             popup_batch_common_filter_start(
-                ::filter<std::filesystem::path> &filter,
-                std::string_view                 prefix,
-                std::string_view                 base_name) const;
+  void        popup_batch_common_filter_start(
+           ::filter<std::filesystem::path> &filter,
+           std::string_view                 prefix,
+           std::string_view                 base_name) const;
   template<
     typename batch_opT,
     typename filterT,
