@@ -610,6 +610,9 @@ void gui::combo_coo() const
         },
         m_selections.coo))
   {
+    Configuration config{};
+    config->insert_or_assign("selections_palette", m_selections.palette);
+    config.save();
     if (mim_test())
     {
       m_mim_sprite = m_mim_sprite.with_coo(get_coo());
@@ -677,6 +680,10 @@ void gui::checkbox_map_swizzle() const
 {
   if (ImGui::Checkbox("Swizzle", &m_selections.draw_swizzle))
   {
+    Configuration config{};
+    config->insert_or_assign(
+      "selections_draw_swizzle", m_selections.draw_swizzle);
+    config.save();
     if (m_selections.draw_swizzle)
     {
       m_map_sprite.enable_disable_blends();
@@ -699,6 +706,10 @@ void gui::checkbox_map_disable_blending() const
     !m_selections.draw_swizzle
     && ImGui::Checkbox("Disable Blending", &m_selections.draw_disable_blending))
   {
+    Configuration config{};
+    config->insert_or_assign(
+      "selections_draw_disable_blending", m_selections.draw_disable_blending);
+    config.save();
     if (m_selections.draw_disable_blending)
     {
       m_map_sprite.enable_disable_blends();
@@ -714,6 +725,10 @@ void gui::checkbox_mim_palette_texture() const
 {
   if (ImGui::Checkbox("draw Palette Texture", &m_selections.draw_palette))
   {
+    Configuration config{};
+    config->insert_or_assign(
+      "selections_draw_palette", m_selections.draw_palette);
+    config.save();
     m_mim_sprite = m_mim_sprite.with_draw_palette(m_selections.draw_palette);
     m_changed    = true;
   }
@@ -746,6 +761,9 @@ void gui::combo_bpp() const
           static_cast<int>(bpp_items.size()),
           static_cast<int>(bpp_items.size())))
     {
+      Configuration config{};
+      config->insert_or_assign("selections_bpp", m_selections.bpp);
+      config.save();
       if (mim_test())
       {
         update_bpp(m_mim_sprite, bpp());
@@ -817,6 +835,9 @@ void gui::combo_palette() const
         {
           update_palette(m_map_sprite, palette());
         }
+        Configuration config{};
+        config->insert_or_assign("selections_palette", m_selections.palette);
+        config.save();
         m_changed = true;
       }
     }
@@ -891,11 +912,24 @@ void gui::menu_bar() const
     }
     if (ImGui::BeginMenu("Grid"))
     {
-      ImGui::MenuItem("draw Tile Grid", nullptr, &m_selections.draw_grid);
-      ImGui::MenuItem(
-        "draw Texture Page Grid",
-        nullptr,
-        &m_selections.draw_texture_page_grid);
+      if (ImGui::MenuItem("draw Tile Grid", nullptr, &m_selections.draw_grid))
+      {
+        Configuration config{};
+        config->insert_or_assign(
+          "selections_draw_grid", m_selections.draw_grid);
+        config.save();
+      }
+      if (ImGui::MenuItem(
+            "draw Texture Page Grid",
+            nullptr,
+            &m_selections.draw_texture_page_grid))
+      {
+        Configuration config{};
+        config->insert_or_assign(
+          "selections_draw_texture_page_grid",
+          m_selections.draw_texture_page_grid);
+        config.save();
+      }
       ImGui::EndMenu();
     }
 
@@ -1271,6 +1305,9 @@ void gui::combo_draw() const
         [this]() { return m_draw_selections; },
         m_selections.draw))
   {
+    Configuration config{};
+    config->insert_or_assign("selections_draw", m_selections.draw);
+    config.save();
     if (m_selections.draw == 0)
     {
       m_mim_sprite = get_mim_sprite();
@@ -1300,6 +1337,9 @@ bool gui::combo_path() const
         },
         m_selections.path))
   {
+    Configuration config{};
+    config->insert_or_assign("selection_path", m_selections.path);
+    config.save();
     update_path();
     return true;
   }
@@ -1634,7 +1674,10 @@ void gui::combo_filtered_palettes() const
     {
       m_map_sprite.update_render_texture();
       m_selections.palette = m_map_sprite.filter().palette.value();
-      m_changed            = true;
+      Configuration config{};
+      config->insert_or_assign("selections_palette", m_selections.palette);
+      config.save();
+      m_changed = true;
     }
   }
 }
@@ -1652,6 +1695,9 @@ void gui::combo_filtered_bpps() const
     m_map_sprite.update_render_texture();
     m_selections.bpp =
       static_cast<int>(m_map_sprite.filter().bpp.value().raw() & 3U);
+    Configuration config{};
+    config->insert_or_assign("selections_bpp", m_selections.bpp);
+    config.save();
     m_changed = true;
   }
 }
@@ -2819,5 +2865,23 @@ void gui::batch_ops_ask_menu() const
   }
   ImGui::End();
 #endif
+}
+gui::selections gui::default_selections() const
+{
+  gui::selections s{};
+  Configuration   config{};
+  s.path    = config["selections_path"].value_or(decltype(s.path){});
+  s.palette = config["selections_palette"].value_or(decltype(s.palette){});
+  s.bpp     = config["selections_bpp"].value_or(decltype(s.bpp){});
+  s.draw    = config["selections_draw"].value_or(decltype(s.draw){1});
+  s.coo     = config["selections_coo"].value_or(decltype(s.coo){});
+  s.draw_disable_blending =
+    config["selections_draw_disable_blending"].value_or(false);
+  s.draw_grid    = config["selections_draw_grid"].value_or(false);
+  s.draw_palette = config["selections_draw_palette"].value_or(false);
+  s.draw_swizzle = config["selections_draw_swizzle"].value_or(false);
+  s.draw_texture_page_grid =
+    config["selections_draw_texture_page_grid"].value_or(false);
+  return s;
 }
 }// namespace fme

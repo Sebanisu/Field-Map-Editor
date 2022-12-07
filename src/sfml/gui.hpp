@@ -153,6 +153,7 @@ private:
     bool draw_swizzle           = { false };
     bool draw_disable_blending  = { false };
   };
+  selections                        default_selections() const;
   static constexpr std::uint32_t    default_window_width  = 800U;
   static constexpr std::uint32_t    default_window_height = 600U;
   mutable scrolling                 m_scrolling           = {};
@@ -164,7 +165,7 @@ private:
   mutable batch_embed               m_batch_embed4        = {};
   mutable int                       m_id                  = {};
   mutable mouse_positions           m_mouse_positions     = {};
-  mutable selections                m_selections          = {};
+  mutable selections                m_selections          = {default_selections()};
   std::uint32_t                     m_window_width  = { default_window_width };
   mutable float                     m_scale_width   = {};
   std::uint32_t                     m_window_height = { default_window_height };
