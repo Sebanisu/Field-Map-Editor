@@ -195,46 +195,48 @@ private:
       static_cast<std::uint32_t>(ImGuiFileBrowserFlags_EnterNewFilename)
       | static_cast<std::uint32_t>(ImGuiFileBrowserFlags_CreateNewDir))
   };
+  mutable ImGui::FileBrowser m_load_file_browser{};
   mutable ImGui::FileBrowser m_directory_browser{
     static_cast<ImGuiFileBrowserFlags>(
       static_cast<std::uint32_t>(ImGuiFileBrowserFlags_SelectDirectory)
       | static_cast<std::uint32_t>(ImGuiFileBrowserFlags_CreateNewDir))
   };
-  static toml::array get_paths();
+  mutable sf::Texture loaded_image = {};
+  static toml::array  get_paths();
   // imgui doesn't support std::string or std::string_view or
   // std::filesystem::path, only const char *
-  archives_group     get_archives_group() const;
-  sf::RenderWindow   get_render_window() const;
-  void               update_path() const;
-  mim_sprite         get_mim_sprite() const;
-  map_sprite         get_map_sprite() const;
-  void               init_and_get_style() const;
-  void               loop_events() const;
-  void               loop() const;
-  bool               combo_path() const;
-  void               combo_draw() const;
-  void               file_browser_save_texture() const;
-  void               file_browser_locate_ff8() const;
-  void               menu_bar() const;
-  void               slider_xy_sprite(auto &sprite) const;
-  void               combo_pupu() const;
-  void               combo_palette() const;
-  void               combo_bpp() const;
-  void               checkbox_mim_palette_texture() const;
-  void               combo_field() const;
-  void               combo_coo() const;
-  void               combo_draw_bit() const;
-  std::string        save_texture_path() const;
-  void               update_field() const;
-  bool               mim_test() const;
-  bool               map_test() const;
-  void               checkbox_map_swizzle() const;
-  void               checkbox_map_disable_blending() const;
-  void               menuitem_locate_ff8() const;
-  void               menuitem_save_swizzle_textures() const;
-  void               menuitem_save_deswizzle_textures() const;
-  void               menuitem_load_swizzle_textures() const;
-  void               menuitem_load_deswizzle_textures() const;
+  archives_group      get_archives_group() const;
+  sf::RenderWindow    get_render_window() const;
+  void                update_path() const;
+  mim_sprite          get_mim_sprite() const;
+  map_sprite          get_map_sprite() const;
+  void                init_and_get_style() const;
+  void                loop_events() const;
+  void                loop() const;
+  bool                combo_path() const;
+  void                combo_draw() const;
+  void                file_browser_save_texture() const;
+  void                file_browser_locate_ff8() const;
+  void                menu_bar() const;
+  void                slider_xy_sprite(auto &sprite) const;
+  void                combo_pupu() const;
+  void                combo_palette() const;
+  void                combo_bpp() const;
+  void                checkbox_mim_palette_texture() const;
+  void                combo_field() const;
+  void                combo_coo() const;
+  void                combo_draw_bit() const;
+  std::string         save_texture_path() const;
+  void                update_field() const;
+  bool                mim_test() const;
+  bool                map_test() const;
+  void                checkbox_map_swizzle() const;
+  void                checkbox_map_disable_blending() const;
+  void                menuitem_locate_ff8() const;
+  void                menuitem_save_swizzle_textures() const;
+  void                menuitem_save_deswizzle_textures() const;
+  void                menuitem_load_swizzle_textures() const;
+  void                menuitem_load_deswizzle_textures() const;
   void
     menuitem_save_texture(const std::string &path, bool enabled = true) const;
   void
@@ -317,8 +319,14 @@ private:
     std::monostate,
     open_viii::graphics::background::Tile1,
     open_viii::graphics::background::Tile2,
-    open_viii::graphics::background::Tile3> &
+    open_viii::graphics::background::Tile3>    &
     combo_selected_tile() const;
+  void collapsing_tile_info(
+    const std::variant<
+      std::monostate,
+      open_viii::graphics::background::Tile1,
+      open_viii::graphics::background::Tile2,
+      open_viii::graphics::background::Tile3> &current_tile) const;
 };
 }// namespace fme
 #endif// FIELD_MAP_EDITOR_GUI_HPP

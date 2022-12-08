@@ -3064,29 +3064,44 @@ void gui::import_image_window() const
   //   * So I need to choose an existing tile to base the new tiles on.
   [[maybe_unused]] const auto &current_tile = combo_selected_tile();
   // add text showing the tile's info.
-  std::visit(
-    [this](const auto &tile) {
-      if constexpr (is_tile<std::decay_t<decltype(tile)>>)
-      {
-        if(ImGui::CollapsingHeader("Selected Tile Info"))
-        {
-          if (ImGui::BeginTable("table_tile_info", 2))
-          {
-            const auto the_end_table = scope_guard([]() { ImGui::EndTable(); });
-            m_map_sprite.format_tile_text(
-              tile, [](const std::string_view text, const auto value) {
-                ImGui::TableNextRow();
-                ImGui::TableNextColumn();
-                ImGui::Text("%s", text.data());
-                ImGui::TableNextColumn();
-                ImGui::Text("%s", fmt::format("{}", value).c_str());
-              });
-          }
-        }
-      }
-    },
-    current_tile);
+  collapsing_tile_info(current_tile);
   //   * I need to browse for an image file.
+  static std::string image_path{};
+  ImGui::InputText(
+    "##image_path",
+    image_path.data(),
+    image_path.size(),
+    ImGuiInputTextFlags_ReadOnly);
+  ImGui::SameLine();
+  if (ImGui::Button("Browse"))
+  {
+    m_load_file_browser.Open();
+    m_load_file_browser.SetTitle("Load Image File...");
+    m_load_file_browser.SetTypeFilters({ ".png" });
+    m_load_file_browser.SetInputName(image_path.data());
+  }
+  m_load_file_browser.Display();
+  if (m_load_file_browser.HasSelected())
+  {
+    [[maybe_unused]] const auto selected_path =
+      m_load_file_browser.GetSelected();
+    image_path = selected_path.string();
+    m_load_file_browser.ClearSelected();
+    loaded_image.loadFromFile(image_path);
+  }
+  if (loaded_image.getSize().x != 0 && loaded_image.getSize().y != 0)
+  {
+    if (ImGui::CollapsingHeader("Selected Image Preview"))
+    {
+      sf::Sprite sprite(loaded_image);
+      const auto w = std::max(
+        (ImGui::GetContentRegionAvail()
+           .x /* - ImGui::GetStyle().ItemSpacing.x*/),
+        1.0f);
+      const auto size = loaded_image.getSize();
+      ImGui::Image(sprite, sf::Vector2f(w, size.y * w / size.x));
+    }
+  }
   //   * We need to adjust the scale to fit
   //   * We need to adjust the position
   //   * Set new tiles to 4 bit to get max amount of tiles.
@@ -3118,5 +3133,35 @@ void gui::import_image_window() const
   {
     // todo reset state
   }
+}
+void gui::collapsing_tile_info(
+  const std::variant<
+    std::monostate,
+    open_viii::graphics::background::Tile1,
+    open_viii::graphics::background::Tile2,
+    open_viii::graphics::background::Tile3> &current_tile) const
+{
+  std::visit(
+    [this](const auto &tile) {
+      if constexpr (is_tile<std::decay_t<decltype(tile)>>)
+      {
+        if (ImGui::CollapsingHeader("Selected Tile Info"))
+        {
+          if (ImGui::BeginTable("table_tile_info", 2))
+          {
+            const auto the_end_table = scope_guard([]() { ImGui::EndTable(); });
+            m_map_sprite.format_tile_text(
+              tile, [](const std::string_view text, const auto value) {
+                ImGui::TableNextRow();
+                ImGui::TableNextColumn();
+                ImGui::Text("%s", text.data());
+                ImGui::TableNextColumn();
+                ImGui::Text("%s", fmt::format("{}", value).c_str());
+              });
+          }
+        }
+      }
+    },
+    current_tile);
 }
 }// namespace fme

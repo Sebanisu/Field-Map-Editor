@@ -309,8 +309,7 @@ private:
   mutable grid                               m_grid                        = {};
   grid                                       m_texture_page_grid           = {};
   std::vector<std::size_t>                   m_saved_indicies              = {};
-  mutable std::uint32_t                      m_scale = { 1 };
-
+  mutable std::uint32_t                      m_scale      = { 1 };
   grid                                       get_grid() const;
   grid                                       get_texture_page_grid() const;
   all_unique_values_and_strings get_all_unique_values_and_strings() const;
