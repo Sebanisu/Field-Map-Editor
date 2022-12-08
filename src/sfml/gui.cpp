@@ -3066,6 +3066,41 @@ void gui::import_image_window() const
   // add text showing the tile's info.
   collapsing_tile_info(current_tile);
   //   * I need to browse for an image file.
+  browse_for_image_display_preview();
+  //   * We need to adjust the scale to fit
+  //   * We need to adjust the position
+  //   * Set new tiles to 4 bit to get max amount of tiles.
+  //   * I'd probably store the new tiles in their own vector.
+  //   * Then we can swap between swizzle and deswizzle views to show what they
+  //   look like
+  //   * At the end we need to be able to save and merge them with the '.map'
+  //   file.
+  //   * They'll probably insert before the last tile.
+  // Save button that'll save the swizzled images with new '.map'
+  if (ImGui::Button("Save Swizzle"))
+  {
+    // todo save swizzle
+  }
+  // have a cancel button to hide window.
+  ImGui::SameLine();
+  if (ImGui::Button("Cancel"))
+  {
+    // hide window and save that it's hidden.
+    m_selections.display_import_image = false;
+    Configuration config{};
+    config->insert_or_assign(
+      "selections_display_import_image", m_selections.display_import_image);
+    config.save();
+  }
+  // have a reset button to reset window state?
+  ImGui::SameLine();
+  if (ImGui::Button("Reset"))
+  {
+    // todo reset state
+  }
+}
+void gui::browse_for_image_display_preview() const
+{
   static std::string image_path{};
   ImGui::InputText(
     "##image_path",
@@ -3101,37 +3136,6 @@ void gui::import_image_window() const
       const auto size = loaded_image.getSize();
       ImGui::Image(sprite, sf::Vector2f(w, size.y * w / size.x));
     }
-  }
-  //   * We need to adjust the scale to fit
-  //   * We need to adjust the position
-  //   * Set new tiles to 4 bit to get max amount of tiles.
-  //   * I'd probably store the new tiles in their own vector.
-  //   * Then we can swap between swizzle and deswizzle views to show what they
-  //   look like
-  //   * At the end we need to be able to save and merge them with the '.map'
-  //   file.
-  //   * They'll probably insert before the last tile.
-  // Save button that'll save the swizzled images with new '.map'
-  if (ImGui::Button("Save Swizzle"))
-  {
-    // todo save swizzle
-  }
-  // have a cancel button to hide window.
-  ImGui::SameLine();
-  if (ImGui::Button("Cancel"))
-  {
-    // hide window and save that it's hidden.
-    m_selections.display_import_image = false;
-    Configuration config{};
-    config->insert_or_assign(
-      "selections_display_import_image", m_selections.display_import_image);
-    config.save();
-  }
-  // have a reset button to reset window state?
-  ImGui::SameLine();
-  if (ImGui::Button("Reset"))
-  {
-    // todo reset state
   }
 }
 void gui::collapsing_tile_info(

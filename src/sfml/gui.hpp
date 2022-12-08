@@ -327,6 +327,7 @@ private:
       open_viii::graphics::background::Tile1,
       open_viii::graphics::background::Tile2,
       open_viii::graphics::background::Tile3> &current_tile) const;
+  void browse_for_image_display_preview() const;
 };
 }// namespace fme
 #endif// FIELD_MAP_EDITOR_GUI_HPP
