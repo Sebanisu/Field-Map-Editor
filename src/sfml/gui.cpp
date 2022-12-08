@@ -967,6 +967,14 @@ void gui::menu_bar() const
         m_directory_browser.SetTypeFilters({ ".map" });
         m_modified_directory_map = map_directory_mode::batch_embed_map_files;
       }
+      if (ImGui::MenuItem(
+            "Test Batch Window", nullptr, &m_selections.test_batch_window))
+      {
+        Configuration config{};
+        config->insert_or_assign(
+          "selections_test_batch_window", m_selections.test_batch_window);
+        config.save();
+      }
       ImGui::EndMenu();
     }
     ImGui::EndMenuBar();
@@ -2725,8 +2733,11 @@ void gui::launch_async(T &&task, argsT &&...args) const
 void gui::batch_ops_ask_menu() const
 {
 #if 1
-  static GuiBatch test{ m_archives_group };
-  test(&m_id);
+  if (m_selections.test_batch_window)
+  {
+    static GuiBatch test{ m_archives_group };
+    test(&m_id);
+  }
 #else
   using namespace std::string_view_literals;
   if (ImGui::Begin(
@@ -2873,7 +2884,7 @@ gui::selections gui::default_selections() const
   s.path    = config["selections_path"].value_or(decltype(s.path){});
   s.palette = config["selections_palette"].value_or(decltype(s.palette){});
   s.bpp     = config["selections_bpp"].value_or(decltype(s.bpp){});
-  s.draw    = config["selections_draw"].value_or(decltype(s.draw){1});
+  s.draw    = config["selections_draw"].value_or(decltype(s.draw){ 1 });
   s.coo     = config["selections_coo"].value_or(decltype(s.coo){});
   s.draw_disable_blending =
     config["selections_draw_disable_blending"].value_or(false);
@@ -2882,6 +2893,7 @@ gui::selections gui::default_selections() const
   s.draw_swizzle = config["selections_draw_swizzle"].value_or(false);
   s.draw_texture_page_grid =
     config["selections_draw_texture_page_grid"].value_or(false);
+  s.test_batch_window = config["selections_test_batch_window"].value_or(false);
   return s;
 }
 }// namespace fme
