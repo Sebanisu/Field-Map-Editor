@@ -3070,9 +3070,18 @@ void gui::import_image_window() const
       {
         if(ImGui::CollapsingHeader("Selected Tile Info"))
         {
-          m_map_sprite.format_tile_text(tile,[](const std::string_view text,const auto value){
-            ImGui::Text("%s",fmt::format("{}: {}", text,value).c_str());
-          });
+          if (ImGui::BeginTable("table_tile_info", 2))
+          {
+            const auto the_end_table = scope_guard([]() { ImGui::EndTable(); });
+            m_map_sprite.format_tile_text(
+              tile, [](const std::string_view text, const auto value) {
+                ImGui::TableNextRow();
+                ImGui::TableNextColumn();
+                ImGui::Text("%s", text.data());
+                ImGui::TableNextColumn();
+                ImGui::Text("%s", fmt::format("{}", value).c_str());
+              });
+          }
         }
       }
     },
