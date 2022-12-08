@@ -53,9 +53,43 @@ struct map_sprite final
   }
 
   [[nodiscard]] sf::Vector2u
-    get_tile_texture_size(const sf::Texture *texture) const;
+               get_tile_texture_size(const sf::Texture *texture) const;
 
   sf::Vector2u get_tile_draw_size() const;
+
+  template<open_viii::graphics::background::is_tile this_type, typename T>
+  static void format_tile_text(const this_type &tile, T &&format_function)
+  {
+    const auto raw_hex = to_hex(tile);
+    format_function("Hex", std::string_view(raw_hex.data(), raw_hex.size()));
+    format_function(
+      "Source",
+      fmt::format(
+        "({}, {}) ({}, {})",
+        tile.source_rectangle().x(),
+        tile.source_rectangle().y(),
+        tile.source_rectangle().width(),
+        tile.source_rectangle().height()));
+    format_function(
+      "Output",
+      fmt::format(
+        "({}, {}) ({}, {})",
+        tile.output_rectangle().x(),
+        tile.output_rectangle().y(),
+        tile.output_rectangle().width(),
+        tile.output_rectangle().height()));
+    format_function("Z", tile.z());
+    format_function("Depth", static_cast<int>(tile.depth()));
+    format_function("Palette ID", tile.palette_id());
+    format_function("Texture ID", tile.texture_id());
+    format_function("Layer ID", tile.layer_id());
+    format_function(
+      "Blend Mode", static_cast<std::uint16_t>(tile.blend_mode()));
+    format_function("Blend Other", tile.blend());
+    format_function("Animation ID", tile.animation_id());
+    format_function("Animation State", tile.animation_state());
+    format_function("Draw", tile.draw());
+  }
 
 public:
   using color_type  = open_viii::graphics::Color32RGBA;
@@ -431,6 +465,24 @@ private:
       return { m_field->get_base_name(), m_coo };
     }
     return {};
+  }
+  template<open_viii::graphics::background::is_tile T>
+  static auto to_hex(const T &test)
+  {
+    std::array<std::uint8_t, sizeof(T)>  raw;
+    std::array<char, sizeof(T) * 2U + 1> raw_hex;
+    raw_hex.back() = 0;
+    std::memcpy(raw.data(), &test, sizeof(T));
+
+    std::size_t rhi{};
+    for (const std::uint8_t r : raw)
+    {
+      char right     = r % 16U < 10 ? r % 16U + '0' : r % 16U - 10 + 'A';
+      char left      = r / 16U < 10 ? r / 16U + '0' : r / 16U - 10 + 'A';
+      raw_hex[rhi++] = left;
+      raw_hex[rhi++] = right;
+    }
+    return raw_hex;
   }
   size_t size_of_map() const;
   bool

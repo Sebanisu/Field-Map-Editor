@@ -1321,7 +1321,6 @@ void gui::combo_draw() const
         []() {
           return std::views::iota(
             0, static_cast<int>(std::size(m_draw_selections)));
-          ;
         },
         [this]() { return m_draw_selections; },
         m_selections.draw))
@@ -3064,6 +3063,20 @@ void gui::import_image_window() const
   }
   //   * So I need to choose an existing tile to base the new tiles on.
   [[maybe_unused]] const auto &current_tile = combo_selected_tile();
+  // add text showing the tile's info.
+  std::visit(
+    [this](const auto &tile) {
+      if constexpr (is_tile<std::decay_t<decltype(tile)>>)
+      {
+        if(ImGui::CollapsingHeader("Selected Tile Info"))
+        {
+          m_map_sprite.format_tile_text(tile,[](const std::string_view text,const auto value){
+            ImGui::Text("%s",fmt::format("{}: {}", text,value).c_str());
+          });
+        }
+      }
+    },
+    current_tile);
   //   * I need to browse for an image file.
   //   * We need to adjust the scale to fit
   //   * We need to adjust the position
