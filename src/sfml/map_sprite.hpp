@@ -35,6 +35,28 @@ struct map_sprite final
   : public sf::Drawable
   , public sf::Transformable
 {
+
+  auto const_visit_tiles(auto &&p_function) const
+  {
+    return m_maps.const_back().visit_tiles(
+      std::forward<decltype(p_function)>(p_function));
+  }
+  [[nodiscard]] const sf::Texture *get_texture(
+    open_viii::graphics::BPPT bpp,
+    std::uint8_t              palette,
+    std::uint8_t              texture_page) const;
+  [[nodiscard]] const sf::Texture *get_texture(const ::PupuID &pupu) const;
+  [[nodiscard]] const sf::Texture *
+    get_texture(const open_viii::graphics::background::is_tile auto &tile) const
+  {
+    return get_texture(tile.depth(), tile.palette_id(), tile.texture_id());
+  }
+
+  [[nodiscard]] sf::Vector2u
+    get_tile_texture_size(const sf::Texture *texture) const;
+
+  sf::Vector2u get_tile_draw_size() const;
+
 public:
   using color_type  = open_viii::graphics::Color32RGBA;
   using colors_type = std::vector<color_type>;
@@ -245,7 +267,7 @@ private:
   static constexpr std::uint16_t BPP16_INDEX  = MAX_PALETTES * BPP_COMBOS + 1;
   static constexpr auto          MAX_TEXTURES = (std::max)(
     static_cast<std::uint16_t>(START_OF_NO_PALETTE_INDEX + MAX_TEXTURE_PAGES),
-    static_cast<std::uint16_t>(BPP16_INDEX+1U));
+    static_cast<std::uint16_t>(BPP16_INDEX + 1U));
   // todo ecenter3 shows different images for remaster and 2013. Fix?
 
   mutable std::shared_ptr<std::array<sf::Texture, MAX_TEXTURES>> m_texture = {};
@@ -267,11 +289,6 @@ private:
     open_viii::graphics::BPPT bpp,
     std::uint8_t              palette,
     std::uint8_t              texture_page) const;
-  [[nodiscard]] const sf::Texture *get_texture(
-    open_viii::graphics::BPPT bpp,
-    std::uint8_t              palette,
-    std::uint8_t              texture_page) const;
-  [[nodiscard]] const sf::Texture *get_texture(const ::PupuID &pupu) const;
   [[nodiscard]] std::shared_ptr<std::array<sf::Texture, MAX_TEXTURES>>
     get_textures() const;
   [[nodiscard]] open_viii::graphics::Rectangle<std::uint32_t>

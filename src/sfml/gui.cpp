@@ -240,6 +240,8 @@ void gui::loop() const
   ImGui::End();
   batch_ops_ask_menu();
   popup_batch_embed();
+  import_image_window();
+  // Begin non imgui drawing.
   on_click_not_imgui();
   m_window.clear(clear_color);
   if (mim_test())
@@ -932,7 +934,6 @@ void gui::menu_bar() const
       }
       ImGui::EndMenu();
     }
-
     if (ImGui::BeginMenu("Batch"))
     {
       if (ImGui::MenuItem("Deswizzle"))
@@ -973,6 +974,18 @@ void gui::menu_bar() const
         Configuration config{};
         config->insert_or_assign(
           "selections_test_batch_window", m_selections.test_batch_window);
+        config.save();
+      }
+      ImGui::EndMenu();
+    }
+    if (ImGui::BeginMenu("Import"))
+    {
+      if (ImGui::MenuItem(
+            "Import Image", nullptr, &m_selections.display_import_image))
+      {
+        Configuration config{};
+        config->insert_or_assign(
+          "selections_display_import_image", m_selections.display_import_image);
         config.save();
       }
       ImGui::EndMenu();
@@ -2886,6 +2899,8 @@ gui::selections gui::default_selections() const
   s.bpp     = config["selections_bpp"].value_or(decltype(s.bpp){});
   s.draw    = config["selections_draw"].value_or(decltype(s.draw){ 1 });
   s.coo     = config["selections_coo"].value_or(decltype(s.coo){});
+  s.selected_tile = config["selections_selected_tile"].value_or(
+    decltype(s.selected_tile){ -1 });
   s.draw_disable_blending =
     config["selections_draw_disable_blending"].value_or(false);
   s.draw_grid    = config["selections_draw_grid"].value_or(false);
@@ -2894,6 +2909,192 @@ gui::selections gui::default_selections() const
   s.draw_texture_page_grid =
     config["selections_draw_texture_page_grid"].value_or(false);
   s.test_batch_window = config["selections_test_batch_window"].value_or(false);
+  s.display_import_image =
+    config["selections_display_import_image"].value_or(false);
   return s;
+}
+
+std::variant<
+  std::monostate,
+  open_viii::graphics::background::Tile1,
+  open_viii::graphics::background::Tile2,
+  open_viii::graphics::background::Tile3> &
+  gui::combo_selected_tile() const
+{
+  // combo box with all the tiles.
+  static std::string current_item_str = {};
+  static std::variant<std::monostate, Tile1, Tile2, Tile3> current_tile{
+    std::monostate{}
+  };
+  m_map_sprite.const_visit_tiles([this](const auto &tiles) {
+    if (
+      m_selections.selected_tile < 0
+      || std::cmp_greater_equal(m_selections.selected_tile, tiles.size()))
+    {
+      current_tile = std::monostate{};
+      return;
+    }
+    std::visit(
+      [&tiles, this](const auto &tile) {
+        if (std::cmp_less(m_selections.selected_tile, tiles.size()))
+        {
+          const auto &tmp_tile =
+            tiles[static_cast<std::size_t>(m_selections.selected_tile)];
+          if constexpr (std::is_same_v<
+                          std::decay_t<decltype(tile)>,
+                          std::decay_t<decltype(tmp_tile)>>)
+          {
+            if (tile != tmp_tile)
+            {
+              current_tile = tile;
+            }
+          }
+        }
+      },
+      current_tile);
+  });
+
+  const auto create_tile_button = [this](const auto &tile) {
+    const auto *texture = m_map_sprite.get_texture(tile);
+    if (texture == nullptr)
+    {
+      return false;
+    }
+    const auto draw_size = m_map_sprite.get_tile_draw_size();
+
+    sf::Sprite sprite(
+      *texture,
+      sf::IntRect(
+        static_cast<int>((tile.source_x() / 16.F) * draw_size.x),
+        static_cast<int>((tile.source_y() / 16.F) * draw_size.y),
+        static_cast<int>(draw_size.x),
+        static_cast<int>(draw_size.y)));
+    return ImGui::ImageButton(
+      sprite,
+      sf::Vector2f(ImGui::GetTextLineHeight(), ImGui::GetTextLineHeight()),
+      0);
+  };
+  ImVec2     combo_pos    = ImGui::GetCursorScreenPos();
+  const auto the_end_id_0 = scope_guard([]() { ImGui::PopID(); });
+  ImGui::PushID(++m_id);
+  if (ImGui::BeginCombo(
+        "Select Existing Tile", "", ImGuiComboFlags_HeightLargest))
+  {
+    const auto the_end_combo = scope_guard([]() { ImGui::EndCombo(); });
+    m_map_sprite.const_visit_tiles([this,
+                                    &create_tile_button](const auto &tiles) {
+      for (int i{}; const auto &tile : tiles)
+      {
+        const auto the_end_id_1 = scope_guard([]() { ImGui::PopID(); });
+        ImGui::PushID(++m_id);
+        bool is_selected =
+          (m_selections.selected_tile
+           == i);// You can store your selection however you
+                 // want, outside or inside your objects
+
+        const std::string &i_as_string = fmt::format("{}", i);
+        if (std::ranges::any_of(
+              std::array{ ImGui::Selectable("", is_selected),
+                          []() -> bool {
+                            ImGui::SameLine();
+                            return false;
+                          }(),
+                          create_tile_button(tile),
+                          []() -> bool {
+                            ImGui::SameLine();
+                            return false;
+                          }(),
+                          [&i_as_string]() -> bool {
+                            ImGui::Text("%s", i_as_string.c_str());
+                            return false;
+                          }() },
+              std::identity{}))
+        {
+          m_selections.selected_tile = i;
+          Configuration config{};
+          config->insert_or_assign("selected_tile", m_selections.selected_tile);
+          config.save();
+          current_item_str = std::move(i_as_string);
+          current_tile     = tile;
+        }
+        if (is_selected)
+        {
+          ImGui::SetItemDefaultFocus();// You may set the initial focus when
+                                       // opening the combo (scrolling + for
+                                       // keyboard navigation support)
+        }
+        ++i;
+      }
+    });
+  }
+  ImVec2      backup_pos = ImGui::GetCursorScreenPos();
+  ImGuiStyle &style      = ImGui::GetStyle();
+  ImGui::SetCursorScreenPos(ImVec2(
+    combo_pos.x + style.FramePadding.x, combo_pos.y + style.FramePadding.y));
+  std::visit(
+    [&create_tile_button](const auto &tile) -> bool {
+      if constexpr (!std::
+                      is_same_v<std::decay_t<decltype(tile)>, std::monostate>)
+      {
+        return create_tile_button(tile);
+      }
+      else
+      {
+        return false;
+      }
+    },
+    current_tile);
+  ImGui::SameLine();
+  ImGui::Text("%s", current_item_str.c_str());
+  ImGui::SetCursorScreenPos(backup_pos);
+  return current_tile;
+}
+
+void gui::import_image_window() const
+{
+  if (!m_selections.display_import_image)
+  {
+    return;
+  }
+  // begin imgui window
+  const auto the_end = scope_guard([]() { ImGui::End(); });
+  if (!ImGui::Begin("Import Image", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
+  {
+    return;
+  }
+  //   * So I need to choose an existing tile to base the new tiles on.
+  [[maybe_unused]] const auto &current_tile = combo_selected_tile();
+  //   * I need to browse for an image file.
+  //   * We need to adjust the scale to fit
+  //   * We need to adjust the position
+  //   * Set new tiles to 4 bit to get max amount of tiles.
+  //   * I'd probably store the new tiles in their own vector.
+  //   * Then we can swap between swizzle and deswizzle views to show what they
+  //   look like
+  //   * At the end we need to be able to save and merge them with the '.map'
+  //   file.
+  //   * They'll probably insert before the last tile.
+  // Save button that'll save the swizzled images with new '.map'
+  if (ImGui::Button("Save Swizzle"))
+  {
+    // todo save swizzle
+  }
+  // have a cancel button to hide window.
+  ImGui::SameLine();
+  if (ImGui::Button("Cancel"))
+  {
+    // hide window and save that it's hidden.
+    m_selections.display_import_image = false;
+    Configuration config{};
+    config->insert_or_assign(
+      "selections_display_import_image", m_selections.display_import_image);
+    config.save();
+  }
+  // have a reset button to reset window state?
+  ImGui::SameLine();
+  if (ImGui::Button("Reset"))
+  {
+    // todo reset state
+  }
 }
 }// namespace fme

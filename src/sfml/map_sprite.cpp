@@ -1044,19 +1044,8 @@ void map_sprite::for_all_tiles(
       {
         return;
       }
-      const auto draw_size =
-        sf::Vector2u{ TILE_SIZE * m_scale, TILE_SIZE * m_scale };
-      const auto texture_size = [this, &states]() {
-        const auto raw_texture_size = states.texture->getSize();
-        if (m_filters.deswizzle.enabled())
-        {
-          const auto local_scale = raw_texture_size.y / m_canvas.height();
-          return sf::Vector2u{ TILE_SIZE * local_scale,
-                               TILE_SIZE * local_scale };
-        }
-        const auto i = raw_texture_size.y / TILE_SIZE;
-        return sf::Vector2u{ i, i };
-      }();
+      const auto draw_size = get_tile_draw_size();
+      const auto texture_size = get_tile_texture_size(states.texture);
       auto quad = get_triangle_strip(draw_size, texture_size, tile_const, tile);
       states.blendMode = sf::BlendAlpha;
       if (!m_disable_blends)
@@ -1096,7 +1085,23 @@ void map_sprite::for_all_tiles(
   }
   return drew;
 }
+sf::Vector2u map_sprite::get_tile_draw_size() const
+{
+  return sf::Vector2u{ TILE_SIZE * m_scale, TILE_SIZE * m_scale };
+}
+sf::Vector2u map_sprite::get_tile_texture_size(const sf::Texture * texture) const
+{
+    const auto raw_texture_size = texture->getSize();
+    if (m_filters.deswizzle.enabled())
+    {
+      const auto local_scale = raw_texture_size.y / m_canvas.height();
+      return sf::Vector2u{ TILE_SIZE * local_scale,
+                           TILE_SIZE * local_scale };
+    }
+    const auto i = raw_texture_size.y / TILE_SIZE;
+    return sf::Vector2u{ i, i };
 
+}
 const sf::BlendMode &map_sprite::GetBlendSubtract()
 {
   const static auto BlendSubtract =
@@ -2219,4 +2224,4 @@ std::size_t map_sprite::size_of_map() const
     using tile_type = typename std::remove_cvref_t<decltype(tiles)>::value_type;
     return std::ranges::size(tiles) * sizeof(tile_type);
   });
-};
+}

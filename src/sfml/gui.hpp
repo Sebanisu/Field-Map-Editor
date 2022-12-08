@@ -153,6 +153,8 @@ private:
     bool draw_swizzle           = { false };
     bool draw_disable_blending  = { false };
     bool test_batch_window      = { false };
+    bool display_import_image   = { false };
+    int  selected_tile          = { -1 };
   };
   selections                     default_selections() const;
   static constexpr std::uint32_t default_window_width  = 800U;
@@ -310,6 +312,13 @@ private:
   void                      open_swizzle_filebrowser() const;
   void                      open_deswizzle_filebrowser() const;
   [[nodiscard]] scope_guard PushPop() const;
+  void                      import_image_window() const;
+  std::variant<
+    std::monostate,
+    open_viii::graphics::background::Tile1,
+    open_viii::graphics::background::Tile2,
+    open_viii::graphics::background::Tile3> &
+    combo_selected_tile() const;
 };
 }// namespace fme
 #endif// FIELD_MAP_EDITOR_GUI_HPP
