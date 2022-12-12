@@ -173,7 +173,8 @@ inline static bool generic_combo(
 {
   bool        changed = false;
   const auto &values  = value_lambda();
-  auto        strings = string_lambda() | std::ranges::views::all;
+  auto && strings = string_lambda();
+  //auto        strings = string_lambda() | std::ranges::views::all;
   static std::ranges::range_difference_t<decltype(values)> current_idx = {};
   {
     if (const auto it = std::find(values.begin(), values.end(), value);

@@ -143,20 +143,21 @@ private:
   };
   struct selections
   {
-    int  bpp                    = {};
-    int  palette                = {};
-    int  field                  = {};
-    int  coo                    = {};
-    int  path                   = {};
-    int  draw                   = { 1 };
-    bool draw_palette           = { false };
-    bool draw_grid              = { false };
-    bool draw_texture_page_grid = { false };
-    bool draw_swizzle           = { false };
-    bool draw_disable_blending  = { false };
-    bool test_batch_window      = { false };
-    bool display_import_image   = { false };
-    int  selected_tile          = { -1 };
+    int           bpp                    = {};
+    int           palette                = {};
+    int           field                  = {};
+    int           coo                    = {};
+    int           path                   = {};
+    int           draw                   = { 1 };
+    int           selected_tile          = { -1 };
+    std::uint16_t tile_size_value        = { 16U };
+    bool          draw_palette           = { false };
+    bool          draw_grid              = { false };
+    bool          draw_texture_page_grid = { false };
+    bool          draw_swizzle           = { false };
+    bool          draw_disable_blending  = { false };
+    bool          test_batch_window      = { false };
+    bool          display_import_image   = { false };
   };
   selections                     default_selections() const;
   static constexpr std::uint32_t default_window_width  = 800U;
@@ -344,8 +345,10 @@ private:
     sf::Sprite sprite(
       *texture,
       sf::IntRect(
-        static_cast<int>((tile.source_x() / 16.F) * draw_size.x),
-        static_cast<int>((tile.source_y() / 16.F) * draw_size.y),
+        static_cast<int>(
+          (tile.source_x() / 16.F) * static_cast<float>(draw_size.x)),
+        static_cast<int>(
+          (tile.source_y() / 16.F) * static_cast<float>(draw_size.y)),
         static_cast<int>(draw_size.x),
         static_cast<int>(draw_size.y)));
     if (image_size == sf::Vector2f{})

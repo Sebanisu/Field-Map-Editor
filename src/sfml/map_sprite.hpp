@@ -309,7 +309,7 @@ private:
   mutable grid                               m_grid                        = {};
   grid                                       m_texture_page_grid           = {};
   std::vector<std::size_t>                   m_saved_indicies              = {};
-  mutable std::uint32_t                      m_scale      = { 1 };
+  mutable std::uint32_t                      m_scale = { 1 };
   grid                                       get_grid() const;
   grid                                       get_texture_page_grid() const;
   all_unique_values_and_strings get_all_unique_values_and_strings() const;
@@ -476,8 +476,10 @@ private:
     std::size_t rhi{};
     for (const std::uint8_t r : raw)
     {
-      char right     = r % 16U < 10 ? r % 16U + '0' : r % 16U - 10 + 'A';
-      char left      = r / 16U < 10 ? r / 16U + '0' : r / 16U - 10 + 'A';
+      char right     = r % 16U < 10 ? static_cast<char>(r % 16U + '0')
+                                    : static_cast<char>(r % 16U - 10 + 'A');
+      char left      = r / 16U < 10 ? static_cast<char>(r / 16U + '0')
+                                    : static_cast<char>(r / 16U - 10 + 'A');
       raw_hex[rhi++] = left;
       raw_hex[rhi++] = right;
     }

@@ -2891,23 +2891,28 @@ gui::selections gui::default_selections() const
 {
   gui::selections s{};
   Configuration   config{};
-  s.path    = config["selections_path"].value_or(decltype(s.path){});
-  s.palette = config["selections_palette"].value_or(decltype(s.palette){});
-  s.bpp     = config["selections_bpp"].value_or(decltype(s.bpp){});
-  s.draw    = config["selections_draw"].value_or(decltype(s.draw){ 1 });
-  s.coo     = config["selections_coo"].value_or(decltype(s.coo){});
-  s.selected_tile = config["selections_selected_tile"].value_or(
-    decltype(s.selected_tile){ -1 });
-  s.draw_disable_blending =
-    config["selections_draw_disable_blending"].value_or(false);
-  s.draw_grid    = config["selections_draw_grid"].value_or(false);
-  s.draw_palette = config["selections_draw_palette"].value_or(false);
-  s.draw_swizzle = config["selections_draw_swizzle"].value_or(false);
+  s.path    = config["selections_path"].value_or(s.path);
+  s.palette = config["selections_palette"].value_or(s.palette);
+  s.bpp     = config["selections_bpp"].value_or(s.bpp);
+  s.draw    = config["selections_draw"].value_or(s.draw);
+  s.coo     = config["selections_coo"].value_or(s.coo);
+  s.selected_tile =
+    config["selections_selected_tile"].value_or(s.selected_tile);
+  s.draw_disable_blending = config["selections_draw_disable_blending"].value_or(
+    s.draw_disable_blending);
+  s.draw_grid    = config["selections_draw_grid"].value_or(s.draw_grid);
+  s.draw_palette = config["selections_draw_palette"].value_or(s.draw_palette);
+  s.draw_swizzle = config["selections_draw_swizzle"].value_or(s.draw_swizzle);
   s.draw_texture_page_grid =
-    config["selections_draw_texture_page_grid"].value_or(false);
-  s.test_batch_window = config["selections_test_batch_window"].value_or(false);
+    config["selections_draw_texture_page_grid"].value_or(
+      s.draw_texture_page_grid);
+  s.test_batch_window =
+    config["selections_test_batch_window"].value_or(s.test_batch_window);
   s.display_import_image =
-    config["selections_display_import_image"].value_or(false);
+    config["selections_display_import_image"].value_or(s.display_import_image);
+  s.tile_size_value =
+    config["selections_tile_size_value"].value_or(s.tile_size_value);
+  config.save();
   return s;
 }
 
@@ -3046,6 +3051,32 @@ void gui::import_image_window() const
   //   * I need to browse for an image file.
   browse_for_image_display_preview();
   //   * We need to adjust the scale to fit
+  // maybe i can just create an imgui window filled with the image
+  // scale the image to be the selected tile size. 16,32,64,128,256.
+  if (generic_combo(
+        m_id,
+        std::string_view("Tile Size"),
+        []() {
+          return std::array{ std::uint16_t{ 16U },
+                             std::uint16_t{ 32U },
+                             std::uint16_t{ 64U },
+                             std::uint16_t{ 128U },
+                             std::uint16_t{ 256U } };
+        },
+        []() {
+          return std::array{ std::string_view{ "16" },
+                             std::string_view{ "32" },
+                             std::string_view{ "64" },
+                             std::string_view{ "128" },
+                             std::string_view{ "256" } };
+        },
+        m_selections.tile_size_value))
+  {
+    Configuration config{};
+    config->insert_or_assign(
+      "selections_tile_size_value", m_selections.tile_size_value);
+    config.save();
+  }
   //   * We need to adjust the position
   //   * Set new tiles to 4 bit to get max amount of tiles.
   //   * I'd probably store the new tiles in their own vector.
@@ -3112,7 +3143,10 @@ void gui::browse_for_image_display_preview() const
            .x /* - ImGui::GetStyle().ItemSpacing.x*/),
         1.0f);
       const auto size = loaded_image.getSize();
-      ImGui::Image(sprite, sf::Vector2f(w, size.y * w / size.x));
+      ImGui::Image(
+        sprite,
+        sf::Vector2f(
+          w, static_cast<float>(size.y) * w / static_cast<float>(size.x)));
     }
   }
 }
@@ -3149,7 +3183,8 @@ void gui::collapsing_tile_info(
           ImVec2      backup_pos = ImGui::GetCursorScreenPos();
           ImGuiStyle &style      = ImGui::GetStyle();
           ImGui::SetCursorScreenPos(ImVec2(
-            backup_pos.x + w*1.1F, backup_pos.y - w * .9F - style.FramePadding.y*2.F));
+            backup_pos.x + w * 1.1F,
+            backup_pos.y - w * .9F - style.FramePadding.y * 2.F));
           (void)create_tile_button(tile, { w * .9F, w * .9F });
           ImGui::SetCursorScreenPos(backup_pos);
         }
