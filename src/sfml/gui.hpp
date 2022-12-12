@@ -15,6 +15,8 @@
 #include "upscales.hpp"
 #include <cstdint>
 #include <fmt/chrono.h>
+#include <imgui-SFML.h>
+#include <imgui.h>
 #include <SFML/Graphics/RenderWindow.hpp>
 namespace fme
 {
@@ -328,6 +330,30 @@ private:
       open_viii::graphics::background::Tile2,
       open_viii::graphics::background::Tile3> &current_tile) const;
   void browse_for_image_display_preview() const;
+  template<open_viii::graphics::background::is_tile tileT>
+  bool create_tile_button(const tileT &tile, sf::Vector2f image_size = {}) const
+  {
+    const auto *texture = m_map_sprite.get_texture(tile);
+    if (texture == nullptr)
+    {
+      return false;
+    }
+    const auto draw_size = m_map_sprite.get_tile_draw_size();
+
+    sf::Sprite sprite(
+      *texture,
+      sf::IntRect(
+        static_cast<int>((tile.source_x() / 16.F) * draw_size.x),
+        static_cast<int>((tile.source_y() / 16.F) * draw_size.y),
+        static_cast<int>(draw_size.x),
+        static_cast<int>(draw_size.y)));
+    if (image_size == sf::Vector2f{})
+    {
+      image_size =
+        sf::Vector2f(ImGui::GetTextLineHeight(), ImGui::GetTextLineHeight());
+    }
+    return ImGui::ImageButton(sprite, image_size, 0);
+  }
 };
 }// namespace fme
 #endif// FIELD_MAP_EDITOR_GUI_HPP

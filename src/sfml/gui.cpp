@@ -6,8 +6,6 @@
 #include "gui_labels.hpp"
 #include "GuiBatch.hpp"
 #include "open_viii/paths/Paths.hpp"
-#include <imgui-SFML.h>
-#include <imgui.h>
 #include <SFML/Window/Mouse.hpp>
 #include <utility>
 // #define USE_THREADS
@@ -2953,26 +2951,7 @@ std::variant<
       current_tile);
   });
 
-  const auto create_tile_button = [this](const auto &tile) {
-    const auto *texture = m_map_sprite.get_texture(tile);
-    if (texture == nullptr)
-    {
-      return false;
-    }
-    const auto draw_size = m_map_sprite.get_tile_draw_size();
 
-    sf::Sprite sprite(
-      *texture,
-      sf::IntRect(
-        static_cast<int>((tile.source_x() / 16.F) * draw_size.x),
-        static_cast<int>((tile.source_y() / 16.F) * draw_size.y),
-        static_cast<int>(draw_size.x),
-        static_cast<int>(draw_size.y)));
-    return ImGui::ImageButton(
-      sprite,
-      sf::Vector2f(ImGui::GetTextLineHeight(), ImGui::GetTextLineHeight()),
-      0);
-  };
   ImVec2     combo_pos    = ImGui::GetCursorScreenPos();
   const auto the_end_id_0 = scope_guard([]() { ImGui::PopID(); });
   ImGui::PushID(++m_id);
@@ -2980,8 +2959,7 @@ std::variant<
         "Select Existing Tile", "", ImGuiComboFlags_HeightLargest))
   {
     const auto the_end_combo = scope_guard([]() { ImGui::EndCombo(); });
-    m_map_sprite.const_visit_tiles([this,
-                                    &create_tile_button](const auto &tiles) {
+    m_map_sprite.const_visit_tiles([this](const auto &tiles) {
       for (int i{}; const auto &tile : tiles)
       {
         const auto the_end_id_1 = scope_guard([]() { ImGui::PopID(); });
@@ -3031,7 +3009,7 @@ std::variant<
   ImGui::SetCursorScreenPos(ImVec2(
     combo_pos.x + style.FramePadding.x, combo_pos.y + style.FramePadding.y));
   std::visit(
-    [&create_tile_button](const auto &tile) -> bool {
+    [this](const auto &tile) -> bool {
       if constexpr (!std::
                       is_same_v<std::decay_t<decltype(tile)>, std::monostate>)
       {
