@@ -341,14 +341,31 @@ private:
       return false;
     }
     const auto draw_size = m_map_sprite.get_tile_draw_size();
-
+    auto       src_tpw   = tileT::texture_page_width(tile.depth());
+    const auto x         = [this, &tile, &src_tpw]() -> std::uint32_t {
+      if (m_map_sprite.filter().upscale.enabled())
+      {
+        return 0;
+      }
+      return tile.texture_id() * src_tpw;
+    }();
+    const auto src_x = [&tile, &x, this]() -> std::uint32_t {
+      if (m_map_sprite.filter().deswizzle.enabled())
+        return static_cast<std::uint32_t>(tile.x());
+      return tile.source_x() + x;
+    }();
+    const auto src_y = [&tile, this]() -> std::uint32_t {
+      if (m_map_sprite.filter().deswizzle.enabled())
+        return static_cast<std::uint32_t>(tile.y());
+      return tile.source_y();
+    }();
     sf::Sprite sprite(
       *texture,
       sf::IntRect(
         static_cast<int>(
-          (tile.source_x() / 16.F) * static_cast<float>(draw_size.x)),
+          (src_x / 16.F) * static_cast<float>(draw_size.x)),
         static_cast<int>(
-          (tile.source_y() / 16.F) * static_cast<float>(draw_size.y)),
+          (src_y / 16.F) * static_cast<float>(draw_size.y)),
         static_cast<int>(draw_size.x),
         static_cast<int>(draw_size.y)));
     if (image_size == sf::Vector2f{})

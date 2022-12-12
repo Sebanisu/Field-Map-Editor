@@ -1041,7 +1041,7 @@ void gui::file_browser_locate_ff8() const
     if (m_modified_directory_map == map_directory_mode::ff8_install_directory)
     {
       m_paths.push_back(selected_path.string());
-      //todo remove paths that don't exist.
+      // todo remove paths that don't exist.
       Configuration config{};
       config->insert_or_assign("paths_vector", m_paths);
       config.save();
@@ -1067,7 +1067,8 @@ void gui::file_browser_locate_ff8() const
     {
       Configuration config{};
       config->insert_or_assign(
-        "single_swizzle_or_deswizzle_path", m_directory_browser.GetPwd().string());
+        "single_swizzle_or_deswizzle_path",
+        m_directory_browser.GetPwd().string());
       config.save();
       m_loaded_swizzle_texture_path = selected_path;
       m_map_sprite.filter().deswizzle.disable();
@@ -3235,16 +3236,48 @@ void gui::browse_for_image_display_preview() const
   {
     if (ImGui::CollapsingHeader("Selected Image Preview"))
     {
-      sf::Sprite sprite(loaded_image);
-      const auto w = std::max(
+      sf::Sprite  sprite(loaded_image);
+      const float w = std::max(
         (ImGui::GetContentRegionAvail()
            .x /* - ImGui::GetStyle().ItemSpacing.x*/),
         1.0f);
-      const auto size = loaded_image.getSize();
-      ImGui::Image(
-        sprite,
-        sf::Vector2f(
-          w, static_cast<float>(size.y) * w / static_cast<float>(size.x)));
+      const auto  size  = loaded_image.getSize();
+
+      float       scale = w / static_cast<float>(size.x);
+      const float h     = static_cast<float>(size.y) * scale;
+      ImVec2      p     = ImGui::GetCursorScreenPos();
+      //      ImGui::BeginChild("Test", ImVec2(w, w), true);
+      ImGui::Image(sprite, sf::Vector2f(w, h));
+      //      ImGui::EndChild();
+      //      ImGui::BeginChild("Test");
+      //      std::uint32_t image_x =
+      //        size.x % m_selections.tile_size_value == 0
+      //          ? size.x
+      //          : size.x * (size.x / m_selections.tile_size_value + 1);
+      //      std::uint32_t image_y =
+      //        size.y % m_selections.tile_size_value == 0
+      //          ? size.y
+      //          : size.y * (size.y / m_selections.tile_size_value + 1);
+
+      for (std::uint32_t x{ m_selections.tile_size_value }; x < size.x;
+           x += m_selections.tile_size_value)
+      {
+        ImGui::GetWindowDrawList()->AddLine(
+          ImVec2(p.x + (x * scale), p.y),
+          ImVec2(p.x + (x * scale), p.y + (size.y * scale)),
+          IM_COL32(255, 0, 0, 255),
+          2.0f);
+      }
+      for (std::uint32_t y{ m_selections.tile_size_value }; y < size.y;
+           y += m_selections.tile_size_value)
+      {
+        ImGui::GetWindowDrawList()->AddLine(
+          ImVec2(p.x, p.y + (y * scale)),
+          ImVec2(p.x + (size.x * scale), p.y + (y * scale)),
+          IM_COL32(255, 0, 0, 255),
+          2.0f);
+      }
+      //      ImGui::EndChild();
     }
   }
 }
