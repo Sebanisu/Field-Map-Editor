@@ -2996,6 +2996,8 @@ gui::selections gui::default_selections() const
     config["selections_test_batch_window"].value_or(s.test_batch_window);
   s.display_import_image =
     config["selections_display_import_image"].value_or(s.display_import_image);
+  s.import_image_grid =
+    config["selections_import_image_grid"].value_or(s.import_image_grid);
   s.tile_size_value =
     config["selections_tile_size_value"].value_or(s.tile_size_value);
   config.save();
@@ -3246,38 +3248,35 @@ void gui::browse_for_image_display_preview() const
       float       scale = w / static_cast<float>(size.x);
       const float h     = static_cast<float>(size.y) * scale;
       ImVec2      p     = ImGui::GetCursorScreenPos();
-      //      ImGui::BeginChild("Test", ImVec2(w, w), true);
       ImGui::Image(sprite, sf::Vector2f(w, h));
-      //      ImGui::EndChild();
-      //      ImGui::BeginChild("Test");
-      //      std::uint32_t image_x =
-      //        size.x % m_selections.tile_size_value == 0
-      //          ? size.x
-      //          : size.x * (size.x / m_selections.tile_size_value + 1);
-      //      std::uint32_t image_y =
-      //        size.y % m_selections.tile_size_value == 0
-      //          ? size.y
-      //          : size.y * (size.y / m_selections.tile_size_value + 1);
-
-      for (std::uint32_t x{ m_selections.tile_size_value }; x < size.x;
-           x += m_selections.tile_size_value)
+      if (ImGui::Checkbox("Draw Grid", &m_selections.import_image_grid))
       {
-        ImGui::GetWindowDrawList()->AddLine(
-          ImVec2(p.x + (x * scale), p.y),
-          ImVec2(p.x + (x * scale), p.y + (size.y * scale)),
-          IM_COL32(255, 0, 0, 255),
-          2.0f);
+        Configuration config{};
+        config->insert_or_assign(
+          "selections_import_image_grid", m_selections.import_image_grid);
+        config.save();
       }
-      for (std::uint32_t y{ m_selections.tile_size_value }; y < size.y;
-           y += m_selections.tile_size_value)
+      if (m_selections.import_image_grid)
       {
-        ImGui::GetWindowDrawList()->AddLine(
-          ImVec2(p.x, p.y + (y * scale)),
-          ImVec2(p.x + (size.x * scale), p.y + (y * scale)),
-          IM_COL32(255, 0, 0, 255),
-          2.0f);
+        for (std::uint32_t x{ m_selections.tile_size_value }; x < size.x;
+             x += m_selections.tile_size_value)
+        {
+          ImGui::GetWindowDrawList()->AddLine(
+            ImVec2(p.x + (x * scale), p.y),
+            ImVec2(p.x + (x * scale), p.y + (size.y * scale)),
+            IM_COL32(255, 0, 0, 255),
+            2.0f);
+        }
+        for (std::uint32_t y{ m_selections.tile_size_value }; y < size.y;
+             y += m_selections.tile_size_value)
+        {
+          ImGui::GetWindowDrawList()->AddLine(
+            ImVec2(p.x, p.y + (y * scale)),
+            ImVec2(p.x + (size.x * scale), p.y + (y * scale)),
+            IM_COL32(255, 0, 0, 255),
+            2.0f);
+        }
       }
-      //      ImGui::EndChild();
     }
   }
 }
