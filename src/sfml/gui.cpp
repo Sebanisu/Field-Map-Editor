@@ -2948,8 +2948,14 @@ std::variant<
           {
             if (tile != tmp_tile)
             {
-              current_tile = tile;
+              current_tile = tmp_tile;
+              current_item_str = std::format("{}",m_selections.selected_tile);
             }
+          }
+          else if constexpr (!is_tile<std::decay_t<decltype(tile)>>)
+          {
+            current_tile = tmp_tile;
+            current_item_str = std::format("{}",m_selections.selected_tile);
           }
         }
       },
@@ -2994,7 +3000,8 @@ std::variant<
         {
           m_selections.selected_tile = i;
           Configuration config{};
-          config->insert_or_assign("selected_tile", m_selections.selected_tile);
+          config->insert_or_assign(
+            "selections_selected_tile", m_selections.selected_tile);
           config.save();
           current_item_str = std::move(i_as_string);
           current_tile     = tile;
