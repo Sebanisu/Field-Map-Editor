@@ -940,6 +940,8 @@ void gui::menu_bar() const
         // std::string base_name = m_map_sprite.get_base_name();
         // std::string prefix    = base_name.substr(0U, 2U);
         m_directory_browser.SetTitle("Choose directory to save textures");
+        m_directory_browser.SetPwd(Configuration{}["deswizzle_path"].value_or(
+          std::filesystem::current_path().string()));
         m_directory_browser.SetTypeFilters({ ".map", ".png" });
         m_modified_directory_map =
           map_directory_mode::batch_save_deswizzle_textures;
@@ -952,6 +954,8 @@ void gui::menu_bar() const
         m_directory_browser.SetTitle(
           "Choose source directory of deswizzled textures (contains two letter "
           "directories)");
+        m_directory_browser.SetPwd(Configuration{}["reswizzle_path"].value_or(
+          std::filesystem::current_path().string()));
         m_directory_browser.SetTypeFilters({ ".map", ".png" });
         m_modified_directory_map =
           map_directory_mode::batch_load_deswizzle_textures;
@@ -963,6 +967,9 @@ void gui::menu_bar() const
         m_directory_browser.SetTitle(
           "Choose source directory of your textures and .map files "
           "(contains two letter directories)");
+        m_directory_browser.SetPwd(
+          Configuration{}["embed_source_path"].value_or(
+            std::filesystem::current_path().string()));
         m_directory_browser.SetTypeFilters({ ".map" });
         m_modified_directory_map = map_directory_mode::batch_embed_map_files;
       }
@@ -1034,6 +1041,7 @@ void gui::file_browser_locate_ff8() const
     if (m_modified_directory_map == map_directory_mode::ff8_install_directory)
     {
       m_paths.push_back(selected_path.string());
+      //todo remove paths that don't exist.
       Configuration config{};
       config->insert_or_assign("paths_vector", m_paths);
       config.save();
@@ -1043,6 +1051,9 @@ void gui::file_browser_locate_ff8() const
     else if (
       m_modified_directory_map == map_directory_mode::save_swizzle_textures)
     {
+      Configuration config{};
+      config->insert_or_assign(
+        "reswizzle_path", m_directory_browser.GetPwd().string());
       std::string base_name = m_map_sprite.get_base_name();
       std::string prefix    = base_name.substr(0U, 2U);
       selected_path         = selected_path / prefix / base_name;
@@ -1054,6 +1065,10 @@ void gui::file_browser_locate_ff8() const
     else if (
       m_modified_directory_map == map_directory_mode::load_swizzle_textures)
     {
+      Configuration config{};
+      config->insert_or_assign(
+        "single_swizzle_or_deswizzle_path", m_directory_browser.GetPwd().string());
+      config.save();
       m_loaded_swizzle_texture_path = selected_path;
       m_map_sprite.filter().deswizzle.disable();
       m_map_sprite.filter()
@@ -1070,6 +1085,10 @@ void gui::file_browser_locate_ff8() const
     else if (
       m_modified_directory_map == map_directory_mode::save_deswizzle_textures)
     {
+      Configuration config{};
+      config->insert_or_assign(
+        "deswizzle_path", m_directory_browser.GetPwd().string());
+      config.save();
       std::string base_name = m_map_sprite.get_base_name();
       std::string prefix    = base_name.substr(0U, 2U);
       selected_path         = selected_path / prefix / base_name;
@@ -1081,6 +1100,11 @@ void gui::file_browser_locate_ff8() const
     else if (
       m_modified_directory_map == map_directory_mode::load_deswizzle_textures)
     {
+      Configuration config{};
+      config->insert_or_assign(
+        "single_swizzle_or_deswizzle_path",
+        m_directory_browser.GetPwd().string());
+      config.save();
       m_loaded_deswizzle_texture_path = selected_path;
       m_map_sprite.filter().upscale.disable();
       m_map_sprite.filter()
@@ -1098,17 +1122,29 @@ void gui::file_browser_locate_ff8() const
       m_modified_directory_map
       == map_directory_mode::batch_save_deswizzle_textures)
     {
+      Configuration config{};
+      config->insert_or_assign(
+        "deswizzle_path", m_directory_browser.GetPwd().string());
+      config.save();
       m_batch_deswizzle.enable(selected_path);
     }
     else if (
       m_modified_directory_map == map_directory_mode::batch_embed_map_files)
     {
+      Configuration config{};
+      config->insert_or_assign(
+        "embed_source_path", m_directory_browser.GetPwd().string());
+      config.save();
       m_batch_embed.enable(selected_path);
     }
     else if (
       m_modified_directory_map
       == map_directory_mode::batch_save_swizzle_textures)
     {
+      Configuration config{};
+      config->insert_or_assign(
+        "reswizzle_path", m_directory_browser.GetPwd().string());
+      config.save();
       m_batch_reswizzle.enable(
         std::move(reswizzle_src), std::move(selected_path));
     }
@@ -1116,6 +1152,9 @@ void gui::file_browser_locate_ff8() const
       m_modified_directory_map
       == map_directory_mode::batch_load_deswizzle_textures)
     {
+      Configuration config{};
+      config->insert_or_assign(
+        "deswizzle_path", m_directory_browser.GetPwd().string());
       reswizzle_src = std::move(selected_path);
       m_directory_browser.Open();
       // std::string base_name = m_map_sprite.get_base_name();
@@ -1126,6 +1165,9 @@ void gui::file_browser_locate_ff8() const
       m_directory_browser.SetTypeFilters({ ".map", ".png" });
       m_modified_directory_map =
         map_directory_mode::batch_save_swizzle_textures;
+      config->insert_or_assign(
+        "reswizzle_path", m_directory_browser.GetPwd().string());
+      config.save();
     }
     m_directory_browser.ClearSelected();
   }
@@ -1143,10 +1185,18 @@ void gui::file_browser_save_texture() const
       if (open_viii::tools::i_ends_with(str_path, Mim::EXT))
       {
         m_mim_sprite.mim_save(selected_path);
+        Configuration config{};
+        config->insert_or_assign(
+          "mim_path", m_save_file_browser.GetPwd().string());
+        config.save();
       }
       else
       {
         m_mim_sprite.save(selected_path);
+        Configuration config{};
+        config->insert_or_assign(
+          "save_image_path", m_save_file_browser.GetPwd().string());
+        config.save();
       }
     }
     else if (map_test())
@@ -1158,14 +1208,26 @@ void gui::file_browser_save_texture() const
         {
           case map_dialog_mode::save_modified: {
             m_map_sprite.save_modified_map(selected_path);
+            Configuration config{};
+            config->insert_or_assign(
+              "map_path", m_save_file_browser.GetPwd().string());
+            config.save();
           }
           break;
           case map_dialog_mode::save_unmodified: {
             m_map_sprite.map_save(selected_path);
+            Configuration config{};
+            config->insert_or_assign(
+              "map_path", m_save_file_browser.GetPwd().string());
+            config.save();
           }
           break;
           case map_dialog_mode::load: {
             m_map_sprite.load_map(selected_path);
+            Configuration config{};
+            config->insert_or_assign(
+              "map_path", m_save_file_browser.GetPwd().string());
+            config.save();
             m_changed = true;
           }
           break;
@@ -1174,6 +1236,10 @@ void gui::file_browser_save_texture() const
       else
       {
         m_map_sprite.save(selected_path);
+        Configuration config{};
+        config->insert_or_assign(
+          "save_image_path", m_save_file_browser.GetPwd().string());
+        config.save();
       }
     }
     m_save_file_browser.ClearSelected();
@@ -1207,6 +1273,8 @@ void gui::menuitem_save_swizzle_textures() const
       char{ std::filesystem::path::preferred_separator },
       base_name);
     m_directory_browser.SetTitle(title);
+    m_directory_browser.SetPwd(Configuration{}["reswizzle_path"].value_or(
+      std::filesystem::current_path().string()));
     m_directory_browser.SetTypeFilters({ ".map", ".png" });
     m_modified_directory_map = map_directory_mode::save_swizzle_textures;
   }
@@ -1216,7 +1284,6 @@ void gui::menuitem_save_deswizzle_textures() const
   if (ImGui::MenuItem("Save Deswizzled Textures (Pupu)", nullptr, false, true))
   {
     m_directory_browser.Open();
-
     std::string base_name = m_map_sprite.get_base_name();
     std::string prefix    = base_name.substr(0U, 2U);
     auto        title     = fmt::format(
@@ -1225,6 +1292,8 @@ void gui::menuitem_save_deswizzle_textures() const
       char{ std::filesystem::path::preferred_separator },
       base_name);
     m_directory_browser.SetTitle(title);
+    m_directory_browser.SetPwd(Configuration{}["deswizzle_path"].value_or(
+      std::filesystem::current_path().string()));
     m_directory_browser.SetTypeFilters({ ".map", ".png" });
     m_modified_directory_map = map_directory_mode::save_deswizzle_textures;
   }
@@ -1240,6 +1309,9 @@ void gui::open_swizzle_filebrowser() const
 {
   m_directory_browser.Open();
   m_directory_browser.SetTitle("Choose directory to load textures from");
+  m_directory_browser.SetPwd(
+    Configuration{}["single_swizzle_or_deswizzle_path"].value_or(
+      std::filesystem::current_path().string()));
   m_directory_browser.SetTypeFilters({ ".map", ".png" });
   m_modified_directory_map = map_directory_mode::load_swizzle_textures;
 }
@@ -1254,6 +1326,9 @@ void gui::open_deswizzle_filebrowser() const
 {
   m_directory_browser.Open();
   m_directory_browser.SetTitle("Choose directory to load textures from");
+  m_directory_browser.SetPwd(
+    Configuration{}["single_swizzle_or_deswizzle_path"].value_or(
+      std::filesystem::current_path().string()));
   m_directory_browser.SetTypeFilters({ ".map", ".png" });
   m_modified_directory_map = map_directory_mode::load_deswizzle_textures;
 }
@@ -1263,6 +1338,8 @@ void gui::menuitem_save_texture(const std::string &path, bool enabled) const
   {
     m_save_file_browser.Open();
     m_save_file_browser.SetTitle("Save Texture as...");
+    m_save_file_browser.SetPwd(Configuration{}["save_image_path"].value_or(
+      std::filesystem::current_path().string()));
     m_save_file_browser.SetTypeFilters({ ".png", ".ppm" });
     m_save_file_browser.SetInputName(path.c_str());
   }
@@ -1273,6 +1350,8 @@ void gui::menuitem_save_mim_file(const std::string &path, bool enabled) const
   {
     m_save_file_browser.Open();
     m_save_file_browser.SetTitle("Save Mim as...");
+    m_save_file_browser.SetPwd(Configuration{}["mim_path"].value_or(
+      std::filesystem::current_path().string()));
     m_save_file_browser.SetTypeFilters({ Mim::EXT.data() });
     m_save_file_browser.SetInputName(path);
   }
@@ -1283,6 +1362,8 @@ void gui::menuitem_save_map_file(const std::string &path, bool enabled) const
   {
     m_save_file_browser.Open();
     m_save_file_browser.SetTitle("Save Map as...");
+    m_save_file_browser.SetPwd(Configuration{}["map_path"].value_or(
+      std::filesystem::current_path().string()));
     m_save_file_browser.SetTypeFilters({ Map::EXT.data() });
     m_save_file_browser.SetInputName(path);
     m_modified_map = map_dialog_mode::save_unmodified;
@@ -1295,6 +1376,8 @@ void gui::menuitem_save_map_file_modified(const std::string &path, bool enabled)
   {
     m_save_file_browser.Open();
     m_save_file_browser.SetTitle("Save Map as...");
+    m_save_file_browser.SetPwd(Configuration{}["map_path"].value_or(
+      std::filesystem::current_path().string()));
     m_save_file_browser.SetTypeFilters({ Map::EXT.data() });
     m_save_file_browser.SetInputName(path);
     m_modified_map = map_dialog_mode::save_modified;
@@ -1306,6 +1389,8 @@ void gui::menuitem_load_map_file(const std::string &path, bool enabled) const
   {
     m_save_file_browser.Open();
     m_save_file_browser.SetTitle("Load Map...");
+    m_save_file_browser.SetPwd(Configuration{}["map_path"].value_or(
+      std::filesystem::current_path().string()));
     m_save_file_browser.SetTypeFilters({ Map::EXT.data() });
     m_save_file_browser.SetInputName(path);
     m_modified_map = map_dialog_mode::load;
@@ -2948,14 +3033,14 @@ std::variant<
           {
             if (tile != tmp_tile)
             {
-              current_tile = tmp_tile;
-              current_item_str = std::format("{}",m_selections.selected_tile);
+              current_tile     = tmp_tile;
+              current_item_str = std::format("{}", m_selections.selected_tile);
             }
           }
           else if constexpr (!is_tile<std::decay_t<decltype(tile)>>)
           {
-            current_tile = tmp_tile;
-            current_item_str = std::format("{}",m_selections.selected_tile);
+            current_tile     = tmp_tile;
+            current_item_str = std::format("{}", m_selections.selected_tile);
           }
         }
       },
@@ -3071,11 +3156,11 @@ void gui::import_image_window() const
                              std::uint16_t{ 256U } };
         },
         []() {
-          return std::array{ std::string_view{ "16" },
-                             std::string_view{ "32" },
-                             std::string_view{ "64" },
-                             std::string_view{ "128" },
-                             std::string_view{ "256" } };
+          return std::array{ std::string_view{ " 1x  16 px" },
+                             std::string_view{ " 2x  32 px" },
+                             std::string_view{ " 4x  64 px" },
+                             std::string_view{ " 8x 128 px" },
+                             std::string_view{ "16x 256 px" } };
         },
         m_selections.tile_size_value))
   {
@@ -3129,11 +3214,17 @@ void gui::browse_for_image_display_preview() const
     m_load_file_browser.Open();
     m_load_file_browser.SetTitle("Load Image File...");
     m_load_file_browser.SetTypeFilters({ ".png" });
+    m_load_file_browser.SetPwd(Configuration{}["load_image_path"].value_or(
+      std::filesystem::current_path().string()));
     m_load_file_browser.SetInputName(image_path.data());
   }
   m_load_file_browser.Display();
   if (m_load_file_browser.HasSelected())
   {
+    Configuration config{};
+    config->insert_or_assign(
+      "load_image_path", m_load_file_browser.GetPwd().string());
+    config.save();
     [[maybe_unused]] const auto selected_path =
       m_load_file_browser.GetSelected();
     image_path = selected_path.string();
