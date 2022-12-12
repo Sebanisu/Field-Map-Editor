@@ -3008,7 +3008,7 @@ std::variant<
   ImGuiStyle &style      = ImGui::GetStyle();
   ImGui::SetCursorScreenPos(ImVec2(
     combo_pos.x + style.FramePadding.x, combo_pos.y + style.FramePadding.y));
-  std::visit(
+  (void)std::visit(
     [this](const auto &tile) -> bool {
       if constexpr (!std::
                       is_same_v<std::decay_t<decltype(tile)>, std::monostate>)
@@ -3141,6 +3141,17 @@ void gui::collapsing_tile_info(
                 ImGui::Text("%s", fmt::format("{}", value).c_str());
               });
           }
+          const auto w = std::max(
+                           (ImGui::GetContentRegionAvail()
+                              .x /* - ImGui::GetStyle().ItemSpacing.x*/),
+                           1.F)
+                         / 2.F;
+          ImVec2      backup_pos = ImGui::GetCursorScreenPos();
+          ImGuiStyle &style      = ImGui::GetStyle();
+          ImGui::SetCursorScreenPos(ImVec2(
+            backup_pos.x + w*1.1F, backup_pos.y - w * .9F - style.FramePadding.y*2.F));
+          (void)create_tile_button(tile, { w * .9F, w * .9F });
+          ImGui::SetCursorScreenPos(backup_pos);
         }
       }
     },

@@ -331,7 +331,8 @@ private:
       open_viii::graphics::background::Tile3> &current_tile) const;
   void browse_for_image_display_preview() const;
   template<open_viii::graphics::background::is_tile tileT>
-  bool create_tile_button(const tileT &tile, sf::Vector2f image_size = {}) const
+  [[nodiscard]] bool
+    create_tile_button(const tileT &tile, sf::Vector2f image_size = {}) const
   {
     const auto *texture = m_map_sprite.get_texture(tile);
     if (texture == nullptr)
