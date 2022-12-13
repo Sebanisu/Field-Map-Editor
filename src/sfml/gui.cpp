@@ -3166,20 +3166,13 @@ void gui::import_image_window() const
       tiles_high,
       tiles_wide * tiles_high)
       .c_str());
-
-      ImGui::Text(
-        "%s",
-        fmt::format(
-          "Possible Tiles: {} wide, {} high, {} total",
-          tiles_wide,
-          tiles_high,
-          tiles_wide * tiles_high)
-          .c_str());
-      import_image_map.visit_tiles([](auto &&tiles) {
-        ImGui::Text(
-          "%s", fmt::format("Generated Tiles: {}", std::size(tiles)).c_str());
-      });
-  if (changed && tiles_wide * tiles_high)
+  import_image_map.visit_tiles([](auto &&tiles) {
+    ImGui::Text(
+      "%s", fmt::format("Generated Tiles: {}", std::size(tiles)).c_str());
+  });
+  if (
+    changed && tiles_wide * tiles_high != 0U
+    && loaded_image_cpu.getSize() != sf::Vector2u{})
   {
     import_image_map =
       open_viii::graphics::background::Map([this,
@@ -3205,10 +3198,12 @@ void gui::import_image_window() const
               {
                 return std::monostate{};
               }
-              // open_viii::graphics::background::Tile1
+              //   * Set new tiles to 4 bit to get max amount of tiles.
               tile = tile.with_depth(BPPT::BPP4_CONST())
-                       .with_source_xy({ x_tile * 16U, y_tile * 16U })
-                       .with_xy({ x_tile * 16U, y_tile * 16U });
+                       .with_source_xy({ static_cast<uint8_t>(x_tile * 16U),
+                                         static_cast<uint8_t>(y_tile * 16U) })
+                       .with_xy({ static_cast<int16_t>(x_tile * 16),
+                                  static_cast<int16_t>(y_tile * 16) });
 
               // iterate
               ++x_tile;
@@ -3221,10 +3216,58 @@ void gui::import_image_window() const
           },
           current_tile);
       });
-  }
-  //   * Set new tiles to 4 bit to get max amount of tiles.
-  //   * Filter empty tiles
 
+
+    //* Filter empty tiles
+    loaded_image_cpu = loaded_image.copyToImage();
+    import_image_map.visit_tiles([this](auto &tiles) {
+      const auto rem_range =
+        std::ranges::remove_if(tiles, [this](const auto &tile) -> bool {
+          const auto x_start = tile.x() / 16 * m_selections.tile_size_value;
+          const auto y_start = tile.y() / 16 * m_selections.tile_size_value;
+          const int  xmax    = x_start + m_selections.tile_size_value;
+          const sf::Vector2u &imgsize = loaded_image_cpu.getSize();
+          const auto x_end = (std::min)(static_cast<int>(imgsize.x), xmax);
+          const int  ymax  = y_start + m_selections.tile_size_value;
+          const auto y_end = (std::min)(static_cast<int>(imgsize.y), ymax);
+          for (auto x = x_start; std::cmp_less(x, x_end); ++x)
+          {
+            for (auto y = y_start; std::cmp_less(y, y_end); ++y)
+            {
+              const auto color = loaded_image_cpu.getPixel(
+                static_cast<unsigned int>(x), static_cast<unsigned int>(y));
+              if (std::cmp_greater(color.a, 0U))
+              {
+                return false;
+              }
+            }
+          }
+          return true;
+        });
+      tiles.erase(rem_range.begin(), rem_range.end());
+    });
+  }
+  if (ImGui::BeginTable("import_tiles_table", 9))
+  {
+    const auto the_end_tile_table = scope_guard([]() { ImGui::EndTable(); });
+    import_image_map.visit_tiles([this](auto &tiles) {
+      for (const auto &tile : tiles)
+      {
+        ImGui::TableNextColumn();
+        sf::Sprite sprite(
+          loaded_image,
+          sf::IntRect(
+            tile.x() / 16 * m_selections.tile_size_value,
+            tile.y() / 16 * m_selections.tile_size_value,
+            m_selections.tile_size_value,
+            m_selections.tile_size_value));
+        const auto the_end_tile_table_tile =
+          scope_guard([]() { ImGui::PopID(); });
+        ImGui::PushID(++m_id);
+        ImGui::ImageButton(sprite, sf::Vector2f(32.F, 32.F),0);
+      }
+    });
+  }
   //   * Then we can swap between swizzle and deswizzle views to show what they
   //   look like
   //   * At the end we need to be able to save and merge them with the '.map'
@@ -3284,6 +3327,7 @@ bool gui::combo_tile_size() const
 }
 bool gui::browse_for_image_display_preview() const
 {
+  bool               changed = false;
   static std::string image_path{};
   ImGui::InputText(
     "##image_path",
@@ -3312,10 +3356,11 @@ bool gui::browse_for_image_display_preview() const
     image_path = selected_path.string();
     m_load_file_browser.ClearSelected();
     loaded_image.loadFromFile(image_path);// stored on gpu.
-    if (loaded_image.getSize().x == 0 || loaded_image.getSize().y == 0)
+    if (loaded_image.getSize().x != 0 && loaded_image.getSize().y != 0)
     {
-        loaded_image_cpu.loadFromFile(image_path);// stored in memory
+      loaded_image_cpu.loadFromFile(image_path);// stored in memory
     }
+    changed = true;
   }
   if (loaded_image.getSize().x == 0 || loaded_image.getSize().y == 0)
   {
@@ -3332,7 +3377,8 @@ bool gui::browse_for_image_display_preview() const
     float       scale = w / static_cast<float>(size.x);
     const float h     = static_cast<float>(size.y) * scale;
     ImVec2      p     = ImGui::GetCursorScreenPos();
-    ImGui::Image(sprite, sf::Vector2f(w, h));
+    const auto                  sg        = PushPop();
+    ImGui::ImageButton(sprite, sf::Vector2f(w, h),0);
     if (ImGui::Checkbox("Draw Grid", &m_selections.import_image_grid))
     {
       Configuration config{};
@@ -3346,8 +3392,10 @@ bool gui::browse_for_image_display_preview() const
            x += m_selections.tile_size_value)
       {
         ImGui::GetWindowDrawList()->AddLine(
-          ImVec2(p.x + (x * scale), p.y),
-          ImVec2(p.x + (x * scale), p.y + (size.y * scale)),
+          ImVec2(p.x + (static_cast<float>(x) * scale), p.y),
+          ImVec2(
+            p.x + (static_cast<float>(x) * scale),
+            p.y + (static_cast<float>(size.y) * scale)),
           IM_COL32(255, 0, 0, 255),
           2.0f);
       }
@@ -3355,14 +3403,16 @@ bool gui::browse_for_image_display_preview() const
            y += m_selections.tile_size_value)
       {
         ImGui::GetWindowDrawList()->AddLine(
-          ImVec2(p.x, p.y + (y * scale)),
-          ImVec2(p.x + (size.x * scale), p.y + (y * scale)),
+          ImVec2(p.x, p.y + (static_cast<float>(y) * scale)),
+          ImVec2(
+            p.x + (static_cast<float>(size.x) * scale),
+            p.y + (static_cast<float>(y) * scale)),
           IM_COL32(255, 0, 0, 255),
           2.0f);
       }
     }
   }
-  return true;
+  return changed;
 }
 void gui::collapsing_tile_info(
   const std::variant<

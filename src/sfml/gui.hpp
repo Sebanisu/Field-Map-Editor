@@ -365,8 +365,10 @@ private:
     sf::Sprite sprite(
       *texture,
       sf::IntRect(
-        static_cast<int>((src_x / 16.F) * static_cast<float>(draw_size.x)),
-        static_cast<int>((src_y / 16.F) * static_cast<float>(draw_size.y)),
+        static_cast<int>(
+          (static_cast<float>(src_x) / 16.F) * static_cast<float>(draw_size.x)),
+        static_cast<int>(
+          (static_cast<float>(src_y) / 16.F) * static_cast<float>(draw_size.y)),
         static_cast<int>(draw_size.x),
         static_cast<int>(draw_size.y)));
     if (image_size == sf::Vector2f{})
