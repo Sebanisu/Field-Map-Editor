@@ -3166,10 +3166,6 @@ void gui::import_image_window() const
       tiles_high,
       tiles_wide * tiles_high)
       .c_str());
-  import_image_map.visit_tiles([](auto &&tiles) {
-    ImGui::Text(
-      "%s", fmt::format("Generated Tiles: {}", std::size(tiles)).c_str());
-  });
   if (
     changed && tiles_wide * tiles_high != 0U
     && loaded_image_cpu.getSize() != sf::Vector2u{})
@@ -3247,26 +3243,34 @@ void gui::import_image_window() const
       tiles.erase(rem_range.begin(), rem_range.end());
     });
   }
-  if (ImGui::BeginTable("import_tiles_table", 9))
+  if (ImGui::CollapsingHeader(import_image_map
+                                .visit_tiles([](auto &&tiles) {
+                                  return fmt::format(
+                                    "Generated Tiles: {}", std::size(tiles));
+                                })
+                                .c_str()))
   {
-    const auto the_end_tile_table = scope_guard([]() { ImGui::EndTable(); });
-    import_image_map.visit_tiles([this](auto &tiles) {
-      for (const auto &tile : tiles)
-      {
-        ImGui::TableNextColumn();
-        sf::Sprite sprite(
-          loaded_image,
-          sf::IntRect(
-            tile.x() / 16 * m_selections.tile_size_value,
-            tile.y() / 16 * m_selections.tile_size_value,
-            m_selections.tile_size_value,
-            m_selections.tile_size_value));
-        const auto the_end_tile_table_tile =
-          scope_guard([]() { ImGui::PopID(); });
-        ImGui::PushID(++m_id);
-        ImGui::ImageButton(sprite, sf::Vector2f(32.F, 32.F),0);
-      }
-    });
+    if (ImGui::BeginTable("import_tiles_table", 9))
+    {
+      const auto the_end_tile_table = scope_guard([]() { ImGui::EndTable(); });
+      import_image_map.visit_tiles([this](auto &tiles) {
+        for (const auto &tile : tiles)
+        {
+          ImGui::TableNextColumn();
+          sf::Sprite sprite(
+            loaded_image,
+            sf::IntRect(
+              tile.x() / 16 * m_selections.tile_size_value,
+              tile.y() / 16 * m_selections.tile_size_value,
+              m_selections.tile_size_value,
+              m_selections.tile_size_value));
+          const auto the_end_tile_table_tile =
+            scope_guard([]() { ImGui::PopID(); });
+          ImGui::PushID(++m_id);
+          ImGui::ImageButton(sprite, sf::Vector2f(32.F, 32.F), 0);
+        }
+      });
+    }
   }
   //   * Then we can swap between swizzle and deswizzle views to show what they
   //   look like
@@ -3377,8 +3381,8 @@ bool gui::browse_for_image_display_preview() const
     float       scale = w / static_cast<float>(size.x);
     const float h     = static_cast<float>(size.y) * scale;
     ImVec2      p     = ImGui::GetCursorScreenPos();
-    const auto                  sg        = PushPop();
-    ImGui::ImageButton(sprite, sf::Vector2f(w, h),0);
+    const auto  sg    = PushPop();
+    ImGui::ImageButton(sprite, sf::Vector2f(w, h), 0);
     if (ImGui::Checkbox("Draw Grid", &m_selections.import_image_grid))
     {
       Configuration config{};
