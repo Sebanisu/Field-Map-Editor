@@ -3166,33 +3166,68 @@ void gui::import_image_window() const
       tiles_high,
       tiles_wide * tiles_high)
       .c_str());
-  //  open_viii::graphics::background::Map map(
-  //    [this, &current_tile, x_tile = uint8_t{}, y_tile = uint8_t{}]() mutable
-  //    {
-  //      return std::visit(
-  //        [&](auto tile) -> std::variant<
-  //                         open_viii::graphics::background::Tile1,
-  //                         open_viii::graphics::background::Tile2,
-  //                         open_viii::graphics::background::Tile3,
-  //                         std::monostate> {
-  //          if constexpr (is_tile<std::decay_t<decltype(tile)>>)
-  //          {
-  //            // open_viii::graphics::background::Tile1
-  //
-  //            tile = tile.with_depth(BPPT::BPP4_CONST());
-  //            if (x_tile == 16U)
-  //            {
-  //              x_tile = 0;
-  //            }
-  //            return tile;
-  //          }
-  //          else
-  //          {
-  //            return std::monostate{};
-  //          }
-  //        },
-  //        current_tile);
-  //    });
+  if (tiles_wide * tiles_high)
+  {
+    static open_viii::graphics::background::Map map{};
+    ImGui::Text(
+      "%s",
+      fmt::format(
+        "Possible Tiles: {} wide, {} high, {} total",
+        tiles_wide,
+        tiles_high,
+        tiles_wide * tiles_high)
+        .c_str());
+    map.visit_tiles([](auto && tiles){
+    ImGui::Text(
+      "%s",
+      fmt::format(
+        "Generated Tiles: {}",
+        std::size(tiles))
+        .c_str());
+    });
+    if (map.visit_tiles([](auto &&tiles) { return std::empty(tiles); }))
+    {
+      map = open_viii::graphics::background::Map([this,
+                                                  &current_tile,
+                                                  x_tile = uint8_t{},
+                                                  y_tile = uint8_t{},
+                                                  &tiles_high,
+                                                  &tiles_wide]() mutable {
+        return std::visit(
+          [&](auto tile) -> std::variant<
+                           open_viii::graphics::background::Tile1,
+                           open_viii::graphics::background::Tile2,
+                           open_viii::graphics::background::Tile3,
+                           std::monostate> {
+            if constexpr (is_tile<std::decay_t<decltype(tile)>>)
+            {
+              if (x_tile == tiles_wide)
+              {
+                x_tile = 0;
+                ++y_tile;
+              }
+              if (y_tile == tiles_high)
+              {
+                return std::monostate{};
+              }
+              // open_viii::graphics::background::Tile1
+              tile = tile.with_depth(BPPT::BPP4_CONST())
+                       .with_source_xy({ x_tile * 16U, y_tile * 16U })
+                       .with_xy({ x_tile * 16U, y_tile * 16U });
+
+              // iterate
+              ++x_tile;
+              return tile;
+            }
+            else
+            {
+              return std::monostate{};
+            }
+          },
+          current_tile);
+      });
+    }
+  }
   //   * Set new tiles to 4 bit to get max amount of tiles.
   //   * Filter empty tiles
 
