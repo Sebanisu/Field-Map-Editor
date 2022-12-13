@@ -3037,13 +3037,13 @@ std::variant<
             if (tile != tmp_tile)
             {
               current_tile     = tmp_tile;
-              current_item_str = std::format("{}", m_selections.selected_tile);
+              current_item_str = fmt::format("{}", m_selections.selected_tile);
             }
           }
           else if constexpr (!is_tile<std::decay_t<decltype(tile)>>)
           {
             current_tile     = tmp_tile;
-            current_item_str = std::format("{}", m_selections.selected_tile);
+            current_item_str = fmt::format("{}", m_selections.selected_tile);
           }
         }
       },
@@ -3144,11 +3144,11 @@ void gui::import_image_window() const
   // add text showing the tile's info.
   collapsing_tile_info(current_tile);
   //   * I need to browse for an image file.
-  browse_for_image_display_preview();
+  bool changed          = browse_for_image_display_preview();
   //   * We need to adjust the scale to fit
   // maybe i can just create an imgui window filled with the image
   // scale the image to be the selected tile size. 16,32,64,128,256.
-  combo_tile_size();
+  changed               = combo_tile_size() || changed;
   //   * We need to adjust the position
   // have a px offset? or something?
   //   * I'd probably store the new tiles in their own map.
@@ -3166,33 +3166,28 @@ void gui::import_image_window() const
       tiles_high,
       tiles_wide * tiles_high)
       .c_str());
-  if (tiles_wide * tiles_high)
+
+      ImGui::Text(
+        "%s",
+        fmt::format(
+          "Possible Tiles: {} wide, {} high, {} total",
+          tiles_wide,
+          tiles_high,
+          tiles_wide * tiles_high)
+          .c_str());
+      import_image_map.visit_tiles([](auto &&tiles) {
+        ImGui::Text(
+          "%s", fmt::format("Generated Tiles: {}", std::size(tiles)).c_str());
+      });
+  if (changed && tiles_wide * tiles_high)
   {
-    static open_viii::graphics::background::Map map{};
-    ImGui::Text(
-      "%s",
-      fmt::format(
-        "Possible Tiles: {} wide, {} high, {} total",
-        tiles_wide,
-        tiles_high,
-        tiles_wide * tiles_high)
-        .c_str());
-    map.visit_tiles([](auto && tiles){
-    ImGui::Text(
-      "%s",
-      fmt::format(
-        "Generated Tiles: {}",
-        std::size(tiles))
-        .c_str());
-    });
-    if (map.visit_tiles([](auto &&tiles) { return std::empty(tiles); }))
-    {
-      map = open_viii::graphics::background::Map([this,
-                                                  &current_tile,
-                                                  x_tile = uint8_t{},
-                                                  y_tile = uint8_t{},
-                                                  &tiles_high,
-                                                  &tiles_wide]() mutable {
+    import_image_map =
+      open_viii::graphics::background::Map([this,
+                                            &current_tile,
+                                            x_tile = uint8_t{},
+                                            y_tile = uint8_t{},
+                                            &tiles_high,
+                                            &tiles_wide]() mutable {
         return std::visit(
           [&](auto tile) -> std::variant<
                            open_viii::graphics::background::Tile1,
@@ -3226,7 +3221,6 @@ void gui::import_image_window() const
           },
           current_tile);
       });
-    }
   }
   //   * Set new tiles to 4 bit to get max amount of tiles.
   //   * Filter empty tiles
@@ -3259,9 +3253,9 @@ void gui::import_image_window() const
     // todo reset state
   }
 }
-void gui::combo_tile_size() const
+bool gui::combo_tile_size() const
 {
-  if (generic_combo(
+  if (!generic_combo(
         m_id,
         std::string_view("Tile Size"),
         []() {
@@ -3280,13 +3274,15 @@ void gui::combo_tile_size() const
         },
         m_selections.tile_size_value))
   {
-    Configuration config{};
-    config->insert_or_assign(
-      "selections_tile_size_value", m_selections.tile_size_value);
-    config.save();
+    return false;
   }
+  Configuration config{};
+  config->insert_or_assign(
+    "selections_tile_size_value", m_selections.tile_size_value);
+  config.save();
+  return true;
 }
-void gui::browse_for_image_display_preview() const
+bool gui::browse_for_image_display_preview() const
 {
   static std::string image_path{};
   ImGui::InputText(
@@ -3316,53 +3312,57 @@ void gui::browse_for_image_display_preview() const
     image_path = selected_path.string();
     m_load_file_browser.ClearSelected();
     loaded_image.loadFromFile(image_path);// stored on gpu.
-  }
-  if (loaded_image.getSize().x != 0 && loaded_image.getSize().y != 0)
-  {
-    loaded_image_cpu.loadFromFile(image_path);// stored in memory
-    if (ImGui::CollapsingHeader("Selected Image Preview"))
+    if (loaded_image.getSize().x == 0 || loaded_image.getSize().y == 0)
     {
-      sf::Sprite  sprite(loaded_image);
-      const float w = std::max(
-        (ImGui::GetContentRegionAvail()
-           .x /* - ImGui::GetStyle().ItemSpacing.x*/),
-        1.0f);
-      const auto  size  = loaded_image.getSize();
+        loaded_image_cpu.loadFromFile(image_path);// stored in memory
+    }
+  }
+  if (loaded_image.getSize().x == 0 || loaded_image.getSize().y == 0)
+  {
+    return false;
+  }
+  if (ImGui::CollapsingHeader("Selected Image Preview"))
+  {
+    sf::Sprite  sprite(loaded_image);
+    const float w = std::max(
+      (ImGui::GetContentRegionAvail().x /* - ImGui::GetStyle().ItemSpacing.x*/),
+      1.0f);
+    const auto  size  = loaded_image.getSize();
 
-      float       scale = w / static_cast<float>(size.x);
-      const float h     = static_cast<float>(size.y) * scale;
-      ImVec2      p     = ImGui::GetCursorScreenPos();
-      ImGui::Image(sprite, sf::Vector2f(w, h));
-      if (ImGui::Checkbox("Draw Grid", &m_selections.import_image_grid))
+    float       scale = w / static_cast<float>(size.x);
+    const float h     = static_cast<float>(size.y) * scale;
+    ImVec2      p     = ImGui::GetCursorScreenPos();
+    ImGui::Image(sprite, sf::Vector2f(w, h));
+    if (ImGui::Checkbox("Draw Grid", &m_selections.import_image_grid))
+    {
+      Configuration config{};
+      config->insert_or_assign(
+        "selections_import_image_grid", m_selections.import_image_grid);
+      config.save();
+    }
+    if (m_selections.import_image_grid)
+    {
+      for (std::uint32_t x{ m_selections.tile_size_value }; x < size.x;
+           x += m_selections.tile_size_value)
       {
-        Configuration config{};
-        config->insert_or_assign(
-          "selections_import_image_grid", m_selections.import_image_grid);
-        config.save();
+        ImGui::GetWindowDrawList()->AddLine(
+          ImVec2(p.x + (x * scale), p.y),
+          ImVec2(p.x + (x * scale), p.y + (size.y * scale)),
+          IM_COL32(255, 0, 0, 255),
+          2.0f);
       }
-      if (m_selections.import_image_grid)
+      for (std::uint32_t y{ m_selections.tile_size_value }; y < size.y;
+           y += m_selections.tile_size_value)
       {
-        for (std::uint32_t x{ m_selections.tile_size_value }; x < size.x;
-             x += m_selections.tile_size_value)
-        {
-          ImGui::GetWindowDrawList()->AddLine(
-            ImVec2(p.x + (x * scale), p.y),
-            ImVec2(p.x + (x * scale), p.y + (size.y * scale)),
-            IM_COL32(255, 0, 0, 255),
-            2.0f);
-        }
-        for (std::uint32_t y{ m_selections.tile_size_value }; y < size.y;
-             y += m_selections.tile_size_value)
-        {
-          ImGui::GetWindowDrawList()->AddLine(
-            ImVec2(p.x, p.y + (y * scale)),
-            ImVec2(p.x + (size.x * scale), p.y + (y * scale)),
-            IM_COL32(255, 0, 0, 255),
-            2.0f);
-        }
+        ImGui::GetWindowDrawList()->AddLine(
+          ImVec2(p.x, p.y + (y * scale)),
+          ImVec2(p.x + (size.x * scale), p.y + (y * scale)),
+          IM_COL32(255, 0, 0, 255),
+          2.0f);
       }
     }
   }
+  return true;
 }
 void gui::collapsing_tile_info(
   const std::variant<

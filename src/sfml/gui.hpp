@@ -184,11 +184,12 @@ private:
   mutable std::array<float, 2>                               xy           = {};
   mutable mim_sprite                                         m_mim_sprite = {};
   mutable map_sprite                                         m_map_sprite = {};
-  mutable bool                m_changed         = { false };
+  mutable open_viii::graphics::background::Map import_image_map           = {};
+  mutable bool                                 m_changed         = { false };
   //  ImGuiStyle                  m_original_style  = {};
-  mutable sf::Event           m_event           = {};
-  mutable bool                m_first           = { true };
-  static constexpr std::array m_draw_selections = {
+  mutable sf::Event                            m_event           = {};
+  mutable bool                                 m_first           = { true };
+  static constexpr std::array                  m_draw_selections = {
     open_viii::graphics::background::Mim::EXT,
     open_viii::graphics::background::Map::EXT
   };
@@ -205,8 +206,8 @@ private:
       static_cast<std::uint32_t>(ImGuiFileBrowserFlags_SelectDirectory)
       | static_cast<std::uint32_t>(ImGuiFileBrowserFlags_CreateNewDir))
   };
-  mutable sf::Texture loaded_image = {};
-  mutable sf::Image loaded_image_cpu = {};
+  mutable sf::Texture loaded_image     = {};
+  mutable sf::Image   loaded_image_cpu = {};
   static toml::array  get_paths();
   // imgui doesn't support std::string or std::string_view or
   // std::filesystem::path, only const char *
@@ -332,7 +333,7 @@ private:
       open_viii::graphics::background::Tile1,
       open_viii::graphics::background::Tile2,
       open_viii::graphics::background::Tile3> &current_tile) const;
-  void browse_for_image_display_preview() const;
+  [[nodiscard]] bool browse_for_image_display_preview() const;
   template<open_viii::graphics::background::is_tile tileT>
   [[nodiscard]] bool
     create_tile_button(const tileT &tile, sf::Vector2f image_size = {}) const
@@ -375,7 +376,7 @@ private:
     }
     return ImGui::ImageButton(sprite, image_size, 0);
   }
-  void combo_tile_size() const;
+  [[nodiscard]] bool combo_tile_size() const;
 };
 }// namespace fme
 #endif// FIELD_MAP_EDITOR_GUI_HPP
