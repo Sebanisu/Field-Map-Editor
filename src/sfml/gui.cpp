@@ -3148,33 +3148,54 @@ void gui::import_image_window() const
   //   * We need to adjust the scale to fit
   // maybe i can just create an imgui window filled with the image
   // scale the image to be the selected tile size. 16,32,64,128,256.
-  if (generic_combo(
-        m_id,
-        std::string_view("Tile Size"),
-        []() {
-          return std::array{ std::uint16_t{ 16U },
-                             std::uint16_t{ 32U },
-                             std::uint16_t{ 64U },
-                             std::uint16_t{ 128U },
-                             std::uint16_t{ 256U } };
-        },
-        []() {
-          return std::array{ std::string_view{ " 1x  16 px" },
-                             std::string_view{ " 2x  32 px" },
-                             std::string_view{ " 4x  64 px" },
-                             std::string_view{ " 8x 128 px" },
-                             std::string_view{ "16x 256 px" } };
-        },
-        m_selections.tile_size_value))
-  {
-    Configuration config{};
-    config->insert_or_assign(
-      "selections_tile_size_value", m_selections.tile_size_value);
-    config.save();
-  }
+  combo_tile_size();
   //   * We need to adjust the position
+  // have a px offset? or something?
+  //   * I'd probably store the new tiles in their own map.
+  const auto tiles_wide = static_cast<std::uint32_t>(std::ceil(
+    static_cast<float>(loaded_image.getSize().x)
+    / static_cast<float>(m_selections.tile_size_value)));
+  const auto tiles_high = static_cast<std::uint32_t>(std::ceil(
+    static_cast<float>(loaded_image.getSize().y)
+    / static_cast<float>(m_selections.tile_size_value)));
+  ImGui::Text(
+    "%s",
+    fmt::format(
+      "Possible Tiles: {} wide, {} high, {} total",
+      tiles_wide,
+      tiles_high,
+      tiles_wide * tiles_high)
+      .c_str());
+  //  open_viii::graphics::background::Map map(
+  //    [this, &current_tile, x_tile = uint8_t{}, y_tile = uint8_t{}]() mutable
+  //    {
+  //      return std::visit(
+  //        [&](auto tile) -> std::variant<
+  //                         open_viii::graphics::background::Tile1,
+  //                         open_viii::graphics::background::Tile2,
+  //                         open_viii::graphics::background::Tile3,
+  //                         std::monostate> {
+  //          if constexpr (is_tile<std::decay_t<decltype(tile)>>)
+  //          {
+  //            // open_viii::graphics::background::Tile1
+  //
+  //            tile = tile.with_depth(BPPT::BPP4_CONST());
+  //            if (x_tile == 16U)
+  //            {
+  //              x_tile = 0;
+  //            }
+  //            return tile;
+  //          }
+  //          else
+  //          {
+  //            return std::monostate{};
+  //          }
+  //        },
+  //        current_tile);
+  //    });
   //   * Set new tiles to 4 bit to get max amount of tiles.
-  //   * I'd probably store the new tiles in their own vector.
+  //   * Filter empty tiles
+
   //   * Then we can swap between swizzle and deswizzle views to show what they
   //   look like
   //   * At the end we need to be able to save and merge them with the '.map'
@@ -3201,6 +3222,33 @@ void gui::import_image_window() const
   if (ImGui::Button("Reset"))
   {
     // todo reset state
+  }
+}
+void gui::combo_tile_size() const
+{
+  if (generic_combo(
+        m_id,
+        std::string_view("Tile Size"),
+        []() {
+          return std::array{ uint16_t{ 16U },
+                             uint16_t{ 32U },
+                             uint16_t{ 64U },
+                             uint16_t{ 128U },
+                             uint16_t{ 256U } };
+        },
+        []() {
+          return std::array{ std::string_view{ " 1x  16 px" },
+                             std::string_view{ " 2x  32 px" },
+                             std::string_view{ " 4x  64 px" },
+                             std::string_view{ " 8x 128 px" },
+                             std::string_view{ "16x 256 px" } };
+        },
+        m_selections.tile_size_value))
+  {
+    Configuration config{};
+    config->insert_or_assign(
+      "selections_tile_size_value", m_selections.tile_size_value);
+    config.save();
   }
 }
 void gui::browse_for_image_display_preview() const
@@ -3232,10 +3280,11 @@ void gui::browse_for_image_display_preview() const
       m_load_file_browser.GetSelected();
     image_path = selected_path.string();
     m_load_file_browser.ClearSelected();
-    loaded_image.loadFromFile(image_path);
+    loaded_image.loadFromFile(image_path);// stored on gpu.
   }
   if (loaded_image.getSize().x != 0 && loaded_image.getSize().y != 0)
   {
+    loaded_image_cpu.loadFromFile(image_path);// stored in memory
     if (ImGui::CollapsingHeader("Selected Image Preview"))
     {
       sf::Sprite  sprite(loaded_image);

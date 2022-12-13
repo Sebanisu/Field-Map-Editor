@@ -206,6 +206,7 @@ private:
       | static_cast<std::uint32_t>(ImGuiFileBrowserFlags_CreateNewDir))
   };
   mutable sf::Texture loaded_image = {};
+  mutable sf::Image loaded_image_cpu = {};
   static toml::array  get_paths();
   // imgui doesn't support std::string or std::string_view or
   // std::filesystem::path, only const char *
@@ -374,6 +375,7 @@ private:
     }
     return ImGui::ImageButton(sprite, image_size, 0);
   }
+  void combo_tile_size() const;
 };
 }// namespace fme
 #endif// FIELD_MAP_EDITOR_GUI_HPP
