@@ -45,6 +45,7 @@ private:
     batch_load_deswizzle_textures,
     batch_save_swizzle_textures,
     batch_embed_map_files,
+    custom_upscale_directory,
   };
   struct batch_deswizzle
   {
@@ -160,27 +161,28 @@ private:
     bool          display_import_image   = { false };
     bool          import_image_grid      = { false };
   };
-  selections                     default_selections() const;
-  static constexpr std::uint32_t default_window_width  = 800U;
-  static constexpr std::uint32_t default_window_height = 600U;
-  mutable scrolling              m_scrolling           = {};
-  mutable batch_deswizzle        m_batch_deswizzle     = {};
-  mutable batch_reswizzle        m_batch_reswizzle     = {};
-  mutable batch_embed            m_batch_embed         = {};
-  mutable batch_embed            m_batch_embed2        = {};
-  mutable batch_embed            m_batch_embed3        = {};
-  mutable batch_embed            m_batch_embed4        = {};
-  mutable int                    m_id                  = {};
-  mutable mouse_positions        m_mouse_positions     = {};
-  mutable selections             m_selections     = { default_selections() };
-  std::uint32_t                  m_window_width   = { default_window_width };
-  mutable float                  m_scale_width    = {};
-  std::uint32_t                  m_window_height  = { default_window_height };
-  mutable sf::RenderWindow       m_window         = {};
-  mutable sf::Clock              m_delta_clock    = {};
-  mutable toml::array            m_paths          = {};
-  mutable archives_group         m_archives_group = {};
-  mutable std::vector<std::string> m_upscale_paths = {};
+  selections                       default_selections() const;
+  static constexpr std::uint32_t   default_window_width  = 800U;
+  static constexpr std::uint32_t   default_window_height = 600U;
+  mutable scrolling                m_scrolling           = {};
+  mutable batch_deswizzle          m_batch_deswizzle     = {};
+  mutable batch_reswizzle          m_batch_reswizzle     = {};
+  mutable batch_embed              m_batch_embed         = {};
+  mutable batch_embed              m_batch_embed2        = {};
+  mutable batch_embed              m_batch_embed3        = {};
+  mutable batch_embed              m_batch_embed4        = {};
+  mutable int                      m_id                  = {};
+  mutable mouse_positions          m_mouse_positions     = {};
+  mutable selections               m_selections    = { default_selections() };
+  std::uint32_t                    m_window_width  = { default_window_width };
+  mutable float                    m_scale_width   = {};
+  std::uint32_t                    m_window_height = { default_window_height };
+  mutable sf::RenderWindow         m_window        = {};
+  mutable sf::Clock                m_delta_clock   = {};
+  mutable toml::array              m_paths         = {};
+  mutable toml::array              m_custom_upscale_paths                 = {};
+  mutable archives_group           m_archives_group                       = {};
+  mutable std::vector<std::string> m_upscale_paths                        = {};
   mutable std::shared_ptr<open_viii::archive::FIFLFS<false>> m_field      = {};
   mutable std::array<float, 2>                               xy           = {};
   mutable mim_sprite                                         m_mim_sprite = {};
@@ -273,9 +275,8 @@ private:
   void text_mouse_position() const;
   void on_click_not_imgui() const;
   void combo_upscale_path() const;
-  bool combo_upscale_path(
-    ::filter<std::filesystem::path> &filter) const;
-  void                          combo_deswizzle_path() const;
+  bool combo_upscale_path(::filter<std::filesystem::path> &filter) const;
+  void combo_deswizzle_path() const;
   const open_viii::LangT       &get_coo() const;
   mutable map_dialog_mode       m_modified_map           = {};
   mutable map_directory_mode    m_modified_directory_map = {};
@@ -381,6 +382,9 @@ private:
   void               generate_upscale_paths(
                   const std::string &field_name,
                   open_viii::LangT   coo) const;
+  void menuitem_locate_custom_upscale() const;
+  void open_locate_custom_upscale() const;
+  toml::array get_custom_upscale_paths_vector();
 };
 }// namespace fme
 #endif// FIELD_MAP_EDITOR_GUI_HPP

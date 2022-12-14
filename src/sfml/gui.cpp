@@ -625,7 +625,8 @@ void gui::combo_coo() const
       m_map_sprite = m_map_sprite.with_coo(get_coo());
     }
     m_changed = true;
-    generate_upscale_paths(m_field->get_base_name(), get_coo());
+    if (m_field)
+      generate_upscale_paths(m_field->get_base_name(), get_coo());
   }
 }
 const open_viii::LangT &gui::get_coo() const
@@ -678,7 +679,8 @@ void gui::update_field() const
   m_loaded_deswizzle_texture_path = std::filesystem::path{};
 
   m_changed                       = true;
-  generate_upscale_paths(m_field->get_base_name(), get_coo());
+  if (m_field)
+    generate_upscale_paths(m_field->get_base_name(), get_coo());
 }
 
 void gui::checkbox_map_swizzle() const
@@ -893,6 +895,7 @@ void gui::menu_bar() const
     if (ImGui::BeginMenu("File"))
     {
       menuitem_locate_ff8();
+      menuitem_locate_custom_upscale();
       ImGui::Separator();
       menuitem_save_texture(save_texture_path(), mim_test() || map_test());
       if (mim_test())
@@ -1052,6 +1055,19 @@ void gui::file_browser_locate_ff8() const
       config.save();
       m_selections.path = static_cast<int>(m_paths.size()) - 1;
       update_path();
+    }
+    else if (
+      m_modified_directory_map == map_directory_mode::custom_upscale_directory)
+    {
+      m_custom_upscale_paths.push_back(selected_path.string());
+      // todo remove paths that don't exist.
+      Configuration config{};
+      config->insert_or_assign(
+        "custom_upscale_paths_vector", m_custom_upscale_paths);
+      config.save();
+      if (m_field)
+        generate_upscale_paths(m_field->get_base_name(), get_coo());
+      // todo toggle filter enabled?
     }
     else if (
       m_modified_directory_map == map_directory_mode::save_swizzle_textures)
@@ -1267,6 +1283,19 @@ void gui::open_locate_ff8_filebrowser() const
   m_directory_browser.SetTypeFilters({ ".exe" });
   m_modified_directory_map = map_directory_mode::ff8_install_directory;
 }
+void gui::menuitem_locate_custom_upscale() const
+{
+  if (ImGui::MenuItem("Locate a Custom Upscale directory"))
+  {
+    open_locate_custom_upscale();
+  }
+}
+void gui::open_locate_custom_upscale() const
+{
+  m_directory_browser.Open();
+  m_directory_browser.SetTitle("Choose Custom Upscale directory");
+  m_modified_directory_map = map_directory_mode::custom_upscale_directory;
+}
 void gui::menuitem_save_swizzle_textures() const
 {
   if (ImGui::MenuItem("Save Swizzled Textures", nullptr, false, true))
@@ -1472,6 +1501,22 @@ toml::array gui::get_paths()
     }
     config->insert_or_assign(paths_vector, std::move(paths_array));
     config.save();
+  }
+  return *(config->get_as<toml::array>(paths_vector));
+
+  //  std::vector<std::string> paths{};
+  //  open_viii::Paths::for_each_path([&paths](const std::filesystem::path &p) {
+  //    paths.emplace_back(p.string());
+  //  });
+  //  return paths;
+}
+toml::array gui::get_custom_upscale_paths_vector()
+{
+  const char   *paths_vector = "custom_upscale_paths_vector";
+  Configuration config{};
+  if (!config->contains(paths_vector))
+  {
+   return{};
   }
   return *(config->get_as<toml::array>(paths_vector));
 
@@ -1688,13 +1733,15 @@ void gui::init_and_get_style() const
   //  m_window.setFramerateLimit(fps_lock);
   m_window.setVerticalSyncEnabled(true);
   (void)ImGui::SFML::Init(m_window);
-  generate_upscale_paths(m_field->get_base_name(), get_coo());
+  if (m_field)
+    generate_upscale_paths(m_field->get_base_name(), get_coo());
 }
 gui::gui(std::uint32_t width, std::uint32_t height)
   : m_window_width(width)
   , m_window_height(height)
   , m_window(get_render_window())
   , m_paths(get_paths())
+  , m_custom_upscale_paths(get_custom_upscale_paths_vector())
   , m_archives_group(get_archives_group())
   , m_field(init_field())
   , m_mim_sprite(get_mim_sprite())
@@ -1986,6 +2033,7 @@ void gui::generate_upscale_paths(
   const std::string &field_name,
   open_viii::LangT   coo) const
 {
+  m_upscale_paths.clear();
   auto transform_paths =
     m_paths | std::views::transform([](const toml::node &item) -> std::string {
       return item.value_or(std::string{});
@@ -2018,7 +2066,15 @@ void gui::generate_upscale_paths(
   {
     process(
       upscales(std::filesystem::current_path(), field_name, coo).get_paths());
+    for (const auto &up : m_custom_upscale_paths)
+    {
+      process(
+        upscales(up.value_or(std::string{}), field_name, coo).get_paths());
+    }
   }
+  std::ranges::sort(m_upscale_paths);
+  const auto to_remove = std::ranges::unique(m_upscale_paths);
+  m_upscale_paths.erase(to_remove.begin(), to_remove.end());
 }
 bool gui::combo_upscale_path(::filter<std::filesystem::path> &filter) const
 {
@@ -3008,7 +3064,6 @@ gui::selections gui::default_selections() const
     config["selections_import_image_grid"].value_or(s.import_image_grid);
   s.tile_size_value =
     config["selections_tile_size_value"].value_or(s.tile_size_value);
-  config.save();
   return s;
 }
 

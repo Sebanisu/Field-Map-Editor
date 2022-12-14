@@ -110,6 +110,7 @@ public:
         m_root
           / tl::string::replace_slashes(
             fmt::format(R"(DEMASTER_EXP\textures\field_bg)")),
+        m_root / "field_bg",
         m_root / tl::string::replace_slashes(fmt::format(R"(textures\fields)")),
         m_root / tl::string::replace_slashes(fmt::format(R"(textures)")),
         m_root
@@ -133,6 +134,9 @@ public:
       m_root
         / tl::string::replace_slashes(fmt::format(
           R"(DEMASTER_EXP\textures\field_bg\{}\{}\)", prefix, m_field_name)),
+      m_root
+        / tl::string::replace_slashes(
+          fmt::format(R"(field_bg\{}\{}\)", prefix, m_field_name)),
       m_root
         / tl::string::replace_slashes(
           fmt::format(R"(textures\fields\{}\{}\)", prefix, m_field_name)),
