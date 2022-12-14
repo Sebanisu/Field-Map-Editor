@@ -1516,7 +1516,7 @@ toml::array gui::get_custom_upscale_paths_vector()
   Configuration config{};
   if (!config->contains(paths_vector))
   {
-   return{};
+    return {};
   }
   return *(config->get_as<toml::array>(paths_vector));
 
@@ -3316,7 +3316,7 @@ void gui::import_image_window() const
     if (ImGui::BeginTable("import_tiles_table", 9))
     {
       const auto the_end_tile_table = scope_guard([]() { ImGui::EndTable(); });
-      import_image_map.visit_tiles([this](auto &tiles) {
+      import_image_map_backup.visit_tiles([this](auto &tiles) {
         for (const auto &tile : tiles)
         {
           ImGui::TableNextColumn();
@@ -3335,6 +3335,98 @@ void gui::import_image_window() const
       });
     }
   }
+  // I need to detect the last used texture page and the highest source_y.
+  m_map_sprite.const_visit_tiles([this, &changed](const auto &tiles) {
+    const auto minmax_x = (std::ranges::minmax)(
+      tiles, {}, [](const auto &tile) { return tile.x(); });
+    const auto minmax_y = (std::ranges::minmax)(
+      tiles, {}, [](const auto &tile) { return tile.y(); });
+    static constexpr auto adjust = [](
+                                     std::integral auto OldValue,
+                                     std::integral auto OldMin,
+                                     std::integral auto OldMax,
+                                     std::integral auto NewMin,
+                                     std::integral auto NewMax) {
+      using T = std::common_type_t<
+        decltype(OldValue),
+        decltype(OldMax),
+        decltype(OldMin),
+        decltype(NewMin),
+        decltype(NewMax)>;
+      const auto OldRange = static_cast<T>(OldMax) - static_cast<T>(OldMin);
+      if (OldRange == 0)
+        return static_cast<T>(NewMin);
+      else
+      {
+        const auto NewRange = static_cast<T>(NewMax) - static_cast<T>(NewMin);
+        return static_cast<T>(
+          (static_cast<float>(
+             (static_cast<T>(OldValue) - static_cast<T>(OldMin))
+             * static_cast<T>(NewRange))
+           / static_cast<float>(OldRange))
+          + static_cast<float>(NewMin));
+      }
+    };
+    const auto max_texture_id_tile = (std::ranges::max)(
+      tiles, {}, [](const auto &tile) { return tile.texture_id(); });
+    const auto max_source_y_tile = (std::ranges::max)(
+      tiles
+        | std::ranges::views::filter([&max_texture_id_tile](const auto &tile) {
+            return tile.texture_id() == max_texture_id_tile.texture_id();
+          }),
+      {},
+      [](const auto &tile) { return tile.source_y(); });
+    int tile_y = max_source_y_tile.source_y() / 16;
+    ImGui::Text(
+      "%s",
+      fmt::format(
+        "Last Used Texture Page {}, and Source Y / 16 = {}",
+        max_texture_id_tile.texture_id(),
+        tile_y)
+        .c_str());
+    const auto         next_source_y = static_cast<uint8_t>((tile_y + 1) % 16);
+    const std::uint8_t next_texture_page =
+      tile_y + 1 == 16 ? max_texture_id_tile.texture_id() + 1
+                       : max_texture_id_tile.texture_id();
+    if (changed)
+    {
+      import_image_map_backup = import_image_map;
+      import_image_map.visit_tiles(
+        [&next_texture_page, &next_source_y, this, &minmax_y, &minmax_x](
+          auto &&import_tiles) {
+          auto       tile_i   = import_tiles.begin();
+          const auto tile_end = import_tiles.end();
+          for (std::uint8_t tp = next_texture_page; tp < 16; ++tp)
+          {
+            for (std::uint8_t y = next_source_y; y < 16; ++y)
+            {
+              for (std::uint8_t x = 0; x < 16; ++x)
+              {
+                if (tile_i == tile_end)
+                {
+                  return;
+                }
+                *tile_i =
+                  tile_i->with_source_xy(x, y).with_texture_id(tp).with_xy(
+                    static_cast<std::int16_t>(adjust(
+                      tile_i->x() * m_selections.tile_size_value,
+                      0,
+                      loaded_image.getSize().x,
+                      minmax_x.min.x(),
+                      minmax_x.max.x() + 16)),
+                    static_cast<std::int16_t>(adjust(
+                      tile_i->y() * m_selections.tile_size_value,
+                      0,
+                      loaded_image.getSize().y,
+                      minmax_y.min.y(),
+                      minmax_y.max.y() + 16)));
+                ++tile_i;
+              }
+            }
+          }
+        });
+    }
+  });
   //   * Then we can swap between swizzle and deswizzle views to show what they
   //   look like
   //   * At the end we need to be able to save and merge them with the '.map'

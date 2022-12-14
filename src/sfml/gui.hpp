@@ -188,6 +188,7 @@ private:
   mutable mim_sprite                                         m_mim_sprite = {};
   mutable map_sprite                                         m_map_sprite = {};
   mutable open_viii::graphics::background::Map import_image_map           = {};
+  mutable open_viii::graphics::background::Map import_image_map_backup    = {};
   mutable bool                                 m_changed         = { false };
   //  ImGuiStyle                  m_original_style  = {};
   mutable sf::Event                            m_event           = {};
