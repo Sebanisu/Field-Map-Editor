@@ -12,8 +12,8 @@ class safedir
 public:
   safedir(const std::filesystem::path &path)
     : m_path(path)
-    , m_is_exist(set_is_exists())
     , m_is_dir(set_is_dir())
+    , m_is_exist(set_is_exists())
   {
   }
   //  operator bool() const
