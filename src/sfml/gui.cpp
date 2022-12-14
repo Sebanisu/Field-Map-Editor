@@ -390,7 +390,9 @@ void gui::popup_batch_deswizzle() const
       return filters.upscale;
     },
     [this](::filter<std::filesystem::path> &filter) {
-      if (combo_upscale_path(filter, ""))
+      // do I need to do generate_upscale_paths(m_field->get_base_name(),
+      // get_coo()); here?
+      if (combo_upscale_path(filter))//, ""
       {
       }
 
@@ -623,6 +625,7 @@ void gui::combo_coo() const
       m_map_sprite = m_map_sprite.with_coo(get_coo());
     }
     m_changed = true;
+    generate_upscale_paths(m_field->get_base_name(), get_coo());
   }
 }
 const open_viii::LangT &gui::get_coo() const
@@ -675,6 +678,7 @@ void gui::update_field() const
   m_loaded_deswizzle_texture_path = std::filesystem::path{};
 
   m_changed                       = true;
+  generate_upscale_paths(m_field->get_base_name(), get_coo());
 }
 
 void gui::checkbox_map_swizzle() const
@@ -1684,6 +1688,7 @@ void gui::init_and_get_style() const
   //  m_window.setFramerateLimit(fps_lock);
   m_window.setVerticalSyncEnabled(true);
   (void)ImGui::SFML::Init(m_window);
+  generate_upscale_paths(m_field->get_base_name(), get_coo());
 }
 gui::gui(std::uint32_t width, std::uint32_t height)
   : m_window_width(width)
@@ -1967,7 +1972,7 @@ void gui::combo_upscale_path() const
   if (!m_field)
     return;
   if (combo_upscale_path(
-        m_map_sprite.filter().upscale, m_field->get_base_name(), get_coo()))
+        m_map_sprite.filter().upscale))//, m_field->get_base_name(), get_coo()
   {
     if (m_map_sprite.filter().upscale.enabled())
     {
@@ -1977,13 +1982,11 @@ void gui::combo_upscale_path() const
     m_changed = true;
   }
 }
-bool gui::combo_upscale_path(
-  ::filter<std::filesystem::path> &filter,
-  const std::string               &field_name,
-  open_viii::LangT                 coo) const
+void gui::generate_upscale_paths(
+  const std::string &field_name,
+  open_viii::LangT   coo) const
 {
-  std::vector<std::string> paths = {};
-  auto                     transform_paths =
+  auto transform_paths =
     m_paths | std::views::transform([](const toml::node &item) -> std::string {
       return item.value_or(std::string{});
     })
@@ -1994,13 +1997,13 @@ bool gui::combo_upscale_path(
         return upscales{}.get_paths();
       });
   // std::views::join; broken in msvc.
-  auto process = [&paths](const auto &temp_paths) {
+  auto process = [this](const auto &temp_paths) {
     auto filter_paths = temp_paths | std::views::filter([](safedir path) {
                           return path.is_exists() && path.is_dir();
                         });
     for (auto &path : filter_paths)
     {
-      paths.emplace_back(path.string());
+      m_upscale_paths.emplace_back(path.string());
     }
   };
   for (auto temp_paths : transform_paths)
@@ -2009,23 +2012,28 @@ bool gui::combo_upscale_path(
   }
   if (safedir(m_loaded_swizzle_texture_path).is_exists())
   {
-    paths.push_back(m_loaded_swizzle_texture_path.string());
+    m_upscale_paths.push_back(m_loaded_swizzle_texture_path.string());
   }
   if (m_field)
   {
     process(
       upscales(std::filesystem::current_path(), field_name, coo).get_paths());
-
-    if (generic_combo(
-          m_id,
-          gui_labels::upscale_path,
-          [&paths]() { return paths; },
-          [&paths]() { return paths; },
-          [ this, &filter ]() -> auto & { return filter; }))
-    {
-      return true;
-    }
   }
+}
+bool gui::combo_upscale_path(::filter<std::filesystem::path> &filter) const
+{
+  if (
+    m_field
+    && generic_combo(
+      m_id,
+      gui_labels::upscale_path,
+      [this]() { return m_upscale_paths; },
+      [this]() { return m_upscale_paths; },
+      [&filter]() -> auto & { return filter; }))
+  {
+    return true;
+  }
+
   return false;
 }
 

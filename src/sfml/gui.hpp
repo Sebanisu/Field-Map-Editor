@@ -180,6 +180,7 @@ private:
   mutable sf::Clock              m_delta_clock    = {};
   mutable toml::array            m_paths          = {};
   mutable archives_group         m_archives_group = {};
+  mutable std::vector<std::string> m_upscale_paths = {};
   mutable std::shared_ptr<open_viii::archive::FIFLFS<false>> m_field      = {};
   mutable std::array<float, 2>                               xy           = {};
   mutable mim_sprite                                         m_mim_sprite = {};
@@ -273,9 +274,7 @@ private:
   void on_click_not_imgui() const;
   void combo_upscale_path() const;
   bool combo_upscale_path(
-    ::filter<std::filesystem::path> &filter,
-    const std::string               &field_name,
-    open_viii::LangT                 coo = {}) const;
+    ::filter<std::filesystem::path> &filter) const;
   void                          combo_deswizzle_path() const;
   const open_viii::LangT       &get_coo() const;
   mutable map_dialog_mode       m_modified_map           = {};
@@ -379,6 +378,9 @@ private:
     return ImGui::ImageButton(sprite, image_size, 0);
   }
   [[nodiscard]] bool combo_tile_size() const;
+  void               generate_upscale_paths(
+                  const std::string &field_name,
+                  open_viii::LangT   coo) const;
 };
 }// namespace fme
 #endif// FIELD_MAP_EDITOR_GUI_HPP
