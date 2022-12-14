@@ -6,6 +6,7 @@
 #include "gui_labels.hpp"
 #include "GuiBatch.hpp"
 #include "open_viii/paths/Paths.hpp"
+#include "safedir.hpp"
 #include <SFML/Window/Mouse.hpp>
 #include <utility>
 // #define USE_THREADS
@@ -267,9 +268,8 @@ void gui::popup_batch_common_filter_start(
   if (filter.enabled())
   {
     filter.update(filter.value() / prefix / base_name);
-    if (
-      !std::filesystem::exists(filter.value())
-      || !std::filesystem::is_directory(filter.value()))
+    safedir path = filter.value();
+    if (!path.is_exists() || !path.is_dir())
     {
       filter.disable();
     }
@@ -314,8 +314,9 @@ void gui::popup_batch_common(
           }
           if (filter(filters).enabled())
           {
-            auto map_path = filter(filters).value() / map.map_filename();
-            if (std::filesystem::exists(map_path))
+            auto    map_path = filter(filters).value() / map.map_filename();
+            safedir safe_map_path = map_path;
+            if (safe_map_path.is_exists())
             {
               map.load_map(map_path);
             }
@@ -1077,7 +1078,8 @@ void gui::file_browser_locate_ff8() const
         .enable();
       auto map_path =
         m_loaded_swizzle_texture_path / m_map_sprite.map_filename();
-      if (std::filesystem::exists(map_path))
+      safedir safe_map_path = map_path;
+      if (safe_map_path.is_exists())
       {
         m_map_sprite.load_map(map_path);
       }
@@ -1113,7 +1115,8 @@ void gui::file_browser_locate_ff8() const
         .enable();
       auto map_path =
         m_loaded_deswizzle_texture_path / m_map_sprite.map_filename();
-      if (std::filesystem::exists(map_path))
+      safedir safe_map_path = map_path;
+      if (safe_map_path.is_exists())
       {
         m_map_sprite.load_map(map_path);
       }
@@ -1933,7 +1936,8 @@ BPPT gui::bpp() const
 }
 void gui::combo_deswizzle_path() const
 {
-  if (!std::filesystem::exists(m_loaded_deswizzle_texture_path) || !m_field)
+  if (safedir deswizzle_texture_path = m_loaded_deswizzle_texture_path;
+      !deswizzle_texture_path.is_exists() || !m_field)
   {
     return;
   }
@@ -1991,11 +1995,9 @@ bool gui::combo_upscale_path(
       });
   // std::views::join; broken in msvc.
   auto process = [&paths](const auto &temp_paths) {
-    auto filter_paths =
-      temp_paths | std::views::filter([](const std::filesystem::path &path) {
-        return std::filesystem::exists(path)
-               && std::filesystem::is_directory(path);
-      });
+    auto filter_paths = temp_paths | std::views::filter([](safedir path) {
+                          return path.is_exists() && path.is_dir();
+                        });
     for (auto &path : filter_paths)
     {
       paths.emplace_back(path.string());
@@ -2005,7 +2007,7 @@ bool gui::combo_upscale_path(
   {
     process(temp_paths);
   }
-  if (std::filesystem::exists(m_loaded_swizzle_texture_path))
+  if (safedir(m_loaded_swizzle_texture_path).is_exists())
   {
     paths.push_back(m_loaded_swizzle_texture_path.string());
   }
@@ -2046,11 +2048,9 @@ bool gui::combo_upscale_path(
       });
   // std::views::join; broken in msvc.
   auto process = [&paths](const auto &temp_paths) {
-    auto filter_paths =
-      temp_paths | std::views::filter([](const std::filesystem::path &in_path) {
-        return std::filesystem::exists(in_path)
-               && std::filesystem::is_directory(in_path);
-      });
+    auto filter_paths = temp_paths | std::views::filter([](safedir in_path) {
+                          return in_path.is_exists() && in_path.is_dir();
+                        });
     for (auto &in_path : filter_paths)
     {
       paths.emplace_back(in_path.string());
@@ -2060,7 +2060,7 @@ bool gui::combo_upscale_path(
   {
     process(temp_paths);
   }
-  if (std::filesystem::exists(m_loaded_swizzle_texture_path))
+  if (safedir(m_loaded_swizzle_texture_path).is_exists())
   {
     paths.push_back(m_loaded_swizzle_texture_path.string());
   }
@@ -2712,7 +2712,7 @@ void gui::popup_batch_embed() const
                      {
                        return;
                      }
-                     if (std::filesystem::exists(path))
+                     if (safedir(path).is_exists())
                      {
                        // IF files exist rename to same path .bak
                        std::filesystem::copy(

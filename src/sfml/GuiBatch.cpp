@@ -6,6 +6,7 @@
 #include "format_imgui_text.hpp"
 #include "formatters.hpp"
 #include "generic_combo.hpp"
+#include "safedir.hpp"
 #include "scope_guard.hpp"
 #include <array>
 #include <filesystem>
@@ -453,9 +454,7 @@ void fme::GuiBatch::popup_batch_common_filter_start(
   if (filter.enabled())
   {
     filter.update(filter.value() / prefix / base_name);
-    if (
-      !std::filesystem::exists(filter.value())
-      || !std::filesystem::is_directory(filter.value()))
+    if (safedir path = filter.value(); !path.is_exists() || !path.is_dir())
     {
       filter.disable();
     }
@@ -491,7 +490,8 @@ cppcoro::generator<::map_sprite> fme::GuiBatch::get_map_sprite(
       if (!filter.enabled())
         return;
       auto map_path = filter.value() / sprite.map_filename();
-      if (std::filesystem::exists(map_path))
+      safedir safe_map_path = map_path;
+      if (safe_map_path.is_exists())
       {
         sprite.load_map(map_path);
       }

@@ -43,6 +43,7 @@ add_executable(${PROJECT_NAME}_SFML
         upscales.cpp
         GuiBatch.cpp
         Configuration.cpp
+        safedir.cpp
         )
 #set_property(TARGET ${PROJECT_NAME}_SFML PROPERTY CXX_STANDARD 20)
 #find_package(ImGui-SFML REQUIRED)

@@ -1,6 +1,7 @@
 #include "map_sprite.hpp"
 #include "append_inserter.hpp"
 #include "format_imgui_text.hpp"
+#include "safedir.hpp"
 #include <bit>
 #include <open_viii/graphics/Png.hpp>
 #include <spdlog/spdlog.h>
@@ -253,11 +254,9 @@ void map_sprite::find_upscale_path(
     const auto   fn = [this, texture_page](sf::Texture *texture) -> void {
       const auto &root  = m_filters.upscale.value();
       const auto  paths = m_upscales.get_file_paths(root, texture_page);
-      auto        filtered_paths =
-        paths | std::views::filter([](const std::filesystem::path &path) {
-          return std::filesystem::exists(path)
-                 && !std::filesystem::is_directory(path);
-        });
+      auto        filtered_paths = paths | std::views::filter([](safedir path) {
+                              return path.is_exists() && !path.is_dir();
+                            });
       if (filtered_paths.begin() != filtered_paths.end())
       {
         const auto &path = *(filtered_paths.begin());
@@ -301,7 +300,7 @@ void map_sprite::find_deswizzle_path(
           pattern_pupu, m_filters.deswizzle.value(), field_name, pupu);
       }
       const auto fn = [in_path](sf::Texture *texture) -> void {
-        if (std::filesystem::exists(in_path))
+        if (safedir(in_path).is_exists())
         {
           spdlog::info("texture path: \"{}\"", in_path.string());
           texture->loadFromFile(in_path.string());
@@ -359,11 +358,9 @@ void map_sprite::find_upscale_path(
     auto const fn  = [texture_page, palette, this](sf::Texture *const texture) {
       const auto &root = m_filters.upscale.value();
       const auto paths = m_upscales.get_file_paths(root, texture_page, palette);
-      auto       filtered_paths =
-        paths | std::views::filter([](const std::filesystem::path &path) {
-          return std::filesystem::exists(path)
-                 && !std::filesystem::is_directory(path);
-        });
+      auto       filtered_paths = paths | std::views::filter([](safedir path) {
+                              return path.is_exists() && !path.is_dir();
+                            });
 
       if (filtered_paths.begin() != filtered_paths.end())
       {
@@ -781,9 +778,6 @@ sf::Sprite map_sprite::save_intersecting(
 }
 
 
-
-
-
 std::vector<size_t> map_sprite::find_intersecting(
   const sf::Vector2i &pixel_pos,
   const sf::Vector2i &tile_pos,
@@ -996,7 +990,7 @@ void map_sprite::for_all_tiles(
       {
         return;
       }
-      const auto draw_size = get_tile_draw_size();
+      const auto draw_size    = get_tile_draw_size();
       const auto texture_size = get_tile_texture_size(states.texture);
       auto quad = get_triangle_strip(draw_size, texture_size, tile_const, tile);
       states.blendMode = sf::BlendAlpha;
@@ -1041,18 +1035,16 @@ sf::Vector2u map_sprite::get_tile_draw_size() const
 {
   return sf::Vector2u{ TILE_SIZE * m_scale, TILE_SIZE * m_scale };
 }
-sf::Vector2u map_sprite::get_tile_texture_size(const sf::Texture * texture) const
+sf::Vector2u map_sprite::get_tile_texture_size(const sf::Texture *texture) const
 {
-    const auto raw_texture_size = texture->getSize();
-    if (m_filters.deswizzle.enabled())
-    {
-      const auto local_scale = raw_texture_size.y / m_canvas.height();
-      return sf::Vector2u{ TILE_SIZE * local_scale,
-                           TILE_SIZE * local_scale };
-    }
-    const auto i = raw_texture_size.y / TILE_SIZE;
-    return sf::Vector2u{ i, i };
-
+  const auto raw_texture_size = texture->getSize();
+  if (m_filters.deswizzle.enabled())
+  {
+    const auto local_scale = raw_texture_size.y / m_canvas.height();
+    return sf::Vector2u{ TILE_SIZE * local_scale, TILE_SIZE * local_scale };
+  }
+  const auto i = raw_texture_size.y / TILE_SIZE;
+  return sf::Vector2u{ i, i };
 }
 const sf::BlendMode &map_sprite::GetBlendSubtract()
 {
@@ -2123,12 +2115,14 @@ void map_sprite::test_map(const std::filesystem::path &saved_path) const
             pairs.begin(), pairs.end(), pair_type{ nullptr, nullptr }),
           pairs.end());
         std::ranges::for_each(pairs, [](const pair_type &pair) {
-          format_tile_text(*pair.first, [](std::string_view name, const auto &value) {
-            spdlog::info("tile {}: {}", name, value);
-          });
-          format_tile_text(*pair.second, [](std::string_view name, const auto &value) {
-            spdlog::info("tile {}: {}", name, value);
-          });
+          format_tile_text(
+            *pair.first, [](std::string_view name, const auto &value) {
+              spdlog::info("tile {}: {}", name, value);
+            });
+          format_tile_text(
+            *pair.second, [](std::string_view name, const auto &value) {
+              spdlog::info("tile {}: {}", name, value);
+            });
         });
       }
     });
