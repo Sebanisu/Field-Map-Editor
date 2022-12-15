@@ -1123,6 +1123,8 @@ void gui::file_browser_locate_ff8() const
         m_directory_browser.GetPwd().string());
       config.save();
       m_loaded_swizzle_texture_path = selected_path;
+      if (m_field)
+        generate_upscale_paths(m_field->get_base_name(), get_coo());
       m_map_sprite.filter().deswizzle.disable();
       m_map_sprite.filter()
         .upscale.update(m_loaded_swizzle_texture_path)

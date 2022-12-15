@@ -2223,22 +2223,22 @@ std::shared_ptr<sf::RenderTexture>
 }
 void map_sprite::load_map(const std::filesystem::path &src_path) const
 {
-  const auto filesize  = std::filesystem::file_size(src_path);
-  const auto tilesize  = m_maps.const_back().visit_tiles([](auto &&tiles) {
-    return sizeof(typename std::remove_cvref_t<decltype(tiles)>::value_type);
-  });
-  const auto tilecount = m_maps.front().visit_tiles(
-    [](const auto &tiles) { return std::size(tiles); });
-  assert(std::cmp_equal(tilecount, filesize / tilesize));
-  if (!std::cmp_equal(tilecount, filesize / tilesize))
-  {
-    spdlog::error(
-      "Error wrong size map file, {} != {} / {}",
-      tilecount,
-      filesize,
-      tilesize);
-    return;
-  }
+//  const auto filesize  = std::filesystem::file_size(src_path);
+//  const auto tilesize  = m_maps.const_back().visit_tiles([](auto &&tiles) {
+//    return sizeof(typename std::remove_cvref_t<decltype(tiles)>::value_type);
+//  });
+//  const auto tilecount = m_maps.front().visit_tiles(
+//    [](const auto &tiles) { return std::size(tiles); });
+//  assert(std::cmp_equal(tilecount, filesize / tilesize));
+//  if (!std::cmp_equal(tilecount, filesize / tilesize))
+//  {
+//    spdlog::error(
+//      "Error wrong size map file, {} != {} / {}",
+//      tilecount,
+//      filesize,
+//      tilesize);
+//    return;
+//  }
   const auto path = src_path.string();
   open_viii::tools::read_from_file(
     [this](std::istream &os) {
