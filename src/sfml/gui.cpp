@@ -1109,9 +1109,10 @@ void gui::file_browser_locate_ff8() const
       std::string prefix    = base_name.substr(0U, 2U);
       selected_path         = selected_path / prefix / base_name;
       std::filesystem::create_directories(selected_path);
-      m_map_sprite.save_new_textures(selected_path);
+      //todo modify these two functions :P to use the imported image.
+      m_map_sprite.save_new_textures(selected_path); // done.
       m_map_sprite.save_modified_map(
-        selected_path / m_map_sprite.map_filename());
+        selected_path / m_map_sprite.map_filename()); // done.
     }
     else if (
       m_modified_directory_map == map_directory_mode::load_swizzle_textures)
@@ -2822,7 +2823,19 @@ void gui::popup_batch_embed() const
                        *it,
                        path,
                        std::filesystem::copy_options::overwrite_existing);
-                     std::filesystem::remove(*it);
+                     std::error_code ec{};
+                     std::filesystem::remove(*it,ec);
+                     if (ec)
+                     {
+                       spdlog::warn(
+                         "{}:{} - {}: {} - path: {}",
+                         __FILE__,
+                         __LINE__,
+                         ec.value(),
+                         ec.message(),
+                         it->string());
+                       ec.clear();
+                     }
                      results.erase(it);
                    };
                    // I need to detect the path where the game files are then

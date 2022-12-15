@@ -2092,6 +2092,10 @@ uint32_t map_sprite::get_max_texture_height() const
   {
     tex_height = 256U;
   }
+  if (m_using_imported_texture && m_imported_tile_size / 16 * 256U > tex_height)
+  {
+    tex_height = m_imported_tile_size / 16 * 256U;
+  }
   return tex_height;
 }
 std::filesystem::path map_sprite::save_path_coo(
@@ -2209,6 +2213,7 @@ std::shared_ptr<sf::RenderTexture>
   texture->create(width, height);
   if (local_draw(*texture, sf::RenderStates::Default))
   {
+    (void)draw_imported(*texture, sf::RenderStates::Default);
     texture->display();
     texture->setSmooth(false);
     texture->generateMipmap();
@@ -2315,8 +2320,10 @@ void map_sprite::save_modified_map(const std::filesystem::path &dest_path) const
   spdlog::info("Saving modified map: {}", path);
   open_viii::tools::write_buffer(
     [this](std::ostream &os) {
+      bool used_imports = false;
       for_all_tiles(
-        [this, &os](const auto &tile_const, const auto &tile, const auto &) {
+        [this, &os, &used_imports](
+          const auto &tile_const, const auto &tile, const auto &) {
           const auto append = [this, &os](auto t) {
             // shift to original offset
 
@@ -2330,8 +2337,24 @@ void map_sprite::save_modified_map(const std::filesystem::path &dest_path) const
             const auto data = std::bit_cast<std::array<char, sizeof(t)>>(t);
             os.write(data.data(), data.size());
           };
-          if (!filter_invalid(tile_const))
-          {// write from tiles const
+          if (!filter_invalid(tile_const))// should be last tile.
+          {
+            // write imported tiles first.
+            if (m_using_imported_texture && !used_imports)
+            {
+              used_imports = true;
+              m_imported_tile_map.visit_tiles(
+                [&append](const auto &import_tiles) {
+                  for (const auto &import_tile : import_tiles)
+                  {
+                    if (filter_invalid(import_tile))
+                    {
+                      append(import_tile);
+                    }
+                  }
+                });
+            }
+            // write from tiles const
             append(tile_const);
             return;
           }
