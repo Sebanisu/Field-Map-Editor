@@ -1109,10 +1109,10 @@ void gui::file_browser_locate_ff8() const
       std::string prefix    = base_name.substr(0U, 2U);
       selected_path         = selected_path / prefix / base_name;
       std::filesystem::create_directories(selected_path);
-      //todo modify these two functions :P to use the imported image.
-      m_map_sprite.save_new_textures(selected_path); // done.
+      // todo modify these two functions :P to use the imported image.
+      m_map_sprite.save_new_textures(selected_path);// done.
       m_map_sprite.save_modified_map(
-        selected_path / m_map_sprite.map_filename()); // done.
+        selected_path / m_map_sprite.map_filename());// done.
     }
     else if (
       m_modified_directory_map == map_directory_mode::load_swizzle_textures)
@@ -2826,7 +2826,7 @@ void gui::popup_batch_embed() const
                        path,
                        std::filesystem::copy_options::overwrite_existing);
                      std::error_code ec{};
-                     std::filesystem::remove(*it,ec);
+                     std::filesystem::remove(*it, ec);
                      if (ec)
                      {
                        spdlog::warn(

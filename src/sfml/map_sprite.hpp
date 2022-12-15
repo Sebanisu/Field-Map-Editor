@@ -71,9 +71,13 @@ struct map_sprite final
             const auto  distance = std::ranges::distance(tiles.begin(), it);
             const auto &unique_pupu_ids =
               m_all_unique_values_and_strings.pupu().values();
-            auto pupu_it = unique_pupu_ids.cbegin();
-            std::ranges::advance(pupu_it, distance);
-            return get_texture(*pupu_it);
+            if (std::cmp_greater(std::ranges::ssize(unique_pupu_ids), distance))
+            {
+              auto pupu_it = unique_pupu_ids.cbegin();
+              std::ranges::advance(pupu_it, distance);
+              return get_texture(*pupu_it);
+            }
+            return static_cast<const sf::Texture *>(nullptr);
           }
           else
           {
