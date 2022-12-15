@@ -181,6 +181,7 @@ void gui::loop() const
       else if (map_test())
       {
         checkbox_map_swizzle();
+        checkbox_render_imported_image();
         checkbox_map_disable_blending();
         format_imgui_text("{}: ", gui_labels::compact);
         ImGui::SameLine();
@@ -259,6 +260,35 @@ void gui::loop() const
   ImGui::SFML::Render(m_window);
   m_window.display();
   m_first = false;
+}
+void gui::checkbox_render_imported_image() const
+{
+  if(loaded_image.getSize() != sf::Vector2u{})
+  {
+    if (ImGui::Checkbox(
+          "Render Imported Image", &m_selections.render_imported_image))
+    {
+      Configuration config{};
+      config->insert_or_assign(
+        "selections_render_imported_image", m_selections.render_imported_image);
+      config.save();
+      // pass texture and map and tile_size
+      update_imported_render_texture();
+      if (!m_selections.render_imported_image)
+      {
+        m_map_sprite.update_render_texture(nullptr, {}, 16);
+      }
+      m_changed = true;
+    }
+  }
+}
+void gui::update_imported_render_texture() const
+{
+  if (m_selections.render_imported_image)
+  {
+    m_map_sprite.update_render_texture(
+      &loaded_image, import_image_map, m_selections.tile_size_value);
+  }
 }
 void gui::popup_batch_common_filter_start(
   ::filter<std::filesystem::path> &filter,
@@ -1300,21 +1330,25 @@ void gui::menuitem_save_swizzle_textures() const
 {
   if (ImGui::MenuItem("Save Swizzled Textures", nullptr, false, true))
   {
-    m_directory_browser.Open();
-
-    std::string base_name = m_map_sprite.get_base_name();
-    std::string prefix    = base_name.substr(0U, 2U);
-    auto        title     = fmt::format(
-      "Choose directory to save textures (appends {}{}{})",
-      prefix,
-      char{ std::filesystem::path::preferred_separator },
-      base_name);
-    m_directory_browser.SetTitle(title);
-    m_directory_browser.SetPwd(Configuration{}["reswizzle_path"].value_or(
-      std::filesystem::current_path().string()));
-    m_directory_browser.SetTypeFilters({ ".map", ".png" });
-    m_modified_directory_map = map_directory_mode::save_swizzle_textures;
+    save_swizzle_textures();
   }
+}
+void gui::save_swizzle_textures() const
+{
+  m_directory_browser.Open();
+
+  std::string base_name = m_map_sprite.get_base_name();
+  std::string prefix    = base_name.substr(0U, 2U);
+  auto        title     = fmt::format(
+    "Choose directory to save textures (appends {}{}{})",
+    prefix,
+    char{ std::filesystem::path::preferred_separator },
+    base_name);
+  m_directory_browser.SetTitle(title);
+  m_directory_browser.SetPwd(Configuration{}["reswizzle_path"].value_or(
+    std::filesystem::current_path().string()));
+  m_directory_browser.SetTypeFilters({ ".map", ".png" });
+  m_modified_directory_map = map_directory_mode::save_swizzle_textures;
 }
 void gui::menuitem_save_deswizzle_textures() const
 {
@@ -3053,6 +3087,9 @@ gui::selections gui::default_selections() const
   s.draw_grid    = config["selections_draw_grid"].value_or(s.draw_grid);
   s.draw_palette = config["selections_draw_palette"].value_or(s.draw_palette);
   s.draw_swizzle = config["selections_draw_swizzle"].value_or(s.draw_swizzle);
+  //  s.render_imported_image =
+  //  config["selections_render_imported_image"].value_or(
+  //    s.render_imported_image);
   s.draw_texture_page_grid =
     config["selections_draw_texture_page_grid"].value_or(
       s.draw_texture_page_grid);
@@ -3230,8 +3267,7 @@ void gui::import_image_window() const
       tiles_wide * tiles_high)
       .c_str());
   if (
-    changed && tiles_wide * tiles_high != 0U
-    && loaded_image_cpu.getSize() != sf::Vector2u{})
+    changed && tiles_wide * tiles_high != 0U)
   {
     import_image_map =
       open_viii::graphics::background::Map([this,
@@ -3283,7 +3319,7 @@ void gui::import_image_window() const
       const auto rem_range =
         std::ranges::remove_if(tiles, [this](const auto &tile) -> bool {
           const auto x_start = tile.x() / 16 * m_selections.tile_size_value;
-          const auto y_start = tile.y() / 16 * m_selections.tile_size_value;
+          auto y_start = tile.y() / 16 * m_selections.tile_size_value;
           const int  xmax    = x_start + m_selections.tile_size_value;
           const sf::Vector2u &imgsize = loaded_image_cpu.getSize();
           const auto x_end = (std::min)(static_cast<int>(imgsize.x), xmax);
@@ -3305,6 +3341,7 @@ void gui::import_image_window() const
         });
       tiles.erase(rem_range.begin(), rem_range.end());
     });
+    loaded_image_cpu = {};
   }
   if (ImGui::CollapsingHeader(import_image_map
                                 .visit_tiles([](auto &&tiles) {
@@ -3316,7 +3353,7 @@ void gui::import_image_window() const
     if (ImGui::BeginTable("import_tiles_table", 9))
     {
       const auto the_end_tile_table = scope_guard([]() { ImGui::EndTable(); });
-      import_image_map_backup.visit_tiles([this](auto &tiles) {
+      import_image_map.visit_tiles([this](auto &tiles) {
         for (const auto &tile : tiles)
         {
           ImGui::TableNextColumn();
@@ -3341,32 +3378,32 @@ void gui::import_image_window() const
       tiles, {}, [](const auto &tile) { return tile.x(); });
     const auto minmax_y = (std::ranges::minmax)(
       tiles, {}, [](const auto &tile) { return tile.y(); });
-    static constexpr auto adjust = [](
-                                     std::integral auto OldValue,
-                                     std::integral auto OldMin,
-                                     std::integral auto OldMax,
-                                     std::integral auto NewMin,
-                                     std::integral auto NewMax) {
-      using T = std::common_type_t<
-        decltype(OldValue),
-        decltype(OldMax),
-        decltype(OldMin),
-        decltype(NewMin),
-        decltype(NewMax)>;
-      const auto OldRange = static_cast<T>(OldMax) - static_cast<T>(OldMin);
-      if (OldRange == 0)
-        return static_cast<T>(NewMin);
-      else
-      {
-        const auto NewRange = static_cast<T>(NewMax) - static_cast<T>(NewMin);
-        return static_cast<T>(
-          (static_cast<float>(
-             (static_cast<T>(OldValue) - static_cast<T>(OldMin))
-             * static_cast<T>(NewRange))
-           / static_cast<float>(OldRange))
-          + static_cast<float>(NewMin));
-      }
-    };
+//    static constexpr auto adjust = [](
+//                                     std::integral auto OldValue,
+//                                     std::integral auto OldMin,
+//                                     std::integral auto OldMax,
+//                                     std::integral auto NewMin,
+//                                     std::integral auto NewMax) {
+//      using T = std::common_type_t<
+//        decltype(OldValue),
+//        decltype(OldMax),
+//        decltype(OldMin),
+//        decltype(NewMin),
+//        decltype(NewMax)>;
+//      const auto OldRange = static_cast<T>(OldMax) - static_cast<T>(OldMin);
+//      if (OldRange == 0)
+//        return static_cast<T>(NewMin);
+//      else
+//      {
+//        const auto NewRange = static_cast<T>(NewMax) - static_cast<T>(NewMin);
+//        return static_cast<T>(
+//          (static_cast<float>(
+//             (static_cast<T>(OldValue) - static_cast<T>(OldMin))
+//             * static_cast<T>(NewRange))
+//           / static_cast<float>(OldRange))
+//          + static_cast<float>(NewMin));
+//      }
+//    };
     const auto max_texture_id_tile = (std::ranges::max)(
       tiles, {}, [](const auto &tile) { return tile.texture_id(); });
     const auto max_source_y_tile = (std::ranges::max)(
@@ -3384,13 +3421,12 @@ void gui::import_image_window() const
         max_texture_id_tile.texture_id(),
         tile_y)
         .c_str());
-    const auto         next_source_y = static_cast<uint8_t>((tile_y + 1) % 16);
+    auto         next_source_y = static_cast<uint8_t>((tile_y + 1) % 16);
     const std::uint8_t next_texture_page =
       tile_y + 1 == 16 ? max_texture_id_tile.texture_id() + 1
                        : max_texture_id_tile.texture_id();
     if (changed)
     {
-      import_image_map_backup = import_image_map;
       import_image_map.visit_tiles(
         [&next_texture_page, &next_source_y, this, &minmax_y, &minmax_x](
           auto &&import_tiles) {
@@ -3399,7 +3435,7 @@ void gui::import_image_window() const
           for (std::uint8_t tp = next_texture_page; tp < 16; ++tp)
           {
             for (std::uint8_t y = next_source_y; y < 16; ++y)
-            {
+            {next_source_y =0;
               for (std::uint8_t x = 0; x < 16; ++x)
               {
                 if (tile_i == tile_end)
@@ -3407,7 +3443,7 @@ void gui::import_image_window() const
                   return;
                 }
                 *tile_i =
-                  tile_i->with_source_xy(x, y).with_texture_id(tp).with_xy(
+                  tile_i->with_source_xy(x*16, y*16).with_texture_id(tp)/*.with_xy(
                     static_cast<std::int16_t>(adjust(
                       tile_i->x() * m_selections.tile_size_value,
                       0,
@@ -3419,23 +3455,27 @@ void gui::import_image_window() const
                       0,
                       loaded_image.getSize().y,
                       minmax_y.min.y(),
-                      minmax_y.max.y() + 16)));
+                      minmax_y.max.y() + 16)))*/;
                 ++tile_i;
               }
             }
           }
         });
+      update_imported_render_texture();
     }
   });
-  //   * Then we can swap between swizzle and deswizzle views to show what they
-  //   look like
-  //   * At the end we need to be able to save and merge them with the '.map'
-  //   file.
-  //   * They'll probably insert before the last tile.
-  // Save button that'll save the swizzled images with new '.map'
+  // I think I have the new tiles coords generated correctly for the swizzle and
+  // for drawing in game. just need to render it into an image and merge the new
+  // tiles into the `.map`
+  //    * Then we can swap between swizzle and deswizzle views to show what they
+  //    look like
+  //    * At the end we need to be able to save and merge them with the '.map'
+  //    file.
+  //    * They'll probably insert before the last tile.
+  //  Save button that'll save the swizzled images with new '.map'
   if (ImGui::Button("Save Swizzle"))
   {
-    // todo save swizzle
+    save_swizzle_textures();
   }
   // have a cancel button to hide window.
   ImGui::SameLine();
@@ -3452,7 +3492,15 @@ void gui::import_image_window() const
   ImGui::SameLine();
   if (ImGui::Button("Reset"))
   {
-    // todo reset state
+    m_map_sprite.update_render_texture(nullptr, {}, 16);
+    import_image_map = {};
+    loaded_image = {};
+    loaded_image_cpu = {};
+    m_selections.render_imported_image = false;
+    Configuration config{};
+    config->insert_or_assign(
+      "selections_render_imported_image", m_selections.render_imported_image);
+    config.save();
   }
 }
 bool gui::combo_tile_size() const
@@ -3515,10 +3563,6 @@ bool gui::browse_for_image_display_preview() const
     image_path = selected_path.string();
     m_load_file_browser.ClearSelected();
     loaded_image.loadFromFile(image_path);// stored on gpu.
-    if (loaded_image.getSize().x != 0 && loaded_image.getSize().y != 0)
-    {
-      loaded_image_cpu.loadFromFile(image_path);// stored in memory
-    }
     changed = true;
   }
   if (loaded_image.getSize().x == 0 || loaded_image.getSize().y == 0)

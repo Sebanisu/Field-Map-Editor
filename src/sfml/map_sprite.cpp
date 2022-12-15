@@ -425,7 +425,51 @@ void map_sprite::wait_for_futures() const
                        tu * texture_size_f.x,
                        (tv + 1) * texture_size_f.y) };
 }
+[[nodiscard]] std::array<sf::Vertex, 4U>
+  map_sprite::get_triangle_strip_for_imported(
+    const sf::Vector2u                                  &draw_size,
+    const sf::Vector2u                                  &texture_size,
+    const open_viii::graphics::background::is_tile auto &tile_const,
+    open_viii::graphics::background::is_tile auto      &&tile) const
+{
+  using namespace open_viii::graphics::literals;
+  using tile_type  = std::remove_cvref_t<decltype(tile)>;
+  //  auto       src_tpw = tile_type::texture_page_width(tile_const.depth());
+  //  const auto x       = [this, &tile_const, &src_tpw]() -> std::uint32_t {
+  //    if (m_filters.upscale.enabled())
+  //    {
+  //      return 0;
+  //    }
+  //    return tile_const.texture_id() * src_tpw;
+  //  }();
+  const auto src_x = [&tile_const]() -> std::uint32_t {
+    return static_cast<std::uint32_t>(tile_const.x());
+  }();
+  const auto src_y = [&tile_const]() -> std::uint32_t {
+    return static_cast<std::uint32_t>(tile_const.y());
+  }();
 
+  const auto dst_x = [this, &tile]() {
+    if (m_draw_swizzle)
+    {
+      if (!m_disable_texture_page_shift)
+        return static_cast<uint32_t>(
+          tile.source_x()
+          + tile.texture_id() * tile_type::texture_page_width(4_bpp));
+      return static_cast<uint32_t>(tile.source_x());
+    }
+    return static_cast<uint32_t>(tile.x());
+  }();
+  const auto dst_y = [this, &tile]() {
+    if (m_draw_swizzle)
+    {
+      return static_cast<uint32_t>(tile.source_y());
+    }
+    return static_cast<uint32_t>(tile.y());
+  }();
+  return get_triangle_strip(
+    draw_size, texture_size, src_x, src_y, dst_x, dst_y);
+}
 [[nodiscard]] std::array<sf::Vertex, 4U> map_sprite::get_triangle_strip(
   const sf::Vector2u                                  &draw_size,
   const sf::Vector2u                                  &texture_size,
@@ -1031,9 +1075,133 @@ void map_sprite::for_all_tiles(
   }
   return drew;
 }
+[[nodiscard]] bool map_sprite::draw_imported(
+  sf::RenderTarget &target,
+  sf::RenderStates  states) const
+{
+  if (!m_using_imported_texture || m_imported_texture == nullptr)
+  {
+    return false;
+  }
+  bool drew = false;
+  // target.clear(sf::Color::Transparent);
+  for (const auto &z : m_all_unique_values_and_strings.z().values())
+  {
+    m_imported_tile_map.visit_tiles(
+      [z, this, &states, &target, &drew](const auto &tiles) {
+        for (const auto &tile : tiles)
+        {
+          const auto &tile_const = tile;
+          //      if (m_filters.pupu.enabled())
+          //      {
+          //        if (m_filters.pupu.value() != pupu_id)
+          //        {
+          //          return;
+          //        }
+          //      }
+          if (m_filters.draw_bit.enabled())
+          {
+            switch (m_filters.draw_bit.value())
+            {
+              case draw_bitT::all:
+              default:
+                break;
+              case draw_bitT::enabled: {
+                if (!tile_const.draw())
+                {
+                  return;
+                }
+                break;
+              }
+              case draw_bitT::disabled: {
+                if (tile_const.draw())
+                {
+                  return;
+                }
+                break;
+              }
+            }
+          }
+          if (tile.z() != z)
+          {
+            return;
+          }
+          if (fail_filter(tile))
+          {
+            return;
+          }
+          if (!filter_invalid(tile_const))
+          {
+            return;
+          }
+          states.texture = m_imported_texture;
+          //        if (!m_filters.deswizzle.enabled())
+          //        {
+          //          states.texture = get_texture(
+          //            tile_const.depth(),
+          //            tile_const.palette_id(),
+          //            tile_const.texture_id());
+          //        }
+          //        else
+          //        {
+          //          states.texture = get_texture(pupu_id);
+          //        }
+          if (
+            states.texture == nullptr || states.texture->getSize().y == 0
+            || states.texture->getSize().x == 0)
+          {
+            return;
+          }
+          const auto draw_size    = get_tile_draw_size();
+          const auto texture_size = get_tile_texture_size_for_import();
+          auto       quad         = get_triangle_strip_for_imported(
+            draw_size, texture_size, tile_const, tile);
+          states.blendMode = sf::BlendAlpha;
+          if (!m_disable_blends)
+          {
+            if (tile.blend_mode() == BlendModeT::add)
+            {
+              states.blendMode = sf::BlendAdd;
+            }
+            else if (tile.blend_mode() == BlendModeT::half_add)
+            {
+              states.blendMode = sf::BlendAdd;
+              constexpr static std::uint8_t per50 =
+                (std::numeric_limits<std::uint8_t>::max)() / 2U;
+              set_color(quad, { per50, per50, per50, per50 });// 50% alpha
+            }
+            else if (tile.blend_mode() == BlendModeT::quarter_add)
+            {
+              states.blendMode = sf::BlendAdd;
+              constexpr static std::uint8_t per25 =
+                (std::numeric_limits<std::uint8_t>::max)() / 4U;
+              set_color(quad, { per25, per25, per25, per25 });// 25% alpha
+            }
+            else if (tile.blend_mode() == BlendModeT::subtract)
+            {
+              states.blendMode = GetBlendSubtract();
+              // states.blendMode = sf::BlendMultiply;
+            }
+          }
+          // apply the tileset texture
+
+          // std::lock_guard<std::mutex> lock(mutex_texture);
+          // spdlog::info("({}, {})\t", raw_texture_size.x, raw_texture_size.y);
+          // draw the vertex array
+          target.draw(quad.data(), quad.size(), sf::TriangleStrip, states);
+          drew = true;
+        }
+      });
+  }
+  return drew;
+}
 sf::Vector2u map_sprite::get_tile_draw_size() const
 {
   return sf::Vector2u{ TILE_SIZE * m_scale, TILE_SIZE * m_scale };
+}
+sf::Vector2u map_sprite::get_tile_texture_size_for_import() const
+{
+  return sf::Vector2u{ m_imported_tile_size, m_imported_tile_size };
 }
 sf::Vector2u map_sprite::get_tile_texture_size(const sf::Texture *texture) const
 {
@@ -1117,6 +1285,7 @@ void map_sprite::update_render_texture(bool reload_textures) const
   if (!fail())
   {
     (void)local_draw(*m_render_texture, sf::RenderStates::Default);
+    (void)draw_imported(*m_render_texture, sf::RenderStates::Default);
     m_render_texture->display();
     m_render_texture->setSmooth(false);
     m_render_texture->generateMipmap();
@@ -1235,14 +1404,7 @@ void map_sprite::resize_render_texture() const
         const auto &size = texture.getSize();
         return size.x != 0 && size.y != 0;
       });
-    if (filtered_textures.begin() != filtered_textures.end())
-    {
-      const auto y = filtered_textures.begin()->getSize().y;
-      m_scale      = y / 256U;
-      if (m_filters.deswizzle.enabled())
-      {
-        m_scale = y / m_canvas.height();
-      }
+    const auto check_size = [this]() {
       const auto max_size = sf::Texture::getMaximumSize();
       while (width() * m_scale > max_size || height() * m_scale > max_size)
       {
@@ -1253,16 +1415,35 @@ void map_sprite::resize_render_texture() const
           break;
         }
       }
-      // spdlog::info(
-      //   "{}, ({}, {})", m_scale, width() * m_scale, height() * m_scale);
-      m_render_texture->create(width() * m_scale, height() * m_scale);
+    };
+    if (filtered_textures.begin() != filtered_textures.end())
+    {
+      const auto max_texture =
+        (std::ranges::max)(filtered_textures, {}, [](const auto &texture) {
+          return texture.getSize().y;
+        });
+      const auto y = max_texture.getSize().y;
+      m_scale      = y / 256U;
+      if (m_filters.deswizzle.enabled())
+      {
+        m_scale = y / m_canvas.height();
+      }
     }
     else
     {
-      m_scale = 1;
-      // spdlog::info("{}, ({}, {})", m_scale, width(), height());
-      m_render_texture->create(width(), height());
+      m_scale = 1U;
     }
+    if (m_using_imported_texture && m_scale < m_imported_tile_size / 16U)
+    {
+      m_scale = m_imported_tile_size / 16U;
+    }
+    check_size();
+    spdlog::info(
+      "Render Texture- scale:{}, size:({}, {})",
+      m_scale,
+      width() * m_scale,
+      height() * m_scale);
+    m_render_texture->create(width() * m_scale, height() * m_scale);
   }
 }
 void map_sprite::init_render_texture() const
@@ -2170,4 +2351,15 @@ std::size_t map_sprite::size_of_map() const
     using tile_type = typename std::remove_cvref_t<decltype(tiles)>::value_type;
     return std::ranges::size(tiles) * sizeof(tile_type);
   });
+}
+void map_sprite::update_render_texture(
+  sf::Texture                         *p_texture,
+  open_viii::graphics::background::Map map,
+  uint16_t                             tile_size)
+{
+  m_imported_texture       = p_texture;
+  m_imported_tile_map      = std::move(map);
+  m_imported_tile_size     = tile_size;
+  m_using_imported_texture = p_texture != nullptr;
+  update_render_texture(true);
 }

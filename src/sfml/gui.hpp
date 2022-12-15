@@ -160,6 +160,7 @@ private:
     bool          test_batch_window      = { false };
     bool          display_import_image   = { false };
     bool          import_image_grid      = { false };
+    bool          render_imported_image  = { false };
   };
   selections                       default_selections() const;
   static constexpr std::uint32_t   default_window_width  = 800U;
@@ -188,7 +189,7 @@ private:
   mutable mim_sprite                                         m_mim_sprite = {};
   mutable map_sprite                                         m_map_sprite = {};
   mutable open_viii::graphics::background::Map import_image_map           = {};
-  mutable open_viii::graphics::background::Map import_image_map_backup    = {};
+
   mutable bool                                 m_changed         = { false };
   //  ImGuiStyle                  m_original_style  = {};
   mutable sf::Event                            m_event           = {};
@@ -383,9 +384,12 @@ private:
   void               generate_upscale_paths(
                   const std::string &field_name,
                   open_viii::LangT   coo) const;
-  void menuitem_locate_custom_upscale() const;
-  void open_locate_custom_upscale() const;
+  void        menuitem_locate_custom_upscale() const;
+  void        open_locate_custom_upscale() const;
   toml::array get_custom_upscale_paths_vector();
+  void        checkbox_render_imported_image() const;
+  void        update_imported_render_texture() const;
+  void        save_swizzle_textures() const;
 };
 }// namespace fme
 #endif// FIELD_MAP_EDITOR_GUI_HPP

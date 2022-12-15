@@ -35,7 +35,6 @@ struct map_sprite final
   : public sf::Drawable
   , public sf::Transformable
 {
-
   auto const_visit_tiles(auto &&p_function) const
   {
     return m_maps.const_back().visit_tiles(
@@ -49,7 +48,39 @@ struct map_sprite final
   [[nodiscard]] const sf::Texture *
     get_texture(const open_viii::graphics::background::is_tile auto &tile) const
   {
-    return get_texture(tile.depth(), tile.palette_id(), tile.texture_id());
+
+    if (!m_filters.deswizzle.enabled())
+    {
+      return get_texture(tile.depth(), tile.palette_id(), tile.texture_id());
+    }
+    else
+    {
+      // pupu_ids
+      return const_visit_tiles(
+        [&tile, this](const auto &tiles) -> const sf::Texture * {
+          if (tiles.empty())
+          {
+            return nullptr;
+          }
+          using TileT1 = std::remove_cvref<decltype(tiles.front())>;
+          using TileT2 = std::remove_cvref<decltype(tile)>;
+          if constexpr (std::is_same_v<TileT1, TileT2>)
+          {
+            const auto it = std::ranges::find_if(
+              tiles, [&tile](const auto &l_tile) { return l_tile == tile; });
+            const auto  distance = std::ranges::distance(tiles.begin(), it);
+            const auto &unique_pupu_ids =
+              m_all_unique_values_and_strings.pupu().values();
+            auto pupu_it = unique_pupu_ids.cbegin();
+            std::ranges::advance(pupu_it, distance);
+            return get_texture(*pupu_it);
+          }
+          else
+          {
+            return static_cast<const sf::Texture *>(nullptr);
+          }
+        });
+    }
   }
 
   [[nodiscard]] sf::Vector2u
@@ -90,6 +121,11 @@ struct map_sprite final
     format_function("Animation State", tile.animation_state());
     format_function("Draw", tile.draw());
   }
+
+  void update_render_texture(
+    sf::Texture                         *p_texture,
+    open_viii::graphics::background::Map map,
+    uint16_t                             tile_size);
 
 public:
   using color_type  = open_viii::graphics::Color32RGBA;
@@ -279,23 +315,27 @@ private:
     mutable std::vector<bool>                                 m_history{};
   };
 
-  mutable bool    m_draw_swizzle                                  = { false };
-  mutable bool    m_disable_texture_page_shift                    = { false };
-  mutable bool    m_disable_blends                                = { false };
-  mutable filters m_filters                                       = {};
-  std::shared_ptr<open_viii::archive::FIFLFS<false>> m_field      = {};
-  open_viii::LangT                                   m_coo        = {};
-  ::upscales                                         m_upscales   = {};
-  open_viii::graphics::background::Mim               m_mim        = {};
-  mutable std::string                                m_map_path   = {};
-  bool                                               m_using_coo  = {};
-  maps                                               m_maps       = {};
-  all_unique_values_and_strings m_all_unique_values_and_strings   = {};
-  open_viii::graphics::Rectangle<std::uint32_t> m_canvas          = {};
-  static constexpr std::uint8_t                 TILE_SIZE         = 16U;
-  static constexpr std::uint8_t                 MAX_TEXTURE_PAGES = 14U;
-  static constexpr std::uint8_t                 MAX_PALETTES      = 16U;
-  static constexpr std::uint8_t                 BPP_COMBOS        = 2U;
+  mutable bool    m_draw_swizzle                                 = { false };
+  mutable bool    m_disable_texture_page_shift                   = { false };
+  mutable bool    m_disable_blends                               = { false };
+  mutable filters m_filters                                      = {};
+  std::shared_ptr<open_viii::archive::FIFLFS<false>> m_field     = {};
+  open_viii::LangT                                   m_coo       = {};
+  ::upscales                                         m_upscales  = {};
+  open_viii::graphics::background::Mim               m_mim       = {};
+  mutable std::string                                m_map_path  = {};
+  bool                                               m_using_coo = {};
+  bool                                 m_using_imported_texture  = {};
+  sf::Texture                         *m_imported_texture        = { nullptr };
+  std::uint16_t                        m_imported_tile_size      = {};
+  open_viii::graphics::background::Map m_imported_tile_map       = {};
+  maps                                 m_maps                    = {};
+  all_unique_values_and_strings        m_all_unique_values_and_strings = {};
+  open_viii::graphics::Rectangle<std::uint32_t> m_canvas               = {};
+  static constexpr std::uint8_t                 TILE_SIZE              = 16U;
+  static constexpr std::uint8_t                 MAX_TEXTURE_PAGES      = 14U;
+  static constexpr std::uint8_t                 MAX_PALETTES           = 16U;
+  static constexpr std::uint8_t                 BPP_COMBOS             = 2U;
   static constexpr std::uint16_t                START_OF_NO_PALETTE_INDEX =
     MAX_PALETTES * MAX_TEXTURE_PAGES;
   static constexpr std::uint16_t BPP16_INDEX  = MAX_PALETTES * BPP_COMBOS + 1;
@@ -488,5 +528,12 @@ private:
   size_t size_of_map() const;
   bool
     save_png_image(const sf::Image &image, const std::string &filename) const;
+  bool draw_imported(sf::RenderTarget &target, sf::RenderStates states) const;
+  std::array<sf::Vertex, 4U> get_triangle_strip_for_imported(
+    const sf::Vector2u                                  &draw_size,
+    const sf::Vector2u                                  &texture_size,
+    const open_viii::graphics::background::is_tile auto &tile_const,
+    open_viii::graphics::background::is_tile auto      &&tile) const;
+  sf::Vector2u get_tile_texture_size_for_import() const;
 };
 #endif// FIELD_MAP_EDITOR_MAP_SPRITE_HPP
