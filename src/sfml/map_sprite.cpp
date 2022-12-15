@@ -2326,9 +2326,6 @@ void map_sprite::save_modified_map(const std::filesystem::path &dest_path) const
           const auto &tile_const, const auto &tile, const auto &) {
           const auto append = [this, &os](auto t) {
             // shift to original offset
-
-            // static constexpr auto end_x{ 0x7FFFU };
-            // if (t.x() != end_x)
             if (filter_invalid(t))
             {
               t = t.shift_xy(m_maps.const_back().offset());
@@ -2345,6 +2342,9 @@ void map_sprite::save_modified_map(const std::filesystem::path &dest_path) const
               used_imports = true;
               m_imported_tile_map.visit_tiles(
                 [&append](const auto &import_tiles) {
+                  spdlog::info(
+                    "Saving imported tiles {} count",
+                    std::ranges::size(import_tiles));
                   for (const auto &import_tile : import_tiles)
                   {
                     if (filter_invalid(import_tile))
