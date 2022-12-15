@@ -263,7 +263,7 @@ void gui::loop() const
 }
 void gui::checkbox_render_imported_image() const
 {
-  if(loaded_image.getSize() != sf::Vector2u{})
+  if (loaded_image.getSize() != sf::Vector2u{})
   {
     if (ImGui::Checkbox(
           "Render Imported Image", &m_selections.render_imported_image))
@@ -3266,8 +3266,7 @@ void gui::import_image_window() const
       tiles_high,
       tiles_wide * tiles_high)
       .c_str());
-  if (
-    changed && tiles_wide * tiles_high != 0U)
+  if (changed && tiles_wide * tiles_high != 0U)
   {
     import_image_map =
       open_viii::graphics::background::Map([this,
@@ -3319,7 +3318,7 @@ void gui::import_image_window() const
       const auto rem_range =
         std::ranges::remove_if(tiles, [this](const auto &tile) -> bool {
           const auto x_start = tile.x() / 16 * m_selections.tile_size_value;
-          auto y_start = tile.y() / 16 * m_selections.tile_size_value;
+          auto       y_start = tile.y() / 16 * m_selections.tile_size_value;
           const int  xmax    = x_start + m_selections.tile_size_value;
           const sf::Vector2u &imgsize = loaded_image_cpu.getSize();
           const auto x_end = (std::min)(static_cast<int>(imgsize.x), xmax);
@@ -3378,32 +3377,32 @@ void gui::import_image_window() const
       tiles, {}, [](const auto &tile) { return tile.x(); });
     const auto minmax_y = (std::ranges::minmax)(
       tiles, {}, [](const auto &tile) { return tile.y(); });
-//    static constexpr auto adjust = [](
-//                                     std::integral auto OldValue,
-//                                     std::integral auto OldMin,
-//                                     std::integral auto OldMax,
-//                                     std::integral auto NewMin,
-//                                     std::integral auto NewMax) {
-//      using T = std::common_type_t<
-//        decltype(OldValue),
-//        decltype(OldMax),
-//        decltype(OldMin),
-//        decltype(NewMin),
-//        decltype(NewMax)>;
-//      const auto OldRange = static_cast<T>(OldMax) - static_cast<T>(OldMin);
-//      if (OldRange == 0)
-//        return static_cast<T>(NewMin);
-//      else
-//      {
-//        const auto NewRange = static_cast<T>(NewMax) - static_cast<T>(NewMin);
-//        return static_cast<T>(
-//          (static_cast<float>(
-//             (static_cast<T>(OldValue) - static_cast<T>(OldMin))
-//             * static_cast<T>(NewRange))
-//           / static_cast<float>(OldRange))
-//          + static_cast<float>(NewMin));
-//      }
-//    };
+    //    static constexpr auto adjust = [](
+    //                                     std::integral auto OldValue,
+    //                                     std::integral auto OldMin,
+    //                                     std::integral auto OldMax,
+    //                                     std::integral auto NewMin,
+    //                                     std::integral auto NewMax) {
+    //      using T = std::common_type_t<
+    //        decltype(OldValue),
+    //        decltype(OldMax),
+    //        decltype(OldMin),
+    //        decltype(NewMin),
+    //        decltype(NewMax)>;
+    //      const auto OldRange = static_cast<T>(OldMax) -
+    //      static_cast<T>(OldMin); if (OldRange == 0)
+    //        return static_cast<T>(NewMin);
+    //      else
+    //      {
+    //        const auto NewRange = static_cast<T>(NewMax) -
+    //        static_cast<T>(NewMin); return static_cast<T>(
+    //          (static_cast<float>(
+    //             (static_cast<T>(OldValue) - static_cast<T>(OldMin))
+    //             * static_cast<T>(NewRange))
+    //           / static_cast<float>(OldRange))
+    //          + static_cast<float>(NewMin));
+    //      }
+    //    };
     const auto max_texture_id_tile = (std::ranges::max)(
       tiles, {}, [](const auto &tile) { return tile.texture_id(); });
     const auto max_source_y_tile = (std::ranges::max)(
@@ -3421,7 +3420,7 @@ void gui::import_image_window() const
         max_texture_id_tile.texture_id(),
         tile_y)
         .c_str());
-    auto         next_source_y = static_cast<uint8_t>((tile_y + 1) % 16);
+    auto               next_source_y = static_cast<uint8_t>((tile_y + 1) % 16);
     const std::uint8_t next_texture_page =
       tile_y + 1 == 16 ? max_texture_id_tile.texture_id() + 1
                        : max_texture_id_tile.texture_id();
@@ -3435,27 +3434,29 @@ void gui::import_image_window() const
           for (std::uint8_t tp = next_texture_page; tp < 16; ++tp)
           {
             for (std::uint8_t y = next_source_y; y < 16; ++y)
-            {next_source_y =0;
+            {
+              next_source_y = 0;
               for (std::uint8_t x = 0; x < 16; ++x)
               {
                 if (tile_i == tile_end)
                 {
                   return;
                 }
-                *tile_i =
-                  tile_i->with_source_xy(x*16, y*16).with_texture_id(tp)/*.with_xy(
-                    static_cast<std::int16_t>(adjust(
-                      tile_i->x() * m_selections.tile_size_value,
-                      0,
-                      loaded_image.getSize().x,
-                      minmax_x.min.x(),
-                      minmax_x.max.x() + 16)),
-                    static_cast<std::int16_t>(adjust(
-                      tile_i->y() * m_selections.tile_size_value,
-                      0,
-                      loaded_image.getSize().y,
-                      minmax_y.min.y(),
-                      minmax_y.max.y() + 16)))*/;
+                *tile_i = tile_i->with_source_xy(x * 16, y * 16)
+                            .with_texture_id(tp) /*.with_xy(
+static_cast<std::int16_t>(adjust(
+tile_i->x() * m_selections.tile_size_value,
+0,
+loaded_image.getSize().x,
+minmax_x.min.x(),
+minmax_x.max.x() + 16)),
+static_cast<std::int16_t>(adjust(
+tile_i->y() * m_selections.tile_size_value,
+0,
+loaded_image.getSize().y,
+minmax_y.min.y(),
+minmax_y.max.y() + 16)))*/
+                  ;
                 ++tile_i;
               }
             }
@@ -3487,21 +3488,27 @@ void gui::import_image_window() const
     config->insert_or_assign(
       "selections_display_import_image", m_selections.display_import_image);
     config.save();
+    reset_imported_image();
   }
   // have a reset button to reset window state?
   ImGui::SameLine();
   if (ImGui::Button("Reset"))
   {
-    m_map_sprite.update_render_texture(nullptr, {}, 16);
-    import_image_map = {};
-    loaded_image = {};
-    loaded_image_cpu = {};
-    m_selections.render_imported_image = false;
-    Configuration config{};
-    config->insert_or_assign(
-      "selections_render_imported_image", m_selections.render_imported_image);
-    config.save();
+    reset_imported_image();
   }
+}
+void gui::reset_imported_image() const
+{
+  m_map_sprite.update_render_texture(nullptr, {}, 16);
+  import_image_map                   = {};
+  loaded_image                       = {};
+  loaded_image_cpu                   = {};
+  m_import_image_path                = {};
+  m_selections.render_imported_image = false;
+  Configuration config{};
+  config->insert_or_assign(
+    "selections_render_imported_image", m_selections.render_imported_image);
+  config.save();
 }
 bool gui::combo_tile_size() const
 {
@@ -3534,12 +3541,11 @@ bool gui::combo_tile_size() const
 }
 bool gui::browse_for_image_display_preview() const
 {
-  bool               changed = false;
-  static std::string image_path{};
+  bool changed = false;
   ImGui::InputText(
     "##image_path",
-    image_path.data(),
-    image_path.size(),
+    m_import_image_path.data(),
+    m_import_image_path.size(),
     ImGuiInputTextFlags_ReadOnly);
   ImGui::SameLine();
   if (ImGui::Button("Browse"))
@@ -3549,7 +3555,7 @@ bool gui::browse_for_image_display_preview() const
     m_load_file_browser.SetTypeFilters({ ".png" });
     m_load_file_browser.SetPwd(Configuration{}["load_image_path"].value_or(
       std::filesystem::current_path().string()));
-    m_load_file_browser.SetInputName(image_path.data());
+    m_load_file_browser.SetInputName(m_import_image_path.data());
   }
   m_load_file_browser.Display();
   if (m_load_file_browser.HasSelected())
@@ -3560,9 +3566,9 @@ bool gui::browse_for_image_display_preview() const
     config.save();
     [[maybe_unused]] const auto selected_path =
       m_load_file_browser.GetSelected();
-    image_path = selected_path.string();
+    m_import_image_path = selected_path.string();
     m_load_file_browser.ClearSelected();
-    loaded_image.loadFromFile(image_path);// stored on gpu.
+    loaded_image.loadFromFile(m_import_image_path);// stored on gpu.
     changed = true;
   }
   if (loaded_image.getSize().x == 0 || loaded_image.getSize().y == 0)

@@ -189,6 +189,7 @@ private:
   mutable mim_sprite                                         m_mim_sprite = {};
   mutable map_sprite                                         m_map_sprite = {};
   mutable open_viii::graphics::background::Map import_image_map           = {};
+  mutable std::string                          m_import_image_path        = {};
 
   mutable bool                                 m_changed         = { false };
   //  ImGuiStyle                  m_original_style  = {};
@@ -390,6 +391,7 @@ private:
   void        checkbox_render_imported_image() const;
   void        update_imported_render_texture() const;
   void        save_swizzle_textures() const;
+  void        reset_imported_image() const;
 };
 }// namespace fme
 #endif// FIELD_MAP_EDITOR_GUI_HPP
