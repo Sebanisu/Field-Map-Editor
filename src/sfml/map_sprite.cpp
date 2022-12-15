@@ -911,12 +911,13 @@ void map_sprite::for_all_tiles(
   bool        regular_order) const
 {
   // todo move pupu generation to constructor
-  UniquifyPupu        m_pupu_map = {};
-  std::vector<PupuID> pupu_ids   = {};
-  pupu_ids.reserve(std::size(tiles_const));
-  std::ranges::transform(tiles_const, std::back_inserter(pupu_ids), m_pupu_map);
+  UniquifyPupu m_pupu_map = {};
+  m_pupu_ids              = {};
+  m_pupu_ids.reserve(std::size(tiles_const));
+  std::ranges::transform(
+    tiles_const, std::back_inserter(m_pupu_ids), m_pupu_map);
   assert(std::size(tiles_const) == std::size(tiles));
-  assert(std::size(tiles_const) == std::size(pupu_ids));
+  assert(std::size(tiles_const) == std::size(m_pupu_ids));
   const auto process = [&skip_invalid,
                         &lambda](auto tc, const auto tce, auto t, auto pupu_t) {
     for (; /*t != te &&*/ tc != tce; (void)++tc, ++t, ++pupu_t)
@@ -937,7 +938,7 @@ void map_sprite::for_all_tiles(
       std::crbegin(tiles_const),
       std::crend(tiles_const),
       std::rbegin(tiles),
-      std::rbegin(pupu_ids));
+      std::rbegin(m_pupu_ids));
   }
   else
   {
@@ -945,7 +946,7 @@ void map_sprite::for_all_tiles(
       std::cbegin(tiles_const),
       std::cend(tiles_const),
       std::begin(tiles),
-      std::begin(pupu_ids));
+      std::begin(m_pupu_ids));
   }
 }
 
@@ -2223,22 +2224,23 @@ std::shared_ptr<sf::RenderTexture>
 }
 void map_sprite::load_map(const std::filesystem::path &src_path) const
 {
-//  const auto filesize  = std::filesystem::file_size(src_path);
-//  const auto tilesize  = m_maps.const_back().visit_tiles([](auto &&tiles) {
-//    return sizeof(typename std::remove_cvref_t<decltype(tiles)>::value_type);
-//  });
-//  const auto tilecount = m_maps.front().visit_tiles(
-//    [](const auto &tiles) { return std::size(tiles); });
-//  assert(std::cmp_equal(tilecount, filesize / tilesize));
-//  if (!std::cmp_equal(tilecount, filesize / tilesize))
-//  {
-//    spdlog::error(
-//      "Error wrong size map file, {} != {} / {}",
-//      tilecount,
-//      filesize,
-//      tilesize);
-//    return;
-//  }
+  //  const auto filesize  = std::filesystem::file_size(src_path);
+  //  const auto tilesize  = m_maps.const_back().visit_tiles([](auto &&tiles) {
+  //    return sizeof(typename
+  //    std::remove_cvref_t<decltype(tiles)>::value_type);
+  //  });
+  //  const auto tilecount = m_maps.front().visit_tiles(
+  //    [](const auto &tiles) { return std::size(tiles); });
+  //  assert(std::cmp_equal(tilecount, filesize / tilesize));
+  //  if (!std::cmp_equal(tilecount, filesize / tilesize))
+  //  {
+  //    spdlog::error(
+  //      "Error wrong size map file, {} != {} / {}",
+  //      tilecount,
+  //      filesize,
+  //      tilesize);
+  //    return;
+  //  }
   const auto path = src_path.string();
   open_viii::tools::read_from_file(
     [this](std::istream &os) {
@@ -2336,6 +2338,7 @@ void map_sprite::save_modified_map(const std::filesystem::path &dest_path) const
           };
           if (!filter_invalid(tile_const))// should be last tile.
           {
+            spdlog::info("About to save the last tile.");
             // write imported tiles first.
             if (m_using_imported_texture && !used_imports)
             {

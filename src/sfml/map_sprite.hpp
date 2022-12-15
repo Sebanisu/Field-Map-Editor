@@ -68,12 +68,11 @@ struct map_sprite final
           {
             const auto it = std::ranges::find_if(
               tiles, [&tile](const auto &l_tile) { return l_tile == tile; });
-            const auto  distance = std::ranges::distance(tiles.begin(), it);
-            const auto &unique_pupu_ids =
-              m_all_unique_values_and_strings.pupu().values();
-            if (std::cmp_greater(std::ranges::ssize(unique_pupu_ids), distance))
+            const auto distance = std::ranges::distance(tiles.begin(), it);
+
+            if (std::cmp_greater(std::ranges::ssize(m_pupu_ids), distance))
             {
-              auto pupu_it = unique_pupu_ids.cbegin();
+              auto pupu_it = m_pupu_ids.cbegin();
               std::ranges::advance(pupu_it, distance);
               return get_texture(*pupu_it);
             }
@@ -237,6 +236,8 @@ private:
   static constexpr auto default_filter_lambda = [](auto &&) { return true; };
   static constexpr auto filter_invalid =
     open_viii::graphics::background::Map::filter_invalid();
+
+  mutable std::vector<PupuID> m_pupu_ids = {};
   struct maps
   {
     maps() = default;
