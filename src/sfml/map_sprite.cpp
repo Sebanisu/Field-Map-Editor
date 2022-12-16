@@ -2266,13 +2266,9 @@ void map_sprite::load_map(const std::filesystem::path &src_path) const
               { return false; }
               t = std::bit_cast<std::remove_cvref_t<decltype(t)>>(data);
 
-              // shift to origin
-              if (filter_invalid(t))
-              {
-                t = t.shift_xy(m_maps.const_back().offset().abs());
-              }
               return true;
             };
+
             if(append(tile))
             {
               // write from tiles.
@@ -2281,6 +2277,8 @@ void map_sprite::load_map(const std::filesystem::path &src_path) const
             return std::monostate{};
           });
       });
+      //   shift to origin
+      m_maps.back().shift(m_maps.front().offset().abs());
       (void)m_maps.copy_back_to_front();
     },
     path);
@@ -2368,8 +2366,9 @@ void map_sprite::save_modified_map(const std::filesystem::path &dest_path) const
           });
         }
       };
+      append_imported_tiles();
       for_all_tiles(
-        [&append_imported_tiles, &append, &wrote_end_tile](
+        [&append, &wrote_end_tile](
           const auto &tile_const, const auto &tile, const auto &) {
           bool end_const = filter_invalid(tile_const);
           bool end_other = filter_invalid(tile);
@@ -2377,7 +2376,6 @@ void map_sprite::save_modified_map(const std::filesystem::path &dest_path) const
           {
             spdlog::info("About to save the last tile.");
             // write imported tiles first.
-            append_imported_tiles();
             // write from tiles const
             if (end_other)
               append(tile);
