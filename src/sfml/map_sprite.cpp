@@ -957,6 +957,11 @@ void map_sprite::for_all_tiles(
 {
   duel_visitor([&lambda, &skip_invalid, &regular_order, this](
                  auto const &tiles_const, auto &&tiles) {
+    if (std::ranges::size(tiles_const) != std::ranges::size(tiles))
+    {
+      spdlog::warn(
+        "{} != {}", std::ranges::size(tiles_const), std::ranges::size(tiles));
+    }
     for_all_tiles(
       tiles_const,
       std::forward<decltype(tiles)>(tiles),
@@ -2245,26 +2250,37 @@ void map_sprite::load_map(const std::filesystem::path &src_path) const
   open_viii::tools::read_from_file(
     [this](std::istream &os) {
       (void)m_maps.copy_back();
-      for_all_tiles(
-        [this, &os](const auto &, auto &tile, const auto &) {
-          const auto append = [this, &os](auto &t) {
-            // load tile
-            std::array<char, sizeof(t)> data = {};
-            os.read(data.data(), data.size());
-            t = std::bit_cast<std::remove_cvref_t<decltype(t)>>(data);
+      m_maps.front().visit_tiles([this, &os](const auto &const_tiles) {
+        using TileT   = std::remove_cvref_t<decltype(const_tiles.front())>;
+        m_maps.back() = open_viii::graphics::background::Map(
+          [this, &os]() -> std::variant<
+                          open_viii::graphics::background::Tile1,
+                          open_viii::graphics::background::Tile2,
+                          open_viii::graphics::background::Tile3,
+                          std::monostate> {
+            TileT      tile{};
+            const auto append = [this, &os](auto &t)->bool {
+              // load tile
+              std::array<char, sizeof(t)> data = {};
+              if(!os.read(data.data(), data.size()))
+              { return false; }
+              t = std::bit_cast<std::remove_cvref_t<decltype(t)>>(data);
 
-            // shift to origin
-            t = t.shift_xy(m_maps.const_back().offset().abs());
-          };
-          //          if (!filter_invalid(tile_const))
-          //          {
-          //            return;
-          //          }
-          append(tile);
-          // write from tiles.
-        },
-        false,
-        true);
+              // shift to origin
+              if (filter_invalid(t))
+              {
+                t = t.shift_xy(m_maps.const_back().offset().abs());
+              }
+              return true;
+            };
+            if(append(tile))
+            {
+              // write from tiles.
+              return tile;
+            }
+            return std::monostate{};
+          });
+      });
       (void)m_maps.copy_back_to_front();
     },
     path);
@@ -2322,43 +2338,52 @@ void map_sprite::save_modified_map(const std::filesystem::path &dest_path) const
   spdlog::info("Saving modified map: {}", path);
   open_viii::tools::write_buffer(
     [this](std::ostream &os) {
-      bool used_imports = false;
-      for_all_tiles(
-        [this, &os, &used_imports](
-          const auto &tile_const, const auto &tile, const auto &) {
-          const auto append = [this, &os](auto t) {
-            // shift to original offset
-            if (filter_invalid(t))
+      bool       used_imports   = false;
+      bool       wrote_end_tile = false;
+      const auto append         = [this, &os](auto t) {
+        // shift to original offset
+        if (filter_invalid(t))
+        {
+          t = t.shift_xy(m_maps.const_back().offset());
+        }
+        // save tile
+        const auto data = std::bit_cast<std::array<char, sizeof(t)>>(t);
+        os.write(data.data(), data.size());
+      };
+      const auto append_imported_tiles = [this, &used_imports, &append]() {
+        if (m_using_imported_texture && !used_imports)
+        {
+          used_imports = true;
+          m_imported_tile_map.visit_tiles([&append](const auto &import_tiles) {
+            spdlog::info(
+              "Saving imported tiles {} count",
+              std::ranges::size(import_tiles));
+            for (const auto &import_tile : import_tiles)
             {
-              t = t.shift_xy(m_maps.const_back().offset());
+              if (filter_invalid(import_tile))
+              {
+                append(import_tile);
+              }
             }
-            // save tile
-            const auto data = std::bit_cast<std::array<char, sizeof(t)>>(t);
-            os.write(data.data(), data.size());
-          };
-          if (!filter_invalid(tile_const))// should be last tile.
+          });
+        }
+      };
+      for_all_tiles(
+        [&append_imported_tiles, &append, &wrote_end_tile](
+          const auto &tile_const, const auto &tile, const auto &) {
+          bool end_const = filter_invalid(tile_const);
+          bool end_other = filter_invalid(tile);
+          if (end_const || end_other)// should be last tile.
           {
             spdlog::info("About to save the last tile.");
             // write imported tiles first.
-            if (m_using_imported_texture && !used_imports)
-            {
-              used_imports = true;
-              m_imported_tile_map.visit_tiles(
-                [&append](const auto &import_tiles) {
-                  spdlog::info(
-                    "Saving imported tiles {} count",
-                    std::ranges::size(import_tiles));
-                  for (const auto &import_tile : import_tiles)
-                  {
-                    if (filter_invalid(import_tile))
-                    {
-                      append(import_tile);
-                    }
-                  }
-                });
-            }
+            append_imported_tiles();
             // write from tiles const
-            append(tile_const);
+            if (end_other)
+              append(tile);
+            else
+              append(tile_const);
+            wrote_end_tile = true;
             return;
           }
           append(tile);
@@ -2366,6 +2391,18 @@ void map_sprite::save_modified_map(const std::filesystem::path &dest_path) const
         },
         false,
         true);
+      // write imported tiles first.
+//      append_imported_tiles();
+//      if (!wrote_end_tile)
+//      {
+//        const_visit_tiles([&append, &wrote_end_tile](const auto &tiles) {
+//          spdlog::info("Generating the last tile. (shouldn't happen)");
+//          using tile_t = std::remove_cvref_t<decltype(tiles.front())>;
+//          tile_t tile{};
+//          append(tile.with_xy(0x7FFFU, 0U));
+//          wrote_end_tile = true;
+//        });
+//      }
     },
     path,
     "");
