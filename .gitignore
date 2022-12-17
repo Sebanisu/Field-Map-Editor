@@ -5,7 +5,8 @@ cmake-build-*/
 
 # IDE files
 .vs/
-.idea/
+.idea/workspace.xml*
+.idea/vcs.xml*
 .vscode/
 !.vscode/settings.json
 !.vscode/tasks.json
