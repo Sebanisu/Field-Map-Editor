@@ -14,13 +14,14 @@ before_build:
       mkdir bin\Release
       powershell Compress-Archive -Path src\opengl\opengl_version\res -DestinationPath bin\Release\res.zip
       powershell Compress-Archive -Path src -DestinationPath bin\Release\src.zip
+
+
+build_script:
+  - cmd: >-
       set PATH=%PATH%;C:\Users\appveyor\AppData\Roaming\Python\Python38\Scripts
       set CONAN_USER_HOME=c:\conan\data
       "%PYTHON%" -m pip install --user conan
       mkdir build
-
-build_script:
-  - cmd: >-
       cmake -S c:\projects\source -B ./build -G "Visual Studio 16 2019" -A x64 -DCMAKE_BUILD_TYPE:STRING=Release -DCPP_STARTER_USE_IMGUI=ON
       cmake --build ./build --config "Release"
 
