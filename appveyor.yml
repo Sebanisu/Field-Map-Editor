@@ -10,17 +10,19 @@ cache:
   - c:\conan\data -> conanfile.py, CMakeLists.txt
 
 before_build:
-  - cmd: mkdir bin\Release
-  - cmd: powershell Compress-Archive -Path src\opengl\opengl_version\res -DestinationPath bin\Release\res.zip
-  - cmd: powershell Compress-Archive -Path src -DestinationPath bin\Release\src.zip
-  - cmd: set PATH=%PATH%;C:\Users\appveyor\AppData\Roaming\Python\Python38\Scripts
-  - cmd: set CONAN_USER_HOME=c:\conan\data
-  - cmd: "%PYTHON%" -m pip install --user conan
-  - cmd: mkdir build
+  - cmd: >-
+      mkdir bin\Release
+      powershell Compress-Archive -Path src\opengl\opengl_version\res -DestinationPath bin\Release\res.zip
+      powershell Compress-Archive -Path src -DestinationPath bin\Release\src.zip
+      set PATH=%PATH%;C:\Users\appveyor\AppData\Roaming\Python\Python38\Scripts
+      set CONAN_USER_HOME=c:\conan\data
+      "%PYTHON%" -m pip install --user conan
+      mkdir build
 
 build_script:
-  - cmd: cmake -S c:\projects\source -B ./build -G "Visual Studio 16 2019" -A x64 -DCMAKE_BUILD_TYPE:STRING=Release -DCPP_STARTER_USE_IMGUI=ON
-  - cmd: cmake --build ./build --config "Release"
+  - cmd: >-
+      cmake -S c:\projects\source -B ./build -G "Visual Studio 16 2019" -A x64 -DCMAKE_BUILD_TYPE:STRING=Release -DCPP_STARTER_USE_IMGUI=ON
+      cmake --build ./build --config "Release"
 
 test_script:
   - cmd: cd build && ctest -C Debug
