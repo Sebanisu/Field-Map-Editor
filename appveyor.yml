@@ -2,6 +2,9 @@ image:
   - Visual Studio 2019
 clone_folder: c:\projects\source
 
+cache:
+  - conan
+
 environment:
     PYTHON: "C:\\Python38-x64\\python.exe"
 
