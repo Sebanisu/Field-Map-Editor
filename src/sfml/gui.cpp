@@ -263,7 +263,7 @@ void gui::loop() const
 }
 void gui::checkbox_render_imported_image() const
 {
-  if (loaded_image.getSize() != sf::Vector2u{})
+  if (loaded_image_texture.getSize() != sf::Vector2u{})
   {
     if (ImGui::Checkbox(
           "Render Imported Image", &m_selections.render_imported_image))
@@ -287,7 +287,9 @@ void gui::update_imported_render_texture() const
   if (m_selections.render_imported_image)
   {
     m_map_sprite.update_render_texture(
-      &loaded_image, import_image_map, m_selections.tile_size_value);
+      &loaded_image_render_texture.getTexture(),
+      import_image_map,
+      m_selections.tile_size_value);
   }
 }
 void gui::popup_batch_common_filter_start(
@@ -3268,10 +3270,10 @@ void gui::import_image_window() const
   // have a px offset? or something?
   //   * I'd probably store the new tiles in their own map.
   const auto tiles_wide = static_cast<std::uint32_t>(std::ceil(
-    static_cast<float>(loaded_image.getSize().x)
+    static_cast<float>(loaded_image_texture.getSize().x)
     / static_cast<float>(m_selections.tile_size_value)));
   const auto tiles_high = static_cast<std::uint32_t>(std::ceil(
-    static_cast<float>(loaded_image.getSize().y)
+    static_cast<float>(loaded_image_texture.getSize().y)
     / static_cast<float>(m_selections.tile_size_value)));
   ImGui::Text(
     "%s",
@@ -3328,7 +3330,7 @@ void gui::import_image_window() const
 
 
     //* Filter empty tiles
-    loaded_image_cpu = loaded_image.copyToImage();
+    loaded_image_cpu = loaded_image_texture.copyToImage();
     import_image_map.visit_tiles([this](auto &tiles) {
       const auto rem_range =
         std::ranges::remove_if(tiles, [this](const auto &tile) -> bool {
@@ -3372,7 +3374,7 @@ void gui::import_image_window() const
         {
           ImGui::TableNextColumn();
           sf::Sprite sprite(
-            loaded_image,
+            loaded_image_texture,
             sf::IntRect(
               tile.x() / 16 * m_selections.tile_size_value,
               tile.y() / 16 * m_selections.tile_size_value,
@@ -3477,6 +3479,7 @@ minmax_y.max.y() + 16)))*/
             }
           }
         });
+      update_scaled_up_render_texture();
       update_imported_render_texture();
     }
   });
@@ -3516,7 +3519,7 @@ void gui::reset_imported_image() const
 {
   m_map_sprite.update_render_texture(nullptr, {}, 16);
   import_image_map                   = {};
-  loaded_image                       = {};
+  loaded_image_texture               = {};
   loaded_image_cpu                   = {};
   m_import_image_path                = {};
   m_selections.render_imported_image = false;
@@ -3573,6 +3576,7 @@ bool gui::browse_for_image_display_preview() const
     m_load_file_browser.SetInputName(m_import_image_path.data());
   }
   m_load_file_browser.Display();
+
   if (m_load_file_browser.HasSelected())
   {
     Configuration config{};
@@ -3583,20 +3587,25 @@ bool gui::browse_for_image_display_preview() const
       m_load_file_browser.GetSelected();
     m_import_image_path = selected_path.string();
     m_load_file_browser.ClearSelected();
-    loaded_image.loadFromFile(m_import_image_path);// stored on gpu.
+    loaded_image_texture.loadFromFile(m_import_image_path);// stored on gpu.
+    loaded_image_texture.setRepeated(false);
+    loaded_image_texture.setSmooth(false);
+    loaded_image_texture.generateMipmap();
     changed = true;
   }
-  if (loaded_image.getSize().x == 0 || loaded_image.getSize().y == 0)
+  if (
+    loaded_image_texture.getSize().x == 0
+    || loaded_image_texture.getSize().y == 0)
   {
     return false;
   }
   if (ImGui::CollapsingHeader("Selected Image Preview"))
   {
-    sf::Sprite  sprite(loaded_image);
+    sf::Sprite  sprite(loaded_image_texture);
     const float w = std::max(
       (ImGui::GetContentRegionAvail().x /* - ImGui::GetStyle().ItemSpacing.x*/),
       1.0f);
-    const auto  size  = loaded_image.getSize();
+    const auto  size  = loaded_image_texture.getSize();
 
     float       scale = w / static_cast<float>(size.x);
     const float h     = static_cast<float>(size.y) * scale;
@@ -3637,6 +3646,29 @@ bool gui::browse_for_image_display_preview() const
     }
   }
   return changed;
+}
+void gui::update_scaled_up_render_texture() const
+{
+  const auto scale_up_dim = [this](uint32_t dim) {
+    return static_cast<uint32_t>(
+      ceil(
+        static_cast<float>(dim)
+        / static_cast<float>(m_selections.tile_size_value))
+      * static_cast<float>(m_selections.tile_size_value));
+  };
+  const auto size = loaded_image_texture.getSize();
+  loaded_image_render_texture.create(
+    scale_up_dim(size.x), scale_up_dim(size.y));
+  loaded_image_render_texture.setActive(true);
+  loaded_image_render_texture.clear(sf::Color::Transparent);
+  sf::Sprite sprite = sf::Sprite(loaded_image_texture);
+  sprite.setScale(1.f, -1.f);
+  sprite.setPosition(
+    0.f, static_cast<float>(loaded_image_render_texture.getSize().y));
+  loaded_image_render_texture.draw(sprite);
+  loaded_image_render_texture.setRepeated(false);
+  loaded_image_render_texture.setSmooth(false);
+  loaded_image_render_texture.generateMipmap();
 }
 void gui::collapsing_tile_info(
   const std::variant<

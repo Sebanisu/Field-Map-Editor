@@ -126,9 +126,9 @@ struct map_sprite final
   }
 
   void update_render_texture(
-    sf::Texture                         *p_texture,
+    const sf::Texture                         *p_texture,
     open_viii::graphics::background::Map map,
-    uint16_t                             tile_size);
+    const uint16_t                             tile_size);
 
 public:
   using color_type  = open_viii::graphics::Color32RGBA;
@@ -331,7 +331,7 @@ private:
   mutable std::string                                m_map_path  = {};
   bool                                               m_using_coo = {};
   bool                                 m_using_imported_texture  = {};
-  sf::Texture                         *m_imported_texture        = { nullptr };
+  const sf::Texture                   *m_imported_texture        = { nullptr };
   std::uint16_t                        m_imported_tile_size      = {};
   open_viii::graphics::background::Map m_imported_tile_map       = {};
   maps                                 m_maps                    = {};

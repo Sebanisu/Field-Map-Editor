@@ -237,9 +237,10 @@ void map_sprite::load_mim_textures(
       const auto colors = get_colors(bppt, pal);
       // std::lock_guard<std::mutex> lock(mutex_texture);
       texture->create(m_mim.get_width(bppt), m_mim.get_height());
-      texture->setSmooth(false);
-      texture->generateMipmap();
       texture->update(reinterpret_cast<const sf::Uint8 *>(colors.data()));
+      texture->setSmooth(false);
+      texture->setRepeated(false);
+      texture->generateMipmap();
     };
     spawn_thread(task, &(ret->at(pos)), bpp, palette);
   }
@@ -263,6 +264,7 @@ void map_sprite::find_upscale_path(
         spdlog::info("upscale path: {}", path.string());
         texture->loadFromFile(path.string());
         texture->setSmooth(false);
+        texture->setRepeated(false);
         texture->generateMipmap();
       }
     };
@@ -305,6 +307,7 @@ void map_sprite::find_deswizzle_path(
           spdlog::info("texture path: \"{}\"", in_path.string());
           texture->loadFromFile(in_path.string());
           texture->setSmooth(false);
+          texture->setRepeated(false);
           texture->generateMipmap();
         }
       };
@@ -341,6 +344,7 @@ void map_sprite::find_deswizzle_path(
               spdlog::info("{}", path.string());
               texture->loadFromFile(path.string());
               texture->setSmooth(false);
+              texture->setRepeated(false);
               texture->generateMipmap();
           }
       };
@@ -368,6 +372,7 @@ void map_sprite::find_upscale_path(
         spdlog::info("texture path: \"{}\"", path.string());
         texture->loadFromFile(path.string());
         texture->setSmooth(false);
+        texture->setRepeated(false);
         texture->generateMipmap();
       }
     };
@@ -1294,6 +1299,7 @@ void map_sprite::update_render_texture(bool reload_textures) const
     (void)draw_imported(*m_render_texture, sf::RenderStates::Default);
     m_render_texture->display();
     m_render_texture->setSmooth(false);
+    m_render_texture->setRepeated(false);
     m_render_texture->generateMipmap();
   }
 }
@@ -2222,6 +2228,7 @@ std::shared_ptr<sf::RenderTexture>
     (void)draw_imported(*texture, sf::RenderStates::Default);
     texture->display();
     texture->setSmooth(false);
+    texture->setRepeated(false);
     texture->generateMipmap();
     return texture;
   }
@@ -2414,9 +2421,9 @@ std::size_t map_sprite::size_of_map() const
   });
 }
 void map_sprite::update_render_texture(
-  sf::Texture                         *p_texture,
+  const sf::Texture                         *p_texture,
   open_viii::graphics::background::Map map,
-  uint16_t                             tile_size)
+  const uint16_t                             tile_size)
 {
   m_imported_texture       = p_texture;
   m_imported_tile_map      = std::move(map);

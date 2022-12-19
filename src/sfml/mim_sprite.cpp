@@ -42,6 +42,8 @@ std::shared_ptr<sf::Texture> mim_sprite::get_texture() const
     // underlying type is an array of chars.
     texture->update(reinterpret_cast<const sf::Uint8 *>(m_colors.data()));
     texture->setSmooth(false);
+    texture->setRepeated(false);
+    texture->generateMipmap();
   }
   return texture;
 }
