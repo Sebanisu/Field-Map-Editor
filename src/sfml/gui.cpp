@@ -3652,9 +3652,9 @@ void gui::update_scaled_up_render_texture() const
   const auto scale_up_dim = [this](uint32_t dim) {
     return static_cast<uint32_t>(
       ceil(
-        static_cast<float>(dim)
-        / static_cast<float>(m_selections.tile_size_value))
-      * static_cast<float>(m_selections.tile_size_value));
+        static_cast<double>(dim)
+        / static_cast<double>(m_selections.tile_size_value))
+      * static_cast<double>(m_selections.tile_size_value));
   };
   const auto size = loaded_image_texture.getSize();
   loaded_image_render_texture.create(
