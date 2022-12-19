@@ -2,11 +2,13 @@ image:
   - Visual Studio 2019
 clone_folder: c:\projects\source
 
-cache:
-  - %CONAN_USER_HOME%\conan\data -> conanfile.py, CMakeLists.txt
 
 environment:
   PYTHON: "C:\\Python38-x64\\python.exe"
+  CONAN_USER_HOME: "c:\\projects\\source\\conan"
+
+cache:
+  - %CONAN_USER_HOME%\conan\data -> conanfile.py, CMakeLists.txt
 
 before_build:
   - cmd: mkdir bin\Release
