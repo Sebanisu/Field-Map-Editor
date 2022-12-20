@@ -161,6 +161,7 @@ private:
     bool          display_import_image   = { false };
     bool          import_image_grid      = { false };
     bool          render_imported_image  = { false };
+    bool          batch_embed_map_warning_window = { false };
   };
   selections                       default_selections() const;
   static constexpr std::uint32_t   default_window_width  = 800U;
@@ -394,6 +395,8 @@ private:
   void        save_swizzle_textures() const;
   void        reset_imported_image() const;
   void        update_scaled_up_render_texture() const;
+  void        browse_for_embed_map_dir() const;
+  void        begin_batch_embed_map_warning_window() const;
 };
 }// namespace fme
 #endif// FIELD_MAP_EDITOR_GUI_HPP

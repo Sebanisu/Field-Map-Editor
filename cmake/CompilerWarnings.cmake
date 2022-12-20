@@ -31,6 +31,7 @@ function(set_project_warnings project_name)
             /permissive- # standards conformance mode for MSVC compiler.
             /wd4068 # suppress unknown pragma. cmake is using #pragma GCC in precompiled header. MSVC no like.
             /wd4201 # suppress nonstandard extension used : nameless struct/union
+            /wd4702 # suppress unreachable code.
             )
 
     set(CLANG_WARNINGS

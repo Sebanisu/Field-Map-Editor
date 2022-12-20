@@ -239,6 +239,7 @@ void gui::loop() const
   popup_batch_reswizzle();
   ImGui::End();
   batch_ops_ask_menu();
+  begin_batch_embed_map_warning_window();
   popup_batch_embed();
   import_image_window();
   // Begin non imgui drawing.
@@ -1003,15 +1004,7 @@ void gui::menu_bar() const
 
       if (ImGui::MenuItem("Embed .map files into Archives"))
       {
-        m_directory_browser.Open();
-        m_directory_browser.SetTitle(
-          "Choose source directory of your textures and .map files "
-          "(contains two letter directories)");
-        m_directory_browser.SetPwd(
-          Configuration{}["embed_source_path"].value_or(
-            std::filesystem::current_path().string()));
-        m_directory_browser.SetTypeFilters({ ".map" });
-        m_modified_directory_map = map_directory_mode::batch_embed_map_files;
+        m_selections.batch_embed_map_warning_window = true;
       }
       if (ImGui::MenuItem(
             "Test Batch Window", nullptr, &m_selections.test_batch_window))
@@ -1037,6 +1030,17 @@ void gui::menu_bar() const
     }
     ImGui::EndMenuBar();
   }
+}
+void gui::browse_for_embed_map_dir() const
+{
+  m_directory_browser.Open();
+  m_directory_browser.SetTitle(
+    "Choose source directory of your textures and .map files "
+    "(contains two letter directories)");
+  m_directory_browser.SetPwd(Configuration{}["embed_source_path"].value_or(
+    std::filesystem::current_path().string()));
+  m_directory_browser.SetTypeFilters({ ".map" });
+  m_modified_directory_map = map_directory_mode::batch_embed_map_files;
 }
 bool gui::map_test() const
 {
@@ -3243,7 +3247,50 @@ std::variant<
   ImGui::SetCursorScreenPos(backup_pos);
   return current_tile;
 }
-
+void gui::begin_batch_embed_map_warning_window() const
+{
+  if (!m_selections.batch_embed_map_warning_window)
+  {
+    return;
+  }
+  // begin imgui window
+  const auto pop_id = PushPop();
+  ImGui::SetNextWindowPos(
+    ImGui::GetMainViewport()->GetCenter(),
+    ImGuiCond_Always,
+    ImVec2(0.5F, 0.5F));
+  const char *id = "Batch embed '.map' files.";
+  ImGui::OpenPopup(id);
+  if (!ImGui::BeginPopupModal(
+        id,
+        nullptr,
+        ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings))
+  {
+    return;
+  }
+  const auto g = scope_guard([]() { ImGui::EndPopup(); });
+  ImGui::TextWrapped(
+    "%s",
+    fmt::format(
+      "This will take the currently loaded Final Fantasy 8 archive in \"{}\" "
+      "and create new `field.fi`, `field.fl`, and `field.fs` files. "
+      "Replacing any `.map` file with ones found in the chosen path.",
+      m_paths.at(static_cast<std::size_t>(m_selections.path))
+        .value_or(std::string{}))
+      .c_str());
+  if (ImGui::Button("Browse to begin..."))
+  {
+    browse_for_embed_map_dir();
+    ImGui::CloseCurrentPopup();
+    m_selections.batch_embed_map_warning_window = false;
+  }
+  ImGui::SameLine();
+  if (ImGui::Button("Close"))
+  {
+    ImGui::CloseCurrentPopup();
+    m_selections.batch_embed_map_warning_window = false;
+  }
+}
 void gui::import_image_window() const
 {
   if (!m_selections.display_import_image)
@@ -3390,6 +3437,10 @@ void gui::import_image_window() const
   }
   // I need to detect the last used texture page and the highest source_y.
   m_map_sprite.const_visit_tiles([this, &changed](const auto &tiles) {
+    if(std::ranges::empty(tiles))
+    {
+      return;
+    }
     const auto minmax_x = (std::ranges::minmax)(
       tiles, {}, [](const auto &tile) { return tile.x(); });
     const auto minmax_y = (std::ranges::minmax)(
