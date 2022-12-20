@@ -1085,11 +1085,8 @@ void gui::file_browser_locate_ff8() const
     if (m_modified_directory_map == map_directory_mode::ff8_install_directory)
     {
       m_paths.push_back(selected_path.string());
-      // todo remove paths that don't exist.
-      Configuration config{};
-      config->insert_or_assign("paths_vector", m_paths);
-      config.save();
-      m_selections.path = static_cast<int>(m_paths.size()) - 1;
+      sort_paths();
+      m_selections.path = selected_path.string();
       update_path();
     }
     else if (
@@ -1234,6 +1231,24 @@ void gui::file_browser_locate_ff8() const
     }
     m_directory_browser.ClearSelected();
   }
+}
+void gui::sort_paths() const
+{// todo remove paths that don't exist.
+  std::vector<std::string> tmp = {};
+  tmp.reserve(std::ranges::size(m_paths));
+  std::ranges::transform(
+    m_paths, std::back_inserter(tmp), [](const toml::node &node) {
+      return node.value_or(std::string{});
+    });
+  std::ranges::sort(tmp);
+  const auto removal = std::ranges::unique(tmp);
+  tmp.erase(removal.begin(), removal.end());
+  m_paths.clear();
+  std::ranges::for_each(
+    tmp, [this](std::string &str) { m_paths.push_back(std::move(str)); });
+  Configuration config{};
+  config->insert_or_assign("paths_vector", m_paths);
+  config.save();
 }
 void gui::file_browser_save_texture() const
 {
@@ -1509,7 +1524,11 @@ bool gui::combo_path() const
         m_id,
         gui_labels::path,
         [this]() {
-          return std::views::iota(0, static_cast<int>(std::size(m_paths)));
+          return m_paths
+                 | std::ranges::views::transform(
+                   [](toml::node &item) -> std::string {
+                     return item.value_or<std::string>({});
+                   });
         },
         [this]() {
           return m_paths
@@ -1521,7 +1540,7 @@ bool gui::combo_path() const
         m_selections.path))
   {
     Configuration config{};
-    config->insert_or_assign("selection_path", m_selections.path);
+    config->insert_or_assign("selections_path", m_selections.path);
     config.save();
     update_path();
     return true;
@@ -1735,10 +1754,9 @@ void gui::scale_window(float width, float height) const
 }
 archives_group gui::get_archives_group() const
 {
-  if (!m_paths.empty())
+  if (!std::ranges::empty(m_selections.path))
   {
-    return { open_viii::LangCommon::to_array().front(),
-             m_paths.front().value_or(std::string{}) };
+    return { open_viii::LangCommon::to_array().front(), m_selections.path };
   }
   return {};
 }
@@ -1749,16 +1767,11 @@ sf::RenderWindow gui::get_render_window() const
 }
 void gui::update_path() const
 {
-  m_archives_group = m_archives_group.with_path(
-    m_paths.at(static_cast<std::size_t>(m_selections.path))
-      .value_or(std::string{}));
+  m_archives_group = m_archives_group.with_path(m_selections.path);
   update_field();
   if (m_batch_embed4.enabled())
   {
-    m_batch_embed4.enable(
-      m_paths.at(static_cast<std::size_t>(m_selections.path))
-        .value_or(std::string{}),
-      m_batch_embed4.start());
+    m_batch_embed4.enable(m_selections.path, m_batch_embed4.start());
   }
 }
 mim_sprite gui::get_mim_sprite() const
@@ -1780,7 +1793,8 @@ void gui::init_and_get_style() const
     generate_upscale_paths(m_field->get_base_name(), get_coo());
 }
 gui::gui(std::uint32_t width, std::uint32_t height)
-  : m_window_width(width)
+  : m_selections(default_selections())
+  , m_window_width(width)
   , m_window_height(height)
   , m_window(get_render_window())
   , m_paths(get_paths())
@@ -1791,6 +1805,7 @@ gui::gui(std::uint32_t width, std::uint32_t height)
   , m_map_sprite(get_map_sprite())
 
 {
+  sort_paths();
   init_and_get_style();
 }
 std::shared_ptr<open_viii::archive::FIFLFS<false>> gui::init_field()
@@ -2616,10 +2631,7 @@ void gui::popup_batch_embed() const
     }
     else
     {
-      m_batch_embed4.enable(
-        m_paths.at(static_cast<std::size_t>(m_selections.path))
-          .value_or(std::string{}),
-        m_batch_embed2.start());
+      m_batch_embed4.enable(m_selections.path, m_batch_embed2.start());
     }
   }
   else if (m_batch_embed3(
@@ -2793,10 +2805,7 @@ void gui::popup_batch_embed() const
                return true;
              }))
   {
-    m_batch_embed4.enable(
-      m_paths.at(static_cast<std::size_t>(m_selections.path))
-        .value_or(std::string{}),
-      m_batch_embed3.start());
+    m_batch_embed4.enable(m_selections.path, m_batch_embed3.start());
   }
   else if (m_batch_embed4(
              std::array{ "save" },
@@ -3275,8 +3284,7 @@ void gui::begin_batch_embed_map_warning_window() const
       "This will take the currently loaded Final Fantasy 8 archive in \"{}\" "
       "and create new `field.fi`, `field.fl`, and `field.fs` files. "
       "Replacing any `.map` file with ones found in the chosen path.",
-      m_paths.at(static_cast<std::size_t>(m_selections.path))
-        .value_or(std::string{}))
+      m_selections.path)
       .c_str());
   if (ImGui::Button("Browse to begin..."))
   {
@@ -3437,7 +3445,7 @@ void gui::import_image_window() const
   }
   // I need to detect the last used texture page and the highest source_y.
   m_map_sprite.const_visit_tiles([this, &changed](const auto &tiles) {
-    if(std::ranges::empty(tiles))
+    if (std::ranges::empty(tiles))
     {
       return;
     }

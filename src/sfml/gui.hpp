@@ -23,12 +23,12 @@ namespace fme
 struct gui
 {
 public:
+
   gui(std::uint32_t width, std::uint32_t height);
   gui();
   void start() const;
 
-private:
-  enum struct map_dialog_mode
+private:enum struct map_dialog_mode
   {
     save_unmodified,
     save_modified,
@@ -46,8 +46,7 @@ private:
     batch_save_swizzle_textures,
     batch_embed_map_files,
     custom_upscale_directory,
-  };
-  struct batch_deswizzle
+  };struct batch_deswizzle
   {
     void enable(std::filesystem::path in_outgoing);
     void disable();
@@ -144,26 +143,44 @@ private:
   };
   struct selections
   {
-    int           bpp                    = {};
-    int           palette                = {};
-    int           field                  = {};
-    int           coo                    = {};
-    int           path                   = {};
-    int           draw                   = { 1 };
-    int           selected_tile          = { -1 };
-    std::uint16_t tile_size_value        = { 16U };
-    bool          draw_palette           = { false };
-    bool          draw_grid              = { false };
-    bool          draw_texture_page_grid = { false };
-    bool          draw_swizzle           = { false };
-    bool          draw_disable_blending  = { false };
-    bool          test_batch_window      = { false };
-    bool          display_import_image   = { false };
-    bool          import_image_grid      = { false };
-    bool          render_imported_image  = { false };
+    int         bpp     = {};
+    int         palette = {};
+    int         field   = {};
+    int         coo     = {};
+    std::string path    = []() {
+      std::error_code ec  = {};
+      auto            str = std::filesystem::current_path(ec).string();
+      if (ec)
+      {
+        spdlog::warn(
+          "{}:{} - {}: {} path: \"{}\"",
+          __FILE__,
+          __LINE__,
+          ec.value(),
+          ec.message(),
+          str);
+        ec.clear();
+      }
+      return str;
+    }();
+    int           draw                           = { 1 };
+    int           selected_tile                  = { -1 };
+    std::uint16_t tile_size_value                = { 16U };
+    bool          draw_palette                   = { false };
+    bool          draw_grid                      = { false };
+    bool          draw_texture_page_grid         = { false };
+    bool          draw_swizzle                   = { false };
+    bool          draw_disable_blending          = { false };
+    bool          test_batch_window              = { false };
+    bool          display_import_image           = { false };
+    bool          import_image_grid              = { false };
+    bool          render_imported_image          = { false };
     bool          batch_embed_map_warning_window = { false };
   };
   selections                       default_selections() const;
+  mutable selections               m_selections    = {};
+
+
   static constexpr std::uint32_t   default_window_width  = 800U;
   static constexpr std::uint32_t   default_window_height = 600U;
   mutable scrolling                m_scrolling           = {};
@@ -175,7 +192,6 @@ private:
   mutable batch_embed              m_batch_embed4        = {};
   mutable int                      m_id                  = {};
   mutable mouse_positions          m_mouse_positions     = {};
-  mutable selections               m_selections    = { default_selections() };
   std::uint32_t                    m_window_width  = { default_window_width };
   mutable float                    m_scale_width   = {};
   std::uint32_t                    m_window_height = { default_window_height };
@@ -397,6 +413,7 @@ private:
   void        update_scaled_up_render_texture() const;
   void        browse_for_embed_map_dir() const;
   void        begin_batch_embed_map_warning_window() const;
+  void        sort_paths() const;
 };
 }// namespace fme
 #endif// FIELD_MAP_EDITOR_GUI_HPP
