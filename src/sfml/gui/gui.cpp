@@ -75,7 +75,8 @@ void gui::start() const
   if (m_window.isOpen())
   {
     scale_window(
-      static_cast<float>(m_window_width), static_cast<float>(m_window_height));
+      static_cast<float>(m_selections.window_width),
+      static_cast<float>(m_selections.window_height));
     do
     {
       //      if(!map_test() && m_selections.draw == 1)
@@ -1762,8 +1763,10 @@ archives_group gui::get_archives_group() const
 }
 sf::RenderWindow gui::get_render_window() const
 {
-  return sf::RenderWindow{ sf::VideoMode(m_window_width, m_window_height),
-                           sf::String{ gui_labels::window_title } };
+  return sf::RenderWindow{
+    sf::VideoMode(m_selections.window_width, m_selections.window_height),
+    sf::String{ gui_labels::window_title }
+  };
 }
 void gui::update_path() const
 {
@@ -1792,11 +1795,8 @@ void gui::init_and_get_style() const
   if (m_field)
     generate_upscale_paths(m_field->get_base_name(), get_coo());
 }
-gui::gui(std::uint32_t width, std::uint32_t height)
-  : m_selections(default_selections())
-  , m_window_width(width)
-  , m_window_height(height)
-  , m_window(get_render_window())
+gui::gui()
+  : m_window(get_render_window())
   , m_paths(get_paths())
   , m_custom_upscale_paths(get_custom_upscale_paths_vector())
   , m_archives_group(get_archives_group())
@@ -1812,10 +1812,6 @@ std::shared_ptr<open_viii::archive::FIFLFS<false>> gui::init_field()
 {
   m_selections.field = get_selected_field();
   return m_archives_group.field(m_selections.field);
-}
-gui::gui()
-  : gui(default_window_width, default_window_height)
-{
 }
 map_sprite gui::get_map_sprite() const
 {
@@ -2204,164 +2200,6 @@ bool gui::combo_upscale_path(
   return false;
 }
 
-void gui::mouse_positions::update()
-{
-  old_left    = left;
-  mouse_moved = false;
-}
-bool gui::mouse_positions::left_changed() const
-{
-  const auto condition = old_left != left;
-  if (!mouse_enabled && condition)
-  {
-    spdlog::trace("Warning! mouse up off screen!");
-  }
-  return condition;
-}
-void gui::mouse_positions::update_sprite_pos(bool swizzle, float spacing)
-{
-  float x = {};
-  if (swizzle && max_tile_x != 0U)
-  {
-    x = ((std::min)(static_cast<std::uint8_t>(tile.x), max_tile_x) * 16.F)
-        + (texture_page * spacing);
-  }
-  else
-  {
-    x = (static_cast<float>(pixel.x / 16)) * 16.F;
-  }
-  float y = (static_cast<float>(pixel.y / 16)) * 16.F;
-  sprite.setPosition(x, y);
-}
-void gui::scrolling::reset() noexcept
-{
-  left = right = up = down = false;
-}
-bool gui::scrolling::scroll(std::array<float, 2U> &in_xy, const sf::Time &time)
-{
-  bool changed = false;
-  if (!(left || right || up || down))
-  {
-    return changed;
-  }
-  const auto time_ms = static_cast<float>(time.asMicroseconds()) / 1000.F;
-  if (left && right)
-  {
-  }
-  else
-  {
-    float total_time = (in_xy[0] + 1.F) * total_scroll_time[0];
-    //        spdlog::info("{:.2f} = ({:.2f} + 1.00) * {:.2f}",
-    //          total_time,
-    //          in_xy[0],
-    //          total_scroll_time[0]);
-    if (left)
-    {
-      in_xy[0] = std::lerp(
-        -1.F,
-        0.F,
-        std::clamp((total_time + time_ms) / total_scroll_time[0], 0.F, 1.F));
-      changed = true;
-    }
-    else if (right)
-    {
-      in_xy[0] = std::lerp(
-        -1.F,
-        0.F,
-        std::clamp((total_time - time_ms) / total_scroll_time[0], 0.F, 1.F));
-      changed = true;
-    }
-  }
-  if (up && down)
-  {
-  }
-  else
-  {
-    float total_time = (in_xy[1] + 1.F) * total_scroll_time[1];
-    if (up)
-    {
-      in_xy[1] = std::lerp(
-        -1.F,
-        0.F,
-        std::clamp((total_time + time_ms) / total_scroll_time[1], 0.F, 1.F));
-      changed = true;
-    }
-    else if (down)
-    {
-      in_xy[1] = std::lerp(
-        -1.F,
-        0.F,
-        std::clamp((total_time - time_ms) / total_scroll_time[1], 0.F, 1.F));
-      changed = true;
-    }
-  }
-  return changed;
-}
-void gui::batch_reswizzle::disable()
-{
-  enabled = false;
-}
-template<typename lambdaT, typename askT>
-bool gui::batch_reswizzle::operator()(
-  const std::vector<std::string> &fields,
-  lambdaT                       &&lambda,
-  askT                          &&ask_lambda)
-{
-  if (!enabled)
-  {
-    return false;
-  }
-  const char *title = "Batch saving swizzle textures...";
-  ImGui::SetNextWindowPos(
-    ImGui::GetMainViewport()->GetCenter(),
-    ImGuiCond_Always,
-    ImVec2(0.5F, 0.5F));
-  ImGui::OpenPopup(title);
-  if (ImGui::BeginPopupModal(
-        title,
-        nullptr,
-        ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings))
-  {
-    const auto g = scope_guard([]() { ImGui::EndPopup(); });
-    if (fields.size() <= pos)
-    {
-      auto current = std::chrono::high_resolution_clock::now();
-      spdlog::info(
-        "{:%H:%M:%S} - Finished the batch swizzle...", current - start);
-      disable();
-      return pos > 0U;
-    }
-    if (!asked)
-    {
-      asked = ask_lambda(compact_filter, bpp, palette);
-    }
-    else
-    {
-      auto current = std::chrono::high_resolution_clock::now();
-      format_imgui_text(
-        "{:%H:%M:%S} - {:>3.2f}% - Processing {}...",
-        current - start,
-        static_cast<float>(pos) * 100.F / static_cast<float>(std::size(fields)),
-        fields[pos]);
-      ImGui::Separator();
-      lambda(
-        static_cast<int>(pos), outgoing, filters, compact_filter, bpp, palette);
-      ++pos;
-    }
-  }
-  return false;
-}
-void gui::batch_reswizzle::enable(
-  std::filesystem::path in_incoming,
-  std::filesystem::path in_outgoing)
-{
-  enabled = true;
-  pos     = 0;
-  filters.deswizzle.update(std::move(in_incoming)).enable();
-  outgoing = std::move(in_outgoing);
-  asked    = false;
-  start    = std::chrono::high_resolution_clock::now();
-}
 inline std::vector<std::filesystem::path>
   find_maps_in_directory(std::filesystem::path src, size_t reserve = {})
 {
@@ -2955,38 +2793,6 @@ void gui::batch_ops_ask_menu() const
   }
   ImGui::End();
 #endif
-}
-gui::selections gui::default_selections() const
-{
-  gui::selections s{};
-  Configuration   config{};
-  s.path    = config["selections_path"].value_or(s.path);
-  s.palette = config["selections_palette"].value_or(s.palette);
-  s.bpp     = config["selections_bpp"].value_or(s.bpp);
-  s.draw    = config["selections_draw"].value_or(s.draw);
-  s.coo     = config["selections_coo"].value_or(s.coo);
-  s.selected_tile =
-    config["selections_selected_tile"].value_or(s.selected_tile);
-  s.draw_disable_blending = config["selections_draw_disable_blending"].value_or(
-    s.draw_disable_blending);
-  s.draw_grid    = config["selections_draw_grid"].value_or(s.draw_grid);
-  s.draw_palette = config["selections_draw_palette"].value_or(s.draw_palette);
-  s.draw_swizzle = config["selections_draw_swizzle"].value_or(s.draw_swizzle);
-  //  s.render_imported_image =
-  //  config["selections_render_imported_image"].value_or(
-  //    s.render_imported_image);
-  s.draw_texture_page_grid =
-    config["selections_draw_texture_page_grid"].value_or(
-      s.draw_texture_page_grid);
-  s.test_batch_window =
-    config["selections_test_batch_window"].value_or(s.test_batch_window);
-  s.display_import_image =
-    config["selections_display_import_image"].value_or(s.display_import_image);
-  s.import_image_grid =
-    config["selections_import_image_grid"].value_or(s.import_image_grid);
-  s.tile_size_value =
-    config["selections_tile_size_value"].value_or(s.tile_size_value);
-  return s;
 }
 
 std::variant<

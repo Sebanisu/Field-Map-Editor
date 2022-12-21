@@ -7,7 +7,7 @@
 #include "archives_group.hpp"
 #include "batch_deswizzle.hpp"
 #include "batch_embed.hpp"
-#include "compact_type.hpp"
+#include "batch_reswizzle.hpp"
 #include "Configuration.hpp"
 #include "events.hpp"
 #include "filebrowser.hpp"
@@ -16,7 +16,10 @@
 #include "grid.hpp"
 #include "map_dialog_mode.hpp"
 #include "map_directory_mode.hpp"
+#include "mouse_positions.hpp"
 #include "scope_guard.hpp"
+#include "scrolling.hpp"
+#include "selections.hpp"
 #include "upscales.hpp"
 #include <cstdint>
 #include <fmt/chrono.h>
@@ -28,104 +31,11 @@ namespace fme
 struct gui
 {
 public:
-  gui(std::uint32_t width, std::uint32_t height);
   gui();
   void start() const;
 
 private:
-  struct batch_reswizzle
-  {
-    void enable(
-      std::filesystem::path in_incoming,
-      std::filesystem::path in_outgoing);
-    void disable();
-    template<typename lambdaT, typename askT>
-    bool operator()(
-      const std::vector<std::string> &fields,
-      lambdaT                       &&lambda,
-      [[maybe_unused]] askT         &&ask_lambda);
-
-  private:
-    bool                   enabled        = { false };
-    bool                   asked          = { false };
-    bool                   bpp            = { false };
-    bool                   palette        = { false };
-    std::size_t            pos            = {};
-    std::filesystem::path  outgoing       = {};
-    ::filters              filters        = {};
-    ::filter<compact_type> compact_filter = {};
-    std::chrono::time_point<std::chrono::high_resolution_clock> start = {};
-  };
-  struct mouse_positions
-  {
-    sf::Vector2i       pixel         = {};
-    sf::Vector2i       tile          = {};
-    std::uint8_t       texture_page  = {};
-    bool               left          = { false };
-    bool               mouse_enabled = { false };
-    bool               mouse_moved   = { false };
-    sf::Sprite         sprite        = {};
-    std::uint8_t       max_tile_x    = {};
-    // sf::Sprite   cover         = {};
-    void               update();
-    [[nodiscard]] bool left_changed() const;
-    void               update_sprite_pos(bool swizzle, float spacing = 256.F);
-
-  private:
-    bool old_left = { false };
-  };
-  struct scrolling
-  {
-    std::array<float, 2U> total_scroll_time = { 1000.F, 1000.F };
-    bool                  left{};
-    bool                  right{};
-    bool                  up{};
-    bool                  down{};
-    void                  reset() noexcept;
-    bool scroll(std::array<float, 2U> &in_xy, const sf::Time &time);
-  };
-  struct selections
-  {
-    int         bpp     = {};
-    int         palette = {};
-    int         field   = {};
-    int         coo     = {};
-    std::string path    = []() {
-      std::error_code ec  = {};
-      auto            str = std::filesystem::current_path(ec).string();
-      if (ec)
-      {
-        spdlog::warn(
-          "{}:{} - {}: {} path: \"{}\"",
-          __FILE__,
-          __LINE__,
-          ec.value(),
-          ec.message(),
-          str);
-        ec.clear();
-      }
-      return str;
-    }();
-    int           draw                           = { 1 };
-    int           selected_tile                  = { -1 };
-    std::uint16_t tile_size_value                = { 16U };
-    bool          draw_palette                   = { false };
-    bool          draw_grid                      = { false };
-    bool          draw_texture_page_grid         = { false };
-    bool          draw_swizzle                   = { false };
-    bool          draw_disable_blending          = { false };
-    bool          test_batch_window              = { false };
-    bool          display_import_image           = { false };
-    bool          import_image_grid              = { false };
-    bool          render_imported_image          = { false };
-    bool          batch_embed_map_warning_window = { false };
-  };
-  selections                       default_selections() const;
   mutable selections               m_selections          = {};
-
-
-  static constexpr std::uint32_t   default_window_width  = 800U;
-  static constexpr std::uint32_t   default_window_height = 600U;
   mutable scrolling                m_scrolling           = {};
   mutable batch_deswizzle          m_batch_deswizzle     = {};
   mutable batch_reswizzle          m_batch_reswizzle     = {};
@@ -135,9 +45,7 @@ private:
   mutable batch_embed              m_batch_embed4        = {};
   mutable int                      m_id                  = {};
   mutable mouse_positions          m_mouse_positions     = {};
-  std::uint32_t                    m_window_width  = { default_window_width };
   mutable float                    m_scale_width   = {};
-  std::uint32_t                    m_window_height = { default_window_height };
   mutable sf::RenderWindow         m_window        = {};
   mutable sf::Clock                m_delta_clock   = {};
   mutable toml::array              m_paths         = {};
