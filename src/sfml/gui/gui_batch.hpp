@@ -1,9 +1,5 @@
-//
-// Created by pcvii on 11/15/2021.
-//
-
-#ifndef FIELD_MAP_EDITOR_GUIBATCH_HPP
-#define FIELD_MAP_EDITOR_GUIBATCH_HPP
+#ifndef FIELD_MAP_EDITOR_GUI_BATCH_HPP
+#define FIELD_MAP_EDITOR_GUI_BATCH_HPP
 #include "archives_group.hpp"
 #include "filebrowser.hpp"
 #include "open_viii/paths/Paths.hpp"
@@ -12,26 +8,26 @@
 #include <cppcoro/task.hpp>
 namespace fme
 {
-struct [[nodiscard]] GuiBatch
+struct [[nodiscard]] gui_batch
 {
-  enum class BatchOperationSource
+  enum class batch_operation_source
   {
     None,
-    FieldsArchive,
-    Swizzles,
-    Deswizzles,
+    fields_archive,
+    swizzles,
+    deswizzles,
   };
-  enum class BatchOperationTransformation
+  enum class batch_operation_transformation
   {
     None,
-    Deswizzle [[maybe_unused]] = 1U,
-    Swizzle [[maybe_unused]]   = 1U << 1U,
-    CompactRows                = 1U << 2U,
-    CompactAll                 = 1U << 3U,
-    FlattenBPP                 = 1U << 4U,
-    FlattenPalette             = 1U << 5U,
+    deswizzle [[maybe_unused]] = 1U,
+    swizzle [[maybe_unused]]   = 1U << 1U,
+    compact_rows               = 1U << 2U,
+    compact_all                = 1U << 3U,
+    flatten_bpp                = 1U << 4U,
+    flatten_palette            = 1U << 5U,
   };
-  GuiBatch(archives_group ag)
+  gui_batch(archives_group ag)
     : m_archive_paths(open_viii::Paths::get())
     , m_archive_group(std::move(ag))
   // m_archive_paths.empty() ? archives_group{}
@@ -73,9 +69,9 @@ private:
 
   mutable std::vector<std::string>             m_archive_paths       = {};
   mutable archives_group                       m_archive_group       = {};
-  mutable BatchOperationSource                 m_source_type         = {};
+  mutable batch_operation_source               m_source_type         = {};
   mutable std::optional<std::filesystem::path> m_source_path         = {};
-  mutable BatchOperationTransformation         m_transformation_type = {};
+  mutable batch_operation_transformation       m_transformation_type = {};
   mutable std::optional<std::filesystem::path> m_output_path         = {};
   mutable int                                 *m_id                  = {};
   mutable bool                                 m_embed_maps          = {};
@@ -87,7 +83,7 @@ private:
     create_directory_browser("Select Directory");
   mutable ImGui::FileBrowser m_output_browser =
     create_directory_browser("Select Directory");
-  [[nodiscard]] scope_guard PushPop() const;
+  [[nodiscard]] scope_guard push_pop() const;
 };
 }// namespace fme
-#endif// FIELD_MAP_EDITOR_GUIBATCH_HPP
+#endif// FIELD_MAP_EDITOR_GUI_BATCH_HPP

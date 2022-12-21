@@ -43,7 +43,7 @@ add_executable(${PROJECT_NAME}_SFML
         Configuration.cpp
         safedir.cpp
         gui/gui.cpp
-        gui/GuiBatch.cpp
+        gui/gui_batch.cpp
         )
 #set_property(TARGET ${PROJECT_NAME}_SFML PROPERTY CXX_STANDARD 20)
 #find_package(ImGui-SFML REQUIRED)

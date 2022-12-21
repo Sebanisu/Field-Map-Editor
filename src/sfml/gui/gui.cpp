@@ -3,10 +3,10 @@
 //
 
 #include "gui.hpp"
+#include "gui_batch.hpp"
 #include "gui_labels.hpp"
-#include "GuiBatch.hpp"
-#include <open_viii/paths/Paths.hpp>
 #include "safedir.hpp"
+#include <open_viii/paths/Paths.hpp>
 #include <SFML/Window/Mouse.hpp>
 #include <utility>
 // #define USE_THREADS
@@ -2956,7 +2956,7 @@ void gui::batch_ops_ask_menu() const
 #if 1
   if (m_selections.test_batch_window)
   {
-    static GuiBatch test{ m_archives_group };
+    static gui_batch test{ m_archives_group };
     test(&m_id);
   }
 #else

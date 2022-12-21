@@ -2,7 +2,7 @@
 // Created by pcvii on 11/15/2021.
 //
 
-#include "GuiBatch.hpp"
+#include "gui_batch.hpp"
 #include "format_imgui_text.hpp"
 #include "formatters.hpp"
 #include "generic_combo.hpp"
@@ -30,7 +30,7 @@ static constexpr auto BatchOperationTransformationStrings =
 static constexpr auto BatchOperationTransformationCompactStrings =
   std::array{ std::string_view{ "Rows" }, std::string_view{ "All" } };
 }// namespace fme
-bool fme::GuiBatch::ask() const
+bool fme::gui_batch::ask() const
 {
   const auto end = scope_guard(&ImGui::End);
   if (ImGui::Begin(
@@ -40,7 +40,7 @@ bool fme::GuiBatch::ask() const
       ask_archive_path() && ask_source() && ask_transformation() && ask_output()
       && ask_post_operation())
     {
-      const auto sg = PushPop();
+      const auto sg = push_pop();
       if (ImGui::Button("Start"))
       {
         puts("Pushed Start");
@@ -50,7 +50,7 @@ bool fme::GuiBatch::ask() const
   }
   return false;
 }
-bool fme::GuiBatch::ask_post_operation() const
+bool fme::gui_batch::ask_post_operation() const
 {
   static int               selected_embed_path = {};
   std::vector<std::string> paths               = {};
@@ -87,7 +87,7 @@ bool fme::GuiBatch::ask_post_operation() const
       m_embed_path = paths.at(static_cast<std::size_t>(selected_embed_path));
     }
     {
-      const auto sg = PushPop();
+      const auto sg = push_pop();
       if (ImGui::Checkbox("Enable ", &m_embed_maps))
       {
       }
@@ -96,7 +96,7 @@ bool fme::GuiBatch::ask_post_operation() const
     {
       ImGui::SameLine();
       {
-        const auto sg = PushPop();
+        const auto sg = push_pop();
         if (ImGui::Checkbox("Reload after?", &m_reload_after))
         {
         }
@@ -108,7 +108,7 @@ bool fme::GuiBatch::ask_post_operation() const
          || (!m_embed_maps && (static_cast<std::uint32_t>(m_transformation_type) & 0b11U) != 0U && m_output_path.has_value()
              && !m_output_path.value().empty());
 }
-bool fme::GuiBatch::ask_output() const
+bool fme::gui_batch::ask_output() const
 {
   const bool requires_output =
     (static_cast<std::uint32_t>(m_transformation_type) & 0b11U) != 0U;
@@ -121,7 +121,7 @@ bool fme::GuiBatch::ask_output() const
       format_imgui_text("Directory: \"{}\"", m_output_path.value());
     }
     {
-      const auto sg = PushPop();
+      const auto sg = push_pop();
       if (ImGui::Button("Browse"))
       {
         m_output_browser.Open();
@@ -135,7 +135,7 @@ bool fme::GuiBatch::ask_output() const
   return !requires_output
          || (m_output_path.has_value() && !m_output_path.value().empty());
 }
-bool fme::GuiBatch::ask_archive_path() const
+bool fme::gui_batch::ask_archive_path() const
 {
   static int selected_src_archive_int = {};
   if (generic_combo(
@@ -152,7 +152,7 @@ bool fme::GuiBatch::ask_archive_path() const
       m_archive_paths.at(static_cast<std::size_t>(selected_src_archive_int)));
   }
   {
-    const auto sg = PushPop();
+    const auto sg = push_pop();
     if (ImGui::Button("Browse"))
     {
       m_archive_browser.Open();
@@ -166,7 +166,7 @@ bool fme::GuiBatch::ask_archive_path() const
   }
   return !std::empty(m_archive_paths) && !m_archive_group.failed();
 }
-bool fme::GuiBatch::ask_source() const
+bool fme::gui_batch::ask_source() const
 {
   if (ImGui::CollapsingHeader("Source", ImGuiTreeNodeFlags_DefaultOpen))
   {
@@ -183,18 +183,18 @@ bool fme::GuiBatch::ask_source() const
           []() { return BatchOperationSourceStrings; },
           selected_src_type_int))
     {
-      m_source_type = static_cast<BatchOperationSource>(selected_src_type_int);
+      m_source_type = static_cast<batch_operation_source>(selected_src_type_int);
     }
     if (
-      m_source_type == BatchOperationSource::Swizzles
-      || m_source_type == BatchOperationSource::Deswizzles)
+      m_source_type == batch_operation_source::swizzles
+      || m_source_type == batch_operation_source::deswizzles)
     {
       if (m_source_path.has_value() && !m_source_path.value().empty())
       {
         format_imgui_text("Directory: \"{}\"", m_source_path.value());
       }
       {
-        const auto sg = PushPop();
+        const auto sg = push_pop();
         if (ImGui::Button("Browse"))
         {
           m_source_browser.Open();
@@ -206,17 +206,17 @@ bool fme::GuiBatch::ask_source() const
       }
     }
   }
-  return m_source_type == BatchOperationSource::FieldsArchive
-         || ((m_source_type == BatchOperationSource::Swizzles
-              || m_source_type == BatchOperationSource::Deswizzles)
+  return m_source_type == batch_operation_source::fields_archive
+         || ((m_source_type == batch_operation_source::swizzles
+              || m_source_type == batch_operation_source::deswizzles)
              && m_source_path.has_value() && !m_source_path.value().empty());
 }
-scope_guard fme::GuiBatch::PushPop() const
+scope_guard fme::gui_batch::push_pop() const
 {
   ImGui::PushID(++*m_id);
   return scope_guard{ &ImGui::PopID };
 }
-bool fme::GuiBatch::ask_transformation() const
+bool fme::gui_batch::ask_transformation() const
 {
   if (!ImGui::CollapsingHeader(
         "Transformation", ImGuiTreeNodeFlags_DefaultOpen))
@@ -238,17 +238,17 @@ bool fme::GuiBatch::ask_transformation() const
     {
       if (task_type > 0)
       {
-        m_transformation_type = static_cast<BatchOperationTransformation>(
+        m_transformation_type = static_cast<batch_operation_transformation>(
           1U << (static_cast<std::uint32_t>(task_type - 1)));
       }
       else
       {
-        m_transformation_type = BatchOperationTransformation::None;
+        m_transformation_type = batch_operation_transformation::None;
       }
     }
     else
     {
-      m_transformation_type = static_cast<BatchOperationTransformation>(
+      m_transformation_type = static_cast<batch_operation_transformation>(
         static_cast<std::uint32_t>(m_transformation_type) & 0b11U);
     }
     if ((static_cast<std::uint32_t>(m_transformation_type) & 0b11U) != 0U)
@@ -270,17 +270,17 @@ bool fme::GuiBatch::ask_transformation() const
       {
         if (compact.value() == 0)
         {
-          m_transformation_type = static_cast<BatchOperationTransformation>(
+          m_transformation_type = static_cast<batch_operation_transformation>(
             static_cast<std::uint32_t>(m_transformation_type)
             | static_cast<std::uint32_t>(
-              BatchOperationTransformation::CompactRows));
+              batch_operation_transformation::compact_rows));
         }
         else if (compact.value() == 1)
         {
-          m_transformation_type = static_cast<BatchOperationTransformation>(
+          m_transformation_type = static_cast<batch_operation_transformation>(
             static_cast<std::uint32_t>(m_transformation_type)
             | static_cast<std::uint32_t>(
-              BatchOperationTransformation::CompactAll));
+              batch_operation_transformation::compact_all));
         }
       }
       format_imgui_text("Flatten: ");
@@ -288,28 +288,28 @@ bool fme::GuiBatch::ask_transformation() const
       ImGui::SameLine();
       ImGui::Checkbox("BPP", &flatten_bpp);
       if (flatten_bpp)
-        m_transformation_type = static_cast<BatchOperationTransformation>(
+        m_transformation_type = static_cast<batch_operation_transformation>(
           static_cast<std::uint32_t>(m_transformation_type)
           | static_cast<std::uint32_t>(
-            BatchOperationTransformation::FlattenBPP));
+            batch_operation_transformation::flatten_bpp));
       static bool flatten_palette{};
       ImGui::SameLine();
       ImGui::Checkbox("Palette", &flatten_palette);
       if (flatten_palette)
-        m_transformation_type = static_cast<BatchOperationTransformation>(
+        m_transformation_type = static_cast<batch_operation_transformation>(
           static_cast<std::uint32_t>(m_transformation_type)
           | static_cast<std::uint32_t>(
-            BatchOperationTransformation::FlattenPalette));
+            batch_operation_transformation::flatten_palette));
     }
     if (old != m_transformation_type)
       spdlog::info(
         "0b{:0>6b}U\n", static_cast<std::uint32_t>(m_transformation_type));
   }
   return !(
-    m_transformation_type == BatchOperationTransformation::None
-    && m_source_type == BatchOperationSource::FieldsArchive);
+    m_transformation_type == batch_operation_transformation::None
+    && m_source_type == batch_operation_source::fields_archive);
 }
-ImGui::FileBrowser fme::GuiBatch::create_directory_browser(
+ImGui::FileBrowser fme::gui_batch::create_directory_browser(
   std::string              title,
   std::vector<std::string> filetypes)
 {
@@ -321,7 +321,7 @@ ImGui::FileBrowser fme::GuiBatch::create_directory_browser(
   return directory_browser;
 }
 std::optional<std::filesystem::path>
-  fme::GuiBatch::ask_for_path(ImGui::FileBrowser &file_browser)
+  fme::gui_batch::ask_for_path(ImGui::FileBrowser &file_browser)
 {
   std::optional<std::filesystem::path> path{};
   file_browser.Display();
@@ -332,19 +332,19 @@ std::optional<std::filesystem::path>
   }
   return path;
 }
-void fme::GuiBatch::compact_and_flatten(map_sprite &ms) const
+void fme::gui_batch::compact_and_flatten(map_sprite &ms) const
 {
   const auto c = [&] {
     if (
       (static_cast<uint32_t>(m_transformation_type)
-       & static_cast<uint32_t>(BatchOperationTransformation::CompactRows))
+       & static_cast<uint32_t>(batch_operation_transformation::compact_rows))
       != 0)
     {
       ms.compact();
     }
     if (
       (static_cast<uint32_t>(m_transformation_type)
-       & static_cast<uint32_t>(BatchOperationTransformation::CompactAll))
+       & static_cast<uint32_t>(batch_operation_transformation::compact_all))
       != 0)
     {
       ms.compact2();
@@ -354,7 +354,7 @@ void fme::GuiBatch::compact_and_flatten(map_sprite &ms) const
   const auto f = [&]() -> bool {
     if (
       (static_cast<uint32_t>(m_transformation_type)
-       & static_cast<uint32_t>(BatchOperationTransformation::FlattenBPP))
+       & static_cast<uint32_t>(batch_operation_transformation::flatten_bpp))
       != 0)
     {
       ms.flatten_bpp();
@@ -362,7 +362,7 @@ void fme::GuiBatch::compact_and_flatten(map_sprite &ms) const
     }
     if (
       (static_cast<uint32_t>(m_transformation_type)
-       & static_cast<uint32_t>(BatchOperationTransformation::FlattenPalette))
+       & static_cast<uint32_t>(batch_operation_transformation::flatten_palette))
       != 0)
     {
       ms.flatten_palette();
@@ -375,20 +375,20 @@ void fme::GuiBatch::compact_and_flatten(map_sprite &ms) const
     c();
   }
 }
-filters fme::GuiBatch::get_filters()
+filters fme::gui_batch::get_filters()
 {
   filters filters{};
-  if (m_source_type == BatchOperationSource::Swizzles)
+  if (m_source_type == batch_operation_source::swizzles)
   {
     filters.upscale.update(m_source_path.value()).enable();
   }
-  else if (m_source_type == BatchOperationSource::Deswizzles)
+  else if (m_source_type == batch_operation_source::deswizzles)
   {
     filters.deswizzle.update(m_source_path.value()).enable();
   }
   return filters;
 }
-cppcoro::generator<bool> fme::GuiBatch::save_output(const map_sprite ms) const
+cppcoro::generator<bool> fme::gui_batch::save_output(const map_sprite ms) const
 {
   if (m_output_path.has_value())
   {
@@ -397,7 +397,7 @@ cppcoro::generator<bool> fme::GuiBatch::save_output(const map_sprite ms) const
     auto             selected_path = m_output_path.value() / prefix / base_name;
     if (
       (static_cast<uint32_t>(m_transformation_type)
-       & static_cast<uint32_t>(BatchOperationTransformation::Deswizzle))
+       & static_cast<uint32_t>(batch_operation_transformation::deswizzle))
       != 0)
     {
       // ms.save_pupu_textures(selected_path);
@@ -409,7 +409,7 @@ cppcoro::generator<bool> fme::GuiBatch::save_output(const map_sprite ms) const
     }
     else if (
       (static_cast<uint32_t>(m_transformation_type)
-       & static_cast<uint32_t>(BatchOperationTransformation::Swizzle))
+       & static_cast<uint32_t>(batch_operation_transformation::swizzle))
       != 0)
     {
       auto gen_new_textures = ms.gen_new_textures(selected_path);
@@ -422,7 +422,7 @@ cppcoro::generator<bool> fme::GuiBatch::save_output(const map_sprite ms) const
     ms.save_modified_map(map_path);
   }
 }
-cppcoro::generator<bool> fme::GuiBatch::source()
+cppcoro::generator<bool> fme::gui_batch::source()
 {
   const auto filters   = get_filters();
   auto       gen_field = get_field(m_archive_group);
@@ -446,7 +446,7 @@ cppcoro::generator<bool> fme::GuiBatch::source()
     }
   }
 }
-void fme::GuiBatch::popup_batch_common_filter_start(
+void fme::gui_batch::popup_batch_common_filter_start(
   filter<std::filesystem::path> &filter,
   std::string_view               base_name)
 {
@@ -460,7 +460,7 @@ void fme::GuiBatch::popup_batch_common_filter_start(
     }
   }
 }
-void fme::GuiBatch::popup_batch_common_filter_start(
+void fme::gui_batch::popup_batch_common_filter_start(
   filters     &filters,
   std::string &base_name)
 {
@@ -473,7 +473,7 @@ void fme::GuiBatch::popup_batch_common_filter_start(
     popup_batch_common_filter_start(filters.deswizzle, base_name);
   }
 }
-cppcoro::generator<::map_sprite> fme::GuiBatch::get_map_sprite(
+cppcoro::generator<::map_sprite> fme::gui_batch::get_map_sprite(
   const std::shared_ptr<open_viii::archive::FIFLFS<false>> &field,
   const filters                                            &in_filters)
 {
@@ -518,7 +518,7 @@ cppcoro::generator<::map_sprite> fme::GuiBatch::get_map_sprite(
     }
   }
 }
-cppcoro::generator<open_viii::LangT> fme::GuiBatch::get_field_coos(
+cppcoro::generator<open_viii::LangT> fme::gui_batch::get_field_coos(
   const std::shared_ptr<open_viii::archive::FIFLFS<false>> field)
 {
   auto map_pairs = field->get_vector_of_indexes_and_files(
@@ -545,7 +545,7 @@ cppcoro::generator<open_viii::LangT> fme::GuiBatch::get_field_coos(
   }
 }
 cppcoro::generator<std::shared_ptr<open_viii::archive::FIFLFS<false>>>
-  fme::GuiBatch::get_field(::archives_group archives_group)
+  fme::gui_batch::get_field(::archives_group archives_group)
 {
   auto gen_fields = get_field_id_and_name(archives_group.mapdata());
   for (const auto &[i, name] : gen_fields)
@@ -558,7 +558,7 @@ cppcoro::generator<std::shared_ptr<open_viii::archive::FIFLFS<false>>>
   }
 }
 cppcoro::generator<std::tuple<int, std::string>>
-  fme::GuiBatch::get_field_id_and_name(std::vector<std::string> maps)
+  fme::gui_batch::get_field_id_and_name(std::vector<std::string> maps)
 {
   for (int i{}; auto &name : maps)
   {
@@ -566,7 +566,7 @@ cppcoro::generator<std::tuple<int, std::string>>
     ++i;
   }
 }
-void fme::GuiBatch::operator()(int *id)
+void fme::gui_batch::operator()(int *id)
 {
   m_id              = std::move(id);
   static bool asked = { false };
