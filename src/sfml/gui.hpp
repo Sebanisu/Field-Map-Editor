@@ -23,12 +23,12 @@ namespace fme
 struct gui
 {
 public:
-
   gui(std::uint32_t width, std::uint32_t height);
   gui();
   void start() const;
 
-private:enum struct map_dialog_mode
+private:
+  enum struct map_dialog_mode
   {
     save_unmodified,
     save_modified,
@@ -46,7 +46,8 @@ private:enum struct map_dialog_mode
     batch_save_swizzle_textures,
     batch_embed_map_files,
     custom_upscale_directory,
-  };struct batch_deswizzle
+  };
+  struct batch_deswizzle
   {
     void enable(std::filesystem::path in_outgoing);
     void disable();
@@ -74,7 +75,7 @@ private:enum struct map_dialog_mode
     template<typename lambdaT, typename askT, std::ranges::range T>
     bool operator()(const T &fields, lambdaT &&lambda, askT &&ask_lambda);
     std::chrono::time_point<std::chrono::high_resolution_clock>
-         start() const noexcept;
+         start_time() const noexcept;
 
     bool enabled() const noexcept;
 
@@ -178,7 +179,7 @@ private:enum struct map_dialog_mode
     bool          batch_embed_map_warning_window = { false };
   };
   selections                       default_selections() const;
-  mutable selections               m_selections    = {};
+  mutable selections               m_selections          = {};
 
 
   static constexpr std::uint32_t   default_window_width  = 800U;

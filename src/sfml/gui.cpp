@@ -1771,7 +1771,7 @@ void gui::update_path() const
   update_field();
   if (m_batch_embed4.enabled())
   {
-    m_batch_embed4.enable(m_selections.path, m_batch_embed4.start());
+    m_batch_embed4.enable(m_selections.path, m_batch_embed4.start_time());
   }
 }
 mim_sprite gui::get_mim_sprite() const
@@ -2480,6 +2480,7 @@ bool gui::batch_embed::operator()(
     const auto g = scope_guard([]() { ImGui::EndPopup(); });
     if (fields.size() <= m_pos)
     {
+      format_imgui_text("Processing please wait...");
       auto current = std::chrono::high_resolution_clock::now();
       spdlog::info(
         "{:%H:%M:%S} - Finished the batch embed operation...",
@@ -2489,26 +2490,22 @@ bool gui::batch_embed::operator()(
     }
     if (!m_asked)
     {
+      format_imgui_text("Displaying Ask?");
       m_asked = ask_lambda();
     }
     else
     {
+      format_imgui_text("Processing please wait...");
       auto current = std::chrono::high_resolution_clock::now();
-      if (std::size(fields) != 1U)
-      {
-        format_imgui_text(
-          "{:%H:%M:%S} - {:>3.2f}% - Processing {}...",
-          current - m_start,
-          static_cast<float>(m_pos) * 100.F
-            / static_cast<float>(std::size(fields)),
-          fields[m_pos]);
-      }
-      else
-      {
-        format_imgui_text(
-          "{:%H:%M:%S} - Processing {}...", current - m_start, fields[m_pos]);
-        ImGui::Separator();
-      }
+      format_imgui_text(
+        "{:%H:%M:%S} - {:>3.2f}% - {} / {} - {}...",
+        current - m_start,
+        static_cast<float>(m_pos) * 100.F
+          / static_cast<float>(std::size(fields)),
+        m_pos,
+        std::ranges::size(fields),
+        fields[m_pos]);
+      ImGui::Separator();
       int tmp = static_cast<int>(m_pos);
       lambda(tmp, m_outgoing);
       ++tmp;
@@ -2518,7 +2515,7 @@ bool gui::batch_embed::operator()(
   return false;
 }
 std::chrono::time_point<std::chrono::high_resolution_clock>
-  gui::batch_embed::start() const noexcept
+  gui::batch_embed::start_time() const noexcept
 {
   return m_start;
 }
@@ -2584,7 +2581,7 @@ void gui::popup_batch_embed() const
           return true;
         }))
   {
-    m_batch_embed2.enable({}, m_batch_embed.start());
+    m_batch_embed2.enable({}, m_batch_embed.start_time());
   }
   else if (m_batch_embed2(
              std::array{ "fields" },
@@ -2627,11 +2624,11 @@ void gui::popup_batch_embed() const
   {
     if (open_viii::archive::fiflfs_in_main_zzz(m_archives_group.archives()))
     {
-      m_batch_embed3.enable({}, m_batch_embed2.start());
+      m_batch_embed3.enable({}, m_batch_embed2.start_time());
     }
     else
     {
-      m_batch_embed4.enable(m_selections.path, m_batch_embed2.start());
+      m_batch_embed4.enable(m_selections.path, m_batch_embed2.start_time());
     }
   }
   else if (m_batch_embed3(
@@ -2805,7 +2802,7 @@ void gui::popup_batch_embed() const
                return true;
              }))
   {
-    m_batch_embed4.enable(m_selections.path, m_batch_embed3.start());
+    m_batch_embed4.enable(m_selections.path, m_batch_embed3.start_time());
   }
   else if (m_batch_embed4(
              std::array{ "save" },
@@ -2894,7 +2891,7 @@ void gui::popup_batch_embed() const
                {
                  auto current = std::chrono::high_resolution_clock::now();
                  format_imgui_text(
-                   "{:%H:%M:%S}", current - m_batch_embed4.start());
+                   "{:%H:%M:%S}", current - m_batch_embed4.start_time());
                  if (open_viii::archive::fiflfs_in_main_zzz(
                        m_archives_group.archives()))
                  {
