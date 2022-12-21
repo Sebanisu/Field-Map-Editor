@@ -6,12 +6,16 @@
 #define FIELD_MAP_EDITOR_GUI_HPP
 #include "archives_group.hpp"
 #include "batch_deswizzle.hpp"
+#include "batch_embed.hpp"
+#include "compact_type.hpp"
 #include "Configuration.hpp"
 #include "events.hpp"
 #include "filebrowser.hpp"
 #include "formatters.hpp"
 #include "generic_combo.hpp"
 #include "grid.hpp"
+#include "map_dialog_mode.hpp"
+#include "map_directory_mode.hpp"
 #include "scope_guard.hpp"
 #include "upscales.hpp"
 #include <cstdint>
@@ -29,52 +33,6 @@ public:
   void start() const;
 
 private:
-  enum struct map_dialog_mode
-  {
-    save_unmodified,
-    save_modified,
-    load
-  };
-  enum struct map_directory_mode
-  {
-    ff8_install_directory,
-    save_swizzle_textures,
-    save_deswizzle_textures,
-    load_swizzle_textures,
-    load_deswizzle_textures,
-    batch_save_deswizzle_textures,
-    batch_load_deswizzle_textures,
-    batch_save_swizzle_textures,
-    batch_embed_map_files,
-    custom_upscale_directory,
-  };
-
-  struct batch_embed
-  {
-    void enable(
-      std::filesystem::path                                       in_outgoing,
-      std::chrono::time_point<std::chrono::high_resolution_clock> start =
-        std::chrono::high_resolution_clock::now());
-    void disable();
-    template<typename lambdaT, typename askT, std::ranges::range T>
-    bool operator()(const T &fields, lambdaT &&lambda, askT &&ask_lambda);
-    std::chrono::time_point<std::chrono::high_resolution_clock>
-         start_time() const noexcept;
-
-    bool enabled() const noexcept;
-
-  private:
-    bool                  m_enabled  = { false };
-    std::size_t           m_pos      = {};
-    std::filesystem::path m_outgoing = {};
-    bool                  m_asked    = { false };
-    std::chrono::time_point<std::chrono::high_resolution_clock> m_start = {};
-  };
-  enum struct compact_type
-  {
-    rows,
-    all
-  };
   struct batch_reswizzle
   {
     void enable(
