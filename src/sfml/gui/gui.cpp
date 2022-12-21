@@ -5,7 +5,7 @@
 #include "gui.hpp"
 #include "gui_labels.hpp"
 #include "GuiBatch.hpp"
-#include "open_viii/paths/Paths.hpp"
+#include <open_viii/paths/Paths.hpp>
 #include "safedir.hpp"
 #include <SFML/Window/Mouse.hpp>
 #include <utility>

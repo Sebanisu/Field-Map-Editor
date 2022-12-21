@@ -35,15 +35,15 @@ include(${CMAKE_SOURCE_DIR}/cmake/OpenVIII_CPP_WIP.cmake)
 include(${CMAKE_SOURCE_DIR}/cmake/ImGuiFileBrowser.cmake)
 add_executable(${PROJECT_NAME}_SFML
         test.cpp
-        gui.cpp
         archives_group.cpp
         mim_sprite.cpp
         map_sprite.cpp
         grid.cpp
         upscales.cpp
-        GuiBatch.cpp
         Configuration.cpp
         safedir.cpp
+        gui/gui.cpp
+        gui/GuiBatch.cpp
         )
 #set_property(TARGET ${PROJECT_NAME}_SFML PROPERTY CXX_STANDARD 20)
 #find_package(ImGui-SFML REQUIRED)
@@ -63,6 +63,9 @@ target_link_libraries(${PROJECT_NAME}_SFML
         PRIVATE cppcoro::cppcoro
         PRIVATE tomlplusplus::tomlplusplus
         PRIVATE spdlog::spdlog
+        )
+target_include_directories(${PROJECT_NAME}_SFML
+        PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
         )
 
 target_compile_definitions(${PROJECT_NAME}_SFML
