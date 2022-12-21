@@ -44,7 +44,7 @@ add_executable(${PROJECT_NAME}_SFML
         safedir.cpp
         gui/gui.cpp
         gui/gui_batch.cpp
-        )
+        gui/batch_deswizzle.cpp gui/batch_deswizzle.hpp)
 #set_property(TARGET ${PROJECT_NAME}_SFML PROPERTY CXX_STANDARD 20)
 #find_package(ImGui-SFML REQUIRED)
 find_package(cppcoro) # todo will probably remove at some point.

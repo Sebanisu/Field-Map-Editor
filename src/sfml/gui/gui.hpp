@@ -5,6 +5,7 @@
 #ifndef FIELD_MAP_EDITOR_GUI_HPP
 #define FIELD_MAP_EDITOR_GUI_HPP
 #include "archives_group.hpp"
+#include "batch_deswizzle.hpp"
 #include "Configuration.hpp"
 #include "events.hpp"
 #include "filebrowser.hpp"
@@ -47,24 +48,7 @@ private:
     batch_embed_map_files,
     custom_upscale_directory,
   };
-  struct batch_deswizzle
-  {
-    void enable(std::filesystem::path in_outgoing);
-    void disable();
-    template<typename lambdaT, typename askT>
-    bool operator()(
-      const std::vector<std::string> &fields,
-      lambdaT                       &&lambda,
-      askT                          &&ask_lambda);
 
-  private:
-    bool                  enabled  = { false };
-    std::size_t           pos      = {};
-    std::filesystem::path outgoing = {};
-    bool                  asked    = { false };
-    ::filters             filters  = {};
-    std::chrono::time_point<std::chrono::high_resolution_clock> start = {};
-  };
   struct batch_embed
   {
     void enable(
