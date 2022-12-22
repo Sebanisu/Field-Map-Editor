@@ -390,7 +390,7 @@ private:
               .get<open_viii::archive::ArchiveTypeT::zzz_main>()
               .value();
           const auto &path_zzz_main = zzz_main.path();
-          const auto copy = append_results; //move removes matches.
+          const auto  copy          = append_results;// move removes matches.
           std::ranges::for_each(
             copy, [&](const std::filesystem::path &tmp_path) {
               if (path_zzz_main.filename() != tmp_path.filename())
@@ -447,10 +447,40 @@ private:
         });
       format_imgui_text(
         "{}", "(If files exist they will renamed filename.bak)");
+
       combo_path();
+      ImGui::SameLine();
       if (ImGui::Button("Browse"))
       {
         file_browser_locate_ff8();
+      }
+      format_imgui_text("This is where the files will be installed...");
+      if (!open_viii::archive::fiflfs_in_main_zzz(m_archives_group.archives()))
+      {
+        const open_viii::archive::FIFLFS<true> &fields =
+          m_archives_group.archives()
+            .get<open_viii::archive::ArchiveTypeT::field>();
+        std::ranges::for_each(
+          std::array{
+            fields.fi().path(), fields.fl().path(), fields.fs().path() },
+          [](const std::filesystem::path &path) {
+            format_imgui_text("\t\"{}\"", path.string());
+          });
+      }
+      else
+      {
+        const open_viii::archive::ZZZ &zzz_main =
+          m_archives_group.archives()
+            .get<open_viii::archive::ArchiveTypeT::zzz_main>()
+            .value();
+        std::ranges::for_each(
+          append_results, [&zzz_main](const std::filesystem::path &path) {
+            format_imgui_text(
+              "\t\"{}\"",
+              (zzz_main.path().parent_path() / "DEMASTER_EXP" / "data"
+               / path.filename())
+                .string());
+          });
       }
 
       return ImGui::Button("Okay");
