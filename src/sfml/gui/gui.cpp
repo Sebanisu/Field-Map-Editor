@@ -980,10 +980,7 @@ void gui::menu_bar() const
     if (ImGui::BeginMenu("Batch"))
     {
       if (ImGui::MenuItem(
-            "Deswizzle",
-            nullptr,
-            false,
-            static_cast<bool>(m_archives_group.archives())))
+            "Deswizzle", nullptr, false, static_cast<bool>(m_archives_group)))
       {
         m_directory_browser.Open();
         // std::string base_name = m_map_sprite.get_base_name();
@@ -996,10 +993,7 @@ void gui::menu_bar() const
           map_directory_mode::batch_save_deswizzle_textures;
       }
       if (ImGui::MenuItem(
-            "Reswizzle",
-            nullptr,
-            false,
-            static_cast<bool>(m_archives_group.archives())))
+            "Reswizzle", nullptr, false, static_cast<bool>(m_archives_group)))
       {
         m_directory_browser.Open();
         // std::string base_name = m_map_sprite.get_base_name();
@@ -1018,7 +1012,7 @@ void gui::menu_bar() const
             "Embed .map files into Archives",
             nullptr,
             false,
-            static_cast<bool>(m_archives_group.archives())))
+            static_cast<bool>(m_archives_group)))
       {
         m_selections.batch_embed_map_warning_window = true;
       }

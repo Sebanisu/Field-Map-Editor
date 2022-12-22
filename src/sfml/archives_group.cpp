@@ -10,14 +10,20 @@ open_viii::archive::Archives archives_group::get_archives() const
 {
   // todo need a way to filter out versions of game that don't have a
   // language.
-  spdlog::info("{}",m_path);
+  spdlog::info("{}", m_path);
   auto archives = open_viii::archive::Archives(
     m_path, open_viii::LangCommon::to_string(m_coo));
   if (!static_cast<bool>(archives))
   {
-    spdlog::warn("Failed to load path: {}",m_path);
+    spdlog::warn(
+      "{}:{} Failed to fully load path: \"{}\", but fields is loaded: "
+      "{:boolalpha}",
+      __FILE__,
+      __LINE__,
+      m_path,
+      static_cast<bool>(fields()));
   }
-  m_failed = !archives;
+  m_failed = !fields();
   return archives;
 }
 const open_viii::archive::FIFLFS<true> &archives_group::fields() const
@@ -26,7 +32,7 @@ const open_viii::archive::FIFLFS<true> &archives_group::fields() const
 }
 std::vector<std::string> archives_group::get_map_data() const
 {
-  if (!m_failed && fields().all_set())
+  if (!m_failed)
   {
     return fields().map_data();
   }
