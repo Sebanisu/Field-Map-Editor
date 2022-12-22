@@ -6,12 +6,13 @@
 void batch_embed::enable(
   std::filesystem::path                                       in_outgoing,
   std::chrono::time_point<std::chrono::high_resolution_clock> start)
+
 {
-  m_enabled  = { true };
-  m_pos      = {};
-  m_outgoing = in_outgoing;
-  m_asked    = { false };
-  m_start    = start;
+  m_enabled        = { true };
+  m_pos            = {};
+  m_outgoing       = { std::move(in_outgoing) };
+  m_asked          = { false };
+  m_start          = { start };
 }
 void batch_embed::disable()
 {

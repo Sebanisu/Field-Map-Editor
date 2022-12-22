@@ -5,6 +5,7 @@
 #ifndef FIELD_MAP_EDITOR_SAFEDIR_HPP
 #define FIELD_MAP_EDITOR_SAFEDIR_HPP
 #include <filesystem>
+#include <open_viii/tools/Compare.hpp>
 #include <spdlog/spdlog.h>
 #include <system_error>
 class safedir
@@ -31,6 +32,28 @@ public:
   bool is_dir() const
   {
     return m_is_dir;
+  }
+  std::filesystem::path case_insensitive_exists() const
+  {
+    std::error_code ec{};
+    for (const auto &entry :
+         std::filesystem::directory_iterator(m_path.parent_path(), ec))
+    {
+      bool size_match =
+        entry.path().filename().string().size() == m_path.filename().string().size();
+      if (
+        size_match
+        && open_viii::tools::i_equals(
+          entry.path().filename().string(), m_path.filename().string()))
+      {
+        return entry.path();
+      }
+    }
+    if (ec)
+    {
+      warn(ec, __FILE__, __LINE__);
+    }
+    return {};
   }
 
 private:
@@ -64,7 +87,7 @@ private:
     }
     return return_val;
   }
-  void warn(std::error_code &ec, std::string_view file, int line)
+  void warn(std::error_code &ec, std::string_view file, int line) const
   {
     spdlog::warn(
       "{}:{} - {}: {} path: \"{}\"",
