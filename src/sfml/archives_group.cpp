@@ -17,7 +17,7 @@ open_viii::archive::Archives archives_group::get_archives() const
   {
     spdlog::warn(
       "{}:{} Failed to fully load path: \"{}\", but fields is loaded: "
-      "{:boolalpha}",
+      "{}",
       __FILE__,
       __LINE__,
       m_path,
