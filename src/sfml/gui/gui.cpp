@@ -929,7 +929,10 @@ void gui::menu_bar() const
     if (ImGui::BeginMenu("File"))
     {
       menuitem_locate_ff8();
-      menuitem_locate_custom_upscale();
+      if (map_test())
+      {
+        menuitem_locate_custom_upscale();
+      }
       ImGui::Separator();
       menuitem_save_texture(save_texture_path(), mim_test() || map_test());
       if (mim_test())
@@ -976,7 +979,11 @@ void gui::menu_bar() const
     }
     if (ImGui::BeginMenu("Batch"))
     {
-      if (ImGui::MenuItem("Deswizzle"))
+      if (ImGui::MenuItem(
+            "Deswizzle",
+            nullptr,
+            false,
+            static_cast<bool>(m_archives_group.archives())))
       {
         m_directory_browser.Open();
         // std::string base_name = m_map_sprite.get_base_name();
@@ -988,7 +995,11 @@ void gui::menu_bar() const
         m_modified_directory_map =
           map_directory_mode::batch_save_deswizzle_textures;
       }
-      if (ImGui::MenuItem("Reswizzle"))
+      if (ImGui::MenuItem(
+            "Reswizzle",
+            nullptr,
+            false,
+            static_cast<bool>(m_archives_group.archives())))
       {
         m_directory_browser.Open();
         // std::string base_name = m_map_sprite.get_base_name();
@@ -1003,7 +1014,11 @@ void gui::menu_bar() const
           map_directory_mode::batch_load_deswizzle_textures;
       }
 
-      if (ImGui::MenuItem("Embed .map files into Archives"))
+      if (ImGui::MenuItem(
+            "Embed .map files into Archives",
+            nullptr,
+            false,
+            static_cast<bool>(m_archives_group.archives())))
       {
         m_selections.batch_embed_map_warning_window = true;
       }
@@ -2568,6 +2583,8 @@ void gui::begin_batch_embed_map_warning_window() const
   }
   // begin imgui window
   const auto pop_id = PushPop();
+  ImGui::SetNextWindowSizeConstraints(
+    ImVec2{ 500.F, 150.F }, ImVec2{ INFINITY, INFINITY });
   ImGui::SetNextWindowPos(
     ImGui::GetMainViewport()->GetCenter(),
     ImGuiCond_Always,

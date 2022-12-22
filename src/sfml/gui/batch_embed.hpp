@@ -11,9 +11,10 @@
 struct batch_embed
 {
   explicit batch_embed(
-    std::string                                             in_operation_name,
-    std::function<void(int&, const std::filesystem::path &)> in_process_function,
-    std::function<bool(void)>                               in_ask_function)
+    std::string in_operation_name,
+    std::function<void(int &, const std::filesystem::path &)>
+                              in_process_function,
+    std::function<bool(void)> in_ask_function)
     : m_operation_name{ std::move(in_operation_name) }
     , m_ask_function{ std::move(in_ask_function) }
     , m_process_function{ std::move(in_process_function) }
@@ -38,6 +39,8 @@ struct batch_embed
       return false;
     }
     const char *title = "Batch embedding .map files into archives...";
+    ImGui::SetNextWindowSizeConstraints(
+      ImVec2{ 500.F, 150.F }, ImVec2{ INFINITY, INFINITY });
     ImGui::SetNextWindowPos(
       ImGui::GetMainViewport()->GetCenter(),
       ImGuiCond_Always,
@@ -51,7 +54,7 @@ struct batch_embed
       const auto g = scope_guard([]() { ImGui::EndPopup(); });
       if (fields.size() <= m_pos)
       {
-        format_imgui_text("Processing please wait...");
+        format_imgui_wrapped_text("Processing please wait...");
         auto current = std::chrono::high_resolution_clock::now();
         spdlog::info(
           "{:%H:%M:%S} - Finished the batch embed operation... {}",
@@ -62,14 +65,14 @@ struct batch_embed
       }
       if (!m_asked)
       {
-        format_imgui_text("Displaying Ask?");
+        //format_imgui_wrapped_text("Displaying Ask?");
         m_asked = m_ask_function();
       }
       else
       {
-        format_imgui_text("Processing please wait...");
+        format_imgui_wrapped_text("Processing please wait...");
         auto current = std::chrono::high_resolution_clock::now();
-        format_imgui_text(
+        format_imgui_wrapped_text(
           "{:%H:%M:%S} - {:>3.2f}% - {} / {} - {}...",
           current - m_start,
           static_cast<float>(m_pos) * 100.F
@@ -97,7 +100,7 @@ private:
   std::filesystem::path m_outgoing       = {};
   bool                  m_asked          = { false };
   std::chrono::time_point<std::chrono::high_resolution_clock> m_start = {};
-  std::function<void(int&, const std::filesystem::path &)>
+  std::function<void(int &, const std::filesystem::path &)>
                             m_process_function = {};
   std::function<bool(void)> m_ask_function     = {};
 };

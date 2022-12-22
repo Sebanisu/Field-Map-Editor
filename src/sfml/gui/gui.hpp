@@ -45,22 +45,21 @@ private:
   mutable batch_embed                              m_batch_embed = batch_embed{
     "Operation 1: Find map, Replace map for each field, Save temp file.",
     [this](const int in_pos, const std::filesystem::path &in_selected_path) {
+      if (in_pos <= 0)
+      {
+        append_results.clear();
+      }
       launch_async(
         [this](const int pos, const std::filesystem::path selected_path) {
-          if (pos <= 0)
-          {
-            std::scoped_lock guard{ append_results_mutex };
-            append_results.clear();
-          }
           auto field = m_archives_group.field(pos);
           if (!field)
           {
             return;
           }
-          auto             paths = find_maps_in_directory(selected_path);
-          const auto       tmp   = replace_entries(*field, paths);
+          auto                   paths = find_maps_in_directory(selected_path);
+          const auto             tmp   = replace_entries(*field, paths);
 
-          std::scoped_lock guard{ append_results_mutex };
+          const std::scoped_lock guard{ append_results_mutex };
           append_results.insert(
             std::ranges::end(append_results),
             std::ranges::begin(tmp),
@@ -69,54 +68,43 @@ private:
         in_pos,
         in_selected_path);
     },
-    []() {
-      //  return ImGui::Button(gui_labels::start.data());
-      return true;
-    }
+    []() { return true; }
   };
   mutable batch_embed m_batch_embed2 = batch_embed{
     "Operation 2: Update fields archive, Remove Temporary Files",
     [this](int &pos, const std::filesystem::path &) {
-      format_imgui_text(
-        "{}", "Waiting for smaller field archives to finish writing...");
       if (check_futures())
       {
         --pos;
         return;
       }
-      launch_async([this]() {
+      [this]() {
         const auto &fields = m_archives_group.archives()
                                .get<open_viii::archive::ArchiveTypeT::field>();
         {
-          const auto       tmp = replace_entries(fields, append_results);
-          //                     std::ranges::for_each(
-          //                       tmp,
-          //                       [](const auto &path) {
-          //                       format_imgui_text("Updating: {}",
-          //                       path.string()); });
-          std::scoped_lock guard{ append_results_mutex };
+          // create a new fields archive with files replaced.
+          const auto tmp = replace_entries(fields, append_results);
           std::ranges::for_each(append_results, [](const auto &path) {
             std::filesystem::remove(path);
           });
+          // const std::scoped_lock guard{ append_results_mutex };
           append_results = tmp;
         }
-      });
+      }();
     },
     [this]() {
-      //               format_imgui_text(
-      //                 "{}", "Updating fields.fi, fields.fl, and
-      //                 fields.fs...");
-      //               return !check_futures();
+      format_imgui_wrapped_text(
+        "Waiting for smaller field archives to finish writing...");
+      ImGui::Separator();
       return true;
     }
   };
   mutable batch_embed m_batch_embed3 = batch_embed{
     "Operation 3: Embed fields in main.zzz (disabled)",
-
     [this]([[maybe_unused]] int &pos, const std::filesystem::path &) {
       // todo rewrite this code to work with new zzz.
-      //               // format_imgui_text("{}", "Updating
-      //               main.zzz..."); format_imgui_text(
+      //               // format_imgui_wrapped_text("{}", "Updating
+      //               main.zzz..."); format_imgui_wrapped_text(
       //                 "{}", "Updating fields.fi, fields.fl, and
       //                 fields.fs...");
       //               if (check_futures())
@@ -274,7 +262,7 @@ private:
       //                 });
     },
     [this]() {
-      //               format_imgui_text(
+      //               format_imgui_wrapped_text(
       //                 "{}", "{}", "Updating fields.fi, fields.fl,
       //                 and fields.fs...");
       //               return !check_futures();
@@ -284,7 +272,7 @@ private:
   mutable batch_embed m_batch_embed4 = batch_embed{
     "Operation 4: Save",
     [this](int &pos, const std::filesystem::path &in_selected_path) {
-      format_imgui_text("{}", "Saving Files...");
+      format_imgui_wrapped_text("{}", "Saving Files...");
       if (check_futures())
       {
         --pos;
@@ -383,7 +371,17 @@ private:
         };
         // I need to detect the path where the game files are then
         // save them there.
-        if (open_viii::archive::fiflfs_in_main_zzz(m_archives_group.archives()))
+        if (!m_archives_group.archives())
+        {
+          const auto copy = append_results;// move removes matches.
+          std::ranges::for_each(
+            copy, [&](const std::filesystem::path &tmp_path) {
+              move(
+                std::filesystem::path(m_selections.path) / tmp_path.filename());
+            });
+        }
+        else if (open_viii::archive::fiflfs_in_main_zzz(
+                   m_archives_group.archives()))
         {
           const open_viii::archive::ZZZ &zzz_main =
             m_archives_group.archives()
@@ -400,7 +398,7 @@ private:
                   / tmp_path.filename());
               }
             });
-          move(path_zzz_main);
+          move(path_zzz_main);// if main.zzz exists move it.
         }
         else
         {
@@ -426,26 +424,28 @@ private:
       if (check_futures())
       {
         auto current = std::chrono::high_resolution_clock::now();
-        format_imgui_text("{:%H:%M:%S}", current - m_batch_embed4.start_time());
+        format_imgui_wrapped_text(
+          "{:%H:%M:%S}", current - m_batch_embed4.start_time());
         if (open_viii::archive::fiflfs_in_main_zzz(m_archives_group.archives()))
         {
-          format_imgui_text("{}", "Updating main.zzz...Finishing writing...");
+          format_imgui_wrapped_text(
+            "{}", "Updating main.zzz...Finishing writing...");
         }
         else
         {
-          format_imgui_text(
+          format_imgui_wrapped_text(
             "{}",
             "Updating fields.fi, fields.fl, and fields.fs...Finishing "
             "writing...");
         }
         return false;
       }
-      format_imgui_text("{}", "Choose where to save the files.");
+      format_imgui_wrapped_text("{}", "Choose where to save the files.");
       std::ranges::for_each(
         append_results, [](const std::filesystem::path &path) {
-          format_imgui_text("\t\"{}\"", path);
+          format_imgui_wrapped_text("\t\"{}\"", path);
         });
-      format_imgui_text(
+      format_imgui_wrapped_text(
         "{}", "(If files exist they will renamed filename.bak)");
 
       combo_path();
@@ -454,8 +454,19 @@ private:
       {
         file_browser_locate_ff8();
       }
-      format_imgui_text("This is where the files will be installed...");
-      if (!open_viii::archive::fiflfs_in_main_zzz(m_archives_group.archives()))
+      format_imgui_wrapped_text("This is where the files will be installed...");
+      if (!m_archives_group.archives())
+      {
+        std::ranges::for_each(
+          append_results, [this](const std::filesystem::path &path) {
+            format_imgui_wrapped_text(
+              "\t\"{}\"",
+              (std::filesystem::path(m_selections.path) / path.filename())
+                .string());
+          });
+      }
+      else if (!open_viii::archive::fiflfs_in_main_zzz(
+                 m_archives_group.archives()))
       {
         const open_viii::archive::FIFLFS<true> &fields =
           m_archives_group.archives()
@@ -464,7 +475,7 @@ private:
           std::array{
             fields.fi().path(), fields.fl().path(), fields.fs().path() },
           [](const std::filesystem::path &path) {
-            format_imgui_text("\t\"{}\"", path.string());
+            format_imgui_wrapped_text("\t\"{}\"", path.string());
           });
       }
       else
@@ -475,7 +486,7 @@ private:
             .value();
         std::ranges::for_each(
           append_results, [&zzz_main](const std::filesystem::path &path) {
-            format_imgui_text(
+            format_imgui_wrapped_text(
               "\t\"{}\"",
               (zzz_main.path().parent_path() / "DEMASTER_EXP" / "data"
                / path.filename())
