@@ -9,6 +9,7 @@
 #include "open_viii/archive/Archives.hpp"
 #include "open_viii/graphics/background/Map.hpp"
 #include "open_viii/graphics/background/Mim.hpp"
+#include "square.hpp"
 #include "unique_values.hpp"
 #include "upscales.hpp"
 #include <cppcoro/generator.hpp>
@@ -126,9 +127,9 @@ struct map_sprite final
   }
 
   void update_render_texture(
-    const sf::Texture                         *p_texture,
+    const sf::Texture                   *p_texture,
     open_viii::graphics::background::Map map,
-    const uint16_t                             tile_size);
+    const uint16_t                       tile_size);
 
 public:
   using color_type  = open_viii::graphics::Color32RGBA;
@@ -195,8 +196,32 @@ public:
     with_field(std::shared_ptr<open_viii::archive::FIFLFS<false>> field) const;
   map_sprite with_filters(::filters filters) const;
   void draw(sf::RenderTarget &target, sf::RenderStates states) const final;
-  const map_sprite        &
+  const map_sprite    &
     toggle_grid(bool enable, bool enable_texture_page_grid) const;
+
+  void enable_square(sf::Vector2u position) const;
+  void disable_square() const;
+  void enable_square(
+    const open_viii::graphics::background::is_tile auto &tile) const
+  {
+    using namespace open_viii::graphics::literals;
+    using tile_type    = std::remove_cvref_t<decltype(tile)>;
+    auto       src_tpw = tile_type::texture_page_width(tile.depth());
+    const auto x       = [this, &tile, &src_tpw]() -> std::uint32_t {
+      return tile.texture_id() * src_tpw;
+    }();
+    const auto src_x = [&tile, &x, this]() -> std::uint32_t {
+      if (!m_filters.deswizzle.enabled())
+        return static_cast<std::uint32_t>(tile.x());
+      return tile.source_x() + x;
+    }();
+    const auto src_y = [&tile, this]() -> std::uint32_t {
+      if (!m_filters.deswizzle.enabled())
+        return static_cast<std::uint32_t>(tile.y());
+      return tile.source_y();
+    }();
+    enable_square(sf::Vector2u(src_x, src_y));
+  }
   bool     empty() const;
   filters &filter() const;
   void     update_render_texture(bool reload_textures = false) const;
@@ -236,7 +261,9 @@ private:
   static constexpr auto default_filter_lambda = [](auto &&) { return true; };
   static constexpr auto filter_invalid =
     open_viii::graphics::background::Map::filter_invalid();
-
+  mutable square              m_square   = { sf::Vector2u{},
+                                             sf::Vector2u{ TILE_SIZE, TILE_SIZE },
+                                             sf::Color::Red };
   mutable std::vector<PupuID> m_pupu_ids = {};
   struct maps
   {

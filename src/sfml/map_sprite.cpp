@@ -1279,6 +1279,8 @@ void map_sprite::draw(sf::RenderTarget &target, sf::RenderStates states) const
   target.draw(quad.data(), quad.size(), sf::TriangleStrip, states);
   // draw grid
   target.draw(m_grid, states);
+  // draw square
+  target.draw(m_square, states);
   // draw texture_page_grid
   if (m_draw_swizzle)
   {
@@ -2430,4 +2432,13 @@ void map_sprite::update_render_texture(
   m_imported_tile_size     = tile_size;
   m_using_imported_texture = p_texture != nullptr;
   update_render_texture(true);
+}
+void     map_sprite::enable_square(sf::Vector2u position) const
+{
+  m_square = m_square.with_position(std::move(position));
+  m_square.enable();
+}
+void     map_sprite::disable_square() const
+{
+  m_square.disable();
 }

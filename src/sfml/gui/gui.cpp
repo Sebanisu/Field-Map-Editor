@@ -2505,6 +2505,7 @@ std::variant<
   ImVec2     combo_pos    = ImGui::GetCursorScreenPos();
   const auto the_end_id_0 = scope_guard([]() { ImGui::PopID(); });
   ImGui::PushID(++m_id);
+  static bool was_hovered = false;
   if (ImGui::BeginCombo(
         "Select Existing Tile", "", ImGuiComboFlags_HeightLargest))
   {
@@ -2531,6 +2532,8 @@ std::variant<
                                scope_guard(&ImGui::EndTooltip);
                              (void)create_tile_button(
                                tile, sf::Vector2f(256.f, 256.f));
+                             m_map_sprite.enable_square(tile);
+                             was_hovered = true;
                            }
                            return selected;
                          }(),
@@ -2566,6 +2569,11 @@ std::variant<
         ++i;
       }
     });
+  }
+  else if (was_hovered)
+  {
+    was_hovered = false;
+    m_map_sprite.disable_square();
   }
   ImVec2      backup_pos = ImGui::GetCursorScreenPos();
   ImGuiStyle &style      = ImGui::GetStyle();
