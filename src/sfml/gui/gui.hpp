@@ -641,17 +641,21 @@ private:
     std::filesystem::path &path,
     const std::string     &field_name,
     open_viii::LangT       coo) const;
-  void                      open_locate_ff8_filebrowser() const;
-  void                      open_swizzle_filebrowser() const;
-  void                      open_deswizzle_filebrowser() const;
-  [[nodiscard]] scope_guard PushPop() const;
-  void                      import_image_window() const;
+  void               open_locate_ff8_filebrowser() const;
+  void               open_swizzle_filebrowser() const;
+  void               open_deswizzle_filebrowser() const;
+  [[nodiscard]] auto PushPop() const
+  {
+    ImGui::PushID(++m_id);
+    return scope_guard{ &ImGui::PopID };
+  }
+  void import_image_window() const;
   std::variant<
     std::monostate,
     open_viii::graphics::background::Tile1,
     open_viii::graphics::background::Tile2,
     open_viii::graphics::background::Tile3>    &
-    combo_selected_tile() const;
+    combo_selected_tile(bool &changed) const;
   void collapsing_tile_info(
     const std::variant<
       std::monostate,

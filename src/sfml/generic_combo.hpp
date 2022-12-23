@@ -18,28 +18,28 @@ template<typename T>
 concept returns_range_concept = requires(std::remove_cvref_t<T> t) {
                                   {
                                     t()
-                                    } -> std::ranges::range;
+                                  } -> std::ranges::range;
                                 };
 template<typename T>
 concept filter_concept = requires(std::remove_cvref_t<T> t) {
                            {
                              t.enabled()
-                             } -> std::convertible_to<bool>;
+                           } -> std::convertible_to<bool>;
                            {
                              t.update(t.value())
-                             } -> std::convertible_to<T>;
+                           } -> std::convertible_to<T>;
                            {
                              t.enable()
-                             } -> std::convertible_to<T>;
+                           } -> std::convertible_to<T>;
                            {
                              t.disable()
-                             } -> std::convertible_to<T>;
+                           } -> std::convertible_to<T>;
                          };
 template<typename T>
 concept returns_filter_concept = requires(std::remove_cvref_t<T> t) {
                                    {
                                      t()
-                                     } -> filter_concept;
+                                   } -> filter_concept;
                                  };
 template<
   returns_range_concept  value_lambdaT,
@@ -153,10 +153,13 @@ inline static bool generic_combo(
       ImGui::EndCombo();
     }
   }
-  changed = (filter.update(*next(values, current_idx)).enabled()
-             && (old != current_idx))
-            || changed;
-  return changed;
+  auto      &update        = filter.update(*next(values, current_idx));
+  const auto index_changed = old != current_idx;
+  if (index_changed)
+  {
+    update.enable();
+  }
+  return (update.enabled() && index_changed) || changed;
 }
 template<
   returns_range_concept value_lambdaT,
@@ -173,8 +176,8 @@ inline static bool generic_combo(
 {
   bool        changed = false;
   const auto &values  = value_lambda();
-  auto && strings = string_lambda();
-  //auto        strings = string_lambda() | std::ranges::views::all;
+  auto      &&strings = string_lambda();
+  // auto        strings = string_lambda() | std::ranges::views::all;
   static std::ranges::range_difference_t<decltype(values)> current_idx = {};
   {
     if (const auto it = std::find(values.begin(), values.end(), value);

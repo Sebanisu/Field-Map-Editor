@@ -1,6 +1,4 @@
-//
-// Created by pcvii on 9/7/2021.
-//
+
 #include "archives_group.hpp"
 #include <ranges>
 #include <spdlog/spdlog.h>
@@ -70,10 +68,6 @@ const std::vector<std::string> &archives_group::mapdata() const noexcept
 {
   return m_mapdata;
 }
-const std::vector<const char *> &archives_group::mapdata_c_str() const noexcept
-{
-  return m_mapdata_c_str;
-}
 std::shared_ptr<open_viii::archive::FIFLFS<false>>
   archives_group::field(const int current_map) const
 {
@@ -100,10 +94,6 @@ std::shared_ptr<open_viii::archive::FIFLFS<false>>
       m_mapdata.size());
   }
   return archive;
-}
-archives_group archives_group::with_coo(const open_viii::LangT in_coo) const
-{
-  return { in_coo, m_path };
 }
 archives_group archives_group::with_path(const std::string &in_path) const
 {

@@ -35,15 +35,6 @@ public:
   {
   }
   /**
-   * Only really needed if we need to reload files. In fields in remaster all
-   * the different language files are in the same archive. They use a suffix if
-   * a file has different languages. While other archives are split up and have
-   * different ones for each language.
-   * @param in_coo new language code
-   * @return new copy of this object with new language loaded.
-   */
-  [[nodiscard]] archives_group with_coo(open_viii::LangT in_coo) const;
-  /**
    * Creates a new archive_group pointing to the provided path.
    * @param in_path new path.
    * @return new archive_group
@@ -59,7 +50,6 @@ public:
     return !m_failed;
   }
   [[nodiscard]] const std::vector<std::string>  &mapdata() const noexcept;
-  [[nodiscard]] const std::vector<const char *> &mapdata_c_str() const noexcept;
   [[nodiscard]] std::shared_ptr<open_viii::archive::FIFLFS<false>>
                     field(int current_map) const;
   [[nodiscard]] int find_field(std::string_view needle) const;

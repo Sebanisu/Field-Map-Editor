@@ -83,7 +83,11 @@ private:
     create_directory_browser("Select Directory");
   mutable ImGui::FileBrowser m_output_browser =
     create_directory_browser("Select Directory");
-  [[nodiscard]] scope_guard push_pop() const;
+  [[nodiscard]] auto push_pop() const
+  {
+    ImGui::PushID(++*m_id);
+    return scope_guard{ &ImGui::PopID };
+  }
 };
 }// namespace fme
 #endif// FIELD_MAP_EDITOR_GUI_BATCH_HPP

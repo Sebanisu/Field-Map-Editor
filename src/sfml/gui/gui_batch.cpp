@@ -211,11 +211,6 @@ bool fme::gui_batch::ask_source() const
               || m_source_type == batch_operation_source::deswizzles)
              && m_source_path.has_value() && !m_source_path.value().empty());
 }
-scope_guard fme::gui_batch::push_pop() const
-{
-  ImGui::PushID(++*m_id);
-  return scope_guard{ &ImGui::PopID };
-}
 bool fme::gui_batch::ask_transformation() const
 {
   if (!ImGui::CollapsingHeader(

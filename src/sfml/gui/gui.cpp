@@ -153,10 +153,13 @@ void gui::loop() const
     {
       file_browser_save_texture();
       combo_path();
+      ImGui::SameLine();
+      if (ImGui::Button("Browse"))
+      {
+        open_locate_ff8_filebrowser();
+      }
       combo_coo();
       combo_field();
-      combo_upscale_path();
-      combo_deswizzle_path();
       if (mim_test())
       {
         checkbox_mim_palette_texture();
@@ -181,6 +184,8 @@ void gui::loop() const
       }
       else if (map_test())
       {
+        combo_upscale_path();
+        combo_deswizzle_path();
         checkbox_map_swizzle();
         checkbox_render_imported_image();
         checkbox_map_disable_blending();
@@ -662,6 +667,21 @@ void gui::combo_coo() const
     if (m_field)
       generate_upscale_paths(m_field->get_base_name(), get_coo());
   }
+  if (ImGui::IsItemHovered())
+  {
+    ImGui::BeginTooltip();
+    ImGui::Text(
+      "%s",
+      fmt::format(
+        "{}",
+        "This Language dropdown won't refresh archives unless you toggle the\n"
+        "FF8 Path. Also it might not change anything unless it's the remaster\n"
+        "version of the fields archive because they have all the languages in\n"
+        "the same file. You could change the path directly to a lang- path.\n"
+        "Then this will override this dropdown for older versions of FF8.")
+        .c_str());
+    ImGui::EndTooltip();
+  }
 }
 const open_viii::LangT &gui::get_coo() const
 {
@@ -784,11 +804,6 @@ static void update_bpp(map_sprite &sprite, BPPT bpp)
   {
     sprite.update_render_texture();
   }
-}
-scope_guard gui::PushPop() const
-{
-  ImGui::PushID(++m_id);
-  return scope_guard{ &ImGui::PopID };
 }
 void gui::combo_bpp() const
 {
@@ -1557,6 +1572,7 @@ bool gui::combo_path() const
   }
   return false;
 }
+
 toml::array gui::get_paths()
 {
   const char   *paths_vector = "paths_vector";
@@ -2452,8 +2468,12 @@ std::variant<
   open_viii::graphics::background::Tile1,
   open_viii::graphics::background::Tile2,
   open_viii::graphics::background::Tile3> &
-  gui::combo_selected_tile() const
+  gui::combo_selected_tile(bool &changed) const
 {
+  const auto end_action = scope_guard(
+    [&changed, current_tile_id = m_selections.selected_tile, this]() {
+      changed = current_tile_id != m_selections.selected_tile;
+    });
   // combo box with all the tiles.
   static std::string current_item_str = {};
   static std::variant<std::monostate, Tile1, Tile2, Tile3> current_tile{
@@ -2626,12 +2646,13 @@ void gui::import_image_window() const
   {
     return;
   }
+  bool                         changed      = false;
   //   * So I need to choose an existing tile to base the new tiles on.
-  [[maybe_unused]] const auto &current_tile = combo_selected_tile();
+  [[maybe_unused]] const auto &current_tile = combo_selected_tile(changed);
   // add text showing the tile's info.
   collapsing_tile_info(current_tile);
   //   * I need to browse for an image file.
-  bool changed          = browse_for_image_display_preview();
+  changed               = browse_for_image_display_preview() || changed;
   //   * We need to adjust the scale to fit
   // maybe i can just create an imgui window filled with the image
   // scale the image to be the selected tile size. 16,32,64,128,256.
