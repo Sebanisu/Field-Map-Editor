@@ -16,8 +16,8 @@ struct batch_embed
                               in_process_function,
     std::function<bool(void)> in_ask_function)
     : m_operation_name{ std::move(in_operation_name) }
-    , m_ask_function{ std::move(in_ask_function) }
     , m_process_function{ std::move(in_process_function) }
+    , m_ask_function{ std::move(in_ask_function) }
   {
   }
 

@@ -4,7 +4,7 @@
 
 #ifndef FIELD_MAP_EDITOR_GENERIC_COMBO_HPP
 #define FIELD_MAP_EDITOR_GENERIC_COMBO_HPP
-#include "gui_labels.hpp"
+#include "gui/gui_labels.hpp"
 #include "scope_guard.hpp"
 #include <algorithm>
 #include <fmt/format.h>

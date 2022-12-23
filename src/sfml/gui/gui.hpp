@@ -27,6 +27,8 @@
 #include <imgui-SFML.h>
 #include <imgui.h>
 #include <SFML/Graphics/RenderWindow.hpp>
+
+// #define USE_THREADS
 namespace fme
 {
 struct gui
@@ -634,7 +636,16 @@ private:
 
   mutable std::vector<std::future<void>> m_futures = {};
   template<typename T, typename... argsT>
-  void launch_async(T &&task, argsT &&...args) const;
+  void launch_async(T &&task, argsT &&...args) const
+  {
+#ifdef USE_THREADS
+    m_futures.emplace_back(std::async(
+      std::launch::async, std::forward<T>(task), std::forward<argsT>(args)...));
+#undef USE_THREADS
+#else
+    task(std::forward<argsT>(args)...);
+#endif
+  }
   bool check_futures() const;
   void batch_ops_ask_menu() const;
   bool combo_upscale_path(

@@ -3,6 +3,7 @@
 //
 
 #include "scrolling.hpp"
+#include <cmath>
 
 void scrolling::reset() noexcept
 {

@@ -9,7 +9,6 @@
 #include <open_viii/paths/Paths.hpp>
 #include <SFML/Window/Mouse.hpp>
 #include <utility>
-// #define USE_THREADS
 using namespace open_viii::graphics::background;
 using namespace open_viii::graphics;
 using namespace open_viii::graphics::literals;
@@ -2304,17 +2303,6 @@ bool gui::check_futures() const
   m_futures.erase(romoval.begin(), romoval.end());
   return !std::ranges::empty(m_futures);
 }
-template<typename T, typename... argsT>
-void gui::launch_async(T &&task, argsT &&...args) const
-{
-#ifdef USE_THREADS
-  m_futures.emplace_back(std::async(
-    std::launch::async, std::forward<T>(task), std::forward<argsT>(args)...));
-#undef USE_THREADS
-#else
-  task(std::forward<argsT>(args)...);
-#endif
-}
 void gui::batch_ops_ask_menu() const
 {
 #if 1
@@ -2533,7 +2521,19 @@ std::variant<
 
         const std::string &i_as_string = fmt::format("{}", i);
         if (std::ranges::any_of(
-              std::array{ ImGui::Selectable("", is_selected),
+              std::array{ [&is_selected, this, &tile, &i_as_string]() -> bool {
+                           bool selected = ImGui::Selectable("", is_selected);
+                           if (ImGui::IsItemHovered())
+                           {
+                             ImGui::BeginTooltip();
+                             ImGui::Text("%s", i_as_string.c_str());
+                             const auto end_tooltip =
+                               scope_guard(&ImGui::EndTooltip);
+                             (void)create_tile_button(
+                               tile, sf::Vector2f(256.f, 256.f));
+                           }
+                           return selected;
+                         }(),
                           []() -> bool {
                             ImGui::SameLine();
                             return false;
