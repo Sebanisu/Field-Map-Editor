@@ -13,8 +13,10 @@ std::array<sf::Vertex, 5U> square::get_vertices() const
     sf::Vertex{ sf::Vector2f(0.f, 0.f), m_color }
   };
   std::ranges::transform(ret, ret.begin(), [this](sf::Vertex v) {
-    v.position.x = (v.position.x * m_size.x) + m_position.x;
-    v.position.y = (v.position.y * m_size.y) + m_position.y;
+    v.position.x = (v.position.x * static_cast<float>(m_size.x))
+                   + static_cast<float>(m_position.x);
+    v.position.y = (v.position.y * static_cast<float>(m_size.y))
+                   + static_cast<float>(m_position.y);
     return v;
   });
   return ret;

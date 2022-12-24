@@ -2795,10 +2795,6 @@ void gui::import_image_window() const
     {
       return;
     }
-    const auto minmax_x = (std::ranges::minmax)(
-      tiles, {}, [](const auto &tile) { return tile.x(); });
-    const auto minmax_y = (std::ranges::minmax)(
-      tiles, {}, [](const auto &tile) { return tile.y(); });
     const auto max_texture_id_tile = (std::ranges::max)(
       tiles, {}, [](const auto &tile) { return tile.texture_id(); });
     const auto max_source_y_tile = (std::ranges::max)(
