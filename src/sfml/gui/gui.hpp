@@ -28,7 +28,7 @@
 #include <imgui.h>
 #include <SFML/Graphics/RenderWindow.hpp>
 
-// #define USE_THREADS
+#define USE_THREADS
 namespace fme
 {
 struct gui
