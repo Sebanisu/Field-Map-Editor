@@ -2682,7 +2682,9 @@ void gui::import_image_window() const
       tiles_high,
       tiles_wide * tiles_high)
       .c_str());
-  if (changed && tiles_wide * tiles_high != 0U)
+  if (
+    changed && tiles_wide * tiles_high != 0U
+    && loaded_image_texture.getSize() != sf::Vector2u{})
   {
     import_image_map =
       open_viii::graphics::background::Map([this,
@@ -2797,32 +2799,6 @@ void gui::import_image_window() const
       tiles, {}, [](const auto &tile) { return tile.x(); });
     const auto minmax_y = (std::ranges::minmax)(
       tiles, {}, [](const auto &tile) { return tile.y(); });
-    //    static constexpr auto adjust = [](
-    //                                     std::integral auto OldValue,
-    //                                     std::integral auto OldMin,
-    //                                     std::integral auto OldMax,
-    //                                     std::integral auto NewMin,
-    //                                     std::integral auto NewMax) {
-    //      using T = std::common_type_t<
-    //        decltype(OldValue),
-    //        decltype(OldMax),
-    //        decltype(OldMin),
-    //        decltype(NewMin),
-    //        decltype(NewMax)>;
-    //      const auto OldRange = static_cast<T>(OldMax) -
-    //      static_cast<T>(OldMin); if (OldRange == 0)
-    //        return static_cast<T>(NewMin);
-    //      else
-    //      {
-    //        const auto NewRange = static_cast<T>(NewMax) -
-    //        static_cast<T>(NewMin); return static_cast<T>(
-    //          (static_cast<float>(
-    //             (static_cast<T>(OldValue) - static_cast<T>(OldMin))
-    //             * static_cast<T>(NewRange))
-    //           / static_cast<float>(OldRange))
-    //          + static_cast<float>(NewMin));
-    //      }
-    //    };
     const auto max_texture_id_tile = (std::ranges::max)(
       tiles, {}, [](const auto &tile) { return tile.texture_id(); });
     const auto max_source_y_tile = (std::ranges::max)(
@@ -2847,8 +2823,7 @@ void gui::import_image_window() const
     if (changed)
     {
       import_image_map.visit_tiles(
-        [&next_texture_page, &next_source_y, this, &minmax_y, &minmax_x](
-          auto &&import_tiles) {
+        [&next_texture_page, &next_source_y](auto &&import_tiles) {
           auto       tile_i   = import_tiles.begin();
           const auto tile_end = import_tiles.end();
           for (std::uint8_t tp = next_texture_page; tp < 16; ++tp)
@@ -2862,21 +2837,8 @@ void gui::import_image_window() const
                 {
                   return;
                 }
-                *tile_i = tile_i->with_source_xy(x * 16, y * 16)
-                            .with_texture_id(tp) /*.with_xy(
-static_cast<std::int16_t>(adjust(
-tile_i->x() * m_selections.tile_size_value,
-0,
-loaded_image.getSize().x,
-minmax_x.min.x(),
-minmax_x.max.x() + 16)),
-static_cast<std::int16_t>(adjust(
-tile_i->y() * m_selections.tile_size_value,
-0,
-loaded_image.getSize().y,
-minmax_y.min.y(),
-minmax_y.max.y() + 16)))*/
-                  ;
+                *tile_i =
+                  tile_i->with_source_xy(x * 16, y * 16).with_texture_id(tp);
                 ++tile_i;
               }
             }
@@ -3060,6 +3022,10 @@ void gui::update_scaled_up_render_texture() const
       * static_cast<double>(m_selections.tile_size_value));
   };
   const auto size = loaded_image_texture.getSize();
+  if (size == decltype(size){})
+  {
+    return;
+  }
   loaded_image_render_texture.create(
     scale_up_dim(size.x), scale_up_dim(size.y));
   loaded_image_render_texture.setActive(true);
