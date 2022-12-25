@@ -17,7 +17,9 @@ class FieldMapEditor(ConanFile):
         "imgui/cci.20220207+1.87.docking", #docking UI for opengl
         #"imgui/1.87",  # UI used for both opengl and sfml
         "sfml/2.5.1",  # sfml version simplified c++98 gaming library
-        "andreasbuhr-cppcoro/cci.20210113",  # sfml version
+        #"libunwind/1.6.2", # umm test program is looking for this?
+        "zlib/1.2.13", # resolve conflict by using it here.
+        "andreasbuhr-cppcoro/cci.20210113",  # sfml version uses coroutines. Thought this would help with async.
         "stb/cci.20210713",  # image loading and saving
         "boost-ext-ut/1.1.9",  # unit testing library / wip
         #"tomlplusplus/3.1.0"  #toml++  c++17 configuration library
