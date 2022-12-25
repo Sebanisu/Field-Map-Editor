@@ -42,6 +42,7 @@ add_executable(${PROJECT_NAME}_SFML
         upscales.cpp
         Configuration.cpp
         safedir.cpp
+        tile_operations.hpp
         gui/gui.cpp
         gui/gui_batch.cpp
         gui/batch_deswizzle.cpp gui/batch_deswizzle.hpp gui/map_dialog_mode.hpp gui/map_directory_mode.hpp gui/batch_embed.cpp gui/batch_embed.hpp gui/compact_type.hpp gui/batch_reswizzle.cpp gui/batch_reswizzle.hpp gui/mouse_positions.cpp gui/mouse_positions.hpp gui/scrolling.cpp gui/scrolling.hpp gui/selections.cpp gui/selections.hpp square.cpp square.hpp)
