@@ -78,6 +78,16 @@ if (MSVC)
     target_link_options(${PROJECT_NAME}_SFML PRIVATE "/PROFILE")
 elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     target_compile_options(${PROJECT_NAME}_SFML PUBLIC "-fconcepts-diagnostics-depth=2")
+elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+    target_compile_options(${PROJECT_NAME}_SFML
+            PRIVATE "-stdlib=libc++"
+            PRIVATE "-march=native"
+            PRIVATE "-fcoroutines-ts")
+    target_link_options(${PROJECT_NAME}_SFML
+            PRIVATE "-stdlib=libc++"
+            PRIVATE "-lc++abi"
+            PRIVATE "-fuse-ld=lld"
+            PRIVATE "-Wl") #,--gdb-index
 endif ()
 enable_sanitizers(${PROJECT_NAME}_SFML)
 SET_TARGET_PATHS(${PROJECT_NAME}_SFML)
