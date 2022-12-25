@@ -92,12 +92,14 @@ struct map_sprite final
 
   sf::Vector2u get_tile_draw_size() const;
 
-  template<open_viii::graphics::background::is_tile this_type, typename T>
-  static void format_tile_text(const this_type &tile, T &&format_function)
+  template<open_viii::graphics::background::is_tile tileT, typename T>
+  static void format_tile_text(const tileT &tile, T &&format_function)
   {
     const auto raw_hex = to_hex(tile);
-    format_function("Hex", std::string_view(raw_hex.data(), raw_hex.size()));
-    format_function(
+    std::invoke(
+      format_function, "Hex", std::string_view(raw_hex.data(), raw_hex.size()));
+    std::invoke(
+      format_function,
       "Source",
       fmt::format(
         "({}, {}) ({}, {})",
@@ -105,7 +107,8 @@ struct map_sprite final
         tile.source_rectangle().y(),
         tile.source_rectangle().width(),
         tile.source_rectangle().height()));
-    format_function(
+    std::invoke(
+      format_function,
       "Output",
       fmt::format(
         "({}, {}) ({}, {})",
@@ -113,17 +116,19 @@ struct map_sprite final
         tile.output_rectangle().y(),
         tile.output_rectangle().width(),
         tile.output_rectangle().height()));
-    format_function("Z", tile.z());
-    format_function("Depth", static_cast<int>(tile.depth()));
-    format_function("Palette ID", tile.palette_id());
-    format_function("Texture ID", tile.texture_id());
-    format_function("Layer ID", tile.layer_id());
-    format_function(
-      "Blend Mode", static_cast<std::uint16_t>(tile.blend_mode()));
-    format_function("Blend Other", tile.blend());
-    format_function("Animation ID", tile.animation_id());
-    format_function("Animation State", tile.animation_state());
-    format_function("Draw", tile.draw());
+    std::invoke(format_function, "Z", tile.z());
+    std::invoke(format_function, "Depth", static_cast<int>(tile.depth()));
+    std::invoke(format_function, "Palette ID", tile.palette_id());
+    std::invoke(format_function, "Texture ID", tile.texture_id());
+    std::invoke(format_function, "Layer ID", tile.layer_id());
+    std::invoke(
+      format_function,
+      "Blend Mode",
+      static_cast<std::uint16_t>(tile.blend_mode()));
+    std::invoke(format_function, "Blend Other", tile.blend());
+    std::invoke(format_function, "Animation ID", tile.animation_id());
+    std::invoke(format_function, "Animation State", tile.animation_state());
+    std::invoke(format_function, "Draw", tile.draw());
   }
 
   void update_render_texture(
