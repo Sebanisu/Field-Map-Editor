@@ -76,8 +76,8 @@ if (MSVC)
     target_compile_definitions(${PROJECT_NAME}_SFML
             PUBLIC _CRT_SECURE_NO_WARNINGS) # required by libpng
     target_link_options(${PROJECT_NAME}_SFML PRIVATE "/PROFILE")
-else ()
-target_compile_options(${PROJECT_NAME}_SFML PUBLIC "-fconcepts-diagnostics-depth=2")
+elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    target_compile_options(${PROJECT_NAME}_SFML PUBLIC "-fconcepts-diagnostics-depth=2")
 endif ()
 enable_sanitizers(${PROJECT_NAME}_SFML)
 SET_TARGET_PATHS(${PROJECT_NAME}_SFML)
