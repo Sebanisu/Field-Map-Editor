@@ -36,7 +36,7 @@ build_script:
 
 after_build:
   - cmd: move bin\*.exe bin\Release
-
+    
 test_script:
   - cmd: cd build && ctest -C Debug
 
@@ -49,10 +49,9 @@ deploy:
     release: Canary
     description: Automatic Test build version ($(APPVEYOR_BUILD_VERSION)). Updated ($(APPVEYOR_REPO_COMMIT_TIMESTAMP))
     auth_token:
-      secure: $(APPVEYOR_TOKEN)
+      secure: 5giEwDYEP975x3C+JYDNGukTupBCPcmez7GbulvUX40/2C5cgs5ta8Gyq6IYpFmW
     artifact: Canary
     prerelease: true
     force_update: true
-    delete_release: true
     on:
       branch: main
