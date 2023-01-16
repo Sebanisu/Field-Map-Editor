@@ -44,7 +44,7 @@ artifacts:
   - path: 'bin/Release/*.*'
     name: Canary
 
-pre_deploy:
+before_deploy:
   - git -c http.https://github.com/.extraheader="AUTHORIZATION: token $(APPVEYOR_TOKEN)" ls-remote --tags --refs https://github.com/Sebanisu/Field-Map-Editor Canary | xargs git -c http.https://github.com/.extraheader="AUTHORIZATION: token $(APPVEYOR_TOKEN)" push --delete origin
 
 deploy:
