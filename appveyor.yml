@@ -28,7 +28,7 @@ build_script:
       
       mkdir build
       
-      cmake -S c:\projects\source -B ./build -G Ninja -A x64 -DCMAKE_BUILD_TYPE=Release  
+      cmake -S c:\projects\source -B ./build -G Ninja -DCMAKE_BUILD_TYPE=Release  
       
       cmake --build ./build --config "Release"
 
