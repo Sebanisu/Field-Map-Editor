@@ -7,12 +7,14 @@
 #include "filter.hpp"
 #include "format_imgui_text.hpp"
 #include "gui_labels.hpp"
+#include "scope_guard.hpp"
+#include <chrono>
 #include <filesystem>
 #include <fmt/chrono.h>
+#include <fmt/format.h>
 #include <imgui-SFML.h>
 #include <imgui.h>
 #include <spdlog/spdlog.h>
-#include "scope_guard.hpp"
 struct batch_deswizzle
 {
   void enable(std::filesystem::path in_outgoing);
@@ -40,10 +42,11 @@ struct batch_deswizzle
       const auto g = scope_guard([]() { ImGui::EndPopup(); });
       if (fields.size() <= pos)
       {
-        auto current = std::chrono::high_resolution_clock::now();
+        const auto current    = std::chrono::high_resolution_clock::now();
+        const auto difference = current - start;
         spdlog::info(
           "{:%H:%M:%S} - {}",
-          current - start,
+          difference,
           gui_labels::batch_deswizzle_finish);
         disable();
         return pos > 0U;
@@ -54,10 +57,11 @@ struct batch_deswizzle
       }
       else
       {
-        auto current = std::chrono::high_resolution_clock::now();
+        const auto current = std::chrono::high_resolution_clock::now();
+        const auto difference = current - start;
         format_imgui_text(
           "{:%H:%M:%S} - {:>3.2f}% - {} {}...",
-          current - start,
+          difference,
           static_cast<float>(pos) * 100.F
             / static_cast<float>(std::size(fields)),
           gui_labels::processing,

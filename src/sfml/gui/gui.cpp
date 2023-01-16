@@ -1524,7 +1524,7 @@ void gui::combo_draw() const
           return std::views::iota(
             0, static_cast<int>(std::size(m_draw_selections)));
         },
-        [this]() { return m_draw_selections; },
+        [this]() { return this->m_draw_selections; },
         m_selections.draw))
   {
     Configuration config{};
@@ -2687,8 +2687,7 @@ void gui::import_image_window() const
     && loaded_image_texture.getSize() != sf::Vector2u{})
   {
     import_image_map =
-      open_viii::graphics::background::Map([this,
-                                            &current_tile,
+      open_viii::graphics::background::Map([&current_tile,
                                             x_tile = uint8_t{},
                                             y_tile = uint8_t{},
                                             &tiles_high,

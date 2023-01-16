@@ -23,7 +23,7 @@
 #include <SFML/Graphics/Vertex.hpp>
 #include <utility>
 
-static inline std::string str_to_lower(std::string &&input)
+static inline std::string str_to_lower(std::string input)
 {
   std::string output{};
   output.reserve(std::size(input) + 1);
@@ -212,7 +212,7 @@ public:
     using namespace open_viii::graphics::literals;
     using tile_type    = std::remove_cvref_t<decltype(tile)>;
     auto       src_tpw = tile_type::texture_page_width(tile.depth());
-    const auto x       = [this, &tile, &src_tpw]() -> std::uint32_t {
+    const auto x       = [&tile, &src_tpw]() -> std::uint32_t {
       return tile.texture_id() * src_tpw;
     }();
     const auto src_x = [&tile, &x, this]() -> std::uint32_t {
@@ -422,8 +422,26 @@ private:
 
   static const sf::BlendMode &GetBlendSubtract();
   [[nodiscard]] bool
-       local_draw(sf::RenderTarget &target, sf::RenderStates states) const;
-  bool fail_filter(auto &tile) const;
+    local_draw(sf::RenderTarget &target, sf::RenderStates states) const;
+  template<open_viii::graphics::background::is_tile tileT>
+  bool fail_filter(const tileT &tile) const
+  {
+    using namespace open_viii::graphics::literals;
+    const auto test =
+      []<typename T>(const ::filter<T> &in_filter, const auto &value) -> bool {
+      return (in_filter && value != in_filter);
+    };
+    return (m_filters.bpp.value() != 16_bpp
+            && test(m_filters.palette, tile.palette_id()))
+           || test(m_filters.bpp, tile.depth())
+           || test(m_filters.blend_mode, tile.blend_mode())
+           || test(m_filters.blend_other, tile.blend())
+           || test(m_filters.animation_id, tile.animation_id())
+           || test(m_filters.animation_frame, tile.animation_state())
+           || test(m_filters.layer_id, tile.layer_id())
+           || test(m_filters.texture_page_id, tile.texture_id())
+           || test(m_filters.z, tile.z());
+  }
   void wait_for_futures() const;
   auto duel_visitor(auto &&lambda) const;
   void for_all_tiles(

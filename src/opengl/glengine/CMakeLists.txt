@@ -82,7 +82,7 @@ if (MSVC)
     target_compile_definitions(glengine
             PUBLIC _CRT_SECURE_NO_WARNINGS) # required by libpng
     target_link_options(glengine PRIVATE "/PROFILE")
-else ()
+elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     target_compile_options(glengine PUBLIC "-fconcepts-diagnostics-depth=2")
 endif ()
 
@@ -110,7 +110,6 @@ target_precompile_headers(glengine
         <numeric>
         <optional>
         <ranges>
-        <source_location>
         <span>
         <sstream>
         <string>
@@ -118,6 +117,7 @@ target_precompile_headers(glengine
         <thread>
         <type_traits>
         <unordered_map>
+        <source_location>
         <utility>
         <variant>
         <vector>

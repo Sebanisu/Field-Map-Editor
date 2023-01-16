@@ -58,12 +58,14 @@ macro(run_conan)
             if ("${ProjectOptions_CONAN_PROFILE}" STREQUAL "")
                 # Detects current build settings to pass into conan
                 conan_cmake_autodetect(settings BUILD_TYPE ${TYPE})
-                set(CONAN_SETTINGS SETTINGS ${settings} compiler.cppstd=20)
                 if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
-                    set(CONAN_ENV ENV "CC=${CMAKE_C_COMPILER}" "CXX=${CMAKE_CXX_COMPILER}" "CXXFLAGS=/D_HAS_AUTO_PTR_ETC")
+                    set(CONAN_SETTINGS SETTINGS ${settings} compiler.cppstd=20)
+                    #set(CONAN_ENV ENV "CC=${CMAKE_C_COMPILER}" "CXX=${CMAKE_CXX_COMPILER}" "CXXFLAGS=/D_HAS_AUTO_PTR_ETC") #shouldn't need to enable auto_ptr anymore
                 elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
-                    set(CONAN_ENV ENV "CC=${CMAKE_C_COMPILER}" "CXX=${CMAKE_CXX_COMPILER}" "CXXFLAGS=-stdlib=libc++ -march=native -fcoroutines-ts" "LDFLAGS=-stdlib=libc++ -lc++abi -fuse-ld=lld -Wl") #,--gdb-index
-                else ()
+                    set(CONAN_SETTINGS SETTINGS ${settings} compiler.cppstd=20 compiler.libcxx=libstdc++11)
+                    set(CONAN_ENV ENV "CC=${CMAKE_C_COMPILER}" "CXX=${CMAKE_CXX_COMPILER}" "CXXFLAGS=-fexperimental-library")# "CXXFLAGS=-stdlib=libc++ -march=native -fexperimental-library" "LDFLAGS=-stdlib=libc++ -fuse-ld=lld -Wl")
+                else () #GCC
+                    set(CONAN_SETTINGS SETTINGS ${settings} compiler.cppstd=20 compiler.libcxx=libstdc++11)
                     set(CONAN_ENV ENV "CC=${CMAKE_C_COMPILER}" "CXX=${CMAKE_CXX_COMPILER}")
                 endif ()
             else ()
@@ -83,10 +85,11 @@ macro(run_conan)
                     PATH_OR_REFERENCE
                     ${CMAKE_SOURCE_DIR}
                     BUILD
-                    missing
+                    outdated
                     # Pass compile-time configured options into conan
                     OPTIONS
                     ${ProjectOptions_CONAN_OPTIONS}
+                    UPDATE
                     # Pass CMake compilers to Conan
                     ${CONAN_ENV}
                     # Pass either autodetected settings or a conan profile

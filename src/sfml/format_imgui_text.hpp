@@ -5,7 +5,9 @@
 #ifndef FIELD_MAP_EDITOR_FORMAT_IMGUI_TEXT_HPP
 #define FIELD_MAP_EDITOR_FORMAT_IMGUI_TEXT_HPP
 #include <array>
-#include <fmt/core.h>
+#include <chrono>
+#include <fmt/chrono.h>
+#include <fmt/format.h>
 #include <imgui.h>
 inline const auto format_imgui_text =
   []<std::size_t sizeT = 0xFFU, typename... T>(

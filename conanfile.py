@@ -16,7 +16,7 @@ class FieldMapEditor(ConanFile):
         "glm/0.9.9.8",  # opengl version opengl math library
         "imgui/cci.20220207+1.87.docking", #docking UI for opengl
         #"imgui/1.87",  # UI used for both opengl and sfml
-        "sfml/2.5.1",  # sfml version simplified c++98 gaming library
+        "sfml/2.5.1@#7971039289b1207a61814784bd619d01",  # sfml version simplified c++98 gaming library
         #"libunwind/1.6.2", # umm test program is looking for this?
         "zlib/1.2.13", # resolve conflict by using it here.
         "andreasbuhr-cppcoro/cci.20210113",  # sfml version uses coroutines. Thought this would help with async.

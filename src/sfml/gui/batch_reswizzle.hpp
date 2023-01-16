@@ -44,9 +44,9 @@ struct batch_reswizzle
       const auto g = scope_guard([]() { ImGui::EndPopup(); });
       if (fields.size() <= pos)
       {
-        auto current = std::chrono::high_resolution_clock::now();
-        spdlog::info(
-          "{:%H:%M:%S} - Finished the batch swizzle...", current - start);
+        const auto current    = std::chrono::high_resolution_clock::now();
+        const auto difference = current - start;
+        spdlog::info("{:%H:%M:%S} - Finished the batch swizzle...", difference);
         disable();
         return pos > 0U;
       }
@@ -56,10 +56,11 @@ struct batch_reswizzle
       }
       else
       {
-        auto current = std::chrono::high_resolution_clock::now();
+        const auto current    = std::chrono::high_resolution_clock::now();
+        const auto difference = current - start;
         format_imgui_text(
           "{:%H:%M:%S} - {:>3.2f}% - Processing {}...",
-          current - start,
+          difference,
           static_cast<float>(pos) * 100.F
             / static_cast<float>(std::size(fields)),
           fields[pos]);

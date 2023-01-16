@@ -1,23 +1,4 @@
 cmake_minimum_required(VERSION 3.18)
-if (MSVC AND
-        CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 19.29.30129 AND
-        CMAKE_VERSION VERSION_GREATER 3.21.0)
-    set(CMAKE_CXX_STANDARD 23) # /std:c++latest - unlocks the non stable cpp20 features. For new 16.11 versions
-elseif (MSVC AND
-        CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 19.29.30129 AND
-        CMAKE_VERSION VERSION_GREATER 3.20.3 AND
-        CMAKE_PATCH_VERSION LESS 21000000)
-    # this change happened in CMake 3.20.4
-    set(CMAKE_CXX_STANDARD 23) # /std:c++latest - unlocks the non stable cpp20 features. For new 16.11 versions
-elseif (MSVC AND
-        CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 19.29.30129 AND
-        CMAKE_VERSION VERSION_GREATER 3.20.3 AND
-        CMAKE_PATCH_VERSION GREATER 21032501) #update this when msvc does support 23 flag.
-    # msvc uses custom patch version example 21032501 it's older than 3.20.4
-    set(CMAKE_CXX_STANDARD 23) # /std:c++latest - unlocks the non stable cpp20 features. For new 16.11 versions
-else ()
-    set(CMAKE_CXX_STANDARD 20) # /std:c++latest for msvc and -std=c++20 for everyone else.
-endif ()
 ## Supported values are 98, 11, 14, 17, 20, 23.
 #To use all of c++20 on MVSC you must set cmake to 23
 #https://github.com/microsoft/STL/issues/1814#issuecomment-845572895
@@ -72,6 +53,10 @@ target_include_directories(${PROJECT_NAME}_SFML
 target_compile_definitions(${PROJECT_NAME}_SFML
         PUBLIC NOMINMAX # imgui uses unguarded min and max.
         PUBLIC TOML_EXCEPTIONS=0)
+
+target_compile_features(${PROJECT_NAME}_SFML
+        PUBLIC cxx_std_23
+        PUBLIC cxx_std_20)
 if (MSVC)
     target_compile_definitions(${PROJECT_NAME}_SFML
             PUBLIC _CRT_SECURE_NO_WARNINGS) # required by libpng
@@ -82,10 +67,10 @@ elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
     target_compile_options(${PROJECT_NAME}_SFML
             PRIVATE "-stdlib=libc++"
             PRIVATE "-march=native"
-            PRIVATE "-fcoroutines-ts")
+            PRIVATE "-fexperimental-library" ##new in clang15 for things like std::ranges and std::format
+            )
     target_link_options(${PROJECT_NAME}_SFML
             PRIVATE "-stdlib=libc++"
-            PRIVATE "-lc++abi"
             PRIVATE "-fuse-ld=lld"
             PRIVATE "-Wl") #,--gdb-index
 endif ()

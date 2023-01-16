@@ -55,26 +55,28 @@ struct batch_embed
       if (fields.size() <= m_pos)
       {
         format_imgui_wrapped_text("Processing please wait...");
-        auto current = std::chrono::high_resolution_clock::now();
+        const auto current    = std::chrono::high_resolution_clock::now();
+        const auto difference = current - m_start;
         spdlog::info(
           "{:%H:%M:%S} - Finished the batch embed operation... {}",
-          current - m_start,
+          difference,
           m_operation_name);
         disable();
         return m_pos > 0U;
       }
       if (!m_asked)
       {
-        //format_imgui_wrapped_text("Displaying Ask?");
+        // format_imgui_wrapped_text("Displaying Ask?");
         m_asked = m_ask_function();
       }
       else
       {
         format_imgui_wrapped_text("Processing please wait...");
-        auto current = std::chrono::high_resolution_clock::now();
+        const auto current    = std::chrono::high_resolution_clock::now();
+        const auto difference = current - m_start;
         format_imgui_wrapped_text(
           "{:%H:%M:%S} - {:>3.2f}% - {} / {} - {}...",
-          current - m_start,
+          difference,
           static_cast<float>(m_pos) * 100.F
             / static_cast<float>(std::size(fields)),
           m_pos,

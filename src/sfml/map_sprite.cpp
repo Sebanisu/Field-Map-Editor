@@ -554,9 +554,8 @@ std::uint8_t map_sprite::max_x_for_saved() const
           return TILE_SIZE;
         });
 
-    const auto it =
-      std::min_element(transform_range.begin(), transform_range.end());
-    if (it != std::end(transform_range))
+    const auto it = std::ranges::min_element(transform_range);
+    if (it != std::ranges::end(transform_range))
       return static_cast<std::uint8_t>((*it - TILE_SIZE) / TILE_SIZE);
     return std::uint8_t(255U);
   });
@@ -575,7 +574,7 @@ template<typename key_lambdaT, typename weight_lambdaT>
                 // other texture pages and then the keys are less valuable.
     {
       auto pointers =
-        generate_map(tiles, key_lambda, [](auto &&tile) { return &tile; });
+        this->generate_map(tiles, key_lambda, [](auto &&tile) { return &tile; });
       std::uint8_t col        = {};
       std::uint8_t row        = {};
       std::uint8_t page       = {};
@@ -967,7 +966,7 @@ void map_sprite::for_all_tiles(
       spdlog::warn(
         "{} != {}", std::ranges::size(tiles_const), std::ranges::size(tiles));
     }
-    for_all_tiles(
+    this->for_all_tiles(
       tiles_const,
       std::forward<decltype(tiles)>(tiles),
       std::forward<decltype(lambda)>(lambda),
@@ -1507,87 +1506,6 @@ grid map_sprite::get_texture_page_grid() const
            sf::Color::Yellow };
 }
 
-bool map_sprite::fail_filter(auto &tile) const
-{
-  using namespace open_viii::graphics::literals;
-#if 1
-  const auto test =
-    []<typename T>(const ::filter<T> &in_filter, const auto &value) -> bool {
-    return (in_filter && value != in_filter);
-  };
-  return (m_filters.bpp.value() != 16_bpp
-          && test(m_filters.palette, tile.palette_id()))
-         || test(m_filters.bpp, tile.depth())
-         || test(m_filters.blend_mode, tile.blend_mode())
-         || test(m_filters.blend_other, tile.blend())
-         || test(m_filters.animation_id, tile.animation_id())
-         || test(m_filters.animation_frame, tile.animation_state())
-         || test(m_filters.layer_id, tile.layer_id())
-         || test(m_filters.texture_page_id, tile.texture_id())
-         || test(m_filters.z, tile.z());
-
-  // TODO need to generate pupus for this map so I get the offset.
-#else
-  if (m_filters.palette.enabled() && m_filters.bpp.value() != 16_bpp)
-  {
-    if (tile.palette_id() != m_filters.palette.value())
-    {
-      return true;
-    }
-  }
-  if (m_filters.bpp.enabled())
-  {
-    if (tile.depth() != m_filters.bpp.value())
-    {
-      return true;
-    }
-  }
-  if (m_filters.blend_mode.enabled())
-  {
-    if (tile.blend_mode() != m_filters.blend_mode.value())
-    {
-      return true;
-    }
-  }
-  if (m_filters.blend_other.enabled())
-  {
-    if (tile.blend() != m_filters.blend_other.value())
-    {
-      return true;
-    }
-  }
-  if (m_filters.animation_id.enabled())
-  {
-    if (tile.animation_id() != m_filters.animation_id.value())
-    {
-      return true;
-    }
-  }
-  if (m_filters.animation_frame.enabled())
-  {
-    if (tile.animation_state() != m_filters.animation_frame.value())
-    {
-      return true;
-    }
-  }
-  if (m_filters.layer_id.enabled())
-  {
-    if (tile.layer_id() != m_filters.layer_id.value())
-    {
-      return true;
-    }
-  }
-  if (m_filters.texture_page_id.enabled())
-  {
-    if (tile.texture_id() != m_filters.texture_page_id.value())
-    {
-      return true;
-    }
-  }
-  return false;
-#endif
-}
-
 all_unique_values_and_strings
   map_sprite::get_all_unique_values_and_strings() const
 {
@@ -2095,10 +2013,9 @@ uint32_t map_sprite::get_max_texture_height() const
     (*m_texture) | std::views::transform([](const sf::Texture &texture) {
       return texture.getSize().y;
     });
-  auto max_height_it =
-    std::max_element(transform_range.begin(), transform_range.end());
-  uint32_t tex_height = {};
-  if (max_height_it != transform_range.end())
+  auto     max_height_it = std::ranges::max_element(transform_range);
+  uint32_t tex_height    = {};
+  if (max_height_it != std::ranges::end(transform_range))
   {
     tex_height = *max_height_it;
   }
@@ -2262,23 +2179,25 @@ void map_sprite::load_map(const std::filesystem::path &src_path) const
       m_maps.front().visit_tiles([this, &os](const auto &const_tiles) {
         using TileT   = std::remove_cvref_t<decltype(const_tiles.front())>;
         m_maps.back() = open_viii::graphics::background::Map(
-          [this, &os]() -> std::variant<
+          [&os]() -> std::variant<
                           open_viii::graphics::background::Tile1,
                           open_viii::graphics::background::Tile2,
                           open_viii::graphics::background::Tile3,
                           std::monostate> {
             TileT      tile{};
-            const auto append = [this, &os](auto &t)->bool {
+            const auto append = [&os](auto &t) -> bool {
               // load tile
               std::array<char, sizeof(t)> data = {};
-              if(!os.read(data.data(), data.size()))
-              { return false; }
+              if (!os.read(data.data(), data.size()))
+              {
+                return false;
+              }
               t = std::bit_cast<std::remove_cvref_t<decltype(t)>>(data);
 
               return true;
             };
 
-            if(append(tile))
+            if (append(tile))
             {
               // write from tiles.
               return tile;
@@ -2399,17 +2318,18 @@ void map_sprite::save_modified_map(const std::filesystem::path &dest_path) const
         false,
         true);
       // write imported tiles first.
-//      append_imported_tiles();
-//      if (!wrote_end_tile)
-//      {
-//        const_visit_tiles([&append, &wrote_end_tile](const auto &tiles) {
-//          spdlog::info("Generating the last tile. (shouldn't happen)");
-//          using tile_t = std::remove_cvref_t<decltype(tiles.front())>;
-//          tile_t tile{};
-//          append(tile.with_xy(0x7FFFU, 0U));
-//          wrote_end_tile = true;
-//        });
-//      }
+      //      append_imported_tiles();
+      //      if (!wrote_end_tile)
+      //      {
+      //        const_visit_tiles([&append, &wrote_end_tile](const auto &tiles)
+      //        {
+      //          spdlog::info("Generating the last tile. (shouldn't happen)");
+      //          using tile_t = std::remove_cvref_t<decltype(tiles.front())>;
+      //          tile_t tile{};
+      //          append(tile.with_xy(0x7FFFU, 0U));
+      //          wrote_end_tile = true;
+      //        });
+      //      }
     },
     path,
     "");
@@ -2423,9 +2343,9 @@ std::size_t map_sprite::size_of_map() const
   });
 }
 void map_sprite::update_render_texture(
-  const sf::Texture                         *p_texture,
+  const sf::Texture                   *p_texture,
   open_viii::graphics::background::Map map,
-  const uint16_t                             tile_size)
+  const uint16_t                       tile_size)
 {
   m_imported_texture       = p_texture;
   m_imported_tile_map      = std::move(map);
@@ -2433,12 +2353,12 @@ void map_sprite::update_render_texture(
   m_using_imported_texture = p_texture != nullptr;
   update_render_texture(true);
 }
-void     map_sprite::enable_square(sf::Vector2u position) const
+void map_sprite::enable_square(sf::Vector2u position) const
 {
   m_square = m_square.with_position(std::move(position));
   m_square.enable();
 }
-void     map_sprite::disable_square() const
+void map_sprite::disable_square() const
 {
   m_square.disable();
 }
