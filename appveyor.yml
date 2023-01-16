@@ -44,12 +44,15 @@ artifacts:
   - path: 'bin/Release/*.*'
     name: Canary
 
+pre_deploy:
+  - git -c http.https://github.com/.extraheader="AUTHORIZATION: token $(APPVEYOR_TOKEN)" ls-remote --tags --refs https://github.com/Sebanisu/Field-Map-Editor Canary | xargs git -c http.https://github.com/.extraheader="AUTHORIZATION: token $(APPVEYOR_TOKEN)" push --delete origin
+
 deploy:
   - provider: GitHub
     release: Canary
     description: Automatic Test build version ($(APPVEYOR_BUILD_VERSION)). Updated ($(APPVEYOR_REPO_COMMIT_TIMESTAMP))
     auth_token:
-      secure: 5giEwDYEP975x3C+JYDNGukTupBCPcmez7GbulvUX40/2C5cgs5ta8Gyq6IYpFmW
+      secure: $(APPVEYOR_TOKEN)
     artifact: Canary
     prerelease: true
     force_update: true
