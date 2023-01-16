@@ -10,7 +10,9 @@ cache:
   - c:\conan\data
 
 before_build:
-  - cmd: >-
+  - cmd: >-      
+      C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvars64.bat
+      
       mkdir bin\Release
       
       powershell Compress-Archive -Path src\opengl\opengl_version\res -DestinationPath bin\Release\res.zip
@@ -19,7 +21,7 @@ before_build:
 
 
 build_script:
-  - cmd: >-
+  - cmd: >-      
       set PATH=%PATH%;C:\Users\appveyor\AppData\Roaming\Python\Python38\Scripts
       
       set CONAN_USER_HOME=c:\conan\data
