@@ -15,9 +15,9 @@ before_build:
       
       mkdir bin\Release
       
-      powershell Compress-Archive -Path src\opengl\opengl_version\res -DestinationPath bin\Release\res.zip
+      powershell Compress-Archive -Path src\opengl\opengl_version\res -DestinationPath bin\res.zip
       
-      powershell Compress-Archive -Path src -DestinationPath bin\Release\src.zip
+      powershell Compress-Archive -Path src -DestinationPath bin\src.zip
 
 
 build_script:
@@ -38,7 +38,7 @@ test_script:
   - cmd: cd build && ctest -C Debug
 
 artifacts:
-  - path: 'bin/Release/*.*'
+  - path: 'bin/*.*'
     name: Canary
 
 deploy:
