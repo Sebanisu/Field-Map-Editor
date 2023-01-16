@@ -36,7 +36,7 @@ build_script:
 
 after_build:
   - cmd: move bin\*.exe bin\Release
-    
+
 test_script:
   - cmd: cd build && ctest -C Debug
 
@@ -53,5 +53,6 @@ deploy:
     artifact: Canary
     prerelease: true
     force_update: true
+    delete_release: true
     on:
       branch: main
