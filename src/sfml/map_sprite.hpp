@@ -6,6 +6,7 @@
 #define FIELD_MAP_EDITOR_MAP_SPRITE_HPP
 #include "filter.hpp"
 #include "grid.hpp"
+#include "MapHistory.hpp"
 #include "open_viii/archive/Archives.hpp"
 #include "open_viii/graphics/background/Map.hpp"
 #include "open_viii/graphics/background/Mim.hpp"
@@ -169,6 +170,39 @@ public:
     (void)m_maps.undo();
     update_render_texture();
   }
+
+  void redo()
+  {
+    (void)m_maps.redo();
+    update_render_texture();
+  }
+
+  void undo_all()
+  {
+    (void)m_maps.undo_all();
+    update_render_texture();
+  }
+
+  void redo_all()
+  {
+    (void)m_maps.redo_all();
+    update_render_texture();
+  }
+
+  bool undo_enabled()
+  {
+    return m_maps.undo_enabled();
+  }
+
+  bool redo_enabled()
+  {
+    return m_maps.redo_enabled();
+  }
+  bool history_remove_duplicate()
+  {
+    return m_maps.remove_duplicate();
+  }
+
   [[nodiscard]] const all_unique_values_and_strings &uniques() const;
 
   map_sprite                                         update(
@@ -266,98 +300,18 @@ private:
   static constexpr auto default_filter_lambda = [](auto &&) { return true; };
   static constexpr auto filter_invalid =
     open_viii::graphics::background::Map::filter_invalid();
-  mutable square              m_square   = { sf::Vector2u{},
-                                             sf::Vector2u{ TILE_SIZE, TILE_SIZE },
-                                             sf::Color::Red };
-  mutable std::vector<PupuID> m_pupu_ids = {};
-  struct maps
-  {
-    maps() = default;
-    explicit maps(open_viii::graphics::background::Map &&in_map)
-      : m_maps{ std::move(in_map) }
-    {
-      copy_back();
-    }
-    open_viii::graphics::background::Map &copy_back() const
-    {
-      m_history.push_back(true);
-      return m_maps.emplace_back(m_maps.back());
-    }
-    const open_viii::graphics::background::Map &copy_back_to_front() const
-    {
-      m_maps.insert(m_maps.begin(), m_maps.back());
-      m_history.push_back(false);
-      return front();
-    }
-    const open_viii::graphics::background::Map &copy_front() const
-    {
-      m_maps.insert(m_maps.begin(), m_maps.front());
-      m_history.push_back(false);
-      return m_maps.front();
-    }
-    [[nodiscard]] const open_viii::graphics::background::Map &
-      front() const noexcept
-    {
-      return m_maps.front();
-    }
-    [[nodiscard]] open_viii::graphics::background::Map &
-      mutable_front() const noexcept
-    {
-      return m_maps.front();
-    }
-    [[nodiscard]] open_viii::graphics::background::Map &back() const noexcept
-    {
-      return m_maps.back();
-    }
-    [[nodiscard]] const open_viii::graphics::background::Map &
-      const_back() const noexcept
-    {
-      return m_maps.back();
-    }
-    bool undo() const
-    {
-      if (m_maps.size() <= 2U)
-      {
-        return false;
-      }
-      bool last = m_history.back();
-      m_history.pop_back();
-      if (last)
-      {
-        (void)pop_back();
-        return true;
-      }
-      (void)pop_front();
-      return true;
-    }
+  mutable square              m_square                       = { sf::Vector2u{},
+                                                                 sf::Vector2u{ TILE_SIZE, TILE_SIZE },
+                                                                 sf::Color::Red };
+  mutable std::vector<PupuID> m_pupu_ids                     = {};
 
-  private:
-    open_viii::graphics::background::Map &pop_back() const
-    {
-      if (m_maps.size() > 2U)
-      {
-        m_maps.pop_back();
-      }
-      return m_maps.back();
-    }
-    const open_viii::graphics::background::Map &pop_front() const
-    {
-      if (m_maps.size() > 2U)
-      {
-        m_maps.erase(m_maps.begin());
-      }
-      return m_maps.front();
-    }
-    mutable std::vector<open_viii::graphics::background::Map> m_maps{};
-    mutable std::vector<bool>                                 m_history{};
-  };
 
-  mutable bool    m_draw_swizzle                                 = { false };
-  mutable bool    m_disable_texture_page_shift                   = { false };
-  mutable bool    m_disable_blends                               = { false };
-  mutable filters m_filters                                      = {};
-  std::shared_ptr<open_viii::archive::FIFLFS<false>> m_field     = {};
-  open_viii::LangT                                   m_coo       = {};
+  mutable bool                m_draw_swizzle                 = { false };
+  mutable bool                m_disable_texture_page_shift   = { false };
+  mutable bool                m_disable_blends               = { false };
+  mutable filters             m_filters                      = {};
+  std::shared_ptr<open_viii::archive::FIFLFS<false>> m_field = {};
+  open_viii::LangT                                   m_coo   = {};
   ::upscales                                         m_upscales  = {};
   open_viii::graphics::background::Mim               m_mim       = {};
   mutable std::string                                m_map_path  = {};
@@ -366,7 +320,7 @@ private:
   const sf::Texture                   *m_imported_texture        = { nullptr };
   std::uint16_t                        m_imported_tile_size      = {};
   open_viii::graphics::background::Map m_imported_tile_map       = {};
-  maps                                 m_maps                    = {};
+  ff_8::MapHistory                     m_maps                    = {};
   all_unique_values_and_strings        m_all_unique_values_and_strings = {};
   open_viii::graphics::Rectangle<std::uint32_t> m_canvas               = {};
   static constexpr std::uint8_t                 TILE_SIZE              = 16U;

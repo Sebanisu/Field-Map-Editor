@@ -938,46 +938,67 @@ void gui::slider_xy_sprite(auto &sprite) const
 }
 void gui::menu_bar() const
 {
-  if (ImGui::BeginMenuBar())
+  if (!ImGui::BeginMenuBar())
+    return;
+  const auto end_menu_bar = scope_guard(&ImGui::EndMenuBar);
+  if (ImGui::BeginMenu("File"))
   {
-    if (ImGui::BeginMenu("File"))
+    const auto end_menu = scope_guard(&ImGui::EndMenu);
+    menuitem_locate_ff8();
+    if (map_test())
     {
-      menuitem_locate_ff8();
-      if (map_test())
-      {
-        menuitem_locate_custom_upscale();
-      }
-      ImGui::Separator();
-      menuitem_save_texture(save_texture_path(), mim_test() || map_test());
-      if (mim_test())
-      {
-        ImGui::Separator();
-        menuitem_save_mim_file(m_mim_sprite.mim_filename());
-      }
-      if (map_test())
-      {
-        ImGui::Separator();
-        menuitem_save_map_file(m_map_sprite.map_filename());
-        menuitem_save_map_file_modified(m_map_sprite.map_filename());
-        menuitem_load_map_file(m_map_sprite.map_filename());
-        ImGui::Separator();
-        menuitem_save_swizzle_textures();
-        menuitem_load_swizzle_textures();
-        ImGui::Separator();
-        menuitem_save_deswizzle_textures();
-        menuitem_load_deswizzle_textures();
-      }
-      ImGui::EndMenu();
+      menuitem_locate_custom_upscale();
     }
-    if (ImGui::BeginMenu("Grid"))
+    ImGui::Separator();
+    menuitem_save_texture(save_texture_path(), mim_test() || map_test());
+    if (mim_test())
     {
-      if (ImGui::MenuItem("draw Tile Grid", nullptr, &m_selections.draw_grid))
-      {
-        Configuration config{};
-        config->insert_or_assign(
-          "selections_draw_grid", m_selections.draw_grid);
-        config.save();
-      }
+      ImGui::Separator();
+      menuitem_save_mim_file(m_mim_sprite.mim_filename());
+    }
+    if (map_test())
+    {
+      ImGui::Separator();
+      menuitem_save_map_file(m_map_sprite.map_filename());
+      menuitem_save_map_file_modified(m_map_sprite.map_filename());
+      menuitem_load_map_file(m_map_sprite.map_filename());
+      ImGui::Separator();
+      menuitem_save_swizzle_textures();
+      menuitem_load_swizzle_textures();
+      ImGui::Separator();
+      menuitem_save_deswizzle_textures();
+      menuitem_load_deswizzle_textures();
+    }
+  }
+  if (ImGui::BeginMenu("Edit"))
+  {
+    const auto end_menu = scope_guard(&ImGui::EndMenu);
+    if (ImGui::MenuItem("Undo", "Control + Z", false, m_map_sprite.undo_enabled()))
+    {
+      m_map_sprite.undo();
+    }
+    if (ImGui::MenuItem("Redo", "Control + Y", false, m_map_sprite.redo_enabled()))
+    {
+      m_map_sprite.redo();
+    }
+    ImGui::Separator();
+    if (ImGui::MenuItem("Undo All", "Shift + Control + Z", false, m_map_sprite.undo_enabled()))
+    {
+      m_map_sprite.undo_all();
+    }
+    if (ImGui::MenuItem("Redo All", "Shift + Control + Y", false, m_map_sprite.redo_enabled()))
+    {
+      m_map_sprite.redo_all();
+    }
+    ImGui::Separator();
+    if (ImGui::MenuItem("draw Tile Grid", nullptr, &m_selections.draw_grid))
+    {
+      Configuration config{};
+      config->insert_or_assign("selections_draw_grid", m_selections.draw_grid);
+      config.save();
+    }
+    if((map_test() && m_selections.draw_swizzle) || mim_test())
+    {
       if (ImGui::MenuItem(
             "draw Texture Page Grid",
             nullptr,
@@ -989,70 +1010,68 @@ void gui::menu_bar() const
           m_selections.draw_texture_page_grid);
         config.save();
       }
-      ImGui::EndMenu();
     }
-    if (ImGui::BeginMenu("Batch"))
+  }
+  if (ImGui::BeginMenu("Batch Operation Test"))
+  {
+    const auto end_menu = scope_guard(&ImGui::EndMenu);
+    if (ImGui::MenuItem(
+          "Deswizzle", nullptr, false, static_cast<bool>(m_archives_group)))
     {
-      if (ImGui::MenuItem(
-            "Deswizzle", nullptr, false, static_cast<bool>(m_archives_group)))
-      {
-        m_directory_browser.Open();
-        // std::string base_name = m_map_sprite.get_base_name();
-        // std::string prefix    = base_name.substr(0U, 2U);
-        m_directory_browser.SetTitle("Choose directory to save textures");
-        m_directory_browser.SetPwd(Configuration{}["deswizzle_path"].value_or(
-          std::filesystem::current_path().string()));
-        m_directory_browser.SetTypeFilters({ ".map", ".png" });
-        m_modified_directory_map =
-          map_directory_mode::batch_save_deswizzle_textures;
-      }
-      if (ImGui::MenuItem(
-            "Reswizzle", nullptr, false, static_cast<bool>(m_archives_group)))
-      {
-        m_directory_browser.Open();
-        // std::string base_name = m_map_sprite.get_base_name();
-        // std::string prefix    = base_name.substr(0U, 2U);
-        m_directory_browser.SetTitle(
-          "Choose source directory of deswizzled textures (contains two letter "
-          "directories)");
-        m_directory_browser.SetPwd(Configuration{}["reswizzle_path"].value_or(
-          std::filesystem::current_path().string()));
-        m_directory_browser.SetTypeFilters({ ".map", ".png" });
-        m_modified_directory_map =
-          map_directory_mode::batch_load_deswizzle_textures;
-      }
+      m_directory_browser.Open();
+      // std::string base_name = m_map_sprite.get_base_name();
+      // std::string prefix    = base_name.substr(0U, 2U);
+      m_directory_browser.SetTitle("Choose directory to save textures");
+      m_directory_browser.SetPwd(Configuration{}["deswizzle_path"].value_or(
+        std::filesystem::current_path().string()));
+      m_directory_browser.SetTypeFilters({ ".map", ".png" });
+      m_modified_directory_map =
+        map_directory_mode::batch_save_deswizzle_textures;
+    }
+    if (ImGui::MenuItem(
+          "Reswizzle", nullptr, false, static_cast<bool>(m_archives_group)))
+    {
+      m_directory_browser.Open();
+      // std::string base_name = m_map_sprite.get_base_name();
+      // std::string prefix    = base_name.substr(0U, 2U);
+      m_directory_browser.SetTitle(
+        "Choose source directory of deswizzled textures (contains two letter "
+        "directories)");
+      m_directory_browser.SetPwd(Configuration{}["reswizzle_path"].value_or(
+        std::filesystem::current_path().string()));
+      m_directory_browser.SetTypeFilters({ ".map", ".png" });
+      m_modified_directory_map =
+        map_directory_mode::batch_load_deswizzle_textures;
+    }
 
-      if (ImGui::MenuItem(
-            "Embed .map files into Archives",
-            nullptr,
-            false,
-            static_cast<bool>(m_archives_group)))
-      {
-        m_selections.batch_embed_map_warning_window = true;
-      }
-      if (ImGui::MenuItem(
-            "Test Batch Window", nullptr, &m_selections.test_batch_window))
-      {
-        Configuration config{};
-        config->insert_or_assign(
-          "selections_test_batch_window", m_selections.test_batch_window);
-        config.save();
-      }
-      ImGui::EndMenu();
-    }
-    if (ImGui::BeginMenu("Import"))
+    if (ImGui::MenuItem(
+          "Embed .map files into Archives",
+          nullptr,
+          false,
+          static_cast<bool>(m_archives_group)))
     {
-      if (ImGui::MenuItem(
-            "Import Image", nullptr, &m_selections.display_import_image))
-      {
-        Configuration config{};
-        config->insert_or_assign(
-          "selections_display_import_image", m_selections.display_import_image);
-        config.save();
-      }
-      ImGui::EndMenu();
+      m_selections.batch_embed_map_warning_window = true;
     }
-    ImGui::EndMenuBar();
+    if (ImGui::MenuItem(
+          "Test Batch Window", nullptr, &m_selections.test_batch_window))
+    {
+      Configuration config{};
+      config->insert_or_assign(
+        "selections_test_batch_window", m_selections.test_batch_window);
+      config.save();
+    }
+  }
+  if (ImGui::BeginMenu("Import"))
+  {
+    const auto end_menu = scope_guard(&ImGui::EndMenu);
+    if (ImGui::MenuItem(
+          "Import Image", nullptr, &m_selections.display_import_image))
+    {
+      Configuration config{};
+      config->insert_or_assign(
+        "selections_display_import_image", m_selections.display_import_image);
+      config.save();
+    }
   }
 }
 void gui::browse_for_embed_map_dir() const
@@ -1641,9 +1660,21 @@ void gui::loop_events() const
           }
           if (type == sf::Event::EventType::KeyReleased)
           {
-            if (key.control && key.code == sf::Keyboard::Z)
+            if (key.shift && key.control && key.code == sf::Keyboard::Z)
+            {
+              m_map_sprite.undo_all();
+            }
+            else if (key.shift && key.control && key.code == sf::Keyboard::Y)
+            {
+              m_map_sprite.redo_all();
+            }
+            else if (key.control && key.code == sf::Keyboard::Z)
             {
               m_map_sprite.undo();
+            }
+            else if (key.control && key.code == sf::Keyboard::Y)
+            {
+              m_map_sprite.redo();
             }
             else if (key.code == sf::Keyboard::Up)
             {

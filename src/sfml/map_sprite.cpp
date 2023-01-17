@@ -797,6 +797,7 @@ void map_sprite::update_position(
       }
     }
   });
+  history_remove_duplicate();
   update_render_texture();
 }
 

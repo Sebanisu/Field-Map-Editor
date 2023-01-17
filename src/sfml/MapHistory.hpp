@@ -4,10 +4,13 @@
 
 #ifndef FIELD_MAP_EDITOR_MAPHISTORY_HPP
 #define FIELD_MAP_EDITOR_MAPHISTORY_HPP
-#include "MouseToTilePos.h"
-#include "SimilarAdjustments.hpp"
+// #include "MouseToTilePos.h"
+// #include "SimilarAdjustments.hpp"
+#include "PupuID.hpp"
+#include "scope_guard.hpp"
 #include "UniquifyPupu.hpp"
-#include <ScopeGuard.hpp>
+#include <open_viii/graphics/background/Map.hpp>
+#include <spdlog/spdlog.h>
 namespace ff_8
 {
 // template<typename TileT>
@@ -104,16 +107,14 @@ class [[nodiscard]] MapHistory
     m_front_history.pop_back();
     return front();
   }
-  auto debug_count_print(
-    std::source_location source_location =
-      std::source_location::current()) const
+  auto debug_count_print() const
   {
-    return glengine::ScopeGuardCaptures([=, this]() {
+    return scope_guard([=, this]() {
       spdlog::debug(
         "Map History Count: {}\n\t{}:{}",
         m_back_history.size() + m_front_history.size() + 2U,
-        source_location.file_name(),
-        source_location.line());
+        __FILE__,
+        __LINE__);
     });
   }
 
@@ -311,22 +312,23 @@ public:
       }
     });
   }
-  template<typename TileT, typename LambdaT>
-  void copy_back_perform_operation(
-    const TileT              &tile,
-    const SimilarAdjustments &similar,
-    LambdaT                 &&lambda) const
-  {
-    if (similar)
-    {
-      copy_back_perform_operation<TileT>(
-        similar(tile), std::forward<LambdaT>(lambda));
-    }
-    else
-    {
-      copy_back_and_get_new_tile<TileT>(tile, std::forward<LambdaT>(lambda));
-    }
-  }
+  //  template<typename TileT, typename LambdaT>
+  //  void copy_back_perform_operation(
+  //    const TileT              &tile,
+  //    const SimilarAdjustments &similar,
+  //    LambdaT                 &&lambda) const
+  //  {
+  //    if (similar)
+  //    {
+  //      copy_back_perform_operation<TileT>(
+  //        similar(tile), std::forward<LambdaT>(lambda));
+  //    }
+  //    else
+  //    {
+  //      copy_back_and_get_new_tile<TileT>(tile,
+  //      std::forward<LambdaT>(lambda));
+  //    }
+  //  }
 
   template<typename TileT, typename LambdaT>
   auto get_front_version_of_back_tile(const TileT &tile, LambdaT &&lambda) const
@@ -338,9 +340,7 @@ public:
    * For when a change could happen. we make a copy ahead of time.
    * @return back map
    */
-  [[nodiscard]] MapT &copy_back_preemptive(
-    std::source_location source_location =
-      std::source_location::current()) const
+  [[nodiscard]] MapT &copy_back_preemptive() const
   {
     if (!preemptive_copy_mode)
     {
@@ -349,8 +349,8 @@ public:
       spdlog::debug(
         "Map History preemptive_copy_mode: {}\n\t{}:{}",
         preemptive_copy_mode,
-        source_location.file_name(),
-        source_location.line());
+        __FILE__,
+        __LINE__);
       return temp;
     }
     return back();
@@ -359,9 +359,7 @@ public:
    * After copy_mode is returned to normal copy_back_preemptive will resume
    * making copies.
    */
-  void end_preemptive_copy_mode(
-    std::source_location source_location =
-      std::source_location::current()) const
+  void end_preemptive_copy_mode() const
   {
     if (preemptive_copy_mode)
     {
@@ -369,8 +367,8 @@ public:
       spdlog::debug(
         "Map History preemptive_copy_mode: {}\n\t{}:{}",
         preemptive_copy_mode,
-        source_location.file_name(),
-        source_location.line());
+        __FILE__,
+        __LINE__);
     }
   }
   [[nodiscard]] MapT &copy_back() const
@@ -402,24 +400,28 @@ public:
     bool ret = false;
     while (!undo_enabled() &&
            ((m_front_or_back.back() == Pushed::Back
-             && m_back_history.back() == m_back)
+           && m_back_history.back() == m_back)
             || (m_front_or_back.back() == Pushed::Front
-                && m_front_history.back() == m_front)))
+               && m_front_history.back() == m_front)))
     {
       (void)undo(true);
       ret = true;
     }
     return ret;
   }
-  //  [[nodiscard]] const MapT &copy_back_to_front() const
-  //  {
-  //    m_redo_history.clear();
-  //    m_redo_front_or_back.clear();
-  //    const auto count = debug_count_print();
-  //    m_maps.insert(m_maps.begin(), back());
-  //    m_front_or_back.push_back(Pushed::Front);
-  //    return front();
-  //  }
+  [[nodiscard]] const MapT &copy_back_to_front() const
+  {
+    if (!preemptive_copy_mode)
+    {
+      clear_redo();
+    }
+    const auto count = debug_count_print();
+    m_front_history.push_back(front());
+    m_front_or_back.push_back(Pushed::Front);
+    // todo do we want to recalculate the pupu?
+    m_front = back();
+    return front();
+  }
   //  [[nodiscard]] const MapT &copy_front() const
   //  {
   //    m_redo_history.clear();
@@ -434,11 +436,9 @@ public:
    * Deletes the most recent back or front
    * @return
    */
-  [[nodiscard]] bool
-    redo(std::source_location source_location = std::source_location::current())
-      const
+  [[nodiscard]] bool redo() const
   {
-    const auto count = debug_count_print(source_location);
+    const auto count = debug_count_print();
     if (!redo_enabled())
     {
       return false;
@@ -458,42 +458,36 @@ public:
    * Deletes the most recent back or front
    * @return
    */
-  [[nodiscard]] bool
-    undo(bool skip_redo = false, std::source_location source_location = std::source_location::current())
-      const
+  [[nodiscard]] bool undo(bool skip_redo = false) const
   {
-    const auto count = debug_count_print(source_location);
+    const auto count = debug_count_print();
     if (!undo_enabled())
     {
       return false;
     }
     Pushed last = m_front_or_back.back();
-    if(!skip_redo)
+    if (!skip_redo)
     {
       m_redo_front_or_back.push_back(last);
     }
     m_front_or_back.pop_back();
     if (last == Pushed::Back)
     {
-      (void)undo_back(false);
+      (void)undo_back(skip_redo);
       return true;
     }
-    (void)undo_front(false);
+    (void)undo_front(skip_redo);
     return true;
   }
-  void undo_all(
-    std::source_location source_location =
-      std::source_location::current()) const
+  void undo_all() const
   {
-    while (undo(false,source_location))
+    while (undo())
     {
     }
   }
-  void redo_all(
-    std::source_location source_location =
-      std::source_location::current()) const
+  void redo_all() const
   {
-    while (redo(source_location))
+    while (redo())
     {
     }
   }
@@ -562,6 +556,10 @@ public:
   //      },
   //      filter);
   //  }
+  const auto &const_back() const
+  {
+    return back();
+  }
 };
 }// namespace ff_8
 #endif// FIELD_MAP_EDITOR_MAPHISTORY_HPP

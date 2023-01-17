@@ -592,8 +592,8 @@ public:
           //            return true;
           //          }
           // move_tiles(); //seems to move the tiles extra here for some reason.
-          GetMapHistory()->remove_duplicate();// checks most recent for
-                                              // duplicate
+          (void)GetMapHistory()->remove_duplicate();// checks most recent for
+                                                    // duplicate
         }
         return true;
       });

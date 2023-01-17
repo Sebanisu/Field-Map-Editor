@@ -19,6 +19,8 @@ add_executable(${PROJECT_NAME}_SFML
         archives_group.cpp
         mim_sprite.cpp
         map_sprite.cpp
+        MapHistory.cpp
+        UniquifyPupu.hpp
         grid.cpp
         upscales.cpp
         Configuration.cpp

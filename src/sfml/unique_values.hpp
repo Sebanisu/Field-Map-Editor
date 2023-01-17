@@ -15,40 +15,7 @@
 #include <string>
 #include <utility>
 #include <vector>
-class UniquifyPupu
-{
-public:
-  struct PupuKey
-  {
-    PupuID       pupu_id                            = {};
-    std::int16_t x                                  = {};
-    std::int16_t y                                  = {};
-    auto         operator<=>(const PupuKey &) const = default;
-  };
-  std::map<PupuKey, std::uint8_t> m_pupu_map = {};
-  PupuID
-    operator()(const open_viii::graphics::background::is_tile auto &tile_const)
-  {
-    const auto t           = 16;
-    const auto x           = static_cast<int16_t>(tile_const.x() / t);
-    const auto y           = static_cast<int16_t>(tile_const.y() / t);
-    const auto pupu        = PupuID(tile_const);
-    const auto input_value = PupuKey{ pupu, x, y };
-    auto       insert_key  = [&](PupuKey key) -> PupuID {
-      if (m_pupu_map.contains(key))
-      {
-        ++(m_pupu_map.at(key));
-        return key.pupu_id + m_pupu_map.at(key);
-      }
-      else
-      {
-        m_pupu_map.emplace(key, std::uint8_t{});
-        return key.pupu_id + m_pupu_map.at(key);
-      }
-    };
-    return insert_key(input_value);
-  }
-};
+#include "UniquifyPupu.hpp"
 template<typename T>
 struct unique_values_and_strings
 {
