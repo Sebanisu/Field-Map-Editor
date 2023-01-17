@@ -266,11 +266,10 @@ public:
   void     update_render_texture(bool reload_textures = false) const;
   void     update_position(
         const sf::Vector2i &pixel_pos,
-        const sf::Vector2i &tile_pos,
-        const std::uint8_t &texture_page);
+        const uint8_t      &texture_page,
+        const sf::Vector2i &down_pixel_pos);
   std::vector<std::size_t> find_intersecting(
     const sf::Vector2i &pixel_pos,
-    const sf::Vector2i &tile_pos,
     const std::uint8_t &texture_page,
     bool                skip_filters = false);
   std::size_t row_empties(
@@ -279,7 +278,6 @@ public:
     bool         move_from_row = false);
   sf::Sprite save_intersecting(
     const sf::Vector2i &pixel_pos,
-    const sf::Vector2i &tile_pos,
     const std::uint8_t &texture_page);
   std::uint8_t max_x_for_saved() const;
   void         compact() const;
@@ -337,6 +335,7 @@ private:
 
   mutable std::shared_ptr<std::array<sf::Texture, MAX_TEXTURES>> m_texture = {};
   mutable std::shared_ptr<sf::RenderTexture> m_render_texture              = {};
+  mutable std::shared_ptr<sf::RenderTexture> m_drag_sprite_texture         = {};
   mutable grid                               m_grid                        = {};
   grid                                       m_texture_page_grid           = {};
   std::vector<std::size_t>                   m_saved_indicies              = {};
@@ -543,6 +542,9 @@ private:
     const sf::Vector2u                                  &texture_size,
     const open_viii::graphics::background::is_tile auto &tile_const,
     open_viii::graphics::background::is_tile auto      &&tile) const;
-  sf::Vector2u get_tile_texture_size_for_import() const;
+  sf::Vector2u  get_tile_texture_size_for_import() const;
+  sf::BlendMode set_blend_mode(
+    const open_viii::graphics::background::BlendModeT &blend_mode,
+    std::array<sf::Vertex, 4U>                        &quad) const;
 };
 #endif// FIELD_MAP_EDITOR_MAP_SPRITE_HPP

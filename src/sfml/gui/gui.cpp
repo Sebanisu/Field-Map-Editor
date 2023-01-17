@@ -519,9 +519,8 @@ void gui::on_click_not_imgui() const
           // left mouse down
           // m_mouse_positions.cover =
           m_mouse_positions.sprite = m_map_sprite.save_intersecting(
-            m_mouse_positions.pixel,
-            m_mouse_positions.tile,
-            m_mouse_positions.texture_page);
+            m_mouse_positions.pixel, m_mouse_positions.texture_page);
+          m_mouse_positions.down_pixel = m_mouse_positions.pixel;
           m_mouse_positions.max_tile_x = m_map_sprite.max_x_for_saved();
         }
         else
@@ -529,8 +528,8 @@ void gui::on_click_not_imgui() const
           // left mouse up
           m_map_sprite.update_position(
             m_mouse_positions.pixel,
-            m_mouse_positions.tile,
-            m_mouse_positions.texture_page);
+            m_mouse_positions.texture_page,
+            m_mouse_positions.down_pixel);
           // m_mouse_positions.cover =
           m_mouse_positions.sprite     = {};
           m_mouse_positions.max_tile_x = {};
@@ -561,8 +560,8 @@ void gui::text_mouse_position() const
     {
       format_imgui_text(
         "Tile Pos: ({:2}, {:2})",
-        m_mouse_positions.tile.x,
-        m_mouse_positions.tile.y);
+        m_mouse_positions.pixel.x / 16,
+        m_mouse_positions.pixel.y / 16);
     }
     if (m_selections.draw_swizzle)
     {
@@ -609,8 +608,8 @@ bool gui::handle_mouse_cursor() const
         static constexpr int tile_size       = 16;
         static constexpr int texture_page_t1 = 128;
         static constexpr int texture_page_t2 = 64;
-        m_mouse_positions.tile = m_mouse_positions.pixel / tile_size;
-        auto &tilex            = m_mouse_positions.tile.x;
+        // m_mouse_positions.tile = m_mouse_positions.pixel / tile_size;
+        auto                &tilex           = m_mouse_positions.pixel.x;
         m_mouse_positions.texture_page =
           static_cast<std::uint8_t>(tilex / tile_size);// for 4bit swizzle.
         auto &texture_page = m_mouse_positions.texture_page;
@@ -973,20 +972,30 @@ void gui::menu_bar() const
   if (ImGui::BeginMenu("Edit"))
   {
     const auto end_menu = scope_guard(&ImGui::EndMenu);
-    if (ImGui::MenuItem("Undo", "Control + Z", false, m_map_sprite.undo_enabled()))
+    if (ImGui::MenuItem(
+          "Undo", "Control + Z", false, m_map_sprite.undo_enabled()))
     {
       m_map_sprite.undo();
     }
-    if (ImGui::MenuItem("Redo", "Control + Y", false, m_map_sprite.redo_enabled()))
+    if (ImGui::MenuItem(
+          "Redo", "Control + Y", false, m_map_sprite.redo_enabled()))
     {
       m_map_sprite.redo();
     }
     ImGui::Separator();
-    if (ImGui::MenuItem("Undo All", "Shift + Control + Z", false, m_map_sprite.undo_enabled()))
+    if (ImGui::MenuItem(
+          "Undo All",
+          "Shift + Control + Z",
+          false,
+          m_map_sprite.undo_enabled()))
     {
       m_map_sprite.undo_all();
     }
-    if (ImGui::MenuItem("Redo All", "Shift + Control + Y", false, m_map_sprite.redo_enabled()))
+    if (ImGui::MenuItem(
+          "Redo All",
+          "Shift + Control + Y",
+          false,
+          m_map_sprite.redo_enabled()))
     {
       m_map_sprite.redo_all();
     }
@@ -997,7 +1006,7 @@ void gui::menu_bar() const
       config->insert_or_assign("selections_draw_grid", m_selections.draw_grid);
       config.save();
     }
-    if((map_test() && m_selections.draw_swizzle) || mim_test())
+    if ((map_test() && m_selections.draw_swizzle) || mim_test())
     {
       if (ImGui::MenuItem(
             "draw Texture Page Grid",

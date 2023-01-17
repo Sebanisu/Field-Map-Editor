@@ -551,7 +551,7 @@ std::uint8_t map_sprite::max_x_for_saved() const
             }
             return 128U;
           }
-          return TILE_SIZE;
+          return TILE_SIZE;// todo invalid?
         });
 
     const auto it = std::ranges::min_element(transform_range);
@@ -573,8 +573,8 @@ template<typename key_lambdaT, typename weight_lambdaT>
          --pass)// at least 2 passes needed as things might get shifted to
                 // other texture pages and then the keys are less valuable.
     {
-      auto pointers =
-        this->generate_map(tiles, key_lambda, [](auto &&tile) { return &tile; });
+      auto pointers = this->generate_map(
+        tiles, key_lambda, [](auto &&tile) { return &tile; });
       std::uint8_t col        = {};
       std::uint8_t row        = {};
       std::uint8_t page       = {};
@@ -718,23 +718,23 @@ std::size_t map_sprite::row_empties(
       return total;
     });
 }
-
 void map_sprite::update_position(
   const sf::Vector2i &pixel_pos,
-  const sf::Vector2i &tile_pos,
-  const std::uint8_t &texture_page)
+  const uint8_t      &texture_page,
+  const sf::Vector2i &down_pixel_pos)
 {
   if (m_saved_indicies.empty())
   {
     return;
   }
-  m_maps.copy_back().visit_tiles([this, &tile_pos, &texture_page, &pixel_pos](
-                                   auto &&tiles) {
+  m_maps.copy_back().visit_tiles([this,
+                                  &texture_page,
+                                  &pixel_pos,
+                                  &down_pixel_pos](auto &&tiles) {
     std::uint8_t max_x = max_x_for_saved() * TILE_SIZE;
     if (m_draw_swizzle)
     {
-      if (auto intersecting =
-            find_intersecting(pixel_pos, tile_pos, texture_page, true);
+      if (auto intersecting = find_intersecting(pixel_pos, texture_page, true);
           !intersecting.empty())
       {
         // this might not be good enough as two 4 bpp tiles fit in the
@@ -746,8 +746,8 @@ void map_sprite::update_position(
           intersecting.size());
         return;
       }
-      const auto &tile     = tiles[m_saved_indicies.front()];
-      bool        same_row = ((tile.source_y() / TILE_SIZE) == tile_pos.y)
+      const auto &tile = tiles[m_saved_indicies.front()];
+      bool same_row = ((tile.source_y() / TILE_SIZE) == pixel_pos.y / TILE_SIZE)
                       && (texture_page == tile.texture_id());
       //        spdlog::info("{} == {} && {} == {}",
       //          (tile.source_y() / TILE_SIZE),
@@ -755,7 +755,9 @@ void map_sprite::update_position(
       //          texture_page,
       //          tile.texture_id());
       const auto empty_count = row_empties(
-        static_cast<std::uint8_t>(tile_pos.y), texture_page, same_row);
+        static_cast<std::uint8_t>(pixel_pos.y / TILE_SIZE),
+        texture_page,
+        same_row);
       spdlog::info("Empty cells in row = {}", empty_count);
       if (empty_count == 0)
       {
@@ -768,7 +770,7 @@ void map_sprite::update_position(
       if (m_draw_swizzle)
       {
         if (auto intersecting =
-              find_intersecting(pixel_pos, tile_pos, texture_page, true);
+              find_intersecting(pixel_pos, texture_page, true);
             !intersecting.empty())
         {
           if (std::ranges::any_of(intersecting, [&tile, &tiles](const auto &j) {
@@ -782,65 +784,98 @@ void map_sprite::update_position(
             continue;
           }
         }
-        tile = tile
-                 .with_source_xy(
-                   (std::min)(
-                     static_cast<std::uint8_t>(tile_pos.x * TILE_SIZE), max_x),
-                   static_cast<std::uint8_t>(tile_pos.y * TILE_SIZE))
-                 .with_texture_id(texture_page);
+        tile =
+          tile
+            .with_source_xy(
+              (std::min)(
+                static_cast<std::uint8_t>(
+                  (pixel_pos.x / TILE_SIZE) * TILE_SIZE),
+                max_x),
+              static_cast<std::uint8_t>((pixel_pos.y / TILE_SIZE) * TILE_SIZE))
+            .with_texture_id(texture_page);
       }
       else
       {
-        tile = tile.with_xy(
-          static_cast<std::int16_t>((pixel_pos.x / TILE_SIZE) * TILE_SIZE),
-          static_cast<std::int16_t>((pixel_pos.y / TILE_SIZE) * TILE_SIZE));
+        const std::int32_t x_offset = down_pixel_pos.x - tile.x();
+        const std::int32_t y_offset = down_pixel_pos.y - tile.y();
+        tile                        = tile.with_xy(
+          static_cast<std::int16_t>(pixel_pos.x - x_offset),
+          static_cast<std::int16_t>(pixel_pos.y - y_offset));
       }
     }
   });
   history_remove_duplicate();
+  m_saved_indicies.clear();
   update_render_texture();
 }
 
 sf::Sprite map_sprite::save_intersecting(
   const sf::Vector2i &pixel_pos,
-  const sf::Vector2i &tile_pos,
   const std::uint8_t &texture_page)
 {
   static constexpr auto tile_size_float = static_cast<float>(TILE_SIZE);
   sf::Sprite            sprite          = {};
-  sprite.setTexture(m_render_texture->getTexture());
   sprite.setTextureRect(
-    { (pixel_pos.x / static_cast<int>(TILE_SIZE)) * static_cast<int>(TILE_SIZE)
-        * static_cast<int>(m_scale),
-
-      tile_pos.y * static_cast<int>(TILE_SIZE) * static_cast<int>(m_scale),
-      static_cast<int>(TILE_SIZE) * static_cast<int>(m_scale),
-
-      static_cast<int>(TILE_SIZE) * static_cast<int>(m_scale) });
+    { 0,
+      0,
+      static_cast<int>(TILE_SIZE) * static_cast<int>(m_scale) * 2,
+      static_cast<int>(TILE_SIZE) * static_cast<int>(m_scale) * 2 });
   sprite.setPosition(
-    static_cast<float>(pixel_pos.x / TILE_SIZE) * tile_size_float,
-    static_cast<float>(tile_pos.y) * tile_size_float);
-  sprite.setScale(
-    1.F / static_cast<float>(m_scale), 1.F / static_cast<float>(m_scale));
-  m_saved_indicies = find_intersecting(pixel_pos, tile_pos, texture_page);
+    static_cast<float>(pixel_pos.x) - TILE_SIZE,
+    static_cast<float>(pixel_pos.y) - TILE_SIZE);
+  //  sprite.setScale(
+  //    1.F / static_cast<float>(m_scale), 1.F / static_cast<float>(m_scale));
+  m_saved_indicies = find_intersecting(pixel_pos, texture_page);
+  m_drag_sprite_texture->clear(sf::Color::Transparent);
+  (void)m_maps.const_back().visit_tiles([this, &pixel_pos](const auto &tiles) {
+    sf::RenderStates states        = {};
+    const auto render_texture_size = m_render_texture->getSize() / m_scale;
+    states.transform.translate(sf::Vector2f(
+      static_cast<float>(-pixel_pos.x + TILE_SIZE),
+      static_cast<float>(-pixel_pos.y + TILE_SIZE)));
+    for (const auto i : m_saved_indicies)
+    {
+      const auto &tile = tiles[i];
+      states.texture =
+        get_texture(tile.depth(), tile.palette_id(), tile.texture_id());
+      if (
+        states.texture == nullptr || states.texture->getSize().y == 0
+        || states.texture->getSize().x == 0)
+      {
+        continue;
+      }
+      const auto draw_size    = get_tile_draw_size();
+      const auto texture_size = get_tile_texture_size(states.texture);
+      auto       quad = get_triangle_strip(draw_size, texture_size, tile, tile);
+      states.blendMode = sf::BlendAlpha;
+      if (!m_disable_blends)
+      {
+        states.blendMode = set_blend_mode(tile.blend_mode(), quad);
+      }
+
+      m_drag_sprite_texture->draw(
+        quad.data(), quad.size(), sf::TriangleStrip, states);
+    }
+  });
+  m_drag_sprite_texture->display();
+  sprite.setTexture(m_drag_sprite_texture->getTexture());
+  update_render_texture();
   return sprite;
 }
 
 
 std::vector<size_t> map_sprite::find_intersecting(
   const sf::Vector2i &pixel_pos,
-  const sf::Vector2i &tile_pos,
   const std::uint8_t &texture_page,
   const bool          skip_filters)
 {
   return m_maps.const_back().visit_tiles(
-    [this, &tile_pos, &texture_page, &pixel_pos, &skip_filters](
-      const auto &tiles) {
+    [this, &texture_page, &pixel_pos, &skip_filters](const auto &tiles) {
       std::vector<std::size_t> out = {};
       auto                     filtered_tiles =
         tiles
         | std::views::filter(
-          [this, &skip_filters, &tile_pos, &texture_page, &pixel_pos](
+          [this, &skip_filters, &texture_page, &pixel_pos](
             const auto &tile) -> bool {
             static constexpr auto in_bounds = [](auto i, auto low, auto high) {
               return std::cmp_greater_equal(i, low)
@@ -852,9 +887,11 @@ std::vector<size_t> map_sprite::find_intersecting(
             }
             if (m_draw_swizzle)
             {
-              if (std::cmp_equal(tile_pos.x, tile.source_x() / TILE_SIZE))
+              if (std::cmp_equal(
+                    pixel_pos.x / TILE_SIZE, tile.source_x() / TILE_SIZE))
               {
-                if (std::cmp_equal(tile_pos.y, tile.source_y() / TILE_SIZE))
+                if (std::cmp_equal(
+                      pixel_pos.y / TILE_SIZE, tile.source_y() / TILE_SIZE))
                 {
                   if (std::cmp_equal(tile.texture_id(), texture_page))
                   {
@@ -988,6 +1025,19 @@ void map_sprite::for_all_tiles(
                     [[maybe_unused]] const auto &tile_const,
                     const auto                  &tile,
                     const PupuID                &pupu_id) {
+      if(!m_saved_indicies.empty())
+      {
+        //skip saved indices on redraw.
+        const auto current_index = m_maps.get_offset_from_back(tile);
+        const auto find_index =
+          std::ranges::find_if(m_saved_indicies, [&current_index](const auto i) {
+            return std::cmp_equal(i, current_index);
+          });
+        if (find_index != m_saved_indicies.end())
+        {
+          return;
+        }
+      }
       if (m_filters.pupu.enabled())
       {
         if (m_filters.pupu.value() != pupu_id)
@@ -1051,29 +1101,7 @@ void map_sprite::for_all_tiles(
       states.blendMode = sf::BlendAlpha;
       if (!m_disable_blends)
       {
-        if (tile.blend_mode() == BlendModeT::add)
-        {
-          states.blendMode = sf::BlendAdd;
-        }
-        else if (tile.blend_mode() == BlendModeT::half_add)
-        {
-          states.blendMode = sf::BlendAdd;
-          constexpr static std::uint8_t per50 =
-            (std::numeric_limits<std::uint8_t>::max)() / 2U;
-          set_color(quad, { per50, per50, per50, per50 });// 50% alpha
-        }
-        else if (tile.blend_mode() == BlendModeT::quarter_add)
-        {
-          states.blendMode = sf::BlendAdd;
-          constexpr static std::uint8_t per25 =
-            (std::numeric_limits<std::uint8_t>::max)() / 4U;
-          set_color(quad, { per25, per25, per25, per25 });// 25% alpha
-        }
-        else if (tile.blend_mode() == BlendModeT::subtract)
-        {
-          states.blendMode = GetBlendSubtract();
-          // states.blendMode = sf::BlendMultiply;
-        }
+        states.blendMode = set_blend_mode(tile.blend_mode(), quad);
       }
       // apply the tileset texture
 
@@ -1085,6 +1113,32 @@ void map_sprite::for_all_tiles(
     });
   }
   return drew;
+}
+sf::BlendMode map_sprite::set_blend_mode(
+  const BlendModeT           &blend_mode,
+  std::array<sf::Vertex, 4U> &quad) const
+{
+  if (blend_mode == BlendModeT::add)
+  {
+    return sf::BlendAdd;
+  }
+  else if (blend_mode == BlendModeT::half_add)
+  {
+    constexpr static uint8_t per50 = (std::numeric_limits<uint8_t>::max)() / 2U;
+    set_color(quad, { per50, per50, per50, per50 });// 50% alpha
+    return sf::BlendAdd;
+  }
+  else if (blend_mode == BlendModeT::quarter_add)
+  {
+    constexpr static uint8_t per25 = (std::numeric_limits<uint8_t>::max)() / 4U;
+    set_color(quad, { per25, per25, per25, per25 });// 25% alpha
+    return sf::BlendAdd;
+  }
+  else if (blend_mode == BlendModeT::subtract)
+  {
+    return GetBlendSubtract();
+  }
+  return sf::BlendAlpha;
 }
 [[nodiscard]] bool map_sprite::draw_imported(
   sf::RenderTarget &target,
@@ -1458,13 +1512,16 @@ void map_sprite::resize_render_texture() const
       width() * m_scale,
       height() * m_scale);
     m_render_texture->create(width() * m_scale, height() * m_scale);
+    m_drag_sprite_texture->create(
+      TILE_SIZE * m_scale * 2, TILE_SIZE * m_scale * 2);
   }
 }
 void map_sprite::init_render_texture() const
 {
-  if (!m_render_texture)
+  if (!m_render_texture || !m_drag_sprite_texture)
   {
-    m_render_texture = std::make_shared<sf::RenderTexture>();
+    m_render_texture      = std::make_shared<sf::RenderTexture>();
+    m_drag_sprite_texture = std::make_shared<sf::RenderTexture>();
   }
   resize_render_texture();
   update_render_texture();
@@ -2181,10 +2238,10 @@ void map_sprite::load_map(const std::filesystem::path &src_path) const
         using TileT   = std::remove_cvref_t<decltype(const_tiles.front())>;
         m_maps.back() = open_viii::graphics::background::Map(
           [&os]() -> std::variant<
-                          open_viii::graphics::background::Tile1,
-                          open_viii::graphics::background::Tile2,
-                          open_viii::graphics::background::Tile3,
-                          std::monostate> {
+                    open_viii::graphics::background::Tile1,
+                    open_viii::graphics::background::Tile2,
+                    open_viii::graphics::background::Tile3,
+                    std::monostate> {
             TileT      tile{};
             const auto append = [&os](auto &t) -> bool {
               // load tile

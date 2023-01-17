@@ -8,7 +8,7 @@
 struct mouse_positions
 {
   sf::Vector2i       pixel         = {};
-  sf::Vector2i       tile          = {};
+  sf::Vector2i       down_pixel    = {};
   std::uint8_t       texture_page  = {};
   bool               left          = { false };
   bool               mouse_enabled = { false };

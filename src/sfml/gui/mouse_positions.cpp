@@ -20,15 +20,23 @@ bool mouse_positions::left_changed() const
 void mouse_positions::update_sprite_pos(bool swizzle, float spacing)
 {
   float x = {};
+  float y = {};
   if (swizzle && max_tile_x != 0U)
   {
-    x = ((std::min)(static_cast<std::uint8_t>(tile.x), max_tile_x) * 16.F)
+    x = ((std::min)(static_cast<std::uint8_t>(pixel.x/16), max_tile_x) * 16.F)
         + (texture_page * spacing);
   }
   else
   {
-    x = (static_cast<float>(pixel.x / 16)) * 16.F;
+    x = static_cast<float>(pixel.x);
   }
-  float y = (static_cast<float>(pixel.y / 16)) * 16.F;
-  sprite.setPosition(x, y);
+  if (swizzle)
+  {
+    y = (static_cast<float>(pixel.y / 16)) * 16.F;
+  }
+  else
+  {
+    y = static_cast<float>(pixel.y);
+  }
+  sprite.setPosition(x-16.F, y-16.F);
 }
