@@ -826,7 +826,7 @@ sf::Sprite map_sprite::save_intersecting(
   //  sprite.setScale(
   //    1.F / static_cast<float>(m_scale), 1.F / static_cast<float>(m_scale));
   m_saved_indicies = find_intersecting(pixel_pos, texture_page);
-  m_drag_sprite_texture->clear(sf::Color::Transparent);
+  m_drag_sprite_texture->clear(sf::Color::Green);
   (void)m_maps.const_back().visit_tiles([this, &pixel_pos](const auto &tiles) {
     sf::RenderStates states        = {};
     const auto render_texture_size = m_render_texture->getSize() / m_scale;

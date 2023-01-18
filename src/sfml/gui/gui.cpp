@@ -97,8 +97,16 @@ void gui::start() const
       }
       if (m_scrolling.scroll(xy, dt))
       {
-        m_changed                     = true;
+        m_changed                     = false;
         m_mouse_positions.mouse_moved = true;
+        if (mim_test())
+        {
+          move_camera(m_mim_sprite);
+        }
+        else if (map_test())
+        {
+          move_camera(m_map_sprite);
+        }
       }
       ImGui::SFML::Update(m_window, dt);
       loop();
@@ -526,10 +534,21 @@ void gui::on_click_not_imgui() const
         else
         {
           // left mouse up
-          m_map_sprite.update_position(
-            m_mouse_positions.pixel,
-            m_mouse_positions.texture_page,
-            m_mouse_positions.down_pixel);
+          if (m_selections.draw_swizzle)
+          {
+            m_map_sprite.update_position(
+              { m_mouse_positions.pixel.x / 256, m_mouse_positions.pixel.y },
+              m_mouse_positions.texture_page,
+              m_mouse_positions.down_pixel);
+          }
+          else
+          {
+            m_map_sprite.update_position(
+              m_mouse_positions.pixel,
+              m_mouse_positions.texture_page,
+              m_mouse_positions.down_pixel);
+          }
+
           // m_mouse_positions.cover =
           m_mouse_positions.sprite     = {};
           m_mouse_positions.max_tile_x = {};
@@ -610,24 +629,32 @@ bool gui::handle_mouse_cursor() const
         static constexpr int texture_page_t2 = 64;
         // m_mouse_positions.tile = m_mouse_positions.pixel / tile_size;
         auto                &tilex           = m_mouse_positions.pixel.x;
+
         m_mouse_positions.texture_page =
-          static_cast<std::uint8_t>(tilex / tile_size);// for 4bit swizzle.
-        auto &texture_page = m_mouse_positions.texture_page;
-        if (is_swizzle)
-        {
-          tilex %= tile_size;
-          if (mim_test())
-          {
-            if (m_selections.bpp == 1)
-            {
-              texture_page = static_cast<std::uint8_t>(x / texture_page_t1);
-            }
-            else if (m_selections.bpp == 2)
-            {
-              texture_page = static_cast<std::uint8_t>(x / texture_page_t2);
-            }
-          }
-        }
+          static_cast<std::uint8_t>(tilex / 256);// for 4bit swizzle.
+        //        if (m_mouse_positions.left)
+        //          spdlog::info(
+        //            "tilex: {} texture_page: {}",
+        //            tilex,
+        //            m_mouse_positions.texture_page);
+        //        auto &texture_page = m_mouse_positions.texture_page;
+        //        if (is_swizzle)
+        //        {
+        //          tilex = ((tilex / tile_size) * tile_size) % 256;
+        //          if (mim_test())
+        //          {
+        //            if (m_selections.bpp == 1)
+        //            {
+        //              texture_page = static_cast<std::uint8_t>(x /
+        //              texture_page_t1);
+        //            }
+        //            else if (m_selections.bpp == 2)
+        //            {
+        //              texture_page = static_cast<std::uint8_t>(x /
+        //              texture_page_t2);
+        //            }
+        //          }
+        //}
       }
     }
   }
@@ -919,22 +946,7 @@ void gui::combo_palette() const
   }
 }
 
-void gui::slider_xy_sprite(auto &sprite) const
-{
-  format_imgui_text(
-    "X: {:>9.3f} px  Width:  {:>4} px", -std::abs(m_cam_pos.x), sprite.width());
-  format_imgui_text(
-    "Y: {:>9.3f} px  Height: {:>4} px",
-    -std::abs(m_cam_pos.y),
-    sprite.height());
-  if (ImGui::SliderFloat2("Adjust", xy.data(), -1.0F, 0.0F) || m_changed)
-  {
-    m_cam_pos = { -xy[0] * (static_cast<float>(sprite.width()) - m_scale_width),
-                  -xy[1] * static_cast<float>(sprite.height()) };
-    m_changed = true;
-    scale_window();
-  }
-}
+
 void gui::menu_bar() const
 {
   if (!ImGui::BeginMenuBar())
@@ -1664,6 +1676,25 @@ void gui::loop_events() const
         [this, type](const sf::Event::KeyEvent &key) {
           if (ImGui::GetIO().WantCaptureKeyboard)
           {
+            if (type == sf::Event::EventType::KeyPressed)
+            {
+              if (key.code == sf::Keyboard::Up)
+              {
+                spdlog::info("up");
+              }
+              else if (key.code == sf::Keyboard::Down)
+              {
+                spdlog::info("down");
+              }
+              else if (key.code == sf::Keyboard::Left)
+              {
+                spdlog::info("left");
+              }
+              else if (key.code == sf::Keyboard::Right)
+              {
+                spdlog::info("right");
+              }
+            }
             m_scrolling.reset();
             return;
           }
@@ -1702,7 +1733,7 @@ void gui::loop_events() const
               m_scrolling.right = false;
             }
           }
-          if (type == sf::Event::EventType::KeyPressed)
+          else if (type == sf::Event::EventType::KeyPressed)
           {
             if (key.code == sf::Keyboard::Up)
             {

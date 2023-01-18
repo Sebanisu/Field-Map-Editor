@@ -564,7 +564,6 @@ private:
   void                      file_browser_save_texture() const;
   void                      file_browser_locate_ff8() const;
   void                      menu_bar() const;
-  void                      slider_xy_sprite(auto &sprite) const;
   void                      combo_pupu() const;
   void                      combo_palette() const;
   void                      combo_bpp() const;
@@ -743,7 +742,30 @@ private:
   void        begin_batch_embed_map_warning_window() const;
   void        sort_paths() const;
   static std::vector<std::filesystem::path>
-    find_maps_in_directory(std::filesystem::path src, size_t reserve = {});
+       find_maps_in_directory(std::filesystem::path src, size_t reserve = {});
+
+  void slider_xy_sprite(auto &sprite) const
+  {
+    format_imgui_text(
+      "X: {:>9.3f} px  Width:  {:>4} px",
+      -std::abs(m_cam_pos.x),
+      sprite.width());
+    format_imgui_text(
+      "Y: {:>9.3f} px  Height: {:>4} px",
+      -std::abs(m_cam_pos.y),
+      sprite.height());
+    if (ImGui::SliderFloat2("Adjust", xy.data(), -1.0F, 0.0F) || m_changed)
+    {
+      move_camera(sprite);
+    }
+  }
+  void move_camera(const auto &sprite) const
+  {
+    m_cam_pos = { -xy[0] * (static_cast<float>(sprite.width()) - m_scale_width),
+                  -xy[1] * static_cast<float>(sprite.height()) };
+    m_changed = true;
+    scale_window();
+  }
 };
 }// namespace fme
 #endif// FIELD_MAP_EDITOR_GUI_HPP
