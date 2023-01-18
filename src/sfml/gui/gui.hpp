@@ -27,6 +27,7 @@
 #include <imgui-SFML.h>
 #include <imgui.h>
 #include <SFML/Graphics/RenderWindow.hpp>
+#include <SFML/Graphics/Shader.hpp>
 
 #define USE_THREADS
 namespace fme
@@ -40,6 +41,7 @@ public:
 private:
   inline static std::mutex                         append_results_mutex = {};
   inline static std::vector<std::filesystem::path> append_results       = {};
+  mutable std::shared_ptr<sf::Shader>              m_drag_sprite_shader = {};
   mutable selections                               m_selections         = {};
   mutable scrolling                                m_scrolling          = {};
   mutable batch_deswizzle                          m_batch_deswizzle    = {};

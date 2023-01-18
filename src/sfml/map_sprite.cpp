@@ -826,7 +826,9 @@ sf::Sprite map_sprite::save_intersecting(
   //  sprite.setScale(
   //    1.F / static_cast<float>(m_scale), 1.F / static_cast<float>(m_scale));
   m_saved_indicies = find_intersecting(pixel_pos, texture_page);
-  m_drag_sprite_texture->clear(sf::Color::Green);
+  spdlog::info(
+    "count m_saved_indicies: {}", std::ranges::size(m_saved_indicies));
+  m_drag_sprite_texture->clear(sf::Color::Transparent);
   (void)m_maps.const_back().visit_tiles([this, &pixel_pos](const auto &tiles) {
     sf::RenderStates states        = {};
     const auto render_texture_size = m_render_texture->getSize() / m_scale;
@@ -888,10 +890,12 @@ std::vector<size_t> map_sprite::find_intersecting(
             if (m_draw_swizzle)
             {
               if (std::cmp_equal(
-                    pixel_pos.x / TILE_SIZE, tile.source_x() / TILE_SIZE))
+                    (pixel_pos.x % 256) / TILE_SIZE,
+                    tile.source_x() / TILE_SIZE))
               {
                 if (std::cmp_equal(
-                      pixel_pos.y / TILE_SIZE, tile.source_y() / TILE_SIZE))
+                      (pixel_pos.y % 256) / TILE_SIZE,
+                      tile.source_y() / TILE_SIZE))
                 {
                   if (std::cmp_equal(tile.texture_id(), texture_page))
                   {
@@ -1025,12 +1029,12 @@ void map_sprite::for_all_tiles(
                     [[maybe_unused]] const auto &tile_const,
                     const auto                  &tile,
                     const PupuID                &pupu_id) {
-      if(!m_saved_indicies.empty())
+      if (!m_saved_indicies.empty())
       {
-        //skip saved indices on redraw.
+        // skip saved indices on redraw.
         const auto current_index = m_maps.get_offset_from_back(tile);
-        const auto find_index =
-          std::ranges::find_if(m_saved_indicies, [&current_index](const auto i) {
+        const auto find_index    = std::ranges::find_if(
+          m_saved_indicies, [&current_index](const auto i) {
             return std::cmp_equal(i, current_index);
           });
         if (find_index != m_saved_indicies.end())

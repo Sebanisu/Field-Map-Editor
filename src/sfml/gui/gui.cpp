@@ -13,6 +13,38 @@ using namespace open_viii::graphics::background;
 using namespace open_viii::graphics;
 using namespace open_viii::graphics::literals;
 using namespace std::string_literals;
+static const std::string border_shader_raw = R"(#version 130
+uniform sampler2D texture;
+uniform float borderWidth;
+
+void main()
+{
+    vec4 pixel = texture2D(texture, gl_TexCoord[0].st);
+    vec2 texelSize = vec2(1.0/textureSize(texture,0).x, 1.0/textureSize(texture,0).y);
+    float alpha = 0;
+    int space = int(borderWidth);
+    int threshold = (2*space) * (2*space);
+    int count = 0;
+    for(int y=-space;y<=space;++y)
+    {
+      for(int x=-space;x<=space;++x)
+      {
+        if(texture2D(texture, gl_TexCoord[0].st + vec2(x*texelSize.x, y*texelSize.y)).a > 0.5)
+        {
+            count++;
+        }
+      }
+    }
+    if(pixel.a > 0.5)
+    {
+      gl_FragColor = pixel;
+    }
+    else
+    {
+      gl_FragColor = vec4(1, 0, 0, float(count)/float(threshold));
+    }
+}
+)";
 /**
  * @see https://godbolt.org/z/xce9jEbqh
  * @tparam T enforced std::filesystem::path
@@ -270,7 +302,16 @@ void gui::loop() const
   }
   //  m_mouse_positions.cover.setColor(clear_color);
   //  m_window.draw(m_mouse_positions.cover);
-  m_window.draw(m_mouse_positions.sprite);
+
+  sf::RenderStates states = {};
+  if (m_drag_sprite_shader)
+  {
+    m_drag_sprite_shader->setUniform(
+      "texture", *m_mouse_positions.sprite.getTexture());
+    m_drag_sprite_shader->setUniform("borderWidth", 2.5F);
+    states.shader = m_drag_sprite_shader.get();
+  }
+  m_window.draw(m_mouse_positions.sprite, states);
   ImGui::SFML::Render(m_window);
   m_window.display();
   m_first = false;
@@ -1889,6 +1930,12 @@ void gui::init_and_get_style() const
   (void)ImGui::SFML::Init(m_window);
   if (m_field)
     generate_upscale_paths(m_field->get_base_name(), get_coo());
+  if (!m_drag_sprite_shader)
+  {
+    m_drag_sprite_shader = std::make_shared<sf::Shader>();
+    m_drag_sprite_shader->loadFromMemory(
+      border_shader_raw, sf::Shader::Fragment);
+  }
 }
 gui::gui()
   : m_window(get_render_window())
