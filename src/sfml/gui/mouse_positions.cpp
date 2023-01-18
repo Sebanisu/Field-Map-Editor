@@ -40,5 +40,5 @@ void mouse_positions::update_sprite_pos([[maybe_unused]]bool swizzle, [[maybe_un
   {
     y = static_cast<float>(pixel.y);
   }
-  sprite.setPosition(x-16.F, y-16.F);
+  sprite.setPosition(x-24.F, y-24.F);
 }
