@@ -727,89 +727,53 @@ void map_sprite::update_position(
   {
     return;
   }
-  m_maps.copy_back().visit_tiles(
-    [this, &texture_page, &pixel_pos, &down_pixel_pos](auto &&tiles) {
-      //      std::uint8_t max_x = max_x_for_saved() * TILE_SIZE;
-      //      if (m_draw_swizzle)
-      //      {
-      //
-      //        if (auto intersecting =
-      //              find_intersecting(pixel_pos, texture_page, true);
-      //            !intersecting.empty())
-      //        {
-      //          // this might not be good enough as two 4 bpp tiles fit in the
-      //          // same location as 8 bpp. and two 8 bpp fit in space for 16
-      //          bpp.
-      //          // but this should catch obvious problems.
-      //          spdlog::info(
-      //            "There are {} tiles at this location. Choose an empty "
-      //            "location!",
-      //            intersecting.size());
-      //          return;
-      //        }
-      //        const auto &tile = tiles[m_saved_indicies.front()];
-      //        bool        same_row =
-      //          ((tile.source_y() / TILE_SIZE) == pixel_pos.y / TILE_SIZE)
-      //          && (texture_page == tile.texture_id());
-      //        //        spdlog::info("{} == {} && {} == {}",
-      //        //          (tile.source_y() / TILE_SIZE),
-      //        //          tile_pos.y,
-      //        //          texture_page,
-      //        //          tile.texture_id());
-      //        const auto empty_count = row_empties(
-      //          static_cast<std::uint8_t>(pixel_pos.y / TILE_SIZE),
-      //          texture_page,
-      //          same_row);
-      //        spdlog::info("Empty cells in row = {}", empty_count);
-      //        if (empty_count == 0)
-      //        {
-      //          return;
-      //        }
-      //      }
-      for (auto i : m_saved_indicies)
+  m_maps.copy_back().visit_tiles([this,
+                                  &texture_page,
+                                  &pixel_pos,
+                                  &down_pixel_pos](auto &&tiles) {
+    for (auto i : m_saved_indicies)
+    {
+      auto &tile = tiles[i];
+      if (m_draw_swizzle)
       {
-        auto &tile = tiles[i];
-        if (m_draw_swizzle)
+        if (auto intersecting =
+              find_intersecting(pixel_pos, texture_page, true);
+            !intersecting.empty())
         {
-          //        if (auto intersecting =
-          //              find_intersecting(pixel_pos, texture_page, true);
-          //            !intersecting.empty())
-          //        {
-          //          if (std::ranges::any_of(intersecting, [&tile,
-          //          &tiles](const auto &j) {
-          //                const auto &other_tile = tiles[j];
-          //                return (tile.depth() != other_tile.depth())
-          //                       || (tile.palette_id() !=
-          //                       other_tile.palette_id());
-          //              }))
-          //          {
-          //            // this second pass is to make sure tiles you are moving
-          //            aren't
-          //            // conflicting with different bpp or palette.
-          //            continue;
-          //          }
-          //        }
-          const std::int32_t x_offset =
-            (down_pixel_pos.x % 256) - static_cast<int>(tile.source_x());
-          const std::int32_t y_offset =
-            down_pixel_pos.y - static_cast<int>(tile.source_y());
-          tile =
-            tile
-              .with_source_xy(
-                static_cast<std::uint8_t>((((pixel_pos.x % 256) - x_offset))),
-                static_cast<std::uint8_t>(((pixel_pos.y - y_offset))))
-              .with_texture_id(texture_page);
+          // this might not be good enough as two 4 bpp tiles fit in the
+          // same location as 8 bpp. and two 8 bpp fit in space for 16
+          // bpp but this should catch obvious problems.
+
+          // in the end it is safer to keep all 8bpp tiles aligned left
+          // and all 4bpp aligned right. For each Texture page.
+          // 16bpp are rare but they should be left of 8bpp.
+          spdlog::info(
+            "There is at least {} tile(s) at this location. Choose an empty "
+            "location!",// at least because i am filtering by depth and palette
+            intersecting.size());
+          return;
         }
-        else
-        {
-          const std::int32_t x_offset = down_pixel_pos.x - tile.x();
-          const std::int32_t y_offset = down_pixel_pos.y - tile.y();
-          tile                        = tile.with_xy(
-            static_cast<std::int16_t>(pixel_pos.x - x_offset),
-            static_cast<std::int16_t>(pixel_pos.y - y_offset));
-        }
+        const std::int32_t x_offset =
+          (down_pixel_pos.x % 256) - static_cast<int>(tile.source_x());
+        const std::int32_t y_offset =
+          down_pixel_pos.y - static_cast<int>(tile.source_y());
+        tile =
+          tile
+            .with_source_xy(
+              static_cast<std::uint8_t>((((pixel_pos.x % 256) - x_offset))),
+              static_cast<std::uint8_t>(((pixel_pos.y - y_offset))))
+            .with_texture_id(texture_page);
       }
-    });
+      else
+      {
+        const std::int32_t x_offset = down_pixel_pos.x - tile.x();
+        const std::int32_t y_offset = down_pixel_pos.y - tile.y();
+        tile                        = tile.with_xy(
+          static_cast<std::int16_t>(pixel_pos.x - x_offset),
+          static_cast<std::int16_t>(pixel_pos.y - y_offset));
+      }
+    }
+  });
   history_remove_duplicate();
   m_saved_indicies.clear();
   update_render_texture();
@@ -819,8 +783,8 @@ sf::Sprite map_sprite::save_intersecting(
   const sf::Vector2i &pixel_pos,
   const std::uint8_t &texture_page)
 {
-  //static constexpr auto tile_size_float = static_cast<float>(TILE_SIZE);
-  sf::Sprite            sprite          = {};
+  // static constexpr auto tile_size_float = static_cast<float>(TILE_SIZE);
+  sf::Sprite sprite = {};
   sprite.setTextureRect(
     { 0,
       0,
@@ -836,8 +800,9 @@ sf::Sprite map_sprite::save_intersecting(
   m_maps.front().visit_tiles([this, &pixel_pos](const auto &front_tiles) {
     m_maps.const_back().visit_tiles(
       [this, &pixel_pos, &front_tiles](const auto &tiles) {
-        sf::RenderStates states        = {};
-//        const auto render_texture_size = m_render_texture->getSize() / m_scale;
+        sf::RenderStates states = {};
+        //        const auto render_texture_size = m_render_texture->getSize() /
+        //        m_scale;
         states.transform.translate(sf::Vector2f(
           static_cast<float>(-pixel_pos.x) + (TILE_SIZE * 1.5f),
           static_cast<float>(-pixel_pos.y) + (TILE_SIZE * 1.5f)));
@@ -889,8 +854,7 @@ std::vector<size_t> map_sprite::find_intersecting(
           [this, &skip_filters, &texture_page, &pixel_pos](
             const auto &tile) -> bool {
             static constexpr auto in_bounds = [](auto i, auto low, auto high) {
-              return std::cmp_greater_equal(i, low)
-                     && std::cmp_less(i, high);
+              return std::cmp_greater_equal(i, low) && std::cmp_less(i, high);
             };
             if (!skip_filters && fail_filter(tile))
             {
@@ -930,18 +894,46 @@ std::vector<size_t> map_sprite::find_intersecting(
             }
             return false;
           });
-      std::transform(
-        std::begin(filtered_tiles),
-        std::end(filtered_tiles),
-        std::back_inserter(out),
-        [&tiles](const auto &tile) {
-          const auto *const start = tiles.data();
-          const auto *const curr  = &tile;
-          format_tile_text(tile, [](std::string_view name, const auto &value) {
-            spdlog::info("tile {}: {}", name, value);
+      const auto get_indicies = [&](auto &&range) {
+        std::transform(
+          std::begin(range),
+          std::end(range),
+          std::back_inserter(out),
+          [&tiles](const auto &tile) {
+            const auto *const start = tiles.data();
+            const auto *const curr  = &tile;
+            format_tile_text(
+              tile, [](std::string_view name, const auto &value) {
+                spdlog::info("tile {}: {}", name, value);
+              });
+            return static_cast<std::size_t>(std::distance(start, curr));
           });
-          return static_cast<std::size_t>(std::distance(start, curr));
-        });
+      };
+      if (m_draw_swizzle)
+      {
+        // If palette and bpp are overlapping it causes problems.
+        //  This prevents you selecting more than one at a time.
+        //  min depth/bpp was chosen because lower bpp can be greater src x.
+        const auto min_depth = (std::ranges::min_element)(
+          filtered_tiles, {}, [](const auto &tile) { return tile.depth(); });
+        // min palette well, lower bpp tend to be a lower palette id I think.
+        const auto min_palette =
+          (std::ranges::min_element)(filtered_tiles, {}, [](const auto &tile) {
+            return tile.palette_id();
+          });
+        auto filtered_tiles_with_depth_and_palette =
+          filtered_tiles | std::views::filter([&](const auto &tile) -> bool {
+            return min_depth->depth() == tile.depth()
+                   && min_palette->palette_id() == tile.palette_id();
+          });
+        get_indicies(filtered_tiles_with_depth_and_palette);
+      }
+      else
+      {
+        get_indicies(filtered_tiles);
+      }
+
+
       spdlog::info("Found {:3} intersecting tiles", out.size());
       for (const auto &i : out)
       {
