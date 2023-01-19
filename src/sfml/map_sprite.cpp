@@ -832,8 +832,6 @@ sf::Sprite map_sprite::save_intersecting(
   //  sprite.setScale(
   //    1.F / static_cast<float>(m_scale), 1.F / static_cast<float>(m_scale));
   m_saved_indicies = find_intersecting(pixel_pos, texture_page);
-  spdlog::info(
-    "count m_saved_indicies: {}", std::ranges::size(m_saved_indicies));
   m_drag_sprite_texture->clear(sf::Color::Transparent);
   (void)m_maps.front().visit_tiles([this, &pixel_pos](const auto &front_tiles) {
     (void)m_maps.const_back().visit_tiles(
