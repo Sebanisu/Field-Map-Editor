@@ -1708,25 +1708,6 @@ void gui::loop_events() const
         [this, type](const sf::Event::KeyEvent &key) {
           if (ImGui::GetIO().WantCaptureKeyboard)
           {
-            if (type == sf::Event::EventType::KeyPressed)
-            {
-              if (key.code == sf::Keyboard::Up)
-              {
-                spdlog::info("up");
-              }
-              else if (key.code == sf::Keyboard::Down)
-              {
-                spdlog::info("down");
-              }
-              else if (key.code == sf::Keyboard::Left)
-              {
-                spdlog::info("left");
-              }
-              else if (key.code == sf::Keyboard::Right)
-              {
-                spdlog::info("right");
-              }
-            }
             m_scrolling.reset();
             return;
           }
