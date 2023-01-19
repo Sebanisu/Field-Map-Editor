@@ -784,55 +784,60 @@ sf::Sprite map_sprite::save_intersecting(
   const std::uint8_t &texture_page)
 {
   // static constexpr auto tile_size_float = static_cast<float>(TILE_SIZE);
-  sf::Sprite sprite = {};
+  sf::Sprite sprite      = {};
+  const auto sprite_size = m_drag_sprite_texture->getSize();
+  spdlog::info("sprite_size: ({},{})", sprite_size.x, sprite_size.y);
+  spdlog::info("m_scale: ({})", m_scale);
   sprite.setTextureRect(
-    { 0,
-      0,
-      static_cast<int>(TILE_SIZE) * static_cast<int>(m_scale) * 3,
-      static_cast<int>(TILE_SIZE) * static_cast<int>(m_scale) * 3 });
+    { 0, 0, static_cast<int>(sprite_size.x), static_cast<int>(sprite_size.y) });
   sprite.setPosition(
     static_cast<float>(pixel_pos.x) - (TILE_SIZE * 1.5f),
     static_cast<float>(pixel_pos.y) - (TILE_SIZE * 1.5f));
+  sprite.setScale(
+    1.0f / static_cast<float>(m_scale), 1.0f / static_cast<float>(m_scale));
   //  sprite.setScale(
   //    1.F / static_cast<float>(m_scale), 1.F / static_cast<float>(m_scale));
   m_saved_indicies = find_intersecting(pixel_pos, texture_page);
   m_drag_sprite_texture->clear(sf::Color::Transparent);
-  m_maps.front().visit_tiles([this, &pixel_pos](const auto &front_tiles) {
-    m_maps.const_back().visit_tiles(
-      [this, &pixel_pos, &front_tiles](const auto &tiles) {
-        sf::RenderStates states = {};
-        //        const auto render_texture_size = m_render_texture->getSize() /
-        //        m_scale;
-        states.transform.translate(sf::Vector2f(
-          static_cast<float>(-pixel_pos.x) + (TILE_SIZE * 1.5f),
-          static_cast<float>(-pixel_pos.y) + (TILE_SIZE * 1.5f)));
-        for (const auto i : m_saved_indicies)
-        {
-          const auto &tile       = tiles[i];
-          const auto &front_tile = front_tiles[i];
-          states.texture =
-            get_texture(tile.depth(), tile.palette_id(), tile.texture_id());
-          if (
-            states.texture == nullptr || states.texture->getSize().y == 0
-            || states.texture->getSize().x == 0)
+  m_maps.front().visit_tiles(
+    [this, &pixel_pos, &sprite_size](const auto &front_tiles) {
+      m_maps.const_back().visit_tiles(
+        [this, &pixel_pos, &front_tiles, &sprite_size](const auto &tiles) {
+          sf::RenderStates states = {};
+          //        const auto render_texture_size = m_render_texture->getSize()
+          //        / m_scale;
+          states.transform.translate(sf::Vector2f(
+            (static_cast<float>(-pixel_pos.x) * static_cast<float>(m_scale))
+              + (sprite_size.x / 2),
+            (static_cast<float>(-pixel_pos.y) * static_cast<float>(m_scale))
+              + (sprite_size.y / 2)));
+          for (const auto i : m_saved_indicies)
           {
-            continue;
-          }
-          const auto draw_size    = get_tile_draw_size();
-          const auto texture_size = get_tile_texture_size(states.texture);
-          auto       quad =
-            get_triangle_strip(draw_size, texture_size, front_tile, tile);
-          states.blendMode = sf::BlendAlpha;
-          if (!m_disable_blends)
-          {
-            states.blendMode = set_blend_mode(tile.blend_mode(), quad);
-          }
+            const auto &tile       = tiles[i];
+            const auto &front_tile = front_tiles[i];
+            states.texture =
+              get_texture(tile.depth(), tile.palette_id(), tile.texture_id());
+            if (
+              states.texture == nullptr || states.texture->getSize().y == 0
+              || states.texture->getSize().x == 0)
+            {
+              continue;
+            }
+            const auto draw_size    = get_tile_draw_size();
+            const auto texture_size = get_tile_texture_size(states.texture);
+            auto       quad =
+              get_triangle_strip(draw_size, texture_size, front_tile, tile);
+            states.blendMode = sf::BlendAlpha;
+            if (!m_disable_blends)
+            {
+              states.blendMode = set_blend_mode(tile.blend_mode(), quad);
+            }
 
-          m_drag_sprite_texture->draw(
-            quad.data(), quad.size(), sf::TriangleStrip, states);
-        }
-      });
-  });
+            m_drag_sprite_texture->draw(
+              quad.data(), quad.size(), sf::TriangleStrip, states);
+          }
+        });
+    });
   m_drag_sprite_texture->display();
   sprite.setTexture(m_drag_sprite_texture->getTexture());
   update_render_texture();

@@ -203,6 +203,11 @@ public:
     return m_maps.remove_duplicate();
   }
 
+  auto get_map_scale() const
+  {
+    return m_scale;
+  }
+
   [[nodiscard]] const all_unique_values_and_strings &uniques() const;
 
   map_sprite                                         update(

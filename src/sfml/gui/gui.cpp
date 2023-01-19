@@ -308,7 +308,8 @@ void gui::loop() const
   {
     m_drag_sprite_shader->setUniform(
       "texture", *m_mouse_positions.sprite.getTexture());
-    m_drag_sprite_shader->setUniform("borderWidth", 2.5F);
+    m_drag_sprite_shader->setUniform(
+      "borderWidth", 2.F * m_map_sprite.get_map_scale());
     states.shader = m_drag_sprite_shader.get();
   }
   m_window.draw(m_mouse_positions.sprite, states);
@@ -651,16 +652,17 @@ bool gui::handle_mouse_cursor() const
     //! ImGui::IsWindowHovered(ImGuiHoveredFlags_AnyWindow)
     //&& !ImGui::IsAnyItemHovered())
     {
-      mouse_enabled         = true;
-//      const auto is_swizzle = (map_test() && m_selections.draw_swizzle)
-//                              || (mim_test() && !m_selections.draw_palette);
+      mouse_enabled = true;
+      //      const auto is_swizzle = (map_test() && m_selections.draw_swizzle)
+      //                              || (mim_test() &&
+      //                              !m_selections.draw_palette);
       if (m_mouse_positions.mouse_moved)
       {
-//        static constexpr int tile_size       = 16;
-//        static constexpr int texture_page_t1 = 128;
-//        static constexpr int texture_page_t2 = 64;
+        //        static constexpr int tile_size       = 16;
+        //        static constexpr int texture_page_t1 = 128;
+        //        static constexpr int texture_page_t2 = 64;
         // m_mouse_positions.tile = m_mouse_positions.pixel / tile_size;
-        auto                &tilex           = m_mouse_positions.pixel.x;
+        auto &tilex = m_mouse_positions.pixel.x;
 
         m_mouse_positions.texture_page =
           static_cast<std::uint8_t>(tilex / 256);// for 4bit swizzle.
