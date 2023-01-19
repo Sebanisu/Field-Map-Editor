@@ -179,13 +179,13 @@ public:
 
   void undo_all()
   {
-    (void)m_maps.undo_all();
+    m_maps.undo_all();
     update_render_texture();
   }
 
   void redo_all()
   {
-    (void)m_maps.redo_all();
+    m_maps.redo_all();
     update_render_texture();
   }
 

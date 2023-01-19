@@ -652,13 +652,13 @@ bool gui::handle_mouse_cursor() const
     //&& !ImGui::IsAnyItemHovered())
     {
       mouse_enabled         = true;
-      const auto is_swizzle = (map_test() && m_selections.draw_swizzle)
-                              || (mim_test() && !m_selections.draw_palette);
+//      const auto is_swizzle = (map_test() && m_selections.draw_swizzle)
+//                              || (mim_test() && !m_selections.draw_palette);
       if (m_mouse_positions.mouse_moved)
       {
-        static constexpr int tile_size       = 16;
-        static constexpr int texture_page_t1 = 128;
-        static constexpr int texture_page_t2 = 64;
+//        static constexpr int tile_size       = 16;
+//        static constexpr int texture_page_t1 = 128;
+//        static constexpr int texture_page_t2 = 64;
         // m_mouse_positions.tile = m_mouse_positions.pixel / tile_size;
         auto                &tilex           = m_mouse_positions.pixel.x;
 

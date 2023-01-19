@@ -819,7 +819,7 @@ sf::Sprite map_sprite::save_intersecting(
   const sf::Vector2i &pixel_pos,
   const std::uint8_t &texture_page)
 {
-  static constexpr auto tile_size_float = static_cast<float>(TILE_SIZE);
+  //static constexpr auto tile_size_float = static_cast<float>(TILE_SIZE);
   sf::Sprite            sprite          = {};
   sprite.setTextureRect(
     { 0,
@@ -833,11 +833,11 @@ sf::Sprite map_sprite::save_intersecting(
   //    1.F / static_cast<float>(m_scale), 1.F / static_cast<float>(m_scale));
   m_saved_indicies = find_intersecting(pixel_pos, texture_page);
   m_drag_sprite_texture->clear(sf::Color::Transparent);
-  (void)m_maps.front().visit_tiles([this, &pixel_pos](const auto &front_tiles) {
-    (void)m_maps.const_back().visit_tiles(
+  m_maps.front().visit_tiles([this, &pixel_pos](const auto &front_tiles) {
+    m_maps.const_back().visit_tiles(
       [this, &pixel_pos, &front_tiles](const auto &tiles) {
         sf::RenderStates states        = {};
-        const auto render_texture_size = m_render_texture->getSize() / m_scale;
+//        const auto render_texture_size = m_render_texture->getSize() / m_scale;
         states.transform.translate(sf::Vector2f(
           static_cast<float>(-pixel_pos.x) + (TILE_SIZE * 1.5f),
           static_cast<float>(-pixel_pos.y) + (TILE_SIZE * 1.5f)));
