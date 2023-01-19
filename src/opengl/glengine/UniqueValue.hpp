@@ -76,7 +76,7 @@ public:
     requires decay_same_as<ValueT, std::invoke_result_t<createT>>
   constexpr UniqueValueArray(void (*destroy)(ParameterT), createT &&create)
     : m_value(std::invoke(create))
-    , m_function(move(destroy))
+    , m_function(std::move(destroy))
   {
   }
   constexpr ~UniqueValueArray() noexcept
