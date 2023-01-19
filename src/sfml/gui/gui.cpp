@@ -575,20 +575,11 @@ void gui::on_click_not_imgui() const
         else
         {
           // left mouse up
-          if (m_selections.draw_swizzle)
-          {
-            m_map_sprite.update_position(
-              { m_mouse_positions.pixel.x / 256, m_mouse_positions.pixel.y },
-              m_mouse_positions.texture_page,
-              m_mouse_positions.down_pixel);
-          }
-          else
-          {
-            m_map_sprite.update_position(
-              m_mouse_positions.pixel,
-              m_mouse_positions.texture_page,
-              m_mouse_positions.down_pixel);
-          }
+          m_map_sprite.update_position(
+            m_mouse_positions.pixel,
+            m_mouse_positions.texture_page,
+            m_mouse_positions.down_pixel);
+
 
           // m_mouse_positions.cover =
           m_mouse_positions.sprite     = {};

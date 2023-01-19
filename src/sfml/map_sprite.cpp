@@ -537,7 +537,7 @@ std::uint8_t map_sprite::max_x_for_saved() const
   return m_maps.const_back().visit_tiles([this](const auto &tiles) {
     auto transform_range =
       m_saved_indicies
-      | std::views::transform([this, &tiles](std::size_t i) -> std::size_t {
+      | std::views::transform([this, &tiles](std::size_t i) -> std::uint16_t {
           auto &tile = tiles[i];
           if (m_draw_swizzle)
           {
@@ -556,8 +556,8 @@ std::uint8_t map_sprite::max_x_for_saved() const
 
     const auto it = std::ranges::min_element(transform_range);
     if (it != std::ranges::end(transform_range))
-      return static_cast<std::uint8_t>((*it - TILE_SIZE) / TILE_SIZE);
-    return std::uint8_t(255U);
+      return static_cast<std::uint8_t>(*it - TILE_SIZE);
+    return (std::numeric_limits<std::uint8_t>::max)();
   });
 }
 
@@ -727,83 +727,89 @@ void map_sprite::update_position(
   {
     return;
   }
-  m_maps.copy_back().visit_tiles([this,
-                                  &texture_page,
-                                  &pixel_pos,
-                                  &down_pixel_pos](auto &&tiles) {
-    std::uint8_t max_x = max_x_for_saved() * TILE_SIZE;
-    if (m_draw_swizzle)
-    {
-      if (auto intersecting = find_intersecting(pixel_pos, texture_page, true);
-          !intersecting.empty())
-      {
-        // this might not be good enough as two 4 bpp tiles fit in the
-        // same location as 8 bpp. and two 8 bpp fit in space for 16 bpp.
-        // but this should catch obvious problems.
-        spdlog::info(
-          "There are {} tiles at this location. Choose an empty "
-          "location!",
-          intersecting.size());
-        return;
-      }
-      const auto &tile = tiles[m_saved_indicies.front()];
-      bool same_row = ((tile.source_y() / TILE_SIZE) == pixel_pos.y / TILE_SIZE)
-                      && (texture_page == tile.texture_id());
-      //        spdlog::info("{} == {} && {} == {}",
-      //          (tile.source_y() / TILE_SIZE),
-      //          tile_pos.y,
+  m_maps.copy_back().visit_tiles(
+    [this, &texture_page, &pixel_pos, &down_pixel_pos](auto &&tiles) {
+      //      std::uint8_t max_x = max_x_for_saved() * TILE_SIZE;
+      //      if (m_draw_swizzle)
+      //      {
+      //
+      //        if (auto intersecting =
+      //              find_intersecting(pixel_pos, texture_page, true);
+      //            !intersecting.empty())
+      //        {
+      //          // this might not be good enough as two 4 bpp tiles fit in the
+      //          // same location as 8 bpp. and two 8 bpp fit in space for 16
+      //          bpp.
+      //          // but this should catch obvious problems.
+      //          spdlog::info(
+      //            "There are {} tiles at this location. Choose an empty "
+      //            "location!",
+      //            intersecting.size());
+      //          return;
+      //        }
+      //        const auto &tile = tiles[m_saved_indicies.front()];
+      //        bool        same_row =
+      //          ((tile.source_y() / TILE_SIZE) == pixel_pos.y / TILE_SIZE)
+      //          && (texture_page == tile.texture_id());
+      //        //        spdlog::info("{} == {} && {} == {}",
+      //        //          (tile.source_y() / TILE_SIZE),
+      //        //          tile_pos.y,
+      //        //          texture_page,
+      //        //          tile.texture_id());
+      //        const auto empty_count = row_empties(
+      //          static_cast<std::uint8_t>(pixel_pos.y / TILE_SIZE),
       //          texture_page,
-      //          tile.texture_id());
-      const auto empty_count = row_empties(
-        static_cast<std::uint8_t>(pixel_pos.y / TILE_SIZE),
-        texture_page,
-        same_row);
-      spdlog::info("Empty cells in row = {}", empty_count);
-      if (empty_count == 0)
+      //          same_row);
+      //        spdlog::info("Empty cells in row = {}", empty_count);
+      //        if (empty_count == 0)
+      //        {
+      //          return;
+      //        }
+      //      }
+      for (auto i : m_saved_indicies)
       {
-        return;
-      }
-    }
-    for (auto i : m_saved_indicies)
-    {
-      auto &tile = tiles[i];
-      if (m_draw_swizzle)
-      {
-        if (auto intersecting =
-              find_intersecting(pixel_pos, texture_page, true);
-            !intersecting.empty())
+        auto &tile = tiles[i];
+        if (m_draw_swizzle)
         {
-          if (std::ranges::any_of(intersecting, [&tile, &tiles](const auto &j) {
-                const auto &other_tile = tiles[j];
-                return (tile.depth() != other_tile.depth())
-                       || (tile.palette_id() != other_tile.palette_id());
-              }))
-          {
-            // this second pass is to make sure tiles you are moving aren't
-            // conflicting with different bpp or palette.
-            continue;
-          }
+          //        if (auto intersecting =
+          //              find_intersecting(pixel_pos, texture_page, true);
+          //            !intersecting.empty())
+          //        {
+          //          if (std::ranges::any_of(intersecting, [&tile,
+          //          &tiles](const auto &j) {
+          //                const auto &other_tile = tiles[j];
+          //                return (tile.depth() != other_tile.depth())
+          //                       || (tile.palette_id() !=
+          //                       other_tile.palette_id());
+          //              }))
+          //          {
+          //            // this second pass is to make sure tiles you are moving
+          //            aren't
+          //            // conflicting with different bpp or palette.
+          //            continue;
+          //          }
+          //        }
+          const std::int32_t x_offset =
+            (down_pixel_pos.x % 256) - static_cast<int>(tile.source_x());
+          const std::int32_t y_offset =
+            down_pixel_pos.y - static_cast<int>(tile.source_y());
+          tile =
+            tile
+              .with_source_xy(
+                static_cast<std::uint8_t>((((pixel_pos.x % 256) - x_offset))),
+                static_cast<std::uint8_t>(((pixel_pos.y - y_offset))))
+              .with_texture_id(texture_page);
         }
-        tile =
-          tile
-            .with_source_xy(
-              (std::min)(
-                static_cast<std::uint8_t>(
-                  (pixel_pos.x / TILE_SIZE) * TILE_SIZE),
-                max_x),
-              static_cast<std::uint8_t>((pixel_pos.y / TILE_SIZE) * TILE_SIZE))
-            .with_texture_id(texture_page);
+        else
+        {
+          const std::int32_t x_offset = down_pixel_pos.x - tile.x();
+          const std::int32_t y_offset = down_pixel_pos.y - tile.y();
+          tile                        = tile.with_xy(
+            static_cast<std::int16_t>(pixel_pos.x - x_offset),
+            static_cast<std::int16_t>(pixel_pos.y - y_offset));
+        }
       }
-      else
-      {
-        const std::int32_t x_offset = down_pixel_pos.x - tile.x();
-        const std::int32_t y_offset = down_pixel_pos.y - tile.y();
-        tile                        = tile.with_xy(
-          static_cast<std::int16_t>(pixel_pos.x - x_offset),
-          static_cast<std::int16_t>(pixel_pos.y - y_offset));
-      }
-    }
-  });
+    });
   history_remove_duplicate();
   m_saved_indicies.clear();
   update_render_texture();
@@ -821,43 +827,48 @@ sf::Sprite map_sprite::save_intersecting(
       static_cast<int>(TILE_SIZE) * static_cast<int>(m_scale) * 3,
       static_cast<int>(TILE_SIZE) * static_cast<int>(m_scale) * 3 });
   sprite.setPosition(
-    static_cast<float>(pixel_pos.x) - (TILE_SIZE*1.5f),
-    static_cast<float>(pixel_pos.y) - (TILE_SIZE*1.5f));
+    static_cast<float>(pixel_pos.x) - (TILE_SIZE * 1.5f),
+    static_cast<float>(pixel_pos.y) - (TILE_SIZE * 1.5f));
   //  sprite.setScale(
   //    1.F / static_cast<float>(m_scale), 1.F / static_cast<float>(m_scale));
   m_saved_indicies = find_intersecting(pixel_pos, texture_page);
   spdlog::info(
     "count m_saved_indicies: {}", std::ranges::size(m_saved_indicies));
   m_drag_sprite_texture->clear(sf::Color::Transparent);
-  (void)m_maps.const_back().visit_tiles([this, &pixel_pos](const auto &tiles) {
-    sf::RenderStates states        = {};
-    const auto render_texture_size = m_render_texture->getSize() / m_scale;
-    states.transform.translate(sf::Vector2f(
-      static_cast<float>(-pixel_pos.x) + (TILE_SIZE*1.5f),
-      static_cast<float>(-pixel_pos.y) + (TILE_SIZE*1.5f)));
-    for (const auto i : m_saved_indicies)
-    {
-      const auto &tile = tiles[i];
-      states.texture =
-        get_texture(tile.depth(), tile.palette_id(), tile.texture_id());
-      if (
-        states.texture == nullptr || states.texture->getSize().y == 0
-        || states.texture->getSize().x == 0)
-      {
-        continue;
-      }
-      const auto draw_size    = get_tile_draw_size();
-      const auto texture_size = get_tile_texture_size(states.texture);
-      auto       quad = get_triangle_strip(draw_size, texture_size, tile, tile);
-      states.blendMode = sf::BlendAlpha;
-      if (!m_disable_blends)
-      {
-        states.blendMode = set_blend_mode(tile.blend_mode(), quad);
-      }
+  (void)m_maps.front().visit_tiles([this, &pixel_pos](const auto &front_tiles) {
+    (void)m_maps.const_back().visit_tiles(
+      [this, &pixel_pos, &front_tiles](const auto &tiles) {
+        sf::RenderStates states        = {};
+        const auto render_texture_size = m_render_texture->getSize() / m_scale;
+        states.transform.translate(sf::Vector2f(
+          static_cast<float>(-pixel_pos.x) + (TILE_SIZE * 1.5f),
+          static_cast<float>(-pixel_pos.y) + (TILE_SIZE * 1.5f)));
+        for (const auto i : m_saved_indicies)
+        {
+          const auto &tile       = tiles[i];
+          const auto &front_tile = front_tiles[i];
+          states.texture =
+            get_texture(tile.depth(), tile.palette_id(), tile.texture_id());
+          if (
+            states.texture == nullptr || states.texture->getSize().y == 0
+            || states.texture->getSize().x == 0)
+          {
+            continue;
+          }
+          const auto draw_size    = get_tile_draw_size();
+          const auto texture_size = get_tile_texture_size(states.texture);
+          auto       quad =
+            get_triangle_strip(draw_size, texture_size, front_tile, tile);
+          states.blendMode = sf::BlendAlpha;
+          if (!m_disable_blends)
+          {
+            states.blendMode = set_blend_mode(tile.blend_mode(), quad);
+          }
 
-      m_drag_sprite_texture->draw(
-        quad.data(), quad.size(), sf::TriangleStrip, states);
-    }
+          m_drag_sprite_texture->draw(
+            quad.data(), quad.size(), sf::TriangleStrip, states);
+        }
+      });
   });
   m_drag_sprite_texture->display();
   sprite.setTexture(m_drag_sprite_texture->getTexture());
@@ -881,7 +892,7 @@ std::vector<size_t> map_sprite::find_intersecting(
             const auto &tile) -> bool {
             static constexpr auto in_bounds = [](auto i, auto low, auto high) {
               return std::cmp_greater_equal(i, low)
-                     && std::cmp_less_equal(i, high);
+                     && std::cmp_less(i, high);
             };
             if (!skip_filters && fail_filter(tile))
             {
@@ -889,15 +900,17 @@ std::vector<size_t> map_sprite::find_intersecting(
             }
             if (m_draw_swizzle)
             {
-              if (std::cmp_equal(
-                    (pixel_pos.x % 256) / TILE_SIZE,
-                    tile.source_x() / TILE_SIZE))
+              if (std::cmp_equal(tile.texture_id(), texture_page))
               {
-                if (std::cmp_equal(
-                      (pixel_pos.y % 256) / TILE_SIZE,
-                      tile.source_y() / TILE_SIZE))
+                if (in_bounds(
+                      pixel_pos.x % 256,
+                      tile.source_x(),
+                      tile.source_x() + static_cast<int>(TILE_SIZE)))
                 {
-                  if (std::cmp_equal(tile.texture_id(), texture_page))
+                  if (in_bounds(
+                        pixel_pos.y % 256,
+                        tile.source_y(),
+                        tile.source_y() + static_cast<int>(TILE_SIZE)))
                   {
                     return true;
                   }

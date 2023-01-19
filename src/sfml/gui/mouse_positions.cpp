@@ -1,8 +1,8 @@
 //
 // Created by pcvii on 12/21/2022.
 //
-#include <spdlog/spdlog.h>
 #include "mouse_positions.hpp"
+#include <spdlog/spdlog.h>
 void mouse_positions::update()
 {
   old_left    = left;
@@ -17,28 +17,25 @@ bool mouse_positions::left_changed() const
   }
   return condition;
 }
-void mouse_positions::update_sprite_pos([[maybe_unused]]bool swizzle, [[maybe_unused]]float spacing)
+void mouse_positions::update_sprite_pos(
+  [[maybe_unused]] bool swizzle,
+  [[maybe_unused]] int  spacing)
 {
-  float x = {};
-  float y = {};
-//  if (swizzle)
-//  {
-////    x = ((std::min)(static_cast<std::uint8_t>(pixel.x/16), max_tile_x) * 16.F)
-////        + (texture_page * spacing);
-//    x = static_cast<float>(pixel.x)+ (texture_page * spacing);
-//  }
-//  else
+  static constexpr std::uint8_t TILE_SIZE = 16;
+  static constexpr auto         TEXTURE_OFFSET =
+    static_cast<std::uint8_t>(TILE_SIZE * 1.5);
+  if (swizzle && max_tile_x > 0U)// snap to grid.
   {
-    x = static_cast<float>(pixel.x);
+    const auto x_offset = down_pixel.x % TILE_SIZE;
+    pixel.x             = (std::min)(
+                ((pixel.x % spacing) / TILE_SIZE) * TILE_SIZE,
+                static_cast<int>(max_tile_x))
+              + x_offset + (texture_page * spacing);
+
+    const auto y_offset = down_pixel.y % TILE_SIZE;
+    pixel.y             = ((pixel.y / TILE_SIZE) * TILE_SIZE) + y_offset;
   }
-//  if (swizzle)
-//  {
-////    y = (static_cast<float>(pixel.y / 16)) * 16.F;
-//    y = static_cast<float>(pixel.y);
-//  }
-//  else
-  {
-    y = static_cast<float>(pixel.y);
-  }
-  sprite.setPosition(x-24.F, y-24.F);
+  sprite.setPosition(
+    static_cast<float>(pixel.x - TEXTURE_OFFSET),
+    static_cast<float>(pixel.y - TEXTURE_OFFSET));
 }

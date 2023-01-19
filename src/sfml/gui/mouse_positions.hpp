@@ -18,7 +18,7 @@ struct mouse_positions
   // sf::Sprite   cover         = {};
   void               update();
   [[nodiscard]] bool left_changed() const;
-  void               update_sprite_pos(bool swizzle, float spacing = 256.F);
+  void               update_sprite_pos(bool swizzle, int spacing = 256);
 
 private:
   bool old_left = { false };
