@@ -8,6 +8,7 @@
 #include "SimilarAdjustments.hpp"
 #include "UniquifyPupu.hpp"
 #include <ScopeGuard.hpp>
+#include <source_location>
 namespace ff_8
 {
 // template<typename TileT>
@@ -458,9 +459,10 @@ public:
    * Deletes the most recent back or front
    * @return
    */
-  [[nodiscard]] bool
-    undo(bool skip_redo = false, std::source_location source_location = std::source_location::current())
-      const
+  [[nodiscard]] bool undo(
+    bool                 skip_redo = false,
+    std::source_location source_location =
+      std::source_location::current()) const
   {
     const auto count = debug_count_print(source_location);
     if (!undo_enabled())
@@ -468,7 +470,7 @@ public:
       return false;
     }
     Pushed last = m_front_or_back.back();
-    if(!skip_redo)
+    if (!skip_redo)
     {
       m_redo_front_or_back.push_back(last);
     }
@@ -485,7 +487,7 @@ public:
     std::source_location source_location =
       std::source_location::current()) const
   {
-    while (undo(false,source_location))
+    while (undo(false, source_location))
     {
     }
   }

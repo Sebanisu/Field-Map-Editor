@@ -1,25 +1,4 @@
 cmake_minimum_required(VERSION 3.18)
-if (MSVC AND
-        CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 19.29.30129 AND
-        CMAKE_VERSION VERSION_GREATER 3.21.0)
-    set(CMAKE_CXX_STANDARD 23) # /std:c++latest - unlocks the non stable cpp20 features. For new 16.11 versions
-elseif (MSVC AND
-        CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 19.29.30129 AND
-        CMAKE_VERSION VERSION_GREATER 3.20.3 AND
-        CMAKE_PATCH_VERSION LESS 21000000)
-    # this change happened in CMake 3.20.4
-    set(CMAKE_CXX_STANDARD 23) # /std:c++latest - unlocks the non stable cpp20 features. For new 16.11 versions
-elseif (MSVC AND
-        CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 19.29.30129 AND
-        CMAKE_VERSION VERSION_GREATER 3.20.3 AND
-        CMAKE_PATCH_VERSION GREATER 21032501) #update this when msvc does support 23 flag.
-    # msvc uses custom patch version example 21032501 it's older than 3.20.4
-    set(CMAKE_CXX_STANDARD 23) # /std:c++latest - unlocks the non stable cpp20 features. For new 16.11 versions
-else ()
-    set(CMAKE_CXX_STANDARD 20) # /std:c++latest for msvc and -std=c++20 for everyone else.
-endif ()
-
-
 include(${CMAKE_SOURCE_DIR}/cmake/OpenVIII_CPP_WIP.cmake)
 include(CheckIPOSupported)
 check_ipo_supported(RESULT supported OUTPUT error)
@@ -59,6 +38,9 @@ add_library(glengine STATIC
         VertexBufferDynamic.cpp
         Window.cpp
         )
+target_compile_features(glengine
+        PUBLIC cxx_std_23
+        PUBLIC cxx_std_20)
 target_link_libraries(glengine
         PUBLIC project_warnings
         PUBLIC spdlog::spdlog
@@ -81,9 +63,19 @@ target_include_directories(glengine
 if (MSVC)
     target_compile_definitions(glengine
             PUBLIC _CRT_SECURE_NO_WARNINGS) # required by libpng
-    target_link_options(glengine PRIVATE "/PROFILE")
+    target_link_options(glengine PUBLIC "/PROFILE")
 elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     target_compile_options(glengine PUBLIC "-fconcepts-diagnostics-depth=2")
+elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+    target_compile_options(${PROJECT_NAME}_SFML
+            PUBLIC "-stdlib=libc++"
+            PUBLIC "-march=native"
+            PUBLIC "-fexperimental-library" ##new in clang15 for things like std::ranges and std::format
+            )
+    target_link_options(${PROJECT_NAME}_SFML
+            PUBLIC "-stdlib=libc++"
+            PUBLIC "-fuse-ld=lld"
+            PUBLIC "-Wl") #,--gdb-index
 endif ()
 
 if (supported)
@@ -117,7 +109,6 @@ target_precompile_headers(glengine
         <thread>
         <type_traits>
         <unordered_map>
-        <source_location>
         <utility>
         <variant>
         <vector>

@@ -16,6 +16,10 @@ target_link_libraries(imgui_glfw
         PUBLIC OpenGL::GL
         )
 
+target_compile_features(imgui_glfw
+        PUBLIC cxx_std_23
+        PUBLIC cxx_std_20)
+
 target_include_directories(imgui_glfw PUBLIC ${CONAN_SRC_DIRS_IMGUI})
 add_subdirectory(stbi)
 add_subdirectory(glengine)
