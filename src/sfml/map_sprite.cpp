@@ -723,59 +723,90 @@ void map_sprite::update_position(
   const uint8_t      &texture_page,
   const sf::Vector2i &down_pixel_pos)
 {
-  if (m_saved_indicies.empty())
+  if (m_saved_indicies.empty() && m_saved_imported_indicies.empty())
   {
     return;
   }
-  m_maps.copy_back().visit_tiles([this,
-                                  &texture_page,
-                                  &pixel_pos,
-                                  &down_pixel_pos](auto &&tiles) {
-    for (auto i : m_saved_indicies)
-    {
-      auto &tile = tiles[i];
-      if (m_draw_swizzle)
+  Map       &map = m_maps.copy_back();
+  const auto update_tile_positions =
+    [this, &texture_page, &pixel_pos, &down_pixel_pos](
+      const auto &map, auto &&tiles, const std::vector<std::size_t> &indices) {
+      for (auto i : indices)
       {
-        if (auto intersecting =
-              find_intersecting(pixel_pos, texture_page, true);
-            !intersecting.empty())
+        auto &tile = tiles[i];
+        if (m_draw_swizzle)
         {
-          // this might not be good enough as two 4 bpp tiles fit in the
-          // same location as 8 bpp. and two 8 bpp fit in space for 16
-          // bpp but this should catch obvious problems.
+          if (auto intersecting = find_intersecting(
+                m_imported_tile_map, pixel_pos, texture_page, true);
+              !intersecting.empty())
+          {
+            // this might not be good enough as two 4 bpp tiles fit in the
+            // same location as 8 bpp. and two 8 bpp fit in space for 16
+            // bpp but this should catch obvious problems.
 
-          // in the end it is safer to keep all 8bpp tiles aligned left
-          // and all 4bpp aligned right. For each Texture page.
-          // 16bpp are rare but they should be left of 8bpp.
-          spdlog::info(
-            "There is at least {} tile(s) at this location. Choose an empty "
-            "location!",// at least because i am filtering by depth and palette
-            intersecting.size());
-          return;
+            // in the end it is safer to keep all 8bpp tiles aligned left
+            // and all 4bpp aligned right. For each Texture page.
+            // 16bpp are rare, but they should be left of 8bpp.
+            spdlog::info(
+              "There is at least {} tile(s) at this location. Choose an empty "
+              "location!",// at least because i am filtering by depth and
+                          // palette
+              intersecting.size());
+            return;
+          }
+          if (auto intersecting =
+                find_intersecting(map, pixel_pos, texture_page, true);
+              !intersecting.empty())
+          {
+            // this might not be good enough as two 4 bpp tiles fit in the
+            // same location as 8 bpp. and two 8 bpp fit in space for 16
+            // bpp but this should catch obvious problems.
+
+            // in the end it is safer to keep all 8bpp tiles aligned left
+            // and all 4bpp aligned right. For each Texture page.
+            // 16bpp are rare, but they should be left of 8bpp.
+            spdlog::info(
+              "There is at least {} tile(s) at this location. Choose an empty "
+              "location!",// at least because i am filtering by depth and
+                          // palette
+              intersecting.size());
+            return;
+          }
+          const std::int32_t x_offset =
+            (down_pixel_pos.x % 256) - static_cast<int>(tile.source_x());
+          const std::int32_t y_offset =
+            down_pixel_pos.y - static_cast<int>(tile.source_y());
+          tile =
+            tile
+              .with_source_xy(
+                static_cast<std::uint8_t>((((pixel_pos.x % 256) - x_offset))),
+                static_cast<std::uint8_t>(((pixel_pos.y - y_offset))))
+              .with_texture_id(texture_page);
         }
-        const std::int32_t x_offset =
-          (down_pixel_pos.x % 256) - static_cast<int>(tile.source_x());
-        const std::int32_t y_offset =
-          down_pixel_pos.y - static_cast<int>(tile.source_y());
-        tile =
-          tile
-            .with_source_xy(
-              static_cast<std::uint8_t>((((pixel_pos.x % 256) - x_offset))),
-              static_cast<std::uint8_t>(((pixel_pos.y - y_offset))))
-            .with_texture_id(texture_page);
+        else
+        {
+          const std::int32_t x_offset = down_pixel_pos.x - tile.x();
+          const std::int32_t y_offset = down_pixel_pos.y - tile.y();
+          tile                        = tile.with_xy(
+            static_cast<std::int16_t>(pixel_pos.x - x_offset),
+            static_cast<std::int16_t>(pixel_pos.y - y_offset));
+        }
       }
-      else
-      {
-        const std::int32_t x_offset = down_pixel_pos.x - tile.x();
-        const std::int32_t y_offset = down_pixel_pos.y - tile.y();
-        tile                        = tile.with_xy(
-          static_cast<std::int16_t>(pixel_pos.x - x_offset),
-          static_cast<std::int16_t>(pixel_pos.y - y_offset));
-      }
-    }
+    };
+  map.visit_tiles([this, &update_tile_positions, &map](auto &&tiles) {
+    update_tile_positions(map, tiles, m_saved_indicies);
   });
+  if (!m_draw_swizzle)
+  {
+    m_imported_tile_map.visit_tiles(
+      [this, &update_tile_positions](auto &&tiles) {
+        update_tile_positions(
+          m_imported_tile_map, tiles, m_saved_imported_indicies);
+      });
+  }
   history_remove_duplicate();
   m_saved_indicies.clear();
+  m_saved_imported_indicies.clear();
   update_render_texture();
 }
 
@@ -797,47 +828,73 @@ sf::Sprite map_sprite::save_intersecting(
     1.0f / static_cast<float>(m_scale), 1.0f / static_cast<float>(m_scale));
   //  sprite.setScale(
   //    1.F / static_cast<float>(m_scale), 1.F / static_cast<float>(m_scale));
-  m_saved_indicies = find_intersecting(pixel_pos, texture_page);
+  m_saved_indicies =
+    find_intersecting(m_maps.const_back(), pixel_pos, texture_page);
+  if (!m_draw_swizzle)
+  {
+    m_saved_imported_indicies =
+      find_intersecting(m_imported_tile_map, pixel_pos, texture_page);
+  }
   m_drag_sprite_texture->clear(sf::Color::Transparent);
-  m_maps.front().visit_tiles(
-    [this, &pixel_pos, &sprite_size](const auto &front_tiles) {
-      m_maps.const_back().visit_tiles(
-        [this, &pixel_pos, &front_tiles, &sprite_size](const auto &tiles) {
-          sf::RenderStates states = {};
-          //        const auto render_texture_size = m_render_texture->getSize()
-          //        / m_scale;
-          states.transform.translate(sf::Vector2f(
-            (static_cast<float>(-pixel_pos.x) * static_cast<float>(m_scale))
-              + (sprite_size.x / 2),
-            (static_cast<float>(-pixel_pos.y) * static_cast<float>(m_scale))
-              + (sprite_size.y / 2)));
-          for (const auto i : m_saved_indicies)
-          {
-            const auto &tile       = tiles[i];
-            const auto &front_tile = front_tiles[i];
-            states.texture =
-              get_texture(tile.depth(), tile.palette_id(), tile.texture_id());
-            if (
-              states.texture == nullptr || states.texture->getSize().y == 0
-              || states.texture->getSize().x == 0)
-            {
-              continue;
-            }
-            const auto draw_size    = get_tile_draw_size();
-            const auto texture_size = get_tile_texture_size(states.texture);
-            auto       quad =
-              get_triangle_strip(draw_size, texture_size, front_tile, tile);
-            states.blendMode = sf::BlendAlpha;
-            if (!m_disable_blends)
-            {
-              states.blendMode = set_blend_mode(tile.blend_mode(), quad);
-            }
+  const auto draw_drag_texture = [this, &pixel_pos, &sprite_size](
+                                   const auto &front_tiles,
+                                   const auto &tiles,
+                                   bool        imported = false) {
+    sf::RenderStates states = {};
+    //        const auto render_texture_size = m_render_texture->getSize()
+    //        / m_scale;
+    states.transform.translate(sf::Vector2f(
+      (static_cast<float>(-pixel_pos.x) * static_cast<float>(m_scale))
+        + (sprite_size.x / 2),
+      (static_cast<float>(-pixel_pos.y) * static_cast<float>(m_scale))
+        + (sprite_size.y / 2)));
+    for (const auto i : imported ? m_saved_imported_indicies : m_saved_indicies)
+    {
+      const auto &tile       = tiles[i];
+      const auto &front_tile = front_tiles[i];
+      states.texture =
+        imported
+          ? m_imported_texture
+          : get_texture(tile.depth(), tile.palette_id(), tile.texture_id());
+      if (
+        states.texture == nullptr || states.texture->getSize().y == 0
+        || states.texture->getSize().x == 0)
+      {
+        continue;
+      }
+      const auto draw_size    = get_tile_draw_size();
+      const auto texture_size = imported
+                                  ? get_tile_texture_size_for_import()
+                                  : get_tile_texture_size(states.texture);
+      auto       quad =
+        imported
+                ? get_triangle_strip_for_imported(
+            draw_size, texture_size, front_tile, tile)
+                : get_triangle_strip(draw_size, texture_size, front_tile, tile);
+      states.blendMode = sf::BlendAlpha;
+      if (!m_disable_blends)
+      {
+        states.blendMode = set_blend_mode(tile.blend_mode(), quad);
+      }
 
-            m_drag_sprite_texture->draw(
-              quad.data(), quad.size(), sf::TriangleStrip, states);
-          }
+      m_drag_sprite_texture->draw(
+        quad.data(), quad.size(), sf::TriangleStrip, states);
+    }
+  };
+  m_maps.front().visit_tiles(
+    [this, &draw_drag_texture](const auto &front_tiles) {
+      m_maps.const_back().visit_tiles(
+        [&front_tiles, &draw_drag_texture](const auto &tiles) {
+          draw_drag_texture(front_tiles, tiles);
         });
     });
+  m_imported_tile_map_front.visit_tiles([this, &draw_drag_texture](
+                                          const auto &imported_front_tiles) {
+    m_imported_tile_map.visit_tiles(
+      [&draw_drag_texture, &imported_front_tiles](const auto &imported_tiles) {
+        draw_drag_texture(imported_front_tiles, imported_tiles, true);
+      });
+  });
   m_drag_sprite_texture->display();
   sprite.setTexture(m_drag_sprite_texture->getTexture());
   update_render_texture();
@@ -846,106 +903,104 @@ sf::Sprite map_sprite::save_intersecting(
 
 
 std::vector<size_t> map_sprite::find_intersecting(
+  const Map          &map,
   const sf::Vector2i &pixel_pos,
   const std::uint8_t &texture_page,
-  const bool          skip_filters)
+  const bool          skip_filters) const
 {
-  return m_maps.const_back().visit_tiles(
-    [this, &texture_page, &pixel_pos, &skip_filters](const auto &tiles) {
-      std::vector<std::size_t> out = {};
-      auto                     filtered_tiles =
-        tiles
-        | std::views::filter(
-          [this, &skip_filters, &texture_page, &pixel_pos](
-            const auto &tile) -> bool {
-            static constexpr auto in_bounds = [](auto i, auto low, auto high) {
-              return std::cmp_greater_equal(i, low) && std::cmp_less(i, high);
-            };
-            if (!skip_filters && fail_filter(tile))
+  return map.visit_tiles([this, &texture_page, &pixel_pos, &skip_filters](
+                           const auto &tiles) {
+    std::vector<std::size_t> out = {};
+    auto                     filtered_tiles =
+      tiles
+      | std::views::filter(
+        [this, &skip_filters, &texture_page, &pixel_pos](
+          const auto &tile) -> bool {
+          static constexpr auto in_bounds = [](auto i, auto low, auto high) {
+            return std::cmp_greater_equal(i, low) && std::cmp_less(i, high);
+          };
+          if (!skip_filters && fail_filter(tile))
+          {
+            return false;
+          }
+          if (m_draw_swizzle)
+          {
+            if (std::cmp_equal(tile.texture_id(), texture_page))
             {
-              return false;
-            }
-            if (m_draw_swizzle)
-            {
-              if (std::cmp_equal(tile.texture_id(), texture_page))
+              if (in_bounds(
+                    pixel_pos.x % 256,
+                    tile.source_x(),
+                    tile.source_x() + static_cast<int>(TILE_SIZE)))
               {
                 if (in_bounds(
-                      pixel_pos.x % 256,
-                      tile.source_x(),
-                      tile.source_x() + static_cast<int>(TILE_SIZE)))
+                      pixel_pos.y % 256,
+                      tile.source_y(),
+                      tile.source_y() + static_cast<int>(TILE_SIZE)))
                 {
-                  if (in_bounds(
-                        pixel_pos.y % 256,
-                        tile.source_y(),
-                        tile.source_y() + static_cast<int>(TILE_SIZE)))
-                  {
-                    return true;
-                  }
+                  return true;
                 }
               }
             }
-            else if (in_bounds(
-                       pixel_pos.x,
-                       tile.x(),
-                       tile.x() + static_cast<int>(TILE_SIZE)))
+          }
+          else if (in_bounds(
+                     pixel_pos.x,
+                     tile.x(),
+                     tile.x() + static_cast<int>(TILE_SIZE)))
+          {
+            if (in_bounds(
+                  pixel_pos.y,
+                  tile.y(),
+                  tile.y() + static_cast<int>(TILE_SIZE)))
             {
-              if (in_bounds(
-                    pixel_pos.y,
-                    tile.y(),
-                    tile.y() + static_cast<int>(TILE_SIZE)))
-              {
-                return true;
-              }
+              return true;
             }
-            return false;
+          }
+          return false;
+        });
+    const auto get_indicies = [&](auto &&range) {
+      std::transform(
+        std::begin(range),
+        std::end(range),
+        std::back_inserter(out),
+        [&tiles](const auto &tile) {
+          const auto *const start = tiles.data();
+          const auto *const curr  = &tile;
+          format_tile_text(tile, [](std::string_view name, const auto &value) {
+            spdlog::info("tile {}: {}", name, value);
           });
-      const auto get_indicies = [&](auto &&range) {
-        std::transform(
-          std::begin(range),
-          std::end(range),
-          std::back_inserter(out),
-          [&tiles](const auto &tile) {
-            const auto *const start = tiles.data();
-            const auto *const curr  = &tile;
-            format_tile_text(
-              tile, [](std::string_view name, const auto &value) {
-                spdlog::info("tile {}: {}", name, value);
-              });
-            return static_cast<std::size_t>(std::distance(start, curr));
-          });
-      };
-      if (m_draw_swizzle)
-      {
-        // If palette and bpp are overlapping it causes problems.
-        //  This prevents you selecting more than one at a time.
-        //  min depth/bpp was chosen because lower bpp can be greater src x.
-        const auto min_depth = (std::ranges::min_element)(
-          filtered_tiles, {}, [](const auto &tile) { return tile.depth(); });
-        // min palette well, lower bpp tend to be a lower palette id I think.
-        const auto min_palette =
-          (std::ranges::min_element)(filtered_tiles, {}, [](const auto &tile) {
-            return tile.palette_id();
-          });
-        auto filtered_tiles_with_depth_and_palette =
-          filtered_tiles | std::views::filter([&](const auto &tile) -> bool {
-            return min_depth->depth() == tile.depth()
-                   && min_palette->palette_id() == tile.palette_id();
-          });
-        get_indicies(filtered_tiles_with_depth_and_palette);
-      }
-      else
-      {
-        get_indicies(filtered_tiles);
-      }
+          return static_cast<std::size_t>(std::distance(start, curr));
+        });
+    };
+    if (m_draw_swizzle)
+    {
+      // If palette and bpp are overlapping it causes problems.
+      //  This prevents you selecting more than one at a time.
+      //  min depth/bpp was chosen because lower bpp can be greater src x.
+      const auto min_depth = (std::ranges::min_element)(
+        filtered_tiles, {}, [](const auto &tile) { return tile.depth(); });
+      // min palette well, lower bpp tend to be a lower palette id I think.
+      const auto min_palette = (std::ranges::min_element)(
+        filtered_tiles, {}, [](const auto &tile) { return tile.palette_id(); });
+      auto filtered_tiles_with_depth_and_palette =
+        filtered_tiles | std::views::filter([&](const auto &tile) -> bool {
+          return min_depth->depth() == tile.depth()
+                 && min_palette->palette_id() == tile.palette_id();
+        });
+      get_indicies(filtered_tiles_with_depth_and_palette);
+    }
+    else
+    {
+      get_indicies(filtered_tiles);
+    }
 
 
-      spdlog::info("Found {:3} intersecting tiles", out.size());
-      for (const auto &i : out)
-      {
-        spdlog::info("Tile index: {:4} ", i);
-      }
-      return out;
-    });
+    spdlog::info("Found {:3} intersecting tiles", out.size());
+    for (const auto &i : out)
+    {
+      spdlog::info("Tile index: {:4} ", i);
+    }
+    return out;
+  });
 }
 
 auto map_sprite::duel_visitor(auto &&lambda) const
@@ -1164,110 +1219,96 @@ sf::BlendMode map_sprite::set_blend_mode(
   // target.clear(sf::Color::Transparent);
   for (const auto &z : m_all_unique_values_and_strings.z().values())
   {
-    m_imported_tile_map.visit_tiles(
-      [z, this, &states, &target, &drew](const auto &tiles) {
-        for (const auto &tile : tiles)
-        {
-          const auto &tile_const = tile;
-          //      if (m_filters.pupu.enabled())
-          //      {
-          //        if (m_filters.pupu.value() != pupu_id)
-          //        {
-          //          return;
-          //        }
-          //      }
-          if (m_filters.draw_bit.enabled())
-          {
-            switch (m_filters.draw_bit.value())
-            {
-              case draw_bitT::all:
-              default:
-                break;
-              case draw_bitT::enabled: {
-                if (!tile_const.draw())
-                {
-                  return;
-                }
-                break;
-              }
-              case draw_bitT::disabled: {
-                if (tile_const.draw())
-                {
-                  return;
-                }
-                break;
-              }
-            }
-          }
-          if (tile.z() != z)
-          {
-            return;
-          }
-          if (fail_filter(tile))
-          {
-            return;
-          }
-          if (!filter_invalid(tile_const))
-          {
-            return;
-          }
-          states.texture = m_imported_texture;
-          //        if (!m_filters.deswizzle.enabled())
-          //        {
-          //          states.texture = get_texture(
-          //            tile_const.depth(),
-          //            tile_const.palette_id(),
-          //            tile_const.texture_id());
-          //        }
-          //        else
-          //        {
-          //          states.texture = get_texture(pupu_id);
-          //        }
-          if (
-            states.texture == nullptr || states.texture->getSize().y == 0
-            || states.texture->getSize().x == 0)
-          {
-            return;
-          }
-          const auto draw_size    = get_tile_draw_size();
-          const auto texture_size = get_tile_texture_size_for_import();
-          auto       quad         = get_triangle_strip_for_imported(
-            draw_size, texture_size, tile_const, tile);
-          states.blendMode = sf::BlendAlpha;
-          if (!m_disable_blends)
-          {
-            if (tile.blend_mode() == BlendModeT::add)
-            {
-              states.blendMode = sf::BlendAdd;
-            }
-            else if (tile.blend_mode() == BlendModeT::half_add)
-            {
-              states.blendMode = sf::BlendAdd;
-              constexpr static std::uint8_t per50 =
-                (std::numeric_limits<std::uint8_t>::max)() / 2U;
-              set_color(quad, { per50, per50, per50, per50 });// 50% alpha
-            }
-            else if (tile.blend_mode() == BlendModeT::quarter_add)
-            {
-              states.blendMode = sf::BlendAdd;
-              constexpr static std::uint8_t per25 =
-                (std::numeric_limits<std::uint8_t>::max)() / 4U;
-              set_color(quad, { per25, per25, per25, per25 });// 25% alpha
-            }
-            else if (tile.blend_mode() == BlendModeT::subtract)
-            {
-              states.blendMode = GetBlendSubtract();
-              // states.blendMode = sf::BlendMultiply;
-            }
-          }
-          // apply the tileset texture
 
-          // std::lock_guard<std::mutex> lock(mutex_texture);
-          // spdlog::info("({}, {})\t", raw_texture_size.x, raw_texture_size.y);
-          // draw the vertex array
-          target.draw(quad.data(), quad.size(), sf::TriangleStrip, states);
-          drew = true;
-        }
+    m_imported_tile_map_front.visit_tiles(
+      [z, this, &states, &target, &drew](const auto &front_tiles) {
+        m_imported_tile_map.visit_tiles(
+          [z, this, &states, &target, &drew, &front_tiles](const auto &tiles) {
+            auto fb = front_tiles.cbegin();
+            auto fe = front_tiles.cend();
+            auto bb = tiles.cbegin();
+            auto be = tiles.cend();
+            for (; fb != fe && bb != be; ++fb, ++bb)
+            {
+              const auto &tile_const = *fb;
+              const auto &tile       = *bb;
+              if (!m_saved_imported_indicies.empty())
+              {
+                // skip saved indices on redraw.
+                const auto current_index =
+                  std::ranges::distance(&tiles.front(), &tile);
+                const auto find_index = std::ranges::find_if(
+                  m_saved_imported_indicies, [&current_index](const auto i) {
+                    return std::cmp_equal(i, current_index);
+                  });
+                if (find_index != m_saved_imported_indicies.end())
+                {
+                  continue;
+                }
+              }
+              if (m_filters.draw_bit.enabled())
+              {
+                if (
+                  !tile_const.draw()
+                  && m_filters.draw_bit.value() == draw_bitT::enabled)
+                {
+                  continue;
+                }
+                if (
+                  tile_const.draw()
+                  && m_filters.draw_bit.value() == draw_bitT::disabled)
+                {
+                  continue;
+                }
+              }
+              if (tile.z() != z)
+              {
+                continue;
+              }
+              if (fail_filter(tile))
+              {
+                continue;
+              }
+              if (!filter_invalid(tile_const))
+              {
+                continue;
+              }
+              states.texture = m_imported_texture;
+              //        if (!m_filters.deswizzle.enabled())
+              //        {
+              //          states.texture = get_texture(
+              //            tile_const.depth(),
+              //            tile_const.palette_id(),
+              //            tile_const.texture_id());
+              //        }
+              //        else
+              //        {
+              //          states.texture = get_texture(pupu_id);
+              //        }
+              if (
+                states.texture == nullptr || states.texture->getSize().y == 0
+                || states.texture->getSize().x == 0)
+              {
+                continue;
+              }
+              const auto draw_size    = get_tile_draw_size();
+              const auto texture_size = get_tile_texture_size_for_import();
+              auto       quad         = get_triangle_strip_for_imported(
+                draw_size, texture_size, tile_const, tile);
+              states.blendMode = sf::BlendAlpha;
+              if (!m_disable_blends)
+              {
+                states.blendMode = set_blend_mode(tile.blend_mode(), quad);
+              }
+              // apply the tileset texture
+
+              // std::lock_guard<std::mutex> lock(mutex_texture);
+              // spdlog::info("({}, {})\t", raw_texture_size.x,
+              // raw_texture_size.y); draw the vertex array
+              target.draw(quad.data(), quad.size(), sf::TriangleStrip, states);
+              drew = true;
+            }
+          });
       });
   }
   return drew;
@@ -2417,10 +2458,11 @@ void map_sprite::update_render_texture(
   open_viii::graphics::background::Map map,
   const uint16_t                       tile_size)
 {
-  m_imported_texture       = p_texture;
-  m_imported_tile_map      = std::move(map);
-  m_imported_tile_size     = tile_size;
-  m_using_imported_texture = p_texture != nullptr;
+  m_imported_texture        = p_texture;
+  m_imported_tile_map       = std::move(map);
+  m_imported_tile_map_front = m_imported_tile_map;
+  m_imported_tile_size      = tile_size;
+  m_using_imported_texture  = p_texture != nullptr;
   update_render_texture(true);
 }
 void map_sprite::enable_square(sf::Vector2u position) const

@@ -274,9 +274,10 @@ public:
         const uint8_t      &texture_page,
         const sf::Vector2i &down_pixel_pos);
   std::vector<std::size_t> find_intersecting(
-    const sf::Vector2i &pixel_pos,
-    const std::uint8_t &texture_page,
-    bool                skip_filters = false);
+    const open_viii::graphics::background::Map &map,
+    const sf::Vector2i                         &pixel_pos,
+    const std::uint8_t                         &texture_page,
+    bool                                        skip_filters = false) const;
   std::size_t row_empties(
     std::uint8_t tile_y,
     std::uint8_t texture_page,
@@ -323,6 +324,7 @@ private:
   const sf::Texture                   *m_imported_texture        = { nullptr };
   std::uint16_t                        m_imported_tile_size      = {};
   open_viii::graphics::background::Map m_imported_tile_map       = {};
+  open_viii::graphics::background::Map m_imported_tile_map_front = {};
   ff_8::MapHistory                     m_maps                    = {};
   all_unique_values_and_strings        m_all_unique_values_and_strings = {};
   open_viii::graphics::Rectangle<std::uint32_t> m_canvas               = {};
@@ -344,6 +346,7 @@ private:
   mutable grid                               m_grid                        = {};
   grid                                       m_texture_page_grid           = {};
   std::vector<std::size_t>                   m_saved_indicies              = {};
+  std::vector<std::size_t>                   m_saved_imported_indicies     = {};
   mutable std::uint32_t                      m_scale = { 1 };
   grid                                       get_grid() const;
   grid                                       get_texture_page_grid() const;
