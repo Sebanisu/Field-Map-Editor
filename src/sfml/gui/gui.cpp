@@ -146,25 +146,22 @@ void gui::start() const
     ImGui::SFML::Shutdown();
   }
 }
-void gui::loop() const
+static sf::Color clear_color = { 0,
+                                 0,
+                                 0,
+                                 std::numeric_limits<sf::Uint8>::max() };
+void             gui::control_panel_window() const
 {
-  using namespace std::string_view_literals;
-  static sf::Color clear_color = {
-    0, 0, 0, std::numeric_limits<sf::Uint8>::max()
-  };
   if (ImGui::Begin(
         gui_labels::control_panel.data(),
         nullptr,
         static_cast<ImGuiWindowFlags>(
-          static_cast<uint32_t>(ImGuiWindowFlags_AlwaysAutoResize)
-          | static_cast<uint32_t>(ImGuiWindowFlags_MenuBar))))
+          static_cast<uint32_t>(ImGuiWindowFlags_AlwaysAutoResize))))
   {
     if (m_first)
     {
       ImGui::SetWindowPos({ 0U, 0U });
     }
-    menu_bar();
-    file_browser_locate_ff8();
     static std::array<float, 3U> clear_color_f{};
     if (ImGui::ColorEdit3(
           gui_labels::background.data(),
@@ -190,7 +187,6 @@ void gui::loop() const
     combo_draw();
     if (!m_paths.empty())
     {
-      file_browser_save_texture();
       combo_path();
       ImGui::SameLine();
       if (ImGui::Button("Browse"))
@@ -280,9 +276,18 @@ void gui::loop() const
   {
     m_mouse_positions.mouse_enabled = handle_mouse_cursor();
   }
+  ImGui::End();
+}
+void gui::loop() const
+{
+  using namespace std::string_view_literals;
+
+  menu_bar();
+  file_browser_locate_ff8();
+  file_browser_save_texture();
   popup_batch_deswizzle();
   popup_batch_reswizzle();
-  ImGui::End();
+  control_panel_window();
   batch_ops_ask_menu();
   begin_batch_embed_map_warning_window();
   popup_batch_embed();
@@ -638,7 +643,8 @@ bool gui::handle_mouse_cursor() const
       std::clamp(mouse_pos.y, 0, static_cast<int>(win_size.y))
     };
 
-    const auto pixel_pos    = m_window.mapPixelToCoords(clamped_mouse_pos);
+    const auto pixel_pos = m_window.mapPixelToCoords(clamped_mouse_pos);
+
     m_mouse_positions.pixel = { static_cast<int>(pixel_pos.x),
                                 static_cast<int>(pixel_pos.y) };
     const auto &x           = m_mouse_positions.pixel.x;
@@ -983,9 +989,12 @@ void gui::combo_palette() const
 
 void gui::menu_bar() const
 {
-  if (!ImGui::BeginMenuBar())
+  if (!ImGui::BeginMainMenuBar())
     return;
-  const auto end_menu_bar = scope_guard(&ImGui::EndMenuBar);
+  const auto end_menu_bar = scope_guard(&ImGui::EndMainMenuBar);
+  //  if (!ImGui::BeginMenuBar())
+  //    return;
+  //  const auto end_menu_bar = scope_guard(&ImGui::EndMenuBar);
   if (ImGui::BeginMenu("File"))
   {
     const auto end_menu = scope_guard(&ImGui::EndMenu);
@@ -1822,18 +1831,27 @@ void gui::loop_events() const
       event_variant);
   }
 }
+std::uint32_t gui::image_height() const
+{
+  if (map_test())
+  {
+    return m_map_sprite.height();
+  }
+  return m_mim_sprite.height();
+}
+static auto saved_window_width  = float{};
+static auto saved_window_height = float{};
+float       gui::scaled_menubar_gap() const
+{
+  if (saved_window_height < std::numeric_limits<float>::epsilon())
+    return {};
+  return ImGui::GetFrameHeight() * static_cast<float>(image_height())
+         / saved_window_height;
+}
 void gui::scale_window(float width, float height) const
 {
-  static auto save_width  = float{};
-  static auto save_height = float{};
-  float       img_height  = [this]() {
-    if (map_test())
-    {
-      return static_cast<float>(m_map_sprite.height());
-    }
-    return static_cast<float>(m_mim_sprite.height());
-  }();
-  auto load = [](auto &saved, auto &not_saved) {
+  float img_height = static_cast<float>(image_height());
+  auto  load       = [](auto &saved, auto &not_saved) {
     if (not_saved < std::numeric_limits<float>::epsilon())
     {
       not_saved = saved;
@@ -1843,25 +1861,18 @@ void gui::scale_window(float width, float height) const
       saved = not_saved;
     }
   };
-  load(save_width, width);
-  load(save_height, height);
+  load(saved_window_width, width);
+  load(saved_window_height, height);
+  const float adjusted_height = height - ImGui::GetFrameHeight();
   // this scales up the elements without losing the horizontal space. so
   // going from 4:3 to 16:9 will end up with wide screen.
-  // auto scale    = height / static_cast<float>(m_window_height);
-  m_scale_width = std::round(width / height * img_height);
-  //  if (scale < 1.0F)
-  //  {
-  //    scale = 1.0F;
-  //  }
-  // ImGui::GetIO().FontGlobalScale = std::round(scale);
-  // ImGui::GetStyle() =
-  // m_original_style;// restore original before applying scale.
-  // ImGui::GetStyle().ScaleAllSizes(std::round(scale));
+  m_scale_width    = std::round(width / adjusted_height * img_height);
+  float scaled_gap = scaled_menubar_gap();
   m_window.setView(sf::View(sf::FloatRect(
     std::round(m_cam_pos.x),
-    std::round(m_cam_pos.y),
+    std::round(m_cam_pos.y - scaled_gap),
     m_scale_width,
-    std::round(img_height))));
+    std::round(img_height + scaled_gap))));
 }
 archives_group gui::get_archives_group() const
 {
@@ -1902,6 +1913,8 @@ void gui::init_and_get_style() const
   //  m_window.setFramerateLimit(fps_lock);
   m_window.setVerticalSyncEnabled(true);
   (void)ImGui::SFML::Init(m_window);
+  ImGuiIO &io = ImGui::GetIO();
+  io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
   if (m_field)
     generate_upscale_paths(m_field->get_base_name(), get_coo());
   if (!m_drag_sprite_shader)

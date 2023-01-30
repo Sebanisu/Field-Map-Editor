@@ -732,21 +732,23 @@ private:
   void               generate_upscale_paths(
                   const std::string &field_name,
                   open_viii::LangT   coo) const;
-  void        menuitem_locate_custom_upscale() const;
-  void        open_locate_custom_upscale() const;
-  toml::array get_custom_upscale_paths_vector();
-  void        checkbox_render_imported_image() const;
-  void        update_imported_render_texture() const;
-  void        save_swizzle_textures() const;
-  void        reset_imported_image() const;
-  void        update_scaled_up_render_texture() const;
-  void        browse_for_embed_map_dir() const;
-  void        begin_batch_embed_map_warning_window() const;
-  void        sort_paths() const;
+  void          menuitem_locate_custom_upscale() const;
+  void          open_locate_custom_upscale() const;
+  toml::array   get_custom_upscale_paths_vector();
+  void          checkbox_render_imported_image() const;
+  void          update_imported_render_texture() const;
+  void          save_swizzle_textures() const;
+  void          reset_imported_image() const;
+  void          update_scaled_up_render_texture() const;
+  void          browse_for_embed_map_dir() const;
+  void          begin_batch_embed_map_warning_window() const;
+  void          sort_paths() const;
+  void          control_panel_window() const;
+  std::uint32_t image_height() const;
   static std::vector<std::filesystem::path>
        find_maps_in_directory(std::filesystem::path src, size_t reserve = {});
 
-  void slider_xy_sprite(auto &sprite) const
+  void slider_xy_sprite(const auto &sprite) const
   {
     format_imgui_text(
       "X: {:>9.3f} px  Width:  {:>4} px",
@@ -768,6 +770,7 @@ private:
     m_changed = true;
     scale_window();
   }
+  float scaled_menubar_gap() const;
 };
 }// namespace fme
 #endif// FIELD_MAP_EDITOR_GUI_HPP
