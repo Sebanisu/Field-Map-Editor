@@ -771,6 +771,7 @@ private:
     scale_window();
   }
   float scaled_menubar_gap() const;
+  void  render_dockspace() const;
 };
 }// namespace fme
 #endif// FIELD_MAP_EDITOR_GUI_HPP
