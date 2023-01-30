@@ -240,10 +240,10 @@ void             gui::control_panel_window() const
         static_cast<ImGuiWindowFlags>(
           static_cast<uint32_t>(ImGuiWindowFlags_AlwaysAutoResize))))
   {
-//    if (m_first)
-//    {
-//      ImGui::SetWindowPos({ 0U, 0U });
-//    }
+    //    if (m_first)
+    //    {
+    //      ImGui::SetWindowPos({ 0U, 0U });
+    //    }
     static std::array<float, 3U> clear_color_f{};
     if (ImGui::ColorEdit3(
           gui_labels::background.data(),
@@ -702,12 +702,45 @@ void gui::text_mouse_position() const
         "Tile Pos: ({:2}, {:2})",
         m_mouse_positions.pixel.x / 16,
         m_mouse_positions.pixel.y / 16);
-    }
-    if (m_selections.draw_swizzle)
-    {
-      format_imgui_text("Page: {:2}", m_mouse_positions.texture_page);
+      if (m_selections.draw_swizzle)
+      {
+        format_imgui_text("Page: {:2}", m_mouse_positions.texture_page);
+      }
     }
   }
+  if (!map_test())
+  {
+    return;
+  }
+  if (!ImGui::CollapsingHeader("Hovered Tiles") && m_mouse_positions.mouse_enabled)
+  {
+    return;
+  }
+  m_map_sprite.const_visit_tiles([&](const auto &tiles) {
+    static std::vector<std::size_t> indices = {};
+    if (m_mouse_positions.mouse_moved)
+    {
+      indices = m_map_sprite.find_intersecting(
+        tiles, m_mouse_positions.pixel, m_mouse_positions.texture_page);
+    }
+    if (std::ranges::empty(indices))
+    {
+      return;
+    }
+    if (!ImGui::BeginTable("##table", 8))
+    {
+      return;
+    }
+    for (const auto i : indices)
+    {
+      ImGui::TableNextColumn();
+      format_imgui_text("{:4}", i);
+      ImGui::TableNextColumn();
+      const auto &tile = tiles[i];
+      (void)create_tile_button(tile);
+    }
+    ImGui::EndTable();
+  });
 }
 bool gui::handle_mouse_cursor() const
 {
@@ -726,7 +759,7 @@ bool gui::handle_mouse_cursor() const
       std::clamp(mouse_pos.y, 0, static_cast<int>(win_size.y))
     };
 
-    const auto pixel_pos = m_window.mapPixelToCoords(clamped_mouse_pos);
+    const auto pixel_pos    = m_window.mapPixelToCoords(clamped_mouse_pos);
 
     m_mouse_positions.pixel = { static_cast<int>(pixel_pos.x),
                                 static_cast<int>(pixel_pos.y) };

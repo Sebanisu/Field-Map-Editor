@@ -837,9 +837,10 @@ sf::Sprite map_sprite::save_intersecting(
   }
   m_drag_sprite_texture->clear(sf::Color::Transparent);
   const auto draw_drag_texture = [this, &pixel_pos, &sprite_size](
-                                   const auto &front_tiles,
-                                   const auto &tiles,
-                                   bool        imported = false) {
+                                   const auto         &front_tiles,
+                                   const auto         &tiles,
+                                   const std::uint16_t z,
+                                   bool                imported = false) {
     sf::RenderStates states = {};
     //        const auto render_texture_size = m_render_texture->getSize()
     //        / m_scale;
@@ -852,6 +853,10 @@ sf::Sprite map_sprite::save_intersecting(
     {
       const auto &tile       = tiles[i];
       const auto &front_tile = front_tiles[i];
+      if(front_tile.z() != z)
+      {
+        continue;
+      }
       states.texture =
         imported
           ? m_imported_texture
@@ -881,127 +886,26 @@ sf::Sprite map_sprite::save_intersecting(
         quad.data(), quad.size(), sf::TriangleStrip, states);
     }
   };
-  m_maps.front().visit_tiles(
-    [this, &draw_drag_texture](const auto &front_tiles) {
+
+  for (const std::uint16_t &z : m_all_unique_values_and_strings.z().values())
+  {
+    m_maps.front().visit_tiles([&](const auto &front_tiles) {
       m_maps.const_back().visit_tiles(
-        [&front_tiles, &draw_drag_texture](const auto &tiles) {
-          draw_drag_texture(front_tiles, tiles);
-        });
+        [&](const auto &tiles) { draw_drag_texture(front_tiles, tiles, z); });
     });
-  m_imported_tile_map_front.visit_tiles([this, &draw_drag_texture](
-                                          const auto &imported_front_tiles) {
-    m_imported_tile_map.visit_tiles(
-      [&draw_drag_texture, &imported_front_tiles](const auto &imported_tiles) {
-        draw_drag_texture(imported_front_tiles, imported_tiles, true);
+    m_imported_tile_map_front.visit_tiles(
+      [&](const auto &imported_front_tiles) {
+        m_imported_tile_map.visit_tiles([&](const auto &imported_tiles) {
+          draw_drag_texture(imported_front_tiles, imported_tiles, z, true);
+        });
       });
-  });
+  }
   m_drag_sprite_texture->display();
   sprite.setTexture(m_drag_sprite_texture->getTexture());
   update_render_texture();
   return sprite;
 }
 
-
-std::vector<size_t> map_sprite::find_intersecting(
-  const Map          &map,
-  const sf::Vector2i &pixel_pos,
-  const std::uint8_t &texture_page,
-  const bool          skip_filters) const
-{
-  return map.visit_tiles([this, &texture_page, &pixel_pos, &skip_filters](
-                           const auto &tiles) {
-    std::vector<std::size_t> out = {};
-    auto                     filtered_tiles =
-      tiles
-      | std::views::filter(
-        [this, &skip_filters, &texture_page, &pixel_pos](
-          const auto &tile) -> bool {
-          static constexpr auto in_bounds = [](auto i, auto low, auto high) {
-            return std::cmp_greater_equal(i, low) && std::cmp_less(i, high);
-          };
-          if (!skip_filters && fail_filter(tile))
-          {
-            return false;
-          }
-          if (m_draw_swizzle)
-          {
-            if (std::cmp_equal(tile.texture_id(), texture_page))
-            {
-              if (in_bounds(
-                    pixel_pos.x % 256,
-                    tile.source_x(),
-                    tile.source_x() + static_cast<int>(TILE_SIZE)))
-              {
-                if (in_bounds(
-                      pixel_pos.y % 256,
-                      tile.source_y(),
-                      tile.source_y() + static_cast<int>(TILE_SIZE)))
-                {
-                  return true;
-                }
-              }
-            }
-          }
-          else if (in_bounds(
-                     pixel_pos.x,
-                     tile.x(),
-                     tile.x() + static_cast<int>(TILE_SIZE)))
-          {
-            if (in_bounds(
-                  pixel_pos.y,
-                  tile.y(),
-                  tile.y() + static_cast<int>(TILE_SIZE)))
-            {
-              return true;
-            }
-          }
-          return false;
-        });
-    const auto get_indicies = [&](auto &&range) {
-      std::transform(
-        std::begin(range),
-        std::end(range),
-        std::back_inserter(out),
-        [&tiles](const auto &tile) {
-          const auto *const start = tiles.data();
-          const auto *const curr  = &tile;
-          format_tile_text(tile, [](std::string_view name, const auto &value) {
-            spdlog::info("tile {}: {}", name, value);
-          });
-          return static_cast<std::size_t>(std::distance(start, curr));
-        });
-    };
-    if (m_draw_swizzle)
-    {
-      // If palette and bpp are overlapping it causes problems.
-      //  This prevents you selecting more than one at a time.
-      //  min depth/bpp was chosen because lower bpp can be greater src x.
-      const auto min_depth = (std::ranges::min_element)(
-        filtered_tiles, {}, [](const auto &tile) { return tile.depth(); });
-      // min palette well, lower bpp tend to be a lower palette id I think.
-      const auto min_palette = (std::ranges::min_element)(
-        filtered_tiles, {}, [](const auto &tile) { return tile.palette_id(); });
-      auto filtered_tiles_with_depth_and_palette =
-        filtered_tiles | std::views::filter([&](const auto &tile) -> bool {
-          return min_depth->depth() == tile.depth()
-                 && min_palette->palette_id() == tile.palette_id();
-        });
-      get_indicies(filtered_tiles_with_depth_and_palette);
-    }
-    else
-    {
-      get_indicies(filtered_tiles);
-    }
-
-
-    spdlog::info("Found {:3} intersecting tiles", out.size());
-    for (const auto &i : out)
-    {
-      spdlog::info("Tile index: {:4} ", i);
-    }
-    return out;
-  });
-}
 
 auto map_sprite::duel_visitor(auto &&lambda) const
 {
