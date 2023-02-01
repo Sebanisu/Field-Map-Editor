@@ -853,7 +853,7 @@ sf::Sprite map_sprite::save_intersecting(
     {
       const auto &tile       = tiles[i];
       const auto &front_tile = front_tiles[i];
-      if(front_tile.z() != z)
+      if (front_tile.z() != z)
       {
         continue;
       }
@@ -1112,108 +1112,111 @@ sf::BlendMode map_sprite::set_blend_mode(
   return sf::BlendAlpha;
 }
 [[nodiscard]] bool map_sprite::draw_imported(
-  sf::RenderTarget &target,
-  sf::RenderStates  states) const
+  [[maybe_unused]] sf::RenderTarget &target,
+  [[maybe_unused]] sf::RenderStates  states) const
 {
   if (!m_using_imported_texture || m_imported_texture == nullptr)
   {
     return false;
   }
   bool drew = false;
-  // target.clear(sf::Color::Transparent);
+  target.clear(sf::Color::Transparent);
+  const auto draw_imported_tile =
+    [&](
+      const std::integral auto                             current_index,
+      const open_viii::graphics::background::is_tile auto &tile_const,
+      const open_viii::graphics::background::is_tile auto &tile) {
+      if (!m_saved_imported_indicies.empty())
+      {
+        const auto find_index = std::ranges::find_if(
+          m_saved_imported_indicies, [&current_index](const auto i) {
+            return std::cmp_equal(i, current_index);
+          });
+        if (find_index != m_saved_imported_indicies.end())
+        {
+          return;
+        }
+      }
+      if (m_filters.draw_bit.enabled())
+      {
+        if (
+          !tile_const.draw()
+          && m_filters.draw_bit.value() == draw_bitT::enabled)
+        {
+          return;
+        }
+        if (
+          tile_const.draw()
+          && m_filters.draw_bit.value() == draw_bitT::disabled)
+        {
+          return;
+        }
+      }
+      if (fail_filter(tile))
+      {
+        return;
+      }
+      if (!filter_invalid(tile_const))
+      {
+        return;
+      }
+      states.texture = m_imported_texture;
+      //        if (!m_filters.deswizzle.enabled())
+      //        {
+      //          states.texture = get_texture(
+      //            tile_const.depth(),
+      //            tile_const.palette_id(),
+      //            tile_const.texture_id());
+      //        }
+      //        else
+      //        {
+      //          states.texture = get_texture(pupu_id);
+      //        }
+      if (
+        states.texture == nullptr || states.texture->getSize().y == 0
+        || states.texture->getSize().x == 0)
+      {
+        return;
+      }
+      const auto draw_size    = get_tile_draw_size();
+      const auto texture_size = get_tile_texture_size_for_import();
+      auto       quad         = get_triangle_strip_for_imported(
+        draw_size, texture_size, tile_const, tile);
+      states.blendMode = sf::BlendAlpha;
+      if (!m_disable_blends)
+      {
+        states.blendMode = set_blend_mode(tile.blend_mode(), quad);
+      }
+      // apply the tileset texture
+
+      // std::lock_guard<std::mutex> lock(mutex_texture);
+      // spdlog::info("({}, {})\t", raw_texture_size.x,
+      // raw_texture_size.y); draw the vertex array
+      target.draw(quad.data(), quad.size(), sf::TriangleStrip, states);
+      drew = true;
+    };
   for (const auto &z : m_all_unique_values_and_strings.z().values())
   {
-
-    m_imported_tile_map_front.visit_tiles(
-      [z, this, &states, &target, &drew](const auto &front_tiles) {
-        m_imported_tile_map.visit_tiles(
-          [z, this, &states, &target, &drew, &front_tiles](const auto &tiles) {
-            auto fb = front_tiles.cbegin();
-            auto fe = front_tiles.cend();
-            auto bb = tiles.cbegin();
-            auto be = tiles.cend();
-            for (; fb != fe && bb != be; ++fb, ++bb)
-            {
-              const auto &tile_const = *fb;
-              const auto &tile       = *bb;
-              if (!m_saved_imported_indicies.empty())
-              {
-                // skip saved indices on redraw.
-                const auto current_index =
-                  std::ranges::distance(&tiles.front(), &tile);
-                const auto find_index = std::ranges::find_if(
-                  m_saved_imported_indicies, [&current_index](const auto i) {
-                    return std::cmp_equal(i, current_index);
-                  });
-                if (find_index != m_saved_imported_indicies.end())
-                {
-                  continue;
-                }
-              }
-              if (m_filters.draw_bit.enabled())
-              {
-                if (
-                  !tile_const.draw()
-                  && m_filters.draw_bit.value() == draw_bitT::enabled)
-                {
-                  continue;
-                }
-                if (
-                  tile_const.draw()
-                  && m_filters.draw_bit.value() == draw_bitT::disabled)
-                {
-                  continue;
-                }
-              }
-              if (tile.z() != z)
-              {
-                continue;
-              }
-              if (fail_filter(tile))
-              {
-                continue;
-              }
-              if (!filter_invalid(tile_const))
-              {
-                continue;
-              }
-              states.texture = m_imported_texture;
-              //        if (!m_filters.deswizzle.enabled())
-              //        {
-              //          states.texture = get_texture(
-              //            tile_const.depth(),
-              //            tile_const.palette_id(),
-              //            tile_const.texture_id());
-              //        }
-              //        else
-              //        {
-              //          states.texture = get_texture(pupu_id);
-              //        }
-              if (
-                states.texture == nullptr || states.texture->getSize().y == 0
-                || states.texture->getSize().x == 0)
-              {
-                continue;
-              }
-              const auto draw_size    = get_tile_draw_size();
-              const auto texture_size = get_tile_texture_size_for_import();
-              auto       quad         = get_triangle_strip_for_imported(
-                draw_size, texture_size, tile_const, tile);
-              states.blendMode = sf::BlendAlpha;
-              if (!m_disable_blends)
-              {
-                states.blendMode = set_blend_mode(tile.blend_mode(), quad);
-              }
-              // apply the tileset texture
-
-              // std::lock_guard<std::mutex> lock(mutex_texture);
-              // spdlog::info("({}, {})\t", raw_texture_size.x,
-              // raw_texture_size.y); draw the vertex array
-              target.draw(quad.data(), quad.size(), sf::TriangleStrip, states);
-              drew = true;
-            }
-          });
+    m_imported_tile_map_front.visit_tiles([&](const auto &front_tiles) {
+      m_imported_tile_map.visit_tiles([&](const auto &tiles) {
+        auto fb = front_tiles.cbegin();
+        auto fe = front_tiles.cend();
+        auto bb = tiles.cbegin();
+        auto be = tiles.cend();
+        for (; fb != fe && bb != be; ++fb, ++bb)
+        {
+          const auto &tile_const = *fb;
+          const auto &tile       = *bb;
+          if (tile.z() != z)
+          {
+            return;
+          }
+          const auto current_index =
+            std::ranges::distance(&tiles.front(), &tile);
+          draw_imported_tile(current_index, tile_const, tile);
+        }
       });
+    });
   }
   return drew;
 }
@@ -2171,7 +2174,8 @@ std::shared_ptr<sf::RenderTexture>
 void map_sprite::load_map(const std::filesystem::path &src_path) const
 {
   //  const auto filesize  = std::filesystem::file_size(src_path);
-  //  const auto tilesize  = m_maps.const_back().visit_tiles([](auto &&tiles) {
+  //  const auto tilesize  = m_maps.const_back().visit_tiles([](auto &&tiles)
+  //  {
   //    return sizeof(typename
   //    std::remove_cvref_t<decltype(tiles)>::value_type);
   //  });
@@ -2336,11 +2340,12 @@ void map_sprite::save_modified_map(const std::filesystem::path &dest_path) const
       //      append_imported_tiles();
       //      if (!wrote_end_tile)
       //      {
-      //        const_visit_tiles([&append, &wrote_end_tile](const auto &tiles)
+      //        const_visit_tiles([&append, &wrote_end_tile](const auto
+      //        &tiles)
       //        {
-      //          spdlog::info("Generating the last tile. (shouldn't happen)");
-      //          using tile_t = std::remove_cvref_t<decltype(tiles.front())>;
-      //          tile_t tile{};
+      //          spdlog::info("Generating the last tile. (shouldn't
+      //          happen)"); using tile_t =
+      //          std::remove_cvref_t<decltype(tiles.front())>; tile_t tile{};
       //          append(tile.with_xy(0x7FFFU, 0U));
       //          wrote_end_tile = true;
       //        });

@@ -22,6 +22,7 @@
 #include <SFML/Graphics/Sprite.hpp>
 #include <SFML/Graphics/Transformable.hpp>
 #include <SFML/Graphics/Vertex.hpp>
+// #include <stacktrace>
 #include <utility>
 
 static inline std::string str_to_lower(std::string input)
@@ -37,7 +38,8 @@ struct map_sprite final
   : public sf::Drawable
   , public sf::Transformable
 {
-  auto const_visit_tiles(auto &&p_function) const
+  template<typename funcT>
+  auto const_visit_tiles(funcT &&p_function) const
   {
     return m_maps.const_back().visit_tiles(
       std::forward<decltype(p_function)>(p_function));
@@ -47,8 +49,9 @@ struct map_sprite final
     std::uint8_t              palette,
     std::uint8_t              texture_page) const;
   [[nodiscard]] const sf::Texture *get_texture(const ::PupuID &pupu) const;
-  [[nodiscard]] const sf::Texture *
-    get_texture(const open_viii::graphics::background::is_tile auto &tile) const
+
+  template<open_viii::graphics::background::is_tile tileT>
+  [[nodiscard]] const sf::Texture *get_texture(const tileT &tile) const
   {
 
     if (!m_filters.deswizzle.enabled())
@@ -245,11 +248,10 @@ public:
 
   void enable_square(sf::Vector2u position) const;
   void disable_square() const;
-  void enable_square(
-    const open_viii::graphics::background::is_tile auto &tile) const
+  template<open_viii::graphics::background::is_tile tile_type>
+  void enable_square(const tile_type &tile) const
   {
     using namespace open_viii::graphics::literals;
-    using tile_type    = std::remove_cvref_t<decltype(tile)>;
     auto       src_tpw = tile_type::texture_page_width(tile.depth());
     const auto x       = [&tile, &src_tpw]() -> std::uint32_t {
       return tile.texture_id() * src_tpw;
@@ -283,8 +285,9 @@ public:
       return find_intersecting(tiles, pixel_pos, texture_page, skip_filters);
     });
   }
+  template<std::ranges::range tilesT>
   [[nodiscard]] std::vector<std::size_t> find_intersecting(
-    const std::ranges::range auto &tiles,
+    const tilesT &tiles,
     const sf::Vector2i            &pixel_pos,
     const std::uint8_t            &texture_page,
     bool                           skip_filters = false) const
@@ -372,7 +375,16 @@ public:
       get_indicies(filtered_tiles);
     }
 
-
+    //    auto currentStacktrace =
+    //      std::stacktrace();// Won't work as one might expect!
+    //    for (const auto &entry : currentStacktrace)
+    //    {
+    //      spdlog::info(
+    //        "{}:{} - {}",
+    //        entry.source_file(),
+    //        entry.source_line(),
+    //        entry.description());
+    //    }
     spdlog::info("Found {:3} intersecting tiles", out.size());
     for (const auto &i : out)
     {
