@@ -22,7 +22,7 @@
 #include <SFML/Graphics/Sprite.hpp>
 #include <SFML/Graphics/Transformable.hpp>
 #include <SFML/Graphics/Vertex.hpp>
-#include <stacktrace>
+//#include <stacktrace>
 #include <utility>
 
 static inline std::string str_to_lower(std::string input)
