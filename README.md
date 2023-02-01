@@ -8,7 +8,7 @@ Test Application for editing the tiles of a FF8 field. See [releases](https://gi
 * OPENGL version to have more control over what the API is doing. I'm slowly trying to move features to this version but it's lagging behind. Goal was to eventually stop using the SFML version in the future.
   * This version requires the https://github.com/Sebanisu/Field-Map-Editor/tree/main/src/opengl/opengl_version/res folder to be placed in the same directory as the `.exe` file. That folder contains the shaders and textures.
 
-This projected is based on the work of [Omzy](https://forums.qhimm.com/index.php?topic=13444.0) [(src)](https://github.com/Sebanisu/Pupu) and [myst6re](https://forums.qhimm.com/index.php?topic=13050.0) [(src)](https://github.com/myst6re/deling). Also [Maki](https://forums.qhimm.com/index.php?topic=18656.0) [(src)](https://github.com/MaKiPL/OpenVIII-monogame). I referenced their code to make this.
+This project is based on the work of [Omzy](https://forums.qhimm.com/index.php?topic=13444.0) [(src)](https://github.com/Sebanisu/Pupu) and [myst6re](https://forums.qhimm.com/index.php?topic=13050.0) [(src)](https://github.com/myst6re/deling). Also [Maki](https://forums.qhimm.com/index.php?topic=18656.0) [(src)](https://github.com/MaKiPL/OpenVIII-monogame). I referenced their code to make this.
 
 ### Pupu Compatablility Warning!
 * I updated my Pupu ID generation to use 2 bits that were unused. These tell if the X coordinate and/or the Y coordinate aren't aligned with the 16 x 16 grid. This was because a few instances where tiles weren't being deswizzled or swizzled correctly. And you'd end up with two layers of tiles merged together. This change happened around September 2022 so if you already created deswizzles the filenames won't match anymore.
