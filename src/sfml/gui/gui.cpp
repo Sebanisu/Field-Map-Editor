@@ -712,7 +712,9 @@ void gui::text_mouse_position() const
   {
     return;
   }
-  if (!ImGui::CollapsingHeader("Hovered Tiles") && m_mouse_positions.mouse_enabled)
+  if (
+    !ImGui::CollapsingHeader("Hovered Tiles")
+    || !m_mouse_positions.mouse_enabled)
   {
     return;
   }
@@ -727,6 +729,7 @@ void gui::text_mouse_position() const
     {
       return;
     }
+    format_imgui_text("Number of Tiles {:4}", std::ranges::size(indices));
     if (!ImGui::BeginTable("##table", 8))
     {
       return;

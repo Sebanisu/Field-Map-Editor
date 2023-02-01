@@ -22,7 +22,7 @@
 #include <SFML/Graphics/Sprite.hpp>
 #include <SFML/Graphics/Transformable.hpp>
 #include <SFML/Graphics/Vertex.hpp>
-// #include <stacktrace>
+#include <stacktrace>
 #include <utility>
 
 static inline std::string str_to_lower(std::string input)
@@ -287,12 +287,13 @@ public:
   }
   template<std::ranges::range tilesT>
   [[nodiscard]] std::vector<std::size_t> find_intersecting(
-    const tilesT &tiles,
-    const sf::Vector2i            &pixel_pos,
-    const std::uint8_t            &texture_page,
-    bool                           skip_filters = false) const
+    const tilesT       &tiles,
+    const sf::Vector2i &pixel_pos,
+    const std::uint8_t &texture_page,
+    bool                skip_filters = false) const
   {
     std::vector<std::size_t> out = {};
+    out.reserve(30);
     auto                     filtered_tiles =
       tiles
       | std::views::filter(
@@ -375,21 +376,20 @@ public:
       get_indicies(filtered_tiles);
     }
 
-    //    auto currentStacktrace =
-    //      std::stacktrace();// Won't work as one might expect!
-    //    for (const auto &entry : currentStacktrace)
-    //    {
-    //      spdlog::info(
-    //        "{}:{} - {}",
-    //        entry.source_file(),
-    //        entry.source_line(),
-    //        entry.description());
-    //    }
-    spdlog::info("Found {:3} intersecting tiles", out.size());
-    for (const auto &i : out)
-    {
-      spdlog::info("Tile index: {:4} ", i);
-    }
+//    auto currentStacktrace = std::stacktrace::current();
+//    for (const auto &entry : currentStacktrace)
+//    {
+//      spdlog::info(
+//        "{}:{} - {}",
+//        entry.source_file(),
+//        entry.source_line(),
+//        entry.description());
+//    }
+//    spdlog::info("Found {:3} intersecting tiles", out.size());
+//    for (const auto &i : out)
+//    {
+//      spdlog::info("Tile index: {:4} ", i);
+//    }
     return out;
   }
 
