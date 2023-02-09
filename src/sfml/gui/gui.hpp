@@ -693,20 +693,19 @@ private:
     {
       return false;
     }
-    const auto draw_size = m_map_sprite.get_tile_texture_size(texture);
-    auto source_texture_page_width = tileT::texture_page_width(tile.depth());
-    const auto texture_page_x_offset =
-      [this, &tile, &source_texture_page_width]() -> std::uint32_t {
-      if (m_map_sprite.filter().upscale.enabled())
-      {
-        return 0;
-      }
-      return tile.texture_id() * source_texture_page_width;
-    }();
-    const auto src_x =
-      [&tile, &texture_page_x_offset, this]() -> std::uint32_t {
+    const auto tile_texture_size = m_map_sprite.get_tile_texture_size(texture);
+    const auto src_x             = [&tile, this]() -> std::uint32_t {
       if (m_map_sprite.filter().deswizzle.enabled())
         return static_cast<std::uint32_t>(tile.x());
+      auto source_texture_page_width = tileT::texture_page_width(tile.depth());
+      const auto texture_page_x_offset =
+        [this, &tile, &source_texture_page_width]() -> std::uint32_t {
+        if (m_map_sprite.filter().upscale.enabled())
+        {
+          return 0;
+        }
+        return tile.texture_id() * source_texture_page_width;
+      }();
       return tile.source_x() + texture_page_x_offset;
     }();
     const auto src_y = [&tile, this]() -> std::uint32_t {
@@ -718,11 +717,13 @@ private:
       *texture,
       sf::IntRect(
         static_cast<int>(
-          (static_cast<float>(src_x) / 16.F) * static_cast<float>(draw_size.x)),
+          (static_cast<float>(src_x) / 16.F)
+          * static_cast<float>(tile_texture_size.x)),
         static_cast<int>(
-          (static_cast<float>(src_y) / 16.F) * static_cast<float>(draw_size.y)),
-        static_cast<int>(draw_size.x),
-        static_cast<int>(draw_size.y)));
+          (static_cast<float>(src_y) / 16.F)
+          * static_cast<float>(tile_texture_size.y)),
+        static_cast<int>(tile_texture_size.x),
+        static_cast<int>(tile_texture_size.y)));
     if (image_size == sf::Vector2f{})
     {
       image_size =
