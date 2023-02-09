@@ -693,19 +693,21 @@ private:
     {
       return false;
     }
-    const auto draw_size = m_map_sprite.get_tile_draw_size();
-    auto       src_tpw   = tileT::texture_page_width(tile.depth());
-    const auto x         = [this, &tile, &src_tpw]() -> std::uint32_t {
+    const auto draw_size = m_map_sprite.get_tile_texture_size(texture);
+    auto source_texture_page_width = tileT::texture_page_width(tile.depth());
+    const auto texture_page_x_offset =
+      [this, &tile, &source_texture_page_width]() -> std::uint32_t {
       if (m_map_sprite.filter().upscale.enabled())
       {
         return 0;
       }
-      return tile.texture_id() * src_tpw;
+      return tile.texture_id() * source_texture_page_width;
     }();
-    const auto src_x = [&tile, &x, this]() -> std::uint32_t {
+    const auto src_x =
+      [&tile, &texture_page_x_offset, this]() -> std::uint32_t {
       if (m_map_sprite.filter().deswizzle.enabled())
         return static_cast<std::uint32_t>(tile.x());
-      return tile.source_x() + x;
+      return tile.source_x() + texture_page_x_offset;
     }();
     const auto src_y = [&tile, this]() -> std::uint32_t {
       if (m_map_sprite.filter().deswizzle.enabled())
