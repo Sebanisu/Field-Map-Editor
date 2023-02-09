@@ -1120,7 +1120,7 @@ sf::BlendMode map_sprite::set_blend_mode(
     return false;
   }
   bool drew = false;
-  target.clear(sf::Color::Transparent);
+  //target.clear(sf::Color::Transparent);
   const auto draw_imported_tile =
     [&](
       const std::integral auto                             current_index,
