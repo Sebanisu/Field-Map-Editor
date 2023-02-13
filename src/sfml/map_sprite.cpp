@@ -561,64 +561,9 @@ std::uint8_t map_sprite::max_x_for_saved() const
   });
 }
 
-template<typename key_lambdaT, typename weight_lambdaT>
-[[maybe_unused]] void map_sprite::compact_generic(
-  key_lambdaT    &&key_lambda,
-  weight_lambdaT &&weight_lambda,
-  const int        passes) const
-{
-  m_maps.copy_back().visit_tiles([&key_lambda, &weight_lambda, &passes, this](
-                                   auto &&tiles) {
-    for (int pass = passes; pass != 0;
-         --pass)// at least 2 passes needed as things might get shifted to
-                // other texture pages and then the keys are less valuable.
-    {
-      auto pointers = this->generate_map(
-        tiles, key_lambda, [](auto &&tile) { return &tile; });
-      std::uint8_t col        = {};
-      std::uint8_t row        = {};
-      std::uint8_t page       = {};
-      std::size_t  row_weight = {};
-      for (auto &[key, tps] : pointers)
-      {
-        const auto weight = weight_lambda(key, tps);
 
-        if (
-          std::cmp_greater_equal(col, TILE_SIZE)
-          || std::cmp_greater_equal(row_weight, TILE_SIZE)
-          || std::cmp_greater(row_weight + weight, TILE_SIZE))
-        {
-          ++row;
-          col        = {};
-          row_weight = {};
-        }
 
-        if (std::cmp_greater_equal(row, TILE_SIZE))
-        {
-          ++page;
-          row = {};
-        }
-
-        using tileT = std::remove_cvref_t<
-          typename std::remove_cvref_t<decltype(tiles)>::value_type>;
-        for (tileT *const tp : tps)
-        {
-          *tp = tp->with_source_xy(
-                    static_cast<decltype(tileT{}.source_x())>(col * TILE_SIZE),
-                    static_cast<decltype(tileT{}.source_y())>(row * TILE_SIZE))
-                  .with_texture_id(
-                    static_cast<decltype(tileT{}.texture_id())>(page));
-        }
-
-        row_weight += weight;
-        ++col;
-      }
-    }
-  });
-  update_render_texture();
-}
-
-void map_sprite::compact() const
+void map_sprite::compact()
 {
   compact_generic(
     [](const auto &tile) {
@@ -635,7 +580,7 @@ void map_sprite::compact() const
 }
 
 
-void map_sprite::compact2() const
+void map_sprite::compact2()
 {
   compact_generic(
     [](const auto &tile) {
@@ -651,7 +596,7 @@ void map_sprite::compact2() const
     });
 }
 
-void map_sprite::flatten_bpp() const
+void map_sprite::flatten_bpp()
 {
   m_maps.copy_back().visit_tiles([](auto &tiles) {
     std::ranges::transform(tiles, tiles.begin(), [](const auto tile) {
@@ -663,7 +608,7 @@ void map_sprite::flatten_bpp() const
     });
   });
 }
-void map_sprite::flatten_palette() const
+void map_sprite::flatten_palette()
 {
   m_maps.copy_back().visit_tiles([](auto &tiles) {
     std::ranges::transform(tiles, tiles.begin(), [](const auto tile) {
@@ -2171,26 +2116,8 @@ std::shared_ptr<sf::RenderTexture>
   }
   return nullptr;
 }
-void map_sprite::load_map(const std::filesystem::path &src_path) const
+void map_sprite::load_map(const std::filesystem::path &src_path)
 {
-  //  const auto filesize  = std::filesystem::file_size(src_path);
-  //  const auto tilesize  = m_maps.const_back().visit_tiles([](auto &&tiles)
-  //  {
-  //    return sizeof(typename
-  //    std::remove_cvref_t<decltype(tiles)>::value_type);
-  //  });
-  //  const auto tilecount = m_maps.front().visit_tiles(
-  //    [](const auto &tiles) { return std::size(tiles); });
-  //  assert(std::cmp_equal(tilecount, filesize / tilesize));
-  //  if (!std::cmp_equal(tilecount, filesize / tilesize))
-  //  {
-  //    spdlog::error(
-  //      "Error wrong size map file, {} != {} / {}",
-  //      tilecount,
-  //      filesize,
-  //      tilesize);
-  //    return;
-  //  }
   const auto path = src_path.string();
   open_viii::tools::read_from_file(
     [this](std::istream &os) {

@@ -401,10 +401,10 @@ public:
     const sf::Vector2i &pixel_pos,
     const std::uint8_t &texture_page);
   std::uint8_t max_x_for_saved() const;
-  void         compact() const;
-  void         compact2() const;
-  void         flatten_bpp() const;
-  void         flatten_palette() const;
+  void         compact();
+  void         compact2();
+  void         flatten_bpp();
+  void         flatten_palette();
   void         save_new_textures(const std::filesystem::path &path) const;
   cppcoro::generator<bool>
        gen_new_textures(const std::filesystem::path path) const;
@@ -412,7 +412,7 @@ public:
   cppcoro::generator<bool>
               gen_pupu_textures(const std::filesystem::path path) const;
   void        save_modified_map(const std::filesystem::path &path) const;
-  void        load_map(const std::filesystem::path &dest_path) const;
+  void        load_map(const std::filesystem::path &dest_path);
   std::string get_base_name() const;
 
 private:
@@ -547,7 +547,58 @@ private:
   [[maybe_unused]] void compact_generic(
     key_lambdaT    &&key_lambda,
     weight_lambdaT &&weight_lambda,
-    int              passes = 2) const;
+    int              passes = 2)
+  {
+    m_maps.copy_back().visit_tiles([&key_lambda, &weight_lambda, &passes, this](
+                                     auto &&tiles) {
+      for (int pass = passes; pass != 0;
+           --pass)// at least 2 passes needed as things might get shifted to
+                  // other texture pages and then the keys are less valuable.
+      {
+        auto pointers = this->generate_map(
+          tiles, key_lambda, [](auto &&tile) { return &tile; });
+        std::uint8_t col        = {};
+        std::uint8_t row        = {};
+        std::uint8_t page       = {};
+        std::size_t  row_weight = {};
+        for (auto &[key, tps] : pointers)
+        {
+          const auto weight = weight_lambda(key, tps);
+
+          if (
+            std::cmp_greater_equal(col, TILE_SIZE)
+            || std::cmp_greater_equal(row_weight, TILE_SIZE)
+            || std::cmp_greater(row_weight + weight, TILE_SIZE))
+          {
+            ++row;
+            col        = {};
+            row_weight = {};
+          }
+
+          if (std::cmp_greater_equal(row, TILE_SIZE))
+          {
+            ++page;
+            row = {};
+          }
+
+          using tileT = std::remove_cvref_t<
+            typename std::remove_cvref_t<decltype(tiles)>::value_type>;
+          for (tileT *const tp : tps)
+          {
+            *tp = tp->with_source_xy(
+                      static_cast<decltype(tileT{}.source_x())>(col * TILE_SIZE),
+                      static_cast<decltype(tileT{}.source_y())>(row * TILE_SIZE))
+                    .with_texture_id(
+                      static_cast<decltype(tileT{}.texture_id())>(page));
+          }
+
+          row_weight += weight;
+          ++col;
+        }
+      }
+    });
+    update_render_texture();
+  }
 
   std::shared_ptr<sf::RenderTexture>
            save_texture(std::uint32_t width, std::uint32_t height) const;

@@ -39,27 +39,27 @@ namespace ff_8
 // };
 class [[nodiscard]] MapHistory
 {
-  enum class Pushed : std::uint8_t
+  enum class pushed : std::uint8_t
   {
     Front,
     Back
   };
-  using MapT                          = open_viii::graphics::background::Map;
-  mutable MapT                m_front = {};
-  mutable MapT                m_back  = {};
+  using map_t                          = open_viii::graphics::background::Map;
+  mutable map_t                m_front = {};
+  mutable map_t                m_back  = {};
   mutable std::vector<PupuID> m_front_pupu         = {};
-  mutable std::vector<MapT>   m_front_history      = {};
-  mutable std::vector<MapT>   m_back_history       = {};
-  mutable std::vector<MapT>   m_redo_history       = {};
-  mutable std::vector<Pushed> m_front_or_back      = {};
-  mutable std::vector<Pushed> m_redo_front_or_back = {};
+  mutable std::vector<map_t>   m_front_history      = {};
+  mutable std::vector<map_t>   m_back_history       = {};
+  mutable std::vector<map_t>   m_redo_history       = {};
+  mutable std::vector<pushed> m_front_or_back      = {};
+  mutable std::vector<pushed> m_redo_front_or_back = {};
   // mutable std::vector<std::string> m_changes       = {};
   mutable bool                preemptive_copy_mode = false;
   /**
    * Should only be called by undo() pops back
    * @return returns new back
    */
-  [[nodiscard]] MapT         &redo_back() const
+  [[nodiscard]] map_t         &redo_back() const
   {
     m_back_history.emplace_back(std::move(m_back));
     m_back = std::move(m_redo_history.back());
@@ -70,7 +70,7 @@ class [[nodiscard]] MapHistory
    * Should only be called by undo() pops front
    * @return returns new front
    */
-  [[nodiscard]] const MapT &redo_front() const
+  [[nodiscard]] const map_t &redo_front() const
   {
     m_front_history.emplace_back(std::move(m_front));
     m_front = std::move(m_redo_history.back());
@@ -81,7 +81,7 @@ class [[nodiscard]] MapHistory
    * Should only be called by undo() pops back
    * @return returns new back
    */
-  [[nodiscard]] MapT &undo_back(bool skip_redo = false) const
+  [[nodiscard]] map_t &undo_back(bool skip_redo = false) const
   {
     if (!skip_redo)
     {
@@ -95,7 +95,7 @@ class [[nodiscard]] MapHistory
    * Should only be called by undo() pops front
    * @return returns new front
    */
-  [[nodiscard]] const MapT &undo_front(bool skip_redo = false) const
+  [[nodiscard]] const map_t &undo_front(bool skip_redo = false) const
   {
     if (!skip_redo)
     {
@@ -211,7 +211,7 @@ class [[nodiscard]] MapHistory
     });
   }
 
-  static std::vector<PupuID> calculate_pupu(const MapT &map)
+  static std::vector<PupuID> calculate_pupu(const map_t &map)
   {
     return map.visit_tiles([](const auto &tiles) {
       std::vector<PupuID> pupu_ids = {};
@@ -225,7 +225,7 @@ class [[nodiscard]] MapHistory
 
 public:
   MapHistory() = default;
-  explicit MapHistory(MapT map)
+  explicit MapHistory(map_t map)
     : m_front(std::move(map))
     , m_back(m_front)
     , m_front_pupu(calculate_pupu(m_front))
@@ -266,11 +266,11 @@ public:
   {
     return m_redo_history.size();
   }
-  [[nodiscard]] const MapT &front() const
+  [[nodiscard]] const map_t &front() const
   {
     return m_front;
   }
-  [[nodiscard]] MapT &back() const
+  [[nodiscard]] map_t &back() const
   {
     return m_back;
   }
@@ -339,7 +339,7 @@ public:
    * For when a change could happen. we make a copy ahead of time.
    * @return back map
    */
-  [[nodiscard]] MapT &copy_back_preemptive(
+  [[nodiscard]] map_t &copy_back_preemptive(
     std::source_location source_location =
       std::source_location::current()) const
   {
@@ -374,7 +374,7 @@ public:
         source_location.line());
     }
   }
-  [[nodiscard]] MapT &copy_back() const
+  [[nodiscard]] map_t &copy_back() const
   {
     auto &temp = safe_copy_back();
     if (!preemptive_copy_mode)
@@ -383,12 +383,12 @@ public:
     }
     return temp;
   }
-  [[nodiscard]] MapT &safe_copy_back() const
+  [[nodiscard]] map_t &safe_copy_back() const
   {
     (void)debug_count_print();
     if (!preemptive_copy_mode)
     {
-      m_front_or_back.push_back(Pushed::Back);
+      m_front_or_back.push_back(pushed::Back);
       m_back_history.push_back(back());
     }
     return back();
@@ -402,9 +402,9 @@ public:
   {
     bool ret = false;
     while (!undo_enabled() &&
-           ((m_front_or_back.back() == Pushed::Back
+           ((m_front_or_back.back() == pushed::Back
              && m_back_history.back() == m_back)
-            || (m_front_or_back.back() == Pushed::Front
+            || (m_front_or_back.back() == pushed::Front
                 && m_front_history.back() == m_front)))
     {
       (void)undo(true);
@@ -444,10 +444,10 @@ public:
     {
       return false;
     }
-    Pushed last = m_redo_front_or_back.back();
+    pushed last = m_redo_front_or_back.back();
     m_front_or_back.push_back(last);
     m_redo_front_or_back.pop_back();
-    if (last == Pushed::Back)
+    if (last == pushed::Back)
     {
       (void)redo_back();
       return true;
@@ -469,13 +469,13 @@ public:
     {
       return false;
     }
-    Pushed last = m_front_or_back.back();
+    pushed last = m_front_or_back.back();
     if (!skip_redo)
     {
       m_redo_front_or_back.push_back(last);
     }
     m_front_or_back.pop_back();
-    if (last == Pushed::Back)
+    if (last == pushed::Back)
     {
       (void)undo_back(false);
       return true;
