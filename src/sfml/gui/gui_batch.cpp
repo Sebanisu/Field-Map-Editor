@@ -383,7 +383,7 @@ filters fme::gui_batch::get_filters()
   }
   return filters;
 }
-cppcoro::generator<bool> fme::gui_batch::save_output(const map_sprite ms) const
+cppcoro::generator<bool> fme::gui_batch::save_output(map_sprite ms) const
 {
   if (m_output_path.has_value())
   {
