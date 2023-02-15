@@ -335,14 +335,14 @@ void fme::gui_batch::compact_and_flatten(map_sprite &ms) const
        & static_cast<uint32_t>(batch_operation_transformation::compact_rows))
       != 0)
     {
-      ms.compact();
+      ms.compact_rows();
     }
     if (
       (static_cast<uint32_t>(m_transformation_type)
        & static_cast<uint32_t>(batch_operation_transformation::compact_all))
       != 0)
     {
-      ms.compact2();
+      ms.compact_all();
     }
   };
   c();

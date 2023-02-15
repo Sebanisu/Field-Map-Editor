@@ -561,7 +561,7 @@ std::uint8_t map_sprite::max_x_for_saved() const
 }
 
 
-void map_sprite::compact()
+void map_sprite::compact_rows()
 {
   compact_generic(
     [](const auto &tile) {
@@ -578,7 +578,7 @@ void map_sprite::compact()
 }
 
 
-void map_sprite::compact2()
+void map_sprite::compact_all()
 {
   compact_generic(
     [](const auto &tile) {

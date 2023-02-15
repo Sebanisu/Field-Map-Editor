@@ -29,9 +29,10 @@ static inline std::string str_to_lower(std::string input)
 {
   std::string output{};
   output.reserve(std::size(input) + 1);
-  std::ranges::transform(input, std::back_inserter(output), [](char c) -> char {
-    return static_cast<char>(::tolower(c));
-  });
+  std::ranges::transform(
+    input, std::back_inserter(output), [](char character) -> char {
+      return static_cast<char>(::tolower(character));
+    });
   return output;
 }
 struct map_sprite final
@@ -71,9 +72,10 @@ struct map_sprite final
           using TileT2 = std::remove_cvref<decltype(tile)>;
           if constexpr (std::is_same_v<TileT1, TileT2>)
           {
-            const auto it = std::ranges::find_if(
+            const auto found_iterator = std::ranges::find_if(
               tiles, [&tile](const auto &l_tile) { return l_tile == tile; });
-            const auto distance = std::ranges::distance(tiles.begin(), it);
+            const auto distance =
+              std::ranges::distance(tiles.begin(), found_iterator);
 
             if (std::cmp_greater(std::ranges::ssize(m_maps.pupu()), distance))
             {
@@ -157,7 +159,6 @@ public:
     , m_coo(coo)
     , m_upscales(get_upscales())
     , m_mim(get_mim())
-    , m_using_coo(false)
     , m_maps(get_map(&m_map_path, true, m_using_coo))
     , m_all_unique_values_and_strings(get_all_unique_values_and_strings())
     , m_canvas(get_canvas())
@@ -249,12 +250,16 @@ public:
     }();
     const auto src_x = [&tile, &x, this]() -> std::uint32_t {
       if (!m_filters.deswizzle.enabled())
+      {
         return static_cast<std::uint32_t>(tile.x());
+      }
       return tile.source_x() + x;
     }();
     const auto src_y = [&tile, this]() -> std::uint32_t {
       if (!m_filters.deswizzle.enabled())
+      {
         return static_cast<std::uint32_t>(tile.y());
+      }
       return tile.source_y();
     }();
     enable_square(sf::Vector2u(src_x, src_y));
@@ -393,8 +398,8 @@ public:
     const sf::Vector2i &pixel_pos,
     const std::uint8_t &texture_page);
   std::uint8_t             max_x_for_saved() const;
-  void                     compact();
-  void                     compact2();
+  void                     compact_rows();
+  void                     compact_all();
   void                     flatten_bpp();
   void                     flatten_palette();
   void                     save_new_textures(const std::filesystem::path &path);

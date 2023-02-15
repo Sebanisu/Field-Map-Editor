@@ -64,15 +64,6 @@ public:
   {
     return m_enabled;
   }
-  //  /**
-  //   * common test for tiles.
-  //   * @param cmp value of tile
-  //   * @return true if not match and enabled.
-  //   */
-  //  [[nodiscard]] bool test(const T &cmp) const
-  //  {
-  //    return m_enabled && m_value != cmp;
-  //  }
   explicit operator T() const
   {
     return m_value;

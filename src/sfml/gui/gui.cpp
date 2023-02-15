@@ -13,38 +13,6 @@ using namespace open_viii::graphics::background;
 using namespace open_viii::graphics;
 using namespace open_viii::graphics::literals;
 using namespace std::string_literals;
-static const std::string border_shader_raw = R"(#version 130
-uniform sampler2D texture;
-uniform float borderWidth;
-
-void main()
-{
-    vec4 pixel = texture2D(texture, gl_TexCoord[0].st);
-    vec2 texelSize = vec2(1.0/textureSize(texture,0).x, 1.0/textureSize(texture,0).y);
-    float alpha = 0;
-    int space = int(borderWidth);
-    int threshold = (2*space) * (2*space);
-    int count = 0;
-    for(int y=-space;y<=space;++y)
-    {
-      for(int x=-space;x<=space;++x)
-      {
-        if(texture2D(texture, gl_TexCoord[0].st + vec2(x*texelSize.x, y*texelSize.y)).a > 0.5)
-        {
-            count++;
-        }
-      }
-    }
-    if(pixel.a > 0.5)
-    {
-      gl_FragColor = pixel;
-    }
-    else
-    {
-      gl_FragColor = vec4(1, 0, 0, float(count)/float(threshold));
-    }
-}
-)";
 /**
  * @see https://godbolt.org/z/xce9jEbqh
  * @tparam T enforced std::filesystem::path
@@ -81,23 +49,23 @@ inline std::filesystem::path
   tmp += rhs;
   return tmp;
 }
-std::ostream &operator<<(std::ostream &os, const BlendModeT &bm)
-{
-  switch (bm)
-  {
-    case BlendModeT::quarter_add:
-      return os << "quarter add"s;
-    case BlendModeT::half_add:
-      return os << "half add"s;
-    case BlendModeT::add:
-      return os << "add"s;
-    default:
-    case BlendModeT::none:
-      return os << "none"s;
-    case BlendModeT::subtract:
-      return os << "subtract"s;
-  }
-}
+// std::ostream &operator<<(std::ostream &os, const BlendModeT &bm)
+//{
+//   switch (bm)
+//   {
+//     case BlendModeT::quarter_add:
+//       return os << "quarter add"s;
+//     case BlendModeT::half_add:
+//       return os << "half add"s;
+//     case BlendModeT::add:
+//       return os << "add"s;
+//     default:
+//     case BlendModeT::none:
+//       return os << "none"s;
+//     case BlendModeT::subtract:
+//       return os << "subtract"s;
+//   }
+// }
 
 namespace fme
 {
@@ -110,24 +78,18 @@ void gui::start() const
       static_cast<float>(m_selections.window_height));
     do
     {
-      //      if(!map_test() && m_selections.draw == 1)
-      //      {
-      //        m_map_sprite = get_map_sprite();
-      //      }
       m_changed = false;
       m_id      = {};
       loop_events();
-      const sf::Time &dt = m_delta_clock.restart();
-      if (
-        m_selections.draw_swizzle || (!m_selections.draw_palette && mim_test()))
-      {
-        m_scrolling.total_scroll_time[0] = 4000.F;
-      }
-      else
-      {
-        m_scrolling.total_scroll_time[0] = 1000.F;
-      }
-      if (m_scrolling.scroll(xy, dt))
+      const sf::Time        &delta_time       = m_delta_clock.restart();
+
+      static constexpr float scroll_time_fast = 4000.F;
+      static constexpr float scroll_time_slow = 1000.F;
+      m_scrolling.total_scroll_time[0] =
+        m_selections.draw_swizzle || (!m_selections.draw_palette && mim_test())
+          ? scroll_time_fast
+          : scroll_time_slow;
+      if (m_scrolling.scroll(xy, delta_time))
       {
         m_changed                     = false;
         m_mouse_positions.mouse_moved = true;
@@ -140,13 +102,13 @@ void gui::start() const
           move_camera(m_map_sprite);
         }
       }
-      ImGui::SFML::Update(m_window, dt);
+      ImGui::SFML::Update(m_window, delta_time);
       loop();
     } while (m_window.isOpen());
     ImGui::SFML::Shutdown();
   }
 }
-void gui::render_dockspace() const
+void gui::render_dockspace()
 {
   // If you strip some features of, this demo is pretty much equivalent to
   // calling DockSpaceOverViewport()! In most cases you should be able to just
@@ -164,8 +126,8 @@ void gui::render_dockspace() const
   //         ImGui::DockSpaceOverViewport(ImGui::GetMainViewport());
   //     }
 
-  static bool               opt_fullscreen  = true;
-  static bool               opt_padding     = false;
+  static constexpr bool     opt_fullscreen  = true;
+  static constexpr bool     opt_padding     = false;
   static ImGuiDockNodeFlags dockspace_flags = ImGuiDockNodeFlags_None;
 
   // We are using the ImGuiWindowFlags_NoDocking flag to make the parent window
@@ -173,192 +135,237 @@ void gui::render_dockspace() const
   // targets within each others.
   ImGuiWindowFlags          window_flags =
     ImGuiWindowFlags_NoDocking;// ImGuiWindowFlags_MenuBar
-  if (opt_fullscreen)
+  static constexpr auto bitwise_or = [](auto start, auto... rest) {
+    return static_cast<decltype(start)>(
+      static_cast<std::uint32_t>(start)
+      | (static_cast<std::uint32_t>(rest) | ...));
+  };
+  static constexpr auto bitwise_and = [](auto start, auto... rest) {
+    return static_cast<decltype(start)>(
+      static_cast<std::uint32_t>(start)
+      & (static_cast<std::uint32_t>(rest) & ...));
+  };
+  static constexpr auto bitwise_not = [](auto value) {
+    return static_cast<decltype(value)>(~static_cast<std::uint32_t>(value));
+  };
+  if constexpr (opt_fullscreen)
   {
     const ImGuiViewport *viewport = ImGui::GetMainViewport();
     ImGui::SetNextWindowPos(viewport->WorkPos);
     ImGui::SetNextWindowSize(viewport->WorkSize);
     ImGui::SetNextWindowViewport(viewport->ID);
-    ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
-    ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
-    window_flags |= ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse
-                    | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove;
-    window_flags |=
-      ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus;
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0F);
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0F);
+    window_flags = bitwise_or(
+      window_flags,
+      ImGuiWindowFlags_NoTitleBar,
+      ImGuiWindowFlags_NoCollapse,
+      ImGuiWindowFlags_NoResize,
+      ImGuiWindowFlags_NoMove,
+      ImGuiWindowFlags_NoBringToFrontOnFocus,
+      ImGuiWindowFlags_NoNavFocus);
   }
   else
   {
-    dockspace_flags &= ~ImGuiDockNodeFlags_PassthruCentralNode;
+    dockspace_flags = bitwise_and(
+      dockspace_flags, bitwise_not(ImGuiDockNodeFlags_PassthruCentralNode));
   }
 
   // When using ImGuiDockNodeFlags_PassthruCentralNode, DockSpace() will render
   // our background and handle the pass-thru hole, so we ask Begin() to not
   // render a background.
-  if (dockspace_flags & ImGuiDockNodeFlags_PassthruCentralNode)
-    window_flags |= ImGuiWindowFlags_NoBackground;
+  if (
+    bitwise_and(dockspace_flags, ImGuiDockNodeFlags_PassthruCentralNode)
+    != ImGuiDockNodeFlags{})
+  {
+    window_flags = bitwise_or(window_flags, ImGuiWindowFlags_NoBackground);
+  }
 
   // Important: note that we proceed even if Begin() returns false (aka window
-  // is collapsed). This is because we want to keep our DockSpace() active. If a
-  // DockSpace() is inactive, all active windows docked into it will lose their
-  // parent and become undocked. We cannot preserve the docking relationship
-  // between an active window and an inactive docking, otherwise any change of
-  // dockspace/settings would lead to windows being stuck in limbo and never
-  // being visible.
-  if (!opt_padding)
-    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
+  // is collapsed). This is because we want to keep our DockSpace() active. If
+  // a DockSpace() is inactive, all active windows docked into it will lose
+  // their parent and become undocked. We cannot preserve the docking
+  // relationship between an active window and an inactive docking, otherwise
+  // any change of dockspace/settings would lead to windows being stuck in
+  // limbo and never being visible.
+  if constexpr (!opt_padding)
+  {
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0F, 0.0F));
+  }
+
+  const auto imgui_end = scope_guard(&ImGui::End);
   ImGui::Begin("DockSpace Demo", nullptr, window_flags);
-  if (!opt_padding)
+  if constexpr (!opt_padding)
+  {
     ImGui::PopStyleVar();
+  }
 
-  if (opt_fullscreen)
+  if constexpr (opt_fullscreen)
+  {
     ImGui::PopStyleVar(2);
+  }
 
-  dockspace_flags |= ImGuiDockNodeFlags_PassthruCentralNode;
-  dockspace_flags = dockspace_flags & (~ImGuiDockNodeFlags_NoResize);
+  dockspace_flags =
+    bitwise_or(dockspace_flags, ImGuiDockNodeFlags_PassthruCentralNode);
+  dockspace_flags =
+    bitwise_and(dockspace_flags, bitwise_not(ImGuiDockNodeFlags_NoResize));
   // Submit the DockSpace
-  ImGuiIO &io     = ImGui::GetIO();
-  if (io.ConfigFlags & ImGuiConfigFlags_DockingEnable)
+  const ImGuiIO &imgui_io = ImGui::GetIO();
+  if (
+    bitwise_and(imgui_io.ConfigFlags, ImGuiConfigFlags_DockingEnable)
+    != ImGuiConfigFlags{})
   {
-    ImGuiID dockspace_id = ImGui::GetID("MyDockSpace");
-    ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f), dockspace_flags);
+    const ImGuiID dockspace_id = ImGui::GetID("MyDockSpace");
+    ImGui::DockSpace(dockspace_id, ImVec2(0.0F, 0.0F), dockspace_flags);
   }
-  else
-  {
-    // ShowDockingDisabledMessage();
-  }
-  ImGui::End();
+  //  else
+  //  {
+  //    ShowDockingDisabledMessage();
+  //  }
 }
-static sf::Color clear_color = { 0,
-                                 0,
-                                 0,
-                                 std::numeric_limits<sf::Uint8>::max() };
-void             gui::control_panel_window() const
+void gui::control_panel_window() const
 {
-  if (ImGui::Begin(
+  const auto imgui_end = scope_guard(&ImGui::End);
+  if (!ImGui::Begin(
         gui_labels::control_panel.data(),
         nullptr,
         static_cast<ImGuiWindowFlags>(
           static_cast<uint32_t>(ImGuiWindowFlags_AlwaysAutoResize))))
   {
-    //    if (m_first)
-    //    {
-    //      ImGui::SetWindowPos({ 0U, 0U });
-    //    }
-    static std::array<float, 3U> clear_color_f{};
-    if (ImGui::ColorEdit3(
-          gui_labels::background.data(),
-          clear_color_f.data(),
-          ImGuiColorEditFlags_DisplayRGB))
-    {
-      // changed color
-      clear_color = {
-        static_cast<sf::Uint8>(
-          std::numeric_limits<sf::Uint8>::max() * clear_color_f[0]),
-        static_cast<sf::Uint8>(
-          std::numeric_limits<sf::Uint8>::max() * clear_color_f[1]),
-        static_cast<sf::Uint8>(
-          std::numeric_limits<sf::Uint8>::max() * clear_color_f[2]),
-        std::numeric_limits<sf::Uint8>::max()
-      };
-    }
-    ImGui::SameLine();
-    {
-      const auto framerate = ImGui::GetIO().Framerate;
-      format_imgui_text("   {:>3.2f} fps", framerate);
-    }
-    combo_draw();
-    if (!m_paths.empty())
-    {
-      combo_path();
-      ImGui::SameLine();
-      if (ImGui::Button("Browse"))
-      {
-        open_locate_ff8_filebrowser();
-      }
-      combo_coo();
-      combo_field();
-      if (mim_test())
-      {
-        checkbox_mim_palette_texture();
-        if (ImGui::CollapsingHeader(gui_labels::filters.data()))
-        {
-          if (!m_mim_sprite.draw_palette())
-          {
-            combo_bpp();
-            combo_palette();
-          }
-          if (!m_mim_sprite.draw_palette())
-          {
-            format_imgui_text(
-              "{} == {}", gui_labels::width, gui_labels::max_tiles);
-          }
-        }
-        if (m_changed)
-        {
-          scale_window();
-        }
-        slider_xy_sprite(m_mim_sprite);
-      }
-      else if (map_test())
-      {
-        combo_upscale_path();
-        combo_deswizzle_path();
-        checkbox_map_swizzle();
-        checkbox_render_imported_image();
-        checkbox_map_disable_blending();
-        format_imgui_text("{}: ", gui_labels::compact);
-        ImGui::SameLine();
-        if (ImGui::Button(gui_labels::rows.data()))
-        {
-          m_map_sprite.compact();
-        }
-        ImGui::SameLine();
-        if (ImGui::Button(gui_labels::all.data()))
-        {
-          m_map_sprite.compact2();
-        }
-        ImGui::SameLine();
-        format_imgui_text("{}: ", gui_labels::flatten);
-        ImGui::SameLine();
-        if (ImGui::Button(gui_labels::bpp.data()))
-        {
-          m_map_sprite.flatten_bpp();
-        }
-        ImGui::SameLine();
-        if (ImGui::Button(gui_labels::palette.data()))
-        {
-          m_map_sprite.flatten_palette();
-        }
-        if (ImGui::CollapsingHeader(gui_labels::filters.data()))
-        {
-          combo_pupu();
-          combo_filtered_bpps();
-          combo_filtered_palettes();
-          combo_blend_modes();
-          combo_blend_other();
-          combo_layers();
-          combo_texture_pages();
-          combo_animation_ids();
-          combo_animation_frames();
-          combo_z();
-          combo_draw_bit();
-        }
-        if (m_changed)
-        {
-          scale_window();
-        }
-        slider_xy_sprite(m_map_sprite);
-      }
-
-      m_mouse_positions.mouse_enabled = handle_mouse_cursor();
-      text_mouse_position();
-    }
-  }
-  else
-  {
     m_mouse_positions.mouse_enabled = handle_mouse_cursor();
+    return;
   }
-  ImGui::End();
+  //    if (m_first)
+  //    {
+  //      ImGui::SetWindowPos({ 0U, 0U });
+  //    }
+  background_color_picker();
+  ImGui::SameLine();
+  frame_rate();
+  combo_draw();
+  if (m_paths.empty())
+  {
+    return;
+  }
+  combo_path();
+  combo_coo();
+  combo_field();
+  if (mim_test())
+  {
+    control_panel_window_mim();
+  }
+  else if (map_test())
+  {
+    control_panel_window_map();
+  }
+
+  m_mouse_positions.mouse_enabled = handle_mouse_cursor();
+  text_mouse_position();
+}
+void gui::control_panel_window_mim() const
+{
+  checkbox_mim_palette_texture();
+  if (ImGui::CollapsingHeader(gui_labels::filters.data()))
+  {
+    if (!m_mim_sprite.draw_palette())
+    {
+      combo_bpp();
+      combo_palette();
+    }
+    if (!m_mim_sprite.draw_palette())
+    {
+      format_imgui_text("{} == {}", gui_labels::width, gui_labels::max_tiles);
+    }
+  }
+  if (m_changed)
+  {
+    scale_window();
+  }
+  slider_xy_sprite(m_mim_sprite);
+}
+void gui::control_panel_window_map() const
+{
+  combo_upscale_path();
+  combo_deswizzle_path();
+  checkbox_map_swizzle();
+  checkbox_render_imported_image();
+  checkbox_map_disable_blending();
+  compact_flatten_buttons();
+  collapsing_header_filters();
+  if (m_changed)
+  {
+    scale_window();
+  }
+  slider_xy_sprite(m_map_sprite);
+}
+void gui::frame_rate()
+{
+  const auto framerate = ImGui::GetIO().Framerate;
+  format_imgui_text("   {:>3.2f} fps", framerate);
+}
+void gui::compact_flatten_buttons() const
+{
+  format_imgui_text("{}: ", gui_labels::compact);
+  ImGui::SameLine();
+  if (ImGui::Button(gui_labels::rows.data()))
+  {
+    m_map_sprite.compact_rows();
+  }
+  ImGui::SameLine();
+  if (ImGui::Button(gui_labels::all.data()))
+  {
+    m_map_sprite.compact_all();
+  }
+  ImGui::SameLine();
+  format_imgui_text("{}: ", gui_labels::flatten);
+  ImGui::SameLine();
+  if (ImGui::Button(gui_labels::bpp.data()))
+  {
+    m_map_sprite.flatten_bpp();
+  }
+  ImGui::SameLine();
+  if (ImGui::Button(gui_labels::palette.data()))
+  {
+    m_map_sprite.flatten_palette();
+  }
+}
+void gui::collapsing_header_filters() const
+{
+  if (ImGui::CollapsingHeader(gui_labels::filters.data()))
+  {
+    combo_pupu();
+    combo_filtered_bpps();
+    combo_filtered_palettes();
+    combo_blend_modes();
+    combo_blend_other();
+    combo_layers();
+    combo_texture_pages();
+    combo_animation_ids();
+    combo_animation_frames();
+    combo_z();
+    combo_draw_bit();
+  }
+}
+void gui::background_color_picker() const
+{
+  static std::array<float, 3U> clear_color_f{};
+  if (ImGui::ColorEdit3(
+        gui_labels::background.data(),
+        clear_color_f.data(),
+        ImGuiColorEditFlags_DisplayRGB))
+  {
+    // changed color
+    static constexpr auto lerp = [](float percent) {
+      return static_cast<sf::Uint8>(std::lerp(
+        (std::numeric_limits<sf::Uint8>::min)(),
+        (std::numeric_limits<sf::Uint8>::max)(),
+        percent));
+    };
+    clear_color = { lerp(clear_color_f[0]),
+                    lerp(clear_color_f[1]),
+                    lerp(clear_color_f[2]),
+                    (std::numeric_limits<sf::Uint8>::max)() };
+  }
 }
 void gui::loop() const
 {
@@ -396,8 +403,10 @@ void gui::loop() const
   {
     m_drag_sprite_shader->setUniform(
       "texture", *m_mouse_positions.sprite.getTexture());
+    static constexpr float border_width = 2.F;
     m_drag_sprite_shader->setUniform(
-      "borderWidth", 2.F * m_map_sprite.get_map_scale());
+      "borderWidth",
+      border_width * static_cast<float>(m_map_sprite.get_map_scale()));
     states.shader = m_drag_sprite_shader.get();
   }
   m_window.draw(m_mouse_positions.sprite, states);
@@ -420,7 +429,8 @@ void gui::checkbox_render_imported_image() const
       update_imported_render_texture();
       if (!m_selections.render_imported_image)
       {
-        m_map_sprite.update_render_texture(nullptr, {}, 16);
+        const int tile_size = 16;
+        m_map_sprite.update_render_texture(nullptr, {}, tile_size);
       }
       m_changed = true;
     }
@@ -439,12 +449,12 @@ void gui::update_imported_render_texture() const
 void gui::popup_batch_common_filter_start(
   ::filter<std::filesystem::path> &filter,
   std::string_view                 prefix,
-  std::string_view                 base_name) const
+  std::string_view                 base_name)
 {
   if (filter.enabled())
   {
     filter.update(filter.value() / prefix / base_name);
-    safedir path = filter.value();
+    safedir const path = filter.value();
     if (!path.is_exists() || !path.is_dir())
     {
       filter.disable();
@@ -477,8 +487,9 @@ void gui::popup_batch_common(
           {
             return;
           }
-          std::string      base_name = str_to_lower(field->get_base_name());
-          std::string_view prefix = std::string_view(base_name).substr(0U, 2U);
+          std::string const base_name = str_to_lower(field->get_base_name());
+          std::string_view const prefix =
+            std::string_view{ base_name }.substr(0U, 2U);
           popup_batch_common_filter_start(filter(filters), prefix, base_name);
 
           auto map = m_map_sprite.with_field(field)
@@ -524,8 +535,8 @@ void gui::popup_batch_common(
             {
               const auto filename =
                 std::filesystem::path(file_path).filename().stem().string();
-              std::string_view filename_view = { filename };
-              std::string_view basename_view = { base_name };
+              std::string_view const filename_view = { filename };
+              std::string_view const basename_view = { base_name };
               if (
                 filename_view.substr(
                   0,
@@ -586,7 +597,6 @@ void gui::popup_batch_deswizzle() const
         map_path.string());
     });
 }
-
 void gui::popup_batch_reswizzle() const
 {
   popup_batch_common(
@@ -606,35 +616,33 @@ void gui::popup_batch_reswizzle() const
     },
     [&](
       const auto                 &selected_path,
-      auto                       &map,
+      map_sprite                 &map,
       const filter<compact_type> &compact,
       const bool                 &flatten_bpp,
       const bool                 &flatten_palette) {
-      const auto c = [&] {
+      const auto compact_function = [&] {
         if (compact.enabled())
         {
           if (compact.value() == compact_type::rows)
           {
-            map.compact();
+            map.compact_rows();
           }
           if (compact.value() == compact_type::all)
           {
-            map.compact2();
+            map.compact_all();
           }
         }
       };
-      c();
+      compact_function();
       if (flatten_bpp)
       {
         map.flatten_bpp();
+        compact_function();
       }
       if (flatten_palette)
       {
         map.flatten_palette();
-      }
-      if (flatten_bpp || flatten_palette)
-      {
-        c();
+        compact_function();
       }
       const std::filesystem::path map_path = selected_path / map.map_filename();
       map.save_new_textures(selected_path);
@@ -698,10 +706,11 @@ void gui::text_mouse_position() const
     ImGui::SameLine();
     if (map_test() || !m_selections.draw_palette)
     {
+      const int tile_size = 16;
       format_imgui_text(
         "Tile Pos: ({:2}, {:2})",
-        m_mouse_positions.pixel.x / 16,
-        m_mouse_positions.pixel.y / 16);
+        m_mouse_positions.pixel.x / tile_size,
+        m_mouse_positions.pixel.y / tile_size);
       if (m_selections.draw_swizzle)
       {
         format_imgui_text("Page: {:2}", m_mouse_positions.texture_page);
@@ -730,17 +739,18 @@ void gui::text_mouse_position() const
       return;
     }
     format_imgui_text("Number of Tiles {:4}", std::ranges::size(indices));
-    if (!ImGui::BeginTable("##table", 8))
+    static constexpr int columns = 8;
+    static_assert(columns % 2 == 0);
+    if (!ImGui::BeginTable("##table", columns))
     {
       return;
     }
-    for (const auto i : indices)
+    for (const auto index : indices)
     {
       ImGui::TableNextColumn();
-      format_imgui_text("{:4}", i);
+      format_imgui_text("{:4}", index);
       ImGui::TableNextColumn();
-      const auto &tile = tiles[i];
-      (void)create_tile_button(tile);
+      (void)create_tile_button(tiles[index]);
     }
     ImGui::EndTable();
   });
@@ -750,73 +760,47 @@ bool gui::handle_mouse_cursor() const
   bool           mouse_enabled = false;
   const auto    &mouse_pos     = sf::Mouse::getPosition(m_window);
   const auto    &win_size      = m_window.getSize();
-  constexpr auto in_bounds     = [](auto i, auto low, auto high) {
-    return std::cmp_greater_equal(i, low) && std::cmp_less_equal(i, high);
+  constexpr auto in_bounds     = [](
+                               std::integral auto value,
+                               std::integral auto low,
+                               std::integral auto high) {
+    return std::cmp_greater_equal(value, low)
+           && std::cmp_less_equal(value, high);
   };
   if (
-    in_bounds(mouse_pos.x, 0, win_size.x)
-    && in_bounds(mouse_pos.y, 0, win_size.y) && m_window.hasFocus())
+    !in_bounds(mouse_pos.x, 0, win_size.x)
+    || !in_bounds(mouse_pos.y, 0, win_size.y) || !m_window.hasFocus())
   {
-    const sf::Vector2i clamped_mouse_pos = {
-      std::clamp(mouse_pos.x, 0, static_cast<int>(win_size.x)),
-      std::clamp(mouse_pos.y, 0, static_cast<int>(win_size.y))
-    };
-
-    const auto pixel_pos    = m_window.mapPixelToCoords(clamped_mouse_pos);
-
-    m_mouse_positions.pixel = { static_cast<int>(pixel_pos.x),
-                                static_cast<int>(pixel_pos.y) };
-    const auto &x           = m_mouse_positions.pixel.x;
-    const auto &y           = m_mouse_positions.pixel.y;
-    auto        io          = ImGui::GetIO();
-    if (((mim_test() && in_bounds(x, 0, m_mim_sprite.width())
-           && in_bounds(y, 0, m_mim_sprite.height()))
-          || (map_test() && in_bounds(x, 0, m_map_sprite.width())
-              && in_bounds(y, 0, m_map_sprite.height())))
-        && !io.WantCaptureMouse)
-    //! ImGui::IsWindowHovered(ImGuiHoveredFlags_AnyWindow)
-    //&& !ImGui::IsAnyItemHovered())
-    {
-      mouse_enabled = true;
-      //      const auto is_swizzle = (map_test() && m_selections.draw_swizzle)
-      //                              || (mim_test() &&
-      //                              !m_selections.draw_palette);
-      if (m_mouse_positions.mouse_moved)
-      {
-        //        static constexpr int tile_size       = 16;
-        //        static constexpr int texture_page_t1 = 128;
-        //        static constexpr int texture_page_t2 = 64;
-        // m_mouse_positions.tile = m_mouse_positions.pixel / tile_size;
-        auto &tilex = m_mouse_positions.pixel.x;
-
-        m_mouse_positions.texture_page =
-          static_cast<std::uint8_t>(tilex / 256);// for 4bit swizzle.
-        //        if (m_mouse_positions.left)
-        //          spdlog::info(
-        //            "tilex: {} texture_page: {}",
-        //            tilex,
-        //            m_mouse_positions.texture_page);
-        //        auto &texture_page = m_mouse_positions.texture_page;
-        //        if (is_swizzle)
-        //        {
-        //          tilex = ((tilex / tile_size) * tile_size) % 256;
-        //          if (mim_test())
-        //          {
-        //            if (m_selections.bpp == 1)
-        //            {
-        //              texture_page = static_cast<std::uint8_t>(x /
-        //              texture_page_t1);
-        //            }
-        //            else if (m_selections.bpp == 2)
-        //            {
-        //              texture_page = static_cast<std::uint8_t>(x /
-        //              texture_page_t2);
-        //            }
-        //          }
-        //}
-      }
-    }
+    return mouse_enabled;
   }
+  const sf::Vector2i clamped_mouse_pos = {
+    std::clamp(mouse_pos.x, 0, static_cast<int>(win_size.x)),
+    std::clamp(mouse_pos.y, 0, static_cast<int>(win_size.y))
+  };
+
+  const auto pixel_pos     = m_window.mapPixelToCoords(clamped_mouse_pos);
+
+  m_mouse_positions.pixel  = { static_cast<int>(pixel_pos.x),
+                               static_cast<int>(pixel_pos.y) };
+  const auto &pixel_x      = m_mouse_positions.pixel.x;
+  const auto &pixel_y      = m_mouse_positions.pixel.y;
+  auto        imgui_io     = ImGui::GetIO();
+  const bool  mim_or_map   = mim_test() || map_test();
+  const bool  is_in_bounds = in_bounds(pixel_x, 0, m_mim_sprite.width())
+                            && in_bounds(pixel_y, 0, m_mim_sprite.height());
+  if (!mim_or_map || !is_in_bounds || imgui_io.WantCaptureMouse)
+  {
+    return mouse_enabled;
+  }
+  mouse_enabled = true;
+  if (!m_mouse_positions.mouse_moved)
+  {
+    return mouse_enabled;
+  }
+  auto              &tilex              = m_mouse_positions.pixel.x;
+  const std::int16_t texture_page_width = 256;
+  m_mouse_positions.texture_page =
+    static_cast<std::uint8_t>(tilex / texture_page_width);// for 4bit swizzle.
   return mouse_enabled;
 }
 void gui::combo_coo() const
@@ -847,23 +831,22 @@ void gui::combo_coo() const
     {
       m_map_sprite = m_map_sprite.with_coo(get_coo());
     }
-    m_changed = true;
     if (m_field)
+    {
       generate_upscale_paths(m_field->get_base_name(), get_coo());
+    }
+    m_changed = true;
   }
   if (ImGui::IsItemHovered())
   {
     ImGui::BeginTooltip();
-    ImGui::Text(
-      "%s",
-      fmt::format(
-        "{}",
-        "This Language dropdown won't refresh archives unless you toggle the\n"
-        "FF8 Path. Also it might not change anything unless it's the remaster\n"
-        "version of the fields archive because they have all the languages in\n"
-        "the same file. You could change the path directly to a lang- path.\n"
-        "Then this will override this dropdown for older versions of FF8.")
-        .c_str());
+    format_imgui_text(
+      "{}",
+      "This Language dropdown won't refresh archives unless you toggle the\n"
+      "FF8 Path. Also it might not change anything unless it's the remaster\n"
+      "version of the fields archive because they have all the languages in\n"
+      "the same file. You could change the path directly to a lang- path.\n"
+      "Then this will override this dropdown for older versions of FF8.");
     ImGui::EndTooltip();
   }
 }
@@ -918,7 +901,9 @@ void gui::update_field() const
 
   m_changed                       = true;
   if (m_field)
+  {
     generate_upscale_paths(m_field->get_base_name(), get_coo());
+  }
 }
 
 void gui::checkbox_map_swizzle() const
@@ -992,8 +977,8 @@ static void update_bpp(map_sprite &sprite, BPPT bpp)
 void gui::combo_bpp() const
 {
   {
-    const auto                  sg        = PushPop();
-    static constexpr std::array bpp_items = Mim::bpp_selections_c_str();
+    const auto                  pop_pushed = PushPop();
+    static constexpr std::array bpp_items  = Mim::bpp_selections_c_str();
     if (ImGui::Combo(
           "BPP",
           &m_selections.bpp,
@@ -1016,7 +1001,7 @@ void gui::combo_bpp() const
     }
   }
   {
-    const auto  sg                    = PushPop();
+    const auto  pop_pushed            = PushPop();
     static bool enable_palette_filter = false;
     if (map_test())
     {
@@ -1059,7 +1044,7 @@ void gui::combo_palette() const
   {
     static constexpr std::array palette_items = Mim::palette_selections_c_str();
     {
-      const auto sg = PushPop();
+      const auto pop_pushed = PushPop();
       if (ImGui::Combo(
             "Palette",
             &m_selections.palette,
@@ -1086,7 +1071,7 @@ void gui::combo_palette() const
       ImGui::SameLine();
       {
         static bool enable_palette_filter = false;
-        const auto  sg                    = PushPop();
+        const auto  pop_pushed            = PushPop();
         if (ImGui::Checkbox("", &enable_palette_filter))
         {
           if (enable_palette_filter)
@@ -1105,11 +1090,12 @@ void gui::combo_palette() const
   }
 }
 
-
 void gui::menu_bar() const
 {
   if (!ImGui::BeginMainMenuBar())
+  {
     return;
+  }
   const auto end_menu_bar = scope_guard(&ImGui::EndMainMenuBar);
   //  if (!ImGui::BeginMenuBar())
   //    return;
@@ -1202,8 +1188,6 @@ void gui::menu_bar() const
           "Deswizzle", nullptr, false, static_cast<bool>(m_archives_group)))
     {
       m_directory_browser.Open();
-      // std::string base_name = m_map_sprite.get_base_name();
-      // std::string prefix    = base_name.substr(0U, 2U);
       m_directory_browser.SetTitle("Choose directory to save textures");
       m_directory_browser.SetPwd(Configuration{}["deswizzle_path"].value_or(
         std::filesystem::current_path().string()));
@@ -1215,8 +1199,6 @@ void gui::menu_bar() const
           "Reswizzle", nullptr, false, static_cast<bool>(m_archives_group)))
     {
       m_directory_browser.Open();
-      // std::string base_name = m_map_sprite.get_base_name();
-      // std::string prefix    = base_name.substr(0U, 2U);
       m_directory_browser.SetTitle(
         "Choose source directory of deswizzled textures (contains two letter "
         "directories)");
@@ -1325,7 +1307,9 @@ void gui::file_browser_locate_ff8() const
         "custom_upscale_paths_vector", m_custom_upscale_paths);
       config.save();
       if (m_field)
+      {
         generate_upscale_paths(m_field->get_base_name(), get_coo());
+      }
       // todo toggle filter enabled?
     }
     else if (
@@ -1334,9 +1318,7 @@ void gui::file_browser_locate_ff8() const
       Configuration config{};
       config->insert_or_assign(
         "reswizzle_path", m_directory_browser.GetPwd().string());
-      std::string base_name = m_map_sprite.get_base_name();
-      std::string prefix    = base_name.substr(0U, 2U);
-      selected_path         = selected_path / prefix / base_name;
+      selected_path = path_with_prefix_and_base_name(std::move(selected_path));
       std::filesystem::create_directories(selected_path);
       // todo modify these two functions :P to use the imported image.
       m_map_sprite.save_new_textures(selected_path);// done.
@@ -1353,14 +1335,16 @@ void gui::file_browser_locate_ff8() const
       config.save();
       m_loaded_swizzle_texture_path = selected_path;
       if (m_field)
+      {
         generate_upscale_paths(m_field->get_base_name(), get_coo());
+      }
       m_map_sprite.filter().deswizzle.disable();
       m_map_sprite.filter()
         .upscale.update(m_loaded_swizzle_texture_path)
         .enable();
       auto map_path =
         m_loaded_swizzle_texture_path / m_map_sprite.map_filename();
-      safedir safe_map_path = map_path;
+      safedir const safe_map_path = map_path;
       if (safe_map_path.is_exists())
       {
         m_map_sprite.load_map(map_path);
@@ -1374,9 +1358,7 @@ void gui::file_browser_locate_ff8() const
       config->insert_or_assign(
         "deswizzle_path", m_directory_browser.GetPwd().string());
       config.save();
-      std::string base_name = m_map_sprite.get_base_name();
-      std::string prefix    = base_name.substr(0U, 2U);
-      selected_path         = selected_path / prefix / base_name;
+      selected_path = path_with_prefix_and_base_name(std::move(selected_path));
       std::filesystem::create_directories(selected_path);
       m_map_sprite.save_pupu_textures(selected_path);
       m_map_sprite.save_modified_map(
@@ -1397,7 +1379,7 @@ void gui::file_browser_locate_ff8() const
         .enable();
       auto map_path =
         m_loaded_deswizzle_texture_path / m_map_sprite.map_filename();
-      safedir safe_map_path = map_path;
+      safedir const safe_map_path = map_path;
       if (safe_map_path.is_exists())
       {
         m_map_sprite.load_map(map_path);
@@ -1443,8 +1425,6 @@ void gui::file_browser_locate_ff8() const
         "deswizzle_path", m_directory_browser.GetPwd().string());
       reswizzle_src = std::move(selected_path);
       m_directory_browser.Open();
-      // std::string base_name = m_map_sprite.get_base_name();
-      // std::string prefix    = base_name.substr(0U, 2U);
       m_directory_browser.SetTitle(
         "Choose destination directory where reswizzled textures will be "
         "saved.");
@@ -1457,6 +1437,14 @@ void gui::file_browser_locate_ff8() const
     }
     m_directory_browser.ClearSelected();
   }
+}
+std::filesystem::path
+  gui::path_with_prefix_and_base_name(std::filesystem::path selected_path) const
+{
+  std::string const      base_name = m_map_sprite.get_base_name();
+  std::string_view const prefix = std::string_view{ base_name }.substr(0U, 2U);
+  selected_path                 = selected_path / prefix / base_name;
+  return selected_path;
 }
 void gui::sort_paths() const
 {// todo remove paths that don't exist.
@@ -1583,18 +1571,23 @@ void gui::menuitem_save_swizzle_textures() const
     save_swizzle_textures();
   }
 }
-void gui::save_swizzle_textures() const
+std::string gui::appends_prefix_base_name(std::string_view title) const
 {
-  m_directory_browser.Open();
-
-  std::string base_name = m_map_sprite.get_base_name();
-  std::string prefix    = base_name.substr(0U, 2U);
-  auto        title     = fmt::format(
-    "Choose directory to save textures (appends {}{}{})",
+  std::string const      base_name = m_map_sprite.get_base_name();
+  std::string_view const prefix = std::string_view{ base_name }.substr(0U, 2U);
+  return fmt::format(
+    "{} (appends {}{}{})",
+    title,
     prefix,
     char{ std::filesystem::path::preferred_separator },
     base_name);
-  m_directory_browser.SetTitle(title);
+}
+void gui::save_swizzle_textures() const
+{
+  m_directory_browser.Open();
+  static constexpr std::string_view title =
+    "Choose directory to save reswizzle textures";
+  m_directory_browser.SetTitle(appends_prefix_base_name(title));
   m_directory_browser.SetPwd(Configuration{}["reswizzle_path"].value_or(
     std::filesystem::current_path().string()));
   m_directory_browser.SetTypeFilters({ ".map", ".png" });
@@ -1605,14 +1598,9 @@ void gui::menuitem_save_deswizzle_textures() const
   if (ImGui::MenuItem("Save Deswizzled Textures (Pupu)", nullptr, false, true))
   {
     m_directory_browser.Open();
-    std::string base_name = m_map_sprite.get_base_name();
-    std::string prefix    = base_name.substr(0U, 2U);
-    auto        title     = fmt::format(
-      "Choose directory to save textures (appends {}{}{})",
-      prefix,
-      char{ std::filesystem::path::preferred_separator },
-      base_name);
-    m_directory_browser.SetTitle(title);
+    static constexpr std::string_view title =
+      "Choose directory to save deswizzle textures";
+    m_directory_browser.SetTitle(appends_prefix_base_name(title));
     m_directory_browser.SetPwd(Configuration{}["deswizzle_path"].value_or(
       std::filesystem::current_path().string()));
     m_directory_browser.SetTypeFilters({ ".map", ".png" });
@@ -1746,6 +1734,13 @@ void gui::combo_draw() const
 }
 bool gui::combo_path() const
 {
+  const auto browse_button = scope_guard([this]() {
+    ImGui::SameLine();
+    if (ImGui::Button("Browse"))
+    {
+      open_locate_ff8_filebrowser();
+    }
+  });
   if (generic_combo(
         m_id,
         gui_labels::path,
@@ -1958,19 +1953,19 @@ std::uint32_t gui::image_height() const
   }
   return m_mim_sprite.height();
 }
-static auto saved_window_width  = float{};
-static auto saved_window_height = float{};
-float       gui::scaled_menubar_gap() const
+float gui::scaled_menubar_gap() const
 {
   if (saved_window_height < std::numeric_limits<float>::epsilon())
+  {
     return {};
+  }
   return ImGui::GetFrameHeight() * static_cast<float>(image_height())
          / saved_window_height;
 }
 void gui::scale_window(float width, float height) const
 {
-  float img_height = static_cast<float>(image_height());
-  auto  load       = [](auto &saved, auto &not_saved) {
+  const auto            img_height = static_cast<float>(image_height());
+  static constexpr auto load       = [](auto &saved, auto &not_saved) {
     if (not_saved < std::numeric_limits<float>::epsilon())
     {
       not_saved = saved;
@@ -1985,8 +1980,8 @@ void gui::scale_window(float width, float height) const
   const float adjusted_height = height - ImGui::GetFrameHeight();
   // this scales up the elements without losing the horizontal space. so
   // going from 4:3 to 16:9 will end up with wide screen.
-  m_scale_width    = std::round(width / adjusted_height * img_height);
-  float scaled_gap = scaled_menubar_gap();
+  m_scale_width          = std::round(width / adjusted_height * img_height);
+  float const scaled_gap = scaled_menubar_gap();
   m_window.setView(sf::View(sf::FloatRect(
     std::round(m_cam_pos.x),
     std::round(m_cam_pos.y - scaled_gap),
@@ -2032,13 +2027,47 @@ void gui::init_and_get_style() const
   //  m_window.setFramerateLimit(fps_lock);
   m_window.setVerticalSyncEnabled(true);
   (void)ImGui::SFML::Init(m_window);
-  ImGuiIO &io = ImGui::GetIO();
-  io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+  ImGuiIO &imgui_io = ImGui::GetIO();
+  imgui_io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
   if (m_field)
+  {
     generate_upscale_paths(m_field->get_base_name(), get_coo());
+  }
   if (!m_drag_sprite_shader)
   {
-    m_drag_sprite_shader = std::make_shared<sf::Shader>();
+    m_drag_sprite_shader                       = std::make_shared<sf::Shader>();
+    static const std::string border_shader_raw = R"(#version 130
+uniform sampler2D texture;
+uniform float borderWidth;
+
+void main()
+{
+    vec4 pixel = texture2D(texture, gl_TexCoord[0].st);
+    vec2 texelSize = vec2(1.0/textureSize(texture,0).x, 1.0/textureSize(texture,0).y);
+    float alpha = 0;
+    int space = int(borderWidth);
+    int threshold = (2*space) * (2*space);
+    int count = 0;
+    for(int y=-space;y<=space;++y)
+    {
+      for(int x=-space;x<=space;++x)
+      {
+        if(texture2D(texture, gl_TexCoord[0].st + vec2(x*texelSize.x, y*texelSize.y)).a > 0.5)
+        {
+            count++;
+        }
+      }
+    }
+    if(pixel.a > 0.5)
+    {
+      gl_FragColor = pixel;
+    }
+    else
+    {
+      gl_FragColor = vec4(1, 0, 0, float(count)/float(threshold));
+    }
+}
+)";
     m_drag_sprite_shader->loadFromMemory(
       border_shader_raw, sf::Shader::Fragment);
   }
@@ -2319,17 +2348,19 @@ void gui::combo_deswizzle_path() const
 void gui::combo_upscale_path() const
 {
   if (!m_field)
-    return;
-  if (combo_upscale_path(
-        m_map_sprite.filter().upscale))//, m_field->get_base_name(), get_coo()
   {
-    if (m_map_sprite.filter().upscale.enabled())
-    {
-      m_map_sprite.filter().deswizzle.disable();
-    }
-    m_map_sprite.update_render_texture(true);
-    m_changed = true;
+    return;
   }
+  if (!combo_upscale_path(m_map_sprite.filter().upscale))
+  {
+    return;
+  }
+  if (m_map_sprite.filter().upscale.enabled())
+  {
+    m_map_sprite.filter().deswizzle.disable();
+  }
+  m_map_sprite.update_render_texture(true);
+  m_changed = true;
 }
 void gui::generate_upscale_paths(
   const std::string &field_name,
@@ -2342,8 +2373,10 @@ void gui::generate_upscale_paths(
     })
     | std::views::transform([this, &field_name, &coo](const std::string &path) {
         if (m_field)
+        {
           return upscales(std::filesystem::path(path), field_name, coo)
             .get_paths();
+        }
         return upscales{}.get_paths();
       });
   // std::views::join; broken in msvc.
@@ -2408,8 +2441,10 @@ bool gui::combo_upscale_path(
     | std::views::transform(
       [this, &field_name, &coo](const std::string &in_path) {
         if (m_field)
+        {
           return upscales(std::filesystem::path(in_path), field_name, coo)
             .get_paths();
+        }
         return upscales{}.get_paths();
       });
   // std::views::join; broken in msvc.
@@ -2449,11 +2484,11 @@ bool gui::combo_upscale_path(
 }
 
 std::vector<std::filesystem::path>
-  gui::find_maps_in_directory(std::filesystem::path src, size_t reserve)
+  gui::find_maps_in_directory(const std::filesystem::path &src, size_t reserve)
 {
   std::vector<std::filesystem::path> r{};
   r.reserve(reserve);
-  for (auto path : std::filesystem::recursive_directory_iterator{ src })
+  for (const auto &path : std::filesystem::recursive_directory_iterator{ src })
   {
     if (
       path.path().has_extension()
@@ -2461,7 +2496,7 @@ std::vector<std::filesystem::path>
         path.path().extension().string(),
         open_viii::graphics::background::Map::EXT))
     {
-      r.emplace_back(std::move(path.path()));
+      r.emplace_back(path.path());
     }
   }
   return r;
@@ -2469,8 +2504,8 @@ std::vector<std::filesystem::path>
 
 
 [[nodiscard]] inline bool any_matches(
-  const std::vector<std::filesystem::path>       &paths,
-  const std::vector<open_viii::archive::FileData> all_file_data)
+  const std::vector<std::filesystem::path>        &paths,
+  const std::vector<open_viii::archive::FileData> &all_file_data)
 {
   return std::ranges::any_of(
     all_file_data, [&paths](const open_viii::archive::FileData &file_data) {
@@ -2747,15 +2782,17 @@ std::variant<
         const std::string &i_as_string = fmt::format("{}", i);
         if (std::ranges::any_of(
               std::array{ [&is_selected, this, &tile, &i_as_string]() -> bool {
-                           bool selected = ImGui::Selectable("", is_selected);
+                           bool const selected =
+                             ImGui::Selectable("", is_selected);
                            if (ImGui::IsItemHovered())
                            {
                              ImGui::BeginTooltip();
                              ImGui::Text("%s", i_as_string.c_str());
                              const auto end_tooltip =
                                scope_guard(&ImGui::EndTooltip);
+                             const float tile_size = 256.F;
                              (void)create_tile_button(
-                               tile, sf::Vector2f(256.f, 256.f));
+                               tile, sf::Vector2f(tile_size, tile_size));
                              m_map_sprite.enable_square(tile);
                              was_hovered = true;
                            }
@@ -2817,7 +2854,7 @@ std::variant<
     },
     current_tile);
   ImGui::SameLine();
-  ImGui::Text("%s", current_item_str.c_str());
+  format_imgui_text("{}", current_item_str);
   ImGui::SetCursorScreenPos(backup_pos);
   return current_tile;
 }
@@ -2828,31 +2865,41 @@ void gui::begin_batch_embed_map_warning_window() const
     return;
   }
   // begin imgui window
-  const auto pop_id = PushPop();
+  const auto             pop_id     = PushPop();
+  static constexpr float min_width  = 500.F;
+  static constexpr float min_height = 150.F;
+  static constexpr float half       = 0.5F;
   ImGui::SetNextWindowSizeConstraints(
-    ImVec2{ 500.F, 150.F }, ImVec2{ INFINITY, INFINITY });
+    ImVec2{ min_width, min_height },
+    ImVec2{ std::numeric_limits<float>::infinity(),
+            std::numeric_limits<float>::infinity() });
   ImGui::SetNextWindowPos(
     ImGui::GetMainViewport()->GetCenter(),
     ImGuiCond_Always,
-    ImVec2(0.5F, 0.5F));
-  const char *id = "Batch embed '.map' files.";
-  ImGui::OpenPopup(id);
+    ImVec2(half, half));
+  static const char *title = "Batch embed '.map' files.";
+  ImGui::OpenPopup(title);
+  static constexpr auto bitwise_or = [](auto first, auto... rest) {
+    return static_cast<decltype(first)>(
+      static_cast<std::uint32_t>(first)
+      | (static_cast<std::uint32_t>(rest) | ...));
+  };
   if (!ImGui::BeginPopupModal(
-        id,
+        title,
         nullptr,
-        ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings))
+        bitwise_or(
+          ImGuiWindowFlags{},
+          ImGuiWindowFlags_AlwaysAutoResize,
+          ImGuiWindowFlags_NoSavedSettings)))
   {
     return;
   }
-  const auto g = scope_guard([]() { ImGui::EndPopup(); });
-  ImGui::TextWrapped(
-    "%s",
-    fmt::format(
-      "This will take the currently loaded Final Fantasy 8 archive in \"{}\" "
-      "and create new `field.fi`, `field.fl`, and `field.fs` files. "
-      "Replacing any `.map` file with ones found in the chosen path.",
-      m_selections.path)
-      .c_str());
+  const auto end_popup = scope_guard([]() { ImGui::EndPopup(); });
+  format_imgui_wrapped_text(
+    "This will take the currently loaded Final Fantasy 8 archive in \"{}\" "
+    "and create new `field.fi`, `field.fl`, and `field.fs` files. "
+    "Replacing any `.map` file with ones found in the chosen path.",
+    m_selections.path);
   if (ImGui::Button("Browse to begin..."))
   {
     browse_for_embed_map_dir();
@@ -2898,14 +2945,13 @@ void gui::import_image_window() const
   const auto tiles_high = static_cast<std::uint32_t>(std::ceil(
     static_cast<float>(loaded_image_texture.getSize().y)
     / static_cast<float>(m_selections.tile_size_value)));
-  ImGui::Text(
-    "%s",
-    fmt::format(
-      "Possible Tiles: {} wide, {} high, {} total",
-      tiles_wide,
-      tiles_high,
-      tiles_wide * tiles_high)
-      .c_str());
+  format_imgui_text(
+    "Possible Tiles: {} wide, {} high, {} total",
+    tiles_wide,
+    tiles_high,
+    tiles_wide * tiles_high);
+  static constexpr std::int8_t  tile_size          = 16;
+  static constexpr std::uint8_t tile_size_unsigned = 16U;
   if (
     changed && tiles_wide * tiles_high != 0U
     && loaded_image_texture.getSize() != sf::Vector2u{})
@@ -2935,10 +2981,11 @@ void gui::import_image_window() const
               }
               //   * Set new tiles to 4 bit to get max amount of tiles.
               tile = tile.with_depth(BPPT::BPP4_CONST())
-                       .with_source_xy({ static_cast<uint8_t>(x_tile * 16U),
-                                         static_cast<uint8_t>(y_tile * 16U) })
-                       .with_xy({ static_cast<int16_t>(x_tile * 16),
-                                  static_cast<int16_t>(y_tile * 16) });
+                       .with_source_xy(
+                         { static_cast<uint8_t>(x_tile * tile_size_unsigned),
+                           static_cast<uint8_t>(y_tile * tile_size_unsigned) })
+                       .with_xy({ static_cast<int16_t>(x_tile * tile_size),
+                                  static_cast<int16_t>(y_tile * tile_size) });
 
               // iterate
               ++x_tile;
@@ -2958,9 +3005,10 @@ void gui::import_image_window() const
     import_image_map.visit_tiles([this](auto &tiles) {
       const auto rem_range =
         std::ranges::remove_if(tiles, [this](const auto &tile) -> bool {
-          const auto x_start = tile.x() / 16 * m_selections.tile_size_value;
-          auto       y_start = tile.y() / 16 * m_selections.tile_size_value;
-          const int  xmax    = x_start + m_selections.tile_size_value;
+          const auto x_start =
+            tile.x() / tile_size * m_selections.tile_size_value;
+          auto y_start = tile.y() / tile_size * m_selections.tile_size_value;
+          const int           xmax    = x_start + m_selections.tile_size_value;
           const sf::Vector2u &imgsize = loaded_image_cpu.getSize();
           const auto x_end = (std::min)(static_cast<int>(imgsize.x), xmax);
           const int  ymax  = y_start + m_selections.tile_size_value;
@@ -3000,8 +3048,8 @@ void gui::import_image_window() const
           sf::Sprite sprite(
             loaded_image_texture,
             sf::IntRect(
-              tile.x() / 16 * m_selections.tile_size_value,
-              tile.y() / 16 * m_selections.tile_size_value,
+              tile.x() / tile_size * m_selections.tile_size_value,
+              tile.y() / tile_size * m_selections.tile_size_value,
               m_selections.tile_size_value,
               m_selections.tile_size_value));
           const auto the_end_tile_table_tile =
@@ -3027,7 +3075,7 @@ void gui::import_image_window() const
           }),
       {},
       [](const auto &tile) { return tile.source_y(); });
-    int tile_y = max_source_y_tile.source_y() / 16;
+    int tile_y = max_source_y_tile.source_y() / tile_size;
     ImGui::Text(
       "%s",
       fmt::format(
@@ -3035,29 +3083,29 @@ void gui::import_image_window() const
         max_texture_id_tile.texture_id(),
         tile_y)
         .c_str());
-    auto               next_source_y = static_cast<uint8_t>((tile_y + 1) % 16);
+    auto next_source_y = static_cast<uint8_t>((tile_y + 1) % tile_size);
     const std::uint8_t next_texture_page =
-      tile_y + 1 == 16 ? max_texture_id_tile.texture_id() + 1
-                       : max_texture_id_tile.texture_id();
+      tile_y + 1 == tile_size ? max_texture_id_tile.texture_id() + 1
+                              : max_texture_id_tile.texture_id();
     if (changed)
     {
       import_image_map.visit_tiles(
         [&next_texture_page, &next_source_y](auto &&import_tiles) {
           auto       tile_i   = import_tiles.begin();
           const auto tile_end = import_tiles.end();
-          for (std::uint8_t tp = next_texture_page; tp < 16; ++tp)
+          for (std::uint8_t tp = next_texture_page; tp < tile_size; ++tp)
           {
-            for (std::uint8_t y = next_source_y; y < 16; ++y)
+            for (std::uint8_t y = next_source_y; y < tile_size; ++y)
             {
               next_source_y = 0;
-              for (std::uint8_t x = 0; x < 16; ++x)
+              for (std::uint8_t x = 0; x < tile_size; ++x)
               {
                 if (tile_i == tile_end)
                 {
                   return;
                 }
-                *tile_i =
-                  tile_i->with_source_xy(x * 16, y * 16).with_texture_id(tp);
+                *tile_i = tile_i->with_source_xy(x * tile_size, y * tile_size)
+                            .with_texture_id(tp);
                 ++tile_i;
               }
             }
@@ -3117,19 +3165,22 @@ bool gui::combo_tile_size() const
   if (!generic_combo(
         m_id,
         std::string_view("Tile Size"),
-        []() {
-          return std::array{ uint16_t{ 16U },
-                             uint16_t{ 32U },
-                             uint16_t{ 64U },
-                             uint16_t{ 128U },
-                             uint16_t{ 256U } };
+        []() -> decltype(auto) {
+          static constexpr auto sizes = std::array{ uint16_t{ 16U },
+                                                    uint16_t{ 32U },
+                                                    uint16_t{ 64U },
+                                                    uint16_t{ 128U },
+                                                    uint16_t{ 256U } };
+          return sizes;
         },
-        []() {
-          return std::array{ std::string_view{ " 1x  16 px" },
-                             std::string_view{ " 2x  32 px" },
-                             std::string_view{ " 4x  64 px" },
-                             std::string_view{ " 8x 128 px" },
-                             std::string_view{ "16x 256 px" } };
+        []() -> decltype(auto) {
+          static constexpr auto size_strings =
+            std::array{ std::string_view{ " 1x  16 px" },
+                        std::string_view{ " 2x  32 px" },
+                        std::string_view{ " 4x  64 px" },
+                        std::string_view{ " 8x 128 px" },
+                        std::string_view{ "16x 256 px" } };
+          return size_strings;
         },
         m_selections.tile_size_value))
   {

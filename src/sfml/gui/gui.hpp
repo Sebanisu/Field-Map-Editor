@@ -39,14 +39,15 @@ public:
   void start() const;
 
 private:
-  inline static std::mutex                         append_results_mutex = {};
-  inline static std::vector<std::filesystem::path> append_results       = {};
-  mutable std::shared_ptr<sf::Shader>              m_drag_sprite_shader = {};
-  mutable selections                               m_selections         = {};
-  mutable scrolling                                m_scrolling          = {};
-  mutable batch_deswizzle                          m_batch_deswizzle    = {};
-  mutable batch_reswizzle                          m_batch_reswizzle    = {};
-  mutable batch_embed                              m_batch_embed = batch_embed{
+  mutable sf::Color                          clear_color = sf::Color::Black;
+  mutable std::mutex                         append_results_mutex = {};
+  mutable std::vector<std::filesystem::path> append_results       = {};
+  mutable std::shared_ptr<sf::Shader>        m_drag_sprite_shader = {};
+  mutable selections                         m_selections         = {};
+  mutable scrolling                          m_scrolling          = {};
+  mutable batch_deswizzle                    m_batch_deswizzle    = {};
+  mutable batch_reswizzle                    m_batch_reswizzle    = {};
+  mutable batch_embed                        m_batch_embed        = batch_embed{
     "Operation 1: Find map, Replace map for each field, Save temp file.",
     [this](const int in_pos, const std::filesystem::path &in_selected_path) {
       if (in_pos <= 0)
@@ -54,7 +55,7 @@ private:
         append_results.clear();
       }
       launch_async(
-        [this](const int pos, const std::filesystem::path selected_path) {
+        [this](const int pos, const std::filesystem::path &selected_path) {
           auto field = m_archives_group.field(pos);
           if (!field)
           {
@@ -292,7 +293,7 @@ private:
         return;
       }
       // launch_async(
-      [this](const std::filesystem::path selected_path) {
+      [this](const std::filesystem::path &selected_path) {
         const auto move = [&](std::filesystem::path path) {
           const auto it = std::ranges::find_if(
             append_results, [&](const std::filesystem::path &tmp_path) {
@@ -326,7 +327,7 @@ private:
             path = tmp;
             // IF files exist rename to same path .bak
             spdlog::info(
-              "{}:{} - Moving path: \"{}\" to \"{}\"",
+              R"({}:{} - Moving path: "{}" to "{}")",
               __FILE__,
               __LINE__,
               path.string(),
@@ -339,7 +340,7 @@ private:
             if (ec)
             {
               spdlog::warn(
-                "{}:{} - {}: {} path: \"{}\" to \"{}\"",
+                R"({}:{} - {}: {} path: "{}" to "{}")",
                 __FILE__,
                 __LINE__,
                 ec.value(),
@@ -350,7 +351,7 @@ private:
             }
           }
           spdlog::info(
-            "{}:{} - Moving - path: \"{}\" to \"{}\"",
+            R"({}:{} - Moving - path: "{}" to "{}")",
             __FILE__,
             __LINE__,
             it->string(),
@@ -526,6 +527,9 @@ private:
   mutable open_viii::graphics::background::Map import_image_map           = {};
   mutable std::string                          m_import_image_path        = {};
 
+  mutable float                                saved_window_width         = {};
+  mutable float                                saved_window_height        = {};
+
   mutable bool                                 m_changed         = { false };
   //  ImGuiStyle                  m_original_style  = {};
   mutable sf::Event                            m_event           = {};
@@ -624,10 +628,10 @@ private:
   void        popup_batch_reswizzle() const;
   void        popup_batch_deswizzle() const;
   std::string starter_field() const;
-  void        popup_batch_common_filter_start(
-           ::filter<std::filesystem::path> &filter,
-           std::string_view                 prefix,
-           std::string_view                 base_name) const;
+  static void popup_batch_common_filter_start(
+    ::filter<std::filesystem::path> &filter,
+    std::string_view                 prefix,
+    std::string_view                 base_name);
   template<
     typename batch_opT,
     typename filterT,
@@ -696,7 +700,9 @@ private:
     const auto tile_texture_size = m_map_sprite.get_tile_texture_size(texture);
     const auto src_x             = [&tile, this]() -> std::uint32_t {
       if (m_map_sprite.filter().deswizzle.enabled())
+      {
         return static_cast<std::uint32_t>(tile.x());
+      }
       auto source_texture_page_width = tileT::texture_page_width(tile.depth());
       const auto texture_page_x_offset =
         [this, &tile, &source_texture_page_width]() -> std::uint32_t {
@@ -710,17 +716,20 @@ private:
     }();
     const auto src_y = [&tile, this]() -> std::uint32_t {
       if (m_map_sprite.filter().deswizzle.enabled())
+      {
         return static_cast<std::uint32_t>(tile.y());
+      }
       return tile.source_y();
     }();
-    sf::Sprite sprite(
+    static constexpr float tile_size = 16.F;
+    sf::Sprite             sprite(
       *texture,
       sf::IntRect(
         static_cast<int>(
-          (static_cast<float>(src_x) / 16.F)
+          (static_cast<float>(src_x) / tile_size)
           * static_cast<float>(tile_texture_size.x)),
         static_cast<int>(
-          (static_cast<float>(src_y) / 16.F)
+          (static_cast<float>(src_y) / tile_size)
           * static_cast<float>(tile_texture_size.y)),
         static_cast<int>(tile_texture_size.x),
         static_cast<int>(tile_texture_size.y)));
@@ -749,7 +758,7 @@ private:
   void          control_panel_window() const;
   std::uint32_t image_height() const;
   static std::vector<std::filesystem::path>
-       find_maps_in_directory(std::filesystem::path src, size_t reserve = {});
+       find_maps_in_directory(const std::filesystem::path& src, size_t reserve = {});
 
   void slider_xy_sprite(const auto &sprite) const
   {
@@ -773,8 +782,17 @@ private:
     m_changed = true;
     scale_window();
   }
-  float scaled_menubar_gap() const;
-  void  render_dockspace() const;
+  float       scaled_menubar_gap() const;
+  static void render_dockspace();
+  void        background_color_picker() const;
+  void        collapsing_header_filters() const;
+  void        compact_flatten_buttons() const;
+  static void frame_rate();
+  void        control_panel_window_map() const;
+  void        control_panel_window_mim() const;
+  std::filesystem::path
+    path_with_prefix_and_base_name(std::filesystem::path selected_path) const;
+  std::string appends_prefix_base_name(std::string_view title) const;
 };
 }// namespace fme
 #endif// FIELD_MAP_EDITOR_GUI_HPP
