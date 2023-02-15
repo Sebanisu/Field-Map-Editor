@@ -28,7 +28,7 @@ add_executable(${PROJECT_NAME}_SFML
         tile_operations.hpp
         gui/gui.cpp
         gui/gui_batch.cpp
-        gui/batch_deswizzle.cpp gui/batch_deswizzle.hpp gui/map_dialog_mode.hpp gui/map_directory_mode.hpp gui/batch_embed.cpp gui/batch_embed.hpp gui/compact_type.hpp gui/batch_reswizzle.cpp gui/batch_reswizzle.hpp gui/mouse_positions.cpp gui/mouse_positions.hpp gui/scrolling.cpp gui/scrolling.hpp gui/selections.cpp gui/selections.hpp square.cpp square.hpp)
+        gui/batch_deswizzle.cpp gui/batch_deswizzle.hpp gui/map_dialog_mode.hpp gui/map_directory_mode.hpp gui/batch_embed.cpp gui/batch_embed.hpp gui/compact_type.hpp gui/batch_reswizzle.cpp gui/batch_reswizzle.hpp gui/mouse_positions.cpp gui/mouse_positions.hpp gui/scrolling.cpp gui/scrolling.hpp gui/Selections.cpp gui/Selections.hpp square.cpp square.hpp tile_sizes.hpp)
 #set_property(TARGET ${PROJECT_NAME}_SFML PROPERTY CXX_STANDARD 20)
 #find_package(ImGui-SFML REQUIRED)
 find_package(cppcoro) # todo will probably remove at some point.

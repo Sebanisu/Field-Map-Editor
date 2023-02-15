@@ -2222,18 +2222,18 @@ std::size_t map_sprite::size_of_map() const
 void map_sprite::update_render_texture(
   const sf::Texture                   *p_texture,
   open_viii::graphics::background::Map map,
-  const uint16_t                       tile_size)
+  const tile_sizes                     tile_size)
 {
   m_imported_texture        = p_texture;
   m_imported_tile_map       = std::move(map);
   m_imported_tile_map_front = m_imported_tile_map;
-  m_imported_tile_size      = tile_size;
+  m_imported_tile_size      = static_cast<uint16_t>(tile_size);
   m_using_imported_texture  = p_texture != nullptr;
   update_render_texture(true);
 }
 void map_sprite::enable_square(sf::Vector2u position)
 {
-  m_square = m_square.with_position(std::move(position));
+  m_square = m_square.with_position(position);
   m_square.enable();
 }
 void map_sprite::disable_square() const

@@ -20,7 +20,7 @@
 #include "safedir.hpp"
 #include "scope_guard.hpp"
 #include "scrolling.hpp"
-#include "selections.hpp"
+#include "Selections.hpp"
 #include "upscales.hpp"
 #include <cstdint>
 #include <fmt/chrono.h>
@@ -32,6 +32,10 @@
 #define USE_THREADS
 namespace fme
 {
+template<typename T>
+concept is_enum = std::is_enum_v<T>;
+template<typename T>
+concept is_enum_or_integral = is_enum<T> || std::integral<T>;
 struct gui
 {
 public:
@@ -43,7 +47,7 @@ private:
   mutable std::mutex                         append_results_mutex = {};
   mutable std::vector<std::filesystem::path> append_results       = {};
   mutable std::shared_ptr<sf::Shader>        m_drag_sprite_shader = {};
-  mutable selections                         m_selections         = {};
+  mutable Selections                         m_selections         = {};
   mutable scrolling                          m_scrolling          = {};
   mutable batch_deswizzle                    m_batch_deswizzle    = {};
   mutable batch_reswizzle                    m_batch_reswizzle    = {};
@@ -624,14 +628,61 @@ private:
   mutable map_directory_mode    m_modified_directory_map = {};
   mutable std::filesystem::path m_loaded_swizzle_texture_path{};
   mutable std::filesystem::path m_loaded_deswizzle_texture_path{};
-  void        combo_compact_type(filter<compact_type> &) const;
-  void        popup_batch_reswizzle() const;
-  void        popup_batch_deswizzle() const;
-  std::string starter_field() const;
-  static void popup_batch_common_filter_start(
-    ::filter<std::filesystem::path> &filter,
-    std::string_view                 prefix,
-    std::string_view                 base_name);
+  void combo_compact_type(filter<compact_type> &) const;
+  void popup_batch_reswizzle() const;
+  void popup_batch_deswizzle() const;
+
+  template<
+    is_enum_or_integral number_type,
+    is_enum_or_integral... rest_number_type>
+  static constexpr number_type
+    bitwise_or(number_type first, rest_number_type... rest)
+  {
+    return static_cast<number_type>(
+      static_cast<std::uint32_t>(first)
+      | (static_cast<std::uint32_t>(rest) | ...));
+  }
+  template<
+    is_enum_or_integral number_type,
+    is_enum_or_integral... rest_number_type>
+  static constexpr number_type
+    bitwise_and(number_type start, rest_number_type... rest)
+  {
+    return static_cast<number_type>(
+      static_cast<std::uint32_t>(start)
+      & (static_cast<std::uint32_t>(rest) & ...));
+  }
+  template<is_enum_or_integral number_type>
+  static constexpr number_type bitwise_not(number_type value)
+  {
+    return static_cast<number_type>(~static_cast<std::uint32_t>(value));
+  }
+  static ImU32 imgui_color32(sf::Color color)
+  {
+    return imgui_color32(color.r,color.g,color.b,color.a);
+  }
+  static constexpr ImU32 imgui_color32(
+    std::uint8_t red,
+    std::uint8_t green,
+    std::uint8_t blue,
+    std::uint8_t alpha)
+  {
+    constexpr auto R_SHIFT = 0U;
+    constexpr auto G_SHIFT = 8U;
+    constexpr auto B_SHIFT = 16U;
+    constexpr auto A_SHIFT = 24U;
+    return bitwise_or(
+      ImU32{},
+      alpha << A_SHIFT,
+      blue << B_SHIFT,
+      green << G_SHIFT,
+      red << R_SHIFT);
+  }
+  static std::string starter_field();
+  static void        popup_batch_common_filter_start(
+           ::filter<std::filesystem::path> &filter,
+           std::string_view                 prefix,
+           std::string_view                 base_name);
   template<
     typename batch_opT,
     typename filterT,
@@ -744,21 +795,22 @@ private:
   void               generate_upscale_paths(
                   const std::string &field_name,
                   open_viii::LangT   coo) const;
-  void          menuitem_locate_custom_upscale() const;
-  void          open_locate_custom_upscale() const;
-  toml::array   get_custom_upscale_paths_vector();
-  void          checkbox_render_imported_image() const;
-  void          update_imported_render_texture() const;
-  void          save_swizzle_textures() const;
-  void          reset_imported_image() const;
-  void          update_scaled_up_render_texture() const;
-  void          browse_for_embed_map_dir() const;
-  void          begin_batch_embed_map_warning_window() const;
-  void          sort_paths() const;
-  void          control_panel_window() const;
-  std::uint32_t image_height() const;
-  static std::vector<std::filesystem::path>
-       find_maps_in_directory(const std::filesystem::path& src, size_t reserve = {});
+  void               menuitem_locate_custom_upscale() const;
+  void               open_locate_custom_upscale() const;
+  static toml::array get_custom_upscale_paths_vector();
+  void               checkbox_render_imported_image() const;
+  void               update_imported_render_texture() const;
+  void               save_swizzle_textures() const;
+  void               reset_imported_image() const;
+  void               update_scaled_up_render_texture() const;
+  void               browse_for_embed_map_dir() const;
+  void               begin_batch_embed_map_warning_window() const;
+  void               sort_paths() const;
+  void               control_panel_window() const;
+  std::uint32_t      image_height() const;
+  static std::vector<std::filesystem::path> find_maps_in_directory(
+    const std::filesystem::path &src,
+    size_t                       reserve = {});
 
   void slider_xy_sprite(const auto &sprite) const
   {

@@ -135,19 +135,6 @@ void gui::render_dockspace()
   // targets within each others.
   ImGuiWindowFlags          window_flags =
     ImGuiWindowFlags_NoDocking;// ImGuiWindowFlags_MenuBar
-  static constexpr auto bitwise_or = [](auto start, auto... rest) {
-    return static_cast<decltype(start)>(
-      static_cast<std::uint32_t>(start)
-      | (static_cast<std::uint32_t>(rest) | ...));
-  };
-  static constexpr auto bitwise_and = [](auto start, auto... rest) {
-    return static_cast<decltype(start)>(
-      static_cast<std::uint32_t>(start)
-      & (static_cast<std::uint32_t>(rest) & ...));
-  };
-  static constexpr auto bitwise_not = [](auto value) {
-    return static_cast<decltype(value)>(~static_cast<std::uint32_t>(value));
-  };
   if constexpr (opt_fullscreen)
   {
     const ImGuiViewport *viewport = ImGui::GetMainViewport();
@@ -429,8 +416,8 @@ void gui::checkbox_render_imported_image() const
       update_imported_render_texture();
       if (!m_selections.render_imported_image)
       {
-        const int tile_size = 16;
-        m_map_sprite.update_render_texture(nullptr, {}, tile_size);
+        m_map_sprite.update_render_texture(
+          nullptr, {}, tile_sizes::default_size);
       }
       m_changed = true;
     }
@@ -2028,7 +2015,8 @@ void gui::init_and_get_style() const
   m_window.setVerticalSyncEnabled(true);
   (void)ImGui::SFML::Init(m_window);
   ImGuiIO &imgui_io = ImGui::GetIO();
-  imgui_io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+  imgui_io.ConfigFlags =
+    bitwise_or(imgui_io.ConfigFlags, ImGuiConfigFlags_DockingEnable);
   if (m_field)
   {
     generate_upscale_paths(m_field->get_base_name(), get_coo());
@@ -2107,7 +2095,7 @@ int gui::get_selected_field()
   }
   return 0;
 }
-std::string gui::starter_field() const
+std::string gui::starter_field()
 {
   return Configuration{}["starter_field"].value_or(std::string("ecenter3"));
 }
@@ -2319,7 +2307,7 @@ BPPT gui::bpp() const
 }
 void gui::combo_deswizzle_path() const
 {
-  if (safedir deswizzle_texture_path = m_loaded_deswizzle_texture_path;
+  if (const safedir deswizzle_texture_path = m_loaded_deswizzle_texture_path;
       !deswizzle_texture_path.is_exists() || !m_field)
   {
     return;
@@ -2401,10 +2389,10 @@ void gui::generate_upscale_paths(
   {
     process(
       upscales(std::filesystem::current_path(), field_name, coo).get_paths());
-    for (const auto &up : m_custom_upscale_paths)
+    for (const auto &upscale_path : m_custom_upscale_paths)
     {
-      process(
-        upscales(up.value_or(std::string{}), field_name, coo).get_paths());
+      process(upscales(upscale_path.value_or(std::string{}), field_name, coo)
+                .get_paths());
     }
   }
   std::ranges::sort(m_upscale_paths);
@@ -2413,19 +2401,13 @@ void gui::generate_upscale_paths(
 }
 bool gui::combo_upscale_path(::filter<std::filesystem::path> &filter) const
 {
-  if (
-    m_field
-    && generic_combo(
-      m_id,
-      gui_labels::upscale_path,
-      [this]() { return m_upscale_paths; },
-      [this]() { return m_upscale_paths; },
-      [&filter]() -> auto & { return filter; }))
-  {
-    return true;
-  }
-
-  return false;
+  return m_field
+         && generic_combo(
+           m_id,
+           gui_labels::upscale_path,
+           [this]() { return m_upscale_paths; },
+           [this]() { return m_upscale_paths; },
+           [&filter]() -> auto & { return filter; });
 }
 
 bool gui::combo_upscale_path(
@@ -2486,8 +2468,8 @@ bool gui::combo_upscale_path(
 std::vector<std::filesystem::path>
   gui::find_maps_in_directory(const std::filesystem::path &src, size_t reserve)
 {
-  std::vector<std::filesystem::path> r{};
-  r.reserve(reserve);
+  std::vector<std::filesystem::path> paths{};
+  paths.reserve(reserve);
   for (const auto &path : std::filesystem::recursive_directory_iterator{ src })
   {
     if (
@@ -2496,24 +2478,24 @@ std::vector<std::filesystem::path>
         path.path().extension().string(),
         open_viii::graphics::background::Map::EXT))
     {
-      r.emplace_back(path.path());
+      paths.emplace_back(path.path());
     }
   }
-  return r;
+  return paths;
 }
 
 
-[[nodiscard]] inline bool any_matches(
-  const std::vector<std::filesystem::path>        &paths,
-  const std::vector<open_viii::archive::FileData> &all_file_data)
-{
-  return std::ranges::any_of(
-    all_file_data, [&paths](const open_viii::archive::FileData &file_data) {
-      const auto in_path = file_data.get_path();
-      return in_path.has_filename()
-             && open_viii::archive::any_matches(paths, in_path);
-    });
-}
+//[[nodiscard]] inline bool any_matches(
+//  const std::vector<std::filesystem::path>        &paths,
+//  const std::vector<open_viii::archive::FileData> &all_file_data)
+//{
+//  return std::ranges::any_of(
+//    all_file_data, [&paths](const open_viii::archive::FileData &file_data) {
+//      const auto in_path = file_data.get_path();
+//      return in_path.has_filename()
+//             && open_viii::archive::any_matches(paths, in_path);
+//    });
+//}
 template<bool Nested>
 std::vector<std::filesystem::path> gui::replace_entries(
   const open_viii::archive::FIFLFS<Nested> &field,
@@ -2554,12 +2536,13 @@ void gui::popup_batch_embed() const
 
 bool gui::check_futures() const
 {
-  const auto romoval =
-    std::ranges::remove_if(m_futures, [](const std::future<void> &f) {
-      return !f.valid()
-             || f.wait_for(std::chrono::seconds{}) == std::future_status::ready;
+  const auto removal =
+    std::ranges::remove_if(m_futures, [](const std::future<void> &future) {
+      return !future.valid()
+             || future.wait_for(std::chrono::seconds{})
+                  == std::future_status::ready;
     });
-  m_futures.erase(romoval.begin(), romoval.end());
+  m_futures.erase(removal.begin(), removal.end());
   return !std::ranges::empty(m_futures);
 }
 void gui::batch_ops_ask_menu() const
@@ -2761,8 +2744,8 @@ std::variant<
   });
 
 
-  ImVec2     combo_pos    = ImGui::GetCursorScreenPos();
-  const auto the_end_id_0 = scope_guard([]() { ImGui::PopID(); });
+  ImVec2 const combo_pos    = ImGui::GetCursorScreenPos();
+  const auto   the_end_id_0 = scope_guard([]() { ImGui::PopID(); });
   ImGui::PushID(++m_id);
   static bool was_hovered = false;
   if (ImGui::BeginCombo(
@@ -2770,26 +2753,24 @@ std::variant<
   {
     const auto the_end_combo = scope_guard([]() { ImGui::EndCombo(); });
     m_map_sprite.const_visit_tiles([this](const auto &tiles) {
-      for (int i{}; const auto &tile : tiles)
+      for (int tile_id{}; const auto &tile : tiles)
       {
-        const auto the_end_id_1 = scope_guard([]() { ImGui::PopID(); });
-        ImGui::PushID(++m_id);
-        bool is_selected =
+        const auto the_end_id_1 = PushPop();
+        const auto iterate      = scope_guard([&tile_id]() { ++tile_id; });
+        bool       is_selected =
           (m_selections.selected_tile
-           == i);// You can store your selection however you
-                 // want, outside or inside your objects
-
-        const std::string &i_as_string = fmt::format("{}", i);
+           == tile_id);// You can store your selection however you
+                       // want, outside or inside your objects
         if (std::ranges::any_of(
-              std::array{ [&is_selected, this, &tile, &i_as_string]() -> bool {
+              std::array{ [&is_selected, this, &tile, &tile_id]() -> bool {
                            bool const selected =
                              ImGui::Selectable("", is_selected);
                            if (ImGui::IsItemHovered())
                            {
                              ImGui::BeginTooltip();
-                             ImGui::Text("%s", i_as_string.c_str());
                              const auto end_tooltip =
                                scope_guard(&ImGui::EndTooltip);
+                             format_imgui_text("{}", tile_id);
                              const float tile_size = 256.F;
                              (void)create_tile_button(
                                tile, sf::Vector2f(tile_size, tile_size));
@@ -2807,18 +2788,18 @@ std::variant<
                             ImGui::SameLine();
                             return false;
                           }(),
-                          [&i_as_string]() -> bool {
-                            ImGui::Text("%s", i_as_string.c_str());
+                          [&tile_id]() -> bool {
+                            format_imgui_text("{}", tile_id);
                             return false;
                           }() },
               std::identity{}))
         {
-          m_selections.selected_tile = i;
+          m_selections.selected_tile = tile_id;
           Configuration config{};
           config->insert_or_assign(
             "selections_selected_tile", m_selections.selected_tile);
           config.save();
-          current_item_str = std::move(i_as_string);
+          current_item_str = std::format("{}", tile_id);
           current_tile     = tile;
         }
         if (is_selected)
@@ -2827,7 +2808,6 @@ std::variant<
                                        // opening the combo (scrolling + for
                                        // keyboard navigation support)
         }
-        ++i;
       }
     });
   }
@@ -2836,8 +2816,8 @@ std::variant<
     was_hovered = false;
     m_map_sprite.disable_square();
   }
-  ImVec2      backup_pos = ImGui::GetCursorScreenPos();
-  ImGuiStyle &style      = ImGui::GetStyle();
+  ImVec2 const      backup_pos = ImGui::GetCursorScreenPos();
+  ImGuiStyle const &style      = ImGui::GetStyle();
   ImGui::SetCursorScreenPos(ImVec2(
     combo_pos.x + style.FramePadding.x, combo_pos.y + style.FramePadding.y));
   (void)std::visit(
@@ -2879,11 +2859,6 @@ void gui::begin_batch_embed_map_warning_window() const
     ImVec2(half, half));
   static const char *title = "Batch embed '.map' files.";
   ImGui::OpenPopup(title);
-  static constexpr auto bitwise_or = [](auto first, auto... rest) {
-    return static_cast<decltype(first)>(
-      static_cast<std::uint32_t>(first)
-      | (static_cast<std::uint32_t>(rest) | ...));
-  };
   if (!ImGui::BeginPopupModal(
         title,
         nullptr,
@@ -3038,24 +3013,26 @@ void gui::import_image_window() const
                                 })
                                 .c_str()))
   {
-    if (ImGui::BeginTable("import_tiles_table", 9))
+    static constexpr int columns = 9;
+    if (ImGui::BeginTable("import_tiles_table", columns))
     {
       const auto the_end_tile_table = scope_guard([]() { ImGui::EndTable(); });
       import_image_map.visit_tiles([this](auto &tiles) {
         for (const auto &tile : tiles)
         {
           ImGui::TableNextColumn();
-          sf::Sprite sprite(
+          sf::Sprite const sprite(
             loaded_image_texture,
             sf::IntRect(
-              tile.x() / tile_size * m_selections.tile_size_value,
-              tile.y() / tile_size * m_selections.tile_size_value,
-              m_selections.tile_size_value,
-              m_selections.tile_size_value));
-          const auto the_end_tile_table_tile =
-            scope_guard([]() { ImGui::PopID(); });
-          ImGui::PushID(++m_id);
-          ImGui::ImageButton(sprite, sf::Vector2f(32.F, 32.F), 0);
+              static_cast<int>(
+                tile.x() / tile_size * m_selections.tile_size_value),
+              static_cast<int>(
+                tile.y() / tile_size * m_selections.tile_size_value),
+              static_cast<int>(m_selections.tile_size_value),
+              static_cast<int>(m_selections.tile_size_value)));
+          const auto             the_end_tile_table_tile = PushPop();
+          static constexpr float button_size             = 32.F;
+          ImGui::ImageButton(sprite, sf::Vector2f(button_size, button_size), 0);
         }
       });
     }
@@ -3075,14 +3052,11 @@ void gui::import_image_window() const
           }),
       {},
       [](const auto &tile) { return tile.source_y(); });
-    int tile_y = max_source_y_tile.source_y() / tile_size;
-    ImGui::Text(
-      "%s",
-      fmt::format(
-        "Last Used Texture Page {}, and Source Y / 16 = {}",
-        max_texture_id_tile.texture_id(),
-        tile_y)
-        .c_str());
+    int const tile_y = max_source_y_tile.source_y() / tile_size;
+    format_imgui_text(
+      "Last Used Texture Page {}, and Source Y / 16 = {}",
+      max_texture_id_tile.texture_id(),
+      tile_y);
     auto next_source_y = static_cast<uint8_t>((tile_y + 1) % tile_size);
     const std::uint8_t next_texture_page =
       tile_y + 1 == tile_size ? max_texture_id_tile.texture_id() + 1
@@ -3149,7 +3123,7 @@ void gui::import_image_window() const
 }
 void gui::reset_imported_image() const
 {
-  m_map_sprite.update_render_texture(nullptr, {}, 16);
+  m_map_sprite.update_render_texture(nullptr, {}, tile_sizes::default_size);
   import_image_map                   = {};
   loaded_image_texture               = {};
   loaded_image_cpu                   = {};
@@ -3166,11 +3140,11 @@ bool gui::combo_tile_size() const
         m_id,
         std::string_view("Tile Size"),
         []() -> decltype(auto) {
-          static constexpr auto sizes = std::array{ uint16_t{ 16U },
-                                                    uint16_t{ 32U },
-                                                    uint16_t{ 64U },
-                                                    uint16_t{ 128U },
-                                                    uint16_t{ 256U } };
+          static constexpr auto sizes = std::array{ tile_sizes::default_size,
+                                                    tile_sizes::x_2_size,
+                                                    tile_sizes::x_4_size,
+                                                    tile_sizes::x_8_size,
+                                                    tile_sizes::x_16_size };
           return sizes;
         },
         []() -> decltype(auto) {
@@ -3188,7 +3162,9 @@ bool gui::combo_tile_size() const
   }
   Configuration config{};
   config->insert_or_assign(
-    "selections_tile_size_value", m_selections.tile_size_value);
+    "selections_tile_size_value",
+    static_cast<std::underlying_type_t<tile_sizes>>(
+      m_selections.tile_size_value));
   config.save();
   return true;
 }
@@ -3236,17 +3212,15 @@ bool gui::browse_for_image_display_preview() const
   }
   if (ImGui::CollapsingHeader("Selected Image Preview"))
   {
-    sf::Sprite  sprite(loaded_image_texture);
-    const float w = std::max(
-      (ImGui::GetContentRegionAvail().x /* - ImGui::GetStyle().ItemSpacing.x*/),
-      1.0f);
-    const auto  size  = loaded_image_texture.getSize();
+    sf::Sprite const sprite(loaded_image_texture);
+    const float      width = std::max((ImGui::GetContentRegionAvail().x), 1.0F);
+    const auto       size  = loaded_image_texture.getSize();
 
-    float       scale = w / static_cast<float>(size.x);
-    const float h     = static_cast<float>(size.y) * scale;
-    ImVec2      p     = ImGui::GetCursorScreenPos();
-    const auto  sg    = PushPop();
-    ImGui::ImageButton(sprite, sf::Vector2f(w, h), 0);
+    float const      scale = width / static_cast<float>(size.x);
+    const float      height            = static_cast<float>(size.y) * scale;
+    ImVec2 const     cursor_screen_pos = ImGui::GetCursorScreenPos();
+    const auto       pop_id            = PushPop();
+    ImGui::ImageButton(sprite, sf::Vector2f(width, height), 0);
     if (ImGui::Checkbox("Draw Grid", &m_selections.import_image_grid))
     {
       Configuration config{};
@@ -3256,27 +3230,38 @@ bool gui::browse_for_image_display_preview() const
     }
     if (m_selections.import_image_grid)
     {
-      for (std::uint32_t x{ m_selections.tile_size_value }; x < size.x;
-           x += m_selections.tile_size_value)
+      static constexpr float thickness = 2.0F;
+      static const ImU32     color_32  = imgui_color32(sf::Color::Red);
+      for (auto x = static_cast<std::uint32_t>(m_selections.tile_size_value);
+           x < size.x;
+           x += static_cast<std::underlying_type_t<tile_sizes>>(
+             m_selections.tile_size_value))
       {
         ImGui::GetWindowDrawList()->AddLine(
-          ImVec2(p.x + (static_cast<float>(x) * scale), p.y),
           ImVec2(
-            p.x + (static_cast<float>(x) * scale),
-            p.y + (static_cast<float>(size.y) * scale)),
-          IM_COL32(255, 0, 0, 255),
-          2.0f);
+            cursor_screen_pos.x + (static_cast<float>(x) * scale),
+            cursor_screen_pos.y),
+          ImVec2(
+            cursor_screen_pos.x + (static_cast<float>(x) * scale),
+            cursor_screen_pos.y + (static_cast<float>(size.y) * scale)),
+          color_32,
+          thickness);
       }
-      for (std::uint32_t y{ m_selections.tile_size_value }; y < size.y;
-           y += m_selections.tile_size_value)
+
+      for (auto y = static_cast<std::uint32_t>(m_selections.tile_size_value);
+           y < size.y;
+           y += static_cast<std::underlying_type_t<tile_sizes>>(
+             m_selections.tile_size_value))
       {
         ImGui::GetWindowDrawList()->AddLine(
-          ImVec2(p.x, p.y + (static_cast<float>(y) * scale)),
           ImVec2(
-            p.x + (static_cast<float>(size.x) * scale),
-            p.y + (static_cast<float>(y) * scale)),
-          IM_COL32(255, 0, 0, 255),
-          2.0f);
+            cursor_screen_pos.x,
+            cursor_screen_pos.y + (static_cast<float>(y) * scale)),
+          ImVec2(
+            cursor_screen_pos.x + (static_cast<float>(size.x) * scale),
+            cursor_screen_pos.y + (static_cast<float>(y) * scale)),
+          color_32,
+          thickness);
       }
     }
   }
@@ -3301,9 +3286,9 @@ void gui::update_scaled_up_render_texture() const
   loaded_image_render_texture.setActive(true);
   loaded_image_render_texture.clear(sf::Color::Transparent);
   sf::Sprite sprite = sf::Sprite(loaded_image_texture);
-  sprite.setScale(1.f, -1.f);
+  sprite.setScale(1.F, -1.f);
   sprite.setPosition(
-    0.f, static_cast<float>(loaded_image_render_texture.getSize().y));
+    0.F, static_cast<float>(loaded_image_render_texture.getSize().y));
   loaded_image_render_texture.draw(sprite);
   loaded_image_render_texture.setRepeated(false);
   loaded_image_render_texture.setSmooth(false);
@@ -3329,22 +3314,28 @@ void gui::collapsing_tile_info(
               tile, [](const std::string_view text, const auto value) {
                 ImGui::TableNextRow();
                 ImGui::TableNextColumn();
-                ImGui::Text("%s", text.data());
+                format_imgui_text("{}", text.data());
                 ImGui::TableNextColumn();
-                ImGui::Text("%s", fmt::format("{}", value).c_str());
+                format_imgui_text("{}", value);
               });
           }
-          const auto w = std::max(
-                           (ImGui::GetContentRegionAvail()
-                              .x /* - ImGui::GetStyle().ItemSpacing.x*/),
-                           1.F)
-                         / 2.F;
-          ImVec2      backup_pos = ImGui::GetCursorScreenPos();
-          ImGuiStyle &style      = ImGui::GetStyle();
+
+          static constexpr float width_max = 1.0F;
+          static constexpr float half      = 0.5F;
+          const auto             width =
+            std::max((ImGui::GetContentRegionAvail().x), width_max) * half;
+          ImVec2 const           backup_pos = ImGui::GetCursorScreenPos();
+          ImGuiStyle const      &style      = ImGui::GetStyle();
+          static constexpr float position_width_scale  = 1.1F;
+          static constexpr float position_height_scale = 0.9F;
+          static constexpr float padding_height_scale  = 2.0F;
+          static constexpr float tile_scale            = 0.9F;
           ImGui::SetCursorScreenPos(ImVec2(
-            backup_pos.x + w * 1.1F,
-            backup_pos.y - w * .9F - style.FramePadding.y * 2.F));
-          (void)create_tile_button(tile, { w * .9F, w * .9F });
+            backup_pos.x + width * position_width_scale,
+            backup_pos.y - width * position_height_scale
+              - style.FramePadding.y * padding_height_scale));
+          (void)create_tile_button(
+            tile, { width * tile_scale, width * tile_scale });
           ImGui::SetCursorScreenPos(backup_pos);
         }
       }

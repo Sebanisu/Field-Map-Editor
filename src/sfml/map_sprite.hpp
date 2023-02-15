@@ -11,6 +11,7 @@
 #include "open_viii/graphics/background/Map.hpp"
 #include "open_viii/graphics/background/Mim.hpp"
 #include "square.hpp"
+#include "tile_sizes.hpp"
 #include "unique_values.hpp"
 #include "upscales.hpp"
 #include <cppcoro/generator.hpp>
@@ -140,7 +141,7 @@ struct map_sprite final
   void update_render_texture(
     const sf::Texture                   *p_texture,
     open_viii::graphics::background::Map map,
-    const uint16_t                       tile_size);
+    const tile_sizes                     tile_size);
 
 public:
   using color_type  = open_viii::graphics::Color32RGBA;
