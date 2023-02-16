@@ -52,7 +52,7 @@ inline std::filesystem::path
 
 namespace fme
 {
-void gui::start() const
+void gui::start()
 {
   if (m_window.isOpen())
   {
@@ -61,8 +61,8 @@ void gui::start() const
       static_cast<float>(m_selections.window_height));
     do
     {
-      m_changed = false;
-      m_id      = {};
+      m_changed      = false;
+      get_imgui_id() = {};
       loop_events();
       const sf::Time        &delta_time       = m_delta_clock.restart();
 
@@ -193,7 +193,7 @@ void gui::render_dockspace()
   //    ShowDockingDisabledMessage();
   //  }
 }
-void gui::control_panel_window() const
+void gui::control_panel_window()
 {
   const auto imgui_end = scope_guard(&ImGui::End);
   if (!ImGui::Begin(
@@ -232,7 +232,7 @@ void gui::control_panel_window() const
   m_mouse_positions.mouse_enabled = handle_mouse_cursor();
   text_mouse_position();
 }
-void gui::control_panel_window_mim() const
+void gui::control_panel_window_mim()
 {
   checkbox_mim_palette_texture();
   if (ImGui::CollapsingHeader(gui_labels::filters.data()))
@@ -253,7 +253,7 @@ void gui::control_panel_window_mim() const
   }
   slider_xy_sprite(m_mim_sprite);
 }
-void gui::control_panel_window_map() const
+void gui::control_panel_window_map()
 {
   combo_upscale_path();
   combo_deswizzle_path();
@@ -273,7 +273,7 @@ void gui::frame_rate()
   const auto framerate = ImGui::GetIO().Framerate;
   format_imgui_text("   {:>3.2f} fps", framerate);
 }
-void gui::compact_flatten_buttons() const
+void gui::compact_flatten_buttons()
 {
   format_imgui_text("{}: ", gui_labels::compact);
   ImGui::SameLine();
@@ -299,7 +299,7 @@ void gui::compact_flatten_buttons() const
     m_map_sprite.flatten_palette();
   }
 }
-void gui::collapsing_header_filters() const
+void gui::collapsing_header_filters()
 {
   if (ImGui::CollapsingHeader(gui_labels::filters.data()))
   {
@@ -316,7 +316,7 @@ void gui::collapsing_header_filters() const
     combo_draw_bit();
   }
 }
-void gui::background_color_picker() const
+void gui::background_color_picker()
 {
   static std::array<float, 3U> clear_color_f{};
   if (ImGui::ColorEdit3(
@@ -337,7 +337,7 @@ void gui::background_color_picker() const
                     (std::numeric_limits<sf::Uint8>::max)() };
   }
 }
-void gui::loop() const
+void gui::loop()
 {
   using namespace std::string_view_literals;
 
@@ -382,9 +382,8 @@ void gui::loop() const
   m_window.draw(m_mouse_positions.sprite, states);
   ImGui::SFML::Render(m_window);
   m_window.display();
-  m_first = false;
 }
-void gui::checkbox_render_imported_image() const
+void gui::checkbox_render_imported_image()
 {
   if (loaded_image_texture.getSize() != sf::Vector2u{})
   {
@@ -406,7 +405,7 @@ void gui::checkbox_render_imported_image() const
     }
   }
 }
-void gui::update_imported_render_texture() const
+void gui::update_imported_render_texture()
 {
   if (m_selections.render_imported_image)
   {
@@ -433,7 +432,7 @@ void gui::popup_batch_common_filter_start(
 }
 
 
-void gui::popup_batch_deswizzle() const
+void gui::popup_batch_deswizzle()
 {
   popup_batch_common(
     m_batch_deswizzle,
@@ -461,7 +460,7 @@ void gui::popup_batch_deswizzle() const
         map_path.string());
     });
 }
-void gui::popup_batch_reswizzle() const
+void gui::popup_batch_reswizzle()
 {
   popup_batch_common(
     m_batch_reswizzle,
@@ -515,7 +514,7 @@ void gui::popup_batch_reswizzle() const
     });
 }
 
-void gui::on_click_not_imgui() const
+void gui::on_click_not_imgui()
 {
   if (m_mouse_positions.mouse_enabled)
   {
@@ -619,7 +618,7 @@ void gui::text_mouse_position() const
     ImGui::EndTable();
   });
 }
-bool gui::handle_mouse_cursor() const
+bool gui::handle_mouse_cursor()
 {
   bool           mouse_enabled = false;
   const auto    &mouse_pos     = sf::Mouse::getPosition(m_window);
@@ -667,10 +666,10 @@ bool gui::handle_mouse_cursor() const
     static_cast<std::uint8_t>(tilex / texture_page_width);// for 4bit swizzle.
   return mouse_enabled;
 }
-void gui::combo_coo() const
+void gui::combo_coo()
 {
   if (generic_combo(
-        m_id,
+        get_imgui_id(),
         gui_labels::language,
         []() {
           return std::views::iota(
@@ -720,10 +719,10 @@ const open_viii::LangT &gui::get_coo() const
   static constexpr auto coos = open_viii::LangCommon::to_array();
   return coos.at(static_cast<size_t>(m_selections.coo));
 }
-void gui::combo_field() const
+void gui::combo_field()
 {
   if (generic_combo(
-        m_id,
+        get_imgui_id(),
         gui_labels::field,
         [this]() {
           return std::views::iota(
@@ -748,7 +747,7 @@ void gui::combo_field() const
   }
 }
 
-void gui::update_field() const
+void gui::update_field()
 {
   m_field = m_archives_group.field(m_selections.field);
   if (m_selections.draw == 0)
@@ -770,7 +769,7 @@ void gui::update_field() const
   }
 }
 
-void gui::checkbox_map_swizzle() const
+void gui::checkbox_map_swizzle()
 {
   if (ImGui::Checkbox("Swizzle", &m_selections.draw_swizzle))
   {
@@ -794,7 +793,7 @@ void gui::checkbox_map_swizzle() const
     m_changed = true;
   }
 }
-void gui::checkbox_map_disable_blending() const
+void gui::checkbox_map_disable_blending()
 {
   if (
     !m_selections.draw_swizzle
@@ -815,7 +814,7 @@ void gui::checkbox_map_disable_blending() const
     m_changed = true;
   }
 }
-void gui::checkbox_mim_palette_texture() const
+void gui::checkbox_mim_palette_texture()
 {
   if (ImGui::Checkbox("draw Palette Texture", &m_selections.draw_palette))
   {
@@ -838,7 +837,7 @@ static void update_bpp(map_sprite &sprite, BPPT bpp)
     sprite.update_render_texture();
   }
 }
-void gui::combo_bpp() const
+void gui::combo_bpp()
 {
   {
     const auto                  pop_pushed = PushPop();
@@ -902,7 +901,7 @@ static void update_palette(map_sprite &sprite, uint8_t palette)
     sprite.update_render_texture();
   }
 }
-void gui::combo_palette() const
+void gui::combo_palette()
 {
   if (m_selections.bpp != 2)
   {
@@ -954,7 +953,7 @@ void gui::combo_palette() const
   }
 }
 
-void gui::menu_bar() const
+void gui::menu_bar()
 {
   if (!ImGui::BeginMainMenuBar())
   {
@@ -993,7 +992,7 @@ void gui::import_menu() const
     config.save();
   }
 }
-void gui::batch_operation_test_menu() const
+void gui::batch_operation_test_menu()
 {
   const auto end_menu = scope_guard(&ImGui::EndMenu);
   if (ImGui::MenuItem(
@@ -1038,7 +1037,7 @@ void gui::batch_operation_test_menu() const
     config.save();
   }
 }
-void gui::edit_menu() const
+void gui::edit_menu()
 {
   const auto end_menu = scope_guard(&ImGui::EndMenu);
   if (ImGui::MenuItem(
@@ -1084,7 +1083,7 @@ void gui::edit_menu() const
     }
   }
 }
-void gui::file_menu() const
+void gui::file_menu()
 {
   const auto end_menu = scope_guard(&ImGui::EndMenu);
   menuitem_locate_ff8();
@@ -1113,7 +1112,7 @@ void gui::file_menu() const
     menuitem_load_deswizzle_textures();
   }
 }
-void gui::browse_for_embed_map_dir() const
+void gui::browse_for_embed_map_dir()
 {
   m_directory_browser.Open();
   m_directory_browser.SetTitle(
@@ -1157,7 +1156,7 @@ std::string gui::save_texture_path() const
   }
   return {};
 }
-void gui::file_browser_locate_ff8() const
+void gui::file_browser_locate_ff8()
 {
   m_directory_browser.Display();
   if (m_directory_browser.HasSelected())
@@ -1320,7 +1319,7 @@ std::filesystem::path
   selected_path                 = selected_path / prefix / base_name;
   return selected_path;
 }
-void gui::sort_paths() const
+void gui::sort_paths()
 {// todo remove paths that don't exist.
   std::vector<std::string> tmp = {};
   tmp.reserve(std::ranges::size(m_paths));
@@ -1338,7 +1337,7 @@ void gui::sort_paths() const
   config->insert_or_assign("paths_vector", m_paths);
   config.save();
 }
-void gui::file_browser_save_texture() const
+void gui::file_browser_save_texture()
 {
   m_save_file_browser.Display();
   if (m_save_file_browser.HasSelected())
@@ -1411,34 +1410,34 @@ void gui::file_browser_save_texture() const
     m_save_file_browser.ClearSelected();
   }
 }
-void gui::menuitem_locate_ff8() const
+void gui::menuitem_locate_ff8()
 {
   if (ImGui::MenuItem("Locate a FF8 install"))
   {
     open_locate_ff8_filebrowser();
   }
 }
-void gui::open_locate_ff8_filebrowser() const
+void gui::open_locate_ff8_filebrowser()
 {
   m_directory_browser.Open();
   m_directory_browser.SetTitle("Choose FF8 install directory");
   m_directory_browser.SetTypeFilters({ ".exe" });
   m_modified_directory_map = map_directory_mode::ff8_install_directory;
 }
-void gui::menuitem_locate_custom_upscale() const
+void gui::menuitem_locate_custom_upscale()
 {
   if (ImGui::MenuItem("Locate a Custom Upscale directory"))
   {
     open_locate_custom_upscale();
   }
 }
-void gui::open_locate_custom_upscale() const
+void gui::open_locate_custom_upscale()
 {
   m_directory_browser.Open();
   m_directory_browser.SetTitle("Choose Custom Upscale directory");
   m_modified_directory_map = map_directory_mode::custom_upscale_directory;
 }
-void gui::menuitem_save_swizzle_textures() const
+void gui::menuitem_save_swizzle_textures()
 {
   if (ImGui::MenuItem("Save Swizzled Textures", nullptr, false, true))
   {
@@ -1456,7 +1455,7 @@ std::string gui::appends_prefix_base_name(std::string_view title) const
     char{ std::filesystem::path::preferred_separator },
     base_name);
 }
-void gui::save_swizzle_textures() const
+void gui::save_swizzle_textures()
 {
   m_directory_browser.Open();
   static constexpr std::string_view title =
@@ -1467,7 +1466,7 @@ void gui::save_swizzle_textures() const
   m_directory_browser.SetTypeFilters({ ".map", ".png" });
   m_modified_directory_map = map_directory_mode::save_swizzle_textures;
 }
-void gui::menuitem_save_deswizzle_textures() const
+void gui::menuitem_save_deswizzle_textures()
 {
   if (ImGui::MenuItem("Save Deswizzled Textures (Pupu)", nullptr, false, true))
   {
@@ -1481,14 +1480,14 @@ void gui::menuitem_save_deswizzle_textures() const
     m_modified_directory_map = map_directory_mode::save_deswizzle_textures;
   }
 }
-void gui::menuitem_load_swizzle_textures() const
+void gui::menuitem_load_swizzle_textures()
 {
   if (ImGui::MenuItem("Load Swizzled Textures", nullptr, false, true))
   {
     open_swizzle_filebrowser();
   }
 }
-void gui::open_swizzle_filebrowser() const
+void gui::open_swizzle_filebrowser()
 {
   m_directory_browser.Open();
   m_directory_browser.SetTitle("Choose directory to load textures from");
@@ -1498,14 +1497,14 @@ void gui::open_swizzle_filebrowser() const
   m_directory_browser.SetTypeFilters({ ".map", ".png" });
   m_modified_directory_map = map_directory_mode::load_swizzle_textures;
 }
-void gui::menuitem_load_deswizzle_textures() const
+void gui::menuitem_load_deswizzle_textures()
 {
   if (ImGui::MenuItem("Load Deswizzled Textures", nullptr, false, true))
   {
     open_deswizzle_filebrowser();
   }
 }
-void gui::open_deswizzle_filebrowser() const
+void gui::open_deswizzle_filebrowser()
 {
   m_directory_browser.Open();
   m_directory_browser.SetTitle("Choose directory to load textures from");
@@ -1515,7 +1514,7 @@ void gui::open_deswizzle_filebrowser() const
   m_directory_browser.SetTypeFilters({ ".map", ".png" });
   m_modified_directory_map = map_directory_mode::load_deswizzle_textures;
 }
-void gui::menuitem_save_texture(const std::string &path, bool enabled) const
+void gui::menuitem_save_texture(const std::string &path, bool enabled)
 {
   if (ImGui::MenuItem("Save Displayed Texture", nullptr, false, enabled))
   {
@@ -1527,7 +1526,7 @@ void gui::menuitem_save_texture(const std::string &path, bool enabled) const
     m_save_file_browser.SetInputName(path.c_str());
   }
 }
-void gui::menuitem_save_mim_file(const std::string &path, bool enabled) const
+void gui::menuitem_save_mim_file(const std::string &path, bool enabled)
 {
   if (ImGui::MenuItem("Save Mim File", nullptr, false, enabled))
   {
@@ -1539,7 +1538,7 @@ void gui::menuitem_save_mim_file(const std::string &path, bool enabled) const
     m_save_file_browser.SetInputName(path);
   }
 }
-void gui::menuitem_save_map_file(const std::string &path, bool enabled) const
+void gui::menuitem_save_map_file(const std::string &path, bool enabled)
 {
   if (ImGui::MenuItem("Save Map File (unmodified)", nullptr, false, enabled))
   {
@@ -1553,7 +1552,6 @@ void gui::menuitem_save_map_file(const std::string &path, bool enabled) const
   }
 }
 void gui::menuitem_save_map_file_modified(const std::string &path, bool enabled)
-  const
 {
   if (ImGui::MenuItem("Save Map File (modified)", nullptr, false, enabled))
   {
@@ -1566,7 +1564,7 @@ void gui::menuitem_save_map_file_modified(const std::string &path, bool enabled)
     m_modified_map = map_dialog_mode::save_modified;
   }
 }
-void gui::menuitem_load_map_file(const std::string &path, bool enabled) const
+void gui::menuitem_load_map_file(const std::string &path, bool enabled)
 {
   if (ImGui::MenuItem("Load Map File", nullptr, false, enabled))
   {
@@ -1579,10 +1577,10 @@ void gui::menuitem_load_map_file(const std::string &path, bool enabled) const
     m_modified_map = map_dialog_mode::load;
   }
 }
-void gui::combo_draw() const
+void gui::combo_draw()
 {
   if (generic_combo(
-        m_id,
+        get_imgui_id(),
         gui_labels::draw,
         []() {
           return std::views::iota(
@@ -1606,7 +1604,7 @@ void gui::combo_draw() const
     m_changed = true;
   }
 }
-bool gui::combo_path() const
+bool gui::combo_path()
 {
   const auto browse_button = scope_guard([this]() {
     ImGui::SameLine();
@@ -1616,7 +1614,7 @@ bool gui::combo_path() const
     }
   });
   if (generic_combo(
-        m_id,
+        get_imgui_id(),
         gui_labels::path,
         [this]() {
           return m_paths
@@ -1684,7 +1682,7 @@ toml::array gui::get_custom_upscale_paths_vector()
   //  });
   //  return paths;
 }
-void gui::loop_events() const
+void gui::loop_events()
 {
   m_mouse_positions.update();
   while (m_window.pollEvent(m_event))
@@ -1755,8 +1753,7 @@ void gui::loop_events() const
       event_variant);
   }
 }
-void gui::event_type_mouse_button_released(
-  const sf::Mouse::Button &button) const
+void gui::event_type_mouse_button_released(const sf::Mouse::Button &button)
 {
   switch (button)
   {
@@ -1769,7 +1766,7 @@ void gui::event_type_mouse_button_released(
       break;
   }
 }
-void gui::event_type_mouse_button_pressed(const sf::Mouse::Button &button) const
+void gui::event_type_mouse_button_pressed(const sf::Mouse::Button &button)
 {
   switch (button)
   {
@@ -1782,7 +1779,7 @@ void gui::event_type_mouse_button_pressed(const sf::Mouse::Button &button) const
       break;
   }
 }
-void gui::event_type_key_pressed(const sf::Event::KeyEvent &key) const
+void gui::event_type_key_pressed(const sf::Event::KeyEvent &key)
 {
   if (key.code == sf::Keyboard::Up)
   {
@@ -1801,7 +1798,7 @@ void gui::event_type_key_pressed(const sf::Event::KeyEvent &key) const
     m_scrolling.right = true;
   }
 }
-void gui::event_type_key_released(const sf::Event::KeyEvent &key) const
+void gui::event_type_key_released(const sf::Event::KeyEvent &key)
 {
   if (key.shift && key.control && key.code == sf::Keyboard::Z)
   {
@@ -1853,7 +1850,7 @@ float gui::scaled_menubar_gap() const
   return ImGui::GetFrameHeight() * static_cast<float>(image_height())
          / saved_window_height;
 }
-void gui::scale_window(float width, float height) const
+void gui::scale_window(float width, float height)
 {
   const auto            img_height = static_cast<float>(image_height());
   static constexpr auto load       = [](auto &saved, auto &not_saved) {
@@ -1894,7 +1891,7 @@ sf::RenderWindow gui::get_render_window() const
     sf::String{ gui_labels::window_title }
   };
 }
-void gui::update_path() const
+void gui::update_path()
 {
   m_archives_group = m_archives_group.with_path(m_selections.path);
   update_field();
@@ -1912,7 +1909,7 @@ mim_sprite gui::get_mim_sprite() const
            get_coo(),
            m_selections.draw_palette };
 }
-void gui::init_and_get_style() const
+void gui::init_and_get_style()
 {
   //  static constexpr auto fps_lock = 360U;
   //  m_window.setFramerateLimit(fps_lock);
@@ -2005,11 +2002,11 @@ std::string gui::starter_field()
 }
 
 
-void gui::combo_pupu() const
+void gui::combo_pupu()
 {
   const auto &pair = m_map_sprite.uniques().pupu();
   if (generic_combo(
-        m_id,
+        get_imgui_id(),
         gui_labels::pupu_id,
         [&pair]() { return pair.values(); },
         [&pair]() { return pair.strings(); },
@@ -2020,11 +2017,11 @@ void gui::combo_pupu() const
   }
 }
 
-void gui::combo_draw_bit() const
+void gui::combo_draw_bit()
 {
   using namespace std::string_view_literals;
   if (generic_combo(
-        m_id,
+        get_imgui_id(),
         gui_labels::draw_bit,
         []() {
           return std::array{ draw_bitT::all,
@@ -2040,7 +2037,7 @@ void gui::combo_draw_bit() const
     m_changed = true;
   }
 }
-void gui::combo_filtered_palettes() const
+void gui::combo_filtered_palettes()
 {
   const auto &map = m_map_sprite.uniques().palette();
   const auto &key = m_map_sprite.filter().bpp.value();
@@ -2048,7 +2045,7 @@ void gui::combo_filtered_palettes() const
   {
     const auto &pair = map.at(key);
     if (generic_combo(
-          m_id,
+          get_imgui_id(),
           gui_labels::palette,
           [&pair]() { return pair.values(); },
           [&pair]() { return pair.strings(); },
@@ -2064,11 +2061,11 @@ void gui::combo_filtered_palettes() const
   }
 }
 
-void gui::combo_filtered_bpps() const
+void gui::combo_filtered_bpps()
 {
   const auto &pair = m_map_sprite.uniques().bpp();
   if (generic_combo(
-        m_id,
+        get_imgui_id(),
         gui_labels::bpp,
         [&pair]() { return pair.values(); },
         [&pair]() { return pair.strings(); },
@@ -2084,11 +2081,11 @@ void gui::combo_filtered_bpps() const
   }
 }
 
-void gui::combo_blend_modes() const
+void gui::combo_blend_modes()
 {
   const auto &pair = m_map_sprite.uniques().blend_mode();
   if (generic_combo(
-        m_id,
+        get_imgui_id(),
         gui_labels::blend_mode,
         [&pair]() { return pair.values(); },
         [&pair]() { return pair.strings(); },
@@ -2099,11 +2096,11 @@ void gui::combo_blend_modes() const
   }
 }
 
-void gui::combo_layers() const
+void gui::combo_layers()
 {
   const auto &pair = m_map_sprite.uniques().layer_id();
   if (generic_combo(
-        m_id,
+        get_imgui_id(),
         gui_labels::layers,
         [&pair]() { return pair.values(); },
         [&pair]() { return pair.strings(); },
@@ -2113,11 +2110,11 @@ void gui::combo_layers() const
     m_changed = true;
   }
 }
-void gui::combo_texture_pages() const
+void gui::combo_texture_pages()
 {
   const auto &pair = m_map_sprite.uniques().texture_page_id();
   if (generic_combo(
-        m_id,
+        get_imgui_id(),
         gui_labels::texture_page,
         [&pair]() { return pair.values(); },
         [&pair]() { return pair.strings(); },
@@ -2127,11 +2124,11 @@ void gui::combo_texture_pages() const
     m_changed = true;
   }
 }
-void gui::combo_animation_ids() const
+void gui::combo_animation_ids()
 {
   const auto &pair = m_map_sprite.uniques().animation_id();
   if (generic_combo(
-        m_id,
+        get_imgui_id(),
         gui_labels::animation_id,
         [&pair]() { return pair.values(); },
         [&pair]() { return pair.strings(); },
@@ -2141,11 +2138,11 @@ void gui::combo_animation_ids() const
     m_changed = true;
   }
 }
-void gui::combo_blend_other() const
+void gui::combo_blend_other()
 {
   const auto &pair = m_map_sprite.uniques().blend_other();
   if (generic_combo(
-        m_id,
+        get_imgui_id(),
         gui_labels::blend_other,
         [&pair]() { return pair.values(); },
         [&pair]() { return pair.strings(); },
@@ -2158,7 +2155,7 @@ void gui::combo_blend_other() const
 void gui::combo_compact_type(::filter<compact_type> &compact) const
 {
   if (generic_combo(
-        m_id,
+        get_imgui_id(),
         gui_labels::compact,
         []() {
           return std::array{ compact_type::rows, compact_type::all };
@@ -2171,11 +2168,11 @@ void gui::combo_compact_type(::filter<compact_type> &compact) const
   }
 }
 
-void gui::combo_z() const
+void gui::combo_z()
 {
   const auto &pair = m_map_sprite.uniques().z();
   if (generic_combo(
-        m_id,
+        get_imgui_id(),
         gui_labels::z,
         [&pair]() { return pair.values(); },
         [&pair]() { return pair.strings(); },
@@ -2186,7 +2183,7 @@ void gui::combo_z() const
   }
 }
 
-void gui::combo_animation_frames() const
+void gui::combo_animation_frames()
 {
   const auto &map = m_map_sprite.uniques().animation_frame();
   const auto &key = m_map_sprite.filter().animation_id.value();
@@ -2194,7 +2191,7 @@ void gui::combo_animation_frames() const
   {
     const auto &pair = map.at(key);
     if (generic_combo(
-          m_id,
+          get_imgui_id(),
           gui_labels::animation_frame,
           [&pair]() { return pair.values(); },
           [&pair]() { return pair.strings(); },
@@ -2209,7 +2206,7 @@ BPPT gui::bpp() const
 {
   return Mim::bpp_selections().at(static_cast<size_t>(m_selections.bpp));
 }
-void gui::combo_deswizzle_path() const
+void gui::combo_deswizzle_path()
 {
   if (const safedir deswizzle_texture_path = m_loaded_deswizzle_texture_path;
       !deswizzle_texture_path.is_exists() || !m_field)
@@ -2222,7 +2219,7 @@ void gui::combo_deswizzle_path() const
     m_loaded_deswizzle_texture_path.string()
   };
   if (generic_combo(
-        m_id,
+        get_imgui_id(),
         gui_labels::deswizzle_path,
         //[&values]() { return values; },
         [&strings]() { return strings; },
@@ -2237,7 +2234,7 @@ void gui::combo_deswizzle_path() const
     m_changed = true;
   }
 }
-void gui::combo_upscale_path() const
+void gui::combo_upscale_path()
 {
   if (!m_field)
   {
@@ -2256,7 +2253,7 @@ void gui::combo_upscale_path() const
 }
 void gui::generate_upscale_paths(
   const std::string &field_name,
-  open_viii::LangT   coo) const
+  open_viii::LangT   coo)
 {
   m_upscale_paths.clear();
   auto transform_paths =
@@ -2307,7 +2304,7 @@ bool gui::combo_upscale_path(::filter<std::filesystem::path> &filter) const
 {
   return m_field
          && generic_combo(
-           m_id,
+           get_imgui_id(),
            gui_labels::upscale_path,
            [this]() { return m_upscale_paths; },
            [this]() { return m_upscale_paths; },
@@ -2357,7 +2354,7 @@ bool gui::combo_upscale_path(
       upscales(std::filesystem::current_path(), field_name, coo).get_paths());
 
     if (generic_combo(
-          m_id,
+          get_imgui_id(),
           gui_labels::upscale_path,
           [&paths]() { return paths; },
           [&paths]() { return paths; },
@@ -2409,7 +2406,7 @@ std::vector<std::filesystem::path> gui::replace_entries(
   return tmp;
 }
 
-void gui::popup_batch_embed() const
+void gui::popup_batch_embed()
 {
   if (m_batch_embed(m_archives_group.mapdata()))
   {
@@ -2438,7 +2435,7 @@ void gui::popup_batch_embed() const
   }
 }
 
-bool gui::check_futures() const
+bool gui::check_futures()
 {
   const auto removal =
     std::ranges::remove_if(m_futures, [](const std::future<void> &future) {
@@ -2455,7 +2452,7 @@ void gui::batch_ops_ask_menu() const
   if (m_selections.test_batch_window)
   {
     static gui_batch test{ m_archives_group };
-    test(&m_id);
+    test(&get_imgui_id());
   }
 #else
   using namespace std::string_view_literals;
@@ -2470,7 +2467,7 @@ void gui::batch_ops_ask_menu() const
                                                     "Upscales or Swizzles"sv,
                                                     "Deswizzles"sv };
       generic_combo(
-        m_id,
+        get_imgui_id(),
         "Type",
         []() {
           return std::views::iota(
@@ -2526,7 +2523,7 @@ void gui::batch_ops_ask_menu() const
           "Transformation", ImGuiTreeNodeFlags_DefaultOpen))
     {
       generic_combo(
-        m_id,
+        get_imgui_id(),
         "Task"sv,
         []() {
           return std::views::iota(
@@ -2597,7 +2594,7 @@ void gui::batch_ops_ask_menu() const
 #endif
 }
 
-gui::variant_tile_t &gui::combo_selected_tile(bool &changed) const
+gui::variant_tile_t &gui::combo_selected_tile(bool &changed)
 {
   const auto end_action = scope_guard(
     [&changed, current_tile_id = m_selections.selected_tile, this]() {
@@ -2740,7 +2737,7 @@ void gui::find_selected_tile_for_import(
       current_tile);
   });
 }
-void gui::begin_batch_embed_map_warning_window() const
+void gui::begin_batch_embed_map_warning_window()
 {
   if (!m_selections.batch_embed_map_warning_window)
   {
@@ -2790,7 +2787,7 @@ void gui::begin_batch_embed_map_warning_window() const
     m_selections.batch_embed_map_warning_window = false;
   }
 }
-void gui::import_image_window() const
+void gui::import_image_window()
 {
   if (!m_selections.display_import_image)
   {
@@ -2867,7 +2864,7 @@ void gui::import_image_window() const
 }
 void gui::adjust_source_xy_texture_page_for_import_map(
   uint8_t       next_source_y,
-  const uint8_t next_texture_page) const
+  const uint8_t next_texture_page)
 {
   import_image_map.visit_tiles(
     [&next_texture_page, &next_source_y](auto &&import_tiles) {
@@ -2930,7 +2927,7 @@ void gui::collapsing_header_generated_tiles() const
 }
 void gui::generate_map_for_imported_image(
   const variant_tile_t &current_tile,
-  bool                  changed) const
+  bool                  changed)
 {//   * I'd probably store the new tiles in their own map.
   const auto tiles_wide = static_cast<uint32_t>(ceil(
     static_cast<float>(loaded_image_texture.getSize().x)
@@ -2989,7 +2986,7 @@ void gui::generate_map_for_imported_image(
     filter_empty_import_tiles();
   }
 }
-void gui::filter_empty_import_tiles() const
+void gui::filter_empty_import_tiles()
 {//* Filter empty tiles
   loaded_image_cpu = loaded_image_texture.copyToImage();
   import_image_map.visit_tiles([this](auto &tiles) {
@@ -3023,7 +3020,7 @@ void gui::filter_empty_import_tiles() const
   });
   loaded_image_cpu = {};
 }
-void gui::reset_imported_image() const
+void gui::reset_imported_image()
 {
   m_map_sprite.update_render_texture(nullptr, {}, tile_sizes::default_size);
   import_image_map                   = {};
@@ -3036,10 +3033,10 @@ void gui::reset_imported_image() const
     "selections_render_imported_image", m_selections.render_imported_image);
   config.save();
 }
-bool gui::combo_tile_size() const
+bool gui::combo_tile_size()
 {
   if (!generic_combo(
-        m_id,
+        get_imgui_id(),
         std::string_view("Tile Size"),
         []() -> decltype(auto) {
           static constexpr auto sizes = std::array{ tile_sizes::default_size,
@@ -3070,7 +3067,7 @@ bool gui::combo_tile_size() const
   config.save();
   return true;
 }
-bool gui::browse_for_image_display_preview() const
+bool gui::browse_for_image_display_preview()
 {
   bool changed = false;
   ImGui::InputText(
@@ -3171,7 +3168,7 @@ bool gui::browse_for_image_display_preview() const
   }
   return changed;
 }
-void gui::update_scaled_up_render_texture() const
+void gui::update_scaled_up_render_texture()
 {
   const auto scale_up_dim = [this](uint32_t dim) {
     return static_cast<uint32_t>(

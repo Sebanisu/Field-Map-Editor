@@ -40,7 +40,7 @@ struct gui
 {
 public:
   gui();
-  void start() const;
+  void start();
 
 private:
   using variant_tile_t = std::variant<
@@ -48,15 +48,15 @@ private:
     open_viii::graphics::background::Tile2,
     open_viii::graphics::background::Tile3,
     std::monostate>;
-  mutable sf::Color                          clear_color = sf::Color::Black;
-  mutable std::mutex                         append_results_mutex = {};
-  mutable std::vector<std::filesystem::path> append_results       = {};
-  mutable std::shared_ptr<sf::Shader>        m_drag_sprite_shader = {};
-  mutable Selections                         m_selections         = {};
-  mutable scrolling                          m_scrolling          = {};
-  mutable batch_deswizzle                    m_batch_deswizzle    = {};
-  mutable batch_reswizzle                    m_batch_reswizzle    = {};
-  mutable batch_embed                        m_batch_embed        = batch_embed{
+  sf::Color                          clear_color          = sf::Color::Black;
+  std::mutex                         append_results_mutex = {};
+  std::vector<std::filesystem::path> append_results       = {};
+  std::shared_ptr<sf::Shader>        m_drag_sprite_shader = {};
+  Selections                         m_selections         = {};
+  scrolling                          m_scrolling          = {};
+  batch_deswizzle                    m_batch_deswizzle    = {};
+  batch_reswizzle                    m_batch_reswizzle    = {};
+  batch_embed                        m_batch_embed        = batch_embed{
     "Operation 1: Find map, Replace map for each field, Save temp file.",
     [this](const int in_pos, const std::filesystem::path &in_selected_path) {
       if (in_pos <= 0)
@@ -84,7 +84,7 @@ private:
     },
     []() { return true; }
   };
-  mutable batch_embed m_batch_embed2 = batch_embed{
+  batch_embed m_batch_embed2 = batch_embed{
     "Operation 2: Update fields archive, Remove Temporary Files",
     [this](int &pos, const std::filesystem::path &) {
       if (check_futures())
@@ -113,7 +113,7 @@ private:
       return true;
     }
   };
-  mutable batch_embed m_batch_embed3 =
+  batch_embed m_batch_embed3 =
     batch_embed{ "Operation 3: Embed fields in main.zzz (disabled)",
                  []([[maybe_unused]] int &pos, const std::filesystem::path &) {
                    // todo rewrite this code to work with new zzz.
@@ -175,7 +175,7 @@ private:
                    //                     std::ranges::begin(dst),
                    //                     [&, i = uint64_t{ header_size }](
                    //                       open_viii::archive::FileData
-                   //                       file_data) mutable
+                   //                       file_data)
                    //                     {
                    //                       if (auto match =
                    //                       open_viii::archive::find_match(
@@ -292,7 +292,7 @@ private:
                    //               return !check_futures();
                    return true;
                  } };
-  mutable batch_embed m_batch_embed4 = batch_embed{
+  batch_embed m_batch_embed4 = batch_embed{
     "Operation 4: Save",
     [this](int &pos, const std::filesystem::path &in_selected_path) {
       format_imgui_wrapped_text("{}", "Saving Files...");
@@ -524,124 +524,114 @@ private:
     }
   };
 
-  static constexpr std::int8_t     tile_size_px                      = { 16 };
-  static constexpr std::uint8_t    tile_size_px_unsigned             = { 16U };
-  mutable int                      m_id                              = {};
-  mutable mouse_positions          m_mouse_positions                 = {};
-  mutable float                    m_scale_width                     = {};
-  mutable sf::RenderWindow         m_window                          = {};
-  mutable sf::Clock                m_delta_clock                     = {};
-  mutable toml::array              m_paths                           = {};
-  mutable toml::array              m_custom_upscale_paths            = {};
-  mutable archives_group           m_archives_group                  = {};
-  mutable std::vector<std::string> m_upscale_paths                   = {};
-  mutable std::shared_ptr<open_viii::archive::FIFLFS<false>> m_field = {};
-  mutable std::array<float, 2>                               xy      = {};
-  mutable mim_sprite                                         m_mim_sprite = {};
-  mutable map_sprite                                         m_map_sprite = {};
-  mutable open_viii::graphics::background::Map import_image_map           = {};
-  mutable std::string                          m_import_image_path        = {};
+  static constexpr std::int8_t  tile_size_px                          = { 16 };
+  static constexpr std::uint8_t tile_size_px_unsigned                 = { 16U };
+  mouse_positions               m_mouse_positions                     = {};
+  float                         m_scale_width                         = {};
+  sf::RenderWindow              m_window                              = {};
+  sf::Clock                     m_delta_clock                         = {};
+  toml::array                   m_paths                               = {};
+  toml::array                   m_custom_upscale_paths                = {};
+  archives_group                m_archives_group                      = {};
+  std::vector<std::string>      m_upscale_paths                       = {};
+  std::shared_ptr<open_viii::archive::FIFLFS<false>> m_field          = {};
+  std::array<float, 2>                               xy               = {};
+  mim_sprite                                         m_mim_sprite     = {};
+  map_sprite                                         m_map_sprite     = {};
+  open_viii::graphics::background::Map               import_image_map = {};
+  std::string                                        m_import_image_path = {};
 
-  mutable float                                saved_window_width         = {};
-  mutable float                                saved_window_height        = {};
+  float                                              saved_window_width  = {};
+  float                                              saved_window_height = {};
 
-  mutable bool                                 m_changed         = { false };
+  bool                                               m_changed = { false };
   //  ImGuiStyle                  m_original_style  = {};
-  mutable sf::Event                            m_event           = {};
-  mutable bool                                 m_first           = { true };
-  static constexpr std::array                  m_draw_selections = {
+  sf::Event                                          m_event   = {};
+  static constexpr std::array                        m_draw_selections = {
     open_viii::graphics::background::Mim::EXT,
     open_viii::graphics::background::Map::EXT
   };
-  mutable sf::Vector2f       m_cam_pos = {};
+  sf::Vector2f       m_cam_pos = {};
   // create a file browser instances
-  mutable ImGui::FileBrowser m_save_file_browser{
-    static_cast<ImGuiFileBrowserFlags>(
-      static_cast<std::uint32_t>(ImGuiFileBrowserFlags_EnterNewFilename)
-      | static_cast<std::uint32_t>(ImGuiFileBrowserFlags_CreateNewDir))
-  };
-  mutable ImGui::FileBrowser m_load_file_browser{};
-  mutable ImGui::FileBrowser m_directory_browser{
-    static_cast<ImGuiFileBrowserFlags>(
-      static_cast<std::uint32_t>(ImGuiFileBrowserFlags_SelectDirectory)
-      | static_cast<std::uint32_t>(ImGuiFileBrowserFlags_CreateNewDir))
-  };
-  mutable sf::Texture       loaded_image_texture        = {};
-  mutable sf::RenderTexture loaded_image_render_texture = {};
-  mutable sf::Image         loaded_image_cpu            = {};
-  static toml::array        get_paths();
+  ImGui::FileBrowser m_save_file_browser{ static_cast<ImGuiFileBrowserFlags>(
+    static_cast<std::uint32_t>(ImGuiFileBrowserFlags_EnterNewFilename)
+    | static_cast<std::uint32_t>(ImGuiFileBrowserFlags_CreateNewDir)) };
+  ImGui::FileBrowser m_load_file_browser{};
+  ImGui::FileBrowser m_directory_browser{ static_cast<ImGuiFileBrowserFlags>(
+    static_cast<std::uint32_t>(ImGuiFileBrowserFlags_SelectDirectory)
+    | static_cast<std::uint32_t>(ImGuiFileBrowserFlags_CreateNewDir)) };
+  sf::Texture        loaded_image_texture        = {};
+  sf::RenderTexture  loaded_image_render_texture = {};
+  sf::Image          loaded_image_cpu            = {};
+  static toml::array get_paths();
   // imgui doesn't support std::string or std::string_view or
   // std::filesystem::path, only const char *
-  archives_group            get_archives_group() const;
-  sf::RenderWindow          get_render_window() const;
-  void                      update_path() const;
-  mim_sprite                get_mim_sprite() const;
-  map_sprite                get_map_sprite() const;
-  void                      init_and_get_style() const;
-  void                      loop_events() const;
-  void                      loop() const;
-  bool                      combo_path() const;
-  void                      combo_draw() const;
-  void                      file_browser_save_texture() const;
-  void                      file_browser_locate_ff8() const;
-  void                      menu_bar() const;
-  void                      combo_pupu() const;
-  void                      combo_palette() const;
-  void                      combo_bpp() const;
-  void                      checkbox_mim_palette_texture() const;
-  void                      combo_field() const;
-  void                      combo_coo() const;
-  void                      combo_draw_bit() const;
-  std::string               save_texture_path() const;
-  void                      update_field() const;
-  bool                      mim_test() const;
-  bool                      map_test() const;
-  void                      checkbox_map_swizzle() const;
-  void                      checkbox_map_disable_blending() const;
-  void                      menuitem_locate_ff8() const;
-  void                      menuitem_save_swizzle_textures() const;
-  void                      menuitem_save_deswizzle_textures() const;
-  void                      menuitem_load_swizzle_textures() const;
-  void                      menuitem_load_deswizzle_textures() const;
-  void
-    menuitem_save_texture(const std::string &path, bool enabled = true) const;
-  void
-    menuitem_save_mim_file(const std::string &path, bool enabled = true) const;
-  void
-    menuitem_save_map_file(const std::string &path, bool enabled = true) const;
+  archives_group     get_archives_group() const;
+  sf::RenderWindow   get_render_window() const;
+  void               update_path();
+  mim_sprite         get_mim_sprite() const;
+  map_sprite         get_map_sprite() const;
+  void               init_and_get_style();
+  void               loop_events();
+  void               loop();
+  bool               combo_path();
+  void               combo_draw();
+  void               file_browser_save_texture();
+  void               file_browser_locate_ff8();
+  void               menu_bar();
+  void               combo_pupu();
+  void               combo_palette();
+  void               combo_bpp();
+  void               checkbox_mim_palette_texture();
+  void               combo_field();
+  void               combo_coo();
+  void               combo_draw_bit();
+  std::string        save_texture_path() const;
+  void               update_field();
+  bool               mim_test() const;
+  bool               map_test() const;
+  void               checkbox_map_swizzle();
+  void               checkbox_map_disable_blending();
+  void               menuitem_locate_ff8();
+  void               menuitem_save_swizzle_textures();
+  void               menuitem_save_deswizzle_textures();
+  void               menuitem_load_swizzle_textures();
+  void               menuitem_load_deswizzle_textures();
+  void menuitem_save_texture(const std::string &path, bool enabled = true);
+  void menuitem_save_mim_file(const std::string &path, bool enabled = true);
+  void menuitem_save_map_file(const std::string &path, bool enabled = true);
   void menuitem_save_map_file_modified(
     const std::string &path,
-    bool               enabled = true) const;
-  void
-    menuitem_load_map_file(const std::string &path, bool enabled = true) const;
-  void         scale_window(float width = {}, float height = {}) const;
-  int          get_selected_field();
-  std::uint8_t palette() const;
-  open_viii::graphics::BPPT bpp() const;
-  void                      combo_blend_modes() const;
-  void                      combo_layers() const;
-  void                      combo_texture_pages() const;
-  void                      combo_animation_ids() const;
-  void                      combo_animation_frames() const;
-  void                      combo_filtered_palettes() const;
-  void                      combo_filtered_bpps() const;
-  void                      combo_blend_other() const;
-  void                      combo_z() const;
-  bool                      handle_mouse_cursor() const;
+    bool               enabled = true);
+  void menuitem_load_map_file(const std::string &path, bool enabled = true);
+  void scale_window(float width = {}, float height = {});
+  int  get_selected_field();
+  std::uint8_t                                       palette() const;
+  open_viii::graphics::BPPT                          bpp() const;
+  void                                               combo_blend_modes();
+  void                                               combo_layers();
+  void                                               combo_texture_pages();
+  void                                               combo_animation_ids();
+  void                                               combo_animation_frames();
+  void                                               combo_filtered_palettes();
+  void                                               combo_filtered_bpps();
+  void                                               combo_blend_other();
+  void                                               combo_z();
+  bool                                               handle_mouse_cursor();
   std::shared_ptr<open_viii::archive::FIFLFS<false>> init_field();
   void text_mouse_position() const;
-  void on_click_not_imgui() const;
-  void combo_upscale_path() const;
+  void on_click_not_imgui();
+  void combo_upscale_path();
   bool combo_upscale_path(::filter<std::filesystem::path> &filter) const;
-  void combo_deswizzle_path() const;
-  const open_viii::LangT       &get_coo() const;
-  mutable map_dialog_mode       m_modified_map           = {};
-  mutable map_directory_mode    m_modified_directory_map = {};
-  mutable std::filesystem::path m_loaded_swizzle_texture_path{};
-  mutable std::filesystem::path m_loaded_deswizzle_texture_path{};
-  void combo_compact_type(filter<compact_type> &) const;
-  void popup_batch_reswizzle() const;
-  void popup_batch_deswizzle() const;
+  void combo_deswizzle_path();
+  const open_viii::LangT &get_coo() const;
+  map_dialog_mode         m_modified_map           = {};
+  map_directory_mode      m_modified_directory_map = {};
+  std::filesystem::path   m_loaded_swizzle_texture_path{};
+  std::filesystem::path   m_loaded_deswizzle_texture_path{};
+  void                    combo_compact_type(filter<compact_type> &) const;
+  void                    popup_batch_reswizzle();
+  void                    popup_batch_deswizzle();
 
   template<
     is_enum_or_integral number_type,
@@ -694,42 +684,47 @@ private:
            ::filter<std::filesystem::path> &filter,
            std::string_view                 prefix,
            std::string_view                 base_name);
-  void popup_batch_embed() const;
+  void popup_batch_embed();
   template<bool Nested = false>
   std::vector<std::filesystem::path> replace_entries(
     const open_viii::archive::FIFLFS<Nested> &field,
     const std::vector<std::filesystem::path> &paths) const;
 
-  mutable std::vector<std::future<void>> m_futures = {};
+  std::vector<std::future<void>> m_futures = {};
   template<typename T, typename... argsT>
-  void launch_async(T &&task, argsT &&...args) const
+  void launch_async(T &&task, argsT &&...args)
   {
 #ifdef USE_THREADS
     m_futures.emplace_back(std::async(
       std::launch::async, std::forward<T>(task), std::forward<argsT>(args)...));
 #undef USE_THREADS
 #else
-    task(std::forward<argsT>(args)...);
+    std::invoke(std::forward<T>(task), std::forward<argsT>(args)...);
 #endif
   }
-  bool check_futures() const;
+  bool check_futures();
   void batch_ops_ask_menu() const;
   bool combo_upscale_path(
     std::filesystem::path &path,
     const std::string     &field_name,
     open_viii::LangT       coo) const;
-  void               open_locate_ff8_filebrowser() const;
-  void               open_swizzle_filebrowser() const;
-  void               open_deswizzle_filebrowser() const;
-  [[nodiscard]] auto PushPop() const
+  void                      open_locate_ff8_filebrowser();
+  void                      open_swizzle_filebrowser();
+  void                      open_deswizzle_filebrowser();
+  [[nodiscard]] static int &get_imgui_id()
   {
-    ImGui::PushID(++m_id);
+    static int imgui_id = {};
+    return imgui_id;
+  }
+  [[nodiscard]] static auto PushPop()
+  {
+    ImGui::PushID(++get_imgui_id());
     return scope_guard{ &ImGui::PopID };
   }
-  void            import_image_window() const;
-  variant_tile_t &combo_selected_tile(bool &changed) const;
+  void            import_image_window();
+  variant_tile_t &combo_selected_tile(bool &changed);
   void collapsing_tile_info(const variant_tile_t &current_tile) const;
-  [[nodiscard]] bool browse_for_image_display_preview() const;
+  [[nodiscard]] bool browse_for_image_display_preview();
   template<open_viii::graphics::background::is_tile tileT>
   [[nodiscard]] bool
     create_tile_button(const tileT &tile, sf::Vector2f image_size = {}) const
@@ -782,28 +777,27 @@ private:
     }
     return ImGui::ImageButton(sprite, image_size, 0);
   }
-  [[nodiscard]] bool combo_tile_size() const;
-  void               generate_upscale_paths(
-                  const std::string &field_name,
-                  open_viii::LangT   coo) const;
-  void               menuitem_locate_custom_upscale() const;
-  void               open_locate_custom_upscale() const;
+  [[nodiscard]] bool combo_tile_size();
+  void
+    generate_upscale_paths(const std::string &field_name, open_viii::LangT coo);
+  void               menuitem_locate_custom_upscale();
+  void               open_locate_custom_upscale();
   static toml::array get_custom_upscale_paths_vector();
-  void               checkbox_render_imported_image() const;
-  void               update_imported_render_texture() const;
-  void               save_swizzle_textures() const;
-  void               reset_imported_image() const;
-  void               update_scaled_up_render_texture() const;
-  void               browse_for_embed_map_dir() const;
-  void               begin_batch_embed_map_warning_window() const;
-  void               sort_paths() const;
-  void               control_panel_window() const;
+  void               checkbox_render_imported_image();
+  void               update_imported_render_texture();
+  void               save_swizzle_textures();
+  void               reset_imported_image();
+  void               update_scaled_up_render_texture();
+  void               browse_for_embed_map_dir();
+  void               begin_batch_embed_map_warning_window();
+  void               sort_paths();
+  void               control_panel_window();
   std::uint32_t      image_height() const;
   static std::vector<std::filesystem::path> find_maps_in_directory(
     const std::filesystem::path &src,
     size_t                       reserve = {});
 
-  void slider_xy_sprite(const auto &sprite) const
+  void slider_xy_sprite(const auto &sprite)
   {
     format_imgui_text(
       "X: {:>9.3f} px  Width:  {:>4} px",
@@ -818,7 +812,8 @@ private:
       move_camera(sprite);
     }
   }
-  void move_camera(const auto &sprite) const
+  template<typename sprite_t>
+  void move_camera(const sprite_t &sprite)
   {
     m_cam_pos = { -xy[0] * (static_cast<float>(sprite.width()) - m_scale_width),
                   -xy[1] * static_cast<float>(sprite.height()) };
@@ -827,12 +822,12 @@ private:
   }
   float       scaled_menubar_gap() const;
   static void render_dockspace();
-  void        background_color_picker() const;
-  void        collapsing_header_filters() const;
-  void        compact_flatten_buttons() const;
+  void        background_color_picker();
+  void        collapsing_header_filters();
+  void        compact_flatten_buttons();
   static void frame_rate();
-  void        control_panel_window_map() const;
-  void        control_panel_window_mim() const;
+  void        control_panel_window_map();
+  void        control_panel_window_mim();
   std::filesystem::path
     path_with_prefix_and_base_name(std::filesystem::path selected_path) const;
   std::string appends_prefix_base_name(std::string_view title) const;
@@ -949,14 +944,14 @@ private:
     {
     }
   }
-  void filter_empty_import_tiles() const;
+  void filter_empty_import_tiles();
   void generate_map_for_imported_image(
     const variant_tile_t &current_tile,
-    bool                  changed) const;
+    bool                  changed);
   void collapsing_header_generated_tiles() const;
   void adjust_source_xy_texture_page_for_import_map(
     uint8_t       next_source_y,
-    const uint8_t next_texture_page) const;
+    const uint8_t next_texture_page);
   template<typename tiles_t>
   std::pair<std::uint8_t, std::uint8_t>
     get_next_unused_y_and_texture_page(const tiles_t &tiles) const
@@ -985,13 +980,13 @@ private:
   void find_selected_tile_for_import(
     variant_tile_t &current_tile,
     std::string    &current_item_str) const;
-  void event_type_key_released(const sf::Event::KeyEvent &key) const;
-  void event_type_key_pressed(const sf::Event::KeyEvent &key) const;
-  void event_type_mouse_button_pressed(const sf::Mouse::Button &button) const;
-  void event_type_mouse_button_released(const sf::Mouse::Button &button) const;
-  void file_menu() const;
-  void edit_menu() const;
-  void batch_operation_test_menu() const;
+  void event_type_key_released(const sf::Event::KeyEvent &key);
+  void event_type_key_pressed(const sf::Event::KeyEvent &key);
+  void event_type_mouse_button_pressed(const sf::Mouse::Button &button);
+  void event_type_mouse_button_released(const sf::Mouse::Button &button);
+  void file_menu();
+  void edit_menu();
+  void batch_operation_test_menu();
   void import_menu() const;
 };
 }// namespace fme
