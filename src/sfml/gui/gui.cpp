@@ -49,23 +49,6 @@ inline std::filesystem::path
   tmp += rhs;
   return tmp;
 }
-// std::ostream &operator<<(std::ostream &os, const BlendModeT &bm)
-//{
-//   switch (bm)
-//   {
-//     case BlendModeT::quarter_add:
-//       return os << "quarter add"s;
-//     case BlendModeT::half_add:
-//       return os << "half add"s;
-//     case BlendModeT::add:
-//       return os << "add"s;
-//     default:
-//     case BlendModeT::none:
-//       return os << "none"s;
-//     case BlendModeT::subtract:
-//       return os << "subtract"s;
-//   }
-// }
 
 namespace fme
 {
@@ -449,112 +432,6 @@ void gui::popup_batch_common_filter_start(
   }
 }
 
-template<typename batch_opT, typename filterT, typename askT, typename processT>
-void gui::popup_batch_common(
-  batch_opT &&batch_op,
-  filterT   &&filter,
-  askT      &&ask,
-  processT  &&process) const
-{
-  if (batch_op(
-        m_archives_group.mapdata(),
-        [&](
-          const int            &pos,
-          std::filesystem::path selected_path,
-          filters               filters,
-          auto &&...rest) {
-          auto field = m_archives_group.field(pos);
-          if (!field)
-          {
-            return;
-          }
-          const auto map_pairs = field->get_vector_of_indexes_and_files(
-            { open_viii::graphics::background::Map::EXT });
-          if (map_pairs.empty())
-          {
-            return;
-          }
-          std::string const base_name = str_to_lower(field->get_base_name());
-          std::string_view const prefix =
-            std::string_view{ base_name }.substr(0U, 2U);
-          popup_batch_common_filter_start(filter(filters), prefix, base_name);
-
-          auto map = m_map_sprite.with_field(field)
-                       .with_coo(open_viii::LangT::generic)
-                       .with_filters(filters);
-          if (map.fail())
-          {
-            return;
-          }
-          if (filter(filters).enabled())
-          {
-            auto    map_path = filter(filters).value() / map.map_filename();
-            safedir safe_map_path = map_path;
-            if (safe_map_path.is_exists())
-            {
-              map.load_map(map_path);
-            }
-          }
-          selected_path = selected_path / prefix / base_name;
-          if (std::filesystem::create_directories(selected_path))
-          {
-            format_imgui_text(
-              "{} {}", gui_labels::directory_created, selected_path.string());
-          }
-          else
-          {
-            format_imgui_text(
-              "{} {}", gui_labels::directory_exists, selected_path.string());
-          }
-          format_imgui_text(gui_labels::saving_textures);
-
-          if (map_pairs.size() > 1U)
-          {
-            spdlog::debug(
-              "{}:{} - {}: {}\t {}: {}",
-              __FILE__,
-              __LINE__,
-              gui_labels::count_of_maps,
-              map_pairs.size(),
-              gui_labels::field,
-              base_name);
-            for (const auto &[i, file_path] : map_pairs)
-            {
-              const auto filename =
-                std::filesystem::path(file_path).filename().stem().string();
-              std::string_view const filename_view = { filename };
-              std::string_view const basename_view = { base_name };
-              if (
-                filename_view.substr(
-                  0,
-                  std::min(std::size(filename_view), std::size(basename_view)))
-                != basename_view.substr(
-                  0,
-                  std::min(std::size(filename_view), std::size(basename_view))))
-              {
-                continue;
-              }
-              if (filename.size() == base_name.size())
-              {
-                process(selected_path, map, rest...);
-                continue;
-              }
-              const auto coo_view =
-                filename_view.substr(std::size(basename_view) + 1U, 2U);
-              spdlog::info("Filename and coo: {}\t{}", filename, coo_view);
-              map = map.with_coo(open_viii::LangCommon::from_string(coo_view));
-              process(selected_path, map, rest...);
-            }
-          }
-          else
-          {
-            process(selected_path, map, rest...);
-          }
-        },
-        ask))
-  {
-  }
-}
 
 void gui::popup_batch_deswizzle() const
 {
@@ -1803,8 +1680,7 @@ void gui::loop_events() const
   while (m_window.pollEvent(m_event))
   {
     ImGui::SFML::ProcessEvent(m_event);
-    const auto  event_variant = events::get(m_event);
-    const auto &type          = m_event.type;
+    const auto event_variant = events::get(m_event);
     std::visit(
       events::make_visitor(
         [this](const sf::Event::SizeEvent &size) {
@@ -1817,105 +1693,42 @@ void gui::loop_events() const
           // TODO move setting mouse pos code here?
           // m_changed = true;
         },
-        [this, type](const sf::Event::KeyEvent &key) {
+        [this](const sf::Event::KeyEvent &key) {
           if (ImGui::GetIO().WantCaptureKeyboard)
           {
             m_scrolling.reset();
             return;
           }
+          const auto &type = m_event.type;
           if (type == sf::Event::EventType::KeyReleased)
           {
-            if (key.shift && key.control && key.code == sf::Keyboard::Z)
-            {
-              m_map_sprite.undo_all();
-            }
-            else if (key.shift && key.control && key.code == sf::Keyboard::Y)
-            {
-              m_map_sprite.redo_all();
-            }
-            else if (key.control && key.code == sf::Keyboard::Z)
-            {
-              m_map_sprite.undo();
-            }
-            else if (key.control && key.code == sf::Keyboard::Y)
-            {
-              m_map_sprite.redo();
-            }
-            else if (key.code == sf::Keyboard::Up)
-            {
-              m_scrolling.up = false;
-            }
-            else if (key.code == sf::Keyboard::Down)
-            {
-              m_scrolling.down = false;
-            }
-            else if (key.code == sf::Keyboard::Left)
-            {
-              m_scrolling.left = false;
-            }
-            else if (key.code == sf::Keyboard::Right)
-            {
-              m_scrolling.right = false;
-            }
+            event_type_key_released(key);
           }
           else if (type == sf::Event::EventType::KeyPressed)
           {
-            if (key.code == sf::Keyboard::Up)
-            {
-              m_scrolling.up = true;
-            }
-            else if (key.code == sf::Keyboard::Down)
-            {
-              m_scrolling.down = true;
-            }
-            else if (key.code == sf::Keyboard::Left)
-            {
-              m_scrolling.left = true;
-            }
-            else if (key.code == sf::Keyboard::Right)
-            {
-              m_scrolling.right = true;
-            }
+            event_type_key_pressed(key);
           }
         },
-        [this, &type](const sf::Event::MouseButtonEvent &mouse) {
+        [this](const sf::Event::MouseButtonEvent &mouse) {
           const sf::Mouse::Button &button = mouse.button;
           if (!m_mouse_positions.mouse_enabled)
           {
             m_mouse_positions.left = false;
             return;
           }
-          switch (type)
+          switch (m_event.type)
           {
             case sf::Event::EventType::MouseButtonPressed:
               ///< A mouse button was pressed (data in event.mouseButton)
               {
-                switch (button)
-                {
-                  case sf::Mouse::Button::Left: {
-                    m_mouse_positions.left = true;
-                    spdlog::trace("{}", "Left Mouse Button Down");
-                  }
-                  break;
-                  default:
-                    break;
-                }
+                event_type_mouse_button_pressed(button);
               }
               break;
             case sf::Event::EventType::MouseButtonReleased:
               ///< A mouse button was released (data in
               ///< event.mouseButton)
               {
-                switch (button)
-                {
-                  case sf::Mouse::Button::Left: {
-                    m_mouse_positions.left = false;
-                    spdlog::trace("{}", "Left Mouse Button Up");
-                  }
-                  break;
-                  default:
-                    break;
-                }
+                event_type_mouse_button_released(button);
               }
               break;
             default:
@@ -1930,6 +1743,87 @@ void gui::loop_events() const
         },
         []([[maybe_unused]] const auto &) {}),
       event_variant);
+  }
+}
+void gui::event_type_mouse_button_released(
+  const sf::Mouse::Button &button) const
+{
+  switch (button)
+  {
+    case sf::Mouse::Left: {
+      m_mouse_positions.left = false;
+      spdlog::trace("{}", "Left Mouse Button Up");
+    }
+    break;
+    default:
+      break;
+  }
+}
+void gui::event_type_mouse_button_pressed(const sf::Mouse::Button &button) const
+{
+  switch (button)
+  {
+    case sf::Mouse::Left: {
+      m_mouse_positions.left = true;
+      spdlog::trace("{}", "Left Mouse Button Down");
+    }
+    break;
+    default:
+      break;
+  }
+}
+void gui::event_type_key_pressed(const sf::Event::KeyEvent &key) const
+{
+  if (key.code == sf::Keyboard::Up)
+  {
+    m_scrolling.up = true;
+  }
+  else if (key.code == sf::Keyboard::Down)
+  {
+    m_scrolling.down = true;
+  }
+  else if (key.code == sf::Keyboard::Left)
+  {
+    m_scrolling.left = true;
+  }
+  else if (key.code == sf::Keyboard::Right)
+  {
+    m_scrolling.right = true;
+  }
+}
+void gui::event_type_key_released(const sf::Event::KeyEvent &key) const
+{
+  if (key.shift && key.control && key.code == sf::Keyboard::Z)
+  {
+    m_map_sprite.undo_all();
+  }
+  else if (key.shift && key.control && key.code == sf::Keyboard::Y)
+  {
+    m_map_sprite.redo_all();
+  }
+  else if (key.control && key.code == sf::Keyboard::Z)
+  {
+    m_map_sprite.undo();
+  }
+  else if (key.control && key.code == sf::Keyboard::Y)
+  {
+    m_map_sprite.redo();
+  }
+  else if (key.code == sf::Keyboard::Up)
+  {
+    m_scrolling.up = false;
+  }
+  else if (key.code == sf::Keyboard::Down)
+  {
+    m_scrolling.down = false;
+  }
+  else if (key.code == sf::Keyboard::Left)
+  {
+    m_scrolling.left = false;
+  }
+  else if (key.code == sf::Keyboard::Right)
+  {
+    m_scrolling.right = false;
   }
 }
 std::uint32_t gui::image_height() const
@@ -2693,61 +2587,21 @@ void gui::batch_ops_ask_menu() const
 #endif
 }
 
-std::variant<
-  std::monostate,
-  open_viii::graphics::background::Tile1,
-  open_viii::graphics::background::Tile2,
-  open_viii::graphics::background::Tile3> &
-  gui::combo_selected_tile(bool &changed) const
+gui::variant_tile_t &gui::combo_selected_tile(bool &changed) const
 {
   const auto end_action = scope_guard(
     [&changed, current_tile_id = m_selections.selected_tile, this]() {
       changed = current_tile_id != m_selections.selected_tile;
     });
   // combo box with all the tiles.
-  static std::string current_item_str = {};
-  static std::variant<std::monostate, Tile1, Tile2, Tile3> current_tile{
-    std::monostate{}
-  };
-  m_map_sprite.const_visit_tiles([this](const auto &tiles) {
-    if (
-      m_selections.selected_tile < 0
-      || std::cmp_greater_equal(m_selections.selected_tile, tiles.size()))
-    {
-      current_tile = std::monostate{};
-      return;
-    }
-    std::visit(
-      [&tiles, this](const auto &tile) {
-        if (std::cmp_less(m_selections.selected_tile, tiles.size()))
-        {
-          const auto &tmp_tile =
-            tiles[static_cast<std::size_t>(m_selections.selected_tile)];
-          if constexpr (std::is_same_v<
-                          std::decay_t<decltype(tile)>,
-                          std::decay_t<decltype(tmp_tile)>>)
-          {
-            if (tile != tmp_tile)
-            {
-              current_tile     = tmp_tile;
-              current_item_str = fmt::format("{}", m_selections.selected_tile);
-            }
-          }
-          else if constexpr (!is_tile<std::decay_t<decltype(tile)>>)
-          {
-            current_tile     = tmp_tile;
-            current_item_str = fmt::format("{}", m_selections.selected_tile);
-          }
-        }
-      },
-      current_tile);
-  });
+  static std::string    current_item_str = {};
+  static variant_tile_t current_tile     = { std::monostate{} };
+  find_selected_tile_for_import(current_tile, current_item_str);
 
 
   ImVec2 const combo_pos    = ImGui::GetCursorScreenPos();
-  const auto   the_end_id_0 = scope_guard([]() { ImGui::PopID(); });
-  ImGui::PushID(++m_id);
-  static bool was_hovered = false;
+  const auto   the_end_id_0 = PushPop();
+  static bool  was_hovered  = false;
   if (ImGui::BeginCombo(
         "Select Existing Tile", "", ImGuiComboFlags_HeightLargest))
   {
@@ -2771,7 +2625,7 @@ std::variant<
                              const auto end_tooltip =
                                scope_guard(&ImGui::EndTooltip);
                              format_imgui_text("{}", tile_id);
-                             const float tile_size = 256.F;
+                             constexpr float tile_size = 256.F;
                              (void)create_tile_button(
                                tile, sf::Vector2f(tile_size, tile_size));
                              m_map_sprite.enable_square(tile);
@@ -2837,6 +2691,44 @@ std::variant<
   format_imgui_text("{}", current_item_str);
   ImGui::SetCursorScreenPos(backup_pos);
   return current_tile;
+}
+void gui::find_selected_tile_for_import(
+  gui::variant_tile_t &current_tile,
+  std::string         &current_item_str) const
+{
+  m_map_sprite.const_visit_tiles([&](const auto &tiles) {
+    if (
+      m_selections.selected_tile < 0
+      || std::cmp_greater_equal(m_selections.selected_tile, tiles.size()))
+    {
+      current_tile = std::monostate{};
+      return;
+    }
+    std::visit(
+      [&](const auto &tile) {
+        if (std::cmp_less(m_selections.selected_tile, tiles.size()))
+        {
+          const auto &tmp_tile =
+            tiles[static_cast<size_t>(m_selections.selected_tile)];
+          if constexpr (std::is_same_v<
+                          std::decay_t<decltype(tile)>,
+                          std::decay_t<decltype(tmp_tile)>>)
+          {
+            if (tile != tmp_tile)
+            {
+              current_tile     = tmp_tile;
+              current_item_str = fmt::format("{}", m_selections.selected_tile);
+            }
+          }
+          else if constexpr (!is_tile<std::decay_t<decltype(tile)>>)
+          {
+            current_tile     = tmp_tile;
+            current_item_str = fmt::format("{}", m_selections.selected_tile);
+          }
+        }
+      },
+      current_tile);
+  });
 }
 void gui::begin_batch_embed_map_warning_window() const
 {
@@ -2906,185 +2798,27 @@ void gui::import_image_window() const
   // add text showing the tile's info.
   collapsing_tile_info(current_tile);
   //   * I need to browse for an image file.
-  changed               = browse_for_image_display_preview() || changed;
+  changed = browse_for_image_display_preview() || changed;
   //   * We need to adjust the scale to fit
   // maybe i can just create an imgui window filled with the image
   // scale the image to be the selected tile size. 16,32,64,128,256.
-  changed               = combo_tile_size() || changed;
+  changed = combo_tile_size() || changed;
   //   * We need to adjust the position
   // have a px offset? or something?
-  //   * I'd probably store the new tiles in their own map.
-  const auto tiles_wide = static_cast<std::uint32_t>(std::ceil(
-    static_cast<float>(loaded_image_texture.getSize().x)
-    / static_cast<float>(m_selections.tile_size_value)));
-  const auto tiles_high = static_cast<std::uint32_t>(std::ceil(
-    static_cast<float>(loaded_image_texture.getSize().y)
-    / static_cast<float>(m_selections.tile_size_value)));
-  format_imgui_text(
-    "Possible Tiles: {} wide, {} high, {} total",
-    tiles_wide,
-    tiles_high,
-    tiles_wide * tiles_high);
-  static constexpr std::int8_t  tile_size          = 16;
-  static constexpr std::uint8_t tile_size_unsigned = 16U;
-  if (
-    changed && tiles_wide * tiles_high != 0U
-    && loaded_image_texture.getSize() != sf::Vector2u{})
-  {
-    import_image_map =
-      open_viii::graphics::background::Map([&current_tile,
-                                            x_tile = uint8_t{},
-                                            y_tile = uint8_t{},
-                                            &tiles_high,
-                                            &tiles_wide]() mutable {
-        return std::visit(
-          [&](auto tile) -> std::variant<
-                           open_viii::graphics::background::Tile1,
-                           open_viii::graphics::background::Tile2,
-                           open_viii::graphics::background::Tile3,
-                           std::monostate> {
-            if constexpr (is_tile<std::decay_t<decltype(tile)>>)
-            {
-              if (x_tile == tiles_wide)
-              {
-                x_tile = 0;
-                ++y_tile;
-              }
-              if (y_tile == tiles_high)
-              {
-                return std::monostate{};
-              }
-              //   * Set new tiles to 4 bit to get max amount of tiles.
-              tile = tile.with_depth(BPPT::BPP4_CONST())
-                       .with_source_xy(
-                         { static_cast<uint8_t>(x_tile * tile_size_unsigned),
-                           static_cast<uint8_t>(y_tile * tile_size_unsigned) })
-                       .with_xy({ static_cast<int16_t>(x_tile * tile_size),
-                                  static_cast<int16_t>(y_tile * tile_size) });
-
-              // iterate
-              ++x_tile;
-              return tile;
-            }
-            else
-            {
-              return std::monostate{};
-            }
-          },
-          current_tile);
-      });
-
-
-    //* Filter empty tiles
-    loaded_image_cpu = loaded_image_texture.copyToImage();
-    import_image_map.visit_tiles([this](auto &tiles) {
-      const auto rem_range =
-        std::ranges::remove_if(tiles, [this](const auto &tile) -> bool {
-          const auto x_start =
-            tile.x() / tile_size * m_selections.tile_size_value;
-          auto y_start = tile.y() / tile_size * m_selections.tile_size_value;
-          const int           xmax    = x_start + m_selections.tile_size_value;
-          const sf::Vector2u &imgsize = loaded_image_cpu.getSize();
-          const auto x_end = (std::min)(static_cast<int>(imgsize.x), xmax);
-          const int  ymax  = y_start + m_selections.tile_size_value;
-          const auto y_end = (std::min)(static_cast<int>(imgsize.y), ymax);
-          for (auto x = x_start; std::cmp_less(x, x_end); ++x)
-          {
-            for (auto y = y_start; std::cmp_less(y, y_end); ++y)
-            {
-              const auto color = loaded_image_cpu.getPixel(
-                static_cast<unsigned int>(x), static_cast<unsigned int>(y));
-              if (std::cmp_greater(color.a, 0U))
-              {
-                return false;
-              }
-            }
-          }
-          return true;
-        });
-      tiles.erase(rem_range.begin(), rem_range.end());
-    });
-    loaded_image_cpu = {};
-  }
-  if (ImGui::CollapsingHeader(import_image_map
-                                .visit_tiles([](auto &&tiles) {
-                                  return fmt::format(
-                                    "Generated Tiles: {}", std::size(tiles));
-                                })
-                                .c_str()))
-  {
-    static constexpr int columns = 9;
-    if (ImGui::BeginTable("import_tiles_table", columns))
-    {
-      const auto the_end_tile_table = scope_guard([]() { ImGui::EndTable(); });
-      import_image_map.visit_tiles([this](auto &tiles) {
-        for (const auto &tile : tiles)
-        {
-          ImGui::TableNextColumn();
-          sf::Sprite const sprite(
-            loaded_image_texture,
-            sf::IntRect(
-              static_cast<int>(
-                tile.x() / tile_size * m_selections.tile_size_value),
-              static_cast<int>(
-                tile.y() / tile_size * m_selections.tile_size_value),
-              static_cast<int>(m_selections.tile_size_value),
-              static_cast<int>(m_selections.tile_size_value)));
-          const auto             the_end_tile_table_tile = PushPop();
-          static constexpr float button_size             = 32.F;
-          ImGui::ImageButton(sprite, sf::Vector2f(button_size, button_size), 0);
-        }
-      });
-    }
-  }
+  generate_map_for_imported_image(current_tile, changed);
+  collapsing_header_generated_tiles();
   // I need to detect the last used texture page and the highest source_y.
   m_map_sprite.const_visit_tiles([this, &changed](const auto &tiles) {
     if (std::ranges::empty(tiles))
     {
       return;
     }
-    const auto max_texture_id_tile = (std::ranges::max)(
-      tiles, {}, [](const auto &tile) { return tile.texture_id(); });
-    const auto max_source_y_tile = (std::ranges::max)(
-      tiles
-        | std::ranges::views::filter([&max_texture_id_tile](const auto &tile) {
-            return tile.texture_id() == max_texture_id_tile.texture_id();
-          }),
-      {},
-      [](const auto &tile) { return tile.source_y(); });
-    int const tile_y = max_source_y_tile.source_y() / tile_size;
-    format_imgui_text(
-      "Last Used Texture Page {}, and Source Y / 16 = {}",
-      max_texture_id_tile.texture_id(),
-      tile_y);
-    auto next_source_y = static_cast<uint8_t>((tile_y + 1) % tile_size);
-    const std::uint8_t next_texture_page =
-      tile_y + 1 == tile_size ? max_texture_id_tile.texture_id() + 1
-                              : max_texture_id_tile.texture_id();
+    const auto [next_source_y, next_texture_page] =
+      get_next_unused_y_and_texture_page(tiles);
     if (changed)
     {
-      import_image_map.visit_tiles(
-        [&next_texture_page, &next_source_y](auto &&import_tiles) {
-          auto       tile_i   = import_tiles.begin();
-          const auto tile_end = import_tiles.end();
-          for (std::uint8_t tp = next_texture_page; tp < tile_size; ++tp)
-          {
-            for (std::uint8_t y = next_source_y; y < tile_size; ++y)
-            {
-              next_source_y = 0;
-              for (std::uint8_t x = 0; x < tile_size; ++x)
-              {
-                if (tile_i == tile_end)
-                {
-                  return;
-                }
-                *tile_i = tile_i->with_source_xy(x * tile_size, y * tile_size)
-                            .with_texture_id(tp);
-                ++tile_i;
-              }
-            }
-          }
-        });
+      adjust_source_xy_texture_page_for_import_map(
+        next_source_y, next_texture_page);
       update_scaled_up_render_texture();
       update_imported_render_texture();
     }
@@ -3120,6 +2854,164 @@ void gui::import_image_window() const
   {
     reset_imported_image();
   }
+}
+void gui::adjust_source_xy_texture_page_for_import_map(
+  uint8_t       next_source_y,
+  const uint8_t next_texture_page) const
+{
+  import_image_map.visit_tiles(
+    [&next_texture_page, &next_source_y](auto &&import_tiles) {
+      auto       tile_i   = import_tiles.begin();
+      const auto tile_end = import_tiles.end();
+      for (uint8_t tp = next_texture_page; tp < tile_size_px; ++tp)
+      {
+        for (uint8_t pixel_y = next_source_y; pixel_y < tile_size_px; ++pixel_y)
+        {
+          next_source_y = 0;
+          for (uint8_t pixel_x = 0; pixel_x < tile_size_px; ++pixel_x)
+          {
+            if (tile_i == tile_end)
+            {
+              return;
+            }
+            *tile_i =
+              tile_i
+                ->with_source_xy(pixel_x * tile_size_px, pixel_y * tile_size_px)
+                .with_texture_id(tp);
+            ++tile_i;
+          }
+        }
+      }
+    });
+}
+void gui::collapsing_header_generated_tiles() const
+{
+  if (ImGui::CollapsingHeader(import_image_map
+                                .visit_tiles([](auto &&tiles) {
+                                  return fmt::format(
+                                    "Generated Tiles: {}", std::size(tiles));
+                                })
+                                .c_str()))
+  {
+    static constexpr int columns = 9;
+    if (ImGui::BeginTable("import_tiles_table", columns))
+    {
+      const auto the_end_tile_table = scope_guard([]() { ImGui::EndTable(); });
+      import_image_map.visit_tiles([this](auto &tiles) {
+        for (const auto &tile : tiles)
+        {
+          ImGui::TableNextColumn();
+          sf::Sprite const sprite(
+            loaded_image_texture,
+            sf::IntRect(
+              static_cast<int>(
+                tile.x() / tile_size_px * m_selections.tile_size_value),
+              static_cast<int>(
+                tile.y() / tile_size_px * m_selections.tile_size_value),
+              static_cast<int>(m_selections.tile_size_value),
+              static_cast<int>(m_selections.tile_size_value)));
+          const auto             the_end_tile_table_tile = PushPop();
+          static constexpr float button_size             = 32.F;
+          ImGui::ImageButton(sprite, sf::Vector2f(button_size, button_size), 0);
+        }
+      });
+    }
+  }
+}
+void gui::generate_map_for_imported_image(
+  const variant_tile_t &current_tile,
+  bool                  changed) const
+{//   * I'd probably store the new tiles in their own map.
+  const auto tiles_wide = static_cast<uint32_t>(ceil(
+    static_cast<float>(loaded_image_texture.getSize().x)
+    / static_cast<float>(m_selections.tile_size_value)));
+  const auto tiles_high = static_cast<uint32_t>(ceil(
+    static_cast<float>(loaded_image_texture.getSize().y)
+    / static_cast<float>(m_selections.tile_size_value)));
+  format_imgui_text(
+    "Possible Tiles: {} wide, {} high, {} total",
+    tiles_wide,
+    tiles_high,
+    tiles_wide * tiles_high);
+  if (
+    changed && tiles_wide * tiles_high != 0U
+    && loaded_image_texture.getSize() != sf::Vector2u{})
+  {
+    import_image_map =
+      open_viii::graphics::background::Map([&current_tile,
+                                            x_tile = uint8_t{},
+                                            y_tile = uint8_t{},
+                                            &tiles_high,
+                                            &tiles_wide]() mutable {
+        return std::visit(
+          [&](auto tile) -> variant_tile_t {
+            if constexpr (is_tile<std::decay_t<decltype(tile)>>)
+            {
+              if (x_tile == tiles_wide)
+              {
+                x_tile = 0;
+                ++y_tile;
+              }
+              if (y_tile == tiles_high)
+              {
+                return std::monostate{};
+              }
+              //   * Set new tiles to 4 bit to get max amount of tiles.
+              tile =
+                tile.with_depth(BPPT::BPP4_CONST())
+                  .with_source_xy(
+                    { static_cast<uint8_t>(x_tile * tile_size_px_unsigned),
+                      static_cast<uint8_t>(y_tile * tile_size_px_unsigned) })
+                  .with_xy({ static_cast<int16_t>(x_tile * tile_size_px),
+                             static_cast<int16_t>(y_tile * tile_size_px) });
+
+              // iterate
+              ++x_tile;
+              return tile;
+            }
+            else
+            {
+              return std::monostate{};
+            }
+          },
+          current_tile);
+      });
+    filter_empty_import_tiles();
+  }
+}
+void gui::filter_empty_import_tiles() const
+{//* Filter empty tiles
+  loaded_image_cpu = loaded_image_texture.copyToImage();
+  import_image_map.visit_tiles([this](auto &tiles) {
+    const auto rem_range =
+      std::ranges::remove_if(tiles, [this](const auto &tile) -> bool {
+        const auto x_start =
+          tile.x() / tile_size_px * m_selections.tile_size_value;
+        const auto y_start =
+          tile.y() / tile_size_px * m_selections.tile_size_value;
+        const int           x_max   = x_start + m_selections.tile_size_value;
+        const sf::Vector2u &imgsize = loaded_image_cpu.getSize();
+        const auto x_end = (std::min)(static_cast<int>(imgsize.x), x_max);
+        const int  y_max = y_start + m_selections.tile_size_value;
+        const auto y_end = (std::min)(static_cast<int>(imgsize.y), y_max);
+        for (auto pixel_x = x_start; std::cmp_less(pixel_x, x_end); ++pixel_x)
+        {
+          for (auto pixel_y = y_start; std::cmp_less(pixel_y, y_end); ++pixel_y)
+          {
+            const auto color = loaded_image_cpu.getPixel(
+              static_cast<unsigned int>(pixel_x),
+              static_cast<unsigned int>(pixel_y));
+            if (std::cmp_greater(color.a, 0U))
+            {
+              return false;
+            }
+          }
+        }
+        return true;
+      });
+    tiles.erase(rem_range.begin(), rem_range.end());
+  });
+  loaded_image_cpu = {};
 }
 void gui::reset_imported_image() const
 {
@@ -3232,34 +3124,36 @@ bool gui::browse_for_image_display_preview() const
     {
       static constexpr float thickness = 2.0F;
       static const ImU32     color_32  = imgui_color32(sf::Color::Red);
-      for (auto x = static_cast<std::uint32_t>(m_selections.tile_size_value);
-           x < size.x;
-           x += static_cast<std::underlying_type_t<tile_sizes>>(
+      for (auto x_pos =
+             static_cast<std::uint32_t>(m_selections.tile_size_value);
+           x_pos < size.x;
+           x_pos += static_cast<std::underlying_type_t<tile_sizes>>(
              m_selections.tile_size_value))
       {
         ImGui::GetWindowDrawList()->AddLine(
           ImVec2(
-            cursor_screen_pos.x + (static_cast<float>(x) * scale),
+            cursor_screen_pos.x + (static_cast<float>(x_pos) * scale),
             cursor_screen_pos.y),
           ImVec2(
-            cursor_screen_pos.x + (static_cast<float>(x) * scale),
+            cursor_screen_pos.x + (static_cast<float>(x_pos) * scale),
             cursor_screen_pos.y + (static_cast<float>(size.y) * scale)),
           color_32,
           thickness);
       }
 
-      for (auto y = static_cast<std::uint32_t>(m_selections.tile_size_value);
-           y < size.y;
-           y += static_cast<std::underlying_type_t<tile_sizes>>(
+      for (auto y_pos =
+             static_cast<std::uint32_t>(m_selections.tile_size_value);
+           y_pos < size.y;
+           y_pos += static_cast<std::underlying_type_t<tile_sizes>>(
              m_selections.tile_size_value))
       {
         ImGui::GetWindowDrawList()->AddLine(
           ImVec2(
             cursor_screen_pos.x,
-            cursor_screen_pos.y + (static_cast<float>(y) * scale)),
+            cursor_screen_pos.y + (static_cast<float>(y_pos) * scale)),
           ImVec2(
             cursor_screen_pos.x + (static_cast<float>(size.x) * scale),
-            cursor_screen_pos.y + (static_cast<float>(y) * scale)),
+            cursor_screen_pos.y + (static_cast<float>(y_pos) * scale)),
           color_32,
           thickness);
       }
@@ -3286,7 +3180,7 @@ void gui::update_scaled_up_render_texture() const
   loaded_image_render_texture.setActive(true);
   loaded_image_render_texture.clear(sf::Color::Transparent);
   sf::Sprite sprite = sf::Sprite(loaded_image_texture);
-  sprite.setScale(1.F, -1.f);
+  sprite.setScale(1.F, -1.F);
   sprite.setPosition(
     0.F, static_cast<float>(loaded_image_render_texture.getSize().y));
   loaded_image_render_texture.draw(sprite);
@@ -3294,12 +3188,7 @@ void gui::update_scaled_up_render_texture() const
   loaded_image_render_texture.setSmooth(false);
   loaded_image_render_texture.generateMipmap();
 }
-void gui::collapsing_tile_info(
-  const std::variant<
-    std::monostate,
-    open_viii::graphics::background::Tile1,
-    open_viii::graphics::background::Tile2,
-    open_viii::graphics::background::Tile3> &current_tile) const
+void gui::collapsing_tile_info(const variant_tile_t &current_tile) const
 {
   std::visit(
     [this](const auto &tile) {

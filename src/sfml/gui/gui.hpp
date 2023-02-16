@@ -43,6 +43,11 @@ public:
   void start() const;
 
 private:
+  using variant_tile_t = std::variant<
+    open_viii::graphics::background::Tile1,
+    open_viii::graphics::background::Tile2,
+    open_viii::graphics::background::Tile3,
+    std::monostate>;
   mutable sf::Color                          clear_color = sf::Color::Black;
   mutable std::mutex                         append_results_mutex = {};
   mutable std::vector<std::filesystem::path> append_results       = {};
@@ -307,23 +312,23 @@ private:
           {
             return;
           }
-          std::error_code ec{};
+          std::error_code error_code{};
           spdlog::info(
             "{}:{} - Creating directory: \"{}\"",
             __FILE__,
             __LINE__,
             path.parent_path().string());
-          std::filesystem::create_directories(path.parent_path(), ec);
-          if (ec)
+          std::filesystem::create_directories(path.parent_path(), error_code);
+          if (error_code)
           {
             spdlog::warn(
               "{}:{} - {}: {} - path: {}",
               __FILE__,
               __LINE__,
-              ec.value(),
-              ec.message(),
+              error_code.value(),
+              error_code.message(),
               path.parent_path().string());
-            ec.clear();
+            error_code.clear();
           }
           if (const auto tmp = safedir(path).case_insensitive_exists();
               !tmp.empty())
@@ -340,18 +345,18 @@ private:
               path,
               path.string() + ".bak",
               std::filesystem::copy_options::overwrite_existing,
-              ec);
-            if (ec)
+              error_code);
+            if (error_code)
             {
               spdlog::warn(
                 R"({}:{} - {}: {} path: "{}" to "{}")",
                 __FILE__,
                 __LINE__,
-                ec.value(),
-                ec.message(),
+                error_code.value(),
+                error_code.message(),
                 path.string(),
                 path.string() + ".bak");
-              ec.clear();
+              error_code.clear();
             }
           }
           spdlog::info(
@@ -361,29 +366,32 @@ private:
             it->string(),
             path);
           std::filesystem::copy(
-            *it, path, std::filesystem::copy_options::overwrite_existing, ec);
-          if (ec)
+            *it,
+            path,
+            std::filesystem::copy_options::overwrite_existing,
+            error_code);
+          if (error_code)
           {
             spdlog::warn(
               "{}:{} - {}: {} - path: {}",
               __FILE__,
               __LINE__,
-              ec.value(),
-              ec.message(),
+              error_code.value(),
+              error_code.message(),
               it->string());
-            ec.clear();
+            error_code.clear();
           }
-          std::filesystem::remove(*it, ec);
-          if (ec)
+          std::filesystem::remove(*it, error_code);
+          if (error_code)
           {
             spdlog::warn(
               "{}:{} - {}: {} - path: {}",
               __FILE__,
               __LINE__,
-              ec.value(),
-              ec.message(),
+              error_code.value(),
+              error_code.message(),
               it->string());
-            ec.clear();
+            error_code.clear();
           }
           append_results.erase(it);
         };
@@ -515,17 +523,20 @@ private:
       return ImGui::Button("Okay");
     }
   };
-  mutable int                      m_id                                   = {};
-  mutable mouse_positions          m_mouse_positions                      = {};
-  mutable float                    m_scale_width                          = {};
-  mutable sf::RenderWindow         m_window                               = {};
-  mutable sf::Clock                m_delta_clock                          = {};
-  mutable toml::array              m_paths                                = {};
-  mutable toml::array              m_custom_upscale_paths                 = {};
-  mutable archives_group           m_archives_group                       = {};
-  mutable std::vector<std::string> m_upscale_paths                        = {};
-  mutable std::shared_ptr<open_viii::archive::FIFLFS<false>> m_field      = {};
-  mutable std::array<float, 2>                               xy           = {};
+
+  static constexpr std::int8_t     tile_size_px                      = { 16 };
+  static constexpr std::uint8_t    tile_size_px_unsigned             = { 16U };
+  mutable int                      m_id                              = {};
+  mutable mouse_positions          m_mouse_positions                 = {};
+  mutable float                    m_scale_width                     = {};
+  mutable sf::RenderWindow         m_window                          = {};
+  mutable sf::Clock                m_delta_clock                     = {};
+  mutable toml::array              m_paths                           = {};
+  mutable toml::array              m_custom_upscale_paths            = {};
+  mutable archives_group           m_archives_group                  = {};
+  mutable std::vector<std::string> m_upscale_paths                   = {};
+  mutable std::shared_ptr<open_viii::archive::FIFLFS<false>> m_field = {};
+  mutable std::array<float, 2>                               xy      = {};
   mutable mim_sprite                                         m_mim_sprite = {};
   mutable map_sprite                                         m_map_sprite = {};
   mutable open_viii::graphics::background::Map import_image_map           = {};
@@ -659,7 +670,7 @@ private:
   }
   static ImU32 imgui_color32(sf::Color color)
   {
-    return imgui_color32(color.r,color.g,color.b,color.a);
+    return imgui_color32(color.r, color.g, color.b, color.a);
   }
   static constexpr ImU32 imgui_color32(
     std::uint8_t red,
@@ -683,16 +694,6 @@ private:
            ::filter<std::filesystem::path> &filter,
            std::string_view                 prefix,
            std::string_view                 base_name);
-  template<
-    typename batch_opT,
-    typename filterT,
-    typename askT,
-    typename processT>
-  void popup_batch_common(
-    batch_opT &&batch_op,
-    filterT   &&filter,
-    askT      &&ask,
-    processT  &&process) const;
   void popup_batch_embed() const;
   template<bool Nested = false>
   std::vector<std::filesystem::path> replace_entries(
@@ -725,19 +726,9 @@ private:
     ImGui::PushID(++m_id);
     return scope_guard{ &ImGui::PopID };
   }
-  void import_image_window() const;
-  std::variant<
-    std::monostate,
-    open_viii::graphics::background::Tile1,
-    open_viii::graphics::background::Tile2,
-    open_viii::graphics::background::Tile3>    &
-    combo_selected_tile(bool &changed) const;
-  void collapsing_tile_info(
-    const std::variant<
-      std::monostate,
-      open_viii::graphics::background::Tile1,
-      open_viii::graphics::background::Tile2,
-      open_viii::graphics::background::Tile3> &current_tile) const;
+  void            import_image_window() const;
+  variant_tile_t &combo_selected_tile(bool &changed) const;
+  void collapsing_tile_info(const variant_tile_t &current_tile) const;
   [[nodiscard]] bool browse_for_image_display_preview() const;
   template<open_viii::graphics::background::is_tile tileT>
   [[nodiscard]] bool
@@ -845,6 +836,159 @@ private:
   std::filesystem::path
     path_with_prefix_and_base_name(std::filesystem::path selected_path) const;
   std::string appends_prefix_base_name(std::string_view title) const;
+  template<
+    typename batch_opT,
+    typename filterT,
+    typename askT,
+    typename processT>
+  void popup_batch_common(
+    batch_opT &&batch_op,
+    filterT   &&filter,
+    askT      &&ask,
+    processT  &&process) const
+  {
+    if (batch_op(
+          m_archives_group.mapdata(),
+          [&](
+            const int            &pos,
+            std::filesystem::path selected_path,
+            filters               filters,
+            auto &&...rest) {
+            auto field = m_archives_group.field(pos);
+            if (!field)
+            {
+              return;
+            }
+            const auto map_pairs = field->get_vector_of_indexes_and_files(
+              { open_viii::graphics::background::Map::EXT });
+            if (map_pairs.empty())
+            {
+              return;
+            }
+            std::string const base_name = str_to_lower(field->get_base_name());
+            std::string_view const prefix =
+              std::string_view{ base_name }.substr(0U, 2U);
+            popup_batch_common_filter_start(filter(filters), prefix, base_name);
+
+            auto map = m_map_sprite.with_field(field)
+                         .with_coo(open_viii::LangT::generic)
+                         .with_filters(filters);
+            if (map.fail())
+            {
+              return;
+            }
+            if (filter(filters).enabled())
+            {
+              auto    map_path = filter(filters).value() / map.map_filename();
+              safedir safe_map_path = map_path;
+              if (safe_map_path.is_exists())
+              {
+                map.load_map(map_path);
+              }
+            }
+            selected_path = selected_path / prefix / base_name;
+            if (std::filesystem::create_directories(selected_path))
+            {
+              format_imgui_text(
+                "{} {}", gui_labels::directory_created, selected_path.string());
+            }
+            else
+            {
+              format_imgui_text(
+                "{} {}", gui_labels::directory_exists, selected_path.string());
+            }
+            format_imgui_text(gui_labels::saving_textures);
+
+            if (map_pairs.size() > 1U)
+            {
+              spdlog::debug(
+                "{}:{} - {}: {}\t {}: {}",
+                __FILE__,
+                __LINE__,
+                gui_labels::count_of_maps,
+                map_pairs.size(),
+                gui_labels::field,
+                base_name);
+              for (const auto &[i, file_path] : map_pairs)
+              {
+                const auto filename =
+                  std::filesystem::path(file_path).filename().stem().string();
+                std::string_view const filename_view = { filename };
+                std::string_view const basename_view = { base_name };
+                if (
+                  filename_view.substr(
+                    0,
+                    std::min(
+                      std::size(filename_view), std::size(basename_view)))
+                  != basename_view.substr(
+                    0,
+                    std::min(
+                      std::size(filename_view), std::size(basename_view))))
+                {
+                  continue;
+                }
+                if (filename.size() == base_name.size())
+                {
+                  process(selected_path, map, rest...);
+                  continue;
+                }
+                const auto coo_view =
+                  filename_view.substr(std::size(basename_view) + 1U, 2U);
+                spdlog::info("Filename and coo: {}\t{}", filename, coo_view);
+                map =
+                  map.with_coo(open_viii::LangCommon::from_string(coo_view));
+                process(selected_path, map, rest...);
+              }
+            }
+            else
+            {
+              process(selected_path, map, rest...);
+            }
+          },
+          ask))
+    {
+    }
+  }
+  void filter_empty_import_tiles() const;
+  void generate_map_for_imported_image(
+    const variant_tile_t &current_tile,
+    bool                  changed) const;
+  void collapsing_header_generated_tiles() const;
+  void adjust_source_xy_texture_page_for_import_map(
+    uint8_t       next_source_y,
+    const uint8_t next_texture_page) const;
+  template<typename tiles_t>
+  std::pair<std::uint8_t, std::uint8_t>
+    get_next_unused_y_and_texture_page(const tiles_t &tiles) const
+  {
+    const auto max_texture_id_tile = (std::ranges::max)(
+      tiles, {}, [](const auto &tile) { return tile.texture_id(); });
+    const auto max_source_y_tile = (std::ranges::max)(
+      tiles
+        | std::ranges::views::filter([&max_texture_id_tile](const auto &tile) {
+            return tile.texture_id() == max_texture_id_tile.texture_id();
+          }),
+      {},
+      [](const auto &tile) { return tile.source_y(); });
+    int const tile_y = max_source_y_tile.source_y() / tile_size_px;
+    format_imgui_text(
+      "Last Used Texture Page {}, and Source Y / 16 = {}",
+      max_texture_id_tile.texture_id(),
+      tile_y);
+    const auto next_source_y =
+      static_cast<uint8_t>((tile_y + 1) % tile_size_px);
+    const std::uint8_t next_texture_page =
+      tile_y + 1 == tile_size_px ? max_texture_id_tile.texture_id() + 1
+                                 : max_texture_id_tile.texture_id();
+    return { next_source_y, next_texture_page };
+  }
+  void find_selected_tile_for_import(
+    variant_tile_t &current_tile,
+    std::string    &current_item_str) const;
+  void event_type_key_released(const sf::Event::KeyEvent &key) const;
+  void event_type_key_pressed(const sf::Event::KeyEvent &key) const;
+  void event_type_mouse_button_pressed(const sf::Mouse::Button &button) const;
+  void event_type_mouse_button_released(const sf::Mouse::Button &button) const;
 };
 }// namespace fme
 #endif// FIELD_MAP_EDITOR_GUI_HPP
