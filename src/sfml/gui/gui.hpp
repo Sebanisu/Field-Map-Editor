@@ -304,11 +304,11 @@ private:
       // launch_async(
       [this](const std::filesystem::path &selected_path) {
         const auto move = [&](std::filesystem::path path) {
-          const auto it = std::ranges::find_if(
+          const auto found = std::ranges::find_if(
             append_results, [&](const std::filesystem::path &tmp_path) {
               return tmp_path.filename() == path.filename();
             });
-          if (it == append_results.end())
+          if (found == append_results.end())
           {
             return;
           }
@@ -363,10 +363,10 @@ private:
             R"({}:{} - Moving - path: "{}" to "{}")",
             __FILE__,
             __LINE__,
-            it->string(),
+            found->string(),
             path);
           std::filesystem::copy(
-            *it,
+            *found,
             path,
             std::filesystem::copy_options::overwrite_existing,
             error_code);
@@ -378,10 +378,10 @@ private:
               __LINE__,
               error_code.value(),
               error_code.message(),
-              it->string());
+              found->string());
             error_code.clear();
           }
-          std::filesystem::remove(*it, error_code);
+          std::filesystem::remove(*found, error_code);
           if (error_code)
           {
             spdlog::warn(
@@ -390,10 +390,10 @@ private:
               __LINE__,
               error_code.value(),
               error_code.message(),
-              it->string());
+              found->string());
             error_code.clear();
           }
-          append_results.erase(it);
+          append_results.erase(found);
         };
         // I need to detect the path where the game files are then
         // save them there.
@@ -854,7 +854,7 @@ private:
             std::filesystem::path selected_path,
             filters               filters,
             auto &&...rest) {
-            auto field = m_archives_group.field(pos);
+            const auto field = m_archives_group.field(pos);
             if (!field)
             {
               return;
@@ -989,6 +989,10 @@ private:
   void event_type_key_pressed(const sf::Event::KeyEvent &key) const;
   void event_type_mouse_button_pressed(const sf::Mouse::Button &button) const;
   void event_type_mouse_button_released(const sf::Mouse::Button &button) const;
+  void file_menu() const;
+  void edit_menu() const;
+  void batch_operation_test_menu() const;
+  void import_menu() const;
 };
 }// namespace fme
 #endif// FIELD_MAP_EDITOR_GUI_HPP
