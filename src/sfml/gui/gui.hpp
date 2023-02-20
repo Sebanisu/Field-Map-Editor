@@ -658,13 +658,14 @@ private:
   {
     return static_cast<number_type>(~static_cast<std::uint32_t>(value));
   }
-  static constexpr ImU32 imgui_color32(open_viii::struct_of_color32_byte auto color)
+  static constexpr ImU32
+    imgui_color32(open_viii::struct_of_color32_byte auto color)
   {
     return imgui_color32(color.r, color.g, color.b, color.a);
   }
   static constexpr ImU32 imgui_color32(open_viii::Color auto color)
   {
-    return imgui_color32(color.r(),color.b(),color.b(),color.a());
+    return imgui_color32(color.r(), color.b(), color.b(), color.a());
   }
   static constexpr ImU32 imgui_color32(
     std::uint8_t red,
@@ -991,7 +992,7 @@ private:
   void file_menu();
   void edit_menu();
   void batch_operation_test_menu();
-  void import_menu() const;
+  void import_menu();
 };
 }// namespace fme
 #endif// FIELD_MAP_EDITOR_GUI_HPP

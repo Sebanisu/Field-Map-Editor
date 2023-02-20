@@ -231,7 +231,7 @@ void map_sprite::load_mim_textures(
 {
   if (m_mim.get_width(bpp) != 0U)
   {
-    size_t     pos  = get_texture_pos(bpp, palette, 0);
+    std::size_t const pos = get_texture_pos(bpp, palette, 0);
     const auto task = [this](sf::Texture *texture, BPPT bppt, uint8_t pal) {
       const auto colors = get_colors(bppt, pal);
       // std::lock_guard<std::mutex> lock(mutex_texture);
@@ -250,8 +250,9 @@ void map_sprite::find_upscale_path(
   for (const auto &texture_page :
        m_all_unique_values_and_strings.texture_page_id().values())
   {
-    const size_t i  = START_OF_NO_PALETTE_INDEX + texture_page;
-    const auto   fn = [this, texture_page](sf::Texture *texture) -> void {
+    const size_t texture_index = START_OF_NO_PALETTE_INDEX + texture_page;
+    const auto   texture_file_exists_then_load =
+      [this, texture_page](sf::Texture *texture) -> void {
       const auto &root  = m_filters.upscale.value();
       const auto  paths = m_upscales.get_file_paths(root, texture_page);
       auto        filtered_paths = paths | std::views::filter([](safedir path) {
@@ -267,19 +268,20 @@ void map_sprite::find_upscale_path(
         texture->generateMipmap();
       }
     };
-    if (i >= MAX_TEXTURES)
+    if (texture_index >= MAX_TEXTURES)
     {
       spdlog::error(
         "{}:{} - Index out of range {} / {}",
         __FILE__,
         __LINE__,
-        i,
+        texture_index,
         MAX_TEXTURES);
       return;
     }
-    spawn_thread(fn, &(ret->at(i)));
+    spawn_thread(texture_file_exists_then_load, &(ret->at(texture_index)));
   }
 }
+
 void map_sprite::find_deswizzle_path(
   std::shared_ptr<std::array<sf::Texture, MAX_TEXTURES>> &ret) const
 {
@@ -287,8 +289,8 @@ void map_sprite::find_deswizzle_path(
   std::ranges::for_each(
     m_all_unique_values_and_strings.pupu().values(),
     [&ret, &field_name, this, i = size_t{}](const ::PupuID &pupu) mutable {
-      static constexpr char pattern_pupu[]     = { "{}_{}.png" };
-      static constexpr char pattern_coo_pupu[] = { "{}_{}_{}.png" };
+      static constexpr auto pattern_pupu     = std::string_view("{}_{}.png");
+      static constexpr auto pattern_coo_pupu = std::string_view("{}_{}_{}.png");
       std::filesystem::path in_path{};
       if (m_using_coo)
       {
@@ -300,7 +302,8 @@ void map_sprite::find_deswizzle_path(
         in_path = save_path(
           pattern_pupu, m_filters.deswizzle.value(), field_name, pupu);
       }
-      const auto fn = [in_path](sf::Texture *texture) -> void {
+      const auto check_if_file_exists_and_load_it =
+        [in_path](sf::Texture *texture) -> void {
         if (safedir(in_path).is_exists())
         {
           spdlog::info("texture path: \"{}\"", in_path.string());
@@ -320,7 +323,7 @@ void map_sprite::find_deswizzle_path(
           MAX_TEXTURES);
         return;
       }
-      spawn_thread(fn, &(ret->at(i++)));
+      spawn_thread(check_if_file_exists_and_load_it, &(ret->at(i++)));
     });
   /*for (const auto& texture_page :
       m_all_unique_values_and_strings.texture_page_id().values())
@@ -378,7 +381,7 @@ void map_sprite::find_upscale_path(
     spawn_thread(fn, &(ret->at(i)));
   }
 }
-void map_sprite::wait_for_futures() const
+void map_sprite::wait_for_futures()
 {
   std::ranges::for_each(m_futures, [](auto &f) { f.wait(); });
   m_futures.clear();
@@ -670,7 +673,7 @@ void map_sprite::update_position(
   {
     return;
   }
-  Map       &map = m_maps.copy_back();
+  Map       &current_map = m_maps.copy_back();
   const auto update_tile_positions =
     [this, &texture_page, &pixel_pos, &down_pixel_pos](
       const auto &map, auto &&tiles, const std::vector<std::size_t> &indices) {
@@ -736,8 +739,8 @@ void map_sprite::update_position(
         }
       }
     };
-  map.visit_tiles([this, &update_tile_positions, &map](auto &&tiles) {
-    update_tile_positions(map, tiles, m_saved_indicies);
+  current_map.visit_tiles([&](auto &&tiles) {
+    update_tile_positions(current_map, tiles, m_saved_indicies);
   });
   if (!m_draw_swizzle)
   {
@@ -764,11 +767,12 @@ sf::Sprite map_sprite::save_intersecting(
   spdlog::info("m_scale: ({})", m_scale);
   sprite.setTextureRect(
     { 0, 0, static_cast<int>(sprite_size.x), static_cast<int>(sprite_size.y) });
+  static constexpr float one_and_half = 1.5F;
   sprite.setPosition(
-    static_cast<float>(pixel_pos.x) - (TILE_SIZE * 1.5f),
-    static_cast<float>(pixel_pos.y) - (TILE_SIZE * 1.5f));
+    static_cast<float>(pixel_pos.x) - (TILE_SIZE * one_and_half),
+    static_cast<float>(pixel_pos.y) - (TILE_SIZE * one_and_half));
   sprite.setScale(
-    1.0f / static_cast<float>(m_scale), 1.0f / static_cast<float>(m_scale));
+    1.0F / static_cast<float>(m_scale), 1.0F / static_cast<float>(m_scale));
   //  sprite.setScale(
   //    1.F / static_cast<float>(m_scale), 1.F / static_cast<float>(m_scale));
   m_saved_indicies =
@@ -789,13 +793,14 @@ sf::Sprite map_sprite::save_intersecting(
     //        / m_scale;
     states.transform.translate(sf::Vector2f(
       (static_cast<float>(-pixel_pos.x) * static_cast<float>(m_scale))
-        + (sprite_size.x / 2),
+        + (static_cast<float>(sprite_size.x) * 0.5F),
       (static_cast<float>(-pixel_pos.y) * static_cast<float>(m_scale))
-        + (sprite_size.y / 2)));
-    for (const auto i : imported ? m_saved_imported_indicies : m_saved_indicies)
+        + (static_cast<float>(sprite_size.x) * 0.5F)));
+    for (const auto tile_index :
+         imported ? m_saved_imported_indicies : m_saved_indicies)
     {
-      const auto &tile       = tiles[i];
-      const auto &front_tile = front_tiles[i];
+      const auto &tile       = tiles[tile_index];
+      const auto &front_tile = front_tiles[tile_index];
       if (front_tile.z() != z)
       {
         continue;
@@ -953,7 +958,7 @@ sf::Sprite map_sprite::save_intersecting(
 }
 sf::BlendMode map_sprite::set_blend_mode(
   const BlendModeT           &blend_mode,
-  std::array<sf::Vertex, 4U> &quad) const
+  std::array<sf::Vertex, 4U> &quad)
 {
   if (blend_mode == BlendModeT::add)
   {
@@ -1172,8 +1177,7 @@ void map_sprite::update_render_texture(bool reload_textures)
   if (reload_textures)
   {
     m_texture = load_textures();
-    init_render_texture();
-    return;
+    reset_render_texture();
   }
   if (!fail())
   {
@@ -1344,13 +1348,17 @@ void map_sprite::resize_render_texture()
 }
 void map_sprite::init_render_texture()
 {
+  reset_render_texture();
+  update_render_texture();
+}
+void map_sprite::reset_render_texture()
+{
   if (!m_render_texture || !m_drag_sprite_texture)
   {
     m_render_texture      = std::make_shared<sf::RenderTexture>();
     m_drag_sprite_texture = std::make_shared<sf::RenderTexture>();
   }
   resize_render_texture();
-  update_render_texture();
 }
 
 
@@ -1497,39 +1505,51 @@ template<typename T>
 struct setting_backup
 {
 private:
-  T  m_backup;
-  T &m_value;
+  T                         m_backup;
+  std::reference_wrapper<T> m_value;
 
 public:
-  const T &backup() const
-  {
-    return m_backup;
-  }
-  const T &value() const
-  {
-    return m_value;
-  }
-  T &value()
-  {
-    return m_value;
-  }
-  auto &operator=(const T &in_value)
-  {
-    m_value = in_value;
-    return *this;
-  }
-  bool operator==(const T &in_value) const
-  {
-    return m_value == in_value;
-  }
+  setting_backup()                                    = delete;
+  setting_backup(const setting_backup &)              = default;
+  setting_backup &operator=(const setting_backup &)   = default;
+  setting_backup(setting_backup &&)                   = delete;
+  setting_backup        &operator=(setting_backup &&) = delete;
+
   explicit setting_backup(T &in_value)
     : m_backup(in_value)
     , m_value(in_value)
   {
   }
+
   ~setting_backup()
   {
-    m_value = m_backup;
+    m_value.get() = m_backup;
+  }
+
+  [[nodiscard]] const T &backup() const
+  {
+    return m_backup;
+  }
+
+  [[nodiscard]] const T &value() const
+  {
+    return m_value.get();
+  }
+
+  [[nodiscard]] T &value()
+  {
+    return m_value.get();
+  }
+
+  auto &operator=(const T &in_value)
+  {
+    m_value.get() = in_value;
+    return *this;
+  }
+
+  [[nodiscard]] bool operator==(const T &in_value) const
+  {
+    return m_value == in_value;
   }
 };
 struct settings_backup
@@ -1547,12 +1567,11 @@ public:
     bool          &in_disable_texture_page_shift,
     bool          &in_disable_blends,
     std::uint32_t &in_scale)
-    : filters(setting_backup{ in_filters })
-    , draw_swizzle(setting_backup{ in_draw_swizzle })
-    , disable_texture_page_shift(
-        setting_backup{ in_disable_texture_page_shift })
-    , disable_blends(setting_backup{ in_disable_blends })
-    , scale(setting_backup{ in_scale })
+    : filters{in_filters}
+    , draw_swizzle{in_draw_swizzle}
+    , disable_texture_page_shift{in_disable_texture_page_shift}
+    , disable_blends{in_disable_blends}
+    , scale{in_scale}
   {
   }
 };
@@ -1587,11 +1606,15 @@ cppcoro::generator<bool>
   map_sprite::gen_new_textures(const std::filesystem::path path)
 {
   // assert(std::filesystem::path.is_directory(path));
-  const std::string     field_name                     = { get_base_name() };
-  static constexpr char pattern_texture_page[]         = { "{}_{}.png" };
-  static constexpr char pattern_texture_page_palette[] = { "{}_{}_{}.png" };
-  static constexpr char pattern_coo_texture_page[]     = { "{}_{}_{}.png" };
-  static constexpr char pattern_coo_texture_page_palette[] = {
+  const std::string                 field_name           = { get_base_name() };
+  static constexpr std::string_view pattern_texture_page = { "{}_{}.png" };
+  static constexpr std::string_view pattern_texture_page_palette = {
+    "{}_{}_{}.png"
+  };
+  static constexpr std::string_view pattern_coo_texture_page = {
+    "{}_{}_{}.png"
+  };
+  static constexpr std::string_view pattern_coo_texture_page_palette = {
     "{}_{}_{}_{}.png"
   };
 
@@ -1605,21 +1628,24 @@ cppcoro::generator<bool>
     m_disable_texture_page_shift,
     m_disable_blends,
     m_scale);
-  settings.filters                    = {};
-  settings.filters.value().upscale    = settings.filters.backup().upscale;
-  settings.filters.value().deswizzle  = settings.filters.backup().deswizzle;
-  settings.draw_swizzle               = true;
-  settings.disable_texture_page_shift = true;
-  settings.disable_blends             = true;
-  uint32_t height                     = get_max_texture_height();
-  settings.scale                      = height / 256U;
+  settings.filters                     = ::filters{};
+  settings.filters.value().upscale     = settings.filters.backup().upscale;
+  settings.filters.value().deswizzle   = settings.filters.backup().deswizzle;
+  settings.draw_swizzle                = true;
+  settings.disable_texture_page_shift  = true;
+  settings.disable_blends              = true;
+  uint32_t                      height = get_max_texture_height();
+  constexpr static unsigned int mim_height = { 256U };
+  settings.scale                           = height / mim_height;
   if (settings.filters.value().deswizzle.enabled())
   {
     settings.scale = height / m_canvas.height();
-    height         = settings.scale.value() * 256U;
+    height         = settings.scale.value() * mim_height;
   }
   if (settings.scale == 0U)
+  {
     settings.scale = 1U;
+  }
   bool map_test =
     unique_bpp.size() == 1U
     && unique_values.palette().at(unique_bpp.front()).values().size() <= 1U;
@@ -1702,63 +1728,61 @@ std::string map_sprite::get_base_name() const
 std::vector<std::uint8_t>
   map_sprite::get_conflicting_palettes(const std::uint8_t &texture_page) const
 {
-  const auto palettes =
-    m_maps.front().visit_tiles([&texture_page, this](const auto &tiles) {
-      //        using tileT =
-      //          std::remove_cvref_t<typename
-      //          std::remove_cvref_t<decltype(tiles)>::value_type>;
+  return m_maps.front().visit_tiles([&texture_page, this](const auto &tiles) {
+    //        using tileT =
+    //          std::remove_cvref_t<typename
+    //          std::remove_cvref_t<decltype(tiles)>::value_type>;
 
-      auto map_xy_palette = generate_map(
-        tiles,
-        [](const auto &tile) {
-          return std::make_tuple(
-            tile.source_x() / tile.width(), tile.source_y() / tile.height());
-        },
-        [](const auto &tile) { return tile.palette_id(); },
-        [&texture_page](const auto &tile) {
-          return std::cmp_equal(texture_page, tile.texture_id());
-        });
-      std::vector<uint8_t>     conflict_palettes{};
-      std::vector<std::string> conflict_xy{};
-      for (auto &kvp : map_xy_palette)
+    auto map_xy_palette = generate_map(
+      tiles,
+      [](const auto &tile) {
+        return std::make_tuple(
+          tile.source_x() / tile.width(), tile.source_y() / tile.height());
+      },
+      [](const auto &tile) { return tile.palette_id(); },
+      [&texture_page](const auto &tile) {
+        return std::cmp_equal(texture_page, tile.texture_id());
+      });
+    std::vector<uint8_t>     conflict_palettes{};
+    std::vector<std::string> conflict_xy{};
+    for (auto &kvp : map_xy_palette)
+    {
+      // const auto& xy = kvp.first;
+      std::vector<std::uint8_t> &palette_vector = kvp.second;
+      std::ranges::sort(palette_vector);
+      auto [first, last] = std::ranges::unique(palette_vector);
+      palette_vector.erase(first, last);
+      if (palette_vector.size() <= 1U)
       {
-        // const auto& xy = kvp.first;
-        std::vector<std::uint8_t> &palette_vector = kvp.second;
-        std::ranges::sort(palette_vector);
-        auto [first, last] = std::ranges::unique(palette_vector);
-        palette_vector.erase(first, last);
-        if (palette_vector.size() <= 1U)
-        {
-          // map_xy_palette.erase(xy);
-        }
-        else
-        {
-          conflict_xy.emplace_back(fmt::format(
-            "({},{})", std::get<0>(kvp.first), std::get<1>(kvp.first)));
-          conflict_palettes.insert(
-            conflict_palettes.end(),
-            palette_vector.begin(),
-            palette_vector.end());
-        }
+        // map_xy_palette.erase(xy);
       }
-      if (!conflict_xy.empty())
+      else
       {
-        spdlog::info("Conflicting Palettes:");
-        for (const auto &cxy : conflict_xy)
-        {
-          spdlog::info("conflict xy: {}", cxy);
-        }
-        std::ranges::sort(conflict_palettes);
-        auto [first, last] = std::ranges::unique(conflict_palettes);
-        conflict_palettes.erase(first, last);
-        for (auto p : conflict_palettes)
-        {
-          spdlog::info("conflict palette: {}", p);
-        }
+        conflict_xy.emplace_back(fmt::format(
+          "({},{})", std::get<0>(kvp.first), std::get<1>(kvp.first)));
+        conflict_palettes.insert(
+          conflict_palettes.end(),
+          palette_vector.begin(),
+          palette_vector.end());
       }
-      return conflict_palettes;
-    });
-  return palettes;
+    }
+    if (!conflict_xy.empty())
+    {
+      spdlog::info("Conflicting Palettes:");
+      for (const auto &cxy : conflict_xy)
+      {
+        spdlog::info("conflict xy: {}", cxy);
+      }
+      std::ranges::sort(conflict_palettes);
+      auto [first, last] = std::ranges::unique(conflict_palettes);
+      conflict_palettes.erase(first, last);
+      for (auto p : conflict_palettes)
+      {
+        spdlog::info("conflict palette: {}", p);
+      }
+    }
+    return conflict_palettes;
+  });
 }
 
 void map_sprite::save_pupu_textures(const std::filesystem::path &path)
@@ -1773,9 +1797,9 @@ cppcoro::generator<bool>
   map_sprite::gen_pupu_textures(const std::filesystem::path path)
 {
   // assert(std::filesystem::path.is_directory(path));
-  const std::string     field_name = { str_to_lower(m_field->get_base_name()) };
-  static constexpr char pattern_pupu[]     = { "{}_{}.png" };
-  static constexpr char pattern_coo_pupu[] = { "{}_{}_{}.png" };
+  const std::string field_name = { str_to_lower(m_field->get_base_name()) };
+  static constexpr std::string_view pattern_pupu     = { "{}_{}.png" };
+  static constexpr std::string_view pattern_coo_pupu = { "{}_{}_{}.png" };
 
   const auto &unique_pupu_ids = m_all_unique_values_and_strings.pupu().values();
   settings_backup settings(
@@ -1784,14 +1808,15 @@ cppcoro::generator<bool>
     m_disable_texture_page_shift,
     m_disable_blends,
     m_scale);
-  settings.filters                    = {};
-  settings.filters.value().upscale    = settings.filters.backup().upscale;
-  settings.draw_swizzle               = false;
-  settings.disable_texture_page_shift = true;
-  settings.disable_blends             = true;
+  settings.filters                         = ::filters{};
+  settings.filters.value().upscale         = settings.filters.backup().upscale;
+  settings.draw_swizzle                    = false;
+  settings.disable_texture_page_shift      = true;
+  settings.disable_blends                  = true;
   // todo maybe draw with blends enabled to transparent black or white.
-  uint32_t tex_height                 = get_max_texture_height();
-  settings.scale                      = tex_height / 256U;
+  uint32_t                      tex_height = get_max_texture_height();
+  static constexpr unsigned int mim_height = { 256U };
+  settings.scale                           = tex_height / mim_height;
   const auto canvas = m_maps.const_back().canvas() * static_cast<int>(m_scale);
   if (settings.scale == 0U)
   {
@@ -1826,7 +1851,7 @@ void map_sprite::async_save(
   if (out_texture)
   {
     // trying packaged task to so we don't wait for files to save.
-    const auto task = [this](std::filesystem::path op, sf::Image image) {
+    const auto task = [](std::filesystem::path op, sf::Image image) {
       std::error_code ec{};
       std::filesystem::create_directories(op.parent_path(), ec);
       if (ec)
@@ -1885,7 +1910,7 @@ void map_sprite::async_save(
 }
 bool map_sprite::save_png_image(
   const sf::Image   &image,
-  const std::string &filename) const
+  const std::string &filename)
 {
 #if 0
   return image.saveToFile(filename);
@@ -1969,7 +1994,7 @@ std::filesystem::path map_sprite::save_path(
   fmt::format_string<std::string_view, std::uint8_t> pattern,
   const std::filesystem::path                       &path,
   const std::string_view                            &field_name,
-  const std::uint8_t                                 texture_page) const
+  const std::uint8_t                                 texture_page)
 {
   return path
          / fmt::vformat(
@@ -1981,7 +2006,7 @@ std::filesystem::path map_sprite::save_path(
   const std::filesystem::path                                     &path,
   const std::string_view                                          &field_name,
   std::uint8_t                                                     texture_page,
-  std::uint8_t palette) const
+  std::uint8_t                                                     palette)
 {
   return path
          / fmt::vformat(
@@ -1992,7 +2017,7 @@ std::filesystem::path map_sprite::save_path(
   fmt::format_string<std::string_view, PupuID> pattern,
   const std::filesystem::path                 &path,
   const std::string_view                      &field_name,
-  PupuID                                       pupu) const
+  PupuID                                       pupu)
 {
   return path
          / fmt::vformat(

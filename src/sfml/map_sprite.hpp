@@ -511,7 +511,7 @@ private:
            || test(m_filters.texture_page_id, tile.texture_id())
            || test(m_filters.z, tile.z());
   }
-  void wait_for_futures() const;
+  static void wait_for_futures() ;
   auto duel_visitor(auto &&lambda) const
   {
     return m_maps.front().visit_tiles([this, &lambda](auto const &tiles_const) {
@@ -731,22 +731,22 @@ private:
     const std::filesystem::path                                   &path,
     const std::string_view                                        &field_name,
     PupuID                                                         pupu) const;
-  std::filesystem::path save_path(
+  static std::filesystem::path save_path(
     fmt::format_string<std::string_view, uint8_t> pattern,
     const std::filesystem::path                  &path,
     const std::string_view                       &field_name,
-    uint8_t                                       texture_page) const;
-  std::filesystem::path save_path(
+    uint8_t                                       texture_page) ;
+  static std::filesystem::path save_path(
     fmt::format_string<std::string_view, uint8_t, uint8_t> pattern,
     const std::filesystem::path                           &path,
     const std::string_view                                &field_name,
     uint8_t                                                texture_page,
-    uint8_t                                                palette) const;
-  std::filesystem::path save_path(
+    uint8_t                                                palette) ;
+  static std::filesystem::path save_path(
     fmt::format_string<std::string_view, PupuID> pattern,
     const std::filesystem::path                 &path,
     const std::string_view                      &field_name,
-    PupuID                                       pupu) const;
+    PupuID                                       pupu) ;
   bool check_if_one_palette(const uint8_t &texture_page) const;
   std::vector<uint8_t>
              get_conflicting_palettes(const uint8_t &texture_page) const;
@@ -779,8 +779,8 @@ private:
     return raw_hex;
   }
   size_t size_of_map() const;
-  bool
-    save_png_image(const sf::Image &image, const std::string &filename) const;
+  static bool
+    save_png_image(const sf::Image &image, const std::string &filename) ;
   bool draw_imported(sf::RenderTarget &target, sf::RenderStates states) const;
   std::array<sf::Vertex, 4U> get_triangle_strip_for_imported(
     const sf::Vector2u                                  &draw_size,
@@ -788,10 +788,11 @@ private:
     const open_viii::graphics::background::is_tile auto &tile_const,
     open_viii::graphics::background::is_tile auto      &&tile) const;
   sf::Vector2u  get_tile_texture_size_for_import() const;
-  sf::BlendMode set_blend_mode(
+  static sf::BlendMode set_blend_mode(
     const open_viii::graphics::background::BlendModeT &blend_mode,
-    std::array<sf::Vertex, 4U>                        &quad) const;
+    std::array<sf::Vertex, 4U>                        &quad) ;
   std::shared_ptr<std::array<sf::Texture, map_sprite::MAX_TEXTURES>>
     load_textures();
+  void reset_render_texture();
 };
 #endif// FIELD_MAP_EDITOR_MAP_SPRITE_HPP

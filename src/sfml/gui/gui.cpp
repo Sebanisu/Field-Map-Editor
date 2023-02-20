@@ -980,7 +980,7 @@ void gui::menu_bar()
     import_menu();
   }
 }
-void gui::import_menu() const
+void gui::import_menu()
 {
   const auto end_menu = scope_guard(&ImGui::EndMenu);
   if (ImGui::MenuItem(
@@ -2660,7 +2660,7 @@ gui::variant_tile_t &gui::combo_selected_tile(bool &changed)
           config->insert_or_assign(
             "selections_selected_tile", m_selections.selected_tile);
           config.save();
-          current_item_str = std::format("{}", tile_id);
+          current_item_str = fmt::format("{}", tile_id);
           current_tile     = tile;
         }
         if (is_selected)
