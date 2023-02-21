@@ -15,18 +15,6 @@ enum class tile_sizes : std::uint16_t
   x_16_size    = default_size << 4U,
 };
 
-template<>
-struct fmt::formatter<tile_sizes>
-  : fmt::formatter<std::underlying_type_t<tile_sizes>>
-{
-  // parse is inherited from formatter<std::underlying_type_t<tile_sizes>>.
-  template<typename FormatContext>
-  auto format(tile_sizes tile_size, FormatContext &ctx) const
-  {
-    return fmt::formatter<std::underlying_type_t<tile_sizes>>::format(
-      static_cast<std::underlying_type_t<tile_sizes>>(tile_size), ctx);
-  }
-};
 template<typename T>
 inline static auto operator*(const T &num, tile_sizes tile_size)
 {

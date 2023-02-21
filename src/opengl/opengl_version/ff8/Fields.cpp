@@ -101,11 +101,11 @@ bool Fields::on_archive_change() const
   m_start_time = std::chrono::steady_clock::now();
   if (m_archive.on_im_gui_update())
   {
-    m_map_data = m_archive.fields().map_data();
-    m_field    = load_field();
-    m_end_time = std::chrono::steady_clock::now();
-    spdlog::debug(
-      "time to load fields = {:%S} seconds", m_end_time - m_start_time);
+    m_map_data          = m_archive.fields().map_data();
+    m_field             = load_field();
+    m_end_time          = std::chrono::steady_clock::now();
+    const auto duration = m_end_time - m_start_time;
+    spdlog::debug("time to load fields = {:%S} seconds", duration);
     return true;
   }
   return false;
@@ -180,8 +180,9 @@ Fields::Fields()
   , m_map_data(m_archive.fields().map_data())
   , m_field(load_field())
 {
+  const auto duration = m_end_time - m_start_time;
   spdlog::debug(
-    "time to load fields = {:%S} seconds", m_end_time - m_start_time);
+    "time to load fields = {:%S} seconds", duration);
   //  auto pos = std::ranges::find(
   //    m_map_data, std::string("bgmdele1"));//"feopen2" //crtower3
   //  if (pos != m_map_data.end())

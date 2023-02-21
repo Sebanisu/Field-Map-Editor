@@ -4,9 +4,11 @@
 
 #ifndef FIELD_MAP_EDITOR_UNIQUE_VALUES_HPP
 #define FIELD_MAP_EDITOR_UNIQUE_VALUES_HPP
+#include "formatters.hpp"
 #include "open_viii/graphics/background/BlendModeT.hpp"
 #include "open_viii/graphics/BPPT.hpp"
 #include "PupuID.hpp"
+#include "UniquifyPupu.hpp"
 #include <concepts>
 #include <cstdint>
 #include <fmt/format.h>
@@ -15,7 +17,6 @@
 #include <string>
 #include <utility>
 #include <vector>
-#include "UniquifyPupu.hpp"
 template<typename T>
 struct unique_values_and_strings
 {
@@ -65,37 +66,10 @@ private:
     using namespace std::string_literals;
     std::vector<std::string> vector;
     vector.reserve(std::size(data));
-    std::ranges::transform(data, std::back_inserter(vector), [](const T &t) {
-      if constexpr (std::is_same_v<T, BlendModeT>)
-      {
-        switch (t)
-        {
-          case BlendModeT::quarter_add:
-            return "quarter add"s;
-          case BlendModeT::half_add:
-            return "half add"s;
-          case BlendModeT::add:
-            return "add"s;
-          default:
-          case BlendModeT::none:
-            return "none"s;
-          case BlendModeT::subtract:
-            return "subtract"s;
-        }
-      }
-      else if constexpr (std::is_same_v<T, BPPT>)
-      {
-        if (t.bpp8())
-          return "8"s;
-        if (t.bpp16())
-          return "16"s;
-        return "4"s;
-      }
-      else
-      {
-        return fmt::format("{}", t);
-      }
-    });
+    std::ranges::transform(
+      data, std::back_inserter(vector), [](const T &t_value) {
+        return fmt::format("{}", t_value);
+      });
     return vector;
   }
   template<typename tilesT, typename lambdaT, typename sortT, typename filterT>
@@ -126,7 +100,7 @@ struct all_unique_values_and_strings
 {
 public:
   all_unique_values_and_strings() = default;
-  explicit all_unique_values_and_strings(std::monostate) {}
+  explicit all_unique_values_and_strings(std::monostate /*unused*/) {}
   template<std::ranges::range tilesT>
   explicit all_unique_values_and_strings(const tilesT &tiles)
     : m_pupu(

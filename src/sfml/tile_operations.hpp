@@ -4,17 +4,17 @@
 
 #ifndef FIELD_MAP_EDITOR_TILE_OPERATIONS_HPP
 #define FIELD_MAP_EDITOR_TILE_OPERATIONS_HPP
-namespace ff_8
+#include <open_viii/graphics/background/Map.hpp>
+#include <spdlog/spdlog.h>
+namespace ff_8::tile_operations
 {
-namespace tile_operations
-{
-  template<open_viii::graphics::background::is_tile TileT>
-  static constexpr TileT MaxTile = []() {
-    std::array<std::uint8_t, sizeof(TileT)> tmp{};
-    // std::fill(tmp.begin(), tmp.end(), 0xFFU);
-    tmp.fill(0xFFU);
-    return std::bit_cast<TileT>(tmp);
-  }();
+template<open_viii::graphics::background::is_tile TileT>
+static constexpr TileT MaxTile = []() {
+  std::array<std::uint8_t, sizeof(TileT)> tmp{};
+  // std::fill(tmp.begin(), tmp.end(), 0xFFU);
+  tmp.fill((std::numeric_limits<std::uint8_t>::max)());
+  return std::bit_cast<TileT>(tmp);
+}();
 #define TILE_OPERATION(STRING, FUNCTION)                                       \
   template<open_viii::graphics::background::is_tile TileT>                     \
   using STRING##T = typename std::remove_cvref_t<                              \
@@ -37,7 +37,7 @@ namespace tile_operations
     }                                                                          \
     constexpr STRING##Match(ValueT value)                                      \
       requires(!open_viii::graphics::background::is_tile<ValueT>)              \
-    : m_value(std::move(value))                                                \
+      : m_value(std::move(value))                                              \
     {                                                                          \
     }                                                                          \
     template<open_viii::graphics::background::is_tile TileT>                   \
@@ -69,8 +69,8 @@ namespace tile_operations
   };                                                                           \
   template<typename TileT>                                                     \
   concept has_with_##FUNCTION =                                                \
-    requires(std::remove_cvref_t<TileT> t, STRING##T<TileT> v) {               \
-      t = t.with_##FUNCTION(v);                                                \
+    requires(std::remove_cvref_t<TileT> tile, STRING##T<TileT> value) {        \
+      tile = tile.with_##FUNCTION(value);                                      \
     };                                                                         \
   template<typename ValueT>                                                    \
   struct With##STRING                                                          \
@@ -101,9 +101,9 @@ namespace tile_operations
   template<typename ValueT>                                                    \
   struct TranslateWith##STRING                                                 \
   {                                                                            \
-    constexpr TranslateWith##STRING(ValueT to, ValueT from)                    \
-      : m_to(std::move(to))                                                    \
-      , m_from(std::move(from))                                                \
+    constexpr TranslateWith##STRING(ValueT to_value, ValueT from_value)        \
+      : m_to(std::move(to_value))                                              \
+      , m_from(std::move(from_value))                                          \
     {                                                                          \
     }                                                                          \
     template<open_viii::graphics::background::is_tile TileT>                   \
@@ -170,34 +170,33 @@ namespace tile_operations
     using match_with                = STRING##Match<value_type>;               \
   }
 
-  TILE_OPERATION(X, x);
-  TILE_OPERATION(Y, y);
-  TILE_OPERATION(XY, xy);
-  TILE_OPERATION(Z, z);
-  TILE_OPERATION(SourceX, source_x);
-  TILE_OPERATION(SourceY, source_y);
-  TILE_OPERATION(SourceXY, source_xy);
-  TILE_OPERATION(TextureId, texture_id);
-  TILE_OPERATION(BlendMode, blend_mode);
-  TILE_OPERATION(Blend, blend);
-  TILE_OPERATION(Draw, draw);
-  TILE_OPERATION(Depth, depth);
-  TILE_OPERATION(LayerId, layer_id);
-  TILE_OPERATION(PaletteId, palette_id);
-  TILE_OPERATION(AnimationId, animation_id);
-  TILE_OPERATION(AnimationState, animation_state);
+TILE_OPERATION(X, x);
+TILE_OPERATION(Y, y);
+TILE_OPERATION(XY, xy);
+TILE_OPERATION(Z, z);
+TILE_OPERATION(SourceX, source_x);
+TILE_OPERATION(SourceY, source_y);
+TILE_OPERATION(SourceXY, source_xy);
+TILE_OPERATION(TextureId, texture_id);
+TILE_OPERATION(BlendMode, blend_mode);
+TILE_OPERATION(Blend, blend);
+TILE_OPERATION(Draw, draw);
+TILE_OPERATION(Depth, depth);
+TILE_OPERATION(LayerId, layer_id);
+TILE_OPERATION(PaletteId, palette_id);
+TILE_OPERATION(AnimationId, animation_id);
+TILE_OPERATION(AnimationState, animation_state);
 #undef TILE_OPERATION
-  struct InvalidTile
+struct InvalidTile
+{
+  template<open_viii::graphics::background::is_tile T>
+  constexpr bool operator()(const T &tile) const noexcept
   {
-    template<open_viii::graphics::background::is_tile T>
-    constexpr bool operator()(const T &tile) const noexcept
-    {
-      return (std::cmp_not_equal(tile.x(), s_end_x));
-    }
+    return (std::cmp_not_equal(tile.x(), s_end_x));
+  }
 
-  private:
-    static constexpr std::uint16_t s_end_x = { 0x7FFFU };
-  };
-}// namespace tile_operations
-}// namespace ff_8
+private:
+  static constexpr std::uint16_t s_end_x = { 0x7FFFU };
+};
+}// namespace ff_8::tile_operations
 #endif// FIELD_MAP_EDITOR_TILE_OPERATIONS_HPP

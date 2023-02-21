@@ -11,7 +11,7 @@ static std::vector<PupuID> calculate_pupu(const map_t &map)
 {
   return map.visit_tiles([](const auto &tiles) {
     std::vector<PupuID> pupu_ids = {};
-    UniquifyPupu        pupu_map = {};
+    UniquifyPupu        const pupu_map = {};
     pupu_ids.reserve(std::ranges::size(tiles));
     std::ranges::transform(
       tiles, std::back_insert_iterator(pupu_ids), pupu_map);
@@ -149,7 +149,7 @@ void ff_8::MapHistory::clear_redo()
   {
     return false;
   }
-  pushed last = m_redo_front_or_back.back();
+  pushed const last = m_redo_front_or_back.back();
   m_front_or_back.push_back(last);
   m_redo_front_or_back.pop_back();
   if (last == pushed::back)
@@ -171,7 +171,7 @@ void ff_8::MapHistory::clear_redo()
   {
     return false;
   }
-  pushed last = m_front_or_back.back();
+  pushed const last = m_front_or_back.back();
   if (!skip_redo)
   {
     m_redo_front_or_back.push_back(last);

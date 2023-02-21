@@ -22,11 +22,11 @@ public:
   PupuID
     operator()(const open_viii::graphics::background::is_tile auto &tile_const)
   {
-    const auto t           = 16;
-    const auto x           = static_cast<int16_t>(tile_const.x() / t);
-    const auto y           = static_cast<int16_t>(tile_const.y() / t);
-    auto input_value = PupuKey{ PupuID(tile_const), x, y };
-    auto       insert_key  = [&](PupuKey key) -> PupuID {
+    const auto tile_size  = 16;
+    const auto x_position = static_cast<int16_t>(tile_const.x() / tile_size);
+    const auto y_position = static_cast<int16_t>(tile_const.y() / tile_size);
+    auto input_value = PupuKey{ PupuID(tile_const), x_position, y_position };
+    auto insert_key  = [&](PupuKey key) -> PupuID {
       if (m_pupu_map.contains(key))
       {
         ++(m_pupu_map.at(key));
@@ -35,19 +35,20 @@ public:
       else
       {
         m_pupu_map.emplace(key, std::uint8_t{});
-        return key.pupu_id + m_pupu_map.at(std::move(key));
+        return key.pupu_id + m_pupu_map.at(key);
       }
     };
     return insert_key(input_value);
   }
-//  operator UniqueValues<PupuID>() const
-//  {
-//    std::vector<PupuID> values{};
-//    std::ranges::transform(m_pupu_map, std::back_insert_iterator(values),[](auto && key_value)->PupuID{
-//      const auto & [key,value] = key_value;
-//      return key.pupu_id;
-//    });
-//    UniqueValues<PupuID>{std::move(values)};
-//  }
+  //  operator UniqueValues<PupuID>() const
+  //  {
+  //    std::vector<PupuID> values{};
+  //    std::ranges::transform(m_pupu_map,
+  //    std::back_insert_iterator(values),[](auto && key_value)->PupuID{
+  //      const auto & [key,value] = key_value;
+  //      return key.pupu_id;
+  //    });
+  //    UniqueValues<PupuID>{std::move(values)};
+  //  }
 };
 #endif// FIELD_MAP_EDITOR_UNIQUIFYPUPU_HPP
