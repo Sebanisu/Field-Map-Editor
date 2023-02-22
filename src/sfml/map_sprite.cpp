@@ -1,3 +1,4 @@
+
 #include "map_sprite.hpp"
 #include "append_inserter.hpp"
 #include "format_imgui_text.hpp"
@@ -6,7 +7,6 @@
 #include <open_viii/graphics/Png.hpp>
 #include <spdlog/spdlog.h>
 #include <utility>
-// #define USE_THREADS
 using namespace open_viii::graphics::background;
 using namespace open_viii::graphics;
 using namespace open_viii::graphics::literals;
@@ -180,20 +180,10 @@ std::shared_ptr<std::array<sf::Texture, map_sprite::MAX_TEXTURES>> map_sprite::l
      }
      return ret;
 }
-template<typename F, typename... T>
-void map_sprite::spawn_thread(F &&f, T &&...t) const
-{
-#ifdef USE_THREADS
-     m_futures.emplace_back(std::async(std::launch::async, std::forward<F>(f), std::forward<T>(t)...));
-#undef USE_THREADS
-#else
-     f(std::forward<T>(t)...);
-#endif
-}
 void map_sprite::load_mim_textures(
   std::shared_ptr<std::array<sf::Texture, MAX_TEXTURES>> &ret,
   open_viii::graphics::BPPT                               bpp,
-  std::uint8_t                                            palette) const
+  std::uint8_t                                            palette)
 {
      if (m_mim.get_width(bpp) != 0U)
      {
@@ -210,7 +200,7 @@ void map_sprite::load_mim_textures(
           spawn_thread(task, &(ret->at(pos)), bpp, palette);
      }
 }
-void map_sprite::find_upscale_path(std::shared_ptr<std::array<sf::Texture, MAX_TEXTURES>> &ret) const
+void map_sprite::find_upscale_path(std::shared_ptr<std::array<sf::Texture, MAX_TEXTURES>> &ret)
 {
      for (const auto &texture_page : m_all_unique_values_and_strings.texture_page_id().values())
      {
@@ -238,7 +228,7 @@ void map_sprite::find_upscale_path(std::shared_ptr<std::array<sf::Texture, MAX_T
      }
 }
 
-void map_sprite::find_deswizzle_path(std::shared_ptr<std::array<sf::Texture, MAX_TEXTURES>> &ret) const
+void map_sprite::find_deswizzle_path(std::shared_ptr<std::array<sf::Texture, MAX_TEXTURES>> &ret)
 {
      auto field_name = get_base_name();
      std::ranges::for_each(
@@ -299,7 +289,7 @@ void map_sprite::find_deswizzle_path(std::shared_ptr<std::array<sf::Texture, MAX
          spawn_thread(fn, &(ret->at(i)));
      }*/
 }
-void map_sprite::find_upscale_path(std::shared_ptr<std::array<sf::Texture, MAX_TEXTURES>> &ret, std::uint8_t palette) const
+void map_sprite::find_upscale_path(std::shared_ptr<std::array<sf::Texture, MAX_TEXTURES>> &ret, std::uint8_t palette)
 {
      for (const auto &texture_page : m_all_unique_values_and_strings.texture_page_id().values())
      {
@@ -324,7 +314,7 @@ void map_sprite::find_upscale_path(std::shared_ptr<std::array<sf::Texture, MAX_T
 }
 void map_sprite::wait_for_futures()
 {
-     std::ranges::for_each(m_futures, [](auto &f) { f.wait(); });
+     std::ranges::for_each(m_futures, [](auto &future) { future.wait(); });
      m_futures.clear();
 }
 
@@ -333,24 +323,40 @@ void map_sprite::wait_for_futures()
   const sf::Vector2u &texture_size,
   std::integral auto  source_x,
   std::integral auto  source_y,
-  std::integral auto  x,
-  std::integral auto  y) const
+  std::integral auto  dest_x,
+  std::integral auto  dest_y) const
 {
-     const sf::Vector2f     draw_size_f    = { static_cast<float>(draw_size.x), static_cast<float>(draw_size.y) };
-     const sf::Vector2f     texture_size_f = { static_cast<float>(texture_size.x), static_cast<float>(texture_size.y) };
-     constexpr static float tile_size_f    = static_cast<float>(TILE_SIZE);
-     auto                   i              = static_cast<float>(x) / tile_size_f;
-     auto                   j              = static_cast<float>(y) / tile_size_f;
-     float                  tu             = static_cast<float>(source_x) / tile_size_f;
-     float                  tv             = static_cast<float>(source_y) / tile_size_f;
+     const sf::Vector2f     draw_size_f     = { static_cast<float>(draw_size.x), static_cast<float>(draw_size.y) };
+     const sf::Vector2f     texture_size_f  = { static_cast<float>(texture_size.x), static_cast<float>(texture_size.y) };
+     constexpr static float tile_size_f     = static_cast<float>(TILE_SIZE);
+     auto                   scaled_dest_x   = static_cast<float>(dest_x) / tile_size_f;
+     auto                   scaled_dest_y   = static_cast<float>(dest_y) / tile_size_f;
+     float                  scaled_source_x = static_cast<float>(source_x) / tile_size_f;
+     float                  scaled_source_y = static_cast<float>(source_y) / tile_size_f;
      const auto tovec  = [](auto &&in_x, auto &&in_y) { return sf::Vector2f{ static_cast<float>(in_x), static_cast<float>(in_y) }; };
-     const auto tovert = [&tovec](auto &&in_x, auto &&in_y, auto &&texx, auto &&texy) {
-          return sf::Vertex{ tovec(in_x, in_y), tovec(texx, texy) };
+     const auto tovert = [&tovec](auto &&draw_x, auto &&draw_y, auto &&texture_x, auto &&texture_y) {
+          return sf::Vertex{ tovec(draw_x, draw_y), tovec(texture_x, texture_y) };
      };
-     return std::array{ tovert((i + 1) * draw_size_f.x, j * draw_size_f.y, (tu + 1) * texture_size_f.x, tv * texture_size_f.y),
-                        tovert(i * draw_size_f.x, j * draw_size_f.y, tu * texture_size_f.x, tv * texture_size_f.y),
-                        tovert((i + 1) * draw_size_f.x, (j + 1) * draw_size_f.y, (tu + 1) * texture_size_f.x, (tv + 1) * texture_size_f.y),
-                        tovert(i * draw_size_f.x, (j + 1) * draw_size_f.y, tu * texture_size_f.x, (tv + 1) * texture_size_f.y) };
+     return std::array{ tovert(
+                          (scaled_dest_x + 1) * draw_size_f.x,
+                          scaled_dest_y * draw_size_f.y,
+                          (scaled_source_x + 1) * texture_size_f.x,
+                          scaled_source_y * texture_size_f.y),
+                        tovert(
+                          scaled_dest_x * draw_size_f.x,
+                          scaled_dest_y * draw_size_f.y,
+                          scaled_source_x * texture_size_f.x,
+                          scaled_source_y * texture_size_f.y),
+                        tovert(
+                          (scaled_dest_x + 1) * draw_size_f.x,
+                          (scaled_dest_y + 1) * draw_size_f.y,
+                          (scaled_source_x + 1) * texture_size_f.x,
+                          (scaled_source_y + 1) * texture_size_f.y),
+                        tovert(
+                          scaled_dest_x * draw_size_f.x,
+                          (scaled_dest_y + 1) * draw_size_f.y,
+                          scaled_source_x * texture_size_f.x,
+                          (scaled_source_y + 1) * texture_size_f.y) };
 }
 [[nodiscard]] std::array<sf::Vertex, 4U> map_sprite::get_triangle_strip_for_imported(
   const sf::Vector2u                                  &draw_size,
@@ -450,33 +456,42 @@ void set_color(std::array<sf::Vertex, 4U> &vertices, const sf::Color &color)
           vertex.color = color;
      }
 }
-
+enum struct texture_page_width : std::uint16_t
+{
+     bit_4  = 256U,
+     bit_8  = bit_4 >> 1U,
+     bit_16 = bit_4 >> 2U,
+};
+static constexpr std::underlying_type_t<texture_page_width> operator+(texture_page_width input) noexcept
+{
+     return static_cast<std::underlying_type_t<texture_page_width>>(input);
+}
 std::uint8_t map_sprite::max_x_for_saved() const
 {
      return m_maps.const_back().visit_tiles([this](const auto &tiles) {
-          auto       transform_range = m_saved_indices | std::views::transform([this, &tiles](std::size_t i) -> std::uint16_t {
-                                      auto &tile = tiles[i];
+          auto       transform_range = m_saved_indices | std::views::transform([this, &tiles](std::size_t tile_index) -> std::uint16_t {
+                                      auto &tile = tiles[tile_index];
                                       if (m_draw_swizzle)
                                       {
                                            if (tile.depth().bpp4())
                                            {
-                                                return 256U;
+                                                return +texture_page_width::bit_4;
                                            }
                                            if (tile.depth().bpp16())
                                            {
-                                                return 64U;
+                                                return +texture_page_width::bit_16;
                                            }
-                                           return 128U;
+                                           return +texture_page_width::bit_8;
                                       }
                                       return TILE_SIZE;// todo invalid?
                                  });
 
-          const auto it              = std::ranges::min_element(transform_range);
-          if (it != std::ranges::end(transform_range))
+          const auto found_min       = std::ranges::min_element(transform_range);
+          if (found_min != std::ranges::end(transform_range))
           {
-               return static_cast<std::uint8_t>(*it - TILE_SIZE);
+               return static_cast<std::uint8_t>(*found_min - TILE_SIZE);
           }
-          return (std::numeric_limits<std::uint8_t>::max)();
+          return static_cast<std::uint8_t>((std::numeric_limits<std::uint8_t>::max)() - TILE_SIZE);
      });
 }
 
@@ -719,8 +734,8 @@ sf::Sprite map_sprite::save_intersecting(const sf::Vector2i &pixel_pos, const st
                  {
                       // skip saved indices on redraw.
                       const auto current_index = m_maps.get_offset_from_back(tile);
-                      const auto find_index =
-                        std::ranges::find_if(m_saved_indices, [&current_index](const auto i) { return std::cmp_equal(i, current_index); });
+                      const auto find_index    = std::ranges::find_if(
+                        m_saved_indices, [&current_index](const auto search_index) { return std::cmp_equal(search_index, current_index); });
                       if (find_index != m_saved_indices.end())
                       {
                            return;
@@ -814,8 +829,9 @@ sf::BlendMode map_sprite::set_blend_mode(const BlendModeT &blend_mode, std::arra
                                        const open_viii::graphics::background::is_tile auto &tile) {
           if (!m_saved_imported_indices.empty())
           {
-               const auto find_index = std::ranges::find_if(
-                 m_saved_imported_indices, [&current_index](const auto i) { return std::cmp_equal(i, current_index); });
+               const auto find_index = std::ranges::find_if(m_saved_imported_indices, [&current_index](const auto search_index) {
+                    return std::cmp_equal(search_index, current_index);
+               });
                if (find_index != m_saved_imported_indices.end())
                {
                     return;
@@ -1293,7 +1309,7 @@ struct setting_backup
      {
      }
 
-     ~setting_backup()
+     ~setting_backup() noexcept(noexcept(m_value.get() = m_backup))
      {
           m_value.get() = m_backup;
      }
@@ -1563,33 +1579,42 @@ cppcoro::generator<bool> map_sprite::gen_pupu_textures(const std::filesystem::pa
      }
      m_futures.clear();
 }
-void map_sprite::async_save(const std::filesystem::path &out_path, const std::shared_ptr<sf::RenderTexture> &out_texture) const
+void map_sprite::async_save(const std::filesystem::path &out_path, const std::shared_ptr<sf::RenderTexture> &out_texture)
 {
      if (out_texture)
      {
-          // trying packaged task to so we don't wait for files to save.
-          const auto task = [](std::filesystem::path op, sf::Image image) {
-               std::error_code ec{};
-               std::filesystem::create_directories(op.parent_path(), ec);
-               if (ec)
+          sf::Image  image = out_texture->getTexture().copyToImage();
+          // trying packaged task to, so we don't wait for files to save.
+          const auto task  = [=]() {
+               std::error_code error_code{};
+               std::filesystem::create_directories(out_path.parent_path(), error_code);
+               if (error_code)
                {
-                    spdlog::error("error {}:{} - {}: {} - path: {}", __FILE__, __LINE__, ec.value(), ec.message(), op.string());
-                    ec.clear();
+                    spdlog::error(
+                      "error {}:{} - {}: {} - path: {}", __FILE__, __LINE__, error_code.value(), error_code.message(), out_path.string());
+                    error_code.clear();
                }
                if (image.getSize().x == 0 || image.getSize().y == 0 || image.getPixelsPtr() == nullptr)
                {
                     spdlog::error(
-                      "error {}:{} Invalid image: \"{}\" - ({},{})", __FILE__, __LINE__, op.string(), image.getSize().x, image.getSize().y);
+                      "error {}:{} Invalid image: \"{}\" - ({},{})",
+                      __FILE__,
+                      __LINE__,
+                      out_path.string(),
+                      image.getSize().x,
+                      image.getSize().y);
                     return;
                }
-               const std::string filename = op.string();
-               size_t            i        = { 1U };
+               using namespace std::chrono_literals;
+               const std::string     filename         = out_path.string();
+               std::size_t           count            = { 0U };
+               static constexpr auto error_delay_time = 1000ms;
                for (;;)
                {
                     if (!save_png_image(image, filename))
                     {
-                         spdlog::error("Looping on fail {:>2} times", i++);
-                         std::this_thread::sleep_for(std::chrono::milliseconds{ 1000 });
+                         spdlog::error("Looping on fail {:>2} times", ++count);
+                         std::this_thread::sleep_for(error_delay_time);
                     }
                     else
                     {
@@ -1608,7 +1633,7 @@ void map_sprite::async_save(const std::filesystem::path &out_path, const std::sh
                  out_texture->getTexture().copyToImage() }
       .detach();
 #else
-          spawn_thread(task, out_path, out_texture->getTexture().copyToImage());
+          spawn_thread(task);
 #endif
      }
 }

@@ -25,7 +25,7 @@
 #include <SFML/Graphics/Vertex.hpp>
 // #include <stacktrace>
 #include <utility>
-
+#define USE_THREADS
 static inline std::string str_to_lower(std::string input)
 {
      std::string output{};
@@ -412,12 +412,12 @@ struct map_sprite final
      void                                                        init_render_texture();
 
      [[nodiscard]] std::array<sf::Vertex, 4U>                    get_triangle_strip(
-                          const sf::Vector2u &draw_size,
+                          const sf::Vector2u &draw_x,
                           const sf::Vector2u &texture_size,
-                          std::integral auto  source_x,
-                          std::integral auto  source_y,
-                          std::integral auto  x,
-                          std::integral auto  y) const;
+                          std::integral auto  texture_x,
+                          std::integral auto  texture_y,
+                          std::integral auto  dest_x,
+                          std::integral auto  dest_y) const;
 
      [[nodiscard]] std::array<sf::Vertex, 4U> get_triangle_strip(
        const sf::Vector2u                                  &draw_size,
@@ -458,17 +458,18 @@ struct map_sprite final
           pupu_ids.reserve(std::size(tiles_const));
           std::ranges::transform(tiles_const, std::back_inserter(pupu_ids), UniquifyPupu{});
           assert(std::size(tiles_const) == std::size(tiles));
-          //assert(std::size(tiles_const) == std::size(m_pupu_ids));
-          const auto process = [&skip_invalid, &lambda](auto tc, const auto tce, auto t, auto pupu_t) {
-               for (; /*t != te &&*/ tc != tce; (void)++tc, ++t, ++pupu_t)
+          // assert(std::size(tiles_const) == std::size(m_pupu_ids));
+          const auto process = [&skip_invalid,
+                                &lambda](auto tiles_const_begin, const auto tiles_const_end, auto tiles_begin, auto pupu_ids_begin) {
+               for (; /*t != te &&*/ tiles_const_begin != tiles_const_end; (void)++tiles_const_begin, ++tiles_begin, ++pupu_ids_begin)
                {
-                    const is_tile auto &tile_const = *tc;
+                    const is_tile auto &tile_const = *tiles_const_begin;
                     if (skip_invalid && !filter_invalid(tile_const))
                     {
                          continue;
                     }
-                    is_tile auto &tile       = *t;
-                    const PupuID &pupu_const = *pupu_t;
+                    is_tile auto &tile       = *tiles_begin;
+                    const PupuID &pupu_const = *pupu_ids_begin;
                     lambda(tile_const, tile, pupu_const);
                }
           };
@@ -493,13 +494,20 @@ struct map_sprite final
           });
      }
 
-     void find_upscale_path(std::shared_ptr<std::array<sf::Texture, MAX_TEXTURES>> &ret, uint8_t palette) const;
-     void find_upscale_path(std::shared_ptr<std::array<sf::Texture, MAX_TEXTURES>> &ret) const;
-     void find_deswizzle_path(std::shared_ptr<std::array<sf::Texture, MAX_TEXTURES>> &ret) const;
-     void
-       load_mim_textures(std::shared_ptr<std::array<sf::Texture, MAX_TEXTURES>> &ret, open_viii::graphics::BPPT bpp, uint8_t palette) const;
+     void find_upscale_path(std::shared_ptr<std::array<sf::Texture, MAX_TEXTURES>> &ret, uint8_t palette);
+     void find_upscale_path(std::shared_ptr<std::array<sf::Texture, MAX_TEXTURES>> &ret);
+     void find_deswizzle_path(std::shared_ptr<std::array<sf::Texture, MAX_TEXTURES>> &ret);
+     void load_mim_textures(std::shared_ptr<std::array<sf::Texture, MAX_TEXTURES>> &ret, open_viii::graphics::BPPT bpp, uint8_t palette);
      template<typename F, typename... T>
-     void spawn_thread(F &&f, T &&...t) const;
+     void spawn_thread(F &&function, T &&...arguments)
+     {
+#ifdef USE_THREADS
+          m_futures.emplace_back(std::async(std::launch::async, std::forward<F>(function), std::forward<T>(arguments)...));
+#undef USE_THREADS
+#else
+          std::invoke(std::forward<F>(function), std::forward<T>(arguments)...);
+#endif
+     }
      template<typename key_lambdaT, typename weight_lambdaT>
      [[maybe_unused]] void compact_generic(key_lambdaT &&key_lambda, weight_lambdaT &&weight_lambda, int passes = 2)
      {
@@ -550,32 +558,32 @@ struct map_sprite final
 
      std::shared_ptr<sf::RenderTexture> save_texture(std::uint32_t width, std::uint32_t height) const;
      uint32_t                           get_max_texture_height() const;
-     void async_save(const std::filesystem::path &out_path, const std::shared_ptr<sf::RenderTexture> &out_texture) const;
+     void async_save(const std::filesystem::path &out_path, const std::shared_ptr<sf::RenderTexture> &out_texture);
      template<typename tilesT, typename key_lambdaT, typename value_lambdaT, typename filterT = decltype(default_filter_lambda)>
      auto generate_map(tilesT &&tiles, key_lambdaT &&key_lambda, value_lambdaT &&value_lambda, filterT &&filter = {}) const
      {
           using tileT  = std::remove_cvref_t<typename std::remove_cvref_t<tilesT>::value_type>;
           using keyT   = decltype(key_lambda(tileT{}));
           using valueT = decltype(value_lambda(tileT{}));
-          std::map<keyT, std::vector<valueT>> r{};
+          std::map<keyT, std::vector<valueT>> map{};
           auto                                filtered_tiles = tiles | std::views::filter(filter);
-          std::ranges::for_each(filtered_tiles, [&r, &key_lambda, &value_lambda](auto &&tile) {
+          std::ranges::for_each(filtered_tiles, [&map, &key_lambda, &value_lambda](auto &&tile) {
                if (!filter_invalid(tile))
                {
                     return;
                }
                valueT value = value_lambda(tile);
                keyT   key   = key_lambda(tile);
-               if (r.contains(key))
+               if (map.contains(key))
                {
-                    r.at(key).push_back(value);
+                    map.at(key).push_back(value);
                }
                else
                {
-                    r.emplace(key, std::vector<valueT>{ value });
+                    map.emplace(key, std::vector<valueT>{ value });
                }
           });
-          return r;
+          return map;
      }
 
      std::filesystem::path save_path_coo(
