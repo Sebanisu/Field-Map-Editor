@@ -1583,9 +1583,8 @@ void map_sprite::async_save(const std::filesystem::path &out_path, const std::sh
 {
      if (out_texture)
      {
-          sf::Image  image = out_texture->getTexture().copyToImage();
           // trying packaged task to, so we don't wait for files to save.
-          const auto task  = [=]() {
+          const auto task  = [=,image = out_texture->getTexture().copyToImage()]() {
                std::error_code error_code{};
                std::filesystem::create_directories(out_path.parent_path(), error_code);
                if (error_code)
