@@ -1380,9 +1380,9 @@ bool map_sprite::check_if_one_palette(const std::uint8_t &texture_page) const
 }
 void map_sprite::save_new_textures(const std::filesystem::path &path)
 {
-     for (bool const b : gen_new_textures(path))
+     for (bool const gen_bool : gen_new_textures(path))
      {
-          std::ignore = b;
+          std::ignore = gen_bool;
      }
 }
 
@@ -1480,7 +1480,8 @@ std::string map_sprite::get_base_name() const
 }
 std::vector<std::uint8_t> map_sprite::get_conflicting_palettes(const std::uint8_t &texture_page) const
 {
-     return m_maps.front().visit_tiles([&texture_page, this](const auto &tiles) {
+     //todo rewrite this.
+     return m_maps.back().visit_tiles([&texture_page, this](const auto &tiles) {
           //        using tileT =
           //          std::remove_cvref_t<typename
           //          std::remove_cvref_t<decltype(tiles)>::value_type>;
@@ -1584,7 +1585,7 @@ void map_sprite::async_save(const std::filesystem::path &out_path, const std::sh
      if (out_texture)
      {
           // trying packaged task to, so we don't wait for files to save.
-          const auto task  = [=,image = out_texture->getTexture().copyToImage()]() {
+          const auto task = [=, image = out_texture->getTexture().copyToImage()]() {
                std::error_code error_code{};
                std::filesystem::create_directories(out_path.parent_path(), error_code);
                if (error_code)
@@ -1951,4 +1952,25 @@ void map_sprite::disable_disable_blends()
 {
      m_disable_blends = false;
      init_render_texture();
+}
+void map_sprite::compact_map_order()
+{
+     auto &map = m_maps.copy_back();
+     map.visit_tiles([](auto &&tiles) {
+          auto filtered_tiles            = tiles | std::views::filter(filter_invalid);
+          using tile_t                   = std::remove_cvref_t<std::ranges::range_value_t<decltype(tiles)>>;
+          const auto WithDepth_operation = ff_8::tile_operations::WithDepth<tile_t>{ open_viii::graphics::BPPT::BPP4_CONST() };
+          for (std::size_t tile_index = {}; tile_t & tile : filtered_tiles)
+          {
+               const auto texture_page    = static_cast<ff_8::tile_operations::TextureIdT<tile_t>>(tile_index / 256);
+               const auto file_tile_index = tile_index % 256;
+               const auto source_x        = static_cast<ff_8::tile_operations::SourceXT<tile_t>>((file_tile_index % TILE_SIZE) * TILE_SIZE);
+               const auto source_y        = static_cast<ff_8::tile_operations::SourceYT<tile_t>>((file_tile_index / TILE_SIZE) * TILE_SIZE);
+               ++tile_index;
+               const auto WithTextureId_operation = ff_8::tile_operations::WithTextureId<tile_t>{ texture_page };
+               const auto WithSourceXY_operation  = ff_8::tile_operations::WithSourceXY<tile_t>{ { source_x, source_y } };
+               tile                               = tile | WithDepth_operation | WithSourceXY_operation | WithTextureId_operation;
+          }
+     });
+     update_render_texture();
 }

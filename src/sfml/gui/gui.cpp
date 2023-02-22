@@ -271,6 +271,11 @@ void gui::compact_flatten_buttons()
           m_map_sprite.compact_all();
      }
      ImGui::SameLine();
+     if (ImGui::Button(gui_labels::map_order.data()))
+     {
+          m_map_sprite.compact_map_order();
+     }
+     ImGui::SameLine();
      format_imgui_text("{}: ", gui_labels::flatten);
      ImGui::SameLine();
      if (ImGui::Button(gui_labels::bpp.data()))
@@ -428,7 +433,18 @@ void gui::popup_batch_reswizzle()
             combo_compact_type(compact);
             ImGui::Separator();
             format_imgui_text("Flatten: ");
-            ImGui::Checkbox("BPP", &flatten_bpp);
+            if (compact.enabled() && compact.value() == compact_type::map_order)
+            {
+                 flatten_bpp = false;
+                 ImGui::BeginDisabled();
+                 bool ignore = true;
+                 ImGui::Checkbox("BPP", &ignore);
+                 ImGui::EndDisabled();
+            }
+            else
+            {
+                 ImGui::Checkbox("BPP", &flatten_bpp);
+            }
             ImGui::SameLine();
             ImGui::Checkbox("Palette", &flatten_palette);
             return ImGui::Button("Start");
@@ -1952,10 +1968,10 @@ void gui::combo_compact_type(ff_8::filter_old<compact_type> &compact) const
            get_imgui_id(),
            gui_labels::compact,
            []() {
-                return std::array{ compact_type::rows, compact_type::all };
+                return std::array{ compact_type::rows, compact_type::all, compact_type::map_order };
            },
            []() {
-                return std::array{ gui_labels::rows, gui_labels::all };
+                return std::array{ gui_labels::rows, gui_labels::all, gui_labels::map_order };
            },
            [&]() -> auto & { return compact; }))
      {

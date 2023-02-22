@@ -57,6 +57,22 @@ struct fmt::formatter<tile_sizes>
   }
 };
 
+template<open_viii::Number numT>
+struct fmt::formatter<open_viii::graphics::Point<numT>>
+  : fmt::formatter<numT>
+{
+  // parse is inherited from formatter<std::underlying_type_t<tile_sizes>>.
+  template<typename FormatContext>
+  constexpr auto format(open_viii::graphics::Point<numT> point, FormatContext &ctx) const
+  {
+    fmt::format_to(ctx.out(),"{}",'(');
+    fmt::formatter<numT>::format(point.x(),ctx);
+    fmt::format_to(ctx.out(),"{}",", ");
+    fmt::formatter<numT>::format(point.y(),ctx);
+    return fmt::format_to(ctx.out(),"{}",')');
+  }
+};
+
 template<>
 struct fmt::formatter<open_viii::graphics::BPPT> : fmt::formatter<std::uint32_t>
 {

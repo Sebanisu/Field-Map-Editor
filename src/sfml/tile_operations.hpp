@@ -10,165 +10,164 @@ namespace ff_8::tile_operations
 {
 template<open_viii::graphics::background::is_tile TileT>
 static constexpr TileT MaxTile = []() {
-  std::array<std::uint8_t, sizeof(TileT)> tmp{};
-  // std::fill(tmp.begin(), tmp.end(), 0xFFU);
-  tmp.fill((std::numeric_limits<std::uint8_t>::max)());
-  return std::bit_cast<TileT>(tmp);
+     std::array<std::uint8_t, sizeof(TileT)> tmp{};
+     // std::fill(tmp.begin(), tmp.end(), 0xFFU);
+     tmp.fill((std::numeric_limits<std::uint8_t>::max)());
+     return std::bit_cast<TileT>(tmp);
 }();
-#define TILE_OPERATION(STRING, FUNCTION)                                       \
-  template<open_viii::graphics::background::is_tile TileT>                     \
-  using STRING##T = typename std::remove_cvref_t<                              \
-    std::invoke_result_t<decltype(&TileT::FUNCTION), TileT>>;                  \
-  struct STRING                                                                \
-  {                                                                            \
-    template<open_viii::graphics::background::is_tile TileT>                   \
-    constexpr STRING##T<TileT> operator()(const TileT &tile) const noexcept    \
-    {                                                                          \
-      return tile.FUNCTION();                                                  \
-    }                                                                          \
-  };                                                                           \
-  template<typename ValueT>                                                    \
-  struct STRING##Match                                                         \
-  {                                                                            \
-    template<open_viii::graphics::background::is_tile TileT>                   \
-    constexpr STRING##Match(TileT tile)                                        \
-      : STRING##Match(tile.FUNCTION())                                         \
-    {                                                                          \
-    }                                                                          \
-    constexpr STRING##Match(ValueT value)                                      \
-      requires(!open_viii::graphics::background::is_tile<ValueT>)              \
-      : m_value(std::move(value))                                              \
-    {                                                                          \
-    }                                                                          \
-    template<open_viii::graphics::background::is_tile TileT>                   \
-    constexpr bool operator()(const TileT &tile) const noexcept                \
-    {                                                                          \
-      return static_cast<STRING##T<TileT>>(m_value) == tile.FUNCTION();        \
-    }                                                                          \
-    auto                 operator<=>(const STRING##Match &) const = default;   \
-    std::strong_ordering operator<=>(const ValueT &that) const                 \
-    {                                                                          \
-      return m_value <=> that;                                                 \
-    }                                                                          \
-    template<open_viii::graphics::background::is_tile TileT>                   \
-    std::strong_ordering operator<=>(const TileT &tile) const                  \
-    {                                                                          \
-      return static_cast<STRING##T<TileT>>(m_value) <=> tile.FUNCTION();       \
-    }                                                                          \
-                                                                               \
-  private:                                                                     \
-    ValueT m_value = {};                                                       \
-  };                                                                           \
-  struct STRING##DefaultValue                                                  \
-  {                                                                            \
-    template<open_viii::graphics::background::is_tile T>                       \
-    constexpr STRING##T<T> operator()(const T &) const noexcept                \
-    {                                                                          \
-      return {};                                                               \
-    }                                                                          \
-  };                                                                           \
-  template<typename TileT>                                                     \
-  concept has_with_##FUNCTION =                                                \
-    requires(std::remove_cvref_t<TileT> tile, STRING##T<TileT> value) {        \
-      tile = tile.with_##FUNCTION(value);                                      \
-    };                                                                         \
-  template<typename ValueT>                                                    \
-  struct With##STRING                                                          \
-  {                                                                            \
-    constexpr With##STRING(ValueT value)                                       \
-      : m_value(std::move(value))                                              \
-    {                                                                          \
-    }                                                                          \
-    template<open_viii::graphics::background::is_tile TileT>                   \
-      requires(has_with_##FUNCTION<TileT>)                                     \
-    [[nodiscard]] constexpr TileT operator()(const TileT &tile) const noexcept \
-    {                                                                          \
-      spdlog::debug("Used with_" #FUNCTION " to assign: {}", m_value);         \
-      return tile.with_##FUNCTION(static_cast<STRING##T<TileT>>(m_value));     \
-    }                                                                          \
-                                                                               \
-    template<open_viii::graphics::background::is_tile TileT>                   \
-      requires(!has_with_##FUNCTION<TileT>)                                    \
-    constexpr decltype(auto) operator()(const TileT &tile) const noexcept      \
-    { /*donno why I can not forward or move when not has_with*/                \
-      spdlog::debug("Has no with_" #FUNCTION);                                 \
-      return tile;                                                             \
-    }                                                                          \
-                                                                               \
-  private:                                                                     \
-    ValueT m_value = {};                                                       \
-  };                                                                           \
-  template<typename ValueT>                                                    \
-  struct TranslateWith##STRING                                                 \
-  {                                                                            \
-    constexpr TranslateWith##STRING(ValueT to_value, ValueT from_value)        \
-      : m_to(std::move(to_value))                                              \
-      , m_from(std::move(from_value))                                          \
-    {                                                                          \
-    }                                                                          \
-    template<open_viii::graphics::background::is_tile TileT>                   \
-      requires(has_with_##FUNCTION<TileT>)                                     \
-    [[nodiscard]] constexpr TileT operator()(const TileT &tile) const noexcept \
-    {                                                                          \
-      const auto current = m_to + tile.FUNCTION() - m_from;                    \
-      spdlog::debug("Used with_" #FUNCTION " to assign: {}", current);         \
-      return tile.with_##FUNCTION(static_cast<STRING##T<TileT>>(current));     \
-    }                                                                          \
-                                                                               \
-    template<open_viii::graphics::background::is_tile TileT>                   \
-      requires(!has_with_##FUNCTION<TileT>)                                    \
-    constexpr decltype(auto) operator()(const TileT &tile) const noexcept      \
-    { /*donno why I can not forward or move when not has_with*/                \
-      spdlog::debug("Has no with_" #FUNCTION);                                 \
-      return tile;                                                             \
-    }                                                                          \
-                                                                               \
-  private:                                                                     \
-    ValueT m_to   = {};                                                        \
-    ValueT m_from = {}; /*used to calc offset using original*/                 \
-  };                                                                           \
-  template<open_viii::graphics::background::is_tile TileT>                     \
-  struct STRING##Group                                                         \
-  {                                                                            \
-    using value_type          = STRING##T<TileT>;                              \
-    using get                 = STRING;                                        \
-    using get_default         = STRING##DefaultValue;                          \
-    constexpr STRING##Group() = default;                                       \
-    constexpr STRING##Group(value_type value)                                  \
-      : current(std::move(value))                                              \
-    {                                                                          \
-    }                                                                          \
-    constexpr STRING##Group(TileT tile)                                        \
-      : current(get{}(tile))                                                   \
-    {                                                                          \
-    }                                                                          \
-    static constexpr value_type min_value = []() -> value_type {               \
-      if constexpr (std::signed_integral<value_type>)                          \
-      {                                                                        \
-        return (std::numeric_limits<value_type>::min)();                       \
-      }                                                                        \
-      else                                                                     \
-      {                                                                        \
-        const auto get_f = get{};                                              \
-        return get_f(TileT{});                                                 \
-      }                                                                        \
-    }();                                                                       \
-    static constexpr value_type max_value = []() -> value_type {               \
-      if constexpr (std::signed_integral<value_type>)                          \
-      {                                                                        \
-        return (std::numeric_limits<value_type>::max)();                       \
-      }                                                                        \
-      else                                                                     \
-      {                                                                        \
-        const auto get_f = get{};                                              \
-        return get_f(MaxTile<TileT>);                                          \
-      }                                                                        \
-    }();                                                                       \
-    value_type            current   = {};                                      \
-    constexpr static bool read_only = !has_with_##FUNCTION<TileT>;             \
-    using transform_with            = With##STRING<value_type>;                \
-    using match_with                = STRING##Match<value_type>;               \
-  }
+#define TILE_OPERATION(STRING, FUNCTION)                                                                          \
+     template<open_viii::graphics::background::is_tile TileT>                                                     \
+     using STRING##T = typename std::remove_cvref_t<std::invoke_result_t<decltype(&TileT::FUNCTION), TileT>>;     \
+     struct STRING                                                                                                \
+     {                                                                                                            \
+          template<open_viii::graphics::background::is_tile TileT>                                                \
+          constexpr STRING##T<TileT> operator()(const TileT &tile) const noexcept                                 \
+          {                                                                                                       \
+               return tile.FUNCTION();                                                                            \
+          }                                                                                                       \
+     };                                                                                                           \
+     template<typename ValueT>                                                                                    \
+     struct STRING##Match                                                                                         \
+     {                                                                                                            \
+          template<open_viii::graphics::background::is_tile TileT>                                                \
+          constexpr STRING##Match(TileT tile)                                                                     \
+            : STRING##Match(tile.FUNCTION())                                                                      \
+          {                                                                                                       \
+          }                                                                                                       \
+          constexpr STRING##Match(ValueT value)                                                                   \
+               requires(!open_viii::graphics::background::is_tile<ValueT>)                                        \
+            : m_value(std::move(value))                                                                           \
+          {                                                                                                       \
+          }                                                                                                       \
+          template<open_viii::graphics::background::is_tile TileT>                                                \
+          constexpr bool operator()(const TileT &tile) const noexcept                                             \
+          {                                                                                                       \
+               return static_cast<STRING##T<TileT>>(m_value) == tile.FUNCTION();                                  \
+          }                                                                                                       \
+          auto                 operator<=>(const STRING##Match &) const = default;                                \
+          std::strong_ordering operator<=>(const ValueT &that) const                                              \
+          {                                                                                                       \
+               return m_value <=> that;                                                                           \
+          }                                                                                                       \
+          template<open_viii::graphics::background::is_tile TileT>                                                \
+          std::strong_ordering operator<=>(const TileT &tile) const                                               \
+          {                                                                                                       \
+               return static_cast<STRING##T<TileT>>(m_value) <=> tile.FUNCTION();                                 \
+          }                                                                                                       \
+                                                                                                                  \
+        private:                                                                                                  \
+          ValueT m_value = {};                                                                                    \
+     };                                                                                                           \
+     struct STRING##DefaultValue                                                                                  \
+     {                                                                                                            \
+          template<open_viii::graphics::background::is_tile T>                                                    \
+          constexpr STRING##T<T> operator()(const T &) const noexcept                                             \
+          {                                                                                                       \
+               return {};                                                                                         \
+          }                                                                                                       \
+     };                                                                                                           \
+     template<typename TileT>                                                                                     \
+     concept has_with_##FUNCTION =                                                                                \
+       requires(std::remove_cvref_t<TileT> tile, STRING##T<TileT> value) { tile = tile.with_##FUNCTION(value); }; \
+     template<open_viii::graphics::background::is_tile TileT>                                                     \
+     struct With##STRING                                                                                          \
+     {                                                                                                            \
+          constexpr explicit With##STRING(STRING##T<TileT> value)                                                 \
+            : m_value(std::move(value))                                                                           \
+          {                                                                                                       \
+          }                                                                                                       \
+                                                                                                                  \
+          [[nodiscard]] constexpr TileT operator()(const TileT &tile) const noexcept                              \
+               requires(has_with_##FUNCTION<TileT>)                                                               \
+          {                                                                                                       \
+               spdlog::debug("Used with_" #FUNCTION " to assign: {}", m_value);                                   \
+               return tile.with_##FUNCTION(static_cast<STRING##T<TileT>>(m_value));                               \
+          }                                                                                                       \
+          constexpr decltype(auto) operator()(const TileT &tile) const noexcept                                   \
+               requires(!has_with_##FUNCTION<TileT>)                                                              \
+          { /*donno why I can not forward or move when not has_with*/                                             \
+               spdlog::debug("Has no with_" #FUNCTION);                                                           \
+               return tile;                                                                                       \
+          }                                                                                                       \
+          friend constexpr TileT operator|(const TileT &tile, const With##STRING &operation)                      \
+          {                                                                                                       \
+               return operation.operator()(tile);                                                                 \
+          }                                                                                                       \
+                                                                                                                  \
+        private:                                                                                                  \
+          STRING##T<TileT> m_value = {};                                                                          \
+     };                                                                                                           \
+     template<typename ValueT>                                                                                    \
+     struct TranslateWith##STRING                                                                                 \
+     {                                                                                                            \
+          constexpr explicit TranslateWith##STRING(ValueT to_value, ValueT from_value)                            \
+            : m_to(std::move(to_value))                                                                           \
+            , m_from(std::move(from_value))                                                                       \
+          {                                                                                                       \
+          }                                                                                                       \
+          template<open_viii::graphics::background::is_tile TileT>                                                \
+               requires(has_with_##FUNCTION<TileT>)                                                               \
+          [[nodiscard]] constexpr TileT operator()(const TileT &tile) const noexcept                              \
+          {                                                                                                       \
+               const auto current = m_to + tile.FUNCTION() - m_from;                                              \
+               spdlog::debug("Used with_" #FUNCTION " to assign: {}", current);                                   \
+               return tile.with_##FUNCTION(static_cast<STRING##T<TileT>>(current));                               \
+          }                                                                                                       \
+                                                                                                                  \
+          template<open_viii::graphics::background::is_tile TileT>                                                \
+               requires(!has_with_##FUNCTION<TileT>)                                                              \
+          constexpr decltype(auto) operator()(const TileT &tile) const noexcept                                   \
+          { /*donno why I can not forward or move when not has_with*/                                             \
+               spdlog::debug("Has no with_" #FUNCTION);                                                           \
+               return tile;                                                                                       \
+          }                                                                                                       \
+                                                                                                                  \
+        private:                                                                                                  \
+          ValueT m_to   = {};                                                                                     \
+          ValueT m_from = {}; /*used to calc offset using original*/                                              \
+     };                                                                                                           \
+     template<open_viii::graphics::background::is_tile TileT>                                                     \
+     struct STRING##Group                                                                                         \
+     {                                                                                                            \
+          using value_type          = STRING##T<TileT>;                                                           \
+          using get                 = STRING;                                                                     \
+          using get_default         = STRING##DefaultValue;                                                       \
+          constexpr STRING##Group() = default;                                                                    \
+          constexpr explicit STRING##Group(value_type value)                                                      \
+            : current(std::move(value))                                                                           \
+          {                                                                                                       \
+          }                                                                                                       \
+          constexpr explicit STRING##Group(TileT tile)                                                            \
+            : current(get{}(tile))                                                                                \
+          {                                                                                                       \
+          }                                                                                                       \
+          static constexpr value_type min_value = []() -> value_type {                                            \
+               if constexpr (std::signed_integral<value_type>)                                                    \
+               {                                                                                                  \
+                    return (std::numeric_limits<value_type>::min)();                                              \
+               }                                                                                                  \
+               else                                                                                               \
+               {                                                                                                  \
+                    const auto get_f = get{};                                                                     \
+                    return get_f(TileT{});                                                                        \
+               }                                                                                                  \
+          }();                                                                                                    \
+          static constexpr value_type max_value = []() -> value_type {                                            \
+               if constexpr (std::signed_integral<value_type>)                                                    \
+               {                                                                                                  \
+                    return (std::numeric_limits<value_type>::max)();                                              \
+               }                                                                                                  \
+               else                                                                                               \
+               {                                                                                                  \
+                    const auto get_f = get{};                                                                     \
+                    return get_f(MaxTile<TileT>);                                                                 \
+               }                                                                                                  \
+          }();                                                                                                    \
+          value_type            current   = {};                                                                   \
+          constexpr static bool read_only = !has_with_##FUNCTION<TileT>;                                          \
+          using transform_with            = With##STRING<value_type>;                                             \
+          using match_with                = STRING##Match<value_type>;                                            \
+     }
 
 TILE_OPERATION(X, x);
 TILE_OPERATION(Y, y);
@@ -189,14 +188,14 @@ TILE_OPERATION(AnimationState, animation_state);
 #undef TILE_OPERATION
 struct InvalidTile
 {
-  template<open_viii::graphics::background::is_tile T>
-  constexpr bool operator()(const T &tile) const noexcept
-  {
-    return (std::cmp_not_equal(tile.x(), s_end_x));
-  }
+     template<open_viii::graphics::background::is_tile T>
+     constexpr bool operator()(const T &tile) const noexcept
+     {
+          return (std::cmp_not_equal(tile.x(), s_end_x));
+     }
 
-private:
-  static constexpr std::uint16_t s_end_x = { 0x7FFFU };
+   private:
+     static constexpr std::uint16_t s_end_x = { 0x7FFFU };
 };
 }// namespace ff_8::tile_operations
 #endif// FIELD_MAP_EDITOR_TILE_OPERATIONS_HPP

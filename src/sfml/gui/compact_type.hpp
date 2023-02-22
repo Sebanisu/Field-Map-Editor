@@ -6,7 +6,8 @@
 #define FIELD_MAP_EDITOR_COMPACT_TYPE_HPP
 enum struct compact_type
 {
-  rows,
-  all
+     rows,
+     all,
+     map_order,
 };
 #endif// FIELD_MAP_EDITOR_COMPACT_TYPE_HPP

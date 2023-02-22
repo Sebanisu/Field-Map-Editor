@@ -126,6 +126,8 @@ struct map_sprite final
 
      void update_render_texture(const sf::Texture *p_texture, open_viii::graphics::background::Map map, const tile_sizes tile_size);
 
+     void compact_map_order();
+
    public:
      using color_type  = open_viii::graphics::Color32RGBA;
      using colors_type = std::vector<color_type>;
