@@ -59,7 +59,7 @@ macro(run_conan)
                 # Detects current build settings to pass into conan
                 conan_cmake_autodetect(settings BUILD_TYPE ${TYPE})
                 if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
-                    set(CONAN_SETTINGS SETTINGS ${settings} compiler.cppstd=20 compiler=msvc)
+                    set(CONAN_SETTINGS SETTINGS ${settings} compiler.cppstd=20)
                     #set(CONAN_ENV ENV "CC=${CMAKE_C_COMPILER}" "CXX=${CMAKE_CXX_COMPILER}" "CXXFLAGS=/D_HAS_AUTO_PTR_ETC") #shouldn't need to enable auto_ptr anymore
                 elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
                     set(CONAN_SETTINGS SETTINGS ${settings} compiler.cppstd=20 compiler.libcxx=libstdc++11)
