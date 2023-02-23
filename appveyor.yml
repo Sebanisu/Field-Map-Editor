@@ -26,7 +26,7 @@ build_script:
       
       set CONAN_USER_HOME=c:\conan\data
       
-      "%PYTHON%" -m pip install --user conan
+      "%PYTHON%" -m pip install --user conan==1.58.0
       
       conan profile detect
       
