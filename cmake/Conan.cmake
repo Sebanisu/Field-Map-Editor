@@ -20,18 +20,18 @@ macro(run_conan)
 
     # Add (or remove) remotes as needed
     # conan_add_remote(NAME conan-center URL https://conan.bintray.com)
-    conan_add_remote(
-            NAME
-            cci
-            URL
-            https://center.conan.io
-            INDEX
-            0)
-    conan_add_remote(
-            NAME
-            bincrafters
-            URL
-            https://bincrafters.jfrog.io/artifactory/api/conan/public-conan)
+#    conan_add_remote(
+#            NAME
+#            cci
+#            URL
+#            https://center.conan.io
+#            INDEX
+#            0)
+#    conan_add_remote(
+#            NAME
+#            bincrafters
+#            URL
+#            https://bincrafters.jfrog.io/artifactory/api/conan/public-conan)
 
     if (CONAN_EXPORTED)
         # standard conan installation, in which deps will be defined in conanfile. It is not necessary to call conan again, as it is already running.
