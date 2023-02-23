@@ -6,11 +6,11 @@ macro(run_conan)
     if (NOT EXISTS "${CMAKE_BINARY_DIR}/conan.cmake")
         message(STATUS "Downloading conan.cmake from https://github.com/conan-io/cmake-conan")
         file(
-#                DOWNLOAD "https://raw.githubusercontent.com/conan-io/cmake-conan/0.17.0/conan.cmake"
+                #                DOWNLOAD "https://raw.githubusercontent.com/conan-io/cmake-conan/0.17.0/conan.cmake"
                 DOWNLOAD "https://raw.githubusercontent.com/conan-io/cmake-conan/release/0.18/conan.cmake"
                 "${CMAKE_BINARY_DIR}/conan.cmake"
-#                EXPECTED_HASH SHA256=3bef79da16c2e031dc429e1dac87a08b9226418b300ce004cc125a82687baeef
-                EXPECTED_HASH SHA256=50bd7c9c076198334fb8365b009e516f97b3c9cb0fac3cf9637d12b88bc1a67e
+                #                EXPECTED_HASH SHA256=3bef79da16c2e031dc429e1dac87a08b9226418b300ce004cc125a82687baeef
+                EXPECTED_HASH SHA256=5cdb3042632da3efff558924eecefd580a0e786863a857ca097c3d1d43df5dcd
                 TLS_VERIFY ON)
     endif ()
 
@@ -22,18 +22,18 @@ macro(run_conan)
 
     # Add (or remove) remotes as needed
     # conan_add_remote(NAME conan-center URL https://conan.bintray.com)
-#    conan_add_remote(
-#            NAME
-#            cci
-#            URL
-#            https://center.conan.io
-#            INDEX
-#            0)
-#    conan_add_remote(
-#            NAME
-#            bincrafters
-#            URL
-#            https://bincrafters.jfrog.io/artifactory/api/conan/public-conan)
+    #    conan_add_remote(
+    #            NAME
+    #            cci
+    #            URL
+    #            https://center.conan.io
+    #            INDEX
+    #            0)
+    #    conan_add_remote(
+    #            NAME
+    #            bincrafters
+    #            URL
+    #            https://bincrafters.jfrog.io/artifactory/api/conan/public-conan)
 
     if (CONAN_EXPORTED)
         # standard conan installation, in which deps will be defined in conanfile. It is not necessary to call conan again, as it is already running.
