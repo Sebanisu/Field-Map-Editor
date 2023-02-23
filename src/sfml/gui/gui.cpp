@@ -466,6 +466,10 @@ void gui::popup_batch_reswizzle()
                       {
                            map.compact_all();
                       }
+                      if (compact.value() == compact_type::map_order)
+                      {
+                           map.compact_map_order();
+                      }
                  }
             };
             compact_function();
@@ -477,7 +481,10 @@ void gui::popup_batch_reswizzle()
             if (flatten_palette)
             {
                  map.flatten_palette();
-                 compact_function();
+                 if (compact.value() != compact_type::map_order)
+                 {
+                      compact_function();
+                 }
             }
             const std::filesystem::path map_path = selected_path / map.map_filename();
             map.save_new_textures(selected_path);
@@ -555,7 +562,7 @@ void gui::text_mouse_position() const
           static std::vector<std::size_t> indices = {};
           if (m_mouse_positions.mouse_moved)
           {
-               indices = m_map_sprite.find_intersecting(tiles, m_mouse_positions.pixel, m_mouse_positions.texture_page);
+               indices = m_map_sprite.find_intersecting(tiles, m_mouse_positions.pixel, m_mouse_positions.texture_page, false, true);
           }
           if (std::ranges::empty(indices))
           {

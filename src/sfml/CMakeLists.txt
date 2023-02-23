@@ -62,6 +62,7 @@ target_compile_features(${PROJECT_NAME}_SFML
 if (MSVC)
     target_compile_definitions(${PROJECT_NAME}_SFML
             PUBLIC _CRT_SECURE_NO_WARNINGS) # required by libpng
+    target_compile_options(${PROJECT_NAME}_SFML PUBLIC "/bigobj" PUBLIC "/await")
     target_link_options(${PROJECT_NAME}_SFML PRIVATE "/PROFILE")
 elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     target_compile_options(${PROJECT_NAME}_SFML PUBLIC "-fconcepts-diagnostics-depth=2")

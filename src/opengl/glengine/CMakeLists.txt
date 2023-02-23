@@ -63,16 +63,17 @@ target_include_directories(glengine
 if (MSVC)
     target_compile_definitions(glengine
             PUBLIC _CRT_SECURE_NO_WARNINGS) # required by libpng
+    target_compile_options(glengine PUBLIC "/bigobj")
     target_link_options(glengine PUBLIC "/PROFILE")
 elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     target_compile_options(glengine PUBLIC "-fconcepts-diagnostics-depth=2")
 elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
-    target_compile_options(${PROJECT_NAME}_SFML
+    target_compile_options(glengine
             PUBLIC "-stdlib=libc++"
             PUBLIC "-march=native"
             PUBLIC "-fexperimental-library" ##new in clang15 for things like std::ranges and std::format
             )
-    target_link_options(${PROJECT_NAME}_SFML
+    target_link_options(glengine
             PUBLIC "-stdlib=libc++"
             PUBLIC "-fuse-ld=lld"
             PUBLIC "-Wl") #,--gdb-index

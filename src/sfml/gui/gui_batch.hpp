@@ -26,6 +26,7 @@ struct [[nodiscard]] gui_batch
           compact_all                = 1U << 3U,
           flatten_bpp                = 1U << 4U,
           flatten_palette            = 1U << 5U,
+          compact_row_order          = 1U << 6U,
      };
      gui_batch(archives_group ag)
        : m_archive_paths(open_viii::Paths::get())
@@ -44,8 +45,8 @@ struct [[nodiscard]] gui_batch
                  get_map_sprite(const std::shared_ptr<open_viii::archive::FIFLFS<false>> &field, const ff_8::filters &in_filters);
      static void popup_batch_common_filter_start(ff_8::filters &filters, std::string &base_name);
      static void popup_batch_common_filter_start(ff_8::filter_old<std::filesystem::path> &filter, std::string_view base_name);
-     [[nodiscard]] cppcoro::generator<bool>  source();
-     cppcoro::generator<bool>                save_output(const map_sprite ms) const;
+     [[nodiscard]] cppcoro::task<void>       source();
+     cppcoro::task<void>                     save_output(const map_sprite ms) const;
      ff_8::filters                           get_filters();
      void                                    compact_and_flatten(map_sprite &ms) const;
      [[nodiscard]] bool                      ask() const;

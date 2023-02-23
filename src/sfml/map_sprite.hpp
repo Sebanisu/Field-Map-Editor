@@ -15,6 +15,7 @@
 #include "unique_values.hpp"
 #include "upscales.hpp"
 #include <cppcoro/generator.hpp>
+#include <cppcoro/task.hpp>
 #include <cstdint>
 #include <fmt/format.h>
 #include <future>
@@ -259,9 +260,12 @@ struct map_sprite final
           });
      }
      template<std::ranges::range tilesT>
-     [[nodiscard]] std::vector<std::size_t>
-       find_intersecting(const tilesT &tiles, const sf::Vector2i &pixel_pos, const std::uint8_t &texture_page, bool skip_filters = false)
-         const
+     [[nodiscard]] std::vector<std::size_t> find_intersecting(
+       const tilesT       &tiles,
+       const sf::Vector2i &pixel_pos,
+       const std::uint8_t &texture_page,
+       bool                skip_filters = false,
+       bool                find_all     = false) const
      {
           std::vector<std::size_t>                             out          = {};
           static constexpr std::vector<std::size_t>::size_type new_capacity = { 30 };
@@ -308,7 +312,7 @@ struct map_sprite final
                     return static_cast<std::size_t>(std::distance(start, curr));
                });
           };
-          if (m_draw_swizzle)
+          if (m_draw_swizzle && !find_all)
           {
                // If palette and bpp are overlapping it causes problems.
                //  This prevents you selecting more than one at a time.
@@ -344,20 +348,20 @@ struct map_sprite final
           return out;
      }
 
-     std::size_t              row_empties(std::uint8_t tile_y, std::uint8_t texture_page, bool move_from_row = false);
-     sf::Sprite               save_intersecting(const sf::Vector2i &pixel_pos, const std::uint8_t &texture_page);
-     std::uint8_t             max_x_for_saved() const;
-     void                     compact_rows();
-     void                     compact_all();
-     void                     flatten_bpp();
-     void                     flatten_palette();
-     void                     save_new_textures(const std::filesystem::path &path);
-     cppcoro::generator<bool> gen_new_textures(const std::filesystem::path path);
-     void                     save_pupu_textures(const std::filesystem::path &path);
-     cppcoro::generator<bool> gen_pupu_textures(const std::filesystem::path path);
-     void                     save_modified_map(const std::filesystem::path &path) const;
-     void                     load_map(const std::filesystem::path &dest_path);
-     std::string              get_base_name() const;
+     std::size_t         row_empties(std::uint8_t tile_y, std::uint8_t texture_page, bool move_from_row = false);
+     sf::Sprite          save_intersecting(const sf::Vector2i &pixel_pos, const std::uint8_t &texture_page);
+     std::uint8_t        max_x_for_saved() const;
+     void                compact_rows();
+     void                compact_all();
+     void                flatten_bpp();
+     void                flatten_palette();
+     void                save_new_textures(const std::filesystem::path &path);
+     cppcoro::task<void>                gen_new_textures(const std::filesystem::path path);
+     void                save_pupu_textures(const std::filesystem::path &path);
+     cppcoro::task<void> gen_pupu_textures(const std::filesystem::path path);
+     void                save_modified_map(const std::filesystem::path &path) const;
+     void                load_map(const std::filesystem::path &dest_path);
+     std::string         get_base_name() const;
 
    private:
      static constexpr auto                              default_filter_lambda = [](auto &&) { return true; };
@@ -561,6 +565,48 @@ struct map_sprite final
      std::shared_ptr<sf::RenderTexture> save_texture(std::uint32_t width, std::uint32_t height) const;
      uint32_t                           get_max_texture_height() const;
      void async_save(const std::filesystem::path &out_path, const std::shared_ptr<sf::RenderTexture> &out_texture);
+
+
+     template<typename TilesT>
+     auto find_conflicting_tiles(const TilesT &tiles) const
+     {
+          using TileT                                             = std::ranges::range_value_t<std::remove_cvref_t<TilesT>>;
+          using TextureIdT                                        = ff_8::tile_operations::TextureIdT<TileT>;
+          using PaletteIdT                                        = ff_8::tile_operations::PaletteIdT<TileT>;
+          static constexpr auto                         SourceX   = ff_8::tile_operations::SourceX{};
+          static constexpr auto                         SourceY   = ff_8::tile_operations::SourceY{};
+          static constexpr auto                         TextureId = ff_8::tile_operations::TextureId{};
+          static constexpr auto                         PaletteId = ff_8::tile_operations::PaletteId{};
+          std::map<TextureIdT, std::vector<PaletteIdT>> conflicts;
+
+          // Process each pair of matching tiles and insert their palette IDs into the conflicts map
+          for (const auto &first : tiles)
+          {
+               for (const auto &second : tiles | std::views::drop(1))
+               {
+                    if (
+                      &first != &second && PaletteId(first) != PaletteId(second) && TextureId(first) == TextureId(second)
+                      && SourceX(first) == SourceX(second) && SourceY(first) == SourceY(second))
+                    {
+                         conflicts[TextureId(first)].push_back(PaletteId(first));
+                         conflicts[TextureId(second)].push_back(PaletteId(second));
+                    }
+               }
+          }
+
+          // Sort and remove duplicates from the conflict sets
+          for (auto &pair : conflicts)
+          {
+               std::vector<PaletteIdT> &vector = pair.second;
+               std::ranges::sort(vector);
+               auto last = std::ranges::unique(vector);
+               vector.erase(last.begin(), last.end());
+          }
+
+          return conflicts;
+     }
+
+
      template<typename tilesT, typename key_lambdaT, typename value_lambdaT, typename filterT = decltype(default_filter_lambda)>
      auto generate_map(tilesT &&tiles, key_lambdaT &&key_lambda, value_lambdaT &&value_lambda, filterT &&filter = {}) const
      {
@@ -620,9 +666,61 @@ struct map_sprite final
        const std::filesystem::path                 &path,
        const std::string_view                      &field_name,
        PupuID                                       pupu);
-     bool                 check_if_one_palette(const uint8_t &texture_page) const;
-     std::vector<uint8_t> get_conflicting_palettes(const uint8_t &texture_page) const;
-     ::upscales           get_upscales()
+     bool check_if_one_palette(const uint8_t &texture_page) const;
+     auto get_conflicting_palettes() const
+     {
+          // todo rewrite this.
+          return m_maps.back().visit_tiles([this](const auto &tiles) {
+               //        using tileT =
+               //          std::remove_cvref_t<typename
+               //          std::remove_cvref_t<decltype(tiles)>::value_type>;
+
+               //          auto map_xy_palette = generate_map(
+               //            tiles,
+               //            [](const auto &tile) { return std::make_tuple(tile.source_x() / tile.width(), tile.source_y() / tile.height());
+               //            },
+               //            [](const auto &tile) { return tile.palette_id(); },
+               //            [&texture_page](const auto &tile) { return std::cmp_equal(texture_page, tile.texture_id()); });
+               //          std::vector<uint8_t>     conflict_palettes{};
+               //          std::vector<std::string> conflict_xy{};
+               //          for (auto &kvp : map_xy_palette)
+               //          {
+               //               // const auto& xy = kvp.first;
+               //               std::vector<std::uint8_t> &palette_vector = kvp.second;
+               //               std::ranges::sort(palette_vector);
+               //               auto [first, last] = std::ranges::unique(palette_vector);
+               //               palette_vector.erase(first, last);
+               //               if (palette_vector.size() <= 1U)
+               //               {
+               //                    // map_xy_palette.erase(xy);
+               //               }
+               //               else
+               //               {
+               //                    conflict_xy.emplace_back(fmt::format("({},{})", std::get<0>(kvp.first), std::get<1>(kvp.first)));
+               //                    conflict_palettes.insert(conflict_palettes.end(), palette_vector.begin(), palette_vector.end());
+               //               }
+               //          }
+
+               //          if (!conflict_xy.empty())
+               //          {
+               //               spdlog::info("Conflicting Palettes:");
+               //               for (const auto &cxy : conflict_xy)
+               //               {
+               //                    spdlog::info("conflict xy: {}", cxy);
+               //               }
+               //               std::ranges::sort(conflict_palettes);
+               //               auto [first, last] = std::ranges::unique(conflict_palettes);
+               //               conflict_palettes.erase(first, last);
+               //               for (auto p : conflict_palettes)
+               //               {
+               //                    spdlog::info("conflict palette: {}", p);
+               //               }
+               //          }
+               //          return conflict_palettes;
+               return find_conflicting_tiles(tiles);
+          });
+     }
+     ::upscales get_upscales()
      {
           if (m_field)
           {

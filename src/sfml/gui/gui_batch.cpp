@@ -9,6 +9,8 @@
 #include "safedir.hpp"
 #include "scope_guard.hpp"
 #include <array>
+#include <cppcoro/generator.hpp>
+#include <cppcoro/task.hpp>
 #include <filesystem>
 #include <ranges>
 #include <string_view>
@@ -24,7 +26,8 @@ static constexpr auto BatchOperationSourceStrings = std::array{ std::string_view
 static constexpr auto BatchOperationTransformationStrings =
   std::array{ std::string_view{ "None" }, std::string_view{ "Deswizzle" }, std::string_view{ "Swizzle" } };
 
-static constexpr auto BatchOperationTransformationCompactStrings = std::array{ std::string_view{ "Rows" }, std::string_view{ "All" } };
+static constexpr auto BatchOperationTransformationCompactStrings =
+  std::array{ std::string_view{ "Rows" }, std::string_view{ "All" }, std::string_view{ "Map Order" } };
 }// namespace fme
 bool fme::gui_batch::ask() const
 {
@@ -232,11 +235,28 @@ bool fme::gui_batch::ask_transformation() const
                            static_cast<std::uint32_t>(m_transformation_type)
                            | static_cast<std::uint32_t>(batch_operation_transformation::compact_all));
                     }
+                    else if (compact.value() == 2)
+                    {
+                         m_transformation_type = static_cast<batch_operation_transformation>(
+                           static_cast<std::uint32_t>(m_transformation_type)
+                           | static_cast<std::uint32_t>(batch_operation_transformation::compact_all));
+                    }
                }
                format_imgui_text("Flatten: ");
                static bool flatten_bpp{};
                ImGui::SameLine();
-               ImGui::Checkbox("BPP", &flatten_bpp);
+               if (compact.enabled() && compact.value() == 2)
+               {
+                    ImGui::BeginDisabled();
+                    bool skip   = true;
+                    flatten_bpp = false;
+                    ImGui::Checkbox("BPP", &skip);
+                    ImGui::EndDisabled();
+               }
+               else
+               {
+                    ImGui::Checkbox("BPP", &flatten_bpp);
+               }
                if (flatten_bpp)
                     m_transformation_type = static_cast<batch_operation_transformation>(
                       static_cast<std::uint32_t>(m_transformation_type)
@@ -318,65 +338,66 @@ ff_8::filters fme::gui_batch::get_filters()
      }
      return filters;
 }
-cppcoro::generator<bool> fme::gui_batch::save_output(map_sprite ms) const
+cppcoro::task<void> fme::gui_batch::save_output(map_sprite current_map_sprite) const
 {
      if (m_output_path.has_value())
      {
-          std::string      base_name     = ms.get_base_name();
+          std::string      base_name     = current_map_sprite.get_base_name();
           std::string_view prefix        = std::string_view{ base_name }.substr(0, 2);
           auto             selected_path = m_output_path.value() / prefix / base_name;
           if ((static_cast<uint32_t>(m_transformation_type) & static_cast<uint32_t>(batch_operation_transformation::deswizzle)) != 0)
           {
                // ms.save_pupu_textures(selected_path);
-               auto gen_pupu_textures = ms.gen_pupu_textures(selected_path);
-               for (bool b : gen_pupu_textures)
+               auto task = current_map_sprite.gen_pupu_textures(selected_path);
+               while (!task.is_ready())
                {
-                    co_yield b;
+                    co_await cppcoro::suspend_always{};
                }
           }
           else if ((static_cast<uint32_t>(m_transformation_type) & static_cast<uint32_t>(batch_operation_transformation::swizzle)) != 0)
           {
-               auto gen_new_textures = ms.gen_new_textures(selected_path);
-               for (bool b : gen_new_textures)
+               auto task = current_map_sprite.gen_new_textures(selected_path);
+               while (!task.is_ready())
                {
-                    co_yield b;
+                    co_await cppcoro::suspend_always{};
                }
           }
-          const std::filesystem::path map_path = selected_path / ms.map_filename();
-          ms.save_modified_map(map_path);
+          const std::filesystem::path map_path = selected_path / current_map_sprite.map_filename();
+          current_map_sprite.save_modified_map(map_path);
+          co_await cppcoro::suspend_always{};
      }
 }
-cppcoro::generator<bool> fme::gui_batch::source()
+cppcoro::task<void> fme::gui_batch::source()
 {
      const auto filters   = get_filters();
      auto       gen_field = get_field(m_archive_group);
-     for (auto field : gen_field)
+     for (const auto &field : gen_field)
      {
-          co_yield true;
+          co_await cppcoro::suspend_always{};
           auto gen_map_sprite = get_map_sprite(field, filters);
-          co_yield true;
-          for (::map_sprite &ms_ref : gen_map_sprite)
+          co_await cppcoro::suspend_always{};
+          for (::map_sprite &current_map_sprite_ref : gen_map_sprite)
           {
-               auto ms = std::move(ms_ref);
-               co_yield true;
-               compact_and_flatten(ms);
-               co_yield true;
-               auto gen_save_output = save_output(std::move(ms));
-               co_yield true;
-               for (bool b : gen_save_output)
+               auto current_map_sprite = std::move(current_map_sprite_ref);
+               co_await cppcoro::suspend_always{};
+               compact_and_flatten(current_map_sprite);
+               co_await cppcoro::suspend_always{};
+               auto task = save_output(std::move(current_map_sprite));
+               co_await cppcoro::suspend_always{};
+               while (!task.is_ready())
                {
-                    co_yield b;
+                    co_await cppcoro::suspend_always{};
                }
           }
      }
 }
 void fme::gui_batch::popup_batch_common_filter_start(ff_8::filter_old<std::filesystem::path> &filter, std::string_view base_name)
 {
-     std::string_view prefix = base_name.substr(0, 2);
+     std::string_view const prefix = base_name.substr(0, 2);
      if (filter.enabled())
      {
           filter.update(filter.value() / prefix / base_name);
-          if (safedir path = filter.value(); !path.is_exists() || !path.is_dir())
+          if (safedir const path = filter.value(); !path.is_exists() || !path.is_dir())
           {
                filter.disable();
           }
@@ -487,22 +508,15 @@ void fme::gui_batch::operator()(int *id)
      }
      if (asked)
      {
-          static std::optional<decltype(source())>      gen_source{};
-          static decltype(decltype(source()){}.begin()) gen_current{};
-          if (!gen_source.has_value())
+          static std::optional<decltype(source())> task{};
+          if (!task.has_value())
           {
-               gen_source  = source();
-               gen_current = gen_source->begin();
+               task = source();
           }
-          else if (gen_current != gen_source->end())
+          else if (task->is_ready())
           {
-               std::ignore = *gen_current;
-               ++gen_current;
-          }
-          else
-          {
-               gen_source = std::nullopt;
-               asked      = false;
+               task  = std::nullopt;
+               asked = false;
           }
      }
 }

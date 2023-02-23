@@ -1380,13 +1380,13 @@ bool map_sprite::check_if_one_palette(const std::uint8_t &texture_page) const
 }
 void map_sprite::save_new_textures(const std::filesystem::path &path)
 {
-     for (bool const gen_bool : gen_new_textures(path))
+     auto task = gen_new_textures(path);
+     while (!task.is_ready())
      {
-          std::ignore = gen_bool;
      }
 }
 
-cppcoro::generator<bool> map_sprite::gen_new_textures(const std::filesystem::path path)
+cppcoro::task<void> map_sprite::gen_new_textures(const std::filesystem::path path)
 {
      // assert(std::filesystem::path.is_directory(path));
      const std::string                 field_name                       = { get_base_name() };
@@ -1417,60 +1417,80 @@ cppcoro::generator<bool> map_sprite::gen_new_textures(const std::filesystem::pat
      {
           settings.scale = 1U;
      }
-     bool map_test = unique_bpp.size() == 1U && unique_values.palette().at(unique_bpp.front()).values().size() <= 1U;
 
-
+     if (unique_bpp.size() == 1U && unique_values.palette().at(unique_bpp.front()).values().size() <= 1U)
+     {
+          co_return;
+     }
+     using map_type                          = std::remove_cvref_t<decltype(get_conflicting_palettes())>;
+     using mapped_type                       = typename map_type::mapped_type;
+     const map_type conflicting_palettes_map = get_conflicting_palettes();
      for (const auto &texture_page : unique_texture_page_ids)
      {
           settings.filters.value().texture_page_id.update(texture_page).enable();
-          if (!map_test)
+          const bool contains_conflicts = conflicting_palettes_map.contains(texture_page);
+          if (contains_conflicts)
           {
-               if (check_if_one_palette(texture_page))
+               const mapped_type &conflicting_palettes = conflicting_palettes_map.at(texture_page);
+               for (const auto &bpp : unique_bpp)
                {
-                    const auto conflicting_palettes = get_conflicting_palettes(texture_page);
-                    for (const auto &bpp : unique_bpp)
+                    const auto &unique_palette = unique_values.palette().at(bpp).values();
+                    auto        filter_palette = unique_palette | std::views::filter([&conflicting_palettes](const std::uint8_t &palette) {
+                                               return std::ranges::any_of(
+                                                 conflicting_palettes, [&palette](const std::uint8_t &other) { return palette == other; });
+                                          });
+                    for (const auto &palette : filter_palette)
                     {
-                         const auto &unique_palette = unique_values.palette().at(bpp).values();
-                         auto filter_palette = unique_palette | std::views::filter([&conflicting_palettes](const std::uint8_t &palette) {
-                                                    return std::ranges::any_of(conflicting_palettes, [&palette](const std::uint8_t &other) {
-                                                         return palette == other;
-                                                    });
-                                               });
-                         for (const auto &palette : filter_palette)
-                         {
-                              settings.filters.value().palette.update(palette).enable();
-                              settings.filters.value().bpp.update(bpp).enable();
-                              auto out_path = [&]() -> std::filesystem::path {
-                                   if (m_using_coo)
-                                   {
-                                        return save_path_coo(pattern_coo_texture_page_palette, path, field_name, texture_page, palette);
-                                   }
-                                   return save_path(pattern_texture_page_palette, path, field_name, texture_page, palette);
-                              }();
-                              co_yield true;
-                              auto out_texture = save_texture(height, height);
-                              co_yield true;
-                              async_save(out_path, out_texture);
-                              co_yield true;
-                         }
+                         settings.filters.value().palette.update(palette).enable();
+                         settings.filters.value().bpp.update(bpp).enable();
+                         auto out_path = [&]() -> std::filesystem::path {
+                              if (m_using_coo)
+                              {
+                                   return save_path_coo(pattern_coo_texture_page_palette, path, field_name, texture_page, palette);
+                              }
+                              return save_path(pattern_texture_page_palette, path, field_name, texture_page, palette);
+                         }();
+
+                         auto out_texture = save_texture(height, height);
+
+                         async_save(out_path, out_texture);
+                         co_await cppcoro::suspend_always{};
                     }
                }
           }
+
           settings.filters.value().palette.disable();
           settings.filters.value().bpp.disable();
-          auto out_path = m_using_coo ? save_path_coo(pattern_coo_texture_page, path, field_name, texture_page)
-                                      : save_path(pattern_texture_page, path, field_name, texture_page);
-          co_yield true;
+          auto out_path    = m_using_coo ? save_path_coo(pattern_coo_texture_page, path, field_name, texture_page)
+                                         : save_path(pattern_texture_page, path, field_name, texture_page);
+
           auto out_texture = save_texture(height, height);
-          co_yield true;
+
           async_save(out_path, out_texture);
-          co_yield true;
+          co_await cppcoro::suspend_always{};
      }
+
      for (std::future<void> &future : m_futures)
      {
-          co_yield true;
-          future.wait();
-          co_yield true;
+          while (true)
+          {
+               std::future_status status = future.wait_for(std::chrono::seconds(0));
+               if (status == std::future_status::ready)
+               {
+                    // Do something with the result
+                    co_await cppcoro::suspend_always{};
+                    break;
+               }
+               else if (status == std::future_status::timeout)
+               {
+                    // Future not yet ready
+               }
+               else if (status == std::future_status::deferred)
+               {
+                    // Deferred future, not yet started
+               }
+               co_await cppcoro::suspend_always{};
+          }
      }
      m_futures.clear();
 }
@@ -1478,66 +1498,16 @@ std::string map_sprite::get_base_name() const
 {
      return str_to_lower(m_field->get_base_name());
 }
-std::vector<std::uint8_t> map_sprite::get_conflicting_palettes(const std::uint8_t &texture_page) const
-{
-     //todo rewrite this.
-     return m_maps.back().visit_tiles([&texture_page, this](const auto &tiles) {
-          //        using tileT =
-          //          std::remove_cvref_t<typename
-          //          std::remove_cvref_t<decltype(tiles)>::value_type>;
-
-          auto map_xy_palette = generate_map(
-            tiles,
-            [](const auto &tile) { return std::make_tuple(tile.source_x() / tile.width(), tile.source_y() / tile.height()); },
-            [](const auto &tile) { return tile.palette_id(); },
-            [&texture_page](const auto &tile) { return std::cmp_equal(texture_page, tile.texture_id()); });
-          std::vector<uint8_t>     conflict_palettes{};
-          std::vector<std::string> conflict_xy{};
-          for (auto &kvp : map_xy_palette)
-          {
-               // const auto& xy = kvp.first;
-               std::vector<std::uint8_t> &palette_vector = kvp.second;
-               std::ranges::sort(palette_vector);
-               auto [first, last] = std::ranges::unique(palette_vector);
-               palette_vector.erase(first, last);
-               if (palette_vector.size() <= 1U)
-               {
-                    // map_xy_palette.erase(xy);
-               }
-               else
-               {
-                    conflict_xy.emplace_back(fmt::format("({},{})", std::get<0>(kvp.first), std::get<1>(kvp.first)));
-                    conflict_palettes.insert(conflict_palettes.end(), palette_vector.begin(), palette_vector.end());
-               }
-          }
-          if (!conflict_xy.empty())
-          {
-               spdlog::info("Conflicting Palettes:");
-               for (const auto &cxy : conflict_xy)
-               {
-                    spdlog::info("conflict xy: {}", cxy);
-               }
-               std::ranges::sort(conflict_palettes);
-               auto [first, last] = std::ranges::unique(conflict_palettes);
-               conflict_palettes.erase(first, last);
-               for (auto p : conflict_palettes)
-               {
-                    spdlog::info("conflict palette: {}", p);
-               }
-          }
-          return conflict_palettes;
-     });
-}
 
 void map_sprite::save_pupu_textures(const std::filesystem::path &path)
 {
-     for (bool const b : gen_pupu_textures(path))
+     auto task = gen_pupu_textures(path);
+     while (!task.is_ready())
      {
-          std::ignore = b;
      }
 }
 
-cppcoro::generator<bool> map_sprite::gen_pupu_textures(const std::filesystem::path path)
+cppcoro::task<void> map_sprite::gen_pupu_textures(const std::filesystem::path path)
 {
      // assert(std::filesystem::path.is_directory(path));
      const std::string                 field_name       = { str_to_lower(m_field->get_base_name()) };
@@ -1565,18 +1535,18 @@ cppcoro::generator<bool> map_sprite::gen_pupu_textures(const std::filesystem::pa
           settings.filters.value().pupu.update(pupu).enable();
           std::filesystem::path out_path =
             m_using_coo ? save_path_coo(pattern_coo_pupu, path, field_name, pupu) : save_path(pattern_pupu, path, field_name, pupu);
-          co_yield true;
+          co_await cppcoro::suspend_always{};
           std::shared_ptr<sf::RenderTexture> out_texture =
             save_texture(static_cast<std::uint32_t>(canvas.width()), static_cast<std::uint32_t>(canvas.height()));
-          co_yield true;
+          co_await cppcoro::suspend_always{};
           async_save(out_path, out_texture);
-          co_yield true;
+          co_await cppcoro::suspend_always{};
      }
      for (std::future<void> &future : m_futures)
      {
-          co_yield true;
+          co_await cppcoro::suspend_always{};
           future.wait();
-          co_yield true;
+          co_await cppcoro::suspend_always{};
      }
      m_futures.clear();
 }
@@ -1875,11 +1845,11 @@ void map_sprite::save_modified_map(const std::filesystem::path &dest_path) const
             append_imported_tiles();
             for_all_tiles(
               [&append, &wrote_end_tile](const auto &tile_const, const auto &tile, const auto &) {
-                   bool end_const = filter_invalid(tile_const);
-                   bool end_other = filter_invalid(tile);
+                   bool const end_const = filter_invalid(tile_const);
+                   bool const end_other = filter_invalid(tile);
                    if (end_const || end_other)// should be last tile.
                    {
-                        spdlog::info("About to save the last tile.");
+                        //spdlog::info("About to save the last tile.");
                         // write imported tiles first.
                         // write from tiles const
                         if (end_other)
@@ -1957,7 +1927,7 @@ void map_sprite::compact_map_order()
 {
      auto &map = m_maps.copy_back();
      map.visit_tiles([](auto &&tiles) {
-          auto filtered_tiles            = tiles | std::views::filter(filter_invalid);
+          auto filtered_tiles            = tiles | std::views::filter(ff_8::tile_operations::InvalidTile{});
           using tile_t                   = std::remove_cvref_t<std::ranges::range_value_t<decltype(tiles)>>;
           const auto WithDepth_operation = ff_8::tile_operations::WithDepth<tile_t>{ open_viii::graphics::BPPT::BPP4_CONST() };
           for (std::size_t tile_index = {}; tile_t & tile : filtered_tiles)
