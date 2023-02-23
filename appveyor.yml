@@ -22,21 +22,19 @@ before_build:
 
 build_script:
   - cmd: >-
-           set PATH=%PATH%;C:\Users\appveyor\AppData\Roaming\Python\Python38\Scripts
-           
-           set CONAN_USER_HOME=c:\conan\data
-           
-           del c:\conan\data\.conan\settings.yml*
-           
-           "%PYTHON%" -m pip install --user conan==1.58.0
-
-    #      conan profile detect
-
-           mkdir build
-           
-           cmake -S c:\projects\source -B ./build -G Ninja -DCMAKE_BUILD_TYPE=Release
-           
-           cmake --build ./build --config "Release"
+      set PATH=%PATH%;C:\Users\appveyor\AppData\Roaming\Python\Python38\Scripts
+      
+      set CONAN_USER_HOME=c:\conan\data
+      
+      del c:\conan\data\.conan\settings.yml*
+      
+      "%PYTHON%" -m pip install --user conan==1.58.0
+      
+      mkdir build
+      
+      cmake -S c:\projects\source -B ./build -G Ninja -DCMAKE_BUILD_TYPE=Release
+      
+      cmake --build ./build --config "Release"
 
 after_build:
   - cmd: move bin\*.exe bin\Release
