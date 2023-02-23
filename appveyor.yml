@@ -28,7 +28,7 @@ build_script:
       
       del c:\conan\data\.conan\settings.yml*
       
-      "%PYTHON%" -m pip install --user conan<2.0 --upgrade
+      "%PYTHON%" -m pip install --user "conan<2.0" --upgrade
       
       mkdir build
       
