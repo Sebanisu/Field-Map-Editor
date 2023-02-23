@@ -28,6 +28,8 @@ build_script:
       
       "%PYTHON%" -m pip install --user conan
       
+      conan profile detect
+      
       mkdir build
       
       cmake -S c:\projects\source -B ./build -G Ninja -DCMAKE_BUILD_TYPE=Release  
