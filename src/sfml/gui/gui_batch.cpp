@@ -239,7 +239,7 @@ bool fme::gui_batch::ask_transformation() const
                     {
                          m_transformation_type = static_cast<batch_operation_transformation>(
                            static_cast<std::uint32_t>(m_transformation_type)
-                           | static_cast<std::uint32_t>(batch_operation_transformation::compact_all));
+                           | static_cast<std::uint32_t>(batch_operation_transformation::compact_map_order));
                     }
                }
                format_imgui_text("Flatten: ");
@@ -258,29 +258,35 @@ bool fme::gui_batch::ask_transformation() const
                     ImGui::Checkbox("BPP", &flatten_bpp);
                }
                if (flatten_bpp)
+               {
                     m_transformation_type = static_cast<batch_operation_transformation>(
                       static_cast<std::uint32_t>(m_transformation_type)
                       | static_cast<std::uint32_t>(batch_operation_transformation::flatten_bpp));
+               }
                static bool flatten_palette{};
                ImGui::SameLine();
                ImGui::Checkbox("Palette", &flatten_palette);
                if (flatten_palette)
+               {
                     m_transformation_type = static_cast<batch_operation_transformation>(
                       static_cast<std::uint32_t>(m_transformation_type)
                       | static_cast<std::uint32_t>(batch_operation_transformation::flatten_palette));
+               }
           }
           if (old != m_transformation_type)
+          {
                spdlog::info("0b{:0>6b}U\n", static_cast<std::uint32_t>(m_transformation_type));
+          }
      }
-     return !(m_transformation_type == batch_operation_transformation::None && m_source_type == batch_operation_source::fields_archive);
+     return m_transformation_type != batch_operation_transformation::None || m_source_type != batch_operation_source::fields_archive;
 }
-ImGui::FileBrowser fme::gui_batch::create_directory_browser(std::string title, std::vector<std::string> filetypes)
+ImGui::FileBrowser fme::gui_batch::create_directory_browser(std::string title, const std::vector<std::string> &filetypes)
 {
      ImGui::FileBrowser directory_browser{ static_cast<ImGuiFileBrowserFlags>(
        static_cast<std::uint32_t>(ImGuiFileBrowserFlags_SelectDirectory)
        | static_cast<std::uint32_t>(ImGuiFileBrowserFlags_CreateNewDir)) };
      directory_browser.SetTitle(std::move(title));
-     directory_browser.SetTypeFilters(std::move(filetypes));
+     directory_browser.SetTypeFilters(filetypes);
      return directory_browser;
 }
 std::optional<std::filesystem::path> fme::gui_batch::ask_for_path(ImGui::FileBrowser &file_browser)
@@ -294,35 +300,44 @@ std::optional<std::filesystem::path> fme::gui_batch::ask_for_path(ImGui::FileBro
      }
      return path;
 }
-void fme::gui_batch::compact_and_flatten(map_sprite &ms) const
+void fme::gui_batch::compact_and_flatten(map_sprite &current_map_sprite) const
 {
-     const auto c = [&] {
+     const auto compact = [&] {
           if ((static_cast<uint32_t>(m_transformation_type) & static_cast<uint32_t>(batch_operation_transformation::compact_rows)) != 0)
           {
-               ms.compact_rows();
+               current_map_sprite.compact_rows();
           }
           if ((static_cast<uint32_t>(m_transformation_type) & static_cast<uint32_t>(batch_operation_transformation::compact_all)) != 0)
           {
-               ms.compact_all();
+               current_map_sprite.compact_all();
+          }
+          if (
+            (static_cast<uint32_t>(m_transformation_type) & static_cast<uint32_t>(batch_operation_transformation::compact_map_order)) != 0)
+          {
+               current_map_sprite.compact_map_order();
           }
      };
-     c();
-     const auto f = [&]() -> bool {
-          if ((static_cast<uint32_t>(m_transformation_type) & static_cast<uint32_t>(batch_operation_transformation::flatten_bpp)) != 0)
+     compact();
+     const auto flatten = [&]() -> bool {
+          if (
+            (static_cast<uint32_t>(m_transformation_type) & static_cast<uint32_t>(batch_operation_transformation::compact_map_order)) == 0)
           {
-               ms.flatten_bpp();
-               return true;
+               if ((static_cast<uint32_t>(m_transformation_type) & static_cast<uint32_t>(batch_operation_transformation::flatten_bpp)) != 0)
+               {
+                    current_map_sprite.flatten_bpp();
+                    return true;
+               }
           }
           if ((static_cast<uint32_t>(m_transformation_type) & static_cast<uint32_t>(batch_operation_transformation::flatten_palette)) != 0)
           {
-               ms.flatten_palette();
+               current_map_sprite.flatten_palette();
                return true;
           }
           return false;
      };
-     if (f())
+     if (flatten())
      {
-          c();
+          compact();
      }
 }
 ff_8::filters fme::gui_batch::get_filters()

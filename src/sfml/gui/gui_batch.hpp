@@ -26,7 +26,7 @@ struct [[nodiscard]] gui_batch
           compact_all                = 1U << 3U,
           flatten_bpp                = 1U << 4U,
           flatten_palette            = 1U << 5U,
-          compact_row_order          = 1U << 6U,
+          compact_map_order          = 1U << 6U,
      };
      gui_batch(archives_group ag)
        : m_archive_paths(open_viii::Paths::get())
@@ -55,7 +55,7 @@ struct [[nodiscard]] gui_batch
      [[nodiscard]] bool                      ask_archive_path() const;
      [[nodiscard]] bool                      ask_source() const;
      [[nodiscard]] bool                      ask_transformation() const;
-     [[nodiscard]] static ImGui::FileBrowser create_directory_browser(std::string title, std::vector<std::string> filetypes = {});
+     [[nodiscard]] static ImGui::FileBrowser create_directory_browser(std::string title, const std::vector<std::string>& filetypes = {});
      [[nodiscard]] static std::optional<std::filesystem::path> ask_for_path(ImGui::FileBrowser &file_browser);
 
      mutable std::vector<std::string>                          m_archive_paths       = {};
