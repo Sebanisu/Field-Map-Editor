@@ -26,7 +26,7 @@ build_script:
       
       set CONAN_USER_HOME=c:\conan\data
       
-      del c:\conan\data\.conan\settings.yml*
+      REM del c:\conan\data\.conan\settings.yml*
       
       "%PYTHON%" -m pip install --user "conan<2.0" --upgrade
       
