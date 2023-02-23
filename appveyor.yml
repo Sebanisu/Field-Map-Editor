@@ -10,7 +10,7 @@ cache:
   - c:\conan\data
 
 before_build:
-  - cmd: >-      
+  - cmd: >-
       "C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvars64.bat"
       
       mkdir bin\Release
@@ -21,24 +21,26 @@ before_build:
 
 
 build_script:
-  - cmd: >-      
-      set PATH=%PATH%;C:\Users\appveyor\AppData\Roaming\Python\Python38\Scripts
-      
-      set CONAN_USER_HOME=c:\conan\data
-      
-      "%PYTHON%" -m pip install --user conan==1.58.0
-      
-      conan profile detect
-      
-      mkdir build
-      
-      cmake -S c:\projects\source -B ./build -G Ninja -DCMAKE_BUILD_TYPE=Release  
-      
-      cmake --build ./build --config "Release"
+  - cmd: >-
+           set PATH=%PATH%;C:\Users\appveyor\AppData\Roaming\Python\Python38\Scripts
+           
+           set CONAN_USER_HOME=c:\conan\data
+           
+           del c:\conan\data\.conan\settings.yml*
+           
+           "%PYTHON%" -m pip install --user conan==1.58.0
+
+    #      conan profile detect
+
+           mkdir build
+           
+           cmake -S c:\projects\source -B ./build -G Ninja -DCMAKE_BUILD_TYPE=Release
+           
+           cmake --build ./build --config "Release"
 
 after_build:
   - cmd: move bin\*.exe bin\Release
-    
+
 test_script:
   - cmd: cd build && ctest -C Debug
 
