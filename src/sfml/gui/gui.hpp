@@ -1,7 +1,6 @@
 //
 // Created by pcvii on 9/7/2021.
 //
-
 #ifndef FIELD_MAP_EDITOR_GUI_HPP
 #define FIELD_MAP_EDITOR_GUI_HPP
 #include "archives_group.hpp"
@@ -24,6 +23,7 @@
 #include "upscales.hpp"
 #include <cstdint>
 #include <fmt/chrono.h>
+#include <GL/glew.h>
 #include <imgui-SFML.h>
 #include <imgui.h>
 #include <SFML/Graphics/RenderWindow.hpp>

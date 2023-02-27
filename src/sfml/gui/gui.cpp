@@ -1796,6 +1796,14 @@ gui::gui()
   , m_map_sprite(get_map_sprite())
 
 {
+     m_window.setVerticalSyncEnabled(false);
+     GLenum err = glewInit();
+     if (GLEW_OK != err)
+     {
+          // GLEW initialization failed
+          std::cerr << "Error: " << glewGetErrorString(err) << std::endl;
+          std::exit(EXIT_FAILURE);
+     }
      sort_paths();
      init_and_get_style();
 }

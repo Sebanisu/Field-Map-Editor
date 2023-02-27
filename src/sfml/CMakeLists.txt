@@ -28,12 +28,13 @@ add_executable(${PROJECT_NAME}_SFML
         tile_operations.hpp
         gui/gui.cpp
         gui/gui_batch.cpp
-        gui/batch_deswizzle.cpp gui/batch_deswizzle.hpp gui/map_dialog_mode.hpp gui/map_directory_mode.hpp gui/batch_embed.cpp gui/batch_embed.hpp gui/compact_type.hpp gui/batch_reswizzle.cpp gui/batch_reswizzle.hpp gui/mouse_positions.cpp gui/mouse_positions.hpp gui/scrolling.cpp gui/scrolling.hpp gui/Selections.cpp gui/Selections.hpp square.cpp square.hpp tile_sizes.hpp)
+        gui/batch_deswizzle.cpp gui/batch_deswizzle.hpp gui/map_dialog_mode.hpp gui/map_directory_mode.hpp gui/batch_embed.cpp gui/batch_embed.hpp gui/compact_type.hpp gui/batch_reswizzle.cpp gui/batch_reswizzle.hpp gui/mouse_positions.cpp gui/mouse_positions.hpp gui/scrolling.cpp gui/scrolling.hpp gui/Selections.cpp gui/Selections.hpp square.cpp square.hpp tile_sizes.hpp save_image_pbo.cpp save_image_pbo.hpp)
 #set_property(TARGET ${PROJECT_NAME}_SFML PROPERTY CXX_STANDARD 20)
 #find_package(ImGui-SFML REQUIRED)
 find_package(cppcoro) # todo will probably remove at some point.
 find_package(tomlplusplus REQUIRED)
 find_package(spdlog REQUIRED)
+find_package(GLEW REQUIRED)
 include(${CMAKE_SOURCE_DIR}/cmake/imgui-sfml.cmake)
 target_link_libraries(${PROJECT_NAME}_SFML
         PRIVATE project_warnings
@@ -47,6 +48,7 @@ target_link_libraries(${PROJECT_NAME}_SFML
         PRIVATE cppcoro::cppcoro
         PRIVATE tomlplusplus::tomlplusplus
         PRIVATE spdlog::spdlog
+        PRIVATE GLEW::GLEW
         )
 target_include_directories(${PROJECT_NAME}_SFML
         PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
@@ -54,7 +56,9 @@ target_include_directories(${PROJECT_NAME}_SFML
 
 target_compile_definitions(${PROJECT_NAME}_SFML
         PUBLIC NOMINMAX # imgui uses unguarded min and max.
-        PUBLIC TOML_EXCEPTIONS=0)
+        PUBLIC TOML_EXCEPTIONS=0
+        PUBLIC GLEW_STATIC
+        )
 
 target_compile_features(${PROJECT_NAME}_SFML
         PUBLIC cxx_std_23

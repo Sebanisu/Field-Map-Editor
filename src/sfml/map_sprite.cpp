@@ -3,6 +3,7 @@
 #include "append_inserter.hpp"
 #include "format_imgui_text.hpp"
 #include "safedir.hpp"
+#include "save_image_pbo.hpp"
 #include <bit>
 #include <open_viii/graphics/Png.hpp>
 #include <spdlog/spdlog.h>
@@ -1001,10 +1002,12 @@ void map_sprite::save(const std::filesystem::path &path) const
      {
           return;
      }
-     const auto image = m_render_texture->getTexture().copyToImage();
+     auto future = save_image_pbo(m_render_texture->getTexture());
+     future.wait();
+     const auto image = future.get();
      if (!image.saveToFile(path.string()))
      {
-          std::cerr << "failure to save file:" << path << std::endl;
+          spdlog::warn("Failed to save file: {}", path.string());
      }
 }
 bool map_sprite::fail() const
@@ -1849,9 +1852,9 @@ void map_sprite::save_modified_map(const std::filesystem::path &dest_path) const
                    bool const end_other = filter_invalid(tile);
                    if (end_const || end_other)// should be last tile.
                    {
-                        //spdlog::info("About to save the last tile.");
-                        // write imported tiles first.
-                        // write from tiles const
+                        // spdlog::info("About to save the last tile.");
+                        //  write imported tiles first.
+                        //  write from tiles const
                         if (end_other)
                         {
                              append(tile);
