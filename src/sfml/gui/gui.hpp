@@ -64,11 +64,11 @@ struct gui
                               append_results.clear();
                          }
                          launch_async(
-                           [this](const int pos, const std::filesystem::path &selected_path) -> cppcoro::task<void> {
+                           [this](const int pos, const std::filesystem::path &selected_path) -> void {
                                 auto field = m_archives_group.field(pos);
                                 if (!field)
                                 {
-                                     co_return;
+                                     return;
                                 }
                                 auto                   paths = find_maps_in_directory(selected_path);
                                 const auto             tmp   = replace_entries(*field, paths);
@@ -82,12 +82,12 @@ struct gui
                     []() { return true; } };
      batch_embed m_batch_embed2 =
        batch_embed{ "Operation 2: Update fields archive, Remove Temporary Files",
-                    [this](int &pos, const std::filesystem::path &) {
-                         if (check_futures())
-                         {
-                              --pos;
-                              return;
-                         }
+                    [this](int &, const std::filesystem::path &) {
+//                         if (check_futures())
+//                         {
+//                              --pos;
+//                              return;
+//                         }
                          [this]() {
                               const auto &fields = m_archives_group.archives().get<open_viii::archive::ArchiveTypeT::field>();
                               {
@@ -284,13 +284,13 @@ struct gui
                                                } };
      batch_embed m_batch_embed4 = batch_embed{
           "Operation 4: Save",
-          [this](int &pos, const std::filesystem::path &in_selected_path) {
+          [this](int &, const std::filesystem::path &in_selected_path) {
                format_imgui_wrapped_text("{}", "Saving Files...");
-               if (check_futures())
-               {
-                    --pos;
-                    return;
-               }
+//               if (check_futures())
+//               {
+//                    --pos;
+//                    return;
+//               }
                // launch_async(
                [this](const std::filesystem::path &selected_path) {
                     const auto move = [&](std::filesystem::path path) {
@@ -395,24 +395,24 @@ struct gui
                }(in_selected_path);
           },
           [this]() {
-               if (check_futures())
-               {
-                    const auto current    = std::chrono::high_resolution_clock::now();
-                    const auto difference = current - m_batch_embed4.start_time();
-                    format_imgui_wrapped_text("{:%H:%M:%S}", difference);
-                    if (open_viii::archive::fiflfs_in_main_zzz(m_archives_group.archives()))
-                    {
-                         format_imgui_wrapped_text("{}", "Updating main.zzz...Finishing writing...");
-                    }
-                    else
-                    {
-                         format_imgui_wrapped_text(
-                           "{}",
-                           "Updating fields.fi, fields.fl, and fields.fs...Finishing "
-                           "writing...");
-                    }
-                    return false;
-               }
+//               if (check_futures())
+//               {
+//                    const auto current    = std::chrono::high_resolution_clock::now();
+//                    const auto difference = current - m_batch_embed4.start_time();
+//                    format_imgui_wrapped_text("{:%H:%M:%S}", difference);
+//                    if (open_viii::archive::fiflfs_in_main_zzz(m_archives_group.archives()))
+//                    {
+//                         format_imgui_wrapped_text("{}", "Updating main.zzz...Finishing writing...");
+//                    }
+//                    else
+//                    {
+//                         format_imgui_wrapped_text(
+//                           "{}",
+//                           "Updating fields.fi, fields.fl, and fields.fs...Finishing "
+//                           "writing...");
+//                    }
+//                    return false;
+//               }
                format_imgui_wrapped_text("{}", "Choose where to save the files.");
                std::ranges::for_each(
                  append_results, [](const std::filesystem::path &path) { format_imgui_wrapped_text("\t\"{}\"", path); });
@@ -599,16 +599,11 @@ struct gui
      std::vector<std::filesystem::path>
        replace_entries(const open_viii::archive::FIFLFS<Nested> &field, const std::vector<std::filesystem::path> &paths) const;
 
-     std::vector<cppcoro::task<void>> m_coro_tasks = {};
      template<typename T, typename... argsT>
      void launch_async(T &&task, argsT &&...args)
      {
-
-          m_coro_tasks.emplace_back(std::invoke(std::forward<T>(task), std::forward<argsT>(args)...));
-
-
+          std::invoke(std::forward<T>(task), std::forward<argsT>(args)...);
      }
-     bool                      check_futures();
      void                      batch_ops_ask_menu() const;
      bool                      combo_upscale_path(std::filesystem::path &path, const std::string &field_name, open_viii::LangT coo) const;
      void                      open_locate_ff8_filebrowser();

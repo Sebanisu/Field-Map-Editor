@@ -186,7 +186,7 @@ std::shared_ptr<std::array<sf::Texture, map_sprite::MAX_TEXTURES>> map_sprite::l
      }
      return ret;
 }
-cppcoro::task<void> map_sprite::load_mim_textures(open_viii::graphics::background::Mim mim, sf::Texture *texture, BPPT bppt, uint8_t pal)
+void map_sprite::load_mim_textures(open_viii::graphics::background::Mim mim, sf::Texture *texture, BPPT bppt, uint8_t pal)
 {
      const auto colors = get_colors(mim, bppt, pal);
      // std::lock_guard<std::mutex> lock(mutex_texture);
@@ -195,32 +195,28 @@ cppcoro::task<void> map_sprite::load_mim_textures(open_viii::graphics::backgroun
      texture->setSmooth(false);
      texture->setRepeated(false);
      texture->generateMipmap();
-     co_return;
+     return;
 }
 void map_sprite::load_mim_textures(
   std::shared_ptr<std::array<sf::Texture, MAX_TEXTURES>> &ret,
   open_viii::graphics::BPPT                               bpp,
   std::uint8_t                                            palette)
 {
-     std::vector<cppcoro::task<void>> tasks{};
+
      if (m_mim.get_width(bpp) != 0U)
      {
           std::size_t const pos = get_texture_pos(bpp, palette, 0);
-          tasks.emplace_back(load_mim_textures(m_mim, &(ret->at(pos)), bpp, palette));
+          load_mim_textures(m_mim, &(ret->at(pos)), bpp, palette);
      }
-     sync_wait_tasks(tasks);
-}
-void map_sprite::sync_wait_tasks(std::vector<cppcoro::task<void>> &tasks)
-{
-     std::ranges::for_each(tasks, [](auto &task) { cppcoro::sync_wait(task); });
+
 }
 void map_sprite::find_upscale_path(std::shared_ptr<std::array<sf::Texture, MAX_TEXTURES>> &ret)
 {
-     std::vector<cppcoro::task<void>> tasks{};
+
      for (const auto &texture_page : m_all_unique_values_and_strings.texture_page_id().values())
      {
           const size_t texture_index                 = START_OF_NO_PALETTE_INDEX + texture_page;
-          const auto   texture_file_exists_then_load = [=](sf::Texture *texture) -> cppcoro::task<void> {
+          const auto   texture_file_exists_then_load = [=](sf::Texture *texture) {
                const auto &root           = m_filters.upscale.value();
                const auto  paths          = m_upscales.get_file_paths(root, texture_page);
                auto        filtered_paths = paths | std::views::filter([](safedir path) { return path.is_exists() && !path.is_dir(); });
@@ -233,21 +229,21 @@ void map_sprite::find_upscale_path(std::shared_ptr<std::array<sf::Texture, MAX_T
                     texture->setRepeated(false);
                     texture->generateMipmap();
                }
-               co_return;
+               return;
           };
           if (texture_index >= MAX_TEXTURES)
           {
                spdlog::error("{}:{} - Index out of range {} / {}", __FILE__, __LINE__, texture_index, MAX_TEXTURES);
                return;
           }
-          tasks.emplace_back(texture_file_exists_then_load(&(ret->at(texture_index))));
+          texture_file_exists_then_load(&(ret->at(texture_index)));
      }
-     sync_wait_tasks(tasks);
+
 }
 
 void map_sprite::find_deswizzle_path(std::shared_ptr<std::array<sf::Texture, MAX_TEXTURES>> &ret)
 {
-     std::vector<cppcoro::task<void>> tasks{};
+
      auto                             field_name = get_base_name();
      std::ranges::for_each(m_all_unique_values_and_strings.pupu().values(), [&, i = size_t{}](const ::PupuID &pupu) mutable {
           static constexpr auto pattern_pupu     = std::string_view("{}_{}.png");
@@ -261,7 +257,7 @@ void map_sprite::find_deswizzle_path(std::shared_ptr<std::array<sf::Texture, MAX
           {
                in_path = save_path(pattern_pupu, m_filters.deswizzle.value(), field_name, pupu);
           }
-          const auto check_if_file_exists_and_load_it = [=](sf::Texture *texture) -> cppcoro::task<void> {
+          const auto check_if_file_exists_and_load_it = [=](sf::Texture *texture) -> void {
                if (safedir(in_path).is_exists())
                {
                     spdlog::info("texture path: \"{}\"", in_path.string());
@@ -270,24 +266,24 @@ void map_sprite::find_deswizzle_path(std::shared_ptr<std::array<sf::Texture, MAX
                     texture->setRepeated(false);
                     texture->generateMipmap();
                }
-               co_return;
+               return;
           };
           if (i >= MAX_TEXTURES)
           {
                spdlog::error("{}:{} - Index out of range {} / {}", __FILE__, __LINE__, i, MAX_TEXTURES);
                return;
           }
-          tasks.emplace_back(check_if_file_exists_and_load_it(&(ret->at(i++))));
+          check_if_file_exists_and_load_it(&(ret->at(i++)));
      });
-     sync_wait_tasks(tasks);
+
 }
 void map_sprite::find_upscale_path(std::shared_ptr<std::array<sf::Texture, MAX_TEXTURES>> &ret, std::uint8_t palette)
 {
-     std::vector<cppcoro::task<void>> tasks{};
+
      for (const auto &texture_page : m_all_unique_values_and_strings.texture_page_id().values())
      {
           const size_t index      = size_t{ texture_page } * MAX_PALETTES + palette;
-          auto const   p_function = [=](sf::Texture *const texture) -> cppcoro::task<void> {
+          auto const   p_function = [=](sf::Texture *const texture) -> void {
                const auto &root           = m_filters.upscale.value();
                const auto  paths          = m_upscales.get_file_paths(root, texture_page, palette);
                auto        filtered_paths = paths | std::views::filter([](safedir path) { return path.is_exists() && !path.is_dir(); });
@@ -301,11 +297,11 @@ void map_sprite::find_upscale_path(std::shared_ptr<std::array<sf::Texture, MAX_T
                     texture->setRepeated(false);
                     texture->generateMipmap();
                }
-               co_return;
+               return;
           };
-          tasks.emplace_back(p_function(&(ret->at(index))));
+          p_function(&(ret->at(index)));
      }
-     sync_wait_tasks(tasks);
+
 }
 
 void set_color(std::array<sf::Vertex, 4U> &vertices, const sf::Color &color)
@@ -854,14 +850,14 @@ void map_sprite::update_render_texture(bool reload_textures)
           m_render_texture->generateMipmap();
      }
 }
-cppcoro::task<> map_sprite::save(const std::filesystem::path &path) const
+void map_sprite::save(const std::filesystem::path &path) const
 {
      if (fail())
      {
-          co_return;
+          return;
      }
-     cppcoro::task<sf::Image> const task  = save_image_pbo(m_render_texture->getTexture());
-     const sf::Image                image = co_await task;
+     sf::Image const task  = save_image_pbo(m_render_texture->getTexture());
+     const sf::Image                image = task;
      if (!image.saveToFile(path.string()))
      {
           spdlog::warn("Failed to save file: {}", path.string());
@@ -1167,13 +1163,10 @@ bool map_sprite::check_if_one_palette(const std::uint8_t &texture_page) const
 }
 void map_sprite::save_new_textures(const std::filesystem::path &path)
 {
-     auto task = gen_new_textures(path);
-     while (!task.is_ready())
-     {
-     }
+     gen_new_textures(path);
 }
 
-cppcoro::task<void> map_sprite::gen_new_textures(const std::filesystem::path path)
+void map_sprite::gen_new_textures(const std::filesystem::path path)
 {
      // assert(std::filesystem::path.is_directory(path));
      const std::string                 field_name                       = { get_base_name() };
@@ -1207,7 +1200,7 @@ cppcoro::task<void> map_sprite::gen_new_textures(const std::filesystem::path pat
 
      if (unique_bpp.size() == 1U && unique_values.palette().at(unique_bpp.front()).values().size() <= 1U)
      {
-          co_return;
+          return;
      }
      using map_type                          = std::remove_cvref_t<decltype(get_conflicting_palettes())>;
      using mapped_type                       = typename map_type::mapped_type;
@@ -1242,7 +1235,7 @@ cppcoro::task<void> map_sprite::gen_new_textures(const std::filesystem::path pat
                          if (out_texture)
                          {
                               async_save(out_texture->getTexture(), out_path);
-                              co_await cppcoro::suspend_always{};
+
                          }
                     }
                }
@@ -1257,7 +1250,7 @@ cppcoro::task<void> map_sprite::gen_new_textures(const std::filesystem::path pat
           if (out_texture)
           {
                async_save(out_texture->getTexture(), out_path);
-               co_await cppcoro::suspend_always{};
+
           }
      }
 }
@@ -1284,17 +1277,17 @@ void map_sprite::save_pupu_textures(const std::filesystem::path &path)
      iRectangle const canvas = m_maps.const_back().canvas() * static_cast<int>(m_scale);
      std::shared_ptr<sf::RenderTexture> out_texture =
        save_texture(static_cast<std::uint32_t>(canvas.width()), static_cast<std::uint32_t>(canvas.height()));
-     std::vector<cppcoro::task<void>> tasks{};
-     tasks.emplace_back(gen_pupu_textures(
+
+     gen_pupu_textures(
        path,
        std::string{ str_to_lower(m_field->get_base_name()) },
        settings,
        m_all_unique_values_and_strings.pupu().values(),
-       m_using_coo ? std::optional<open_viii::LangT>{ m_coo } : std::optional<open_viii::LangT>{ std::nullopt },std::move(out_texture)));
-     sync_wait_tasks(tasks);
+       m_using_coo ? std::optional<open_viii::LangT>{ m_coo } : std::optional<open_viii::LangT>{ std::nullopt },std::move(out_texture));
+
 }
 
-cppcoro::task<void> map_sprite::gen_pupu_textures(
+void map_sprite::gen_pupu_textures(
   const std::filesystem::path     path,
   const std::string               field_name,
   settings_backup                 settings,
@@ -1311,22 +1304,22 @@ cppcoro::task<void> map_sprite::gen_pupu_textures(
           settings.filters.value().pupu.update(pupu).enable();
           std::filesystem::path out_path =
             coo ? save_path_coo(pattern_coo_pupu, path, field_name, pupu, *coo) : save_path(pattern_pupu, path, field_name, pupu);
-          co_await cppcoro::suspend_always{};
-          co_await cppcoro::suspend_always{};
+
+
           if (out_texture)
           {
                async_save(out_texture->getTexture(), out_path);
-               co_await cppcoro::suspend_always{};
+
           }
      }
 }
 void map_sprite::async_save(const sf::Texture &out_texture, const std::filesystem::path &out_path)
 {
-     std::vector<cppcoro::task<void>> tasks{};
+
      // trying packaged task to, so we don't wait for files to save.
-     const auto                       task = [=](cppcoro::task<sf::Image> image_task) -> cppcoro::task<void> {
+     const auto                       task = [=](sf::Image image_task) -> void {
           spdlog::info("Saving Texture, {}.", out_path.string());
-          const sf::Image image = co_await image_task;
+          const sf::Image image = image_task;
           std::error_code error_code{};
           std::filesystem::create_directories(out_path.parent_path(), error_code);
           if (error_code)
@@ -1344,7 +1337,7 @@ void map_sprite::async_save(const sf::Texture &out_texture, const std::filesyste
                  out_path.string(),
                  image.getSize().x,
                  image.getSize().y);
-               co_return;
+               return;
           }
           using namespace std::chrono_literals;
           const std::string     filename         = out_path.string();
@@ -1364,8 +1357,8 @@ void map_sprite::async_save(const sf::Texture &out_texture, const std::filesyste
                }
           }
      };
-     tasks.emplace_back(task(save_image_pbo(out_texture)));
-     sync_wait_tasks(tasks);
+     task(save_image_pbo(out_texture));
+
 }
 bool map_sprite::save_png_image(const sf::Image &image, const std::filesystem::path &path)
 {

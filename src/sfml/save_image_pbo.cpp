@@ -86,7 +86,7 @@ class [[nodiscard]] Framebuffer
      }
      return Framebuffer{ fbo };
 }
-cppcoro::task<sf::Image> save_image_pbo(const sf::Texture &texture)
+sf::Image save_image_pbo(const sf::Texture &texture)
 {
      const auto texture_size = texture.getSize();
      const auto backup_fbo   = backup_frame_buffer();
@@ -105,7 +105,7 @@ cppcoro::task<sf::Image> save_image_pbo(const sf::Texture &texture)
      glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
      // Bind the PBO to a future that will be returned
      std::invoke(backup_fbo);
-     co_await cppcoro::suspend_always{};
+
 #ifdef __cpp_lib_smart_ptr_for_overwrite
      const auto pixels = std::make_unique_for_overwrite<std::uint8_t[]>(static_cast<std::size_t>(buffer_size));
 #else
@@ -120,5 +120,5 @@ cppcoro::task<sf::Image> save_image_pbo(const sf::Texture &texture)
      image.create(texture_size.x, texture_size.y, pixels.get());
      glDeleteBuffers(1, &pbo_id);
 
-     co_return image;
+     return image;
 }

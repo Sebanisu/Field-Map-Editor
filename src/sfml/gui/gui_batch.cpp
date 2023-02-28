@@ -353,7 +353,7 @@ ff_8::filters fme::gui_batch::get_filters()
      }
      return filters;
 }
-cppcoro::task<void> fme::gui_batch::save_output(map_sprite current_map_sprite) const
+void fme::gui_batch::save_output(map_sprite current_map_sprite) const
 {
      if (m_output_path.has_value())
      {
@@ -367,39 +367,30 @@ cppcoro::task<void> fme::gui_batch::save_output(map_sprite current_map_sprite) c
           }
           else if ((static_cast<uint32_t>(m_transformation_type) & static_cast<uint32_t>(batch_operation_transformation::swizzle)) != 0)
           {
-               auto task = current_map_sprite.gen_new_textures(selected_path);
-               while (!task.is_ready())
-               {
-                    co_await cppcoro::suspend_always{};
-               }
+               current_map_sprite.gen_new_textures(selected_path);
           }
           const std::filesystem::path map_path = selected_path / current_map_sprite.map_filename();
           current_map_sprite.save_modified_map(map_path);
-          co_await cppcoro::suspend_always{};
      }
 }
-cppcoro::task<void> fme::gui_batch::source()
+void fme::gui_batch::source()
 {
-     const auto filters   = get_filters();
-     auto       gen_field = get_field(m_archive_group);
-     for (const auto &field : gen_field)
-     {
-          co_await cppcoro::suspend_always{};
-          auto gen_map_sprite = get_map_sprite(field, filters);
-          co_await cppcoro::suspend_always{};
-          for (::map_sprite &current_map_sprite_ref : gen_map_sprite)
-          {
-               auto current_map_sprite = std::move(current_map_sprite_ref);
-               co_await cppcoro::suspend_always{};
-               compact_and_flatten(current_map_sprite);
-               co_await cppcoro::suspend_always{};
-               auto task = save_output(std::move(current_map_sprite));
-               while (!task.is_ready())
-               {
-                    co_await cppcoro::suspend_always{};
-               }
-          }
-     }
+     //     const auto filters   = get_filters();
+     //     auto       gen_field = get_field(m_archive_group);
+     //     for (const auto &field : gen_field)
+     //     {
+     //
+     //          auto gen_map_sprite = get_map_sprite(field, filters);
+     //
+     //          for (::map_sprite &current_map_sprite_ref : gen_map_sprite)
+     //          {
+     //               auto current_map_sprite = std::move(current_map_sprite_ref);
+     //
+     //               compact_and_flatten(current_map_sprite);
+     //
+     //               save_output(std::move(current_map_sprite));
+     //          }
+     //     }
 }
 void fme::gui_batch::popup_batch_common_filter_start(ff_8::filter_old<std::filesystem::path> &filter, std::string_view base_name)
 {
@@ -424,7 +415,7 @@ void fme::gui_batch::popup_batch_common_filter_start(ff_8::filters &filters, std
           popup_batch_common_filter_start(filters.deswizzle, base_name);
      }
 }
-cppcoro::generator<::map_sprite>
+::map_sprite
   fme::gui_batch::get_map_sprite(const std::shared_ptr<open_viii::archive::FIFLFS<false>> &field, const ff_8::filters &in_filters)
 {
      std::string base_name     = ::map_sprite::str_to_lower(field->get_base_name());
@@ -449,22 +440,23 @@ cppcoro::generator<::map_sprite>
           load_map_file(local_filters.upscale);
           load_map_file(local_filters.deswizzle);
           spdlog::info("language code: {}", open_viii::LangCommon::to_string(open_viii::LangT::generic));
-          co_yield std::move(sprite);
+          return std::move(sprite);
      }
-     auto gen_field_coo = get_field_coos(field);
-     for (const open_viii::LangT coo : gen_field_coo)
-     {
-          sprite = map_sprite{ field, coo, {}, local_filters, {} };
-          if (!sprite.fail())
-          {
-               spdlog::info("language code: {}", open_viii::LangCommon::to_string(coo));
-               load_map_file(local_filters.upscale);
-               load_map_file(local_filters.deswizzle);
-               co_yield std::move(sprite);
-          }
-     }
+     //     auto gen_field_coo = get_field_coos(field);
+     //     for (const open_viii::LangT coo : gen_field_coo)
+     //     {
+     //          sprite = map_sprite{ field, coo, {}, local_filters, {} };
+     //          if (!sprite.fail())
+     //          {
+     //               spdlog::info("language code: {}", open_viii::LangCommon::to_string(coo));
+     //               load_map_file(local_filters.upscale);
+     //               load_map_file(local_filters.deswizzle);
+     //               return std::move(sprite);
+     //          }
+     //     }
+     return {};
 }
-cppcoro::generator<open_viii::LangT> fme::gui_batch::get_field_coos(const map_sprite::SharedField field)
+open_viii::LangT fme::gui_batch::get_field_coos(const map_sprite::SharedField field)
 {
      auto map_pairs = field->get_vector_of_indexes_and_files({ open_viii::graphics::background::Map::EXT });
      for (auto &map_pair : map_pairs)
@@ -480,29 +472,32 @@ cppcoro::generator<open_viii::LangT> fme::gui_batch::get_field_coos(const map_sp
                  == basename_view.substr(0, std::min(std::size(filename_view), std::size(basename_view))))
           {
                const auto coo_view = filename_view.substr(std::size(basename_view) + 1U, 2U);
-               co_yield open_viii::LangCommon::from_string(coo_view);
+               return open_viii::LangCommon::from_string(coo_view);
           }
      }
+     return {};
 }
-cppcoro::generator<std::shared_ptr<open_viii::archive::FIFLFS<false>>> fme::gui_batch::get_field(::archives_group archives_group)
+std::shared_ptr<open_viii::archive::FIFLFS<false>> fme::gui_batch::get_field(::archives_group archives_group)
 {
-     auto gen_fields = get_field_id_and_name(archives_group.mapdata());
-     for (const auto &[i, name] : gen_fields)
-     {
-          spdlog::info("field id: {:>3}\tname: {}", i, name);
-          if (auto f = archives_group.field(i); f)
-          {
-               co_yield std::move(f);
-          }
-     }
+     //     auto gen_fields = get_field_id_and_name(archives_group.mapdata());
+     //     for (const auto &[i, name] : gen_fields)
+     //     {
+     //          spdlog::info("field id: {:>3}\tname: {}", i, name);
+     //          if (auto f = archives_group.field(i); f)
+     //          {
+     //               return std::move(f);
+     //          }
+     //     }
+     return {};
 }
-cppcoro::generator<std::tuple<int, std::string>> fme::gui_batch::get_field_id_and_name(std::vector<std::string> maps)
+std::tuple<int, std::string> fme::gui_batch::get_field_id_and_name(std::vector<std::string> maps)
 {
      for (int i{}; auto &name : maps)
      {
-          co_yield std::make_tuple(i, std::move(name));
+          return std::make_tuple(i, std::move(name));
           ++i;
      }
+     return {};
 }
 void fme::gui_batch::operator()(int *id)
 {
@@ -518,15 +513,15 @@ void fme::gui_batch::operator()(int *id)
      }
      if (asked)
      {
-          static std::optional<decltype(source())> task{};
-          if (!task.has_value())
-          {
-               task = source();
-          }
-          else if (task->is_ready())
-          {
-               task  = std::nullopt;
-               asked = false;
-          }
+          //          static std::optional<decltype(source())> task{};
+          //          if (!task.has_value())
+          //          {
+          //               task = source();
+          //          }
+          //          else if (task->is_ready())
+          //          {
+          //               task  = std::nullopt;
+          //               asked = false;
+          //          }
      }
 }

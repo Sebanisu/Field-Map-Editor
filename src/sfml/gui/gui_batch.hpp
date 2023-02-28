@@ -38,15 +38,15 @@ struct [[nodiscard]] gui_batch
      void operator()(int *id);
 
    private:
-     static cppcoro::generator<std::tuple<int, std::string>>                       get_field_id_and_name(std::vector<std::string> maps);
-     static cppcoro::generator<std::shared_ptr<open_viii::archive::FIFLFS<false>>> get_field(::archives_group archives_group);
-     static cppcoro::generator<open_viii::LangT> get_field_coos(const std::shared_ptr<open_viii::archive::FIFLFS<false>> field);
-     static cppcoro::generator<::map_sprite>
+     static std::tuple<int, std::string>                       get_field_id_and_name(std::vector<std::string> maps);
+     static std::shared_ptr<open_viii::archive::FIFLFS<false>> get_field(::archives_group archives_group);
+     static open_viii::LangT get_field_coos(const std::shared_ptr<open_viii::archive::FIFLFS<false>> field);
+     static ::map_sprite
                  get_map_sprite(const std::shared_ptr<open_viii::archive::FIFLFS<false>> &field, const ff_8::filters &in_filters);
      static void popup_batch_common_filter_start(ff_8::filters &filters, std::string &base_name);
      static void popup_batch_common_filter_start(ff_8::filter_old<std::filesystem::path> &filter, std::string_view base_name);
-     [[nodiscard]] cppcoro::task<void>       source();
-     cppcoro::task<void>                     save_output(const map_sprite ms) const;
+     [[nodiscard]] void       source();
+     void                     save_output(const map_sprite ms) const;
      ff_8::filters                           get_filters();
      void                                    compact_and_flatten(map_sprite &ms) const;
      [[nodiscard]] bool                      ask() const;

@@ -26,7 +26,6 @@
 #include <SFML/Graphics/Vertex.hpp>
 // #include <stacktrace>
 #include <utility>
-#define USE_THREADS
 
 struct map_sprite final
   : public sf::Drawable
@@ -102,14 +101,13 @@ struct map_sprite final
      bool                                               fail() const;
      std::uint32_t                                      width() const;
      std::uint32_t                                      height() const;
-     cppcoro::task<>                                    save(const std::filesystem::path &path) const;
+     void                                               save(const std::filesystem::path &path) const;
      void                                               map_save(const std::filesystem::path &dest_path) const;
      void                                               test_map(const std::filesystem::path &saved_path) const;
      map_sprite                                         with_coo(open_viii::LangT coo) const;
      map_sprite                                         with_field(SharedField field) const;
      map_sprite                                         with_filters(ff_8::filters filters) const;
      const map_sprite                                  &toggle_grid(bool enable, bool enable_texture_page_grid) const;
-     static void                                        sync_wait_tasks(std::vector<cppcoro::task<void>> &tasks);
      void                                               disable_square() const;
      bool                                               empty() const;
      const ff_8::filters                               &filter() const;
@@ -151,7 +149,7 @@ struct map_sprite final
      SharedTextures                                     load_textures_internal();
      static colors_type                                 get_colors(const Mim &mim, BPPT bpp, uint8_t palette);
      void                                               save_new_textures(const std::filesystem::path &path);
-     cppcoro::task<void>                                gen_new_textures(const std::filesystem::path path);
+     void                                               gen_new_textures(const std::filesystem::path path);
      void                                               save_pupu_textures(const std::filesystem::path &path);
      void                                               load_map(const std::filesystem::path &dest_path);
      void                                               resize_render_texture();
@@ -160,7 +158,7 @@ struct map_sprite final
      void                                               find_upscale_path(SharedTextures &ret, uint8_t palette);
      void                                               find_upscale_path(SharedTextures &ret);
      void                                               find_deswizzle_path(SharedTextures &ret);
-     static cppcoro::task<void>                         load_mim_textures(Mim mim, sf::Texture *texture, BPPT bppt, uint8_t pal);
+     static void                                        load_mim_textures(Mim mim, sf::Texture *texture, BPPT bppt, uint8_t pal);
      void                                               load_mim_textures(SharedTextures &ret, BPPT bpp, uint8_t palette);
      static void                                        async_save(const sf::Texture &out_texture, const std::filesystem::path &out_path);
      static bool                                        save_png_image(const sf::Image &image, const std::filesystem::path &filename);
@@ -170,9 +168,9 @@ struct map_sprite final
      sf::Sprite                save_intersecting(const sf::Vector2i &pixel_pos, const std::uint8_t &texture_page);
      [[nodiscard]] std::size_t get_texture_pos(BPPT bpp, std::uint8_t palette, std::uint8_t texture_page) const;
      void                      update_render_texture(const sf::Texture *p_texture, Map map, const tile_sizes tile_size);
-     void update_position(const sf::Vector2i &pixel_pos, const uint8_t &texture_page, const sf::Vector2i &down_pixel_pos);
+     void        update_position(const sf::Vector2i &pixel_pos, const uint8_t &texture_page, const sf::Vector2i &down_pixel_pos);
 
-     static cppcoro::task<void> gen_pupu_textures(
+     static void gen_pupu_textures(
        const std::filesystem::path        path,
        const std::string                  field_name,
        settings_backup                    settings,

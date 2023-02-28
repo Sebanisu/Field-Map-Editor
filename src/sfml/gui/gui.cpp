@@ -1264,9 +1264,7 @@ void gui::file_browser_save_texture()
                }
                else
                {
-                    const auto task = m_map_sprite.save(selected_path);
-                    while(!task.is_ready())
-                    {}
+                    m_map_sprite.save(selected_path);
                     Configuration config{};
                     config->insert_or_assign("save_image_path", m_save_file_browser.GetPwd().string());
                     config.save();
@@ -2230,15 +2228,6 @@ void gui::popup_batch_embed()
           {
           }
      }
-}
-
-bool gui::check_futures()
-{
-     const auto removal = std::ranges::remove_if(m_coro_tasks, [](const cppcoro::task<void> &task) {
-          return task.is_ready();
-     });
-     m_coro_tasks.erase(removal.begin(), removal.end());
-     return !std::ranges::empty(m_coro_tasks);
 }
 void gui::batch_ops_ask_menu() const
 {
