@@ -5,7 +5,7 @@
 #include "safedir.hpp"
 #include "save_image_pbo.hpp"
 #include <bit>
-#include <cppcoro/sync_wait.hpp>
+
 #include <open_viii/graphics/Png.hpp>
 #include <spdlog/spdlog.h>
 #include <utility>

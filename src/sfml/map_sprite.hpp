@@ -15,8 +15,8 @@
 #include "tile_sizes.hpp"
 #include "unique_values.hpp"
 #include "upscales.hpp"
-#include <cppcoro/generator.hpp>
-#include <cppcoro/task.hpp>
+
+
 #include <cstdint>
 #include <fmt/format.h>
 #include <SFML/Graphics/Drawable.hpp>

@@ -4,8 +4,8 @@
 #include "filebrowser.hpp"
 #include "open_viii/paths/Paths.hpp"
 #include "scope_guard.hpp"
-#include <cppcoro/generator.hpp>
-#include <cppcoro/task.hpp>
+
+
 namespace fme
 {
 struct [[nodiscard]] gui_batch

@@ -4,7 +4,7 @@
 
 #ifndef FIELD_MAP_EDITOR_SAVE_IMAGE_PBO_HPP
 #define FIELD_MAP_EDITOR_SAVE_IMAGE_PBO_HPP
-#include <cppcoro/task.hpp>
+
 #include <SFML/Graphics.hpp>
 
 [[nodiscard]] cppcoro::task<sf::Image> save_image_pbo(const sf::Texture &texture);
