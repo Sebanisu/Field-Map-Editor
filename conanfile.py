@@ -19,7 +19,7 @@ class FieldMapEditor(ConanFile):
         "sfml/2.5.1@#7971039289b1207a61814784bd619d01",  # sfml version simplified c++98 gaming library
         #"libunwind/1.6.2", # umm test program is looking for this?
         "zlib/1.2.13", # resolve conflict by using it here.
-        "andreasbuhr-cppcoro/cci.20210113",  # sfml version uses coroutines. Thought this would help with async.
+        #"andreasbuhr-cppcoro/cci.20210113",  # sfml version uses coroutines. Thought this would help with async.
         "stb/cci.20220909",  # image loading and saving
         "openal-soft/1.22.2", # open audio library used by sfml.
         "boost-ext-ut/1.1.9",  # unit testing library / wip
