@@ -508,7 +508,7 @@ struct map_sprite final
      void spawn_thread(F &&function, T &&...arguments)
      {
 #ifdef USE_THREADS
-          m_futures.emplace_back(std::async(std::launch::async, std::forward<F>(function), std::forward<T>(arguments)...));
+          m_futures.emplace_back(std::async(std::launch::deferred, std::forward<F>(function), std::forward<T>(arguments)...));
 #undef USE_THREADS
 #else
           std::invoke(std::forward<F>(function), std::forward<T>(arguments)...);
@@ -564,7 +564,7 @@ struct map_sprite final
 
      std::shared_ptr<sf::RenderTexture> save_texture(std::uint32_t width, std::uint32_t height) const;
      uint32_t                           get_max_texture_height() const;
-     void async_save(const std::filesystem::path &out_path, const std::shared_ptr<sf::RenderTexture> &out_texture);
+     void async_save(const sf::Texture &out_texture, const std::filesystem::path &out_path);
 
 
      template<typename TilesT>
@@ -754,7 +754,7 @@ struct map_sprite final
           return raw_hex;
      }
      size_t                     size_of_map() const;
-     static bool                save_png_image(const sf::Image &image, const std::string &filename);
+     static bool                save_png_image(const sf::Image &image, const std::filesystem::path &filename);
      bool                       draw_imported(sf::RenderTarget &target, sf::RenderStates states) const;
      std::array<sf::Vertex, 4U> get_triangle_strip_for_imported(
        const sf::Vector2u                                  &draw_size,

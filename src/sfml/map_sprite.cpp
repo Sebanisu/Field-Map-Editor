@@ -1455,9 +1455,11 @@ cppcoro::task<void> map_sprite::gen_new_textures(const std::filesystem::path pat
                          }();
 
                          auto out_texture = save_texture(height, height);
-
-                         async_save(out_path, out_texture);
-                         co_await cppcoro::suspend_always{};
+                         if (out_texture)
+                         {
+                              async_save(out_texture->getTexture(), out_path);
+                              co_await cppcoro::suspend_always{};
+                         }
                     }
                }
           }
@@ -1468,34 +1470,35 @@ cppcoro::task<void> map_sprite::gen_new_textures(const std::filesystem::path pat
                                          : save_path(pattern_texture_page, path, field_name, texture_page);
 
           auto out_texture = save_texture(height, height);
-
-          async_save(out_path, out_texture);
-          co_await cppcoro::suspend_always{};
-     }
-
-     for (std::future<void> &future : m_futures)
-     {
-          while (true)
+          if (out_texture)
           {
-               std::future_status status = future.wait_for(std::chrono::seconds(0));
-               if (status == std::future_status::ready)
-               {
-                    // Do something with the result
-                    co_await cppcoro::suspend_always{};
-                    break;
-               }
-               else if (status == std::future_status::timeout)
-               {
-                    // Future not yet ready
-               }
-               else if (status == std::future_status::deferred)
-               {
-                    // Deferred future, not yet started
-               }
+               async_save(out_texture->getTexture(), out_path);
                co_await cppcoro::suspend_always{};
           }
      }
+
+     bool allFuturesReady;
+     do {
+          allFuturesReady = true;
+          for (std::future<void> &future : m_futures) {
+               if (!future.valid()) {
+                    continue;
+               }
+               std::future_status status = future.wait_for(std::chrono::seconds(0));
+               if (status == std::future_status::ready) {
+                    // Do something with the result
+               } else if (status == std::future_status::timeout) {
+                    allFuturesReady = false;
+               } else if (status == std::future_status::deferred) {
+                    future.wait();
+                    co_await cppcoro::suspend_always{};
+               }
+          }
+          co_await cppcoro::suspend_always{};
+     }
+     while(!allFuturesReady);
      m_futures.clear();
+
 }
 std::string map_sprite::get_base_name() const
 {
@@ -1542,8 +1545,11 @@ cppcoro::task<void> map_sprite::gen_pupu_textures(const std::filesystem::path pa
           std::shared_ptr<sf::RenderTexture> out_texture =
             save_texture(static_cast<std::uint32_t>(canvas.width()), static_cast<std::uint32_t>(canvas.height()));
           co_await cppcoro::suspend_always{};
-          async_save(out_path, out_texture);
-          co_await cppcoro::suspend_always{};
+          if (out_texture)
+          {
+               async_save(out_texture->getTexture(), out_path);
+               co_await cppcoro::suspend_always{};
+          }
      }
      for (std::future<void> &future : m_futures)
      {
@@ -1553,49 +1559,49 @@ cppcoro::task<void> map_sprite::gen_pupu_textures(const std::filesystem::path pa
      }
      m_futures.clear();
 }
-void map_sprite::async_save(const std::filesystem::path &out_path, const std::shared_ptr<sf::RenderTexture> &out_texture)
+void map_sprite::async_save(const sf::Texture &out_texture, const std::filesystem::path &out_path)
 {
-     if (out_texture)
-     {
-          // trying packaged task to, so we don't wait for files to save.
-          const auto task = [=, image = out_texture->getTexture().copyToImage()]() {
-               std::error_code error_code{};
-               std::filesystem::create_directories(out_path.parent_path(), error_code);
-               if (error_code)
+     // trying packaged task to, so we don't wait for files to save.
+     const auto task = [=](std::future<sf::Image> future) {
+          future.wait();
+          const auto      image = future.get();
+          std::error_code error_code{};
+          std::filesystem::create_directories(out_path.parent_path(), error_code);
+          if (error_code)
+          {
+               spdlog::error(
+                 "error {}:{} - {}: {} - path: {}", __FILE__, __LINE__, error_code.value(), error_code.message(), out_path.string());
+               error_code.clear();
+          }
+          if (image.getSize().x == 0 || image.getSize().y == 0 || image.getPixelsPtr() == nullptr)
+          {
+               spdlog::error(
+                 "error {}:{} Invalid image: \"{}\" - ({},{})",
+                 __FILE__,
+                 __LINE__,
+                 out_path.string(),
+                 image.getSize().x,
+                 image.getSize().y);
+               return;
+          }
+          using namespace std::chrono_literals;
+          const std::string     filename         = out_path.string();
+          std::size_t           count            = { 0U };
+          static constexpr auto error_delay_time = 1000ms;
+          for (;;)
+          {
+               if (!save_png_image(image, filename))
                {
-                    spdlog::error(
-                      "error {}:{} - {}: {} - path: {}", __FILE__, __LINE__, error_code.value(), error_code.message(), out_path.string());
-                    error_code.clear();
+                    spdlog::error("Looping on fail {:>2} times", ++count);
+                    std::this_thread::sleep_for(error_delay_time);
                }
-               if (image.getSize().x == 0 || image.getSize().y == 0 || image.getPixelsPtr() == nullptr)
+               else
                {
-                    spdlog::error(
-                      "error {}:{} Invalid image: \"{}\" - ({},{})",
-                      __FILE__,
-                      __LINE__,
-                      out_path.string(),
-                      image.getSize().x,
-                      image.getSize().y);
-                    return;
+                    spdlog::info("Saved \"{}\"", filename);
+                    break;
                }
-               using namespace std::chrono_literals;
-               const std::string     filename         = out_path.string();
-               std::size_t           count            = { 0U };
-               static constexpr auto error_delay_time = 1000ms;
-               for (;;)
-               {
-                    if (!save_png_image(image, filename))
-                    {
-                         spdlog::error("Looping on fail {:>2} times", ++count);
-                         std::this_thread::sleep_for(error_delay_time);
-                    }
-                    else
-                    {
-                         spdlog::info("Saved \"{}\"", filename);
-                         break;
-                    }
-               }
-          };
+          }
+     };
 
 #if 0
     auto package =
@@ -1606,14 +1612,18 @@ void map_sprite::async_save(const std::filesystem::path &out_path, const std::sh
                  out_texture->getTexture().copyToImage() }
       .detach();
 #else
-          spawn_thread(task);
+     spawn_thread(task, save_image_pbo(out_texture));
 #endif
-     }
 }
-bool map_sprite::save_png_image(const sf::Image &image, const std::string &filename)
+bool map_sprite::save_png_image(const sf::Image &image, const std::filesystem::path &path)
 {
-#if 0
-  return image.saveToFile(filename);
+#if 1
+     if (!image.saveToFile(path.string()))
+     {
+          spdlog::warn("Failed to save file: {}", path.string());
+          return false;
+     }
+     return true;
 #else
      return open_viii::graphics::Png::save(image.getPixelsPtr(), image.getSize().x, image.getSize().y, filename, {}, {}).has_value();
 #endif
@@ -1801,12 +1811,15 @@ void map_sprite::test_map(const std::filesystem::path &saved_path) const
                            return pair_type{ nullptr, nullptr };
                       });
                     pairs.erase(std::remove(pairs.begin(), pairs.end(), pair_type{ nullptr, nullptr }), pairs.end());
-                    std::ranges::for_each(pairs, [](const pair_type &pair) {
-                         format_tile_text(
-                           *pair.first, [](std::string_view name, const auto &value) { spdlog::info("tile {}: {}", name, value); });
-                         format_tile_text(
-                           *pair.second, [](std::string_view name, const auto &value) { spdlog::info("tile {}: {}", name, value); });
-                    });
+                    spdlog::info("maps are different, count {} tiles.", std::ranges::size(pairs));
+                    //                    std::ranges::for_each(pairs, [](const pair_type &pair) {
+                    //                         format_tile_text(
+                    //                           *pair.first, [](std::string_view name, const auto &value) { spdlog::info("tile {}: {}",
+                    //                           name, value); });
+                    //                         format_tile_text(
+                    //                           *pair.second, [](std::string_view name, const auto &value) { spdlog::info("tile {}: {}",
+                    //                           name, value); });
+                    //                    });
                }
           });
      });
