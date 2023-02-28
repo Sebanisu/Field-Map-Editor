@@ -32,7 +32,6 @@ struct map_sprite final
   , public sf::Transformable
 {
    public:
-     static constexpr auto          default_filter_lambda     = [](auto &&) { return true; };
      static constexpr auto          filter_invalid            = open_viii::graphics::background::Map::filter_invalid();
      static constexpr std::uint8_t  TILE_SIZE                 = 16U;
      static constexpr std::uint8_t  MAX_TEXTURE_PAGES         = 14U;
@@ -503,53 +502,6 @@ struct map_sprite final
           });
      }
 
-     template<typename key_lambdaT, typename weight_lambdaT>
-     [[maybe_unused]] void compact_generic(key_lambdaT &&key_lambda, weight_lambdaT &&weight_lambda, int passes = 2)
-     {
-          m_map_group.maps.copy_back().visit_tiles([&key_lambda, &weight_lambda, &passes, this](auto &&tiles) {
-               for (int pass = passes; pass != 0; --pass)// at least 2 passes needed as things might get shifted to
-                                                         // other texture pages and then the keys are less valuable.
-               {
-                    auto         pointers   = this->generate_map(tiles, key_lambda, [](auto &&tile) { return &tile; });
-                    std::uint8_t col        = {};
-                    std::uint8_t row        = {};
-                    std::uint8_t page       = {};
-                    std::size_t  row_weight = {};
-                    for (auto &[key, tps] : pointers)
-                    {
-                         const auto weight = weight_lambda(key, tps);
-
-                         if (
-                           std::cmp_greater_equal(col, TILE_SIZE) || std::cmp_greater_equal(row_weight, TILE_SIZE)
-                           || std::cmp_greater(row_weight + weight, TILE_SIZE))
-                         {
-                              ++row;
-                              col        = {};
-                              row_weight = {};
-                         }
-
-                         if (std::cmp_greater_equal(row, TILE_SIZE))
-                         {
-                              ++page;
-                              row = {};
-                         }
-
-                         using tileT = std::remove_cvref_t<typename std::remove_cvref_t<decltype(tiles)>::value_type>;
-                         for (tileT *const tp : tps)
-                         {
-                              *tp = tp->with_source_xy(
-                                        static_cast<decltype(tileT{}.source_x())>(col * TILE_SIZE),
-                                        static_cast<decltype(tileT{}.source_y())>(row * TILE_SIZE))
-                                      .with_texture_id(static_cast<decltype(tileT{}.texture_id())>(page));
-                         }
-
-                         row_weight += weight;
-                         ++col;
-                    }
-               }
-          });
-          update_render_texture();
-     }
 
 
      template<typename TilesT>
@@ -592,32 +544,7 @@ struct map_sprite final
      }
 
 
-     template<typename tilesT, typename key_lambdaT, typename value_lambdaT, typename filterT = decltype(default_filter_lambda)>
-     auto generate_map(tilesT &&tiles, key_lambdaT &&key_lambda, value_lambdaT &&value_lambda, filterT &&filter = {}) const
-     {
-          using tileT  = std::remove_cvref_t<typename std::remove_cvref_t<tilesT>::value_type>;
-          using keyT   = decltype(key_lambda(tileT{}));
-          using valueT = decltype(value_lambda(tileT{}));
-          std::map<keyT, std::vector<valueT>> map{};
-          auto                                filtered_tiles = tiles | std::views::filter(filter);
-          std::ranges::for_each(filtered_tiles, [&map, &key_lambda, &value_lambda](auto &&tile) {
-               if (!filter_invalid(tile))
-               {
-                    return;
-               }
-               valueT value = value_lambda(tile);
-               keyT   key   = key_lambda(tile);
-               if (map.contains(key))
-               {
-                    map.at(key).push_back(value);
-               }
-               else
-               {
-                    map.emplace(key, std::vector<valueT>{ value });
-               }
-          });
-          return map;
-     }
+
 
 
      auto get_conflicting_palettes() const

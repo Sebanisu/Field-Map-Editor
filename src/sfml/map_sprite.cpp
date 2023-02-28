@@ -2,10 +2,10 @@
 #include "map_sprite.hpp"
 #include "append_inserter.hpp"
 #include "format_imgui_text.hpp"
+#include "map_operation.hpp"
 #include "safedir.hpp"
 #include "save_image_pbo.hpp"
 #include <bit>
-
 #include <open_viii/graphics/Png.hpp>
 #include <spdlog/spdlog.h>
 #include <utility>
@@ -322,56 +322,23 @@ std::uint8_t map_sprite::max_x_for_saved() const
 
 void map_sprite::compact_rows()
 {
-     compact_generic(
-       [](const auto &tile) {
-            return std::make_tuple(
-              tile.texture_id(),
-              tile.source_y(),
-              static_cast<std::uint8_t>(3U - (tile.depth().raw() & 3U)),
-              tile.source_x(),
-              tile.palette_id());
-       },
-       [](const auto &key, const auto &) { return static_cast<std::uint8_t>(1U << (3U - std::get<2>(key))); });
+     ff_8::compact_rows(m_map_group.maps.copy_back());
+     update_render_texture();
 }
-
-
 void map_sprite::compact_all()
 {
-     compact_generic(
-       [](const auto &tile) {
-            return std::make_tuple(
-              static_cast<std::uint8_t>(3U - (tile.depth().raw() & 3U)),
-              tile.texture_id(),
-              tile.source_y(),
-              tile.source_x(),
-              tile.palette_id());
-       },
-       [](const auto &key, const auto &) { return static_cast<std::uint8_t>(1U << (3U - std::get<0>(key))); });
+     ff_8::compact_all(m_map_group.maps.copy_back());
+     update_render_texture();
 }
-
 void map_sprite::flatten_bpp()
 {
-     m_map_group.maps.copy_back().visit_tiles([](auto &tiles) {
-          std::ranges::transform(tiles, tiles.begin(), [](const auto tile) {
-               if (filter_invalid(tile))
-               {
-                    return tile.with_depth(4_bpp);
-               }
-               return tile;
-          });
-     });
+     ff_8::flatten_bpp(m_map_group.maps.copy_back());
+     update_render_texture();
 }
 void map_sprite::flatten_palette()
 {
-     m_map_group.maps.copy_back().visit_tiles([](auto &tiles) {
-          std::ranges::transform(tiles, tiles.begin(), [](const auto tile) {
-               if (filter_invalid(tile))
-               {
-                    return tile.with_palette_id(0);
-               }
-               return tile;
-          });
-     });
+     ff_8::flatten_palette(m_map_group.maps.copy_back());
+     update_render_texture();
 }
 
 std::size_t map_sprite::row_empties(std::uint8_t tile_y, std::uint8_t texture_page, const bool move_from_row)
@@ -882,8 +849,8 @@ bool map_sprite::fail() const
 void map_sprite::map_save(const std::filesystem::path &dest_path) const
 {
      ff_8::map_group::OptCoo coo  = m_map_group.opt_coo;
-     const auto map  = ff_8::load_map(m_map_group.field, coo,m_map_group.mim,nullptr, false);
-     const auto path = dest_path.string();
+     const auto              map  = ff_8::load_map(m_map_group.field, coo, m_map_group.mim, nullptr, false);
+     const auto              path = dest_path.string();
 
      open_viii::tools::write_buffer(
        [&map](std::ostream &os) {
@@ -1684,23 +1651,7 @@ void map_sprite::disable_disable_blends()
 }
 void map_sprite::compact_map_order()
 {
-     auto &map = m_map_group.maps.copy_back();
-     map.visit_tiles([](auto &&tiles) {
-          auto filtered_tiles            = tiles | std::views::filter(ff_8::tile_operations::InvalidTile{});
-          using tile_t                   = std::remove_cvref_t<std::ranges::range_value_t<decltype(tiles)>>;
-          const auto WithDepth_operation = ff_8::tile_operations::WithDepth<tile_t>{ open_viii::graphics::BPPT::BPP4_CONST() };
-          for (std::size_t tile_index = {}; tile_t & tile : filtered_tiles)
-          {
-               const auto texture_page    = static_cast<ff_8::tile_operations::TextureIdT<tile_t>>(tile_index / 256);
-               const auto file_tile_index = tile_index % 256;
-               const auto source_x        = static_cast<ff_8::tile_operations::SourceXT<tile_t>>((file_tile_index % TILE_SIZE) * TILE_SIZE);
-               const auto source_y        = static_cast<ff_8::tile_operations::SourceYT<tile_t>>((file_tile_index / TILE_SIZE) * TILE_SIZE);
-               ++tile_index;
-               const auto WithTextureId_operation = ff_8::tile_operations::WithTextureId<tile_t>{ texture_page };
-               const auto WithSourceXY_operation  = ff_8::tile_operations::WithSourceXY<tile_t>{ { source_x, source_y } };
-               tile                               = tile | WithDepth_operation | WithSourceXY_operation | WithTextureId_operation;
-          }
-     });
+     ff_8::compact_map_order(m_map_group.maps.copy_back());
      update_render_texture();
 }
 std::string map_sprite::str_to_lower(std::string input)

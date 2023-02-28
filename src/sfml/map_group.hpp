@@ -15,16 +15,17 @@ namespace ff_8
 struct map_group
 {
      // required to initialize
-     using Field       = open_viii::archive::FIFLFS<false>;
-     using SharedField = std::shared_ptr<Field>;
-     using Mim         = open_viii::graphics::background::Mim;
-     using SharedMim   = std::shared_ptr<Mim>;
-     using Map         = open_viii::graphics::background::Map;
-     using MapHistory  = ff_8::MapHistory;
+     using Field                     = open_viii::archive::FIFLFS<false>;
+     using SharedField               = std::shared_ptr<Field>;
+     using Mim                       = open_viii::graphics::background::Mim;
+     using SharedMim                 = std::shared_ptr<Mim>;
+     using Map                       = open_viii::graphics::background::Map;
+     using MapHistory                = ff_8::MapHistory;
 
-     using Coo         = open_viii::LangT;
-     using OptCoo      = std::optional<Coo>;
-     map_group()       = default;
+     using Coo                       = open_viii::LangT;
+     using OptCoo                    = std::optional<Coo>;
+     static constexpr auto TILE_SIZE = 16U;
+     map_group()                     = default;
      map_group(const SharedField &, Coo);
      SharedField field{};
      SharedMim   mim{};
