@@ -31,7 +31,6 @@ add_executable(${PROJECT_NAME}_SFML
         gui/batch_deswizzle.cpp gui/batch_deswizzle.hpp gui/map_dialog_mode.hpp gui/map_directory_mode.hpp gui/batch_embed.cpp gui/batch_embed.hpp gui/compact_type.hpp gui/batch_reswizzle.cpp gui/batch_reswizzle.hpp gui/mouse_positions.cpp gui/mouse_positions.hpp gui/scrolling.cpp gui/scrolling.hpp gui/Selections.cpp gui/Selections.hpp square.cpp square.hpp tile_sizes.hpp save_image_pbo.cpp save_image_pbo.hpp settings_backup.hpp)
 #set_property(TARGET ${PROJECT_NAME}_SFML PROPERTY CXX_STANDARD 20)
 #find_package(ImGui-SFML REQUIRED)
-find_package(cppcoro) # todo will probably remove at some point.
 find_package(tomlplusplus REQUIRED)
 find_package(spdlog REQUIRED)
 find_package(GLEW REQUIRED)
@@ -45,7 +44,6 @@ target_link_libraries(${PROJECT_NAME}_SFML
         PRIVATE OpenVIII_CPP_WIP_VIIIGraphics
         PRIVATE Threads::Threads
         PRIVATE imgui_filebrowser
-        PRIVATE cppcoro::cppcoro
         PRIVATE tomlplusplus::tomlplusplus
         PRIVATE spdlog::spdlog
         PRIVATE GLEW::GLEW
