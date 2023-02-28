@@ -363,11 +363,7 @@ cppcoro::task<void> fme::gui_batch::save_output(map_sprite current_map_sprite) c
           if ((static_cast<uint32_t>(m_transformation_type) & static_cast<uint32_t>(batch_operation_transformation::deswizzle)) != 0)
           {
                // ms.save_pupu_textures(selected_path);
-               auto task = current_map_sprite.gen_pupu_textures(selected_path);
-               while (!task.is_ready())
-               {
-                    co_await cppcoro::suspend_always{};
-               }
+               current_map_sprite.save_pupu_textures(selected_path);
           }
           else if ((static_cast<uint32_t>(m_transformation_type) & static_cast<uint32_t>(batch_operation_transformation::swizzle)) != 0)
           {
@@ -468,7 +464,7 @@ cppcoro::generator<::map_sprite>
           }
      }
 }
-cppcoro::generator<open_viii::LangT> fme::gui_batch::get_field_coos(const std::shared_ptr<open_viii::archive::FIFLFS<false>> field)
+cppcoro::generator<open_viii::LangT> fme::gui_batch::get_field_coos(const map_sprite::SharedField field)
 {
      auto map_pairs = field->get_vector_of_indexes_and_files({ open_viii::graphics::background::Map::EXT });
      for (auto &map_pair : map_pairs)

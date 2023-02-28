@@ -10,6 +10,7 @@
 #include "open_viii/archive/Archives.hpp"
 #include "open_viii/graphics/background/Map.hpp"
 #include "open_viii/graphics/background/Mim.hpp"
+#include "settings_backup.hpp"
 #include "square.hpp"
 #include "tile_sizes.hpp"
 #include "unique_values.hpp"
@@ -52,6 +53,7 @@ struct map_sprite final
      using SharedTextures = std::shared_ptr<std::array<sf::Texture, MAX_TEXTURES>>;
      using BlendModeT     = open_viii::graphics::background::BlendModeT;
      using Rectangle      = open_viii::graphics::Rectangle<std::uint32_t>;
+     using iRectangle     = open_viii::graphics::Rectangle<std::int32_t>;
 
    private:
      square                                        m_square = { sf::Vector2u{}, sf::Vector2u{ TILE_SIZE, TILE_SIZE }, sf::Color::Red };
@@ -107,7 +109,7 @@ struct map_sprite final
      map_sprite                                         with_field(SharedField field) const;
      map_sprite                                         with_filters(ff_8::filters filters) const;
      const map_sprite                                  &toggle_grid(bool enable, bool enable_texture_page_grid) const;
-     void                                               sync_wait_tasks(std::vector<cppcoro::task<void>> &tasks) const;
+     static void                                        sync_wait_tasks(std::vector<cppcoro::task<void>> &tasks);
      void                                               disable_square() const;
      bool                                               empty() const;
      const ff_8::filters                               &filter() const;
@@ -151,7 +153,6 @@ struct map_sprite final
      void                                               save_new_textures(const std::filesystem::path &path);
      cppcoro::task<void>                                gen_new_textures(const std::filesystem::path path);
      void                                               save_pupu_textures(const std::filesystem::path &path);
-     cppcoro::task<void>                                gen_pupu_textures(const std::filesystem::path path);
      void                                               load_map(const std::filesystem::path &dest_path);
      void                                               resize_render_texture();
      void                                               init_render_texture();
@@ -161,7 +162,7 @@ struct map_sprite final
      void                                               find_deswizzle_path(SharedTextures &ret);
      static cppcoro::task<void>                         load_mim_textures(Mim mim, sf::Texture *texture, BPPT bppt, uint8_t pal);
      void                                               load_mim_textures(SharedTextures &ret, BPPT bpp, uint8_t palette);
-     void                                    async_save(const sf::Texture &out_texture, const std::filesystem::path &out_path);
+     static void                                        async_save(const sf::Texture &out_texture, const std::filesystem::path &out_path);
      static bool                                        save_png_image(const sf::Image &image, const std::filesystem::path &filename);
      bool                                               draw_imported(sf::RenderTarget &target, sf::RenderStates states) const;
      static std::string                                 str_to_lower(std::string input);
@@ -169,24 +170,34 @@ struct map_sprite final
      sf::Sprite                save_intersecting(const sf::Vector2i &pixel_pos, const std::uint8_t &texture_page);
      [[nodiscard]] std::size_t get_texture_pos(BPPT bpp, std::uint8_t palette, std::uint8_t texture_page) const;
      void                      update_render_texture(const sf::Texture *p_texture, Map map, const tile_sizes tile_size);
-     void                  update_position(const sf::Vector2i &pixel_pos, const uint8_t &texture_page, const sf::Vector2i &down_pixel_pos);
+     void update_position(const sf::Vector2i &pixel_pos, const uint8_t &texture_page, const sf::Vector2i &down_pixel_pos);
 
-     std::filesystem::path save_path_coo(
+     static cppcoro::task<void> gen_pupu_textures(
+       const std::filesystem::path        path,
+       const std::string                  field_name,
+       settings_backup                    settings,
+       const std::vector<PupuID>          unique_pupu_ids,
+       std::optional<open_viii::LangT>    coo,
+       std::shared_ptr<sf::RenderTexture> out_texture);
+     static std::filesystem::path save_path_coo(
        fmt::format_string<std::string_view, std::string_view, uint8_t> pattern,
        const std::filesystem::path                                    &path,
        const std::string_view                                         &field_name,
-       uint8_t                                                         texture_page) const;
-     std::filesystem::path save_path_coo(
+       const uint8_t                                                   texture_page,
+       const open_viii::LangT                                          coo);
+     static std::filesystem::path save_path_coo(
        fmt::format_string<std::string_view, std::string_view, uint8_t, uint8_t> pattern,
        const std::filesystem::path                                             &path,
        const std::string_view                                                  &field_name,
-       uint8_t                                                                  texture_page,
-       uint8_t                                                                  palette) const;
-     std::filesystem::path save_path_coo(
+       const uint8_t                                                            texture_page,
+       const uint8_t                                                            palette,
+       const open_viii::LangT                                                   coo);
+     static std::filesystem::path save_path_coo(
        fmt::format_string<std::string_view, std::string_view, PupuID> pattern,
        const std::filesystem::path                                   &path,
        const std::string_view                                        &field_name,
-       PupuID                                                         pupu) const;
+       const PupuID                                                   pupu,
+       const open_viii::LangT                                         coo);
      static std::filesystem::path save_path(
        fmt::format_string<std::string_view, uint8_t> pattern,
        const std::filesystem::path                  &path,

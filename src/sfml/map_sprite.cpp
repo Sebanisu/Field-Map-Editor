@@ -210,7 +210,7 @@ void map_sprite::load_mim_textures(
      }
      sync_wait_tasks(tasks);
 }
-void map_sprite::sync_wait_tasks(std::vector<cppcoro::task<void>> &tasks) const
+void map_sprite::sync_wait_tasks(std::vector<cppcoro::task<void>> &tasks)
 {
      std::ranges::for_each(tasks, [](auto &task) { cppcoro::sync_wait(task); });
 }
@@ -255,7 +255,7 @@ void map_sprite::find_deswizzle_path(std::shared_ptr<std::array<sf::Texture, MAX
           std::filesystem::path in_path{};
           if (m_using_coo)
           {
-               in_path = save_path_coo(pattern_coo_pupu, m_filters.deswizzle.value(), field_name, pupu);
+               in_path = save_path_coo(pattern_coo_pupu, m_filters.deswizzle.value(), field_name, pupu, m_coo);
           }
           else
           {
@@ -1149,80 +1149,7 @@ const all_unique_values_and_strings &map_sprite::uniques() const
 // detection for overlapping palettes and make sure to place them into other
 // files. map - save changes #48 - this should be done at the same time
 // especially when map has changed.
-template<typename T>
-struct setting_backup
-{
-   private:
-     T                         m_backup;
-     std::reference_wrapper<T> m_value;
 
-   public:
-     setting_backup()                                  = delete;
-     setting_backup(const setting_backup &)            = default;
-     setting_backup &operator=(const setting_backup &) = default;
-     setting_backup(setting_backup &&)                 = delete;
-     setting_backup &operator=(setting_backup &&)      = delete;
-
-     explicit setting_backup(T &in_value)
-       : m_backup(in_value)
-       , m_value(in_value)
-     {
-     }
-
-     ~setting_backup() noexcept(noexcept(m_value.get() = m_backup))
-     {
-          m_value.get() = m_backup;
-     }
-
-     [[nodiscard]] const T &backup() const
-     {
-          return m_backup;
-     }
-
-     [[nodiscard]] const T &value() const
-     {
-          return m_value.get();
-     }
-
-     [[nodiscard]] T &value()
-     {
-          return m_value.get();
-     }
-
-     auto &operator=(const T &in_value)
-     {
-          m_value.get() = in_value;
-          return *this;
-     }
-
-     [[nodiscard]] bool operator==(const T &in_value) const
-     {
-          return m_value == in_value;
-     }
-};
-struct settings_backup
-{
-   public:
-     setting_backup<ff_8::filters> filters;
-     setting_backup<bool>          draw_swizzle;
-     setting_backup<bool>          disable_texture_page_shift;
-     setting_backup<bool>          disable_blends;
-     setting_backup<uint32_t>      scale;
-
-     settings_backup(
-       ff_8::filters &in_filters,
-       bool          &in_draw_swizzle,
-       bool          &in_disable_texture_page_shift,
-       bool          &in_disable_blends,
-       std::uint32_t &in_scale)
-       : filters{ in_filters }
-       , draw_swizzle{ in_draw_swizzle }
-       , disable_texture_page_shift{ in_disable_texture_page_shift }
-       , disable_blends{ in_disable_blends }
-       , scale{ in_scale }
-     {
-     }
-};
 bool map_sprite::check_if_one_palette(const std::uint8_t &texture_page) const
 {
      return m_maps.const_back().visit_tiles([&texture_page](const auto &tiles) -> bool {
@@ -1306,7 +1233,7 @@ cppcoro::task<void> map_sprite::gen_new_textures(const std::filesystem::path pat
                          auto out_path = [&]() -> std::filesystem::path {
                               if (m_using_coo)
                               {
-                                   return save_path_coo(pattern_coo_texture_page_palette, path, field_name, texture_page, palette);
+                                   return save_path_coo(pattern_coo_texture_page_palette, path, field_name, texture_page, palette,m_coo);
                               }
                               return save_path(pattern_texture_page_palette, path, field_name, texture_page, palette);
                          }();
@@ -1323,7 +1250,7 @@ cppcoro::task<void> map_sprite::gen_new_textures(const std::filesystem::path pat
 
           settings.filters.value().palette.disable();
           settings.filters.value().bpp.disable();
-          auto out_path    = m_using_coo ? save_path_coo(pattern_coo_texture_page, path, field_name, texture_page)
+          auto out_path    = m_using_coo ? save_path_coo(pattern_coo_texture_page, path, field_name, texture_page,m_coo)
                                          : save_path(pattern_texture_page, path, field_name, texture_page);
 
           auto out_texture = save_texture(height, height);
@@ -1341,43 +1268,50 @@ std::string map_sprite::get_base_name() const
 
 void map_sprite::save_pupu_textures(const std::filesystem::path &path)
 {
-     auto task = gen_pupu_textures(path);
-     while (!task.is_ready())
-     {
-     }
-}
-
-cppcoro::task<void> map_sprite::gen_pupu_textures(const std::filesystem::path path)
-{
-     // assert(std::filesystem::path.is_directory(path));
-     const std::string                 field_name       = { str_to_lower(m_field->get_base_name()) };
-     static constexpr std::string_view pattern_pupu     = { "{}_{}.png" };
-     static constexpr std::string_view pattern_coo_pupu = { "{}_{}_{}.png" };
-
-     const auto                       &unique_pupu_ids  = m_all_unique_values_and_strings.pupu().values();
-     settings_backup                   settings(m_filters, m_draw_swizzle, m_disable_texture_page_shift, m_disable_blends, m_scale);
-     settings.filters                         = ff_8::filters{};
-     settings.filters.value().upscale         = settings.filters.backup().upscale;
-     settings.draw_swizzle                    = false;
-     settings.disable_texture_page_shift      = true;
-     settings.disable_blends                  = true;
+     auto settings = settings_backup{ m_filters, m_draw_swizzle, m_disable_texture_page_shift, m_disable_blends, m_scale };
+       settings.filters                                   = ff_8::filters{};
+     settings.filters.value().upscale                   = settings.filters.backup().upscale;
+     settings.draw_swizzle                              = false;
+     settings.disable_texture_page_shift                = true;
+     settings.disable_blends                            = true;
      // todo maybe draw with blends enabled to transparent black or white.
-     uint32_t                      tex_height = get_max_texture_height();
-     static constexpr unsigned int mim_height = { 256U };
-     settings.scale                           = tex_height / mim_height;
-     const auto canvas                        = m_maps.const_back().canvas() * static_cast<int>(m_scale);
+     static constexpr unsigned int mim_height           = { 256U };
+     settings.scale                                     = get_max_texture_height() / mim_height;
      if (settings.scale == 0U)
      {
           settings.scale = 1U;
      }
+     iRectangle const canvas = m_maps.const_back().canvas() * static_cast<int>(m_scale);
+     std::shared_ptr<sf::RenderTexture> out_texture =
+       save_texture(static_cast<std::uint32_t>(canvas.width()), static_cast<std::uint32_t>(canvas.height()));
+     std::vector<cppcoro::task<void>> tasks{};
+     tasks.emplace_back(gen_pupu_textures(
+       path,
+       std::string{ str_to_lower(m_field->get_base_name()) },
+       settings,
+       m_all_unique_values_and_strings.pupu().values(),
+       m_using_coo ? std::optional<open_viii::LangT>{ m_coo } : std::optional<open_viii::LangT>{ std::nullopt },std::move(out_texture)));
+     sync_wait_tasks(tasks);
+}
+
+cppcoro::task<void> map_sprite::gen_pupu_textures(
+  const std::filesystem::path     path,
+  const std::string               field_name,
+  settings_backup                 settings,
+  const std::vector<PupuID>       unique_pupu_ids,
+  std::optional<open_viii::LangT> coo,std::shared_ptr<sf::RenderTexture> out_texture)
+{
+     // assert(std::filesystem::path.is_directory(path));
+     static constexpr std::string_view pattern_pupu     = { "{}_{}.png" };
+     static constexpr std::string_view pattern_coo_pupu = { "{}_{}_{}.png" };
+
+
      for (const PupuID &pupu : unique_pupu_ids)
      {
           settings.filters.value().pupu.update(pupu).enable();
           std::filesystem::path out_path =
-            m_using_coo ? save_path_coo(pattern_coo_pupu, path, field_name, pupu) : save_path(pattern_pupu, path, field_name, pupu);
+            coo ? save_path_coo(pattern_coo_pupu, path, field_name, pupu, *coo) : save_path(pattern_pupu, path, field_name, pupu);
           co_await cppcoro::suspend_always{};
-          std::shared_ptr<sf::RenderTexture> out_texture =
-            save_texture(static_cast<std::uint32_t>(canvas.width()), static_cast<std::uint32_t>(canvas.height()));
           co_await cppcoro::suspend_always{};
           if (out_texture)
           {
@@ -1390,7 +1324,7 @@ void map_sprite::async_save(const sf::Texture &out_texture, const std::filesyste
 {
      std::vector<cppcoro::task<void>> tasks{};
      // trying packaged task to, so we don't wait for files to save.
-     const auto task = [=](cppcoro::task<sf::Image> image_task) -> cppcoro::task<void> {
+     const auto                       task = [=](cppcoro::task<sf::Image> image_task) -> cppcoro::task<void> {
           spdlog::info("Saving Texture, {}.", out_path.string());
           const sf::Image image = co_await image_task;
           std::error_code error_code{};
@@ -1469,31 +1403,33 @@ std::filesystem::path map_sprite::save_path_coo(
   fmt::format_string<std::string_view, std::string_view, uint8_t> pattern,
   const std::filesystem::path                                    &path,
   const std::string_view                                         &field_name,
-  uint8_t                                                         texture_page) const
+  const uint8_t                                                   texture_page,
+  const open_viii::LangT                                          coo)
 {
      return path
             / fmt::vformat(
-              fmt::string_view(pattern), fmt::make_format_args(field_name, open_viii::LangCommon::to_string(m_coo), texture_page));
+              fmt::string_view(pattern), fmt::make_format_args(field_name, open_viii::LangCommon::to_string(coo), texture_page));
 }
 std::filesystem::path map_sprite::save_path_coo(
   fmt::format_string<std::string_view, std::string_view, uint8_t, uint8_t> pattern,
   const std::filesystem::path                                             &path,
   const std::string_view                                                  &field_name,
-  uint8_t                                                                  texture_page,
-  uint8_t                                                                  palette) const
+  const uint8_t                                                            texture_page,
+  const uint8_t                                                            palette,
+  const open_viii::LangT                                                   coo)
 {
      return path
             / fmt::vformat(
-              fmt::string_view(pattern), fmt::make_format_args(field_name, open_viii::LangCommon::to_string(m_coo), texture_page, palette));
+              fmt::string_view(pattern), fmt::make_format_args(field_name, open_viii::LangCommon::to_string(coo), texture_page, palette));
 }
 std::filesystem::path map_sprite::save_path_coo(
   fmt::format_string<std::string_view, std::string_view, PupuID> pattern,
   const std::filesystem::path                                   &path,
   const std::string_view                                        &field_name,
-  PupuID                                                         pupu) const
+  const PupuID                                                   pupu,
+  const open_viii::LangT                                         coo)
 {
-     return path
-            / fmt::vformat(fmt::string_view(pattern), fmt::make_format_args(field_name, open_viii::LangCommon::to_string(m_coo), pupu));
+     return path / fmt::vformat(fmt::string_view(pattern), fmt::make_format_args(field_name, open_viii::LangCommon::to_string(coo), pupu));
 }
 std::filesystem::path map_sprite::save_path(
   fmt::format_string<std::string_view, std::uint8_t> pattern,
