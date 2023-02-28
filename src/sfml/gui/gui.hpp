@@ -64,11 +64,11 @@ struct gui
                               append_results.clear();
                          }
                          launch_async(
-                           [this](const int pos, const std::filesystem::path &selected_path) {
+                           [this](const int pos, const std::filesystem::path &selected_path) -> cppcoro::task<void> {
                                 auto field = m_archives_group.field(pos);
                                 if (!field)
                                 {
-                                     return;
+                                     co_return;
                                 }
                                 auto                   paths = find_maps_in_directory(selected_path);
                                 const auto             tmp   = replace_entries(*field, paths);
@@ -599,16 +599,14 @@ struct gui
      std::vector<std::filesystem::path>
        replace_entries(const open_viii::archive::FIFLFS<Nested> &field, const std::vector<std::filesystem::path> &paths) const;
 
-     std::vector<std::future<void>> m_futures = {};
+     std::vector<cppcoro::task<void>> m_coro_tasks = {};
      template<typename T, typename... argsT>
      void launch_async(T &&task, argsT &&...args)
      {
-#ifdef USE_THREADS
-          m_futures.emplace_back(std::async(std::launch::async, std::forward<T>(task), std::forward<argsT>(args)...));
-#undef USE_THREADS
-#else
-          std::invoke(std::forward<T>(task), std::forward<argsT>(args)...);
-#endif
+
+          m_coro_tasks.emplace_back(std::invoke(std::forward<T>(task), std::forward<argsT>(args)...));
+
+
      }
      bool                      check_futures();
      void                      batch_ops_ask_menu() const;
@@ -734,7 +732,7 @@ struct gui
                      {
                           return;
                      }
-                     std::string const      base_name = str_to_lower(field->get_base_name());
+                     std::string const      base_name = map_sprite::str_to_lower(field->get_base_name());
                      std::string_view const prefix    = std::string_view{ base_name }.substr(0U, 2U);
                      popup_batch_common_filter_start(filter(filters), prefix, base_name);
 

@@ -1264,7 +1264,9 @@ void gui::file_browser_save_texture()
                }
                else
                {
-                    m_map_sprite.save(selected_path);
+                    const auto task = m_map_sprite.save(selected_path);
+                    while(!task.is_ready())
+                    {}
                     Configuration config{};
                     config->insert_or_assign("save_image_path", m_save_file_browser.GetPwd().string());
                     config.save();
@@ -2232,11 +2234,11 @@ void gui::popup_batch_embed()
 
 bool gui::check_futures()
 {
-     const auto removal = std::ranges::remove_if(m_futures, [](const std::future<void> &future) {
-          return !future.valid() || future.wait_for(std::chrono::seconds{}) == std::future_status::ready;
+     const auto removal = std::ranges::remove_if(m_coro_tasks, [](const cppcoro::task<void> &task) {
+          return task.is_ready();
      });
-     m_futures.erase(removal.begin(), removal.end());
-     return !std::ranges::empty(m_futures);
+     m_coro_tasks.erase(removal.begin(), removal.end());
+     return !std::ranges::empty(m_coro_tasks);
 }
 void gui::batch_ops_ask_menu() const
 {
@@ -2663,9 +2665,9 @@ void gui::collapsing_header_generated_tiles() const
 void gui::generate_map_for_imported_image(const variant_tile_t &current_tile, bool changed)
 {//   * I'd probably store the new tiles in their own map.
      const auto tiles_wide =
-       static_cast<uint32_t>(ceil(static_cast<float>(loaded_image_texture.getSize().x) / static_cast<float>(m_selections.tile_size_value)));
+       static_cast<uint32_t>(ceil(static_cast<double>(static_cast<float>(loaded_image_texture.getSize().x) / static_cast<float>(m_selections.tile_size_value))));
      const auto tiles_high =
-       static_cast<uint32_t>(ceil(static_cast<float>(loaded_image_texture.getSize().y) / static_cast<float>(m_selections.tile_size_value)));
+       static_cast<uint32_t>(ceil(static_cast<double>(static_cast<float>(loaded_image_texture.getSize().y) / static_cast<float>(m_selections.tile_size_value))));
      format_imgui_text("Possible Tiles: {} wide, {} high, {} total", tiles_wide, tiles_high, tiles_wide * tiles_high);
      if (changed && tiles_wide * tiles_high != 0U && loaded_image_texture.getSize() != sf::Vector2u{})
      {

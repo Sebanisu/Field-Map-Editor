@@ -5,6 +5,7 @@
 #include "safedir.hpp"
 #include "save_image_pbo.hpp"
 #include <bit>
+#include <cppcoro/sync_wait.hpp>
 #include <open_viii/graphics/Png.hpp>
 #include <spdlog/spdlog.h>
 #include <utility>
@@ -53,10 +54,14 @@ Map map_sprite::get_map(std::string *out_path, bool shift, bool &coo) const
      }
      return {};
 }
-
+map_sprite::colors_type
+  map_sprite::get_colors(const open_viii::graphics::background::Mim &mim, open_viii::graphics::BPPT bpp, std::uint8_t palette)
+{
+     return mim.get_colors<open_viii::graphics::Color32RGBA>(bpp, palette, false);
+}
 map_sprite::colors_type map_sprite::get_colors(open_viii::graphics::BPPT bpp, std::uint8_t palette) const
 {
-     return m_mim.get_colors<open_viii::graphics::Color32RGBA>(bpp, palette, false);
+     return get_colors(m_mim, bpp, palette);
 }
 
 std::size_t
@@ -153,7 +158,7 @@ std::shared_ptr<std::array<sf::Texture, map_sprite::MAX_TEXTURES>> map_sprite::l
      {
           find_deswizzle_path(ret);
      }
-     wait_for_futures();
+
      return ret;
 }
 std::shared_ptr<std::array<sf::Texture, map_sprite::MAX_TEXTURES>> map_sprite::load_textures()
@@ -181,32 +186,41 @@ std::shared_ptr<std::array<sf::Texture, map_sprite::MAX_TEXTURES>> map_sprite::l
      }
      return ret;
 }
+cppcoro::task<void> map_sprite::load_mim_textures(open_viii::graphics::background::Mim mim, sf::Texture *texture, BPPT bppt, uint8_t pal)
+{
+     const auto colors = get_colors(mim, bppt, pal);
+     // std::lock_guard<std::mutex> lock(mutex_texture);
+     texture->create(mim.get_width(bppt), mim.get_height());
+     texture->update(colors.front().data());
+     texture->setSmooth(false);
+     texture->setRepeated(false);
+     texture->generateMipmap();
+     co_return;
+}
 void map_sprite::load_mim_textures(
   std::shared_ptr<std::array<sf::Texture, MAX_TEXTURES>> &ret,
   open_viii::graphics::BPPT                               bpp,
   std::uint8_t                                            palette)
 {
+     std::vector<cppcoro::task<void>> tasks{};
      if (m_mim.get_width(bpp) != 0U)
      {
-          std::size_t const pos  = get_texture_pos(bpp, palette, 0);
-          const auto        task = [this](sf::Texture *texture, BPPT bppt, uint8_t pal) {
-               const auto colors = get_colors(bppt, pal);
-               // std::lock_guard<std::mutex> lock(mutex_texture);
-               texture->create(m_mim.get_width(bppt), m_mim.get_height());
-               texture->update(colors.front().data());
-               texture->setSmooth(false);
-               texture->setRepeated(false);
-               texture->generateMipmap();
-          };
-          spawn_thread(task, &(ret->at(pos)), bpp, palette);
+          std::size_t const pos = get_texture_pos(bpp, palette, 0);
+          tasks.emplace_back(load_mim_textures(m_mim, &(ret->at(pos)), bpp, palette));
      }
+     sync_wait_tasks(tasks);
+}
+void map_sprite::sync_wait_tasks(std::vector<cppcoro::task<void>> &tasks) const
+{
+     std::ranges::for_each(tasks, [](auto &task) { cppcoro::sync_wait(task); });
 }
 void map_sprite::find_upscale_path(std::shared_ptr<std::array<sf::Texture, MAX_TEXTURES>> &ret)
 {
+     std::vector<cppcoro::task<void>> tasks{};
      for (const auto &texture_page : m_all_unique_values_and_strings.texture_page_id().values())
      {
           const size_t texture_index                 = START_OF_NO_PALETTE_INDEX + texture_page;
-          const auto   texture_file_exists_then_load = [this, texture_page](sf::Texture *texture) -> void {
+          const auto   texture_file_exists_then_load = [=](sf::Texture *texture) -> cppcoro::task<void> {
                const auto &root           = m_filters.upscale.value();
                const auto  paths          = m_upscales.get_file_paths(root, texture_page);
                auto        filtered_paths = paths | std::views::filter([](safedir path) { return path.is_exists() && !path.is_dir(); });
@@ -219,83 +233,61 @@ void map_sprite::find_upscale_path(std::shared_ptr<std::array<sf::Texture, MAX_T
                     texture->setRepeated(false);
                     texture->generateMipmap();
                }
+               co_return;
           };
           if (texture_index >= MAX_TEXTURES)
           {
                spdlog::error("{}:{} - Index out of range {} / {}", __FILE__, __LINE__, texture_index, MAX_TEXTURES);
                return;
           }
-          spawn_thread(texture_file_exists_then_load, &(ret->at(texture_index)));
+          tasks.emplace_back(texture_file_exists_then_load(&(ret->at(texture_index))));
      }
+     sync_wait_tasks(tasks);
 }
 
 void map_sprite::find_deswizzle_path(std::shared_ptr<std::array<sf::Texture, MAX_TEXTURES>> &ret)
 {
-     auto field_name = get_base_name();
-     std::ranges::for_each(
-       m_all_unique_values_and_strings.pupu().values(), [&ret, &field_name, this, i = size_t{}](const ::PupuID &pupu) mutable {
-            static constexpr auto pattern_pupu     = std::string_view("{}_{}.png");
-            static constexpr auto pattern_coo_pupu = std::string_view("{}_{}_{}.png");
-            std::filesystem::path in_path{};
-            if (m_using_coo)
-            {
-                 in_path = save_path_coo(pattern_coo_pupu, m_filters.deswizzle.value(), field_name, pupu);
-            }
-            else
-            {
-                 in_path = save_path(pattern_pupu, m_filters.deswizzle.value(), field_name, pupu);
-            }
-            const auto check_if_file_exists_and_load_it = [in_path](sf::Texture *texture) -> void {
-                 if (safedir(in_path).is_exists())
-                 {
-                      spdlog::info("texture path: \"{}\"", in_path.string());
-                      texture->loadFromFile(in_path.string());
-                      texture->setSmooth(false);
-                      texture->setRepeated(false);
-                      texture->generateMipmap();
-                 }
-            };
-            if (i >= MAX_TEXTURES)
-            {
-                 spdlog::error("{}:{} - Index out of range {} / {}", __FILE__, __LINE__, i, MAX_TEXTURES);
-                 return;
-            }
-            spawn_thread(check_if_file_exists_and_load_it, &(ret->at(i++)));
-       });
-     /*for (const auto& texture_page :
-         m_all_unique_values_and_strings.texture_page_id().values())
-     {
-         const size_t i = MAX_TEXTURES - MAX_TEXTURE_PAGES + texture_page;
-         const auto   fn = [this, texture_page](sf::Texture* texture) -> void
-         {
-             const auto& root = m_filters.upscale.value();
-             const auto  paths = m_upscales.get_file_paths(root, texture_page);
-             auto        filtered_paths = paths
-                 | std::views::filter(
-                     [](const std::filesystem::path& path)
-                     {
-                         return std::filesystem::exists(path)
-                             && !std::filesystem::is_directory(path);
-                     });
-             if (filtered_paths.begin() != filtered_paths.end())
-             {
-                 const auto& path = *(filtered_paths.begin());
-                 spdlog::info("{}", path.string());
-                 texture->loadFromFile(path.string());
-                 texture->setSmooth(false);
-                 texture->setRepeated(false);
-                 texture->generateMipmap();
-             }
-         };
-         spawn_thread(fn, &(ret->at(i)));
-     }*/
+     std::vector<cppcoro::task<void>> tasks{};
+     auto                             field_name = get_base_name();
+     std::ranges::for_each(m_all_unique_values_and_strings.pupu().values(), [&, i = size_t{}](const ::PupuID &pupu) mutable {
+          static constexpr auto pattern_pupu     = std::string_view("{}_{}.png");
+          static constexpr auto pattern_coo_pupu = std::string_view("{}_{}_{}.png");
+          std::filesystem::path in_path{};
+          if (m_using_coo)
+          {
+               in_path = save_path_coo(pattern_coo_pupu, m_filters.deswizzle.value(), field_name, pupu);
+          }
+          else
+          {
+               in_path = save_path(pattern_pupu, m_filters.deswizzle.value(), field_name, pupu);
+          }
+          const auto check_if_file_exists_and_load_it = [=](sf::Texture *texture) -> cppcoro::task<void> {
+               if (safedir(in_path).is_exists())
+               {
+                    spdlog::info("texture path: \"{}\"", in_path.string());
+                    texture->loadFromFile(in_path.string());
+                    texture->setSmooth(false);
+                    texture->setRepeated(false);
+                    texture->generateMipmap();
+               }
+               co_return;
+          };
+          if (i >= MAX_TEXTURES)
+          {
+               spdlog::error("{}:{} - Index out of range {} / {}", __FILE__, __LINE__, i, MAX_TEXTURES);
+               return;
+          }
+          tasks.emplace_back(check_if_file_exists_and_load_it(&(ret->at(i++))));
+     });
+     sync_wait_tasks(tasks);
 }
 void map_sprite::find_upscale_path(std::shared_ptr<std::array<sf::Texture, MAX_TEXTURES>> &ret, std::uint8_t palette)
 {
+     std::vector<cppcoro::task<void>> tasks{};
      for (const auto &texture_page : m_all_unique_values_and_strings.texture_page_id().values())
      {
-          const size_t i  = size_t{ texture_page } * MAX_PALETTES + palette;
-          auto const   fn = [texture_page, palette, this](sf::Texture *const texture) {
+          const size_t index      = size_t{ texture_page } * MAX_PALETTES + palette;
+          auto const   p_function = [=](sf::Texture *const texture) -> cppcoro::task<void> {
                const auto &root           = m_filters.upscale.value();
                const auto  paths          = m_upscales.get_file_paths(root, texture_page, palette);
                auto        filtered_paths = paths | std::views::filter([](safedir path) { return path.is_exists() && !path.is_dir(); });
@@ -309,145 +301,11 @@ void map_sprite::find_upscale_path(std::shared_ptr<std::array<sf::Texture, MAX_T
                     texture->setRepeated(false);
                     texture->generateMipmap();
                }
+               co_return;
           };
-          spawn_thread(fn, &(ret->at(i)));
+          tasks.emplace_back(p_function(&(ret->at(index))));
      }
-}
-void map_sprite::wait_for_futures()
-{
-     std::ranges::for_each(m_futures, [](auto &future) { future.wait(); });
-     m_futures.clear();
-}
-
-[[nodiscard]] std::array<sf::Vertex, 4U> map_sprite::get_triangle_strip(
-  const sf::Vector2u &draw_size,
-  const sf::Vector2u &texture_size,
-  std::integral auto  source_x,
-  std::integral auto  source_y,
-  std::integral auto  dest_x,
-  std::integral auto  dest_y) const
-{
-     const sf::Vector2f     draw_size_f     = { static_cast<float>(draw_size.x), static_cast<float>(draw_size.y) };
-     const sf::Vector2f     texture_size_f  = { static_cast<float>(texture_size.x), static_cast<float>(texture_size.y) };
-     constexpr static float tile_size_f     = static_cast<float>(TILE_SIZE);
-     auto                   scaled_dest_x   = static_cast<float>(dest_x) / tile_size_f;
-     auto                   scaled_dest_y   = static_cast<float>(dest_y) / tile_size_f;
-     float                  scaled_source_x = static_cast<float>(source_x) / tile_size_f;
-     float                  scaled_source_y = static_cast<float>(source_y) / tile_size_f;
-     const auto tovec  = [](auto &&in_x, auto &&in_y) { return sf::Vector2f{ static_cast<float>(in_x), static_cast<float>(in_y) }; };
-     const auto tovert = [&tovec](auto &&draw_x, auto &&draw_y, auto &&texture_x, auto &&texture_y) {
-          return sf::Vertex{ tovec(draw_x, draw_y), tovec(texture_x, texture_y) };
-     };
-     return std::array{ tovert(
-                          (scaled_dest_x + 1) * draw_size_f.x,
-                          scaled_dest_y * draw_size_f.y,
-                          (scaled_source_x + 1) * texture_size_f.x,
-                          scaled_source_y * texture_size_f.y),
-                        tovert(
-                          scaled_dest_x * draw_size_f.x,
-                          scaled_dest_y * draw_size_f.y,
-                          scaled_source_x * texture_size_f.x,
-                          scaled_source_y * texture_size_f.y),
-                        tovert(
-                          (scaled_dest_x + 1) * draw_size_f.x,
-                          (scaled_dest_y + 1) * draw_size_f.y,
-                          (scaled_source_x + 1) * texture_size_f.x,
-                          (scaled_source_y + 1) * texture_size_f.y),
-                        tovert(
-                          scaled_dest_x * draw_size_f.x,
-                          (scaled_dest_y + 1) * draw_size_f.y,
-                          scaled_source_x * texture_size_f.x,
-                          (scaled_source_y + 1) * texture_size_f.y) };
-}
-[[nodiscard]] std::array<sf::Vertex, 4U> map_sprite::get_triangle_strip_for_imported(
-  const sf::Vector2u                                  &draw_size,
-  const sf::Vector2u                                  &texture_size,
-  const open_viii::graphics::background::is_tile auto &tile_const,
-  open_viii::graphics::background::is_tile auto      &&tile) const
-{
-     using namespace open_viii::graphics::literals;
-     using tile_type  = std::remove_cvref_t<decltype(tile)>;
-     //  auto       src_tpw = tile_type::texture_page_width(tile_const.depth());
-     //  const auto x       = [this, &tile_const, &src_tpw]() -> std::uint32_t {
-     //    if (m_filters.upscale.enabled())
-     //    {
-     //      return 0;
-     //    }
-     //    return tile_const.texture_id() * src_tpw;
-     //  }();
-     const auto src_x = [&tile_const]() -> std::uint32_t { return static_cast<std::uint32_t>(tile_const.x()); }();
-     const auto src_y = [&tile_const]() -> std::uint32_t { return static_cast<std::uint32_t>(tile_const.y()); }();
-
-     const auto dst_x = [this, &tile]() {
-          if (m_draw_swizzle)
-          {
-               if (!m_disable_texture_page_shift)
-               {
-                    return static_cast<uint32_t>(tile.source_x() + tile.texture_id() * tile_type::texture_page_width(4_bpp));
-               }
-               return static_cast<uint32_t>(tile.source_x());
-          }
-          return static_cast<uint32_t>(tile.x());
-     }();
-     const auto dst_y = [this, &tile]() {
-          if (m_draw_swizzle)
-          {
-               return static_cast<uint32_t>(tile.source_y());
-          }
-          return static_cast<uint32_t>(tile.y());
-     }();
-     return get_triangle_strip(draw_size, texture_size, src_x, src_y, dst_x, dst_y);
-}
-[[nodiscard]] std::array<sf::Vertex, 4U> map_sprite::get_triangle_strip(
-  const sf::Vector2u                                  &draw_size,
-  const sf::Vector2u                                  &texture_size,
-  const open_viii::graphics::background::is_tile auto &tile_const,
-  open_viii::graphics::background::is_tile auto      &&tile) const
-{
-     using namespace open_viii::graphics::literals;
-     using tile_type    = std::remove_cvref_t<decltype(tile)>;
-     auto       src_tpw = tile_type::texture_page_width(tile_const.depth());
-     const auto x       = [this, &tile_const, &src_tpw]() -> std::uint32_t {
-          if (m_filters.upscale.enabled())
-          {
-               return 0;
-          }
-          return tile_const.texture_id() * src_tpw;
-     }();
-     const auto src_x = [&tile_const, &x, this]() -> std::uint32_t {
-          if (m_filters.deswizzle.enabled())
-          {
-               return static_cast<std::uint32_t>(tile_const.x());
-          }
-          return tile_const.source_x() + x;
-     }();
-     const auto src_y = [&tile_const, this]() -> std::uint32_t {
-          if (m_filters.deswizzle.enabled())
-          {
-               return static_cast<std::uint32_t>(tile_const.y());
-          }
-          return tile_const.source_y();
-     }();
-
-     const auto dst_x = [this, &tile]() {
-          if (m_draw_swizzle)
-          {
-               if (!m_disable_texture_page_shift)
-               {
-                    return static_cast<uint32_t>(tile.source_x() + tile.texture_id() * tile_type::texture_page_width(4_bpp));
-               }
-               return static_cast<uint32_t>(tile.source_x());
-          }
-          return static_cast<uint32_t>(tile.x());
-     }();
-     const auto dst_y = [this, &tile]() {
-          if (m_draw_swizzle)
-          {
-               return static_cast<uint32_t>(tile.source_y());
-          }
-          return static_cast<uint32_t>(tile.y());
-     }();
-     return get_triangle_strip(draw_size, texture_size, src_x, src_y, dst_x, dst_y);
+     sync_wait_tasks(tasks);
 }
 
 void set_color(std::array<sf::Vertex, 4U> &vertices, const sf::Color &color)
@@ -996,15 +854,14 @@ void map_sprite::update_render_texture(bool reload_textures)
           m_render_texture->generateMipmap();
      }
 }
-void map_sprite::save(const std::filesystem::path &path) const
+cppcoro::task<> map_sprite::save(const std::filesystem::path &path) const
 {
      if (fail())
      {
-          return;
+          co_return;
      }
-     auto future = save_image_pbo(m_render_texture->getTexture());
-     future.wait();
-     const auto image = future.get();
+     cppcoro::task<sf::Image> const task  = save_image_pbo(m_render_texture->getTexture());
+     const sf::Image                image = co_await task;
      if (!image.saveToFile(path.string()))
      {
           spdlog::warn("Failed to save file: {}", path.string());
@@ -1476,29 +1333,6 @@ cppcoro::task<void> map_sprite::gen_new_textures(const std::filesystem::path pat
                co_await cppcoro::suspend_always{};
           }
      }
-
-     bool allFuturesReady;
-     do {
-          allFuturesReady = true;
-          for (std::future<void> &future : m_futures) {
-               if (!future.valid()) {
-                    continue;
-               }
-               std::future_status status = future.wait_for(std::chrono::seconds(0));
-               if (status == std::future_status::ready) {
-                    // Do something with the result
-               } else if (status == std::future_status::timeout) {
-                    allFuturesReady = false;
-               } else if (status == std::future_status::deferred) {
-                    future.wait();
-                    co_await cppcoro::suspend_always{};
-               }
-          }
-          co_await cppcoro::suspend_always{};
-     }
-     while(!allFuturesReady);
-     m_futures.clear();
-
 }
 std::string map_sprite::get_base_name() const
 {
@@ -1551,20 +1385,14 @@ cppcoro::task<void> map_sprite::gen_pupu_textures(const std::filesystem::path pa
                co_await cppcoro::suspend_always{};
           }
      }
-     for (std::future<void> &future : m_futures)
-     {
-          co_await cppcoro::suspend_always{};
-          future.wait();
-          co_await cppcoro::suspend_always{};
-     }
-     m_futures.clear();
 }
 void map_sprite::async_save(const sf::Texture &out_texture, const std::filesystem::path &out_path)
 {
+     std::vector<cppcoro::task<void>> tasks{};
      // trying packaged task to, so we don't wait for files to save.
-     const auto task = [=](std::future<sf::Image> future) {
-          future.wait();
-          const auto      image = future.get();
+     const auto task = [=](cppcoro::task<sf::Image> image_task) -> cppcoro::task<void> {
+          spdlog::info("Saving Texture, {}.", out_path.string());
+          const sf::Image image = co_await image_task;
           std::error_code error_code{};
           std::filesystem::create_directories(out_path.parent_path(), error_code);
           if (error_code)
@@ -1582,7 +1410,7 @@ void map_sprite::async_save(const sf::Texture &out_texture, const std::filesyste
                  out_path.string(),
                  image.getSize().x,
                  image.getSize().y);
-               return;
+               co_return;
           }
           using namespace std::chrono_literals;
           const std::string     filename         = out_path.string();
@@ -1602,18 +1430,8 @@ void map_sprite::async_save(const sf::Texture &out_texture, const std::filesyste
                }
           }
      };
-
-#if 0
-    auto package =
-      std::packaged_task<void(std::filesystem::path, sf::Image)>{ task };
-
-    std::thread{ std::move(package),
-                 out_path,
-                 out_texture->getTexture().copyToImage() }
-      .detach();
-#else
-     spawn_thread(task, save_image_pbo(out_texture));
-#endif
+     tasks.emplace_back(task(save_image_pbo(out_texture)));
+     sync_wait_tasks(tasks);
 }
 bool map_sprite::save_png_image(const sf::Image &image, const std::filesystem::path &path)
 {
@@ -1959,4 +1777,71 @@ void map_sprite::compact_map_order()
           }
      });
      update_render_texture();
+}
+std::string map_sprite::str_to_lower(std::string input)
+{
+     std::string output{};
+     output.reserve(std::size(input) + 1);
+     std::ranges::transform(
+       input, std::back_inserter(output), [](char character) -> char { return static_cast<char>(::tolower(character)); });
+     return output;
+}
+map_sprite::map_sprite(
+  map_sprite::SharedField field,
+  open_viii::LangT        coo,
+  bool                    draw_swizzle,
+  ff_8::filters           in_filters,
+  bool                    force_disable_blends)
+  : m_draw_swizzle(draw_swizzle)
+  , m_disable_blends(force_disable_blends)
+  , m_filters(std::move(in_filters))
+  , m_field(std::move(field))
+  , m_coo(coo)
+  , m_upscales(get_upscales())
+  , m_mim(get_mim())
+  , m_maps(get_map(&m_map_path, true, m_using_coo))
+  , m_all_unique_values_and_strings(get_all_unique_values_and_strings())
+  , m_canvas(get_canvas())
+  , m_texture(load_textures())
+  , m_render_texture(std::make_shared<sf::RenderTexture>())
+  , m_grid(get_grid())
+  , m_texture_page_grid(get_texture_page_grid())
+{
+     init_render_texture();
+}
+void map_sprite::undo()
+{
+     (void)m_maps.undo();
+     update_render_texture();
+}
+void map_sprite::redo()
+{
+     (void)m_maps.redo();
+     update_render_texture();
+}
+void map_sprite::undo_all()
+{
+     m_maps.undo_all();
+     update_render_texture();
+}
+void map_sprite::redo_all()
+{
+     m_maps.redo_all();
+     update_render_texture();
+}
+bool map_sprite::undo_enabled()
+{
+     return m_maps.undo_enabled();
+}
+bool map_sprite::redo_enabled()
+{
+     return m_maps.redo_enabled();
+}
+bool map_sprite::history_remove_duplicate()
+{
+     return m_maps.remove_duplicate();
+}
+std::uint32_t map_sprite::get_map_scale() const
+{
+     return m_scale;
 }

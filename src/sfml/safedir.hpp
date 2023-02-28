@@ -79,7 +79,7 @@ private:
       return false;
     }
     std::error_code ec         = {};
-    bool            return_val = std::filesystem::is_directory(m_path, ec);
+    bool            const return_val = std::filesystem::is_directory(m_path, ec);
     if (ec)
     {
       warn(ec, __FILE__, __LINE__);

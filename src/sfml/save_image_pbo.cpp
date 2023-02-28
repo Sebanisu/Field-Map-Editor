@@ -86,11 +86,12 @@ class [[nodiscard]] Framebuffer
      }
      return Framebuffer{ fbo };
 }
-std::future<sf::Image> save_image_pbo(const sf::Texture &texture)
+cppcoro::task<sf::Image> save_image_pbo(const sf::Texture &texture)
 {
-     const auto backup_fbo  = backup_frame_buffer();
-     const auto buffer_size = GLsizeiptr{ texture.getSize().x } * GLsizeiptr{ texture.getSize().y } * 4;
-     auto       pbo_id      = 0U;
+     const auto texture_size = texture.getSize();
+     const auto backup_fbo   = backup_frame_buffer();
+     const auto buffer_size  = GLsizeiptr{ texture.getSize().x } * GLsizeiptr{ texture.getSize().y } * 4;
+     auto       pbo_id       = 0U;
      glGenBuffers(1, &pbo_id);
      glBindBuffer(GL_PIXEL_PACK_BUFFER, pbo_id);
      glBufferData(GL_PIXEL_PACK_BUFFER, buffer_size, nullptr, GL_STREAM_READ);
@@ -103,22 +104,21 @@ std::future<sf::Image> save_image_pbo(const sf::Texture &texture)
 
      glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
      // Bind the PBO to a future that will be returned
-     return std::async(
-       std::launch::deferred, [texture_size = texture.getSize(), pbo_id, buffer_size, fbo_moved_to = std::move(fbo)]() -> sf::Image {
+     std::invoke(backup_fbo);
+     co_await cppcoro::suspend_always{};
 #ifdef __cpp_lib_smart_ptr_for_overwrite
-            const auto pixels = std::make_unique_for_overwrite<std::uint8_t[]>(static_cast<std::size_t>(buffer_size));
+     const auto pixels = std::make_unique_for_overwrite<std::uint8_t[]>(static_cast<std::size_t>(buffer_size));
 #else
-          const auto pixels = std::make_unique<std::uint8_t[]>(static_cast<std::size_t>(buffer_size));
+     const auto pixels = std::make_unique<std::uint8_t[]>(static_cast<std::size_t>(buffer_size));
 #endif
 
-            glBindBuffer(GL_PIXEL_PACK_BUFFER, pbo_id);
-            glGetBufferSubData(GL_PIXEL_PACK_BUFFER, 0, buffer_size, pixels.get());
-            glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
+     glBindBuffer(GL_PIXEL_PACK_BUFFER, pbo_id);
+     glGetBufferSubData(GL_PIXEL_PACK_BUFFER, 0, buffer_size, pixels.get());
+     glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
 
-            sf::Image image;
-            image.create(texture_size.x, texture_size.y, pixels.get());
-            glDeleteBuffers(1, &pbo_id);
+     sf::Image image;
+     image.create(texture_size.x, texture_size.y, pixels.get());
+     glDeleteBuffers(1, &pbo_id);
 
-            return image;
-       });
+     co_return image;
 }

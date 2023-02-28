@@ -18,7 +18,6 @@
 #include <cppcoro/task.hpp>
 #include <cstdint>
 #include <fmt/format.h>
-#include <future>
 #include <SFML/Graphics/Drawable.hpp>
 #include <SFML/Graphics/RenderTexture.hpp>
 #include <SFML/Graphics/Sprite.hpp>
@@ -27,25 +26,189 @@
 // #include <stacktrace>
 #include <utility>
 #define USE_THREADS
-static inline std::string str_to_lower(std::string input)
-{
-     std::string output{};
-     output.reserve(std::size(input) + 1);
-     std::ranges::transform(
-       input, std::back_inserter(output), [](char character) -> char { return static_cast<char>(::tolower(character)); });
-     return output;
-}
+
 struct map_sprite final
   : public sf::Drawable
   , public sf::Transformable
 {
+   public:
+     static constexpr auto          default_filter_lambda     = [](auto &&) { return true; };
+     static constexpr auto          filter_invalid            = open_viii::graphics::background::Map::filter_invalid();
+     static constexpr std::uint8_t  TILE_SIZE                 = 16U;
+     static constexpr std::uint8_t  MAX_TEXTURE_PAGES         = 14U;
+     static constexpr std::uint8_t  MAX_PALETTES              = 16U;
+     static constexpr std::uint8_t  BPP_COMBOS                = 2U;
+     static constexpr std::uint16_t START_OF_NO_PALETTE_INDEX = MAX_PALETTES * MAX_TEXTURE_PAGES;
+     static constexpr std::uint16_t BPP16_INDEX               = MAX_PALETTES * BPP_COMBOS + 1;
+     static constexpr auto          MAX_TEXTURES =
+       (std::max)(static_cast<std::uint16_t>(START_OF_NO_PALETTE_INDEX + MAX_TEXTURE_PAGES), static_cast<std::uint16_t>(BPP16_INDEX + 1U));
+
+     using BPPT           = open_viii::graphics::BPPT;
+     using SharedField    = std::shared_ptr<open_viii::archive::FIFLFS<false>>;
+     using Map            = open_viii::graphics::background::Map;
+     using Mim            = open_viii::graphics::background::Mim;
+     using color_type     = open_viii::graphics::Color32RGBA;
+     using colors_type    = std::vector<color_type>;
+     using SharedTextures = std::shared_ptr<std::array<sf::Texture, MAX_TEXTURES>>;
+     using BlendModeT     = open_viii::graphics::background::BlendModeT;
+     using Rectangle      = open_viii::graphics::Rectangle<std::uint32_t>;
+
+   private:
+     square                                        m_square = { sf::Vector2u{}, sf::Vector2u{ TILE_SIZE, TILE_SIZE }, sf::Color::Red };
+     bool                                          m_draw_swizzle                  = { false };
+     bool                                          m_disable_texture_page_shift    = { false };
+     bool                                          m_disable_blends                = { false };
+     ff_8::filters                                 m_filters                       = {};
+     SharedField                                   m_field                         = {};
+     open_viii::LangT                              m_coo                           = {};
+     ::upscales                                    m_upscales                      = {};
+     Mim                                           m_mim                           = {};
+     std::string                                   m_map_path                      = {};
+     bool                                          m_using_coo                     = {};
+     bool                                          m_using_imported_texture        = {};
+     const sf::Texture                            *m_imported_texture              = { nullptr };
+     std::uint16_t                                 m_imported_tile_size            = {};
+     Map                                           m_imported_tile_map             = {};
+     Map                                           m_imported_tile_map_front       = {};
+     ff_8::MapHistory                              m_maps                          = {};
+     all_unique_values_and_strings                 m_all_unique_values_and_strings = {};
+     open_viii::graphics::Rectangle<std::uint32_t> m_canvas                        = {};
+     std::shared_ptr<sf::RenderTexture>            m_render_texture                = {};
+     std::shared_ptr<sf::RenderTexture>            m_drag_sprite_texture           = {};
+     grid                                          m_grid                          = {};
+     grid                                          m_texture_page_grid             = {};
+     std::vector<std::size_t>                      m_saved_indices                 = {};
+     std::vector<std::size_t>                      m_saved_imported_indices        = {};
+     std::uint32_t                                 m_scale                         = { 1 };
+     SharedTextures                                m_texture                       = {};
+
+   public:
+     map_sprite() = default;
+     map_sprite(SharedField field, open_viii::LangT coo, bool draw_swizzle, ff_8::filters in_filters, bool force_disable_blends);
+     std::uint32_t                                      get_map_scale() const;
+     [[nodiscard]] const sf::Texture                   *get_texture(BPPT bpp, std::uint8_t palette, std::uint8_t texture_page) const;
+     [[nodiscard]] const sf::Texture                   *get_texture(const ::PupuID &pupu) const;
+     [[nodiscard]] sf::Vector2u                         get_tile_texture_size(const sf::Texture *texture) const;
+     sf::Vector2u                                       get_tile_draw_size() const;
+     std::shared_ptr<sf::RenderTexture>                 save_texture(std::uint32_t width, std::uint32_t height) const;
+     uint32_t                                           get_max_texture_height() const;
+     [[nodiscard]] bool                                 local_draw(sf::RenderTarget &target, sf::RenderStates states) const;
+     std::string                                        get_base_name() const;
+     void                                               save_modified_map(const std::filesystem::path &path) const;
+     [[nodiscard]] const all_unique_values_and_strings &uniques() const;
+     std::string                                        map_filename() const;
+     bool                                               fail() const;
+     std::uint32_t                                      width() const;
+     std::uint32_t                                      height() const;
+     cppcoro::task<>                                    save(const std::filesystem::path &path) const;
+     void                                               map_save(const std::filesystem::path &dest_path) const;
+     void                                               test_map(const std::filesystem::path &saved_path) const;
+     map_sprite                                         with_coo(open_viii::LangT coo) const;
+     map_sprite                                         with_field(SharedField field) const;
+     map_sprite                                         with_filters(ff_8::filters filters) const;
+     const map_sprite                                  &toggle_grid(bool enable, bool enable_texture_page_grid) const;
+     void                                               sync_wait_tasks(std::vector<cppcoro::task<void>> &tasks) const;
+     void                                               disable_square() const;
+     bool                                               empty() const;
+     const ff_8::filters                               &filter() const;
+     std::uint8_t                                       max_x_for_saved() const;
+     map_sprite                                         update(SharedField field, open_viii::LangT coo, bool draw_swizzle) const;
+     grid                                               get_grid() const;
+     grid                                               get_texture_page_grid() const;
+     all_unique_values_and_strings                      get_all_unique_values_and_strings() const;
+     [[nodiscard]] Mim                                  get_mim() const;
+     sf::Vector2u                                       get_tile_texture_size_for_import() const;
+     open_viii::graphics::background::Map               get_map(std::string *out_path, bool shift, bool &coo) const;
+     [[nodiscard]] colors_type                          get_colors(BPPT bpp, std::uint8_t palette) const;
+     [[nodiscard]] Rectangle                            get_canvas() const;
+     bool                                               check_if_one_palette(const uint8_t &texture_page) const;
+     size_t                                             size_of_map() const;
+     void                                               draw(sf::RenderTarget &target, sf::RenderStates states) const final;
+     void                                               enable_draw_swizzle();
+     void                                               disable_draw_swizzle();
+     void                                               enable_disable_blends();
+     void                                               disable_disable_blends();
+     void                                               enable_square(sf::Vector2u position);
+     void                                               compact_map_order();
+     void                                               undo();
+     void                                               redo();
+     void                                               undo_all();
+     void                                               redo_all();
+     bool                                               undo_enabled();
+     bool                                               redo_enabled();
+     bool                                               history_remove_duplicate();
+     ff_8::filters                                     &filter();
+     void                                               update_render_texture(bool reload_textures = false);
+     void                                               compact_rows();
+     void                                               compact_all();
+     void                                               flatten_bpp();
+     void                                               flatten_palette();
+     static sf::BlendMode                               set_blend_mode(const BlendModeT &blend_mode, std::array<sf::Vertex, 4U> &quad);
+     SharedTextures                                     load_textures();
+     void                                               reset_render_texture();
+     SharedTextures                                     load_textures_internal();
+     static colors_type                                 get_colors(const Mim &mim, BPPT bpp, uint8_t palette);
+     void                                               save_new_textures(const std::filesystem::path &path);
+     cppcoro::task<void>                                gen_new_textures(const std::filesystem::path path);
+     void                                               save_pupu_textures(const std::filesystem::path &path);
+     cppcoro::task<void>                                gen_pupu_textures(const std::filesystem::path path);
+     void                                               load_map(const std::filesystem::path &dest_path);
+     void                                               resize_render_texture();
+     void                                               init_render_texture();
+     static const sf::BlendMode                        &GetBlendSubtract();
+     void                                               find_upscale_path(SharedTextures &ret, uint8_t palette);
+     void                                               find_upscale_path(SharedTextures &ret);
+     void                                               find_deswizzle_path(SharedTextures &ret);
+     static cppcoro::task<void>                         load_mim_textures(Mim mim, sf::Texture *texture, BPPT bppt, uint8_t pal);
+     void                                               load_mim_textures(SharedTextures &ret, BPPT bpp, uint8_t palette);
+     void                                    async_save(const sf::Texture &out_texture, const std::filesystem::path &out_path);
+     static bool                                        save_png_image(const sf::Image &image, const std::filesystem::path &filename);
+     bool                                               draw_imported(sf::RenderTarget &target, sf::RenderStates states) const;
+     static std::string                                 str_to_lower(std::string input);
+     std::size_t               row_empties(std::uint8_t tile_y, std::uint8_t texture_page, bool move_from_row = false);
+     sf::Sprite                save_intersecting(const sf::Vector2i &pixel_pos, const std::uint8_t &texture_page);
+     [[nodiscard]] std::size_t get_texture_pos(BPPT bpp, std::uint8_t palette, std::uint8_t texture_page) const;
+     void                      update_render_texture(const sf::Texture *p_texture, Map map, const tile_sizes tile_size);
+     void                  update_position(const sf::Vector2i &pixel_pos, const uint8_t &texture_page, const sf::Vector2i &down_pixel_pos);
+
+     std::filesystem::path save_path_coo(
+       fmt::format_string<std::string_view, std::string_view, uint8_t> pattern,
+       const std::filesystem::path                                    &path,
+       const std::string_view                                         &field_name,
+       uint8_t                                                         texture_page) const;
+     std::filesystem::path save_path_coo(
+       fmt::format_string<std::string_view, std::string_view, uint8_t, uint8_t> pattern,
+       const std::filesystem::path                                             &path,
+       const std::string_view                                                  &field_name,
+       uint8_t                                                                  texture_page,
+       uint8_t                                                                  palette) const;
+     std::filesystem::path save_path_coo(
+       fmt::format_string<std::string_view, std::string_view, PupuID> pattern,
+       const std::filesystem::path                                   &path,
+       const std::string_view                                        &field_name,
+       PupuID                                                         pupu) const;
+     static std::filesystem::path save_path(
+       fmt::format_string<std::string_view, uint8_t> pattern,
+       const std::filesystem::path                  &path,
+       const std::string_view                       &field_name,
+       uint8_t                                       texture_page);
+     static std::filesystem::path save_path(
+       fmt::format_string<std::string_view, uint8_t, uint8_t> pattern,
+       const std::filesystem::path                           &path,
+       const std::string_view                                &field_name,
+       uint8_t                                                texture_page,
+       uint8_t                                                palette);
+     static std::filesystem::path save_path(
+       fmt::format_string<std::string_view, PupuID> pattern,
+       const std::filesystem::path                 &path,
+       const std::string_view                      &field_name,
+       PupuID                                       pupu);
+
      template<typename funcT>
      auto const_visit_tiles(funcT &&p_function) const
      {
           return m_maps.const_back().visit_tiles(std::forward<decltype(p_function)>(p_function));
      }
-     [[nodiscard]] const sf::Texture *get_texture(open_viii::graphics::BPPT bpp, std::uint8_t palette, std::uint8_t texture_page) const;
-     [[nodiscard]] const sf::Texture *get_texture(const ::PupuID &pupu) const;
 
      template<open_viii::graphics::background::is_tile tileT>
      [[nodiscard]] const sf::Texture *get_texture(const tileT &tile) const
@@ -86,9 +249,6 @@ struct map_sprite final
           }
      }
 
-     [[nodiscard]] sf::Vector2u get_tile_texture_size(const sf::Texture *texture) const;
-
-     sf::Vector2u               get_tile_draw_size() const;
 
      template<open_viii::graphics::background::is_tile tileT, typename T>
      static void format_tile_text(const tileT &tile, T &&format_function)
@@ -125,103 +285,7 @@ struct map_sprite final
           std::invoke(format_function, "Draw", tile.draw());
      }
 
-     void update_render_texture(const sf::Texture *p_texture, open_viii::graphics::background::Map map, const tile_sizes tile_size);
 
-     void compact_map_order();
-
-   public:
-     using color_type  = open_viii::graphics::Color32RGBA;
-     using colors_type = std::vector<color_type>;
-     map_sprite()      = default;
-     map_sprite(
-       std::shared_ptr<open_viii::archive::FIFLFS<false>> field,
-       open_viii::LangT                                   coo,
-       bool                                               draw_swizzle,
-       ff_8::filters                                      in_filters,
-       bool                                               force_disable_blends)
-       : m_draw_swizzle(draw_swizzle)
-       , m_disable_blends(force_disable_blends)
-       , m_filters(std::move(in_filters))
-       , m_field(std::move(field))
-       , m_coo(coo)
-       , m_upscales(get_upscales())
-       , m_mim(get_mim())
-       , m_maps(get_map(&m_map_path, true, m_using_coo))
-       , m_all_unique_values_and_strings(get_all_unique_values_and_strings())
-       , m_canvas(get_canvas())
-       , m_texture(load_textures())
-       , m_render_texture(std::make_shared<sf::RenderTexture>())
-       , m_grid(get_grid())
-       , m_texture_page_grid(get_texture_page_grid())
-     {
-          init_render_texture();
-     }
-     void undo()
-     {
-          (void)m_maps.undo();
-          update_render_texture();
-     }
-
-     void redo()
-     {
-          (void)m_maps.redo();
-          update_render_texture();
-     }
-
-     void undo_all()
-     {
-          m_maps.undo_all();
-          update_render_texture();
-     }
-
-     void redo_all()
-     {
-          m_maps.redo_all();
-          update_render_texture();
-     }
-
-     bool undo_enabled()
-     {
-          return m_maps.undo_enabled();
-     }
-
-     bool redo_enabled()
-     {
-          return m_maps.redo_enabled();
-     }
-     bool history_remove_duplicate()
-     {
-          return m_maps.remove_duplicate();
-     }
-
-     auto get_map_scale() const
-     {
-          return m_scale;
-     }
-
-     [[nodiscard]] const all_unique_values_and_strings &uniques() const;
-
-     map_sprite        update(std::shared_ptr<open_viii::archive::FIFLFS<false>> field, open_viii::LangT coo, bool draw_swizzle) const;
-
-     void              enable_draw_swizzle();
-     void              disable_draw_swizzle();
-     void              enable_disable_blends();
-     void              disable_disable_blends();
-     std::string       map_filename() const;
-     bool              fail() const;
-     std::uint32_t     width() const;
-     std::uint32_t     height() const;
-     void              save(const std::filesystem::path &path) const;
-     void              map_save(const std::filesystem::path &dest_path) const;
-     void              test_map(const std::filesystem::path &saved_path) const;
-     map_sprite        with_coo(open_viii::LangT coo) const;
-     map_sprite        with_field(std::shared_ptr<open_viii::archive::FIFLFS<false>> field) const;
-     map_sprite        with_filters(ff_8::filters filters) const;
-     void              draw(sf::RenderTarget &target, sf::RenderStates states) const final;
-     const map_sprite &toggle_grid(bool enable, bool enable_texture_page_grid) const;
-
-     void              enable_square(sf::Vector2u position);
-     void              disable_square() const;
      template<open_viii::graphics::background::is_tile tile_type>
      void enable_square(const tile_type &tile)
      {
@@ -244,11 +308,6 @@ struct map_sprite final
           }();
           enable_square(sf::Vector2u(src_x, src_y));
      }
-     bool                 empty() const;
-     const ff_8::filters &filter() const;
-     ff_8::filters       &filter();
-     void                 update_render_texture(bool reload_textures = false);
-     void                 update_position(const sf::Vector2i &pixel_pos, const uint8_t &texture_page, const sf::Vector2i &down_pixel_pos);
      [[nodiscard]] std::vector<std::size_t> find_intersecting(
        const open_viii::graphics::background::Map &map,
        const sf::Vector2i                         &pixel_pos,
@@ -330,116 +389,58 @@ struct map_sprite final
           {
                get_indices(filtered_tiles);
           }
-
-          //    auto currentStacktrace = std::stacktrace::current();
-          //    for (const auto &entry : currentStacktrace)
-          //    {
-          //      spdlog::info(
-          //        "{}:{} - {}",
-          //        entry.source_file(),
-          //        entry.source_line(),
-          //        entry.description());
-          //    }
-          //    spdlog::info("Found {:3} intersecting tiles", out.size());
-          //    for (const auto &i : out)
-          //    {
-          //      spdlog::info("Tile index: {:4} ", i);
-          //    }
           return out;
      }
 
-     std::size_t         row_empties(std::uint8_t tile_y, std::uint8_t texture_page, bool move_from_row = false);
-     sf::Sprite          save_intersecting(const sf::Vector2i &pixel_pos, const std::uint8_t &texture_page);
-     std::uint8_t        max_x_for_saved() const;
-     void                compact_rows();
-     void                compact_all();
-     void                flatten_bpp();
-     void                flatten_palette();
-     void                save_new_textures(const std::filesystem::path &path);
-     cppcoro::task<void>                gen_new_textures(const std::filesystem::path path);
-     void                save_pupu_textures(const std::filesystem::path &path);
-     cppcoro::task<void> gen_pupu_textures(const std::filesystem::path path);
-     void                save_modified_map(const std::filesystem::path &path) const;
-     void                load_map(const std::filesystem::path &dest_path);
-     std::string         get_base_name() const;
-
-   private:
-     static constexpr auto                              default_filter_lambda = [](auto &&) { return true; };
-     static constexpr auto                              filter_invalid        = open_viii::graphics::background::Map::filter_invalid();
-     square                                             m_square = { sf::Vector2u{}, sf::Vector2u{ TILE_SIZE, TILE_SIZE }, sf::Color::Red };
-
-
-     bool                                               m_draw_swizzle                  = { false };
-     bool                                               m_disable_texture_page_shift    = { false };
-     bool                                               m_disable_blends                = { false };
-     ff_8::filters                                      m_filters                       = {};
-     std::shared_ptr<open_viii::archive::FIFLFS<false>> m_field                         = {};
-     open_viii::LangT                                   m_coo                           = {};
-     ::upscales                                         m_upscales                      = {};
-     open_viii::graphics::background::Mim               m_mim                           = {};
-     std::string                                        m_map_path                      = {};
-     bool                                               m_using_coo                     = {};
-     bool                                               m_using_imported_texture        = {};
-     const sf::Texture                                 *m_imported_texture              = { nullptr };
-     std::uint16_t                                      m_imported_tile_size            = {};
-     open_viii::graphics::background::Map               m_imported_tile_map             = {};
-     open_viii::graphics::background::Map               m_imported_tile_map_front       = {};
-     ff_8::MapHistory                                   m_maps                          = {};
-     all_unique_values_and_strings                      m_all_unique_values_and_strings = {};
-     open_viii::graphics::Rectangle<std::uint32_t>      m_canvas                        = {};
-     static constexpr std::uint8_t                      TILE_SIZE                       = 16U;
-     static constexpr std::uint8_t                      MAX_TEXTURE_PAGES               = 14U;
-     static constexpr std::uint8_t                      MAX_PALETTES                    = 16U;
-     static constexpr std::uint8_t                      BPP_COMBOS                      = 2U;
-     static constexpr std::uint16_t                     START_OF_NO_PALETTE_INDEX       = MAX_PALETTES * MAX_TEXTURE_PAGES;
-     static constexpr std::uint16_t                     BPP16_INDEX                     = MAX_PALETTES * BPP_COMBOS + 1;
-     static constexpr auto                              MAX_TEXTURES =
-       (std::max)(static_cast<std::uint16_t>(START_OF_NO_PALETTE_INDEX + MAX_TEXTURE_PAGES), static_cast<std::uint16_t>(BPP16_INDEX + 1U));
-     // todo ecenter3 shows different images for remaster and 2013. Fix?
-
-     std::vector<std::future<void>>                         m_futures                = {};
-     std::shared_ptr<std::array<sf::Texture, MAX_TEXTURES>> m_texture                = {};
-     std::shared_ptr<sf::RenderTexture>                     m_render_texture         = {};
-     std::shared_ptr<sf::RenderTexture>                     m_drag_sprite_texture    = {};
-     grid                                                   m_grid                   = {};
-     grid                                                   m_texture_page_grid      = {};
-     std::vector<std::size_t>                               m_saved_indices          = {};
-     std::vector<std::size_t>                               m_saved_imported_indices = {};
-     std::uint32_t                                          m_scale                  = { 1 };
-     grid                                                   get_grid() const;
-     grid                                                   get_texture_page_grid() const;
-     all_unique_values_and_strings                          get_all_unique_values_and_strings() const;
-     [[nodiscard]] open_viii::graphics::background::Mim     get_mim() const;
-     open_viii::graphics::background::Map                   get_map(std::string *out_path, bool shift, bool &coo) const;
-     [[nodiscard]] colors_type                              get_colors(open_viii::graphics::BPPT bpp, std::uint8_t palette) const;
-     [[nodiscard]] std::size_t get_texture_pos(open_viii::graphics::BPPT bpp, std::uint8_t palette, std::uint8_t texture_page) const;
-     [[nodiscard]] open_viii::graphics::Rectangle<std::uint32_t> get_canvas() const;
-     void                                                        resize_render_texture();
-     void                                                        init_render_texture();
-
-     [[nodiscard]] std::array<sf::Vertex, 4U>                    get_triangle_strip(
-                          const sf::Vector2u &draw_x,
-                          const sf::Vector2u &texture_size,
-                          std::integral auto  texture_x,
-                          std::integral auto  texture_y,
-                          std::integral auto  dest_x,
-                          std::integral auto  dest_y) const;
 
      [[nodiscard]] std::array<sf::Vertex, 4U> get_triangle_strip(
-       const sf::Vector2u                                  &draw_size,
-       const sf::Vector2u                                  &texture_size,
-       const open_viii::graphics::background::is_tile auto &tile_const,
-       open_viii::graphics::background::is_tile auto      &&tile) const;
+       const sf::Vector2u &draw_size,
+       const sf::Vector2u &texture_size,
+       std::integral auto  source_x,
+       std::integral auto  source_y,
+       std::integral auto  dest_x,
+       std::integral auto  dest_y) const
+     {
+          const sf::Vector2f     draw_size_f     = { static_cast<float>(draw_size.x), static_cast<float>(draw_size.y) };
+          const sf::Vector2f     texture_size_f  = { static_cast<float>(texture_size.x), static_cast<float>(texture_size.y) };
+          constexpr static float tile_size_f     = static_cast<float>(TILE_SIZE);
+          auto                   scaled_dest_x   = static_cast<float>(dest_x) / tile_size_f;
+          auto                   scaled_dest_y   = static_cast<float>(dest_y) / tile_size_f;
+          float                  scaled_source_x = static_cast<float>(source_x) / tile_size_f;
+          float                  scaled_source_y = static_cast<float>(source_y) / tile_size_f;
+          const auto tovec  = [](auto &&in_x, auto &&in_y) { return sf::Vector2f{ static_cast<float>(in_x), static_cast<float>(in_y) }; };
+          const auto tovert = [&tovec](auto &&draw_x, auto &&draw_y, auto &&texture_x, auto &&texture_y) {
+               return sf::Vertex{ tovec(draw_x, draw_y), tovec(texture_x, texture_y) };
+          };
+          return std::array{ tovert(
+                               (scaled_dest_x + 1) * draw_size_f.x,
+                               scaled_dest_y * draw_size_f.y,
+                               (scaled_source_x + 1) * texture_size_f.x,
+                               scaled_source_y * texture_size_f.y),
+                             tovert(
+                               scaled_dest_x * draw_size_f.x,
+                               scaled_dest_y * draw_size_f.y,
+                               scaled_source_x * texture_size_f.x,
+                               scaled_source_y * texture_size_f.y),
+                             tovert(
+                               (scaled_dest_x + 1) * draw_size_f.x,
+                               (scaled_dest_y + 1) * draw_size_f.y,
+                               (scaled_source_x + 1) * texture_size_f.x,
+                               (scaled_source_y + 1) * texture_size_f.y),
+                             tovert(
+                               scaled_dest_x * draw_size_f.x,
+                               (scaled_dest_y + 1) * draw_size_f.y,
+                               scaled_source_x * texture_size_f.x,
+                               (scaled_source_y + 1) * texture_size_f.y) };
+     }
 
-     static const sf::BlendMode &GetBlendSubtract();
-     [[nodiscard]] bool          local_draw(sf::RenderTarget &target, sf::RenderStates states) const;
+
      template<open_viii::graphics::background::is_tile tileT>
      bool fail_filter(const tileT &tile) const
      {
           // m_filters.bpp.value() != 16_bpp
           return !std::invoke(m_filters, tile);
      }
-     void wait_for_futures();
      auto duel_visitor(auto &&lambda) const
      {
           return m_maps.front().visit_tiles([this, &lambda](auto const &tiles_const) {
@@ -500,20 +501,6 @@ struct map_sprite final
           });
      }
 
-     void find_upscale_path(std::shared_ptr<std::array<sf::Texture, MAX_TEXTURES>> &ret, uint8_t palette);
-     void find_upscale_path(std::shared_ptr<std::array<sf::Texture, MAX_TEXTURES>> &ret);
-     void find_deswizzle_path(std::shared_ptr<std::array<sf::Texture, MAX_TEXTURES>> &ret);
-     void load_mim_textures(std::shared_ptr<std::array<sf::Texture, MAX_TEXTURES>> &ret, open_viii::graphics::BPPT bpp, uint8_t palette);
-     template<typename F, typename... T>
-     void spawn_thread(F &&function, T &&...arguments)
-     {
-#ifdef USE_THREADS
-          m_futures.emplace_back(std::async(std::launch::deferred, std::forward<F>(function), std::forward<T>(arguments)...));
-#undef USE_THREADS
-#else
-          std::invoke(std::forward<F>(function), std::forward<T>(arguments)...);
-#endif
-     }
      template<typename key_lambdaT, typename weight_lambdaT>
      [[maybe_unused]] void compact_generic(key_lambdaT &&key_lambda, weight_lambdaT &&weight_lambda, int passes = 2)
      {
@@ -561,10 +548,6 @@ struct map_sprite final
           });
           update_render_texture();
      }
-
-     std::shared_ptr<sf::RenderTexture> save_texture(std::uint32_t width, std::uint32_t height) const;
-     uint32_t                           get_max_texture_height() const;
-     void async_save(const sf::Texture &out_texture, const std::filesystem::path &out_path);
 
 
      template<typename TilesT>
@@ -634,39 +617,7 @@ struct map_sprite final
           return map;
      }
 
-     std::filesystem::path save_path_coo(
-       fmt::format_string<std::string_view, std::string_view, uint8_t> pattern,
-       const std::filesystem::path                                    &path,
-       const std::string_view                                         &field_name,
-       uint8_t                                                         texture_page) const;
-     std::filesystem::path save_path_coo(
-       fmt::format_string<std::string_view, std::string_view, uint8_t, uint8_t> pattern,
-       const std::filesystem::path                                             &path,
-       const std::string_view                                                  &field_name,
-       uint8_t                                                                  texture_page,
-       uint8_t                                                                  palette) const;
-     std::filesystem::path save_path_coo(
-       fmt::format_string<std::string_view, std::string_view, PupuID> pattern,
-       const std::filesystem::path                                   &path,
-       const std::string_view                                        &field_name,
-       PupuID                                                         pupu) const;
-     static std::filesystem::path save_path(
-       fmt::format_string<std::string_view, uint8_t> pattern,
-       const std::filesystem::path                  &path,
-       const std::string_view                       &field_name,
-       uint8_t                                       texture_page);
-     static std::filesystem::path save_path(
-       fmt::format_string<std::string_view, uint8_t, uint8_t> pattern,
-       const std::filesystem::path                           &path,
-       const std::string_view                                &field_name,
-       uint8_t                                                texture_page,
-       uint8_t                                                palette);
-     static std::filesystem::path save_path(
-       fmt::format_string<std::string_view, PupuID> pattern,
-       const std::filesystem::path                 &path,
-       const std::string_view                      &field_name,
-       PupuID                                       pupu);
-     bool check_if_one_palette(const uint8_t &texture_page) const;
+
      auto get_conflicting_palettes() const
      {
           // todo rewrite this.
@@ -753,18 +704,95 @@ struct map_sprite final
           }
           return raw_hex;
      }
-     size_t                     size_of_map() const;
-     static bool                save_png_image(const sf::Image &image, const std::filesystem::path &filename);
-     bool                       draw_imported(sf::RenderTarget &target, sf::RenderStates states) const;
-     std::array<sf::Vertex, 4U> get_triangle_strip_for_imported(
+     [[nodiscard]] std::array<sf::Vertex, 4U> get_triangle_strip_for_imported(
        const sf::Vector2u                                  &draw_size,
        const sf::Vector2u                                  &texture_size,
        const open_viii::graphics::background::is_tile auto &tile_const,
-       open_viii::graphics::background::is_tile auto      &&tile) const;
-     sf::Vector2u         get_tile_texture_size_for_import() const;
-     static sf::BlendMode set_blend_mode(const open_viii::graphics::background::BlendModeT &blend_mode, std::array<sf::Vertex, 4U> &quad);
-     std::shared_ptr<std::array<sf::Texture, map_sprite::MAX_TEXTURES>> load_textures();
-     void                                                               reset_render_texture();
-     std::shared_ptr<std::array<sf::Texture, MAX_TEXTURES>>             load_textures_internal();
+       open_viii::graphics::background::is_tile auto      &&tile) const
+     {
+          using namespace open_viii::graphics::literals;
+          using tile_type  = std::remove_cvref_t<decltype(tile)>;
+          //  auto       src_tpw = tile_type::texture_page_width(tile_const.depth());
+          //  const auto x       = [this, &tile_const, &src_tpw]() -> std::uint32_t {
+          //    if (m_filters.upscale.enabled())
+          //    {
+          //      return 0;
+          //    }
+          //    return tile_const.texture_id() * src_tpw;
+          //  }();
+          const auto src_x = [&tile_const]() -> std::uint32_t { return static_cast<std::uint32_t>(tile_const.x()); }();
+          const auto src_y = [&tile_const]() -> std::uint32_t { return static_cast<std::uint32_t>(tile_const.y()); }();
+
+          const auto dst_x = [this, &tile]() {
+               if (m_draw_swizzle)
+               {
+                    if (!m_disable_texture_page_shift)
+                    {
+                         return static_cast<uint32_t>(tile.source_x() + tile.texture_id() * tile_type::texture_page_width(4_bpp));
+                    }
+                    return static_cast<uint32_t>(tile.source_x());
+               }
+               return static_cast<uint32_t>(tile.x());
+          }();
+          const auto dst_y = [this, &tile]() {
+               if (m_draw_swizzle)
+               {
+                    return static_cast<uint32_t>(tile.source_y());
+               }
+               return static_cast<uint32_t>(tile.y());
+          }();
+          return get_triangle_strip(draw_size, texture_size, src_x, src_y, dst_x, dst_y);
+     }
+     [[nodiscard]] std::array<sf::Vertex, 4U> get_triangle_strip(
+       const sf::Vector2u                                  &draw_size,
+       const sf::Vector2u                                  &texture_size,
+       const open_viii::graphics::background::is_tile auto &tile_const,
+       open_viii::graphics::background::is_tile auto      &&tile) const
+     {
+          using namespace open_viii::graphics::literals;
+          using tile_type    = std::remove_cvref_t<decltype(tile)>;
+          auto       src_tpw = tile_type::texture_page_width(tile_const.depth());
+          const auto x       = [this, &tile_const, &src_tpw]() -> std::uint32_t {
+               if (m_filters.upscale.enabled())
+               {
+                    return 0;
+               }
+               return tile_const.texture_id() * src_tpw;
+          }();
+          const auto src_x = [&tile_const, &x, this]() -> std::uint32_t {
+               if (m_filters.deswizzle.enabled())
+               {
+                    return static_cast<std::uint32_t>(tile_const.x());
+               }
+               return tile_const.source_x() + x;
+          }();
+          const auto src_y = [&tile_const, this]() -> std::uint32_t {
+               if (m_filters.deswizzle.enabled())
+               {
+                    return static_cast<std::uint32_t>(tile_const.y());
+               }
+               return tile_const.source_y();
+          }();
+
+          const auto dst_x = [this, &tile]() {
+               if (m_draw_swizzle)
+               {
+                    if (!m_disable_texture_page_shift)
+                    {
+                         return static_cast<uint32_t>(tile.source_x() + tile.texture_id() * tile_type::texture_page_width(4_bpp));
+                    }
+                    return static_cast<uint32_t>(tile.source_x());
+               }
+               return static_cast<uint32_t>(tile.x());
+          }();
+          const auto dst_y = [this, &tile]() {
+               if (m_draw_swizzle)
+               {
+                    return static_cast<uint32_t>(tile.source_y());
+               }
+               return static_cast<uint32_t>(tile.y());
+          }();
+          return get_triangle_strip(draw_size, texture_size, src_x, src_y, dst_x, dst_y);
+     }
 };
 #endif// FIELD_MAP_EDITOR_MAP_SPRITE_HPP

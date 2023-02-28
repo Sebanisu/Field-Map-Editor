@@ -398,7 +398,6 @@ cppcoro::task<void> fme::gui_batch::source()
                compact_and_flatten(current_map_sprite);
                co_await cppcoro::suspend_always{};
                auto task = save_output(std::move(current_map_sprite));
-               co_await cppcoro::suspend_always{};
                while (!task.is_ready())
                {
                     co_await cppcoro::suspend_always{};
@@ -432,7 +431,7 @@ void fme::gui_batch::popup_batch_common_filter_start(ff_8::filters &filters, std
 cppcoro::generator<::map_sprite>
   fme::gui_batch::get_map_sprite(const std::shared_ptr<open_viii::archive::FIFLFS<false>> &field, const ff_8::filters &in_filters)
 {
-     std::string base_name     = str_to_lower(field->get_base_name());
+     std::string base_name     = ::map_sprite::str_to_lower(field->get_base_name());
      auto        local_filters = in_filters;
 
      popup_batch_common_filter_start(local_filters, base_name);
@@ -476,7 +475,7 @@ cppcoro::generator<open_viii::LangT> fme::gui_batch::get_field_coos(const std::s
      {
           const auto &[i, file_path]     = map_pair;
           const auto       filename      = std::filesystem::path(file_path).filename().stem().string();
-          std::string      base_name     = str_to_lower(field->get_base_name());
+          std::string      base_name     = ::map_sprite::str_to_lower(field->get_base_name());
           std::string_view filename_view = { filename };
           std::string_view basename_view = { base_name };
           if (
