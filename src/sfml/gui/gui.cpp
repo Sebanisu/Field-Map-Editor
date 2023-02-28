@@ -666,7 +666,6 @@ void gui::combo_coo()
 }
 const open_viii::LangT &gui::get_coo() const
 {
-
      static constexpr auto coos = open_viii::LangCommon::to_array();
      return coos.at(static_cast<size_t>(m_selections.coo));
 }
@@ -702,7 +701,7 @@ void gui::update_field()
      }
      else if (m_selections.draw == 1)
      {
-          m_map_sprite = m_map_sprite.with_field(m_field);
+          m_map_sprite = m_map_sprite.with_field(m_field, get_coo());
      }
 
      m_loaded_swizzle_texture_path   = std::filesystem::path{};
@@ -1440,7 +1439,7 @@ void gui::combo_draw()
           }
           else if (m_selections.draw == 1)
           {
-               m_map_sprite = m_map_sprite.update(m_field, get_coo(), m_selections.draw_swizzle);
+               m_map_sprite = m_map_sprite.update(ff_8::map_group(m_field, get_coo()), m_selections.draw_swizzle);
           }
           m_changed = true;
      }
@@ -1814,7 +1813,7 @@ std::shared_ptr<open_viii::archive::FIFLFS<false>> gui::init_field()
 }
 map_sprite gui::get_map_sprite() const
 {
-     return { m_field, get_coo(), m_selections.draw_swizzle, {}, m_selections.draw_disable_blending };
+     return { ff_8::map_group{m_field, get_coo()}, m_selections.draw_swizzle, {}, m_selections.draw_disable_blending };
 }
 int gui::get_selected_field()
 {

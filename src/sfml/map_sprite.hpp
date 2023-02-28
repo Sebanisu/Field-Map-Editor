@@ -6,6 +6,7 @@
 #define FIELD_MAP_EDITOR_MAP_SPRITE_HPP
 #include "filter.hpp"
 #include "grid.hpp"
+#include "map_group.hpp"
 #include "MapHistory.hpp"
 #include "open_viii/archive/Archives.hpp"
 #include "open_viii/graphics/background/Map.hpp"
@@ -26,7 +27,6 @@
 #include <SFML/Graphics/Vertex.hpp>
 // #include <stacktrace>
 #include <utility>
-
 struct map_sprite final
   : public sf::Drawable
   , public sf::Transformable
@@ -55,23 +55,18 @@ struct map_sprite final
      using iRectangle     = open_viii::graphics::Rectangle<std::int32_t>;
 
    private:
-     square                                        m_square = { sf::Vector2u{}, sf::Vector2u{ TILE_SIZE, TILE_SIZE }, sf::Color::Red };
+     ff_8::map_group                               m_map_group = {};
+     square                                        m_square    = { sf::Vector2u{}, sf::Vector2u{ TILE_SIZE, TILE_SIZE }, sf::Color::Red };
      bool                                          m_draw_swizzle                  = { false };
      bool                                          m_disable_texture_page_shift    = { false };
      bool                                          m_disable_blends                = { false };
      ff_8::filters                                 m_filters                       = {};
-     SharedField                                   m_field                         = {};
-     open_viii::LangT                              m_coo                           = {};
      ::upscales                                    m_upscales                      = {};
-     Mim                                           m_mim                           = {};
-     std::string                                   m_map_path                      = {};
-     bool                                          m_using_coo                     = {};
      bool                                          m_using_imported_texture        = {};
      const sf::Texture                            *m_imported_texture              = { nullptr };
      std::uint16_t                                 m_imported_tile_size            = {};
      Map                                           m_imported_tile_map             = {};
      Map                                           m_imported_tile_map_front       = {};
-     ff_8::MapHistory                              m_maps                          = {};
      all_unique_values_and_strings                 m_all_unique_values_and_strings = {};
      open_viii::graphics::Rectangle<std::uint32_t> m_canvas                        = {};
      std::shared_ptr<sf::RenderTexture>            m_render_texture                = {};
@@ -85,7 +80,7 @@ struct map_sprite final
 
    public:
      map_sprite() = default;
-     map_sprite(SharedField field, open_viii::LangT coo, bool draw_swizzle, ff_8::filters in_filters, bool force_disable_blends);
+     map_sprite(ff_8::map_group map_group, bool draw_swizzle, ff_8::filters in_filters, bool force_disable_blends);
      std::uint32_t                                      get_map_scale() const;
      [[nodiscard]] const sf::Texture                   *get_texture(BPPT bpp, std::uint8_t palette, std::uint8_t texture_page) const;
      [[nodiscard]] const sf::Texture                   *get_texture(const ::PupuID &pupu) const;
@@ -105,20 +100,18 @@ struct map_sprite final
      void                                               map_save(const std::filesystem::path &dest_path) const;
      void                                               test_map(const std::filesystem::path &saved_path) const;
      map_sprite                                         with_coo(open_viii::LangT coo) const;
-     map_sprite                                         with_field(SharedField field) const;
+     map_sprite                                         with_field(SharedField field, open_viii::LangT coo) const;
      map_sprite                                         with_filters(ff_8::filters filters) const;
      const map_sprite                                  &toggle_grid(bool enable, bool enable_texture_page_grid) const;
      void                                               disable_square() const;
      bool                                               empty() const;
      const ff_8::filters                               &filter() const;
      std::uint8_t                                       max_x_for_saved() const;
-     map_sprite                                         update(SharedField field, open_viii::LangT coo, bool draw_swizzle) const;
+     map_sprite                                         update(ff_8::map_group map_group, bool draw_swizzle) const;
      grid                                               get_grid() const;
      grid                                               get_texture_page_grid() const;
      all_unique_values_and_strings                      get_all_unique_values_and_strings() const;
-     [[nodiscard]] Mim                                  get_mim() const;
      sf::Vector2u                                       get_tile_texture_size_for_import() const;
-     open_viii::graphics::background::Map               get_map(std::string *out_path, bool shift, bool &coo) const;
      [[nodiscard]] colors_type                          get_colors(BPPT bpp, std::uint8_t palette) const;
      [[nodiscard]] Rectangle                            get_canvas() const;
      bool                                               check_if_one_palette(const uint8_t &texture_page) const;
@@ -216,7 +209,7 @@ struct map_sprite final
      template<typename funcT>
      auto const_visit_tiles(funcT &&p_function) const
      {
-          return m_maps.const_back().visit_tiles(std::forward<decltype(p_function)>(p_function));
+          return m_map_group.maps.const_back().visit_tiles(std::forward<decltype(p_function)>(p_function));
      }
 
      template<open_viii::graphics::background::is_tile tileT>
@@ -242,9 +235,9 @@ struct map_sprite final
                          const auto found_iterator = std::ranges::find_if(tiles, [&tile](const auto &l_tile) { return l_tile == tile; });
                          const auto distance       = std::ranges::distance(tiles.begin(), found_iterator);
 
-                         if (std::cmp_greater(std::ranges::ssize(m_maps.pupu()), distance))
+                         if (std::cmp_greater(std::ranges::ssize(m_map_group.maps.pupu()), distance))
                          {
-                              auto pupu_it = m_maps.pupu().cbegin();
+                              auto pupu_it = m_map_group.maps.pupu().cbegin();
                               std::ranges::advance(pupu_it, distance);
                               return get_texture(*pupu_it);
                          }
@@ -452,16 +445,16 @@ struct map_sprite final
      }
      auto duel_visitor(auto &&lambda) const
      {
-          return m_maps.front().visit_tiles([this, &lambda](auto const &tiles_const) {
-               return m_maps.back().visit_tiles([&lambda, &tiles_const](const auto &tiles) {
+          return m_map_group.maps.front().visit_tiles([this, &lambda](auto const &tiles_const) {
+               return m_map_group.maps.back().visit_tiles([&lambda, &tiles_const](const auto &tiles) {
                     return std::invoke(std::forward<decltype(lambda)>(lambda), tiles_const, tiles);
                });
           });
      }
      auto duel_visitor(auto &&lambda)
      {
-          return m_maps.front().visit_tiles([this, &lambda](auto const &tiles_const) {
-               return m_maps.back().visit_tiles([&lambda, &tiles_const](auto &&tiles) {
+          return m_map_group.maps.front().visit_tiles([this, &lambda](auto const &tiles_const) {
+               return m_map_group.maps.back().visit_tiles([&lambda, &tiles_const](auto &&tiles) {
                     return std::invoke(std::forward<decltype(lambda)>(lambda), tiles_const, std::forward<decltype(tiles)>(tiles));
                });
           });
@@ -513,7 +506,7 @@ struct map_sprite final
      template<typename key_lambdaT, typename weight_lambdaT>
      [[maybe_unused]] void compact_generic(key_lambdaT &&key_lambda, weight_lambdaT &&weight_lambda, int passes = 2)
      {
-          m_maps.copy_back().visit_tiles([&key_lambda, &weight_lambda, &passes, this](auto &&tiles) {
+          m_map_group.maps.copy_back().visit_tiles([&key_lambda, &weight_lambda, &passes, this](auto &&tiles) {
                for (int pass = passes; pass != 0; --pass)// at least 2 passes needed as things might get shifted to
                                                          // other texture pages and then the keys are less valuable.
                {
@@ -630,7 +623,7 @@ struct map_sprite final
      auto get_conflicting_palettes() const
      {
           // todo rewrite this.
-          return m_maps.back().visit_tiles([this](const auto &tiles) {
+          return m_map_group.maps.back().visit_tiles([this](const auto &tiles) {
                //        using tileT =
                //          std::remove_cvref_t<typename
                //          std::remove_cvref_t<decltype(tiles)>::value_type>;
@@ -682,9 +675,9 @@ struct map_sprite final
      }
      ::upscales get_upscales()
      {
-          if (m_field)
+          if (m_map_group.field)
           {
-               return { m_field->get_base_name(), m_coo };
+               return { m_map_group.field->get_base_name(), m_map_group.opt_coo ? *m_map_group.opt_coo : open_viii::LangT::generic };
           }
           return {};
      }

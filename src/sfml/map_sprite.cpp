@@ -16,44 +16,9 @@ using namespace std::string_literals;
 
 bool map_sprite::empty() const
 {
-     return m_maps.const_back().visit_tiles([](const auto &tiles) { return std::empty(tiles); });
+     return m_map_group.maps.const_back().visit_tiles([](const auto &tiles) { return std::empty(tiles); });
 }
 
-Mim map_sprite::get_mim() const
-{
-     if (m_field)
-     {
-          auto lang_name      = fmt::format("_{}{}", open_viii::LangCommon::to_string(m_coo), Mim::EXT);
-          auto long_lang_name = fmt::format(
-            "{}_{}{}", m_field->get_base_name(), open_viii::LangCommon::to_string(m_coo), open_viii::graphics::background::Mim::EXT);
-          auto long_name = fmt::format("{}{}", m_field->get_base_name(), open_viii::graphics::background::Mim::EXT);
-          return { m_field->get_entry_data(
-                     { std::string_view(long_lang_name), std::string_view(long_name), std::string_view(lang_name), Mim::EXT }),
-                   str_to_lower(m_field->get_base_name()) };
-     }
-     return {};
-}
-
-Map map_sprite::get_map(std::string *out_path, bool shift, bool &coo) const
-{
-     if (m_field)
-     {
-          std::size_t out_path_pos   = {};
-          auto        lang_name      = fmt::format("_{}{}", open_viii::LangCommon::to_string(m_coo), Map::EXT);
-          auto        long_lang_name = fmt::format(
-            "{}_{}{}", m_field->get_base_name(), open_viii::LangCommon::to_string(m_coo), open_viii::graphics::background::Map::EXT);
-          auto long_name = fmt::format("{}{}", m_field->get_base_name(), open_viii::graphics::background::Map::EXT);
-          auto map       = Map{ m_mim.mim_type(),
-                          m_field->get_entry_data(
-                            { std::string_view(long_lang_name), std::string_view(long_name), std::string_view(lang_name), Map::EXT },
-                            out_path,
-                            &out_path_pos),
-                          shift };
-          coo            = out_path_pos == 0U;
-          return map;
-     }
-     return {};
-}
 map_sprite::colors_type
   map_sprite::get_colors(const open_viii::graphics::background::Mim &mim, open_viii::graphics::BPPT bpp, std::uint8_t palette)
 {
@@ -61,7 +26,11 @@ map_sprite::colors_type
 }
 map_sprite::colors_type map_sprite::get_colors(open_viii::graphics::BPPT bpp, std::uint8_t palette) const
 {
-     return get_colors(m_mim, bpp, palette);
+     if (m_map_group.mim)
+     {
+          return get_colors(*m_map_group.mim, bpp, palette);
+     }
+     return {};
 }
 
 std::size_t
@@ -202,13 +171,16 @@ void map_sprite::load_mim_textures(
   open_viii::graphics::BPPT                               bpp,
   std::uint8_t                                            palette)
 {
-
-     if (m_mim.get_width(bpp) != 0U)
+     if (!m_map_group.mim)
      {
-          std::size_t const pos = get_texture_pos(bpp, palette, 0);
-          load_mim_textures(m_mim, &(ret->at(pos)), bpp, palette);
+          return;
      }
+     if (m_map_group.mim->get_width(bpp) != 0U)
+     {
 
+          std::size_t const pos = get_texture_pos(bpp, palette, 0);
+          load_mim_textures(*m_map_group.mim, &(ret->at(pos)), bpp, palette);
+     }
 }
 void map_sprite::find_upscale_path(std::shared_ptr<std::array<sf::Texture, MAX_TEXTURES>> &ret)
 {
@@ -238,20 +210,19 @@ void map_sprite::find_upscale_path(std::shared_ptr<std::array<sf::Texture, MAX_T
           }
           texture_file_exists_then_load(&(ret->at(texture_index)));
      }
-
 }
 
 void map_sprite::find_deswizzle_path(std::shared_ptr<std::array<sf::Texture, MAX_TEXTURES>> &ret)
 {
 
-     auto                             field_name = get_base_name();
+     auto field_name = get_base_name();
      std::ranges::for_each(m_all_unique_values_and_strings.pupu().values(), [&, i = size_t{}](const ::PupuID &pupu) mutable {
           static constexpr auto pattern_pupu     = std::string_view("{}_{}.png");
           static constexpr auto pattern_coo_pupu = std::string_view("{}_{}_{}.png");
           std::filesystem::path in_path{};
-          if (m_using_coo)
+          if (m_map_group.opt_coo)
           {
-               in_path = save_path_coo(pattern_coo_pupu, m_filters.deswizzle.value(), field_name, pupu, m_coo);
+               in_path = save_path_coo(pattern_coo_pupu, m_filters.deswizzle.value(), field_name, pupu, *m_map_group.opt_coo);
           }
           else
           {
@@ -275,7 +246,6 @@ void map_sprite::find_deswizzle_path(std::shared_ptr<std::array<sf::Texture, MAX
           }
           check_if_file_exists_and_load_it(&(ret->at(i++)));
      });
-
 }
 void map_sprite::find_upscale_path(std::shared_ptr<std::array<sf::Texture, MAX_TEXTURES>> &ret, std::uint8_t palette)
 {
@@ -301,7 +271,6 @@ void map_sprite::find_upscale_path(std::shared_ptr<std::array<sf::Texture, MAX_T
           };
           p_function(&(ret->at(index)));
      }
-
 }
 
 void set_color(std::array<sf::Vertex, 4U> &vertices, const sf::Color &color)
@@ -323,7 +292,7 @@ static constexpr std::underlying_type_t<texture_page_width> operator+(texture_pa
 }
 std::uint8_t map_sprite::max_x_for_saved() const
 {
-     return m_maps.const_back().visit_tiles([this](const auto &tiles) {
+     return m_map_group.maps.const_back().visit_tiles([this](const auto &tiles) {
           auto       transform_range = m_saved_indices | std::views::transform([this, &tiles](std::size_t tile_index) -> std::uint16_t {
                                       auto &tile = tiles[tile_index];
                                       if (m_draw_swizzle)
@@ -382,7 +351,7 @@ void map_sprite::compact_all()
 
 void map_sprite::flatten_bpp()
 {
-     m_maps.copy_back().visit_tiles([](auto &tiles) {
+     m_map_group.maps.copy_back().visit_tiles([](auto &tiles) {
           std::ranges::transform(tiles, tiles.begin(), [](const auto tile) {
                if (filter_invalid(tile))
                {
@@ -394,7 +363,7 @@ void map_sprite::flatten_bpp()
 }
 void map_sprite::flatten_palette()
 {
-     m_maps.copy_back().visit_tiles([](auto &tiles) {
+     m_map_group.maps.copy_back().visit_tiles([](auto &tiles) {
           std::ranges::transform(tiles, tiles.begin(), [](const auto tile) {
                if (filter_invalid(tile))
                {
@@ -407,7 +376,7 @@ void map_sprite::flatten_palette()
 
 std::size_t map_sprite::row_empties(std::uint8_t tile_y, std::uint8_t texture_page, const bool move_from_row)
 {
-     return m_maps.const_back().visit_tiles([&tile_y, &texture_page, &move_from_row](const auto &tiles) -> std::size_t {
+     return m_map_group.maps.const_back().visit_tiles([&tile_y, &texture_page, &move_from_row](const auto &tiles) -> std::size_t {
           std::vector<std::pair<std::uint8_t, std::int8_t>> values = {};
           auto                                              filtered_range =
             tiles | std::views::filter([&tile_y, &texture_page](const auto &tile) -> bool {
@@ -436,7 +405,7 @@ void map_sprite::update_position(const sf::Vector2i &pixel_pos, const uint8_t &t
      {
           return;
      }
-     Map       &current_map = m_maps.copy_back();
+     Map       &current_map = m_map_group.maps.copy_back();
      const auto update_tile_positions =
        [this, &texture_page, &pixel_pos, &down_pixel_pos](const auto &map, auto &&tiles, const std::vector<std::size_t> &indices) {
             for (auto i : indices)
@@ -519,7 +488,7 @@ sf::Sprite map_sprite::save_intersecting(const sf::Vector2i &pixel_pos, const st
      sprite.setScale(1.0F / static_cast<float>(m_scale), 1.0F / static_cast<float>(m_scale));
      //  sprite.setScale(
      //    1.F / static_cast<float>(m_scale), 1.F / static_cast<float>(m_scale));
-     m_saved_indices = find_intersecting(m_maps.const_back(), pixel_pos, texture_page);
+     m_saved_indices = find_intersecting(m_map_group.maps.const_back(), pixel_pos, texture_page);
      if (!m_draw_swizzle)
      {
           m_saved_imported_indices = find_intersecting(m_imported_tile_map, pixel_pos, texture_page);
@@ -562,8 +531,8 @@ sf::Sprite map_sprite::save_intersecting(const sf::Vector2i &pixel_pos, const st
 
      for (const std::uint16_t &z : m_all_unique_values_and_strings.z().values())
      {
-          m_maps.front().visit_tiles([&](const auto &front_tiles) {
-               m_maps.const_back().visit_tiles([&](const auto &tiles) { draw_drag_texture(front_tiles, tiles, z); });
+          m_map_group.maps.front().visit_tiles([&](const auto &front_tiles) {
+               m_map_group.maps.const_back().visit_tiles([&](const auto &tiles) { draw_drag_texture(front_tiles, tiles, z); });
           });
           m_imported_tile_map_front.visit_tiles([&](const auto &imported_front_tiles) {
                m_imported_tile_map.visit_tiles(
@@ -588,7 +557,7 @@ sf::Sprite map_sprite::save_intersecting(const sf::Vector2i &pixel_pos, const st
                  if (!m_saved_indices.empty())
                  {
                       // skip saved indices on redraw.
-                      const auto current_index = m_maps.get_offset_from_back(tile);
+                      const auto current_index = m_map_group.maps.get_offset_from_back(tile);
                       const auto find_index    = std::ranges::find_if(
                         m_saved_indices, [&current_index](const auto search_index) { return std::cmp_equal(search_index, current_index); });
                       if (find_index != m_saved_indices.end())
@@ -786,17 +755,17 @@ const sf::BlendMode &map_sprite::GetBlendSubtract()
 
 map_sprite map_sprite::with_coo(const open_viii::LangT coo) const
 {
-     return { m_field, coo, m_draw_swizzle, m_filters, m_disable_blends };
+     return { ff_8::map_group{ std::move(m_map_group.field), coo }, m_draw_swizzle, m_filters, m_disable_blends };
 }
 
-map_sprite map_sprite::with_field(std::shared_ptr<open_viii::archive::FIFLFS<false>> field) const
+map_sprite map_sprite::with_field(map_sprite::SharedField field, const open_viii::LangT coo) const
 {
-     return { std::move(field), m_coo, m_draw_swizzle, m_filters, m_disable_blends };
+     return { ff_8::map_group{ std::move(field), coo }, m_draw_swizzle, m_filters, m_disable_blends };
 }
 
 map_sprite map_sprite::with_filters(ff_8::filters filters) const
 {
-     return { m_field, m_coo, m_draw_swizzle, std::move(filters), m_disable_blends };
+     return { m_map_group, m_draw_swizzle, std::move(filters), m_disable_blends };
 }
 
 void map_sprite::enable_draw_swizzle()
@@ -857,7 +826,7 @@ void map_sprite::save(const std::filesystem::path &path) const
           return;
      }
      sf::Image const task  = save_image_pbo(m_render_texture->getTexture());
-     const sf::Image                image = task;
+     const sf::Image image = task;
      if (!image.saveToFile(path.string()))
      {
           spdlog::warn("Failed to save file: {}", path.string());
@@ -885,7 +854,11 @@ bool map_sprite::fail() const
           }
           return true;
      }
-     if (m_mim.get_width(4_bpp, false) == 0)
+     if (!m_map_group.mim)
+     {
+          return false;
+     }
+     if (m_map_group.mim->get_width(4_bpp, false) == 0)
      {
           if (once)
           {
@@ -908,8 +881,8 @@ bool map_sprite::fail() const
 }
 void map_sprite::map_save(const std::filesystem::path &dest_path) const
 {
-     bool       coo  = false;
-     const auto map  = get_map(nullptr, false, coo);
+     ff_8::map_group::OptCoo coo  = m_map_group.opt_coo;
+     const auto map  = ff_8::load_map(m_map_group.field, coo,m_map_group.mim,nullptr, false);
      const auto path = dest_path.string();
 
      open_viii::tools::write_buffer(
@@ -929,7 +902,7 @@ void map_sprite::map_save(const std::filesystem::path &dest_path) const
 }
 std::string map_sprite::map_filename() const
 {
-     return std::filesystem::path(m_map_path).filename().string();
+     return std::filesystem::path(m_map_group.map_path).filename().string();
 }
 
 const map_sprite &map_sprite::toggle_grid(bool enable, bool enable_texture_page_grid) const
@@ -1016,15 +989,18 @@ void map_sprite::reset_render_texture()
 
 open_viii::graphics::Rectangle<std::uint32_t> map_sprite::get_canvas() const
 {
-     return static_cast<open_viii::graphics::Rectangle<std::uint32_t>>(m_maps.const_back().canvas());
+     return static_cast<open_viii::graphics::Rectangle<std::uint32_t>>(m_map_group.maps.const_back().canvas());
 }
 
 std::uint32_t map_sprite::width() const
 {
      if (m_draw_swizzle)
      {
-          using namespace open_viii::graphics::literals;
-          return m_mim.get_width(4_bpp);
+          if (m_map_group.mim)
+          {
+               using namespace open_viii::graphics::literals;
+               return m_map_group.mim->get_width(4_bpp);
+          }
      }
      return m_canvas.width();
 }
@@ -1033,7 +1009,10 @@ std::uint32_t map_sprite::height() const
 {
      if (m_draw_swizzle)
      {
-          return m_mim.get_height();
+          if (m_map_group.mim)
+          {
+               return m_map_group.mim->get_height();
+          }
      }
      return m_canvas.height();
 }
@@ -1044,12 +1023,18 @@ grid map_sprite::get_grid() const
 grid map_sprite::get_texture_page_grid() const
 {
      using namespace open_viii::graphics::literals;
-     return { { (1U << (8U - ((4_bpp).raw() & 3U))), 256U }, { m_mim.get_width(4_bpp), m_mim.get_height() }, sf::Color::Yellow };
+     if (!m_map_group.mim)
+     {
+          return {};
+     }
+     return { { (1U << (8U - ((4_bpp).raw() & 3U))), 256U },
+              { m_map_group.mim->get_width(4_bpp), m_map_group.mim->get_height() },
+              sf::Color::Yellow };
 }
 
 all_unique_values_and_strings map_sprite::get_all_unique_values_and_strings() const
 {
-     return m_maps.const_back().visit_tiles([](const auto &tiles) { return all_unique_values_and_strings(tiles); });
+     return m_map_group.maps.const_back().visit_tiles([](const auto &tiles) { return all_unique_values_and_strings(tiles); });
 }
 
 const ff_8::filters &map_sprite::filter() const
@@ -1060,9 +1045,9 @@ ff_8::filters &map_sprite::filter()
 {
      return m_filters;
 }
-map_sprite map_sprite::update(std::shared_ptr<open_viii::archive::FIFLFS<false>> field, open_viii::LangT coo, bool draw_swizzle) const
+map_sprite map_sprite::update(ff_8::map_group map_group, bool draw_swizzle) const
 {
-     return { std::move(field), coo, draw_swizzle, m_filters, m_disable_blends };
+     return { std::move(map_group), draw_swizzle, m_filters, m_disable_blends };
 }
 const all_unique_values_and_strings &map_sprite::uniques() const
 {
@@ -1148,7 +1133,7 @@ const all_unique_values_and_strings &map_sprite::uniques() const
 
 bool map_sprite::check_if_one_palette(const std::uint8_t &texture_page) const
 {
-     return m_maps.const_back().visit_tiles([&texture_page](const auto &tiles) -> bool {
+     return m_map_group.maps.const_back().visit_tiles([&texture_page](const auto &tiles) -> bool {
           auto filtered_tiles = tiles | std::views::filter([&texture_page](const auto &tile) -> bool {
                                      return std::cmp_equal(tile.texture_id(), texture_page);
                                 });
@@ -1224,9 +1209,10 @@ void map_sprite::gen_new_textures(const std::filesystem::path path)
                          settings.filters.value().palette.update(palette).enable();
                          settings.filters.value().bpp.update(bpp).enable();
                          auto out_path = [&]() -> std::filesystem::path {
-                              if (m_using_coo)
+                              if (m_map_group.opt_coo)
                               {
-                                   return save_path_coo(pattern_coo_texture_page_palette, path, field_name, texture_page, palette,m_coo);
+                                   return save_path_coo(
+                                     pattern_coo_texture_page_palette, path, field_name, texture_page, palette, *m_map_group.opt_coo);
                               }
                               return save_path(pattern_texture_page_palette, path, field_name, texture_page, palette);
                          }();
@@ -1235,7 +1221,6 @@ void map_sprite::gen_new_textures(const std::filesystem::path path)
                          if (out_texture)
                          {
                               async_save(out_texture->getTexture(), out_path);
-
                          }
                     }
                }
@@ -1243,56 +1228,64 @@ void map_sprite::gen_new_textures(const std::filesystem::path path)
 
           settings.filters.value().palette.disable();
           settings.filters.value().bpp.disable();
-          auto out_path    = m_using_coo ? save_path_coo(pattern_coo_texture_page, path, field_name, texture_page,m_coo)
-                                         : save_path(pattern_texture_page, path, field_name, texture_page);
+          auto out_path    = m_map_group.opt_coo
+                               ? save_path_coo(pattern_coo_texture_page, path, field_name, texture_page, *m_map_group.opt_coo)
+                               : save_path(pattern_texture_page, path, field_name, texture_page);
 
           auto out_texture = save_texture(height, height);
           if (out_texture)
           {
                async_save(out_texture->getTexture(), out_path);
-
           }
      }
 }
 std::string map_sprite::get_base_name() const
 {
-     return str_to_lower(m_field->get_base_name());
+     if (m_map_group.field)
+     {
+          return str_to_lower(m_map_group.field->get_base_name());
+     }
+     return {};
 }
 
 void map_sprite::save_pupu_textures(const std::filesystem::path &path)
 {
-     auto settings = settings_backup{ m_filters, m_draw_swizzle, m_disable_texture_page_shift, m_disable_blends, m_scale };
-       settings.filters                                   = ff_8::filters{};
-     settings.filters.value().upscale                   = settings.filters.backup().upscale;
-     settings.draw_swizzle                              = false;
-     settings.disable_texture_page_shift                = true;
-     settings.disable_blends                            = true;
+     auto settings    = settings_backup{ m_filters, m_draw_swizzle, m_disable_texture_page_shift, m_disable_blends, m_scale };
+     settings.filters = ff_8::filters{};
+     settings.filters.value().upscale         = settings.filters.backup().upscale;
+     settings.draw_swizzle                    = false;
+     settings.disable_texture_page_shift      = true;
+     settings.disable_blends                  = true;
      // todo maybe draw with blends enabled to transparent black or white.
-     static constexpr unsigned int mim_height           = { 256U };
-     settings.scale                                     = get_max_texture_height() / mim_height;
+     static constexpr unsigned int mim_height = { 256U };
+     settings.scale                           = get_max_texture_height() / mim_height;
      if (settings.scale == 0U)
      {
           settings.scale = 1U;
      }
-     iRectangle const canvas = m_maps.const_back().canvas() * static_cast<int>(m_scale);
+     iRectangle const                   canvas = m_map_group.maps.const_back().canvas() * static_cast<int>(m_scale);
      std::shared_ptr<sf::RenderTexture> out_texture =
        save_texture(static_cast<std::uint32_t>(canvas.width()), static_cast<std::uint32_t>(canvas.height()));
 
-     gen_pupu_textures(
-       path,
-       std::string{ str_to_lower(m_field->get_base_name()) },
-       settings,
-       m_all_unique_values_and_strings.pupu().values(),
-       m_using_coo ? std::optional<open_viii::LangT>{ m_coo } : std::optional<open_viii::LangT>{ std::nullopt },std::move(out_texture));
-
+     if (m_map_group.field)
+     {
+          gen_pupu_textures(
+            path,
+            std::string{ str_to_lower(m_map_group.field->get_base_name()) },
+            settings,
+            m_all_unique_values_and_strings.pupu().values(),
+            m_map_group.opt_coo,
+            std::move(out_texture));
+     }
 }
 
 void map_sprite::gen_pupu_textures(
-  const std::filesystem::path     path,
-  const std::string               field_name,
-  settings_backup                 settings,
-  const std::vector<PupuID>       unique_pupu_ids,
-  std::optional<open_viii::LangT> coo,std::shared_ptr<sf::RenderTexture> out_texture)
+  const std::filesystem::path        path,
+  const std::string                  field_name,
+  settings_backup                    settings,
+  const std::vector<PupuID>          unique_pupu_ids,
+  std::optional<open_viii::LangT>    coo,
+  std::shared_ptr<sf::RenderTexture> out_texture)
 {
      // assert(std::filesystem::path.is_directory(path));
      static constexpr std::string_view pattern_pupu     = { "{}_{}.png" };
@@ -1309,7 +1302,6 @@ void map_sprite::gen_pupu_textures(
           if (out_texture)
           {
                async_save(out_texture->getTexture(), out_path);
-
           }
      }
 }
@@ -1317,7 +1309,7 @@ void map_sprite::async_save(const sf::Texture &out_texture, const std::filesyste
 {
 
      // trying packaged task to, so we don't wait for files to save.
-     const auto                       task = [=](sf::Image image_task) -> void {
+     const auto task = [=](sf::Image image_task) -> void {
           spdlog::info("Saving Texture, {}.", out_path.string());
           const sf::Image image = image_task;
           std::error_code error_code{};
@@ -1358,7 +1350,6 @@ void map_sprite::async_save(const sf::Texture &out_texture, const std::filesyste
           }
      };
      task(save_image_pbo(out_texture));
-
 }
 bool map_sprite::save_png_image(const sf::Image &image, const std::filesystem::path &path)
 {
@@ -1501,10 +1492,10 @@ void map_sprite::load_map(const std::filesystem::path &src_path)
      const auto path = src_path.string();
      open_viii::tools::read_from_file(
        [this](std::istream &os) {
-            (void)m_maps.copy_back();
-            m_maps.front().visit_tiles([this, &os](const auto &const_tiles) {
-                 using TileT   = std::remove_cvref_t<decltype(const_tiles.front())>;
-                 m_maps.back() = open_viii::graphics::background::Map(
+            (void)m_map_group.maps.copy_back();
+            m_map_group.maps.front().visit_tiles([this, &os](const auto &const_tiles) {
+                 using TileT             = std::remove_cvref_t<decltype(const_tiles.front())>;
+                 m_map_group.maps.back() = open_viii::graphics::background::Map(
                    [&os]() -> std::variant<
                              open_viii::graphics::background::Tile1,
                              open_viii::graphics::background::Tile2,
@@ -1532,16 +1523,21 @@ void map_sprite::load_map(const std::filesystem::path &src_path)
                    });
             });
             //   shift to origin
-            m_maps.back().shift(m_maps.front().offset().abs());
-            (void)m_maps.copy_back_to_front();
+            m_map_group.maps.back().shift(m_map_group.maps.front().offset().abs());
+            (void)m_map_group.maps.copy_back_to_front();
        },
        path);
      update_render_texture();
 }
 void map_sprite::test_map(const std::filesystem::path &saved_path) const
 {
-     const auto raw_map   = Map{ m_mim.mim_type(), m_field->get_entry_data({ saved_path.filename().string() }), false };
-     auto       saved_map = Map{ m_mim.mim_type(), open_viii::tools::read_entire_file(saved_path), false };
+     if (!m_map_group.field || !m_map_group.mim)
+     {
+          return;
+     }
+     const MimType &type      = m_map_group.mim->mim_type();
+     const auto     raw_map   = Map{ type, m_map_group.field->get_entry_data({ saved_path.filename().string() }), false };
+     auto           saved_map = Map{ type, open_viii::tools::read_entire_file(saved_path), false };
 
      raw_map.visit_tiles([&](const auto &raw_tiles) {
           saved_map.visit_tiles([&](const auto &saved_tiles) {
@@ -1583,7 +1579,7 @@ void map_sprite::save_modified_map(const std::filesystem::path &dest_path) const
                  // shift to original offset
                  if (filter_invalid(t))
                  {
-                      t = t.shift_xy(m_maps.const_back().offset());
+                      t = t.shift_xy(m_map_group.maps.const_back().offset());
                  }
                  // save tile
                  const auto data = std::bit_cast<std::array<char, sizeof(t)>>(t);
@@ -1652,7 +1648,7 @@ void map_sprite::save_modified_map(const std::filesystem::path &dest_path) const
 }
 std::size_t map_sprite::size_of_map() const
 {
-     return m_maps.back().visit_tiles([](const auto &tiles) {
+     return m_map_group.maps.back().visit_tiles([](const auto &tiles) {
           using tile_type = typename std::remove_cvref_t<decltype(tiles)>::value_type;
           return std::ranges::size(tiles) * sizeof(tile_type);
      });
@@ -1688,7 +1684,7 @@ void map_sprite::disable_disable_blends()
 }
 void map_sprite::compact_map_order()
 {
-     auto &map = m_maps.copy_back();
+     auto &map = m_map_group.maps.copy_back();
      map.visit_tiles([](auto &&tiles) {
           auto filtered_tiles            = tiles | std::views::filter(ff_8::tile_operations::InvalidTile{});
           using tile_t                   = std::remove_cvref_t<std::ranges::range_value_t<decltype(tiles)>>;
@@ -1715,20 +1711,12 @@ std::string map_sprite::str_to_lower(std::string input)
        input, std::back_inserter(output), [](char character) -> char { return static_cast<char>(::tolower(character)); });
      return output;
 }
-map_sprite::map_sprite(
-  map_sprite::SharedField field,
-  open_viii::LangT        coo,
-  bool                    draw_swizzle,
-  ff_8::filters           in_filters,
-  bool                    force_disable_blends)
-  : m_draw_swizzle(draw_swizzle)
+map_sprite::map_sprite(ff_8::map_group map_group, bool draw_swizzle, ff_8::filters in_filters, bool force_disable_blends)
+  : m_map_group(std::move(map_group))
+  , m_draw_swizzle(draw_swizzle)
   , m_disable_blends(force_disable_blends)
   , m_filters(std::move(in_filters))
-  , m_field(std::move(field))
-  , m_coo(coo)
   , m_upscales(get_upscales())
-  , m_mim(get_mim())
-  , m_maps(get_map(&m_map_path, true, m_using_coo))
   , m_all_unique_values_and_strings(get_all_unique_values_and_strings())
   , m_canvas(get_canvas())
   , m_texture(load_textures())
@@ -1740,35 +1728,35 @@ map_sprite::map_sprite(
 }
 void map_sprite::undo()
 {
-     (void)m_maps.undo();
+     (void)m_map_group.maps.undo();
      update_render_texture();
 }
 void map_sprite::redo()
 {
-     (void)m_maps.redo();
+     (void)m_map_group.maps.redo();
      update_render_texture();
 }
 void map_sprite::undo_all()
 {
-     m_maps.undo_all();
+     m_map_group.maps.undo_all();
      update_render_texture();
 }
 void map_sprite::redo_all()
 {
-     m_maps.redo_all();
+     m_map_group.maps.redo_all();
      update_render_texture();
 }
 bool map_sprite::undo_enabled()
 {
-     return m_maps.undo_enabled();
+     return m_map_group.maps.undo_enabled();
 }
 bool map_sprite::redo_enabled()
 {
-     return m_maps.redo_enabled();
+     return m_map_group.maps.redo_enabled();
 }
 bool map_sprite::history_remove_duplicate()
 {
-     return m_maps.remove_duplicate();
+     return m_map_group.maps.remove_duplicate();
 }
 std::uint32_t map_sprite::get_map_scale() const
 {

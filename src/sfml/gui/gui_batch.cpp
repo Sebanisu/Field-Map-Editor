@@ -424,12 +424,14 @@ void fme::gui_batch::popup_batch_common_filter_start(ff_8::filters &filters, std
      popup_batch_common_filter_start(local_filters, base_name);
 
      spdlog::info("base name: {}", base_name);
-     auto       sprite        = map_sprite{ field, open_viii::LangT::generic, {}, local_filters, {} };
+     auto       sprite        = map_sprite{ ff_8::map_group{ field, open_viii::LangT::generic }, {}, local_filters, {} };
      const auto load_map_file = [&](const ff_8::filter_old<std::filesystem::path> &filter) {
           if (!filter.enabled())
+          {
                return;
-          auto    map_path      = filter.value() / sprite.map_filename();
-          safedir safe_map_path = map_path;
+          }
+          auto          map_path      = filter.value() / sprite.map_filename();
+          safedir const safe_map_path = map_path;
           if (safe_map_path.is_exists())
           {
                sprite.load_map(map_path);

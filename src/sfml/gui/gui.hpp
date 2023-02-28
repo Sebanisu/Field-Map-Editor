@@ -731,7 +731,7 @@ struct gui
                      std::string_view const prefix    = std::string_view{ base_name }.substr(0U, 2U);
                      popup_batch_common_filter_start(filter(filters), prefix, base_name);
 
-                     auto map = m_map_sprite.with_field(field).with_coo(open_viii::LangT::generic).with_filters(filters);
+                     auto map = m_map_sprite.with_field(field,open_viii::LangT::generic).with_filters(filters);
                      if (map.fail())
                      {
                           return;
