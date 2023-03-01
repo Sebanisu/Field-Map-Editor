@@ -220,14 +220,33 @@ bool test_if_map_same(const std::filesystem::path &saved_path, const map_group::
           saved_map.visit_tiles([&](const auto &saved_tiles) {
                if constexpr (std::is_same_v<std::remove_cvref_t<decltype(raw_tiles)>, std::remove_cvref_t<decltype(saved_tiles)>>)
                {
+                    return_value = std::ranges::size(raw_tiles) == std::ranges::size(saved_tiles);
+                    if (!return_value)
+                    {
+                         spdlog::warn(
+                           "maps are different, raw_tiles_size({}) != saved_tiles_size({}).",
+                           std::ranges::size(raw_tiles),
+                           std::ranges::size(saved_tiles));
+                         return;
+                    }
                     std::vector<bool> pairs_dont_match{};
                     std::ranges::transform(
                       raw_tiles, saved_tiles, std::back_inserter(pairs_dont_match), [](const auto &raw_tile, const auto &saved_tile) {
                            return raw_tile != saved_tile;
                       });
                     pairs_dont_match.erase(std::remove(pairs_dont_match.begin(), pairs_dont_match.end(), false), pairs_dont_match.end());
-                    spdlog::info("maps are different, count {} tiles.", std::ranges::size(pairs_dont_match));
                     return_value = std::ranges::empty(pairs_dont_match);
+                    if (!return_value)
+                    {
+                         spdlog::warn(
+                           "maps are different, count {} different tiles, total {} tiles",
+                           std::ranges::size(pairs_dont_match),
+                           std::ranges::size(raw_tiles));
+                    }
+                    else
+                    {
+                         spdlog::info("maps are the same, total {} tiles.", std::ranges::size(raw_tiles));
+                    }
                }
           });
      });
@@ -243,8 +262,8 @@ void save_modified_map(
      spdlog::info("Saving modified map: {}", path);
      open_viii::tools::write_buffer(
        [&](std::ostream &os) {
-            bool       used_imports   = false;
-            const auto append         = [&](auto tile) {
+            bool       used_imports = false;
+            const auto append       = [&](auto tile) {
                  // shift to original offset
                  if (not_invalid(tile))
                  {

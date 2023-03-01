@@ -841,6 +841,8 @@ void map_sprite::map_save(const std::filesystem::path &dest_path) const
        },
        path,
        "");
+
+     test_map(dest_path);
 }
 std::string map_sprite::map_filename() const
 {

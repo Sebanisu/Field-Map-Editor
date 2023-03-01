@@ -50,9 +50,13 @@ map_group::Map load_map(
   std::string                   *out_path,
   bool                           shift)
 {
-     if (!field || !coo)
+     if (!field)
      {
           return {};
+     }
+     if (!coo)
+     {
+          coo = map_group::Coo::generic;
      }
      size_t out_path_pos = {};
      auto   lang_name    = fmt::format("_{}{}", open_viii::LangCommon::to_string(*coo), map_group::Map::EXT);
