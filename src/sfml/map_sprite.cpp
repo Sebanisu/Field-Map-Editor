@@ -1295,16 +1295,12 @@ void map_sprite::async_save(const sf::Texture &out_texture, const std::filesyste
 }
 bool map_sprite::save_png_image(const sf::Image &image, const std::filesystem::path &path)
 {
-#if 1
      if (!image.saveToFile(path.string()))
      {
           spdlog::warn("Failed to save file: {}", path.string());
           return false;
      }
      return true;
-#else
-     return open_viii::graphics::Png::save(image.getPixelsPtr(), image.getSize().x, image.getSize().y, filename, {}, {}).has_value();
-#endif
 }
 uint32_t map_sprite::get_max_texture_height() const
 {
@@ -1382,37 +1378,6 @@ std::filesystem::path map_sprite::save_path(
 {
      return path / fmt::vformat(fmt::string_view(pattern), fmt::make_format_args(field_name, pupu));
 }
-// std::filesystem::path
-//   map_sprite::save_path(fmt::string_view pattern,
-//     const std::filesystem::path         &path,
-//     const std::string                   &field_name,
-//     std::optional<std::uint8_t>          texture_page,
-//     std::optional<std::uint8_t>          palette,
-//     std::optional<PupuID>                pupu) const
-//{
-//   // todo put language code in filename. because of remaster multilanguage
-//   // maps.
-//   std::string filename = {};
-//   if (texture_page.has_value())
-//   {
-//     if (palette.has_value())
-//     {
-//       filename =
-//         fmt::format(fmt::runtime(pattern), field_name, *texture_page,
-//         *palette);
-//     }
-//     else
-//     {
-//       filename = fmt::format(fmt::runtime(pattern), field_name,
-//       *texture_page);
-//     }
-//   }
-//   else if (pupu.has_value())
-//   {
-//     filename = fmt::format(fmt::runtime(pattern), field_name, *pupu);
-//   }
-//   return path / filename;
-// }
 
 std::shared_ptr<sf::RenderTexture> map_sprite::save_texture(std::uint32_t width, std::uint32_t height) const
 {

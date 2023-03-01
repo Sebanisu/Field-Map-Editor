@@ -9,11 +9,11 @@
 #include "batch_reswizzle.hpp"
 #include "Configuration.hpp"
 #include "events.hpp"
+#include "file_dialog_mode.hpp"
 #include "filebrowser.hpp"
 #include "formatters.hpp"
 #include "generic_combo.hpp"
 #include "grid.hpp"
-#include "map_dialog_mode.hpp"
 #include "map_directory_mode.hpp"
 #include "mouse_positions.hpp"
 #include "safedir.hpp"
@@ -524,11 +524,11 @@ struct gui
      void                                               menuitem_save_deswizzle_textures();
      void                                               menuitem_load_swizzle_textures();
      void                                               menuitem_load_deswizzle_textures();
-     void                                               menuitem_save_texture(const std::string &path, bool enabled = true);
-     void                                               menuitem_save_mim_file(const std::string &path, bool enabled = true);
-     void                                               menuitem_save_map_file(const std::string &path, bool enabled = true);
-     void                                               menuitem_save_map_file_modified(const std::string &path, bool enabled = true);
-     void                                               menuitem_load_map_file(const std::string &path, bool enabled = true);
+     void                                               menuitem_save_texture(bool enabled = true);
+     void                                               menuitem_save_mim_file(bool enabled = true);
+     void                                               menuitem_save_map_file(bool enabled = true);
+     void                                               menuitem_save_map_file_modified(bool enabled = true);
+     void                                               menuitem_load_map_file(bool enabled = true);
      void                                               scale_window(float width = {}, float height = {});
      int                                                get_selected_field();
      std::uint8_t                                       palette() const;
@@ -550,7 +550,7 @@ struct gui
      bool                                               combo_upscale_path(ff_8::filter_old<std::filesystem::path> &filter) const;
      void                                               combo_deswizzle_path();
      const open_viii::LangT                            &get_coo() const;
-     map_dialog_mode                                    m_modified_map           = {};
+     file_dialog_mode                                   m_file_dialog_mode       = {};
      map_directory_mode                                 m_modified_directory_map = {};
      std::filesystem::path                              m_loaded_swizzle_texture_path{};
      std::filesystem::path                              m_loaded_deswizzle_texture_path{};

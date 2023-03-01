@@ -5,6 +5,7 @@
 #include "gui.hpp"
 #include "gui_batch.hpp"
 #include "gui_labels.hpp"
+#include "open_file_explorer.hpp"
 #include "safedir.hpp"
 #include <open_viii/paths/Paths.hpp>
 #include <SFML/Window/Mouse.hpp>
@@ -1004,18 +1005,18 @@ void gui::file_menu()
           menuitem_locate_custom_upscale();
      }
      ImGui::Separator();
-     menuitem_save_texture(save_texture_path(), mim_test() || map_test());
+     menuitem_save_texture(mim_test() || map_test());
      if (mim_test())
      {
           ImGui::Separator();
-          menuitem_save_mim_file(m_mim_sprite.mim_filename());
+          menuitem_save_mim_file();
      }
      if (map_test())
      {
           ImGui::Separator();
-          menuitem_save_map_file(m_map_sprite.map_filename());
-          menuitem_save_map_file_modified(m_map_sprite.map_filename());
-          menuitem_load_map_file(m_map_sprite.map_filename());
+          menuitem_save_map_file();
+          menuitem_save_map_file_modified();
+          menuitem_load_map_file();
           ImGui::Separator();
           menuitem_save_swizzle_textures();
           menuitem_load_swizzle_textures();
@@ -1049,6 +1050,7 @@ std::string gui::save_texture_path() const
           return {};
      }
      const std::string &field_name = m_archives_group.mapdata().at(static_cast<size_t>(m_selections.field));
+     spdlog::info("field_name = {}", field_name);
      if (mim_test())// MIM
      {
           if (m_mim_sprite.draw_palette())
@@ -1214,59 +1216,68 @@ void gui::file_browser_save_texture()
           [[maybe_unused]] const auto selected_path = m_save_file_browser.GetSelected();
           if (mim_test())
           {
-               const auto str_path = selected_path.string();
-               if (open_viii::tools::i_ends_with(str_path, Mim::EXT))
+               switch (m_file_dialog_mode)
                {
-                    m_mim_sprite.mim_save(selected_path);
-                    Configuration config{};
-                    config->insert_or_assign("mim_path", m_save_file_browser.GetPwd().string());
-                    config.save();
-               }
-               else
-               {
-                    m_mim_sprite.save(selected_path);
-                    Configuration config{};
-                    config->insert_or_assign("save_image_path", m_save_file_browser.GetPwd().string());
-                    config.save();
+                    case file_dialog_mode::save_mim_file: {
+                         m_mim_sprite.mim_save(selected_path);
+                         Configuration config{};
+                         config->insert_or_assign("mim_path", m_save_file_browser.GetPwd().string());
+                         config.save();
+                    }
+                    break;
+                    case file_dialog_mode::save_image_file: {
+                         m_mim_sprite.save(selected_path);
+                         Configuration config{};
+                         config->insert_or_assign("save_image_path", m_save_file_browser.GetPwd().string());
+                         config.save();
+                    }
+                    break;
+                    case file_dialog_mode::save_unmodified_map_file:
+                         break;
+                    case file_dialog_mode::save_modified_map_file:
+                         break;
+                    case file_dialog_mode::load_map_file:
+                         break;
                }
           }
           else if (map_test())
           {
-               const auto str_path = selected_path.string();
-               if (open_viii::tools::i_ends_with(str_path, Map::EXT))
+               switch (m_file_dialog_mode)
                {
-                    switch (m_modified_map)
-                    {
-                         case map_dialog_mode::save_modified: {
-                              m_map_sprite.save_modified_map(selected_path);
-                              Configuration config{};
-                              config->insert_or_assign("map_path", m_save_file_browser.GetPwd().string());
-                              config.save();
-                         }
-                         break;
-                         case map_dialog_mode::save_unmodified: {
-                              m_map_sprite.map_save(selected_path);
-                              Configuration config{};
-                              config->insert_or_assign("map_path", m_save_file_browser.GetPwd().string());
-                              config.save();
-                         }
-                         break;
-                         case map_dialog_mode::load: {
-                              m_map_sprite.load_map(selected_path);
-                              Configuration config{};
-                              config->insert_or_assign("map_path", m_save_file_browser.GetPwd().string());
-                              config.save();
-                              m_changed = true;
-                         }
-                         break;
+                    case file_dialog_mode::save_modified_map_file: {
+                         m_map_sprite.save_modified_map(selected_path);
+                         Configuration config{};
+                         config->insert_or_assign("map_path", m_save_file_browser.GetPwd().string());
+                         config.save();
+                         open_file_explorer(selected_path);
                     }
-               }
-               else
-               {
-                    m_map_sprite.save(selected_path);
-                    Configuration config{};
-                    config->insert_or_assign("save_image_path", m_save_file_browser.GetPwd().string());
-                    config.save();
+                    break;
+                    case file_dialog_mode::save_unmodified_map_file: {
+                         m_map_sprite.map_save(selected_path);
+                         Configuration config{};
+                         config->insert_or_assign("map_path", m_save_file_browser.GetPwd().string());
+                         config.save();
+                         open_file_explorer(selected_path);
+                    }
+                    break;
+                    case file_dialog_mode::load_map_file: {
+                         m_map_sprite.load_map(selected_path);
+                         Configuration config{};
+                         config->insert_or_assign("map_path", m_save_file_browser.GetPwd().string());
+                         config.save();
+                         m_changed = true;
+                    }
+                    break;
+                    case file_dialog_mode::save_image_file: {
+                         m_map_sprite.save(selected_path);
+                         Configuration config{};
+                         config->insert_or_assign("save_image_path", m_save_file_browser.GetPwd().string());
+                         config.save();
+                         open_file_explorer(selected_path);
+                    }
+                    break;
+                    case file_dialog_mode::save_mim_file:
+                         break;
                }
           }
           m_save_file_browser.ClearSelected();
@@ -1363,62 +1374,69 @@ void gui::open_deswizzle_filebrowser()
      m_directory_browser.SetTypeFilters({ ".map", ".png" });
      m_modified_directory_map = map_directory_mode::load_deswizzle_textures;
 }
-void gui::menuitem_save_texture(const std::string &path, bool enabled)
+void gui::menuitem_save_texture(bool enabled)
 {
      if (ImGui::MenuItem("Save Displayed Texture", nullptr, false, enabled))
      {
+          const std::string &path = save_texture_path();
           m_save_file_browser.Open();
           m_save_file_browser.SetTitle("Save Texture as...");
           m_save_file_browser.SetPwd(Configuration{}["save_image_path"].value_or(std::filesystem::current_path().string()));
           m_save_file_browser.SetTypeFilters({ ".png", ".ppm" });
           m_save_file_browser.SetInputName(path.c_str());
+          m_file_dialog_mode = file_dialog_mode::save_image_file;
      }
 }
-void gui::menuitem_save_mim_file(const std::string &path, bool enabled)
+void gui::menuitem_save_mim_file(bool enabled)
 {
      if (ImGui::MenuItem("Save Mim File", nullptr, false, enabled))
      {
+          const std::string &path = m_mim_sprite.mim_filename();
           m_save_file_browser.Open();
           m_save_file_browser.SetTitle("Save Mim as...");
           m_save_file_browser.SetPwd(Configuration{}["mim_path"].value_or(std::filesystem::current_path().string()));
           m_save_file_browser.SetTypeFilters({ Mim::EXT.data() });
           m_save_file_browser.SetInputName(path);
+          m_file_dialog_mode = file_dialog_mode::save_mim_file;
      }
 }
-void gui::menuitem_save_map_file(const std::string &path, bool enabled)
+void gui::menuitem_save_map_file(bool enabled)
 {
      if (ImGui::MenuItem("Save Map File (unmodified)", nullptr, false, enabled))
      {
+          const std::string &path = m_map_sprite.map_filename();
           m_save_file_browser.Open();
           m_save_file_browser.SetTitle("Save Map as...");
           m_save_file_browser.SetPwd(Configuration{}["map_path"].value_or(std::filesystem::current_path().string()));
           m_save_file_browser.SetTypeFilters({ Map::EXT.data() });
           m_save_file_browser.SetInputName(path);
-          m_modified_map = map_dialog_mode::save_unmodified;
+          m_file_dialog_mode = file_dialog_mode::save_unmodified_map_file;
      }
 }
-void gui::menuitem_save_map_file_modified(const std::string &path, bool enabled)
+void gui::menuitem_save_map_file_modified(bool enabled)
 {
      if (ImGui::MenuItem("Save Map File (modified)", nullptr, false, enabled))
      {
+          const std::string &path = m_map_sprite.map_filename();
           m_save_file_browser.Open();
           m_save_file_browser.SetTitle("Save Map as...");
           m_save_file_browser.SetPwd(Configuration{}["map_path"].value_or(std::filesystem::current_path().string()));
           m_save_file_browser.SetTypeFilters({ Map::EXT.data() });
           m_save_file_browser.SetInputName(path);
-          m_modified_map = map_dialog_mode::save_modified;
+          m_file_dialog_mode = file_dialog_mode::save_modified_map_file;
      }
 }
-void gui::menuitem_load_map_file(const std::string &path, bool enabled)
+void gui::menuitem_load_map_file(bool enabled)
 {
      if (ImGui::MenuItem("Load Map File", nullptr, false, enabled))
      {
+          const std::string &path = m_map_sprite.map_filename();
           m_save_file_browser.Open();
           m_save_file_browser.SetTitle("Load Map...");
           m_save_file_browser.SetPwd(Configuration{}["map_path"].value_or(std::filesystem::current_path().string()));
           m_save_file_browser.SetTypeFilters({ Map::EXT.data() });
           m_save_file_browser.SetInputName(path);
-          m_modified_map = map_dialog_mode::load;
+          m_file_dialog_mode = file_dialog_mode::load_map_file;
      }
 }
 void gui::combo_draw()
