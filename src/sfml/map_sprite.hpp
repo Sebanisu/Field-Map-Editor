@@ -457,14 +457,7 @@ struct map_sprite final
           return {};
      }
 
-     [[nodiscard]] std::array<sf::Vertex, 4U> get_triangle_strip_for_imported(
-       const sf::Vector2u                                  &draw_size,
-       const sf::Vector2u                                  &texture_size,
-       const open_viii::graphics::background::is_tile auto &tile_const,
-       open_viii::graphics::background::is_tile auto      &&tile) const
-     {
-          return get_triangle_strip(draw_size, texture_size, tile_const, tile, true);
-     }
+
      [[nodiscard]] static sf::Vector2f to_Vector2f(sf::Vector2u in_vec)
      {
           return { static_cast<float>(in_vec.x), static_cast<float>(in_vec.y) };
@@ -472,6 +465,14 @@ struct map_sprite final
      [[nodiscard]] static sf::Vector2f to_Vector2f(sf::Vector2i in_vec)
      {
           return { static_cast<float>(in_vec.x), static_cast<float>(in_vec.y) };
+     }
+     [[nodiscard]] std::array<sf::Vertex, 4U> get_triangle_strip_for_imported(
+       const sf::Vector2u                                  &draw_size,
+       const sf::Vector2u                                  &texture_size,
+       const open_viii::graphics::background::is_tile auto &tile_const,
+       open_viii::graphics::background::is_tile auto      &&tile) const
+     {
+          return get_triangle_strip(draw_size, texture_size, tile_const, tile, true);
      }
      [[nodiscard]] std::array<sf::Vertex, 4U> get_triangle_strip(
        const sf::Vector2u                                  &draw_size,
