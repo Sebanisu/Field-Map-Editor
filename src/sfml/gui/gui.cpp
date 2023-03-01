@@ -429,7 +429,7 @@ void gui::popup_batch_reswizzle()
      popup_batch_common(
        m_batch_reswizzle,
        [](ff_8::filters &filters) -> ff_8::filter_old<std::filesystem::path> & { return filters.deswizzle; },
-       [this](ff_8::filter_old<compact_type> &compact, bool &flatten_bpp, bool &flatten_palette) {
+       [](ff_8::filter_old<compact_type> &compact, bool &flatten_bpp, bool &flatten_palette) {
             combo_compact_type(compact);
             ImGui::Separator();
             format_imgui_text("Flatten: ");
@@ -1796,12 +1796,12 @@ gui::gui()
 
 {
      m_window.setVerticalSyncEnabled(false);
-     GLenum err = glewInit();
-     if (GLEW_OK != err)
+     GLenum const err = glewInit();
+     if (std::cmp_not_equal(GLEW_OK, err))
      {
           // GLEW initialization failed
-          std::cerr << "Error: " << glewGetErrorString(err) << std::endl;
-          std::exit(EXIT_FAILURE);
+          spdlog::error("{}", glewGetErrorString(err));
+          std::terminate();
      }
      sort_paths();
      init_and_get_style();
@@ -1976,7 +1976,7 @@ void gui::combo_blend_other()
           m_changed = true;
      }
 }
-void gui::combo_compact_type(ff_8::filter_old<compact_type> &compact) const
+void gui::combo_compact_type(ff_8::filter_old<compact_type> &compact)
 {
      if (generic_combo(
            get_imgui_id(),
@@ -2889,18 +2889,19 @@ void gui::collapsing_tile_info(const variant_tile_t &current_tile) const
                                 ImGui::TableNextColumn();
                                 format_imgui_text("{}", value);
                            };
-                           const auto div_string = std::string(": ");
+                           constexpr auto div_string = std::string_view(": ");
                            for (auto line : lines)
                            {
-                                auto split_line = line | std::ranges::views::split(div_string);
+                                auto       split_line = line | std::ranges::views::split(div_string);
 
-                                auto it         = split_line.begin();
-                                if (it != split_line.end())
+                                auto       pos        = split_line.begin();
+                                const auto end        = split_line.end();
+                                if (pos != end)
                                 {
-                                     auto key = *it;
-                                     if (++it != split_line.end())
+                                     auto key = *pos;
+                                     if (++pos != end)
                                      {
-                                          auto value = *it;
+                                          auto value = *pos;
                                           output_text_values(std::string_view(key), std::string_view(value));
                                      }
                                 }

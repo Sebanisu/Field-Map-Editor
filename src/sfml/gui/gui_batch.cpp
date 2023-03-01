@@ -442,7 +442,7 @@ void fme::gui_batch::popup_batch_common_filter_start(ff_8::filters &filters, std
           load_map_file(local_filters.upscale);
           load_map_file(local_filters.deswizzle);
           spdlog::info("language code: {}", open_viii::LangCommon::to_string(open_viii::LangT::generic));
-          return std::move(sprite);
+          return sprite;
      }
      //     auto gen_field_coo = get_field_coos(field);
      //     for (const open_viii::LangT coo : gen_field_coo)
@@ -479,7 +479,7 @@ open_viii::LangT fme::gui_batch::get_field_coos(const map_sprite::SharedField fi
      }
      return {};
 }
-std::shared_ptr<open_viii::archive::FIFLFS<false>> fme::gui_batch::get_field(::archives_group archives_group)
+std::shared_ptr<open_viii::archive::FIFLFS<false>> fme::gui_batch::get_field(::archives_group)
 {
      //     auto gen_fields = get_field_id_and_name(archives_group.mapdata());
      //     for (const auto &[i, name] : gen_fields)

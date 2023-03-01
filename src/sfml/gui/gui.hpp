@@ -83,11 +83,11 @@ struct gui
      batch_embed m_batch_embed2 =
        batch_embed{ "Operation 2: Update fields archive, Remove Temporary Files",
                     [this](int &, const std::filesystem::path &) {
-//                         if (check_futures())
-//                         {
-//                              --pos;
-//                              return;
-//                         }
+                         //                         if (check_futures())
+                         //                         {
+                         //                              --pos;
+                         //                              return;
+                         //                         }
                          [this]() {
                               const auto &fields = m_archives_group.archives().get<open_viii::archive::ArchiveTypeT::field>();
                               {
@@ -286,11 +286,11 @@ struct gui
           "Operation 4: Save",
           [this](int &, const std::filesystem::path &in_selected_path) {
                format_imgui_wrapped_text("{}", "Saving Files...");
-//               if (check_futures())
-//               {
-//                    --pos;
-//                    return;
-//               }
+               //               if (check_futures())
+               //               {
+               //                    --pos;
+               //                    return;
+               //               }
                // launch_async(
                [this](const std::filesystem::path &selected_path) {
                     const auto move = [&](std::filesystem::path path) {
@@ -395,24 +395,24 @@ struct gui
                }(in_selected_path);
           },
           [this]() {
-//               if (check_futures())
-//               {
-//                    const auto current    = std::chrono::high_resolution_clock::now();
-//                    const auto difference = current - m_batch_embed4.start_time();
-//                    format_imgui_wrapped_text("{:%H:%M:%S}", difference);
-//                    if (open_viii::archive::fiflfs_in_main_zzz(m_archives_group.archives()))
-//                    {
-//                         format_imgui_wrapped_text("{}", "Updating main.zzz...Finishing writing...");
-//                    }
-//                    else
-//                    {
-//                         format_imgui_wrapped_text(
-//                           "{}",
-//                           "Updating fields.fi, fields.fl, and fields.fs...Finishing "
-//                           "writing...");
-//                    }
-//                    return false;
-//               }
+               //               if (check_futures())
+               //               {
+               //                    const auto current    = std::chrono::high_resolution_clock::now();
+               //                    const auto difference = current - m_batch_embed4.start_time();
+               //                    format_imgui_wrapped_text("{:%H:%M:%S}", difference);
+               //                    if (open_viii::archive::fiflfs_in_main_zzz(m_archives_group.archives()))
+               //                    {
+               //                         format_imgui_wrapped_text("{}", "Updating main.zzz...Finishing writing...");
+               //                    }
+               //                    else
+               //                    {
+               //                         format_imgui_wrapped_text(
+               //                           "{}",
+               //                           "Updating fields.fi, fields.fl, and fields.fs...Finishing "
+               //                           "writing...");
+               //                    }
+               //                    return false;
+               //               }
                format_imgui_wrapped_text("{}", "Choose where to save the files.");
                std::ranges::for_each(
                  append_results, [](const std::filesystem::path &path) { format_imgui_wrapped_text("\t\"{}\"", path); });
@@ -554,7 +554,7 @@ struct gui
      map_directory_mode                                 m_modified_directory_map = {};
      std::filesystem::path                              m_loaded_swizzle_texture_path{};
      std::filesystem::path                              m_loaded_deswizzle_texture_path{};
-     void                                               combo_compact_type(ff_8::filter_old<compact_type> &) const;
+     static void                                        combo_compact_type(ff_8::filter_old<compact_type> &);
      void                                               popup_batch_reswizzle();
      void                                               popup_batch_deswizzle();
 
@@ -731,7 +731,7 @@ struct gui
                      std::string_view const prefix    = std::string_view{ base_name }.substr(0U, 2U);
                      popup_batch_common_filter_start(filter(filters), prefix, base_name);
 
-                     auto map = m_map_sprite.with_field(field,open_viii::LangT::generic).with_filters(filters);
+                     auto map = m_map_sprite.with_field(field, open_viii::LangT::generic).with_filters(filters);
                      if (map.fail())
                      {
                           return;

@@ -69,6 +69,7 @@ struct map_sprite final
      Map                                           m_imported_tile_map_front       = {};
      all_unique_values_and_strings                 m_all_unique_values_and_strings = {};
      open_viii::graphics::Rectangle<std::uint32_t> m_canvas                        = {};
+     SharedTextures                                m_texture                       = {}; 
      std::shared_ptr<sf::RenderTexture>            m_render_texture                = {};
      std::shared_ptr<sf::RenderTexture>            m_drag_sprite_texture           = {};
      grid                                          m_grid                          = {};
@@ -76,7 +77,6 @@ struct map_sprite final
      std::vector<std::size_t>                      m_saved_indices                 = {};
      std::vector<std::size_t>                      m_saved_imported_indices        = {};
      std::uint32_t                                 m_scale                         = { 1 };
-     SharedTextures                                m_texture                       = {};
 
    public:
      map_sprite() = default;
