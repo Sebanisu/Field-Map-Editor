@@ -704,7 +704,7 @@ private:
   {
     return GetMapHistory()->back().visit_tiles([&](const auto &tiles) {
       auto f_tiles =
-        tiles | std::views::filter(tile_operations::InvalidTile{})
+        tiles | std::views::filter(tile_operations::NotInvalidTile{})
         | std::views::filter([]([[maybe_unused]] const auto &tile) -> bool {
             if constexpr (typename TileFunctions::UseBlending{})
             {
@@ -942,7 +942,7 @@ private:
     return GetMapHistory()->back().visit_tiles(
       [&](const auto &tiles) -> std::size_t {
         auto f_tiles =
-          tiles | std::views::filter(tile_operations::InvalidTile{});
+          tiles | std::views::filter(tile_operations::NotInvalidTile{});
         return static_cast<std::size_t>(
           std::ranges::count_if(f_tiles, [](auto &&) { return true; }));
       });
@@ -950,7 +950,7 @@ private:
   bool visit_unsorted_unfiltered_tiles(auto &&lambda, auto &&filter) const
   {
     return GetMapHistory()->back().visit_tiles([&](auto &&tiles) -> bool {
-      auto f_tiles = tiles | std::views::filter(tile_operations::InvalidTile{})
+      auto f_tiles = tiles | std::views::filter(tile_operations::NotInvalidTile{})
                      | std::views::filter(filter);
       bool       changed     = false;
       VisitState visit_state = {};

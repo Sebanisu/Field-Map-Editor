@@ -195,7 +195,7 @@ TILE_OPERATION(AnimationId, animation_id);
 TILE_OPERATION(AnimationState, animation_state);
 #undef TILE_OPERATION
 #undef CONCAT
-struct InvalidTile
+struct NotInvalidTile
 {
      template<open_viii::graphics::background::is_tile T>
      constexpr bool operator()(const T &tile) const noexcept

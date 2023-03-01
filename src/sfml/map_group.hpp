@@ -18,6 +18,7 @@ struct map_group
      using Field                     = open_viii::archive::FIFLFS<false>;
      using SharedField               = std::shared_ptr<Field>;
      using Mim                       = open_viii::graphics::background::Mim;
+     using MimType                   = open_viii::graphics::background::MimType;
      using SharedMim                 = std::shared_ptr<Mim>;
      using Map                       = open_viii::graphics::background::Map;
      using MapHistory                = ff_8::MapHistory;

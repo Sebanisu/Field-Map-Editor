@@ -33,7 +33,7 @@ struct map_sprite final
   , public sf::Transformable
 {
    public:
-     static constexpr auto          filter_invalid            = open_viii::graphics::background::Map::filter_invalid();
+     static constexpr auto          filter_invalid            = ff_8::tile_operations::NotInvalidTile{};
      static constexpr std::uint8_t  TILE_SIZE                 = 16U;
      static constexpr std::uint8_t  MAX_TEXTURE_PAGES         = 14U;
      static constexpr std::uint8_t  MAX_PALETTES              = 16U;

@@ -17,7 +17,7 @@ private:
   using MapT = MapHistory;
   static auto filtered(const auto &tiles)
   {
-    return tiles | std::views::filter(tile_operations::InvalidTile{});
+    return tiles | std::views::filter(tile_operations::NotInvalidTile{});
   };
   static auto visit(const MapT &map, auto &&transform)
   {

@@ -10,12 +10,12 @@
 #include <ranges>
 namespace ff_8
 {
-static constexpr auto invalid = tile_operations::InvalidTile{};
+static constexpr auto not_invalid = tile_operations::NotInvalidTile{};
 void                  flatten_bpp(map_group::Map &map)
 {
      map.visit_tiles([](auto &tiles) {
           std::ranges::transform(tiles, tiles.begin(), [](const auto tile) {
-               if (std::invoke(invalid, tile))
+               if (std::invoke(not_invalid, tile))
                {
                     using namespace open_viii::graphics::literals;
                     return tile.with_depth(4_bpp);
@@ -28,7 +28,7 @@ void flatten_palette(map_group::Map &map)
 {
      map.visit_tiles([](auto &tiles) {
           std::ranges::transform(tiles, tiles.begin(), [](const auto tile) {
-               if (std::invoke(invalid, tile))
+               if (std::invoke(not_invalid, tile))
                {
                     return tile.with_palette_id(0);
                }
@@ -39,7 +39,7 @@ void flatten_palette(map_group::Map &map)
 void compact_map_order(map_group::Map &map)
 {
      map.visit_tiles([](auto &&tiles) {
-          auto filtered_tiles             = tiles | std::views::filter(invalid);
+          auto filtered_tiles             = tiles | std::views::filter(not_invalid);
           using tile_t                    = std::remove_cvref_t<std::ranges::range_value_t<decltype(tiles)>>;
           const auto with_depth_operation = ff_8::tile_operations::WithDepth<tile_t>{ open_viii::graphics::BPPT::BPP4_CONST() };
           for (std::size_t tile_index = {}; tile_t & tile : filtered_tiles)
@@ -67,7 +67,7 @@ static auto generate_map(tilesT &&tiles, key_lambdaT &&key_lambda, value_lambdaT
      std::map<key_t, std::vector<value_t>> map{};
      auto                                  filtered_tiles = tiles | std::views::filter(filter);
      std::ranges::for_each(filtered_tiles, [&map, &key_lambda, &value_lambda](auto &&tile) {
-          if (!invalid(tile))
+          if (!not_invalid(tile))
           {
                return;
           }
@@ -205,5 +205,104 @@ std::array<sf::Vertex, 4U>
             (source.y + 1.F) * texture_size.y),
           tovert(dest.x * draw_size.x, (dest.y + 1.F) * draw_size.y, source.x * texture_size.x, (source.y + 1.F) * texture_size.y)
      };
+}
+bool test_if_map_same(const std::filesystem::path &saved_path, const map_group::SharedField &field, const map_group::MimType &type)
+{
+     bool return_value = false;
+     if (!field)
+     {
+          return return_value;
+     }
+     const auto raw_map   = map_group::Map{ type, field->get_entry_data({ saved_path.filename().string() }), false };
+     auto       saved_map = map_group::Map{ type, open_viii::tools::read_entire_file(saved_path), false };
+
+     raw_map.visit_tiles([&](const auto &raw_tiles) {
+          saved_map.visit_tiles([&](const auto &saved_tiles) {
+               if constexpr (std::is_same_v<std::remove_cvref_t<decltype(raw_tiles)>, std::remove_cvref_t<decltype(saved_tiles)>>)
+               {
+                    std::vector<bool> pairs_dont_match{};
+                    std::ranges::transform(
+                      raw_tiles, saved_tiles, std::back_inserter(pairs_dont_match), [](const auto &raw_tile, const auto &saved_tile) {
+                           return raw_tile != saved_tile;
+                      });
+                    pairs_dont_match.erase(std::remove(pairs_dont_match.begin(), pairs_dont_match.end(), false), pairs_dont_match.end());
+                    spdlog::info("maps are different, count {} tiles.", std::ranges::size(pairs_dont_match));
+                    return_value = std::ranges::empty(pairs_dont_match);
+               }
+          });
+     });
+     return return_value;
+}
+void save_modified_map(
+  const std::filesystem::path &dest_path,
+  const map_group::Map        &map_const,
+  const map_group::Map        &map_changed,
+  const map_group::Map *const  imported)
+{
+     const auto path = dest_path.string();
+     spdlog::info("Saving modified map: {}", path);
+     open_viii::tools::write_buffer(
+       [&](std::ostream &os) {
+            bool       used_imports   = false;
+            bool       wrote_end_tile = false;
+            const auto append         = [&](auto tile) {
+                 // shift to original offset
+                 if (not_invalid(tile))
+                 {
+                      tile = tile.shift_xy(map_changed.offset());
+                 }
+                 // save tile
+                 const auto data = std::bit_cast<std::array<char, sizeof(tile)>>(tile);
+                 os.write(data.data(), data.size());
+            };
+            const auto append_imported_tiles = [&]() {
+                 if (imported && !used_imports)
+                 {
+                      used_imports = true;
+                      imported->visit_tiles([&append](const auto &import_tiles) {
+                           spdlog::info("Saving imported tiles {} count", std::ranges::size(import_tiles));
+                           for (const auto &import_tile : import_tiles)
+                           {
+                                if (not_invalid(import_tile))
+                                {
+                                     append(import_tile);
+                                }
+                           }
+                      });
+                 }
+            };
+            append_imported_tiles();
+            map_const.visit_tiles([&](const auto &tiles_const) {
+                 map_changed.visit_tiles([&](const auto &tiles_changed) {
+                      auto it_const    = tiles_const.cbegin();
+                      auto it_changed  = tiles_changed.cbegin();
+                      auto end_const   = tiles_const.cend();
+                      auto end_changed = tiles_changed.cend();
+                      for (; it_const != end_const && it_changed != end_changed; (void)++it_const, ++it_changed)
+                      {
+                           const auto &tile_const    = *it_const;
+                           const auto &tile          = *it_changed;
+                           bool const  valid_const   = not_invalid(tile_const);
+                           bool const  valid_changed = not_invalid(tile);
+                           if (valid_const || valid_changed)// one of these is valid.
+                           {
+                                if (valid_changed)
+                                {
+                                     append(tile);
+                                }
+                                else
+                                {
+                                     append(tile_const);
+                                }
+                                return;
+                           }
+                           append(tile);
+                           // write from tiles.
+                      }
+                 });
+            });
+       },
+       path,
+       "");
 }
 }// namespace ff_8

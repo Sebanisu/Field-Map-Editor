@@ -50,7 +50,7 @@ public:
     map.visit_tiles([&](const auto &tiles) {
       {
         auto f_tiles =
-          tiles | std::views::filter(tile_operations::InvalidTile{});
+          tiles | std::views::filter(tile_operations::NotInvalidTile{});
         get_x(f_tiles);
         get_y(f_tiles);
         get_true_x(f_tiles);

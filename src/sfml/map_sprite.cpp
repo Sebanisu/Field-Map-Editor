@@ -1473,119 +1473,23 @@ void map_sprite::load_map(const std::filesystem::path &src_path)
 }
 void map_sprite::test_map(const std::filesystem::path &saved_path) const
 {
-     if (!m_map_group.field || !m_map_group.mim)
+     if (!m_map_group.mim)
      {
           return;
      }
-     const MimType &type      = m_map_group.mim->mim_type();
-     const auto     raw_map   = Map{ type, m_map_group.field->get_entry_data({ saved_path.filename().string() }), false };
-     auto           saved_map = Map{ type, open_viii::tools::read_entire_file(saved_path), false };
-
-     raw_map.visit_tiles([&](const auto &raw_tiles) {
-          saved_map.visit_tiles([&](const auto &saved_tiles) {
-               if constexpr (std::is_same_v<decltype(raw_tiles), decltype(saved_tiles)>)
-               {
-                    using pair_type = decltype(std::make_pair(&raw_tiles.front(), &saved_tiles.front()));
-                    std::vector<pair_type> pairs{};
-                    std::ranges::transform(
-                      raw_tiles, saved_tiles, std::back_inserter(pairs), [](const auto &raw_tile, const auto &saved_tile) {
-                           if (raw_tile != saved_tile)
-                           {
-                                return std::make_pair(&raw_tile, &saved_tile);
-                           }
-                           return pair_type{ nullptr, nullptr };
-                      });
-                    pairs.erase(std::remove(pairs.begin(), pairs.end(), pair_type{ nullptr, nullptr }), pairs.end());
-                    spdlog::info("maps are different, count {} tiles.", std::ranges::size(pairs));
-                    //                    std::ranges::for_each(pairs, [](const pair_type &pair) {
-                    //                         format_tile_text(
-                    //                           *pair.first, [](std::string_view name, const auto &value) { spdlog::info("tile {}: {}",
-                    //                           name, value); });
-                    //                         format_tile_text(
-                    //                           *pair.second, [](std::string_view name, const auto &value) { spdlog::info("tile {}: {}",
-                    //                           name, value); });
-                    //                    });
-               }
-          });
-     });
+     const MimType &type = m_map_group.mim->mim_type();
+     std::ignore         = ff_8::test_if_map_same(saved_path, m_map_group.field, type);
 }
 void map_sprite::save_modified_map(const std::filesystem::path &dest_path) const
 {
-     const auto path = dest_path.string();
-     spdlog::info("Saving modified map: {}", path);
-     open_viii::tools::write_buffer(
-       [this](std::ostream &os) {
-            bool       used_imports   = false;
-            bool       wrote_end_tile = false;
-            const auto append         = [this, &os](auto t) {
-                 // shift to original offset
-                 if (filter_invalid(t))
-                 {
-                      t = t.shift_xy(m_map_group.maps.const_back().offset());
-                 }
-                 // save tile
-                 const auto data = std::bit_cast<std::array<char, sizeof(t)>>(t);
-                 os.write(data.data(), data.size());
-            };
-            const auto append_imported_tiles = [this, &used_imports, &append]() {
-                 if (m_using_imported_texture && !used_imports)
-                 {
-                      used_imports = true;
-                      m_imported_tile_map.visit_tiles([&append](const auto &import_tiles) {
-                           spdlog::info("Saving imported tiles {} count", std::ranges::size(import_tiles));
-                           for (const auto &import_tile : import_tiles)
-                           {
-                                if (filter_invalid(import_tile))
-                                {
-                                     append(import_tile);
-                                }
-                           }
-                      });
-                 }
-            };
-            append_imported_tiles();
-            for_all_tiles(
-              [&append, &wrote_end_tile](const auto &tile_const, const auto &tile, const auto &) {
-                   bool const end_const = filter_invalid(tile_const);
-                   bool const end_other = filter_invalid(tile);
-                   if (end_const || end_other)// should be last tile.
-                   {
-                        // spdlog::info("About to save the last tile.");
-                        //  write imported tiles first.
-                        //  write from tiles const
-                        if (end_other)
-                        {
-                             append(tile);
-                        }
-                        else
-                        {
-                             append(tile_const);
-                        }
-                        wrote_end_tile = true;
-                        return;
-                   }
-                   append(tile);
-                   // write from tiles.
-              },
-              false,
-              true);
-            // write imported tiles first.
-            //      append_imported_tiles();
-            //      if (!wrote_end_tile)
-            //      {
-            //        const_visit_tiles([&append, &wrote_end_tile](const auto
-            //        &tiles)
-            //        {
-            //          spdlog::info("Generating the last tile. (shouldn't
-            //          happen)"); using tile_t =
-            //          std::remove_cvref_t<decltype(tiles.front())>; tile_t tile{};
-            //          append(tile.with_xy(0x7FFFU, 0U));
-            //          wrote_end_tile = true;
-            //        });
-            //      }
-       },
-       path,
-       "");
+     if (m_using_imported_texture)
+     {
+          ff_8::save_modified_map(dest_path, m_map_group.maps.front(), m_map_group.maps.const_back(), &m_imported_tile_map);
+     }
+     else
+     {
+          ff_8::save_modified_map(dest_path, m_map_group.maps.front(), m_map_group.maps.const_back());
+     }
      test_map(dest_path);
 }
 std::size_t map_sprite::size_of_map() const
@@ -1615,7 +1519,6 @@ void map_sprite::disable_square() const
 }
 void map_sprite::enable_disable_blends()
 {
-
      m_disable_blends = true;
      init_render_texture();
 }
