@@ -295,13 +295,13 @@ struct map_sprite final
      }
 
 
-     [[nodiscard]] std::array<sf::Vertex, 4U> get_triangle_strip(
+     [[nodiscard]] static std::array<sf::Vertex, 4U> get_triangle_strip(
        const sf::Vector2u &draw_size,
        const sf::Vector2u &texture_size,
        std::integral auto  source_x,
        std::integral auto  source_y,
        std::integral auto  dest_x,
-       std::integral auto  dest_y) const
+       std::integral auto  dest_y)
      {
           const sf::Vector2f     draw_size_f     = { static_cast<float>(draw_size.x), static_cast<float>(draw_size.y) };
           const sf::Vector2f     texture_size_f  = { static_cast<float>(texture_size.x), static_cast<float>(texture_size.y) };
