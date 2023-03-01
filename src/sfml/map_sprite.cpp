@@ -543,7 +543,7 @@ sf::Sprite map_sprite::save_intersecting(const sf::Vector2i &pixel_pos, const st
                  {
                       return;
                  }
-                 if (fail_filter(tile))
+                 if (ff_8::tile_operations::fail_any_filters(m_filters, tile))
                  {
                       return;
                  }
@@ -628,7 +628,7 @@ sf::BlendMode map_sprite::set_blend_mode(const BlendModeT &blend_mode, std::arra
                     return;
                }
           }
-          if (fail_filter(tile))
+          if (ff_8::tile_operations::fail_any_filters(m_filters, tile))
           {
                return;
           }
@@ -1712,4 +1712,17 @@ bool map_sprite::history_remove_duplicate()
 std::uint32_t map_sprite::get_map_scale() const
 {
      return m_scale;
+}
+std::vector<std::size_t> map_sprite::find_intersecting(
+  const Map          &map,
+  const sf::Vector2i &pixel_pos,
+  const uint8_t      &texture_page,
+  bool                skip_filters,
+  bool                find_all) const
+{
+     if (m_draw_swizzle)
+     {
+          return ff_8::find_intersecting_swizzle(map, m_filters, pixel_pos, texture_page, skip_filters, find_all);
+     }
+     return ff_8::find_intersecting_deswizzle(map, m_filters, pixel_pos, skip_filters, find_all);
 }

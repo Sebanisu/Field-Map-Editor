@@ -7,6 +7,7 @@
 #include "filter.hpp"
 #include "grid.hpp"
 #include "map_group.hpp"
+#include "map_operation.hpp"
 #include "MapHistory.hpp"
 #include "open_viii/archive/Archives.hpp"
 #include "open_viii/graphics/background/Map.hpp"
@@ -205,6 +206,26 @@ struct map_sprite final
        const std::string_view                      &field_name,
        PupuID                                       pupu);
 
+     [[nodiscard]] std::vector<std::size_t> find_intersecting(
+       const open_viii::graphics::background::Map &map,
+       const sf::Vector2i                         &pixel_pos,
+       const std::uint8_t                         &texture_page,
+       bool                                        skip_filters = false,
+       bool                                        find_all     = false) const;
+     template<std::ranges::range tilesT>
+     [[nodiscard]] std::vector<std::size_t> find_intersecting(
+       const tilesT       &tiles,
+       const sf::Vector2i &pixel_pos,
+       const std::uint8_t &texture_page,
+       bool                skip_filters = false,
+       bool                find_all     = false) const
+     {
+          if (m_draw_swizzle)
+          {
+               return ff_8::find_intersecting_swizzle(tiles, m_filters, pixel_pos, texture_page, skip_filters, find_all);
+          }
+          return ff_8::find_intersecting_deswizzle(tiles, m_filters, pixel_pos, skip_filters, find_all);
+     }
      template<typename funcT>
      auto const_visit_tiles(funcT &&p_function) const
      {
@@ -251,42 +272,6 @@ struct map_sprite final
      }
 
 
-     template<open_viii::graphics::background::is_tile tileT, typename T>
-     static void format_tile_text(const tileT &tile, T &&format_function)
-     {
-          const auto raw_hex = to_hex(tile);
-          std::invoke(format_function, "Hex", std::string_view(raw_hex.data(), raw_hex.size()));
-          std::invoke(
-            format_function,
-            "Source",
-            fmt::format(
-              "({}, {}) ({}, {})",
-              tile.source_rectangle().x(),
-              tile.source_rectangle().y(),
-              tile.source_rectangle().width(),
-              tile.source_rectangle().height()));
-          std::invoke(
-            format_function,
-            "Output",
-            fmt::format(
-              "({}, {}) ({}, {})",
-              tile.output_rectangle().x(),
-              tile.output_rectangle().y(),
-              tile.output_rectangle().width(),
-              tile.output_rectangle().height()));
-          std::invoke(format_function, "Z", tile.z());
-          std::invoke(format_function, "Depth", static_cast<int>(tile.depth()));
-          std::invoke(format_function, "Palette ID", tile.palette_id());
-          std::invoke(format_function, "Texture ID", tile.texture_id());
-          std::invoke(format_function, "Layer ID", tile.layer_id());
-          std::invoke(format_function, "Blend Mode", static_cast<std::uint16_t>(tile.blend_mode()));
-          std::invoke(format_function, "Blend Other", tile.blend());
-          std::invoke(format_function, "Animation ID", tile.animation_id());
-          std::invoke(format_function, "Animation State", tile.animation_state());
-          std::invoke(format_function, "Draw", tile.draw());
-     }
-
-
      template<open_viii::graphics::background::is_tile tile_type>
      void enable_square(const tile_type &tile)
      {
@@ -308,89 +293,6 @@ struct map_sprite final
                return tile.source_y();
           }();
           enable_square(sf::Vector2u(src_x, src_y));
-     }
-     [[nodiscard]] std::vector<std::size_t> find_intersecting(
-       const open_viii::graphics::background::Map &map,
-       const sf::Vector2i                         &pixel_pos,
-       const std::uint8_t                         &texture_page,
-       bool                                        skip_filters = false) const
-     {
-          return map.visit_tiles([this, &pixel_pos, &texture_page, &skip_filters](const auto &tiles) {
-               return find_intersecting(tiles, pixel_pos, texture_page, skip_filters);
-          });
-     }
-     template<std::ranges::range tilesT>
-     [[nodiscard]] std::vector<std::size_t> find_intersecting(
-       const tilesT       &tiles,
-       const sf::Vector2i &pixel_pos,
-       const std::uint8_t &texture_page,
-       bool                skip_filters = false,
-       bool                find_all     = false) const
-     {
-          std::vector<std::size_t>                             out          = {};
-          static constexpr std::vector<std::size_t>::size_type new_capacity = { 30 };
-          out.reserve(new_capacity);
-          auto filtered_tiles =
-            tiles | std::views::filter([this, &skip_filters, &texture_page, &pixel_pos](const auto &tile) -> bool {
-                 static constexpr auto in_bounds = [](auto input, auto low, auto high) {
-                      return std::cmp_greater_equal(input, low) && std::cmp_less(input, high);
-                 };
-                 if (!skip_filters && fail_filter(tile))
-                 {
-                      return false;
-                 }
-                 if (m_draw_swizzle)
-                 {
-                      if (std::cmp_equal(tile.texture_id(), texture_page))
-                      {
-                           static constexpr int max_texture_page_dim = 256;
-                           if (in_bounds(
-                                 pixel_pos.x % max_texture_page_dim, tile.source_x(), tile.source_x() + static_cast<int>(TILE_SIZE)))
-                           {
-                                if (in_bounds(
-                                      pixel_pos.y % max_texture_page_dim, tile.source_y(), tile.source_y() + static_cast<int>(TILE_SIZE)))
-                                {
-                                     return true;
-                                }
-                           }
-                      }
-                 }
-                 else if (in_bounds(pixel_pos.x, tile.x(), tile.x() + static_cast<int>(TILE_SIZE)))
-                 {
-                      if (in_bounds(pixel_pos.y, tile.y(), tile.y() + static_cast<int>(TILE_SIZE)))
-                      {
-                           return true;
-                      }
-                 }
-                 return false;
-            });
-          const auto get_indices = [&](auto &&range) {
-               std::transform(std::begin(range), std::end(range), std::back_inserter(out), [&tiles](const auto &tile) {
-                    const auto *const start = tiles.data();
-                    const auto *const curr  = &tile;
-                    format_tile_text(tile, [](std::string_view name, const auto &value) { spdlog::info("tile {}: {}", name, value); });
-                    return static_cast<std::size_t>(std::distance(start, curr));
-               });
-          };
-          if (m_draw_swizzle && !find_all)
-          {
-               // If palette and bpp are overlapping it causes problems.
-               //  This prevents you selecting more than one at a time.
-               //  min depth/bpp was chosen because lower bpp can be greater src x.
-               const auto min_depth   = (std::ranges::min_element)(filtered_tiles, {}, [](const auto &tile) { return tile.depth(); });
-               // min palette well, lower bpp tend to be a lower palette id I think.
-               const auto min_palette = (std::ranges::min_element)(filtered_tiles, {}, [](const auto &tile) { return tile.palette_id(); });
-               auto       filtered_tiles_with_depth_and_palette =
-                 filtered_tiles | std::views::filter([&](const auto &tile) -> bool {
-                      return min_depth->depth() == tile.depth() && min_palette->palette_id() == tile.palette_id();
-                 });
-               get_indices(filtered_tiles_with_depth_and_palette);
-          }
-          else
-          {
-               get_indices(filtered_tiles);
-          }
-          return out;
      }
 
 
@@ -433,14 +335,6 @@ struct map_sprite final
                                (scaled_dest_y + 1) * draw_size_f.y,
                                scaled_source_x * texture_size_f.x,
                                (scaled_source_y + 1) * texture_size_f.y) };
-     }
-
-
-     template<open_viii::graphics::background::is_tile tileT>
-     bool fail_filter(const tileT &tile) const
-     {
-          // m_filters.bpp.value() != 16_bpp
-          return !std::invoke(m_filters, tile);
      }
      auto duel_visitor(auto &&lambda) const
      {
@@ -503,7 +397,6 @@ struct map_sprite final
      }
 
 
-
      template<typename TilesT>
      auto find_conflicting_tiles(const TilesT &tiles) const
      {
@@ -542,9 +435,6 @@ struct map_sprite final
 
           return conflicts;
      }
-
-
-
 
 
      auto get_conflicting_palettes() const
@@ -607,31 +497,6 @@ struct map_sprite final
                return { m_map_group.field->get_base_name(), m_map_group.opt_coo ? *m_map_group.opt_coo : open_viii::LangT::generic };
           }
           return {};
-     }
-     template<open_viii::graphics::background::is_tile T>
-          requires(std::is_standard_layout_v<T>)
-     static constexpr auto to_hex(const T &tile)
-     {
-          constexpr auto to_hex_operation = [](const std::uint8_t input_byte, const auto operation) -> char {
-               constexpr std::uint8_t number_of_values_in_nibble = 16U;
-               constexpr char         threshold_of_A_to_F        = 10;
-               char const             half_transformed_char      = static_cast<char>(operation(input_byte, number_of_values_in_nibble));
-               return static_cast<char>(
-                 (half_transformed_char < threshold_of_A_to_F ? half_transformed_char + '0'
-                                                              : half_transformed_char - threshold_of_A_to_F + 'A'));
-          };
-          const auto                           raw_bytes = std::bit_cast<std::array<std::uint8_t, sizeof(T)>>(tile);
-          std::array<char, sizeof(T) * 2U + 1> raw_hex{};
-          raw_hex.back() = 0;
-          auto rhi       = raw_hex.begin();
-          for (const std::uint8_t current_byte : raw_bytes)
-          {
-               *rhi = to_hex_operation(current_byte, std::divides{});
-               std::advance(rhi, 1);
-               *rhi = to_hex_operation(current_byte, std::modulus{});
-               std::advance(rhi, 1);
-          }
-          return raw_hex;
      }
      [[nodiscard]] std::array<sf::Vertex, 4U> get_triangle_strip_for_imported(
        const sf::Vector2u                                  &draw_size,

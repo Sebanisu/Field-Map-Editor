@@ -173,5 +173,13 @@ struct filters
           }(draw_bit, z, palette, animation_id, animation_frame, layer_id, texture_page_id, blend_mode, blend_other, bpp);
      }
 };
+namespace tile_operations
+{
+     template<open_viii::graphics::background::is_tile tileT>
+     bool fail_any_filters(const ff_8::filters &filters, const tileT &tile)
+     {
+          return !std::invoke(filters, tile);
+     }
+}
 }// namespace ff_8
 #endif// FIELD_MAP_EDITOR_FILTER_HPP

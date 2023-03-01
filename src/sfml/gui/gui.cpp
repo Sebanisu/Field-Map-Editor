@@ -1813,7 +1813,7 @@ std::shared_ptr<open_viii::archive::FIFLFS<false>> gui::init_field()
 }
 map_sprite gui::get_map_sprite() const
 {
-     return { ff_8::map_group{m_field, get_coo()}, m_selections.draw_swizzle, {}, m_selections.draw_disable_blending };
+     return { ff_8::map_group{ m_field, get_coo() }, m_selections.draw_swizzle, {}, m_selections.draw_disable_blending };
 }
 int gui::get_selected_field()
 {
@@ -2652,10 +2652,10 @@ void gui::collapsing_header_generated_tiles() const
 }
 void gui::generate_map_for_imported_image(const variant_tile_t &current_tile, bool changed)
 {//   * I'd probably store the new tiles in their own map.
-     const auto tiles_wide =
-       static_cast<uint32_t>(ceil(static_cast<double>(static_cast<float>(loaded_image_texture.getSize().x) / static_cast<float>(m_selections.tile_size_value))));
-     const auto tiles_high =
-       static_cast<uint32_t>(ceil(static_cast<double>(static_cast<float>(loaded_image_texture.getSize().y) / static_cast<float>(m_selections.tile_size_value))));
+     const auto tiles_wide = static_cast<uint32_t>(
+       ceil(static_cast<double>(static_cast<float>(loaded_image_texture.getSize().x) / static_cast<float>(m_selections.tile_size_value))));
+     const auto tiles_high = static_cast<uint32_t>(
+       ceil(static_cast<double>(static_cast<float>(loaded_image_texture.getSize().y) / static_cast<float>(m_selections.tile_size_value))));
      format_imgui_text("Possible Tiles: {} wide, {} high, {} total", tiles_wide, tiles_high, tiles_wide * tiles_high);
      if (changed && tiles_wide * tiles_high != 0U && loaded_image_texture.getSize() != sf::Vector2u{})
      {
@@ -2879,14 +2879,32 @@ void gui::collapsing_tile_info(const variant_tile_t &current_tile) const
                  {
                       if (ImGui::BeginTable("table_tile_info", 2))
                       {
-                           const auto the_end_table = scope_guard([]() { ImGui::EndTable(); });
-                           m_map_sprite.format_tile_text(tile, [](const std::string_view text, const auto value) {
+                           const auto the_end_table      = scope_guard([]() { ImGui::EndTable(); });
+                           const auto tile_string        = fmt::format("{}", tile);
+                           auto       lines              = tile_string | std::ranges::views::split('\n');
+                           const auto output_text_values = [](const std::string_view text, const std::string_view value) {
                                 ImGui::TableNextRow();
                                 ImGui::TableNextColumn();
-                                format_imgui_text("{}", text.data());
+                                format_imgui_text("{}", text);
                                 ImGui::TableNextColumn();
                                 format_imgui_text("{}", value);
-                           });
+                           };
+                           const auto div_string = std::string(": ");
+                           for (auto line : lines)
+                           {
+                                auto split_line = line | std::ranges::views::split(div_string);
+
+                                auto it         = split_line.begin();
+                                if (it != split_line.end())
+                                {
+                                     auto key = *it;
+                                     if (++it != split_line.end())
+                                     {
+                                          auto value = *it;
+                                          output_text_values(std::string_view(key), std::string_view(value));
+                                     }
+                                }
+                           }
                       }
 
                       static constexpr float width_max             = 1.0F;

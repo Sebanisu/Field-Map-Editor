@@ -4,13 +4,138 @@
 
 #ifndef FIELD_MAP_EDITOR_MAP_OPERATION_HPP
 #define FIELD_MAP_EDITOR_MAP_OPERATION_HPP
+#include "filter.hpp"
 #include "map_group.hpp"
+#include <SFML/System/Vector2.hpp>
 namespace ff_8
 {
-void flatten_bpp(map_group::Map &map);
-void flatten_palette(map_group::Map &map);
-void compact_map_order(map_group::Map &map);
-void compact_rows(map_group::Map &map);
-void compact_all(map_group::Map &map);
+void                                   flatten_bpp(map_group::Map &map);
+void                                   flatten_palette(map_group::Map &map);
+void                                   compact_map_order(map_group::Map &map);
+void                                   compact_rows(map_group::Map &map);
+void                                   compact_all(map_group::Map &map);
+[[nodiscard]] std::vector<std::size_t> find_intersecting_swizzle(
+  const map_group::Map &map,
+  const ff_8::filters  &filters,
+  const sf::Vector2i   &pixel_pos,
+  const std::uint8_t   &texture_page,
+  bool                  skip_filters,
+  bool                  find_all);
+[[nodiscard]] std::vector<std::size_t> find_intersecting_deswizzle(
+  const map_group::Map &map,
+  const ff_8::filters  &filters,
+  const sf::Vector2i   &pixel_pos,
+  bool                  skip_filters,
+  bool                  find_all);
+// templates
+template<std::integral input_t, std::integral low_t, std::integral high_t>
+bool find_intersecting_in_bounds(input_t input, low_t low, high_t high)
+{
+     return std::cmp_greater_equal(input, low) && std::cmp_less(input, high);
+}
+
+template<std::ranges::range range_t, std::ranges::range out_t, std::ranges::contiguous_range tiles_t>
+void find_intersecting_get_indices(range_t &&range, out_t &out, const tiles_t &tiles)
+{
+     std::ranges::transform(range, std::back_inserter(out), [&tiles](const auto &tile) {
+          const auto *const start = tiles.data();
+          const auto *const curr  = &tile;
+          // format_tile_text(tile, [](std::string_view name, const auto &value) { spdlog::info("tile {}: {}", name, value); });
+          return static_cast<std::size_t>(std::distance(start, curr));
+     });
+}
+template<std::ranges::range tilesT>
+[[nodiscard]] std::vector<std::size_t> find_intersecting_swizzle(
+  const tilesT        &tiles,
+  const ff_8::filters &filters,
+  const sf::Vector2i  &pixel_pos,
+  const std::uint8_t  &texture_page,
+  bool                 skip_filters = false,
+  bool                 find_all     = false)
+{
+     std::vector<std::size_t>                             out          = {};
+     static constexpr std::vector<std::size_t>::size_type new_capacity = { 30 };
+     out.reserve(new_capacity);
+     auto filtered_tiles =
+       tiles | std::views::filter([&](const auto &tile) -> bool {
+            if (!skip_filters && ff_8::tile_operations::fail_any_filters(filters, tile))
+            {
+                 return false;
+            }
+            if (std::cmp_equal(tile.texture_id(), texture_page))
+            {
+                 static constexpr int max_texture_page_dim = 256;
+                 if (find_intersecting_in_bounds(
+                       pixel_pos.x % max_texture_page_dim, tile.source_x(), tile.source_x() + static_cast<int>(ff_8::map_group::TILE_SIZE)))
+                 {
+                      if (find_intersecting_in_bounds(
+                            pixel_pos.y % max_texture_page_dim,
+                            tile.source_y(),
+                            tile.source_y() + static_cast<int>(ff_8::map_group::TILE_SIZE)))
+                      {
+                           return true;
+                      }
+                 }
+            }
+            return false;
+       });
+     if (!find_all)
+     {
+          // If palette and bpp are overlapping it causes problems.
+          //  This prevents you selecting more than one at a time.
+          //  min depth/bpp was chosen because lower bpp can be greater src x.
+          const auto min_depth   = (std::ranges::min_element)(filtered_tiles, {}, [](const auto &tile) { return tile.depth(); });
+          // min palette well, lower bpp tend to be a lower palette id I think.
+          const auto min_palette = (std::ranges::min_element)(filtered_tiles, {}, [](const auto &tile) { return tile.palette_id(); });
+          auto       filtered_tiles_with_depth_and_palette =
+            filtered_tiles | std::views::filter([&](const auto &tile) -> bool {
+                 return min_depth->depth() == tile.depth() && min_palette->palette_id() == tile.palette_id();
+            });
+          find_intersecting_get_indices(filtered_tiles_with_depth_and_palette, out, tiles);
+     }
+     else
+     {
+          find_intersecting_get_indices(filtered_tiles, out, tiles);
+     }
+     return out;
+}
+template<std::ranges::range tilesT>
+[[nodiscard]] std::vector<std::size_t> find_intersecting_deswizzle(
+  const tilesT        &tiles,
+  const ff_8::filters &filters,
+  const sf::Vector2i  &pixel_pos,
+  bool                 skip_filters = false,
+  bool                 find_all     = false)
+{
+     std::vector<std::size_t>                             out          = {};
+     static constexpr std::vector<std::size_t>::size_type new_capacity = { 30 };
+     out.reserve(new_capacity);
+     auto filtered_tiles =
+       tiles | std::views::filter([&](const auto &tile) -> bool {
+            if (!skip_filters && ff_8::tile_operations::fail_any_filters(filters, tile))
+            {
+                 return false;
+            }
+            if (find_intersecting_in_bounds(pixel_pos.x, tile.x(), tile.x() + static_cast<int>(ff_8::map_group::TILE_SIZE)))
+            {
+                 if (find_intersecting_in_bounds(pixel_pos.y, tile.y(), tile.y() + static_cast<int>(ff_8::map_group::TILE_SIZE)))
+                 {
+                      return true;
+                 }
+            }
+            return false;
+       });
+
+
+     if (!find_all)
+     {
+          find_intersecting_get_indices(filtered_tiles | std::views::take(1), out, tiles);
+     }
+     else
+     {
+          find_intersecting_get_indices(filtered_tiles, out, tiles);
+     }
+     return out;
+}
 }// namespace ff_8
 #endif// FIELD_MAP_EDITOR_MAP_OPERATION_HPP
