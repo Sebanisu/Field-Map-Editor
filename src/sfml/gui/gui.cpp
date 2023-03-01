@@ -2879,31 +2879,24 @@ void gui::collapsing_tile_info(const variant_tile_t &current_tile) const
                  {
                       if (ImGui::BeginTable("table_tile_info", 2))
                       {
-                           const auto the_end_table      = scope_guard([]() { ImGui::EndTable(); });
-                           const auto tile_string        = fmt::format("{}", tile);
-                           auto       lines              = tile_string | std::ranges::views::split('\n');
-                           const auto output_text_values = [](const std::string_view text, const std::string_view value) {
+                           const auto         the_end_table = scope_guard([]() { ImGui::EndTable(); });
+                           const auto         tile_string   = fmt::format("{}", tile);
+                           std::istringstream ss(tile_string);
+                           std::string        line;
+                           const auto         output_text_values = [](const std::string_view text, const std::string_view value) {
                                 ImGui::TableNextRow();
                                 ImGui::TableNextColumn();
                                 format_imgui_text("{}", text);
                                 ImGui::TableNextColumn();
                                 format_imgui_text("{}", value);
                            };
-                           constexpr auto div_string = std::string_view(": ");
-                           for (auto line : lines)
+                           while (std::getline(ss, line, '\n'))
                            {
-                                auto       split_line = line | std::ranges::views::split(div_string);
-
-                                auto       pos        = split_line.begin();
-                                const auto end        = split_line.end();
-                                if (pos != end)
+                                std::istringstream ss_line(line);
+                                std::string        key, value;
+                                if (std::getline(ss_line, key, ':') && std::getline(ss_line, value))
                                 {
-                                     auto key = *pos;
-                                     if (++pos != end)
-                                     {
-                                          auto value = *pos;
-                                          output_text_values(std::string_view(key), std::string_view(value));
-                                     }
+                                     output_text_values(std::string_view(key), std::string_view(value).substr(1));
                                 }
                            }
                       }
