@@ -188,7 +188,7 @@ void map_sprite::find_upscale_path(std::shared_ptr<std::array<sf::Texture, MAX_T
      for (const auto &texture_page : m_all_unique_values_and_strings.texture_page_id().values())
      {
           const size_t texture_index                 = START_OF_NO_PALETTE_INDEX + texture_page;
-          const auto   texture_file_exists_then_load = [=,*this](sf::Texture *texture) {
+          const auto   texture_file_exists_then_load = [=, *this](sf::Texture *texture) {
                const auto &root           = m_filters.upscale.value();
                const auto  paths          = m_upscales.get_file_paths(root, texture_page);
                auto        filtered_paths = paths | std::views::filter([](safedir path) { return path.is_exists() && !path.is_dir(); });
@@ -253,7 +253,7 @@ void map_sprite::find_upscale_path(std::shared_ptr<std::array<sf::Texture, MAX_T
      for (const auto &texture_page : m_all_unique_values_and_strings.texture_page_id().values())
      {
           const size_t index      = size_t{ texture_page } * MAX_PALETTES + palette;
-          auto const   p_function = [=,*this](sf::Texture *const texture) -> void {
+          auto const   p_function = [=, *this](sf::Texture *const texture) -> void {
                const auto &root           = m_filters.upscale.value();
                const auto  paths          = m_upscales.get_file_paths(root, texture_page, palette);
                auto        filtered_paths = paths | std::views::filter([](safedir path) { return path.is_exists() && !path.is_dir(); });
@@ -731,7 +731,7 @@ void map_sprite::draw(sf::RenderTarget &target, sf::RenderStates states) const
      states.texture    = &m_render_texture->getTexture();
      auto texture_size = m_render_texture->getSize();
      auto draw_size    = sf::Vector2u(width(), height());
-     auto quad         = get_triangle_strip(draw_size, texture_size, 0, 0, 0, 0);
+     auto quad         = ff_8::get_triangle_strip(to_Vector2f(draw_size), to_Vector2f(texture_size), {}, {});
      // draw the vertex array
      target.draw(quad.data(), quad.size(), sf::TriangleStrip, states);
      // draw grid

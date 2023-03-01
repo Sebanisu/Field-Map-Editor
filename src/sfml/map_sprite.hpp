@@ -294,47 +294,6 @@ struct map_sprite final
           enable_square(sf::Vector2u(src_x, src_y));
      }
 
-
-     [[nodiscard]] static std::array<sf::Vertex, 4U> get_triangle_strip(
-       const sf::Vector2u &draw_size,
-       const sf::Vector2u &texture_size,
-       std::integral auto  source_x,
-       std::integral auto  source_y,
-       std::integral auto  dest_x,
-       std::integral auto  dest_y)
-     {
-          const sf::Vector2f     draw_size_f     = { static_cast<float>(draw_size.x), static_cast<float>(draw_size.y) };
-          const sf::Vector2f     texture_size_f  = { static_cast<float>(texture_size.x), static_cast<float>(texture_size.y) };
-          constexpr static float tile_size_f     = static_cast<float>(TILE_SIZE);
-          auto                   scaled_dest_x   = static_cast<float>(dest_x) / tile_size_f;
-          auto                   scaled_dest_y   = static_cast<float>(dest_y) / tile_size_f;
-          float                  scaled_source_x = static_cast<float>(source_x) / tile_size_f;
-          float                  scaled_source_y = static_cast<float>(source_y) / tile_size_f;
-          const auto tovec  = [](auto &&in_x, auto &&in_y) { return sf::Vector2f{ static_cast<float>(in_x), static_cast<float>(in_y) }; };
-          const auto tovert = [&tovec](auto &&draw_x, auto &&draw_y, auto &&texture_x, auto &&texture_y) {
-               return sf::Vertex{ tovec(draw_x, draw_y), tovec(texture_x, texture_y) };
-          };
-          return std::array{ tovert(
-                               (scaled_dest_x + 1) * draw_size_f.x,
-                               scaled_dest_y * draw_size_f.y,
-                               (scaled_source_x + 1) * texture_size_f.x,
-                               scaled_source_y * texture_size_f.y),
-                             tovert(
-                               scaled_dest_x * draw_size_f.x,
-                               scaled_dest_y * draw_size_f.y,
-                               scaled_source_x * texture_size_f.x,
-                               scaled_source_y * texture_size_f.y),
-                             tovert(
-                               (scaled_dest_x + 1) * draw_size_f.x,
-                               (scaled_dest_y + 1) * draw_size_f.y,
-                               (scaled_source_x + 1) * texture_size_f.x,
-                               (scaled_source_y + 1) * texture_size_f.y),
-                             tovert(
-                               scaled_dest_x * draw_size_f.x,
-                               (scaled_dest_y + 1) * draw_size_f.y,
-                               scaled_source_x * texture_size_f.x,
-                               (scaled_source_y + 1) * texture_size_f.y) };
-     }
      auto duel_visitor(auto &&lambda) const
      {
           return m_map_group.maps.front().visit_tiles([this, &lambda](auto const &tiles_const) {
@@ -497,95 +456,57 @@ struct map_sprite final
           }
           return {};
      }
+
      [[nodiscard]] std::array<sf::Vertex, 4U> get_triangle_strip_for_imported(
        const sf::Vector2u                                  &draw_size,
        const sf::Vector2u                                  &texture_size,
        const open_viii::graphics::background::is_tile auto &tile_const,
        open_viii::graphics::background::is_tile auto      &&tile) const
      {
-          using namespace open_viii::graphics::literals;
-          using tile_type  = std::remove_cvref_t<decltype(tile)>;
-          //  auto       src_tpw = tile_type::texture_page_width(tile_const.depth());
-          //  const auto x       = [this, &tile_const, &src_tpw]() -> std::uint32_t {
-          //    if (m_filters.upscale.enabled())
-          //    {
-          //      return 0;
-          //    }
-          //    return tile_const.texture_id() * src_tpw;
-          //  }();
-          const auto src_x = [&tile_const]() -> std::uint32_t { return static_cast<std::uint32_t>(tile_const.x()); }();
-          const auto src_y = [&tile_const]() -> std::uint32_t { return static_cast<std::uint32_t>(tile_const.y()); }();
-
-          const auto dst_x = [this, &tile]() {
-               if (m_draw_swizzle)
-               {
-                    if (!m_disable_texture_page_shift)
-                    {
-                         return static_cast<uint32_t>(tile.source_x() + tile.texture_id() * tile_type::texture_page_width(4_bpp));
-                    }
-                    return static_cast<uint32_t>(tile.source_x());
-               }
-               return static_cast<uint32_t>(tile.x());
-          }();
-          const auto dst_y = [this, &tile]() {
-               if (m_draw_swizzle)
-               {
-                    return static_cast<uint32_t>(tile.source_y());
-               }
-               return static_cast<uint32_t>(tile.y());
-          }();
-          return get_triangle_strip(draw_size, texture_size, src_x, src_y, dst_x, dst_y);
+          return get_triangle_strip(draw_size, texture_size, tile_const, tile, true);
+     }
+     [[nodiscard]] static sf::Vector2f to_Vector2f(sf::Vector2u in_vec)
+     {
+          return { static_cast<float>(in_vec.x), static_cast<float>(in_vec.y) };
+     }
+     [[nodiscard]] static sf::Vector2f to_Vector2f(sf::Vector2i in_vec)
+     {
+          return { static_cast<float>(in_vec.x), static_cast<float>(in_vec.y) };
      }
      [[nodiscard]] std::array<sf::Vertex, 4U> get_triangle_strip(
        const sf::Vector2u                                  &draw_size,
        const sf::Vector2u                                  &texture_size,
        const open_viii::graphics::background::is_tile auto &tile_const,
-       open_viii::graphics::background::is_tile auto      &&tile) const
+       open_viii::graphics::background::is_tile auto      &&tile,
+       bool                                                 imported = false) const
      {
-          using namespace open_viii::graphics::literals;
-          using tile_type    = std::remove_cvref_t<decltype(tile)>;
-          auto       src_tpw = tile_type::texture_page_width(tile_const.depth());
-          const auto x       = [this, &tile_const, &src_tpw]() -> std::uint32_t {
+          const auto src = [this, &tile_const, &imported]() {
+               if (imported)
+               {
+                    return to_Vector2f(ff_8::get_triangle_strip_source_imported(tile_const));
+               }
                if (m_filters.upscale.enabled())
                {
-                    return 0;
+                    return to_Vector2f(ff_8::get_triangle_strip_source_upscale(tile_const));
                }
-               return tile_const.texture_id() * src_tpw;
-          }();
-          const auto src_x = [&tile_const, &x, this]() -> std::uint32_t {
                if (m_filters.deswizzle.enabled())
                {
-                    return static_cast<std::uint32_t>(tile_const.x());
+                    return to_Vector2f(ff_8::get_triangle_strip_source_deswizzle(tile_const));
                }
-               return tile_const.source_x() + x;
+               return to_Vector2f(ff_8::get_triangle_strip_source_default(tile_const));
           }();
-          const auto src_y = [&tile_const, this]() -> std::uint32_t {
-               if (m_filters.deswizzle.enabled())
-               {
-                    return static_cast<std::uint32_t>(tile_const.y());
-               }
-               return tile_const.source_y();
-          }();
-
-          const auto dst_x = [this, &tile]() {
+          const auto dest = [this, &tile]() {
                if (m_draw_swizzle)
                {
-                    if (!m_disable_texture_page_shift)
+                    if (m_disable_texture_page_shift)
                     {
-                         return static_cast<uint32_t>(tile.source_x() + tile.texture_id() * tile_type::texture_page_width(4_bpp));
+                         return to_Vector2f(ff_8::get_triangle_strip_dest_swizzle_disable_shift(tile));
                     }
-                    return static_cast<uint32_t>(tile.source_x());
+                    return to_Vector2f(ff_8::get_triangle_strip_dest_swizzle(tile));
                }
-               return static_cast<uint32_t>(tile.x());
+               return to_Vector2f(ff_8::get_triangle_strip_dest_default(tile));
           }();
-          const auto dst_y = [this, &tile]() {
-               if (m_draw_swizzle)
-               {
-                    return static_cast<uint32_t>(tile.source_y());
-               }
-               return static_cast<uint32_t>(tile.y());
-          }();
-          return get_triangle_strip(draw_size, texture_size, src_x, src_y, dst_x, dst_y);
+          return ff_8::get_triangle_strip(to_Vector2f(draw_size), to_Vector2f(texture_size), src, dest);
      }
 };
 #endif// FIELD_MAP_EDITOR_MAP_SPRITE_HPP

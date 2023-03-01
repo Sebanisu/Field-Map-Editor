@@ -6,14 +6,53 @@
 #define FIELD_MAP_EDITOR_MAP_OPERATION_HPP
 #include "filter.hpp"
 #include "map_group.hpp"
+#include <SFML/Graphics/Vertex.hpp>
 #include <SFML/System/Vector2.hpp>
 namespace ff_8
 {
-void                                   flatten_bpp(map_group::Map &map);
-void                                   flatten_palette(map_group::Map &map);
-void                                   compact_map_order(map_group::Map &map);
-void                                   compact_rows(map_group::Map &map);
-void                                   compact_all(map_group::Map &map);
+void flatten_bpp(map_group::Map &map);
+void flatten_palette(map_group::Map &map);
+void compact_map_order(map_group::Map &map);
+void compact_rows(map_group::Map &map);
+void compact_all(map_group::Map &map);
+[[nodiscard]] std::array<sf::Vertex, 4U>
+  get_triangle_strip(const sf::Vector2f &draw_size, const sf::Vector2f &texture_size, sf::Vector2f source, sf::Vector2f dest);
+
+[[nodiscard]] static inline sf::Vector2i get_triangle_strip_source_imported(const open_viii::graphics::background::is_tile auto &tile_const)
+{
+     return { tile_const.x(), tile_const.y() };
+}
+[[nodiscard]] static inline sf::Vector2u get_triangle_strip_source_upscale(const open_viii::graphics::background::is_tile auto &tile_const)
+{
+     return { tile_const.source_x(), tile_const.source_y() };
+}
+[[nodiscard]] static inline sf::Vector2u get_triangle_strip_source_default(const open_viii::graphics::background::is_tile auto &tile_const)
+{
+     using tile_type             = std::remove_cvref_t<decltype(tile_const)>;
+     auto                src_tpw = tile_type::texture_page_width(tile_const.depth());
+     const std::uint32_t x_shift = tile_const.texture_id() * src_tpw;
+     return { tile_const.source_x() + x_shift, tile_const.source_y() };
+};
+[[nodiscard]] static inline sf::Vector2i
+  get_triangle_strip_source_deswizzle(const open_viii::graphics::background::is_tile auto &tile_const)
+{
+     return { tile_const.x(), tile_const.y() };
+}
+[[nodiscard]] static inline sf::Vector2i get_triangle_strip_dest_default(open_viii::graphics::background::is_tile auto &&tile)
+{
+     return { tile.x(), tile.y() };
+}
+[[nodiscard]] static inline sf::Vector2u get_triangle_strip_dest_swizzle_disable_shift(open_viii::graphics::background::is_tile auto &&tile)
+{
+     return { tile.source_x(), tile.source_y() };
+}
+[[nodiscard]] static inline sf::Vector2u get_triangle_strip_dest_swizzle(open_viii::graphics::background::is_tile auto &&tile)
+{
+     using namespace open_viii::graphics::literals;
+     using tile_type = std::remove_cvref_t<decltype(tile)>;
+     return { static_cast<std::uint32_t>(tile.source_x() + tile.texture_id() * tile_type::texture_page_width(4_bpp)), tile.source_y() };
+}
+
 [[nodiscard]] std::vector<std::size_t> find_intersecting_swizzle(
   const map_group::Map &map,
   const ff_8::filters  &filters,
@@ -29,13 +68,13 @@ void                                   compact_all(map_group::Map &map);
   bool                  find_all);
 // templates
 template<std::integral input_t, std::integral low_t, std::integral high_t>
-bool find_intersecting_in_bounds(input_t input, low_t low, high_t high)
+static inline bool find_intersecting_in_bounds(input_t input, low_t low, high_t high)
 {
      return std::cmp_greater_equal(input, low) && std::cmp_less(input, high);
 }
 
 template<std::ranges::range range_t, std::ranges::range out_t, std::ranges::contiguous_range tiles_t>
-void find_intersecting_get_indices(range_t &&range, out_t &out, const tiles_t &tiles)
+static inline void find_intersecting_get_indices(range_t &&range, out_t &out, const tiles_t &tiles)
 {
      std::ranges::transform(range, std::back_inserter(out), [&tiles](const auto &tile) {
           const auto *const start = tiles.data();
@@ -45,7 +84,7 @@ void find_intersecting_get_indices(range_t &&range, out_t &out, const tiles_t &t
      });
 }
 template<std::ranges::range tilesT>
-[[nodiscard]] std::vector<std::size_t> find_intersecting_swizzle(
+[[nodiscard]] static inline std::vector<std::size_t> find_intersecting_swizzle(
   const tilesT        &tiles,
   const ff_8::filters &filters,
   const sf::Vector2i  &pixel_pos,
@@ -100,7 +139,7 @@ template<std::ranges::range tilesT>
      return out;
 }
 template<std::ranges::range tilesT>
-[[nodiscard]] std::vector<std::size_t> find_intersecting_deswizzle(
+[[nodiscard]] static inline std::vector<std::size_t> find_intersecting_deswizzle(
   const tilesT        &tiles,
   const ff_8::filters &filters,
   const sf::Vector2i  &pixel_pos,

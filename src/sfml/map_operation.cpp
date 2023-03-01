@@ -39,8 +39,8 @@ void flatten_palette(map_group::Map &map)
 void compact_map_order(map_group::Map &map)
 {
      map.visit_tiles([](auto &&tiles) {
-          auto filtered_tiles            = tiles | std::views::filter(invalid);
-          using tile_t                   = std::remove_cvref_t<std::ranges::range_value_t<decltype(tiles)>>;
+          auto filtered_tiles             = tiles | std::views::filter(invalid);
+          using tile_t                    = std::remove_cvref_t<std::ranges::range_value_t<decltype(tiles)>>;
           const auto with_depth_operation = ff_8::tile_operations::WithDepth<tile_t>{ open_viii::graphics::BPPT::BPP4_CONST() };
           for (std::size_t tile_index = {}; tile_t & tile : filtered_tiles)
           {
@@ -52,8 +52,8 @@ void compact_map_order(map_group::Map &map)
                  (file_tile_index / ff_8::map_group::TILE_SIZE) * ff_8::map_group::TILE_SIZE);
                ++tile_index;
                const auto with_texture_id_operation = ff_8::tile_operations::WithTextureId<tile_t>{ texture_page };
-               const auto with_source_xy_operation = ff_8::tile_operations::WithSourceXY<tile_t>{ { source_x, source_y } };
-               tile                               = tile | with_depth_operation | with_source_xy_operation | with_texture_id_operation;
+               const auto with_source_xy_operation  = ff_8::tile_operations::WithSourceXY<tile_t>{ { source_x, source_y } };
+               tile                                 = tile | with_depth_operation | with_source_xy_operation | with_texture_id_operation;
           }
      });
 }
@@ -61,18 +61,18 @@ static constexpr auto default_filter_lambda = [](auto &&) { return true; };
 template<typename tilesT, typename key_lambdaT, typename value_lambdaT, typename filterT = decltype(default_filter_lambda)>
 static auto generate_map(tilesT &&tiles, key_lambdaT &&key_lambda, value_lambdaT &&value_lambda, filterT &&filter = {})
 {
-     using tile_t = std::remove_cvref_t<typename std::remove_cvref_t<tilesT>::value_type>;
-     using key_t  = decltype(key_lambda(tile_t{}));
+     using tile_t  = std::remove_cvref_t<typename std::remove_cvref_t<tilesT>::value_type>;
+     using key_t   = decltype(key_lambda(tile_t{}));
      using value_t = decltype(value_lambda(tile_t{}));
      std::map<key_t, std::vector<value_t>> map{};
-     auto                                filtered_tiles = tiles | std::views::filter(filter);
+     auto                                  filtered_tiles = tiles | std::views::filter(filter);
      std::ranges::for_each(filtered_tiles, [&map, &key_lambda, &value_lambda](auto &&tile) {
           if (!invalid(tile))
           {
                return;
           }
           value_t value = value_lambda(tile);
-          key_t  key   = key_lambda(tile);
+          key_t   key   = key_lambda(tile);
           if (map.contains(key))
           {
                map.at(key).push_back(value);
@@ -181,8 +181,29 @@ void compact_all(map_group::Map &map)
   bool                  skip_filters,
   bool                  find_all)
 {
-     return map.visit_tiles([&](const auto &tiles) {
-          return find_intersecting_deswizzle(tiles, filters, pixel_pos, skip_filters, find_all);
-     });
+     return map.visit_tiles(
+       [&](const auto &tiles) { return find_intersecting_deswizzle(tiles, filters, pixel_pos, skip_filters, find_all); });
+}
+std::array<sf::Vertex, 4U>
+  get_triangle_strip(const sf::Vector2f &draw_size, const sf::Vector2f &texture_size, sf::Vector2f source, sf::Vector2f dest)
+
+{
+     constexpr static auto tile_size_f = static_cast<float>(map_group::TILE_SIZE);
+     source /= tile_size_f;
+     dest /= tile_size_f;
+     const auto tovec  = [](auto &&in_x, auto &&in_y) { return sf::Vector2f{ static_cast<float>(in_x), static_cast<float>(in_y) }; };
+     const auto tovert = [&tovec](auto &&draw_x, auto &&draw_y, auto &&texture_x, auto &&texture_y) {
+          return sf::Vertex{ tovec(draw_x, draw_y), tovec(texture_x, texture_y) };
+     };
+     return std::array{
+          tovert((dest.x + 1.F) * draw_size.x, dest.y * draw_size.y, (source.x + 1.F) * texture_size.x, source.y * texture_size.y),
+          tovert(dest.x * draw_size.x, dest.y * draw_size.y, source.x * texture_size.x, source.y * texture_size.y),
+          tovert(
+            (dest.x + 1.F) * draw_size.x,
+            (dest.y + 1.F) * draw_size.y,
+            (source.x + 1.F) * texture_size.x,
+            (source.y + 1.F) * texture_size.y),
+          tovert(dest.x * draw_size.x, (dest.y + 1.F) * draw_size.y, source.x * texture_size.x, (source.y + 1.F) * texture_size.y)
+     };
 }
 }// namespace ff_8
