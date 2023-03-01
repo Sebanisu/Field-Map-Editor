@@ -28,7 +28,7 @@ add_executable(${PROJECT_NAME}_SFML
         tile_operations.hpp
         gui/gui.cpp
         gui/gui_batch.cpp
-        gui/batch_deswizzle.cpp gui/batch_deswizzle.hpp gui/file_dialog_mode.hpp gui/map_directory_mode.hpp gui/batch_embed.cpp gui/batch_embed.hpp gui/compact_type.hpp gui/batch_reswizzle.cpp gui/batch_reswizzle.hpp gui/mouse_positions.cpp gui/mouse_positions.hpp gui/scrolling.cpp gui/scrolling.hpp gui/Selections.cpp gui/Selections.hpp square.cpp square.hpp tile_sizes.hpp save_image_pbo.cpp save_image_pbo.hpp settings_backup.hpp map_group.cpp map_group.hpp map_operation.cpp map_operation.hpp open_file_explorer.cpp open_file_explorer.hpp)
+        gui/batch_deswizzle.cpp gui/batch_deswizzle.hpp gui/file_dialog_mode.hpp gui/map_directory_mode.hpp gui/batch_embed.cpp gui/batch_embed.hpp gui/compact_type.hpp gui/batch_reswizzle.cpp gui/batch_reswizzle.hpp gui/mouse_positions.cpp gui/mouse_positions.hpp gui/scrolling.cpp gui/scrolling.hpp gui/Selections.cpp gui/Selections.hpp square.cpp square.hpp tile_sizes.hpp save_image_pbo.cpp save_image_pbo.hpp settings_backup.hpp map_group.cpp map_group.hpp map_operation.cpp map_operation.hpp open_file_explorer.cpp open_file_explorer.hpp range_holder.cpp range_holder.hpp)
 #set_property(TARGET ${PROJECT_NAME}_SFML PROPERTY CXX_STANDARD 20)
 #find_package(ImGui-SFML REQUIRED)
 find_package(tomlplusplus REQUIRED)
