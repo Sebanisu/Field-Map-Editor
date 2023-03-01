@@ -312,7 +312,7 @@ void save_modified_map(
                                 {
                                      append(tile_const);
                                 }
-                                return;
+                                continue;
                            }
                            append(tile);
                            // write from tiles.
