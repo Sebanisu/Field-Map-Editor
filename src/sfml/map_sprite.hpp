@@ -397,54 +397,7 @@ struct map_sprite final
 
      auto get_conflicting_palettes() const
      {
-          // todo rewrite this.
           return m_map_group.maps.back().visit_tiles([this](const auto &tiles) {
-               //        using tileT =
-               //          std::remove_cvref_t<typename
-               //          std::remove_cvref_t<decltype(tiles)>::value_type>;
-
-               //          auto map_xy_palette = generate_map(
-               //            tiles,
-               //            [](const auto &tile) { return std::make_tuple(tile.source_x() / tile.width(), tile.source_y() / tile.height());
-               //            },
-               //            [](const auto &tile) { return tile.palette_id(); },
-               //            [&texture_page](const auto &tile) { return std::cmp_equal(texture_page, tile.texture_id()); });
-               //          std::vector<uint8_t>     conflict_palettes{};
-               //          std::vector<std::string> conflict_xy{};
-               //          for (auto &kvp : map_xy_palette)
-               //          {
-               //               // const auto& xy = kvp.first;
-               //               std::vector<std::uint8_t> &palette_vector = kvp.second;
-               //               std::ranges::sort(palette_vector);
-               //               auto [first, last] = std::ranges::unique(palette_vector);
-               //               palette_vector.erase(first, last);
-               //               if (palette_vector.size() <= 1U)
-               //               {
-               //                    // map_xy_palette.erase(xy);
-               //               }
-               //               else
-               //               {
-               //                    conflict_xy.emplace_back(fmt::format("({},{})", std::get<0>(kvp.first), std::get<1>(kvp.first)));
-               //                    conflict_palettes.insert(conflict_palettes.end(), palette_vector.begin(), palette_vector.end());
-               //               }
-               //          }
-
-               //          if (!conflict_xy.empty())
-               //          {
-               //               spdlog::info("Conflicting Palettes:");
-               //               for (const auto &cxy : conflict_xy)
-               //               {
-               //                    spdlog::info("conflict xy: {}", cxy);
-               //               }
-               //               std::ranges::sort(conflict_palettes);
-               //               auto [first, last] = std::ranges::unique(conflict_palettes);
-               //               conflict_palettes.erase(first, last);
-               //               for (auto p : conflict_palettes)
-               //               {
-               //                    spdlog::info("conflict palette: {}", p);
-               //               }
-               //          }
-               //          return conflict_palettes;
                return find_conflicting_tiles(tiles);
           });
      }
