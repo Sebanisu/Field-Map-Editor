@@ -69,7 +69,7 @@ struct map_sprite final
      Map                                           m_imported_tile_map_front       = {};
      all_unique_values_and_strings                 m_all_unique_values_and_strings = {};
      open_viii::graphics::Rectangle<std::uint32_t> m_canvas                        = {};
-     SharedTextures                                m_texture                       = {}; 
+     SharedTextures                                m_texture                       = {};
      std::shared_ptr<sf::RenderTexture>            m_render_texture                = {};
      std::shared_ptr<sf::RenderTexture>            m_drag_sprite_texture           = {};
      grid                                          m_grid                          = {};
@@ -157,10 +157,9 @@ struct map_sprite final
      static bool                                        save_png_image(const sf::Image &image, const std::filesystem::path &filename);
      bool                                               draw_imported(sf::RenderTarget &target, sf::RenderStates states) const;
      static std::string                                 str_to_lower(std::string input);
-     std::size_t               row_empties(std::uint8_t tile_y, std::uint8_t texture_page, bool move_from_row = false);
-     sf::Sprite                save_intersecting(const sf::Vector2i &pixel_pos, const std::uint8_t &texture_page);
-     [[nodiscard]] std::size_t get_texture_pos(BPPT bpp, std::uint8_t palette, std::uint8_t texture_page) const;
-     void                      update_render_texture(const sf::Texture *p_texture, Map map, const tile_sizes tile_size);
+     sf::Sprite                                         save_intersecting(const sf::Vector2i &pixel_pos, const std::uint8_t &texture_page);
+     [[nodiscard]] std::size_t                          get_texture_pos(BPPT bpp, std::uint8_t palette, std::uint8_t texture_page) const;
+     void        update_render_texture(const sf::Texture *p_texture, Map map, const tile_sizes tile_size);
      void        update_position(const sf::Vector2i &pixel_pos, const uint8_t &texture_page, const sf::Vector2i &down_pixel_pos);
 
      static void gen_pupu_textures(

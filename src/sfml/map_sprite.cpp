@@ -341,31 +341,6 @@ void map_sprite::flatten_palette()
      update_render_texture();
 }
 
-std::size_t map_sprite::row_empties(std::uint8_t tile_y, std::uint8_t texture_page, const bool move_from_row)
-{
-     return m_map_group.maps.const_back().visit_tiles([&tile_y, &texture_page, &move_from_row](const auto &tiles) -> std::size_t {
-          std::vector<std::pair<std::uint8_t, std::int8_t>> values = {};
-          auto                                              filtered_range =
-            tiles | std::views::filter([&tile_y, &texture_page](const auto &tile) -> bool {
-                 return std::cmp_equal((tile.source_y() / TILE_SIZE), tile_y) && std::cmp_equal(texture_page, tile.texture_id());
-            });
-          std::transform(
-            std::ranges::begin(filtered_range), std::ranges::end(filtered_range), std::back_inserter(values), [](const auto &tile) {
-                 return std::make_pair(
-                   static_cast<std::uint8_t>(1U << (tile.depth().raw() & 3U)), static_cast<std::uint8_t>(tile.source_x() / TILE_SIZE));
-            });
-          std::ranges::sort(values);
-          const auto [first, last] = std::ranges::unique(values);
-          values.erase(first, last);
-          auto        transform_values = values | std::views::transform([](const auto &pair) -> std::size_t { return pair.first; });
-          std::size_t total            = TILE_SIZE - std::reduce(transform_values.begin(), transform_values.end(), std::size_t{});
-          if (move_from_row)
-          {
-               total += 1U;
-          }
-          return total;
-     });
-}
 void map_sprite::update_position(const sf::Vector2i &pixel_pos, const uint8_t &texture_page, const sf::Vector2i &down_pixel_pos)
 {
      if (m_saved_indices.empty() && m_saved_imported_indices.empty())
