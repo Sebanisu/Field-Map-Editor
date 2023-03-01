@@ -244,7 +244,6 @@ void save_modified_map(
      open_viii::tools::write_buffer(
        [&](std::ostream &os) {
             bool       used_imports   = false;
-            bool       wrote_end_tile = false;
             const auto append         = [&](auto tile) {
                  // shift to original offset
                  if (not_invalid(tile))
