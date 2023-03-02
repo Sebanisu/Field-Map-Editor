@@ -767,8 +767,9 @@ void map_sprite::save(const std::filesystem::path &path) const
      {
           return;
      }
-     sf::Image const task  = save_image_pbo(m_render_texture->getTexture());
-     const sf::Image image = task;
+     std::future<sf::Image> task = save_image_pbo(m_render_texture->getTexture());
+     task.wait();
+     const sf::Image image = task.get();
      if (!image.saveToFile(path.string()))
      {
           spdlog::warn("Failed to save file: {}", path.string());
@@ -1253,9 +1254,10 @@ void map_sprite::async_save(const sf::Texture &out_texture, const std::filesyste
 {
 
      // trying packaged task to, so we don't wait for files to save.
-     const auto task = [=](sf::Image image_task) -> void {
+     const auto task = [=](std::future<sf::Image> image_task) -> void {
           spdlog::info("Saving Texture, {}.", out_path.string());
-          const sf::Image image = image_task;
+          image_task.wait();
+          const sf::Image image = image_task.get();
           std::error_code error_code{};
           std::filesystem::create_directories(out_path.parent_path(), error_code);
           if (error_code)

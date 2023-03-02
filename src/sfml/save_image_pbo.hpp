@@ -6,6 +6,7 @@
 #define FIELD_MAP_EDITOR_SAVE_IMAGE_PBO_HPP
 
 #include <SFML/Graphics.hpp>
+#include <future>
 
-[[nodiscard]] sf::Image save_image_pbo(const sf::Texture &texture);
+[[nodiscard]] std::future<sf::Image> save_image_pbo(const sf::Texture &texture);
 #endif// FIELD_MAP_EDITOR_SAVE_IMAGE_PBO_HPP
