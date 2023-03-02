@@ -75,6 +75,7 @@ class [[nodiscard]] Framebuffer
                spdlog::warn("Framebuffer is incomplete (status = {})", status);
                // Handle the error here, e.g. by logging an error message or throwing an exception
           }
+
           // copy the data from the original texture to the new texture// Set up the blit parameters
           glBlitFramebuffer(
             0,
@@ -176,6 +177,7 @@ class [[nodiscard]] Framebuffer
 };
 std::future<sf::Image> save_image_pbo(const sf::Texture &texture)
 {
+     spdlog::info("starting save_image_pbo: {}", texture.getNativeHandle());
      const auto texture_size = texture.getSize();
      const auto backup_fbo   = backup_frame_buffer();
      const auto buffer_size  = GLsizeiptr{ texture.getSize().x } * GLsizeiptr{ texture.getSize().y } * 4;
@@ -186,7 +188,7 @@ std::future<sf::Image> save_image_pbo(const sf::Texture &texture)
 
      auto fbo = Framebuffer(texture);
      // Issue a request to the GPU to copy the texture to the PBO
-     glReadBuffer(GL_COLOR_ATTACHMENT0);
+     //glReadBuffer(GL_FRONT);
      // glNamedFramebufferReadBuffer(fbo, GL_FRONT);
      glReadPixels(
        0, 0, static_cast<GLsizei>(texture.getSize().x), static_cast<GLsizei>(texture.getSize().y), GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
@@ -210,6 +212,7 @@ std::future<sf::Image> save_image_pbo(const sf::Texture &texture)
             glDeleteBuffers(1, &pbo_id);
             sf::Image image;
             image.create(texture_size.x, texture_size.y, pixels.get());
+            image.flipVertically();
 
             return image;
        },
