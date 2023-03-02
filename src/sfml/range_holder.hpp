@@ -33,7 +33,7 @@ class range_holder
      {
           return *++pos;
      }
-     const value_t &operator++(int) const
+     value_t operator++(int) const
      {
           return *pos++;
      }
