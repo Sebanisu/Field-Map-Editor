@@ -1261,7 +1261,6 @@ void map_sprite::save_pupu_textures(const std::filesystem::path &path)
 
      // trying packaged task to, so we don't wait for files to save.
      const auto task = [=](std::future<sf::Image> image_task) -> void {
-          spdlog::info("Saving Texture, {}.", out_path.string());
           image_task.wait();
           const sf::Image image = image_task.get();
           std::error_code error_code{};
