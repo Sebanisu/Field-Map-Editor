@@ -367,7 +367,7 @@ void fme::gui_batch::save_output(map_sprite current_map_sprite) const
           }
           else if ((static_cast<uint32_t>(m_transformation_type) & static_cast<uint32_t>(batch_operation_transformation::swizzle)) != 0)
           {
-               current_map_sprite.gen_new_textures(selected_path);
+               //current_map_sprite.gen_new_textures(selected_path);
           }
           const std::filesystem::path map_path = selected_path / current_map_sprite.map_filename();
           current_map_sprite.save_modified_map(map_path);

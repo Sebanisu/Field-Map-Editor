@@ -1093,11 +1093,6 @@ bool map_sprite::check_if_one_palette(const std::uint8_t &texture_page) const
 }
 void map_sprite::save_new_textures(const std::filesystem::path &path)
 {
-     gen_new_textures(path);
-}
-
-void map_sprite::gen_new_textures(const std::filesystem::path path)
-{
      // assert(std::filesystem::path.is_directory(path));
      const std::string                 field_name                       = { get_base_name() };
      static constexpr std::string_view pattern_texture_page             = { "{}_{}.png" };
@@ -1132,9 +1127,11 @@ void map_sprite::gen_new_textures(const std::filesystem::path path)
      {
           return;
      }
-     using map_type                          = std::remove_cvref_t<decltype(get_conflicting_palettes())>;
-     using mapped_type                       = typename map_type::mapped_type;
-     const map_type conflicting_palettes_map = get_conflicting_palettes();
+     using map_type                                           = std::remove_cvref_t<decltype(get_conflicting_palettes())>;
+     using mapped_type                                        = typename map_type::mapped_type;
+     const map_type                  conflicting_palettes_map = get_conflicting_palettes();
+     std::vector<std::future<void>> futures{};
+     futures.reserve(13);
      for (const auto &texture_page : unique_texture_page_ids)
      {
           settings.filters.value().texture_page_id.update(texture_page).enable();
@@ -1165,7 +1162,7 @@ void map_sprite::gen_new_textures(const std::filesystem::path path)
                          auto out_texture = save_texture(height, height);
                          if (out_texture)
                          {
-                              async_save(out_texture->getTexture(), out_path);
+                              futures.push_back(async_save(out_texture->getTexture(), out_path));
                          }
                     }
                }
@@ -1180,10 +1177,20 @@ void map_sprite::gen_new_textures(const std::filesystem::path path)
           auto out_texture = save_texture(height, height);
           if (out_texture)
           {
-               async_save(out_texture->getTexture(), out_path);
+               futures.push_back(async_save(out_texture->getTexture(), out_path));
           }
      }
+     for (auto &future : futures)
+     {
+          if (!future.valid())
+          {
+               continue;
+          }
+          future.wait();
+          future.get();
+     }
 }
+
 std::string map_sprite::get_base_name() const
 {
      if (m_map_group.field)
@@ -1242,12 +1249,14 @@ void map_sprite::save_pupu_textures(const std::filesystem::path &path)
      for (auto &future : futures)
      {
           if (!future.valid())
+          {
                continue;
+          }
           future.wait();
           future.get();
      }
 }
-std::future<void> map_sprite::async_save(const sf::Texture &out_texture, const std::filesystem::path &out_path)
+[[nodiscard]] std::future<void> map_sprite::async_save(const sf::Texture &out_texture, const std::filesystem::path &out_path)
 {
 
      // trying packaged task to, so we don't wait for files to save.

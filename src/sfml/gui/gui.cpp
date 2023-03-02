@@ -33,7 +33,7 @@ static void DebugCallback(
                break ;
           case GL_DEBUG_SEVERITY_NOTIFICATION:
           default:
-               spdlog::info("OpenGL message: {}", message);
+               spdlog::debug("OpenGL message: {}", message);
                break;
      }
 }

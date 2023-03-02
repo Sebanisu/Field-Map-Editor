@@ -142,7 +142,6 @@ struct map_sprite final
      SharedTextures                                     load_textures_internal();
      static colors_type                                 get_colors(const Mim &mim, BPPT bpp, uint8_t palette);
      void                                               save_new_textures(const std::filesystem::path &path);
-     void                                               gen_new_textures(const std::filesystem::path path);
      void                                               save_pupu_textures(const std::filesystem::path &path);
      void                                               load_map(const std::filesystem::path &dest_path);
      void                                               resize_render_texture();
