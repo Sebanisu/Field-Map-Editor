@@ -1127,11 +1127,13 @@ void map_sprite::save_new_textures(const std::filesystem::path &path)
      {
           return;
      }
-     using map_type                                           = std::remove_cvref_t<decltype(get_conflicting_palettes())>;
-     using mapped_type                                        = typename map_type::mapped_type;
-     const map_type                  conflicting_palettes_map = get_conflicting_palettes();
+     using map_type                                          = std::remove_cvref_t<decltype(get_conflicting_palettes())>;
+     using mapped_type                                       = typename map_type::mapped_type;
+     const map_type                 conflicting_palettes_map = get_conflicting_palettes();
      std::vector<std::future<void>> futures{};
      futures.reserve(13);
+     sf::RenderTexture out_texture{};
+     out_texture.create(height, height);
      for (const auto &texture_page : unique_texture_page_ids)
      {
           settings.filters.value().texture_page_id.update(texture_page).enable();
@@ -1150,6 +1152,10 @@ void map_sprite::save_new_textures(const std::filesystem::path &path)
                     {
                          settings.filters.value().palette.update(palette).enable();
                          settings.filters.value().bpp.update(bpp).enable();
+                         if (!save_texture(&out_texture))
+                         {
+                              continue;
+                         }
                          auto out_path = [&]() -> std::filesystem::path {
                               if (m_map_group.opt_coo)
                               {
@@ -1158,27 +1164,21 @@ void map_sprite::save_new_textures(const std::filesystem::path &path)
                               }
                               return save_path(pattern_texture_page_palette, path, field_name, texture_page, palette);
                          }();
-
-                         auto out_texture = save_texture(height, height);
-                         if (out_texture)
-                         {
-                              futures.push_back(async_save(out_texture->getTexture(), out_path));
-                         }
+                         futures.push_back(async_save(out_texture.getTexture(), out_path));
                     }
                }
           }
 
           settings.filters.value().palette.disable();
           settings.filters.value().bpp.disable();
-          auto out_path    = m_map_group.opt_coo
-                               ? save_path_coo(pattern_coo_texture_page, path, field_name, texture_page, *m_map_group.opt_coo)
-                               : save_path(pattern_texture_page, path, field_name, texture_page);
-
-          auto out_texture = save_texture(height, height);
-          if (out_texture)
+          if (!save_texture(&out_texture))
           {
-               futures.push_back(async_save(out_texture->getTexture(), out_path));
+               continue;
           }
+          auto out_path = m_map_group.opt_coo
+                            ? save_path_coo(pattern_coo_texture_page, path, field_name, texture_page, *m_map_group.opt_coo)
+                            : save_path(pattern_texture_page, path, field_name, texture_page);
+          futures.push_back(async_save(out_texture.getTexture(), out_path));
      }
      for (auto &future : futures)
      {
@@ -1231,20 +1231,20 @@ void map_sprite::save_pupu_textures(const std::filesystem::path &path)
 
      std::vector<std::future<void>>    futures{};
      futures.reserve(13);
+
+     sf::RenderTexture out_texture{};
+     iRectangle const  canvas = m_map_group.maps.const_back().canvas() * static_cast<int>(m_scale);
+     out_texture.create(static_cast<std::uint32_t>(canvas.width()), static_cast<std::uint32_t>(canvas.height()));
      for (const PupuID &pupu : unique_pupu_ids)
      {
           settings.filters.value().pupu.update(pupu).enable();
-          iRectangle const                   canvas = m_map_group.maps.const_back().canvas() * static_cast<int>(m_scale);
-          std::shared_ptr<sf::RenderTexture> out_texture =
-            save_texture(static_cast<std::uint32_t>(canvas.width()), static_cast<std::uint32_t>(canvas.height()));
-          settings.filters.value().pupu.update(pupu).enable();
+          if (!save_texture(&out_texture))
+          {
+               continue;
+          }
           std::filesystem::path const out_path =
             coo ? save_path_coo(pattern_coo_pupu, path, field_name, pupu, *coo) : save_path(pattern_pupu, path, field_name, pupu);
-          if (out_texture)
-          {
-               out_texture->display();
-               futures.push_back(async_save(out_texture->getTexture(), out_path));
-          }
+          futures.push_back(async_save(out_texture.getTexture(), out_path));
      }
      for (auto &future : futures)
      {
@@ -1389,10 +1389,12 @@ std::filesystem::path map_sprite::save_path(
      return path / fmt::vformat(fmt::string_view(pattern), fmt::make_format_args(field_name, pupu));
 }
 
-std::shared_ptr<sf::RenderTexture> map_sprite::save_texture(std::uint32_t width, std::uint32_t height) const
+bool map_sprite::save_texture(sf::RenderTexture *texture) const
 {
-     auto texture = std::make_shared<sf::RenderTexture>();
-     texture->create(width, height);
+     if (!texture)
+     {
+          return false;
+     }
      if (local_draw(*texture, sf::RenderStates::Default))
      {
           (void)draw_imported(*texture, sf::RenderStates::Default);
@@ -1400,9 +1402,9 @@ std::shared_ptr<sf::RenderTexture> map_sprite::save_texture(std::uint32_t width,
           texture->setSmooth(false);
           texture->setRepeated(false);
           texture->generateMipmap();
-          return texture;
+          return true;
      }
-     return nullptr;
+     return false;
 }
 void map_sprite::load_map(const std::filesystem::path &src_path)
 {

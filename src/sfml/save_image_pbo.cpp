@@ -177,7 +177,6 @@ class [[nodiscard]] Framebuffer
 };
 std::future<sf::Image> save_image_pbo(const sf::Texture &texture)
 {
-     spdlog::info("starting save_image_pbo: {}", texture.getNativeHandle());
      const auto texture_size = texture.getSize();
      const auto backup_fbo   = backup_frame_buffer();
      const auto buffer_size  = GLsizeiptr{ texture.getSize().x } * GLsizeiptr{ texture.getSize().y } * 4;
@@ -188,7 +187,7 @@ std::future<sf::Image> save_image_pbo(const sf::Texture &texture)
 
      auto fbo = Framebuffer(texture);
      // Issue a request to the GPU to copy the texture to the PBO
-     //glReadBuffer(GL_FRONT);
+     // glReadBuffer(GL_FRONT);
      // glNamedFramebufferReadBuffer(fbo, GL_FRONT);
      glReadPixels(
        0, 0, static_cast<GLsizei>(texture.getSize().x), static_cast<GLsizei>(texture.getSize().y), GL_RGBA, GL_UNSIGNED_BYTE, nullptr);

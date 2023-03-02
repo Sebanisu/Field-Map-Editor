@@ -86,7 +86,7 @@ struct map_sprite final
      [[nodiscard]] const sf::Texture                   *get_texture(const ::PupuID &pupu) const;
      [[nodiscard]] sf::Vector2u                         get_tile_texture_size(const sf::Texture *texture) const;
      sf::Vector2u                                       get_tile_draw_size() const;
-     std::shared_ptr<sf::RenderTexture>                 save_texture(std::uint32_t width, std::uint32_t height) const;
+     [[nodiscard]] bool                                 save_texture(sf::RenderTexture *texture) const;
      uint32_t                                           get_max_texture_height() const;
      [[nodiscard]] bool                                 local_draw(sf::RenderTarget &target, sf::RenderStates states) const;
      std::string                                        get_base_name() const;
@@ -158,8 +158,8 @@ struct map_sprite final
      static std::string                                 str_to_lower(std::string input);
      sf::Sprite                                         save_intersecting(const sf::Vector2i &pixel_pos, const std::uint8_t &texture_page);
      [[nodiscard]] std::size_t                          get_texture_pos(BPPT bpp, std::uint8_t palette, std::uint8_t texture_page) const;
-     void        update_render_texture(const sf::Texture *p_texture, Map map, const tile_sizes tile_size);
-     void        update_position(const sf::Vector2i &pixel_pos, const uint8_t &texture_page, const sf::Vector2i &down_pixel_pos);
+     void update_render_texture(const sf::Texture *p_texture, Map map, const tile_sizes tile_size);
+     void update_position(const sf::Vector2i &pixel_pos, const uint8_t &texture_page, const sf::Vector2i &down_pixel_pos);
 
 
      static std::filesystem::path save_path_coo(
