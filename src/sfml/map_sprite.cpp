@@ -1208,49 +1208,46 @@ void map_sprite::save_pupu_textures(const std::filesystem::path &path)
      {
           settings.scale = 1U;
      }
-     iRectangle const                   canvas = m_map_group.maps.const_back().canvas() * static_cast<int>(m_scale);
-     std::shared_ptr<sf::RenderTexture> out_texture =
-       save_texture(static_cast<std::uint32_t>(canvas.width()), static_cast<std::uint32_t>(canvas.height()));
 
-     if (m_map_group.field)
+     if (!m_map_group.field)
      {
-          gen_pupu_textures(
-            path,
-            std::string{ str_to_lower(m_map_group.field->get_base_name()) },
-            settings,
-            m_all_unique_values_and_strings.pupu().values(),
-            m_map_group.opt_coo,
-            std::move(out_texture));
+          return;
      }
-}
 
-void map_sprite::gen_pupu_textures(
-  const std::filesystem::path        path,
-  const std::string                  field_name,
-  settings_backup                    settings,
-  const std::vector<PupuID>          unique_pupu_ids,
-  std::optional<open_viii::LangT>    coo,
-  std::shared_ptr<sf::RenderTexture> out_texture)
-{
-     // assert(std::filesystem::path.is_directory(path));
+     const std::string                field_name      = std::string{ str_to_lower(m_map_group.field->get_base_name()) };
+     const std::vector<PupuID>       &unique_pupu_ids = m_all_unique_values_and_strings.pupu().values();
+     std::optional<open_viii::LangT> &coo             = m_map_group.opt_coo;
+
+     assert(safedir(path).is_dir());
      static constexpr std::string_view pattern_pupu     = { "{}_{}.png" };
      static constexpr std::string_view pattern_coo_pupu = { "{}_{}_{}.png" };
 
-
+     std::vector<std::future<void>>    futures{};
+     futures.reserve(13);
      for (const PupuID &pupu : unique_pupu_ids)
      {
           settings.filters.value().pupu.update(pupu).enable();
-          std::filesystem::path out_path =
+          iRectangle const                   canvas = m_map_group.maps.const_back().canvas() * static_cast<int>(m_scale);
+          std::shared_ptr<sf::RenderTexture> out_texture =
+            save_texture(static_cast<std::uint32_t>(canvas.width()), static_cast<std::uint32_t>(canvas.height()));
+          settings.filters.value().pupu.update(pupu).enable();
+          std::filesystem::path const out_path =
             coo ? save_path_coo(pattern_coo_pupu, path, field_name, pupu, *coo) : save_path(pattern_pupu, path, field_name, pupu);
-
-
           if (out_texture)
           {
-               async_save(out_texture->getTexture(), out_path);
+               out_texture->display();
+               futures.push_back(async_save(out_texture->getTexture(), out_path));
           }
      }
+     for (auto &future : futures)
+     {
+          if (!future.valid())
+               continue;
+          future.wait();
+          future.get();
+     }
 }
-void map_sprite::async_save(const sf::Texture &out_texture, const std::filesystem::path &out_path)
+std::future<void> map_sprite::async_save(const sf::Texture &out_texture, const std::filesystem::path &out_path)
 {
 
      // trying packaged task to, so we don't wait for files to save.
@@ -1295,7 +1292,7 @@ void map_sprite::async_save(const sf::Texture &out_texture, const std::filesyste
                }
           }
      };
-     task(save_image_pbo(out_texture));
+     return std::async(std::launch::deferred, task, save_image_pbo(out_texture));
 }
 bool map_sprite::save_png_image(const sf::Image &image, const std::filesystem::path &path)
 {

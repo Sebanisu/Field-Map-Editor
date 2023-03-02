@@ -153,7 +153,7 @@ struct map_sprite final
      void                                               find_deswizzle_path(SharedTextures &ret);
      static void                                        load_mim_textures(Mim mim, sf::Texture *texture, BPPT bppt, uint8_t pal);
      void                                               load_mim_textures(SharedTextures &ret, BPPT bpp, uint8_t palette);
-     static void                                        async_save(const sf::Texture &out_texture, const std::filesystem::path &out_path);
+     static std::future<void>                           async_save(const sf::Texture &out_texture, const std::filesystem::path &out_path);
      static bool                                        save_png_image(const sf::Image &image, const std::filesystem::path &filename);
      bool                                               draw_imported(sf::RenderTarget &target, sf::RenderStates states) const;
      static std::string                                 str_to_lower(std::string input);
@@ -162,13 +162,7 @@ struct map_sprite final
      void        update_render_texture(const sf::Texture *p_texture, Map map, const tile_sizes tile_size);
      void        update_position(const sf::Vector2i &pixel_pos, const uint8_t &texture_page, const sf::Vector2i &down_pixel_pos);
 
-     static void gen_pupu_textures(
-       const std::filesystem::path        path,
-       const std::string                  field_name,
-       settings_backup                    settings,
-       const std::vector<PupuID>          unique_pupu_ids,
-       std::optional<open_viii::LangT>    coo,
-       std::shared_ptr<sf::RenderTexture> out_texture);
+
      static std::filesystem::path save_path_coo(
        fmt::format_string<std::string_view, std::string_view, uint8_t> pattern,
        const std::filesystem::path                                    &path,
@@ -397,9 +391,7 @@ struct map_sprite final
 
      auto get_conflicting_palettes() const
      {
-          return m_map_group.maps.back().visit_tiles([this](const auto &tiles) {
-               return find_conflicting_tiles(tiles);
-          });
+          return m_map_group.maps.back().visit_tiles([this](const auto &tiles) { return find_conflicting_tiles(tiles); });
      }
      ::upscales get_upscales()
      {
