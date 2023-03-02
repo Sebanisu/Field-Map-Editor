@@ -1129,6 +1129,7 @@ void gui::file_browser_locate_ff8()
                // todo modify these two functions :P to use the imported image.
                m_map_sprite.save_new_textures(selected_path);// done.
                m_map_sprite.save_modified_map(selected_path / m_map_sprite.map_filename());// done.
+               open_directory(selected_path);
           }
           else if (m_modified_directory_map == map_directory_mode::load_swizzle_textures)
           {
@@ -1159,6 +1160,7 @@ void gui::file_browser_locate_ff8()
                std::filesystem::create_directories(selected_path);
                m_map_sprite.save_pupu_textures(selected_path);
                m_map_sprite.save_modified_map(selected_path / m_map_sprite.map_filename());
+               open_directory(selected_path);
           }
           else if (m_modified_directory_map == map_directory_mode::load_deswizzle_textures)
           {
