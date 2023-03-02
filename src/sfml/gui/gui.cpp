@@ -10,6 +10,33 @@
 #include <open_viii/paths/Paths.hpp>
 #include <SFML/Window/Mouse.hpp>
 #include <utility>
+static void DebugCallback(
+  [[maybe_unused]] GLenum      source,
+  [[maybe_unused]] GLenum      type,
+  [[maybe_unused]] GLuint      id,
+  GLenum                       severity,
+  [[maybe_unused]] GLsizei     length,
+  const GLchar                *message,
+  [[maybe_unused]] const void *userParam)
+{
+     switch (severity)
+     {
+          case GL_DEBUG_SEVERITY_HIGH:
+               spdlog::error("OpenGL error: {}", message);
+               throw;
+               break;
+          case GL_DEBUG_SEVERITY_MEDIUM:
+               spdlog::warn("OpenGL error: {}", message);
+               break;
+          case GL_DEBUG_SEVERITY_LOW:
+               spdlog::info("OpenGL message: {}", message);
+               break ;
+          case GL_DEBUG_SEVERITY_NOTIFICATION:
+          default:
+               spdlog::info("OpenGL message: {}", message);
+               break;
+     }
+}
 using namespace open_viii::graphics::background;
 using namespace open_viii::graphics;
 using namespace open_viii::graphics::literals;
@@ -327,12 +354,12 @@ void gui::loop()
      file_browser_locate_ff8();
      file_browser_save_texture();
      render_dockspace();
-     popup_batch_deswizzle();
-     popup_batch_reswizzle();
+     //     popup_batch_deswizzle();
+     //     popup_batch_reswizzle();
      control_panel_window();
-     batch_ops_ask_menu();
+     //     batch_ops_ask_menu();
      begin_batch_embed_map_warning_window();
-     popup_batch_embed();
+     //     popup_batch_embed();
      import_image_window();
      // Begin non imgui drawing.
      on_click_not_imgui();
@@ -403,96 +430,96 @@ void gui::popup_batch_common_filter_start(
 }
 
 
-void gui::popup_batch_deswizzle()
-{
-     popup_batch_common(
-       m_batch_deswizzle,
-       [](ff_8::filters &filters) -> ff_8::filter_old<std::filesystem::path> & { return filters.upscale; },
-       [this](ff_8::filter_old<std::filesystem::path> &filter) {
-            // do I need to do generate_upscale_paths(m_field->get_base_name(),
-            // get_coo()); here?
-            if (combo_upscale_path(filter))//, ""
-            {
-            }
-
-            return ImGui::Button(gui_labels::start.data());
-       },
-       [&](const auto &selected_path, auto &map) {
-            map.save_pupu_textures(selected_path);
-            const std::filesystem::path map_path = selected_path / map.map_filename();
-            map.save_modified_map(map_path);
-            format_imgui_text(
-              "{} {} {}: {}", gui_labels::saving, open_viii::graphics::background::Map::EXT, gui_labels::file, map_path.string());
-       });
-}
-void gui::popup_batch_reswizzle()
-{
-     popup_batch_common(
-       m_batch_reswizzle,
-       [](ff_8::filters &filters) -> ff_8::filter_old<std::filesystem::path> & { return filters.deswizzle; },
-       [](ff_8::filter_old<compact_type> &compact, bool &flatten_bpp, bool &flatten_palette) {
-            combo_compact_type(compact);
-            ImGui::Separator();
-            format_imgui_text("Flatten: ");
-            if (compact.enabled() && compact.value() == compact_type::map_order)
-            {
-                 flatten_bpp = false;
-                 ImGui::BeginDisabled();
-                 bool ignore = true;
-                 ImGui::Checkbox("BPP", &ignore);
-                 ImGui::EndDisabled();
-            }
-            else
-            {
-                 ImGui::Checkbox("BPP", &flatten_bpp);
-            }
-            ImGui::SameLine();
-            ImGui::Checkbox("Palette", &flatten_palette);
-            return ImGui::Button("Start");
-       },
-       [&](
-         const auto                           &selected_path,
-         map_sprite                           &map,
-         const ff_8::filter_old<compact_type> &compact,
-         const bool                           &flatten_bpp,
-         const bool                           &flatten_palette) {
-            const auto compact_function = [&] {
-                 if (compact.enabled())
-                 {
-                      if (compact.value() == compact_type::rows)
-                      {
-                           map.compact_rows();
-                      }
-                      if (compact.value() == compact_type::all)
-                      {
-                           map.compact_all();
-                      }
-                      if (compact.value() == compact_type::map_order)
-                      {
-                           map.compact_map_order();
-                      }
-                 }
-            };
-            compact_function();
-            if (flatten_bpp)
-            {
-                 map.flatten_bpp();
-                 compact_function();
-            }
-            if (flatten_palette)
-            {
-                 map.flatten_palette();
-                 if (compact.value() != compact_type::map_order)
-                 {
-                      compact_function();
-                 }
-            }
-            const std::filesystem::path map_path = selected_path / map.map_filename();
-            map.save_new_textures(selected_path);
-            map.save_modified_map(map_path);
-            format_imgui_text("Saving Map file: {}", map_path.string());
-       });
-}
+// void gui::popup_batch_deswizzle()
+//{
+//      popup_batch_common(
+//        m_batch_deswizzle,
+//        [](ff_8::filters &filters) -> ff_8::filter_old<std::filesystem::path> & { return filters.upscale; },
+//        [this](ff_8::filter_old<std::filesystem::path> &filter) {
+//             // do I need to do generate_upscale_paths(m_field->get_base_name(),
+//             // get_coo()); here?
+//             if (combo_upscale_path(filter))//, ""
+//             {
+//             }
+//
+//             return ImGui::Button(gui_labels::start.data());
+//        },
+//        [&](const auto &selected_path, auto &map) {
+//             map.save_pupu_textures(selected_path);
+//             const std::filesystem::path map_path = selected_path / map.map_filename();
+//             map.save_modified_map(map_path);
+//             format_imgui_text(
+//               "{} {} {}: {}", gui_labels::saving, open_viii::graphics::background::Map::EXT, gui_labels::file, map_path.string());
+//        });
+// }
+// void gui::popup_batch_reswizzle()
+//{
+//      popup_batch_common(
+//        m_batch_reswizzle,
+//        [](ff_8::filters &filters) -> ff_8::filter_old<std::filesystem::path> & { return filters.deswizzle; },
+//        [](ff_8::filter_old<compact_type> &compact, bool &flatten_bpp, bool &flatten_palette) {
+//             combo_compact_type(compact);
+//             ImGui::Separator();
+//             format_imgui_text("Flatten: ");
+//             if (compact.enabled() && compact.value() == compact_type::map_order)
+//             {
+//                  flatten_bpp = false;
+//                  ImGui::BeginDisabled();
+//                  bool ignore = true;
+//                  ImGui::Checkbox("BPP", &ignore);
+//                  ImGui::EndDisabled();
+//             }
+//             else
+//             {
+//                  ImGui::Checkbox("BPP", &flatten_bpp);
+//             }
+//             ImGui::SameLine();
+//             ImGui::Checkbox("Palette", &flatten_palette);
+//             return ImGui::Button("Start");
+//        },
+//        [&](
+//          const auto                           &selected_path,
+//          map_sprite                           &map,
+//          const ff_8::filter_old<compact_type> &compact,
+//          const bool                           &flatten_bpp,
+//          const bool                           &flatten_palette) {
+//             const auto compact_function = [&] {
+//                  if (compact.enabled())
+//                  {
+//                       if (compact.value() == compact_type::rows)
+//                       {
+//                            map.compact_rows();
+//                       }
+//                       if (compact.value() == compact_type::all)
+//                       {
+//                            map.compact_all();
+//                       }
+//                       if (compact.value() == compact_type::map_order)
+//                       {
+//                            map.compact_map_order();
+//                       }
+//                  }
+//             };
+//             compact_function();
+//             if (flatten_bpp)
+//             {
+//                  map.flatten_bpp();
+//                  compact_function();
+//             }
+//             if (flatten_palette)
+//             {
+//                  map.flatten_palette();
+//                  if (compact.value() != compact_type::map_order)
+//                  {
+//                       compact_function();
+//                  }
+//             }
+//             const std::filesystem::path map_path = selected_path / map.map_filename();
+//             map.save_new_textures(selected_path);
+//             map.save_modified_map(map_path);
+//             format_imgui_text("Saving Map file: {}", map_path.string());
+//        });
+// }
 
 void gui::on_click_not_imgui()
 {
@@ -1149,27 +1176,24 @@ void gui::file_browser_locate_ff8()
                }
                m_map_sprite.update_render_texture(true);
           }
-          else if (m_modified_directory_map == map_directory_mode::batch_save_deswizzle_textures)
-          {
-               Configuration config{};
-               config->insert_or_assign("deswizzle_path", m_directory_browser.GetPwd().string());
-               config.save();
-               m_batch_deswizzle.enable(selected_path);
-          }
-          else if (m_modified_directory_map == map_directory_mode::batch_embed_map_files)
-          {
-               Configuration config{};
-               config->insert_or_assign("embed_source_path", m_directory_browser.GetPwd().string());
-               config.save();
-               m_batch_embed.enable(selected_path);
-          }
-          else if (m_modified_directory_map == map_directory_mode::batch_save_swizzle_textures)
-          {
-               Configuration config{};
-               config->insert_or_assign("reswizzle_path", m_directory_browser.GetPwd().string());
-               config.save();
-               m_batch_reswizzle.enable(std::move(reswizzle_src), std::move(selected_path));
-          }
+          //          else if (m_modified_directory_map == map_directory_mode::batch_save_deswizzle_textures)
+          //          {
+          //               Configuration config{};
+          //               config->insert_or_assign("deswizzle_path", m_directory_browser.GetPwd().string());
+          //               config.save();
+          //          }
+          //          else if (m_modified_directory_map == map_directory_mode::batch_embed_map_files)
+          //          {
+          //               Configuration config{};
+          //               config->insert_or_assign("embed_source_path", m_directory_browser.GetPwd().string());
+          //               config.save();
+          //          }
+          //          else if (m_modified_directory_map == map_directory_mode::batch_save_swizzle_textures)
+          //          {
+          //               Configuration config{};
+          //               config->insert_or_assign("reswizzle_path", m_directory_browser.GetPwd().string());
+          //               config.save();
+          //          }
           else if (m_modified_directory_map == map_directory_mode::batch_load_deswizzle_textures)
           {
                Configuration config{};
@@ -1740,10 +1764,10 @@ void gui::update_path()
 {
      m_archives_group = m_archives_group.with_path(m_selections.path);
      update_field();
-     if (m_batch_embed4.enabled())
-     {
-          m_batch_embed4.enable(m_selections.path, m_batch_embed4.start_time());
-     }
+     //     if (m_batch_embed4.enabled())
+     //     {
+     //          m_batch_embed4.enable(m_selections.path, m_batch_embed4.start_time());
+     //     }
 }
 mim_sprite gui::get_mim_sprite() const
 {
@@ -1821,6 +1845,12 @@ gui::gui()
           spdlog::error("{}", glewGetErrorString(err));
           std::terminate();
      }
+     // Enable debug output
+     glEnable(GL_DEBUG_OUTPUT);
+     glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
+
+     // Set the debug callback function
+     glDebugMessageCallback(DebugCallback, nullptr);
      sort_paths();
      init_and_get_style();
 }
@@ -2218,167 +2248,167 @@ std::vector<std::filesystem::path>
      return tmp;
 }
 
-void gui::popup_batch_embed()
-{
-     if (m_batch_embed(m_archives_group.mapdata()))
-     {
-          m_batch_embed2.enable({}, m_batch_embed.start_time());
-     }
-     else if (m_batch_embed2(std::array{ "fields" }))
-     {
-          if (open_viii::archive::fiflfs_in_main_zzz(m_archives_group.archives()))
-          {
-               m_batch_embed3.enable({}, m_batch_embed2.start_time());
-          }
-          else
-          {
-               m_batch_embed4.enable(m_selections.path, m_batch_embed2.start_time());
-          }
-     }
-     else if (m_batch_embed3(std::array{ "fields" }))
-     {
-          m_batch_embed4.enable(m_selections.path, m_batch_embed3.start_time());
-     }
-     else if (m_batch_embed4(std::array{ "save" }))
-     {
-          if (open_viii::archive::fiflfs_in_main_zzz(m_archives_group.archives()))
-          {
-          }
-     }
-}
-void gui::batch_ops_ask_menu() const
-{
-#if 1
-     if (m_selections.test_batch_window)
-     {
-          static gui_batch test{ m_archives_group };
-          test(&get_imgui_id());
-     }
-#else
-     using namespace std::string_view_literals;
-     if (ImGui::Begin("Batch Operations", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
-     {
-          if (ImGui::CollapsingHeader("Source", ImGuiTreeNodeFlags_DefaultOpen))
-          {
-               static int            selected_src_type = {};
-
-               static constexpr auto src_types         = std::array{ "Fields Archive"sv, "Upscales or Swizzles"sv, "Deswizzles"sv };
-               generic_combo(
-                 get_imgui_id(),
-                 "Type",
-                 []() { return std::views::iota(0, static_cast<int>(std::ranges::ssize(src_types))); },
-                 []() { return src_types; },
-                 selected_src_type);
-               static std::filesystem::path selected_src_swizzle_path   = {};
-               static std::filesystem::path selected_src_deswizzle_path = {};
-               if (selected_src_type == 0)
-               {
-                    combo_path();
-                    {
-                         const auto sg = PushPop();
-                         if (ImGui::Button("Browse"))
-                         {
-                              open_locate_ff8_filebrowser();
-                         }
-                    }
-               }
-               else if (selected_src_type == 1)
-               {
-                    if (combo_upscale_path(selected_src_swizzle_path, "", {}))
-                    {
-                    }
-                    {
-                         const auto sg = PushPop();
-                         if (ImGui::Button("Browse"))
-                         {
-                              open_swizzle_filebrowser();
-                         }
-                    }
-               }
-               else if (selected_src_type == 2)
-               {
-                    format_imgui_text("Directory: {}", selected_src_deswizzle_path);
-                    {
-                         const auto sg = PushPop();
-                         if (ImGui::Button("Browse"))
-                         {
-                              open_deswizzle_filebrowser();
-                         }
-                    }
-               }
-          }
-          static constexpr auto       task_types      = std::array{ "None"sv, "Deswizzle"sv, "Swizzle"sv };
-          static int                  task_type       = {};
-          static filter<compact_type> compact         = {};
-          static bool                 flatten_bpp     = {};
-          static bool                 flatten_palette = {};
-          if (ImGui::CollapsingHeader("Transformation", ImGuiTreeNodeFlags_DefaultOpen))
-          {
-               generic_combo(
-                 get_imgui_id(),
-                 "Task"sv,
-                 []() { return std::views::iota(0, static_cast<int>(std::ranges::ssize(task_types))); },
-                 []() { return task_types; },
-                 task_type);
-               combo_compact_type(compact);
-               format_imgui_text("Flatten: ");
-               ImGui::SameLine();
-               ImGui::Checkbox("BPP", &flatten_bpp);
-               ImGui::SameLine();
-               ImGui::Checkbox("Palette", &flatten_palette);
-               ImGui::Separator();
-          }
-          if (task_type != 0 && ImGui::CollapsingHeader("Destination", ImGuiTreeNodeFlags_DefaultOpen))
-          {
-               static std::filesystem::path selected_dst_path{};
-               format_imgui_text("Directory: {}", selected_dst_path);
-               {
-                    const auto sg = PushPop();
-                    if (ImGui::Button("Browse"))
-                    {
-                    }
-               }
-          }
-          if (ImGui::CollapsingHeader("Embed .map(s) into archives", ImGuiTreeNodeFlags_DefaultOpen))
-          {
-               static bool embed_maps   = {};
-               static bool reload_after = { true };
-               {
-                    const auto sg = PushPop();
-                    if (ImGui::Checkbox("", &embed_maps))
-                    {
-                    }
-               }
-               if (embed_maps)
-               {
-                    ImGui::SameLine();
-                    combo_path();
-                    {
-                         const auto sg = PushPop();
-                         if (ImGui::Checkbox("Reload after?", &reload_after))
-                         {
-                         }
-                    }
-               }
-          }
-          ImGui::Separator();
-          {
-               const auto sg = PushPop();
-               if (ImGui::Button("Start"))
-               {
-               }
-          }
-          ImGui::SameLine();
-          {
-               const auto sg = PushPop();
-               if (ImGui::Button("Cancel"))
-               {
-               }
-          }
-     }
-     ImGui::End();
-#endif
-}
+// void gui::popup_batch_embed()
+//{
+//      if (m_batch_embed(m_archives_group.mapdata()))
+//      {
+//           m_batch_embed2.enable({}, m_batch_embed.start_time());
+//      }
+//      else if (m_batch_embed2(std::array{ "fields" }))
+//      {
+//           if (open_viii::archive::fiflfs_in_main_zzz(m_archives_group.archives()))
+//           {
+//                m_batch_embed3.enable({}, m_batch_embed2.start_time());
+//           }
+//           else
+//           {
+//                m_batch_embed4.enable(m_selections.path, m_batch_embed2.start_time());
+//           }
+//      }
+//      else if (m_batch_embed3(std::array{ "fields" }))
+//      {
+//           m_batch_embed4.enable(m_selections.path, m_batch_embed3.start_time());
+//      }
+//      else if (m_batch_embed4(std::array{ "save" }))
+//      {
+//           if (open_viii::archive::fiflfs_in_main_zzz(m_archives_group.archives()))
+//           {
+//           }
+//      }
+// }
+// void gui::batch_ops_ask_menu() const
+//{
+// #if 1
+//      if (m_selections.test_batch_window)
+//      {
+//           static gui_batch test{ m_archives_group };
+//           test(&get_imgui_id());
+//      }
+// #else
+//      using namespace std::string_view_literals;
+//      if (ImGui::Begin("Batch Operations", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
+//      {
+//           if (ImGui::CollapsingHeader("Source", ImGuiTreeNodeFlags_DefaultOpen))
+//           {
+//                static int            selected_src_type = {};
+//
+//                static constexpr auto src_types         = std::array{ "Fields Archive"sv, "Upscales or Swizzles"sv, "Deswizzles"sv };
+//                generic_combo(
+//                  get_imgui_id(),
+//                  "Type",
+//                  []() { return std::views::iota(0, static_cast<int>(std::ranges::ssize(src_types))); },
+//                  []() { return src_types; },
+//                  selected_src_type);
+//                static std::filesystem::path selected_src_swizzle_path   = {};
+//                static std::filesystem::path selected_src_deswizzle_path = {};
+//                if (selected_src_type == 0)
+//                {
+//                     combo_path();
+//                     {
+//                          const auto sg = PushPop();
+//                          if (ImGui::Button("Browse"))
+//                          {
+//                               open_locate_ff8_filebrowser();
+//                          }
+//                     }
+//                }
+//                else if (selected_src_type == 1)
+//                {
+//                     if (combo_upscale_path(selected_src_swizzle_path, "", {}))
+//                     {
+//                     }
+//                     {
+//                          const auto sg = PushPop();
+//                          if (ImGui::Button("Browse"))
+//                          {
+//                               open_swizzle_filebrowser();
+//                          }
+//                     }
+//                }
+//                else if (selected_src_type == 2)
+//                {
+//                     format_imgui_text("Directory: {}", selected_src_deswizzle_path);
+//                     {
+//                          const auto sg = PushPop();
+//                          if (ImGui::Button("Browse"))
+//                          {
+//                               open_deswizzle_filebrowser();
+//                          }
+//                     }
+//                }
+//           }
+//           static constexpr auto       task_types      = std::array{ "None"sv, "Deswizzle"sv, "Swizzle"sv };
+//           static int                  task_type       = {};
+//           static filter<compact_type> compact         = {};
+//           static bool                 flatten_bpp     = {};
+//           static bool                 flatten_palette = {};
+//           if (ImGui::CollapsingHeader("Transformation", ImGuiTreeNodeFlags_DefaultOpen))
+//           {
+//                generic_combo(
+//                  get_imgui_id(),
+//                  "Task"sv,
+//                  []() { return std::views::iota(0, static_cast<int>(std::ranges::ssize(task_types))); },
+//                  []() { return task_types; },
+//                  task_type);
+//                combo_compact_type(compact);
+//                format_imgui_text("Flatten: ");
+//                ImGui::SameLine();
+//                ImGui::Checkbox("BPP", &flatten_bpp);
+//                ImGui::SameLine();
+//                ImGui::Checkbox("Palette", &flatten_palette);
+//                ImGui::Separator();
+//           }
+//           if (task_type != 0 && ImGui::CollapsingHeader("Destination", ImGuiTreeNodeFlags_DefaultOpen))
+//           {
+//                static std::filesystem::path selected_dst_path{};
+//                format_imgui_text("Directory: {}", selected_dst_path);
+//                {
+//                     const auto sg = PushPop();
+//                     if (ImGui::Button("Browse"))
+//                     {
+//                     }
+//                }
+//           }
+//           if (ImGui::CollapsingHeader("Embed .map(s) into archives", ImGuiTreeNodeFlags_DefaultOpen))
+//           {
+//                static bool embed_maps   = {};
+//                static bool reload_after = { true };
+//                {
+//                     const auto sg = PushPop();
+//                     if (ImGui::Checkbox("", &embed_maps))
+//                     {
+//                     }
+//                }
+//                if (embed_maps)
+//                {
+//                     ImGui::SameLine();
+//                     combo_path();
+//                     {
+//                          const auto sg = PushPop();
+//                          if (ImGui::Checkbox("Reload after?", &reload_after))
+//                          {
+//                          }
+//                     }
+//                }
+//           }
+//           ImGui::Separator();
+//           {
+//                const auto sg = PushPop();
+//                if (ImGui::Button("Start"))
+//                {
+//                }
+//           }
+//           ImGui::SameLine();
+//           {
+//                const auto sg = PushPop();
+//                if (ImGui::Button("Cancel"))
+//                {
+//                }
+//           }
+//      }
+//      ImGui::End();
+// #endif
+// }
 
 gui::variant_tile_t &gui::combo_selected_tile(bool &changed)
 {

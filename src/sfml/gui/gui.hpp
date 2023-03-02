@@ -4,9 +4,7 @@
 #ifndef FIELD_MAP_EDITOR_GUI_HPP
 #define FIELD_MAP_EDITOR_GUI_HPP
 #include "archives_group.hpp"
-#include "batch_deswizzle.hpp"
-#include "batch_embed.hpp"
-#include "batch_reswizzle.hpp"
+#include "compact_type.hpp"
 #include "Configuration.hpp"
 #include "events.hpp"
 #include "file_dialog_mode.hpp"
@@ -28,8 +26,6 @@
 #include <imgui.h>
 #include <SFML/Graphics/RenderWindow.hpp>
 #include <SFML/Graphics/Shader.hpp>
-
-#define USE_THREADS
 namespace fme
 {
 template<typename T>
@@ -48,411 +44,12 @@ struct gui
        open_viii::graphics::background::Tile2,
        open_viii::graphics::background::Tile3,
        std::monostate>;
-     sf::Color                          clear_color          = sf::Color::Black;
-     std::mutex                         append_results_mutex = {};
-     std::vector<std::filesystem::path> append_results       = {};
-     std::shared_ptr<sf::Shader>        m_drag_sprite_shader = {};
-     Selections                         m_selections         = {};
-     scrolling                          m_scrolling          = {};
-     batch_deswizzle                    m_batch_deswizzle    = {};
-     batch_reswizzle                    m_batch_reswizzle    = {};
-     batch_embed                        m_batch_embed =
-       batch_embed{ "Operation 1: Find map, Replace map for each field, Save temp file.",
-                    [this](const int in_pos, const std::filesystem::path &in_selected_path) {
-                         if (in_pos <= 0)
-                         {
-                              append_results.clear();
-                         }
-                         launch_async(
-                           [this](const int pos, const std::filesystem::path &selected_path) -> void {
-                                auto field = m_archives_group.field(pos);
-                                if (!field)
-                                {
-                                     return;
-                                }
-                                auto                   paths = find_maps_in_directory(selected_path);
-                                const auto             tmp   = replace_entries(*field, paths);
-
-                                const std::scoped_lock guard{ append_results_mutex };
-                                append_results.insert(std::ranges::end(append_results), std::ranges::begin(tmp), std::ranges::end(tmp));
-                           },
-                           in_pos,
-                           in_selected_path);
-                    },
-                    []() { return true; } };
-     batch_embed m_batch_embed2 =
-       batch_embed{ "Operation 2: Update fields archive, Remove Temporary Files",
-                    [this](int &, const std::filesystem::path &) {
-                         //                         if (check_futures())
-                         //                         {
-                         //                              --pos;
-                         //                              return;
-                         //                         }
-                         [this]() {
-                              const auto &fields = m_archives_group.archives().get<open_viii::archive::ArchiveTypeT::field>();
-                              {
-                                   // create a new fields archive with files replaced.
-                                   const auto tmp = replace_entries(fields, append_results);
-                                   std::ranges::for_each(append_results, [](const auto &path) { std::filesystem::remove(path); });
-                                   // const std::scoped_lock guard{ append_results_mutex };
-                                   append_results = tmp;
-                              }
-                         }();
-                    },
-                    []() {
-                         format_imgui_wrapped_text("Waiting for smaller field archives to finish writing...");
-                         ImGui::Separator();
-                         return true;
-                    } };
-     batch_embed m_batch_embed3 = batch_embed{ "Operation 3: Embed fields in main.zzz (disabled)",
-                                               []([[maybe_unused]] int &pos, const std::filesystem::path &) {
-                                                    // todo rewrite this code to work with new zzz.
-                                                    //               // format_imgui_wrapped_text("{}", "Updating
-                                                    //               main.zzz..."); format_imgui_wrapped_text(
-                                                    //                 "{}", "Updating fields.fi, fields.fl, and
-                                                    //                 fields.fs...");
-                                                    //               if (check_futures())
-                                                    //               {
-                                                    //                 --pos;
-                                                    //                 return;
-                                                    //               }
-                                                    //               wait_for_futures();
-                                                    //               launch_async(
-                                                    //                 [this]()
-                                                    //                 {
-                                                    //                   const open_viii::archive::ZZZ &zzzmain =
-                                                    //                     m_archives_group.archives()
-                                                    //                       .get<open_viii::archive::ArchiveTypeT::zzz_main>()
-                                                    //                       .value();
-                                                    //                   auto src = zzzmain.data();
-                                                    //
-                                                    //                   std::ranges::sort(
-                                                    //                     src,
-                                                    //                     [](
-                                                    //                       const open_viii::archive::FileData
-                                                    //                       &l, const
-                                                    //                       open_viii::archive::FileData &r)
-                                                    //                     { return std::cmp_less(l.offset(),
-                                                    //                     r.offset()); });
-                                                    //                   auto        dst  = src;// copy
-                                                    //                   const auto &path = zzzmain.path();
-                                                    //
-                                                    //                   spdlog::info("Attempting to work:
-                                                    //                   \"{}\"", path.string()); if
-                                                    //                   (!any_matches(results, dst))
-                                                    //                   {
-                                                    //                     return;
-                                                    //                   }
-                                                    //                   // danger here there are files with the
-                                                    //                   same filename. Should
-                                                    //                   // be fine for fields because there is
-                                                    //                   only one copy. auto transform_view =
-                                                    //                     dst
-                                                    //                     | std::views::transform(
-                                                    //                       [](const
-                                                    //                       open_viii::archive::FileData
-                                                    //                       &file_data) {
-                                                    //                         return std::ranges::size(
-                                                    //                                  file_data.get_path_string_view())
-                                                    //                                + 16U;
-                                                    //                       });
-                                                    //                   const auto header_size = std::reduce(
-                                                    //                     transform_view.begin(),
-                                                    //                     transform_view.end(),
-                                                    //                     sizeof(std::uint32_t));
-                                                    //                   std::ranges::transform(
-                                                    //                     dst,
-                                                    //                     std::ranges::begin(dst),
-                                                    //                     [&, i = uint64_t{ header_size }](
-                                                    //                       open_viii::archive::FileData
-                                                    //                       file_data)
-                                                    //                     {
-                                                    //                       if (auto match =
-                                                    //                       open_viii::archive::find_match(
-                                                    //                             results,
-                                                    //                             file_data.get_path());
-                                                    //                           match !=
-                                                    //                           std::ranges::end(results))
-                                                    //                       {
-                                                    //                         file_data =
-                                                    //                         file_data.with_uncompressed_size(
-                                                    //                           static_cast<std::uint32_t>(
-                                                    //                             std::filesystem::file_size(*match)));
-                                                    //                       }
-                                                    //                       file_data =
-                                                    //                       file_data.with_offset(i); i +=
-                                                    //                       file_data.uncompressed_size();
-                                                    //                       return file_data;
-                                                    //                     });
-                                                    //
-                                                    //                   const auto   &temp =
-                                                    //                   std::filesystem::temp_directory_path();
-                                                    //                   auto out_path = temp / path.filename();
-                                                    //                   std::ofstream fs_mainzzz(
-                                                    //                     out_path,
-                                                    //                     std::ios::out | std::ios::binary |
-                                                    //                     std::ios::trunc);
-                                                    //                   spdlog::info("Creating: \"{}\"",
-                                                    //                   out_path.string()); const auto count =
-                                                    //                     std::bit_cast<std::array<char,
-                                                    //                     sizeof(std::uint32_t)>>(
-                                                    //                       static_cast<std::uint32_t>(std::ranges::size(dst)));
-                                                    //                   fs_mainzzz.write(count.data(),
-                                                    //                   count.size()); std::ranges::for_each(
-                                                    //                     dst,
-                                                    //                     [&](const open_viii::archive::FileData
-                                                    //                     &file_data)
-                                                    //                     {
-                                                    //                       std::string filename =
-                                                    //                       file_data.get_path_string();
-                                                    //                       tl::string::undo_replace_slashes(filename);
-                                                    //                       const auto filename_length =
-                                                    //                         std::bit_cast<std::array<char,
-                                                    //                         sizeof(std::uint32_t)>>(
-                                                    //                           static_cast<std::uint32_t>(
-                                                    //                             std::ranges::size(filename)));
-                                                    //                       fs_mainzzz.write(
-                                                    //                         filename_length.data(),
-                                                    //                         filename_length.size());
-                                                    //                       fs_mainzzz.write(
-                                                    //                         filename.data(),
-                                                    //                         static_cast<std::streamsize>(filename.size()));
-                                                    //                       const auto offset =
-                                                    //                         std::bit_cast<std::array<char,
-                                                    //                         sizeof(std::uint64_t)>>(
-                                                    //                           file_data.offset());
-                                                    //                       fs_mainzzz.write(offset.data(),
-                                                    //                       offset.size()); const auto
-                                                    //                       uncompressed_size =
-                                                    //                         std::bit_cast<std::array<char,
-                                                    //                         sizeof(std::uint32_t)>>(
-                                                    //                           file_data.uncompressed_size());
-                                                    //                       fs_mainzzz.write(
-                                                    //                         uncompressed_size.data(),
-                                                    //                         uncompressed_size.size());
-                                                    //                     });
-                                                    //
-                                                    //                   std::ifstream in_fs_mainzzz(
-                                                    //                     path, std::ios::in |
-                                                    //                     std::ios::binary);
-                                                    //                   tl::read::input  input(&in_fs_mainzzz);
-                                                    //
-                                                    //                   std::scoped_lock guard{
-                                                    //                   append_results_mutex
-                                                    //                   }; std::ranges::for_each(
-                                                    //                     src,
-                                                    //                     [&](const open_viii::archive::FileData
-                                                    //                     &file_data)
-                                                    //                     {
-                                                    //                       if (auto match =
-                                                    //                       open_viii::archive::find_match(
-                                                    //                             results,
-                                                    //                             file_data.get_path());
-                                                    //                           match !=
-                                                    //                           std::ranges::end(results))
-                                                    //                       {
-                                                    //                         const auto buffer =
-                                                    //                           open_viii::tools::read_entire_file(*match);
-                                                    //                         fs_mainzzz.write(
-                                                    //                           buffer.data(),
-                                                    //                           static_cast<std::streamsize>(buffer.size()));
-                                                    //                         return;
-                                                    //                       }
-                                                    //                       const auto buffer =
-                                                    //                         open_viii::archive::FS::get_entry(input,
-                                                    //                         file_data);
-                                                    //                       fs_mainzzz.write(
-                                                    //                         buffer.data(),
-                                                    //                         static_cast<std::streamsize>(buffer.size()));
-                                                    //                     });
-                                                    //                   // make sure this code is ran.
-                                                    //                   std::ranges::for_each(
-                                                    //                     results,
-                                                    //                     [](const auto &rem_path)
-                                                    //                     { std::filesystem::remove(rem_path);
-                                                    //                     });
-                                                    //                   results.clear();
-                                                    //                   results.push_back(out_path);
-                                                    //                 });
-                                               },
-                                               []() {
-                                                    //               format_imgui_wrapped_text(
-                                                    //                 "{}", "{}", "Updating fields.fi,
-                                                    //                 fields.fl, and fields.fs...");
-                                                    //               return !check_futures();
-                                                    return true;
-                                               } };
-     batch_embed m_batch_embed4 = batch_embed{
-          "Operation 4: Save",
-          [this](int &, const std::filesystem::path &in_selected_path) {
-               format_imgui_wrapped_text("{}", "Saving Files...");
-               //               if (check_futures())
-               //               {
-               //                    --pos;
-               //                    return;
-               //               }
-               // launch_async(
-               [this](const std::filesystem::path &selected_path) {
-                    const auto move = [&](std::filesystem::path path) {
-                         const auto found = std::ranges::find_if(
-                           append_results, [&](const std::filesystem::path &tmp_path) { return tmp_path.filename() == path.filename(); });
-                         if (found == append_results.end())
-                         {
-                              return;
-                         }
-                         std::error_code error_code{};
-                         spdlog::info("{}:{} - Creating directory: \"{}\"", __FILE__, __LINE__, path.parent_path().string());
-                         std::filesystem::create_directories(path.parent_path(), error_code);
-                         if (error_code)
-                         {
-                              spdlog::warn(
-                                "{}:{} - {}: {} - path: {}",
-                                __FILE__,
-                                __LINE__,
-                                error_code.value(),
-                                error_code.message(),
-                                path.parent_path().string());
-                              error_code.clear();
-                         }
-                         if (const auto tmp = safedir(path).case_insensitive_exists(); !tmp.empty())
-                         {
-                              path = tmp;
-                              // IF files exist rename to same path .bak
-                              spdlog::info(
-                                R"({}:{} - Moving path: "{}" to "{}")", __FILE__, __LINE__, path.string(), path.string() + ".bak");
-                              std::filesystem::copy(
-                                path, path.string() + ".bak", std::filesystem::copy_options::overwrite_existing, error_code);
-                              if (error_code)
-                              {
-                                   spdlog::warn(
-                                     R"({}:{} - {}: {} path: "{}" to "{}")",
-                                     __FILE__,
-                                     __LINE__,
-                                     error_code.value(),
-                                     error_code.message(),
-                                     path.string(),
-                                     path.string() + ".bak");
-                                   error_code.clear();
-                              }
-                         }
-                         spdlog::info(R"({}:{} - Moving - path: "{}" to "{}")", __FILE__, __LINE__, found->string(), path);
-                         std::filesystem::copy(*found, path, std::filesystem::copy_options::overwrite_existing, error_code);
-                         if (error_code)
-                         {
-                              spdlog::warn(
-                                "{}:{} - {}: {} - path: {}", __FILE__, __LINE__, error_code.value(), error_code.message(), found->string());
-                              error_code.clear();
-                         }
-                         std::filesystem::remove(*found, error_code);
-                         if (error_code)
-                         {
-                              spdlog::warn(
-                                "{}:{} - {}: {} - path: {}", __FILE__, __LINE__, error_code.value(), error_code.message(), found->string());
-                              error_code.clear();
-                         }
-                         append_results.erase(found);
-                    };
-                    // I need to detect the path where the game files are then
-                    // save them there.
-                    if (!m_archives_group.archives())
-                    {
-                         const auto copy = append_results;// move removes matches.
-                         std::ranges::for_each(copy, [&](const std::filesystem::path &tmp_path) {
-                              move(std::filesystem::path(m_selections.path) / tmp_path.filename());
-                         });
-                    }
-                    else if (open_viii::archive::fiflfs_in_main_zzz(m_archives_group.archives()))
-                    {
-                         const open_viii::archive::ZZZ &zzz_main =
-                           m_archives_group.archives().get<open_viii::archive::ArchiveTypeT::zzz_main>().value();
-                         const auto &path_zzz_main = zzz_main.path();
-                         const auto  copy          = append_results;// move removes matches.
-                         std::ranges::for_each(copy, [&](const std::filesystem::path &tmp_path) {
-                              if (path_zzz_main.filename() != tmp_path.filename())
-                              {
-                                   move(path_zzz_main.parent_path() / "DEMASTER_EXP" / "data" / tmp_path.filename());
-                              }
-                         });
-                         move(path_zzz_main);// if main.zzz exists move it.
-                    }
-                    else
-                    {
-                         const open_viii::archive::FIFLFS<true> &fields =
-                           m_archives_group.archives().get<open_viii::archive::ArchiveTypeT::field>();
-                         const auto &path_fi = fields.fi().path_or_nested_path();
-                         move(path_fi);
-                         const auto &path_fl = fields.fl().path_or_nested_path();
-                         move(path_fl);
-                         const auto &path_fs = fields.fs().path_or_nested_path();
-                         move(path_fs);
-                    }
-                    while (!append_results.empty())
-                    {
-                         // If I can't find the files just save to
-                         // the selected directory.
-                         move(selected_path.parent_path() / append_results.back().filename());
-                    }
-               }(in_selected_path);
-          },
-          [this]() {
-               //               if (check_futures())
-               //               {
-               //                    const auto current    = std::chrono::high_resolution_clock::now();
-               //                    const auto difference = current - m_batch_embed4.start_time();
-               //                    format_imgui_wrapped_text("{:%H:%M:%S}", difference);
-               //                    if (open_viii::archive::fiflfs_in_main_zzz(m_archives_group.archives()))
-               //                    {
-               //                         format_imgui_wrapped_text("{}", "Updating main.zzz...Finishing writing...");
-               //                    }
-               //                    else
-               //                    {
-               //                         format_imgui_wrapped_text(
-               //                           "{}",
-               //                           "Updating fields.fi, fields.fl, and fields.fs...Finishing "
-               //                           "writing...");
-               //                    }
-               //                    return false;
-               //               }
-               format_imgui_wrapped_text("{}", "Choose where to save the files.");
-               std::ranges::for_each(
-                 append_results, [](const std::filesystem::path &path) { format_imgui_wrapped_text("\t\"{}\"", path); });
-               format_imgui_wrapped_text("{}", "(If files exist they will renamed filename.bak)");
-
-               combo_path();
-               ImGui::SameLine();
-               if (ImGui::Button("Browse"))
-               {
-                    file_browser_locate_ff8();
-               }
-               format_imgui_wrapped_text("This is where the files will be installed...");
-               if (!m_archives_group.archives())
-               {
-                    std::ranges::for_each(append_results, [this](const std::filesystem::path &path) {
-                         format_imgui_wrapped_text("\t\"{}\"", (std::filesystem::path(m_selections.path) / path.filename()).string());
-                    });
-               }
-               else if (!open_viii::archive::fiflfs_in_main_zzz(m_archives_group.archives()))
-               {
-                    const open_viii::archive::FIFLFS<true> &fields =
-                      m_archives_group.archives().get<open_viii::archive::ArchiveTypeT::field>();
-                    std::ranges::for_each(
-                      std::array{ fields.fi().path(), fields.fl().path(), fields.fs().path() },
-                      [](const std::filesystem::path &path) { format_imgui_wrapped_text("\t\"{}\"", path.string()); });
-               }
-               else
-               {
-                    const open_viii::archive::ZZZ &zzz_main =
-                      m_archives_group.archives().get<open_viii::archive::ArchiveTypeT::zzz_main>().value();
-                    std::ranges::for_each(append_results, [&zzz_main](const std::filesystem::path &path) {
-                         format_imgui_wrapped_text(
-                           "\t\"{}\"", (zzz_main.path().parent_path() / "DEMASTER_EXP" / "data" / path.filename()).string());
-                    });
-               }
-
-               return ImGui::Button("Okay");
-          }
-     };
-
+     sf::Color                                          clear_color            = sf::Color::Black;
+     std::mutex                                         append_results_mutex   = {};
+     std::vector<std::filesystem::path>                 append_results         = {};
+     std::shared_ptr<sf::Shader>                        m_drag_sprite_shader   = {};
+     Selections                                         m_selections           = {};
+     scrolling                                          m_scrolling            = {};
      static constexpr std::int8_t                       tile_size_px           = { 16 };
      static constexpr std::uint8_t                      tile_size_px_unsigned  = { 16U };
      mouse_positions                                    m_mouse_positions      = {};
@@ -555,8 +152,8 @@ struct gui
      std::filesystem::path                              m_loaded_swizzle_texture_path{};
      std::filesystem::path                              m_loaded_deswizzle_texture_path{};
      static void                                        combo_compact_type(ff_8::filter_old<compact_type> &);
-     void                                               popup_batch_reswizzle();
-     void                                               popup_batch_deswizzle();
+//     void                                               popup_batch_reswizzle();
+//     void                                               popup_batch_deswizzle();
 
      template<is_enum_or_integral number_type, is_enum_or_integral... rest_number_type>
      static constexpr number_type bitwise_or(number_type first, rest_number_type... rest)
@@ -594,17 +191,17 @@ struct gui
               ff_8::filter_old<std::filesystem::path> &filter,
               std::string_view                         prefix,
               std::string_view                         base_name);
-     void popup_batch_embed();
+     //void popup_batch_embed();
      template<bool Nested = false>
      std::vector<std::filesystem::path>
        replace_entries(const open_viii::archive::FIFLFS<Nested> &field, const std::vector<std::filesystem::path> &paths) const;
 
-     template<typename T, typename... argsT>
-     void launch_async(T &&task, argsT &&...args)
-     {
-          std::invoke(std::forward<T>(task), std::forward<argsT>(args)...);
-     }
-     void                      batch_ops_ask_menu() const;
+//     template<typename T, typename... argsT>
+//     void launch_async(T &&task, argsT &&...args)
+//     {
+//          std::invoke(std::forward<T>(task), std::forward<argsT>(args)...);
+//     }
+//     void                      batch_ops_ask_menu() const;
      bool                      combo_upscale_path(std::filesystem::path &path, const std::string &field_name, open_viii::LangT coo) const;
      void                      open_locate_ff8_filebrowser();
      void                      open_swizzle_filebrowser();
