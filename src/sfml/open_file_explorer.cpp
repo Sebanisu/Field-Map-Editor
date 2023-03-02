@@ -31,8 +31,12 @@ void open_directory(const std::filesystem::path &path)
           // handle error
      }
 #elif defined(__linux__)
-     std::string cmd = "xdg-open " + path.string();
-     std::system(cmd.c_str());
+     //not thread safe.
+     const std::string cmd = "xdg-open " + path.string();
+     const int ret = std::system(cmd.c_str());
+     if (ret != 0) {
+          spdlog::error("Command execution failed with error code {}. {}", ret, strerror(errno));
+     }
 #endif
 }
 void open_file_explorer(const std::filesystem::path &path)
@@ -60,10 +64,12 @@ void open_file_explorer(const std::filesystem::path &path)
      CFURLGetFSRef(url, &file_ref);
      LSOpenCFURLRef(&url, nullptr);
 #elif defined(__linux__)
-     std::string folder_path = path.parent_path().string();
-     std::string cmd         = "xdg-open " + folder_path;
-     std::system(cmd.c_str());
-//     std::string cmd = "xdg-open " + path.string();
-//     std::system(cmd.c_str());
+     //not thread safe
+     std::string const folder_path = path.parent_path().string();
+     std::string const cmd         = "xdg-open " + folder_path;
+     int const ret = std::system(cmd.c_str());
+     if (ret != 0) {
+          spdlog::error("Command execution failed with error code {}. {}", ret, strerror(errno));
+     }
 #endif
 }
