@@ -27,7 +27,7 @@ struct map_group
      using OptCoo                    = std::optional<Coo>;
      static constexpr auto TILE_SIZE = 16U;
      map_group()                     = default;
-     map_group(const SharedField &, Coo);
+     map_group(SharedField, Coo);
      SharedField field{};
      SharedMim   mim{};
      std::string map_path{};

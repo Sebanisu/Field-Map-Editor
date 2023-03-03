@@ -8,6 +8,7 @@
 #include <bit>
 #include <open_viii/graphics/Png.hpp>
 #include <spdlog/spdlog.h>
+#include <stb_image.h>
 #include <utility>
 using namespace open_viii::graphics::background;
 using namespace open_viii::graphics;
@@ -88,6 +89,8 @@ const sf::Texture *map_sprite::get_texture(const ::PupuID &pupu) const
 
 std::shared_ptr<std::array<sf::Texture, map_sprite::MAX_TEXTURES>> map_sprite::load_textures_internal()
 {
+     std::vector<std::future<std::future<void>>> future_of_futures{};
+     std::vector<std::future<void>>              futures{};
      auto        ret   = std::make_shared<std::array<sf::Texture, MAX_TEXTURES>>(std::array<sf::Texture, MAX_TEXTURES>{});
      const auto &range = m_all_unique_values_and_strings.bpp().values();
      if (!m_filters.deswizzle.enabled())
@@ -108,11 +111,14 @@ std::shared_ptr<std::array<sf::Texture, map_sprite::MAX_TEXTURES>> map_sprite::l
                               }
                               if (!m_filters.upscale.enabled())
                               {
-                                   load_mim_textures(ret, bpp, palette);
+                                   future_of_futures.push_back(load_mim_textures(ret, bpp, palette));
                               }
                               else
                               {
-                                   find_upscale_path(ret, palette);
+                                   for (const auto &texture_page : m_all_unique_values_and_strings.texture_page_id().values())
+                                   {
+                                        future_of_futures.push_back(find_upscale_path(ret, texture_page, palette));
+                                   }
                               }
                          }
                     }
@@ -120,14 +126,37 @@ std::shared_ptr<std::array<sf::Texture, map_sprite::MAX_TEXTURES>> map_sprite::l
           }
           if (m_filters.upscale.enabled())
           {
-               find_upscale_path(ret);
+               for (const auto &texture_page : m_all_unique_values_and_strings.texture_page_id().values())
+               {
+                    future_of_futures.push_back(find_upscale_path(ret, texture_page));
+               }
           }
      }
      else
      {
-          find_deswizzle_path(ret);
-     }
 
+          std::ranges::for_each(m_all_unique_values_and_strings.pupu().values(), [&, pos = size_t{}](const ::PupuID &pupu) mutable {
+               future_of_futures.push_back(find_deswizzle_path(ret, pupu, pos));
+               ++pos;
+          });
+     }
+     futures.reserve(std::ranges::size(future_of_futures));
+     std::ranges::transform(
+       future_of_futures, std::back_inserter(futures), [](std::future<std::future<void>> &future_of_future) -> std::future<void> {
+            if (future_of_future.valid())
+            {
+                 future_of_future.wait();
+                 return future_of_future.get();
+            }
+            return {};
+       });
+     std::ranges::for_each(futures, [](std::future<void> &future) {
+          if (future.valid())
+          {
+               future.wait();
+               future.get();
+          }
+     });
      return ret;
 }
 std::shared_ptr<std::array<sf::Texture, map_sprite::MAX_TEXTURES>> map_sprite::load_textures()
@@ -155,122 +184,174 @@ std::shared_ptr<std::array<sf::Texture, map_sprite::MAX_TEXTURES>> map_sprite::l
      }
      return ret;
 }
-void map_sprite::load_mim_textures(open_viii::graphics::background::Mim mim, sf::Texture *texture, BPPT bppt, uint8_t pal)
-{
-     const auto colors = get_colors(mim, bppt, pal);
-     // std::lock_guard<std::mutex> lock(mutex_texture);
-     texture->create(mim.get_width(bppt), mim.get_height());
-     texture->update(colors.front().data());
-     texture->setSmooth(false);
-     texture->setRepeated(false);
-     texture->generateMipmap();
-     return;
-}
-void map_sprite::load_mim_textures(
+std::future<std::future<void>> map_sprite::load_mim_textures(
   std::shared_ptr<std::array<sf::Texture, MAX_TEXTURES>> &ret,
   open_viii::graphics::BPPT                               bpp,
   std::uint8_t                                            palette)
 {
      if (!m_map_group.mim)
      {
-          return;
+          return {};
      }
-     if (m_map_group.mim->get_width(bpp) != 0U)
+     if (m_map_group.mim->get_width(bpp) == 0U)
      {
-
+          return {};
+     }
+     else
+     {
           std::size_t const pos = get_texture_pos(bpp, palette, 0);
-          load_mim_textures(*m_map_group.mim, &(ret->at(pos)), bpp, palette);
+          return { std::async(
+            std::launch::async,
+            [bpp, palette](ff_8::map_group::SharedMim mim, sf::Texture *const texture) -> std::future<void> {
+                 return { std::async(
+                   std::launch::deferred,
+                   [texture](const std::vector<open_viii::graphics::Color32RGBA> colors, sf::Vector2u size) {
+                        // std::lock_guard<std::mutex> lock(mutex_texture);
+                        texture->create(size.x, size.y);
+                        texture->update(colors.front().data());
+                        texture->setSmooth(false);
+                        texture->setRepeated(false);
+                        texture->generateMipmap();
+                        return;
+                   },
+                   get_colors(*mim, bpp, palette),
+                   sf::Vector2u{ mim->get_width(bpp), mim->get_height() }) };
+            },
+            m_map_group.mim,
+            &(ret->at(pos))) };
      }
 }
-void map_sprite::find_upscale_path(std::shared_ptr<std::array<sf::Texture, MAX_TEXTURES>> &ret)
+std::future<std::future<void>>
+  map_sprite::find_upscale_path(std::shared_ptr<std::array<sf::Texture, MAX_TEXTURES>> &ret, std::uint8_t texture_page)
 {
-
-     for (const auto &texture_page : m_all_unique_values_and_strings.texture_page_id().values())
+     const size_t texture_index = START_OF_NO_PALETTE_INDEX + texture_page;
+     if (texture_index >= MAX_TEXTURES)
      {
-          const size_t texture_index                 = START_OF_NO_PALETTE_INDEX + texture_page;
-          const auto   texture_file_exists_then_load = [=, *this](sf::Texture *texture) {
-               const auto &root           = m_filters.upscale.value();
-               const auto  paths          = m_upscales.get_file_paths(root, texture_page);
-               auto        filtered_paths = paths | std::views::filter([](safedir path) { return path.is_exists() && !path.is_dir(); });
-               if (filtered_paths.begin() != filtered_paths.end())
-               {
-                    const auto &path = *(filtered_paths.begin());
-                    spdlog::info("upscale path: {}", path.string());
-                    texture->loadFromFile(path.string());
-                    texture->setSmooth(false);
-                    texture->setRepeated(false);
-                    texture->generateMipmap();
-               }
-               return;
-          };
-          if (texture_index >= MAX_TEXTURES)
-          {
-               spdlog::error("{}:{} - Index out of range {} / {}", __FILE__, __LINE__, texture_index, MAX_TEXTURES);
-               return;
-          }
-          texture_file_exists_then_load(&(ret->at(texture_index)));
+          spdlog::error("{}:{} - Index out of range {} / {}", __FILE__, __LINE__, texture_index, MAX_TEXTURES);
+          return {};
      }
-}
-
-void map_sprite::find_deswizzle_path(std::shared_ptr<std::array<sf::Texture, MAX_TEXTURES>> &ret)
-{
-
-     auto field_name = get_base_name();
-     std::ranges::for_each(m_all_unique_values_and_strings.pupu().values(), [&, i = size_t{}](const ::PupuID &pupu) mutable {
-          static constexpr auto pattern_pupu     = std::string_view("{}_{}.png");
-          static constexpr auto pattern_coo_pupu = std::string_view("{}_{}_{}.png");
-          std::filesystem::path in_path{};
-          if (m_map_group.opt_coo)
-          {
-               in_path = save_path_coo(pattern_coo_pupu, m_filters.deswizzle.value(), field_name, pupu, *m_map_group.opt_coo);
-          }
-          else
-          {
-               in_path = save_path(pattern_pupu, m_filters.deswizzle.value(), field_name, pupu);
-          }
-          const auto check_if_file_exists_and_load_it = [=](sf::Texture *texture) -> void {
-               if (safedir(in_path).is_exists())
-               {
-                    spdlog::info("texture path: \"{}\"", in_path.string());
-                    texture->loadFromFile(in_path.string());
-                    texture->setSmooth(false);
-                    texture->setRepeated(false);
-                    texture->generateMipmap();
-               }
-               return;
-          };
-          if (i >= MAX_TEXTURES)
-          {
-               spdlog::error("{}:{} - Index out of range {} / {}", __FILE__, __LINE__, i, MAX_TEXTURES);
-               return;
-          }
-          check_if_file_exists_and_load_it(&(ret->at(i++)));
-     });
-}
-void map_sprite::find_upscale_path(std::shared_ptr<std::array<sf::Texture, MAX_TEXTURES>> &ret, std::uint8_t palette)
-{
-
-     for (const auto &texture_page : m_all_unique_values_and_strings.texture_page_id().values())
+     const auto &root           = m_filters.upscale.value();
+     auto        paths          = m_upscales.get_file_paths(root, texture_page);
+     auto        filtered_paths = paths | std::views::filter([](safedir path) { return path.is_exists() && !path.is_dir(); });
+     if (filtered_paths.begin() == filtered_paths.end())
      {
-          const size_t index      = size_t{ texture_page } * MAX_PALETTES + palette;
-          auto const   p_function = [=, *this](sf::Texture *const texture) -> void {
-               const auto &root           = m_filters.upscale.value();
-               const auto  paths          = m_upscales.get_file_paths(root, texture_page, palette);
-               auto        filtered_paths = paths | std::views::filter([](safedir path) { return path.is_exists() && !path.is_dir(); });
-
-               if (filtered_paths.begin() != filtered_paths.end())
-               {
-                    const auto &path = *(filtered_paths.begin());
-                    spdlog::info("texture path: \"{}\"", path.string());
-                    texture->loadFromFile(path.string());
-                    texture->setSmooth(false);
-                    texture->setRepeated(false);
-                    texture->generateMipmap();
-               }
-               return;
-          };
-          p_function(&(ret->at(index)));
+          return {};
      }
+     return { std::async(
+       std::launch::async,
+       [](sf::Texture *const texture, const auto path) -> std::future<void> {
+            spdlog::info("upscale path: {}", path.string());
+            sf::Image image{};
+            image.loadFromFile(path.string());
+            return { std::async(
+              std::launch::deferred,
+              [texture](const sf::Image in_image) {
+                   texture->create(in_image.getSize().x, in_image.getSize().y);
+                   texture->update(in_image);
+                   texture->setSmooth(false);
+                   texture->setRepeated(false);
+                   texture->generateMipmap();
+              },
+              std::move(image)) };
+       },
+       &(ret->at(texture_index)),
+       *(filtered_paths.begin())) };
+}
+
+std::future<std::future<void>>
+  map_sprite::find_deswizzle_path(std::shared_ptr<std::array<sf::Texture, MAX_TEXTURES>> &ret, const ::PupuID pupu, const size_t pos)
+{
+
+     if (pos >= MAX_TEXTURES)
+     {
+          spdlog::error("{}:{} - Index out of range {} / {}", __FILE__, __LINE__, pos, MAX_TEXTURES);
+          return {};
+     }
+     auto                  field_name       = get_base_name();
+     static constexpr auto pattern_pupu     = std::string_view("{}_{}.png");
+     static constexpr auto pattern_coo_pupu = std::string_view("{}_{}_{}.png");
+     std::filesystem::path path{};
+     if (m_map_group.opt_coo)
+     {
+          path = save_path_coo(pattern_coo_pupu, m_filters.deswizzle.value(), field_name, pupu, *m_map_group.opt_coo);
+     }
+     else
+     {
+          path = save_path(pattern_pupu, m_filters.deswizzle.value(), field_name, pupu);
+     }
+     if (!safedir(path).is_exists())
+     {
+          return {};
+     }
+     return { std::async(
+       std::launch::async,
+       [path](sf::Texture *texture) -> std::future<void> {
+            spdlog::info("texture path: \"{}\"", path.string());
+            sf::Image image{};
+            image.loadFromFile(path.string());
+            return { std::async(
+              std::launch::deferred,
+              [texture](const sf::Image in_image) {
+                   texture->create(in_image.getSize().x, in_image.getSize().y);
+                   texture->update(in_image);
+                   texture->setSmooth(false);
+                   texture->setRepeated(false);
+                   texture->generateMipmap();
+              },
+              std::move(image)) };
+       },
+       &(ret->at(pos))) };
+}
+// struct [[nodiscard]] custom_stb_load_image
+//{
+//      int x        = {};
+//      int y        = {};
+//      int channels = {};
+//      struct deleter
+//      {
+//           void operator()(stbi_uc *ptr) const
+//           {
+//                stbi_image_free(ptr);
+//           }
+//      };
+//      std::unique_ptr<stbi_uc, deleter> png;
+//      explicit custom_stb_load_image(const std::filesystem::path &file_path)
+//        : png(stbi_load(file_path.string().c_str(), &x, &y, &channels, 4))
+//      {
+//      }
+// };
+std::future<std::future<void>> map_sprite::find_upscale_path(SharedTextures &ret, std::uint8_t texture_page, std::uint8_t palette)
+{
+     const size_t index = size_t{ texture_page } * MAX_PALETTES + palette;
+     const auto  &root  = m_filters.upscale.value();
+     auto         paths = m_upscales.get_file_paths(root, texture_page, palette);
+     return { std::async(
+       std::launch::async,
+       [](sf::Texture *const texture, const auto in_paths) -> std::future<void> {
+            auto filtered_paths = in_paths | std::views::filter([](safedir path) { return path.is_exists() && !path.is_dir(); });
+
+            if (filtered_paths.begin() != filtered_paths.end())
+            {
+                 const auto &path = *(filtered_paths.begin());
+                 spdlog::info("texture path: \"{}\"", path.string());
+                 sf::Image loaded_image{};
+                 loaded_image.loadFromFile(path.string());
+
+                 return { std::async(
+                   std::launch::deferred,
+                   [texture](const sf::Image image) {
+                        texture->create(image.getSize().x, image.getSize().y);
+                        texture->update(image);
+                        texture->setSmooth(false);
+                        texture->setRepeated(false);
+                        texture->generateMipmap();
+                   },
+                   std::move(loaded_image)) };
+            }
+            return {};
+       },
+       &(ret->at(index)),
+       std::move(paths)) };
 }
 
 void set_color(std::array<sf::Vertex, 4U> &vertices, const sf::Color &color)
@@ -1390,7 +1471,7 @@ std::filesystem::path map_sprite::save_path(
 
 bool map_sprite::save_texture(sf::RenderTexture *texture) const
 {
-     if (!texture)
+     if (texture == nullptr)
      {
           return false;
      }
@@ -1551,11 +1632,11 @@ void map_sprite::redo_all()
      m_map_group.maps.redo_all();
      update_render_texture();
 }
-bool map_sprite::undo_enabled()
+bool map_sprite::undo_enabled() const
 {
      return m_map_group.maps.undo_enabled();
 }
-bool map_sprite::redo_enabled()
+bool map_sprite::redo_enabled() const
 {
      return m_map_group.maps.redo_enabled();
 }

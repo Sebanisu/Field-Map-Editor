@@ -127,8 +127,8 @@ struct map_sprite final
      void                                               redo();
      void                                               undo_all();
      void                                               redo_all();
-     bool                                               undo_enabled();
-     bool                                               redo_enabled();
+     bool                                               undo_enabled() const;
+     bool                                               redo_enabled() const;
      bool                                               history_remove_duplicate();
      ff_8::filters                                     &filter();
      void                                               update_render_texture(bool reload_textures = false);
@@ -147,18 +147,17 @@ struct map_sprite final
      void                                               resize_render_texture();
      void                                               init_render_texture();
      static const sf::BlendMode                        &GetBlendSubtract();
-     void                                               find_upscale_path(SharedTextures &ret, uint8_t palette);
-     void                                               find_upscale_path(SharedTextures &ret);
-     void                                               find_deswizzle_path(SharedTextures &ret);
-     static void                                        load_mim_textures(Mim mim, sf::Texture *texture, BPPT bppt, uint8_t pal);
-     void                                               load_mim_textures(SharedTextures &ret, BPPT bpp, uint8_t palette);
-     static std::future<void>                           async_save(const sf::Texture &out_texture, const std::filesystem::path &out_path);
-     static bool                                        save_png_image(const sf::Image &image, const std::filesystem::path &filename);
-     bool                                               draw_imported(sf::RenderTarget &target, sf::RenderStates states) const;
-     static std::string                                 str_to_lower(std::string input);
-     sf::Sprite                                         save_intersecting(const sf::Vector2i &pixel_pos, const std::uint8_t &texture_page);
-     [[nodiscard]] std::size_t                          get_texture_pos(BPPT bpp, std::uint8_t palette, std::uint8_t texture_page) const;
-     void update_render_texture(const sf::Texture *p_texture, Map map, const tile_sizes tile_size);
+     [[nodiscard]] std::future<std::future<void>> find_upscale_path(SharedTextures &ret, std::uint8_t texture_page, std::uint8_t palette);
+     [[nodiscard]] std::future<std::future<void>> find_upscale_path(SharedTextures &ret, std::uint8_t texture_page);
+     [[nodiscard]] std::future<std::future<void>> find_deswizzle_path(SharedTextures &ret, const ::PupuID pupu, const size_t pos);
+     [[nodiscard]] std::future<std::future<void>> load_mim_textures(SharedTextures &ret, BPPT bpp, uint8_t palette);
+     static std::future<void>                     async_save(const sf::Texture &out_texture, const std::filesystem::path &out_path);
+     static bool                                  save_png_image(const sf::Image &image, const std::filesystem::path &filename);
+     bool                                         draw_imported(sf::RenderTarget &target, sf::RenderStates states) const;
+     static std::string                           str_to_lower(std::string input);
+     sf::Sprite                                   save_intersecting(const sf::Vector2i &pixel_pos, const std::uint8_t &texture_page);
+     [[nodiscard]] std::size_t                    get_texture_pos(BPPT bpp, std::uint8_t palette, std::uint8_t texture_page) const;
+     void                                         update_render_texture(const sf::Texture *p_texture, Map map, const tile_sizes tile_size);
      void update_position(const sf::Vector2i &pixel_pos, const uint8_t &texture_page, const sf::Vector2i &down_pixel_pos);
 
 

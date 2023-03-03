@@ -77,8 +77,8 @@ map_group::Map load_map(
      }
      return map;
 }
-map_group::map_group(const map_group::SharedField &in_field, map_group::Coo coo = map_group::Coo::generic)
-  : field{ in_field }
+map_group::map_group(map_group::SharedField in_field, map_group::Coo coo = map_group::Coo::generic)
+  : field{ std::move(in_field) }
   , mim{ std::make_shared<Mim>(load_mim(field, coo)) }
   , map_path{}
   , opt_coo{ coo }
