@@ -267,22 +267,34 @@ std::future<std::future<void>>
           spdlog::error("{}:{} - Index out of range {} / {}", __FILE__, __LINE__, pos, MAX_TEXTURES);
           return {};
      }
-     auto                  field_name       = get_base_name();
+     const auto            field_name       = get_base_name();
      static constexpr auto pattern_pupu     = std::string_view("{}_{}.png");
      static constexpr auto pattern_coo_pupu = std::string_view("{}_{}_{}.png");
-     std::filesystem::path path{};
-     if (m_map_group.opt_coo)
-     {
-          path = save_path_coo(pattern_coo_pupu, m_filters.deswizzle.value(), field_name, pupu, *m_map_group.opt_coo);
-     }
-     else
-     {
-          path = save_path(pattern_pupu, m_filters.deswizzle.value(), field_name, pupu);
-     }
-     if (!safedir(path).is_exists())
+     const auto            prefix           = std::string_view{ field_name }.substr(0, 2);
+     const auto            alt_path         = std::filesystem::path(m_filters.deswizzle.value()) / prefix / field_name;
+     const auto            alt_path2 = std::filesystem::path(m_filters.deswizzle.value()).parent_path().parent_path() / prefix / field_name;
+
+     const auto            paths     = std::array{
+          save_path_coo(
+            pattern_coo_pupu,
+            m_filters.deswizzle.value(),
+            field_name,
+            pupu,
+            (m_map_group.opt_coo ? *m_map_group.opt_coo : ff_8::map_group::Coo::generic)),
+          save_path_coo(
+            pattern_coo_pupu, alt_path, field_name, pupu, (m_map_group.opt_coo ? *m_map_group.opt_coo : ff_8::map_group::Coo::generic)),
+          save_path_coo(
+            pattern_coo_pupu, alt_path2, field_name, pupu, (m_map_group.opt_coo ? *m_map_group.opt_coo : ff_8::map_group::Coo::generic)),
+          save_path(pattern_pupu, m_filters.deswizzle.value(), field_name, pupu),
+          save_path(pattern_pupu, alt_path, field_name, pupu),
+          save_path(pattern_pupu, alt_path2, field_name, pupu),
+     };
+     auto filtered_paths = paths | std::views::filter([](safedir path) { return path.is_exists() && !path.is_dir(); });
+     if (filtered_paths.begin() == filtered_paths.end())
      {
           return {};
      }
+     std::filesystem::path path = *filtered_paths.begin();
      return { std::async(
        std::launch::async,
        [path](sf::Texture *texture) -> std::future<void> {
