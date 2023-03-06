@@ -17,8 +17,6 @@
 #include "tile_sizes.hpp"
 #include "unique_values.hpp"
 #include "upscales.hpp"
-
-
 #include <cstdint>
 #include <fmt/format.h>
 #include <SFML/Graphics/Drawable.hpp>
@@ -26,8 +24,8 @@
 #include <SFML/Graphics/Sprite.hpp>
 #include <SFML/Graphics/Transformable.hpp>
 #include <SFML/Graphics/Vertex.hpp>
-// #include <stacktrace>
 #include <utility>
+
 struct map_sprite final
   : public sf::Drawable
   , public sf::Transformable
@@ -81,85 +79,85 @@ struct map_sprite final
    public:
      map_sprite() = default;
      map_sprite(ff_8::map_group map_group, bool draw_swizzle, ff_8::filters in_filters, bool force_disable_blends);
-     std::uint32_t                                      get_map_scale() const;
-     [[nodiscard]] const sf::Texture                   *get_texture(BPPT bpp, std::uint8_t palette, std::uint8_t texture_page) const;
-     [[nodiscard]] const sf::Texture                   *get_texture(const ::PupuID &pupu) const;
-     [[nodiscard]] sf::Vector2u                         get_tile_texture_size(const sf::Texture *texture) const;
-     sf::Vector2u                                       get_tile_draw_size() const;
-     [[nodiscard]] bool                                 save_texture(sf::RenderTexture *texture) const;
-     uint32_t                                           get_max_texture_height() const;
-     [[nodiscard]] bool                                 local_draw(sf::RenderTarget &target, sf::RenderStates states) const;
-     std::string                                        get_base_name() const;
-     void                                               save_modified_map(const std::filesystem::path &path) const;
-     [[nodiscard]] const all_unique_values_and_strings &uniques() const;
-     std::string                                        map_filename() const;
-     bool                                               fail() const;
-     std::uint32_t                                      width() const;
-     std::uint32_t                                      height() const;
-     void                                               save(const std::filesystem::path &path) const;
-     void                                               map_save(const std::filesystem::path &dest_path) const;
-     void                                               test_map(const std::filesystem::path &saved_path) const;
-     map_sprite                                         with_coo(open_viii::LangT coo) const;
-     map_sprite                                         with_field(SharedField field, open_viii::LangT coo) const;
-     map_sprite                                         with_filters(ff_8::filters filters) const;
-     const map_sprite                                  &toggle_grid(bool enable, bool enable_texture_page_grid) const;
-     void                                               disable_square() const;
-     bool                                               empty() const;
-     const ff_8::filters                               &filter() const;
-     std::uint8_t                                       max_x_for_saved() const;
-     map_sprite                                         update(ff_8::map_group map_group, bool draw_swizzle) const;
-     grid                                               get_grid() const;
-     grid                                               get_texture_page_grid() const;
-     all_unique_values_and_strings                      get_all_unique_values_and_strings() const;
-     sf::Vector2u                                       get_tile_texture_size_for_import() const;
-     [[nodiscard]] colors_type                          get_colors(BPPT bpp, std::uint8_t palette) const;
-     [[nodiscard]] Rectangle                            get_canvas() const;
-     bool                                               check_if_one_palette(const uint8_t &texture_page) const;
-     size_t                                             size_of_map() const;
-     void                                               draw(sf::RenderTarget &target, sf::RenderStates states) const final;
-     void                                               enable_draw_swizzle();
-     void                                               disable_draw_swizzle();
-     void                                               enable_disable_blends();
-     void                                               disable_disable_blends();
-     void                                               enable_square(sf::Vector2u position);
-     void                                               compact_map_order();
-     void                                               undo();
-     void                                               redo();
-     void                                               undo_all();
-     void                                               redo_all();
-     bool                                               undo_enabled() const;
-     bool                                               redo_enabled() const;
-     bool                                               history_remove_duplicate();
-     ff_8::filters                                     &filter();
-     void                                               update_render_texture(bool reload_textures = false);
-     void                                               compact_rows();
-     void                                               compact_all();
-     void                                               flatten_bpp();
-     void                                               flatten_palette();
-     static sf::BlendMode                               set_blend_mode(const BlendModeT &blend_mode, std::array<sf::Vertex, 4U> &quad);
-     SharedTextures                                     load_textures();
-     void                                               reset_render_texture();
-     SharedTextures                                     load_textures_internal();
-     static colors_type                                 get_colors(const Mim &mim, BPPT bpp, uint8_t palette);
-     void                                               save_new_textures(const std::filesystem::path &path);
-     void                                               save_pupu_textures(const std::filesystem::path &path);
-     void                                               load_map(const std::filesystem::path &dest_path);
-     void                                               resize_render_texture();
-     void                                               init_render_texture();
-     static const sf::BlendMode                        &GetBlendSubtract();
-     [[nodiscard]] std::future<std::future<void>> find_upscale_path(SharedTextures &ret, std::uint8_t texture_page, std::uint8_t palette);
-     [[nodiscard]] std::future<std::future<void>> find_upscale_path(SharedTextures &ret, std::uint8_t texture_page);
-     [[nodiscard]] std::future<std::future<void>> find_deswizzle_path(SharedTextures &ret, const ::PupuID pupu, const size_t pos);
-     [[nodiscard]] std::future<std::future<void>> load_mim_textures(SharedTextures &ret, BPPT bpp, uint8_t palette);
-     static std::future<void>                     async_save(const sf::Texture &out_texture, const std::filesystem::path &out_path);
-     static bool                                  save_png_image(const sf::Image &image, const std::filesystem::path &filename);
-     bool                                         draw_imported(sf::RenderTarget &target, sf::RenderStates states) const;
-     static std::string                           str_to_lower(std::string input);
-     sf::Sprite                                   save_intersecting(const sf::Vector2i &pixel_pos, const std::uint8_t &texture_page);
-     [[nodiscard]] std::size_t                    get_texture_pos(BPPT bpp, std::uint8_t palette, std::uint8_t texture_page) const;
-     void                                         update_render_texture(const sf::Texture *p_texture, Map map, const tile_sizes tile_size);
-     void update_position(const sf::Vector2i &pixel_pos, const uint8_t &texture_page, const sf::Vector2i &down_pixel_pos);
 
+     [[nodiscard]] std::uint32_t                         get_map_scale() const;
+     [[nodiscard]] const sf::Texture                    *get_texture(BPPT bpp, std::uint8_t palette, std::uint8_t texture_page) const;
+     [[nodiscard]] const sf::Texture                    *get_texture(const ::PupuID &pupu) const;
+     [[nodiscard]] sf::Vector2u                          get_tile_texture_size(const sf::Texture *texture) const;
+     [[nodiscard]] sf::Vector2u                          get_tile_draw_size() const;
+     [[nodiscard]] bool                                  save_texture(sf::RenderTexture *texture) const;
+     [[nodiscard]] std::uint32_t                         get_max_texture_height() const;
+     [[nodiscard]] bool                                  local_draw(sf::RenderTarget &target, sf::RenderStates states) const;
+     [[nodiscard]] std::string                           get_base_name() const;
+     [[nodiscard]] const all_unique_values_and_strings  &uniques() const;
+     [[nodiscard]] std::string                           map_filename() const;
+     [[nodiscard]] bool                                  fail() const;
+     [[nodiscard]] std::uint32_t                         width() const;
+     [[nodiscard]] std::uint32_t                         height() const;
+     [[nodiscard]] map_sprite                            with_coo(open_viii::LangT coo) const;
+     [[nodiscard]] map_sprite                            with_field(SharedField field, open_viii::LangT coo) const;
+     [[nodiscard]] map_sprite                            with_filters(ff_8::filters filters) const;
+     [[nodiscard]] const map_sprite                     &toggle_grid(bool enable, bool enable_texture_page_grid) const;
+     [[nodiscard]] bool                                  empty() const;
+     [[nodiscard]] const ff_8::filters                  &filter() const;
+     [[nodiscard]] std::uint8_t                          max_x_for_saved() const;
+     [[nodiscard]] map_sprite                            update(ff_8::map_group map_group, bool draw_swizzle) const;
+     [[nodiscard]] grid                                  get_grid() const;
+     [[nodiscard]] grid                                  get_texture_page_grid() const;
+     [[nodiscard]] all_unique_values_and_strings         get_all_unique_values_and_strings() const;
+     [[nodiscard]] sf::Vector2u                          get_tile_texture_size_for_import() const;
+     [[nodiscard]] Rectangle                             get_canvas() const;
+     [[nodiscard]] bool                                  undo_enabled() const;
+     [[nodiscard]] bool                                  redo_enabled() const;
+     [[nodiscard]] bool                                  history_remove_duplicate();
+     [[nodiscard]] ff_8::filters                        &filter();
+     [[nodiscard]] static sf::BlendMode                  set_blend_mode(const BlendModeT &blend_mode, std::array<sf::Vertex, 4U> &quad);
+     [[nodiscard]] SharedTextures                        load_textures();
+     [[nodiscard]] SharedTextures                        load_textures_internal();
+     [[nodiscard]] static colors_type                    get_colors(const Mim &mim, BPPT bpp, uint8_t palette);
+     [[nodiscard]] static const sf::BlendMode           &get_blend_subtract();
+     [[nodiscard]] static std::future<std::future<void>> async_save(const sf::Texture &out_texture, const std::filesystem::path &out_path);
+     [[nodiscard]] bool                                  draw_imported(sf::RenderTarget &changed_tiles, sf::RenderStates states) const;
+     [[nodiscard]] static std::string                    str_to_lower(std::string input);
+     [[nodiscard]] sf::Sprite                            save_intersecting(const sf::Vector2i &pixel_pos, const std::uint8_t &texture_page);
+     [[nodiscard]] std::size_t                           get_texture_pos(BPPT bpp, std::uint8_t palette, std::uint8_t texture_page) const;
+     [[nodiscard]] std::future<std::future<void>>        load_upscale_textures(SharedTextures &ret, std::uint8_t texture_page);
+     [[nodiscard]] std::future<std::future<void>> load_deswizzle_textures(SharedTextures &ret, const ::PupuID pupu, const size_t pos) const;
+     [[nodiscard]] std::future<std::future<void>> load_mim_textures(SharedTextures &ret, BPPT bpp, uint8_t palette);
+     [[nodiscard]] std::future<std::future<void>>
+                 load_upscale_textures(SharedTextures &ret, std::uint8_t texture_page, std::uint8_t palette);
+
+     void        save_modified_map(const std::filesystem::path &path) const;
+     void        save(const std::filesystem::path &path) const;
+     void        map_save(const std::filesystem::path &dest_path) const;
+     void        test_map(const std::filesystem::path &saved_path) const;
+     void        disable_square() const;
+     void        draw(sf::RenderTarget &target, sf::RenderStates states) const final;
+     void        enable_draw_swizzle();
+     void        disable_draw_swizzle();
+     void        enable_disable_blends();
+     void        disable_disable_blends();
+     void        enable_square(sf::Vector2u position);
+     void        compact_map_order();
+     void        undo();
+     void        redo();
+     void        undo_all();
+     void        redo_all();
+     void        update_render_texture(bool reload_textures = false);
+     void        compact_rows();
+     void        compact_all();
+     void        flatten_bpp();
+     void        flatten_palette();
+     void        reset_render_texture();
+     void        save_new_textures(const std::filesystem::path &path);
+     void        save_pupu_textures(const std::filesystem::path &path);
+     void        load_map(const std::filesystem::path &dest_path);
+     void        resize_render_texture();
+     void        init_render_texture();
+     void        update_render_texture(const sf::Texture *p_texture, Map map, const tile_sizes tile_size);
+     static void consume_futures(std::vector<std::future<void>> &futures);
+     void        consume_futures(std::vector<std::future<std::future<void>>> &future_of_futures) const;
+     void        update_position(const sf::Vector2i &pixel_pos, const uint8_t &texture_page, const sf::Vector2i &down_pixel_pos);
 
      static std::filesystem::path save_path_coo(
        fmt::format_string<std::string_view, std::string_view, uint8_t> pattern,
@@ -387,11 +385,11 @@ struct map_sprite final
      }
 
 
-     auto get_conflicting_palettes() const
+     [[nodiscard]] auto get_conflicting_palettes() const
      {
           return m_map_group.maps.back().visit_tiles([this](const auto &tiles) { return find_conflicting_tiles(tiles); });
      }
-     ::upscales get_upscales()
+     [[nodiscard]] ::upscales get_upscales()
      {
           if (m_map_group.field)
           {
@@ -451,6 +449,40 @@ struct map_sprite final
                return to_Vector2f(ff_8::get_triangle_strip_dest_default(tile));
           }();
           return ff_8::get_triangle_strip(to_Vector2f(draw_size), to_Vector2f(texture_size), src, dest);
+     }
+
+     auto generate_deswizzle_paths(const ::PupuID pupu) const
+     {
+          const auto            field_name       = get_base_name();
+          static constexpr auto pattern_pupu     = std::string_view("{}_{}.png");
+          static constexpr auto pattern_coo_pupu = std::string_view("{}_{}_{}.png");
+          const auto            prefix           = std::string_view{ field_name }.substr(0, 2);
+          const auto            alt_path         = std::filesystem::path(m_filters.deswizzle.value()) / prefix / field_name;
+          const auto alt_path_2 = std::filesystem::path(m_filters.deswizzle.value()).parent_path().parent_path() / prefix / field_name;
+
+          return std::array{
+               save_path_coo(
+                 pattern_coo_pupu,
+                 m_filters.deswizzle.value(),
+                 field_name,
+                 pupu,
+                 (m_map_group.opt_coo ? *m_map_group.opt_coo : ff_8::map_group::Coo::generic)),
+               save_path_coo(
+                 pattern_coo_pupu,
+                 alt_path,
+                 field_name,
+                 pupu,
+                 (m_map_group.opt_coo ? *m_map_group.opt_coo : ff_8::map_group::Coo::generic)),
+               save_path_coo(
+                 pattern_coo_pupu,
+                 alt_path_2,
+                 field_name,
+                 pupu,
+                 (m_map_group.opt_coo ? *m_map_group.opt_coo : ff_8::map_group::Coo::generic)),
+               save_path(pattern_pupu, m_filters.deswizzle.value(), field_name, pupu),
+               save_path(pattern_pupu, alt_path, field_name, pupu),
+               save_path(pattern_pupu, alt_path_2, field_name, pupu),
+          };
      }
 };
 #endif// FIELD_MAP_EDITOR_MAP_SPRITE_HPP

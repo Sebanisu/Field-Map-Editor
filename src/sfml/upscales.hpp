@@ -42,7 +42,7 @@ public:
   {
   }
 
-  [[nodiscard]] auto get_file_paths(
+  [[nodiscard]] auto generate_upscale_paths(
     const std::filesystem::path &field_root,
     std::uint8_t                 texture_page,
     std::uint8_t                 palette,
@@ -74,7 +74,8 @@ public:
     };
   }
 
-  [[nodiscard]] auto get_file_paths(
+  [[nodiscard]] auto
+    generate_upscale_paths(
     const std::filesystem::path &field_root,
     std::uint8_t                 texture_page,
     std::string_view             ext = m_ext) const
