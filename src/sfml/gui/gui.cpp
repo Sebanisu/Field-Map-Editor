@@ -210,8 +210,8 @@ void gui::control_panel_window()
      const auto imgui_end = scope_guard(&ImGui::End);
      if (!ImGui::Begin(
            gui_labels::control_panel.data()//,
-           //nullptr,
-           //static_cast<ImGuiWindowFlags>(static_cast<uint32_t>(ImGuiWindowFlags_AlwaysAutoResize))
+                                           // nullptr,
+                                           // static_cast<ImGuiWindowFlags>(static_cast<uint32_t>(ImGuiWindowFlags_AlwaysAutoResize))
            ))
      {
           m_mouse_positions.mouse_enabled = handle_mouse_cursor();
@@ -287,31 +287,34 @@ void gui::frame_rate()
 }
 void gui::compact_flatten_buttons()
 {
+
+     const ImGuiStyle &style       = ImGui::GetStyle();
+     const float       spacing     = style.ItemInnerSpacing.x;
+     const ImVec2      button_size = { ImGui::GetFrameHeight() * 3.75F, ImGui::GetFrameHeight() };
      format_imgui_text("{}: ", gui_labels::compact);
-     ImGui::SameLine();
-     if (ImGui::Button(gui_labels::rows.data()))
+     ImGui::SameLine(0, spacing);
+     if (ImGui::Button(gui_labels::rows.data(), button_size))
      {
           m_map_sprite.compact_rows();
      }
-     ImGui::SameLine();
-     if (ImGui::Button(gui_labels::all.data()))
+     ImGui::SameLine(0, spacing);
+     if (ImGui::Button(gui_labels::all.data(), button_size))
      {
           m_map_sprite.compact_all();
      }
-     ImGui::SameLine();
-     if (ImGui::Button(gui_labels::map_order.data()))
+     ImGui::SameLine(0, spacing);
+     if (ImGui::Button(gui_labels::map_order.data(), button_size))
      {
           m_map_sprite.compact_map_order();
      }
-     ImGui::SameLine();
      format_imgui_text("{}: ", gui_labels::flatten);
-     ImGui::SameLine();
-     if (ImGui::Button(gui_labels::bpp.data()))
+     ImGui::SameLine(0, spacing);
+     if (ImGui::Button(gui_labels::bpp.data(), button_size))
      {
           m_map_sprite.flatten_bpp();
      }
-     ImGui::SameLine();
-     if (ImGui::Button(gui_labels::palette.data()))
+     ImGui::SameLine(0, spacing);
+     if (ImGui::Button(gui_labels::palette.data(), button_size))
      {
           m_map_sprite.flatten_palette();
      }
