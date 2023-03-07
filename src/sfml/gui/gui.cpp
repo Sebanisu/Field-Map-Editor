@@ -209,9 +209,10 @@ void gui::control_panel_window()
 {
      const auto imgui_end = scope_guard(&ImGui::End);
      if (!ImGui::Begin(
-           gui_labels::control_panel.data(),
-           nullptr,
-           static_cast<ImGuiWindowFlags>(static_cast<uint32_t>(ImGuiWindowFlags_AlwaysAutoResize))))
+           gui_labels::control_panel.data()//,
+           //nullptr,
+           //static_cast<ImGuiWindowFlags>(static_cast<uint32_t>(ImGuiWindowFlags_AlwaysAutoResize))
+           ))
      {
           m_mouse_positions.mouse_enabled = handle_mouse_cursor();
           return;
