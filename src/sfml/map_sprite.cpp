@@ -2,6 +2,7 @@
 #include "map_sprite.hpp"
 #include "append_inserter.hpp"
 #include "format_imgui_text.hpp"
+#include "future_operations.hpp"
 #include "map_operation.hpp"
 #include "safedir.hpp"
 #include "save_image_pbo.hpp"
@@ -134,7 +135,7 @@ std::shared_ptr<std::array<sf::Texture, map_sprite::MAX_TEXTURES>> map_sprite::l
      consume_futures(future_of_futures);
      return ret;
 }
-void map_sprite::consume_futures(std::vector<std::future<std::future<void>>> &future_of_futures) const
+void map_sprite::consume_futures(std::vector<std::future<std::future<void>>> &future_of_futures)
 {
      std::vector<std::future<void>> futures{};
      futures.reserve(std::ranges::size(future_of_futures));
@@ -183,133 +184,6 @@ std::shared_ptr<std::array<sf::Texture, map_sprite::MAX_TEXTURES>> map_sprite::l
      }
      return ret;
 }
-class LoadColorsIntoTexture
-{
-     sf::Texture                                  *m_texture;
-     std::vector<open_viii::graphics::Color32RGBA> m_colors;
-     sf::Vector2u                                  m_size{};
-
-   public:
-     LoadColorsIntoTexture(sf::Texture *const in_texture, std::vector<open_viii::graphics::Color32RGBA> &&in_colors, sf::Vector2u in_size)
-       : m_texture(in_texture)
-       , m_colors(std::move(in_colors))
-       , m_size(in_size)
-     {
-     }
-     void operator()() const
-     {
-          try
-          {
-               assert(m_size.x * m_size.y == std::ranges::size(m_colors));
-               if (std::ranges::empty(m_colors) || m_size.x == 0 || m_size.y == 0)
-               {
-                    return;
-               }
-               m_texture->create(m_size.x, m_size.y);
-               m_texture->update(m_colors.front().data());
-               m_texture->setSmooth(false);
-               m_texture->setRepeated(false);
-               m_texture->generateMipmap();
-          }
-          catch (const std::exception &e)
-          {
-               // Handle the exception and log the error message using spdlog
-               spdlog::error("Exception caught while creating texture: {}", e.what());
-          }
-     }
-};
-class LoadImageIntoTexture
-{
-     sf::Texture *m_texture;
-     sf::Image    m_image;
-
-   public:
-     LoadImageIntoTexture(sf::Texture *const in_texture, sf::Image in_image)
-       : m_texture(in_texture)
-       , m_image(in_image)
-     {
-     }
-     void operator()() const
-     {
-          try
-          {
-               if (m_image.getSize().x == 0 || m_image.getSize().y == 0)
-               {
-                    return;
-               }
-               m_texture->create(m_image.getSize().x, m_image.getSize().y);
-               m_texture->update(m_image);
-               m_texture->setSmooth(false);
-               m_texture->setRepeated(false);
-               m_texture->generateMipmap();
-          }
-          catch (const std::exception &e)
-          {
-               // Handle the exception and log the error message using spdlog
-               spdlog::error("Exception caught while creating texture: {}", e.what());
-          }
-     }
-};
-
-class GetImageFromPathCreateFuture
-{
-     sf::Texture *          m_texture;
-     std::filesystem::path m_path;
-
-   public:
-     GetImageFromPathCreateFuture(sf::Texture *const in_texture, std::filesystem::path in_path)
-       : m_texture(in_texture)
-       , m_path(std::move(in_path))
-     {
-     }
-     std::future<void> operator()() const
-     {
-          try
-          {
-               spdlog::info("texture path: \"{}\"", m_path.string());
-               sf::Image image{};
-               image.loadFromFile(m_path.string());
-               return { std::async(std::launch::deferred, LoadImageIntoTexture{ m_texture, std::move(image) }) };
-          }
-          catch (const std::exception &e)
-          {
-               // Handle the exception and log the error message using spdlog
-               spdlog::error("Exception caught while loading image: {}", e.what());
-               return {};
-          }
-     }
-};
-template<std::ranges::contiguous_range range_t>
-class GetImageFromFromFirstValidPathCreateFuture
-{
-     sf::Texture *m_texture;
-     range_t      m_paths;
-
-   public:
-     GetImageFromFromFirstValidPathCreateFuture(sf::Texture *const in_texture, range_t &&in_paths)
-       : m_texture(in_texture)
-       , m_paths(std::move(in_paths))
-     {
-     }
-     std::future<void> operator()() const
-     {
-          try
-          {
-               auto filtered_paths = m_paths | std::views::filter([](safedir path) { return path.is_exists() && !path.is_dir(); });
-               if (filtered_paths.begin() == filtered_paths.end())
-               {
-                    return {};
-               }
-               return GetImageFromPathCreateFuture{ m_texture, *filtered_paths.begin() }();
-          }
-          catch (const std::exception &e)
-          {
-               // Handle the exception and log the error message using spdlog
-               spdlog::error("Exception caught while loading image: {}", e.what());
-               return {};
-          }
-     }
-};
 
 std::future<std::future<void>> map_sprite::load_mim_textures(
   std::shared_ptr<std::array<sf::Texture, MAX_TEXTURES>> &ret,
@@ -332,7 +206,7 @@ std::future<std::future<void>> map_sprite::load_mim_textures(
             [bpp, palette](const ff_8::map_group::SharedMim &mim, sf::Texture *const texture) -> std::future<void> {
                  return { std::async(
                    std::launch::deferred,
-                   LoadColorsIntoTexture{
+                   future_operations::LoadColorsIntoTexture{
                      texture, get_colors(*mim, bpp, palette), sf::Vector2u{ mim->get_width(bpp), mim->get_height() } }) };
             },
             m_map_group.mim,
@@ -350,7 +224,7 @@ std::future<std::future<void>> map_sprite::load_deswizzle_textures(
           return {};
      }
      return { std::async(
-       std::launch::async, GetImageFromFromFirstValidPathCreateFuture{ &(ret->at(pos)), generate_deswizzle_paths(pupu) }) };
+       std::launch::async, future_operations::GetImageFromFromFirstValidPathCreateFuture{ &(ret->at(pos)), generate_deswizzle_paths(pupu) }) };
 }
 std::future<std::future<void>> map_sprite::load_upscale_textures(SharedTextures &ret, std::uint8_t texture_page, std::uint8_t palette)
 {
@@ -362,7 +236,7 @@ std::future<std::future<void>> map_sprite::load_upscale_textures(SharedTextures 
      }
      return { std::async(
        std::launch::async,
-       GetImageFromFromFirstValidPathCreateFuture{ &(ret->at(pos)),
+       future_operations::GetImageFromFromFirstValidPathCreateFuture{ &(ret->at(pos)),
                                                    m_upscales.generate_upscale_paths(m_filters.upscale.value(), texture_page, palette) }) };
 }
 
@@ -376,7 +250,7 @@ std::future<std::future<void>> map_sprite::load_upscale_textures(SharedTextures 
      }
      return { std::async(
        std::launch::async,
-       GetImageFromFromFirstValidPathCreateFuture{ &(ret->at(pos)),
+       future_operations::GetImageFromFromFirstValidPathCreateFuture{ &(ret->at(pos)),
                                                    m_upscales.generate_upscale_paths(m_filters.upscale.value(), texture_page) }) };
 }
 
@@ -1151,7 +1025,7 @@ const all_unique_values_and_strings &map_sprite::uniques() const
 //   }
 //   return result;
 // }
-void map_sprite::save_new_textures(const std::filesystem::path &path)
+void map_sprite::save_swizzle_textures(const std::filesystem::path &path)
 {
      // assert(std::filesystem::path.is_directory(path));
      const std::string                 field_name                       = { get_base_name() };
@@ -1301,57 +1175,13 @@ void map_sprite::save_pupu_textures(const std::filesystem::path &path)
      }
      consume_futures(future_of_futures);
 }
-class save_image_to_path
-{
-     std::filesystem::path m_path;
-     sf::Image             m_image;
 
-   public:
-     save_image_to_path(std::filesystem::path in_path, const sf::Image &in_image)
-       : m_path(std::move(in_path))
-       , m_image(in_image)
-     {
-     }
-     void operator()() const
-     {
-          std::error_code error_code{};
-          std::filesystem::create_directories(m_path.parent_path(), error_code);
-          const std::string &string = m_path.string();
-          if (error_code)
-          {
-               spdlog::error("error {}:{} - {}: {} - path: {}", __FILE__, __LINE__, error_code.value(), error_code.message(), string);
-               error_code.clear();
-          }
-          if (m_image.getSize().x == 0 || m_image.getSize().y == 0 || m_image.getPixelsPtr() == nullptr)
-          {
-               spdlog::error(
-                 "error {}:{} Invalid image: \"{}\" - ({},{})", __FILE__, __LINE__, string, m_image.getSize().x, m_image.getSize().y);
-               return;
-          }
-          using namespace std::chrono_literals;
-          std::size_t           count            = { 0U };
-          static constexpr auto error_delay_time = 1000ms;
-          for (;;)
-          {
-               if (m_image.saveToFile(string))
-               {
-                    spdlog::info("Saved \"{}\"", string);
-                    return;
-               }
-               else
-               {
-                    spdlog::error("Looping on fail {:>2} times", ++count);
-                    std::this_thread::sleep_for(error_delay_time);
-               }
-          }
-     }
-};
 [[nodiscard]] std::future<std::future<void>> map_sprite::async_save(const sf::Texture &out_texture, const std::filesystem::path &out_path)
 {
      return { std::async(
        std::launch::deferred,
        [out_path](std::future<sf::Image> image_task) -> std::future<void> {
-            return std::async(std::launch::async, save_image_to_path{ out_path, image_task.get() });
+            return std::async(std::launch::async, future_operations::save_image_to_path{ out_path, image_task.get() });
        },
        save_image_pbo(out_texture)) };
 }

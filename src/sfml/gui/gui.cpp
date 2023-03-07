@@ -1127,7 +1127,7 @@ void gui::file_browser_locate_ff8()
                selected_path = path_with_prefix_and_base_name(std::move(selected_path));
                std::filesystem::create_directories(selected_path);
                // todo modify these two functions :P to use the imported image.
-               m_map_sprite.save_new_textures(selected_path);// done.
+               m_map_sprite.save_swizzle_textures(selected_path);// done.
                m_map_sprite.save_modified_map(selected_path / m_map_sprite.map_filename());// done.
                open_directory(selected_path);
           }
