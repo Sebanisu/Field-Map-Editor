@@ -44,12 +44,12 @@ class RangeConsumer
      }
      const auto &operator++() const
      {
-          ++pos;
+          pos = std::next(pos);
           return *this;
      }
      auto &operator++()
      {
-          ++pos;
+          pos = std::next(pos);
           return *this;
      }
      const value_t &operator*() const
@@ -65,7 +65,39 @@ class RangeConsumer
           return !done();
      }
 };
+template<std::ranges::range range_t>
+class FutureConsumer
+{
+   private:
+     using range_value_t  = std::ranges::range_value_t<range_t>;
 
+     RangeConsumer<range_t>      m_range{};
+
+
+   public:
+     explicit FutureConsumer(range_t in_range)
+       : m_range(std::move(in_range))
+     {
+     }
+     const FutureConsumer<range_t> &operator++()
+     {
+          if (!done())
+          {
+               auto &item = *m_range;
+               if(item.valid())
+               {
+                    item.get();
+               }
+               ++m_range;
+          }
+
+          return *this;
+     }
+     [[nodiscard]] bool done() const
+     {
+          return m_range.done();
+     }
+};
 template<std::ranges::range range_t>
 class FutureOfFutureConsumer
 {
@@ -89,24 +121,24 @@ class FutureOfFutureConsumer
           {
                auto &item = *m_range;
                ++m_range;
-               m_out.push_back(item.get());
+               if(item.valid())
+               {m_out.push_back(item.get());}
           }
-
           return *this;
      }
      [[nodiscard]] bool done() const
      {
-          return !static_cast<bool>(m_range);
+          return m_range.done();
      }
-     [[nodiscard]] bool empty() const
+     [[nodiscard]] bool output_empty() const
      {
           return std::ranges::empty(m_out);
      }
-     [[nodiscard]] decltype(auto) get_holder()
+     [[nodiscard]] decltype(auto) get_consumer()
      {
-          return RangeConsumer{ std::move(m_out) };
+          return FutureConsumer{ std::move(m_out) };
      }
-     [[nodiscard]] decltype(auto) get_future_of_future_holder()
+     [[nodiscard]] decltype(auto) get_future_of_future_consumer()
      {
           return FutureOfFutureConsumer{ std::move(m_out) };
      }

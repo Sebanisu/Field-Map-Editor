@@ -135,13 +135,11 @@ std::shared_ptr<std::array<sf::Texture, map_sprite::MAX_TEXTURES>> map_sprite::l
      for (; !fofh.done(); ++fofh)
      {
      }
-     auto frh = fofh.get_holder();
+     auto frh = fofh.get_consumer();
      for (; !frh.done(); ++frh)
      {
-          auto &future = *frh;
-          future.get();
      }
-     // consume_futures();
+     //consume_futures(future_of_futures);
      return ret;
 }
 void map_sprite::consume_futures(std::vector<std::future<std::future<void>>> &future_of_futures)
