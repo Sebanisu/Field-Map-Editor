@@ -86,7 +86,7 @@ struct map_sprite final
      [[nodiscard]] const sf::Texture                    *get_texture(const ::PupuID &pupu) const;
      [[nodiscard]] sf::Vector2u                          get_tile_texture_size(const sf::Texture *texture) const;
      [[nodiscard]] sf::Vector2u                          get_tile_draw_size() const;
-     [[nodiscard]] bool                                  save_texture(sf::RenderTexture *texture) const;
+     [[nodiscard]] bool                                  generate_texture(sf::RenderTexture *texture) const;
      [[nodiscard]] std::uint32_t                         get_max_texture_height() const;
      [[nodiscard]] bool                                  local_draw(sf::RenderTarget &target, sf::RenderStates states) const;
      [[nodiscard]] std::string                           get_base_name() const;
@@ -122,7 +122,9 @@ struct map_sprite final
      [[nodiscard]] static std::string                    str_to_lower(std::string input);
      [[nodiscard]] sf::Sprite                            save_intersecting(const sf::Vector2i &pixel_pos, const std::uint8_t &texture_page);
      [[nodiscard]] std::size_t                           get_texture_pos(BPPT bpp, std::uint8_t palette, std::uint8_t texture_page) const;
-     [[nodiscard]] std::future<std::future<void>>        load_upscale_textures(SharedTextures &ret, std::uint8_t texture_page);
+     [[nodiscard]] std::vector<std::future<std::future<void>>> save_swizzle_textures(const std::filesystem::path &path);
+     [[nodiscard]] std::vector<std::future<std::future<void>>> save_pupu_textures(const std::filesystem::path &path);
+     [[nodiscard]] std::future<std::future<void>>              load_upscale_textures(SharedTextures &ret, std::uint8_t texture_page);
      [[nodiscard]] std::future<std::future<void>> load_deswizzle_textures(SharedTextures &ret, const ::PupuID pupu, const size_t pos) const;
      [[nodiscard]] std::future<std::future<void>> load_mim_textures(SharedTextures &ret, BPPT bpp, uint8_t palette);
      [[nodiscard]] std::future<std::future<void>>
@@ -150,8 +152,6 @@ struct map_sprite final
      void        flatten_bpp();
      void        flatten_palette();
      void        reset_render_texture();
-     void        save_swizzle_textures(const std::filesystem::path &path);
-     void        save_pupu_textures(const std::filesystem::path &path);
      void        load_map(const std::filesystem::path &dest_path);
      void        resize_render_texture();
      void        init_render_texture();

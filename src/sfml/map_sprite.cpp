@@ -1033,7 +1033,7 @@ const all_unique_values_and_strings &map_sprite::uniques() const
 //   }
 //   return result;
 // }
-void map_sprite::save_swizzle_textures(const std::filesystem::path &path)
+std::vector<std::future<std::future<void>>> map_sprite::save_swizzle_textures(const std::filesystem::path &path)
 {
      // assert(std::filesystem::path.is_directory(path));
      const std::string                 field_name                       = { get_base_name() };
@@ -1067,7 +1067,7 @@ void map_sprite::save_swizzle_textures(const std::filesystem::path &path)
 
      if (unique_bpp.size() == 1U && unique_values.palette().at(unique_bpp.front()).values().size() <= 1U)
      {
-          return;
+          return{};
      }
      using map_type                                                          = std::remove_cvref_t<decltype(get_conflicting_palettes())>;
      using mapped_type                                                       = typename map_type::mapped_type;
@@ -1095,7 +1095,7 @@ void map_sprite::save_swizzle_textures(const std::filesystem::path &path)
                     {
                          settings.filters.value().palette.update(palette).enable();
                          settings.filters.value().bpp.update(bpp).enable();
-                         if (!save_texture(&out_texture))
+                         if (!generate_texture(&out_texture))
                          {
                               continue;
                          }
@@ -1114,7 +1114,7 @@ void map_sprite::save_swizzle_textures(const std::filesystem::path &path)
 
           settings.filters.value().palette.disable();
           settings.filters.value().bpp.disable();
-          if (!save_texture(&out_texture))
+          if (!generate_texture(&out_texture))
           {
                continue;
           }
@@ -1123,7 +1123,8 @@ void map_sprite::save_swizzle_textures(const std::filesystem::path &path)
                             : save_path(pattern_texture_page, path, field_name, texture_page);
           future_of_futures.push_back(async_save(out_texture.getTexture(), out_path));
      }
-     consume_futures(future_of_futures);
+     return future_of_futures;
+     //consume_futures(future_of_futures);
 }
 
 std::string map_sprite::get_base_name() const
@@ -1135,7 +1136,7 @@ std::string map_sprite::get_base_name() const
      return {};
 }
 
-void map_sprite::save_pupu_textures(const std::filesystem::path &path)
+std::vector<std::future<std::future<void>>> map_sprite::save_pupu_textures(const std::filesystem::path &path)
 {
      auto settings    = settings_backup{ m_filters, m_draw_swizzle, m_disable_texture_page_shift, m_disable_blends, m_scale };
      settings.filters = ff_8::filters{};
@@ -1153,7 +1154,7 @@ void map_sprite::save_pupu_textures(const std::filesystem::path &path)
 
      if (!m_map_group.field)
      {
-          return;
+          return{};
      }
 
      const std::string                field_name      = std::string{ str_to_lower(m_map_group.field->get_base_name()) };
@@ -1173,7 +1174,7 @@ void map_sprite::save_pupu_textures(const std::filesystem::path &path)
      for (const PupuID &pupu : unique_pupu_ids)
      {
           settings.filters.value().pupu.update(pupu).enable();
-          if (!save_texture(&out_texture))
+          if (!generate_texture(&out_texture))
           {
                continue;
           }
@@ -1181,7 +1182,8 @@ void map_sprite::save_pupu_textures(const std::filesystem::path &path)
             coo ? save_path_coo(pattern_coo_pupu, path, field_name, pupu, *coo) : save_path(pattern_pupu, path, field_name, pupu);
           future_of_futures.push_back(async_save(out_texture.getTexture(), out_path));
      }
-     consume_futures(future_of_futures);
+     return future_of_futures;
+     //consume_futures(future_of_futures);
 }
 
 [[nodiscard]] std::future<std::future<void>> map_sprite::async_save(const sf::Texture &out_texture, const std::filesystem::path &out_path)
@@ -1273,7 +1275,7 @@ std::filesystem::path map_sprite::save_path(
      return path / fmt::vformat(fmt::string_view(pattern), fmt::make_format_args(field_name, pupu));
 }
 
-bool map_sprite::save_texture(sf::RenderTexture *texture) const
+bool map_sprite::generate_texture(sf::RenderTexture *texture) const
 {
      if (texture == nullptr)
      {

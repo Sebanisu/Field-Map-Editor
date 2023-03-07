@@ -3,7 +3,6 @@
 //
 
 #include "gui.hpp"
-#include "gui_batch.hpp"
 #include "gui_labels.hpp"
 #include "open_file_explorer.hpp"
 #include "safedir.hpp"
@@ -30,7 +29,7 @@ static void DebugCallback(
                break;
           case GL_DEBUG_SEVERITY_LOW:
                spdlog::info("OpenGL message: {}", message);
-               break ;
+               break;
           case GL_DEBUG_SEVERITY_NOTIFICATION:
           default:
                spdlog::debug("OpenGL message: {}", message);
@@ -349,7 +348,6 @@ void gui::background_color_picker()
 void gui::loop()
 {
      using namespace std::string_view_literals;
-
      menu_bar();
      file_browser_locate_ff8();
      file_browser_save_texture();
@@ -386,6 +384,19 @@ void gui::loop()
      m_window.draw(m_mouse_positions.sprite, states);
      ImGui::SFML::Render(m_window);
      m_window.display();
+
+     if (!m_future_of_future_consumer.done())
+     {
+          ++m_future_of_future_consumer;
+     }
+     else if (!m_future_of_future_consumer.output_empty())
+     {
+          m_future_consumer = m_future_of_future_consumer.get_consumer();
+     }
+     else if (!m_future_consumer.done())
+     {
+          ++m_future_consumer;
+     }
 }
 void gui::checkbox_render_imported_image()
 {
@@ -1125,9 +1136,16 @@ void gui::file_browser_locate_ff8()
                Configuration config{};
                config->insert_or_assign("reswizzle_path", m_directory_browser.GetPwd().string());
                selected_path = path_with_prefix_and_base_name(std::move(selected_path));
-               std::filesystem::create_directories(selected_path);
+               std::error_code error_code{};
+               std::filesystem::create_directories(selected_path, error_code);
+               if (error_code)
+               {
+                    spdlog::error(
+                      "{}:{} - {}: {} - path: {}", __FILE__, __LINE__, error_code.value(), error_code.message(), selected_path.string());
+                    error_code.clear();
+               }
                // todo modify these two functions :P to use the imported image.
-               m_map_sprite.save_swizzle_textures(selected_path);// done.
+               m_future_of_future_consumer = m_map_sprite.save_swizzle_textures(selected_path);// done.
                m_map_sprite.save_modified_map(selected_path / m_map_sprite.map_filename());// done.
                open_directory(selected_path);
           }
@@ -1157,8 +1175,15 @@ void gui::file_browser_locate_ff8()
                config->insert_or_assign("deswizzle_path", m_directory_browser.GetPwd().string());
                config.save();
                selected_path = path_with_prefix_and_base_name(std::move(selected_path));
-               std::filesystem::create_directories(selected_path);
-               m_map_sprite.save_pupu_textures(selected_path);
+               std::error_code error_code{};
+               std::filesystem::create_directories(selected_path, error_code);
+               if (error_code)
+               {
+                    spdlog::error(
+                      "{}:{} - {}: {} - path: {}", __FILE__, __LINE__, error_code.value(), error_code.message(), selected_path.string());
+                    error_code.clear();
+               }
+               m_future_of_future_consumer = m_map_sprite.save_pupu_textures(selected_path);
                m_map_sprite.save_modified_map(selected_path / m_map_sprite.map_filename());
                open_directory(selected_path);
           }
