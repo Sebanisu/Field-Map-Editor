@@ -149,14 +149,14 @@ struct map_sprite final
      void        flatten_bpp();
      void        flatten_palette();
      void        reset_render_texture();
-     void                         save_swizzle_textures(const std::filesystem::path &path);
+     void        save_swizzle_textures(const std::filesystem::path &path);
      void        save_pupu_textures(const std::filesystem::path &path);
      void        load_map(const std::filesystem::path &dest_path);
      void        resize_render_texture();
      void        init_render_texture();
      void        update_render_texture(const sf::Texture *p_texture, Map map, const tile_sizes tile_size);
      static void consume_futures(std::vector<std::future<void>> &futures);
-     static void        consume_futures(std::vector<std::future<std::future<void>>> &future_of_futures) const;
+     static void consume_futures(std::vector<std::future<std::future<void>>> &future_of_futures);
      void        update_position(const sf::Vector2i &pixel_pos, const uint8_t &texture_page, const sf::Vector2i &down_pixel_pos);
 
      static std::filesystem::path save_path_coo(
