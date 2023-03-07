@@ -4,6 +4,7 @@
 #ifndef FIELD_MAP_EDITOR_GUI_HPP
 #define FIELD_MAP_EDITOR_GUI_HPP
 #include "archives_group.hpp"
+#include "batch.hpp"
 #include "compact_type.hpp"
 #include "Configuration.hpp"
 #include "events.hpp"
@@ -51,12 +52,14 @@ struct gui
      std::shared_ptr<sf::Shader>                                         m_drag_sprite_shader        = {};
      Selections                                                          m_selections                = {};
      scrolling                                                           m_scrolling                 = {};
+     batch                                                               m_batch                     = {};
      static constexpr std::int8_t                                        tile_size_px                = { 16 };
      static constexpr std::uint8_t                                       tile_size_px_unsigned       = { 16U };
      mouse_positions                                                     m_mouse_positions           = {};
      float                                                               m_scale_width               = {};
      sf::RenderWindow                                                    m_window                    = {};
      sf::Clock                                                           m_delta_clock               = {};
+     sf::Time                                                            m_elapsed_time              = {};
      toml::array                                                         m_paths                     = {};
      toml::array                                                         m_custom_upscale_paths      = {};
      archives_group                                                      m_archives_group            = {};
@@ -95,6 +98,7 @@ struct gui
      archives_group                                                      get_archives_group() const;
      sf::RenderWindow                                                    get_render_window() const;
      void                                                                update_path();
+     void                                                                consume_one_future();
      mim_sprite                                                          get_mim_sprite() const;
      map_sprite                                                          get_map_sprite() const;
      void                                                                init_and_get_style();
@@ -153,7 +157,6 @@ struct gui
      map_directory_mode      m_modified_directory_map = {};
      std::filesystem::path   m_loaded_swizzle_texture_path{};
      std::filesystem::path   m_loaded_deswizzle_texture_path{};
-     static void             combo_compact_type(ff_8::filter_old<compact_type> &);
      //     void                                               popup_batch_reswizzle();
      //     void                                               popup_batch_deswizzle();
 

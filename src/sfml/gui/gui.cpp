@@ -86,13 +86,13 @@ void gui::start()
                m_changed      = false;
                get_imgui_id() = {};
                loop_events();
-               const sf::Time        &delta_time       = m_delta_clock.restart();
+               m_elapsed_time                          = m_delta_clock.restart();
 
                static constexpr float scroll_time_fast = 4000.F;
                static constexpr float scroll_time_slow = 1000.F;
                m_scrolling.total_scroll_time[0] =
                  m_selections.draw_swizzle || (!m_selections.draw_palette && mim_test()) ? scroll_time_fast : scroll_time_slow;
-               if (m_scrolling.scroll(xy, delta_time))
+               if (m_scrolling.scroll(xy, m_elapsed_time))
                {
                     m_changed                     = false;
                     m_mouse_positions.mouse_moved = true;
@@ -105,7 +105,7 @@ void gui::start()
                          move_camera(m_map_sprite);
                     }
                }
-               ImGui::SFML::Update(m_window, delta_time);
+               ImGui::SFML::Update(m_window, m_elapsed_time);
                loop();
           } while (m_window.isOpen());
           ImGui::SFML::Shutdown();
@@ -354,6 +354,10 @@ void gui::loop()
      render_dockspace();
      //     popup_batch_deswizzle();
      //     popup_batch_reswizzle();
+     if (m_selections.test_batch_window)
+     {
+          m_batch.draw_window(get_imgui_id());
+     }
      control_panel_window();
      //     batch_ops_ask_menu();
      begin_batch_embed_map_warning_window();
@@ -384,7 +388,21 @@ void gui::loop()
      m_window.draw(m_mouse_positions.sprite, states);
      ImGui::SFML::Render(m_window);
      m_window.display();
+     consume_one_future();
+}
+void gui::consume_one_future()
+{
+     static constexpr int interval           = 50;// the interval in milliseconds
+     static int           total_elapsed_time = 0;// keep track of the elapsed time using a static variable
 
+     total_elapsed_time += m_elapsed_time.asMilliseconds();// add the elapsed time since last update
+
+     if (total_elapsed_time < interval)
+     {
+          return;
+     }
+     // perform your operation here
+     total_elapsed_time = 0;// reset the elapsed time
      if (!m_future_of_future_consumer.done())
      {
           ++m_future_of_future_consumer;
@@ -2051,21 +2069,7 @@ void gui::combo_blend_other()
           m_changed = true;
      }
 }
-void gui::combo_compact_type(ff_8::filter_old<compact_type> &compact)
-{
-     if (generic_combo(
-           get_imgui_id(),
-           gui_labels::compact,
-           []() {
-                return std::array{ compact_type::rows, compact_type::all, compact_type::map_order };
-           },
-           []() {
-                return std::array{ gui_labels::rows, gui_labels::all, gui_labels::map_order };
-           },
-           [&]() -> auto & { return compact; }))
-     {
-     }
-}
+
 
 void gui::combo_z()
 {
@@ -2792,7 +2796,8 @@ void gui::collapsing_tile_info(const variant_tile_t &current_tile) const
                            while (std::getline(ss, line, '\n'))
                            {
                                 std::istringstream ss_line(line);
-                                std::string        key, value;
+                                std::string        key;
+                                std::string        value;
                                 if (std::getline(ss_line, key, ':') && std::getline(ss_line, value))
                                 {
                                      output_text_values(std::string_view(key), std::string_view(value).substr(1));
