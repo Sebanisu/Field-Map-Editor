@@ -2254,19 +2254,6 @@ std::vector<std::filesystem::path> gui::find_maps_in_directory(const std::filesy
      }
      return paths;
 }
-
-
-//[[nodiscard]] inline bool any_matches(
-//  const std::vector<std::filesystem::path>        &paths,
-//  const std::vector<open_viii::archive::FileData> &all_file_data)
-//{
-//  return std::ranges::any_of(
-//    all_file_data, [&paths](const open_viii::archive::FileData &file_data) {
-//      const auto in_path = file_data.get_path();
-//      return in_path.has_filename()
-//             && open_viii::archive::any_matches(paths, in_path);
-//    });
-//}
 template<bool Nested>
 std::vector<std::filesystem::path>
   gui::replace_entries(const open_viii::archive::FIFLFS<Nested> &field, const std::vector<std::filesystem::path> &paths) const
