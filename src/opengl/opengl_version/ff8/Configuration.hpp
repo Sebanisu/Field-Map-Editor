@@ -40,7 +40,14 @@ public:
 
   void save() const
   {
-    std::filesystem::create_directories(m_path.parent_path());
+    std::error_code error_code{};
+    std::filesystem::create_directories(m_path.parent_path(), error_code);
+    if (error_code)
+    {
+         spdlog::error(
+           "{}:{} - {}: {} - path: {}", __FILE__, __LINE__, error_code.value(), error_code.message(), m_path.parent_path().string());
+         error_code.clear();
+    }
     auto fs =
       std::ofstream(m_path, std::ios::out | std::ios::binary | std::ios::trunc);
     if (!fs)
