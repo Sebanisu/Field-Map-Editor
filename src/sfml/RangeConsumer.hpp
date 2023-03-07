@@ -20,15 +20,30 @@ class RangeConsumer
      using end_t   = std::remove_cvref_t<decltype(std::ranges::end(m_range))>;
 
    private:
-     mutable begin_t pos{};
-     end_t           end_pos{};
+     begin_t pos;
+     end_t   end_pos;
 
    public:
+     RangeConsumer()
+       : RangeConsumer(range_t{})
+     {
+     }
      explicit RangeConsumer(range_t in_range)
        : m_range(std::move(in_range))
        , pos(std::ranges::begin(m_range))
        , end_pos(std::ranges::end(m_range))
      {
+     }
+     void restart()
+     {
+          pos     = std::ranges::begin(m_range);
+          end_pos = std::ranges::end(m_range);
+     }
+     RangeConsumer<range_t> &operator=(range_t new_value)
+     {
+          m_range = std::move(new_value);
+          restart();
+          return *this;
      }
      [[nodiscard]] std::size_t size() const
      {
@@ -41,11 +56,6 @@ class RangeConsumer
      [[nodiscard]] bool done() const
      {
           return pos == end_pos;
-     }
-     const auto &operator++() const
-     {
-          pos = std::next(pos);
-          return *this;
      }
      auto &operator++()
      {
@@ -69,22 +79,35 @@ template<std::ranges::range range_t>
 class FutureConsumer
 {
    private:
-     using range_value_t  = std::ranges::range_value_t<range_t>;
+     using range_value_t = std::ranges::range_value_t<range_t>;
 
-     RangeConsumer<range_t>      m_range{};
+     RangeConsumer<range_t> m_range{};
 
+     void                   consume_now()
+     {
+          for (; !done(); operator++())
+          {
+          }
+     }
 
    public:
+     FutureConsumer() = default;
      explicit FutureConsumer(range_t in_range)
        : m_range(std::move(in_range))
      {
+     }
+     FutureConsumer<range_t> &operator=(range_t new_value)
+     {
+          consume_now();
+          m_range = std::move(new_value);
+          return *this;
      }
      const FutureConsumer<range_t> &operator++()
      {
           if (!done())
           {
                auto &item = *m_range;
-               if(item.valid())
+               if (item.valid())
                {
                     item.get();
                }
@@ -108,12 +131,29 @@ class FutureOfFutureConsumer
      RangeConsumer<range_t>      m_range{};
      std::vector<future_value_t> m_out{};
 
+     void                        consume_now()
+     {
+          for (; !done(); operator++())
+          {
+          }
+          auto frh = get_consumer();
+          for (; !frh.done(); ++frh)
+          {
+          }
+     }
 
    public:
+     FutureOfFutureConsumer() = default;
      explicit FutureOfFutureConsumer(range_t in_range)
        : m_range(std::move(in_range))
      {
           m_out.reserve(std::ranges::size(m_range));
+     }
+     FutureOfFutureConsumer<range_t> &operator=(range_t new_value)
+     {
+          consume_now();
+          m_range = std::move(new_value);
+          return *this;
      }
      const FutureOfFutureConsumer<range_t> &operator++()
      {
@@ -121,8 +161,10 @@ class FutureOfFutureConsumer
           {
                auto &item = *m_range;
                ++m_range;
-               if(item.valid())
-               {m_out.push_back(item.get());}
+               if (item.valid())
+               {
+                    m_out.push_back(item.get());
+               }
           }
           return *this;
      }
