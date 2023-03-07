@@ -12,6 +12,7 @@
 #include "open_viii/archive/Archives.hpp"
 #include "open_viii/graphics/background/Map.hpp"
 #include "open_viii/graphics/background/Mim.hpp"
+#include "RangeConsumer.hpp"
 #include "settings_backup.hpp"
 #include "square.hpp"
 #include "tile_sizes.hpp"

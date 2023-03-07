@@ -1,4 +1,3 @@
-
 #include "map_sprite.hpp"
 #include "append_inserter.hpp"
 #include "format_imgui_text.hpp"
@@ -91,16 +90,16 @@ std::shared_ptr<std::array<sf::Texture, map_sprite::MAX_TEXTURES>> map_sprite::l
           {
                for (const auto &bpp : range)
                {
+                    if (bpp.bpp24())
+                    {
+                         continue;
+                    }
                     const auto &map = m_all_unique_values_and_strings.palette();
                     if (map.contains(bpp))
                     {
 
                          for (const auto &palette : map.at(bpp).values())
                          {
-                              if (bpp.bpp24())
-                              {
-                                   continue;
-                              }
                               if (!m_filters.upscale.enabled())
                               {
                                    future_of_futures.push_back(load_mim_textures(ret, bpp, palette));
@@ -132,7 +131,17 @@ std::shared_ptr<std::array<sf::Texture, map_sprite::MAX_TEXTURES>> map_sprite::l
                ++pos;
           });
      }
-     consume_futures(future_of_futures);
+     auto fofh = FutureOfFutureConsumer{ std::move(future_of_futures) };
+     for (; !fofh.done(); ++fofh)
+     {
+     }
+     auto frh = fofh.get_holder();
+     for (; !frh.done(); ++frh)
+     {
+          auto &future = *frh;
+          future.get();
+     }
+     // consume_futures();
      return ret;
 }
 void map_sprite::consume_futures(std::vector<std::future<std::future<void>>> &future_of_futures)
@@ -224,7 +233,8 @@ std::future<std::future<void>> map_sprite::load_deswizzle_textures(
           return {};
      }
      return { std::async(
-       std::launch::async, future_operations::GetImageFromFromFirstValidPathCreateFuture{ &(ret->at(pos)), generate_deswizzle_paths(pupu) }) };
+       std::launch::async,
+       future_operations::GetImageFromFromFirstValidPathCreateFuture{ &(ret->at(pos)), generate_deswizzle_paths(pupu) }) };
 }
 std::future<std::future<void>> map_sprite::load_upscale_textures(SharedTextures &ret, std::uint8_t texture_page, std::uint8_t palette)
 {
@@ -236,8 +246,8 @@ std::future<std::future<void>> map_sprite::load_upscale_textures(SharedTextures 
      }
      return { std::async(
        std::launch::async,
-       future_operations::GetImageFromFromFirstValidPathCreateFuture{ &(ret->at(pos)),
-                                                   m_upscales.generate_upscale_paths(m_filters.upscale.value(), texture_page, palette) }) };
+       future_operations::GetImageFromFromFirstValidPathCreateFuture{
+         &(ret->at(pos)), m_upscales.generate_upscale_paths(m_filters.upscale.value(), texture_page, palette) }) };
 }
 
 std::future<std::future<void>> map_sprite::load_upscale_textures(SharedTextures &ret, std::uint8_t texture_page)
@@ -250,8 +260,8 @@ std::future<std::future<void>> map_sprite::load_upscale_textures(SharedTextures 
      }
      return { std::async(
        std::launch::async,
-       future_operations::GetImageFromFromFirstValidPathCreateFuture{ &(ret->at(pos)),
-                                                   m_upscales.generate_upscale_paths(m_filters.upscale.value(), texture_page) }) };
+       future_operations::GetImageFromFromFirstValidPathCreateFuture{
+         &(ret->at(pos)), m_upscales.generate_upscale_paths(m_filters.upscale.value(), texture_page) }) };
 }
 
 void set_color(std::array<sf::Vertex, 4U> &vertices, const sf::Color &color)
