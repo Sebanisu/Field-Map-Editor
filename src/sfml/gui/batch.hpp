@@ -22,6 +22,11 @@
 
 class batch
 {
+     enum struct directory_mode
+     {
+          input_mode,
+          output_mode,
+     };
      std::shared_ptr<archives_group>                            m_archives_group    = {};
      input_types                                                m_input_type        = {};
      output_types                                               m_output_type       = {};
@@ -38,6 +43,8 @@ class batch
      std::optional<open_viii::LangT>                            m_coo               = {};
      std::string                                                m_status            = {};
      map_sprite                                                 m_map_sprite        = {};
+     directory_mode                                             m_directory_browser_mode             = {};
+     bool                                                       m_input_load_map                     = { false };
      FutureOfFutureConsumer<std::vector<std::future<std::future<void>>>> m_future_of_future_consumer = {};
      FutureConsumer<std::vector<std::future<void>>>                      m_future_consumer           = {};
      ImGui::FileBrowser                                                  m_directory_browser{ static_cast<ImGuiFileBrowserFlags>(
@@ -51,6 +58,7 @@ class batch
      void                                                                browse_input_path(int &imgui_id);
      void                                                                browse_output_path(int &imgui_id);
      void                                                                button_begin(int &imgui_id);
+     void                                                                checkbox_load_map(int &imgui_id);
      void                                                                choose_field_and_coo();
      void                                                                reset_for_next();
      void                                                                generate_map_sprite();
@@ -58,6 +66,8 @@ class batch
      void                                                                flatten();
      bool                                                                consume_one_future();
      void                                                                open_directory_browser();
+     void                                                                button_input_browse();
+     void                                                                button_output_browse();
      [[nodiscard]] std::filesystem::path                                 append_file_structure(const std::filesystem::path &path) const;
      [[nodiscard]] bool browse_path(int &imgui_id, std::string_view name, bool &valid_path, std::array<char, m_buffer_size> &path_buffer);
 
@@ -105,6 +115,7 @@ class batch
           {
                m_flatten_type.disable();
           }
+          m_input_load_map = config["batch_input_load_map"].value_or(m_input_load_map);
      }
      batch &operator=(std::shared_ptr<archives_group> new_group)
      {
@@ -123,6 +134,7 @@ class batch
           ImGui::BeginDisabled(disabled);
           combo_input_type(imgui_id);
           browse_input_path(imgui_id);
+          checkbox_load_map(imgui_id);
           combo_output_type(imgui_id);
           browse_output_path(imgui_id);
           combo_compact_type(imgui_id);
@@ -135,13 +147,5 @@ class batch
           }
           format_imgui_text("{}", m_status);
      }
-     enum struct directory_mode
-     {
-          input_mode,
-          output_mode,
-     };
-     void           button_input_browse();
-     void           button_output_browse();
-     directory_mode m_directory_browser_mode = {};
 };
 #endif// FIELD_MAP_EDITOR_BATCH_HPP

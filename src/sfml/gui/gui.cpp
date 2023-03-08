@@ -968,10 +968,8 @@ void gui::menu_bar()
      {
           edit_menu();
      }
-     if (ImGui::BeginMenu("Batch Operation Test"))
-     {
-          batch_operation_test_menu();
-     }
+     batch_operation_test_menu();
+
      if (ImGui::BeginMenu("Import"))
      {
           import_menu();
@@ -989,30 +987,34 @@ void gui::import_menu()
 }
 void gui::batch_operation_test_menu()
 {
+     if (!ImGui::BeginMenu("Batch Operation Test"))
+     {
+          return;
+     }
      const auto end_menu = scope_guard(&ImGui::EndMenu);
-     if (ImGui::MenuItem("Deswizzle", nullptr, false, static_cast<bool>(m_archives_group)))
-     {
-          m_directory_browser.Open();
-          m_directory_browser.SetTitle("Choose directory to save textures");
-          m_directory_browser.SetPwd(Configuration{}["deswizzle_path"].value_or(std::filesystem::current_path().string()));
-          m_directory_browser.SetTypeFilters({ ".map", ".png" });
-          m_modified_directory_map = map_directory_mode::batch_save_deswizzle_textures;
-     }
-     if (ImGui::MenuItem("Reswizzle", nullptr, false, static_cast<bool>(m_archives_group)))
-     {
-          m_directory_browser.Open();
-          m_directory_browser.SetTitle(
-            "Choose source directory of deswizzled textures (contains two letter "
-            "directories)");
-          m_directory_browser.SetPwd(Configuration{}["reswizzle_path"].value_or(std::filesystem::current_path().string()));
-          m_directory_browser.SetTypeFilters({ ".map", ".png" });
-          m_modified_directory_map = map_directory_mode::batch_load_deswizzle_textures;
-     }
+     //     if (ImGui::MenuItem("Deswizzle", nullptr, false, static_cast<bool>(m_archives_group)))
+     //     {
+     //          m_directory_browser.Open();
+     //          m_directory_browser.SetTitle("Choose directory to save textures");
+     //          m_directory_browser.SetPwd(Configuration{}["deswizzle_path"].value_or(std::filesystem::current_path().string()));
+     //          m_directory_browser.SetTypeFilters({ ".map", ".png" });
+     //          m_modified_directory_map = map_directory_mode::batch_save_deswizzle_textures;
+     //     }
+     //     if (ImGui::MenuItem("Reswizzle", nullptr, false, static_cast<bool>(m_archives_group)))
+     //     {
+     //          m_directory_browser.Open();
+     //          m_directory_browser.SetTitle(
+     //            "Choose source directory of deswizzled textures (contains two letter "
+     //            "directories)");
+     //          m_directory_browser.SetPwd(Configuration{}["reswizzle_path"].value_or(std::filesystem::current_path().string()));
+     //          m_directory_browser.SetTypeFilters({ ".map", ".png" });
+     //          m_modified_directory_map = map_directory_mode::batch_load_deswizzle_textures;
+     //     }
 
-     if (ImGui::MenuItem("Embed .map files into Archives", nullptr, false, static_cast<bool>(m_archives_group)))
-     {
-          m_selections.batch_embed_map_warning_window = true;
-     }
+     //     if (ImGui::MenuItem("Embed .map files into Archives", nullptr, false, static_cast<bool>(m_archives_group)))
+     //     {
+     //          m_selections.batch_embed_map_warning_window = true;
+     //     }
      if (ImGui::MenuItem("Test Batch Window", nullptr, &m_selections.test_batch_window))
      {
           Configuration config{};

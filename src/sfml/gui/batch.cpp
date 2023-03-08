@@ -232,6 +232,10 @@ void batch::update(sf::Time elapsed_time)
 
      if (!m_map_sprite.fail() && (m_map_sprite.using_coo() || m_coo.value() == open_viii::LangT::generic))
      {
+          if (m_input_load_map && m_input_type != input_types::mim)
+          {
+               m_map_sprite.load_map(append_file_structure(m_input_path.data()) / m_map_sprite.map_filename());
+          }
           compact();
           flatten();
           switch (m_output_type)
@@ -401,4 +405,20 @@ void batch::open_directory_browser()
           }
           break;
      }
+}
+void batch::checkbox_load_map(int &imgui_id)
+{
+     if (!(m_input_type != input_types::mim))
+     {
+          return;
+     }
+     const auto pop_id = scope_guard{ &ImGui::PopID };
+     ImGui::PushID(++imgui_id);
+     if (!ImGui::Checkbox("Load Map", &m_input_load_map))
+     {
+          return;
+     }
+     Configuration config{};
+     config->insert_or_assign("batch_input_load_map", m_input_load_map);
+     config.save();
 }
