@@ -3,7 +3,8 @@
 //
 
 #include "batch.hpp"
-struct as_string
+#include "Configuration.hpp"
+struct AsString
 {
      template<typename T>
      std::string operator()(const T &value) const
@@ -15,16 +16,22 @@ void batch::combo_input_type(int &imgui_id)
 {
      static const auto values = std::array{ input_types::mim, input_types::deswizzle, input_types::swizzle };
      if (fme::generic_combo(
-           imgui_id, "Input Type", []() { return values; }, []() { return values | std::views::transform(as_string{}); }, m_input_type))
+           imgui_id, "Input Type", []() { return values; }, []() { return values | std::views::transform(AsString{}); }, m_input_type))
      {
+          Configuration config{};
+          config->insert_or_assign("batch_input_type", static_cast<std::underlying_type_t<input_types>>(m_input_type));
+          config.save();
      }
 }
 void batch::combo_output_type(int &imgui_id)
 {
      static const auto values = std::array{ output_types::deswizzle, output_types::swizzle };
      if (fme::generic_combo(
-           imgui_id, "Output Type", []() { return values; }, []() { return values | std::views::transform(as_string{}); }, m_output_type))
+           imgui_id, "Output Type", []() { return values; }, []() { return values | std::views::transform(AsString{}); }, m_output_type))
      {
+          Configuration config{};
+          config->insert_or_assign("batch_output_type", static_cast<std::underlying_type_t<output_types>>(m_output_type));
+          config.save();
      }
 }
 void batch::combo_compact_type(int &imgui_id)
@@ -34,30 +41,79 @@ void batch::combo_compact_type(int &imgui_id)
            imgui_id,
            gui_labels::compact,
            []() { return values; },
-           []() { return values | std::views::transform(as_string{}); },
+           []() { return values | std::views::transform(AsString{}); },
            [&]() -> auto & { return m_compact_type; }))
      {
+          Configuration config{};
+          config->insert_or_assign("batch_compact_type", static_cast<std::underlying_type_t<compact_type>>(m_compact_type.value()));
+          config->insert_or_assign("batch_compact_enabled", m_compact_type.enabled());
+          config.save();
      }
 }
 void batch::combo_flatten_type(int &imgui_id)
 {
-     static const auto values = std::array{ flatten_type::bpp, flatten_type::palette, flatten_type::both };
+     if (!m_compact_type.enabled() || m_compact_type.value() != compact_type::map_order)
+     {
+          static const auto values = std::array{ flatten_type::bpp, flatten_type::palette, flatten_type::both };
+          if (fme::generic_combo(
+                imgui_id,
+                gui_labels::flatten,
+                []() { return values; },
+                []() { return values | std::views::transform(AsString{}); },
+                [&]() -> auto & { return m_flatten_type; }))
+          {
+               Configuration config{};
+               config->insert_or_assign("batch_flatten_type", static_cast<std::underlying_type_t<flatten_type>>(m_flatten_type.value()));
+               config->insert_or_assign("batch_flatten_enabled", m_flatten_type.enabled());
+               config.save();
+          }
+          return;
+     }
+     static const auto values = std::array{ flatten_type::palette };
      if (fme::generic_combo(
            imgui_id,
            gui_labels::flatten,
            []() { return values; },
-           []() { return values | std::views::transform(as_string{}); },
+           []() { return values | std::views::transform(AsString{}); },
            [&]() -> auto & { return m_flatten_type; }))
      {
+          Configuration config{};
+          config->insert_or_assign("batch_flatten_type", static_cast<std::underlying_type_t<flatten_type>>(m_flatten_type.value()));
+          config->insert_or_assign("batch_flatten_enabled", m_flatten_type.enabled());
+          config.save();
      }
 }
 void batch::browse_input_path(int &imgui_id)
 {
-     browse_path(imgui_id, "Input Path", m_input_path_valid, m_input_path);
+     if (m_input_type == input_types::mim)
+     {
+          return;
+     }
+     if (!browse_path(imgui_id, "Input Path", m_input_path_valid, m_input_path))
+     {
+          return;
+     }
+     if (!m_input_path_valid)
+     {
+          return;
+     }
+     Configuration config{};
+     config->insert_or_assign("batch_input_path", std::string(m_input_path.data()));
+     config.save();
 }
 void batch::browse_output_path(int &imgui_id)
 {
-     browse_path(imgui_id, "Output Path", m_output_path_valid, m_output_path);
+     if (!browse_path(imgui_id, "Output Path", m_output_path_valid, m_output_path))
+     {
+          return;
+     }
+     if (!m_output_path_valid)
+     {
+          return;
+     }
+     Configuration config{};
+     config->insert_or_assign("batch_output_path", std::string(m_output_path.data()));
+     config.save();
 }
 void batch::button_begin(int &imgui_id)
 {
@@ -66,9 +122,9 @@ void batch::button_begin(int &imgui_id)
      ImGui::BeginDisabled(
        (m_input_type == input_types::mim || (!m_input_path_valid && m_input_type != input_types::mim)) && !m_output_path_valid
        || !m_archives_group.operator bool());
-     ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.0f, 0.5f, 0.0f, 1.0f));// Green
-     ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.3f, 0.8f, 0.3f, 1.0f));// Light green hover
-     ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.1f, 0.3f, 0.1f, 1.0f));// Dark green active
+     ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.0F, 0.5F, 0.0F, 1.0F));// Green
+     ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.3F, 0.8F, 0.3F, 1.0F));// Light green hover
+     ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.1F, 0.3F, 0.1F, 1.0F));// Dark green active
      if (ImGui::Button("Begin Batch Operation...", ImVec2{ ImGui::GetContentRegionAvail().x, ImGui::GetFrameHeight() }))
      {
           m_fields_consumer = m_archives_group->fields();
@@ -79,8 +135,9 @@ void batch::button_begin(int &imgui_id)
      ImGui::PopStyleColor(3);
      ImGui::EndDisabled();
 }
-void batch::browse_path(int &imgui_id, std::string_view name, bool &valid_path, std::array<char, m_buffer_size> &path_buffer)
+bool batch::browse_path(int &imgui_id, std::string_view name, bool &valid_path, std::array<char, m_buffer_size> &path_buffer)
 {
+     bool              changed      = false;
      const ImGuiStyle &style        = ImGui::GetStyle();
      const float       spacing      = style.ItemInnerSpacing.x;
      const float       button_size  = ImGui::GetFrameHeight();
@@ -91,12 +148,12 @@ void batch::browse_path(int &imgui_id, std::string_view name, bool &valid_path, 
      // Highlight text box red if the folder doesn't exist
      {
           const float width = ImGui::CalcItemWidth();
-          ImGui::PushItemWidth(width - (spacing * 1.0f) - button_width);
+          ImGui::PushItemWidth(width - (spacing * 1.0F) - button_width);
           const auto pop_item_width = scope_guard(&ImGui::PopItemWidth);
           if (!valid_path)
           {
                ImGui::PushStyleColor(ImGuiCol_FrameBg, (ImVec4)ImColor::HSV(0.0F, 0.5F, 0.5F));
-               ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, (ImVec4)ImColor::HSV(0.0f, 0.8f, 0.8f));// lighter red on hover
+               ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, (ImVec4)ImColor::HSV(0.0F, 0.8F, 0.8F));// lighter red on hover
                ImGui::PushStyleColor(ImGuiCol_FrameBgActive, (ImVec4)ImColor::HSV(0.0F, 0.5F, 0.5F));
           }
           const auto pop_color = scope_guard([valid = valid_path]() {
@@ -110,11 +167,11 @@ void batch::browse_path(int &imgui_id, std::string_view name, bool &valid_path, 
                // Check if the folder path exists when the text box changes
                const auto tmp = safedir(path_buffer.data());
                valid_path     = tmp.is_exists() && tmp.is_dir();
+               changed        = true;
           }
      }
      ImGui::SameLine(0, spacing);
      {
-          ;
           if (ImGui::Button("Browse", ImVec2{ button_width, button_size }))
           {
                // Trigger the chooseFolder function when the button is clicked
@@ -123,16 +180,140 @@ void batch::browse_path(int &imgui_id, std::string_view name, bool &valid_path, 
      }
      ImGui::SameLine(0, spacing);
      format_imgui_text("{}", name.data());
+     return changed;
 }
-void batch::update(sf::Time /*unused*/)
+void batch::update(sf::Time elapsed_time)
 {
+     static constexpr int interval           = 1;// the interval in milliseconds
+     static int           total_elapsed_time = 0;// keep track of the elapsed time using a static variable
+
+     total_elapsed_time += elapsed_time.asMilliseconds();// add the elapsed time since last update
+
+     if (total_elapsed_time < interval)
+     {
+          return;
+     }
+     total_elapsed_time = 0;// reset the elapsed time
+     if (consume_one_future())
+     {
+          return;
+     }
      choose_field_and_coo();
      if (!m_field || !m_coo || !m_field->operator bool())
      {
           return;
      }
      m_status = fmt::format("Processing {}:{}", m_field->get_base_name(), *m_coo);
+     generate_map_sprite();
+
+     if (!m_map_sprite.fail() && (m_map_sprite.using_coo() || m_coo.value() == open_viii::LangT::generic))
+     {
+          compact();
+          flatten();
+          switch (m_output_type)
+          {
+               case output_types::deswizzle:
+                    m_future_of_future_consumer = m_map_sprite.save_pupu_textures(append_file_structure(m_output_path.data()));
+                    break;
+               case output_types::swizzle:
+                    m_future_of_future_consumer = m_map_sprite.save_swizzle_textures(append_file_structure(m_output_path.data()));
+                    break;
+          }
+          m_map_sprite.save_modified_map(append_file_structure(m_output_path.data()) / m_map_sprite.map_filename());
+     }
      reset_for_next();
+}
+bool batch::consume_one_future()
+{
+     // perform your operation here
+     if (!m_future_of_future_consumer.done())
+     {
+          ++m_future_of_future_consumer;
+          return true;
+     }
+     else if (!m_future_of_future_consumer.output_empty())
+     {
+          m_future_consumer = m_future_of_future_consumer.get_consumer();
+          return true;
+     }
+     else if (!m_future_consumer.done())
+     {
+          ++m_future_consumer;
+          return true;
+     }
+     return false;
+}
+void batch::generate_map_sprite()
+{
+     assert(m_field);
+     assert(m_coo);
+     ff_8::filters filters = {};
+     switch (m_input_type)
+     {
+          case input_types::mim:
+               // do nothing
+               break;
+          case input_types::deswizzle:
+               filters.deswizzle.update(append_file_structure(m_input_path.data())).enable();
+               break;
+          case input_types::swizzle:
+               filters.upscale.update(append_file_structure(m_input_path.data())).enable();
+               break;
+     }
+     m_map_sprite = map_sprite{ ff_8::map_group{ m_field, *m_coo },
+                                m_output_type == output_types::swizzle,
+                                filters,
+                                true,
+                                m_coo && m_coo.value() != open_viii::LangT::generic };
+}
+void batch::compact()
+{
+     if (!m_compact_type.enabled())
+     {
+          return;
+     }
+     switch (m_compact_type.value())
+     {
+          case compact_type::rows:
+               m_map_sprite.compact_rows();
+               break;
+          case compact_type::all:
+               m_map_sprite.compact_all();
+               break;
+          case compact_type::map_order:
+               m_map_sprite.compact_map_order();
+               break;
+     }
+}
+void batch::flatten()
+{
+     if (!m_flatten_type.enabled())
+     {
+          return;
+     }
+     switch (m_flatten_type.value())
+     {
+          case flatten_type::bpp:
+               if (!m_compact_type.enabled() || m_compact_type.value() != compact_type::map_order)
+               {
+                    m_map_sprite.flatten_bpp();
+               }
+               break;
+          case flatten_type::palette:
+               m_map_sprite.flatten_palette();
+               break;
+          case flatten_type::both:
+               if (!m_compact_type.enabled() || m_compact_type.value() != compact_type::map_order)
+               {
+                    m_map_sprite.flatten_bpp();
+               }
+               m_map_sprite.flatten_palette();
+               break;
+     }
+     if (m_compact_type.value() != compact_type::map_order)
+     {
+          compact();
+     }
 }
 void batch::reset_for_next()
 {
@@ -158,4 +339,10 @@ void batch::choose_field_and_coo()
           m_coo = *m_lang_consumer;
           ++m_lang_consumer;
      }
+}
+std::filesystem::path batch::append_file_structure(const std::filesystem::path &path) const
+{
+     std::string const      name   = m_map_sprite.get_base_name();
+     std::string_view const prefix = std::string_view(name).substr(0, 2);
+     return path / prefix / name;
 }

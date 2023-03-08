@@ -21,18 +21,18 @@ static void DebugCallback(
      switch (severity)
      {
           case GL_DEBUG_SEVERITY_HIGH:
-               spdlog::error("OpenGL error: {}", message);
+               spdlog::error("OpenGL high: {}", message);
                throw;
                break;
           case GL_DEBUG_SEVERITY_MEDIUM:
-               spdlog::warn("OpenGL error: {}", message);
+               spdlog::debug("OpenGL medium: {}", message);
                break;
           case GL_DEBUG_SEVERITY_LOW:
-               spdlog::info("OpenGL message: {}", message);
+               spdlog::debug("OpenGL low: {}", message);
                break;
           case GL_DEBUG_SEVERITY_NOTIFICATION:
           default:
-               spdlog::debug("OpenGL message: {}", message);
+               spdlog::debug("OpenGL notification: {}", message);
                break;
      }
 }
@@ -284,7 +284,7 @@ void gui::control_panel_window_map()
 void gui::frame_rate()
 {
      const auto framerate = ImGui::GetIO().Framerate;
-     format_imgui_text("   {:>3.2f} fps", framerate);
+     format_imgui_text("{:>3.2f} fps", framerate);
 }
 void gui::compact_flatten_buttons()
 {
@@ -689,15 +689,15 @@ void gui::combo_coo()
      if (generic_combo(
            get_imgui_id(),
            gui_labels::language,
-           []() { return std::views::iota(static_cast<int>(open_viii::LangT::begin), static_cast<int>(open_viii::LangT::end)); },
+           []() { return open_viii::LangCommon::to_array(); },
            []() {
-                static constexpr auto coos_string_array = open_viii::LangCommon::to_string_array();
-                return coos_string_array;
+                return open_viii::LangCommon::to_array()
+                       | std::views::transform([](open_viii::LangT value) { return fmt::format("{}", value); });
            },
            m_selections.coo))
      {
           Configuration config{};
-          config->insert_or_assign("selections_palette", m_selections.palette);
+          config->insert_or_assign("selections_coo", static_cast<std::underlying_type_t<open_viii::LangT>>(m_selections.coo));
           config.save();
           if (mim_test())
           {
@@ -1912,7 +1912,7 @@ std::shared_ptr<open_viii::archive::FIFLFS<false>> gui::init_field()
 }
 map_sprite gui::get_map_sprite() const
 {
-     return { ff_8::map_group{ m_field, get_coo() }, m_selections.draw_swizzle, {}, m_selections.draw_disable_blending };
+     return { ff_8::map_group{ m_field, get_coo() }, m_selections.draw_swizzle, {}, m_selections.draw_disable_blending, false };
 }
 int gui::get_selected_field()
 {

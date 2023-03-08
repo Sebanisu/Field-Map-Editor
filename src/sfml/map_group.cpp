@@ -36,12 +36,11 @@ static map_group::MapHistory load_map_history(
   std::string                   *out_path,
   bool                           shift = true)
 {
-     if (!field || !coo)
+     if (!field)
      {
           return {};
      }
-     map_group::Map map = load_map(field, coo, mim, out_path, shift);
-     return map_group::MapHistory{ map };
+     return map_group::MapHistory{ load_map(field, coo, mim, out_path, shift) };
 }
 map_group::Map load_map(
   const map_group::SharedField  &field,
@@ -77,11 +76,11 @@ map_group::Map load_map(
      }
      return map;
 }
-map_group::map_group(map_group::SharedField in_field, map_group::Coo coo = map_group::Coo::generic)
+map_group::map_group(map_group::SharedField in_field, map_group::OptCoo in_coo = std::nullopt)
   : field{ std::move(in_field) }
-  , mim{ std::make_shared<Mim>(load_mim(field, coo)) }
+  , mim{ std::make_shared<Mim>(load_mim(field, in_coo ? *in_coo : map_group::Coo::generic)) }
   , map_path{}
-  , opt_coo{ coo }
+  , opt_coo{ in_coo }
   , maps{ load_map_history(field, opt_coo, mim, &map_path) }
 {
 }

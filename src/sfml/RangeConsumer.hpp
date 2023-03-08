@@ -76,7 +76,7 @@ class RangeConsumer
      }
 };
 template<std::ranges::range range_t>
-class FutureConsumer
+class [[nodiscard]] FutureConsumer
 {
    private:
      using range_value_t = std::ranges::range_value_t<range_t>;
@@ -122,7 +122,7 @@ class FutureConsumer
      }
 };
 template<std::ranges::range range_t>
-class FutureOfFutureConsumer
+class [[nodiscard]] FutureOfFutureConsumer
 {
    private:
      using range_value_t  = std::ranges::range_value_t<range_t>;

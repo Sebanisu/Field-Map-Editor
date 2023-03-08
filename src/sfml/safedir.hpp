@@ -51,7 +51,7 @@ public:
     }
     if (ec)
     {
-      warn(ec, __FILE__, __LINE__);
+      debug(ec, __FILE__, __LINE__);
     }
     return {};
   }
@@ -67,7 +67,7 @@ private:
     bool            return_val = std::filesystem::exists(m_path, ec);
     if (ec)
     {
-      warn(ec, __FILE__, __LINE__);
+      debug(ec, __FILE__, __LINE__);
       return false;
     }
     return return_val;
@@ -82,14 +82,14 @@ private:
     bool            const return_val = std::filesystem::is_directory(m_path, ec);
     if (ec)
     {
-      warn(ec, __FILE__, __LINE__);
+      debug(ec, __FILE__, __LINE__);
       return false;
     }
     return return_val;
   }
-  void warn(std::error_code &ec, std::string_view file, int line) const
+  void debug(std::error_code &ec, std::string_view file, int line) const
   {
-    spdlog::warn(
+    spdlog::debug(
       "{}:{} - {}: {} path: \"{}\"",
       file,
       line,

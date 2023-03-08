@@ -4,11 +4,12 @@
 
 #ifndef FIELD_MAP_EDITOR_FORMATTERS_HPP
 #define FIELD_MAP_EDITOR_FORMATTERS_HPP
+#include "tile_sizes.hpp"
 #include <filesystem>
 #include <fmt/format.h>
 #include <open_viii/graphics/background/BlendModeT.hpp>
 #include <open_viii/graphics/BPPT.hpp>
-#include <tile_sizes.hpp>
+#include <open_viii/strings/LangCommon.hpp>
 
 template<>
 struct fmt::formatter<open_viii::graphics::background::BlendModeT> : fmt::formatter<std::string_view>
@@ -56,23 +57,24 @@ struct fmt::formatter<open_viii::LangT> : fmt::formatter<std::string_view>
           switch (lang_t)
           {
                case open_viii::LangT::en:
-                    name = "English"sv;
+                    name = open_viii::LangCommon::ENFULL;
                     break;
                case open_viii::LangT::fr:
-                    name = "French"sv;
+                    name = open_viii::LangCommon::FRFULL;
                     break;
                case open_viii::LangT::de:
-                    name = "German"sv;
+                    name = open_viii::LangCommon::DEFULL;
                     break;
                case open_viii::LangT::it:
-                    name = "Italian"sv;
+                    name = open_viii::LangCommon::ITFULL;
                     break;
                case open_viii::LangT::es:
-                    name = "Spanish"sv;
+                    name = open_viii::LangCommon::ESFULL;
                     break;
                case open_viii::LangT::jp:
-                    name = "Japanese"sv;
+                    name = open_viii::LangCommon::JPFULL;
                     break;
+               case open_viii::LangT::end:
                case open_viii::LangT::generic:
                     name = "Generic"sv;
                     break;

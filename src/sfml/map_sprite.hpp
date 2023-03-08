@@ -76,10 +76,11 @@ struct map_sprite final
      std::vector<std::size_t>                      m_saved_indices                 = {};
      std::vector<std::size_t>                      m_saved_imported_indices        = {};
      std::uint32_t                                 m_scale                         = { 1 };
+     mutable bool                                  once                            = { true };
 
    public:
      map_sprite() = default;
-     map_sprite(ff_8::map_group map_group, bool draw_swizzle, ff_8::filters in_filters, bool force_disable_blends);
+     map_sprite(ff_8::map_group map_group, bool draw_swizzle, ff_8::filters in_filters, bool force_disable_blends, bool require_coo);
 
      [[nodiscard]] std::uint32_t                         get_map_scale() const;
      [[nodiscard]] const sf::Texture                    *get_texture(BPPT bpp, std::uint8_t palette, std::uint8_t texture_page) const;
@@ -119,6 +120,7 @@ struct map_sprite final
      [[nodiscard]] static const sf::BlendMode           &get_blend_subtract();
      [[nodiscard]] static std::future<std::future<void>> async_save(const sf::Texture &out_texture, const std::filesystem::path &out_path);
      [[nodiscard]] bool                                  draw_imported(sf::RenderTarget &changed_tiles, sf::RenderStates states) const;
+     [[nodiscard]] bool                                  using_coo() const;
      [[nodiscard]] static std::string                    str_to_lower(std::string input);
      [[nodiscard]] sf::Sprite                            save_intersecting(const sf::Vector2i &pixel_pos, const std::uint8_t &texture_page);
      [[nodiscard]] std::size_t                           get_texture_pos(BPPT bpp, std::uint8_t palette, std::uint8_t texture_page) const;
@@ -394,7 +396,7 @@ struct map_sprite final
      {
           if (m_map_group.field)
           {
-               return { m_map_group.field->get_base_name(), m_map_group.opt_coo ? *m_map_group.opt_coo : open_viii::LangT::generic };
+               return { m_map_group.field->get_base_name(), m_map_group.opt_coo };
           }
           return {};
      }
@@ -461,25 +463,11 @@ struct map_sprite final
           const auto            alt_path         = std::filesystem::path(m_filters.deswizzle.value()) / prefix / field_name;
           const auto alt_path_2 = std::filesystem::path(m_filters.deswizzle.value()).parent_path().parent_path() / prefix / field_name;
 
+          if (m_map_group.opt_coo)
+               return std::array{ save_path_coo(pattern_coo_pupu, m_filters.deswizzle.value(), field_name, pupu, *m_map_group.opt_coo),
+                                  save_path_coo(pattern_coo_pupu, alt_path, field_name, pupu, *m_map_group.opt_coo),
+                                  save_path_coo(pattern_coo_pupu, alt_path_2, field_name, pupu, *m_map_group.opt_coo) };
           return std::array{
-               save_path_coo(
-                 pattern_coo_pupu,
-                 m_filters.deswizzle.value(),
-                 field_name,
-                 pupu,
-                 (m_map_group.opt_coo ? *m_map_group.opt_coo : ff_8::map_group::Coo::generic)),
-               save_path_coo(
-                 pattern_coo_pupu,
-                 alt_path,
-                 field_name,
-                 pupu,
-                 (m_map_group.opt_coo ? *m_map_group.opt_coo : ff_8::map_group::Coo::generic)),
-               save_path_coo(
-                 pattern_coo_pupu,
-                 alt_path_2,
-                 field_name,
-                 pupu,
-                 (m_map_group.opt_coo ? *m_map_group.opt_coo : ff_8::map_group::Coo::generic)),
                save_path(pattern_pupu, m_filters.deswizzle.value(), field_name, pupu),
                save_path(pattern_pupu, alt_path, field_name, pupu),
                save_path(pattern_pupu, alt_path_2, field_name, pupu),

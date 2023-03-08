@@ -139,7 +139,7 @@ std::shared_ptr<std::array<sf::Texture, map_sprite::MAX_TEXTURES>> map_sprite::l
      for (; !frh.done(); ++frh)
      {
      }
-     //consume_futures(future_of_futures);
+     // consume_futures(future_of_futures);
      return ret;
 }
 void map_sprite::consume_futures(std::vector<std::future<std::future<void>>> &future_of_futures)
@@ -671,17 +671,17 @@ const sf::BlendMode &map_sprite::get_blend_subtract()
 
 map_sprite map_sprite::with_coo(const open_viii::LangT coo) const
 {
-     return { ff_8::map_group{ m_map_group.field, coo }, m_draw_swizzle, m_filters, m_disable_blends };
+     return { ff_8::map_group{ m_map_group.field, coo }, m_draw_swizzle, m_filters, m_disable_blends, false };
 }
 
 map_sprite map_sprite::with_field(map_sprite::SharedField field, const open_viii::LangT coo) const
 {
-     return { ff_8::map_group{ std::move(field), coo }, m_draw_swizzle, m_filters, m_disable_blends };
+     return { ff_8::map_group{ std::move(field), coo }, m_draw_swizzle, m_filters, m_disable_blends, false };
 }
 
 map_sprite map_sprite::with_filters(ff_8::filters filters) const
 {
-     return { m_map_group, m_draw_swizzle, std::move(filters), m_disable_blends };
+     return { m_map_group, m_draw_swizzle, std::move(filters), m_disable_blends, false };
 }
 
 void map_sprite::enable_draw_swizzle()
@@ -751,7 +751,6 @@ void map_sprite::save(const std::filesystem::path &path) const
 }
 bool map_sprite::fail() const
 {
-     static bool once = true;
      using namespace open_viii::graphics::literals;
      if (!m_render_texture)
      {
@@ -887,7 +886,7 @@ void map_sprite::resize_render_texture()
                m_scale = tmp_scale;
           }
           check_size();
-          spdlog::info("Render Texture- scale:{}, size:({}, {})", m_scale, width() * m_scale, height() * m_scale);
+          spdlog::debug("Render Texture- scale:{}, size:({}, {})", m_scale, width() * m_scale, height() * m_scale);
           m_render_texture->create(width() * m_scale, height() * m_scale);
           m_drag_sprite_texture->create(TILE_SIZE * m_scale * 3, TILE_SIZE * m_scale * 3);
      }
@@ -949,8 +948,9 @@ grid map_sprite::get_texture_page_grid() const
           return {};
      }
      const unsigned int texture_page_width = 256U;
+     const unsigned int grid_spacing       = (1U << ((8U - (open_viii::graphics::BPPT::BPP4_CONST().raw() & 3U))));
      //(1U << (open_viii::graphics::BPPT::CLP_VALUE - ((4_bpp).raw() & open_viii::graphics::BPPT::RAW24_VALUE)))
-     return { { map_sprite::TILE_SIZE, texture_page_width },
+     return { { grid_spacing, texture_page_width },
               { m_map_group.mim->get_width(4_bpp), m_map_group.mim->get_height() },
               sf::Color::Yellow };
 }
@@ -970,7 +970,7 @@ ff_8::filters &map_sprite::filter()
 }
 map_sprite map_sprite::update(ff_8::map_group map_group, bool draw_swizzle) const
 {
-     return { std::move(map_group), draw_swizzle, m_filters, m_disable_blends };
+     return { std::move(map_group), draw_swizzle, m_filters, m_disable_blends, false };
 }
 const all_unique_values_and_strings &map_sprite::uniques() const
 {
@@ -1067,7 +1067,7 @@ std::vector<std::future<std::future<void>>> map_sprite::save_swizzle_textures(co
 
      if (unique_bpp.size() == 1U && unique_values.palette().at(unique_bpp.front()).values().size() <= 1U)
      {
-          return{};
+          return {};
      }
      using map_type                                                          = std::remove_cvref_t<decltype(get_conflicting_palettes())>;
      using mapped_type                                                       = typename map_type::mapped_type;
@@ -1124,7 +1124,7 @@ std::vector<std::future<std::future<void>>> map_sprite::save_swizzle_textures(co
           future_of_futures.push_back(async_save(out_texture.getTexture(), out_path));
      }
      return future_of_futures;
-     //consume_futures(future_of_futures);
+     // consume_futures(future_of_futures);
 }
 
 std::string map_sprite::get_base_name() const
@@ -1154,7 +1154,7 @@ std::vector<std::future<std::future<void>>> map_sprite::save_pupu_textures(const
 
      if (!m_map_group.field)
      {
-          return{};
+          return {};
      }
 
      const std::string                field_name      = std::string{ str_to_lower(m_map_group.field->get_base_name()) };
@@ -1183,7 +1183,7 @@ std::vector<std::future<std::future<void>>> map_sprite::save_pupu_textures(const
           future_of_futures.push_back(async_save(out_texture.getTexture(), out_path));
      }
      return future_of_futures;
-     //consume_futures(future_of_futures);
+     // consume_futures(future_of_futures);
 }
 
 [[nodiscard]] std::future<std::future<void>> map_sprite::async_save(const sf::Texture &out_texture, const std::filesystem::path &out_path)
@@ -1396,8 +1396,10 @@ std::string map_sprite::str_to_lower(std::string input)
        input, std::back_inserter(output), [](char character) -> char { return static_cast<char>(::tolower(character)); });
      return output;
 }
-map_sprite::map_sprite(ff_8::map_group map_group, bool draw_swizzle, ff_8::filters in_filters, bool force_disable_blends)
-  : m_map_group(std::move(map_group))
+map_sprite::map_sprite(ff_8::map_group map_group, bool draw_swizzle, ff_8::filters in_filters, bool force_disable_blends, bool require_coo)
+  : m_map_group(
+    !require_coo || (map_group.opt_coo && map_group.opt_coo.value() != open_viii::LangT::generic) ? std::move(map_group)
+                                                                                                  : ff_8::map_group{})
   , m_draw_swizzle(draw_swizzle)
   , m_disable_blends(force_disable_blends)
   , m_filters(std::move(in_filters))
@@ -1459,4 +1461,8 @@ std::vector<std::size_t> map_sprite::find_intersecting(
           return ff_8::find_intersecting_swizzle(map, m_filters, pixel_pos, texture_page, skip_filters, find_all);
      }
      return ff_8::find_intersecting_deswizzle(map, m_filters, pixel_pos, skip_filters, find_all);
+}
+bool map_sprite::using_coo() const
+{
+     return m_map_group.opt_coo.operator bool();
 }
