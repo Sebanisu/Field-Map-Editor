@@ -464,9 +464,11 @@ struct map_sprite final
           const auto alt_path_2 = std::filesystem::path(m_filters.deswizzle.value()).parent_path().parent_path() / prefix / field_name;
 
           if (m_map_group.opt_coo)
+          {
                return std::array{ save_path_coo(pattern_coo_pupu, m_filters.deswizzle.value(), field_name, pupu, *m_map_group.opt_coo),
                                   save_path_coo(pattern_coo_pupu, alt_path, field_name, pupu, *m_map_group.opt_coo),
                                   save_path_coo(pattern_coo_pupu, alt_path_2, field_name, pupu, *m_map_group.opt_coo) };
+          }
           return std::array{
                save_path(pattern_pupu, m_filters.deswizzle.value(), field_name, pupu),
                save_path(pattern_pupu, alt_path, field_name, pupu),
