@@ -686,14 +686,12 @@ bool gui::handle_mouse_cursor()
 }
 void gui::combo_coo()
 {
+     constexpr static auto array = open_viii::LangCommon::to_array();
      if (generic_combo(
            get_imgui_id(),
            gui_labels::language,
-           []() { return open_viii::LangCommon::to_array(); },
-           []() {
-                return open_viii::LangCommon::to_array()
-                       | std::views::transform([](open_viii::LangT value) { return fmt::format("{}", value); });
-           },
+           []() { return array; },
+           []() { return array | std::views::transform([](open_viii::LangT value) { return fmt::format("{}", value); }); },
            m_selections.coo))
      {
           Configuration config{};

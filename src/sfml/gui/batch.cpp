@@ -121,7 +121,7 @@ void batch::button_start(int &imgui_id)
      const auto spacing      = ImGui::GetStyle().ItemInnerSpacing.x;
      ImGui::PushID(++imgui_id);
      ImGui::BeginDisabled(
-       (m_input_type == input_types::mim || (!m_input_path_valid && m_input_type != input_types::mim)) && !m_output_path_valid
+       ((m_input_type == input_types::mim || (!m_input_path_valid && m_input_type != input_types::mim)) && !m_output_path_valid)
        || !m_archives_group.operator bool());
      ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.0F, 0.5F, 0.0F, 1.0F));// Green
      ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.3F, 0.8F, 0.3F, 1.0F));// Light green hover
@@ -144,7 +144,7 @@ void batch::button_stop(int &imgui_id)
      ImGui::SameLine(0, spacing);
      ImGui::PushID(++imgui_id);
      ImGui::BeginDisabled(
-       (m_input_type == input_types::mim || (!m_input_path_valid && m_input_type != input_types::mim)) && !m_output_path_valid
+       ((m_input_type == input_types::mim || (!m_input_path_valid && m_input_type != input_types::mim)) && !m_output_path_valid)
        || !m_archives_group.operator bool());
      ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.5F, 0.0F, 0.0F, 1.0F));// Red
      ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.8F, 0.3F, 0.3F, 1.0F));// Light red hover
@@ -189,9 +189,9 @@ bool batch::browse_path(int &imgui_id, std::string_view name, bool &valid_path, 
           const auto pop_item_width = scope_guard(&ImGui::PopItemWidth);
           if (!valid_path)
           {
-               ImGui::PushStyleColor(ImGuiCol_FrameBg, (ImVec4)ImColor::HSV(0.0F, 0.5F, 0.5F));
-               ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, (ImVec4)ImColor::HSV(0.0F, 0.8F, 0.8F));// lighter red on hover
-               ImGui::PushStyleColor(ImGuiCol_FrameBgActive, (ImVec4)ImColor::HSV(0.0F, 0.5F, 0.5F));
+               ImGui::PushStyleColor(ImGuiCol_FrameBg, static_cast<ImVec4>(ImColor::HSV(0.0F, 0.5F, 0.5F)));
+               ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, static_cast<ImVec4>(ImColor::HSV(0.0F, 0.8F, 0.8F)));// lighter red on hover
+               ImGui::PushStyleColor(ImGuiCol_FrameBgActive, static_cast<ImVec4>(ImColor::HSV(0.0F, 0.5F, 0.5F)));
           }
           const auto pop_color = scope_guard([valid = valid_path]() {
                if (!valid)
