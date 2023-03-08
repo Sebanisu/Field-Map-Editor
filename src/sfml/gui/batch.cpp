@@ -135,6 +135,22 @@ void batch::button_begin(int &imgui_id)
      ImGui::PopStyleColor(3);
      ImGui::EndDisabled();
 }
+void batch::button_input_browse()
+{
+     m_directory_browser.Open();
+     m_directory_browser.SetTitle("Choose directory to load textures from...");
+     m_directory_browser.SetPwd(m_input_path.data());
+     m_directory_browser.SetTypeFilters({ ".map", ".png" });
+     m_directory_browser_mode = directory_mode::input_mode;
+};
+void batch::button_output_browse()
+{
+     m_directory_browser.Open();
+     m_directory_browser.SetTitle("Choose directory to save textures to...");
+     m_directory_browser.SetPwd(m_output_path.data());
+     m_directory_browser.SetTypeFilters({ ".map", ".png" });
+     m_directory_browser_mode = directory_mode::output_mode;
+};
 bool batch::browse_path(int &imgui_id, std::string_view name, bool &valid_path, std::array<char, m_buffer_size> &path_buffer)
 {
      bool              changed      = false;
@@ -176,6 +192,14 @@ bool batch::browse_path(int &imgui_id, std::string_view name, bool &valid_path, 
           {
                // Trigger the chooseFolder function when the button is clicked
                // chooseFolder();
+               if (std::addressof(path_buffer) == std::addressof(m_input_path))
+               {
+                    button_input_browse();
+               }
+               else if (std::addressof(path_buffer) == std::addressof(m_output_path))
+               {
+                    button_output_browse();
+               }
           }
      }
      ImGui::SameLine(0, spacing);
@@ -184,7 +208,7 @@ bool batch::browse_path(int &imgui_id, std::string_view name, bool &valid_path, 
 }
 void batch::update(sf::Time elapsed_time)
 {
-     static constexpr int interval           = 1;// the interval in milliseconds
+     static constexpr int interval           = 30;// the interval in milliseconds
      static int           total_elapsed_time = 0;// keep track of the elapsed time using a static variable
 
      total_elapsed_time += elapsed_time.asMilliseconds();// add the elapsed time since last update
@@ -345,4 +369,36 @@ std::filesystem::path batch::append_file_structure(const std::filesystem::path &
      std::string const      name   = m_map_sprite.get_base_name();
      std::string_view const prefix = std::string_view(name).substr(0, 2);
      return path / prefix / name;
+}
+void batch::open_directory_browser()
+{
+     m_directory_browser.Display();
+     if (!m_directory_browser.HasSelected())
+     {
+          return;
+     }
+     const auto         clear_browser = scope_guard([this]() { m_directory_browser.ClearSelected(); });
+     const std::string &selected_path = m_directory_browser.GetPwd().string();
+     const auto         tmp           = safedir(selected_path);
+     switch (m_directory_browser_mode)
+     {
+          case directory_mode::input_mode: {
+               Configuration config{};
+               config->insert_or_assign("batch_input_path", selected_path);
+               config.save();
+               std::ranges::copy(selected_path, m_input_path.data());
+               m_input_path.at(selected_path.size()) = '\0';
+               m_input_path_valid                    = tmp.is_dir() && tmp.is_exists();
+          }
+          break;
+          case directory_mode::output_mode: {
+               Configuration config{};
+               config->insert_or_assign("batch_output_path", selected_path);
+               config.save();
+               std::ranges::copy(selected_path, m_output_path.data());
+               m_output_path.at(selected_path.size()) = '\0';
+               m_output_path_valid                    = tmp.is_dir() && tmp.is_exists();
+          }
+          break;
+     }
 }
