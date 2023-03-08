@@ -62,11 +62,11 @@ class RangeConsumer
           pos = std::next(pos);
           return *this;
      }
-     const value_t &operator*() const
+     decltype(auto) operator*() const
      {
           return *pos;
      }
-     value_t &operator*()
+     decltype(auto) operator*()
      {
           return *pos;
      }

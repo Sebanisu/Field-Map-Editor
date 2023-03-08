@@ -42,6 +42,45 @@ struct fmt::formatter<open_viii::graphics::background::BlendModeT> : fmt::format
      }
 };
 
+
+template<>
+struct fmt::formatter<open_viii::LangT> : fmt::formatter<std::string_view>
+{
+     // parse is inherited from formatter<string_view>.
+     template<typename FormatContext>
+     constexpr auto format(open_viii::LangT lang_t, FormatContext &ctx) const
+     {
+          using namespace open_viii::graphics::background;
+          using namespace std::string_view_literals;
+          std::string_view name = {};
+          switch (lang_t)
+          {
+               case open_viii::LangT::en:
+                    name = "English"sv;
+                    break;
+               case open_viii::LangT::fr:
+                    name = "French"sv;
+                    break;
+               case open_viii::LangT::de:
+                    name = "German"sv;
+                    break;
+               case open_viii::LangT::it:
+                    name = "Italian"sv;
+                    break;
+               case open_viii::LangT::es:
+                    name = "Spanish"sv;
+                    break;
+               case open_viii::LangT::jp:
+                    name = "Japanese"sv;
+                    break;
+               case open_viii::LangT::generic:
+                    name = "Generic"sv;
+                    break;
+          }
+          return fmt::formatter<std::string_view>::format(name, ctx);
+     }
+};
+
 template<>
 struct fmt::formatter<tile_sizes> : fmt::formatter<std::underlying_type_t<tile_sizes>>
 {

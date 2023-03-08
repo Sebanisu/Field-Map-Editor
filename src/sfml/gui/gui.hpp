@@ -52,7 +52,6 @@ struct gui
      std::shared_ptr<sf::Shader>                                         m_drag_sprite_shader        = {};
      Selections                                                          m_selections                = {};
      scrolling                                                           m_scrolling                 = {};
-     batch                                                               m_batch                     = {};
      static constexpr std::int8_t                                        tile_size_px                = { 16 };
      static constexpr std::uint8_t                                       tile_size_px_unsigned       = { 16U };
      mouse_positions                                                     m_mouse_positions           = {};
@@ -62,7 +61,8 @@ struct gui
      sf::Time                                                            m_elapsed_time              = {};
      toml::array                                                         m_paths                     = {};
      toml::array                                                         m_custom_upscale_paths      = {};
-     archives_group                                                      m_archives_group            = {};
+     std::shared_ptr<archives_group>                                     m_archives_group            = {};
+     batch                                                               m_batch                     = batch{m_archives_group};
      std::vector<std::string>                                            m_upscale_paths             = {};
      std::shared_ptr<open_viii::archive::FIFLFS<false>>                  m_field                     = {};
      std::array<float, 2>                                                xy                          = {};
@@ -316,10 +316,14 @@ struct gui
      template<typename batch_opT, typename filterT, typename askT, typename processT>
      void popup_batch_common(batch_opT &&batch_op, filterT &&filter, askT &&ask, processT &&process) const
      {
+          if (!m_archives_group)
+          {
+               return;
+          }
           if (batch_op(
-                m_archives_group.mapdata(),
+                m_archives_group->mapdata(),
                 [&](const int &pos, std::filesystem::path selected_path, ff_8::filters filters, auto &&...rest) {
-                     const auto field = m_archives_group.field(pos);
+                     const auto field = m_archives_group->field(pos);
                      if (!field)
                      {
                           return;

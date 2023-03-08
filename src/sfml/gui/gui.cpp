@@ -106,6 +106,7 @@ void gui::start()
                     }
                }
                ImGui::SFML::Update(m_window, m_elapsed_time);
+               m_batch.update(m_elapsed_time);
                loop();
           } while (m_window.isOpen());
           ImGui::SFML::Shutdown();
@@ -735,8 +736,8 @@ void gui::combo_field()
      if (generic_combo(
            get_imgui_id(),
            gui_labels::field,
-           [this]() { return std::views::iota(0, static_cast<int>(std::ranges::ssize(m_archives_group.mapdata()))); },
-           [this]() { return m_archives_group.mapdata(); },
+           [this]() { return std::views::iota(0, static_cast<int>(std::ranges::ssize(m_archives_group->mapdata()))); },
+           [this]() { return m_archives_group->mapdata(); },
            m_selections.field))
      //  static constexpr auto items = 20;
      //  if (ImGui::Combo("Field",
@@ -746,7 +747,7 @@ void gui::combo_field()
      //        items))
      {
           Configuration config{};
-          const auto   &maps = m_archives_group.mapdata();
+          const auto   &maps = m_archives_group->mapdata();
           config->insert_or_assign("starter_field", *std::next(maps.begin(), m_selections.field));
           config.save();
           update_field();
@@ -755,7 +756,7 @@ void gui::combo_field()
 
 void gui::update_field()
 {
-     m_field = m_archives_group.field(m_selections.field);
+     m_field = m_archives_group->field(m_selections.field);
      if (m_selections.draw == 0)
      {
           m_mim_sprite = m_mim_sprite.with_field(m_field);
@@ -1105,11 +1106,11 @@ bool gui::mim_test() const
 }
 std::string gui::save_texture_path() const
 {
-     if (m_archives_group.mapdata().empty())
+     if (m_archives_group->mapdata().empty())
      {
           return {};
      }
-     const std::string &field_name = m_archives_group.mapdata().at(static_cast<size_t>(m_selections.field));
+     const std::string &field_name = m_archives_group->mapdata().at(static_cast<size_t>(m_selections.field));
      spdlog::info("field_name = {}", field_name);
      if (mim_test())// MIM
      {
@@ -1811,7 +1812,8 @@ sf::RenderWindow gui::get_render_window() const
 }
 void gui::update_path()
 {
-     m_archives_group = m_archives_group.with_path(m_selections.path);
+     m_archives_group = std::make_shared<archives_group>(m_archives_group->with_path(m_selections.path));
+     m_batch          = m_archives_group;
      update_field();
      //     if (m_batch_embed4.enabled())
      //     {
@@ -1880,7 +1882,7 @@ gui::gui()
   : m_window(get_render_window())
   , m_paths(get_paths())
   , m_custom_upscale_paths(get_custom_upscale_paths_vector())
-  , m_archives_group(get_archives_group())
+  , m_archives_group(std::make_shared<archives_group>(get_archives_group()))
   , m_field(init_field())
   , m_mim_sprite(get_mim_sprite())
   , m_map_sprite(get_map_sprite())
@@ -1906,7 +1908,7 @@ gui::gui()
 std::shared_ptr<open_viii::archive::FIFLFS<false>> gui::init_field()
 {
      m_selections.field = get_selected_field();
-     return m_archives_group.field(m_selections.field);
+     return m_archives_group->field(m_selections.field);
 }
 map_sprite gui::get_map_sprite() const
 {
@@ -1914,7 +1916,7 @@ map_sprite gui::get_map_sprite() const
 }
 int gui::get_selected_field()
 {
-     if (const int field = m_archives_group.find_field(starter_field()); field != -1)
+     if (const int field = m_archives_group->find_field(starter_field()); field != -1)
      {
           return field;
      }
