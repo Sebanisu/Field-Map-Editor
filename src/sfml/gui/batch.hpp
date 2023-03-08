@@ -57,7 +57,8 @@ class batch
      void                                                                combo_flatten_type(int &imgui_id);
      void                                                                browse_input_path(int &imgui_id);
      void                                                                browse_output_path(int &imgui_id);
-     void                                                                button_begin(int &imgui_id);
+     void                                                                button_start(int &imgui_id);
+     void                                                                button_stop(int &imgui_id);
      void                                                                checkbox_load_map(int &imgui_id);
      void                                                                choose_field_and_coo();
      void                                                                reset_for_next();
@@ -117,8 +118,19 @@ class batch
           }
           m_input_load_map = config["batch_input_load_map"].value_or(m_input_load_map);
      }
+     bool in_progress() const
+     {
+          return !m_fields_consumer.done() || m_field;
+     }
+     void stop()
+     {
+          m_fields_consumer.stop();
+          m_lang_consumer.stop();
+          m_field.reset();
+     }
      batch &operator=(std::shared_ptr<archives_group> new_group)
      {
+          stop();
           m_archives_group = std::move(new_group);
           return *this;
      }
@@ -129,7 +141,7 @@ class batch
           {
                return;
           }
-          const bool disabled = !m_fields_consumer.done() || m_field;
+          const bool disabled = in_progress();
           open_directory_browser();
           ImGui::BeginDisabled(disabled);
           combo_input_type(imgui_id);
@@ -139,7 +151,10 @@ class batch
           browse_output_path(imgui_id);
           combo_compact_type(imgui_id);
           combo_flatten_type(imgui_id);
-          button_begin(imgui_id);
+          button_start(imgui_id);
+          ImGui::EndDisabled();
+          ImGui::BeginDisabled(!disabled);
+          button_stop(imgui_id);
           ImGui::EndDisabled();
           if (!disabled)
           {

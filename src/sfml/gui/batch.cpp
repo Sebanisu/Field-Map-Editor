@@ -115,9 +115,10 @@ void batch::browse_output_path(int &imgui_id)
      config->insert_or_assign("batch_output_path", std::string(m_output_path.data()));
      config.save();
 }
-void batch::button_begin(int &imgui_id)
+void batch::button_start(int &imgui_id)
 {
      const auto pop_id_right = scope_guard{ &ImGui::PopID };
+     const auto spacing      = ImGui::GetStyle().ItemInnerSpacing.x;
      ImGui::PushID(++imgui_id);
      ImGui::BeginDisabled(
        (m_input_type == input_types::mim || (!m_input_path_valid && m_input_type != input_types::mim)) && !m_output_path_valid
@@ -125,12 +126,32 @@ void batch::button_begin(int &imgui_id)
      ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.0F, 0.5F, 0.0F, 1.0F));// Green
      ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.3F, 0.8F, 0.3F, 1.0F));// Light green hover
      ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.1F, 0.3F, 0.1F, 1.0F));// Dark green active
-     if (ImGui::Button("Begin Batch Operation...", ImVec2{ ImGui::GetContentRegionAvail().x, ImGui::GetFrameHeight() }))
+     if (ImGui::Button("Begin Batch Operation...", ImVec2{ ImGui::GetContentRegionAvail().x * 0.75F - spacing, ImGui::GetFrameHeight() }))
      {
           m_fields_consumer = m_archives_group->fields();
           m_field.reset();
           m_lang_consumer.restart();
           m_coo.reset();
+     }
+     ImGui::PopStyleColor(3);
+     ImGui::EndDisabled();
+}
+
+void batch::button_stop(int &imgui_id)
+{
+     const auto pop_id_right = scope_guard{ &ImGui::PopID };
+     const auto spacing      = ImGui::GetStyle().ItemInnerSpacing.x;
+     ImGui::SameLine(0, spacing);
+     ImGui::PushID(++imgui_id);
+     ImGui::BeginDisabled(
+       (m_input_type == input_types::mim || (!m_input_path_valid && m_input_type != input_types::mim)) && !m_output_path_valid
+       || !m_archives_group.operator bool());
+     ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.5F, 0.0F, 0.0F, 1.0F));// Red
+     ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.8F, 0.3F, 0.3F, 1.0F));// Light red hover
+     ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.3F, 0.1F, 0.1F, 1.0F));// Dark red active
+     if (ImGui::Button("Stop", ImVec2{ ImGui::GetContentRegionAvail().x, ImGui::GetFrameHeight() }))
+     {
+          stop();
      }
      ImGui::PopStyleColor(3);
      ImGui::EndDisabled();

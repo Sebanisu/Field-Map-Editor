@@ -22,6 +22,7 @@ class RangeConsumer
    private:
      begin_t pos;
      end_t   end_pos;
+     bool    m_stop = { false };
 
    public:
      RangeConsumer()
@@ -38,6 +39,7 @@ class RangeConsumer
      {
           pos     = std::ranges::begin(m_range);
           end_pos = std::ranges::end(m_range);
+          m_stop  = false;
      }
      RangeConsumer<range_t> &operator=(range_t new_value)
      {
@@ -55,7 +57,7 @@ class RangeConsumer
      }
      [[nodiscard]] bool done() const
      {
-          return pos == end_pos;
+          return m_stop || pos == end_pos;
      }
      auto &operator++()
      {
@@ -73,6 +75,10 @@ class RangeConsumer
      explicit operator bool() const
      {
           return !done();
+     }
+     void stop()
+     {
+          m_stop = true;
      }
 };
 template<std::ranges::range range_t>
