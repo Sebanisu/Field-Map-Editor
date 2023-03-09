@@ -89,18 +89,22 @@ class [[nodiscard]] FutureConsumer
 
      RangeConsumer<range_t> m_range{};
 
-     void                   consume_now()
-     {
-          for (; !done(); operator++())
-          {
-          }
-     }
 
    public:
      FutureConsumer() = default;
      explicit FutureConsumer(range_t in_range)
        : m_range(std::move(in_range))
      {
+     }
+     void                   consume_now()
+     {
+         for (; !done(); ++m_range)
+         {
+             auto& item = *m_range;
+             if (item.valid()) {
+                 item.get();
+             }
+         }
      }
      FutureConsumer<range_t> &operator=(range_t new_value)
      {
@@ -110,16 +114,27 @@ class [[nodiscard]] FutureConsumer
      }
      const FutureConsumer<range_t> &operator++()
      {
-          if (!done())
-          {
-               auto &item = *m_range;
-               if (item.valid())
-               {
-                    item.get();
-               }
-               ++m_range;
+          //if (!done())
+          //{
+          //     auto &item = *m_range;
+          //     if (item.valid())
+          //     {
+          //          item.get();
+          //     }
+          //     ++m_range;
+          //}
+          if (!done()) {
+              auto& item = *m_range;
+              const auto state = item.wait_for(std::chrono::seconds(0));
+              if (std::future_status::ready != state && std::future_status::deferred != state) {
+                  // launch policy is async and the future is not yet ready, so skip it
+                  return *this;
+              }
+              if (item.valid()) {
+                  item.get();
+              }
+              ++m_range;
           }
-
           return *this;
      }
      [[nodiscard]] bool done() const
@@ -137,23 +152,27 @@ class [[nodiscard]] FutureOfFutureConsumer
      RangeConsumer<range_t>      m_range{};
      std::vector<future_value_t> m_out{};
 
-     void                        consume_now()
-     {
-          for (; !done(); operator++())
-          {
-          }
-          auto frh = get_consumer();
-          for (; !frh.done(); ++frh)
-          {
-          }
-     }
 
    public:
+
      FutureOfFutureConsumer() = default;
      explicit FutureOfFutureConsumer(range_t in_range)
        : m_range(std::move(in_range))
      {
           m_out.reserve(std::ranges::size(m_range));
+     }
+
+     void                        consume_now()
+     {
+         for (; !done(); ++m_range)
+         {
+             auto& item = *m_range;
+             if (item.valid()) {
+                 m_out.push_back(item.get());
+             }
+         }
+         auto frh = get_consumer();
+         frh.consume_now();
      }
      FutureOfFutureConsumer<range_t> &operator=(range_t new_value)
      {
@@ -163,14 +182,26 @@ class [[nodiscard]] FutureOfFutureConsumer
      }
      const FutureOfFutureConsumer<range_t> &operator++()
      {
-          if (!done())
-          {
-               auto &item = *m_range;
-               ++m_range;
-               if (item.valid())
-               {
-                    m_out.push_back(item.get());
-               }
+          //if (!done())
+          //{
+          //     auto &item = *m_range;
+          //     ++m_range;
+          //     if (item.valid())
+          //     {
+          //          m_out.push_back(item.get());
+          //     }
+          //}
+          if (!done()) {
+              auto& item = *m_range;
+              const auto state = item.wait_for(std::chrono::seconds(0));
+              if (std::future_status::ready != state && std::future_status::deferred != state) {
+                  // launch policy is async and the future is not yet ready, so skip it
+                  return *this;
+              }
+              if (item.valid()) {
+                  m_out.push_back(item.get());
+              }
+              ++m_range;
           }
           return *this;
      }
