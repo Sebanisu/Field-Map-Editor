@@ -78,8 +78,6 @@ struct gui
      bool                                                                m_changed                   = { false };
      //  ImGuiStyle                  m_original_style  = {};
      sf::Event                                                           m_event                     = {};
-     static constexpr std::array                                         m_draw_selections = { open_viii::graphics::background::Mim::EXT,
-                                                                                               open_viii::graphics::background::Map::EXT };
      sf::Vector2f                                                        m_cam_pos         = {};
      // create a file browser instances
      ImGui::FileBrowser                                                  m_save_file_browser{ static_cast<ImGuiFileBrowserFlags>(
@@ -107,7 +105,7 @@ struct gui
      bool                                                                combo_path();
      void                                                                combo_draw();
      void                                                                file_browser_save_texture();
-     void                                                                file_browser_locate_ff8();
+     void                                                                directory_browser_display();
      void                                                                menu_bar();
      void                                                                combo_pupu();
      void                                                                combo_palette();
@@ -209,8 +207,6 @@ struct gui
      //     void                      batch_ops_ask_menu() const;
      bool combo_upscale_path(std::filesystem::path &path, const std::string &field_name, open_viii::LangT coo) const;
      void open_locate_ff8_filebrowser();
-     void open_swizzle_filebrowser();
-     void open_deswizzle_filebrowser();
      [[nodiscard]] static int &get_imgui_id()
      {
           static int imgui_id = {};
@@ -273,15 +269,12 @@ struct gui
      [[nodiscard]] bool                        combo_tile_size();
      void                                      generate_upscale_paths(const std::string &field_name, open_viii::LangT coo);
      void                                      menuitem_locate_custom_upscale();
-     void                                      open_locate_custom_upscale();
      static toml::array                        get_custom_upscale_paths_vector();
      void                                      checkbox_render_imported_image();
      void                                      update_imported_render_texture();
      void                                      save_swizzle_textures();
      void                                      reset_imported_image();
      void                                      update_scaled_up_render_texture();
-     void                                      browse_for_embed_map_dir();
-     void                                      begin_batch_embed_map_warning_window();
      void                                      sort_paths();
      void                                      control_panel_window();
      std::uint32_t                             image_height() const;

@@ -218,8 +218,8 @@ inline static bool
   generic_combo(int &imgui_id, std::string_view name, value_lambdaT &&value_lambda, string_lambdaT &&string_lambda, valueT &value)
 {
      bool                                                     changed     = false;
-     const auto                                              &values      = value_lambda();
-     auto                                                   &&strings     = string_lambda();
+     auto                                                   &&values      = std::invoke(std::forward<value_lambdaT>(value_lambda));
+     auto                                                   &&strings     = std::invoke(std::forward<string_lambdaT>(string_lambda));
      const ImGuiStyle                                        &style       = ImGui::GetStyle();
      const float                                              spacing     = style.ItemInnerSpacing.x;
      // auto        strings = string_lambda() | std::ranges::views::all;

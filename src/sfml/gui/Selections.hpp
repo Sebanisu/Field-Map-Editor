@@ -4,6 +4,7 @@
 #ifndef FIELD_MAP_EDITOR_SELECTIONS_HPP
 #define FIELD_MAP_EDITOR_SELECTIONS_HPP
 #include "Configuration.hpp"
+#include "draw_mode.hpp"
 #include "open_viii/strings/LangT.hpp"
 #include "tile_sizes.hpp"
 #include <filesystem>
@@ -26,7 +27,7 @@ struct Selections
      int                            palette                        = {};
      int                            field                          = {};
      open_viii::LangT               coo                            = {};
-     int                            draw                           = { 1 };
+     draw_mode                      draw                           = { draw_mode::draw_map };
      int                            selected_tile                  = { -1 };
      std::uint32_t                  window_width                   = { window_width_default };
      std::uint32_t                  window_height                  = { window_height_default };
@@ -49,7 +50,7 @@ struct Selections
           window_height = config["selections_window_width"].value_or(window_height);
           palette       = config["selections_palette"].value_or(palette);
           bpp           = config["selections_bpp"].value_or(bpp);
-          draw          = config["selections_draw"].value_or(draw);
+          draw          = static_cast<draw_mode>(config["selections_draw"].value_or(static_cast<std::underlying_type_t<draw_mode>>(draw)));
           coo =
             static_cast<open_viii::LangT>(config["selections_coo"].value_or(static_cast<std::underlying_type_t<open_viii::LangT>>(coo)));
           selected_tile          = config["selections_selected_tile"].value_or(selected_tile);

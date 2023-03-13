@@ -4,6 +4,7 @@
 
 #ifndef FIELD_MAP_EDITOR_FORMATTERS_HPP
 #define FIELD_MAP_EDITOR_FORMATTERS_HPP
+#include "gui/draw_mode.hpp"
 #include "tile_sizes.hpp"
 #include <filesystem>
 #include <fmt/format.h>
@@ -44,6 +45,28 @@ struct fmt::formatter<open_viii::graphics::background::BlendModeT> : fmt::format
 };
 
 
+template<>
+struct fmt::formatter<draw_mode> : fmt::formatter<std::string_view>
+{
+     // parse is inherited from formatter<string_view>.
+     template<typename FormatContext>
+     constexpr auto format(draw_mode draw_mode_t, FormatContext &ctx) const
+     {
+          using namespace open_viii::graphics::background;
+          using namespace std::string_view_literals;
+          std::string_view name = {};
+          switch (draw_mode_t)
+          {
+               case draw_mode::draw_mim:
+                    name = open_viii::graphics::background::Mim::EXT;
+                    break;
+               case draw_mode::draw_map:
+                    name = open_viii::graphics::background::Map::EXT;
+                    break;
+          }
+          return fmt::formatter<std::string_view>::format(name, ctx);
+     }
+};
 template<>
 struct fmt::formatter<open_viii::LangT> : fmt::formatter<std::string_view>
 {
@@ -174,7 +197,7 @@ struct fmt::formatter<tileT> : fmt::formatter<std::string>
           };
           const auto                               raw_bytes = std::bit_cast<std::array<std::uint8_t, sizeof(tileT)>>(tile);
           std::array<char, sizeof(tileT) * 2U + 1> raw_hex{};
-          raw_hex.back() = 0;
+          raw_hex.back() = '\0';
           auto rhi       = raw_hex.begin();
           for (const std::uint8_t current_byte : raw_bytes)
           {
@@ -189,6 +212,7 @@ struct fmt::formatter<tileT> : fmt::formatter<std::string>
      template<typename FormatContext>
      constexpr auto format(const tileT &tile, FormatContext &ctx) const
      {
+          const auto array = to_hex(tile);
           return fmt::format_to(
             ctx.out(),
             "Hex: {}\n"
@@ -204,7 +228,7 @@ struct fmt::formatter<tileT> : fmt::formatter<std::string>
             "Animation ID: {}\n"
             "Animation State: {}\n"
             "Draw: {}",
-            to_hex(tile),
+            std::string_view(array.data(),array.size()-1),
             tile.source_rectangle(),
             tile.output_rectangle(),
             tile.z(),
