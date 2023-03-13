@@ -27,7 +27,7 @@ add_executable(${PROJECT_NAME}_SFML
         safedir.cpp
         tile_operations.hpp
         gui/gui.cpp
-        gui/file_dialog_mode.hpp gui/map_directory_mode.hpp gui/compact_type.hpp gui/mouse_positions.cpp gui/mouse_positions.hpp gui/scrolling.cpp gui/scrolling.hpp gui/Selections.cpp gui/Selections.hpp square.cpp square.hpp tile_sizes.hpp save_image_pbo.cpp save_image_pbo.hpp settings_backup.hpp map_group.cpp map_group.hpp map_operation.cpp map_operation.hpp open_file_explorer.cpp open_file_explorer.hpp RangeConsumer.hpp future_operations.cpp future_operations.hpp gui/batch.cpp gui/batch.hpp)
+        gui/file_dialog_mode.hpp gui/map_directory_mode.hpp gui/compact_type.hpp gui/mouse_positions.cpp gui/mouse_positions.hpp gui/scrolling.cpp gui/scrolling.hpp gui/Selections.cpp gui/Selections.hpp square.cpp square.hpp tile_sizes.hpp save_image_pbo.cpp save_image_pbo.hpp settings_backup.hpp map_group.cpp map_group.hpp map_operation.cpp map_operation.hpp open_file_explorer.cpp open_file_explorer.hpp RangeConsumer.hpp future_operations.cpp future_operations.hpp gui/batch.cpp gui/batch.hpp EmptyStringIterator.hpp)
 #set_property(TARGET ${PROJECT_NAME}_SFML PROPERTY CXX_STANDARD 20)
 #find_package(ImGui-SFML REQUIRED)
 find_package(tomlplusplus REQUIRED)

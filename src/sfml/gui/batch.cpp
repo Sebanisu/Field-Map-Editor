@@ -36,52 +36,69 @@ void batch::combo_output_type(int &imgui_id)
 }
 void batch::combo_compact_type(int &imgui_id)
 {
+     using namespace std::string_view_literals;
      static const auto values = std::array{ compact_type::rows, compact_type::all, compact_type::map_order };
-     if (fme::generic_combo(
+     static const auto tool_tips =
+       std::array{ "Rows: sorts 8bit to 4bit, and separates conflicting palettes. Tries to apply sort to each row at a time."sv,
+                   "All: sorts 8bit to 4bit, and separates conflicting palettes. Applies the sort to all the tiles "sv,
+                   "Map Order: Creates a tile for each map entry. 16 cols, and 16 rows, per texture page."sv };
+     if (!fme::generic_combo(
            imgui_id,
            gui_labels::compact,
            []() { return values; },
            []() { return values | std::views::transform(AsString{}); },
+           []() { return tool_tips; },
            [&]() -> auto & { return m_compact_type; }))
-     {
-          Configuration config{};
-          config->insert_or_assign("batch_compact_type", static_cast<std::underlying_type_t<compact_type>>(m_compact_type.value()));
-          config->insert_or_assign("batch_compact_enabled", m_compact_type.enabled());
-          config.save();
-     }
+          return;
+     Configuration config{};
+     config->insert_or_assign("batch_compact_type", static_cast<std::underlying_type_t<compact_type>>(m_compact_type.value()));
+     config->insert_or_assign("batch_compact_enabled", m_compact_type.enabled());
+     config.save();
 }
 void batch::combo_flatten_type(int &imgui_id)
 {
-     if (!m_compact_type.enabled() || m_compact_type.value() != compact_type::map_order)
+     using namespace std::string_view_literals;
+     const bool            all_or_only_palette = !m_compact_type.enabled() || m_compact_type.value() != compact_type::map_order;
+     static constexpr auto values              = std::array{ flatten_type::bpp, flatten_type::palette, flatten_type::both };
+     static constexpr auto palette_str         = "Palette: Changes all the palettes to 0. This might reduce reloading of textures."sv;
+     static constexpr auto tool_tips           = std::array{
+          "BPP: Changes all the bits per pixel to 4 to get the max number of tiles per texture page. Applied automatically by Map Order compacting."sv,
+          palette_str,
+          "Both."sv
+     };
+     static constexpr auto values_only_palette    = std::array{ flatten_type::palette };
+     static constexpr auto tool_tips_only_palette = std::array{ palette_str };
+     if (all_or_only_palette)
      {
-          static const auto values = std::array{ flatten_type::bpp, flatten_type::palette, flatten_type::both };
-          if (fme::generic_combo(
+          if (!fme::generic_combo(
                 imgui_id,
                 gui_labels::flatten,
-                []() { return values; },
-                []() { return values | std::views::transform(AsString{}); },
+                [&]() { return values; },
+                [&]() { return values | std::views::transform(AsString{}); },
+                [&]() { return tool_tips; },
                 [&]() -> auto & { return m_flatten_type; }))
           {
-               Configuration config{};
-               config->insert_or_assign("batch_flatten_type", static_cast<std::underlying_type_t<flatten_type>>(m_flatten_type.value()));
-               config->insert_or_assign("batch_flatten_enabled", m_flatten_type.enabled());
-               config.save();
+               return;
           }
-          return;
      }
-     static const auto values = std::array{ flatten_type::palette };
-     if (fme::generic_combo(
-           imgui_id,
-           gui_labels::flatten,
-           []() { return values; },
-           []() { return values | std::views::transform(AsString{}); },
-           [&]() -> auto & { return m_flatten_type; }))
+     else
      {
-          Configuration config{};
-          config->insert_or_assign("batch_flatten_type", static_cast<std::underlying_type_t<flatten_type>>(m_flatten_type.value()));
-          config->insert_or_assign("batch_flatten_enabled", m_flatten_type.enabled());
-          config.save();
+          if (!fme::generic_combo(
+                imgui_id,
+                gui_labels::flatten,
+                [&]() { return values_only_palette; },
+                [&]() { return values_only_palette | std::views::transform(AsString{}); },
+                [&]() { return tool_tips_only_palette; },
+                [&]() -> auto & { return m_flatten_type; }))
+          {
+               return;
+          }
      }
+     Configuration config{};
+     config->insert_or_assign("batch_flatten_type", static_cast<std::underlying_type_t<flatten_type>>(m_flatten_type.value()));
+     config->insert_or_assign("batch_flatten_enabled", m_flatten_type.enabled());
+     config.save();
+     return;
 }
 void batch::browse_input_path(int &imgui_id)
 {

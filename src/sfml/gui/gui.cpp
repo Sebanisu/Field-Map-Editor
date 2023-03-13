@@ -3,6 +3,7 @@
 //
 
 #include "gui.hpp"
+#include "EmptyStringIterator.hpp"
 #include "gui_labels.hpp"
 #include "open_file_explorer.hpp"
 #include "safedir.hpp"
@@ -1930,12 +1931,16 @@ std::string gui::starter_field()
 
 void gui::combo_pupu()
 {
-     const auto &pair = m_map_sprite.uniques().pupu();
+     const auto &pair   = m_map_sprite.uniques().pupu();
+     const auto &values = pair.values();
      if (generic_combo(
            get_imgui_id(),
            gui_labels::pupu_id,
-           [&pair]() { return pair.values(); },
+           [&values]() { return values; },
            [&pair]() { return pair.strings(); },
+           [&values]() {
+                return values | std::views::transform([](const PupuID &pupu_id) -> decltype(auto) { return pupu_id.create_summary(); });
+           },
            [this]() -> auto & { return m_map_sprite.filter().pupu; }))
      {
           m_map_sprite.update_render_texture();
@@ -1955,6 +1960,11 @@ void gui::combo_draw_bit()
            []() {
                 return std::array{ "all"sv, "enabled"sv, "disabled"sv };
            },
+           []() {
+                return std::array{ "Show all regardless of bit being enabled or disabled."sv,
+                                   "Show only tiles with draw bit enabled"sv,
+                                   "Show only tiles with draw bit disabled"sv };
+           },
            [this]() -> auto & { return m_map_sprite.filter().draw_bit; }))
      {
           m_map_sprite.update_render_texture();
@@ -1973,6 +1983,7 @@ void gui::combo_filtered_palettes()
                 gui_labels::palette,
                 [&pair]() { return pair.values(); },
                 [&pair]() { return pair.strings(); },
+                EmptyStringView{},
                 [this]() -> auto & { return m_map_sprite.filter().palette; }))
           {
                m_map_sprite.update_render_texture();
@@ -1993,6 +2004,7 @@ void gui::combo_filtered_bpps()
            gui_labels::bpp,
            [&pair]() { return pair.values(); },
            [&pair]() { return pair.strings(); },
+           EmptyStringView{},
            [this]() -> auto & { return m_map_sprite.filter().bpp; }))
      {
           m_map_sprite.update_render_texture();
@@ -2012,6 +2024,7 @@ void gui::combo_blend_modes()
            gui_labels::blend_mode,
            [&pair]() { return pair.values(); },
            [&pair]() { return pair.strings(); },
+           EmptyStringView{},
            [this]() -> auto & { return m_map_sprite.filter().blend_mode; }))
      {
           m_map_sprite.update_render_texture();
@@ -2027,6 +2040,7 @@ void gui::combo_layers()
            gui_labels::layers,
            [&pair]() { return pair.values(); },
            [&pair]() { return pair.strings(); },
+           EmptyStringView{},
            [this]() -> auto & { return m_map_sprite.filter().layer_id; }))
      {
           m_map_sprite.update_render_texture();
@@ -2041,6 +2055,7 @@ void gui::combo_texture_pages()
            gui_labels::texture_page,
            [&pair]() { return pair.values(); },
            [&pair]() { return pair.strings(); },
+           EmptyStringView{},
            [this]() -> auto & { return m_map_sprite.filter().texture_page_id; }))
      {
           m_map_sprite.update_render_texture();
@@ -2055,6 +2070,7 @@ void gui::combo_animation_ids()
            gui_labels::animation_id,
            [&pair]() { return pair.values(); },
            [&pair]() { return pair.strings(); },
+           EmptyStringView{},
            [this]() -> auto & { return m_map_sprite.filter().animation_id; }))
      {
           m_map_sprite.update_render_texture();
@@ -2069,6 +2085,7 @@ void gui::combo_blend_other()
            gui_labels::blend_other,
            [&pair]() { return pair.values(); },
            [&pair]() { return pair.strings(); },
+           EmptyStringView{},
            [this]() -> auto & { return m_map_sprite.filter().blend_other; }))
      {
           m_map_sprite.update_render_texture();
@@ -2085,6 +2102,7 @@ void gui::combo_z()
            gui_labels::z,
            [&pair]() { return pair.values(); },
            [&pair]() { return pair.strings(); },
+           EmptyStringView{},
            [this]() -> auto & { return m_map_sprite.filter().z; }))
      {
           m_map_sprite.update_render_texture();
@@ -2104,6 +2122,7 @@ void gui::combo_animation_frames()
                 gui_labels::animation_frame,
                 [&pair]() { return pair.values(); },
                 [&pair]() { return pair.strings(); },
+                EmptyStringView{},
                 [this]() -> auto & { return m_map_sprite.filter().animation_frame; }))
           {
                m_map_sprite.update_render_texture();
@@ -2128,6 +2147,7 @@ void gui::combo_deswizzle_path()
            get_imgui_id(),
            gui_labels::deswizzle_path,
            //[&values]() { return values; },
+           [&strings]() { return strings; },
            [&strings]() { return strings; },
            [&strings]() { return strings; },
            [this]() -> auto & { return m_map_sprite.filter().deswizzle; }))
@@ -2203,6 +2223,7 @@ bool gui::combo_upscale_path(ff_8::filter_old<std::filesystem::path> &filter) co
             && generic_combo(
               get_imgui_id(),
               gui_labels::upscale_path,
+              [this]() { return m_upscale_paths; },
               [this]() { return m_upscale_paths; },
               [this]() { return m_upscale_paths; },
               [&filter]() -> auto & { return filter; });

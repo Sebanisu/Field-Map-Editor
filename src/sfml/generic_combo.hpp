@@ -41,18 +41,24 @@ concept returns_filter_concept = requires(std::remove_cvref_t<T> callable) {
                                            callable()
                                       } -> filter_concept;
                                  };
-template<returns_range_concept value_lambdaT, returns_range_concept string_lambdaT, returns_filter_concept filter_lambdaT>
+template<
+  returns_range_concept  value_lambdaT,
+  returns_range_concept  string_lambdaT,
+  returns_range_concept  tool_tip_lambda_t,
+  returns_filter_concept filter_lambdaT>
 inline static bool generic_combo(
-  int             &imgui_id,
-  std::string_view name,
-  value_lambdaT  &&value_lambda,
-  string_lambdaT &&string_lambda,
-  filter_lambdaT &&filter_lambda)
+  int                &imgui_id,
+  std::string_view    name,
+  value_lambdaT     &&value_lambda,
+  string_lambdaT    &&string_lambda,
+  tool_tip_lambda_t &&tool_tip_lambda,
+  filter_lambdaT    &&filter_lambda)
 {
      bool                                                     changed     = false;
-     const auto                                              &values      = value_lambda();
-     auto                                                   &&strings     = string_lambda();
-     auto                                                    &filter      = filter_lambda();
+     const auto                                              &values      = std::invoke(std::forward<value_lambdaT>(value_lambda));
+     auto                                                   &&strings     = std::invoke(std::forward<string_lambdaT>(string_lambda));
+     auto                                                   &&tooltips    = std::invoke(std::forward<tool_tip_lambda_t>(tool_tip_lambda));
+     auto                                                    &filter      = std::invoke(std::forward<filter_lambdaT>(filter_lambda));
      bool                                                     checked     = filter.enabled();
      const ImGuiStyle                                        &style       = ImGui::GetStyle();
      const float                                              spacing     = style.ItemInnerSpacing.x;
@@ -114,11 +120,12 @@ inline static bool generic_combo(
      {
           const auto pop_id = scope_guard{ &ImGui::PopID };
           ImGui::PushID(++imgui_id);
-          const auto &string_like = *current_item;
+          const auto &string_like  = *current_item;
 
-          const float width       = ImGui::CalcItemWidth();
-          const float button_size = ImGui::GetFrameHeight();
-          ImGui::PushItemWidth(width - spacing * 3.0f - button_size * 3.0f);
+          const float width        = ImGui::CalcItemWidth();
+          const float button_size  = ImGui::GetFrameHeight();
+          const float button_count = 3.0F;
+          ImGui::PushItemWidth(width - spacing * button_count - button_size * button_count);
           const auto pop_item_width = scope_guard(&ImGui::PopItemWidth);
           if (ImGui::BeginCombo("##Empty", string_like.data(), ImGuiComboFlags_HeightLarge))
           // The second parameter is the label previewed
@@ -126,6 +133,7 @@ inline static bool generic_combo(
           {
                std::ranges::for_each(strings, [&, index = 0U](const auto &string) mutable {
                     const bool is_selected = (string_like == string);
+                    const auto iterate     = scope_guard([&]() { ++index; });
                     // You can store your selection however you
                     // want, outside or inside your objects
                     {
@@ -144,7 +152,18 @@ inline static bool generic_combo(
                          // opening the combo (scrolling + for
                          // keyboard navigation support)
                     }
-                    ++index;
+                    if (!ImGui::IsItemHovered())
+                    {
+                         return;
+                    }
+                    const auto &tooltip = *next(tooltips, index);
+                    if (std::ranges::empty(tooltip))
+                    {
+                         return;
+                    }
+                    const auto pop_tool_tip = scope_guard{ &ImGui::EndTooltip };
+                    ImGui::BeginTooltip();
+                    format_imgui_text("{}", tooltip);
                });
                //      if (old != current_idx)
                //      {
@@ -182,7 +201,7 @@ inline static bool generic_combo(
                ImGui::EndDisabled();
           }
           ImGui::SameLine(0, spacing);
-          ImGui::Text("%s", name.data());
+          format_imgui_text("{}", name);
      }
      auto      &update        = filter.update(*next(values, current_idx));
      const auto index_changed = old != current_idx;
@@ -236,9 +255,10 @@ inline static bool
      {
           const auto pop_id = scope_guard{ &ImGui::PopID };
           ImGui::PushID(++imgui_id);
-          const float width       = ImGui::CalcItemWidth();
-          const float button_size = ImGui::GetFrameHeight();
-          ImGui::PushItemWidth(width - spacing * 2.0f - button_size * 2.0f);
+          const float width        = ImGui::CalcItemWidth();
+          const float button_size  = ImGui::GetFrameHeight();
+          const float button_count = 2.0F;
+          ImGui::PushItemWidth(width - spacing * button_count - button_size * button_count);
           const auto pop_item_width = scope_guard(&ImGui::PopItemWidth);
           if (ImGui::BeginCombo("##Empty", current_item.data(), ImGuiComboFlags_HeightLarge))
           // The second parameter is the label previewed
@@ -311,7 +331,7 @@ inline static bool
                ImGui::EndDisabled();
           }
           ImGui::SameLine(0, spacing);
-          ImGui::Text("%s", name.data());
+          format_imgui_text("{}", name);
      }
      value = *next(values, current_idx);
      return old != current_idx || changed;
