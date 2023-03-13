@@ -9,8 +9,8 @@ class FieldMapEditor(ConanFile):
     requires = (
         # "catch2/2.13.7", another unit testing library.
         # "docopt.cpp/0.6.3", command line library.
-        #"fmt/8.1.1",  # formatting library, included with spdlog
-        "spdlog/1.10.0",  # logging library
+        #"fmt/9.1.0",  # formatting library, included with spdlog
+        "spdlog/1.11.0",  # logging library
         "glfw/3.3.5",  # opengl version opengl library.
         "glew/2.2.0",  # opengl version opengl extension library
         "glm/0.9.9.8",  # opengl version opengl math library
