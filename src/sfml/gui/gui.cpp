@@ -708,7 +708,7 @@ void gui::combo_coo()
           }
           if (m_field)
           {
-               generate_upscale_paths(m_field->get_base_name(), get_coo());
+               generate_upscale_paths(std::string{ m_field->get_base_name() }, get_coo());
           }
           m_changed = true;
      }
@@ -771,7 +771,7 @@ void gui::update_field()
      m_changed                       = true;
      if (m_field)
      {
-          generate_upscale_paths(m_field->get_base_name(), get_coo());
+          generate_upscale_paths(std::string{ m_field->get_base_name() }, get_coo());
      }
 }
 
@@ -1185,7 +1185,7 @@ void gui::directory_browser_display()
                m_loaded_swizzle_texture_path = selected_path;
                if (m_field)
                {
-                    generate_upscale_paths(m_field->get_base_name(), get_coo());
+                    generate_upscale_paths(std::string{ m_field->get_base_name() }, get_coo());
                }
                m_map_sprite.filter().deswizzle.disable();
                m_map_sprite.filter().upscale.update(m_loaded_swizzle_texture_path).enable();
@@ -1222,7 +1222,7 @@ void gui::directory_browser_display()
                config.save();
                if (m_field)
                {
-                    generate_upscale_paths(m_field->get_base_name(), get_coo());
+                    generate_upscale_paths(std::string{ m_field->get_base_name() }, get_coo());
                }
                // todo toggle filter enabled?
           }
@@ -1801,7 +1801,7 @@ void gui::init_and_get_style()
      imgui_io.ConfigFlags = bitwise_or(imgui_io.ConfigFlags, ImGuiConfigFlags_DockingEnable);
      if (m_field)
      {
-          generate_upscale_paths(m_field->get_base_name(), get_coo());
+          generate_upscale_paths(std::string{ m_field->get_base_name() }, get_coo());
      }
      if (!m_drag_sprite_shader)
      {
@@ -1856,7 +1856,7 @@ gui::gui()
      if (std::cmp_not_equal(GLEW_OK, err))
      {
           // GLEW initialization failed
-          const GLubyte * error_msg = glewGetErrorString(err);
+          const GLubyte *error_msg = glewGetErrorString(err);
           spdlog::error("{}", reinterpret_cast<const char *>(error_msg));
           std::terminate();
      }

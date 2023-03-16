@@ -14,6 +14,7 @@ set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON) ## automatically create a module defini
 find_package(Threads REQUIRED)
 include(${CMAKE_SOURCE_DIR}/cmake/OpenVIII_CPP_WIP.cmake)
 include(${CMAKE_SOURCE_DIR}/cmake/ImGuiFileBrowser.cmake)
+include(${CMAKE_SOURCE_DIR}/cmake/IconFontCppHeaders.cmake)
 add_executable(${PROJECT_NAME}_SFML
         test.cpp
         archives_group.cpp
@@ -46,6 +47,7 @@ target_link_libraries(${PROJECT_NAME}_SFML
         PRIVATE tomlplusplus::tomlplusplus
         PRIVATE spdlog::spdlog
         PRIVATE GLEW::GLEW
+        PRIVATE IconFontCppHeaders
         )
 target_include_directories(${PROJECT_NAME}_SFML
         PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
@@ -63,20 +65,21 @@ target_compile_features(${PROJECT_NAME}_SFML
 if (MSVC)
     target_compile_definitions(${PROJECT_NAME}_SFML
             PUBLIC _CRT_SECURE_NO_WARNINGS) # required by libpng
-    target_compile_options(${PROJECT_NAME}_SFML PUBLIC "/bigobj" PUBLIC "/await")
-    target_link_options(${PROJECT_NAME}_SFML PRIVATE "/PROFILE")
+    target_compile_options(${PROJECT_NAME}_SFML PUBLIC "/bigobj" PUBLIC "/await" PUBLIC "/Zc:char8_t-")
+    target_link_options(${PROJECT_NAME}_SFML PUBLIC "/PROFILE")
 elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    target_compile_options(${PROJECT_NAME}_SFML PUBLIC "-fconcepts-diagnostics-depth=2")
+    target_compile_options(${PROJECT_NAME}_SFML PUBLIC "-fconcepts-diagnostics-depth=2" PUBLIC "-fno-char8_t")
 elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
     target_compile_options(${PROJECT_NAME}_SFML
-            PRIVATE "-stdlib=libc++"
-            PRIVATE "-march=native"
-            PRIVATE "-fexperimental-library" ##new in clang15 for things like std::ranges and std::format
+            PUBLIC "-stdlib=libc++"
+            PUBLIC "-march=native"
+            PUBLIC "-fexperimental-library" ##new in clang15 for things like std::ranges and std::format
+            PUBLIC "-fno-char8_t"
             )
     target_link_options(${PROJECT_NAME}_SFML
-            PRIVATE "-stdlib=libc++"
-            PRIVATE "-fuse-ld=lld"
-            PRIVATE "-Wl") #,--gdb-index
+            PUBLIC "-stdlib=libc++"
+            PUBLIC "-fuse-ld=lld"
+            PUBLIC "-Wl") #,--gdb-index
 endif ()
 enable_sanitizers(${PROJECT_NAME}_SFML)
 SET_TARGET_PATHS(${PROJECT_NAME}_SFML)

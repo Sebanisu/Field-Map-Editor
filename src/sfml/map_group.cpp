@@ -13,6 +13,7 @@ static std::string str_to_lower(std::string input)
        input, std::back_inserter(output), [](char character) -> char { return static_cast<char>(::tolower(character)); });
      return output;
 }
+
 namespace ff_8
 {
 static map_group::Mim load_mim(const map_group::SharedField &field, const map_group::Coo coo)
@@ -27,7 +28,7 @@ static map_group::Mim load_mim(const map_group::SharedField &field, const map_gr
      auto long_name = fmt::format("{}{}", field->get_base_name(), open_viii::graphics::background::Mim::EXT);
      return { field->get_entry_data(
                 { std::string_view(long_lang_name), std::string_view(long_name), std::string_view(lang_name), map_group::Mim::EXT }),
-              str_to_lower(field->get_base_name()) };
+              str_to_lower(std::string{ field->get_base_name() }) };
 }
 static map_group::MapHistory load_map_history(
   const map_group::SharedField  &field,

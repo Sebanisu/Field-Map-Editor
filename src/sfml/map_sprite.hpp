@@ -122,6 +122,12 @@ struct map_sprite final
      [[nodiscard]] bool                                  draw_imported(sf::RenderTarget &changed_tiles, sf::RenderStates states) const;
      [[nodiscard]] bool                                  using_coo() const;
      [[nodiscard]] static std::string                    str_to_lower(std::string input);
+     template<typename T>
+          requires(std::same_as<std::remove_cvref_t<T>,std::string_view>)
+     [[nodiscard]] static std::string str_to_lower(T input)
+     {
+          return str_to_lower(std::string{input});
+     }
      [[nodiscard]] sf::Sprite                            save_intersecting(const sf::Vector2i &pixel_pos, const std::uint8_t &texture_page);
      [[nodiscard]] std::size_t                           get_texture_pos(BPPT bpp, std::uint8_t palette, std::uint8_t texture_page) const;
      [[nodiscard]] std::vector<std::future<std::future<void>>> save_swizzle_textures(const std::filesystem::path &path);
@@ -396,7 +402,7 @@ struct map_sprite final
      {
           if (m_map_group.field)
           {
-               return { m_map_group.field->get_base_name(), m_map_group.opt_coo };
+               return { std::string{ m_map_group.field->get_base_name() }, m_map_group.opt_coo };
           }
           return {};
      }
