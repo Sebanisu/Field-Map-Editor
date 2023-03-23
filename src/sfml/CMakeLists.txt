@@ -65,16 +65,16 @@ target_compile_features(${PROJECT_NAME}_SFML
 if (MSVC)
     target_compile_definitions(${PROJECT_NAME}_SFML
             PUBLIC _CRT_SECURE_NO_WARNINGS) # required by libpng
-    target_compile_options(${PROJECT_NAME}_SFML PUBLIC "/bigobj" PUBLIC "/await" PUBLIC "/Zc:char8_t-")
+    target_compile_options(${PROJECT_NAME}_SFML PUBLIC "/bigobj" PUBLIC "/await")#PUBLIC "/Zc:char8_t-"
     target_link_options(${PROJECT_NAME}_SFML PUBLIC "/PROFILE")
 elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    target_compile_options(${PROJECT_NAME}_SFML PUBLIC "-fconcepts-diagnostics-depth=2" PUBLIC "-fno-char8_t")
+    target_compile_options(${PROJECT_NAME}_SFML PUBLIC "-fconcepts-diagnostics-depth=2")# PUBLIC "-fno-char8_t"
 elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
     target_compile_options(${PROJECT_NAME}_SFML
             PUBLIC "-stdlib=libc++"
             PUBLIC "-march=native"
             PUBLIC "-fexperimental-library" ##new in clang15 for things like std::ranges and std::format
-            PUBLIC "-fno-char8_t"
+            #PUBLIC "-fno-char8_t"
             )
     target_link_options(${PROJECT_NAME}_SFML
             PUBLIC "-stdlib=libc++"

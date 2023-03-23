@@ -20,7 +20,7 @@ struct GlCall
 {
 public:
   GlCall(std::source_location location = std::source_location::current())
-    : m_source_location(std::move(location))
+    : m_source_location(location)
   {
   }
   template<typename FuncT, typename... ArgsT>
