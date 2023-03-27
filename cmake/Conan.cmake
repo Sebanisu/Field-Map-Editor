@@ -65,7 +65,7 @@ macro(run_conan)
                     #set(CONAN_ENV ENV "CC=${CMAKE_C_COMPILER}" "CXX=${CMAKE_CXX_COMPILER}" "CXXFLAGS=/D_HAS_AUTO_PTR_ETC") #shouldn't need to enable auto_ptr anymore
                 elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
                     set(CONAN_SETTINGS SETTINGS ${settings} compiler.cppstd=20 compiler.libcxx=libstdc++11)
-                    set(CONAN_ENV ENV "CC=${CMAKE_C_COMPILER}" "CXX=${CMAKE_CXX_COMPILER}" "CXXFLAGS=-fexperimental-library")# "CXXFLAGS=-stdlib=libc++ -march=native -fexperimental-library" "LDFLAGS=-stdlib=libc++ -fuse-ld=lld -Wl")
+                    set(CONAN_ENV ENV "CC=${CMAKE_C_COMPILER}" "CXX=${CMAKE_CXX_COMPILER}" "CXXFLAGS=-stdlib=libc++ -fexperimental-library" "LDFLAGS=-stdlib=libc++ -fexperimental-library")
                 else () #GCC
                     set(CONAN_SETTINGS SETTINGS ${settings} compiler.cppstd=20 compiler.libcxx=libstdc++11)
                     set(CONAN_ENV ENV "CC=${CMAKE_C_COMPILER}" "CXX=${CMAKE_CXX_COMPILER}")
@@ -80,23 +80,32 @@ macro(run_conan)
                 # CONAN_ENV should be redundant, since the profile can set CC & CXX
             endif ()
 
+            set(SYNC_LOCKFILE "${CMAKE_SOURCE_DIR}/conan_sync.lock")
+            file(LOCK ${SYNC_LOCKFILE} TIMEOUT 300 RESULT_VARIABLE lock_result)
+
             # PATH_OR_REFERENCE ${CMAKE_SOURCE_DIR} is used to tell conan to process
             # the external "conanfile.py" provided with the project
             # Alternatively a conanfile.txt could be used
-            conan_cmake_install(
-                    PATH_OR_REFERENCE
-                    ${CMAKE_SOURCE_DIR}
-                    BUILD
-                    outdated
-                    # Pass compile-time configured options into conan
-                    OPTIONS
-                    ${ProjectOptions_CONAN_OPTIONS}
-                    UPDATE
-                    # Pass CMake compilers to Conan
-                    ${CONAN_ENV}
-                    # Pass either autodetected settings or a conan profile
-                    ${CONAN_SETTINGS}
-                    ${OUTPUT_QUIET})
+            if (lock_result)
+                message(WARNING "Failed to acquire lock on ${SYNC_LOCKFILE} within 300 seconds.")
+            else ()
+                message(STATUS "Successfully acquired lock on ${SYNC_LOCKFILE}.")
+                conan_cmake_install(
+                        PATH_OR_REFERENCE
+                        ${CMAKE_SOURCE_DIR}
+                        BUILD
+                        outdated
+                        # Pass compile-time configured options into conan
+                        OPTIONS
+                        ${ProjectOptions_CONAN_OPTIONS}
+                        UPDATE
+                        # Pass CMake compilers to Conan
+                        ${CONAN_ENV}
+                        # Pass either autodetected settings or a conan profile
+                        ${CONAN_SETTINGS}
+                        ${OUTPUT_QUIET})
+                file(LOCK ${SYNC_LOCKFILE} RELEASE)
+            endif ()
         endforeach ()
     endif ()
 

@@ -70,13 +70,16 @@ elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
 elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
     target_compile_options(glengine
             PUBLIC "-stdlib=libc++"
-            PUBLIC "-march=native"
+            #            PUBLIC "-march=native"
             PUBLIC "-fexperimental-library" ##new in clang15 for things like std::ranges and std::format
             )
     target_link_options(glengine
             PUBLIC "-stdlib=libc++"
-            PUBLIC "-fuse-ld=lld"
-            PUBLIC "-Wl") #,--gdb-index
+            #            PUBLIC "-fuse-ld=lld"
+            #                        PUBLIC "-Wl"
+            PUBLIC "-fexperimental-library" ##new in clang15 for things like std::ranges and std::format
+            PUBLIC "-v"
+            ) #,--gdb-index
 endif ()
 
 if (supported)

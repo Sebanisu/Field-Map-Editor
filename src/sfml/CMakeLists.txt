@@ -72,14 +72,18 @@ elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
 elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
     target_compile_options(${PROJECT_NAME}_SFML
             PUBLIC "-stdlib=libc++"
-            PUBLIC "-march=native"
+            #            PUBLIC "-march=native"
             PUBLIC "-fexperimental-library" ##new in clang15 for things like std::ranges and std::format
             #PUBLIC "-fno-char8_t"
             )
     target_link_options(${PROJECT_NAME}_SFML
             PUBLIC "-stdlib=libc++"
-            PUBLIC "-fuse-ld=lld"
-            PUBLIC "-Wl") #,--gdb-index
+            #            PUBLIC "-fuse-ld=lld"
+            PUBLIC "-fexperimental-library" ##new in clang15 for things like std::ranges and std::format
+            #            PUBLIC "-Wl"
+            #-lstdc++
+            PUBLIC "-v"
+            ) #,--gdb-index
 endif ()
 enable_sanitizers(${PROJECT_NAME}_SFML)
 SET_TARGET_PATHS(${PROJECT_NAME}_SFML)
