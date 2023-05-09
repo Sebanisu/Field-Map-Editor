@@ -44,6 +44,7 @@ class batch
      std::string                                                m_status            = {};
      map_sprite                                                 m_map_sprite        = {};
      std::vector<bool>                                          m_maps_enabled      = {};
+     std::uint8_t                                               m_num_columns       = { 5 };
      directory_mode                                             m_directory_browser_mode             = {};
      bool                                                       m_input_load_map                     = { false };
      FutureOfFutureConsumer<std::vector<std::future<std::future<void>>>> m_future_of_future_consumer = {};

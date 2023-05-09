@@ -147,9 +147,9 @@ void batch::draw_multi_column_list_box(
 
      if (ImGui::Button("Select All"))
      {
-          for (size_t i = 0; i < enabled.size(); ++i)
+          for (auto &&i : enabled)
           {
-               enabled[i] = true;
+               i = true;
           }
      }
 
@@ -157,16 +157,37 @@ void batch::draw_multi_column_list_box(
 
      if (ImGui::Button("Select None"))
      {
-          for (size_t i = 0; i < enabled.size(); ++i)
+          for (auto &&i : enabled)
           {
-               enabled[i] = false;
+               i = false;
           }
+     }
+
+     ImGui::SameLine();
+
+     {
+          ImGui::BeginDisabled(m_num_columns == 1);
+          if (ImGui::ArrowButton("num_columns_dec", ImGuiDir_Left) && m_num_columns > 1)
+          {
+               --m_num_columns;
+          }
+          ImGui::EndDisabled();
+     }
+
+     ImGui::SameLine();
+     {
+          ImGui::BeginDisabled(m_num_columns == (std::numeric_limits<std::uint8_t>::max)());
+          if (ImGui::ArrowButton("num_columns_inc", ImGuiDir_Right))
+          {
+               ++m_num_columns;
+          }
+          ImGui::EndDisabled();
      }
 
      const auto pop_border = scope_guard{ []() { ImGui::PopStyleColor(); } };
      ImGui::PushStyleColor(ImGuiCol_Border, ImVec4(0.0f, 0.0f, 0.0f, 0.0f));// Set border alpha to 0
 
-     ImGui::Columns(5, "multicol_listbox");
+     ImGui::Columns(m_num_columns, "multicol_listbox");
      //     ImGui::Separator();
      //     ImGui::Text("Toggle"); ImGui::NextColumn();
      //     ImGui::Text("Item"); ImGui::NextColumn();
