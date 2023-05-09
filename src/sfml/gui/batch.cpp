@@ -4,6 +4,7 @@
 
 #include "batch.hpp"
 #include "Configuration.hpp"
+#include "open_file_explorer.hpp"
 struct AsString
 {
      template<typename T>
@@ -268,14 +269,14 @@ bool batch::browse_path(int &imgui_id, std::string_view name, bool &valid_path, 
      const ImGuiStyle &style        = ImGui::GetStyle();
      const float       spacing      = style.ItemInnerSpacing.x;
      const float       button_size  = ImGui::GetFrameHeight();
-     const float       button_width = button_size * 2.60F;
+     const float       button_width = button_size * 3.0F;
      const auto        pop_id       = scope_guard{ &ImGui::PopID };
      ImGui::PushID(++imgui_id);
      // ImGui text box with browse button
      // Highlight text box red if the folder doesn't exist
      {
           const float width = ImGui::CalcItemWidth();
-          ImGui::PushItemWidth(width - (spacing * 1.0F) - button_width);
+          ImGui::PushItemWidth(width - (spacing * 2.0F) - button_width * 2.0F);
           const auto pop_item_width = scope_guard(&ImGui::PopItemWidth);
           if (!valid_path)
           {
@@ -314,6 +315,12 @@ bool batch::browse_path(int &imgui_id, std::string_view name, bool &valid_path, 
           }
      }
      ImGui::SameLine(0, spacing);
+     if (ImGui::Button("Explore", ImVec2{ button_width, button_size }))
+     {
+          open_directory(path_buffer.data());
+     }
+     ImGui::SameLine(0, spacing);
+
      format_imgui_text("{}", name.data());
      return changed;
 }
