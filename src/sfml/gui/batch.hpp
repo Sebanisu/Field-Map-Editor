@@ -43,6 +43,7 @@ class batch
      std::optional<open_viii::LangT>                            m_coo               = {};
      std::string                                                m_status            = {};
      map_sprite                                                 m_map_sprite        = {};
+     std::vector<bool>                                          m_maps_enabled      = {};
      directory_mode                                             m_directory_browser_mode             = {};
      bool                                                       m_input_load_map                     = { false };
      FutureOfFutureConsumer<std::vector<std::future<std::future<void>>>> m_future_of_future_consumer = {};
@@ -77,6 +78,10 @@ class batch
      explicit batch(std::shared_ptr<archives_group> existing_group)
        : m_archives_group(std::move(existing_group))
      {
+          if (m_archives_group)
+          {
+               m_maps_enabled.resize(m_archives_group->mapdata().size());
+          }
           Configuration const config{};
           m_input_type =
             static_cast<input_types>(config["batch_input_type"].value_or(static_cast<std::underlying_type_t<input_types>>(m_input_type)));
@@ -132,6 +137,10 @@ class batch
      {
           stop();
           m_archives_group = std::move(new_group);
+          if (m_archives_group)
+          {
+               m_maps_enabled.resize(m_archives_group->mapdata().size());
+          }
           return *this;
      }
      void draw_window(int &imgui_id)
@@ -151,6 +160,10 @@ class batch
           browse_output_path(imgui_id);
           combo_compact_type(imgui_id);
           combo_flatten_type(imgui_id);
+          if (m_archives_group)
+          {
+               draw_multi_column_list_box(imgui_id, "Map List", m_archives_group->mapdata(), m_maps_enabled);
+          }
           button_start(imgui_id);
           ImGui::EndDisabled();
           ImGui::BeginDisabled(!disabled);
@@ -162,5 +175,10 @@ class batch
           }
           format_imgui_text("{}", m_status);
      }
+     void draw_multi_column_list_box(
+       int                            &imgui_id,
+       const std::string_view          name,
+       const std::vector<std::string> &items,
+       std::vector<bool>              &enabled);
 };
 #endif// FIELD_MAP_EDITOR_BATCH_HPP

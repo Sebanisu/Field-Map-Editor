@@ -132,6 +132,79 @@ void batch::browse_output_path(int &imgui_id)
      config->insert_or_assign("batch_output_path", std::string(m_output_path.data()));
      config.save();
 }
+void batch::draw_multi_column_list_box(
+  int                            &imgui_id,
+  const std::string_view          name,
+  const std::vector<std::string> &items,
+  std::vector<bool>              &enabled)
+{
+     if (!ImGui::CollapsingHeader(name.data()))
+     {
+          return;
+     }
+
+
+     if (ImGui::Button("Select All"))
+     {
+          for (size_t i = 0; i < enabled.size(); ++i)
+          {
+               enabled[i] = true;
+          }
+     }
+
+     ImGui::SameLine();
+
+     if (ImGui::Button("Select None"))
+     {
+          for (size_t i = 0; i < enabled.size(); ++i)
+          {
+               enabled[i] = false;
+          }
+     }
+
+     const auto pop_border = scope_guard{ []() { ImGui::PopStyleColor(); } };
+     ImGui::PushStyleColor(ImGuiCol_Border, ImVec4(0.0f, 0.0f, 0.0f, 0.0f));// Set border alpha to 0
+
+     ImGui::Columns(3, "multicol_listbox");
+     //     ImGui::Separator();
+     //     ImGui::Text("Toggle"); ImGui::NextColumn();
+     //     ImGui::Text("Item"); ImGui::NextColumn();
+     ImGui::Separator();
+
+     ImVec4 enabledColor = ImVec4(0.4f, 0.8f, 0.4f, 1.0f);// Green
+
+     for (size_t i = 0; i < items.size(); ++i)
+     {
+          const auto pop_id = scope_guard{ []() {
+               ImGui::PopID();
+               ImGui::NextColumn();
+          } };
+          ImGui::PushID(imgui_id++);
+          const auto selectable = [&]() {
+               if (ImGui::Selectable(items[i].c_str(), enabled[i]))
+               {
+                    enabled[i] = !enabled[i];
+               }
+          };
+
+          if (enabled[i])
+          {
+               // Revert text color to default
+               const auto pop_text_color = scope_guard{ []() { ImGui::PopStyleColor(); } };
+               // Change text color and show the current enabled status
+               ImGui::PushStyleColor(ImGuiCol_Text, enabledColor);
+
+               selectable();
+          }
+          else
+          {
+               selectable();
+          }
+     }
+
+     ImGui::Columns(1);
+     ImGui::Separator();
+}
 void batch::button_start(int &imgui_id)
 {
      const auto pop_id_right = scope_guard{ &ImGui::PopID };
@@ -395,12 +468,28 @@ void batch::reset_for_next()
 }
 void batch::choose_field_and_coo()
 {
-     if ((!m_field || !m_field->operator bool()) && !m_fields_consumer.done())
+     while ((!m_field || !m_field->operator bool()) && !m_fields_consumer.done())
      {
-          m_field = std::make_shared<open_viii::archive::FIFLFS<false>>(*m_fields_consumer);
+          open_viii::archive::FIFLFSArchiveFetcher tmp         = *m_fields_consumer;
+          const auto                              &map_data    = m_archives_group->mapdata();
+          const auto                               find_result = std::ranges::find_if(
+            map_data, [&](std::string_view map_name) -> bool { return open_viii::tools::i_find(map_name, tmp.map_name()); });
+
+          if (find_result != std::ranges::end(map_data))
+          {
+               const auto offset = std::ranges::distance(std::ranges::begin(map_data), find_result);
+               if (m_maps_enabled.at(static_cast<std::size_t>(offset)))
+               {
+                    m_field = std::make_shared<open_viii::archive::FIFLFS<false>>(tmp.get());
+                    ++m_fields_consumer;
+                    break;
+               }
+          }
+
           ++m_fields_consumer;
      }
-     if (!m_coo && !m_lang_consumer.done())
+
+     while (!m_coo && !m_lang_consumer.done())
      {
           m_coo = *m_lang_consumer;
           ++m_lang_consumer;

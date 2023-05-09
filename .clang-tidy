@@ -14,6 +14,11 @@ Checks: "*,
         -cppcoreguidelines-non-private-member-variables-in-classes,
         -misc-non-private-member-variables-in-classes,
 "
+CheckOptions:
+  - key: readability-identifier-naming.MinimumVariableNameLength
+    value: '1'
+  - key: readability-identifier-naming.MinimumParameterNameLength
+    value: '1'
 WarningsAsErrors: ''
 HeaderFilterRegex: ''
 FormatStyle: none
