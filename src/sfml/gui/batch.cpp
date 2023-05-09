@@ -480,7 +480,7 @@ void batch::choose_field_and_coo()
           open_viii::archive::FIFLFSArchiveFetcher tmp         = *m_fields_consumer;
           const auto                              &map_data    = m_archives_group->mapdata();
           const auto                               find_result = std::ranges::find_if(
-            map_data, [&](std::string_view map_name) -> bool { return open_viii::tools::i_find(map_name, tmp.map_name()); });
+            map_data, [&](std::string_view map_name) -> bool { return open_viii::tools::i_equals(map_name, tmp.map_name()); });
 
           if (find_result != std::ranges::end(map_data))
           {
