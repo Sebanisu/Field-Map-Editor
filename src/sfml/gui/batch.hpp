@@ -78,9 +78,9 @@ class batch
      explicit batch(std::shared_ptr<archives_group> existing_group)
        : m_archives_group(std::move(existing_group))
      {
-          if (m_archives_group)
+          if (m_archives_group && m_archives_group->mapdata().size() != m_maps_enabled.size())
           {
-               m_maps_enabled.resize(m_archives_group->mapdata().size());
+               m_maps_enabled.resize(m_archives_group->mapdata().size(), true);
           }
           Configuration const config{};
           m_input_type =
@@ -137,9 +137,9 @@ class batch
      {
           stop();
           m_archives_group = std::move(new_group);
-          if (m_archives_group)
+          if (m_archives_group && m_archives_group->mapdata().size() != m_maps_enabled.size())
           {
-               m_maps_enabled.resize(m_archives_group->mapdata().size());
+               m_maps_enabled.resize(m_archives_group->mapdata().size(), true);
           }
           return *this;
      }
