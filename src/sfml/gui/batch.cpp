@@ -166,13 +166,13 @@ void batch::draw_multi_column_list_box(
      const auto pop_border = scope_guard{ []() { ImGui::PopStyleColor(); } };
      ImGui::PushStyleColor(ImGuiCol_Border, ImVec4(0.0f, 0.0f, 0.0f, 0.0f));// Set border alpha to 0
 
-     ImGui::Columns(3, "multicol_listbox");
+     ImGui::Columns(5, "multicol_listbox");
      //     ImGui::Separator();
      //     ImGui::Text("Toggle"); ImGui::NextColumn();
      //     ImGui::Text("Item"); ImGui::NextColumn();
      ImGui::Separator();
 
-     ImVec4 enabledColor = ImVec4(0.4f, 0.8f, 0.4f, 1.0f);// Green
+     ImVec4 const enabled_color = ImVec4(0.4f, 0.8f, 0.4f, 1.0f);// Green
 
      for (size_t i = 0; i < items.size(); ++i)
      {
@@ -193,7 +193,7 @@ void batch::draw_multi_column_list_box(
                // Revert text color to default
                const auto pop_text_color = scope_guard{ []() { ImGui::PopStyleColor(); } };
                // Change text color and show the current enabled status
-               ImGui::PushStyleColor(ImGuiCol_Text, enabledColor);
+               ImGui::PushStyleColor(ImGuiCol_Text, enabled_color);
 
                selectable();
           }
