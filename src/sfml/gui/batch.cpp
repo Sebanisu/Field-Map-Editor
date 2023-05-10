@@ -49,8 +49,10 @@ void batch::combo_compact_type(int &imgui_id)
            []() { return values; },
            []() { return values | std::views::transform(AsString{}); },
            []() { return tool_tips; },
-           [&]() -> auto & { return m_compact_type; }))
+           [this]() -> auto & { return m_compact_type; }))
+     {
           return;
+     }
      Configuration config{};
      config->insert_or_assign("batch_compact_type", static_cast<std::underlying_type_t<compact_type>>(m_compact_type.value()));
      config->insert_or_assign("batch_compact_enabled", m_compact_type.enabled());
@@ -77,7 +79,7 @@ void batch::combo_flatten_type(int &imgui_id)
                 [&]() { return values; },
                 [&]() { return values | std::views::transform(AsString{}); },
                 [&]() { return tool_tips; },
-                [&]() -> auto & { return m_flatten_type; }))
+                [this]() -> auto & { return m_flatten_type; }))
           {
                return;
           }
@@ -90,7 +92,7 @@ void batch::combo_flatten_type(int &imgui_id)
                 [&]() { return values_only_palette; },
                 [&]() { return values_only_palette | std::views::transform(AsString{}); },
                 [&]() { return tool_tips_only_palette; },
-                [&]() -> auto & { return m_flatten_type; }))
+                [this]() -> auto & { return m_flatten_type; }))
           {
                return;
           }
@@ -99,7 +101,6 @@ void batch::combo_flatten_type(int &imgui_id)
      config->insert_or_assign("batch_flatten_type", static_cast<std::underlying_type_t<flatten_type>>(m_flatten_type.value()));
      config->insert_or_assign("batch_flatten_enabled", m_flatten_type.enabled());
      config.save();
-     return;
 }
 void batch::browse_input_path(int &imgui_id)
 {
@@ -166,7 +167,7 @@ void batch::draw_multi_column_list_box(
      ImGui::SameLine();
 
      {
-          ImGui::BeginDisabled(m_num_columns == 1);
+          ImGui::BeginDisabled(m_num_columns <= 1);
           if (ImGui::ArrowButton("num_columns_dec", ImGuiDir_Left) && m_num_columns > 1)
           {
                --m_num_columns;
@@ -184,18 +185,15 @@ void batch::draw_multi_column_list_box(
           ImGui::EndDisabled();
      }
 
-     const auto pop_border = scope_guard{ []() { ImGui::PopStyleColor(); } };
-     ImGui::PushStyleColor(ImGuiCol_Border, ImVec4(0.0f, 0.0f, 0.0f, 0.0f));// Set border alpha to 0
-
-     ImGui::Columns(m_num_columns, "multicol_listbox");
+     ImGui::Columns(m_num_columns, "multicol_listbox", false);
      //     ImGui::Separator();
      //     ImGui::Text("Toggle"); ImGui::NextColumn();
      //     ImGui::Text("Item"); ImGui::NextColumn();
      ImGui::Separator();
 
-     ImVec4 const enabled_color = ImVec4(0.4f, 0.8f, 0.4f, 1.0f);// Green
+     ImVec4 const enabled_color = ImVec4(0.4F, 0.8F, 0.4F, 1.0F);// Green
 
-     for (size_t i = 0; i < items.size(); ++i)
+     for (size_t i = 0; i != items.size(); ++i)
      {
           const auto pop_id = scope_guard{ []() {
                ImGui::PopID();
@@ -233,8 +231,7 @@ void batch::button_start(int &imgui_id)
      const auto spacing      = ImGui::GetStyle().ItemInnerSpacing.x;
      ImGui::PushID(++imgui_id);
      ImGui::BeginDisabled(
-       ((m_input_type == input_types::mim || (!m_input_path_valid && m_input_type != input_types::mim)) && !m_output_path_valid)
-       || !m_archives_group.operator bool());
+       ((m_input_type == input_types::mim || !m_input_path_valid) && !m_output_path_valid) || !m_archives_group.operator bool());
      ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.0F, 0.5F, 0.0F, 1.0F));// Green
      ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.3F, 0.8F, 0.3F, 1.0F));// Light green hover
      ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.1F, 0.3F, 0.1F, 1.0F));// Dark green active
@@ -256,8 +253,7 @@ void batch::button_stop(int &imgui_id)
      ImGui::SameLine(0, spacing);
      ImGui::PushID(++imgui_id);
      ImGui::BeginDisabled(
-       ((m_input_type == input_types::mim || (!m_input_path_valid && m_input_type != input_types::mim)) && !m_output_path_valid)
-       || !m_archives_group.operator bool());
+       ((m_input_type == input_types::mim || !m_input_path_valid) && !m_output_path_valid) || !m_archives_group.operator bool());
      ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.5F, 0.0F, 0.0F, 1.0F));// Red
      ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.8F, 0.3F, 0.3F, 1.0F));// Light red hover
      ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.3F, 0.1F, 0.1F, 1.0F));// Dark red active

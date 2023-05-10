@@ -16,31 +16,31 @@ namespace fme
 {
 template<typename T>
 concept returns_range_concept = requires(std::remove_cvref_t<T> callable) {
-                                     {
-                                          callable()
-                                     } -> std::ranges::range;
-                                };
+     {
+          callable()
+     } -> std::ranges::range;
+};
 template<typename T>
 concept filter_concept = requires(std::remove_cvref_t<T> filter) {
-                              {
-                                   filter.enabled()
-                              } -> std::convertible_to<bool>;
-                              {
-                                   filter.update(filter.value())
-                              } -> std::convertible_to<T>;
-                              {
-                                   filter.enable()
-                              } -> std::convertible_to<T>;
-                              {
-                                   filter.disable()
-                              } -> std::convertible_to<T>;
-                         };
+     {
+          filter.enabled()
+     } -> std::convertible_to<bool>;
+     {
+          filter.update(filter.value())
+     } -> std::convertible_to<T>;
+     {
+          filter.enable()
+     } -> std::convertible_to<T>;
+     {
+          filter.disable()
+     } -> std::convertible_to<T>;
+};
 template<typename T>
 concept returns_filter_concept = requires(std::remove_cvref_t<T> callable) {
-                                      {
-                                           callable()
-                                      } -> filter_concept;
-                                 };
+     {
+          callable()
+     } -> filter_concept;
+};
 template<
   returns_range_concept  value_lambdaT,
   returns_range_concept  string_lambdaT,
@@ -52,7 +52,8 @@ inline static bool generic_combo(
   value_lambdaT     &&value_lambda,
   string_lambdaT    &&string_lambda,
   tool_tip_lambda_t &&tool_tip_lambda,
-  filter_lambdaT    &&filter_lambda)
+  filter_lambdaT    &&filter_lambda,
+  int                 num_columns = 2)
 {
      bool                                                     changed     = false;
      const auto                                              &values      = std::invoke(std::forward<value_lambdaT>(value_lambda));
@@ -131,13 +132,26 @@ inline static bool generic_combo(
           // The second parameter is the label previewed
           // before opening the combo.
           {
+               ImGui::Columns(num_columns, "##columns", false);
                std::ranges::for_each(strings, [&, index = 0U](const auto &string) mutable {
                     const bool is_selected = (string_like == string);
+                    //                    const char *c_str_value = std::ranges::data(string);
+
+                    //                    ImVec2 textSize = ImGui::CalcTextSize(c_str_value);
+                    //                    float columnWidth = ImGui::GetColumnWidth();
+                    //
+                    //                    // Set the column width to the text width + some padding, if the text width is larger than the
+                    //                    current column width if (textSize.x + 10.0f > columnWidth) {
+                    //                         ImGui::SetColumnWidth(ImGui::GetColumnIndex(), textSize.x + 10.0f);
+                    //                    }
                     const auto iterate     = scope_guard([&]() { ++index; });
                     // You can store your selection however you
                     // want, outside or inside your objects
                     {
-                         const auto pop_id_2 = scope_guard{ &ImGui::PopID };
+                         const auto pop_id_each = scope_guard{ []() {
+                              ImGui::PopID();
+                              ImGui::NextColumn();
+                         } };
                          ImGui::PushID(++imgui_id);
                          if (ImGui::Selectable(string.data(), is_selected))
                          {
@@ -170,6 +184,7 @@ inline static bool generic_combo(
                //        spdlog::info(pattern, gui_labels::set, name, *next(values,
                //        current_idx));
                //      }
+               ImGui::Columns(1);
                ImGui::EndCombo();
           }
           {
@@ -214,8 +229,13 @@ inline static bool generic_combo(
 template<returns_range_concept value_lambdaT, typename string_lambdaT, typename valueT>
 // requires
 // std::same_as<std::decay<std::ranges::range_value_t<std::invoke_result_t<value_lambdaT>>>,valueT>
-inline static bool
-  generic_combo(int &imgui_id, std::string_view name, value_lambdaT &&value_lambda, string_lambdaT &&string_lambda, valueT &value)
+inline static bool generic_combo(
+  int             &imgui_id,
+  std::string_view name,
+  value_lambdaT  &&value_lambda,
+  string_lambdaT &&string_lambda,
+  valueT          &value,
+  int              num_columns = 2)
 {
      bool                                                     changed     = false;
      auto                                                   &&values      = std::invoke(std::forward<value_lambdaT>(value_lambda));
@@ -253,7 +273,7 @@ inline static bool
      static constexpr auto pattern      = "{}: \t{}\t{}\t{}";
      const auto            old          = current_idx;
      {
-          const auto pop_id = scope_guard{ &ImGui::PopID };
+          const auto pop_id = scope_guard{ []() { ImGui::PopID(); } };
           ImGui::PushID(++imgui_id);
           const float width        = ImGui::CalcItemWidth();
           const float button_size  = ImGui::GetFrameHeight();
@@ -264,13 +284,17 @@ inline static bool
           // The second parameter is the label previewed
           // before opening the combo.
           {
+               ImGui::Columns(num_columns, "##columns", false);
                std::ranges::for_each(strings, [&](const auto &string) {
                     const bool  is_selected = (current_item == string);
                     // You can store your selection however you
                     // want, outside or inside your objects
                     const char *c_str_value = std::ranges::data(string);
                     {
-                         const auto pop_id_2 = scope_guard{ &ImGui::PopID };
+                         const auto pop_id_each = scope_guard{ []() {
+                              ImGui::PopID();
+                              ImGui::NextColumn();
+                         } };
                          ImGui::PushID(++imgui_id);
                          if (ImGui::Selectable(c_str_value, is_selected))
                          {
@@ -300,6 +324,7 @@ inline static bool
                {
                     spdlog::info(pattern, gui_labels::set, name, *next(values, current_idx), *next(strings, current_idx));
                }
+               ImGui::Columns(1);
                ImGui::EndCombo();
           }
           {

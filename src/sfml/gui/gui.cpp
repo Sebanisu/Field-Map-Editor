@@ -1519,7 +1519,8 @@ bool gui::combo_path()
                 return m_paths
                        | std::ranges::views::transform([](toml::node &item) -> std::string { return item.value_or<std::string>({}); });
            },
-           m_selections.path))
+           m_selections.path,
+           1))
      {
           Configuration config{};
           config->insert_or_assign("selections_path", m_selections.path);
