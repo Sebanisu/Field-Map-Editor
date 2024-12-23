@@ -1,7 +1,6 @@
 //
 // Created by pcvii on 9/7/2021.
 //
-
 #include "gui.hpp"
 #include "EmptyStringIterator.hpp"
 #include "gui_labels.hpp"
@@ -1919,12 +1918,8 @@ void gui::combo_draw_bit()
      if (!generic_combo(
            get_imgui_id(),
            gui_labels::draw_bit,
-           []() {
-                return std::array{ ff_8::draw_bitT::all, ff_8::draw_bitT::enabled, ff_8::draw_bitT::disabled };
-           },
-           []() {
-                return std::array{ "all"sv, "enabled"sv, "disabled"sv };
-           },
+           []() { return std::array{ ff_8::draw_bitT::all, ff_8::draw_bitT::enabled, ff_8::draw_bitT::disabled }; },
+           []() { return std::array{ "all"sv, "enabled"sv, "disabled"sv }; },
            []() {
                 return std::array{ "Show all regardless of bit being enabled or disabled."sv,
                                    "Show only tiles with draw bit enabled"sv,
@@ -2236,8 +2231,7 @@ bool gui::combo_upscale_path(std::filesystem::path &path, const std::string &fie
      {
           process(upscales(std::filesystem::current_path(), field_name, coo).get_paths());
 
-          if (generic_combo(
-                get_imgui_id(), gui_labels::upscale_path, [&paths]() { return paths; }, [&paths]() { return paths; }, path))
+          if (generic_combo(get_imgui_id(), gui_labels::upscale_path, [&paths]() { return paths; }, [&paths]() { return paths; }, path))
           {
                return true;
           }
@@ -2485,11 +2479,14 @@ void gui::collapsing_header_generated_tiles() const
      if (ImGui::CollapsingHeader(
            import_image_map.visit_tiles([](auto &&tiles) { return fmt::format("Generated Tiles: {}", std::size(tiles)); }).c_str()))
      {
+
+          
           static constexpr int columns = 9;
           if (ImGui::BeginTable("import_tiles_table", columns))
           {
                const auto the_end_tile_table = scope_guard([]() { ImGui::EndTable(); });
                import_image_map.visit_tiles([this](auto &tiles) {
+                    std::uint32_t          i{};
                     for (const auto &tile : tiles)
                     {
                          ImGui::TableNextColumn();
@@ -2502,7 +2499,9 @@ void gui::collapsing_header_generated_tiles() const
                              static_cast<int>(m_selections.tile_size_value)));
                          const auto             the_end_tile_table_tile = PushPop();
                          static constexpr float button_size             = 32.F;
-                         ImGui::ImageButton(sprite, sf::Vector2f(button_size, button_size), 0);
+                         
+                         const auto str =  fmt::format("tb{}", i++);
+                         ImGui::ImageButton(str.c_str(), sprite, sf::Vector2f(button_size, button_size));
                     }
                });
           }

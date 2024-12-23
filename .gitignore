@@ -36,3 +36,4 @@ lib/
 enc_temp_folder/*
 CMakeCache.txt
 /CMakeFiles
+CMakePresets.json
