@@ -34,3 +34,5 @@ lib/
 *.i
 
 enc_temp_folder/*
+CMakeCache.txt
+/CMakeFiles

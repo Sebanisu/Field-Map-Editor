@@ -1,14 +1,12 @@
-cmake_minimum_required(VERSION 3.18)
-function(SET_TARGET_PATHS target)
-  set_target_properties(${target}
-          PROPERTIES
-          ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/lib"
-          LIBRARY_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/lib"
-          RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/bin"
-          )
-endfunction()
-# Set the project name to your project name, my project isn't very descriptive
+cmake_minimum_required(VERSION 3.20)
+
 project(Field-Map-Editor VERSION 0.1.0 LANGUAGES C CXX)
+list(APPEND CMAKE_MODULE_PATH ${CMAKE_BINARY_DIR})
+list(APPEND CMAKE_PREFIX_PATH ${CMAKE_BINARY_DIR})
+
+set (CMAKE_CXX_STANDARD "23")
+
+# Set the project name to your project name, my project isn't very descriptive
 set(MY_PROJECT_USER "sebanisu")
 set(MY_PROJECT_CHANNEL "development")
 include(cmake/StandardProjectSettings.cmake)
@@ -16,7 +14,6 @@ include(cmake/PreventInSourceBuilds.cmake)
 
 # Link this 'library' to set the c++ standard / compile-time options requested
 add_library(project_options INTERFACE)
-target_compile_features(project_options INTERFACE cxx_std_17)
 
 if(CMAKE_CXX_COMPILER_ID MATCHES ".*Clang")
   option(ENABLE_BUILD_WITH_TIME_TRACE "Enable -ftime-trace to generate time tracing .json files on clang" OFF)
@@ -28,8 +25,6 @@ endif()
 # Link this 'library' to use the warnings specified in CompilerWarnings.cmake
 add_library(project_warnings INTERFACE)
 
-# enable cache system
-#include(cmake/Cache.cmake)
 
 # Add linker configuration
 include(cmake/Linker.cmake)
@@ -54,44 +49,4 @@ option(BUILD_SHARED_LIBS "Enable compilation of shared libraries" OFF)
 option(ENABLE_TESTING "Enable Test Builds" OFF)
 option(ENABLE_FUZZING "Enable Fuzzing Builds" OFF)
 
-## Very basic PCH example
-#option(ENABLE_PCH "Enable Precompiled Headers" OFF)
-#if(ENABLE_PCH)
-#  # This sets a global PCH parameter, each project will build its own PCH, which is a good idea if any #define's change
-#  #
-#  # consider breaking this out per project as necessary
-#  target_precompile_headers(
-#    project_options
-#    INTERFACE
-#    <vector>
-#    <string>
-#    <map>
-#    <utility>)
-#endif()
-
-option(ENABLE_CONAN "Use Conan for dependency management" ON)
-if(ENABLE_CONAN)
-  include(cmake/Conan.cmake)
-  run_conan()
-  include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
-  #conan_basic_setup()
-endif()
-
-#if(ENABLE_TESTING)
-#  enable_testing()
-#  message("Building Tests. Be sure to check out test/constexpr_tests for constexpr testing")
-#  add_subdirectory(test)
-#endif()
-
-#if(ENABLE_FUZZING)
-#  message("Building Fuzz Tests, using fuzzing sanitizer https://www.llvm.org/docs/LibFuzzer.html")
-#  add_subdirectory(fuzz_test)
-#endif()
-
 add_subdirectory(src)
-
-#option(ENABLE_UNITY "Enable Unity builds of projects" OFF)
-#if(ENABLE_UNITY)
-#  # Add for any project you want to apply unity builds for
-#  set_target_properties(intro PROPERTIES UNITY_BUILD ON)
-#endif()

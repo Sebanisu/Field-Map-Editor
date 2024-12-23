@@ -10,7 +10,7 @@ find_package(SFML REQUIRED) #from conan
 FetchContent_Declare(
 imgui-sfml_fetch
 GIT_REPOSITORY https://github.com/eliasdaler/imgui-sfml.git
-GIT_TAG origin/master
+GIT_TAG 2.6.x #origin/master
 GIT_REMOTE_UPDATE_STRATEGY CHECKOUT
 )
 #FetchContent_MakeAvailable(imgui-sfml_fetch)
@@ -26,7 +26,7 @@ FetchContent_Populate(imgui-sfml_fetch)
             )
     target_link_libraries(ImGui-SFML
             PUBLIC imgui::imgui
-            PUBLIC SFML::graphics
-            PUBLIC SFML::system
-            PUBLIC SFML::window)
+            PUBLIC sfml::graphics
+            PUBLIC sfml::system
+            PUBLIC sfml::window)
 endif ()

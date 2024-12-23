@@ -1,10 +1,12 @@
 find_package(glfw3 REQUIRED)
 find_package(OpenGL REQUIRED)
 find_package(imgui REQUIRED)
-message(${CONAN_SRC_DIRS_IMGUI})
+# Access the variable directly
+message(STATUS "IMGUI_IMPL_DIR is: ${IMGUI_IMPL_DIR}")
+
 file(GLOB_RECURSE IMGUI_BINDINGS
-        ${CONAN_SRC_DIRS_IMGUI}/imgui_impl_glfw.*
-        ${CONAN_SRC_DIRS_IMGUI}/imgui_impl_opengl3.*)
+        ${IMGUI_IMPL_DIR}/imgui_impl_glfw.*
+        ${IMGUI_IMPL_DIR}/imgui_impl_opengl3.*)
 foreach (file_path ${IMGUI_BINDINGS})
     message(${file_path})
 endforeach ()
@@ -20,7 +22,7 @@ target_compile_features(imgui_glfw
         PUBLIC cxx_std_23
         PUBLIC cxx_std_20)
 
-target_include_directories(imgui_glfw PUBLIC ${CONAN_SRC_DIRS_IMGUI})
+target_include_directories(imgui_glfw PUBLIC ${IMGUI_IMPL_DIR})
 add_subdirectory(stbi)
 add_subdirectory(glengine)
 add_subdirectory(opengl_version)
