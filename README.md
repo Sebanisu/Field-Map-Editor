@@ -24,3 +24,12 @@ This project is based on the work of [Omzy](https://forums.qhimm.com/index.php?t
 * cmake --version
 * cmake --list-presets
 * cmake --preset conan-relwithdebinfo
+linux
+* sudo apt update
+* sudo apt install python3 python3-venv python3-pip
+* source venv/bin/activate
+* pip install conan
+or
+* pip install -r requirements.txt
+* deactivate
+* conan install . -pr ubuntu24 -pr:b ubuntu24 --build=missing -of ./linux
