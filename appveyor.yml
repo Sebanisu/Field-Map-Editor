@@ -32,15 +32,11 @@ build_script:
 
       conan profile detect --name windows_msvc
 
-      REM Update the profile using Python to ensure correct settings
-
-      "%PYTHON%" -c "import pathlib, re; profile = pathlib.Path('./.conan2/profiles/windows_msvc'); content = profile.read_text(); content = re.sub(r'compiler\\.cppstd=\\d+', 'compiler.cppstd=23', content); profile.write_text(content)"
-
       REM Install dependencies with Conan using the profiles
 
       conan profile list
 
-      conan install . -pr windows_msvc -pr:b windows_msvc --build=missing
+      conan install . -pr windows_msvc -pr:b windows_msvc --build=missing -s compiler.cppstd=23
 
       REM Check CMake version and list presets
 
