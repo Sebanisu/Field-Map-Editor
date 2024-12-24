@@ -2,48 +2,60 @@ image:
   - Visual Studio 2022
 clone_folder: c:\projects\source
 
-
 environment:
   PYTHON: "C:\\Python38-x64\\python.exe"
 
 cache:
-  - c:\conan\data -> conanfile.py
+  - c:\\conan\\data -> conanfile.py
 
 before_build:
   - cmd: >-
-      "C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvars64.bat"
-      
-      mkdir bin\Release
-      
-      powershell Compress-Archive -Path src\opengl\opengl_version\res -DestinationPath bin\Release\res.zip
-      
-      powershell Compress-Archive -Path src -DestinationPath bin\Release\src.zip
+      "C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Auxiliary\\Build\\vcvars64.bat"
 
+      mkdir bin\\Release
+
+      powershell Compress-Archive -Path src\\opengl\\opengl_version\\res -DestinationPath bin\\Release\\res.zip
+
+      powershell Compress-Archive -Path src -DestinationPath bin\\Release\\src.zip
 
 build_script:
   - cmd: >-
-      set PATH=%PATH%;C:\Users\appveyor\AppData\Roaming\Python\Python38\Scripts
-      
-      set CONAN_USER_HOME=c:\conan\data
-      
-      REM del c:\conan\data\.conan\settings.yml*
-      
-      "%PYTHON%" -m pip install --user "conan<2.0" --upgrade
-      
-      mkdir build
-      
-      cmake -S c:\projects\source -B ./build -G Ninja -DCMAKE_BUILD_TYPE=Release
-      
-      cmake --build ./build --config "Release"
+      set PATH=%PATH%;C:\\Users\\appveyor\\AppData\\Roaming\\Python\\Python38\\Scripts
+
+      set CONAN_USER_HOME=c:\\conan\\data
+
+      REM Ensure Conan 2.x or newer
+      "%PYTHON%" -m pip install --user "conan>=2.0" --upgrade
+
+      REM Set Conan home and detect profiles
+      conan profile detect --name windows_msvc
+
+      REM Update the profile using Python to ensure correct settings
+      "%PYTHON%" -c "import pathlib; profile = pathlib.Path('c:/conan/data/.conan2/profiles/windows_msvc'); content = profile.read_text(); content = content.replace('compiler.cppstd=.*', 'compiler.cppstd=23') if 'compiler.cppstd' in content else content + '\ncompiler.cppstd=23\n'; profile.write_text(content)"
+
+      REM Install dependencies with Conan using the profiles
+      conan install . -pr windows_msvc -pr:b windows_msvc --build=missing
+
+      REM Check CMake version and list presets
+      cmake --version
+
+      cmake --list-presets
+
+      REM Configure and generate build files using the CMake preset
+      cmake --preset conan_windows-default
+
+      REM Build using msbuild
+      cd build
+      msbuild /p:Configuration=Release
 
 after_build:
-  - cmd: move bin\*.exe bin\Release
+  - cmd: move bin\\*.exe bin\\Release
 
 test_script:
   - cmd: cd build && ctest -C Debug
 
 artifacts:
-  - path: 'bin/Release/*.*'
+  - path: "bin/Release/*.*"
     name: Canary
 
 deploy:
