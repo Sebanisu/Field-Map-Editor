@@ -59,11 +59,8 @@ build_script:
 after_build:
   - cmd: move bin\\*.exe bin\\Release
 
-test_script:
-  - cmd: cd build && ctest -C Debug
-
 artifacts:
-  - path: "bin/Release/*.*"
+  - path: "C:/projects/source/bin/Release/Release/*.*"
     name: Canary
 
 deploy:
