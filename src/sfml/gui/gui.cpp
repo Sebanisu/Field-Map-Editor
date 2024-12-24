@@ -2480,13 +2480,13 @@ void gui::collapsing_header_generated_tiles() const
            import_image_map.visit_tiles([](auto &&tiles) { return fmt::format("Generated Tiles: {}", std::size(tiles)); }).c_str()))
      {
 
-          
+
           static constexpr int columns = 9;
           if (ImGui::BeginTable("import_tiles_table", columns))
           {
                const auto the_end_tile_table = scope_guard([]() { ImGui::EndTable(); });
                import_image_map.visit_tiles([this](auto &tiles) {
-                    std::uint32_t          i{};
+                    std::uint32_t i{};
                     for (const auto &tile : tiles)
                     {
                          ImGui::TableNextColumn();
@@ -2499,8 +2499,8 @@ void gui::collapsing_header_generated_tiles() const
                              static_cast<int>(m_selections.tile_size_value)));
                          const auto             the_end_tile_table_tile = PushPop();
                          static constexpr float button_size             = 32.F;
-                         
-                         const auto str =  fmt::format("tb{}", i++);
+
+                         const auto             str                     = fmt::format("tb{}", i++);
                          ImGui::ImageButton(str.c_str(), sprite, sf::Vector2f(button_size, button_size));
                     }
                });
@@ -2665,7 +2665,8 @@ bool gui::browse_for_image_display_preview()
           const float      height            = static_cast<float>(size.y) * scale;
           ImVec2 const     cursor_screen_pos = ImGui::GetCursorScreenPos();
           const auto       pop_id            = PushPop();
-          ImGui::ImageButton(sprite, sf::Vector2f(width, height), 0);
+          const auto       str_id            = fmt::format("id2668{}", get_imgui_id());
+          ImGui::ImageButton(str_id.c_str(), sprite, sf::Vector2f(width, height));
           if (ImGui::Checkbox("Draw Grid", &m_selections.import_image_grid))
           {
                Configuration config{};

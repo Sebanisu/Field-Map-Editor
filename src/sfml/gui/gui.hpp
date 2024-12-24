@@ -62,7 +62,7 @@ struct gui
      toml::array                                                         m_paths                     = {};
      toml::array                                                         m_custom_upscale_paths      = {};
      std::shared_ptr<archives_group>                                     m_archives_group            = {};
-     batch                                                               m_batch                     = batch{m_archives_group};
+     batch                                                               m_batch                     = batch{ m_archives_group };
      std::vector<std::string>                                            m_upscale_paths             = {};
      std::shared_ptr<open_viii::archive::FIFLFS<false>>                  m_field                     = {};
      std::array<float, 2>                                                xy                          = {};
@@ -78,7 +78,7 @@ struct gui
      bool                                                                m_changed                   = { false };
      //  ImGuiStyle                  m_original_style  = {};
      sf::Event                                                           m_event                     = {};
-     sf::Vector2f                                                        m_cam_pos         = {};
+     sf::Vector2f                                                        m_cam_pos                   = {};
      // create a file browser instances
      ImGui::FileBrowser                                                  m_save_file_browser{ static_cast<ImGuiFileBrowserFlags>(
        static_cast<std::uint32_t>(ImGuiFileBrowserFlags_EnterNewFilename)
@@ -264,7 +264,10 @@ struct gui
           {
                image_size = sf::Vector2f(ImGui::GetTextLineHeight(), ImGui::GetTextLineHeight());
           }
-          return ImGui::ImageButton(sprite, image_size, 0);
+
+          
+          const auto str_id = fmt::format("id269{}", get_imgui_id());
+          return ImGui::ImageButton(str_id.c_str(), sprite, image_size);
      }
      [[nodiscard]] bool                        combo_tile_size();
      void                                      generate_upscale_paths(const std::string &field_name, open_viii::LangT coo);
