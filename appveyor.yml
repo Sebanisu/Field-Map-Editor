@@ -30,7 +30,7 @@ build_script:
 
       conan config home
 
-      conan profile detect --name windows_msvc
+      conan profile detect --name windows_msvc > nul 2> nul
 
       REM Install dependencies with Conan using the profiles
 
