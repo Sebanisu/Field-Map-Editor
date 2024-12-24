@@ -40,3 +40,4 @@ CMakePresets.json
 .conan2/
 /full_deploy
 /venv
+CMakeUserPresets.json
