@@ -58,7 +58,7 @@ build_script:
 
       cd ..
 
-      dir /s /b bin\*.exe
+      dir /s /b bin\\*.exe
 
 artifacts:
   - path: "bin/Release/*.*"
