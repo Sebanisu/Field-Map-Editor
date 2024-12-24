@@ -25,27 +25,35 @@ build_script:
       set CONAN_USER_HOME=c:\\conan\\data
 
       REM Ensure Conan 2.x or newer
+      
       "%PYTHON%" -m pip install --user "conan>=2.0" --upgrade
 
       REM Set Conan home and detect profiles
+      
       conan profile detect --name windows_msvc
 
       REM Update the profile using Python to ensure correct settings
+      
       "%PYTHON%" -c "import pathlib; profile = pathlib.Path('c:/conan/data/.conan2/profiles/windows_msvc'); content = profile.read_text(); content = content.replace('compiler.cppstd=.*', 'compiler.cppstd=23') if 'compiler.cppstd' in content else content + '\ncompiler.cppstd=23\n'; profile.write_text(content)"
 
       REM Install dependencies with Conan using the profiles
+      
       conan install . -pr windows_msvc -pr:b windows_msvc --build=missing
 
       REM Check CMake version and list presets
+      
       cmake --version
 
       cmake --list-presets
 
       REM Configure and generate build files using the CMake preset
+      
       cmake --preset conan_windows-default
 
       REM Build using msbuild
+      
       cd build
+      
       msbuild /p:Configuration=Release
 
 after_build:
@@ -55,7 +63,7 @@ test_script:
   - cmd: cd build && ctest -C Debug
 
 artifacts:
-  - path: "bin/Release/*.*"
+  - path: 'bin/Release/*.*'
     name: Canary
 
 deploy:
