@@ -44,13 +44,15 @@ build_script:
 
       cmake --list-presets
 
-      REM Configure and generate build files using the CMake preset
+      echo Configure and generate build files using the CMake preset
 
       cmake --preset conan_windows-default
 
-      REM Build using msbuild
+      echo Build using msbuild
 
       cd build
+
+      dir
 
       msbuild /p:Configuration=Release
 
