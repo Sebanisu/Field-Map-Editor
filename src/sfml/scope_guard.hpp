@@ -4,6 +4,8 @@
 
 #ifndef FIELD_MAP_EDITOR_SCOPE_GUARD_HPP
 #define FIELD_MAP_EDITOR_SCOPE_GUARD_HPP
+#include <functional>
+#include <concepts>
 template<std::invocable functionT>
 struct [[nodiscard]] scope_guard
 {
