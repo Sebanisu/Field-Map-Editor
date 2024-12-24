@@ -56,9 +56,6 @@ build_script:
 
       msbuild Field-Map-Editor.sln /p:Configuration=Release
 
-after_build:
-  - cmd: move bin\\*.exe bin\\Release
-
 artifacts:
   - path: "C:/projects/source/bin/Release/Release/*.*"
     name: Canary
