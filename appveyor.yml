@@ -56,8 +56,12 @@ build_script:
 
       msbuild Field-Map-Editor.sln /p:Configuration=Release
 
+      cd ..
+
+      dir /s /b bin\*.exe
+
 artifacts:
-  - path: "bin/Release/Release/*.*"
+  - path: "bin/Release/*.*"
     name: Canary
 
 deploy:
