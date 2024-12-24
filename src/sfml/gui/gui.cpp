@@ -1576,7 +1576,7 @@ void gui::loop_events()
      m_mouse_positions.update();
      while (m_window.pollEvent(m_event))
      {
-          ImGui::SFML::ProcessEvent(m_event);
+          ImGui::SFML::ProcessEvent(m_window, m_event);
           const auto event_variant = events::get(m_event);
           std::visit(
             events::make_visitor(
