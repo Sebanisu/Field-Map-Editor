@@ -28,6 +28,8 @@ build_script:
 
       REM Set Conan home and detect profiles
       
+      conan config home
+
       conan profile detect --name windows_msvc
 
       REM Update the profile using Python to ensure correct settings
