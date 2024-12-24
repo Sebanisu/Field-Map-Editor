@@ -37,3 +37,5 @@ enc_temp_folder/*
 CMakeCache.txt
 /CMakeFiles
 CMakePresets.json
+.conan2/
+/full_deploy

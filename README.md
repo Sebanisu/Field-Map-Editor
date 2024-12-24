@@ -12,3 +12,15 @@ This project is based on the work of [Omzy](https://forums.qhimm.com/index.php?t
 
 ### Pupu Compatablility Warning!
 * I updated my Pupu ID generation to use 2 bits that were unused. These tell if the X coordinate and/or the Y coordinate aren't aligned with the 16 x 16 grid. This was because a few instances where tiles weren't being deswizzled or swizzled correctly. And you'd end up with two layers of tiles merged together. This change happened around September 2022 so if you already created deswizzles the filenames won't match anymore.
+
+
+### Build instructions
+* install vs2022
+* choco install conan
+* conan config home
+* conan profile detect --name windows10_msvc
+* edit your profile .conan2/profiles/windows10_msvc
+* conan install . -pr windows10_msvc -pr:b windows10_msvc  --build=missing
+* cmake --version
+* cmake --list-presets
+* cmake --preset conan-relwithdebinfo
