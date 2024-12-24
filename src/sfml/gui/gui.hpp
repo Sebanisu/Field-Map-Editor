@@ -81,12 +81,10 @@ struct gui
      sf::Vector2f                                                        m_cam_pos                   = {};
      // create a file browser instances
      ImGui::FileBrowser                                                  m_save_file_browser{ static_cast<ImGuiFileBrowserFlags>(
-       static_cast<std::uint32_t>(ImGuiFileBrowserFlags_EnterNewFilename)
-       | static_cast<std::uint32_t>(ImGuiFileBrowserFlags_CreateNewDir)) };
+       ImGuiFileBrowserFlags_EnterNewFilename | ImGuiFileBrowserFlags_CreateNewDir) };
      ImGui::FileBrowser                                                  m_load_file_browser{};
      ImGui::FileBrowser                                                  m_directory_browser{ static_cast<ImGuiFileBrowserFlags>(
-       static_cast<std::uint32_t>(ImGuiFileBrowserFlags_SelectDirectory)
-       | static_cast<std::uint32_t>(ImGuiFileBrowserFlags_CreateNewDir)) };
+       ImGuiFileBrowserFlags_SelectDirectory | ImGuiFileBrowserFlags_CreateNewDir) };
      sf::Texture                                                         loaded_image_texture        = {};
      sf::RenderTexture                                                   loaded_image_render_texture = {};
      sf::Image                                                           loaded_image_cpu            = {};
@@ -265,7 +263,7 @@ struct gui
                image_size = sf::Vector2f(ImGui::GetTextLineHeight(), ImGui::GetTextLineHeight());
           }
 
-          
+
           const auto str_id = fmt::format("id269{}", get_imgui_id());
           return ImGui::ImageButton(str_id.c_str(), sprite, image_size);
      }

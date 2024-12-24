@@ -50,8 +50,7 @@ class batch
      FutureOfFutureConsumer<std::vector<std::future<std::future<void>>>> m_future_of_future_consumer = {};
      FutureConsumer<std::vector<std::future<void>>>                      m_future_consumer           = {};
      ImGui::FileBrowser                                                  m_directory_browser{ static_cast<ImGuiFileBrowserFlags>(
-       static_cast<std::uint32_t>(ImGuiFileBrowserFlags_SelectDirectory)
-       | static_cast<std::uint32_t>(ImGuiFileBrowserFlags_CreateNewDir)) };
+       ImGuiFileBrowserFlags_SelectDirectory | ImGuiFileBrowserFlags_CreateNewDir) };
 
      void                                                                combo_input_type(int &imgui_id);
      void                                                                combo_output_type(int &imgui_id);
