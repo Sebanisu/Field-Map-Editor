@@ -49,28 +49,27 @@ class batch
      bool                                                       m_input_load_map                     = { false };
      FutureOfFutureConsumer<std::vector<std::future<std::future<void>>>> m_future_of_future_consumer = {};
      FutureConsumer<std::vector<std::future<void>>>                      m_future_consumer           = {};
-     ImGui::FileBrowser                                                  m_directory_browser{ static_cast<ImGuiFileBrowserFlags>(
-       ImGuiFileBrowserFlags_SelectDirectory | ImGuiFileBrowserFlags_CreateNewDir) };
+     ImGui::FileBrowser                  m_directory_browser{ ImGuiFileBrowserFlags_SelectDirectory | ImGuiFileBrowserFlags_CreateNewDir };
 
-     void                                                                combo_input_type(int &imgui_id);
-     void                                                                combo_output_type(int &imgui_id);
-     void                                                                combo_compact_type(int &imgui_id);
-     void                                                                combo_flatten_type(int &imgui_id);
-     void                                                                browse_input_path(int &imgui_id);
-     void                                                                browse_output_path(int &imgui_id);
-     void                                                                button_start(int &imgui_id);
-     void                                                                button_stop(int &imgui_id);
-     void                                                                checkbox_load_map(int &imgui_id);
-     void                                                                choose_field_and_coo();
-     void                                                                reset_for_next();
-     void                                                                generate_map_sprite();
-     void                                                                compact();
-     void                                                                flatten();
-     bool                                                                consume_one_future();
-     void                                                                open_directory_browser();
-     void                                                                button_input_browse();
-     void                                                                button_output_browse();
-     [[nodiscard]] std::filesystem::path                                 append_file_structure(const std::filesystem::path &path) const;
+     void                                combo_input_type(int &imgui_id);
+     void                                combo_output_type(int &imgui_id);
+     void                                combo_compact_type(int &imgui_id);
+     void                                combo_flatten_type(int &imgui_id);
+     void                                browse_input_path(int &imgui_id);
+     void                                browse_output_path(int &imgui_id);
+     void                                button_start(int &imgui_id);
+     void                                button_stop(int &imgui_id);
+     void                                checkbox_load_map(int &imgui_id);
+     void                                choose_field_and_coo();
+     void                                reset_for_next();
+     void                                generate_map_sprite();
+     void                                compact();
+     void                                flatten();
+     bool                                consume_one_future();
+     void                                open_directory_browser();
+     void                                button_input_browse();
+     void                                button_output_browse();
+     [[nodiscard]] std::filesystem::path append_file_structure(const std::filesystem::path &path) const;
      [[nodiscard]] bool browse_path(int &imgui_id, std::string_view name, bool &valid_path, std::array<char, m_buffer_size> &path_buffer);
 
    public:
