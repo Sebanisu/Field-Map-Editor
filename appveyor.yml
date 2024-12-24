@@ -34,7 +34,7 @@ build_script:
 
       REM Update the profile using Python to ensure correct settings
       
-      "%PYTHON%" -c "import pathlib, re; profile = pathlib.Path('C:/projects/source/.conan2/profiles/windows_msvc'); content = profile.read_text(); content = re.sub(r'compiler\\.cppstd=\\d+', 'compiler.cppstd=23', content) if 'compiler.cppstd' in content else content + '\ncompiler.cppstd=23\n'; profile.write_text(content)"
+      "%PYTHON%" -c "import pathlib, re; profile = pathlib.Path('C:/projects/source/.conan2/profiles/windows_msvc'); content = profile.read_text(); content = re.sub(r'compiler\\.cppstd=\\d+', 'compiler.cppstd=23', content); profile.write_text(content)"
 
       REM Install dependencies with Conan using the profiles
       
