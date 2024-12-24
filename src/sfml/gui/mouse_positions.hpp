@@ -5,6 +5,7 @@
 #ifndef FIELD_MAP_EDITOR_MOUSE_POSITIONS_HPP
 #define FIELD_MAP_EDITOR_MOUSE_POSITIONS_HPP
 #include <SFML/Graphics.hpp>
+#include <cstdint>
 struct mouse_positions
 {
   sf::Vector2i       pixel         = {};
