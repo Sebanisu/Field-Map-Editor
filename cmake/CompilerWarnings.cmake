@@ -32,6 +32,7 @@ function(set_project_warnings project_name)
             /wd4068 # suppress unknown pragma. cmake is using #pragma GCC in precompiled header. MSVC no like.
             /wd4201 # suppress nonstandard extension used : nameless struct/union
             /wd4702 # suppress unreachable code.
+            /wd4172 # ignore the specific warning about returning the address of a local variable or temporary. (needs fixed but error too generic)
             )
 
     set(CLANG_WARNINGS
