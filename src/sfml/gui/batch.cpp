@@ -15,9 +15,10 @@ struct AsString
 };
 void batch::combo_input_type(int &imgui_id)
 {
-     static const auto values = std::array{ input_types::mim, input_types::deswizzle, input_types::swizzle };
-     if (fme::generic_combo(
-           imgui_id, "Input Type", []() { return values; }, []() { return values | std::views::transform(AsString{}); }, m_input_type))
+     static constexpr auto values = std::array{ input_types::mim, input_types::deswizzle, input_types::swizzle };
+     const auto            gcc    = fme::GenericComboClass(
+       "Input Type", []() { return values; }, []() { return values | std::views::transform(AsString{}); }, m_input_type);
+     if (gcc.render(imgui_id))
      {
           Configuration config{};
           config->insert_or_assign("batch_input_type", static_cast<std::underlying_type_t<input_types>>(m_input_type));
@@ -26,9 +27,10 @@ void batch::combo_input_type(int &imgui_id)
 }
 void batch::combo_output_type(int &imgui_id)
 {
-     static const auto values = std::array{ output_types::deswizzle, output_types::swizzle };
-     if (fme::generic_combo(
-           imgui_id, "Output Type", []() { return values; }, []() { return values | std::views::transform(AsString{}); }, m_output_type))
+     static constexpr auto values = std::array{ output_types::deswizzle, output_types::swizzle };
+     const auto            gcc    = fme::GenericComboClass(
+       "Output Type", []() { return values; }, []() { return values | std::views::transform(AsString{}); }, m_output_type);
+     if (gcc.render(imgui_id))
      {
           Configuration config{};
           config->insert_or_assign("batch_output_type", static_cast<std::underlying_type_t<output_types>>(m_output_type));

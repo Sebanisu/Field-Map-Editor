@@ -209,11 +209,7 @@ void gui::render_dockspace()
 void gui::control_panel_window()
 {
      const auto imgui_end = scope_guard(&ImGui::End);
-     if (!ImGui::Begin(
-           gui_labels::control_panel.data()//,
-                                           // nullptr,
-                                           // static_cast<ImGuiWindowFlags>(static_cast<uint32_t>(ImGuiWindowFlags_AlwaysAutoResize))
-           ))
+     if (!ImGui::Begin(gui_labels::control_panel.data()))
      {
           m_mouse_positions.mouse_enabled = handle_mouse_cursor();
           return;
@@ -687,12 +683,12 @@ bool gui::handle_mouse_cursor()
 void gui::combo_coo()
 {
      constexpr static auto array = open_viii::LangCommon::to_array();
-     if (generic_combo(
-           get_imgui_id(),
-           gui_labels::language,
-           []() { return array; },
-           []() { return array | std::views::transform([](open_viii::LangT value) { return fmt::format("{}", value); }); },
-           m_selections.coo))
+     const auto            gcc   = GenericComboClass(
+       gui_labels::language,
+       []() { return array; },
+       []() { return array | std::views::transform([](open_viii::LangT value) { return fmt::format("{}", value); }); },
+       m_selections.coo);
+     if (gcc.render(get_imgui_id()))
      {
           Configuration config{};
           config->insert_or_assign("selections_coo", static_cast<std::underlying_type_t<open_viii::LangT>>(m_selections.coo));
@@ -731,12 +727,12 @@ const open_viii::LangT &gui::get_coo() const
 }
 void gui::combo_field()
 {
-     if (generic_combo(
-           get_imgui_id(),
-           gui_labels::field,
-           [this]() { return std::views::iota(0, static_cast<int>(std::ranges::ssize(m_archives_group->mapdata()))); },
-           [this]() { return m_archives_group->mapdata(); },
-           m_selections.field))
+     const auto gcc = GenericComboClass(
+       gui_labels::field,
+       [this]() { return std::views::iota(0, static_cast<int>(std::ranges::ssize(m_archives_group->mapdata()))); },
+       [this]() { return m_archives_group->mapdata(); },
+       m_selections.field);
+     if (gcc.render(get_imgui_id()))
      //  static constexpr auto items = 20;
      //  if (ImGui::Combo("Field",
      //        &m_selections.field,
@@ -1474,13 +1470,15 @@ void gui::menuitem_load_map_file(bool enabled)
 }
 void gui::combo_draw()
 {
-     auto iota_draw_mode = std::views::iota(0, 2) | std::views::transform([](const int mode) { return static_cast<draw_mode>(mode); });
-     if (!generic_combo(
-           get_imgui_id(),
-           gui_labels::draw,
-           [=]() { return iota_draw_mode; },
-           [=]() { return iota_draw_mode | std::views::transform([](draw_mode in_draw_mode) { return fmt::format("{}", in_draw_mode); }); },
-           m_selections.draw))
+     static const constinit auto iota_draw_mode =
+       std::views::iota(0, 2) | std::views::transform([](const int mode) { return static_cast<draw_mode>(mode); });
+     static const auto str_draw_mode =
+       iota_draw_mode | std::views::transform([](draw_mode in_draw_mode) { return fmt::format("{}", in_draw_mode); });
+
+     const auto gcc =
+       GenericComboClass(gui_labels::draw, [=]() { return iota_draw_mode; }, [=]() { return str_draw_mode; }, m_selections.draw);
+
+     if (!gcc.render(get_imgui_id()))
      {
           return;
      }
@@ -1507,19 +1505,17 @@ bool gui::combo_path()
                open_locate_ff8_filebrowser();
           }
      });
-     if (generic_combo(
-           get_imgui_id(),
-           gui_labels::path,
-           [this]() {
-                return m_paths
-                       | std::ranges::views::transform([](toml::node &item) -> std::string { return item.value_or<std::string>({}); });
-           },
-           [this]() {
-                return m_paths
-                       | std::ranges::views::transform([](toml::node &item) -> std::string { return item.value_or<std::string>({}); });
-           },
-           m_selections.path,
-           1))
+     const auto gcc           = GenericComboClass(
+       gui_labels::path,
+       [this]() {
+            return m_paths | std::ranges::views::transform([](toml::node &item) -> std::string { return item.value_or<std::string>({}); });
+       },
+       [this]() {
+            return m_paths | std::ranges::views::transform([](toml::node &item) -> std::string { return item.value_or<std::string>({}); });
+       },
+       m_selections.path,
+       1);
+     if (gcc.render(get_imgui_id()))
      {
           Configuration config{};
           config->insert_or_assign("selections_path", m_selections.path);
@@ -2231,10 +2227,9 @@ bool gui::combo_upscale_path(std::filesystem::path &path, const std::string &fie
      {
           process(upscales(std::filesystem::current_path(), field_name, coo).get_paths());
 
-          if (generic_combo(get_imgui_id(), gui_labels::upscale_path, [&paths]() { return paths; }, [&paths]() { return paths; }, path))
-          {
-               return true;
-          }
+          const auto gcc = GenericComboClass(gui_labels::upscale_path, [&paths]() { return paths; }, [&paths]() { return paths; }, path);
+
+          return gcc.render(get_imgui_id());
      }
      return false;
 }
@@ -2596,24 +2591,24 @@ void gui::reset_imported_image()
 }
 bool gui::combo_tile_size()
 {
-     if (!generic_combo(
-           get_imgui_id(),
-           std::string_view("Tile Size"),
-           []() -> decltype(auto) {
-                static constexpr auto sizes = std::array{
-                     tile_sizes::default_size, tile_sizes::x_2_size, tile_sizes::x_4_size, tile_sizes::x_8_size, tile_sizes::x_16_size
-                };
-                return sizes;
-           },
-           []() -> decltype(auto) {
-                static constexpr auto size_strings = std::array{ std::string_view{ " 1x  16 px" },
-                                                                 std::string_view{ " 2x  32 px" },
-                                                                 std::string_view{ " 4x  64 px" },
-                                                                 std::string_view{ " 8x 128 px" },
-                                                                 std::string_view{ "16x 256 px" } };
-                return size_strings;
-           },
-           m_selections.tile_size_value))
+     const auto gcc = GenericComboClass(
+       std::string_view("Tile Size"),
+       []() -> decltype(auto) {
+            static constexpr auto sizes = std::array{
+                 tile_sizes::default_size, tile_sizes::x_2_size, tile_sizes::x_4_size, tile_sizes::x_8_size, tile_sizes::x_16_size
+            };
+            return sizes;
+       },
+       []() -> decltype(auto) {
+            static constexpr auto size_strings = std::array{ std::string_view{ " 1x  16 px" },
+                                                             std::string_view{ " 2x  32 px" },
+                                                             std::string_view{ " 4x  64 px" },
+                                                             std::string_view{ " 8x 128 px" },
+                                                             std::string_view{ "16x 256 px" } };
+            return size_strings;
+       },
+       m_selections.tile_size_value);
+     if (!gcc.render(get_imgui_id()))
      {
           return false;
      }

@@ -16,30 +16,18 @@ namespace fme
 {
 template<typename T>
 concept returns_range_concept = requires(std::remove_cvref_t<T> callable) {
-     {
-          callable()
-     } -> std::ranges::range;
+     { callable() } -> std::ranges::range;
 };
 template<typename T>
 concept filter_concept = requires(std::remove_cvref_t<T> filter) {
-     {
-          filter.enabled()
-     } -> std::convertible_to<bool>;
-     {
-          filter.update(filter.value())
-     } -> std::convertible_to<T>;
-     {
-          filter.enable()
-     } -> std::convertible_to<T>;
-     {
-          filter.disable()
-     } -> std::convertible_to<T>;
+     { filter.enabled() } -> std::convertible_to<bool>;
+     { filter.update(filter.value()) } -> std::convertible_to<T>;
+     { filter.enable() } -> std::convertible_to<T>;
+     { filter.disable() } -> std::convertible_to<T>;
 };
 template<typename T>
 concept returns_filter_concept = requires(std::remove_cvref_t<T> callable) {
-     {
-          callable()
-     } -> filter_concept;
+     { callable() } -> filter_concept;
 };
 template<
   returns_range_concept  value_lambdaT,
@@ -226,66 +214,246 @@ inline static bool generic_combo(
      }
      return (update.enabled() && index_changed) || changed;
 }
-template<returns_range_concept value_lambdaT, typename string_lambdaT, typename valueT>
-// requires
-// std::same_as<std::decay<std::ranges::range_value_t<std::invoke_result_t<value_lambdaT>>>,valueT>
-inline static bool generic_combo(
-  int             &imgui_id,
-  std::string_view name,
-  value_lambdaT  &&value_lambda,
-  string_lambdaT &&string_lambda,
-  valueT          &value,
-  int              num_columns = 2)
+// template<returns_range_concept value_lambdaT, typename string_lambdaT, typename valueT>
+// // requires
+// // std::same_as<std::decay<std::ranges::range_value_t<std::invoke_result_t<value_lambdaT>>>,valueT>
+// inline static bool generic_combo(
+//   int             &imgui_id,
+//   std::string_view name,
+//   value_lambdaT  &&value_lambda,
+//   string_lambdaT &&string_lambda,
+//   valueT          &value,
+//   int              num_columns = 2)
+// {
+//      bool                                                     changed     = false;
+//      auto                                                   &&values      = std::invoke(std::forward<value_lambdaT>(value_lambda));
+//      auto                                                   &&strings     = std::invoke(std::forward<string_lambdaT>(string_lambda));
+//      const ImGuiStyle                                        &style       = ImGui::GetStyle();
+//      const float                                              spacing     = style.ItemInnerSpacing.x;
+//      // auto        strings = string_lambda() | std::ranges::views::all;
+//      static std::ranges::range_difference_t<decltype(values)> current_idx = {};
+//      {
+//           if (const auto found = std::find(values.begin(), values.end(), value); found != values.end())
+//           {
+//                current_idx = std::ranges::distance(std::ranges::cbegin(values), found);
+//           }
+//           else
+//           {
+//                current_idx = 0;
+//                if (!std::empty(values))
+//                {
+//                     value = values.front();
+//                }
+//                changed = true;
+//           }
+//      }
+//      if (std::empty(values) || std::empty(strings))
+//      {
+//           return false;
+//      }
+//      const auto next = [](const auto &range, const auto &idx) {
+//           // sometimes the types are different. So I had to static cast to silence
+//           // warning.
+//           return std::ranges::next(
+//             std::ranges::cbegin(range), static_cast<std::iter_difference_t<decltype(std::ranges::cbegin(range))>>(idx));
+//      };
+//      const auto           &current_item = *next(strings, current_idx);
+//      static constexpr auto pattern      = "{}: \t{}\t{}\t{}";
+//      const auto            old          = current_idx;
+//      {
+//           const auto pop_id = scope_guard{ []() { ImGui::PopID(); } };
+//           ImGui::PushID(++imgui_id);
+//           const float width        = ImGui::CalcItemWidth();
+//           const float button_size  = ImGui::GetFrameHeight();
+//           const float button_count = 2.0F;
+//           ImGui::PushItemWidth(width - spacing * button_count - button_size * button_count);
+//           const auto pop_item_width = scope_guard(&ImGui::PopItemWidth);
+//           if (ImGui::BeginCombo("##Empty", current_item.data(), ImGuiComboFlags_HeightLarge))
+//           // The second parameter is the label previewed
+//           // before opening the combo.
+//           {
+//                ImGui::Columns(num_columns, "##columns", false);
+//                std::ranges::for_each(strings, [&](const auto &string) {
+//                     const bool  is_selected = (current_item == string);
+//                     // You can store your selection however you
+//                     // want, outside or inside your objects
+//                     const char *c_str_value = std::ranges::data(string);
+//                     {
+//                          const auto pop_id_each = scope_guard{ []() {
+//                               ImGui::PopID();
+//                               ImGui::NextColumn();
+//                          } };
+//                          ImGui::PushID(++imgui_id);
+//                          if (ImGui::Selectable(c_str_value, is_selected))
+//                          {
+//                               for (current_idx = 0; const auto &temp : strings)
+//                               {
+//                                    if (std::ranges::equal(temp, string))
+//                                    {
+//                                         changed = true;
+//                                         break;
+//                                    }
+//                                    ++current_idx;
+//                               }
+//                               //            current_idx =
+//                               //            std::distance(std::ranges::data(strings), &string);
+//                               //            changed     = true;
+//                          }
+//                     }
+//                     if (is_selected)
+//                     {
+//                          ImGui::SetItemDefaultFocus();
+//                          // You may set the initial focus when
+//                          // opening the combo (scrolling + for
+//                          // keyboard navigation support)
+//                     }
+//                });
+//                if (old != current_idx)
+//                {
+//                     spdlog::info(pattern, gui_labels::set, name, *next(values, current_idx), *next(strings, current_idx));
+//                }
+//                ImGui::Columns(1);
+//                ImGui::EndCombo();
+//           }
+//           {
+
+//                const auto pop_id_left = scope_guard{ &ImGui::PopID };
+//                ImGui::SameLine(0, spacing);
+//                ImGui::PushID(++imgui_id);
+//                const bool disabled =
+//                  std::cmp_less_equal(current_idx, 0) || std::cmp_greater_equal(current_idx - 1, std::ranges::size(values));
+//                ImGui::BeginDisabled(disabled);
+//                if (ImGui::ArrowButton("##l", ImGuiDir_Left))
+//                {
+//                     --current_idx;
+//                     changed = true;
+//                }
+//                ImGui::EndDisabled();
+//           }
+//           {
+//                const auto pop_id_right = scope_guard{ &ImGui::PopID };
+//                ImGui::PushID(++imgui_id);
+//                ImGui::SameLine(0, spacing);
+//                const bool disabled = std::cmp_greater_equal(current_idx + 1, std::ranges::size(values));
+//                ImGui::BeginDisabled(disabled);
+//                if (ImGui::ArrowButton("##r", ImGuiDir_Right))
+//                {
+//                     ++current_idx;
+//                     changed = true;
+//                }
+//                ImGui::EndDisabled();
+//           }
+//           ImGui::SameLine(0, spacing);
+//           format_imgui_text("{}", name);
+//      }
+//      value = *next(values, current_idx);
+//      return old != current_idx || changed;
+// }
+
+
+#include <algorithm>
+#include <functional>
+#include <ranges>
+#include <string_view>
+#include <vector>
+
+template<typename ValueLambdaT, typename StringLambdaT, typename ValueT>
+class GenericComboClass
 {
-     bool                                                     changed     = false;
-     auto                                                   &&values      = std::invoke(std::forward<value_lambdaT>(value_lambda));
-     auto                                                   &&strings     = std::invoke(std::forward<string_lambdaT>(string_lambda));
-     const ImGuiStyle                                        &style       = ImGui::GetStyle();
-     const float                                              spacing     = style.ItemInnerSpacing.x;
-     // auto        strings = string_lambda() | std::ranges::views::all;
-     static std::ranges::range_difference_t<decltype(values)> current_idx = {};
+   public:
+     GenericComboClass(
+       std::string_view name,
+       ValueLambdaT   &&value_lambda,
+       StringLambdaT  &&string_lambda,
+       ValueT          &value,
+       int              num_columns = 2)
+       : name_(name)
+       , values_(std::invoke(std::forward<ValueLambdaT>(value_lambda)))
+       , strings_(std::invoke(std::forward<StringLambdaT>(string_lambda)))
+       , value_(value)
+       , num_columns_(num_columns)
+       , current_idx_(0)
+       , changed_(false)
+       , spacing_(ImGui::GetStyle().ItemInnerSpacing.x)
      {
-          if (const auto found = std::find(values.begin(), values.end(), value); found != values.end())
+     }
+
+     bool render(int &imgui_id) const
+     {
+          if (values_.empty() || strings_.empty())
           {
-               current_idx = std::ranges::distance(std::ranges::cbegin(values), found);
+               return false;
+          }
+
+          updateCurrentIndex();
+
+          const auto old_idx = current_idx_;
+          renderComboBox(imgui_id);
+          renderLeftButton(imgui_id);
+          renderRightButton(imgui_id);
+          renderTitle();
+
+          value_.get() = *getNext(values_, current_idx_);
+
+          if (old_idx != current_idx_)
+          {
+               static constexpr auto pattern = "{}: \t{}\t{}\t{}";
+               spdlog::info(pattern, gui_labels::set, name_, *getNext(values_, current_idx_), *getNext(strings_, current_idx_));
+          }
+          return old_idx != current_idx_ || changed_;
+     }
+
+   private:
+     std::string_view                                   name_;
+     std::invoke_result_t<ValueLambdaT>                 values_;
+     std::invoke_result_t<StringLambdaT>                strings_;
+     std::reference_wrapper<ValueT>                     value_;
+     int                                                num_columns_;
+     mutable std::ranges::range_difference_t<decltype(values_)> current_idx_;
+     mutable bool                                               changed_;
+     const float                                        spacing_;
+
+     void                                               updateCurrentIndex() const
+     {
+          const auto found = std::find(std::ranges::begin(values_), std::ranges::end(values_), value_.get());
+          if (found != std::ranges::end(values_))
+          {
+               current_idx_ = std::ranges::distance(std::ranges::begin(values_), found);
           }
           else
           {
-               current_idx = 0;
-               if (!std::empty(values))
+               current_idx_ = 0;
+               if (!values_.empty())
                {
-                    value = values.front();
+                    value_.get() = values_.front();
                }
-               changed = true;
+               changed_ = true;
           }
      }
-     if (std::empty(values) || std::empty(strings))
+
+     template<typename Range>
+     auto getNext(const Range &range, const auto &idx) const
      {
-          return false;
+          return std::ranges::next(std::ranges::begin(range), idx);
      }
-     const auto next = [](const auto &range, const auto &idx) {
-          // sometimes the types are different. So I had to static cast to silence
-          // warning.
-          return std::ranges::next(
-            std::ranges::cbegin(range), static_cast<std::iter_difference_t<decltype(std::ranges::cbegin(range))>>(idx));
-     };
-     const auto           &current_item = *next(strings, current_idx);
-     static constexpr auto pattern      = "{}: \t{}\t{}\t{}";
-     const auto            old          = current_idx;
+
+     void renderComboBox(int &imgui_id) const
      {
-          const auto pop_id = scope_guard{ []() { ImGui::PopID(); } };
+          const auto pop_id = scope_guard([] { ImGui::PopID(); });
           ImGui::PushID(++imgui_id);
-          const float width        = ImGui::CalcItemWidth();
           const float button_size  = ImGui::GetFrameHeight();
-          const float button_count = 2.0F;
-          ImGui::PushItemWidth(width - spacing * button_count - button_size * button_count);
-          const auto pop_item_width = scope_guard(&ImGui::PopItemWidth);
+          const float button_count = 2.0f;
+          ImGui::PushItemWidth(ImGui::CalcItemWidth() - spacing_ * button_count - button_size * button_count);
+          const auto  pop_item_width = scope_guard(&ImGui::PopItemWidth);
+
+          const auto &current_item   = *getNext(strings_, current_idx_);
+
           if (ImGui::BeginCombo("##Empty", current_item.data(), ImGuiComboFlags_HeightLarge))
           // The second parameter is the label previewed
           // before opening the combo.
           {
-               ImGui::Columns(num_columns, "##columns", false);
-               std::ranges::for_each(strings, [&](const auto &string) {
+               ImGui::Columns(num_columns_, "##columns", false);
+               std::ranges::for_each(strings_, [&](const auto &string) {
                     const bool  is_selected = (current_item == string);
                     // You can store your selection however you
                     // want, outside or inside your objects
@@ -298,14 +466,14 @@ inline static bool generic_combo(
                          ImGui::PushID(++imgui_id);
                          if (ImGui::Selectable(c_str_value, is_selected))
                          {
-                              for (current_idx = 0; const auto &temp : strings)
+                              for (current_idx_ = 0; const auto &temp : strings_)
                               {
                                    if (std::ranges::equal(temp, string))
                                    {
-                                        changed = true;
+                                        changed_ = true;
                                         break;
                                    }
-                                   ++current_idx;
+                                   ++current_idx_;
                               }
                               //            current_idx =
                               //            std::distance(std::ranges::data(strings), &string);
@@ -320,46 +488,47 @@ inline static bool generic_combo(
                          // keyboard navigation support)
                     }
                });
-               if (old != current_idx)
-               {
-                    spdlog::info(pattern, gui_labels::set, name, *next(values, current_idx), *next(strings, current_idx));
-               }
                ImGui::Columns(1);
                ImGui::EndCombo();
           }
-          {
-
-               const auto pop_id_left = scope_guard{ &ImGui::PopID };
-               ImGui::SameLine(0, spacing);
-               ImGui::PushID(++imgui_id);
-               const bool disabled =
-                 std::cmp_less_equal(current_idx, 0) || std::cmp_greater_equal(current_idx - 1, std::ranges::size(values));
-               ImGui::BeginDisabled(disabled);
-               if (ImGui::ArrowButton("##l", ImGuiDir_Left))
-               {
-                    --current_idx;
-                    changed = true;
-               }
-               ImGui::EndDisabled();
-          }
-          {
-               const auto pop_id_right = scope_guard{ &ImGui::PopID };
-               ImGui::PushID(++imgui_id);
-               ImGui::SameLine(0, spacing);
-               const bool disabled = std::cmp_greater_equal(current_idx + 1, std::ranges::size(values));
-               ImGui::BeginDisabled(disabled);
-               if (ImGui::ArrowButton("##r", ImGuiDir_Right))
-               {
-                    ++current_idx;
-                    changed = true;
-               }
-               ImGui::EndDisabled();
-          }
-          ImGui::SameLine(0, spacing);
-          format_imgui_text("{}", name);
      }
-     value = *next(values, current_idx);
-     return old != current_idx || changed;
-}
+
+     void renderLeftButton(int &imgui_id) const
+     {
+          const auto pop_id_left = scope_guard{ &ImGui::PopID };
+          ImGui::SameLine(0, spacing_);
+          ImGui::PushID(++imgui_id);
+          const bool disabled =
+            std::cmp_less_equal(current_idx_, 0) || std::cmp_greater_equal(current_idx_ - 1, std::ranges::size(values_));
+          ImGui::BeginDisabled(disabled);
+          if (ImGui::ArrowButton("##l", ImGuiDir_Left))
+          {
+               --current_idx_;
+               changed_ = true;
+          }
+          ImGui::EndDisabled();
+     }
+
+     void renderRightButton(int &imgui_id) const
+     {
+          const auto pop_id_right = scope_guard{ &ImGui::PopID };
+          ImGui::PushID(++imgui_id);
+          ImGui::SameLine(0, spacing_);
+          const bool disabled = std::cmp_greater_equal(current_idx_ + 1, std::ranges::size(values_));
+          ImGui::BeginDisabled(disabled);
+          if (ImGui::ArrowButton("##r", ImGuiDir_Right))
+          {
+               ++current_idx_;
+               changed_ = true;
+          }
+          ImGui::EndDisabled();
+     }
+     void renderTitle() const
+     {
+          ImGui::SameLine(0, spacing_);
+          format_imgui_text("{}", name_);
+     }
+};
+
 }// namespace fme
 #endif// FIELD_MAP_EDITOR_GENERIC_COMBO_HPP
