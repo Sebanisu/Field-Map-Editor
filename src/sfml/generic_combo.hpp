@@ -72,7 +72,7 @@ inline static bool generic_combo(
      bool                                                     changed     = false;
      const auto                                              &values      = std::invoke(std::forward<value_lambdaT>(value_lambda));
      auto                                                   &&strings     = std::invoke(std::forward<string_lambdaT>(string_lambda));
-     [[maybe_unused]]  auto                                  &&tooltips    = std::invoke(std::forward<tool_tip_lambda_t>(tool_tip_lambda));
+     [[maybe_unused]] auto                                  &&tooltips    = std::invoke(std::forward<tool_tip_lambda_t>(tool_tip_lambda));
      auto                                                    &filter      = std::invoke(std::forward<filter_lambdaT>(filter_lambda));
      bool                                                     checked     = filter.enabled();
      const ImGuiStyle                                        &style       = ImGui::GetStyle();
@@ -491,7 +491,8 @@ class GenericComboClassWithFilter
           // before opening the combo.
           {
                ImGui::Columns(num_columns_, "##columns", false);
-               std::ranges::for_each(strings_, [&](const auto &string) {
+
+               std::ranges::for_each(strings_, [&, index = decltype(current_idx_){}](const auto &string) mutable {
                     const bool  is_selected = (current_item == string);
                     // You can store your selection however you
                     // want, outside or inside your objects
@@ -526,25 +527,29 @@ class GenericComboClassWithFilter
                          // opening the combo (scrolling + for
                          // keyboard navigation support)
                     }
-                    renderToolTip();
+                    renderToolTip(imgui_id, index);
+                    ++index;
                });
                ImGui::Columns(1);
                ImGui::EndCombo();
           }
+          renderToolTip(imgui_id, current_idx_);
      }
 
-     void renderToolTip() const
+     void renderToolTip(int &imgui_id, const decltype(current_idx_) index) const
      {
 
-          if (!ImGui::IsItemHovered())
-          {
-               return;
-          }
           if (std::ranges::empty(tool_tips_))
           {
                return;
           }
-          const auto &tooltip      = *getNext(tool_tips_, current_idx_);
+          if (!ImGui::IsItemHovered())
+          {
+               return;
+          }
+          const auto pop_id_left = scope_guard{ &ImGui::PopID };
+          ImGui::PushID(++imgui_id);
+          const auto &tooltip      = *getNext(tool_tips_, index);
 
           const auto  pop_tool_tip = scope_guard{ &ImGui::EndTooltip };
           ImGui::BeginTooltip();
