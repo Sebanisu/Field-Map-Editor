@@ -1892,15 +1892,16 @@ void gui::combo_pupu()
 {
      const auto &pair   = m_map_sprite.uniques().pupu();
      const auto &values = pair.values();
-     if (!generic_combo(
-           get_imgui_id(),
-           gui_labels::pupu_id,
-           [&values]() { return values; },
-           [&pair]() { return pair.strings(); },
-           [&values]() {
-                return values | std::views::transform([](const PupuID &pupu_id) -> decltype(auto) { return pupu_id.create_summary(); });
-           },
-           [this]() -> auto & { return m_map_sprite.filter().pupu; }))
+     const auto  gcc    = GenericComboClassWithFilter(
+       gui_labels::pupu_id,
+       [&values]() { return values; },
+       [&pair]() { return pair.strings(); },
+       [&values]() {
+            return values | std::views::transform([](const PupuID &pupu_id) -> decltype(auto) { return pupu_id.create_summary(); });
+       },
+       [this]() -> auto & { return m_map_sprite.filter().pupu; });
+
+     if (!gcc.render(get_imgui_id()))
      {
           return;
      }
