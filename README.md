@@ -17,11 +17,11 @@ The OPENGL version has evolved into a testing ground for new features. These fea
 
 If you are using the OPENGL version and find a feature you would like to see in the SFML version, please let me know. Your feedback helps prioritize what gets implemented in the SFML version.
 
-**Note:** The OPENGL version requires the following:
+**Note:** The OPENGL version requires the `res` folder, which contains the necessary shaders and textures.:
 1. Download the `res` folder from [this location](https://github.com/Sebanisu/Field-Map-Editor/tree/main/src/opengl/opengl_version/res).
 2. Alternatively, the `res.zip` file is included in the [releases](https://github.com/Sebanisu/Field-Map-Editor/releases). Extract it to the same directory as the `.exe` file.
 
-This folder contains the necessary shaders and textures.
+
 
 ### Credits
 
