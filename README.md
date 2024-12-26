@@ -31,20 +31,89 @@ This project is based on the work of [Omzy](https://forums.qhimm.com/index.php?t
 * I updated my Pupu ID generation to use 2 bits that were unused. These tell if the X coordinate and/or the Y coordinate aren't aligned with the 16 x 16 grid. This was because a few instances where tiles weren't being deswizzled or swizzled correctly. And you'd end up with two layers of tiles merged together. This change happened around September 2022 so if you already created deswizzles the filenames won't match anymore.
 
 
-### Build instructions
-* install vs2022
-* choco install conan
-* conan config home
-* conan profile detect --name windows10_msvc
-* edit your profile .conan2/profiles/windows10_msvc
-* conan install . -pr windows10_msvc -pr:b windows10_msvc  --build=missing
-* cmake --version
-* cmake --list-presets
-* cmake --preset conan_windows-default
-* rmdir /S /Q build
+# Windows Build Instructions
+
+This guide provides detailed instructions for building the project on Windows using the provided build scripts and dependencies.
+
+## Prerequisites
+
+Ensure the following tools and software are installed on your system:
+
+- **Microsoft Visual Studio 2022** (Community Edition or higher)
+- **Python 3.8 or newer**
+- **Conan 2.x or newer**
+- **CMake**
+
+## Build Steps
+
+### Step 1: Setup Environment
+
+Run the Visual Studio `vcvars64.bat` script to configure the environment variables for 64-bit builds:
+
+```cmd
+"C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvars64.bat"
+```
+
+### Step 2: Install Conan Dependencies
+
+Ensure Conan 2.x or newer is installed and set up:
+
+```cmd
+python -m venv .\venv
+.\venv\Scripts\activate
+python -m pip install --user "conan>=2.0" --upgrade
+```
+
+Configure Conan and detect profiles:
+
+```cmd
+conan config home
+conan profile detect --name windows_msvc > nul 2> nul & exit 0
+conan profile list
+```
+
+Install project dependencies with Conan:
+
+```cmd
+conan install . -pr windows_msvc -pr:b windows_msvc --build=missing -s compiler.cppstd=23
+deactivate
+```
+
+### Step 3: Configure and Build with CMake
+
+Check the CMake version and list available presets:
+
+```cmd
+cmake --version
+cmake --list-presets
+```
+
+Configure and generate build files using the preset:
+
+```cmd
+cmake --preset conan_windows-default
+```
+
+### Step 4: Build the Project
+
+Navigate to the build directory and build the solution:
+
+```cmd
+cd build
+msbuild Field-Map-Editor.sln /p:Configuration=Release
+cd ..
+dir /s /b bin\*.exe
+```
+
+## Additional Notes
+
+- The resulting executables will be located in the `bin` directory.
+- Ensure all paths and configurations match your local setup.
+- For troubleshooting, review the output logs during each step.
 
 
-### linux
+
+# Linux Build Instructions **(WIP)**
 
 * sudo apt update
 * sudo apt install python3 python3-venv python3-pip cmake
