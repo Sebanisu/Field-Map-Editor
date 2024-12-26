@@ -4,9 +4,26 @@
 <!--![CMake](https://github.com/Sebanisu/Field-Map-Editor/workflows/CMake/badge.svg)-->
 
 Test Application for editing the tiles of a FF8 field. See [releases](https://github.com/Sebanisu/Field-Map-Editor/releases) to download the most recent build. Everything is in constant flux.
-* SFML version is more feature complete. I have been updating this recently because people have been using it. So now new features are getting put into this first.
-* OPENGL version to have more control over what the API is doing. I'm slowly trying to move features to this version but it's lagging behind. Goal was to eventually stop using the SFML version in the future.
-  * This version requires the https://github.com/Sebanisu/Field-Map-Editor/tree/main/src/opengl/opengl_version/res folder to be placed in the same directory as the `.exe` file. That folder contains the shaders and textures.
+
+### SFML Version
+
+The SFML version is the more feature-complete version and is recommended for most users. Recently, it has seen active updates because it is the version most people are using. New features are now being developed and implemented in the SFML version first, ensuring it stays up to date and reliable.
+
+If you find any features missing from the SFML version or have suggestions, please let me know. Your feedback helps shape its development.
+
+### OPENGL Version
+
+The OPENGL version has evolved into a testing ground for new features. These features are tested and refined in the OPENGL version and then backported to the SFML version where applicable. While the SFML version is the recommended version for most users, the OPENGL version might contain experimental features that have not yet made their way to the SFML version.
+
+If you are using the OPENGL version and find a feature you would like to see in the SFML version, please let me know. Your feedback helps prioritize what gets implemented in the SFML version.
+
+**Note:** The OPENGL version requires the following:
+1. Download the `res` folder from [this location](https://github.com/Sebanisu/Field-Map-Editor/tree/main/src/opengl/opengl_version/res).
+2. Alternatively, the `res.zip` file is included in the [releases](https://github.com/Sebanisu/Field-Map-Editor/releases). Extract it to the same directory as the `.exe` file.
+
+This folder contains the necessary shaders and textures.
+
+### Credits
 
 This project is based on the work of [Omzy](https://forums.qhimm.com/index.php?topic=13444.0) [(src)](https://github.com/Sebanisu/Pupu) and [myst6re](https://forums.qhimm.com/index.php?topic=13050.0) [(src)](https://github.com/myst6re/deling). Also [Maki](https://forums.qhimm.com/index.php?topic=18656.0) [(src)](https://github.com/MaKiPL/OpenVIII-monogame). I referenced their code to make this.
 
