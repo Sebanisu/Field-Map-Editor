@@ -123,13 +123,13 @@ struct map_sprite final
      [[nodiscard]] bool                                  using_coo() const;
      [[nodiscard]] static std::string                    str_to_lower(std::string input);
      template<typename T>
-          requires(std::same_as<std::remove_cvref_t<T>,std::string_view>)
+          requires(std::same_as<std::remove_cvref_t<T>, std::string_view>)
      [[nodiscard]] static std::string str_to_lower(T input)
      {
-          return str_to_lower(std::string{input});
+          return str_to_lower(std::string{ input });
      }
-     [[nodiscard]] sf::Sprite                            save_intersecting(const sf::Vector2i &pixel_pos, const std::uint8_t &texture_page);
-     [[nodiscard]] std::size_t                           get_texture_pos(BPPT bpp, std::uint8_t palette, std::uint8_t texture_page) const;
+     [[nodiscard]] sf::Sprite  save_intersecting(const sf::Vector2i &pixel_pos, const std::uint8_t &texture_page);
+     [[nodiscard]] std::size_t get_texture_pos(BPPT bpp, std::uint8_t palette, std::uint8_t texture_page) const;
      [[nodiscard]] std::vector<std::future<std::future<void>>> save_swizzle_textures(const std::filesystem::path &path);
      [[nodiscard]] std::vector<std::future<std::future<void>>> save_pupu_textures(const std::filesystem::path &path);
      [[nodiscard]] std::future<std::future<void>>              load_upscale_textures(SharedTextures &ret, std::uint8_t texture_page);
@@ -228,6 +228,13 @@ struct map_sprite final
      auto const_visit_tiles(funcT &&p_function) const
      {
           return m_map_group.maps.const_back().visit_tiles(std::forward<decltype(p_function)>(p_function));
+     }
+     template<typename funcT>
+     auto const_visit_tiles_both(funcT &&p_function) const
+     {
+          return m_map_group.maps.const_back().visit_tiles([&](const auto &back) {
+               return m_map_group.maps.front().visit_tiles([&](const auto &front) { return p_function(back, front); });
+          });
      }
 
      template<open_viii::graphics::background::is_tile tileT>

@@ -629,7 +629,7 @@ void gui::text_mouse_position() const
      {
           return;
      }
-     m_map_sprite.const_visit_tiles([&](const auto &tiles) {
+     m_map_sprite.const_visit_tiles_both([&](const auto &tiles, const auto &front_tiles) {
           static std::vector<std::size_t> indices = {};
           if (m_mouse_positions.mouse_moved)
           {
@@ -651,7 +651,7 @@ void gui::text_mouse_position() const
                ImGui::TableNextColumn();
                format_imgui_text("{:4}", index);
                ImGui::TableNextColumn();
-               (void)create_tile_button(tiles[index]);
+               (void)create_tile_button(front_tiles[index]);
           }
           ImGui::EndTable();
      });
