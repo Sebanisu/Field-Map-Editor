@@ -402,62 +402,97 @@ void map_sprite::update_position(const sf::Vector2i &pixel_pos, const uint8_t &t
 
 sf::Sprite map_sprite::save_intersecting(const sf::Vector2i &pixel_pos, const std::uint8_t &texture_page)
 {
-     // static constexpr auto tile_size_float = static_cast<float>(TILE_SIZE);
+     // Initialize an empty sprite object
      sf::Sprite sprite      = {};
+
+     // Get the size of the sprite texture
      const auto sprite_size = m_drag_sprite_texture->getSize();
      spdlog::info("sprite_size: ({},{})", sprite_size.x, sprite_size.y);
      spdlog::info("m_scale: ({})", m_scale);
+
+     // Set the texture rectangle of the sprite to cover the whole texture
      sprite.setTextureRect({ 0, 0, static_cast<int>(sprite_size.x), static_cast<int>(sprite_size.y) });
+
+     // Static constant factor for offset when positioning the sprite
      static constexpr float one_and_half = 1.5F;
+
+     // Set the sprite's position based on the provided pixel position, adjusted by TILE_SIZE
      sprite.setPosition(
        static_cast<float>(pixel_pos.x) - (TILE_SIZE * one_and_half), static_cast<float>(pixel_pos.y) - (TILE_SIZE * one_and_half));
+
+     // Scale the sprite based on the m_scale factor
      sprite.setScale(1.0F / static_cast<float>(m_scale), 1.0F / static_cast<float>(m_scale));
-     //  sprite.setScale(
-     //    1.F / static_cast<float>(m_scale), 1.F / static_cast<float>(m_scale));
-     m_saved_indices = find_intersecting(m_map_group.maps.const_back(), pixel_pos, texture_page);
+
+     // Find intersecting tiles for the given position and texture page
+     m_saved_indices = find_intersecting(m_map_group.maps.const_back(), pixel_pos, texture_page, false, true);
+
+     spdlog::info("m_saved_indices count: {}", std::ranges::size(m_saved_indices));
+
+     // If drawing is not swizzled, find intersecting imported tiles as well
      if (!m_draw_swizzle)
      {
-          m_saved_imported_indices = find_intersecting(m_imported_tile_map, pixel_pos, texture_page);
+          m_saved_imported_indices = find_intersecting(m_imported_tile_map, pixel_pos, texture_page, false, true);
      }
+
+     // Clear the drag sprite texture with transparency
      m_drag_sprite_texture->clear(sf::Color::Transparent);
+
+     // Lambda function to draw tiles based on the front tiles and tile data, and optionally imported tiles
      const auto draw_drag_texture =
        [this, &pixel_pos, &sprite_size](const auto &front_tiles, const auto &tiles, const std::uint16_t z, bool imported = false) {
             sf::RenderStates       states = {};
-            //        const auto render_texture_size = m_render_texture->getSize()
-            //        / m_scale;
+
+            // Set the transformation to adjust the sprite's position based on the scale and pixel position
             static constexpr float half   = 0.5F;
             states.transform.translate(sf::Vector2f(
               (static_cast<float>(-pixel_pos.x) * static_cast<float>(m_scale)) + (static_cast<float>(sprite_size.x) * half),
               (static_cast<float>(-pixel_pos.y) * static_cast<float>(m_scale)) + (static_cast<float>(sprite_size.x) * half)));
+
+            // Loop through either saved imported indices or regular saved indices based on the flag
             for (const auto tile_index : imported ? m_saved_imported_indices : m_saved_indices)
             {
                  const auto &tile       = tiles[tile_index];
                  const auto &front_tile = front_tiles[tile_index];
+
+                 // Skip drawing if the front tile's z-index does not match the current z layer
                  if (front_tile.z() != z)
                  {
                       continue;
                  }
+
+                 // Set the texture for the tile, either imported or regular
                  states.texture = imported ? m_imported_texture : get_texture(tile.depth(), tile.palette_id(), tile.texture_id());
+
+                 // Skip if the texture is invalid (size is zero)
                  if (states.texture == nullptr || states.texture->getSize().y == 0 || states.texture->getSize().x == 0)
                  {
                       continue;
                  }
+
+                 // Calculate draw size and texture size for the tile
                  const auto draw_size    = get_tile_draw_size();
                  const auto texture_size = imported ? get_tile_texture_size_for_import() : get_tile_texture_size(states.texture);
+
+                 // Generate the quad for the tile using triangle strips
                  auto       quad         = imported ? get_triangle_strip_for_imported(draw_size, texture_size, front_tile, tile)
                                                     : get_triangle_strip(draw_size, texture_size, front_tile, tile);
+
+                 // Set the blend mode for the sprite
                  states.blendMode        = sf::BlendAlpha;
                  if (!m_disable_blends)
                  {
                       states.blendMode = set_blend_mode(tile.blend_mode(), quad);
                  }
 
+                 // Draw the tile to the drag sprite texture
                  m_drag_sprite_texture->draw(quad.data(), quad.size(), sf::TriangleStrip, states);
             }
        };
 
+     // Iterate over all unique z values and draw the intersecting tiles at each z layer
      for (const std::uint16_t &z : m_all_unique_values_and_strings.z().values())
      {
+          // Draw tiles for both the regular map and the imported map
           m_map_group.maps.front().visit_tiles([&](const auto &front_tiles) {
                m_map_group.maps.const_back().visit_tiles([&](const auto &tiles) { draw_drag_texture(front_tiles, tiles, z); });
           });
@@ -466,9 +501,17 @@ sf::Sprite map_sprite::save_intersecting(const sf::Vector2i &pixel_pos, const st
                  [&](const auto &imported_tiles) { draw_drag_texture(imported_front_tiles, imported_tiles, z, true); });
           });
      }
+
+     // Display the drawn texture to make it visible
      m_drag_sprite_texture->display();
+
+     // Set the sprite's texture to the one stored in the drag sprite texture
      sprite.setTexture(m_drag_sprite_texture->getTexture());
+
+     // Update the render texture to reflect any changes
      update_render_texture();
+
+     // Return the sprite
      return sprite;
 }
 
@@ -1391,8 +1434,8 @@ std::string map_sprite::str_to_lower(std::string input)
 }
 map_sprite::map_sprite(ff_8::map_group map_group, bool draw_swizzle, ff_8::filters in_filters, bool force_disable_blends, bool require_coo)
   : m_map_group(
-    !require_coo || (map_group.opt_coo && map_group.opt_coo.value() != open_viii::LangT::generic) ? std::move(map_group)
-                                                                                                  : ff_8::map_group{})
+      !require_coo || (map_group.opt_coo && map_group.opt_coo.value() != open_viii::LangT::generic) ? std::move(map_group)
+                                                                                                    : ff_8::map_group{})
   , m_draw_swizzle(draw_swizzle)
   , m_disable_blends(force_disable_blends)
   , m_filters(std::move(in_filters))
