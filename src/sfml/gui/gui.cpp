@@ -848,7 +848,7 @@ void gui::tool_tip(const std::string_view str)
 }
 void gui::checkbox_mim_palette_texture()
 {
-     if (ImGui::Checkbox("draw Palette Texture", &m_selections.draw_palette))
+     if (ImGui::Checkbox("Draw Palette Texture", &m_selections.draw_palette))
      {
           Configuration config{};
           config->insert_or_assign("selections_draw_palette", m_selections.draw_palette);
@@ -856,6 +856,9 @@ void gui::checkbox_mim_palette_texture()
           m_mim_sprite = m_mim_sprite.with_draw_palette(m_selections.draw_palette);
           m_changed    = true;
      }
+     tool_tip(
+       "Draw Palette Texture: The .mim file uses palettes to draw tiles. 4-bit palettes have 16 colors, 8-bit palettes support up to 256, "
+       "and 16-bit tiles don’t use palettes. This setting shows the raw palettes in a grid.");
 }
 static void update_bpp(mim_sprite &sprite, BPPT bpp)
 {
