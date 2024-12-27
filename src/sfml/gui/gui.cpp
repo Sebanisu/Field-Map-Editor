@@ -284,6 +284,14 @@ void gui::frame_rate()
 }
 void gui::compact_flatten_buttons()
 {
+     using namespace std::string_view_literals;
+     static constexpr auto tool_tips = std::array{
+          "Rows: Sorts tiles from 8-bit to 4-bit and separates conflicting palettes. Attempts to apply the sort to each row individually."sv,
+          "All: Sorts tiles from 8-bit to 4-bit and separates conflicting palettes. Applies the sort to all tiles at once."sv,
+          "Map Order: Creates a tile for each map entry, with 16 columns and 16 rows per texture page."sv,
+          "BPP: Converts all tiles to 4 bits per pixel to maximize the number of tiles per texture page. Applied automatically by Map Order compacting."sv,
+          "Palette: Resets all palettes to 0, which may reduce the need to reload textures."sv
+     };
 
      const ImGuiStyle &style       = ImGui::GetStyle();
      const float       spacing     = style.ItemInnerSpacing.x;
@@ -294,27 +302,32 @@ void gui::compact_flatten_buttons()
      {
           m_map_sprite.compact_rows();
      }
+     tool_tip(tool_tips[0]);
      ImGui::SameLine(0, spacing);
      if (ImGui::Button(gui_labels::all.data(), button_size))
      {
           m_map_sprite.compact_all();
      }
+     tool_tip(tool_tips[1]);
      ImGui::SameLine(0, spacing);
      if (ImGui::Button(gui_labels::map_order.data(), button_size))
      {
           m_map_sprite.compact_map_order();
      }
+     tool_tip(tool_tips[2]);
      format_imgui_text("{}: ", gui_labels::flatten);
      ImGui::SameLine(0, spacing);
      if (ImGui::Button(gui_labels::bpp.data(), button_size))
      {
           m_map_sprite.flatten_bpp();
      }
+     tool_tip(tool_tips[3]);
      ImGui::SameLine(0, spacing);
      if (ImGui::Button(gui_labels::palette.data(), button_size))
      {
           m_map_sprite.flatten_palette();
      }
+     tool_tip(tool_tips[4]);
 }
 void gui::collapsing_header_filters()
 {
@@ -792,6 +805,9 @@ void gui::checkbox_map_swizzle()
           }
           m_changed = true;
      }
+     tool_tip(
+       "Swizzle displays the tiles in their original positions as defined in the `.mim` file, or in their current swizzled positions if "
+       "they have been rearranged.");
 }
 void gui::checkbox_map_disable_blending()
 {
@@ -810,6 +826,25 @@ void gui::checkbox_map_disable_blending()
           }
           m_changed = true;
      }
+     tool_tip(
+       "Use Disable blending to turn off the effect that emulates PSX-style blending for tiles with semi-transparent parts, such as lights "
+       "or colored glass.");
+}
+void gui::tool_tip(const std::string_view str)
+{
+     const auto pop_id = scope_guard{ &ImGui::PopID };
+     ImGui::PushID(++get_imgui_id());
+     if (!ImGui::IsItemHovered())
+     {
+          return;
+     }
+
+     const auto pop_tool_tip = scope_guard{ &ImGui::EndTooltip };
+
+     ImGui::BeginTooltip();
+     const auto pop_textwrappos = scope_guard{ &ImGui::PopTextWrapPos };
+     ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);// Adjust wrap width as needed
+     format_imgui_text("{}", str);
 }
 void gui::checkbox_mim_palette_texture()
 {
@@ -2191,8 +2226,9 @@ bool gui::combo_upscale_path(ff_8::filter_old<std::filesystem::path> &filter) co
        gui_labels::upscale_path,
        [this]() { return m_upscale_paths; },
        [this]() { return m_upscale_paths; },
-       EmptyStringView{},
-       [&filter]() -> auto & { return filter; });
+       [this]() { return m_upscale_paths; },
+       [&filter]() -> auto & { return filter; },
+       1);
      return m_field && gcc.render(get_imgui_id());
 }
 

@@ -215,6 +215,9 @@ class GenericComboClassWithFilter
 
           const auto  pop_tool_tip = scope_guard{ &ImGui::EndTooltip };
           ImGui::BeginTooltip();
+
+          const auto pop_text_wrap = scope_guard{ &ImGui::PopTextWrapPos };
+          ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);// Adjust this value as needed for wrap width
           format_imgui_text("{}", tooltip);
      }
 
@@ -365,6 +368,7 @@ class GenericComboClass
                               ImGui::NextColumn();
                          } };
                          ImGui::PushID(++imgui_id);
+
                          if (ImGui::Selectable(c_str_value, is_selected))
                          {
                               for (current_idx_ = 0; const auto &temp : strings_)
