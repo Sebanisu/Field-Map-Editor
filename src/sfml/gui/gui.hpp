@@ -288,12 +288,19 @@ struct gui
           {
                move_camera(sprite);
           }
+          ImGui::SameLine();
+          if (ImGui::Button("Reset"))
+          {
+               xy = { 0.0F, 0.0F };
+               move_camera(sprite);
+          }
      }
      template<typename sprite_t>
      void move_camera(const sprite_t &sprite)
-     {
-          m_cam_pos = { -xy[0] * (static_cast<float>(sprite.width()) - m_scale_width), -xy[1] * static_cast<float>(sprite.height()) };
-          m_changed = true;
+     {//- m_scale_width
+          m_cam_pos = { -xy[0] * (static_cast<float>(sprite.width())), -xy[1] * static_cast<float>(sprite.height()) };
+         
+          m_changed = true;// Set this to true if you want to trigger the camera move immediately after resetting
           scale_window();
      }
      float                 scaled_menubar_gap() const;
@@ -301,7 +308,7 @@ struct gui
      void                  background_color_picker();
      void                  collapsing_header_filters();
      void                  compact_flatten_buttons();
-     static void           frame_rate();
+     void                  frame_rate();
      void                  control_panel_window_map();
      void                  control_panel_window_mim();
      std::filesystem::path path_with_prefix_and_base_name(std::filesystem::path selected_path) const;

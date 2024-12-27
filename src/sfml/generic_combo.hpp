@@ -261,19 +261,39 @@ class GenericComboClassWithFilter
 };
 
 
-template<returns_range_concept ValueLambdaT, returns_range_concept StringLambdaT, typename ValueT>
+template<returns_range_concept ValueLambdaT, returns_range_concept StringLambdaT, typename ValueT, returns_range_concept tool_tip_lambda_t = StringLambdaT>
 class GenericComboClass
 {
    public:
      GenericComboClass(
-       std::string_view name,
-       ValueLambdaT   &&value_lambda,
-       StringLambdaT  &&string_lambda,
-       ValueT          &value,
-       int              num_columns = 2)
+       std::string_view    name,
+       ValueLambdaT      &&value_lambda,
+       StringLambdaT     &&string_lambda,
+       ValueT             &value,
+       int                 num_columns = 2)
        : name_(name)
        , values_(std::invoke(std::forward<ValueLambdaT>(value_lambda)))
        , strings_(std::invoke(std::forward<StringLambdaT>(string_lambda)))
+       , tool_tips_(std::invoke(std::forward<StringLambdaT>(string_lambda)))
+       , value_(value)
+       , num_columns_(num_columns)
+       , current_idx_(0)
+       , changed_(false)
+       , spacing_(ImGui::GetStyle().ItemInnerSpacing.x)
+     {
+     }
+
+     GenericComboClass(
+       std::string_view    name,
+       ValueLambdaT      &&value_lambda,
+       StringLambdaT     &&string_lambda,
+       tool_tip_lambda_t &&tooltip_lamda,
+       ValueT             &value,
+       int                 num_columns = 2)
+       : name_(name)
+       , values_(std::invoke(std::forward<ValueLambdaT>(value_lambda)))
+       , strings_(std::invoke(std::forward<StringLambdaT>(string_lambda)))
+       , tool_tips_(std::invoke(std::forward<StringLambdaT>(tooltip_lamda)))
        , value_(value)
        , num_columns_(num_columns)
        , current_idx_(0)
@@ -311,6 +331,7 @@ class GenericComboClass
      std::string_view                                           name_;
      std::invoke_result_t<ValueLambdaT>                         values_;
      std::invoke_result_t<StringLambdaT>                        strings_;
+     std::invoke_result_t<StringLambdaT>                        tool_tips_;
      std::reference_wrapper<ValueT>                             value_;
      int                                                        num_columns_;
      mutable std::ranges::range_difference_t<decltype(values_)> current_idx_;
@@ -357,7 +378,7 @@ class GenericComboClass
           // before opening the combo.
           {
                ImGui::Columns(num_columns_, "##columns", false);
-               std::ranges::for_each(strings_, [&](const auto &string) {
+               std::ranges::for_each(strings_, [&, index = decltype(current_idx_){}](const auto &string) mutable {
                     const bool  is_selected = (current_item == string);
                     // You can store your selection however you
                     // want, outside or inside your objects
@@ -392,10 +413,34 @@ class GenericComboClass
                          // opening the combo (scrolling + for
                          // keyboard navigation support)
                     }
+                    renderToolTip(imgui_id, index++);
                });
                ImGui::Columns(1);
                ImGui::EndCombo();
           }
+          renderToolTip(imgui_id, current_idx_);
+     }
+     void renderToolTip(int &imgui_id, const decltype(current_idx_) index) const
+     {
+
+          if (std::ranges::empty(tool_tips_))
+          {
+               return;
+          }
+          if (!ImGui::IsItemHovered())
+          {
+               return;
+          }
+          const auto pop_id_left = scope_guard{ &ImGui::PopID };
+          ImGui::PushID(++imgui_id);
+          const auto &tooltip      = *getNext(tool_tips_, index);
+
+          const auto  pop_tool_tip = scope_guard{ &ImGui::EndTooltip };
+          ImGui::BeginTooltip();
+
+          const auto pop_text_wrap = scope_guard{ &ImGui::PopTextWrapPos };
+          ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);// Adjust this value as needed for wrap width
+          format_imgui_text("{}", tooltip);
      }
 
      void renderLeftButton(int &imgui_id) const

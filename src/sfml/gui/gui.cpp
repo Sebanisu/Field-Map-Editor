@@ -219,8 +219,6 @@ void gui::control_panel_window()
      //      ImGui::SetWindowPos({ 0U, 0U });
      //    }
      background_color_picker();
-     ImGui::SameLine();
-     frame_rate();
      combo_draw();
      if (m_paths.empty())
      {
@@ -237,7 +235,7 @@ void gui::control_panel_window()
      {
           control_panel_window_map();
      }
-
+     frame_rate();
      m_mouse_positions.mouse_enabled = handle_mouse_cursor();
      text_mouse_position();
 }
@@ -280,7 +278,9 @@ void gui::control_panel_window_map()
 void gui::frame_rate()
 {
      const auto framerate = ImGui::GetIO().Framerate;
-     format_imgui_text("{:>3.2f} fps", framerate);
+     const auto fps = fmt::format("{:>3.2f} fps", framerate);
+     format_imgui_text("{}",fps);
+     tool_tip(fps);
 }
 void gui::compact_flatten_buttons()
 {
