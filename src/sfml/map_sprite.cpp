@@ -461,7 +461,8 @@ sf::Sprite map_sprite::save_intersecting(const sf::Vector2i &pixel_pos, const st
                  }
 
                  // Set the texture for the tile, either imported or regular
-                 states.texture = imported ? m_imported_texture : get_texture(tile.depth(), tile.palette_id(), tile.texture_id());
+                 states.texture =
+                   imported ? m_imported_texture : get_texture(front_tile.depth(), front_tile.palette_id(), front_tile.texture_id());
 
                  // Skip if the texture is invalid (size is zero)
                  if (states.texture == nullptr || states.texture->getSize().y == 0 || states.texture->getSize().x == 0)
