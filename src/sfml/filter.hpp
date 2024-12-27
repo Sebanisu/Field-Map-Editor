@@ -139,6 +139,7 @@ enum struct draw_bitT
      disabled = 1,
      enabled  = 2,
 };
+
 static inline constexpr bool operator==(draw_bitT left, bool right) noexcept
 {
      return (left == draw_bitT::all) || (left == draw_bitT::disabled && !right) || (left == draw_bitT::enabled && right);
@@ -180,6 +181,49 @@ namespace tile_operations
      {
           return !std::invoke(filters, tile);
      }
-}
+}// namespace tile_operations
 }// namespace ff_8
+template<>
+struct fmt::formatter<ff_8::draw_bitT>
+{
+     // Presentation format: 'f' - fixed, 'e' - exponential.
+     char           presentation = 'f';
+
+     // Parses format specifications of the form ['f' | 'e'].
+     constexpr auto parse(fmt::format_parse_context &ctx) -> decltype(ctx.begin())
+     {
+          // [ctx.begin(), ctx.end()) is a character range that contains a part of
+          // the format string starting from the format specifications to be parsed,
+          // e.g. in
+          //
+          //   fmt::format("{:f} - BPPT of interest", BPPT{1, 2});
+          //
+          // the range will contain "f} - BPPT of interest". The formatter should
+          // parse specifiers until '}' or the end of the range. In this example
+          // the formatter should parse the 'f' specifier and return an iterator
+          // BPPTing to '}'.
+
+          // Parse the presentation format and store it in the formatter:
+          auto it  = ctx.begin();
+          auto end = ctx.end();
+          if (it != end && (*it == 'f' || *it == 'e'))
+               presentation = *it++;
+
+          // Check if reached the end of the range:
+          if (it != end && *it != '}')
+               throw fmt::format_error("invalid format");
+
+          // Return an iterator past the end of the parsed range:
+          return it;
+     }
+
+     // Formats the BPPT p using the parsed format specification (presentation)
+     // stored in this formatter.
+     template<typename FormatContext>
+     auto format(const ff_8::draw_bitT &p, FormatContext &ctx) -> decltype(ctx.out())
+     {
+          // ctx.out() is an output iterator to write to.
+          return fmt::format_to(ctx.out(), "{:08X}", static_cast<int>(p));
+     }
+};
 #endif// FIELD_MAP_EDITOR_FILTER_HPP

@@ -1899,7 +1899,7 @@ void gui::combo_pupu()
        [&values]() {
             return values | std::views::transform([](const PupuID &pupu_id) -> decltype(auto) { return pupu_id.create_summary(); });
        },
-       [this]() -> auto & { return m_map_sprite.filter().pupu; });
+       [this]() -> auto  &{ return m_map_sprite.filter().pupu; });
 
      if (!gcc.render(get_imgui_id()))
      {
@@ -1912,17 +1912,18 @@ void gui::combo_pupu()
 void gui::combo_draw_bit()
 {
      using namespace std::string_view_literals;
-     if (!generic_combo(
-           get_imgui_id(),
-           gui_labels::draw_bit,
-           []() { return std::array{ ff_8::draw_bitT::all, ff_8::draw_bitT::enabled, ff_8::draw_bitT::disabled }; },
-           []() { return std::array{ "all"sv, "enabled"sv, "disabled"sv }; },
-           []() {
-                return std::array{ "Show all regardless of bit being enabled or disabled."sv,
-                                   "Show only tiles with draw bit enabled"sv,
-                                   "Show only tiles with draw bit disabled"sv };
-           },
-           [this]() -> auto & { return m_map_sprite.filter().draw_bit; }))
+
+     const auto gcc = fme::GenericComboClassWithFilter(
+       gui_labels::draw_bit,
+       []() { return std::array{ ff_8::draw_bitT::all, ff_8::draw_bitT::enabled, ff_8::draw_bitT::disabled }; },
+       []() { return std::array{ "all"sv, "enabled"sv, "disabled"sv }; },
+       []() {
+            return std::array{ "Show all regardless of bit being enabled or disabled."sv,
+                               "Show only tiles with draw bit enabled"sv,
+                               "Show only tiles with draw bit disabled"sv };
+       },
+       [this]() -> auto & { return m_map_sprite.filter().draw_bit; });
+     if (!gcc.render(get_imgui_id()))
           return;
      m_map_sprite.update_render_texture();
      m_changed = true;
@@ -1936,13 +1937,13 @@ void gui::combo_filtered_palettes()
           return;
      }
      const auto &pair = map.at(key);
-     if (!generic_combo(
-           get_imgui_id(),
-           gui_labels::palette,
-           [&pair]() { return pair.values(); },
-           [&pair]() { return pair.strings(); },
-           EmptyStringView{},
-           [this]() -> auto & { return m_map_sprite.filter().palette; }))
+     const auto  gcc  = fme::GenericComboClassWithFilter(
+       gui_labels::palette,
+       [&pair]() { return pair.values(); },
+       [&pair]() { return pair.strings(); },
+       EmptyStringView{},
+       [this]() -> auto  &{ return m_map_sprite.filter().palette; });
+     if (!gcc.render(get_imgui_id()))
      {
           return;
      }
@@ -1957,13 +1958,13 @@ void gui::combo_filtered_palettes()
 void gui::combo_filtered_bpps()
 {
      const auto &pair = m_map_sprite.uniques().bpp();
-     if (!generic_combo(
-           get_imgui_id(),
-           gui_labels::bpp,
-           [&pair]() { return pair.values(); },
-           [&pair]() { return pair.strings(); },
-           EmptyStringView{},
-           [this]() -> auto & { return m_map_sprite.filter().bpp; }))
+     const auto  gcc  = fme::GenericComboClassWithFilter(
+       gui_labels::bpp,
+       [&pair]() { return pair.values(); },
+       [&pair]() { return pair.strings(); },
+       EmptyStringView{},
+       [this]() -> auto  &{ return m_map_sprite.filter().bpp; });
+     if (!gcc.render(get_imgui_id()))
      {
           return;
      }
@@ -1978,13 +1979,13 @@ void gui::combo_filtered_bpps()
 void gui::combo_blend_modes()
 {
      const auto &pair = m_map_sprite.uniques().blend_mode();
-     if (!generic_combo(
-           get_imgui_id(),
-           gui_labels::blend_mode,
-           [&pair]() { return pair.values(); },
-           [&pair]() { return pair.strings(); },
-           EmptyStringView{},
-           [this]() -> auto & { return m_map_sprite.filter().blend_mode; }))
+     const auto  gcc  = fme::GenericComboClassWithFilter(
+       gui_labels::blend_mode,
+       [&pair]() { return pair.values(); },
+       [&pair]() { return pair.strings(); },
+       EmptyStringView{},
+       [this]() -> auto  &{ return m_map_sprite.filter().blend_mode; });
+     if (!gcc.render(get_imgui_id()))
      {
           return;
      }
@@ -1995,13 +1996,13 @@ void gui::combo_blend_modes()
 void gui::combo_layers()
 {
      const auto &pair = m_map_sprite.uniques().layer_id();
-     if (!generic_combo(
-           get_imgui_id(),
-           gui_labels::layers,
-           [&pair]() { return pair.values(); },
-           [&pair]() { return pair.strings(); },
-           EmptyStringView{},
-           [this]() -> auto & { return m_map_sprite.filter().layer_id; }))
+     const auto  gcc  = fme::GenericComboClassWithFilter(
+       gui_labels::layers,
+       [&pair]() { return pair.values(); },
+       [&pair]() { return pair.strings(); },
+       EmptyStringView{},
+       [this]() -> auto  &{ return m_map_sprite.filter().layer_id; });
+     if (!gcc.render(get_imgui_id()))
      {
           return;
      }
@@ -2011,13 +2012,13 @@ void gui::combo_layers()
 void gui::combo_texture_pages()
 {
      const auto &pair = m_map_sprite.uniques().texture_page_id();
-     if (!generic_combo(
-           get_imgui_id(),
-           gui_labels::texture_page,
-           [&pair]() { return pair.values(); },
-           [&pair]() { return pair.strings(); },
-           EmptyStringView{},
-           [this]() -> auto & { return m_map_sprite.filter().texture_page_id; }))
+     const auto  gcc  = fme::GenericComboClassWithFilter(
+       gui_labels::texture_page,
+       [&pair]() { return pair.values(); },
+       [&pair]() { return pair.strings(); },
+       EmptyStringView{},
+       [this]() -> auto  &{ return m_map_sprite.filter().texture_page_id; });
+     if (!gcc.render(get_imgui_id()))
      {
           return;
      }
@@ -2027,13 +2028,13 @@ void gui::combo_texture_pages()
 void gui::combo_animation_ids()
 {
      const auto &pair = m_map_sprite.uniques().animation_id();
-     if (!generic_combo(
-           get_imgui_id(),
-           gui_labels::animation_id,
-           [&pair]() { return pair.values(); },
-           [&pair]() { return pair.strings(); },
-           EmptyStringView{},
-           [this]() -> auto & { return m_map_sprite.filter().animation_id; }))
+     const auto  gcc  = fme::GenericComboClassWithFilter(
+       gui_labels::animation_id,
+       [&pair]() { return pair.values(); },
+       [&pair]() { return pair.strings(); },
+       EmptyStringView{},
+       [this]() -> auto  &{ return m_map_sprite.filter().animation_id; });
+     if (!gcc.render(get_imgui_id()))
      {
           return;
      }
@@ -2043,13 +2044,13 @@ void gui::combo_animation_ids()
 void gui::combo_blend_other()
 {
      const auto &pair = m_map_sprite.uniques().blend_other();
-     if (!generic_combo(
-           get_imgui_id(),
-           gui_labels::blend_other,
-           [&pair]() { return pair.values(); },
-           [&pair]() { return pair.strings(); },
-           EmptyStringView{},
-           [this]() -> auto & { return m_map_sprite.filter().blend_other; }))
+     const auto  gcc  = fme::GenericComboClassWithFilter(
+       gui_labels::blend_other,
+       [&pair]() { return pair.values(); },
+       [&pair]() { return pair.strings(); },
+       EmptyStringView{},
+       [this]() -> auto  &{ return m_map_sprite.filter().blend_other; });
+     if (!gcc.render(get_imgui_id()))
      {
           return;
      }
@@ -2061,13 +2062,13 @@ void gui::combo_blend_other()
 void gui::combo_z()
 {
      const auto &pair = m_map_sprite.uniques().z();
-     if (!generic_combo(
-           get_imgui_id(),
-           gui_labels::z,
-           [&pair]() { return pair.values(); },
-           [&pair]() { return pair.strings(); },
-           EmptyStringView{},
-           [this]() -> auto & { return m_map_sprite.filter().z; }))
+     const auto  gcc  = fme::GenericComboClassWithFilter(
+       gui_labels::z,
+       [&pair]() { return pair.values(); },
+       [&pair]() { return pair.strings(); },
+       EmptyStringView{},
+       [this]() -> auto  &{ return m_map_sprite.filter().z; });
+     if (!gcc.render(get_imgui_id()))
      {
           return;
      }
@@ -2084,13 +2085,13 @@ void gui::combo_animation_frames()
           return;
      }
      const auto &pair = map.at(key);
-     if (!generic_combo(
-           get_imgui_id(),
-           gui_labels::animation_frame,
-           [&pair]() { return pair.values(); },
-           [&pair]() { return pair.strings(); },
-           EmptyStringView{},
-           [this]() -> auto & { return m_map_sprite.filter().animation_frame; }))
+     const auto  gcc  = fme::GenericComboClassWithFilter(
+       gui_labels::animation_frame,
+       [&pair]() { return pair.values(); },
+       [&pair]() { return pair.strings(); },
+       EmptyStringView{},
+       [this]() -> auto  &{ return m_map_sprite.filter().animation_frame; });
+     if (!gcc.render(get_imgui_id()))
      {
           return;
      }
@@ -2110,14 +2111,14 @@ void gui::combo_deswizzle_path()
      // std::vector<std::filesystem::path> values = {
      // m_loaded_deswizzle_texture_path };
      std::vector<std::string> strings = { m_loaded_deswizzle_texture_path.string() };
-     if (generic_combo(
-           get_imgui_id(),
-           gui_labels::deswizzle_path,
-           //[&values]() { return values; },
-           [&strings]() { return strings; },
-           [&strings]() { return strings; },
-           EmptyStringView{},
-           [this]() -> auto & { return m_map_sprite.filter().deswizzle; }))
+     const auto               gcc     = fme::GenericComboClassWithFilter(
+       gui_labels::deswizzle_path,
+       //[&values]() { return values; },
+       [&strings]() { return strings; },
+       [&strings]() { return strings; },
+       EmptyStringView{},
+       [this]() -> auto                   &{ return m_map_sprite.filter().deswizzle; });
+     if (gcc.render(get_imgui_id()))
      {
           if (m_map_sprite.filter().deswizzle.enabled())
           {
@@ -2186,14 +2187,13 @@ void gui::generate_upscale_paths(const std::string &field_name, open_viii::LangT
 }
 bool gui::combo_upscale_path(ff_8::filter_old<std::filesystem::path> &filter) const
 {
-     return m_field
-            && generic_combo(
-              get_imgui_id(),
-              gui_labels::upscale_path,
-              [this]() { return m_upscale_paths; },
-              [this]() { return m_upscale_paths; },
-              EmptyStringView{},
-              [&filter]() -> auto & { return filter; });
+     const auto gcc = fme::GenericComboClassWithFilter(
+       gui_labels::upscale_path,
+       [this]() { return m_upscale_paths; },
+       [this]() { return m_upscale_paths; },
+       EmptyStringView{},
+       [&filter]() -> auto & { return filter; });
+     return m_field && gcc.render(get_imgui_id());
 }
 
 bool gui::combo_upscale_path(std::filesystem::path &path, const std::string &field_name, open_viii::LangT coo) const

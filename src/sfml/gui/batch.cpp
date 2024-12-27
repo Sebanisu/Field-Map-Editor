@@ -45,13 +45,15 @@ void batch::combo_compact_type(int &imgui_id)
        std::array{ "Rows: sorts 8bit to 4bit, and separates conflicting palettes. Tries to apply sort to each row at a time."sv,
                    "All: sorts 8bit to 4bit, and separates conflicting palettes. Applies the sort to all the tiles "sv,
                    "Map Order: Creates a tile for each map entry. 16 cols, and 16 rows, per texture page."sv };
-     if (!fme::generic_combo(
-           imgui_id,
-           gui_labels::compact,
-           []() { return values; },
-           []() { return values | std::views::transform(AsString{}); },
-           []() { return tool_tips; },
-           [this]() -> auto & { return m_compact_type; }))
+
+     const auto gcc = fme::GenericComboClassWithFilter(
+       gui_labels::compact,
+       []() { return values; },
+       []() { return values | std::views::transform(AsString{}); },
+       []() { return tool_tips; },
+       [this]() -> auto & { return m_compact_type; });
+
+     if (!gcc.render(imgui_id))
      {
           return;
      }
@@ -75,26 +77,26 @@ void batch::combo_flatten_type(int &imgui_id)
      static constexpr auto tool_tips_only_palette = std::array{ palette_str };
      if (all_or_only_palette)
      {
-          if (!fme::generic_combo(
-                imgui_id,
-                gui_labels::flatten,
-                [&]() { return values; },
-                [&]() { return values | std::views::transform(AsString{}); },
-                [&]() { return tool_tips; },
-                [this]() -> auto & { return m_flatten_type; }))
+          const auto gcc = fme::GenericComboClassWithFilter(
+            gui_labels::flatten,
+            [&]() { return values; },
+            [&]() { return values | std::views::transform(AsString{}); },
+            [&]() { return tool_tips; },
+            [this]() -> auto & { return m_flatten_type; });
+          if (!gcc.render(imgui_id))
           {
                return;
           }
      }
      else
      {
-          if (!fme::generic_combo(
-                imgui_id,
-                gui_labels::flatten,
-                [&]() { return values_only_palette; },
-                [&]() { return values_only_palette | std::views::transform(AsString{}); },
-                [&]() { return tool_tips_only_palette; },
-                [this]() -> auto & { return m_flatten_type; }))
+          const auto gcc = fme::GenericComboClassWithFilter(
+            gui_labels::flatten,
+            [&]() { return values_only_palette; },
+            [&]() { return values_only_palette | std::views::transform(AsString{}); },
+            [&]() { return tool_tips_only_palette; },
+            [this]() -> auto & { return m_flatten_type; });
+          if (!gcc.render(imgui_id))
           {
                return;
           }
