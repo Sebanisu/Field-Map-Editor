@@ -82,7 +82,11 @@ struct map_sprite final
      map_sprite() = default;
      map_sprite(ff_8::map_group map_group, bool draw_swizzle, ff_8::filters in_filters, bool force_disable_blends, bool require_coo);
 
-     [[nodiscard]] std::uint32_t                         get_map_scale() const;
+     [[nodiscard]] std::uint32_t            get_map_scale() const;
+     [[nodiscard]] const sf::RenderTexture *get_render_texture() const
+     {
+          return m_render_texture.get();
+     }
      [[nodiscard]] const sf::Texture                    *get_texture(BPPT bpp, std::uint8_t palette, std::uint8_t texture_page) const;
      [[nodiscard]] const sf::Texture                    *get_texture(const ::PupuID &pupu) const;
      [[nodiscard]] sf::Vector2u                          get_tile_texture_size(const sf::Texture *texture) const;

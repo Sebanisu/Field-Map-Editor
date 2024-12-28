@@ -96,14 +96,6 @@ void gui::start()
                {
                     m_changed                     = false;
                     m_mouse_positions.mouse_moved = true;
-                    if (mim_test())
-                    {
-                         move_camera(m_mim_sprite);
-                    }
-                    else if (map_test())
-                    {
-                         move_camera(m_map_sprite);
-                    }
                }
                ImGui::SFML::Update(m_window, m_elapsed_time);
                m_batch.update(m_elapsed_time);
@@ -192,10 +184,11 @@ void gui::render_dockspace()
           ImGui::PopStyleVar(2);
      }
 
-     dockspace_flags         = bitwise_or(dockspace_flags, ImGuiDockNodeFlags_PassthruCentralNode);
-     dockspace_flags         = bitwise_and(dockspace_flags, bitwise_not(ImGuiDockNodeFlags_NoResize));
+     dockspace_flags                            = bitwise_or(dockspace_flags, ImGuiDockNodeFlags_PassthruCentralNode);
+     dockspace_flags                            = bitwise_and(dockspace_flags, bitwise_not(ImGuiDockNodeFlags_NoResize));
      // Submit the DockSpace
-     const ImGuiIO &imgui_io = ImGui::GetIO();
+     ImGuiIO &imgui_io                          = ImGui::GetIO();
+     imgui_io.ConfigWindowsMoveFromTitleBarOnly = true;
      if (bitwise_and(imgui_io.ConfigFlags, ImGuiConfigFlags_DockingEnable) != ImGuiConfigFlags{})
      {
           const ImGuiID dockspace_id = ImGui::GetID("MyDockSpace");
@@ -211,7 +204,7 @@ void gui::control_panel_window()
      const auto imgui_end = scope_guard(&ImGui::End);
      if (!ImGui::Begin(gui_labels::control_panel.data()))
      {
-          m_mouse_positions.mouse_enabled = handle_mouse_cursor();
+          // m_mouse_positions.mouse_enabled = handle_mouse_cursor();
           return;
      }
      //    if (m_first)
@@ -248,9 +241,6 @@ void gui::control_panel_window_mim()
           {
                combo_bpp();
                combo_palette();
-          }
-          if (!m_mim_sprite.draw_palette())
-          {
                format_imgui_text("{} == {}", gui_labels::width, gui_labels::max_tiles);
           }
      }
@@ -258,7 +248,6 @@ void gui::control_panel_window_mim()
      {
           scale_window();
      }
-     slider_xy_sprite(m_mim_sprite);
 }
 void gui::control_panel_window_map()
 {
@@ -273,13 +262,12 @@ void gui::control_panel_window_map()
      {
           scale_window();
      }
-     slider_xy_sprite(m_map_sprite);
 }
 void gui::frame_rate()
 {
      const auto framerate = ImGui::GetIO().Framerate;
-     const auto fps = fmt::format("{:>3.2f} fps", framerate);
-     format_imgui_text("{}",fps);
+     const auto fps       = fmt::format("{:>3.2f} fps", framerate);
+     format_imgui_text("{}", fps);
      tool_tip(fps);
 }
 void gui::compact_flatten_buttons()
@@ -378,16 +366,84 @@ void gui::loop()
      //     popup_batch_embed();
      import_image_window();
      // Begin non imgui drawing.
-     on_click_not_imgui();
-     m_window.clear(clear_color);
+     m_window.clear(sf::Color::Black);
+
+     const auto title = "Draw Window";
      if (mim_test())
      {
-          m_window.draw(m_mim_sprite.toggle_grids(m_selections.draw_grid, m_selections.draw_texture_page_grid));
+          // m_window.draw(m_mim_sprite.toggle_grids(m_selections.draw_grid, m_selections.draw_texture_page_grid));
+
+          const auto pop_style0 = scope_guard([]() { ImGui::PopStyleVar(); });
+          ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.F, 0.F));
+          const auto pop_id0    = PushPopID();
+          const auto pop_end    = scope_guard(&ImGui::End);
+          const auto pop_style1 = scope_guard([]() { ImGui::PopStyleColor(); });
+          ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4{ clear_color.r / 256.F, clear_color.g / 256.F, clear_color.b / 256.F, 0.9F });
+          if (!ImGui::Begin(
+                title,
+                nullptr,
+                ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_AlwaysHorizontalScrollbar
+                  | ImGuiWindowFlags_AlwaysVerticalScrollbar))
+          {
+               return;
+          }
+
+
+          const auto         wsize      = ImGui::GetContentRegionAvail();
+          const auto         img_size   = m_mim_sprite.get_texture()->getSize();
+
+          const auto         screen_pos = ImGui::GetCursorScreenPos();
+          const float        scale      = std::max(wsize.x / img_size.x, wsize.y / img_size.y);
+          const sf::Vector2f scaled_size(img_size.x * scale, img_size.y * scale);
+
+
+          const auto         pop_id1 = PushPopID();
+
+          ImGui::Image(*m_mim_sprite.get_texture(), scaled_size);
+
+          draw_mim_grid_lines_for_tiles(screen_pos, scaled_size, scale);
+
+          draw_mim_grid_lines_for_texture_page(screen_pos, scaled_size, scale);
      }
      else if (map_test())
      {
-          m_window.draw(m_map_sprite.toggle_grid(m_selections.draw_grid, m_selections.draw_texture_page_grid));
+          const auto pop_style0 = scope_guard([]() { ImGui::PopStyleVar(); });
+          ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.F, 0.F));
+          const auto pop_id0    = PushPopID();
+          const auto pop_end    = scope_guard(&ImGui::End);
+          const auto pop_style1 = scope_guard([]() { ImGui::PopStyleColor(); });
+          ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4{ clear_color.r / 256.F, clear_color.g / 256.F, clear_color.b / 256.F, 0.9F });
+          if (!ImGui::Begin(
+                title,
+                nullptr,
+                ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_AlwaysHorizontalScrollbar
+                  | ImGuiWindowFlags_AlwaysVerticalScrollbar))
+          {
+               return;
+          }
+
+
+          const auto         wsize      = ImGui::GetContentRegionAvail();
+          const auto         img_size   = m_map_sprite.get_render_texture()->getSize();
+
+          const auto         screen_pos = ImGui::GetCursorScreenPos();
+          const float        scale      = std::max(wsize.x / img_size.x, wsize.y / img_size.y);
+          const sf::Vector2f scaled_size(img_size.x * scale, img_size.y * scale);
+
+
+          const auto         pop_id1 = PushPopID();
+
+          ImGui::Image(*m_map_sprite.get_render_texture(), scaled_size);
+
+          update_hover_and_mouse_button_status_for_map(screen_pos, scale);
+
+          draw_map_grid_lines_for_tiles(screen_pos, scaled_size, scale);
+
+          draw_map_grid_lines_for_texture_page(screen_pos, scaled_size, scale);
+
+          draw_mouse_positions_sprite(scale, screen_pos);
      }
+     on_click_not_imgui();
      //  m_mouse_positions.cover.setColor(clear_color);
      //  m_window.draw(m_mouse_positions.cover);
 
@@ -403,6 +459,191 @@ void gui::loop()
      ImGui::SFML::Render(m_window);
      m_window.display();
      consume_one_future();
+}
+void gui::update_hover_and_mouse_button_status_for_map(const ImVec2 &img_start, const float scale)
+{
+     // Check if the mouse is over the image
+     const ImVec2 mouse_pos = ImGui::GetMousePos();
+     if (ImGui::IsItemHovered())
+     {
+          // Calculate the mouse position relative to the image
+          sf::Vector2f relative_pos(mouse_pos.x - img_start.x, mouse_pos.y - img_start.y);
+
+          // Map it back to the texture coordinates
+          m_mouse_positions.pixel = sf::Vector2i(
+            static_cast<int>(relative_pos.x / scale / static_cast<float>(m_map_sprite.get_map_scale())),
+            static_cast<int>(relative_pos.y / scale / static_cast<float>(m_map_sprite.get_map_scale())));
+
+          if (m_selections.draw_swizzle)
+          {
+               m_mouse_positions.pixel /= 16;
+               m_mouse_positions.pixel *= 16;
+          }
+          m_mouse_positions.mouse_enabled = true;
+          m_mouse_positions.texture_page  = static_cast<uint8_t>(m_mouse_positions.pixel.x / 256);
+          if (ImGui::IsMouseDown(ImGuiMouseButton_Left))
+          {
+               ImGui::BeginTooltip();
+               format_imgui_text("({}, {})", m_mouse_positions.pixel.x, m_mouse_positions.pixel.y);
+               ImGui::EndTooltip();
+          }
+     }
+     else
+     {
+          m_mouse_positions.mouse_enabled = false;
+     }
+     if (ImGui::IsItemClicked(ImGuiMouseButton_Left))
+     {
+
+          m_mouse_positions.left = true;
+     }
+     if (ImGui::IsMouseReleased(ImGuiMouseButton_Left))
+     {
+          m_mouse_positions.left = false;
+     }
+}
+
+
+void gui::draw_mim_grid_lines_for_tiles(const ImVec2 &screen_pos, const sf::Vector2f &scaled_size, const float scale)
+{
+     // Drawing grid lines within the window if m_selections.draw_grid is true
+     if (m_selections.draw_grid)
+     {
+          // Get the starting position and size of the image
+          const ImVec2 img_end      = { screen_pos.x + scaled_size.x, screen_pos.y + scaled_size.y };
+
+          // Calculate grid spacing
+          const float  grid_spacing = (m_selections.draw_palette ? 1.F : 16.0f) * scale;
+
+          // Iterate over horizontal and vertical lines
+          for (float x = screen_pos.x; x < img_end.x; x += grid_spacing)
+          {
+               // Draw vertical lines
+               ImGui::GetWindowDrawList()->AddLine(ImVec2(x, screen_pos.y), ImVec2(x, img_end.y), IM_COL32(255, 255, 255, 255));
+          }
+
+          for (float y = screen_pos.y; y < img_end.y; y += grid_spacing)
+          {
+               // Draw horizontal lines
+               ImGui::GetWindowDrawList()->AddLine(ImVec2(screen_pos.x, y), ImVec2(img_end.x, y), IM_COL32(255, 255, 255, 255));
+          }
+     }
+}
+void gui::draw_mim_grid_lines_for_texture_page(const ImVec2 &screen_pos, const sf::Vector2f &scaled_size, const float scale)
+{
+     // Drawing grid lines within the window if m_selections.draw_grid is true
+     if (m_selections.draw_texture_page_grid && !m_selections.draw_palette)
+     {
+          // Get the starting position and size of the image
+          const ImVec2 img_end      = { screen_pos.x + scaled_size.x, screen_pos.y + scaled_size.y };
+
+          // Calculate grid spacing
+
+          const float  grid_spacing = [&]() {
+               switch (m_selections.bpp)
+               {
+                    default:
+                    case 0:
+                         return 256.f;
+                    case 1:
+                         return 128.f;
+                    case 2:
+                         return 64.F;
+               }
+          }() * scale;
+
+          //  m_selections.bpp
+
+          // Iterate over horizontal and vertical lines
+          for (float x = screen_pos.x; x < img_end.x; x += grid_spacing)
+          {
+               // Draw vertical lines
+               ImGui::GetWindowDrawList()->AddLine(ImVec2(x, screen_pos.y), ImVec2(x, img_end.y), IM_COL32(255, 255, 0, 255));
+          }
+     }
+}
+
+void gui::draw_map_grid_lines_for_tiles(const ImVec2 &screen_pos, const sf::Vector2f &scaled_size, const float scale)
+{
+     // Drawing grid lines within the window if m_selections.draw_grid is true
+     if (m_selections.draw_grid)
+     {
+          // Get the starting position and size of the image
+          const ImVec2 img_end      = { screen_pos.x + scaled_size.x, screen_pos.y + scaled_size.y };
+
+          // Calculate grid spacing
+          const float  grid_spacing = 16.0f * scale * static_cast<float>(m_map_sprite.get_map_scale());
+
+          // Iterate over horizontal and vertical lines
+          for (float x = screen_pos.x; x < img_end.x; x += grid_spacing)
+          {
+               // Draw vertical lines
+               ImGui::GetWindowDrawList()->AddLine(ImVec2(x, screen_pos.y), ImVec2(x, img_end.y), IM_COL32(255, 255, 255, 255));
+          }
+
+          for (float y = screen_pos.y; y < img_end.y; y += grid_spacing)
+          {
+               // Draw horizontal lines
+               ImGui::GetWindowDrawList()->AddLine(ImVec2(screen_pos.x, y), ImVec2(img_end.x, y), IM_COL32(255, 255, 255, 255));
+          }
+     }
+}
+void gui::draw_map_grid_lines_for_texture_page(const ImVec2 &screen_pos, const sf::Vector2f &scaled_size, const float scale)
+{
+     // Drawing grid lines within the window if m_selections.draw_grid is true
+     if (m_selections.draw_texture_page_grid && m_selections.draw_swizzle)
+     {
+          // Get the starting position and size of the image
+          const ImVec2 img_end      = { screen_pos.x + scaled_size.x, screen_pos.y + scaled_size.y };
+
+          // Calculate grid spacing
+          const float  grid_spacing = 256.0f * scale * static_cast<float>(m_map_sprite.get_map_scale());
+
+          // Iterate over horizontal and vertical lines
+          for (float x = screen_pos.x; x < img_end.x; x += grid_spacing)
+          {
+               // Draw vertical lines
+               ImGui::GetWindowDrawList()->AddLine(ImVec2(x, screen_pos.y), ImVec2(x, img_end.y), IM_COL32(255, 255, 0, 255));
+          }
+     }
+}
+void gui::draw_mouse_positions_sprite(const float scale, const ImVec2 &screen_pos)
+{
+     if (m_mouse_positions.sprite.getTexture() != nullptr)
+     {
+
+          sf::RenderStates states = {};
+          if (m_drag_sprite_shader)
+          {
+               m_drag_sprite_shader->setUniform("texture", *m_mouse_positions.sprite.getTexture());
+               static constexpr float border_width = 2.F;
+               m_drag_sprite_shader->setUniform("borderWidth", border_width);
+               states.shader = m_drag_sprite_shader.get();
+          }
+
+          // Prepare a render texture to draw the sprite with the shader
+          m_shader_renderTexture.create(
+            static_cast<std::uint32_t>(m_mouse_positions.sprite.getGlobalBounds().width),
+            static_cast<std::uint32_t>(m_mouse_positions.sprite.getGlobalBounds().height));
+
+          // Clear and draw the sprite with the shader
+          m_shader_renderTexture.clear(sf::Color::Transparent);
+          m_mouse_positions.sprite.setPosition(sf::Vector2f{});
+          m_shader_renderTexture.draw(m_mouse_positions.sprite, states);
+          m_shader_renderTexture.display();
+
+          // int offset_y = -32 + m_mouse_positions.pixel.y % 16;
+          ImGui::SetCursorScreenPos(ImVec2(
+            (m_mouse_positions.pixel.x - 24) * scale * static_cast<float>(m_map_sprite.get_map_scale()) + screen_pos.x,
+            (m_mouse_positions.pixel.y - 24) * scale * static_cast<float>(m_map_sprite.get_map_scale()) + screen_pos.y));
+          ImGui::Image(
+            std::bit_cast<ImTextureID>(static_cast<std::uintptr_t>(m_shader_renderTexture.getTexture().getNativeHandle())),
+            ImVec2(
+              m_mouse_positions.sprite.getGlobalBounds().width * scale * static_cast<float>(m_map_sprite.get_map_scale()),
+              m_mouse_positions.sprite.getGlobalBounds().height * scale * static_cast<float>(m_map_sprite.get_map_scale())),
+            ImVec2(0, 1),
+            ImVec2(1, 0));
+     }
 }
 void gui::consume_one_future()
 {
@@ -472,98 +713,6 @@ void gui::popup_batch_common_filter_start(
      }
 }
 
-
-// void gui::popup_batch_deswizzle()
-//{
-//      popup_batch_common(
-//        m_batch_deswizzle,
-//        [](ff_8::filters &filters) -> ff_8::filter_old<std::filesystem::path> & { return filters.upscale; },
-//        [this](ff_8::filter_old<std::filesystem::path> &filter) {
-//             // do I need to do generate_upscale_paths(m_field->get_base_name(),
-//             // get_coo()); here?
-//             if (combo_upscale_path(filter))//, ""
-//             {
-//             }
-//
-//             return ImGui::Button(gui_labels::start.data());
-//        },
-//        [&](const auto &selected_path, auto &map) {
-//             map.save_pupu_textures(selected_path);
-//             const std::filesystem::path map_path = selected_path / map.map_filename();
-//             map.save_modified_map(map_path);
-//             format_imgui_text(
-//               "{} {} {}: {}", gui_labels::saving, open_viii::graphics::background::Map::EXT, gui_labels::file, map_path.string());
-//        });
-// }
-// void gui::popup_batch_reswizzle()
-//{
-//      popup_batch_common(
-//        m_batch_reswizzle,
-//        [](ff_8::filters &filters) -> ff_8::filter_old<std::filesystem::path> & { return filters.deswizzle; },
-//        [](ff_8::filter_old<compact_type> &compact, bool &flatten_bpp, bool &flatten_palette) {
-//             combo_compact_type(compact);
-//             ImGui::Separator();
-//             format_imgui_text("Flatten: ");
-//             if (compact.enabled() && compact.value() == compact_type::map_order)
-//             {
-//                  flatten_bpp = false;
-//                  ImGui::BeginDisabled();
-//                  bool ignore = true;
-//                  ImGui::Checkbox("BPP", &ignore);
-//                  ImGui::EndDisabled();
-//             }
-//             else
-//             {
-//                  ImGui::Checkbox("BPP", &flatten_bpp);
-//             }
-//             ImGui::SameLine();
-//             ImGui::Checkbox("Palette", &flatten_palette);
-//             return ImGui::Button("Start");
-//        },
-//        [&](
-//          const auto                           &selected_path,
-//          map_sprite                           &map,
-//          const ff_8::filter_old<compact_type> &compact,
-//          const bool                           &flatten_bpp,
-//          const bool                           &flatten_palette) {
-//             const auto compact_function = [&] {
-//                  if (compact.enabled())
-//                  {
-//                       if (compact.value() == compact_type::rows)
-//                       {
-//                            map.compact_rows();
-//                       }
-//                       if (compact.value() == compact_type::all)
-//                       {
-//                            map.compact_all();
-//                       }
-//                       if (compact.value() == compact_type::map_order)
-//                       {
-//                            map.compact_map_order();
-//                       }
-//                  }
-//             };
-//             compact_function();
-//             if (flatten_bpp)
-//             {
-//                  map.flatten_bpp();
-//                  compact_function();
-//             }
-//             if (flatten_palette)
-//             {
-//                  map.flatten_palette();
-//                  if (compact.value() != compact_type::map_order)
-//                  {
-//                       compact_function();
-//                  }
-//             }
-//             const std::filesystem::path map_path = selected_path / map.map_filename();
-//             map.save_new_textures(selected_path);
-//             map.save_modified_map(map_path);
-//             format_imgui_text("Saving Map file: {}", map_path.string());
-//        });
-// }
-
 void gui::on_click_not_imgui()
 {
      if (m_mouse_positions.mouse_enabled)
@@ -607,25 +756,33 @@ void gui::on_click_not_imgui()
 }
 void gui::text_mouse_position() const
 {
-     if (m_mouse_positions.mouse_enabled)
-     {
-          format_imgui_text("Mouse Pos: ({:4}, {:3})", m_mouse_positions.pixel.x, m_mouse_positions.pixel.y);
-          ImGui::SameLine();
-          if (map_test() || !m_selections.draw_palette)
-          {
-               const int tile_size = 16;
-               format_imgui_text("Tile Pos: ({:2}, {:2})", m_mouse_positions.pixel.x / tile_size, m_mouse_positions.pixel.y / tile_size);
-               if (m_selections.draw_swizzle)
-               {
-                    format_imgui_text("Page: {:2}", m_mouse_positions.texture_page);
-               }
-          }
-     }
+
+
      if (!map_test())
      {
           return;
      }
-     if (!ImGui::CollapsingHeader("Hovered Tiles") || !m_mouse_positions.mouse_enabled)
+     // Display texture coordinates if they are set
+     if (!m_mouse_positions.mouse_enabled)
+     {
+          ImGui::Text("Mouse not over the image.");
+     }
+     else
+     {
+          format_imgui_text("Mouse Pos: ({:4}, {:3})", m_mouse_positions.pixel.x, m_mouse_positions.pixel.y);
+          ImGui::SameLine();
+          const int tile_size = 16;
+          format_imgui_text("Tile Pos: ({:2}, {:2})", m_mouse_positions.pixel.x / tile_size, m_mouse_positions.pixel.y / tile_size);
+          if (m_selections.draw_swizzle)
+          {
+               format_imgui_text("Page: {:2}", m_mouse_positions.texture_page);
+          }
+     }
+     if (!ImGui::CollapsingHeader("Hovered Tiles"))
+     {
+          return;
+     }
+     if (!m_mouse_positions.mouse_enabled)
      {
           return;
      }
@@ -658,40 +815,41 @@ void gui::text_mouse_position() const
 }
 bool gui::handle_mouse_cursor()
 {
-     bool           mouse_enabled = false;
-     const auto    &mouse_pos     = sf::Mouse::getPosition(m_window);
-     const auto    &win_size      = m_window.getSize();
-     constexpr auto in_bounds     = [](std::integral auto value, std::integral auto low, std::integral auto high) {
-          return std::cmp_greater_equal(value, low) && std::cmp_less_equal(value, high);
-     };
-     if (!in_bounds(mouse_pos.x, 0, win_size.x) || !in_bounds(mouse_pos.y, 0, win_size.y) || !m_window.hasFocus())
-     {
-          return mouse_enabled;
-     }
-     const sf::Vector2i clamped_mouse_pos = { std::clamp(mouse_pos.x, 0, static_cast<int>(win_size.x)),
-                                              std::clamp(mouse_pos.y, 0, static_cast<int>(win_size.y)) };
+     // bool           mouse_enabled = false;
+     // const auto    &mouse_pos     = sf::Mouse::getPosition(m_window);
+     // const auto    &win_size      = m_window.getSize();
+     // constexpr auto in_bounds     = [](std::integral auto value, std::integral auto low, std::integral auto high) {
+     //      return std::cmp_greater_equal(value, low) && std::cmp_less_equal(value, high);
+     // };
+     // if (!in_bounds(mouse_pos.x, 0, win_size.x) || !in_bounds(mouse_pos.y, 0, win_size.y) || !m_window.hasFocus())
+     // {
+     //      return mouse_enabled;
+     // }
+     // const sf::Vector2i clamped_mouse_pos = { std::clamp(mouse_pos.x, 0, static_cast<int>(win_size.x)),
+     //                                          std::clamp(mouse_pos.y, 0, static_cast<int>(win_size.y)) };
 
-     const auto         pixel_pos         = m_window.mapPixelToCoords(clamped_mouse_pos);
+     // const auto         pixel_pos         = m_window.mapPixelToCoords(clamped_mouse_pos);
 
-     m_mouse_positions.pixel              = { static_cast<int>(pixel_pos.x), static_cast<int>(pixel_pos.y) };
-     const auto &pixel_x                  = m_mouse_positions.pixel.x;
-     const auto &pixel_y                  = m_mouse_positions.pixel.y;
-     auto        imgui_io                 = ImGui::GetIO();
-     const bool  mim_or_map               = mim_test() || map_test();
-     const bool  is_in_bounds             = in_bounds(pixel_x, 0, m_mim_sprite.width()) && in_bounds(pixel_y, 0, m_mim_sprite.height());
-     if (!mim_or_map || !is_in_bounds || imgui_io.WantCaptureMouse)
-     {
-          return mouse_enabled;
-     }
-     mouse_enabled = true;
-     if (!m_mouse_positions.mouse_moved)
-     {
-          return mouse_enabled;
-     }
-     auto              &tilex              = m_mouse_positions.pixel.x;
-     const std::int16_t texture_page_width = 256;
-     m_mouse_positions.texture_page        = static_cast<std::uint8_t>(tilex / texture_page_width);// for 4bit swizzle.
-     return mouse_enabled;
+     // m_mouse_positions.pixel              = { static_cast<int>(pixel_pos.x), static_cast<int>(pixel_pos.y) };
+     // const auto &pixel_x                  = m_mouse_positions.pixel.x;
+     // const auto &pixel_y                  = m_mouse_positions.pixel.y;
+     // auto        imgui_io                 = ImGui::GetIO();
+     // const bool  mim_or_map               = mim_test() || map_test();
+     // const bool  is_in_bounds             = in_bounds(pixel_x, 0, m_mim_sprite.width()) && in_bounds(pixel_y, 0, m_mim_sprite.height());
+     // if (!mim_or_map || !is_in_bounds || imgui_io.WantCaptureMouse)
+     // {
+     //      return mouse_enabled;
+     // }
+     // mouse_enabled = true;
+     // if (!m_mouse_positions.mouse_moved)
+     // {
+     //      return mouse_enabled;
+     // }
+     // auto              &tilex              = m_mouse_positions.pixel.x;
+     // const std::int16_t texture_page_width = 256;
+     // m_mouse_positions.texture_page        = static_cast<std::uint8_t>(tilex / texture_page_width);// for 4bit swizzle.
+     // return mouse_enabled;
+     return m_mouse_positions.mouse_enabled;
 }
 void gui::combo_coo()
 {
@@ -832,13 +990,12 @@ void gui::checkbox_map_disable_blending()
 }
 void gui::tool_tip(const std::string_view str)
 {
-     const auto pop_id = scope_guard{ &ImGui::PopID };
-     ImGui::PushID(++get_imgui_id());
      if (!ImGui::IsItemHovered())
      {
           return;
      }
 
+     const auto pop_id       = PushPopID();
      const auto pop_tool_tip = scope_guard{ &ImGui::EndTooltip };
 
      ImGui::BeginTooltip();
@@ -874,10 +1031,12 @@ static void update_bpp(map_sprite &sprite, BPPT bpp)
 void gui::combo_bpp()
 {
      {
-          const auto                  pop_pushed = PushPop();
-          static constexpr std::array bpp_items  = Mim::bpp_selections_c_str();
-          if (ImGui::Combo(
-                "BPP", &m_selections.bpp, bpp_items.data(), static_cast<int>(bpp_items.size()), static_cast<int>(bpp_items.size())))
+          static constexpr auto bpp_strings = Mim::bpp_selections_c_str();
+          static const auto     bpp_values  = std::ranges::views::iota(int{ 0 }, static_cast<int>(std::ranges::size(bpp_strings)));
+          const auto            gcc =
+            GenericComboClass(gui_labels::bpp, [&]() { return bpp_values; }, [&]() { return bpp_strings; }, m_selections.bpp);
+
+          if (gcc.render(get_imgui_id()))
           {
                Configuration config{};
                config->insert_or_assign("selections_bpp", m_selections.bpp);
@@ -891,27 +1050,6 @@ void gui::combo_bpp()
                     update_bpp(m_map_sprite, bpp());
                }
                m_changed = true;
-          }
-     }
-     {
-          const auto  pop_pushed            = PushPop();
-          static bool enable_palette_filter = false;
-          if (map_test())
-          {
-               ImGui::SameLine();
-               if (ImGui::Checkbox("", &enable_palette_filter))
-               {
-                    if (enable_palette_filter)
-                    {
-                         m_map_sprite.filter().bpp.enable();
-                    }
-                    else
-                    {
-                         m_map_sprite.filter().bpp.disable();
-                    }
-                    m_map_sprite.update_render_texture();
-                    m_changed = true;
-               }
           }
      }
 }
@@ -934,15 +1072,12 @@ void gui::combo_palette()
 {
      if (m_selections.bpp != 2)
      {
-          static constexpr std::array palette_items = Mim::palette_selections_c_str();
           {
-               const auto pop_pushed = PushPop();
-               if (ImGui::Combo(
-                     "Palette",
-                     &m_selections.palette,
-                     palette_items.data(),
-                     static_cast<int>(palette_items.size()),
-                     static_cast<int>(palette_items.size())))
+               static constexpr std::array palette_values  = Mim::palette_selections();
+               static constexpr std::array palette_strings = Mim::palette_selections_c_str();
+               const auto                  gcc             = GenericComboClass(
+                 gui_labels::palette, []() { return palette_values; }, []() { return palette_strings; }, m_selections.palette);
+               if (gcc.render(get_imgui_id()))
                {
                     if (mim_test())
                     {
@@ -956,27 +1091,6 @@ void gui::combo_palette()
                     config->insert_or_assign("selections_palette", m_selections.palette);
                     config.save();
                     m_changed = true;
-               }
-          }
-          if (map_test())
-          {
-               ImGui::SameLine();
-               {
-                    static bool enable_palette_filter = false;
-                    const auto  pop_pushed            = PushPop();
-                    if (ImGui::Checkbox("", &enable_palette_filter))
-                    {
-                         if (enable_palette_filter)
-                         {
-                              m_map_sprite.filter().palette.enable();
-                         }
-                         else
-                         {
-                              m_map_sprite.filter().palette.disable();
-                         }
-                         m_map_sprite.update_render_texture();
-                         m_changed = true;
-                    }
                }
           }
      }
@@ -1075,15 +1189,15 @@ void gui::edit_menu()
           m_map_sprite.redo_all();
      }
      ImGui::Separator();
-     if (ImGui::MenuItem("draw Tile Grid", nullptr, &m_selections.draw_grid))
+     if (ImGui::MenuItem("Draw Tile Grid", nullptr, &m_selections.draw_grid))
      {
           Configuration config{};
           config->insert_or_assign("selections_draw_grid", m_selections.draw_grid);
           config.save();
      }
-     if ((map_test() && m_selections.draw_swizzle) || mim_test())
+     if ((map_test() && m_selections.draw_swizzle) || (mim_test() && !m_selections.draw_palette))
      {
-          if (ImGui::MenuItem("draw Texture Page Grid", nullptr, &m_selections.draw_texture_page_grid))
+          if (ImGui::MenuItem("Draw Texture Page Grid", nullptr, &m_selections.draw_texture_page_grid))
           {
                Configuration config{};
                config->insert_or_assign("selections_draw_texture_page_grid", m_selections.draw_texture_page_grid);
@@ -1621,7 +1735,7 @@ void gui::loop_events()
               [this](const sf::Event::MouseMoveEvent &) {
                    m_mouse_positions.mouse_moved = true;
                    // TODO move setting mouse pos code here?
-                   // m_changed = true;
+                   m_changed                     = true;
               },
               [this](const sf::Event::KeyEvent &key) {
                    if (ImGui::GetIO().WantCaptureKeyboard)
@@ -1643,7 +1757,7 @@ void gui::loop_events()
                    const sf::Mouse::Button &button = mouse.button;
                    if (!m_mouse_positions.mouse_enabled)
                    {
-                        m_mouse_positions.left = false;
+                        // m_mouse_positions.left = false;
                         return;
                    }
                    switch (m_event.type)
@@ -1680,7 +1794,7 @@ void gui::event_type_mouse_button_released(const sf::Mouse::Button &button)
      switch (button)
      {
           case sf::Mouse::Left: {
-               m_mouse_positions.left = false;
+               // m_mouse_positions.left = false;
                spdlog::trace("{}", "Left Mouse Button Up");
           }
           break;
@@ -1693,7 +1807,7 @@ void gui::event_type_mouse_button_pressed(const sf::Mouse::Button &button)
      switch (button)
      {
           case sf::Mouse::Left: {
-               m_mouse_positions.left = true;
+               // m_mouse_positions.left = true;
                spdlog::trace("{}", "Left Mouse Button Down");
           }
           break;
@@ -2307,7 +2421,7 @@ gui::variant_tile_t &gui::combo_selected_tile(bool &changed)
 
 
      ImVec2 const combo_pos    = ImGui::GetCursorScreenPos();
-     const auto   the_end_id_0 = PushPop();
+     const auto   the_end_id_0 = PushPopID();
      static bool  was_hovered  = false;
      if (ImGui::BeginCombo("Select Existing Tile", "", ImGuiComboFlags_HeightLargest))
      {
@@ -2315,7 +2429,7 @@ gui::variant_tile_t &gui::combo_selected_tile(bool &changed)
           m_map_sprite.const_visit_tiles([this](const auto &tiles) {
                for (int tile_id{}; const auto &tile : tiles)
                {
-                    const auto the_end_id_1 = PushPop();
+                    const auto the_end_id_1 = PushPopID();
                     const auto iterate      = scope_guard([&tile_id]() { ++tile_id; });
                     bool       is_selected  = (m_selections.selected_tile == tile_id);// You can store your selection however you
                                                                                // want, outside or inside your objects
@@ -2532,7 +2646,7 @@ void gui::collapsing_header_generated_tiles() const
                              static_cast<int>(tile.y() / tile_size_px * m_selections.tile_size_value),
                              static_cast<int>(m_selections.tile_size_value),
                              static_cast<int>(m_selections.tile_size_value)));
-                         const auto             the_end_tile_table_tile = PushPop();
+                         const auto             the_end_tile_table_tile = PushPopID();
                          static constexpr float button_size             = 32.F;
 
                          const auto             str                     = fmt::format("tb{}", i++);
@@ -2699,7 +2813,7 @@ bool gui::browse_for_image_display_preview()
           float const      scale             = width / static_cast<float>(size.x);
           const float      height            = static_cast<float>(size.y) * scale;
           ImVec2 const     cursor_screen_pos = ImGui::GetCursorScreenPos();
-          const auto       pop_id            = PushPop();
+          const auto       pop_id            = PushPopID();
           const auto       str_id            = fmt::format("id2668{}", get_imgui_id());
           ImGui::ImageButton(str_id.c_str(), sprite, sf::Vector2f(width, height));
           if (ImGui::Checkbox("Draw Grid", &m_selections.import_image_grid))

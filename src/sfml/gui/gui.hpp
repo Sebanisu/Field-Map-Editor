@@ -75,71 +75,79 @@ struct gui
      float                                                               saved_window_width          = {};
      float                                                               saved_window_height         = {};
 
+     sf::RenderTexture                                                   m_shader_renderTexture      = {};
+
      bool                                                                m_changed                   = { false };
      //  ImGuiStyle                  m_original_style  = {};
      sf::Event                                                           m_event                     = {};
      sf::Vector2f                                                        m_cam_pos                   = {};
      // create a file browser instances
-     ImGui::FileBrowser        m_save_file_browser{ ImGuiFileBrowserFlags_EnterNewFilename | ImGuiFileBrowserFlags_CreateNewDir };
-     ImGui::FileBrowser        m_load_file_browser{};
-     ImGui::FileBrowser        m_directory_browser{ ImGuiFileBrowserFlags_SelectDirectory | ImGuiFileBrowserFlags_CreateNewDir };
-     sf::Texture               loaded_image_texture        = {};
-     sf::RenderTexture         loaded_image_render_texture = {};
-     sf::Image                 loaded_image_cpu            = {};
-     static toml::array        get_paths();
+     ImGui::FileBrowser m_save_file_browser{ ImGuiFileBrowserFlags_EnterNewFilename | ImGuiFileBrowserFlags_CreateNewDir };
+     ImGui::FileBrowser m_load_file_browser{};
+     ImGui::FileBrowser m_directory_browser{ ImGuiFileBrowserFlags_SelectDirectory | ImGuiFileBrowserFlags_CreateNewDir };
+     sf::Texture        loaded_image_texture        = {};
+     sf::RenderTexture  loaded_image_render_texture = {};
+     sf::Image          loaded_image_cpu            = {};
+     static toml::array get_paths();
      // imgui doesn't support std::string or std::string_view or
      // std::filesystem::path, only const char *
-     archives_group            get_archives_group() const;
-     sf::RenderWindow          get_render_window() const;
-     void                      update_path();
-     void                      consume_one_future();
-     mim_sprite                get_mim_sprite() const;
-     map_sprite                get_map_sprite() const;
-     void                      init_and_get_style();
-     void                      loop_events();
-     void                      loop();
-     bool                      combo_path();
-     void                      combo_draw();
-     void                      file_browser_save_texture();
-     void                      directory_browser_display();
-     void                      menu_bar();
-     void                      combo_pupu();
-     void                      combo_palette();
-     void                      combo_bpp();
-     void                      checkbox_mim_palette_texture();
-     void                      combo_field();
-     void                      combo_coo();
-     void                      combo_draw_bit();
-     std::string               save_texture_path() const;
-     void                      update_field();
-     bool                      mim_test() const;
-     bool                      map_test() const;
-     void                      checkbox_map_swizzle();
-     void                      checkbox_map_disable_blending();
-     void                      menuitem_locate_ff8();
-     void                      menuitem_save_swizzle_textures();
-     void                      menuitem_save_deswizzle_textures();
-     void                      menuitem_load_swizzle_textures();
-     void                      menuitem_load_deswizzle_textures();
-     void                      menuitem_save_texture(bool enabled = true);
-     void                      menuitem_save_mim_file(bool enabled = true);
-     void                      menuitem_save_map_file(bool enabled = true);
-     void                      menuitem_save_map_file_modified(bool enabled = true);
-     void                      menuitem_load_map_file(bool enabled = true);
-     void                      scale_window(float width = {}, float height = {});
-     int                       get_selected_field();
-     std::uint8_t              palette() const;
-     open_viii::graphics::BPPT bpp() const;
-     void                      combo_blend_modes();
-     void                      combo_layers();
-     void                      combo_texture_pages();
-     void                      combo_animation_ids();
-     void                      combo_animation_frames();
-     void                      combo_filtered_palettes();
-     void                      combo_filtered_bpps();
-     void                      combo_blend_other();
-     void                      combo_z();
-     bool                      handle_mouse_cursor();
+     archives_group     get_archives_group() const;
+     sf::RenderWindow   get_render_window() const;
+     void               update_path();
+     void               consume_one_future();
+     mim_sprite         get_mim_sprite() const;
+     map_sprite         get_map_sprite() const;
+     void               init_and_get_style();
+     void               loop_events();
+     void               loop();
+     void               update_hover_and_mouse_button_status_for_map(const ImVec2 &img_start, const float scale);
+     void               draw_map_grid_lines_for_tiles(const ImVec2 &screen_pos, const sf::Vector2f &scaled_size, const float scale);
+     void               draw_map_grid_lines_for_texture_page(const ImVec2 &screen_pos, const sf::Vector2f &scaled_size, const float scale);
+     void               draw_mim_grid_lines_for_tiles(const ImVec2 &screen_pos, const sf::Vector2f &scaled_size, const float scale);
+     void               draw_mim_grid_lines_for_texture_page(const ImVec2 &screen_pos, const sf::Vector2f &scaled_size, const float scale);
+     void               draw_mouse_positions_sprite(const float scale, const ImVec2 &screen_pos);
+     bool               combo_path();
+     void               combo_draw();
+     void               file_browser_save_texture();
+     void               directory_browser_display();
+     void               menu_bar();
+     void               combo_pupu();
+     void               combo_palette();
+     void               combo_bpp();
+     void               checkbox_mim_palette_texture();
+     void               combo_field();
+     void               combo_coo();
+     void               combo_draw_bit();
+     std::string        save_texture_path() const;
+     void               update_field();
+     bool               mim_test() const;
+     bool               map_test() const;
+     void               checkbox_map_swizzle();
+     void               checkbox_map_disable_blending();
+     void               menuitem_locate_ff8();
+     void               menuitem_save_swizzle_textures();
+     void               menuitem_save_deswizzle_textures();
+     void               menuitem_load_swizzle_textures();
+     void               menuitem_load_deswizzle_textures();
+     void               menuitem_save_texture(bool enabled = true);
+     void               menuitem_save_mim_file(bool enabled = true);
+     void               menuitem_save_map_file(bool enabled = true);
+     void               menuitem_save_map_file_modified(bool enabled = true);
+     void               menuitem_load_map_file(bool enabled = true);
+     void               scale_window(float width = {}, float height = {});
+     int                get_selected_field();
+     std::uint8_t       palette() const;
+     open_viii::graphics::BPPT                          bpp() const;
+     void                                               combo_blend_modes();
+     void                                               combo_layers();
+     void                                               combo_texture_pages();
+     void                                               combo_animation_ids();
+     void                                               combo_animation_frames();
+     void                                               combo_filtered_palettes();
+     void                                               combo_filtered_bpps();
+     void                                               combo_blend_other();
+     void                                               combo_z();
+     bool                                               handle_mouse_cursor();
      std::shared_ptr<open_viii::archive::FIFLFS<false>> init_field();
      void                                               text_mouse_position() const;
      void                                               on_click_not_imgui();
@@ -209,7 +217,7 @@ struct gui
           static int imgui_id = {};
           return imgui_id;
      }
-     [[nodiscard]] static auto PushPop()
+     [[nodiscard]] static auto PushPopID()
      {
           ImGui::PushID(++get_imgui_id());
           return scope_guard{ &ImGui::PopID };
@@ -279,40 +287,16 @@ struct gui
      void                                      control_panel_window();
      std::uint32_t                             image_height() const;
      static std::vector<std::filesystem::path> find_maps_in_directory(const std::filesystem::path &src, size_t reserve = {});
-
-     void                                      slider_xy_sprite(const auto &sprite)
-     {
-          format_imgui_text("X: {:>9.3f} px  Width:  {:>4} px", -std::abs(m_cam_pos.x), sprite.width());
-          format_imgui_text("Y: {:>9.3f} px  Height: {:>4} px", -std::abs(m_cam_pos.y), sprite.height());
-          if (ImGui::SliderFloat2("Adjust", xy.data(), -1.0F, 0.0F) || m_changed)
-          {
-               move_camera(sprite);
-          }
-          ImGui::SameLine();
-          if (ImGui::Button("Reset"))
-          {
-               xy = { 0.0F, 0.0F };
-               move_camera(sprite);
-          }
-     }
-     template<typename sprite_t>
-     void move_camera(const sprite_t &sprite)
-     {//- m_scale_width
-          m_cam_pos = { -xy[0] * (static_cast<float>(sprite.width())), -xy[1] * static_cast<float>(sprite.height()) };
-         
-          m_changed = true;// Set this to true if you want to trigger the camera move immediately after resetting
-          scale_window();
-     }
-     float                 scaled_menubar_gap() const;
-     static void           render_dockspace();
-     void                  background_color_picker();
-     void                  collapsing_header_filters();
-     void                  compact_flatten_buttons();
-     void                  frame_rate();
-     void                  control_panel_window_map();
-     void                  control_panel_window_mim();
-     std::filesystem::path path_with_prefix_and_base_name(std::filesystem::path selected_path) const;
-     std::string           appends_prefix_base_name(std::string_view title) const;
+     float                                     scaled_menubar_gap() const;
+     static void                               render_dockspace();
+     void                                      background_color_picker();
+     void                                      collapsing_header_filters();
+     void                                      compact_flatten_buttons();
+     void                                      frame_rate();
+     void                                      control_panel_window_map();
+     void                                      control_panel_window_mim();
+     std::filesystem::path                     path_with_prefix_and_base_name(std::filesystem::path selected_path) const;
+     std::string                               appends_prefix_base_name(std::string_view title) const;
      template<typename batch_opT, typename filterT, typename askT, typename processT>
      void popup_batch_common(batch_opT &&batch_op, filterT &&filter, askT &&ask, processT &&process) const
      {
