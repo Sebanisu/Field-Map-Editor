@@ -231,6 +231,22 @@ void gui::control_panel_window()
      frame_rate();
      m_mouse_positions.mouse_enabled = handle_mouse_cursor();
      text_mouse_position();
+
+     if (std::ranges::empty(m_clicked_tile_indices))
+     {
+          return;
+     }
+
+     m_map_sprite.const_visit_tiles([&](const auto &tiles) {
+          for (const auto &i : m_clicked_tile_indices)
+          {
+               if (i < std::ranges::size(tiles))
+               {
+                    const auto &tile = tiles[i];
+                    collapsing_tile_info(tile, i);
+               }
+          }
+     });
 }
 void gui::control_panel_window_mim()
 {
@@ -244,10 +260,10 @@ void gui::control_panel_window_mim()
                format_imgui_text("{} == {}", gui_labels::width, gui_labels::max_tiles);
           }
      }
-     if (m_changed)
-     {
-          scale_window();
-     }
+     // if (m_changed)
+     // {
+     //      scale_window();
+     // }
 }
 void gui::control_panel_window_map()
 {
@@ -258,10 +274,10 @@ void gui::control_panel_window_map()
      checkbox_map_disable_blending();
      compact_flatten_buttons();
      collapsing_header_filters();
-     if (m_changed)
-     {
-          scale_window();
-     }
+     // if (m_changed)
+     // {
+     //      scale_window();
+     // }
 }
 void gui::frame_rate()
 {
@@ -446,16 +462,6 @@ void gui::loop()
      on_click_not_imgui();
      //  m_mouse_positions.cover.setColor(clear_color);
      //  m_window.draw(m_mouse_positions.cover);
-
-     sf::RenderStates states = {};
-     if (m_drag_sprite_shader)
-     {
-          m_drag_sprite_shader->setUniform("texture", *m_mouse_positions.sprite.getTexture());
-          static constexpr float border_width = 2.F;
-          m_drag_sprite_shader->setUniform("borderWidth", border_width * static_cast<float>(m_map_sprite.get_map_scale()));
-          states.shader = m_drag_sprite_shader.get();
-     }
-     m_window.draw(m_mouse_positions.sprite, states);
      ImGui::SFML::Render(m_window);
      m_window.display();
      consume_one_future();
@@ -494,8 +500,11 @@ void gui::update_hover_and_mouse_button_status_for_map(const ImVec2 &img_start, 
      }
      if (ImGui::IsItemClicked(ImGuiMouseButton_Left))
      {
-
           m_mouse_positions.left = true;
+          m_map_sprite.const_visit_tiles([&](const auto &tiles) {
+               m_clicked_tile_indices =
+                 m_map_sprite.find_intersecting(tiles, m_mouse_positions.pixel, m_mouse_positions.texture_page, false, true);
+          });
      }
      if (ImGui::IsMouseReleased(ImGuiMouseButton_Left))
      {
@@ -778,7 +787,7 @@ void gui::text_mouse_position() const
                format_imgui_text("Page: {:2}", m_mouse_positions.texture_page);
           }
      }
-     if (!ImGui::CollapsingHeader("Hovered Tiles"))
+     if (!ImGui::CollapsingHeader(gui_labels::hovered_tiles.data()))
      {
           return;
      }
@@ -864,19 +873,21 @@ void gui::combo_coo()
           Configuration config{};
           config->insert_or_assign("selections_coo", static_cast<std::underlying_type_t<open_viii::LangT>>(m_selections.coo));
           config.save();
-          if (mim_test())
-          {
-               m_mim_sprite = m_mim_sprite.with_coo(get_coo());
-          }
-          else if (map_test())
-          {
-               m_map_sprite = m_map_sprite.with_coo(get_coo());
-          }
-          if (m_field)
-          {
-               generate_upscale_paths(std::string{ m_field->get_base_name() }, get_coo());
-          }
-          m_changed = true;
+          // if (mim_test())
+          // {
+          //      m_mim_sprite = m_mim_sprite.with_coo(get_coo());
+          // }
+          // else if (map_test())
+          // {
+          //      m_map_sprite = m_map_sprite.with_coo(get_coo());
+          // }
+          // if (m_field)
+          // {
+          //      generate_upscale_paths(std::string{ m_field->get_base_name() }, get_coo());
+          // }
+          // m_clicked_tile_indices.clear();
+          // m_changed = true;
+          update_field();
      }
      if (ImGui::IsItemHovered())
      {
@@ -939,11 +950,13 @@ void gui::update_field()
      {
           generate_upscale_paths(std::string{ m_field->get_base_name() }, get_coo());
      }
+
+     m_clicked_tile_indices.clear();
 }
 
 void gui::checkbox_map_swizzle()
 {
-     if (ImGui::Checkbox("Swizzle", &m_selections.draw_swizzle))
+     if (ImGui::Checkbox(gui_labels::swizzle.data(), &m_selections.draw_swizzle))
      {
           Configuration config{};
           config->insert_or_assign("selections_draw_swizzle", m_selections.draw_swizzle);
@@ -963,13 +976,11 @@ void gui::checkbox_map_swizzle()
           }
           m_changed = true;
      }
-     tool_tip(
-       "Swizzle displays the tiles in their original positions as defined in the `.mim` file, or in their current swizzled positions if "
-       "they have been rearranged.");
+     tool_tip(gui_labels::swizzle_tooltip);
 }
 void gui::checkbox_map_disable_blending()
 {
-     if (!m_selections.draw_swizzle && ImGui::Checkbox("Disable Blending", &m_selections.draw_disable_blending))
+     if (!m_selections.draw_swizzle && ImGui::Checkbox(gui_labels::disable_blending.data(), &m_selections.draw_disable_blending))
      {
           Configuration config{};
           config->insert_or_assign("selections_draw_disable_blending", m_selections.draw_disable_blending);
@@ -984,9 +995,7 @@ void gui::checkbox_map_disable_blending()
           }
           m_changed = true;
      }
-     tool_tip(
-       "Use Disable blending to turn off the effect that emulates PSX-style blending for tiles with semi-transparent parts, such as lights "
-       "or colored glass.");
+     tool_tip(gui_labels::disable_blending_tooltip);
 }
 void gui::tool_tip(const std::string_view str)
 {
@@ -2882,17 +2891,29 @@ void gui::update_scaled_up_render_texture()
      loaded_image_render_texture.setSmooth(false);
      loaded_image_render_texture.generateMipmap();
 }
-void gui::collapsing_tile_info(const variant_tile_t &current_tile) const
+void gui::collapsing_tile_info(const variant_tile_t &current_tile, const std::size_t index) const
 {
      std::visit(
        events::make_visitor(
-         [this](const is_tile auto &tile) {
-              if (!ImGui::CollapsingHeader("Selected Tile Info"))
+         [&](const is_tile auto &tile) {
+              std::string title      = index == std::numeric_limits<size_t>::max()
+                                         ? std::format("{}", gui_labels::selected_tile_info)
+                                         : std::format("{}: {}", gui_labels::selected_tile_info, index);
+              const auto  pushpopid0 = scope_guard{ &ImGui::PopID };
+              ImGui::PushID(title.data());
+              if (!ImGui::CollapsingHeader(title.data()))
               {
                    return;
               }
+              const auto pushpopid1 = PushPopID();
               if (ImGui::BeginTable("table_tile_info", 2))
               {
+                   // Configure columns
+                   ImGui::TableSetupColumn("Key", ImGuiTableColumnFlags_WidthFixed);
+                   ImGui::TableSetupColumn("Value", ImGuiTableColumnFlags_WidthStretch);
+
+                   // Finalize setup
+                   //ImGui::TableHeadersRow();
                    const auto         the_end_table = scope_guard([]() { ImGui::EndTable(); });
                    const auto         tile_string   = fmt::format("{}", tile);
                    std::istringstream string_stream(tile_string);
@@ -2925,6 +2946,7 @@ void gui::collapsing_tile_info(const variant_tile_t &current_tile) const
               ImGui::SetCursorScreenPos(ImVec2(
                 backup_pos.x + width * position_width_scale,
                 backup_pos.y - width * position_height_scale - style.FramePadding.y * padding_height_scale));
+              const auto pushpopid2 = PushPopID();
               (void)create_tile_button(tile, { width * tile_scale, width * tile_scale });
               ImGui::SetCursorScreenPos(backup_pos);
          },

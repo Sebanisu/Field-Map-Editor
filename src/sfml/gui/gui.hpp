@@ -160,6 +160,7 @@ struct gui
      map_directory_mode                                 m_modified_directory_map = {};
      std::filesystem::path                              m_loaded_swizzle_texture_path{};
      std::filesystem::path                              m_loaded_deswizzle_texture_path{};
+     std::vector<std::size_t>                           m_clicked_tile_indices{};
      //     void                                               popup_batch_reswizzle();
      //     void                                               popup_batch_deswizzle();
 
@@ -222,9 +223,9 @@ struct gui
           ImGui::PushID(++get_imgui_id());
           return scope_guard{ &ImGui::PopID };
      }
-     void               import_image_window();
-     variant_tile_t    &combo_selected_tile(bool &changed);
-     void               collapsing_tile_info(const variant_tile_t &current_tile) const;
+     void            import_image_window();
+     variant_tile_t &combo_selected_tile(bool &changed);
+     void collapsing_tile_info(const variant_tile_t &current_tile, const std::size_t index = std::numeric_limits<size_t>::max()) const;
      [[nodiscard]] bool browse_for_image_display_preview();
      template<open_viii::graphics::background::is_tile tileT>
      [[nodiscard]] bool create_tile_button(const tileT &tile, sf::Vector2f image_size = {}) const

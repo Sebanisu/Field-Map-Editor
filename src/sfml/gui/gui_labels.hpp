@@ -48,10 +48,25 @@ struct gui_labels
      static constexpr std::string_view start                  = { "Start" };
      static constexpr std::string_view count_of_maps          = { "count of maps" };
 
+     static constexpr std::string_view swizzle                = { "Swizzle" };
+     static constexpr std::string_view disable_blending       = { "Disable Blending" };
+     static constexpr std::string_view selected_tile_info     = { "Selected Tile Info" };
+     static constexpr std::string_view hovered_tiles          = { "Hovered Tiles" };
 
      static constexpr std::string_view batch_deswizzle_title  = { "Batch saving deswizzle textures..." };
      static constexpr std::string_view batch_deswizzle_finish = { "Finished the batch deswizzle..." };
 
-     gui_labels()                                             = delete;
+
+     static constexpr std::string_view swizzle_tooltip        = {
+          "Swizzle displays the tiles in their original positions as defined in the `.mim` file, or in their current swizzled positions if "
+                 "they have been rearranged."
+     };
+
+     static constexpr std::string_view disable_blending_tooltip = {
+          "Use Disable blending to turn off the effect that emulates PSX-style blending for tiles with semi-transparent parts, such as "
+          "lights or colored glass."
+     };
+
+     gui_labels() = delete;
 };
 #endif// FIELD_MAP_EDITOR_GUI_LABELS_HPP
