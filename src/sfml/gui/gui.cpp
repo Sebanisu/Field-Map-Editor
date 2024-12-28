@@ -1033,8 +1033,11 @@ void gui::combo_bpp()
      {
           static constexpr auto bpp_strings = Mim::bpp_selections_c_str();
           static const auto     bpp_values  = std::ranges::views::iota(int{ 0 }, static_cast<int>(std::ranges::size(bpp_strings)));
-          const auto            gcc =
-            GenericComboClass(gui_labels::bpp, [&]() { return bpp_values; }, [&]() { return bpp_strings; }, m_selections.bpp);
+          const auto            gcc         = GenericComboClass(
+            gui_labels::bpp,
+            [&]() { return bpp_values; },
+            [&]() { return bpp_strings | std::ranges::views::transform([](std::string_view sv) { return sv; }); },
+            m_selections.bpp);
 
           if (gcc.render(get_imgui_id()))
           {
@@ -1073,10 +1076,13 @@ void gui::combo_palette()
      if (m_selections.bpp != 2)
      {
           {
-               static constexpr std::array palette_values  = Mim::palette_selections();
-               static constexpr std::array palette_strings = Mim::palette_selections_c_str();
-               const auto                  gcc             = GenericComboClass(
-                 gui_labels::palette, []() { return palette_values; }, []() { return palette_strings; }, m_selections.palette);
+               static constexpr auto palette_values  = Mim::palette_selections();
+               static constexpr auto palette_strings = Mim::palette_selections_c_str();
+               const auto            gcc             = GenericComboClass(
+                 gui_labels::palette,
+                 []() { return palette_values; },
+                 []() { return palette_strings | std::ranges::views::transform([](std::string_view sv) { return sv; }); },
+                 m_selections.palette);
                if (gcc.render(get_imgui_id()))
                {
                     if (mim_test())
