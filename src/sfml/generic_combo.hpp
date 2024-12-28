@@ -148,7 +148,7 @@ class GenericComboClassWithFilter
 
           const auto &current_item   = *getNext(strings_, current_idx_);
 
-          if (ImGui::BeginCombo("##Empty", current_item.data(), ImGuiComboFlags_HeightLarge))
+          if (ImGui::BeginCombo("##Empty", std::ranges::data(current_item), ImGuiComboFlags_HeightLarge))
           // The second parameter is the label previewed
           // before opening the combo.
           {
@@ -373,7 +373,7 @@ class GenericComboClass
 
           const auto &current_item   = *getNext(strings_, current_idx_);
 
-          if (ImGui::BeginCombo("##Empty", current_item.data(), ImGuiComboFlags_HeightLarge))
+          if (ImGui::BeginCombo("##Empty", std::ranges::data(current_item), ImGuiComboFlags_HeightLarge))
           // The second parameter is the label previewed
           // before opening the combo.
           {
