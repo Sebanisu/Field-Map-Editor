@@ -112,20 +112,74 @@ dir /s /b bin\*.exe
 - For troubleshooting, review the output logs during each step.
 
 
-
 # Linux Build Instructions **(WIP)**
 
-* sudo apt update
-* sudo apt install python3 python3-venv python3-pip cmake
-* source venv/bin/activate
-* pip install conan
-or
-* pip install -r requirements.txt
-* deactivate
-* conan install . -pr ubuntu24 -pr:b ubuntu24 --build=missing -of ./linux
-* cmake --list-presets
-* cmake --preset=conan_linux-relwithdebinfo
-* cd ./linux/build/RelWithDebInfo/
-* make
-* cd ../../..
-* rm -r ./linux
+### Step 1. Update and install required packages
+
+```sh
+sudo apt update
+sudo apt install -y python3 python3-venv python3-pip cmake build-essential
+```
+
+### Step 2. Create and activate a Python virtual environment
+```sh
+python3 -m venv venv
+source venv/bin/activate
+```
+
+### Step 3. Install Conan package manager
+
+```sh
+pip install conan
+```
+
+### Step 4. Configure and Install dependencies using Conan
+#### Set Conan's home directory (optional, useful for CI environments)
+```sh
+conan config home
+```
+
+#### Detect a Conan profile and name it `ubuntu24` if it doesn't already exist
+#### Replace `ubuntu24` with the appropriate profile name if necessary
+#### Redirect stdout and stderr to /dev/null and ensure the script continues regardless of errors
+```sh
+conan profile detect --name ubuntu24 > /dev/null 2>&1 || true
+```
+
+#### List all available Conan profiles
+```sh
+conan profile list
+```
+#### Install dependencies using Conan
+```sh
+conan install . -pr ubuntu24 -pr:b ubuntu24 --build=missing -of ./linux
+```
+
+### Step 5. Deactivate the virtual environment
+```sh
+deactivate
+```
+
+### Step 6. Check available CMake presets (optional)
+```sh
+cmake --list-presets
+```
+
+### Step 7. Configure the build with CMake
+```sh
+cmake --preset=conan_linux-relwithdebinfo
+```
+
+### Step 8. Build the project
+```sh
+cd ./linux/build/RelWithDebInfo/
+make
+```
+
+### Step 9. Return to the root directory (optional)
+```sh
+cd ../../../
+```
+## Additional Notes
+- The compiled binaries can be found in the `./linux/build/RelWithDebInfo/` directory.
+
