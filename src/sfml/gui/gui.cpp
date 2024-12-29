@@ -2430,18 +2430,35 @@ std::vector<std::filesystem::path>
 }
 gui::variant_tile_t &gui::combo_selected_tile(bool &changed)
 {
-     const auto end_action = scope_guard(
-       [&changed, current_tile_id = m_selections.selected_tile, this]() { changed = current_tile_id != m_selections.selected_tile; });
-     // combo box with all the tiles.
+
      static std::string    current_item_str = {};
      static variant_tile_t current_tile     = { std::monostate{} };
-     find_selected_tile_for_import(current_tile, current_item_str);
+     const auto            save_config      = [&]() {
+          Configuration config{};
+          config->insert_or_assign("selections_selected_tile", m_selections.selected_tile);
+          config.save();
+          current_item_str = std::holds_alternative<std::monostate>(current_tile) ? "" : fmt::format("{}", m_selections.selected_tile);
+     };
+     const auto  spacing      = ImGui::GetStyle().ItemInnerSpacing.x;
+
+     const float button_size  = ImGui::GetFrameHeight();
+     const float button_count = 2.0f;
+     const auto  end_action   = scope_guard(
+       [&changed, current_tile_id = m_selections.selected_tile, this]() { changed = current_tile_id != m_selections.selected_tile; });
+     // combo box with all the tiles.
+     find_selected_tile_for_import(current_tile);
+     save_config();
 
 
      ImVec2 const combo_pos    = ImGui::GetCursorScreenPos();
      const auto   the_end_id_0 = PushPopID();
      static bool  was_hovered  = false;
-     if (ImGui::BeginCombo("Select Existing Tile", "", ImGuiComboFlags_HeightLarge))
+
+     ImGui::PushItemWidth(ImGui::CalcItemWidth() - spacing * button_count - button_size * button_count);
+     const auto pop_item_width = scope_guard(&ImGui::PopItemWidth);
+
+
+     if (ImGui::BeginCombo("##Select Existing Tile", "", ImGuiComboFlags_HeightLarge))
      {
           static constexpr int  columnWidth   = 100;// Adjust as needed
           const auto            num_columns   = std::max(1, static_cast<int>(ImGui::GetContentRegionAvail().x / columnWidth));
@@ -2449,8 +2466,8 @@ gui::variant_tile_t &gui::combo_selected_tile(bool &changed)
           const auto            cols_pop      = scope_guard([]() { ImGui::Columns(1); });
           ImGui::Columns(num_columns, "##columns", false);
           const auto the_end_combo = scope_guard([]() { ImGui::EndCombo(); });
-          m_map_sprite.const_visit_tiles([this](const auto &tiles) {
-               for (int tile_id{}; const auto &tile : tiles)
+          m_map_sprite.const_visit_tiles([&](const auto &tiles) {
+               for (int tile_id = {}; const auto &tile : tiles)
                {
                     const auto next_col_pop = scope_guard([]() { ImGui::NextColumn(); });
                     const auto the_end_id_1 = PushPopID();
@@ -2487,11 +2504,8 @@ gui::variant_tile_t &gui::combo_selected_tile(bool &changed)
                           std::identity{}))
                     {
                          m_selections.selected_tile = tile_id;
-                         Configuration config{};
-                         config->insert_or_assign("selections_selected_tile", m_selections.selected_tile);
-                         config.save();
-                         current_item_str = fmt::format("{}", tile_id);
-                         current_tile     = tile;
+                         current_tile               = tile;
+                         save_config();
                     }
                     if (is_selected)
                     {
@@ -2507,6 +2521,42 @@ gui::variant_tile_t &gui::combo_selected_tile(bool &changed)
           was_hovered = false;
           m_map_sprite.disable_square();
      }
+     m_map_sprite.const_visit_tiles([&](const auto &tiles) {
+          {
+               // Left
+               const auto pop_id_left = PushPopID();
+               ImGui::SameLine(0, spacing);
+               const bool disabled = std::cmp_less_equal(m_selections.selected_tile, 0)
+                                     || std::cmp_greater_equal(m_selections.selected_tile - 1, std::ranges::size(tiles));
+               ImGui::BeginDisabled(disabled);
+               if (ImGui::ArrowButton("##l", ImGuiDir_Left))
+               {
+                    --m_selections.selected_tile;
+                    current_tile = tiles[m_selections.selected_tile];
+                    save_config();
+                    changed = true;
+               }
+               ImGui::EndDisabled();
+          }
+          {
+               // Right
+               const auto pop_id_right = PushPopID();
+               ImGui::SameLine(0, spacing);
+               const bool disabled = std::cmp_greater_equal(m_selections.selected_tile + 1, std::ranges::size(tiles));
+               ImGui::BeginDisabled(disabled);
+               if (ImGui::ArrowButton("##r", ImGuiDir_Right))
+               {
+                    ++m_selections.selected_tile;
+                    current_tile = tiles[m_selections.selected_tile];
+                    save_config();
+                    changed = true;
+               }
+               ImGui::EndDisabled();
+          }
+     });
+
+     ImGui::SameLine(0, spacing);
+     format_imgui_text("{}", gui_labels::select_existing_tile);
      ImVec2 const      backup_pos = ImGui::GetCursorScreenPos();
      ImGuiStyle const &style      = ImGui::GetStyle();
      ImGui::SetCursorScreenPos(ImVec2(combo_pos.x + style.FramePadding.x, combo_pos.y /*+ style.FramePadding.y*/));
@@ -2520,7 +2570,7 @@ gui::variant_tile_t &gui::combo_selected_tile(bool &changed)
      ImGui::SetCursorScreenPos(backup_pos);
      return current_tile;
 }
-void gui::find_selected_tile_for_import(gui::variant_tile_t &current_tile, std::string &current_item_str) const
+void gui::find_selected_tile_for_import(gui::variant_tile_t &current_tile) const
 {
      m_map_sprite.const_visit_tiles([&](const auto &tiles) {
           if (m_selections.selected_tile < 0 || std::cmp_greater_equal(m_selections.selected_tile, tiles.size()))
@@ -2537,14 +2587,12 @@ void gui::find_selected_tile_for_import(gui::variant_tile_t &current_tile, std::
                       {
                            if (tile != tmp_tile)
                            {
-                                current_tile     = tmp_tile;
-                                current_item_str = fmt::format("{}", m_selections.selected_tile);
+                                current_tile = tmp_tile;
                            }
                       }
                       else if constexpr (!is_tile<std::decay_t<decltype(tile)>>)
                       {
-                           current_tile     = tmp_tile;
-                           current_item_str = fmt::format("{}", m_selections.selected_tile);
+                           current_tile = tmp_tile;
                       }
                  }
             },

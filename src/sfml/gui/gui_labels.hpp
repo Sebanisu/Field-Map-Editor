@@ -60,10 +60,11 @@ struct gui_labels
      static constexpr std::string_view selected_tile_info           = { "Selected Tile Info" };
      static constexpr std::string_view hovered_tiles                = { "Hovered Tiles" };
      static constexpr std::string_view tile_size                    = { "Tile Size" };
-     static constexpr std::string_view import_image                    = { "Import Image" };
-     
+     static constexpr std::string_view import_image                 = { "Import Image" };
+     static constexpr std::string_view select_existing_tile         = { "Select Existing Tile" };
 
-       static constexpr std::string_view batch_deswizzle_title        = { "Batch saving deswizzle textures..." };
+
+     static constexpr std::string_view batch_deswizzle_title        = { "Batch saving deswizzle textures..." };
      static constexpr std::string_view batch_deswizzle_finish       = { "Finished the batch deswizzle..." };
 
      static constexpr std::string_view possible_tiles               = { "Possible Tiles" };
@@ -73,11 +74,10 @@ struct gui_labels
      };
 
 
-
-     static constexpr std::string_view swizzle_tooltip        = {
+     static constexpr std::string_view swizzle_tooltip = {
           "Swizzle displays the tiles in their original positions as defined in the `.mim` file, or in their current swizzled positions "
-                 "if "
-                 "they have been rearranged."
+          "if "
+          "they have been rearranged."
      };
 
      static constexpr std::string_view disable_blending_tooltip = {

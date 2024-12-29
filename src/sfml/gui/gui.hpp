@@ -423,7 +423,7 @@ struct gui
             tile_y + 1 == tile_size_px ? max_texture_id_tile.texture_id() + 1 : max_texture_id_tile.texture_id();
           return { next_source_y, next_texture_page };
      }
-     void find_selected_tile_for_import(variant_tile_t &current_tile, std::string &current_item_str) const;
+     void find_selected_tile_for_import(variant_tile_t &current_tile) const;
      void event_type_key_released(const sf::Event::KeyEvent &key);
      void event_type_key_pressed(const sf::Event::KeyEvent &key);
      void event_type_mouse_button_pressed(const sf::Mouse::Button &button);
