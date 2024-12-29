@@ -100,6 +100,7 @@ struct gui
      void               init_and_get_style();
      void               loop_events();
      void               loop();
+     void               draw_window();
      void               update_hover_and_mouse_button_status_for_map(const ImVec2 &img_start, const float scale);
      void               draw_map_grid_lines_for_tiles(const ImVec2 &screen_pos, const sf::Vector2f &scaled_size, const float scale);
      void               draw_map_grid_lines_for_texture_page(const ImVec2 &screen_pos, const sf::Vector2f &scaled_size, const float scale);
@@ -289,7 +290,7 @@ struct gui
      std::uint32_t                             image_height() const;
      static std::vector<std::filesystem::path> find_maps_in_directory(const std::filesystem::path &src, size_t reserve = {});
      float                                     scaled_menubar_gap() const;
-     static void                               render_dockspace();
+     void                                      render_dockspace();
      void                                      background_color_picker();
      void                                      collapsing_header_filters();
      void                                      compact_flatten_buttons();

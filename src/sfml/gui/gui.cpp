@@ -173,7 +173,7 @@ void gui::render_dockspace()
      }
 
      const auto imgui_end = scope_guard(&ImGui::End);
-     ImGui::Begin("DockSpace Demo", nullptr, window_flags);
+     (void)ImGui::Begin("DockSpace Demo", nullptr, window_flags);
      if constexpr (!opt_padding)
      {
           ImGui::PopStyleVar();
@@ -365,11 +365,12 @@ void gui::background_color_picker()
 }
 void gui::loop()
 {
-     using namespace std::string_view_literals;
-     menu_bar();
+     // Begin non imgui drawing.
+     m_window.clear(sf::Color::Black);
      directory_browser_display();
      file_browser_save_texture();
      render_dockspace();
+     menu_bar();
      //     popup_batch_deswizzle();
      //     popup_batch_reswizzle();
      if (m_selections.test_batch_window)
@@ -381,9 +382,16 @@ void gui::loop()
      // begin_batch_embed_map_warning_window();
      //     popup_batch_embed();
      import_image_window();
-     // Begin non imgui drawing.
-     m_window.clear(sf::Color::Black);
 
+     draw_window();
+     //  m_mouse_positions.cover.setColor(clear_color);
+     //  m_window.draw(m_mouse_positions.cover);
+     ImGui::SFML::Render(m_window);
+     m_window.display();
+     consume_one_future();
+}
+void gui::draw_window()
+{
      const auto title = "Draw Window";
      if (mim_test())
      {
@@ -460,11 +468,6 @@ void gui::loop()
           draw_mouse_positions_sprite(scale, screen_pos);
      }
      on_click_not_imgui();
-     //  m_mouse_positions.cover.setColor(clear_color);
-     //  m_window.draw(m_mouse_positions.cover);
-     ImGui::SFML::Render(m_window);
-     m_window.display();
-     consume_one_future();
 }
 void gui::update_hover_and_mouse_button_status_for_map(const ImVec2 &img_start, const float scale)
 {
