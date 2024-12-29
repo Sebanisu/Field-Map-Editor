@@ -2438,12 +2438,18 @@ gui::variant_tile_t &gui::combo_selected_tile(bool &changed)
      ImVec2 const combo_pos    = ImGui::GetCursorScreenPos();
      const auto   the_end_id_0 = PushPopID();
      static bool  was_hovered  = false;
-     if (ImGui::BeginCombo("Select Existing Tile", "", ImGuiComboFlags_HeightLargest))
+     if (ImGui::BeginCombo("Select Existing Tile", "", ImGuiComboFlags_HeightLarge))
      {
+          static constexpr int  columnWidth   = 100;// Adjust as needed
+          const auto            num_columns   = std::max(1, static_cast<int>(ImGui::GetContentRegionAvail().x / columnWidth));
+          static constexpr auto tooltips_size = 256.F;
+          const auto            cols_pop      = scope_guard([]() { ImGui::Columns(1); });
+          ImGui::Columns(num_columns, "##columns", false);
           const auto the_end_combo = scope_guard([]() { ImGui::EndCombo(); });
           m_map_sprite.const_visit_tiles([this](const auto &tiles) {
                for (int tile_id{}; const auto &tile : tiles)
                {
+                    const auto next_col_pop = scope_guard([]() { ImGui::NextColumn(); });
                     const auto the_end_id_1 = PushPopID();
                     const auto iterate      = scope_guard([&tile_id]() { ++tile_id; });
                     bool       is_selected  = (m_selections.selected_tile == tile_id);// You can store your selection however you
@@ -2456,8 +2462,7 @@ gui::variant_tile_t &gui::combo_selected_tile(bool &changed)
                                                const auto end_tooltip = scope_guard(&ImGui::EndTooltip);
                                                ImGui::BeginTooltip();
                                                format_imgui_text("{}", tile_id);
-                                               constexpr float tile_size = 256.F;
-                                               (void)create_tile_button(tile, sf::Vector2f(tile_size, tile_size));
+                                               (void)create_tile_button(tile, sf::Vector2f(tooltips_size, tooltips_size));
                                                m_map_sprite.enable_square(tile);
                                                was_hovered = true;
                                           }
@@ -2501,7 +2506,7 @@ gui::variant_tile_t &gui::combo_selected_tile(bool &changed)
      }
      ImVec2 const      backup_pos = ImGui::GetCursorScreenPos();
      ImGuiStyle const &style      = ImGui::GetStyle();
-     ImGui::SetCursorScreenPos(ImVec2(combo_pos.x + style.FramePadding.x, combo_pos.y + style.FramePadding.y));
+     ImGui::SetCursorScreenPos(ImVec2(combo_pos.x + style.FramePadding.x, combo_pos.y /*+ style.FramePadding.y*/));
      (void)std::visit(
        events::make_visitor(
          [this](const is_tile auto &tile) -> bool { return create_tile_button(tile); },
@@ -2551,7 +2556,7 @@ void gui::import_image_window()
      }
      // begin imgui window
      const auto the_end = scope_guard([]() { ImGui::End(); });
-     if (!ImGui::Begin("Import Image", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
+     if (!ImGui::Begin(gui_labels::import_image.data()))
      {
           return;
      }
@@ -2593,13 +2598,14 @@ void gui::import_image_window()
      //    file.
      //    * They'll probably insert before the last tile.
      //  Save button that'll save the swizzled images with new '.map'
-     if (ImGui::Button("Save Swizzle"))
+     if (ImGui::Button(gui_labels::save_swizzle.data()))
      {
           save_swizzle_textures();
      }
+     tool_tip(gui_labels::save_swizzle_import_tool_tip);
      // have a cancel button to hide window.
      ImGui::SameLine();
-     if (ImGui::Button("Cancel"))
+     if (ImGui::Button(gui_labels::cancel.data()))
      {
           // hide window and save that it's hidden.
           m_selections.display_import_image = false;
@@ -2608,12 +2614,14 @@ void gui::import_image_window()
           config.save();
           reset_imported_image();
      }
+     tool_tip(gui_labels::cancel_tool_tip);
      // have a reset button to reset window state?
      ImGui::SameLine();
-     if (ImGui::Button("Reset"))
+     if (ImGui::Button(gui_labels::reset.data()))
      {
           reset_imported_image();
      }
+     tool_tip(gui_labels::reset_tool_tip);
 }
 void gui::adjust_source_xy_texture_page_for_import_map(uint8_t next_source_y, const uint8_t next_texture_page)
 {
@@ -2641,7 +2649,8 @@ void gui::adjust_source_xy_texture_page_for_import_map(uint8_t next_source_y, co
 void gui::collapsing_header_generated_tiles() const
 {
      if (ImGui::CollapsingHeader(
-           import_image_map.visit_tiles([](auto &&tiles) { return fmt::format("Generated Tiles: {}", std::size(tiles)); }).c_str()))
+           import_image_map.visit_tiles([](auto &&tiles) { return fmt::format("{}: {}", gui_labels::generated_tiles, std::size(tiles)); })
+             .c_str()))
      {
 
 
@@ -2677,7 +2686,7 @@ void gui::generate_map_for_imported_image(const variant_tile_t &current_tile, bo
        ceil(static_cast<double>(static_cast<float>(loaded_image_texture.getSize().x) / static_cast<float>(m_selections.tile_size_value))));
      const auto tiles_high = static_cast<uint32_t>(
        ceil(static_cast<double>(static_cast<float>(loaded_image_texture.getSize().y) / static_cast<float>(m_selections.tile_size_value))));
-     format_imgui_text("Possible Tiles: {} wide, {} high, {} total", tiles_wide, tiles_high, tiles_wide * tiles_high);
+     format_imgui_text("{}: {} x {} = {}", gui_labels::possible_tiles, tiles_wide, tiles_high, tiles_wide * tiles_high);
      if (changed && tiles_wide * tiles_high != 0U && loaded_image_texture.getSize() != sf::Vector2u{})
      {
           import_image_map = open_viii::graphics::background::Map(
@@ -2761,7 +2770,7 @@ void gui::reset_imported_image()
 bool gui::combo_tile_size()
 {
      const auto gcc = GenericComboClass(
-       std::string_view("Tile Size"),
+       gui_labels::tile_size,
        []() -> decltype(auto) {
             static constexpr auto sizes = std::array{
                  tile_sizes::default_size, tile_sizes::x_2_size, tile_sizes::x_4_size, tile_sizes::x_8_size, tile_sizes::x_16_size
@@ -2794,7 +2803,7 @@ bool gui::browse_for_image_display_preview()
      if (ImGui::Button("Browse"))
      {
           m_load_file_browser.Open();
-          m_load_file_browser.SetTitle("Load Image File...");
+          m_load_file_browser.SetTitle(gui_labels::load_image_file.data());
           m_load_file_browser.SetTypeFilters({ ".png" });
           m_load_file_browser.SetPwd(Configuration{}["load_image_path"].value_or(std::filesystem::current_path().string()));
           m_load_file_browser.SetInputName(m_import_image_path.data());
@@ -2819,7 +2828,7 @@ bool gui::browse_for_image_display_preview()
      {
           return false;
      }
-     if (ImGui::CollapsingHeader("Selected Image Preview"))
+     if (ImGui::CollapsingHeader(gui_labels::selected_image_preview.data()))
      {
           sf::Sprite const sprite(loaded_image_texture);
           const float      width             = std::max((ImGui::GetContentRegionAvail().x), 1.0F);
@@ -2831,7 +2840,7 @@ bool gui::browse_for_image_display_preview()
           const auto       pop_id            = PushPopID();
           const auto       str_id            = fmt::format("id2668{}", get_imgui_id());
           ImGui::ImageButton(str_id.c_str(), sprite, sf::Vector2f(width, height));
-          if (ImGui::Checkbox("Draw Grid", &m_selections.import_image_grid))
+          if (ImGui::Checkbox(gui_labels::draw_grid.data(), &m_selections.import_image_grid))
           {
                Configuration config{};
                config->insert_or_assign("selections_import_image_grid", m_selections.import_image_grid);
@@ -2905,15 +2914,14 @@ void gui::collapsing_tile_info(const variant_tile_t &current_tile, const std::si
               {
                    return;
               }
-              const auto pushpopid1 = PushPopID();
+              const auto   pushpopid1 = PushPopID();
+              ImVec2 const table_pos  = ImGui::GetCursorScreenPos();
               if (ImGui::BeginTable("table_tile_info", 2))
               {
                    // Configure columns
                    ImGui::TableSetupColumn("Key", ImGuiTableColumnFlags_WidthFixed);
                    ImGui::TableSetupColumn("Value", ImGuiTableColumnFlags_WidthStretch);
 
-                   // Finalize setup
-                   //ImGui::TableHeadersRow();
                    const auto         the_end_table = scope_guard([]() { ImGui::EndTable(); });
                    const auto         tile_string   = fmt::format("{}", tile);
                    std::istringstream string_stream(tile_string);
@@ -2934,14 +2942,13 @@ void gui::collapsing_tile_info(const variant_tile_t &current_tile, const std::si
                    }
               }
 
-              static constexpr float width_max             = 1.0F;
-              static constexpr float half                  = 0.5F;
-              const auto             width                 = (std::max)((ImGui::GetContentRegionAvail().x), width_max) * half;
               ImVec2 const           backup_pos            = ImGui::GetCursorScreenPos();
+              const float            width_max             = backup_pos.y - table_pos.y;
+              const auto             width                 = width_max * 0.75F;
               ImGuiStyle const      &style                 = ImGui::GetStyle();
               static constexpr float position_width_scale  = 1.1F;
               static constexpr float position_height_scale = 0.9F;
-              static constexpr float padding_height_scale  = 2.0F;
+              static constexpr float padding_height_scale  = 4.0F;
               static constexpr float tile_scale            = 0.9F;
               ImGui::SetCursorScreenPos(ImVec2(
                 backup_pos.x + width * position_width_scale,
