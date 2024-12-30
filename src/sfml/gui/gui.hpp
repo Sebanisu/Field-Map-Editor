@@ -82,9 +82,11 @@ struct gui
      sf::Event                                                           m_event                     = {};
      sf::Vector2f                                                        m_cam_pos                   = {};
      // create a file browser instances
-     ImGui::FileBrowser m_save_file_browser{ ImGuiFileBrowserFlags_EnterNewFilename | ImGuiFileBrowserFlags_CreateNewDir };
-     ImGui::FileBrowser m_load_file_browser{};
-     ImGui::FileBrowser m_directory_browser{ ImGuiFileBrowserFlags_SelectDirectory | ImGuiFileBrowserFlags_CreateNewDir };
+     ImGui::FileBrowser m_save_file_browser{ ImGuiFileBrowserFlags_EnterNewFilename | ImGuiFileBrowserFlags_CreateNewDir
+                                             | ImGuiFileBrowserFlags_EditPathString };
+     ImGui::FileBrowser m_load_file_browser{ ImGuiFileBrowserFlags_EditPathString };
+     ImGui::FileBrowser m_directory_browser{ ImGuiFileBrowserFlags_SelectDirectory | ImGuiFileBrowserFlags_CreateNewDir
+                                             | ImGuiFileBrowserFlags_EditPathString };
      sf::Texture        loaded_image_texture        = {};
      sf::RenderTexture  loaded_image_render_texture = {};
      sf::Image          loaded_image_cpu            = {};

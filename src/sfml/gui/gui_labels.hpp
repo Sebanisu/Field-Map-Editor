@@ -86,10 +86,52 @@ struct gui_labels
      static constexpr std::string_view choose_directory_to_load_textures_from = { "Choose directory to load textures from" };
      static constexpr std::string_view choose_directory_to_save_textures_to   = { "Choose directory to save textures to" };
      static constexpr std::string_view draw_palette_texture                   = { "Draw Palette Texture" };
-     static constexpr std::string_view language_dropdown_tool_tip             = {
+     static constexpr std::string_view compact_flatten                        = { "Compact and Flatten" };
+     static constexpr std::string_view batch_operation                        = { "Batch Operation" };
+
+     static constexpr std::string_view compact_flatten_warning                = {
+          "The compact and flatten functions modify the `.map` file. For these changes to take effect in the game, the user must load the "
+                         "updated `.map` file into the field's (.fi.fl.fs) files."
+     };
+
+     static constexpr std::string_view compact_tooltip = {
+          "Reorder tiles to reduce overlapping. The game often reuses tiles with different palettes."
+     };
+
+     static constexpr std::string_view flatten_tooltip = {
+          "Simplify `.map` files by reducing the number of different bits per pixel (bpp) and/or palettes. Upscales generally don't "
+          "require these."
+     };
+
+     static constexpr std::string_view compact_rows_tooltip = {
+          "Rows: Sort tiles from 8-bit to 4-bit and separate conflicting palettes, attempting to apply the sort to each row individually."
+     };
+
+     static constexpr std::string_view compact_all_tooltip = {
+          "All: Sort tiles from 8-bit to 4-bit and separate conflicting palettes, applying the sort to all tiles at once."
+     };
+
+     static constexpr std::string_view compact_map_order_tooltip = {
+          "Map Order: Creates a tile for each map entry with 16 columns and 16 rows per texture page. Tiles are changed to 4bpp, "
+          "allowing 16 tiles per row."
+     };
+
+     static constexpr std::string_view flatten_bpp_tooltip = {
+          "BPP: Changes all tiles to 4 bits per pixel (bpp) to maximize the number of tiles per texture page. This is applied "
+          "automatically by Map Order compacting."
+     };
+
+     static constexpr std::string_view flatten_palette_tooltip = {
+          "Palette: Changes all palettes to 0, potentially reducing the need to reload textures."
+     };
+
+     static constexpr std::string_view flatten_both_tooltip       = { "Both: Changes the bpp to 4 and the palette to 0." };
+
+
+     static constexpr std::string_view language_dropdown_tool_tip = {
           "This Language dropdown might not change anything unless it's the remaster version of the fields archive because they have all "
-                      "the languages in the same file. You could change the path directly to a lang- path. Then this will override this dropdown for "
-                      "older versions of FF8."
+          "the languages in the same file. You could change the path directly to a lang- path. Then this will override this dropdown for "
+          "older versions of FF8."
      };
      static constexpr std::string_view save_swizzle_import_tool_tip = {
           "Save swizzled image wtih new `.map`. Including imported texture."

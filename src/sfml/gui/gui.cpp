@@ -288,50 +288,48 @@ void gui::frame_rate()
 }
 void gui::compact_flatten_buttons()
 {
-     using namespace std::string_view_literals;
-     static constexpr auto tool_tips = std::array{
-          "Rows: Sorts tiles from 8-bit to 4-bit and separates conflicting palettes. Attempts to apply the sort to each row individually."sv,
-          "All: Sorts tiles from 8-bit to 4-bit and separates conflicting palettes. Applies the sort to all tiles at once."sv,
-          "Map Order: Creates a tile for each map entry, with 16 columns and 16 rows per texture page."sv,
-          "BPP: Converts all tiles to 4 bits per pixel to maximize the number of tiles per texture page. Applied automatically by Map Order compacting."sv,
-          "Palette: Resets all palettes to 0, which may reduce the need to reload textures."sv
-     };
-
+     if(!ImGui::CollapsingHeader(gui_labels::compact_flatten.data()))
+     {
+          return;
+     }
+     format_imgui_wrapped_text("{}: ", gui_labels::compact_flatten_warning);
      const ImGuiStyle &style       = ImGui::GetStyle();
      const float       spacing     = style.ItemInnerSpacing.x;
      const ImVec2      button_size = { ImGui::GetFrameHeight() * 3.75F, ImGui::GetFrameHeight() };
      format_imgui_text("{}: ", gui_labels::compact);
+     tool_tip(gui_labels::compact_tooltip);
      ImGui::SameLine(0, spacing);
      if (ImGui::Button(gui_labels::rows.data(), button_size))
      {
           m_map_sprite.compact_rows();
      }
-     tool_tip(tool_tips[0]);
+     tool_tip(gui_labels::compact_rows_tooltip);
      ImGui::SameLine(0, spacing);
      if (ImGui::Button(gui_labels::all.data(), button_size))
      {
           m_map_sprite.compact_all();
      }
-     tool_tip(tool_tips[1]);
+     tool_tip(gui_labels::compact_all_tooltip);
      ImGui::SameLine(0, spacing);
      if (ImGui::Button(gui_labels::map_order.data(), button_size))
      {
           m_map_sprite.compact_map_order();
      }
-     tool_tip(tool_tips[2]);
+     tool_tip(gui_labels::compact_map_order_tooltip);
      format_imgui_text("{}: ", gui_labels::flatten);
+     tool_tip(gui_labels::flatten_tooltip);
      ImGui::SameLine(0, spacing);
      if (ImGui::Button(gui_labels::bpp.data(), button_size))
      {
           m_map_sprite.flatten_bpp();
      }
-     tool_tip(tool_tips[3]);
+     tool_tip(gui_labels::flatten_bpp_tooltip);
      ImGui::SameLine(0, spacing);
      if (ImGui::Button(gui_labels::palette.data(), button_size))
      {
           m_map_sprite.flatten_palette();
      }
-     tool_tip(tool_tips[4]);
+     tool_tip(gui_labels::flatten_palette_tooltip);
 }
 void gui::collapsing_header_filters()
 {
@@ -1115,7 +1113,7 @@ void gui::import_menu()
 }
 void gui::batch_operation_test_menu()
 {
-     if (!ImGui::BeginMenu("Batch Operation Test"))
+     if (!ImGui::BeginMenu(gui_labels::batch_operation.data()))
      {
           return;
      }
@@ -1598,11 +1596,11 @@ void gui::menuitem_load_map_file(bool enabled)
           return;
      }
      const std::string &path = m_map_sprite.map_filename();
-     m_save_file_browser.Open();
-     m_save_file_browser.SetTitle(gui_labels::load_map.data());
-     m_save_file_browser.SetPwd(Configuration{}["map_path"].value_or(std::filesystem::current_path().string()));
-     m_save_file_browser.SetTypeFilters({ Map::EXT.data() });
-     m_save_file_browser.SetInputName(path);
+     m_load_file_browser.Open();
+     m_load_file_browser.SetTitle(gui_labels::load_map.data());
+     m_load_file_browser.SetPwd(Configuration{}["map_path"].value_or(std::filesystem::current_path().string()));
+     m_load_file_browser.SetTypeFilters({ Map::EXT.data() });
+     m_load_file_browser.SetInputName(path);
      m_file_dialog_mode = file_dialog_mode::load_map_file;
 }
 void gui::combo_draw()

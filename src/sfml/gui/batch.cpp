@@ -48,12 +48,11 @@ void batch::combo_output_type(int &imgui_id)
 }
 void batch::combo_compact_type(int &imgui_id)
 {
-     using namespace std::string_view_literals;
-     static const auto values = std::array{ compact_type::rows, compact_type::all, compact_type::map_order };
+     const auto        tool_tip_pop = scope_guard{ [&]() { tool_tip(gui_labels::compact_tooltip, imgui_id); } };
+
+     static const auto values       = std::array{ compact_type::rows, compact_type::all, compact_type::map_order };
      static const auto tool_tips =
-       std::array{ "Rows: sorts 8bit to 4bit, and separates conflicting palettes. Tries to apply sort to each row at a time."sv,
-                   "All: sorts 8bit to 4bit, and separates conflicting palettes. Applies the sort to all the tiles "sv,
-                   "Map Order: Creates a tile for each map entry. 16 cols, and 16 rows, per texture page."sv };
+       std::array{ gui_labels::compact_rows_tooltip, gui_labels::compact_all_tooltip, gui_labels::compact_map_order_tooltip };
 
      const auto gcc = fme::GenericComboClassWithFilter(
        gui_labels::compact,
@@ -66,6 +65,7 @@ void batch::combo_compact_type(int &imgui_id)
      {
           return;
      }
+
      Configuration config{};
      config->insert_or_assign("batch_compact_type", static_cast<std::underlying_type_t<compact_type>>(m_compact_type.value()));
      config->insert_or_assign("batch_compact_enabled", m_compact_type.enabled());
@@ -73,17 +73,13 @@ void batch::combo_compact_type(int &imgui_id)
 }
 void batch::combo_flatten_type(int &imgui_id)
 {
-     using namespace std::string_view_literals;
+     const auto            tool_tip_pop        = scope_guard{ [&]() { tool_tip(gui_labels::flatten_tooltip, imgui_id); } };
      const bool            all_or_only_palette = !m_compact_type.enabled() || m_compact_type.value() != compact_type::map_order;
      static constexpr auto values              = std::array{ flatten_type::bpp, flatten_type::palette, flatten_type::both };
-     static constexpr auto palette_str         = "Palette: Changes all the palettes to 0. This might reduce reloading of textures."sv;
-     static constexpr auto tool_tips           = std::array{
-          "BPP: Changes all the bits per pixel to 4 to get the max number of tiles per texture page. Applied automatically by Map Order compacting."sv,
-          palette_str,
-          "Both."sv
-     };
+     static constexpr auto tool_tips =
+       std::array{ gui_labels::flatten_bpp_tooltip, gui_labels::flatten_palette_tooltip, gui_labels::flatten_both_tooltip };
      static constexpr auto values_only_palette    = std::array{ flatten_type::palette };
-     static constexpr auto tool_tips_only_palette = std::array{ palette_str };
+     static constexpr auto tool_tips_only_palette = std::array{ gui_labels::flatten_palette_tooltip };
      if (all_or_only_palette)
      {
           const auto gcc = fme::GenericComboClassWithFilter(
@@ -327,6 +323,7 @@ bool batch::browse_path(int &imgui_id, std::string_view name, bool &valid_path, 
                valid_path     = tmp.is_exists() && tmp.is_dir();
                changed        = true;
           }
+          tool_tip({ path_buffer.begin(), path_buffer.end() }, imgui_id);
      }
      ImGui::SameLine(0, spacing);
      {
@@ -585,4 +582,133 @@ void batch::checkbox_load_map(int &imgui_id)
      Configuration config{};
      config->insert_or_assign("batch_input_load_map", m_input_load_map);
      config.save();
+}
+
+void batch::tool_tip(const std::string_view str, int &imgui_id)
+{
+     if (!ImGui::IsItemHovered())
+     {
+          return;
+     }
+
+     const auto pop_id = scope_guard{ &ImGui::PopID };
+     ImGui::PushID(++imgui_id);
+     const auto pop_tool_tip = scope_guard{ &ImGui::EndTooltip };
+
+     ImGui::BeginTooltip();
+     const auto pop_textwrappos = scope_guard{ &ImGui::PopTextWrapPos };
+     ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);// Adjust wrap width as needed
+     format_imgui_text("{}", str);
+}
+
+
+void batch::draw_window(int &imgui_id)
+{
+     const auto end = scope_guard(&ImGui::End);
+     if (!ImGui::Begin(gui_labels::batch_operation.data()))
+     {
+          return;
+     }
+     const bool disabled = in_progress();
+     open_directory_browser();
+     ImGui::BeginDisabled(disabled);
+     combo_input_type(imgui_id);
+     browse_input_path(imgui_id);
+     checkbox_load_map(imgui_id);
+
+
+     combo_output_type(imgui_id);
+     browse_output_path(imgui_id);
+     if(ImGui::CollapsingHeader(gui_labels::compact_flatten.data()))
+     {
+          format_imgui_wrapped_text("{}", gui_labels::compact_flatten_warning);
+          combo_compact_type(imgui_id);
+          combo_flatten_type(imgui_id);
+     }
+     if (m_archives_group)
+     {
+          draw_multi_column_list_box(imgui_id, "Map List", m_archives_group->mapdata(), m_maps_enabled);
+     }
+     button_start(imgui_id);
+     ImGui::EndDisabled();
+     ImGui::BeginDisabled(!disabled);
+     button_stop(imgui_id);
+     ImGui::EndDisabled();
+     if (!disabled)
+     {
+          return;
+     }
+     format_imgui_text("{}", m_status);
+}
+
+batch &batch::operator=(std::shared_ptr<archives_group> new_group)
+{
+     stop();
+     m_archives_group = std::move(new_group);
+     if (m_archives_group && m_archives_group->mapdata().size() != m_maps_enabled.size())
+     {
+          m_maps_enabled.resize(m_archives_group->mapdata().size(), true);
+     }
+     return *this;
+}
+
+
+bool batch::in_progress() const
+{
+     return !m_fields_consumer.done() || m_field;
+}
+void batch::stop()
+{
+     m_fields_consumer.stop();
+     m_lang_consumer.stop();
+     m_field.reset();
+}
+
+batch::batch(std::shared_ptr<archives_group> existing_group)
+  : m_archives_group(std::move(existing_group))
+{
+     if (m_archives_group && m_archives_group->mapdata().size() != m_maps_enabled.size())
+     {
+          m_maps_enabled.resize(m_archives_group->mapdata().size(), true);
+     }
+     Configuration const config{};
+     m_input_type =
+       static_cast<input_types>(config["batch_input_type"].value_or(static_cast<std::underlying_type_t<input_types>>(m_input_type)));
+     {
+          std::string str_tmp = config["batch_input_path"].value_or(std::string(m_input_path.data()));
+          std::ranges::copy(str_tmp, m_input_path.data());
+          m_input_path.at(str_tmp.size()) = '\0';
+          const auto tmp                  = safedir(m_input_path.data());
+          m_input_path_valid              = tmp.is_dir() && tmp.is_exists();
+     }
+     m_output_type =
+       static_cast<output_types>(config["batch_output_type"].value_or(static_cast<std::underlying_type_t<output_types>>(m_output_type)));
+     {
+          std::string str_tmp = config["batch_output_path"].value_or(std::string(m_output_path.data()));
+          std::ranges::copy(str_tmp, m_output_path.data());
+          m_output_path.at(str_tmp.size()) = '\0';
+          const auto tmp                   = safedir(m_output_path.data());
+          m_output_path_valid              = tmp.is_dir() && tmp.is_exists();
+     }
+     m_compact_type.update(static_cast<compact_type>(
+       config["batch_compact_type"].value_or(static_cast<std::underlying_type_t<compact_type>>(m_compact_type.value()))));
+     if (config["batch_compact_enabled"].value_or(m_compact_type.enabled()))
+     {
+          m_compact_type.enable();
+     }
+     else
+     {
+          m_compact_type.disable();
+     }
+     m_flatten_type.update(static_cast<flatten_type>(
+       config["batch_flatten_type"].value_or(static_cast<std::underlying_type_t<flatten_type>>(m_flatten_type.value()))));
+     if (config["batch_flatten_enabled"].value_or(m_flatten_type.enabled()))
+     {
+          m_flatten_type.enable();
+     }
+     else
+     {
+          m_flatten_type.disable();
+     }
+     m_input_load_map = config["batch_input_load_map"].value_or(m_input_load_map);
 }
