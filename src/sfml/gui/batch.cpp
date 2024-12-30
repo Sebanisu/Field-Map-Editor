@@ -15,9 +15,18 @@ struct AsString
 };
 void batch::combo_input_type(int &imgui_id)
 {
+     using namespace std::string_view_literals;
      static constexpr auto values = std::array{ input_types::mim, input_types::deswizzle, input_types::swizzle };
-     const auto            gcc    = fme::GenericComboClass(
-       "Input Type", []() { return values; }, []() { return values | std::views::transform(AsString{}); }, m_input_type);
+     static constexpr auto tooltips =
+       std::array{ "Mim is the storage of the field texture in FF8. So this selection means your using the original low res textures."sv,
+                   "Load a directory of deswizzled textures. Including `.map` files if found. They may be upscaled."sv,
+                   "Load a directory of swizzled textures. Including `.map` files if found. They may be upscaled."sv };
+     const auto gcc = fme::GenericComboClass(
+       "Input Type",
+       []() { return values; },
+       []() { return values | std::views::transform(AsString{}); },
+       []() { return tooltips; },
+       m_input_type);
      if (gcc.render(imgui_id))
      {
           Configuration config{};
