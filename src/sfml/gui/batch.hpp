@@ -45,6 +45,7 @@ class batch
      map_sprite                                                 m_map_sprite        = {};
      std::vector<bool>                                          m_maps_enabled      = {};
      std::uint8_t                                               m_num_columns       = { 5 };
+     bool                                                       m_save_map          = {};
      directory_mode                                             m_directory_browser_mode             = {};
      bool                                                       m_input_load_map                     = { false };
      FutureOfFutureConsumer<std::vector<std::future<std::future<void>>>> m_future_of_future_consumer = {};
@@ -76,15 +77,16 @@ class batch
    public:
      void update(sf::Time elapsed_time);
      explicit batch(std::shared_ptr<archives_group> existing_group);
-     bool in_progress() const;
-     void stop();
+     bool   in_progress() const;
+     void   stop();
      batch &operator=(std::shared_ptr<archives_group> new_group);
-     void draw_window(int &imgui_id);
-     void draw_multi_column_list_box(
-       int                            &imgui_id,
-       const std::string_view          name,
-       const std::vector<std::string> &items,
-       std::vector<bool>              &enabled);
+     void   draw_window(int &imgui_id);
+     void   checkmark_save_map();
+     void   draw_multi_column_list_box(
+         int                            &imgui_id,
+         const std::string_view          name,
+         const std::vector<std::string> &items,
+         std::vector<bool>              &enabled);
 
      void tool_tip(const std::string_view str, int &imgui_id);
 };

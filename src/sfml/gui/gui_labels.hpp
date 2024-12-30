@@ -88,6 +88,7 @@ struct gui_labels
      static constexpr std::string_view draw_palette_texture                   = { "Draw Palette Texture" };
      static constexpr std::string_view compact_flatten                        = { "Compact and Flatten" };
      static constexpr std::string_view batch_operation                        = { "Batch Operation" };
+     static constexpr std::string_view save_map_files                         = { "Save `.map` files" };
 
      static constexpr std::string_view compact_flatten_warning                = {
           "The compact and flatten functions modify the `.map` file. For these changes to take effect in the game, the user must load the "

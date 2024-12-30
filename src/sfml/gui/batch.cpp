@@ -392,7 +392,10 @@ void batch::update(sf::Time elapsed_time)
                     m_future_of_future_consumer = m_map_sprite.save_swizzle_textures(append_file_structure(m_output_path.data()));
                     break;
           }
-          m_map_sprite.save_modified_map(append_file_structure(m_output_path.data()) / m_map_sprite.map_filename());
+          if (m_save_map)
+          {
+               m_map_sprite.save_modified_map(append_file_structure(m_output_path.data()) / m_map_sprite.map_filename());
+          }
      }
      reset_for_next();
 }
@@ -619,7 +622,8 @@ void batch::draw_window(int &imgui_id)
 
      combo_output_type(imgui_id);
      browse_output_path(imgui_id);
-     if(ImGui::CollapsingHeader(gui_labels::compact_flatten.data()))
+     checkmark_save_map();
+     if (ImGui::CollapsingHeader(gui_labels::compact_flatten.data()))
      {
           format_imgui_wrapped_text("{}", gui_labels::compact_flatten_warning);
           combo_compact_type(imgui_id);
@@ -639,6 +643,25 @@ void batch::draw_window(int &imgui_id)
           return;
      }
      format_imgui_text("{}", m_status);
+}
+
+void batch::checkmark_save_map()
+{
+     bool changed = false;
+     bool forced  = (m_compact_type.enabled() || m_flatten_type.enabled());
+     if (!m_save_map && forced)
+     {
+          m_save_map = true;
+          changed    = true;
+     }
+     ImGui::BeginDisabled(forced);
+     if (ImGui::Checkbox(gui_labels::save_map_files.data(), &m_save_map) || changed)
+     {
+          Configuration config{};
+          config->insert_or_assign("batch_save_map", static_cast<std::underlying_type_t<input_types>>(m_save_map));
+          config.save();
+     }
+     ImGui::EndDisabled();
 }
 
 batch &batch::operator=(std::shared_ptr<archives_group> new_group)
@@ -711,4 +734,6 @@ batch::batch(std::shared_ptr<archives_group> existing_group)
           m_flatten_type.disable();
      }
      m_input_load_map = config["batch_input_load_map"].value_or(m_input_load_map);
+
+     m_save_map       = config["batch_save_map"].value_or(m_save_map);
 }
