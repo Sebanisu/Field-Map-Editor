@@ -293,7 +293,7 @@ class GenericComboClass
        : name_(name)
        , values_(std::invoke(std::forward<ValueLambdaT>(value_lambda)))
        , strings_(std::invoke(std::forward<StringLambdaT>(string_lambda)))
-       , tool_tips_(std::invoke(std::forward<StringLambdaT>(tooltip_lamda)))
+       , tool_tips_(std::invoke(std::forward<tool_tip_lambda_t>(tooltip_lamda)))
        , value_(value)
        , num_columns_(num_columns)
        , current_idx_(0)
@@ -331,7 +331,7 @@ class GenericComboClass
      std::string_view                                           name_;
      std::invoke_result_t<ValueLambdaT>                         values_;
      std::invoke_result_t<StringLambdaT>                        strings_;
-     std::invoke_result_t<StringLambdaT>                        tool_tips_;
+     std::invoke_result_t<tool_tip_lambda_t>                    tool_tips_;
      std::reference_wrapper<ValueT>                             value_;
      int                                                        num_columns_;
      mutable std::ranges::range_difference_t<decltype(values_)> current_idx_;
