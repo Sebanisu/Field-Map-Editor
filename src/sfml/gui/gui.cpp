@@ -873,37 +873,9 @@ void gui::combo_coo()
        m_selections.coo);
      if (gcc.render(get_imgui_id()))
      {
-          Configuration config{};
-          config->insert_or_assign("selections_coo", static_cast<std::underlying_type_t<open_viii::LangT>>(m_selections.coo));
-          config.save();
-          // if (mim_test())
-          // {
-          //      m_mim_sprite = m_mim_sprite.with_coo(get_coo());
-          // }
-          // else if (map_test())
-          // {
-          //      m_map_sprite = m_map_sprite.with_coo(get_coo());
-          // }
-          // if (m_field)
-          // {
-          //      generate_upscale_paths(std::string{ m_field->get_base_name() }, get_coo());
-          // }
-          // m_clicked_tile_indices.clear();
-          // m_changed = true;
           update_field();
      }
-     if (ImGui::IsItemHovered())
-     {
-          ImGui::BeginTooltip();
-          format_imgui_text(
-            "{}",
-            "This Language dropdown won't refresh archives unless you toggle the\n"
-            "FF8 Path. Also it might not change anything unless it's the remaster\n"
-            "version of the fields archive because they have all the languages in\n"
-            "the same file. You could change the path directly to a lang- path.\n"
-            "Then this will override this dropdown for older versions of FF8.");
-          ImGui::EndTooltip();
-     }
+     tool_tip(gui_labels::language_dropdown_tool_tip);
 }
 const open_viii::LangT &gui::get_coo() const
 {
@@ -918,12 +890,6 @@ void gui::combo_field()
        [this]() { return m_archives_group->mapdata(); },
        m_selections.field);
      if (gcc.render(get_imgui_id()))
-     //  static constexpr auto items = 20;
-     //  if (ImGui::Combo("Field",
-     //        &m_selections.field,
-     //        m_archives_group.mapdata_c_str().data(),
-     //        static_cast<int>(m_archives_group.mapdata_c_str().size()),
-     //        items))
      {
           Configuration config{};
           const auto   &maps = m_archives_group->mapdata();
@@ -1017,7 +983,7 @@ void gui::tool_tip(const std::string_view str)
 }
 void gui::checkbox_mim_palette_texture()
 {
-     if (ImGui::Checkbox("Draw Palette Texture", &m_selections.draw_palette))
+     if (ImGui::Checkbox(gui_labels::draw_palette_texture.data(), &m_selections.draw_palette))
      {
           Configuration config{};
           config->insert_or_assign("selections_draw_palette", m_selections.draw_palette);
@@ -1025,9 +991,7 @@ void gui::checkbox_mim_palette_texture()
           m_mim_sprite = m_mim_sprite.with_draw_palette(m_selections.draw_palette);
           m_changed    = true;
      }
-     tool_tip(
-       "Draw Palette Texture: The .mim file uses palettes to draw tiles. 4-bit palettes have 16 colors, 8-bit palettes support up to 256, "
-       "and 16-bit tiles don’t use palettes. This setting shows the raw palettes in a grid.");
+     tool_tip(gui_labels::draw_palette_texture_tooltip);
 }
 static void update_bpp(mim_sprite &sprite, BPPT bpp)
 {
@@ -1490,57 +1454,60 @@ void gui::file_browser_save_texture()
 }
 void gui::menuitem_locate_ff8()
 {
-     if (!ImGui::MenuItem("Locate a FF8 install"))
+     if (!ImGui::MenuItem(gui_labels::locate_a_ff8_install.data()))
      {
           return;
      }
+     open_locate_ff8_filebrowser();
+}
+void gui::open_locate_ff8_filebrowser()
+{
      m_directory_browser.Open();
-     m_directory_browser.SetTitle("Choose FF8 install directory");
+     m_directory_browser.SetTitle(gui_labels::choose_a_ff8_install.data());
      m_directory_browser.SetPwd(Configuration{}["ff8_install_navigation_path"].value_or(std::filesystem::current_path().string()));
      m_directory_browser.SetTypeFilters({ ".exe" });
      m_modified_directory_map = map_directory_mode::ff8_install_directory;
 }
-void gui::open_locate_ff8_filebrowser() {}
 void gui::menuitem_locate_custom_upscale()
 {
-     if (!ImGui::MenuItem("Locate a Custom Upscale directory"))
+     if (!ImGui::MenuItem(gui_labels::locate_a_custom_upscale_directory.data()))
      {
           return;
      }
 
      m_directory_browser.Open();
-     m_directory_browser.SetTitle("Choose Custom Upscale directory");
+     m_directory_browser.SetTitle(gui_labels::choose_a_custom_upscale_directory.data());
      m_modified_directory_map = map_directory_mode::custom_upscale_directory;
 }
 void gui::menuitem_save_swizzle_textures()
 {
-     if (ImGui::MenuItem("Save Swizzled Textures", nullptr, false, true))
+     if (!ImGui::MenuItem(gui_labels::save_swizzled_textures.data(), nullptr, false, true))
      {
-          save_swizzle_textures();
+          return;
      }
+     save_swizzle_textures();
 }
 std::string gui::appends_prefix_base_name(std::string_view title) const
 {
-     std::string const      base_name = m_map_sprite.get_base_name();
-     std::string_view const prefix    = std::string_view{ base_name }.substr(0U, 2U);
-     return fmt::format("{} (appends {}{}{})", title, prefix, char{ std::filesystem::path::preferred_separator }, base_name);
+     const auto base_name = m_map_sprite.get_base_name();
+     const auto prefix    = std::string_view{ base_name }.substr(0U, 2U);
+     return fmt::format(
+       "{} ({} {}{}{})", title, gui_labels::appends, prefix, char{ std::filesystem::path::preferred_separator }, base_name);
 }
 void gui::save_swizzle_textures()
 {
      m_directory_browser.Open();
-     static constexpr std::string_view title = "Choose directory to save reswizzle textures";
-     m_directory_browser.SetTitle(appends_prefix_base_name(title));
+     m_directory_browser.SetTitle(appends_prefix_base_name(gui_labels::choose_directory_to_save_textures_to));
      m_directory_browser.SetPwd(Configuration{}["swizzle_path"].value_or(std::filesystem::current_path().string()));
      m_directory_browser.SetTypeFilters({ ".map", ".png" });
      m_modified_directory_map = map_directory_mode::save_swizzle_textures;
 }
 void gui::menuitem_save_deswizzle_textures()
 {
-     if (ImGui::MenuItem("Save Deswizzled Textures (Pupu)", nullptr, false, true))
+     if (ImGui::MenuItem(gui_labels::save_deswizzled_textures.data(), nullptr, false, true))
      {
           m_directory_browser.Open();
-          static constexpr std::string_view title = "Choose directory to save deswizzle textures";
-          m_directory_browser.SetTitle(appends_prefix_base_name(title));
+          m_directory_browser.SetTitle(appends_prefix_base_name(gui_labels::choose_directory_to_save_textures_to));
           m_directory_browser.SetPwd(Configuration{}["deswizzle_path"].value_or(std::filesystem::current_path().string()));
           m_directory_browser.SetTypeFilters({ ".map", ".png" });
           m_modified_directory_map = map_directory_mode::save_deswizzle_textures;
@@ -1553,7 +1520,7 @@ void gui::menuitem_load_swizzle_textures()
           return;
      }
      m_directory_browser.Open();
-     m_directory_browser.SetTitle("Choose directory to load textures from");
+     m_directory_browser.SetTitle(gui_labels::choose_directory_to_load_textures_from.data());
      m_directory_browser.SetPwd(Configuration{}["single_swizzle_path"].value_or(std::filesystem::current_path().string()));
      m_directory_browser.SetTypeFilters({ ".map", ".png" });
      m_modified_directory_map = map_directory_mode::load_swizzle_textures;
@@ -1563,20 +1530,20 @@ void gui::menuitem_load_deswizzle_textures()
      if (!ImGui::MenuItem("Load Deswizzled Textures", nullptr, false, true))
           return;
      m_directory_browser.Open();
-     m_directory_browser.SetTitle("Choose directory to load textures from");
+     m_directory_browser.SetTitle(gui_labels::choose_directory_to_load_textures_from.data());
      m_directory_browser.SetPwd(Configuration{}["single_deswizzle_path"].value_or(std::filesystem::current_path().string()));
      m_directory_browser.SetTypeFilters({ ".map", ".png" });
      m_modified_directory_map = map_directory_mode::load_deswizzle_textures;
 }
 void gui::menuitem_save_texture(bool enabled)
 {
-     if (!ImGui::MenuItem("Save Displayed Texture", nullptr, false, enabled))
+     if (!ImGui::MenuItem(gui_labels::save_displayed_texture.data(), nullptr, false, enabled))
      {
           return;
      }
      const std::string &path = save_texture_path();
      m_save_file_browser.Open();
-     m_save_file_browser.SetTitle("Save Texture as...");
+     m_save_file_browser.SetTitle(gui_labels::save_texture_as.data());
      m_save_file_browser.SetPwd(Configuration{}["save_image_path"].value_or(std::filesystem::current_path().string()));
      m_save_file_browser.SetTypeFilters({ ".png", ".ppm" });
      m_save_file_browser.SetInputName(path.c_str());
@@ -1584,13 +1551,13 @@ void gui::menuitem_save_texture(bool enabled)
 }
 void gui::menuitem_save_mim_file(bool enabled)
 {
-     if (!ImGui::MenuItem("Save Mim File", nullptr, false, enabled))
+     if (!ImGui::MenuItem(gui_labels::save_mim_unmodified.data(), nullptr, false, enabled))
      {
           return;
      }
      const std::string &path = m_mim_sprite.mim_filename();
      m_save_file_browser.Open();
-     m_save_file_browser.SetTitle("Save Mim as...");
+     m_save_file_browser.SetTitle(gui_labels::save_mim_as.data());
      m_save_file_browser.SetPwd(Configuration{}["mim_path"].value_or(std::filesystem::current_path().string()));
      m_save_file_browser.SetTypeFilters({ Mim::EXT.data() });
      m_save_file_browser.SetInputName(path);
@@ -1598,13 +1565,13 @@ void gui::menuitem_save_mim_file(bool enabled)
 }
 void gui::menuitem_save_map_file(bool enabled)
 {
-     if (!ImGui::MenuItem("Save Map File (unmodified)", nullptr, false, enabled))
+     if (!ImGui::MenuItem(gui_labels::save_map_unmodified.data(), nullptr, false, enabled))
      {
           return;
      }
      const std::string &path = m_map_sprite.map_filename();
      m_save_file_browser.Open();
-     m_save_file_browser.SetTitle("Save Map as...");
+     m_save_file_browser.SetTitle(gui_labels::save_map_as.data());
      m_save_file_browser.SetPwd(Configuration{}["map_path"].value_or(std::filesystem::current_path().string()));
      m_save_file_browser.SetTypeFilters({ Map::EXT.data() });
      m_save_file_browser.SetInputName(path);
@@ -1612,13 +1579,13 @@ void gui::menuitem_save_map_file(bool enabled)
 }
 void gui::menuitem_save_map_file_modified(bool enabled)
 {
-     if (!ImGui::MenuItem("Save Map File (modified)", nullptr, false, enabled))
+     if (!ImGui::MenuItem(gui_labels::save_map_modified.data(), nullptr, false, enabled))
      {
           return;
      }
      const std::string &path = m_map_sprite.map_filename();
      m_save_file_browser.Open();
-     m_save_file_browser.SetTitle("Save Map as...");
+     m_save_file_browser.SetTitle(gui_labels::save_map_as.data());
      m_save_file_browser.SetPwd(Configuration{}["map_path"].value_or(std::filesystem::current_path().string()));
      m_save_file_browser.SetTypeFilters({ Map::EXT.data() });
      m_save_file_browser.SetInputName(path);
@@ -1632,7 +1599,7 @@ void gui::menuitem_load_map_file(bool enabled)
      }
      const std::string &path = m_map_sprite.map_filename();
      m_save_file_browser.Open();
-     m_save_file_browser.SetTitle("Load Map...");
+     m_save_file_browser.SetTitle(gui_labels::load_map.data());
      m_save_file_browser.SetPwd(Configuration{}["map_path"].value_or(std::filesystem::current_path().string()));
      m_save_file_browser.SetTypeFilters({ Map::EXT.data() });
      m_save_file_browser.SetInputName(path);
@@ -1668,23 +1635,34 @@ void gui::combo_draw()
 }
 bool gui::combo_path()
 {
-     const auto browse_button = scope_guard([this]() {
-          ImGui::SameLine();
-          if (ImGui::Button("Browse"))
+     const auto transformed_paths =
+       m_paths | std::ranges::views::transform([](toml::node &item) -> std::string { return item.value_or<std::string>({}); });
+     const auto browse_button = scope_guard([&]() {
+          if (ImGui::Button(gui_labels::browse.data()))
           {
                open_locate_ff8_filebrowser();
           }
-     });
-     const auto gcc           = GenericComboClass(
-       gui_labels::path,
-       [this]() {
-            return m_paths | std::ranges::views::transform([](toml::node &item) -> std::string { return item.value_or<std::string>({}); });
-       },
-       [this]() {
-            return m_paths | std::ranges::views::transform([](toml::node &item) -> std::string { return item.value_or<std::string>({}); });
-       },
-       m_selections.path,
-       1);
+          tool_tip(gui_labels::locate_a_ff8_install);
+          ImGui::SameLine();
+          ImGui::BeginDisabled(std::ranges::empty(transformed_paths));
+          if (ImGui::Button(gui_labels::remove.data()))
+          {
+               // Find and remove the selected path from m_paths
+               auto it =
+                 std::ranges::find_if(m_paths, [&](toml::node &item) { return item.value_or<std::string>({}) == m_selections.path; });
+               if (it != m_paths.end())
+               {
+                    m_paths.erase(it);
+                    Configuration config{};
+                    config->insert_or_assign("paths_vector", m_paths);
+                    config.save();
+               }
+          }
+          ImGui::EndDisabled();
+          tool_tip(gui_labels::remove_the_selected_ff8_path);
+          });
+     const auto gcc =
+       GenericComboClass(gui_labels::path, [&]() { return transformed_paths; }, [&]() { return transformed_paths; }, m_selections.path, 1);
      if (gcc.render(get_imgui_id()))
      {
           Configuration config{};
@@ -1937,7 +1915,7 @@ archives_group gui::get_archives_group() const
 sf::RenderWindow gui::get_render_window() const
 {
      return sf::RenderWindow{ sf::VideoMode(m_selections.window_width, m_selections.window_height),
-                              sf::String{ gui_labels::window_title } };
+                              sf::String{ gui_labels::window_title.data() } };
 }
 void gui::update_path()
 {
@@ -2851,7 +2829,7 @@ bool gui::browse_for_image_display_preview()
      bool changed = false;
      ImGui::InputText("##image_path", m_import_image_path.data(), m_import_image_path.size(), ImGuiInputTextFlags_ReadOnly);
      ImGui::SameLine();
-     if (ImGui::Button("Browse"))
+     if (ImGui::Button(gui_labels::browse.data()))
      {
           m_load_file_browser.Open();
           m_load_file_browser.SetTitle(gui_labels::load_image_file.data());
