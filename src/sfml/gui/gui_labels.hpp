@@ -76,6 +76,7 @@ struct gui_labels
      static constexpr std::string_view batch_deswizzle_title                  = { "Batch saving deswizzle textures..." };
      static constexpr std::string_view batch_deswizzle_finish                 = { "Finished the batch deswizzle..." };
      static constexpr std::string_view load_map                               = { "Load Map..." };
+     static constexpr std::string_view batch_load_map                         = { "Load `.map` files" };
      static constexpr std::string_view save_map_as                            = { "Save Map as..." };
      static constexpr std::string_view save_mim_as                            = { "Save Mim as..." };
      static constexpr std::string_view save_texture_as                        = { "Save Texture as..." };
@@ -88,6 +89,7 @@ struct gui_labels
      static constexpr std::string_view draw_palette_texture                   = { "Draw Palette Texture" };
      static constexpr std::string_view compact_flatten                        = { "Compact and Flatten" };
      static constexpr std::string_view batch_operation                        = { "Batch Operation" };
+     static constexpr std::string_view batch_operation_window                 = { "Batch Swizzle/Deswizzle" };
      static constexpr std::string_view save_map_files                         = { "Save `.map` files" };
 
      static constexpr std::string_view compact_flatten_warning                = {

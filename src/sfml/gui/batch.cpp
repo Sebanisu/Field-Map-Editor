@@ -578,7 +578,7 @@ void batch::checkbox_load_map(int &imgui_id)
      }
      const auto pop_id = scope_guard{ &ImGui::PopID };
      ImGui::PushID(++imgui_id);
-     if (!ImGui::Checkbox("Load Map", &m_input_load_map))
+     if (!ImGui::Checkbox(gui_labels::batch_load_map.data(), &m_input_load_map))
      {
           return;
      }
@@ -608,7 +608,7 @@ void batch::tool_tip(const std::string_view str, int &imgui_id)
 void batch::draw_window(int &imgui_id)
 {
      const auto end = scope_guard(&ImGui::End);
-     if (!ImGui::Begin(gui_labels::batch_operation.data()))
+     if (!ImGui::Begin(gui_labels::batch_operation_window.data()))
      {
           return;
      }

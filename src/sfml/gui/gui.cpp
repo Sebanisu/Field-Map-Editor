@@ -1141,7 +1141,7 @@ void gui::batch_operation_test_menu()
      //     {
      //          m_selections.batch_embed_map_warning_window = true;
      //     }
-     if (ImGui::MenuItem("Test Batch Window", nullptr, &m_selections.test_batch_window))
+     if (ImGui::MenuItem(gui_labels::batch_operation_window.data(), nullptr, &m_selections.test_batch_window))
      {
           Configuration config{};
           config->insert_or_assign("selections_test_batch_window", m_selections.test_batch_window);
