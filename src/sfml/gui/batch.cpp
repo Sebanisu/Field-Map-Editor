@@ -344,6 +344,7 @@ bool batch::browse_path(int &imgui_id, std::string_view name, bool &valid_path, 
      {
           open_directory(path_buffer.data());
      }
+     tool_tip(gui_labels::explore_tooltip, imgui_id);
      ImGui::SameLine(0, spacing);
 
      format_imgui_text("{}", name.data());

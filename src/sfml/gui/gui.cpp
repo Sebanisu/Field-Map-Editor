@@ -1646,6 +1646,7 @@ bool gui::combo_path()
           {
                open_directory(m_selections.path);
           }
+          tool_tip(gui_labels::explore_tooltip);
           ImGui::SameLine();
           ImGui::BeginDisabled(std::ranges::empty(transformed_paths));
           if (ImGui::Button(gui_labels::remove.data()))

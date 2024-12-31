@@ -103,8 +103,12 @@ struct gui_labels
 
      static constexpr std::string_view save_map_files                         = { "Save `.map` files" };
 
+     static constexpr std::string_view explore_tooltip                        = {
+          "Opens the file explorer window in the currently assigned directory. On Windows, this opens File Explorer; on Linux, it should "
+                                 "open a similar file browser."
+     };
 
-     static constexpr std::string_view input_mim_tooltip                            = {
+     static constexpr std::string_view input_mim_tooltip = {
           "Mim is the storage of the field texture in FF8. So this selection means your using the original low res textures."
      };
      static constexpr std::string_view input_deswizzle_tooltip = {
@@ -116,8 +120,7 @@ struct gui_labels
 
      static constexpr std::string_view compact_flatten_warning = {
           "The compact and flatten functions modify the `.map` file. For these changes to take effect in the game, the user must load "
-          "the "
-          "updated `.map` file into the field's (.fi.fl.fs) files."
+          "the updated `.map` file into the field's (.fi.fl.fs) files."
      };
 
      static constexpr std::string_view compact_tooltip = {
