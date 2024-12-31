@@ -90,11 +90,34 @@ struct gui_labels
      static constexpr std::string_view compact_flatten                        = { "Compact and Flatten" };
      static constexpr std::string_view batch_operation                        = { "Batch Operation" };
      static constexpr std::string_view batch_operation_window                 = { "Batch Swizzle/Deswizzle" };
+     static constexpr std::string_view explore                                = { "Explore" };
+
+     static constexpr std::string_view choose_input_directory                 = { "Choose directory to load textures from..." };
+     static constexpr std::string_view choose_output_directory                = { "Choose directory to save textures to..." };
+
+     static constexpr std::string_view input_type                             = { "Input Type" };
+     static constexpr std::string_view Output_type                            = { "Output Type" };
+
+     static constexpr std::string_view begin_batch_operation                  = { "Begin Batch Operation..." };
+     static constexpr std::string_view stop                                   = { "Stop" };
+
      static constexpr std::string_view save_map_files                         = { "Save `.map` files" };
 
-     static constexpr std::string_view compact_flatten_warning                = {
-          "The compact and flatten functions modify the `.map` file. For these changes to take effect in the game, the user must load the "
-                         "updated `.map` file into the field's (.fi.fl.fs) files."
+
+     static constexpr std::string_view input_mim_tooltip                            = {
+          "Mim is the storage of the field texture in FF8. So this selection means your using the original low res textures."
+     };
+     static constexpr std::string_view input_deswizzle_tooltip = {
+          "Load a directory of deswizzled textures. Including `.map` files if found. They may be upscaled."
+     };
+     static constexpr std::string_view input_swizzle_tooltip = {
+          "Load a directory of swizzled textures. Including `.map` files if found. They may be upscaled."
+     };
+
+     static constexpr std::string_view compact_flatten_warning = {
+          "The compact and flatten functions modify the `.map` file. For these changes to take effect in the game, the user must load "
+          "the "
+          "updated `.map` file into the field's (.fi.fl.fs) files."
      };
 
      static constexpr std::string_view compact_tooltip = {

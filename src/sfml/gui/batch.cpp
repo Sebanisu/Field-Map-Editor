@@ -15,14 +15,11 @@ struct AsString
 };
 void batch::combo_input_type(int &imgui_id)
 {
-     using namespace std::string_view_literals;
      static constexpr auto values = std::array{ input_types::mim, input_types::deswizzle, input_types::swizzle };
      static constexpr auto tooltips =
-       std::array{ "Mim is the storage of the field texture in FF8. So this selection means your using the original low res textures."sv,
-                   "Load a directory of deswizzled textures. Including `.map` files if found. They may be upscaled."sv,
-                   "Load a directory of swizzled textures. Including `.map` files if found. They may be upscaled."sv };
+       std::array{ gui_labels::input_mim_tooltip, gui_labels::input_deswizzle_tooltip, gui_labels::input_swizzle_tooltip };
      const auto gcc = fme::GenericComboClass(
-       "Input Type",
+       gui_labels::input_type,
        []() { return values; },
        []() { return values | std::views::transform(AsString{}); },
        []() { return tooltips; },
@@ -38,7 +35,7 @@ void batch::combo_output_type(int &imgui_id)
 {
      static constexpr auto values = std::array{ output_types::deswizzle, output_types::swizzle };
      const auto            gcc    = fme::GenericComboClass(
-       "Output Type", []() { return values; }, []() { return values | std::views::transform(AsString{}); }, m_output_type);
+       gui_labels::Output_type, []() { return values; }, []() { return values | std::views::transform(AsString{}); }, m_output_type);
      if (gcc.render(imgui_id))
      {
           Configuration config{};
@@ -244,7 +241,8 @@ void batch::button_start(int &imgui_id)
      ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.0F, 0.5F, 0.0F, 1.0F));// Green
      ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.3F, 0.8F, 0.3F, 1.0F));// Light green hover
      ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.1F, 0.3F, 0.1F, 1.0F));// Dark green active
-     if (ImGui::Button("Begin Batch Operation...", ImVec2{ ImGui::GetContentRegionAvail().x * 0.75F - spacing, ImGui::GetFrameHeight() }))
+     if (ImGui::Button(
+           gui_labels::begin_batch_operation.data(), ImVec2{ ImGui::GetContentRegionAvail().x * 0.75F - spacing, ImGui::GetFrameHeight() }))
      {
           m_fields_consumer = m_archives_group->fields();
           m_field.reset();
@@ -266,7 +264,7 @@ void batch::button_stop(int &imgui_id)
      ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.5F, 0.0F, 0.0F, 1.0F));// Red
      ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.8F, 0.3F, 0.3F, 1.0F));// Light red hover
      ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.3F, 0.1F, 0.1F, 1.0F));// Dark red active
-     if (ImGui::Button("Stop", ImVec2{ ImGui::GetContentRegionAvail().x, ImGui::GetFrameHeight() }))
+     if (ImGui::Button(gui_labels::stop.data(), ImVec2{ ImGui::GetContentRegionAvail().x, ImGui::GetFrameHeight() }))
      {
           stop();
      }
@@ -276,7 +274,7 @@ void batch::button_stop(int &imgui_id)
 void batch::button_input_browse()
 {
      m_directory_browser.Open();
-     m_directory_browser.SetTitle("Choose directory to load textures from...");
+     m_directory_browser.SetTitle(gui_labels::choose_input_directory.data());
      m_directory_browser.SetPwd(m_input_path.data());
      m_directory_browser.SetTypeFilters({ ".map", ".png" });
      m_directory_browser_mode = directory_mode::input_mode;
@@ -284,7 +282,7 @@ void batch::button_input_browse()
 void batch::button_output_browse()
 {
      m_directory_browser.Open();
-     m_directory_browser.SetTitle("Choose directory to save textures to...");
+     m_directory_browser.SetTitle(gui_labels::choose_output_directory.data());
      m_directory_browser.SetPwd(m_output_path.data());
      m_directory_browser.SetTypeFilters({ ".map", ".png" });
      m_directory_browser_mode = directory_mode::output_mode;
@@ -327,7 +325,7 @@ bool batch::browse_path(int &imgui_id, std::string_view name, bool &valid_path, 
      }
      ImGui::SameLine(0, spacing);
      {
-          if (ImGui::Button("Browse", ImVec2{ button_width, button_size }))
+          if (ImGui::Button(gui_labels::browse.data(), ImVec2{ button_width, button_size }))
           {
                // Trigger the chooseFolder function when the button is clicked
                // chooseFolder();
@@ -342,7 +340,7 @@ bool batch::browse_path(int &imgui_id, std::string_view name, bool &valid_path, 
           }
      }
      ImGui::SameLine(0, spacing);
-     if (ImGui::Button("Explore", ImVec2{ button_width, button_size }))
+     if (ImGui::Button(gui_labels::explore.data(), ImVec2{ button_width, button_size }))
      {
           open_directory(path_buffer.data());
      }

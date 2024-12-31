@@ -1642,6 +1642,11 @@ bool gui::combo_path()
           }
           tool_tip(gui_labels::locate_a_ff8_install);
           ImGui::SameLine();
+          if (ImGui::Button(gui_labels::explore.data()))
+          {
+               open_directory(m_selections.path);
+          }
+          ImGui::SameLine();
           ImGui::BeginDisabled(std::ranges::empty(transformed_paths));
           if (ImGui::Button(gui_labels::remove.data()))
           {
