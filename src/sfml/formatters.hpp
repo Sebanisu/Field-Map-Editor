@@ -4,6 +4,7 @@
 
 #ifndef FIELD_MAP_EDITOR_FORMATTERS_HPP
 #define FIELD_MAP_EDITOR_FORMATTERS_HPP
+#include "draw_bit_t.hpp"
 #include "gui/draw_mode.hpp"
 #include "tile_sizes.hpp"
 #include <filesystem>
@@ -11,6 +12,67 @@
 #include <open_viii/graphics/background/BlendModeT.hpp>
 #include <open_viii/graphics/BPPT.hpp>
 #include <open_viii/strings/LangCommon.hpp>
+#include "tile_sizes.hpp"
+
+
+template<>
+struct fmt::formatter<tile_sizes> : fmt::formatter<std::string_view>
+{
+     // tile_sizes::default_size, tile_sizes::x_2_size, tile_sizes::x_4_size, tile_sizes::x_8_size, tile_sizes::x_16_size
+     //  parse is inherited from formatter<string_view>.
+     template<typename FormatContext>
+     constexpr auto format(tile_sizes tile_sizes_t, FormatContext &ctx) const
+     {
+          using namespace open_viii::graphics::background;
+          using namespace std::string_view_literals;
+          std::string_view name = {};
+          switch (tile_sizes_t)
+          {
+               case tile_sizes::default_size:
+                    name = "1x   16 px"sv;
+                    break;
+               case tile_sizes::x_2_size:
+                    name = "2x   32 px"sv;
+                    break;
+               case tile_sizes::x_4_size:
+                    name = "4x   64 px"sv;
+                    break;
+               case tile_sizes::x_8_size:
+                    name = "8x  128 px"sv;
+                    break;
+               case tile_sizes::x_16_size:
+                    name = "16x 256 px"sv;
+                    break;
+          }
+          return fmt::formatter<std::string_view>::format(name, ctx);
+     }
+};
+
+template<>
+struct fmt::formatter<ff_8::draw_bitT> : fmt::formatter<std::string_view>
+{
+     // parse is inherited from formatter<string_view>.
+     template<typename FormatContext>
+     constexpr auto format(ff_8::draw_bitT draw_bit_t, FormatContext &ctx) const
+     {
+          using namespace open_viii::graphics::background;
+          using namespace std::string_view_literals;
+          std::string_view name = {};
+          switch (draw_bit_t)
+          {
+               case ff_8::draw_bitT::all:
+                    name = "all"sv;
+                    break;
+               case ff_8::draw_bitT::disabled:
+                    name = "disabled"sv;
+                    break;
+               case ff_8::draw_bitT::enabled:
+                    name = "enabled"sv;
+                    break;
+          }
+          return fmt::formatter<std::string_view>::format(name, ctx);
+     }
+};
 
 template<>
 struct fmt::formatter<open_viii::graphics::background::BlendModeT> : fmt::formatter<std::string_view>
@@ -103,18 +165,6 @@ struct fmt::formatter<open_viii::LangT> : fmt::formatter<std::string_view>
                     break;
           }
           return fmt::formatter<std::string_view>::format(name, ctx);
-     }
-};
-
-template<>
-struct fmt::formatter<tile_sizes> : fmt::formatter<std::underlying_type_t<tile_sizes>>
-{
-     // parse is inherited from formatter<std::underlying_type_t<tile_sizes>>.
-     template<typename FormatContext>
-     constexpr auto format(tile_sizes tile_size, FormatContext &ctx) const
-     {
-          return fmt::formatter<std::underlying_type_t<tile_sizes>>::format(
-            static_cast<std::underlying_type_t<tile_sizes>>(tile_size), ctx);
      }
 };
 
@@ -228,7 +278,7 @@ struct fmt::formatter<tileT> : fmt::formatter<std::string>
             "Animation ID: {}\n"
             "Animation State: {}\n"
             "Draw: {}",
-            std::string_view(array.data(),array.size()-1),
+            std::string_view(array.data(), array.size() - 1),
             tile.source_rectangle(),
             tile.output_rectangle(),
             tile.z(),

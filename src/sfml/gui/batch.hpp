@@ -90,4 +90,13 @@ class batch
 
      void tool_tip(const std::string_view str, int &imgui_id);
 };
+
+struct AsString
+{
+     template<typename T>
+     std::string operator()(const T &value) const
+     {
+          return fmt::format("{}", value);
+     }
+};
 #endif// FIELD_MAP_EDITOR_BATCH_HPP

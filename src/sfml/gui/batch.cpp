@@ -5,14 +5,6 @@
 #include "batch.hpp"
 #include "Configuration.hpp"
 #include "open_file_explorer.hpp"
-struct AsString
-{
-     template<typename T>
-     std::string operator()(const T &value) const
-     {
-          return fmt::format("{}", value);
-     }
-};
 void batch::combo_input_type(int &imgui_id)
 {
      static constexpr auto values = std::array{ input_types::mim, input_types::deswizzle, input_types::swizzle };

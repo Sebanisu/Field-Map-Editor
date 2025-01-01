@@ -45,7 +45,6 @@ struct gui_labels
      static constexpr std::string_view directory_exists                       = { "Directory Exists" };
      static constexpr std::string_view saving_textures                        = { "Saving Textures" };
      static constexpr std::string_view saving                                 = { "Saving" };
-     static constexpr std::string_view file                                   = { "file" };
      static constexpr std::string_view appends                                = { "appends" };
      static constexpr std::string_view start                                  = { "Start" };
      static constexpr std::string_view count_of_maps                          = { "count of maps" };
@@ -76,6 +75,7 @@ struct gui_labels
      static constexpr std::string_view batch_deswizzle_title                  = { "Batch saving deswizzle textures..." };
      static constexpr std::string_view batch_deswizzle_finish                 = { "Finished the batch deswizzle..." };
      static constexpr std::string_view load_map                               = { "Load Map..." };
+     static constexpr std::string_view load_map_file                          = { "Load Map File" };
      static constexpr std::string_view batch_load_map                         = { "Load `.map` files" };
      static constexpr std::string_view save_map_as                            = { "Save Map as..." };
      static constexpr std::string_view save_mim_as                            = { "Save Mim as..." };
@@ -102,11 +102,35 @@ struct gui_labels
      static constexpr std::string_view select_none                            = { "Select None" };
      static constexpr std::string_view select_all                             = { "Select All" };
      static constexpr std::string_view draw_window_title                      = { "Draw Window" };
+     static constexpr std::string_view render_imported_image                  = { "Render Imported Image" };
+     static constexpr std::string_view mouse_not_over                         = { "Mouse not over the image." };
+     static constexpr std::string_view mouse_pos                              = { "Mouse Pos" };
+     static constexpr std::string_view tile_pos                               = { "Tile Pos" };
+     static constexpr std::string_view page                                   = { "Page" };
+     static constexpr std::string_view number_of_tiles                        = { "Number of Tiles" };
+
+     static constexpr std::string_view file                                   = { "File" };
+     static constexpr std::string_view edit                                   = { "Edit" };
+     static constexpr std::string_view import                                 = { "Import" };
+     static constexpr std::string_view import_page                            = { "Import Page" };
+     static constexpr std::string_view undo                                   = { "Undo" };
+     static constexpr std::string_view redo                                   = { "Redo" };
+     static constexpr std::string_view undo_all                               = { "Undo All" };
+     static constexpr std::string_view redo_all                               = { "Redo All" };
+     static constexpr std::string_view draw_tile_grid                         = { "Draw Tile Grid" };
+     static constexpr std::string_view draw_texture_page_grid                 = { "Draw Texture Page Grid" };
+
 
      static constexpr std::string_view begin_batch_operation                  = { "Begin Batch Operation..." };
      static constexpr std::string_view stop                                   = { "Stop" };
 
      static constexpr std::string_view save_map_files                         = { "Save `.map` files" };
+
+     static constexpr std::string_view draw_bit_all_tooltip                   = { "Show all regardless of bit being enabled or disabled." };
+
+     static constexpr std::string_view draw_bit_enabled_tooltip               = { "Show only tiles with draw bit enabled" };
+
+     static constexpr std::string_view draw_bit_disabled_tooltip              = { "Show only tiles with draw bit disabled" };
 
      static constexpr std::string_view explore_tooltip                        = {
           "Opens the file explorer window in the currently assigned directory. On Windows, this opens File Explorer; on Linux, it should "
