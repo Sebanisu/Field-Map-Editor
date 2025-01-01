@@ -96,7 +96,12 @@ struct gui_labels
      static constexpr std::string_view choose_output_directory                = { "Choose directory to save textures to..." };
 
      static constexpr std::string_view input_type                             = { "Input Type" };
-     static constexpr std::string_view Output_type                            = { "Output Type" };
+     static constexpr std::string_view output_type                            = { "Output Type" };
+     static constexpr std::string_view input_path                             = { "Input Path" };
+     static constexpr std::string_view output_path                            = { "Output Path" };
+     static constexpr std::string_view select_none                            = { "Select None" };
+     static constexpr std::string_view select_all                             = { "Select All" };
+     static constexpr std::string_view draw_window_title                      = { "Draw Window" };
 
      static constexpr std::string_view begin_batch_operation                  = { "Begin Batch Operation..." };
      static constexpr std::string_view stop                                   = { "Stop" };

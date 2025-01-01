@@ -173,7 +173,7 @@ void gui::render_dockspace()
      }
 
      const auto imgui_end = scope_guard(&ImGui::End);
-     (void)ImGui::Begin("DockSpace Demo", nullptr, window_flags);
+     (void)ImGui::Begin("##DockSpace Demo", nullptr, window_flags);
      if constexpr (!opt_padding)
      {
           ImGui::PopStyleVar();
@@ -288,7 +288,7 @@ void gui::frame_rate()
 }
 void gui::compact_flatten_buttons()
 {
-     if(!ImGui::CollapsingHeader(gui_labels::compact_flatten.data()))
+     if (!ImGui::CollapsingHeader(gui_labels::compact_flatten.data()))
      {
           return;
      }
@@ -390,7 +390,8 @@ void gui::loop()
 }
 void gui::draw_window()
 {
-     const auto title = "Draw Window";
+     static constexpr ImGuiWindowFlags window_flags =
+       ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_AlwaysHorizontalScrollbar | ImGuiWindowFlags_AlwaysVerticalScrollbar;
      if (mim_test())
      {
           // m_window.draw(m_mim_sprite.toggle_grids(m_selections.draw_grid, m_selections.draw_texture_page_grid));
@@ -401,11 +402,7 @@ void gui::draw_window()
           const auto pop_end    = scope_guard(&ImGui::End);
           const auto pop_style1 = scope_guard([]() { ImGui::PopStyleColor(); });
           ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4{ clear_color.r / 256.F, clear_color.g / 256.F, clear_color.b / 256.F, 0.9F });
-          if (!ImGui::Begin(
-                title,
-                nullptr,
-                ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_AlwaysHorizontalScrollbar
-                  | ImGuiWindowFlags_AlwaysVerticalScrollbar))
+          if (!ImGui::Begin(gui_labels::draw_window_title.data(), nullptr, window_flags))
           {
                return;
           }
@@ -435,11 +432,7 @@ void gui::draw_window()
           const auto pop_end    = scope_guard(&ImGui::End);
           const auto pop_style1 = scope_guard([]() { ImGui::PopStyleColor(); });
           ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4{ clear_color.r / 256.F, clear_color.g / 256.F, clear_color.b / 256.F, 0.9F });
-          if (!ImGui::Begin(
-                title,
-                nullptr,
-                ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_AlwaysHorizontalScrollbar
-                  | ImGuiWindowFlags_AlwaysVerticalScrollbar))
+          if (!ImGui::Begin(gui_labels::draw_window_title.data(), nullptr, window_flags))
           {
                return;
           }
@@ -1664,7 +1657,7 @@ bool gui::combo_path()
           }
           ImGui::EndDisabled();
           tool_tip(gui_labels::remove_the_selected_ff8_path);
-          });
+     });
      const auto gcc =
        GenericComboClass(gui_labels::path, [&]() { return transformed_paths; }, [&]() { return transformed_paths; }, m_selections.path, 1);
      if (gcc.render(get_imgui_id()))

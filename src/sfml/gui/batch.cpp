@@ -35,7 +35,7 @@ void batch::combo_output_type(int &imgui_id)
 {
      static constexpr auto values = std::array{ output_types::deswizzle, output_types::swizzle };
      const auto            gcc    = fme::GenericComboClass(
-       gui_labels::Output_type, []() { return values; }, []() { return values | std::views::transform(AsString{}); }, m_output_type);
+       gui_labels::output_type, []() { return values; }, []() { return values | std::views::transform(AsString{}); }, m_output_type);
      if (gcc.render(imgui_id))
      {
           Configuration config{};
@@ -114,7 +114,7 @@ void batch::browse_input_path(int &imgui_id)
      {
           return;
      }
-     if (!browse_path(imgui_id, "Input Path", m_input_path_valid, m_input_path))
+     if (!browse_path(imgui_id, gui_labels::input_path, m_input_path_valid, m_input_path))
      {
           return;
      }
@@ -128,7 +128,7 @@ void batch::browse_input_path(int &imgui_id)
 }
 void batch::browse_output_path(int &imgui_id)
 {
-     if (!browse_path(imgui_id, "Output Path", m_output_path_valid, m_output_path))
+     if (!browse_path(imgui_id, gui_labels::output_path, m_output_path_valid, m_output_path))
      {
           return;
      }
@@ -152,22 +152,16 @@ void batch::draw_multi_column_list_box(
      }
 
 
-     if (ImGui::Button("Select All"))
+     if (ImGui::Button(gui_labels::select_all.data()))
      {
-          for (auto &&i : enabled)
-          {
-               i = true;
-          }
+          std::ranges::transform(enabled, enabled.begin(), [](auto &&) { return true; });
      }
 
      ImGui::SameLine();
 
-     if (ImGui::Button("Select None"))
+     if (ImGui::Button(gui_labels::select_none.data()))
      {
-          for (auto &&i : enabled)
-          {
-               i = false;
-          }
+          std::ranges::transform(enabled, enabled.begin(), [](auto &&) { return false; });
      }
 
      ImGui::SameLine();
@@ -192,13 +186,10 @@ void batch::draw_multi_column_list_box(
      }
 
      ImGui::Columns(m_num_columns, "multicol_listbox", false);
-     //     ImGui::Separator();
-     //     ImGui::Text("Toggle"); ImGui::NextColumn();
-     //     ImGui::Text("Item"); ImGui::NextColumn();
      ImGui::Separator();
 
      ImVec4 const enabled_color = ImVec4(0.4F, 0.8F, 0.4F, 1.0F);// Green
-
+     assert(items.size() == enabled.size());
      for (size_t i = 0; i != items.size(); ++i)
      {
           const auto pop_id = scope_guard{ []() {
