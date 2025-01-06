@@ -27,7 +27,7 @@
 #include <SFML/Graphics/Vertex.hpp>
 #include <utility>
 
-struct map_sprite final
+struct [[nodiscard]] map_sprite final
   : public sf::Drawable
   , public sf::Transformable
 {
@@ -82,7 +82,10 @@ struct map_sprite final
      map_sprite() = default;
      map_sprite(ff_8::map_group map_group, bool draw_swizzle, ff_8::filters in_filters, bool force_disable_blends, bool require_coo);
 
-     [[nodiscard]] std::uint32_t            get_map_scale() const;
+
+     [[nodiscard]]std::string appends_prefix_base_name(std::string_view title) const;
+
+       [[nodiscard]] std::uint32_t get_map_scale() const;
      [[nodiscard]] const sf::RenderTexture *get_render_texture() const
      {
           return m_render_texture.get();

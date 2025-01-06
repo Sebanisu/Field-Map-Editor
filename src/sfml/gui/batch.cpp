@@ -3,6 +3,7 @@
 //
 
 #include "batch.hpp"
+#include "as_string.hpp"
 #include "Configuration.hpp"
 #include "open_file_explorer.hpp"
 void batch::combo_input_type(int &imgui_id)

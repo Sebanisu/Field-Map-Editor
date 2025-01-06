@@ -36,6 +36,11 @@ add_executable(${PROJECT_NAME}_SFML
         open_file_explorer.cpp
         future_operations.cpp
         gui/batch.cpp
+        gui/import.cpp
+        gui/collapsing_tile_info.cpp
+        gui/push_pop_id.cpp
+        gui/create_tile_button.cpp
+        gui/tool_tip.cpp
 )
 #set_property(TARGET ${PROJECT_NAME}_SFML PROPERTY CXX_STANDARD 20)
 #find_package(ImGui-SFML REQUIRED)

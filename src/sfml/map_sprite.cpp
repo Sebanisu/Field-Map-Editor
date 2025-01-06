@@ -2,10 +2,12 @@
 #include "append_inserter.hpp"
 #include "format_imgui_text.hpp"
 #include "future_operations.hpp"
+#include "gui/gui_labels.hpp"
 #include "map_operation.hpp"
 #include "safedir.hpp"
 #include "save_image_pbo.hpp"
 #include <bit>
+#include <fmt/format.h>
 #include <open_viii/graphics/Png.hpp>
 #include <spdlog/spdlog.h>
 #include <stb_image.h>
@@ -1502,4 +1504,12 @@ std::vector<std::size_t> map_sprite::find_intersecting(
 bool map_sprite::using_coo() const
 {
      return m_map_group.opt_coo.operator bool();
+}
+
+std::string map_sprite::appends_prefix_base_name(std::string_view title) const
+{
+     const auto base_name = get_base_name();
+     const auto prefix    = std::string_view{ base_name }.substr(0U, 2U);
+     return fmt::format(
+       "{} ({} {}{}{})", title, gui_labels::appends, prefix, char{ std::filesystem::path::preferred_separator }, base_name);
 }
