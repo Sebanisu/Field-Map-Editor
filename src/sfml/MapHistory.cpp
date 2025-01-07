@@ -4,258 +4,273 @@
 
 #include "MapHistory.hpp"
 
-using map_t = open_viii::graphics::background::Map;
+using namespace open_viii::graphics::background;
+using map_t = Map;
+
 namespace ff_8
 {
 static std::vector<PupuID> calculate_pupu(const map_t &map)
 {
-  return map.visit_tiles([](const auto &tiles) {
-    std::vector<PupuID> pupu_ids = {};
-    UniquifyPupu        const pupu_map = {};
-    pupu_ids.reserve(std::ranges::size(tiles));
-    std::ranges::transform(
-      tiles, std::back_insert_iterator(pupu_ids), pupu_map);
-    return pupu_ids;
-  });
+     return map.visit_tiles([](const auto &tiles) {
+          std::vector<PupuID> pupu_ids = {};
+          UniquifyPupu const  pupu_map = {};
+          pupu_ids.reserve(std::ranges::size(tiles));
+          std::ranges::transform(tiles, std::back_insert_iterator(pupu_ids), pupu_map);
+          return pupu_ids;
+     });
 }
 }// namespace ff_8
 
 ff_8::MapHistory::MapHistory(map_t map)
-  : m_front(std::move(map))
-  , m_back(m_front)
-  , m_front_pupu(calculate_pupu(m_front))
+  : m_original(std::move(map))
+  , m_working(m_original)
+  , m_original_pupu(calculate_pupu(m_original))
+  , m_working_pupu(m_original_pupu)
 {
-}
-[[nodiscard]] const std::vector<PupuID> &ff_8::MapHistory::pupu() const noexcept
-{
-  return m_front_pupu;
 }
 
-[[nodiscard]] std::size_t ff_8::MapHistory::count() const
+void ff_8::MapHistory::refresh_all_pupu()
 {
-  return m_front_history.size() + m_back_history.size();
-}
-[[nodiscard]] std::size_t ff_8::MapHistory::redo_count() const
-{
-  return m_redo_history.size();
-}
-[[nodiscard]] const map_t &ff_8::MapHistory::front() const
-{
-  return m_front;
-}
-[[nodiscard]] map_t &ff_8::MapHistory::back()
-{
-  return m_back;
+     refresh_original_pupu();
+     refresh_working_pupu();
 }
 
-[[nodiscard]] const map_t &ff_8::MapHistory::back() const
+void ff_8::MapHistory::refresh_original_pupu()
 {
-  return m_back;
+     m_original_pupu = calculate_pupu(m_original);
 }
-/**
- * For when a change could happen. we make a copy ahead of time.
- * @return back map
- */
-[[nodiscard]] map_t &ff_8::MapHistory::copy_back_preemptive()
+
+void ff_8::MapHistory::refresh_working_pupu()
 {
-  if (!preemptive_copy_mode)
-  {
-    auto &temp           = safe_copy_back();
-    preemptive_copy_mode = true;
-    spdlog::debug(
-      "Map History preemptive_copy_mode: {}\n\t{}:{}",
-      preemptive_copy_mode,
-      __FILE__,
-      __LINE__);
-    return temp;
-  }
-  return back();
+     m_working_pupu = calculate_pupu(m_working);
 }
-/**
- * After copy_mode is returned to normal copy_back_preemptive will resume
- * making copies.
- */
-void ff_8::MapHistory::end_preemptive_copy_mode() const
+
+const std::vector<PupuID> &ff_8::MapHistory::original_pupu() const noexcept
 {
-  if (preemptive_copy_mode)
-  {
-    preemptive_copy_mode = false;
-    spdlog::debug(
-      "Map History preemptive_copy_mode: {}\n\t{}:{}",
-      preemptive_copy_mode,
-      __FILE__,
-      __LINE__);
-  }
+     return m_original_pupu;
 }
-[[nodiscard]] map_t &ff_8::MapHistory::copy_back()
+
+const std::vector<PupuID> &ff_8::MapHistory::working_pupu() const noexcept
 {
-  auto &temp = safe_copy_back();
-  if (!preemptive_copy_mode)
-  {
-    clear_redo();
-  }
-  return temp;
+     return m_working_pupu;
 }
-[[nodiscard]] map_t &ff_8::MapHistory::safe_copy_back()
+
+std::size_t ff_8::MapHistory::count() const
 {
-  (void)debug_count_print();
-  if (!preemptive_copy_mode)
-  {
-    m_front_or_back.push_back(pushed::back);
-    m_back_history.push_back(back());
-  }
-  return back();
+     return m_undo_history.size();
 }
+
+std::size_t ff_8::MapHistory::redo_count() const
+{
+     return m_redo_history.size();
+}
+
+const map_t &ff_8::MapHistory::original() const
+{
+     return m_original;
+}
+
+map_t &ff_8::MapHistory::working()
+{
+     return m_working;
+}
+
+const map_t &ff_8::MapHistory::working() const
+{
+     return m_working;
+}
+
+map_t &ff_8::MapHistory::copy_working(std::string description)
+{
+     (void)debug_count_print();
+     m_undo_original_or_working.push_back(pushed::working);
+     m_undo_history.push_back(working());
+     m_undo_change_descriptions.push_back(std::move(description));
+     return working();
+}
+
 void ff_8::MapHistory::clear_redo()
 {
-  m_redo_history.clear();
-  m_redo_front_or_back.clear();
+     m_redo_history.clear();
+     m_redo_original_or_working.clear();
 }
-[[nodiscard]] bool ff_8::MapHistory::remove_duplicate()
+
+bool ff_8::MapHistory::remove_duplicate()
 {
-  bool ret = false;
-  while (!undo_enabled() &&
-         ((m_front_or_back.back() == pushed::back
-           && m_back_history.back() == m_back)
-          || (m_front_or_back.back() == pushed::front
-              && m_front_history.back() == m_front)))
-  {
-    (void)undo(true);
-    ret = true;
-  }
-  return ret;
+     bool ret = false;
+     while (!undo_enabled() &&
+         ((m_undo_original_or_working.back() == pushed::working
+           && m_undo_history.back() == m_working)
+          || (m_undo_original_or_working.back() == pushed::original
+              && m_undo_history.back() == m_original)))
+     {
+          (void)undo(true);
+          ret = true;
+     }
+     return ret;
 }
-[[nodiscard]] const map_t &ff_8::MapHistory::copy_back_to_front()
+
+const map_t &ff_8::MapHistory::copy_working_to_original(std::string description)
 {
-  if (!preemptive_copy_mode)
-  {
-    clear_redo();
-  }
-  const auto count = debug_count_print();
-  m_front_history.push_back(front());
-  m_front_or_back.push_back(pushed::front);
-  // todo do we want to recalculate the pupu?
-  m_front = back();
-  return front();
+     clear_redo();
+     const auto count = debug_count_print();
+     m_undo_history.push_back(original());
+     m_undo_original_or_working.push_back(pushed::original);
+     m_undo_change_descriptions.push_back(std::move(description));
+     // todo do we want to recalculate the pupu?
+     m_original = working();
+     return original();
 }
-/**
- * Deletes the most recent back or front
- * @return
- */
-[[nodiscard]] bool ff_8::MapHistory::redo()
+
+bool ff_8::MapHistory::redo()
 {
-  const auto count = debug_count_print();
-  if (!redo_enabled())
-  {
-    return false;
-  }
-  pushed const last = m_redo_front_or_back.back();
-  m_front_or_back.push_back(last);
-  m_redo_front_or_back.pop_back();
-  if (last == pushed::back)
-  {
-    (void)redo_back();
-    return true;
-  }
-  (void)redo_front();
-  return true;
+     const auto count = debug_count_print();
+     if (!redo_enabled())
+     {
+          return false;
+     }
+     const pushed last = m_redo_original_or_working.back();
+     m_undo_original_or_working.push_back(last);
+     m_redo_original_or_working.pop_back();
+
+     (void)m_undo_change_descriptions.emplace_back(std::move(m_redo_change_descriptions.back()));
+     m_redo_change_descriptions.pop_back();
+     if (last == pushed::working)
+     {
+          (void)m_undo_history.emplace_back(std::move(m_working));
+          m_working = std::move(m_redo_history.back());
+          m_redo_history.pop_back();
+          return true;
+     }
+     (void)m_undo_history.emplace_back(std::move(m_original));
+     m_original = std::move(m_redo_history.back());
+     m_redo_history.pop_back();
+     return true;
 }
-/**
- * Deletes the most recent back or front
- * @return
- */
-[[nodiscard]] bool ff_8::MapHistory::undo(bool skip_redo)
+
+bool ff_8::MapHistory::undo(bool skip_redo)
 {
-  const auto count = debug_count_print();
-  if (!undo_enabled())
-  {
-    return false;
-  }
-  pushed const last = m_front_or_back.back();
-  if (!skip_redo)
-  {
-    m_redo_front_or_back.push_back(last);
-  }
-  m_front_or_back.pop_back();
-  if (last == pushed::back)
-  {
-    (void)undo_back(skip_redo);
-    return true;
-  }
-  (void)undo_front(skip_redo);
-  return true;
+     const auto count = debug_count_print();
+     if (!undo_enabled())
+     {
+          return false;
+     }
+     const pushed last = m_undo_original_or_working.back();
+     if (!skip_redo)
+     {
+          m_redo_original_or_working.push_back(last);
+          (void)m_redo_change_descriptions.emplace_back(std::move(m_undo_change_descriptions.back()));
+     }
+     m_undo_original_or_working.pop_back();
+     m_undo_change_descriptions.pop_back();
+     if (last == pushed::working)
+     {
+          if (!skip_redo)
+          {
+               m_redo_history.emplace_back(std::move(m_working));
+          }
+          m_working = std::move(m_undo_history.back());
+          m_undo_history.pop_back();
+          return true;
+     }
+     if (!skip_redo)
+     {
+          m_redo_history.emplace_back(std::move(m_original));
+     }
+     m_original = std::move(m_undo_history.back());
+     m_undo_history.pop_back();
+     return true;
 }
 void ff_8::MapHistory::undo_all()
 {
-  while (undo())
-  {
-  }
+     while (undo())
+     {
+     }
 }
 void ff_8::MapHistory::redo_all()
 {
-  while (redo())
-  {
-  }
+     while (redo())
+     {
+     }
 }
-[[nodiscard]] bool ff_8::MapHistory::redo_enabled() const
+bool ff_8::MapHistory::redo_enabled() const
 {
-  return !m_redo_history.empty();
+     return !std::ranges::empty(m_redo_history);
 }
-[[nodiscard]] bool ff_8::MapHistory::undo_enabled() const
+
+bool ff_8::MapHistory::undo_enabled() const
 {
-  return count() != 0U;
+     return !std::ranges::empty(m_undo_history);
 }
-const map_t &ff_8::MapHistory::const_back() const
+
+const map_t &ff_8::MapHistory::const_working() const
 {
-  return m_back;
+     return m_working;
 }
-/**
-* Should only be called by undo() pops front
-* @return returns new front
-*/
-const map_t &ff_8::MapHistory::undo_front(bool skip_redo)
+
+template<is_tile TileT>
+[[nodiscard]] PupuID ff_8::MapHistory::get_pupu_from_working(const TileT &tile) const
 {
-  if (!skip_redo)
-  {
-    m_redo_history.emplace_back(std::move(m_front));
-  }
-  m_front = std::move(m_front_history.back());
-  m_front_history.pop_back();
-  return front();
+     return m_original_pupu[static_cast<std::size_t>(get_offset_from_working(tile))];
 }
-/**
-   * Should only be called by undo() pops back
-   * @return returns new back
- */
-map_t &ff_8::MapHistory::undo_back(bool skip_redo)
+
+// Explicit instantiation for Tiles
+template PupuID ff_8::MapHistory::get_pupu_from_working(const Tile1 &) const;
+template PupuID ff_8::MapHistory::get_pupu_from_working(const Tile2 &) const;
+template PupuID ff_8::MapHistory::get_pupu_from_working(const Tile3 &) const;
+
+template<open_viii::graphics::background::is_tile TileT>
+std::vector<TileT>::difference_type ff_8::MapHistory::get_offset_from_working(const TileT &tile) const
 {
-  if (!skip_redo)
-  {
-    m_redo_history.emplace_back(std::move(m_back));
-  }
-  m_back = std::move(m_back_history.back());
-  m_back_history.pop_back();
-  return back();
+     return working().visit_tiles([&](const auto &tiles) -> std::vector<TileT>::difference_type {
+          if constexpr (std::is_same_v<std::ranges::range_value_t<std::remove_cvref_t<decltype(tiles)>>, TileT>)
+          {
+               return static_cast<std::vector<TileT>::difference_type>(std::ranges::distance(&tiles.front(), &tile));
+          }
+          else
+          {
+               return {};
+          }
+     });
 }
-/**
-   * Should only be called by undo() pops front
-   * @return returns new front
- */
-const map_t &ff_8::MapHistory::redo_front()
+
+template std::vector<Tile1>::difference_type ff_8::MapHistory::get_offset_from_working(const Tile1 &) const;
+template std::vector<Tile2>::difference_type ff_8::MapHistory::get_offset_from_working(const Tile2 &) const;
+template std::vector<Tile3>::difference_type ff_8::MapHistory::get_offset_from_working(const Tile3 &) const;
+
+
+std::string_view                             ff_8::MapHistory::undo_description() const
 {
-  m_front_history.emplace_back(std::move(m_front));
-  m_front = std::move(m_redo_history.back());
-  m_redo_history.pop_back();
-  return front();
+     if (std::ranges::empty(m_undo_change_descriptions))
+     {
+          return {};
+     }
+     return m_undo_change_descriptions.back();
 }
-/**
-   * Should only be called by undo() pops back
-   * @return returns new back
- */
-map_t &ff_8::MapHistory::redo_back()
+
+std::string_view ff_8::MapHistory::redo_description() const
 {
-  m_back_history.emplace_back(std::move(m_back));
-  m_back = std::move(m_redo_history.back());
-  m_redo_history.pop_back();
-  return back();
+     if (std::ranges::empty(m_redo_change_descriptions))
+     {
+          return {};
+     }
+     return m_redo_change_descriptions.back();
+}
+
+[[nodiscard]] ff_8::MapHistory::pushed ff_8::MapHistory::undo_pushed() const
+{
+     if (std::ranges::empty(m_undo_original_or_working))
+     {
+          return {};
+     }
+     return m_undo_original_or_working.back();
+}
+
+[[nodiscard]] ff_8::MapHistory::pushed ff_8::MapHistory::redo_pushed() const
+{
+     if (std::ranges::empty(m_redo_original_or_working))
+     {
+          return {};
+     }
+     return m_redo_original_or_working.back();
 }

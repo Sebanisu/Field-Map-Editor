@@ -234,13 +234,13 @@ struct [[nodiscard]] map_sprite final
      template<typename funcT>
      auto const_visit_tiles(funcT &&p_function) const
      {
-          return m_map_group.maps.const_back().visit_tiles(std::forward<decltype(p_function)>(p_function));
+          return m_map_group.maps.const_working().visit_tiles(std::forward<decltype(p_function)>(p_function));
      }
      template<typename funcT>
      auto const_visit_tiles_both(funcT &&p_function) const
      {
-          return m_map_group.maps.const_back().visit_tiles([&](const auto &back) {
-               return m_map_group.maps.front().visit_tiles([&](const auto &front) { return p_function(back, front); });
+          return m_map_group.maps.const_working().visit_tiles([&](const auto &back) {
+               return m_map_group.maps.original().visit_tiles([&](const auto &front) { return p_function(back, front); });
           });
      }
 
@@ -267,9 +267,9 @@ struct [[nodiscard]] map_sprite final
                          const auto found_iterator = std::ranges::find_if(tiles, [&tile](const auto &l_tile) { return l_tile == tile; });
                          const auto distance       = std::ranges::distance(tiles.begin(), found_iterator);
 
-                         if (std::cmp_greater(std::ranges::ssize(m_map_group.maps.pupu()), distance))
+                         if (std::cmp_greater(std::ranges::ssize(m_map_group.maps.original_pupu()), distance))
                          {
-                              auto pupu_it = m_map_group.maps.pupu().cbegin();
+                              auto pupu_it = m_map_group.maps.original_pupu().cbegin();
                               std::ranges::advance(pupu_it, distance);
                               return get_texture(*pupu_it);
                          }
@@ -309,16 +309,16 @@ struct [[nodiscard]] map_sprite final
 
      auto duel_visitor(auto &&lambda) const
      {
-          return m_map_group.maps.front().visit_tiles([this, &lambda](auto const &tiles_const) {
-               return m_map_group.maps.back().visit_tiles([&lambda, &tiles_const](const auto &tiles) {
+          return m_map_group.maps.original().visit_tiles([this, &lambda](auto const &tiles_const) {
+               return m_map_group.maps.working().visit_tiles([&lambda, &tiles_const](const auto &tiles) {
                     return std::invoke(std::forward<decltype(lambda)>(lambda), tiles_const, tiles);
                });
           });
      }
      auto duel_visitor(auto &&lambda)
      {
-          return m_map_group.maps.front().visit_tiles([this, &lambda](auto const &tiles_const) {
-               return m_map_group.maps.back().visit_tiles([&lambda, &tiles_const](auto &&tiles) {
+          return m_map_group.maps.original().visit_tiles([this, &lambda](auto const &tiles_const) {
+               return m_map_group.maps.working().visit_tiles([&lambda, &tiles_const](auto &&tiles) {
                     return std::invoke(std::forward<decltype(lambda)>(lambda), tiles_const, std::forward<decltype(tiles)>(tiles));
                });
           });
@@ -407,10 +407,14 @@ struct [[nodiscard]] map_sprite final
           return conflicts;
      }
 
+     [[nodiscard]] std::string undo_description() const;
+     
+     [[nodiscard]] std::string redo_description() const;
+
 
      [[nodiscard]] auto get_conflicting_palettes() const
      {
-          return m_map_group.maps.back().visit_tiles([this](const auto &tiles) { return find_conflicting_tiles(tiles); });
+          return m_map_group.maps.working().visit_tiles([this](const auto &tiles) { return find_conflicting_tiles(tiles); });
      }
      [[nodiscard]] ::upscales get_upscales()
      {

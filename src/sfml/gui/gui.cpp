@@ -1056,9 +1056,20 @@ void gui::edit_menu()
      {
           m_map_sprite->undo();
      }
+     else if (m_map_sprite->undo_enabled())
+     {
+
+          const auto description = m_map_sprite->undo_description();
+          tool_tip(description);
+     }
      if (ImGui::MenuItem(gui_labels::redo.data(), "Control + Y", false, m_map_sprite->redo_enabled()))
      {
           m_map_sprite->redo();
+     }
+     else if (m_map_sprite->redo_enabled())
+     {
+          const auto description = m_map_sprite->redo_description();
+          tool_tip(description);
      }
      ImGui::Separator();
      if (ImGui::MenuItem(gui_labels::undo_all.data(), "Shift + Control + Z", false, m_map_sprite->undo_enabled()))

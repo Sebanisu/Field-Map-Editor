@@ -19,7 +19,7 @@ using namespace std::string_literals;
 
 bool map_sprite::empty() const
 {
-     return m_map_group.maps.const_back().visit_tiles([](const auto &tiles) { return std::empty(tiles); });
+     return m_map_group.maps.const_working().visit_tiles([](const auto &tiles) { return std::empty(tiles); });
 }
 
 map_sprite::colors_type
@@ -276,7 +276,7 @@ static constexpr std::underlying_type_t<texture_page_width> operator+(texture_pa
 }
 std::uint8_t map_sprite::max_x_for_saved() const
 {
-     return m_map_group.maps.const_back().visit_tiles([this](const auto &tiles) {
+     return m_map_group.maps.const_working().visit_tiles([this](const auto &tiles) {
           auto       transform_range = m_saved_indices | std::views::transform([this, &tiles](std::size_t tile_index) -> std::uint16_t {
                                       auto &tile = tiles[tile_index];
                                       if (m_draw_swizzle)
@@ -306,22 +306,22 @@ std::uint8_t map_sprite::max_x_for_saved() const
 
 void map_sprite::compact_rows()
 {
-     ff_8::compact_rows(m_map_group.maps.copy_back());
+     ff_8::compact_rows(m_map_group.maps.copy_working(fmt::format("{} {}", gui_labels::compact, gui_labels::rows)));
      update_render_texture();
 }
 void map_sprite::compact_all()
 {
-     ff_8::compact_all(m_map_group.maps.copy_back());
+     ff_8::compact_all(m_map_group.maps.copy_working(fmt::format("{} {}", gui_labels::compact, gui_labels::all)));
      update_render_texture();
 }
 void map_sprite::flatten_bpp()
 {
-     ff_8::flatten_bpp(m_map_group.maps.copy_back());
+     ff_8::flatten_bpp(m_map_group.maps.copy_working(fmt::format("{} {}", gui_labels::flatten, gui_labels::bpp)));
      update_render_texture();
 }
 void map_sprite::flatten_palette()
 {
-     ff_8::flatten_palette(m_map_group.maps.copy_back());
+     ff_8::flatten_palette(m_map_group.maps.copy_working(fmt::format("{} {}", gui_labels::flatten, gui_labels::palette)));
      update_render_texture();
 }
 
@@ -331,7 +331,8 @@ void map_sprite::update_position(const sf::Vector2i &pixel_pos, const uint8_t &t
      {
           return;
      }
-     Map       &current_map = m_map_group.maps.copy_back();
+     Map &current_map = m_map_group.maps.copy_working(
+       fmt::format("{} ({},{}) -> ({},{})", gui_labels::update_position, pixel_pos.x, pixel_pos.y, down_pixel_pos.x, down_pixel_pos.y));
      const auto update_tile_positions =
        [this, &texture_page, &pixel_pos, &down_pixel_pos](const auto &map, auto &&tiles, const std::vector<std::size_t> &indices) {
             for (auto i : indices)
@@ -426,7 +427,7 @@ sf::Sprite map_sprite::save_intersecting(const sf::Vector2i &pixel_pos, const st
      sprite.setScale(1.0F / static_cast<float>(m_scale), 1.0F / static_cast<float>(m_scale));
 
      // Find intersecting tiles for the given position and texture page
-     m_saved_indices = find_intersecting(m_map_group.maps.const_back(), pixel_pos, texture_page, false, true);
+     m_saved_indices = find_intersecting(m_map_group.maps.const_working(), pixel_pos, texture_page, false, true);
 
      spdlog::info("m_saved_indices count: {}", std::ranges::size(m_saved_indices));
 
@@ -496,8 +497,8 @@ sf::Sprite map_sprite::save_intersecting(const sf::Vector2i &pixel_pos, const st
      for (const std::uint16_t &z : m_all_unique_values_and_strings.z().values())
      {
           // Draw tiles for both the regular map and the imported map
-          m_map_group.maps.front().visit_tiles([&](const auto &front_tiles) {
-               m_map_group.maps.const_back().visit_tiles([&](const auto &tiles) { draw_drag_texture(front_tiles, tiles, z); });
+          m_map_group.maps.original().visit_tiles([&](const auto &front_tiles) {
+               m_map_group.maps.const_working().visit_tiles([&](const auto &tiles) { draw_drag_texture(front_tiles, tiles, z); });
           });
           m_imported_tile_map_front.visit_tiles([&](const auto &imported_front_tiles) {
                m_imported_tile_map.visit_tiles(
@@ -530,7 +531,7 @@ sf::Sprite map_sprite::save_intersecting(const sf::Vector2i &pixel_pos, const st
                  if (!m_saved_indices.empty())
                  {
                       // skip saved indices on redraw.
-                      const auto current_index = m_map_group.maps.get_offset_from_back(tile);
+                      const auto current_index = m_map_group.maps.get_offset_from_working(tile);
                       const auto find_index    = std::ranges::find_if(
                         m_saved_indices, [&current_index](const auto search_index) { return std::cmp_equal(search_index, current_index); });
                       if (find_index != m_saved_indices.end())
@@ -948,7 +949,7 @@ void map_sprite::reset_render_texture()
 
 open_viii::graphics::Rectangle<std::uint32_t> map_sprite::get_canvas() const
 {
-     return static_cast<open_viii::graphics::Rectangle<std::uint32_t>>(m_map_group.maps.const_back().canvas());
+     return static_cast<open_viii::graphics::Rectangle<std::uint32_t>>(m_map_group.maps.const_working().canvas());
 }
 
 std::uint32_t map_sprite::width() const
@@ -996,7 +997,7 @@ grid map_sprite::get_texture_page_grid() const
 
 all_unique_values_and_strings map_sprite::get_all_unique_values_and_strings() const
 {
-     return m_map_group.maps.const_back().visit_tiles([](const auto &tiles) { return all_unique_values_and_strings(tiles); });
+     return m_map_group.maps.const_working().visit_tiles([](const auto &tiles) { return all_unique_values_and_strings(tiles); });
 }
 
 const ff_8::filters &map_sprite::filter() const
@@ -1208,7 +1209,7 @@ std::vector<std::future<std::future<void>>> map_sprite::save_pupu_textures(const
      future_of_futures.reserve(max_number_of_texture_pages);
 
      sf::RenderTexture out_texture{};
-     iRectangle const  canvas = m_map_group.maps.const_back().canvas() * static_cast<int>(m_scale);
+     iRectangle const  canvas = m_map_group.maps.const_working().canvas() * static_cast<int>(m_scale);
      out_texture.create(static_cast<std::uint32_t>(canvas.width()), static_cast<std::uint32_t>(canvas.height()));
      for (const PupuID &pupu : unique_pupu_ids)
      {
@@ -1336,10 +1337,10 @@ void map_sprite::load_map(const std::filesystem::path &src_path)
      const auto path = src_path.string();
      open_viii::tools::read_from_file(
        [this](std::istream &os) {
-            (void)m_map_group.maps.copy_back();
-            m_map_group.maps.front().visit_tiles([this, &os](const auto &const_tiles) {
-                 using tile_t            = std::remove_cvref_t<decltype(const_tiles.front())>;
-                 m_map_group.maps.back() = open_viii::graphics::background::Map(
+            (void)m_map_group.maps.copy_working(fmt::format("{}", gui_labels::load_map));
+            m_map_group.maps.original().visit_tiles([this, &os](const auto &const_tiles) {
+                 using tile_t               = std::remove_cvref_t<decltype(const_tiles.front())>;
+                 m_map_group.maps.working() = open_viii::graphics::background::Map(
                    [&os]() -> std::variant<
                              open_viii::graphics::background::Tile1,
                              open_viii::graphics::background::Tile2,
@@ -1367,8 +1368,8 @@ void map_sprite::load_map(const std::filesystem::path &src_path)
                    });
             });
             //   shift to origin
-            m_map_group.maps.back().shift(m_map_group.maps.front().offset().abs());
-            (void)m_map_group.maps.copy_back_to_front();
+            m_map_group.maps.working().shift(m_map_group.maps.original().offset().abs());
+            (void)m_map_group.maps.copy_working_to_original(fmt::format("{}", gui_labels::load_map));
        },
        path);
      update_render_texture();
@@ -1386,11 +1387,11 @@ void map_sprite::save_modified_map(const std::filesystem::path &dest_path) const
 {
      if (m_using_imported_texture)
      {
-          ff_8::save_modified_map(dest_path, m_map_group.maps.front(), m_map_group.maps.const_back(), &m_imported_tile_map);
+          ff_8::save_modified_map(dest_path, m_map_group.maps.original(), m_map_group.maps.const_working(), &m_imported_tile_map);
      }
      else
      {
-          ff_8::save_modified_map(dest_path, m_map_group.maps.front(), m_map_group.maps.const_back());
+          ff_8::save_modified_map(dest_path, m_map_group.maps.original(), m_map_group.maps.const_working());
      }
      test_map(dest_path);
 }
@@ -1424,7 +1425,7 @@ void map_sprite::disable_disable_blends()
 }
 void map_sprite::compact_map_order()
 {
-     ff_8::compact_map_order(m_map_group.maps.copy_back());
+     ff_8::compact_map_order(m_map_group.maps.copy_working(fmt::format("{} {}", gui_labels::compact, gui_labels::map_order)));
      update_render_texture();
 }
 std::string map_sprite::str_to_lower(std::string input)
@@ -1452,6 +1453,15 @@ map_sprite::map_sprite(ff_8::map_group map_group, bool draw_swizzle, ff_8::filte
 {
      init_render_texture();
 }
+
+std::string map_sprite::undo_description() const {
+     return fmt::format("{}: {}", m_map_group.maps.undo_pushed(), m_map_group.maps.undo_description());
+}
+std::string map_sprite::redo_description() const
+{
+     return fmt::format("{}: {}", m_map_group.maps.redo_pushed(), m_map_group.maps.redo_description());
+}
+
 void map_sprite::undo()
 {
      (void)m_map_group.maps.undo();

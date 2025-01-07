@@ -83,7 +83,7 @@ class [[nodiscard]] MoveTiles
           {
                operations.push_back(tile_operations::WithTextureId{ m_released.z });
           }
-          GetMapHistory()->copy_back_perform_operation<TileT>(m_indexes, [&](TileT &new_tile) {
+          GetMapHistory()->copy_working_perform_operation<TileT>(m_indexes, [&](TileT &new_tile) {
                int i = {};
                for (const auto &op : operations)
                {
@@ -293,7 +293,7 @@ class Map
                           //                GetMapHistory().filters)
                           [this](auto &&tile) -> bool {
                                return std::ranges::any_of(m_clicked_indexes, [&](auto &&j) -> bool {
-                                    return std::cmp_equal(j, GetMapHistory()->get_offset_from_back(tile));
+                                    return std::cmp_equal(j, GetMapHistory()->get_offset_from_working(tile));
                                });
                           }))
                     {
@@ -415,7 +415,7 @@ class Map
                          decltype(m_clicked_indexes) tmp{};
                          visit_unsorted_unfiltered_tiles(
                            [&](const auto &tile, VisitState &) -> bool {
-                                tmp.push_back(static_cast<std::intmax_t>(GetMapHistory()->get_offset_from_back(tile)));
+                                tmp.push_back(static_cast<std::intmax_t>(GetMapHistory()->get_offset_from_working(tile)));
                                 return false;
                            },
                            overlap);
@@ -428,7 +428,7 @@ class Map
                     {
                          visit_unsorted_unfiltered_tiles(
                            [this](const auto &tile, VisitState &) -> bool {
-                                m_clicked_indexes.push_back(static_cast<std::intmax_t>(GetMapHistory()->get_offset_from_back(tile)));
+                                m_clicked_indexes.push_back(static_cast<std::intmax_t>(GetMapHistory()->get_offset_from_working(tile)));
                                 return false;
                            },
                            overlap);
@@ -563,7 +563,7 @@ class Map
           const auto  bpp     = tile.depth();
           const auto  palette = tile.palette_id();
           const auto  texture_page_id =
-            GetMapHistory()->get_front_version_of_back_tile(tile, [&](const auto &front_tile) { return front_tile.texture_id(); });
+            GetMapHistory()->get_original_version_of_working_tile(tile, [&](const auto &front_tile) { return front_tile.texture_id(); });
           const auto [texture_index, texture_page_width] = [&]() {
                if (std::ranges::empty(m_upscale_path))
                {
@@ -591,7 +591,7 @@ class Map
           const float tile_scale   = static_cast<float>(texture.height()) / static_cast<float>(GetMim()->get_height());
           const float tile_size    = tile_scale * map_dims_statics::TileSize;
           // glm::vec2(m_mim.get_width(tile.depth()), m_mim.get_height());
-          return GetMapHistory()->get_front_version_of_back_tile(tile, [&](const auto &front_tile) {
+          return GetMapHistory()->get_original_version_of_working_tile(tile, [&](const auto &front_tile) {
                // todo maybe should have a toggle to force back tile.
                return std::optional<glengine::SubTexture>{
                     std::in_place_t{},
@@ -673,7 +673,7 @@ class Map
                  *sub_texture,
                  tile_to_draw_pos(tile),
                  m_map_dims.scaled_tile_size(),
-                 static_cast<int>(GetMapHistory()->get_offset_from_back(tile)));
+                 static_cast<int>(GetMapHistory()->get_offset_from_working(tile)));
                return true;
           });
           m_batch_renderer.draw();
@@ -912,7 +912,7 @@ class Map
      mutable bool                         m_dragging                   = { false };
      mutable SimilarAdjustments           m_similar                    = {};
      static inline const auto             m_filters                    = [](const auto &tile) -> bool {
-          return GetMapHistory().filters(tile) && GetMapHistory().filters(GetMapHistory()->get_pupu_from_back(tile));
+          return GetMapHistory().filters(tile) && GetMapHistory().filters(GetMapHistory()->get_pupu_from_working(tile));
      };
 };
 }// namespace ff_8
