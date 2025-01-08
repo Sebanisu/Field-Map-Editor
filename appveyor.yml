@@ -18,6 +18,8 @@ before_build:
 
       powershell Compress-Archive -Path src -DestinationPath bin\\Release\\src.zip
 
+      powershell Compress-Archive -Path fonts -DestinationPath bin\\Release\\fonts.zip
+
 build_script:
   - cmd: >-
       set PATH=%PATH%;C:\\Users\\appveyor\\AppData\\Roaming\\Python\\Python38\\Scripts

@@ -48,6 +48,7 @@ add_executable(${PROJECT_NAME}_SFML
 find_package(tomlplusplus REQUIRED)
 find_package(spdlog REQUIRED)
 find_package(GLEW REQUIRED)
+find_package(iconfontcppheaders REQUIRED CONFIG)
 include(${CMAKE_SOURCE_DIR}/cmake/imgui-sfml.cmake)
 target_link_libraries(${PROJECT_NAME}_SFML
         PRIVATE project_warnings
@@ -61,7 +62,7 @@ target_link_libraries(${PROJECT_NAME}_SFML
         PRIVATE tomlplusplus::tomlplusplus
         PRIVATE spdlog::spdlog
         PRIVATE GLEW::GLEW
-        PRIVATE IconFontCppHeaders
+        PRIVATE iconfontcppheaders::iconfontcppheaders
         )
 target_include_directories(${PROJECT_NAME}_SFML
         PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
@@ -101,3 +102,11 @@ elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
 endif ()
 enable_sanitizers(${PROJECT_NAME}_SFML)
 SET_TARGET_PATHS(${PROJECT_NAME}_SFML)
+
+add_custom_command(
+    TARGET ${PROJECT_NAME}_SFML POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E echo "Copying fonts to target directory..."
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+        "${CMAKE_SOURCE_DIR}/fonts" "$<TARGET_FILE_DIR:${PROJECT_NAME}_SFML>/fonts"
+    VERBATIM
+)
