@@ -208,6 +208,10 @@ void gui::render_dockspace()
 }
 void gui::control_panel_window()
 {
+     if (!m_selections->display_control_panel_window)
+     {
+          return;
+     }
      const auto imgui_end = scope_guard(&ImGui::End);
      if (!ImGui::Begin(gui_labels::control_panel.data()))
      {
@@ -378,9 +382,14 @@ void gui::loop()
      menu_bar();
      //     popup_batch_deswizzle();
      //     popup_batch_reswizzle();
-     if (m_selections->test_batch_window)
+     if (m_selections->display_batch_window)
      {
           m_batch.draw_window(get_imgui_id());
+     }
+     
+     if(toggle_imgui_demo_window)
+     {
+          ImGui::ShowDemoWindow();
      }
      control_panel_window();
      //     batch_ops_ask_menu();
@@ -398,6 +407,10 @@ void gui::loop()
 }
 void gui::draw_window()
 {
+     if (!m_selections->display_draw_window)
+     {
+          return;
+     }
      static constexpr ImGuiWindowFlags window_flags =
        ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_AlwaysHorizontalScrollbar | ImGuiWindowFlags_AlwaysVerticalScrollbar;
      if (mim_test())
@@ -1012,47 +1025,62 @@ void gui::menu_bar()
      //  if (!ImGui::BeginMenuBar())
      //    return;
      //  const auto end_menu_bar = scope_guard(&ImGui::EndMenuBar);
-     if (ImGui::BeginMenu(gui_labels::file.data()))
-     {
-          file_menu();
-     }
-     if (ImGui::BeginMenu(gui_labels::edit.data()))
-     {
-          edit_menu();
-     }
-     batch_operation_test_menu();
 
-     if (ImGui::BeginMenu(gui_labels::import.data()))
-     {
-          import_menu();
-     }
+     file_menu();
+
+     edit_menu();
+
+     windows_menu();
 }
-void gui::import_menu()
+void gui::windows_menu()
 {
+     if (!ImGui::BeginMenu(gui_labels::windows.data()))
+     {
+          return;
+     }
      const auto end_menu = scope_guard(&ImGui::EndMenu);
-     if (ImGui::MenuItem(gui_labels::import_page.data(), nullptr, &m_selections->display_import_image))
+     if (ImGui::MenuItem(gui_labels::batch_operation_window.data(), "Control + B", &m_selections->display_batch_window))
+     {
+          Configuration config{};
+          config->insert_or_assign("selections_display_batch_window", m_selections->display_batch_window);
+          config.save();
+     }
+     if (ImGui::MenuItem(gui_labels::import_page.data(), "Control + I", &m_selections->display_import_image))
      {
           Configuration config{};
           config->insert_or_assign("selections_display_import_image", m_selections->display_import_image);
           config.save();
      }
-}
-void gui::batch_operation_test_menu()
-{
-     if (!ImGui::BeginMenu(gui_labels::batch_operation.data()))
-     {
-          return;
-     }
-     const auto end_menu = scope_guard(&ImGui::EndMenu);
-     if (ImGui::MenuItem(gui_labels::batch_operation_window.data(), nullptr, &m_selections->test_batch_window))
+     ImGui::Separator();
+     if (ImGui::MenuItem(gui_labels::display_history.data(), "Control + H", &m_selections->display_history_window))
      {
           Configuration config{};
-          config->insert_or_assign("selections_test_batch_window", m_selections->test_batch_window);
+          config->insert_or_assign("selections_display_history_window", m_selections->display_history_window);
           config.save();
+     }
+     ImGui::Separator();
+     if (ImGui::MenuItem(gui_labels::display_draw_window.data(), "Control + D", &m_selections->display_draw_window))
+     {
+          Configuration config{};
+          config->insert_or_assign("selections_display_draw_window", m_selections->display_draw_window);
+          config.save();
+     }
+     if (ImGui::MenuItem(gui_labels::display_control_panel_window.data(), "Control + P", &m_selections->display_control_panel_window))
+     {
+          Configuration config{};
+          config->insert_or_assign("selections_display_control_panel_window", m_selections->display_control_panel_window);
+          config.save();
+     }
+     if (ImGui::MenuItem("ImGui Demo Window", std::nullptr_t{}, &toggle_imgui_demo_window))
+     {
      }
 }
 void gui::edit_menu()
 {
+     if (!ImGui::BeginMenu(gui_labels::edit.data()))
+     {
+          return;
+     }
      const auto end_menu = scope_guard(&ImGui::EndMenu);
      if (ImGui::MenuItem(gui_labels::undo.data(), "Control + Z", false, m_map_sprite->undo_enabled()))
      {
@@ -1108,6 +1136,10 @@ void gui::edit_menu()
 }
 void gui::file_menu()
 {
+     if (!ImGui::BeginMenu(gui_labels::file.data()))
+     {
+          return;
+     }
      const auto end_menu = scope_guard(&ImGui::EndMenu);
      menuitem_locate_ff8();
      if (map_test())
@@ -1762,6 +1794,34 @@ void gui::event_type_key_released(const sf::Event::KeyEvent &key)
           m_selections->display_history_window = !m_selections->display_history_window;
           Configuration config{};
           config->insert_or_assign("selections_display_history_window", m_selections->display_history_window);
+          config.save();
+     }
+     else if (key.control && key.code == sf::Keyboard::I)
+     {
+          m_selections->display_import_image = !m_selections->display_import_image;
+          Configuration config{};
+          config->insert_or_assign("selections_display_import_image", m_selections->display_import_image);
+          config.save();
+     }
+     else if (key.control && key.code == sf::Keyboard::B)
+     {
+          m_selections->display_batch_window = !m_selections->display_batch_window;
+          Configuration config{};
+          config->insert_or_assign("selections_display_batch_window", m_selections->display_batch_window);
+          config.save();
+     }
+     else if (key.control && key.code == sf::Keyboard::D)
+     {
+          m_selections->display_draw_window = !m_selections->display_draw_window;
+          Configuration config{};
+          config->insert_or_assign("selections_display_draw_window", m_selections->display_draw_window);
+          config.save();
+     }
+     else if (key.control && key.code == sf::Keyboard::P)
+     {
+          m_selections->display_control_panel_window = !m_selections->display_control_panel_window;
+          Configuration config{};
+          config->insert_or_assign("selections_display_control_panel_window", m_selections->display_control_panel_window);
           config.save();
      }
      // else if (key.code == sf::Keyboard::Up)

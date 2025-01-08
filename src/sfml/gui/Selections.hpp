@@ -61,15 +61,18 @@ struct Selections
      bool                           draw_texture_page_grid         = { false };///< Whether to draw the texture page grid.
      bool                           draw_swizzle                   = { false };///< Whether to enable swizzle rendering.
      bool                           draw_disable_blending          = { false };///< Whether to disable blending during rendering.
-     bool                           test_batch_window              = { false };///< Whether to display the test batch window.
+     bool                           display_batch_window           = { false };///< Whether to display the test batch window.
      bool                           display_import_image           = { false };///< Whether to display the imported image.
      bool                           import_image_grid              = { false };///< Whether to overlay a grid on the imported image.
      bool                           render_imported_image          = { false };///< Whether to render the imported image.
      bool                           batch_embed_map_warning_window = { false };///< Whether to display a warning window when embedding maps.
      bool                           display_history_window         = { false };///< Whether to display history window.
+     bool                           display_control_panel_window   = { true };///< Whether to display control panel window.
+     bool                           display_draw_window            = { true };///< Whether to display draw window.
+
 
      /**
-      * @brief Constructs a Selections object with default values.
+      * @brief Constructs a Selections object with default values. Loading from past configuration if possible.
       */
      Selections();
 };

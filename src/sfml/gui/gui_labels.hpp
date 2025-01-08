@@ -18,6 +18,7 @@ struct gui_labels
      static constexpr std::string_view compact                                = { "Compact" };
      static constexpr std::string_view rows                                   = { "Rows" };
      static constexpr std::string_view width                                  = { "Width" };
+     static constexpr std::string_view windows                                = { "Windows" };
      static constexpr std::string_view max_tiles                              = { "Max Tiles" };
      static constexpr std::string_view filters                                = { "Filters" };
      static constexpr std::string_view background                             = { "Background" };
@@ -25,7 +26,7 @@ struct gui_labels
      static constexpr std::string_view upscale_path                           = { "Upscale Path" };
      static constexpr std::string_view deswizzle_path                         = { "Deswizzle Path" };
      static constexpr std::string_view processing                             = { "Processing" };
-     static constexpr std::string_view display_history                        = { "Display History" };
+     static constexpr std::string_view display_history                        = { "History" };
      static constexpr std::string_view history                                = { "History" };
      static constexpr std::string_view animation_frame                        = { "Animation Frame" };
      static constexpr std::string_view z                                      = { "Z" };
@@ -103,7 +104,9 @@ struct gui_labels
      static constexpr std::string_view output_path                            = { "Output Path" };
      static constexpr std::string_view select_none                            = { "Select None" };
      static constexpr std::string_view select_all                             = { "Select All" };
-     static constexpr std::string_view draw_window_title                      = { "Draw Window" };
+     static constexpr std::string_view draw_window_title                      = { "Draw" };
+     static constexpr std::string_view display_draw_window                    = { "Draw" };
+     static constexpr std::string_view display_control_panel_window           = { "Control Panel" };
      static constexpr std::string_view render_imported_image                  = { "Render Imported Image" };
      static constexpr std::string_view mouse_not_over                         = { "Mouse not over the image." };
      static constexpr std::string_view mouse_pos                              = { "Mouse Pos" };
@@ -114,7 +117,7 @@ struct gui_labels
      static constexpr std::string_view file                                   = { "File" };
      static constexpr std::string_view edit                                   = { "Edit" };
      static constexpr std::string_view import                                 = { "Import" };
-     static constexpr std::string_view import_page                            = { "Import Page" };
+     static constexpr std::string_view import_page                            = { "Import" };
      static constexpr std::string_view undo                                   = { "Undo" };
      static constexpr std::string_view redo                                   = { "Redo" };
      static constexpr std::string_view undo_all                               = { "Undo All" };

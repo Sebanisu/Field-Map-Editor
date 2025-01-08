@@ -22,10 +22,12 @@ fme::Selections::Selections()
      //  config["selections_render_imported_image"].value_or(
      //    render_imported_image);
      draw_texture_page_grid = config["selections_draw_texture_page_grid"].value_or(draw_texture_page_grid);
-     test_batch_window      = config["selections_test_batch_window"].value_or(test_batch_window);
+     display_batch_window   = config["selections_display_batch_window"].value_or(display_batch_window);
      display_import_image   = config["selections_display_import_image"].value_or(display_import_image);
      import_image_grid      = config["selections_import_image_grid"].value_or(import_image_grid);
      tile_size_value        = static_cast<tile_sizes>(
        config["selections_tile_size_value"].value_or(static_cast<std::underlying_type_t<tile_sizes>>(tile_size_value)));
      display_history_window = config["selections_display_history_window"].value_or(display_history_window);
+     display_control_panel_window = config["selections_display_control_panel_window"].value_or(display_control_panel_window);
+     display_draw_window = config["selections_display_draw_window"].value_or(display_draw_window);
 }

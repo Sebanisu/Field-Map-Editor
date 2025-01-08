@@ -315,8 +315,9 @@ struct gui
      void event_type_mouse_button_released(const sf::Mouse::Button &button);
      void file_menu();
      void edit_menu();
-     void batch_operation_test_menu();
-     void import_menu();
+     void windows_menu();
+
+     static inline constinit bool toggle_imgui_demo_window = { false };
 };
 }// namespace fme
 #endif// FIELD_MAP_EDITOR_GUI_HPP
