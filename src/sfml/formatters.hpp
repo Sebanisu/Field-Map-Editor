@@ -222,16 +222,6 @@ struct fmt::formatter<open_viii::graphics::BPPT> : fmt::formatter<std::uint32_t>
      }
 };
 
-template<>
-struct fmt::formatter<std::filesystem::path> : fmt::formatter<std::string>
-{
-     // parse is inherited from formatter<string_view>.
-     template<typename FormatContext>
-     constexpr auto format(const std::filesystem::path &path, FormatContext &ctx) const
-     {
-          return fmt::formatter<std::string>::format(path.string(), ctx);
-     }
-};
 template<open_viii::graphics::background::is_tile tileT>
 struct fmt::formatter<tileT> : fmt::formatter<std::string>
 {
