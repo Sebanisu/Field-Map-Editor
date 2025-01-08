@@ -13,7 +13,8 @@ class MyPackage(ConanFile):
     settings = "os", "compiler", "build_type", "arch"
     
     def requirements(self):
-        self.requires("spdlog/1.11.0")
+        #self.requires("fmt/11.1.1", override=True)
+        self.requires("spdlog/1.15.0")
         self.requires("glfw/3.3.5")
         self.requires("glew/2.2.0")
         self.requires("glm/0.9.9.8")
