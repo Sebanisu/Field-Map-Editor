@@ -25,7 +25,8 @@ struct gui_labels
      static constexpr std::string_view upscale_path                           = { "Upscale Path" };
      static constexpr std::string_view deswizzle_path                         = { "Deswizzle Path" };
      static constexpr std::string_view processing                             = { "Processing" };
-     static constexpr std::string_view display_history                             = { "Display History" };
+     static constexpr std::string_view display_history                        = { "Display History" };
+     static constexpr std::string_view history                                = { "History" };
      static constexpr std::string_view animation_frame                        = { "Animation Frame" };
      static constexpr std::string_view z                                      = { "Z" };
      static constexpr std::string_view blend_other                            = { "Blend Other" };

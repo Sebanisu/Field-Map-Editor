@@ -239,7 +239,7 @@ template std::vector<Tile2>::difference_type ff_8::MapHistory::get_offset_from_w
 template std::vector<Tile3>::difference_type ff_8::MapHistory::get_offset_from_working(const Tile3 &) const;
 
 
-std::string_view                             ff_8::MapHistory::undo_description() const
+std::string_view                             ff_8::MapHistory::current_undo_description() const
 {
      if (std::ranges::empty(m_undo_change_descriptions))
      {
@@ -248,7 +248,7 @@ std::string_view                             ff_8::MapHistory::undo_description(
      return m_undo_change_descriptions.back();
 }
 
-std::string_view ff_8::MapHistory::redo_description() const
+std::string_view ff_8::MapHistory::current_redo_description() const
 {
      if (std::ranges::empty(m_redo_change_descriptions))
      {
@@ -257,7 +257,7 @@ std::string_view ff_8::MapHistory::redo_description() const
      return m_redo_change_descriptions.back();
 }
 
-[[nodiscard]] ff_8::MapHistory::pushed ff_8::MapHistory::undo_pushed() const
+[[nodiscard]] ff_8::MapHistory::pushed ff_8::MapHistory::current_undo_pushed() const
 {
      if (std::ranges::empty(m_undo_original_or_working))
      {
@@ -266,7 +266,7 @@ std::string_view ff_8::MapHistory::redo_description() const
      return m_undo_original_or_working.back();
 }
 
-[[nodiscard]] ff_8::MapHistory::pushed ff_8::MapHistory::redo_pushed() const
+[[nodiscard]] ff_8::MapHistory::pushed ff_8::MapHistory::current_redo_pushed() const
 {
      if (std::ranges::empty(m_redo_original_or_working))
      {

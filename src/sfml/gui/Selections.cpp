@@ -27,4 +27,5 @@ fme::Selections::Selections()
      import_image_grid      = config["selections_import_image_grid"].value_or(import_image_grid);
      tile_size_value        = static_cast<tile_sizes>(
        config["selections_tile_size_value"].value_or(static_cast<std::underlying_type_t<tile_sizes>>(tile_size_value)));
+     display_history_window = config["selections_display_history_window"].value_or(display_history_window);
 }

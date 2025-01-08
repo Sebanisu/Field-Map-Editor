@@ -456,7 +456,7 @@ class [[nodiscard]] MapHistory
       * @return A string view representing the description of the most recent undoable change.
       *         If there are no undoable changes, an empty string view is returned.
       */
-     [[nodiscard]] std::string_view undo_description() const;
+     [[nodiscard]] std::string_view current_undo_description() const;
 
      /**
       * @brief Retrieves the description of the most recent redoable change.
@@ -467,7 +467,7 @@ class [[nodiscard]] MapHistory
       * @return A string view representing the description of the most recent redoable change.
       *         If there are no redoable changes, an empty string view is returned.
       */
-     [[nodiscard]] std::string_view redo_description() const;
+     [[nodiscard]] std::string_view current_redo_description() const;
      /**
       * @brief Retrieves the type of the most recent undoable change.
       *
@@ -477,7 +477,7 @@ class [[nodiscard]] MapHistory
       * @return A `pushed` value representing the type of the most recent undoable change.
       *         If there are no undoable changes, it returns `pushed::unknown`.
       */
-     [[nodiscard]] pushed           undo_pushed() const;
+     [[nodiscard]] pushed           current_undo_pushed() const;
 
      /**
       * @brief Retrieves the type of the most recent redoable change.
@@ -488,7 +488,22 @@ class [[nodiscard]] MapHistory
       * @return A `pushed` value representing the type of the most recent redoable change.
       *         If there are no redoable changes, it returns `pushed::unknown`.
       */
-     [[nodiscard]] pushed           redo_pushed() const;
+     [[nodiscard]] pushed           current_redo_pushed() const;
+
+     [[nodiscard]] auto             undo_history() const
+     {
+          return std::ranges::views::zip(
+            std::ranges::views::iota(std::size_t{}, std::ranges::size(m_undo_original_or_working)),
+            m_undo_original_or_working,
+            m_undo_change_descriptions);
+     }
+     [[nodiscard]] auto redo_history() const
+     {
+          return std::ranges::views::zip(
+            std::ranges::views::iota(std::size_t{}, std::ranges::size(m_redo_original_or_working)),
+            m_redo_original_or_working,
+            m_redo_change_descriptions);
+     }
 };
 }// namespace ff_8
 

@@ -30,21 +30,21 @@ namespace fme
 void import::render() const
 {
      auto selections = m_selections.lock();
-     auto map_sprite = m_map_sprite.lock();
-
      if (!selections)
      {
           spdlog::error("m_selections is no longer valid. File: {}, Line: {}", __FILE__, __LINE__);
           return;
      }
 
+     if (!selections->display_import_image)
+     {
+          return;
+     }
+
+     auto map_sprite = m_map_sprite.lock();
      if (!map_sprite)
      {
           spdlog::error("m_map_sprite is no longer valid. File: {}, Line: {}", __FILE__, __LINE__);
-          return;
-     }
-     if (!selections->display_import_image)
-     {
           return;
      }
      // begin imgui window

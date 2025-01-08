@@ -386,7 +386,8 @@ void gui::loop()
      //     batch_ops_ask_menu();
      // begin_batch_embed_map_warning_window();
      //     popup_batch_embed();
-     import_image_window();
+     m_import.render();
+     m_history_window.render();
 
      draw_window();
      //  m_mouse_positions.cover.setColor(clear_color);
@@ -846,6 +847,7 @@ void gui::update_field()
           case draw_mode::draw_map:
                m_map_sprite = std::make_shared<map_sprite>(m_map_sprite->with_field(m_field, get_coo()));
                m_import.update(m_map_sprite);
+               m_history_window.update(m_map_sprite);
                break;
      }
      m_loaded_swizzle_texture_path   = std::filesystem::path{};
@@ -1059,7 +1061,7 @@ void gui::edit_menu()
      else if (m_map_sprite->undo_enabled())
      {
 
-          const auto description = m_map_sprite->undo_description();
+          const auto description = m_map_sprite->current_undo_description();
           tool_tip(description);
      }
      if (ImGui::MenuItem(gui_labels::redo.data(), "Control + Y", false, m_map_sprite->redo_enabled()))
@@ -1068,7 +1070,7 @@ void gui::edit_menu()
      }
      else if (m_map_sprite->redo_enabled())
      {
-          const auto description = m_map_sprite->redo_description();
+          const auto description = m_map_sprite->current_redo_description();
           tool_tip(description);
      }
      ImGui::Separator();
@@ -1079,6 +1081,13 @@ void gui::edit_menu()
      if (ImGui::MenuItem(gui_labels::redo_all.data(), "Shift + Control + Y", false, m_map_sprite->redo_enabled()))
      {
           m_map_sprite->redo_all();
+     }
+     ImGui::Separator();
+     if (ImGui::MenuItem(gui_labels::display_history.data(), "Control + H", &m_selections->display_history_window))
+     {
+          Configuration config{};
+          config->insert_or_assign("selections_display_history_window", m_selections->display_history_window);
+          config.save();
      }
      ImGui::Separator();
      if (ImGui::MenuItem(gui_labels::draw_tile_grid.data(), nullptr, &m_selections->draw_grid))
@@ -1534,6 +1543,7 @@ void gui::combo_draw()
                m_map_sprite =
                  std::make_shared<map_sprite>(m_map_sprite->update(ff_8::map_group(m_field, get_coo()), m_selections->draw_swizzle));
                m_import.update(m_map_sprite);
+               m_history_window.update(m_map_sprite);
                break;
      }
      m_changed = true;
@@ -1747,6 +1757,13 @@ void gui::event_type_key_released(const sf::Event::KeyEvent &key)
      {
           m_map_sprite->redo();
      }
+     else if (key.control && key.code == sf::Keyboard::H)
+     {
+          m_selections->display_history_window = !m_selections->display_history_window;
+          Configuration config{};
+          config->insert_or_assign("selections_display_history_window", m_selections->display_history_window);
+          config.save();
+     }
      // else if (key.code == sf::Keyboard::Up)
      // {
      //      m_scrolling.up = false;
@@ -1889,7 +1906,9 @@ gui::gui()
 
 {
      m_import.update(m_selections);
+     m_history_window.update(m_selections);
      m_import.update(m_map_sprite);
+     m_history_window.update(m_map_sprite);
      m_window.setVerticalSyncEnabled(false);
      GLenum const err = glewInit();
      if (std::cmp_not_equal(GLEW_OK, err))
@@ -2301,11 +2320,6 @@ std::vector<std::filesystem::path>
 {
      auto tmp = open_viii::archive::replace_files<Nested>(field, paths);
      return tmp;
-}
-void gui::import_image_window()
-{
-     // draw import window here.
-     m_import.render();
 }
 
 

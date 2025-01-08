@@ -83,9 +83,9 @@ struct [[nodiscard]] map_sprite final
      map_sprite(ff_8::map_group map_group, bool draw_swizzle, ff_8::filters in_filters, bool force_disable_blends, bool require_coo);
 
 
-     [[nodiscard]]std::string appends_prefix_base_name(std::string_view title) const;
+     [[nodiscard]] std::string              appends_prefix_base_name(std::string_view title) const;
 
-       [[nodiscard]] std::uint32_t get_map_scale() const;
+     [[nodiscard]] std::uint32_t            get_map_scale() const;
      [[nodiscard]] const sf::RenderTexture *get_render_texture() const
      {
           return m_render_texture.get();
@@ -407,12 +407,22 @@ struct [[nodiscard]] map_sprite final
           return conflicts;
      }
 
-     [[nodiscard]] std::string undo_description() const;
-     
-     [[nodiscard]] std::string redo_description() const;
+     [[nodiscard]] std::string current_undo_description() const;
+
+     [[nodiscard]] std::string current_redo_description() const;
+
+     [[nodiscard]] auto undo_history() const
+     {
+          return m_map_group.maps.undo_history();
+     }
+
+     [[nodiscard]] auto redo_history() const
+     {
+          return m_map_group.maps.redo_history();
+     }
 
 
-     [[nodiscard]] auto get_conflicting_palettes() const
+     [[nodiscard]] auto        get_conflicting_palettes() const
      {
           return m_map_group.maps.working().visit_tiles([this](const auto &tiles) { return find_conflicting_tiles(tiles); });
      }

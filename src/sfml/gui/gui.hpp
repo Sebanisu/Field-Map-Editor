@@ -13,6 +13,7 @@
 #include "formatters.hpp"
 #include "generic_combo.hpp"
 #include "grid.hpp"
+#include "gui/history_window.hpp"
 #include "import.hpp"
 #include "map_directory_mode.hpp"
 #include "mouse_positions.hpp"
@@ -71,7 +72,8 @@ struct gui
      FutureConsumer<std::vector<std::future<void>>>                      m_future_consumer           = {};
      float                                                               saved_window_width          = {};
      float                                                               saved_window_height         = {};
-     fme::import m_import ={};
+     fme::import                                                         m_import                    = {};
+     fme::history_window                                                 m_history_window            = {};
 
      sf::RenderTexture                                                   m_shader_renderTexture      = {};
 
@@ -180,7 +182,6 @@ struct gui
      //     void                      batch_ops_ask_menu() const;
      bool combo_upscale_path(std::filesystem::path &path, const std::string &field_name, open_viii::LangT coo) const;
      void open_locate_ff8_filebrowser();
-     void import_image_window();
      variant_tile_t                           &combo_selected_tile(bool &changed);
      [[nodiscard]] bool                        browse_for_image_display_preview();
      void                                      generate_upscale_paths(const std::string &field_name, open_viii::LangT coo);

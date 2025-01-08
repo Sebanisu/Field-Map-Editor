@@ -41,6 +41,7 @@ add_executable(${PROJECT_NAME}_SFML
         gui/push_pop_id.cpp
         gui/create_tile_button.cpp
         gui/tool_tip.cpp
+        gui/history_window.cpp
 )
 #set_property(TARGET ${PROJECT_NAME}_SFML PROPERTY CXX_STANDARD 20)
 #find_package(ImGui-SFML REQUIRED)

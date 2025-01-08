@@ -66,6 +66,7 @@ struct Selections
      bool                           import_image_grid              = { false };///< Whether to overlay a grid on the imported image.
      bool                           render_imported_image          = { false };///< Whether to render the imported image.
      bool                           batch_embed_map_warning_window = { false };///< Whether to display a warning window when embedding maps.
+     bool                           display_history_window         = { false };///< Whether to display history window.
 
      /**
       * @brief Constructs a Selections object with default values.

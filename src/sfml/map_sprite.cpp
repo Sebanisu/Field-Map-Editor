@@ -1454,12 +1454,13 @@ map_sprite::map_sprite(ff_8::map_group map_group, bool draw_swizzle, ff_8::filte
      init_render_texture();
 }
 
-std::string map_sprite::undo_description() const {
-     return fmt::format("{}: {}", m_map_group.maps.undo_pushed(), m_map_group.maps.undo_description());
-}
-std::string map_sprite::redo_description() const
+std::string map_sprite::current_undo_description() const
 {
-     return fmt::format("{}: {}", m_map_group.maps.redo_pushed(), m_map_group.maps.redo_description());
+     return fmt::format("{}: {}", m_map_group.maps.current_undo_pushed(), m_map_group.maps.current_undo_description());
+}
+std::string map_sprite::current_redo_description() const
+{
+     return fmt::format("{}: {}", m_map_group.maps.current_redo_pushed(), m_map_group.maps.current_redo_description());
 }
 
 void map_sprite::undo()
