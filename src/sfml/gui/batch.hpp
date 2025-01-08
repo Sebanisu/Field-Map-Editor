@@ -19,7 +19,7 @@
 #include <imgui.h>
 #include <memory>
 #include <SFML/System/Time.hpp>
-
+namespace fme{
 class batch
 {
      enum struct directory_mode
@@ -90,5 +90,5 @@ class batch
 
      void tool_tip(const std::string_view str, int &imgui_id);
 };
-
+}
 #endif// FIELD_MAP_EDITOR_BATCH_HPP

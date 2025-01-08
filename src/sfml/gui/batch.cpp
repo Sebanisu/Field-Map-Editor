@@ -6,7 +6,7 @@
 #include "as_string.hpp"
 #include "Configuration.hpp"
 #include "open_file_explorer.hpp"
-void batch::combo_input_type(int &imgui_id)
+void fme::batch::combo_input_type(int &imgui_id)
 {
      static constexpr auto values = std::array{ input_types::mim, input_types::deswizzle, input_types::swizzle };
      static constexpr auto tooltips =
@@ -24,7 +24,7 @@ void batch::combo_input_type(int &imgui_id)
           config.save();
      }
 }
-void batch::combo_output_type(int &imgui_id)
+void fme::batch::combo_output_type(int &imgui_id)
 {
      static constexpr auto values = std::array{ output_types::deswizzle, output_types::swizzle };
      const auto            gcc    = fme::GenericComboClass(
@@ -36,7 +36,7 @@ void batch::combo_output_type(int &imgui_id)
           config.save();
      }
 }
-void batch::combo_compact_type(int &imgui_id)
+void fme::batch::combo_compact_type(int &imgui_id)
 {
      const auto        tool_tip_pop = scope_guard{ [&]() { tool_tip(gui_labels::compact_tooltip, imgui_id); } };
 
@@ -61,7 +61,7 @@ void batch::combo_compact_type(int &imgui_id)
      config->insert_or_assign("batch_compact_enabled", m_compact_type.enabled());
      config.save();
 }
-void batch::combo_flatten_type(int &imgui_id)
+void fme::batch::combo_flatten_type(int &imgui_id)
 {
      const auto            tool_tip_pop        = scope_guard{ [&]() { tool_tip(gui_labels::flatten_tooltip, imgui_id); } };
      const bool            all_or_only_palette = !m_compact_type.enabled() || m_compact_type.value() != compact_type::map_order;
@@ -101,7 +101,7 @@ void batch::combo_flatten_type(int &imgui_id)
      config->insert_or_assign("batch_flatten_enabled", m_flatten_type.enabled());
      config.save();
 }
-void batch::browse_input_path(int &imgui_id)
+void fme::batch::browse_input_path(int &imgui_id)
 {
      if (m_input_type == input_types::mim)
      {
@@ -119,7 +119,7 @@ void batch::browse_input_path(int &imgui_id)
      config->insert_or_assign("batch_input_path", std::string(m_input_path.data()));
      config.save();
 }
-void batch::browse_output_path(int &imgui_id)
+void fme::batch::browse_output_path(int &imgui_id)
 {
      if (!browse_path(imgui_id, gui_labels::output_path, m_output_path_valid, m_output_path))
      {
@@ -133,7 +133,7 @@ void batch::browse_output_path(int &imgui_id)
      config->insert_or_assign("batch_output_path", std::string(m_output_path.data()));
      config.save();
 }
-void batch::draw_multi_column_list_box(
+void fme::batch::draw_multi_column_list_box(
   int                            &imgui_id,
   const std::string_view          name,
   const std::vector<std::string> &items,
@@ -215,7 +215,7 @@ void batch::draw_multi_column_list_box(
      ImGui::Columns(1);
      ImGui::Separator();
 }
-void batch::button_start(int &imgui_id)
+void fme::batch::button_start(int &imgui_id)
 {
      const auto pop_id_right = scope_guard{ &ImGui::PopID };
      const auto spacing      = ImGui::GetStyle().ItemInnerSpacing.x;
@@ -237,7 +237,7 @@ void batch::button_start(int &imgui_id)
      ImGui::EndDisabled();
 }
 
-void batch::button_stop(int &imgui_id)
+void fme::batch::button_stop(int &imgui_id)
 {
      const auto pop_id_right = scope_guard{ &ImGui::PopID };
      const auto spacing      = ImGui::GetStyle().ItemInnerSpacing.x;
@@ -255,7 +255,7 @@ void batch::button_stop(int &imgui_id)
      ImGui::PopStyleColor(3);
      ImGui::EndDisabled();
 }
-void batch::button_input_browse()
+void fme::batch::button_input_browse()
 {
      m_directory_browser.Open();
      m_directory_browser.SetTitle(gui_labels::choose_input_directory.data());
@@ -263,7 +263,7 @@ void batch::button_input_browse()
      m_directory_browser.SetTypeFilters({ ".map", ".png" });
      m_directory_browser_mode = directory_mode::input_mode;
 };
-void batch::button_output_browse()
+void fme::batch::button_output_browse()
 {
      m_directory_browser.Open();
      m_directory_browser.SetTitle(gui_labels::choose_output_directory.data());
@@ -271,7 +271,7 @@ void batch::button_output_browse()
      m_directory_browser.SetTypeFilters({ ".map", ".png" });
      m_directory_browser_mode = directory_mode::output_mode;
 };
-bool batch::browse_path(int &imgui_id, std::string_view name, bool &valid_path, std::array<char, m_buffer_size> &path_buffer)
+bool fme::batch::browse_path(int &imgui_id, std::string_view name, bool &valid_path, std::array<char, m_buffer_size> &path_buffer)
 {
      bool              changed      = false;
      const ImGuiStyle &style        = ImGui::GetStyle();
@@ -334,7 +334,7 @@ bool batch::browse_path(int &imgui_id, std::string_view name, bool &valid_path, 
      format_imgui_text("{}", name.data());
      return changed;
 }
-void batch::update(sf::Time elapsed_time)
+void fme::batch::update(sf::Time elapsed_time)
 {
      static constexpr int interval           = 30;// the interval in milliseconds
      static int           total_elapsed_time = 0;// keep track of the elapsed time using a static variable
@@ -382,7 +382,7 @@ void batch::update(sf::Time elapsed_time)
      }
      reset_for_next();
 }
-bool batch::consume_one_future()
+bool fme::batch::consume_one_future()
 {
      // perform your operation here
      if (!m_future_of_future_consumer.done())
@@ -402,7 +402,7 @@ bool batch::consume_one_future()
      }
      return false;
 }
-void batch::generate_map_sprite()
+void fme::batch::generate_map_sprite()
 {
      assert(m_field);
      assert(m_coo);
@@ -425,7 +425,7 @@ void batch::generate_map_sprite()
                                 true,
                                 m_coo && m_coo.value() != open_viii::LangT::generic };
 }
-void batch::compact()
+void fme::batch::compact()
 {
      if (!m_compact_type.enabled())
      {
@@ -444,7 +444,7 @@ void batch::compact()
                break;
      }
 }
-void batch::flatten()
+void fme::batch::flatten()
 {
      if (!m_flatten_type.enabled())
      {
@@ -474,7 +474,7 @@ void batch::flatten()
           compact();
      }
 }
-void batch::reset_for_next()
+void fme::batch::reset_for_next()
 {
      m_coo.reset();
      if (m_lang_consumer.done())
@@ -486,7 +486,7 @@ void batch::reset_for_next()
           }
      }
 }
-void batch::choose_field_and_coo()
+void fme::batch::choose_field_and_coo()
 {
      while ((!m_field || !m_field->operator bool()) && !m_fields_consumer.done())
      {
@@ -515,13 +515,13 @@ void batch::choose_field_and_coo()
           ++m_lang_consumer;
      }
 }
-std::filesystem::path batch::append_file_structure(const std::filesystem::path &path) const
+std::filesystem::path fme::batch::append_file_structure(const std::filesystem::path &path) const
 {
      std::string const      name   = m_map_sprite.get_base_name();
      std::string_view const prefix = std::string_view(name).substr(0, 2);
      return path / prefix / name;
 }
-void batch::open_directory_browser()
+void fme::batch::open_directory_browser()
 {
      m_directory_browser.Display();
      if (!m_directory_browser.HasSelected())
@@ -553,7 +553,7 @@ void batch::open_directory_browser()
           break;
      }
 }
-void batch::checkbox_load_map(int &imgui_id)
+void fme::batch::checkbox_load_map(int &imgui_id)
 {
      if (!(m_input_type != input_types::mim))
      {
@@ -570,7 +570,7 @@ void batch::checkbox_load_map(int &imgui_id)
      config.save();
 }
 
-void batch::tool_tip(const std::string_view str, int &imgui_id)
+void fme::batch::tool_tip(const std::string_view str, int &imgui_id)
 {
      if (!ImGui::IsItemHovered())
      {
@@ -588,7 +588,7 @@ void batch::tool_tip(const std::string_view str, int &imgui_id)
 }
 
 
-void batch::draw_window(int &imgui_id)
+void fme::batch::draw_window(int &imgui_id)
 {
      const auto end = scope_guard(&ImGui::End);
      if (!ImGui::Begin(gui_labels::batch_operation_window.data()))
@@ -628,7 +628,7 @@ void batch::draw_window(int &imgui_id)
      format_imgui_text("{}", m_status);
 }
 
-void batch::checkmark_save_map()
+void fme::batch::checkmark_save_map()
 {
      bool changed = false;
      bool forced  = (m_compact_type.enabled() || m_flatten_type.enabled());
@@ -647,7 +647,7 @@ void batch::checkmark_save_map()
      ImGui::EndDisabled();
 }
 
-batch &batch::operator=(std::shared_ptr<archives_group> new_group)
+fme::batch &fme::batch::operator=(std::shared_ptr<archives_group> new_group)
 {
      stop();
      m_archives_group = std::move(new_group);
@@ -659,18 +659,18 @@ batch &batch::operator=(std::shared_ptr<archives_group> new_group)
 }
 
 
-bool batch::in_progress() const
+bool fme::batch::in_progress() const
 {
      return !m_fields_consumer.done() || m_field;
 }
-void batch::stop()
+void fme::batch::stop()
 {
      m_fields_consumer.stop();
      m_lang_consumer.stop();
      m_field.reset();
 }
 
-batch::batch(std::shared_ptr<archives_group> existing_group)
+fme::batch::batch(std::shared_ptr<archives_group> existing_group)
   : m_archives_group(std::move(existing_group))
 {
      if (m_archives_group && m_archives_group->mapdata().size() != m_maps_enabled.size())
