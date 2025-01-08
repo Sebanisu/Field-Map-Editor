@@ -5,71 +5,89 @@
 #ifndef FIELD_MAP_EDITOR_CONFIGURATION_HPP
 #define FIELD_MAP_EDITOR_CONFIGURATION_HPP
 #include <filesystem>
+#include <fmt/std.h>
 #include <spdlog/spdlog.h>
 #include <toml++/toml.h>
+namespace fme
+{
+/**
+ * @brief Manages the configuration settings for the application, using a TOML file.
+ *
+ * This class provides access to a TOML configuration file and allows for reading and writing
+ * settings. The configuration file is loaded into memory and saved when necessary.
+ */
 class Configuration
 {
-public:
-  Configuration()
-    : m_table([]() {
-      toml::parse_result result = toml::parse_file(m_path.string());
-      if (!result)
-      {
-        spdlog::warn(
-          "TOML Parsing failed: {}\n\t{}",
-          result.error().description(),
-          m_path.string());
-        return toml::table{};
-      }
-      return std::move(result).table();
-    }())
-  {
-  }
-  toml::table *operator->() &
-  {
-    return &m_table;
-  }
-  toml::table       *operator->()       && = delete;
-  const toml::table *operator->() const &&
-  {
-    return &m_table;
-  }
-  const toml::table *operator->() const &
-  {
-    return &m_table;
-  }
-  auto operator[](std::string_view i) const
-  {
-    return m_table[i];
-  }
+   public:
+     /**
+      * @brief Constructs a Configuration object and loads the TOML configuration file.
+      *
+      * The configuration file is expected to be located at `res/ff8_config_sfml.toml`
+      * relative to the current working directory.
+      */
+     Configuration();
 
-  void save() const
-  {
-    std::error_code error_code = {};
-    (void)std::filesystem::create_directories(m_path.parent_path(), error_code);
-    if (error_code)
-    {
-      spdlog::warn(
-        "create directories error: \"{}\" - \"{}\" - \"{}\"",
-        m_path.parent_path().string(),
-        error_code.message(),
-        error_code.value());
-      error_code.clear();
-    }
-    auto fs =
-      std::ofstream(m_path, std::ios::out | std::ios::binary | std::ios::trunc);
-    if (!fs)
-    {
-      spdlog::error(
-        "ofstream: failed to open \"{}\" for writing", m_path.string());
-      return;
-    }
-    fs << m_table;
-  }
+     /**
+      * @brief Provides mutable access to the underlying TOML table.
+      * @return A pointer to the mutable TOML table.
+      */
+     toml::table                      *operator->() &;
 
-private:
-  static inline const auto m_path =
-    std::filesystem::current_path() / "res" / "ff8_config_sfml.toml";
-  toml::table m_table{};
+     /**
+      * @brief Deleted move-access operator for mutable TOML table.
+      *
+      * Prevents accessing the TOML table through rvalue references.
+      */
+     toml::table                      *operator->()                      && = delete;
+
+     /**
+      * @brief Provides read-only access to the underlying TOML table.
+      * @return A pointer to the immutable TOML table.
+      */
+     const toml::table                *operator->() const &&;
+
+     /**
+      * @brief Provides read-only access to the underlying TOML table.
+      * @return A pointer to the immutable TOML table.
+      */
+     const toml::table                *operator->() const &;
+
+     /**
+      * @brief Accesses a value in the TOML table by key.
+      * @param i The key of the configuration entry to retrieve.
+      * @return The value associated with the specified key, or an empty value if the key is not found.
+      */
+     toml::node_view<const toml::node> operator[](std::string_view i) const;
+
+     /**
+      * @brief Saves the current state of the configuration back to the file.
+      *
+      * Writes the in-memory TOML table to the configuration file located at `m_path`.
+      */
+     void                              save() const;
+
+   private:
+     /**
+      * @brief The path to the TOML configuration file.
+      *
+      * This is a static inline constant that resolves to `res/ff8_config_sfml.toml`
+      * in the current working directory.
+      */
+     static inline const auto m_path = []() {
+          std::error_code error_code = {};
+          auto            str        = std::filesystem::current_path(error_code) / "res" / "ff8_config_sfml.toml";
+          if (error_code)
+          {
+               spdlog::warn("{}:{} - {}: {} path: \"{}\"", __FILE__, __LINE__, error_code.value(), error_code.message(), str);
+               error_code.clear();
+          }
+          return str;
+     }();
+
+     /**
+      * @brief The in-memory representation of the TOML configuration file.
+      */
+     toml::table m_table{};
 };
+}// namespace fme
 #endif// FIELD_MAP_EDITOR_CONFIGURATION_HPP
