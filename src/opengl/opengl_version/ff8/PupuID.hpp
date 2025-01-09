@@ -110,46 +110,13 @@ private:
 // IDs.end()); auto it = std::unique(IDs.begin(), IDs.end()); IDs.erase(it,
 // IDs.end());
 template<>
-struct fmt::formatter<PupuID>
+struct fmt::formatter<PupuID> : fmt::formatter<std::string>
 {
-  // Presentation format: 'f' - fixed, 'e' - exponential.
-  char           presentation = 'f';
-
-  // Parses format specifications of the form ['f' | 'e'].
-  constexpr auto parse(format_parse_context &ctx) -> decltype(ctx.begin())
-  {
-    // [ctx.begin(), ctx.end()) is a character range that contains a part of
-    // the format string starting from the format specifications to be parsed,
-    // e.g. in
-    //
-    //   fmt::format("{:f} - BPPT of interest", BPPT{1, 2});
-    //
-    // the range will contain "f} - BPPT of interest". The formatter should
-    // parse specifiers until '}' or the end of the range. In this example
-    // the formatter should parse the 'f' specifier and return an iterator
-    // BPPTing to '}'.
-
-    // Parse the presentation format and store it in the formatter:
-    auto it  = ctx.begin();
-    auto end = ctx.end();
-    if (it != end && (*it == 'f' || *it == 'e'))
-      presentation = *it++;
-
-    // Check if reached the end of the range:
-    if (it != end && *it != '}')
-      throw format_error("invalid format");
-
-    // Return an iterator past the end of the parsed range:
-    return it;
-  }
-
-  // Formats the BPPT p using the parsed format specification (presentation)
-  // stored in this formatter.
-  template<typename FormatContext>
-  auto format(const PupuID &p, FormatContext &ctx) -> decltype(ctx.out())
-  {
-    // ctx.out() is an output iterator to write to.
-    return fmt::format_to(ctx.out(), "{:08X}", p.raw());
-  }
+     // Formats value using the parsed format specification stored in this
+     // formatter and writes the output to ctx.out().
+     auto format(const PupuID &value, format_context &ctx) const -> format_context::iterator
+     {
+          return fmt::format_to(ctx.out(), "{:08X}", value.raw());
+     }
 };
 #endif// FIELD_MAP_EDITOR_PUPUID_HPP

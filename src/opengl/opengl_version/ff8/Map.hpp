@@ -205,7 +205,7 @@ class Map
                     const auto pop_color = glengine::ScopeGuard([]() { ImGui::PopStyleColor(1); });
                     // ImGui::PushStyleColor(ImGuiCol_ButtonActive, color);
                     // ImGui::PushStyleColor(ImGuiCol_ButtonHovered, color);
-                    bool       value     = ImGui::ImageButton(imgui_texture_id_ref, ImVec2(32, 32), uv[0], uv[1]);
+                    bool       value     = ImGui::ImageButton("##tile_display_window", imgui_texture_id_ref, ImVec2(32, 32), uv[0], uv[1]);
                     text_width           = ImGui::GetStyle().ItemSpacing.x + ImGui::GetItemRectMax().x - text_width;
                     return value;
                };
