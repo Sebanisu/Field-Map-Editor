@@ -13,12 +13,12 @@ class MyPackage(ConanFile):
     settings = "os", "compiler", "build_type", "arch"
     
     def requirements(self):
-        #self.requires("fmt/11.1.1", override=True)
+        self.requires("lz4/1.10.0")
         self.requires("spdlog/1.15.0")
         self.requires("glfw/3.4")
         self.requires("glew/2.2.0")
         self.requires("glm/0.9.9.8")
-        self.requires("imgui/1.91.5-docking")#imgui/cci.20230105+1.89.2.docking
+        self.requires("imgui/1.91.5-docking")
         self.requires("sfml/2.6.2")
         self.requires("zlib/1.3.1")
         self.requires("openal-soft/1.22.2")
