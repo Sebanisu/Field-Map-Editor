@@ -41,7 +41,7 @@ class MyPackage(ConanFile):
     def generate(self):
         #tc = CMakeToolchain(self, generator="Ninja")
         tc = CMakeToolchain(self)
-        tc.presets_prefix = f"conan_{self.settings.os}".lower()
+        tc.presets_prefix = f"conan_{self.settings.os}".lower() + "_" + str(self.settings.build_type).lower()
         imgui = self.dependencies["imgui"].cpp_info
         tc.variables["IMGUI_IMPL_DIR"] = os.path.normpath(imgui.srcdirs[0]).replace("\\", "/")        
         tc.variables["SFML_WITH_WINDOW"] = self.dependencies["sfml"].options.window

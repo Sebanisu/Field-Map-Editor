@@ -18,9 +18,9 @@
 if (NOT EXISTS "${CMAKE_SOURCE_DIR}/fonts/fa-solid-900.ttf")
     message(STATUS "Downloading Font Awesome solid font (fa-solid-900.ttf)...")
     file(
-        DOWNLOAD "https://github.com/FortAwesome/Font-Awesome/raw/5.x/webfonts/fa-solid-900.ttf"
+        DOWNLOAD "https://github.com/FortAwesome/Font-Awesome/raw/refs/heads/6.x/webfonts/fa-solid-900.ttf"
         "${CMAKE_SOURCE_DIR}/fonts/fa-solid-900.ttf"
-        EXPECTED_HASH SHA256=f9d6933d04c59a42aca30bd88eec38bb9cbeb69b1547fd550ef73eba0bce7a1a
+        EXPECTED_HASH SHA256=af19d135d3a935b3ebfbd80320716ffe1202052c5f68dc2c5f1abc57005ac605
         TLS_VERIFY ON
     )
 endif()

@@ -48,7 +48,7 @@ build_script:
 
       echo Configure and generate build files using the CMake preset
 
-      cmake --preset conan_windows-default
+      cmake --preset conan_windows_release-default
 
       echo Build using msbuild
 

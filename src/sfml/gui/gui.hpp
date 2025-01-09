@@ -8,6 +8,7 @@
 #include "compact_type.hpp"
 #include "Configuration.hpp"
 #include "events.hpp"
+#include "fa_icons.hpp"
 #include "file_dialog_mode.hpp"
 #include "filebrowser.hpp"
 #include "formatters.hpp"
@@ -305,17 +306,17 @@ struct gui
           {
           }
      }
-     void filter_empty_import_tiles();
-     void collapsing_header_generated_tiles() const;
-     void adjust_source_xy_texture_page_for_import_map(uint8_t next_source_y, const uint8_t next_texture_page);
-     void find_selected_tile_for_import(variant_tile_t &current_tile) const;
-     void event_type_key_released(const sf::Event::KeyEvent &key);
-     void event_type_key_pressed(const sf::Event::KeyEvent &key);
-     void event_type_mouse_button_pressed(const sf::Mouse::Button &button);
-     void event_type_mouse_button_released(const sf::Mouse::Button &button);
-     void file_menu();
-     void edit_menu();
-     void windows_menu();
+     void                         filter_empty_import_tiles();
+     void                         collapsing_header_generated_tiles() const;
+     void                         adjust_source_xy_texture_page_for_import_map(uint8_t next_source_y, const uint8_t next_texture_page);
+     void                         find_selected_tile_for_import(variant_tile_t &current_tile) const;
+     void                         event_type_key_released(const sf::Event::KeyEvent &key);
+     void                         event_type_key_pressed(const sf::Event::KeyEvent &key);
+     void                         event_type_mouse_button_pressed(const sf::Mouse::Button &button);
+     void                         event_type_mouse_button_released(const sf::Mouse::Button &button);
+     void                         file_menu();
+     void                         edit_menu();
+     void                         windows_menu();
 
      static inline constinit bool toggle_imgui_demo_window = { false };
 };

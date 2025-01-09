@@ -75,7 +75,9 @@ conan profile list
 Install project dependencies with Conan:
 
 ```cmd
-conan install . -pr windows_msvc -pr:b windows_msvc --build=missing -s compiler.cppstd=23
+conan install . -pr windows_msvc -pr:b windows_msvc --build=missing -s compiler.cppstd=23 -s build_type=Release -of build/Release
+conan install . -pr windows_msvc -pr:b windows_msvc --build=missing -s compiler.cppstd=23 -s build_type=RelWithDebInfo -of build/RelWithDebInfo
+conan install . -pr windows_msvc -pr:b windows_msvc --build=missing -s compiler.cppstd=23 -s build_type=Debug -of build/Debug
 deactivate
 ```
 
@@ -88,10 +90,10 @@ cmake --version
 cmake --list-presets
 ```
 
-Configure and generate build files using the preset:
+Configure and generate build files using the preset: (Conan loves to add default to the preset.)
 
 ```cmd
-cmake --preset conan_windows-default
+cmake --preset conan_windows-release-default
 ```
 
 ### Step 4: Build the Project

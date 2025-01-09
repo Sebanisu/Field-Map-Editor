@@ -88,6 +88,7 @@ void gui::start()
      if (m_window.isOpen())
      {
           scale_window(static_cast<float>(m_selections->window_width), static_cast<float>(m_selections->window_height));
+          (void)icons_font();
           do
           {
                m_changed      = false;
@@ -218,6 +219,9 @@ void gui::control_panel_window()
           // m_mouse_positions.mouse_enabled = handle_mouse_cursor();
           return;
      }
+     // ImGui::PushFont(icons_font());
+     // ImGui::Button(ICON_FA_MAGNIFYING_GLASS " Search");     
+     // ImGui::PopFont();
      //    if (m_first)
      //    {
      //      ImGui::SetWindowPos({ 0U, 0U });
@@ -386,8 +390,8 @@ void gui::loop()
      {
           m_batch.draw_window(get_imgui_id());
      }
-     
-     if(toggle_imgui_demo_window)
+
+     if (toggle_imgui_demo_window)
      {
           ImGui::ShowDemoWindow();
      }
@@ -1910,8 +1914,10 @@ mim_sprite gui::get_mim_sprite() const
 void gui::init_and_get_style()
 {
      m_window.setVerticalSyncEnabled(true);
-     (void)ImGui::SFML::Init(m_window);
-     ImGuiIO &imgui_io    = ImGui::GetIO();
+     (void)ImGui::SFML::Init(m_window, false);
+     (void)icons_font();
+     ImGui::SFML::UpdateFontTexture();
+     ImGuiIO &imgui_io = ImGui::GetIO();
      imgui_io.ConfigFlags = bitwise_or(imgui_io.ConfigFlags, ImGuiConfigFlags_DockingEnable);
      if (m_field)
      {
