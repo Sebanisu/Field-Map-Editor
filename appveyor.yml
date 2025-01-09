@@ -18,6 +18,9 @@ before_build:
 
       powershell Compress-Archive -Path src -DestinationPath bin\\Release\\src.zip
 
+# fonts.zip is now generated after the build process
+after_build:
+  - cmd: >-
       powershell Compress-Archive -Path fonts -DestinationPath bin\\Release\\fonts.zip
 
 build_script:
