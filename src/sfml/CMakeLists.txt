@@ -15,34 +15,34 @@ find_package(Threads REQUIRED)
 include(${CMAKE_SOURCE_DIR}/cmake/OpenVIII_CPP_WIP.cmake)
 include(${CMAKE_SOURCE_DIR}/cmake/ImGuiFileBrowser.cmake)
 include(${CMAKE_SOURCE_DIR}/cmake/IconFontCppHeaders.cmake)
-add_executable(${PROJECT_NAME}_SFML
-        main.cpp
-        archives_group.cpp
-        generic_combo.cpp
-        mim_sprite.cpp
-        map_sprite.cpp
-        MapHistory.cpp
-        grid.cpp
-        upscales.cpp
-        Configuration.cpp
-        safedir.cpp
+add_executable(${PROJECT_NAME}_SFML        gui/batch.cpp
+        gui/collapsing_tile_info.cpp
+        gui/create_tile_button.cpp
         gui/gui.cpp
+        gui/history_window.cpp
+        gui/import.cpp
         gui/mouse_positions.cpp
+        gui/push_pop_id.cpp
         gui/scrolling.cpp
         gui/Selections.cpp
-        square.cpp
-        save_image_pbo.cpp
+        gui/tool_tip.cpp
+        archives_group.cpp
+        Configuration.cpp
+        future_operations.cpp
+        generic_combo.cpp
+        grid.cpp
+        main.cpp
         map_group.cpp
         map_operation.cpp
+        MapHistory.cpp
+        map_sprite.cpp
+        mim_sprite.cpp
         open_file_explorer.cpp
-        future_operations.cpp
-        gui/batch.cpp
-        gui/import.cpp
-        gui/collapsing_tile_info.cpp
-        gui/push_pop_id.cpp
-        gui/create_tile_button.cpp
-        gui/tool_tip.cpp
-        gui/history_window.cpp
+        PupuID.cpp
+        safedir.cpp
+        save_image_pbo.cpp
+        square.cpp
+        upscales.cpp
 )
 #set_property(TARGET ${PROJECT_NAME}_SFML PROPERTY CXX_STANDARD 20)
 #find_package(ImGui-SFML REQUIRED)
