@@ -222,8 +222,8 @@ struct gui_labels
           "256, and 16-bit tiles don’t use palettes. This setting shows the raw palettes in a grid."
      };
      static constexpr auto tile_values =
-       std::array{ hex,         source,       destination,     z,   bpp, palette, texture_page, layer_id, blend_mode,
-                   blend_other, animation_id, animation_frame, draw };
+       std::array<std::string_view, 13>{ hex,         source,       destination,     z,   bpp, palette, texture_page, layer_id, blend_mode,
+                                         blend_other, animation_id, animation_frame, draw };
 
 
      gui_labels() = delete;
