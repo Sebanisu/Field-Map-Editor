@@ -221,12 +221,12 @@ struct gui_labels
           "Draw Palette Texture: The .mim file uses palettes to draw tiles. 4-bit palettes have 16 colors, 8-bit palettes support up to "
           "256, and 16-bit tiles don’t use palettes. This setting shows the raw palettes in a grid."
      };
-     static constexpr std::array tile_values = { hex,          source,          destination, z,          bpp,
-                                                 palette,      texture_page,    layer_id,    blend_mode, blend_other,
-                                                 animation_id, animation_frame, draw };
+     static constexpr auto tile_values =
+       std::array{ hex,         source,       destination,     z,   bpp, palette, texture_page, layer_id, blend_mode,
+                   blend_other, animation_id, animation_frame, draw };
 
 
-     gui_labels()                            = delete;
+     gui_labels() = delete;
 };
 }// namespace fme
 #endif// FIELD_MAP_EDITOR_GUI_LABELS_HPP
