@@ -397,7 +397,7 @@ bool import::combo_tile_size() const
        []() -> decltype(auto) { return values; },
        []() { return values | std::views::transform(AsString{}); },
        selections->tile_size_value);
-     if (!gcc.render(get_imgui_id()))
+     if (!gcc.render())
      {
           return false;
      }

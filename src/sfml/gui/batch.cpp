@@ -19,7 +19,7 @@ void fme::batch::combo_input_type()
        []() { return values | std::views::transform(AsString{}); },
        []() { return tooltips; },
        m_input_type);
-     if (gcc.render(get_imgui_id()))
+     if (gcc.render())
      {
           Configuration config{};
           config->insert_or_assign("batch_input_type", static_cast<std::underlying_type_t<input_types>>(m_input_type));
@@ -31,7 +31,7 @@ void fme::batch::combo_output_type()
      static constexpr auto values = std::array{ output_types::deswizzle, output_types::swizzle };
      const auto            gcc    = fme::GenericComboClass(
        gui_labels::output_type, []() { return values; }, []() { return values | std::views::transform(AsString{}); }, m_output_type);
-     if (gcc.render(get_imgui_id()))
+     if (gcc.render())
      {
           Configuration config{};
           config->insert_or_assign("batch_output_type", static_cast<std::underlying_type_t<output_types>>(m_output_type));
@@ -53,7 +53,7 @@ void fme::batch::combo_compact_type()
        []() { return tool_tips; },
        [this]() -> auto & { return m_compact_type; });
 
-     if (!gcc.render(get_imgui_id()))
+     if (!gcc.render())
      {
           return;
      }
@@ -80,7 +80,7 @@ void fme::batch::combo_flatten_type()
             [&]() { return values | std::views::transform(AsString{}); },
             [&]() { return tool_tips; },
             [this]() -> auto & { return m_flatten_type; });
-          if (!gcc.render(get_imgui_id()))
+          if (!gcc.render())
           {
                return;
           }
@@ -93,7 +93,7 @@ void fme::batch::combo_flatten_type()
             [&]() { return values_only_palette | std::views::transform(AsString{}); },
             [&]() { return tool_tips_only_palette; },
             [this]() -> auto & { return m_flatten_type; });
-          if (!gcc.render(get_imgui_id()))
+          if (!gcc.render())
           {
                return;
           }

@@ -5,6 +5,8 @@
 #ifndef FIELD_MAP_EDITOR_GENERIC_COMBO_HPP
 #define FIELD_MAP_EDITOR_GENERIC_COMBO_HPP
 #include "gui/gui_labels.hpp"
+#include "gui/push_pop_id.hpp"
+#include "gui/tool_tip.hpp"
 #include "scope_guard.hpp"
 #include <algorithm>
 #include <fmt/format.h>
@@ -61,7 +63,7 @@ class GenericComboClassWithFilter
      {
      }
 
-     bool render(int &imgui_id) const
+     bool render() const
      {
           if (values_.empty() || strings_.empty())
           {
@@ -71,10 +73,10 @@ class GenericComboClassWithFilter
           updateCurrentIndex();
 
           const auto old_idx = current_idx_;
-          renderCheckBox(imgui_id);
-          renderComboBox(imgui_id);
-          renderLeftButton(imgui_id);
-          renderRightButton(imgui_id);
+          renderCheckBox();
+          renderComboBox();
+          renderLeftButton();
+          renderRightButton();
           renderTitle();
 
 
@@ -122,12 +124,11 @@ class GenericComboClassWithFilter
      {
           return std::ranges::next(std::ranges::begin(range), idx);
      }
-     void renderCheckBox(int &imgui_id) const
+     void renderCheckBox() const
      {
 
           bool       checked = filter_.get().enabled();
-          const auto pop_id  = scope_guard{ &ImGui::PopID };
-          ImGui::PushID(++imgui_id);
+          const auto pop_id  = PushPopID();
           if (ImGui::Checkbox("", &checked))
           {
                checked ? filter_.get().enable() : filter_.get().disable();
@@ -137,10 +138,9 @@ class GenericComboClassWithFilter
           ImGui::SameLine(0, spacing_);
      }
 
-     void renderComboBox(int &imgui_id) const
+     void renderComboBox() const
      {
-          const auto pop_id = scope_guard([] { ImGui::PopID(); });
-          ImGui::PushID(++imgui_id);
+          const auto  pop_id       = PushPopID();
           const float button_size  = ImGui::GetFrameHeight();
           const float button_count = 3.0f;
           ImGui::PushItemWidth(ImGui::CalcItemWidth() - spacing_ * button_count - button_size * button_count);
@@ -160,11 +160,8 @@ class GenericComboClassWithFilter
                     // want, outside or inside your objects
                     const char *c_str_value = std::ranges::data(string);
                     {
-                         const auto pop_id_each = scope_guard{ []() {
-                              ImGui::PopID();
-                              ImGui::NextColumn();
-                         } };
-                         ImGui::PushID(++imgui_id);
+                         const auto pop_id     = PushPopID();
+                         const auto pop_column = scope_guard{ &ImGui::NextColumn };
                          if (ImGui::Selectable(c_str_value, is_selected))
                          {
                               for (current_idx_ = 0; const auto &temp : strings_)
@@ -189,16 +186,16 @@ class GenericComboClassWithFilter
                          // opening the combo (scrolling + for
                          // keyboard navigation support)
                     }
-                    renderToolTip(imgui_id, index);
+                    renderToolTip(index);
                     ++index;
                });
                ImGui::Columns(1);
                ImGui::EndCombo();
           }
-          renderToolTip(imgui_id, current_idx_);
+          renderToolTip(current_idx_);
      }
 
-     void renderToolTip(int &imgui_id, const decltype(current_idx_) index) const
+     void renderToolTip(const decltype(current_idx_) index) const
      {
 
           if (std::ranges::empty(tool_tips_))
@@ -209,8 +206,7 @@ class GenericComboClassWithFilter
           {
                return;
           }
-          const auto pop_id_left = scope_guard{ &ImGui::PopID };
-          ImGui::PushID(++imgui_id);
+          const auto  pop_id_left  = PushPopID();
           const auto &tooltip      = *getNext(tool_tips_, index);
 
           const auto  pop_tool_tip = scope_guard{ &ImGui::EndTooltip };
@@ -221,11 +217,10 @@ class GenericComboClassWithFilter
           format_imgui_text("{}", tooltip);
      }
 
-     void renderLeftButton(int &imgui_id) const
+     void renderLeftButton() const
      {
-          const auto pop_id_left = scope_guard{ &ImGui::PopID };
+          const auto pop_id_left = PushPopID();
           ImGui::SameLine(0, spacing_);
-          ImGui::PushID(++imgui_id);
           const bool disabled =
             std::cmp_less_equal(current_idx_, 0) || std::cmp_greater_equal(current_idx_ - 1, std::ranges::size(values_));
           ImGui::BeginDisabled(disabled);
@@ -238,10 +233,9 @@ class GenericComboClassWithFilter
           ImGui::EndDisabled();
      }
 
-     void renderRightButton(int &imgui_id) const
+     void renderRightButton() const
      {
-          const auto pop_id_right = scope_guard{ &ImGui::PopID };
-          ImGui::PushID(++imgui_id);
+          const auto pop_id_right = PushPopID();
           ImGui::SameLine(0, spacing_);
           const bool disabled = std::cmp_greater_equal(current_idx_ + 1, std::ranges::size(values_));
           ImGui::BeginDisabled(disabled);
@@ -261,16 +255,20 @@ class GenericComboClassWithFilter
 };
 
 
-template<returns_range_concept ValueLambdaT, returns_range_concept StringLambdaT, typename ValueT, returns_range_concept tool_tip_lambda_t = StringLambdaT>
+template<
+  returns_range_concept ValueLambdaT,
+  returns_range_concept StringLambdaT,
+  typename ValueT,
+  returns_range_concept tool_tip_lambda_t = StringLambdaT>
 class GenericComboClass
 {
    public:
      GenericComboClass(
-       std::string_view    name,
-       ValueLambdaT      &&value_lambda,
-       StringLambdaT     &&string_lambda,
-       ValueT             &value,
-       int                 num_columns = 2)
+       std::string_view name,
+       ValueLambdaT   &&value_lambda,
+       StringLambdaT  &&string_lambda,
+       ValueT          &value,
+       int              num_columns = 2)
        : name_(name)
        , values_(std::invoke(std::forward<ValueLambdaT>(value_lambda)))
        , strings_(std::invoke(std::forward<StringLambdaT>(string_lambda)))
@@ -302,7 +300,7 @@ class GenericComboClass
      {
      }
 
-     bool render(int &imgui_id) const
+     bool render() const
      {
           if (values_.empty() || strings_.empty())
           {
@@ -312,9 +310,9 @@ class GenericComboClass
           updateCurrentIndex();
 
           const auto old_idx = current_idx_;
-          renderComboBox(imgui_id);
-          renderLeftButton(imgui_id);
-          renderRightButton(imgui_id);
+          renderComboBox();
+          renderLeftButton();
+          renderRightButton();
           renderTitle();
 
           value_.get() = *getNext(values_, current_idx_);
@@ -362,10 +360,9 @@ class GenericComboClass
           return std::ranges::next(std::ranges::begin(range), idx);
      }
 
-     void renderComboBox(int &imgui_id) const
+     void renderComboBox() const
      {
-          const auto pop_id = scope_guard([] { ImGui::PopID(); });
-          ImGui::PushID(++imgui_id);
+          const auto  pop_id       = PushPopID();
           const float button_size  = ImGui::GetFrameHeight();
           const float button_count = 2.0f;
           ImGui::PushItemWidth(ImGui::CalcItemWidth() - spacing_ * button_count - button_size * button_count);
@@ -384,11 +381,8 @@ class GenericComboClass
                     // want, outside or inside your objects
                     const char *c_str_value = std::ranges::data(string);
                     {
-                         const auto pop_id_each = scope_guard{ []() {
-                              ImGui::PopID();
-                              ImGui::NextColumn();
-                         } };
-                         ImGui::PushID(++imgui_id);
+                         const auto pop_id     = PushPopID();
+                         const auto pop_column = scope_guard{ &ImGui::NextColumn };
 
                          if (ImGui::Selectable(c_str_value, is_selected))
                          {
@@ -413,14 +407,14 @@ class GenericComboClass
                          // opening the combo (scrolling + for
                          // keyboard navigation support)
                     }
-                    renderToolTip(imgui_id, index++);
+                    renderToolTip(index++);
                });
                ImGui::Columns(1);
                ImGui::EndCombo();
           }
-          renderToolTip(imgui_id, current_idx_);
+          renderToolTip(current_idx_);
      }
-     void renderToolTip(int &imgui_id, const decltype(current_idx_) index) const
+     void renderToolTip(const decltype(current_idx_) index) const
      {
 
           if (std::ranges::empty(tool_tips_))
@@ -431,8 +425,7 @@ class GenericComboClass
           {
                return;
           }
-          const auto pop_id_left = scope_guard{ &ImGui::PopID };
-          ImGui::PushID(++imgui_id);
+          const auto  pop_id_left  = PushPopID();
           const auto &tooltip      = *getNext(tool_tips_, index);
 
           const auto  pop_tool_tip = scope_guard{ &ImGui::EndTooltip };
@@ -443,11 +436,10 @@ class GenericComboClass
           format_imgui_text("{}", tooltip);
      }
 
-     void renderLeftButton(int &imgui_id) const
+     void renderLeftButton() const
      {
-          const auto pop_id_left = scope_guard{ &ImGui::PopID };
+          const auto pop_id_left = PushPopID();
           ImGui::SameLine(0, spacing_);
-          ImGui::PushID(++imgui_id);
           const bool disabled =
             std::cmp_less_equal(current_idx_, 0) || std::cmp_greater_equal(current_idx_ - 1, std::ranges::size(values_));
           ImGui::BeginDisabled(disabled);
@@ -459,10 +451,9 @@ class GenericComboClass
           ImGui::EndDisabled();
      }
 
-     void renderRightButton(int &imgui_id) const
+     void renderRightButton() const
      {
-          const auto pop_id_right = scope_guard{ &ImGui::PopID };
-          ImGui::PushID(++imgui_id);
+          const auto pop_id_right = PushPopID();
           ImGui::SameLine(0, spacing_);
           const bool disabled = std::cmp_greater_equal(current_idx_ + 1, std::ranges::size(values_));
           ImGui::BeginDisabled(disabled);

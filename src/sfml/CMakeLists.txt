@@ -18,6 +18,7 @@ include(${CMAKE_SOURCE_DIR}/cmake/IconFontCppHeaders.cmake)
 add_executable(${PROJECT_NAME}_SFML
         main.cpp
         archives_group.cpp
+        generic_combo.cpp
         mim_sprite.cpp
         map_sprite.cpp
         MapHistory.cpp

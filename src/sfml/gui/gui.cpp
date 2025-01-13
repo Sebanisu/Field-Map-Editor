@@ -825,7 +825,7 @@ void gui::combo_coo()
      constexpr static auto values = open_viii::LangCommon::to_array();
      const auto            gcc    = GenericComboClass(
        gui_labels::language, []() { return values; }, []() { return values | std::views::transform(AsString{}); }, m_selections->coo);
-     if (gcc.render(get_imgui_id()))
+     if (gcc.render())
      {
           update_field();
      }
@@ -843,7 +843,7 @@ void gui::combo_field()
        [this]() { return std::views::iota(0, static_cast<int>(std::ranges::ssize(m_archives_group->mapdata()))); },
        [this]() { return m_archives_group->mapdata(); },
        m_selections->field);
-     if (gcc.render(get_imgui_id()))
+     if (gcc.render())
      {
           Configuration config{};
           const auto   &maps = m_archives_group->mapdata();
@@ -956,7 +956,7 @@ void gui::combo_bpp()
             [&]() { return bpp_strings | std::ranges::views::transform([](std::string_view sv) { return sv; }); },
             m_selections->bpp);
 
-          if (gcc.render(get_imgui_id()))
+          if (gcc.render())
           {
                Configuration config{};
                config->insert_or_assign("selections_bpp", m_selections->bpp);
@@ -1000,7 +1000,7 @@ void gui::combo_palette()
                  []() { return palette_values; },
                  []() { return palette_strings | std::ranges::views::transform([](std::string_view sv) { return sv; }); },
                  m_selections->palette);
-               if (gcc.render(get_imgui_id()))
+               if (gcc.render())
                {
                     if (mim_test())
                     {
@@ -1563,7 +1563,7 @@ void gui::combo_draw()
      const auto gcc =
        GenericComboClass(gui_labels::draw, [=]() { return iota_draw_mode; }, [=]() { return str_draw_mode; }, m_selections->draw);
 
-     if (!gcc.render(get_imgui_id()))
+     if (!gcc.render())
      {
           return;
      }
@@ -1620,7 +1620,7 @@ bool gui::combo_path()
      });
      const auto gcc =
        GenericComboClass(gui_labels::path, [&]() { return transformed_paths; }, [&]() { return transformed_paths; }, m_selections->path, 1);
-     if (gcc.render(get_imgui_id()))
+     if (gcc.render())
      {
           Configuration config{};
           config->insert_or_assign("selections_path", m_selections->path);
@@ -2032,7 +2032,7 @@ void gui::combo_pupu()
        },
        [this]() -> auto  &{ return m_map_sprite->filter().pupu; });
 
-     if (!gcc.render(get_imgui_id()))
+     if (!gcc.render())
      {
           return;
      }
@@ -2054,7 +2054,7 @@ void gui::combo_draw_bit()
                                gui_labels::draw_bit_disabled_tooltip };
        },
        [this]() -> auto               &{ return m_map_sprite->filter().draw_bit; });
-     if (!gcc.render(get_imgui_id()))
+     if (!gcc.render())
           return;
      m_map_sprite->update_render_texture();
      m_changed = true;
@@ -2074,7 +2074,7 @@ void gui::combo_filtered_palettes()
        [&pair]() { return pair.strings(); },
        EmptyStringView{},
        [this]() -> auto  &{ return m_map_sprite->filter().palette; });
-     if (!gcc.render(get_imgui_id()))
+     if (!gcc.render())
      {
           return;
      }
@@ -2095,7 +2095,7 @@ void gui::combo_filtered_bpps()
        [&pair]() { return pair.strings(); },
        EmptyStringView{},
        [this]() -> auto  &{ return m_map_sprite->filter().bpp; });
-     if (!gcc.render(get_imgui_id()))
+     if (!gcc.render())
      {
           return;
      }
@@ -2116,7 +2116,7 @@ void gui::combo_blend_modes()
        [&pair]() { return pair.strings(); },
        EmptyStringView{},
        [this]() -> auto  &{ return m_map_sprite->filter().blend_mode; });
-     if (!gcc.render(get_imgui_id()))
+     if (!gcc.render())
      {
           return;
      }
@@ -2133,7 +2133,7 @@ void gui::combo_layers()
        [&pair]() { return pair.strings(); },
        EmptyStringView{},
        [this]() -> auto  &{ return m_map_sprite->filter().layer_id; });
-     if (!gcc.render(get_imgui_id()))
+     if (!gcc.render())
      {
           return;
      }
@@ -2149,7 +2149,7 @@ void gui::combo_texture_pages()
        [&pair]() { return pair.strings(); },
        EmptyStringView{},
        [this]() -> auto  &{ return m_map_sprite->filter().texture_page_id; });
-     if (!gcc.render(get_imgui_id()))
+     if (!gcc.render())
      {
           return;
      }
@@ -2165,7 +2165,7 @@ void gui::combo_animation_ids()
        [&pair]() { return pair.strings(); },
        EmptyStringView{},
        [this]() -> auto  &{ return m_map_sprite->filter().animation_id; });
-     if (!gcc.render(get_imgui_id()))
+     if (!gcc.render())
      {
           return;
      }
@@ -2181,7 +2181,7 @@ void gui::combo_blend_other()
        [&pair]() { return pair.strings(); },
        EmptyStringView{},
        [this]() -> auto  &{ return m_map_sprite->filter().blend_other; });
-     if (!gcc.render(get_imgui_id()))
+     if (!gcc.render())
      {
           return;
      }
@@ -2199,8 +2199,7 @@ void gui::combo_z()
        [&pair]() { return pair.strings(); },
        EmptyStringView{},
        [this]() -> auto  &{ return m_map_sprite->filter().z; });
-     if (!gcc.render(get_imgui_id()))
-     {
+     if (!gcc.render())     {
           return;
      }
      m_map_sprite->update_render_texture();
@@ -2222,7 +2221,7 @@ void gui::combo_animation_frames()
        [&pair]() { return pair.strings(); },
        EmptyStringView{},
        [this]() -> auto  &{ return m_map_sprite->filter().animation_frame; });
-     if (!gcc.render(get_imgui_id()))
+     if (!gcc.render())
      {
           return;
      }
@@ -2247,7 +2246,7 @@ void gui::combo_deswizzle_path()
        [&strings]() { return strings; },
        EmptyStringView{},
        [this]() -> auto                   &{ return m_map_sprite->filter().deswizzle; });
-     if (gcc.render(get_imgui_id()))
+     if (gcc.render())
      {
           if (m_map_sprite->filter().deswizzle.enabled())
           {
@@ -2323,7 +2322,7 @@ bool gui::combo_upscale_path(ff_8::filter_old<std::filesystem::path> &filter) co
        [this]() { return m_upscale_paths; },
        [&filter]() -> auto & { return filter; },
        1);
-     return m_field && gcc.render(get_imgui_id());
+     return m_field && gcc.render();
 }
 
 bool gui::combo_upscale_path(std::filesystem::path &path, const std::string &field_name, open_viii::LangT coo) const
@@ -2360,7 +2359,7 @@ bool gui::combo_upscale_path(std::filesystem::path &path, const std::string &fie
 
           const auto gcc = GenericComboClass(gui_labels::upscale_path, [&paths]() { return paths; }, [&paths]() { return paths; }, path);
 
-          return gcc.render(get_imgui_id());
+          return gcc.render();
      }
      return false;
 }
