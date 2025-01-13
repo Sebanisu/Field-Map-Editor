@@ -4,6 +4,7 @@
 
 #ifndef FIELD_MAP_EDITOR_GENERIC_COMBO_HPP
 #define FIELD_MAP_EDITOR_GENERIC_COMBO_HPP
+#include "format_imgui_text.hpp"
 #include "gui/gui_labels.hpp"
 #include "gui/push_pop_id.hpp"
 #include "gui/tool_tip.hpp"
@@ -125,8 +126,8 @@ class GenericComboClassWithFilter
           return std::ranges::next(std::ranges::begin(range), idx);
      }
      void renderCheckBox() const
-     {        
-          const auto _  = PushPopID();
+     {
+          const auto _ = PushPopID();
           if (bool checked = filter_.get().enabled(); ImGui::Checkbox("", &checked))
           {
                checked ? filter_.get().enable() : filter_.get().disable();
@@ -137,7 +138,7 @@ class GenericComboClassWithFilter
 
      void renderComboBox() const
      {
-          const auto  _       = PushPopID();
+          const auto  _            = PushPopID();
           const float button_size  = ImGui::GetFrameHeight();
           const float button_count = 3.0f;
           ImGui::PushItemWidth(ImGui::CalcItemWidth() - spacing_ * button_count - button_size * button_count);
@@ -423,8 +424,8 @@ class GenericComboClass
 
      void renderLeftButton() const
      {
-          const auto _ = PushPopID();
-          const auto pop_disabled = scope_guard{&ImGui::EndDisabled};
+          const auto _            = PushPopID();
+          const auto pop_disabled = scope_guard{ &ImGui::EndDisabled };
           ImGui::SameLine(0, spacing_);
           const bool disabled =
             std::cmp_less_equal(current_idx_, 0) || std::cmp_greater_equal(current_idx_ - 1, std::ranges::size(values_));
