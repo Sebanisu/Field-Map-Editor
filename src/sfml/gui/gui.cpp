@@ -220,7 +220,7 @@ void gui::control_panel_window()
           return;
      }
      // ImGui::PushFont(icons_font());
-     // ImGui::Button(ICON_FA_MAGNIFYING_GLASS " Search");     
+     // ImGui::Button(ICON_FA_MAGNIFYING_GLASS " Search");
      // ImGui::PopFont();
      //    if (m_first)
      //    {
@@ -1917,7 +1917,7 @@ void gui::init_and_get_style()
      (void)ImGui::SFML::Init(m_window, false);
      (void)icons_font();
      ImGui::SFML::UpdateFontTexture();
-     ImGuiIO &imgui_io = ImGui::GetIO();
+     ImGuiIO &imgui_io    = ImGui::GetIO();
      imgui_io.ConfigFlags = bitwise_or(imgui_io.ConfigFlags, ImGuiConfigFlags_DockingEnable);
      if (m_field)
      {
@@ -2128,7 +2128,7 @@ void gui::combo_layers()
 {
      const auto &pair = m_map_sprite->uniques().layer_id();
      const auto  gcc  = fme::GenericComboClassWithFilter(
-       gui_labels::layers,
+       gui_labels::layer_id,
        [&pair]() { return pair.values(); },
        [&pair]() { return pair.strings(); },
        EmptyStringView{},

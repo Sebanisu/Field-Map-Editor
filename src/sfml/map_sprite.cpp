@@ -16,7 +16,8 @@ using namespace open_viii::graphics::background;
 using namespace open_viii::graphics;
 using namespace open_viii::graphics::literals;
 using namespace std::string_literals;
-
+namespace fme
+{
 bool map_sprite::empty() const
 {
      return m_map_group.maps.const_working().visit_tiles([](const auto &tiles) { return std::empty(tiles); });
@@ -1524,3 +1525,4 @@ std::string map_sprite::appends_prefix_base_name(std::string_view title) const
      return fmt::format(
        "{} ({} {}{}{})", title, gui_labels::appends, prefix, char{ std::filesystem::path::preferred_separator }, base_name);
 }
+}// namespace fme

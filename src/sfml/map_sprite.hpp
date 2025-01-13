@@ -26,7 +26,8 @@
 #include <SFML/Graphics/Transformable.hpp>
 #include <SFML/Graphics/Vertex.hpp>
 #include <utility>
-
+namespace fme
+{
 struct [[nodiscard]] map_sprite final
   : public sf::Drawable
   , public sf::Transformable
@@ -411,7 +412,7 @@ struct [[nodiscard]] map_sprite final
 
      [[nodiscard]] std::string current_redo_description() const;
 
-     [[nodiscard]] auto undo_history() const
+     [[nodiscard]] auto        undo_history() const
      {
           return m_map_group.maps.undo_history();
      }
@@ -422,7 +423,7 @@ struct [[nodiscard]] map_sprite final
      }
 
 
-     [[nodiscard]] auto        get_conflicting_palettes() const
+     [[nodiscard]] auto get_conflicting_palettes() const
      {
           return m_map_group.maps.working().visit_tiles([this](const auto &tiles) { return find_conflicting_tiles(tiles); });
      }
@@ -510,4 +511,5 @@ struct [[nodiscard]] map_sprite final
           };
      }
 };
+}// namespace fme
 #endif// FIELD_MAP_EDITOR_MAP_SPRITE_HPP

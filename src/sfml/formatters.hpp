@@ -6,14 +6,40 @@
 #define FIELD_MAP_EDITOR_FORMATTERS_HPP
 #include "draw_bit_t.hpp"
 #include "gui/draw_mode.hpp"
+#include "gui/gui_labels.hpp"
 #include "tile_sizes.hpp"
 #include <filesystem>
 #include <fmt/format.h>
 #include <open_viii/graphics/background/BlendModeT.hpp>
 #include <open_viii/graphics/BPPT.hpp>
 #include <open_viii/strings/LangCommon.hpp>
-#include "tile_sizes.hpp"
 
+namespace ff_8
+{
+template<open_viii::graphics::background::is_tile tileT>
+static constexpr auto to_hex(const tileT &tile)
+{
+     constexpr auto to_hex_operation = [](const std::uint8_t input_byte, const auto operation) -> char {
+          constexpr std::uint8_t number_of_values_in_nibble = 16U;
+          constexpr char         threshold_of_A_to_F        = 10;
+          char const             half_transformed_char      = static_cast<char>(operation(input_byte, number_of_values_in_nibble));
+          return static_cast<char>((
+            half_transformed_char < threshold_of_A_to_F ? half_transformed_char + '0' : half_transformed_char - threshold_of_A_to_F + 'A'));
+     };
+     const auto                               raw_bytes = std::bit_cast<std::array<std::uint8_t, sizeof(tileT)>>(tile);
+     std::array<char, sizeof(tileT) * 2U + 1> raw_hex{};
+     raw_hex.back() = '\0';
+     auto rhi       = raw_hex.begin();
+     for (const std::uint8_t current_byte : raw_bytes)
+     {
+          *rhi = to_hex_operation(current_byte, std::divides{});
+          std::advance(rhi, 1);
+          *rhi = to_hex_operation(current_byte, std::modulus{});
+          std::advance(rhi, 1);
+     }
+     return raw_hex;
+}
+}// namespace ff_8
 
 template<>
 struct fmt::formatter<tile_sizes> : fmt::formatter<std::string_view>
@@ -225,61 +251,52 @@ struct fmt::formatter<open_viii::graphics::BPPT> : fmt::formatter<std::uint32_t>
 template<open_viii::graphics::background::is_tile tileT>
 struct fmt::formatter<tileT> : fmt::formatter<std::string>
 {
-     static constexpr auto to_hex(const tileT &tile)
-     {
-          constexpr auto to_hex_operation = [](const std::uint8_t input_byte, const auto operation) -> char {
-               constexpr std::uint8_t number_of_values_in_nibble = 16U;
-               constexpr char         threshold_of_A_to_F        = 10;
-               char const             half_transformed_char      = static_cast<char>(operation(input_byte, number_of_values_in_nibble));
-               return static_cast<char>(
-                 (half_transformed_char < threshold_of_A_to_F ? half_transformed_char + '0'
-                                                              : half_transformed_char - threshold_of_A_to_F + 'A'));
-          };
-          const auto                               raw_bytes = std::bit_cast<std::array<std::uint8_t, sizeof(tileT)>>(tile);
-          std::array<char, sizeof(tileT) * 2U + 1> raw_hex{};
-          raw_hex.back() = '\0';
-          auto rhi       = raw_hex.begin();
-          for (const std::uint8_t current_byte : raw_bytes)
-          {
-               *rhi = to_hex_operation(current_byte, std::divides{});
-               std::advance(rhi, 1);
-               *rhi = to_hex_operation(current_byte, std::modulus{});
-               std::advance(rhi, 1);
-          }
-          return raw_hex;
-     }
      // parse is inherited from formatter<string_view>.
      template<typename FormatContext>
      constexpr auto format(const tileT &tile, FormatContext &ctx) const
      {
-          const auto array = to_hex(tile);
+          const auto array   = ff_8::to_hex(tile);
+          const auto hexview = std::string_view(array.data(), array.size() - 1);
           return fmt::format_to(
             ctx.out(),
-            "Hex: {}\n"
-            "Source: {}\n"
-            "Output: {}\n"
-            "Z: {}\n"
-            "Depth: {}\n"
-            "Palette ID: {}\n"
-            "Texture ID: {}\n"
-            "Layer ID: {}\n"
-            "Blend Mode: {}\n"
-            "Blend Other: {}\n"
-            "Animation ID: {}\n"
-            "Animation State: {}\n"
-            "Draw: {}",
-            std::string_view(array.data(), array.size() - 1),
+            "{}: {}\n"
+            "{}: {}\n"
+            "{}: {}\n"
+            "{}: {}\n"
+            "{}: {}\n"
+            "{}: {}\n"
+            "{}: {}\n"
+            "{}: {}\n"
+            "{}: {}\n"
+            "{}: {}\n"
+            "{}: {}\n"
+            "{}: {}\n"
+            "{}: {}",
+            fme::gui_labels::hex,
+            hexview,
+            fme::gui_labels::source,
             tile.source_rectangle(),
+            fme::gui_labels::destination,
             tile.output_rectangle(),
+            fme::gui_labels::z,
             tile.z(),
+            fme::gui_labels::bpp,
             tile.depth(),
+            fme::gui_labels::palette,
             tile.palette_id(),
+            fme::gui_labels::texture_page,
             tile.texture_id(),
+            fme::gui_labels::layer_id,
             tile.layer_id(),
+            fme::gui_labels::blend_mode,
             tile.blend_mode(),
+            fme::gui_labels::blend_other,
             tile.blend(),
+            fme::gui_labels::animation_id,
             tile.animation_id(),
+            fme::gui_labels::animation_frame,
             tile.animation_state(),
+            fme::gui_labels::draw,
             tile.draw());
      }
 };

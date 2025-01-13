@@ -7,6 +7,8 @@
 #include "scope_guard.hpp"
 #include <sstream>
 #include <string>
+namespace fme
+{
 void collapsing_tile_info(
   const map_sprite &map,
   const std::variant<
@@ -75,3 +77,4 @@ void collapsing_tile_info(
          [](const std::monostate &) {}),
        current_tile);
 }
+}// namespace fme

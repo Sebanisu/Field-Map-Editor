@@ -5,6 +5,8 @@
 #ifndef FIELD_MAP_EDITOR_GUI_LABELS_HPP
 #define FIELD_MAP_EDITOR_GUI_LABELS_HPP
 #include <string_view>
+namespace fme
+{
 struct gui_labels
 {
      static constexpr std::string_view window_title                           = { "Field-Map-Editor - SFML" };
@@ -12,6 +14,9 @@ struct gui_labels
      static constexpr std::string_view browse                                 = { "Browse" };
      static constexpr std::string_view palette                                = { "Palette" };
      static constexpr std::string_view bpp                                    = { "BPP" };
+     static constexpr std::string_view hex                                    = { "Hex" };
+     static constexpr std::string_view source                                 = { "Source" };
+     static constexpr std::string_view destination                            = { "Destination" };
      static constexpr std::string_view flatten                                = { "Flatten" };
      static constexpr std::string_view all                                    = { "All" };
      static constexpr std::string_view map_order                              = { "Map Order" };
@@ -34,7 +39,7 @@ struct gui_labels
      static constexpr std::string_view blend_mode                             = { "Blend Mode" };
      static constexpr std::string_view animation_id                           = { "Animation ID" };
      static constexpr std::string_view texture_page                           = { "Texture Page" };
-     static constexpr std::string_view layers                                 = { "Layers" };
+     static constexpr std::string_view layer_id                               = { "Layer ID" };
      static constexpr std::string_view pupu_id                                = { "Pupu ID" };
      static constexpr std::string_view set                                    = { "Set" };
      static constexpr std::string_view disable                                = { "Disable" };
@@ -216,8 +221,12 @@ struct gui_labels
           "Draw Palette Texture: The .mim file uses palettes to draw tiles. 4-bit palettes have 16 colors, 8-bit palettes support up to "
           "256, and 16-bit tiles don’t use palettes. This setting shows the raw palettes in a grid."
      };
+     static constexpr std::array tile_values = { hex,          source,          destination, z,          bpp,
+                                                 palette,      texture_page,    layer_id,    blend_mode, blend_other,
+                                                 animation_id, animation_frame, draw };
 
 
-     gui_labels() = delete;
+     gui_labels()                            = delete;
 };
+}// namespace fme
 #endif// FIELD_MAP_EDITOR_GUI_LABELS_HPP
