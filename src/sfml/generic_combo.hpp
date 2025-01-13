@@ -125,22 +125,19 @@ class GenericComboClassWithFilter
           return std::ranges::next(std::ranges::begin(range), idx);
      }
      void renderCheckBox() const
-     {
-
-          bool       checked = filter_.get().enabled();
-          const auto pop_id  = PushPopID();
-          if (ImGui::Checkbox("", &checked))
+     {        
+          const auto _  = PushPopID();
+          if (bool checked = filter_.get().enabled(); ImGui::Checkbox("", &checked))
           {
                checked ? filter_.get().enable() : filter_.get().disable();
                changed_ = true;
           }
-
           ImGui::SameLine(0, spacing_);
      }
 
      void renderComboBox() const
      {
-          const auto  pop_id       = PushPopID();
+          const auto  _       = PushPopID();
           const float button_size  = ImGui::GetFrameHeight();
           const float button_count = 3.0f;
           ImGui::PushItemWidth(ImGui::CalcItemWidth() - spacing_ * button_count - button_size * button_count);
@@ -197,29 +194,17 @@ class GenericComboClassWithFilter
 
      void renderToolTip(const decltype(current_idx_) index) const
      {
-
           if (std::ranges::empty(tool_tips_))
           {
                return;
           }
-          if (!ImGui::IsItemHovered())
-          {
-               return;
-          }
-          const auto  pop_id_left  = PushPopID();
-          const auto &tooltip      = *getNext(tool_tips_, index);
-
-          const auto  pop_tool_tip = scope_guard{ &ImGui::EndTooltip };
-          ImGui::BeginTooltip();
-
-          const auto pop_text_wrap = scope_guard{ &ImGui::PopTextWrapPos };
-          ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);// Adjust this value as needed for wrap width
-          format_imgui_text("{}", tooltip);
+          const auto &tooltip = *getNext(tool_tips_, index);
+          tool_tip(tooltip);
      }
 
      void renderLeftButton() const
      {
-          const auto pop_id_left = PushPopID();
+          const auto _ = PushPopID();
           ImGui::SameLine(0, spacing_);
           const bool disabled =
             std::cmp_less_equal(current_idx_, 0) || std::cmp_greater_equal(current_idx_ - 1, std::ranges::size(values_));
@@ -235,7 +220,7 @@ class GenericComboClassWithFilter
 
      void renderRightButton() const
      {
-          const auto pop_id_right = PushPopID();
+          const auto _ = PushPopID();
           ImGui::SameLine(0, spacing_);
           const bool disabled = std::cmp_greater_equal(current_idx_ + 1, std::ranges::size(values_));
           ImGui::BeginDisabled(disabled);
@@ -438,7 +423,8 @@ class GenericComboClass
 
      void renderLeftButton() const
      {
-          const auto pop_id_left = PushPopID();
+          const auto _ = PushPopID();
+          const auto pop_disabled = scope_guard{&ImGui::EndDisabled};
           ImGui::SameLine(0, spacing_);
           const bool disabled =
             std::cmp_less_equal(current_idx_, 0) || std::cmp_greater_equal(current_idx_ - 1, std::ranges::size(values_));
@@ -448,7 +434,6 @@ class GenericComboClass
                --current_idx_;
                changed_ = true;
           }
-          ImGui::EndDisabled();
      }
 
      void renderRightButton() const
