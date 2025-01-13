@@ -6,7 +6,9 @@
 #include "as_string.hpp"
 #include "Configuration.hpp"
 #include "open_file_explorer.hpp"
-void fme::batch::combo_input_type(int &imgui_id)
+#include "push_pop_id.hpp"
+#include "tool_tip.hpp"
+void fme::batch::combo_input_type()
 {
      static constexpr auto values = std::array{ input_types::mim, input_types::deswizzle, input_types::swizzle };
      static constexpr auto tooltips =
@@ -17,28 +19,28 @@ void fme::batch::combo_input_type(int &imgui_id)
        []() { return values | std::views::transform(AsString{}); },
        []() { return tooltips; },
        m_input_type);
-     if (gcc.render(imgui_id))
+     if (gcc.render(get_imgui_id()))
      {
           Configuration config{};
           config->insert_or_assign("batch_input_type", static_cast<std::underlying_type_t<input_types>>(m_input_type));
           config.save();
      }
 }
-void fme::batch::combo_output_type(int &imgui_id)
+void fme::batch::combo_output_type()
 {
      static constexpr auto values = std::array{ output_types::deswizzle, output_types::swizzle };
      const auto            gcc    = fme::GenericComboClass(
        gui_labels::output_type, []() { return values; }, []() { return values | std::views::transform(AsString{}); }, m_output_type);
-     if (gcc.render(imgui_id))
+     if (gcc.render(get_imgui_id()))
      {
           Configuration config{};
           config->insert_or_assign("batch_output_type", static_cast<std::underlying_type_t<output_types>>(m_output_type));
           config.save();
      }
 }
-void fme::batch::combo_compact_type(int &imgui_id)
+void fme::batch::combo_compact_type()
 {
-     const auto        tool_tip_pop = scope_guard{ [&]() { tool_tip(gui_labels::compact_tooltip, imgui_id); } };
+     const auto        tool_tip_pop = scope_guard{ [&]() { tool_tip(gui_labels::compact_tooltip); } };
 
      static const auto values       = std::array{ compact_type::rows, compact_type::all, compact_type::map_order };
      static const auto tool_tips =
@@ -51,7 +53,7 @@ void fme::batch::combo_compact_type(int &imgui_id)
        []() { return tool_tips; },
        [this]() -> auto & { return m_compact_type; });
 
-     if (!gcc.render(imgui_id))
+     if (!gcc.render(get_imgui_id()))
      {
           return;
      }
@@ -61,9 +63,9 @@ void fme::batch::combo_compact_type(int &imgui_id)
      config->insert_or_assign("batch_compact_enabled", m_compact_type.enabled());
      config.save();
 }
-void fme::batch::combo_flatten_type(int &imgui_id)
+void fme::batch::combo_flatten_type()
 {
-     const auto            tool_tip_pop        = scope_guard{ [&]() { tool_tip(gui_labels::flatten_tooltip, imgui_id); } };
+     const auto            tool_tip_pop        = scope_guard{ [&]() { tool_tip(gui_labels::flatten_tooltip); } };
      const bool            all_or_only_palette = !m_compact_type.enabled() || m_compact_type.value() != compact_type::map_order;
      static constexpr auto values              = std::array{ flatten_type::bpp, flatten_type::palette, flatten_type::both };
      static constexpr auto tool_tips =
@@ -78,7 +80,7 @@ void fme::batch::combo_flatten_type(int &imgui_id)
             [&]() { return values | std::views::transform(AsString{}); },
             [&]() { return tool_tips; },
             [this]() -> auto & { return m_flatten_type; });
-          if (!gcc.render(imgui_id))
+          if (!gcc.render(get_imgui_id()))
           {
                return;
           }
@@ -91,7 +93,7 @@ void fme::batch::combo_flatten_type(int &imgui_id)
             [&]() { return values_only_palette | std::views::transform(AsString{}); },
             [&]() { return tool_tips_only_palette; },
             [this]() -> auto & { return m_flatten_type; });
-          if (!gcc.render(imgui_id))
+          if (!gcc.render(get_imgui_id()))
           {
                return;
           }
@@ -101,13 +103,13 @@ void fme::batch::combo_flatten_type(int &imgui_id)
      config->insert_or_assign("batch_flatten_enabled", m_flatten_type.enabled());
      config.save();
 }
-void fme::batch::browse_input_path(int &imgui_id)
+void fme::batch::browse_input_path()
 {
      if (m_input_type == input_types::mim)
      {
           return;
      }
-     if (!browse_path(imgui_id, gui_labels::input_path, m_input_path_valid, m_input_path))
+     if (!browse_path(gui_labels::input_path, m_input_path_valid, m_input_path))
      {
           return;
      }
@@ -119,9 +121,9 @@ void fme::batch::browse_input_path(int &imgui_id)
      config->insert_or_assign("batch_input_path", std::string(m_input_path.data()));
      config.save();
 }
-void fme::batch::browse_output_path(int &imgui_id)
+void fme::batch::browse_output_path()
 {
-     if (!browse_path(imgui_id, gui_labels::output_path, m_output_path_valid, m_output_path))
+     if (!browse_path(gui_labels::output_path, m_output_path_valid, m_output_path))
      {
           return;
      }
@@ -133,11 +135,7 @@ void fme::batch::browse_output_path(int &imgui_id)
      config->insert_or_assign("batch_output_path", std::string(m_output_path.data()));
      config.save();
 }
-void fme::batch::draw_multi_column_list_box(
-  int                            &imgui_id,
-  const std::string_view          name,
-  const std::vector<std::string> &items,
-  std::vector<bool>              &enabled)
+void fme::batch::draw_multi_column_list_box(const std::string_view name, const std::vector<std::string> &items, std::vector<bool> &enabled)
 {
      if (!ImGui::CollapsingHeader(name.data()))
      {
@@ -185,11 +183,8 @@ void fme::batch::draw_multi_column_list_box(
      assert(items.size() == enabled.size());
      for (size_t i = 0; i != items.size(); ++i)
      {
-          const auto pop_id = scope_guard{ []() {
-               ImGui::PopID();
-               ImGui::NextColumn();
-          } };
-          ImGui::PushID(imgui_id++);
+          const auto pop_id     = PushPopID();
+          const auto pop_column = scope_guard{ &ImGui::NextColumn };
           const auto selectable = [&]() {
                if (ImGui::Selectable(items[i].c_str(), enabled[i]))
                {
@@ -215,11 +210,10 @@ void fme::batch::draw_multi_column_list_box(
      ImGui::Columns(1);
      ImGui::Separator();
 }
-void fme::batch::button_start(int &imgui_id)
+void fme::batch::button_start()
 {
-     const auto pop_id_right = scope_guard{ &ImGui::PopID };
+     const auto pop_id_right = PushPopID();
      const auto spacing      = ImGui::GetStyle().ItemInnerSpacing.x;
-     ImGui::PushID(++imgui_id);
      ImGui::BeginDisabled(
        ((m_input_type == input_types::mim || !m_input_path_valid) && !m_output_path_valid) || !m_archives_group.operator bool());
      ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.0F, 0.5F, 0.0F, 1.0F));// Green
@@ -237,12 +231,11 @@ void fme::batch::button_start(int &imgui_id)
      ImGui::EndDisabled();
 }
 
-void fme::batch::button_stop(int &imgui_id)
+void fme::batch::button_stop()
 {
-     const auto pop_id_right = scope_guard{ &ImGui::PopID };
+     const auto pop_id_right = PushPopID();
      const auto spacing      = ImGui::GetStyle().ItemInnerSpacing.x;
      ImGui::SameLine(0, spacing);
-     ImGui::PushID(++imgui_id);
      ImGui::BeginDisabled(
        ((m_input_type == input_types::mim || !m_input_path_valid) && !m_output_path_valid) || !m_archives_group.operator bool());
      ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.5F, 0.0F, 0.0F, 1.0F));// Red
@@ -271,15 +264,14 @@ void fme::batch::button_output_browse()
      m_directory_browser.SetTypeFilters({ ".map", ".png" });
      m_directory_browser_mode = directory_mode::output_mode;
 };
-bool fme::batch::browse_path(int &imgui_id, std::string_view name, bool &valid_path, std::array<char, m_buffer_size> &path_buffer)
+bool fme::batch::browse_path(std::string_view name, bool &valid_path, std::array<char, m_buffer_size> &path_buffer)
 {
      bool              changed      = false;
      const ImGuiStyle &style        = ImGui::GetStyle();
      const float       spacing      = style.ItemInnerSpacing.x;
      const float       button_size  = ImGui::GetFrameHeight();
      const float       button_width = button_size * 3.0F;
-     const auto        pop_id       = scope_guard{ &ImGui::PopID };
-     ImGui::PushID(++imgui_id);
+     const auto        pop_id       = PushPopID();
      // ImGui text box with browse button
      // Highlight text box red if the folder doesn't exist
      {
@@ -305,7 +297,7 @@ bool fme::batch::browse_path(int &imgui_id, std::string_view name, bool &valid_p
                valid_path     = tmp.is_exists() && tmp.is_dir();
                changed        = true;
           }
-          tool_tip({ path_buffer.begin(), path_buffer.end() }, imgui_id);
+          tool_tip({ path_buffer.begin(), path_buffer.end() });
      }
      ImGui::SameLine(0, spacing);
      {
@@ -328,7 +320,7 @@ bool fme::batch::browse_path(int &imgui_id, std::string_view name, bool &valid_p
      {
           open_directory(path_buffer.data());
      }
-     tool_tip(gui_labels::explore_tooltip, imgui_id);
+     tool_tip(gui_labels::explore_tooltip);
      ImGui::SameLine(0, spacing);
 
      format_imgui_text("{}", name.data());
@@ -553,14 +545,13 @@ void fme::batch::open_directory_browser()
           break;
      }
 }
-void fme::batch::checkbox_load_map(int &imgui_id)
+void fme::batch::checkbox_load_map()
 {
      if (!(m_input_type != input_types::mim))
      {
           return;
      }
-     const auto pop_id = scope_guard{ &ImGui::PopID };
-     ImGui::PushID(++imgui_id);
+     const auto pop_id = PushPopID();
      if (!ImGui::Checkbox(gui_labels::batch_load_map.data(), &m_input_load_map))
      {
           return;
@@ -570,25 +561,7 @@ void fme::batch::checkbox_load_map(int &imgui_id)
      config.save();
 }
 
-void fme::batch::tool_tip(const std::string_view str, int &imgui_id)
-{
-     if (!ImGui::IsItemHovered())
-     {
-          return;
-     }
-
-     const auto pop_id = scope_guard{ &ImGui::PopID };
-     ImGui::PushID(++imgui_id);
-     const auto pop_tool_tip = scope_guard{ &ImGui::EndTooltip };
-
-     ImGui::BeginTooltip();
-     const auto pop_textwrappos = scope_guard{ &ImGui::PopTextWrapPos };
-     ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);// Adjust wrap width as needed
-     format_imgui_text("{}", str);
-}
-
-
-void fme::batch::draw_window(int &imgui_id)
+void fme::batch::draw_window()
 {
      const auto end = scope_guard(&ImGui::End);
      if (!ImGui::Begin(gui_labels::batch_operation_window.data()))
@@ -598,28 +571,28 @@ void fme::batch::draw_window(int &imgui_id)
      const bool disabled = in_progress();
      open_directory_browser();
      ImGui::BeginDisabled(disabled);
-     combo_input_type(imgui_id);
-     browse_input_path(imgui_id);
-     checkbox_load_map(imgui_id);
+     combo_input_type();
+     browse_input_path();
+     checkbox_load_map();
 
 
-     combo_output_type(imgui_id);
-     browse_output_path(imgui_id);
+     combo_output_type();
+     browse_output_path();
      checkmark_save_map();
      if (ImGui::CollapsingHeader(gui_labels::compact_flatten.data()))
      {
           format_imgui_wrapped_text("{}", gui_labels::compact_flatten_warning);
-          combo_compact_type(imgui_id);
-          combo_flatten_type(imgui_id);
+          combo_compact_type();
+          combo_flatten_type();
      }
      if (m_archives_group)
      {
-          draw_multi_column_list_box(imgui_id, "Map List", m_archives_group->mapdata(), m_maps_enabled);
+          draw_multi_column_list_box("Map List", m_archives_group->mapdata(), m_maps_enabled);
      }
-     button_start(imgui_id);
+     button_start();
      ImGui::EndDisabled();
      ImGui::BeginDisabled(!disabled);
-     button_stop(imgui_id);
+     button_stop();
      ImGui::EndDisabled();
      if (!disabled)
      {

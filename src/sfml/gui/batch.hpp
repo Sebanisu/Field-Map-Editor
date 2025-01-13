@@ -19,7 +19,8 @@
 #include <imgui.h>
 #include <memory>
 #include <SFML/System/Time.hpp>
-namespace fme{
+namespace fme
+{
 class batch
 {
      enum struct directory_mode
@@ -53,15 +54,15 @@ class batch
      ImGui::FileBrowser                  m_directory_browser{ ImGuiFileBrowserFlags_SelectDirectory | ImGuiFileBrowserFlags_CreateNewDir
                                              | ImGuiFileBrowserFlags_EditPathString };
 
-     void                                combo_input_type(int &imgui_id);
-     void                                combo_output_type(int &imgui_id);
-     void                                combo_compact_type(int &imgui_id);
-     void                                combo_flatten_type(int &imgui_id);
-     void                                browse_input_path(int &imgui_id);
-     void                                browse_output_path(int &imgui_id);
-     void                                button_start(int &imgui_id);
-     void                                button_stop(int &imgui_id);
-     void                                checkbox_load_map(int &imgui_id);
+     void                                combo_input_type();
+     void                                combo_output_type();
+     void                                combo_compact_type();
+     void                                combo_flatten_type();
+     void                                browse_input_path();
+     void                                browse_output_path();
+     void                                button_start();
+     void                                button_stop();
+     void                                checkbox_load_map();
      void                                choose_field_and_coo();
      void                                reset_for_next();
      void                                generate_map_sprite();
@@ -72,7 +73,7 @@ class batch
      void                                button_input_browse();
      void                                button_output_browse();
      [[nodiscard]] std::filesystem::path append_file_structure(const std::filesystem::path &path) const;
-     [[nodiscard]] bool browse_path(int &imgui_id, std::string_view name, bool &valid_path, std::array<char, m_buffer_size> &path_buffer);
+     [[nodiscard]] bool                  browse_path(std::string_view name, bool &valid_path, std::array<char, m_buffer_size> &path_buffer);
 
    public:
      void update(sf::Time elapsed_time);
@@ -80,15 +81,9 @@ class batch
      bool   in_progress() const;
      void   stop();
      batch &operator=(std::shared_ptr<archives_group> new_group);
-     void   draw_window(int &imgui_id);
+     void   draw_window();
      void   checkmark_save_map();
-     void   draw_multi_column_list_box(
-         int                            &imgui_id,
-         const std::string_view          name,
-         const std::vector<std::string> &items,
-         std::vector<bool>              &enabled);
-
-     void tool_tip(const std::string_view str, int &imgui_id);
+     void   draw_multi_column_list_box(const std::string_view name, const std::vector<std::string> &items, std::vector<bool> &enabled);
 };
-}
+}// namespace fme
 #endif// FIELD_MAP_EDITOR_BATCH_HPP

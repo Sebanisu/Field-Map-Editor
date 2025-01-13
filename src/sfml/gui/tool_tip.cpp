@@ -1,8 +1,9 @@
 #include "tool_tip.hpp"
 #include "format_imgui_text.hpp"
 #include "push_pop_id.hpp"
-#include "scope_guard.hpp"
 #include <imgui.h>
+namespace fme
+{
 void tool_tip(const std::string_view str)
 {
      if (!ImGui::IsItemHovered())
@@ -18,3 +19,4 @@ void tool_tip(const std::string_view str)
      ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);// Adjust wrap width as needed
      format_imgui_text("{}", str);
 }
+}// namespace fme

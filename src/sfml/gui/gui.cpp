@@ -388,7 +388,7 @@ void gui::loop()
      //     popup_batch_reswizzle();
      if (m_selections->display_batch_window)
      {
-          m_batch.draw_window(get_imgui_id());
+          m_batch.draw_window();
      }
 
      if (toggle_imgui_demo_window)
