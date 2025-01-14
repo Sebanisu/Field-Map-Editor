@@ -12,21 +12,40 @@ namespace ff_8
 struct PupuID
 {
 
+     // 1 bit for x not aligned
+     static constexpr std::uint32_t x_not_aligned_offset   = 31U;
+     static constexpr std::uint32_t x_not_aligned_mask     = 0x1U;
+     static constexpr std::uint32_t x_not_aligned_to_grid  = x_not_aligned_mask << x_not_aligned_offset;
      // layer is 7 bits
      static constexpr std::uint32_t layer_offset           = 24U;
      static constexpr std::uint32_t layer_mask             = 0x7FU;
+     // 1 bit for y not aligned
+     static constexpr std::uint32_t y_not_aligned_offset   = 23U;
+     static constexpr std::uint32_t y_not_aligned_mask     = 0x1U;
+     static constexpr std::uint32_t y_not_aligned_to_grid  = y_not_aligned_mask << y_not_aligned_offset;
      // blend is only 0,1,2,3,4. So 3 bits
      static constexpr std::uint32_t blend_offset           = 20U;
      static constexpr std::uint32_t blend_mask             = 0x07U;
-     // animation id and state is 8 bits
+     // animation id 8 bits
      static constexpr std::uint32_t animation_offset       = 12U;
+     static constexpr std::uint32_t animation_mask         = 0xFFU;
+     // animation state 8 bits
      static constexpr std::uint32_t animation_state_offset = 4U;
+     static constexpr std::uint32_t animation_state_mask   = 0xFFU;
+     // the offset is 4 bits
      static constexpr std::uint32_t offset_mask            = 0xFU;
-     static constexpr std::uint32_t x_not_aligned_to_grid  = 0x8000'0000;
-     static constexpr std::uint32_t y_not_aligned_to_grid  = 0x0080'0000;
+     // We just used this to check if the x and y are not aligned.
      static constexpr std::int8_t   tile_grid_size         = 16;
 
-     constexpr PupuID() noexcept                           = default;
+     static_assert(x_not_aligned_to_grid == 0x8000'0000U);
+     static_assert((layer_mask << layer_offset) == 0x7F00'0000U);
+     static_assert(y_not_aligned_to_grid == 0x0080'0000U);
+     static_assert((blend_mask << blend_offset) == 0x0070'0000U);
+     static_assert((animation_mask << animation_offset) == 0x000F'F000U);
+     static_assert((animation_state_mask << animation_state_offset) == 0x0000'0FF0);
+
+
+     constexpr PupuID() noexcept = default;
      constexpr PupuID(std::uint32_t raw) noexcept
        : m_raw(raw)
      {
@@ -45,14 +64,18 @@ struct PupuID
           {
                m_raw |= y_not_aligned_to_grid;
           }
+          assert(tile.layer_id() == layer_id());
+          assert(tile.blend_mode() == blend_mode());
+          assert(tile.animation_id() == animation_id());
+          assert(tile.animation_state() == animation_state());
      }
      [[nodiscard]] constexpr std::uint8_t layer_id() const noexcept
      {
           return static_cast<std::uint8_t>((m_raw >> layer_offset) & layer_mask);
      }
-     [[nodiscard]] constexpr std::uint8_t blend_mode() const noexcept
+     [[nodiscard]] constexpr open_viii::graphics::background::BlendModeT blend_mode() const noexcept
      {
-          return static_cast<std::uint8_t>((m_raw >> blend_offset) & blend_mask);
+          return static_cast<open_viii::graphics::background::BlendModeT>((m_raw >> blend_offset) & blend_mask);
      }
      [[nodiscard]] constexpr std::uint8_t animation_id() const noexcept
      {
