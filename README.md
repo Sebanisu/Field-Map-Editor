@@ -11,6 +11,11 @@ The SFML version is the more feature-complete version and is recommended for mos
 
 If you find any features missing from the SFML version or have suggestions, please let me know. Your feedback helps shape its development.
 
+#### Pupu Compatibility Issue
+
+-  **2025.01.13** - I found a small bug https://github.com/Sebanisu/Field-Map-Editor/issues/121. This could cause the Pupu to not be unique enough. It might break your exports. Convert to swizzled in your current version before upgrading.
+-  **2022.09.01** - https://github.com/Sebanisu/Field-Map-Editor/issues/80. I used 2 bits to note if a tile is not aligned with the 16x16 grid, via the X-axis or the Y-axis.
+
 ### OPENGL Version
 
 The OPENGL version has evolved into a testing ground for new features. These features are tested and refined in the OPENGL version and then backported to the SFML version where applicable. While the SFML version is the recommended version for most users, the OPENGL version might contain experimental features that have not yet made their way to the SFML version.
@@ -29,10 +34,6 @@ If you are using the OPENGL version and find a feature you would like to see in 
 ### Credits
 
 This project is based on the work of [Omzy](https://forums.qhimm.com/index.php?topic=13444.0) [(src)](https://github.com/Sebanisu/Pupu) and [myst6re](https://forums.qhimm.com/index.php?topic=13050.0) [(src)](https://github.com/myst6re/deling). Also [Maki](https://forums.qhimm.com/index.php?topic=18656.0) [(src)](https://github.com/MaKiPL/OpenVIII-monogame). I referenced their code to make this.
-
-### Pupu Compatablility Warning!
-* I updated my Pupu ID generation to use 2 bits that were unused. These tell if the X coordinate and/or the Y coordinate aren't aligned with the 16 x 16 grid. This was because a few instances where tiles weren't being deswizzled or swizzled correctly. And you'd end up with two layers of tiles merged together. This change happened around September 2022 so if you already created deswizzles the filenames won't match anymore.
-
 
 # Windows Build Instructions
 
