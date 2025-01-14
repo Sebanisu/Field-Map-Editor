@@ -35,14 +35,14 @@ struct PupuID
   {
     if (tile.x() % 16 != 0)
     {
-      m_raw |= 0x8000'0000;
+      m_raw |= 0x8000'0000U;
     }
     if (tile.y() % 16 != 0)
     {
-      m_raw |= 0x0080'0000;
+      m_raw |= 0x0080'0000U;
     }
   }
-  constexpr auto operator+=(std::uint32_t right)
+  constexpr auto &operator+=(std::uint32_t right)
   {
     m_raw += right;
     return *this;
@@ -53,7 +53,7 @@ struct PupuID
     cpy += right;
     return cpy;
   }
-  constexpr auto operator|=(std::uint32_t right)
+  constexpr auto &operator|=(std::uint32_t right)
   {
     m_raw |= right;
     return *this;
@@ -64,7 +64,7 @@ struct PupuID
     cpy |= right;
     return cpy;
   }
-  constexpr auto operator+=(PupuID right)
+  constexpr auto &operator+=(PupuID right)
   {
     m_raw += right.raw();
     return *this;
