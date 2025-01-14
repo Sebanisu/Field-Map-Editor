@@ -28,6 +28,8 @@ add_executable(${PROJECT_NAME}_SFML        gui/batch.cpp
         gui/tool_tip.cpp
         archives_group.cpp
         Configuration.cpp
+        events.cpp
+        formatters.cpp
         future_operations.cpp
         generic_combo.cpp
         grid.cpp
@@ -42,6 +44,7 @@ add_executable(${PROJECT_NAME}_SFML        gui/batch.cpp
         safedir.cpp
         save_image_pbo.cpp
         square.cpp
+        tile_sizes.cpp
         unique_values.cpp
         UniquifyPupu.cpp
         upscales.cpp
