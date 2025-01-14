@@ -65,7 +65,7 @@ const sf::Texture *
      }
      return &m_texture->at(index);
 }
-const sf::Texture *map_sprite::get_texture(const ::PupuID &pupu) const
+const sf::Texture *map_sprite::get_texture(const ff_8::PupuID &pupu) const
 {
      const auto &values = m_all_unique_values_and_strings.pupu().values();
      auto        it     = std::ranges::find(values, pupu);
@@ -129,7 +129,7 @@ std::shared_ptr<std::array<sf::Texture, map_sprite::MAX_TEXTURES>> map_sprite::l
      else
      {
 
-          std::ranges::for_each(m_all_unique_values_and_strings.pupu().values(), [&, pos = size_t{}](const ::PupuID &pupu) mutable {
+          std::ranges::for_each(m_all_unique_values_and_strings.pupu().values(), [&, pos = size_t{}](const ff_8::PupuID &pupu) mutable {
                future_of_futures.push_back(load_deswizzle_textures(ret, pupu, pos));
                ++pos;
           });
@@ -218,7 +218,7 @@ std::future<std::future<void>> map_sprite::load_mim_textures(
 }
 std::future<std::future<void>> map_sprite::load_deswizzle_textures(
   std::shared_ptr<std::array<sf::Texture, MAX_TEXTURES>> &ret,
-  const ::PupuID                                          pupu,
+  const ff_8::PupuID                                      pupu,
   const size_t                                            pos) const
 {
      if (pos >= MAX_TEXTURES)
@@ -528,7 +528,7 @@ sf::Sprite map_sprite::save_intersecting(const sf::Vector2i &pixel_pos, const st
      for (const auto &z : m_all_unique_values_and_strings.z().values())
      {
           for_all_tiles(
-            [this, &states, &target, &z, &drew]([[maybe_unused]] const auto &tile_const, const auto &tile, const PupuID pupu_id) {
+            [this, &states, &target, &z, &drew]([[maybe_unused]] const auto &tile_const, const auto &tile, const ff_8::PupuID pupu_id) {
                  if (!m_saved_indices.empty())
                  {
                       // skip saved indices on redraw.
@@ -1199,7 +1199,7 @@ std::vector<std::future<std::future<void>>> map_sprite::save_pupu_textures(const
      }
 
      const std::string                field_name      = std::string{ str_to_lower(m_map_group.field->get_base_name()) };
-     const std::vector<PupuID>       &unique_pupu_ids = m_all_unique_values_and_strings.pupu().values();
+     const std::vector<ff_8::PupuID> &unique_pupu_ids = m_all_unique_values_and_strings.pupu().values();
      std::optional<open_viii::LangT> &coo             = m_map_group.opt_coo;
 
      assert(safedir(path).is_dir());
@@ -1212,7 +1212,7 @@ std::vector<std::future<std::future<void>>> map_sprite::save_pupu_textures(const
      sf::RenderTexture out_texture{};
      iRectangle const  canvas = m_map_group.maps.const_working().canvas() * static_cast<int>(m_scale);
      out_texture.create(static_cast<std::uint32_t>(canvas.width()), static_cast<std::uint32_t>(canvas.height()));
-     for (const PupuID &pupu : unique_pupu_ids)
+     for (const ff_8::PupuID &pupu : unique_pupu_ids)
      {
           settings.filters.value().pupu.update(pupu).enable();
           if (!generate_texture(&out_texture))
@@ -1282,11 +1282,11 @@ std::filesystem::path map_sprite::save_path_coo(
               fmt::string_view(pattern), fmt::make_format_args(field_name, open_viii::LangCommon::to_string(coo), texture_page, palette));
 }
 std::filesystem::path map_sprite::save_path_coo(
-  fmt::format_string<std::string_view, std::string_view, PupuID> pattern,
-  const std::filesystem::path                                   &path,
-  const std::string_view                                        &field_name,
-  const PupuID                                                   pupu,
-  const open_viii::LangT                                         coo)
+  fmt::format_string<std::string_view, std::string_view, ff_8::PupuID> pattern,
+  const std::filesystem::path                                         &path,
+  const std::string_view                                              &field_name,
+  const ff_8::PupuID                                                   pupu,
+  const open_viii::LangT                                               coo)
 {
      return path / fmt::vformat(fmt::string_view(pattern), fmt::make_format_args(field_name, open_viii::LangCommon::to_string(coo), pupu));
 }
@@ -1308,10 +1308,10 @@ std::filesystem::path map_sprite::save_path(
      return path / fmt::vformat(fmt::string_view(pattern), fmt::make_format_args(field_name, texture_page, palette));
 }
 std::filesystem::path map_sprite::save_path(
-  fmt::format_string<std::string_view, PupuID> pattern,
-  const std::filesystem::path                 &path,
-  const std::string_view                      &field_name,
-  PupuID                                       pupu)
+  fmt::format_string<std::string_view, ff_8::PupuID> pattern,
+  const std::filesystem::path                       &path,
+  const std::string_view                            &field_name,
+  ff_8::PupuID                                       pupu)
 {
      return path / fmt::vformat(fmt::string_view(pattern), fmt::make_format_args(field_name, pupu));
 }

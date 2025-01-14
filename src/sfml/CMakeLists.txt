@@ -42,6 +42,8 @@ add_executable(${PROJECT_NAME}_SFML        gui/batch.cpp
         safedir.cpp
         save_image_pbo.cpp
         square.cpp
+        unique_values.cpp
+        UniquifyPupu.cpp
         upscales.cpp
 )
 #set_property(TARGET ${PROJECT_NAME}_SFML PROPERTY CXX_STANDARD 20)
@@ -54,6 +56,8 @@ include(${CMAKE_SOURCE_DIR}/cmake/imgui-sfml.cmake)
 target_link_libraries(${PROJECT_NAME}_SFML
         PRIVATE project_warnings
         PRIVATE project_options
+        #PRIVATE imgui::imgui
+        #PRIVATE ImGui-SFML::ImGui-SFML
         PRIVATE ImGui-SFML
         PRIVATE OpenVIII_CPP_WIP_VIIIPaths
         PRIVATE OpenVIII_CPP_WIP_VIIIArchive

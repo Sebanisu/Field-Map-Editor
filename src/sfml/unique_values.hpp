@@ -8,6 +8,7 @@
 #include "open_viii/graphics/background/BlendModeT.hpp"
 #include "open_viii/graphics/BPPT.hpp"
 #include "PupuID.hpp"
+#include "tile_operations.hpp"
 #include "UniquifyPupu.hpp"
 #include <concepts>
 #include <cstdint>
@@ -89,7 +90,7 @@ struct all_unique_values_and_strings
      explicit all_unique_values_and_strings(std::monostate /*unused*/) {}
      template<std::ranges::range tilesT>
      explicit all_unique_values_and_strings(const tilesT &tiles)
-       : m_pupu(tiles, m_pupu_map, [](const PupuID &left, const PupuID &right) { return left.raw() < right.raw(); })
+       : m_pupu(tiles, m_pupu_map, [](const ff_8::PupuID &left, const ff_8::PupuID &right) { return left.raw() < right.raw(); })
        , m_z(
            tiles,
            [](const auto &tile) { return tile.z(); },
@@ -105,13 +106,13 @@ struct all_unique_values_and_strings
            m_animation_id,
            ff_8::tile_operations::AnimationState{},
            {},
-           [](const auto key, const auto &tile)->bool { return ff_8::tile_operations::AnimationIdMatch{ key } == tile; }))
+           [](const auto key, const auto &tile) -> bool { return ff_8::tile_operations::AnimationIdMatch{ key } == tile; }))
        , m_palette(get_map<std::uint8_t, open_viii::graphics::BPPT>(
            tiles,
            m_bpp,
            ff_8::tile_operations::PaletteId{},
            {},
-           [](const auto key, const auto &tile)->bool { return ff_8::tile_operations::DepthMatch{ tile } == key; }))
+           [](const auto key, const auto &tile) -> bool { return ff_8::tile_operations::DepthMatch{ tile } == key; }))
      {
      }
      [[nodiscard]] const auto &z() const
@@ -156,8 +157,8 @@ struct all_unique_values_and_strings
      }
 
    private:
-     UniquifyPupu                                                                 m_pupu_map            = {};
-     unique_values_and_strings<PupuID>                                            m_pupu                = {};
+     ff_8::UniquifyPupu                                                           m_pupu_map            = {};
+     unique_values_and_strings<ff_8::PupuID>                                      m_pupu                = {};
      unique_values_and_strings<std::uint16_t>                                     m_z                   = {};
      unique_values_and_strings<std::uint8_t>                                      m_layer_id            = {};
      unique_values_and_strings<std::uint8_t>                                      m_texture_page_id     = {};

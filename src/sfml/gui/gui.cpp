@@ -2028,7 +2028,7 @@ void gui::combo_pupu()
        [&values]() { return values; },
        [&pair]() { return pair.strings(); },
        [&values]() {
-            return values | std::views::transform([](const PupuID &pupu_id) -> decltype(auto) { return pupu_id.create_summary(); });
+            return values | std::views::transform([](const ff_8::PupuID &pupu_id) -> decltype(auto) { return pupu_id.create_summary(); });
        },
        [this]() -> auto  &{ return m_map_sprite->filter().pupu; });
 

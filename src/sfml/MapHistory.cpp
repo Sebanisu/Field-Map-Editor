@@ -45,12 +45,12 @@ void ff_8::MapHistory::refresh_working_pupu()
      m_working_pupu = calculate_pupu(m_working);
 }
 
-const std::vector<PupuID> &ff_8::MapHistory::original_pupu() const noexcept
+const std::vector<ff_8::PupuID> &ff_8::MapHistory::original_pupu() const noexcept
 {
      return m_original_pupu;
 }
 
-const std::vector<PupuID> &ff_8::MapHistory::working_pupu() const noexcept
+const std::vector<ff_8::PupuID> &ff_8::MapHistory::working_pupu() const noexcept
 {
      return m_working_pupu;
 }
@@ -209,15 +209,15 @@ const map_t &ff_8::MapHistory::const_working() const
 }
 
 template<is_tile TileT>
-[[nodiscard]] PupuID ff_8::MapHistory::get_pupu_from_working(const TileT &tile) const
+[[nodiscard]] ff_8::PupuID ff_8::MapHistory::get_pupu_from_working(const TileT &tile) const
 {
      return m_original_pupu[static_cast<std::size_t>(get_offset_from_working(tile))];
 }
 
 // Explicit instantiation for Tiles
-template PupuID ff_8::MapHistory::get_pupu_from_working(const Tile1 &) const;
-template PupuID ff_8::MapHistory::get_pupu_from_working(const Tile2 &) const;
-template PupuID ff_8::MapHistory::get_pupu_from_working(const Tile3 &) const;
+template ff_8::PupuID ff_8::MapHistory::get_pupu_from_working(const Tile1 &) const;
+template ff_8::PupuID ff_8::MapHistory::get_pupu_from_working(const Tile2 &) const;
+template ff_8::PupuID ff_8::MapHistory::get_pupu_from_working(const Tile3 &) const;
 
 template<open_viii::graphics::background::is_tile TileT>
 std::vector<TileT>::difference_type ff_8::MapHistory::get_offset_from_working(const TileT &tile) const

@@ -92,7 +92,7 @@ struct [[nodiscard]] map_sprite final
           return m_render_texture.get();
      }
      [[nodiscard]] const sf::Texture                    *get_texture(BPPT bpp, std::uint8_t palette, std::uint8_t texture_page) const;
-     [[nodiscard]] const sf::Texture                    *get_texture(const ::PupuID &pupu) const;
+     [[nodiscard]] const sf::Texture                    *get_texture(const ff_8::PupuID &pupu) const;
      [[nodiscard]] sf::Vector2u                          get_tile_texture_size(const sf::Texture *texture) const;
      [[nodiscard]] sf::Vector2u                          get_tile_draw_size() const;
      [[nodiscard]] bool                                  generate_texture(sf::RenderTexture *texture) const;
@@ -141,7 +141,8 @@ struct [[nodiscard]] map_sprite final
      [[nodiscard]] std::vector<std::future<std::future<void>>> save_swizzle_textures(const std::filesystem::path &path);
      [[nodiscard]] std::vector<std::future<std::future<void>>> save_pupu_textures(const std::filesystem::path &path);
      [[nodiscard]] std::future<std::future<void>>              load_upscale_textures(SharedTextures &ret, std::uint8_t texture_page);
-     [[nodiscard]] std::future<std::future<void>> load_deswizzle_textures(SharedTextures &ret, const ::PupuID pupu, const size_t pos) const;
+     [[nodiscard]] std::future<std::future<void>>
+       load_deswizzle_textures(SharedTextures &ret, const ff_8::PupuID pupu, const size_t pos) const;
      [[nodiscard]] std::future<std::future<void>> load_mim_textures(SharedTextures &ret, BPPT bpp, uint8_t palette);
      [[nodiscard]] std::future<std::future<void>>
                  load_upscale_textures(SharedTextures &ret, std::uint8_t texture_page, std::uint8_t palette);
@@ -190,11 +191,11 @@ struct [[nodiscard]] map_sprite final
        const uint8_t                                                            palette,
        const open_viii::LangT                                                   coo);
      static std::filesystem::path save_path_coo(
-       fmt::format_string<std::string_view, std::string_view, PupuID> pattern,
-       const std::filesystem::path                                   &path,
-       const std::string_view                                        &field_name,
-       const PupuID                                                   pupu,
-       const open_viii::LangT                                         coo);
+       fmt::format_string<std::string_view, std::string_view, ff_8::PupuID> pattern,
+       const std::filesystem::path                                         &path,
+       const std::string_view                                              &field_name,
+       const ff_8::PupuID                                                   pupu,
+       const open_viii::LangT                                               coo);
      static std::filesystem::path save_path(
        fmt::format_string<std::string_view, uint8_t> pattern,
        const std::filesystem::path                  &path,
@@ -207,10 +208,10 @@ struct [[nodiscard]] map_sprite final
        uint8_t                                                texture_page,
        uint8_t                                                palette);
      static std::filesystem::path save_path(
-       fmt::format_string<std::string_view, PupuID> pattern,
-       const std::filesystem::path                 &path,
-       const std::string_view                      &field_name,
-       PupuID                                       pupu);
+       fmt::format_string<std::string_view, ff_8::PupuID> pattern,
+       const std::filesystem::path                       &path,
+       const std::string_view                            &field_name,
+       ff_8::PupuID                                       pupu);
 
      [[nodiscard]] std::vector<std::size_t> find_intersecting(
        const open_viii::graphics::background::Map &map,
@@ -328,9 +329,9 @@ struct [[nodiscard]] map_sprite final
      {
           using namespace open_viii::graphics::background;
           // todo move pupu generation to constructor
-          std::vector<PupuID> pupu_ids = {};
+          std::vector<ff_8::PupuID> pupu_ids = {};
           pupu_ids.reserve(std::size(tiles_const));
-          std::ranges::transform(tiles_const, std::back_inserter(pupu_ids), UniquifyPupu{});
+          std::ranges::transform(tiles_const, std::back_inserter(pupu_ids), ff_8::UniquifyPupu{});
           assert(std::size(tiles_const) == std::size(tiles));
           // assert(std::size(tiles_const) == std::size(m_pupu_ids));
           const auto process = [&skip_invalid,
@@ -342,8 +343,8 @@ struct [[nodiscard]] map_sprite final
                     {
                          continue;
                     }
-                    is_tile auto &tile       = *tiles_begin;
-                    const PupuID &pupu_const = *pupu_ids_begin;
+                    is_tile auto       &tile       = *tiles_begin;
+                    const ff_8::PupuID &pupu_const = *pupu_ids_begin;
                     lambda(tile_const, tile, pupu_const);
                }
           };
@@ -489,7 +490,7 @@ struct [[nodiscard]] map_sprite final
           return ff_8::get_triangle_strip(to_Vector2f(draw_size), to_Vector2f(texture_size), src, dest);
      }
 
-     auto generate_deswizzle_paths(const ::PupuID pupu) const
+     auto generate_deswizzle_paths(const ff_8::PupuID pupu) const
      {
           const auto            field_name       = get_base_name();
           static constexpr auto pattern_pupu     = std::string_view("{}_{}.png");

@@ -6,48 +6,23 @@
 #define FIELD_MAP_EDITOR_UNIQUIFYPUPU_HPP
 #include "PupuID.hpp"
 #include <map>
-
+namespace ff_8
+{
 class UniquifyPupu
 {
-public:
-  struct PupuKey
-  {
-    PupuID       pupu_id                            = {};
-    std::int16_t x                                  = {};
-    std::int16_t y                                  = {};
-    auto         operator<=>(const PupuKey &) const = default;
-  };
-  std::map<PupuKey, std::uint8_t> m_pupu_map = {};
+   public:
+     struct PupuKey
+     {
+          PupuID       pupu_id                            = {};
+          std::int16_t x                                  = {};
+          std::int16_t y                                  = {};
+          auto         operator<=>(const PupuKey &) const = default;
+     };
 
-  PupuID
-    operator()(const open_viii::graphics::background::is_tile auto &tile_const)
-  {
-    const auto t           = 16;
-    const auto x           = static_cast<int16_t>(tile_const.x() / t);
-    const auto y           = static_cast<int16_t>(tile_const.y() / t);
-    auto input_value = PupuKey{ PupuID(tile_const), x, y };
-    auto       insert_key  = [&](PupuKey key) -> PupuID {
-      if (m_pupu_map.contains(key))
-      {
-        ++(m_pupu_map.at(key));
-        return key.pupu_id + m_pupu_map.at(key);
-      }
-      else
-      {
-        m_pupu_map.emplace(key, std::uint8_t{});
-        return key.pupu_id + m_pupu_map.at(std::move(key));
-      }
-    };
-    return insert_key(input_value);
-  }
-//  operator UniqueValues<PupuID>() const
-//  {
-//    std::vector<PupuID> values{};
-//    std::ranges::transform(m_pupu_map, std::back_insert_iterator(values),[](auto && key_value)->PupuID{
-//      const auto & [key,value] = key_value;
-//      return key.pupu_id;
-//    });
-//    UniqueValues<PupuID>{std::move(values)};
-//  }
+     PupuID operator()(const open_viii::graphics::background::is_tile auto &tile_const);
+
+   private:
+     std::map<PupuKey, std::uint8_t> m_pupu_map = {};
 };
+}// namespace ff_8
 #endif// FIELD_MAP_EDITOR_UNIQUIFYPUPU_HPP

@@ -4,6 +4,7 @@
 
 #ifndef FIELD_MAP_EDITOR_TILE_OPERATIONS_HPP
 #define FIELD_MAP_EDITOR_TILE_OPERATIONS_HPP
+#include <open_viii/graphics/background/Map.hpp>
 namespace ff_8
 {
 namespace tile_operations

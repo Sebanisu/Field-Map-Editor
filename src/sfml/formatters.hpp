@@ -9,8 +9,10 @@
 #include "gui/gui_labels.hpp"
 #include "tile_sizes.hpp"
 #include <filesystem>
+#include <functional>
 #include <fmt/format.h>
 #include <open_viii/graphics/background/BlendModeT.hpp>
+#include <open_viii/graphics/background/Map.hpp>
 #include <open_viii/graphics/BPPT.hpp>
 #include <open_viii/strings/LangCommon.hpp>
 
