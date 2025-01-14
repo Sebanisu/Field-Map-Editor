@@ -7,7 +7,7 @@ environment:
 
 skip_commits:
   files:
-    - '*.md'
+    - '**/*.md'
 
 cache:
   - C:\\projects\\source\\.conan2 -> conanfile.py
