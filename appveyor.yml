@@ -5,6 +5,10 @@ clone_folder: c:\projects\source
 environment:
   PYTHON: "C:\\Python38-x64\\python.exe"
 
+skip_commits:
+  files:
+    - '*.md'
+
 cache:
   - C:\\projects\\source\\.conan2 -> conanfile.py
 
