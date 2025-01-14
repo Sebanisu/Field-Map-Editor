@@ -14,7 +14,7 @@ If you find any features missing from the SFML version or have suggestions, plea
 #### Pupu Compatibility Issue
 
 -  **2025.01.13** - I found a small bug https://github.com/Sebanisu/Field-Map-Editor/issues/121. This could cause the Pupu to not be unique enough. It might break your exports. You may need to convert to swizzled in your current version before upgrading.
--  **2022.09.01** - https://github.com/Sebanisu/Field-Map-Editor/issues/80. I used 2 bits to note if a tile is not aligned with the 16x16 grid, via the X-axis or the Y-axis.
+-  **2022.09.12** - https://github.com/Sebanisu/Field-Map-Editor/issues/80 & https://github.com/Sebanisu/Field-Map-Editor/issues/122. I used 2 bits to note if a tile is not aligned with the 16x16 grid, via the X-axis or the Y-axis.
 
 ### OPENGL Version
 
