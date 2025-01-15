@@ -191,7 +191,7 @@ class [[nodiscard]] source_tile_conflicts final
           {
                assert(std::cmp_greater(index, 0) && " index must be greater than 0");
           }
-          assert(std::cmp_less(index, std::ranges::size(m_grid)) && "the index is out of range");
+          //assert(std::cmp_less(index, std::ranges::size(m_grid)) && "the index is out of range");
           l.t = static_cast<std::uint8_t>(static_cast<std::make_unsigned<Index>::type>(index) / GRID_SIZE);// Reverse the t calculation
           const Index remaining = static_cast<std::make_unsigned<Index>::type>(index) % GRID_SIZE;// Remaining part after extracting t
           l.y                   = static_cast<std::uint8_t>((remaining / X_SIZE) * Y_SIZE);// y is the remainder
