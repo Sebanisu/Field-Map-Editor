@@ -125,12 +125,12 @@ const std::vector<ff_8::PupuID> &ff_8::MapHistory::working_pupu() const noexcept
      return m_working_pupu;
 }
 
-const source_tile_conflicts &ff_8::MapHistory::original_conflicts() const noexcept
+const ff_8::source_tile_conflicts &ff_8::MapHistory::original_conflicts() const noexcept
 {
      return m_original_conflicts;
 }
 
-const source_tile_conflicts &ff_8::MapHistory::working_conflicts() const noexcept
+const ff_8::source_tile_conflicts &ff_8::MapHistory::working_conflicts() const noexcept
 {
      return m_working_conflicts;
 }
