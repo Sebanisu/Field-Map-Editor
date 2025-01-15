@@ -11,6 +11,7 @@ class MyPackage(ConanFile):
     default_options  = {"fmt/*:shared": True}
     
     settings = "os", "compiler", "build_type", "arch"
+    test_type = "explicit"
     
     def requirements(self):
         self.requires("lz4/1.10.0")
@@ -22,12 +23,11 @@ class MyPackage(ConanFile):
         self.requires("sfml/2.6.2")
         self.requires("zlib/1.3.1")
         self.requires("openal-soft/1.22.2")
-        self.requires("boost-ext-ut/1.1.9")
+        self.requires("boost-ext-ut/2.1.0") 
         self.requires("tomlplusplus/3.0.1")
         self.requires("libpng/1.6.44")
         self.requires("stb/cci.20230920")        
         self.requires("iconfontcppheaders/cci.20240620")
-
     
     def build_requirements(self):
         self.tool_requires("cmake/[>=3.22.6]")        
@@ -37,6 +37,7 @@ class MyPackage(ConanFile):
         
     def configure(self):
         self.options["fmt"].header_only = True
+        self.options["boost-ext-ut"].disable_module = True
     
     def generate(self):
         #tc = CMakeToolchain(self, generator="Ninja")

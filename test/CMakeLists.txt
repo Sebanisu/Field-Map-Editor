@@ -1,62 +1,47 @@
-find_package(Catch2 REQUIRED)
+# set(BOOST_UT_DISABLE_MODULE TRUE) find_package(ut CONFIG REQUIRED)
+# function(add_test_common file_name)
+# add_executable(${PROJECT_NAME}_UT_${file_name} ${file_name}.cpp)
+# target_link_libraries( ${PROJECT_NAME}_UT_${file_name} PRIVATE Boost::ut
+# PRIVATE ${PROJECT_NAME}_project_warnings)
+# target_include_directories(${PROJECT_NAME}_UT_${file_name} PRIVATE
+# ${CMAKE_CURRENT_SOURCE_DIR})
+# set_target_properties(${PROJECT_NAME}_UT_${file_name} PROPERTIES OUTPUT_NAME
+# "${file_name}") target_compile_definitions(${PROJECT_NAME}_UT_${file_name}
+# PRIVATE BOOST_UT_DISABLE_MODULE=1) add_test(NAME
+# ${PROJECT_NAME}_UT_${file_name} COMMAND ${PROJECT_NAME}_UT_${file_name})
+# target_compile_features( ${PROJECT_NAME}_UT_${file_name} PUBLIC cxx_std_23
+# PUBLIC cxx_std_20) if(MSVC) target_compile_definitions(
+# ${PROJECT_NAME}_UT_${file_name} PUBLIC _CRT_SECURE_NO_WARNINGS )# required by
+# libpng target_compile_options(${PROJECT_NAME}_UT_${file_name} PUBLIC
+# "/bigobj") target_link_options(${PROJECT_NAME}_UT_${file_name} PUBLIC
+# "/PROFILE") endif() #
+# target_compile_definitions(${PROJECT_NAME}_UT_${file_name} PRIVATE #
+# BOOST_UT_DISABLE_MODULE ) endfunction() add_test_common(source_tile_conflicts)
 
-include(CTest)
-include(Catch)
+find_package(ut REQUIRED CONFIG)
 
-add_library(catch_main STATIC catch_main.cpp)
-target_link_libraries(catch_main PUBLIC Catch2::Catch2)
-target_link_libraries(catch_main PRIVATE project_options)
+set(boost_namespace Boost)
+if(ut_VERSION VERSION_LESS "1.1.9")
+  set(boost_namespace boost)
+endif()
 
-add_executable(tests tests.cpp)
-target_link_libraries(tests PRIVATE project_warnings project_options catch_main)
+add_executable(${PROJECT_NAME}_UT_source_tile_conflicts_test
+               UT_source_tile_conflicts_test.cpp)
+target_link_libraries(${PROJECT_NAME}_UT_source_tile_conflicts_test
+                      PRIVATE "${boost_namespace}::ut")
+target_compile_features(
+  ${PROJECT_NAME}_UT_source_tile_conflicts_test
+  PRIVATE cxx_std_23
+  PRIVATE cxx_std_20)
+target_link_libraries(
+  ${PROJECT_NAME}_UT_source_tile_conflicts_test
+  PRIVATE OpenVIII_CPP_WIP_VIIIGraphics
+  PRIVATE ${PROJECT_NAME}_SFML_Common)
+target_compile_definitions(
+  ${PROJECT_NAME}_UT_source_tile_conflicts_test
+  PRIVATE UT_source_tile_conflicts_test # PRIVATE NDEBUG
+)
 
-# automatically discover tests that are defined in catch based test files you can modify the unittests. Set TEST_PREFIX
-# to whatever you want, or use different for different binaries
-catch_discover_tests(
-  tests
-  TEST_PREFIX
-  "unittests."
-  REPORTER
-  xml
-  OUTPUT_DIR
-  .
-  OUTPUT_PREFIX
-  "unittests."
-  OUTPUT_SUFFIX
-  .xml)
-
-# Add a file containing a set of constexpr tests
-add_executable(constexpr_tests constexpr_tests.cpp)
-target_link_libraries(constexpr_tests PRIVATE project_options project_warnings catch_main)
-
-catch_discover_tests(
-  constexpr_tests
-  TEST_PREFIX
-  "constexpr."
-  REPORTER
-  xml
-  OUTPUT_DIR
-  .
-  OUTPUT_PREFIX
-  "constexpr."
-  OUTPUT_SUFFIX
-  .xml)
-
-# Disable the constexpr portion of the test, and build again this allows us to have an executable that we can debug when
-# things go wrong with the constexpr testing
-add_executable(relaxed_constexpr_tests constexpr_tests.cpp)
-target_link_libraries(relaxed_constexpr_tests PRIVATE project_options project_warnings catch_main)
-target_compile_definitions(relaxed_constexpr_tests PRIVATE -DCATCH_CONFIG_RUNTIME_STATIC_REQUIRE)
-
-catch_discover_tests(
-  relaxed_constexpr_tests
-  TEST_PREFIX
-  "relaxed_constexpr."
-  REPORTER
-  xml
-  OUTPUT_DIR
-  .
-  OUTPUT_PREFIX
-  "relaxed_constexpr."
-  OUTPUT_SUFFIX
-  .xml)
+# Register the test with CTest
+add_test(NAME ${PROJECT_NAME}_UT_source_tile_conflicts_test
+         COMMAND ${PROJECT_NAME}_UT_source_tile_conflicts_test)
