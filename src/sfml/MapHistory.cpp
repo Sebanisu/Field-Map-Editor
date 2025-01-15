@@ -83,10 +83,26 @@ ff_8::MapHistory::MapHistory(map_t map)
 {
 }
 
-void ff_8::MapHistory::refresh_all_pupu()
+void ff_8::MapHistory::refresh_original_all(bool force)
 {
+     if (!m_original_changed && !force)
+     {
+          return;
+     }
      refresh_original_pupu();
+     refresh_original_conflicts();
+     m_original_changed = false;
+}
+
+void ff_8::MapHistory::refresh_working_all(bool force)
+{
+     if (!m_working_changed && !force)
+     {
+          return;
+     }
+     refresh_working_conflicts();
      refresh_working_pupu();
+     m_working_changed = false;
 }
 
 void ff_8::MapHistory::refresh_original_pupu()
@@ -99,11 +115,6 @@ void ff_8::MapHistory::refresh_working_pupu()
      m_working_pupu = calculate_pupu(m_working);
 }
 
-void ff_8::MapHistory::refresh_all_conflicts()
-{
-     refresh_original_conflicts();
-     refresh_working_conflicts();
-}
 
 void ff_8::MapHistory::refresh_original_conflicts()
 {
@@ -166,6 +177,7 @@ map_t &ff_8::MapHistory::copy_working(std::string description)
      m_undo_original_or_working.push_back(pushed::working);
      m_undo_history.push_back(working());
      m_undo_change_descriptions.push_back(std::move(description));
+     m_working_changed = true;
      return working();
 }
 
@@ -198,7 +210,8 @@ const map_t &ff_8::MapHistory::copy_working_to_original(std::string description)
      m_undo_original_or_working.push_back(pushed::original);
      m_undo_change_descriptions.push_back(std::move(description));
      // todo do we want to recalculate the pupu?
-     m_original = working();
+     m_original         = working();
+     m_original_changed = true;
      return original();
 }
 
@@ -218,12 +231,14 @@ bool ff_8::MapHistory::redo()
      if (last == pushed::working)
      {
           (void)m_undo_history.emplace_back(std::move(m_working));
-          m_working = std::move(m_redo_history.back());
+          m_working         = std::move(m_redo_history.back());
+          m_working_changed = true;
           m_redo_history.pop_back();
           return true;
      }
      (void)m_undo_history.emplace_back(std::move(m_original));
-     m_original = std::move(m_redo_history.back());
+     m_original         = std::move(m_redo_history.back());
+     m_original_changed = true;
      m_redo_history.pop_back();
      return true;
 }
@@ -249,7 +264,8 @@ bool ff_8::MapHistory::undo(bool skip_redo)
           {
                m_redo_history.emplace_back(std::move(m_working));
           }
-          m_working = std::move(m_undo_history.back());
+          m_working         = std::move(m_undo_history.back());
+          m_working_changed = true;
           m_undo_history.pop_back();
           return true;
      }
@@ -257,7 +273,8 @@ bool ff_8::MapHistory::undo(bool skip_redo)
      {
           m_redo_history.emplace_back(std::move(m_original));
      }
-     m_original = std::move(m_undo_history.back());
+     m_original         = std::move(m_undo_history.back());
+     m_original_changed = true;
      m_undo_history.pop_back();
      return true;
 }

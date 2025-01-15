@@ -40,6 +40,30 @@ class [[nodiscard]] MapHistory
 
    private:
      /**
+      * @brief Indicates whether the original state has been changed.
+      *
+      * This boolean flag tracks whether changes have been made to the original tile data.
+      * It is set to `true` before changes are made to the original state, and may be set to
+      * `false` after changes are committed. However, changes may still be in progress when
+      * it is set to `false`, so it is important to check the state before performing any further operations.
+      *
+      * @note This flag is used to track modifications to the original tile data.
+      */
+     bool m_original_changed                             = { false };
+
+     /**
+      * @brief Indicates whether the working state has been changed.
+      *
+      * This boolean flag tracks whether changes have been made to the working tile data.
+      * It is set to `true` before making changes to the working state, and may be set to
+      * `false` after changes are completed. As with the original flag, the state may be in
+      * the middle of a change when it is set to `false`.
+      *
+      * @note This flag is used to track modifications to the working tile data.
+      */
+     bool m_working_changed                              = { false };
+
+     /**
       * @typedef map_t
       * @brief Alias for the `Map` type from `open_viii::graphics::background`.
       */
@@ -74,12 +98,12 @@ class [[nodiscard]] MapHistory
      /**
       * @brief Source Conflict list corresponding to the original map state.
       */
-     source_tile_conflicts      m_original_conflicts            = {};
+     source_tile_conflicts    m_original_conflicts       = {};
 
      /**
       * @brief Source Conflict list corresponding to the working map state.
       */
-     source_tile_conflicts      m_working_conflicts             = {};
+     source_tile_conflicts    m_working_conflicts        = {};
 
 
      // Consolidated history and tracking
@@ -225,25 +249,25 @@ class [[nodiscard]] MapHistory
       * @brief Retrieves the current original map.
       * @return A constant reference to the original map.
       */
-     const map_t                             &original() const;
+     const map_t                               &original() const;
 
      /**
       * @brief Retrieves the current working map as a constant reference.
       * @return A constant reference to the working map.
       */
-     const map_t                             &const_working() const;
+     const map_t                               &const_working() const;
 
      /**
       * @brief Retrieves the current working map.
       * @return A constant reference to the working map.
       */
-     const map_t                             &working() const;
+     const map_t                               &working() const;
 
      /**
       * @brief Provides a mutable reference to the working map for modifications.
       * @return A mutable reference to the working map.
       */
-     map_t                                   &working();
+     map_t                                     &working();
      /**
       * @brief Creates a copy of the current working map and logs the planned change.
       *
@@ -261,7 +285,7 @@ class [[nodiscard]] MapHistory
       * - The copied state is stored in the undo history along with the provided description.
       * - This function is integral to the undo system, which stores the map's state before changes are applied.
       */
-     map_t                                   &copy_working(std::string description);
+     map_t                                     &copy_working(std::string description);
 
      /**
       * @brief Copies the current working map to the original map and logs the reason for the operation.
@@ -279,97 +303,113 @@ class [[nodiscard]] MapHistory
       * - After calling this function, other components (e.g., texture loaders) may need updates to reflect
       *   the new state of the map, as changes could affect rendering or other operations.
       */
-     const map_t                             &copy_working_to_original(std::string description);
+     const map_t                               &copy_working_to_original(std::string description);
 
      /**
       * @brief Checks whether undo operations are possible.
       * @return True if undo is enabled, false otherwise.
       */
-     bool                                     undo_enabled() const;
+     bool                                       undo_enabled() const;
 
      /**
       * @brief Checks whether redo operations are possible.
       * @return True if redo is enabled, false otherwise.
       */
-     bool                                     redo_enabled() const;
+     bool                                       redo_enabled() const;
 
      /**
       * @brief Performs all available redo operations.
       */
-     void                                     redo_all();
+     void                                       redo_all();
 
      /**
       * @brief Performs all available undo operations.
       */
-     void                                     undo_all();
+     void                                       undo_all();
 
      /**
       * @brief Performs a single redo operation.
       * @return True if a redo was successfully performed, false otherwise.
       */
-     bool                                     redo();
+     bool                                       redo();
 
      /**
       * @brief Performs a single undo operation.
       * @param skip_redo If true, skips saving the undone change for redo.
       * @return True if an undo was successfully performed, false otherwise.
       */
-     bool                                     undo(bool skip_redo = false);
+     bool                                       undo(bool skip_redo = false);
 
      /**
       * @brief Removes duplicate entries from the undo history.
       * @return True if duplicates were found and removed, false otherwise.
       */
-     bool                                     remove_duplicate();
+     bool                                       remove_duplicate();
 
      /**
       * @brief Retrieves the total number of changes in the undo history.
       * @return The size of the undo history.
       */
-     size_t                                   count() const;
+     size_t                                     count() const;
 
      /**
-      * @brief Regenerates all PupuID data for both the original and working maps.
+      * @brief Regenerates all PupuID data and Source Conflicts data for the maps in the original state.
+      *
+      * This function regenerates the entire set of PupuID data and source conflicts for the
+      * maps in their original, unmodified state. It can be called to refresh the data,
+      * either for the first time or after significant changes have been made.
+      *
+      * @param force If `true`, forces a regeneration even if the data is considered up-to-date.
+      *              If `false` (default), the regeneration occurs only if necessary.
       */
-     void                                     refresh_all_pupu();
+     void                                       refresh_original_all(bool force = false);
+
+     /**
+      * @brief Regenerates all PupuID data and Source Conflicts data for the maps in the working state.
+      *
+      * This function regenerates the entire set of PupuID data and source conflicts for the
+      * maps in their working state, which reflects any changes or modifications made.
+      * It is useful for updating the working state data after changes have occurred.
+      *
+      * @param force If `true`, forces a regeneration even if the data is considered up-to-date.
+      *              If `false` (default), the regeneration occurs only if necessary.
+      */
+     void                                       refresh_working_all(bool force = false);
+
 
      /**
       * @brief Regenerates the PupuID data for the original map.
       */
-     void                                     refresh_original_pupu();
+     void                                       refresh_original_pupu();
 
      /**
       * @brief Regenerates the PupuID data for the working map.
       */
-     void                                     refresh_working_pupu();
+     void                                       refresh_working_pupu();
 
 
-     /**
-      * @brief Regenerates all Source Conflicts data for both the original and working maps.
-      */
-     void                                     refresh_all_conflicts();
 
      /**
       * @brief Regenerates the Source Conflicts data for the original map.
       */
-     void                                     refresh_original_conflicts();
+     void                                       refresh_original_conflicts();
 
      /**
       * @brief Regenerates the Source Conflicts data for the working map.
       */
-     void                                     refresh_working_conflicts();
+     void                                       refresh_working_conflicts();
 
      /**
       * @brief Retrieves the PupuIDs for the original map.
       * @return A constant reference to the vector of PupuIDs for the original map.
       */
-     [[nodiscard]] const std::vector<PupuID> &original_pupu() const noexcept;
+     [[nodiscard]] const std::vector<PupuID>   &original_pupu() const noexcept;
 
      /**
       * @brief Retrieves the PupuIDs for the working map.
       * @return A constant reference to the vector of PupuIDs for the working map.
       */
-     [[nodiscard]] const std::vector<PupuID> &working_pupu() const noexcept;
+     [[nodiscard]] const std::vector<PupuID>   &working_pupu() const noexcept;
 
 
      /**
@@ -399,12 +439,12 @@ class [[nodiscard]] MapHistory
       * @brief Retrieves the total number of redo operations available.
       * @return The size of the redo history.
       */
-     size_t                                   redo_count() const;
+     size_t                                     redo_count() const;
 
      /**
       * @brief Clears all redo history.
       */
-     void                                     clear_redo();
+     void                                       clear_redo();
 
      /**
       * @brief Retrieves the PupuID corresponding to the given working tile.

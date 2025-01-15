@@ -95,9 +95,9 @@ struct [[nodiscard]] map_sprite final
      [[nodiscard]] const sf::Texture                    *get_texture(const ff_8::PupuID &pupu) const;
      [[nodiscard]] sf::Vector2u                          get_tile_texture_size(const sf::Texture *texture) const;
      [[nodiscard]] sf::Vector2u                          get_tile_draw_size() const;
-     [[nodiscard]] bool                                  generate_texture(sf::RenderTexture *texture) const;
+     [[nodiscard]] bool generate_texture(sf::RenderTexture *texture);// not const because may need to refresh pupu
      [[nodiscard]] std::uint32_t                         get_max_texture_height() const;
-     [[nodiscard]] bool                                  local_draw(sf::RenderTarget &target, sf::RenderStates states) const;
+     [[nodiscard]] bool                                  local_draw(sf::RenderTarget &target, sf::RenderStates states); //not const because may need to refresh pupu
      [[nodiscard]] std::string                           get_base_name() const;
      [[nodiscard]] const all_unique_values_and_strings  &uniques() const;
      [[nodiscard]] std::string                           map_filename() const;
@@ -325,16 +325,19 @@ struct [[nodiscard]] map_sprite final
                });
           });
      }
-     void for_all_tiles(auto const &tiles_const, auto &&tiles, auto &&lambda, bool skip_invalid, bool regular_order) const
+     void for_all_tiles(auto const &tiles_const, auto &&tiles, auto &&lambda, bool skip_invalid, bool regular_order)
      {
           using namespace open_viii::graphics::background;
-          // todo move pupu generation to constructor
-          std::vector<ff_8::PupuID> pupu_ids = {};
-          pupu_ids.reserve(std::size(tiles_const));
-          std::ranges::transform(tiles_const, std::back_inserter(pupu_ids), ff_8::UniquifyPupu{});
-          assert(std::size(tiles_const) == std::size(tiles));
-          // assert(std::size(tiles_const) == std::size(m_pupu_ids));
-          const auto process = [&skip_invalid,
+          // // todo move pupu generation to constructor
+          // std::vector<ff_8::PupuID> pupu_ids = {};
+          // pupu_ids.reserve(std::size(tiles_const));
+          // std::ranges::transform(tiles_const, std::back_inserter(pupu_ids), ff_8::UniquifyPupu{});
+          // assert(std::size(tiles_const) == std::size(tiles));
+          // //assert(std::size(tiles_const) == std::size(m_pupu_ids));
+          m_map_group.maps.refresh_original_all();
+          const auto &pupu_ids = m_map_group.maps.original_pupu();
+
+          const auto  process  = [&skip_invalid,
                                 &lambda](auto tiles_const_begin, const auto tiles_const_end, auto tiles_begin, auto pupu_ids_begin) {
                for (; /*t != te &&*/ tiles_const_begin != tiles_const_end; (void)++tiles_const_begin, ++tiles_begin, ++pupu_ids_begin)
                {
@@ -357,7 +360,7 @@ struct [[nodiscard]] map_sprite final
                process(std::cbegin(tiles_const), std::cend(tiles_const), std::begin(tiles), std::begin(pupu_ids));
           }
      }
-     void for_all_tiles(auto &&lambda, bool skip_invalid = true, bool regular_order = false) const
+     void for_all_tiles(auto &&lambda, bool skip_invalid = true, bool regular_order = false)
      {
           duel_visitor([&lambda, &skip_invalid, &regular_order, this](auto const &tiles_const, auto &&tiles) {
                if (std::ranges::size(tiles_const) != std::ranges::size(tiles))

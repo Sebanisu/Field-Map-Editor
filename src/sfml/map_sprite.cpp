@@ -521,7 +521,7 @@ sf::Sprite map_sprite::save_intersecting(const sf::Vector2i &pixel_pos, const st
 }
 
 
-[[nodiscard]] bool map_sprite::local_draw(sf::RenderTarget &target, sf::RenderStates states) const
+[[nodiscard]] bool map_sprite::local_draw(sf::RenderTarget &target, sf::RenderStates states)
 {
      bool drew = false;
      target.clear(sf::Color::Transparent);
@@ -1316,7 +1316,7 @@ std::filesystem::path map_sprite::save_path(
      return path / fmt::vformat(fmt::string_view(pattern), fmt::make_format_args(field_name, pupu));
 }
 
-bool map_sprite::generate_texture(sf::RenderTexture *texture) const
+bool map_sprite::generate_texture(sf::RenderTexture *texture)
 {
      if (texture == nullptr)
      {
