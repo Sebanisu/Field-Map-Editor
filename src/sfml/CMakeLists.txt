@@ -100,7 +100,7 @@ if(MSVC)
     ${PROJECT_NAME}_SFML
     PUBLIC "/bigobj"
     PUBLIC "/await") # PUBLIC "/Zc:char8_t-"
-  target_link_options(${PROJECT_NAME}_SFML PUBLIC "/PROFILE")
+  # target_link_options(${PROJECT_NAME}_SFML PUBLIC "/PROFILE")
 elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
   target_compile_options(
     ${PROJECT_NAME}_SFML PUBLIC "-fconcepts-diagnostics-depth=2"
