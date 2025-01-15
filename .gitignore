@@ -43,3 +43,4 @@ CMakePresets.json
 CMakeUserPresets.json
 /fonts
 imgui.ini
+src/sfml/imgui.ini

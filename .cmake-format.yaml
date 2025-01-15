@@ -1,28 +1,17 @@
-additional_commands:
-  foo:
-    flags:
-    - BAR
-    - BAZ
-    kwargs:
-      DEPENDS: '*'
-      HEADERS: '*'
-      SOURCES: '*'
-bullet_char: '*'
-dangle_parens: false
-enum_char: .
-line_width: 120
-separate_ctrl_name_with_space: false
-separate_fn_name_with_space: false
-tab_size: 2
 format:
+  bullet_char: "*"
+  enum_char: "."
   # Solves line ending issues on Windows.
   line_ending: unix
 
   # Any more than 4 args, and function calls become hard to read.
-  max_pargs_hwrap: 4
+  max_pargs_hwrap: 2
+  line_width: 120
+  dangle_parens: false
+  separate_ctrl_name_with_space: false
+  separate_fn_name_with_space: false
+  tab_size: 2
 
 markup:
   # Disable formatting of comments entirely, as this is annoying.
   enable_markup: false
-
-
