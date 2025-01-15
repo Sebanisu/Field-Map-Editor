@@ -71,15 +71,17 @@ struct unique_values_and_strings
      [[nodiscard]] std::vector<T> get_values(const tilesT &tiles, lambdaT &&lambda, sortT &&sort, filterT &&filter) const
      {
           std::vector<T> ret{};
-          if (!std::ranges::empty(tiles))
+          if (std::ranges::empty(tiles))
           {
-               static constexpr auto filter_invalid0 = open_viii::graphics::background::Map::filter_invalid();
-               std::ranges::transform(
-                 tiles | std::views::filter(filter_invalid0) | std::views::filter(filter), std::back_inserter(ret), lambda);
-               std::ranges::sort(ret, sort);
-               auto last = std::unique(ret.begin(), ret.end());
-               ret.erase(last, ret.end());
+               return ret;
           }
+          using namespace open_viii::graphics::background;
+          auto filtered = tiles | Map::filter_view_invalid();
+          std::ranges::transform(filtered | std::views::filter(filter), std::back_inserter(ret), lambda);
+          std::ranges::sort(ret, sort);
+          auto last = std::ranges::unique(ret.begin(), ret.end());
+          ret.erase(last.begin(), last.end());
+
           return ret;
      }
 };
@@ -90,8 +92,7 @@ struct all_unique_values_and_strings
      explicit all_unique_values_and_strings(std::monostate /*unused*/) {}
      template<std::ranges::range tilesT>
      explicit all_unique_values_and_strings(const tilesT &tiles)
-       : m_pupu(tiles, m_pupu_map, [](const ff_8::PupuID &left, const ff_8::PupuID &right) { return left.raw() < right.raw(); })
-       , m_z(
+       : m_z(
            tiles,
            [](const auto &tile) { return tile.z(); },
            std::greater<>{})
@@ -151,14 +152,8 @@ struct all_unique_values_and_strings
      {
           return m_palette;
      }
-     [[nodiscard]] const auto &pupu() const
-     {
-          return m_pupu;
-     }
 
    private:
-     ff_8::UniquifyPupu                                                           m_pupu_map            = {};
-     unique_values_and_strings<ff_8::PupuID>                                      m_pupu                = {};
      unique_values_and_strings<std::uint16_t>                                     m_z                   = {};
      unique_values_and_strings<std::uint8_t>                                      m_layer_id            = {};
      unique_values_and_strings<std::uint8_t>                                      m_texture_page_id     = {};

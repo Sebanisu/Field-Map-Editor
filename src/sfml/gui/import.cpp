@@ -69,7 +69,7 @@ void import::render() const
      generate_map_for_imported_image(current_tile, changed);
      collapsing_header_generated_tiles();
      // I need to detect the last used texture page and the highest source_y.
-     map_sprite->const_visit_tiles([&](const auto &tiles) {
+     map_sprite->const_visit_working_tiles([&](const auto &tiles) {
           if (std::ranges::empty(tiles))
           {
                return;
@@ -171,7 +171,7 @@ import::variant_tile_t &import::combo_selected_tile(bool &changed) const
           const auto            cols_pop      = scope_guard([]() { ImGui::Columns(1); });
           ImGui::Columns(num_columns, "##columns", false);
           const auto the_end_combo = scope_guard([]() { ImGui::EndCombo(); });
-          map_sprite->const_visit_tiles([&](const auto &tiles) {
+          map_sprite->const_visit_working_tiles([&](const auto &tiles) {
                for (int tile_id = {}; const auto &tile : tiles)
                {
                     const auto next_col_pop = scope_guard([]() { ImGui::NextColumn(); });
@@ -226,7 +226,7 @@ import::variant_tile_t &import::combo_selected_tile(bool &changed) const
           was_hovered = false;
           map_sprite->disable_square();
      }
-     map_sprite->const_visit_tiles([&](const auto &tiles) {
+     map_sprite->const_visit_working_tiles([&](const auto &tiles) {
           {
                // Left
                const auto pop_id_left = PushPopID();
@@ -641,7 +641,7 @@ void import::find_selected_tile_for_import(import::variant_tile_t &current_tile)
           spdlog::error("m_selections is no longer valid. File: {}, Line: {}", __FILE__, __LINE__);
           return;
      }
-     map_sprite->const_visit_tiles([&](const auto &tiles) {
+     map_sprite->const_visit_working_tiles([&](const auto &tiles) {
           if (selections->selected_tile < 0 || std::cmp_greater_equal(selections->selected_tile, tiles.size()))
           {
                current_tile = std::monostate{};

@@ -49,7 +49,7 @@ class [[nodiscard]] MapHistory
       *
       * @note This flag is used to track modifications to the original tile data.
       */
-     bool m_original_changed                             = { false };
+     mutable bool m_original_changed                          = { false };
 
      /**
       * @brief Indicates whether the working state has been changed.
@@ -61,82 +61,94 @@ class [[nodiscard]] MapHistory
       *
       * @note This flag is used to track modifications to the working tile data.
       */
-     bool m_working_changed                              = { false };
+     mutable bool m_working_changed                           = { false };
 
      /**
       * @typedef map_t
       * @brief Alias for the `Map` type from `open_viii::graphics::background`.
       */
-     using map_t                                         = open_viii::graphics::background::Map;
+     using map_t                                              = open_viii::graphics::background::Map;
 
 
      // Current states
      /**
       * @brief The active original map state.
       */
-     map_t                    m_original                 = {};
+     map_t                         m_original                 = {};
 
 
      /**
       * @brief The active working map state.
       */
-     map_t                    m_working                  = {};
+     map_t                         m_working                  = {};
 
      // Corresponding PupuIDs
      /**
       * @brief PupuID list corresponding to the original map state.
       */
-     std::vector<PupuID>      m_original_pupu            = {};
+     mutable std::vector<PupuID>   m_original_pupu            = {};
 
      /**
       * @brief PupuID list corresponding to the working map state.
       */
-     std::vector<PupuID>      m_working_pupu             = {};
+     mutable std::vector<PupuID>   m_working_pupu             = {};
+
+
+     // Corresponding PupuIDs
+     /**
+      * @brief Unique PupuID list corresponding to the original map state.
+      */
+     mutable std::vector<PupuID>   m_original_unique_pupu     = {};
+
+     /**
+      * @brief Unique PupuID list corresponding to the working map state.
+      */
+     mutable std::vector<PupuID>   m_working_unique_pupu      = {};
 
 
      // Corresponding Source Conflicts
      /**
       * @brief Source Conflict list corresponding to the original map state.
       */
-     source_tile_conflicts    m_original_conflicts       = {};
+     mutable source_tile_conflicts m_original_conflicts       = {};
 
      /**
       * @brief Source Conflict list corresponding to the working map state.
       */
-     source_tile_conflicts    m_working_conflicts        = {};
+     mutable source_tile_conflicts m_working_conflicts        = {};
 
 
      // Consolidated history and tracking
      /**
       * @brief Unified undo history for both original and working states.
       */
-     std::vector<map_t>       m_undo_history             = {};
+     std::vector<map_t>            m_undo_history             = {};
      /**
       * @brief Tracks whether a history entry belongs to the original or working state.
       */
-     std::vector<pushed>      m_undo_original_or_working = {};
+     std::vector<pushed>           m_undo_original_or_working = {};
 
      // Redo history and tracking
      /**
       * @brief Unified redo history for both original and working states.
       */
-     std::vector<map_t>       m_redo_history             = {};
+     std::vector<map_t>            m_redo_history             = {};
 
      /**
       * @brief Tracks redo states for original or working states.
       */
-     std::vector<pushed>      m_redo_original_or_working = {};
+     std::vector<pushed>           m_redo_original_or_working = {};
 
      // New vectors for tracking descriptions of changes
      /**
       * @brief Descriptions of undo changes corresponding to `m_undo_original_or_working`.
       */
-     std::vector<std::string> m_undo_change_descriptions = {};
+     std::vector<std::string>      m_undo_change_descriptions = {};
 
      /**
       * @brief Descriptions of redo changes corresponding to `m_redo_original_or_working`.
       */
-     std::vector<std::string> m_redo_change_descriptions = {};
+     std::vector<std::string>      m_redo_change_descriptions = {};
 
      /**
       * @brief Debug utility to print the current map history count.
@@ -145,7 +157,7 @@ class [[nodiscard]] MapHistory
       *
       * @return A `scope_guard` object that automatically logs debug information when it goes out of scope.
       */
-     auto                     debug_count_print() const
+     auto                          debug_count_print() const
      {
           return scope_guard([&]() { spdlog::debug("Map History Count: {}\n\t{}:{}", count() + 2U, __FILE__, __LINE__); });
      }
@@ -226,6 +238,27 @@ class [[nodiscard]] MapHistory
                }
           });
      }
+
+     /**
+      * @brief Regenerates the PupuID data for the original map.
+      */
+     void refresh_original_pupu() const;
+
+     /**
+      * @brief Regenerates the PupuID data for the working map.
+      */
+     void refresh_working_pupu() const;
+
+
+     /**
+      * @brief Regenerates the Source Conflicts data for the original map.
+      */
+     void refresh_original_conflicts() const;
+
+     /**
+      * @brief Regenerates the Source Conflicts data for the working map.
+      */
+     void refresh_working_conflicts() const;
 
    public:
      /**
@@ -362,7 +395,7 @@ class [[nodiscard]] MapHistory
       * @param force If `true`, forces a regeneration even if the data is considered up-to-date.
       *              If `false` (default), the regeneration occurs only if necessary.
       */
-     void                                       refresh_original_all(bool force = false);
+     void                                       refresh_original_all(bool force = false) const;
 
      /**
       * @brief Regenerates all PupuID data and Source Conflicts data for the maps in the working state.
@@ -374,30 +407,8 @@ class [[nodiscard]] MapHistory
       * @param force If `true`, forces a regeneration even if the data is considered up-to-date.
       *              If `false` (default), the regeneration occurs only if necessary.
       */
-     void                                       refresh_working_all(bool force = false);
+     void                                       refresh_working_all(bool force = false) const;
 
-
-     /**
-      * @brief Regenerates the PupuID data for the original map.
-      */
-     void                                       refresh_original_pupu();
-
-     /**
-      * @brief Regenerates the PupuID data for the working map.
-      */
-     void                                       refresh_working_pupu();
-
-
-
-     /**
-      * @brief Regenerates the Source Conflicts data for the original map.
-      */
-     void                                       refresh_original_conflicts();
-
-     /**
-      * @brief Regenerates the Source Conflicts data for the working map.
-      */
-     void                                       refresh_working_conflicts();
 
      /**
       * @brief Retrieves the PupuIDs for the original map.
@@ -410,6 +421,33 @@ class [[nodiscard]] MapHistory
       * @return A constant reference to the vector of PupuIDs for the working map.
       */
      [[nodiscard]] const std::vector<PupuID>   &working_pupu() const noexcept;
+
+
+     /**
+      * @brief Retrieves the unique PupuIDs for the original state of the map.
+      *
+      * This function provides a constant reference to a vector of unique `PupuID` values
+      * for the tiles in their original, unmodified state. These IDs are used to prevent
+      * conflicts or overlapping tiles in the unswizzled or rendered output for the original
+      * map data.
+      *
+      * @return A constant reference to a vector of unique `PupuID` values for the original state.
+      * @note The returned vector is guaranteed to contain only unique values.
+      */
+     const std::vector<ff_8::PupuID>           &original_unique_pupu() const noexcept;
+
+     /**
+      * @brief Retrieves the unique PupuIDs for the working state of the map.
+      *
+      * This function provides a constant reference to a vector of unique `PupuID` values
+      * for the tiles in their working state. The working state reflects any modifications
+      * made to the tiles or their layout. These IDs are used to ensure consistency and
+      * prevent conflicts in the unswizzled or rendered output for the working map data.
+      *
+      * @return A constant reference to a vector of unique `PupuID` values for the working state.
+      * @note The returned vector is guaranteed to contain only unique values.
+      */
+     const std::vector<ff_8::PupuID>           &working_unique_pupu() const noexcept;
 
 
      /**

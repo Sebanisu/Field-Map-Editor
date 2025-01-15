@@ -244,6 +244,39 @@ void gui::control_panel_window()
           control_panel_window_map();
      }
      frame_rate();
+
+     m_map_sprite->const_visit_working_tiles([&](const auto &tiles) {
+          if (!ImGui::CollapsingHeader("Conflicting Tiles"))
+          {
+               return;
+          }
+
+          const auto &conflicts          = m_map_sprite->working_conflicts();
+          auto        range_of_conflicts = conflicts.range_of_conflicts();
+          for (const auto &conflict_group : range_of_conflicts)
+          {
+               const auto location = ff_8::source_tile_conflicts::reverse_index(conflict_group.front());
+               format_imgui_text("X {}, Y {}, T {}: ", location.x, location.y, location.t);
+               for (const auto index : conflict_group)
+               {
+                    assert(cmp_less(index, std::ranges::size(tiles)) && "index out of range!");
+                    const auto &tile = [&]() {
+                         auto begin = std::ranges::cbegin(tiles);
+                         std::ranges::advance(begin, index);
+                         return *begin;
+                    }();
+                    const auto push_pop_id = PushPopID();
+                    (void)create_tile_button(*m_map_sprite, tile, { 32.F, 32.F });
+                    // Ensure subsequent buttons are on the same row
+                    std::string strtooltip = fmt::format("Index {}\n{}", index, tile);
+                    tool_tip(strtooltip);
+                    ImGui::SameLine();
+               }
+               // Break the line after finishing a conflict group
+               ImGui::NewLine();
+          }
+     });
+
      m_mouse_positions.mouse_enabled = handle_mouse_cursor();
      text_mouse_position();
 
@@ -252,7 +285,7 @@ void gui::control_panel_window()
           return;
      }
 
-     m_map_sprite->const_visit_tiles([&](const auto &tiles) {
+     m_map_sprite->const_visit_working_tiles([&](const auto &tiles) {
           for (const auto &i : m_clicked_tile_indices)
           {
                if (i < std::ranges::size(tiles))
@@ -520,7 +553,7 @@ void gui::update_hover_and_mouse_button_status_for_map(const ImVec2 &img_start, 
      if (ImGui::IsItemClicked(ImGuiMouseButton_Left))
      {
           m_mouse_positions.left = true;
-          m_map_sprite->const_visit_tiles([&](const auto &tiles) {
+          m_map_sprite->const_visit_working_tiles([&](const auto &tiles) {
                m_clicked_tile_indices =
                  m_map_sprite->find_intersecting(tiles, m_mouse_positions.pixel, m_mouse_positions.texture_page, false, true);
           });
@@ -758,8 +791,6 @@ void gui::on_click_not_imgui()
 }
 void gui::text_mouse_position() const
 {
-
-
      if (!map_test())
      {
           return;
@@ -811,6 +842,7 @@ void gui::text_mouse_position() const
                ImGui::TableNextColumn();
                format_imgui_text("{:4}", index);
                ImGui::TableNextColumn();
+
                (void)create_tile_button(*m_map_sprite, front_tiles[index]);
           }
           ImGui::EndTable();
@@ -2000,7 +2032,8 @@ std::shared_ptr<open_viii::archive::FIFLFS<false>> gui::init_field()
 }
 std::shared_ptr<map_sprite> gui::get_map_sprite() const
 {
-     //     map_sprite(ff_8::map_group map_group, bool draw_swizzle, ff_8::filters in_filters, bool force_disable_blends, bool require_coo);
+     //     map_sprite(ff_8::map_group map_group, bool draw_swizzle, ff_8::filters in_filters, bool force_disable_blends, bool
+     //     require_coo);
      return std::make_shared<map_sprite>(
        ff_8::map_group{ m_field, get_coo() }, m_selections->draw_swizzle, ff_8::filters{}, m_selections->draw_disable_blending, false);
 }
@@ -2021,16 +2054,15 @@ std::string gui::starter_field()
 
 void gui::combo_pupu()
 {
-     const auto &pair   = m_map_sprite->uniques().pupu();
-     const auto &values = pair.values();
-     const auto  gcc    = GenericComboClassWithFilter(
+     const auto gcc = GenericComboClassWithFilter(
        gui_labels::pupu_id,
-       [&values]() { return values; },
-       [&pair]() { return pair.strings(); },
-       [&values]() {
-            return values | std::views::transform([](const ff_8::PupuID &pupu_id) -> decltype(auto) { return pupu_id.create_summary(); });
+       [&]() { return m_map_sprite->working_unique_pupu(); },
+       [&]() { return m_map_sprite->working_unique_pupu() | std::views::transform(AsString{}); },
+       [&]() {
+            return m_map_sprite->working_unique_pupu()
+                   | std::views::transform([](const ff_8::PupuID &pupu_id) -> decltype(auto) { return pupu_id.create_summary(); });
        },
-       [this]() -> auto  &{ return m_map_sprite->filter().pupu; });
+       [this]() -> auto & { return m_map_sprite->filter().pupu; });
 
      if (!gcc.render())
      {
@@ -2199,7 +2231,8 @@ void gui::combo_z()
        [&pair]() { return pair.strings(); },
        EmptyStringView{},
        [this]() -> auto  &{ return m_map_sprite->filter().z; });
-     if (!gcc.render())     {
+     if (!gcc.render())
+     {
           return;
      }
      m_map_sprite->update_render_texture();

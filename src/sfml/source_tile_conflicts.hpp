@@ -143,33 +143,6 @@ class [[nodiscard]] source_tile_conflicts final
 
 
      /**
-      * @brief Reverses an index to calculate its tile location.
-      *
-      * This function takes an index and calculates the corresponding tile location
-      * in terms of its `x`, `y` coordinates and texture page `t`.
-      *
-      * @tparam Index The type of the index (must be an integral type).
-      * @param index The index to reverse.
-      * @return The location of the tile, containing `x`, `y`, and `t`.
-      */
-     template<std::integral Index>
-     static constexpr location reverse_index(Index index) noexcept
-     {
-          location l;
-          if constexpr (std::signed_integral<Index>)
-          {
-               assert(std::cmp_greater(index, 0) && " index must be greater than 0");
-          }
-          assert(std::cmp_less(index, std::ranges::size(m_grid)) && "the index is out of range");
-          l.t = static_cast<std::uint8_t>(static_cast<std::make_unsigned<Index>::type>(index) / GRID_SIZE);// Reverse the t calculation
-          const Index remaining = static_cast<std::make_unsigned<Index>::type>(index) % GRID_SIZE;// Remaining part after extracting t
-          l.y                   = static_cast<std::uint8_t>((remaining / X_SIZE) * Y_SIZE);// y is the remainder
-          l.x                   = static_cast<std::uint8_t>((remaining % Y_SIZE) * X_SIZE);// Calculate x by reversing the division
-          return l;
-     }
-
-
-     /**
       * @brief Validates the inputs for tile index calculation.
       *
       * This function checks that the `x` and `y` coordinates, as well as the texture page `t`,
@@ -200,6 +173,32 @@ class [[nodiscard]] source_tile_conflicts final
      }
 
    public:
+     /**
+      * @brief Reverses an index to calculate its tile location.
+      *
+      * This function takes an index and calculates the corresponding tile location
+      * in terms of its `x`, `y` coordinates and texture page `t`.
+      *
+      * @tparam Index The type of the index (must be an integral type).
+      * @param index The index to reverse.
+      * @return The location of the tile, containing `x`, `y`, and `t`.
+      */
+     template<std::integral Index>
+     static constexpr location reverse_index(Index index) noexcept
+     {
+          location l;
+          if constexpr (std::signed_integral<Index>)
+          {
+               assert(std::cmp_greater(index, 0) && " index must be greater than 0");
+          }
+          assert(std::cmp_less(index, std::ranges::size(m_grid)) && "the index is out of range");
+          l.t = static_cast<std::uint8_t>(static_cast<std::make_unsigned<Index>::type>(index) / GRID_SIZE);// Reverse the t calculation
+          const Index remaining = static_cast<std::make_unsigned<Index>::type>(index) % GRID_SIZE;// Remaining part after extracting t
+          l.y                   = static_cast<std::uint8_t>((remaining / X_SIZE) * Y_SIZE);// y is the remainder
+          l.x                   = static_cast<std::uint8_t>((remaining % Y_SIZE) * X_SIZE);// Calculate x by reversing the division
+          return l;
+     }
+
 #if defined(__cpp_multidimensional_subscript) && __cpp_multidimensional_subscript >= 202110L
      /**
       * @brief Accesses the grid element at the specified 3D coordinates (x, y, t).

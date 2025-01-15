@@ -47,10 +47,43 @@ static std::vector<PupuID> calculate_pupu(const map_t &map)
           std::vector<PupuID> pupu_ids = {};
           UniquifyPupu const  pupu_map = {};
           pupu_ids.reserve(std::ranges::size(tiles));
-          std::ranges::transform(tiles, std::back_insert_iterator(pupu_ids), pupu_map);
+
+          std::ranges::transform(tiles | Map::filter_view_invalid(), std::back_insert_iterator(pupu_ids), pupu_map);
           return pupu_ids;
      });
 }
+
+/**
+ * @brief Generates a vector of unique PupuIDs from the input vector.
+ *
+ * This function processes a vector of `PupuID` values, removing any duplicate entries
+ * while preserving the order of unique elements (after sorting). The steps include:
+ * - Sorting the input vector to group duplicates together.
+ * - Removing consecutive duplicates using `std::ranges::unique`.
+ * - Erasing the duplicates from the resulting vector to ensure all elements are unique.
+ *
+ * @param input A vector of `PupuID` values that may contain duplicates.
+ * @return A new vector containing only the unique `PupuID` values from the input.
+ *
+ * @note The function operates on a copy of the input, leaving the original vector unmodified.
+ *       The output is sorted due to the use of `std::ranges::sort` prior to deduplication.
+ */
+static std::vector<PupuID> make_unique_pupu(const std::vector<PupuID> &input)
+{
+     // Copies the input
+     std::vector<PupuID> output = input;
+
+     // Sorts the vector to prepare for unique removal
+     std::ranges::sort(output);
+
+     // Removes consecutive duplicates
+     const auto last = std::ranges::unique(output);
+
+     // Erases the duplicates from the vector
+     output.erase(last.begin(), last.end());
+     return output;
+}
+
 
 /**
  * @brief Calculates source tile location conflicts for a given map.
@@ -67,7 +100,9 @@ static std::vector<PupuID> calculate_pupu(const map_t &map)
 {
      return map.visit_tiles([](const auto &tiles) {
           source_tile_conflicts stc{};
-          std::ranges::for_each(tiles, [&](const auto &tile) { stc(tile).push_back(std::ranges::distance(&tiles.front(), &tile)); });
+          std::ranges::for_each(tiles | Map::filter_view_invalid(), [&](const auto &tile) {
+               stc(tile).push_back(std::ranges::distance(&tiles.front(), &tile));
+          });
           return stc;
      });
 }
@@ -78,12 +113,14 @@ ff_8::MapHistory::MapHistory(map_t map)
   , m_working(m_original)
   , m_original_pupu(calculate_pupu(m_original))
   , m_working_pupu(m_original_pupu)
+  , m_original_unique_pupu(make_unique_pupu(m_original_pupu))
+  , m_working_unique_pupu(m_original_unique_pupu)
   , m_original_conflicts(calculate_conflicts(m_original))
   , m_working_conflicts(calculate_conflicts(m_original))
 {
 }
 
-void ff_8::MapHistory::refresh_original_all(bool force)
+void ff_8::MapHistory::refresh_original_all(bool force) const
 {
      if (!m_original_changed && !force)
      {
@@ -94,7 +131,7 @@ void ff_8::MapHistory::refresh_original_all(bool force)
      m_original_changed = false;
 }
 
-void ff_8::MapHistory::refresh_working_all(bool force)
+void ff_8::MapHistory::refresh_working_all(bool force) const
 {
      if (!m_working_changed && !force)
      {
@@ -105,23 +142,25 @@ void ff_8::MapHistory::refresh_working_all(bool force)
      m_working_changed = false;
 }
 
-void ff_8::MapHistory::refresh_original_pupu()
+void ff_8::MapHistory::refresh_original_pupu() const
 {
-     m_original_pupu = calculate_pupu(m_original);
+     m_original_pupu        = calculate_pupu(m_original);
+     m_original_unique_pupu = make_unique_pupu(m_original_pupu);
 }
 
-void ff_8::MapHistory::refresh_working_pupu()
+void ff_8::MapHistory::refresh_working_pupu() const
 {
-     m_working_pupu = calculate_pupu(m_working);
+     m_working_pupu        = calculate_pupu(m_working);
+     m_working_unique_pupu = make_unique_pupu(m_working_pupu);
 }
 
 
-void ff_8::MapHistory::refresh_original_conflicts()
+void ff_8::MapHistory::refresh_original_conflicts() const
 {
      m_original_conflicts = calculate_conflicts(m_original);
 }
 
-void ff_8::MapHistory::refresh_working_conflicts()
+void ff_8::MapHistory::refresh_working_conflicts() const
 {
      m_working_conflicts = calculate_conflicts(m_working);
 }
@@ -134,6 +173,16 @@ const std::vector<ff_8::PupuID> &ff_8::MapHistory::original_pupu() const noexcep
 const std::vector<ff_8::PupuID> &ff_8::MapHistory::working_pupu() const noexcept
 {
      return m_working_pupu;
+}
+
+const std::vector<ff_8::PupuID> &ff_8::MapHistory::original_unique_pupu() const noexcept
+{
+     return m_original_unique_pupu;
+}
+
+const std::vector<ff_8::PupuID> &ff_8::MapHistory::working_unique_pupu() const noexcept
+{
+     return m_working_unique_pupu;
 }
 
 const ff_8::source_tile_conflicts &ff_8::MapHistory::original_conflicts() const noexcept

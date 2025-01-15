@@ -95,11 +95,17 @@ struct [[nodiscard]] map_sprite final
      [[nodiscard]] const sf::Texture                    *get_texture(const ff_8::PupuID &pupu) const;
      [[nodiscard]] sf::Vector2u                          get_tile_texture_size(const sf::Texture *texture) const;
      [[nodiscard]] sf::Vector2u                          get_tile_draw_size() const;
-     [[nodiscard]] bool generate_texture(sf::RenderTexture *texture);// not const because may need to refresh pupu
+     [[nodiscard]] bool                                  generate_texture(sf::RenderTexture *texture) const;
      [[nodiscard]] std::uint32_t                         get_max_texture_height() const;
-     [[nodiscard]] bool                                  local_draw(sf::RenderTarget &target, sf::RenderStates states); //not const because may need to refresh pupu
+     [[nodiscard]] bool                                  local_draw(sf::RenderTarget &target, sf::RenderStates states) const;
      [[nodiscard]] std::string                           get_base_name() const;
      [[nodiscard]] const all_unique_values_and_strings  &uniques() const;
+     [[nodiscard]] const std::vector<ff_8::PupuID>      &working_unique_pupu() const;
+     [[nodiscard]] const std::vector<ff_8::PupuID>      &original_unique_pupu() const;
+     [[nodiscard]] const std::vector<ff_8::PupuID>      &original_pupu() const;
+     [[nodiscard]] const std::vector<ff_8::PupuID>      &working_pupu() const;
+     [[nodiscard]] const ff_8::source_tile_conflicts    &original_conflicts() const;
+     [[nodiscard]] const ff_8::source_tile_conflicts    &working_conflicts() const;
      [[nodiscard]] std::string                           map_filename() const;
      [[nodiscard]] bool                                  fail() const;
      [[nodiscard]] std::uint32_t                         width() const;
@@ -226,7 +232,7 @@ struct [[nodiscard]] map_sprite final
        const std::uint8_t &texture_page,
        bool                skip_filters = false,
        bool                find_all     = false) const
-     {
+     {          
           if (m_draw_swizzle)
           {
                return ff_8::find_intersecting_swizzle(tiles, m_filters, pixel_pos, texture_page, skip_filters, find_all);
@@ -234,7 +240,7 @@ struct [[nodiscard]] map_sprite final
           return ff_8::find_intersecting_deswizzle(tiles, m_filters, pixel_pos, skip_filters, find_all);
      }
      template<typename funcT>
-     auto const_visit_tiles(funcT &&p_function) const
+     auto const_visit_working_tiles(funcT &&p_function) const
      {
           return m_map_group.maps.const_working().visit_tiles(std::forward<decltype(p_function)>(p_function));
      }
@@ -247,7 +253,7 @@ struct [[nodiscard]] map_sprite final
      }
 
      template<open_viii::graphics::background::is_tile tileT>
-     [[nodiscard]] const sf::Texture *get_texture(const tileT &tile) const
+     [[nodiscard]] const sf::Texture *get_texture(const tileT &tile)
      {
 
           if (!m_filters.deswizzle.enabled())
@@ -257,7 +263,7 @@ struct [[nodiscard]] map_sprite final
           else
           {
                // pupu_ids
-               return const_visit_tiles([&tile, this](const auto &tiles) -> const sf::Texture * {
+               return const_visit_working_tiles([&tile, this](const auto &tiles) -> const sf::Texture * {
                     if (tiles.empty())
                     {
                          return nullptr;
@@ -325,7 +331,7 @@ struct [[nodiscard]] map_sprite final
                });
           });
      }
-     void for_all_tiles(auto const &tiles_const, auto &&tiles, auto &&lambda, bool skip_invalid, bool regular_order)
+     void for_all_tiles(auto const &tiles_const, auto &&tiles, auto &&lambda, bool skip_invalid, bool regular_order) const
      {
           using namespace open_viii::graphics::background;
           // // todo move pupu generation to constructor
@@ -360,7 +366,7 @@ struct [[nodiscard]] map_sprite final
                process(std::cbegin(tiles_const), std::cend(tiles_const), std::begin(tiles), std::begin(pupu_ids));
           }
      }
-     void for_all_tiles(auto &&lambda, bool skip_invalid = true, bool regular_order = false)
+     void for_all_tiles(auto &&lambda, bool skip_invalid = true, bool regular_order = false) const
      {
           duel_visitor([&lambda, &skip_invalid, &regular_order, this](auto const &tiles_const, auto &&tiles) {
                if (std::ranges::size(tiles_const) != std::ranges::size(tiles))

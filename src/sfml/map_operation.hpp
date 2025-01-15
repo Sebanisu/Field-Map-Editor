@@ -20,7 +20,7 @@ void save_modified_map(
   const std::filesystem::path &dest_path,
   const map_group::Map        &map_const,
   const map_group::Map        &map_changed,
-  const map_group::Map* const imported = nullptr);
+  const map_group::Map *const  imported = nullptr);
 
 
 [[nodiscard]] std::array<sf::Vertex, 4U>
@@ -100,11 +100,14 @@ template<std::ranges::range tilesT>
   bool                 skip_filters = false,
   bool                 find_all     = false)
 {
+
+     using namespace open_viii::graphics::background;
+     auto                                                 filtered     = tiles | Map::filter_view_invalid();
      std::vector<std::size_t>                             out          = {};
      static constexpr std::vector<std::size_t>::size_type new_capacity = { 30 };
      out.reserve(new_capacity);
      auto filtered_tiles =
-       tiles | std::views::filter([&](const auto &tile) -> bool {
+       filtered | std::views::filter([&](const auto &tile) -> bool {
             if (!skip_filters && ff_8::tile_operations::fail_any_filters(filters, tile))
             {
                  return false;
@@ -154,11 +157,13 @@ template<std::ranges::range tilesT>
   bool                 skip_filters = false,
   bool                 find_all     = false)
 {
+     using namespace open_viii::graphics::background;
+     auto                                                 filtered     = tiles | Map::filter_view_invalid();
      std::vector<std::size_t>                             out          = {};
      static constexpr std::vector<std::size_t>::size_type new_capacity = { 30 };
      out.reserve(new_capacity);
      auto filtered_tiles =
-       tiles | std::views::filter([&](const auto &tile) -> bool {
+       filtered | std::views::filter([&](const auto &tile) -> bool {
             if (!skip_filters && ff_8::tile_operations::fail_any_filters(filters, tile))
             {
                  return false;

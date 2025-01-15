@@ -67,7 +67,7 @@ const sf::Texture *
 }
 const sf::Texture *map_sprite::get_texture(const ff_8::PupuID &pupu) const
 {
-     const auto &values = m_all_unique_values_and_strings.pupu().values();
+     const auto &values = working_unique_pupu();
      auto        it     = std::ranges::find(values, pupu);
      if (it != values.end())
      {
@@ -129,7 +129,7 @@ std::shared_ptr<std::array<sf::Texture, map_sprite::MAX_TEXTURES>> map_sprite::l
      else
      {
 
-          std::ranges::for_each(m_all_unique_values_and_strings.pupu().values(), [&, pos = size_t{}](const ff_8::PupuID &pupu) mutable {
+          std::ranges::for_each(working_unique_pupu(), [&, pos = size_t{}](const ff_8::PupuID &pupu) mutable {
                future_of_futures.push_back(load_deswizzle_textures(ret, pupu, pos));
                ++pos;
           });
@@ -521,7 +521,7 @@ sf::Sprite map_sprite::save_intersecting(const sf::Vector2i &pixel_pos, const st
 }
 
 
-[[nodiscard]] bool map_sprite::local_draw(sf::RenderTarget &target, sf::RenderStates states)
+[[nodiscard]] bool map_sprite::local_draw(sf::RenderTarget &target, sf::RenderStates states) const
 {
      bool drew = false;
      target.clear(sf::Color::Transparent);
@@ -1018,6 +1018,49 @@ const all_unique_values_and_strings &map_sprite::uniques() const
      return m_all_unique_values_and_strings;
 }
 
+
+const std::vector<ff_8::PupuID> &map_sprite::working_pupu() const
+{
+     // side effect. we wait till pupu is needed than we refresh it.
+     m_map_group.maps.refresh_working_all();
+     return m_map_group.maps.working_pupu();
+}
+const std::vector<ff_8::PupuID> &map_sprite::original_pupu() const
+{
+     // side effect. we wait till pupu is needed than we refresh it.
+     m_map_group.maps.refresh_original_all();
+     return m_map_group.maps.original_pupu();
+}
+
+const std::vector<ff_8::PupuID> &map_sprite::working_unique_pupu() const
+{
+     // side effect. we wait till pupu is needed than we refresh it.
+     m_map_group.maps.refresh_working_all();
+     return m_map_group.maps.working_unique_pupu();
+}
+const std::vector<ff_8::PupuID> &map_sprite::original_unique_pupu() const
+{
+     // side effect. we wait till pupu is needed than we refresh it.
+     m_map_group.maps.refresh_original_all();
+     return m_map_group.maps.original_unique_pupu();
+}
+
+
+const ff_8::source_tile_conflicts &map_sprite::original_conflicts() const
+{
+     // side effect. we wait till conflicts is needed than we refresh it.
+     m_map_group.maps.refresh_original_all();
+     return m_map_group.maps.original_conflicts();
+}
+
+const ff_8::source_tile_conflicts &map_sprite::working_conflicts() const
+{
+
+     // side effect. we wait till conflicts is needed than we refresh it.
+     m_map_group.maps.refresh_working_all();
+     return m_map_group.maps.working_conflicts();
+}
+
 // template<typename... T>
 // requires(sizeof...(T) == 6U) bool map_sprite::draw_drop_downs()
 //{
@@ -1199,7 +1242,7 @@ std::vector<std::future<std::future<void>>> map_sprite::save_pupu_textures(const
      }
 
      const std::string                field_name      = std::string{ str_to_lower(m_map_group.field->get_base_name()) };
-     const std::vector<ff_8::PupuID> &unique_pupu_ids = m_all_unique_values_and_strings.pupu().values();
+     const std::vector<ff_8::PupuID> &unique_pupu_ids = working_unique_pupu();
      std::optional<open_viii::LangT> &coo             = m_map_group.opt_coo;
 
      assert(safedir(path).is_dir());
@@ -1316,7 +1359,7 @@ std::filesystem::path map_sprite::save_path(
      return path / fmt::vformat(fmt::string_view(pattern), fmt::make_format_args(field_name, pupu));
 }
 
-bool map_sprite::generate_texture(sf::RenderTexture *texture)
+bool map_sprite::generate_texture(sf::RenderTexture *texture) const
 {
      if (texture == nullptr)
      {
