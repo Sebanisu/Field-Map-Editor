@@ -7,8 +7,40 @@
 using namespace open_viii::graphics::background;
 using map_t = Map;
 
+/**
+ * @brief Namespace for Final Fantasy VIII-related functionality.
+ *
+ * The `ff_8` namespace contains utilities, classes, and functions related to
+ * handling tile data, conflicts, and other game-specific operations for Final Fantasy VIII.
+ */
 namespace ff_8
 {
+
+/**
+ * @brief Calculates the Pupu IDs for the tiles in a given map.
+ *
+ * This function processes all tiles in the provided map and generates a unique
+ * `PupuID` (an unsigned 64-bit integer) for each tile. The `PupuID` is used to
+ * prevent conflicts or overlapping tiles in the unswizzled or rendered images,
+ * allowing modders to modify and re-import tiles without conflicts.
+ *
+ * The `UniquifyPupu` logic performs the following:
+ * - Initially, a `PupuID` is generated for each tile, which includes 4 offset bits.
+ * - After the initial generation, a second pass is made where overlapping tiles are detected.
+ * - For overlapping tiles, the `PupuID` is incremented to resolve the conflict, ensuring each tile
+ *   has a unique ID even when they occupy the same location.
+ *
+ * The `PupuID` is designed to wrap around the unsigned 64-bit integer, allowing you to reverse
+ * the ID back to the original values, much like `source_tile_conflicts` handles the swizzle or input locations.
+ *
+ * The generated `PupuID`s can be used to:
+ * - Dump unswizzled images with unique filenames containing the raw hex value of each `PupuID`.
+ * - Allow modders to upscale or modify the images.
+ * - Re-import the modified images back into the system without conflicts.
+ *
+ * @param map The map containing the tiles to process.
+ * @return A vector of `PupuID` objects corresponding to the tiles in the map.
+ */
 static std::vector<PupuID> calculate_pupu(const map_t &map)
 {
      return map.visit_tiles([](const auto &tiles) {
@@ -19,6 +51,18 @@ static std::vector<PupuID> calculate_pupu(const map_t &map)
           return pupu_ids;
      });
 }
+
+/**
+ * @brief Calculates source tile location conflicts for a given map.
+ *
+ * This function identifies and tracks conflicts between tiles in the provided map.
+ * A conflict is defined as multiple tiles occupying the same grid location. The result
+ * is a `source_tile_conflicts` object, which stores information about conflicting tiles
+ * and their locations.
+ *
+ * @param map The map containing the tiles to process.
+ * @return A `source_tile_conflicts` object representing the tile conflicts in the map.
+ */
 [[maybe_unused]] static source_tile_conflicts calculate_conflicts(const map_t &map)
 {
      return map.visit_tiles([](const auto &tiles) {
@@ -79,6 +123,16 @@ const std::vector<ff_8::PupuID> &ff_8::MapHistory::original_pupu() const noexcep
 const std::vector<ff_8::PupuID> &ff_8::MapHistory::working_pupu() const noexcept
 {
      return m_working_pupu;
+}
+
+const source_tile_conflicts &ff_8::MapHistory::original_conflicts() const noexcept
+{
+     return m_original_conflicts;
+}
+
+const source_tile_conflicts &ff_8::MapHistory::working_conflicts() const noexcept
+{
+     return m_working_conflicts;
 }
 
 std::size_t ff_8::MapHistory::count() const

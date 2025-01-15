@@ -371,6 +371,30 @@ class [[nodiscard]] MapHistory
       */
      [[nodiscard]] const std::vector<PupuID> &working_pupu() const noexcept;
 
+
+     /**
+      * @brief Retrieves the current (working) tile conflicts.
+      *
+      * This function returns a constant reference to the current `source_tile_conflicts` object,
+      * which holds the conflicts between tiles in their current (working) state. The working
+      * conflicts represent the tile data that is actively being used or modified.
+      *
+      * @return A constant reference to the current `source_tile_conflicts` object.
+      */
+     [[nodiscard]] const source_tile_conflicts &working_conflicts() const noexcept;
+
+     /**
+      * @brief Retrieves the original tile conflicts.
+      *
+      * This function returns a constant reference to the original `source_tile_conflicts` object,
+      * which holds the conflicts between tiles in their initial, unmodified state. The original
+      * conflicts are typically used to compare against the working conflicts or as a reference.
+      *
+      * @return A constant reference to the original `source_tile_conflicts` object.
+      */
+     [[nodiscard]] const source_tile_conflicts &original_conflicts() const noexcept;
+
+
      /**
       * @brief Retrieves the total number of redo operations available.
       * @return The size of the redo history.
