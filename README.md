@@ -16,19 +16,23 @@ The SFML version is the more feature-complete version and is recommended for mos
 
 If you find any features missing from the SFML version or have suggestions, please let me know. Your feedback helps shape its development.
 
+**Note:** The SFML version requires the `fonts` folder:
+1. Download the `fonts.zip` file is included in the [releases](https://github.com/Sebanisu/Field-Map-Editor/releases). Extract it to the same directory as the `.exe` file.
+
+![image](https://github.com/user-attachments/assets/730fbd48-b742-47cf-bffa-b7a106e586b6)
+
+
 ### OPENGL Version
 
 The OPENGL version has evolved into a testing ground for new features. These features are tested and refined in the OPENGL version and then backported to the SFML version where applicable. While the SFML version is the recommended version for most users, the OPENGL version might contain experimental features that have not yet made their way to the SFML version.
 
 If you are using the OPENGL version and find a feature you would like to see in the SFML version, please let me know. Your feedback helps prioritize what gets implemented in the SFML version.
 
-**Note:** The SFML version requires the `fonts` folder:
-1. Download the `fonts.zip` file is included in the [releases](https://github.com/Sebanisu/Field-Map-Editor/releases). Extract it to the same directory as the `.exe` file.
-
 **Note:** The OPENGL version requires the `res` folder, which contains the necessary shaders and textures.:
 1. Download the `res` folder from [this location](https://github.com/Sebanisu/Field-Map-Editor/tree/main/src/opengl/opengl_version/res).
 2. Alternatively, the `res.zip` file is included in the [releases](https://github.com/Sebanisu/Field-Map-Editor/releases). Extract it to the same directory as the `.exe` file.
 
+![image](https://github.com/user-attachments/assets/57f33eb5-83f1-4ed1-9d0a-c19678651305)
 
 
 ### Credits
