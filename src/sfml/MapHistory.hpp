@@ -6,6 +6,7 @@
 #define FIELD_MAP_EDITOR_MAPHISTORY_HPP
 #include "PupuID.hpp"
 #include "scope_guard.hpp"
+#include "source_tile_conflicts.hpp"
 #include "UniquifyPupu.hpp"
 #include <open_viii/graphics/background/Map.hpp>
 #include <spdlog/spdlog.h>
@@ -67,6 +68,18 @@ class [[nodiscard]] MapHistory
       * @brief PupuID list corresponding to the working map state.
       */
      std::vector<PupuID>      m_working_pupu             = {};
+
+
+     // Corresponding Source Conflicts
+     /**
+      * @brief Source Conflict list corresponding to the original map state.
+      */
+     source_tile_conflicts      m_original_conflicts            = {};
+
+     /**
+      * @brief Source Conflict list corresponding to the working map state.
+      */
+     source_tile_conflicts      m_working_conflicts             = {};
 
 
      // Consolidated history and tracking
@@ -329,6 +342,22 @@ class [[nodiscard]] MapHistory
       * @brief Regenerates the PupuID data for the working map.
       */
      void                                     refresh_working_pupu();
+
+
+     /**
+      * @brief Regenerates all Source Conflicts data for both the original and working maps.
+      */
+     void                                     refresh_all_conflicts();
+
+     /**
+      * @brief Regenerates the Source Conflicts data for the original map.
+      */
+     void                                     refresh_original_conflicts();
+
+     /**
+      * @brief Regenerates the Source Conflicts data for the working map.
+      */
+     void                                     refresh_working_conflicts();
 
      /**
       * @brief Retrieves the PupuIDs for the original map.

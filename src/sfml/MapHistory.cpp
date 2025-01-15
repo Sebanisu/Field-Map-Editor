@@ -19,6 +19,14 @@ static std::vector<PupuID> calculate_pupu(const map_t &map)
           return pupu_ids;
      });
 }
+[[maybe_unused]] static source_tile_conflicts calculate_conflicts(const map_t &map)
+{
+     return map.visit_tiles([](const auto &tiles) {
+          source_tile_conflicts stc{};
+          std::ranges::for_each(tiles, [&](const auto &tile) { stc(tile).push_back(std::ranges::distance(&tiles.front(), &tile)); });
+          return stc;
+     });
+}
 }// namespace ff_8
 
 ff_8::MapHistory::MapHistory(map_t map)
@@ -26,6 +34,8 @@ ff_8::MapHistory::MapHistory(map_t map)
   , m_working(m_original)
   , m_original_pupu(calculate_pupu(m_original))
   , m_working_pupu(m_original_pupu)
+  , m_original_conflicts(calculate_conflicts(m_original))
+  , m_working_conflicts(calculate_conflicts(m_original))
 {
 }
 
@@ -43,6 +53,22 @@ void ff_8::MapHistory::refresh_original_pupu()
 void ff_8::MapHistory::refresh_working_pupu()
 {
      m_working_pupu = calculate_pupu(m_working);
+}
+
+void ff_8::MapHistory::refresh_all_conflicts()
+{
+     refresh_original_conflicts();
+     refresh_working_conflicts();
+}
+
+void ff_8::MapHistory::refresh_original_conflicts()
+{
+     m_original_conflicts = calculate_conflicts(m_original);
+}
+
+void ff_8::MapHistory::refresh_working_conflicts()
+{
+     m_working_conflicts = calculate_conflicts(m_working);
 }
 
 const std::vector<ff_8::PupuID> &ff_8::MapHistory::original_pupu() const noexcept

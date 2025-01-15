@@ -26,19 +26,19 @@ int main()
                {
                     for (const auto x : x_range)
                     {
-                         const auto   index = ff_8::source_tile_conflicts::calculate_index(x, y, t);
-                         std::uint8_t x_out, y_out, t_out;
-                         ff_8::source_tile_conflicts::reverse_index(index, x_out, y_out, t_out);
+                         const auto index = ff_8::source_tile_conflicts::calculate_index(x, y, t);
+
+                         const auto l     = ff_8::source_tile_conflicts::reverse_index(index);
 
                          // Assert that input matches output
-                         expect(x == x_out) << "Mismatch in x: input " << +x << ", output " << +x_out;
-                         expect(y == y_out) << "Mismatch in y: input " << +y << ", output " << +y_out;
-                         expect(t == t_out) << "Mismatch in t: input " << +t << ", output " << +t_out;
+                         expect(x == l.x) << "Mismatch in x: input " << +x << ", output " << +l.x;
+                         expect(y == l.y) << "Mismatch in y: input " << +y << ", output " << +l.y;
+                         expect(t == l.t) << "Mismatch in t: input " << +t << ", output " << +l.t;
                          expect(index < std::ranges::size(stc.m_grid))
                            << "Index out of range: t=" << +t << ", y=" << +y << ", x=" << +x << ", index=" << +index
                            << ", size=" << std::ranges::size(stc.m_grid);
 
-                         if (x != x_out || y != y_out || t != t_out)
+                         if (x != l.x || y != l.y || t != l.t)
                          {
                               return;
                          }
