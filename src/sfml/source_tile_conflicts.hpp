@@ -38,6 +38,7 @@ namespace ff_8
  */
 class [[nodiscard]] source_tile_conflicts final
 {
+     public:
      /**
       * @brief Represents a 3D location in the grid.
       *
@@ -52,13 +53,6 @@ class [[nodiscard]] source_tile_conflicts final
           std::uint8_t y{};///< The y-coordinate of the tile.
           std::uint8_t t{};///< The texture page of the tile.
      };
-#ifdef UT_source_tile_conflicts_test
-     // Code specific to UT_source_tile_conflicts_test
-   public:
-#else
-     // Code for other cases
-   private:
-#endif
 
      /**
       * @brief The width of each tile grid in units.
@@ -87,6 +81,13 @@ class [[nodiscard]] source_tile_conflicts final
       * This constant is calculated as the product of the grid's width (`X_SIZE`) and height (`Y_SIZE`).
       */
      static constexpr auto GRID_SIZE = X_SIZE * Y_SIZE;
+#ifdef UT_source_tile_conflicts_test
+     // Code specific to UT_source_tile_conflicts_test
+   public:
+#else
+     // Code for other cases
+   private:
+#endif     
 
      /**
       * @brief Alias for the underlying grid storage.

@@ -34,9 +34,12 @@ int main()
                          expect(x == l.x) << "Mismatch in x: input " << +x << ", output " << +l.x;
                          expect(y == l.y) << "Mismatch in y: input " << +y << ", output " << +l.y;
                          expect(t == l.t) << "Mismatch in t: input " << +t << ", output " << +l.t;
-                         expect(index < std::ranges::size(stc.m_grid))
-                           << "Index out of range: t=" << +t << ", y=" << +y << ", x=" << +x << ", index=" << +index
-                           << ", size=" << std::ranges::size(stc.m_grid);
+                         expect(
+                           index < ff_8::source_tile_conflicts::X_SIZE * ff_8::source_tile_conflicts::Y_SIZE
+                                     * ff_8::source_tile_conflicts::T_SIZE)
+                           << "Index out of range: t=" << +t << ", y=" << +y << ", x=" << +x << ", index=" << +index << ", size="
+                           << ff_8::source_tile_conflicts::X_SIZE * ff_8::source_tile_conflicts::Y_SIZE
+                                * ff_8::source_tile_conflicts::T_SIZE;
 
                          if (x != l.x || y != l.y || t != l.t)
                          {
