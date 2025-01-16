@@ -167,6 +167,7 @@ std::shared_ptr<std::array<sf::Texture, map_sprite::MAX_TEXTURES>> map_sprite::l
      std::shared_ptr<std::array<sf::Texture, MAX_TEXTURES>> ret = load_textures_internal();
      while (std::ranges::all_of(*ret, [](const sf::Texture &texture) {
           auto size = texture.getSize();
+          spdlog::info("{}",size);
           return size.x == 0 || size.y == 0;
      }))
      {
@@ -555,10 +556,10 @@ sf::Sprite map_sprite::save_intersecting(const sf::Vector2i &pixel_pos, const st
                  {
                       return;
                  }
-                 if (!filter_invalid(tile_const))
-                 {
-                      return;
-                 }
+                 //   if (!filter_invalid(tile_const))
+                 //   {
+                 //        return;
+                 //   }
                  if (!m_filters.deswizzle.enabled())
                  {
                       states.texture = get_texture(tile_const.depth(), tile_const.palette_id(), tile_const.texture_id());
@@ -616,70 +617,69 @@ sf::BlendMode map_sprite::set_blend_mode(const BlendModeT &blend_mode, std::arra
 }
 [[nodiscard]] bool map_sprite::draw_imported([[maybe_unused]] sf::RenderTarget &target, [[maybe_unused]] sf::RenderStates states) const
 {
+     using namespace open_viii::graphics::background;
+     namespace v = std::ranges::views;
+     namespace r = std::ranges;
+
      if (
        !m_using_imported_texture || m_imported_texture == nullptr || m_imported_texture->getSize().x == 0
        || m_imported_texture->getSize().y == 0)
      {
           return false;
      }
-     states.texture                = m_imported_texture;
-     bool       drew               = false;
-     const auto draw_imported_tile = [this, &drew, &states, &target](
-                                       const std::integral auto                             current_index,
-                                       const open_viii::graphics::background::is_tile auto &tile_const,
-                                       const open_viii::graphics::background::is_tile auto &tile) {
-          if (!m_saved_imported_indices.empty())
-          {
-               const auto find_index = std::ranges::find_if(m_saved_imported_indices, [&current_index](const auto search_index) {
-                    return std::cmp_equal(search_index, current_index);
-               });
-               if (find_index != m_saved_imported_indices.end())
+     states.texture  = m_imported_texture;
+     bool       drew = false;
+     const auto draw_imported_tile =
+       [this, &drew, &states, &target](const std::integral auto current_index, const is_tile auto &tile_const, const is_tile auto &tile) {
+            if (!m_saved_imported_indices.empty())
+            {
+                 const auto find_index = std::ranges::find_if(m_saved_imported_indices, [&current_index](const auto search_index) {
+                      return std::cmp_equal(search_index, current_index);
+                 });
+                 if (find_index != m_saved_imported_indices.end())
+                 {
+                      return;
+                 }
+            }
+            if (ff_8::tile_operations::fail_any_filters(m_filters, tile))
+            {
+                 return;
+            }
+            const auto draw_size    = get_tile_draw_size();
+            const auto texture_size = get_tile_texture_size_for_import();
+            auto       quad         = get_triangle_strip_for_imported(draw_size, texture_size, tile_const, tile);
+            states.blendMode        = sf::BlendAlpha;
+            if (!m_disable_blends)
+            {
+                 states.blendMode = set_blend_mode(tile.blend_mode(), quad);
+            }
+            // apply the tileset texture
+            target.draw(quad.data(), quad.size(), sf::TriangleStrip, states);
+            drew = true;
+       };
+     m_imported_tile_map_front.visit_tiles([&](const auto &unchanged_tiles) {
+          m_imported_tile_map.visit_tiles([&](const auto &changed_tiles) {
+               for (const auto &z_axis : m_all_unique_values_and_strings.z().values())
                {
-                    return;
-               }
-          }
-          if (ff_8::tile_operations::fail_any_filters(m_filters, tile))
-          {
-               return;
-          }
-          if (!filter_invalid(tile_const))
-          {
-               return;
-          }
-          const auto draw_size    = get_tile_draw_size();
-          const auto texture_size = get_tile_texture_size_for_import();
-          auto       quad         = get_triangle_strip_for_imported(draw_size, texture_size, tile_const, tile);
-          states.blendMode        = sf::BlendAlpha;
-          if (!m_disable_blends)
-          {
-               states.blendMode = set_blend_mode(tile.blend_mode(), quad);
-          }
-          // apply the tileset texture
-          target.draw(quad.data(), quad.size(), sf::TriangleStrip, states);
-          drew = true;
-     };
-     for (const auto &z_axis : m_all_unique_values_and_strings.z().values())
-     {
-          m_imported_tile_map_front.visit_tiles([&](const auto &unchanged_tiles) {
-               m_imported_tile_map.visit_tiles([&](const auto &changed_tiles) {
-                    auto       unchanged_begin = unchanged_tiles.cbegin();
-                    const auto unchanged_end   = unchanged_tiles.cend();
-                    auto       changed_begin   = changed_tiles.cbegin();
-                    const auto changed_end     = changed_tiles.cend();
-                    for (; unchanged_begin != unchanged_end && changed_begin != changed_end; ++unchanged_begin, ++changed_begin)
+                    const auto z_test = [&]([[maybe_unused]] const is_tile auto &tile_const, const is_tile auto &tile) {
+                         return std::cmp_equal(z_axis, tile.z());
+                    };
+
+                    auto zipped_range = v::zip(unchanged_tiles, changed_tiles)
+                                        | v::filter([&](const auto &current) { return std::apply(Map::filter_invalid(), current); })
+                                        | v::filter([&](const auto &current) { return std::apply(z_test, current); });
+                    for (decltype(auto) current : zipped_range)
                     {
-                         const auto &unchanged_tile = *unchanged_begin;
-                         const auto &changed_tile   = *changed_begin;
-                         if (changed_tile.z() != z_axis)
-                         {
-                              return;
-                         }
-                         const auto current_index = std::ranges::distance(&changed_tiles.front(), &changed_tile);
-                         draw_imported_tile(current_index, unchanged_tile, changed_tile);
+                         std::apply(
+                           [&](const is_tile auto &unchanged_tile, const is_tile auto &changed_tile) {
+                                const auto current_index = std::ranges::distance(&changed_tiles.front(), &changed_tile);
+                                draw_imported_tile(current_index, unchanged_tile, changed_tile);
+                           },
+                           current);
                     }
-               });
+               }
           });
-     }
+     });
      return drew;
 }
 sf::Vector2u map_sprite::get_tile_draw_size() const
@@ -1055,7 +1055,6 @@ const ff_8::source_tile_conflicts &map_sprite::original_conflicts() const
 
 const ff_8::source_tile_conflicts &map_sprite::working_conflicts() const
 {
-
      // side effect. we wait till conflicts is needed than we refresh it.
      m_map_group.maps.refresh_working_all();
      return m_map_group.maps.working_conflicts();

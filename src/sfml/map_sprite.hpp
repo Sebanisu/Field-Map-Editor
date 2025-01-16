@@ -338,13 +338,13 @@ struct [[nodiscard]] map_sprite final
           const auto &pupu_ids = m_map_group.maps.original_pupu();
           namespace v          = std::ranges::views;
           namespace r          = std::ranges;
-          auto zipped_range    = v::zip(tiles_const, tiles, pupu_ids) | v::filter([&](const auto & current) {
-                                    return !skip_invalid && std::apply(Map::filter_invalid(), current);
-                              });
+          auto zipped_range    = v::zip(tiles_const, tiles, pupu_ids)
+                              | v::filter([&](const auto &current) { return !skip_invalid || std::apply(Map::filter_invalid(), current); });
           if (!regular_order)
           {
                for (decltype(auto) current : zipped_range | v::reverse)
                {
+                    //spdlog::info(" {} -- {} -- {} ", std::get<0>(current), std::get<1>(current), std::get<2>(current));
                     std::apply(lambda, std::forward<decltype(current)>(current));
                }
           }
@@ -352,6 +352,7 @@ struct [[nodiscard]] map_sprite final
           {
                for (decltype(auto) current : zipped_range)
                {
+                    //spdlog::info(" {} -- {} -- {} ", std::get<0>(current), std::get<1>(current), std::get<2>(current));
                     std::apply(lambda, std::forward<decltype(current)>(current));
                }
           }
