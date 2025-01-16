@@ -259,7 +259,7 @@ void gui::control_panel_window()
                format_imgui_text("X {}, Y {}, T {}: ", location.x, location.y, location.t);
                for (const auto index : conflict_group)
                {
-                    //assert(cmp_less(index, std::ranges::size(tiles)) && "index out of range!");
+                    assert(std::cmp_less(index, std::ranges::size(tiles)) && "index out of range!");
                     const auto &tile = [&]() {
                          auto begin = std::ranges::cbegin(tiles);
                          std::ranges::advance(begin, index);
