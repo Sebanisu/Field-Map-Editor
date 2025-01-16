@@ -245,6 +245,11 @@ struct [[nodiscard]] map_sprite final
           return m_map_group.maps.const_working().visit_tiles(std::forward<decltype(p_function)>(p_function));
      }
      template<typename funcT>
+     auto const_visit_original_tiles(funcT &&p_function) const
+     {
+          return m_map_group.maps.original().visit_tiles(std::forward<decltype(p_function)>(p_function));
+     }
+     template<typename funcT>
      auto const_visit_tiles_both(funcT &&p_function) const
      {
           return m_map_group.maps.const_working().visit_tiles([&](const auto &back) {
