@@ -187,7 +187,8 @@ import::variant_tile_t &import::combo_selected_tile(bool &changed) const
                                                const auto end_tooltip = scope_guard(&ImGui::EndTooltip);
                                                ImGui::BeginTooltip();
                                                format_imgui_text("{}", tile_id);
-                                               (void)create_tile_button(map_sprite, tile, sf::Vector2f(tooltips_size, tooltips_size));
+                                               const tile_button_options options = { .size = { tooltips_size, tooltips_size } };
+                                               (void)create_tile_button(map_sprite, tile, options);
                                                map_sprite->enable_square(tile);
                                                was_hovered = true;
                                           }

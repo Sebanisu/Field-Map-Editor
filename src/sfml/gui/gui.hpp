@@ -82,6 +82,7 @@ struct gui
      //  ImGuiStyle                  m_original_style  = {};
      sf::Event                                                           m_event                     = {};
      sf::Vector2f                                                        m_cam_pos                   = {};
+     std::vector<std::size_t>                                            m_hovered_tiles_indices     = {};
      // create a file browser instances
      ImGui::FileBrowser          m_save_file_browser{ ImGuiFileBrowserFlags_EnterNewFilename | ImGuiFileBrowserFlags_CreateNewDir
                                              | ImGuiFileBrowserFlags_EditPathString };
@@ -114,6 +115,9 @@ struct gui
      void         file_browser_save_texture();
      void         directory_browser_display();
      void         menu_bar();
+     void         selected_tiles_panel();
+     void         tile_conflicts_panel();
+     void         hovered_tiles_panel();
      void         combo_pupu();
      void         combo_palette();
      void         combo_bpp();
@@ -150,7 +154,6 @@ struct gui
      void                                               combo_filtered_bpps();
      void                                               combo_blend_other();
      void                                               combo_z();
-     bool                                               handle_mouse_cursor();
      std::shared_ptr<open_viii::archive::FIFLFS<false>> init_field();
      void                                               text_mouse_position() const;
      void                                               on_click_not_imgui();

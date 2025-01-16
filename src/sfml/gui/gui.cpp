@@ -244,6 +244,15 @@ void gui::control_panel_window()
           control_panel_window_map();
      }
      frame_rate();
+
+
+     text_mouse_position();
+     hovered_tiles_panel();
+     selected_tiles_panel();
+     tile_conflicts_panel();
+}
+void gui::tile_conflicts_panel()
+{
      if (!map_test())
      {
           return;
@@ -281,8 +290,25 @@ void gui::control_panel_window()
                          std::ranges::advance(begin, index);
                          return *begin;
                     }();
-                    const auto push_pop_id = PushPopID();
-                    (void)create_tile_button(m_map_sprite, tile, { 32.F, 32.F });
+
+                    static constexpr auto ImVec4ToSFColor = [](const ImVec4 &color) -> sf::Color {
+                         return { static_cast<std::uint8_t>(color.x * 255.F),
+                                  static_cast<std::uint8_t>(color.y * 255.F),
+                                  static_cast<std::uint8_t>(color.z * 255.F),
+                                  static_cast<std::uint8_t>(color.w * 255.F) };
+                    };
+                    const auto options = [&]() -> tile_button_options {
+                         sf::Vector2f size = { 32.F, 32.F };
+                         if (
+                           std::ranges::empty(m_hovered_tiles_indices)
+                           || std::ranges::find(m_hovered_tiles_indices, static_cast<std::size_t>(index))
+                                == std::ranges::end(m_hovered_tiles_indices))
+                         {
+                              return { .size = size };
+                         }
+                         return { .size = size, .color = ImVec4ToSFColor(ImGui::GetStyle().Colors[ImGuiCol_ButtonHovered]) };
+                    }();
+                    (void)create_tile_button(m_map_sprite, tile, options);
                     // Ensure subsequent buttons are on the same row
                     std::string strtooltip = fmt::format("Index {}\n{}", index, tile);
                     tool_tip(strtooltip);
@@ -292,9 +318,16 @@ void gui::control_panel_window()
                ImGui::NewLine();
           }
      });
+}
 
-     m_mouse_positions.mouse_enabled = handle_mouse_cursor();
-     text_mouse_position();
+void gui::selected_tiles_panel()
+{
+
+
+     if (!map_test())
+     {
+          return;
+     }
 
      if (std::ranges::empty(m_clicked_tile_indices))
      {
@@ -307,7 +340,7 @@ void gui::control_panel_window()
                if (i < std::ranges::size(tiles))
                {
                     const auto &tile = tiles[i];
-                    collapsing_tile_info(m_map_sprite, tile, i);
+                    collapsing_tile_info(m_map_sprite, tile, {}, i);
                }
           }
      });
@@ -807,14 +840,12 @@ void gui::on_click_not_imgui()
 }
 void gui::text_mouse_position() const
 {
-     if (!map_test())
-     {
-          return;
-     }
+
      // Display texture coordinates if they are set
      if (!m_mouse_positions.mouse_enabled)
      {
           format_imgui_text("{}", gui_labels::mouse_not_over);
+          return;
      }
      else
      {
@@ -828,32 +859,37 @@ void gui::text_mouse_position() const
                format_imgui_text("{}: {:2}", gui_labels::page, m_mouse_positions.texture_page);
           }
      }
-     if (!ImGui::CollapsingHeader(gui_labels::hovered_tiles.data()))
+}
+void gui::hovered_tiles_panel()
+{
+     if (!map_test())
      {
           return;
      }
-     if (!m_mouse_positions.mouse_enabled)
-     {
-          return;
-     }
+
+
      m_map_sprite->const_visit_tiles_both([&](const auto &tiles, const auto &front_tiles) {
-          static std::vector<std::size_t> indices = {};
           if (m_mouse_positions.mouse_moved)
           {
-               indices = m_map_sprite->find_intersecting(tiles, m_mouse_positions.pixel, m_mouse_positions.texture_page, false, true);
+               m_hovered_tiles_indices =
+                 m_map_sprite->find_intersecting(tiles, m_mouse_positions.pixel, m_mouse_positions.texture_page, false, true);
           }
-          if (std::ranges::empty(indices))
+          format_imgui_text("{} {:4}", gui_labels::number_of_tiles, std::ranges::size(m_hovered_tiles_indices));
+          if (!ImGui::CollapsingHeader(gui_labels::hovered_tiles.data()))
           {
                return;
           }
-          format_imgui_text("{} {:4}", gui_labels::number_of_tiles, std::ranges::size(indices));
+          if (std::ranges::empty(m_hovered_tiles_indices))
+          {
+               return;
+          }
           static constexpr int columns = 8;
           static_assert(columns % 2 == 0);
           if (!ImGui::BeginTable("##table", columns))
           {
                return;
           }
-          for (const auto index : indices)
+          for (const auto index : m_hovered_tiles_indices)
           {
                ImGui::TableNextColumn();
                format_imgui_text("{:4}", index);
@@ -863,10 +899,6 @@ void gui::text_mouse_position() const
           }
           ImGui::EndTable();
      });
-}
-bool gui::handle_mouse_cursor()
-{
-     return m_mouse_positions.mouse_enabled;
 }
 void gui::combo_coo()
 {

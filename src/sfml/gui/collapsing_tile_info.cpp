@@ -1,5 +1,4 @@
 #include "collapsing_tile_info.hpp"
-#include "create_tile_button.hpp"
 #include "events.hpp"
 #include "format_imgui_text.hpp"
 #include "gui_labels.hpp"
@@ -15,8 +14,9 @@ void collapsing_tile_info(
     open_viii::graphics::background::Tile1,
     open_viii::graphics::background::Tile2,
     open_viii::graphics::background::Tile3,
-    std::monostate> &current_tile,
-  const std::size_t  index)
+    std::monostate>         &current_tile,
+  const tile_button_options &options,
+  const std::size_t          index)
 {
      auto map = map_ptr.lock();
      if (!map)
@@ -75,8 +75,9 @@ void collapsing_tile_info(
               ImGui::SetCursorScreenPos(ImVec2(
                 backup_pos.x + width * position_width_scale,
                 backup_pos.y - width * position_height_scale - style.FramePadding.y * padding_height_scale));
-              const auto pushpopid2 = PushPopID();
-              (void)create_tile_button(map, tile, { width * tile_scale, width * tile_scale });
+              auto options_with_size = options;
+              options_with_size.size = { width * tile_scale, width * tile_scale };
+              (void)create_tile_button(map, tile, options_with_size);
               ImGui::SetCursorScreenPos(backup_pos);
          },
          [](const std::monostate &) {}),

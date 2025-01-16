@@ -1,7 +1,11 @@
 #include "create_tile_button.hpp"
+static constexpr auto toImColor = [](const sf::Color &c) -> ImColor {
+     return ImColor(static_cast<int>(c.r), static_cast<int>(c.g), static_cast<int>(c.b), static_cast<int>(c.a));
+};
 using namespace open_viii::graphics::background;
 template<is_tile tileT>
-[[nodiscard]] bool fme::create_tile_button(std::weak_ptr<const fme::map_sprite> map_ptr, const tileT &tile, sf::Vector2f image_size)
+[[nodiscard]] bool
+  fme::create_tile_button(std::weak_ptr<const fme::map_sprite> map_ptr, const tileT &tile, const tile_button_options &options)
 {
      const auto map = map_ptr.lock();
      if (!map)
@@ -46,17 +50,49 @@ template<is_tile tileT>
          static_cast<int>((static_cast<float>(src_y) / tile_size) * static_cast<float>(tile_texture_size.y)),
          static_cast<int>(tile_texture_size.x),
          static_cast<int>(tile_texture_size.y)));
-     if (image_size == sf::Vector2f{})
+
+     int pop_count     = {};
+     int pop_var_count = {};
+     if (options.color.has_value())
      {
-          image_size = sf::Vector2f(ImGui::GetTextLineHeight(), ImGui::GetTextLineHeight());
+          ImGui::PushStyleColor(ImGuiCol_Button, ImVec4{toImColor(options.color.value())});
+          ++pop_count;
+     }
+     if (options.hover_color.has_value())
+     {
+          ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4{toImColor(options.hover_color.value())});
+          ++pop_count;
+     }
+     if (options.active_color.has_value())
+     {
+          ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4{toImColor(options.active_color.value())});
+          ++pop_count;
+     }
+     if (options.padding_size.has_value())
+     {
+          ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, options.padding_size.value());
+          ++pop_var_count;
      }
 
+     // Use scope_guard to safely pop style colors and variables
+     const auto pop_style = scope_guard{ [&]() {
+          if (pop_count > 0)
+               ImGui::PopStyleColor(pop_count);
+          if (pop_var_count > 0)
+               ImGui::PopStyleVar(pop_var_count);
+     } };
      const auto pop_id = PushPopID();
-     return ImGui::ImageButton("##tile_image_button", sprite, image_size);
+
+     return ImGui::ImageButton(
+       "##tile_image_button",
+       sprite,
+       options.size == sf::Vector2f{} ? sf::Vector2f{ ImGui::GetTextLineHeight(), ImGui::GetTextLineHeight() } : options.size,
+       options.background_color,
+       options.tint_color);
 }
 
 
 // Explicit instantiation for Tiles
-template [[nodiscard]] bool fme::create_tile_button(std::weak_ptr<const fme::map_sprite>, const Tile1 &, sf::Vector2f);
-template [[nodiscard]] bool fme::create_tile_button(std::weak_ptr<const fme::map_sprite>, const Tile2 &, sf::Vector2f);
-template [[nodiscard]] bool fme::create_tile_button(std::weak_ptr<const fme::map_sprite>, const Tile3 &, sf::Vector2f);
+template [[nodiscard]] bool fme::create_tile_button(std::weak_ptr<const fme::map_sprite>, const Tile1 &, const tile_button_options &);
+template [[nodiscard]] bool fme::create_tile_button(std::weak_ptr<const fme::map_sprite>, const Tile2 &, const tile_button_options &);
+template [[nodiscard]] bool fme::create_tile_button(std::weak_ptr<const fme::map_sprite>, const Tile3 &, const tile_button_options &);
