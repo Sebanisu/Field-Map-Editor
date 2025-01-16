@@ -258,8 +258,21 @@ void gui::control_panel_window()
           auto        range_of_conflicts = conflicts.range_of_conflicts();
           for (const auto &conflict_group : range_of_conflicts)
           {
-               const auto location = ff_8::source_tile_conflicts::reverse_index(conflict_group.front());
-               format_imgui_text("X {}, Y {}, T {}: ", location.x + location.t * ff_8::source_tile_conflicts::GRID_SIZE, location.y, location.t);
+               {
+                    const auto  first_index = conflict_group.front();
+                    const auto &first_tile  = [&]() {
+                         auto begin = std::ranges::cbegin(tiles);
+                         std::ranges::advance(begin, first_index);
+                         return *begin;
+                    }();
+
+                    format_imgui_text(
+                      "X = {}, (X + T * 256 = {}), Y = {}, T = {}: ",
+                      first_tile.source_x(),
+                      first_tile.source_x() + first_tile.texture_id() * ff_8::source_tile_conflicts::GRID_SIZE,
+                      first_tile.source_y(),
+                      first_tile.texture_id());
+               }
                for (const auto index : conflict_group)
                {
                     assert(std::cmp_less(index, std::ranges::size(tiles)) && "index out of range!");
