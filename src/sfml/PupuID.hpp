@@ -46,11 +46,11 @@ struct PupuID
 
 
      constexpr PupuID() noexcept = default;
-     constexpr PupuID(std::uint32_t raw) noexcept
+     constexpr explicit PupuID(std::uint32_t raw) noexcept
        : m_raw(raw)
      {
      }
-     constexpr PupuID(const open_viii::graphics::background::is_tile auto &tile, std::uint8_t offset = 0U) noexcept
+     constexpr explicit PupuID(const open_viii::graphics::background::is_tile auto &tile, std::uint8_t offset = 0U) noexcept
        : PupuID(std::uint32_t{ ((static_cast<std::uint32_t>(tile.layer_id()) & layer_mask) << layer_offset)
                                | ((static_cast<std::uint32_t>(tile.blend_mode()) & blend_mask) << blend_offset)
                                | static_cast<std::uint32_t>(tile.animation_id() << animation_offset)

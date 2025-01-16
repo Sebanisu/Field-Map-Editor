@@ -258,7 +258,7 @@ struct [[nodiscard]] map_sprite final
      }
 
      template<open_viii::graphics::background::is_tile tileT>
-     [[nodiscard]] const sf::Texture *get_texture(const tileT &tile)
+     [[nodiscard]] const sf::Texture *get_texture(const tileT &tile) const
      {
 
           if (!m_filters.deswizzle.enabled())
@@ -268,7 +268,7 @@ struct [[nodiscard]] map_sprite final
           else
           {
                // pupu_ids
-               return const_visit_working_tiles([&tile, this](const auto &tiles) -> const sf::Texture * {
+               return const_visit_original_tiles([&tile, this](const auto &tiles) -> const sf::Texture * {
                     if (tiles.empty())
                     {
                          return nullptr;

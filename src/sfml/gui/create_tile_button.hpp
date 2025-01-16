@@ -12,6 +12,6 @@
 namespace fme
 {
 template<open_viii::graphics::background::is_tile tileT>
-[[nodiscard]] bool create_tile_button(const map_sprite &map, const tileT &tile, sf::Vector2f image_size = {});
+[[nodiscard]] bool create_tile_button(std::weak_ptr<const map_sprite> map, const tileT &tile, sf::Vector2f image_size = {});
 }// namespace fme
 #endif /* DF4C3AF7_C3A6_4F62_8336_B0EF72752E11 */

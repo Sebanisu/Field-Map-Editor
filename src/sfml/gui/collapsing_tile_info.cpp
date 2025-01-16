@@ -10,7 +10,7 @@
 namespace fme
 {
 void collapsing_tile_info(
-  const map_sprite &map,
+  std::weak_ptr<const map_sprite> map_ptr,
   const std::variant<
     open_viii::graphics::background::Tile1,
     open_viii::graphics::background::Tile2,
@@ -18,6 +18,11 @@ void collapsing_tile_info(
     std::monostate> &current_tile,
   const std::size_t  index)
 {
+     auto map = map_ptr.lock();
+     if (!map)
+     {
+          return;
+     }
      using namespace open_viii::graphics::background;
      std::visit(
        events::make_visitor(

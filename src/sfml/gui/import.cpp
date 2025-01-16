@@ -57,7 +57,7 @@ void import::render() const
      //   * So I need to choose an existing tile to base the new tiles on.
      [[maybe_unused]] const auto &current_tile = combo_selected_tile(changed);
      // add text showing the tile's info.
-     collapsing_tile_info(*map_sprite, current_tile);
+     collapsing_tile_info(map_sprite, current_tile);
      //   * I need to browse for an image file.
      changed = browse_for_image_display_preview() || changed;
      //   * We need to adjust the scale to fit
@@ -171,7 +171,7 @@ import::variant_tile_t &import::combo_selected_tile(bool &changed) const
           const auto            cols_pop      = scope_guard([]() { ImGui::Columns(1); });
           ImGui::Columns(num_columns, "##columns", false);
           const auto the_end_combo = scope_guard([]() { ImGui::EndCombo(); });
-          map_sprite->const_visit_working_tiles([&](const auto &tiles) {
+          map_sprite->const_visit_original_tiles([&](const auto &tiles) {
                for (int tile_id = {}; const auto &tile : tiles)
                {
                     const auto next_col_pop = scope_guard([]() { ImGui::NextColumn(); });
@@ -187,7 +187,7 @@ import::variant_tile_t &import::combo_selected_tile(bool &changed) const
                                                const auto end_tooltip = scope_guard(&ImGui::EndTooltip);
                                                ImGui::BeginTooltip();
                                                format_imgui_text("{}", tile_id);
-                                               (void)create_tile_button(*map_sprite, tile, sf::Vector2f(tooltips_size, tooltips_size));
+                                               (void)create_tile_button(map_sprite, tile, sf::Vector2f(tooltips_size, tooltips_size));
                                                map_sprite->enable_square(tile);
                                                was_hovered = true;
                                           }
@@ -197,7 +197,7 @@ import::variant_tile_t &import::combo_selected_tile(bool &changed) const
                                            ImGui::SameLine();
                                            return false;
                                       }(),
-                                      create_tile_button(*map_sprite, tile),
+                                      create_tile_button(map_sprite, tile),
                                       []() -> bool {
                                            ImGui::SameLine();
                                            return false;
@@ -226,7 +226,7 @@ import::variant_tile_t &import::combo_selected_tile(bool &changed) const
           was_hovered = false;
           map_sprite->disable_square();
      }
-     map_sprite->const_visit_working_tiles([&](const auto &tiles) {
+     map_sprite->const_visit_original_tiles([&](const auto &tiles) {
           {
                // Left
                const auto pop_id_left = PushPopID();
@@ -268,7 +268,7 @@ import::variant_tile_t &import::combo_selected_tile(bool &changed) const
      using namespace open_viii::graphics::background;
      (void)std::visit(
        events::make_visitor(
-         [&](const is_tile auto &tile) -> bool { return create_tile_button(*map_sprite, tile); },
+         [&](const is_tile auto &tile) -> bool { return create_tile_button(map_sprite, tile); },
          [](const std::monostate &) -> bool { return false; }),
        current_tile);
      ImGui::SameLine();

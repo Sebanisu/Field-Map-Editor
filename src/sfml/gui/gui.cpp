@@ -244,7 +244,10 @@ void gui::control_panel_window()
           control_panel_window_map();
      }
      frame_rate();
-
+     if (!map_test())
+     {
+          return;
+     }
      m_map_sprite->const_visit_working_tiles([&](const auto &tiles) {
           if (!ImGui::CollapsingHeader("Conflicting Tiles"))
           {
@@ -256,7 +259,7 @@ void gui::control_panel_window()
           for (const auto &conflict_group : range_of_conflicts)
           {
                const auto location = ff_8::source_tile_conflicts::reverse_index(conflict_group.front());
-               format_imgui_text("X {}, Y {}, T {}: ", location.x, location.y, location.t);
+               format_imgui_text("X {}, Y {}, T {}: ", location.x + location.t * ff_8::source_tile_conflicts::GRID_SIZE, location.y, location.t);
                for (const auto index : conflict_group)
                {
                     assert(std::cmp_less(index, std::ranges::size(tiles)) && "index out of range!");
@@ -266,7 +269,7 @@ void gui::control_panel_window()
                          return *begin;
                     }();
                     const auto push_pop_id = PushPopID();
-                    (void)create_tile_button(*m_map_sprite, tile, { 32.F, 32.F });
+                    (void)create_tile_button(m_map_sprite, tile, { 32.F, 32.F });
                     // Ensure subsequent buttons are on the same row
                     std::string strtooltip = fmt::format("Index {}\n{}", index, tile);
                     tool_tip(strtooltip);
@@ -285,13 +288,13 @@ void gui::control_panel_window()
           return;
      }
 
-     m_map_sprite->const_visit_working_tiles([&](const auto &tiles) {
+     m_map_sprite->const_visit_original_tiles([&](const auto &tiles) {
           for (const auto &i : m_clicked_tile_indices)
           {
                if (i < std::ranges::size(tiles))
                {
                     const auto &tile = tiles[i];
-                    collapsing_tile_info(*m_map_sprite, tile, i);
+                    collapsing_tile_info(m_map_sprite, tile, i);
                }
           }
      });
@@ -843,7 +846,7 @@ void gui::text_mouse_position() const
                format_imgui_text("{:4}", index);
                ImGui::TableNextColumn();
 
-               (void)create_tile_button(*m_map_sprite, front_tiles[index]);
+               (void)create_tile_button(m_map_sprite, front_tiles[index]);
           }
           ImGui::EndTable();
      });

@@ -67,7 +67,7 @@ const sf::Texture *
 }
 const sf::Texture *map_sprite::get_texture(const ff_8::PupuID &pupu) const
 {
-     const auto &values = working_unique_pupu();
+     const auto &values = original_unique_pupu();
      auto        it     = std::ranges::find(values, pupu);
      if (it != values.end())
      {

@@ -1,22 +1,29 @@
 #include "create_tile_button.hpp"
 using namespace open_viii::graphics::background;
 template<is_tile tileT>
-[[nodiscard]] bool fme::create_tile_button(const fme::map_sprite &map, const tileT &tile, sf::Vector2f image_size)
+[[nodiscard]] bool fme::create_tile_button(std::weak_ptr<const fme::map_sprite> map_ptr, const tileT &tile, sf::Vector2f image_size)
 {
-     const auto *texture = map.get_texture(tile);
-     if (texture == nullptr)
+     const auto map = map_ptr.lock();
+     if (!map)
      {
+          spdlog::error("{}", "map_sprite is null");
           return false;
      }
-     const auto tile_texture_size = map.get_tile_texture_size(texture);
+     const auto *texture = map->get_texture(tile);
+     if (texture == nullptr)
+     {
+          spdlog::error("{}", "Failed to get texture for tile.");
+          return false;
+     }
+     const auto tile_texture_size = map->get_tile_texture_size(texture);
      const auto src_x             = [&]() -> std::uint32_t {
-          if (map.filter().deswizzle.enabled())
+          if (map->filter().deswizzle.enabled())
           {
                return static_cast<std::uint32_t>(tile.x());
           }
           auto       source_texture_page_width = tileT::texture_page_width(tile.depth());
           const auto texture_page_x_offset     = [&]() -> std::uint32_t {
-               if (map.filter().upscale.enabled())
+               if (map->filter().upscale.enabled())
                {
                     return 0;
                }
@@ -25,7 +32,7 @@ template<is_tile tileT>
           return tile.source_x() + texture_page_x_offset;
      }();
      const auto src_y = [&]() -> std::uint32_t {
-          if (map.filter().deswizzle.enabled())
+          if (map->filter().deswizzle.enabled())
           {
                return static_cast<std::uint32_t>(tile.y());
           }
@@ -44,13 +51,12 @@ template<is_tile tileT>
           image_size = sf::Vector2f(ImGui::GetTextLineHeight(), ImGui::GetTextLineHeight());
      }
 
-
-     const auto str_id = fmt::format("id269{}", get_imgui_id());
-     return ImGui::ImageButton(str_id.c_str(), sprite, image_size);
+     const auto pop_id = PushPopID();
+     return ImGui::ImageButton("##tile_image_button", sprite, image_size);
 }
 
 
 // Explicit instantiation for Tiles
-template [[nodiscard]] bool fme::create_tile_button(const fme::map_sprite &, const Tile1 &, sf::Vector2f);
-template [[nodiscard]] bool fme::create_tile_button(const fme::map_sprite &, const Tile2 &, sf::Vector2f);
-template [[nodiscard]] bool fme::create_tile_button(const fme::map_sprite &, const Tile3 &, sf::Vector2f);
+template [[nodiscard]] bool fme::create_tile_button(std::weak_ptr<const fme::map_sprite>, const Tile1 &, sf::Vector2f);
+template [[nodiscard]] bool fme::create_tile_button(std::weak_ptr<const fme::map_sprite>, const Tile2 &, sf::Vector2f);
+template [[nodiscard]] bool fme::create_tile_button(std::weak_ptr<const fme::map_sprite>, const Tile3 &, sf::Vector2f);

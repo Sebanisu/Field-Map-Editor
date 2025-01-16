@@ -8,7 +8,7 @@
 namespace fme
 {
 void collapsing_tile_info(
-  const map_sprite &map,
+  std::weak_ptr<const map_sprite> map,
   const std::variant<
     open_viii::graphics::background::Tile1,
     open_viii::graphics::background::Tile2,
