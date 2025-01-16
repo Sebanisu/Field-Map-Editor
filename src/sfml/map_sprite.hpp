@@ -18,6 +18,7 @@
 #include "tile_sizes.hpp"
 #include "unique_values.hpp"
 #include "upscales.hpp"
+#include <algorithm>
 #include <cstdint>
 #include <fmt/format.h>
 #include <SFML/Graphics/Drawable.hpp>
@@ -33,7 +34,6 @@ struct [[nodiscard]] map_sprite final
   , public sf::Transformable
 {
    public:
-     static constexpr auto          filter_invalid            = ff_8::tile_operations::NotInvalidTile{};
      static constexpr std::uint8_t  TILE_SIZE                 = 16U;
      static constexpr std::uint8_t  MAX_TEXTURE_PAGES         = 14U;
      static constexpr std::uint8_t  MAX_PALETTES              = 16U;
@@ -232,7 +232,7 @@ struct [[nodiscard]] map_sprite final
        const std::uint8_t &texture_page,
        bool                skip_filters = false,
        bool                find_all     = false) const
-     {          
+     {
           if (m_draw_swizzle)
           {
                return ff_8::find_intersecting_swizzle(tiles, m_filters, pixel_pos, texture_page, skip_filters, find_all);
@@ -334,36 +334,26 @@ struct [[nodiscard]] map_sprite final
      void for_all_tiles(auto const &tiles_const, auto &&tiles, auto &&lambda, bool skip_invalid, bool regular_order) const
      {
           using namespace open_viii::graphics::background;
-          // // todo move pupu generation to constructor
-          // std::vector<ff_8::PupuID> pupu_ids = {};
-          // pupu_ids.reserve(std::size(tiles_const));
-          // std::ranges::transform(tiles_const, std::back_inserter(pupu_ids), ff_8::UniquifyPupu{});
-          // assert(std::size(tiles_const) == std::size(tiles));
-          // //assert(std::size(tiles_const) == std::size(m_pupu_ids));
           m_map_group.maps.refresh_original_all();
           const auto &pupu_ids = m_map_group.maps.original_pupu();
-
-          const auto  process  = [&skip_invalid,
-                                &lambda](auto tiles_const_begin, const auto tiles_const_end, auto tiles_begin, auto pupu_ids_begin) {
-               for (; /*t != te &&*/ tiles_const_begin != tiles_const_end; (void)++tiles_const_begin, ++tiles_begin, ++pupu_ids_begin)
-               {
-                    const is_tile auto &tile_const = *tiles_const_begin;
-                    if (skip_invalid && !filter_invalid(tile_const))
-                    {
-                         continue;
-                    }
-                    is_tile auto       &tile       = *tiles_begin;
-                    const ff_8::PupuID &pupu_const = *pupu_ids_begin;
-                    lambda(tile_const, tile, pupu_const);
-               }
-          };
+          namespace v          = std::ranges::views;
+          namespace r          = std::ranges;
+          auto zipped_range    = v::zip(tiles_const, tiles, pupu_ids) | v::filter([&](const auto & current) {
+                                    return !skip_invalid && std::apply(Map::filter_invalid(), current);
+                              });
           if (!regular_order)
           {
-               process(std::crbegin(tiles_const), std::crend(tiles_const), std::rbegin(tiles), std::rbegin(pupu_ids));
+               for (decltype(auto) current : zipped_range | v::reverse)
+               {
+                    std::apply(lambda, std::forward<decltype(current)>(current));
+               }
           }
           else
           {
-               process(std::cbegin(tiles_const), std::cend(tiles_const), std::begin(tiles), std::begin(pupu_ids));
+               for (decltype(auto) current : zipped_range)
+               {
+                    std::apply(lambda, std::forward<decltype(current)>(current));
+               }
           }
      }
      void for_all_tiles(auto &&lambda, bool skip_invalid = true, bool regular_order = false) const

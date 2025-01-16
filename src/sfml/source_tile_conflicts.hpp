@@ -100,7 +100,8 @@ class [[nodiscard]] source_tile_conflicts final
       * different tile types, avoiding the need for templates. A static assertion can be added
       * to confirm the `difference_type` is consistent across all potential tile types.
       */
-     using grid_array                 = std::array<std::vector<std::vector<std::uint8_t>::difference_type>, X_SIZE * Y_SIZE * T_SIZE>;
+     using grid_array                = std::array<std::vector<std::vector<std::uint8_t>::difference_type>, X_SIZE * Y_SIZE * T_SIZE>;
+     using grid_array_ptr  = std::shared_ptr<std::array<std::vector<std::vector<std::uint8_t>::difference_type>, X_SIZE * Y_SIZE * T_SIZE>>;
 
      /**
       * @brief The grid storage for tracking tile indexes.
@@ -114,7 +115,7 @@ class [[nodiscard]] source_tile_conflicts final
       * Each entry in the grid corresponds to a specific location and contains a vector of
       * tile indexes, which can be used for further analysis or operations.
       */
-     grid_array m_grid                = {};
+     grid_array_ptr m_grid = std::make_shared<grid_array>();
 
      /**
       * @brief Calculates the index of a tile based on its coordinates and texture page.
@@ -191,7 +192,7 @@ class [[nodiscard]] source_tile_conflicts final
           {
                assert(std::cmp_greater(index, 0) && " index must be greater than 0");
           }
-          //assert(std::cmp_less(index, std::ranges::size(m_grid)) && "the index is out of range");
+          // assert(std::cmp_less(index, std::ranges::size(m_grid)) && "the index is out of range");
           l.t = static_cast<std::uint8_t>(static_cast<std::make_unsigned<Index>::type>(index) / GRID_SIZE);// Reverse the t calculation
           const Index remaining = static_cast<std::make_unsigned<Index>::type>(index) % GRID_SIZE;// Remaining part after extracting t
           l.y                   = static_cast<std::uint8_t>((remaining / X_SIZE) * Y_SIZE);// y is the remainder
@@ -213,7 +214,7 @@ class [[nodiscard]] source_tile_conflicts final
       */
      [[nodiscard]] constexpr auto &operator[](std::uint16_t x, std::uint16_t y, std::uint8_t t) noexcept
      {
-          return m_grid[calculate_index(x, y, t)];
+          return m_grid.get()->at(calculate_index(x, y, t));
      }
 
      /**
@@ -229,7 +230,7 @@ class [[nodiscard]] source_tile_conflicts final
       */
      [[nodiscard]] constexpr auto operator[](std::uint16_t x, std::uint16_t y, std::uint8_t t) const noexcept
      {
-          return m_grid[calculate_index(x, y, t)];
+          return m_grid.get()->at(calculate_index(x, y, t));
      }
 
      /**
@@ -245,7 +246,7 @@ class [[nodiscard]] source_tile_conflicts final
      template<open_viii::graphics::background::is_tile tile_t>
      [[nodiscard]] constexpr auto &operator[](const tile_t &tile) noexcept
      {
-          return m_grid[calculate_index(tile.source_x(), tile.source_y(), tile.texture_id())];
+          return m_grid.get()->at(calculate_index(tile.source_x(), tile.source_y(), tile.texture_id()));
      }
 
      /**
@@ -261,7 +262,7 @@ class [[nodiscard]] source_tile_conflicts final
      template<open_viii::graphics::background::is_tile tile_t>
      [[nodiscard]] constexpr auto operator[](const tile_t &tile) const noexcept
      {
-          return m_grid[calculate_index(tile.source_x(), tile.source_y(), tile.texture_id())];
+          return m_grid.get()->at(calculate_index(tile.source_x(), tile.source_y(), tile.texture_id()));
      }
 #endif
 
@@ -277,7 +278,7 @@ class [[nodiscard]] source_tile_conflicts final
       */
      [[nodiscard]] constexpr auto &operator()(const std::uint8_t x, const std::uint8_t y, const std::uint8_t t) noexcept
      {
-          return m_grid[calculate_index(x, y, t)];
+          return m_grid.get()->at(calculate_index(x, y, t));
      }
 
      /**
@@ -292,7 +293,7 @@ class [[nodiscard]] source_tile_conflicts final
       */
      [[nodiscard]] constexpr auto operator()(const std::uint8_t x, const std::uint8_t y, const std::uint8_t t) const noexcept
      {
-          return m_grid[calculate_index(x, y, t)];
+          return m_grid.get()->at(calculate_index(x, y, t));
      }
 
      /**
@@ -307,7 +308,7 @@ class [[nodiscard]] source_tile_conflicts final
      template<open_viii::graphics::background::is_tile tile_t>
      [[nodiscard]] constexpr auto &operator()(const tile_t &tile) noexcept
      {
-          return m_grid[calculate_index(tile.source_x(), tile.source_y(), tile.texture_id())];
+          return m_grid.get()->at(calculate_index(tile.source_x(), tile.source_y(), tile.texture_id()));
      }
 
      /**
@@ -322,18 +323,18 @@ class [[nodiscard]] source_tile_conflicts final
      template<open_viii::graphics::background::is_tile tile_t>
      [[nodiscard]] constexpr auto operator()(const tile_t &tile) const noexcept
      {
-          return m_grid[calculate_index(tile.source_x(), tile.source_y(), tile.texture_id())];
+          return m_grid.get()->at(calculate_index(tile.source_x(), tile.source_y(), tile.texture_id()));
      }
 
-     /**
-      * @brief Compares two `source_tile_conflicts` objects for ordering and equality.
-      *
-      * This operator provides default comparison behavior using the three-way comparison operator.
-      *
-      * @param other The other `source_tile_conflicts` object to compare.
-      * @return A `std::strong_ordering` indicating the result of the comparison.
-      */
-     constexpr auto               operator<=>(const source_tile_conflicts &) const noexcept = default;
+     // /**
+     //  * @brief Compares two `source_tile_conflicts` objects for ordering and equality.
+     //  *
+     //  * This operator provides default comparison behavior using the three-way comparison operator.
+     //  *
+     //  * @param other The other `source_tile_conflicts` object to compare.
+     //  * @return A `std::strong_ordering` indicating the result of the comparison.
+     //  */
+     // constexpr auto               operator<=>(const source_tile_conflicts &) const noexcept = default;
 
 
      /**
@@ -348,7 +349,7 @@ class [[nodiscard]] source_tile_conflicts final
      [[nodiscard]] constexpr auto range_of_conflicts() const
      {
           namespace v = std::ranges::views;
-          return m_grid | v::filter([](const auto &v) { return std::ranges::size(v) > 1U; });
+          return *m_grid | v::filter([](const auto &v) { return std::ranges::size(v) > 1U; });
      }
 
      /**
@@ -363,7 +364,7 @@ class [[nodiscard]] source_tile_conflicts final
      [[nodiscard]] constexpr auto range_of_conflicts_flattened() const
      {
           namespace v = std::ranges::views;
-          return m_grid | v::filter([](const auto &v) { return std::ranges::size(v) > 1U; }) | v::join;
+          return *m_grid | v::filter([](const auto &v) { return std::ranges::size(v) > 1U; }) | v::join;
      }
 
      /**
@@ -378,7 +379,7 @@ class [[nodiscard]] source_tile_conflicts final
      [[nodiscard]] constexpr auto range_of_non_conflicts_flattened() const
      {
           namespace v = std::ranges::views;
-          return m_grid | v::filter([](const auto &v) { return std::ranges::size(v) == 1U; }) | v::join;
+          return *m_grid | v::filter([](const auto &v) { return std::ranges::size(v) == 1U; }) | v::join;
      }
 
      /**
@@ -393,8 +394,8 @@ class [[nodiscard]] source_tile_conflicts final
      [[nodiscard]] constexpr auto range_of_empty_locations() const
      {
           namespace v = std::ranges::views;
-          return m_grid | v::filter([](const auto &v) { return std::ranges::size(v) == 0U; })
-                 | v::transform([&](const auto &v) { return reverse_index(std::ranges::distance(&m_grid.front(), &v)); });
+          return *m_grid | v::filter([](const auto &v) { return std::ranges::size(v) == 0U; })
+                 | v::transform([&](const auto &v) { return reverse_index(std::ranges::distance(&m_grid.get()->front(), &v)); });
      }
 
      /**
@@ -409,8 +410,8 @@ class [[nodiscard]] source_tile_conflicts final
      [[nodiscard]] constexpr auto range_of_occupied_locations() const
      {
           namespace v = std::ranges::views;
-          return m_grid | v::filter([](const auto &v) { return std::ranges::size(v) != 0U; })
-                 | v::transform([&](const auto &v) { return reverse_index(std::ranges::distance(&m_grid.front(), &v)); });
+          return *m_grid | v::filter([](const auto &v) { return std::ranges::size(v) != 0U; })
+                 | v::transform([&](const auto &v) { return reverse_index(std::ranges::distance(&m_grid.get()->front(), &v)); });
      }
 };
 }// namespace ff_8
