@@ -783,6 +783,24 @@ void gui::draw_map_grid_lines_for_tiles(const ImVec2 &screen_pos, const sf::Vect
                // Draw horizontal lines
                ImGui::GetWindowDrawList()->AddLine(ImVec2(screen_pos.x, y), ImVec2(img_end.x, y), IM_COL32(255, 255, 255, 255));
           }
+          m_map_sprite->const_visit_working_tiles([&](const auto &tiles) {
+               for (const auto index : m_map_sprite->working_conflicts().range_of_conflicts_flattened())
+               {
+                    assert(std::cmp_less(index, std::ranges::size(tiles)) && "Index out of Range...");
+                    const auto &tile = [&]() {
+                         auto begin = std::ranges::cbegin(tiles);
+                         std::ranges::advance(begin, index);
+                         return *begin;
+                    }();
+                    const float x = screen_pos.x
+                                    + ((static_cast<float>(tile.source_x()) + (static_cast<float>(tile.texture_id()) * 256.F)) * scale * static_cast<float>(m_map_sprite->get_map_scale()));
+                    const float y =
+                      screen_pos.y + (static_cast<float>(tile.source_y()) * scale * static_cast<float>(m_map_sprite->get_map_scale()));
+                    const float tile_size = 16.0f * scale * static_cast<float>(m_map_sprite->get_map_scale());
+                    ImGui::GetWindowDrawList()->AddRect(
+                      ImVec2(x, y), ImVec2(x + tile_size, y + tile_size), IM_COL32(255, 0, 0, 255), {}, {},3.F);
+               }
+          });
      }
 }
 void gui::draw_map_grid_lines_for_texture_page(const ImVec2 &screen_pos, const sf::Vector2f &scaled_size, const float scale)
