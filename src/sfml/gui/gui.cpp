@@ -12,10 +12,77 @@
 #include "push_pop_id.hpp"
 #include "safedir.hpp"
 #include "tool_tip.hpp"
+#include <algorithm>
+#include <cmath>
 #include <open_viii/paths/Paths.hpp>
+#include <ranges>
 #include <SFML/Window/Mouse.hpp>
 #include <utility>
 
+/**
+ * @brief Checks if any index in the first range is also present in the second range.
+ *
+ * @tparam Range1 A range type satisfying std::ranges::range.
+ * @tparam Range2 A range type satisfying std::ranges::range.
+ * @param hovered_tiles_indices The first range of indices to check.
+ * @param conflicts_range The second range of indices to compare against.
+ * @return true If any index from `hovered_tiles_indices` is found in `conflicts_range`.
+ * @return false Otherwise.
+ */
+static constexpr auto are_indices_in_both_ranges =
+  [](std::ranges::range auto &&hovered_tiles_indices, std::ranges::range auto &&conflicts_range) -> bool {
+     return std::ranges::any_of(
+       std::forward<decltype(hovered_tiles_indices)>(hovered_tiles_indices), [&](const std::integral auto &hovered_tile) -> bool {
+            return std::ranges::any_of(
+              std::forward<decltype(conflicts_range)>(conflicts_range),
+              [&](const std::integral auto &conflict_tile) -> bool { return std::cmp_equal(hovered_tile, conflict_tile); });
+       });
+};
+
+/**
+ * @brief Converts an ImVec4 color to an sf::Color.
+ *
+ * @param color The input color as ImVec4 (ImGui format, with floating-point components in the range [0, 1]).
+ * @return sf::Color The converted color, with each component scaled to the range [0, 255].
+ */
+static constexpr auto ImVec4ToSFColor = [](const ImVec4 &color) -> sf::Color {
+     return { static_cast<std::uint8_t>(color.x * 255.F),
+              static_cast<std::uint8_t>(color.y * 255.F),
+              static_cast<std::uint8_t>(color.z * 255.F),
+              static_cast<std::uint8_t>(color.w * 255.F) };
+};
+
+/**
+ * @brief Calculates the maximum number of buttons that can fit per row in the available content region.
+ *
+ * Ensures that the result is an even number and defaults to a minimum of 2 buttons per row.
+ *
+ * @param buttonWidth The width of each button.
+ * @param buttonSpacing The spacing between buttons.
+ * @return std::uint16_t The number of buttons that can fit per row, ensuring it's even and at least 2.
+ */
+static constexpr auto get_count_per_row = [](float buttonWidth, float buttonSpacing) -> std::uint16_t {
+     const auto count_per_row_in = (std::max)(
+       static_cast<std::uint16_t>((std::floor)(ImGui::GetContentRegionAvail().x / (buttonWidth + buttonSpacing))), std::uint16_t{ 2 });
+     return count_per_row_in % 2 != 0 ? count_per_row_in - 1 : count_per_row_in;
+};
+
+/**
+ * @brief Callback function for OpenGL debug messages.
+ *
+ * This function handles OpenGL debug output messages based on their severity level.
+ * High-severity messages are logged as errors and trigger an exception.
+ * Medium- and low-severity messages are logged for debugging purposes,
+ * while notifications are logged with minimal impact.
+ *
+ * @param source The source of the debug message (e.g., API, shader compiler). May be unused.
+ * @param type The type of the debug message (e.g., error, performance issue). May be unused.
+ * @param id A unique identifier for the debug message. May be unused.
+ * @param severity The severity of the debug message (e.g., high, medium, low, or notification).
+ * @param length The length of the debug message string. May be unused.
+ * @param message The actual debug message as a null-terminated string.
+ * @param userParam A user-defined parameter passed to the callback. May be unused.
+ */
 static void DebugCallback(
   [[maybe_unused]] GLenum      source,
   [[maybe_unused]] GLenum      type,
@@ -43,6 +110,7 @@ static void DebugCallback(
                break;
      }
 }
+
 using namespace open_viii::graphics::background;
 using namespace open_viii::graphics;
 using namespace open_viii::graphics::literals;
@@ -262,9 +330,18 @@ void gui::tile_conflicts_panel()
           {
                return;
           }
+          static constexpr float buttonWidth        = 32.F;
+          static constexpr float buttonSpacing      = 12.F;
+          const auto             count_per_row      = get_count_per_row(buttonWidth, buttonSpacing);
 
-          const auto &conflicts          = m_map_sprite->working_conflicts();
-          auto        range_of_conflicts = conflicts.range_of_conflicts();
+          const auto            &conflicts          = m_map_sprite->working_conflicts();
+          auto                   range_of_conflicts = conflicts.range_of_conflicts();
+          const auto             pop_table_id       = PushPopID();
+
+          const auto             options_hover      = tile_button_options{ .size = { buttonWidth, buttonWidth },
+                                                                           .color = ImVec4ToSFColor(ImGui::GetStyle().Colors[ImGuiCol_ButtonHovered]) };
+          const auto             options_regular    = tile_button_options{ .size = { buttonWidth, buttonWidth } };
+
           for (const auto &conflict_group : range_of_conflicts)
           {
                {
@@ -282,40 +359,50 @@ void gui::tile_conflicts_panel()
                       first_tile.source_y(),
                       first_tile.texture_id());
                }
-               for (const auto index : conflict_group)
+               format_imgui_text("index count: {}", std::ranges::size(conflict_group));
+               if (ImGui::BeginTable(
+                     "##table_overlaps",
+                     count_per_row,
+                     ImGuiTableFlags_SizingStretchProp | ImGuiTableFlags_NoPadOuterX | ImGuiTableFlags_NoPadInnerX))
                {
-                    assert(std::cmp_less(index, std::ranges::size(tiles)) && "index out of range!");
-                    const auto &tile = [&]() {
-                         auto begin = std::ranges::cbegin(tiles);
-                         std::ranges::advance(begin, index);
-                         return *begin;
-                    }();
 
-                    static constexpr auto ImVec4ToSFColor = [](const ImVec4 &color) -> sf::Color {
-                         return { static_cast<std::uint8_t>(color.x * 255.F),
-                                  static_cast<std::uint8_t>(color.y * 255.F),
-                                  static_cast<std::uint8_t>(color.z * 255.F),
-                                  static_cast<std::uint8_t>(color.w * 255.F) };
-                    };
-                    const auto options = [&]() -> tile_button_options {
-                         sf::Vector2f size = { 32.F, 32.F };
-                         if (
-                           std::ranges::empty(m_hovered_tiles_indices)
-                           || std::ranges::find(m_hovered_tiles_indices, static_cast<std::size_t>(index))
-                                == std::ranges::end(m_hovered_tiles_indices))
-                         {
-                              return { .size = size };
-                         }
-                         return { .size = size, .color = ImVec4ToSFColor(ImGui::GetStyle().Colors[ImGuiCol_ButtonHovered]) };
-                    }();
-                    (void)create_tile_button(m_map_sprite, tile, options);
-                    // Ensure subsequent buttons are on the same row
-                    std::string strtooltip = fmt::format("Index {}\n{}", index, tile);
-                    tool_tip(strtooltip);
-                    ImGui::SameLine();
+
+                    for (const auto &[i, index] : conflict_group | std::ranges::views::enumerate)
+                    {
+                         assert(std::cmp_less(index, std::ranges::size(tiles)) && "index out of range!");
+
+
+                         // ImGui::TableNextColumn();
+                         // format_imgui_text("{:4}", index);
+
+                         ImGui::TableNextColumn();
+
+                         const auto &tile = [&]() {
+                              auto begin = std::ranges::cbegin(tiles);
+                              std::ranges::advance(begin, index);
+                              return *begin;
+                         }();
+
+                         const auto options = [&]() {
+                              if (
+                                std::ranges::empty(m_hovered_tiles_indices)
+                                || std::ranges::find(m_hovered_tiles_indices, static_cast<std::size_t>(index))
+                                     == std::ranges::end(m_hovered_tiles_indices))
+                              {
+                                   return options_regular;
+                              }
+                              return options_hover;
+                         }();
+
+                         (void)create_tile_button(m_map_sprite, tile, options);
+                         // Ensure subsequent buttons are on the same row
+                         std::string strtooltip = fmt::format("Index {}\n{}", index, tile);
+                         tool_tip(strtooltip);
+                    }
+                    // Break the line after finishing a conflict group
+
+                    ImGui::EndTable();
                }
-               // Break the line after finishing a conflict group
-               ImGui::NewLine();
           }
      });
 }
@@ -879,23 +966,44 @@ void gui::hovered_tiles_panel()
           {
                return;
           }
+          if (!m_mouse_positions.mouse_enabled)
+          {
+               return;
+          }
           if (std::ranges::empty(m_hovered_tiles_indices))
           {
                return;
           }
-          static constexpr int columns = 8;
-          static_assert(columns % 2 == 0);
-          if (!ImGui::BeginTable("##table", columns))
+          static constexpr float buttonWidth   = 32.F;
+          static constexpr float buttonSpacing = 12.F;
+          const auto             columns       = get_count_per_row(buttonWidth, buttonSpacing);
+
+          if (!ImGui::BeginTable(
+                "##table", columns, ImGuiTableFlags_SizingStretchProp | ImGuiTableFlags_NoPadOuterX | ImGuiTableFlags_NoPadInnerX))
           {
                return;
           }
+          const auto &conflicts_obj = m_map_sprite->working_conflicts();
+          const bool  hovering_over_conflict =
+            are_indices_in_both_ranges(m_hovered_tiles_indices, conflicts_obj.range_of_conflicts_flattened());
+
+          const auto options = [&]() -> tile_button_options {
+               sf::Vector2f size = { buttonWidth, buttonWidth };
+               if (hovering_over_conflict)
+               {
+                    return { .size = size, .color = ImVec4ToSFColor(ImGui::GetStyle().Colors[ImGuiCol_ButtonHovered]) };
+               }
+               return { .size = size };
+          }();
+
           for (const auto index : m_hovered_tiles_indices)
           {
+               assert(std::cmp_less(index, std::ranges::size(front_tiles)) && "index out of range!");
                ImGui::TableNextColumn();
                format_imgui_text("{:4}", index);
                ImGui::TableNextColumn();
 
-               (void)create_tile_button(m_map_sprite, front_tiles[index]);
+               (void)create_tile_button(m_map_sprite, front_tiles[index], options);
           }
           ImGui::EndTable();
      });
