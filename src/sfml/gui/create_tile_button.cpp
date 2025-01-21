@@ -1,6 +1,6 @@
 #include "create_tile_button.hpp"
 static constexpr auto toImColor = [](const sf::Color &c) -> ImColor {
-     return ImColor(static_cast<int>(c.r), static_cast<int>(c.g), static_cast<int>(c.b), static_cast<int>(c.a));
+     return {static_cast<int>(c.r), static_cast<int>(c.g), static_cast<int>(c.b), static_cast<int>(c.a)};
 };
 using namespace open_viii::graphics::background;
 template<is_tile tileT>
@@ -55,17 +55,17 @@ template<is_tile tileT>
      int pop_var_count = {};
      if (options.color.has_value())
      {
-          ImGui::PushStyleColor(ImGuiCol_Button, ImVec4{toImColor(options.color.value())});
+          ImGui::PushStyleColor(ImGuiCol_Button, ImVec4{ toImColor(options.color.value()) });
           ++pop_count;
      }
      if (options.hover_color.has_value())
      {
-          ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4{toImColor(options.hover_color.value())});
+          ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4{ toImColor(options.hover_color.value()) });
           ++pop_count;
      }
      if (options.active_color.has_value())
      {
-          ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4{toImColor(options.active_color.value())});
+          ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4{ toImColor(options.active_color.value()) });
           ++pop_count;
      }
      if (options.padding_size.has_value())
@@ -96,3 +96,61 @@ template<is_tile tileT>
 template [[nodiscard]] bool fme::create_tile_button(std::weak_ptr<const fme::map_sprite>, const Tile1 &, const tile_button_options &);
 template [[nodiscard]] bool fme::create_tile_button(std::weak_ptr<const fme::map_sprite>, const Tile2 &, const tile_button_options &);
 template [[nodiscard]] bool fme::create_tile_button(std::weak_ptr<const fme::map_sprite>, const Tile3 &, const tile_button_options &);
+
+
+[[nodiscard]] bool          fme::create_color_button(const tile_button_options &options)
+{
+     // needs to be in a std::shared_ptr to be returned from a lambda. it has no move or copy operations. Also it won't just use copy
+     // elision.
+     static std::shared_ptr<sf::RenderTexture> transparent_texture = []() {
+          auto t = std::make_shared<sf::RenderTexture>();
+          t->create(1, 1);
+          t->clear(sf::Color::Transparent);
+          t->display();
+          return t;
+     }();
+
+     if (!transparent_texture)
+     {
+          spdlog::error("{}", "transparent_texture is null");
+          return false;
+     }
+
+     int pop_count     = {};
+     int pop_var_count = {};
+     if (options.color.has_value())
+     {
+          ImGui::PushStyleColor(ImGuiCol_Button, ImVec4{ toImColor(options.color.value()) });
+          ++pop_count;
+     }
+     if (options.hover_color.has_value())
+     {
+          ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4{ toImColor(options.hover_color.value()) });
+          ++pop_count;
+     }
+     if (options.active_color.has_value())
+     {
+          ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4{ toImColor(options.active_color.value()) });
+          ++pop_count;
+     }
+     if (options.padding_size.has_value())
+     {
+          ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, options.padding_size.value());
+          ++pop_var_count;
+     }
+
+     // Use scope_guard to safely pop style colors and variables
+     const auto pop_style = scope_guard{ [&]() {
+          if (pop_count > 0)
+               ImGui::PopStyleColor(pop_count);
+          if (pop_var_count > 0)
+               ImGui::PopStyleVar(pop_var_count);
+     } };
+     const auto pop_id = PushPopID();
+     return ImGui::ImageButton(
+       "##color_button",
+       *transparent_texture.get(),
+       options.size == sf::Vector2f{} ? sf::Vector2f{ ImGui::GetTextLineHeight(), ImGui::GetTextLineHeight() } : options.size,
+       options.background_color,
+       options.tint_color);
+}

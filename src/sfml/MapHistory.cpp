@@ -96,7 +96,7 @@ static std::vector<PupuID> make_unique_pupu(const std::vector<PupuID> &input)
  * @param map The map containing the tiles to process.
  * @return A `source_tile_conflicts` object representing the tile conflicts in the map.
  */
-[[maybe_unused]] static source_tile_conflicts calculate_conflicts(const map_t &map)
+[[nodiscard]] static source_tile_conflicts calculate_conflicts(const map_t &map)
 {
      return map.visit_tiles([](const auto &tiles) {
           source_tile_conflicts stc{};
@@ -104,6 +104,49 @@ static std::vector<PupuID> make_unique_pupu(const std::vector<PupuID> &input)
                stc(tile).push_back(std::ranges::distance(&tiles.front(), &tile));
           });
           return stc;
+     });
+}
+
+
+/**
+ * @brief Populates a map with the count of similar tiles within a given range of tile indices.
+ *
+ * This function traverses a range of tile indices within the map and counts the frequency of normalized tiles.
+ * The function returns a map where each key is a normalized tile, and the corresponding value is the count of
+ * its occurrences within the specified range of tile indices.
+ *
+ * The count of tiles is incremented for each occurrence of a normalized tile in the provided range.
+ * This is useful for identifying tiles that appear multiple times in the range, potentially for highlighting
+ * or providing additional feedback to the user.
+ *
+ * @param map The map object that contains the tiles to be processed.
+ * @param range_of_tile_indices A range of indices specifying the tiles to be counted. The range can be any
+ *        iterable sequence of indices that corresponds to the tiles within the map.
+ *
+ * @return A map of `normalized_source_tile` to `std::uint8_t` where the key is the normalized tile and the
+ *         value is the count of its occurrences within the specified range of tile indices.
+ *
+ * @note This function relies on `std::ranges::advance` to retrieve the tile at each index, ensuring that the
+ *       correct tile is processed for each index in the given range.
+ */
+[[nodiscard]] static std::map<normalized_source_tile, std::uint8_t>
+  populate_similar_tile_count(const map_t &map, std::ranges::range auto &&range_of_tile_indices)
+{
+
+     return map.visit_tiles([&](const auto &tiles) {
+          std::map<normalized_source_tile, std::uint8_t> ret = {};
+          for (const auto index : range_of_tile_indices)
+          {
+               assert(std::cmp_less(index, std::ranges::size(tiles)) && "index out of range!");
+               const auto &tile = [&]() {
+                    auto begin = std::ranges::cbegin(tiles);
+                    std::ranges::advance(begin, index);
+                    return *begin;
+               }();
+               // Increment the count for the current tile (default initializes to 0 if not found)
+               ++ret[tile];
+          }
+          return ret;
      });
 }
 }// namespace ff_8
@@ -117,6 +160,7 @@ ff_8::MapHistory::MapHistory(map_t map)
   , m_working_unique_pupu(m_original_unique_pupu)
   , m_original_conflicts(calculate_conflicts(m_original))
   , m_working_conflicts(calculate_conflicts(m_original))
+  , m_working_similar_counts(populate_similar_tile_count(m_working, m_working_conflicts.range_of_conflicts_flattened()))
 {
 }
 
@@ -163,6 +207,7 @@ void ff_8::MapHistory::refresh_original_conflicts() const
 void ff_8::MapHistory::refresh_working_conflicts() const
 {
      m_working_conflicts = calculate_conflicts(m_working);
+     m_working_similar_counts = populate_similar_tile_count(m_working, m_working_conflicts.range_of_conflicts_flattened());
 }
 
 const std::vector<ff_8::PupuID> &ff_8::MapHistory::original_pupu() const noexcept
@@ -193,6 +238,11 @@ const ff_8::source_tile_conflicts &ff_8::MapHistory::original_conflicts() const 
 const ff_8::source_tile_conflicts &ff_8::MapHistory::working_conflicts() const noexcept
 {
      return m_working_conflicts;
+}
+
+const ff_8::MapHistory::nst_map &ff_8::MapHistory::working_similar_counts() const noexcept
+{
+     return m_working_similar_counts;
 }
 
 std::size_t ff_8::MapHistory::count() const

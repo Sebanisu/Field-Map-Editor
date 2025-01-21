@@ -71,5 +71,6 @@ struct tile_button_options
 
 template<open_viii::graphics::background::is_tile tileT>
 [[nodiscard]] bool create_tile_button(std::weak_ptr<const map_sprite> map, const tileT &tile, const tile_button_options & options = {});
+[[nodiscard]] bool create_color_button(const tile_button_options &options = {});
 }// namespace fme
 #endif /* DF4C3AF7_C3A6_4F62_8336_B0EF72752E11 */

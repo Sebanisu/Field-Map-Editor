@@ -4,6 +4,7 @@
 #include "gui.hpp"
 #include "as_string.hpp"
 #include "collapsing_tile_info.hpp"
+#include "colors.hpp"
 #include "create_tile_button.hpp"
 #include "EmptyStringIterator.hpp"
 #include "gui_labels.hpp"
@@ -336,11 +337,71 @@ void gui::tile_conflicts_panel()
 
           const auto            &conflicts          = m_map_sprite->working_conflicts();
           auto                   range_of_conflicts = conflicts.range_of_conflicts();
+          const auto            &similar_counts     = m_map_sprite->working_similar_counts();
           const auto             pop_table_id       = PushPopID();
-
+          // Default hover options for ImGuiCol_ButtonHovered
           const auto             options_hover      = tile_button_options{ .size = { buttonWidth, buttonWidth },
                                                                            .color = ImVec4ToSFColor(ImGui::GetStyle().Colors[ImGuiCol_ButtonHovered]) };
+
+          // Default regular options for ImGuiCol_Button
           const auto             options_regular    = tile_button_options{ .size = { buttonWidth, buttonWidth } };
+
+          // New options for when the count is greater than 1 (green tint)
+          const auto             options_highlighted =
+            tile_button_options{ .size         = { buttonWidth, buttonWidth },
+                                 .color        = ImVec4ToSFColor(ImVec4(0.26f, 0.98f, 0.26f, 0.40f)),// Green tint instead of blue
+                                 .hover_color  = ImVec4ToSFColor(ImVec4(0.26f, 0.98f, 0.26f, 1.00f)),
+                                 .active_color = ImVec4ToSFColor(ImVec4(0.06f, 0.53f, 0.06f, 1.00f))
+
+            };
+
+          // New hover options for highlighted tiles (green hover)
+          const auto options_highlighted_hover = tile_button_options{
+               .size = { buttonWidth, buttonWidth }, .color = ImVec4ToSFColor(ImVec4(0.26f, 0.98f, 0.26f, 1.00f))// Green hover tint
+          };
+
+          ImGui::ColorButton(
+            "##ButtonRegular",
+            ImGui::GetStyle().Colors[ImGuiCol_Button],
+            ImGuiColorEditFlags_NoTooltip | ImGuiColorEditFlags_NoDragDrop | ImGuiColorEditFlags_AlphaPreview);
+          tool_tip("Button Color - Conflicts with different tiles.");
+          ImGui::SameLine();
+          ImGui::ColorButton(
+            "##ButtonHovered",
+            ImGui::GetStyle().Colors[ImGuiCol_ButtonHovered],
+            ImGuiColorEditFlags_NoTooltip | ImGuiColorEditFlags_NoDragDrop);
+
+          tool_tip("Button Hover Color - Conflicts with different tiles.");
+          ImGui::SameLine();
+          ImGui::ColorButton(
+            "##ButtonActive",
+            ImGui::GetStyle().Colors[ImGuiCol_ButtonActive],
+            ImGuiColorEditFlags_NoTooltip | ImGuiColorEditFlags_NoDragDrop);
+          tool_tip("Button Active Color - Conflicts with different tiles.");
+          ImGui::SameLine();
+          ImGui::ColorButton(
+            "##ButtonRegularGreen",
+            ImVec4(0.26f, 0.98f, 0.26f, 0.40f),
+            ImGuiColorEditFlags_NoTooltip | ImGuiColorEditFlags_NoDragDrop | ImGuiColorEditFlags_AlphaPreview);
+          tool_tip("Button Color - Conflicts with similar tiles, or duplicate tiles.");
+          ImGui::SameLine();
+          ImGui::ColorButton(
+            "##ButtonHoveredGreen", ImVec4(0.26f, 0.98f, 0.26f, 1.00f), ImGuiColorEditFlags_NoTooltip | ImGuiColorEditFlags_NoDragDrop);
+          tool_tip("Button Hover Color - Conflicts with similar tiles, or duplicate tiles.");
+          ImGui::SameLine();
+          ImGui::ColorButton(
+            "##ButtonActiveGreen", ImVec4(0.06f, 0.53f, 0.06f, 1.00f), ImGuiColorEditFlags_NoTooltip | ImGuiColorEditFlags_NoDragDrop);
+          tool_tip("Button Active Color - Conflicts with similar tiles, or duplicate tiles.");
+
+
+          static std::shared_ptr<sf::RenderTexture> testTexture = []() {
+               auto t = std::make_shared<sf::RenderTexture>();
+               t->create(1, 1);
+               t->clear(sf::Color::Transparent);
+               t->display();
+               return t;
+          }();
+          ImGui::ImageButton("##Test", *testTexture.get(), sf::Vector2f(50, 50));
 
           for (const auto &conflict_group : range_of_conflicts)
           {
@@ -366,8 +427,7 @@ void gui::tile_conflicts_panel()
                      ImGuiTableFlags_SizingStretchProp | ImGuiTableFlags_NoPadOuterX | ImGuiTableFlags_NoPadInnerX))
                {
 
-
-                    for (const auto &[i, index] : conflict_group | std::ranges::views::enumerate)
+                    for (const auto index : conflict_group)
                     {
                          assert(std::cmp_less(index, std::ranges::size(tiles)) && "index out of range!");
 
@@ -382,21 +442,24 @@ void gui::tile_conflicts_panel()
                               std::ranges::advance(begin, index);
                               return *begin;
                          }();
+                         assert(similar_counts.contains(tile) && "Tile wasn't in the map");
+                         const auto counts  = similar_counts.at(tile);
 
                          const auto options = [&]() {
+                              const bool over_1 = std::cmp_greater(counts, 1);
                               if (
                                 std::ranges::empty(m_hovered_tiles_indices)
                                 || std::ranges::find(m_hovered_tiles_indices, static_cast<std::size_t>(index))
                                      == std::ranges::end(m_hovered_tiles_indices))
                               {
-                                   return options_regular;
+                                   return over_1 ? options_highlighted : options_regular;
                               }
-                              return options_hover;
+                              return over_1 ? options_highlighted_hover : options_hover;
                          }();
 
                          (void)create_tile_button(m_map_sprite, tile, options);
                          // Ensure subsequent buttons are on the same row
-                         std::string strtooltip = fmt::format("Index {}\n{}", index, tile);
+                         std::string strtooltip = fmt::format("Index {}\n{}\nSimilar Counts {}", index, tile, counts);
                          tool_tip(strtooltip);
                     }
                     // Break the line after finishing a conflict group
@@ -798,7 +861,7 @@ void gui::draw_map_grid_lines_for_tiles(const ImVec2 &screen_pos, const sf::Vect
                       screen_pos.y + (static_cast<float>(tile.source_y()) * scale * static_cast<float>(m_map_sprite->get_map_scale()));
                     const float tile_size = 16.0f * scale * static_cast<float>(m_map_sprite->get_map_scale());
                     ImGui::GetWindowDrawList()->AddRect(
-                      ImVec2(x, y), ImVec2(x + tile_size, y + tile_size), IM_COL32(255, 0, 0, 255), {}, {},3.F);
+                      ImVec2(x, y), ImVec2(x + tile_size, y + tile_size), IM_COL32(255, 0, 0, 255), {}, {}, 3.F);
                }
           });
      }

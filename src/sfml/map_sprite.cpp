@@ -1060,6 +1060,12 @@ const ff_8::source_tile_conflicts &map_sprite::working_conflicts() const
      return m_map_group.maps.working_conflicts();
 }
 
+const ff_8::MapHistory::nst_map &map_sprite::working_similar_counts() const{
+          m_map_group.maps.refresh_working_all();
+     return m_map_group.maps.working_similar_counts();
+}
+
+
 // template<typename... T>
 // requires(sizeof...(T) == 6U) bool map_sprite::draw_drop_downs()
 //{

@@ -106,6 +106,7 @@ struct [[nodiscard]] map_sprite final
      [[nodiscard]] const std::vector<ff_8::PupuID>      &working_pupu() const;
      [[nodiscard]] const ff_8::source_tile_conflicts    &original_conflicts() const;
      [[nodiscard]] const ff_8::source_tile_conflicts    &working_conflicts() const;
+     [[nodiscard]] const ff_8::MapHistory::nst_map      &working_similar_counts() const;
      [[nodiscard]] std::string                           map_filename() const;
      [[nodiscard]] bool                                  fail() const;
      [[nodiscard]] std::uint32_t                         width() const;
@@ -349,7 +350,7 @@ struct [[nodiscard]] map_sprite final
           {
                for (decltype(auto) current : zipped_range | v::reverse)
                {
-                    //spdlog::info(" {} -- {} -- {} ", std::get<0>(current), std::get<1>(current), std::get<2>(current));
+                    // spdlog::info(" {} -- {} -- {} ", std::get<0>(current), std::get<1>(current), std::get<2>(current));
                     std::apply(lambda, std::forward<decltype(current)>(current));
                }
           }
@@ -357,7 +358,7 @@ struct [[nodiscard]] map_sprite final
           {
                for (decltype(auto) current : zipped_range)
                {
-                    //spdlog::info(" {} -- {} -- {} ", std::get<0>(current), std::get<1>(current), std::get<2>(current));
+                    // spdlog::info(" {} -- {} -- {} ", std::get<0>(current), std::get<1>(current), std::get<2>(current));
                     std::apply(lambda, std::forward<decltype(current)>(current));
                }
           }

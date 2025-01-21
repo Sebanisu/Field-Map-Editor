@@ -38,7 +38,7 @@ namespace ff_8
  */
 class [[nodiscard]] source_tile_conflicts final
 {
-     public:
+public:
      /**
       * @brief Represents a 3D location in the grid.
       *
@@ -174,7 +174,6 @@ class [[nodiscard]] source_tile_conflicts final
           assert(std::cmp_less(t, T_SIZE) && "t must be less than the maximum number of texture pages");
      }
 
-   public:
      /**
       * @brief Reverses an index to calculate its tile location.
       *
@@ -200,6 +199,9 @@ class [[nodiscard]] source_tile_conflicts final
           l.x                   = static_cast<std::uint8_t>((remaining % Y_SIZE) * X_SIZE);// Calculate x by reversing the division
           return l;
      }
+
+   public:
+     
 
 #if defined(__cpp_multidimensional_subscript) && __cpp_multidimensional_subscript >= 202110L
      /**

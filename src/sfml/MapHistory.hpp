@@ -4,13 +4,14 @@
 
 #ifndef FIELD_MAP_EDITOR_MAPHISTORY_HPP
 #define FIELD_MAP_EDITOR_MAPHISTORY_HPP
+#include "normalized_source_tile.hpp"
 #include "PupuID.hpp"
 #include "scope_guard.hpp"
 #include "source_tile_conflicts.hpp"
 #include "UniquifyPupu.hpp"
+#include <map>
 #include <open_viii/graphics/background/Map.hpp>
 #include <spdlog/spdlog.h>
-
 /**
  * @namespace ff_8
  * @brief Contains classes and utilities specific to the Final Fantasy VIII field map editor.
@@ -37,6 +38,13 @@ class [[nodiscard]] MapHistory
           original,
           working
      };
+     
+     /**
+      * @typedef map_t
+      * @brief Alias for the `Map` type from `open_viii::graphics::background`.
+      */
+     using map_t                                          = open_viii::graphics::background::Map;
+     using nst_map                                        = std::map<open_viii::graphics::background::normalized_source_tile, std::uint8_t>;
 
    private:
      /**
@@ -49,7 +57,7 @@ class [[nodiscard]] MapHistory
       *
       * @note This flag is used to track modifications to the original tile data.
       */
-     mutable bool m_original_changed                          = { false };
+     mutable bool m_original_changed                      = { false };
 
      /**
       * @brief Indicates whether the working state has been changed.
@@ -61,61 +69,64 @@ class [[nodiscard]] MapHistory
       *
       * @note This flag is used to track modifications to the working tile data.
       */
-     mutable bool m_working_changed                           = { false };
+     mutable bool m_working_changed                       = { false };
 
-     /**
-      * @typedef map_t
-      * @brief Alias for the `Map` type from `open_viii::graphics::background`.
-      */
-     using map_t                                              = open_viii::graphics::background::Map;
 
 
      // Current states
      /**
       * @brief The active original map state.
       */
-     map_t                         m_original                 = {};
+     map_t                         m_original             = {};
 
 
      /**
       * @brief The active working map state.
       */
-     map_t                         m_working                  = {};
+     map_t                         m_working              = {};
 
      // Corresponding PupuIDs
      /**
       * @brief PupuID list corresponding to the original map state.
       */
-     mutable std::vector<PupuID>   m_original_pupu            = {};
+     mutable std::vector<PupuID>   m_original_pupu        = {};
 
      /**
       * @brief PupuID list corresponding to the working map state.
       */
-     mutable std::vector<PupuID>   m_working_pupu             = {};
+     mutable std::vector<PupuID>   m_working_pupu         = {};
 
 
      // Corresponding PupuIDs
      /**
       * @brief Unique PupuID list corresponding to the original map state.
       */
-     mutable std::vector<PupuID>   m_original_unique_pupu     = {};
+     mutable std::vector<PupuID>   m_original_unique_pupu = {};
 
      /**
       * @brief Unique PupuID list corresponding to the working map state.
       */
-     mutable std::vector<PupuID>   m_working_unique_pupu      = {};
+     mutable std::vector<PupuID>   m_working_unique_pupu  = {};
 
 
      // Corresponding Source Conflicts
      /**
       * @brief Source Conflict list corresponding to the original map state.
       */
-     mutable source_tile_conflicts m_original_conflicts       = {};
+     mutable source_tile_conflicts m_original_conflicts   = {};
 
      /**
       * @brief Source Conflict list corresponding to the working map state.
       */
-     mutable source_tile_conflicts m_working_conflicts        = {};
+     mutable source_tile_conflicts m_working_conflicts    = {};
+
+
+     /**
+      * @brief Made from Source Conflict list corresponding to the working map state. m_working_conflicts.  We normalize a tile and then see
+      * what the count is. We're using this to know if a tile is being used in more than one location. Mostly just to high light it
+      * differently. Or provide a user with information.
+      */
+     mutable nst_map               m_working_similar_counts   = {};
 
 
      // Consolidated history and tracking
@@ -460,6 +471,20 @@ class [[nodiscard]] MapHistory
       * @return A constant reference to the current `source_tile_conflicts` object.
       */
      [[nodiscard]] const source_tile_conflicts &working_conflicts() const noexcept;
+
+     /**
+      * @brief Returns a constant reference to the map holding the count of similar tiles.
+      *
+      * This getter provides access to the `m_working_similar_counts` map, which contains the frequency of normalized
+      * tiles in the working map state. The map is of type `std::map<normalized_source_tile, std::uint8_t>`, where
+      * the key represents a normalized tile and the value represents how many times it appears.
+      *
+      * The function is marked as `noexcept`, meaning it does not throw any exceptions, and is marked as `[[nodiscard]]`
+      * to indicate that the return value should not be ignored.
+      *
+      * @return A constant reference to the map containing the count of similar tiles.
+      */
+     [[nodiscard]] const nst_map               &working_similar_counts() const noexcept;
 
      /**
       * @brief Retrieves the original tile conflicts.
