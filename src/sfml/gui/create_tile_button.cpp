@@ -1,7 +1,4 @@
 #include "create_tile_button.hpp"
-static constexpr auto toImColor = [](const sf::Color &c) -> ImColor {
-     return {static_cast<int>(c.r), static_cast<int>(c.g), static_cast<int>(c.b), static_cast<int>(c.a)};
-};
 using namespace open_viii::graphics::background;
 template<is_tile tileT>
 [[nodiscard]] bool
@@ -53,19 +50,19 @@ template<is_tile tileT>
 
      int pop_count     = {};
      int pop_var_count = {};
-     if (options.color.has_value())
+     if (options.button_color.has_value())
      {
-          ImGui::PushStyleColor(ImGuiCol_Button, ImVec4{ toImColor(options.color.value()) });
+          ImGui::PushStyleColor(ImGuiCol_Button, options.button_color.value());
           ++pop_count;
      }
-     if (options.hover_color.has_value())
+     if (options.button_hover_color.has_value())
      {
-          ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4{ toImColor(options.hover_color.value()) });
+          ImGui::PushStyleColor(ImGuiCol_ButtonHovered, options.button_hover_color.value());
           ++pop_count;
      }
-     if (options.active_color.has_value())
+     if (options.button_active_color.has_value())
      {
-          ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4{ toImColor(options.active_color.value()) });
+          ImGui::PushStyleColor(ImGuiCol_ButtonActive, options.button_active_color.value());
           ++pop_count;
      }
      if (options.padding_size.has_value())
@@ -118,19 +115,19 @@ template [[nodiscard]] bool fme::create_tile_button(std::weak_ptr<const fme::map
 
      int pop_count     = {};
      int pop_var_count = {};
-     if (options.color.has_value())
+     if (options.button_color.has_value())
      {
-          ImGui::PushStyleColor(ImGuiCol_Button, ImVec4{ toImColor(options.color.value()) });
+          ImGui::PushStyleColor(ImGuiCol_Button, options.button_color.value());
           ++pop_count;
      }
-     if (options.hover_color.has_value())
+     if (options.button_hover_color.has_value())
      {
-          ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4{ toImColor(options.hover_color.value()) });
+          ImGui::PushStyleColor(ImGuiCol_ButtonHovered, options.button_hover_color.value());
           ++pop_count;
      }
-     if (options.active_color.has_value())
+     if (options.button_active_color.has_value())
      {
-          ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4{ toImColor(options.active_color.value()) });
+          ImGui::PushStyleColor(ImGuiCol_ButtonActive, options.button_active_color.value());
           ++pop_count;
      }
      if (options.padding_size.has_value())
