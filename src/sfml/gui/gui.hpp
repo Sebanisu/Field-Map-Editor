@@ -106,6 +106,7 @@ struct gui
      void                        draw_window();
      void                        update_hover_and_mouse_button_status_for_map(const ImVec2 &img_start, const float scale);
      void         draw_map_grid_lines_for_tiles(const ImVec2 &screen_pos, const sf::Vector2f &scaled_size, const float scale);
+     void         draw_map_grid_for_conflict_tiles(const ImVec2 &screen_pos, const float scale);
      void         draw_map_grid_lines_for_texture_page(const ImVec2 &screen_pos, const sf::Vector2f &scaled_size, const float scale);
      void         draw_mim_grid_lines_for_tiles(const ImVec2 &screen_pos, const sf::Vector2f &scaled_size, const float scale);
      void         draw_mim_grid_lines_for_texture_page(const ImVec2 &screen_pos, const sf::Vector2f &scaled_size, const float scale);

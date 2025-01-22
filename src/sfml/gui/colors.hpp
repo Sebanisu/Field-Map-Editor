@@ -197,6 +197,16 @@ struct [[nodiscard]] color
      }
 
      /**
+      * @brief Converts the color to a std::uint32_t.
+      *
+      * @return An std::uint32_t object representing the color.
+      */
+     [[nodiscard]] explicit constexpr operator std::uint32_t() const noexcept
+     {
+          return IM_COL32(r, g, b, a);// std::bit_cast<std::uint32_t>(*this);
+     }
+
+     /**
       * @brief Converts the color to an ImColor object.
       *
       * @return An ImColor object representing the color.
@@ -257,6 +267,11 @@ struct [[nodiscard]] color
           const float factor = 1.0f + fadeValue;// The factor by which the color channels will be adjusted
           return { r, g, b, static_cast<std::uint8_t>(std::clamp(a * factor, min_f<float>, max_f<float>)) };
      }
+
+     [[nodiscard]] constexpr color opaque() const noexcept
+     {
+          return { r, g, b };
+     }
 };
 
 struct colors
@@ -304,62 +319,62 @@ struct colors
           return s;
      }();
 
-     static constexpr color        Red                   = { 255, 0, 0 };//!< Fully red.
-     static constexpr color        Green                 = { 0, 255, 0 };//!< Fully green.
-     static constexpr color        Blue                  = { 0, 0, 255 };//!< Fully blue.
-     static constexpr color        White                 = { 255, 255, 255 };//!< Fully white.
-     static constexpr color        Black                 = { 0, 0, 0 };//!< Fully black.
-     static constexpr color        Transparent           = { 0, 0, 0, 0 };//!< Fully transparent.
-     static constexpr color        Yellow                = { 255, 255, 0 };//!< Fully yellow.
-     static constexpr color        Cyan                  = { 0, 255, 255 };//!< Fully cyan.
-     static constexpr color        Magenta               = { 255, 0, 255 };//!< Fully magenta.
-     static constexpr color        Gray                  = { 128, 128, 128 };//!< Neutral gray.
-     static constexpr color        LightGray             = { 192, 192, 192 };//!< Light gray.
-     static constexpr color        DarkGray              = { 64, 64, 64 };//!< Dark gray.
-     static constexpr color        Orange                = { 255, 165, 0 };//!< Orange color.
-     static constexpr color        Purple                = { 128, 0, 128 };//!< Purple color.
-     static constexpr color        Pink                  = { 255, 192, 203 };//!< Pink color.
-     static constexpr color        Brown                 = { 165, 42, 42 };//!< Brown color.
+     static constexpr color    Red                   = { 255, 0, 0 };//!< Fully red.
+     static constexpr color    Green                 = { 0, 255, 0 };//!< Fully green.
+     static constexpr color    Blue                  = { 0, 0, 255 };//!< Fully blue.
+     static constexpr color    White                 = { 255, 255, 255 };//!< Fully white.
+     static constexpr color    Black                 = { 0, 0, 0 };//!< Fully black.
+     static constexpr color    Transparent           = { 0, 0, 0, 0 };//!< Fully transparent.
+     static constexpr color    Yellow                = { 255, 255, 0 };//!< Fully yellow.
+     static constexpr color    Cyan                  = { 0, 255, 255 };//!< Fully cyan.
+     static constexpr color    Magenta               = { 255, 0, 255 };//!< Fully magenta.
+     static constexpr color    Gray                  = { 128, 128, 128 };//!< Neutral gray.
+     static constexpr color    LightGray             = { 192, 192, 192 };//!< Light gray.
+     static constexpr color    DarkGray              = { 64, 64, 64 };//!< Dark gray.
+     static constexpr color    Orange                = { 255, 165, 0 };//!< Orange color.
+     static constexpr color    Purple                = { 128, 0, 128 };//!< Purple color.
+     static constexpr color    Pink                  = { 255, 192, 203 };//!< Pink color.
+     static constexpr color    Brown                 = { 165, 42, 42 };//!< Brown color.
 
      // darkstyle imgui color blue tint
-     static inline const color     Button                = color{ DarkStyle.Colors[ImGuiCol_Button] };
-     static inline const color     ButtonHovered         = color{ DarkStyle.Colors[ImGuiCol_ButtonHovered] };
-     static inline const color     ButtonActive          = color{ DarkStyle.Colors[ImGuiCol_ButtonActive] };
+     static inline const color Button                = color{ DarkStyle.Colors[ImGuiCol_Button] };
+     static inline const color ButtonHovered         = color{ DarkStyle.Colors[ImGuiCol_ButtonHovered] };
+     static inline const color ButtonActive          = color{ DarkStyle.Colors[ImGuiCol_ButtonActive] };
 
      // Green tint
-     static constexpr color ButtonGreen           = color{ ImVec4(0.26f, 0.98f, 0.26f, 0.40f) };
-     static constexpr color ButtonGreenHovered    = color{ ImVec4(0.26f, 0.98f, 0.26f, 1.00f) };
-     static constexpr color ButtonGreenActive     = color{ ImVec4(0.06f, 0.53f, 0.06f, 1.00f) };
+     static constexpr color    ButtonGreen           = color{ ImVec4(0.26f, 0.98f, 0.26f, 0.40f) };
+     static constexpr color    ButtonGreenHovered    = color{ ImVec4(0.26f, 0.98f, 0.26f, 1.00f) };
+     static constexpr color    ButtonGreenActive     = color{ ImVec4(0.06f, 0.53f, 0.06f, 1.00f) };
 
      // Red tint
-     static constexpr color ButtonRed             = color{ ImVec4(0.98f, 0.26f, 0.26f, 0.40f) };
-     static constexpr color ButtonRedHovered      = color{ ImVec4(0.98f, 0.26f, 0.26f, 1.00f) };
-     static constexpr color ButtonRedActive       = color{ ImVec4(0.53f, 0.06f, 0.06f, 1.00f) };
+     static constexpr color    ButtonRed             = color{ ImVec4(0.98f, 0.26f, 0.26f, 0.40f) };
+     static constexpr color    ButtonRedHovered      = color{ ImVec4(0.98f, 0.26f, 0.26f, 1.00f) };
+     static constexpr color    ButtonRedActive       = color{ ImVec4(0.53f, 0.06f, 0.06f, 1.00f) };
 
      // Dark Blue tint
-     static constexpr color ButtonDarkBlue        = color{ ImVec4(0.26f, 0.26f, 0.59f, 0.40f) };
-     static constexpr color ButtonDarkBlueHovered = color{ ImVec4(0.26f, 0.26f, 0.59f, 1.00f) };
-     static constexpr color ButtonDarkBlueActive  = color{ ImVec4(0.06f, 0.06f, 0.53f, 1.00f) };
+     static constexpr color    ButtonDarkBlue        = color{ ImVec4(0.26f, 0.26f, 0.59f, 0.40f) };
+     static constexpr color    ButtonDarkBlueHovered = color{ ImVec4(0.26f, 0.26f, 0.59f, 1.00f) };
+     static constexpr color    ButtonDarkBlueActive  = color{ ImVec4(0.06f, 0.06f, 0.53f, 1.00f) };
 
      // Yellow tint
-     static constexpr color ButtonYellow          = color{ ImVec4(0.98f, 0.98f, 0.26f, 0.40f) };
-     static constexpr color ButtonYellowHovered   = color{ ImVec4(0.98f, 0.98f, 0.26f, 1.00f) };
-     static constexpr color ButtonYellowActive    = color{ ImVec4(0.53f, 0.53f, 0.06f, 1.00f) };
+     static constexpr color    ButtonYellow          = color{ ImVec4(0.98f, 0.98f, 0.26f, 0.40f) };
+     static constexpr color    ButtonYellowHovered   = color{ ImVec4(0.98f, 0.98f, 0.26f, 1.00f) };
+     static constexpr color    ButtonYellowActive    = color{ ImVec4(0.53f, 0.53f, 0.06f, 1.00f) };
 
      // Orange tint
-     static constexpr color ButtonOrange          = color{ ImVec4(0.98f, 0.59f, 0.26f, 0.40f) };
-     static constexpr color ButtonOrangeHovered   = color{ ImVec4(0.98f, 0.59f, 0.26f, 1.00f) };
-     static constexpr color ButtonOrangeActive    = color{ ImVec4(0.53f, 0.26f, 0.06f, 1.00f) };
+     static constexpr color    ButtonOrange          = color{ ImVec4(0.98f, 0.59f, 0.26f, 0.40f) };
+     static constexpr color    ButtonOrangeHovered   = color{ ImVec4(0.98f, 0.59f, 0.26f, 1.00f) };
+     static constexpr color    ButtonOrangeActive    = color{ ImVec4(0.53f, 0.26f, 0.06f, 1.00f) };
 
      // Pink tint
-     static constexpr color ButtonPink            = color{ ImVec4(0.98f, 0.26f, 0.59f, 0.40f) };
-     static constexpr color ButtonPinkHovered     = color{ ImVec4(0.98f, 0.26f, 0.59f, 1.00f) };
-     static constexpr color ButtonPinkActive      = color{ ImVec4(0.53f, 0.06f, 0.29f, 1.00f) };
+     static constexpr color    ButtonPink            = color{ ImVec4(0.98f, 0.26f, 0.59f, 0.40f) };
+     static constexpr color    ButtonPinkHovered     = color{ ImVec4(0.98f, 0.26f, 0.59f, 1.00f) };
+     static constexpr color    ButtonPinkActive      = color{ ImVec4(0.53f, 0.06f, 0.29f, 1.00f) };
 
      // Tan tint
-     static constexpr color ButtonTan             = color{ ImVec4(0.98f, 0.84f, 0.57f, 0.40f) };
-     static constexpr color ButtonTanHovered      = color{ ImVec4(0.98f, 0.84f, 0.57f, 1.00f) };
-     static constexpr color ButtonTanActive       = color{ ImVec4(0.53f, 0.48f, 0.29f, 1.00f) };
+     static constexpr color    ButtonTan             = color{ ImVec4(0.98f, 0.84f, 0.57f, 0.40f) };
+     static constexpr color    ButtonTanHovered      = color{ ImVec4(0.98f, 0.84f, 0.57f, 1.00f) };
+     static constexpr color    ButtonTanActive       = color{ ImVec4(0.53f, 0.48f, 0.29f, 1.00f) };
 };
 }// namespace fme
 
