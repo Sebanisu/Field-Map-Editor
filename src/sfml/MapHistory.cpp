@@ -149,6 +149,27 @@ static std::vector<PupuID> make_unique_pupu(const std::vector<PupuID> &input)
           return ret;
      });
 }
+// normalized_source_animated_tile
+[[nodiscard]] static std::map<normalized_source_animated_tile, std::uint8_t>
+  populate_animation_tile_count(const map_t &map, std::ranges::range auto &&range_of_tile_indices)
+{
+
+     return map.visit_tiles([&](const auto &tiles) {
+          std::map<normalized_source_animated_tile, std::uint8_t> ret = {};
+          for (const auto index : range_of_tile_indices)
+          {
+               assert(std::cmp_less(index, std::ranges::size(tiles)) && "index out of range!");
+               const auto &tile = [&]() {
+                    auto begin = std::ranges::cbegin(tiles);
+                    std::ranges::advance(begin, index);
+                    return *begin;
+               }();
+               // Increment the count for the current tile (default initializes to 0 if not found)
+               ++ret[tile];
+          }
+          return ret;
+     });
+}
 }// namespace ff_8
 
 ff_8::MapHistory::MapHistory(map_t map)
