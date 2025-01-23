@@ -4,9 +4,9 @@
 #include <imgui.h>
 namespace fme
 {
-void tool_tip(const std::string_view str)
+void tool_tip(const std::string_view str, bool override)
 {
-     if (!ImGui::IsItemHovered())
+     if (!ImGui::IsItemHovered() && !override)
      {
           return;
      }

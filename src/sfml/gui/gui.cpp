@@ -15,6 +15,7 @@
 #include "tool_tip.hpp"
 #include <algorithm>
 #include <cmath>
+//#include <fmt/ranges.h>
 #include <open_viii/paths/Paths.hpp>
 #include <ranges>
 #include <SFML/Window/Mouse.hpp>
@@ -410,9 +411,9 @@ void gui::tile_conflicts_panel()
                          }();
                          assert(similar_counts.contains(tile) && "Tile wasn't in the map");
                          const auto counts  = similar_counts.at(tile);
+                         const bool over_1  = std::cmp_greater(counts, 1);
 
                          const auto options = [&]() {
-                              const bool over_1 = std::cmp_greater(counts, 1);
                               if (over_1 && hovered_similar)
                               {
                                    return options_highlighted_hover;
@@ -687,7 +688,7 @@ void gui::draw_window()
 
           draw_map_grid_lines_for_texture_page(screen_pos, scaled_size, scale);
 
-          draw_map_grid_for_conflict_tiles(screen_pos,scale);
+          draw_map_grid_for_conflict_tiles(screen_pos, scale);
 
           draw_mouse_positions_sprite(scale, screen_pos);
      }
@@ -828,28 +829,74 @@ void gui::draw_map_grid_lines_for_tiles(const ImVec2 &screen_pos, const sf::Vect
 void gui::draw_map_grid_for_conflict_tiles(const ImVec2 &screen_pos, const float scale)
 {
      m_map_sprite->const_visit_working_tiles([&](const auto &tiles) {
-          const auto action = [&](const auto index) {
-               assert(std::cmp_less(index, std::ranges::size(tiles)) && "Index out of Range...");
-               const auto &tile = [&]() {
-                    auto begin = std::ranges::cbegin(tiles);
-                    std::ranges::advance(begin, index);
-                    return *begin;
-               }();
-               const float x = screen_pos.x
-                                    + ((static_cast<float>(tile.source_x()) + (static_cast<float>(tile.texture_id()) * 256.F)) * scale * static_cast<float>(m_map_sprite->get_map_scale()));
-               const float y =
-                 screen_pos.y + (static_cast<float>(tile.source_y()) * scale * static_cast<float>(m_map_sprite->get_map_scale()));
-               const float tile_size = 16.0f * scale * static_cast<float>(m_map_sprite->get_map_scale());
-               ImGui::GetWindowDrawList()->AddRect(
-                 ImVec2(x, y), ImVec2(x + tile_size, y + tile_size), ImU32 {colors::Button.opaque()}, {}, {}, 3.F);
+          const auto &similar_counts = m_map_sprite->working_similar_counts();
 
-                 //todo add hover action using the hovered_indices and change color for if similar counts >1
-          };
           for (const auto indices : m_map_sprite->working_conflicts().range_of_conflicts())
           {
+               const auto action = [&](const auto index) {
+                    assert(std::cmp_less(index, std::ranges::size(tiles)) && "Index out of Range...");
+                    const auto index_to_tile = [&tiles](const auto i) {
+                         auto begin = std::ranges::cbegin(tiles);
+                         std::ranges::advance(begin, i);
+                         return *begin;
+                    };
+                    const auto &tile = index_to_tile(index);
+                    assert(similar_counts.contains(tile) && "Tile wasn't in the map");
+                    const auto  counts = similar_counts.at(tile);
+                    const bool  over_1 = std::cmp_greater(counts, 1);
+
+                    const float x      = [&]() {
+                         if (m_selections->draw_swizzle)
+                         {
+                              return screen_pos.x
+                                    + ((static_cast<float>(tile.source_x()) + (static_cast<float>(tile.texture_id()) * 256.F)) * scale * static_cast<float>(m_map_sprite->get_map_scale()));
+                         }
+                         return screen_pos.x + (static_cast<float>(tile.x()) * scale * static_cast<float>(m_map_sprite->get_map_scale()));
+                    }();
+                    const float y = [&]() {
+                         if (m_selections->draw_swizzle)
+                         {
+                              return screen_pos.y
+                                     + (static_cast<float>(tile.source_y()) * scale * static_cast<float>(m_map_sprite->get_map_scale()));
+                         }
+                         return screen_pos.y + (static_cast<float>(tile.y()) * scale * static_cast<float>(m_map_sprite->get_map_scale()));
+                    }();
+                    const float tile_size = 16.0f * scale * static_cast<float>(m_map_sprite->get_map_scale());
+                    const ImU32 c         = ImU32{ [&]() {
+                         if (
+                           std::ranges::empty(m_hovered_tiles_indices)
+                           || std::ranges::find(m_hovered_tiles_indices, static_cast<std::size_t>(index))
+                                == std::ranges::end(m_hovered_tiles_indices))
+                         {
+                              return over_1 ? colors::ButtonGreen.opaque().fade(-.2F) : colors::Button.opaque().fade(-.2F);
+                         }
+                         if (m_mouse_positions.left)
+                         {
+                              return over_1 ? colors::ButtonGreenActive.opaque().fade(-.2F) : colors::ButtonActive.opaque().fade(-.2F);
+                         }
+
+                         if (m_selections->draw_swizzle)
+                         {
+                              std::string strtooltip = fmt::format("{}", indices | std::ranges::views::transform(index_to_tile));
+                              tool_tip(strtooltip, true);
+                         }
+                         else
+                         {
+                              std::string strtooltip = fmt::format("Index {}\n{}\nSimilar Count: {}", index, tile, counts - 1);
+
+                              tool_tip(strtooltip, true);
+                         }
+                         return over_1 ? colors::ButtonGreenHovered.opaque() : colors::ButtonHovered.opaque();
+                    }() };
+
+                    ImGui::GetWindowDrawList()->AddRect(ImVec2(x, y), ImVec2(x + tile_size, y + tile_size), c, {}, {}, 3.F);
+
+                    // todo add hover action using the hovered_indices and change color for if similar counts >1
+               };
                if (m_selections->draw_swizzle)
-               { //all are drawn in the same spot so we only need to draw one.
+               {// all are drawn in the same spot so we only need to draw one.
                     std::ranges::for_each(indices | std::ranges::views::take(1), action);
+                    //there might be different kinds of conflicts in the same location. but here we're assuming your either one or another. because we can't quite draw all the colors in the same place.
                }
                else
                {

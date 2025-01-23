@@ -7,10 +7,11 @@
 #include "draw_bit_t.hpp"
 #include "gui/draw_mode.hpp"
 #include "gui/gui_labels.hpp"
+#include "normalized_source_tile.hpp"
 #include "tile_sizes.hpp"
 #include <filesystem>
-#include <functional>
 #include <fmt/format.h>
+#include <functional>
 #include <open_viii/graphics/background/BlendModeT.hpp>
 #include <open_viii/graphics/background/Map.hpp>
 #include <open_viii/graphics/BPPT.hpp>
@@ -267,10 +268,11 @@ struct fmt::formatter<open_viii::graphics::BPPT> : fmt::formatter<std::uint32_t>
      }
 };
 
+
 template<open_viii::graphics::background::is_tile tileT>
 struct fmt::formatter<tileT> : fmt::formatter<std::string>
 {
-     // parse is inherited from formatter<string_view>.
+     // parse is inherited from formatter<string>.
      template<typename FormatContext>
      constexpr auto format(const tileT &tile, FormatContext &ctx) const
      {
@@ -317,6 +319,72 @@ struct fmt::formatter<tileT> : fmt::formatter<std::string>
             tile.animation_state(),
             fme::gui_labels::draw,
             tile.draw());
+     }
+};
+
+template<>
+struct fmt::formatter<open_viii::graphics::background::normalized_source_tile> : fmt::formatter<std::string>
+{
+     // parse is inherited from formatter<string>.
+     template<typename FormatContext>
+     constexpr auto format(const open_viii::graphics::background::normalized_source_tile &tile, FormatContext &ctx) const
+     {
+          const auto array   = ff_8::to_hex(tile);
+          const auto hexview = std::string_view(array.data(), array.size() - 1);
+          return fmt::format_to(
+            ctx.out(),
+            "{}: {}\n"
+            "{}: {}\n"
+            "{}: {}\n"
+            "{}: {}\n"
+            "{}: {}\n"
+            "{}: {}\n"
+            "{}: {}\n"
+            "{}: {}\n"
+            "{}: {}\n"
+            "{}: {}\n"
+            "{}: {}\n"
+            "{}: {}",
+            fme::gui_labels::hex,
+            hexview,
+            fme::gui_labels::source,
+            tile.m_source_xy,
+            fme::gui_labels::bpp,
+            tile.m_tex_id_buffer.depth(),
+            fme::gui_labels::palette,
+            tile.m_palette_id.id(),
+            fme::gui_labels::texture_page,
+            tile.m_tex_id_buffer.id(),
+            fme::gui_labels::layer_id,
+            tile.m_layer_id.id(),
+            fme::gui_labels::blend_mode,
+            tile.m_blend_mode,
+            fme::gui_labels::blend_other,
+            tile.m_tex_id_buffer.blend(),
+            fme::gui_labels::animation_id,
+            tile.m_animation_id,
+            fme::gui_labels::animation_frame,
+            tile.m_animation_state,
+            fme::gui_labels::draw,
+            tile.m_tex_id_buffer.draw);
+     }
+};
+
+template<typename range_t>
+concept tile_range = std::ranges::range<range_t> && open_viii::graphics::background::is_tile<std::ranges::range_value_t<range_t>>;
+
+// Specialization for ranges of tiles
+template<tile_range TileRange>
+struct fmt::formatter<TileRange> : fmt::formatter<std::string>
+{
+     // parse is inherited from formatter<string_view>.
+     template<typename FormatContext>
+     constexpr auto format(const TileRange &tiles, FormatContext &ctx) const
+     {
+          const auto count = std::ranges::distance(tiles);
+
+
+          return fmt::format_to(ctx.out(), "Total Tiles: {}\n", count);
      }
 };
 #endif// FIELD_MAP_EDITOR_FORMATTERS_HPP
