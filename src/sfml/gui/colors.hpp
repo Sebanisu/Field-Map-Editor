@@ -379,14 +379,38 @@ struct colors
      // tableColors
      static constexpr color    TableDarkRed          = color{ 120, 40, 40 };
      static constexpr color    TableLightDarkRed     = color{ 160, 60, 60 };
-     static constexpr color    TableHoverDarkRed     = TableLightDarkRed.fade(0.4F);
-     static constexpr color    TableActiveDarkRed    = color{ 100, 20, 20 };
-
+     static constexpr color    TableDarkRedHovered   = TableLightDarkRed.fade(0.4F);
+     static constexpr color    TableDarkRedActive    = color{ 100, 20, 20 };
 
      static constexpr color    TableDarkGray         = color{ 80, 80, 80 };
      static constexpr color    TableLightDarkGray    = color{ 100, 100, 100 };
-     static constexpr color    TableHoverDarkGray    = TableLightDarkGray.fade(0.4F);
-     static constexpr color    TableActiveDarkGray   = color{ 50, 50, 50 };
+     static constexpr color    TableDarkGrayHovered  = TableLightDarkGray.fade(0.4F);
+     static constexpr color    TableDarkGrayActive   = color{ 50, 50, 50 };
+
+     static constexpr color    TableDarkBlue          = color{ 40, 60, 120 };
+     static constexpr color    TableLightDarkBlue     = color{ 60, 90, 160 };
+     static constexpr color    TableDarkBlueHovered   = TableLightDarkBlue.fade(0.4F);
+     static constexpr color    TableDarkBlueActive    = color{ 20, 40, 100 };
+
+     static constexpr color    TableDarkGreen         = color{ 40, 120, 60 };
+     static constexpr color    TableLightDarkGreen    = color{ 60, 160, 90 };
+     static constexpr color    TableDarkGreenHovered  = TableLightDarkGreen.fade(0.4F);
+     static constexpr color    TableDarkGreenActive   = color{ 20, 100, 40 };
+
+     static constexpr color    TableDarkPurple        = color{ 80, 40, 120 };
+     static constexpr color    TableLightDarkPurple   = color{ 110, 60, 160 };
+     static constexpr color    TableDarkPurpleHovered = TableLightDarkPurple.fade(0.4F);
+     static constexpr color    TableDarkPurpleActive  = color{ 50, 20, 100 };
+
+     static constexpr color    TableDarkTeal          = color{ 40, 100, 100 };
+     static constexpr color    TableLightDarkTeal     = color{ 60, 140, 140 };
+     static constexpr color    TableDarkTealHovered   = TableLightDarkTeal.fade(0.4F);
+     static constexpr color    TableDarkTealActive    = color{ 20, 80, 80 };
+
+     static constexpr color    TableDarkOrange        = color{ 120, 80, 40 };
+     static constexpr color    TableLightDarkOrange   = color{ 160, 110, 60 };
+     static constexpr color    TableDarkOrangeHovered = TableLightDarkOrange.fade(0.4F);
+     static constexpr color    TableDarkOrangeActive  = color{ 100, 50, 20 };
 };
 }// namespace fme
 

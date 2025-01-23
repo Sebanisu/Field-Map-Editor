@@ -81,8 +81,8 @@ void fme::history_window::draw_table() const
                     } };
 
                     const auto pop_id = PushPopID();
-                    ImGui::PushStyleColor(ImGuiCol_HeaderHovered, colors::TableHoverDarkGray);
-                    ImGui::PushStyleColor(ImGuiCol_HeaderActive, colors::TableActiveDarkGray);
+                    ImGui::PushStyleColor(ImGuiCol_HeaderHovered, colors::TableDarkGrayHovered);
+                    ImGui::PushStyleColor(ImGuiCol_HeaderActive, colors::TableDarkGrayActive);
                     if (ImGui::Selectable("##undo_history", false, ImGuiSelectableFlags_SpanAllColumns))
                     {
                          spdlog::info("Clicked on Index: {}", index);
@@ -145,8 +145,8 @@ void fme::history_window::draw_table() const
                     } };
                     const auto pop_id = PushPopID();
 
-                    ImGui::PushStyleColor(ImGuiCol_HeaderHovered, colors::TableHoverDarkRed);
-                    ImGui::PushStyleColor(ImGuiCol_HeaderActive, colors::TableActiveDarkRed);
+                    ImGui::PushStyleColor(ImGuiCol_HeaderHovered, colors::TableDarkRedHovered);
+                    ImGui::PushStyleColor(ImGuiCol_HeaderActive, colors::TableDarkRedActive);
                     if (ImGui::Selectable("##redo history", false, ImGuiSelectableFlags_SpanAllColumns))
                     {
                          spdlog::info("Clicked on Index: {}", index);
