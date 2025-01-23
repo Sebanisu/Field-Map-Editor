@@ -11,6 +11,7 @@
 #include "tile_sizes.hpp"
 #include <filesystem>
 #include <fmt/format.h>
+#include <fmt/ranges.h>
 #include <functional>
 #include <open_viii/graphics/background/BlendModeT.hpp>
 #include <open_viii/graphics/background/Map.hpp>
@@ -373,9 +374,15 @@ struct fmt::formatter<open_viii::graphics::background::normalized_source_tile> :
 template<typename range_t>
 concept tile_range = std::ranges::range<range_t> && open_viii::graphics::background::is_tile<std::ranges::range_value_t<range_t>>;
 
-// Specialization for ranges of tiles
 template<tile_range TileRange>
-struct fmt::formatter<TileRange> : fmt::formatter<std::string>
+struct fmt::is_range<TileRange, char> : std::false_type
+{
+};
+
+
+  // Specialization for ranges of tiles
+  template<tile_range TileRange>
+  struct fmt::formatter<TileRange> : fmt::formatter<std::string>
 {
      // parse is inherited from formatter<string_view>.
      template<typename FormatContext>
