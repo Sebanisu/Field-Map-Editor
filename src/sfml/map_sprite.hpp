@@ -107,6 +107,7 @@ struct [[nodiscard]] map_sprite final
      [[nodiscard]] const ff_8::source_tile_conflicts    &original_conflicts() const;
      [[nodiscard]] const ff_8::source_tile_conflicts    &working_conflicts() const;
      [[nodiscard]] const ff_8::MapHistory::nst_map      &working_similar_counts() const;
+     [[nodiscard]] const ff_8::MapHistory::nsat_map     &working_animation_counts() const;
      [[nodiscard]] std::string                           map_filename() const;
      [[nodiscard]] bool                                  fail() const;
      [[nodiscard]] std::uint32_t                         width() const;

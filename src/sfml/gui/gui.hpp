@@ -83,6 +83,7 @@ struct gui
      sf::Event                                                           m_event                     = {};
      sf::Vector2f                                                        m_cam_pos                   = {};
      std::vector<std::size_t>                                            m_hovered_tiles_indices     = {};
+     std::ptrdiff_t                                                      m_hovered_index             = { -1 };
      // create a file browser instances
      ImGui::FileBrowser          m_save_file_browser{ ImGuiFileBrowserFlags_EnterNewFilename | ImGuiFileBrowserFlags_CreateNewDir
                                              | ImGuiFileBrowserFlags_EditPathString };

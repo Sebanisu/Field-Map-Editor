@@ -182,6 +182,7 @@ ff_8::MapHistory::MapHistory(map_t map)
   , m_original_conflicts(calculate_conflicts(m_original))
   , m_working_conflicts(calculate_conflicts(m_original))
   , m_working_similar_counts(populate_similar_tile_count(m_working, m_working_conflicts.range_of_conflicts_flattened()))
+  , m_working_animation_counts(populate_animation_tile_count(m_working, m_working_conflicts.range_of_conflicts_flattened()))
 {
 }
 
@@ -229,6 +230,7 @@ void ff_8::MapHistory::refresh_working_conflicts() const
 {
      m_working_conflicts = calculate_conflicts(m_working);
      m_working_similar_counts = populate_similar_tile_count(m_working, m_working_conflicts.range_of_conflicts_flattened());
+     m_working_animation_counts = populate_animation_tile_count(m_working, m_working_conflicts.range_of_conflicts_flattened());
 }
 
 const std::vector<ff_8::PupuID> &ff_8::MapHistory::original_pupu() const noexcept
@@ -264,6 +266,11 @@ const ff_8::source_tile_conflicts &ff_8::MapHistory::working_conflicts() const n
 const ff_8::MapHistory::nst_map &ff_8::MapHistory::working_similar_counts() const noexcept
 {
      return m_working_similar_counts;
+}
+
+const ff_8::MapHistory::nsat_map &ff_8::MapHistory::working_animation_counts() const noexcept
+{
+     return m_working_animation_counts;
 }
 
 std::size_t ff_8::MapHistory::count() const

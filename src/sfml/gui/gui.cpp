@@ -323,11 +323,12 @@ void gui::control_panel_window()
 }
 void gui::tile_conflicts_panel()
 {
+     m_hovered_index = -1;// reset to -1 and below we set to number if we're hovering.
      if (!map_test())
      {
           return;
      }
-     m_map_sprite->const_visit_working_tiles([&](const auto &tiles) {
+     m_map_sprite->const_visit_tiles_both([&](const auto &working_tiles, const auto &original_tiles) {
           if (!ImGui::CollapsingHeader("Conflicting Tiles"))
           {
                return;
@@ -339,6 +340,8 @@ void gui::tile_conflicts_panel()
           const auto            &conflicts          = m_map_sprite->working_conflicts();
           auto                   range_of_conflicts = conflicts.range_of_conflicts();
           const auto            &similar_counts     = m_map_sprite->working_similar_counts();
+          const auto            &animation_counts   = m_map_sprite->working_animation_counts();
+
           const auto             pop_table_id       = PushPopID();
           // Default hover options for ImGuiCol_ButtonHovered
           const auto options_hover   = tile_button_options{ .size = { buttonWidth, buttonWidth }, .button_color = colors::ButtonHovered };
@@ -346,15 +349,26 @@ void gui::tile_conflicts_panel()
           // Default regular options for ImGuiCol_Button
           const auto options_regular = tile_button_options{ .size = { buttonWidth, buttonWidth } };
 
-          // New options for when the count is greater than 1 (green tint)
-          const auto options_highlighted       = tile_button_options{ .size                = { buttonWidth, buttonWidth },
-                                                                      .button_color        = colors::ButtonGreen,
-                                                                      .button_hover_color  = colors::ButtonGreenHovered,
-                                                                      .button_active_color = colors::ButtonGreenActive };
+          // New options for when the similar count is greater than 1 (green tint)
+          const auto options_similar = tile_button_options{ .size                = { buttonWidth, buttonWidth },
+                                                            .button_color        = colors::ButtonGreen,
+                                                            .button_hover_color  = colors::ButtonGreenHovered,
+                                                            .button_active_color = colors::ButtonGreenActive };
 
-          // New hover options for highlighted tiles (green hover)
-          const auto options_highlighted_hover = tile_button_options{
+          // New hover options for similar tiles (green hover)
+          const auto options_similar_hover = tile_button_options{
                .size = { buttonWidth, buttonWidth }, .button_color = colors::ButtonGreenHovered// Green hover tint
+          };
+
+          // New options for when the animation count is greater than 1 (pink tint)
+          const auto options_animation       = tile_button_options{ .size                = { buttonWidth, buttonWidth },
+                                                                    .button_color        = colors::ButtonPink,
+                                                                    .button_hover_color  = colors::ButtonPinkHovered,
+                                                                    .button_active_color = colors::ButtonPinkActive };
+
+          // New hover options for animation tiles (pink hover)
+          const auto options_animation_hover = tile_button_options{
+               .size = { buttonWidth, buttonWidth }, .button_color = colors::ButtonPinkHovered// pink hover tint
           };
 
           format_imgui_text("{}", "Legend: ");
@@ -369,13 +383,20 @@ void gui::tile_conflicts_panel()
           const bool hovered_similar = ImGui::IsItemHovered();
           tool_tip("Button Color - Conflicts with similar tiles, or duplicate tiles.");
 
+          ImGui::SameLine();
+          (void)create_color_button({ .button_color        = colors::ButtonPink,
+                                      .button_hover_color  = colors::ButtonPinkHovered,
+                                      .button_active_color = colors::ButtonPinkActive });
+          const bool hovered_animation = ImGui::IsItemHovered();
+          tool_tip("Button Color - Conflicts with similar tiles with different animation frame or blend modes.");
+
 
           for (const auto &conflict_group : range_of_conflicts)
           {
                {
                     const auto  first_index = conflict_group.front();
                     const auto &first_tile  = [&]() {
-                         auto begin = std::ranges::cbegin(tiles);
+                         auto begin = std::ranges::cbegin(working_tiles);
                          std::ranges::advance(begin, first_index);
                          return *begin;
                     }();
@@ -396,29 +417,40 @@ void gui::tile_conflicts_panel()
 
                     for (const auto index : conflict_group)
                     {
-                         assert(std::cmp_less(index, std::ranges::size(tiles)) && "index out of range!");
+                         assert(std::cmp_less(index, std::ranges::size(working_tiles)) && "index out of range!");
+                         assert(std::cmp_less(index, std::ranges::size(original_tiles)) && "index out of range!");
 
 
                          // ImGui::TableNextColumn();
                          // format_imgui_text("{:4}", index);
 
                          ImGui::TableNextColumn();
-
-                         const auto &tile = [&]() {
+                         const auto get_tile = [&](const auto &tiles) -> decltype(auto) {
                               auto begin = std::ranges::cbegin(tiles);
                               std::ranges::advance(begin, index);
                               return *begin;
-                         }();
-                         assert(similar_counts.contains(tile) && "Tile wasn't in the map");
-                         const auto counts  = similar_counts.at(tile);
-                         const bool over_1  = std::cmp_greater(counts, 1);
+                         };
 
-                         const auto options = [&]() {
-                              if (over_1 && hovered_similar)
+                         const auto &working_tile  = get_tile(working_tiles);
+                         const auto &original_tile = get_tile(original_tiles);
+                         assert(similar_counts.contains(working_tile) && "Tile wasn't in the map");
+                         const auto similar_count  = similar_counts.at(working_tile);
+                         const bool similar_over_1 = std::cmp_greater(similar_count, 1);
+
+                         assert(animation_counts.contains(working_tile) && "Tile wasn't in the map");
+                         const auto animation_count  = animation_counts.at(working_tile);
+                         const bool animation_over_1 = std::cmp_greater(animation_count, 1);
+
+                         const auto options          = [&]() {
+                              if (animation_over_1 && !similar_over_1 && hovered_animation)
                               {
-                                   return options_highlighted_hover;
+                                   return options_animation_hover;
                               }
-                              if (!over_1 && hovered_conflicts)
+                              if (similar_over_1 && hovered_similar)
+                              {
+                                   return options_similar_hover;
+                              }
+                              if (!similar_over_1 && !animation_over_1 && hovered_conflicts)
                               {
                                    return options_hover;
                               }
@@ -427,14 +459,39 @@ void gui::tile_conflicts_panel()
                                 || std::ranges::find(m_hovered_tiles_indices, static_cast<std::size_t>(index))
                                      == std::ranges::end(m_hovered_tiles_indices))
                               {
-                                   return over_1 ? options_highlighted : options_regular;
+                                   if (similar_over_1)
+                                   {
+                                        return options_similar;
+                                   }
+                                   if (animation_over_1)
+                                   {
+                                        return options_animation;
+                                   }
+                                   return options_regular;
                               }
-                              return over_1 ? options_highlighted_hover : options_hover;
+                              if (similar_over_1)
+                              {
+                                   return options_similar_hover;
+                              }
+                              if (animation_over_1)
+                              {
+                                   return options_animation_hover;
+                              }
+                              return options_hover;
                          }();
 
-                         (void)create_tile_button(m_map_sprite, tile, options);
+                         (void)create_tile_button(m_map_sprite, original_tile, options);
+                         if (ImGui::IsItemHovered())
+                         {
+                              m_hovered_index = index;
+                         }
                          // Ensure subsequent buttons are on the same row
-                         std::string strtooltip = fmt::format("Index {}\n{}\nSimilar Count: {}", index, tile, counts - 1);
+                         std::string strtooltip = fmt::format(
+                           "Index {}\n{}\nSimilar Count: {}\nAnimation Count: {}",
+                           index,
+                           working_tile,
+                           similar_over_1 ? similar_count : 0,
+                           animation_over_1 ? animation_count : 0);
                          tool_tip(strtooltip);
                     }
                     // Break the line after finishing a conflict group
@@ -836,68 +893,121 @@ void gui::draw_map_grid_for_conflict_tiles(const ImVec2 &screen_pos, const float
      {
           return;
      }
-     m_map_sprite->const_visit_working_tiles([&](const auto &tiles) {
-          const auto &similar_counts = m_map_sprite->working_similar_counts();
+     m_map_sprite->const_visit_working_tiles([&](const auto &working_tiles) {
+          const auto &similar_counts   = m_map_sprite->working_similar_counts();
+          const auto &animation_counts = m_map_sprite->working_animation_counts();
 
           for (const auto indices : m_map_sprite->working_conflicts().range_of_conflicts())
           {
                const auto action = [&](const auto index) {
-                    assert(std::cmp_less(index, std::ranges::size(tiles)) && "Index out of Range...");
-                    const auto index_to_tile = [&tiles](const auto i) {
-                         auto begin = std::ranges::cbegin(tiles);
+                    assert(std::cmp_less(index, std::ranges::size(working_tiles)) && "Index out of Range...");
+                    const auto index_to_working_tile = [&working_tiles](const auto i) {
+                         auto begin = std::ranges::cbegin(working_tiles);
                          std::ranges::advance(begin, i);
                          return *begin;
                     };
-                    const auto &tile = index_to_tile(index);
-                    assert(similar_counts.contains(tile) && "Tile wasn't in the map");
-                    const auto  counts = similar_counts.at(tile);
-                    const bool  over_1 = std::cmp_greater(counts, 1);
+                    // assert(std::cmp_less(index, std::ranges::size(original_tiles)) && "Index out of Range...");
+                    // const auto index_to_original_tile = [&original_tiles](const auto i) {
+                    //      auto begin = std::ranges::cbegin(original_tiles);
+                    //      std::ranges::advance(begin, i);
+                    //      return *begin;
+                    // };
 
-                    const float x      = [&]() {
+                    const auto &working_tile = index_to_working_tile(index);
+                    // const auto &original_tile = index_to_original_tile(index);
+                    assert(similar_counts.contains(working_tile) && "Tile wasn't in the map");
+                    const auto similar_count  = similar_counts.at(working_tile);
+                    const bool similar_over_1 = std::cmp_greater(similar_count, 1);
+
+                    assert(animation_counts.contains(working_tile) && "Tile wasn't in the map");
+                    const auto  animation_count  = animation_counts.at(working_tile);
+                    const bool  animation_over_1 = std::cmp_greater(animation_count, 1);
+
+                    const float x                = [&]() {
                          if (m_selections->draw_swizzle)
                          {
                               return screen_pos.x
-                                    + ((static_cast<float>(tile.source_x()) + (static_cast<float>(tile.texture_id()) * 256.F)) * scale * static_cast<float>(m_map_sprite->get_map_scale()));
+                                    + ((static_cast<float>(working_tile.source_x()) + (static_cast<float>(working_tile.texture_id()) * 256.F)) * scale * static_cast<float>(m_map_sprite->get_map_scale()));
                          }
-                         return screen_pos.x + (static_cast<float>(tile.x()) * scale * static_cast<float>(m_map_sprite->get_map_scale()));
+                         return screen_pos.x
+                                + (static_cast<float>(working_tile.x()) * scale * static_cast<float>(m_map_sprite->get_map_scale()));
                     }();
                     const float y = [&]() {
                          if (m_selections->draw_swizzle)
                          {
                               return screen_pos.y
-                                     + (static_cast<float>(tile.source_y()) * scale * static_cast<float>(m_map_sprite->get_map_scale()));
+                                     + (static_cast<float>(working_tile.source_y()) * scale * static_cast<float>(m_map_sprite->get_map_scale()));
                          }
-                         return screen_pos.y + (static_cast<float>(tile.y()) * scale * static_cast<float>(m_map_sprite->get_map_scale()));
+                         return screen_pos.y
+                                + (static_cast<float>(working_tile.y()) * scale * static_cast<float>(m_map_sprite->get_map_scale()));
                     }();
-                    const float tile_size = 16.0f * scale * static_cast<float>(m_map_sprite->get_map_scale());
-                    const ImU32 c         = ImU32{ [&]() {
+                    const float tile_size     = 16.0f * scale * static_cast<float>(m_map_sprite->get_map_scale());
+                    const auto [c, thickness] = [&]() -> std::pair<color, float> {
+                         const auto default_thickness = 3.F;
+                         const auto hover_thickeness  = 4.5F;
                          if (
-                           std::ranges::empty(m_hovered_tiles_indices)
-                           || std::ranges::find(m_hovered_tiles_indices, static_cast<std::size_t>(index))
-                                == std::ranges::end(m_hovered_tiles_indices))
+                           (!m_selections->draw_swizzle && !animation_over_1 && std::cmp_not_equal(m_hovered_index, index))
+                           || ((m_selections->draw_swizzle || animation_over_1) && std::ranges::find(indices, m_hovered_index) == std::ranges::end(indices)))
                          {
-                              return over_1 ? colors::ButtonGreen.opaque().fade(-.2F) : colors::Button.opaque().fade(-.2F);
+                              if (
+                                std::ranges::empty(m_hovered_tiles_indices)
+                                || std::ranges::find(m_hovered_tiles_indices, static_cast<std::size_t>(index))
+                                     == std::ranges::end(m_hovered_tiles_indices))
+                              {
+                                   if (similar_over_1)
+                                   {
+                                        return { colors::ButtonGreen.opaque().fade(-.2F), default_thickness };
+                                   }
+                                   if (animation_over_1)
+                                   {
+                                        return { colors::ButtonPink.opaque().fade(-.2F), default_thickness };
+                                   }
+                                   return { colors::Button.opaque().fade(-.2F), default_thickness };
+                              }
+                              if (m_mouse_positions.left)
+                              {
+                                   if (similar_over_1)
+                                   {
+                                        return { colors::ButtonGreenActive.opaque().fade(-.2F), default_thickness };
+                                   }
+                                   if (animation_over_1)
+                                   {
+                                        return { colors::ButtonPinkActive.opaque().fade(-.2F), default_thickness };
+                                   }
+                                   return { colors::ButtonActive.opaque().fade(-.2F), default_thickness };
+                              }
+
+                              if (m_selections->draw_swizzle)
+                              {
+                                   std::string strtooltip = fmt::format(
+                                     "Indicies: {}\n{}", indices, indices | std::ranges::views::transform(index_to_working_tile));
+                                   tool_tip(strtooltip, true);
+                              }
+                              else
+                              {
+                                   std::string strtooltip = fmt::format(
+                                     "Index {}\n{}\nSimilar Count: {}\nAnimation Count: {}",
+                                     index,
+                                     working_tile,
+                                     similar_over_1 ? similar_count : 0,
+                                     animation_over_1 ? animation_count : 0);
+
+                                   tool_tip(strtooltip, true);
+                              }
                          }
-                         if (m_mouse_positions.left)
+                         if (similar_over_1)
                          {
-                              return over_1 ? colors::ButtonGreenActive.opaque().fade(-.2F) : colors::ButtonActive.opaque().fade(-.2F);
+                              return { colors::ButtonGreenHovered.opaque(), hover_thickeness };
                          }
 
-                         if (m_selections->draw_swizzle)
+                         if (animation_over_1)
                          {
-                              std::string strtooltip = fmt::format("{}", indices | std::ranges::views::transform(index_to_tile));
-                              tool_tip(strtooltip, true);
+                              return { colors::ButtonPinkHovered.opaque(), hover_thickeness };
                          }
-                         else
-                         {
-                              std::string strtooltip = fmt::format("Index {}\n{}\nSimilar Count: {}", index, tile, counts - 1);
+                         return { colors::ButtonHovered.opaque(), hover_thickeness };
+                    }();
 
-                              tool_tip(strtooltip, true);
-                         }
-                         return over_1 ? colors::ButtonGreenHovered.opaque() : colors::ButtonHovered.opaque();
-                    }() };
-
-                    ImGui::GetWindowDrawList()->AddRect(ImVec2(x, y), ImVec2(x + tile_size, y + tile_size), c, {}, {}, 3.F);
+                    ImGui::GetWindowDrawList()->AddRect(ImVec2(x, y), ImVec2(x + tile_size, y + tile_size), ImU32{ c }, {}, {}, thickness);
 
                     // todo add hover action using the hovered_indices and change color for if similar counts >1
                };
@@ -1084,11 +1194,11 @@ void gui::hovered_tiles_panel()
      }
 
 
-     m_map_sprite->const_visit_tiles_both([&](const auto &tiles, const auto &front_tiles) {
+     m_map_sprite->const_visit_tiles_both([&](const auto &working_tiles, const auto &original_tiles) {
           if (m_mouse_positions.mouse_moved)
           {
                m_hovered_tiles_indices =
-                 m_map_sprite->find_intersecting(tiles, m_mouse_positions.pixel, m_mouse_positions.texture_page, false, true);
+                 m_map_sprite->find_intersecting(working_tiles, m_mouse_positions.pixel, m_mouse_positions.texture_page, false, true);
           }
           format_imgui_text("{} {:4}", gui_labels::number_of_tiles, std::ranges::size(m_hovered_tiles_indices));
           if (!ImGui::CollapsingHeader(gui_labels::hovered_tiles.data()))
@@ -1112,27 +1222,49 @@ void gui::hovered_tiles_panel()
           {
                return;
           }
-          const auto &conflicts_obj = m_map_sprite->working_conflicts();
-          const bool  hovering_over_conflict =
-            are_indices_in_both_ranges(m_hovered_tiles_indices, conflicts_obj.range_of_conflicts_flattened());
+          const auto &conflicts_obj          = m_map_sprite->working_conflicts();
+          auto        conflict_range         = conflicts_obj.range_of_conflicts_flattened();
+          const bool  hovering_over_conflict = are_indices_in_both_ranges(m_hovered_tiles_indices, conflict_range);
 
-          const auto options = [&]() -> tile_button_options {
-               sf::Vector2f size = { buttonWidth, buttonWidth };
-               if (hovering_over_conflict)
-               {
-                    return { .size = size, .button_color = colors::ButtonHovered };
-               }
-               return { .size = size };
-          }();
 
+          const auto &similar_counts         = m_map_sprite->working_similar_counts();
+          const auto &animation_counts       = m_map_sprite->working_animation_counts();
           for (const auto index : m_hovered_tiles_indices)
           {
-               assert(std::cmp_less(index, std::ranges::size(front_tiles)) && "index out of range!");
+               assert(std::cmp_less(index, std::ranges::size(original_tiles)) && "index out of range!");
+               const auto c = [&]() {
+                    const auto &working_tile = working_tiles[index];
+                    if (hovering_over_conflict)
+                    {
+                         if (similar_counts.contains(working_tile) && std::cmp_greater(similar_counts.at(working_tile), 1))
+                         {
+                              return colors::ButtonGreenHovered;
+                         }
+                         if (animation_counts.contains(working_tile) && std::cmp_greater(animation_counts.at(working_tile), 1))
+                         {
+                              return colors::ButtonPinkHovered;
+                         }
+                         return colors::ButtonHovered;
+                    }
+
+                    if (similar_counts.contains(working_tile) && std::cmp_greater(similar_counts.at(working_tile), 1))
+                    {
+                         return colors::ButtonGreen;
+                    }
+                    if (animation_counts.contains(working_tile) && std::cmp_greater(animation_counts.at(working_tile), 1))
+                    {
+                         return colors::ButtonPink;
+                    }
+                    return colors::Button;
+               }();
+               const auto options = tile_button_options{ .size = { buttonWidth, buttonWidth }, .button_color = c };
+
+
                ImGui::TableNextColumn();
                format_imgui_text("{:4}", index);
                ImGui::TableNextColumn();
 
-               (void)create_tile_button(m_map_sprite, front_tiles[index], options);
+               (void)create_tile_button(m_map_sprite, original_tiles[index], options);
           }
           ImGui::EndTable();
      });
