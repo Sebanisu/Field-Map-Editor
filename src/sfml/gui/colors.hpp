@@ -375,6 +375,18 @@ struct colors
      static constexpr color    ButtonTan             = color{ ImVec4(0.98f, 0.84f, 0.57f, 0.40f) };
      static constexpr color    ButtonTanHovered      = color{ ImVec4(0.98f, 0.84f, 0.57f, 1.00f) };
      static constexpr color    ButtonTanActive       = color{ ImVec4(0.53f, 0.48f, 0.29f, 1.00f) };
+
+     // tableColors
+     static constexpr color    TableDarkRed          = color{ 120, 40, 40 };
+     static constexpr color    TableLightDarkRed     = color{ 160, 60, 60 };
+     static constexpr color    TableHoverDarkRed     = TableLightDarkRed.fade(0.4F);
+     static constexpr color    TableActiveDarkRed    = color{ 100, 20, 20 };
+
+
+     static constexpr color    TableDarkGray         = color{ 80, 80, 80 };
+     static constexpr color    TableLightDarkGray    = color{ 100, 100, 100 };
+     static constexpr color    TableHoverDarkGray    = TableLightDarkGray.fade(0.4F);
+     static constexpr color    TableActiveDarkGray   = color{ 50, 50, 50 };
 };
 }// namespace fme
 
