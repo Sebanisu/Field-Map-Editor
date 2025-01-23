@@ -59,6 +59,7 @@ struct Selections
      bool                           draw_palette                   = { false };///< Whether to draw the palette.
      bool                           draw_grid                      = { false };///< Whether to draw the grid.
      bool                           draw_texture_page_grid         = { false };///< Whether to draw the texture page grid.
+     bool                           draw_tile_conflict_rects       = { false };///< Whether to draw the tile conflicts rectangles.
      bool                           draw_swizzle                   = { false };///< Whether to enable swizzle rendering.
      bool                           draw_disable_blending          = { false };///< Whether to disable blending during rendering.
      bool                           display_batch_window           = { false };///< Whether to display the test batch window.

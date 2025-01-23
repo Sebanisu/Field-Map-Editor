@@ -130,6 +130,7 @@ struct gui_labels
      static constexpr std::string_view redo_all                               = { "Redo All" };
      static constexpr std::string_view draw_tile_grid                         = { "Draw Tile Grid" };
      static constexpr std::string_view draw_texture_page_grid                 = { "Draw Texture Page Grid" };
+     static constexpr std::string_view draw_tile_conflict_rects               = { "Draw Tile Conflict Rectangles" };
      static constexpr std::string_view update_position                        = { "Update Position" };
 
 

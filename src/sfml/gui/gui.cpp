@@ -15,7 +15,7 @@
 #include "tool_tip.hpp"
 #include <algorithm>
 #include <cmath>
-//#include <fmt/ranges.h>
+// #include <fmt/ranges.h>
 #include <open_viii/paths/Paths.hpp>
 #include <ranges>
 #include <SFML/Window/Mouse.hpp>
@@ -744,90 +744,98 @@ void gui::update_hover_and_mouse_button_status_for_map(const ImVec2 &img_start, 
 void gui::draw_mim_grid_lines_for_tiles(const ImVec2 &screen_pos, const sf::Vector2f &scaled_size, const float scale)
 {
      // Drawing grid lines within the window if m_selections->draw_grid is true
-     if (m_selections->draw_grid)
+     if (!m_selections->draw_grid)
      {
-          // Get the starting position and size of the image
-          const ImVec2 img_end      = { screen_pos.x + scaled_size.x, screen_pos.y + scaled_size.y };
+          return;
+     }
+     // Get the starting position and size of the image
+     const ImVec2 img_end      = { screen_pos.x + scaled_size.x, screen_pos.y + scaled_size.y };
 
-          // Calculate grid spacing
-          const float  grid_spacing = (m_selections->draw_palette ? 1.F : 16.0f) * scale;
+     // Calculate grid spacing
+     const float  grid_spacing = (m_selections->draw_palette ? 1.F : 16.0f) * scale;
 
-          // Iterate over horizontal and vertical lines
-          for (float x = screen_pos.x; x < img_end.x; x += grid_spacing)
-          {
-               // Draw vertical lines
-               ImGui::GetWindowDrawList()->AddLine(ImVec2(x, screen_pos.y), ImVec2(x, img_end.y), IM_COL32(255, 255, 255, 255));
-          }
+     // Iterate over horizontal and vertical lines
+     for (float x = screen_pos.x; x < img_end.x; x += grid_spacing)
+     {
+          // Draw vertical lines
+          ImGui::GetWindowDrawList()->AddLine(ImVec2(x, screen_pos.y), ImVec2(x, img_end.y), IM_COL32(255, 255, 255, 255));
+     }
 
-          for (float y = screen_pos.y; y < img_end.y; y += grid_spacing)
-          {
-               // Draw horizontal lines
-               ImGui::GetWindowDrawList()->AddLine(ImVec2(screen_pos.x, y), ImVec2(img_end.x, y), IM_COL32(255, 255, 255, 255));
-          }
+     for (float y = screen_pos.y; y < img_end.y; y += grid_spacing)
+     {
+          // Draw horizontal lines
+          ImGui::GetWindowDrawList()->AddLine(ImVec2(screen_pos.x, y), ImVec2(img_end.x, y), IM_COL32(255, 255, 255, 255));
      }
 }
 
 void gui::draw_mim_grid_lines_for_texture_page(const ImVec2 &screen_pos, const sf::Vector2f &scaled_size, const float scale)
 {
      // Drawing grid lines within the window if m_selections->draw_grid is true
-     if (m_selections->draw_texture_page_grid && !m_selections->draw_palette)
+     if (!m_selections->draw_texture_page_grid || m_selections->draw_palette)
      {
-          // Get the starting position and size of the image
-          const ImVec2 img_end      = { screen_pos.x + scaled_size.x, screen_pos.y + scaled_size.y };
+          return;
+     }
+     // Get the starting position and size of the image
+     const ImVec2 img_end      = { screen_pos.x + scaled_size.x, screen_pos.y + scaled_size.y };
 
-          // Calculate grid spacing
+     // Calculate grid spacing
 
-          const float  grid_spacing = [&]() {
-               switch (m_selections->bpp)
-               {
-                    default:
-                    case 0:
-                         return 256.f;
-                    case 1:
-                         return 128.f;
-                    case 2:
-                         return 64.F;
-               }
-          }() * scale;
-
-          //  m_selections->bpp
-
-          // Iterate over horizontal and vertical lines
-          for (float x = screen_pos.x; x < img_end.x; x += grid_spacing)
+     const float  grid_spacing = [&]() {
+          switch (m_selections->bpp)
           {
-               // Draw vertical lines
-               ImGui::GetWindowDrawList()->AddLine(ImVec2(x, screen_pos.y), ImVec2(x, img_end.y), IM_COL32(255, 255, 0, 255));
+               default:
+               case 0:
+                    return 256.f;
+               case 1:
+                    return 128.f;
+               case 2:
+                    return 64.F;
           }
+     }() * scale;
+
+     //  m_selections->bpp
+
+     // Iterate over horizontal and vertical lines
+     for (float x = screen_pos.x; x < img_end.x; x += grid_spacing)
+     {
+          // Draw vertical lines
+          ImGui::GetWindowDrawList()->AddLine(ImVec2(x, screen_pos.y), ImVec2(x, img_end.y), IM_COL32(255, 255, 0, 255));
      }
 }
 
 void gui::draw_map_grid_lines_for_tiles(const ImVec2 &screen_pos, const sf::Vector2f &scaled_size, const float scale)
 {
      // Drawing grid lines within the window if m_selections->draw_grid is true
-     if (m_selections->draw_grid)
+     if (!m_selections->draw_grid)
      {
-          // Get the starting position and size of the image
-          const ImVec2 img_end      = { screen_pos.x + scaled_size.x, screen_pos.y + scaled_size.y };
+          return;
+     }
+     // Get the starting position and size of the image
+     const ImVec2 img_end      = { screen_pos.x + scaled_size.x, screen_pos.y + scaled_size.y };
 
-          // Calculate grid spacing
-          const float  grid_spacing = 16.0f * scale * static_cast<float>(m_map_sprite->get_map_scale());
+     // Calculate grid spacing
+     const float  grid_spacing = 16.0f * scale * static_cast<float>(m_map_sprite->get_map_scale());
 
-          // Iterate over horizontal and vertical lines
-          for (float x = screen_pos.x; x < img_end.x; x += grid_spacing)
-          {
-               // Draw vertical lines
-               ImGui::GetWindowDrawList()->AddLine(ImVec2(x, screen_pos.y), ImVec2(x, img_end.y), IM_COL32(255, 255, 255, 255));
-          }
+     // Iterate over horizontal and vertical lines
+     for (float x = screen_pos.x; x < img_end.x; x += grid_spacing)
+     {
+          // Draw vertical lines
+          ImGui::GetWindowDrawList()->AddLine(ImVec2(x, screen_pos.y), ImVec2(x, img_end.y), IM_COL32(255, 255, 255, 255));
+     }
 
-          for (float y = screen_pos.y; y < img_end.y; y += grid_spacing)
-          {
-               // Draw horizontal lines
-               ImGui::GetWindowDrawList()->AddLine(ImVec2(screen_pos.x, y), ImVec2(img_end.x, y), IM_COL32(255, 255, 255, 255));
-          }
+     for (float y = screen_pos.y; y < img_end.y; y += grid_spacing)
+     {
+          // Draw horizontal lines
+          ImGui::GetWindowDrawList()->AddLine(ImVec2(screen_pos.x, y), ImVec2(img_end.x, y), IM_COL32(255, 255, 255, 255));
      }
 }
+
 void gui::draw_map_grid_for_conflict_tiles(const ImVec2 &screen_pos, const float scale)
 {
+     if (!m_selections->draw_tile_conflict_rects)
+     {
+          return;
+     }
      m_map_sprite->const_visit_working_tiles([&](const auto &tiles) {
           const auto &similar_counts = m_map_sprite->working_similar_counts();
 
@@ -896,7 +904,8 @@ void gui::draw_map_grid_for_conflict_tiles(const ImVec2 &screen_pos, const float
                if (m_selections->draw_swizzle)
                {// all are drawn in the same spot so we only need to draw one.
                     std::ranges::for_each(indices | std::ranges::views::take(1), action);
-                    //there might be different kinds of conflicts in the same location. but here we're assuming your either one or another. because we can't quite draw all the colors in the same place.
+                    // there might be different kinds of conflicts in the same location. but here we're assuming your either one or another.
+                    // because we can't quite draw all the colors in the same place.
                }
                else
                {
@@ -1436,6 +1445,8 @@ void gui::edit_menu()
           config->insert_or_assign("selections_draw_grid", m_selections->draw_grid);
           config.save();
      }
+     // draw_tile_conflict_rects = config["selections_draw_tile_conflict_rects"].value_or(draw_tile_conflict_rects);
+
      if ((map_test() && m_selections->draw_swizzle) || (mim_test() && !m_selections->draw_palette))
      {
           if (ImGui::MenuItem(gui_labels::draw_texture_page_grid.data(), nullptr, &m_selections->draw_texture_page_grid))
@@ -1444,6 +1455,13 @@ void gui::edit_menu()
                config->insert_or_assign("selections_draw_texture_page_grid", m_selections->draw_texture_page_grid);
                config.save();
           }
+     }
+
+     if (map_test() && ImGui::MenuItem(gui_labels::draw_tile_conflict_rects.data(), nullptr, &m_selections->draw_tile_conflict_rects))
+     {
+          Configuration config{};
+          config->insert_or_assign("selections_draw_tile_conflict_rects", m_selections->draw_tile_conflict_rects);
+          config.save();
      }
 }
 void gui::file_menu()
