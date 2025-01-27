@@ -951,7 +951,8 @@ void gui::draw_map_grid_for_conflict_tiles(const ImVec2 &screen_pos, const float
                               if (
                                 std::ranges::empty(m_hovered_tiles_indices)
                                 || std::ranges::find(m_hovered_tiles_indices, static_cast<std::size_t>(index))
-                                     == std::ranges::end(m_hovered_tiles_indices) || !m_mouse_positions.mouse_enabled)
+                                     == std::ranges::end(m_hovered_tiles_indices)
+                                || !m_mouse_positions.mouse_enabled)
                               {
                                    if (similar_over_1)
                                    {
@@ -1012,13 +1013,26 @@ void gui::draw_map_grid_for_conflict_tiles(const ImVec2 &screen_pos, const float
                };
                if (m_selections->draw_swizzle)
                {// all are drawn in the same spot so we only need to draw one.
-                    std::ranges::for_each(indices | std::ranges::views::take(1), action);
+                    if (std::ranges::find(indices, m_hovered_index) == std::ranges::end(indices))
+                    {
+                         std::ranges::for_each(indices | std::ranges::views::take(1), action);
+                    }
+                    else
+                    {
+                         action(m_hovered_index);
+                    }
+
+
                     // there might be different kinds of conflicts in the same location. but here we're assuming your either one or another.
                     // because we can't quite draw all the colors in the same place.
                }
                else
                {
                     std::ranges::for_each(indices, action);
+                    if (std::ranges::find(indices, m_hovered_index) != std::ranges::end(indices))
+                    {
+                         action(m_hovered_index);
+                    }
                }
           }
      });
