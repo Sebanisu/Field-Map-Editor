@@ -1340,28 +1340,31 @@ void gui::update_field()
 
      m_clicked_tile_indices.clear();
 }
-
+void gui::refresh_map_swizzle()
+{
+     Configuration config{};
+     config->insert_or_assign("selections_draw_swizzle", m_selections->draw_swizzle);
+     config.save();
+     if (m_selections->draw_swizzle)
+     {
+          m_map_sprite->enable_disable_blends();
+          m_map_sprite->enable_draw_swizzle();
+     }
+     else
+     {
+          m_map_sprite->disable_draw_swizzle();
+          if (!m_selections->draw_disable_blending)
+          {
+               m_map_sprite->disable_disable_blends();
+          }
+     }
+     m_changed = true;
+}
 void gui::checkbox_map_swizzle()
 {
      if (ImGui::Checkbox(gui_labels::swizzle.data(), &m_selections->draw_swizzle))
      {
-          Configuration config{};
-          config->insert_or_assign("selections_draw_swizzle", m_selections->draw_swizzle);
-          config.save();
-          if (m_selections->draw_swizzle)
-          {
-               m_map_sprite->enable_disable_blends();
-               m_map_sprite->enable_draw_swizzle();
-          }
-          else
-          {
-               m_map_sprite->disable_draw_swizzle();
-               if (!m_selections->draw_disable_blending)
-               {
-                    m_map_sprite->disable_disable_blends();
-               }
-          }
-          m_changed = true;
+          refresh_map_swizzle();
      }
      tool_tip(gui_labels::swizzle_tooltip);
 }
@@ -1607,6 +1610,15 @@ void gui::edit_menu()
           Configuration config{};
           config->insert_or_assign("selections_draw_tile_conflict_rects", m_selections->draw_tile_conflict_rects);
           config.save();
+     }
+
+     if (map_test() && ImGui::MenuItem(gui_labels::swizzle.data(), nullptr, &m_selections->draw_swizzle))
+     {
+          refresh_map_swizzle();
+     }
+     else
+     {
+          tool_tip(gui_labels::swizzle_tooltip.data());
      }
 }
 void gui::file_menu()

@@ -322,6 +322,7 @@ struct gui
      void                         file_menu();
      void                         edit_menu();
      void                         windows_menu();
+     void                         refresh_map_swizzle();
 
      static inline constinit bool toggle_imgui_demo_window = { false };
 };
