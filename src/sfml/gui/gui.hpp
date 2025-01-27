@@ -323,6 +323,7 @@ struct gui
      void                         edit_menu();
      void                         windows_menu();
      void                         refresh_map_swizzle();
+     void                         refresh_map_disable_blending();
 
      static inline constinit bool toggle_imgui_demo_window = { false };
 };

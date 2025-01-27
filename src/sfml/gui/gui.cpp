@@ -1368,22 +1368,26 @@ void gui::checkbox_map_swizzle()
      }
      tool_tip(gui_labels::swizzle_tooltip);
 }
+void gui::refresh_map_disable_blending()
+{
+     Configuration config{};
+     config->insert_or_assign("selections_draw_disable_blending", m_selections->draw_disable_blending);
+     config.save();
+     if (m_selections->draw_disable_blending)
+     {
+          m_map_sprite->enable_disable_blends();
+     }
+     else
+     {
+          m_map_sprite->disable_disable_blends();
+     }
+     m_changed = true;
+}
 void gui::checkbox_map_disable_blending()
 {
      if (!m_selections->draw_swizzle && ImGui::Checkbox(gui_labels::disable_blending.data(), &m_selections->draw_disable_blending))
      {
-          Configuration config{};
-          config->insert_or_assign("selections_draw_disable_blending", m_selections->draw_disable_blending);
-          config.save();
-          if (m_selections->draw_disable_blending)
-          {
-               m_map_sprite->enable_disable_blends();
-          }
-          else
-          {
-               m_map_sprite->disable_disable_blends();
-          }
-          m_changed = true;
+          refresh_map_disable_blending();
      }
      tool_tip(gui_labels::disable_blending_tooltip);
 }
@@ -1619,6 +1623,17 @@ void gui::edit_menu()
      else
      {
           tool_tip(gui_labels::swizzle_tooltip.data());
+     }
+
+     if (
+       map_test() && !m_selections->draw_swizzle
+       && ImGui::MenuItem(gui_labels::disable_blending.data(), nullptr, &m_selections->draw_disable_blending))
+     {
+          refresh_map_disable_blending();
+     }
+     else
+     {
+          tool_tip(gui_labels::disable_blending_tooltip);
      }
 }
 void gui::file_menu()
