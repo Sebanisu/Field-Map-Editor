@@ -18,14 +18,20 @@ before_build:
 
       mkdir bin\\Release
 
-      powershell Compress-Archive -Path src\\opengl\\opengl_version\\res -DestinationPath bin\\Release\\res.zip
+      
+after_build:
+  - cmd: >- 
+      dir /s /b bin\\*.exe
+
+      xcopy "src\\opengl\\opengl_version\\res bin\\Release\\res" /E /I /Y
+
+      xcopy fonts bin\\Release\\fonts /E /I /Y
+
+      powershell Compress-Archive -Path bin\\Release\\* -DestinationPath bin\\Release\\Field-Map-Editor_canary_build.zip
 
       powershell Compress-Archive -Path src -DestinationPath bin\\Release\\src.zip
 
-# fonts.zip is now generated after the build process
-after_build:
-  - cmd: >-
-      powershell Compress-Archive -Path fonts -DestinationPath bin\\Release\\fonts.zip
+
 
 build_script:
   - cmd: >-
@@ -67,11 +73,11 @@ build_script:
 
       cd ..
 
-      dir /s /b bin\\*.exe
-
 artifacts:
-  - path: "bin/Release/*.*"
+  - path: "bin/Release/Field-Map-Editor_canary_build.zip"
     name: Canary
+  - path: "bin/Release/src.zip"
+    name: Source
 
 deploy:
   - provider: GitHub
@@ -79,7 +85,9 @@ deploy:
     description: Automatic Test build version ($(APPVEYOR_BUILD_VERSION)). Updated ($(APPVEYOR_REPO_COMMIT_TIMESTAMP))
     auth_token:
       secure: 5giEwDYEP975x3C+JYDNGukTupBCPcmez7GbulvUX40/2C5cgs5ta8Gyq6IYpFmW
-    artifact: Canary
+    artifact:     
+      - Canary
+      - Source
     prerelease: true
     force_update: true
     on:
