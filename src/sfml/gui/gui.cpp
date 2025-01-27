@@ -775,9 +775,8 @@ void gui::update_hover_and_mouse_button_status_for_map(const ImVec2 &img_start, 
           m_mouse_positions.texture_page  = static_cast<uint8_t>(m_mouse_positions.pixel.x / 256);
           if (ImGui::IsMouseDown(ImGuiMouseButton_Left))
           {
-               ImGui::BeginTooltip();
-               format_imgui_text("({}, {})", m_mouse_positions.pixel.x, m_mouse_positions.pixel.y);
-               ImGui::EndTooltip();
+               const auto strtooltip = fmt::format("({}, {})", m_mouse_positions.pixel.x, m_mouse_positions.pixel.y);
+               tool_tip(strtooltip, true);
           }
      }
      else

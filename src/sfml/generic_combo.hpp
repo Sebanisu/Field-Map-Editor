@@ -407,19 +407,10 @@ class GenericComboClass
           {
                return;
           }
-          if (!ImGui::IsItemHovered())
+          tool_tip(*getNext(tool_tips_, index)); if (!ImGui::IsItemHovered())
           {
                return;
           }
-          const auto  pop_id_left  = PushPopID();
-          const auto &tooltip      = *getNext(tool_tips_, index);
-
-          const auto  pop_tool_tip = scope_guard{ &ImGui::EndTooltip };
-          ImGui::BeginTooltip();
-
-          const auto pop_text_wrap = scope_guard{ &ImGui::PopTextWrapPos };
-          ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);// Adjust this value as needed for wrap width
-          format_imgui_text("{}", tooltip);
      }
 
      void renderLeftButton() const

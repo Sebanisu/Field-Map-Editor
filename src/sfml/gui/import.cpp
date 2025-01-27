@@ -182,16 +182,13 @@ import::variant_tile_t &import::combo_selected_tile(bool &changed) const
                     if (std::ranges::any_of(
                           std::array{ [&]() -> bool {
                                           bool const selected = ImGui::Selectable("", is_selected);
-                                          if (ImGui::IsItemHovered())
-                                          {
-                                               const auto end_tooltip = scope_guard(&ImGui::EndTooltip);
-                                               ImGui::BeginTooltip();
+                                          tool_tip([&]() {
                                                format_imgui_text("{}", tile_id);
                                                const tile_button_options options = { .size = { tooltips_size, tooltips_size } };
                                                (void)create_tile_button(map_sprite, tile, options);
                                                map_sprite->enable_square(tile);
                                                was_hovered = true;
-                                          }
+                                          });
                                           return selected;
                                      }(),
                                       []() -> bool {
