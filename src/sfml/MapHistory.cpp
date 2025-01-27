@@ -389,6 +389,7 @@ const map_t &ff_8::MapHistory::working() const
 map_t &ff_8::MapHistory::copy_working(std::string description)
 {
      (void)debug_count_print();
+     clear_redo();
      m_undo_original_or_working.push_back(pushed::working);
      m_undo_history.push_back(working());
      m_undo_change_descriptions.push_back(std::move(description));
@@ -419,8 +420,8 @@ bool ff_8::MapHistory::remove_duplicate()
 
 const map_t &ff_8::MapHistory::copy_working_to_original(std::string description)
 {
+     (void)debug_count_print();
      clear_redo();
-     const auto count = debug_count_print();
      m_undo_history.push_back(original());
      m_undo_original_or_working.push_back(pushed::original);
      m_undo_change_descriptions.push_back(std::move(description));
