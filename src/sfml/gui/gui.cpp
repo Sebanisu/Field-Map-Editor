@@ -918,7 +918,6 @@ void gui::draw_map_grid_for_conflict_tiles(const ImVec2 &screen_pos, const float
                     assert(similar_counts.contains(working_tile) && "Tile wasn't in the map");
                     const auto similar_count  = similar_counts.at(working_tile);
                     const bool similar_over_1 = std::cmp_greater(similar_count, 1);
-
                     assert(animation_counts.contains(working_tile) && "Tile wasn't in the map");
                     const auto  animation_count  = animation_counts.at(working_tile);
                     const bool  animation_over_1 = std::cmp_greater(animation_count, 1);
@@ -952,7 +951,7 @@ void gui::draw_map_grid_for_conflict_tiles(const ImVec2 &screen_pos, const float
                               if (
                                 std::ranges::empty(m_hovered_tiles_indices)
                                 || std::ranges::find(m_hovered_tiles_indices, static_cast<std::size_t>(index))
-                                     == std::ranges::end(m_hovered_tiles_indices))
+                                     == std::ranges::end(m_hovered_tiles_indices) || !m_mouse_positions.mouse_enabled)
                               {
                                    if (similar_over_1)
                                    {

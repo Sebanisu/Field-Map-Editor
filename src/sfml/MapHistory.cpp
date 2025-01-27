@@ -134,42 +134,122 @@ static std::vector<PupuID> make_unique_pupu(const std::vector<PupuID> &input)
 {
 
      return map.visit_tiles([&](const auto &tiles) {
-          std::map<normalized_source_tile, std::uint8_t> ret = {};
-          for (const auto index : range_of_tile_indices)
-          {
+          std::map<normalized_source_tile, std::uint8_t> ret     = {};
+          const auto                                     to_tile = [&](const auto index) {
                assert(std::cmp_less(index, std::ranges::size(tiles)) && "index out of range!");
-               const auto &tile = [&]() {
-                    auto begin = std::ranges::cbegin(tiles);
-                    std::ranges::advance(begin, index);
-                    return *begin;
-               }();
-               // Increment the count for the current tile (default initializes to 0 if not found)
+               auto begin = std::ranges::cbegin(tiles);
+               std::ranges::advance(begin, index);
+               return *begin;
+          };
+          auto transform_view = range_of_tile_indices | std::ranges::views::transform(to_tile);
+          for (const auto tile : transform_view)
+          {// Increment the count for the current tile (default initializes to 0 if not found)
                ++ret[tile];
           }
           return ret;
      });
 }
-// normalized_source_animated_tile
-[[nodiscard]] static std::map<normalized_source_animated_tile, std::uint8_t>
+
+/**
+ * @brief Populates a map with the count of animated tiles within a given range of tile indices.
+ *
+ * This function processes a range of tile indices within the map and counts the frequency of normalized
+ * animated tiles. The result is a map where each key is a `normalized_source_animated_tile`, and the corresponding
+ * value represents the count of its occurrences in the specified range.
+ *
+ * This function is useful for identifying frequently used animated tiles within the range, which may
+ * help with optimization, debugging, or providing visual feedback to users.
+ *
+ * @param map The map object containing tiles to process.
+ * @param range_of_tile_indices A range of indices specifying the animated tiles to be counted. The range can be
+ *        any iterable sequence of indices corresponding to tiles in the map.
+ *
+ * @return A map of `normalized_source_animated_tile` to `std::uint8_t` where the key is the normalized animated tile
+ *         and the value is the count of its occurrences within the specified range of tile indices.
+ *
+ * @note This function ensures that tile indices are within bounds using an `assert` statement.
+ *       It leverages `std::ranges` to transform the range of indices into tiles and count their occurrences.
+ */
+[[nodiscard]] [[maybe_unused]] static std::map<normalized_source_animated_tile, std::uint8_t>
   populate_animation_tile_count(const map_t &map, std::ranges::range auto &&range_of_tile_indices)
 {
 
      return map.visit_tiles([&](const auto &tiles) {
-          std::map<normalized_source_animated_tile, std::uint8_t> ret = {};
-          for (const auto index : range_of_tile_indices)
-          {
+          std::map<normalized_source_animated_tile, std::uint8_t> ret     = {};
+          const auto                                              to_tile = [&](const auto index) {
                assert(std::cmp_less(index, std::ranges::size(tiles)) && "index out of range!");
-               const auto &tile = [&]() {
-                    auto begin = std::ranges::cbegin(tiles);
-                    std::ranges::advance(begin, index);
-                    return *begin;
-               }();
-               // Increment the count for the current tile (default initializes to 0 if not found)
+               auto begin = std::ranges::cbegin(tiles);
+               std::ranges::advance(begin, index);
+               return *begin;
+          };
+          auto transform_view = range_of_tile_indices | std::ranges::views::transform(to_tile);
+          for (const auto &tile : transform_view)
+          {// Increment the count for the current tile (default initializes to 0 if not found)
                ++ret[tile];
           }
           return ret;
      });
 }
+
+/**
+ * @brief Generates a map of normalized source animated tiles to their counts based on similar tiles.
+ *
+ * This function processes a subset of tiles (`similar_tiles`) and creates a new map where
+ * each normalized source animated tile is associated with its total count. It aggregates counts
+ * from the given similar tiles map.
+ *
+ * @param similar_tiles A map containing normalized source tiles and their counts.
+ * @return A map of normalized source animated tiles to their total counts.
+ */
+[[nodiscard]] static std::map<normalized_source_animated_tile, std::uint8_t>
+  populate_animation_tile_count(const ff_8::MapHistory::nst_map &similar_tiles)
+{
+     std::map<normalized_source_animated_tile, std::uint8_t> ret = {};
+     for (const auto &[tile, count] : similar_tiles)
+     {
+          ret[tile] += count;
+     }
+     return ret;
+}
+
+/**
+ * @brief Disambiguates conflicts between similar and animation tile counts.
+ *
+ * This function ensures that tiles are either marked as similar or animation tiles,
+ * but not both. It resolves conflicts by prioritizing one category over the other:
+ * - If a tile's "similar" count is greater than 1, its animation count is set to 0, as similar tiles are considered more specific.
+ * - Otherwise, the "similar" count is set to 0, prioritizing animation tiles.
+ *
+ * The function assumes that the number of elements in `working_similar_counts` is greater than or equal
+ * to the number of elements in `working_animation_counts`. It uses the key from `working_similar_counts` to access
+ * and modify corresponding values in `working_animation_counts`.
+ *
+ * @param working_similar_counts A reference to a map of normalized source tiles and their similar counts.
+ *                               This map must have a superset of the keys in `working_animation_counts`.
+ * @param working_animation_counts A reference to a map of normalized source animated tiles and their counts.
+ *                                 Keys in this map may be a subset of those in `working_similar_counts`.
+ *
+ * @note This function uses an `assert` to ensure that the size of `working_similar_counts` is greater than or
+ *       equal to the size of `working_animation_counts`.
+ */
+static void
+  disambiguate_normalized_tiles(ff_8::MapHistory::nst_map &working_similar_counts, ff_8::MapHistory::nsat_map &working_animation_counts)
+{
+     assert(std::cmp_greater_equal(std::ranges::size(working_similar_counts), std::ranges::size(working_animation_counts)));
+     std::ranges::for_each(working_similar_counts, [&](auto &similar) {
+          if (similar.second > 1)
+          {
+               auto &animated = working_animation_counts[similar.first];
+               animated       = 0;// similar is more specific
+          }
+          else
+          {
+               similar.second = 0;// assume animation is more important
+          }
+     });
+}
+
+
 }// namespace ff_8
 
 ff_8::MapHistory::MapHistory(map_t map)
@@ -182,8 +262,9 @@ ff_8::MapHistory::MapHistory(map_t map)
   , m_original_conflicts(calculate_conflicts(m_original))
   , m_working_conflicts(calculate_conflicts(m_original))
   , m_working_similar_counts(populate_similar_tile_count(m_working, m_working_conflicts.range_of_conflicts_flattened()))
-  , m_working_animation_counts(populate_animation_tile_count(m_working, m_working_conflicts.range_of_conflicts_flattened()))
+  , m_working_animation_counts(populate_animation_tile_count(m_working_similar_counts))
 {
+     disambiguate_normalized_tiles(m_working_similar_counts, m_working_animation_counts);
 }
 
 void ff_8::MapHistory::refresh_original_all(bool force) const
@@ -228,9 +309,10 @@ void ff_8::MapHistory::refresh_original_conflicts() const
 
 void ff_8::MapHistory::refresh_working_conflicts() const
 {
-     m_working_conflicts = calculate_conflicts(m_working);
-     m_working_similar_counts = populate_similar_tile_count(m_working, m_working_conflicts.range_of_conflicts_flattened());
-     m_working_animation_counts = populate_animation_tile_count(m_working, m_working_conflicts.range_of_conflicts_flattened());
+     m_working_conflicts        = calculate_conflicts(m_working);
+     m_working_similar_counts   = populate_similar_tile_count(m_working, m_working_conflicts.range_of_conflicts_flattened());
+     m_working_animation_counts = populate_animation_tile_count(m_working_similar_counts);
+     disambiguate_normalized_tiles(m_working_similar_counts, m_working_animation_counts);
 }
 
 const std::vector<ff_8::PupuID> &ff_8::MapHistory::original_pupu() const noexcept
