@@ -457,7 +457,8 @@ void gui::tile_conflicts_panel()
                               if (
                                 std::ranges::empty(m_hovered_tiles_indices)
                                 || std::ranges::find(m_hovered_tiles_indices, static_cast<std::size_t>(index))
-                                     == std::ranges::end(m_hovered_tiles_indices))
+                                     == std::ranges::end(m_hovered_tiles_indices)
+                                || !m_mouse_positions.mouse_enabled)
                               {
                                    if (similar_over_1)
                                    {
