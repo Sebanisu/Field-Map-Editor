@@ -629,15 +629,15 @@ void gui::collapsing_header_filters()
 }
 void gui::background_color_picker()
 {
-     static std::array<float, 3U> clear_color_f{};
+     static std::array<float, 3U> clear_color_f{ static_cast<float>(m_selections->background_color.r) / 255.F,
+                                                 static_cast<float>(m_selections->background_color.b) / 255.F,
+                                                 static_cast<float>(m_selections->background_color.g) / 255.F };
      if (ImGui::ColorEdit3(gui_labels::background.data(), clear_color_f.data(), ImGuiColorEditFlags_DisplayRGB))
      {
-          // changed color
-          static constexpr auto lerp = [](float percent) {
-               return static_cast<sf::Uint8>(
-                 std::lerp((std::numeric_limits<sf::Uint8>::min)(), (std::numeric_limits<sf::Uint8>::max)(), percent));
-          };
-          clear_color = { lerp(clear_color_f[0]), lerp(clear_color_f[1]), lerp(clear_color_f[2]), (std::numeric_limits<sf::Uint8>::max)() };
+          m_selections->background_color = { clear_color_f[0], clear_color_f[1], clear_color_f[2] };
+          Configuration config{};
+          config->insert_or_assign("selections_background_color", std::bit_cast<std::uint32_t>(m_selections->background_color));
+          config.save();
      }
 }
 void gui::loop()
@@ -681,21 +681,40 @@ void gui::draw_window()
      }
      static constexpr ImGuiWindowFlags window_flags =
        ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_AlwaysHorizontalScrollbar | ImGuiWindowFlags_AlwaysVerticalScrollbar;
+     static const auto DrawCheckerboardBackground =
+       [](const ImVec2 &window_pos, const sf::Vector2f &window_size, float tile_size, color color1, color color2) {
+            auto  *draw_list = ImGui::GetWindowDrawList();
+            ImVec2 clip_min  = ImGui::GetWindowPos();
+            ImVec2 clip_max  = { ImGui::GetWindowPos().x + ImGui::GetWindowSize().x, ImGui::GetWindowPos().y + ImGui::GetWindowSize().y };
+            draw_list->PushClipRect(clip_min, clip_max, true);
+            for (float y = window_pos.y; y < window_pos.y + window_size.y; y += tile_size)
+            {
+                 for (float x = window_pos.x; x < window_pos.x + window_size.x; x += tile_size)
+                 {
+                      if (!ImGui::IsRectVisible(ImVec2(x, y), ImVec2(x + tile_size, y + tile_size)))
+                      {
+                           continue;// Skip tiles that are not visible in the current viewport
+                      }
+                      bool  is_even = (static_cast<int>((x / tile_size) + (y / tile_size)) % 2 == 0);
+                      ImU32 color   = ImU32{ is_even ? color1 : color2 };
+                      draw_list->AddRectFilled(ImVec2(x, y), ImVec2(x + tile_size, y + tile_size), color);
+                 }
+            }
+       };
      if (mim_test())
      {
           // m_window.draw(m_mim_sprite.toggle_grids(m_selections->draw_grid, m_selections->draw_texture_page_grid));
 
           const auto pop_style0 = scope_guard([]() { ImGui::PopStyleVar(); });
           ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.F, 0.F));
-          const auto pop_id0    = PushPopID();
-          const auto pop_end    = scope_guard(&ImGui::End);
-          const auto pop_style1 = scope_guard([]() { ImGui::PopStyleColor(); });
-          ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4{ clear_color.r / 256.F, clear_color.g / 256.F, clear_color.b / 256.F, 0.9F });
+          const auto pop_id0 = PushPopID();
+          const auto pop_end = scope_guard(&ImGui::End);
+          // const auto pop_style1 = scope_guard([]() { ImGui::PopStyleColor(); });
+          //  ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4{ clear_color.r / 256.F, clear_color.g / 256.F, clear_color.b / 256.F, 0.9F });
           if (!ImGui::Begin(gui_labels::draw_window_title.data(), nullptr, window_flags))
           {
                return;
           }
-
 
           const auto         wsize      = ImGui::GetContentRegionAvail();
           const auto         img_size   = m_mim_sprite.get_texture()->getSize();
@@ -704,8 +723,14 @@ void gui::draw_window()
           const float        scale      = std::max(wsize.x / img_size.x, wsize.y / img_size.y);
           const sf::Vector2f scaled_size(img_size.x * scale, img_size.y * scale);
 
+          DrawCheckerboardBackground(
+            screen_pos,
+            scaled_size,
+            (m_selections->draw_palette ? 0.25F : 4.F) * scale,
+            m_selections->background_color.fade(-0.2F),
+            m_selections->background_color.fade(0.2F));
 
-          const auto         pop_id1 = PushPopID();
+          const auto pop_id1 = PushPopID();
 
           ImGui::Image(*m_mim_sprite.get_texture(), scaled_size);
 
@@ -717,10 +742,10 @@ void gui::draw_window()
      {
           const auto pop_style0 = scope_guard([]() { ImGui::PopStyleVar(); });
           ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.F, 0.F));
-          const auto pop_id0    = PushPopID();
-          const auto pop_end    = scope_guard(&ImGui::End);
-          const auto pop_style1 = scope_guard([]() { ImGui::PopStyleColor(); });
-          ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4{ clear_color.r / 256.F, clear_color.g / 256.F, clear_color.b / 256.F, 0.9F });
+          const auto pop_id0 = PushPopID();
+          const auto pop_end = scope_guard(&ImGui::End);
+          // const auto pop_style1 = scope_guard([]() { ImGui::PopStyleColor(); });
+          //  ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4{ clear_color.r / 256.F, clear_color.g / 256.F, clear_color.b / 256.F, 0.9F });
           if (!ImGui::Begin(gui_labels::draw_window_title.data(), nullptr, window_flags))
           {
                return;
@@ -734,8 +759,10 @@ void gui::draw_window()
           const float        scale      = std::max(wsize.x / img_size.x, wsize.y / img_size.y);
           const sf::Vector2f scaled_size(img_size.x * scale, img_size.y * scale);
 
+          DrawCheckerboardBackground(
+            screen_pos, scaled_size, 4.F * scale, m_selections->background_color.fade(-0.2F), m_selections->background_color.fade(0.2F));
 
-          const auto         pop_id1 = PushPopID();
+          const auto pop_id1 = PushPopID();
 
           ImGui::Image(*m_map_sprite->get_render_texture(), scaled_size);
 

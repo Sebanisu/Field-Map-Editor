@@ -9,6 +9,7 @@
 #include "tile_sizes.hpp"
 #include <filesystem>
 #include <spdlog/spdlog.h>
+#include "colors.hpp"
 namespace fme
 {
 /**
@@ -70,6 +71,7 @@ struct Selections
      bool                           display_history_window         = { false };///< Whether to display history window.
      bool                           display_control_panel_window   = { true };///< Whether to display control panel window.
      bool                           display_draw_window            = { true };///< Whether to display draw window.
+     color                          background_color               = { fme::colors::White };///< Remember to user's selected Background Color for draw Window.
 
 
      /**

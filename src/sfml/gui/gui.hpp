@@ -5,6 +5,7 @@
 #define FIELD_MAP_EDITOR_GUI_HPP
 #include "archives_group.hpp"
 #include "batch.hpp"
+#include "colors.hpp"
 #include "compact_type.hpp"
 #include "Configuration.hpp"
 #include "events.hpp"
@@ -47,7 +48,6 @@ struct gui
        open_viii::graphics::background::Tile2,
        open_viii::graphics::background::Tile3,
        std::monostate>;
-     sf::Color                                                           clear_color                 = sf::Color::Black;
      std::mutex                                                          append_results_mutex        = {};
      std::vector<std::filesystem::path>                                  append_results              = {};
      std::shared_ptr<sf::Shader>                                         m_drag_sprite_shader        = {};
