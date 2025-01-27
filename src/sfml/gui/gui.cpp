@@ -20,7 +20,6 @@
 #include <ranges>
 #include <SFML/Window/Mouse.hpp>
 #include <utility>
-
 /**
  * @brief Checks if any index in the first range is also present in the second range.
  *
@@ -1391,15 +1390,19 @@ void gui::checkbox_map_disable_blending()
      }
      tool_tip(gui_labels::disable_blending_tooltip);
 }
+void gui::refresh_mim_palette_texture()
+{
+     Configuration config{};
+     config->insert_or_assign("selections_draw_palette", m_selections->draw_palette);
+     config.save();
+     m_mim_sprite = m_mim_sprite.with_draw_palette(m_selections->draw_palette);
+     m_changed    = true;
+}
 void gui::checkbox_mim_palette_texture()
 {
      if (ImGui::Checkbox(gui_labels::draw_palette_texture.data(), &m_selections->draw_palette))
      {
-          Configuration config{};
-          config->insert_or_assign("selections_draw_palette", m_selections->draw_palette);
-          config.save();
-          m_mim_sprite = m_mim_sprite.with_draw_palette(m_selections->draw_palette);
-          m_changed    = true;
+          refresh_mim_palette_texture();
      }
      tool_tip(gui_labels::draw_palette_texture_tooltip);
 }
@@ -1634,6 +1637,37 @@ void gui::edit_menu()
      else
      {
           tool_tip(gui_labels::disable_blending_tooltip);
+     }
+     if (ImGui::BeginMenu(gui_labels::draw.data()))
+     {
+          static const constinit auto iota_draw_mode =
+            std::views::iota(0, 2) | std::views::transform([](const int mode) { return static_cast<draw_mode>(mode); });
+          static const auto str_draw_mode =
+            iota_draw_mode | std::views::transform([](draw_mode in_draw_mode) { return fmt::format("{}", in_draw_mode); });
+          auto zip_modes = std::ranges::views::zip(str_draw_mode, iota_draw_mode);
+          for (auto &&[str, mode] : zip_modes)
+          {
+               bool care_not = m_selections->draw == mode;
+               if (ImGui::MenuItem(str.data(), nullptr, &care_not, !care_not))
+               {
+                    if (m_selections->draw != mode)
+                    {
+                         m_selections->draw = mode;
+                         refresh_draw_mode();
+                    }
+               }
+          }
+          ImGui::EndMenu();
+     }
+
+
+     if (mim_test() && ImGui::MenuItem(gui_labels::draw_palette_texture.data(), nullptr, &m_selections->draw_palette))
+     {
+          refresh_mim_palette_texture();
+     }
+     else
+     {
+          tool_tip(gui_labels::draw_palette_texture_tooltip);
      }
 }
 void gui::file_menu()
@@ -2051,20 +2085,8 @@ void gui::menuitem_load_map_file(bool enabled)
      m_load_file_browser.SetInputName(path);
      m_file_dialog_mode = file_dialog_mode::load_map_file;
 }
-void gui::combo_draw()
+void gui::refresh_draw_mode()
 {
-     static const constinit auto iota_draw_mode =
-       std::views::iota(0, 2) | std::views::transform([](const int mode) { return static_cast<draw_mode>(mode); });
-     static const auto str_draw_mode =
-       iota_draw_mode | std::views::transform([](draw_mode in_draw_mode) { return fmt::format("{}", in_draw_mode); });
-
-     const auto gcc =
-       GenericComboClass(gui_labels::draw, [=]() { return iota_draw_mode; }, [=]() { return str_draw_mode; }, m_selections->draw);
-
-     if (!gcc.render())
-     {
-          return;
-     }
      Configuration config{};
      config->insert_or_assign("selections_draw", static_cast<std::underlying_type_t<draw_mode>>(m_selections->draw));
      config.save();
@@ -2081,6 +2103,22 @@ void gui::combo_draw()
                break;
      }
      m_changed = true;
+}
+void gui::combo_draw()
+{
+     static const constinit auto iota_draw_mode =
+       std::views::iota(0, 2) | std::views::transform([](const int mode) { return static_cast<draw_mode>(mode); });
+     static const auto str_draw_mode =
+       iota_draw_mode | std::views::transform([](draw_mode in_draw_mode) { return fmt::format("{}", in_draw_mode); });
+
+     const auto gcc =
+       GenericComboClass(gui_labels::draw, [=]() { return iota_draw_mode; }, [=]() { return str_draw_mode; }, m_selections->draw);
+
+     if (!gcc.render())
+     {
+          return;
+     }
+     refresh_draw_mode();
 }
 bool gui::combo_path()
 {

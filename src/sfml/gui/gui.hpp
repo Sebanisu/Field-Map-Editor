@@ -324,6 +324,8 @@ struct gui
      void                         windows_menu();
      void                         refresh_map_swizzle();
      void                         refresh_map_disable_blending();
+     void                         refresh_draw_mode();
+     void                         refresh_mim_palette_texture();
 
      static inline constinit bool toggle_imgui_demo_window = { false };
 };
