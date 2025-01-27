@@ -86,8 +86,8 @@ deploy:
     auth_token:
       secure: 5giEwDYEP975x3C+JYDNGukTupBCPcmez7GbulvUX40/2C5cgs5ta8Gyq6IYpFmW
     artifact:     
-      - Canary
-      - Source
+      - "Canary"
+      - "Source"
     prerelease: true
     force_update: true
     on:
