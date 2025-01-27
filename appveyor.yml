@@ -23,9 +23,9 @@ after_build:
   - cmd: >- 
       dir /s /b bin\\*.exe
 
-      xcopy "src\\opengl\\opengl_version\\res bin\\Release\\res" /E /I /Y
+      xcopy "src\\opengl\\opengl_version\\res" "bin\\Release\\res" /E /I /Y
 
-      xcopy fonts bin\\Release\\fonts /E /I /Y
+      xcopy "fonts" "bin\\Release\\fonts" /E /I /Y
 
       powershell Compress-Archive -Path bin\\Release\\* -DestinationPath bin\\Release\\Field-Map-Editor_canary_build.zip
 
