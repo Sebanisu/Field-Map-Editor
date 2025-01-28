@@ -15,7 +15,7 @@
 #include "tool_tip.hpp"
 #include <algorithm>
 #include <cmath>
-// #include <fmt/ranges.h>
+#include <fmt/ranges.h>
 #include <open_viii/paths/Paths.hpp>
 #include <ranges>
 #include <SFML/Window/Mouse.hpp>
@@ -627,17 +627,21 @@ void gui::collapsing_header_filters()
           combo_draw_bit();
      }
 }
+void gui::change_background_color(const fme::color &in_color)
+{
+     m_selections->background_color = in_color;
+     Configuration config{};
+     config->insert_or_assign("selections_background_color", std::bit_cast<std::uint32_t>(m_selections->background_color));
+     config.save();
+}
 void gui::background_color_picker()
 {
-     static std::array<float, 3U> clear_color_f{ static_cast<float>(m_selections->background_color.r) / 255.F,
-                                                 static_cast<float>(m_selections->background_color.b) / 255.F,
-                                                 static_cast<float>(m_selections->background_color.g) / 255.F };
+     clear_color_f = { static_cast<float>(m_selections->background_color.r) / 255.F,
+                       static_cast<float>(m_selections->background_color.g) / 255.F,
+                       static_cast<float>(m_selections->background_color.b) / 255.F };
      if (ImGui::ColorEdit3(gui_labels::background.data(), clear_color_f.data(), ImGuiColorEditFlags_DisplayRGB))
      {
-          m_selections->background_color = { clear_color_f[0], clear_color_f[1], clear_color_f[2] };
-          Configuration config{};
-          config->insert_or_assign("selections_background_color", std::bit_cast<std::uint32_t>(m_selections->background_color));
-          config.save();
+          change_background_color({ clear_color_f[0], clear_color_f[1], clear_color_f[2] });
      }
 }
 void gui::loop()
@@ -1695,6 +1699,32 @@ void gui::edit_menu()
      else
      {
           tool_tip(gui_labels::draw_palette_texture_tooltip);
+     }
+     if (ImGui::BeginMenu("Background Color"))
+     {
+          float sz       = ImGui::GetTextLineHeight();
+          auto  zip_view = std::ranges::views::zip(fme::colors::ColorValues, fme::colors::ColorNames);
+          for (auto &&[color_value, color_name] : zip_view)
+          {
+               if (std::cmp_less(color_value.a, 255))
+               {
+                    continue;
+               }
+               ImVec2 p = ImGui::GetCursorScreenPos();
+               ImGui::GetWindowDrawList()->AddRectFilled(p, ImVec2(p.x + sz, p.y + sz), ImU32{ color_value });
+               ImGui::Dummy(ImVec2(sz, sz));
+               ImGui::SameLine();
+               if (ImGui::MenuItem(color_name.data()))
+               {
+                    change_background_color(color_value);
+               }
+          }
+
+          if (ImGui::ColorPicker3("Select Color", clear_color_f.data(), ImGuiColorEditFlags_DisplayRGB))
+          {
+               change_background_color({ clear_color_f[0], clear_color_f[1], clear_color_f[2] });
+          }
+          ImGui::EndMenu();
      }
 }
 void gui::file_menu()

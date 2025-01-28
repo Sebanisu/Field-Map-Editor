@@ -91,6 +91,9 @@ struct gui
      ImGui::FileBrowser          m_directory_browser{ ImGuiFileBrowserFlags_SelectDirectory | ImGuiFileBrowserFlags_CreateNewDir
                                              | ImGuiFileBrowserFlags_EditPathString };
 
+
+     std::array<float, 3U>       clear_color_f{};
+
      static toml::array          get_paths();
      // imgui doesn't support std::string or std::string_view or
      // std::filesystem::path, only const char *
@@ -326,6 +329,8 @@ struct gui
      void                         refresh_map_disable_blending();
      void                         refresh_draw_mode();
      void                         refresh_mim_palette_texture();
+     void                         change_background_color(const fme::color &);
+
 
      static inline constinit bool toggle_imgui_demo_window = { false };
 };
