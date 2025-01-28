@@ -35,11 +35,13 @@ static inline void tool_tip(lambdaT &&lambda, bool override = false)
           return;
      }
 
-     //const auto pop_id       = PushPopID();
-     const auto pop_tool_tip = scope_guard{ &ImGui::EndTooltip };
+     // const auto pop_id       = PushPopID();
+     if (ImGui::BeginTooltip())
+     {
+          const auto pop_tool_tip = scope_guard{ &ImGui::EndTooltip };
 
-     ImGui::BeginTooltip();
-     std::invoke(std::forward<lambdaT>(lambda));
+          std::invoke(std::forward<lambdaT>(lambda));
+     }
 }
 
 }// namespace fme
