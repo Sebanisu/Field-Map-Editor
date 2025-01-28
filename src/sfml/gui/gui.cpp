@@ -1415,11 +1415,26 @@ void gui::refresh_map_disable_blending()
 }
 void gui::checkbox_map_disable_blending()
 {
-     if (!m_selections->draw_swizzle && ImGui::Checkbox(gui_labels::disable_blending.data(), &m_selections->draw_disable_blending))
+     if (!m_selections->draw_swizzle)
      {
-          refresh_map_disable_blending();
+          if (ImGui::Checkbox(gui_labels::disable_blending.data(), &m_selections->draw_disable_blending))
+          {
+               refresh_map_disable_blending();
+          }
+          else
+          {
+               tool_tip(gui_labels::disable_blending_tooltip);
+          }
      }
-     tool_tip(gui_labels::disable_blending_tooltip);
+     else
+     {
+          static const bool true_val = true;
+          ImGui::BeginDisabled();
+          ImGui::Checkbox(gui_labels::disable_blending.data(), const_cast<bool *>(&true_val));
+          tool_tip(gui_labels::disable_blending_tooltip);
+          tool_tip(gui_labels::forced_on_while_swizzled);
+          ImGui::EndDisabled();
+     }
 }
 void gui::refresh_mim_palette_texture()
 {
@@ -1676,6 +1691,16 @@ void gui::edit_menu()
           {
                tool_tip(gui_labels::disable_blending_tooltip);
           }
+     }
+
+     else
+     {
+          static const bool true_val = true;
+          ImGui::BeginDisabled();
+          ImGui::MenuItem(gui_labels::disable_blending.data(), nullptr, const_cast<bool *>(&true_val));
+          tool_tip(gui_labels::disable_blending_tooltip);
+          tool_tip(gui_labels::forced_on_while_swizzled);
+          ImGui::EndDisabled();
      }
      if (ImGui::BeginMenu(gui_labels::draw.data()))
      {

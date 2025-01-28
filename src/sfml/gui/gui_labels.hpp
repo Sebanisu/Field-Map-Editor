@@ -100,6 +100,7 @@ struct gui_labels
      static constexpr std::string_view batch_operation                        = { "Batch Operation" };
      static constexpr std::string_view batch_operation_window                 = { "Batch Swizzle/Deswizzle" };
      static constexpr std::string_view explore                                = { "Explore" };
+     static constexpr std::string_view forced_on_while_swizzled               = { "Forced on while Swizzled..." };
 
      static constexpr std::string_view choose_input_directory                 = { "Choose directory to load textures from..." };
      static constexpr std::string_view choose_output_directory                = { "Choose directory to save textures to..." };
