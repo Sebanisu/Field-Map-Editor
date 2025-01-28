@@ -330,6 +330,8 @@ struct gui
      void                         refresh_draw_mode();
      void                         refresh_mim_palette_texture();
      void                         change_background_color(const fme::color &);
+     void                         refresh_path();
+     void                         browse_buttons();
 
 
      static inline constinit bool toggle_imgui_demo_window = { false };

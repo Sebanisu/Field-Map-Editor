@@ -206,6 +206,7 @@ struct gui_labels
           "the languages in the same file. You could change the path directly to a lang- path. Then this will override this dropdown for "
           "older versions of FF8."
      };
+     static constexpr std::string_view language_generic_tool_tip    = { "Generic this is for matching files without lang code in them." };
      static constexpr std::string_view save_swizzle_import_tool_tip = {
           "Save swizzled image wtih new `.map`. Including imported texture."
      };

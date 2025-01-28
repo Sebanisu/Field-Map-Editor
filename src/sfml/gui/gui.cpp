@@ -296,13 +296,17 @@ void gui::control_panel_window()
      //    {
      //      ImGui::SetWindowPos({ 0U, 0U });
      //    }
-     background_color_picker();
-     combo_draw();
+     if (mim_test() || map_test())
+     {
+          background_color_picker();
+          combo_draw();
+     }
+     combo_path();
+
      if (m_paths.empty())
      {
           return;
      }
-     combo_path();
      combo_coo();
      combo_field();
      if (mim_test())
@@ -1322,7 +1326,10 @@ void gui::combo_coo()
      {
           update_field();
      }
-     tool_tip(gui_labels::language_dropdown_tool_tip);
+     else
+     {
+          tool_tip(gui_labels::language_dropdown_tool_tip);
+     }
 }
 const open_viii::LangT &gui::get_coo() const
 {
@@ -1562,6 +1569,19 @@ void gui::windows_menu()
           return;
      }
      const auto end_menu = scope_guard(&ImGui::EndMenu);
+     if (ImGui::MenuItem(gui_labels::display_control_panel_window.data(), "Control + P", &m_selections->display_control_panel_window))
+     {
+          Configuration config{};
+          config->insert_or_assign("selections_display_control_panel_window", m_selections->display_control_panel_window);
+          config.save();
+     }
+     if (ImGui::MenuItem("ImGui Demo Window", std::nullptr_t{}, &toggle_imgui_demo_window))
+     {
+     }
+     if (!map_test() && !mim_test())
+     {
+          return;
+     }
      if (ImGui::MenuItem(gui_labels::batch_operation_window.data(), "Control + B", &m_selections->display_batch_window))
      {
           Configuration config{};
@@ -1588,86 +1608,86 @@ void gui::windows_menu()
           config->insert_or_assign("selections_display_draw_window", m_selections->display_draw_window);
           config.save();
      }
-     if (ImGui::MenuItem(gui_labels::display_control_panel_window.data(), "Control + P", &m_selections->display_control_panel_window))
-     {
-          Configuration config{};
-          config->insert_or_assign("selections_display_control_panel_window", m_selections->display_control_panel_window);
-          config.save();
-     }
-     if (ImGui::MenuItem("ImGui Demo Window", std::nullptr_t{}, &toggle_imgui_demo_window))
-     {
-     }
 }
 void gui::edit_menu()
 {
+     if (!map_test() && !mim_test())
+     {
+          return;
+     }
      if (!ImGui::BeginMenu(gui_labels::edit.data()))
      {
           return;
      }
      const auto end_menu = scope_guard(&ImGui::EndMenu);
-     if (ImGui::MenuItem(gui_labels::undo.data(), "Control + Z", false, m_map_sprite->undo_enabled()))
+     if (map_test())
      {
-          m_map_sprite->undo();
-     }
-     else if (m_map_sprite->undo_enabled())
-     {
-
-          const auto description = m_map_sprite->current_undo_description();
-          tool_tip(description);
-     }
-     if (ImGui::MenuItem(gui_labels::redo.data(), "Control + Y", false, m_map_sprite->redo_enabled()))
-     {
-          m_map_sprite->redo();
-     }
-     else if (m_map_sprite->redo_enabled())
-     {
-          const auto description = m_map_sprite->current_redo_description();
-          tool_tip(description);
-     }
-     ImGui::Separator();
-     if (ImGui::MenuItem(gui_labels::undo_all.data(), "Shift + Control + Z", false, m_map_sprite->undo_enabled()))
-     {
-          m_map_sprite->undo_all();
-     }
-     if (ImGui::MenuItem(gui_labels::redo_all.data(), "Shift + Control + Y", false, m_map_sprite->redo_enabled()))
-     {
-          m_map_sprite->redo_all();
-     }
-     ImGui::Separator();
-     if (ImGui::MenuItem(gui_labels::display_history.data(), "Control + H", &m_selections->display_history_window))
-     {
-          Configuration config{};
-          config->insert_or_assign("selections_display_history_window", m_selections->display_history_window);
-          config.save();
-     }
-     ImGui::Separator();
-
-
-     if (ImGui::BeginMenu(gui_labels::draw.data()))
-     {
-          const auto pop_menu = scope_guard(&ImGui::EndMenu);
+          if (ImGui::MenuItem(gui_labels::undo.data(), "Control + Z", false, m_map_sprite->undo_enabled()))
           {
-               static const constinit auto iota_draw_mode =
-                 std::views::iota(0, 2) | std::views::transform([](const int mode) { return static_cast<draw_mode>(mode); });
-               static const auto str_draw_mode =
-                 iota_draw_mode | std::views::transform([](draw_mode in_draw_mode) { return fmt::format("{}", in_draw_mode); });
-               auto zip_modes = std::ranges::views::zip(iota_draw_mode, str_draw_mode);
-               for (auto &&[mode, str] : zip_modes)
+               m_map_sprite->undo();
+          }
+          else if (m_map_sprite->undo_enabled())
+          {
+
+               const auto description = m_map_sprite->current_undo_description();
+               tool_tip(description);
+          }
+          if (ImGui::MenuItem(gui_labels::redo.data(), "Control + Y", false, m_map_sprite->redo_enabled()))
+          {
+               m_map_sprite->redo();
+          }
+          else if (m_map_sprite->redo_enabled())
+          {
+               const auto description = m_map_sprite->current_redo_description();
+               tool_tip(description);
+          }
+          ImGui::Separator();
+          if (ImGui::MenuItem(gui_labels::undo_all.data(), "Shift + Control + Z", false, m_map_sprite->undo_enabled()))
+          {
+               m_map_sprite->undo_all();
+          }
+          if (ImGui::MenuItem(gui_labels::redo_all.data(), "Shift + Control + Y", false, m_map_sprite->redo_enabled()))
+          {
+               m_map_sprite->redo_all();
+          }
+          ImGui::Separator();
+          if (ImGui::MenuItem(gui_labels::display_history.data(), "Control + H", &m_selections->display_history_window))
+          {
+               Configuration config{};
+               config->insert_or_assign("selections_display_history_window", m_selections->display_history_window);
+               config.save();
+          }
+          ImGui::Separator();
+     }
+
+     if (map_test() || mim_test())
+     {
+          if (ImGui::BeginMenu(gui_labels::draw.data()))
+          {
+               const auto pop_menu = scope_guard(&ImGui::EndMenu);
                {
-                    bool care_not = m_selections->draw == mode;
-                    if (ImGui::MenuItem(str.data(), nullptr, &care_not, !care_not))
+                    static const constinit auto iota_draw_mode =
+                      std::views::iota(0, 2) | std::views::transform([](const int mode) { return static_cast<draw_mode>(mode); });
+                    static const auto str_draw_mode =
+                      iota_draw_mode | std::views::transform([](draw_mode in_draw_mode) { return fmt::format("{}", in_draw_mode); });
+                    auto zip_modes = std::ranges::views::zip(iota_draw_mode, str_draw_mode);
+                    for (auto &&[mode, str] : zip_modes)
                     {
-                         if (m_selections->draw != mode)
+                         bool care_not = m_selections->draw == mode;
+                         if (ImGui::MenuItem(str.data(), nullptr, &care_not, !care_not))
                          {
-                              m_selections->draw = mode;
-                              refresh_draw_mode();
+                              if (m_selections->draw != mode)
+                              {
+                                   m_selections->draw = mode;
+                                   refresh_draw_mode();
+                              }
                          }
                     }
                }
+
+
+               ImGui::Separator();
           }
-
-
-          ImGui::Separator();
           if (map_test())
           {
 
@@ -1764,32 +1784,81 @@ void gui::edit_menu()
      }
 
 
-     if (ImGui::BeginMenu("Background Color"))
+     if (map_test() || mim_test())
      {
-          float sz       = ImGui::GetTextLineHeight();
-          auto  zip_view = std::ranges::views::zip(fme::colors::ColorValues, fme::colors::ColorNames);
-          for (auto &&[color_value, color_name] : zip_view)
+          if (ImGui::BeginMenu("Background Color"))
           {
-               if (std::cmp_less(color_value.a, 255))
+               float sz       = ImGui::GetTextLineHeight();
+               auto  zip_view = std::ranges::views::zip(fme::colors::ColorValues, fme::colors::ColorNames);
+               for (auto &&[color_value, color_name] : zip_view)
                {
-                    continue;
+                    if (std::cmp_less(color_value.a, 255))
+                    {
+                         continue;
+                    }
+                    ImVec2 p = ImGui::GetCursorScreenPos();
+                    ImGui::GetWindowDrawList()->AddRectFilled(p, ImVec2(p.x + sz, p.y + sz), ImU32{ color_value });
+                    ImGui::Dummy(ImVec2(sz, sz));
+                    ImGui::SameLine();
+                    if (ImGui::MenuItem(color_name.data()))
+                    {
+                         change_background_color(color_value);
+                    }
                }
-               ImVec2 p = ImGui::GetCursorScreenPos();
-               ImGui::GetWindowDrawList()->AddRectFilled(p, ImVec2(p.x + sz, p.y + sz), ImU32{ color_value });
-               ImGui::Dummy(ImVec2(sz, sz));
-               ImGui::SameLine();
-               if (ImGui::MenuItem(color_name.data()))
-               {
-                    change_background_color(color_value);
-               }
-          }
 
-          if (ImGui::ColorPicker3("##Choose Background Color", clear_color_f.data(), ImGuiColorEditFlags_DisplayRGB))
-          {
-               change_background_color({ clear_color_f[0], clear_color_f[1], clear_color_f[2] });
+               if (ImGui::ColorPicker3("##Choose Background Color", clear_color_f.data(), ImGuiColorEditFlags_DisplayRGB))
+               {
+                    change_background_color({ clear_color_f[0], clear_color_f[1], clear_color_f[2] });
+               }
+               ImGui::EndMenu();
           }
-          ImGui::EndMenu();
      }
+}
+void gui::browse_buttons()
+{
+
+     if (ImGui::Button(gui_labels::browse.data()))
+     {
+          open_locate_ff8_filebrowser();
+     }
+     tool_tip(gui_labels::locate_a_ff8_install);
+     ImGui::SameLine();
+     ImGui::BeginDisabled(std::ranges::empty(m_paths));
+     if (ImGui::Button(gui_labels::explore.data()))
+     {
+          open_directory(m_selections->path);
+     }
+     tool_tip(gui_labels::explore_tooltip);
+     ImGui::SameLine();
+     m_paths;
+     if (ImGui::Button(gui_labels::remove.data()))
+     {
+          // Find and remove the selected path from m_paths
+          auto it = std::ranges::find_if(m_paths, [&](toml::node &item) { return item.value_or<std::string>({}) == m_selections->path; });
+          if (it != m_paths.end())
+          {
+
+               bool selected = it->value_or<std::string>({}) == m_selections->path;
+               m_paths.erase(it);
+               Configuration config{};
+               config->insert_or_assign("paths_vector", m_paths);
+               config.save();
+               if (selected)
+               {
+                    if (std::ranges::empty(m_paths))
+                    {
+                         m_selections->path = "";
+                    }
+                    else
+                    {
+                         m_selections->path = m_paths.begin()->value_or<std::string>({});
+                    }
+                    refresh_path();
+               }
+          }
+     }
+     ImGui::EndDisabled();
+     tool_tip(gui_labels::remove_the_selected_ff8_path);
 }
 void gui::file_menu()
 {
@@ -1798,7 +1867,103 @@ void gui::file_menu()
           return;
      }
      const auto end_menu = scope_guard(&ImGui::EndMenu);
-     menuitem_locate_ff8();
+     if (ImGui::BeginMenu(gui_labels::path.data()))
+     {
+          const auto end_menu1 = scope_guard(&ImGui::EndMenu);
+          menuitem_locate_ff8();
+          if (ImGui::MenuItem(gui_labels::explore.data(), nullptr, nullptr, !std::ranges::empty(m_paths)))
+          {
+               open_directory(m_selections->path);
+          }
+          else
+          {
+               tool_tip(gui_labels::explore_tooltip);
+          }
+          if (std::ranges::empty(m_paths))
+          {
+               return;
+          }
+          ImGui::Separator();
+          const auto transformed_paths =
+            m_paths | std::ranges::views::transform([](toml::node &item) -> std::string { return item.value_or<std::string>({}); });
+
+          std::ptrdiff_t delete_me = -1;
+          for (const auto &[index, path] : transformed_paths | std::ranges::views::enumerate)
+          {
+               bool is_checked = path == m_selections->path;
+               ImGui::SetNextItemAllowOverlap();
+               if (ImGui::MenuItem(path.data(), nullptr, &is_checked, !is_checked))
+               {
+                    m_selections->path = path;
+                    refresh_path();
+               }
+               ImGui::SameLine();
+               const auto pop_id = PushPopID();
+               if (ImGui::Button(ICON_FA_TRASH))
+               {
+                    delete_me = index;
+               }
+               else
+               {
+                    tool_tip("delete me");
+               }
+          }
+          if (std::cmp_greater(delete_me, -1))
+          {
+               auto it = std::ranges::begin(m_paths);
+               std::ranges::advance(it, delete_me);
+               if (it != std::ranges::end(m_paths))
+               {
+
+                    bool selected = it->value_or<std::string>({}) == m_selections->path;
+                    m_paths.erase(it);
+                    Configuration config{};
+                    config->insert_or_assign("paths_vector", m_paths);
+                    config.save();
+                    if (selected)
+                    {
+                         if (std::ranges::empty(m_paths))
+                         {
+                              m_selections->path = "";
+                         }
+                         else
+                         {
+                              m_selections->path = m_paths.begin()->value_or<std::string>({});
+                         }
+                         refresh_path();
+                    }
+               }
+          }
+     }
+     if (!map_test() && !mim_test())
+     {
+          return;
+     }
+     if (ImGui::BeginMenu(gui_labels::language.data()))
+     {
+          const auto            end_menu1 = scope_guard(&ImGui::EndMenu);
+          constexpr static auto values    = open_viii::LangCommon::to_array();
+          const static auto     strings   = values | std::views::transform(AsString{});
+          static auto           zip_items = std::ranges::views::zip(values, strings);
+          for (auto &&[value, string] : zip_items)
+          {
+
+               bool is_checked = value == m_selections->coo;
+               if (ImGui::MenuItem(string.data(), nullptr, &is_checked, !is_checked))
+               {
+                    m_selections->coo = value;
+                    update_field();
+               }
+               else
+               {
+                    tool_tip(gui_labels::language_dropdown_tool_tip);
+                    if (value == open_viii::LangT::generic)
+                         tool_tip(gui_labels::language_generic_tool_tip);
+               }
+          }
+     }
+
+
      if (map_test())
      {
           menuitem_locate_custom_upscale();
@@ -2062,11 +2227,14 @@ void gui::file_browser_save_texture()
 }
 void gui::menuitem_locate_ff8()
 {
-     if (!ImGui::MenuItem(gui_labels::locate_a_ff8_install.data()))
+     if (ImGui::MenuItem(gui_labels::browse.data()))
      {
-          return;
+          open_locate_ff8_filebrowser();
      }
-     open_locate_ff8_filebrowser();
+     else
+     {
+          tool_tip(gui_labels::locate_a_ff8_install);
+     }
 }
 void gui::open_locate_ff8_filebrowser()
 {
@@ -2138,6 +2306,10 @@ void gui::menuitem_load_deswizzle_textures()
 }
 void gui::menuitem_save_texture(bool enabled)
 {
+     if (!map_test() && !mim_test())
+     {
+          return;
+     }
      if (!ImGui::MenuItem(gui_labels::save_displayed_texture.data(), nullptr, false, enabled))
      {
           return;
@@ -2243,50 +2415,27 @@ void gui::combo_draw()
 }
 bool gui::combo_path()
 {
+     const auto pop_buttons = scope_guard([&]() { browse_buttons(); });
      const auto transformed_paths =
        m_paths | std::ranges::views::transform([](toml::node &item) -> std::string { return item.value_or<std::string>({}); });
-     const auto browse_button = scope_guard([&]() {
-          if (ImGui::Button(gui_labels::browse.data()))
-          {
-               open_locate_ff8_filebrowser();
-          }
-          tool_tip(gui_labels::locate_a_ff8_install);
-          ImGui::SameLine();
-          if (ImGui::Button(gui_labels::explore.data()))
-          {
-               open_directory(m_selections->path);
-          }
-          tool_tip(gui_labels::explore_tooltip);
-          ImGui::SameLine();
-          ImGui::BeginDisabled(std::ranges::empty(transformed_paths));
-          if (ImGui::Button(gui_labels::remove.data()))
-          {
-               // Find and remove the selected path from m_paths
-               auto it =
-                 std::ranges::find_if(m_paths, [&](toml::node &item) { return item.value_or<std::string>({}) == m_selections->path; });
-               if (it != m_paths.end())
-               {
-                    m_paths.erase(it);
-                    Configuration config{};
-                    config->insert_or_assign("paths_vector", m_paths);
-                    config.save();
-               }
-          }
-          ImGui::EndDisabled();
-          tool_tip(gui_labels::remove_the_selected_ff8_path);
-     });
      const auto gcc =
        GenericComboClass(gui_labels::path, [&]() { return transformed_paths; }, [&]() { return transformed_paths; }, m_selections->path, 1);
-     if (gcc.render())
+     if (!m_paths.empty() && gcc.render())
      {
-          Configuration config{};
-          config->insert_or_assign("selections_path", m_selections->path);
-          config.save();
-          update_path();
+          refresh_path();
           return true;
      }
      return false;
 }
+
+void gui::refresh_path()
+{
+     Configuration config{};
+     config->insert_or_assign("selections_path", m_selections->path);
+     config.save();
+     update_path();
+}
+
 
 toml::array gui::get_paths()
 {
