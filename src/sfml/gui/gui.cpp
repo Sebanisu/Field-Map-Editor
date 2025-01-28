@@ -1687,98 +1687,99 @@ void gui::edit_menu()
 
 
                ImGui::Separator();
-          }
-          if (map_test())
-          {
 
-               static const constinit std::array<bool, 2>             swizzle_value    = { true, false };
-               static const constinit std::array<std::string_view, 2> swizzle_string   = { gui_labels::swizzle, gui_labels::deswizzle };
-               static const constinit std::array<std::string_view, 2> swizzle_tooltips = { gui_labels::swizzle_tooltip,
-                                                                                           gui_labels::deswizzle_tooltip };
-               static auto constinit zip_modes = std::ranges::views::zip(swizzle_value, swizzle_string, swizzle_tooltips);
-               for (auto &&[mode, str, tool_tip_str] : zip_modes)
+               if (map_test())
                {
-                    bool care_not = m_selections->draw_swizzle == mode;
-                    if (ImGui::MenuItem(str.data(), nullptr, &care_not, !care_not))
+
+                    static const constinit std::array<bool, 2>             swizzle_value  = { true, false };
+                    static const constinit std::array<std::string_view, 2> swizzle_string = { gui_labels::swizzle, gui_labels::deswizzle };
+                    static const constinit std::array<std::string_view, 2> swizzle_tooltips = { gui_labels::swizzle_tooltip,
+                                                                                                gui_labels::deswizzle_tooltip };
+                    static auto constinit zip_modes = std::ranges::views::zip(swizzle_value, swizzle_string, swizzle_tooltips);
+                    for (auto &&[mode, str, tool_tip_str] : zip_modes)
                     {
-                         if (m_selections->draw_swizzle != mode)
+                         bool care_not = m_selections->draw_swizzle == mode;
+                         if (ImGui::MenuItem(str.data(), nullptr, &care_not, !care_not))
                          {
-                              m_selections->draw_swizzle = mode;
-                              refresh_map_swizzle();
+                              if (m_selections->draw_swizzle != mode)
+                              {
+                                   m_selections->draw_swizzle = mode;
+                                   refresh_map_swizzle();
+                              }
+                         }
+                         else
+                         {
+                              tool_tip(tool_tip_str);
                          }
                     }
-                    else
-                    {
-                         tool_tip(tool_tip_str);
-                    }
                }
-          }
 
-          if (map_test())
-          {
-               if (!m_selections->draw_swizzle)
+               if (map_test())
                {
-                    if (
-
-                      ImGui::MenuItem(gui_labels::disable_blending.data(), nullptr, &m_selections->draw_disable_blending))
+                    if (!m_selections->draw_swizzle)
                     {
-                         refresh_map_disable_blending();
+                         if (
+
+                           ImGui::MenuItem(gui_labels::disable_blending.data(), nullptr, &m_selections->draw_disable_blending))
+                         {
+                              refresh_map_disable_blending();
+                         }
+                         else
+                         {
+                              tool_tip(gui_labels::disable_blending_tooltip);
+                         }
                     }
+
                     else
                     {
+                         static const bool true_val = true;
+                         ImGui::BeginDisabled();
+                         ImGui::MenuItem(gui_labels::disable_blending.data(), nullptr, const_cast<bool *>(&true_val));
                          tool_tip(gui_labels::disable_blending_tooltip);
+                         tool_tip(gui_labels::forced_on_while_swizzled);
+                         ImGui::EndDisabled();
                     }
                }
 
-               else
+               if (mim_test())
                {
-                    static const bool true_val = true;
-                    ImGui::BeginDisabled();
-                    ImGui::MenuItem(gui_labels::disable_blending.data(), nullptr, const_cast<bool *>(&true_val));
-                    tool_tip(gui_labels::disable_blending_tooltip);
-                    tool_tip(gui_labels::forced_on_while_swizzled);
-                    ImGui::EndDisabled();
+                    if (ImGui::MenuItem(gui_labels::draw_palette_texture.data(), nullptr, &m_selections->draw_palette))
+                    {
+                         refresh_mim_palette_texture();
+                    }
+                    else
+                    {
+                         tool_tip(gui_labels::draw_palette_texture_tooltip);
+                    }
                }
-          }
 
-          if (mim_test())
-          {
-               if (ImGui::MenuItem(gui_labels::draw_palette_texture.data(), nullptr, &m_selections->draw_palette))
-               {
-                    refresh_mim_palette_texture();
-               }
-               else
-               {
-                    tool_tip(gui_labels::draw_palette_texture_tooltip);
-               }
-          }
+               ImGui::Separator();
 
-          ImGui::Separator();
-
-          if (ImGui::MenuItem(gui_labels::draw_tile_grid.data(), nullptr, &m_selections->draw_grid))
-          {
-               Configuration config{};
-               config->insert_or_assign("selections_draw_grid", m_selections->draw_grid);
-               config.save();
-          }
-
-          if ((map_test() && m_selections->draw_swizzle) || (mim_test() && !m_selections->draw_palette))
-          {
-               if (ImGui::MenuItem(gui_labels::draw_texture_page_grid.data(), nullptr, &m_selections->draw_texture_page_grid))
+               if (ImGui::MenuItem(gui_labels::draw_tile_grid.data(), nullptr, &m_selections->draw_grid))
                {
                     Configuration config{};
-                    config->insert_or_assign("selections_draw_texture_page_grid", m_selections->draw_texture_page_grid);
+                    config->insert_or_assign("selections_draw_grid", m_selections->draw_grid);
                     config.save();
                }
-          }
 
-          if (map_test())
-          {
-               if (ImGui::MenuItem(gui_labels::draw_tile_conflict_rects.data(), nullptr, &m_selections->draw_tile_conflict_rects))
+               if ((map_test() && m_selections->draw_swizzle) || (mim_test() && !m_selections->draw_palette))
                {
-                    Configuration config{};
-                    config->insert_or_assign("selections_draw_tile_conflict_rects", m_selections->draw_tile_conflict_rects);
-                    config.save();
+                    if (ImGui::MenuItem(gui_labels::draw_texture_page_grid.data(), nullptr, &m_selections->draw_texture_page_grid))
+                    {
+                         Configuration config{};
+                         config->insert_or_assign("selections_draw_texture_page_grid", m_selections->draw_texture_page_grid);
+                         config.save();
+                    }
+               }
+
+               if (map_test())
+               {
+                    if (ImGui::MenuItem(gui_labels::draw_tile_conflict_rects.data(), nullptr, &m_selections->draw_tile_conflict_rects))
+                    {
+                         Configuration config{};
+                         config->insert_or_assign("selections_draw_tile_conflict_rects", m_selections->draw_tile_conflict_rects);
+                         config.save();
+                    }
                }
           }
      }
@@ -1888,24 +1889,31 @@ void gui::file_menu()
             m_paths | std::ranges::views::transform([](toml::node &item) -> std::string { return item.value_or<std::string>({}); });
 
           std::ptrdiff_t delete_me = -1;
-          for (const auto &[index, path] : transformed_paths | std::ranges::views::enumerate)
+          if (ImGui::BeginTable("##path_table", 2))
           {
-               bool is_checked = path == m_selections->path;
-               ImGui::SetNextItemAllowOverlap();
-               if (ImGui::MenuItem(path.data(), nullptr, &is_checked, !is_checked))
+               const auto end_table = scope_guard(&ImGui::EndTable);
+               for (const auto &[index, path] : transformed_paths | std::ranges::views::enumerate)
                {
-                    m_selections->path = path;
-                    refresh_path();
-               }
-               ImGui::SameLine();
-               const auto pop_id = PushPopID();
-               if (ImGui::Button(ICON_FA_TRASH))
-               {
-                    delete_me = index;
-               }
-               else
-               {
-                    tool_tip("delete me");
+                    bool is_checked = path == m_selections->path;
+                    ImGui::TableNextColumn();
+                    ImGui::SetNextItemAllowOverlap();
+                    if (ImGui::MenuItem(path.data(), nullptr, &is_checked, !is_checked))
+                    {
+                         m_selections->path = path;
+                         refresh_path();
+                    }
+                    ImGui::TableNextColumn();
+                    const auto pop_id = PushPopID();
+                    if (ImGui::Button(ICON_FA_TRASH))
+                    {
+                         delete_me = index;
+                         ImGui::CloseCurrentPopup();
+                         break;
+                    }
+                    else
+                    {
+                         tool_tip("delete me");
+                    }
                }
           }
           if (std::cmp_greater(delete_me, -1))
