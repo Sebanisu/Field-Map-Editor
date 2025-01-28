@@ -14,6 +14,7 @@
 #include "safedir.hpp"
 #include "tool_tip.hpp"
 #include <algorithm>
+#include <array>
 #include <cmath>
 #include <fmt/ranges.h>
 #include <open_viii/paths/Paths.hpp>
@@ -1640,27 +1641,27 @@ void gui::edit_menu()
           config.save();
      }
      ImGui::Separator();
-     
 
-  
 
      if (ImGui::BeginMenu(gui_labels::draw.data()))
      {
-          const auto                  pop_menu = scope_guard(&ImGui::EndMenu);
-          static const constinit auto iota_draw_mode =
-            std::views::iota(0, 2) | std::views::transform([](const int mode) { return static_cast<draw_mode>(mode); });
-          static const auto str_draw_mode =
-            iota_draw_mode | std::views::transform([](draw_mode in_draw_mode) { return fmt::format("{}", in_draw_mode); });
-          auto zip_modes = std::ranges::views::zip(str_draw_mode, iota_draw_mode);
-          for (auto &&[str, mode] : zip_modes)
+          const auto pop_menu = scope_guard(&ImGui::EndMenu);
           {
-               bool care_not = m_selections->draw == mode;
-               if (ImGui::MenuItem(str.data(), nullptr, &care_not, !care_not))
+               static const constinit auto iota_draw_mode =
+                 std::views::iota(0, 2) | std::views::transform([](const int mode) { return static_cast<draw_mode>(mode); });
+               static const auto str_draw_mode =
+                 iota_draw_mode | std::views::transform([](draw_mode in_draw_mode) { return fmt::format("{}", in_draw_mode); });
+               auto zip_modes = std::ranges::views::zip(iota_draw_mode, str_draw_mode);
+               for (auto &&[mode, str] : zip_modes)
                {
-                    if (m_selections->draw != mode)
+                    bool care_not = m_selections->draw == mode;
+                    if (ImGui::MenuItem(str.data(), nullptr, &care_not, !care_not))
                     {
-                         m_selections->draw = mode;
-                         refresh_draw_mode();
+                         if (m_selections->draw != mode)
+                         {
+                              m_selections->draw = mode;
+                              refresh_draw_mode();
+                         }
                     }
                }
           }
@@ -1669,13 +1670,27 @@ void gui::edit_menu()
           ImGui::Separator();
           if (map_test())
           {
-               if (ImGui::MenuItem(gui_labels::swizzle.data(), nullptr, &m_selections->draw_swizzle))
+
+               static const constinit std::array<bool, 2>             swizzle_value    = { true, false };
+               static const constinit std::array<std::string_view, 2> swizzle_string   = { gui_labels::swizzle, gui_labels::deswizzle };
+               static const constinit std::array<std::string_view, 2> swizzle_tooltips = { gui_labels::swizzle_tooltip,
+                                                                                           gui_labels::deswizzle_tooltip };
+               static auto constinit zip_modes = std::ranges::views::zip(swizzle_value, swizzle_string, swizzle_tooltips);
+               for (auto &&[mode, str, tool_tip_str] : zip_modes)
                {
-                    refresh_map_swizzle();
-               }
-               else
-               {
-                    tool_tip(gui_labels::swizzle_tooltip.data());
+                    bool care_not = m_selections->draw_swizzle == mode;
+                    if (ImGui::MenuItem(str.data(), nullptr, &care_not, !care_not))
+                    {
+                         if (m_selections->draw_swizzle != mode)
+                         {
+                              m_selections->draw_swizzle = mode;
+                              refresh_map_swizzle();
+                         }
+                    }
+                    else
+                    {
+                         tool_tip(tool_tip_str);
+                    }
                }
           }
 
@@ -1705,7 +1720,7 @@ void gui::edit_menu()
                     ImGui::EndDisabled();
                }
           }
-          
+
           if (mim_test())
           {
                if (ImGui::MenuItem(gui_labels::draw_palette_texture.data(), nullptr, &m_selections->draw_palette))
@@ -1747,7 +1762,6 @@ void gui::edit_menu()
                }
           }
      }
-
 
 
      if (ImGui::BeginMenu("Background Color"))

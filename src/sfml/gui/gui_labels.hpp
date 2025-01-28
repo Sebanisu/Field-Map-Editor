@@ -66,6 +66,7 @@ struct gui_labels
      static constexpr std::string_view reset_tool_tip                         = { "Reset window state" };
      static constexpr std::string_view save_swizzle                           = { "Save Swizzle" };
      static constexpr std::string_view swizzle                                = { "Swizzle" };
+     static constexpr std::string_view deswizzle                              = { "Deswizzle" };
      static constexpr std::string_view disable_blending                       = { "Disable Blending" };
      static constexpr std::string_view selected_tile_info                     = { "Selected Tile Info" };
      static constexpr std::string_view hovered_tiles                          = { "Hovered Tiles" };
@@ -211,10 +212,17 @@ struct gui_labels
 
 
      static constexpr std::string_view swizzle_tooltip = {
-          "Swizzle displays the tiles in their original positions as defined in the `.mim` file, or in their current swizzled positions "
+          "Swizzle mode displays the tiles in their original positions as defined in the `.mim` file, or in their current swizzled "
+          "positions "
           "if "
           "they have been rearranged."
      };
+
+     static constexpr std::string_view deswizzle_tooltip = {
+          "Deswizzle mode displays tiles in the positions where they would draw in game. It's a best effort attempt to emulate the way the "
+          "game draws the image."
+     };
+
 
      static constexpr std::string_view disable_blending_tooltip = {
           "Use Disable blending to turn off the effect that emulates PSX-style blending for tiles with semi-transparent parts, such as "
