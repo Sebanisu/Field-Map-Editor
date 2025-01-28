@@ -1631,7 +1631,6 @@ void gui::edit_menu()
           config->insert_or_assign("selections_draw_grid", m_selections->draw_grid);
           config.save();
      }
-     // draw_tile_conflict_rects = config["selections_draw_tile_conflict_rects"].value_or(draw_tile_conflict_rects);
 
      if ((map_test() && m_selections->draw_swizzle) || (mim_test() && !m_selections->draw_palette))
      {
@@ -1643,31 +1642,40 @@ void gui::edit_menu()
           }
      }
 
-     if (map_test() && ImGui::MenuItem(gui_labels::draw_tile_conflict_rects.data(), nullptr, &m_selections->draw_tile_conflict_rects))
+     if (map_test())
      {
-          Configuration config{};
-          config->insert_or_assign("selections_draw_tile_conflict_rects", m_selections->draw_tile_conflict_rects);
-          config.save();
+          if (ImGui::MenuItem(gui_labels::draw_tile_conflict_rects.data(), nullptr, &m_selections->draw_tile_conflict_rects))
+          {
+               Configuration config{};
+               config->insert_or_assign("selections_draw_tile_conflict_rects", m_selections->draw_tile_conflict_rects);
+               config.save();
+          }
      }
 
-     if (map_test() && ImGui::MenuItem(gui_labels::swizzle.data(), nullptr, &m_selections->draw_swizzle))
+     if (map_test())
      {
-          refresh_map_swizzle();
-     }
-     else
-     {
-          tool_tip(gui_labels::swizzle_tooltip.data());
+          if (ImGui::MenuItem(gui_labels::swizzle.data(), nullptr, &m_selections->draw_swizzle))
+          {
+               refresh_map_swizzle();
+          }
+          else
+          {
+               tool_tip(gui_labels::swizzle_tooltip.data());
+          }
      }
 
-     if (
-       map_test() && !m_selections->draw_swizzle
-       && ImGui::MenuItem(gui_labels::disable_blending.data(), nullptr, &m_selections->draw_disable_blending))
+     if (map_test() && !m_selections->draw_swizzle)
      {
-          refresh_map_disable_blending();
-     }
-     else
-     {
-          tool_tip(gui_labels::disable_blending_tooltip);
+          if (
+
+            ImGui::MenuItem(gui_labels::disable_blending.data(), nullptr, &m_selections->draw_disable_blending))
+          {
+               refresh_map_disable_blending();
+          }
+          else
+          {
+               tool_tip(gui_labels::disable_blending_tooltip);
+          }
      }
      if (ImGui::BeginMenu(gui_labels::draw.data()))
      {
@@ -1692,13 +1700,16 @@ void gui::edit_menu()
      }
 
 
-     if (mim_test() && ImGui::MenuItem(gui_labels::draw_palette_texture.data(), nullptr, &m_selections->draw_palette))
+     if (mim_test())
      {
-          refresh_mim_palette_texture();
-     }
-     else
-     {
-          tool_tip(gui_labels::draw_palette_texture_tooltip);
+          if (ImGui::MenuItem(gui_labels::draw_palette_texture.data(), nullptr, &m_selections->draw_palette))
+          {
+               refresh_mim_palette_texture();
+          }
+          else
+          {
+               tool_tip(gui_labels::draw_palette_texture_tooltip);
+          }
      }
      if (ImGui::BeginMenu("Background Color"))
      {
@@ -1720,7 +1731,7 @@ void gui::edit_menu()
                }
           }
 
-          if (ImGui::ColorPicker3("Select Color", clear_color_f.data(), ImGuiColorEditFlags_DisplayRGB))
+          if (ImGui::ColorPicker3("##Choose Background Color", clear_color_f.data(), ImGuiColorEditFlags_DisplayRGB))
           {
                change_background_color({ clear_color_f[0], clear_color_f[1], clear_color_f[2] });
           }
