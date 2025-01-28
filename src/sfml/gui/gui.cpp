@@ -1640,70 +1640,13 @@ void gui::edit_menu()
           config.save();
      }
      ImGui::Separator();
-     if (ImGui::MenuItem(gui_labels::draw_tile_grid.data(), nullptr, &m_selections->draw_grid))
-     {
-          Configuration config{};
-          config->insert_or_assign("selections_draw_grid", m_selections->draw_grid);
-          config.save();
-     }
+     
 
-     if ((map_test() && m_selections->draw_swizzle) || (mim_test() && !m_selections->draw_palette))
-     {
-          if (ImGui::MenuItem(gui_labels::draw_texture_page_grid.data(), nullptr, &m_selections->draw_texture_page_grid))
-          {
-               Configuration config{};
-               config->insert_or_assign("selections_draw_texture_page_grid", m_selections->draw_texture_page_grid);
-               config.save();
-          }
-     }
+  
 
-     if (map_test())
-     {
-          if (ImGui::MenuItem(gui_labels::draw_tile_conflict_rects.data(), nullptr, &m_selections->draw_tile_conflict_rects))
-          {
-               Configuration config{};
-               config->insert_or_assign("selections_draw_tile_conflict_rects", m_selections->draw_tile_conflict_rects);
-               config.save();
-          }
-     }
-
-     if (map_test())
-     {
-          if (ImGui::MenuItem(gui_labels::swizzle.data(), nullptr, &m_selections->draw_swizzle))
-          {
-               refresh_map_swizzle();
-          }
-          else
-          {
-               tool_tip(gui_labels::swizzle_tooltip.data());
-          }
-     }
-
-     if (map_test() && !m_selections->draw_swizzle)
-     {
-          if (
-
-            ImGui::MenuItem(gui_labels::disable_blending.data(), nullptr, &m_selections->draw_disable_blending))
-          {
-               refresh_map_disable_blending();
-          }
-          else
-          {
-               tool_tip(gui_labels::disable_blending_tooltip);
-          }
-     }
-
-     else
-     {
-          static const bool true_val = true;
-          ImGui::BeginDisabled();
-          ImGui::MenuItem(gui_labels::disable_blending.data(), nullptr, const_cast<bool *>(&true_val));
-          tool_tip(gui_labels::disable_blending_tooltip);
-          tool_tip(gui_labels::forced_on_while_swizzled);
-          ImGui::EndDisabled();
-     }
      if (ImGui::BeginMenu(gui_labels::draw.data()))
      {
+          const auto                  pop_menu = scope_guard(&ImGui::EndMenu);
           static const constinit auto iota_draw_mode =
             std::views::iota(0, 2) | std::views::transform([](const int mode) { return static_cast<draw_mode>(mode); });
           static const auto str_draw_mode =
@@ -1721,21 +1664,92 @@ void gui::edit_menu()
                     }
                }
           }
-          ImGui::EndMenu();
+
+
+          ImGui::Separator();
+          if (map_test())
+          {
+               if (ImGui::MenuItem(gui_labels::swizzle.data(), nullptr, &m_selections->draw_swizzle))
+               {
+                    refresh_map_swizzle();
+               }
+               else
+               {
+                    tool_tip(gui_labels::swizzle_tooltip.data());
+               }
+          }
+
+          if (map_test())
+          {
+               if (!m_selections->draw_swizzle)
+               {
+                    if (
+
+                      ImGui::MenuItem(gui_labels::disable_blending.data(), nullptr, &m_selections->draw_disable_blending))
+                    {
+                         refresh_map_disable_blending();
+                    }
+                    else
+                    {
+                         tool_tip(gui_labels::disable_blending_tooltip);
+                    }
+               }
+
+               else
+               {
+                    static const bool true_val = true;
+                    ImGui::BeginDisabled();
+                    ImGui::MenuItem(gui_labels::disable_blending.data(), nullptr, const_cast<bool *>(&true_val));
+                    tool_tip(gui_labels::disable_blending_tooltip);
+                    tool_tip(gui_labels::forced_on_while_swizzled);
+                    ImGui::EndDisabled();
+               }
+          }
+          
+          if (mim_test())
+          {
+               if (ImGui::MenuItem(gui_labels::draw_palette_texture.data(), nullptr, &m_selections->draw_palette))
+               {
+                    refresh_mim_palette_texture();
+               }
+               else
+               {
+                    tool_tip(gui_labels::draw_palette_texture_tooltip);
+               }
+          }
+
+          ImGui::Separator();
+
+          if (ImGui::MenuItem(gui_labels::draw_tile_grid.data(), nullptr, &m_selections->draw_grid))
+          {
+               Configuration config{};
+               config->insert_or_assign("selections_draw_grid", m_selections->draw_grid);
+               config.save();
+          }
+
+          if ((map_test() && m_selections->draw_swizzle) || (mim_test() && !m_selections->draw_palette))
+          {
+               if (ImGui::MenuItem(gui_labels::draw_texture_page_grid.data(), nullptr, &m_selections->draw_texture_page_grid))
+               {
+                    Configuration config{};
+                    config->insert_or_assign("selections_draw_texture_page_grid", m_selections->draw_texture_page_grid);
+                    config.save();
+               }
+          }
+
+          if (map_test())
+          {
+               if (ImGui::MenuItem(gui_labels::draw_tile_conflict_rects.data(), nullptr, &m_selections->draw_tile_conflict_rects))
+               {
+                    Configuration config{};
+                    config->insert_or_assign("selections_draw_tile_conflict_rects", m_selections->draw_tile_conflict_rects);
+                    config.save();
+               }
+          }
      }
 
 
-     if (mim_test())
-     {
-          if (ImGui::MenuItem(gui_labels::draw_palette_texture.data(), nullptr, &m_selections->draw_palette))
-          {
-               refresh_mim_palette_texture();
-          }
-          else
-          {
-               tool_tip(gui_labels::draw_palette_texture_tooltip);
-          }
-     }
+
      if (ImGui::BeginMenu("Background Color"))
      {
           float sz       = ImGui::GetTextLineHeight();
