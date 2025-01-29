@@ -2017,20 +2017,20 @@ void gui::file_menu()
                     ++i;
                     if (row_toggle)
                     {
-                         ImGui::TableSetBgColor(ImGuiTableBgTarget_RowBg0, ImU32{ colors::TableDarkRed });// Dark red
+                         ImGui::TableSetBgColor(ImGuiTableBgTarget_RowBg0, ImU32{ colors::TableDarkGray.fade(-.6F).fade_alpha(-.4F) });
                     }
                     else
                     {
-                         ImGui::TableSetBgColor(ImGuiTableBgTarget_RowBg0, ImU32{ colors::TableLightDarkRed });// Slightly lighter dark red
+                         ImGui::TableSetBgColor(ImGuiTableBgTarget_RowBg0, ImU32{ colors::TableLightDarkGray.fade(-.6F).fade_alpha(-.4F) });
                     }
                     ImGui::TableNextColumn();
-                    ImGui::PushStyleColor(ImGuiCol_HeaderHovered, colors::TableDarkRedHovered);
-                    ImGui::PushStyleColor(ImGuiCol_HeaderActive, colors::TableDarkRedActive);
+                    ImGui::PushStyleColor(ImGuiCol_HeaderHovered, colors::ButtonHovered);
+                    ImGui::PushStyleColor(ImGuiCol_HeaderActive, colors::ButtonActive);
                     const bool checked = std::cmp_equal(m_selections->field, index);
                     if (checked)
                     {
                          ImGui::TableSetBgColor(
-                           ImGuiTableBgTarget_CellBg, ImU32{ colors::TableDarkGray });// Make the selected field stand out more.
+                           ImGuiTableBgTarget_CellBg, ImU32{ colors::Button });// Make the selected field stand out more.
                     }
                     if (ImGui::MenuItem(str.c_str(), nullptr, const_cast<bool *>(&checked), !checked))
                     {
