@@ -1951,11 +1951,11 @@ void gui::file_menu()
                }
           }
      }
-     if (!map_test() && !mim_test())
+
+     if (std::ranges::empty(m_archives_group->mapdata()))
      {
           return;
      }
-
      menu_upscale_paths();
 
      if (ImGui::BeginMenu(gui_labels::language.data()))
@@ -2038,6 +2038,10 @@ void gui::file_menu()
           // {
           //      refresh_field();
           // }
+     }
+     if (!map_test() && !mim_test())
+     {
+          return;
      }
      ImGui::Separator();
      menuitem_save_texture(mim_test() || map_test());
