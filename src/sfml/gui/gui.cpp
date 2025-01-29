@@ -2008,13 +2008,18 @@ void gui::menu_upscale_paths()
           {
                const auto end_menu1 = scope_guard(&ImGui::EndMenu);
                menuitem_locate_custom_upscale();
-               if (ImGui::MenuItem(gui_labels::explore.data(), nullptr, nullptr, !std::ranges::empty(m_custom_upscale_paths)))
+               if (ImGui::MenuItem(
+                     gui_labels::explore.data(),
+                     nullptr,
+                     nullptr,
+                     !std::ranges::empty(m_map_sprite->filter().upscale.value()) && m_map_sprite->filter().upscale.enabled()))
                {
                     open_directory(m_map_sprite->filter().upscale.value());
                }
                else
                {
                     tool_tip(gui_labels::explore_tooltip);
+                    tool_tip(m_map_sprite->filter().upscale.value().string());
                }
 
                const auto transformed_paths =
@@ -2080,7 +2085,7 @@ void gui::menu_upscale_paths()
                               bool is_checked = path == m_map_sprite->filter().upscale.value() && m_map_sprite->filter().upscale.enabled();
                               ImGui::TableNextColumn();
                               ImGui::SetNextItemAllowOverlap();
-                              const auto  path_padded  = path + "  -  ";
+                              const auto path_padded = path + "  -  ";
                               size_t offset = static_cast<size_t>(elapsed_time * chars_per_second) % (path_padded.size());// Sliding offset
                               std::string display_text = path_padded.substr(offset, max_display_chars);
                               if (display_text.size() < max_display_chars && offset > 0)
@@ -2090,9 +2095,13 @@ void gui::menu_upscale_paths()
                               }
                               const auto pop_id_menu_item = PushPopID();
                               ImVec2     cursor_pos       = ImGui::GetCursorScreenPos();
-                              bool selected = ImGui::MenuItem("##menu_item", nullptr, &is_checked);
+                              bool       selected         = ImGui::MenuItem("##menu_item", nullptr, &is_checked);
+                              if (!selected)
+                              {
+                                   tool_tip(path);
+                              }
                               ImGui::SetCursorScreenPos(cursor_pos);
-                              ImGui::TextUnformatted(display_text.c_str()); // Draw the scrolling text separately
+                              ImGui::TextUnformatted(display_text.c_str());// Draw the scrolling text separately
                               ImGui::SameLine();
                               float sz = ImGui::GetTextLineHeight();
                               ImGui::Dummy(ImVec2(sz, sz));
@@ -2112,10 +2121,7 @@ void gui::menu_upscale_paths()
                                    }
                                    m_map_sprite->update_render_texture(true);
                               }
-                              else
-                              {
-                                   tool_tip(path);
-                              }
+
                               ImGui::TableNextColumn();
 
                               // Find the index where other_path starts with a path in transformed_paths
