@@ -26,6 +26,7 @@ struct unique_values_and_strings
      static constexpr auto kite                  = [](auto &&, auto &&ret) { return std::forward<decltype(ret)>(ret); };
 
    public:
+     using value_type            = T;
      unique_values_and_strings() = default;
      template<
        std::ranges::range tilesT,
@@ -47,13 +48,19 @@ struct unique_values_and_strings
      {
           return m_values;
      }
+
      [[nodiscard]] const auto &strings() const
      {
           return m_strings;
      }
 
+     [[nodiscard]] auto zip() const
+     {
+          return std::views::zip(m_values, m_strings);
+     }
+
    private:
-     std::vector<T>                         m_values{};
+     std::vector<value_type>                m_values{};
      std::vector<std::string>               m_strings{};
 
      [[nodiscard]] std::vector<std::string> get_strings(const std::vector<T> &data) const
@@ -85,6 +92,14 @@ struct unique_values_and_strings
           return ret;
      }
 };
+// Concept to check for values(), strings(), and zip()
+template<typename T>
+concept HasValuesAndStringsAndZip = requires(T obj) {
+     { obj.values() } -> std::ranges::range;// std::convertible_to<const std::vector<typename std::remove_cvref_t<T>::value_type> &>;
+     { obj.strings() } -> std::ranges::range;// std::convertible_to<const std::vector<std::string> &>;
+     { obj.zip() } -> std::ranges::range;
+};
+
 struct all_unique_values_and_strings
 {
    public:

@@ -21,6 +21,42 @@
 #include <ranges>
 #include <SFML/Window/Mouse.hpp>
 #include <utility>
+
+using namespace open_viii::graphics::background;
+using namespace open_viii::graphics;
+using namespace open_viii::graphics::literals;
+using namespace std::string_literals;
+
+struct mim_palette
+{
+     auto values() const
+     {
+          return Mim::palette_selections() | std::ranges::views::transform([](auto i) { return static_cast<std::uint8_t>(i); });
+     }
+     auto strings() const
+     {
+          return Mim::palette_selections_c_str() | std::ranges::views::transform([](std::string_view sv) { return sv; });
+     }
+     auto zip() const
+     {
+          return std::ranges::views::zip(values(), strings());
+     }
+};
+struct mim_bpp
+{
+     auto values() const
+     {
+          return Mim::bpp_selections();
+     }
+     auto strings() const
+     {
+          return Mim::bpp_selections_c_str() | std::ranges::views::transform([](std::string_view sv) { return sv; });
+     }
+     auto zip() const
+     {
+          return std::ranges::views::zip(values(), strings());
+     }
+};
 /**
  * @brief Checks if any index in the first range is also present in the second range.
  *
@@ -113,10 +149,6 @@ static void DebugCallback(
      }
 }
 
-using namespace open_viii::graphics::background;
-using namespace open_viii::graphics;
-using namespace open_viii::graphics::literals;
-using namespace std::string_literals;
 /**
  * @see https://godbolt.org/z/xce9jEbqh
  * @tparam T enforced std::filesystem::path
@@ -1485,6 +1517,22 @@ static void update_bpp(map_sprite &sprite, BPPT bpp)
           sprite.update_render_texture();
      }
 }
+void gui::refresh_bpp()
+{
+     m_selections->bpp = static_cast<int>(m_map_sprite->filter().bpp.value().raw() & 3U);
+     Configuration config{};
+     config->insert_or_assign("selections_bpp", m_selections->bpp);
+     config.save();
+     if (mim_test())
+     {
+          update_bpp(m_mim_sprite, bpp());
+     }
+     if (map_test())
+     {
+          update_bpp(*m_map_sprite, bpp());
+     }
+     m_changed = true;
+}
 void gui::combo_bpp()
 {
      {
@@ -1496,21 +1544,11 @@ void gui::combo_bpp()
             [&]() { return bpp_strings | std::ranges::views::transform([](std::string_view sv) { return sv; }); },
             m_selections->bpp);
 
-          if (gcc.render())
+          if (!gcc.render())
           {
-               Configuration config{};
-               config->insert_or_assign("selections_bpp", m_selections->bpp);
-               config.save();
-               if (mim_test())
-               {
-                    update_bpp(m_mim_sprite, bpp());
-               }
-               if (map_test())
-               {
-                    update_bpp(*m_map_sprite, bpp());
-               }
-               m_changed = true;
+               return;
           }
+          gui::refresh_bpp();
      }
 }
 std::uint8_t gui::palette() const
@@ -1796,11 +1834,7 @@ void gui::edit_menu()
                     }
                }
           }
-     }
 
-
-     if (map_test() || mim_test())
-     {
           if (ImGui::BeginMenu("Background Color"))
           {
                float sz       = ImGui::GetTextLineHeight();
@@ -1826,6 +1860,100 @@ void gui::edit_menu()
                     change_background_color({ clear_color_f[0], clear_color_f[1], clear_color_f[2] });
                }
                ImGui::EndMenu();
+          }
+
+          if (ImGui::BeginMenu(gui_labels::filters.data()))
+          {
+               const auto pop_menu = scope_guard(&ImGui::EndMenu);
+
+               if (ImGui::BeginMenu(gui_labels::pupu_id.data()))
+               {
+                    const auto pop_menu1 = scope_guard(&ImGui::EndMenu);
+                    auto       zip_range = std::ranges::views::zip(
+                      m_map_sprite->working_unique_pupu(),
+                      m_map_sprite->working_unique_pupu() | std::views::transform(AsString{}),
+                      m_map_sprite->working_unique_pupu()
+                        | std::views::transform([](const ff_8::PupuID &pupu_id) -> decltype(auto) { return pupu_id.create_summary(); }));
+
+                    for (auto &&[value, str, tooltip_str] : zip_range)
+                    {
+                         const bool checked = m_map_sprite->filter().pupu.value() == value && m_map_sprite->filter().pupu.enabled();
+                         if (ImGui::MenuItem(str.c_str(), nullptr, const_cast<bool *>(&checked)))
+                         {
+                              if (m_map_sprite->filter().pupu.value() != value)
+                              {
+                                   m_map_sprite->filter().pupu.update(value);
+                              }
+                              if (m_map_sprite->filter().pupu.enabled())
+                              {
+                                   m_map_sprite->filter().pupu.disable();
+                              }
+                              else
+                              {
+                                   m_map_sprite->filter().pupu.enable();
+                              }
+                              m_map_sprite->update_render_texture();
+                              m_changed = true;
+                         }
+                         else
+                         {
+                              tool_tip(tooltip_str);
+                         }
+                    }
+               }
+               const auto generic_filter_menu = [&](
+                                                  std::string_view                 label,
+                                                  HasValuesAndStringsAndZip auto &&pair,
+                                                  ff_8::IsFilterOld auto         &&filter,
+                                                  std::invocable auto            &&lambda) {
+                    if (ImGui::BeginMenu(label.data()))
+                    {
+                         const auto pop_menu1 = scope_guard(&ImGui::EndMenu);
+
+                         for (auto &&[value, str] : pair.zip())
+                         {
+                              const bool checked = filter.value() == value && m_map_sprite->filter().pupu.enabled();
+                              if (ImGui::MenuItem(str.data(), nullptr, const_cast<bool *>(&checked)))
+                              {
+                                   if (filter.value() != value)
+                                   {
+                                        filter.update(value);
+                                   }
+                                   if (filter.enabled())
+                                   {
+                                        filter.disable();
+                                   }
+                                   else
+                                   {
+                                        filter.enable();
+                                   }
+                                   std::invoke(std::forward<decltype(lambda)>(lambda));
+                              }
+                         }
+                    }
+               };
+               if (mim_test())
+               {
+                    generic_filter_menu(gui_labels::bpp.data(), mim_bpp{}, m_map_sprite->filter().bpp, [&]() { refresh_bpp(); });
+                    generic_filter_menu(
+                      gui_labels::palette.data(), mim_palette{}, m_map_sprite->filter().palette, [&]() { refresh_palette(); });
+               }
+               else if (map_test())
+               {
+                    generic_filter_menu(
+                      gui_labels::bpp.data(), m_map_sprite->uniques().bpp(), m_map_sprite->filter().bpp, [&]() { refresh_bpp(); });
+                    const auto &map = m_map_sprite->uniques().palette();
+                    const auto &key = m_map_sprite->filter().bpp.value();
+                    if (map.contains(key))
+                    {
+                         generic_filter_menu(
+                           gui_labels::palette.data(), map.at(key), m_map_sprite->filter().palette, [&]() { refresh_palette(); });
+                    }
+                    else
+                    {
+                         m_map_sprite->filter().bpp.update(m_map_sprite->uniques().bpp().values().front());
+                    }
+               }
           }
      }
 }
@@ -3122,6 +3250,15 @@ void gui::combo_draw_bit()
      m_map_sprite->update_render_texture();
      m_changed = true;
 }
+void gui::refresh_palette()
+{
+     m_map_sprite->update_render_texture();
+     m_selections->palette = m_map_sprite->filter().palette.value();
+     Configuration config{};
+     config->insert_or_assign("selections_palette", m_selections->palette);
+     config.save();
+     m_changed = true;
+}
 void gui::combo_filtered_palettes()
 {
      const auto &map = m_map_sprite->uniques().palette();
@@ -3141,12 +3278,7 @@ void gui::combo_filtered_palettes()
      {
           return;
      }
-     m_map_sprite->update_render_texture();
-     m_selections->palette = m_map_sprite->filter().palette.value();
-     Configuration config{};
-     config->insert_or_assign("selections_palette", m_selections->palette);
-     config.save();
-     m_changed = true;
+     refresh_palette();
 }
 
 void gui::combo_filtered_bpps()
@@ -3162,12 +3294,7 @@ void gui::combo_filtered_bpps()
      {
           return;
      }
-     m_map_sprite->update_render_texture();
-     m_selections->bpp = static_cast<int>(m_map_sprite->filter().bpp.value().raw() & 3U);
-     Configuration config{};
-     config->insert_or_assign("selections_bpp", m_selections->bpp);
-     config.save();
-     m_changed = true;
+     refresh_bpp();
 }
 
 void gui::combo_blend_modes()

@@ -334,9 +334,11 @@ struct gui
      void                         browse_buttons();
      void                         menu_upscale_paths();
      void                         refresh_field();
+     void                          refresh_bpp();
+     void                          refresh_palette();
 
 
-     static inline constinit bool toggle_imgui_demo_window = { false };
+       static inline constinit bool toggle_imgui_demo_window = { false };
 };
 }// namespace fme
 #endif// FIELD_MAP_EDITOR_GUI_HPP

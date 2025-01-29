@@ -26,7 +26,8 @@ struct filter_old
      bool m_enabled = { false };
 
    public:
-     filter_old() = default;
+     using value_type = T;
+     filter_old()     = default;
      explicit filter_old(T value, bool enabled = false)
        : m_value(std::move(value))
        , m_enabled(enabled)
@@ -82,7 +83,8 @@ struct filter
      OpT  m_operation = {};
 
    public:
-     filter() = default;
+     using value_type = T;
+     filter()         = default;
      explicit filter(T value, bool enabled = false)
        : m_value(std::move(value))
        , m_enabled(enabled)
@@ -134,6 +136,26 @@ struct filter
           return !m_enabled || (m_value == std::invoke(m_operation, tile));
      }
 };
+
+template<typename T>
+concept IsFilterOld = requires(T obj) {
+     { obj.update(typename std::remove_cvref_t<T>::value_type{}) } -> std::same_as<T &>;
+     { obj.value() } -> std::convertible_to<typename std::remove_cvref_t<T>::value_type const &>;
+     { obj.enabled() } -> std::convertible_to<const bool &>;
+     { obj.enable() } -> std::same_as<T &>;
+     { obj.disable() } -> std::same_as<T &>;
+     { static_cast<bool>(obj) } -> std::convertible_to<bool>;
+     { static_cast<typename std::remove_cvref_t<T>::value_type>(obj) } -> std::convertible_to<typename std::remove_cvref_t<T>::value_type>;
+};
+
+template<typename T, typename TileT>
+concept IsFilter = open_viii::graphics::background::is_tile<TileT> && IsFilterOld<T> && requires(T obj, TileT tile) {
+     { obj(tile) } -> std::convertible_to<bool>;// Ensure it works as a predicate on tiles
+};
+
+template<typename T, typename TileT = void>
+concept IsEitherFilter = IsFilterOld<T> || IsFilter<T, TileT>;
+
 struct filters
 {
      using TileT = open_viii::graphics::background::Tile1;
