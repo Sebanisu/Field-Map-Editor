@@ -735,7 +735,7 @@ void gui::draw_window()
           DrawCheckerboardBackground(
             screen_pos,
             scaled_size,
-            (m_selections->draw_palette ? 0.25F : 4.F) * scale,
+            (m_selections->draw_palette ? 0.25F : (static_cast<float>(m_map_sprite->get_map_scale()) * 4.F) * scale),
             m_selections->background_color.fade(-0.2F),
             m_selections->background_color.fade(0.2F));
 
@@ -769,7 +769,11 @@ void gui::draw_window()
           const sf::Vector2f scaled_size(img_size.x * scale, img_size.y * scale);
 
           DrawCheckerboardBackground(
-            screen_pos, scaled_size, 4.F * scale, m_selections->background_color.fade(-0.2F), m_selections->background_color.fade(0.2F));
+            screen_pos,
+            scaled_size,
+            (static_cast<float>(m_map_sprite->get_map_scale() * 4.F)) * scale,
+            m_selections->background_color.fade(-0.2F),
+            m_selections->background_color.fade(0.2F));
 
           const auto pop_id1 = PushPopID();
 
@@ -1947,6 +1951,9 @@ void gui::file_menu()
      {
           return;
      }
+
+     menu_upscale_paths();
+
      if (ImGui::BeginMenu(gui_labels::language.data()))
      {
           const auto            end_menu1 = scope_guard(&ImGui::EndMenu);
@@ -1972,10 +1979,6 @@ void gui::file_menu()
      }
 
 
-     if (map_test())
-     {
-          menuitem_locate_custom_upscale();
-     }
      ImGui::Separator();
      menuitem_save_texture(mim_test() || map_test());
      if (mim_test())
@@ -1995,6 +1998,173 @@ void gui::file_menu()
           ImGui::Separator();
           menuitem_save_deswizzle_textures();
           menuitem_load_deswizzle_textures();
+     }
+}
+void gui::menu_upscale_paths()
+{
+     if (map_test())
+     {
+          if (ImGui::BeginMenu(gui_labels::upscale_path.data()))
+          {
+               const auto end_menu1 = scope_guard(&ImGui::EndMenu);
+               menuitem_locate_custom_upscale();
+               if (ImGui::MenuItem(gui_labels::explore.data(), nullptr, nullptr, !std::ranges::empty(m_custom_upscale_paths)))
+               {
+                    open_directory(m_map_sprite->filter().upscale.value());
+               }
+               else
+               {
+                    tool_tip(gui_labels::explore_tooltip);
+               }
+
+               const auto transformed_paths =
+                 m_custom_upscale_paths
+                 | std::ranges::views::transform([](toml::node &item) -> std::string { return item.value_or<std::string>({}); })
+                 | std::ranges::views::enumerate;
+
+               std::ptrdiff_t delete_me    = -1;
+               static float   elapsed_time = 0.0f;// Track elapsed time
+
+               elapsed_time += ImGui::GetIO().DeltaTime;// Increment with frame delta time
+               static constexpr size_t max_display_chars = 50;
+               static constexpr float  chars_per_second  = 8.0f;
+               [&]() {
+                    if (std::ranges::empty(m_custom_upscale_paths))
+                    {
+                         return;
+                    }
+                    ImGui::Separator();
+                    if (ImGui::BeginTable("##path_table", 2))
+                    {
+                         if (std::ranges::empty(m_custom_upscale_paths))
+                         {
+                              return;
+                         }
+                         const auto end_table = scope_guard(&ImGui::EndTable);
+                         for (const auto &[index, path] : transformed_paths)
+                         {
+                              ImGui::TableNextColumn();
+                              ImGui::SetNextItemAllowOverlap();
+                              if (ImGui::MenuItem(path.data(), nullptr, nullptr, true))
+                              {
+                                   // m_map_sprite->filter().upscale.update(path);
+                                   // m_map_sprite->update_render_texture(true);
+                              }
+                              ImGui::TableNextColumn();
+                              const auto pop_id = PushPopID();
+                              if (ImGui::Button(ICON_FA_TRASH))
+                              {
+                                   delete_me = index;
+                                   ImGui::CloseCurrentPopup();
+                                   break;
+                              }
+                              else
+                              {
+                                   tool_tip("delete me");
+                              }
+                         }
+                    }
+               }();
+               [&]() {
+                    if (std::ranges::empty(m_upscale_paths))
+                    {
+                         return;
+                    }
+                    ImGui::Separator();
+
+                    if (ImGui::BeginTable("##path_table", 2))
+                    {
+                         const auto end_table = scope_guard(&ImGui::EndTable);
+                         for (const auto &path : m_upscale_paths)
+                         {
+                              bool is_checked = path == m_map_sprite->filter().upscale.value() && m_map_sprite->filter().upscale.enabled();
+                              ImGui::TableNextColumn();
+                              ImGui::SetNextItemAllowOverlap();
+                              const auto  path_padded  = path + "  -  ";
+                              size_t offset = static_cast<size_t>(elapsed_time * chars_per_second) % (path_padded.size());// Sliding offset
+                              std::string display_text = path_padded.substr(offset, max_display_chars);
+                              if (display_text.size() < max_display_chars && offset > 0)
+                              {
+                                   // Wrap-around to show the start of the string
+                                   display_text += path_padded.substr(0, max_display_chars - display_text.size());
+                              }
+                              const auto pop_id_menu_item = PushPopID();
+                              ImVec2     cursor_pos       = ImGui::GetCursorScreenPos();
+                              bool selected = ImGui::MenuItem("##menu_item", nullptr, &is_checked);
+                              ImGui::SetCursorScreenPos(cursor_pos);
+                              ImGui::TextUnformatted(display_text.c_str()); // Draw the scrolling text separately
+                              if (selected)
+                              {
+                                   if (m_map_sprite->filter().upscale.value() != path)
+                                   {
+                                        m_map_sprite->filter().upscale.update(path);
+                                   }
+                                   if (m_map_sprite->filter().upscale.enabled())
+                                   {
+                                        m_map_sprite->filter().upscale.disable();
+                                   }
+                                   else
+                                   {
+                                        m_map_sprite->filter().upscale.enable();
+                                   }
+                                   m_map_sprite->update_render_texture(true);
+                              }
+                              else
+                              {
+                                   tool_tip(path);
+                              }
+                              ImGui::TableNextColumn();
+
+                              // Find the index where other_path starts with a path in transformed_paths
+                              auto it = std::ranges::find_if(transformed_paths, [&path](const auto &pair) {
+                                   const auto &[index, t_path] = pair;
+                                   return path.starts_with(t_path);
+                              });
+                              if (it != std::ranges::end(transformed_paths))
+                              {
+                                   const auto &[index, _] = *it;
+                                   const auto pop_id      = PushPopID();
+                                   if (ImGui::Button(ICON_FA_TRASH))
+                                   {
+                                        delete_me = index;
+                                        ImGui::CloseCurrentPopup();
+                                        break;
+                                   }
+                                   else
+                                   {
+                                        tool_tip("delete me");
+                                   }
+                              }
+                         }
+                    }
+                    if (std::cmp_greater(delete_me, -1))
+                    {
+                         auto it = std::ranges::begin(m_custom_upscale_paths);
+                         std::ranges::advance(it, delete_me);
+                         if (it != std::ranges::end(m_custom_upscale_paths))
+                         {
+
+                              bool selected = it->value_or<std::string>({}) == m_map_sprite->filter().upscale.value();
+                              m_custom_upscale_paths.erase(it);
+                              Configuration config{};
+                              config->insert_or_assign("custom_upscale_paths_vector", m_custom_upscale_paths);
+                              config.save();
+                              if (selected)
+                              {
+                                   if (std::ranges::empty(m_custom_upscale_paths))
+                                   {
+                                        m_map_sprite->filter().upscale.update("");
+                                   }
+                                   else
+                                   {
+                                        m_map_sprite->filter().upscale.update(m_custom_upscale_paths.begin()->value_or<std::string>({}));
+                                   }
+                                   m_map_sprite->update_render_texture(true);
+                              }
+                         }
+                    }
+               }();
+          }
      }
 }
 bool gui::map_test() const
@@ -2254,9 +2424,13 @@ void gui::open_locate_ff8_filebrowser()
 }
 void gui::menuitem_locate_custom_upscale()
 {
-     if (!ImGui::MenuItem(gui_labels::locate_a_custom_upscale_directory.data()))
+     if (!ImGui::MenuItem(gui_labels::browse.data()))
      {
           return;
+     }
+     else
+     {
+          tool_tip(gui_labels::locate_a_custom_upscale_directory.data());
      }
 
      m_directory_browser.Open();
