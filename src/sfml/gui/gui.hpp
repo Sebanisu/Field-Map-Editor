@@ -333,6 +333,7 @@ struct gui
      void                         refresh_path();
      void                         browse_buttons();
      void                         menu_upscale_paths();
+     void                         refresh_field();
 
 
      static inline constinit bool toggle_imgui_demo_window = { false };

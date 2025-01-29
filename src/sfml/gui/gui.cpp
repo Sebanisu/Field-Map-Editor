@@ -1340,6 +1340,14 @@ const open_viii::LangT &gui::get_coo() const
      static constexpr auto coos = open_viii::LangCommon::to_array();
      return coos.at(static_cast<size_t>(m_selections->coo));
 }
+void gui::refresh_field()
+{
+     Configuration config{};
+     const auto   &maps = m_archives_group->mapdata();
+     config->insert_or_assign("starter_field", *std::next(maps.begin(), m_selections->field));
+     config.save();
+     update_field();
+}
 void gui::combo_field()
 {
      const auto gcc = GenericComboClass(
@@ -1349,11 +1357,7 @@ void gui::combo_field()
        m_selections->field);
      if (gcc.render())
      {
-          Configuration config{};
-          const auto   &maps = m_archives_group->mapdata();
-          config->insert_or_assign("starter_field", *std::next(maps.begin(), m_selections->field));
-          config.save();
-          update_field();
+          refresh_field();
      }
 }
 
@@ -1978,7 +1982,60 @@ void gui::file_menu()
           }
      }
 
-
+     if (ImGui::BeginMenu(gui_labels::field.data()))
+     {
+          const auto        end_menu1 = scope_guard(&ImGui::EndMenu);
+          static const auto cols      = 5;
+          if (ImGui::BeginTable("##field_table", cols))
+          {
+               const auto               end_table1    = scope_guard(&ImGui::EndTable);
+               auto                     numbered_maps = m_archives_group->mapdata() | std::ranges::views::enumerate;
+               static const std::string dummy         = {};
+               std::string_view         start         = dummy;
+               bool                     row_toggle    = false;
+               for (const auto &[index, str] : numbered_maps)
+               {
+                    if (const auto temp = std::string_view(str).substr(0, 2); start != temp || (index % cols == 0))
+                    {
+                         start = temp;
+                         ImGui::TableNextRow();
+                         row_toggle = !row_toggle;
+                    }
+                    if (row_toggle)
+                    {
+                         ImGui::TableSetBgColor(ImGuiTableBgTarget_RowBg0, ImU32{ colors::TableDarkRed });// Dark red
+                    }
+                    else
+                    {
+                         ImGui::TableSetBgColor(ImGuiTableBgTarget_RowBg0, ImU32{ colors::TableLightDarkRed });// Slightly lighter dark red
+                    }
+                    ImGui::TableNextColumn();
+                    ImGui::PushStyleColor(ImGuiCol_HeaderHovered, colors::TableDarkRedHovered);
+                    ImGui::PushStyleColor(ImGuiCol_HeaderActive, colors::TableDarkRedActive);
+                    const bool checked = std::cmp_equal(m_selections->field, index);
+                    if(checked)
+                    {
+                         ImGui::TableSetBgColor(
+                           ImGuiTableBgTarget_CellBg, ImU32{ colors::TableDarkGray });// Make the selected field stand out more.
+                    }
+                    if (ImGui::MenuItem(str.c_str(), nullptr, const_cast<bool *>(&checked), !checked))
+                    {
+                         m_selections->field = static_cast<int>(index);
+                         refresh_field();
+                    }
+                    ImGui::PopStyleColor(2);
+               }
+          }
+          // const auto gcc       = GenericComboClass(
+          //   gui_labels::field,
+          //   [this]() { return std::views::iota(0, static_cast<int>(std::ranges::ssize(m_archives_group->mapdata()))); },
+          //   [this]() { return m_archives_group->mapdata(); },
+          //   m_selections->field);
+          // if (gcc.render())
+          // {
+          //      refresh_field();
+          // }
+     }
      ImGui::Separator();
      menuitem_save_texture(mim_test() || map_test());
      if (mim_test())
