@@ -2093,6 +2093,9 @@ void gui::menu_upscale_paths()
                               bool selected = ImGui::MenuItem("##menu_item", nullptr, &is_checked);
                               ImGui::SetCursorScreenPos(cursor_pos);
                               ImGui::TextUnformatted(display_text.c_str()); // Draw the scrolling text separately
+                              ImGui::SameLine();
+                              float sz = ImGui::GetTextLineHeight();
+                              ImGui::Dummy(ImVec2(sz, sz));
                               if (selected)
                               {
                                    if (m_map_sprite->filter().upscale.value() != path)
