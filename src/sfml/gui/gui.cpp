@@ -1993,14 +1993,17 @@ void gui::file_menu()
                static const std::string dummy         = {};
                std::string_view         start         = dummy;
                bool                     row_toggle    = false;
+               std::uint8_t             i             = 0;
                for (const auto &[index, str] : numbered_maps)
                {
-                    if (const auto temp = std::string_view(str).substr(0, 2); start != temp || (index % cols == 0))
+                    if (const auto temp = std::string_view(str).substr(0, 2); start != temp || (i % cols == 0))
                     {
                          start = temp;
                          ImGui::TableNextRow();
                          row_toggle = !row_toggle;
+                         i          = 0;
                     }
+                    ++i;
                     if (row_toggle)
                     {
                          ImGui::TableSetBgColor(ImGuiTableBgTarget_RowBg0, ImU32{ colors::TableDarkRed });// Dark red
@@ -2013,7 +2016,7 @@ void gui::file_menu()
                     ImGui::PushStyleColor(ImGuiCol_HeaderHovered, colors::TableDarkRedHovered);
                     ImGui::PushStyleColor(ImGuiCol_HeaderActive, colors::TableDarkRedActive);
                     const bool checked = std::cmp_equal(m_selections->field, index);
-                    if(checked)
+                    if (checked)
                     {
                          ImGui::TableSetBgColor(
                            ImGuiTableBgTarget_CellBg, ImU32{ colors::TableDarkGray });// Make the selected field stand out more.
