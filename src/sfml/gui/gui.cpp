@@ -2040,15 +2040,6 @@ void gui::file_menu()
                     ImGui::PopStyleColor(2);
                }
           }
-          // const auto gcc       = GenericComboClass(
-          //   gui_labels::field,
-          //   [this]() { return std::views::iota(0, static_cast<int>(std::ranges::ssize(m_archives_group->mapdata()))); },
-          //   [this]() { return m_archives_group->mapdata(); },
-          //   m_selections->field);
-          // if (gcc.render())
-          // {
-          //      refresh_field();
-          // }
      }
      if (!map_test() && !mim_test())
      {
