@@ -1353,8 +1353,14 @@ void gui::combo_field()
      const auto gcc = GenericComboClass(
        gui_labels::field,
        [this]() { return std::views::iota(0, static_cast<int>(std::ranges::ssize(m_archives_group->mapdata()))); },
-       [this]() { return m_archives_group->mapdata(); },
+       [this]() {
+            return m_archives_group->mapdata() | std::ranges::views::transform([](const std::string &str) -> std::string_view {
+                        using namespace std::string_view_literals;
+                        return std::string_view(str).starts_with("ma"sv) ? ""sv : str;
+                   });
+       },
        m_selections->field);
+
      if (gcc.render())
      {
           refresh_field();
@@ -1996,7 +2002,12 @@ void gui::file_menu()
                std::uint8_t             i             = 0;
                for (const auto &[index, str] : numbered_maps)
                {
-                    if (const auto temp = std::string_view(str).substr(0, 2); start != temp || (i % cols == 0))
+                    const auto temp = std::string_view(str).substr(0, 2);
+                    if (temp == std::string_view("ma"))
+                    {
+                         continue;
+                    }
+                    if (start != temp || (i % cols == 0))
                     {
                          start = temp;
                          ImGui::TableNextRow();

@@ -288,7 +288,7 @@ class GenericComboClass
 
      bool render() const
      {
-          if (values_.empty() || strings_.empty())
+          if (std::ranges::empty(values_) || std::ranges::empty(strings_))
           {
                return false;
           }
@@ -365,6 +365,10 @@ class GenericComboClass
                     const bool  is_selected = (current_item == string);
                     // You can store your selection however you
                     // want, outside or inside your objects
+                    if(std::ranges::empty(string))
+                    {
+                         return;
+                    }
                     const char *c_str_value = std::ranges::data(string);
                     {
                          const auto pop_id     = PushPopID();
