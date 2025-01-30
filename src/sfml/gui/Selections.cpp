@@ -35,6 +35,4 @@ fme::Selections::Selections()
 
      background_color =
        std::bit_cast<fme::color>(config["selections_background_color"].value_or(std::bit_cast<std::uint32_t>(background_color)));
-     blend_mode = static_cast<BlendModeT>(config["selections_filter_blend_mode"].value_or(std::to_underlying(blend_mode)));
-     blend_other = config["selections_filter_blend_other"].value_or(blend_other);
 }

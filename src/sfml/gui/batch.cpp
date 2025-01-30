@@ -646,11 +646,22 @@ void fme::batch::stop()
 fme::batch::batch(std::shared_ptr<archives_group> existing_group)
   : m_archives_group(std::move(existing_group))
 {
+     fme::Configuration const config{};
+
+     m_compact_type =
+       decltype(m_compact_type){ static_cast<compact_type>(config[ff_8::ConfigKeys<ff_8::FilterTag::Compact>::key_name].value_or(
+                                   std::to_underlying(m_compact_type.value()))),
+                                 config[ff_8::ConfigKeys<ff_8::FilterTag::Compact>::enabled_key_name].value_or(false) };
+
+     m_flatten_type =
+       decltype(m_flatten_type){ static_cast<flatten_type>(config[ff_8::ConfigKeys<ff_8::FilterTag::Flatten>::key_name].value_or(
+                                   std::to_underlying(m_flatten_type.value()))),
+                                 config[ff_8::ConfigKeys<ff_8::FilterTag::Flatten>::enabled_key_name].value_or(false) };
+
      if (m_archives_group && m_archives_group->mapdata().size() != m_maps_enabled.size())
      {
           m_maps_enabled.resize(m_archives_group->mapdata().size(), true);
      }
-     Configuration const config{};
      m_input_type =
        static_cast<input_types>(config["batch_input_type"].value_or(static_cast<std::underlying_type_t<input_types>>(m_input_type)));
      {
@@ -668,26 +679,6 @@ fme::batch::batch(std::shared_ptr<archives_group> existing_group)
           m_output_path.at(str_tmp.size()) = '\0';
           const auto tmp                   = safedir(m_output_path.data());
           m_output_path_valid              = tmp.is_dir() && tmp.is_exists();
-     }
-     m_compact_type.update(static_cast<compact_type>(
-       config["batch_compact_type"].value_or(static_cast<std::underlying_type_t<compact_type>>(m_compact_type.value()))));
-     if (config["batch_compact_enabled"].value_or(m_compact_type.enabled()))
-     {
-          m_compact_type.enable();
-     }
-     else
-     {
-          m_compact_type.disable();
-     }
-     m_flatten_type.update(static_cast<flatten_type>(
-       config["batch_flatten_type"].value_or(static_cast<std::underlying_type_t<flatten_type>>(m_flatten_type.value()))));
-     if (config["batch_flatten_enabled"].value_or(m_flatten_type.enabled()))
-     {
-          m_flatten_type.enable();
-     }
-     else
-     {
-          m_flatten_type.disable();
      }
      m_input_load_map = config["batch_input_load_map"].value_or(m_input_load_map);
 

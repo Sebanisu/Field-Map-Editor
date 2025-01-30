@@ -1511,19 +1511,23 @@ static void update_bpp(mim_sprite &sprite, BPPT bpp)
 {
      sprite = sprite.with_bpp(bpp);
 }
-static void update_bpp(map_sprite &sprite, BPPT bpp)
+static void update_bpp(map_sprite &sprite, [[maybe_unused]] BPPT bpp)
 {
-     if (sprite.filter().bpp.update(bpp).enabled())
-     {
-          sprite.update_render_texture();
-     }
+     sprite.update_render_texture();
 }
 void gui::refresh_bpp(BPPT in_bpp)
 {
      m_selections->bpp = in_bpp;
-     Configuration config{};
-     config->insert_or_assign("selections_bpp", m_selections->bpp.raw());
-     config.save();
+     if (m_map_sprite)
+     {
+          m_map_sprite->filter().bpp.update(in_bpp);
+     }
+     else
+     {
+          Configuration config{};
+          config->insert_or_assign("selections_bpp", m_selections->bpp.raw());
+          config.save();
+     }
      if (mim_test())
      {
           update_bpp(m_mim_sprite, bpp());
@@ -3267,16 +3271,19 @@ void gui::combo_draw_bit()
 
 void gui::refresh_palette(std::uint8_t palette)
 {
-     palette = static_cast<std::uint8_t>(palette & 0xFU);
-     spdlog::info("refresh_palette: {}", palette);
+     palette               = static_cast<std::uint8_t>(palette & 0xFU);
      m_selections->palette = palette;
      if (m_map_sprite)
      {
           m_map_sprite->filter().palette.update(palette);
      }
-     Configuration config{};
-     config->insert_or_assign("selections_palette", m_selections->palette);
-     config.save();
+     else
+     {
+          // filter saves config now but mim doens't use filter.
+          Configuration config{};
+          config->insert_or_assign("selections_palette", m_selections->palette);
+          config.save();
+     }
      if (mim_test())
      {
           update_palette(m_mim_sprite, palette);
@@ -3344,22 +3351,12 @@ void gui::combo_blend_modes()
 
 void gui::refresh_blend_mode()
 {
-     m_selections->blend_mode = m_map_sprite->filter().blend_mode.value();
-     spdlog::info("refresh_blend_mode: {}", m_selections->blend_mode);
-     Configuration config{};
-     config->insert_or_assign("selections_filter_blend_mode", std::to_underlying(m_selections->blend_mode));
-     config.save();
      m_map_sprite->update_render_texture();
      m_changed = true;
 }
 
 void gui::refresh_blend_other()
 {
-     m_selections->blend_other = m_map_sprite->filter().blend_other.value();
-     spdlog::info("refresh_blend_other: {}", m_selections->blend_other);
-     Configuration config{};
-     config->insert_or_assign("selections_filter_blend_other", m_selections->blend_other);
-     config.save();
      m_map_sprite->update_render_texture();
      m_changed = true;
 }
