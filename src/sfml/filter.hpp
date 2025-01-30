@@ -4,6 +4,7 @@
 
 #ifndef FIELD_MAP_EDITOR_FILTER_HPP
 #define FIELD_MAP_EDITOR_FILTER_HPP
+#include "Configuration.hpp"
 #include "draw_bit_t.hpp"
 #include "open_viii/graphics/background/BlendModeT.hpp"
 #include "open_viii/graphics/BPPT.hpp"
@@ -168,12 +169,50 @@ struct filters
      filter<ff_8::tile_operations::AnimationIdT<TileT>, ff_8::tile_operations::AnimationId>       animation_id    = {};
      filter<ff_8::tile_operations::AnimationStateT<TileT>, ff_8::tile_operations::AnimationState> animation_frame = {};
      filter<ff_8::tile_operations::LayerIdT<TileT>, ff_8::tile_operations::LayerId>               layer_id        = {};
-
      filter<ff_8::tile_operations::TextureIdT<TileT>, ff_8::tile_operations::TextureId>           texture_page_id = {};
      filter<ff_8::tile_operations::BlendModeT<TileT>, ff_8::tile_operations::BlendMode>           blend_mode      = {};
      filter<ff_8::tile_operations::BlendT<TileT>, ff_8::tile_operations::Blend>                   blend_other     = {};
      filter<ff_8::tile_operations::DepthT<TileT>, ff_8::tile_operations::Depth>                   bpp =
        filter<ff_8::tile_operations::DepthT<TileT>, ff_8::tile_operations::Depth>{ open_viii::graphics::BPPT::BPP4_CONST() };
+
+
+     filters()
+     {
+          fme::Configuration const config{};
+
+          pupu      = decltype(pupu){ std::bit_cast<PupuID>(config["filter_pupu"].value_or(PupuID{}.raw())),
+                                      config["filter_pupu_enabled"].value_or(false) };
+          upscale   = decltype(upscale){ std::filesystem::path{ config["filter_upscale"].value_or(std::string{}) },
+                                         config["filter_upscale_enabled"].value_or(false) };
+          deswizzle = decltype(deswizzle){ std::filesystem::path{ config["filter_deswizzle"].value_or(std::string{}) },
+                                           config["filter_deswizzle_enabled"].value_or(false) };
+          draw_bit  = decltype(draw_bit){ static_cast<draw_bitT>(config["filter_draw"].value_or(std::to_underlying(draw_bitT{}))),
+                                          config["filter_draw_enabled"].value_or(false) };
+          z = decltype(z){ config["filter_z"].value_or(ff_8::tile_operations::ZT<TileT>{}), config["filter_z_enabled"].value_or(false) };
+          palette      = decltype(palette){ config["filter_palette"].value_or(ff_8::tile_operations::PaletteIdT<TileT>{}) & 0xFU,
+                                            config["filter_palette_enabled"].value_or(false) };
+          animation_id = decltype(animation_id){ config["filter_animation_id"].value_or(ff_8::tile_operations::AnimationIdT<TileT>{}),
+                                                 config["filter_animation_id_enabled"].value_or(false) };
+          animation_frame =
+            decltype(animation_frame){ config["filter_animation_frame"].value_or(ff_8::tile_operations::AnimationStateT<TileT>{}),
+                                       config["filter_animation_frame_enabled"].value_or(false) };
+          layer_id = decltype(layer_id){ config["filter_layer_id"].value_or(ff_8::tile_operations::LayerIdT<TileT>{}),
+                                         config["filter_layer_id_enabled"].value_or(false) };
+          texture_page_id =
+            decltype(texture_page_id){ config["filter_texture_page_id"].value_or(ff_8::tile_operations::TextureIdT<TileT>{}),
+                                       config["filter_texture_page_id_enabled"].value_or(false) };
+          blend_mode = decltype(blend_mode){
+               static_cast<ff_8::tile_operations::BlendModeT<TileT>>(config["filter_blend_mode"].value_or(
+                 std::to_underlying(ff_8::tile_operations::BlendModeT<TileT>{ ff_8::tile_operations::BlendModeT<TileT>::none }))),
+               config["filter_blend_mode_enabled"].value_or(false)
+          };
+          blend_other = decltype(blend_other){ config["filter_blend_other"].value_or(ff_8::tile_operations::BlendT<TileT>{}),
+                                               config["filter_blend_other_enabled"].value_or(false) };
+          bpp         = decltype(bpp){ ff_8::tile_operations::DepthT<TileT>{
+                                 config["filter_bpp"].value_or(ff_8::tile_operations::DepthT<TileT>::BPP4_CONST().raw()) & 3U },
+                                       config["filter_bpp_enabled"].value_or(false) };
+     }
+
      template<open_viii::graphics::background::is_tile ThisTileT>
      bool operator()(const ThisTileT &tile) const
      {
