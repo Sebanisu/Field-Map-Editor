@@ -334,11 +334,12 @@ struct gui
      void                         browse_buttons();
      void                         menu_upscale_paths();
      void                         refresh_field();
-     void                          refresh_bpp(std::uint8_t bpp_raw);
-     void                          refresh_palette(std::uint8_t palette);
+     void                         refresh_bpp(open_viii::graphics::BPPT in_bpp);
+     void                         refresh_palette(std::uint8_t palette);
+     void                         refresh_blend_mode();
 
 
-     static inline constinit bool  toggle_imgui_demo_window = { false };
+     static inline constinit bool toggle_imgui_demo_window = { false };
 };
 }// namespace fme
 #endif// FIELD_MAP_EDITOR_GUI_HPP

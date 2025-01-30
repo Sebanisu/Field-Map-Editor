@@ -3,13 +3,15 @@
 //
 #ifndef FIELD_MAP_EDITOR_SELECTIONS_HPP
 #define FIELD_MAP_EDITOR_SELECTIONS_HPP
+#include "colors.hpp"
 #include "Configuration.hpp"
 #include "draw_mode.hpp"
-#include "open_viii/strings/LangT.hpp"
 #include "tile_sizes.hpp"
 #include <filesystem>
+#include <open_viii/graphics/background/BlendModeT.hpp>
+#include <open_viii/graphics/BPPT.hpp>
+#include <open_viii/strings/LangT.hpp>
 #include <spdlog/spdlog.h>
-#include "colors.hpp"
 namespace fme
 {
 /**
@@ -47,8 +49,8 @@ struct Selections
       */
      static constexpr std::uint32_t window_height_default          = 600;
 
-     int                            bpp                            = {};///< Bits per pixel for rendering.
-     int                            palette                        = {};///< Selected palette index.
+     open_viii::graphics::BPPT      bpp                            = {};///< Bits per pixel for rendering.
+     uint8_t                        palette                        = {};///< Selected palette index.
      int                            field                          = {};///< Selected field ID.
      open_viii::LangT               coo                            = {};///< Selected language.
      draw_mode                      draw                           = { draw_mode::draw_map };///< Current drawing mode.
@@ -71,7 +73,8 @@ struct Selections
      bool                           display_history_window         = { false };///< Whether to display history window.
      bool                           display_control_panel_window   = { true };///< Whether to display control panel window.
      bool                           display_draw_window            = { true };///< Whether to display draw window.
-     color                          background_color               = { fme::colors::White };///< Remember to user's selected Background Color for draw Window.
+     color background_color = { fme::colors::White };///< Remember to user's selected Background Color for draw Window.
+     open_viii::graphics::background::BlendModeT blend_mode = { open_viii::graphics::background::BlendModeT::none };
 
 
      /**
