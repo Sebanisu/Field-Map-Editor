@@ -47,7 +47,7 @@ struct gui_labels
      static constexpr std::string_view enable                                 = { "Enable" };
      static constexpr std::string_view language                               = { "Language" };
      static constexpr std::string_view draw                                   = { "Draw" };
-     static constexpr std::string_view draw_bit                               = { "draw-bit" };
+     static constexpr std::string_view draw_bit                               = { "Draw-Bit" };
      static constexpr std::string_view path                                   = { "Path" };
      static constexpr std::string_view field                                  = { "Field" };
      static constexpr std::string_view directory_created                      = { "Directory Created" };

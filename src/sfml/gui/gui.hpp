@@ -4,6 +4,7 @@
 #ifndef FIELD_MAP_EDITOR_GUI_HPP
 #define FIELD_MAP_EDITOR_GUI_HPP
 #include "archives_group.hpp"
+#include "as_string.hpp"
 #include "batch.hpp"
 #include "colors.hpp"
 #include "compact_type.hpp"
@@ -314,7 +315,7 @@ struct gui
      //      {
      //      }
      // }
-     
+
      void                         filter_empty_import_tiles();
      void                         collapsing_header_generated_tiles() const;
      void                         adjust_source_xy_texture_page_for_import_map(uint8_t next_source_y, const uint8_t next_texture_page);
@@ -337,11 +338,32 @@ struct gui
      void                         refresh_field();
      void                         refresh_bpp(open_viii::graphics::BPPT in_bpp);
      void                         refresh_palette(std::uint8_t palette);
-     void                         refresh_blend_mode();
-     void                         refresh_blend_other();
+     void                         refresh_render_texture();
 
 
      static inline constinit bool toggle_imgui_demo_window = { false };
+
+     struct map_pupu_id
+     {
+          std::shared_ptr<map_sprite> m_map_sprite = {};
+          const auto                 &values() const
+          {
+               return m_map_sprite->working_unique_pupu();
+          }
+          auto strings() const
+          {
+               return m_map_sprite->working_unique_pupu() | std::views::transform(AsString{});
+          }
+          auto tooltips() const
+          {
+               return m_map_sprite->working_unique_pupu()
+                      | std::views::transform([](const ff_8::PupuID &pupu_id) -> decltype(auto) { return pupu_id.create_summary(); });
+          }
+          auto zip() const
+          {
+               return std::ranges::views::zip(values(), strings(), tooltips());
+          }
+     };
 };
 }// namespace fme
 #endif// FIELD_MAP_EDITOR_GUI_HPP

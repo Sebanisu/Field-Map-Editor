@@ -2,7 +2,6 @@
 // Created by pcvii on 9/7/2021.
 //
 #include "gui.hpp"
-#include "as_string.hpp"
 #include "collapsing_tile_info.hpp"
 #include "colors.hpp"
 #include "create_tile_button.hpp"
@@ -55,6 +54,33 @@ struct mim_bpp
      auto zip() const
      {
           return std::ranges::views::zip(values(), strings());
+     }
+};
+
+struct map_draw_bit
+{
+   private:
+     static constexpr auto m_values   = std::array{ ff_8::draw_bitT::all, ff_8::draw_bitT::enabled, ff_8::draw_bitT::disabled };
+     static constexpr auto m_tooltips = std::array{ fme::gui_labels::draw_bit_all_tooltip,
+                                                    fme::gui_labels::draw_bit_enabled_tooltip,
+                                                    fme::gui_labels::draw_bit_disabled_tooltip };
+
+   public:
+     auto values() const
+     {
+          return m_values;
+     }
+     auto strings() const
+     {
+          return m_values | std::views::transform(fme::AsString{});
+     }
+     auto tooltips() const
+     {
+          return m_tooltips;
+     }
+     auto zip() const
+     {
+          return std::ranges::views::zip(values(), strings(), tooltips());
      }
 };
 /**
@@ -1857,47 +1883,9 @@ void gui::edit_menu()
 
           if (ImGui::BeginMenu(gui_labels::filters.data()))
           {
-               const auto pop_menu = scope_guard(&ImGui::EndMenu);
+               const auto pop_menu            = scope_guard(&ImGui::EndMenu);
 
-               if (map_test())
-               {
-                    if (ImGui::BeginMenu(gui_labels::pupu_id.data()))
-                    {
-                         const auto pop_menu1 = scope_guard(&ImGui::EndMenu);
-                         auto       zip_range = std::ranges::views::zip(
-                           m_map_sprite->working_unique_pupu(),
-                           m_map_sprite->working_unique_pupu() | std::views::transform(AsString{}),
-                           m_map_sprite->working_unique_pupu() | std::views::transform([](const ff_8::PupuID &pupu_id) -> decltype(auto) {
-                                return pupu_id.create_summary();
-                           }));
 
-                         for (auto &&[value, str, tooltip_str] : zip_range)
-                         {
-                              const bool checked = m_map_sprite->filter().pupu.value() == value && m_map_sprite->filter().pupu.enabled();
-                              if (ImGui::MenuItem(str.c_str(), nullptr, const_cast<bool *>(&checked)))
-                              {
-                                   if (m_map_sprite->filter().pupu.value() != value)
-                                   {
-                                        m_map_sprite->filter().pupu.update(value);
-                                   }
-                                   if (m_map_sprite->filter().pupu.enabled())
-                                   {
-                                        m_map_sprite->filter().pupu.disable();
-                                   }
-                                   else
-                                   {
-                                        m_map_sprite->filter().pupu.enable();
-                                   }
-                                   m_map_sprite->update_render_texture();
-                                   m_changed = true;
-                              }
-                              else
-                              {
-                                   tool_tip(tooltip_str);
-                              }
-                         }
-                    }
-               }
                const auto generic_filter_menu = [&](
                                                   std::string_view                 label,
                                                   HasValuesAndStringsAndZip auto &&pair,
@@ -1905,10 +1893,8 @@ void gui::edit_menu()
                                                   std::invocable auto            &&lambda) {
                     if (ImGui::BeginMenu(label.data()))
                     {
-                         const auto pop_menu1 = scope_guard(&ImGui::EndMenu);
-
-                         for (auto &&[value, str] : pair.zip())
-                         {
+                         const auto pop_menu1       = scope_guard(&ImGui::EndMenu);
+                         const auto process_element = [&](auto &value, auto &str) {
                               const bool selected = filter.value() == value;
                               bool       checked  = selected && filter.enabled();
                               if (ImGui::MenuItem(str.data(), nullptr, &checked))
@@ -1931,9 +1917,43 @@ void gui::edit_menu()
                                    }
                                    std::invoke(std::forward<decltype(lambda)>(lambda));
                               }
+                         };
+                         const std::uint32_t cols = { 3U };
+                         std::uint32_t       i    = {};
+                         ImGui::BeginTable("##filter_menu_items", cols);
+                         for (auto &&t : pair.zip())
+                         {
+                              if (i % cols == 0U)
+                              {
+                                   ImGui::TableNextRow();
+                              }
+                              ImGui::TableNextColumn();
+                              if constexpr (std::tuple_size_v<std::decay_t<decltype(t)>> == 2)
+                              {
+                                   auto &&[value, str] = t;
+                                   // Handle the case where tuple has 2 elements
+                                   process_element(value, str);
+                              }
+                              else if constexpr (std::tuple_size_v<std::decay_t<decltype(t)>> == 3)
+                              {
+                                   auto &&[value, str, tooltip_str] = t;
+                                   // Handle the case where tuple has 3 elements
+                                   process_element(value, str);
+                                   tool_tip(tooltip_str);
+                              }
+                              ++i;
                          }
+                         ImGui::EndTable();
                     }
                };
+               if (map_test())
+               {
+                    generic_filter_menu(
+                      gui_labels::pupu_id,
+                    map_pupu_id{m_map_sprite},
+                      m_map_sprite->filter().pupu,
+                      [&]() { refresh_render_texture(); });
+               }
                if (mim_test())
                {
                     auto tmp_bpp = std::remove_cvref_t<decltype(m_map_sprite->filter().bpp)>{ m_selections->bpp, true };
@@ -1966,14 +1986,52 @@ void gui::edit_menu()
 
                     generic_filter_menu(
                       gui_labels::blend_mode.data(), m_map_sprite->uniques().blend_mode(), m_map_sprite->filter().blend_mode, [&]() {
-                           refresh_blend_mode();
+                           refresh_render_texture();
                       });
 
 
                     generic_filter_menu(
                       gui_labels::blend_other.data(), m_map_sprite->uniques().blend_other(), m_map_sprite->filter().blend_other, [&]() {
-                           refresh_blend_other();
+                           refresh_render_texture();
                       });
+
+                    generic_filter_menu(
+                      gui_labels::layer_id.data(), m_map_sprite->uniques().layer_id(), m_map_sprite->filter().layer_id, [&]() {
+                           refresh_render_texture();
+                      });
+
+                    generic_filter_menu(
+                      gui_labels::texture_page.data(),
+                      m_map_sprite->uniques().texture_page_id(),
+                      m_map_sprite->filter().texture_page_id,
+                      [&]() { refresh_render_texture(); });
+
+                    generic_filter_menu(
+                      gui_labels::animation_id.data(), m_map_sprite->uniques().animation_id(), m_map_sprite->filter().animation_id, [&]() {
+                           refresh_render_texture();
+                      });
+
+                    {
+                         const auto &map = m_map_sprite->uniques().animation_frame();
+                         const auto &key = m_map_sprite->filter().animation_id.value();
+                         if (map.contains(key))
+                         {
+                              generic_filter_menu(
+                                gui_labels::animation_frame.data(), map.at(key), m_map_sprite->filter().animation_frame, [&]() {
+                                     refresh_render_texture();
+                                });
+                         }
+                         else
+                         {
+                              m_map_sprite->filter().animation_id.update(m_map_sprite->uniques().animation_id().values().front());
+                         }
+                    }
+
+                    generic_filter_menu(
+                      gui_labels::z.data(), m_map_sprite->uniques().z(), m_map_sprite->filter().z, [&]() { refresh_render_texture(); });
+
+                    generic_filter_menu(
+                      gui_labels::draw_bit.data(), map_draw_bit{}, m_map_sprite->filter().draw_bit, [&]() { refresh_render_texture(); });
                }
           }
      }
@@ -3137,7 +3195,7 @@ void gui::init_and_get_style()
           error_code.clear();
      }
      ImGui::LoadIniSettingsFromDisk(path.c_str());
-     (void) icons_font();
+     (void)icons_font();
      ImGui::SFML::UpdateFontTexture();
      imgui_io.ConfigFlags = bitwise_or(imgui_io.ConfigFlags, ImGuiConfigFlags_DockingEnable);
      if (m_field)
@@ -3361,13 +3419,8 @@ void gui::combo_blend_modes()
      m_changed = true;
 }
 
-void gui::refresh_blend_mode()
-{
-     m_map_sprite->update_render_texture();
-     m_changed = true;
-}
 
-void gui::refresh_blend_other()
+void gui::refresh_render_texture()
 {
      m_map_sprite->update_render_texture();
      m_changed = true;
@@ -3435,7 +3488,7 @@ void gui::combo_blend_other()
      {
           return;
      }
-     refresh_blend_other();
+     refresh_render_texture();
 }
 
 
@@ -3452,8 +3505,7 @@ void gui::combo_z()
      {
           return;
      }
-     m_map_sprite->update_render_texture();
-     m_changed = true;
+     refresh_render_texture();
 }
 
 void gui::combo_animation_frames()
@@ -3475,8 +3527,7 @@ void gui::combo_animation_frames()
      {
           return;
      }
-     m_map_sprite->update_render_texture();
-     m_changed = true;
+     refresh_render_texture();
 }
 BPPT gui::bpp() const
 {
@@ -3502,8 +3553,8 @@ void gui::combo_deswizzle_path()
           {
                m_map_sprite->filter().upscale.disable();
           }
-          m_map_sprite->update_render_texture(true);
-          m_changed = true;
+
+          refresh_render_texture();
      }
 }
 void gui::combo_upscale_path()
@@ -3520,8 +3571,8 @@ void gui::combo_upscale_path()
      {
           m_map_sprite->filter().deswizzle.disable();
      }
-     m_map_sprite->update_render_texture(true);
-     m_changed = true;
+
+     refresh_render_texture();
 }
 void gui::generate_upscale_paths(const std::string &field_name, open_viii::LangT coo)
 {
