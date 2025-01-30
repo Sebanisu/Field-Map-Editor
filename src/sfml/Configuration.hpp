@@ -22,7 +22,7 @@ class Configuration
      /**
       * @brief Constructs a Configuration object and loads the TOML configuration file.
       *
-      * The configuration file is expected to be located at `res/ff8_config_sfml.toml`
+      * The configuration file is expected to be located at `Field-Map-Editor_SFML.toml`
       * relative to the current working directory.
       */
      Configuration();
@@ -38,7 +38,7 @@ class Configuration
       *
       * Prevents accessing the TOML table through rvalue references.
       */
-     toml::table                      *operator->()                      && = delete;
+     toml::table                      *operator->() && = delete;
 
      /**
       * @brief Provides read-only access to the underlying TOML table.
@@ -70,12 +70,12 @@ class Configuration
      /**
       * @brief The path to the TOML configuration file.
       *
-      * This is a static inline constant that resolves to `res/ff8_config_sfml.toml`
+      * This is a static inline constant that resolves to `Field-Map-Editor_SFML.toml`
       * in the current working directory.
       */
      static inline const auto m_path = []() {
           std::error_code error_code = {};
-          auto            str        = std::filesystem::current_path(error_code) / "res" / "ff8_config_sfml.toml";
+          auto            str        = std::filesystem::current_path(error_code) / "Field-Map-Editor_SFML.toml";
           if (error_code)
           {
                spdlog::warn("{}:{} - {}: {} path: \"{}\"", __FILE__, __LINE__, error_code.value(), error_code.message(), str);

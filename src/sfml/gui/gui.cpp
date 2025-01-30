@@ -299,6 +299,15 @@ void gui::render_dockspace()
      // Submit the DockSpace
      ImGuiIO &imgui_io                          = ImGui::GetIO();
      imgui_io.ConfigWindowsMoveFromTitleBarOnly = true;
+
+     std::error_code   error_code               = {};
+     static const auto path                     = (std::filesystem::current_path(error_code) / "Field-Map-Editor_SFML_imgui.ini").string();
+     imgui_io.IniFilename                       = path.c_str();
+     if (error_code)
+     {
+          spdlog::warn("{}:{} - {}: {} path: \"{}\"", __FILE__, __LINE__, error_code.value(), error_code.message(), path);
+          error_code.clear();
+     }
      if (bitwise_and(imgui_io.ConfigFlags, ImGuiConfigFlags_DockingEnable) != ImGuiConfigFlags{})
      {
           const ImGuiID dockspace_id = ImGui::GetID("MyDockSpace");
