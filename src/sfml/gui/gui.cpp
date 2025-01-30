@@ -300,14 +300,7 @@ void gui::render_dockspace()
      ImGuiIO &imgui_io                          = ImGui::GetIO();
      imgui_io.ConfigWindowsMoveFromTitleBarOnly = true;
 
-     std::error_code   error_code               = {};
-     static const auto path                     = (std::filesystem::current_path(error_code) / "Field-Map-Editor_SFML_imgui.ini").string();
-     imgui_io.IniFilename                       = path.c_str();
-     if (error_code)
-     {
-          spdlog::warn("{}:{} - {}: {} path: \"{}\"", __FILE__, __LINE__, error_code.value(), error_code.message(), path);
-          error_code.clear();
-     }
+
      if (bitwise_and(imgui_io.ConfigFlags, ImGuiConfigFlags_DockingEnable) != ImGuiConfigFlags{})
      {
           const ImGuiID dockspace_id = ImGui::GetID("MyDockSpace");
@@ -3133,9 +3126,19 @@ void gui::init_and_get_style()
 {
      m_window.setVerticalSyncEnabled(true);
      (void)ImGui::SFML::Init(m_window, false);
-     (void)icons_font();
+
+     ImGuiIO          &imgui_io   = ImGui::GetIO();
+     std::error_code   error_code = {};
+     static const auto path       = (std::filesystem::current_path(error_code) / "Field-Map-Editor_SFML_imgui.ini").string();
+     imgui_io.IniFilename         = path.c_str();
+     if (error_code)
+     {
+          spdlog::warn("{}:{} - {}: {} path: \"{}\"", __FILE__, __LINE__, error_code.value(), error_code.message(), path);
+          error_code.clear();
+     }
+     ImGui::LoadIniSettingsFromDisk(path.c_str());
+     (void) icons_font();
      ImGui::SFML::UpdateFontTexture();
-     ImGuiIO &imgui_io    = ImGui::GetIO();
      imgui_io.ConfigFlags = bitwise_or(imgui_io.ConfigFlags, ImGuiConfigFlags_DockingEnable);
      if (m_field)
      {
