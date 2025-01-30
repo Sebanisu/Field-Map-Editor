@@ -207,14 +207,20 @@ class GenericComboClassWithFilter
      {
           const auto _ = PushPopID();
           ImGui::SameLine(0, spacing_);
-          const bool disabled =
-            std::cmp_less_equal(current_idx_, 0) || std::cmp_greater_equal(current_idx_ - 1, std::ranges::size(values_));
+          const auto check_valid = [&]() {
+               return std::cmp_less_equal(current_idx_, 0) || std::cmp_greater_equal(current_idx_ - 1, std::ranges::size(values_));
+          };
+          const bool disabled = check_valid();
           ImGui::BeginDisabled(disabled);
           if (ImGui::ArrowButton("##l", ImGuiDir_Left))
           {
                --current_idx_;
                changed_ = true;
                filter_.get().enable();
+               while (std::ranges::empty(*getNext(strings_, current_idx_)) && !check_valid())
+               {
+                    --current_idx_;
+               }
           }
           ImGui::EndDisabled();
      }
@@ -223,13 +229,18 @@ class GenericComboClassWithFilter
      {
           const auto _ = PushPopID();
           ImGui::SameLine(0, spacing_);
-          const bool disabled = std::cmp_greater_equal(current_idx_ + 1, std::ranges::size(values_));
+          const auto check_valid = [&]() { return std::cmp_greater_equal(current_idx_ + 1, std::ranges::size(values_)); };
+          const bool disabled    = check_valid();
           ImGui::BeginDisabled(disabled);
           if (ImGui::ArrowButton("##r", ImGuiDir_Right))
           {
                ++current_idx_;
                changed_ = true;
                filter_.get().enable();
+               while (std::ranges::empty(*getNext(strings_, current_idx_)) && !check_valid())
+               {
+                    ++current_idx_;
+               }
           }
           ImGui::EndDisabled();
      }
@@ -362,10 +373,10 @@ class GenericComboClass
           {
                ImGui::Columns(num_columns_, "##columns", false);
                std::ranges::for_each(strings_, [&, index = decltype(current_idx_){}](const auto &string) mutable {
-                    const bool  is_selected = (current_item == string);
+                    const bool is_selected = (current_item == string);
                     // You can store your selection however you
                     // want, outside or inside your objects
-                    if(std::ranges::empty(string))
+                    if (std::ranges::empty(string))
                     {
                          return;
                     }
@@ -411,7 +422,8 @@ class GenericComboClass
           {
                return;
           }
-          tool_tip(*getNext(tool_tips_, index)); if (!ImGui::IsItemHovered())
+          tool_tip(*getNext(tool_tips_, index));
+          if (!ImGui::IsItemHovered())
           {
                return;
           }
@@ -422,13 +434,20 @@ class GenericComboClass
           const auto _            = PushPopID();
           const auto pop_disabled = scope_guard{ &ImGui::EndDisabled };
           ImGui::SameLine(0, spacing_);
-          const bool disabled =
-            std::cmp_less_equal(current_idx_, 0) || std::cmp_greater_equal(current_idx_ - 1, std::ranges::size(values_));
+          const auto check_valid = [&]() {
+               return std::cmp_less_equal(current_idx_, 0) || std::cmp_greater_equal(current_idx_ - 1, std::ranges::size(values_));
+          };
+          const bool disabled = check_valid();
           ImGui::BeginDisabled(disabled);
           if (ImGui::ArrowButton("##l", ImGuiDir_Left))
           {
                --current_idx_;
                changed_ = true;
+
+               while (std::ranges::empty(*getNext(strings_, current_idx_)) && !check_valid())
+               {
+                    --current_idx_;
+               }
           }
      }
 
@@ -436,12 +455,17 @@ class GenericComboClass
      {
           const auto pop_id_right = PushPopID();
           ImGui::SameLine(0, spacing_);
-          const bool disabled = std::cmp_greater_equal(current_idx_ + 1, std::ranges::size(values_));
+          const auto check_valid = [&]() { return std::cmp_greater_equal(current_idx_ + 1, std::ranges::size(values_)); };
+          const bool disabled    = check_valid();
           ImGui::BeginDisabled(disabled);
           if (ImGui::ArrowButton("##r", ImGuiDir_Right))
           {
                ++current_idx_;
                changed_ = true;
+               while (std::ranges::empty(*getNext(strings_, current_idx_)) && !check_valid())
+               {
+                    ++current_idx_;
+               }
           }
           ImGui::EndDisabled();
      }
