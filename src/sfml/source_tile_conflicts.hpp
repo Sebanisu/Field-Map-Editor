@@ -73,7 +73,7 @@ public:
       *
       * This constant represents the total number of texture pages (layers) in the grid.
       */
-     static constexpr auto T_SIZE    = 13U;
+     static constexpr auto T_SIZE    = 14U;
 
      /**
       * @brief The total number of tiles in a single texture page.
