@@ -19,7 +19,135 @@
 #include <vector>
 namespace ff_8
 {
-template<typename T>
+enum class FilterTag : std::uint8_t
+{
+     Pupu,
+     Upscale,
+     Deswizzle,
+     DrawBit,
+     Z,
+     Palette,
+     AnimationId,
+     AnimationFrame,
+     LayerId,
+     TexturePageId,
+     BlendMode,
+     BlendOther,
+     Bpp,
+     Compact,
+     Flatten,
+};
+
+template<FilterTag Tag>
+struct ConfigKeys;
+
+template<>
+struct ConfigKeys<FilterTag::Pupu>
+{
+     static constexpr auto key_name         = "filter_pupu";
+     static constexpr auto enabled_key_name = "filter_pupu_enabled";
+};
+
+template<>
+struct ConfigKeys<FilterTag::Upscale>
+{
+     static constexpr auto key_name         = "filter_upscale";
+     static constexpr auto enabled_key_name = "filter_upscale_enabled";
+};
+
+template<>
+struct ConfigKeys<FilterTag::Deswizzle>
+{
+     static constexpr auto key_name         = "filter_deswizzle";
+     static constexpr auto enabled_key_name = "filter_deswizzle_enabled";
+};
+
+template<>
+struct ConfigKeys<FilterTag::DrawBit>
+{
+     static constexpr auto key_name         = "filter_draw";
+     static constexpr auto enabled_key_name = "filter_draw_enabled";
+};
+
+template<>
+struct ConfigKeys<FilterTag::Z>
+{
+     static constexpr auto key_name         = "filter_z";
+     static constexpr auto enabled_key_name = "filter_z_enabled";
+};
+
+template<>
+struct ConfigKeys<FilterTag::Palette>
+{
+     static constexpr auto key_name         = "filter_palette";
+     static constexpr auto enabled_key_name = "filter_palette_enabled";
+};
+
+template<>
+struct ConfigKeys<FilterTag::AnimationId>
+{
+     static constexpr auto key_name         = "filter_animation_id";
+     static constexpr auto enabled_key_name = "filter_animation_id_enabled";
+};
+
+template<>
+struct ConfigKeys<FilterTag::AnimationFrame>
+{
+     static constexpr auto key_name         = "filter_animation_frame";
+     static constexpr auto enabled_key_name = "filter_animation_frame_enabled";
+};
+
+template<>
+struct ConfigKeys<FilterTag::LayerId>
+{
+     static constexpr auto key_name         = "filter_layer_id";
+     static constexpr auto enabled_key_name = "filter_layer_id_enabled";
+};
+
+template<>
+struct ConfigKeys<FilterTag::TexturePageId>
+{
+     static constexpr auto key_name         = "filter_texture_page_id";
+     static constexpr auto enabled_key_name = "filter_texture_page_id_enabled";
+};
+
+template<>
+struct ConfigKeys<FilterTag::BlendMode>
+{
+     static constexpr auto key_name         = "filter_blend_mode";
+     static constexpr auto enabled_key_name = "filter_blend_mode_enabled";
+};
+
+template<>
+struct ConfigKeys<FilterTag::BlendOther>
+{
+     static constexpr auto key_name         = "filter_blend_other";
+     static constexpr auto enabled_key_name = "filter_blend_other_enabled";
+};
+
+template<>
+struct ConfigKeys<FilterTag::Bpp>
+{
+     static constexpr auto key_name         = "filter_bpp";
+     static constexpr auto enabled_key_name = "filter_bpp_enabled";
+};
+
+template<>
+struct ConfigKeys<FilterTag::Compact>
+{
+     static constexpr auto key_name         = "filter_compact";
+     static constexpr auto enabled_key_name = "filter_compact_enabled";
+};
+
+template<>
+struct ConfigKeys<FilterTag::Flatten>
+{
+     static constexpr auto key_name         = "filter_flatten";
+     static constexpr auto enabled_key_name = "filter_flatten_enabled";
+};
+
+
+template<typename T, FilterTag Tag>
 struct filter_old
 {
    private:
@@ -75,7 +203,7 @@ struct filter_old
           return m_value;
      }
 };
-template<typename T, typename OpT>
+template<typename T, typename OpT, FilterTag Tag>
 struct filter
 {
    private:
@@ -160,20 +288,20 @@ concept IsEitherFilter = IsFilterOld<T> || IsFilter<T, TileT>;
 struct filters
 {
      using TileT = open_viii::graphics::background::Tile1;
-     filter_old<PupuID>                                                                           pupu            = {};
-     filter_old<std::filesystem::path>                                                            upscale         = {};
-     filter_old<std::filesystem::path>                                                            deswizzle       = {};
-     filter<draw_bitT, ff_8::tile_operations::Draw>                                               draw_bit        = {};
-     filter<ff_8::tile_operations::ZT<TileT>, ff_8::tile_operations::Z>                           z               = {};
-     filter<ff_8::tile_operations::PaletteIdT<TileT>, ff_8::tile_operations::PaletteId>           palette         = {};
-     filter<ff_8::tile_operations::AnimationIdT<TileT>, ff_8::tile_operations::AnimationId>       animation_id    = {};
-     filter<ff_8::tile_operations::AnimationStateT<TileT>, ff_8::tile_operations::AnimationState> animation_frame = {};
-     filter<ff_8::tile_operations::LayerIdT<TileT>, ff_8::tile_operations::LayerId>               layer_id        = {};
-     filter<ff_8::tile_operations::TextureIdT<TileT>, ff_8::tile_operations::TextureId>           texture_page_id = {};
-     filter<ff_8::tile_operations::BlendModeT<TileT>, ff_8::tile_operations::BlendMode>           blend_mode      = {};
-     filter<ff_8::tile_operations::BlendT<TileT>, ff_8::tile_operations::Blend>                   blend_other     = {};
-     filter<ff_8::tile_operations::DepthT<TileT>, ff_8::tile_operations::Depth>                   bpp =
-       filter<ff_8::tile_operations::DepthT<TileT>, ff_8::tile_operations::Depth>{ open_viii::graphics::BPPT::BPP4_CONST() };
+     filter_old<PupuID, FilterTag::Pupu>                                                                           pupu            = {};
+     filter_old<std::filesystem::path, FilterTag::Upscale>                                                            upscale         = {};
+     filter_old<std::filesystem::path, FilterTag::Deswizzle>                                                            deswizzle       = {};
+     filter<draw_bitT, ff_8::tile_operations::Draw, FilterTag::DrawBit>                                                        draw_bit = {};
+     filter<ff_8::tile_operations::ZT<TileT>, ff_8::tile_operations::Z, FilterTag::Z>                           z               = {};
+     filter<ff_8::tile_operations::PaletteIdT<TileT>, ff_8::tile_operations::PaletteId, FilterTag::Palette>           palette         = {};
+     filter<ff_8::tile_operations::AnimationIdT<TileT>, ff_8::tile_operations::AnimationId, FilterTag::AnimationId>       animation_id    = {};
+     filter<ff_8::tile_operations::AnimationStateT<TileT>, ff_8::tile_operations::AnimationState, FilterTag::AnimationFrame> animation_frame = {};
+     filter<ff_8::tile_operations::LayerIdT<TileT>, ff_8::tile_operations::LayerId, FilterTag::LayerId>               layer_id        = {};
+     filter<ff_8::tile_operations::TextureIdT<TileT>, ff_8::tile_operations::TextureId, FilterTag::TexturePageId>           texture_page_id = {};
+     filter<ff_8::tile_operations::BlendModeT<TileT>, ff_8::tile_operations::BlendMode, FilterTag::BlendMode>           blend_mode      = {};
+     filter<ff_8::tile_operations::BlendT<TileT>, ff_8::tile_operations::Blend, FilterTag::BlendOther>                   blend_other     = {};
+     filter<ff_8::tile_operations::DepthT<TileT>, ff_8::tile_operations::Depth, FilterTag::Bpp>                          bpp =
+       filter<ff_8::tile_operations::DepthT<TileT>, ff_8::tile_operations::Depth, FilterTag::Bpp>{ open_viii::graphics::BPPT::BPP4_CONST() };
 
 
      filters()

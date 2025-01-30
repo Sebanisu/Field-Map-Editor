@@ -1193,21 +1193,21 @@ void gui::consume_one_future()
      }
 }
 
-void gui::popup_batch_common_filter_start(
-  ff_8::filter_old<std::filesystem::path> &filter,
-  std::string_view                         prefix,
-  std::string_view                         base_name)
-{
-     if (filter.enabled())
-     {
-          filter.update(filter.value() / prefix / base_name);
-          safedir const path = filter.value();
-          if (!path.is_exists() || !path.is_dir())
-          {
-               filter.disable();
-          }
-     }
-}
+// void gui::popup_batch_common_filter_start(
+//   ff_8::filter_old<std::filesystem::path> &filter,
+//   std::string_view                         prefix,
+//   std::string_view                         base_name)
+// {
+//      if (filter.enabled())
+//      {
+//           filter.update(filter.value() / prefix / base_name);
+//           safedir const path = filter.value();
+//           if (!path.is_exists() || !path.is_dir())
+//           {
+//                filter.disable();
+//           }
+//      }
+// }
 
 void gui::on_click_not_imgui()
 {
@@ -3554,7 +3554,7 @@ void gui::generate_upscale_paths(const std::string &field_name, open_viii::LangT
      const auto to_remove = std::ranges::unique(m_upscale_paths);
      m_upscale_paths.erase(to_remove.begin(), to_remove.end());
 }
-bool gui::combo_upscale_path(ff_8::filter_old<std::filesystem::path> &filter) const
+bool gui::combo_upscale_path(ff_8::filter_old<std::filesystem::path, ff_8::FilterTag::Upscale> &filter) const
 {
      const auto gcc = fme::GenericComboClassWithFilter(
        gui_labels::upscale_path,

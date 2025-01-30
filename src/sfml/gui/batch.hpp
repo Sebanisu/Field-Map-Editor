@@ -31,8 +31,8 @@ class batch
      std::shared_ptr<archives_group>                            m_archives_group    = {};
      input_types                                                m_input_type        = {};
      output_types                                               m_output_type       = {};
-     ff_8::filter_old<compact_type>                             m_compact_type      = {};
-     ff_8::filter_old<flatten_type>                             m_flatten_type      = {};
+     ff_8::filter_old<compact_type, ff_8::FilterTag::Compact>                           m_compact_type      = {};
+     ff_8::filter_old<flatten_type, ff_8::FilterTag::Flatten>                           m_flatten_type      = {};
      bool                                                       m_input_path_valid  = { false };
      bool                                                       m_output_path_valid = { false };
      static constexpr std::size_t                               m_buffer_size       = { 256U };

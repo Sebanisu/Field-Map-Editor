@@ -163,21 +163,21 @@ struct gui
      void                                               text_mouse_position() const;
      void                                               on_click_not_imgui();
      void                                               combo_upscale_path();
-     bool                                               combo_upscale_path(ff_8::filter_old<std::filesystem::path> &filter) const;
-     void                                               combo_deswizzle_path();
-     const open_viii::LangT                            &get_coo() const;
-     file_dialog_mode                                   m_file_dialog_mode       = {};
-     map_directory_mode                                 m_modified_directory_map = {};
-     std::filesystem::path                              m_loaded_swizzle_texture_path{};
-     std::filesystem::path                              m_loaded_deswizzle_texture_path{};
-     std::vector<std::size_t>                           m_clicked_tile_indices{};
+     bool                     combo_upscale_path(ff_8::filter_old<std::filesystem::path, ff_8::FilterTag::Upscale> &filter) const;
+     void                     combo_deswizzle_path();
+     const open_viii::LangT  &get_coo() const;
+     file_dialog_mode         m_file_dialog_mode       = {};
+     map_directory_mode       m_modified_directory_map = {};
+     std::filesystem::path    m_loaded_swizzle_texture_path{};
+     std::filesystem::path    m_loaded_deswizzle_texture_path{};
+     std::vector<std::size_t> m_clicked_tile_indices{};
      //     void                                               popup_batch_reswizzle();
      //     void                                               popup_batch_deswizzle();
-     static std::string                                 starter_field();
-     static void                                        popup_batch_common_filter_start(
-                                              ff_8::filter_old<std::filesystem::path> &filter,
-                                              std::string_view                         prefix,
-                                              std::string_view                         base_name);
+     static std::string       starter_field();
+     // static void              popup_batch_common_filter_start(
+     //                ff_8::filter_old<std::filesystem::path> &filter,
+     //                std::string_view                         prefix,
+     //                std::string_view                         base_name);
      // void popup_batch_embed();
      template<bool Nested = false>
      std::vector<std::filesystem::path>
@@ -212,108 +212,109 @@ struct gui
      void                                      control_panel_window_mim();
      std::filesystem::path                     path_with_prefix_and_base_name(std::filesystem::path selected_path) const;
      template<typename batch_opT, typename filterT, typename askT, typename processT>
-     void popup_batch_common(batch_opT &&batch_op, filterT &&filter, askT &&ask, processT &&process) const
-     {
-          if (!m_archives_group)
-          {
-               return;
-          }
-          if (batch_op(
-                m_archives_group->mapdata(),
-                [&](const int &pos, std::filesystem::path selected_path, ff_8::filters filters, auto &&...rest) {
-                     const auto field = m_archives_group->field(pos);
-                     if (!field)
-                     {
-                          return;
-                     }
-                     const auto map_pairs = field->get_vector_of_indexes_and_files({ open_viii::graphics::background::Map::EXT });
-                     if (map_pairs.empty())
-                     {
-                          return;
-                     }
-                     std::string const      base_name = map_sprite::str_to_lower(field->get_base_name());
-                     std::string_view const prefix    = std::string_view{ base_name }.substr(0U, 2U);
-                     popup_batch_common_filter_start(filter(filters), prefix, base_name);
+     // void popup_batch_common(batch_opT &&batch_op, filterT &&filter, askT &&ask, processT &&process) const
+     // {
+     //      if (!m_archives_group)
+     //      {
+     //           return;
+     //      }
+     //      if (batch_op(
+     //            m_archives_group->mapdata(),
+     //            [&](const int &pos, std::filesystem::path selected_path, ff_8::filters filters, auto &&...rest) {
+     //                 const auto field = m_archives_group->field(pos);
+     //                 if (!field)
+     //                 {
+     //                      return;
+     //                 }
+     //                 const auto map_pairs = field->get_vector_of_indexes_and_files({ open_viii::graphics::background::Map::EXT });
+     //                 if (map_pairs.empty())
+     //                 {
+     //                      return;
+     //                 }
+     //                 std::string const      base_name = map_sprite::str_to_lower(field->get_base_name());
+     //                 std::string_view const prefix    = std::string_view{ base_name }.substr(0U, 2U);
+     //                 popup_batch_common_filter_start(filter(filters), prefix, base_name);
 
-                     auto map = m_map_sprite->with_field(field, open_viii::LangT::generic).with_filters(filters);
-                     if (map.fail())
-                     {
-                          return;
-                     }
-                     if (filter(filters).enabled())
-                     {
-                          auto    map_path      = filter(filters).value() / map.map_filename();
-                          safedir safe_map_path = map_path;
-                          if (safe_map_path.is_exists())
-                          {
-                               map.load_map(map_path);
-                          }
-                     }
-                     selected_path = selected_path / prefix / base_name;
-                     std::error_code error_code{};
-                     const bool      create_directories_result = std::filesystem::create_directories(selected_path, error_code);
-                     if (error_code)
-                     {
-                          spdlog::error(
-                            "{}:{} - {}: {} - path: {}",
-                            __FILE__,
-                            __LINE__,
-                            error_code.value(),
-                            error_code.message(),
-                            selected_path.string());
-                          error_code.clear();
-                     }
-                     if (create_directories_result)
-                     {
-                          format_imgui_text("{} {}", gui_labels::directory_created, selected_path.string());
-                     }
-                     else
-                     {
-                          format_imgui_text("{} {}", gui_labels::directory_exists, selected_path.string());
-                     }
-                     format_imgui_text(gui_labels::saving_textures);
+     //                 auto map = m_map_sprite->with_field(field, open_viii::LangT::generic).with_filters(filters);
+     //                 if (map.fail())
+     //                 {
+     //                      return;
+     //                 }
+     //                 if (filter(filters).enabled())
+     //                 {
+     //                      auto    map_path      = filter(filters).value() / map.map_filename();
+     //                      safedir safe_map_path = map_path;
+     //                      if (safe_map_path.is_exists())
+     //                      {
+     //                           map.load_map(map_path);
+     //                      }
+     //                 }
+     //                 selected_path = selected_path / prefix / base_name;
+     //                 std::error_code error_code{};
+     //                 const bool      create_directories_result = std::filesystem::create_directories(selected_path, error_code);
+     //                 if (error_code)
+     //                 {
+     //                      spdlog::error(
+     //                        "{}:{} - {}: {} - path: {}",
+     //                        __FILE__,
+     //                        __LINE__,
+     //                        error_code.value(),
+     //                        error_code.message(),
+     //                        selected_path.string());
+     //                      error_code.clear();
+     //                 }
+     //                 if (create_directories_result)
+     //                 {
+     //                      format_imgui_text("{} {}", gui_labels::directory_created, selected_path.string());
+     //                 }
+     //                 else
+     //                 {
+     //                      format_imgui_text("{} {}", gui_labels::directory_exists, selected_path.string());
+     //                 }
+     //                 format_imgui_text(gui_labels::saving_textures);
 
-                     if (map_pairs.size() > 1U)
-                     {
-                          spdlog::debug(
-                            "{}:{} - {}: {}\t {}: {}",
-                            __FILE__,
-                            __LINE__,
-                            gui_labels::count_of_maps,
-                            map_pairs.size(),
-                            gui_labels::field,
-                            base_name);
-                          for (const auto &[i, file_path] : map_pairs)
-                          {
-                               const auto             filename      = std::filesystem::path(file_path).filename().stem().string();
-                               std::string_view const filename_view = { filename };
-                               std::string_view const basename_view = { base_name };
-                               if (
-                                 filename_view.substr(0, std::min(std::size(filename_view), std::size(basename_view)))
-                                 != basename_view.substr(0, std::min(std::size(filename_view), std::size(basename_view))))
-                               {
-                                    continue;
-                               }
-                               if (filename.size() == base_name.size())
-                               {
-                                    process(selected_path, map, rest...);
-                                    continue;
-                               }
-                               const auto coo_view = filename_view.substr(std::size(basename_view) + 1U, 2U);
-                               spdlog::info("Filename and coo: {}\t{}", filename, coo_view);
-                               map = map.with_coo(open_viii::LangCommon::from_string(coo_view));
-                               process(selected_path, map, rest...);
-                          }
-                     }
-                     else
-                     {
-                          process(selected_path, map, rest...);
-                     }
-                },
-                ask))
-          {
-          }
-     }
+     //                 if (map_pairs.size() > 1U)
+     //                 {
+     //                      spdlog::debug(
+     //                        "{}:{} - {}: {}\t {}: {}",
+     //                        __FILE__,
+     //                        __LINE__,
+     //                        gui_labels::count_of_maps,
+     //                        map_pairs.size(),
+     //                        gui_labels::field,
+     //                        base_name);
+     //                      for (const auto &[i, file_path] : map_pairs)
+     //                      {
+     //                           const auto             filename      = std::filesystem::path(file_path).filename().stem().string();
+     //                           std::string_view const filename_view = { filename };
+     //                           std::string_view const basename_view = { base_name };
+     //                           if (
+     //                             filename_view.substr(0, std::min(std::size(filename_view), std::size(basename_view)))
+     //                             != basename_view.substr(0, std::min(std::size(filename_view), std::size(basename_view))))
+     //                           {
+     //                                continue;
+     //                           }
+     //                           if (filename.size() == base_name.size())
+     //                           {
+     //                                process(selected_path, map, rest...);
+     //                                continue;
+     //                           }
+     //                           const auto coo_view = filename_view.substr(std::size(basename_view) + 1U, 2U);
+     //                           spdlog::info("Filename and coo: {}\t{}", filename, coo_view);
+     //                           map = map.with_coo(open_viii::LangCommon::from_string(coo_view));
+     //                           process(selected_path, map, rest...);
+     //                      }
+     //                 }
+     //                 else
+     //                 {
+     //                      process(selected_path, map, rest...);
+     //                 }
+     //            },
+     //            ask))
+     //      {
+     //      }
+     // }
+     
      void                         filter_empty_import_tiles();
      void                         collapsing_header_generated_tiles() const;
      void                         adjust_source_xy_texture_page_for_import_map(uint8_t next_source_y, const uint8_t next_texture_page);
