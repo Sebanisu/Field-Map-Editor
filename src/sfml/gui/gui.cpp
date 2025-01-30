@@ -1903,16 +1903,24 @@ void gui::edit_menu()
 
                          for (auto &&[value, str] : pair.zip())
                          {
-                              bool checked = filter.value() == value && filter.enabled();
+                              const bool selected = filter.value() == value;
+                              bool       checked  = selected && filter.enabled();
                               if (ImGui::MenuItem(str.data(), nullptr, &checked))
                               {
-                                   filter.update(value);
-                                   if (filter.enabled())
+                                   if (selected)
                                    {
-                                        filter.disable();
+                                        if (filter.enabled())
+                                        {
+                                             filter.disable();
+                                        }
+                                        else
+                                        {
+                                             filter.enable();
+                                        }
                                    }
                                    else
                                    {
+                                        filter.update(value);
                                         filter.enable();
                                    }
                                    std::invoke(std::forward<decltype(lambda)>(lambda));
@@ -1952,8 +1960,13 @@ void gui::edit_menu()
 
                     generic_filter_menu(
                       gui_labels::blend_mode.data(), m_map_sprite->uniques().blend_mode(), m_map_sprite->filter().blend_mode, [&]() {
-                           m_map_sprite->update_render_texture();
-                           m_changed = true;
+                           refresh_blend_mode();
+                      });
+
+
+                    generic_filter_menu(
+                      gui_labels::blend_other.data(), m_map_sprite->uniques().blend_other(), m_map_sprite->filter().blend_other, [&]() {
+                           refresh_blend_other();
                       });
                }
           }
@@ -3340,6 +3353,17 @@ void gui::refresh_blend_mode()
      m_changed = true;
 }
 
+void gui::refresh_blend_other()
+{
+     m_selections->blend_other = m_map_sprite->filter().blend_other.value();
+     spdlog::info("refresh_blend_other: {}", m_selections->blend_other);
+     Configuration config{};
+     config->insert_or_assign("selections_filter_blend_other", m_selections->blend_other);
+     config.save();
+     m_map_sprite->update_render_texture();
+     m_changed = true;
+}
+
 
 void gui::combo_layers()
 {
@@ -3402,8 +3426,7 @@ void gui::combo_blend_other()
      {
           return;
      }
-     m_map_sprite->update_render_texture();
-     m_changed = true;
+     refresh_blend_other();
 }
 
 

@@ -74,7 +74,8 @@ struct Selections
      bool                           display_control_panel_window   = { true };///< Whether to display control panel window.
      bool                           display_draw_window            = { true };///< Whether to display draw window.
      color background_color = { fme::colors::White };///< Remember to user's selected Background Color for draw Window.
-     open_viii::graphics::background::BlendModeT blend_mode = { open_viii::graphics::background::BlendModeT::none };
+     open_viii::graphics::background::BlendModeT blend_mode  = { open_viii::graphics::background::BlendModeT::none };
+     std::uint8_t                                blend_other = {};
 
 
      /**

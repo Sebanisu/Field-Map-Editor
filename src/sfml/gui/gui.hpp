@@ -337,6 +337,7 @@ struct gui
      void                         refresh_bpp(open_viii::graphics::BPPT in_bpp);
      void                         refresh_palette(std::uint8_t palette);
      void                         refresh_blend_mode();
+     void                         refresh_blend_other();
 
 
      static inline constinit bool toggle_imgui_demo_window = { false };
