@@ -17,11 +17,7 @@ enum struct input_types
      mim,
      deswizzle,
      swizzle,
-};
-enum struct output_types
-{
-     deswizzle,
-     swizzle,
+     horizontal_tile_index_swizzle
 };
 enum struct flatten_type : std::uint8_t
 {
@@ -75,32 +71,14 @@ struct fmt::formatter<input_types> : fmt::formatter<std::string_view>
                case input_types::swizzle:
                     name = "Swizzle"sv;
                     break;
+               case input_types::horizontal_tile_index_swizzle:
+                    name = "Horizontal Tile Index Swizzle"sv;
+                    break;
           }
           return fmt::formatter<std::string_view>::format(name, ctx);
      }
 };
 
-template<>
-struct fmt::formatter<output_types> : fmt::formatter<std::string_view>
-{
-     // parse is inherited from formatter<string_view>.
-     template<typename FormatContext>
-     constexpr auto format(output_types in_output_type, FormatContext &ctx) const
-     {
-          using namespace std::string_view_literals;
-          std::string_view name = {};
-          switch (in_output_type)
-          {
-               case output_types::deswizzle:
-                    name = "Deswizzle"sv;
-                    break;
-               case output_types::swizzle:
-                    name = "Swizzle"sv;
-                    break;
-          }
-          return fmt::formatter<std::string_view>::format(name, ctx);
-     }
-};
 template<>
 struct fmt::formatter<flatten_type> : fmt::formatter<std::string_view>
 {

@@ -223,11 +223,13 @@ void gui::start()
                get_imgui_id() = {};
                loop_events();
                m_elapsed_time                          = m_delta_clock.restart();
-
+               // todo is this m_scrolling used anymore?
                static constexpr float scroll_time_fast = 4000.F;
                static constexpr float scroll_time_slow = 1000.F;
                m_scrolling.total_scroll_time[0] =
-                 m_selections->draw_swizzle || (!m_selections->draw_palette && mim_test()) ? scroll_time_fast : scroll_time_slow;
+                 (m_selections->output_draw_mode != ::output_draw_mode::output_deswizzle) || (!m_selections->draw_palette && mim_test())
+                   ? scroll_time_fast
+                   : scroll_time_slow;
                if (m_scrolling.scroll(xy, m_elapsed_time))
                {
                     m_changed                     = false;
@@ -865,13 +867,20 @@ void gui::update_hover_and_mouse_button_status_for_map(const ImVec2 &img_start, 
             static_cast<int>(relative_pos.x / scale / static_cast<float>(m_map_sprite->get_map_scale())),
             static_cast<int>(relative_pos.y / scale / static_cast<float>(m_map_sprite->get_map_scale())));
 
-          if (m_selections->draw_swizzle)
+          if (m_selections->output_draw_mode != ::output_draw_mode::output_deswizzle)
           {
                m_mouse_positions.pixel /= 16;
                m_mouse_positions.pixel *= 16;
           }
           m_mouse_positions.mouse_enabled = true;
-          m_mouse_positions.texture_page  = static_cast<uint8_t>(m_mouse_positions.pixel.x / 256);
+          if (m_selections->output_draw_mode == ::output_draw_mode::output_swizzle)
+          {
+               m_mouse_positions.texture_page = static_cast<uint8_t>(m_mouse_positions.pixel.x / 256);
+          }
+          else
+          {// todo confirm this doesn't break anything. just texture page doesn't matter unless output_draw_mode::output_swizzle
+               m_mouse_positions.texture_page = (std::numeric_limits<std::uint8_t>::max)();
+          }
           if (ImGui::IsMouseDown(ImGuiMouseButton_Left))
           {
                const auto strtooltip = fmt::format("({}, {})", m_mouse_positions.pixel.x, m_mouse_positions.pixel.y);
@@ -1023,30 +1032,47 @@ void gui::draw_map_grid_for_conflict_tiles(const ImVec2 &screen_pos, const float
                     const bool  animation_over_1 = std::cmp_greater(animation_count, 1);
 
                     const float x                = [&]() {
-                         if (m_selections->draw_swizzle)
+                         switch (m_selections->output_draw_mode)
                          {
-                              return screen_pos.x
+                              case ::output_draw_mode::output_swizzle:
+                                   return screen_pos.x
                                     + ((static_cast<float>(working_tile.source_x()) + (static_cast<float>(working_tile.texture_id()) * 256.F)) * scale * static_cast<float>(m_map_sprite->get_map_scale()));
+                              case ::output_draw_mode ::output_deswizzle:
+                                   return screen_pos.x
+                                          + (static_cast<float>(working_tile.x()) * scale * static_cast<float>(m_map_sprite->get_map_scale()));
+                              case ::output_draw_mode ::output_horizontal_tile_index_swizzle:
+                                   assert(!std::ranges::empty(working_tiles));
+                                   return screen_pos.x
+                                          + (static_cast<float>(index * 16 % (std::ranges::size(working_tiles) - 1))* scale * static_cast<float>(m_map_sprite->get_map_scale()));
+                              default:
+                                   throw;// handle edge case.
                          }
-                         return screen_pos.x
-                                + (static_cast<float>(working_tile.x()) * scale * static_cast<float>(m_map_sprite->get_map_scale()));
                     }();
                     const float y = [&]() {
-                         if (m_selections->draw_swizzle)
+                         switch (m_selections->output_draw_mode)
                          {
-                              return screen_pos.y
-                                     + (static_cast<float>(working_tile.source_y()) * scale * static_cast<float>(m_map_sprite->get_map_scale()));
+                              case ::output_draw_mode::output_swizzle:
+                                   return screen_pos.y
+                                          + (static_cast<float>(working_tile.source_y()) * scale * static_cast<float>(m_map_sprite->get_map_scale()));
+                              case ::output_draw_mode ::output_deswizzle:
+                                   return screen_pos.y
+                                          + (static_cast<float>(working_tile.y()) * scale * static_cast<float>(m_map_sprite->get_map_scale()));
+                              case ::output_draw_mode ::output_horizontal_tile_index_swizzle:
+                                   assert(!std::ranges::empty(working_tiles));
+                                   return screen_pos.x
+                                          + (static_cast<float>(index * 16 / (std::ranges::size(working_tiles) - 1))* scale * static_cast<float>(m_map_sprite->get_map_scale()));
+                              default:
+                                   throw;// handle edge case
                          }
-                         return screen_pos.y
-                                + (static_cast<float>(working_tile.y()) * scale * static_cast<float>(m_map_sprite->get_map_scale()));
                     }();
                     const float tile_size     = 16.0f * scale * static_cast<float>(m_map_sprite->get_map_scale());
                     const auto [c, thickness] = [&]() -> std::pair<color, float> {
                          const auto default_thickness = 3.F;
                          const auto hover_thickeness  = 4.5F;
                          if (
-                           (!m_selections->draw_swizzle && !animation_over_1 && std::cmp_not_equal(m_hovered_index, index))
-                           || ((m_selections->draw_swizzle || animation_over_1) && std::ranges::find(indices, m_hovered_index) == std::ranges::end(indices)))
+                           ((m_selections->output_draw_mode != ::output_draw_mode::output_swizzle) && !animation_over_1
+                            && std::cmp_not_equal(m_hovered_index, index))
+                           || (((m_selections->output_draw_mode == ::output_draw_mode::output_swizzle) || animation_over_1) && std::ranges::find(indices, m_hovered_index) == std::ranges::end(indices)))
                          {
                               if (
                                 std::ranges::empty(m_hovered_tiles_indices)
@@ -1077,7 +1103,7 @@ void gui::draw_map_grid_for_conflict_tiles(const ImVec2 &screen_pos, const float
                                    return { colors::ButtonActive.opaque().fade(-.2F), default_thickness };
                               }
 
-                              if (m_selections->draw_swizzle)
+                              if (m_selections->output_draw_mode == ::output_draw_mode::output_swizzle)
                               {
                                    std::string strtooltip = fmt::format(
                                      "Indicies: {}\n{}", indices, indices | std::ranges::views::transform(index_to_working_tile));
@@ -1111,7 +1137,7 @@ void gui::draw_map_grid_for_conflict_tiles(const ImVec2 &screen_pos, const float
 
                     // todo add hover action using the hovered_indices and change color for if similar counts >1
                };
-               if (m_selections->draw_swizzle)
+               if (m_selections->output_draw_mode == ::output_draw_mode::output_swizzle)
                {// all are drawn in the same spot so we only need to draw one.
                     if (std::ranges::find(indices, m_hovered_index) == std::ranges::end(indices))
                     {
@@ -1140,7 +1166,7 @@ void gui::draw_map_grid_for_conflict_tiles(const ImVec2 &screen_pos, const float
 void gui::draw_map_grid_lines_for_texture_page(const ImVec2 &screen_pos, const sf::Vector2f &scaled_size, const float scale)
 {
      // Drawing grid lines within the window if m_selections->draw_grid is true
-     if (m_selections->draw_texture_page_grid && m_selections->draw_swizzle)
+     if (m_selections->draw_texture_page_grid && m_selections->output_draw_mode == ::output_draw_mode::output_swizzle)
      {
           // Get the starting position and size of the image
           const ImVec2 img_end      = { screen_pos.x + scaled_size.x, screen_pos.y + scaled_size.y };
@@ -1241,7 +1267,7 @@ void gui::on_click_not_imgui()
 {
      if (m_mouse_positions.mouse_enabled)
      {
-          m_mouse_positions.update_sprite_pos(m_selections->draw_swizzle);
+          m_mouse_positions.update_sprite_pos(m_selections->output_draw_mode);
           if (m_mouse_positions.left_changed())
           {
                if (map_test())
@@ -1293,7 +1319,7 @@ void gui::text_mouse_position() const
           const int tile_size = 16;
           format_imgui_text(
             "{}: ({:2}, {:2})", gui_labels::tile_pos, m_mouse_positions.pixel.x / tile_size, m_mouse_positions.pixel.y / tile_size);
-          if (m_selections->draw_swizzle)
+          if (m_selections->output_draw_mode == ::output_draw_mode::output_swizzle)
           {
                format_imgui_text("{}: {:2}", gui_labels::page, m_mouse_positions.texture_page);
           }
@@ -1456,30 +1482,26 @@ void gui::update_field()
 void gui::refresh_map_swizzle()
 {
      Configuration config{};
-     config->insert_or_assign("selections_draw_swizzle", m_selections->draw_swizzle);
+     // config->insert_or_assign("selections_draw_swizzle", m_selections->draw_swizzle);
+     config->insert_or_assign("selections_output_draw_mode", std::to_underlying(m_selections->output_draw_mode));
      config.save();
-     if (m_selections->draw_swizzle)
-     {
-          m_map_sprite->enable_disable_blends();
-          m_map_sprite->enable_draw_swizzle();
-     }
-     else
-     {
-          m_map_sprite->disable_draw_swizzle();
-          if (!m_selections->draw_disable_blending)
-          {
-               m_map_sprite->disable_disable_blends();
-          }
-     }
+     m_map_sprite->set_output_draw_mode(m_selections->output_draw_mode);
      m_changed = true;
 }
 void gui::checkbox_map_swizzle()
 {
-     if (ImGui::Checkbox(gui_labels::swizzle.data(), &m_selections->draw_swizzle))
+     const auto values = std::views::iota(std::uint8_t{}, std::uint8_t{ 3 })
+                         | std::ranges::views::transform([](const auto x) { return static_cast<::output_draw_mode>(x); });
+     const auto strings = values | std::ranges::views::transform(AsString{});
+
+     const auto gcc =
+       GenericComboClass(gui_labels::field, [&]() { return values; }, [&]() { return strings; }, m_selections->output_draw_mode);
+     if (gcc.render())
      {
           refresh_map_swizzle();
      }
-     tool_tip(gui_labels::swizzle_tooltip);
+     // tool_tip(gui_labels::swizzle_tooltip);
+     // todo update tooltip or add tooltips to combo box.
 }
 void gui::refresh_map_disable_blending()
 {
@@ -1498,7 +1520,7 @@ void gui::refresh_map_disable_blending()
 }
 void gui::checkbox_map_disable_blending()
 {
-     if (!m_selections->draw_swizzle)
+     if (m_selections->output_draw_mode != ::output_draw_mode::output_deswizzle)
      {
           if (ImGui::Checkbox(gui_labels::disable_blending.data(), &m_selections->draw_disable_blending))
           {
@@ -1762,19 +1784,26 @@ void gui::edit_menu()
                if (map_test())
                {
 
-                    static const constinit std::array<bool, 2>             swizzle_value  = { true, false };
-                    static const constinit std::array<std::string_view, 2> swizzle_string = { gui_labels::swizzle, gui_labels::deswizzle };
-                    static const constinit std::array<std::string_view, 2> swizzle_tooltips = { gui_labels::swizzle_tooltip,
-                                                                                                gui_labels::deswizzle_tooltip };
+                    static const constinit std::array<::output_draw_mode, 3> swizzle_value = {
+                         ::output_draw_mode::output_deswizzle,
+                         ::output_draw_mode::output_swizzle,
+                         ::output_draw_mode::output_horizontal_tile_index_swizzle
+                    };
+                    static const constinit std::array<std::string_view, 3> swizzle_string   = { gui_labels::deswizzle,
+                                                                                                gui_labels::swizzle,
+                                                                                                gui_labels::horizontal_tile_index_swizzle };
+                    static const constinit std::array<std::string_view, 3> swizzle_tooltips = { gui_labels::deswizzle_tooltip,
+                                                                                                gui_labels::swizzle_tooltip,
+                                                                                                gui_labels::horizontal_tile_index_swizzle };
                     static auto constinit zip_modes = std::ranges::views::zip(swizzle_value, swizzle_string, swizzle_tooltips);
                     for (auto &&[mode, str, tool_tip_str] : zip_modes)
                     {
-                         bool care_not = m_selections->draw_swizzle == mode;
+                         bool care_not = m_selections->output_draw_mode == mode;
                          if (ImGui::MenuItem(str.data(), nullptr, &care_not, !care_not))
                          {
-                              if (m_selections->draw_swizzle != mode)
+                              if (m_selections->output_draw_mode != mode)
                               {
-                                   m_selections->draw_swizzle = mode;
+                                   m_selections->output_draw_mode = mode;
                                    refresh_map_swizzle();
                               }
                          }
@@ -1787,7 +1816,7 @@ void gui::edit_menu()
 
                if (map_test())
                {
-                    if (!m_selections->draw_swizzle)
+                    if (m_selections->output_draw_mode == ::output_draw_mode::output_deswizzle)
                     {
                          if (
 
@@ -1833,7 +1862,9 @@ void gui::edit_menu()
                     config.save();
                }
 
-               if ((map_test() && m_selections->draw_swizzle) || (mim_test() && !m_selections->draw_palette))
+               if (
+                 (map_test() && (m_selections->output_draw_mode == output_draw_mode::output_swizzle))
+                 || (mim_test() && !m_selections->draw_palette))
                {
                     if (ImGui::MenuItem(gui_labels::draw_texture_page_grid.data(), nullptr, &m_selections->draw_texture_page_grid))
                     {
@@ -1949,10 +1980,7 @@ void gui::edit_menu()
                if (map_test())
                {
                     generic_filter_menu(
-                      gui_labels::pupu_id,
-                    map_pupu_id{m_map_sprite},
-                      m_map_sprite->filter().pupu,
-                      [&]() { refresh_render_texture(); });
+                      gui_labels::pupu_id, map_pupu_id{ m_map_sprite }, m_map_sprite->filter().pupu, [&]() { refresh_render_texture(); });
                }
                if (mim_test())
                {
@@ -2853,7 +2881,7 @@ void gui::refresh_draw_mode()
                break;
           case draw_mode::draw_map:
                m_map_sprite =
-                 std::make_shared<map_sprite>(m_map_sprite->update(ff_8::map_group(m_field, get_coo()), m_selections->draw_swizzle));
+                 std::make_shared<map_sprite>(m_map_sprite->update(ff_8::map_group(m_field, get_coo()), m_selections->output_draw_mode));
                m_import.update(m_map_sprite);
                m_history_window.update(m_map_sprite);
                break;
@@ -3282,7 +3310,7 @@ std::shared_ptr<map_sprite> gui::get_map_sprite() const
      //     map_sprite(ff_8::map_group map_group, bool draw_swizzle, ff_8::filters in_filters, bool force_disable_blends, bool
      //     require_coo);
      return std::make_shared<map_sprite>(
-       ff_8::map_group{ m_field, get_coo() }, m_selections->draw_swizzle, ff_8::filters{}, m_selections->draw_disable_blending, false);
+       ff_8::map_group{ m_field, get_coo() }, m_selections->output_draw_mode, ff_8::filters{}, m_selections->draw_disable_blending, false);
 }
 
 int gui::get_selected_field()

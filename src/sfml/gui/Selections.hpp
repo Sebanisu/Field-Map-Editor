@@ -63,7 +63,7 @@ struct Selections
      bool                           draw_grid                      = { false };///< Whether to draw the grid.
      bool                           draw_texture_page_grid         = { false };///< Whether to draw the texture page grid.
      bool                           draw_tile_conflict_rects       = { false };///< Whether to draw the tile conflicts rectangles.
-     bool                           draw_swizzle                   = { false };///< Whether to enable swizzle rendering.
+     // bool                           draw_swizzle                   = { false };///< Whether to enable swizzle rendering.
      bool                           draw_disable_blending          = { false };///< Whether to disable blending during rendering.
      bool                           display_batch_window           = { false };///< Whether to display the test batch window.
      bool                           display_import_image           = { false };///< Whether to display the imported image.
@@ -73,6 +73,7 @@ struct Selections
      bool                           display_history_window         = { false };///< Whether to display history window.
      bool                           display_control_panel_window   = { true };///< Whether to display control panel window.
      bool                           display_draw_window            = { true };///< Whether to display draw window.
+     ::output_draw_mode             output_draw_mode               = {};///< deswizzle, swizzle, other.
      color background_color = { fme::colors::White };///< Remember to user's selected Background Color for draw Window.
 
 

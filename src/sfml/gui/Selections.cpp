@@ -8,21 +8,23 @@ using namespace open_viii::graphics::background;
 fme::Selections::Selections()
 {
      Configuration const config{};
-     path                     = config["selections_path"].value_or(path);
-     window_width             = config["selections_window_width"].value_or(window_width);
-     window_height            = config["selections_window_width"].value_or(window_height);
-     palette                  = config["selections_palette"].value_or(palette) & 0xFU;
-     bpp                      = BPPT{config["selections_bpp"].value_or(bpp.raw()) & 3U};
-     draw                     = static_cast<draw_mode>(config["selections_draw"].value_or(std::to_underlying(draw)));
-     coo                      = static_cast<LangT>(config["selections_coo"].value_or(std::to_underlying(coo)));
-     selected_tile            = config["selections_selected_tile"].value_or(selected_tile);
-     draw_disable_blending    = config["selections_draw_disable_blending"].value_or(draw_disable_blending);
-     draw_grid                = config["selections_draw_grid"].value_or(draw_grid);
-     draw_palette             = config["selections_draw_palette"].value_or(draw_palette);
-     draw_swizzle             = config["selections_draw_swizzle"].value_or(draw_swizzle);
-     //  render_imported_image =
-     //  config["selections_render_imported_image"].value_or(
-     //    render_imported_image);
+     path                  = config["selections_path"].value_or(path);
+     window_width          = config["selections_window_width"].value_or(window_width);
+     window_height         = config["selections_window_width"].value_or(window_height);
+     palette               = config["selections_palette"].value_or(palette) & 0xFU;
+     bpp                   = BPPT{ config["selections_bpp"].value_or(bpp.raw()) & 3U };
+     draw                  = static_cast<draw_mode>(config["selections_draw"].value_or(std::to_underlying(draw)));
+     coo                   = static_cast<LangT>(config["selections_coo"].value_or(std::to_underlying(coo)));
+     selected_tile         = config["selections_selected_tile"].value_or(selected_tile);
+     draw_disable_blending = config["selections_draw_disable_blending"].value_or(draw_disable_blending);
+     draw_grid             = config["selections_draw_grid"].value_or(draw_grid);
+     draw_palette          = config["selections_draw_palette"].value_or(draw_palette);
+     output_draw_mode =
+       static_cast<::output_draw_mode>(config["selections_output_draw_mode"].value_or(std::to_underlying(output_draw_mode)));
+     // draw_swizzle             = config["selections_draw_swizzle"].value_or(draw_swizzle);
+     //   render_imported_image =
+     //   config["selections_render_imported_image"].value_or(
+     //     render_imported_image);
      draw_texture_page_grid   = config["selections_draw_texture_page_grid"].value_or(draw_texture_page_grid);
      draw_tile_conflict_rects = config["selections_draw_tile_conflict_rects"].value_or(draw_tile_conflict_rects);
      display_batch_window     = config["selections_display_batch_window"].value_or(display_batch_window);

@@ -6,6 +6,7 @@
 #define FIELD_MAP_EDITOR_MAP_SPRITE_HPP
 #include "filter.hpp"
 #include "grid.hpp"
+#include "gui/draw_mode.hpp"
 #include "map_group.hpp"
 #include "map_operation.hpp"
 #include "MapHistory.hpp"
@@ -57,7 +58,8 @@ struct [[nodiscard]] map_sprite final
    private:
      ff_8::map_group                               m_map_group = {};
      square                                        m_square    = { sf::Vector2u{}, sf::Vector2u{ TILE_SIZE, TILE_SIZE }, sf::Color::Red };
-     bool                                          m_draw_swizzle                  = { false };
+     // bool                                          m_draw_swizzle                  = { false };
+     ::output_draw_mode                            m_output_draw_mode              = {};
      bool                                          m_disable_texture_page_shift    = { false };
      bool                                          m_disable_blends                = { false };
      ff_8::filters                                 m_filters                       = {};
@@ -81,7 +83,7 @@ struct [[nodiscard]] map_sprite final
 
    public:
      map_sprite() = default;
-     map_sprite(ff_8::map_group map_group, bool draw_swizzle, ff_8::filters in_filters, bool force_disable_blends, bool require_coo);
+     map_sprite(ff_8::map_group map_group, ::output_draw_mode output_draw_mode, ff_8::filters in_filters, bool force_disable_blends, bool require_coo);
 
 
      [[nodiscard]] std::string              appends_prefix_base_name(std::string_view title) const;
@@ -119,7 +121,7 @@ struct [[nodiscard]] map_sprite final
      [[nodiscard]] bool                                  empty() const;
      [[nodiscard]] const ff_8::filters                  &filter() const;
      [[nodiscard]] std::uint8_t                          max_x_for_saved() const;
-     [[nodiscard]] map_sprite                            update(ff_8::map_group map_group, bool draw_swizzle) const;
+     [[nodiscard]] map_sprite                            update(ff_8::map_group map_group, ::output_draw_mode output_draw_mode) const;
      [[nodiscard]] grid                                  get_grid() const;
      [[nodiscard]] grid                                  get_texture_page_grid() const;
      [[nodiscard]] all_unique_values_and_strings         get_all_unique_values_and_strings() const;
@@ -161,8 +163,9 @@ struct [[nodiscard]] map_sprite final
      void        test_map(const std::filesystem::path &saved_path) const;
      void        disable_square() const;
      void        draw(sf::RenderTarget &target, sf::RenderStates states) const final;
-     void        enable_draw_swizzle();
-     void        disable_draw_swizzle();
+     // void        enable_draw_swizzle();
+     // void        disable_draw_swizzle();
+     void        set_output_draw_mode(::output_draw_mode mode);
      void        enable_disable_blends();
      void        disable_disable_blends();
      void        enable_square(sf::Vector2u position);
@@ -235,11 +238,16 @@ struct [[nodiscard]] map_sprite final
        bool                skip_filters = false,
        bool                find_all     = false) const
      {
-          if (m_draw_swizzle)
+          switch (m_output_draw_mode)
           {
-               return ff_8::find_intersecting_swizzle(tiles, m_filters, pixel_pos, texture_page, skip_filters, find_all);
+               case ::output_draw_mode::output_swizzle:
+                    return ff_8::find_intersecting_swizzle(tiles, m_filters, pixel_pos, texture_page, skip_filters, find_all);
+               case ::output_draw_mode::output_deswizzle:
+                    return ff_8::find_intersecting_deswizzle(tiles, m_filters, pixel_pos, skip_filters, find_all);
+               case ::output_draw_mode::output_horizontal_tile_index_swizzle:
+               default:
+                    throw;// todo write find_intersecting for new mode.
           }
-          return ff_8::find_intersecting_deswizzle(tiles, m_filters, pixel_pos, skip_filters, find_all);
      }
      template<typename funcT>
      auto const_visit_working_tiles(funcT &&p_function) const
@@ -481,18 +489,25 @@ struct [[nodiscard]] map_sprite final
                {
                     return to_Vector2f(ff_8::get_triangle_strip_source_deswizzle(tile_const));
                }
+               // todo add src mode for output_horizontal_tile_index_swizzle input.
                return to_Vector2f(ff_8::get_triangle_strip_source_default(tile_const));
           }();
-          const auto dest = [this, &tile]() {
-               if (m_draw_swizzle)
+          const auto dest = [this, &tile]() -> sf::Vector2f{
+               switch (m_output_draw_mode)
                {
-                    if (m_disable_texture_page_shift)
-                    {
-                         return to_Vector2f(ff_8::get_triangle_strip_dest_swizzle_disable_shift(tile));
-                    }
-                    return to_Vector2f(ff_8::get_triangle_strip_dest_swizzle(tile));
+                    case ::output_draw_mode::output_swizzle:
+                         if (m_disable_texture_page_shift)
+                         {
+                              return to_Vector2f(ff_8::get_triangle_strip_dest_swizzle_disable_shift(tile));
+                         }
+                         return to_Vector2f(ff_8::get_triangle_strip_dest_swizzle(tile));
+                    case ::output_draw_mode::output_deswizzle:
+                         return to_Vector2f(ff_8::get_triangle_strip_dest_default(tile));
+                    case ::output_draw_mode::output_horizontal_tile_index_swizzle:
+                    default:
+                         throw;// todo add variant for new mode.
+                         return{};
                }
-               return to_Vector2f(ff_8::get_triangle_strip_dest_default(tile));
           }();
           return ff_8::get_triangle_strip(to_Vector2f(draw_size), to_Vector2f(texture_size), src, dest);
      }

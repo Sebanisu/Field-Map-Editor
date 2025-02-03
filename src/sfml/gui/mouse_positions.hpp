@@ -6,6 +6,7 @@
 #define FIELD_MAP_EDITOR_MOUSE_POSITIONS_HPP
 #include <SFML/Graphics.hpp>
 #include <cstdint>
+#include "draw_mode.hpp"
 struct mouse_positions
 {
   sf::Vector2i       pixel         = {};
@@ -19,7 +20,7 @@ struct mouse_positions
   // sf::Sprite   cover         = {};
   void               update();
   [[nodiscard]] bool left_changed() const;
-  void               update_sprite_pos(bool swizzle, int spacing = 256);
+  void               update_sprite_pos(::output_draw_mode output_draw_mode, int spacing = 256);
 
 private:
   bool old_left = { false };

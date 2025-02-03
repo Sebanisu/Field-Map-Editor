@@ -8,7 +8,7 @@
 #include <cstdint>
 template<typename T>
 struct setting_backup
-{
+{// todo do we still use this class? it's for keeping a backup of you settings and doing an operation and then putting them back.
    private:
      T                         m_backup;
      std::reference_wrapper<T> m_value;
@@ -60,18 +60,18 @@ struct setting_backup
 struct settings_backup
 {
    public:
-     setting_backup<ff_8::filters> filters;
-     setting_backup<bool>          draw_swizzle;
-     setting_backup<bool>          disable_texture_page_shift;
-     setting_backup<bool>          disable_blends;
-     setting_backup<uint32_t>      scale;
+     setting_backup<ff_8::filters>      filters;
+     setting_backup<::output_draw_mode> draw_swizzle;
+     setting_backup<bool>               disable_texture_page_shift;
+     setting_backup<bool>               disable_blends;
+     setting_backup<uint32_t>           scale;
 
      settings_backup(
-       ff_8::filters &in_filters,
-       bool          &in_draw_swizzle,
-       bool          &in_disable_texture_page_shift,
-       bool          &in_disable_blends,
-       std::uint32_t &in_scale)
+       ff_8::filters      &in_filters,
+       ::output_draw_mode &in_draw_swizzle,
+       bool               &in_disable_texture_page_shift,
+       bool               &in_disable_blends,
+       std::uint32_t      &in_scale)
        : filters{ in_filters }
        , draw_swizzle{ in_draw_swizzle }
        , disable_texture_page_shift{ in_disable_texture_page_shift }

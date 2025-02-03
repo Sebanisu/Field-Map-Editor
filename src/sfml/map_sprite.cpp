@@ -167,7 +167,7 @@ std::shared_ptr<std::array<sf::Texture, map_sprite::MAX_TEXTURES>> map_sprite::l
      std::shared_ptr<std::array<sf::Texture, MAX_TEXTURES>> ret = load_textures_internal();
      while (std::ranges::all_of(*ret, [](const sf::Texture &texture) {
           auto size = texture.getSize();
-          spdlog::info("{}",size);
+          spdlog::info("{}", size);
           return size.x == 0 || size.y == 0;
      }))
      {
@@ -281,7 +281,7 @@ std::uint8_t map_sprite::max_x_for_saved() const
      return m_map_group.maps.const_working().visit_tiles([this](const auto &tiles) {
           auto       transform_range = m_saved_indices | std::views::transform([this, &tiles](std::size_t tile_index) -> std::uint16_t {
                                       auto &tile = tiles[tile_index];
-                                      if (m_draw_swizzle)
+                                      if (m_output_draw_mode == ::output_draw_mode::output_swizzle)
                                       {
                                            if (tile.depth().bpp4())
                                            {
@@ -293,6 +293,7 @@ std::uint8_t map_sprite::max_x_for_saved() const
                                            }
                                            return +texture_page_width::bit_8;
                                       }
+                                      // todo do I need to change this? I donno
                                       return TILE_SIZE;// todo invalid?
                                  });
 
@@ -340,7 +341,7 @@ void map_sprite::update_position(const sf::Vector2i &pixel_pos, const uint8_t &t
             for (auto i : indices)
             {
                  auto &tile = tiles[i];
-                 if (m_draw_swizzle)
+                 if (m_output_draw_mode == ::output_draw_mode::output_swizzle)
                  {
                       if (auto intersecting = find_intersecting(m_imported_tile_map, pixel_pos, texture_page, true); !intersecting.empty())
                       {
@@ -384,17 +385,21 @@ void map_sprite::update_position(const sf::Vector2i &pixel_pos, const uint8_t &t
                                  static_cast<std::uint8_t>(((pixel_pos.y - y_offset))))
                                .with_texture_id(texture_page);
                  }
-                 else
+                 else if (m_output_draw_mode == ::output_draw_mode::output_deswizzle)
                  {
                       const std::int32_t x_offset = down_pixel_pos.x - tile.x();
                       const std::int32_t y_offset = down_pixel_pos.y - tile.y();
                       tile =
                         tile.with_xy(static_cast<std::int16_t>(pixel_pos.x - x_offset), static_cast<std::int16_t>(pixel_pos.y - y_offset));
                  }
+                 else if (m_output_draw_mode == ::output_draw_mode::output_horizontal_tile_index_swizzle)
+                 {
+                      throw;// todo support new mode.
+                 }
             }
        };
      current_map.visit_tiles([&](auto &&tiles) { update_tile_positions(current_map, tiles, m_saved_indices); });
-     if (!m_draw_swizzle)
+     if (m_output_draw_mode == ::output_draw_mode::output_deswizzle)
      {
           m_imported_tile_map.visit_tiles(
             [this, &update_tile_positions](auto &&tiles) { update_tile_positions(m_imported_tile_map, tiles, m_saved_imported_indices); });
@@ -434,7 +439,7 @@ sf::Sprite map_sprite::save_intersecting(const sf::Vector2i &pixel_pos, const st
      spdlog::info("m_saved_indices count: {}", std::ranges::size(m_saved_indices));
 
      // If drawing is not swizzled, find intersecting imported tiles as well
-     if (!m_draw_swizzle)
+     if (m_output_draw_mode == ::output_draw_mode::output_deswizzle)
      {
           m_saved_imported_indices = find_intersecting(m_imported_tile_map, pixel_pos, texture_page, false, true);
      }
@@ -712,31 +717,46 @@ const sf::BlendMode &map_sprite::get_blend_subtract()
 
 map_sprite map_sprite::with_coo(const open_viii::LangT coo) const
 {
-     return { ff_8::map_group{ m_map_group.field, coo }, m_draw_swizzle, m_filters, m_disable_blends, false };
+     return { ff_8::map_group{ m_map_group.field, coo }, m_output_draw_mode, m_filters, m_disable_blends, false };
 }
 
 map_sprite map_sprite::with_field(map_sprite::SharedField field, const open_viii::LangT coo) const
 {
-     return { ff_8::map_group{ std::move(field), coo }, m_draw_swizzle, m_filters, m_disable_blends, false };
+     return { ff_8::map_group{ std::move(field), coo }, m_output_draw_mode, m_filters, m_disable_blends, false };
 }
 
 map_sprite map_sprite::with_filters(ff_8::filters filters) const
 {
-     return { m_map_group, m_draw_swizzle, std::move(filters), m_disable_blends, false };
+     return { m_map_group, m_output_draw_mode, std::move(filters), m_disable_blends, false };
 }
 
-void map_sprite::enable_draw_swizzle()
-{
-     m_draw_swizzle = true;
-     init_render_texture();
-     m_grid = get_grid();
-}
+// void map_sprite::enable_draw_swizzle()
+// {
+//      m_draw_swizzle = true;
+//      init_render_texture();
+//      m_grid = get_grid();
+// }
 
-void map_sprite::disable_draw_swizzle()
+// void map_sprite::disable_draw_swizzle()
+// {
+//      m_draw_swizzle = false;
+//      init_render_texture();
+//      m_grid = get_grid();
+// }
+
+void map_sprite::set_output_draw_mode(::output_draw_mode output_draw_mode)
 {
-     m_draw_swizzle = false;
-     init_render_texture();
-     m_grid = get_grid();
+     m_output_draw_mode = output_draw_mode;
+     if (m_output_draw_mode == ::output_draw_mode::output_swizzle)
+     {
+          enable_disable_blends();
+     }
+     if (m_output_draw_mode == ::output_draw_mode::output_deswizzle)
+     {
+          disable_disable_blends();
+     }
+     // init_render_texture();
+     m_grid = get_grid();// todo remove m_grid.
 }
 
 void map_sprite::draw(sf::RenderTarget &target, sf::RenderStates states) const
@@ -754,8 +774,8 @@ void map_sprite::draw(sf::RenderTarget &target, sf::RenderStates states) const
      // draw square
      target.draw(m_square, states);
      // draw texture_page_grid
-     if (m_draw_swizzle)
-     {
+     if (m_output_draw_mode == ::output_draw_mode::output_swizzle)
+     {// todo i don't think this does anything anymore.
           target.draw(m_texture_page_grid, states);
      }
 }
@@ -955,30 +975,48 @@ open_viii::graphics::Rectangle<std::uint32_t> map_sprite::get_canvas() const
 
 std::uint32_t map_sprite::width() const
 {
-     if (m_draw_swizzle)
+     switch (m_output_draw_mode)
      {
-          if (m_map_group.mim)
-          {
-               using namespace open_viii::graphics::literals;
-               return m_map_group.mim->get_width(4_bpp);
-          }
+          case ::output_draw_mode::output_swizzle:
+               if (m_map_group.mim)
+               {
+                    using namespace open_viii::graphics::literals;
+                    return m_map_group.mim->get_width(4_bpp);
+               }
+               throw;
+               return {};
+               break;
+          case ::output_draw_mode::output_deswizzle:
+               return m_canvas.width();
+          case ::output_draw_mode::output_horizontal_tile_index_swizzle:
+          default:
+               throw;// todo compute width for new mode.
+               return {};
      }
-     return m_canvas.width();
 }
 
 std::uint32_t map_sprite::height() const
 {
-     if (m_draw_swizzle)
+     switch (m_output_draw_mode)
      {
-          if (m_map_group.mim)
-          {
-               return m_map_group.mim->get_height();
-          }
+          case ::output_draw_mode::output_swizzle:
+               if (m_map_group.mim)
+               {
+                    return m_map_group.mim->get_height();
+               }
+               throw;// todo compute height for new mode.
+               return {};
+               break;
+          case ::output_draw_mode::output_deswizzle:
+               return m_canvas.height();
+          case ::output_draw_mode::output_horizontal_tile_index_swizzle:
+          default:
+               throw;// todo compute height for new mode.
+               return {};
      }
-     return m_canvas.height();
 }
 grid map_sprite::get_grid() const
-{
+{// todo remove?
      return { { TILE_SIZE, TILE_SIZE }, { width(), height() } };
 }
 grid map_sprite::get_texture_page_grid() const
@@ -1009,9 +1047,9 @@ ff_8::filters &map_sprite::filter()
 {
      return m_filters;
 }
-map_sprite map_sprite::update(ff_8::map_group map_group, bool draw_swizzle) const
+map_sprite map_sprite::update(ff_8::map_group map_group, ::output_draw_mode output_draw_mode) const
 {
-     return { std::move(map_group), draw_swizzle, m_filters, m_disable_blends, false };
+     return { std::move(map_group), output_draw_mode, m_filters, m_disable_blends, false };
 }
 const all_unique_values_and_strings &map_sprite::uniques() const
 {
@@ -1060,8 +1098,9 @@ const ff_8::source_tile_conflicts &map_sprite::working_conflicts() const
      return m_map_group.maps.working_conflicts();
 }
 
-const ff_8::MapHistory::nst_map &map_sprite::working_similar_counts() const{
-          m_map_group.maps.refresh_working_all();
+const ff_8::MapHistory::nst_map &map_sprite::working_similar_counts() const
+{
+     m_map_group.maps.refresh_working_all();
      return m_map_group.maps.working_similar_counts();
 }
 
@@ -1140,11 +1179,11 @@ std::vector<std::future<std::future<void>>> map_sprite::save_swizzle_textures(co
      const auto                        unique_values                    = get_all_unique_values_and_strings();
      const auto                       &unique_texture_page_ids          = unique_values.texture_page_id().values();
      const auto                       &unique_bpp                       = unique_values.bpp().values();
-     settings_backup                   settings(m_filters, m_draw_swizzle, m_disable_texture_page_shift, m_disable_blends, m_scale);
+     settings_backup                   settings(m_filters, m_output_draw_mode, m_disable_texture_page_shift, m_disable_blends, m_scale);
      settings.filters                         = ff_8::filters{};
      settings.filters.value().upscale         = settings.filters.backup().upscale;
      settings.filters.value().deswizzle       = settings.filters.backup().deswizzle;
-     settings.draw_swizzle                    = true;
+     settings.draw_swizzle                    = ::output_draw_mode::output_swizzle;
      settings.disable_texture_page_shift      = true;
      settings.disable_blends                  = true;
      uint32_t                      height     = get_max_texture_height();
@@ -1233,10 +1272,10 @@ std::string map_sprite::get_base_name() const
 
 std::vector<std::future<std::future<void>>> map_sprite::save_pupu_textures(const std::filesystem::path &path)
 {
-     auto settings    = settings_backup{ m_filters, m_draw_swizzle, m_disable_texture_page_shift, m_disable_blends, m_scale };
+     auto settings    = settings_backup{ m_filters, m_output_draw_mode, m_disable_texture_page_shift, m_disable_blends, m_scale };
      settings.filters = ff_8::filters{};
      settings.filters.value().upscale         = settings.filters.backup().upscale;
-     settings.draw_swizzle                    = false;
+     settings.draw_swizzle                    = ::output_draw_mode::output_deswizzle;
      settings.disable_texture_page_shift      = true;
      settings.disable_blends                  = true;
      // todo maybe draw with blends enabled to transparent black or white.
@@ -1491,11 +1530,16 @@ std::string map_sprite::str_to_lower(std::string input)
        input, std::back_inserter(output), [](char character) -> char { return static_cast<char>(::tolower(character)); });
      return output;
 }
-map_sprite::map_sprite(ff_8::map_group map_group, bool draw_swizzle, ff_8::filters in_filters, bool force_disable_blends, bool require_coo)
+map_sprite::map_sprite(
+  ff_8::map_group    map_group,
+  ::output_draw_mode output_draw_mode,
+  ff_8::filters      in_filters,
+  bool               force_disable_blends,
+  bool               require_coo)
   : m_map_group(
       !require_coo || (map_group.opt_coo && map_group.opt_coo.value() != open_viii::LangT::generic) ? std::move(map_group)
                                                                                                     : ff_8::map_group{})
-  , m_draw_swizzle(draw_swizzle)
+  , m_output_draw_mode(output_draw_mode)
   , m_disable_blends(force_disable_blends)
   , m_filters(std::move(in_filters))
   , m_upscales(get_upscales())
@@ -1561,11 +1605,19 @@ std::vector<std::size_t> map_sprite::find_intersecting(
   bool                skip_filters,
   bool                find_all) const
 {
-     if (m_draw_swizzle)
+     switch (m_output_draw_mode)
      {
-          return ff_8::find_intersecting_swizzle(map, m_filters, pixel_pos, texture_page, skip_filters, find_all);
+          case ::output_draw_mode::output_swizzle:
+               return ff_8::find_intersecting_swizzle(map, m_filters, pixel_pos, texture_page, skip_filters, find_all);
+
+          case ::output_draw_mode::output_deswizzle:
+               return ff_8::find_intersecting_deswizzle(map, m_filters, pixel_pos, skip_filters, find_all);
+
+          case ::output_draw_mode::output_horizontal_tile_index_swizzle:
+          default:
+               throw;// todo add method for this mode.
+               return {};
      }
-     return ff_8::find_intersecting_deswizzle(map, m_filters, pixel_pos, skip_filters, find_all);
 }
 bool map_sprite::using_coo() const
 {

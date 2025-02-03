@@ -10,10 +10,13 @@
 #include "tool_tip.hpp"
 void fme::batch::combo_input_type()
 {
-     static constexpr auto values = std::array{ input_types::mim, input_types::deswizzle, input_types::swizzle };
-     static constexpr auto tooltips =
-       std::array{ gui_labels::input_mim_tooltip, gui_labels::input_deswizzle_tooltip, gui_labels::input_swizzle_tooltip };
-     const auto gcc = fme::GenericComboClass(
+     static constexpr auto values =
+       std::array{ input_types::mim, input_types::deswizzle, input_types::swizzle, input_types::horizontal_tile_index_swizzle };
+     static constexpr auto tooltips = std::array{ gui_labels::input_mim_tooltip,
+                                                  gui_labels::input_deswizzle_tooltip,
+                                                  gui_labels::input_swizzle_tooltip,
+                                                  gui_labels::horizontal_tile_index_swizzle };// todo add tooltip
+     const auto            gcc      = fme::GenericComboClass(
        gui_labels::input_type,
        []() { return values; },
        []() { return values | std::views::transform(AsString{}); },
@@ -28,13 +31,15 @@ void fme::batch::combo_input_type()
 }
 void fme::batch::combo_output_type()
 {
-     static constexpr auto values = std::array{ output_types::deswizzle, output_types::swizzle };
+     static constexpr auto values = std::array{ ::output_draw_mode::output_deswizzle,
+                                                ::output_draw_mode::output_swizzle,
+                                                ::output_draw_mode::output_horizontal_tile_index_swizzle };
      const auto            gcc    = fme::GenericComboClass(
        gui_labels::output_type, []() { return values; }, []() { return values | std::views::transform(AsString{}); }, m_output_type);
      if (gcc.render())
      {
           Configuration config{};
-          config->insert_or_assign("batch_output_type", static_cast<std::underlying_type_t<output_types>>(m_output_type));
+          config->insert_or_assign("batch_output_type", static_cast<std::underlying_type_t<::output_draw_mode>>(m_output_type));
           config.save();
      }
 }
@@ -360,12 +365,14 @@ void fme::batch::update(sf::Time elapsed_time)
           flatten();
           switch (m_output_type)
           {
-               case output_types::deswizzle:
+               case ::output_draw_mode::output_deswizzle:
                     m_future_of_future_consumer = m_map_sprite.save_pupu_textures(append_file_structure(m_output_path.data()));
                     break;
-               case output_types::swizzle:
+               case ::output_draw_mode::output_swizzle:
                     m_future_of_future_consumer = m_map_sprite.save_swizzle_textures(append_file_structure(m_output_path.data()));
                     break;
+               case ::output_draw_mode::output_horizontal_tile_index_swizzle:
+                    throw;// todo add function for this mode
           }
           if (m_save_map)
           {
@@ -411,11 +418,8 @@ void fme::batch::generate_map_sprite()
                filters.upscale.update(append_file_structure(m_input_path.data())).enable();
                break;
      }
-     m_map_sprite = map_sprite{ ff_8::map_group{ m_field, *m_coo },
-                                m_output_type == output_types::swizzle,
-                                filters,
-                                true,
-                                m_coo && m_coo.value() != open_viii::LangT::generic };
+     m_map_sprite =
+       map_sprite{ ff_8::map_group{ m_field, *m_coo }, m_output_type, filters, true, m_coo && m_coo.value() != open_viii::LangT::generic };
 }
 void fme::batch::compact()
 {
@@ -671,8 +675,8 @@ fme::batch::batch(std::shared_ptr<archives_group> existing_group)
           const auto tmp                  = safedir(m_input_path.data());
           m_input_path_valid              = tmp.is_dir() && tmp.is_exists();
      }
-     m_output_type =
-       static_cast<output_types>(config["batch_output_type"].value_or(static_cast<std::underlying_type_t<output_types>>(m_output_type)));
+     m_output_type = static_cast<::output_draw_mode>(
+       config["batch_output_type"].value_or(static_cast<std::underlying_type_t<::output_draw_mode>>(m_output_type)));
      {
           std::string str_tmp = config["batch_output_path"].value_or(std::string(m_output_path.data()));
           std::ranges::copy(str_tmp, m_output_path.data());
