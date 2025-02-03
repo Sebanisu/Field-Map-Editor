@@ -160,6 +160,32 @@ struct fmt::formatter<draw_mode> : fmt::formatter<std::string_view>
           return fmt::formatter<std::string_view>::format(name, ctx);
      }
 };
+
+template<>
+struct fmt::formatter<output_draw_mode> : fmt::formatter<std::string_view>
+{
+     // parse is inherited from formatter<string_view>.
+     template<typename FormatContext>
+     constexpr auto format(output_draw_mode draw_mode_t, FormatContext &ctx) const
+     {
+          using namespace open_viii::graphics::background;
+          using namespace std::string_view_literals;
+          std::string_view name = {};
+          switch (draw_mode_t)
+          {
+               case output_draw_mode::output_deswizzle:
+                    name = fme::gui_labels::deswizzle;
+                    break;
+               case output_draw_mode::output_swizzle:
+                    name = fme::gui_labels::swizzle;
+                    break;
+               case output_draw_mode::output_horizontal_tile_index_swizzle:
+                    name = fme::gui_labels::horizontal_tile_index_swizzle;
+                    break;
+          }
+          return fmt::formatter<std::string_view>::format(name, ctx);
+     }
+};
 template<>
 struct fmt::formatter<open_viii::LangT> : fmt::formatter<std::string_view>
 {
@@ -380,9 +406,9 @@ struct fmt::is_range<TileRange, char> : std::false_type
 };
 
 
-  // Specialization for ranges of tiles
-  template<tile_range TileRange>
-  struct fmt::formatter<TileRange> : fmt::formatter<std::string>
+// Specialization for ranges of tiles
+template<tile_range TileRange>
+struct fmt::formatter<TileRange> : fmt::formatter<std::string>
 {
      // parse is inherited from formatter<string_view>.
      template<typename FormatContext>
