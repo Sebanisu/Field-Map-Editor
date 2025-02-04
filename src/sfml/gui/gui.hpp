@@ -338,7 +338,7 @@ struct gui
      void                         refresh_field();
      void                         refresh_bpp(open_viii::graphics::BPPT in_bpp);
      void                         refresh_palette(std::uint8_t palette);
-     void                         refresh_render_texture();
+     void                         refresh_render_texture(bool reload_textures = false);
 
 
      static inline constinit bool toggle_imgui_demo_window = { false };
