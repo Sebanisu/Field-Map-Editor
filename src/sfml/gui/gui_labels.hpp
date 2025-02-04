@@ -67,7 +67,6 @@ struct gui_labels
      static constexpr std::string_view save_swizzle                           = { "Save Swizzle" };
      static constexpr std::string_view swizzle                                = { "Swizzle" };
      static constexpr std::string_view deswizzle                              = { "Deswizzle" };
-     static constexpr std::string_view horizontal_tile_index_swizzle          = { "Horizontal Tile Index Swizzle" };
      static constexpr std::string_view disable_blending                       = { "Disable Blending" };
      static constexpr std::string_view selected_tile_info                     = { "Selected Tile Info" };
      static constexpr std::string_view hovered_tiles                          = { "Hovered Tiles" };
