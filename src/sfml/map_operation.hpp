@@ -60,6 +60,22 @@ void save_modified_map(
      using tile_type = std::remove_cvref_t<decltype(tile)>;
      return { static_cast<std::uint32_t>(tile.source_x() + tile.texture_id() * tile_type::texture_page_width(4_bpp)), tile.source_y() };
 }
+struct source_x_y_texture_page
+{
+     sf::Vector2i source_xy    = {};
+     std::uint8_t texture_page = {};
+};
+[[nodiscard]] static inline source_x_y_texture_page
+  get_triangle_strip_dest_horizontal_tile_index_swizzle(const std::integral auto &tile_index, const std::integral auto &size)
+{
+     static const auto TILE_SIZE          = 16;
+     static const auto TEXTURE_PAGE_WIDTH = 256;
+     const auto        tiles_per_row      = size / TILE_SIZE;
+
+     return { .source_xy    = { static_cast<int>(((tile_index % tiles_per_row) * TILE_SIZE) % TEXTURE_PAGE_WIDTH),
+                                static_cast<int>((tile_index / tiles_per_row) * TILE_SIZE) },
+              .texture_page = static_cast<int>(((tile_index % tiles_per_row) * TILE_SIZE) / TEXTURE_PAGE_WIDTH) };
+}
 
 [[nodiscard]] std::vector<std::size_t> find_intersecting_swizzle(
   const map_group::Map &map,
