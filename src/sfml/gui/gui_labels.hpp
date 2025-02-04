@@ -189,6 +189,11 @@ struct gui_labels
           "allowing 16 tiles per row."
      };
 
+     static constexpr std::string_view compact_map_order_ffnx         = { "Map Order 2" };
+     static constexpr std::string_view compact_map_order_ffnx_tooltip = {
+          "FFNX Map Order: order tiles in rows of (number_of_tiles / 16)."
+     };
+
      static constexpr std::string_view flatten_bpp_tooltip = {
           "BPP: Changes all tiles to 4 bits per pixel (bpp) to maximize the number of tiles per texture page. This is applied "
           "automatically by Map Order compacting."

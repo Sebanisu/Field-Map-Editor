@@ -11,6 +11,7 @@ enum struct compact_type
      rows,
      all,
      map_order,
+     map_order_ffnx
 };
 enum struct input_types
 {
@@ -41,6 +42,9 @@ struct fmt::formatter<compact_type> : fmt::formatter<std::string_view>
           std::string_view name = {};
           switch (in_compact_type)
           {
+               case compact_type::map_order_ffnx:
+                    name = "Map Order: FFNX"sv;
+                    break;
                case compact_type::map_order:
                     name = "Map Order"sv;
                     break;
