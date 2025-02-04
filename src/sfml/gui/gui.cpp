@@ -2392,7 +2392,7 @@ void gui::menu_upscale_paths()
                                    {
                                         m_map_sprite->filter().upscale.enable();
                                    }
-                                   m_map_sprite->update_render_texture(true);
+                                   refresh_render_texture(true);
                               }
 
                               ImGui::TableNextColumn();
@@ -2441,7 +2441,7 @@ void gui::menu_upscale_paths()
                                    {
                                         m_map_sprite->filter().upscale.update(m_custom_upscale_paths.begin()->value_or<std::string>({}));
                                    }
-                                   m_map_sprite->update_render_texture(true);
+                                   refresh_render_texture(true);
                               }
                          }
                     }
@@ -2556,7 +2556,7 @@ void gui::directory_browser_display()
                {
                     m_map_sprite->load_map(map_path);
                }
-               m_map_sprite->update_render_texture(true);
+               refresh_render_texture(true);
           }
           break;
           case map_directory_mode::load_deswizzle_textures: {
@@ -2572,7 +2572,7 @@ void gui::directory_browser_display()
                {
                     m_map_sprite->load_map(map_path);
                }
-               m_map_sprite->update_render_texture(true);
+               refresh_render_texture(true);
           }
           break;
           case map_directory_mode::custom_upscale_directory: {
@@ -3420,9 +3420,9 @@ void gui::combo_blend_modes()
 }
 
 
-void gui::refresh_render_texture()
+void gui::refresh_render_texture(bool reload_textures)
 {
-     m_map_sprite->update_render_texture();
+     m_map_sprite->update_render_texture(reload_textures);
      m_changed = true;
 }
 
@@ -3554,7 +3554,7 @@ void gui::combo_deswizzle_path()
                m_map_sprite->filter().upscale.disable();
           }
 
-          refresh_render_texture();
+          refresh_render_texture(true);
      }
 }
 void gui::combo_upscale_path()
@@ -3572,7 +3572,7 @@ void gui::combo_upscale_path()
           m_map_sprite->filter().deswizzle.disable();
      }
 
-     refresh_render_texture();
+     refresh_render_texture(true);
 }
 void gui::generate_upscale_paths(const std::string &field_name, open_viii::LangT coo)
 {
