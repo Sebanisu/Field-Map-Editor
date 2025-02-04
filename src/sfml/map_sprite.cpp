@@ -1483,6 +1483,11 @@ void map_sprite::compact_map_order()
      ff_8::compact_map_order(m_map_group.maps.copy_working(fmt::format("{} {}", gui_labels::compact, gui_labels::map_order)));
      update_render_texture();
 }
+void map_sprite::compact_map_order_ffnx()
+{
+     ff_8::compact_map_order_ffnx(m_map_group.maps.copy_working(fmt::format("{} {}", gui_labels::compact, "FFNX Map Order")));
+     update_render_texture();
+}
 std::string map_sprite::str_to_lower(std::string input)
 {
      std::string output{};

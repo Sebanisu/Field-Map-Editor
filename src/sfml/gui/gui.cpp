@@ -660,6 +660,12 @@ void gui::compact_flatten_buttons()
           m_map_sprite->compact_map_order();
      }
      tool_tip(gui_labels::compact_map_order_tooltip);
+     ImGui::SameLine(0, spacing);
+     if (ImGui::Button("FFNX Map Order", button_size))
+     {
+          m_map_sprite->compact_map_order_ffnx();
+     }
+     tool_tip("FFNX Map Order: order tiles in rows of number_of_tiles / 16.");
      format_imgui_text("{}: ", gui_labels::flatten);
      tool_tip(gui_labels::flatten_tooltip);
      ImGui::SameLine(0, spacing);
@@ -1949,10 +1955,7 @@ void gui::edit_menu()
                if (map_test())
                {
                     generic_filter_menu(
-                      gui_labels::pupu_id,
-                    map_pupu_id{m_map_sprite},
-                      m_map_sprite->filter().pupu,
-                      [&]() { refresh_render_texture(); });
+                      gui_labels::pupu_id, map_pupu_id{ m_map_sprite }, m_map_sprite->filter().pupu, [&]() { refresh_render_texture(); });
                }
                if (mim_test())
                {

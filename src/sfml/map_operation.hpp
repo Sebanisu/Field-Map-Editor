@@ -13,6 +13,7 @@ namespace ff_8
 void flatten_bpp(map_group::Map &map);
 void flatten_palette(map_group::Map &map);
 void compact_map_order(map_group::Map &map);
+void compact_map_order_ffnx(map_group::Map &map);
 void compact_rows(map_group::Map &map);
 void compact_all(map_group::Map &map);
 bool test_if_map_same(const std::filesystem::path &saved_path, const map_group::SharedField &field, const map_group::MimType &type);
@@ -74,7 +75,7 @@ struct source_x_y_texture_page
 
      return { .source_xy    = { static_cast<int>(((tile_index % tiles_per_row) * TILE_SIZE) % TEXTURE_PAGE_WIDTH),
                                 static_cast<int>((tile_index / tiles_per_row) * TILE_SIZE) },
-              .texture_page = static_cast<int>(((tile_index % tiles_per_row) * TILE_SIZE) / TEXTURE_PAGE_WIDTH) };
+              .texture_page = static_cast<std::uint8_t>(((tile_index % tiles_per_row) * TILE_SIZE) / TEXTURE_PAGE_WIDTH) };
 }
 
 [[nodiscard]] std::vector<std::size_t> find_intersecting_swizzle(
