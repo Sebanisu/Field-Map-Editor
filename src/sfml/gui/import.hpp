@@ -21,11 +21,6 @@ namespace fme
 class [[nodiscard]] import
 {
    private:
-     using variant_tile_t = std::variant<
-       open_viii::graphics::background::Tile1,
-       open_viii::graphics::background::Tile2,
-       open_viii::graphics::background::Tile3,
-       std::monostate>;
      static constexpr std::int8_t                 tile_size_px                  = { 16 };
      static constexpr std::uint8_t                tile_size_px_unsigned         = { 16U };
 
@@ -48,23 +43,23 @@ class [[nodiscard]] import
 
    public:
      import();
-     void                          render() const;
-     [[nodiscard]] variant_tile_t &combo_selected_tile(bool &changed) const;
-     [[nodiscard]] bool            browse_for_image_display_preview() const;
-     [[nodiscard]] bool            combo_tile_size() const;
-     [[nodiscard]] bool            checkbox_render_imported_image() const;
-     void                          generate_map_for_imported_image(const variant_tile_t &current_tile, bool changed) const;
-     void                          collapsing_header_generated_tiles() const;
-     void                          update_scaled_up_render_texture() const;
-     void                          update_imported_render_texture() const;
-     void                          save_swizzle_textures() const;
-     void                          reset_imported_image() const;
-     void                          filter_empty_import_tiles() const;
-     void                          find_selected_tile_for_import(variant_tile_t &current_tile) const;
+     void                                                              render() const;
+     [[nodiscard]] open_viii::graphics::background::Map::variant_tile &combo_selected_tile(bool &changed) const;
+     [[nodiscard]] bool                                                browse_for_image_display_preview() const;
+     [[nodiscard]] bool                                                combo_tile_size() const;
+     [[nodiscard]] bool                                                checkbox_render_imported_image() const;
+     void generate_map_for_imported_image(const open_viii::graphics::background::Map::variant_tile &current_tile, bool changed) const;
+     void collapsing_header_generated_tiles() const;
+     void update_scaled_up_render_texture() const;
+     void update_imported_render_texture() const;
+     void save_swizzle_textures() const;
+     void reset_imported_image() const;
+     void filter_empty_import_tiles() const;
+     void find_selected_tile_for_import(open_viii::graphics::background::Map::variant_tile &current_tile) const;
 
      // Update functions for m_selections and m_map_sprite
-     void                          update(const std::shared_ptr<Selections> &new_selections) const;
-     void                          update(const std::shared_ptr<map_sprite> &new_map_sprite) const;
+     void update(const std::shared_ptr<Selections> &new_selections) const;
+     void update(const std::shared_ptr<map_sprite> &new_map_sprite) const;
 
      void adjust_source_xy_texture_page_for_import_map(uint8_t next_source_y, const uint8_t next_texture_page) const;
 
