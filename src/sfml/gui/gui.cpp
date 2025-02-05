@@ -660,6 +660,10 @@ void gui::compact_flatten_buttons()
      tool_tip(gui_labels::compact_all_tooltip);
      ImGui::TableNextRow();
      ImGui::TableNextColumn();
+     if (ImGui::Button(gui_labels::move_conflicts_only.data(), button_size))
+     {
+          m_map_sprite->compact_move_conflicts_only();
+     }
      ImGui::TableNextColumn();
      if (ImGui::Button(gui_labels::map_order.data(), button_size))
      {

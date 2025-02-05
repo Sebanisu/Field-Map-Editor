@@ -6,12 +6,14 @@
 #define FIELD_MAP_EDITOR_MAP_OPERATION_HPP
 #include "filter.hpp"
 #include "map_group.hpp"
+#include "source_tile_conflicts.hpp"
 #include <SFML/Graphics/Vertex.hpp>
 #include <SFML/System/Vector2.hpp>
 namespace ff_8
 {
 void flatten_bpp(map_group::Map &map);
 void flatten_palette(map_group::Map &map);
+void compact_move_conflicts_only(map_group::Map &map, const source_tile_conflicts &conflicts);
 void compact_map_order(map_group::Map &map);
 void compact_map_order_ffnx(map_group::Map &map);
 void compact_rows(map_group::Map &map);

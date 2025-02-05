@@ -166,8 +166,9 @@ struct [[nodiscard]] map_sprite final
      void        enable_disable_blends();
      void        disable_disable_blends();
      void        enable_square(sf::Vector2u position);
-     void                         compact_map_order();
-     void                         compact_map_order_ffnx();
+     void        compact_move_conflicts_only();
+     void        compact_map_order();
+     void        compact_map_order_ffnx();
      void        undo();
      void        redo();
      void        undo_all();

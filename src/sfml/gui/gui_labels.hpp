@@ -23,6 +23,7 @@ struct gui_labels
      static constexpr std::string_view all                                    = { "All" };
      static constexpr std::string_view map_order                              = { "Map Order" };
      static constexpr std::string_view compact                                = { "Compact" };
+     static constexpr std::string_view move_conflicts_only                    = { "Move Conflicts Only" };
      static constexpr std::string_view rows                                   = { "Rows" };
      static constexpr std::string_view width                                  = { "Width" };
      static constexpr std::string_view windows                                = { "Windows" };
