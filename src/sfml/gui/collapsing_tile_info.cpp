@@ -9,14 +9,10 @@
 namespace fme
 {
 void collapsing_tile_info(
-  std::weak_ptr<const map_sprite> map_ptr,
-  const std::variant<
-    open_viii::graphics::background::Tile1,
-    open_viii::graphics::background::Tile2,
-    open_viii::graphics::background::Tile3,
-    std::monostate>         &current_tile,
-  const tile_button_options &options,
-  const std::size_t          index)
+  std::weak_ptr<const map_sprite>                           map_ptr,
+  const open_viii::graphics::background::Map::variant_tile &current_tile,
+  const tile_button_options                                &options,
+  const std::size_t                                         index)
 {
      auto map = map_ptr.lock();
      if (!map)

@@ -42,16 +42,18 @@ void fme::batch::combo_compact_type()
 {
      const auto        tool_tip_pop = scope_guard{ [&]() { tool_tip(gui_labels::compact_tooltip); } };
 
-     static const auto values       = std::array{ compact_type::rows, compact_type::all, compact_type::map_order };
-     static const auto tool_tips =
-       std::array{ gui_labels::compact_rows_tooltip, gui_labels::compact_all_tooltip, gui_labels::compact_map_order_tooltip };
+     static const auto values = std::array{ compact_type::rows, compact_type::all, compact_type::map_order, compact_type::map_order_ffnx };
+     static const auto tool_tips = std::array{ gui_labels::compact_rows_tooltip,
+                                               gui_labels::compact_all_tooltip,
+                                               gui_labels::compact_map_order_tooltip,
+                                               gui_labels::compact_map_order_ffnx_tooltip };
 
-     const auto gcc = fme::GenericComboClassWithFilter(
+     const auto        gcc       = fme::GenericComboClassWithFilter(
        gui_labels::compact,
        []() { return values; },
        []() { return values | std::views::transform(AsString{}); },
        []() { return tool_tips; },
-       [this]() -> auto & { return m_compact_type; });
+       [this]() -> auto              &{ return m_compact_type; });
 
      if (!gcc.render())
      {
@@ -65,9 +67,10 @@ void fme::batch::combo_compact_type()
 }
 void fme::batch::combo_flatten_type()
 {
-     const auto            tool_tip_pop        = scope_guard{ [&]() { tool_tip(gui_labels::flatten_tooltip); } };
-     const bool            all_or_only_palette = !m_compact_type.enabled() || m_compact_type.value() != compact_type::map_order;
-     static constexpr auto values              = std::array{ flatten_type::bpp, flatten_type::palette, flatten_type::both };
+     const auto tool_tip_pop        = scope_guard{ [&]() { tool_tip(gui_labels::flatten_tooltip); } };
+     const bool all_or_only_palette = !m_compact_type.enabled() || (m_compact_type.value() != compact_type::map_order)
+                                      || (m_compact_type.value() != compact_type::map_order_ffnx);
+     static constexpr auto values = std::array{ flatten_type::bpp, flatten_type::palette, flatten_type::both };
      static constexpr auto tool_tips =
        std::array{ gui_labels::flatten_bpp_tooltip, gui_labels::flatten_palette_tooltip, gui_labels::flatten_both_tooltip };
      static constexpr auto values_only_palette    = std::array{ flatten_type::palette };
@@ -434,6 +437,9 @@ void fme::batch::compact()
           case compact_type::map_order:
                m_map_sprite.compact_map_order();
                break;
+          case compact_type::map_order_ffnx:
+               m_map_sprite.compact_map_order_ffnx();
+               break;
      }
 }
 void fme::batch::flatten()
@@ -445,7 +451,9 @@ void fme::batch::flatten()
      switch (m_flatten_type.value())
      {
           case flatten_type::bpp:
-               if (!m_compact_type.enabled() || m_compact_type.value() != compact_type::map_order)
+               if (
+                 !m_compact_type.enabled() || (m_compact_type.value() != compact_type::map_order)
+                 || (m_compact_type.value() != compact_type::map_order_ffnx))
                {
                     m_map_sprite.flatten_bpp();
                }
@@ -454,7 +462,9 @@ void fme::batch::flatten()
                m_map_sprite.flatten_palette();
                break;
           case flatten_type::both:
-               if (!m_compact_type.enabled() || m_compact_type.value() != compact_type::map_order)
+               if (
+                 !m_compact_type.enabled() || (m_compact_type.value() != compact_type::map_order)
+                 || (m_compact_type.value() != compact_type::map_order_ffnx))
                {
                     m_map_sprite.flatten_bpp();
                }

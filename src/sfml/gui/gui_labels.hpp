@@ -15,6 +15,7 @@ struct gui_labels
      static constexpr std::string_view browse                                 = { "Browse" };
      static constexpr std::string_view palette                                = { "Palette" };
      static constexpr std::string_view bpp                                    = { "BPP" };
+     static constexpr std::string_view bpp_and_palette                        = { "BPP & Palette" };
      static constexpr std::string_view hex                                    = { "Hex" };
      static constexpr std::string_view source                                 = { "Source" };
      static constexpr std::string_view destination                            = { "Destination" };
@@ -49,6 +50,7 @@ struct gui_labels
      static constexpr std::string_view draw                                   = { "Draw" };
      static constexpr std::string_view draw_bit                               = { "Draw-Bit" };
      static constexpr std::string_view path                                   = { "Path" };
+     static constexpr std::string_view mim                                    = { "Mim" };
      static constexpr std::string_view field                                  = { "Field" };
      static constexpr std::string_view directory_created                      = { "Directory Created" };
      static constexpr std::string_view directory_exists                       = { "Directory Exists" };
@@ -187,6 +189,12 @@ struct gui_labels
      static constexpr std::string_view compact_map_order_tooltip = {
           "Map Order: Creates a tile for each map entry with 16 columns and 16 rows per texture page. Tiles are changed to 4bpp, "
           "allowing 16 tiles per row."
+     };
+
+     static constexpr std::string_view compact_map_order_ffnx         = { "Map Order 2" };
+     static constexpr std::string_view compact_map_order_ffnx2        = { "Map Order 2: FFNX" };
+     static constexpr std::string_view compact_map_order_ffnx_tooltip = {
+          "FFNX Map Order: order tiles in rows of (number_of_tiles / 16)."
      };
 
      static constexpr std::string_view flatten_bpp_tooltip = {

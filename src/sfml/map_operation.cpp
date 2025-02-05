@@ -36,6 +36,25 @@ void flatten_palette(map_group::Map &map)
           });
      });
 }
+void compact_map_order_ffnx(map_group::Map &map)
+{
+     map.visit_tiles([](auto &&tiles) {
+          // get_triangle_strip_dest_horizontal_tile_index_swizzle
+
+          auto filtered_tiles             = tiles | std::views::filter(not_invalid);
+          using tile_t                    = std::remove_cvref_t<std::ranges::range_value_t<decltype(tiles)>>;
+          const auto with_depth_operation = ff_8::tile_operations::WithDepth<tile_t>{ open_viii::graphics::BPPT::BPP4_CONST() };
+          for (auto &&[tile_index, tile] : filtered_tiles | std::ranges::views::enumerate)
+          {
+               const auto new_pos  = get_triangle_strip_dest_horizontal_tile_index_swizzle(tile_index, std::ranges::size(tiles));
+               const auto source_x = static_cast<ff_8::tile_operations::SourceXT<tile_t>>(new_pos.source_xy.x);
+               const auto source_y = static_cast<ff_8::tile_operations::SourceYT<tile_t>>(new_pos.source_xy.y);
+               const auto with_texture_id_operation = ff_8::tile_operations::WithTextureId<tile_t>{ new_pos.texture_page };
+               const auto with_source_xy_operation  = ff_8::tile_operations::WithSourceXY<tile_t>{ { source_x, source_y } };
+               tile                                 = tile | with_depth_operation | with_source_xy_operation | with_texture_id_operation;
+          }
+     });
+}
 void compact_map_order(map_group::Map &map)
 {
      map.visit_tiles([](auto &&tiles) {

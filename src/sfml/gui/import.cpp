@@ -117,12 +117,12 @@ void import::render() const
      tool_tip(gui_labels::reset_tool_tip);
 }
 
-import::variant_tile_t &import::combo_selected_tile(bool &changed) const
+open_viii::graphics::background::Map::variant_tile &import::combo_selected_tile(bool &changed) const
 {
      auto                  selections   = m_selections.lock();
      auto                  map_sprite   = m_map_sprite.lock();
 
-     static variant_tile_t current_tile = { std::monostate{} };
+     static open_viii::graphics::background::Map::variant_tile current_tile = { std::monostate{} };
      if (!selections)
      {
           current_tile = std::monostate{};
@@ -404,7 +404,7 @@ bool import::combo_tile_size() const
      config.save();
      return true;
 }
-void import::generate_map_for_imported_image(const variant_tile_t &current_tile, bool changed) const
+void import::generate_map_for_imported_image(const open_viii::graphics::background::Map::variant_tile &current_tile, bool changed) const
 {//   * I'd probably store the new tiles in their own map.
      using namespace open_viii::graphics::background;
      using namespace open_viii::graphics;
@@ -422,11 +422,15 @@ void import::generate_map_for_imported_image(const variant_tile_t &current_tile,
      format_imgui_text("{}: {} x {} = {}", gui_labels::possible_tiles, tiles_wide, tiles_high, tiles_wide * tiles_high);
      if (changed && tiles_wide * tiles_high != 0U && m_loaded_image_texture.getSize() != sf::Vector2u{})
      {
-          m_import_image_map = open_viii::graphics::background::Map(
-            [&current_tile, x_tile = uint8_t{}, y_tile = uint8_t{}, &tiles_high, &tiles_wide]() mutable {
+          m_import_image_map =
+            open_viii::graphics::background::Map{ [&current_tile,
+                                                   x_tile = uint8_t{},
+                                                   y_tile = uint8_t{},
+                                                   &tiles_high,
+                                                   &tiles_wide]() mutable -> open_viii::graphics::background::Map::variant_tile {
                  return std::visit(
-                   [&](auto tile) -> variant_tile_t {
-                        if constexpr (is_tile<std::decay_t<decltype(tile)>>)
+                   [&](auto tile) -> open_viii::graphics::background::Map::variant_tile {
+                        if constexpr (is_tile<std::remove_cvref_t<decltype(tile)>>)
                         {
                              if (x_tile == tiles_wide)
                              {
@@ -454,7 +458,7 @@ void import::generate_map_for_imported_image(const variant_tile_t &current_tile,
                         }
                    },
                    current_tile);
-            });
+            } };
           filter_empty_import_tiles();
      }
 }
@@ -624,7 +628,7 @@ void import::reset_imported_image() const
 }
 
 
-void import::find_selected_tile_for_import(import::variant_tile_t &current_tile) const
+void import::find_selected_tile_for_import(open_viii::graphics::background::Map::variant_tile &current_tile) const
 {
      using namespace open_viii::graphics::background;
      auto map_sprite = m_map_sprite.lock();

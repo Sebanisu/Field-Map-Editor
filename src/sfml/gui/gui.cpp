@@ -637,43 +637,59 @@ void gui::compact_flatten_buttons()
           return;
      }
      format_imgui_wrapped_text("{}: ", gui_labels::compact_flatten_warning);
-     const ImGuiStyle &style       = ImGui::GetStyle();
-     const float       spacing     = style.ItemInnerSpacing.x;
-     const ImVec2      button_size = { ImGui::GetFrameHeight() * 3.75F, ImGui::GetFrameHeight() };
+     const ImVec2 button_size = { ImGui::GetFrameHeight() * 4.5F, ImGui::GetFrameHeight() };
+     if (!ImGui::BeginTable("##compact buttons", 4, ImGuiTableFlags_SizingFixedSame))
+     {
+          return;
+     }
+     ImGui::TableNextRow();
+     ImGui::TableNextColumn();
      format_imgui_text("{}: ", gui_labels::compact);
      tool_tip(gui_labels::compact_tooltip);
-     ImGui::SameLine(0, spacing);
+     ImGui::TableNextColumn();
      if (ImGui::Button(gui_labels::rows.data(), button_size))
      {
           m_map_sprite->compact_rows();
      }
      tool_tip(gui_labels::compact_rows_tooltip);
-     ImGui::SameLine(0, spacing);
+     ImGui::TableNextColumn();
      if (ImGui::Button(gui_labels::all.data(), button_size))
      {
           m_map_sprite->compact_all();
      }
      tool_tip(gui_labels::compact_all_tooltip);
-     ImGui::SameLine(0, spacing);
+     ImGui::TableNextRow();
+     ImGui::TableNextColumn();
+     ImGui::TableNextColumn();
      if (ImGui::Button(gui_labels::map_order.data(), button_size))
      {
           m_map_sprite->compact_map_order();
      }
      tool_tip(gui_labels::compact_map_order_tooltip);
+     ImGui::TableNextColumn();
+     if (ImGui::Button(gui_labels::compact_map_order_ffnx.data(), button_size))
+     {
+          m_map_sprite->compact_map_order_ffnx();
+     }
+     tool_tip(gui_labels::compact_map_order_ffnx_tooltip);
+     ImGui::TableNextRow();
+     ImGui::TableNextColumn();
      format_imgui_text("{}: ", gui_labels::flatten);
      tool_tip(gui_labels::flatten_tooltip);
-     ImGui::SameLine(0, spacing);
+     ImGui::TableNextColumn();
      if (ImGui::Button(gui_labels::bpp.data(), button_size))
      {
           m_map_sprite->flatten_bpp();
      }
      tool_tip(gui_labels::flatten_bpp_tooltip);
-     ImGui::SameLine(0, spacing);
+     ImGui::TableNextColumn();
      if (ImGui::Button(gui_labels::palette.data(), button_size))
      {
           m_map_sprite->flatten_palette();
      }
      tool_tip(gui_labels::flatten_palette_tooltip);
+
+     ImGui::EndTable();
 }
 void gui::collapsing_header_filters()
 {
@@ -1949,10 +1965,7 @@ void gui::edit_menu()
                if (map_test())
                {
                     generic_filter_menu(
-                      gui_labels::pupu_id,
-                    map_pupu_id{m_map_sprite},
-                      m_map_sprite->filter().pupu,
-                      [&]() { refresh_render_texture(); });
+                      gui_labels::pupu_id, map_pupu_id{ m_map_sprite }, m_map_sprite->filter().pupu, [&]() { refresh_render_texture(); });
                }
                if (mim_test())
                {

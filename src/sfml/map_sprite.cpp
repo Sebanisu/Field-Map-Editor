@@ -1395,12 +1395,8 @@ void map_sprite::load_map(const std::filesystem::path &src_path)
             (void)m_map_group.maps.copy_working(fmt::format("{}", gui_labels::load_map));
             m_map_group.maps.original().visit_tiles([this, &os](const auto &const_tiles) {
                  using tile_t               = std::remove_cvref_t<decltype(const_tiles.front())>;
-                 m_map_group.maps.working() = open_viii::graphics::background::Map(
-                   [&os]() -> std::variant<
-                             open_viii::graphics::background::Tile1,
-                             open_viii::graphics::background::Tile2,
-                             open_viii::graphics::background::Tile3,
-                             std::monostate> {
+                 m_map_group.maps.working() =
+                   open_viii::graphics::background::Map([&os]() -> open_viii::graphics::background::Map::variant_tile {
                         tile_t     tile{};
                         const auto append = [&os](auto &t) -> bool {
                              // load tile
@@ -1481,6 +1477,11 @@ void map_sprite::disable_disable_blends()
 void map_sprite::compact_map_order()
 {
      ff_8::compact_map_order(m_map_group.maps.copy_working(fmt::format("{} {}", gui_labels::compact, gui_labels::map_order)));
+     update_render_texture();
+}
+void map_sprite::compact_map_order_ffnx()
+{
+     ff_8::compact_map_order_ffnx(m_map_group.maps.copy_working(fmt::format("{} {}", gui_labels::compact, gui_labels::compact_map_order_ffnx2)));
      update_render_texture();
 }
 std::string map_sprite::str_to_lower(std::string input)
