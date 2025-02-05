@@ -5,6 +5,7 @@
 #ifndef FIELD_MAP_EDITOR_FORMATTERS_HPP
 #define FIELD_MAP_EDITOR_FORMATTERS_HPP
 #include "draw_bit_t.hpp"
+#include "gui/compact_type.hpp"
 #include "gui/draw_mode.hpp"
 #include "gui/gui_labels.hpp"
 #include "normalized_source_tile.hpp"
@@ -380,9 +381,9 @@ struct fmt::is_range<TileRange, char> : std::false_type
 };
 
 
-  // Specialization for ranges of tiles
-  template<tile_range TileRange>
-  struct fmt::formatter<TileRange> : fmt::formatter<std::string>
+// Specialization for ranges of tiles
+template<tile_range TileRange>
+struct fmt::formatter<TileRange> : fmt::formatter<std::string>
 {
      // parse is inherited from formatter<string_view>.
      template<typename FormatContext>
@@ -392,6 +393,106 @@ struct fmt::is_range<TileRange, char> : std::false_type
 
 
           return fmt::format_to(ctx.out(), "Total Tiles: {}\n", count);
+     }
+};
+
+template<>
+struct fmt::formatter<fme::compact_type> : fmt::formatter<std::string_view>
+{
+     // parse is inherited from formatter<string_view>.
+     template<typename FormatContext>
+     constexpr auto format(fme::compact_type in_compact_type, FormatContext &ctx) const
+     {
+          using namespace std::string_view_literals;
+          std::string_view name = {};
+          switch (in_compact_type)
+          {
+               case fme::compact_type::map_order_ffnx:
+                    name = fme::gui_labels::compact_map_order_ffnx2;
+                    break;
+               case fme::compact_type::map_order:
+                    name = fme::gui_labels::map_order;
+                    break;
+               case fme::compact_type::rows:
+                    name = fme::gui_labels::rows;
+                    break;
+               case fme::compact_type::all:
+                    name = fme::gui_labels::all;
+                    break;
+          }
+          return fmt::formatter<std::string_view>::format(name, ctx);
+     }
+};
+
+template<>
+struct fmt::formatter<fme::input_types> : fmt::formatter<std::string_view>
+{
+     // parse is inherited from formatter<string_view>.
+     template<typename FormatContext>
+     constexpr auto format(fme::input_types in_input_type, FormatContext &ctx) const
+     {
+          using namespace std::string_view_literals;
+          std::string_view name = {};
+          switch (in_input_type)
+          {
+               case fme::input_types::mim:
+                    name = fme::gui_labels::mim;
+                    break;
+               case fme::input_types::deswizzle:
+                    name = fme::gui_labels::deswizzle;
+                    break;
+               case fme::input_types::swizzle:
+                    name = fme::gui_labels::swizzle;
+                    break;
+          }
+          return fmt::formatter<std::string_view>::format(name, ctx);
+     }
+};
+
+template<>
+struct fmt::formatter<fme::output_types> : fmt::formatter<std::string_view>
+{
+     // parse is inherited from formatter<string_view>.
+     template<typename FormatContext>
+     constexpr auto format(fme::output_types in_output_type, FormatContext &ctx) const
+     {
+          using namespace std::string_view_literals;
+          std::string_view name = {};
+          switch (in_output_type)
+          {
+               case fme::output_types::deswizzle:
+                    name = fme::gui_labels::deswizzle;
+                    break;
+               case fme::output_types::swizzle:
+                    name = fme::gui_labels::swizzle;
+                    break;
+          }
+          return fmt::formatter<std::string_view>::format(name, ctx);
+     }
+};
+
+template<>
+struct fmt::formatter<fme::flatten_type> : fmt::formatter<std::string_view>
+{
+     // parse is inherited from formatter<string_view>.
+     template<typename FormatContext>
+     constexpr auto format(fme::flatten_type in_flatten_type, FormatContext &ctx) const
+     {
+          using namespace std::string_view_literals;
+          std::string_view name = {};
+          switch (in_flatten_type)
+          {
+               case fme::flatten_type::bpp:
+                    name = fme::gui_labels::bpp;
+                    break;
+               case fme::flatten_type::palette:
+                    name = fme::gui_labels::palette;
+                    break;
+               case fme::flatten_type::both:
+                    name = fme::gui_labels::bpp_and_palette;
+                    break;
+          }
+          return fmt::formatter<std::string_view>::format(name, ctx);
      }
 };
 #endif// FIELD_MAP_EDITOR_FORMATTERS_HPP
