@@ -9,6 +9,7 @@
 #include "colors.hpp"
 #include "compact_type.hpp"
 #include "Configuration.hpp"
+#include "custom_paths_window.hpp"
 #include "events.hpp"
 #include "fa_icons.hpp"
 #include "file_dialog_mode.hpp"
@@ -85,6 +86,7 @@ struct gui
      sf::Vector2f                                                        m_cam_pos                   = {};
      std::vector<std::size_t>                                            m_hovered_tiles_indices     = {};
      std::ptrdiff_t                                                      m_hovered_index             = { -1 };
+     custom_paths_window                                                 m_custom_paths_window       = { m_selections };
      // create a file browser instances
      ImGui::FileBrowser          m_save_file_browser{ ImGuiFileBrowserFlags_EnterNewFilename | ImGuiFileBrowserFlags_CreateNewDir
                                              | ImGuiFileBrowserFlags_EditPathString };

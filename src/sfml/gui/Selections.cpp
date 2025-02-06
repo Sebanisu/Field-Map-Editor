@@ -2,6 +2,7 @@
 // Created by pcvii on 12/21/2022.
 //
 #include "Selections.hpp"
+#include <spdlog/spdlog.h>
 using namespace open_viii;
 using namespace open_viii::graphics;
 using namespace open_viii::graphics::background;
@@ -12,7 +13,7 @@ fme::Selections::Selections()
      window_width             = config["selections_window_width"].value_or(window_width);
      window_height            = config["selections_window_width"].value_or(window_height);
      palette                  = config["selections_palette"].value_or(palette) & 0xFU;
-     bpp                      = BPPT{config["selections_bpp"].value_or(bpp.raw()) & 3U};
+     bpp                      = BPPT{ config["selections_bpp"].value_or(bpp.raw()) & 3U };
      draw                     = static_cast<draw_mode>(config["selections_draw"].value_or(std::to_underlying(draw)));
      coo                      = static_cast<LangT>(config["selections_coo"].value_or(std::to_underlying(coo)));
      selected_tile            = config["selections_selected_tile"].value_or(selected_tile);
@@ -32,7 +33,40 @@ fme::Selections::Selections()
      display_history_window   = config["selections_display_history_window"].value_or(display_history_window);
      display_control_panel_window = config["selections_display_control_panel_window"].value_or(display_control_panel_window);
      display_draw_window          = config["selections_display_draw_window"].value_or(display_draw_window);
+     display_custom_paths_window  = config["selections_display_custom_paths_window"].value_or(display_custom_paths_window);
 
      background_color =
        std::bit_cast<fme::color>(config["selections_background_color"].value_or(std::bit_cast<std::uint32_t>(background_color)));
+
+     refresh_ffnx_paths();
+}
+
+
+void fme::Selections::refresh_ffnx_paths()
+{
+     const auto      ffnx_settings_toml = std::filesystem::path(path) / "FFNx.toml";
+     std::error_code error_code         = {};
+     bool            exists             = std::filesystem::exists(ffnx_settings_toml, error_code);
+     if (error_code)
+     {
+          spdlog::warn("{}:{} - {}: {} path: \"{}\"", __FILE__, __LINE__, error_code.value(), error_code.message(), ffnx_settings_toml);
+          error_code.clear();
+     }
+     static constexpr std::string_view default_mod_path         = "mods/Textures";
+     static constexpr std::string_view default_override         = "override";
+     static constexpr std::string_view default_direct_mode_path = "direct";
+     if (exists)
+     {
+          const auto ffnx_config = Configuration(ffnx_settings_toml);
+          ffnx_mod_path          = ffnx_config["mod_path"].value_or(std::string{ default_mod_path.begin(), default_mod_path.end() });
+          ffnx_override_path     = ffnx_config["override_path"].value_or(std::string{ default_override.begin(), default_override.end() });
+          ffnx_direct_mode_path =
+            ffnx_config["direct_mode_path"].value_or(std::string{ default_direct_mode_path.begin(), default_direct_mode_path.end() });
+     }
+     else
+     {
+          ffnx_mod_path         = std::string{ default_mod_path.begin(), default_mod_path.end() };
+          ffnx_override_path    = std::string{ default_override.begin(), default_override.end() };
+          ffnx_direct_mode_path = std::string{ default_direct_mode_path.begin(), default_direct_mode_path.end() };
+     }
 }

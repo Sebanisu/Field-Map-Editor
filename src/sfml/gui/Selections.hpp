@@ -73,6 +73,10 @@ struct Selections
      bool                           display_history_window         = { false };///< Whether to display history window.
      bool                           display_control_panel_window   = { true };///< Whether to display control panel window.
      bool                           display_draw_window            = { true };///< Whether to display draw window.
+     bool                           display_custom_paths_window    = { false };///< Whether to display custom paths window.
+     std::string                    ffnx_mod_path                  = {};
+     std::string                    ffnx_override_path             = {};
+     std::string                    ffnx_direct_mode_path          = {};
      color background_color = { fme::colors::White };///< Remember to user's selected Background Color for draw Window.
 
 
@@ -80,6 +84,8 @@ struct Selections
       * @brief Constructs a Selections object with default values. Loading from past configuration if possible.
       */
      Selections();
+     // need to rerun when we change the path because ffnx might not be there.
+     void refresh_ffnx_paths();
 };
 }// namespace fme
 #endif// FIELD_MAP_EDITOR_SELECTIONS_HPP

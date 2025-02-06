@@ -27,6 +27,9 @@ class Configuration
       */
      Configuration();
 
+     
+     Configuration(std::filesystem::path);
+
      /**
       * @brief Provides mutable access to the underlying TOML table.
       * @return A pointer to the mutable TOML table.
@@ -73,16 +76,7 @@ class Configuration
       * This is a static inline constant that resolves to `Field-Map-Editor_SFML.toml`
       * in the current working directory.
       */
-     static inline const auto m_path = []() {
-          std::error_code error_code = {};
-          auto            str        = std::filesystem::current_path(error_code) / "Field-Map-Editor_SFML.toml";
-          if (error_code)
-          {
-               spdlog::warn("{}:{} - {}: {} path: \"{}\"", __FILE__, __LINE__, error_code.value(), error_code.message(), str);
-               error_code.clear();
-          }
-          return str;
-     }();
+     std::filesystem::path m_path{};
 
      /**
       * @brief The in-memory representation of the TOML configuration file.

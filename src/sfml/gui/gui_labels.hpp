@@ -150,6 +150,8 @@ struct gui_labels
      static constexpr std::string_view draw_bit_enabled_tooltip               = { "Show only tiles with draw bit enabled" };
 
      static constexpr std::string_view draw_bit_disabled_tooltip              = { "Show only tiles with draw bit disabled" };
+     static constexpr std::string_view display_custom_paths_window            = { "Display Custom Paths Window" };
+     static constexpr std::string_view custom_paths_window            = { "Custom Paths Window" };
 
      static constexpr std::string_view move_conflicts_only_tooltip            = {
           "Move Only Conflicts: It takes any tiles with conflicting source locations and it moves all but one to new locations that are "

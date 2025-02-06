@@ -747,6 +747,7 @@ void gui::loop()
      {
           m_batch.draw_window();
      }
+     m_custom_paths_window.render();
 
      if (toggle_imgui_demo_window)
      {
@@ -1701,6 +1702,13 @@ void gui::windows_menu()
      {
           Configuration config{};
           config->insert_or_assign("selections_display_draw_window", m_selections->display_draw_window);
+          config.save();
+     }
+     ImGui::Separator();
+     if (ImGui::MenuItem(gui_labels::display_custom_paths_window.data(), "Control + U", &m_selections->display_custom_paths_window))
+     {
+          Configuration config{};
+          config->insert_or_assign("selections_display_custom_paths_window", m_selections->display_custom_paths_window);
           config.save();
      }
 }
@@ -2917,6 +2925,7 @@ void gui::refresh_path()
      Configuration config{};
      config->insert_or_assign("selections_path", m_selections->path);
      config.save();
+     m_selections->refresh_ffnx_paths();
      update_path();
 }
 
@@ -3109,6 +3118,13 @@ void gui::event_type_key_released(const sf::Event::KeyEvent &key)
           m_selections->display_draw_window = !m_selections->display_draw_window;
           Configuration config{};
           config->insert_or_assign("selections_display_draw_window", m_selections->display_draw_window);
+          config.save();
+     }
+     else if (key.control && key.code == sf::Keyboard::U)
+     {
+          m_selections->display_custom_paths_window = !m_selections->display_custom_paths_window;
+          Configuration config{};
+          config->insert_or_assign("selections_display_custom_paths_window", m_selections->display_custom_paths_window);
           config.save();
      }
      else if (key.control && key.code == sf::Keyboard::P)

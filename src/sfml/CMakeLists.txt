@@ -23,6 +23,7 @@ add_executable(
   gui/batch.cpp
   gui/collapsing_tile_info.cpp
   gui/create_tile_button.cpp
+  gui/custom_paths_window.cpp
   gui/gui.cpp
   gui/history_window.cpp
   gui/import.cpp
@@ -59,6 +60,7 @@ add_executable(
 find_package(tomlplusplus REQUIRED)
 find_package(spdlog REQUIRED)
 find_package(GLEW REQUIRED)
+find_package(ctre REQUIRED)
 find_package(iconfontcppheaders REQUIRED CONFIG)
 include(${CMAKE_SOURCE_DIR}/cmake/imgui-sfml.cmake)
 

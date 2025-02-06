@@ -3,10 +3,9 @@
 //
 
 #include "Configuration.hpp"
-
-
-fme::Configuration::Configuration()
-  : m_table([]() {
+fme::Configuration::Configuration(std::filesystem::path in_path)
+  : m_path(in_path)
+  , m_table([this]() {
        toml::parse_result result = toml::parse_file(m_path.string());
        if (!result)
        {
@@ -14,6 +13,20 @@ fme::Configuration::Configuration()
             return toml::table{};
        }
        return std::move(result).table();
+  }())
+{
+}
+
+fme::Configuration::Configuration()
+  : Configuration([]() {
+       std::error_code error_code = {};
+       auto            str        = std::filesystem::current_path(error_code) / "Field-Map-Editor_SFML.toml";
+       if (error_code)
+       {
+            spdlog::warn("{}:{} - {}: {} path: \"{}\"", __FILE__, __LINE__, error_code.value(), error_code.message(), str);
+            error_code.clear();
+       }
+       return str;
   }())
 {
 }

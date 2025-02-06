@@ -1,0 +1,10 @@
+filter_upscale = 'D:\SteamLibrary\steamapps\common\FINAL FANTASY VIII Remastered\DEMASTER_EXP\textures\field_bg\EC\ECENTER3'
+paths_vector = [
+    'D:\SteamLibrary\steamapps\common\FINAL FANTASY VIII',
+    'D:\SteamLibrary\steamapps\common\FINAL FANTASY VIII Remastered',
+    'D:\games\ff82000',
+    'd:\tim',
+    'e:\'
+]
+selections_display_custom_paths_window = true
+selections_path = 'D:\SteamLibrary\steamapps\common\FINAL FANTASY VIII'
