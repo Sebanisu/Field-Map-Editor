@@ -28,6 +28,7 @@ class MyPackage(ConanFile):
         self.requires("libpng/1.6.44")
         self.requires("stb/cci.20230920")        
         self.requires("iconfontcppheaders/cci.20240620")
+        self.requires("ctre/3.9.0")
     
     def build_requirements(self):
         self.tool_requires("cmake/[>=3.22.6]")        

@@ -81,6 +81,7 @@ target_link_libraries(
   PRIVATE spdlog::spdlog
   PRIVATE GLEW::GLEW
   PRIVATE iconfontcppheaders::iconfontcppheaders
+  PRIVATE ctre::ctre
   PRIVATE ${PROJECT_NAME}_SFML_Common)
 
 target_compile_definitions(
