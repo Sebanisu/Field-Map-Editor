@@ -408,10 +408,13 @@ struct fmt::formatter<fme::compact_type> : fmt::formatter<std::string_view>
           switch (in_compact_type)
           {
                case fme::compact_type::map_order_ffnx:
-                    name = fme::gui_labels::compact_map_order_ffnx2;
+                    name = fme::gui_labels::compact_map_order_ffnx;
                     break;
                case fme::compact_type::map_order:
                     name = fme::gui_labels::map_order;
+                    break;
+               case fme::compact_type::move_only_conflicts:
+                    name = fme::gui_labels::move_conflicts;
                     break;
                case fme::compact_type::rows:
                     name = fme::gui_labels::rows;

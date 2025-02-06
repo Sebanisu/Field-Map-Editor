@@ -42,9 +42,12 @@ void fme::batch::combo_compact_type()
 {
      const auto        tool_tip_pop = scope_guard{ [&]() { tool_tip(gui_labels::compact_tooltip); } };
 
-     static const auto values = std::array{ compact_type::rows, compact_type::all, compact_type::map_order, compact_type::map_order_ffnx };
+     static const auto values       = std::array{
+          compact_type::rows, compact_type::all, compact_type::move_only_conflicts, compact_type::map_order, compact_type::map_order_ffnx
+     };
      static const auto tool_tips = std::array{ gui_labels::compact_rows_tooltip,
                                                gui_labels::compact_all_tooltip,
+                                               gui_labels::move_conflicts_only_tooltip,
                                                gui_labels::compact_map_order_tooltip,
                                                gui_labels::compact_map_order_ffnx_tooltip };
 
@@ -433,6 +436,9 @@ void fme::batch::compact()
                break;
           case compact_type::all:
                m_map_sprite.compact_all();
+               break;
+          case compact_type::move_only_conflicts:
+               m_map_sprite.compact_move_conflicts_only();
                break;
           case compact_type::map_order:
                m_map_sprite.compact_map_order();

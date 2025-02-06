@@ -38,7 +38,7 @@ namespace ff_8
  */
 class [[nodiscard]] source_tile_conflicts final
 {
-public:
+   public:
      /**
       * @brief Represents a 3D location in the grid.
       *
@@ -87,7 +87,7 @@ public:
 #else
      // Code for other cases
    private:
-#endif     
+#endif
 
      /**
       * @brief Alias for the underlying grid storage.
@@ -101,8 +101,8 @@ public:
       * different tile types, avoiding the need for templates. A static assertion can be added
       * to confirm the `difference_type` is consistent across all potential tile types.
       */
-     using grid_array                = std::array<std::vector<std::vector<std::uint8_t>::difference_type>, X_SIZE * Y_SIZE * T_SIZE>;
-     using grid_array_ptr  = std::shared_ptr<std::array<std::vector<std::vector<std::uint8_t>::difference_type>, X_SIZE * Y_SIZE * T_SIZE>>;
+     using grid_array      = std::array<std::vector<std::vector<std::uint8_t>::difference_type>, X_SIZE * Y_SIZE * T_SIZE>;
+     using grid_array_ptr  = std::shared_ptr<grid_array>;
 
      /**
       * @brief The grid storage for tracking tile indexes.
@@ -201,8 +201,6 @@ public:
      }
 
    public:
-     
-
 #if defined(__cpp_multidimensional_subscript) && __cpp_multidimensional_subscript >= 202110L
      /**
       * @brief Accesses the grid element at the specified 3D coordinates (x, y, t).
@@ -354,7 +352,7 @@ public:
           namespace v = std::ranges::views;
           return *m_grid | v::filter([](const auto &v) { return std::ranges::size(v) > 1U; });
      }
-
+     
      /**
       * @brief Retrieves a flattened range of tile indexes for each conflict.
       *

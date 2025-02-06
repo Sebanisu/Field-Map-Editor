@@ -55,6 +55,51 @@ void compact_map_order_ffnx(map_group::Map &map)
           }
      });
 }
+void compact_move_conflicts_only(map_group::Map &map, const source_tile_conflicts &conflicts)
+{
+
+     map.visit_tiles([&conflicts](auto &&tiles) {
+          std::vector<ff_8::source_tile_conflicts::location> empty_locations =
+            conflicts.range_of_empty_locations() | std::ranges::to<std::vector>();
+          auto range_of_conflicts         = conflicts.range_of_conflicts();
+          auto filtered_tiles             = tiles | std::views::filter(not_invalid);
+          using tile_t                    = std::remove_cvref_t<std::ranges::range_value_t<decltype(tiles)>>;
+          const auto with_depth_operation = ff_8::tile_operations::WithDepth<tile_t>{ open_viii::graphics::BPPT::BPP4_CONST() };
+
+          for (const auto indieces : range_of_conflicts)
+          {
+               for (const auto index : indieces | std::ranges::views::drop(1))
+               {
+                    // these are the tiles we need to relocate.
+                    auto &tile = [&]() -> decltype(auto) {
+                         auto b = tiles.begin();
+                         std::ranges::advance(b, index);
+                         return *b;
+                    }();
+                    const auto remove_e_index = [&]() -> std::ptrdiff_t {
+                         for (const auto &[e_index, location] : empty_locations | std::ranges::views::enumerate)
+                         {
+                              // filter out any locations you don't want here.
+
+                              const auto texture_page              = static_cast<ff_8::tile_operations::TextureIdT<tile_t>>(location.t);
+                              const auto source_x                  = static_cast<ff_8::tile_operations::SourceXT<tile_t>>(location.x);
+                              const auto source_y                  = static_cast<ff_8::tile_operations::SourceYT<tile_t>>(location.y);
+                              const auto with_texture_id_operation = ff_8::tile_operations::WithTextureId<tile_t>{ texture_page };
+                              const auto with_source_xy_operation  = ff_8::tile_operations::WithSourceXY<tile_t>{ { source_x, source_y } };
+                              tile = tile | with_depth_operation | with_source_xy_operation | with_texture_id_operation;
+
+                              return e_index;
+                         }
+                         return -1;
+                    }();
+                    if (remove_e_index > -1)
+                    {
+                         empty_locations.erase(empty_locations.begin() + remove_e_index);
+                    }
+               }
+          }
+     });
+}
 void compact_map_order(map_group::Map &map)
 {
      map.visit_tiles([](auto &&tiles) {

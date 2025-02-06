@@ -167,7 +167,7 @@ std::shared_ptr<std::array<sf::Texture, map_sprite::MAX_TEXTURES>> map_sprite::l
      std::shared_ptr<std::array<sf::Texture, MAX_TEXTURES>> ret = load_textures_internal();
      while (std::ranges::all_of(*ret, [](const sf::Texture &texture) {
           auto size = texture.getSize();
-          spdlog::info("{}",size);
+          spdlog::info("{}", size);
           return size.x == 0 || size.y == 0;
      }))
      {
@@ -1060,8 +1060,9 @@ const ff_8::source_tile_conflicts &map_sprite::working_conflicts() const
      return m_map_group.maps.working_conflicts();
 }
 
-const ff_8::MapHistory::nst_map &map_sprite::working_similar_counts() const{
-          m_map_group.maps.refresh_working_all();
+const ff_8::MapHistory::nst_map &map_sprite::working_similar_counts() const
+{
+     m_map_group.maps.refresh_working_all();
      return m_map_group.maps.working_similar_counts();
 }
 
@@ -1394,7 +1395,7 @@ void map_sprite::load_map(const std::filesystem::path &src_path)
        [this](std::istream &os) {
             (void)m_map_group.maps.copy_working(fmt::format("{}", gui_labels::load_map));
             m_map_group.maps.original().visit_tiles([this, &os](const auto &const_tiles) {
-                 using tile_t               = std::remove_cvref_t<decltype(const_tiles.front())>;
+                 using tile_t = std::remove_cvref_t<decltype(const_tiles.front())>;
                  m_map_group.maps.working() =
                    open_viii::graphics::background::Map([&os]() -> open_viii::graphics::background::Map::variant_tile {
                         tile_t     tile{};
@@ -1474,6 +1475,13 @@ void map_sprite::disable_disable_blends()
      m_disable_blends = false;
      init_render_texture();
 }
+void map_sprite::compact_move_conflicts_only()
+{
+     const auto &conflicts = m_map_group.maps.working_conflicts();
+     ff_8::compact_move_conflicts_only(
+       m_map_group.maps.copy_working(fmt::format("{} {}", gui_labels::compact, gui_labels::move_conflicts_only)), conflicts);
+     update_render_texture();
+}
 void map_sprite::compact_map_order()
 {
      ff_8::compact_map_order(m_map_group.maps.copy_working(fmt::format("{} {}", gui_labels::compact, gui_labels::map_order)));
@@ -1481,7 +1489,8 @@ void map_sprite::compact_map_order()
 }
 void map_sprite::compact_map_order_ffnx()
 {
-     ff_8::compact_map_order_ffnx(m_map_group.maps.copy_working(fmt::format("{} {}", gui_labels::compact, gui_labels::compact_map_order_ffnx2)));
+     ff_8::compact_map_order_ffnx(
+       m_map_group.maps.copy_working(fmt::format("{} {}", gui_labels::compact, gui_labels::compact_map_order_ffnx2)));
      update_render_texture();
 }
 std::string map_sprite::str_to_lower(std::string input)

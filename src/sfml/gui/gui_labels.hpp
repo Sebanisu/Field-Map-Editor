@@ -23,6 +23,8 @@ struct gui_labels
      static constexpr std::string_view all                                    = { "All" };
      static constexpr std::string_view map_order                              = { "Map Order" };
      static constexpr std::string_view compact                                = { "Compact" };
+     static constexpr std::string_view move_conflicts                         = { "Move Conflicts" };
+     static constexpr std::string_view move_conflicts_only                    = { "Move Conflicts Only" };
      static constexpr std::string_view rows                                   = { "Rows" };
      static constexpr std::string_view width                                  = { "Width" };
      static constexpr std::string_view windows                                = { "Windows" };
@@ -149,9 +151,14 @@ struct gui_labels
 
      static constexpr std::string_view draw_bit_disabled_tooltip              = { "Show only tiles with draw bit disabled" };
 
-     static constexpr std::string_view explore_tooltip                        = {
+     static constexpr std::string_view move_conflicts_only_tooltip            = {
+          "Move Only Conflicts: It takes any tiles with conflicting source locations and it moves all but one to new locations that are "
+                     "detected as empty. It also changes the depth to 4bpp. "
+     };
+
+     static constexpr std::string_view explore_tooltip = {
           "Opens the file explorer window in the currently assigned directory. On Windows, this opens File Explorer; on Linux, it should "
-                                 "open a similar file browser."
+          "open a similar file browser."
      };
 
      static constexpr std::string_view input_mim_tooltip = {
@@ -194,7 +201,7 @@ struct gui_labels
      static constexpr std::string_view compact_map_order_ffnx         = { "Map Order 2" };
      static constexpr std::string_view compact_map_order_ffnx2        = { "Map Order 2: FFNX" };
      static constexpr std::string_view compact_map_order_ffnx_tooltip = {
-          "FFNX Map Order: order tiles in rows of (number_of_tiles / 16)."
+          "FFNX Map Order: order tiles in rows of (number_of_tiles / 16). Changes all the tiles' deapth to 4bpp."
      };
 
      static constexpr std::string_view flatten_bpp_tooltip = {

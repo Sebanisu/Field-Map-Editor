@@ -11,6 +11,7 @@ enum struct compact_type
 {
      rows,
      all,
+     move_only_conflicts,
      map_order,
      map_order_ffnx
 };
