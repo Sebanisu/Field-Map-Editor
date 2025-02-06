@@ -637,7 +637,7 @@ void gui::compact_flatten_buttons()
           return;
      }
      format_imgui_wrapped_text("{}: ", gui_labels::compact_flatten_warning);
-     const ImVec2 button_size = { ImGui::GetFrameHeight() * 4.5F, ImGui::GetFrameHeight() };
+     const ImVec2 button_size = { ImGui::GetFrameHeight() * 5.50F, ImGui::GetFrameHeight() };
      if (!ImGui::BeginTable("##compact buttons", 4, ImGuiTableFlags_SizingFixedSame))
      {
           return;
@@ -660,10 +660,14 @@ void gui::compact_flatten_buttons()
      tool_tip(gui_labels::compact_all_tooltip);
      ImGui::TableNextRow();
      ImGui::TableNextColumn();
-     if (ImGui::Button(gui_labels::move_conflicts_only.data(), button_size))
+     ImGui::TableNextColumn();
+     if (ImGui::Button(gui_labels::move_conflicts.data(), button_size))
      {
           m_map_sprite->compact_move_conflicts_only();
      }
+     tool_tip(gui_labels::move_conflicts_only_tooltip);
+     ImGui::TableNextRow();
+     ImGui::TableNextColumn();
      ImGui::TableNextColumn();
      if (ImGui::Button(gui_labels::map_order.data(), button_size))
      {
