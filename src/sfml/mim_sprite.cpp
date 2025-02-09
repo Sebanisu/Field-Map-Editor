@@ -7,12 +7,14 @@
 open_viii::graphics::background::Mim mim_sprite::get_mim() const
 {
      auto lang_name = fmt::format("_{}{}", std::string(open_viii::LangCommon::to_string(m_coo)), open_viii::graphics::background::Mim::EXT);
-     if (m_field != nullptr)
+     const auto field = m_field.lock();
+     if (!field)
      {
-          return { m_field->get_entry_data({ std::string_view(lang_name), open_viii::graphics::background::Mim::EXT }, &m_mim_path),
-                   m_field->get_base_name() };
+          return {};
      }
-     return {};
+
+     return { field->get_entry_data({ std::string_view(lang_name), open_viii::graphics::background::Mim::EXT }, &m_mim_path),
+              field->get_base_name() };
 }
 open_viii::graphics::BPPT mim_sprite::get_bpp(const open_viii::graphics::BPPT &in_bpp)
 {
@@ -45,7 +47,7 @@ std::vector<open_viii::graphics::Color32RGBA> mim_sprite::get_colors()
 }
 
 [[maybe_unused]] mim_sprite::mim_sprite(
-  std::shared_ptr<open_viii::archive::FIFLFS<false>> in_field,
+  std::weak_ptr<open_viii::archive::FIFLFS<false>> in_field,
   const open_viii::graphics::BPPT                   &in_bpp,
   const uint8_t                                     &in_palette,
   const open_viii::LangT                             in_coo,
@@ -65,7 +67,7 @@ std::vector<open_viii::graphics::Color32RGBA> mim_sprite::get_colors()
 {
 }
 
-mim_sprite mim_sprite::with_field(std::shared_ptr<open_viii::archive::FIFLFS<false>> in_field) const
+mim_sprite mim_sprite::with_field(std::weak_ptr<open_viii::archive::FIFLFS<false>> in_field) const
 {
      return { std::move(in_field), m_bpp, m_palette, m_coo, m_draw_palette };
 }

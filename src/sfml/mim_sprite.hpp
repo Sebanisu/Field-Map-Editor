@@ -21,7 +21,7 @@ struct mim_sprite final
 
 
    private:
-     std::shared_ptr<open_viii::archive::FIFLFS<false>>          m_field             = {};
+     std::weak_ptr<open_viii::archive::FIFLFS<false>>            m_field             = {};
      open_viii::LangT                                            m_coo               = {};
      mutable std::string                                         m_mim_path          = {};
      open_viii::graphics::background::Mim                        m_mim               = {};
@@ -40,9 +40,9 @@ struct mim_sprite final
      [[nodiscard]] std::array<sf::Vertex, 4U>                    get_vertices() const;
 
    public:
-     const sf::Texture* get_texture() const
+     const sf::Texture *get_texture() const
      {
-       return m_texture.get();
+          return m_texture.get();
      }
      mim_sprite() = default;
      /**
@@ -52,7 +52,7 @@ struct mim_sprite final
       * @param in_palette
       */
      [[maybe_unused]] mim_sprite(
-       std::shared_ptr<open_viii::archive::FIFLFS<false>> in_field,
+       std::weak_ptr<open_viii::archive::FIFLFS<false>> in_field,
        const open_viii::graphics::BPPT                   &in_bpp,
        const std::uint8_t                                &in_palette,
        open_viii::LangT                                   in_coo,
@@ -71,7 +71,7 @@ struct mim_sprite final
       * @param in_field
       * @return mim_sprite object
       */
-     [[nodiscard]] mim_sprite    with_field(std::shared_ptr<open_viii::archive::FIFLFS<false>> in_field) const;
+     [[nodiscard]] mim_sprite    with_field(std::weak_ptr<open_viii::archive::FIFLFS<false>> in_field) const;
      /**
       * create a new object with a new bits per pixel and the same settings
       * @param in_bpp

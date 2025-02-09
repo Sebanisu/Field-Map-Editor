@@ -44,7 +44,7 @@ struct [[nodiscard]] map_sprite final
        (std::max)(static_cast<std::uint16_t>(START_OF_NO_PALETTE_INDEX + MAX_TEXTURE_PAGES), static_cast<std::uint16_t>(BPP16_INDEX + 1U));
 
      using BPPT           = open_viii::graphics::BPPT;
-     using SharedField    = std::shared_ptr<open_viii::archive::FIFLFS<false>>;
+     using WeakField    = std::weak_ptr<open_viii::archive::FIFLFS<false>>;
      using Map            = open_viii::graphics::background::Map;
      using Mim            = open_viii::graphics::background::Mim;
      using color_type     = open_viii::graphics::Color32RGBA;
@@ -113,7 +113,7 @@ struct [[nodiscard]] map_sprite final
      [[nodiscard]] std::uint32_t                         width() const;
      [[nodiscard]] std::uint32_t                         height() const;
      [[nodiscard]] map_sprite                            with_coo(open_viii::LangT coo) const;
-     [[nodiscard]] map_sprite                            with_field(SharedField field, open_viii::LangT coo) const;
+     [[nodiscard]] map_sprite                            with_field(WeakField field, open_viii::LangT coo) const;
      [[nodiscard]] map_sprite                            with_filters(ff_8::filters filters) const;
      [[nodiscard]] const map_sprite                     &toggle_grid(bool enable, bool enable_texture_page_grid) const;
      [[nodiscard]] bool                                  empty() const;
@@ -439,11 +439,12 @@ struct [[nodiscard]] map_sprite final
      }
      [[nodiscard]] ::upscales get_upscales()
      {
-          if (m_map_group.field)
+          const auto field = m_map_group.field.lock();
+          if (!field)
           {
-               return { std::string{ m_map_group.field->get_base_name() }, m_map_group.opt_coo };
+               return {};
           }
-          return {};
+          return { std::string{ field->get_base_name() }, m_map_group.opt_coo };
      }
 
 

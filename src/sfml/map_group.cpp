@@ -16,8 +16,9 @@ static std::string str_to_lower(std::string input)
 
 namespace ff_8
 {
-static map_group::Mim load_mim(const map_group::SharedField &field, const map_group::Coo coo)
+static map_group::Mim load_mim(const map_group::WeakField &weak_field, const map_group::Coo coo)
 {
+     const auto field = weak_field.lock();
      if (!field)
      {
           return {};
@@ -31,12 +32,13 @@ static map_group::Mim load_mim(const map_group::SharedField &field, const map_gr
               str_to_lower(std::string{ field->get_base_name() }) };
 }
 static map_group::MapHistory load_map_history(
-  const map_group::SharedField  &field,
+  const map_group::WeakField    &weak_field,
   std::optional<map_group::Coo> &coo,
   const map_group::SharedMim    &mim,
   std::string                   *out_path,
   bool                           shift = true)
 {
+     const auto field = weak_field.lock();
      if (!field)
      {
           return {};
@@ -44,12 +46,13 @@ static map_group::MapHistory load_map_history(
      return map_group::MapHistory{ load_map(field, coo, mim, out_path, shift) };
 }
 map_group::Map load_map(
-  const map_group::SharedField  &field,
+  const map_group::WeakField    &weak_field,
   std::optional<map_group::Coo> &coo,
   const map_group::SharedMim    &mim,
   std::string                   *out_path,
   bool                           shift)
 {
+     const auto field = weak_field.lock();
      if (!field)
      {
           return {};
@@ -77,7 +80,7 @@ map_group::Map load_map(
      }
      return map;
 }
-map_group::map_group(map_group::SharedField in_field, map_group::OptCoo in_coo = std::nullopt)
+map_group::map_group(map_group::WeakField in_field, map_group::OptCoo in_coo = std::nullopt)
   : field{ std::move(in_field) }
   , mim{ std::make_shared<Mim>(load_mim(field, in_coo ? *in_coo : map_group::Coo::generic)) }
   , map_path{}

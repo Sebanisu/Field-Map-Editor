@@ -270,9 +270,10 @@ std::array<sf::Vertex, 4U>
           tovert(dest.x * draw_size.x, (dest.y + 1.F) * draw_size.y, source.x * texture_size.x, (source.y + 1.F) * texture_size.y)
      };
 }
-bool test_if_map_same(const std::filesystem::path &saved_path, const map_group::SharedField &field, const map_group::MimType &type)
+bool test_if_map_same(const std::filesystem::path &saved_path, const map_group::WeakField &weak_field, const map_group::MimType &type)
 {
-     bool return_value = false;
+     bool       return_value = false;
+     const auto field        = weak_field.lock();
      if (!field)
      {
           return return_value;

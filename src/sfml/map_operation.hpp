@@ -18,7 +18,7 @@ void compact_map_order(map_group::Map &map);
 void compact_map_order_ffnx(map_group::Map &map);
 void compact_rows(map_group::Map &map);
 void compact_all(map_group::Map &map);
-bool test_if_map_same(const std::filesystem::path &saved_path, const map_group::SharedField &field, const map_group::MimType &type);
+bool test_if_map_same(const std::filesystem::path &saved_path, const map_group::WeakField &field, const map_group::MimType &type);
 void save_modified_map(
   const std::filesystem::path &dest_path,
   const map_group::Map        &map_const,

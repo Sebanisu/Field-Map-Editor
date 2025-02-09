@@ -715,7 +715,7 @@ map_sprite map_sprite::with_coo(const open_viii::LangT coo) const
      return { ff_8::map_group{ m_map_group.field, coo }, m_draw_swizzle, m_filters, m_disable_blends, false };
 }
 
-map_sprite map_sprite::with_field(map_sprite::SharedField field, const open_viii::LangT coo) const
+map_sprite map_sprite::with_field(map_sprite::WeakField field, const open_viii::LangT coo) const
 {
      return { ff_8::map_group{ std::move(field), coo }, m_draw_swizzle, m_filters, m_disable_blends, false };
 }
@@ -1225,11 +1225,12 @@ std::vector<std::future<std::future<void>>> map_sprite::save_swizzle_textures(co
 
 std::string map_sprite::get_base_name() const
 {
-     if (m_map_group.field)
+     const auto field = m_map_group.field.lock();
+     if (!field)
      {
-          return str_to_lower(m_map_group.field->get_base_name());
+          return {};
      }
-     return {};
+     return str_to_lower(field->get_base_name());
 }
 
 std::vector<std::future<std::future<void>>> map_sprite::save_pupu_textures(const std::filesystem::path &path)
@@ -1248,12 +1249,13 @@ std::vector<std::future<std::future<void>>> map_sprite::save_pupu_textures(const
           settings.scale = 1U;
      }
 
-     if (!m_map_group.field)
+     const auto field = m_map_group.field.lock();
+     if (!field)
      {
           return {};
      }
 
-     const std::string                field_name      = std::string{ str_to_lower(m_map_group.field->get_base_name()) };
+     const std::string                field_name      = std::string{ str_to_lower(field->get_base_name()) };
      const std::vector<ff_8::PupuID> &unique_pupu_ids = working_unique_pupu();
      std::optional<open_viii::LangT> &coo             = m_map_group.opt_coo;
 

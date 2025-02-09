@@ -16,7 +16,7 @@ struct map_group
 {
      // required to initialize
      using Field                     = open_viii::archive::FIFLFS<false>;
-     using SharedField               = std::shared_ptr<Field>;
+     using WeakField                 = std::weak_ptr<Field>;
      using Mim                       = open_viii::graphics::background::Mim;
      using MimType                   = open_viii::graphics::background::MimType;
      using SharedMim                 = std::shared_ptr<Mim>;
@@ -27,8 +27,8 @@ struct map_group
      using OptCoo                    = std::optional<Coo>;
      static constexpr auto TILE_SIZE = 16U;
      map_group()                     = default;
-     map_group(SharedField, OptCoo);
-     SharedField field{};
+     map_group(WeakField, OptCoo);
+     WeakField   field{};
      SharedMim   mim{};
      std::string map_path{};
      // if coo was discarded this is nullopt;
@@ -36,7 +36,7 @@ struct map_group
      MapHistory  maps{};
 };
 map_group::Map load_map(
-  const map_group::SharedField  &field,
+  const map_group::WeakField    &field,
   std::optional<map_group::Coo> &coo,
   const map_group::SharedMim    &mim,
   std::string                   *out_path,
