@@ -211,12 +211,25 @@ struct custom_paths_window
 {
    private:
      std::weak_ptr<Selections> m_selections = {};
+     bool                      changed      = {};
 
    public:
      custom_paths_window(std::weak_ptr<Selections> input_selections)
        : m_selections(input_selections)
      {
      }
+
+     void refresh(std::weak_ptr<Selections> input_selections)
+     {
+          m_selections = input_selections;
+          refresh();
+     }
+
+     void refresh()
+     {
+          changed = true;
+     }
+
      void render()
      {
 
@@ -256,7 +269,7 @@ struct custom_paths_window
           static std::vector<std::string> output_tests   = {};
           static std::array<char, 256U>   input_path_str = {};
 
-          if (ImGui::InputText("test input:", input_path_str.data(), input_path_str.size()))
+          if (changed || ImGui::InputText("test input:", input_path_str.data(), input_path_str.size()))
           {
                output_tests.clear();
                for (const auto test_data : tests)

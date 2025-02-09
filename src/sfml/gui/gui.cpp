@@ -3207,6 +3207,7 @@ void gui::update_path()
 {
      m_archives_group = std::make_shared<archives_group>(m_archives_group->with_path(m_selections->path));
      m_batch          = m_archives_group;
+     m_custom_paths_window.refresh();
      update_field();
 }
 mim_sprite gui::get_mim_sprite() const
