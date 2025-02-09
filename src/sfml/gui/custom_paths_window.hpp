@@ -231,7 +231,8 @@ struct custom_paths_window
      }
 
      void render()
-     {
+          {
+               
 
           using namespace std::string_view_literals;
           auto selections = m_selections.lock();
@@ -244,6 +245,9 @@ struct custom_paths_window
           {
                return;
           }
+          const auto pop_changed = scope_guard([this](){
+               changed = false;
+          });
 
           // Test values based on provided directories
           static const auto tests = std::to_array<custom_paths_map>(
@@ -269,7 +273,7 @@ struct custom_paths_window
           static std::vector<std::string> output_tests   = {};
           static std::array<char, 256U>   input_path_str = {};
 
-          if (changed || ImGui::InputText("test input:", input_path_str.data(), input_path_str.size()))
+          if (ImGui::InputText("test input:", input_path_str.data(), input_path_str.size()) || changed)
           {
                output_tests.clear();
                for (const auto test_data : tests)
