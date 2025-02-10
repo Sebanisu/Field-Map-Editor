@@ -12,6 +12,7 @@
 #include "custom_paths_window.hpp"
 #include "events.hpp"
 #include "fa_icons.hpp"
+#include "field_file_window.hpp"
 #include "file_dialog_mode.hpp"
 #include "filebrowser.hpp"
 #include "formatters.hpp"
@@ -87,6 +88,7 @@ struct gui
      std::vector<std::size_t>                                            m_hovered_tiles_indices     = {};
      std::ptrdiff_t                                                      m_hovered_index             = { -1 };
      custom_paths_window                                                 m_custom_paths_window       = { m_selections };
+     field_file_window                                                   m_field_file_window         = { m_field, m_selections };
      // create a file browser instances
      ImGui::FileBrowser          m_save_file_browser{ ImGuiFileBrowserFlags_EnterNewFilename | ImGuiFileBrowserFlags_CreateNewDir
                                              | ImGuiFileBrowserFlags_EditPathString };

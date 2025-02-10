@@ -34,6 +34,7 @@ fme::Selections::Selections()
      display_control_panel_window = config["selections_display_control_panel_window"].value_or(display_control_panel_window);
      display_draw_window          = config["selections_display_draw_window"].value_or(display_draw_window);
      display_custom_paths_window  = config["selections_display_custom_paths_window"].value_or(display_custom_paths_window);
+     display_field_file_window    = config["selections_display_field_file_window"].value_or(display_field_file_window);
 
      background_color =
        std::bit_cast<fme::color>(config["selections_background_color"].value_or(std::bit_cast<std::uint32_t>(background_color)));

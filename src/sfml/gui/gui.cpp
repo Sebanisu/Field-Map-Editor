@@ -748,8 +748,9 @@ void gui::loop()
           m_batch.draw_window();
      }
      m_custom_paths_window.render();
+     m_field_file_window.render();
 
-     if (toggle_imgui_demo_window)
+       if (toggle_imgui_demo_window)
      {
           ImGui::ShowDemoWindow();
      }
@@ -1456,6 +1457,7 @@ void gui::combo_field()
 void gui::update_field()
 {
      m_field = m_archives_group->field(m_selections->field);
+     m_field_file_window.refresh(m_field);
      switch (m_selections->draw)
      {
           case draw_mode::draw_mim:
@@ -1711,6 +1713,16 @@ void gui::windows_menu()
           config->insert_or_assign("selections_display_custom_paths_window", m_selections->display_custom_paths_window);
           config.save();
      }
+
+     ImGui::Separator();
+     if (ImGui::MenuItem(gui_labels::display_field_file_window.data(), "Control + F", &m_selections->display_field_file_window))
+     {
+          Configuration config{};
+          config->insert_or_assign("selections_display_field_file_window", m_selections->display_field_file_window);
+          config.save();
+     }
+
+
 }
 void gui::edit_menu()
 {
@@ -3127,6 +3139,15 @@ void gui::event_type_key_released(const sf::Event::KeyEvent &key)
           config->insert_or_assign("selections_display_custom_paths_window", m_selections->display_custom_paths_window);
           config.save();
      }
+
+     else if (key.control && key.code == sf::Keyboard::F)
+     {
+          m_selections->display_field_file_window = !m_selections->display_field_file_window;
+          Configuration config{};
+          config->insert_or_assign("selections_display_field_file_window", m_selections->display_field_file_window);
+          config.save();
+     }
+
      else if (key.control && key.code == sf::Keyboard::P)
      {
           m_selections->display_control_panel_window = !m_selections->display_control_panel_window;

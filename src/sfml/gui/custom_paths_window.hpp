@@ -211,7 +211,7 @@ struct custom_paths_window
 {
    private:
      std::weak_ptr<Selections> m_selections = {};
-     bool                      changed      = {};
+     mutable bool              m_changed    = {};
 
    public:
      custom_paths_window(std::weak_ptr<Selections> input_selections)
@@ -219,20 +219,21 @@ struct custom_paths_window
      {
      }
 
-     void refresh(std::weak_ptr<Selections> input_selections)
+     custom_paths_window &refresh(std::weak_ptr<Selections> input_selections)
      {
           m_selections = input_selections;
-          refresh();
+          return refresh();
      }
 
-     void refresh()
+     custom_paths_window &refresh()
      {
-          changed = true;
+          m_changed = true;
+          return *this;
      }
 
-     void render()
-          {
-               
+     void render() const
+     {
+
 
           using namespace std::string_view_literals;
           auto selections = m_selections.lock();
@@ -245,35 +246,33 @@ struct custom_paths_window
           {
                return;
           }
-          const auto pop_changed = scope_guard([this](){
-               changed = false;
-          });
+          const auto        pop_changed = scope_guard([this]() { m_changed = false; });
 
           // Test values based on provided directories
-          static const auto tests = std::to_array<custom_paths_map>(
+          static const auto tests       = std::to_array<custom_paths_map>(
             { { .field_name    = "bg2f_1"sv,
-                .ext           = ".png"sv,
-                .language_code = open_viii::LangT::en,
-                .palette       = std::uint8_t{ 3 },
-                .texture_page  = std::uint8_t{ 1 },
-                .pupu_id       = 12345U },
+                      .ext           = ".png"sv,
+                      .language_code = open_viii::LangT::en,
+                      .palette       = std::uint8_t{ 3 },
+                      .texture_page  = std::uint8_t{ 1 },
+                      .pupu_id       = 12345U },
 
-              { .field_name = "bgbook1a"sv, .ext = ".jpg"sv },
+                    { .field_name = "bgbook1a"sv, .ext = ".jpg"sv },
 
-              { .field_name    = "bgeat1a"sv,
-                .ext           = ".bmp"sv,
-                .language_code = open_viii::LangT::de,
-                .palette       = std::uint8_t{ 4 },
-                .texture_page  = std::uint8_t{ 3 } },
+                    { .field_name    = "bgeat1a"sv,
+                      .ext           = ".bmp"sv,
+                      .language_code = open_viii::LangT::de,
+                      .palette       = std::uint8_t{ 4 },
+                      .texture_page  = std::uint8_t{ 3 } },
 
-              { .field_name = "bggate_1"sv, .ext = ".gif"sv, .language_code = open_viii::LangT::it, .pupu_id = 78901U },
+                    { .field_name = "bggate_1"sv, .ext = ".gif"sv, .language_code = open_viii::LangT::it, .pupu_id = 78901U },
 
-              { .field_name = "bgkote1a"sv, .ext = ".tiff"sv, .language_code = open_viii::LangT::es, .texture_page = std::uint8_t{ 5 } } });
+                    { .field_name = "bgkote1a"sv, .ext = ".tiff"sv, .language_code = open_viii::LangT::es, .texture_page = std::uint8_t{ 5 } } });
 
           static std::vector<std::string> output_tests   = {};
           static std::array<char, 256U>   input_path_str = {};
 
-          if (ImGui::InputText("test input:", input_path_str.data(), input_path_str.size()) || changed)
+          if (ImGui::InputText("test input:", input_path_str.data(), input_path_str.size()) || m_changed)
           {
                output_tests.clear();
                for (const auto test_data : tests)

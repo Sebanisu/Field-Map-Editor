@@ -24,6 +24,7 @@ add_executable(
   gui/collapsing_tile_info.cpp
   gui/create_tile_button.cpp
   gui/custom_paths_window.cpp
+  gui/field_file_window.cpp
   gui/gui.cpp
   gui/history_window.cpp
   gui/import.cpp

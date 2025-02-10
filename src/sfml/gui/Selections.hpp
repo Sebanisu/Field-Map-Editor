@@ -74,6 +74,7 @@ struct Selections
      bool                           display_control_panel_window   = { true };///< Whether to display control panel window.
      bool                           display_draw_window            = { true };///< Whether to display draw window.
      bool                           display_custom_paths_window    = { false };///< Whether to display custom paths window.
+     bool                           display_field_file_window      = { false };///< Whether to display field file window.
      std::string                    ffnx_mod_path                  = {};
      std::string                    ffnx_override_path             = {};
      std::string                    ffnx_direct_mode_path          = {};
