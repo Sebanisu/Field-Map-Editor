@@ -2,6 +2,7 @@
 #define FFE291E8_6AE6_403A_A4F4_7173F0D98EE5
 #include "format_imgui_text.hpp"
 #include "gui_labels.hpp"
+#include "push_pop_id.hpp"
 #include "scope_guard.hpp"
 #include "Selections.hpp"
 #include <open_viii/archive/FIFLFS.hpp>
@@ -69,7 +70,28 @@ struct field_file_window
           }
           for (const std::string_view path : paths)
           {
-               format_imgui_text("{}", path);
+               const auto pop_id = PushPopID();
+               (void)ImGui::Selectable(path.data());
+               if (ImGui::BeginPopupContextItem())// <-- use last item id as popup id
+               {
+                    if (ImGui::Selectable("Copy Path"))
+                    {
+                         ImGui::SetClipboardText(path.data());
+                    }
+                    if (ImGui::Selectable("Copy All Paths"))
+                    {
+                         using namespace std::string_literals;
+                         auto combined_paths = paths | std::ranges::views::join_with("\n"s) | std::ranges::to<std::string>();
+                         ImGui::SetClipboardText(combined_paths.data());
+                    }
+                    if (ImGui::Button("Close"))
+                         ImGui::CloseCurrentPopup();
+                    ImGui::EndPopup();
+               }
+               else
+               {
+                    ImGui::SetItemTooltip("Right-click to open popup");
+               }
           }
      }
 
