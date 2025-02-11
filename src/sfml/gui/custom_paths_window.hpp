@@ -6,6 +6,7 @@
 #include "push_pop_id.hpp"
 #include "scope_guard.hpp"
 #include "Selections.hpp"
+#include "tool_tip.hpp"
 #include <array>
 #include <cstdint>
 #include <ctre.hpp>
@@ -51,13 +52,13 @@ struct custom_paths_map
           static constexpr std::string_view ffnx_map              = { "ffnx_map" };
           static constexpr std::string_view demaster              = { "demaster" };
 
-          static constexpr std::string_view field_main            = {"field_main"};
-          static constexpr std::string_view field_lang            = {"field_lang"};
-          static constexpr std::string_view chara_main            = {"chara_main"};
-          static constexpr std::string_view chara_lang            = {"chara_lang"};
-          static constexpr std::string_view field_3lang_main      = {"field_3lang_main"};
-          static constexpr std::string_view chara_3lang_main      = {"chara_3lang_main"};
-          static constexpr std::string_view chara_3lang_lang      = {"chara_3lang_lang"};
+          static constexpr std::string_view field_main            = { "field_main" };
+          static constexpr std::string_view field_lang            = { "field_lang" };
+          static constexpr std::string_view chara_main            = { "chara_main" };
+          static constexpr std::string_view chara_lang            = { "chara_lang" };
+          static constexpr std::string_view field_3lang_main      = { "field_3lang_main" };
+          static constexpr std::string_view chara_3lang_main      = { "chara_3lang_main" };
+          static constexpr std::string_view chara_3lang_lang      = { "chara_3lang_lang" };
 
 
           static constexpr auto             all_keys              = std::to_array<std::string_view>({ ff8_path,
@@ -185,21 +186,20 @@ struct custom_paths_map
           }
           else if (keys::ffnx_single_texture == key)
           {
-               const static auto path =
-                 std::string("{ffnx_mod_path}/field/mapdata/{field_name}/{field_name}{_{2_letter_lang}}{ext}");
+               const static auto path = std::string("{ffnx_mod_path}/field/mapdata/{field_name}/{field_name}{_{2_letter_lang}}{ext}");
                return path;
           }
           else if (keys::ffnx_map == key)
           {
-               const static auto path = std::string(
-                 "{ffnx_direct_mode_path}/field/mapdata/{field_prefix}/{field_name}/{field_name}{_{2_letter_lang}}{ext}");
+               const static auto path =
+                 std::string("{ffnx_direct_mode_path}/field/mapdata/{field_prefix}/{field_name}/{field_name}{_{2_letter_lang}}{ext}");
                return path;
           }
           else if (keys::demaster == key)
           {
                const static auto path = std::string(
                  "{demaster_mod_path}/textures/field_bg/{field_prefix}/{field_name}/"
-                 "{field_name}{_{2_letter_lang}}_{texture_page}{_{palette}}{ext}");
+                 "{field_name}{_{2_letter_lang}}{_{texture_page}}{_{palette}}{ext}");
                return path;
           }
           else if (keys::field_main == key)
@@ -209,8 +209,7 @@ struct custom_paths_map
           }
           else if (keys::field_lang == key)
           {
-               const static auto path =
-                 std::string("field/mapdata/{field_prefix}/{field_name}/{field_name}{_{2_letter_lang}}{ext}");
+               const static auto path = std::string("field/mapdata/{field_prefix}/{field_name}/{field_name}{_{2_letter_lang}}{ext}");
                return path;
           }
           else if (keys::chara_main == key)
@@ -220,14 +219,12 @@ struct custom_paths_map
           }
           else if (keys::chara_lang == key)
           {
-               const static auto path =
-                 std::string("field/mapdata/{field_prefix}/{field_name}/chara{_{2_letter_lang}}.one");
+               const static auto path = std::string("field/mapdata/{field_prefix}/{field_name}/chara{_{2_letter_lang}}.one");
                return path;
           }
           else if (keys::field_3lang_main == key)
           {
-               const static auto path =
-                 std::string("{3_letter_lang}/FIELD/mapdata/{field_prefix}/{field_name}/{field_name}{ext}");
+               const static auto path = std::string("{3_letter_lang}/FIELD/mapdata/{field_prefix}/{field_name}/{field_name}{ext}");
                return path;
           }
           else if (keys::chara_3lang_main == key)
@@ -302,10 +299,10 @@ struct custom_paths_window
           {
                return;
           }
-          const auto                      pop_changed    = scope_guard([this, &override_changed]() { m_changed = override_changed; });
+          const auto                    pop_changed    = scope_guard([this, &override_changed]() { m_changed = override_changed; });
 
           // Test values based on provided directories
-          static const auto               tests          = std::to_array<custom_paths_map>({
+          static const auto             tests          = std::to_array<custom_paths_map>({
             { .field_name = "ecmall1"sv, .ext = ".ca"sv },// Basic field_name + ext match
             { .field_name = "ecmall1"sv, .ext = ".jsm"sv, .language_code = open_viii::LangT::en },// Field with language suffix
             { .field_name = "ecmall1"sv, .ext = ".msd"sv, .language_code = open_viii::LangT::jp },// Another language case
@@ -319,20 +316,20 @@ struct custom_paths_window
             { .field_name = "cdfield1"sv, .ext = ".pmd"sv },// Another general field match
             { .field_name = "cdfield2"sv, .ext = ".pvp"sv, .palette = std::uint8_t{ 2 } },// Field with palette
             { .field_name    = "bgkote1a"sv,
-                                     .ext           = ".tiff"sv,
-                                     .language_code = open_viii::LangT::es,
-                                     .texture_page  = std::uint8_t{ 5 } },// With texture_page
+                                   .ext           = ".tiff"sv,
+                                   .language_code = open_viii::LangT::es,
+                                   .texture_page  = std::uint8_t{ 5 } },// With texture_page
             { .field_name = "bggate_1"sv, .ext = ".gif"sv, .language_code = open_viii::LangT::it, .pupu_id = 78901U },// With pupu_id
             { .field_name    = "bgeat1a"sv,
-                                     .ext           = ".bmp"sv,
-                                     .language_code = open_viii::LangT::de,
-                                     .palette       = std::uint8_t{ 4 },
-                                     .texture_page  = std::uint8_t{ 3 } }// Full case
+                                   .ext           = ".bmp"sv,
+                                   .language_code = open_viii::LangT::de,
+                                   .palette       = std::uint8_t{ 4 },
+                                   .texture_page  = std::uint8_t{ 3 } }// Full case
           });
 
 
-          static std::vector<std::string> output_tests   = {};
-          static std::array<char, 256U>   input_path_str = {};
+          static auto                   output_tests   = std::vector<std::string>{ tests.size() };
+          static std::array<char, 256U> input_path_str = {};
 
           if (ImGui::InputText("test input:", input_path_str.data(), input_path_str.size()) || m_changed)
           {
@@ -384,7 +381,6 @@ struct custom_paths_window
                     ImGui::CloseCurrentPopup();
                ImGui::EndPopup();
           }
-          ImGui::SameLine();
           if (ImGui::Button("Remove Last {Key}"))
           {
                std::string_view path_view(input_path_str.data());
@@ -403,69 +399,153 @@ struct custom_paths_window
                     override_changed          = true;
                }
           }
-
-          for (const auto &test_str : output_tests)
+          // Button to append the path separator
           {
-               const auto pop_id = PushPopID();
-               (void)ImGui::Selectable(test_str.data());
-               if (ImGui::BeginPopupContextItem())// <-- use last item id as popup id
+               ImGui::SameLine();
+               static constexpr auto seperator = std::array<char, 2>{ std::filesystem::path::preferred_separator, '\0' };
+               if (ImGui::Button("Add Separator"))
                {
-                    if (ImGui::Selectable("Copy Path"))
+
+                    size_t current_length = std::strlen(input_path_str.data());
+                    if (current_length + 1 < input_path_str.size())
                     {
-                         ImGui::SetClipboardText(test_str.data());
+                         std::strncat(input_path_str.data(), seperator.data(), 1);
+                         override_changed = true;
                     }
-                    if (ImGui::Selectable("Copy All Paths"))
-                    {
-                         using namespace std::string_literals;
-                         auto combined_paths = output_tests | std::ranges::views::join_with("\n"s) | std::ranges::to<std::string>();
-                         ImGui::SetClipboardText(combined_paths.data());
-                    }
-                    if (ImGui::Button("Close"))
-                         ImGui::CloseCurrentPopup();
-                    ImGui::EndPopup();
                }
-               ImGui::SetItemTooltip("Right-click to open popup");
+               else
+               {
+                    tool_tip(std::string_view{ seperator });
+               }
           }
-          for (const auto &key : custom_paths_map::keys::all_keys)
+
+          ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 3.F);
+          ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(2.F, 2.F));
+          ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2(4.F, 4.F));
+          const auto color = ImVec4(1.F, 1.F, 1.F, 1.F);
+          ImGui::PushStyleColor(ImGuiCol_TableBorderLight, color);
+          ImGui::PushStyleColor(ImGuiCol_TableBorderStrong, color);
+          ImVec2 scrolling_child_size = ImVec2(0, ImGui::GetFrameHeightWithSpacing() * 7 + 30);
+
+          if (ImGui::BeginChild("scrollingKeys", scrolling_child_size, ImGuiChildFlags_Borders, ImGuiWindowFlags_HorizontalScrollbar))
           {
-               const auto  pop_id       = PushPopID();
-               std::string key_brackets = fmt::format("{{{}}}", key);
-               if (ImGui::Selectable(key_brackets.data()))
+               static constexpr int cols = 3;
+               if (ImGui::BeginTable("scrollingKeys", cols, ImGuiTableFlags_BordersInnerV))
                {
-                    // Ensure null-termination and safe appending
-                    static constexpr size_t max_size       = input_path_str.size() - 1;// Leave space for null terminator
-                    size_t                  current_length = std::strlen(input_path_str.data());
-                    size_t                  append_length  = key_brackets.size();
+                    bool bg_color = true;
+                    for (const auto &[index, key] : custom_paths_map::keys::all_keys | std::ranges::views::enumerate)
+                    {
 
-                    if (current_length + append_length < max_size)
-                    {
-                         std::strncat(input_path_str.data(), key_brackets.data(), append_length);
-                    }
-                    else
-                    {
-                         std::strncat(input_path_str.data(), key_brackets.data(), max_size - current_length);
-                    }
+                         if (index % cols == 0)
+                         {
+                              ImGui::TableNextRow();
+                              if (bg_color)
+                              {
+                                   ImGui::TableSetBgColor(ImGuiTableBgTarget_RowBg0, ImU32{ colors::TableDarkRed.fade(-0.4F) });// Dark red
+                              }
+                              else
+                              {
+                                   ImGui::TableSetBgColor(
+                                     ImGuiTableBgTarget_RowBg0, ImU32{ colors::TableLightDarkRed.fade(-0.4F) });// Slightly lighter dark red
+                              }
+                              bg_color = !bg_color;
+                         }
+                         ImGui::TableNextColumn();
+                         const auto  pop_id       = PushPopID();
+                         std::string key_brackets = fmt::format("{{{}}}", key);
+                         if (ImGui::Selectable(key_brackets.data()))
+                         {
+                              // Ensure null-termination and safe appending
+                              static constexpr size_t max_size       = input_path_str.size() - 1;// Leave space for null terminator
+                              size_t                  current_length = std::strlen(input_path_str.data());
+                              size_t                  append_length  = key_brackets.size();
 
-                    override_changed = true;
-               }
-               if (ImGui::BeginPopupContextItem())// <-- use last item id as popup id
-               {
-                    if (ImGui::Selectable("Copy Path"))
-                    {
-                         ImGui::SetClipboardText(key_brackets.data());
+                              if (current_length + append_length < max_size)
+                              {
+                                   std::strncat(input_path_str.data(), key_brackets.data(), append_length);
+                              }
+                              else
+                              {
+                                   std::strncat(input_path_str.data(), key_brackets.data(), max_size - current_length);
+                              }
+
+                              override_changed = true;
+                         }
+                         if (ImGui::BeginPopupContextItem())// <-- use last item id as popup id
+                         {
+                              if (ImGui::Selectable("Copy Key"))
+                              {
+                                   ImGui::SetClipboardText(key_brackets.data());
+                              }
+                              if (ImGui::Selectable("Copy All Keys"))
+                              {
+                                   using namespace std::string_view_literals;
+                                   auto combined_keys = fmt::format("{{{}}}", fmt::join(custom_paths_map::keys::all_keys, "}\n{"sv));
+                                   ImGui::SetClipboardText(combined_keys.data());
+                              }
+                              if (ImGui::Button("Close"))
+                                   ImGui::CloseCurrentPopup();
+                              ImGui::EndPopup();
+                         }
+                         const auto tooltip = fmt::format("Click to add {}\nRight-click to open popup", key_brackets);
+                         ImGui::SetItemTooltip(tooltip.data());
                     }
-                    if (ImGui::Selectable("Copy All Paths"))
-                    {
-                         using namespace std::string_view_literals;
-                         auto combined_keys = fmt::format("{{{}}}", fmt::join(custom_paths_map::keys::all_keys, "}\n{"sv));
-                         ImGui::SetClipboardText(combined_keys.data());
-                    }
-                    if (ImGui::Button("Close"))
-                         ImGui::CloseCurrentPopup();
-                    ImGui::EndPopup();
+                    ImGui::EndTable();
                }
-               ImGui::SetItemTooltip("Right-click to open popup");
+               ImGui::EndChild();
           }
+          if (ImGui::BeginChild("scrollingTest", scrolling_child_size, ImGuiChildFlags_Borders, ImGuiWindowFlags_HorizontalScrollbar))
+          {
+               static constexpr int cols = 2;
+               if (ImGui::BeginTable("scrollingKeys", cols, ImGuiTableFlags_BordersInnerV))
+               {
+                    bool bg_color = true;
+                    for (const auto &[index, test_str] : output_tests | std::ranges::views::enumerate)
+                    {
+                         if (index % cols == 0)
+                         {
+                              ImGui::TableNextRow();
+                              if (bg_color)
+                              {
+                                   ImGui::TableSetBgColor(
+                                     ImGuiTableBgTarget_RowBg0, ImU32{ colors::TableDarkGreen.fade(-0.4F) });// Dark red
+                              }
+                              else
+                              {
+                                   ImGui::TableSetBgColor(
+                                     ImGuiTableBgTarget_RowBg0,
+                                     ImU32{ colors::TableLightDarkGreen.fade(-0.4F) });// Slightly lighter dark red
+                              }
+                              bg_color = !bg_color;
+                         }
+                         ImGui::TableNextColumn();
+                         const auto pop_id = PushPopID();
+                         (void)ImGui::Selectable(test_str.data());
+                         if (ImGui::BeginPopupContextItem())// <-- use last item id as popup id
+                         {
+                              if (ImGui::Selectable("Copy Path"))
+                              {
+                                   ImGui::SetClipboardText(test_str.data());
+                              }
+                              if (ImGui::Selectable("Copy All Paths"))
+                              {
+                                   using namespace std::string_literals;
+                                   auto combined_paths =
+                                     output_tests | std::ranges::views::join_with("\n"s) | std::ranges::to<std::string>();
+                                   ImGui::SetClipboardText(combined_paths.data());
+                              }
+                              if (ImGui::Button("Close"))
+                                   ImGui::CloseCurrentPopup();
+                              ImGui::EndPopup();
+                         }
+                         ImGui::SetItemTooltip("Right-click to open popup");
+                    }
+                    ImGui::EndTable();
+               }
+               ImGui::EndChild();
+          }
+          ImGui::PopStyleColor(2);
+          ImGui::PopStyleVar(3);
      }
 };
 }// namespace fme
