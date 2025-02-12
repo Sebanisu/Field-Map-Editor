@@ -31,10 +31,17 @@ fme::Selections::Selections()
      import_image_grid        = config["selections_import_image_grid"].value_or(import_image_grid);
      tile_size_value          = static_cast<tile_sizes>(config["selections_tile_size_value"].value_or(std::to_underlying(tile_size_value)));
      display_history_window   = config["selections_display_history_window"].value_or(display_history_window);
-     display_control_panel_window = config["selections_display_control_panel_window"].value_or(display_control_panel_window);
-     display_draw_window          = config["selections_display_draw_window"].value_or(display_draw_window);
-     display_custom_paths_window  = config["selections_display_custom_paths_window"].value_or(display_custom_paths_window);
-     display_field_file_window    = config["selections_display_field_file_window"].value_or(display_field_file_window);
+     display_control_panel_window     = config["selections_display_control_panel_window"].value_or(display_control_panel_window);
+     display_draw_window              = config["selections_display_draw_window"].value_or(display_draw_window);
+     display_custom_paths_window      = config["selections_display_custom_paths_window"].value_or(display_custom_paths_window);
+     display_field_file_window        = config["selections_display_field_file_window"].value_or(display_field_file_window);
+
+     output_swizzle_pattern           = config["selections_output_swizzle_pattern"].value_or(output_swizzle_pattern);
+     output_desizzle_pattern          = config["selections_output_deswizzle_pattern"].value_or(output_desizzle_pattern);
+     output_map_pattern_for_swizzle   = config["selections_output_map_pattern_for_swizzle"].value_or(output_map_pattern_for_swizzle);
+     output_map_pattern_for_deswizzle = config["selections_output_map_pattern_for_deswizzle"].value_or(output_map_pattern_for_deswizzle);
+     current_pattern                  = config["selections_current_pattern"].value_or(current_pattern);
+
 
      background_color =
        std::bit_cast<fme::color>(config["selections_background_color"].value_or(std::bit_cast<std::uint32_t>(background_color)));

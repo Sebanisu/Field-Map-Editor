@@ -203,14 +203,17 @@ class GenericComboClassWithFilter
           tool_tip(tooltip);
      }
 
+     auto size_of_values() const
+     {
+          return static_cast<std::ranges::range_difference_t<std::remove_cvref_t<decltype(values_)>>>(std::ranges::size(values_));
+     }
+
      void renderLeftButton() const
      {
           const auto _ = PushPopID();
           ImGui::SameLine(0, spacing_);
-          const auto check_valid = [&]() {
-               return std::cmp_less_equal(current_idx_, 0) || std::cmp_greater_equal(current_idx_ - 1, std::ranges::size(values_));
-          };
-          const bool disabled = check_valid();
+          const auto check_valid = [&]() { return (current_idx_ <= decltype(current_idx_){}) || (current_idx_ - 1 >= size_of_values()); };
+          const bool disabled    = check_valid();
           ImGui::BeginDisabled(disabled);
           if (ImGui::ArrowButton("##l", ImGuiDir_Left))
           {
@@ -229,7 +232,7 @@ class GenericComboClassWithFilter
      {
           const auto _ = PushPopID();
           ImGui::SameLine(0, spacing_);
-          const auto check_valid = [&]() { return std::cmp_greater_equal(current_idx_ + 1, std::ranges::size(values_)); };
+          const auto check_valid = [&]() { return (current_idx_ + 1 >= size_of_values()); };
           const bool disabled    = check_valid();
           ImGui::BeginDisabled(disabled);
           if (ImGui::ArrowButton("##r", ImGuiDir_Right))
@@ -246,6 +249,10 @@ class GenericComboClassWithFilter
      }
      void renderTitle() const
      {
+          if (std::ranges::empty(name_))
+          {
+               return;
+          }
           ImGui::SameLine(0, spacing_);
           format_imgui_text("{}", name_);
      }
@@ -354,7 +361,7 @@ class GenericComboClass
      template<typename Range>
      auto getNext(const Range &range, const auto &idx) const
      {
-          return std::ranges::next(std::ranges::begin(range), idx);
+          return std::ranges::next(std::ranges::begin(range), static_cast<std::ranges::range_difference_t<Range>>(idx));
      }
 
      void renderComboBox() const
@@ -434,10 +441,8 @@ class GenericComboClass
           const auto _            = PushPopID();
           const auto pop_disabled = scope_guard{ &ImGui::EndDisabled };
           ImGui::SameLine(0, spacing_);
-          const auto check_valid = [&]() {
-               return std::cmp_less_equal(current_idx_, 0) || std::cmp_greater_equal(current_idx_ - 1, std::ranges::size(values_));
-          };
-          const bool disabled = check_valid();
+          const auto check_valid = [&]() { return (current_idx_ <= decltype(current_idx_){}) || (current_idx_ - 1 >= size_of_values()); };
+          const bool disabled    = check_valid();
           ImGui::BeginDisabled(disabled);
           if (ImGui::ArrowButton("##l", ImGuiDir_Left))
           {
@@ -451,11 +456,16 @@ class GenericComboClass
           }
      }
 
+     auto size_of_values() const
+     {
+          return static_cast<std::ranges::range_difference_t<std::remove_cvref_t<decltype(values_)>>>(std::ranges::size(values_));
+     }
+
      void renderRightButton() const
      {
           const auto pop_id_right = PushPopID();
           ImGui::SameLine(0, spacing_);
-          const auto check_valid = [&]() { return std::cmp_greater_equal(current_idx_ + 1, std::ranges::size(values_)); };
+          const auto check_valid = [&]() { return (current_idx_ + 1 >= size_of_values()); };
           const bool disabled    = check_valid();
           ImGui::BeginDisabled(disabled);
           if (ImGui::ArrowButton("##r", ImGuiDir_Right))
@@ -471,6 +481,10 @@ class GenericComboClass
      }
      void renderTitle() const
      {
+          if (std::ranges::empty(name_))
+          {
+               return;
+          }
           ImGui::SameLine(0, spacing_);
           format_imgui_text("{}", name_);
      }
