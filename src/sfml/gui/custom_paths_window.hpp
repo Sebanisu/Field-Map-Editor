@@ -284,17 +284,23 @@ struct custom_paths_window
      };
      static inline const auto                        m_tests        = std::to_array<custom_paths_map>({
        { .field_name = "ecmall1", .ext = ".ca" },// Basic field_name + ext match
-       { .field_name = "ecmall1", .ext = ".jsm", .language_code = open_viii::LangT::en },// Field with language suffix
-       { .field_name = "ecmall1", .ext = ".msd", .language_code = open_viii::LangT::jp },// Another language case
-       { .field_name = "ecmall1", .ext = ".map", .language_code = open_viii::LangT::de },// Different language, different ext
-       { .field_name = "ecmall1", .ext = ".mim", .language_code = open_viii::LangT::fr },// Another unique case
-       { .field_name = "ecmall1", .ext = ".inf", .language_code = open_viii::LangT::it },// Italian match
-       { .field_name = "ecmall1", .ext = ".sfx" },// No language, unique ext
-       { .field_name = "ecmall1", .ext = ".tdw", .language_code = open_viii::LangT::es },// Spanish case
+       { .field_name = "ecmall1", .ext = ".jsm", .language_code = open_viii::LangT::en, .pupu_id = 987654U },// Field with language suffix
+       { .field_name = "ecmall1", .ext = ".msd", .language_code = open_viii::LangT::jp, .pupu_id = 543210U },// Another language case
+       { .field_name    = "ecmall1",
+                                       .ext           = ".map",
+                                       .language_code = open_viii::LangT::de,
+                                       .pupu_id       = 234567U },// Different language, different ext
+       { .field_name = "ecmall1", .ext = ".mim", .language_code = open_viii::LangT::fr, .pupu_id = 890123U },// Another unique case
+       { .field_name = "ecmall1", .ext = ".inf", .language_code = open_viii::LangT::it, .pupu_id = 456789U },// Italian match
+       { .field_name = "ecmall1", .ext = ".sfx", .pupu_id = 678901U },// No language, unique ext
+       { .field_name = "ecmall1", .ext = ".tdw", .language_code = open_viii::LangT::es, .pupu_id = 321098U },// Spanish case
        { .field_name = "cwwood2", .ext = ".one" },// `chara.one` match
-       { .field_name = "cwwood2", .ext = ".one", .language_code = open_viii::LangT::jp },// `chara_{2_letter_lang}.one` match
-       { .field_name = "cdfield1", .ext = ".pmd" },// Another general field match
-       { .field_name = "cdfield2", .ext = ".pvp", .palette = std::uint8_t{ 2 } },// Field with palette
+       { .field_name    = "cwwood2",
+                                       .ext           = ".one",
+                                       .language_code = open_viii::LangT::jp,
+                                       .pupu_id       = 765432U },// `chara_{2_letter_lang}.one` match
+       { .field_name = "cdfield1", .ext = ".pmd", .pupu_id = 210987U },// Another general field match
+       { .field_name = "cdfield2", .ext = ".pvp", .palette = std::uint8_t{ 2 }, .pupu_id = 210987U },// Field with palette
        { .field_name    = "bgkote1a",
                                        .ext           = ".tiff",
                                        .language_code = open_viii::LangT::es,
@@ -304,7 +310,8 @@ struct custom_paths_window
                                        .ext           = ".bmp",
                                        .language_code = open_viii::LangT::de,
                                        .palette       = std::uint8_t{ 4 },
-                                       .texture_page  = std::uint8_t{ 3 } }// Full case
+                                       .texture_page  = std::uint8_t{ 3 },
+                                       .pupu_id       = 123456U }// Full case
      });
 
 
@@ -535,13 +542,13 @@ struct custom_paths_window
             "Right-click a {key} to access a context menu for copying key values.");
 
           {
+               const auto pop_child = scope_guard{ &ImGui::EndChild };
                if (!ImGui::BeginChild(
                      "##scrollingKeys", m_scrolling_child_size, ImGuiChildFlags_Borders, ImGuiWindowFlags_HorizontalScrollbar))
                {
                     return false;
                }
-               const auto           pop_child = scope_guard{ &ImGui::EndChild };
-               static constexpr int cols      = 3;
+               static constexpr int cols = 3;
                if (!ImGui::BeginTable("##scrollingKeys", cols, ImGuiTableFlags_BordersInnerV))
                {
                     return false;
@@ -632,12 +639,12 @@ struct custom_paths_window
             "{ff8_path}/Textures could output something like c:\\ff8\\Textures.\n"
             "Right-click a key to access a context menu for copying test output.");
 
+          const auto pop_child = scope_guard{ &ImGui::EndChild };
           if (!ImGui::BeginChild("##scrollingTest", m_scrolling_child_size, ImGuiChildFlags_Borders, ImGuiWindowFlags_HorizontalScrollbar))
           {
                return false;
           }
-          const auto           pop_child = scope_guard{ &ImGui::EndChild };
-          static constexpr int cols      = 2;
+          static constexpr int cols = 2;
           if (!ImGui::BeginTable("##scrollingTest", cols, ImGuiTableFlags_BordersInnerV))
           {
                return false;
