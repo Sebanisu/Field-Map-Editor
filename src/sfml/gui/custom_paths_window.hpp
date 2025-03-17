@@ -32,6 +32,7 @@ struct custom_paths_map
 
      struct keys
      {
+          static constexpr std::string_view selected_path                 = { "selected_path" };
           static constexpr std::string_view ff8_path                      = { "ff8_path" };
           static constexpr std::string_view current_path                  = { "current_path" };
           static constexpr std::string_view ffnx_mod_path                 = { "ffnx_mod_path" };
@@ -61,7 +62,8 @@ struct custom_paths_map
           static constexpr std::string_view chara_3lang_main              = { "chara_3lang_main" };
 
 
-          static constexpr auto             all_keys                      = std::to_array<std::string_view>({ ff8_path,
+          static constexpr auto             all_keys                      = std::to_array<std::string_view>({ selected_path,
+                                                                                                              ff8_path,
                                                                                                               current_path,
                                                                                                               ffnx_mod_path,
                                                                                                               ffnx_direct_mode_path,
@@ -89,6 +91,7 @@ struct custom_paths_map
                                                                                                               chara_3lang_main });
 
 
+          static constexpr std::string_view selected_path_tooltip         = { "The user chooses a path to output or read data from." };
           static constexpr std::string_view ff8_path_tooltip              = { "The root directory where Final Fantasy VIII is installed." };
           static constexpr std::string_view current_path_tooltip          = { "The current working directory." };
           static constexpr std::string_view ffnx_mod_path_tooltip         = { "The base directory for FFNx mod files." };
@@ -152,7 +155,8 @@ struct custom_paths_map
           };
 
 
-          static constexpr auto all_tooltips = std::to_array<std::string_view>({ ff8_path_tooltip,
+          static constexpr auto all_tooltips = std::to_array<std::string_view>({ selected_path_tooltip,
+                                                                                 ff8_path_tooltip,
                                                                                  current_path_tooltip,
                                                                                  ffnx_mod_path_tooltip,
                                                                                  ffnx_direct_mode_path_tooltip,
@@ -703,8 +707,8 @@ struct custom_paths_window
                               ImGui::CloseCurrentPopup();
                          ImGui::EndPopup();
                     }
-                    const auto current_tooltip = fmt::format("{}\nClick to add {}\nRight-click to open popup", tooltip , key_brackets);
-                    ImGui::SetItemTooltip("%s",current_tooltip.data());
+                    const auto current_tooltip = fmt::format("{}\nClick to add {}\nRight-click to open popup", tooltip, key_brackets);
+                    ImGui::SetItemTooltip("%s", current_tooltip.data());
                }
           }
           const auto same_line = []() -> bool {
