@@ -5,16 +5,15 @@
 #ifndef FIELD_MAP_EDITOR_BATCH_HPP
 #define FIELD_MAP_EDITOR_BATCH_HPP
 #include "archives_group.hpp"
-#include "compact_type.hpp"
 #include "Configuration.hpp"
 #include "cstdint"
 #include "filebrowser.hpp"
-#include "filter.hpp"
 #include "format_imgui_text.hpp"
 #include "generic_combo.hpp"
 #include "gui_labels.hpp"
 #include "RangeConsumer.hpp"
 #include "safedir.hpp"
+#include "Selections.hpp"
 #include <array>
 #include <imgui.h>
 #include <memory>
@@ -28,13 +27,9 @@ class batch
           input_mode,
           output_mode,
      };
-     std::shared_ptr<archives_group>                            m_archives_group        = {};
-     input_types                                                m_input_type            = {};
-     root_path_types                                            m_input_root_path_type  = {};
-     output_types                                               m_output_type           = {};
-     root_path_types                                            m_output_root_path_type = {};
-     ff_8::filter_old<compact_type, ff_8::FilterTag::Compact>   m_compact_type          = {};
-     ff_8::filter_old<flatten_type, ff_8::FilterTag::Flatten>   m_flatten_type          = {};
+
+     std::weak_ptr<Selections>                                  m_selections            = {};
+     std::weak_ptr<archives_group>                              m_archives_group        = {};
      bool                                                       m_input_path_valid      = { false };
      bool                                                       m_output_path_valid     = { false };
      static constexpr std::size_t                               m_buffer_size           = { 256U };
@@ -48,9 +43,7 @@ class batch
      map_sprite                                                 m_map_sprite    = {};
      std::vector<bool>                                          m_maps_enabled  = {};
      std::uint8_t                                               m_num_columns   = { 5 };
-     bool                                                       m_save_map      = {};
      directory_mode                                             m_directory_browser_mode             = {};
-     bool                                                       m_input_load_map                     = { false };
      FutureOfFutureConsumer<std::vector<std::future<std::future<void>>>> m_future_of_future_consumer = {};
      FutureConsumer<std::vector<std::future<void>>>                      m_future_consumer           = {};
      ImGui::FileBrowser                  m_directory_browser{ ImGuiFileBrowserFlags_SelectDirectory | ImGuiFileBrowserFlags_CreateNewDir
@@ -79,10 +72,11 @@ class batch
 
    public:
      void update(sf::Time elapsed_time);
-     explicit batch(std::shared_ptr<archives_group> existing_group);
+     explicit batch(std::weak_ptr<Selections> existing_selections, std::weak_ptr<archives_group> existing_group);
      bool   in_progress() const;
      void   stop();
-     batch &operator=(std::shared_ptr<archives_group> new_group);
+     batch &operator=(std::weak_ptr<archives_group> new_group);
+     batch &operator=(std::weak_ptr<Selections> new_selections);
      void   draw_window();
      void   checkmark_save_map();
      void   draw_multi_column_list_box(const std::string_view name, const std::vector<std::string> &items, std::vector<bool> &enabled);

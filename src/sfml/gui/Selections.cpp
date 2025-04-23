@@ -42,9 +42,33 @@ fme::Selections::Selections()
      output_map_pattern_for_deswizzle = config["selections_output_map_pattern_for_deswizzle"].value_or(output_map_pattern_for_deswizzle);
      current_pattern                  = config["selections_current_pattern"].value_or(current_pattern);
 
-
+     batch_input_type =
+       static_cast<input_types>(config["batch_input_type"].value_or(static_cast<std::underlying_type_t<input_types>>(batch_input_type)));
+     batch_input_root_path_type = static_cast<root_path_types>(
+       config["batch_input_root_path_type"].value_or(static_cast<std::underlying_type_t<root_path_types>>(batch_input_root_path_type)));
+      batch_output_type =
+       static_cast<output_types>(config["batch_output_type"].value_or(static_cast<std::underlying_type_t<output_types>>(batch_output_type)));
+     batch_output_root_path_type = static_cast<root_path_types>(
+       config["batch_output_root_path_type"].value_or(static_cast<std::underlying_type_t<root_path_types>>(batch_output_root_path_type)));
      background_color =
        std::bit_cast<fme::color>(config["selections_background_color"].value_or(std::bit_cast<std::uint32_t>(background_color)));
+
+
+     batch_input_path  = config["batch_input_path"].value_or(std::string(batch_input_path.data()));
+     batch_output_path = config["batch_output_path"].value_or(std::string(batch_output_path.data()));
+     batch_input_load_map  = config["batch_input_load_map"].value_or(batch_input_load_map);
+     batch_save_map        = config["batch_save_map"].value_or(batch_save_map);
+
+
+     batch_compact_type =
+       decltype(batch_compact_type){ static_cast<compact_type>(config[ff_8::ConfigKeys<ff_8::FilterTag::Compact>::key_name].value_or(
+                                       std::to_underlying(batch_compact_type.value()))),
+                                     config[ff_8::ConfigKeys<ff_8::FilterTag::Compact>::enabled_key_name].value_or(false) };
+
+     batch_flatten_type =
+       decltype(batch_flatten_type){ static_cast<flatten_type>(config[ff_8::ConfigKeys<ff_8::FilterTag::Flatten>::key_name].value_or(
+                                       std::to_underlying(batch_flatten_type.value()))),
+                                     config[ff_8::ConfigKeys<ff_8::FilterTag::Flatten>::enabled_key_name].value_or(false) };
 
      refresh_ffnx_paths();
 }

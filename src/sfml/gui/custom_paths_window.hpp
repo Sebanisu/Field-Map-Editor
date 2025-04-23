@@ -21,7 +21,7 @@
 #include <tl/string.hpp>
 namespace fme
 {
-struct custom_paths_map
+struct key_value_data
 {
      std::string_view                field_name    = {};
      std::string_view                ext           = { ".png" };
@@ -63,13 +63,13 @@ struct custom_paths_map
 
 
           static constexpr auto             all_keys                      = std::to_array<std::string_view>({ selected_path,
-                                                                                                              //ff8_path,
-                                                                                                              //current_path,
+                                                                                                              // ff8_path,
+                                                                                                              // current_path,
                                                                                                               ffnx_mod_path,
                                                                                                               ffnx_direct_mode_path,
                                                                                                               ffnx_override_path,
-                                                                                                              //batch_input_path,
-                                                                                                              //batch_output_path,
+                                                                                                              // batch_input_path,
+                                                                                                              // batch_output_path,
                                                                                                               field_name,
                                                                                                               ext,
                                                                                                               field_prefix,
@@ -156,13 +156,13 @@ struct custom_paths_map
 
 
           static constexpr auto all_tooltips = std::to_array<std::string_view>({ selected_path_tooltip,
-                                                                                 //ff8_path_tooltip,
-                                                                                 //current_path_tooltip,
+                                                                                 // ff8_path_tooltip,
+                                                                                 // current_path_tooltip,
                                                                                  ffnx_mod_path_tooltip,
                                                                                  ffnx_direct_mode_path_tooltip,
                                                                                  ffnx_override_path_tooltip,
-                                                                                 //batch_input_path_tooltip,
-                                                                                 //batch_output_path_tooltip,
+                                                                                 // batch_input_path_tooltip,
+                                                                                 // batch_output_path_tooltip,
                                                                                  field_name_tooltip,
                                                                                  ext_tooltip,
                                                                                  field_prefix_tooltip,
@@ -377,7 +377,7 @@ struct custom_paths_window
           "selections_output_map_pattern_for_swizzle",
           "selections_output_map_pattern_for_deswizzle"
      };
-     static inline const auto                        m_tests        = std::to_array<custom_paths_map>({
+     static inline const auto                        m_tests        = std::to_array<key_value_data>({
        { .field_name = "ecmall1", .ext = ".ca" },// Basic field_name + ext match
        { .field_name = "ecmall1", .ext = ".jsm", .language_code = open_viii::LangT::en, .pupu_id = 987654U },// Field with language suffix
        { .field_name = "ecmall1", .ext = ".msd", .language_code = open_viii::LangT::jp, .pupu_id = 543210U },// Another language case
@@ -468,30 +468,8 @@ struct custom_paths_window
           m_output_tests.clear();
           for (const auto test_data : m_tests)
           {
-               auto &output_test                = m_output_tests.emplace_back(m_input_pattern_string.begin(), m_input_pattern_string.end());
-               constexpr static auto pattern    = CTRE_REGEX_INPUT_TYPE{ R"(\{([^\{\}]+)\}|\{([^\{]*)\{([^\}]+)\}([^\}]*)\})" };
-               auto                  input_test = output_test;
-               auto                  matches    = ctre::search_all<pattern>(input_test);
-               do
-               {
-
-                    for ([[maybe_unused]] const auto &match : matches)
-                    {
-                         const auto replace_str = std::string_view{ match.get<0>() };
-                         const auto key         = std::string_view{ match.get<1>() }.empty() ? std::string_view{ match.get<3>() }
-                                                                                             : std::string_view{ match.get<1>() };
-                         const auto value       = test_data(key, selections);
-                         const auto prefix      = value.empty() ? std::string_view{} : std::string_view{ match.get<2>() };
-                         const auto suffix      = value.empty() ? std::string_view{} : std::string_view{ match.get<4>() };
-                         output_test            = output_test | std::views::split(replace_str)
-                                       | std::views::join_with(fmt::format("{}{}{}", prefix, value, suffix))
-                                       | std::ranges::to<std::string>();
-                    }
-
-                    input_test = output_test;
-                    matches    = ctre::search_all<pattern>(input_test);
-               } while (!std::ranges::empty(matches));
-               tl::string::replace_slashes(output_test);
+               std::string &output_test = m_output_tests.emplace_back(m_input_pattern_string.begin(), m_input_pattern_string.end());
+               output_test              = replace_tags(output_test, test_data, selections);
           }
      }
 
@@ -651,7 +629,7 @@ struct custom_paths_window
                const auto pop_table = scope_guard{ &ImGui::EndTable };
                bool       bg_color  = true;
                for (const auto &[index, pair] : std::ranges::views::enumerate(
-                      std::ranges::views::zip(custom_paths_map::keys::all_keys, custom_paths_map::keys::all_tooltips)))
+                      std::ranges::views::zip(key_value_data::keys::all_keys, key_value_data::keys::all_tooltips)))
                {
                     const auto &[key, tooltip] = pair;
 
@@ -700,7 +678,7 @@ struct custom_paths_window
                          if (ImGui::Selectable("Copy All Keys"))
                          {
                               using namespace std::string_view_literals;
-                              auto combined_keys = fmt::format("{{{}}}", fmt::join(custom_paths_map::keys::all_keys, "}\n{"sv));
+                              auto combined_keys = fmt::format("{{{}}}", fmt::join(key_value_data::keys::all_keys, "}\n{"sv));
                               ImGui::SetClipboardText(combined_keys.data());
                          }
                          if (ImGui::Button("Close"))
@@ -789,6 +767,70 @@ struct custom_paths_window
      }
 
    public:
+     /**
+      * @brief Replaces placeholder tags in a string with values from test data or a selected path.
+      *
+      * This function scans the input string for tags in the following formats:
+      * - `{key}`: Replaced directly with the corresponding value from `test_data` or `selected_path`.
+      * - `{prefix{key}suffix}`: If the key resolves to a non-empty value, it's inserted between the prefix and suffix.
+      *
+      * The function uses a regular expression to identify these patterns:
+      * @code
+      *   R"(\{([^\{\}]+)\}|\{([^\{]*)\{([^\}]+)\}([^\}]*)\})"
+      * @endcode
+      * This matches either a simple `{key}` or a nested format with prefix and suffix.
+      *
+      * Nested tags are supported and resolved recursively up to a maximum depth of 10 layers to prevent infinite loops.
+      * After replacements, all slashes in the resulting string are normalized for the platform (Windows or Linux).
+      *
+      * @param keyed_string  The input string possibly containing tag placeholders.
+      * @param test_data     A key-value data source to resolve the values associated with tags.
+      * @param selections    A shared pointer to additional selection context used by `test_data`.
+      * @param selected_path The replacement value for the `{selected_path}` tag. Defaults to "{ff8_path}".
+      *
+      * @return A new string where all recognized tags have been replaced with their corresponding values.
+      * @todo This function might move as this is an odd place to put it. Maybe it should be apart of key_value_data.
+      */
+
+     static std::string replace_tags(
+       std::string                             keyed_string,
+       const fme::key_value_data              &test_data,
+       const std::shared_ptr<fme::Selections> &selections,
+       const std::string                      &selected_path = "{ff8_path}")
+     {
+          using namespace std::string_view_literals;
+          constexpr static auto pattern          = CTRE_REGEX_INPUT_TYPE{ R"(\{([^\{\}]+)\}|\{([^\{]*)\{([^\}]+)\}([^\}]*)\})" };
+          std::string           copy_for_matches = keyed_string;// copy so data won't get lost when we change it.
+          auto                  matches          = ctre::search_all<pattern>(copy_for_matches);
+          int                   layers_deep      = 10;
+          do
+          {
+
+               for ([[maybe_unused]] const auto &match : matches)
+               {
+                    const auto replace_str = std::string_view{ match.get<0>() };
+                    const auto key =
+                      std::string_view{ match.get<1>() }.empty() ? std::string_view{ match.get<3>() } : std::string_view{ match.get<1>() };
+                    const auto value = [&]() {
+                         if (key == "selected_path"sv)
+                         {
+                              return selected_path;
+                         }
+                         return test_data(key, selections);
+                    }();
+                    const auto prefix = value.empty() ? std::string_view{} : std::string_view{ match.get<2>() };
+                    const auto suffix = value.empty() ? std::string_view{} : std::string_view{ match.get<4>() };
+                    keyed_string      = keyed_string | std::views::split(replace_str)
+                                   | std::views::join_with(fmt::format("{}{}{}", prefix, value, suffix)) | std::ranges::to<std::string>();
+               }
+               // check for nested keys.
+               copy_for_matches = keyed_string;
+               matches          = ctre::search_all<pattern>(copy_for_matches);
+          } while (!std::ranges::empty(matches) && ((--layers_deep) != 0));
+          tl::string::replace_slashes(keyed_string); // fixes slashes to be windows or linux based.
+          return keyed_string;
+     }
+
      custom_paths_window(std::weak_ptr<Selections> input_selections)
        : m_selections(input_selections)
      {

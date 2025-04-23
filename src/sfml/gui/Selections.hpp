@@ -4,8 +4,10 @@
 #ifndef FIELD_MAP_EDITOR_SELECTIONS_HPP
 #define FIELD_MAP_EDITOR_SELECTIONS_HPP
 #include "colors.hpp"
+#include "compact_type.hpp"
 #include "Configuration.hpp"
 #include "draw_mode.hpp"
+#include "filter.hpp"
 #include "tile_sizes.hpp"
 #include <filesystem>
 #include <open_viii/graphics/background/BlendModeT.hpp>
@@ -82,8 +84,21 @@ struct Selections
      std::string                    output_desizzle_pattern        = {};
      std::string                    output_map_pattern_for_swizzle = {};
      std::string                    output_map_pattern_for_deswizzle = {};
-     std::uint32_t                    current_pattern                  = {};
-     color background_color = { fme::colors::White };///< Remember to user's selected Background Color for draw Window.
+     std::uint32_t                  current_pattern                  = {};
+     color           background_color            = { fme::colors::White };///< Remember to user's selected Background Color for draw Window.
+
+     input_types     batch_input_type            = {};
+     root_path_types batch_input_root_path_type  = {};
+     output_types    batch_output_type           = {};
+     root_path_types batch_output_root_path_type = {};
+
+     std::string     batch_input_path            = {};
+     std::string     batch_output_path           = {};
+     bool            batch_input_load_map        = { false };
+     bool            batch_save_map              = { true };
+
+     ff_8::filter_old<compact_type, ff_8::FilterTag::Compact> batch_compact_type = {};
+     ff_8::filter_old<flatten_type, ff_8::FilterTag::Flatten> batch_flatten_type = {};
 
 
      /**
