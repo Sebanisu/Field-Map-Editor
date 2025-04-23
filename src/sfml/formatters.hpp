@@ -397,6 +397,31 @@ struct fmt::formatter<TileRange> : fmt::formatter<std::string>
 };
 
 template<>
+struct fmt::formatter<fme::root_path_types> : fmt::formatter<std::string_view>
+{
+      // parse is inherited from formatter<string_view>.
+      template<typename FormatContext>
+      constexpr auto format(fme::root_path_types in_root_path_types, FormatContext &ctx) const
+      {
+           using namespace std::string_view_literals;
+           std::string_view name = {};
+           switch (in_root_path_types)
+           {
+                case fme::root_path_types::selected_path:
+                     name = fme::gui_labels::selected_path;
+                     break;
+                case fme::root_path_types::ff8_path:
+                     name = fme::gui_labels::ff8_path;
+                     break;
+                case fme::root_path_types::current_path:
+                     name = fme::gui_labels::current_path;
+                     break;
+           }
+           return fmt::formatter<std::string_view>::format(name, ctx);
+     }
+};
+
+template<>
 struct fmt::formatter<fme::compact_type> : fmt::formatter<std::string_view>
 {
      // parse is inherited from formatter<string_view>.

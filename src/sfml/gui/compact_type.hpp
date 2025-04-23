@@ -32,5 +32,12 @@ enum struct flatten_type : std::uint8_t
      palette,
      both,
 };
+enum struct root_path_types : std::uint8_t
+{
+     selected_path,
+     ff8_path,
+     current_path
+};
+
 }// namespace fme
 #endif// FIELD_MAP_EDITOR_COMPACT_TYPE_HPP
