@@ -5,9 +5,57 @@
 #include "batch.hpp"
 #include "as_string.hpp"
 #include "Configuration.hpp"
+#include "custom_paths_window.hpp"
 #include "open_file_explorer.hpp"
 #include "push_pop_id.hpp"
 #include "tool_tip.hpp"
+
+
+void fme::batch::draw_window()
+{
+     const auto end = scope_guard(&ImGui::End);
+     if (!ImGui::Begin(gui_labels::batch_operation_window.data()))
+     {
+          return;
+     }
+     open_directory_browser();
+     // while in_progress disable changing the values.
+     const bool disabled = in_progress();
+     ImGui::BeginDisabled(disabled);
+     // input values
+     combo_input_type();
+     browse_input_path();
+     checkbox_load_map();
+     // output values
+     combo_output_type();
+     browse_output_path();
+     checkmark_save_map();
+     // automatic processing via compact or flatten
+     if (ImGui::CollapsingHeader(gui_labels::compact_flatten.data()))
+     {
+          format_imgui_wrapped_text("{}", gui_labels::compact_flatten_warning);
+          combo_compact_type();
+          combo_flatten_type();
+     }
+     // toggle maps to be processed.
+     if (m_archives_group)
+     {
+          draw_multi_column_list_box("Map List", m_archives_group->mapdata(), m_maps_enabled);
+     }
+     // click to start processing
+     button_start();
+     ImGui::EndDisabled();
+     ImGui::BeginDisabled(!disabled);
+     // click to stop processsing.
+     button_stop();
+     ImGui::EndDisabled();
+     if (!disabled)
+     {
+          return;
+     }
+     format_imgui_text("{}", m_status);
+}
+
 void fme::batch::combo_input_type()
 {
      static constexpr auto values = std::array{ input_types::mim, input_types::deswizzle, input_types::swizzle };
@@ -26,6 +74,69 @@ void fme::batch::combo_input_type()
           config.save();
      }
 }
+
+
+void fme::batch::browse_input_path()
+{
+     if (m_input_type == input_types::mim)
+     {
+          // using embedded images from ff8.
+          return;
+     }
+
+     static constexpr auto values = std::array{ root_path_types::selected_path, root_path_types::ff8_path, root_path_types::current_path };
+     static constexpr auto tooltips =
+       std::array{ gui_labels::selected_path_tooltip, gui_labels::ff8_path_tooltip, gui_labels::current_path_tooltip };
+     const auto gcc = fme::GenericComboClass(
+       gui_labels::input_root_path_type,
+       []() { return values; },
+       []() { return values | std::views::transform(AsString{}); },
+       []() { return tooltips; },
+       m_input_root_path_type);
+     if (gcc.render())
+     {
+          Configuration config{};
+          config->insert_or_assign(
+            "batch_input_root_path_type", static_cast<std::underlying_type_t<root_path_types>>(m_input_root_path_type));
+          config.save();
+     }
+     // custom_paths_map cpm = {
+     //      .field_name = "field01", .ext = "png", .language_code = open_viii::LangT::en, .palette = 0, .texture_page = 5, .pupu_id = 9999
+     // };
+     if (m_input_root_path_type != root_path_types::selected_path)
+     {
+          return;
+     }
+     if (!browse_path(gui_labels::input_path, m_input_path_valid, m_input_path))
+     {
+          return;
+     }
+     if (!m_input_path_valid)
+     {
+          return;
+     }
+     Configuration config{};
+     config->insert_or_assign("batch_input_path", std::string(m_input_path.data()));
+     config.save();
+}
+
+
+void fme::batch::checkbox_load_map()
+{
+     if (!(m_input_type != input_types::mim))
+     {
+          return;
+     }
+     const auto pop_id = PushPopID();
+     if (!ImGui::Checkbox(gui_labels::batch_load_map.data(), &m_input_load_map))
+     {
+          return;
+     }
+     Configuration config{};
+     config->insert_or_assign("batch_input_load_map", m_input_load_map);
+     config.save();
+}
+
 void fme::batch::combo_output_type()
 {
      static constexpr auto values = std::array{ output_types::deswizzle, output_types::swizzle };
@@ -38,6 +149,62 @@ void fme::batch::combo_output_type()
           config.save();
      }
 }
+
+
+void fme::batch::browse_output_path()
+{
+     static constexpr auto values = std::array{ root_path_types::selected_path, root_path_types::ff8_path, root_path_types::current_path };
+     static constexpr auto tooltips =
+       std::array{ gui_labels::selected_path_tooltip, gui_labels::ff8_path_tooltip, gui_labels::current_path_tooltip };
+     const auto gcc = fme::GenericComboClass(
+       gui_labels::output_root_path_type,
+       []() { return values; },
+       []() { return values | std::views::transform(AsString{}); },
+       []() { return tooltips; },
+       m_output_root_path_type);
+     if (gcc.render())
+     {
+          Configuration config{};
+          config->insert_or_assign(
+            "batch_output_root_path_type", static_cast<std::underlying_type_t<root_path_types>>(m_output_root_path_type));
+          config.save();
+     }
+     if (m_output_root_path_type != root_path_types::selected_path)
+     {
+          return;
+     }
+     if (!browse_path(gui_labels::output_path, m_output_path_valid, m_output_path))
+     {
+          return;
+     }
+     if (!m_output_path_valid)
+     {
+          return;
+     }
+     Configuration config{};
+     config->insert_or_assign("batch_output_path", std::string(m_output_path.data()));
+     config.save();
+}
+
+void fme::batch::checkmark_save_map()
+{
+     bool changed = false;
+     bool forced  = (m_compact_type.enabled() || m_flatten_type.enabled());
+     if (!m_save_map && forced)
+     {
+          m_save_map = true;
+          changed    = true;
+     }
+     ImGui::BeginDisabled(forced);
+     if (ImGui::Checkbox(gui_labels::save_map_files.data(), &m_save_map) || changed)
+     {
+          Configuration config{};
+          config->insert_or_assign("batch_save_map", static_cast<std::underlying_type_t<input_types>>(m_save_map));
+          config.save();
+     }
+     ImGui::EndDisabled();
+}
+
 void fme::batch::combo_compact_type()
 {
      const auto        tool_tip_pop = scope_guard{ [&]() { tool_tip(gui_labels::compact_tooltip); } };
@@ -107,38 +274,6 @@ void fme::batch::combo_flatten_type()
      Configuration config{};
      config->insert_or_assign("batch_flatten_type", static_cast<std::underlying_type_t<flatten_type>>(m_flatten_type.value()));
      config->insert_or_assign("batch_flatten_enabled", m_flatten_type.enabled());
-     config.save();
-}
-void fme::batch::browse_input_path()
-{
-     if (m_input_type == input_types::mim)
-     {
-          return;
-     }
-     if (!browse_path(gui_labels::input_path, m_input_path_valid, m_input_path))
-     {
-          return;
-     }
-     if (!m_input_path_valid)
-     {
-          return;
-     }
-     Configuration config{};
-     config->insert_or_assign("batch_input_path", std::string(m_input_path.data()));
-     config.save();
-}
-void fme::batch::browse_output_path()
-{
-     if (!browse_path(gui_labels::output_path, m_output_path_valid, m_output_path))
-     {
-          return;
-     }
-     if (!m_output_path_valid)
-     {
-          return;
-     }
-     Configuration config{};
-     config->insert_or_assign("batch_output_path", std::string(m_output_path.data()));
      config.save();
 }
 void fme::batch::draw_multi_column_list_box(const std::string_view name, const std::vector<std::string> &items, std::vector<bool> &enabled)
@@ -561,80 +696,6 @@ void fme::batch::open_directory_browser()
           break;
      }
 }
-void fme::batch::checkbox_load_map()
-{
-     if (!(m_input_type != input_types::mim))
-     {
-          return;
-     }
-     const auto pop_id = PushPopID();
-     if (!ImGui::Checkbox(gui_labels::batch_load_map.data(), &m_input_load_map))
-     {
-          return;
-     }
-     Configuration config{};
-     config->insert_or_assign("batch_input_load_map", m_input_load_map);
-     config.save();
-}
-
-void fme::batch::draw_window()
-{
-     const auto end = scope_guard(&ImGui::End);
-     if (!ImGui::Begin(gui_labels::batch_operation_window.data()))
-     {
-          return;
-     }
-     const bool disabled = in_progress();
-     open_directory_browser();
-     ImGui::BeginDisabled(disabled);
-     combo_input_type();
-     browse_input_path();
-     checkbox_load_map();
-
-
-     combo_output_type();
-     browse_output_path();
-     checkmark_save_map();
-     if (ImGui::CollapsingHeader(gui_labels::compact_flatten.data()))
-     {
-          format_imgui_wrapped_text("{}", gui_labels::compact_flatten_warning);
-          combo_compact_type();
-          combo_flatten_type();
-     }
-     if (m_archives_group)
-     {
-          draw_multi_column_list_box("Map List", m_archives_group->mapdata(), m_maps_enabled);
-     }
-     button_start();
-     ImGui::EndDisabled();
-     ImGui::BeginDisabled(!disabled);
-     button_stop();
-     ImGui::EndDisabled();
-     if (!disabled)
-     {
-          return;
-     }
-     format_imgui_text("{}", m_status);
-}
-
-void fme::batch::checkmark_save_map()
-{
-     bool changed = false;
-     bool forced  = (m_compact_type.enabled() || m_flatten_type.enabled());
-     if (!m_save_map && forced)
-     {
-          m_save_map = true;
-          changed    = true;
-     }
-     ImGui::BeginDisabled(forced);
-     if (ImGui::Checkbox(gui_labels::save_map_files.data(), &m_save_map) || changed)
-     {
-          Configuration config{};
-          config->insert_or_assign("batch_save_map", static_cast<std::underlying_type_t<input_types>>(m_save_map));
-          config.save();
-     }
-     ImGui::EndDisabled();
-}
 
 fme::batch &fme::batch::operator=(std::shared_ptr<archives_group> new_group)
 {
@@ -680,6 +741,8 @@ fme::batch::batch(std::shared_ptr<archives_group> existing_group)
      }
      m_input_type =
        static_cast<input_types>(config["batch_input_type"].value_or(static_cast<std::underlying_type_t<input_types>>(m_input_type)));
+     m_input_root_path_type = static_cast<root_path_types>(
+       config["batch_input_root_path_type"].value_or(static_cast<std::underlying_type_t<root_path_types>>(m_input_root_path_type)));
      {
           std::string str_tmp = config["batch_input_path"].value_or(std::string(m_input_path.data()));
           std::ranges::copy(str_tmp, m_input_path.data());
@@ -689,6 +752,8 @@ fme::batch::batch(std::shared_ptr<archives_group> existing_group)
      }
      m_output_type =
        static_cast<output_types>(config["batch_output_type"].value_or(static_cast<std::underlying_type_t<output_types>>(m_output_type)));
+     m_output_root_path_type = static_cast<root_path_types>(
+       config["batch_output_root_path_type"].value_or(static_cast<std::underlying_type_t<root_path_types>>(m_output_root_path_type)));
      {
           std::string str_tmp = config["batch_output_path"].value_or(std::string(m_output_path.data()));
           std::ranges::copy(str_tmp, m_output_path.data());
