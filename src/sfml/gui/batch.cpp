@@ -10,6 +10,38 @@
 #include "push_pop_id.hpp"
 #include "tool_tip.hpp"
 
+/**
+ * @brief Safely copies a null-terminated string from one contiguous range to another.
+ *
+ * This function copies characters from the source range into the destination range,
+ * ensuring that no buffer overflows occur. The destination is null-terminated.
+ *
+ * @tparam Src Source contiguous range type (e.g., std::string, std::array<char>)
+ * @tparam Dst Destination contiguous range type (e.g., std::array<char>)
+ * @param src The source string-like range.
+ * @param dst The destination character buffer.
+ * @return true if the copy succeeded and the resulting path exists and is a directory.
+ * @return false if the destination was too small or the path is not a valid directory.
+ */
+template<std::ranges::contiguous_range Src, std::ranges::contiguous_range Dst>
+     requires std::indirectly_copyable<std::ranges::iterator_t<Src>, std::ranges::iterator_t<Dst>>
+static bool safe_copy_string(const Src &src, Dst &dst)
+{
+     const auto src_size = std::ranges::size(src);
+     const auto dst_size = std::ranges::size(dst);
+
+     if (src_size + 1 > dst_size)
+     {
+          spdlog::error("safe_copy_string: destination buffer too small ({} < {}).", dst_size, src_size + 1);
+          return false;
+     }
+
+     std::ranges::copy_n(std::ranges::begin(src), src_size, std::ranges::data(dst));
+     dst[src_size]  = '\0';
+
+     const auto tmp = safedir(std::ranges::data(dst));
+     return tmp.is_dir() && tmp.is_exists();
+}
 
 void fme::batch::draw_window()
 {
@@ -119,7 +151,8 @@ void fme::batch::browse_input_path()
           config.save();
      }
      // key_value_data cpm = {
-     //      .field_name = "field01", .ext = "png", .language_code = open_viii::LangT::en, .palette = 0, .texture_page = 5, .pupu_id = 9999
+     //      .field_name = "field01", .ext = "png", .language_code = open_viii::LangT::en, .palette = 0, .texture_page = 5, .pupu_id =
+     //      9999
      // };
      // custom_paths_window::replace_tags();
      if (selections->batch_input_root_path_type != root_path_types::selected_path)
@@ -134,8 +167,9 @@ void fme::batch::browse_input_path()
      {
           return;
      }
+     selections->batch_input_path = std::string(m_input_path.data());
      Configuration config{};
-     config->insert_or_assign("batch_input_path", std::string(m_input_path.data()));
+     config->insert_or_assign("batch_input_path", selections->batch_input_path);
      config.save();
 }
 
@@ -221,6 +255,7 @@ void fme::batch::browse_output_path()
      {
           return;
      }
+     selections->batch_output_path = std::string(m_output_path.data());
      Configuration config{};
      config->insert_or_assign("batch_output_path", std::string(m_output_path.data()));
      config.save();
@@ -781,6 +816,12 @@ std::filesystem::path fme::batch::append_file_structure(const std::filesystem::p
 }
 void fme::batch::open_directory_browser()
 {
+     const auto selections = m_selections.lock();
+     if (!selections)
+     {
+          spdlog::error("Failed to lock m_selections: shared_ptr is expired.");
+          return;
+     }
      m_directory_browser.Display();
      if (!m_directory_browser.HasSelected())
      {
@@ -792,21 +833,13 @@ void fme::batch::open_directory_browser()
      switch (m_directory_browser_mode)
      {
           case directory_mode::input_mode: {
-               Configuration config{};
-               config->insert_or_assign("batch_input_path", selected_path);
-               config.save();
-               std::ranges::copy(selected_path, m_input_path.data());
-               m_input_path.at(selected_path.size()) = '\0';
-               m_input_path_valid                    = tmp.is_dir() && tmp.is_exists();
+               m_input_path_valid           = safe_copy_string(selected_path, m_input_path);
+               selections->batch_input_path = selected_path;
           }
           break;
           case directory_mode::output_mode: {
-               Configuration config{};
-               config->insert_or_assign("batch_output_path", selected_path);
-               config.save();
-               std::ranges::copy(selected_path, m_output_path.data());
-               m_output_path.at(selected_path.size()) = '\0';
-               m_output_path_valid                    = tmp.is_dir() && tmp.is_exists();
+               m_output_path_valid           = safe_copy_string(selected_path, m_output_path);
+               selections->batch_output_path = selected_path;
           }
           break;
      }
@@ -862,16 +895,6 @@ fme::batch::batch(std::weak_ptr<Selections> existing_selections, std::weak_ptr<a
           spdlog::error("Failed to lock m_selections: shared_ptr is expired.");
           return;
      }
-     {
-          std::ranges::copy(selections->batch_input_path, m_input_path.data());
-          m_input_path.at(selections->batch_input_path.size()) = '\0';
-          const auto tmp                                       = safedir(m_input_path.data());
-          m_input_path_valid                                   = tmp.is_dir() && tmp.is_exists();
-     }
-     {
-          std::ranges::copy(selections->batch_output_path, m_output_path.data());
-          m_output_path.at(selections->batch_output_path.size()) = '\0';
-          const auto tmp                                         = safedir(m_output_path.data());
-          m_output_path_valid                                    = tmp.is_dir() && tmp.is_exists();
-     }
+     m_input_path_valid  = safe_copy_string(selections->batch_input_path, m_input_path);
+     m_output_path_valid = safe_copy_string(selections->batch_output_path, m_output_path);
 }
