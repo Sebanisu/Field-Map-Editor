@@ -816,12 +816,6 @@ std::filesystem::path fme::batch::append_file_structure(const std::filesystem::p
 }
 void fme::batch::open_directory_browser()
 {
-     const auto selections = m_selections.lock();
-     if (!selections)
-     {
-          spdlog::error("Failed to lock m_selections: shared_ptr is expired.");
-          return;
-     }
      m_directory_browser.Display();
      if (!m_directory_browser.HasSelected())
      {
@@ -834,12 +828,10 @@ void fme::batch::open_directory_browser()
      {
           case directory_mode::input_mode: {
                m_input_path_valid           = safe_copy_string(selected_path, m_input_path);
-               selections->batch_input_path = selected_path;
           }
           break;
           case directory_mode::output_mode: {
                m_output_path_valid           = safe_copy_string(selected_path, m_output_path);
-               selections->batch_output_path = selected_path;
           }
           break;
      }
