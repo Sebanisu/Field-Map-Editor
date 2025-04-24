@@ -81,7 +81,7 @@ struct Selections
      std::string                    ffnx_override_path             = {};
      std::string                    ffnx_direct_mode_path          = {};
      std::string                    output_swizzle_pattern         = {};
-     std::string                    output_desizzle_pattern        = {};
+     std::string                    output_deswizzle_pattern       = {};
      std::string                    output_map_pattern_for_swizzle = {};
      std::string                    output_map_pattern_for_deswizzle = {};
      std::uint32_t                  current_pattern                  = {};

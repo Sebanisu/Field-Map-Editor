@@ -37,7 +37,7 @@ fme::Selections::Selections()
      display_field_file_window        = config["selections_display_field_file_window"].value_or(display_field_file_window);
 
      output_swizzle_pattern           = config["selections_output_swizzle_pattern"].value_or(output_swizzle_pattern);
-     output_desizzle_pattern          = config["selections_output_deswizzle_pattern"].value_or(output_desizzle_pattern);
+     output_deswizzle_pattern         = config["selections_output_deswizzle_pattern"].value_or(output_deswizzle_pattern);
      output_map_pattern_for_swizzle   = config["selections_output_map_pattern_for_swizzle"].value_or(output_map_pattern_for_swizzle);
      output_map_pattern_for_deswizzle = config["selections_output_map_pattern_for_deswizzle"].value_or(output_map_pattern_for_deswizzle);
      current_pattern                  = config["selections_current_pattern"].value_or(current_pattern);
@@ -46,18 +46,18 @@ fme::Selections::Selections()
        static_cast<input_types>(config["batch_input_type"].value_or(static_cast<std::underlying_type_t<input_types>>(batch_input_type)));
      batch_input_root_path_type = static_cast<root_path_types>(
        config["batch_input_root_path_type"].value_or(static_cast<std::underlying_type_t<root_path_types>>(batch_input_root_path_type)));
-      batch_output_type =
-       static_cast<output_types>(config["batch_output_type"].value_or(static_cast<std::underlying_type_t<output_types>>(batch_output_type)));
+     batch_output_type = static_cast<output_types>(
+       config["batch_output_type"].value_or(static_cast<std::underlying_type_t<output_types>>(batch_output_type)));
      batch_output_root_path_type = static_cast<root_path_types>(
        config["batch_output_root_path_type"].value_or(static_cast<std::underlying_type_t<root_path_types>>(batch_output_root_path_type)));
      background_color =
        std::bit_cast<fme::color>(config["selections_background_color"].value_or(std::bit_cast<std::uint32_t>(background_color)));
 
 
-     batch_input_path  = config["batch_input_path"].value_or(std::string(batch_input_path.data()));
-     batch_output_path = config["batch_output_path"].value_or(std::string(batch_output_path.data()));
-     batch_input_load_map  = config["batch_input_load_map"].value_or(batch_input_load_map);
-     batch_save_map        = config["batch_save_map"].value_or(batch_save_map);
+     batch_input_path     = config["batch_input_path"].value_or(std::string(batch_input_path.data()));
+     batch_output_path    = config["batch_output_path"].value_or(std::string(batch_output_path.data()));
+     batch_input_load_map = config["batch_input_load_map"].value_or(batch_input_load_map);
+     batch_save_map       = config["batch_save_map"].value_or(batch_save_map);
 
 
      batch_compact_type =

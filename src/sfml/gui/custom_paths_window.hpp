@@ -423,7 +423,7 @@ struct custom_paths_window
                return {};
           }
           return { &selections->output_swizzle_pattern,
-                   &selections->output_desizzle_pattern,
+                   &selections->output_deswizzle_pattern,
                    &selections->output_map_pattern_for_swizzle,
                    &selections->output_map_pattern_for_deswizzle };
      }
@@ -792,7 +792,7 @@ struct custom_paths_window
       * @todo This function might move as this is an odd place to put it. Maybe it should be apart of key_value_data.
       */
 
-     static std::string replace_tags(
+     [[nodiscard]] static std::string replace_tags(
        std::string                             keyed_string,
        const fme::key_value_data              &test_data,
        const std::shared_ptr<fme::Selections> &selections,
@@ -805,7 +805,6 @@ struct custom_paths_window
           int                   layers_deep      = 10;
           do
           {
-
                for ([[maybe_unused]] const auto &match : matches)
                {
                     const auto replace_str = std::string_view{ match.get<0>() };
