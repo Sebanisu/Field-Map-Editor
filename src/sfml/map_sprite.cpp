@@ -167,7 +167,7 @@ std::shared_ptr<std::array<sf::Texture, map_sprite::MAX_TEXTURES>> map_sprite::l
      std::shared_ptr<std::array<sf::Texture, MAX_TEXTURES>> ret = load_textures_internal();
      while (std::ranges::all_of(*ret, [](const sf::Texture &texture) {
           auto size = texture.getSize();
-          spdlog::info("{}", size);
+          // spdlog::info("{}", size);
           return size.x == 0 || size.y == 0;
      }))
      {
@@ -449,9 +449,10 @@ sf::Sprite map_sprite::save_intersecting(const sf::Vector2i &pixel_pos, const st
 
             // Set the transformation to adjust the sprite's position based on the scale and pixel position
             static constexpr float half   = 0.5F;
-            states.transform.translate(sf::Vector2f(
-              (static_cast<float>(-pixel_pos.x) * static_cast<float>(m_scale)) + (static_cast<float>(sprite_size.x) * half),
-              (static_cast<float>(-pixel_pos.y) * static_cast<float>(m_scale)) + (static_cast<float>(sprite_size.x) * half)));
+            states.transform.translate(
+              sf::Vector2f(
+                (static_cast<float>(-pixel_pos.x) * static_cast<float>(m_scale)) + (static_cast<float>(sprite_size.x) * half),
+                (static_cast<float>(-pixel_pos.y) * static_cast<float>(m_scale)) + (static_cast<float>(sprite_size.x) * half)));
 
             // Loop through either saved imported indices or regular saved indices based on the flag
             for (const auto tile_index : imported ? m_saved_imported_indices : m_saved_indices)
@@ -927,7 +928,7 @@ void map_sprite::resize_render_texture()
                m_scale = tmp_scale;
           }
           check_size();
-          spdlog::debug("Render Texture- scale:{}, size:({}, {})", m_scale, width() * m_scale, height() * m_scale);
+          // spdlog::debug("Render Texture- scale:{}, size:({}, {})", m_scale, width() * m_scale, height() * m_scale);
           m_render_texture->create(width() * m_scale, height() * m_scale);
           m_drag_sprite_texture->create(TILE_SIZE * m_scale * 3, TILE_SIZE * m_scale * 3);
      }
@@ -1129,25 +1130,45 @@ const ff_8::MapHistory::nsat_map &map_sprite::working_animation_counts() const
 //   }
 //   return result;
 // }
-std::vector<std::future<std::future<void>>> map_sprite::save_swizzle_textures(const std::filesystem::path &path)
+
+/**
+ * @brief Saves swizzled texture pages (and optionally palettes) to disk asynchronously.
+ *
+ * Generates textures for each unique texture page (and conflicting palettes if needed) and saves them as PNG files.
+ * If the texture has palette conflicts (e.g., multiple palettes for the same texture page), generates separate files for each conflicting
+ * palette.
+ *
+ * @param path The base directory path where the images will be saved.
+ * @return A vector of futures representing the save operations, allowing the caller to later wait or check for completion.
+ *
+ * @note Caller is responsible for consuming or waiting on the futures to ensure save completion.
+ */
+[[nodiscard]] std::vector<std::future<std::future<void>>> map_sprite::save_swizzle_textures(const std::filesystem::path &path)
 {
-     // assert(std::filesystem::path.is_directory(path));
+     // Get the base name of the field (e.g., map name) to use in output filenames.
      const std::string                 field_name                       = { get_base_name() };
+
+     // Define filename patterns for various cases (with/without palette, with/without COO region).
      static constexpr std::string_view pattern_texture_page             = { "{}_{}.png" };
      static constexpr std::string_view pattern_texture_page_palette     = { "{}_{}_{}.png" };
      static constexpr std::string_view pattern_coo_texture_page         = { "{}_{}_{}.png" };
      static constexpr std::string_view pattern_coo_texture_page_palette = { "{}_{}_{}_{}.png" };
 
+     // Extract unique texture page IDs and BPP (bits per pixel) values from the map.
      const auto                        unique_values                    = get_all_unique_values_and_strings();
      const auto                       &unique_texture_page_ids          = unique_values.texture_page_id().values();
      const auto                       &unique_bpp                       = unique_values.bpp().values();
+
+     // Backup and override current settings for exporting textures.
      settings_backup                   settings(m_filters, m_draw_swizzle, m_disable_texture_page_shift, m_disable_blends, m_scale);
-     settings.filters                         = ff_8::filters{};
+     settings.filters                         = ff_8::filters{ false };
      settings.filters.value().upscale         = settings.filters.backup().upscale;
      settings.filters.value().deswizzle       = settings.filters.backup().deswizzle;
      settings.draw_swizzle                    = true;
      settings.disable_texture_page_shift      = true;
      settings.disable_blends                  = true;
+
+     // Adjust scale based on texture height or deswizzle state.
      uint32_t                      height     = get_max_texture_height();
      constexpr static unsigned int mim_height = { 256U };
      settings.scale                           = height / mim_height;
@@ -1161,40 +1182,58 @@ std::vector<std::future<std::future<void>>> map_sprite::save_swizzle_textures(co
           settings.scale = 1U;
      }
 
+     // If there’s only one bpp and at most one palette, nothing needs saving.
      if (unique_bpp.size() == 1U && unique_values.palette().at(unique_bpp.front()).values().size() <= 1U)
      {
           return {};
      }
+
+     // Prepare for gathering palette conflicts.
      using map_type                                                          = std::remove_cvref_t<decltype(get_conflicting_palettes())>;
      using mapped_type                                                       = typename map_type::mapped_type;
      const map_type                              conflicting_palettes_map    = get_conflicting_palettes();
+
+     // Prepare futures to track save operations.
      std::vector<std::future<std::future<void>>> future_of_futures           = {};
      const unsigned int                          max_number_of_texture_pages = 13U;
      future_of_futures.reserve(max_number_of_texture_pages);
+
+     // Create an off-screen render texture to draw into.
      sf::RenderTexture out_texture{};
      out_texture.create(height, height);
+
+     // Loop over all unique texture pages.
      for (const auto &texture_page : unique_texture_page_ids)
      {
           settings.filters.value().texture_page_id.update(texture_page).enable();
           const bool contains_conflicts = conflicting_palettes_map.contains(texture_page);
+
           if (contains_conflicts)
           {
+               // Handle palette conflicts: export each conflicting palette individually.
                const mapped_type &conflicting_palettes = conflicting_palettes_map.at(texture_page);
                for (const auto &bpp : unique_bpp)
                {
                     const auto &unique_palette = unique_values.palette().at(bpp).values();
+
+                    // Filter palettes that conflict with the current texture page.
                     auto        filter_palette = unique_palette | std::views::filter([&conflicting_palettes](const std::uint8_t &palette) {
                                                return std::ranges::any_of(
                                                  conflicting_palettes, [&palette](const std::uint8_t &other) { return palette == other; });
                                           });
+
                     for (const auto &palette : filter_palette)
                     {
                          settings.filters.value().palette.update(palette).enable();
                          settings.filters.value().bpp.update(bpp).enable();
+
+                         // Generate the texture.
                          if (!generate_texture(&out_texture))
                          {
                               continue;
                          }
+
+                         // Determine output path based on COO presence.
                          auto out_path = [&]() -> std::filesystem::path {
                               if (m_map_group.opt_coo)
                               {
@@ -1203,25 +1242,36 @@ std::vector<std::future<std::future<void>>> map_sprite::save_swizzle_textures(co
                               }
                               return save_path(pattern_texture_page_palette, path, field_name, texture_page, palette);
                          }();
+
+                         // Start async save and store the future.
                          future_of_futures.push_back(async_save(out_texture.getTexture(), out_path));
                     }
                }
           }
 
+          // No conflicting palettes — save the texture page normally.
           settings.filters.value().palette.disable();
           settings.filters.value().bpp.disable();
+
           if (!generate_texture(&out_texture))
           {
                continue;
           }
+
+          // Determine output path based on COO presence.
           auto out_path = m_map_group.opt_coo
                             ? save_path_coo(pattern_coo_texture_page, path, field_name, texture_page, *m_map_group.opt_coo)
                             : save_path(pattern_texture_page, path, field_name, texture_page);
+
+          // Start async save and store the future.
           future_of_futures.push_back(async_save(out_texture.getTexture(), out_path));
      }
+
+     // Return the list of save operations to the caller.
      return future_of_futures;
-     // consume_futures(future_of_futures);
+     // consume_futures(future_of_futures); // Optionally wait here.
 }
+
 
 std::string map_sprite::get_base_name() const
 {
@@ -1233,15 +1283,28 @@ std::string map_sprite::get_base_name() const
      return str_to_lower(field->get_base_name());
 }
 
-std::vector<std::future<std::future<void>>> map_sprite::save_pupu_textures(const std::filesystem::path &path)
+/**
+ * @brief Saves unique "Pupu" textures for the map field to individual PNG files.
+ *
+ * This function sets up temporary settings specifically for Pupu texture rendering,
+ * generates textures using the current map data, and asynchronously saves them to disk.
+ * Each texture is saved under a specific file naming pattern based on the field name and Pupu ID.
+ *
+ * @param path Filesystem path where the textures should be saved. Must be a directory.
+ * @return A vector of futures, each wrapping a future task that will save one texture.
+ *         Caller should consume or wait on these to ensure saving completes.
+ */
+[[nodiscard]] std::vector<std::future<std::future<void>>> map_sprite::save_pupu_textures(const std::filesystem::path &path)
 {
+     // Backup current settings and adjust for saving Pupu textures
      auto settings    = settings_backup{ m_filters, m_draw_swizzle, m_disable_texture_page_shift, m_disable_blends, m_scale };
-     settings.filters = ff_8::filters{};
-     settings.filters.value().upscale         = settings.filters.backup().upscale;
-     settings.draw_swizzle                    = false;
-     settings.disable_texture_page_shift      = true;
-     settings.disable_blends                  = true;
-     // todo maybe draw with blends enabled to transparent black or white.
+     settings.filters = ff_8::filters{ false };
+     settings.filters.value().upscale         = settings.filters.backup().upscale;// Retain original upscale settings
+     settings.draw_swizzle                    = false;// No swizzling when saving
+     settings.disable_texture_page_shift      = true;// Disable texture page shifts
+     settings.disable_blends                  = true;// Disable blending
+
+     // Set the scale relative to a standard MIM height (256px)
      static constexpr unsigned int mim_height = { 256U };
      settings.scale                           = get_max_texture_height() / mim_height;
      if (settings.scale == 0U)
@@ -1249,50 +1312,73 @@ std::vector<std::future<std::future<void>>> map_sprite::save_pupu_textures(const
           settings.scale = 1U;
      }
 
+     // Acquire the field associated with this map group
      const auto field = m_map_group.field.lock();
      if (!field)
      {
-          return {};
+          return {};// Field no longer exists, nothing to save
      }
 
      const std::string                field_name      = std::string{ str_to_lower(field->get_base_name()) };
-     const std::vector<ff_8::PupuID> &unique_pupu_ids = working_unique_pupu();
-     std::optional<open_viii::LangT> &coo             = m_map_group.opt_coo;
+     const std::vector<ff_8::PupuID> &unique_pupu_ids = working_unique_pupu();// Get list of unique Pupu IDs
+     std::optional<open_viii::LangT> &coo             = m_map_group.opt_coo;// Language option (optional)
 
-     assert(safedir(path).is_dir());
-     static constexpr std::string_view           pattern_pupu                = { "{}_{}.png" };
-     static constexpr std::string_view           pattern_coo_pupu            = { "{}_{}_{}.png" };
-     const unsigned int                          max_number_of_texture_pages = 13U;
+     assert(safedir(path).is_dir());// Ensure output path is a directory
+
+     static constexpr std::string_view           pattern_pupu                = { "{}_{}.png" };// Pattern without language
+     static constexpr std::string_view           pattern_coo_pupu            = { "{}_{}_{}.png" };// Pattern with language
+     const unsigned int                          max_number_of_texture_pages = 13U;// Reserve space for futures
      std::vector<std::future<std::future<void>>> future_of_futures           = {};
      future_of_futures.reserve(max_number_of_texture_pages);
 
+     // Setup an off-screen render texture
      sf::RenderTexture out_texture{};
      iRectangle const  canvas = m_map_group.maps.const_working().canvas() * static_cast<int>(m_scale);
      out_texture.create(static_cast<std::uint32_t>(canvas.width()), static_cast<std::uint32_t>(canvas.height()));
+
+     // Loop through each Pupu ID and generate/save textures
      for (const ff_8::PupuID &pupu : unique_pupu_ids)
      {
-          settings.filters.value().pupu.update(pupu).enable();
+          settings.filters.value().pupu.update(pupu).enable();// Enable this specific Pupu ID
+
           if (!generate_texture(&out_texture))
           {
-               continue;
+               continue;// Skip if texture generation fails
           }
-          std::filesystem::path const out_path =
-            coo ? save_path_coo(pattern_coo_pupu, path, field_name, pupu, *coo) : save_path(pattern_pupu, path, field_name, pupu);
-          future_of_futures.push_back(async_save(out_texture.getTexture(), out_path));
+
+          std::filesystem::path const out_path = coo ? save_path_coo(pattern_coo_pupu, path, field_name, pupu, *coo)// Save with language
+                                                     : save_path(pattern_pupu, path, field_name, pupu);// Save without language
+
+          future_of_futures.push_back(async_save(out_texture.getTexture(), out_path));// Queue async save
      }
+
      return future_of_futures;
-     // consume_futures(future_of_futures);
+     // Note: Caller should consume_futures(future_of_futures) to wait for saves to finish
 }
 
+/**
+ * @brief Launches a two-step asynchronous operation to save a texture to a file.
+ *
+ * First, the texture is converted into an image in a deferred future.
+ * Then, the image is written to disk asynchronously once the first future completes.
+ *
+ * @param out_texture The texture to be saved.
+ * @param out_path Filesystem path where the image will be written.
+ * @return A future that holds another future, which represents the final save operation.
+ */
 [[nodiscard]] std::future<std::future<void>> map_sprite::async_save(const sf::Texture &out_texture, const std::filesystem::path &out_path)
 {
-     return { std::async(
-       std::launch::deferred,
-       [out_path](std::future<sf::Image> image_task) -> std::future<void> {
-            return std::async(std::launch::async, future_operations::save_image_to_path{ out_path, image_task.get() });
-       },
-       save_image_pbo(out_texture)) };
+     return {
+          std::async(
+            std::launch::deferred,// Step 1: Save image conversion deferred
+            [out_path](std::future<sf::Image> image_task) -> std::future<void> {
+                 // Step 2: Save the image to disk asynchronously once ready
+                 return std::async(std::launch::async, future_operations::save_image_to_path{ out_path, image_task.get() });
+            },
+            save_image_pbo(out_texture))// Start image creation task (PBO extraction)
+     };
 }
+
 uint32_t map_sprite::get_max_texture_height() const
 {
      auto     transform_range = (*m_texture) | std::views::transform([](const sf::Texture &texture) { return texture.getSize().y; });
