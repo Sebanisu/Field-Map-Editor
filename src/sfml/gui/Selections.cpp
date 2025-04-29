@@ -6,9 +6,19 @@
 using namespace open_viii;
 using namespace open_viii::graphics;
 using namespace open_viii::graphics::background;
-fme::Selections::Selections()
+fme::Selections::Selections(bool load_config)
+{
+     if (load_config)
+     {
+          load_configuration();
+     }
+}
+
+void fme::Selections::load_configuration()
 {
      Configuration const config{};
+     starter_field            = config["starter_field"].value_or(starter_field);
+     // field
      path                     = config["selections_path"].value_or(path);
      window_width             = config["selections_window_width"].value_or(window_width);
      window_height            = config["selections_window_width"].value_or(window_height);
@@ -58,17 +68,6 @@ fme::Selections::Selections()
      batch_output_path    = config["batch_output_path"].value_or(std::string(batch_output_path.data()));
      batch_input_load_map = config["batch_input_load_map"].value_or(batch_input_load_map);
      batch_save_map       = config["batch_save_map"].value_or(batch_save_map);
-
-
-     batch_compact_type =
-       decltype(batch_compact_type){ static_cast<compact_type>(config[ff_8::ConfigKeys<ff_8::FilterTag::Compact>::key_name].value_or(
-                                       std::to_underlying(batch_compact_type.value()))),
-                                     config[ff_8::ConfigKeys<ff_8::FilterTag::Compact>::enabled_key_name].value_or(false) };
-
-     batch_flatten_type =
-       decltype(batch_flatten_type){ static_cast<flatten_type>(config[ff_8::ConfigKeys<ff_8::FilterTag::Flatten>::key_name].value_or(
-                                       std::to_underlying(batch_flatten_type.value()))),
-                                     config[ff_8::ConfigKeys<ff_8::FilterTag::Flatten>::enabled_key_name].value_or(false) };
 
      refresh_ffnx_paths();
 }

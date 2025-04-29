@@ -53,7 +53,8 @@ struct Selections
 
      open_viii::graphics::BPPT      bpp                            = {};///< Bits per pixel for rendering.
      uint8_t                        palette                        = {};///< Selected palette index.
-     int                            field                          = {};///< Selected field ID.
+     int                            field                          = {};///< Selected field index. Set by gui after reading starter_field
+     std::string                    starter_field                  = { "ecenter3" };///< field name.
      open_viii::LangT               coo                            = {};///< Selected language.
      draw_mode                      draw                           = { draw_mode::draw_map };///< Current drawing mode.
      int                            selected_tile                  = { -1 };///< Index of the currently selected tile.
@@ -97,14 +98,16 @@ struct Selections
      bool            batch_input_load_map        = { false };
      bool            batch_save_map              = { true };
 
-     ff_8::filter_old<compact_type, ff_8::FilterTag::Compact> batch_compact_type = {};
-     ff_8::filter_old<flatten_type, ff_8::FilterTag::Flatten> batch_flatten_type = {};
+     ff_8::filter_old<compact_type, ff_8::FilterTag::Compact> batch_compact_type = { ff_8::FilterSettings::Default };
+     ff_8::filter_old<flatten_type, ff_8::FilterTag::Flatten> batch_flatten_type = { ff_8::FilterSettings::Default };
 
 
      /**
       * @brief Constructs a Selections object with default values. Loading from past configuration if possible.
       */
-     Selections();
+     Selections(bool load_config = true);
+     // need to load
+     void load_configuration();
      // need to rerun when we change the path because ffnx might not be there.
      void refresh_ffnx_paths();
 };
