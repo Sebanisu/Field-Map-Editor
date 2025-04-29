@@ -44,7 +44,7 @@ struct [[nodiscard]] map_sprite final
        (std::max)(static_cast<std::uint16_t>(START_OF_NO_PALETTE_INDEX + MAX_TEXTURE_PAGES), static_cast<std::uint16_t>(BPP16_INDEX + 1U));
 
      using BPPT           = open_viii::graphics::BPPT;
-     using WeakField    = std::weak_ptr<open_viii::archive::FIFLFS<false>>;
+     using WeakField      = std::weak_ptr<open_viii::archive::FIFLFS<false>>;
      using Map            = open_viii::graphics::background::Map;
      using Mim            = open_viii::graphics::background::Mim;
      using color_type     = open_viii::graphics::Color32RGBA;
@@ -57,16 +57,16 @@ struct [[nodiscard]] map_sprite final
    private:
      ff_8::map_group                               m_map_group = {};
      square                                        m_square    = { sf::Vector2u{}, sf::Vector2u{ TILE_SIZE, TILE_SIZE }, sf::Color::Red };
-     bool                                          m_draw_swizzle                  = { false };
-     bool                                          m_disable_texture_page_shift    = { false };
-     bool                                          m_disable_blends                = { false };
-     ff_8::filters                                 m_filters                       = {};
-     ::upscales                                    m_upscales                      = {};
-     bool                                          m_using_imported_texture        = {};
-     const sf::Texture                            *m_imported_texture              = { nullptr };
-     std::uint16_t                                 m_imported_tile_size            = {};
-     Map                                           m_imported_tile_map             = {};
-     Map                                           m_imported_tile_map_front       = {};
+     bool                                          m_draw_swizzle               = { false };
+     bool                                          m_disable_texture_page_shift = { false };
+     bool                                          m_disable_blends             = { false };
+     ff_8::filters                                 m_filters                 = { false };// default false should be override by gui to true.
+     ::upscales                                    m_upscales                = {};
+     bool                                          m_using_imported_texture  = {};
+     const sf::Texture                            *m_imported_texture        = { nullptr };
+     std::uint16_t                                 m_imported_tile_size      = {};
+     Map                                           m_imported_tile_map       = {};
+     Map                                           m_imported_tile_map_front = {};
      all_unique_values_and_strings                 m_all_unique_values_and_strings = {};
      open_viii::graphics::Rectangle<std::uint32_t> m_canvas                        = {};
      SharedTextures                                m_texture                       = {};
