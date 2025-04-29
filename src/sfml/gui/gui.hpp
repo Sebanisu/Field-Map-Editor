@@ -152,7 +152,6 @@ struct gui
      void         menuitem_save_map_file_modified(bool enabled = true);
      void         menuitem_load_map_file(bool enabled = true);
      void         scale_window(float width = {}, float height = {});
-     int          get_selected_field();
      std::uint8_t palette() const;
      open_viii::graphics::BPPT                          bpp() const;
      void                                               combo_blend_modes();
@@ -178,7 +177,6 @@ struct gui
      std::vector<std::size_t> m_clicked_tile_indices{};
      //     void                                               popup_batch_reswizzle();
      //     void                                               popup_batch_deswizzle();
-     static std::string       starter_field();
      // static void              popup_batch_common_filter_start(
      //                ff_8::filter_old<std::filesystem::path> &filter,
      //                std::string_view                         prefix,
