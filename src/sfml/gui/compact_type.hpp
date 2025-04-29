@@ -5,6 +5,7 @@
 #ifndef FIELD_MAP_EDITOR_COMPACT_TYPE_HPP
 #define FIELD_MAP_EDITOR_COMPACT_TYPE_HPP
 #include <cstdint>
+#include <optional>
 namespace fme
 {
 enum struct compact_type
@@ -26,6 +27,31 @@ enum struct output_types
      deswizzle,
      swizzle,
 };
+[[nodiscard]] constexpr static inline std::optional<output_types> to_output_type(input_types input) noexcept
+{
+     switch (input)
+     {
+          case input_types::swizzle:
+               return output_types::swizzle;
+          case input_types::deswizzle:
+               return output_types::deswizzle;
+          default:
+               return std::nullopt;// input_types::mim has no mapping
+     }
+}
+
+[[nodiscard]] constexpr static inline std::optional<input_types> to_input_type(output_types output) noexcept
+{
+     switch (output)
+     {
+          case output_types::swizzle:
+               return input_types::swizzle;
+          case output_types::deswizzle:
+               return input_types::deswizzle;
+          default:
+               return std::nullopt;// input_types::mim has no mapping
+     }
+}
 enum struct flatten_type : std::uint8_t
 {
      bpp,
