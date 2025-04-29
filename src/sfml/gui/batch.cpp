@@ -157,17 +157,12 @@ void fme::batch::browse_input_path()
                                                   .palette       = std::uint8_t{ 0 },
                                                   .texture_page  = std::uint8_t{ 5 },
                                                   .pupu_id       = 9999U };
-     const key_value_data     cpm2             = { .field_name    = "field01",
+     const key_value_data     cpm2            = { .field_name    = "field01",
                                                   .ext           = ".map",
                                                   .language_code = open_viii::LangT::en,
                                                   .palette       = std::uint8_t{ 0 },
                                                   .texture_page  = std::uint8_t{ 5 },
                                                   .pupu_id       = 9999U };
-     // std::string                             keyed_string,
-     // const fme::key_value_data              &test_data,
-     // const std::shared_ptr<fme::Selections> &selections,
-     // const std::string                      &selected_path = "{ff8_path}")
-     // selected_path, ff8_path, current_path
      static const std::string ff8_path        = "{ff8_path}";
      static const std::string current_path    = "{current_path}";
 
@@ -183,19 +178,35 @@ void fme::batch::browse_input_path()
           }
      }();
 
-     switch(selections->batch_input_type)
+     switch (selections->batch_input_type)
      {
           case input_types::swizzle:
-               format_imgui_text(
-                 "{}\n{}",
-                 custom_paths_window::replace_tags(selections->output_swizzle_pattern, cpm, selections, selected_string),
-                 custom_paths_window::replace_tags(selections->output_map_pattern_for_swizzle, cpm2, selections, selected_string));
+               if (selections->batch_input_load_map)
+               {
+                    format_imgui_text(
+                      "{}\n{}",
+                      custom_paths_window::replace_tags(selections->output_swizzle_pattern, cpm, selections, selected_string),
+                      custom_paths_window::replace_tags(selections->output_map_pattern_for_swizzle, cpm2, selections, selected_string));
+               }
+               else
+               {
+                    format_imgui_text(
+                      "{}", custom_paths_window::replace_tags(selections->output_swizzle_pattern, cpm, selections, selected_string));
+               }
                break;
           case input_types::deswizzle:
-               format_imgui_text(
-                 "{}\n{}",
-                 custom_paths_window::replace_tags(selections->output_deswizzle_pattern, cpm, selections, selected_string),
-                 custom_paths_window::replace_tags(selections->output_map_pattern_for_deswizzle, cpm2, selections, selected_string));
+               if (selections->batch_input_load_map)
+               {
+                    format_imgui_text(
+                      "{}\n{}",
+                      custom_paths_window::replace_tags(selections->output_deswizzle_pattern, cpm, selections, selected_string),
+                      custom_paths_window::replace_tags(selections->output_map_pattern_for_deswizzle, cpm2, selections, selected_string));
+               }
+               else
+               {
+                    format_imgui_text(
+                      "{}", custom_paths_window::replace_tags(selections->output_deswizzle_pattern, cpm, selections, selected_string));
+               }
                break;
      }
 
@@ -287,6 +298,67 @@ void fme::batch::browse_output_path()
             "batch_output_root_path_type", static_cast<std::underlying_type_t<root_path_types>>(selections->batch_output_root_path_type));
           config.save();
      }
+
+
+     const key_value_data     cpm             = { .field_name    = "field01",
+                                                  .ext           = ".png",
+                                                  .language_code = open_viii::LangT::en,
+                                                  .palette       = std::uint8_t{ 0 },
+                                                  .texture_page  = std::uint8_t{ 5 },
+                                                  .pupu_id       = 9999U };
+     const key_value_data     cpm2            = { .field_name    = "field01",
+                                                  .ext           = ".map",
+                                                  .language_code = open_viii::LangT::en,
+                                                  .palette       = std::uint8_t{ 0 },
+                                                  .texture_page  = std::uint8_t{ 5 },
+                                                  .pupu_id       = 9999U };
+     static const std::string ff8_path        = "{ff8_path}";
+     static const std::string current_path    = "{current_path}";
+
+     const std::string       &selected_string = [&]() {
+          switch (selections->batch_output_root_path_type)
+          {
+               case root_path_types::ff8_path:
+                    return ff8_path;
+               case root_path_types::current_path:
+                    return current_path;
+               default:
+                    return std::string{ m_output_path.data() };
+          }
+     }();
+
+     switch (selections->batch_output_type)
+     {
+          case output_types::swizzle:
+               if (selections->batch_save_map)
+               {
+                    format_imgui_text(
+                      "{}\n{}",
+                      custom_paths_window::replace_tags(selections->output_swizzle_pattern, cpm, selections, selected_string),
+                      custom_paths_window::replace_tags(selections->output_map_pattern_for_swizzle, cpm2, selections, selected_string));
+               }
+               else
+               {
+                    format_imgui_text(
+                      "{}", custom_paths_window::replace_tags(selections->output_swizzle_pattern, cpm, selections, selected_string));
+               }
+               break;
+          case output_types::deswizzle:
+               if (selections->batch_save_map)
+               {
+                    format_imgui_text(
+                      "{}\n{}",
+                      custom_paths_window::replace_tags(selections->output_deswizzle_pattern, cpm, selections, selected_string),
+                      custom_paths_window::replace_tags(selections->output_map_pattern_for_deswizzle, cpm2, selections, selected_string));
+               }
+               else
+               {
+                    format_imgui_text(
+                      "{}", custom_paths_window::replace_tags(selections->output_deswizzle_pattern, cpm, selections, selected_string));
+               }
+               break;
+     }
+
      if (selections->batch_output_root_path_type != root_path_types::selected_path)
      {
           return;
@@ -715,7 +787,7 @@ void fme::batch::generate_map_sprite()
      }
      assert(m_field);
      assert(m_coo);
-     ff_8::filters filters = {};
+     ff_8::filters filters = { false };
      switch (selections->batch_input_type)
      {
           case input_types::mim:
