@@ -126,8 +126,9 @@ static constexpr auto ImVec4ToSFColor = [](const ImVec4 &color) -> sf::Color {
  * @return std::uint16_t The number of buttons that can fit per row, ensuring it's even and at least 2.
  */
 static constexpr auto get_count_per_row = [](float buttonWidth, float buttonSpacing) -> std::uint16_t {
-     const auto count_per_row_in = (std::max)(
-       static_cast<std::uint16_t>((std::floor)(ImGui::GetContentRegionAvail().x / (buttonWidth + buttonSpacing))), std::uint16_t{ 2 });
+     const auto count_per_row_in =
+       (std::max)(static_cast<std::uint16_t>((std::floor)(ImGui::GetContentRegionAvail().x / (buttonWidth + buttonSpacing))),
+                  std::uint16_t{ 2 });
      return count_per_row_in % 2 != 0 ? count_per_row_in - 1 : count_per_row_in;
 };
 
@@ -441,16 +442,18 @@ void gui::tile_conflicts_panel()
           const bool hovered_conflicts = ImGui::IsItemHovered();
           tool_tip("Button Color - Conflicts with different tiles.");
           ImGui::SameLine();
-          (void)create_color_button({ .button_color        = colors::ButtonGreen,
-                                      .button_hover_color  = colors::ButtonGreenHovered,
-                                      .button_active_color = colors::ButtonGreenActive });
+          (void)create_color_button(
+            { .button_color        = colors::ButtonGreen,
+              .button_hover_color  = colors::ButtonGreenHovered,
+              .button_active_color = colors::ButtonGreenActive });
           const bool hovered_similar = ImGui::IsItemHovered();
           tool_tip("Button Color - Conflicts with similar tiles, or duplicate tiles.");
 
           ImGui::SameLine();
-          (void)create_color_button({ .button_color        = colors::ButtonPink,
-                                      .button_hover_color  = colors::ButtonPinkHovered,
-                                      .button_active_color = colors::ButtonPinkActive });
+          (void)create_color_button(
+            { .button_color        = colors::ButtonPink,
+              .button_hover_color  = colors::ButtonPinkHovered,
+              .button_active_color = colors::ButtonPinkActive });
           const bool hovered_animation = ImGui::IsItemHovered();
           tool_tip("Button Color - Conflicts with similar tiles with different animation frame or blend modes.");
 
@@ -750,7 +753,7 @@ void gui::loop()
      m_custom_paths_window.render();
      m_field_file_window.render();
 
-       if (toggle_imgui_demo_window)
+     if (toggle_imgui_demo_window)
      {
           ImGui::ShowDemoWindow();
      }
@@ -1416,6 +1419,9 @@ void gui::combo_coo()
      if (gcc.render())
      {
           update_field();
+          Configuration config{};
+          config->insert_or_assign("selections_coo", std::to_underlying(m_selections->coo));
+          config.save();
      }
      else
      {
@@ -1427,14 +1433,32 @@ const open_viii::LangT &gui::get_coo() const
      static constexpr auto coos = open_viii::LangCommon::to_array();
      return coos.at(static_cast<size_t>(m_selections->coo));
 }
+
+/**
+ * @brief Updates the configuration with the current field selection and refreshes the field.
+ *
+ * Retrieves the field name from the field index, updates the configuration with this field name,
+ * saves the configuration, and then triggers a field update.
+ */
 void gui::refresh_field()
 {
      Configuration config{};
-     const auto   &maps = m_archives_group->mapdata();
-     config->insert_or_assign("starter_field", *std::next(maps.begin(), m_selections->field));
+
+     // Get a reference to the map data (field name list)
+     const auto   &maps          = m_archives_group->mapdata();
+
+     // Update the starter_field name based on the current field index
+     m_selections->starter_field = *std::next(maps.begin(), m_selections->field);
+
+     // Save the selected field name to the configuration
+     config->insert_or_assign("starter_field", m_selections->starter_field);
      config.save();
+
+     // Apply the updated field selection
      update_field();
 }
+
+
 void gui::combo_field()
 {
      const auto gcc = GenericComboClass(
@@ -1454,32 +1478,56 @@ void gui::combo_field()
      }
 }
 
+/**
+ * @brief Updates the currently loaded field and refreshes all dependent components.
+ *
+ * Loads the selected field archive based on the current selection index,
+ * refreshes the UI elements tied to field content, and updates any stateful
+ * drawing components depending on the draw mode.
+ *
+ * Also resets cached texture paths and clears clicked tile selections.
+ */
 void gui::update_field()
 {
+     // Load the selected field archive
      m_field = m_archives_group->field(m_selections->field);
+
+     // Refresh the file window with the new field
      m_field_file_window.refresh(m_field);
+
+     // Update UI/rendering components depending on the selected draw mode
      switch (m_selections->draw)
      {
           case draw_mode::draw_mim:
+               // Update MIM sprite with the new field
                m_mim_sprite = m_mim_sprite.with_field(m_field);
                break;
+
           case draw_mode::draw_map:
+               // Update map sprite and associated UI elements
                m_map_sprite = std::make_shared<map_sprite>(m_map_sprite->with_field(m_field, get_coo()));
                m_import.update(m_map_sprite);
                m_history_window.update(m_map_sprite);
                break;
      }
+
+     // Reset cached texture paths
      m_loaded_swizzle_texture_path   = std::filesystem::path{};
      m_loaded_deswizzle_texture_path = std::filesystem::path{};
 
+     // Mark field as changed
      m_changed                       = true;
+
+     // Generate upscale texture paths if a field is loaded
      if (m_field)
      {
           generate_upscale_paths(std::string{ m_field->get_base_name() }, get_coo());
      }
 
+     // Clear clicked tile indices used for selection logic
      m_clicked_tile_indices.clear();
 }
+
 void gui::refresh_map_swizzle()
 {
      Configuration config{};
@@ -1721,8 +1769,6 @@ void gui::windows_menu()
           config->insert_or_assign("selections_display_field_file_window", m_selections->display_field_file_window);
           config.save();
      }
-
-
 }
 void gui::edit_menu()
 {
@@ -1997,10 +2043,13 @@ void gui::edit_menu()
                }
                if (mim_test())
                {
-                    auto tmp_bpp = std::remove_cvref_t<decltype(m_map_sprite->filter().bpp)>{ m_selections->bpp, true };
-                    auto tmp_palette =
-                      std::remove_cvref_t<decltype(m_map_sprite->filter().palette)>{ static_cast<std::uint8_t>(m_selections->palette),
-                                                                                     true };
+                    auto tmp_bpp = std::remove_cvref_t<decltype(m_map_sprite->filter().bpp)>{
+                         m_selections->bpp, ff_8::WithFlag(ff_8::FilterSettings::Default, ff_8::FilterSettings::Toggle_Enabled, true)
+                    };
+                    auto tmp_palette = std::remove_cvref_t<decltype(m_map_sprite->filter().palette)>{
+                         static_cast<std::uint8_t>(m_selections->palette),
+                         ff_8::WithFlag(ff_8::FilterSettings::Default, ff_8::FilterSettings::Toggle_Enabled, true)
+                    };
                     generic_filter_menu(gui_labels::bpp.data(), mim_bpp{}, tmp_bpp, [&]() { refresh_bpp(tmp_bpp.value()); });
                     generic_filter_menu(
                       gui_labels::palette.data(), mim_palette{}, tmp_palette, [&]() { refresh_palette(tmp_palette.value()); });
@@ -2638,20 +2687,43 @@ std::filesystem::path gui::path_with_prefix_and_base_name(std::filesystem::path 
      selected_path                    = selected_path / prefix / base_name;
      return selected_path;
 }
+
+/**
+ * @brief Sorts and deduplicates the stored paths.
+ *
+ * This function reads the current paths from `m_paths`, sorts them alphabetically,
+ * and removes duplicates. If the paths are already sorted and unique, no action is taken.
+ * After modification, the updated paths are saved back into the configuration.
+ *
+ * @note Paths that do not exist on the filesystem are TODO: not yet removed.
+ */
 void gui::sort_paths()
-{// todo remove paths that don't exist.
-     std::vector<std::string> tmp = {};
+{
+     // todo: remove paths that don't exist.
+
+     std::vector<std::string> tmp;
      tmp.reserve(std::ranges::size(m_paths));
      std::ranges::transform(m_paths, std::back_inserter(tmp), [](const toml::node &node) { return node.value_or(std::string{}); });
+
+     // Check if already sorted and unique
+     bool already_sorted = std::ranges::is_sorted(tmp);
+     bool already_unique = std::ranges::adjacent_find(tmp) == tmp.end();
+
+     if (already_sorted && already_unique)
+          return;// Nothing to do
+
      std::ranges::sort(tmp);
      const auto removal = std::ranges::unique(tmp);
      tmp.erase(removal.begin(), removal.end());
+
      m_paths.clear();
      std::ranges::for_each(tmp, [this](std::string &str) { m_paths.push_back(std::move(str)); });
+
      Configuration config{};
      config->insert_or_assign("paths_vector", m_paths);
      config.save();
 }
+
 void gui::file_browser_save_texture()
 {
      m_save_file_browser.Display();
@@ -3208,8 +3280,9 @@ void gui::scale_window(float width, float height)
      // going from 4:3 to 16:9 will end up with wide screen.
      m_scale_width               = std::round(width / adjusted_height * img_height);
      float const scaled_gap      = scaled_menubar_gap();
-     m_window.setView(sf::View(
-       sf::FloatRect(std::round(m_cam_pos.x), std::round(m_cam_pos.y - scaled_gap), m_scale_width, std::round(img_height + scaled_gap))));
+     m_window.setView(
+       sf::View(
+         sf::FloatRect(std::round(m_cam_pos.x), std::round(m_cam_pos.y - scaled_gap), m_scale_width, std::round(img_height + scaled_gap))));
 }
 archives_group gui::get_archives_group() const
 {
@@ -3241,6 +3314,9 @@ mim_sprite gui::get_mim_sprite() const
 }
 void gui::init_and_get_style()
 {
+     // m_window.setVerticalSyncEnabled(true);
+     // m_window.setFramerateLimit(0);// Disable manual frame limit
+     // m_window.setVerticalSyncEnabled(false);// Disable vsync
      m_window.setVerticalSyncEnabled(true);
      (void)ImGui::SFML::Init(m_window, false);
 
@@ -3313,7 +3389,6 @@ gui::gui()
      m_history_window.update(m_selections);
      m_import.update(m_map_sprite);
      m_history_window.update(m_map_sprite);
-     m_window.setVerticalSyncEnabled(false);
      GLenum const err = glewInit();
      if (std::cmp_not_equal(GLEW_OK, err))
      {
@@ -3331,32 +3406,36 @@ gui::gui()
      sort_paths();
      init_and_get_style();
 }
+
+/**
+ * @brief Initializes the field data using the selected field name.
+ *
+ * Uses the string stored in the configuration to find the corresponding field index.
+ * If the field name is not found, defaults to index 0.
+ *
+ * @return A shared pointer to the field archive.
+ */
 std::shared_ptr<open_viii::archive::FIFLFS<false>> gui::init_field()
 {
-     m_selections->field = get_selected_field();
+     const int field     = m_archives_group->find_field(m_selections->starter_field);
+
+     // If the field was not found (returns < 0), fall back to 0
+     m_selections->field = field >= 0 ? field : 0;
+
      return m_archives_group->field(m_selections->field);
 }
+
 std::shared_ptr<map_sprite> gui::get_map_sprite() const
 {
      //     map_sprite(ff_8::map_group map_group, bool draw_swizzle, ff_8::filters in_filters, bool force_disable_blends, bool
      //     require_coo);
      return std::make_shared<map_sprite>(
-       ff_8::map_group{ m_field, get_coo() }, m_selections->draw_swizzle, ff_8::filters{}, m_selections->draw_disable_blending, false);
+       ff_8::map_group{ m_field, get_coo() },
+       m_selections->draw_swizzle,
+       ff_8::filters{ true },
+       m_selections->draw_disable_blending,
+       false);
 }
-
-int gui::get_selected_field()
-{
-     if (const int field = m_archives_group->find_field(starter_field()); field != -1)
-     {
-          return field;
-     }
-     return 0;
-}
-std::string gui::starter_field()
-{
-     return Configuration{}["starter_field"].value_or(std::string("ecenter3"));
-}
-
 
 void gui::combo_pupu()
 {
