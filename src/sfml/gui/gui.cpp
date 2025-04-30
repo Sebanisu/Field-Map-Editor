@@ -721,10 +721,15 @@ void gui::collapsing_header_filters()
 }
 void gui::change_background_color(const fme::color &in_color)
 {
+     if (m_selections->background_color == in_color)
+     {
+          return;
+     }
      m_selections->background_color = in_color;
      Configuration config{};
      config->insert_or_assign("selections_background_color", std::bit_cast<std::uint32_t>(m_selections->background_color));
      config.save();
+     spdlog::info("selections_background_color: {}", m_selections->background_color);
 }
 void gui::background_color_picker()
 {
@@ -824,7 +829,7 @@ void gui::draw_window()
           DrawCheckerboardBackground(
             screen_pos,
             scaled_size,
-            (m_selections->draw_palette ? 0.25F : (static_cast<float>(m_map_sprite->get_map_scale()) * 4.F) * scale),
+            (m_selections->draw_palette ? 0.25F * scale : 4.F * scale),
             m_selections->background_color.fade(-0.2F),
             m_selections->background_color.fade(0.2F));
 
@@ -1418,15 +1423,21 @@ void gui::combo_coo()
        gui_labels::language, []() { return values; }, []() { return values | std::views::transform(AsString{}); }, m_selections->coo);
      if (gcc.render())
      {
-          update_field();
-          Configuration config{};
-          config->insert_or_assign("selections_coo", std::to_underlying(m_selections->coo));
-          config.save();
+          refresh_coo();
      }
      else
      {
           tool_tip(gui_labels::language_dropdown_tool_tip);
      }
+}
+
+void gui::refresh_coo()
+{
+     update_field();
+     spdlog::info("selections_coo: {}", m_selections->coo);
+     Configuration config{};
+     config->insert_or_assign("selections_coo", std::to_underlying(m_selections->coo));
+     config.save();
 }
 const open_viii::LangT &gui::get_coo() const
 {
@@ -1535,11 +1546,13 @@ void gui::refresh_map_swizzle()
      config.save();
      if (m_selections->draw_swizzle)
      {
+          spdlog::info("selections_draw_swizzle: enabled");
           m_map_sprite->enable_disable_blends();
           m_map_sprite->enable_draw_swizzle();
      }
      else
      {
+          spdlog::info("selections_draw_swizzle: disabled");
           m_map_sprite->disable_draw_swizzle();
           if (!m_selections->draw_disable_blending)
           {
@@ -1563,10 +1576,12 @@ void gui::refresh_map_disable_blending()
      config.save();
      if (m_selections->draw_disable_blending)
      {
+          spdlog::info("selections_draw_disable_blending: enabled");
           m_map_sprite->enable_disable_blends();
      }
      else
      {
+          spdlog::info("selections_draw_disable_blending: disabled");
           m_map_sprite->disable_disable_blends();
      }
      m_changed = true;
@@ -1597,6 +1612,7 @@ void gui::checkbox_map_disable_blending()
 void gui::refresh_mim_palette_texture()
 {
      Configuration config{};
+     spdlog::info("selections_draw_palette: {}", m_selections->draw_palette ? "enabled" : "disabled");
      config->insert_or_assign("selections_draw_palette", m_selections->draw_palette);
      config.save();
      m_mim_sprite = m_mim_sprite.with_draw_palette(m_selections->draw_palette);
@@ -1918,6 +1934,7 @@ void gui::edit_menu()
 
                if (ImGui::MenuItem(gui_labels::draw_tile_grid.data(), nullptr, &m_selections->draw_grid))
                {
+                    spdlog::info("selections_draw_grid: {}", m_selections->draw_grid ? "enabled" : "disabled");
                     Configuration config{};
                     config->insert_or_assign("selections_draw_grid", m_selections->draw_grid);
                     config.save();
@@ -1927,6 +1944,8 @@ void gui::edit_menu()
                {
                     if (ImGui::MenuItem(gui_labels::draw_texture_page_grid.data(), nullptr, &m_selections->draw_texture_page_grid))
                     {
+                         spdlog::info(
+                           "selections_draw_texture_page_grid: {}", m_selections->draw_texture_page_grid ? "enabled" : "disabled");
                          Configuration config{};
                          config->insert_or_assign("selections_draw_texture_page_grid", m_selections->draw_texture_page_grid);
                          config.save();
@@ -1937,6 +1956,8 @@ void gui::edit_menu()
                {
                     if (ImGui::MenuItem(gui_labels::draw_tile_conflict_rects.data(), nullptr, &m_selections->draw_tile_conflict_rects))
                     {
+                         spdlog::info(
+                           "selections_draw_tile_conflict_rects: {}", m_selections->draw_tile_conflict_rects ? "enabled" : "disabled");
                          Configuration config{};
                          config->insert_or_assign("selections_draw_tile_conflict_rects", m_selections->draw_tile_conflict_rects);
                          config.save();
@@ -2274,7 +2295,7 @@ void gui::file_menu()
                if (ImGui::MenuItem(string.data(), nullptr, &is_checked, !is_checked))
                {
                     m_selections->coo = value;
-                    update_field();
+                    refresh_coo();
                }
                else
                {

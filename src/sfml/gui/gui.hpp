@@ -66,12 +66,12 @@ struct gui
      toml::array                                                         m_paths                = {};
      toml::array                                                         m_custom_upscale_paths = {};
      std::shared_ptr<archives_group>                                     m_archives_group       = {};
-     batch                                                               m_batch                = fme::batch{ m_selections, m_archives_group };
-     std::vector<std::string>                                            m_upscale_paths        = {};
-     std::shared_ptr<open_viii::archive::FIFLFS<false>>                  m_field                = {};
-     std::array<float, 2>                                                xy                     = {};
-     mim_sprite                                                          m_mim_sprite           = {};
-     std::shared_ptr<map_sprite>                                         m_map_sprite           = {};
+     batch                                                               m_batch         = fme::batch{ m_selections, m_archives_group };
+     std::vector<std::string>                                            m_upscale_paths = {};
+     std::shared_ptr<open_viii::archive::FIFLFS<false>>                  m_field         = {};
+     std::array<float, 2>                                                xy              = {};
+     mim_sprite                                                          m_mim_sprite    = {};
+     std::shared_ptr<map_sprite>                                         m_map_sprite    = {};
      FutureOfFutureConsumer<std::vector<std::future<std::future<void>>>> m_future_of_future_consumer = {};
      FutureConsumer<std::vector<std::future<void>>>                      m_future_consumer           = {};
      float                                                               saved_window_width          = {};
@@ -341,6 +341,7 @@ struct gui
      void                         refresh_bpp(open_viii::graphics::BPPT in_bpp);
      void                         refresh_palette(std::uint8_t palette);
      void                         refresh_render_texture(bool reload_textures = false);
+     void                         refresh_coo();
 
 
      static inline constinit bool toggle_imgui_demo_window = { false };
