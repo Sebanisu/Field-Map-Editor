@@ -78,9 +78,9 @@ struct Selections
      bool                           display_draw_window            = { true };///< Whether to display draw window.
      bool                           display_custom_paths_window    = { false };///< Whether to display custom paths window.
      bool                           display_field_file_window      = { false };///< Whether to display field file window.
-     std::string                    ffnx_mod_path                  = {};
-     std::string                    ffnx_override_path             = {};
-     std::string                    ffnx_direct_mode_path          = {};
+     std::string                    ffnx_mod_path                  = { "mods/Textures" };
+     std::string                    ffnx_override_path             = { "override" };
+     std::string                    ffnx_direct_mode_path          = { "direct" };
      std::string                    output_swizzle_pattern         = { "{selected_path}\\{demaster}" };
      std::string                    output_deswizzle_pattern       = { "{selected_path}\\deswizzle\\{demaster}" };
      std::string                    output_map_pattern_for_swizzle = { "{selected_path}\\{demaster}" };

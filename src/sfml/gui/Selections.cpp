@@ -83,21 +83,12 @@ void fme::Selections::refresh_ffnx_paths()
           spdlog::warn("{}:{} - {}: {} path: \"{}\"", __FILE__, __LINE__, error_code.value(), error_code.message(), ffnx_settings_toml);
           error_code.clear();
      }
-     static constexpr std::string_view default_mod_path         = "mods/Textures";
-     static constexpr std::string_view default_override         = "override";
-     static constexpr std::string_view default_direct_mode_path = "direct";
+
      if (exists)
      {
           const auto ffnx_config = Configuration(ffnx_settings_toml);
-          ffnx_mod_path          = ffnx_config["mod_path"].value_or(std::string{ default_mod_path.begin(), default_mod_path.end() });
-          ffnx_override_path     = ffnx_config["override_path"].value_or(std::string{ default_override.begin(), default_override.end() });
-          ffnx_direct_mode_path =
-            ffnx_config["direct_mode_path"].value_or(std::string{ default_direct_mode_path.begin(), default_direct_mode_path.end() });
-     }
-     else
-     {
-          ffnx_mod_path         = std::string{ default_mod_path.begin(), default_mod_path.end() };
-          ffnx_override_path    = std::string{ default_override.begin(), default_override.end() };
-          ffnx_direct_mode_path = std::string{ default_direct_mode_path.begin(), default_direct_mode_path.end() };
+          ffnx_mod_path          = ffnx_config["mod_path"].value_or(ffnx_mod_path);
+          ffnx_override_path     = ffnx_config["override_path"].value_or(ffnx_override_path);
+          ffnx_direct_mode_path  = ffnx_config["direct_mode_path"].value_or(ffnx_direct_mode_path);
      }
 }
