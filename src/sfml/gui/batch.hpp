@@ -67,6 +67,13 @@ class batch
      void                                open_directory_browser();
      void                                button_input_browse();
      void                                button_output_browse();
+     void                                example_input_paths();
+     void                                example_output_paths();
+     // both use the output pattern currently
+     const std::string                  &get_output_pattern(fme::input_types type);
+     const std::string                  &get_output_pattern(fme::output_types type);
+     const std::string                  &get_output_map_pattern(fme::input_types type);
+     const std::string                  &get_output_map_pattern(fme::output_types type);
      void                                save_input_path();
      void                                save_output_path();
      [[nodiscard]] std::filesystem::path append_file_structure(const std::filesystem::path &path) const;
