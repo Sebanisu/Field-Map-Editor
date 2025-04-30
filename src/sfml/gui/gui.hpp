@@ -333,7 +333,8 @@ struct gui
      void                         refresh_map_disable_blending();
      void                         refresh_draw_mode();
      void                         refresh_mim_palette_texture();
-     void                         change_background_color(const fme::color &);
+     bool                         change_background_color(const fme::color &);
+     void                         save_background_color();
      void                         refresh_path();
      void                         browse_buttons();
      void                         menu_upscale_paths();

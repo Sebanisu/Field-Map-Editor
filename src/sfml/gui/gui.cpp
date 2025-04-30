@@ -719,17 +719,21 @@ void gui::collapsing_header_filters()
           combo_draw_bit();
      }
 }
-void gui::change_background_color(const fme::color &in_color)
+bool gui::change_background_color(const fme::color &in_color)
 {
      if (m_selections->background_color == in_color)
      {
-          return;
+          return false;
      }
      m_selections->background_color = in_color;
+     return true;
+}
+void gui::save_background_color()
+{
+     spdlog::info("selections_background_color: {}", m_selections->background_color);
      Configuration config{};
      config->insert_or_assign("selections_background_color", std::bit_cast<std::uint32_t>(m_selections->background_color));
      config.save();
-     spdlog::info("selections_background_color: {}", m_selections->background_color);
 }
 void gui::background_color_picker()
 {
@@ -739,6 +743,10 @@ void gui::background_color_picker()
      if (ImGui::ColorEdit3(gui_labels::background.data(), clear_color_f.data(), ImGuiColorEditFlags_DisplayRGB))
      {
           change_background_color({ clear_color_f[0], clear_color_f[1], clear_color_f[2] });
+     }
+     if (ImGui::IsItemDeactivatedAfterEdit())
+     {
+          save_background_color();
      }
 }
 void gui::loop()
@@ -1981,13 +1989,20 @@ void gui::edit_menu()
                     ImGui::SameLine();
                     if (ImGui::MenuItem(color_name.data()))
                     {
-                         change_background_color(color_value);
+                         if (change_background_color(color_value))
+                         {
+                              save_background_color();
+                         }
                     }
                }
 
                if (ImGui::ColorPicker3("##Choose Background Color", clear_color_f.data(), ImGuiColorEditFlags_DisplayRGB))
                {
                     change_background_color({ clear_color_f[0], clear_color_f[1], clear_color_f[2] });
+               }
+               if (ImGui::IsItemDeactivatedAfterEdit())
+               {
+                    save_background_color();
                }
                ImGui::EndMenu();
           }
