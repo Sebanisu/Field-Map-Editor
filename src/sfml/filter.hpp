@@ -266,22 +266,22 @@ struct filter_old
                          fme::Configuration config{};
                          if constexpr (std::convertible_to<T, std::filesystem::path>)
                          {
-                              spdlog::info("filter_old<{}>: \"{}\"",ConfigKeys<Tag>::key_name,m_value.string());
+                              spdlog::info("filter_old<{}>: \"{}\"", ConfigKeys<Tag>::key_name, m_value.string());
                               config->insert_or_assign(ConfigKeys<Tag>::key_name, m_value.string());
                          }
                          else if constexpr (requires { std::declval<T>().raw(); })
                          {
-                              spdlog::info("filter_old<{}>: {}",ConfigKeys<Tag>::key_name,m_value);
+                              spdlog::info("filter_old<{}>: {}", ConfigKeys<Tag>::key_name, m_value);
                               config->insert_or_assign(ConfigKeys<Tag>::key_name, m_value.raw());
                          }
                          else if constexpr (std::is_enum_v<T>)
                          {
-                              spdlog::info("filter_old<{}>: {}",ConfigKeys<Tag>::key_name,m_value);
+                              spdlog::info("filter_old<{}>: {}", ConfigKeys<Tag>::key_name, m_value);
                               config->insert_or_assign(ConfigKeys<Tag>::key_name, std::to_underlying(m_value));
                          }
                          else
                          {
-                              spdlog::info("filter_old<{}>: m_value = {}",ConfigKeys<Tag>::key_name,m_value);
+                              spdlog::info("filter_old<{}>: {}", ConfigKeys<Tag>::key_name, m_value);
                               config->insert_or_assign(ConfigKeys<Tag>::key_name, m_value);
                          }
                          config.save();
@@ -300,11 +300,16 @@ struct filter_old
      }
      filter_old &enable()
      {
+          if (HasFlag(m_settings, FilterSettings::Toggle_Enabled))
+          {
+               return *this;
+          }
           SetFlag(m_settings, FilterSettings::Toggle_Enabled, true);
           if constexpr (std::same_as<std::remove_cvref_t<decltype(ConfigKeys<Tag>::enabled_key_name)>, std::string_view>)
           {
                if (HasFlag(m_settings, FilterSettings::Config_Enabled))
                {
+                    spdlog::info("filter_old<{}>: enabled", ConfigKeys<Tag>::key_name);
                     fme::Configuration config{};
                     config->insert_or_assign(ConfigKeys<Tag>::enabled_key_name, enabled());
                     config.save();
@@ -314,11 +319,16 @@ struct filter_old
      }
      filter_old &disable()
      {
+          if (!HasFlag(m_settings, FilterSettings::Toggle_Enabled))
+          {
+               return *this;
+          }
           SetFlag(m_settings, FilterSettings::Toggle_Enabled, false);
           if constexpr (std::same_as<std::remove_cvref_t<decltype(ConfigKeys<Tag>::enabled_key_name)>, std::string_view>)
           {
                if (HasFlag(m_settings, FilterSettings::Config_Enabled))
                {
+                    spdlog::info("filter_old<{}>: disabled", ConfigKeys<Tag>::key_name);
                     fme::Configuration config{};
                     config->insert_or_assign(ConfigKeys<Tag>::enabled_key_name, enabled());
                     config.save();
@@ -372,14 +382,17 @@ struct filter
                          fme::Configuration config{};
                          if constexpr (requires { std::declval<T>().raw(); })
                          {
+                              spdlog::info("filter<{}>: {}", ConfigKeys<Tag>::key_name, m_value);
                               config->insert_or_assign(ConfigKeys<Tag>::key_name, m_value.raw());
                          }
                          else if constexpr (std::is_enum_v<T>)
                          {
+                              spdlog::info("filter<{}>: {}", ConfigKeys<Tag>::key_name, m_value);
                               config->insert_or_assign(ConfigKeys<Tag>::key_name, std::to_underlying(m_value));
                          }
                          else
                          {
+                              spdlog::info("filter<{}>: {}", ConfigKeys<Tag>::key_name, m_value);
                               config->insert_or_assign(ConfigKeys<Tag>::key_name, m_value);
                          }
                          config.save();
@@ -403,6 +416,7 @@ struct filter
           {
                if (HasFlag(m_settings, FilterSettings::Config_Enabled))
                {
+                    spdlog::info("filter<{}>: enabled", ConfigKeys<Tag>::key_name);
                     fme::Configuration config{};
                     config->insert_or_assign(ConfigKeys<Tag>::enabled_key_name, enabled());
                     config.save();
@@ -417,6 +431,7 @@ struct filter
           {
                if (HasFlag(m_settings, FilterSettings::Config_Enabled))
                {
+                    spdlog::info("filter<{}>: disabled", ConfigKeys<Tag>::key_name);
                     fme::Configuration config{};
                     config->insert_or_assign(ConfigKeys<Tag>::enabled_key_name, enabled());
                     config.save();
