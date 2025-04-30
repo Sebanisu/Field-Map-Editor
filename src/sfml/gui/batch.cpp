@@ -731,44 +731,84 @@ bool fme::batch::browse_path(std::string_view name, bool &valid_path, std::array
      format_imgui_text("{}", name.data());
      return changed;
 }
+
+/**
+ * @brief Updates the batch processing state based on the elapsed time.
+ *
+ * This function runs periodically and is responsible for:
+ * - Throttling execution to one update every 30ms.
+ * - Attempting to consume a future if available.
+ * - Selecting a field and COO if needed.
+ * - Processing the map sprite if all required data is valid.
+ * - Compacting, flattening, and saving textures/maps according to user-selected options.
+ * - Resetting internal state for the next processing cycle.
+ *
+ * @param elapsed_time The time elapsed since the last update call.
+ */
 void fme::batch::update(sf::Time elapsed_time)
 {
+     // Attempt to acquire a shared_ptr to the selections structure
      const auto selections = m_selections.lock();
      if (!selections)
      {
           spdlog::error("Failed to lock m_selections: shared_ptr is expired.");
           return;
      }
-     static constexpr int interval           = 30;// the interval in milliseconds
-     static int           total_elapsed_time = 0;// keep track of the elapsed time using a static variable
 
-     total_elapsed_time += elapsed_time.asMilliseconds();// add the elapsed time since last update
+     // Interval between updates in milliseconds
+     static constexpr int interval           = 30;
 
+     // Accumulated elapsed time (preserved across calls)
+     static int           total_elapsed_time = 0;
+
+     // Add elapsed time from this frame to the total
+     total_elapsed_time += elapsed_time.asMilliseconds();
+
+     // Skip update if interval threshold hasn't been reached
      if (total_elapsed_time < interval)
      {
           return;
      }
-     total_elapsed_time = 0;// reset the elapsed time
+
+     // Reset accumulated time after reaching the threshold
+     total_elapsed_time = 0;
+
+     // Attempt to process any pending futures first
      if (consume_one_future())
      {
           return;
      }
+
+     // Select the next valid field and COO if needed
      choose_field_and_coo();
+
+     // Exit if required data is missing or invalid
      if (!m_field || !m_coo || !m_field->operator bool())
      {
           return;
      }
+
+     // Update status with the field and language info
      m_status = fmt::format("Processing {}:{}", m_field->get_base_name(), *m_coo);
+
+     // Generate the visual representation of the map
      generate_map_sprite();
 
+     // Proceed only if map sprite generation succeeded
+     // and it either uses the COO or COO is 'generic'
      if (!m_map_sprite.fail() && (m_map_sprite.using_coo() || m_coo.value() == open_viii::LangT::generic))
      {
+          // Optionally load the map from the input path if applicable
           if (selections->batch_input_load_map && selections->batch_input_type != input_types::mim)
           {
                m_map_sprite.load_map(append_file_structure(m_input_path.data()) / m_map_sprite.map_filename());
           }
+
+          // Optimize and prepare data for output
           compact();
           flatten();
+
+          // Choose output method based on batch output type
           switch (selections->batch_output_type)
           {
                case output_types::deswizzle:
@@ -778,63 +818,116 @@ void fme::batch::update(sf::Time elapsed_time)
                     m_future_of_future_consumer = m_map_sprite.save_swizzle_textures(append_file_structure(m_output_path.data()));
                     break;
           }
+
+          // Optionally save the modified map
           if (selections->batch_save_map)
           {
                m_map_sprite.save_modified_map(append_file_structure(m_output_path.data()) / m_map_sprite.map_filename());
           }
      }
+
+     // Clean up and prepare for next processing cycle
      reset_for_next();
 }
+
+
+/**
+ * @brief Attempts to advance or retrieve results from future consumers.
+ *
+ * This function checks the state of asynchronous operations (represented by
+ * `m_future_of_future_consumer` and `m_future_consumer`) and progresses them
+ * if needed. It ensures that any pending output is consumed before continuing.
+ *
+ * @return true if any future was consumed or progressed, false otherwise.
+ */
 bool fme::batch::consume_one_future()
 {
-     // perform your operation here
+     // If the outer future is still processing, advance it
      if (!m_future_of_future_consumer.done())
      {
           ++m_future_of_future_consumer;
           return true;
      }
+     // If the outer future is done but has output, consume it
      else if (!m_future_of_future_consumer.output_empty())
      {
           m_future_consumer = m_future_of_future_consumer.get_consumer();
           return true;
      }
+     // If the inner future is still processing, advance it
      else if (!m_future_consumer.done())
      {
           ++m_future_consumer;
           return true;
      }
+
+     // Nothing to do, both futures are done and consumed
      return false;
 }
+
+/**
+ * @brief Generates the map sprite based on the current field, language, and input type.
+ *
+ * This function builds a `map_sprite` instance using the current field and language (COO),
+ * applying filters depending on the input type selected by the user (e.g., deswizzle, swizzle).
+ * The resulting sprite is stored in `m_map_sprite`.
+ *
+ * It uses input settings from `m_selections` and applies different filters accordingly.
+ * If the shared_ptr to selections is expired, the function logs an error and aborts.
+ */
 void fme::batch::generate_map_sprite()
 {
-     const auto selections = m_selections.lock();
-     if (!selections)
-     {
-          spdlog::error("Failed to lock m_selections: shared_ptr is expired.");
-          return;
-     }
-     assert(m_field);
-     assert(m_coo);
-     ff_8::filters filters = { false };
-     switch (selections->batch_input_type)
-     {
-          case input_types::mim:
-               // do nothing
-               break;
-          case input_types::deswizzle:
-               filters.deswizzle.update(append_file_structure(m_input_path.data())).enable();
-               break;
-          case input_types::swizzle:
-               filters.upscale.update(append_file_structure(m_input_path.data())).enable();
-               break;
-     }
-     m_map_sprite = map_sprite{ ff_8::map_group{ m_field, *m_coo },
-                                selections->batch_output_type == output_types::swizzle,
-                                filters,
-                                true,
-                                m_coo && m_coo.value() != open_viii::LangT::generic };
+    // Try to acquire a shared pointer to user selections
+    const auto selections = m_selections.lock();
+    if (!selections)
+    {
+        spdlog::error("Failed to lock m_selections: shared_ptr is expired.");
+        return;
+    }
+
+    // Ensure preconditions are met
+    assert(m_field);
+    assert(m_coo);
+
+    // Initialize filters with default disabled state
+    ff_8::filters filters = { false };
+
+    // Enable specific filters depending on the input type
+    switch (selections->batch_input_type)
+    {
+        case input_types::mim:
+            // No filters applied for MIM input
+            break;
+
+        case input_types::deswizzle:
+            // Enable deswizzle filter using the input path
+            filters.deswizzle.update(append_file_structure(m_input_path.data())).enable();
+            break;
+
+        case input_types::swizzle:
+            // Enable upscale filter using the input path
+            filters.upscale.update(append_file_structure(m_input_path.data())).enable();
+            break;
+    }
+
+    // Create the map sprite with appropriate settings
+    m_map_sprite = map_sprite{
+        ff_8::map_group{ m_field, *m_coo },                                  // field and language
+        selections->batch_output_type == output_types::swizzle,             // use swizzle format?
+        filters,                                                            // filters to apply
+        true,                                                               // always include image data?
+        m_coo && m_coo.value() != open_viii::LangT::generic                 // use localized COO?
+    };
 }
 
+/**
+ * @brief Applies a compaction strategy to the current map sprite based on user selection.
+ *
+ * This function checks whether a compact type is enabled in the batch selection.
+ * If it is, it applies the appropriate compaction method to `m_map_sprite`.
+ *
+ * Compaction can rearrange tiles, resolve overlaps, or adjust layout according to the selected strategy.
+ */
 void fme::batch::compact()
 {
      const auto selections = m_selections.lock();
@@ -843,10 +936,14 @@ void fme::batch::compact()
           spdlog::error("Failed to lock m_selections: shared_ptr is expired.");
           return;
      }
+
+     // Skip if compact type is not enabled
      if (!selections->batch_compact_type.enabled())
      {
           return;
      }
+
+     // Apply the appropriate compaction strategy based on the selected type
      switch (selections->batch_compact_type.value())
      {
           case compact_type::rows:
@@ -866,6 +963,16 @@ void fme::batch::compact()
                break;
      }
 }
+
+/**
+ * @brief Applies flattening operations to the current map sprite based on user selection.
+ *
+ * Flattening can reduce BPP or palette complexity, depending on the type selected.
+ * Certain flattening operations are skipped if incompatible compaction types are selected.
+ *
+ * If flattening is applied and the compact type is not map-order based,
+ * the function will additionally call `compact()` to optimize layout.
+ */
 void fme::batch::flatten()
 {
      const auto selections = m_selections.lock();
@@ -874,91 +981,149 @@ void fme::batch::flatten()
           spdlog::error("Failed to lock m_selections: shared_ptr is expired.");
           return;
      }
+
+     // Skip if flattening is not enabled
      if (!selections->batch_flatten_type.enabled())
      {
           return;
      }
+
+     // Determine and apply flattening strategy
      switch (selections->batch_flatten_type.value())
      {
           case flatten_type::bpp:
+               // Only flatten BPP if compact type isn't using map order
                if (
-                 !selections->batch_compact_type.enabled() || (selections->batch_compact_type.value() != compact_type::map_order)
-                 || (selections->batch_compact_type.value() != compact_type::map_order_ffnx))
+                 !selections->batch_compact_type.enabled()
+                 || (selections->batch_compact_type.value() != compact_type::map_order && selections->batch_compact_type.value() != compact_type::map_order_ffnx))
                {
                     m_map_sprite.flatten_bpp();
                }
                break;
+
           case flatten_type::palette:
                m_map_sprite.flatten_palette();
                break;
+
           case flatten_type::both:
+               // Only flatten BPP if not using map order
                if (
-                 !selections->batch_compact_type.enabled() || (selections->batch_compact_type.value() != compact_type::map_order)
-                 || (selections->batch_compact_type.value() != compact_type::map_order_ffnx))
+                 !selections->batch_compact_type.enabled()
+                 || (selections->batch_compact_type.value() != compact_type::map_order && selections->batch_compact_type.value() != compact_type::map_order_ffnx))
                {
                     m_map_sprite.flatten_bpp();
                }
                m_map_sprite.flatten_palette();
                break;
      }
+
+     // If the compact strategy is not map-order-based, re-apply compaction
      if (selections->batch_compact_type.value() != compact_type::map_order)
      {
           compact();
      }
 }
+
+
+/**
+ * @brief Resets the current language and field state in preparation for the next item in batch processing.
+ *
+ * If the language consumer is done, the field is reset and language consumer is restarted if more fields remain.
+ * This helps coordinate iteration through fields and their associated languages.
+ */
 void fme::batch::reset_for_next()
 {
+     // Clear the current language
      m_coo.reset();
+
+     // If the current language has been fully processed
      if (m_lang_consumer.done())
      {
+          // Clear the field
           m_field.reset();
+
+          // If more fields are available, restart the language consumer for the next field
           if (!m_fields_consumer.done())
           {
                m_lang_consumer.restart();
           }
      }
 }
+
+/**
+ * @brief Chooses and initializes a field and COO (Language Archive) from consumers.
+ *
+ * This function attempts to initialize `m_field` from the `m_fields_consumer`
+ * and `m_coo` from the `m_lang_consumer`. It ensures the field is valid and
+ * corresponds to a map marked as enabled in `m_maps_enabled`.
+ *
+ * Requirements:
+ * - `m_archives_group` must be valid (not expired).
+ * - `m_fields_consumer` and `m_lang_consumer` must support dereferencing and iteration.
+ * - `m_maps_enabled` should have a size matching the number of map entries in `mapdata()`.
+ *
+ * If a valid field and COO are found, they are stored in `m_field` and `m_coo`, respectively.
+ */
 void fme::batch::choose_field_and_coo()
 {
+     // Attempt to acquire a shared_ptr to the archives group
      const auto archives_group = m_archives_group.lock();
      if (!archives_group)
      {
           spdlog::error("Failed to lock m_archives_group: shared_ptr is expired.");
           return;
      }
+
+     // Attempt to choose a valid field from m_fields_consumer
      while ((!m_field || !m_field->operator bool()) && !m_fields_consumer.done())
      {
+          // Retrieve the next archive from the consumer
           open_viii::archive::FIFLFSArchiveFetcher tmp         = *m_fields_consumer;
+
+          // Reference to the list of map names in the archive group
           const auto                              &map_data    = archives_group->mapdata();
+
+          // Attempt to find a case-insensitive match for the current archive's map name
           const auto                               find_result = std::ranges::find_if(
             map_data, [&](std::string_view map_name) -> bool { return open_viii::tools::i_equals(map_name, tmp.map_name()); });
 
+          // If a matching map name is found
           if (find_result != std::ranges::end(map_data))
           {
                const auto offset = std::ranges::distance(std::ranges::begin(map_data), find_result);
+
+               // Check if the map at this offset is enabled
                if (m_maps_enabled.at(static_cast<std::size_t>(offset)))
                {
+                    // Create the field object from the archive and store it
                     m_field = std::make_shared<open_viii::archive::FIFLFS<false>>(tmp.get());
+
+                    // Move to the next consumer item
                     ++m_fields_consumer;
-                    break;
+
+                    break;// Exit the loop after successfully choosing a field
                }
           }
 
+          // Skip to next field archive if current one is invalid or disabled
           ++m_fields_consumer;
      }
 
+     // Attempt to choose the first available language archive
      while (!m_coo && !m_lang_consumer.done())
      {
           m_coo = *m_lang_consumer;
           ++m_lang_consumer;
      }
 }
+
 std::filesystem::path fme::batch::append_file_structure(const std::filesystem::path &path) const
 {
      std::string const      name   = m_map_sprite.get_base_name();
      std::string_view const prefix = std::string_view(name).substr(0, 2);
      return path / prefix / name;
 }
+
 void fme::batch::open_directory_browser()
 {
      m_directory_browser.Display();
