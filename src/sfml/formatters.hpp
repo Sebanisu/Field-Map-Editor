@@ -5,6 +5,7 @@
 #ifndef FIELD_MAP_EDITOR_FORMATTERS_HPP
 #define FIELD_MAP_EDITOR_FORMATTERS_HPP
 #include "draw_bit_t.hpp"
+#include "gui/colors.hpp"
 #include "gui/compact_type.hpp"
 #include "gui/draw_mode.hpp"
 #include "gui/gui_labels.hpp"
@@ -397,27 +398,44 @@ struct fmt::formatter<TileRange> : fmt::formatter<std::string>
 };
 
 template<>
+struct fmt::formatter<fme::color>
+{
+     // Parses format specs; in this case, we don't support any custom formatting
+     constexpr auto parse(format_parse_context &ctx)
+     {
+          return ctx.begin();// no custom formatting, so just return the end
+     }
+
+     // Formats the color as "(r,g,b,a)"
+     template<typename FormatContext>
+     auto format(const fme::color &c, FormatContext &ctx) const
+     {
+          return fmt::format_to(ctx.out(), "({},{},{},{})", c.r, c.g, c.b, c.a);
+     }
+};
+
+template<>
 struct fmt::formatter<fme::root_path_types> : fmt::formatter<std::string_view>
 {
-      // parse is inherited from formatter<string_view>.
-      template<typename FormatContext>
-      constexpr auto format(fme::root_path_types in_root_path_types, FormatContext &ctx) const
-      {
-           using namespace std::string_view_literals;
-           std::string_view name = {};
-           switch (in_root_path_types)
-           {
-                case fme::root_path_types::selected_path:
-                     name = fme::gui_labels::selected_path;
-                     break;
-                case fme::root_path_types::ff8_path:
-                     name = fme::gui_labels::ff8_path;
-                     break;
-                case fme::root_path_types::current_path:
-                     name = fme::gui_labels::current_path;
-                     break;
-           }
-           return fmt::formatter<std::string_view>::format(name, ctx);
+     // parse is inherited from formatter<string_view>.
+     template<typename FormatContext>
+     constexpr auto format(fme::root_path_types in_root_path_types, FormatContext &ctx) const
+     {
+          using namespace std::string_view_literals;
+          std::string_view name = {};
+          switch (in_root_path_types)
+          {
+               case fme::root_path_types::selected_path:
+                    name = fme::gui_labels::selected_path;
+                    break;
+               case fme::root_path_types::ff8_path:
+                    name = fme::gui_labels::ff8_path;
+                    break;
+               case fme::root_path_types::current_path:
+                    name = fme::gui_labels::current_path;
+                    break;
+          }
+          return fmt::formatter<std::string_view>::format(name, ctx);
      }
 };
 
