@@ -218,11 +218,23 @@ void fme::batch::browse_input_path()
      {
           return;
      }
+     save_input_path();
+}
+
+void fme::batch::save_input_path()
+{
      if (!m_input_path_valid)
      {
           return;
      }
+     const auto selections = m_selections.lock();
+     if (!selections)
+     {
+          spdlog::error("Failed to lock m_selections: shared_ptr is expired.");
+          return;
+     }
      selections->batch_input_path = std::string(m_input_path.data());
+     spdlog::info("batch_input_path: {}", selections->batch_input_path);
      Configuration config{};
      config->insert_or_assign("batch_input_path", selections->batch_input_path);
      config.save();
@@ -246,6 +258,7 @@ void fme::batch::checkbox_load_map()
      {
           return;
      }
+     spdlog::info("batch_input_load_map: {}", selections->batch_input_load_map);
      Configuration config{};
      config->insert_or_assign("batch_input_load_map", selections->batch_input_load_map);
      config.save();
@@ -265,12 +278,13 @@ void fme::batch::combo_output_type()
        []() { return values; },
        []() { return values | std::views::transform(AsString{}); },
        selections->batch_output_type);
-     if (gcc.render())
+     if (!gcc.render())
      {
-          Configuration config{};
-          config->insert_or_assign("batch_output_type", static_cast<std::underlying_type_t<output_types>>(selections->batch_output_type));
-          config.save();
+          return;
      }
+     Configuration config{};
+     config->insert_or_assign("batch_output_type", static_cast<std::underlying_type_t<output_types>>(selections->batch_output_type));
+     config.save();
 }
 
 
@@ -367,13 +381,26 @@ void fme::batch::browse_output_path()
      {
           return;
      }
+     save_output_path();
+}
+
+
+void fme::batch::save_output_path()
+{
      if (!m_output_path_valid)
      {
           return;
      }
+     const auto selections = m_selections.lock();
+     if (!selections)
+     {
+          spdlog::error("Failed to lock m_selections: shared_ptr is expired.");
+          return;
+     }
      selections->batch_output_path = std::string(m_output_path.data());
+     spdlog::info("batch_output_path: {}", selections->batch_output_path);
      Configuration config{};
-     config->insert_or_assign("batch_output_path", std::string(m_output_path.data()));
+     config->insert_or_assign("batch_output_path", selections->batch_output_path);
      config.save();
 }
 
@@ -395,6 +422,7 @@ void fme::batch::checkmark_save_map()
      ImGui::BeginDisabled(forced);
      if (ImGui::Checkbox(gui_labels::save_map_files.data(), &selections->batch_save_map) || changed)
      {
+          spdlog::info("batch_save_map: {}", selections->batch_save_map);
           Configuration config{};
           config->insert_or_assign("batch_save_map", selections->batch_save_map);
           config.save();
@@ -806,6 +834,7 @@ void fme::batch::generate_map_sprite()
                                 true,
                                 m_coo && m_coo.value() != open_viii::LangT::generic };
 }
+
 void fme::batch::compact()
 {
      const auto selections = m_selections.lock();
@@ -944,10 +973,12 @@ void fme::batch::open_directory_browser()
      {
           case directory_mode::input_mode: {
                m_input_path_valid = safe_copy_string(selected_path, m_input_path);
+               save_input_path();
           }
           break;
           case directory_mode::output_mode: {
                m_output_path_valid = safe_copy_string(selected_path, m_output_path);
+               save_output_path();
           }
           break;
      }
