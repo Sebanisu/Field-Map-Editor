@@ -185,9 +185,8 @@ void fme::batch::example_input_paths()
      // currently input and output use the same patterns this might change later.
      render_output_example_table(
        "DeSwizzleOutputExampleTable",
-       custom_paths_window::replace_tags(fme::batch::get_output_pattern(selections->batch_input_type), cpm, selections, selected_string),
-       custom_paths_window::replace_tags(
-         fme::batch::get_output_map_pattern(selections->batch_input_type), cpm2, selections, selected_string),
+       cpm.replace_tags(fme::batch::get_output_pattern(selections->batch_input_type), selections, selected_string),
+       cpm2.replace_tags(fme::batch::get_output_map_pattern(selections->batch_input_type), selections, selected_string),
        selections->batch_save_map);
 }
 
@@ -292,9 +291,8 @@ void fme::batch::example_output_paths()
 
      render_output_example_table(
        "DeSwizzleOutputExampleTable",
-       custom_paths_window::replace_tags(fme::batch::get_output_pattern(selections->batch_output_type), cpm, selections, selected_string),
-       custom_paths_window::replace_tags(
-         fme::batch::get_output_map_pattern(selections->batch_output_type), cpm2, selections, selected_string),
+       cpm.replace_tags(fme::batch::get_output_pattern(selections->batch_output_type), selections, selected_string),
+       cpm2.replace_tags(fme::batch::get_output_map_pattern(selections->batch_output_type), selections, selected_string),
        selections->batch_save_map);
 }
 
@@ -899,8 +897,7 @@ void fme::batch::update(sf::Time elapsed_time)
                const std::string &selected_string =
                  get_selected_path(selections->batch_output_path, selections->batch_output_root_path_type);
                m_map_sprite.save_modified_map(
-                 custom_paths_window::replace_tags(
-                   fme::batch::get_output_map_pattern(selections->batch_output_type), cpm2, selections, selected_string));
+                 cpm2.replace_tags(fme::batch::get_output_map_pattern(selections->batch_output_type), selections, selected_string));
           }
      }
 

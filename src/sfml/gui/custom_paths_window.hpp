@@ -220,6 +220,68 @@ struct key_value_data
           return operator()(key);
      }
 
+     /**
+      * @brief Replaces placeholder tags in a string with values from test data or a selected path.
+      *
+      * This function scans the input string for tags in the following formats:
+      * - `{key}`: Replaced directly with the corresponding value from `test_data` or `selected_path`.
+      * - `{prefix{key}suffix}`: If the key resolves to a non-empty value, it's inserted between the prefix and suffix.
+      *
+      * The function uses a regular expression to identify these patterns:
+      * @code
+      *   R"(\{([^\{\}]+)\}|\{([^\{]*)\{([^\}]+)\}([^\}]*)\})"
+      * @endcode
+      * This matches either a simple `{key}` or a nested format with prefix and suffix.
+      *
+      * Nested tags are supported and resolved recursively up to a maximum depth of 10 layers to prevent infinite loops.
+      * After replacements, all slashes in the resulting string are normalized for the platform (Windows or Linux).
+      *
+      * @param keyed_string  The input string possibly containing tag placeholders.
+      * @param test_data     A key-value data source to resolve the values associated with tags.
+      * @param selections    A shared pointer to additional selection context used by `test_data`.
+      * @param selected_path The replacement value for the `{selected_path}` tag. Defaults to "{ff8_path}".
+      *
+      * @return A new string where all recognized tags have been replaced with their corresponding values.
+      * @todo This function might move as this is an odd place to put it. Maybe it should be apart of key_value_data.
+      */
+
+     [[nodiscard]] std::string replace_tags(
+       std::string                             keyed_string,
+       const std::shared_ptr<fme::Selections> &selections,
+       const std::string                      &selected_path = "{ff8_path}") const
+     {
+          using namespace std::string_view_literals;
+          constexpr static auto pattern          = CTRE_REGEX_INPUT_TYPE{ R"(\{([^\{\}]+)\}|\{([^\{]*)\{([^\}]+)\}([^\}]*)\})" };
+          std::string           copy_for_matches = keyed_string;// copy so data won't get lost when we change it.
+          auto                  matches          = ctre::search_all<pattern>(copy_for_matches);
+          int                   layers_deep      = 10;
+          do
+          {
+               for ([[maybe_unused]] const auto &match : matches)
+               {
+                    const auto replace_str = std::string_view{ match.get<0>() };
+                    const auto key =
+                      std::string_view{ match.get<1>() }.empty() ? std::string_view{ match.get<3>() } : std::string_view{ match.get<1>() };
+                    const auto value = [&]() {
+                         if (key == "selected_path"sv)
+                         {
+                              return selected_path;
+                         }
+                         return operator()(key, selections);
+                    }();
+                    const auto prefix = value.empty() ? std::string_view{} : std::string_view{ match.get<2>() };
+                    const auto suffix = value.empty() ? std::string_view{} : std::string_view{ match.get<4>() };
+                    keyed_string      = keyed_string | std::views::split(replace_str)
+                                   | std::views::join_with(fmt::format("{}{}{}", prefix, value, suffix)) | std::ranges::to<std::string>();
+               }
+               // check for nested keys.
+               copy_for_matches = keyed_string;
+               matches          = ctre::search_all<pattern>(copy_for_matches);
+          } while (!std::ranges::empty(matches) && ((--layers_deep) != 0));
+          tl::string::replace_slashes(keyed_string);// fixes slashes to be windows or linux based.
+          return keyed_string;
+     }
+
      std::string operator()(std::string_view key) const
      {
           if (keys::field_name == key)
@@ -469,7 +531,7 @@ struct custom_paths_window
           for (const auto test_data : m_tests)
           {
                std::string &output_test = m_output_tests.emplace_back(m_input_pattern_string.begin(), m_input_pattern_string.end());
-               output_test              = replace_tags(output_test, test_data, selections);
+               output_test              = test_data.replace_tags(output_test, selections);
           }
      }
 
@@ -767,69 +829,6 @@ struct custom_paths_window
      }
 
    public:
-     /**
-      * @brief Replaces placeholder tags in a string with values from test data or a selected path.
-      *
-      * This function scans the input string for tags in the following formats:
-      * - `{key}`: Replaced directly with the corresponding value from `test_data` or `selected_path`.
-      * - `{prefix{key}suffix}`: If the key resolves to a non-empty value, it's inserted between the prefix and suffix.
-      *
-      * The function uses a regular expression to identify these patterns:
-      * @code
-      *   R"(\{([^\{\}]+)\}|\{([^\{]*)\{([^\}]+)\}([^\}]*)\})"
-      * @endcode
-      * This matches either a simple `{key}` or a nested format with prefix and suffix.
-      *
-      * Nested tags are supported and resolved recursively up to a maximum depth of 10 layers to prevent infinite loops.
-      * After replacements, all slashes in the resulting string are normalized for the platform (Windows or Linux).
-      *
-      * @param keyed_string  The input string possibly containing tag placeholders.
-      * @param test_data     A key-value data source to resolve the values associated with tags.
-      * @param selections    A shared pointer to additional selection context used by `test_data`.
-      * @param selected_path The replacement value for the `{selected_path}` tag. Defaults to "{ff8_path}".
-      *
-      * @return A new string where all recognized tags have been replaced with their corresponding values.
-      * @todo This function might move as this is an odd place to put it. Maybe it should be apart of key_value_data.
-      */
-
-     [[nodiscard]] static std::string replace_tags(
-       std::string                             keyed_string,
-       const fme::key_value_data              &test_data,
-       const std::shared_ptr<fme::Selections> &selections,
-       const std::string                      &selected_path = "{ff8_path}")
-     {
-          using namespace std::string_view_literals;
-          constexpr static auto pattern          = CTRE_REGEX_INPUT_TYPE{ R"(\{([^\{\}]+)\}|\{([^\{]*)\{([^\}]+)\}([^\}]*)\})" };
-          std::string           copy_for_matches = keyed_string;// copy so data won't get lost when we change it.
-          auto                  matches          = ctre::search_all<pattern>(copy_for_matches);
-          int                   layers_deep      = 10;
-          do
-          {
-               for ([[maybe_unused]] const auto &match : matches)
-               {
-                    const auto replace_str = std::string_view{ match.get<0>() };
-                    const auto key =
-                      std::string_view{ match.get<1>() }.empty() ? std::string_view{ match.get<3>() } : std::string_view{ match.get<1>() };
-                    const auto value = [&]() {
-                         if (key == "selected_path"sv)
-                         {
-                              return selected_path;
-                         }
-                         return test_data(key, selections);
-                    }();
-                    const auto prefix = value.empty() ? std::string_view{} : std::string_view{ match.get<2>() };
-                    const auto suffix = value.empty() ? std::string_view{} : std::string_view{ match.get<4>() };
-                    keyed_string      = keyed_string | std::views::split(replace_str)
-                                   | std::views::join_with(fmt::format("{}{}{}", prefix, value, suffix)) | std::ranges::to<std::string>();
-               }
-               // check for nested keys.
-               copy_for_matches = keyed_string;
-               matches          = ctre::search_all<pattern>(copy_for_matches);
-          } while (!std::ranges::empty(matches) && ((--layers_deep) != 0));
-          tl::string::replace_slashes(keyed_string); // fixes slashes to be windows or linux based.
-          return keyed_string;
-     }
-
      custom_paths_window(std::weak_ptr<Selections> input_selections)
        : m_selections(input_selections)
      {
@@ -851,6 +850,7 @@ struct custom_paths_window
           m_changed = true;
           return *this;
      }
+
 
      void render() const
      {
