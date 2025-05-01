@@ -862,7 +862,15 @@ void fme::batch::update(sf::Time elapsed_time)
           // Optionally load the map from the input path if applicable
           if (selections->batch_input_load_map && selections->batch_input_type != input_types::mim)
           {
-               m_map_sprite.load_map(append_file_structure(m_input_path.data()) / m_map_sprite.map_filename());
+               const key_value_data cpm2 = {
+                    .field_name    = m_map_sprite.get_base_name(),
+                    .ext           = ".map",
+                    .language_code = m_coo.has_value() && m_coo.value() != open_viii::LangT::generic ? m_coo : std::nullopt,
+               };
+               const std::string &selected_string =
+                 get_selected_path(selections->batch_output_path, selections->batch_output_root_path_type);
+               m_map_sprite.load_map(
+                 cpm2.replace_tags(fme::batch::get_output_map_pattern(selections->batch_input_type), selections, selected_string));
           }
 
           // Optimize and prepare data for output
@@ -887,13 +895,7 @@ void fme::batch::update(sf::Time elapsed_time)
                     .field_name    = m_map_sprite.get_base_name(),
                     .ext           = ".map",
                     .language_code = m_coo.has_value() && m_coo.value() != open_viii::LangT::generic ? m_coo : std::nullopt,
-                    //.palette       = std::uint8_t{ 0 },
-                    //.texture_page  = std::uint8_t{ 0 },
-                    //.pupu_id       = 9999U
                };
-
-               // m_map_sprite.save_modified_map(append_file_structure(m_output_path.data()) / m_map_sprite.map_filename());
-
                const std::string &selected_string =
                  get_selected_path(selections->batch_output_path, selections->batch_output_root_path_type);
                m_map_sprite.save_modified_map(
