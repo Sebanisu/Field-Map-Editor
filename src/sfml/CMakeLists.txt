@@ -27,6 +27,7 @@ add_executable(
   gui/field_file_window.cpp
   gui/gui.cpp
   gui/history_window.cpp
+  gui/key_value_data.cpp
   gui/import.cpp
   gui/mouse_positions.cpp
   gui/push_pop_id.cpp
