@@ -82,62 +82,80 @@ const sf::Texture *map_sprite::get_texture(const ff_8::PupuID &pupu) const
      return nullptr;
 }
 
+/**
+ * @brief Loads textures for map sprites based on current filters and internal data.
+ *
+ * This function handles multiple texture loading strategies depending on the state of the `deswizzle` and `upscale` filters.
+ * It uses asynchronous operations wrapped in nested futures to schedule texture loading without blocking the main thread.
+ *
+ * @return A shared pointer to an array of loaded sf::Texture objects of size MAX_TEXTURES.
+ */
 std::shared_ptr<std::array<sf::Texture, map_sprite::MAX_TEXTURES>> map_sprite::load_textures_internal()
 {
+     // Container to hold nested futures representing asynchronous texture load operations
      std::vector<std::future<std::future<void>>> future_of_futures{};
-     auto        ret   = std::make_shared<std::array<sf::Texture, MAX_TEXTURES>>(std::array<sf::Texture, MAX_TEXTURES>{});
-     const auto &range = m_all_unique_values_and_strings.bpp().values();
-     if (!m_filters.deswizzle.enabled())
-     {
-          if (!std::empty(range))
-          {
-               for (const auto &bpp : range)
-               {
-                    if (bpp.bpp24())
-                    {
-                         continue;
-                    }
-                    const auto &map = m_all_unique_values_and_strings.palette();
-                    if (map.contains(bpp))
-                    {
 
-                         for (const auto &palette : map.at(bpp).values())
-                         {
-                              if (!m_filters.upscale.enabled())
-                              {
-                                   future_of_futures.push_back(load_mim_textures(ret, bpp, palette));
-                              }
-                              else
-                              {
-                                   for (const auto &texture_page : m_all_unique_values_and_strings.texture_page_id().values())
-                                   {
-                                        future_of_futures.push_back(load_upscale_textures(ret, texture_page, palette));
-                                   }
-                              }
-                         }
-                    }
-               }
-          }
-          if (m_filters.upscale.enabled())
-          {
-               for (const auto &texture_page : m_all_unique_values_and_strings.texture_page_id().values())
-               {
-                    future_of_futures.push_back(load_upscale_textures(ret, texture_page));
-               }
-          }
-     }
-     else
-     {
+     // Allocate shared array to hold the resulting textures
+     auto       ret      = std::make_shared<std::array<sf::Texture, MAX_TEXTURES>>(std::array<sf::Texture, MAX_TEXTURES>{});
 
+     const auto fofh_consumer = scope_guard{ [&]() {
+          // Consume the collected nested futures immediately to kick off the work
+          auto  fofh     = FutureOfFutureConsumer{ std::move(future_of_futures) };
+          fofh.consume_now();
+     } };
+
+     // Check if the deswizzle filter is enabled
+     if (m_filters.deswizzle.enabled())
+     {
+          // Deswizzling is enabled; load textures based on PupuIDs in order
           std::ranges::for_each(working_unique_pupu(), [&, pos = size_t{}](const ff_8::PupuID &pupu) mutable {
                future_of_futures.push_back(load_deswizzle_textures(ret, pupu, pos));
                ++pos;
           });
+          return ret;
      }
-     auto fofh = FutureOfFutureConsumer{ std::move(future_of_futures) };
-     fofh.consume_now();
+
+
+     // Check if palette data exists for the given BPP
+
+     for (const auto &[bpp, palette_set] : m_all_unique_values_and_strings.palette())
+     {
+          if (bpp.bpp24())
+          {
+               continue;
+          }
+          for (const auto &palette : palette_set.values())
+          {
+               if (!m_filters.upscale.enabled())
+               {
+                    // Schedule normal MIM texture load (no upscale)
+                    future_of_futures.push_back(load_mim_textures(ret, bpp, palette));
+               }
+               else
+               {
+                    // Schedule upscale texture loads for each texture page
+                    for (const auto &texture_page : m_all_unique_values_and_strings.texture_page_id().values())
+                    {
+                         future_of_futures.push_back(load_upscale_textures(ret, texture_page, palette));
+                    }
+               }
+          }
+     }
+
+
+     // Additional upscale loading for non-palette based textures
+     if (m_filters.upscale.enabled())
+     {
+          for (const auto &texture_page : m_all_unique_values_and_strings.texture_page_id().values())
+          {
+               future_of_futures.push_back(load_upscale_textures(ret, texture_page));
+          }
+     }
+
+     // Return the shared array of loaded textures
      return ret;
 }
+
 void map_sprite::consume_futures(std::vector<std::future<std::future<void>>> &future_of_futures)
 {
      std::vector<std::future<void>> futures{};
@@ -839,9 +857,9 @@ bool map_sprite::fail() const
 }
 void map_sprite::map_save(const std::filesystem::path &dest_path) const
 {
-     ff_8::map_group::OptCoo coo  = m_map_group.opt_coo; // copy because coo is modified
-     const auto map  = ff_8::load_map(m_map_group.field, coo, m_map_group.mim, nullptr, false);
-     const auto path = dest_path.string();
+     ff_8::map_group::OptCoo coo  = m_map_group.opt_coo;// copy because coo is modified
+     const auto              map  = ff_8::load_map(m_map_group.field, coo, m_map_group.mim, nullptr, false);
+     const auto              path = dest_path.string();
 
      open_viii::tools::write_buffer(
        [&map](std::ostream &os) {
