@@ -326,6 +326,19 @@ void fme::batch::browse_input_path()
             "batch_input_root_path_type", static_cast<std::underlying_type_t<root_path_types>>(selections->batch_input_root_path_type));
           config.save();
      }
+     if (selections->batch_input_root_path_type != root_path_types::selected_path)
+     {
+          const float button_size  = ImGui::GetFrameHeight();
+          const float button_width = button_size * 3.0F;
+          ImGui::SameLine();
+          if (ImGui::Button(gui_labels::explore.data(), ImVec2{ button_width, button_size }))
+          {
+               const std::string &selected_string =
+                 get_selected_path(selections->batch_input_path, selections->batch_input_root_path_type);
+
+               open_directory(key_value_data::static_replace_tags(selected_string, selections));
+          }
+     }
 
      example_input_paths();
 
@@ -998,6 +1011,7 @@ void fme::batch::generate_map_sprite()
      ff_8::filters filters = { false };
 
      // Enable specific filters depending on the input type
+     const std::string &selected_string = get_selected_path(selections->batch_input_path, selections->batch_input_root_path_type);
      switch (selections->batch_input_type)
      {
           case input_types::mim:
@@ -1006,14 +1020,12 @@ void fme::batch::generate_map_sprite()
 
           case input_types::deswizzle:
                // Enable deswizzle filter using the input path
-               // filters.deswizzle.update(append_file_structure(m_input_path.data())).enable();
-               // todo handle pattern with filter
+               filters.deswizzle.update(selected_string).enable();
                break;
 
           case input_types::swizzle:
                // Enable upscale filter using the input path
-               // filters.upscale.update(append_file_structure(m_input_path.data())).enable();
-               // todo handle pattern with filter
+               filters.upscale.update(selected_string).enable();
                break;
      }
 
