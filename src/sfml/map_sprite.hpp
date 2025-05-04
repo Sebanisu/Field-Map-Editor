@@ -6,6 +6,8 @@
 #define FIELD_MAP_EDITOR_MAP_SPRITE_HPP
 #include "filter.hpp"
 #include "grid.hpp"
+#include "gui/key_value_data.hpp"
+#include "gui/Selections.hpp"
 #include "map_group.hpp"
 #include "map_operation.hpp"
 #include "MapHistory.hpp"
@@ -146,9 +148,15 @@ struct [[nodiscard]] map_sprite final
      }
      [[nodiscard]] sf::Sprite  save_intersecting(const sf::Vector2i &pixel_pos, const std::uint8_t &texture_page);
      [[nodiscard]] std::size_t get_texture_pos(BPPT bpp, std::uint8_t palette, std::uint8_t texture_page) const;
-     [[nodiscard]] std::vector<std::future<std::future<void>>> save_swizzle_textures(const std::filesystem::path &path);
-     [[nodiscard]] std::vector<std::future<std::future<void>>> save_pupu_textures(const std::filesystem::path &path);
-     [[nodiscard]] std::future<std::future<void>>              load_upscale_textures(SharedTextures &ret, std::uint8_t texture_page);
+     [[nodiscard]] std::vector<std::future<std::future<void>>> save_swizzle_textures(
+       const std::string                      &keyed_string,
+       const std::shared_ptr<fme::Selections> &selections,
+       const std::string                      &selected_path);
+     [[nodiscard]] std::vector<std::future<std::future<void>>> save_pupu_textures(
+       const std::string                      &keyed_string,
+       const std::shared_ptr<fme::Selections> &selections,
+       const std::string                      &selected_path);
+     [[nodiscard]] std::future<std::future<void>> load_upscale_textures(SharedTextures &ret, std::uint8_t texture_page);
      [[nodiscard]] std::future<std::future<void>>
        load_deswizzle_textures(SharedTextures &ret, const ff_8::PupuID pupu, const size_t pos) const;
      [[nodiscard]] std::future<std::future<void>> load_mim_textures(SharedTextures &ret, BPPT bpp, uint8_t palette);

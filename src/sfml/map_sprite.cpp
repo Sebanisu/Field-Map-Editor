@@ -839,9 +839,9 @@ bool map_sprite::fail() const
 }
 void map_sprite::map_save(const std::filesystem::path &dest_path) const
 {
-     ff_8::map_group::OptCoo coo  = m_map_group.opt_coo;
-     const auto              map  = ff_8::load_map(m_map_group.field, coo, m_map_group.mim, nullptr, false);
-     const auto              path = dest_path.string();
+     ff_8::map_group::OptCoo coo  = m_map_group.opt_coo; // copy because coo is modified
+     const auto map  = ff_8::load_map(m_map_group.field, coo, m_map_group.mim, nullptr, false);
+     const auto path = dest_path.string();
 
      open_viii::tools::write_buffer(
        [&map](std::ostream &os) {
@@ -1143,24 +1143,27 @@ const ff_8::MapHistory::nsat_map &map_sprite::working_animation_counts() const
  *
  * @note Caller is responsible for consuming or waiting on the futures to ensure save completion.
  */
-[[nodiscard]] std::vector<std::future<std::future<void>>> map_sprite::save_swizzle_textures(const std::filesystem::path &path)
+[[nodiscard]] std::vector<std::future<std::future<void>>> map_sprite::save_swizzle_textures(
+  const std::string                      &keyed_string,
+  const std::shared_ptr<fme::Selections> &selections,
+  const std::string                      &selected_path)
 {
      // Get the base name of the field (e.g., map name) to use in output filenames.
-     const std::string                 field_name                       = { get_base_name() };
+     const std::string field_name              = { get_base_name() };
 
      // Define filename patterns for various cases (with/without palette, with/without COO region).
-     static constexpr std::string_view pattern_texture_page             = { "{}_{}.png" };
-     static constexpr std::string_view pattern_texture_page_palette     = { "{}_{}_{}.png" };
-     static constexpr std::string_view pattern_coo_texture_page         = { "{}_{}_{}.png" };
-     static constexpr std::string_view pattern_coo_texture_page_palette = { "{}_{}_{}_{}.png" };
+     // static constexpr std::string_view pattern_texture_page             = { "{}_{}.png" };
+     // static constexpr std::string_view pattern_texture_page_palette     = { "{}_{}_{}.png" };
+     // static constexpr std::string_view pattern_coo_texture_page         = { "{}_{}_{}.png" };
+     // static constexpr std::string_view pattern_coo_texture_page_palette = { "{}_{}_{}_{}.png" };
 
      // Extract unique texture page IDs and BPP (bits per pixel) values from the map.
-     const auto                        unique_values                    = get_all_unique_values_and_strings();
-     const auto                       &unique_texture_page_ids          = unique_values.texture_page_id().values();
-     const auto                       &unique_bpp                       = unique_values.bpp().values();
+     const auto        unique_values           = get_all_unique_values_and_strings();
+     const auto       &unique_texture_page_ids = unique_values.texture_page_id().values();
+     const auto       &unique_bpp              = unique_values.bpp().values();
 
      // Backup and override current settings for exporting textures.
-     settings_backup                   settings(m_filters, m_draw_swizzle, m_disable_texture_page_shift, m_disable_blends, m_scale);
+     settings_backup   settings(m_filters, m_draw_swizzle, m_disable_texture_page_shift, m_disable_blends, m_scale);
      settings.filters                         = ff_8::filters{ false };
      settings.filters.value().upscale         = settings.filters.backup().upscale;
      settings.filters.value().deswizzle       = settings.filters.backup().deswizzle;
@@ -1234,14 +1237,23 @@ const ff_8::MapHistory::nsat_map &map_sprite::working_animation_counts() const
                          }
 
                          // Determine output path based on COO presence.
-                         auto out_path = [&]() -> std::filesystem::path {
-                              if (m_map_group.opt_coo)
-                              {
-                                   return save_path_coo(
-                                     pattern_coo_texture_page_palette, path, field_name, texture_page, palette, *m_map_group.opt_coo);
-                              }
-                              return save_path(pattern_texture_page_palette, path, field_name, texture_page, palette);
-                         }();
+                         const key_value_data cpm      = { .field_name    = get_base_name(),
+                                                           .ext           = ".png",
+                                                           .language_code = m_map_group.opt_coo.has_value()
+                                                                           && m_map_group.opt_coo.value() != open_viii::LangT::generic
+                                                                              ? m_map_group.opt_coo
+                                                                              : std::nullopt,
+                                                           .palette       = palette,
+                                                           .texture_page  = texture_page };
+                         auto                 out_path = cpm.replace_tags(keyed_string, selections, selected_path);
+                         // auto out_path = [&]() -> std::filesystem::path {
+                         //      if (m_map_group.opt_coo)
+                         //      {
+                         //           return save_path_coo(
+                         //             pattern_coo_texture_page_palette, path, field_name, texture_page, palette, *m_map_group.opt_coo);
+                         //      }
+                         //      return save_path(pattern_texture_page_palette, path, field_name, texture_page, palette);
+                         // }();
 
                          // Start async save and store the future.
                          future_of_futures.push_back(async_save(out_texture.getTexture(), out_path));
@@ -1259,9 +1271,17 @@ const ff_8::MapHistory::nsat_map &map_sprite::working_animation_counts() const
           }
 
           // Determine output path based on COO presence.
-          auto out_path = m_map_group.opt_coo
-                            ? save_path_coo(pattern_coo_texture_page, path, field_name, texture_page, *m_map_group.opt_coo)
-                            : save_path(pattern_texture_page, path, field_name, texture_page);
+          const key_value_data cpm      = { .field_name = get_base_name(),
+                                            .ext        = ".png",
+                                            .language_code =
+                                         m_map_group.opt_coo.has_value() && m_map_group.opt_coo.value() != open_viii::LangT::generic
+                                                ? m_map_group.opt_coo
+                                                : std::nullopt,
+                                            .texture_page = texture_page };
+          auto                 out_path = cpm.replace_tags(keyed_string, selections, selected_path);
+          // auto out_path = m_map_group.opt_coo
+          //                   ? save_path_coo(pattern_coo_texture_page, path, field_name, texture_page, *m_map_group.opt_coo)
+          //                   : save_path(pattern_texture_page, path, field_name, texture_page);
 
           // Start async save and store the future.
           future_of_futures.push_back(async_save(out_texture.getTexture(), out_path));
@@ -1294,7 +1314,10 @@ std::string map_sprite::get_base_name() const
  * @return A vector of futures, each wrapping a future task that will save one texture.
  *         Caller should consume or wait on these to ensure saving completes.
  */
-[[nodiscard]] std::vector<std::future<std::future<void>>> map_sprite::save_pupu_textures(const std::filesystem::path &path)
+[[nodiscard]] std::vector<std::future<std::future<void>>> map_sprite::save_pupu_textures(
+  const std::string                      &keyed_string,
+  const std::shared_ptr<fme::Selections> &selections,
+  const std::string                      &selected_path)
 {
      // Backup current settings and adjust for saving Pupu textures
      auto settings    = settings_backup{ m_filters, m_draw_swizzle, m_disable_texture_page_shift, m_disable_blends, m_scale };
@@ -1321,12 +1344,12 @@ std::string map_sprite::get_base_name() const
 
      const std::string                field_name      = std::string{ str_to_lower(field->get_base_name()) };
      const std::vector<ff_8::PupuID> &unique_pupu_ids = working_unique_pupu();// Get list of unique Pupu IDs
-     std::optional<open_viii::LangT> &coo             = m_map_group.opt_coo;// Language option (optional)
+     // std::optional<open_viii::LangT> &coo             = m_map_group.opt_coo;// Language option (optional)
 
      assert(safedir(path).is_dir());// Ensure output path is a directory
 
-     static constexpr std::string_view           pattern_pupu                = { "{}_{}.png" };// Pattern without language
-     static constexpr std::string_view           pattern_coo_pupu            = { "{}_{}_{}.png" };// Pattern with language
+     // static constexpr std::string_view           pattern_pupu                = { "{}_{}.png" };// Pattern without language
+     // static constexpr std::string_view           pattern_coo_pupu            = { "{}_{}_{}.png" };// Pattern with language
      const unsigned int                          max_number_of_texture_pages = 13U;// Reserve space for futures
      std::vector<std::future<std::future<void>>> future_of_futures           = {};
      future_of_futures.reserve(max_number_of_texture_pages);
@@ -1346,8 +1369,16 @@ std::string map_sprite::get_base_name() const
                continue;// Skip if texture generation fails
           }
 
-          std::filesystem::path const out_path = coo ? save_path_coo(pattern_coo_pupu, path, field_name, pupu, *coo)// Save with language
-                                                     : save_path(pattern_pupu, path, field_name, pupu);// Save without language
+          const key_value_data cpm      = { .field_name = get_base_name(),
+                                            .ext        = ".png",
+                                            .language_code =
+                                         m_map_group.opt_coo.has_value() && m_map_group.opt_coo.value() != open_viii::LangT::generic
+                                                ? m_map_group.opt_coo
+                                                : std::nullopt,
+                                            .pupu_id = pupu.raw() };
+          auto                 out_path = cpm.replace_tags(keyed_string, selections, selected_path);
+          // std::filesystem::path const out_path = coo ? save_path_coo(pattern_coo_pupu, path, field_name, pupu, *coo)// Save with language
+          //                                            : save_path(pattern_pupu, path, field_name, pupu);// Save without language
 
           future_of_futures.push_back(async_save(out_texture.getTexture(), out_path));// Queue async save
      }
