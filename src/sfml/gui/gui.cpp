@@ -2641,8 +2641,21 @@ void gui::directory_browser_display()
                     error_code.clear();
                }
                // todo modify these two functions :P to use the imported image.
-               m_future_of_future_consumer = m_map_sprite->save_swizzle_textures(selected_path);// done.
-               m_map_sprite->save_modified_map(selected_path / m_map_sprite->map_filename());// done.
+               m_future_of_future_consumer =
+                 m_map_sprite->save_swizzle_textures(m_selections->output_swizzle_pattern, m_selections, selected_path.string());// done.
+               const key_value_data cpm = {
+                    .field_name    = m_map_sprite->get_base_name(),
+                    .ext           = ".map",
+                    .language_code = m_selections && m_selections->coo != open_viii::LangT::generic && m_map_sprite->using_coo()
+                                       ? std::optional{ m_selections->coo }
+                                       : std::nullopt,
+               };// todo coo might not be done correctly. if the map sprite isn't using a coo we shouldn't either. m_selections->coo is what
+                 // coo we're asking for but the it will default to generic when it can't find it. so we need to know what the map sprite is
+                 // using for it's coo.
+
+               m_map_sprite->save_modified_map(
+                 cpm.replace_tags(m_selections->output_map_pattern_for_swizzle, m_selections, selected_path.string()));
+               // m_map_sprite->save_modified_map(selected_path / m_map_sprite->map_filename());// done.
                open_directory(selected_path);
           }
           break;
@@ -2660,8 +2673,17 @@ void gui::directory_browser_display()
                       "{}:{} - {}: {} - path: {}", __FILE__, __LINE__, error_code.value(), error_code.message(), selected_path.string());
                     error_code.clear();
                }
-               m_future_of_future_consumer = m_map_sprite->save_pupu_textures(selected_path);
-               m_map_sprite->save_modified_map(selected_path / m_map_sprite->map_filename());
+               m_future_of_future_consumer =
+                 m_map_sprite->save_pupu_textures(m_selections->output_deswizzle_pattern, m_selections, selected_path.string());
+               const key_value_data cpm = {
+                    .field_name    = m_map_sprite->get_base_name(),
+                    .ext           = ".map",
+                    .language_code = m_selections && m_selections->coo != open_viii::LangT::generic && m_map_sprite->using_coo()
+                                       ? std::optional{ m_selections->coo }
+                                       : std::nullopt,
+               };
+               m_map_sprite->save_modified_map(
+                 cpm.replace_tags(m_selections->output_map_pattern_for_deswizzle, m_selections, selected_path.string()));
                open_directory(selected_path);
           }
           break;
