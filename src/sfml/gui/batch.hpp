@@ -76,7 +76,7 @@ class batch
      const std::string                  &get_output_map_pattern(fme::output_types type);
      void                                save_input_path();
      void                                save_output_path();
-     [[nodiscard]] std::filesystem::path append_file_structure(const std::filesystem::path &path) const;
+     //[[nodiscard]] std::filesystem::path append_file_structure(const std::filesystem::path &path) const;
      [[nodiscard]] bool                  browse_path(std::string_view name, bool &valid_path, std::array<char, m_buffer_size> &path_buffer);
 
    public:

@@ -431,6 +431,19 @@ void fme::batch::browse_output_path()
             "batch_output_root_path_type", static_cast<std::underlying_type_t<root_path_types>>(selections->batch_output_root_path_type));
           config.save();
      }
+     if (selections->batch_output_root_path_type != root_path_types::selected_path)
+     {
+          const float button_size  = ImGui::GetFrameHeight();
+          const float button_width = button_size * 3.0F;
+          ImGui::SameLine();
+          if (ImGui::Button(gui_labels::explore.data(), ImVec2{ button_width, button_size }))
+          {
+               const std::string &selected_string =
+                 get_selected_path(selections->batch_output_path, selections->batch_output_root_path_type);
+
+               open_directory(key_value_data::static_replace_tags(selected_string,selections));
+          }
+     }
 
      example_output_paths();
 
@@ -668,21 +681,28 @@ void fme::batch::button_start()
      }
      const auto pop_id_right = PushPopID();
      const auto spacing      = ImGui::GetStyle().ItemInnerSpacing.x;
+     const auto end_function = scope_guard{ []() {
+          ImGui::PopStyleColor(3);
+          ImGui::EndDisabled();
+     } };
      ImGui::BeginDisabled(
-       ((selections->batch_input_type == input_types::mim || !m_input_path_valid) && !m_output_path_valid) || !archives_group);
+       ((selections->batch_input_type == input_types::mim
+         || (!m_input_path_valid && selections->batch_input_root_path_type == root_path_types::selected_path))
+        && (!m_output_path_valid && selections->batch_output_root_path_type == root_path_types::selected_path))
+       || !archives_group);
      ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.0F, 0.5F, 0.0F, 1.0F));// Green
      ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.3F, 0.8F, 0.3F, 1.0F));// Light green hover
      ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.1F, 0.3F, 0.1F, 1.0F));// Dark green active
-     if (ImGui::Button(
+     if (!ImGui::Button(
            gui_labels::begin_batch_operation.data(), ImVec2{ ImGui::GetContentRegionAvail().x * 0.75F - spacing, ImGui::GetFrameHeight() }))
      {
-          m_fields_consumer = archives_group->fields();
-          m_field.reset();
-          m_lang_consumer.restart();
-          m_coo.reset();
+          return;
      }
-     ImGui::PopStyleColor(3);
-     ImGui::EndDisabled();
+
+     m_fields_consumer = archives_group->fields();
+     m_field.reset();
+     m_lang_consumer.restart();
+     m_coo.reset();
 }
 
 void fme::batch::button_stop()
@@ -702,17 +722,24 @@ void fme::batch::button_stop()
      const auto pop_id_right = PushPopID();
      const auto spacing      = ImGui::GetStyle().ItemInnerSpacing.x;
      ImGui::SameLine(0, spacing);
+     const auto end_function = scope_guard{ []() {
+          ImGui::PopStyleColor(3);
+          ImGui::EndDisabled();
+     } };
      ImGui::BeginDisabled(
-       ((selections->batch_input_type == input_types::mim || !m_input_path_valid) && !m_output_path_valid) || !archives_group);
+       ((selections->batch_input_type == input_types::mim
+         || (!m_input_path_valid && selections->batch_input_root_path_type == root_path_types::selected_path))
+        && (!m_output_path_valid && selections->batch_output_root_path_type == root_path_types::selected_path))
+       || !archives_group);
      ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.5F, 0.0F, 0.0F, 1.0F));// Red
      ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.8F, 0.3F, 0.3F, 1.0F));// Light red hover
      ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.3F, 0.1F, 0.1F, 1.0F));// Dark red active
-     if (ImGui::Button(gui_labels::stop.data(), ImVec2{ ImGui::GetContentRegionAvail().x, ImGui::GetFrameHeight() }))
+     if (!ImGui::Button(gui_labels::stop.data(), ImVec2{ ImGui::GetContentRegionAvail().x, ImGui::GetFrameHeight() }))
      {
-          stop();
+          return;
      }
-     ImGui::PopStyleColor(3);
-     ImGui::EndDisabled();
+
+     stop();
 }
 void fme::batch::button_input_browse()
 {
@@ -878,13 +905,16 @@ void fme::batch::update(sf::Time elapsed_time)
           flatten();
 
           // Choose output method based on batch output type
+          const std::string &selected_string = get_selected_path(selections->batch_output_path, selections->batch_output_root_path_type);
           switch (selections->batch_output_type)
           {
                case output_types::deswizzle:
-                    m_future_of_future_consumer = m_map_sprite.save_pupu_textures(append_file_structure(m_output_path.data()));
+                    m_future_of_future_consumer =
+                      m_map_sprite.save_pupu_textures(selections->output_deswizzle_pattern, selections, selected_string);
                     break;
                case output_types::swizzle:
-                    m_future_of_future_consumer = m_map_sprite.save_swizzle_textures(append_file_structure(m_output_path.data()));
+                    m_future_of_future_consumer =
+                      m_map_sprite.save_swizzle_textures(selections->output_swizzle_pattern, selections, selected_string);
                     break;
           }
 
@@ -896,10 +926,8 @@ void fme::batch::update(sf::Time elapsed_time)
                     .ext           = ".map",
                     .language_code = m_coo.has_value() && m_coo.value() != open_viii::LangT::generic ? m_coo : std::nullopt,
                };
-               const std::string &selected_string =
-                 get_selected_path(selections->batch_output_path, selections->batch_output_root_path_type);
                m_map_sprite.save_modified_map(
-                 cpm2.replace_tags(fme::batch::get_output_map_pattern(selections->batch_output_type), selections, selected_string));
+                 cpm2.replace_tags(get_output_map_pattern(selections->batch_output_type), selections, selected_string));
           }
      }
 
@@ -978,12 +1006,14 @@ void fme::batch::generate_map_sprite()
 
           case input_types::deswizzle:
                // Enable deswizzle filter using the input path
-               filters.deswizzle.update(append_file_structure(m_input_path.data())).enable();
+               // filters.deswizzle.update(append_file_structure(m_input_path.data())).enable();
+               // todo handle pattern with filter
                break;
 
           case input_types::swizzle:
                // Enable upscale filter using the input path
-               filters.upscale.update(append_file_structure(m_input_path.data())).enable();
+               // filters.upscale.update(append_file_structure(m_input_path.data())).enable();
+               // todo handle pattern with filter
                break;
      }
 
@@ -1194,12 +1224,12 @@ void fme::batch::choose_field_and_coo()
      }
 }
 
-std::filesystem::path fme::batch::append_file_structure(const std::filesystem::path &path) const
-{
-     std::string const      name   = m_map_sprite.get_base_name();
-     std::string_view const prefix = std::string_view(name).substr(0, 2);
-     return path / prefix / name;
-}
+// std::filesystem::path fme::batch::append_file_structure(const std::filesystem::path &path) const
+// {
+//      std::string const      name   = m_map_sprite.get_base_name();
+//      std::string_view const prefix = std::string_view(name).substr(0, 2);
+//      return path / prefix / name;
+// }
 
 void fme::batch::open_directory_browser()
 {
