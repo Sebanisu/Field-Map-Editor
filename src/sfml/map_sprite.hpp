@@ -80,10 +80,17 @@ struct [[nodiscard]] map_sprite final
      std::vector<std::size_t>                      m_saved_imported_indices        = {};
      std::uint32_t                                 m_scale                         = { 1 };
      mutable bool                                  once                            = { true };
+     std::weak_ptr<Selections>                     m_selections                    = {};
 
    public:
      map_sprite() = default;
-     map_sprite(ff_8::map_group map_group, bool draw_swizzle, ff_8::filters in_filters, bool force_disable_blends, bool require_coo);
+     map_sprite(
+       ff_8::map_group           map_group,
+       bool                      draw_swizzle,
+       ff_8::filters             in_filters,
+       bool                      force_disable_blends,
+       bool                      require_coo,
+       std::weak_ptr<Selections> selections);
 
 
      [[nodiscard]] std::string              appends_prefix_base_name(std::string_view title) const;
@@ -508,27 +515,9 @@ struct [[nodiscard]] map_sprite final
           return ff_8::get_triangle_strip(to_Vector2f(draw_size), to_Vector2f(texture_size), src, dest);
      }
 
-     auto generate_deswizzle_paths(const ff_8::PupuID pupu) const
-     {
-          const auto            field_name       = get_base_name();
-          static constexpr auto pattern_pupu     = std::string_view("{}_{}.png");
-          static constexpr auto pattern_coo_pupu = std::string_view("{}_{}_{}.png");
-          const auto            prefix           = std::string_view{ field_name }.substr(0, 2);
-          const auto            alt_path         = std::filesystem::path(m_filters.deswizzle.value()) / prefix / field_name;
-          const auto alt_path_2 = std::filesystem::path(m_filters.deswizzle.value()).parent_path().parent_path() / prefix / field_name;
-
-          if (m_map_group.opt_coo)
-          {
-               return std::array{ save_path_coo(pattern_coo_pupu, m_filters.deswizzle.value(), field_name, pupu, *m_map_group.opt_coo),
-                                  save_path_coo(pattern_coo_pupu, alt_path, field_name, pupu, *m_map_group.opt_coo),
-                                  save_path_coo(pattern_coo_pupu, alt_path_2, field_name, pupu, *m_map_group.opt_coo) };
-          }
-          return std::array{
-               save_path(pattern_pupu, m_filters.deswizzle.value(), field_name, pupu),
-               save_path(pattern_pupu, alt_path, field_name, pupu),
-               save_path(pattern_pupu, alt_path_2, field_name, pupu),
-          };
-     }
+     std::array<std::string, 1> generate_deswizzle_paths(const ff_8::PupuID pupu) const;
+     std::array<std::string, 1> generate_swizzle_paths(const std::uint8_t texture_page, std::uint8_t palette) const;
+     std::array<std::string, 1> generate_swizzle_paths(const std::uint8_t texture_page) const;
 };
 }// namespace fme
 #endif// FIELD_MAP_EDITOR_MAP_SPRITE_HPP

@@ -333,8 +333,7 @@ void fme::batch::browse_input_path()
           ImGui::SameLine();
           if (ImGui::Button(gui_labels::explore.data(), ImVec2{ button_width, button_size }))
           {
-               const std::string &selected_string =
-                 get_selected_path(selections->batch_input_path, selections->batch_input_root_path_type);
+               const std::string &selected_string = get_selected_path(selections->batch_input_path, selections->batch_input_root_path_type);
 
                open_directory(key_value_data::static_replace_tags(selected_string, selections));
           }
@@ -454,7 +453,7 @@ void fme::batch::browse_output_path()
                const std::string &selected_string =
                  get_selected_path(selections->batch_output_path, selections->batch_output_root_path_type);
 
-               open_directory(key_value_data::static_replace_tags(selected_string,selections));
+               open_directory(key_value_data::static_replace_tags(selected_string, selections));
           }
      }
 
@@ -1008,7 +1007,7 @@ void fme::batch::generate_map_sprite()
      assert(m_coo);
 
      // Initialize filters with default disabled state
-     ff_8::filters filters = { false };
+     ff_8::filters      filters         = { false };
 
      // Enable specific filters depending on the input type
      const std::string &selected_string = get_selected_path(selections->batch_input_path, selections->batch_input_root_path_type);
@@ -1030,13 +1029,13 @@ void fme::batch::generate_map_sprite()
      }
 
      // Create the map sprite with appropriate settings
-     m_map_sprite = map_sprite{
-          ff_8::map_group{ m_field, *m_coo },// field and language
-          selections->batch_output_type == output_types::swizzle,// use swizzle format?
-          filters,// filters to apply
-          true,// always include image data?
-          m_coo && m_coo.value() != open_viii::LangT::generic// use localized COO?
-     };
+     m_map_sprite = map_sprite{ ff_8::map_group{ m_field, *m_coo },// field and language
+                                selections->batch_output_type == output_types::swizzle,// use swizzle format?
+                                filters,// filters to apply
+                                true,// always include image data?
+                                m_coo && m_coo.value() != open_viii::LangT::generic// use localized COO?
+                                ,
+                                m_selections };
 }
 
 /**

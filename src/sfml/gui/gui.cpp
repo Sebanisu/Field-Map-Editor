@@ -3492,7 +3492,8 @@ std::shared_ptr<map_sprite> gui::get_map_sprite() const
        m_selections->draw_swizzle,
        ff_8::filters{ true },
        m_selections->draw_disable_blending,
-       false);
+       false,
+       m_selections);
 }
 
 void gui::combo_pupu()
