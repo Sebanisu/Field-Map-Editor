@@ -4,13 +4,13 @@
 
 #ifndef FIELD_MAP_EDITOR_FUTURE_OPERATIONS_HPP
 #define FIELD_MAP_EDITOR_FUTURE_OPERATIONS_HPP
+#include "safedir.hpp"
 #include <filesystem>
 #include <future>
 #include <open_viii/graphics/Color.hpp>
 #include <SFML/Graphics.hpp>
 #include <spdlog/spdlog.h>
 #include <vector>
-#include "safedir.hpp"
 namespace future_operations
 {
 class LoadColorsIntoTexture
@@ -66,7 +66,10 @@ class GetImageFromFromFirstValidPathCreateFuture
      {
           try
           {
-               auto filtered_paths = m_paths | std::views::filter([](safedir path) { return path.is_exists() && !path.is_dir(); });
+               auto filtered_paths =
+                 m_paths
+                 | std::ranges::views::transform([](auto &&path) -> std::filesystem::path { return std::forward<decltype(path)>(path); })
+                 | std::views::filter([](safedir path) { return path.is_exists() && !path.is_dir(); });
                if (filtered_paths.begin() == filtered_paths.end())
                {
                     return {};
