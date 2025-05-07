@@ -159,34 +159,38 @@ static const std::string &get_selected_path(const std::string &custom_path, fme:
 
 void fme::batch::example_input_paths()
 {
+     if (!ImGui::CollapsingHeader("Example Input Paths", ImGuiTreeNodeFlags_DefaultOpen))
+     {
+          return;
+     }
      const auto selections = m_selections.lock();
      if (!selections)
      {
           spdlog::error("Failed to lock m_selections: shared_ptr is expired.");
           return;
      }
-     const key_value_data     cpm             = { .field_name    = "field01",
-                                                  .ext           = ".png",
-                                                  .language_code = open_viii::LangT::en,
-                                                  .palette       = std::uint8_t{ 0 },
-                                                  .texture_page  = std::uint8_t{ 5 },
-                                                  .pupu_id       = 9999U };
-     const key_value_data     cpm2            = { .field_name    = "field01",
-                                                  .ext           = ".map",
-                                                  .language_code = open_viii::LangT::en,
-                                                  .palette       = std::uint8_t{ 0 },
-                                                  .texture_page  = std::uint8_t{ 5 },
-                                                  .pupu_id       = 9999U };
-     static const std::string ff8_path        = "{ff8_path}";
-     static const std::string current_path    = "{current_path}";
+     static const key_value_data png_example     = { .field_name    = "field01",
+                                                     .ext           = ".png",
+                                                     .language_code = open_viii::LangT::en,
+                                                     .palette       = std::uint8_t{ 0 },
+                                                     .texture_page  = std::uint8_t{ 5 },
+                                                     .pupu_id       = 9999U };
+     static const key_value_data map_example     = { .field_name    = "field01",
+                                                     .ext           = ".map",
+                                                     .language_code = open_viii::LangT::en,
+                                                     .palette       = std::uint8_t{ 0 },
+                                                     .texture_page  = std::uint8_t{ 5 },
+                                                     .pupu_id       = 9999U };
+     static const std::string    ff8_path        = "{ff8_path}";
+     static const std::string    current_path    = "{current_path}";
 
-     const std::string       &selected_string = get_selected_path(selections->batch_input_path, selections->batch_input_root_path_type);
+     const std::string          &selected_string = get_selected_path(selections->batch_input_path, selections->batch_input_root_path_type);
 
      // currently input and output use the same patterns this might change later.
      render_output_example_table(
        "DeSwizzleOutputExampleTable",
-       cpm.replace_tags(fme::batch::get_output_pattern(selections->batch_input_type), selections, selected_string),
-       cpm2.replace_tags(fme::batch::get_output_map_pattern(selections->batch_input_type), selections, selected_string),
+       png_example.replace_tags(fme::batch::get_output_pattern(selections->batch_input_type), selections, selected_string),
+       map_example.replace_tags(fme::batch::get_output_map_pattern(selections->batch_input_type), selections, selected_string),
        selections->batch_save_map);
 }
 
@@ -268,31 +272,37 @@ const std::string &fme::batch::get_output_map_pattern(fme::output_types type)
 
 void fme::batch::example_output_paths()
 {
+
+     if (!ImGui::CollapsingHeader("Example Output Paths", ImGuiTreeNodeFlags_DefaultOpen))
+     {
+          return;
+     }
      const auto selections = m_selections.lock();
      if (!selections)
      {
           spdlog::error("Failed to lock m_selections: shared_ptr is expired.");
           return;
      }
-     const key_value_data cpm             = { .field_name    = "field01",
-                                              .ext           = ".png",
-                                              .language_code = open_viii::LangT::en,
-                                              .palette       = std::uint8_t{ 0 },
-                                              .texture_page  = std::uint8_t{ 5 },
-                                              .pupu_id       = 9999U };
-     const key_value_data cpm2            = { .field_name    = "field01",
-                                              .ext           = ".map",
-                                              .language_code = open_viii::LangT::en,
-                                              .palette       = std::uint8_t{ 0 },
-                                              .texture_page  = std::uint8_t{ 5 },
-                                              .pupu_id       = 9999U };
 
-     const std::string   &selected_string = get_selected_path(selections->batch_output_path, selections->batch_output_root_path_type);
+     static const key_value_data png_example = { .field_name    = "field01",
+                                                 .ext           = ".png",
+                                                 .language_code = open_viii::LangT::en,
+                                                 .palette       = std::uint8_t{ 0 },
+                                                 .texture_page  = std::uint8_t{ 5 },
+                                                 .pupu_id       = 9999U };
+     static const key_value_data map_example = { .field_name    = "field01",
+                                                 .ext           = ".map",
+                                                 .language_code = open_viii::LangT::en,
+                                                 .palette       = std::uint8_t{ 0 },
+                                                 .texture_page  = std::uint8_t{ 5 },
+                                                 .pupu_id       = 9999U };
+
+     const std::string &selected_string      = get_selected_path(selections->batch_output_path, selections->batch_output_root_path_type);
 
      render_output_example_table(
        "DeSwizzleOutputExampleTable",
-       cpm.replace_tags(fme::batch::get_output_pattern(selections->batch_output_type), selections, selected_string),
-       cpm2.replace_tags(fme::batch::get_output_map_pattern(selections->batch_output_type), selections, selected_string),
+       png_example.replace_tags(fme::batch::get_output_pattern(selections->batch_output_type), selections, selected_string),
+       map_example.replace_tags(fme::batch::get_output_map_pattern(selections->batch_output_type), selections, selected_string),
        selections->batch_save_map);
 }
 
@@ -328,14 +338,18 @@ void fme::batch::browse_input_path()
      }
      if (selections->batch_input_root_path_type != root_path_types::selected_path)
      {
-          const float button_size  = ImGui::GetFrameHeight();
-          const float button_width = button_size * 3.0F;
-          ImGui::SameLine();
+          const float        button_size      = ImGui::GetFrameHeight();
+          const float        button_width     = button_size * 3.0F;
+          const auto         pop_id           = PushPopID();
+          const std::string &selected_string  = get_selected_path(selections->batch_input_path, selections->batch_input_root_path_type);
+          std::string        processed_string = key_value_data::static_replace_tags(selected_string, selections);
           if (ImGui::Button(gui_labels::explore.data(), ImVec2{ button_width, button_size }))
           {
-               const std::string &selected_string = get_selected_path(selections->batch_input_path, selections->batch_input_root_path_type);
-
-               open_directory(key_value_data::static_replace_tags(selected_string, selections));
+               open_directory(processed_string);
+          }
+          else
+          {
+               tool_tip(processed_string);
           }
      }
 
@@ -445,15 +459,18 @@ void fme::batch::browse_output_path()
      }
      if (selections->batch_output_root_path_type != root_path_types::selected_path)
      {
-          const float button_size  = ImGui::GetFrameHeight();
-          const float button_width = button_size * 3.0F;
-          ImGui::SameLine();
+          const float        button_size      = ImGui::GetFrameHeight();
+          const float        button_width     = button_size * 3.0F;
+          const auto         pop_id           = PushPopID();
+          const std::string &selected_string  = get_selected_path(selections->batch_output_path, selections->batch_output_root_path_type);
+          std::string        processed_string = key_value_data::static_replace_tags(selected_string, selections);
           if (ImGui::Button(gui_labels::explore.data(), ImVec2{ button_width, button_size }))
           {
-               const std::string &selected_string =
-                 get_selected_path(selections->batch_output_path, selections->batch_output_root_path_type);
-
-               open_directory(key_value_data::static_replace_tags(selected_string, selections));
+               open_directory(processed_string);
+          }
+          else
+          {
+               tool_tip(processed_string);
           }
      }
 
@@ -802,7 +819,7 @@ bool fme::batch::browse_path(std::string_view name, bool &valid_path, std::array
                valid_path     = tmp.is_exists() && tmp.is_dir();
                changed        = true;
           }
-          tool_tip({ path_buffer.begin(), path_buffer.end() });
+          tool_tip(std::string_view{ path_buffer.begin(), path_buffer.end() });
      }
      ImGui::SameLine(0, spacing);
      {
@@ -828,7 +845,7 @@ bool fme::batch::browse_path(std::string_view name, bool &valid_path, std::array
      tool_tip(gui_labels::explore_tooltip);
      ImGui::SameLine(0, spacing);
 
-     format_imgui_text("{}", name.data());
+     format_imgui_wrapped_text("{}", name.data());
      return changed;
 }
 
@@ -922,11 +939,11 @@ void fme::batch::update(sf::Time elapsed_time)
           {
                case output_types::deswizzle:
                     m_future_of_future_consumer =
-                      m_map_sprite.save_pupu_textures(selections->output_deswizzle_pattern, selections, selected_string);
+                      m_map_sprite.save_pupu_textures(selections->output_deswizzle_pattern, selected_string);
                     break;
                case output_types::swizzle:
                     m_future_of_future_consumer =
-                      m_map_sprite.save_swizzle_textures(selections->output_swizzle_pattern, selections, selected_string);
+                      m_map_sprite.save_swizzle_textures(selections->output_swizzle_pattern, selected_string);
                     break;
           }
 
