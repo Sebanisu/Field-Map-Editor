@@ -19,8 +19,8 @@ namespace fme
 {
 struct key_value_data
 {
-     std::string_view                field_name    = {};
-     std::string_view                ext           = { ".png" };
+     std::string                     field_name    = {};
+     std::string                     ext           = { ".png" };
      std::optional<open_viii::LangT> language_code = {};
      std::optional<std::uint8_t>     palette       = {};
      std::optional<std::uint8_t>     texture_page  = {};
@@ -119,7 +119,7 @@ struct key_value_data
           static constexpr std::string_view demaster_tooltip = {
                "Path layout for field background textures in Demaster:\n"
                "{demaster_mod_path}/textures/field_bg/{field_prefix}/{field_name}/"
-               "{field_name}{_{2_letter_lang}}{_{texture_page}}{_{palette}}{ext}"
+               "{field_name}{_{2_letter_lang}}{_{texture_page}}{_{palette}}{_{pupu_id}}{ext}"
           };
 
           static constexpr std::string_view field_main_tooltip = {
@@ -239,7 +239,7 @@ struct key_value_data
       * @param selections  Optional selections object to provide context.
       * @return Resolved string or empty.
       */
-     [[nodiscard]] std::string replace_tag(std::string_view key, const std::shared_ptr<Selections> &selections) const;
+     [[nodiscard]] std::string        replace_tag(std::string_view key, const std::shared_ptr<Selections> &selections) const;
 
      /**
       * @brief Attempts to resolve a tag from instance data or static fallbacks.
@@ -247,7 +247,7 @@ struct key_value_data
       * @param key The key/tag to resolve.
       * @return The resolved value or empty string.
       */
-     [[nodiscard]] std::string replace_tag(std::string_view key) const;
+     [[nodiscard]] std::string        replace_tag(std::string_view key) const;
 
      /**
       * @brief Replaces a tag in the given key using the provided selections.
@@ -260,7 +260,7 @@ struct key_value_data
       * @param selections A shared pointer to a Selections object used for tag resolution.
       * @return A new string with the tag(s) replaced using the given selections.
       */
-     [[nodiscard]] std::string operator()(std::string_view key, const std::shared_ptr<Selections> &selections) const;
+     [[nodiscard]] std::string        operator()(std::string_view key, const std::shared_ptr<Selections> &selections) const;
 
      /**
       * @brief Replaces a tag in the given key without using external selections.
@@ -271,7 +271,7 @@ struct key_value_data
       * @param key The input string containing a tag to replace.
       * @return A new string with the tag(s) replaced using default or internal rules.
       */
-     [[nodiscard]] std::string operator()(std::string_view key) const;
+     [[nodiscard]] std::string        operator()(std::string_view key) const;
 
    private:
      /**
@@ -282,7 +282,7 @@ struct key_value_data
       *
       * @return A string view representing the first two characters of the field name.
       */
-     constexpr std::string_view field_prefix() const noexcept
+     constexpr std::string field_prefix() const noexcept
      {
           return field_name.substr(0, 2);
      }
