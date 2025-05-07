@@ -4,9 +4,9 @@
 
 #include "future_operations.hpp"
 future_operations::LoadColorsIntoTexture::LoadColorsIntoTexture(
-  sf::Texture *const         in_texture,
+  sf::Texture *const                              in_texture,
   std::vector<open_viii::graphics::Color32RGBA> &&in_colors,
-  sf::Vector2u               in_size)
+  sf::Vector2u                                    in_size)
   : m_texture(in_texture)
   , m_colors(std::move(in_colors))
   , m_size(in_size)
@@ -103,7 +103,7 @@ void future_operations::save_image_to_path::operator()() const
      using namespace std::chrono_literals;
      std::size_t           count            = { 0U };
      static constexpr auto error_delay_time = 1000ms;
-     for (;;)
+     for (; count != 10; count++)
      {
           if (m_image.saveToFile(string))
           {
@@ -112,7 +112,7 @@ void future_operations::save_image_to_path::operator()() const
           }
           else
           {
-               spdlog::error("Looping on fail {:>2} times", ++count);
+               spdlog::error("{}:{} Looping on fail {:>2} times", __FILE__, __LINE__, count);
                std::this_thread::sleep_for(error_delay_time);
           }
      }
