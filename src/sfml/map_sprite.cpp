@@ -1165,13 +1165,17 @@ const ff_8::MapHistory::nsat_map &map_sprite::working_animation_counts() const
  *
  * @note Caller is responsible for consuming or waiting on the futures to ensure save completion.
  */
-[[nodiscard]] std::vector<std::future<std::future<void>>> map_sprite::save_swizzle_textures(
-  const std::string                      &keyed_string,
-  const std::shared_ptr<fme::Selections> &selections,
-  const std::string                      &selected_path)
+[[nodiscard]] std::vector<std::future<std::future<void>>>
+  map_sprite::save_swizzle_textures(const std::string &keyed_string, const std::string &selected_path)
 {
+     const auto selections = m_selections.lock();
+     if (!selections)
+     {
+          spdlog::error("Failed to lock m_selections: shared_ptr is expired.");
+          return {};
+     }
      // Get the base name of the field (e.g., map name) to use in output filenames.
-     const std::string field_name              = { get_base_name() };
+     // const std::string field_name              = { get_base_name() };
 
      // Define filename patterns for various cases (with/without palette, with/without COO region).
      // static constexpr std::string_view pattern_texture_page             = { "{}_{}.png" };
@@ -1180,12 +1184,12 @@ const ff_8::MapHistory::nsat_map &map_sprite::working_animation_counts() const
      // static constexpr std::string_view pattern_coo_texture_page_palette = { "{}_{}_{}_{}.png" };
 
      // Extract unique texture page IDs and BPP (bits per pixel) values from the map.
-     const auto        unique_values           = get_all_unique_values_and_strings();
-     const auto       &unique_texture_page_ids = unique_values.texture_page_id().values();
-     const auto       &unique_bpp              = unique_values.bpp().values();
+     const auto      unique_values           = get_all_unique_values_and_strings();
+     const auto     &unique_texture_page_ids = unique_values.texture_page_id().values();
+     const auto     &unique_bpp              = unique_values.bpp().values();
 
      // Backup and override current settings for exporting textures.
-     settings_backup   settings(m_filters, m_draw_swizzle, m_disable_texture_page_shift, m_disable_blends, m_scale);
+     settings_backup settings(m_filters, m_draw_swizzle, m_disable_texture_page_shift, m_disable_blends, m_scale);
      settings.filters                         = ff_8::filters{ false };
      settings.filters.value().upscale         = settings.filters.backup().upscale;
      settings.filters.value().deswizzle       = settings.filters.backup().deswizzle;
@@ -1336,11 +1340,15 @@ std::string map_sprite::get_base_name() const
  * @return A vector of futures, each wrapping a future task that will save one texture.
  *         Caller should consume or wait on these to ensure saving completes.
  */
-[[nodiscard]] std::vector<std::future<std::future<void>>> map_sprite::save_pupu_textures(
-  const std::string                      &keyed_string,
-  const std::shared_ptr<fme::Selections> &selections,
-  const std::string                      &selected_path)
+[[nodiscard]] std::vector<std::future<std::future<void>>>
+  map_sprite::save_pupu_textures(const std::string &keyed_string, const std::string &selected_path)
 {
+     const auto selections = m_selections.lock();
+     if (!selections)
+     {
+          spdlog::error("Failed to lock m_selections: shared_ptr is expired.");
+          return {};
+     }
      // Backup current settings and adjust for saving Pupu textures
      auto settings    = settings_backup{ m_filters, m_draw_swizzle, m_disable_texture_page_shift, m_disable_blends, m_scale };
      settings.filters = ff_8::filters{ false };
@@ -1364,11 +1372,11 @@ std::string map_sprite::get_base_name() const
           return {};// Field no longer exists, nothing to save
      }
 
-     const std::string                field_name      = std::string{ str_to_lower(field->get_base_name()) };
-     const std::vector<ff_8::PupuID> &unique_pupu_ids = working_unique_pupu();// Get list of unique Pupu IDs
+     const std::string                           field_name                  = std::string{ str_to_lower(field->get_base_name()) };
+     const std::vector<ff_8::PupuID>            &unique_pupu_ids             = working_unique_pupu();// Get list of unique Pupu IDs
      // std::optional<open_viii::LangT> &coo             = m_map_group.opt_coo;// Language option (optional)
 
-     assert(safedir(path).is_dir());// Ensure output path is a directory
+     // assert(safedir(path).is_dir());// Ensure output path is a directory
 
      // static constexpr std::string_view           pattern_pupu                = { "{}_{}.png" };// Pattern without language
      // static constexpr std::string_view           pattern_coo_pupu            = { "{}_{}_{}.png" };// Pattern with language
