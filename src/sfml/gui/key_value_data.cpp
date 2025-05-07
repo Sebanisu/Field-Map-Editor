@@ -24,7 +24,7 @@
                const auto key         = std::string_view{ match.get<key_id>() }.empty() ? std::string_view{ match.get<key_id_alt>() }
                                                                                         : std::string_view{ match.get<key_id>() };
                const auto value       = [&]() {
-                    if (key == "selected_path"sv)
+                    if (key == keys::selected_path)
                     {
                          return selected_path;
                     }
@@ -79,8 +79,7 @@
 }
 
 
-[[nodiscard]] std::string
-  fme::key_value_data::static_replace_tag(std::string_view key, const std::shared_ptr<Selections> &selections)
+[[nodiscard]] std::string fme::key_value_data::static_replace_tag(std::string_view key, const std::shared_ptr<Selections> &selections)
 {
      if (selections)
      {
@@ -102,7 +101,7 @@
           if (key == keys::batch_output_path)
                return selections->batch_output_path;
      }
-     return {};
+     return static_replace_tag(key);
 }
 
 
@@ -126,17 +125,17 @@
           return "DEMASTER_EXP";
 
      if (key == keys::ffnx_multi_texture)
-          return "{ffnx_mod_path}/field/mapdata/{field_prefix}/{field_name}/{field_name}{_{2_letter_lang}}_{texture_page}{ext}";
+          return "{ffnx_mod_path}/field/mapdata/{field_prefix}/{field_name}/{field_name}{_{2_letter_lang}}_{texture_page}{_{pupu_id}}{ext}";
 
      if (key == keys::ffnx_single_texture)
-          return "{ffnx_mod_path}/field/mapdata/{field_name}/{field_name}{_{2_letter_lang}}{ext}";
+          return "{ffnx_mod_path}/field/mapdata/{field_name}/{field_name}{_{2_letter_lang}}{_{pupu_id}}{ext}";
 
      if (key == keys::ffnx_map)
           return "{ffnx_direct_mode_path}/field/mapdata/{field_prefix}/{field_name}/{field_name}{_{2_letter_lang}}{ext}";
 
      if (key == keys::demaster)
           return "{demaster_mod_path}/textures/field_bg/{field_prefix}/{field_name}/"
-                 "{field_name}{_{2_letter_lang}}{_{texture_page}}{_{palette}}{ext}";
+                 "{field_name}{_{2_letter_lang}}{_{texture_page}}{_{palette}}{_{pupu_id}}{ext}";
 
      if (key == keys::field_main)
           return "field/mapdata/{field_prefix}/{field_name}/{field_name}{ext}";
@@ -187,7 +186,7 @@
           return fmt::format("{}", ext);
      }
      if (key == keys::field_prefix)
-          return fmt::format("{}", field_prefix());
+          return field_prefix();
 
      if (key == keys::letter_2_lang)
           return fmt::format("{}", letter_2_lang());
@@ -202,7 +201,7 @@
           return fmt::format("{:02}", texture_page.value());
 
      if (key == keys::pupu_id && pupu_id.has_value())
-          return fmt::format("{:08x}", pupu_id.value());
+          return fmt::format("{:08X}", pupu_id.value());
 
      return {};
 }
