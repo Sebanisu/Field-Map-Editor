@@ -2642,7 +2642,7 @@ void gui::directory_browser_display()
                }
                // todo modify these two functions :P to use the imported image.
                m_future_of_future_consumer =
-                 m_map_sprite->save_swizzle_textures(m_selections->output_swizzle_pattern, m_selections, selected_path.string());// done.
+                 m_map_sprite->save_swizzle_textures(m_selections->output_swizzle_pattern, selected_path.string());// done.
                const key_value_data cpm = {
                     .field_name    = m_map_sprite->get_base_name(),
                     .ext           = ".map",
@@ -2674,7 +2674,7 @@ void gui::directory_browser_display()
                     error_code.clear();
                }
                m_future_of_future_consumer =
-                 m_map_sprite->save_pupu_textures(m_selections->output_deswizzle_pattern, m_selections, selected_path.string());
+                 m_map_sprite->save_pupu_textures(m_selections->output_deswizzle_pattern, selected_path.string());
                const key_value_data cpm = {
                     .field_name    = m_map_sprite->get_base_name(),
                     .ext           = ".map",
