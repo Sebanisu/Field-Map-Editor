@@ -214,32 +214,33 @@ namespace fme
 {
 void gui::start()
 {
-     if (m_window.isOpen())
+     if (!m_window.isOpen())
      {
-          scale_window(static_cast<float>(m_selections->window_width), static_cast<float>(m_selections->window_height));
-          (void)icons_font();
-          do
-          {
-               m_changed      = false;
-               get_imgui_id() = {};
-               loop_events();
-               m_elapsed_time                          = m_delta_clock.restart();
-
-               static constexpr float scroll_time_fast = 4000.F;
-               static constexpr float scroll_time_slow = 1000.F;
-               m_scrolling.total_scroll_time[0] =
-                 m_selections->draw_swizzle || (!m_selections->draw_palette && mim_test()) ? scroll_time_fast : scroll_time_slow;
-               if (m_scrolling.scroll(xy, m_elapsed_time))
-               {
-                    m_changed                     = false;
-                    m_mouse_positions.mouse_moved = true;
-               }
-               ImGui::SFML::Update(m_window, m_elapsed_time);
-               m_batch.update(m_elapsed_time);
-               loop();
-          } while (m_window.isOpen());
-          ImGui::SFML::Shutdown();
+          return;
      }
+     scale_window(static_cast<float>(m_selections->window_width), static_cast<float>(m_selections->window_height));
+     (void)icons_font();
+     do
+     {
+          m_changed      = false;
+          get_imgui_id() = {};
+          loop_events();
+          m_elapsed_time                          = m_delta_clock.restart();
+
+          static constexpr float scroll_time_fast = 4000.F;
+          static constexpr float scroll_time_slow = 1000.F;
+          m_scrolling.total_scroll_time[0] =
+            m_selections->draw_swizzle || (!m_selections->draw_palette && mim_test()) ? scroll_time_fast : scroll_time_slow;
+          if (m_scrolling.scroll(xy, m_elapsed_time))
+          {
+               m_changed                     = false;
+               m_mouse_positions.mouse_moved = true;
+          }
+          ImGui::SFML::Update(m_window, m_elapsed_time);
+          m_batch.update(m_elapsed_time);
+          loop();
+     } while (m_window.isOpen());
+     ImGui::SFML::Shutdown();
 }
 void gui::render_dockspace()
 {
@@ -3164,6 +3165,7 @@ void gui::loop_events()
               [this]([[maybe_unused]] const std::monostate &) {
                    if (m_event.type == sf::Event::Closed)
                    {
+                        m_batch.stop();
                         m_window.close();
                    }
               },
