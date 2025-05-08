@@ -31,7 +31,6 @@ add_executable(
   gui/import.cpp
   gui/mouse_positions.cpp
   gui/push_pop_id.cpp
-  gui/scrolling.cpp
   gui/Selections.cpp
   gui/tool_tip.cpp
   archives_group.cpp
