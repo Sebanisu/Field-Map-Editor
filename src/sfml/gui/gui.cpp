@@ -228,16 +228,6 @@ void gui::start()
           get_imgui_id() = {};// reset id counter
           loop_events();
           m_elapsed_time = m_delta_clock.restart();
-
-          // static constexpr float scroll_time_fast = 4000.F;
-          // static constexpr float scroll_time_slow = 1000.F;
-          // m_scrolling.total_scroll_time[0] =
-          //   m_selections->draw_swizzle || (!m_selections->draw_palette && mim_test()) ? scroll_time_fast : scroll_time_slow;
-          // if (m_scrolling.scroll(xy, m_elapsed_time))
-          // {
-          //      m_changed                     = false;
-          //      m_mouse_positions.mouse_moved = true;
-          // }
           ImGui::SFML::Update(m_window, m_elapsed_time);
           m_batch.update(m_elapsed_time);
           loop();
@@ -3123,11 +3113,7 @@ void gui::loop_events()
                    m_changed                     = true;
               },
               [this](const sf::Event::KeyEvent &key) {
-                   //     if (ImGui::GetIO().WantCaptureKeyboard)
-                   //     {
-                   //          m_scrolling.reset();
-                   //          return;
-                   //     }
+  
                    const auto &type = m_event.type;
                    if (type == sf::Event::EventType::KeyReleased)
                    {
@@ -3203,22 +3189,6 @@ void gui::event_type_mouse_button_pressed(const sf::Mouse::Button &button)
 }
 void gui::event_type_key_pressed([[maybe_unused]] const sf::Event::KeyEvent &key)
 {
-     // if (key.code == sf::Keyboard::Up)
-     // {
-     //      m_scrolling.up = true;
-     // }
-     // else if (key.code == sf::Keyboard::Down)
-     // {
-     //      m_scrolling.down = true;
-     // }
-     // else if (key.code == sf::Keyboard::Left)
-     // {
-     //      m_scrolling.left = true;
-     // }
-     // else if (key.code == sf::Keyboard::Right)
-     // {
-     //      m_scrolling.right = true;
-     // }
 }
 void gui::event_type_key_released(const sf::Event::KeyEvent &key)
 {
@@ -3289,22 +3259,6 @@ void gui::event_type_key_released(const sf::Event::KeyEvent &key)
           config->insert_or_assign("selections_display_control_panel_window", m_selections->display_control_panel_window);
           config.save();
      }
-     // else if (key.code == sf::Keyboard::Up)
-     // {
-     //      m_scrolling.up = false;
-     // }
-     // else if (key.code == sf::Keyboard::Down)
-     // {
-     //      m_scrolling.down = false;
-     // }
-     // else if (key.code == sf::Keyboard::Left)
-     // {
-     //      m_scrolling.left = false;
-     // }
-     // else if (key.code == sf::Keyboard::Right)
-     // {
-     //      m_scrolling.right = false;
-     // }
 }
 std::uint32_t gui::image_height() const
 {
