@@ -55,7 +55,7 @@ struct gui
      std::vector<std::filesystem::path>                                  append_results         = {};
      std::shared_ptr<sf::Shader>                                         m_drag_sprite_shader   = {};
      std::shared_ptr<Selections>                                         m_selections           = std::make_shared<Selections>();
-     scrolling                                                           m_scrolling            = {};
+     //scrolling                                                           m_scrolling            = {};
      static constexpr std::int8_t                                        tile_size_px           = { 16 };
      static constexpr std::uint8_t                                       tile_size_px_unsigned  = { 16U };
      mouse_positions                                                     m_mouse_positions      = {};

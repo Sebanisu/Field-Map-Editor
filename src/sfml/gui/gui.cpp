@@ -218,24 +218,26 @@ void gui::start()
      {
           return;
      }
+     //m_window.requestFocus();// Ensure the window has focus
+     m_window.setActive(true);
      scale_window(static_cast<float>(m_selections->window_width), static_cast<float>(m_selections->window_height));
      (void)icons_font();
      do
      {
           m_changed      = false;
-          get_imgui_id() = {};
+          get_imgui_id() = {};// reset id counter
           loop_events();
-          m_elapsed_time                          = m_delta_clock.restart();
+          m_elapsed_time = m_delta_clock.restart();
 
-          static constexpr float scroll_time_fast = 4000.F;
-          static constexpr float scroll_time_slow = 1000.F;
-          m_scrolling.total_scroll_time[0] =
-            m_selections->draw_swizzle || (!m_selections->draw_palette && mim_test()) ? scroll_time_fast : scroll_time_slow;
-          if (m_scrolling.scroll(xy, m_elapsed_time))
-          {
-               m_changed                     = false;
-               m_mouse_positions.mouse_moved = true;
-          }
+          // static constexpr float scroll_time_fast = 4000.F;
+          // static constexpr float scroll_time_slow = 1000.F;
+          // m_scrolling.total_scroll_time[0] =
+          //   m_selections->draw_swizzle || (!m_selections->draw_palette && mim_test()) ? scroll_time_fast : scroll_time_slow;
+          // if (m_scrolling.scroll(xy, m_elapsed_time))
+          // {
+          //      m_changed                     = false;
+          //      m_mouse_positions.mouse_moved = true;
+          // }
           ImGui::SFML::Update(m_window, m_elapsed_time);
           m_batch.update(m_elapsed_time);
           loop();
@@ -3121,11 +3123,11 @@ void gui::loop_events()
                    m_changed                     = true;
               },
               [this](const sf::Event::KeyEvent &key) {
-                   if (ImGui::GetIO().WantCaptureKeyboard)
-                   {
-                        m_scrolling.reset();
-                        return;
-                   }
+                   //     if (ImGui::GetIO().WantCaptureKeyboard)
+                   //     {
+                   //          m_scrolling.reset();
+                   //          return;
+                   //     }
                    const auto &type = m_event.type;
                    if (type == sf::Event::EventType::KeyReleased)
                    {
