@@ -63,7 +63,8 @@ struct [[nodiscard]] map_sprite final
      bool                                          m_disable_texture_page_shift = { false };
      bool                                          m_disable_blends             = { false };
      ff_8::filters                                 m_filters                 = { false };// default false should be override by gui to true.
-     ::upscales                                    m_upscales                = {};
+     std::weak_ptr<Selections>                     m_selections              = {};
+     ::upscales                                    m_upscales                = { m_selections };
      bool                                          m_using_imported_texture  = {};
      const sf::Texture                            *m_imported_texture        = { nullptr };
      std::uint16_t                                 m_imported_tile_size      = {};
@@ -80,7 +81,6 @@ struct [[nodiscard]] map_sprite final
      std::vector<std::size_t>                      m_saved_imported_indices        = {};
      std::uint32_t                                 m_scale                         = { 1 };
      mutable bool                                  once                            = { true };
-     std::weak_ptr<Selections>                     m_selections                    = {};
 
    public:
      map_sprite() = default;
@@ -453,9 +453,9 @@ struct [[nodiscard]] map_sprite final
           const auto field = m_map_group.field.lock();
           if (!field)
           {
-               return {};
+               return { m_selections };
           }
-          return { std::string{ field->get_base_name() }, m_map_group.opt_coo };
+          return { std::string{ field->get_base_name() }, m_map_group.opt_coo, m_selections };
      }
 
 
@@ -512,8 +512,8 @@ struct [[nodiscard]] map_sprite final
      }
 
      std::array<std::string, 1> generate_deswizzle_paths(const ff_8::PupuID pupu) const;
-     std::array<std::string, 1> generate_swizzle_paths(const std::uint8_t texture_page, std::uint8_t palette) const;
-     std::array<std::string, 1> generate_swizzle_paths(const std::uint8_t texture_page) const;
+     std::vector<std::filesystem::path> generate_swizzle_paths(const std::uint8_t texture_page, std::uint8_t palette) const;
+     std::vector<std::filesystem::path> generate_swizzle_paths(const std::uint8_t texture_page) const;
 };
 }// namespace fme
 #endif// FIELD_MAP_EDITOR_MAP_SPRITE_HPP

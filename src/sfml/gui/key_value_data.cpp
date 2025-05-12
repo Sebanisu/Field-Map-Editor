@@ -195,13 +195,34 @@
           return fmt::format("{}", letter_3_lang());
 
      if (key == keys::palette && palette.has_value())
-          return fmt::format("{:02}", palette.value());
+          return fmt::format("{}", palette.value());
 
      if (key == keys::texture_page && texture_page.has_value())
-          return fmt::format("{:02}", texture_page.value());
+          return fmt::format("{}", texture_page.value());
 
      if (key == keys::pupu_id && pupu_id.has_value())
           return fmt::format("{:08X}", pupu_id.value());
+
+     if (key == keys::eng)
+          return { open_viii::LangCommon::ENG.begin(), open_viii::LangCommon::ENG.end() };
+
+     if (key == keys::fre)
+          return { open_viii::LangCommon::FRE.begin(), open_viii::LangCommon::FRE.end() };
+
+     if (key == keys::ger)
+          return { open_viii::LangCommon::GER.begin(), open_viii::LangCommon::GER.end() };
+
+     if (key == keys::ita)
+          return { open_viii::LangCommon::ITA.begin(), open_viii::LangCommon::ITA.end() };
+
+     if (key == keys::spa)
+          return { open_viii::LangCommon::SPA.begin(), open_viii::LangCommon::SPA.end() };
+
+     if (key == keys::jp)
+          return { open_viii::LangCommon::JP.begin(), open_viii::LangCommon::JP.end() };
+
+     if (key == keys::x)
+          return { open_viii::LangCommon::MISC.begin(), open_viii::LangCommon::MISC.end() };
 
      return {};
 }

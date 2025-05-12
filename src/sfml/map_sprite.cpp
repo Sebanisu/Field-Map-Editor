@@ -261,7 +261,6 @@ std::future<std::future<void>> map_sprite::load_upscale_textures(SharedTextures 
           spdlog::error("{}:{} - Index out of range {} / {}", __FILE__, __LINE__, pos, MAX_TEXTURES);
           return {};
      }
-     // m_upscales.generate_upscale_paths(m_filters.upscale.value(), texture_page, palette) })
      return { std::async(
        std::launch::async,
        future_operations::GetImageFromFromFirstValidPathCreateFuture{ &(ret->at(pos)), generate_swizzle_paths(texture_page, palette) }) };
@@ -1764,40 +1763,48 @@ std::array<std::string, 1> map_sprite::generate_deswizzle_paths(const ff_8::Pupu
      return std::array{ cpm.replace_tags(selections->output_map_pattern_for_deswizzle, selections, m_filters.deswizzle.value().string()) };
 }
 
-std::array<std::string, 1> map_sprite::generate_swizzle_paths(const std::uint8_t texture_page, std::uint8_t palette) const
+std::vector<std::filesystem::path> map_sprite::generate_swizzle_paths(const std::uint8_t texture_page, std::uint8_t palette) const
 {
      const auto selections = m_selections.lock();
      if (!selections)
      {
           spdlog::error("Failed to lock m_selections: shared_ptr is expired.");
-          return std::array<std::string, 1>{};
+          return {};
      }
-     const key_value_data cpm = { .field_name = get_base_name(),
-                                  .ext        = ".png",
-                                  .language_code =
+     const key_value_data               cpm = { .field_name = get_base_name(),
+                                                .ext        = ".png",
+                                                .language_code =
                                     m_map_group.opt_coo.has_value() && m_map_group.opt_coo.value() != open_viii::LangT::generic
-                                      ? m_map_group.opt_coo
-                                      : std::nullopt,
-                                  .palette      = palette,
-                                  .texture_page = texture_page };
-     return std::array{ cpm.replace_tags(selections->output_map_pattern_for_swizzle, selections, m_filters.upscale.value().string()) };
+                                                    ? m_map_group.opt_coo
+                                                    : std::nullopt,
+                                                .palette      = palette,
+                                                .texture_page = texture_page };
+
+     std::vector<std::filesystem::path> paths = m_upscales.generate_upscale_paths(m_filters.upscale.value().string(), cpm);
+     paths.push_back(cpm.replace_tags(selections->output_swizzle_pattern, selections, m_filters.upscale.value().string()));
+
+     return paths;
 }
 
-std::array<std::string, 1> map_sprite::generate_swizzle_paths(const std::uint8_t texture_page) const
+std::vector<std::filesystem::path> map_sprite::generate_swizzle_paths(const std::uint8_t texture_page) const
 {
      const auto selections = m_selections.lock();
      if (!selections)
      {
           spdlog::error("Failed to lock m_selections: shared_ptr is expired.");
-          return std::array<std::string, 1>{};
+          return {};
      }
-     const key_value_data cpm = { .field_name = get_base_name(),
-                                  .ext        = ".png",
-                                  .language_code =
+     const key_value_data               cpm   = { .field_name = get_base_name(),
+                                                  .ext        = ".png",
+                                                  .language_code =
                                     m_map_group.opt_coo.has_value() && m_map_group.opt_coo.value() != open_viii::LangT::generic
-                                      ? m_map_group.opt_coo
-                                      : std::nullopt,
-                                  .texture_page = texture_page };
-     return std::array{ cpm.replace_tags(selections->output_map_pattern_for_swizzle, selections, m_filters.upscale.value().string()) };
+                                                      ? m_map_group.opt_coo
+                                                      : std::nullopt,
+                                                  .texture_page = texture_page };
+
+     std::vector<std::filesystem::path> paths = m_upscales.generate_upscale_paths(m_filters.upscale.value().string(), cpm);
+     paths.push_back(cpm.replace_tags(selections->output_swizzle_pattern, selections, m_filters.upscale.value().string()));
+
+     return paths;
 }
 }// namespace fme

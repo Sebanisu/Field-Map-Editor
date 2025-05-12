@@ -218,7 +218,7 @@ void gui::start()
      {
           return;
      }
-     //m_window.requestFocus();// Ensure the window has focus
+     // m_window.requestFocus();// Ensure the window has focus
      m_window.setActive(true);
      scale_window(static_cast<float>(m_selections->window_width), static_cast<float>(m_selections->window_height));
      (void)icons_font();
@@ -3113,7 +3113,6 @@ void gui::loop_events()
                    m_changed                     = true;
               },
               [this](const sf::Event::KeyEvent &key) {
-  
                    const auto &type = m_event.type;
                    if (type == sf::Event::EventType::KeyReleased)
                    {
@@ -3187,9 +3186,7 @@ void gui::event_type_mouse_button_pressed(const sf::Mouse::Button &button)
                break;
      }
 }
-void gui::event_type_key_pressed([[maybe_unused]] const sf::Event::KeyEvent &key)
-{
-}
+void gui::event_type_key_pressed([[maybe_unused]] const sf::Event::KeyEvent &key) {}
 void gui::event_type_key_released(const sf::Event::KeyEvent &key)
 {
      if (key.shift && key.control && key.code == sf::Keyboard::Z)
@@ -3734,17 +3731,16 @@ void gui::generate_upscale_paths(const std::string &field_name, open_viii::LangT
      m_upscale_paths.clear();
      auto transform_paths = m_paths
                             | std::views::transform([](const toml::node &item) -> std::string { return item.value_or(std::string{}); })
-                            | std::views::transform([this, &field_name, &coo](const std::string &path) {
+                            | std::views::transform([this, &coo](const std::string &path) {
                                    if (m_field)
                                    {
-                                        return upscales(std::filesystem::path(path), field_name, coo).get_paths();
+                                        return upscales(path, coo, m_selections).get_paths();
                                    }
-                                   return upscales{}.get_paths();
+                                   return upscales{ m_selections }.get_paths();
                               });
      // std::views::join; broken in msvc.
      auto process = [this](const auto &temp_paths) {
-          auto filter_paths = temp_paths | std::views::filter([](safedir path) { return path.is_exists() && path.is_dir(); });
-          for (auto &path : filter_paths)
+          for (const auto &path : temp_paths)
           {
                m_upscale_paths.emplace_back(path.string());
           }
@@ -3759,10 +3755,10 @@ void gui::generate_upscale_paths(const std::string &field_name, open_viii::LangT
      }
      if (m_field)
      {
-          process(upscales(std::filesystem::current_path(), field_name, coo).get_paths());
+          process(upscales(field_name, coo, m_selections).get_paths());
           for (const auto &upscale_path : m_custom_upscale_paths)
           {
-               process(upscales(upscale_path.value_or(std::string{}), field_name, coo).get_paths());
+               process(upscales(upscale_path.value_or(std::string{}), coo, m_selections).get_paths());
           }
      }
      std::ranges::sort(m_upscale_paths);
@@ -3786,22 +3782,21 @@ bool gui::combo_upscale_path(std::filesystem::path &path, const std::string &fie
      std::vector<std::string> paths           = {};
      auto                     transform_paths = m_paths
                             | std::views::transform([](const toml::node &item) -> std::string { return item.value_or(std::string{}); })
-                            | std::views::transform([this, &field_name, &coo](const std::string &in_path) {
+                            | std::views::transform([this, &coo](const std::string &in_path) {
                                    if (m_field)
                                    {
-                                        return upscales(std::filesystem::path(in_path), field_name, coo).get_paths();
+                                        return upscales(in_path, coo, m_selections).get_paths();
                                    }
-                                   return upscales{}.get_paths();
+                                   return upscales{ m_selections }.get_paths();
                               });
      // std::views::join; broken in msvc.
      auto process = [&paths](const auto &temp_paths) {
-          auto filter_paths = temp_paths | std::views::filter([](safedir in_path) { return in_path.is_exists() && in_path.is_dir(); });
-          for (auto &in_path : filter_paths)
+          for (const auto &in_path : temp_paths)
           {
                paths.emplace_back(in_path.string());
           }
      };
-     for (auto temp_paths : transform_paths)
+     for (const auto &temp_paths : transform_paths)
      {
           process(temp_paths);
      }
@@ -3811,7 +3806,7 @@ bool gui::combo_upscale_path(std::filesystem::path &path, const std::string &fie
      }
      if (m_field)
      {
-          process(upscales(std::filesystem::current_path(), field_name, coo).get_paths());
+          process(upscales(field_name, coo, m_selections).get_paths());
 
           const auto gcc = GenericComboClass(gui_labels::upscale_path, [&paths]() { return paths; }, [&paths]() { return paths; }, path);
 

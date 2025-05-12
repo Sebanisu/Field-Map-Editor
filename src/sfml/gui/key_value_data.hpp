@@ -19,12 +19,12 @@ namespace fme
 {
 struct key_value_data
 {
-     std::string                     field_name    = {};
-     std::string                     ext           = { ".png" };
-     std::optional<open_viii::LangT> language_code = {};
-     std::optional<std::uint8_t>     palette       = {};
-     std::optional<std::uint8_t>     texture_page  = {};
-     std::optional<std::uint32_t>    pupu_id       = {};
+     std::string                                        field_name                      = {};
+     std::string                                        ext                             = { ".png" };
+     std::optional<open_viii::LangT>                    language_code                   = {};
+     std::optional<std::uint8_t>                        palette                         = {};
+     std::optional<std::uint8_t>                        texture_page                    = {};
+     std::optional<std::uint32_t>                       pupu_id                         = {};
 
      struct keys
      {
@@ -55,6 +55,13 @@ struct key_value_data
           static constexpr std::string_view chara_lang                    = { "chara_lang" };
           static constexpr std::string_view field_3lang_main              = { "field_3lang_main" };
           static constexpr std::string_view chara_3lang_main              = { "chara_3lang_main" };
+          static constexpr std::string_view eng                           = { "eng" };// open_viii::LangCommon::ENG
+          static constexpr std::string_view fre                           = { "fre" };
+          static constexpr std::string_view ger                           = { "ger" };
+          static constexpr std::string_view ita                           = { "ita" };
+          static constexpr std::string_view spa                           = { "spa" };
+          static constexpr std::string_view jp                            = { "jp" };
+          static constexpr std::string_view x                             = { "x" };
 
           static constexpr auto             all_keys                      = std::to_array<std::string_view>({ selected_path,
                                                                                                               // ff8_path,
@@ -318,6 +325,50 @@ struct key_value_data
                return open_viii::LangCommon::to_string_3_char(language_code.value());
           else
                return open_viii::LangCommon::to_string_3_char(open_viii::LangT::en);
+     }
+
+   public:
+     static inline bool has_balanced_braces(const std::string_view s)
+     {
+          int balance = 0;
+          for (const char c : s)
+          {
+               if (c == '{')
+               {
+                    ++balance;
+               }
+               else if (c == '}')
+               {
+                    --balance;
+                    if (balance < 0)
+                    {
+                         spdlog::error("Unmatched closing brace in input: \"{}\" (note: literal braces shown as {{ and }})", s);
+                         return false;
+                    }
+               }
+          }
+
+          if (balance != 0)
+          {
+               spdlog::error("Mismatched brace count in input: \"{}\" ({} unmatched opening brace{{}})", s, balance);
+               return false;
+          }
+
+          return true;
+     }
+
+     template<std::ranges::range R>
+          requires std::convertible_to<std::ranges::range_value_t<R>, std::string_view>
+     static inline bool has_balanced_braces(const R &r)
+     {
+          for (const auto &s : r)
+          {
+               if (bool ok = has_balanced_braces(s); !ok)
+               {
+                    return false;// found bad brace.
+               }
+          }
+          return true;
      }
 };
 }// namespace fme
