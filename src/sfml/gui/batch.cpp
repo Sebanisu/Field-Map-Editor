@@ -938,12 +938,10 @@ void fme::batch::update(sf::Time elapsed_time)
           switch (selections->batch_output_type)
           {
                case output_types::deswizzle:
-                    m_future_of_future_consumer =
-                      m_map_sprite.save_pupu_textures(selections->output_deswizzle_pattern, selected_string);
+                    m_future_of_future_consumer = m_map_sprite.save_pupu_textures(selections->output_deswizzle_pattern, selected_string);
                     break;
                case output_types::swizzle:
-                    m_future_of_future_consumer =
-                      m_map_sprite.save_swizzle_textures(selections->output_swizzle_pattern, selected_string);
+                    m_future_of_future_consumer = m_map_sprite.save_swizzle_textures(selections->output_swizzle_pattern, selected_string);
                     break;
           }
 

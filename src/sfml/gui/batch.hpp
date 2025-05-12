@@ -46,38 +46,38 @@ class batch
      directory_mode                                             m_directory_browser_mode             = {};
      FutureOfFutureConsumer<std::vector<std::future<std::future<void>>>> m_future_of_future_consumer = {};
      FutureConsumer<std::vector<std::future<void>>>                      m_future_consumer           = {};
-     ImGui::FileBrowser                  m_directory_browser{ ImGuiFileBrowserFlags_SelectDirectory | ImGuiFileBrowserFlags_CreateNewDir
+     ImGui::FileBrowser m_directory_browser{ ImGuiFileBrowserFlags_SelectDirectory | ImGuiFileBrowserFlags_CreateNewDir
                                              | ImGuiFileBrowserFlags_EditPathString };
 
-     void                                combo_input_type();
-     void                                combo_output_type();
-     void                                combo_compact_type();
-     void                                combo_flatten_type();
-     void                                browse_input_path();
-     void                                browse_output_path();
-     void                                button_start();
-     void                                button_stop();
-     void                                checkbox_load_map();
-     void                                choose_field_and_coo();
-     void                                reset_for_next();
-     void                                generate_map_sprite();
-     void                                compact();
-     void                                flatten();
-     bool                                consume_one_future();
-     void                                open_directory_browser();
-     void                                button_input_browse();
-     void                                button_output_browse();
-     void                                example_input_paths();
-     void                                example_output_paths();
+     void               combo_input_type();
+     void               combo_output_type();
+     void               combo_compact_type();
+     void               combo_flatten_type();
+     void               browse_input_path();
+     void               browse_output_path();
+     void               button_start();
+     void               button_stop();
+     void               checkbox_load_map();
+     void               choose_field_and_coo();
+     void               reset_for_next();
+     void               generate_map_sprite();
+     void               compact();
+     void               flatten();
+     bool               consume_one_future();
+     void               open_directory_browser();
+     void               button_input_browse();
+     void               button_output_browse();
+     void               example_input_paths();
+     void               example_output_paths();
      // both use the output pattern currently
-     const std::string                  &get_output_pattern(fme::input_types type);
-     const std::string                  &get_output_pattern(fme::output_types type);
-     const std::string                  &get_output_map_pattern(fme::input_types type);
-     const std::string                  &get_output_map_pattern(fme::output_types type);
-     void                                save_input_path();
-     void                                save_output_path();
+     const std::string &get_output_pattern(fme::input_types type);
+     const std::string &get_output_pattern(fme::output_types type);
+     const std::string &get_output_map_pattern(fme::input_types type);
+     const std::string &get_output_map_pattern(fme::output_types type);
+     void               save_input_path();
+     void               save_output_path();
      //[[nodiscard]] std::filesystem::path append_file_structure(const std::filesystem::path &path) const;
-     [[nodiscard]] bool                  browse_path(std::string_view name, bool &valid_path, std::array<char, m_buffer_size> &path_buffer);
+     [[nodiscard]] bool browse_path(std::string_view name, bool &valid_path, std::array<char, m_buffer_size> &path_buffer);
 
    public:
      void update(sf::Time elapsed_time);
