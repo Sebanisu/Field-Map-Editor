@@ -69,19 +69,6 @@ class Configuration
       */
      void                              save() const;
 
-   private:
-     /**
-      * @brief The path to the TOML configuration file.
-      *
-      * This is a static inline constant that resolves to `Field-Map-Editor_SFML.toml`
-      * in the current working directory.
-      */
-     static inline std::filesystem::path        s_path{};
-
-     /**
-      * @brief The in-memory representation of the TOML configuration file.
-      */
-     static inline std::unique_ptr<toml::table> s_table{};
 
      /**
       * @brief Loads a string array from the TOML configuration.
@@ -92,15 +79,16 @@ class Configuration
       *
       * @param key The TOML key to look up.
       * @param output The vector to populate with strings from the config.
+      * @returns true if changed
       *
       * @note This function expects that the caller is accessing a wrapper
       *       that uses `operator->()` and `operator[]` for TOML table access.
       */
-     void                                       load_array(const std::string_view key, std::vector<std::string> &output)
+     bool                              load_array(const std::string_view key, std::vector<std::string> &output) const
      {
           if (!operator->()->contains(key))
           {
-               return;
+               return false;
           }
 
           if (const auto *array = operator[](key).as_array(); array)
@@ -114,7 +102,9 @@ class Configuration
                          output.emplace_back(std::move(str.value()));
                     }
                }
+               return true;
           }
+          return false;
      }
 
      /**
@@ -151,15 +141,16 @@ class Configuration
       *
       * @param key The TOML key to look up.
       * @param output A vector to populate with `std::filesystem::path` values.
+      * @returns true if changed
       *
       * @note Assumes the TOML array contains strings representing file system paths.
       * @note Requires access via `operator->()` and `operator[]` to the TOML table.
       */
-     void load_array(const std::string_view key, std::vector<std::filesystem::path> &output)
+     bool load_array(const std::string_view key, std::vector<std::filesystem::path> &output) const
      {
           if (!operator->()->contains(key))
           {
-               return;
+               return false;
           }
 
           if (const auto *array = operator[](key).as_array(); array)
@@ -173,7 +164,9 @@ class Configuration
                          output.emplace_back(std::move(str.value()));
                     }
                }
+               return true;
           }
+          return false;
      }
 
      /**
@@ -200,6 +193,20 @@ class Configuration
 
           operator->()->insert_or_assign(key, std::move(array));
      }
+
+   private:
+     /**
+      * @brief The path to the TOML configuration file.
+      *
+      * This is a static inline constant that resolves to `Field-Map-Editor_SFML.toml`
+      * in the current working directory.
+      */
+     static inline std::filesystem::path        s_path{};
+
+     /**
+      * @brief The in-memory representation of the TOML configuration file.
+      */
+     static inline std::unique_ptr<toml::table> s_table{};
 };
 }// namespace fme
 #endif// FIELD_MAP_EDITOR_CONFIGURATION_HPP

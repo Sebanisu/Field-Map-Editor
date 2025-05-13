@@ -153,13 +153,40 @@ struct Selections
      }();
 
      std::vector<std::string> paths_no_palette_and_texture_page = []() {
-          const auto ret = std::vector<std::string> { "{selected_path}/{field_name}{_{2_letter_lang}}{ext}",
-                                                        "{selected_path}/{field_name}/{field_name}{_{2_letter_lang}}{ext}",
-                                                        "{selected_path}/{field_prefix}/{field_name}/{field_name}{_{2_letter_lang}}{ext}",
+          const auto ret = std::vector<std::string>{ "{selected_path}/{field_name}{_{2_letter_lang}}{ext}",
+                                                     "{selected_path}/{field_name}/{field_name}{_{2_letter_lang}}{ext}",
+                                                     "{selected_path}/{field_prefix}/{field_name}/{field_name}{_{2_letter_lang}}{ext}",
 
-                                                        "{selected_path}/{field_name}{ext}",
-                                                        "{selected_path}/{field_name}/{field_name}{ext}",
-                                                        "{selected_path}/{field_prefix}/{field_name}/{field_name}{ext}" };
+                                                     "{selected_path}/{field_name}{ext}",
+                                                     "{selected_path}/{field_name}/{field_name}{ext}",
+                                                     "{selected_path}/{field_prefix}/{field_name}/{field_name}{ext}" };
+          assert(fme::key_value_data::has_balanced_braces(ret));
+          return ret;
+     }();
+
+     std::vector<std::string> paths_common_upscale = []() {
+          const auto ret = std::vector<std::string>{ "{selected_path}/{ffnx_mod_path}/field/mapdata/",
+                                                     "{selected_path}/mods/Textures",
+                                                     "{selected_path}/{demaster_mod_path}/textures/field_bg",
+                                                     "{selected_path}/field_bg",
+                                                     "{selected_path}/textures/fields",
+                                                     "{selected_path}/textures",
+                                                     "{selected_path}/ff8/Data/{3_letter_lang}/field/mapdata",
+                                                     "{selected_path}/ff8/Data/{3_letter_lang}/FIELD/mapdata",
+                                                     "{selected_path}/ff8/Data/{eng}/field/mapdata",
+                                                     "{selected_path}/ff8/Data/{eng}/FIELD/mapdata",
+                                                     "{selected_path}/ff8/Data/{fre}/field/mapdata",
+                                                     "{selected_path}/ff8/Data/{fre}/FIELD/mapdata",
+                                                     "{selected_path}/ff8/Data/{ger}/field/mapdata",
+                                                     "{selected_path}/ff8/Data/{ger}/FIELD/mapdata",
+                                                     "{selected_path}/ff8/Data/{ita}/field/mapdata",
+                                                     "{selected_path}/ff8/Data/{ita}/FIELD/mapdata",
+                                                     "{selected_path}/ff8/Data/{spa}/field/mapdata",
+                                                     "{selected_path}/ff8/Data/{spa}/FIELD/mapdata",
+                                                     "{selected_path}/ff8/Data/{jp}/field/mapdata",
+                                                     "{selected_path}/ff8/Data/{jp}/FIELD/mapdata",
+                                                     "{selected_path}/ff8/Data/{x}/field/mapdata",
+                                                     "{selected_path}/ff8/Data/{x}/FIELD/mapdata" };
           assert(fme::key_value_data::has_balanced_braces(ret));
           return ret;
      }();

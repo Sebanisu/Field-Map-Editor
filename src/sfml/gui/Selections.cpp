@@ -70,6 +70,18 @@ void fme::Selections::load_configuration()
      batch_save_map       = config["batch_save_map"].value_or(batch_save_map);
 
      refresh_ffnx_paths();
+
+     // todo load_array returns true than check with has_balanced_braces
+     config.load_array("paths_with_palette_and_texture_page", paths_with_palette_and_texture_page);
+     config.load_array("paths_with_texture_page", paths_with_texture_page);
+     config.load_array("paths_with_pupu_id", paths_with_pupu_id);
+     config.load_array("paths_no_palette_and_texture_page", paths_no_palette_and_texture_page);
+     config.load_array("paths_common_upscale", paths_common_upscale);
+     assert(fme::key_value_data::has_balanced_braces(paths_with_palette_and_texture_page));
+     assert(fme::key_value_data::has_balanced_braces(paths_with_texture_page));
+     assert(fme::key_value_data::has_balanced_braces(paths_with_pupu_id));
+     assert(fme::key_value_data::has_balanced_braces(paths_no_palette_and_texture_page));
+     assert(fme::key_value_data::has_balanced_braces(paths_common_upscale));
 }
 
 

@@ -86,30 +86,9 @@ upscales::upscales(std::string root, std::optional<open_viii::LangT> coo, std::w
      };
      const auto        filter_dir = [](safedir path) { return path.is_exists() && path.is_dir(); };
 
-     static const auto paths      = std::to_array<std::string>({ "{selected_path}/{ffnx_mod_path}/field/mapdata/",
-                                                                 "{selected_path}/mods/Textures",
-                                                                 "{selected_path}/{demaster_mod_path}/textures/field_bg",
-                                                                 "{selected_path}/field_bg",
-                                                                 "{selected_path}/textures/fields",
-                                                                 "{selected_path}/textures",
-                                                                 "{selected_path}/ff8/Data/{3_letter_lang}/field/mapdata",
-                                                                 "{selected_path}/ff8/Data/{3_letter_lang}/FIELD/mapdata",
-                                                                 "{selected_path}/ff8/Data/{eng}/field/mapdata",
-                                                                 "{selected_path}/ff8/Data/{eng}/FIELD/mapdata",
-                                                                 "{selected_path}/ff8/Data/{fre}/field/mapdata",
-                                                                 "{selected_path}/ff8/Data/{fre}/FIELD/mapdata",
-                                                                 "{selected_path}/ff8/Data/{ger}/field/mapdata",
-                                                                 "{selected_path}/ff8/Data/{ger}/FIELD/mapdata",
-                                                                 "{selected_path}/ff8/Data/{ita}/field/mapdata",
-                                                                 "{selected_path}/ff8/Data/{ita}/FIELD/mapdata",
-                                                                 "{selected_path}/ff8/Data/{spa}/field/mapdata",
-                                                                 "{selected_path}/ff8/Data/{spa}/FIELD/mapdata",
-                                                                 "{selected_path}/ff8/Data/{jp}/field/mapdata",
-                                                                 "{selected_path}/ff8/Data/{jp}/FIELD/mapdata",
-                                                                 "{selected_path}/ff8/Data/{x}/field/mapdata",
-                                                                 "{selected_path}/ff8/Data/{x}/FIELD/mapdata" });
 
-     return paths | std::ranges::views::transform(operation) | std::ranges::views::filter(filter_dir) | std::ranges::to<std::vector>();
+     return selections->paths_common_upscale | std::ranges::views::transform(operation) | std::ranges::views::filter(filter_dir)
+            | std::ranges::to<std::vector>();
 }
 
 [[nodiscard]] std::vector<std::filesystem::path> upscales::get_map_paths() const
