@@ -82,6 +82,124 @@ class Configuration
       * @brief The in-memory representation of the TOML configuration file.
       */
      static inline std::unique_ptr<toml::table> s_table{};
+
+     /**
+      * @brief Loads a string array from the TOML configuration.
+      *
+      * If the specified key exists and contains a TOML array of strings,
+      * the `output` vector is cleared and replaced with its contents.
+      * If the key is not found or not an array of strings, `output` is left unchanged.
+      *
+      * @param key The TOML key to look up.
+      * @param output The vector to populate with strings from the config.
+      *
+      * @note This function expects that the caller is accessing a wrapper
+      *       that uses `operator->()` and `operator[]` for TOML table access.
+      */
+     void                                       load_array(const std::string_view key, std::vector<std::string> &output)
+     {
+          if (!operator->()->contains(key))
+          {
+               return;
+          }
+
+          if (const auto *array = operator[](key).as_array(); array)
+          {
+               output.clear();
+               output.reserve(array->size());
+               for (auto &&val : *array)
+               {
+                    if (auto str = val.value<std::string>(); str.has_value())
+                    {
+                         output.emplace_back(std::move(str.value()));
+                    }
+               }
+          }
+     }
+
+     /**
+      * @brief Updates the TOML configuration with a string array.
+      *
+      * Replaces or creates the value at the given key with a TOML array
+      * containing the provided strings.
+      *
+      * @param key The TOML key under which to store the array.
+      * @param input The vector of strings to write into the config.
+      *
+      * @note This function expects that the caller is accessing a wrapper
+      *       that uses `operator->()` for TOML table access.
+      */
+     void update_array(const std::string_view key, const std::vector<std::string> &input)
+     {
+          toml::array array;
+          array.reserve(input.size());
+
+          for (const auto &str : input)
+          {
+               array.push_back(str);
+          }
+
+          operator->()->insert_or_assign(key, std::move(array));
+     }
+
+     /**
+      * @brief Loads an array of file system paths from the TOML configuration.
+      *
+      * If the specified key exists and maps to a TOML array of strings, this function
+      * clears and replaces the `output` vector with the parsed paths. If the key does not
+      * exist or is not an array of strings, no changes are made to `output`.
+      *
+      * @param key The TOML key to look up.
+      * @param output A vector to populate with `std::filesystem::path` values.
+      *
+      * @note Assumes the TOML array contains strings representing file system paths.
+      * @note Requires access via `operator->()` and `operator[]` to the TOML table.
+      */
+     void load_array(const std::string_view key, std::vector<std::filesystem::path> &output)
+     {
+          if (!operator->()->contains(key))
+          {
+               return;
+          }
+
+          if (const auto *array = operator[](key).as_array(); array)
+          {
+               output.clear();
+               output.reserve(array->size());
+               for (auto &&val : *array)
+               {
+                    if (auto str = val.value<std::string>(); str.has_value())
+                    {
+                         output.emplace_back(std::move(str.value()));
+                    }
+               }
+          }
+     }
+
+     /**
+      * @brief Writes an array of file system paths to the TOML configuration.
+      *
+      * Converts the provided `std::filesystem::path` vector to a TOML array of strings
+      * and inserts or replaces the value at the specified key in the configuration.
+      *
+      * @param key The TOML key under which to store the array.
+      * @param input The vector of `std::filesystem::path` values to write.
+      *
+      * @note Paths are converted to strings using `path.string()`.
+      * @note Requires access via `operator->()` to the TOML table.
+      */
+     void update_array(const std::string_view key, const std::vector<std::filesystem::path> &input)
+     {
+          toml::array array;
+          array.reserve(input.size());
+
+          for (const auto &str : input)
+          {
+               array.push_back(str.string());
+          }
+
+          operator->()->insert_or_assign(key, std::move(array));
+     }
 };
 }// namespace fme
 #endif// FIELD_MAP_EDITOR_CONFIGURATION_HPP
