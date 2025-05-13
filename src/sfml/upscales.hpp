@@ -108,38 +108,41 @@ struct upscales
                assert(fme::key_value_data::has_balanced_braces(ret));
                return ret;
           }();
-          std::vector<std::string> result;
-          const auto concat = [&](const auto &... arr){
-               ((result.insert(result.end(), arr.begin(), arr.end())), ...);
+          const auto transform_and_find_a_match = [&](const auto &...arr) {
+               std::vector<std::filesystem::path> result = {};
+               (
+                 [&]() {
+                      if (result.empty())
+                      {
+                           for (const auto &path_str : arr | std::ranges::views::transform(operation))
+                           {
+                                try
+                                {
+                                     if (std::filesystem::exists(path_str))
+                                     {
+                                          result.push_back(path_str);
+                                          return;
+                                     }
+                                }
+                                catch (...)
+                                {
+                                }
+                           }
+                      }
+                 }(),
+                 ...);
+
+               return result;
           };
           if (copy_data.texture_page.has_value() && copy_data.palette.has_value())
           {
-               concat(paths_with_palette_and_texture_page,paths_with_palette_and_texture_page);               
+               return transform_and_find_a_match(paths_with_palette_and_texture_page, paths_with_palette_and_texture_page);
           }
-          else if (copy_data.texture_page.has_value())
+          if (copy_data.texture_page.has_value())
           {
-               concat(paths_with_texture_page,paths_with_palette_and_texture_page);
+               return transform_and_find_a_match(paths_with_texture_page, paths_with_palette_and_texture_page);
           }
-          else
-          {
-               concat(paths_no_palette_and_texture_page);
-          }
-
-          for (const auto &path_str : result | std::ranges::views::transform(operation))
-          {
-               try
-               {
-                    if (std::filesystem::exists(path_str))
-                    {
-                         return { path_str };
-                    }
-               }
-               catch (...)
-               {
-               }
-          }
-          return {};
-          // return result | std::views::transform(operation) | std::ranges::to<std::vector>();
+          return transform_and_find_a_match(paths_no_palette_and_texture_page);
      }
 
      [[nodiscard]] std::vector<std::filesystem::path> get_paths() const
