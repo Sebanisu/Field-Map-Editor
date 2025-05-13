@@ -53,7 +53,6 @@ struct upscales
           const auto operation = [&](const std::string &pattern) -> std::filesystem::path {
                return copy_data.replace_tags(pattern, selections, field_root.string());
           };
-          // include if copy_data.texture_page.has_value() and          copy_data.palette.has_value();
           static const auto paths_with_palette_and_texture_page = []() {
                const auto ret = std::to_array<std::string>(
                  { "{selected_path}/{field_name}{_{2_letter_lang}}_0{texture_page}_0{palette}{ext}",
@@ -74,7 +73,6 @@ struct upscales
                assert(fme::key_value_data::has_balanced_braces(ret));
                return ret;
           }();
-          // include if copy_data.palette.has_value();
           static const auto paths_with_texture_page = []() {
                const auto ret = std::to_array<std::string>(
                  { "{selected_path}/{field_name}{_{2_letter_lang}}_0{texture_page}{ext}",
@@ -92,6 +90,16 @@ struct upscales
                    "{selected_path}/{field_name}_{texture_page}{ext}",
                    "{selected_path}/{field_name}/{field_name}_{texture_page}{ext}",
                    "{selected_path}/{field_prefix}/{field_name}/{field_name}_{texture_page}{ext}" });
+               assert(fme::key_value_data::has_balanced_braces(ret));
+               return ret;
+          }();
+
+          static const auto paths_with_pupu_id = []() {
+               const auto ret = std::to_array<std::string>(
+                 {
+                   "{selected_path}/{field_name}_{pupu_id}{ext}",
+                   "{selected_path}/{field_name}/{field_name}_{pupu_id}{ext}",
+                   "{selected_path}/{field_prefix}/{field_name}/{field_name}_{pupu_id}{ext}" });
                assert(fme::key_value_data::has_balanced_braces(ret));
                return ret;
           }();
@@ -134,6 +142,10 @@ struct upscales
 
                return result;
           };
+          if (copy_data.pupu_id.has_value())
+          {
+               return transform_and_find_a_match(paths_with_pupu_id);
+          }
           if (copy_data.texture_page.has_value() && copy_data.palette.has_value())
           {
                return transform_and_find_a_match(paths_with_palette_and_texture_page, paths_with_palette_and_texture_page);
@@ -161,50 +173,8 @@ struct upscales
           const auto        filter_dir = [](safedir path) { return path.is_exists() && path.is_dir(); };
 
           static const auto paths =
-            std::to_array<std::string>({ // "{selected_path}/mods/Textures/{field_prefix}/{field_name}",
-                                         //  "{selected_path}/{demaster_mod_path}/textures/field_bg/{field_prefix}/{field_name}",
-                                         //  "{selected_path}/field_bg/{field_prefix}/{field_name}",
-                                         //  "{selected_path}/textures/fields/{field_prefix}/{field_name}",
-                                         //  "{selected_path}/textures/{field_prefix}/{field_name}",
-                                         //  "{selected_path}/ff8/Data/{3_letter_lang}/field/mapdata/{field_prefix}/{field_name}",
-                                         //  "{selected_path}/ff8/Data/{3_letter_lang}/FIELD/mapdata/{field_prefix}/{field_name}",
-                                         //  "{selected_path}/ff8/Data/{eng}/field/mapdata/{field_prefix}/{field_name}",
-                                         //  "{selected_path}/ff8/Data/{eng}/FIELD/mapdata/{field_prefix}/{field_name}",
-                                         //  "{selected_path}/ff8/Data/{fre}/field/mapdata/{field_prefix}/{field_name}",
-                                         //  "{selected_path}/ff8/Data/{fre}/FIELD/mapdata/{field_prefix}/{field_name}",
-                                         //  "{selected_path}/ff8/Data/{ger}/field/mapdata/{field_prefix}/{field_name}",
-                                         //  "{selected_path}/ff8/Data/{ger}/FIELD/mapdata/{field_prefix}/{field_name}",
-                                         //  "{selected_path}/ff8/Data/{ita}/field/mapdata/{field_prefix}/{field_name}",
-                                         //  "{selected_path}/ff8/Data/{ita}/FIELD/mapdata/{field_prefix}/{field_name}",
-                                         //  "{selected_path}/ff8/Data/{spa}/field/mapdata/{field_prefix}/{field_name}",
-                                         //  "{selected_path}/ff8/Data/{spa}/FIELD/mapdata/{field_prefix}/{field_name}",
-                                         //  "{selected_path}/ff8/Data/{jp}/field/mapdata/{field_prefix}/{field_name}",
-                                         //  "{selected_path}/ff8/Data/{jp}/FIELD/mapdata/{field_prefix}/{field_name}",
-                                         //  "{selected_path}/ff8/Data/{x}/field/mapdata/{field_prefix}/{field_name}",
-                                         //  "{selected_path}/ff8/Data/{x}/FIELD/mapdata/{field_prefix}/{field_name}",
-
-                                         //  "{selected_path}/mods/Textures/{field_name}",
-                                         //  "{selected_path}/{demaster_mod_path}/textures/field_bg/{field_name}",
-                                         //  "{selected_path}/field_bg/{field_name}",
-                                         //  "{selected_path}/textures/fields/{field_name}",
-                                         //  "{selected_path}/textures/{field_name}",
-                                         //  "{selected_path}/ff8/Data/{3_letter_lang}/field/mapdata/{field_name}",
-                                         //  "{selected_path}/ff8/Data/{3_letter_lang}/FIELD/mapdata/{field_name}",
-                                         //  "{selected_path}/ff8/Data/{eng}/field/mapdata/{field_name}",
-                                         //  "{selected_path}/ff8/Data/{eng}/FIELD/mapdata/{field_name}",
-                                         //  "{selected_path}/ff8/Data/{fre}/field/mapdata/{field_name}",
-                                         //  "{selected_path}/ff8/Data/{fre}/FIELD/mapdata/{field_name}",
-                                         //  "{selected_path}/ff8/Data/{ger}/field/mapdata/{field_name}",
-                                         //  "{selected_path}/ff8/Data/{ger}/FIELD/mapdata/{field_name}",
-                                         //  "{selected_path}/ff8/Data/{ita}/field/mapdata/{field_name}",
-                                         //  "{selected_path}/ff8/Data/{ita}/FIELD/mapdata/{field_name}",
-                                         //  "{selected_path}/ff8/Data/{spa}/field/mapdata/{field_name}",
-                                         //  "{selected_path}/ff8/Data/{spa}/FIELD/mapdata/{field_name}",
-                                         //  "{selected_path}/ff8/Data/{jp}/field/mapdata/{field_name}",
-                                         //  "{selected_path}/ff8/Data/{jp}/FIELD/mapdata/{field_name}",
-                                         //  "{selected_path}/ff8/Data/{x}/field/mapdata/{field_name}",
-                                         //  "{selected_path}/ff8/Data/{x}/FIELD/mapdata/{field_name}",
-
+            std::to_array<std::string>({ 
+                                         "{selected_path}/{ffnx_mod_path}/field/mapdata/",
                                          "{selected_path}/mods/Textures",
                                          "{selected_path}/{demaster_mod_path}/textures/field_bg",
                                          "{selected_path}/field_bg",
@@ -228,6 +198,33 @@ struct upscales
                                          "{selected_path}/ff8/Data/{x}/FIELD/mapdata" });
 
           return paths | std::ranges::views::transform(operation) | std::ranges::views::filter(filter_dir) | std::ranges::to<std::vector>();
+     }
+
+     [[nodiscard]] std::vector<std::filesystem::path> get_map_paths() const
+     {
+
+          const auto selections = m_selections.lock();
+          if (!selections)
+          {
+               spdlog::error("Failed to lock m_selections: shared_ptr is expired.");
+               return {};
+          }
+          const fme::key_value_data data      = { .language_code = m_coo };
+          const auto                operation = [&](const std::string &pattern) -> std::filesystem::path {
+               return data.replace_tags(pattern, selections, m_root);
+          };
+          const auto        filter_dir = [](safedir path) { return path.is_exists() && path.is_dir(); };
+
+          static const auto paths =
+            std::to_array<std::string>({ // todo ffnx uses a sepperate directory for map files which means we might not see it with our
+                                         // current method of selecting one path ffnx_direct_mode_path might not want to be in the regular paths
+                                         // list might need to be somewhere else. maybe a get paths map.
+                                         "{selected_path}/{ffnx_direct_mode_path}/field/mapdata/"});
+
+          auto transformed_paths = paths | std::ranges::views::transform(operation) | std::ranges::views::filter(filter_dir);
+          auto regular_paths = get_paths();
+          regular_paths.insert(regular_paths.begin(), transformed_paths.begin(),transformed_paths.end());
+          return regular_paths;
      }
 
      /*
