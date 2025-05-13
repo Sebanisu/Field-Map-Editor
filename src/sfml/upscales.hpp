@@ -109,20 +109,20 @@ struct upscales
                return ret;
           }();
           std::vector<std::string> result;
-
+          const auto concat = [&](const auto &... arr){
+               ((result.insert(result.end(), arr.begin(), arr.end())), ...);
+          };
           if (copy_data.texture_page.has_value() && copy_data.palette.has_value())
           {
-               result.insert(result.end(), paths_with_palette_and_texture_page.begin(), paths_with_palette_and_texture_page.end());
-               result.insert(result.end(), paths_no_palette_and_texture_page.begin(), paths_no_palette_and_texture_page.end());
+               concat(paths_with_palette_and_texture_page,paths_with_palette_and_texture_page);               
           }
           else if (copy_data.texture_page.has_value())
           {
-               result.insert(result.end(), paths_with_texture_page.begin(), paths_with_texture_page.end());
-               result.insert(result.end(), paths_no_palette_and_texture_page.begin(), paths_no_palette_and_texture_page.end());
+               concat(paths_with_texture_page,paths_with_palette_and_texture_page);
           }
           else
           {
-               result.insert(result.end(), paths_no_palette_and_texture_page.begin(), paths_no_palette_and_texture_page.end());
+               concat(paths_no_palette_and_texture_page);
           }
 
           for (const auto &path_str : result | std::ranges::views::transform(operation))
