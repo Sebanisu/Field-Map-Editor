@@ -98,9 +98,71 @@ struct Selections
      bool            batch_input_load_map        = { false };
      bool            batch_save_map              = { true };
 
-     ff_8::filter_old<compact_type, ff_8::FilterTag::Compact> batch_compact_type = { ff_8::FilterSettings::Default };
-     ff_8::filter_old<flatten_type, ff_8::FilterTag::Flatten> batch_flatten_type = { ff_8::FilterSettings::Default };
+     ff_8::filter_old<compact_type, ff_8::FilterTag::Compact> batch_compact_type                  = { ff_8::FilterSettings::Default };
+     ff_8::filter_old<flatten_type, ff_8::FilterTag::Flatten> batch_flatten_type                  = { ff_8::FilterSettings::Default };
 
+     std::vector<std::string>                                 paths_with_palette_and_texture_page = []() {
+          const auto ret = std::vector<std::string>{
+               "{selected_path}/{field_name}{_{2_letter_lang}}_0{texture_page}_0{palette}{ext}",
+               "{selected_path}/{field_name}/{field_name}{_{2_letter_lang}}_0{texture_page}_0{palette}{ext}",
+               "{selected_path}/{field_prefix}/{field_name}/{field_name}{_{2_letter_lang}}_0{texture_page}_0{palette}{ext}",
+
+               "{selected_path}/{field_name}_0{texture_page}_0{palette}{ext}",
+               "{selected_path}/{field_name}/{field_name}_0{texture_page}_0{palette}{ext}",
+               "{selected_path}/{field_prefix}/{field_name}/{field_name}_0{texture_page}_0{palette}{ext}",
+
+               "{selected_path}/{field_name}{_{2_letter_lang}}_{texture_page}_{palette}{ext}",
+               "{selected_path}/{field_name}/{field_name}{_{2_letter_lang}}_{texture_page}_{palette}{ext}",
+               "{selected_path}/{field_prefix}/{field_name}/{field_name}{_{2_letter_lang}}_{texture_page}_{palette}{ext}",
+
+               "{selected_path}/{field_name}_{texture_page}_{palette}{ext}",
+               "{selected_path}/{field_name}/{field_name}_{texture_page}_{palette}{ext}",
+               "{selected_path}/{field_prefix}/{field_name}/{field_name}_{texture_page}_{palette}{ext}"
+          };
+          assert(fme::key_value_data::has_balanced_braces(ret));
+          return ret;
+     }();
+
+     std::vector<std::string> paths_with_texture_page = []() {
+          const auto ret =
+            std::vector<std::string>{ "{selected_path}/{field_name}{_{2_letter_lang}}_0{texture_page}{ext}",
+                                      "{selected_path}/{field_name}/{field_name}{_{2_letter_lang}}_0{texture_page}{ext}",
+                                      "{selected_path}/{field_prefix}/{field_name}/{field_name}{_{2_letter_lang}}_0{texture_page}{ext}",
+
+                                      "{selected_path}/{field_name}_0{texture_page}{ext}",
+                                      "{selected_path}/{field_name}/{field_name}_0{texture_page}{ext}",
+                                      "{selected_path}/{field_prefix}/{field_name}/{field_name}_0{texture_page}{ext}",
+
+                                      "{selected_path}/{field_name}{_{2_letter_lang}}_{texture_page}{ext}",
+                                      "{selected_path}/{field_name}/{field_name}{_{2_letter_lang}}_{texture_page}{ext}",
+                                      "{selected_path}/{field_prefix}/{field_name}/{field_name}{_{2_letter_lang}}_{texture_page}{ext}",
+
+                                      "{selected_path}/{field_name}_{texture_page}{ext}",
+                                      "{selected_path}/{field_name}/{field_name}_{texture_page}{ext}",
+                                      "{selected_path}/{field_prefix}/{field_name}/{field_name}_{texture_page}{ext}" };
+          assert(fme::key_value_data::has_balanced_braces(ret));
+          return ret;
+     }();
+
+     std::vector<std::string> paths_with_pupu_id = []() {
+          const auto ret = std::vector<std::string>{ "{selected_path}/{field_name}_{pupu_id}{ext}",
+                                                     "{selected_path}/{field_name}/{field_name}_{pupu_id}{ext}",
+                                                     "{selected_path}/{field_prefix}/{field_name}/{field_name}_{pupu_id}{ext}" };
+          assert(fme::key_value_data::has_balanced_braces(ret));
+          return ret;
+     }();
+
+     std::vector<std::string> paths_no_palette_and_texture_page = []() {
+          const auto ret = std::vector<std::string> { "{selected_path}/{field_name}{_{2_letter_lang}}{ext}",
+                                                        "{selected_path}/{field_name}/{field_name}{_{2_letter_lang}}{ext}",
+                                                        "{selected_path}/{field_prefix}/{field_name}/{field_name}{_{2_letter_lang}}{ext}",
+
+                                                        "{selected_path}/{field_name}{ext}",
+                                                        "{selected_path}/{field_name}/{field_name}{ext}",
+                                                        "{selected_path}/{field_prefix}/{field_name}/{field_name}{ext}" };
+          assert(fme::key_value_data::has_balanced_braces(ret));
+          return ret;
+     }();
 
      /**
       * @brief Constructs a Selections object with default values. Loading from past configuration if possible.
