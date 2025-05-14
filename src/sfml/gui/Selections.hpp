@@ -16,6 +16,56 @@
 #include <spdlog/spdlog.h>
 namespace fme
 {
+enum class ConfigKey
+{
+     StarterField,
+     SelectionsPath,
+     WindowWidth,
+     WindowHeight,
+     Palette,
+     Bpp,
+     Draw,
+     Coo,
+     SelectedTile,
+     DrawDisableBlending,
+     DrawGrid,
+     DrawPalette,
+     DrawSwizzle,
+     RenderImportedImage,// if needed
+     DrawTexturePageGrid,
+     DrawTileConflictRects,
+     DisplayBatchWindow,
+     DisplayImportImage,
+     ImportImageGrid,
+     TileSizeValue,
+     DisplayHistoryWindow,
+     DisplayControlPanelWindow,
+     DisplayDrawWindow,
+     DisplayCustomPathsWindow,
+     DisplayFieldFileWindow,
+     OutputSwizzlePattern,
+     OutputDeswizzlePattern,
+     OutputMapPatternForSwizzle,
+     OutputMapPatternForDeswizzle,
+     CurrentPattern,
+     BatchInputType,
+     BatchInputRootPathType,
+     BatchOutputType,
+     BatchOutputRootPathType,
+     BackgroundColor,
+     BatchInputPath,
+     BatchOutputPath,
+     BatchInputLoadMap,
+     BatchSaveMap,
+     PathsWithPaletteAndTexturePage,
+     PathsWithTtexturePage,
+     PathsWithPupuID,
+     PathsNoPaletteAndTexturePage,
+     PathsCommonUpscale,
+     PathsCommonUpscaleForMaps,
+     // Add more as needed
+     All,
+};
 /**
  * @brief Manages various settings and selections for the application.
  *
@@ -228,56 +278,7 @@ struct Selections
 
      void update_configuration() const;
 
-     enum class ConfigKey
-     {
-          StarterField,
-          SelectionsPath,
-          WindowWidth,
-          WindowHeight,
-          Palette,
-          Bpp,
-          Draw,
-          Coo,
-          SelectedTile,
-          DrawDisableBlending,
-          DrawGrid,
-          DrawPalette,
-          DrawSwizzle,
-          RenderImportedImage,// if needed
-          DrawTexturePageGrid,
-          DrawTileConflictRects,
-          DisplayBatchWindow,
-          DisplayImportImage,
-          ImportImageGrid,
-          TileSizeValue,
-          DisplayHistoryWindow,
-          DisplayControlPanelWindow,
-          DisplayDrawWindow,
-          DisplayCustomPathsWindow,
-          DisplayFieldFileWindow,
-          OutputSwizzlePattern,
-          OutputDeswizzlePattern,
-          OutputMapPatternForSwizzle,
-          OutputMapPatternForDeswizzle,
-          CurrentPattern,
-          BatchInputType,
-          BatchInputRootPathType,
-          BatchOutputType,
-          BatchOutputRootPathType,
-          BackgroundColor,
-          BatchInputPath,
-          BatchOutputPath,
-          BatchInputLoadMap,
-          BatchSaveMap,
-          PathsWithPaletteAndTexturePage,
-          PathsWithTtexturePage,
-          PathsWithPupuID,
-          PathsNoPaletteAndTexturePage,
-          PathsCommonUpscale,
-          PathsCommonUpscaleForMaps,
-          // Add more as needed
-          All,
-     };
+     
 
 
      void update_configuration_key(ConfigKey key) const;

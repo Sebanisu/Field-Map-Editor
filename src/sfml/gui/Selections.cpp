@@ -90,68 +90,16 @@ void fme::Selections::load_configuration()
 
 void fme::Selections::update_configuration() const
 {
-     Configuration config{};
-
-     config->insert_or_assign("starter_field", starter_field);
-     config->insert_or_assign("selections_path", path);
-     config->insert_or_assign("selections_window_width", window_width);
-     config->insert_or_assign("selections_window_height", window_height);
-     config->insert_or_assign("selections_palette", palette & 0xFU);
-     config->insert_or_assign("selections_bpp", bpp.raw() & 3U);
-     config->insert_or_assign("selections_draw", std::to_underlying(draw));
-     config->insert_or_assign("selections_coo", std::to_underlying(coo));
-     config->insert_or_assign("selections_selected_tile", selected_tile);
-     config->insert_or_assign("selections_draw_disable_blending", draw_disable_blending);
-     config->insert_or_assign("selections_draw_grid", draw_grid);
-     config->insert_or_assign("selections_draw_palette", draw_palette);
-     config->insert_or_assign("selections_draw_swizzle", draw_swizzle);
-     // config->insert_or_assign("selections_render_imported_image", render_imported_image);
-     config->insert_or_assign("selections_draw_texture_page_grid", draw_texture_page_grid);
-     config->insert_or_assign("selections_draw_tile_conflict_rects", draw_tile_conflict_rects);
-     config->insert_or_assign("selections_display_batch_window", display_batch_window);
-     config->insert_or_assign("selections_display_import_image", display_import_image);
-     config->insert_or_assign("selections_import_image_grid", import_image_grid);
-     config->insert_or_assign("selections_tile_size_value", std::to_underlying(tile_size_value));
-     config->insert_or_assign("selections_display_history_window", display_history_window);
-     config->insert_or_assign("selections_display_control_panel_window", display_control_panel_window);
-     config->insert_or_assign("selections_display_draw_window", display_draw_window);
-     config->insert_or_assign("selections_display_custom_paths_window", display_custom_paths_window);
-     config->insert_or_assign("selections_display_field_file_window", display_field_file_window);
-
-     config->insert_or_assign("selections_output_swizzle_pattern", output_swizzle_pattern);
-     config->insert_or_assign("selections_output_deswizzle_pattern", output_deswizzle_pattern);
-     config->insert_or_assign("selections_output_map_pattern_for_swizzle", output_map_pattern_for_swizzle);
-     config->insert_or_assign("selections_output_map_pattern_for_deswizzle", output_map_pattern_for_deswizzle);
-     config->insert_or_assign("selections_current_pattern", current_pattern);
-
-     config->insert_or_assign("batch_input_type", static_cast<std::underlying_type_t<input_types>>(batch_input_type));
-     config->insert_or_assign(
-       "batch_input_root_path_type", static_cast<std::underlying_type_t<root_path_types>>(batch_input_root_path_type));
-     config->insert_or_assign("batch_output_type", static_cast<std::underlying_type_t<output_types>>(batch_output_type));
-     config->insert_or_assign(
-       "batch_output_root_path_type", static_cast<std::underlying_type_t<root_path_types>>(batch_output_root_path_type));
-     config->insert_or_assign("selections_background_color", std::bit_cast<std::uint32_t>(background_color));
-
-     config->insert_or_assign("batch_input_path", std::string(batch_input_path.data()));
-     config->insert_or_assign("batch_output_path", std::string(batch_output_path.data()));
-     config->insert_or_assign("batch_input_load_map", batch_input_load_map);
-     config->insert_or_assign("batch_save_map", batch_save_map);
-
-     config.update_array("paths_with_palette_and_texture_page", paths_with_palette_and_texture_page);
-     config.update_array("paths_with_texture_page", paths_with_texture_page);
-     config.update_array("paths_with_pupu_id", paths_with_pupu_id);
-     config.update_array("paths_no_palette_and_texture_page", paths_no_palette_and_texture_page);
-     config.update_array("paths_common_upscale", paths_common_upscale);
-     config.update_array("paths_common_upscale_for_maps", paths_common_upscale_for_maps);
-
-     config.save();// Save config to file or persistent storage if applicable
+     update_configuration_key(ConfigKey::All);
 }
 
 void fme::Selections::update_configuration_key(ConfigKey key) const
 {
      Configuration config{};
 
-     using map_t                 = std::map<ConfigKey, const std::move_only_function<void(Configuration &, const Selections &) const>>;
+     using funct_t = std::move_only_function<void(Configuration &, const Selections &) const>;
+     using map_t                 = std::map<ConfigKey, funct_t>;
+
      static const map_t updaters = []() {
           map_t m{};
 #define MAP_MACRO(KEY, STR_NAME, FIELD_NAME) \
@@ -233,11 +181,11 @@ void fme::Selections::update_configuration_key(ConfigKey key) const
           m.emplace(ConfigKey::PathsCommonUpscaleForMaps, [](Configuration &c, const Selections &s) {
                c.update_array("paths_common_upscale_for_maps", s.paths_common_upscale_for_maps);
           });
-          
+
           // Add more mappings here...
           return m;
      }();
-     if (key == ConfigKey::All)
+     if (key == ConfigKey::All) [[unlikely]]
      {
           for (const auto &[_, funct] : updaters)
           {
@@ -245,13 +193,13 @@ void fme::Selections::update_configuration_key(ConfigKey key) const
           }
           config.save();// Save the single key update
      }
-     else if (const auto it = updaters.find(key); it != updaters.end())
+     else if (const auto it = updaters.find(key); it != updaters.end()) [[likely]]
      {
           // updaters.at(key)(config, *this);
           std::invoke(it->second, config, *this);
           config.save();// Save the single key update
      }
-     else
+     else [[unlikely]]
      {
           spdlog::error("Unknown configuration key (enum): {}", std::to_underlying(key));
      }
