@@ -323,8 +323,7 @@ class GenericComboClass
 
           if (old_idx != current_idx_)
           {
-               static constexpr auto pattern = "{}: \t{}\t{}\t{}";
-               spdlog::info(pattern, gui_labels::set, name_, *getNext(values_, current_idx_), *getNext(strings_, current_idx_));
+               spdlog::info("{}: \t{}\t{}\t{}", gui_labels::set, name_, *getNext(values_, current_idx_), *getNext(strings_, current_idx_));
           }
           return old_idx != current_idx_ || changed_;
      }

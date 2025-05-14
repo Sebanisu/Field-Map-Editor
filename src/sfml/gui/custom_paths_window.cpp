@@ -1,4 +1,6 @@
 #include "custom_paths_window.hpp"
+#include "as_string.hpp"
+#include "formatters.hpp"
 
 [[nodiscard]] std::array<std::string *, fme::custom_paths_window::s_options_size_value>
   fme::custom_paths_window::get_selections_values() const
@@ -21,7 +23,7 @@
      {
           throw;
      }
-     return *m_selections_values[selections->current_pattern];
+     return *m_selections_values[std::to_underlying(selections->current_pattern)];
 }
 
 [[nodiscard]] const std::string &fme::custom_paths_window::get_current_string_value() const
@@ -32,7 +34,7 @@
           static std::string dummy{};
           return dummy;
      }
-     return *m_selections_values[selections->current_pattern];
+     return *m_selections_values[std::to_underlying(selections->current_pattern)];
 }
 
 void fme::custom_paths_window::populate_input_pattern() const
@@ -78,8 +80,15 @@ void fme::custom_paths_window::populate_test_output() const
      ImGui::TableNextColumn();
      const auto pop_table = scope_guard{ &ImGui::EndTable };
      using namespace std::string_view_literals;
-     const GenericComboClass gcc = {
-          ""sv, []() { return m_index_values; }, []() { return m_config_strings; }, selections->current_pattern
+
+     static const auto       values = std::array{ PatternSelector::OutputSwizzlePattern,
+                                            PatternSelector::OutputDeswizzlePattern,
+                                            PatternSelector::OutputMapPatternForSwizzle,
+                                            PatternSelector::OutputMapPatternForDeswizzle };
+
+
+     const GenericComboClass gcc    = {
+          ""sv, []() { return values; }, []() { return values | std::views::transform(AsString{}); }, selections->current_pattern
      };
      if (gcc.render())
      {
@@ -97,11 +106,22 @@ void fme::custom_paths_window::save_pattern() const
      {
           return;
      }
-     get_current_string_value_mutable() = std::string{ m_input_pattern_string.data() };
-     Configuration config{};
-     config->insert_or_assign(m_config_values[selections->current_pattern], get_current_string_value());
-     config->insert_or_assign("selections_current_pattern", static_cast<std::uint32_t>(selections->current_pattern));
-     config.save();
+     selections->update_configuration_key(ConfigKey::CurrentPattern);
+     switch (selections->current_pattern)
+     {
+          case PatternSelector::OutputSwizzlePattern:
+               selections->update_configuration_key(ConfigKey::OutputSwizzlePattern);
+               break;
+          case PatternSelector::OutputDeswizzlePattern:
+               selections->update_configuration_key(ConfigKey::OutputDeswizzlePattern);
+               break;
+          case PatternSelector::OutputMapPatternForSwizzle:
+               selections->update_configuration_key(ConfigKey::OutputMapPatternForSwizzle);
+               break;
+          case PatternSelector::OutputMapPatternForDeswizzle:
+               selections->update_configuration_key(ConfigKey::OutputMapPatternForDeswizzle);
+               break;
+     }
 }
 
 [[nodiscard]] bool fme::custom_paths_window::textbox_pattern() const

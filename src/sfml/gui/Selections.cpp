@@ -50,7 +50,8 @@ void fme::Selections::load_configuration()
      output_deswizzle_pattern         = config["selections_output_deswizzle_pattern"].value_or(output_deswizzle_pattern);
      output_map_pattern_for_swizzle   = config["selections_output_map_pattern_for_swizzle"].value_or(output_map_pattern_for_swizzle);
      output_map_pattern_for_deswizzle = config["selections_output_map_pattern_for_deswizzle"].value_or(output_map_pattern_for_deswizzle);
-     current_pattern                  = config["selections_current_pattern"].value_or(current_pattern);
+     current_pattern =
+       static_cast<decltype(current_pattern)>(config["selections_current_pattern"].value_or(std::to_underlying(current_pattern)));
 
      batch_input_type =
        static_cast<input_types>(config["batch_input_type"].value_or(static_cast<std::underlying_type_t<input_types>>(batch_input_type)));
@@ -97,7 +98,7 @@ void fme::Selections::update_configuration_key(ConfigKey key) const
 {
      Configuration config{};
 
-     using funct_t = std::move_only_function<void(Configuration &, const Selections &) const>;
+     using funct_t               = std::move_only_function<void(Configuration &, const Selections &) const>;
      using map_t                 = std::map<ConfigKey, funct_t>;
 
      static const map_t updaters = []() {
@@ -129,6 +130,7 @@ void fme::Selections::update_configuration_key(ConfigKey key) const
           MAP_MACRO_UNDERLYING(ConfigKey::BatchInputRootPathType, "batch_input_root_path_type", batch_input_root_path_type);
           MAP_MACRO_UNDERLYING(ConfigKey::BatchOutputType, "batch_output_type", batch_output_type);
           MAP_MACRO_UNDERLYING(ConfigKey::BatchOutputRootPathType, "batch_output_root_path_type", batch_output_root_path_type);
+          MAP_MACRO_UNDERLYING(ConfigKey::CurrentPattern, "selections_current_pattern", current_pattern);
           MAP_MACRO(ConfigKey::SelectedTile, "selections_selected_tile", selected_tile);
           MAP_MACRO(ConfigKey::DrawDisableBlending, "selections_draw_disable_blending", draw_disable_blending);
           MAP_MACRO(ConfigKey::DrawGrid, "selections_draw_grid", draw_grid);
@@ -150,7 +152,6 @@ void fme::Selections::update_configuration_key(ConfigKey key) const
           MAP_MACRO(ConfigKey::OutputMapPatternForSwizzle, "selections_output_map_pattern_for_swizzle", output_map_pattern_for_swizzle);
           MAP_MACRO(
             ConfigKey::OutputMapPatternForDeswizzle, "selections_output_map_pattern_for_deswizzle", output_map_pattern_for_deswizzle);
-          MAP_MACRO(ConfigKey::CurrentPattern, "selections_current_pattern", current_pattern);
           MAP_MACRO(ConfigKey::BatchInputLoadMap, "batch_input_load_map", batch_input_load_map);
           MAP_MACRO(ConfigKey::BatchSaveMap, "batch_save_map", batch_save_map);
 
@@ -180,6 +181,16 @@ void fme::Selections::update_configuration_key(ConfigKey key) const
           });
           m.emplace(ConfigKey::PathsCommonUpscaleForMaps, [](Configuration &c, const Selections &s) {
                c.update_array("paths_common_upscale_for_maps", s.paths_common_upscale_for_maps);
+          });
+
+          m.emplace(ConfigKey::BatchCompact, [](Configuration &c, const Selections &s) {
+               c->insert_or_assign("batch_compact_type", std::to_underlying(s.batch_compact_type.value()));
+               c->insert_or_assign("batch_compact_enabled", s.batch_compact_type.enabled());
+          });
+
+          m.emplace(ConfigKey::BatchFlatten, [](Configuration &c, const Selections &s) {
+               c->insert_or_assign("batch_flatten_type", std::to_underlying(s.batch_flatten_type.value()));
+               c->insert_or_assign("batch_flatten_enabled", s.batch_flatten_type.enabled());
           });
 
           // Add more mappings here...

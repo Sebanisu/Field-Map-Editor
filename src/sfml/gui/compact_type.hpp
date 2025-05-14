@@ -65,5 +65,13 @@ enum struct root_path_types : std::uint8_t
      current_path
 };
 
+enum class PatternSelector : std::uint8_t
+{
+     OutputSwizzlePattern,
+     OutputDeswizzlePattern,
+     OutputMapPatternForSwizzle,
+     OutputMapPatternForDeswizzle,
+};
+
 }// namespace fme
 #endif// FIELD_MAP_EDITOR_COMPACT_TYPE_HPP

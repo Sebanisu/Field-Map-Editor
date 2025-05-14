@@ -440,6 +440,35 @@ struct fmt::formatter<fme::root_path_types> : fmt::formatter<std::string_view>
 };
 
 template<>
+struct fmt::formatter<fme::PatternSelector> : fmt::formatter<std::string_view>
+{
+     // parse is inherited from formatter<string_view>.
+     template<typename FormatContext>
+     constexpr auto format(fme::PatternSelector pattern_selector, FormatContext &ctx) const
+     {
+          using namespace std::string_view_literals;
+          std::string_view name = {};
+          switch (pattern_selector)
+          {
+               case fme::PatternSelector::OutputSwizzlePattern:
+                    name = "Output swizzle pattern"sv;
+                    break;
+               case fme::PatternSelector::OutputDeswizzlePattern:
+                    name = "Output deswizzle pattern"sv;
+                    break;
+               case fme::PatternSelector::OutputMapPatternForSwizzle:
+                    name = "Output map pattern for swizzle"sv;
+                    break;
+               case fme::PatternSelector::OutputMapPatternForDeswizzle:
+                    name = "Output map pattern for deswizzle"sv;
+                    break;
+          }
+          return fmt::formatter<std::string_view>::format(name, ctx);
+     }
+};
+
+
+template<>
 struct fmt::formatter<fme::compact_type> : fmt::formatter<std::string_view>
 {
      // parse is inherited from formatter<string_view>.

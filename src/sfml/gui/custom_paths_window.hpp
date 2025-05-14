@@ -33,16 +33,7 @@ struct custom_paths_window
      static constexpr std::size_t                                        s_input_string_size_value = { 256U };
      mutable std::array<char, s_input_string_size_value>                 m_input_pattern_string    = {};
      mutable std::array<std::string *, s_options_size_value>             m_selections_values       = get_selections_values();
-     static constexpr std::array<std::string_view, s_options_size_value> m_config_strings          = { "Output swizzle pattern",
-                                                                                                       "Output deswizzle pattern",
-                                                                                                       "Output map pattern for swizzle",
-                                                                                                       "Output map pattern for deswizzle" };
-     static constexpr std::array<std::string_view, s_options_size_value> m_config_values           = {
-          "selections_output_swizzle_pattern",
-          "selections_output_deswizzle_pattern",
-          "selections_output_map_pattern_for_swizzle",
-          "selections_output_map_pattern_for_deswizzle"
-     };
+     
      static inline const auto         m_tests                = std::to_array<key_value_data>({
        { .field_name = "ecmall1", .ext = ".ca" },// Basic field_name + ext match
        { .field_name = "ecmall1", .ext = ".jsm", .language_code = open_viii::LangT::en, .pupu_id = 987654U },// Field with language suffix

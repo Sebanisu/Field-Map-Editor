@@ -63,6 +63,8 @@ enum class ConfigKey
      PathsNoPaletteAndTexturePage,
      PathsCommonUpscale,
      PathsCommonUpscaleForMaps,
+     BatchCompact,
+     BatchFlatten,
      // Add more as needed
      All,
 };
@@ -135,7 +137,7 @@ struct Selections
      std::string                    output_deswizzle_pattern       = { "{selected_path}\\deswizzle\\{demaster}" };
      std::string                    output_map_pattern_for_swizzle = { "{selected_path}\\{demaster}" };
      std::string                    output_map_pattern_for_deswizzle = { "{selected_path}\\deswizzle\\{demaster}" };
-     std::uint32_t                  current_pattern                  = {};
+     PatternSelector                current_pattern                  = {};
      color           background_color            = { fme::colors::White };///< Remember to user's selected Background Color for draw Window.
 
      input_types     batch_input_type            = {};
@@ -277,8 +279,6 @@ struct Selections
      void refresh_ffnx_paths();
 
      void update_configuration() const;
-
-     
 
 
      void update_configuration_key(ConfigKey key) const;

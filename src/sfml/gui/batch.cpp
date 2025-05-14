@@ -114,9 +114,7 @@ void fme::batch::combo_input_type()
        selections->batch_input_type);
      if (gcc.render())
      {
-          Configuration config{};
-          config->insert_or_assign("batch_input_type", static_cast<std::underlying_type_t<input_types>>(selections->batch_input_type));
-          config.save();
+          selections->update_configuration_key(ConfigKey::BatchInputType);
      }
 }
 
@@ -331,10 +329,7 @@ void fme::batch::browse_input_path()
        selections->batch_input_root_path_type);
      if (gcc.render())
      {
-          Configuration config{};
-          config->insert_or_assign(
-            "batch_input_root_path_type", static_cast<std::underlying_type_t<root_path_types>>(selections->batch_input_root_path_type));
-          config.save();
+          selections->update_configuration_key(ConfigKey::BatchInputRootPathType);
      }
      if (selections->batch_input_root_path_type != root_path_types::selected_path)
      {
@@ -380,9 +375,7 @@ void fme::batch::save_input_path()
      }
      selections->batch_input_path = std::string(m_input_path.data());
      spdlog::info("batch_input_path: {}", selections->batch_input_path);
-     Configuration config{};
-     config->insert_or_assign("batch_input_path", selections->batch_input_path);
-     config.save();
+     selections->update_configuration_key(ConfigKey::BatchInputPath);
 }
 
 
@@ -404,9 +397,7 @@ void fme::batch::checkbox_load_map()
           return;
      }
      spdlog::info("batch_input_load_map: {}", selections->batch_input_load_map);
-     Configuration config{};
-     config->insert_or_assign("batch_input_load_map", selections->batch_input_load_map);
-     config.save();
+     selections->update_configuration_key(ConfigKey::BatchInputLoadMap);
 }
 
 void fme::batch::combo_output_type()
@@ -427,9 +418,7 @@ void fme::batch::combo_output_type()
      {
           return;
      }
-     Configuration config{};
-     config->insert_or_assign("batch_output_type", static_cast<std::underlying_type_t<output_types>>(selections->batch_output_type));
-     config.save();
+     selections->update_configuration_key(ConfigKey::BatchOutputType);
 }
 
 
@@ -452,10 +441,7 @@ void fme::batch::browse_output_path()
        selections->batch_output_root_path_type);
      if (gcc.render())
      {
-          Configuration config{};
-          config->insert_or_assign(
-            "batch_output_root_path_type", static_cast<std::underlying_type_t<root_path_types>>(selections->batch_output_root_path_type));
-          config.save();
+          selections->update_configuration_key(ConfigKey::BatchOutputRootPathType);
      }
      if (selections->batch_output_root_path_type != root_path_types::selected_path)
      {
@@ -500,11 +486,7 @@ void fme::batch::save_output_path()
           spdlog::error("Failed to lock m_selections: shared_ptr is expired.");
           return;
      }
-     selections->batch_output_path = std::string(m_output_path.data());
-     spdlog::info("batch_output_path: {}", selections->batch_output_path);
-     Configuration config{};
-     config->insert_or_assign("batch_output_path", selections->batch_output_path);
-     config.save();
+     selections->update_configuration_key(ConfigKey::BatchOutputPath);
 }
 
 void fme::batch::checkmark_save_map()
@@ -526,9 +508,7 @@ void fme::batch::checkmark_save_map()
      if (ImGui::Checkbox(gui_labels::save_map_files.data(), &selections->batch_save_map) || changed)
      {
           spdlog::info("batch_save_map: {}", selections->batch_save_map);
-          Configuration config{};
-          config->insert_or_assign("batch_save_map", selections->batch_save_map);
-          config.save();
+          selections->update_configuration_key(ConfigKey::BatchSaveMap);
      }
      ImGui::EndDisabled();
 }
@@ -563,12 +543,7 @@ void fme::batch::combo_compact_type()
      {
           return;
      }
-
-     Configuration config{};
-     config->insert_or_assign(
-       "batch_compact_type", static_cast<std::underlying_type_t<compact_type>>(selections->batch_compact_type.value()));
-     config->insert_or_assign("batch_compact_enabled", selections->batch_compact_type.enabled());
-     config.save();
+     selections->update_configuration_key(ConfigKey::BatchCompact);
 }
 void fme::batch::combo_flatten_type()
 {
@@ -613,11 +588,7 @@ void fme::batch::combo_flatten_type()
                return;
           }
      }
-     Configuration config{};
-     config->insert_or_assign(
-       "batch_flatten_type", static_cast<std::underlying_type_t<flatten_type>>(selections->batch_flatten_type.value()));
-     config->insert_or_assign("batch_flatten_enabled", selections->batch_flatten_type.enabled());
-     config.save();
+     selections->update_configuration_key(ConfigKey::BatchFlatten);
 }
 void fme::batch::draw_multi_column_list_box(const std::string_view name, const std::vector<std::string> &items, std::vector<bool> &enabled)
 {
