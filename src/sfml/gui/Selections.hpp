@@ -191,14 +191,96 @@ struct Selections
           return ret;
      }();
 
+     std::vector<std::string> paths_common_upscale_for_maps = []() {
+          const auto ret =
+            std::vector<std::string>{ // todo ffnx uses a sepperate directory for map files which means we might not see it with our
+                                      // current method of selecting one path ffnx_direct_mode_path might not want to be in the regular
+                                      // paths list might need to be somewhere else. maybe a get paths map.
+                                      "{selected_path}/{ffnx_direct_mode_path}/field/mapdata/"
+            };
+          assert(fme::key_value_data::has_balanced_braces(ret));
+          return ret;
+     }();
+
      /**
-      * @brief Constructs a Selections object with default values. Loading from past configuration if possible.
+      * @brief Constructs a Selections object with default values.
+      *
+      * If @p load_config is true, it will automatically call load_configuration().
+      *
+      * @param load_config Whether to load the configuration during construction. Defaults to true.
       */
      Selections(bool load_config = true);
-     // need to load
+
+     /**
+      * @brief Loads configuration from a saved state if available; otherwise, uses default values.
+      *
+      * This function should be called during initialization if prior settings are expected.
+      */
      void load_configuration();
-     // need to rerun when we change the path because ffnx might not be there.
+
+     /**
+      * @brief Refreshes FFNx-related paths based on the current FF8 path.
+      *
+      * This function must be rerun if the FF8 path changes, as the presence and location
+      * of FFNx components are path-dependent. It reads configuration from "FFNx.toml".
+      */
      void refresh_ffnx_paths();
+
+     void update_configuration() const;
+
+     enum class ConfigKey
+     {
+          StarterField,
+          SelectionsPath,
+          WindowWidth,
+          WindowHeight,
+          Palette,
+          Bpp,
+          Draw,
+          Coo,
+          SelectedTile,
+          DrawDisableBlending,
+          DrawGrid,
+          DrawPalette,
+          DrawSwizzle,
+          RenderImportedImage,// if needed
+          DrawTexturePageGrid,
+          DrawTileConflictRects,
+          DisplayBatchWindow,
+          DisplayImportImage,
+          ImportImageGrid,
+          TileSizeValue,
+          DisplayHistoryWindow,
+          DisplayControlPanelWindow,
+          DisplayDrawWindow,
+          DisplayCustomPathsWindow,
+          DisplayFieldFileWindow,
+          OutputSwizzlePattern,
+          OutputDeswizzlePattern,
+          OutputMapPatternForSwizzle,
+          OutputMapPatternForDeswizzle,
+          CurrentPattern,
+          BatchInputType,
+          BatchInputRootPathType,
+          BatchOutputType,
+          BatchOutputRootPathType,
+          BackgroundColor,
+          BatchInputPath,
+          BatchOutputPath,
+          BatchInputLoadMap,
+          BatchSaveMap,
+          PathsWithPaletteAndTexturePage,
+          PathsWithTtexturePage,
+          PathsWithPupuID,
+          PathsNoPaletteAndTexturePage,
+          PathsCommonUpscale,
+          PathsCommonUpscaleForMaps,
+          // Add more as needed
+          All,
+     };
+
+
+     void update_configuration_key(ConfigKey key) const;
 };
 }// namespace fme
 #endif// FIELD_MAP_EDITOR_SELECTIONS_HPP

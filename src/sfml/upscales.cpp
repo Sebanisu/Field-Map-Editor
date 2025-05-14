@@ -3,7 +3,7 @@
 //
 #include "upscales.hpp"
 
-     // upscales() = default;
+// upscales() = default;
 upscales::upscales(std::weak_ptr<fme::Selections> selections)
   : m_selections(selections)
 {
@@ -84,7 +84,7 @@ upscales::upscales(std::string root, std::optional<open_viii::LangT> coo, std::w
      const auto                operation = [&](const std::string &pattern) -> std::filesystem::path {
           return data.replace_tags(pattern, selections, m_root);
      };
-     const auto        filter_dir = [](safedir path) { return path.is_exists() && path.is_dir(); };
+     const auto filter_dir = [](safedir path) { return path.is_exists() && path.is_dir(); };
 
 
      return selections->paths_common_upscale | std::ranges::views::transform(operation) | std::ranges::views::filter(filter_dir)
@@ -104,18 +104,12 @@ upscales::upscales(std::string root, std::optional<open_viii::LangT> coo, std::w
      const auto                operation = [&](const std::string &pattern) -> std::filesystem::path {
           return data.replace_tags(pattern, selections, m_root);
      };
-     const auto        filter_dir = [](safedir path) { return path.is_exists() && path.is_dir(); };
+     const auto filter_dir = [](safedir path) { return path.is_exists() && path.is_dir(); };
 
-     static const auto paths =
-       std::to_array<std::string>({ // todo ffnx uses a sepperate directory for map files which means we might not see it with our
-                                    // current method of selecting one path ffnx_direct_mode_path might not want to be in the regular
-                                    // paths list might need to be somewhere else. maybe a get paths map.
-                                    "{selected_path}/{ffnx_direct_mode_path}/field/mapdata/" });
 
-     auto transformed_paths = paths | std::ranges::views::transform(operation) | std::ranges::views::filter(filter_dir);
-     auto regular_paths     = get_paths();
+     auto       transformed_paths =
+       selections->paths_common_upscale_for_maps | std::ranges::views::transform(operation) | std::ranges::views::filter(filter_dir);
+     auto regular_paths = get_paths();
      regular_paths.insert(regular_paths.begin(), transformed_paths.begin(), transformed_paths.end());
      return regular_paths;
 }
-
-
