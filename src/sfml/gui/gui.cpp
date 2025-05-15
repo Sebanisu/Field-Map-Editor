@@ -724,9 +724,7 @@ bool gui::change_background_color(const fme::color &in_color)
 void gui::save_background_color()
 {
      spdlog::info("selections_background_color: {}", m_selections->background_color);
-     Configuration config{};
-     config->insert_or_assign("selections_background_color", std::bit_cast<std::uint32_t>(m_selections->background_color));
-     config.save();
+     m_selections->update_configuration_key(ConfigKey::BackgroundColor);
 }
 void gui::background_color_picker()
 {
@@ -1436,9 +1434,7 @@ void gui::refresh_coo()
 {
      update_field();
      spdlog::info("selections_coo: {}", m_selections->coo);
-     Configuration config{};
-     config->insert_or_assign("selections_coo", std::to_underlying(m_selections->coo));
-     config.save();
+     m_selections->update_configuration_key(ConfigKey::Coo);
 }
 const open_viii::LangT &gui::get_coo() const
 {
@@ -1454,17 +1450,14 @@ const open_viii::LangT &gui::get_coo() const
  */
 void gui::refresh_field()
 {
-     Configuration config{};
-
      // Get a reference to the map data (field name list)
-     const auto   &maps          = m_archives_group->mapdata();
+     const auto &maps            = m_archives_group->mapdata();
 
      // Update the starter_field name based on the current field index
      m_selections->starter_field = *std::next(maps.begin(), m_selections->field);
 
      // Save the selected field name to the configuration
-     config->insert_or_assign("starter_field", m_selections->starter_field);
-     config.save();
+     m_selections->update_configuration_key(ConfigKey::StarterField);
 
      // Apply the updated field selection
      update_field();
@@ -1542,9 +1535,7 @@ void gui::update_field()
 
 void gui::refresh_map_swizzle()
 {
-     Configuration config{};
-     config->insert_or_assign("selections_draw_swizzle", m_selections->draw_swizzle);
-     config.save();
+     m_selections->update_configuration_key(ConfigKey::DrawSwizzle);
      if (m_selections->draw_swizzle)
      {
           spdlog::info("selections_draw_swizzle: enabled");
@@ -1572,9 +1563,7 @@ void gui::checkbox_map_swizzle()
 }
 void gui::refresh_map_disable_blending()
 {
-     Configuration config{};
-     config->insert_or_assign("selections_draw_disable_blending", m_selections->draw_disable_blending);
-     config.save();
+     m_selections->update_configuration_key(ConfigKey::DrawDisableBlending);
      if (m_selections->draw_disable_blending)
      {
           spdlog::info("selections_draw_disable_blending: enabled");
@@ -1612,10 +1601,8 @@ void gui::checkbox_map_disable_blending()
 }
 void gui::refresh_mim_palette_texture()
 {
-     Configuration config{};
      spdlog::info("selections_draw_palette: {}", m_selections->draw_palette ? "enabled" : "disabled");
-     config->insert_or_assign("selections_draw_palette", m_selections->draw_palette);
-     config.save();
+     m_selections->update_configuration_key(ConfigKey::DrawPalette);
      m_mim_sprite = m_mim_sprite.with_draw_palette(m_selections->draw_palette);
      m_changed    = true;
 }
@@ -1644,9 +1631,7 @@ void gui::refresh_bpp(BPPT in_bpp)
      }
      else
      {
-          Configuration config{};
-          config->insert_or_assign("selections_bpp", m_selections->bpp.raw());
-          config.save();
+          m_selections->update_configuration_key(ConfigKey::Bpp);
      }
      if (mim_test())
      {
@@ -1734,9 +1719,7 @@ void gui::windows_menu()
      const auto end_menu = scope_guard(&ImGui::EndMenu);
      if (ImGui::MenuItem(gui_labels::display_control_panel_window.data(), "Control + P", &m_selections->display_control_panel_window))
      {
-          Configuration config{};
-          config->insert_or_assign("selections_display_control_panel_window", m_selections->display_control_panel_window);
-          config.save();
+          m_selections->update_configuration_key(ConfigKey::DisplayControlPanelWindow);
      }
      if (ImGui::MenuItem("ImGui Demo Window", std::nullptr_t{}, &toggle_imgui_demo_window))
      {
@@ -1747,44 +1730,31 @@ void gui::windows_menu()
      }
      if (ImGui::MenuItem(gui_labels::batch_operation_window.data(), "Control + B", &m_selections->display_batch_window))
      {
-          Configuration config{};
-          config->insert_or_assign("selections_display_batch_window", m_selections->display_batch_window);
-          config.save();
+          m_selections->update_configuration_key(ConfigKey::DisplayBatchWindow);
      }
      if (ImGui::MenuItem(gui_labels::import_page.data(), "Control + I", &m_selections->display_import_image))
      {
-          Configuration config{};
-          config->insert_or_assign("selections_display_import_image", m_selections->display_import_image);
-          config.save();
+          m_selections->update_configuration_key(ConfigKey::DisplayImportImage);
      }
      ImGui::Separator();
      if (ImGui::MenuItem(gui_labels::display_history.data(), "Control + H", &m_selections->display_history_window))
      {
-          Configuration config{};
-          config->insert_or_assign("selections_display_history_window", m_selections->display_history_window);
-          config.save();
+          m_selections->update_configuration_key(ConfigKey::DisplayHistoryWindow);
      }
      ImGui::Separator();
      if (ImGui::MenuItem(gui_labels::display_draw_window.data(), "Control + D", &m_selections->display_draw_window))
      {
-          Configuration config{};
-          config->insert_or_assign("selections_display_draw_window", m_selections->display_draw_window);
-          config.save();
+          m_selections->update_configuration_key(ConfigKey::DisplayDrawWindow);
      }
      ImGui::Separator();
      if (ImGui::MenuItem(gui_labels::display_custom_paths_window.data(), "Control + U", &m_selections->display_custom_paths_window))
      {
-          Configuration config{};
-          config->insert_or_assign("selections_display_custom_paths_window", m_selections->display_custom_paths_window);
-          config.save();
+          m_selections->update_configuration_key(ConfigKey::DisplayCustomPathsWindow);
      }
-
      ImGui::Separator();
      if (ImGui::MenuItem(gui_labels::display_field_file_window.data(), "Control + F", &m_selections->display_field_file_window))
      {
-          Configuration config{};
-          config->insert_or_assign("selections_display_field_file_window", m_selections->display_field_file_window);
-          config.save();
+          m_selections->update_configuration_key(ConfigKey::DisplayFieldFileWindow);
      }
 }
 void gui::edit_menu()
@@ -1831,9 +1801,7 @@ void gui::edit_menu()
           ImGui::Separator();
           if (ImGui::MenuItem(gui_labels::display_history.data(), "Control + H", &m_selections->display_history_window))
           {
-               Configuration config{};
-               config->insert_or_assign("selections_display_history_window", m_selections->display_history_window);
-               config.save();
+               m_selections->update_configuration_key(ConfigKey::DisplayHistoryWindow);
           }
           ImGui::Separator();
      }
@@ -1936,9 +1904,7 @@ void gui::edit_menu()
                if (ImGui::MenuItem(gui_labels::draw_tile_grid.data(), nullptr, &m_selections->draw_grid))
                {
                     spdlog::info("selections_draw_grid: {}", m_selections->draw_grid ? "enabled" : "disabled");
-                    Configuration config{};
-                    config->insert_or_assign("selections_draw_grid", m_selections->draw_grid);
-                    config.save();
+                    m_selections->update_configuration_key(ConfigKey::DrawGrid);
                }
 
                if ((map_test() && m_selections->draw_swizzle) || (mim_test() && !m_selections->draw_palette))
@@ -1947,9 +1913,7 @@ void gui::edit_menu()
                     {
                          spdlog::info(
                            "selections_draw_texture_page_grid: {}", m_selections->draw_texture_page_grid ? "enabled" : "disabled");
-                         Configuration config{};
-                         config->insert_or_assign("selections_draw_texture_page_grid", m_selections->draw_texture_page_grid);
-                         config.save();
+                         m_selections->update_configuration_key(ConfigKey::DrawTexturePageGrid);
                     }
                }
 
@@ -1959,9 +1923,7 @@ void gui::edit_menu()
                     {
                          spdlog::info(
                            "selections_draw_tile_conflict_rects: {}", m_selections->draw_tile_conflict_rects ? "enabled" : "disabled");
-                         Configuration config{};
-                         config->insert_or_assign("selections_draw_tile_conflict_rects", m_selections->draw_tile_conflict_rects);
-                         config.save();
+                         m_selections->update_configuration_key(ConfigKey::DrawTileConflictRects);
                     }
                }
           }
@@ -2181,6 +2143,8 @@ void gui::browse_buttons()
 
                bool selected = it->value_or<std::string>({}) == m_selections->path;
                m_paths.erase(it);
+               ///TODO:: Move the Paths Vector to selections.
+               //m_selections->update_configuration_key(ConfigKey::PathsVector);
                Configuration config{};
                config->insert_or_assign("paths_vector", m_paths);
                config.save();
@@ -2610,12 +2574,10 @@ void gui::directory_browser_display()
      switch (m_modified_directory_map)
      {
           case map_directory_mode::ff8_install_directory: {
-               Configuration config{};
-               config->insert_or_assign("ff8_install_navigation_path", selected_path.string());
-               config.save();
+               m_selections->path = selected_path.string();
+               m_selections->update_configuration_key(ConfigKey::SelectionsPath);
                m_paths.push_back(selected_path.string());
                sort_paths();
-               m_selections->path = selected_path.string();
                update_path();
           }
           break;
@@ -2863,7 +2825,7 @@ void gui::open_locate_ff8_filebrowser()
 {
      m_directory_browser.Open();
      m_directory_browser.SetTitle(gui_labels::choose_a_ff8_install.data());
-     m_directory_browser.SetPwd(Configuration{}["ff8_install_navigation_path"].value_or(std::filesystem::current_path().string()));
+     m_directory_browser.SetPwd(m_selections->path);
      m_directory_browser.SetTypeFilters({ ".exe" });
      m_modified_directory_map = map_directory_mode::ff8_install_directory;
 }

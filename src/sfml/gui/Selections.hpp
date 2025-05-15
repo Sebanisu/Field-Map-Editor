@@ -58,13 +58,19 @@ enum class ConfigKey
      BatchInputLoadMap,
      BatchSaveMap,
      PathsWithPaletteAndTexturePage,
-     PathsWithTtexturePage,
+     PathsWithTexturePage,
      PathsWithPupuID,
      PathsNoPaletteAndTexturePage,
      PathsCommonUpscale,
      PathsCommonUpscaleForMaps,
      BatchCompact,
+     BatchCompactType,
+     BatchCompactEnabled,
      BatchFlatten,
+     BatchFlattenType,
+     BatchFlattenEnabled,
+     SwizzlePath,
+     DeswizzlePath,
      // Add more as needed
      All,
 };
@@ -137,6 +143,8 @@ struct Selections
      std::string                    output_deswizzle_pattern       = { "{selected_path}\\deswizzle\\{demaster}" };
      std::string                    output_map_pattern_for_swizzle = { "{selected_path}\\{demaster}" };
      std::string                    output_map_pattern_for_deswizzle = { "{selected_path}\\deswizzle\\{demaster}" };
+     std::string                    swizzle_path                     = { path };
+     std::string                    deswizzle_path                   = { path };
      PatternSelector                current_pattern                  = {};
      color           background_color            = { fme::colors::White };///< Remember to user's selected Background Color for draw Window.
 
@@ -268,7 +276,7 @@ struct Selections
       *
       * This function should be called during initialization if prior settings are expected.
       */
-     void load_configuration();
+     void                    load_configuration();
 
      /**
       * @brief Refreshes FFNx-related paths based on the current FF8 path.
@@ -276,12 +284,14 @@ struct Selections
       * This function must be rerun if the FF8 path changes, as the presence and location
       * of FFNx components are path-dependent. It reads configuration from "FFNx.toml".
       */
-     void refresh_ffnx_paths();
+     void                    refresh_ffnx_paths();
 
-     void update_configuration() const;
+     void                    update_configuration() const;
 
 
-     void update_configuration_key(ConfigKey key) const;
+     void                    update_configuration_key(ConfigKey key) const;
+
+     static std::string_view key_to_string(ConfigKey key);
 };
 }// namespace fme
 #endif// FIELD_MAP_EDITOR_SELECTIONS_HPP
