@@ -196,11 +196,18 @@ void fme::Selections::load_configuration()
      }
      if (config.load_array(key_to_string(ConfigKey::PathsVector), paths_vector))
      {
-          assert(fme::key_value_data::has_balanced_braces(paths_vector));
+          //assert(fme::key_value_data::has_balanced_braces(paths_vector));
      }
      if (config.load_array(key_to_string(ConfigKey::PathsVectorUpscale), paths_vector_upscale))
      {
-          assert(fme::key_value_data::has_balanced_braces(paths_vector_upscale));
+          //assert(fme::key_value_data::has_balanced_braces(paths_vector_upscale));
+     }
+     if (paths_vector.empty())
+     {
+          paths_vector = []() -> std::vector<std::string> {
+               const auto &default_paths = open_viii::Paths::get();
+               return { default_paths.begin(), default_paths.end() };
+          }();
      }
 
 

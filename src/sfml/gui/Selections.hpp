@@ -79,8 +79,8 @@ enum class ConfigKey
      OutputMimPath,
      OutputMapPath,
      UpscalePathsIndex,
-       // Add more as needed
-       All,
+     // Add more as needed
+     All,
 };
 /**
  * @brief Manages various settings and selections for the application.
@@ -265,11 +265,7 @@ struct Selections
      }();
 
 
-     std::vector<std::string> paths_vector = []() -> std::vector<std::string> {
-          const auto &default_paths = open_viii::Paths::get();
-          return { default_paths.begin(), default_paths.end() };
-     }();
-
+     std::vector<std::string> paths_vector                  = {};
      std::vector<std::string> paths_vector_upscale          = {};
 
      std::vector<std::string> paths_common_upscale_for_maps = []() {

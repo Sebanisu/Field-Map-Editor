@@ -168,7 +168,7 @@ struct gui
      const open_viii::LangT  &get_coo() const;
      file_dialog_mode         m_file_dialog_mode       = {};
      map_directory_mode       m_modified_directory_map = {};
-     std::filesystem::path    m_loaded_swizzle_texture_path{};
+     //std::filesystem::path    m_loaded_swizzle_texture_path{};
      std::filesystem::path    m_loaded_deswizzle_texture_path{};
      std::vector<std::size_t> m_clicked_tile_indices{};
      //     void                                               popup_batch_reswizzle();
@@ -192,7 +192,7 @@ struct gui
      void open_locate_ff8_filebrowser();
      variant_tile_t                           &combo_selected_tile(bool &changed);
      [[nodiscard]] bool                        browse_for_image_display_preview();
-     void                                      generate_upscale_paths(const std::string &field_name, open_viii::LangT coo);
+     void                                      generate_upscale_paths(open_viii::LangT coo);
      void                                      menuitem_locate_custom_upscale();
      void                                      save_swizzle_textures();
      void                                      reset_imported_image();

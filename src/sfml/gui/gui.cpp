@@ -1517,7 +1517,7 @@ void gui::update_field()
      }
 
      // Reset cached texture paths
-     m_loaded_swizzle_texture_path   = std::filesystem::path{};
+     // m_loaded_swizzle_texture_path   = std::filesystem::path{};
      m_loaded_deswizzle_texture_path = std::filesystem::path{};
 
      // Mark field as changed
@@ -1526,7 +1526,7 @@ void gui::update_field()
      // Generate upscale texture paths if a field is loaded
      if (m_field)
      {
-          generate_upscale_paths(std::string{ m_field->get_base_name() }, get_coo());
+          generate_upscale_paths(get_coo());
      }
 
      // Clear clicked tile indices used for selection logic
@@ -2627,15 +2627,27 @@ void gui::directory_browser_display()
           case map_directory_mode::load_swizzle_textures: {
                m_selections->swizzle_path = selected_path.string();
                m_selections->update_configuration_key(ConfigKey::SwizzlePath);
+               m_selections->paths_vector_upscale.push_back(selected_path.string());
                /// TODO might need to update this to use the patterns.
-               m_loaded_swizzle_texture_path = selected_path;
+               // m_loaded_swizzle_texture_path = selected_path;
                if (m_field)
                {
-                    generate_upscale_paths(std::string{ m_field->get_base_name() }, get_coo());
+                    generate_upscale_paths(get_coo());
                }
                m_map_sprite->filter().deswizzle.disable();
-               m_map_sprite->filter().upscale.update(m_loaded_swizzle_texture_path).enable();
-               auto          map_path      = m_loaded_swizzle_texture_path / m_map_sprite->map_filename();
+               m_map_sprite->filter()
+                 .upscale
+                 .update([&]() {
+                      auto paths = upscales(m_selections->swizzle_path, get_coo(), m_selections).get_paths();
+                      if (paths.empty())
+                      {
+                         return m_selections->swizzle_path;
+                      }
+                      std::ranges::sort(paths);
+                      return paths.front().string();
+                 }())
+                 .enable();
+               auto          map_path      = selected_path / m_map_sprite->map_filename();
                safedir const safe_map_path = map_path;
                if (safe_map_path.is_exists())
                {
@@ -2666,7 +2678,7 @@ void gui::directory_browser_display()
                // todo remove paths that don't exist.
                if (m_field)
                {
-                    generate_upscale_paths(std::string{ m_field->get_base_name() }, get_coo());
+                    generate_upscale_paths(get_coo());
                }
                // todo toggle filter enabled?
           }
@@ -3226,7 +3238,7 @@ void gui::init_and_get_style()
      imgui_io.ConfigFlags = bitwise_or(imgui_io.ConfigFlags, ImGuiConfigFlags_DockingEnable);
      if (m_field)
      {
-          generate_upscale_paths(std::string{ m_field->get_base_name() }, get_coo());
+          generate_upscale_paths(get_coo());
      }
      if (!m_drag_sprite_shader)
      {
@@ -3600,18 +3612,20 @@ void gui::combo_upscale_path()
 
      refresh_render_texture(true);
 }
-void gui::generate_upscale_paths(const std::string &field_name, open_viii::LangT coo)
+void gui::generate_upscale_paths(open_viii::LangT coo)
 {
      m_upscale_paths.clear();
-     auto transform_paths = m_selections->paths_vector | std::views::transform([this, &coo](const std::string &path) {
-                                 if (m_field)
-                                 {
-                                      return upscales(path, coo, m_selections).get_paths();
-                                 }
-                                 return upscales{ m_selections }.get_paths();
+     auto transform_paths  = m_selections->paths_vector | std::views::transform([this, &coo](const std::string &path) {
+                                 return upscales(path, coo, m_selections).get_paths();
                             });
+
+     auto transform_paths2 = m_selections->paths_vector_upscale | std::views::transform([this, &coo](const std::string &path) {
+                                  return upscales(path, coo, m_selections).get_paths();
+                             });
+
+
      // std::views::join; broken in msvc.
-     auto process         = [this](const auto &temp_paths) {
+     auto process          = [this](const auto &temp_paths) {
           for (const auto &path : temp_paths)
           {
                m_upscale_paths.emplace_back(path.string());
@@ -3621,18 +3635,14 @@ void gui::generate_upscale_paths(const std::string &field_name, open_viii::LangT
      {
           process(temp_paths);
      }
-     if (safedir(m_loaded_swizzle_texture_path).is_exists())
+     for (auto temp_paths : transform_paths2)
      {
-          m_upscale_paths.push_back(m_loaded_swizzle_texture_path.string());
+          process(temp_paths);
      }
-     if (m_field)
-     {
-          process(upscales(field_name, coo, m_selections).get_paths());
-          for (const auto &upscale_path : m_selections->paths_vector_upscale)
-          {
-               process(upscales(upscale_path, coo, m_selections).get_paths());
-          }
-     }
+     // if (safedir(m_loaded_swizzle_texture_path).is_exists())
+     // {
+     //      m_upscale_paths.push_back(m_loaded_swizzle_texture_path.string());
+     // }
      std::ranges::sort(m_upscale_paths);
      const auto to_remove = std::ranges::unique(m_upscale_paths);
      m_upscale_paths.erase(to_remove.begin(), to_remove.end());
@@ -3653,12 +3663,11 @@ bool gui::combo_upscale_path(std::filesystem::path &path, const std::string &fie
 {
      std::vector<std::string> paths = {};
      auto transform_paths           = m_selections->paths_vector | std::views::transform([this, &coo](const std::string &in_path) {
-                                 if (m_field)
-                                 {
-                                      return upscales(in_path, coo, m_selections).get_paths();
-                                 }
-                                 return upscales{ m_selections }.get_paths();
+                                 return upscales(in_path, coo, m_selections).get_paths();
                             });
+     auto transform_paths2          = m_selections->paths_vector_upscale | std::views::transform([this, &coo](const std::string &in_path) {
+                                  return upscales(in_path, coo, m_selections).get_paths();
+                             });
      // std::views::join; broken in msvc.
      auto process                   = [&paths](const auto &temp_paths) {
           for (const auto &in_path : temp_paths)
@@ -3670,10 +3679,14 @@ bool gui::combo_upscale_path(std::filesystem::path &path, const std::string &fie
      {
           process(temp_paths);
      }
-     if (safedir(m_loaded_swizzle_texture_path).is_exists())
+     for (const auto &temp_paths : transform_paths2)
      {
-          paths.push_back(m_loaded_swizzle_texture_path.string());
+          process(temp_paths);
      }
+     // if (safedir(m_loaded_swizzle_texture_path).is_exists())
+     // {
+     //      paths.push_back(m_loaded_swizzle_texture_path.string());
+     // }
      if (m_field)
      {
           process(upscales(field_name, coo, m_selections).get_paths());
