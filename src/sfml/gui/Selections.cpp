@@ -51,23 +51,30 @@ std::string_view fme::Selections::key_to_string(ConfigKey key)
           m.emplace(ConfigKey::DrawTexturePageGrid, "selections_draw_texture_page_grid");
           m.emplace(ConfigKey::DrawTileConflictRects, "selections_draw_tile_conflict_rects");
           m.emplace(ConfigKey::ImportImageGrid, "selections_import_image_grid");
+          m.emplace(ConfigKey::ImportLoadImageDirectory, "import_load_image_directory");
           m.emplace(ConfigKey::OutputDeswizzlePattern, "selections_output_deswizzle_pattern");
+          m.emplace(ConfigKey::OutputImagePath, "output_image_path");
           m.emplace(ConfigKey::OutputMapPatternForDeswizzle, "selections_output_map_pattern_for_deswizzle");
           m.emplace(ConfigKey::OutputMapPatternForSwizzle, "selections_output_map_pattern_for_swizzle");
+          m.emplace(ConfigKey::OutputMapPath, "output_map_path");
+          m.emplace(ConfigKey::OutputMimPath, "output_mim_path");
           m.emplace(ConfigKey::OutputSwizzlePattern, "selections_output_swizzle_pattern");
           m.emplace(ConfigKey::Palette, "selections_palette");
-          m.emplace(ConfigKey::PathsCommonUpscale, "paths_common_upscale");
-          m.emplace(ConfigKey::PathsCommonUpscaleForMaps, "paths_common_upscale_for_maps");
-          m.emplace(ConfigKey::PathsNoPaletteAndTexturePage, "paths_no_palette_and_texture_page");
-          m.emplace(ConfigKey::PathsWithPaletteAndTexturePage, "paths_with_palette_and_texture_page");
-          m.emplace(ConfigKey::PathsWithPupuID, "paths_with_pupu_id");
-          m.emplace(ConfigKey::PathsWithTexturePage, "paths_with_texture_page");
+          m.emplace(ConfigKey::PathPatternsCommonUpscale, "paths_common_upscale");
+          m.emplace(ConfigKey::PathPatternsCommonUpscaleForMaps, "paths_common_upscale_for_maps");
+          m.emplace(ConfigKey::PathPatternsNoPaletteAndTexturePage, "paths_no_palette_and_texture_page");
+          m.emplace(ConfigKey::PathPatternsWithPaletteAndTexturePage, "paths_with_palette_and_texture_page");
+          m.emplace(ConfigKey::PathPatternsWithPupuID, "paths_with_pupu_id");
+          m.emplace(ConfigKey::PathPatternsWithTexturePage, "paths_with_texture_page");
+          m.emplace(ConfigKey::PathsVector, "paths_vector");
+          m.emplace(ConfigKey::PathsVectorUpscale, "custom_upscale_paths_vector");
           m.emplace(ConfigKey::RenderImportedImage, "selections_render_imported_image");
           m.emplace(ConfigKey::SelectedTile, "selections_selected_tile");
           m.emplace(ConfigKey::SelectionsPath, "selections_path");
           m.emplace(ConfigKey::StarterField, "starter_field");
           m.emplace(ConfigKey::SwizzlePath, "selections_swizzle_path");
           m.emplace(ConfigKey::TileSizeValue, "selections_tile_size_value");
+          m.emplace(ConfigKey::UpscalePathsIndex, "upscale_paths_index");
           m.emplace(ConfigKey::WindowHeight, "selections_window_height");
           m.emplace(ConfigKey::WindowWidth, "selections_window_width");
           return m;
@@ -130,6 +137,7 @@ void fme::Selections::load_configuration()
      draw_tile_conflict_rects     = config[key_to_string(ConfigKey::DrawTileConflictRects)].value_or(draw_tile_conflict_rects);
 
      import_image_grid            = config[key_to_string(ConfigKey::ImportImageGrid)].value_or(import_image_grid);
+     import_load_image_directory  = config[key_to_string(ConfigKey::ImportLoadImageDirectory)].value_or(import_load_image_directory);
 
      output_deswizzle_pattern     = config[key_to_string(ConfigKey::OutputDeswizzlePattern)].value_or(output_deswizzle_pattern);
      output_map_pattern_for_deswizzle =
@@ -140,6 +148,10 @@ void fme::Selections::load_configuration()
      palette                        = config[key_to_string(ConfigKey::Palette)].value_or(palette) & 0xFU;
 
      path                           = config[key_to_string(ConfigKey::SelectionsPath)].value_or(path);
+
+     output_map_path                = config[key_to_string(ConfigKey::OutputMapPath)].value_or(output_map_path);
+     output_mim_path                = config[key_to_string(ConfigKey::OutputMimPath)].value_or(output_mim_path);
+     output_image_path              = config[key_to_string(ConfigKey::OutputImagePath)].value_or(output_image_path);
 
      render_imported_image          = config[key_to_string(ConfigKey::RenderImportedImage)].value_or(render_imported_image);
 
@@ -152,34 +164,45 @@ void fme::Selections::load_configuration()
      tile_size_value =
        static_cast<tile_sizes>(config[key_to_string(ConfigKey::TileSizeValue)].value_or(std::to_underlying(tile_size_value)));
 
-     window_height = config[key_to_string(ConfigKey::WindowHeight)].value_or(window_height);
-     window_width  = config[key_to_string(ConfigKey::WindowWidth)].value_or(window_width);
+     upscale_paths_index = config[key_to_string(ConfigKey::UpscalePathsIndex)].value_or(upscale_paths_index);
+
+     window_height       = config[key_to_string(ConfigKey::WindowHeight)].value_or(window_height);
+     window_width        = config[key_to_string(ConfigKey::WindowWidth)].value_or(window_width);
 
      // Arrays
-     if (config.load_array(key_to_string(ConfigKey::PathsCommonUpscale), paths_common_upscale))
+     if (config.load_array(key_to_string(ConfigKey::PathPatternsCommonUpscale), paths_common_upscale))
      {
           assert(fme::key_value_data::has_balanced_braces(paths_common_upscale));
      }
-     if (config.load_array(key_to_string(ConfigKey::PathsCommonUpscaleForMaps), paths_common_upscale_for_maps))
+     if (config.load_array(key_to_string(ConfigKey::PathPatternsCommonUpscaleForMaps), paths_common_upscale_for_maps))
      {
           assert(fme::key_value_data::has_balanced_braces(paths_common_upscale_for_maps));
      }
-     if (config.load_array(key_to_string(ConfigKey::PathsNoPaletteAndTexturePage), paths_no_palette_and_texture_page))
+     if (config.load_array(key_to_string(ConfigKey::PathPatternsNoPaletteAndTexturePage), paths_no_palette_and_texture_page))
      {
           assert(fme::key_value_data::has_balanced_braces(paths_no_palette_and_texture_page));
      }
-     if (config.load_array(key_to_string(ConfigKey::PathsWithPaletteAndTexturePage), paths_with_palette_and_texture_page))
+     if (config.load_array(key_to_string(ConfigKey::PathPatternsWithPaletteAndTexturePage), paths_with_palette_and_texture_page))
      {
           assert(fme::key_value_data::has_balanced_braces(paths_with_palette_and_texture_page));
      }
-     if (config.load_array(key_to_string(ConfigKey::PathsWithPupuID), paths_with_pupu_id))
+     if (config.load_array(key_to_string(ConfigKey::PathPatternsWithPupuID), paths_with_pupu_id))
      {
           assert(fme::key_value_data::has_balanced_braces(paths_with_pupu_id));
      }
-     if (config.load_array(key_to_string(ConfigKey::PathsWithTexturePage), paths_with_texture_page))
+     if (config.load_array(key_to_string(ConfigKey::PathPatternsWithTexturePage), paths_with_texture_page))
      {
           assert(fme::key_value_data::has_balanced_braces(paths_with_texture_page));
      }
+     if (config.load_array(key_to_string(ConfigKey::PathsVector), paths_vector))
+     {
+          assert(fme::key_value_data::has_balanced_braces(paths_vector));
+     }
+     if (config.load_array(key_to_string(ConfigKey::PathsVectorUpscale), paths_vector_upscale))
+     {
+          assert(fme::key_value_data::has_balanced_braces(paths_vector_upscale));
+     }
+
 
      refresh_ffnx_paths();
 }
@@ -211,7 +234,7 @@ void fme::Selections::update_configuration_key(ConfigKey key) const
 
 #define MAP_UPDATE_ARRAY(KEY, FIELD_NAME) \
      m.emplace(KEY, [](Configuration &c, const Selections &s) { c.update_array(key_to_string(KEY), s.FIELD_NAME); })
-     
+
           MAP_INSERT_OR_ASSIGN(ConfigKey::BackgroundColor, std::bit_cast<std::uint32_t>(s.background_color));
           MAP_MACRO(ConfigKey::BatchCompactEnabled, batch_compact_type.enabled());
           MAP_MACRO_UNDERLYING(ConfigKey::BatchCompactType, batch_compact_type.value());
@@ -227,7 +250,7 @@ void fme::Selections::update_configuration_key(ConfigKey key) const
           MAP_MACRO_UNDERLYING(ConfigKey::BatchOutputType, batch_output_type);
           MAP_MACRO(ConfigKey::Bpp, bpp.raw() & 3U);
           MAP_MACRO_UNDERLYING(ConfigKey::Coo, coo);
-          MAP_MACRO(ConfigKey::CurrentPattern, current_pattern);
+          MAP_MACRO_UNDERLYING(ConfigKey::CurrentPattern, current_pattern);
           MAP_MACRO(ConfigKey::DeswizzlePath, deswizzle_path);
           MAP_MACRO(ConfigKey::DisplayBatchWindow, display_batch_window);
           MAP_MACRO(ConfigKey::DisplayControlPanelWindow, display_control_panel_window);
@@ -244,23 +267,30 @@ void fme::Selections::update_configuration_key(ConfigKey key) const
           MAP_MACRO(ConfigKey::DrawTexturePageGrid, draw_texture_page_grid);
           MAP_MACRO(ConfigKey::DrawTileConflictRects, draw_tile_conflict_rects);
           MAP_MACRO(ConfigKey::ImportImageGrid, import_image_grid);
+          MAP_MACRO(ConfigKey::ImportLoadImageDirectory, import_load_image_directory);
           MAP_MACRO(ConfigKey::OutputDeswizzlePattern, output_deswizzle_pattern);
+          MAP_MACRO(ConfigKey::OutputImagePath, output_image_path);
           MAP_MACRO(ConfigKey::OutputMapPatternForDeswizzle, output_map_pattern_for_deswizzle);
           MAP_MACRO(ConfigKey::OutputMapPatternForSwizzle, output_map_pattern_for_swizzle);
+          MAP_MACRO(ConfigKey::OutputMapPath, output_map_path);
+          MAP_MACRO(ConfigKey::OutputMimPath, output_mim_path);
           MAP_MACRO(ConfigKey::OutputSwizzlePattern, output_swizzle_pattern);
           MAP_MACRO(ConfigKey::Palette, palette & 0xFU);
-          MAP_UPDATE_ARRAY(ConfigKey::PathsCommonUpscale, paths_common_upscale);
-          MAP_UPDATE_ARRAY(ConfigKey::PathsCommonUpscaleForMaps, paths_common_upscale_for_maps);
-          MAP_UPDATE_ARRAY(ConfigKey::PathsNoPaletteAndTexturePage, paths_no_palette_and_texture_page);
-          MAP_UPDATE_ARRAY(ConfigKey::PathsWithPaletteAndTexturePage, paths_with_palette_and_texture_page);
-          MAP_UPDATE_ARRAY(ConfigKey::PathsWithPupuID, paths_with_pupu_id);
-          MAP_UPDATE_ARRAY(ConfigKey::PathsWithTexturePage, paths_with_texture_page);
+          MAP_UPDATE_ARRAY(ConfigKey::PathPatternsCommonUpscale, paths_common_upscale);
+          MAP_UPDATE_ARRAY(ConfigKey::PathPatternsCommonUpscaleForMaps, paths_common_upscale_for_maps);
+          MAP_UPDATE_ARRAY(ConfigKey::PathPatternsNoPaletteAndTexturePage, paths_no_palette_and_texture_page);
+          MAP_UPDATE_ARRAY(ConfigKey::PathPatternsWithPaletteAndTexturePage, paths_with_palette_and_texture_page);
+          MAP_UPDATE_ARRAY(ConfigKey::PathPatternsWithPupuID, paths_with_pupu_id);
+          MAP_UPDATE_ARRAY(ConfigKey::PathPatternsWithTexturePage, paths_with_texture_page);
+          MAP_UPDATE_ARRAY(ConfigKey::PathsVector, paths_vector);
+          MAP_UPDATE_ARRAY(ConfigKey::PathsVectorUpscale, paths_vector_upscale);
           MAP_MACRO(ConfigKey::RenderImportedImage, render_imported_image);
           MAP_MACRO(ConfigKey::SelectedTile, selected_tile);
           MAP_MACRO(ConfigKey::SelectionsPath, path);
           MAP_MACRO(ConfigKey::StarterField, starter_field);
           MAP_MACRO(ConfigKey::SwizzlePath, swizzle_path);
           MAP_MACRO_UNDERLYING(ConfigKey::TileSizeValue, tile_size_value);
+          MAP_MACRO(ConfigKey::UpscalePathsIndex, upscale_paths_index);
           MAP_MACRO(ConfigKey::WindowHeight, window_height);
           MAP_MACRO(ConfigKey::WindowWidth, window_width);
 

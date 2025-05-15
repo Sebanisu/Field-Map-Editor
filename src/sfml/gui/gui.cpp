@@ -357,7 +357,7 @@ void gui::control_panel_window()
      }
      combo_path();
 
-     if (m_paths.empty())
+     if (m_selections->paths_vector.empty())
      {
           return;
      }
@@ -2126,37 +2126,32 @@ void gui::browse_buttons()
      }
      tool_tip(gui_labels::locate_a_ff8_install);
      ImGui::SameLine();
-     ImGui::BeginDisabled(std::ranges::empty(m_paths));
+     ImGui::BeginDisabled(std::ranges::empty(m_selections->paths_vector));
      if (ImGui::Button(gui_labels::explore.data()))
      {
           open_directory(m_selections->path);
      }
      tool_tip(gui_labels::explore_tooltip);
      ImGui::SameLine();
-     m_paths;
      if (ImGui::Button(gui_labels::remove.data()))
      {
-          // Find and remove the selected path from m_paths
-          auto it = std::ranges::find_if(m_paths, [&](toml::node &item) { return item.value_or<std::string>({}) == m_selections->path; });
-          if (it != m_paths.end())
+          // Find and remove the selected path from m_selections->paths
+          auto it = std::ranges::find(m_selections->paths_vector, m_selections->path);
+          if (it != m_selections->paths_vector.end())
           {
 
-               bool selected = it->value_or<std::string>({}) == m_selections->path;
-               m_paths.erase(it);
-               ///TODO:: Move the Paths Vector to selections.
-               //m_selections->update_configuration_key(ConfigKey::PathsVector);
-               Configuration config{};
-               config->insert_or_assign("paths_vector", m_paths);
-               config.save();
+               bool selected = *it == m_selections->path;
+               m_selections->paths_vector.erase(it);
+               m_selections->update_configuration_key(ConfigKey::PathsVector);
                if (selected)
                {
-                    if (std::ranges::empty(m_paths))
+                    if (std::ranges::empty(m_selections->paths_vector))
                     {
                          m_selections->path = "";
                     }
                     else
                     {
-                         m_selections->path = m_paths.begin()->value_or<std::string>({});
+                         m_selections->path = m_selections->paths_vector.front();
                     }
                     refresh_path();
                }
@@ -2176,7 +2171,7 @@ void gui::file_menu()
      {
           const auto end_menu1 = scope_guard(&ImGui::EndMenu);
           menuitem_locate_ff8();
-          if (ImGui::MenuItem(gui_labels::explore.data(), nullptr, nullptr, !std::ranges::empty(m_paths)))
+          if (ImGui::MenuItem(gui_labels::explore.data(), nullptr, nullptr, !std::ranges::empty(m_selections->paths_vector)))
           {
                open_directory(m_selections->path);
           }
@@ -2184,19 +2179,17 @@ void gui::file_menu()
           {
                tool_tip(gui_labels::explore_tooltip);
           }
-          if (std::ranges::empty(m_paths))
+          if (std::ranges::empty(m_selections->paths_vector))
           {
                return;
           }
           ImGui::Separator();
-          const auto transformed_paths =
-            m_paths | std::ranges::views::transform([](toml::node &item) -> std::string { return item.value_or<std::string>({}); });
 
           std::ptrdiff_t delete_me = -1;
           if (ImGui::BeginTable("##path_table", 2))
           {
                const auto end_table = scope_guard(&ImGui::EndTable);
-               for (const auto &[index, path] : transformed_paths | std::ranges::views::enumerate)
+               for (const auto &[index, path] : m_selections->paths_vector | std::ranges::views::enumerate)
                {
                     bool is_checked = path == m_selections->path;
                     ImGui::TableNextColumn();
@@ -2222,25 +2215,23 @@ void gui::file_menu()
           }
           if (std::cmp_greater(delete_me, -1))
           {
-               auto it = std::ranges::begin(m_paths);
+               auto it = std::ranges::begin(m_selections->paths_vector);
                std::ranges::advance(it, delete_me);
-               if (it != std::ranges::end(m_paths))
+               if (it != std::ranges::end(m_selections->paths_vector))
                {
 
-                    bool selected = it->value_or<std::string>({}) == m_selections->path;
-                    m_paths.erase(it);
-                    Configuration config{};
-                    config->insert_or_assign("paths_vector", m_paths);
-                    config.save();
+                    bool selected = *it == m_selections->path;
+                    m_selections->paths_vector.erase(it);
+                    m_selections->update_configuration_key(ConfigKey::PathsVector);
                     if (selected)
                     {
-                         if (std::ranges::empty(m_paths))
+                         if (std::ranges::empty(m_selections->paths_vector))
                          {
                               m_selections->path = "";
                          }
                          else
                          {
-                              m_selections->path = m_paths.begin()->value_or<std::string>({});
+                              m_selections->path = m_selections->paths_vector.front();
                          }
                          refresh_path();
                     }
@@ -2378,26 +2369,23 @@ void gui::menu_upscale_paths()
                     tool_tip(m_map_sprite->filter().upscale.value().string());
                }
 
-               const auto transformed_paths =
-                 m_custom_upscale_paths
-                 | std::ranges::views::transform([](toml::node &item) -> std::string { return item.value_or<std::string>({}); })
-                 | std::ranges::views::enumerate;
+               const auto     transformed_paths = m_selections->paths_vector_upscale | std::ranges::views::enumerate;
 
-               std::ptrdiff_t delete_me    = -1;
-               static float   elapsed_time = 0.0f;// Track elapsed time
+               std::ptrdiff_t delete_me         = -1;
+               static float   elapsed_time      = 0.0f;// Track elapsed time
 
                elapsed_time += ImGui::GetIO().DeltaTime;// Increment with frame delta time
                static constexpr size_t max_display_chars = 50;
                static constexpr float  chars_per_second  = 8.0f;
                [&]() {
-                    if (std::ranges::empty(m_custom_upscale_paths))
+                    if (std::ranges::empty(m_selections->paths_vector_upscale))
                     {
                          return;
                     }
                     ImGui::Separator();
                     if (ImGui::BeginTable("##path_table", 2))
                     {
-                         if (std::ranges::empty(m_custom_upscale_paths))
+                         if (std::ranges::empty(m_selections->paths_vector_upscale))
                          {
                               return;
                          }
@@ -2504,25 +2492,24 @@ void gui::menu_upscale_paths()
                     }
                     if (std::cmp_greater(delete_me, -1))
                     {
-                         auto it = std::ranges::begin(m_custom_upscale_paths);
+                         auto it = std::ranges::begin(m_selections->paths_vector_upscale);
                          std::ranges::advance(it, delete_me);
-                         if (it != std::ranges::end(m_custom_upscale_paths))
+                         if (it != std::ranges::end(m_selections->paths_vector_upscale))
                          {
 
-                              bool selected = it->value_or<std::string>({}) == m_map_sprite->filter().upscale.value();
-                              m_custom_upscale_paths.erase(it);
-                              Configuration config{};
-                              config->insert_or_assign("custom_upscale_paths_vector", m_custom_upscale_paths);
-                              config.save();
+                              bool selected = *it == m_map_sprite->filter().upscale.value();
+                              m_selections->paths_vector_upscale.erase(it);
+                              m_selections->update_configuration_key(ConfigKey::PathsVectorUpscale);
+
                               if (selected)
                               {
-                                   if (std::ranges::empty(m_custom_upscale_paths))
+                                   if (std::ranges::empty(m_selections->paths_vector_upscale))
                                    {
                                         m_map_sprite->filter().upscale.update("");
                                    }
                                    else
                                    {
-                                        m_map_sprite->filter().upscale.update(m_custom_upscale_paths.begin()->value_or<std::string>({}));
+                                        m_map_sprite->filter().upscale.update(m_selections->paths_vector_upscale.front());
                                    }
                                    refresh_render_texture(true);
                               }
@@ -2576,17 +2563,15 @@ void gui::directory_browser_display()
           case map_directory_mode::ff8_install_directory: {
                m_selections->path = selected_path.string();
                m_selections->update_configuration_key(ConfigKey::SelectionsPath);
-               m_paths.push_back(selected_path.string());
+               m_selections->paths_vector.push_back(selected_path.string());
+               m_selections->update_configuration_key(ConfigKey::PathsVector);
                sort_paths();
                update_path();
           }
           break;
           case map_directory_mode::save_swizzle_textures: {
-               Configuration config{};
-               config->insert_or_assign("swizzle_path", selected_path.string());
-               selected_path = path_with_prefix_and_base_name(std::move(selected_path));
-               config->insert_or_assign("single_swizzle_path", selected_path.string());
-               config.save();
+               m_selections->swizzle_path = selected_path.string();
+               m_selections->update_configuration_key(ConfigKey::SwizzlePath);
                std::error_code error_code{};
                std::filesystem::create_directories(selected_path, error_code);
                if (error_code)
@@ -2615,11 +2600,8 @@ void gui::directory_browser_display()
           }
           break;
           case map_directory_mode::save_deswizzle_textures: {
-               Configuration config{};
-               config->insert_or_assign("deswizzle_path", selected_path.string());
-               selected_path = path_with_prefix_and_base_name(std::move(selected_path));
-               config->insert_or_assign("single_deswizzle_path", selected_path.string());
-               config.save();
+               m_selections->deswizzle_path = selected_path.string();
+               m_selections->update_configuration_key(ConfigKey::DeswizzlePath);
                std::error_code error_code{};
                std::filesystem::create_directories(selected_path, error_code);
                if (error_code)
@@ -2643,9 +2625,9 @@ void gui::directory_browser_display()
           }
           break;
           case map_directory_mode::load_swizzle_textures: {
-               Configuration config{};
-               config->insert_or_assign("single_swizzle_path", selected_path.string());
-               config.save();
+               m_selections->swizzle_path = selected_path.string();
+               m_selections->update_configuration_key(ConfigKey::SwizzlePath);
+               /// TODO might need to update this to use the patterns.
                m_loaded_swizzle_texture_path = selected_path;
                if (m_field)
                {
@@ -2663,9 +2645,9 @@ void gui::directory_browser_display()
           }
           break;
           case map_directory_mode::load_deswizzle_textures: {
-               Configuration config{};
-               config->insert_or_assign("single_deswizzle_path", selected_path.string());
-               config.save();
+               m_selections->deswizzle_path = selected_path.string();
+               m_selections->update_configuration_key(ConfigKey::DeswizzlePath);
+               /// TODO might need to update this to use the patterns.
                m_loaded_deswizzle_texture_path = selected_path;
                m_map_sprite->filter().upscale.disable();
                m_map_sprite->filter().deswizzle.update(m_loaded_deswizzle_texture_path).enable();
@@ -2679,11 +2661,9 @@ void gui::directory_browser_display()
           }
           break;
           case map_directory_mode::custom_upscale_directory: {
-               m_custom_upscale_paths.push_back(selected_path.string());
+               m_selections->paths_vector_upscale.push_back(selected_path.string());
+               m_selections->update_configuration_key(ConfigKey::PathsVectorUpscale);
                // todo remove paths that don't exist.
-               Configuration config{};
-               config->insert_or_assign("custom_upscale_paths_vector", m_custom_upscale_paths);
-               config.save();
                if (m_field)
                {
                     generate_upscale_paths(std::string{ m_field->get_base_name() }, get_coo());
@@ -2704,37 +2684,24 @@ std::filesystem::path gui::path_with_prefix_and_base_name(std::filesystem::path 
 /**
  * @brief Sorts and deduplicates the stored paths.
  *
- * This function reads the current paths from `m_paths`, sorts them alphabetically,
+ * This function reads the current paths from `m_selections->paths`, sorts them alphabetically,
  * and removes duplicates. If the paths are already sorted and unique, no action is taken.
  * After modification, the updated paths are saved back into the configuration.
  *
  * @note Paths that do not exist on the filesystem are TODO: not yet removed.
  */
 void gui::sort_paths()
-{
-     // todo: remove paths that don't exist.
-
-     std::vector<std::string> tmp;
-     tmp.reserve(std::ranges::size(m_paths));
-     std::ranges::transform(m_paths, std::back_inserter(tmp), [](const toml::node &node) { return node.value_or(std::string{}); });
-
-     // Check if already sorted and unique
-     bool already_sorted = std::ranges::is_sorted(tmp);
-     bool already_unique = std::ranges::adjacent_find(tmp) == tmp.end();
+{// Check if already sorted and unique
+     bool already_sorted = std::ranges::is_sorted(m_selections->paths_vector);
+     bool already_unique = std::ranges::adjacent_find(m_selections->paths_vector) == m_selections->paths_vector.end();
 
      if (already_sorted && already_unique)
           return;// Nothing to do
 
-     std::ranges::sort(tmp);
-     const auto removal = std::ranges::unique(tmp);
-     tmp.erase(removal.begin(), removal.end());
-
-     m_paths.clear();
-     std::ranges::for_each(tmp, [this](std::string &str) { m_paths.push_back(std::move(str)); });
-
-     Configuration config{};
-     config->insert_or_assign("paths_vector", m_paths);
-     config.save();
+     std::ranges::sort(m_selections->paths_vector);
+     const auto removal = std::ranges::unique(m_selections->paths_vector);
+     m_selections->paths_vector.erase(removal.begin(), removal.end());
+     m_selections->update_configuration_key(ConfigKey::PathsVector);
 }
 
 void gui::file_browser_save_texture()
@@ -2742,28 +2709,29 @@ void gui::file_browser_save_texture()
      m_save_file_browser.Display();
      if (m_save_file_browser.HasSelected())
      {
-          [[maybe_unused]] const auto selected_path = m_save_file_browser.GetSelected();
+          [[maybe_unused]] const auto &selected_path      = m_save_file_browser.GetSelected();
+          [[maybe_unused]] const auto &selected_directory = m_save_file_browser.GetDirectory();
           if (mim_test())
           {
                switch (m_file_dialog_mode)
                {
                     case file_dialog_mode::save_mim_file: {
                          m_mim_sprite.mim_save(selected_path);
-                         Configuration config{};
-                         config->insert_or_assign("mim_path", m_save_file_browser.GetPwd().string());
-                         config.save();
+                         m_selections->output_mim_path = selected_directory.string();
+                         m_selections->update_configuration_key(ConfigKey::OutputMimPath);
+                         open_file_explorer(selected_path);
                     }
                     break;
                     case file_dialog_mode::save_image_file: {
                          m_mim_sprite.save(selected_path);
-                         Configuration config{};
-                         config->insert_or_assign("save_image_path", m_save_file_browser.GetPwd().string());
-                         config.save();
+                         m_selections->output_image_path = selected_directory.string();
+                         m_selections->update_configuration_key(ConfigKey::OutputImagePath);
+                         open_file_explorer(selected_path);
                     }
                     break;
-                    case file_dialog_mode::save_unmodified_map_file:
-                    case file_dialog_mode::save_modified_map_file:
-                    case file_dialog_mode::load_map_file:
+                    default:
+                         spdlog::warn(
+                           "{}:{} m_file_dialog_mode ({}) unused by mim", __FILE__, __LINE__, std::to_underlying(m_file_dialog_mode));
                          break;
                }
           }
@@ -2773,37 +2741,35 @@ void gui::file_browser_save_texture()
                {
                     case file_dialog_mode::save_modified_map_file: {
                          m_map_sprite->save_modified_map(selected_path);
-                         Configuration config{};
-                         config->insert_or_assign("map_path", m_save_file_browser.GetPwd().string());
-                         config.save();
+                         m_selections->output_map_path = selected_directory.string();
+                         m_selections->update_configuration_key(ConfigKey::OutputMapPath);
                          open_file_explorer(selected_path);
                     }
                     break;
                     case file_dialog_mode::save_unmodified_map_file: {
                          m_map_sprite->map_save(selected_path);
-                         Configuration config{};
-                         config->insert_or_assign("map_path", m_save_file_browser.GetPwd().string());
-                         config.save();
+                         m_selections->output_map_path = selected_directory.string();
+                         m_selections->update_configuration_key(ConfigKey::OutputMapPath);
                          open_file_explorer(selected_path);
                     }
                     break;
                     case file_dialog_mode::load_map_file: {
                          m_map_sprite->load_map(selected_path);
-                         Configuration config{};
-                         config->insert_or_assign("map_path", m_save_file_browser.GetPwd().string());
-                         config.save();
+                         m_selections->output_map_path = selected_directory.string();
+                         m_selections->update_configuration_key(ConfigKey::OutputMapPath);
                          m_changed = true;
                     }
                     break;
                     case file_dialog_mode::save_image_file: {
                          m_map_sprite->save(selected_path);
-                         Configuration config{};
-                         config->insert_or_assign("save_image_path", m_save_file_browser.GetPwd().string());
-                         config.save();
+                         m_selections->output_image_path = selected_directory.string();
+                         m_selections->update_configuration_key(ConfigKey::OutputImagePath);
                          open_file_explorer(selected_path);
                     }
                     break;
-                    case file_dialog_mode::save_mim_file:
+                    default:
+                         spdlog::warn(
+                           "{}:{} m_file_dialog_mode ({}) unused by map", __FILE__, __LINE__, std::to_underlying(m_file_dialog_mode));
                          break;
                }
           }
@@ -2825,7 +2791,7 @@ void gui::open_locate_ff8_filebrowser()
 {
      m_directory_browser.Open();
      m_directory_browser.SetTitle(gui_labels::choose_a_ff8_install.data());
-     m_directory_browser.SetPwd(m_selections->path);
+     m_directory_browser.SetDirectory(m_selections->path);
      m_directory_browser.SetTypeFilters({ ".exe" });
      m_modified_directory_map = map_directory_mode::ff8_install_directory;
 }
@@ -2856,7 +2822,7 @@ void gui::save_swizzle_textures()
 {
      m_directory_browser.Open();
      m_directory_browser.SetTitle(m_map_sprite->appends_prefix_base_name(gui_labels::choose_directory_to_save_textures_to));
-     m_directory_browser.SetPwd(Configuration{}["swizzle_path"].value_or(std::filesystem::current_path().string()));
+     m_directory_browser.SetDirectory(m_selections->swizzle_path);
      m_directory_browser.SetTypeFilters({ ".map", ".png" });
      m_modified_directory_map = map_directory_mode::save_swizzle_textures;
 }
@@ -2866,7 +2832,7 @@ void gui::menuitem_save_deswizzle_textures()
      {
           m_directory_browser.Open();
           m_directory_browser.SetTitle(m_map_sprite->appends_prefix_base_name(gui_labels::choose_directory_to_save_textures_to));
-          m_directory_browser.SetPwd(Configuration{}["deswizzle_path"].value_or(std::filesystem::current_path().string()));
+          m_directory_browser.SetDirectory(m_selections->deswizzle_path);
           m_directory_browser.SetTypeFilters({ ".map", ".png" });
           m_modified_directory_map = map_directory_mode::save_deswizzle_textures;
      }
@@ -2879,7 +2845,7 @@ void gui::menuitem_load_swizzle_textures()
      }
      m_directory_browser.Open();
      m_directory_browser.SetTitle(gui_labels::choose_directory_to_load_textures_from.data());
-     m_directory_browser.SetPwd(Configuration{}["single_swizzle_path"].value_or(std::filesystem::current_path().string()));
+     m_directory_browser.SetDirectory(m_selections->swizzle_path);
      m_directory_browser.SetTypeFilters({ ".map", ".png" });
      m_modified_directory_map = map_directory_mode::load_swizzle_textures;
 }
@@ -2889,7 +2855,7 @@ void gui::menuitem_load_deswizzle_textures()
           return;
      m_directory_browser.Open();
      m_directory_browser.SetTitle(gui_labels::choose_directory_to_load_textures_from.data());
-     m_directory_browser.SetPwd(Configuration{}["single_deswizzle_path"].value_or(std::filesystem::current_path().string()));
+     m_directory_browser.SetDirectory(m_selections->deswizzle_path);
      m_directory_browser.SetTypeFilters({ ".map", ".png" });
      m_modified_directory_map = map_directory_mode::load_deswizzle_textures;
 }
@@ -2906,7 +2872,7 @@ void gui::menuitem_save_texture(bool enabled)
      const std::string &path = save_texture_path();
      m_save_file_browser.Open();
      m_save_file_browser.SetTitle(gui_labels::save_texture_as.data());
-     m_save_file_browser.SetPwd(Configuration{}["save_image_path"].value_or(std::filesystem::current_path().string()));
+     m_save_file_browser.SetDirectory(m_selections->output_image_path);
      m_save_file_browser.SetTypeFilters({ ".png", ".ppm" });
      m_save_file_browser.SetInputName(path.c_str());
      m_file_dialog_mode = file_dialog_mode::save_image_file;
@@ -2920,7 +2886,7 @@ void gui::menuitem_save_mim_file(bool enabled)
      const std::string &path = m_mim_sprite.mim_filename();
      m_save_file_browser.Open();
      m_save_file_browser.SetTitle(gui_labels::save_mim_as.data());
-     m_save_file_browser.SetPwd(Configuration{}["mim_path"].value_or(std::filesystem::current_path().string()));
+     m_save_file_browser.SetDirectory(m_selections->output_mim_path);
      m_save_file_browser.SetTypeFilters({ Mim::EXT.data() });
      m_save_file_browser.SetInputName(path);
      m_file_dialog_mode = file_dialog_mode::save_mim_file;
@@ -2934,7 +2900,7 @@ void gui::menuitem_save_map_file(bool enabled)
      const std::string &path = m_map_sprite->map_filename();
      m_save_file_browser.Open();
      m_save_file_browser.SetTitle(gui_labels::save_map_as.data());
-     m_save_file_browser.SetPwd(Configuration{}["map_path"].value_or(std::filesystem::current_path().string()));
+     m_save_file_browser.SetDirectory(m_selections->output_map_path);
      m_save_file_browser.SetTypeFilters({ Map::EXT.data() });
      m_save_file_browser.SetInputName(path);
      m_file_dialog_mode = file_dialog_mode::save_unmodified_map_file;
@@ -2948,7 +2914,7 @@ void gui::menuitem_save_map_file_modified(bool enabled)
      const std::string &path = m_map_sprite->map_filename();
      m_save_file_browser.Open();
      m_save_file_browser.SetTitle(gui_labels::save_map_as.data());
-     m_save_file_browser.SetPwd(Configuration{}["map_path"].value_or(std::filesystem::current_path().string()));
+     m_save_file_browser.SetDirectory(m_selections->output_map_path);
      m_save_file_browser.SetTypeFilters({ Map::EXT.data() });
      m_save_file_browser.SetInputName(path);
      m_file_dialog_mode = file_dialog_mode::save_modified_map_file;
@@ -2962,16 +2928,14 @@ void gui::menuitem_load_map_file(bool enabled)
      const std::string &path = m_map_sprite->map_filename();
      m_load_file_browser.Open();
      m_load_file_browser.SetTitle(gui_labels::load_map.data());
-     m_load_file_browser.SetPwd(Configuration{}["map_path"].value_or(std::filesystem::current_path().string()));
+     m_load_file_browser.SetDirectory(m_selections->output_map_path);
      m_load_file_browser.SetTypeFilters({ Map::EXT.data() });
      m_load_file_browser.SetInputName(path);
      m_file_dialog_mode = file_dialog_mode::load_map_file;
 }
 void gui::refresh_draw_mode()
 {
-     Configuration config{};
-     config->insert_or_assign("selections_draw", static_cast<std::underlying_type_t<draw_mode>>(m_selections->draw));
-     config.save();
+     m_selections->update_configuration_key(ConfigKey::Draw);
      switch (m_selections->draw)
      {
           case draw_mode::draw_mim:
@@ -3005,11 +2969,9 @@ void gui::combo_draw()
 bool gui::combo_path()
 {
      const auto pop_buttons = scope_guard([&]() { browse_buttons(); });
-     const auto transformed_paths =
-       m_paths | std::ranges::views::transform([](toml::node &item) -> std::string { return item.value_or<std::string>({}); });
-     const auto gcc =
-       GenericComboClass(gui_labels::path, [&]() { return transformed_paths; }, [&]() { return transformed_paths; }, m_selections->path, 1);
-     if (!m_paths.empty() && gcc.render())
+     const auto gcc         = GenericComboClass(
+       gui_labels::path, [&]() { return m_selections->paths_vector; }, [&]() { return m_selections->paths_vector; }, m_selections->path, 1);
+     if (!m_selections->paths_vector.empty() && gcc.render())
      {
           refresh_path();
           return true;
@@ -3019,43 +2981,11 @@ bool gui::combo_path()
 
 void gui::refresh_path()
 {
-     Configuration config{};
-     config->insert_or_assign("selections_path", m_selections->path);
-     config.save();
+     m_selections->update_configuration_key(ConfigKey::SelectionsPath);
      m_selections->refresh_ffnx_paths();
      update_path();
 }
 
-
-toml::array gui::get_paths()
-{
-     const char   *paths_vector = "paths_vector";
-     Configuration config{};
-     if (!config->contains(paths_vector))
-     {
-          const auto &default_paths = open_viii::Paths::get();
-          // todo get all default paths for linux and windows.
-          toml::array paths_array{};
-          paths_array.reserve(default_paths.size());
-          for (const auto &path : default_paths)
-          {
-               paths_array.push_back(path);
-          }
-          config->insert_or_assign(paths_vector, std::move(paths_array));
-          config.save();
-     }
-     return *(config->get_as<toml::array>(paths_vector));
-}
-toml::array gui::get_custom_upscale_paths_vector()
-{
-     const char   *paths_vector = "custom_upscale_paths_vector";
-     Configuration config{};
-     if (!config->contains(paths_vector))
-     {
-          return {};
-     }
-     return *(config->get_as<toml::array>(paths_vector));
-}
 void gui::loop_events()
 {
      m_mouse_positions.update();
@@ -3170,53 +3100,39 @@ void gui::event_type_key_released(const sf::Event::KeyEvent &key)
      else if (key.control && key.code == sf::Keyboard::H)
      {
           m_selections->display_history_window = !m_selections->display_history_window;
-          Configuration config{};
-          config->insert_or_assign("selections_display_history_window", m_selections->display_history_window);
-          config.save();
+          m_selections->update_configuration_key(ConfigKey::DisplayHistoryWindow);
      }
      else if (key.control && key.code == sf::Keyboard::I)
      {
           m_selections->display_import_image = !m_selections->display_import_image;
-          Configuration config{};
-          config->insert_or_assign("selections_display_import_image", m_selections->display_import_image);
-          config.save();
+          m_selections->update_configuration_key(ConfigKey::DisplayImportImage);
      }
      else if (key.control && key.code == sf::Keyboard::B)
      {
           m_selections->display_batch_window = !m_selections->display_batch_window;
-          Configuration config{};
-          config->insert_or_assign("selections_display_batch_window", m_selections->display_batch_window);
-          config.save();
+          m_selections->update_configuration_key(ConfigKey::DisplayBatchWindow);
      }
      else if (key.control && key.code == sf::Keyboard::D)
      {
           m_selections->display_draw_window = !m_selections->display_draw_window;
-          Configuration config{};
-          config->insert_or_assign("selections_display_draw_window", m_selections->display_draw_window);
-          config.save();
+          m_selections->update_configuration_key(ConfigKey::DisplayDrawWindow);
      }
      else if (key.control && key.code == sf::Keyboard::U)
      {
           m_selections->display_custom_paths_window = !m_selections->display_custom_paths_window;
-          Configuration config{};
-          config->insert_or_assign("selections_display_custom_paths_window", m_selections->display_custom_paths_window);
-          config.save();
+          m_selections->update_configuration_key(ConfigKey::DisplayCustomPathsWindow);
      }
 
      else if (key.control && key.code == sf::Keyboard::F)
      {
           m_selections->display_field_file_window = !m_selections->display_field_file_window;
-          Configuration config{};
-          config->insert_or_assign("selections_display_field_file_window", m_selections->display_field_file_window);
-          config.save();
+          m_selections->update_configuration_key(ConfigKey::DisplayFieldFileWindow);
      }
 
      else if (key.control && key.code == sf::Keyboard::P)
      {
           m_selections->display_control_panel_window = !m_selections->display_control_panel_window;
-          Configuration config{};
-          config->insert_or_assign("selections_display_control_panel_window", m_selections->display_control_panel_window);
-          config.save();
+          m_selections->update_configuration_key(ConfigKey::DisplayControlPanelWindow);
      }
 }
 std::uint32_t gui::image_height() const
@@ -3352,8 +3268,6 @@ void main()
 }
 gui::gui()
   : m_window(get_render_window())
-  , m_paths(get_paths())
-  , m_custom_upscale_paths(get_custom_upscale_paths_vector())
   , m_archives_group(std::make_shared<archives_group>(get_archives_group()))
   , m_field(init_field())
   , m_mim_sprite(get_mim_sprite())
@@ -3464,9 +3378,7 @@ void gui::refresh_palette(std::uint8_t palette)
      else
      {
           // filter saves config now but mim doens't use filter.
-          Configuration config{};
-          config->insert_or_assign("selections_palette", m_selections->palette);
-          config.save();
+          m_selections->update_configuration_key(ConfigKey::Palette);
      }
      if (mim_test())
      {
@@ -3691,17 +3603,15 @@ void gui::combo_upscale_path()
 void gui::generate_upscale_paths(const std::string &field_name, open_viii::LangT coo)
 {
      m_upscale_paths.clear();
-     auto transform_paths = m_paths
-                            | std::views::transform([](const toml::node &item) -> std::string { return item.value_or(std::string{}); })
-                            | std::views::transform([this, &coo](const std::string &path) {
-                                   if (m_field)
-                                   {
-                                        return upscales(path, coo, m_selections).get_paths();
-                                   }
-                                   return upscales{ m_selections }.get_paths();
-                              });
+     auto transform_paths = m_selections->paths_vector | std::views::transform([this, &coo](const std::string &path) {
+                                 if (m_field)
+                                 {
+                                      return upscales(path, coo, m_selections).get_paths();
+                                 }
+                                 return upscales{ m_selections }.get_paths();
+                            });
      // std::views::join; broken in msvc.
-     auto process = [this](const auto &temp_paths) {
+     auto process         = [this](const auto &temp_paths) {
           for (const auto &path : temp_paths)
           {
                m_upscale_paths.emplace_back(path.string());
@@ -3718,9 +3628,9 @@ void gui::generate_upscale_paths(const std::string &field_name, open_viii::LangT
      if (m_field)
      {
           process(upscales(field_name, coo, m_selections).get_paths());
-          for (const auto &upscale_path : m_custom_upscale_paths)
+          for (const auto &upscale_path : m_selections->paths_vector_upscale)
           {
-               process(upscales(upscale_path.value_or(std::string{}), coo, m_selections).get_paths());
+               process(upscales(upscale_path, coo, m_selections).get_paths());
           }
      }
      std::ranges::sort(m_upscale_paths);
@@ -3741,18 +3651,16 @@ bool gui::combo_upscale_path(ff_8::filter_old<std::filesystem::path, ff_8::Filte
 
 bool gui::combo_upscale_path(std::filesystem::path &path, const std::string &field_name, open_viii::LangT coo) const
 {
-     std::vector<std::string> paths           = {};
-     auto                     transform_paths = m_paths
-                            | std::views::transform([](const toml::node &item) -> std::string { return item.value_or(std::string{}); })
-                            | std::views::transform([this, &coo](const std::string &in_path) {
-                                   if (m_field)
-                                   {
-                                        return upscales(in_path, coo, m_selections).get_paths();
-                                   }
-                                   return upscales{ m_selections }.get_paths();
-                              });
+     std::vector<std::string> paths = {};
+     auto transform_paths           = m_selections->paths_vector | std::views::transform([this, &coo](const std::string &in_path) {
+                                 if (m_field)
+                                 {
+                                      return upscales(in_path, coo, m_selections).get_paths();
+                                 }
+                                 return upscales{ m_selections }.get_paths();
+                            });
      // std::views::join; broken in msvc.
-     auto process = [&paths](const auto &temp_paths) {
+     auto process                   = [&paths](const auto &temp_paths) {
           for (const auto &in_path : temp_paths)
           {
                paths.emplace_back(in_path.string());

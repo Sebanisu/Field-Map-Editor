@@ -12,6 +12,7 @@
 #include <filesystem>
 #include <open_viii/graphics/background/BlendModeT.hpp>
 #include <open_viii/graphics/BPPT.hpp>
+#include <open_viii/paths/Paths.hpp>
 #include <open_viii/strings/LangT.hpp>
 #include <spdlog/spdlog.h>
 namespace fme
@@ -37,6 +38,7 @@ enum class ConfigKey
      DisplayBatchWindow,
      DisplayImportImage,
      ImportImageGrid,
+     ImportLoadImageDirectory,
      TileSizeValue,
      DisplayHistoryWindow,
      DisplayControlPanelWindow,
@@ -57,12 +59,14 @@ enum class ConfigKey
      BatchOutputPath,
      BatchInputLoadMap,
      BatchOutputSaveMap,
-     PathsWithPaletteAndTexturePage,
-     PathsWithTexturePage,
-     PathsWithPupuID,
-     PathsNoPaletteAndTexturePage,
-     PathsCommonUpscale,
-     PathsCommonUpscaleForMaps,
+     PathPatternsWithPaletteAndTexturePage,
+     PathPatternsWithTexturePage,
+     PathPatternsWithPupuID,
+     PathPatternsNoPaletteAndTexturePage,
+     PathPatternsCommonUpscale,
+     PathPatternsCommonUpscaleForMaps,
+     PathsVector,
+     PathsVectorUpscale,
      BatchCompact,
      BatchCompactType,
      BatchCompactEnabled,
@@ -71,8 +75,12 @@ enum class ConfigKey
      BatchFlattenEnabled,
      SwizzlePath,
      DeswizzlePath,
-     // Add more as needed
-     All,
+     OutputImagePath,
+     OutputMimPath,
+     OutputMapPath,
+     UpscalePathsIndex,
+       // Add more as needed
+       All,
 };
 /**
  * @brief Manages various settings and selections for the application.
@@ -116,6 +124,7 @@ struct Selections
      open_viii::LangT               coo                            = {};///< Selected language.
      draw_mode                      draw                           = { draw_mode::draw_map };///< Current drawing mode.
      int                            selected_tile                  = { -1 };///< Index of the currently selected tile.
+     int                            upscale_paths_index            = {};
      std::uint32_t                  window_width                   = { window_width_default };///< Current window width.
      std::uint32_t                  window_height                  = { window_height_default };///< Current window height.
      tile_sizes                     tile_size_value                = { tile_sizes::default_size };///< Current tile size setting.
@@ -145,6 +154,10 @@ struct Selections
      std::string                    output_map_pattern_for_deswizzle = { "{selected_path}\\deswizzle\\{demaster}" };
      std::string                    swizzle_path                     = { path };
      std::string                    deswizzle_path                   = { path };
+     std::string                    output_map_path                  = { path };
+     std::string                    output_mim_path                  = { path };
+     std::string                    output_image_path                = { path };
+     std::string                    import_load_image_directory      = { path };
      PatternSelector                current_pattern                  = {};
      color           background_color            = { fme::colors::White };///< Remember to user's selected Background Color for draw Window.
 
@@ -250,6 +263,14 @@ struct Selections
           assert(fme::key_value_data::has_balanced_braces(ret));
           return ret;
      }();
+
+
+     std::vector<std::string> paths_vector = []() -> std::vector<std::string> {
+          const auto &default_paths = open_viii::Paths::get();
+          return { default_paths.begin(), default_paths.end() };
+     }();
+
+     std::vector<std::string> paths_vector_upscale          = {};
 
      std::vector<std::string> paths_common_upscale_for_maps = []() {
           const auto ret =

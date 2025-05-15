@@ -62,8 +62,6 @@ struct gui
      sf::RenderWindow                                                    m_window               = {};
      sf::Clock                                                           m_delta_clock          = {};
      sf::Time                                                            m_elapsed_time         = {};
-     toml::array                                                         m_paths                = {};
-     toml::array                                                         m_custom_upscale_paths = {};
      std::shared_ptr<archives_group>                                     m_archives_group       = {};
      batch                                                               m_batch         = fme::batch{ m_selections, m_archives_group };
      std::vector<std::string>                                            m_upscale_paths = {};
@@ -98,7 +96,6 @@ struct gui
 
      std::array<float, 3U>       clear_color_f{};
 
-     static toml::array          get_paths();
      // imgui doesn't support std::string or std::string_view or
      // std::filesystem::path, only const char *
      archives_group              get_archives_group() const;
@@ -197,7 +194,6 @@ struct gui
      [[nodiscard]] bool                        browse_for_image_display_preview();
      void                                      generate_upscale_paths(const std::string &field_name, open_viii::LangT coo);
      void                                      menuitem_locate_custom_upscale();
-     static toml::array                        get_custom_upscale_paths_vector();
      void                                      save_swizzle_textures();
      void                                      reset_imported_image();
      void                                      sort_paths();
