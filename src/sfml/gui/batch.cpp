@@ -189,7 +189,7 @@ void fme::batch::example_input_paths()
        "DeSwizzleOutputExampleTable",
        png_example.replace_tags(fme::batch::get_output_pattern(selections->batch_input_type), selections, selected_string),
        map_example.replace_tags(fme::batch::get_output_map_pattern(selections->batch_input_type), selections, selected_string),
-       selections->batch_save_map);
+       selections->batch_output_save_map);
 }
 
 const std::string &fme::batch::get_output_pattern(fme::input_types type)
@@ -301,7 +301,7 @@ void fme::batch::example_output_paths()
        "DeSwizzleOutputExampleTable",
        png_example.replace_tags(fme::batch::get_output_pattern(selections->batch_output_type), selections, selected_string),
        map_example.replace_tags(fme::batch::get_output_map_pattern(selections->batch_output_type), selections, selected_string),
-       selections->batch_save_map);
+       selections->batch_output_save_map);
 }
 
 void fme::batch::browse_input_path()
@@ -499,16 +499,16 @@ void fme::batch::checkmark_save_map()
      }
      bool changed = false;
      bool forced  = (selections->batch_compact_type.enabled() || selections->batch_flatten_type.enabled());
-     if (!selections->batch_save_map && forced)
+     if (!selections->batch_output_save_map && forced)
      {
-          selections->batch_save_map = true;
-          changed                    = true;
+          selections->batch_output_save_map = true;
+          changed                           = true;
      }
      ImGui::BeginDisabled(forced);
-     if (ImGui::Checkbox(gui_labels::save_map_files.data(), &selections->batch_save_map) || changed)
+     if (ImGui::Checkbox(gui_labels::save_map_files.data(), &selections->batch_output_save_map) || changed)
      {
-          spdlog::info("batch_save_map: {}", selections->batch_save_map);
-          selections->update_configuration_key(ConfigKey::BatchSaveMap);
+          spdlog::info("batch_output_save_map: {}", selections->batch_output_save_map);
+          selections->update_configuration_key(ConfigKey::BatchOutputSaveMap);
      }
      ImGui::EndDisabled();
 }
@@ -917,7 +917,7 @@ void fme::batch::update(sf::Time elapsed_time)
           }
 
           // Optionally save the modified map
-          if (selections->batch_save_map)
+          if (selections->batch_output_save_map)
           {
                const key_value_data cpm2 = {
                     .field_name    = m_map_sprite.get_base_name(),

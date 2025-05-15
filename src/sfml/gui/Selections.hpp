@@ -56,7 +56,7 @@ enum class ConfigKey
      BatchInputPath,
      BatchOutputPath,
      BatchInputLoadMap,
-     BatchSaveMap,
+     BatchOutputSaveMap,
      PathsWithPaletteAndTexturePage,
      PathsWithTexturePage,
      PathsWithPupuID,
@@ -156,7 +156,7 @@ struct Selections
      std::string     batch_input_path            = {};
      std::string     batch_output_path           = {};
      bool            batch_input_load_map        = { false };
-     bool            batch_save_map              = { true };
+     bool            batch_output_save_map       = { true };
 
      ff_8::filter_old<compact_type, ff_8::FilterTag::Compact> batch_compact_type                  = { ff_8::FilterSettings::Default };
      ff_8::filter_old<flatten_type, ff_8::FilterTag::Flatten> batch_flatten_type                  = { ff_8::FilterSettings::Default };
