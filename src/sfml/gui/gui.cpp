@@ -1528,6 +1528,7 @@ void gui::update_field()
      {
           generate_upscale_paths();
           generate_deswizzle_paths();
+          sort_paths();
      }
 
      // Clear clicked tile indices used for selection logic
@@ -2866,21 +2867,6 @@ void gui::directory_browser_display()
           }
           break;
           case map_directory_mode::load_deswizzle_textures: {
-               // // m_selections->paths_vector_deswizzle
-               // m_selections->deswizzle_path = selected_path.string();
-               // m_selections->update_configuration_key(ConfigKey::DeswizzlePath);
-               // /// TODO might need to update this to use the patterns.
-               // m_loaded_deswizzle_texture_path = selected_path;
-               // m_map_sprite->filter().upscale.disable();
-               // m_map_sprite->filter().deswizzle.update(m_loaded_deswizzle_texture_path).enable();
-               // auto          map_path      = m_loaded_deswizzle_texture_path / m_map_sprite->map_filename();
-               // safedir const safe_map_path = map_path;
-               // if (safe_map_path.is_exists())
-               // {
-               //      m_map_sprite->load_map(map_path);
-               // }
-               // refresh_render_texture(true);
-
                // remember the last grabbed path.
                m_selections->deswizzle_path = selected_path.string();
                // save the setting to toml
@@ -2959,16 +2945,27 @@ std::filesystem::path gui::path_with_prefix_and_base_name(std::filesystem::path 
  */
 void gui::sort_paths()
 {// Check if already sorted and unique
-     bool already_sorted = std::ranges::is_sorted(m_selections->paths_vector);
-     bool already_unique = std::ranges::adjacent_find(m_selections->paths_vector) == m_selections->paths_vector.end();
-
-     if (already_sorted && already_unique)
-          return;// Nothing to do
-
-     std::ranges::sort(m_selections->paths_vector);
-     const auto removal = std::ranges::unique(m_selections->paths_vector);
-     m_selections->paths_vector.erase(removal.begin(), removal.end());
-     m_selections->update_configuration_key(ConfigKey::PathsVector);
+     const auto sort_and_unique = [&](auto &paths, ConfigKey key) {
+          bool changed = false;
+          if (!std::ranges::is_sorted(paths))
+          {
+               std::ranges::sort(paths);
+               changed = true;
+          }
+          if (std::ranges::adjacent_find(paths) != paths.end())
+          {
+               const auto removal = std::ranges::unique(paths);
+               paths.erase(removal.begin(), removal.end());
+               changed = true;
+          }
+          if (changed)
+          {
+               m_selections->update_configuration_key(key);
+          }
+     };
+     sort_and_unique(m_selections->paths_vector, ConfigKey::PathsVector);
+     sort_and_unique(m_selections->paths_vector_upscale, ConfigKey::PathsVectorUpscale);
+     sort_and_unique(m_selections->paths_vector_deswizzle, ConfigKey::PathsVectorDeswizzle);
 }
 
 void gui::file_browser_save_texture()
@@ -3512,6 +3509,7 @@ void gui::init_and_get_style()
      {
           generate_upscale_paths();
           generate_deswizzle_paths();
+          sort_paths();
      }
      if (!m_drag_sprite_shader)
      {
@@ -3894,9 +3892,6 @@ void gui::generate_upscale_paths()
      auto transform_paths2 = m_selections->paths_vector_upscale | std::views::transform([this, &coo](const std::string &path) {
                                   return upscales(path, coo, m_selections).get_paths();
                              });
-
-
-     // std::views::join; broken in msvc.
      auto process          = [this](const auto &temp_paths) {
           for (const auto &path : temp_paths)
           {
@@ -3911,13 +3906,6 @@ void gui::generate_upscale_paths()
      {
           process(temp_paths);
      }
-     // if (safedir(m_loaded_swizzle_texture_path).is_exists())
-     // {
-     //      m_upscale_paths.push_back(m_loaded_swizzle_texture_path.string());
-     // }
-     std::ranges::sort(m_upscale_paths);
-     const auto to_remove = std::ranges::unique(m_upscale_paths);
-     m_upscale_paths.erase(to_remove.begin(), to_remove.end());
 }
 
 
@@ -3932,9 +3920,6 @@ void gui::generate_deswizzle_paths()
      auto transform_paths2 = m_selections->paths_vector_deswizzle | std::views::transform([this, &coo](const std::string &path) {
                                   return upscales(path, coo, m_selections).get_paths();
                              });
-
-
-     // std::views::join; broken in msvc.
      auto process          = [this](const auto &temp_paths) {
           for (const auto &path : temp_paths)
           {
@@ -3949,13 +3934,6 @@ void gui::generate_deswizzle_paths()
      {
           process(temp_paths);
      }
-     // if (safedir(m_loaded_swizzle_texture_path).is_exists())
-     // {
-     //      m_upscale_paths.push_back(m_loaded_swizzle_texture_path.string());
-     // }
-     std::ranges::sort(m_deswizzle_paths);
-     const auto to_remove = std::ranges::unique(m_deswizzle_paths);
-     m_deswizzle_paths.erase(to_remove.begin(), to_remove.end());
 }
 
 bool gui::combo_upscale_path(ff_8::filter_old<std::filesystem::path, ff_8::FilterTag::Upscale> &filter) const
