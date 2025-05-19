@@ -1802,9 +1802,9 @@ bool map_sprite::has_deswizzle_path(const ff_8::PupuID pupu) const
                                       : std::nullopt,
                                   .pupu_id = pupu.raw() };
 
-     return m_upscales.has_upscale_path(m_filters.deswizzle.value().string(), cpm)
-            || safedir(cpm.replace_tags(selections->output_map_pattern_for_deswizzle, selections, m_filters.deswizzle.value().string()))
-                 .is_exists();
+     return m_upscales.has_upscale_path(m_filters.deswizzle.value().string(), cpm);
+          //   || safedir(cpm.replace_tags(selections->output_map_pattern_for_deswizzle, selections, m_filters.deswizzle.value().string()))
+          //        .is_exists();
 }
 
 bool map_sprite::has_swizzle_path(const std::uint8_t texture_page, std::uint8_t palette) const
@@ -1824,8 +1824,8 @@ bool map_sprite::has_swizzle_path(const std::uint8_t texture_page, std::uint8_t 
                                   .palette      = palette,
                                   .texture_page = texture_page };
 
-     return m_upscales.has_upscale_path(m_filters.upscale.value().string(), cpm)
-            || safedir(cpm.replace_tags(selections->output_swizzle_pattern, selections, m_filters.upscale.value().string())).is_exists();
+     return m_upscales.has_upscale_path(m_filters.upscale.value().string(), cpm);
+          //   || safedir(cpm.replace_tags(selections->output_swizzle_pattern, selections, m_filters.upscale.value().string())).is_exists();
 }
 bool map_sprite::has_swizzle_path(const std::uint8_t texture_page) const
 {
@@ -1844,8 +1844,8 @@ bool map_sprite::has_swizzle_path(const std::uint8_t texture_page) const
                                       : std::nullopt,
                                   .texture_page = texture_page };
 
-     return m_upscales.has_upscale_path(m_filters.upscale.value().string(), cpm)
-            || safedir(cpm.replace_tags(selections->output_swizzle_pattern, selections, m_filters.upscale.value().string())).is_exists();
+     return m_upscales.has_upscale_path(m_filters.upscale.value().string(), cpm);
+          //   || safedir(cpm.replace_tags(selections->output_swizzle_pattern, selections, m_filters.upscale.value().string())).is_exists();
 }
 
 bool map_sprite::has_deswizzle_path(const std::filesystem::path &filter_path, const ff_8::PupuID pupu) const
@@ -1864,8 +1864,8 @@ bool map_sprite::has_deswizzle_path(const std::filesystem::path &filter_path, co
                                       : std::nullopt,
                                   .pupu_id = pupu.raw() };
 
-     return m_upscales.has_upscale_path(filter_path.string(), cpm)
-            || safedir(cpm.replace_tags(selections->output_map_pattern_for_deswizzle, selections, filter_path.string())).is_exists();
+     return m_upscales.has_upscale_path(filter_path.string(), cpm);
+          //   || safedir(cpm.replace_tags(selections->output_map_pattern_for_deswizzle, selections, filter_path.string())).is_exists();
 }
 
 bool map_sprite::has_swizzle_path(const std::filesystem::path &filter_path, const std::uint8_t texture_page, std::uint8_t palette) const
@@ -1885,8 +1885,8 @@ bool map_sprite::has_swizzle_path(const std::filesystem::path &filter_path, cons
                                   .palette      = palette,
                                   .texture_page = texture_page };
 
-     return m_upscales.has_upscale_path(filter_path.string(), cpm)
-            || safedir(cpm.replace_tags(selections->output_swizzle_pattern, selections, filter_path.string())).is_exists();
+     return m_upscales.has_upscale_path(filter_path.string(), cpm);
+          //   || safedir(cpm.replace_tags(selections->output_swizzle_pattern, selections, filter_path.string())).is_exists();
 }
 
 bool map_sprite::has_swizzle_path(const std::filesystem::path &filter_path, const std::uint8_t texture_page) const
@@ -1905,8 +1905,8 @@ bool map_sprite::has_swizzle_path(const std::filesystem::path &filter_path, cons
                                       : std::nullopt,
                                   .texture_page = texture_page };
 
-     return m_upscales.has_upscale_path(filter_path.string(), cpm)
-            || safedir(cpm.replace_tags(selections->output_swizzle_pattern, selections, filter_path.string())).is_exists();
+     return m_upscales.has_upscale_path(filter_path.string(), cpm);
+          //   || safedir(cpm.replace_tags(selections->output_swizzle_pattern, selections, filter_path.string())).is_exists();
 }
 
 bool map_sprite::has_deswizzle_path(const std::filesystem::path &filter_path) const
