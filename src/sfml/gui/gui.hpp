@@ -50,19 +50,19 @@ struct gui
        open_viii::graphics::background::Tile2,
        open_viii::graphics::background::Tile3,
        std::monostate>;
-     std::mutex                                                          append_results_mutex   = {};
-     std::vector<std::filesystem::path>                                  append_results         = {};
-     std::shared_ptr<sf::Shader>                                         m_drag_sprite_shader   = {};
-     std::shared_ptr<Selections>                                         m_selections           = std::make_shared<Selections>();
+     std::mutex                                                          append_results_mutex  = {};
+     std::vector<std::filesystem::path>                                  append_results        = {};
+     std::shared_ptr<sf::Shader>                                         m_drag_sprite_shader  = {};
+     std::shared_ptr<Selections>                                         m_selections          = std::make_shared<Selections>();
 
-     static constexpr std::int8_t                                        tile_size_px           = { 16 };
-     static constexpr std::uint8_t                                       tile_size_px_unsigned  = { 16U };
-     mouse_positions                                                     m_mouse_positions      = {};
-     float                                                               m_scale_width          = {};
-     sf::RenderWindow                                                    m_window               = {};
-     sf::Clock                                                           m_delta_clock          = {};
-     sf::Time                                                            m_elapsed_time         = {};
-     std::shared_ptr<archives_group>                                     m_archives_group       = {};
+     static constexpr std::int8_t                                        tile_size_px          = { 16 };
+     static constexpr std::uint8_t                                       tile_size_px_unsigned = { 16U };
+     mouse_positions                                                     m_mouse_positions     = {};
+     float                                                               m_scale_width         = {};
+     sf::RenderWindow                                                    m_window              = {};
+     sf::Clock                                                           m_delta_clock         = {};
+     sf::Time                                                            m_elapsed_time        = {};
+     std::shared_ptr<archives_group>                                     m_archives_group      = {};
      batch                                                               m_batch         = fme::batch{ m_selections, m_archives_group };
      std::vector<std::string>                                            m_upscale_paths = {};
      std::shared_ptr<open_viii::archive::FIFLFS<false>>                  m_field         = {};
@@ -141,6 +141,7 @@ struct gui
      void         menuitem_save_swizzle_textures();
      void         menuitem_save_deswizzle_textures();
      void         menuitem_load_swizzle_textures();
+     void         menuitem_load_swizzle_textures2();
      void         menuitem_load_deswizzle_textures();
      void         menuitem_save_texture(bool enabled = true);
      void         menuitem_save_mim_file(bool enabled = true);
@@ -168,7 +169,7 @@ struct gui
      const open_viii::LangT  &get_coo() const;
      file_dialog_mode         m_file_dialog_mode       = {};
      map_directory_mode       m_modified_directory_map = {};
-     //std::filesystem::path    m_loaded_swizzle_texture_path{};
+     // std::filesystem::path    m_loaded_swizzle_texture_path{};
      std::filesystem::path    m_loaded_deswizzle_texture_path{};
      std::vector<std::size_t> m_clicked_tile_indices{};
      //     void                                               popup_batch_reswizzle();
@@ -193,8 +194,6 @@ struct gui
      variant_tile_t                           &combo_selected_tile(bool &changed);
      [[nodiscard]] bool                        browse_for_image_display_preview();
      void                                      generate_upscale_paths(open_viii::LangT coo);
-     void                                      menuitem_locate_custom_upscale();
-     void                                      save_swizzle_textures();
      void                                      reset_imported_image();
      void                                      sort_paths();
      void                                      control_panel_window();
@@ -209,8 +208,8 @@ struct gui
      void                                      control_panel_window_map();
      void                                      control_panel_window_mim();
      std::filesystem::path                     path_with_prefix_and_base_name(std::filesystem::path selected_path) const;
-     void                         filter_empty_import_tiles();
-     void                         collapsing_header_generated_tiles() const;
+     void                                      filter_empty_import_tiles();
+     void                                      collapsing_header_generated_tiles() const;
      void                         adjust_source_xy_texture_page_for_import_map(uint8_t next_source_y, const uint8_t next_texture_page);
      void                         find_selected_tile_for_import(variant_tile_t &current_tile) const;
      void                         event_type_key_released(const sf::Event::KeyEvent &key);

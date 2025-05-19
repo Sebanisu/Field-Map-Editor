@@ -2354,7 +2354,7 @@ void gui::menu_upscale_paths()
           if (ImGui::BeginMenu(gui_labels::upscale_path.data()))
           {
                const auto end_menu1 = scope_guard(&ImGui::EndMenu);
-               menuitem_locate_custom_upscale();
+               menuitem_load_swizzle_textures2();
                if (ImGui::MenuItem(
                      gui_labels::explore.data(),
                      nullptr,
@@ -2625,34 +2625,60 @@ void gui::directory_browser_display()
           }
           break;
           case map_directory_mode::load_swizzle_textures: {
+               // remember the last grabbed path.
                m_selections->swizzle_path = selected_path.string();
+               // save the setting to toml
                m_selections->update_configuration_key(ConfigKey::SwizzlePath);
-               m_selections->paths_vector_upscale.push_back(selected_path.string());
-               /// TODO might need to update this to use the patterns.
-               // m_loaded_swizzle_texture_path = selected_path;
-               if (m_field)
+               // this stores a copy of the directory for referencing later we can also remove this path in the file menu.
+               m_selections->paths_vector_upscale.push_back(m_selections->swizzle_path);
+               m_selections->update_configuration_key(ConfigKey::PathsVectorUpscale);
+
+               // sort the drop down
+               std::ranges::sort(m_selections->paths_vector_upscale);
+               // remove duplicates
                {
-                    generate_upscale_paths(get_coo());
+                    const auto to_remove = std::ranges::unique(m_selections->paths_vector_upscale);
+                    m_selections->paths_vector_upscale.erase(to_remove.begin(), to_remove.end());
                }
-               m_map_sprite->filter().deswizzle.disable();
-               m_map_sprite->filter()
-                 .upscale
-                 .update([&]() {
-                      auto paths = upscales(m_selections->swizzle_path, get_coo(), m_selections).get_paths();
-                      if (paths.empty())
-                      {
-                         return m_selections->swizzle_path;
-                      }
-                      std::ranges::sort(paths);
-                      return paths.front().string();
-                 }())
-                 .enable();
-               auto          map_path      = selected_path / m_map_sprite->map_filename();
-               safedir const safe_map_path = map_path;
-               if (safe_map_path.is_exists())
+
+               // append the path to the various search patterns.
+               const auto upscale_result = upscales(m_selections->swizzle_path, get_coo(), m_selections);
+               const auto temp_paths     = upscale_result.get_paths();
+               const auto temp_map_paths = upscale_result.get_map_paths();
+
+               // if we have found matches
+               if (!temp_paths.empty())
                {
-                    m_map_sprite->load_map(map_path);
+                    for (const auto &path : temp_paths)
+                    {
+                         // add matches to the drop down
+                         m_upscale_paths.emplace_back(path.string());
+                    }
+                    // sort the drop down
+                    std::ranges::sort(m_upscale_paths);
+                    // remove duplicates
+                    {
+                         const auto to_remove = std::ranges::unique(m_upscale_paths);
+                         m_upscale_paths.erase(to_remove.begin(), to_remove.end());
+                    }
+                    //  select the first match
+                    m_map_sprite->filter().deswizzle.disable();
+                    m_map_sprite->filter().upscale.update(temp_paths.front()).enable();
                }
+               /// TODO I might need a second drop down to choose the detected map to load. Though map loads are added to the map history
+               /// they aren't something setup to be toggled. I guess I could make it clear that changing the map will overwrite any edits
+               /// to history you have. Not sure. Though in history you can just undo the load.
+               for (const auto &temp_map_path : temp_map_paths)
+               {
+                    auto          map_path      = temp_map_path / m_map_sprite->map_filename();
+                    safedir const safe_map_path = map_path;
+                    if (safe_map_path.is_exists())
+                    {
+                         m_map_sprite->load_map(map_path);
+                         break;
+                    }
+               }
+
                refresh_render_texture(true);
           }
           break;
@@ -2670,17 +2696,6 @@ void gui::directory_browser_display()
                     m_map_sprite->load_map(map_path);
                }
                refresh_render_texture(true);
-          }
-          break;
-          case map_directory_mode::custom_upscale_directory: {
-               m_selections->paths_vector_upscale.push_back(selected_path.string());
-               m_selections->update_configuration_key(ConfigKey::PathsVectorUpscale);
-               // todo remove paths that don't exist.
-               if (m_field)
-               {
-                    generate_upscale_paths(get_coo());
-               }
-               // todo toggle filter enabled?
           }
           break;
      }
@@ -2807,52 +2822,52 @@ void gui::open_locate_ff8_filebrowser()
      m_directory_browser.SetTypeFilters({ ".exe" });
      m_modified_directory_map = map_directory_mode::ff8_install_directory;
 }
-void gui::menuitem_locate_custom_upscale()
-{
-     if (!ImGui::MenuItem(gui_labels::browse.data()))
-     {
-          return;
-     }
-     else
-     {
-          tool_tip(gui_labels::locate_a_custom_upscale_directory.data());
-     }
-
-     m_directory_browser.Open();
-     m_directory_browser.SetTitle(gui_labels::choose_a_custom_upscale_directory.data());
-     m_modified_directory_map = map_directory_mode::custom_upscale_directory;
-}
 void gui::menuitem_save_swizzle_textures()
 {
      if (!ImGui::MenuItem(gui_labels::save_swizzled_textures.data(), nullptr, false, true))
      {
+          tool_tip("Browse for a directory to save swizzled textures.");
           return;
      }
-     save_swizzle_textures();
-}
-void gui::save_swizzle_textures()
-{
      m_directory_browser.Open();
      m_directory_browser.SetTitle(m_map_sprite->appends_prefix_base_name(gui_labels::choose_directory_to_save_textures_to));
      m_directory_browser.SetDirectory(m_selections->swizzle_path);
      m_directory_browser.SetTypeFilters({ ".map", ".png" });
      m_modified_directory_map = map_directory_mode::save_swizzle_textures;
 }
+
 void gui::menuitem_save_deswizzle_textures()
 {
-     if (ImGui::MenuItem(gui_labels::save_deswizzled_textures.data(), nullptr, false, true))
+     if (!ImGui::MenuItem(gui_labels::save_deswizzled_textures.data(), nullptr, false, true))
      {
-          m_directory_browser.Open();
-          m_directory_browser.SetTitle(m_map_sprite->appends_prefix_base_name(gui_labels::choose_directory_to_save_textures_to));
-          m_directory_browser.SetDirectory(m_selections->deswizzle_path);
-          m_directory_browser.SetTypeFilters({ ".map", ".png" });
-          m_modified_directory_map = map_directory_mode::save_deswizzle_textures;
+          tool_tip("Browse for a directory to save deswizzled textures.");
+          return;
      }
+     m_directory_browser.Open();
+     m_directory_browser.SetTitle(m_map_sprite->appends_prefix_base_name(gui_labels::choose_directory_to_save_textures_to));
+     m_directory_browser.SetDirectory(m_selections->deswizzle_path);
+     m_directory_browser.SetTypeFilters({ ".map", ".png" });
+     m_modified_directory_map = map_directory_mode::save_deswizzle_textures;
 }
 void gui::menuitem_load_swizzle_textures()
 {
      if (!ImGui::MenuItem("Load Swizzled Textures", nullptr, false, true))
      {
+          tool_tip("Browse for a directory containing swizzled textures.");
+          return;
+     }
+     m_directory_browser.Open();
+     m_directory_browser.SetTitle(gui_labels::choose_directory_to_load_textures_from.data());
+     m_directory_browser.SetDirectory(m_selections->swizzle_path);
+     m_directory_browser.SetTypeFilters({ ".map", ".png" });
+     m_modified_directory_map = map_directory_mode::load_swizzle_textures;
+}
+
+void gui::menuitem_load_swizzle_textures2()
+{
+     if (!ImGui::MenuItem(gui_labels::browse.data(), nullptr, false, true))
+     {
+          tool_tip(gui_labels::locate_a_custom_upscale_directory);
           return;
      }
      m_directory_browser.Open();
@@ -2864,7 +2879,10 @@ void gui::menuitem_load_swizzle_textures()
 void gui::menuitem_load_deswizzle_textures()
 {
      if (!ImGui::MenuItem("Load Deswizzled Textures", nullptr, false, true))
+     {
+          tool_tip("Browse for a directory containing deswizzled textures.");
           return;
+     }
      m_directory_browser.Open();
      m_directory_browser.SetTitle(gui_labels::choose_directory_to_load_textures_from.data());
      m_directory_browser.SetDirectory(m_selections->deswizzle_path);
