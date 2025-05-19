@@ -193,7 +193,7 @@ struct gui
      void open_locate_ff8_filebrowser();
      variant_tile_t                           &combo_selected_tile(bool &changed);
      [[nodiscard]] bool                        browse_for_image_display_preview();
-     void                                      generate_upscale_paths(open_viii::LangT coo);
+     void                                      generate_upscale_paths();
      void                                      reset_imported_image();
      void                                      sort_paths();
      void                                      control_panel_window();

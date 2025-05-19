@@ -1526,7 +1526,7 @@ void gui::update_field()
      // Generate upscale texture paths if a field is loaded
      if (m_field)
      {
-          generate_upscale_paths(get_coo());
+          generate_upscale_paths();
      }
 
      // Clear clicked tile indices used for selection logic
@@ -3256,7 +3256,7 @@ void gui::init_and_get_style()
      imgui_io.ConfigFlags = bitwise_or(imgui_io.ConfigFlags, ImGuiConfigFlags_DockingEnable);
      if (m_field)
      {
-          generate_upscale_paths(get_coo());
+          generate_upscale_paths();
      }
      if (!m_drag_sprite_shader)
      {
@@ -3630,8 +3630,9 @@ void gui::combo_upscale_path()
 
      refresh_render_texture(true);
 }
-void gui::generate_upscale_paths(open_viii::LangT coo)
+void gui::generate_upscale_paths()
 {
+     const auto coo = get_coo();
      m_upscale_paths.clear();
      auto transform_paths  = m_selections->paths_vector | std::views::transform([this, &coo](const std::string &path) {
                                  return upscales(path, coo, m_selections).get_paths();
