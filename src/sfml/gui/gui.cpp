@@ -1527,6 +1527,7 @@ void gui::update_field()
      if (m_field)
      {
           generate_upscale_paths();
+          generate_deswizzle_paths();
      }
 
      // Clear clicked tile indices used for selection logic
@@ -2683,18 +2684,75 @@ void gui::directory_browser_display()
           }
           break;
           case map_directory_mode::load_deswizzle_textures: {
+               // // m_selections->paths_vector_deswizzle
+               // m_selections->deswizzle_path = selected_path.string();
+               // m_selections->update_configuration_key(ConfigKey::DeswizzlePath);
+               // /// TODO might need to update this to use the patterns.
+               // m_loaded_deswizzle_texture_path = selected_path;
+               // m_map_sprite->filter().upscale.disable();
+               // m_map_sprite->filter().deswizzle.update(m_loaded_deswizzle_texture_path).enable();
+               // auto          map_path      = m_loaded_deswizzle_texture_path / m_map_sprite->map_filename();
+               // safedir const safe_map_path = map_path;
+               // if (safe_map_path.is_exists())
+               // {
+               //      m_map_sprite->load_map(map_path);
+               // }
+               // refresh_render_texture(true);
+
+               // remember the last grabbed path.
                m_selections->deswizzle_path = selected_path.string();
+               // save the setting to toml
                m_selections->update_configuration_key(ConfigKey::DeswizzlePath);
-               /// TODO might need to update this to use the patterns.
-               m_loaded_deswizzle_texture_path = selected_path;
-               m_map_sprite->filter().upscale.disable();
-               m_map_sprite->filter().deswizzle.update(m_loaded_deswizzle_texture_path).enable();
-               auto          map_path      = m_loaded_deswizzle_texture_path / m_map_sprite->map_filename();
-               safedir const safe_map_path = map_path;
-               if (safe_map_path.is_exists())
+               // this stores a copy of the directory for referencing later we can also remove this path in the file menu.
+               m_selections->paths_vector_deswizzle.push_back(m_selections->deswizzle_path);
+               m_selections->update_configuration_key(ConfigKey::PathsVectorDeswizzle);
+
+               // sort the drop down
+               std::ranges::sort(m_selections->paths_vector_deswizzle);
+               // remove duplicates
                {
-                    m_map_sprite->load_map(map_path);
+                    const auto to_remove = std::ranges::unique(m_selections->paths_vector_deswizzle);
+                    m_selections->paths_vector_deswizzle.erase(to_remove.begin(), to_remove.end());
                }
+
+               // append the path to the various search patterns.
+               const auto upscale_result = upscales(m_selections->deswizzle_path, get_coo(), m_selections);
+               const auto temp_paths     = upscale_result.get_paths();
+               const auto temp_map_paths = upscale_result.get_map_paths();
+
+               // if we have found matches
+               if (!temp_paths.empty())
+               {
+                    for (const auto &path : temp_paths)
+                    {
+                         // add matches to the drop down
+                         m_deswizzle_paths.emplace_back(path.string());
+                    }
+                    // sort the drop down
+                    std::ranges::sort(m_deswizzle_paths);
+                    // remove duplicates
+                    {
+                         const auto to_remove = std::ranges::unique(m_deswizzle_paths);
+                         m_deswizzle_paths.erase(to_remove.begin(), to_remove.end());
+                    }
+                    //  select the first match
+                    m_map_sprite->filter().upscale.disable();
+                    m_map_sprite->filter().deswizzle.update(temp_paths.front()).enable();
+               }
+               /// TODO I might need a second drop down to choose the detected map to load. Though map loads are added to the map history
+               /// they aren't something setup to be toggled. I guess I could make it clear that changing the map will overwrite any edits
+               /// to history you have. Not sure. Though in history you can just undo the load.
+               for (const auto &temp_map_path : temp_map_paths)
+               {
+                    auto          map_path      = temp_map_path / m_map_sprite->map_filename();
+                    safedir const safe_map_path = map_path;
+                    if (safe_map_path.is_exists())
+                    {
+                         m_map_sprite->load_map(map_path);
+                         break;
+                    }
+               }
+
                refresh_render_texture(true);
           }
           break;
@@ -3257,6 +3315,7 @@ void gui::init_and_get_style()
      if (m_field)
      {
           generate_upscale_paths();
+          generate_deswizzle_paths();
      }
      if (!m_drag_sprite_shader)
      {
@@ -3585,34 +3644,12 @@ void gui::combo_animation_frames()
      }
      refresh_render_texture();
 }
+
 BPPT gui::bpp() const
 {
      return m_selections->bpp;
 }
-void gui::combo_deswizzle_path()
-{
-     if (const safedir deswizzle_texture_path = m_loaded_deswizzle_texture_path; !deswizzle_texture_path.is_exists() || !m_field)
-     {
-          return;
-     }
-     std::vector<std::string> strings = { m_loaded_deswizzle_texture_path.string() };
-     const auto               gcc     = fme::GenericComboClassWithFilter(
-       gui_labels::deswizzle_path,
-       //[&values]() { return values; },
-       [&strings]() { return strings; },
-       [&strings]() { return strings; },
-       EmptyStringView{},
-       [this]() -> auto                   &{ return m_map_sprite->filter().deswizzle; });
-     if (gcc.render())
-     {
-          if (m_map_sprite->filter().deswizzle.enabled())
-          {
-               m_map_sprite->filter().upscale.disable();
-          }
 
-          refresh_render_texture(true);
-     }
-}
 void gui::combo_upscale_path()
 {
      if (!m_field)
@@ -3630,6 +3667,26 @@ void gui::combo_upscale_path()
 
      refresh_render_texture(true);
 }
+
+
+void gui::combo_deswizzle_path()
+{
+     if (!m_field)
+     {
+          return;
+     }
+     if (!combo_deswizzle_path(m_map_sprite->filter().deswizzle))
+     {
+          return;
+     }
+     if (m_map_sprite->filter().deswizzle.enabled())
+     {
+          m_map_sprite->filter().upscale.disable();
+     }
+
+     refresh_render_texture(true);
+}
+
 void gui::generate_upscale_paths()
 {
      const auto coo = get_coo();
@@ -3666,6 +3723,45 @@ void gui::generate_upscale_paths()
      const auto to_remove = std::ranges::unique(m_upscale_paths);
      m_upscale_paths.erase(to_remove.begin(), to_remove.end());
 }
+
+
+void gui::generate_deswizzle_paths()
+{
+     const auto coo = get_coo();
+     m_deswizzle_paths.clear();
+     auto transform_paths  = m_selections->paths_vector | std::views::transform([this, &coo](const std::string &path) {
+                                 return upscales(path, coo, m_selections).get_paths();
+                            });
+
+     auto transform_paths2 = m_selections->paths_vector_deswizzle | std::views::transform([this, &coo](const std::string &path) {
+                                  return upscales(path, coo, m_selections).get_paths();
+                             });
+
+
+     // std::views::join; broken in msvc.
+     auto process          = [this](const auto &temp_paths) {
+          for (const auto &path : temp_paths)
+          {
+               m_deswizzle_paths.emplace_back(path.string());
+          }
+     };
+     for (auto temp_paths : transform_paths)
+     {
+          process(temp_paths);
+     }
+     for (auto temp_paths : transform_paths2)
+     {
+          process(temp_paths);
+     }
+     // if (safedir(m_loaded_swizzle_texture_path).is_exists())
+     // {
+     //      m_upscale_paths.push_back(m_loaded_swizzle_texture_path.string());
+     // }
+     std::ranges::sort(m_deswizzle_paths);
+     const auto to_remove = std::ranges::unique(m_deswizzle_paths);
+     m_deswizzle_paths.erase(to_remove.begin(), to_remove.end());
+}
+
 bool gui::combo_upscale_path(ff_8::filter_old<std::filesystem::path, ff_8::FilterTag::Upscale> &filter) const
 {
      const auto gcc = fme::GenericComboClassWithFilter(
@@ -3678,44 +3774,19 @@ bool gui::combo_upscale_path(ff_8::filter_old<std::filesystem::path, ff_8::Filte
      return m_field && gcc.render();
 }
 
-bool gui::combo_upscale_path(std::filesystem::path &path, const std::string &field_name, open_viii::LangT coo) const
+
+bool gui::combo_deswizzle_path(ff_8::filter_old<std::filesystem::path, ff_8::FilterTag::Deswizzle> &filter) const
 {
-     std::vector<std::string> paths = {};
-     auto transform_paths           = m_selections->paths_vector | std::views::transform([this, &coo](const std::string &in_path) {
-                                 return upscales(in_path, coo, m_selections).get_paths();
-                            });
-     auto transform_paths2          = m_selections->paths_vector_upscale | std::views::transform([this, &coo](const std::string &in_path) {
-                                  return upscales(in_path, coo, m_selections).get_paths();
-                             });
-     // std::views::join; broken in msvc.
-     auto process                   = [&paths](const auto &temp_paths) {
-          for (const auto &in_path : temp_paths)
-          {
-               paths.emplace_back(in_path.string());
-          }
-     };
-     for (const auto &temp_paths : transform_paths)
-     {
-          process(temp_paths);
-     }
-     for (const auto &temp_paths : transform_paths2)
-     {
-          process(temp_paths);
-     }
-     // if (safedir(m_loaded_swizzle_texture_path).is_exists())
-     // {
-     //      paths.push_back(m_loaded_swizzle_texture_path.string());
-     // }
-     if (m_field)
-     {
-          process(upscales(field_name, coo, m_selections).get_paths());
-
-          const auto gcc = GenericComboClass(gui_labels::upscale_path, [&paths]() { return paths; }, [&paths]() { return paths; }, path);
-
-          return gcc.render();
-     }
-     return false;
+     const auto gcc = fme::GenericComboClassWithFilter(
+       gui_labels::deswizzle_path,
+       [this]() { return m_deswizzle_paths; },
+       [this]() { return m_deswizzle_paths; },
+       [this]() { return m_deswizzle_paths; },
+       [&filter]() -> auto & { return filter; },
+       1);
+     return m_field && gcc.render();
 }
+
 
 std::vector<std::filesystem::path> gui::find_maps_in_directory(const std::filesystem::path &src, size_t reserve)
 {

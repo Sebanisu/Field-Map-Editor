@@ -63,12 +63,13 @@ struct gui
      sf::Clock                                                           m_delta_clock         = {};
      sf::Time                                                            m_elapsed_time        = {};
      std::shared_ptr<archives_group>                                     m_archives_group      = {};
-     batch                                                               m_batch         = fme::batch{ m_selections, m_archives_group };
-     std::vector<std::string>                                            m_upscale_paths = {};
-     std::shared_ptr<open_viii::archive::FIFLFS<false>>                  m_field         = {};
-     std::array<float, 2>                                                xy              = {};
-     mim_sprite                                                          m_mim_sprite    = {};
-     std::shared_ptr<map_sprite>                                         m_map_sprite    = {};
+     batch                                                               m_batch           = fme::batch{ m_selections, m_archives_group };
+     std::vector<std::string>                                            m_upscale_paths   = {};
+     std::vector<std::string>                                            m_deswizzle_paths = {};
+     std::shared_ptr<open_viii::archive::FIFLFS<false>>                  m_field           = {};
+     std::array<float, 2>                                                xy                = {};
+     mim_sprite                                                          m_mim_sprite      = {};
+     std::shared_ptr<map_sprite>                                         m_map_sprite      = {};
      FutureOfFutureConsumer<std::vector<std::future<std::future<void>>>> m_future_of_future_consumer = {};
      FutureConsumer<std::vector<std::future<void>>>                      m_future_consumer           = {};
      float                                                               saved_window_width          = {};
@@ -166,6 +167,7 @@ struct gui
      void                                               combo_upscale_path();
      bool                     combo_upscale_path(ff_8::filter_old<std::filesystem::path, ff_8::FilterTag::Upscale> &filter) const;
      void                     combo_deswizzle_path();
+     bool                     combo_deswizzle_path(ff_8::filter_old<std::filesystem::path, ff_8::FilterTag::Deswizzle> &filter) const;
      const open_viii::LangT  &get_coo() const;
      file_dialog_mode         m_file_dialog_mode       = {};
      map_directory_mode       m_modified_directory_map = {};
@@ -189,11 +191,11 @@ struct gui
      //          std::invoke(std::forward<T>(task), std::forward<argsT>(args)...);
      //     }
      //     void                      batch_ops_ask_menu() const;
-     bool combo_upscale_path(std::filesystem::path &path, const std::string &field_name, open_viii::LangT coo) const;
      void open_locate_ff8_filebrowser();
      variant_tile_t                           &combo_selected_tile(bool &changed);
      [[nodiscard]] bool                        browse_for_image_display_preview();
      void                                      generate_upscale_paths();
+     void                                      generate_deswizzle_paths();
      void                                      reset_imported_image();
      void                                      sort_paths();
      void                                      control_panel_window();

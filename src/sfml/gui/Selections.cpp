@@ -68,6 +68,7 @@ std::string_view fme::Selections::key_to_string(ConfigKey key)
           m.emplace(ConfigKey::PathPatternsWithTexturePage, "paths_with_texture_page");
           m.emplace(ConfigKey::PathsVector, "paths_vector");
           m.emplace(ConfigKey::PathsVectorUpscale, "custom_upscale_paths_vector");
+          m.emplace(ConfigKey::PathsVectorDeswizzle, "paths_vector_deswizzle");
           m.emplace(ConfigKey::RenderImportedImage, "selections_render_imported_image");
           m.emplace(ConfigKey::SelectedTile, "selections_selected_tile");
           m.emplace(ConfigKey::SelectionsPath, "selections_path");
@@ -196,11 +197,15 @@ void fme::Selections::load_configuration()
      }
      if (config.load_array(key_to_string(ConfigKey::PathsVector), paths_vector))
      {
-          //assert(fme::key_value_data::has_balanced_braces(paths_vector));
+          // assert(fme::key_value_data::has_balanced_braces(paths_vector));
      }
      if (config.load_array(key_to_string(ConfigKey::PathsVectorUpscale), paths_vector_upscale))
      {
-          //assert(fme::key_value_data::has_balanced_braces(paths_vector_upscale));
+          // assert(fme::key_value_data::has_balanced_braces(paths_vector_upscale));
+     }
+     if (config.load_array(key_to_string(ConfigKey::PathsVectorDeswizzle), paths_vector_deswizzle))
+     {
+          // assert(fme::key_value_data::has_balanced_braces(paths_vector_deswizzle));
      }
      if (paths_vector.empty())
      {
@@ -291,6 +296,7 @@ void fme::Selections::update_configuration_key(ConfigKey key) const
           MAP_UPDATE_ARRAY(ConfigKey::PathPatternsWithTexturePage, paths_with_texture_page);
           MAP_UPDATE_ARRAY(ConfigKey::PathsVector, paths_vector);
           MAP_UPDATE_ARRAY(ConfigKey::PathsVectorUpscale, paths_vector_upscale);
+          MAP_UPDATE_ARRAY(ConfigKey::PathsVectorDeswizzle, paths_vector_deswizzle);
           MAP_MACRO(ConfigKey::RenderImportedImage, render_imported_image);
           MAP_MACRO(ConfigKey::SelectedTile, selected_tile);
           MAP_MACRO(ConfigKey::SelectionsPath, path);
