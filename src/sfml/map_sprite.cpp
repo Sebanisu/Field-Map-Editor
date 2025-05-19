@@ -1745,22 +1745,26 @@ std::string map_sprite::appends_prefix_base_name(std::string_view title) const
        "{} ({} {}{}{})", title, gui_labels::appends, prefix, char{ std::filesystem::path::preferred_separator }, base_name);
 }
 
-std::array<std::string, 1> map_sprite::generate_deswizzle_paths(const ff_8::PupuID pupu) const
+std::vector<std::filesystem::path> map_sprite::generate_deswizzle_paths(const ff_8::PupuID pupu) const
 {
      const auto selections = m_selections.lock();
      if (!selections)
      {
           spdlog::error("Failed to lock m_selections: shared_ptr is expired.");
-          return std::array<std::string, 1>{};
+          return {};
      }
-     const key_value_data cpm = { .field_name = get_base_name(),
-                                  .ext        = ".png",
-                                  .language_code =
+     const key_value_data               cpm   = { .field_name = get_base_name(),
+                                                  .ext        = ".png",
+                                                  .language_code =
                                     m_map_group.opt_coo.has_value() && m_map_group.opt_coo.value() != open_viii::LangT::generic
-                                      ? m_map_group.opt_coo
-                                      : std::nullopt,
-                                  .pupu_id = pupu.raw() };
-     return std::array{ cpm.replace_tags(selections->output_map_pattern_for_deswizzle, selections, m_filters.deswizzle.value().string()) };
+                                                      ? m_map_group.opt_coo
+                                                      : std::nullopt,
+                                                  .pupu_id = pupu.raw() };
+
+     std::vector<std::filesystem::path> paths = m_upscales.generate_upscale_paths(m_filters.deswizzle.value().string(), cpm);
+     paths.push_back(cpm.replace_tags(selections->output_map_pattern_for_deswizzle, selections, m_filters.deswizzle.value().string()));
+
+     return paths;
 }
 
 std::vector<std::filesystem::path> map_sprite::generate_swizzle_paths(const std::uint8_t texture_page, std::uint8_t palette) const
@@ -1771,14 +1775,14 @@ std::vector<std::filesystem::path> map_sprite::generate_swizzle_paths(const std:
           spdlog::error("Failed to lock m_selections: shared_ptr is expired.");
           return {};
      }
-     const key_value_data               cpm = { .field_name = get_base_name(),
-                                                .ext        = ".png",
-                                                .language_code =
+     const key_value_data               cpm   = { .field_name = get_base_name(),
+                                                  .ext        = ".png",
+                                                  .language_code =
                                     m_map_group.opt_coo.has_value() && m_map_group.opt_coo.value() != open_viii::LangT::generic
-                                                    ? m_map_group.opt_coo
-                                                    : std::nullopt,
-                                                .palette      = palette,
-                                                .texture_page = texture_page };
+                                                      ? m_map_group.opt_coo
+                                                      : std::nullopt,
+                                                  .palette      = palette,
+                                                  .texture_page = texture_page };
 
      std::vector<std::filesystem::path> paths = m_upscales.generate_upscale_paths(m_filters.upscale.value().string(), cpm);
      paths.push_back(cpm.replace_tags(selections->output_swizzle_pattern, selections, m_filters.upscale.value().string()));

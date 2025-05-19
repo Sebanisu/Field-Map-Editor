@@ -511,7 +511,7 @@ struct [[nodiscard]] map_sprite final
           return ff_8::get_triangle_strip(to_Vector2f(draw_size), to_Vector2f(texture_size), src, dest);
      }
 
-     std::array<std::string, 1> generate_deswizzle_paths(const ff_8::PupuID pupu) const;
+     std::vector<std::filesystem::path> generate_deswizzle_paths(const ff_8::PupuID pupu) const;
      std::vector<std::filesystem::path> generate_swizzle_paths(const std::uint8_t texture_page, std::uint8_t palette) const;
      std::vector<std::filesystem::path> generate_swizzle_paths(const std::uint8_t texture_page) const;
 };
