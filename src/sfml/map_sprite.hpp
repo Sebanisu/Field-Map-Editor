@@ -514,6 +514,18 @@ struct [[nodiscard]] map_sprite final
      std::vector<std::filesystem::path> generate_deswizzle_paths(const ff_8::PupuID pupu) const;
      std::vector<std::filesystem::path> generate_swizzle_paths(const std::uint8_t texture_page, std::uint8_t palette) const;
      std::vector<std::filesystem::path> generate_swizzle_paths(const std::uint8_t texture_page) const;
+
+     bool                               has_deswizzle_path() const;
+     bool                               has_swizzle_path() const;
+     bool                               has_deswizzle_path(const ff_8::PupuID pupu) const;
+     bool                               has_swizzle_path(const std::uint8_t texture_page, std::uint8_t palette) const;
+     bool                               has_swizzle_path(const std::uint8_t texture_page) const;
+
+     bool                               has_deswizzle_path(const std::filesystem::path &filter_path) const;
+     bool                               has_swizzle_path(const std::filesystem::path &filter_path) const;
+     bool                               has_deswizzle_path(const std::filesystem::path &filter_path, const ff_8::PupuID pupu) const;
+     bool has_swizzle_path(const std::filesystem::path &filter_path, const std::uint8_t texture_page, std::uint8_t palette) const;
+     bool has_swizzle_path(const std::filesystem::path &filter_path, const std::uint8_t texture_page) const;
 };
 }// namespace fme
 #endif// FIELD_MAP_EDITOR_MAP_SPRITE_HPP

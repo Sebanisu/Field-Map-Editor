@@ -71,6 +71,9 @@ struct upscales
      [[nodiscard]] std::vector<std::filesystem::path>
        generate_upscale_paths(const std::filesystem::path &field_root, fme::key_value_data copy_data) const;
 
+       [[nodiscard]] bool
+       has_upscale_path(const std::filesystem::path &field_root, fme::key_value_data copy_data) const;
+
      /**
       * @brief Gets a list of base paths for upscaling.
       *

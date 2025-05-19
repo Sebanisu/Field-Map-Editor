@@ -71,6 +71,52 @@ upscales::upscales(std::string root, std::optional<open_viii::LangT> coo, std::w
      return transform_and_find_a_match(selections->paths_no_palette_and_texture_page);
 }
 
+
+[[nodiscard]] bool upscales::has_upscale_path(const std::filesystem::path &field_root, fme::key_value_data copy_data) const
+{
+
+     namespace v           = std::ranges::views;
+     const auto selections = m_selections.lock();
+     if (!selections)
+     {
+          spdlog::error("Failed to lock m_selections: shared_ptr is expired.");
+          return false;
+     }
+     const auto transform_and_find_a_match = [&](const auto &...arr) -> bool {
+          return (
+            std::ranges::any_of(
+              arr,
+              [](const auto &path_str) {
+                   try
+                   {
+                        return std::filesystem::exists(path_str);
+                   }
+                   catch (...)
+                   {
+                        return false;
+                   }
+              },
+              [&](const std::string &pattern) -> std::filesystem::path {
+                   return copy_data.replace_tags(pattern, selections, field_root.string());
+              })
+            || ...);
+     };
+     if (copy_data.pupu_id.has_value())
+     {
+          return transform_and_find_a_match(selections->paths_with_pupu_id);
+     }
+     if (copy_data.texture_page.has_value() && copy_data.palette.has_value())
+     {
+          return transform_and_find_a_match(selections->paths_with_palette_and_texture_page, selections->paths_no_palette_and_texture_page);
+     }
+     if (copy_data.texture_page.has_value())
+     {
+          return transform_and_find_a_match(selections->paths_with_texture_page, selections->paths_no_palette_and_texture_page);
+     }
+     return transform_and_find_a_match(selections->paths_no_palette_and_texture_page);
+}
+
+
 [[nodiscard]] std::vector<std::filesystem::path> upscales::get_paths() const
 {
 
