@@ -144,6 +144,7 @@ struct gui
      void         menuitem_load_swizzle_textures();
      void         menuitem_load_swizzle_textures2();
      void         menuitem_load_deswizzle_textures();
+     void         menuitem_load_deswizzle_textures2();
      void         menuitem_save_texture(bool enabled = true);
      void         menuitem_save_mim_file(bool enabled = true);
      void         menuitem_save_map_file(bool enabled = true);
@@ -230,6 +231,7 @@ struct gui
      void                         refresh_path();
      void                         browse_buttons();
      void                         menu_upscale_paths();
+     void                         menu_deswizzle_paths();
      void                         refresh_field();
      void                         refresh_bpp(open_viii::graphics::BPPT in_bpp);
      void                         refresh_palette(std::uint8_t palette);
