@@ -1746,176 +1746,54 @@ std::string map_sprite::appends_prefix_base_name(std::string_view title) const
 }
 
 
-bool map_sprite::has_deswizzle_path() const
+bool map_sprite::has_deswizzle_path(const std::string &ext) const
 {
-
-     const std::vector<ff_8::PupuID> &unique_pupu_ids = working_unique_pupu();// Get list of unique Pupu IDs
-     return std::ranges::any_of(unique_pupu_ids, [&](const ff_8::PupuID pupu) { return has_deswizzle_path(pupu); });
+     return has_deswizzle_path(m_filters.deswizzle.value().string(),ext);
 }
-
-bool map_sprite::has_swizzle_path() const
+bool map_sprite::has_deswizzle_path(const ff_8::PupuID pupu, const std::string &ext) const
 {
-     return [&]() {
-          for (const auto &[bpp, palette_set] : m_all_unique_values_and_strings.palette())
-          {
-               if (bpp.bpp24())
-               {
-                    continue;
-               }
-               for (const auto &palette : palette_set.values())
-               {
-                    for (const auto &texture_page : m_all_unique_values_and_strings.texture_page_id().values())
-                    {
-                         if (has_swizzle_path(texture_page, palette))
-                         {
-                              return true;
-                         }
-                    }
-               }
-          }
-          return false;
-     }() || [&]() {
-          for (const auto &texture_page : m_all_unique_values_and_strings.texture_page_id().values())
-          {
-               if (has_swizzle_path(texture_page))
-               {
-                    return true;
-               }
-          }
-          return false;
-     }();
+     return has_deswizzle_path(m_filters.deswizzle.value().string(), pupu, ext);
 }
-
-bool map_sprite::has_deswizzle_path(const ff_8::PupuID pupu) const
-{
-     const auto selections = m_selections.lock();
-     if (!selections)
-     {
-          spdlog::error("Failed to lock m_selections: shared_ptr is expired.");
-          return false;
-     }
-     const key_value_data cpm = { .field_name = get_base_name(),
-                                  .ext        = ".png",
-                                  .language_code =
-                                    m_map_group.opt_coo.has_value() && m_map_group.opt_coo.value() != open_viii::LangT::generic
-                                      ? m_map_group.opt_coo
-                                      : std::nullopt,
-                                  .pupu_id = pupu.raw() };
-
-     return m_upscales.has_upscale_path(m_filters.deswizzle.value().string(), cpm);
-          //   || safedir(cpm.replace_tags(selections->output_map_pattern_for_deswizzle, selections, m_filters.deswizzle.value().string()))
-          //        .is_exists();
-}
-
-bool map_sprite::has_swizzle_path(const std::uint8_t texture_page, std::uint8_t palette) const
-{
-     const auto selections = m_selections.lock();
-     if (!selections)
-     {
-          spdlog::error("Failed to lock m_selections: shared_ptr is expired.");
-          return {};
-     }
-     const key_value_data cpm = { .field_name = get_base_name(),
-                                  .ext        = ".png",
-                                  .language_code =
-                                    m_map_group.opt_coo.has_value() && m_map_group.opt_coo.value() != open_viii::LangT::generic
-                                      ? m_map_group.opt_coo
-                                      : std::nullopt,
-                                  .palette      = palette,
-                                  .texture_page = texture_page };
-
-     return m_upscales.has_upscale_path(m_filters.upscale.value().string(), cpm);
-          //   || safedir(cpm.replace_tags(selections->output_swizzle_pattern, selections, m_filters.upscale.value().string())).is_exists();
-}
-bool map_sprite::has_swizzle_path(const std::uint8_t texture_page) const
-{
-
-     const auto selections = m_selections.lock();
-     if (!selections)
-     {
-          spdlog::error("Failed to lock m_selections: shared_ptr is expired.");
-          return {};
-     }
-     const key_value_data cpm = { .field_name = get_base_name(),
-                                  .ext        = ".png",
-                                  .language_code =
-                                    m_map_group.opt_coo.has_value() && m_map_group.opt_coo.value() != open_viii::LangT::generic
-                                      ? m_map_group.opt_coo
-                                      : std::nullopt,
-                                  .texture_page = texture_page };
-
-     return m_upscales.has_upscale_path(m_filters.upscale.value().string(), cpm);
-          //   || safedir(cpm.replace_tags(selections->output_swizzle_pattern, selections, m_filters.upscale.value().string())).is_exists();
-}
-
-bool map_sprite::has_deswizzle_path(const std::filesystem::path &filter_path, const ff_8::PupuID pupu) const
-{
-     const auto selections = m_selections.lock();
-     if (!selections)
-     {
-          spdlog::error("Failed to lock m_selections: shared_ptr is expired.");
-          return false;
-     }
-     const key_value_data cpm = { .field_name = get_base_name(),
-                                  .ext        = ".png",
-                                  .language_code =
-                                    m_map_group.opt_coo.has_value() && m_map_group.opt_coo.value() != open_viii::LangT::generic
-                                      ? m_map_group.opt_coo
-                                      : std::nullopt,
-                                  .pupu_id = pupu.raw() };
-
-     return m_upscales.has_upscale_path(filter_path.string(), cpm);
-          //   || safedir(cpm.replace_tags(selections->output_map_pattern_for_deswizzle, selections, filter_path.string())).is_exists();
-}
-
-bool map_sprite::has_swizzle_path(const std::filesystem::path &filter_path, const std::uint8_t texture_page, std::uint8_t palette) const
-{
-     const auto selections = m_selections.lock();
-     if (!selections)
-     {
-          spdlog::error("Failed to lock m_selections: shared_ptr is expired.");
-          return false;
-     }
-     const key_value_data cpm = { .field_name = get_base_name(),
-                                  .ext        = ".png",
-                                  .language_code =
-                                    m_map_group.opt_coo.has_value() && m_map_group.opt_coo.value() != open_viii::LangT::generic
-                                      ? m_map_group.opt_coo
-                                      : std::nullopt,
-                                  .palette      = palette,
-                                  .texture_page = texture_page };
-
-     return m_upscales.has_upscale_path(filter_path.string(), cpm);
-          //   || safedir(cpm.replace_tags(selections->output_swizzle_pattern, selections, filter_path.string())).is_exists();
-}
-
-bool map_sprite::has_swizzle_path(const std::filesystem::path &filter_path, const std::uint8_t texture_page) const
-{
-     const auto selections = m_selections.lock();
-     if (!selections)
-     {
-          spdlog::error("Failed to lock m_selections: shared_ptr is expired.");
-          return false;
-     }
-     const key_value_data cpm = { .field_name = get_base_name(),
-                                  .ext        = ".png",
-                                  .language_code =
-                                    m_map_group.opt_coo.has_value() && m_map_group.opt_coo.value() != open_viii::LangT::generic
-                                      ? m_map_group.opt_coo
-                                      : std::nullopt,
-                                  .texture_page = texture_page };
-
-     return m_upscales.has_upscale_path(filter_path.string(), cpm);
-          //   || safedir(cpm.replace_tags(selections->output_swizzle_pattern, selections, filter_path.string())).is_exists();
-}
-
-bool map_sprite::has_deswizzle_path(const std::filesystem::path &filter_path) const
+bool map_sprite::has_deswizzle_path(const std::filesystem::path &filter_path, const std::string &ext) const
 {
      const std::vector<ff_8::PupuID> &unique_pupu_ids = working_unique_pupu();
-     return std::ranges::any_of(unique_pupu_ids, [&](const ff_8::PupuID pupu) { return has_deswizzle_path(filter_path, pupu); });
+     return std::ranges::any_of(unique_pupu_ids, [&](const ff_8::PupuID pupu) { return has_deswizzle_path(filter_path, pupu, ext); });
+}
+bool map_sprite::has_deswizzle_path(const std::filesystem::path &filter_path, const ff_8::PupuID pupu, const std::string &ext) const
+{
+     const auto selections = m_selections.lock();
+     if (!selections)
+     {
+          spdlog::error("Failed to lock m_selections: shared_ptr is expired.");
+          return false;
+     }
+
+     return m_upscales.has_upscale_path(
+       filter_path.string(),
+       { .field_name = get_base_name(),
+         .ext        = ext,
+         .language_code =
+           m_map_group.opt_coo.has_value() && m_map_group.opt_coo.value() != open_viii::LangT::generic ? m_map_group.opt_coo : std::nullopt,
+         .pupu_id = pupu.raw() });
+     //   || safedir(cpm.replace_tags(selections->output_map_pattern_for_deswizzle, selections, filter_path.string())).is_exists();
 }
 
-bool map_sprite::has_swizzle_path(const std::filesystem::path &filter_path) const
+bool map_sprite::has_swizzle_path(const std::string &ext) const
+{
+     return has_swizzle_path(m_filters.upscale.value().string(),ext);
+}
+
+bool map_sprite::has_swizzle_path(const std::uint8_t texture_page, const std::string &ext) const
+{
+     return has_swizzle_path(m_filters.upscale.value().string(), texture_page, ext);
+}
+
+bool map_sprite::has_swizzle_path(const std::uint8_t texture_page, std::uint8_t palette, const std::string &ext) const
+{
+     return has_swizzle_path(m_filters.upscale.value().string(), texture_page, palette, ext);
+}
+
+bool map_sprite::has_swizzle_path(const std::filesystem::path &filter_path, const std::string &ext) const
 {
      return [&]() {
           for (const auto &[bpp, palette_set] : m_all_unique_values_and_strings.palette())
@@ -1928,7 +1806,7 @@ bool map_sprite::has_swizzle_path(const std::filesystem::path &filter_path) cons
                {
                     for (const auto &texture_page : m_all_unique_values_and_strings.texture_page_id().values())
                     {
-                         if (has_swizzle_path(filter_path, texture_page, palette))
+                         if (has_swizzle_path(filter_path, texture_page, palette, ext))
                          {
                               return true;
                          }
@@ -1939,7 +1817,7 @@ bool map_sprite::has_swizzle_path(const std::filesystem::path &filter_path) cons
      }() || [&]() {
           for (const auto &texture_page : m_all_unique_values_and_strings.texture_page_id().values())
           {
-               if (has_swizzle_path(filter_path, texture_page))
+               if (has_swizzle_path(filter_path, texture_page, ext))
                {
                     return true;
                }
@@ -1948,7 +1826,49 @@ bool map_sprite::has_swizzle_path(const std::filesystem::path &filter_path) cons
      }();
 }
 
-std::vector<std::filesystem::path> map_sprite::generate_deswizzle_paths(const ff_8::PupuID pupu) const
+bool map_sprite::has_swizzle_path(const std::filesystem::path &filter_path, const std::uint8_t texture_page, const std::string &ext) const
+{
+     const auto selections = m_selections.lock();
+     if (!selections)
+     {
+          spdlog::error("Failed to lock m_selections: shared_ptr is expired.");
+          return false;
+     }
+     return m_upscales.has_upscale_path(
+       filter_path.string(),
+       { .field_name = get_base_name(),
+         .ext        = ext,
+         .language_code =
+           m_map_group.opt_coo.has_value() && m_map_group.opt_coo.value() != open_viii::LangT::generic ? m_map_group.opt_coo : std::nullopt,
+         .texture_page = texture_page });
+     //   || safedir(cpm.replace_tags(selections->output_swizzle_pattern, selections, filter_path.string())).is_exists();
+}
+
+bool map_sprite::has_swizzle_path(
+  const std::filesystem::path &filter_path,
+  const std::uint8_t           texture_page,
+  std::uint8_t                 palette,
+  const std::string           &ext) const
+{
+     const auto selections = m_selections.lock();
+     if (!selections)
+     {
+          spdlog::error("Failed to lock m_selections: shared_ptr is expired.");
+          return false;
+     }
+
+     return m_upscales.has_upscale_path(
+       filter_path.string(),
+       { .field_name = get_base_name(),
+         .ext        = ext,
+         .language_code =
+           m_map_group.opt_coo.has_value() && m_map_group.opt_coo.value() != open_viii::LangT::generic ? m_map_group.opt_coo : std::nullopt,
+         .palette      = palette,
+         .texture_page = texture_page });
+     //   || safedir(cpm.replace_tags(selections->output_swizzle_pattern, selections, filter_path.string())).is_exists();
+}
+
+std::vector<std::filesystem::path> map_sprite::generate_deswizzle_paths(const ff_8::PupuID pupu, const std::string &ext) const
 {
      const auto selections = m_selections.lock();
      if (!selections)
@@ -1956,21 +1876,18 @@ std::vector<std::filesystem::path> map_sprite::generate_deswizzle_paths(const ff
           spdlog::error("Failed to lock m_selections: shared_ptr is expired.");
           return {};
      }
-     const key_value_data               cpm   = { .field_name = get_base_name(),
-                                                  .ext        = ".png",
-                                                  .language_code =
-                                    m_map_group.opt_coo.has_value() && m_map_group.opt_coo.value() != open_viii::LangT::generic
-                                                      ? m_map_group.opt_coo
-                                                      : std::nullopt,
-                                                  .pupu_id = pupu.raw() };
-
-     std::vector<std::filesystem::path> paths = m_upscales.generate_upscale_paths(m_filters.deswizzle.value().string(), cpm);
-     paths.push_back(cpm.replace_tags(selections->output_map_pattern_for_deswizzle, selections, m_filters.deswizzle.value().string()));
-
-     return paths;
+     return generate_paths(
+       m_filters.deswizzle.value().string(),
+       { .field_name = get_base_name(),
+         .ext        = ext,
+         .language_code =
+           m_map_group.opt_coo.has_value() && m_map_group.opt_coo.value() != open_viii::LangT::generic ? m_map_group.opt_coo : std::nullopt,
+         .pupu_id = pupu.raw() },
+       selections->output_map_pattern_for_deswizzle);
 }
 
-std::vector<std::filesystem::path> map_sprite::generate_swizzle_paths(const std::uint8_t texture_page, std::uint8_t palette) const
+std::vector<std::filesystem::path>
+  map_sprite::generate_swizzle_paths(const std::uint8_t texture_page, std::uint8_t palette, const std::string &ext) const
 {
      const auto selections = m_selections.lock();
      if (!selections)
@@ -1978,22 +1895,18 @@ std::vector<std::filesystem::path> map_sprite::generate_swizzle_paths(const std:
           spdlog::error("Failed to lock m_selections: shared_ptr is expired.");
           return {};
      }
-     const key_value_data               cpm   = { .field_name = get_base_name(),
-                                                  .ext        = ".png",
-                                                  .language_code =
-                                    m_map_group.opt_coo.has_value() && m_map_group.opt_coo.value() != open_viii::LangT::generic
-                                                      ? m_map_group.opt_coo
-                                                      : std::nullopt,
-                                                  .palette      = palette,
-                                                  .texture_page = texture_page };
-
-     std::vector<std::filesystem::path> paths = m_upscales.generate_upscale_paths(m_filters.upscale.value().string(), cpm);
-     paths.push_back(cpm.replace_tags(selections->output_swizzle_pattern, selections, m_filters.upscale.value().string()));
-
-     return paths;
+     return generate_paths(
+       m_filters.upscale.value().string(),
+       { .field_name = get_base_name(),
+         .ext        = ext,
+         .language_code =
+           m_map_group.opt_coo.has_value() && m_map_group.opt_coo.value() != open_viii::LangT::generic ? m_map_group.opt_coo : std::nullopt,
+         .palette      = palette,
+         .texture_page = texture_page },
+       selections->output_swizzle_pattern);
 }
 
-std::vector<std::filesystem::path> map_sprite::generate_swizzle_paths(const std::uint8_t texture_page) const
+std::vector<std::filesystem::path> map_sprite::generate_swizzle_paths(const std::uint8_t texture_page, const std::string &ext) const
 {
      const auto selections = m_selections.lock();
      if (!selections)
@@ -2001,17 +1914,35 @@ std::vector<std::filesystem::path> map_sprite::generate_swizzle_paths(const std:
           spdlog::error("Failed to lock m_selections: shared_ptr is expired.");
           return {};
      }
-     const key_value_data               cpm   = { .field_name = get_base_name(),
-                                                  .ext        = ".png",
-                                                  .language_code =
-                                    m_map_group.opt_coo.has_value() && m_map_group.opt_coo.value() != open_viii::LangT::generic
-                                                      ? m_map_group.opt_coo
-                                                      : std::nullopt,
-                                                  .texture_page = texture_page };
+     return generate_paths(
+       m_filters.upscale.value().string(),
+       { .field_name = get_base_name(),
+         .ext        = ext,
+         .language_code =
+           m_map_group.opt_coo.has_value() && m_map_group.opt_coo.value() != open_viii::LangT::generic ? m_map_group.opt_coo : std::nullopt,
+         .texture_page = texture_page },
+       selections->output_swizzle_pattern);
+}
 
-     std::vector<std::filesystem::path> paths = m_upscales.generate_upscale_paths(m_filters.upscale.value().string(), cpm);
-     paths.push_back(cpm.replace_tags(selections->output_swizzle_pattern, selections, m_filters.upscale.value().string()));
-
+std::vector<std::filesystem::path>
+  map_sprite::generate_paths(const std::string &filter_path, const key_value_data &cpm, const std::string &output_pattern) const
+{
+     std::vector<std::filesystem::path> paths      = {};
+     const auto                         selections = m_selections.lock();
+     if (!selections)
+     {
+          spdlog::error("Failed to lock m_selections: shared_ptr is expired.");
+          return paths;
+     }
+     if (!filter_path.empty())
+     {
+          paths = m_upscales.generate_upscale_paths(filter_path, cpm);
+     }
+     if (!output_pattern.empty())
+     {
+          paths.push_back(cpm.replace_tags(output_pattern, selections, filter_path));
+     }
      return paths;
 }
+
 }// namespace fme
