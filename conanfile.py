@@ -35,6 +35,7 @@ class MyPackage(ConanFile):
         self.tool_requires("cmake/[>=3.22.6]")        
         # if self.settings.os != "Windows":
         #     self.tool_requires("pkg-config/[>=0.29.2]")
+        
 
         
     def configure(self):
