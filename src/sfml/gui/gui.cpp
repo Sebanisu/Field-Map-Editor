@@ -2432,48 +2432,52 @@ void gui::menu_upscale_paths()
           if (ImGui::BeginTable("##path_table", 2))
           {
                const auto end_table = scope_guard(&ImGui::EndTable);
-               for (const auto &path : m_upscale_paths)
+               for (const auto &[path, enabled] : std::ranges::views::zip(m_upscale_paths, m_upscale_paths_enabled))
                {
                     bool is_checked = path == m_map_sprite->filter().upscale.value() && m_map_sprite->filter().upscale.enabled();
                     ImGui::TableNextColumn();
                     ImGui::SetNextItemAllowOverlap();
-                    const auto  path_padded  = path + "  -  ";
-                    size_t      offset       = static_cast<size_t>(elapsed_time * chars_per_second) % (path_padded.size());// Sliding offset
-                    std::string display_text = path_padded.substr(offset, max_display_chars);
-                    if (display_text.size() < max_display_chars && offset > 0)
                     {
-                         // Wrap-around to show the start of the string
-                         display_text += path_padded.substr(0, max_display_chars - display_text.size());
-                    }
-                    const auto pop_id_menu_item = PushPopID();
-                    ImVec2     cursor_pos       = ImGui::GetCursorScreenPos();
-                    bool       selected         = ImGui::MenuItem("##menu_item", nullptr, &is_checked);
-                    if (!selected)
-                    {
-                         tool_tip(path);
-                    }
-                    ImGui::SetCursorScreenPos(cursor_pos);
-                    ImGui::TextUnformatted(display_text.c_str());// Draw the scrolling text separately
-                    ImGui::SameLine();
-                    float sz = ImGui::GetTextLineHeight();
-                    ImGui::Dummy(ImVec2(sz, sz));
-                    if (selected)
-                    {
-                         if (m_map_sprite->filter().upscale.value() != path)
+                         ImGui::BeginDisabled(!enabled);
+                         const auto  pop_disabled = scope_guard{ &ImGui::EndDisabled };
+                         const auto  path_padded  = path + "  -  ";
+                         size_t      offset = static_cast<size_t>(elapsed_time * chars_per_second) % (path_padded.size());// Sliding offset
+                         std::string display_text = path_padded.substr(offset, max_display_chars);
+                         if (display_text.size() < max_display_chars && offset > 0)
                          {
-                              m_map_sprite->filter().upscale.update(path);
+                              // Wrap-around to show the start of the string
+                              display_text += path_padded.substr(0, max_display_chars - display_text.size());
                          }
-                         if (m_map_sprite->filter().upscale.enabled())
+                         const auto pop_id_menu_item = PushPopID();
+                         ImVec2     cursor_pos       = ImGui::GetCursorScreenPos();
+                         bool       selected         = ImGui::MenuItem("##menu_item", nullptr, &is_checked);
+                         if (!selected)
                          {
-                              m_map_sprite->filter().upscale.disable();
+                              tool_tip(path);
                          }
-                         else
+                         ImGui::SetCursorScreenPos(cursor_pos);
+                         ImGui::TextUnformatted(display_text.c_str());// Draw the scrolling text separately
+                         ImGui::SameLine();
+                         float sz = ImGui::GetTextLineHeight();
+                         ImGui::Dummy(ImVec2(sz, sz));
+                         if (selected)
                          {
-                              m_map_sprite->filter().upscale.enable();
+                              if (m_map_sprite->filter().upscale.value() != path)
+                              {
+                                   m_map_sprite->filter().upscale.update(path);
+                              }
+                              if (m_map_sprite->filter().upscale.enabled())
+                              {
+                                   m_map_sprite->filter().upscale.disable();
+                              }
+                              else
+                              {
+                                   m_map_sprite->filter().deswizzle.disable();
+                                   m_map_sprite->filter().upscale.enable();
+                              }
+                              refresh_render_texture(true);
                          }
-                         refresh_render_texture(true);
                     }
-
                     ImGui::TableNextColumn();
 
                     // Find the index where other_path starts with a path in transformed_paths
@@ -2608,46 +2612,51 @@ void gui::menu_deswizzle_paths()
           if (ImGui::BeginTable("##path_table", 2))
           {
                const auto end_table = scope_guard(&ImGui::EndTable);
-               for (const auto &path : m_deswizzle_paths)
+               for (const auto &[path, enabled] : std::ranges::views::zip(m_deswizzle_paths, m_deswizzle_paths_enabled))
                {
                     bool is_checked = path == m_map_sprite->filter().deswizzle.value() && m_map_sprite->filter().deswizzle.enabled();
                     ImGui::TableNextColumn();
                     ImGui::SetNextItemAllowOverlap();
-                    const auto  path_padded  = path + "  -  ";
-                    size_t      offset       = static_cast<size_t>(elapsed_time * chars_per_second) % (path_padded.size());// Sliding offset
-                    std::string display_text = path_padded.substr(offset, max_display_chars);
-                    if (display_text.size() < max_display_chars && offset > 0)
                     {
-                         // Wrap-around to show the start of the string
-                         display_text += path_padded.substr(0, max_display_chars - display_text.size());
-                    }
-                    const auto pop_id_menu_item = PushPopID();
-                    ImVec2     cursor_pos       = ImGui::GetCursorScreenPos();
-                    bool       selected         = ImGui::MenuItem("##menu_item", nullptr, &is_checked);
-                    if (!selected)
-                    {
-                         tool_tip(path);
-                    }
-                    ImGui::SetCursorScreenPos(cursor_pos);
-                    ImGui::TextUnformatted(display_text.c_str());// Draw the scrolling text separately
-                    ImGui::SameLine();
-                    float sz = ImGui::GetTextLineHeight();
-                    ImGui::Dummy(ImVec2(sz, sz));
-                    if (selected)
-                    {
-                         if (m_map_sprite->filter().deswizzle.value() != path)
+                         ImGui::BeginDisabled(!enabled);
+                         const auto  pop_disabled = scope_guard{ &ImGui::EndDisabled };
+                         const auto  path_padded  = path + "  -  ";
+                         size_t      offset = static_cast<size_t>(elapsed_time * chars_per_second) % (path_padded.size());// Sliding offset
+                         std::string display_text = path_padded.substr(offset, max_display_chars);
+                         if (display_text.size() < max_display_chars && offset > 0)
                          {
-                              m_map_sprite->filter().deswizzle.update(path);
+                              // Wrap-around to show the start of the string
+                              display_text += path_padded.substr(0, max_display_chars - display_text.size());
                          }
-                         if (m_map_sprite->filter().deswizzle.enabled())
+                         const auto pop_id_menu_item = PushPopID();
+                         ImVec2     cursor_pos       = ImGui::GetCursorScreenPos();
+                         bool       selected         = ImGui::MenuItem("##menu_item", nullptr, &is_checked);
+                         if (!selected)
                          {
-                              m_map_sprite->filter().deswizzle.disable();
+                              tool_tip(path);
                          }
-                         else
+                         ImGui::SetCursorScreenPos(cursor_pos);
+                         ImGui::TextUnformatted(display_text.c_str());// Draw the scrolling text separately
+                         ImGui::SameLine();
+                         float sz = ImGui::GetTextLineHeight();
+                         ImGui::Dummy(ImVec2(sz, sz));
+                         if (selected)
                          {
-                              m_map_sprite->filter().deswizzle.enable();
+                              if (m_map_sprite->filter().deswizzle.value() != path)
+                              {
+                                   m_map_sprite->filter().deswizzle.update(path);
+                              }
+                              if (m_map_sprite->filter().deswizzle.enabled())
+                              {
+                                   m_map_sprite->filter().deswizzle.disable();
+                              }
+                              else
+                              {
+                                   m_map_sprite->filter().upscale.disable();
+                                   m_map_sprite->filter().deswizzle.enable();
+                              }
+                              refresh_render_texture(true);
                          }
-                         refresh_render_texture(true);
                     }
 
                     ImGui::TableNextColumn();
@@ -3954,7 +3963,7 @@ void gui::generate_deswizzle_paths()
      m_deswizzle_paths_enabled.clear();
      for (const auto &path : m_deswizzle_paths)
      {
-          m_deswizzle_paths_enabled.push_back(m_map_sprite->has_deswizzle_path(std::filesystem::path{path}));
+          m_deswizzle_paths_enabled.push_back(m_map_sprite->has_deswizzle_path(std::filesystem::path{ path }));
      }
 }
 
