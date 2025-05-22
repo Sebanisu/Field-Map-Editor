@@ -2444,15 +2444,10 @@ void gui::menu_upscale_paths()
                     }
                     ImGui::TableNextColumn();
                     const auto pop_id = PushPopID();
-                    if (ImGui::Button(ICON_FA_TRASH))
+                    delete_me         = add_delete_button(index);
+                    if (std::cmp_greater_equal(delete_me, 0))
                     {
-                         delete_me = index;
-                         ImGui::CloseCurrentPopup();
                          break;
-                    }
-                    else
-                    {
-                         tool_tip("delete me");
                     }
                }
           }
@@ -2520,54 +2515,66 @@ void gui::menu_upscale_paths()
                     }
                     ImGui::TableNextColumn();
 
-                    // Find the index where other_path starts with a path in transformed_paths
-                    auto it = std::ranges::find_if(transformed_paths, [&path](const auto &pair) {
-                         const auto &[index, t_path] = pair;
-                         return path.starts_with(t_path);
-                    });
-                    if (it != std::ranges::end(transformed_paths))
+                    delete_me = add_delete_button(path, m_selections->paths_vector_upscale);
+                    if (std::cmp_greater_equal(delete_me, 0))
                     {
-                         const auto &[index, _] = *it;
-                         const auto pop_id      = PushPopID();
-                         if (ImGui::Button(ICON_FA_TRASH))
-                         {
-                              delete_me = index;
-                              ImGui::CloseCurrentPopup();
-                              break;
-                         }
-                         else
-                         {
-                              tool_tip("delete me");
-                         }
+                         break;
                     }
                }
           }
-          if (std::cmp_greater(delete_me, -1))
+          if (const auto found = handle_path_deletion(m_selections->paths_vector_upscale, delete_me); found.has_value())
           {
-               auto it = std::ranges::begin(m_selections->paths_vector_upscale);
-               std::ranges::advance(it, delete_me);
-               if (it != std::ranges::end(m_selections->paths_vector_upscale))
+               m_selections->update_configuration_key(ConfigKey::PathsVectorUpscale);
+               generate_upscale_paths();
+               if (found.value() == m_map_sprite->filter().upscale.value())
                {
-
-                    bool selected = *it == m_map_sprite->filter().upscale.value();
-                    m_selections->paths_vector_upscale.erase(it);
-                    m_selections->update_configuration_key(ConfigKey::PathsVectorUpscale);
-
-                    if (selected)
+                    m_map_sprite->filter().upscale.update(find_replacement_path_value(m_upscale_paths, m_upscale_paths_enabled));
+                    if (std::ranges::empty(m_map_sprite->filter().upscale.value()))
                     {
-                         if (std::ranges::empty(m_selections->paths_vector_upscale))
-                         {
-                              m_map_sprite->filter().upscale.update("");
-                         }
-                         else
-                         {
-                              m_map_sprite->filter().upscale.update(m_selections->paths_vector_upscale.front());
-                         }
-                         refresh_render_texture(true);
+                         m_map_sprite->filter().upscale.disable();
                     }
+                    refresh_render_texture(true);
                }
           }
      }();
+}
+
+// Helper function to handle path deletion
+std::optional<std::string> gui::handle_path_deletion(std::vector<std::string> &paths_vector, std::ptrdiff_t offset)
+{
+     if (std::cmp_less(offset, 0))
+     {
+          return std::nullopt;
+     }
+     auto it = std::ranges::begin(paths_vector);
+     std::ranges::advance(it, offset);
+     if (it != std::ranges::end(paths_vector))
+     {
+          auto return_value = std::optional<std::string>(std::move(*it));
+          paths_vector.erase(it);
+          return return_value;
+     }
+     return std::nullopt;
+}
+
+std::string gui::find_replacement_path_value(const std::vector<std::string> &paths, const std::vector<bool> &paths_enabled)
+{
+     if (std::ranges::empty(paths))
+     {
+          return "";
+     }
+     if (std::ranges::size(paths) == std::ranges::size(paths_enabled))
+     {
+          return "";
+     }
+
+     auto zip_paths = std::ranges::views::zip(paths, paths_enabled);
+     auto it        = std::ranges::find_if(zip_paths, [](const auto &pair) { return std::get<1>(pair); });
+     if (it != std::ranges::end(zip_paths))
+     {
+          return std::get<0>(*it);
+     }
+     return "";
 }
 
 
@@ -2664,15 +2671,10 @@ void gui::menu_deswizzle_paths()
                     }
                     ImGui::TableNextColumn();
                     const auto pop_id = PushPopID();
-                    if (ImGui::Button(ICON_FA_TRASH))
+                    delete_me         = add_delete_button(index);
+                    if (std::cmp_greater_equal(delete_me, 0))
                     {
-                         delete_me = index;
-                         ImGui::CloseCurrentPopup();
                          break;
-                    }
-                    else
-                    {
-                         tool_tip("delete me");
                     }
                }
           }
@@ -2740,55 +2742,62 @@ void gui::menu_deswizzle_paths()
                     }
 
                     ImGui::TableNextColumn();
-
-                    // Find the index where other_path starts with a path in transformed_paths
-                    auto it = std::ranges::find_if(transformed_paths, [&path](const auto &pair) {
-                         const auto &[index, t_path] = pair;
-                         return path.starts_with(t_path);
-                    });
-                    if (it != std::ranges::end(transformed_paths))
+                    delete_me = add_delete_button(path, m_selections->paths_vector_deswizzle);
+                    if (std::cmp_greater_equal(delete_me, 0))
                     {
-                         const auto &[index, _] = *it;
-                         const auto pop_id      = PushPopID();
-                         if (ImGui::Button(ICON_FA_TRASH))
-                         {
-                              delete_me = index;
-                              ImGui::CloseCurrentPopup();
-                              break;
-                         }
-                         else
-                         {
-                              tool_tip("delete me");
-                         }
+                         break;
                     }
                }
           }
-          if (std::cmp_greater(delete_me, -1))
+
+          if (const auto found = handle_path_deletion(m_selections->paths_vector_deswizzle, delete_me); found.has_value())
           {
-               auto it = std::ranges::begin(m_selections->paths_vector_deswizzle);
-               std::ranges::advance(it, delete_me);
-               if (it != std::ranges::end(m_selections->paths_vector_deswizzle))
+               m_selections->update_configuration_key(ConfigKey::PathsVectorDeswizzle);
+               generate_deswizzle_paths();
+               if (found.value() == m_map_sprite->filter().deswizzle.value())
                {
-
-                    bool selected = *it == m_map_sprite->filter().deswizzle.value();
-                    m_selections->paths_vector_deswizzle.erase(it);
-                    m_selections->update_configuration_key(ConfigKey::PathsVectorDeswizzle);
-
-                    if (selected)
+                    m_map_sprite->filter().deswizzle.update(find_replacement_path_value(m_deswizzle_paths, m_deswizzle_paths_enabled));
+                    if (std::ranges::empty(m_map_sprite->filter().deswizzle.value()))
                     {
-                         if (std::ranges::empty(m_selections->paths_vector_deswizzle))
-                         {
-                              m_map_sprite->filter().deswizzle.update("");
-                         }
-                         else
-                         {
-                              m_map_sprite->filter().deswizzle.update(m_selections->paths_vector_deswizzle.front());
-                         }
-                         refresh_render_texture(true);
+                         m_map_sprite->filter().deswizzle.disable();
                     }
+                    refresh_render_texture(true);
                }
           }
      }();
+}
+
+std::ptrdiff_t gui::add_delete_button(const std::ptrdiff_t index)
+{
+     const auto pop_id = PushPopID();
+     if (ImGui::Button(ICON_FA_TRASH))
+     {
+          ImGui::CloseCurrentPopup();
+          return index;
+     }
+     else
+     {
+          tool_tip("delete me");
+     }
+     return -1;
+}
+
+std::ptrdiff_t gui::add_delete_button(const std::string &path, const std::vector<std::string> &paths)
+{
+     auto       transformed_paths = paths | std::ranges::views::enumerate;
+     const auto it = std::ranges::find_if(transformed_paths, [&path](const auto &pair) { return path.starts_with(std::get<1>(pair)); });
+     if (it != std::ranges::end(transformed_paths))
+     {
+          const auto &index  = std::get<0>(*it);
+          const auto  pop_id = PushPopID();
+          if (ImGui::Button(ICON_FA_TRASH))
+          {
+               ImGui::CloseCurrentPopup();
+               return static_cast<std::ptrdiff_t>(index);
+          }
+          tool_tip("delete me");
+     }
+     return -1;
 }
 
 

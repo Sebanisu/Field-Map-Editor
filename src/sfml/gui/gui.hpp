@@ -215,33 +215,39 @@ struct gui
      std::filesystem::path                     path_with_prefix_and_base_name(std::filesystem::path selected_path) const;
      void                                      filter_empty_import_tiles();
      void                                      collapsing_header_generated_tiles() const;
-     void                         adjust_source_xy_texture_page_for_import_map(uint8_t next_source_y, const uint8_t next_texture_page);
-     void                         find_selected_tile_for_import(variant_tile_t &current_tile) const;
-     void                         event_type_key_released(const sf::Event::KeyEvent &key);
-     void                         event_type_key_pressed(const sf::Event::KeyEvent &key);
-     void                         event_type_mouse_button_pressed(const sf::Mouse::Button &button);
-     void                         event_type_mouse_button_released(const sf::Mouse::Button &button);
-     void                         file_menu();
-     void                         edit_menu();
-     void                         windows_menu();
-     void                         refresh_map_swizzle();
-     void                         refresh_map_disable_blending();
-     void                         refresh_draw_mode();
-     void                         refresh_mim_palette_texture();
-     bool                         change_background_color(const fme::color &);
-     void                         save_background_color();
-     void                         refresh_path();
-     void                         browse_buttons();
-     void                         menu_upscale_paths();
-     void                         menu_deswizzle_paths();
-     void                         refresh_field();
-     void                         refresh_bpp(open_viii::graphics::BPPT in_bpp);
-     void                         refresh_palette(std::uint8_t palette);
-     void                         refresh_render_texture(bool reload_textures = false);
-     void                         refresh_coo();
+     void adjust_source_xy_texture_page_for_import_map(uint8_t next_source_y, const uint8_t next_texture_page);
+     void find_selected_tile_for_import(variant_tile_t &current_tile) const;
+     void event_type_key_released(const sf::Event::KeyEvent &key);
+     void event_type_key_pressed(const sf::Event::KeyEvent &key);
+     void event_type_mouse_button_pressed(const sf::Mouse::Button &button);
+     void event_type_mouse_button_released(const sf::Mouse::Button &button);
+     void file_menu();
+     void edit_menu();
+     void windows_menu();
+     void refresh_map_swizzle();
+     void refresh_map_disable_blending();
+     void refresh_draw_mode();
+     void refresh_mim_palette_texture();
+     bool change_background_color(const fme::color &);
+     void save_background_color();
+     void refresh_path();
+     void browse_buttons();
+     void menu_upscale_paths();
+     void menu_deswizzle_paths();
+     void refresh_field();
+     void refresh_bpp(open_viii::graphics::BPPT in_bpp);
+     void refresh_palette(std::uint8_t palette);
+     void refresh_render_texture(bool reload_textures = false);
+     void refresh_coo();
+     [[nodiscard]] static std::optional<std::string> handle_path_deletion(std::vector<std::string> &paths_vector, std::ptrdiff_t offset);
+     [[nodiscard]] static std::string
+       find_replacement_path_value(const std::vector<std::string> &paths, const std::vector<bool> &paths_enabled);
+     [[nodiscard]] static std::ptrdiff_t add_delete_button(const std::string &path, const std::vector<std::string> &paths);
+
+     [[nodiscard]] static std::ptrdiff_t add_delete_button(const std::ptrdiff_t index);
 
 
-     static inline constinit bool toggle_imgui_demo_window = { false };
+     static inline constinit bool        toggle_imgui_demo_window = { false };
 
      struct map_pupu_id
      {
