@@ -173,39 +173,39 @@ void fme::Selections::load_configuration()
      // Arrays
      if (config.load_array(key_to_string(ConfigKey::PathPatternsCommonUpscale), paths_common_upscale))
      {
-          assert(fme::key_value_data::has_balanced_braces(paths_common_upscale));
+          assert(has_balanced_braces(paths_common_upscale));
      }
      if (config.load_array(key_to_string(ConfigKey::PathPatternsCommonUpscaleForMaps), paths_common_upscale_for_maps))
      {
-          assert(fme::key_value_data::has_balanced_braces(paths_common_upscale_for_maps));
+          assert(has_balanced_braces(paths_common_upscale_for_maps));
      }
      if (config.load_array(key_to_string(ConfigKey::PathPatternsNoPaletteAndTexturePage), paths_no_palette_and_texture_page))
      {
-          assert(fme::key_value_data::has_balanced_braces(paths_no_palette_and_texture_page));
+          assert(has_balanced_braces(paths_no_palette_and_texture_page));
      }
      if (config.load_array(key_to_string(ConfigKey::PathPatternsWithPaletteAndTexturePage), paths_with_palette_and_texture_page))
      {
-          assert(fme::key_value_data::has_balanced_braces(paths_with_palette_and_texture_page));
+          assert(has_balanced_braces(paths_with_palette_and_texture_page));
      }
      if (config.load_array(key_to_string(ConfigKey::PathPatternsWithPupuID), paths_with_pupu_id))
      {
-          assert(fme::key_value_data::has_balanced_braces(paths_with_pupu_id));
+          assert(has_balanced_braces(paths_with_pupu_id));
      }
      if (config.load_array(key_to_string(ConfigKey::PathPatternsWithTexturePage), paths_with_texture_page))
      {
-          assert(fme::key_value_data::has_balanced_braces(paths_with_texture_page));
+          assert(has_balanced_braces(paths_with_texture_page));
      }
      if (config.load_array(key_to_string(ConfigKey::PathsVector), paths_vector))
      {
-          // assert(fme::key_value_data::has_balanced_braces(paths_vector));
+          // assert(has_balanced_braces(paths_vector));
      }
      if (config.load_array(key_to_string(ConfigKey::PathsVectorUpscale), paths_vector_upscale))
      {
-          // assert(fme::key_value_data::has_balanced_braces(paths_vector_upscale));
+          // assert(has_balanced_braces(paths_vector_upscale));
      }
      if (config.load_array(key_to_string(ConfigKey::PathsVectorDeswizzle), paths_vector_deswizzle))
      {
-          // assert(fme::key_value_data::has_balanced_braces(paths_vector_deswizzle));
+          // assert(has_balanced_braces(paths_vector_deswizzle));
      }
      if (paths_vector.empty())
      {

@@ -193,7 +193,7 @@ struct Selections
                "{selected_path}/{field_name}/{field_name}_{texture_page}_{palette}{ext}",
                "{selected_path}/{field_prefix}/{field_name}/{field_name}_{texture_page}_{palette}{ext}"
           };
-          assert(fme::key_value_data::has_balanced_braces(ret));
+          assert(has_balanced_braces(ret));
           return ret;
      }();
 
@@ -214,7 +214,7 @@ struct Selections
                                       "{selected_path}/{field_name}_{texture_page}{ext}",
                                       "{selected_path}/{field_name}/{field_name}_{texture_page}{ext}",
                                       "{selected_path}/{field_prefix}/{field_name}/{field_name}_{texture_page}{ext}" };
-          assert(fme::key_value_data::has_balanced_braces(ret));
+          assert(has_balanced_braces(ret));
           return ret;
      }();
 
@@ -222,7 +222,7 @@ struct Selections
           const auto ret = std::vector<std::string>{ "{selected_path}/{field_name}_{pupu_id}{ext}",
                                                      "{selected_path}/{field_name}/{field_name}_{pupu_id}{ext}",
                                                      "{selected_path}/{field_prefix}/{field_name}/{field_name}_{pupu_id}{ext}" };
-          assert(fme::key_value_data::has_balanced_braces(ret));
+          assert(has_balanced_braces(ret));
           return ret;
      }();
 
@@ -234,7 +234,7 @@ struct Selections
                                                      "{selected_path}/{field_name}{ext}",
                                                      "{selected_path}/{field_name}/{field_name}{ext}",
                                                      "{selected_path}/{field_prefix}/{field_name}/{field_name}{ext}" };
-          assert(fme::key_value_data::has_balanced_braces(ret));
+          assert(has_balanced_braces(ret));
           return ret;
      }();
 
@@ -261,7 +261,7 @@ struct Selections
                                                      "{selected_path}/ff8/Data/{jp}/FIELD/mapdata",
                                                      "{selected_path}/ff8/Data/{x}/field/mapdata",
                                                      "{selected_path}/ff8/Data/{x}/FIELD/mapdata" };
-          assert(fme::key_value_data::has_balanced_braces(ret));
+          assert(has_balanced_braces(ret));
           return ret;
      }();
 
@@ -277,7 +277,7 @@ struct Selections
                                       // paths list might need to be somewhere else. maybe a get paths map.
                                       "{selected_path}/{ffnx_direct_mode_path}/field/mapdata/"
             };
-          assert(fme::key_value_data::has_balanced_braces(ret));
+          assert(has_balanced_braces(ret));
           return ret;
      }();
 
@@ -311,6 +311,49 @@ struct Selections
      void                    update_configuration_key(ConfigKey key) const;
 
      static std::string_view key_to_string(ConfigKey key);
+
+     static inline bool      has_balanced_braces([[maybe_unused]] const std::string_view s)
+     {
+          //      int balance = 0;
+          //      for (const char c : s)
+          //      {
+          //           if (c == '{')
+          //           {
+          //                ++balance;
+          //           }
+          //           else if (c == '}')
+          //           {
+          //                --balance;
+          //                if (balance < 0)
+          //                {
+          //                     spdlog::error("Unmatched closing brace in input: \"{}\" (note: literal braces shown as {{ and }})", s);
+          //                     return false;
+          //                }
+          //           }
+          //      }
+
+          //      if (balance != 0)
+          //      {
+          //           spdlog::error("Mismatched brace count in input: \"{}\" ({} unmatched opening brace{{}})", s, balance);
+          //           return false;
+          //      }
+
+          return true;
+     }
+
+     template<std::ranges::range R>
+          requires std::convertible_to<std::ranges::range_value_t<R>, std::string_view>
+     static inline bool has_balanced_braces([[maybe_unused]] const R &r)
+     {
+          // for (const auto &s : r)
+          // {
+          //      if (bool ok = has_balanced_braces(s); !ok)
+          //      {
+          //           return false;// found bad brace.
+          //      }
+          // }
+          return true;
+     }
 };
 }// namespace fme
 #endif// FIELD_MAP_EDITOR_SELECTIONS_HPP

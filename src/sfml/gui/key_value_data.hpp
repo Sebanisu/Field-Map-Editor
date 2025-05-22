@@ -326,50 +326,6 @@ struct key_value_data
           else
                return open_viii::LangCommon::to_string_3_char(open_viii::LangT::en);
      }
-
-   public:
-     static inline bool has_balanced_braces(const std::string_view s)
-     {
-          int balance = 0;
-          for (const char c : s)
-          {
-               if (c == '{')
-               {
-                    ++balance;
-               }
-               else if (c == '}')
-               {
-                    --balance;
-                    if (balance < 0)
-                    {
-                         spdlog::error("Unmatched closing brace in input: \"{}\" (note: literal braces shown as {{ and }})", s);
-                         return false;
-                    }
-               }
-          }
-
-          if (balance != 0)
-          {
-               spdlog::error("Mismatched brace count in input: \"{}\" ({} unmatched opening brace{{}})", s, balance);
-               return false;
-          }
-
-          return true;
-     }
-
-     template<std::ranges::range R>
-          requires std::convertible_to<std::ranges::range_value_t<R>, std::string_view>
-     static inline bool has_balanced_braces(const R &r)
-     {
-          for (const auto &s : r)
-          {
-               if (bool ok = has_balanced_braces(s); !ok)
-               {
-                    return false;// found bad brace.
-               }
-          }
-          return true;
-     }
 };
 }// namespace fme
 

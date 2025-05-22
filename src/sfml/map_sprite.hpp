@@ -516,8 +516,6 @@ struct [[nodiscard]] map_sprite final
        generate_swizzle_paths(const std::uint8_t texture_page, std::uint8_t palette, const std::string &ext = ".png") const;
      std::vector<std::filesystem::path> generate_swizzle_paths(const std::uint8_t texture_page, const std::string &ext = ".png") const;
 
-     bool                               has_deswizzle_path(const std::string &ext = ".png") const;
-     bool                               has_swizzle_path(const std::string &ext = ".png") const;
      bool                               has_deswizzle_path(const ff_8::PupuID pupu, const std::string &ext = ".png") const;
      bool has_swizzle_path(const std::uint8_t texture_page, std::uint8_t palette, const std::string &ext = ".png") const;
      bool has_swizzle_path(const std::uint8_t texture_page, const std::string &ext = ".png") const;

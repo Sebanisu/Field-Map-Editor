@@ -1746,10 +1746,6 @@ std::string map_sprite::appends_prefix_base_name(std::string_view title) const
 }
 
 
-bool map_sprite::has_deswizzle_path(const std::string &ext) const
-{
-     return has_deswizzle_path(m_filters.deswizzle.value().string(),ext);
-}
 bool map_sprite::has_deswizzle_path(const ff_8::PupuID pupu, const std::string &ext) const
 {
      return has_deswizzle_path(m_filters.deswizzle.value().string(), pupu, ext);
@@ -1776,11 +1772,6 @@ bool map_sprite::has_deswizzle_path(const std::filesystem::path &filter_path, co
            m_map_group.opt_coo.has_value() && m_map_group.opt_coo.value() != open_viii::LangT::generic ? m_map_group.opt_coo : std::nullopt,
          .pupu_id = pupu.raw() });
      //   || safedir(cpm.replace_tags(selections->output_map_pattern_for_deswizzle, selections, filter_path.string())).is_exists();
-}
-
-bool map_sprite::has_swizzle_path(const std::string &ext) const
-{
-     return has_swizzle_path(m_filters.upscale.value().string(),ext);
 }
 
 bool map_sprite::has_swizzle_path(const std::uint8_t texture_page, const std::string &ext) const

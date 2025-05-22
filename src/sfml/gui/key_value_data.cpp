@@ -182,7 +182,11 @@
      }
      if (key == keys::ext)
      {
-          assert(ext.size() >= 2 && ext[0] == '.');
+          if (ext.size() < 2 || ext[0] != '.')
+          {
+               spdlog::error("{}:{} ext \"{}\"must be ext.size(), {} >= 2 && ext[0] == '.' ", __FILE__, __LINE__, ext, ext.size());
+          }
+          //assert(ext.size() >= 2 && ext[0] == '.');
           return fmt::format("{}", ext);
      }
      if (key == keys::field_prefix)

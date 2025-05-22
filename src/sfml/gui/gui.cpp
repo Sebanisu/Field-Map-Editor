@@ -1526,9 +1526,9 @@ void gui::update_field()
      // Generate upscale texture paths if a field is loaded
      if (m_field)
      {
+          sort_paths();
           generate_upscale_paths();
           generate_deswizzle_paths();
-          sort_paths();
      }
 
      // Clear clicked tile indices used for selection logic
@@ -2845,6 +2845,12 @@ void gui::directory_browser_display()
                          const auto to_remove = std::ranges::unique(m_upscale_paths);
                          m_upscale_paths.erase(to_remove.begin(), to_remove.end());
                     }
+
+                    m_upscale_paths_enabled.clear();
+                    for (const auto &path : m_upscale_paths)
+                    {
+                         m_upscale_paths_enabled.push_back(m_map_sprite->has_swizzle_path(std::filesystem::path{ path }));
+                    }
                     //  select the first match
                     m_map_sprite->filter().deswizzle.disable();
                     m_map_sprite->filter().upscale.update(temp_paths.front()).enable();
@@ -2902,6 +2908,11 @@ void gui::directory_browser_display()
                     {
                          const auto to_remove = std::ranges::unique(m_deswizzle_paths);
                          m_deswizzle_paths.erase(to_remove.begin(), to_remove.end());
+                    }
+                    m_deswizzle_paths_enabled.clear();
+                    for (const auto &path : m_deswizzle_paths)
+                    {
+                         m_deswizzle_paths_enabled.push_back(m_map_sprite->has_deswizzle_path(std::filesystem::path{ path }));
                     }
                     //  select the first match
                     m_map_sprite->filter().upscale.disable();
@@ -3507,9 +3518,9 @@ void gui::init_and_get_style()
      imgui_io.ConfigFlags = bitwise_or(imgui_io.ConfigFlags, ImGuiConfigFlags_DockingEnable);
      if (m_field)
      {
+          sort_paths();
           generate_upscale_paths();
           generate_deswizzle_paths();
-          sort_paths();
      }
      if (!m_drag_sprite_shader)
      {
@@ -3906,6 +3917,11 @@ void gui::generate_upscale_paths()
      {
           process(temp_paths);
      }
+     m_upscale_paths_enabled.clear();
+     for (const auto &path : m_upscale_paths)
+     {
+          m_upscale_paths_enabled.push_back(m_map_sprite->has_swizzle_path(std::filesystem::path{ path }));
+     }
 }
 
 
@@ -3934,13 +3950,20 @@ void gui::generate_deswizzle_paths()
      {
           process(temp_paths);
      }
+
+     m_deswizzle_paths_enabled.clear();
+     for (const auto &path : m_deswizzle_paths)
+     {
+          m_deswizzle_paths_enabled.push_back(m_map_sprite->has_deswizzle_path(std::filesystem::path{path}));
+     }
 }
 
 bool gui::combo_upscale_path(ff_8::filter_old<std::filesystem::path, ff_8::FilterTag::Upscale> &filter) const
 {
-     const auto gcc = fme::GenericComboClassWithFilter(
+     const auto gcc = fme::GenericComboClassWithFilterAndFixedToggles(
        gui_labels::upscale_path,
        [this]() { return m_upscale_paths; },
+       [this]() { return m_upscale_paths_enabled; },
        [this]() { return m_upscale_paths; },
        [this]() { return m_upscale_paths; },
        [&filter]() -> auto & { return filter; },
@@ -3951,9 +3974,10 @@ bool gui::combo_upscale_path(ff_8::filter_old<std::filesystem::path, ff_8::Filte
 
 bool gui::combo_deswizzle_path(ff_8::filter_old<std::filesystem::path, ff_8::FilterTag::Deswizzle> &filter) const
 {
-     const auto gcc = fme::GenericComboClassWithFilter(
+     const auto gcc = fme::GenericComboClassWithFilterAndFixedToggles(
        gui_labels::deswizzle_path,
        [this]() { return m_deswizzle_paths; },
+       [this]() { return m_deswizzle_paths_enabled; },
        [this]() { return m_deswizzle_paths; },
        [this]() { return m_deswizzle_paths; },
        [&filter]() -> auto & { return filter; },
