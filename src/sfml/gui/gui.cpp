@@ -2398,14 +2398,49 @@ void gui::menu_upscale_paths()
                     return;
                }
                const auto end_table = scope_guard(&ImGui::EndTable);
+               auto       zip_path  = std::ranges::views::zip(m_upscale_paths, m_upscale_paths_enabled);
                for (const auto &[index, path] : transformed_paths)
                {
+                    bool is_checked = path == m_map_sprite->filter().upscale.value() && m_map_sprite->filter().upscale.enabled();
+                    auto it         = std::ranges::find_if(zip_path, [&path](const auto &pair) {
+                         const auto &[t_path, t_enabled] = pair;
+                         return std::ranges::equal(path, t_path);
+                    });
+                    bool enabled    = [&]() -> bool {
+                         if (it != std::ranges::end(zip_path))
+                         {
+                              const auto &[t_path, t_enabled] = *it;
+                              return t_enabled;
+                         }
+                         return false;
+                    }();
                     ImGui::TableNextColumn();
                     ImGui::SetNextItemAllowOverlap();
-                    if (ImGui::MenuItem(path.data(), nullptr, nullptr, true))
                     {
-                         // m_map_sprite->filter().upscale.update(path);
-                         // m_map_sprite->update_render_texture(true);
+                         ImGui::BeginDisabled(!enabled);
+                         const auto pop_disabled = scope_guard{ &ImGui::EndDisabled };
+                         if (ImGui::MenuItem(path.data(), nullptr, &is_checked, true))
+                         {
+                              if (m_map_sprite->filter().upscale.value() != path)
+                              {
+                                   m_map_sprite->filter().upscale.update(path);
+                                   m_map_sprite->filter().deswizzle.disable();
+                                   m_map_sprite->filter().upscale.enable();
+                              }
+                              else
+                              {
+                                   if (m_map_sprite->filter().upscale.enabled())
+                                   {
+                                        m_map_sprite->filter().upscale.disable();
+                                   }
+                                   else
+                                   {
+                                        m_map_sprite->filter().deswizzle.disable();
+                                        m_map_sprite->filter().upscale.enable();
+                                   }
+                              }
+                              refresh_render_texture(true);
+                         }
                     }
                     ImGui::TableNextColumn();
                     const auto pop_id = PushPopID();
@@ -2465,15 +2500,20 @@ void gui::menu_upscale_paths()
                               if (m_map_sprite->filter().upscale.value() != path)
                               {
                                    m_map_sprite->filter().upscale.update(path);
-                              }
-                              if (m_map_sprite->filter().upscale.enabled())
-                              {
-                                   m_map_sprite->filter().upscale.disable();
+                                   m_map_sprite->filter().deswizzle.disable();
+                                   m_map_sprite->filter().upscale.enable();
                               }
                               else
                               {
-                                   m_map_sprite->filter().deswizzle.disable();
-                                   m_map_sprite->filter().upscale.enable();
+                                   if (m_map_sprite->filter().upscale.enabled())
+                                   {
+                                        m_map_sprite->filter().upscale.disable();
+                                   }
+                                   else
+                                   {
+                                        m_map_sprite->filter().deswizzle.disable();
+                                        m_map_sprite->filter().upscale.enable();
+                                   }
                               }
                               refresh_render_texture(true);
                          }
@@ -2578,14 +2618,49 @@ void gui::menu_deswizzle_paths()
                     return;
                }
                const auto end_table = scope_guard(&ImGui::EndTable);
+               auto       zip_path  = std::ranges::views::zip(m_deswizzle_paths, m_deswizzle_paths_enabled);
                for (const auto &[index, path] : transformed_paths)
                {
+                    bool is_checked = path == m_map_sprite->filter().deswizzle.value() && m_map_sprite->filter().deswizzle.enabled();
                     ImGui::TableNextColumn();
                     ImGui::SetNextItemAllowOverlap();
-                    if (ImGui::MenuItem(path.data(), nullptr, nullptr, true))
+                    auto it      = std::ranges::find_if(zip_path, [&path](const auto &pair) {
+                         const auto &[t_path, t_enabled] = pair;
+                         return std::ranges::equal(path, t_path);
+                    });
+                    bool enabled = [&]() -> bool {
+                         if (it != std::ranges::end(zip_path))
+                         {
+                              const auto &[t_path, t_enabled] = *it;
+                              return t_enabled;
+                         }
+                         return false;
+                    }();
                     {
-                         // m_map_sprite->filter().deswizzle.update(path);
-                         // m_map_sprite->update_render_texture(true);
+                         ImGui::BeginDisabled(!enabled);
+                         const auto pop_disabled = scope_guard{ &ImGui::EndDisabled };
+                         if (ImGui::MenuItem(path.data(), nullptr, &is_checked, true))
+                         {
+                              if (m_map_sprite->filter().deswizzle.value() != path)
+                              {
+                                   m_map_sprite->filter().deswizzle.update(path);
+                                   m_map_sprite->filter().upscale.disable();
+                                   m_map_sprite->filter().deswizzle.enable();
+                              }
+                              else
+                              {
+                                   if (m_map_sprite->filter().deswizzle.enabled())
+                                   {
+                                        m_map_sprite->filter().deswizzle.disable();
+                                   }
+                                   else
+                                   {
+                                        m_map_sprite->filter().upscale.disable();
+                                        m_map_sprite->filter().deswizzle.enable();
+                                   }
+                              }
+                              refresh_render_texture(true);
+                         }
                     }
                     ImGui::TableNextColumn();
                     const auto pop_id = PushPopID();
@@ -2645,15 +2720,20 @@ void gui::menu_deswizzle_paths()
                               if (m_map_sprite->filter().deswizzle.value() != path)
                               {
                                    m_map_sprite->filter().deswizzle.update(path);
-                              }
-                              if (m_map_sprite->filter().deswizzle.enabled())
-                              {
-                                   m_map_sprite->filter().deswizzle.disable();
+                                   m_map_sprite->filter().upscale.disable();
+                                   m_map_sprite->filter().deswizzle.enable();
                               }
                               else
                               {
-                                   m_map_sprite->filter().upscale.disable();
-                                   m_map_sprite->filter().deswizzle.enable();
+                                   if (m_map_sprite->filter().deswizzle.enabled())
+                                   {
+                                        m_map_sprite->filter().deswizzle.disable();
+                                   }
+                                   else
+                                   {
+                                        m_map_sprite->filter().upscale.disable();
+                                        m_map_sprite->filter().deswizzle.enable();
+                                   }
                               }
                               refresh_render_texture(true);
                          }
