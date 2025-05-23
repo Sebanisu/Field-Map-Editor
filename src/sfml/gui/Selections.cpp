@@ -154,7 +154,12 @@ fme::Selections::Selections(bool load_config)
 void fme::Selections::load_configuration()
 {
      Configuration const config{};
-     path             = config[key_to_string(ConfigKey::SelectionsPath)].value_or([]() {
+     if (auto opt_path = config[key_to_string(ConfigKey::SelectionsPath)].value<std::string>(); opt_path.has_value())
+     {
+          path = std::move(opt_path.value());
+     }
+     else
+     {
           std::error_code error_code = {};
           std::string     str        = std::filesystem::current_path(error_code).string();
           if (error_code)
@@ -162,8 +167,8 @@ void fme::Selections::load_configuration()
                spdlog::warn("{}:{} - {}: {} path: \"{}\"", __FILE__, __LINE__, error_code.value(), error_code.message(), str);
                error_code.clear();
           }
-          return str;
-     }());
+          path = str;
+     }
 
      background_color = std::bit_cast<fme::color>(
        config[key_to_string(ConfigKey::BackgroundColor)].value_or(std::bit_cast<std::uint32_t>(fme::colors::White)));
@@ -240,162 +245,121 @@ void fme::Selections::load_configuration()
      window_width        = config[key_to_string(ConfigKey::WindowWidth)].value_or(window_width_default);
 
      // Arrays
-     if (config.load_array(key_to_string(ConfigKey::PathPatternsCommonUpscale), paths_common_upscale))
+     if (!config.load_array(key_to_string(ConfigKey::PathPatternsCommonUpscale), paths_common_upscale))
      {
-          assert(has_balanced_braces(paths_common_upscale));
+          paths_common_upscale = { "{selected_path}/{ffnx_mod_path}/field/mapdata/",
+                                   "{selected_path}/mods/Textures",
+                                   "{selected_path}/{demaster_mod_path}/textures/field_bg",
+                                   "{selected_path}/field_bg",
+                                   "{selected_path}/textures/fields",
+                                   "{selected_path}/textures",
+                                   "{selected_path}/ff8/Data/{3_letter_lang}/field/mapdata",
+                                   "{selected_path}/ff8/Data/{3_letter_lang}/FIELD/mapdata",
+                                   "{selected_path}/ff8/Data/{eng}/field/mapdata",
+                                   "{selected_path}/ff8/Data/{eng}/FIELD/mapdata",
+                                   "{selected_path}/ff8/Data/{fre}/field/mapdata",
+                                   "{selected_path}/ff8/Data/{fre}/FIELD/mapdata",
+                                   "{selected_path}/ff8/Data/{ger}/field/mapdata",
+                                   "{selected_path}/ff8/Data/{ger}/FIELD/mapdata",
+                                   "{selected_path}/ff8/Data/{ita}/field/mapdata",
+                                   "{selected_path}/ff8/Data/{ita}/FIELD/mapdata",
+                                   "{selected_path}/ff8/Data/{spa}/field/mapdata",
+                                   "{selected_path}/ff8/Data/{spa}/FIELD/mapdata",
+                                   "{selected_path}/ff8/Data/{jp}/field/mapdata",
+                                   "{selected_path}/ff8/Data/{jp}/FIELD/mapdata",
+                                   "{selected_path}/ff8/Data/{x}/field/mapdata",
+                                   "{selected_path}/ff8/Data/{x}/FIELD/mapdata" };
      }
-     else
-     {
-          paths_common_upscale = []() {
-               const auto ret = std::vector<std::string>{ "{selected_path}/{ffnx_mod_path}/field/mapdata/",
-                                                          "{selected_path}/mods/Textures",
-                                                          "{selected_path}/{demaster_mod_path}/textures/field_bg",
-                                                          "{selected_path}/field_bg",
-                                                          "{selected_path}/textures/fields",
-                                                          "{selected_path}/textures",
-                                                          "{selected_path}/ff8/Data/{3_letter_lang}/field/mapdata",
-                                                          "{selected_path}/ff8/Data/{3_letter_lang}/FIELD/mapdata",
-                                                          "{selected_path}/ff8/Data/{eng}/field/mapdata",
-                                                          "{selected_path}/ff8/Data/{eng}/FIELD/mapdata",
-                                                          "{selected_path}/ff8/Data/{fre}/field/mapdata",
-                                                          "{selected_path}/ff8/Data/{fre}/FIELD/mapdata",
-                                                          "{selected_path}/ff8/Data/{ger}/field/mapdata",
-                                                          "{selected_path}/ff8/Data/{ger}/FIELD/mapdata",
-                                                          "{selected_path}/ff8/Data/{ita}/field/mapdata",
-                                                          "{selected_path}/ff8/Data/{ita}/FIELD/mapdata",
-                                                          "{selected_path}/ff8/Data/{spa}/field/mapdata",
-                                                          "{selected_path}/ff8/Data/{spa}/FIELD/mapdata",
-                                                          "{selected_path}/ff8/Data/{jp}/field/mapdata",
-                                                          "{selected_path}/ff8/Data/{jp}/FIELD/mapdata",
-                                                          "{selected_path}/ff8/Data/{x}/field/mapdata",
-                                                          "{selected_path}/ff8/Data/{x}/FIELD/mapdata" };
-               assert(has_balanced_braces(ret));
-               return ret;
-          }();
-     }
-     if (config.load_array(key_to_string(ConfigKey::PathPatternsCommonUpscaleForMaps), paths_common_upscale_for_maps))
-     {
-          assert(has_balanced_braces(paths_common_upscale_for_maps));
-     }
-     else
-     {
-          paths_common_upscale_for_maps = []() {
-               const auto ret =
-                 std::vector<std::string>{ // todo ffnx uses a sepperate directory for map files which means we might not see it with our
-                                           // current method of selecting one path ffnx_direct_mode_path might not want to be in the regular
-                                           // paths list might need to be somewhere else. maybe a get paths map.
-                                           "{selected_path}/{ffnx_direct_mode_path}/field/mapdata/"
-                 };
-               assert(has_balanced_braces(ret));
-               return ret;
-          }();
-     }
-     if (config.load_array(key_to_string(ConfigKey::PathPatternsNoPaletteAndTexturePage), paths_no_palette_and_texture_page))
-     {
-          assert(has_balanced_braces(paths_no_palette_and_texture_page));
-     }
-     else
-     {
-          paths_no_palette_and_texture_page = []() {
-               const auto ret = std::vector<std::string>{ "{selected_path}/{field_name}{_{2_letter_lang}}{ext}",
-                                                          "{selected_path}/{field_name}/{field_name}{_{2_letter_lang}}{ext}",
-                                                          "{selected_path}/{field_prefix}/{field_name}/{field_name}{_{2_letter_lang}}{ext}",
+     assert(has_balanced_braces(paths_common_upscale));
 
-                                                          "{selected_path}/{field_name}{ext}",
-                                                          "{selected_path}/{field_name}/{field_name}{ext}",
-                                                          "{selected_path}/{field_prefix}/{field_name}/{field_name}{ext}" };
-               assert(has_balanced_braces(ret));
-               return ret;
-          }();
-     }
-     if (config.load_array(key_to_string(ConfigKey::PathPatternsWithPaletteAndTexturePage), paths_with_palette_and_texture_page))
+     if (!config.load_array(key_to_string(ConfigKey::PathPatternsCommonUpscaleForMaps), paths_common_upscale_for_maps))
      {
-          assert(has_balanced_braces(paths_with_palette_and_texture_page));
+          paths_common_upscale_for_maps = {
+               // todo ffnx uses a sepperate directory for map files which means we might not see it with our
+               // current method of selecting one path ffnx_direct_mode_path might not want to be in the regular
+               // paths list might need to be somewhere else. maybe a get paths map.
+               "{selected_path}/{ffnx_direct_mode_path}/field/mapdata/"
+          };
      }
-     else
-     {
-          paths_with_palette_and_texture_page = []() {
-               const auto ret = std::vector<std::string>{
-                    "{selected_path}/{field_name}{_{2_letter_lang}}_0{texture_page}_0{palette}{ext}",
-                    "{selected_path}/{field_name}/{field_name}{_{2_letter_lang}}_0{texture_page}_0{palette}{ext}",
-                    "{selected_path}/{field_prefix}/{field_name}/{field_name}{_{2_letter_lang}}_0{texture_page}_0{palette}{ext}",
+     assert(has_balanced_braces(paths_common_upscale_for_maps));
 
-                    "{selected_path}/{field_name}_0{texture_page}_0{palette}{ext}",
-                    "{selected_path}/{field_name}/{field_name}_0{texture_page}_0{palette}{ext}",
-                    "{selected_path}/{field_prefix}/{field_name}/{field_name}_0{texture_page}_0{palette}{ext}",
+     if (!config.load_array(key_to_string(ConfigKey::PathPatternsNoPaletteAndTexturePage), paths_no_palette_and_texture_page))
+     {
+          paths_no_palette_and_texture_page = { "{selected_path}/{field_name}{_{2_letter_lang}}{ext}",
+                                                "{selected_path}/{field_name}/{field_name}{_{2_letter_lang}}{ext}",
+                                                "{selected_path}/{field_prefix}/{field_name}/{field_name}{_{2_letter_lang}}{ext}",
 
-                    "{selected_path}/{field_name}{_{2_letter_lang}}_{texture_page}_{palette}{ext}",
-                    "{selected_path}/{field_name}/{field_name}{_{2_letter_lang}}_{texture_page}_{palette}{ext}",
-                    "{selected_path}/{field_prefix}/{field_name}/{field_name}{_{2_letter_lang}}_{texture_page}_{palette}{ext}",
+                                                "{selected_path}/{field_name}{ext}",
+                                                "{selected_path}/{field_name}/{field_name}{ext}",
+                                                "{selected_path}/{field_prefix}/{field_name}/{field_name}{ext}" };
+     }
+     assert(has_balanced_braces(paths_no_palette_and_texture_page));
 
-                    "{selected_path}/{field_name}_{texture_page}_{palette}{ext}",
-                    "{selected_path}/{field_name}/{field_name}_{texture_page}_{palette}{ext}",
-                    "{selected_path}/{field_prefix}/{field_name}/{field_name}_{texture_page}_{palette}{ext}"
-               };
-               assert(has_balanced_braces(ret));
-               return ret;
-          }();
-     }
-     if (config.load_array(key_to_string(ConfigKey::PathPatternsWithPupuID), paths_with_pupu_id))
+     if (!config.load_array(key_to_string(ConfigKey::PathPatternsWithPaletteAndTexturePage), paths_with_palette_and_texture_page))
      {
-          assert(has_balanced_braces(paths_with_pupu_id));
-     }
-     else
-     {
-          paths_with_pupu_id = []() {
-               const auto ret = std::vector<std::string>{ "{selected_path}/{field_name}_{pupu_id}{ext}",
-                                                          "{selected_path}/{field_name}/{field_name}_{pupu_id}{ext}",
-                                                          "{selected_path}/{field_prefix}/{field_name}/{field_name}_{pupu_id}{ext}" };
-               assert(has_balanced_braces(ret));
-               return ret;
-          }();
-     }
-     if (config.load_array(key_to_string(ConfigKey::PathPatternsWithTexturePage), paths_with_texture_page))
-     {
-          assert(has_balanced_braces(paths_with_texture_page));
-     }
-     else
-     {
-          paths_with_texture_page = []() {
-               const auto ret = std::vector<std::string>{
-                    "{selected_path}/{field_name}{_{2_letter_lang}}_0{texture_page}{ext}",
-                    "{selected_path}/{field_name}/{field_name}{_{2_letter_lang}}_0{texture_page}{ext}",
-                    "{selected_path}/{field_prefix}/{field_name}/{field_name}{_{2_letter_lang}}_0{texture_page}{ext}",
+          paths_with_palette_and_texture_page = {
+               "{selected_path}/{field_name}{_{2_letter_lang}}_0{texture_page}_0{palette}{ext}",
+               "{selected_path}/{field_name}/{field_name}{_{2_letter_lang}}_0{texture_page}_0{palette}{ext}",
+               "{selected_path}/{field_prefix}/{field_name}/{field_name}{_{2_letter_lang}}_0{texture_page}_0{palette}{ext}",
 
-                    "{selected_path}/{field_name}_0{texture_page}{ext}",
-                    "{selected_path}/{field_name}/{field_name}_0{texture_page}{ext}",
-                    "{selected_path}/{field_prefix}/{field_name}/{field_name}_0{texture_page}{ext}",
+               "{selected_path}/{field_name}_0{texture_page}_0{palette}{ext}",
+               "{selected_path}/{field_name}/{field_name}_0{texture_page}_0{palette}{ext}",
+               "{selected_path}/{field_prefix}/{field_name}/{field_name}_0{texture_page}_0{palette}{ext}",
 
-                    "{selected_path}/{field_name}{_{2_letter_lang}}_{texture_page}{ext}",
-                    "{selected_path}/{field_name}/{field_name}{_{2_letter_lang}}_{texture_page}{ext}",
-                    "{selected_path}/{field_prefix}/{field_name}/{field_name}{_{2_letter_lang}}_{texture_page}{ext}",
+               "{selected_path}/{field_name}{_{2_letter_lang}}_{texture_page}_{palette}{ext}",
+               "{selected_path}/{field_name}/{field_name}{_{2_letter_lang}}_{texture_page}_{palette}{ext}",
+               "{selected_path}/{field_prefix}/{field_name}/{field_name}{_{2_letter_lang}}_{texture_page}_{palette}{ext}",
 
-                    "{selected_path}/{field_name}_{texture_page}{ext}",
-                    "{selected_path}/{field_name}/{field_name}_{texture_page}{ext}",
-                    "{selected_path}/{field_prefix}/{field_name}/{field_name}_{texture_page}{ext}"
-               };
-               assert(has_balanced_braces(ret));
-               return ret;
-          }();
+               "{selected_path}/{field_name}_{texture_page}_{palette}{ext}",
+               "{selected_path}/{field_name}/{field_name}_{texture_page}_{palette}{ext}",
+               "{selected_path}/{field_prefix}/{field_name}/{field_name}_{texture_page}_{palette}{ext}"
+          };
      }
-     if (config.load_array(key_to_string(ConfigKey::PathsVector), paths_vector))
+     assert(has_balanced_braces(paths_with_palette_and_texture_page));
+
+     if (!config.load_array(key_to_string(ConfigKey::PathPatternsWithPupuID), paths_with_pupu_id))
      {
-          // assert(has_balanced_braces(paths_vector));
+          paths_with_pupu_id = { "{selected_path}/{field_name}_{pupu_id}{ext}",
+                                 "{selected_path}/{field_name}/{field_name}_{pupu_id}{ext}",
+                                 "{selected_path}/{field_prefix}/{field_name}/{field_name}_{pupu_id}{ext}" };
      }
-     if (paths_vector.empty())
+     assert(has_balanced_braces(paths_with_pupu_id));
+
+     if (!config.load_array(key_to_string(ConfigKey::PathPatternsWithTexturePage), paths_with_texture_page))
      {
-          paths_vector = []() -> std::vector<std::string> {
-               const auto &default_paths = open_viii::Paths::get();
-               return { default_paths.begin(), default_paths.end() };
-          }();
+          paths_with_texture_page = { "{selected_path}/{field_name}{_{2_letter_lang}}_0{texture_page}{ext}",
+                                      "{selected_path}/{field_name}/{field_name}{_{2_letter_lang}}_0{texture_page}{ext}",
+                                      "{selected_path}/{field_prefix}/{field_name}/{field_name}{_{2_letter_lang}}_0{texture_page}{ext}",
+
+                                      "{selected_path}/{field_name}_0{texture_page}{ext}",
+                                      "{selected_path}/{field_name}/{field_name}_0{texture_page}{ext}",
+                                      "{selected_path}/{field_prefix}/{field_name}/{field_name}_0{texture_page}{ext}",
+
+                                      "{selected_path}/{field_name}{_{2_letter_lang}}_{texture_page}{ext}",
+                                      "{selected_path}/{field_name}/{field_name}{_{2_letter_lang}}_{texture_page}{ext}",
+                                      "{selected_path}/{field_prefix}/{field_name}/{field_name}{_{2_letter_lang}}_{texture_page}{ext}",
+
+                                      "{selected_path}/{field_name}_{texture_page}{ext}",
+                                      "{selected_path}/{field_name}/{field_name}_{texture_page}{ext}",
+                                      "{selected_path}/{field_prefix}/{field_name}/{field_name}_{texture_page}{ext}" };
      }
+     assert(has_balanced_braces(paths_with_texture_page));
+
+     if (!config.load_array(key_to_string(ConfigKey::PathsVector), paths_vector))
+     {
+          const auto &default_paths = open_viii::Paths::get();
+          paths_vector              = { default_paths.begin(), default_paths.end() };
+     }     
+     assert(has_balanced_braces(paths_vector));
+
      if (config.load_array(key_to_string(ConfigKey::PathsVectorUpscale), paths_vector_upscale))
      {
-          // assert(has_balanced_braces(paths_vector_upscale));
+          assert(has_balanced_braces(paths_vector_upscale));
      }
+     
      if (config.load_array(key_to_string(ConfigKey::PathsVectorDeswizzle), paths_vector_deswizzle))
      {
-          // assert(has_balanced_braces(paths_vector_deswizzle));
+          assert(has_balanced_braces(paths_vector_deswizzle));
      }
      refresh_ffnx_paths();
 }
