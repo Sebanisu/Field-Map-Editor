@@ -6,6 +6,8 @@
 using namespace open_viii;
 using namespace open_viii::graphics;
 using namespace open_viii::graphics::background;
+using namespace std::string_literals;
+using namespace std::string_view_literals;
 fme::Selections::Selections(bool load_config)
 {
      if (load_config)
@@ -95,109 +97,240 @@ std::string_view fme::Selections::key_to_string(ConfigKey key)
 void fme::Selections::load_configuration()
 {
      Configuration const config{};
+     path             = config[key_to_string(ConfigKey::SelectionsPath)].value_or([]() {
+          std::error_code error_code = {};
+          std::string     str        = std::filesystem::current_path(error_code).string();
+          if (error_code)
+          {
+               spdlog::warn("{}:{} - {}: {} path: \"{}\"", __FILE__, __LINE__, error_code.value(), error_code.message(), str);
+               error_code.clear();
+          }
+          return str;
+     }());
+
      background_color = std::bit_cast<fme::color>(
-       config[key_to_string(ConfigKey::BackgroundColor)].value_or(std::bit_cast<std::uint32_t>(background_color)));
+       config[key_to_string(ConfigKey::BackgroundColor)].value_or(std::bit_cast<std::uint32_t>(fme::colors::White)));
 
-     batch_input_path           = config[key_to_string(ConfigKey::BatchInputPath)].value_or(batch_input_path);
+     batch_input_path           = config[key_to_string(ConfigKey::BatchInputPath)].value_or(std::string{});
      batch_input_root_path_type = static_cast<root_path_types>(config[key_to_string(ConfigKey::BatchInputRootPathType)].value_or(
-       static_cast<std::underlying_type_t<root_path_types>>(batch_input_root_path_type)));
+       static_cast<std::underlying_type_t<root_path_types>>(root_path_types{})));
      batch_input_type           = static_cast<input_types>(
-       config[key_to_string(ConfigKey::BatchInputType)].value_or(static_cast<std::underlying_type_t<input_types>>(batch_input_type)));
-     batch_input_load_map        = config[key_to_string(ConfigKey::BatchInputLoadMap)].value_or(batch_input_load_map);
+       config[key_to_string(ConfigKey::BatchInputType)].value_or(static_cast<std::underlying_type_t<input_types>>(input_types{})));
+     batch_input_load_map        = config[key_to_string(ConfigKey::BatchInputLoadMap)].value_or(false);
 
-     batch_output_path           = config[key_to_string(ConfigKey::BatchOutputPath)].value_or(batch_output_path);
-     batch_output_root_path_type = static_cast<root_path_types>(config[key_to_string(ConfigKey::BatchOutputRootPathType)].value_or(
-       static_cast<std::underlying_type_t<root_path_types>>(batch_output_root_path_type)));
-     batch_output_type           = static_cast<output_types>(
-       config[key_to_string(ConfigKey::BatchOutputType)].value_or(static_cast<std::underlying_type_t<output_types>>(batch_output_type)));
-     batch_output_save_map = config[key_to_string(ConfigKey::BatchOutputSaveMap)].value_or(batch_output_save_map);
+     batch_output_path           = config[key_to_string(ConfigKey::BatchOutputPath)].value_or(std::string{});
+     batch_output_root_path_type = static_cast<root_path_types>(
+       config[key_to_string(ConfigKey::BatchOutputRootPathType)].value_or(std::to_underlying(root_path_types{})));
+     batch_output_type =
+       static_cast<output_types>(config[key_to_string(ConfigKey::BatchOutputType)].value_or(std::to_underlying(output_types{})));
+     batch_output_save_map = config[key_to_string(ConfigKey::BatchOutputSaveMap)].value_or(true);
 
-     bpp                   = BPPT{ config[key_to_string(ConfigKey::Bpp)].value_or(bpp.raw()) & 3U };
+     bpp                   = BPPT{ config[key_to_string(ConfigKey::Bpp)].value_or(BPPT{}.raw()) & 3U };
 
-     coo                   = static_cast<LangT>(config[key_to_string(ConfigKey::Coo)].value_or(std::to_underlying(coo)));
+     coo                   = static_cast<LangT>(config[key_to_string(ConfigKey::Coo)].value_or(std::to_underlying(LangT{})));
 
-     current_pattern       = static_cast<decltype(current_pattern)>(
-       config[key_to_string(ConfigKey::CurrentPattern)].value_or(std::to_underlying(current_pattern)));
+     current_pattern =
+       static_cast<PatternSelector>(config[key_to_string(ConfigKey::CurrentPattern)].value_or(std::to_underlying(PatternSelector{})));
 
-     deswizzle_path               = config[key_to_string(ConfigKey::DeswizzlePath)].value_or(deswizzle_path);
+     deswizzle_path               = config[key_to_string(ConfigKey::DeswizzlePath)].value_or(path);
 
-     display_batch_window         = config[key_to_string(ConfigKey::DisplayBatchWindow)].value_or(display_batch_window);
-     display_control_panel_window = config[key_to_string(ConfigKey::DisplayControlPanelWindow)].value_or(display_control_panel_window);
-     display_custom_paths_window  = config[key_to_string(ConfigKey::DisplayCustomPathsWindow)].value_or(display_custom_paths_window);
-     display_draw_window          = config[key_to_string(ConfigKey::DisplayDrawWindow)].value_or(display_draw_window);
-     display_field_file_window    = config[key_to_string(ConfigKey::DisplayFieldFileWindow)].value_or(display_field_file_window);
-     display_history_window       = config[key_to_string(ConfigKey::DisplayHistoryWindow)].value_or(display_history_window);
-     display_import_image         = config[key_to_string(ConfigKey::DisplayImportImage)].value_or(display_import_image);
+     display_batch_window         = config[key_to_string(ConfigKey::DisplayBatchWindow)].value_or(false);
+     display_control_panel_window = config[key_to_string(ConfigKey::DisplayControlPanelWindow)].value_or(true);
+     display_custom_paths_window  = config[key_to_string(ConfigKey::DisplayCustomPathsWindow)].value_or(false);
+     display_draw_window          = config[key_to_string(ConfigKey::DisplayDrawWindow)].value_or(true);
+     display_field_file_window    = config[key_to_string(ConfigKey::DisplayFieldFileWindow)].value_or(false);
+     display_history_window       = config[key_to_string(ConfigKey::DisplayHistoryWindow)].value_or(false);
+     display_import_image         = config[key_to_string(ConfigKey::DisplayImportImage)].value_or(false);
 
-     draw                         = static_cast<draw_mode>(config[key_to_string(ConfigKey::Draw)].value_or(std::to_underlying(draw)));
-     draw_disable_blending        = config[key_to_string(ConfigKey::DrawDisableBlending)].value_or(draw_disable_blending);
-     draw_grid                    = config[key_to_string(ConfigKey::DrawGrid)].value_or(draw_grid);
-     draw_palette                 = config[key_to_string(ConfigKey::DrawPalette)].value_or(draw_palette);
-     draw_swizzle                 = config[key_to_string(ConfigKey::DrawSwizzle)].value_or(draw_swizzle);
-     draw_texture_page_grid       = config[key_to_string(ConfigKey::DrawTexturePageGrid)].value_or(draw_texture_page_grid);
-     draw_tile_conflict_rects     = config[key_to_string(ConfigKey::DrawTileConflictRects)].value_or(draw_tile_conflict_rects);
+     draw = static_cast<draw_mode>(config[key_to_string(ConfigKey::Draw)].value_or(std::to_underlying(draw_mode::draw_map)));
+     draw_disable_blending       = config[key_to_string(ConfigKey::DrawDisableBlending)].value_or(false);
+     draw_grid                   = config[key_to_string(ConfigKey::DrawGrid)].value_or(false);
+     draw_palette                = config[key_to_string(ConfigKey::DrawPalette)].value_or(false);
+     draw_swizzle                = config[key_to_string(ConfigKey::DrawSwizzle)].value_or(false);
+     draw_texture_page_grid      = config[key_to_string(ConfigKey::DrawTexturePageGrid)].value_or(false);
+     draw_tile_conflict_rects    = config[key_to_string(ConfigKey::DrawTileConflictRects)].value_or(false);
 
-     import_image_grid            = config[key_to_string(ConfigKey::ImportImageGrid)].value_or(import_image_grid);
-     import_load_image_directory  = config[key_to_string(ConfigKey::ImportLoadImageDirectory)].value_or(import_load_image_directory);
+     import_image_grid           = config[key_to_string(ConfigKey::ImportImageGrid)].value_or(false);
+     import_load_image_directory = config[key_to_string(ConfigKey::ImportLoadImageDirectory)].value_or(path);
 
-     output_deswizzle_pattern     = config[key_to_string(ConfigKey::OutputDeswizzlePattern)].value_or(output_deswizzle_pattern);
+     output_deswizzle_pattern =
+       config[key_to_string(ConfigKey::OutputDeswizzlePattern)].value_or("{selected_path}\\deswizzle\\{demaster}"s);
      output_map_pattern_for_deswizzle =
-       config[key_to_string(ConfigKey::OutputMapPatternForDeswizzle)].value_or(output_map_pattern_for_deswizzle);
-     output_map_pattern_for_swizzle = config[key_to_string(ConfigKey::OutputMapPatternForSwizzle)].value_or(output_map_pattern_for_swizzle);
-     output_swizzle_pattern         = config[key_to_string(ConfigKey::OutputSwizzlePattern)].value_or(output_swizzle_pattern);
+       config[key_to_string(ConfigKey::OutputMapPatternForDeswizzle)].value_or("{selected_path}\\deswizzle\\{demaster}"s);
+     output_map_pattern_for_swizzle = config[key_to_string(ConfigKey::OutputMapPatternForSwizzle)].value_or("{selected_path}\\{demaster}"s);
+     output_swizzle_pattern         = config[key_to_string(ConfigKey::OutputSwizzlePattern)].value_or("{selected_path}\\{demaster}"s);
 
-     palette                        = config[key_to_string(ConfigKey::Palette)].value_or(palette) & 0xFU;
+     palette                        = config[key_to_string(ConfigKey::Palette)].value_or(std::uint8_t{}) & 0xFU;
 
-     path                           = config[key_to_string(ConfigKey::SelectionsPath)].value_or(path);
+     output_map_path                = config[key_to_string(ConfigKey::OutputMapPath)].value_or(path);
+     output_mim_path                = config[key_to_string(ConfigKey::OutputMimPath)].value_or(path);
+     output_image_path              = config[key_to_string(ConfigKey::OutputImagePath)].value_or(path);
 
-     output_map_path                = config[key_to_string(ConfigKey::OutputMapPath)].value_or(output_map_path);
-     output_mim_path                = config[key_to_string(ConfigKey::OutputMimPath)].value_or(output_mim_path);
-     output_image_path              = config[key_to_string(ConfigKey::OutputImagePath)].value_or(output_image_path);
+     render_imported_image          = config[key_to_string(ConfigKey::RenderImportedImage)].value_or(false);
 
-     render_imported_image          = config[key_to_string(ConfigKey::RenderImportedImage)].value_or(render_imported_image);
+     selected_tile                  = config[key_to_string(ConfigKey::SelectedTile)].value_or(-1);
 
-     selected_tile                  = config[key_to_string(ConfigKey::SelectedTile)].value_or(selected_tile);
+     starter_field                  = config[key_to_string(ConfigKey::StarterField)].value_or("ecenter3"s);
 
-     starter_field                  = config[key_to_string(ConfigKey::StarterField)].value_or(starter_field);
-
-     swizzle_path                   = config[key_to_string(ConfigKey::SwizzlePath)].value_or(swizzle_path);
+     swizzle_path                   = config[key_to_string(ConfigKey::SwizzlePath)].value_or(path);
 
      tile_size_value =
-       static_cast<tile_sizes>(config[key_to_string(ConfigKey::TileSizeValue)].value_or(std::to_underlying(tile_size_value)));
+       static_cast<tile_sizes>(config[key_to_string(ConfigKey::TileSizeValue)].value_or(std::to_underlying(tile_sizes::default_size)));
 
-     upscale_paths_index = config[key_to_string(ConfigKey::UpscalePathsIndex)].value_or(upscale_paths_index);
+     upscale_paths_index = config[key_to_string(ConfigKey::UpscalePathsIndex)].value_or(int{});
 
-     window_height       = config[key_to_string(ConfigKey::WindowHeight)].value_or(window_height);
-     window_width        = config[key_to_string(ConfigKey::WindowWidth)].value_or(window_width);
+     window_height       = config[key_to_string(ConfigKey::WindowHeight)].value_or(window_height_default);
+     window_width        = config[key_to_string(ConfigKey::WindowWidth)].value_or(window_width_default);
 
      // Arrays
      if (config.load_array(key_to_string(ConfigKey::PathPatternsCommonUpscale), paths_common_upscale))
      {
           assert(has_balanced_braces(paths_common_upscale));
      }
+     else
+     {
+          paths_common_upscale = []() {
+               const auto ret = std::vector<std::string>{ "{selected_path}/{ffnx_mod_path}/field/mapdata/",
+                                                          "{selected_path}/mods/Textures",
+                                                          "{selected_path}/{demaster_mod_path}/textures/field_bg",
+                                                          "{selected_path}/field_bg",
+                                                          "{selected_path}/textures/fields",
+                                                          "{selected_path}/textures",
+                                                          "{selected_path}/ff8/Data/{3_letter_lang}/field/mapdata",
+                                                          "{selected_path}/ff8/Data/{3_letter_lang}/FIELD/mapdata",
+                                                          "{selected_path}/ff8/Data/{eng}/field/mapdata",
+                                                          "{selected_path}/ff8/Data/{eng}/FIELD/mapdata",
+                                                          "{selected_path}/ff8/Data/{fre}/field/mapdata",
+                                                          "{selected_path}/ff8/Data/{fre}/FIELD/mapdata",
+                                                          "{selected_path}/ff8/Data/{ger}/field/mapdata",
+                                                          "{selected_path}/ff8/Data/{ger}/FIELD/mapdata",
+                                                          "{selected_path}/ff8/Data/{ita}/field/mapdata",
+                                                          "{selected_path}/ff8/Data/{ita}/FIELD/mapdata",
+                                                          "{selected_path}/ff8/Data/{spa}/field/mapdata",
+                                                          "{selected_path}/ff8/Data/{spa}/FIELD/mapdata",
+                                                          "{selected_path}/ff8/Data/{jp}/field/mapdata",
+                                                          "{selected_path}/ff8/Data/{jp}/FIELD/mapdata",
+                                                          "{selected_path}/ff8/Data/{x}/field/mapdata",
+                                                          "{selected_path}/ff8/Data/{x}/FIELD/mapdata" };
+               assert(has_balanced_braces(ret));
+               return ret;
+          }();
+     }
      if (config.load_array(key_to_string(ConfigKey::PathPatternsCommonUpscaleForMaps), paths_common_upscale_for_maps))
      {
           assert(has_balanced_braces(paths_common_upscale_for_maps));
+     }
+     else
+     {
+          paths_common_upscale_for_maps = []() {
+               const auto ret =
+                 std::vector<std::string>{ // todo ffnx uses a sepperate directory for map files which means we might not see it with our
+                                           // current method of selecting one path ffnx_direct_mode_path might not want to be in the regular
+                                           // paths list might need to be somewhere else. maybe a get paths map.
+                                           "{selected_path}/{ffnx_direct_mode_path}/field/mapdata/"
+                 };
+               assert(has_balanced_braces(ret));
+               return ret;
+          }();
      }
      if (config.load_array(key_to_string(ConfigKey::PathPatternsNoPaletteAndTexturePage), paths_no_palette_and_texture_page))
      {
           assert(has_balanced_braces(paths_no_palette_and_texture_page));
      }
+     else
+     {
+          paths_no_palette_and_texture_page = []() {
+               const auto ret = std::vector<std::string>{ "{selected_path}/{field_name}{_{2_letter_lang}}{ext}",
+                                                          "{selected_path}/{field_name}/{field_name}{_{2_letter_lang}}{ext}",
+                                                          "{selected_path}/{field_prefix}/{field_name}/{field_name}{_{2_letter_lang}}{ext}",
+
+                                                          "{selected_path}/{field_name}{ext}",
+                                                          "{selected_path}/{field_name}/{field_name}{ext}",
+                                                          "{selected_path}/{field_prefix}/{field_name}/{field_name}{ext}" };
+               assert(has_balanced_braces(ret));
+               return ret;
+          }();
+     }
      if (config.load_array(key_to_string(ConfigKey::PathPatternsWithPaletteAndTexturePage), paths_with_palette_and_texture_page))
      {
           assert(has_balanced_braces(paths_with_palette_and_texture_page));
+     }
+     else
+     {
+          paths_with_palette_and_texture_page = []() {
+               const auto ret = std::vector<std::string>{
+                    "{selected_path}/{field_name}{_{2_letter_lang}}_0{texture_page}_0{palette}{ext}",
+                    "{selected_path}/{field_name}/{field_name}{_{2_letter_lang}}_0{texture_page}_0{palette}{ext}",
+                    "{selected_path}/{field_prefix}/{field_name}/{field_name}{_{2_letter_lang}}_0{texture_page}_0{palette}{ext}",
+
+                    "{selected_path}/{field_name}_0{texture_page}_0{palette}{ext}",
+                    "{selected_path}/{field_name}/{field_name}_0{texture_page}_0{palette}{ext}",
+                    "{selected_path}/{field_prefix}/{field_name}/{field_name}_0{texture_page}_0{palette}{ext}",
+
+                    "{selected_path}/{field_name}{_{2_letter_lang}}_{texture_page}_{palette}{ext}",
+                    "{selected_path}/{field_name}/{field_name}{_{2_letter_lang}}_{texture_page}_{palette}{ext}",
+                    "{selected_path}/{field_prefix}/{field_name}/{field_name}{_{2_letter_lang}}_{texture_page}_{palette}{ext}",
+
+                    "{selected_path}/{field_name}_{texture_page}_{palette}{ext}",
+                    "{selected_path}/{field_name}/{field_name}_{texture_page}_{palette}{ext}",
+                    "{selected_path}/{field_prefix}/{field_name}/{field_name}_{texture_page}_{palette}{ext}"
+               };
+               assert(has_balanced_braces(ret));
+               return ret;
+          }();
      }
      if (config.load_array(key_to_string(ConfigKey::PathPatternsWithPupuID), paths_with_pupu_id))
      {
           assert(has_balanced_braces(paths_with_pupu_id));
      }
+     else
+     {
+          paths_with_pupu_id = []() {
+               const auto ret = std::vector<std::string>{ "{selected_path}/{field_name}_{pupu_id}{ext}",
+                                                          "{selected_path}/{field_name}/{field_name}_{pupu_id}{ext}",
+                                                          "{selected_path}/{field_prefix}/{field_name}/{field_name}_{pupu_id}{ext}" };
+               assert(has_balanced_braces(ret));
+               return ret;
+          }();
+     }
      if (config.load_array(key_to_string(ConfigKey::PathPatternsWithTexturePage), paths_with_texture_page))
      {
           assert(has_balanced_braces(paths_with_texture_page));
      }
+     else
+     {
+          paths_with_texture_page = []() {
+               const auto ret = std::vector<std::string>{
+                    "{selected_path}/{field_name}{_{2_letter_lang}}_0{texture_page}{ext}",
+                    "{selected_path}/{field_name}/{field_name}{_{2_letter_lang}}_0{texture_page}{ext}",
+                    "{selected_path}/{field_prefix}/{field_name}/{field_name}{_{2_letter_lang}}_0{texture_page}{ext}",
+
+                    "{selected_path}/{field_name}_0{texture_page}{ext}",
+                    "{selected_path}/{field_name}/{field_name}_0{texture_page}{ext}",
+                    "{selected_path}/{field_prefix}/{field_name}/{field_name}_0{texture_page}{ext}",
+
+                    "{selected_path}/{field_name}{_{2_letter_lang}}_{texture_page}{ext}",
+                    "{selected_path}/{field_name}/{field_name}{_{2_letter_lang}}_{texture_page}{ext}",
+                    "{selected_path}/{field_prefix}/{field_name}/{field_name}{_{2_letter_lang}}_{texture_page}{ext}",
+
+                    "{selected_path}/{field_name}_{texture_page}{ext}",
+                    "{selected_path}/{field_name}/{field_name}_{texture_page}{ext}",
+                    "{selected_path}/{field_prefix}/{field_name}/{field_name}_{texture_page}{ext}"
+               };
+               assert(has_balanced_braces(ret));
+               return ret;
+          }();
+     }
      if (config.load_array(key_to_string(ConfigKey::PathsVector), paths_vector))
      {
           // assert(has_balanced_braces(paths_vector));
+     }
+     if (paths_vector.empty())
+     {
+          paths_vector = []() -> std::vector<std::string> {
+               const auto &default_paths = open_viii::Paths::get();
+               return { default_paths.begin(), default_paths.end() };
+          }();
      }
      if (config.load_array(key_to_string(ConfigKey::PathsVectorUpscale), paths_vector_upscale))
      {
@@ -207,15 +340,6 @@ void fme::Selections::load_configuration()
      {
           // assert(has_balanced_braces(paths_vector_deswizzle));
      }
-     if (paths_vector.empty())
-     {
-          paths_vector = []() -> std::vector<std::string> {
-               const auto &default_paths = open_viii::Paths::get();
-               return { default_paths.begin(), default_paths.end() };
-          }();
-     }
-
-
      refresh_ffnx_paths();
 }
 
@@ -357,8 +481,8 @@ void fme::Selections::refresh_ffnx_paths()
      if (exists)
      {
           const auto ffnx_config = Configuration(ffnx_settings_toml);
-          ffnx_mod_path          = ffnx_config["mod_path"].value_or(ffnx_mod_path);
-          ffnx_override_path     = ffnx_config["override_path"].value_or(ffnx_override_path);
-          ffnx_direct_mode_path  = ffnx_config["direct_mode_path"].value_or(ffnx_direct_mode_path);
+          ffnx_mod_path          = ffnx_config["mod_path"].value_or("mods/Textures"s);
+          ffnx_override_path     = ffnx_config["override_path"].value_or("override"s);
+          ffnx_direct_mode_path  = ffnx_config["direct_mode_path"].value_or("direct"s);
      }
 }

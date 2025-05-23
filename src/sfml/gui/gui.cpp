@@ -762,9 +762,6 @@ void gui::loop()
           ImGui::ShowDemoWindow();
      }
      control_panel_window();
-     //     batch_ops_ask_menu();
-     // begin_batch_embed_map_warning_window();
-     //     popup_batch_embed();
      m_import.render();
      m_history_window.render();
 
@@ -1454,7 +1451,7 @@ void gui::refresh_field()
      const auto &maps            = m_archives_group->mapdata();
 
      // Update the starter_field name based on the current field index
-     m_selections->starter_field = *std::next(maps.begin(), m_selections->field);
+     m_selections->starter_field = *std::next(maps.begin(), m_field_index);
 
      // Save the selected field name to the configuration
      m_selections->update_configuration_key(ConfigKey::StarterField);
@@ -1475,7 +1472,7 @@ void gui::combo_field()
                         return std::string_view(str).starts_with("ma"sv) ? ""sv : str;
                    });
        },
-       m_selections->field);
+       m_field_index);
 
      if (gcc.render())
      {
@@ -1495,7 +1492,7 @@ void gui::combo_field()
 void gui::update_field()
 {
      // Load the selected field archive
-     m_field = m_archives_group->field(m_selections->field);
+     m_field = m_archives_group->field(m_field_index);
 
      // Refresh the file window with the new field
      m_field_file_window.refresh(m_field);
@@ -2310,7 +2307,7 @@ void gui::file_menu()
                     ImGui::TableNextColumn();
                     ImGui::PushStyleColor(ImGuiCol_HeaderHovered, colors::ButtonHovered);
                     ImGui::PushStyleColor(ImGuiCol_HeaderActive, colors::ButtonActive);
-                    const bool checked = std::cmp_equal(m_selections->field, index);
+                    const bool checked = std::cmp_equal(m_field_index, index);
                     if (checked)
                     {
                          ImGui::TableSetBgColor(
@@ -2318,7 +2315,7 @@ void gui::file_menu()
                     }
                     if (ImGui::MenuItem(str.c_str(), nullptr, const_cast<bool *>(&checked), !checked))
                     {
-                         m_selections->field = static_cast<int>(index);
+                         m_field_index = static_cast<int>(index);
                          refresh_field();
                     }
                     ImGui::PopStyleColor(2);
@@ -2815,7 +2812,7 @@ std::string gui::save_texture_path() const
      {
           return {};
      }
-     const std::string &field_name = m_archives_group->mapdata().at(static_cast<size_t>(m_selections->field));
+     const std::string &field_name = m_archives_group->mapdata().at(static_cast<size_t>(m_field_index));
      spdlog::info("field_name = {}", field_name);
      if (mim_test())// MIM
      {
@@ -3701,9 +3698,9 @@ std::shared_ptr<open_viii::archive::FIFLFS<false>> gui::init_field()
      const int field     = m_archives_group->find_field(m_selections->starter_field);
 
      // If the field was not found (returns < 0), fall back to 0
-     m_selections->field = field >= 0 ? field : 0;
+     m_field_index = field >= 0 ? field : 0;
 
-     return m_archives_group->field(m_selections->field);
+     return m_archives_group->field(m_field_index);
 }
 
 std::shared_ptr<map_sprite> gui::get_map_sprite() const

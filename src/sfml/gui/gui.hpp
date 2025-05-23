@@ -50,14 +50,12 @@ struct gui
        open_viii::graphics::background::Tile2,
        open_viii::graphics::background::Tile3,
        std::monostate>;
-     std::mutex                                                          append_results_mutex  = {};
-     std::vector<std::filesystem::path>                                  append_results        = {};
+       std::shared_ptr<Selections>                                         m_selections          = std::make_shared<Selections>();
      std::shared_ptr<sf::Shader>                                         m_drag_sprite_shader  = {};
-     std::shared_ptr<Selections>                                         m_selections          = std::make_shared<Selections>();
-
      static constexpr std::int8_t                                        tile_size_px          = { 16 };
      static constexpr std::uint8_t                                       tile_size_px_unsigned = { 16U };
-     mouse_positions                                                     m_mouse_positions     = {};
+     mouse_positions                                                       m_mouse_positions     = {};
+     int                                                                   m_field_index         = {};
      float                                                               m_scale_width         = {};
      sf::RenderWindow                                                    m_window              = {};
      sf::Clock                                                           m_delta_clock         = {};
