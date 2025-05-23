@@ -153,7 +153,8 @@ fme::Selections::Selections(bool load_config)
 
 void fme::Selections::load_configuration()
 {
-     Configuration const config{};
+     const auto start_time = std::chrono::system_clock::now();
+      Configuration const config{};
      if (auto opt_path = config[key_to_string(ConfigKey::SelectionsPath)].value<std::string>(); opt_path.has_value())
      {
           path = std::move(opt_path.value());
@@ -356,12 +357,16 @@ void fme::Selections::load_configuration()
      {
           assert(has_balanced_braces(paths_vector_upscale));
      }
-     
+
      if (config.load_array(key_to_string(ConfigKey::PathsVectorDeswizzle), paths_vector_deswizzle))
      {
           assert(has_balanced_braces(paths_vector_deswizzle));
      }
      refresh_ffnx_paths();
+
+     const auto end_time    = std::chrono::system_clock::now();
+     const auto duration_us = std::chrono::duration_cast<std::chrono::microseconds>(end_time - start_time).count();
+     spdlog::info("Configuration Load Time: {:.3f} ms", static_cast<float>(duration_us) / 1000.0F);
 }
 
 
