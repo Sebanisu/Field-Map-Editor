@@ -8,6 +8,140 @@ using namespace open_viii::graphics;
 using namespace open_viii::graphics::background;
 using namespace std::string_literals;
 using namespace std::string_view_literals;
+namespace fme
+{
+[[nodiscard]] consteval std::string_view key_to_string(ConfigKey key)
+{
+
+     switch (key)
+     {
+          case ConfigKey::BackgroundColor:
+               return "selections_background_color"sv;
+          case ConfigKey::BatchCompactEnabled:
+               return "batch_compact_enabled"sv;
+          case ConfigKey::BatchCompactType:
+               return "batch_compact_type"sv;
+          case ConfigKey::BatchFlattenEnabled:
+               return "batch_flatten_enabled"sv;
+          case ConfigKey::BatchFlattenType:
+               return "batch_flatten_type"sv;
+          case ConfigKey::BatchInputLoadMap:
+               return "batch_input_load_map"sv;
+          case ConfigKey::BatchInputPath:
+               return "batch_input_path"sv;
+          case ConfigKey::BatchInputRootPathType:
+               return "batch_input_root_path_type"sv;
+          case ConfigKey::BatchInputType:
+               return "batch_input_type"sv;
+          case ConfigKey::BatchOutputPath:
+               return "batch_output_path"sv;
+          case ConfigKey::BatchOutputRootPathType:
+               return "batch_output_root_path_type"sv;
+          case ConfigKey::BatchOutputType:
+               return "batch_output_type"sv;
+          case ConfigKey::BatchOutputSaveMap:
+               return "batch_output_save_map"sv;
+          case ConfigKey::Bpp:
+               return "selections_bpp"sv;
+          case ConfigKey::Coo:
+               return "selections_coo"sv;
+          case ConfigKey::CurrentPattern:
+               return "selections_current_pattern"sv;
+          case ConfigKey::DeswizzlePath:
+               return "selections_deswizzle_path"sv;
+          case ConfigKey::DisplayBatchWindow:
+               return "selections_display_batch_window"sv;
+          case ConfigKey::DisplayControlPanelWindow:
+               return "selections_display_control_panel_window"sv;
+          case ConfigKey::DisplayCustomPathsWindow:
+               return "selections_display_custom_paths_window"sv;
+          case ConfigKey::DisplayDrawWindow:
+               return "selections_display_draw_window"sv;
+          case ConfigKey::DisplayFieldFileWindow:
+               return "selections_display_field_file_window"sv;
+          case ConfigKey::DisplayHistoryWindow:
+               return "selections_display_history_window"sv;
+          case ConfigKey::DisplayImportImage:
+               return "selections_display_import_image"sv;
+          case ConfigKey::Draw:
+               return "selections_draw"sv;
+          case ConfigKey::DrawDisableBlending:
+               return "selections_draw_disable_blending"sv;
+          case ConfigKey::DrawGrid:
+               return "selections_draw_grid"sv;
+          case ConfigKey::DrawPalette:
+               return "selections_draw_palette"sv;
+          case ConfigKey::DrawSwizzle:
+               return "selections_draw_swizzle"sv;
+          case ConfigKey::DrawTexturePageGrid:
+               return "selections_draw_texture_page_grid"sv;
+          case ConfigKey::DrawTileConflictRects:
+               return "selections_draw_tile_conflict_rects"sv;
+          case ConfigKey::ImportImageGrid:
+               return "selections_import_image_grid"sv;
+          case ConfigKey::ImportLoadImageDirectory:
+               return "import_load_image_directory"sv;
+          case ConfigKey::OutputDeswizzlePattern:
+               return "selections_output_deswizzle_pattern"sv;
+          case ConfigKey::OutputImagePath:
+               return "output_image_path"sv;
+          case ConfigKey::OutputMapPatternForDeswizzle:
+               return "selections_output_map_pattern_for_deswizzle"sv;
+          case ConfigKey::OutputMapPatternForSwizzle:
+               return "selections_output_map_pattern_for_swizzle"sv;
+          case ConfigKey::OutputMapPath:
+               return "output_map_path"sv;
+          case ConfigKey::OutputMimPath:
+               return "output_mim_path"sv;
+          case ConfigKey::OutputSwizzlePattern:
+               return "selections_output_swizzle_pattern"sv;
+          case ConfigKey::Palette:
+               return "selections_palette"sv;
+          case ConfigKey::PathPatternsCommonUpscale:
+               return "paths_common_upscale"sv;
+          case ConfigKey::PathPatternsCommonUpscaleForMaps:
+               return "paths_common_upscale_for_maps"sv;
+          case ConfigKey::PathPatternsNoPaletteAndTexturePage:
+               return "paths_no_palette_and_texture_page"sv;
+          case ConfigKey::PathPatternsWithPaletteAndTexturePage:
+               return "paths_with_palette_and_texture_page"sv;
+          case ConfigKey::PathPatternsWithPupuID:
+               return "paths_with_pupu_id"sv;
+          case ConfigKey::PathPatternsWithTexturePage:
+               return "paths_with_texture_page"sv;
+          case ConfigKey::PathsVector:
+               return "paths_vector"sv;
+          case ConfigKey::PathsVectorUpscale:
+               return "custom_upscale_paths_vector"sv;
+          case ConfigKey::PathsVectorDeswizzle:
+               return "paths_vector_deswizzle"sv;
+          case ConfigKey::RenderImportedImage:
+               return "selections_render_imported_image"sv;
+          case ConfigKey::SelectedTile:
+               return "selections_selected_tile"sv;
+          case ConfigKey::SelectionsPath:
+               return "selections_path"sv;
+          case ConfigKey::StarterField:
+               return "starter_field"sv;
+          case ConfigKey::SwizzlePath:
+               return "selections_swizzle_path"sv;
+          case ConfigKey::TileSizeValue:
+               return "selections_tile_size_value"sv;
+          case ConfigKey::UpscalePathsIndex:
+               return "upscale_paths_index"sv;
+          case ConfigKey::WindowHeight:
+               return "selections_window_height"sv;
+          case ConfigKey::WindowWidth:
+               return "selections_window_width"sv;
+
+          default: {
+               spdlog::error("{}:{} Unknown configuration key (ConfigKey): {}", __FILE__, __LINE__, std::to_underlying(key));
+               return {};
+          }
+     };
+}
+}// namespace fme
+
 fme::Selections::Selections(bool load_config)
 {
      if (load_config)
@@ -16,83 +150,6 @@ fme::Selections::Selections(bool load_config)
      }
 }
 
-std::string_view fme::Selections::key_to_string(ConfigKey key)
-{
-     using map_t                 = std::map<ConfigKey, std::string_view>;
-     static const map_t updaters = []() {
-          map_t m{};
-          m.emplace(ConfigKey::BackgroundColor, "selections_background_color");
-          m.emplace(ConfigKey::BatchCompactEnabled, "batch_compact_enabled");
-          m.emplace(ConfigKey::BatchCompactType, "batch_compact_type");
-          m.emplace(ConfigKey::BatchFlattenEnabled, "batch_flatten_enabled");
-          m.emplace(ConfigKey::BatchFlattenType, "batch_flatten_type");
-          m.emplace(ConfigKey::BatchInputLoadMap, "batch_input_load_map");
-          m.emplace(ConfigKey::BatchInputPath, "batch_input_path");
-          m.emplace(ConfigKey::BatchInputRootPathType, "batch_input_root_path_type");
-          m.emplace(ConfigKey::BatchInputType, "batch_input_type");
-          m.emplace(ConfigKey::BatchOutputPath, "batch_output_path");
-          m.emplace(ConfigKey::BatchOutputRootPathType, "batch_output_root_path_type");
-          m.emplace(ConfigKey::BatchOutputType, "batch_output_type");
-          m.emplace(ConfigKey::BatchOutputSaveMap, "batch_output_save_map");
-          m.emplace(ConfigKey::Bpp, "selections_bpp");
-          m.emplace(ConfigKey::Coo, "selections_coo");
-          m.emplace(ConfigKey::CurrentPattern, "selections_current_pattern");
-          m.emplace(ConfigKey::DeswizzlePath, "selections_deswizzle_path");
-          m.emplace(ConfigKey::DisplayBatchWindow, "selections_display_batch_window");
-          m.emplace(ConfigKey::DisplayControlPanelWindow, "selections_display_control_panel_window");
-          m.emplace(ConfigKey::DisplayCustomPathsWindow, "selections_display_custom_paths_window");
-          m.emplace(ConfigKey::DisplayDrawWindow, "selections_display_draw_window");
-          m.emplace(ConfigKey::DisplayFieldFileWindow, "selections_display_field_file_window");
-          m.emplace(ConfigKey::DisplayHistoryWindow, "selections_display_history_window");
-          m.emplace(ConfigKey::DisplayImportImage, "selections_display_import_image");
-          m.emplace(ConfigKey::Draw, "selections_draw");
-          m.emplace(ConfigKey::DrawDisableBlending, "selections_draw_disable_blending");
-          m.emplace(ConfigKey::DrawGrid, "selections_draw_grid");
-          m.emplace(ConfigKey::DrawPalette, "selections_draw_palette");
-          m.emplace(ConfigKey::DrawSwizzle, "selections_draw_swizzle");
-          m.emplace(ConfigKey::DrawTexturePageGrid, "selections_draw_texture_page_grid");
-          m.emplace(ConfigKey::DrawTileConflictRects, "selections_draw_tile_conflict_rects");
-          m.emplace(ConfigKey::ImportImageGrid, "selections_import_image_grid");
-          m.emplace(ConfigKey::ImportLoadImageDirectory, "import_load_image_directory");
-          m.emplace(ConfigKey::OutputDeswizzlePattern, "selections_output_deswizzle_pattern");
-          m.emplace(ConfigKey::OutputImagePath, "output_image_path");
-          m.emplace(ConfigKey::OutputMapPatternForDeswizzle, "selections_output_map_pattern_for_deswizzle");
-          m.emplace(ConfigKey::OutputMapPatternForSwizzle, "selections_output_map_pattern_for_swizzle");
-          m.emplace(ConfigKey::OutputMapPath, "output_map_path");
-          m.emplace(ConfigKey::OutputMimPath, "output_mim_path");
-          m.emplace(ConfigKey::OutputSwizzlePattern, "selections_output_swizzle_pattern");
-          m.emplace(ConfigKey::Palette, "selections_palette");
-          m.emplace(ConfigKey::PathPatternsCommonUpscale, "paths_common_upscale");
-          m.emplace(ConfigKey::PathPatternsCommonUpscaleForMaps, "paths_common_upscale_for_maps");
-          m.emplace(ConfigKey::PathPatternsNoPaletteAndTexturePage, "paths_no_palette_and_texture_page");
-          m.emplace(ConfigKey::PathPatternsWithPaletteAndTexturePage, "paths_with_palette_and_texture_page");
-          m.emplace(ConfigKey::PathPatternsWithPupuID, "paths_with_pupu_id");
-          m.emplace(ConfigKey::PathPatternsWithTexturePage, "paths_with_texture_page");
-          m.emplace(ConfigKey::PathsVector, "paths_vector");
-          m.emplace(ConfigKey::PathsVectorUpscale, "custom_upscale_paths_vector");
-          m.emplace(ConfigKey::PathsVectorDeswizzle, "paths_vector_deswizzle");
-          m.emplace(ConfigKey::RenderImportedImage, "selections_render_imported_image");
-          m.emplace(ConfigKey::SelectedTile, "selections_selected_tile");
-          m.emplace(ConfigKey::SelectionsPath, "selections_path");
-          m.emplace(ConfigKey::StarterField, "starter_field");
-          m.emplace(ConfigKey::SwizzlePath, "selections_swizzle_path");
-          m.emplace(ConfigKey::TileSizeValue, "selections_tile_size_value");
-          m.emplace(ConfigKey::UpscalePathsIndex, "upscale_paths_index");
-          m.emplace(ConfigKey::WindowHeight, "selections_window_height");
-          m.emplace(ConfigKey::WindowWidth, "selections_window_width");
-          return m;
-     }();
-
-     if (const auto it = updaters.find(key); it != updaters.end()) [[likely]]
-     {
-          return it->second;
-     }
-     else [[unlikely]]
-     {
-          spdlog::error("{}:{} Unknown configuration key (ConfigKey): {}", __FILE__, __LINE__, std::to_underlying(key));
-          return {};
-     }
-}
 
 void fme::Selections::load_configuration()
 {

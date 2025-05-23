@@ -211,8 +211,6 @@ struct Selections
 
      void                    update_configuration_key(ConfigKey key) const;
 
-     static std::string_view key_to_string(ConfigKey key);
-
      static inline bool      has_balanced_braces([[maybe_unused]] const std::string_view s)
      {
           //      int balance = 0;
