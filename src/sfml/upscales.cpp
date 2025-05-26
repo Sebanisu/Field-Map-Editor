@@ -38,16 +38,16 @@ upscales::upscales(std::string root, std::optional<open_viii::LangT> coo, std::w
                  {
                       for (const auto &path_str : arr | std::ranges::views::transform(operation))
                       {
-                           try
+                           std::error_code ec{};
+                           const auto      exists = std::filesystem::exists(path_str, ec);
+                           if (ec)
                            {
-                                if (std::filesystem::exists(path_str))
-                                {
-                                     result.push_back(path_str);
-                                     return;
-                                }
+                                spdlog::info("Failed to check path '{}': error={}", path_str, ec.message());
                            }
-                           catch (...)
+                           else if (exists)
                            {
+                                result.push_back(path_str);
+                                return;
                            }
                       }
                  }
@@ -87,14 +87,14 @@ upscales::upscales(std::string root, std::optional<open_viii::LangT> coo, std::w
             std::ranges::any_of(
               arr,
               [](const auto &path_str) {
-                   try
+                   std::error_code ec{};
+                   const auto      exists = std::filesystem::exists(path_str, ec);
+                   if (ec)
                    {
-                        return std::filesystem::exists(path_str);
-                   }
-                   catch (...)
-                   {
+                        spdlog::info("Failed to check path '{}': error={}", path_str, ec.message());
                         return false;
                    }
+                   return exists;
               },
               [&](const std::string &pattern) -> std::filesystem::path {
                    return copy_data.replace_tags(pattern, selections, field_root.string());
