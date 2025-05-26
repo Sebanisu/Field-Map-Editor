@@ -63,8 +63,8 @@ find_package(GLEW REQUIRED)
 find_package(ctre REQUIRED)
 find_package(iconfontcppheaders REQUIRED CONFIG)
 
-#include(${CMAKE_SOURCE_DIR}/cmake/imgui-sfml.cmake)
-find_package(ImGui-SFML)
+include(${CMAKE_SOURCE_DIR}/cmake/imgui-sfml.cmake)
+#find_package(ImGui-SFML)
 
 add_library(${PROJECT_NAME}_SFML_Common INTERFACE)
 target_include_directories(${PROJECT_NAME}_SFML_Common
@@ -74,8 +74,8 @@ target_link_libraries(
   ${PROJECT_NAME}_SFML
   PRIVATE project_warnings
   PRIVATE project_options
-  PRIVATE ImGui-SFML::ImGui-SFML
-  #PRIVATE ImGui-SFML
+  #PRIVATE ImGui-SFML::ImGui-SFML
+  PRIVATE ImGui-SFML
   PRIVATE OpenVIII_CPP_WIP_VIIIPaths
   PRIVATE OpenVIII_CPP_WIP_VIIIArchive
   PRIVATE OpenVIII_CPP_WIP_VIIIGraphics
