@@ -462,6 +462,24 @@ struct fmt::formatter<fme::PatternSelector> : fmt::formatter<std::string_view>
                case fme::PatternSelector::OutputMapPatternForDeswizzle:
                     name = "Output map pattern for deswizzle"sv;
                     break;
+               case fme::PatternSelector::PathPatternsCommonUpscale:
+                    name = "Path Patterns Common Upscale"sv;
+                    break;
+               case fme::PatternSelector::PathPatternsCommonUpscaleForMaps:
+                    name = "Path Patterns Common Upscale For Maps"sv;
+                    break;
+               case fme::PatternSelector::PathPatternsNoPaletteAndTexturePage:
+                    name = "Path Patterns No Palette And Texture Page"sv;
+                    break;
+               case fme::PatternSelector::PathPatternsWithPaletteAndTexturePage:
+                    name = "Path Patterns With Palette And Texture Page"sv;
+                    break;
+               case fme::PatternSelector::PathPatternsWithPupuID:
+                    name = "Path Patterns With PupuID"sv;
+                    break;
+               case fme::PatternSelector::PathPatternsWithTexturePage:
+                    name = "Path Patterns With Texture Page"sv;
+                    break;
           }
           return fmt::formatter<std::string_view>::format(name, ctx);
      }
@@ -470,8 +488,7 @@ struct fmt::formatter<fme::PatternSelector> : fmt::formatter<std::string_view>
 
 template<>
 struct fmt::formatter<fme::compact_type> : fmt::formatter<std::string_view>
-{
-     // parse is inherited from formatter<string_view>.
+{// parse is inherited from formatter<string_view>.
      template<typename FormatContext>
      constexpr auto format(fme::compact_type in_compact_type, FormatContext &ctx) const
      {

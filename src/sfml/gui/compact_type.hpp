@@ -71,6 +71,12 @@ enum class PatternSelector : std::uint8_t
      OutputDeswizzlePattern,
      OutputMapPatternForSwizzle,
      OutputMapPatternForDeswizzle,
+     PathPatternsCommonUpscale,
+     PathPatternsCommonUpscaleForMaps,
+     PathPatternsNoPaletteAndTexturePage,
+     PathPatternsWithPaletteAndTexturePage,
+     PathPatternsWithPupuID,
+     PathPatternsWithTexturePage
 };
 
 }// namespace fme

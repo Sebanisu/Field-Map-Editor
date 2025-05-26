@@ -32,7 +32,6 @@ struct custom_paths_window
      static constexpr std::uint32_t                                      s_options_size_value      = { 4U };
      static constexpr std::size_t                                        s_input_string_size_value = { 256U };
      mutable std::array<char, s_input_string_size_value>                 m_input_pattern_string    = {};
-     mutable std::array<std::string *, s_options_size_value>             m_selections_values       = get_selections_values();
      
      static inline const auto         m_tests                = std::to_array<key_value_data>({
        { .field_name = "ecmall1", .ext = ".ca" },// Basic field_name + ext match
@@ -71,7 +70,6 @@ struct custom_paths_window
      static constexpr auto            m_index_values         = std::ranges::views::iota(std::uint32_t{}, s_options_size_value);
      mutable ImVec2                   m_scrolling_child_size = {};
 
-     [[nodiscard]] std::array<std::string *, s_options_size_value> get_selections_values() const;
      [[nodiscard]] std::string                                    &get_current_string_value_mutable() const;
      [[nodiscard]] const std::string                              &get_current_string_value() const;
 
