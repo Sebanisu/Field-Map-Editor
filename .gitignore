@@ -29,7 +29,7 @@ ehthumbs.db
 Thumbs.db
 
 # Output Directories
-bin/
+bin*/
 lib/
 *.i
 
