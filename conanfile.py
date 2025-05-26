@@ -2,12 +2,16 @@ from conan import ConanFile
 from conan.tools.cmake import CMake, CMakeToolchain, CMakeDeps, cmake_layout
 from conan.tools.files import copy
 import platform
+import platform
 
 import os
 
 class FieldMapEditorConan(ConanFile):
     name = "Field-Map-Editor"
+class FieldMapEditorConan(ConanFile):
+    name = "Field-Map-Editor"
     version = "1.0"
+    package_type = "application"
     package_type = "application"
     
     default_options  = {"fmt/*:shared": True}
@@ -22,6 +26,7 @@ class FieldMapEditorConan(ConanFile):
         self.requires("glew/2.2.0")
         self.requires("glm/0.9.9.8")
         self.requires("imgui/1.91.8-docking", force=True)
+        self.requires("imgui/1.91.8-docking", force=True)
         self.requires("sfml/2.6.2")
         self.requires("zlib/1.3.1")
         self.requires("openal-soft/1.22.2")
@@ -31,9 +36,10 @@ class FieldMapEditorConan(ConanFile):
         self.requires("stb/cci.20230920")        
         self.requires("iconfontcppheaders/cci.20240620")
         self.requires("ctre/3.9.0")        
-        self.requires("imgui-sfml/2.6.1")
+        #self.requires("imgui-sfml/2.6.1")
     
     def build_requirements(self):
+        self.tool_requires("cmake/3.31.6")         
         self.tool_requires("cmake/3.31.6")         
         # if self.settings.os != "Windows":
         #     self.tool_requires("pkg-config/[>=0.29.2]")
@@ -46,6 +52,10 @@ class FieldMapEditorConan(ConanFile):
     
     def generate(self):
         tc = CMakeToolchain(self)
+        if platform.system() == "Windows":
+            tc.generator = "Visual Studio 17 2022"
+        else:
+            tc.generator = "Ninja"
         if platform.system() == "Windows":
             tc.generator = "Visual Studio 17 2022"
         else:
@@ -67,5 +77,6 @@ class FieldMapEditorConan(ConanFile):
         
     def layout(self):
         cmake_layout(self)
+
 
         
