@@ -1,12 +1,14 @@
 from conan import ConanFile
 from conan.tools.cmake import CMake, CMakeToolchain, CMakeDeps, cmake_layout
 from conan.tools.files import copy
+import platform
 
 import os
 
-class MyPackage(ConanFile):
-    name = "my_package"
+class FieldMapEditorConan(ConanFile):
+    name = "Field-Map-Editor"
     version = "1.0"
+    package_type = "application"
     
     default_options  = {"fmt/*:shared": True}
     
@@ -32,7 +34,7 @@ class MyPackage(ConanFile):
         self.requires("imgui-sfml/2.6.1")
     
     def build_requirements(self):
-        self.tool_requires("cmake/[>=3.22.6]")        
+        self.tool_requires("cmake/3.31.6")         
         # if self.settings.os != "Windows":
         #     self.tool_requires("pkg-config/[>=0.29.2]")
         
@@ -43,8 +45,11 @@ class MyPackage(ConanFile):
         self.options["boost-ext-ut"].disable_module = True
     
     def generate(self):
-        #tc = CMakeToolchain(self, generator="Ninja")
         tc = CMakeToolchain(self)
+        if platform.system() == "Windows":
+            tc.generator = "Visual Studio 17 2022"
+        else:
+            tc.generator = "Ninja"
         tc.presets_prefix = f"conan_{self.settings.os}".lower() + "_" + str(self.settings.build_type).lower()
         imgui = self.dependencies["imgui"].cpp_info
         tc.variables["IMGUI_IMPL_DIR"] = os.path.normpath(imgui.srcdirs[0]).replace("\\", "/")        
