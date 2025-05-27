@@ -185,9 +185,9 @@ void fme::custom_paths_window::populate_test_output() const
      };
      if (gcc.render())
      {
+          selections->current_pattern_index = -1;
           populate_input_pattern();
           selections->update_configuration_key(ConfigKey::CurrentPattern);
-          selections->current_pattern_index = -1;
           selections->update_configuration_key(ConfigKey::CurrentPatternIndex);
           return true;
      }
@@ -282,42 +282,193 @@ void fme::custom_paths_window::save_pattern() const
 
 [[nodiscard]] bool fme::custom_paths_window::vector_pattern() const
 {
-     const auto *const vptr = get_current_string_vector_mutable();
+     const auto *const vptr = get_current_string_vector();
      if (!vptr)
      {
           return false;
      }
-     if (!ImGui::BeginTable("##vector of patterns table", 2))
+     const auto selections = m_selections.lock();
+     if (!selections)
+     {
+          spdlog::error("Failed to lock m_selections: shared_ptr is expired.");
+          return false;
+     }
+     constexpr static int cols = 2;
+     // ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 3.F);
+     // ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(2.F, 2.F));
+     // ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2(4.F, 4.F));
+     // const auto color = ImVec4(0.5F, 0.5F, 0.5F, 1.F);
+     // ImGui::PushStyleColor(ImGuiCol_TableBorderLight, color);
+     // ImGui::PushStyleColor(ImGuiCol_TableBorderStrong, color);
+     // const auto pop_styles = scope_guard{ []() {
+     //      ImGui::PopStyleColor(2);
+     //      ImGui::PopStyleVar(3);
+     // } };
+     if (!ImGui::BeginTable("##vector of patterns table", cols, ImGuiTableFlags_SizingFixedFit))
      {
           return false;
      }
      const auto pop_table = scope_guard{ &ImGui::EndTable };
+
+     // Setup columns
+     ImGui::TableSetupColumn("Pattern", ImGuiTableColumnFlags_WidthStretch);// First column stretches to content
+     ImGui::TableSetupColumn("Actions", ImGuiTableColumnFlags_WidthFixed, 120.0f);// Second column fixed width for buttons
+     // ImGui::TableHeadersRow();
+
+     bool                          r_val     = false;
+     bool                          bg_color  = true;
+     std::optional<std::ptrdiff_t> delete_me = std::nullopt;
+
      for (const auto &[index, str] : *vptr | std::ranges::views::enumerate)
      {
           ImGui::TableNextRow();
+          if (bg_color)
+          {
+               ImGui::TableSetBgColor(ImGuiTableBgTarget_RowBg0, ImU32{ colors::TableDarkTeal.fade(-0.4F) });// Dark red
+          }
+          else
+          {
+               ImGui::TableSetBgColor(
+                 ImGuiTableBgTarget_RowBg0, ImU32{ colors::TableLightDarkTeal.fade(-0.4F) });// Slightly lighter dark red
+          }
+          bg_color = !bg_color;
           ImGui::TableNextColumn();
-          format_imgui_text("{}", str);
+          {
+               const float availableWidth = ImGui::GetContentRegionAvail().x;
+               ImGui::PushItemWidth(availableWidth);// Set textbox width to fill cell
+               const auto pop_width = scope_guard(&ImGui::PopItemWidth);
+               if (selections->current_pattern_index == static_cast<int>(index))
+               {
+                    if (ImGui::InputText("##test input", m_input_pattern_string.data(), m_input_pattern_string.size()))
+                    {
+                         save_pattern();
+                         r_val = true;
+                    }
+               }
+               else
+               {
+                    if (ImGui::Selectable(str.c_str()))
+                    {
+                         selections->current_pattern_index = static_cast<int>(index);
+                         selections->update_configuration_key(ConfigKey::CurrentPatternIndex);
+                         populate_input_pattern();
+                         r_val = true;
+                    }
+                    else
+                    {
+                         tool_tip(str);
+                    }
+               }
+          }
           ImGui::TableNextColumn();
           // Delete button
           if (ImGui::Button(fmt::format("{}##delete_{}", ICON_FA_TRASH, index).c_str()))
           {
-               // Delete code here.
+               delete_me = index;
+          }
+          else
+          {
+               tool_tip("Delete");
           }
           ImGui::SameLine();// Keep buttons on the same line
-          // Edit button
-          if (ImGui::Button(fmt::format("{}##edit_{}", ICON_FA_PEN, index).c_str()))
+          if (selections->current_pattern_index != static_cast<int>(index))
           {
-               // Edit code here.
+               // Edit button
+               if (ImGui::Button(fmt::format("{}##edit_{}", ICON_FA_PEN, index).c_str()))
+               {
+                    selections->current_pattern_index = static_cast<int>(index);
+                    selections->update_configuration_key(ConfigKey::CurrentPatternIndex);
+                    populate_input_pattern();
+                    r_val = true;
+               }
+               else
+               {
+                    tool_tip("Edit");
+               }
+          }
+          else
+          {
+               if (ImGui::Button(fmt::format("{}##cancel_{}", ICON_FA_XMARK, index).c_str()))
+               {
+                    selections->current_pattern_index = -1;
+                    selections->update_configuration_key(ConfigKey::CurrentPatternIndex);
+                    std::ranges::fill(m_input_pattern_string, '\0');
+                    r_val = true;
+               }
+               else
+               {
+                    tool_tip("Cancel Edit");
+               }
           }
           ImGui::SameLine();// Keep buttons on the same line
 
           // Copy button
           if (ImGui::Button(fmt::format("{}##copy_{}", ICON_FA_CLIPBOARD, index).c_str()))
           {
-               // Copy code here.
+               ImGui::SetClipboardText(str.c_str());
+          }
+          else
+          {
+               tool_tip("Copy to Clipboard");
           }
      }
-     return false;
+     ImGui::TableNextRow();
+     if (bg_color)
+     {
+          ImGui::TableSetBgColor(ImGuiTableBgTarget_RowBg0, ImU32{ colors::TableDarkTeal.fade(-0.4F) });// Dark red
+     }
+     else
+     {
+          ImGui::TableSetBgColor(ImGuiTableBgTarget_RowBg0, ImU32{ colors::TableLightDarkTeal.fade(-0.4F) });// Slightly lighter dark red
+     }
+     ImGui::TableNextColumn();
+     const char *add        = "Add New Pattern";
+     const auto  add_action = [&]() {
+          if (auto *const mut_vptr = get_current_string_vector_mutable(); mut_vptr)
+          {
+               mut_vptr->emplace_back();
+               selections->current_pattern_index = static_cast<int>(std::ranges::ssize(*mut_vptr) - 1);
+               selections->update_configuration_key(ConfigKey::CurrentPatternIndex);
+               populate_input_pattern();
+               r_val = true;
+          }
+     };
+     if (ImGui::Selectable(add))
+     {
+          add_action();
+     }
+     ImGui::TableNextColumn();
+     if (ImGui::Button(fmt::format("{}##add", ICON_FA_PLUS).c_str()))
+     {
+          add_action();
+     }
+     else
+     {
+          tool_tip(add);
+     }
+
+     if (delete_me.has_value())
+     {
+          if (auto *const mut_vptr = get_current_string_vector_mutable(); mut_vptr)
+          {
+               if (selections->current_pattern_index == static_cast<int>(delete_me.value()))
+               {
+                    selections->current_pattern_index = -1;
+                    selections->update_configuration_key(ConfigKey::CurrentPatternIndex);
+                    std::ranges::fill(m_input_pattern_string, '\0');
+               }
+               else if (selections->current_pattern_index > static_cast<int>(delete_me.value()))
+               {
+                    selections->current_pattern_index--;
+                    selections->update_configuration_key(ConfigKey::CurrentPatternIndex);
+               }
+               auto iter = mut_vptr->begin();
+               std::ranges::advance(iter, delete_me.value());
+               mut_vptr->erase(iter);
+               r_val = true;
+          }
+     }
+     return r_val;
 }
 
 [[nodiscard]] bool fme::custom_paths_window::button_add_seperator() const
