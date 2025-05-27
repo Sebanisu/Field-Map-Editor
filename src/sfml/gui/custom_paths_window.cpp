@@ -165,16 +165,22 @@ void fme::custom_paths_window::save_pattern() const
                selections->update_configuration_key(ConfigKey::OutputMapPatternForDeswizzle);
                break;
           case fme::PatternSelector::PathPatternsCommonUpscale:
+               selections->update_configuration_key(ConfigKey::PathPatternsCommonUpscale);
                break;
           case fme::PatternSelector::PathPatternsCommonUpscaleForMaps:
+               selections->update_configuration_key(ConfigKey::PathPatternsCommonUpscaleForMaps);
                break;
           case fme::PatternSelector::PathPatternsNoPaletteAndTexturePage:
+               selections->update_configuration_key(ConfigKey::PathPatternsNoPaletteAndTexturePage);
                break;
           case fme::PatternSelector::PathPatternsWithPaletteAndTexturePage:
+               selections->update_configuration_key(ConfigKey::PathPatternsWithPaletteAndTexturePage);
                break;
           case fme::PatternSelector::PathPatternsWithPupuID:
+               selections->update_configuration_key(ConfigKey::PathPatternsWithPupuID);
                break;
           case fme::PatternSelector::PathPatternsWithTexturePage:
+               selections->update_configuration_key(ConfigKey::PathPatternsWithTexturePage);
                break;
      }
 }
@@ -438,7 +444,7 @@ fme::custom_paths_window::custom_paths_window(std::weak_ptr<Selections> input_se
 
 fme::custom_paths_window &fme::custom_paths_window::refresh(std::weak_ptr<Selections> input_selections)
 {
-     m_selections        = input_selections;
+     m_selections = input_selections;
      populate_input_pattern();
 
      return refresh();
