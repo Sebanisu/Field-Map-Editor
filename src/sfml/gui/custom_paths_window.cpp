@@ -74,7 +74,7 @@
 void fme::custom_paths_window::populate_input_pattern() const
 {
 
-     if (const auto *strptr = get_current_string_value())
+     if (const auto * const strptr = get_current_string_value())
      {
           auto it = fmt::vformat_to_n(
             std::ranges::begin(m_input_pattern_string),
@@ -150,11 +150,15 @@ void fme::custom_paths_window::populate_test_output() const
 
 void fme::custom_paths_window::save_pattern() const
 {
-     auto selections = m_selections.lock();
+     const auto selections = m_selections.lock();
      if (!selections)
      {
           spdlog::error("Failed to lock m_selections: shared_ptr is expired.");
           return;
+     }
+     if (auto * const strptr = get_current_string_value_mutable(); strptr)
+     {
+          *strptr = std::string{ m_input_pattern_string.data() };
      }
      switch (selections->current_pattern)
      {
