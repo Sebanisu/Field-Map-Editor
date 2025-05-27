@@ -25,6 +25,13 @@ namespace fme
 {
 struct custom_paths_window
 {
+     enum struct vector_or_string_t : std::uint8_t
+     {
+          unknown,
+          vector,
+          string,
+     };
+
    private:
      std::weak_ptr<Selections>                           m_selections              = {};
      mutable bool                                        m_changed                 = {};
@@ -70,22 +77,27 @@ struct custom_paths_window
      static constexpr auto                               m_index_values = std::ranges::views::iota(std::uint32_t{}, s_options_size_value);
      mutable ImVec2                                      m_scrolling_child_size = {};
 
-     [[nodiscard]] static std::string *get_current_string_value_from_index(std::vector<std::string> &strings, const int index);
-     [[nodiscard]] std::string        *get_current_string_value_mutable() const;
-     [[nodiscard]] const std::string  *get_current_string_value() const;
+     [[nodiscard]] static std::string             *get_current_string_value_from_index(std::vector<std::string> &strings, const int index);
+     [[nodiscard]] std::string                    *get_current_string_value_mutable() const;
+     [[nodiscard]] const std::string              *get_current_string_value() const;
+     [[nodiscard]] std::vector<std::string>       *get_current_string_vector_mutable() const;
+     [[nodiscard]] const std::vector<std::string> *get_current_string_vector() const;
 
-     void                              populate_input_pattern() const;
-     void                              populate_test_output() const;
+     [[nodiscard]] vector_or_string_t              vector_or_string() const;
 
-     [[nodiscard]] bool                combo_selected_pattern() const;
+     void                                          populate_input_pattern() const;
+     void                                          populate_test_output() const;
 
-     void                              save_pattern() const;
+     [[nodiscard]] bool                            combo_selected_pattern() const;
 
-     [[nodiscard]] bool                textbox_pattern() const;
-     [[nodiscard]] bool                button_add_seperator() const;
-     [[nodiscard]] bool                button_remove_last_key() const;
-     [[nodiscard]] bool                child_keys() const;
-     [[nodiscard]] bool                child_test_output() const;
+     void                                          save_pattern() const;
+
+     [[nodiscard]] bool                            textbox_pattern() const;
+     [[nodiscard]] bool                            vector_pattern() const;
+     [[nodiscard]] bool                            button_add_seperator() const;
+     [[nodiscard]] bool                            button_remove_last_key() const;
+     [[nodiscard]] bool                            child_keys() const;
+     [[nodiscard]] bool                            child_test_output() const;
 
    public:
      custom_paths_window(std::weak_ptr<Selections> input_selections);

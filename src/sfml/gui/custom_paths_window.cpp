@@ -1,8 +1,33 @@
 #include "custom_paths_window.hpp"
 #include "as_string.hpp"
+#include "fa_icons.hpp"
 #include "formatters.hpp"
 
-
+[[nodiscard]] fme::custom_paths_window::vector_or_string_t fme::custom_paths_window::vector_or_string() const
+{
+     const auto selections = m_selections.lock();
+     if (!selections)
+     {
+          spdlog::error("Failed to lock m_selections: shared_ptr is expired.");
+          return fme::custom_paths_window::vector_or_string_t::unknown;
+     }
+     switch (selections->current_pattern)
+     {
+          case fme::PatternSelector::OutputSwizzlePattern:
+          case fme::PatternSelector::OutputDeswizzlePattern:
+          case fme::PatternSelector::OutputMapPatternForSwizzle:
+          case fme::PatternSelector::OutputMapPatternForDeswizzle:
+               return fme::custom_paths_window::vector_or_string_t::string;
+          case fme::PatternSelector::PathPatternsCommonUpscale:
+          case fme::PatternSelector::PathPatternsCommonUpscaleForMaps:
+          case fme::PatternSelector::PathPatternsNoPaletteAndTexturePage:
+          case fme::PatternSelector::PathPatternsWithPaletteAndTexturePage:
+          case fme::PatternSelector::PathPatternsWithPupuID:
+          case fme::PatternSelector::PathPatternsWithTexturePage:
+               return fme::custom_paths_window::vector_or_string_t::vector;
+     }
+     return fme::custom_paths_window::vector_or_string_t::unknown;
+}
 [[nodiscard]] std::string *fme::custom_paths_window::get_current_string_value_mutable() const
 {
      const auto selections = m_selections.lock();
@@ -36,6 +61,43 @@
                return get_current_string_value_from_index(selections->paths_with_texture_page, selections->current_pattern_index);
      }
      return nullptr;
+}
+
+
+[[nodiscard]] std::vector<std::string> *fme::custom_paths_window::get_current_string_vector_mutable() const
+{
+     const auto selections = m_selections.lock();
+     if (!selections)
+     {
+          spdlog::error("Failed to lock m_selections: shared_ptr is expired.");
+          return nullptr;
+     }
+     switch (selections->current_pattern)
+     {
+          case fme::PatternSelector::OutputSwizzlePattern:
+          case fme::PatternSelector::OutputDeswizzlePattern:
+          case fme::PatternSelector::OutputMapPatternForSwizzle:
+          case fme::PatternSelector::OutputMapPatternForDeswizzle:
+               return nullptr;
+          case fme::PatternSelector::PathPatternsCommonUpscale:
+               return &selections->paths_common_upscale;
+          case fme::PatternSelector::PathPatternsCommonUpscaleForMaps:
+               return &selections->paths_common_upscale_for_maps;
+          case fme::PatternSelector::PathPatternsNoPaletteAndTexturePage:
+               return &selections->paths_no_palette_and_texture_page;
+          case fme::PatternSelector::PathPatternsWithPaletteAndTexturePage:
+               return &selections->paths_with_palette_and_texture_page;
+          case fme::PatternSelector::PathPatternsWithPupuID:
+               return &selections->paths_with_pupu_id;
+          case fme::PatternSelector::PathPatternsWithTexturePage:
+               return &selections->paths_with_texture_page;
+     }
+     return nullptr;
+}
+
+[[nodiscard]] const std::vector<std::string> *fme::custom_paths_window::get_current_string_vector() const
+{
+     return get_current_string_vector_mutable();
 }
 
 
@@ -214,6 +276,46 @@ void fme::custom_paths_window::save_pattern() const
           if (ImGui::Button("Close"))
                ImGui::CloseCurrentPopup();
           ImGui::EndPopup();
+     }
+     return false;
+}
+
+[[nodiscard]] bool fme::custom_paths_window::vector_pattern() const
+{
+     const auto *const vptr = get_current_string_vector_mutable();
+     if (!vptr)
+     {
+          return false;
+     }
+     if (!ImGui::BeginTable("##vector of patterns table", 2))
+     {
+          return false;
+     }
+     const auto pop_table = scope_guard{ &ImGui::EndTable };
+     for (const auto &[index, str] : *vptr | std::ranges::views::enumerate)
+     {
+          ImGui::TableNextRow();
+          ImGui::TableNextColumn();
+          format_imgui_text("{}", str);
+          ImGui::TableNextColumn();
+          // Delete button
+          if (ImGui::Button(fmt::format("{}##delete_{}", ICON_FA_TRASH, index).c_str()))
+          {
+               // Delete code here.
+          }
+          ImGui::SameLine();// Keep buttons on the same line
+          // Edit button
+          if (ImGui::Button(fmt::format("{}##edit_{}", ICON_FA_PEN, index).c_str()))
+          {
+               // Edit code here.
+          }
+          ImGui::SameLine();// Keep buttons on the same line
+
+          // Copy button
+          if (ImGui::Button(fmt::format("{}##copy_{}", ICON_FA_CLIPBOARD, index).c_str()))
+          {
+               // Copy code here.
+          }
      }
      return false;
 }
@@ -468,12 +570,23 @@ void fme::custom_paths_window::render() const
      }
      const auto pop_changed = scope_guard([this, &override_changed]() { m_changed = override_changed; });
 
-
-     if (std::ranges::any_of(std::array{ combo_selected_pattern(), textbox_pattern() }, std::identity{}))
+     switch (vector_or_string())
      {
-          override_changed = true;
+          case vector_or_string_t::string: {
+               if (std::ranges::any_of(std::array{ combo_selected_pattern(), textbox_pattern() }, std::identity{}))
+               {
+                    override_changed = true;
+               }
+          }
+          break;
+          case vector_or_string_t::vector: {
+               if (std::ranges::any_of(std::array{ combo_selected_pattern(), vector_pattern() }, std::identity{}))
+               {
+                    override_changed = true;
+               }
+          }
+          break;
      }
-
 
      ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 3.F);
      ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(2.F, 2.F));
