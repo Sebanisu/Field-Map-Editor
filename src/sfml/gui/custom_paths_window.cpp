@@ -3,24 +3,24 @@
 #include "formatters.hpp"
 
 
-[[nodiscard]] std::string &fme::custom_paths_window::get_current_string_value_mutable() const
+[[nodiscard]] std::string *fme::custom_paths_window::get_current_string_value_mutable() const
 {
      auto selections = m_selections.lock();
      if (!selections)
      {
           spdlog::error("Failed to lock m_selections: shared_ptr is expired.");
-          throw;
+          return nullptr;
      }
      switch (selections->current_pattern)
      {
           case fme::PatternSelector::OutputSwizzlePattern:
-               return selections->output_swizzle_pattern;
+               return &selections->output_swizzle_pattern;
           case fme::PatternSelector::OutputDeswizzlePattern:
-               return selections->output_deswizzle_pattern;
+               return &selections->output_deswizzle_pattern;
           case fme::PatternSelector::OutputMapPatternForSwizzle:
-               return selections->output_map_pattern_for_swizzle;
+               return &selections->output_map_pattern_for_swizzle;
           case fme::PatternSelector::OutputMapPatternForDeswizzle:
-               return selections->output_map_pattern_for_deswizzle;
+               return &selections->output_map_pattern_for_deswizzle;
           case fme::PatternSelector::PathPatternsCommonUpscale:
                break;
           case fme::PatternSelector::PathPatternsCommonUpscaleForMaps:
@@ -34,28 +34,27 @@
           case fme::PatternSelector::PathPatternsWithTexturePage:
                break;
      }
-     throw;
+     return nullptr;
 }
 
-[[nodiscard]] const std::string &fme::custom_paths_window::get_current_string_value() const
+[[nodiscard]] const std::string *fme::custom_paths_window::get_current_string_value() const
 {
-     auto                     selections = m_selections.lock();
-     static const std::string dummy      = {};
+     auto selections = m_selections.lock();
      if (!selections)
      {
           spdlog::error("Failed to lock m_selections: shared_ptr is expired.");
-          return dummy;
+          return nullptr;
      }
      switch (selections->current_pattern)
      {
           case fme::PatternSelector::OutputSwizzlePattern:
-               return selections->output_swizzle_pattern;
+               return &selections->output_swizzle_pattern;
           case fme::PatternSelector::OutputDeswizzlePattern:
-               return selections->output_deswizzle_pattern;
+               return &selections->output_deswizzle_pattern;
           case fme::PatternSelector::OutputMapPatternForSwizzle:
-               return selections->output_map_pattern_for_swizzle;
+               return &selections->output_map_pattern_for_swizzle;
           case fme::PatternSelector::OutputMapPatternForDeswizzle:
-               return selections->output_map_pattern_for_deswizzle;
+               return &selections->output_map_pattern_for_deswizzle;
           case fme::PatternSelector::PathPatternsCommonUpscale:
                break;
           case fme::PatternSelector::PathPatternsCommonUpscaleForMaps:
@@ -69,18 +68,25 @@
           case fme::PatternSelector::PathPatternsWithTexturePage:
                break;
      }
-     return dummy;
+     return nullptr;
 }
 
 void fme::custom_paths_window::populate_input_pattern() const
 {
 
-     auto it = fmt::vformat_to_n(
-       std::ranges::begin(m_input_pattern_string),
-       std::ranges::size(m_input_pattern_string) - 1U,
-       "{}",
-       fmt::make_format_args(get_current_string_value()));
-     *it.out = '\0';
+     if (const auto *strptr = get_current_string_value())
+     {
+          auto it = fmt::vformat_to_n(
+            std::ranges::begin(m_input_pattern_string),
+            std::ranges::size(m_input_pattern_string) - 1U,
+            "{}",
+            fmt::make_format_args(*strptr));
+          *it.out = '\0';
+     }
+     else
+     {
+          std::ranges::fill(m_input_pattern_string,'\0');
+     }
 }
 
 void fme::custom_paths_window::populate_test_output() const

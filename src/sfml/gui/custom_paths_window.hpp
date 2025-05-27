@@ -70,8 +70,8 @@ struct custom_paths_window
      static constexpr auto            m_index_values         = std::ranges::views::iota(std::uint32_t{}, s_options_size_value);
      mutable ImVec2                   m_scrolling_child_size = {};
 
-     [[nodiscard]] std::string                                    &get_current_string_value_mutable() const;
-     [[nodiscard]] const std::string                              &get_current_string_value() const;
+     [[nodiscard]] std::string                                    *get_current_string_value_mutable() const;
+     [[nodiscard]] const std::string                              *get_current_string_value() const;
 
      void                                                          populate_input_pattern() const;
      void                                                          populate_test_output() const;
