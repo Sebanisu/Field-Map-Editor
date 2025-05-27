@@ -47,6 +47,8 @@ namespace fme
                return "selections_coo"sv;
           case ConfigKey::CurrentPattern:
                return "selections_current_pattern"sv;
+          case ConfigKey::CurrentPatternIndex:
+               return "selections_current_pattern_index"sv;
           case ConfigKey::DeswizzlePath:
                return "selections_deswizzle_path"sv;
           case ConfigKey::DisplayBatchWindow:
@@ -153,8 +155,8 @@ fme::Selections::Selections(bool load_config)
 
 void fme::Selections::load_configuration()
 {
-     const auto start_time = std::chrono::system_clock::now();
-      Configuration const config{};
+     const auto          start_time = std::chrono::system_clock::now();
+     Configuration const config{};
      if (auto opt_path = config[key_to_string(ConfigKey::SelectionsPath)].value<std::string>(); opt_path.has_value())
      {
           path = std::move(opt_path.value());
@@ -194,6 +196,7 @@ void fme::Selections::load_configuration()
 
      current_pattern =
        static_cast<PatternSelector>(config[key_to_string(ConfigKey::CurrentPattern)].value_or(std::to_underlying(PatternSelector{})));
+     current_pattern_index        = config[key_to_string(ConfigKey::CurrentPatternIndex)].value_or(int{ -1 });
 
      deswizzle_path               = config[key_to_string(ConfigKey::DeswizzlePath)].value_or(path);
 
@@ -350,7 +353,7 @@ void fme::Selections::load_configuration()
      {
           const auto &default_paths = open_viii::Paths::get();
           paths_vector              = { default_paths.begin(), default_paths.end() };
-     }     
+     }
      assert(has_balanced_braces(paths_vector));
 
      if (config.load_array(key_to_string(ConfigKey::PathsVectorUpscale), paths_vector_upscale))
@@ -413,6 +416,7 @@ void fme::Selections::update_configuration_key(ConfigKey key) const
           MAP_MACRO(ConfigKey::Bpp, bpp.raw() & 3U);
           MAP_MACRO_UNDERLYING(ConfigKey::Coo, coo);
           MAP_MACRO_UNDERLYING(ConfigKey::CurrentPattern, current_pattern);
+          MAP_MACRO(ConfigKey::CurrentPatternIndex, current_pattern_index);
           MAP_MACRO(ConfigKey::DeswizzlePath, deswizzle_path);
           MAP_MACRO(ConfigKey::DisplayBatchWindow, display_batch_window);
           MAP_MACRO(ConfigKey::DisplayControlPanelWindow, display_control_panel_window);

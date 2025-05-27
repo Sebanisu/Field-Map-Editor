@@ -50,6 +50,7 @@ enum class ConfigKey
      OutputMapPatternForSwizzle,
      OutputMapPatternForDeswizzle,
      CurrentPattern,
+     CurrentPatternIndex,
      BatchInputType,
      BatchInputRootPathType,
      BatchOutputType,
@@ -150,6 +151,7 @@ struct Selections
      std::string                    output_image_path;
      std::string                    import_load_image_directory;
      PatternSelector                current_pattern;
+     int                            current_pattern_index;
      color                          background_color;///< Remember to user's selected Background Color for draw Window.
 
      input_types                    batch_input_type;
@@ -196,7 +198,7 @@ struct Selections
       *
       * This function should be called during initialization if prior settings are expected.
       */
-     void                    load_configuration();
+     void               load_configuration();
 
      /**
       * @brief Refreshes FFNx-related paths based on the current FF8 path.
@@ -204,14 +206,14 @@ struct Selections
       * This function must be rerun if the FF8 path changes, as the presence and location
       * of FFNx components are path-dependent. It reads configuration from "FFNx.toml".
       */
-     void                    refresh_ffnx_paths();
+     void               refresh_ffnx_paths();
 
-     void                    update_configuration() const;
+     void               update_configuration() const;
 
 
-     void                    update_configuration_key(ConfigKey key) const;
+     void               update_configuration_key(ConfigKey key) const;
 
-     static inline bool      has_balanced_braces([[maybe_unused]] const std::string_view s)
+     static inline bool has_balanced_braces([[maybe_unused]] const std::string_view s)
      {
           //      int balance = 0;
           //      for (const char c : s)
