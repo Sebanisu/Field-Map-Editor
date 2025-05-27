@@ -5,7 +5,7 @@
 
 [[nodiscard]] std::string *fme::custom_paths_window::get_current_string_value_mutable() const
 {
-     auto selections = m_selections.lock();
+     const auto selections = m_selections.lock();
      if (!selections)
      {
           spdlog::error("Failed to lock m_selections: shared_ptr is expired.");
@@ -22,53 +22,35 @@
           case fme::PatternSelector::OutputMapPatternForDeswizzle:
                return &selections->output_map_pattern_for_deswizzle;
           case fme::PatternSelector::PathPatternsCommonUpscale:
-               break;
+               return get_current_string_value_from_index(selections->paths_common_upscale, selections->current_pattern_index);
           case fme::PatternSelector::PathPatternsCommonUpscaleForMaps:
-               break;
+               return get_current_string_value_from_index(selections->paths_common_upscale_for_maps, selections->current_pattern_index);
           case fme::PatternSelector::PathPatternsNoPaletteAndTexturePage:
-               break;
+               return get_current_string_value_from_index(selections->paths_no_palette_and_texture_page, selections->current_pattern_index);
           case fme::PatternSelector::PathPatternsWithPaletteAndTexturePage:
-               break;
+               return get_current_string_value_from_index(
+                 selections->paths_with_palette_and_texture_page, selections->current_pattern_index);
           case fme::PatternSelector::PathPatternsWithPupuID:
-               break;
+               return get_current_string_value_from_index(selections->paths_with_pupu_id, selections->current_pattern_index);
           case fme::PatternSelector::PathPatternsWithTexturePage:
-               break;
+               return get_current_string_value_from_index(selections->paths_with_texture_page, selections->current_pattern_index);
      }
      return nullptr;
 }
 
-[[nodiscard]] const std::string *fme::custom_paths_window::get_current_string_value() const
+
+[[nodiscard]] std::string *fme::custom_paths_window::get_current_string_value_from_index(std::vector<std::string> &strings, const int index)
 {
-     auto selections = m_selections.lock();
-     if (!selections)
+     if (index < 0 || index >= std::ranges::ssize(strings))
      {
-          spdlog::error("Failed to lock m_selections: shared_ptr is expired.");
           return nullptr;
      }
-     switch (selections->current_pattern)
-     {
-          case fme::PatternSelector::OutputSwizzlePattern:
-               return &selections->output_swizzle_pattern;
-          case fme::PatternSelector::OutputDeswizzlePattern:
-               return &selections->output_deswizzle_pattern;
-          case fme::PatternSelector::OutputMapPatternForSwizzle:
-               return &selections->output_map_pattern_for_swizzle;
-          case fme::PatternSelector::OutputMapPatternForDeswizzle:
-               return &selections->output_map_pattern_for_deswizzle;
-          case fme::PatternSelector::PathPatternsCommonUpscale:
-               break;
-          case fme::PatternSelector::PathPatternsCommonUpscaleForMaps:
-               break;
-          case fme::PatternSelector::PathPatternsNoPaletteAndTexturePage:
-               break;
-          case fme::PatternSelector::PathPatternsWithPaletteAndTexturePage:
-               break;
-          case fme::PatternSelector::PathPatternsWithPupuID:
-               break;
-          case fme::PatternSelector::PathPatternsWithTexturePage:
-               break;
-     }
-     return nullptr;
+     return &strings[index];
+}
+
+[[nodiscard]] const std::string *fme::custom_paths_window::get_current_string_value() const
+{
+     return get_current_string_value_mutable();
 }
 
 void fme::custom_paths_window::populate_input_pattern() const
