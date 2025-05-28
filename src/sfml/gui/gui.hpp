@@ -50,12 +50,12 @@ struct gui
        open_viii::graphics::background::Tile2,
        open_viii::graphics::background::Tile3,
        std::monostate>;
-       std::shared_ptr<Selections>                                         m_selections          = std::make_shared<Selections>();
+     std::shared_ptr<Selections>                                         m_selections          = std::make_shared<Selections>();
      std::shared_ptr<sf::Shader>                                         m_drag_sprite_shader  = {};
      static constexpr std::int8_t                                        tile_size_px          = { 16 };
      static constexpr std::uint8_t                                       tile_size_px_unsigned = { 16U };
-     mouse_positions                                                       m_mouse_positions     = {};
-     int                                                                   m_field_index         = {};
+     mouse_positions                                                     m_mouse_positions     = {};
+     int                                                                 m_field_index         = {};
      float                                                               m_scale_width         = {};
      sf::RenderWindow                                                    m_window              = {};
      sf::Clock                                                           m_delta_clock         = {};
@@ -63,30 +63,34 @@ struct gui
      std::shared_ptr<archives_group>                                     m_archives_group      = {};
      batch                                                               m_batch         = fme::batch{ m_selections, m_archives_group };
      std::vector<std::string>                                            m_upscale_paths = {};
-     std::vector<bool>                                                   m_upscale_paths_enabled     = {};
-     std::vector<std::string>                                            m_deswizzle_paths           = {};
-     std::vector<bool>                                                   m_deswizzle_paths_enabled   = {};
-     std::shared_ptr<open_viii::archive::FIFLFS<false>>                  m_field                     = {};
-     std::array<float, 2>                                                xy                          = {};
-     mim_sprite                                                          m_mim_sprite                = {};
-     std::shared_ptr<map_sprite>                                         m_map_sprite                = {};
-     FutureOfFutureConsumer<std::vector<std::future<std::future<void>>>> m_future_of_future_consumer = {};
-     FutureConsumer<std::vector<std::future<void>>>                      m_future_consumer           = {};
-     float                                                               saved_window_width          = {};
-     float                                                               saved_window_height         = {};
-     fme::import                                                         m_import                    = {};
-     fme::history_window                                                 m_history_window            = {};
+     std::vector<bool>                                                   m_upscale_paths_enabled       = {};
+     std::vector<std::string>                                            m_deswizzle_paths             = {};
+     std::vector<bool>                                                   m_deswizzle_paths_enabled     = {};
+     std::vector<std::string>                                            m_upscale_map_paths           = {};
+     std::vector<bool>                                                   m_upscale_map_paths_enabled   = {};
+     std::vector<std::string>                                            m_deswizzle_map_paths         = {};
+     std::vector<bool>                                                   m_deswizzle_map_paths_enabled = {};
+     std::shared_ptr<open_viii::archive::FIFLFS<false>>                  m_field                       = {};
+     std::array<float, 2>                                                xy                            = {};
+     mim_sprite                                                          m_mim_sprite                  = {};
+     std::shared_ptr<map_sprite>                                         m_map_sprite                  = {};
+     FutureOfFutureConsumer<std::vector<std::future<std::future<void>>>> m_future_of_future_consumer   = {};
+     FutureConsumer<std::vector<std::future<void>>>                      m_future_consumer             = {};
+     float                                                               saved_window_width            = {};
+     float                                                               saved_window_height           = {};
+     fme::import                                                         m_import                      = {};
+     fme::history_window                                                 m_history_window              = {};
 
-     sf::RenderTexture                                                   m_shader_renderTexture      = {};
+     sf::RenderTexture                                                   m_shader_renderTexture        = {};
 
-     bool                                                                m_changed                   = { false };
+     bool                                                                m_changed                     = { false };
      //  ImGuiStyle                  m_original_style  = {};
-     sf::Event                                                           m_event                     = {};
-     sf::Vector2f                                                        m_cam_pos                   = {};
-     std::vector<std::size_t>                                            m_hovered_tiles_indices     = {};
-     std::ptrdiff_t                                                      m_hovered_index             = { -1 };
-     custom_paths_window                                                 m_custom_paths_window       = { m_selections };
-     field_file_window                                                   m_field_file_window         = { m_field, m_selections };
+     sf::Event                                                           m_event                       = {};
+     sf::Vector2f                                                        m_cam_pos                     = {};
+     std::vector<std::size_t>                                            m_hovered_tiles_indices       = {};
+     std::ptrdiff_t                                                      m_hovered_index               = { -1 };
+     custom_paths_window                                                 m_custom_paths_window         = { m_selections };
+     field_file_window                                                   m_field_file_window           = { m_field, m_selections };
      // create a file browser instances
      ImGui::FileBrowser          m_save_file_browser{ ImGuiFileBrowserFlags_EnterNewFilename | ImGuiFileBrowserFlags_CreateNewDir
                                              | ImGuiFileBrowserFlags_EditPathString };
@@ -197,6 +201,8 @@ struct gui
      [[nodiscard]] bool                        browse_for_image_display_preview();
      void                                      generate_upscale_paths();
      void                                      generate_deswizzle_paths();
+     void                                      generate_upscale_map_paths();
+     void                                      generate_deswizzle_map_paths();
      void                                      reset_imported_image();
      void                                      sort_paths();
      void                                      control_panel_window();

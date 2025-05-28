@@ -69,6 +69,8 @@ enum class ConfigKey
      PathsVector,
      PathsVectorUpscale,
      PathsVectorDeswizzle,
+     PathsVectorUpscaleMap,
+     PathsVectorDeswizzleMap,
      BatchCompact,
      BatchCompactType,
      BatchCompactEnabled,
@@ -181,6 +183,8 @@ struct Selections
      std::vector<std::string>                                 paths_vector;
      std::vector<std::string>                                 paths_vector_upscale   = {};
      std::vector<std::string>                                 paths_vector_deswizzle = {};
+     std::vector<std::string>                                 paths_vector_upscale_map   = {};
+     std::vector<std::string>                                 paths_vector_deswizzle_map = {};
 
      std::vector<std::string>                                 paths_common_upscale_for_maps;
 

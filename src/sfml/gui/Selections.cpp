@@ -117,6 +117,10 @@ namespace fme
                return "custom_upscale_paths_vector"sv;
           case ConfigKey::PathsVectorDeswizzle:
                return "paths_vector_deswizzle"sv;
+          case ConfigKey::PathsVectorUpscaleMap:
+               return "custom_upscale_map_paths_vector"sv;
+          case ConfigKey::PathsVectorDeswizzleMap:
+               return "paths_vector_deswizzle_map"sv;
           case ConfigKey::RenderImportedImage:
                return "selections_render_imported_image"sv;
           case ConfigKey::SelectedTile:
@@ -378,11 +382,20 @@ void fme::Selections::load_configuration()
      }
      assert(has_balanced_braces(paths_vector_upscale));
 
+     if (!config.load_array(key_to_string(ConfigKey::PathsVectorUpscaleMap), paths_vector_upscale_map))
+     {
+     }
+     assert(has_balanced_braces(paths_vector_upscale_map));
+
      if (!config.load_array(key_to_string(ConfigKey::PathsVectorDeswizzle), paths_vector_deswizzle))
      {
           paths_vector_deswizzle = { R"(D:\dev\Field-Map-Editor\bin\RelWithDebInfo\deswizzle)" };
      }
      assert(has_balanced_braces(paths_vector_deswizzle));
+     if (!config.load_array(key_to_string(ConfigKey::PathsVectorDeswizzleMap), paths_vector_deswizzle_map))
+     {
+     }
+     assert(has_balanced_braces(paths_vector_deswizzle_map));
 
      refresh_ffnx_paths();
 
@@ -470,6 +483,8 @@ void fme::Selections::update_configuration_key(ConfigKey key) const
           MAP_UPDATE_ARRAY(ConfigKey::PathsVector, paths_vector);
           MAP_UPDATE_ARRAY(ConfigKey::PathsVectorUpscale, paths_vector_upscale);
           MAP_UPDATE_ARRAY(ConfigKey::PathsVectorDeswizzle, paths_vector_deswizzle);
+          MAP_UPDATE_ARRAY(ConfigKey::PathsVectorUpscaleMap, paths_vector_upscale_map);
+          MAP_UPDATE_ARRAY(ConfigKey::PathsVectorDeswizzleMap, paths_vector_deswizzle_map);
           MAP_MACRO(ConfigKey::RenderImportedImage, render_imported_image);
           MAP_MACRO(ConfigKey::SelectedTile, selected_tile);
           MAP_MACRO(ConfigKey::SelectionsPath, path);

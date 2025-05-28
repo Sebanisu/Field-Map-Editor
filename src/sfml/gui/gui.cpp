@@ -1526,6 +1526,8 @@ void gui::update_field()
           sort_paths();
           generate_upscale_paths();
           generate_deswizzle_paths();
+          generate_upscale_map_paths();
+          generate_deswizzle_map_paths();
      }
 
      // Clear clicked tile indices used for selection logic
@@ -2523,6 +2525,7 @@ void gui::menu_upscale_paths()
           {
                m_selections->update_configuration_key(ConfigKey::PathsVectorUpscale);
                generate_upscale_paths();
+               generate_upscale_map_paths();
                if (found.value() == m_map_sprite->filter().upscale.value())
                {
                     m_map_sprite->filter().upscale.update(find_replacement_path_value(m_upscale_paths, m_upscale_paths_enabled));
@@ -2751,6 +2754,7 @@ void gui::menu_deswizzle_paths()
           {
                m_selections->update_configuration_key(ConfigKey::PathsVectorDeswizzle);
                generate_deswizzle_paths();
+               generate_deswizzle_map_paths();
                if (found.value() == m_map_sprite->filter().deswizzle.value())
                {
                     m_map_sprite->filter().deswizzle.update(find_replacement_path_value(m_deswizzle_paths, m_deswizzle_paths_enabled));
@@ -3072,6 +3076,8 @@ void gui::sort_paths()
      sort_and_unique(m_selections->paths_vector, ConfigKey::PathsVector);
      sort_and_unique(m_selections->paths_vector_upscale, ConfigKey::PathsVectorUpscale);
      sort_and_unique(m_selections->paths_vector_deswizzle, ConfigKey::PathsVectorDeswizzle);
+     sort_and_unique(m_selections->paths_vector_upscale_map, ConfigKey::PathsVectorUpscaleMap);
+     sort_and_unique(m_selections->paths_vector_deswizzle_map, ConfigKey::PathsVectorDeswizzleMap);
 }
 
 void gui::file_browser_save_texture()
@@ -3616,6 +3622,8 @@ void gui::init_and_get_style()
           sort_paths();
           generate_upscale_paths();
           generate_deswizzle_paths();
+          generate_upscale_map_paths();
+          generate_deswizzle_map_paths();
      }
      if (!m_drag_sprite_shader)
      {
@@ -3695,10 +3703,10 @@ gui::gui()
  */
 std::shared_ptr<open_viii::archive::FIFLFS<false>> gui::init_field()
 {
-     const int field     = m_archives_group->find_field(m_selections->starter_field);
+     const int field = m_archives_group->find_field(m_selections->starter_field);
 
      // If the field was not found (returns < 0), fall back to 0
-     m_field_index = field >= 0 ? field : 0;
+     m_field_index   = field >= 0 ? field : 0;
 
      return m_archives_group->field(m_field_index);
 }
@@ -4050,6 +4058,72 @@ void gui::generate_deswizzle_paths()
      for (const auto &path : m_deswizzle_paths)
      {
           m_deswizzle_paths_enabled.push_back(m_map_sprite->has_deswizzle_path(std::filesystem::path{ path }));
+     }
+}
+
+void gui::generate_upscale_map_paths()
+{
+     const auto coo = get_coo();
+     m_upscale_map_paths.clear();
+     auto transform_paths  = m_selections->paths_vector | std::views::transform([this, &coo](const std::string &path) {
+                                 return upscales(path, coo, m_selections).get_map_paths();
+                            });
+
+     auto transform_paths2 = m_selections->paths_vector_upscale_map | std::views::transform([this, &coo](const std::string &path) {
+                                  return upscales(path, coo, m_selections).get_map_paths();
+                             });
+     auto process          = [this](const auto &temp_paths) {
+          for (const auto &path : temp_paths)
+          {
+               m_upscale_map_paths.emplace_back(path.string());
+          }
+     };
+     for (auto temp_paths : transform_paths)
+     {
+          process(temp_paths);
+     }
+     for (auto temp_paths : transform_paths2)
+     {
+          process(temp_paths);
+     }
+     m_upscale_map_paths_enabled.clear();
+     for (const auto &path : m_upscale_map_paths)
+     {
+          m_upscale_map_paths_enabled.push_back(m_map_sprite->has_swizzle_path(std::filesystem::path{ path }, ".map"));
+     }
+}
+
+
+void gui::generate_deswizzle_map_paths()
+{
+     const auto coo = get_coo();
+     m_deswizzle_map_paths.clear();
+     auto transform_paths  = m_selections->paths_vector | std::views::transform([this, &coo](const std::string &path) {
+                                 return upscales(path, coo, m_selections).get_map_paths();
+                            });
+
+     auto transform_paths2 = m_selections->paths_vector_deswizzle_map | std::views::transform([this, &coo](const std::string &path) {
+                                  return upscales(path, coo, m_selections).get_map_paths();
+                             });
+     auto process          = [this](const auto &temp_paths) {
+          for (const auto &path : temp_paths)
+          {
+               m_deswizzle_map_paths.emplace_back(path.string());
+          }
+     };
+     for (auto temp_paths : transform_paths)
+     {
+          process(temp_paths);
+     }
+     for (auto temp_paths : transform_paths2)
+     {
+          process(temp_paths);
+     }
+
+     m_deswizzle_map_paths_enabled.clear();
+     for (const auto &path : m_deswizzle_map_paths)
+     {
+          m_deswizzle_map_paths_enabled.push_back(m_map_sprite->has_deswizzle_path(std::filesystem::path{ path }, ".map"));
      }
 }
 
