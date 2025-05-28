@@ -251,26 +251,38 @@ void fme::Selections::load_configuration()
      // Arrays
      if (!config.load_array(key_to_string(ConfigKey::PathPatternsCommonUpscale), paths_common_upscale))
      {
-          paths_common_upscale = { "{selected_path}/{ffnx_mod_path}/field/mapdata/",
+          paths_common_upscale = { "{selected_path}",
+
+                                   "{selected_path}/{ffnx_mod_path}/field/mapdata/",
                                    "{selected_path}/mods/Textures",
+
                                    "{selected_path}/{demaster_mod_path}/textures/field_bg",
                                    "{selected_path}/field_bg",
+
                                    "{selected_path}/textures/fields",
                                    "{selected_path}/textures",
+
                                    "{selected_path}/ff8/Data/{3_letter_lang}/field/mapdata",
                                    "{selected_path}/ff8/Data/{3_letter_lang}/FIELD/mapdata",
+
                                    "{selected_path}/ff8/Data/{eng}/field/mapdata",
                                    "{selected_path}/ff8/Data/{eng}/FIELD/mapdata",
+
                                    "{selected_path}/ff8/Data/{fre}/field/mapdata",
                                    "{selected_path}/ff8/Data/{fre}/FIELD/mapdata",
+
                                    "{selected_path}/ff8/Data/{ger}/field/mapdata",
                                    "{selected_path}/ff8/Data/{ger}/FIELD/mapdata",
+
                                    "{selected_path}/ff8/Data/{ita}/field/mapdata",
                                    "{selected_path}/ff8/Data/{ita}/FIELD/mapdata",
+
                                    "{selected_path}/ff8/Data/{spa}/field/mapdata",
                                    "{selected_path}/ff8/Data/{spa}/FIELD/mapdata",
+
                                    "{selected_path}/ff8/Data/{jp}/field/mapdata",
                                    "{selected_path}/ff8/Data/{jp}/FIELD/mapdata",
+
                                    "{selected_path}/ff8/Data/{x}/field/mapdata",
                                    "{selected_path}/ff8/Data/{x}/FIELD/mapdata" };
      }
@@ -278,12 +290,10 @@ void fme::Selections::load_configuration()
 
      if (!config.load_array(key_to_string(ConfigKey::PathPatternsCommonUpscaleForMaps), paths_common_upscale_for_maps))
      {
-          paths_common_upscale_for_maps = {
-               // todo ffnx uses a sepperate directory for map files which means we might not see it with our
-               // current method of selecting one path ffnx_direct_mode_path might not want to be in the regular
-               // paths list might need to be somewhere else. maybe a get paths map.
-               "{selected_path}/{ffnx_direct_mode_path}/field/mapdata/"
-          };
+          // todo ffnx uses a sepperate directory for map files which means we might not see it with our
+          // current method of selecting one path ffnx_direct_mode_path might not want to be in the regular
+          // paths list might need to be somewhere else. maybe a get paths map.
+          paths_common_upscale_for_maps = { "{selected_path}/{ffnx_direct_mode_path}/field/mapdata/" };
      }
      assert(has_balanced_braces(paths_common_upscale_for_maps));
 
@@ -295,7 +305,13 @@ void fme::Selections::load_configuration()
 
                                                 "{selected_path}/{field_name}{ext}",
                                                 "{selected_path}/{field_name}/{field_name}{ext}",
-                                                "{selected_path}/{field_prefix}/{field_name}/{field_name}{ext}" };
+                                                "{selected_path}/{field_prefix}/{field_name}/{field_name}{ext}",
+
+                                                "{selected_path}/{demaster}",
+
+                                                "{selected_path}/{ffnx_multi_texture}",
+                                                "{selected_path}/{ffnx_single_texture}",
+                                                "{selected_path}/{ffnx_map}" };
      }
      assert(has_balanced_braces(paths_no_palette_and_texture_page));
 
@@ -356,15 +372,18 @@ void fme::Selections::load_configuration()
      }
      assert(has_balanced_braces(paths_vector));
 
-     if (config.load_array(key_to_string(ConfigKey::PathsVectorUpscale), paths_vector_upscale))
+     if (!config.load_array(key_to_string(ConfigKey::PathsVectorUpscale), paths_vector_upscale))
      {
-          assert(has_balanced_braces(paths_vector_upscale));
+          paths_vector_deswizzle = { R"(D:\Angelwing-Ultima_Remastered_v1-0-a)" };
      }
+     assert(has_balanced_braces(paths_vector_upscale));
 
-     if (config.load_array(key_to_string(ConfigKey::PathsVectorDeswizzle), paths_vector_deswizzle))
+     if (!config.load_array(key_to_string(ConfigKey::PathsVectorDeswizzle), paths_vector_deswizzle))
      {
-          assert(has_balanced_braces(paths_vector_deswizzle));
+          paths_vector_deswizzle = { R"(D:\dev\Field-Map-Editor\bin\RelWithDebInfo\deswizzle)" };
      }
+     assert(has_balanced_braces(paths_vector_deswizzle));
+
      refresh_ffnx_paths();
 
      const auto end_time    = std::chrono::system_clock::now();
