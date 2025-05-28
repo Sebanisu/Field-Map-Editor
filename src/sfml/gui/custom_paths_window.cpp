@@ -3,6 +3,42 @@
 #include "fa_icons.hpp"
 #include "formatters.hpp"
 
+static const auto trim = [](const std::string &str) -> std::string {
+     auto start = str.find_first_not_of(" \t\n\r\f\v");
+     if (start == std::string::npos)
+          return "";// Empty or all spaces
+
+     auto end = str.find_last_not_of(" \t\n\r\f\v");
+     return str.substr(start, end - start + 1);
+};
+
+
+static const auto                                          m_tests = std::to_array<fme::key_value_data>({
+  { .field_name = "ecmall1", .ext = ".ca" },// Basic field_name + ext match
+  { .field_name = "ecmall1", .ext = ".jsm", .language_code = open_viii::LangT::en, .pupu_id = 987654U },// Field with language suffix
+  { .field_name = "ecmall1", .ext = ".msd", .language_code = open_viii::LangT::jp, .pupu_id = 543210U },// Another language case
+  { .field_name = "ecmall1", .ext = ".map", .language_code = open_viii::LangT::de, .pupu_id = 234567U },// Different language, different ext
+  { .field_name = "ecmall1", .ext = ".mim", .language_code = open_viii::LangT::fr, .pupu_id = 890123U },// Another unique case
+  { .field_name = "ecmall1", .ext = ".inf", .language_code = open_viii::LangT::it, .pupu_id = 456789U },// Italian match
+  { .field_name = "ecmall1", .ext = ".sfx", .pupu_id = 678901U },// No language, unique ext
+  { .field_name = "ecmall1", .ext = ".tdw", .language_code = open_viii::LangT::es, .pupu_id = 321098U },// Spanish case
+  { .field_name = "cwwood2", .ext = ".one" },// `chara.one` match
+  { .field_name = "cwwood2", .ext = ".one", .language_code = open_viii::LangT::jp, .pupu_id = 765432U },// `chara_{2_letter_lang}.one` match
+  { .field_name = "cdfield1", .ext = ".pmd", .pupu_id = 210987U },// Another general field match
+  { .field_name = "cdfield2", .ext = ".pvp", .palette = std::uint8_t{ 2 }, .pupu_id = 210987U },// Field with palette
+  { .field_name    = "bgkote1a",
+                                             .ext           = ".tiff",
+                                             .language_code = open_viii::LangT::es,
+                                             .texture_page  = std::uint8_t{ 5 } },// With texture_page
+  { .field_name = "bggate_1", .ext = ".gif", .language_code = open_viii::LangT::it, .pupu_id = 78901U },// With pupu_id
+  { .field_name    = "bgeat1a",
+                                             .ext           = ".bmp",
+                                             .language_code = open_viii::LangT::de,
+                                             .palette       = std::uint8_t{ 4 },
+                                             .texture_page  = std::uint8_t{ 3 },
+                                             .pupu_id       = 123456U }// Full case
+});
+
 [[nodiscard]] fme::custom_paths_window::vector_or_string_t fme::custom_paths_window::vector_or_string() const
 {
      const auto selections = m_selections.lock();
@@ -262,14 +298,6 @@ void fme::custom_paths_window::save_pattern() const
      {
           if (ImGui::Selectable("Copy Pattern"))
           {
-               const auto trim = [](const std::string &str) -> std::string {
-                    auto start = str.find_first_not_of(" \t\n\r\f\v");
-                    if (start == std::string::npos)
-                         return "";// Empty or all spaces
-
-                    auto end = str.find_last_not_of(" \t\n\r\f\v");
-                    return str.substr(start, end - start + 1);
-               };
                const auto test_str = trim(std::string{ m_input_pattern_string.data(), m_input_pattern_string.size() });
                ImGui::SetClipboardText(test_str.data());
           }
@@ -293,18 +321,9 @@ void fme::custom_paths_window::save_pattern() const
           spdlog::error("Failed to lock m_selections: shared_ptr is expired.");
           return false;
      }
+     format_imgui_text("{}", "Pattern: ");
      constexpr static int cols = 2;
-     // ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 3.F);
-     // ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(2.F, 2.F));
-     // ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2(4.F, 4.F));
-     // const auto color = ImVec4(0.5F, 0.5F, 0.5F, 1.F);
-     // ImGui::PushStyleColor(ImGuiCol_TableBorderLight, color);
-     // ImGui::PushStyleColor(ImGuiCol_TableBorderStrong, color);
-     // const auto pop_styles = scope_guard{ []() {
-     //      ImGui::PopStyleColor(2);
-     //      ImGui::PopStyleVar(3);
-     // } };
-     if (!ImGui::BeginTable("##vector of patterns table", cols, ImGuiTableFlags_SizingFixedFit))
+     if (!ImGui::BeginTable("##vector of patterns table", cols, ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_BordersInnerV))
      {
           return false;
      }
@@ -405,7 +424,15 @@ void fme::custom_paths_window::save_pattern() const
           // Copy button
           if (ImGui::Button(fmt::format("{}##copy_{}", ICON_FA_CLIPBOARD, index).c_str()))
           {
-               ImGui::SetClipboardText(str.c_str());
+               if (selections->current_pattern_index != static_cast<int>(index))
+               {
+                    ImGui::SetClipboardText(str.c_str());
+               }
+               else
+               {
+                    const auto test_str = trim(std::string{ m_input_pattern_string.data(), m_input_pattern_string.size() });
+                    ImGui::SetClipboardText(test_str.data());
+               }
           }
           else
           {
@@ -430,6 +457,7 @@ void fme::custom_paths_window::save_pattern() const
                selections->current_pattern_index = static_cast<int>(std::ranges::ssize(*mut_vptr) - 1);
                selections->update_configuration_key(ConfigKey::CurrentPatternIndex);
                populate_input_pattern();
+               save_pattern();
                r_val = true;
           }
      };
@@ -465,6 +493,7 @@ void fme::custom_paths_window::save_pattern() const
                auto iter = mut_vptr->begin();
                std::ranges::advance(iter, delete_me.value());
                mut_vptr->erase(iter);
+               save_pattern();
                r_val = true;
           }
      }
@@ -531,7 +560,6 @@ void fme::custom_paths_window::save_pattern() const
        "You can use extra braces like {{key}} to create prefixes or suffixes, e.g., {prefix{key}suffix}.\n"
        "These will only appear if the {key} has a value.\n\n"
        "Right-click a {key} to access a context menu for copying key values.");
-
      {
           const auto pop_child = scope_guard{ &ImGui::EndChild };
           if (!ImGui::BeginChild("##scrollingKeys", m_scrolling_child_size, ImGuiChildFlags_Borders, ImGuiWindowFlags_HorizontalScrollbar))
@@ -688,7 +716,8 @@ void fme::custom_paths_window::save_pattern() const
 
 
 fme::custom_paths_window::custom_paths_window(std::weak_ptr<Selections> input_selections)
-  : m_selections(input_selections)
+  : m_selections{ input_selections }
+  , m_output_tests{ m_tests.size() }
 {
      populate_input_pattern();
      populate_test_output();
@@ -725,7 +754,16 @@ void fme::custom_paths_window::render() const
           return;
      }
      const auto pop_changed = scope_guard([this, &override_changed]() { m_changed = override_changed; });
-
+     ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 3.F);
+     ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(2.F, 2.F));
+     ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2(4.F, 4.F));
+     const auto color = ImVec4(0.5F, 0.5F, 0.5F, 1.F);
+     ImGui::PushStyleColor(ImGuiCol_TableBorderLight, color);
+     ImGui::PushStyleColor(ImGuiCol_TableBorderStrong, color);
+     const auto pop_styles = scope_guard{ []() {
+          ImGui::PopStyleColor(2);
+          ImGui::PopStyleVar(3);
+     } };
      switch (vector_or_string())
      {
           case vector_or_string_t::string: {
@@ -744,16 +782,6 @@ void fme::custom_paths_window::render() const
           break;
      }
 
-     ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 3.F);
-     ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(2.F, 2.F));
-     ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2(4.F, 4.F));
-     const auto color = ImVec4(0.5F, 0.5F, 0.5F, 1.F);
-     ImGui::PushStyleColor(ImGuiCol_TableBorderLight, color);
-     ImGui::PushStyleColor(ImGuiCol_TableBorderStrong, color);
-     const auto pop_styles = scope_guard{ []() {
-          ImGui::PopStyleColor(2);
-          ImGui::PopStyleVar(3);
-     } };
      if (child_keys())
      {
           override_changed = true;
