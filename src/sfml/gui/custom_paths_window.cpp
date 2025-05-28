@@ -523,6 +523,8 @@ void fme::custom_paths_window::save_pattern() const
           return false;
      }
 
+     ImGui::BeginDisabled(get_current_string_value() == nullptr);
+     const auto pop_disabled = scope_guard(&ImGui::EndDisabled);
      format_imgui_wrapped_text(
        "{}",
        "Click a {key} to add it to the pattern text box.\n"
@@ -622,6 +624,9 @@ void fme::custom_paths_window::save_pattern() const
      {
           return false;
      }
+
+     ImGui::BeginDisabled(get_current_string_value() == nullptr);
+     const auto pop_disabled = scope_guard(&ImGui::EndDisabled);
 
      format_imgui_wrapped_text(
        "{}",
