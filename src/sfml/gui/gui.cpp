@@ -609,6 +609,8 @@ void gui::control_panel_window_map()
 {
      combo_upscale_path();
      combo_deswizzle_path();
+     combo_upscale_map_path();
+     combo_deswizzle_map_path();
      checkbox_map_swizzle();
      m_changed = m_import.checkbox_render_imported_image() || m_changed;
      checkbox_map_disable_blending();
@@ -3995,6 +3997,43 @@ void gui::combo_deswizzle_path()
      refresh_render_texture(true);
 }
 
+void gui::combo_upscale_map_path()
+{
+     if (!m_field)
+     {
+          return;
+     }
+     if (!combo_upscale_map_path(m_map_sprite->filter().upscale_map))
+     {
+          return;
+     }
+     if (m_map_sprite->filter().upscale_map.enabled())
+     {
+          m_map_sprite->filter().deswizzle_map.disable();
+     }
+
+     refresh_render_texture(true);
+}
+
+
+void gui::combo_deswizzle_map_path()
+{
+     if (!m_field)
+     {
+          return;
+     }
+     if (!combo_deswizzle_map_path(m_map_sprite->filter().deswizzle_map))
+     {
+          return;
+     }
+     if (m_map_sprite->filter().deswizzle_map.enabled())
+     {
+          m_map_sprite->filter().upscale_map.disable();
+     }
+
+     refresh_render_texture(true);
+}
+
 void gui::generate_upscale_paths()
 {
      const auto coo = get_coo();
@@ -4142,6 +4181,33 @@ bool gui::combo_upscale_path(ff_8::filter_old<std::filesystem::path, ff_8::Filte
 
 
 bool gui::combo_deswizzle_path(ff_8::filter_old<std::filesystem::path, ff_8::FilterTag::Deswizzle> &filter) const
+{
+     const auto gcc = fme::GenericComboClassWithFilterAndFixedToggles(
+       gui_labels::deswizzle_path,
+       [this]() { return m_deswizzle_paths; },
+       [this]() { return m_deswizzle_paths_enabled; },
+       [this]() { return m_deswizzle_paths; },
+       [this]() { return m_deswizzle_paths; },
+       [&filter]() -> auto & { return filter; },
+       1);
+     return m_field && gcc.render();
+}
+
+bool gui::combo_upscale_map_path(ff_8::filter_old<std::filesystem::path, ff_8::FilterTag::UpscaleMap> &filter) const
+{
+     const auto gcc = fme::GenericComboClassWithFilterAndFixedToggles(
+       gui_labels::upscale_path,
+       [this]() { return m_upscale_paths; },
+       [this]() { return m_upscale_paths_enabled; },
+       [this]() { return m_upscale_paths; },
+       [this]() { return m_upscale_paths; },
+       [&filter]() -> auto & { return filter; },
+       1);
+     return m_field && gcc.render();
+}
+
+
+bool gui::combo_deswizzle_map_path(ff_8::filter_old<std::filesystem::path, ff_8::FilterTag::DeswizzleMap> &filter) const
 {
      const auto gcc = fme::GenericComboClassWithFilterAndFixedToggles(
        gui_labels::deswizzle_path,

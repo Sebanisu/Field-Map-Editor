@@ -83,6 +83,8 @@ enum class FilterTag : std::uint8_t
      Pupu,
      Upscale,
      Deswizzle,
+     UpscaleMap,
+     DeswizzleMap,
      DrawBit,
      Z,
      Palette,
@@ -123,6 +125,20 @@ struct ConfigKeys<FilterTag::Deswizzle>
 {
      static constexpr std::string_view key_name         = "filter_deswizzle";
      static constexpr std::string_view enabled_key_name = "filter_deswizzle_enabled";
+};
+
+template<>
+struct ConfigKeys<FilterTag::UpscaleMap>
+{
+     static constexpr std::string_view key_name         = "filter_upscale_map";
+     static constexpr std::string_view enabled_key_name = "filter_upscale_map_enabled";
+};
+
+template<>
+struct ConfigKeys<FilterTag::DeswizzleMap>
+{
+     static constexpr std::string_view key_name         = "filter_deswizzle_map";
+     static constexpr std::string_view enabled_key_name = "filter_deswizzle_map_enabled";
 };
 
 template<>
@@ -487,6 +503,8 @@ struct filters
      filter_old<PupuID, FilterTag::Pupu>                                                                            pupu;
      filter_old<std::filesystem::path, FilterTag::Upscale>                                                          upscale;
      filter_old<std::filesystem::path, FilterTag::Deswizzle>                                                        deswizzle;
+     filter_old<std::filesystem::path, FilterTag::UpscaleMap>                                                       upscale_map;
+     filter_old<std::filesystem::path, FilterTag::DeswizzleMap>                                                     deswizzle_map;
      filter<draw_bitT, ff_8::tile_operations::Draw, FilterTag::DrawBit>                                             draw_bit;
      filter<ff_8::tile_operations::ZT<TileT>, ff_8::tile_operations::Z, FilterTag::Z>                               z;
      filter<ff_8::tile_operations::PaletteIdT<TileT>, ff_8::tile_operations::PaletteId, FilterTag::Palette>         palette;
@@ -532,6 +550,30 @@ struct filters
                             FilterSettings::Default,
                             FilterSettings::Toggle_Enabled,
                             config[ConfigKeys<FilterTag::Deswizzle>::enabled_key_name].value_or(false)) };
+            }
+            return { std::filesystem::path{}, FilterSettings::All_Disabled };
+       }())
+       , upscale_map([&]() -> decltype(upscale_map) {
+            if (load_config)
+            {
+                 return { std::filesystem::path{ config[ConfigKeys<FilterTag::UpscaleMap>::key_name].value_or(std::string{}) },
+
+                          WithFlag(
+                            FilterSettings::Default,
+                            FilterSettings::Toggle_Enabled,
+                            config[ConfigKeys<FilterTag::UpscaleMap>::enabled_key_name].value_or(false)) };
+            }
+            return { std::filesystem::path{}, FilterSettings::All_Disabled };
+       }())
+       , deswizzle_map([&]() -> decltype(deswizzle_map) {
+            if (load_config)
+            {
+                 return { std::filesystem::path{ config[ConfigKeys<FilterTag::DeswizzleMap>::key_name].value_or(std::string{}) },
+
+                          WithFlag(
+                            FilterSettings::Default,
+                            FilterSettings::Toggle_Enabled,
+                            config[ConfigKeys<FilterTag::DeswizzleMap>::enabled_key_name].value_or(false)) };
             }
             return { std::filesystem::path{}, FilterSettings::All_Disabled };
        }())

@@ -173,6 +173,10 @@ struct gui
      bool                     combo_upscale_path(ff_8::filter_old<std::filesystem::path, ff_8::FilterTag::Upscale> &filter) const;
      void                     combo_deswizzle_path();
      bool                     combo_deswizzle_path(ff_8::filter_old<std::filesystem::path, ff_8::FilterTag::Deswizzle> &filter) const;
+     void                     combo_upscale_map_path();
+     bool                     combo_upscale_map_path(ff_8::filter_old<std::filesystem::path, ff_8::FilterTag::UpscaleMap> &filter) const;
+     void                     combo_deswizzle_map_path();
+     bool                     combo_deswizzle_map_path(ff_8::filter_old<std::filesystem::path, ff_8::FilterTag::DeswizzleMap> &filter) const;
      const open_viii::LangT  &get_coo() const;
      file_dialog_mode         m_file_dialog_mode       = {};
      map_directory_mode       m_modified_directory_map = {};
