@@ -102,9 +102,7 @@ void import::render() const
      {
           // hide window and save that it's hidden.
           selections->display_import_image = false;
-          Configuration config{};
-          config->insert_or_assign("selections_display_import_image", selections->display_import_image);
-          config.save();
+          selections->update_configuration_key(ConfigKey::DisplayImportImage);
           reset_imported_image();
      }
      tool_tip(gui_labels::cancel_tool_tip);
@@ -119,8 +117,8 @@ void import::render() const
 
 open_viii::graphics::background::Map::variant_tile &import::combo_selected_tile(bool &changed) const
 {
-     auto                  selections   = m_selections.lock();
-     auto                  map_sprite   = m_map_sprite.lock();
+     auto                                                      selections   = m_selections.lock();
+     auto                                                      map_sprite   = m_map_sprite.lock();
 
      static open_viii::graphics::background::Map::variant_tile current_tile = { std::monostate{} };
      if (!selections)
@@ -139,9 +137,7 @@ open_viii::graphics::background::Map::variant_tile &import::combo_selected_tile(
 
      static std::string current_item_str = {};
      const auto         save_config      = [&]() {
-          Configuration config{};
-          config->insert_or_assign("selections_selected_tile", selections->selected_tile);
-          config.save();
+          selections->update_configuration_key(ConfigKey::SelectedTile);
           current_item_str = std::holds_alternative<std::monostate>(current_tile) ? "" : fmt::format("{}", selections->selected_tile);
      };
      const auto  spacing      = ImGui::GetStyle().ItemInnerSpacing.x;
@@ -304,16 +300,15 @@ bool import::browse_for_image_display_preview() const
           m_load_file_browser.Open();
           m_load_file_browser.SetTitle(gui_labels::load_image_file.data());
           m_load_file_browser.SetTypeFilters({ ".png" });
-          m_load_file_browser.SetPwd(Configuration{}["load_image_path"].value_or(std::filesystem::current_path().string()));
+          m_load_file_browser.SetDirectory(selections->import_load_image_directory);
           m_load_file_browser.SetInputName(m_import_image_path.data());
      }
      m_load_file_browser.Display();
 
      if (m_load_file_browser.HasSelected())
      {
-          Configuration config{};
-          config->insert_or_assign("load_image_path", m_load_file_browser.GetPwd().string());
-          config.save();
+          selections->import_load_image_directory = m_load_file_browser.GetDirectory().string();
+          selections->update_configuration_key(ConfigKey::ImportLoadImageDirectory);
           [[maybe_unused]] const auto selected_path = m_load_file_browser.GetSelected();
           m_import_image_path                       = selected_path.string();
           m_load_file_browser.ClearSelected();
@@ -341,9 +336,7 @@ bool import::browse_for_image_display_preview() const
           ImGui::ImageButton(str_id.c_str(), sprite, sf::Vector2f(width, height));
           if (ImGui::Checkbox(gui_labels::draw_grid.data(), &selections->import_image_grid))
           {
-               Configuration config{};
-               config->insert_or_assign("selections_import_image_grid", selections->import_image_grid);
-               config.save();
+               selections->update_configuration_key(ConfigKey::ImportImageGrid);
           }
           if (selections->import_image_grid)
           {
@@ -399,9 +392,7 @@ bool import::combo_tile_size() const
      {
           return false;
      }
-     Configuration config{};
-     config->insert_or_assign("selections_tile_size_value", static_cast<std::underlying_type_t<tile_sizes>>(selections->tile_size_value));
-     config.save();
+     selections->update_configuration_key(ConfigKey::TileSizeValue);
      return true;
 }
 void import::generate_map_for_imported_image(const open_viii::graphics::background::Map::variant_tile &current_tile, bool changed) const
@@ -422,43 +413,42 @@ void import::generate_map_for_imported_image(const open_viii::graphics::backgrou
      format_imgui_text("{}: {} x {} = {}", gui_labels::possible_tiles, tiles_wide, tiles_high, tiles_wide * tiles_high);
      if (changed && tiles_wide * tiles_high != 0U && m_loaded_image_texture.getSize() != sf::Vector2u{})
      {
-          m_import_image_map =
-            open_viii::graphics::background::Map{ [&current_tile,
-                                                   x_tile = uint8_t{},
-                                                   y_tile = uint8_t{},
-                                                   &tiles_high,
-                                                   &tiles_wide]() mutable -> open_viii::graphics::background::Map::variant_tile {
-                 return std::visit(
-                   [&](auto tile) -> open_viii::graphics::background::Map::variant_tile {
-                        if constexpr (is_tile<std::remove_cvref_t<decltype(tile)>>)
-                        {
-                             if (x_tile == tiles_wide)
-                             {
-                                  x_tile = 0;
-                                  ++y_tile;
-                             }
-                             if (y_tile == tiles_high)
-                             {
-                                  return std::monostate{};
-                             }
-                             //   * Set new tiles to 4 bit to get max amount of tiles.
-                             tile =
-                               tile.with_depth(BPPT::BPP4_CONST())
-                                 .with_source_xy({ static_cast<uint8_t>(x_tile * tile_size_px_unsigned),
-                                                   static_cast<uint8_t>(y_tile * tile_size_px_unsigned) })
-                                 .with_xy({ static_cast<int16_t>(x_tile * tile_size_px), static_cast<int16_t>(y_tile * tile_size_px) });
+          m_import_image_map = open_viii::graphics::background::Map{
+               [&current_tile, x_tile = uint8_t{}, y_tile = uint8_t{}, &tiles_high, &tiles_wide]() mutable
+                 -> open_viii::graphics::background::Map::variant_tile {
+                    return std::visit(
+                      [&](auto tile) -> open_viii::graphics::background::Map::variant_tile {
+                           if constexpr (is_tile<std::remove_cvref_t<decltype(tile)>>)
+                           {
+                                if (x_tile == tiles_wide)
+                                {
+                                     x_tile = 0;
+                                     ++y_tile;
+                                }
+                                if (y_tile == tiles_high)
+                                {
+                                     return std::monostate{};
+                                }
+                                //   * Set new tiles to 4 bit to get max amount of tiles.
+                                tile =
+                                  tile.with_depth(BPPT::BPP4_CONST())
+                                    .with_source_xy(
+                                      { static_cast<uint8_t>(x_tile * tile_size_px_unsigned),
+                                        static_cast<uint8_t>(y_tile * tile_size_px_unsigned) })
+                                    .with_xy({ static_cast<int16_t>(x_tile * tile_size_px), static_cast<int16_t>(y_tile * tile_size_px) });
 
-                             // iterate
-                             ++x_tile;
-                             return tile;
-                        }
-                        else
-                        {
-                             return std::monostate{};
-                        }
-                   },
-                   current_tile);
-            } };
+                                // iterate
+                                ++x_tile;
+                                return tile;
+                           }
+                           else
+                           {
+                                return std::monostate{};
+                           }
+                      },
+                      current_tile);
+               }
+          };
           filter_empty_import_tiles();
      }
 }
@@ -595,9 +585,15 @@ void import::save_swizzle_textures() const
           spdlog::error("m_map_sprite is no longer valid. File: {}, Line: {}", __FILE__, __LINE__);
           return;
      }
+     auto selections = m_selections.lock();
+     if (!selections)
+     {
+          spdlog::error("m_selections is no longer valid. File: {}, Line: {}", __FILE__, __LINE__);
+          return;
+     }
      m_directory_browser.Open();
      m_directory_browser.SetTitle(map_sprite->appends_prefix_base_name(gui_labels::choose_directory_to_save_textures_to));
-     m_directory_browser.SetPwd(Configuration{}["swizzle_path"].value_or(std::filesystem::current_path().string()));
+     m_directory_browser.SetDirectory(selections->swizzle_path);
      m_directory_browser.SetTypeFilters({ ".map", ".png" });
      m_modified_directory_map = map_directory_mode::save_swizzle_textures;
 }
@@ -622,9 +618,7 @@ void import::reset_imported_image() const
      m_loaded_image_cpu                = {};
      m_import_image_path               = {};
      selections->render_imported_image = false;
-     Configuration config{};
-     config->insert_or_assign("selections_render_imported_image", selections->render_imported_image);
-     config.save();
+     selections->update_configuration_key(ConfigKey::RenderImportedImage);
 }
 
 
@@ -729,10 +723,7 @@ bool import::checkbox_render_imported_image() const
 
           if (ImGui::Checkbox(gui_labels::render_imported_image.data(), &selections->render_imported_image))
           {
-               Configuration config{};
-               config->insert_or_assign("selections_render_imported_image", selections->render_imported_image);
-               config.save();
-
+               selections->update_configuration_key(ConfigKey::RenderImportedImage);
                // Pass texture and map and tile_size
                update_imported_render_texture();
 

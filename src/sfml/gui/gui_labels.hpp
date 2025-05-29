@@ -111,7 +111,11 @@ struct gui_labels
      static constexpr std::string_view choose_output_directory                = { "Choose directory to save textures to..." };
 
      static constexpr std::string_view input_type                             = { "Input Type" };
+     static constexpr std::string_view input_root_path_type                   = { "Input Root Path Type" };
+     
      static constexpr std::string_view output_type                            = { "Output Type" };
+     static constexpr std::string_view output_root_path_type                  = { "Output Root Path Type" };
+
      static constexpr std::string_view input_path                             = { "Input Path" };
      static constexpr std::string_view output_path                            = { "Output Path" };
      static constexpr std::string_view select_none                            = { "Select None" };
@@ -150,6 +154,11 @@ struct gui_labels
      static constexpr std::string_view draw_bit_enabled_tooltip               = { "Show only tiles with draw bit enabled" };
 
      static constexpr std::string_view draw_bit_disabled_tooltip              = { "Show only tiles with draw bit disabled" };
+     static constexpr std::string_view display_custom_paths_window            = { "Display Custom Paths Window" };
+     static constexpr std::string_view display_field_file_window              = { "Display Field File Window" };
+
+     static constexpr std::string_view field_file_window                      = { "Field File Window" };
+     static constexpr std::string_view custom_paths_window                    = { "Custom Paths Window" };
 
      static constexpr std::string_view move_conflicts_only_tooltip            = {
           "Move Only Conflicts: It takes any tiles with conflicting source locations and it moves all but one to new locations that are "
@@ -253,7 +262,13 @@ struct gui_labels
                    blend_other, animation_id, animation_frame, draw };
 
 
-     gui_labels() = delete;
+     static constexpr std::string_view selected_path         = { "{selected_path}" };
+     static constexpr std::string_view ff8_path              = { "{ff8_path}" };
+     static constexpr std::string_view current_path          = { "{current_path}" };
+     static constexpr std::string_view selected_path_tooltip = { "The user chooses a path to output or read data from." };
+     static constexpr std::string_view ff8_path_tooltip      = { "The root directory where Final Fantasy VIII is installed." };
+     static constexpr std::string_view current_path_tooltip  = { "The current working directory." };
+     gui_labels()                                            = delete;
 };
 }// namespace fme
 #endif// FIELD_MAP_EDITOR_GUI_LABELS_HPP

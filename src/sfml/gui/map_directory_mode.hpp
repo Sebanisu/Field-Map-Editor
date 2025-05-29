@@ -11,6 +11,5 @@ enum struct map_directory_mode
   save_deswizzle_textures,
   load_swizzle_textures,
   load_deswizzle_textures,
-  custom_upscale_directory,
 };
 #endif// FIELD_MAP_EDITOR_MAP_DIRECTORY_MODE_HPP

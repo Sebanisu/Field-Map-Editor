@@ -82,62 +82,80 @@ const sf::Texture *map_sprite::get_texture(const ff_8::PupuID &pupu) const
      return nullptr;
 }
 
+/**
+ * @brief Loads textures for map sprites based on current filters and internal data.
+ *
+ * This function handles multiple texture loading strategies depending on the state of the `deswizzle` and `upscale` filters.
+ * It uses asynchronous operations wrapped in nested futures to schedule texture loading without blocking the main thread.
+ *
+ * @return A shared pointer to an array of loaded sf::Texture objects of size MAX_TEXTURES.
+ */
 std::shared_ptr<std::array<sf::Texture, map_sprite::MAX_TEXTURES>> map_sprite::load_textures_internal()
 {
+     // Container to hold nested futures representing asynchronous texture load operations
      std::vector<std::future<std::future<void>>> future_of_futures{};
-     auto        ret   = std::make_shared<std::array<sf::Texture, MAX_TEXTURES>>(std::array<sf::Texture, MAX_TEXTURES>{});
-     const auto &range = m_all_unique_values_and_strings.bpp().values();
-     if (!m_filters.deswizzle.enabled())
-     {
-          if (!std::empty(range))
-          {
-               for (const auto &bpp : range)
-               {
-                    if (bpp.bpp24())
-                    {
-                         continue;
-                    }
-                    const auto &map = m_all_unique_values_and_strings.palette();
-                    if (map.contains(bpp))
-                    {
 
-                         for (const auto &palette : map.at(bpp).values())
-                         {
-                              if (!m_filters.upscale.enabled())
-                              {
-                                   future_of_futures.push_back(load_mim_textures(ret, bpp, palette));
-                              }
-                              else
-                              {
-                                   for (const auto &texture_page : m_all_unique_values_and_strings.texture_page_id().values())
-                                   {
-                                        future_of_futures.push_back(load_upscale_textures(ret, texture_page, palette));
-                                   }
-                              }
-                         }
-                    }
-               }
-          }
-          if (m_filters.upscale.enabled())
-          {
-               for (const auto &texture_page : m_all_unique_values_and_strings.texture_page_id().values())
-               {
-                    future_of_futures.push_back(load_upscale_textures(ret, texture_page));
-               }
-          }
-     }
-     else
-     {
+     // Allocate shared array to hold the resulting textures
+     auto       ret           = std::make_shared<std::array<sf::Texture, MAX_TEXTURES>>(std::array<sf::Texture, MAX_TEXTURES>{});
 
+     const auto fofh_consumer = scope_guard{ [&]() {
+          // Consume the collected nested futures immediately to kick off the work
+          auto  fofh          = FutureOfFutureConsumer{ std::move(future_of_futures) };
+          fofh.consume_now();
+     } };
+
+     // Check if the deswizzle filter is enabled
+     if (m_filters.deswizzle.enabled())
+     {
+          // Deswizzling is enabled; load textures based on PupuIDs in order
           std::ranges::for_each(working_unique_pupu(), [&, pos = size_t{}](const ff_8::PupuID &pupu) mutable {
                future_of_futures.push_back(load_deswizzle_textures(ret, pupu, pos));
                ++pos;
           });
+          return ret;
      }
-     auto fofh = FutureOfFutureConsumer{ std::move(future_of_futures) };
-     fofh.consume_now();
+
+
+     // Check if palette data exists for the given BPP
+
+     for (const auto &[bpp, palette_set] : m_all_unique_values_and_strings.palette())
+     {
+          if (bpp.bpp24())
+          {
+               continue;
+          }
+          for (const auto &palette : palette_set.values())
+          {
+               if (!m_filters.upscale.enabled())
+               {
+                    // Schedule normal MIM texture load (no upscale)
+                    future_of_futures.push_back(load_mim_textures(ret, bpp, palette));
+               }
+               else
+               {
+                    // Schedule upscale texture loads for each texture page
+                    for (const auto &texture_page : m_all_unique_values_and_strings.texture_page_id().values())
+                    {
+                         future_of_futures.push_back(load_upscale_textures(ret, texture_page, palette));
+                    }
+               }
+          }
+     }
+
+
+     // Additional upscale loading for non-palette based textures
+     if (m_filters.upscale.enabled())
+     {
+          for (const auto &texture_page : m_all_unique_values_and_strings.texture_page_id().values())
+          {
+               future_of_futures.push_back(load_upscale_textures(ret, texture_page));
+          }
+     }
+
+     // Return the shared array of loaded textures
      return ret;
 }
+
 void map_sprite::consume_futures(std::vector<std::future<std::future<void>>> &future_of_futures)
 {
      std::vector<std::future<void>> futures{};
@@ -153,6 +171,7 @@ void map_sprite::consume_futures(std::vector<std::future<std::future<void>>> &fu
        });
      consume_futures(futures);
 }
+
 void map_sprite::consume_futures(std::vector<std::future<void>> &futures)
 {
      std::ranges::for_each(futures, [](std::future<void> &future) {
@@ -162,12 +181,13 @@ void map_sprite::consume_futures(std::vector<std::future<void>> &futures)
           }
      });
 }
+
 std::shared_ptr<std::array<sf::Texture, map_sprite::MAX_TEXTURES>> map_sprite::load_textures()
 {
      std::shared_ptr<std::array<sf::Texture, MAX_TEXTURES>> ret = load_textures_internal();
      while (std::ranges::all_of(*ret, [](const sf::Texture &texture) {
           auto size = texture.getSize();
-          spdlog::info("{}", size);
+          // spdlog::info("{}", size);
           return size.x == 0 || size.y == 0;
      }))
      {
@@ -217,6 +237,7 @@ std::future<std::future<void>> map_sprite::load_mim_textures(
             &(ret->at(pos))) };
      }
 }
+
 std::future<std::future<void>> map_sprite::load_deswizzle_textures(
   std::shared_ptr<std::array<sf::Texture, MAX_TEXTURES>> &ret,
   const ff_8::PupuID                                      pupu,
@@ -231,6 +252,8 @@ std::future<std::future<void>> map_sprite::load_deswizzle_textures(
        std::launch::async,
        future_operations::GetImageFromFromFirstValidPathCreateFuture{ &(ret->at(pos)), generate_deswizzle_paths(pupu) }) };
 }
+
+
 std::future<std::future<void>> map_sprite::load_upscale_textures(SharedTextures &ret, std::uint8_t texture_page, std::uint8_t palette)
 {
      const std::size_t pos = std::size_t{ texture_page } * MAX_PALETTES + palette;
@@ -241,8 +264,7 @@ std::future<std::future<void>> map_sprite::load_upscale_textures(SharedTextures 
      }
      return { std::async(
        std::launch::async,
-       future_operations::GetImageFromFromFirstValidPathCreateFuture{
-         &(ret->at(pos)), m_upscales.generate_upscale_paths(m_filters.upscale.value(), texture_page, palette) }) };
+       future_operations::GetImageFromFromFirstValidPathCreateFuture{ &(ret->at(pos)), generate_swizzle_paths(texture_page, palette) }) };
 }
 
 std::future<std::future<void>> map_sprite::load_upscale_textures(SharedTextures &ret, std::uint8_t texture_page)
@@ -255,8 +277,7 @@ std::future<std::future<void>> map_sprite::load_upscale_textures(SharedTextures 
      }
      return { std::async(
        std::launch::async,
-       future_operations::GetImageFromFromFirstValidPathCreateFuture{
-         &(ret->at(pos)), m_upscales.generate_upscale_paths(m_filters.upscale.value(), texture_page) }) };
+       future_operations::GetImageFromFromFirstValidPathCreateFuture{ &(ret->at(pos)), generate_swizzle_paths(texture_page) }) };
 }
 
 void set_color(std::array<sf::Vertex, 4U> &vertices, const sf::Color &color)
@@ -449,9 +470,10 @@ sf::Sprite map_sprite::save_intersecting(const sf::Vector2i &pixel_pos, const st
 
             // Set the transformation to adjust the sprite's position based on the scale and pixel position
             static constexpr float half   = 0.5F;
-            states.transform.translate(sf::Vector2f(
-              (static_cast<float>(-pixel_pos.x) * static_cast<float>(m_scale)) + (static_cast<float>(sprite_size.x) * half),
-              (static_cast<float>(-pixel_pos.y) * static_cast<float>(m_scale)) + (static_cast<float>(sprite_size.x) * half)));
+            states.transform.translate(
+              sf::Vector2f(
+                (static_cast<float>(-pixel_pos.x) * static_cast<float>(m_scale)) + (static_cast<float>(sprite_size.x) * half),
+                (static_cast<float>(-pixel_pos.y) * static_cast<float>(m_scale)) + (static_cast<float>(sprite_size.x) * half)));
 
             // Loop through either saved imported indices or regular saved indices based on the flag
             for (const auto tile_index : imported ? m_saved_imported_indices : m_saved_indices)
@@ -712,17 +734,17 @@ const sf::BlendMode &map_sprite::get_blend_subtract()
 
 map_sprite map_sprite::with_coo(const open_viii::LangT coo) const
 {
-     return { ff_8::map_group{ m_map_group.field, coo }, m_draw_swizzle, m_filters, m_disable_blends, false };
+     return { ff_8::map_group{ m_map_group.field, coo }, m_draw_swizzle, m_filters, m_disable_blends, false, m_selections };
 }
 
-map_sprite map_sprite::with_field(map_sprite::SharedField field, const open_viii::LangT coo) const
+map_sprite map_sprite::with_field(map_sprite::WeakField field, const open_viii::LangT coo) const
 {
-     return { ff_8::map_group{ std::move(field), coo }, m_draw_swizzle, m_filters, m_disable_blends, false };
+     return { ff_8::map_group{ std::move(field), coo }, m_draw_swizzle, m_filters, m_disable_blends, false, m_selections };
 }
 
 map_sprite map_sprite::with_filters(ff_8::filters filters) const
 {
-     return { m_map_group, m_draw_swizzle, std::move(filters), m_disable_blends, false };
+     return { m_map_group, m_draw_swizzle, std::move(filters), m_disable_blends, false, m_selections };
 }
 
 void map_sprite::enable_draw_swizzle()
@@ -838,7 +860,7 @@ bool map_sprite::fail() const
 }
 void map_sprite::map_save(const std::filesystem::path &dest_path) const
 {
-     ff_8::map_group::OptCoo coo  = m_map_group.opt_coo;
+     ff_8::map_group::OptCoo coo  = m_map_group.opt_coo;// copy because coo is modified
      const auto              map  = ff_8::load_map(m_map_group.field, coo, m_map_group.mim, nullptr, false);
      const auto              path = dest_path.string();
 
@@ -927,7 +949,7 @@ void map_sprite::resize_render_texture()
                m_scale = tmp_scale;
           }
           check_size();
-          spdlog::debug("Render Texture- scale:{}, size:({}, {})", m_scale, width() * m_scale, height() * m_scale);
+          // spdlog::debug("Render Texture- scale:{}, size:({}, {})", m_scale, width() * m_scale, height() * m_scale);
           m_render_texture->create(width() * m_scale, height() * m_scale);
           m_drag_sprite_texture->create(TILE_SIZE * m_scale * 3, TILE_SIZE * m_scale * 3);
      }
@@ -1011,7 +1033,7 @@ ff_8::filters &map_sprite::filter()
 }
 map_sprite map_sprite::update(ff_8::map_group map_group, bool draw_swizzle) const
 {
-     return { std::move(map_group), draw_swizzle, m_filters, m_disable_blends, false };
+     return { std::move(map_group), draw_swizzle, m_filters, m_disable_blends, false, m_selections };
 }
 const all_unique_values_and_strings &map_sprite::uniques() const
 {
@@ -1129,25 +1151,52 @@ const ff_8::MapHistory::nsat_map &map_sprite::working_animation_counts() const
 //   }
 //   return result;
 // }
-std::vector<std::future<std::future<void>>> map_sprite::save_swizzle_textures(const std::filesystem::path &path)
-{
-     // assert(std::filesystem::path.is_directory(path));
-     const std::string                 field_name                       = { get_base_name() };
-     static constexpr std::string_view pattern_texture_page             = { "{}_{}.png" };
-     static constexpr std::string_view pattern_texture_page_palette     = { "{}_{}_{}.png" };
-     static constexpr std::string_view pattern_coo_texture_page         = { "{}_{}_{}.png" };
-     static constexpr std::string_view pattern_coo_texture_page_palette = { "{}_{}_{}_{}.png" };
 
-     const auto                        unique_values                    = get_all_unique_values_and_strings();
-     const auto                       &unique_texture_page_ids          = unique_values.texture_page_id().values();
-     const auto                       &unique_bpp                       = unique_values.bpp().values();
-     settings_backup                   settings(m_filters, m_draw_swizzle, m_disable_texture_page_shift, m_disable_blends, m_scale);
-     settings.filters                         = ff_8::filters{};
+/**
+ * @brief Saves swizzled texture pages (and optionally palettes) to disk asynchronously.
+ *
+ * Generates textures for each unique texture page (and conflicting palettes if needed) and saves them as PNG files.
+ * If the texture has palette conflicts (e.g., multiple palettes for the same texture page), generates separate files for each conflicting
+ * palette.
+ *
+ * @param path The base directory path where the images will be saved.
+ * @return A vector of futures representing the save operations, allowing the caller to later wait or check for completion.
+ *
+ * @note Caller is responsible for consuming or waiting on the futures to ensure save completion.
+ */
+[[nodiscard]] std::vector<std::future<std::future<void>>>
+  map_sprite::save_swizzle_textures(const std::string &keyed_string, const std::string &selected_path)
+{
+     const auto selections = m_selections.lock();
+     if (!selections)
+     {
+          spdlog::error("Failed to lock m_selections: shared_ptr is expired.");
+          return {};
+     }
+     // Get the base name of the field (e.g., map name) to use in output filenames.
+     // const std::string field_name              = { get_base_name() };
+
+     // Define filename patterns for various cases (with/without palette, with/without COO region).
+     // static constexpr std::string_view pattern_texture_page             = { "{}_{}.png" };
+     // static constexpr std::string_view pattern_texture_page_palette     = { "{}_{}_{}.png" };
+     // static constexpr std::string_view pattern_coo_texture_page         = { "{}_{}_{}.png" };
+     // static constexpr std::string_view pattern_coo_texture_page_palette = { "{}_{}_{}_{}.png" };
+
+     // Extract unique texture page IDs and BPP (bits per pixel) values from the map.
+     const auto      unique_values           = get_all_unique_values_and_strings();
+     const auto     &unique_texture_page_ids = unique_values.texture_page_id().values();
+     const auto     &unique_bpp              = unique_values.bpp().values();
+
+     // Backup and override current settings for exporting textures.
+     settings_backup settings(m_filters, m_draw_swizzle, m_disable_texture_page_shift, m_disable_blends, m_scale);
+     settings.filters                         = ff_8::filters{ false };
      settings.filters.value().upscale         = settings.filters.backup().upscale;
      settings.filters.value().deswizzle       = settings.filters.backup().deswizzle;
      settings.draw_swizzle                    = true;
      settings.disable_texture_page_shift      = true;
      settings.disable_blends                  = true;
+
+     // Adjust scale based on texture height or deswizzle state.
      uint32_t                      height     = get_max_texture_height();
      constexpr static unsigned int mim_height = { 256U };
      settings.scale                           = height / mim_height;
@@ -1161,86 +1210,153 @@ std::vector<std::future<std::future<void>>> map_sprite::save_swizzle_textures(co
           settings.scale = 1U;
      }
 
+     // If there’s only one bpp and at most one palette, nothing needs saving.
      if (unique_bpp.size() == 1U && unique_values.palette().at(unique_bpp.front()).values().size() <= 1U)
      {
           return {};
      }
+
+     // Prepare for gathering palette conflicts.
      using map_type                                                          = std::remove_cvref_t<decltype(get_conflicting_palettes())>;
      using mapped_type                                                       = typename map_type::mapped_type;
      const map_type                              conflicting_palettes_map    = get_conflicting_palettes();
+
+     // Prepare futures to track save operations.
      std::vector<std::future<std::future<void>>> future_of_futures           = {};
      const unsigned int                          max_number_of_texture_pages = 13U;
      future_of_futures.reserve(max_number_of_texture_pages);
+
+     // Create an off-screen render texture to draw into.
      sf::RenderTexture out_texture{};
      out_texture.create(height, height);
+
+     // Loop over all unique texture pages.
      for (const auto &texture_page : unique_texture_page_ids)
      {
           settings.filters.value().texture_page_id.update(texture_page).enable();
           const bool contains_conflicts = conflicting_palettes_map.contains(texture_page);
+
           if (contains_conflicts)
           {
+               // Handle palette conflicts: export each conflicting palette individually.
                const mapped_type &conflicting_palettes = conflicting_palettes_map.at(texture_page);
                for (const auto &bpp : unique_bpp)
                {
                     const auto &unique_palette = unique_values.palette().at(bpp).values();
+
+                    // Filter palettes that conflict with the current texture page.
                     auto        filter_palette = unique_palette | std::views::filter([&conflicting_palettes](const std::uint8_t &palette) {
                                                return std::ranges::any_of(
                                                  conflicting_palettes, [&palette](const std::uint8_t &other) { return palette == other; });
                                           });
+
                     for (const auto &palette : filter_palette)
                     {
                          settings.filters.value().palette.update(palette).enable();
                          settings.filters.value().bpp.update(bpp).enable();
+
+                         // Generate the texture.
                          if (!generate_texture(&out_texture))
                          {
                               continue;
                          }
-                         auto out_path = [&]() -> std::filesystem::path {
-                              if (m_map_group.opt_coo)
-                              {
-                                   return save_path_coo(
-                                     pattern_coo_texture_page_palette, path, field_name, texture_page, palette, *m_map_group.opt_coo);
-                              }
-                              return save_path(pattern_texture_page_palette, path, field_name, texture_page, palette);
-                         }();
+
+                         // Determine output path based on COO presence.
+                         const key_value_data cpm      = { .field_name    = get_base_name(),
+                                                           .ext           = ".png",
+                                                           .language_code = m_map_group.opt_coo.has_value()
+                                                                           && m_map_group.opt_coo.value() != open_viii::LangT::generic
+                                                                              ? m_map_group.opt_coo
+                                                                              : std::nullopt,
+                                                           .palette       = palette,
+                                                           .texture_page  = texture_page };
+                         auto                 out_path = cpm.replace_tags(keyed_string, selections, selected_path);
+                         // auto out_path = [&]() -> std::filesystem::path {
+                         //      if (m_map_group.opt_coo)
+                         //      {
+                         //           return save_path_coo(
+                         //             pattern_coo_texture_page_palette, path, field_name, texture_page, palette, *m_map_group.opt_coo);
+                         //      }
+                         //      return save_path(pattern_texture_page_palette, path, field_name, texture_page, palette);
+                         // }();
+
+                         // Start async save and store the future.
                          future_of_futures.push_back(async_save(out_texture.getTexture(), out_path));
                     }
                }
           }
 
+          // No conflicting palettes — save the texture page normally.
           settings.filters.value().palette.disable();
           settings.filters.value().bpp.disable();
+
           if (!generate_texture(&out_texture))
           {
                continue;
           }
-          auto out_path = m_map_group.opt_coo
-                            ? save_path_coo(pattern_coo_texture_page, path, field_name, texture_page, *m_map_group.opt_coo)
-                            : save_path(pattern_texture_page, path, field_name, texture_page);
+
+          // Determine output path based on COO presence.
+          const key_value_data cpm      = { .field_name = get_base_name(),
+                                            .ext        = ".png",
+                                            .language_code =
+                                         m_map_group.opt_coo.has_value() && m_map_group.opt_coo.value() != open_viii::LangT::generic
+                                                ? m_map_group.opt_coo
+                                                : std::nullopt,
+                                            .texture_page = texture_page };
+          auto                 out_path = cpm.replace_tags(keyed_string, selections, selected_path);
+          // auto out_path = m_map_group.opt_coo
+          //                   ? save_path_coo(pattern_coo_texture_page, path, field_name, texture_page, *m_map_group.opt_coo)
+          //                   : save_path(pattern_texture_page, path, field_name, texture_page);
+
+          // Start async save and store the future.
           future_of_futures.push_back(async_save(out_texture.getTexture(), out_path));
      }
+
+     // Return the list of save operations to the caller.
      return future_of_futures;
-     // consume_futures(future_of_futures);
+     // consume_futures(future_of_futures); // Optionally wait here.
 }
+
 
 std::string map_sprite::get_base_name() const
 {
-     if (m_map_group.field)
+     const auto field = m_map_group.field.lock();
+     if (!field)
      {
-          return str_to_lower(m_map_group.field->get_base_name());
+          return {};
      }
-     return {};
+     return str_to_lower(field->get_base_name());
 }
 
-std::vector<std::future<std::future<void>>> map_sprite::save_pupu_textures(const std::filesystem::path &path)
+/**
+ * @brief Saves unique "Pupu" textures for the map field to individual PNG files.
+ *
+ * This function sets up temporary settings specifically for Pupu texture rendering,
+ * generates textures using the current map data, and asynchronously saves them to disk.
+ * Each texture is saved under a specific file naming pattern based on the field name and Pupu ID.
+ *
+ * @param path Filesystem path where the textures should be saved. Must be a directory.
+ * @return A vector of futures, each wrapping a future task that will save one texture.
+ *         Caller should consume or wait on these to ensure saving completes.
+ */
+[[nodiscard]] std::vector<std::future<std::future<void>>>
+  map_sprite::save_pupu_textures(const std::string &keyed_string, const std::string &selected_path)
 {
+     const auto selections = m_selections.lock();
+     if (!selections)
+     {
+          spdlog::error("Failed to lock m_selections: shared_ptr is expired.");
+          return {};
+     }
+     // Backup current settings and adjust for saving Pupu textures
      auto settings    = settings_backup{ m_filters, m_draw_swizzle, m_disable_texture_page_shift, m_disable_blends, m_scale };
-     settings.filters = ff_8::filters{};
-     settings.filters.value().upscale         = settings.filters.backup().upscale;
-     settings.draw_swizzle                    = false;
-     settings.disable_texture_page_shift      = true;
-     settings.disable_blends                  = true;
-     // todo maybe draw with blends enabled to transparent black or white.
+     settings.filters = ff_8::filters{ false };
+     settings.filters.value().upscale         = settings.filters.backup().upscale;// Retain original upscale settings
+     settings.draw_swizzle                    = false;// No swizzling when saving
+     settings.disable_texture_page_shift      = true;// Disable texture page shifts
+     settings.disable_blends                  = true;// Disable blending
+
+     // Set the scale relative to a standard MIM height (256px)
      static constexpr unsigned int mim_height = { 256U };
      settings.scale                           = get_max_texture_height() / mim_height;
      if (settings.scale == 0U)
@@ -1248,49 +1364,81 @@ std::vector<std::future<std::future<void>>> map_sprite::save_pupu_textures(const
           settings.scale = 1U;
      }
 
-     if (!m_map_group.field)
+     // Acquire the field associated with this map group
+     const auto field = m_map_group.field.lock();
+     if (!field)
      {
-          return {};
+          return {};// Field no longer exists, nothing to save
      }
 
-     const std::string                field_name      = std::string{ str_to_lower(m_map_group.field->get_base_name()) };
-     const std::vector<ff_8::PupuID> &unique_pupu_ids = working_unique_pupu();
-     std::optional<open_viii::LangT> &coo             = m_map_group.opt_coo;
+     const std::string                           field_name                  = std::string{ str_to_lower(field->get_base_name()) };
+     const std::vector<ff_8::PupuID>            &unique_pupu_ids             = working_unique_pupu();// Get list of unique Pupu IDs
+     // std::optional<open_viii::LangT> &coo             = m_map_group.opt_coo;// Language option (optional)
 
-     assert(safedir(path).is_dir());
-     static constexpr std::string_view           pattern_pupu                = { "{}_{}.png" };
-     static constexpr std::string_view           pattern_coo_pupu            = { "{}_{}_{}.png" };
-     const unsigned int                          max_number_of_texture_pages = 13U;
+     // assert(safedir(path).is_dir());// Ensure output path is a directory
+
+     // static constexpr std::string_view           pattern_pupu                = { "{}_{}.png" };// Pattern without language
+     // static constexpr std::string_view           pattern_coo_pupu            = { "{}_{}_{}.png" };// Pattern with language
+     const unsigned int                          max_number_of_texture_pages = 13U;// Reserve space for futures
      std::vector<std::future<std::future<void>>> future_of_futures           = {};
      future_of_futures.reserve(max_number_of_texture_pages);
 
+     // Setup an off-screen render texture
      sf::RenderTexture out_texture{};
      iRectangle const  canvas = m_map_group.maps.const_working().canvas() * static_cast<int>(m_scale);
      out_texture.create(static_cast<std::uint32_t>(canvas.width()), static_cast<std::uint32_t>(canvas.height()));
+
+     // Loop through each Pupu ID and generate/save textures
      for (const ff_8::PupuID &pupu : unique_pupu_ids)
      {
-          settings.filters.value().pupu.update(pupu).enable();
+          settings.filters.value().pupu.update(pupu).enable();// Enable this specific Pupu ID
+
           if (!generate_texture(&out_texture))
           {
-               continue;
+               continue;// Skip if texture generation fails
           }
-          std::filesystem::path const out_path =
-            coo ? save_path_coo(pattern_coo_pupu, path, field_name, pupu, *coo) : save_path(pattern_pupu, path, field_name, pupu);
-          future_of_futures.push_back(async_save(out_texture.getTexture(), out_path));
+
+          const key_value_data cpm      = { .field_name = get_base_name(),
+                                            .ext        = ".png",
+                                            .language_code =
+                                         m_map_group.opt_coo.has_value() && m_map_group.opt_coo.value() != open_viii::LangT::generic
+                                                ? m_map_group.opt_coo
+                                                : std::nullopt,
+                                            .pupu_id = pupu.raw() };
+          auto                 out_path = cpm.replace_tags(keyed_string, selections, selected_path);
+          // std::filesystem::path const out_path = coo ? save_path_coo(pattern_coo_pupu, path, field_name, pupu, *coo)// Save with language
+          //                                            : save_path(pattern_pupu, path, field_name, pupu);// Save without language
+
+          future_of_futures.push_back(async_save(out_texture.getTexture(), out_path));// Queue async save
      }
+
      return future_of_futures;
-     // consume_futures(future_of_futures);
+     // Note: Caller should consume_futures(future_of_futures) to wait for saves to finish
 }
 
+/**
+ * @brief Launches a two-step asynchronous operation to save a texture to a file.
+ *
+ * First, the texture is converted into an image in a deferred future.
+ * Then, the image is written to disk asynchronously once the first future completes.
+ *
+ * @param out_texture The texture to be saved.
+ * @param out_path Filesystem path where the image will be written.
+ * @return A future that holds another future, which represents the final save operation.
+ */
 [[nodiscard]] std::future<std::future<void>> map_sprite::async_save(const sf::Texture &out_texture, const std::filesystem::path &out_path)
 {
-     return { std::async(
-       std::launch::deferred,
-       [out_path](std::future<sf::Image> image_task) -> std::future<void> {
-            return std::async(std::launch::async, future_operations::save_image_to_path{ out_path, image_task.get() });
-       },
-       save_image_pbo(out_texture)) };
+     return {
+          std::async(
+            std::launch::deferred,// Step 1: Save image conversion deferred
+            [out_path](std::future<sf::Image> image_task) -> std::future<void> {
+                 // Step 2: Save the image to disk asynchronously once ready
+                 return std::async(std::launch::async, future_operations::save_image_to_path{ out_path, image_task.get() });
+            },
+            save_image_pbo(out_texture))// Start image creation task (PBO extraction)
+     };
 }
+
 uint32_t map_sprite::get_max_texture_height() const
 {
      auto     transform_range = (*m_texture) | std::views::transform([](const sf::Texture &texture) { return texture.getSize().y; });
@@ -1501,7 +1649,13 @@ std::string map_sprite::str_to_lower(std::string input)
        input, std::back_inserter(output), [](char character) -> char { return static_cast<char>(::tolower(character)); });
      return output;
 }
-map_sprite::map_sprite(ff_8::map_group map_group, bool draw_swizzle, ff_8::filters in_filters, bool force_disable_blends, bool require_coo)
+map_sprite::map_sprite(
+  ff_8::map_group           map_group,
+  bool                      draw_swizzle,
+  ff_8::filters             in_filters,
+  bool                      force_disable_blends,
+  bool                      require_coo,
+  std::weak_ptr<Selections> selections)
   : m_map_group(
       !require_coo || (map_group.opt_coo && map_group.opt_coo.value() != open_viii::LangT::generic) ? std::move(map_group)
                                                                                                     : ff_8::map_group{})
@@ -1515,6 +1669,7 @@ map_sprite::map_sprite(ff_8::map_group map_group, bool draw_swizzle, ff_8::filte
   , m_render_texture(std::make_shared<sf::RenderTexture>())
   , m_grid(get_grid())
   , m_texture_page_grid(get_texture_page_grid())
+  , m_selections(selections)
 {
      init_render_texture();
 }
@@ -1589,4 +1744,196 @@ std::string map_sprite::appends_prefix_base_name(std::string_view title) const
      return fmt::format(
        "{} ({} {}{}{})", title, gui_labels::appends, prefix, char{ std::filesystem::path::preferred_separator }, base_name);
 }
+
+
+bool map_sprite::has_deswizzle_path(const ff_8::PupuID pupu, const std::string &ext) const
+{
+     return has_deswizzle_path(m_filters.deswizzle.value().string(), pupu, ext);
+}
+bool map_sprite::has_deswizzle_path(const std::filesystem::path &filter_path, const std::string &ext) const
+{
+     const std::vector<ff_8::PupuID> &unique_pupu_ids = working_unique_pupu();
+     return std::ranges::any_of(unique_pupu_ids, [&](const ff_8::PupuID pupu) { return has_deswizzle_path(filter_path, pupu, ext); });
+}
+bool map_sprite::has_deswizzle_path(const std::filesystem::path &filter_path, const ff_8::PupuID pupu, const std::string &ext) const
+{
+     const auto selections = m_selections.lock();
+     if (!selections)
+     {
+          spdlog::error("Failed to lock m_selections: shared_ptr is expired.");
+          return false;
+     }
+
+     return m_upscales.has_upscale_path(
+       filter_path.string(),
+       { .field_name = get_base_name(),
+         .ext        = ext,
+         .language_code =
+           m_map_group.opt_coo.has_value() && m_map_group.opt_coo.value() != open_viii::LangT::generic ? m_map_group.opt_coo : std::nullopt,
+         .pupu_id = pupu.raw() });
+     //   || safedir(cpm.replace_tags(selections->output_map_pattern_for_deswizzle, selections, filter_path.string())).is_exists();
+}
+
+bool map_sprite::has_swizzle_path(const std::uint8_t texture_page, const std::string &ext) const
+{
+     return has_swizzle_path(m_filters.upscale.value().string(), texture_page, ext);
+}
+
+bool map_sprite::has_swizzle_path(const std::uint8_t texture_page, std::uint8_t palette, const std::string &ext) const
+{
+     return has_swizzle_path(m_filters.upscale.value().string(), texture_page, palette, ext);
+}
+
+bool map_sprite::has_swizzle_path(const std::filesystem::path &filter_path, const std::string &ext) const
+{
+     return [&]() {
+          for (const auto &[bpp, palette_set] : m_all_unique_values_and_strings.palette())
+          {
+               if (bpp.bpp24())
+               {
+                    continue;
+               }
+               for (const auto &palette : palette_set.values())
+               {
+                    for (const auto &texture_page : m_all_unique_values_and_strings.texture_page_id().values())
+                    {
+                         if (has_swizzle_path(filter_path, texture_page, palette, ext))
+                         {
+                              return true;
+                         }
+                    }
+               }
+          }
+          return false;
+     }() || [&]() {
+          for (const auto &texture_page : m_all_unique_values_and_strings.texture_page_id().values())
+          {
+               if (has_swizzle_path(filter_path, texture_page, ext))
+               {
+                    return true;
+               }
+          }
+          return false;
+     }();
+}
+
+bool map_sprite::has_swizzle_path(const std::filesystem::path &filter_path, const std::uint8_t texture_page, const std::string &ext) const
+{
+     const auto selections = m_selections.lock();
+     if (!selections)
+     {
+          spdlog::error("Failed to lock m_selections: shared_ptr is expired.");
+          return false;
+     }
+     return m_upscales.has_upscale_path(
+       filter_path.string(),
+       { .field_name = get_base_name(),
+         .ext        = ext,
+         .language_code =
+           m_map_group.opt_coo.has_value() && m_map_group.opt_coo.value() != open_viii::LangT::generic ? m_map_group.opt_coo : std::nullopt,
+         .texture_page = texture_page });
+     //   || safedir(cpm.replace_tags(selections->output_swizzle_pattern, selections, filter_path.string())).is_exists();
+}
+
+bool map_sprite::has_swizzle_path(
+  const std::filesystem::path &filter_path,
+  const std::uint8_t           texture_page,
+  std::uint8_t                 palette,
+  const std::string           &ext) const
+{
+     const auto selections = m_selections.lock();
+     if (!selections)
+     {
+          spdlog::error("Failed to lock m_selections: shared_ptr is expired.");
+          return false;
+     }
+
+     return m_upscales.has_upscale_path(
+       filter_path.string(),
+       { .field_name = get_base_name(),
+         .ext        = ext,
+         .language_code =
+           m_map_group.opt_coo.has_value() && m_map_group.opt_coo.value() != open_viii::LangT::generic ? m_map_group.opt_coo : std::nullopt,
+         .palette      = palette,
+         .texture_page = texture_page });
+     //   || safedir(cpm.replace_tags(selections->output_swizzle_pattern, selections, filter_path.string())).is_exists();
+}
+
+std::vector<std::filesystem::path> map_sprite::generate_deswizzle_paths(const ff_8::PupuID pupu, const std::string &ext) const
+{
+     const auto selections = m_selections.lock();
+     if (!selections)
+     {
+          spdlog::error("Failed to lock m_selections: shared_ptr is expired.");
+          return {};
+     }
+     return generate_paths(
+       m_filters.deswizzle.value().string(),
+       { .field_name = get_base_name(),
+         .ext        = ext,
+         .language_code =
+           m_map_group.opt_coo.has_value() && m_map_group.opt_coo.value() != open_viii::LangT::generic ? m_map_group.opt_coo : std::nullopt,
+         .pupu_id = pupu.raw() },
+       selections->output_map_pattern_for_deswizzle);
+}
+
+std::vector<std::filesystem::path>
+  map_sprite::generate_swizzle_paths(const std::uint8_t texture_page, std::uint8_t palette, const std::string &ext) const
+{
+     const auto selections = m_selections.lock();
+     if (!selections)
+     {
+          spdlog::error("Failed to lock m_selections: shared_ptr is expired.");
+          return {};
+     }
+     return generate_paths(
+       m_filters.upscale.value().string(),
+       { .field_name = get_base_name(),
+         .ext        = ext,
+         .language_code =
+           m_map_group.opt_coo.has_value() && m_map_group.opt_coo.value() != open_viii::LangT::generic ? m_map_group.opt_coo : std::nullopt,
+         .palette      = palette,
+         .texture_page = texture_page },
+       selections->output_swizzle_pattern);
+}
+
+std::vector<std::filesystem::path> map_sprite::generate_swizzle_paths(const std::uint8_t texture_page, const std::string &ext) const
+{
+     const auto selections = m_selections.lock();
+     if (!selections)
+     {
+          spdlog::error("Failed to lock m_selections: shared_ptr is expired.");
+          return {};
+     }
+     return generate_paths(
+       m_filters.upscale.value().string(),
+       { .field_name = get_base_name(),
+         .ext        = ext,
+         .language_code =
+           m_map_group.opt_coo.has_value() && m_map_group.opt_coo.value() != open_viii::LangT::generic ? m_map_group.opt_coo : std::nullopt,
+         .texture_page = texture_page },
+       selections->output_swizzle_pattern);
+}
+
+std::vector<std::filesystem::path>
+  map_sprite::generate_paths(const std::string &filter_path, const key_value_data &cpm, const std::string &output_pattern) const
+{
+     std::vector<std::filesystem::path> paths      = {};
+     const auto                         selections = m_selections.lock();
+     if (!selections)
+     {
+          spdlog::error("Failed to lock m_selections: shared_ptr is expired.");
+          return paths;
+     }
+     if (!filter_path.empty())
+     {
+          paths = m_upscales.generate_upscale_paths(filter_path, cpm);
+     }
+     if (!output_pattern.empty())
+     {
+          paths.push_back(cpm.replace_tags(output_pattern, selections, filter_path));
+     }
+     return paths;
+}
+
 }// namespace fme

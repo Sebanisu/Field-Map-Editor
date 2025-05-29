@@ -38,4 +38,6 @@ inline static auto operator+(tile_sizes tile_size, const T &num)
 {
   return static_cast<std::underlying_type_t<tile_sizes>>(tile_size) + num;
 }
+
+
 #endif// FIELD_MAP_EDITOR_TILE_SIZES_HPP
