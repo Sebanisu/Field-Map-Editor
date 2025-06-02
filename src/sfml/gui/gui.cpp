@@ -4196,7 +4196,7 @@ bool gui::combo_deswizzle_path(ff_8::filter_old<std::filesystem::path, ff_8::Fil
 bool gui::combo_upscale_map_path(ff_8::filter_old<std::filesystem::path, ff_8::FilterTag::UpscaleMap> &filter) const
 {
      const auto gcc = fme::GenericComboClassWithFilterAndFixedToggles(
-       gui_labels::upscale_path,
+       gui_labels::upscale_map_path,
        [this]() { return m_upscale_paths; },
        [this]() { return m_upscale_paths_enabled; },
        [this]() { return m_upscale_paths; },
@@ -4210,7 +4210,7 @@ bool gui::combo_upscale_map_path(ff_8::filter_old<std::filesystem::path, ff_8::F
 bool gui::combo_deswizzle_map_path(ff_8::filter_old<std::filesystem::path, ff_8::FilterTag::DeswizzleMap> &filter) const
 {
      const auto gcc = fme::GenericComboClassWithFilterAndFixedToggles(
-       gui_labels::deswizzle_path,
+       gui_labels::deswizzle_map_path,
        [this]() { return m_deswizzle_paths; },
        [this]() { return m_deswizzle_paths_enabled; },
        [this]() { return m_deswizzle_paths; },
