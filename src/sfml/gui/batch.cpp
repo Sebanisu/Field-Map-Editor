@@ -304,63 +304,6 @@ void fme::batch::example_output_paths()
        selections->batch_output_save_map);
 }
 
-void fme::batch::browse_input_path()
-{
-     const auto selections = m_selections.lock();
-     if (!selections)
-     {
-          spdlog::error("Failed to lock m_selections: shared_ptr is expired.");
-          return;
-     }
-     if (selections->batch_input_type == input_types::mim)
-     {
-          // using embedded images from ff8.
-          return;
-     }
-
-     static constexpr auto values = std::array{ root_path_types::selected_path, root_path_types::ff8_path, root_path_types::current_path };
-     static constexpr auto tooltips =
-       std::array{ gui_labels::selected_path_tooltip, gui_labels::ff8_path_tooltip, gui_labels::current_path_tooltip };
-     const auto gcc = fme::GenericComboClass(
-       gui_labels::input_root_path_type,
-       []() { return values; },
-       []() { return values | std::views::transform(AsString{}); },
-       []() { return tooltips; },
-       selections->batch_input_root_path_type);
-     if (gcc.render())
-     {
-          selections->update_configuration_key(ConfigKey::BatchInputRootPathType);
-     }
-     if (selections->batch_input_root_path_type != root_path_types::selected_path)
-     {
-          const float        button_size      = ImGui::GetFrameHeight();
-          const float        button_width     = button_size * 3.0F;
-          const auto         pop_id           = PushPopID();
-          const std::string &selected_string  = get_selected_path(selections->batch_input_path, selections->batch_input_root_path_type);
-          std::string        processed_string = key_value_data::static_replace_tags(selected_string, selections);
-          if (ImGui::Button(gui_labels::explore.data(), ImVec2{ button_width, button_size }))
-          {
-               open_directory(processed_string);
-          }
-          else
-          {
-               tool_tip(processed_string);
-          }
-     }
-
-     example_input_paths();
-
-     if (selections->batch_input_root_path_type != root_path_types::selected_path)
-     {
-          return;
-     }
-     if (!browse_path(gui_labels::input_path, m_input_path_valid, m_input_path))
-     {
-          return;
-     }
-     save_input_path();
-}
-
 void fme::batch::save_input_path()
 {
      if (!m_input_path_valid)
@@ -373,11 +316,27 @@ void fme::batch::save_input_path()
           spdlog::error("Failed to lock m_selections: shared_ptr is expired.");
           return;
      }
-     selections->batch_input_path = std::string(m_input_path.data());
+     selections->batch_input_path = m_input_path.data();
      spdlog::info("batch_input_path: {}", selections->batch_input_path);
      selections->update_configuration_key(ConfigKey::BatchInputPath);
 }
 
+void fme::batch::save_output_path()
+{
+     if (!m_output_path_valid)
+     {
+          return;
+     }
+     const auto selections = m_selections.lock();
+     if (!selections)
+     {
+          spdlog::error("Failed to lock m_selections: shared_ptr is expired.");
+          return;
+     }
+     selections->batch_output_path = m_output_path.data();
+     spdlog::info("batch_output_path: {}", selections->batch_input_path);
+     selections->update_configuration_key(ConfigKey::BatchOutputPath);
+}
 
 void fme::batch::checkbox_load_map()
 {
@@ -422,6 +381,60 @@ void fme::batch::combo_output_type()
 }
 
 
+void fme::batch::browse_input_path()
+{
+     const auto selections = m_selections.lock();
+     if (!selections)
+     {
+          spdlog::error("Failed to lock m_selections: shared_ptr is expired.");
+          return;
+     }
+     if (selections->batch_input_type == input_types::mim)
+     {
+          // using embedded images from ff8.
+          return;
+     }
+
+     static constexpr auto values = std::array{ root_path_types::selected_path, root_path_types::ff8_path, root_path_types::current_path };
+     static constexpr auto tooltips =
+       std::array{ gui_labels::selected_path_tooltip, gui_labels::ff8_path_tooltip, gui_labels::current_path_tooltip };
+     const auto gcc = fme::GenericComboClass(
+       gui_labels::input_root_path_type,
+       []() { return values; },
+       []() { return values | std::views::transform(AsString{}); },
+       []() { return tooltips; },
+       selections->batch_input_root_path_type);
+     if (gcc.render())
+     {
+          selections->update_configuration_key(ConfigKey::BatchInputRootPathType);
+     }
+     if (selections->batch_input_root_path_type != root_path_types::selected_path)
+     {
+          const float        button_size      = ImGui::GetFrameHeight();
+          const float        button_width     = button_size * 3.0F;
+          const auto         pop_id           = PushPopID();
+          const std::string &selected_string  = get_selected_path(selections->batch_input_path, selections->batch_input_root_path_type);
+          std::string        processed_string = key_value_data::static_replace_tags(selected_string, selections);
+          if (ImGui::Button(gui_labels::explore.data(), ImVec2{ button_width, button_size }))
+          {
+               open_directory(processed_string);
+          }
+          else
+          {
+               tool_tip(processed_string);
+          }
+     }
+
+     const bool path_changed = selections->batch_input_root_path_type == root_path_types::selected_path
+                               && browse_path(gui_labels::input_path, m_input_path_valid, m_input_path);
+     example_input_paths();
+     if (!path_changed)
+     {
+          return;
+     }
+     save_input_path();
+}
+
 void fme::batch::browse_output_path()
 {
      const auto selections = m_selections.lock();
@@ -459,34 +472,14 @@ void fme::batch::browse_output_path()
                tool_tip(processed_string);
           }
      }
-
+     const bool path_changed = selections->batch_output_root_path_type == root_path_types::selected_path
+                               && browse_path(gui_labels::output_path, m_output_path_valid, m_output_path);
      example_output_paths();
-
-     if (selections->batch_output_root_path_type != root_path_types::selected_path)
-     {
-          return;
-     }
-     if (!browse_path(gui_labels::output_path, m_output_path_valid, m_output_path))
+     if (!path_changed)
      {
           return;
      }
      save_output_path();
-}
-
-
-void fme::batch::save_output_path()
-{
-     if (!m_output_path_valid)
-     {
-          return;
-     }
-     const auto selections = m_selections.lock();
-     if (!selections)
-     {
-          spdlog::error("Failed to lock m_selections: shared_ptr is expired.");
-          return;
-     }
-     selections->update_configuration_key(ConfigKey::BatchOutputPath);
 }
 
 void fme::batch::checkmark_save_map()
