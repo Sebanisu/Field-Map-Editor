@@ -4007,9 +4007,24 @@ void gui::combo_upscale_map_path()
      {
           return;
      }
+     // below if changed
      if (m_map_sprite->filter().upscale_map.enabled())
      {
-          m_map_sprite->filter().deswizzle_map.disable();
+
+          if (const auto paths = m_map_sprite->generate_swizzle_map_paths(".map"); !std::ranges::empty(paths))
+          {
+               m_map_sprite->filter().deswizzle_map.disable();
+               m_map_sprite->load_map(paths.front());// grab the first match.
+          }
+          else
+          {
+               //.map was not found.
+               m_map_sprite->filter().upscale_map.disable();
+          }
+     }
+     else
+     {
+          // load map from .mim here.
      }
 
      refresh_render_texture(true);
@@ -4029,6 +4044,15 @@ void gui::combo_deswizzle_map_path()
      if (m_map_sprite->filter().deswizzle_map.enabled())
      {
           m_map_sprite->filter().upscale_map.disable();
+
+          if (const auto paths = m_map_sprite->generate_deswizzle_map_paths(".map"); !std::ranges::empty(paths))
+          {
+               m_map_sprite->load_map(paths.front());// grab the first match.
+          }
+     }
+     else
+     {
+          // load map from .mim here.
      }
 
      refresh_render_texture(true);
@@ -4128,7 +4152,8 @@ void gui::generate_upscale_map_paths()
      m_upscale_map_paths_enabled.clear();
      for (const auto &path : m_upscale_map_paths)
      {
-          m_upscale_map_paths_enabled.push_back(m_map_sprite->has_swizzle_path(std::filesystem::path{ path }, ".map"));
+          m_upscale_map_paths_enabled.push_back(
+            m_map_sprite->has_map_path(std::filesystem::path{ path }, ".map", m_selections->output_map_pattern_for_swizzle));
      }
 }
 
@@ -4162,12 +4187,14 @@ void gui::generate_deswizzle_map_paths()
      m_deswizzle_map_paths_enabled.clear();
      for (const auto &path : m_deswizzle_map_paths)
      {
-          m_deswizzle_map_paths_enabled.push_back(m_map_sprite->has_deswizzle_path(std::filesystem::path{ path }, ".map"));
+          m_deswizzle_map_paths_enabled.emplace_back(
+            m_map_sprite->has_map_path(std::filesystem::path{ path }, ".map", m_selections->output_map_pattern_for_deswizzle));
      }
 }
 
 bool gui::combo_upscale_path(ff_8::filter_old<std::filesystem::path, ff_8::FilterTag::Upscale> &filter) const
 {
+
      const auto gcc = fme::GenericComboClassWithFilterAndFixedToggles(
        gui_labels::upscale_path,
        [this]() { return m_upscale_paths; },
@@ -4197,10 +4224,10 @@ bool gui::combo_upscale_map_path(ff_8::filter_old<std::filesystem::path, ff_8::F
 {
      const auto gcc = fme::GenericComboClassWithFilterAndFixedToggles(
        gui_labels::upscale_map_path,
-       [this]() { return m_upscale_paths; },
-       [this]() { return m_upscale_paths_enabled; },
-       [this]() { return m_upscale_paths; },
-       [this]() { return m_upscale_paths; },
+       [this]() { return m_upscale_map_paths; },
+       [this]() { return m_upscale_map_paths_enabled; },
+       [this]() { return m_upscale_map_paths; },
+       [this]() { return m_upscale_map_paths; },
        [&filter]() -> auto & { return filter; },
        1);
      return m_field && gcc.render();
@@ -4211,10 +4238,10 @@ bool gui::combo_deswizzle_map_path(ff_8::filter_old<std::filesystem::path, ff_8:
 {
      const auto gcc = fme::GenericComboClassWithFilterAndFixedToggles(
        gui_labels::deswizzle_map_path,
-       [this]() { return m_deswizzle_paths; },
-       [this]() { return m_deswizzle_paths_enabled; },
-       [this]() { return m_deswizzle_paths; },
-       [this]() { return m_deswizzle_paths; },
+       [this]() { return m_deswizzle_map_paths; },
+       [this]() { return m_deswizzle_map_paths_enabled; },
+       [this]() { return m_deswizzle_map_paths; },
+       [this]() { return m_deswizzle_map_paths; },
        [&filter]() -> auto & { return filter; },
        1);
      return m_field && gcc.render();

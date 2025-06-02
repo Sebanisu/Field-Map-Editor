@@ -3,6 +3,7 @@
 #include "format_imgui_text.hpp"
 #include "gui/gui_labels.hpp"
 #include "gui/push_pop_id.hpp"
+#include "tool_tip.hpp"
 
 
 void fme::history_window::render() const
@@ -87,6 +88,10 @@ void fme::history_window::draw_table() const
                     {
                          spdlog::info("Clicked on Index: {}", index);
                          clicked_index = index;
+                    }
+                    else
+                    {
+                         tool_tip(text);
                     }
                });
                if (clicked_index)

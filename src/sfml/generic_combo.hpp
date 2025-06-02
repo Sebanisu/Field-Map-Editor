@@ -299,9 +299,13 @@ class GenericComboClassWithFilterAndFixedToggles
 
           const auto old_idx = current_idx_;
           renderCheckBox();
-          renderComboBox();
-          renderLeftButton();
-          renderRightButton();
+          {
+               ImGui::BeginDisabled(std::ranges::none_of(fixed_toggles_, std::identity{}));
+               const auto pop_disabled = scope_guard{ &ImGui::EndDisabled };
+               renderComboBox();
+               renderLeftButton();
+               renderRightButton();
+          }
           renderTitle();
 
 
@@ -354,7 +358,7 @@ class GenericComboClassWithFilterAndFixedToggles
      {
           const auto  _                    = PushPopID();
           const auto &current_fixed_toggle = *getNext(fixed_toggles_, current_idx_);
-          ImGui::BeginDisabled(!current_fixed_toggle);
+          ImGui::BeginDisabled(!current_fixed_toggle && !filter_.get().enabled());
           const auto pop_disabled = scope_guard{ &ImGui::EndDisabled };
           if (bool checked = filter_.get().enabled(); ImGui::Checkbox("", &checked))
           {

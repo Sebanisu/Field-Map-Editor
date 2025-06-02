@@ -44,10 +44,17 @@ upscales::upscales(std::string root, std::optional<open_viii::LangT> coo, std::w
                            {
                                 spdlog::info("Failed to check path '{}': error={}", path_str, ec.message());
                            }
-                           else if (exists)
+                           ec.clear();
+                           const auto is_regular_file = exists && std::filesystem::is_regular_file(path_str, ec);
+                           if (ec)
+                           {
+                                spdlog::info("Failed to check if is file path '{}': error={}", path_str, ec.message());
+                           }
+                           if (exists && is_regular_file)
                            {
                                 result.push_back(path_str);
-                                return;
+                                spdlog::info("Found file and added path '{}'", path_str);
+                                return; // we only want one match right now.
                            }
                       }
                  }
@@ -94,7 +101,19 @@ upscales::upscales(std::string root, std::optional<open_viii::LangT> coo, std::w
                         spdlog::info("Failed to check path '{}': error={}", path_str, ec.message());
                         return false;
                    }
-                   return exists;
+                   ec.clear();
+                   const auto is_regular_file = exists && std::filesystem::is_regular_file(path_str, ec);
+                   if (ec)
+                   {
+                        spdlog::info("Failed to check if is file path '{}': error={}", path_str, ec.message());
+                        return false;
+                   }
+                   if (exists && is_regular_file)
+                   {
+                        spdlog::info("Found file path '{}'", path_str);
+                        return true;
+                   }
+                   return false;
               },
               [&](const std::string &pattern) -> std::filesystem::path {
                    return copy_data.replace_tags(pattern, selections, field_root.string());
