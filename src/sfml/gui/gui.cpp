@@ -8,6 +8,7 @@
 #include "EmptyStringIterator.hpp"
 #include "gui_labels.hpp"
 #include "imgui_color.hpp"
+#include "main_menu_paths.hpp"
 #include "open_file_explorer.hpp"
 #include "push_pop_id.hpp"
 #include "safedir.hpp"

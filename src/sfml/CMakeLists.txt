@@ -29,6 +29,7 @@ add_executable(
   gui/history_window.cpp
   gui/key_value_data.cpp
   gui/import.cpp
+  gui/main_menu_paths.cpp
   gui/mouse_positions.cpp
   gui/push_pop_id.cpp
   gui/Selections.cpp
