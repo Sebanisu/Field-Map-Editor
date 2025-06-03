@@ -5,9 +5,11 @@
 #ifndef FIELD_MAP_EDITOR_GENERIC_COMBO_HPP
 #define FIELD_MAP_EDITOR_GENERIC_COMBO_HPP
 #include "format_imgui_text.hpp"
+#include "gui/fa_icons.hpp"
 #include "gui/gui_labels.hpp"
 #include "gui/push_pop_id.hpp"
 #include "gui/tool_tip.hpp"
+#include "open_file_explorer.hpp"
 #include "scope_guard.hpp"
 #include <algorithm>
 #include <fmt/format.h>
@@ -305,6 +307,7 @@ class GenericComboClassWithFilterAndFixedToggles
                renderComboBox();
                renderLeftButton();
                renderRightButton();
+               renderExploreButton();
           }
           renderTitle();
 
@@ -372,7 +375,7 @@ class GenericComboClassWithFilterAndFixedToggles
      {
           const auto  _            = PushPopID();// RAII for ImGui ID stack
           const float button_size  = ImGui::GetFrameHeight();
-          const float button_count = 3.0f;
+          const float button_count = 4.0f;
 
           // Set up combo box width
           ImGui::PushItemWidth(ImGui::CalcItemWidth() - spacing_ * button_count - button_size * button_count);
@@ -467,7 +470,7 @@ class GenericComboClassWithFilterAndFixedToggles
      {
           const auto _ = PushPopID();
           ImGui::SameLine(0, spacing_);
-          const auto check_valid = [&]() { return (current_idx_ + 1 >= size_of_values()); };
+          const auto check_valid           = [&]() { return (current_idx_ + 1 >= size_of_values()); };
           const auto has_valid_right_index = [&]() -> std::optional<decltype(current_idx_)> {
                if (!check_valid())
                {
@@ -485,11 +488,38 @@ class GenericComboClassWithFilterAndFixedToggles
           if (ImGui::ArrowButton("##r", ImGuiDir_Right))
           {
                current_idx_ = has_valid_right_index.value();
-               changed_ = true;
+               changed_     = true;
                filter_.get().enable();
           }
           ImGui::EndDisabled();
      }
+
+     // void renderBrowseButton() const
+     // {
+     //      const auto  _                    = PushPopID();
+     //      const auto &current_fixed_toggle = *getNext(fixed_toggles_, current_idx_);
+     //      ImGui::BeginDisabled(!current_fixed_toggle && !filter_.get().enabled());
+     //      const auto pop_disabled = scope_guard{ &ImGui::EndDisabled };
+     //      if (bool checked = filter_.get().enabled(); ImGui::Checkbox("", &checked))
+     //      {
+     //           checked ? filter_.get().enable() : filter_.get().disable();
+     //           changed_ = true;
+     //      }
+     //      ImGui::SameLine(0, spacing_);
+     // }
+
+     void renderExploreButton() const
+     {
+          ImGui::SameLine(0, spacing_);
+          const float button_size = ImGui::GetFrameHeight();
+          const auto  _           = PushPopID();
+          if (ImGui::Button(ICON_FA_FOLDER_OPEN, ImVec2{ button_size, button_size }))
+          {
+               open_directory(*getNext(strings_, current_idx_));
+          }
+          tool_tip(gui_labels::explore_tooltip);
+     }
+
      void renderTitle() const
      {
           if (std::ranges::empty(name_))
@@ -498,6 +528,19 @@ class GenericComboClassWithFilterAndFixedToggles
           }
           ImGui::SameLine(0, spacing_);
           format_imgui_text("{}", name_);
+
+          // Get size of the text for hover area
+          ImVec2 textSize = ImGui::CalcTextSize(name_.data());
+
+          // Move back to same position
+          ImGui::SetItemAllowOverlap();// Allow us to draw on top
+          ImGui::SetCursorScreenPos(ImGui::GetItemRectMin());
+
+          // Make invisible button the same size as the text
+          const auto _ = PushPopID();
+          ImGui::InvisibleButton("##hover_area", textSize);
+          if (ImGui::IsItemHovered())
+               ImGui::SetTooltip(name_.data());
      }
 };
 
