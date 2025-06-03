@@ -4025,7 +4025,8 @@ void gui::combo_upscale_map_path()
      }
      else
      {
-          // load map from .mim here.
+          // load map from .map here.
+          m_map_sprite->first_to_working_and_original();
      }
 
      refresh_render_texture(true);
@@ -4053,7 +4054,8 @@ void gui::combo_deswizzle_map_path()
      }
      else
      {
-          // load map from .mim here.
+          // load map from .map here.
+          m_map_sprite->first_to_working_and_original();
      }
 
      refresh_render_texture(true);

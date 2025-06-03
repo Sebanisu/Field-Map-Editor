@@ -180,6 +180,7 @@ struct [[nodiscard]] map_sprite final
      void        compact_move_conflicts_only();
      void        compact_map_order();
      void        compact_map_order_ffnx();
+     void        first_to_working_and_original();
      void        undo();
      void        redo();
      void        undo_all();
@@ -525,7 +526,10 @@ struct [[nodiscard]] map_sprite final
                         generate_swizzle_paths(const std::uint8_t texture_page, const std::string &ext = ".png") const;
 
 
-     [[nodiscard]] bool has_map_path(const std::filesystem::path &filter_path, const std::string &ext = ".map",const std::string           &secondary_output_pattern = "") const;
+     [[nodiscard]] bool has_map_path(
+       const std::filesystem::path &filter_path,
+       const std::string           &ext                      = ".map",
+       const std::string           &secondary_output_pattern = "") const;
      [[nodiscard]] bool has_deswizzle_path(const ff_8::PupuID pupu, const std::string &ext = ".png") const;
      [[nodiscard]] bool has_swizzle_path(const std::uint8_t texture_page, std::uint8_t palette, const std::string &ext = ".png") const;
      [[nodiscard]] bool has_swizzle_path(const std::uint8_t texture_page, const std::string &ext = ".png") const;

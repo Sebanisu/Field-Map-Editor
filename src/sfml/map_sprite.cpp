@@ -1641,6 +1641,13 @@ void map_sprite::compact_map_order_ffnx()
        m_map_group.maps.copy_working(fmt::format("{} {}", gui_labels::compact, gui_labels::compact_map_order_ffnx2)));
      update_render_texture();
 }
+void map_sprite::first_to_working_and_original()
+{
+     const std::string message = "restore .map from FF8";
+     (void)m_map_group.maps.first_to_working(message);
+     (void)m_map_group.maps.first_to_original(message);
+     update_render_texture();
+}
 std::string map_sprite::str_to_lower(std::string input)
 {
      std::string output{};
