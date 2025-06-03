@@ -418,6 +418,30 @@ bool ff_8::MapHistory::remove_duplicate()
      return ret;
 }
 
+const map_t &ff_8::MapHistory::first_to_original(std::string description)
+{
+     (void)debug_count_print();
+     clear_redo();
+     m_undo_history.push_back(original());
+     m_undo_original_or_working.push_back(pushed::original);
+     m_undo_change_descriptions.push_back(std::move(description));
+     m_original         = m_undo_history.front();
+     m_original_changed = true;
+     return original();
+}
+
+const map_t &ff_8::MapHistory::first_to_working(std::string description)
+{
+     (void)debug_count_print();
+     clear_redo();
+     m_undo_history.push_back(working());
+     m_undo_original_or_working.push_back(pushed::working);
+     m_undo_change_descriptions.push_back(std::move(description));
+     m_working         = m_undo_history.front();
+     m_working_changed = true;
+     return working();
+}
+
 const map_t &ff_8::MapHistory::copy_working_to_original(std::string description)
 {
      (void)debug_count_print();

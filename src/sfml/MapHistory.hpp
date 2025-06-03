@@ -333,6 +333,45 @@ class [[nodiscard]] MapHistory
       */
      map_t                                     &copy_working(std::string description);
 
+
+     /**
+      * @brief Pushes the current original map to the undo history and sets it as the new original state.
+      *
+      * This function records the current original map state in the undo history, associates it with a
+      * provided description, and clears the redo history. It updates the original map to the earliest
+      * state in the undo history and marks it as changed. The function is used to establish a new
+      * original state while preserving the ability to undo the operation.
+      *
+      * @param description A string describing the change for the undo history.
+      * @return A const reference to the original map state.
+      * @note The `debug_count_print` function is called for debugging purposes.
+      * @note The redo history is cleared as part of this operation.
+      * @pre The `m_undo_history`, `m_undo_original_or_working`, and `m_undo_change_descriptions` containers must be properly initialized.
+      * @post The original map is updated to the earliest undo history state, `m_original_changed` is set to true, and the redo history is
+      * cleared.
+      * @throws None (assumes container operations and `debug_count_print` do not throw).
+      */
+     const map_t                               &first_to_original(std::string description);
+     
+     /**
+      * @brief Pushes the current working map to the undo history and sets it as the new working state.
+      *
+      * This function records the current working map state in the undo history, associates it with a
+      * provided description, and clears the redo history. It updates the working map to the earliest
+      * state in the undo history and marks it as changed. The function is used to establish a new
+      * working state while preserving the ability to undo the operation.
+      *
+      * @param description A string describing the change for the undo history.
+      * @return A const reference to the current working map state.
+      * @note The `debug_count_print` function is called for debugging purposes.
+      * @note The redo history is cleared as part of this operation.
+      * @pre The `m_undo_history`, `m_undo_original_or_working`, and `m_undo_change_descriptions` containers must be properly initialized.
+      * @post The working map is updated to the earliest undo history state, `m_working_changed` is set to true, and the redo history is
+      * cleared.
+      * @throws None (assumes container operations and `debug_count_print` do not throw).
+      */
+     const map_t                               &first_to_working(std::string description);
+
      /**
       * @brief Copies the current working map to the original map and logs the reason for the operation.
       *
