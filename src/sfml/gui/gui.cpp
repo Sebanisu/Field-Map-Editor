@@ -4129,27 +4129,27 @@ void gui::generate_upscale_map_paths()
 {
      const auto coo = get_coo();
      m_upscale_map_paths.clear();
-     auto transform_paths  = m_selections->paths_vector | std::views::transform([this, &coo](const std::string &path) {
-                                 return upscales(path, coo, m_selections).get_map_paths();
-                            });
 
-     auto transform_paths2 = m_selections->paths_vector_upscale_map | std::views::transform([this, &coo](const std::string &path) {
-                                  return upscales(path, coo, m_selections).get_map_paths();
-                             });
-     auto process          = [this](const auto &temp_paths) {
-          for (const auto &path : temp_paths)
-          {
-               m_upscale_map_paths.emplace_back(path.string());
-          }
+     const auto get_map_paths_joined = [this, &coo](const auto &container) {
+          return container | std::views::transform([this, &coo](const std::string &path) {
+                      return upscales(path, coo, m_selections).get_map_paths();
+                 })
+                 | std::views::join;
      };
-     for (auto temp_paths : transform_paths)
-     {
-          process(temp_paths);
-     }
-     for (auto temp_paths : transform_paths2)
-     {
-          process(temp_paths);
-     }
+
+     const auto process = [&](const auto &...ranges) {
+          (
+            [&](const auto &range) {
+                 for (const auto &path : get_map_paths_joined(range))
+                 {
+                      m_upscale_map_paths.emplace_back(path.string());
+                 }
+            }(ranges),
+            ...);
+     };
+
+     process(m_selections->paths_vector, m_selections->paths_vector_upscale, m_selections->paths_vector_upscale_map);
+
      m_upscale_map_paths_enabled.clear();
      for (const auto &path : m_upscale_map_paths)
      {
@@ -4163,27 +4163,26 @@ void gui::generate_deswizzle_map_paths()
 {
      const auto coo = get_coo();
      m_deswizzle_map_paths.clear();
-     auto transform_paths  = m_selections->paths_vector | std::views::transform([this, &coo](const std::string &path) {
-                                 return upscales(path, coo, m_selections).get_map_paths();
-                            });
 
-     auto transform_paths2 = m_selections->paths_vector_deswizzle_map | std::views::transform([this, &coo](const std::string &path) {
-                                  return upscales(path, coo, m_selections).get_map_paths();
-                             });
-     auto process          = [this](const auto &temp_paths) {
-          for (const auto &path : temp_paths)
-          {
-               m_deswizzle_map_paths.emplace_back(path.string());
-          }
+     const auto get_map_paths_joined = [this, &coo](const auto &container) {
+          return container | std::views::transform([this, &coo](const std::string &path) {
+                      return upscales(path, coo, m_selections).get_map_paths();
+                 })
+                 | std::views::join;
      };
-     for (auto temp_paths : transform_paths)
-     {
-          process(temp_paths);
-     }
-     for (auto temp_paths : transform_paths2)
-     {
-          process(temp_paths);
-     }
+
+     const auto process = [&](const auto &...ranges) {
+          (
+            [&](const auto &range) {
+                 for (const auto &path : get_map_paths_joined(range))
+                 {
+                      m_deswizzle_map_paths.emplace_back(path.string());
+                 }
+            }(ranges),
+            ...);
+     };
+
+     process(m_selections->paths_vector, m_selections->paths_vector_deswizzle, m_selections->paths_vector_deswizzle_map);
 
      m_deswizzle_map_paths_enabled.clear();
      for (const auto &path : m_deswizzle_map_paths)
