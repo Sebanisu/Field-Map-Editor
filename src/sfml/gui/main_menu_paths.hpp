@@ -1,7 +1,6 @@
 #ifndef E3DD6F5B_A89D_486E_AB39_F93FAD249002
 #define E3DD6F5B_A89D_486E_AB39_F93FAD249002
 #include "fa_icons.hpp"
-#include "filebrowser.hpp"
 #include "gui_labels.hpp"
 #include "map_directory_mode.hpp"
 #include "scope_guard.hpp"
@@ -21,11 +20,7 @@ struct main_menu_paths_settings
      std::reference_wrapper<std::vector<std::string>> generated_paths;
      std::reference_wrapper<std::vector<bool>>        generated_paths_enabled;
      std::string_view                                 main_label;
-     std::string_view                                 browse_label;
      std::string_view                                 browse_tooltip;
-     map_directory_mode                               browse_mode;
-     std::vector<std::string>                         browse_extensions;
-     std::filesystem::path                            browse_directory;
 };
 template<typename main_filter_t, typename other_filter_t>
 struct main_menu_paths
@@ -36,9 +31,6 @@ struct main_menu_paths
      mutable std::reference_wrapper<other_filter_t> m_other_filter;
      main_menu_paths_settings                       m_settings;
 
-     mutable ImGui::FileBrowser m_directory_browser{ ImGuiFileBrowserFlags_SelectDirectory | ImGuiFileBrowserFlags_CreateNewDir
-                                                     | ImGuiFileBrowserFlags_EditPathString };
-
 
    public:
      main_menu_paths(main_filter_t &main_filter, other_filter_t &other_filter, main_menu_paths_settings settings)
@@ -48,7 +40,7 @@ struct main_menu_paths
      {
      }
 
-     void render(const std::invocable auto &generate, const std::invocable auto &refresh) const
+     void render(const std::invocable auto &generate, const std::invocable auto &refresh, const std::invocable auto & open_browser) const
      {
           if (!ImGui::BeginMenu(m_settings.main_label.data()))
           {
@@ -61,10 +53,7 @@ struct main_menu_paths
                     tool_tip(m_settings.browse_tooltip);
                     return;
                }
-               m_directory_browser.Open();
-               m_directory_browser.SetTitle(m_settings.browse_label.data());
-               m_directory_browser.SetDirectory(m_settings.browse_directory);
-               m_directory_browser.SetTypeFilters(m_settings.browse_extensions);
+               std::invoke(open_browser);
           }();
           if (ImGui::MenuItem(
                 gui_labels::explore.data(),
@@ -280,17 +269,6 @@ struct main_menu_paths
                return std::get<0>(*it);
           }
           return "";
-     }
-
-     void directory_browser_display(const std::invocable<decltype(m_directory_browser)> auto &funct) const
-     {
-          m_directory_browser.Display();
-          if (!m_directory_browser.HasSelected())
-          {
-               return;
-          }
-          const auto pop_directory = scope_guard([this]() { m_directory_browser.ClearSelected(); });
-          std::invoke(funct, m_directory_browser);
      }
 
      std::ptrdiff_t add_delete_button(const std::ptrdiff_t index) const
