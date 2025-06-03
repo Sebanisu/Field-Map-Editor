@@ -1522,7 +1522,7 @@ void gui::update_field()
      // Mark field as changed
      m_changed                       = true;
 
-     // this seems to be called in another place.
+     // Okay it's possible this doesn't need to be called everytime because if the paths are generic enough and nothing major changed.
      // Generate upscale texture paths if a field is loaded
      if (m_field)
      {
@@ -4065,27 +4065,27 @@ void gui::generate_upscale_paths()
 {
      const auto coo = get_coo();
      m_upscale_paths.clear();
-     auto transform_paths  = m_selections->paths_vector | std::views::transform([this, &coo](const std::string &path) {
-                                 return upscales(path, coo, m_selections).get_paths();
-                            });
 
-     auto transform_paths2 = m_selections->paths_vector_upscale | std::views::transform([this, &coo](const std::string &path) {
-                                  return upscales(path, coo, m_selections).get_paths();
-                             });
-     auto process          = [this](const auto &temp_paths) {
-          for (const auto &path : temp_paths)
-          {
-               m_upscale_paths.emplace_back(path.string());
-          }
+     const auto get_map_paths_joined = [this, &coo](const auto &container) {
+          return container | std::views::transform([this, &coo](const std::string &path) {
+                      return upscales(path, coo, m_selections).get_map_paths();
+                 })
+                 | std::views::join;
      };
-     for (auto temp_paths : transform_paths)
-     {
-          process(temp_paths);
-     }
-     for (auto temp_paths : transform_paths2)
-     {
-          process(temp_paths);
-     }
+
+     const auto process = [&](const auto &...ranges) {
+          (
+            [&](const auto &range) {
+                 for (const auto &path : get_map_paths_joined(range))
+                 {
+                      m_upscale_map_paths.emplace_back(path.string());
+                 }
+            }(ranges),
+            ...);
+     };
+
+     process(m_selections->paths_vector, m_selections->paths_vector_upscale);
+     
      m_upscale_paths_enabled.clear();
      for (const auto &path : m_upscale_paths)
      {
@@ -4098,27 +4098,26 @@ void gui::generate_deswizzle_paths()
 {
      const auto coo = get_coo();
      m_deswizzle_paths.clear();
-     auto transform_paths  = m_selections->paths_vector | std::views::transform([this, &coo](const std::string &path) {
-                                 return upscales(path, coo, m_selections).get_paths();
-                            });
 
-     auto transform_paths2 = m_selections->paths_vector_deswizzle | std::views::transform([this, &coo](const std::string &path) {
-                                  return upscales(path, coo, m_selections).get_paths();
-                             });
-     auto process          = [this](const auto &temp_paths) {
-          for (const auto &path : temp_paths)
-          {
-               m_deswizzle_paths.emplace_back(path.string());
-          }
+     const auto get_map_paths_joined = [this, &coo](const auto &container) {
+          return container | std::views::transform([this, &coo](const std::string &path) {
+                      return upscales(path, coo, m_selections).get_map_paths();
+                 })
+                 | std::views::join;
      };
-     for (auto temp_paths : transform_paths)
-     {
-          process(temp_paths);
-     }
-     for (auto temp_paths : transform_paths2)
-     {
-          process(temp_paths);
-     }
+
+     const auto process = [&](const auto &...ranges) {
+          (
+            [&](const auto &range) {
+                 for (const auto &path : get_map_paths_joined(range))
+                 {
+                      m_upscale_map_paths.emplace_back(path.string());
+                 }
+            }(ranges),
+            ...);
+     };
+
+     process(m_selections->paths_vector, m_selections->paths_vector_deswizzle);
 
      m_deswizzle_paths_enabled.clear();
      for (const auto &path : m_deswizzle_paths)
