@@ -54,7 +54,7 @@ upscales::upscales(std::string root, std::optional<open_viii::LangT> coo, std::w
                            {
                                 result.push_back(path_str);
                                 spdlog::info("Found file and added path '{}'", path_str);
-                                return; // we only want one match right now.
+                                return;// we only want one match right now.
                            }
                       }
                  }
@@ -95,20 +95,19 @@ upscales::upscales(std::string root, std::optional<open_viii::LangT> coo, std::w
               arr,
               [](const auto &path_str) {
                    std::error_code ec{};
-                   const auto      exists = std::filesystem::exists(path_str, ec);
+                   const auto      status = std::filesystem::status(path_str, ec);
                    if (ec)
-                   {
+                   {// Ignore "not found" errors
+                        if (ec == std::errc::no_such_file_or_directory)
+                        {
+                             // Not found - common, safe to ignore
+                             return false;
+                        }
                         spdlog::info("Failed to check path '{}': error={}", path_str, ec.message());
                         return false;
                    }
                    ec.clear();
-                   const auto is_regular_file = exists && std::filesystem::is_regular_file(path_str, ec);
-                   if (ec)
-                   {
-                        spdlog::info("Failed to check if is file path '{}': error={}", path_str, ec.message());
-                        return false;
-                   }
-                   if (exists && is_regular_file)
+                   if (std::filesystem::exists(status) && std::filesystem::is_regular_file(status))
                    {
                         spdlog::info("Found file path '{}'", path_str);
                         return true;
