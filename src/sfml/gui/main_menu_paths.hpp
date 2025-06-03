@@ -1,5 +1,6 @@
 #ifndef E3DD6F5B_A89D_486E_AB39_F93FAD249002
 #define E3DD6F5B_A89D_486E_AB39_F93FAD249002
+#include "fa_icons.hpp"
 #include "filebrowser.hpp"
 #include "gui_labels.hpp"
 #include "map_directory_mode.hpp"
@@ -31,12 +32,12 @@ struct main_menu_paths
 {
 
    private:
-     std::reference_wrapper<main_filter_t>  m_main_filter;
-     std::reference_wrapper<other_filter_t> m_other_filter;
-     main_menu_paths_settings               m_settings;
+     mutable std::reference_wrapper<main_filter_t>  m_main_filter;
+     mutable std::reference_wrapper<other_filter_t> m_other_filter;
+     main_menu_paths_settings                       m_settings;
 
-     ImGui::FileBrowser                     m_directory_browser{ ImGuiFileBrowserFlags_SelectDirectory | ImGuiFileBrowserFlags_CreateNewDir
-                                             | ImGuiFileBrowserFlags_EditPathString };
+     mutable ImGui::FileBrowser m_directory_browser{ ImGuiFileBrowserFlags_SelectDirectory | ImGuiFileBrowserFlags_CreateNewDir
+                                                     | ImGuiFileBrowserFlags_EditPathString };
 
 
    public:
@@ -47,7 +48,7 @@ struct main_menu_paths
      {
      }
 
-     void render(const std::invocable auto &generate, const std::invocable auto &refresh)
+     void render(const std::invocable auto &generate, const std::invocable auto &refresh) const
      {
           if (!ImGui::BeginMenu(m_settings.main_label.data()))
           {
@@ -66,17 +67,20 @@ struct main_menu_paths
                m_directory_browser.SetTypeFilters(m_settings.browse_extensions);
           }();
           if (ImGui::MenuItem(
-                gui_labels::explore.data(), nullptr, nullptr, !std::ranges::empty(m_main_filter.value()) && m_main_filter.enabled()))
+                gui_labels::explore.data(),
+                nullptr,
+                nullptr,
+                !std::ranges::empty(m_main_filter.get().value()) && m_main_filter.get().enabled()))
           {
-               open_directory(m_main_filter.value());
+               open_directory(m_main_filter.get().value());
           }
           else
           {
                tool_tip(gui_labels::explore_tooltip);
-               tool_tip(m_main_filter.value().string());
+               tool_tip(m_main_filter.get().value().string());
           }
 
-          const auto     transformed_paths = m_settings.user_paths | std::ranges::views::enumerate;
+          const auto     transformed_paths = m_settings.user_paths.get() | std::ranges::views::enumerate;
 
           std::ptrdiff_t delete_me         = -1;
           static float   elapsed_time      = 0.0f;// Track elapsed time
@@ -85,7 +89,7 @@ struct main_menu_paths
           static constexpr size_t max_display_chars = 50;
           static constexpr float  chars_per_second  = 8.0f;
           [&]() {
-               if (std::ranges::empty(m_settings.user_paths))
+               if (std::ranges::empty(m_settings.user_paths.get()))
                {
                     return;
                }
@@ -93,10 +97,10 @@ struct main_menu_paths
                if (ImGui::BeginTable("##path_table", 2))
                {
                     const auto end_table = scope_guard(&ImGui::EndTable);
-                    auto       zip_path  = std::ranges::views::zip(m_settings.generated_paths, m_settings.generated_paths_enabled);
+                    auto zip_path = std::ranges::views::zip(m_settings.generated_paths.get(), m_settings.generated_paths_enabled.get());
                     for (const auto &[index, path] : transformed_paths)
                     {
-                         bool is_checked = path == m_main_filter.value() && m_main_filter.enabled();
+                         bool is_checked = path == m_main_filter.get().value() && m_main_filter.get().enabled();
                          ImGui::TableNextColumn();
                          ImGui::SetNextItemAllowOverlap();
                          auto it      = std::ranges::find_if(zip_path, [&path](const auto &pair) {
@@ -116,22 +120,22 @@ struct main_menu_paths
                               const auto pop_disabled = scope_guard{ &ImGui::EndDisabled };
                               if (ImGui::MenuItem(path.data(), nullptr, &is_checked, true))
                               {
-                                   if (m_main_filter.value() != path)
+                                   if (m_main_filter.get().value() != path)
                                    {
-                                        m_main_filter.update(path);
-                                        m_other_filter.disable();
-                                        m_main_filter.enable();
+                                        m_main_filter.get().update(path);
+                                        m_other_filter.get().disable();
+                                        m_main_filter.get().enable();
                                    }
                                    else
                                    {
-                                        if (m_main_filter.enabled())
+                                        if (m_main_filter.get().enabled())
                                         {
-                                             m_main_filter.disable();
+                                             m_main_filter.get().disable();
                                         }
                                         else
                                         {
-                                             m_other_filter.disable();
-                                             m_main_filter.enable();
+                                             m_other_filter.get().disable();
+                                             m_main_filter.get().enable();
                                         }
                                    }
                                    // refresh_render_texture(true);
@@ -149,7 +153,7 @@ struct main_menu_paths
                }
           }();
           [&]() {
-               if (std::ranges::empty(m_settings.generated_paths))
+               if (std::ranges::empty(m_settings.generated_paths.get()))
                {
                     return;
                }
@@ -159,9 +163,9 @@ struct main_menu_paths
                {
                     const auto end_table = scope_guard(&ImGui::EndTable);
                     for (const auto &[path, enabled] :
-                         std::ranges::views::zip(m_settings.generated_paths, m_settings.generated_paths_enabled))
+                         std::ranges::views::zip(m_settings.generated_paths.get(), m_settings.generated_paths_enabled.get()))
                     {
-                         bool is_checked = path == m_main_filter.value() && m_main_filter.enabled();
+                         bool is_checked = path == m_main_filter.get().value() && m_main_filter.get().enabled();
                          ImGui::TableNextColumn();
                          ImGui::SetNextItemAllowOverlap();
                          {
@@ -189,22 +193,22 @@ struct main_menu_paths
                               ImGui::Dummy(ImVec2(sz, sz));
                               if (selected)
                               {
-                                   if (m_main_filter.value() != path)
+                                   if (m_main_filter.get().value() != path)
                                    {
-                                        m_main_filter.update(path);
-                                        m_other_filter.disable();
-                                        m_main_filter.enable();
+                                        m_main_filter.get().update(path);
+                                        m_other_filter.get().disable();
+                                        m_main_filter.get().enable();
                                    }
                                    else
                                    {
-                                        if (m_main_filter.enabled())
+                                        if (m_main_filter.get().enabled())
                                         {
-                                             m_main_filter.disable();
+                                             m_main_filter.get().disable();
                                         }
                                         else
                                         {
-                                             m_other_filter.disable();
-                                             m_main_filter.enable();
+                                             m_other_filter.get().disable();
+                                             m_main_filter.get().enable();
                                         }
                                    }
                                    // refresh_render_texture(true);
@@ -213,7 +217,7 @@ struct main_menu_paths
                          }
 
                          ImGui::TableNextColumn();
-                         delete_me = add_delete_button(path, m_settings.user_paths);
+                         delete_me = add_delete_button(path, m_settings.user_paths.get());
                          if (std::cmp_greater_equal(delete_me, 0))
                          {
                               break;
@@ -226,12 +230,13 @@ struct main_menu_paths
                     std::invoke(generate);
                     // generate_deswizzle_map_paths();
                     // handle update config
-                    if (found.value() == m_main_filter.value())
+                    if (found.value() == m_main_filter.get().value())
                     {
-                         m_main_filter.update(find_replacement_path_value(m_settings.generated_paths, m_settings.generated_paths_enabled));
-                         if (std::ranges::empty(m_main_filter.value()))
+                         m_main_filter.get().update(
+                           find_replacement_path_value(m_settings.generated_paths, m_settings.generated_paths_enabled));
+                         if (std::ranges::empty(m_main_filter.get().value()))
                          {
-                              m_main_filter.disable();
+                              m_main_filter.get().disable();
                          }
                          // refresh_render_texture(true);
                          std::invoke(refresh);
@@ -240,7 +245,7 @@ struct main_menu_paths
           }();
      }
 
-     std::optional<std::string> handle_path_deletion(std::vector<std::string> &paths_vector, std::ptrdiff_t offset)
+     std::optional<std::string> handle_path_deletion(std::vector<std::string> &paths_vector, std::ptrdiff_t offset) const
      {
           if (std::cmp_less(offset, 0))
           {
@@ -257,7 +262,7 @@ struct main_menu_paths
           return std::nullopt;
      }
 
-     std::string find_replacement_path_value(const std::vector<std::string> &paths, const std::vector<bool> &paths_enabled)
+     std::string find_replacement_path_value(const std::vector<std::string> &paths, const std::vector<bool> &paths_enabled) const
      {
           if (std::ranges::empty(paths))
           {
@@ -277,7 +282,7 @@ struct main_menu_paths
           return "";
      }
 
-     void directory_browser_display(const std::invocable<decltype(m_directory_browser)> auto & funct)
+     void directory_browser_display(const std::invocable<decltype(m_directory_browser)> auto &funct) const
      {
           m_directory_browser.Display();
           if (!m_directory_browser.HasSelected())
@@ -286,6 +291,40 @@ struct main_menu_paths
           }
           const auto pop_directory = scope_guard([this]() { m_directory_browser.ClearSelected(); });
           std::invoke(funct, m_directory_browser);
+     }
+
+     std::ptrdiff_t add_delete_button(const std::ptrdiff_t index) const
+     {
+          const auto pop_id = PushPopID();
+          if (ImGui::Button(ICON_FA_TRASH))
+          {
+               ImGui::CloseCurrentPopup();
+               return index;
+          }
+          else
+          {
+               tool_tip("delete me");
+          }
+          return -1;
+     }
+
+     std::ptrdiff_t add_delete_button(const std::string &path, const std::vector<std::string> &paths) const
+     {
+          auto       transformed_paths = paths | std::ranges::views::enumerate;
+          const auto it =
+            std::ranges::find_if(transformed_paths, [&path](const auto &pair) { return path.starts_with(std::get<1>(pair)); });
+          if (it != std::ranges::end(transformed_paths))
+          {
+               const auto &index  = std::get<0>(*it);
+               const auto  pop_id = PushPopID();
+               if (ImGui::Button(ICON_FA_TRASH))
+               {
+                    ImGui::CloseCurrentPopup();
+                    return static_cast<std::ptrdiff_t>(index);
+               }
+               tool_tip("delete me");
+          }
+          return -1;
      }
 };
 }// namespace fme
