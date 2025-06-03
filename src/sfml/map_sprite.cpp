@@ -1568,7 +1568,7 @@ void map_sprite::load_map(const std::filesystem::path &src_path)
                    });
             });
             //   shift to origin
-            m_map_group.maps.working().shift(m_map_group.maps.original().offset().abs());
+            m_map_group.maps.working().shift_to_origin();
             (void)m_map_group.maps.copy_working_to_original(fmt::format("{}: {}", gui_labels::load_map, src_path));
        },
        path);
