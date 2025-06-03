@@ -1523,15 +1523,15 @@ void gui::update_field()
      m_changed                       = true;
 
      // this seems to be called in another place.
-     // // Generate upscale texture paths if a field is loaded
-     // if (m_field)
-     // {
-     //      sort_paths();
-     //      generate_upscale_paths();
-     //      generate_deswizzle_paths();
-     //      generate_upscale_map_paths();
-     //      generate_deswizzle_map_paths();
-     // }
+     // Generate upscale texture paths if a field is loaded
+     if (m_field)
+     {
+          sort_paths();
+          generate_upscale_paths();
+          generate_deswizzle_paths();
+          generate_upscale_map_paths();
+          generate_deswizzle_map_paths();
+     }
 
      // Clear clicked tile indices used for selection logic
      m_clicked_tile_indices.clear();
