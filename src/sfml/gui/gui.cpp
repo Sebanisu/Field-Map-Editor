@@ -4067,9 +4067,8 @@ void gui::generate_upscale_paths()
      m_upscale_paths.clear();
 
      const auto get_map_paths_joined = [this, &coo](const auto &container) {
-          return container | std::views::transform([this, &coo](const std::string &path) {
-                      return upscales(path, coo, m_selections).get_paths();
-                 })
+          return container
+                 | std::views::transform([this, &coo](const std::string &path) { return upscales(path, coo, m_selections).get_paths(); })
                  | std::views::join;
      };
 
@@ -4100,9 +4099,8 @@ void gui::generate_deswizzle_paths()
      m_deswizzle_paths.clear();
 
      const auto get_map_paths_joined = [this, &coo](const auto &container) {
-          return container | std::views::transform([this, &coo](const std::string &path) {
-                      return upscales(path, coo, m_selections).get_paths();
-                 })
+          return container
+                 | std::views::transform([this, &coo](const std::string &path) { return upscales(path, coo, m_selections).get_paths(); })
                  | std::views::join;
      };
 
