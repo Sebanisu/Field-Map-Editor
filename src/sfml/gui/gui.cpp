@@ -2249,6 +2249,8 @@ void gui::file_menu()
      }
      menu_upscale_paths();
      menu_deswizzle_paths();
+     menu_upscale_map_paths();
+     menu_deswizzle_map_paths();
 
      if (ImGui::BeginMenu(gui_labels::language.data()))
      {
@@ -2351,6 +2353,45 @@ void gui::file_menu()
           menuitem_save_deswizzle_textures();
           menuitem_load_deswizzle_textures();
      }
+}
+
+
+// Helper function to handle path deletion
+std::optional<std::string> gui::handle_path_deletion(std::vector<std::string> &paths_vector, std::ptrdiff_t offset)
+{
+     if (std::cmp_less(offset, 0))
+     {
+          return std::nullopt;
+     }
+     auto it = std::ranges::begin(paths_vector);
+     std::ranges::advance(it, offset);
+     if (it != std::ranges::end(paths_vector))
+     {
+          auto return_value = std::optional<std::string>(std::move(*it));
+          paths_vector.erase(it);
+          return return_value;
+     }
+     return std::nullopt;
+}
+
+std::string gui::find_replacement_path_value(const std::vector<std::string> &paths, const std::vector<bool> &paths_enabled)
+{
+     if (std::ranges::empty(paths))
+     {
+          return "";
+     }
+     if (std::ranges::size(paths) == std::ranges::size(paths_enabled))
+     {
+          return "";
+     }
+
+     auto zip_paths = std::ranges::views::zip(paths, paths_enabled);
+     auto it        = std::ranges::find_if(zip_paths, [](const auto &pair) { return std::get<1>(pair); });
+     if (it != std::ranges::end(zip_paths))
+     {
+          return std::get<0>(*it);
+     }
+     return "";
 }
 
 void gui::menu_upscale_paths()
@@ -2542,45 +2583,6 @@ void gui::menu_upscale_paths()
      }();
 }
 
-// Helper function to handle path deletion
-std::optional<std::string> gui::handle_path_deletion(std::vector<std::string> &paths_vector, std::ptrdiff_t offset)
-{
-     if (std::cmp_less(offset, 0))
-     {
-          return std::nullopt;
-     }
-     auto it = std::ranges::begin(paths_vector);
-     std::ranges::advance(it, offset);
-     if (it != std::ranges::end(paths_vector))
-     {
-          auto return_value = std::optional<std::string>(std::move(*it));
-          paths_vector.erase(it);
-          return return_value;
-     }
-     return std::nullopt;
-}
-
-std::string gui::find_replacement_path_value(const std::vector<std::string> &paths, const std::vector<bool> &paths_enabled)
-{
-     if (std::ranges::empty(paths))
-     {
-          return "";
-     }
-     if (std::ranges::size(paths) == std::ranges::size(paths_enabled))
-     {
-          return "";
-     }
-
-     auto zip_paths = std::ranges::views::zip(paths, paths_enabled);
-     auto it        = std::ranges::find_if(zip_paths, [](const auto &pair) { return std::get<1>(pair); });
-     if (it != std::ranges::end(zip_paths))
-     {
-          return std::get<0>(*it);
-     }
-     return "";
-}
-
-
 void gui::menu_deswizzle_paths()
 {
      if (!map_test())
@@ -2764,6 +2766,401 @@ void gui::menu_deswizzle_paths()
                     if (std::ranges::empty(m_map_sprite->filter().deswizzle.value()))
                     {
                          m_map_sprite->filter().deswizzle.disable();
+                    }
+                    refresh_render_texture(true);
+               }
+          }
+     }();
+}
+
+
+void gui::menu_upscale_map_paths()
+{
+     if (!map_test())
+     {
+          return;
+     }
+     if (!ImGui::BeginMenu(gui_labels::upscale_map_path.data()))
+     {
+          return;
+     }
+     const auto end_menu1 = scope_guard(&ImGui::EndMenu);
+     menuitem_load_swizzle_textures2();
+     if (ImGui::MenuItem(
+           gui_labels::explore.data(),
+           nullptr,
+           nullptr,
+           !std::ranges::empty(m_map_sprite->filter().upscale.value()) && m_map_sprite->filter().upscale.enabled()))
+     {
+          open_directory(m_map_sprite->filter().upscale.value());
+     }
+     else
+     {
+          tool_tip(gui_labels::explore_tooltip);
+          tool_tip(m_map_sprite->filter().upscale.value().string());
+     }
+
+     const auto     transformed_paths = m_selections->paths_vector_upscale | std::ranges::views::enumerate;
+
+     std::ptrdiff_t delete_me         = -1;
+     static float   elapsed_time      = 0.0f;// Track elapsed time
+
+     elapsed_time += ImGui::GetIO().DeltaTime;// Increment with frame delta time
+     static constexpr size_t max_display_chars = 50;
+     static constexpr float  chars_per_second  = 8.0f;
+     [&]() {
+          if (std::ranges::empty(m_selections->paths_vector_upscale))
+          {
+               return;
+          }
+          ImGui::Separator();
+          if (ImGui::BeginTable("##path_table", 2))
+          {
+               if (std::ranges::empty(m_selections->paths_vector_upscale))
+               {
+                    return;
+               }
+               const auto end_table = scope_guard(&ImGui::EndTable);
+               auto       zip_path  = std::ranges::views::zip(m_upscale_map_paths, m_upscale_map_paths_enabled);
+               for (const auto &[index, path] : transformed_paths)
+               {
+                    bool is_checked = path == m_map_sprite->filter().upscale.value() && m_map_sprite->filter().upscale.enabled();
+                    auto it         = std::ranges::find_if(zip_path, [&path](const auto &pair) {
+                         const auto &[t_path, t_enabled] = pair;
+                         return std::ranges::equal(path, t_path);
+                    });
+                    bool enabled    = [&]() -> bool {
+                         if (it != std::ranges::end(zip_path))
+                         {
+                              const auto &[t_path, t_enabled] = *it;
+                              return t_enabled;
+                         }
+                         return false;
+                    }();
+                    ImGui::TableNextColumn();
+                    ImGui::SetNextItemAllowOverlap();
+                    {
+                         ImGui::BeginDisabled(!enabled);
+                         const auto pop_disabled = scope_guard{ &ImGui::EndDisabled };
+                         if (ImGui::MenuItem(path.data(), nullptr, &is_checked, true))
+                         {
+                              if (m_map_sprite->filter().upscale.value() != path)
+                              {
+                                   m_map_sprite->filter().upscale.update(path);
+                                   m_map_sprite->filter().deswizzle.disable();
+                                   m_map_sprite->filter().upscale.enable();
+                              }
+                              else
+                              {
+                                   if (m_map_sprite->filter().upscale.enabled())
+                                   {
+                                        m_map_sprite->filter().upscale.disable();
+                                   }
+                                   else
+                                   {
+                                        m_map_sprite->filter().deswizzle.disable();
+                                        m_map_sprite->filter().upscale.enable();
+                                   }
+                              }
+                              refresh_render_texture(true);
+                         }
+                    }
+                    ImGui::TableNextColumn();
+                    const auto pop_id = PushPopID();
+                    delete_me         = add_delete_button(index);
+                    if (std::cmp_greater_equal(delete_me, 0))
+                    {
+                         break;
+                    }
+               }
+          }
+     }();
+     [&]() {
+          if (std::ranges::empty(m_upscale_map_paths))
+          {
+               return;
+          }
+          ImGui::Separator();
+
+          if (ImGui::BeginTable("##path_table", 2))
+          {
+               const auto end_table = scope_guard(&ImGui::EndTable);
+               for (const auto &[path, enabled] : std::ranges::views::zip(m_upscale_map_paths, m_upscale_map_paths_enabled))
+               {
+                    bool is_checked = path == m_map_sprite->filter().upscale.value() && m_map_sprite->filter().upscale.enabled();
+                    ImGui::TableNextColumn();
+                    ImGui::SetNextItemAllowOverlap();
+                    {
+                         ImGui::BeginDisabled(!enabled);
+                         const auto  pop_disabled = scope_guard{ &ImGui::EndDisabled };
+                         const auto  path_padded  = path + "  -  ";
+                         size_t      offset = static_cast<size_t>(elapsed_time * chars_per_second) % (path_padded.size());// Sliding offset
+                         std::string display_text = path_padded.substr(offset, max_display_chars);
+                         if (display_text.size() < max_display_chars && offset > 0)
+                         {
+                              // Wrap-around to show the start of the string
+                              display_text += path_padded.substr(0, max_display_chars - display_text.size());
+                         }
+                         const auto pop_id_menu_item = PushPopID();
+                         ImVec2     cursor_pos       = ImGui::GetCursorScreenPos();
+                         bool       selected         = ImGui::MenuItem("##menu_item", nullptr, &is_checked);
+                         if (!selected)
+                         {
+                              tool_tip(path);
+                         }
+                         ImGui::SetCursorScreenPos(cursor_pos);
+                         ImGui::TextUnformatted(display_text.c_str());// Draw the scrolling text separately
+                         ImGui::SameLine();
+                         float sz = ImGui::GetTextLineHeight();
+                         ImGui::Dummy(ImVec2(sz, sz));
+                         if (selected)
+                         {
+                              if (m_map_sprite->filter().upscale.value() != path)
+                              {
+                                   m_map_sprite->filter().upscale.update(path);
+                                   m_map_sprite->filter().deswizzle.disable();
+                                   m_map_sprite->filter().upscale.enable();
+                              }
+                              else
+                              {
+                                   if (m_map_sprite->filter().upscale.enabled())
+                                   {
+                                        m_map_sprite->filter().upscale.disable();
+                                   }
+                                   else
+                                   {
+                                        m_map_sprite->filter().deswizzle.disable();
+                                        m_map_sprite->filter().upscale.enable();
+                                   }
+                              }
+                              refresh_render_texture(true);
+                         }
+                    }
+                    ImGui::TableNextColumn();
+
+                    delete_me = add_delete_button(path, m_selections->paths_vector_upscale);
+                    if (std::cmp_greater_equal(delete_me, 0))
+                    {
+                         break;
+                    }
+               }
+          }
+          if (const auto found = handle_path_deletion(m_selections->paths_vector_upscale, delete_me); found.has_value())
+          {
+               m_selections->update_configuration_key(ConfigKey::PathsVectorUpscaleMap);
+               generate_upscale_map_paths();
+               if (found.value() == m_map_sprite->filter().upscale.value())
+               {
+                    m_map_sprite->filter().upscale.update(find_replacement_path_value(m_upscale_map_paths, m_upscale_map_paths_enabled));
+                    if (std::ranges::empty(m_map_sprite->filter().upscale.value()))
+                    {
+                         m_map_sprite->filter().upscale.disable();
+                    }
+                    refresh_render_texture(true);
+               }
+          }
+     }();
+}
+
+void gui::menu_deswizzle_map_paths()
+{
+     auto                          &main_filter       = m_map_sprite->filter().deswizzle_map;
+     auto                          &other_filter      = m_map_sprite->filter().upscale_map;
+     auto                          &values            = m_selections->paths_vector_deswizzle_map;
+     constexpr std::string_view     main_label        = gui_labels::deswizzle_map_path;
+     constexpr std::string_view     browse_label      = gui_labels::load_map_file;
+     constexpr std::string_view     browse_tooltip    = "Browse for a directory containing deswizzled .map files.";
+     constexpr auto                 browse_mode       = map_directory_mode::load_deswizzle_map;
+     const std::vector<std::string> browse_extensions = { ".map" };
+     std::filesystem::path          browse_directory  = m_selections->deswizzle_path;
+     constexpr ConfigKey            config_key        = ConfigKey::PathsVectorDeswizzleMap;
+     if (!map_test())
+     {
+          return;
+     }
+     if (!ImGui::BeginMenu(main_label.data()))
+     {
+          return;
+     }
+     const auto end_menu1 = scope_guard(&ImGui::EndMenu);
+     [&]() {
+          if (!ImGui::MenuItem(gui_labels::browse.data(), nullptr, false, true))
+          {
+               tool_tip(browse_tooltip);
+               return;
+          }
+          m_directory_browser.Open();
+          m_directory_browser.SetTitle(browse_label.data());
+          m_directory_browser.SetDirectory(browse_directory);
+          m_directory_browser.SetTypeFilters(browse_extensions);
+          m_modified_directory_map = browse_mode;
+     }();
+     if (ImGui::MenuItem(gui_labels::explore.data(), nullptr, nullptr, !std::ranges::empty(main_filter.value()) && main_filter.enabled()))
+     {
+          open_directory(main_filter.value());
+     }
+     else
+     {
+          tool_tip(gui_labels::explore_tooltip);
+          tool_tip(main_filter.value().string());
+     }
+
+     const auto     transformed_paths = values | std::ranges::views::enumerate;
+
+     std::ptrdiff_t delete_me         = -1;
+     static float   elapsed_time      = 0.0f;// Track elapsed time
+
+     elapsed_time += ImGui::GetIO().DeltaTime;// Increment with frame delta time
+     static constexpr size_t max_display_chars = 50;
+     static constexpr float  chars_per_second  = 8.0f;
+     [&]() {
+          if (std::ranges::empty(values))
+          {
+               return;
+          }
+          ImGui::Separator();
+          if (ImGui::BeginTable("##path_table", 2))
+          {
+               if (std::ranges::empty(values))
+               {
+                    return;
+               }
+               const auto end_table = scope_guard(&ImGui::EndTable);
+               auto       zip_path  = std::ranges::views::zip(m_deswizzle_map_paths, m_deswizzle_map_paths_enabled);
+               for (const auto &[index, path] : transformed_paths)
+               {
+                    bool is_checked = path == main_filter.value() && main_filter.enabled();
+                    ImGui::TableNextColumn();
+                    ImGui::SetNextItemAllowOverlap();
+                    auto it      = std::ranges::find_if(zip_path, [&path](const auto &pair) {
+                         const auto &[t_path, t_enabled] = pair;
+                         return std::ranges::equal(path, t_path);
+                    });
+                    bool enabled = [&]() -> bool {
+                         if (it != std::ranges::end(zip_path))
+                         {
+                              const auto &[t_path, t_enabled] = *it;
+                              return t_enabled;
+                         }
+                         return false;
+                    }();
+                    {
+                         ImGui::BeginDisabled(!enabled);
+                         const auto pop_disabled = scope_guard{ &ImGui::EndDisabled };
+                         if (ImGui::MenuItem(path.data(), nullptr, &is_checked, true))
+                         {
+                              if (main_filter.value() != path)
+                              {
+                                   main_filter.update(path);
+                                   other_filter.disable();
+                                   main_filter.enable();
+                              }
+                              else
+                              {
+                                   if (main_filter.enabled())
+                                   {
+                                        main_filter.disable();
+                                   }
+                                   else
+                                   {
+                                        other_filter.disable();
+                                        main_filter.enable();
+                                   }
+                              }
+                              refresh_render_texture(true);
+                         }
+                    }
+                    ImGui::TableNextColumn();
+                    const auto pop_id = PushPopID();
+                    delete_me         = add_delete_button(index);
+                    if (std::cmp_greater_equal(delete_me, 0))
+                    {
+                         break;
+                    }
+               }
+          }
+     }();
+     [&]() {
+          if (std::ranges::empty(m_deswizzle_map_paths))
+          {
+               return;
+          }
+          ImGui::Separator();
+
+          if (ImGui::BeginTable("##path_table", 2))
+          {
+               const auto end_table = scope_guard(&ImGui::EndTable);
+               for (const auto &[path, enabled] : std::ranges::views::zip(m_deswizzle_map_paths, m_deswizzle_map_paths_enabled))
+               {
+                    bool is_checked = path == main_filter.value() && main_filter.enabled();
+                    ImGui::TableNextColumn();
+                    ImGui::SetNextItemAllowOverlap();
+                    {
+                         ImGui::BeginDisabled(!enabled);
+                         const auto  pop_disabled = scope_guard{ &ImGui::EndDisabled };
+                         const auto  path_padded  = path + "  -  ";
+                         size_t      offset = static_cast<size_t>(elapsed_time * chars_per_second) % (path_padded.size());// Sliding offset
+                         std::string display_text = path_padded.substr(offset, max_display_chars);
+                         if (display_text.size() < max_display_chars && offset > 0)
+                         {
+                              // Wrap-around to show the start of the string
+                              display_text += path_padded.substr(0, max_display_chars - display_text.size());
+                         }
+                         const auto pop_id_menu_item = PushPopID();
+                         ImVec2     cursor_pos       = ImGui::GetCursorScreenPos();
+                         bool       selected         = ImGui::MenuItem("##menu_item", nullptr, &is_checked);
+                         if (!selected)
+                         {
+                              tool_tip(path);
+                         }
+                         ImGui::SetCursorScreenPos(cursor_pos);
+                         ImGui::TextUnformatted(display_text.c_str());// Draw the scrolling text separately
+                         ImGui::SameLine();
+                         float sz = ImGui::GetTextLineHeight();
+                         ImGui::Dummy(ImVec2(sz, sz));
+                         if (selected)
+                         {
+                              if (main_filter.value() != path)
+                              {
+                                   main_filter.update(path);
+                                   other_filter.disable();
+                                   main_filter.enable();
+                              }
+                              else
+                              {
+                                   if (main_filter.enabled())
+                                   {
+                                        main_filter.disable();
+                                   }
+                                   else
+                                   {
+                                        other_filter.disable();
+                                        main_filter.enable();
+                                   }
+                              }
+                              refresh_render_texture(true);
+                         }
+                    }
+
+                    ImGui::TableNextColumn();
+                    delete_me = add_delete_button(path, values);
+                    if (std::cmp_greater_equal(delete_me, 0))
+                    {
+                         break;
+                    }
+               }
+          }
+
+          if (const auto found = handle_path_deletion(values, delete_me); found.has_value())
+          {
+               m_selections->update_configuration_key(config_key);
+               generate_deswizzle_map_paths();
+               if (found.value() == main_filter.value())
+               {
+                    main_filter.update(find_replacement_path_value(m_deswizzle_map_paths, m_deswizzle_map_paths_enabled));
+                    if (std::ranges::empty(main_filter.value()))
+                    {
+                         main_filter.disable();
                     }
                     refresh_render_texture(true);
                }

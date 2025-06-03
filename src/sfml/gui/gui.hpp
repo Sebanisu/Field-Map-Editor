@@ -242,6 +242,8 @@ struct gui
      void browse_buttons();
      void menu_upscale_paths();
      void menu_deswizzle_paths();
+     void menu_upscale_map_paths();
+     void menu_deswizzle_map_paths();
      void refresh_field();
      void refresh_bpp(open_viii::graphics::BPPT in_bpp);
      void refresh_palette(std::uint8_t palette);
