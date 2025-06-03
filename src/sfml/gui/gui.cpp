@@ -4078,7 +4078,7 @@ void gui::generate_upscale_paths()
             [&](const auto &range) {
                  for (const auto &path : get_map_paths_joined(range))
                  {
-                      m_upscale_map_paths.emplace_back(path.string());
+                      m_upscale_paths.emplace_back(path.string());
                  }
             }(ranges),
             ...);
@@ -4111,7 +4111,7 @@ void gui::generate_deswizzle_paths()
             [&](const auto &range) {
                  for (const auto &path : get_map_paths_joined(range))
                  {
-                      m_upscale_map_paths.emplace_back(path.string());
+                      m_deswizzle_paths.emplace_back(path.string());
                  }
             }(ranges),
             ...);
