@@ -216,8 +216,11 @@ void fme::custom_paths_window::populate_test_output() const
                                             PatternSelector::PathPatternsWithTexturePage };
 
 
-     const GenericComboClass gcc    = {
-          ""sv, []() { return values; }, []() { return values | std::views::transform(AsString{}); }, selections->current_pattern, 1
+     const GenericComboClass gcc    = { ""sv,
+                                        []() { return values; },
+                                     []() { return values | std::views::transform(AsString{}); },
+                                     selections->current_pattern,
+                                     generic_combo_settings{ .num_columns = 1 }
      };
      if (gcc.render())
      {

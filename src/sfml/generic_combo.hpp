@@ -23,6 +23,12 @@
 
 namespace fme
 {
+struct generic_combo_settings
+{
+     int  num_columns         = 2;
+     bool show_explore_button = false;
+};
+
 template<typename T>
 concept returns_range_concept = requires(std::remove_cvref_t<T> callable) {
      { callable() } -> std::ranges::range;
@@ -48,18 +54,18 @@ class GenericComboClassWithFilter
 {
    public:
      GenericComboClassWithFilter(
-       std::string_view    name,
-       ValueLambdaT      &&value_lambda,
-       StringLambdaT     &&string_lambda,
-       tool_tip_lambda_t &&tool_tip_lambda,
-       filter_lambdaT    &&filter_lambda,
-       int                 num_columns = 2)
+       std::string_view       name,
+       ValueLambdaT         &&value_lambda,
+       StringLambdaT        &&string_lambda,
+       tool_tip_lambda_t    &&tool_tip_lambda,
+       filter_lambdaT       &&filter_lambda,
+       generic_combo_settings settings = {})
        : name_(name)
        , values_(std::invoke(std::forward<ValueLambdaT>(value_lambda)))
        , strings_(std::invoke(std::forward<StringLambdaT>(string_lambda)))
        , tool_tips_(std::invoke(std::forward<tool_tip_lambda_t>(tool_tip_lambda)))
        , filter_(std::invoke(std::forward<filter_lambdaT>(filter_lambda)))
-       , num_columns_(num_columns)
+       , settings_(settings)
        , current_idx_(0)
        , changed_(false)
        , spacing_(ImGui::GetStyle().ItemInnerSpacing.x)
@@ -80,8 +86,8 @@ class GenericComboClassWithFilter
           renderComboBox();
           renderLeftButton();
           renderRightButton();
+          renderExploreButton();
           renderTitle();
-
 
           if (old_idx != current_idx_)
           {
@@ -99,7 +105,7 @@ class GenericComboClassWithFilter
      std::invoke_result_t<StringLambdaT>                                               strings_;
      std::invoke_result_t<tool_tip_lambda_t>                                           tool_tips_;
      std::reference_wrapper<std::remove_cvref_t<std::invoke_result_t<filter_lambdaT>>> filter_;
-     int                                                                               num_columns_;
+     generic_combo_settings                                                            settings_;
      mutable std::ranges::range_difference_t<decltype(values_)>                        current_idx_;
      mutable bool                                                                      changed_;
      const float                                                                       spacing_;
@@ -142,7 +148,14 @@ class GenericComboClassWithFilter
      {
           const auto  _            = PushPopID();
           const float button_size  = ImGui::GetFrameHeight();
-          const float button_count = 3.0f;
+          const float button_count = [&]() {
+               int count = 3;
+               if (settings_.show_explore_button)
+               {
+                    ++count;
+               }
+               return static_cast<float>(count);
+          }();
           ImGui::PushItemWidth(ImGui::CalcItemWidth() - spacing_ * button_count - button_size * button_count);
           const auto  pop_item_width = scope_guard(&ImGui::PopItemWidth);
 
@@ -152,7 +165,7 @@ class GenericComboClassWithFilter
           // The second parameter is the label previewed
           // before opening the combo.
           {
-               ImGui::Columns(num_columns_, "##columns", false);
+               ImGui::Columns(settings_.num_columns, "##columns", false);
 
                std::ranges::for_each(strings_, [&, index = decltype(current_idx_){}](const auto &string) mutable {
                     const bool  is_selected = (current_item == string);
@@ -249,6 +262,23 @@ class GenericComboClassWithFilter
           }
           ImGui::EndDisabled();
      }
+
+     void renderExploreButton() const
+     {
+          if (!settings_.show_explore_button)
+          {
+               return;
+          }
+          ImGui::SameLine(0, spacing_);
+          const float button_size = ImGui::GetFrameHeight();
+          const auto  _           = PushPopID();
+          if (ImGui::Button(ICON_FA_FOLDER_OPEN, ImVec2{ button_size, button_size }))
+          {
+               open_directory(*getNext(strings_, current_idx_));
+          }
+          tool_tip(gui_labels::explore_tooltip);
+     }
+
      void renderTitle() const
      {
           if (std::ranges::empty(name_))
@@ -270,20 +300,20 @@ class GenericComboClassWithFilterAndFixedToggles
 {
    public:
      GenericComboClassWithFilterAndFixedToggles(
-       std::string_view      name,
-       ValueLambdaT        &&value_lambda,
-       FixedTogglesLambdaT &&fixed_toggles_lambda,
-       StringLambdaT       &&string_lambda,
-       ToolTipLambdaT      &&tool_tip_lambda,
-       FilterLambdaT       &&filter_lambda,
-       int                   num_columns = 2)
+       std::string_view       name,
+       ValueLambdaT         &&value_lambda,
+       FixedTogglesLambdaT  &&fixed_toggles_lambda,
+       StringLambdaT        &&string_lambda,
+       ToolTipLambdaT       &&tool_tip_lambda,
+       FilterLambdaT        &&filter_lambda,
+       generic_combo_settings settings = {})
        : name_(name)
        , values_(std::invoke(std::forward<ValueLambdaT>(value_lambda)))
        , fixed_toggles_(std::invoke(std::forward<FixedTogglesLambdaT>(fixed_toggles_lambda)))
        , strings_(std::invoke(std::forward<StringLambdaT>(string_lambda)))
        , tool_tips_(std::invoke(std::forward<ToolTipLambdaT>(tool_tip_lambda)))
        , filter_(std::invoke(std::forward<FilterLambdaT>(filter_lambda)))
-       , num_columns_(num_columns)
+       , settings_(settings)
        , current_idx_(0)
        , changed_(false)
        , spacing_(ImGui::GetStyle().ItemInnerSpacing.x)
@@ -329,7 +359,7 @@ class GenericComboClassWithFilterAndFixedToggles
      std::invoke_result_t<StringLambdaT>                                              strings_;
      std::invoke_result_t<ToolTipLambdaT>                                             tool_tips_;
      std::reference_wrapper<std::remove_cvref_t<std::invoke_result_t<FilterLambdaT>>> filter_;
-     int                                                                              num_columns_;
+     generic_combo_settings                                                           settings_;
      mutable std::ranges::range_difference_t<decltype(values_)>                       current_idx_;
      mutable bool                                                                     changed_;
      const float                                                                      spacing_;
@@ -375,7 +405,14 @@ class GenericComboClassWithFilterAndFixedToggles
      {
           const auto  _            = PushPopID();// RAII for ImGui ID stack
           const float button_size  = ImGui::GetFrameHeight();
-          const float button_count = 4.0f;
+          const float button_count = [&]() {
+               int count = 3;
+               if (settings_.show_explore_button)
+               {
+                    ++count;
+               }
+               return static_cast<float>(count);
+          }();
 
           // Set up combo box width
           ImGui::PushItemWidth(ImGui::CalcItemWidth() - spacing_ * button_count - button_size * button_count);
@@ -387,7 +424,7 @@ class GenericComboClassWithFilterAndFixedToggles
           // Begin combo box with preview of current item
           if (ImGui::BeginCombo("##Empty", std::ranges::data(current_item), ImGuiComboFlags_HeightLarge))
           {
-               ImGui::Columns(num_columns_, "##columns", false);
+               ImGui::Columns(settings_.num_columns, "##columns", false);
                for (const auto &[index_raw, string] : std::ranges::views::enumerate(strings_))
                {
                     const auto  index                = static_cast<decltype(current_idx_)>(index_raw);
@@ -494,22 +531,12 @@ class GenericComboClassWithFilterAndFixedToggles
           ImGui::EndDisabled();
      }
 
-     // void renderBrowseButton() const
-     // {
-     //      const auto  _                    = PushPopID();
-     //      const auto &current_fixed_toggle = *getNext(fixed_toggles_, current_idx_);
-     //      ImGui::BeginDisabled(!current_fixed_toggle && !filter_.get().enabled());
-     //      const auto pop_disabled = scope_guard{ &ImGui::EndDisabled };
-     //      if (bool checked = filter_.get().enabled(); ImGui::Checkbox("", &checked))
-     //      {
-     //           checked ? filter_.get().enable() : filter_.get().disable();
-     //           changed_ = true;
-     //      }
-     //      ImGui::SameLine(0, spacing_);
-     // }
-
      void renderExploreButton() const
      {
+          if (!settings_.show_explore_button)
+          {
+               return;
+          }
           ImGui::SameLine(0, spacing_);
           const float button_size = ImGui::GetFrameHeight();
           const auto  _           = PushPopID();
@@ -533,14 +560,17 @@ class GenericComboClassWithFilterAndFixedToggles
           ImVec2 textSize = ImGui::CalcTextSize(name_.data());
 
           // Move back to same position
+          ImVec2 cursorBackup = ImGui::GetCursorScreenPos();// Save cursor position
           ImGui::SetItemAllowOverlap();// Allow us to draw on top
           ImGui::SetCursorScreenPos(ImGui::GetItemRectMin());
 
           // Make invisible button the same size as the text
           const auto _ = PushPopID();
           ImGui::InvisibleButton("##hover_area", textSize);
-          if (ImGui::IsItemHovered())
-               ImGui::SetTooltip(name_.data());
+          tool_tip(name_);
+
+          // Restore original cursor position
+          ImGui::SetCursorScreenPos(cursorBackup);
      }
 };
 
@@ -553,17 +583,17 @@ class GenericComboClass
 {
    public:
      GenericComboClass(
-       std::string_view name,
-       ValueLambdaT   &&value_lambda,
-       StringLambdaT  &&string_lambda,
-       ValueT          &value,
-       int              num_columns = 2)
+       std::string_view       name,
+       ValueLambdaT         &&value_lambda,
+       StringLambdaT        &&string_lambda,
+       ValueT                &value,
+       generic_combo_settings settings = {})
        : name_(name)
        , values_(std::invoke(std::forward<ValueLambdaT>(value_lambda)))
        , strings_(std::invoke(std::forward<StringLambdaT>(string_lambda)))
        , tool_tips_(std::invoke(std::forward<StringLambdaT>(string_lambda)))
        , value_(value)
-       , num_columns_(num_columns)
+       , settings_(settings)
        , current_idx_(0)
        , changed_(false)
        , spacing_(ImGui::GetStyle().ItemInnerSpacing.x)
@@ -571,18 +601,18 @@ class GenericComboClass
      }
 
      GenericComboClass(
-       std::string_view    name,
-       ValueLambdaT      &&value_lambda,
-       StringLambdaT     &&string_lambda,
-       tool_tip_lambda_t &&tooltip_lamda,
-       ValueT             &value,
-       int                 num_columns = 2)
+       std::string_view       name,
+       ValueLambdaT         &&value_lambda,
+       StringLambdaT        &&string_lambda,
+       tool_tip_lambda_t    &&tooltip_lamda,
+       ValueT                &value,
+       generic_combo_settings settings = {})
        : name_(name)
        , values_(std::invoke(std::forward<ValueLambdaT>(value_lambda)))
        , strings_(std::invoke(std::forward<StringLambdaT>(string_lambda)))
        , tool_tips_(std::invoke(std::forward<tool_tip_lambda_t>(tooltip_lamda)))
        , value_(value)
-       , num_columns_(num_columns)
+       , settings_(settings)
        , current_idx_(0)
        , changed_(false)
        , spacing_(ImGui::GetStyle().ItemInnerSpacing.x)
@@ -602,6 +632,7 @@ class GenericComboClass
           renderComboBox();
           renderLeftButton();
           renderRightButton();
+          renderExploreButton();
           renderTitle();
 
           value_.get() = *getNext(values_, current_idx_);
@@ -619,7 +650,7 @@ class GenericComboClass
      std::invoke_result_t<StringLambdaT>                        strings_;
      std::invoke_result_t<tool_tip_lambda_t>                    tool_tips_;
      std::reference_wrapper<ValueT>                             value_;
-     int                                                        num_columns_;
+     generic_combo_settings                                     settings_;
      mutable std::ranges::range_difference_t<decltype(values_)> current_idx_;
      mutable bool                                               changed_;
      const float                                                spacing_;
@@ -652,7 +683,14 @@ class GenericComboClass
      {
           const auto  pop_id       = PushPopID();
           const float button_size  = ImGui::GetFrameHeight();
-          const float button_count = 2.0f;
+          const float button_count = [&]() {
+               int count = 2;
+               if (settings_.show_explore_button)
+               {
+                    ++count;
+               }
+               return static_cast<float>(count);
+          }();
           ImGui::PushItemWidth(ImGui::CalcItemWidth() - spacing_ * button_count - button_size * button_count);
           const auto  pop_item_width = scope_guard(&ImGui::PopItemWidth);
 
@@ -662,7 +700,7 @@ class GenericComboClass
           // The second parameter is the label previewed
           // before opening the combo.
           {
-               ImGui::Columns(num_columns_, "##columns", false);
+               ImGui::Columns(settings_.num_columns, "##columns", false);
                std::ranges::for_each(strings_, [&, index = decltype(current_idx_){}](const auto &string) mutable {
                     const bool is_selected = (current_item == string);
                     // You can store your selection however you
@@ -763,6 +801,23 @@ class GenericComboClass
           }
           ImGui::EndDisabled();
      }
+
+     void renderExploreButton() const
+     {
+          if (!settings_.show_explore_button)
+          {
+               return;
+          }
+          ImGui::SameLine(0, spacing_);
+          const float button_size = ImGui::GetFrameHeight();
+          const auto  _           = PushPopID();
+          if (ImGui::Button(ICON_FA_FOLDER_OPEN, ImVec2{ button_size, button_size }))
+          {
+               open_directory(*getNext(strings_, current_idx_));
+          }
+          tool_tip(gui_labels::explore_tooltip);
+     }
+
      void renderTitle() const
      {
           if (std::ranges::empty(name_))

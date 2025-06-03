@@ -3366,7 +3366,11 @@ bool gui::combo_path()
 {
      const auto pop_buttons = scope_guard([&]() { browse_buttons(); });
      const auto gcc         = GenericComboClass(
-       gui_labels::path, [&]() { return m_selections->paths_vector; }, [&]() { return m_selections->paths_vector; }, m_selections->path, 1);
+       gui_labels::path,
+       [&]() { return m_selections->paths_vector; },
+       [&]() { return m_selections->paths_vector; },
+       m_selections->path,
+       generic_combo_settings{ .num_columns = 1, .show_explore_button = true });
      if (!m_selections->paths_vector.empty() && gcc.render())
      {
           refresh_path();
@@ -4201,7 +4205,7 @@ bool gui::combo_upscale_path(ff_8::filter_old<std::filesystem::path, ff_8::Filte
        [this]() { return m_upscale_paths; },
        [this]() { return m_upscale_paths; },
        [&filter]() -> auto & { return filter; },
-       1);
+       generic_combo_settings{ .num_columns = 1, .show_explore_button = true });
      return m_field && gcc.render();
 }
 
@@ -4215,7 +4219,7 @@ bool gui::combo_deswizzle_path(ff_8::filter_old<std::filesystem::path, ff_8::Fil
        [this]() { return m_deswizzle_paths; },
        [this]() { return m_deswizzle_paths; },
        [&filter]() -> auto & { return filter; },
-       1);
+       generic_combo_settings{ .num_columns = 1, .show_explore_button = true });
      return m_field && gcc.render();
 }
 
@@ -4228,7 +4232,7 @@ bool gui::combo_upscale_map_path(ff_8::filter_old<std::filesystem::path, ff_8::F
        [this]() { return m_upscale_map_paths; },
        [this]() { return m_upscale_map_paths; },
        [&filter]() -> auto & { return filter; },
-       1);
+       generic_combo_settings{ .num_columns = 1, .show_explore_button = true });
      return m_field && gcc.render();
 }
 
@@ -4242,7 +4246,7 @@ bool gui::combo_deswizzle_map_path(ff_8::filter_old<std::filesystem::path, ff_8:
        [this]() { return m_deswizzle_map_paths; },
        [this]() { return m_deswizzle_map_paths; },
        [&filter]() -> auto & { return filter; },
-       1);
+       generic_combo_settings{ .num_columns = 1, .show_explore_button = true });
      return m_field && gcc.render();
 }
 
