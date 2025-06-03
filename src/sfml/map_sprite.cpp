@@ -1678,6 +1678,32 @@ map_sprite::map_sprite(
   , m_texture_page_grid(get_texture_page_grid())
   , m_selections(selections)
 {
+     if(m_filters.upscale_map.enabled())
+     {
+          if (const auto paths = generate_swizzle_map_paths(".map"); !std::ranges::empty(paths))
+          {
+               m_filters.deswizzle_map.disable();
+               load_map(paths.front());// grab the first match.
+          }
+          else
+          {
+               //.map was not found.
+               m_filters.upscale_map.disable();
+          }
+     }
+     else if(m_filters.deswizzle_map.enabled())
+     {
+          if (const auto paths = generate_deswizzle_map_paths(".map"); !std::ranges::empty(paths))
+          {
+               m_filters.upscale_map.disable();
+               load_map(paths.front());// grab the first match.
+          }
+          else
+          {
+               //.map was not found.               
+               m_filters.deswizzle_map.disable();
+          }
+     }
      init_render_texture();
 }
 
