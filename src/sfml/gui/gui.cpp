@@ -2467,7 +2467,23 @@ void gui::menu_upscale_map_paths()
             m_selections->update_configuration_key(ConfigKey::PathsVectorUpscaleMap);
             generate_upscale_map_paths();
        },
-       [&]() { refresh_render_texture(true); },
+       [&]() {
+            if (m_map_sprite->filter().upscale_map.enabled())
+            {
+                 m_map_sprite->filter().deswizzle_map.disable();
+
+                 if (const auto paths = m_map_sprite->generate_swizzle_map_paths(".map"); !std::ranges::empty(paths))
+                 {
+                      m_map_sprite->load_map(paths.front());// grab the first match.
+                 }
+            }
+            else
+            {
+                 // load map from .map here.
+                 m_map_sprite->first_to_working_and_original();
+            }
+            refresh_render_texture(true);
+       },
        [&]() {
             m_directory_browser.Open();
             m_directory_browser.SetTitle(gui_labels::load_map_file.data());
@@ -2494,7 +2510,23 @@ void gui::menu_deswizzle_map_paths()
             m_selections->update_configuration_key(ConfigKey::PathsVectorDeswizzleMap);
             generate_deswizzle_map_paths();
        },
-       [&]() { refresh_render_texture(true); },
+       [&]() {
+            if (m_map_sprite->filter().deswizzle_map.enabled())
+            {
+                 m_map_sprite->filter().upscale_map.disable();
+
+                 if (const auto paths = m_map_sprite->generate_deswizzle_map_paths(".map"); !std::ranges::empty(paths))
+                 {
+                      m_map_sprite->load_map(paths.front());// grab the first match.
+                 }
+            }
+            else
+            {
+                 // load map from .map here.
+                 m_map_sprite->first_to_working_and_original();
+            }
+            refresh_render_texture(true);
+       },
        [&]() {
             m_directory_browser.Open();
             m_directory_browser.SetTitle(gui_labels::load_map_file.data());
