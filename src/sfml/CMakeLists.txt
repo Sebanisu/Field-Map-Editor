@@ -56,7 +56,8 @@ add_executable(
   tile_sizes.cpp
   unique_values.cpp
   UniquifyPupu.cpp
-  upscales.cpp)
+  upscales.cpp
+  utilities.cpp)
 # set_property(TARGET ${PROJECT_NAME}_SFML PROPERTY CXX_STANDARD 20)
 find_package(tomlplusplus REQUIRED)
 find_package(spdlog REQUIRED)
