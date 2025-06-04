@@ -2803,8 +2803,37 @@ void gui::directory_browser_display()
           }
           break;
           case map_directory_mode::load_swizzle_map: {
+               // remember the last grabbed path.
+               m_selections->swizzle_path = selected_path.string();
+               // save the setting to toml
+               m_selections->update_configuration_key(ConfigKey::SwizzlePath);
                // add path
+               // this stores a copy of the directory for referencing later we can also remove this path in the file menu.
+               m_selections->paths_vector_upscale_map.push_back(m_selections->swizzle_path);
+               // sort the drop down
+               std::ranges::sort(m_selections->paths_vector_upscale_map);
+               // remove duplicates
+               {
+                    const auto to_remove = std::ranges::unique(m_selections->paths_vector_upscale_map);
+                    m_selections->paths_vector_upscale_map.erase(to_remove.begin(), to_remove.end());
+               }
+               m_selections->update_configuration_key(ConfigKey::PathsVectorUpscaleMap);
+
+               // append the path to the various search patterns.
+               const auto upscale_result = upscales(m_selections->swizzle_path, get_coo(), m_selections);
+               //const auto temp_paths     = upscale_result.get_paths();
+               const auto temp_map_paths = upscale_result.get_map_paths();
+
                // attempt to find .map file for this path using new method.
+               for (const auto &temp_map_path : temp_map_paths)
+               {
+                    auto          map_path      = temp_map_path / m_map_sprite->map_filename();
+                    if (const auto paths = m_map_sprite->generate_swizzle_map_paths(temp_map_path, ".map"); !std::ranges::empty(paths))
+                    {
+                         m_map_sprite->load_map(paths.front());// grab the first match.
+                         break;
+                    }
+               }
                // if match found
                //   set path to filter, set path to enable.
                //   refresh the texture
