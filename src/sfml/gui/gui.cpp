@@ -2802,6 +2802,21 @@ void gui::directory_browser_display()
                refresh_render_texture(true);
           }
           break;
+          case map_directory_mode::load_swizzle_map: {
+               // add path
+               // attempt to find .map file for this path using new method.
+               // if match found
+               //   set path to filter, set path to enable.
+               //   refresh the texture
+               // else if .map was not found
+               //   don't change the filter.
+               // generate new map paths, at the end.
+          }
+          break;
+          case map_directory_mode::load_deswizzle_map: {
+               // same as above but different varible names.
+          }
+          break;
      }
 }
 std::filesystem::path gui::path_with_prefix_and_base_name(std::filesystem::path selected_path) const
