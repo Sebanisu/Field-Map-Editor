@@ -5,6 +5,7 @@
 #ifndef FIELD_MAP_EDITOR_FORMATTERS_HPP
 #define FIELD_MAP_EDITOR_FORMATTERS_HPP
 #include "draw_bit_t.hpp"
+#include "gui/colors.hpp"
 #include "gui/compact_type.hpp"
 #include "gui/draw_mode.hpp"
 #include "gui/gui_labels.hpp"
@@ -397,9 +398,97 @@ struct fmt::formatter<TileRange> : fmt::formatter<std::string>
 };
 
 template<>
-struct fmt::formatter<fme::compact_type> : fmt::formatter<std::string_view>
+struct fmt::formatter<fme::color>
+{
+     // Parses format specs; in this case, we don't support any custom formatting
+     constexpr auto parse(format_parse_context &ctx)
+     {
+          return ctx.begin();// no custom formatting, so just return the end
+     }
+
+     // Formats the color as "(r,g,b,a)"
+     template<typename FormatContext>
+     auto format(const fme::color &c, FormatContext &ctx) const
+     {
+          return fmt::format_to(ctx.out(), "({},{},{},{})", c.r, c.g, c.b, c.a);
+     }
+};
+
+template<>
+struct fmt::formatter<fme::root_path_types> : fmt::formatter<std::string_view>
 {
      // parse is inherited from formatter<string_view>.
+     template<typename FormatContext>
+     constexpr auto format(fme::root_path_types in_root_path_types, FormatContext &ctx) const
+     {
+          using namespace std::string_view_literals;
+          std::string_view name = {};
+          switch (in_root_path_types)
+          {
+               case fme::root_path_types::selected_path:
+                    name = fme::gui_labels::selected_path;
+                    break;
+               case fme::root_path_types::ff8_path:
+                    name = fme::gui_labels::ff8_path;
+                    break;
+               case fme::root_path_types::current_path:
+                    name = fme::gui_labels::current_path;
+                    break;
+          }
+          return fmt::formatter<std::string_view>::format(name, ctx);
+     }
+};
+
+template<>
+struct fmt::formatter<fme::PatternSelector> : fmt::formatter<std::string_view>
+{
+     // parse is inherited from formatter<string_view>.
+     template<typename FormatContext>
+     constexpr auto format(fme::PatternSelector pattern_selector, FormatContext &ctx) const
+     {
+          using namespace std::string_view_literals;
+          std::string_view name = {};
+          switch (pattern_selector)
+          {
+               case fme::PatternSelector::OutputSwizzlePattern:
+                    name = "Output swizzle pattern"sv;
+                    break;
+               case fme::PatternSelector::OutputDeswizzlePattern:
+                    name = "Output deswizzle pattern"sv;
+                    break;
+               case fme::PatternSelector::OutputMapPatternForSwizzle:
+                    name = "Output map pattern for swizzle"sv;
+                    break;
+               case fme::PatternSelector::OutputMapPatternForDeswizzle:
+                    name = "Output map pattern for deswizzle"sv;
+                    break;
+               case fme::PatternSelector::PathPatternsCommonUpscale:
+                    name = "Path Patterns Common Upscale"sv;
+                    break;
+               case fme::PatternSelector::PathPatternsCommonUpscaleForMaps:
+                    name = "Path Patterns Common Upscale For Maps"sv;
+                    break;
+               case fme::PatternSelector::PathPatternsNoPaletteAndTexturePage:
+                    name = "Path Patterns No Palette And Texture Page"sv;
+                    break;
+               case fme::PatternSelector::PathPatternsWithPaletteAndTexturePage:
+                    name = "Path Patterns With Palette And Texture Page"sv;
+                    break;
+               case fme::PatternSelector::PathPatternsWithPupuID:
+                    name = "Path Patterns With PupuID"sv;
+                    break;
+               case fme::PatternSelector::PathPatternsWithTexturePage:
+                    name = "Path Patterns With Texture Page"sv;
+                    break;
+          }
+          return fmt::formatter<std::string_view>::format(name, ctx);
+     }
+};
+
+
+template<>
+struct fmt::formatter<fme::compact_type> : fmt::formatter<std::string_view>
+{// parse is inherited from formatter<string_view>.
      template<typename FormatContext>
      constexpr auto format(fme::compact_type in_compact_type, FormatContext &ctx) const
      {
@@ -447,6 +536,9 @@ struct fmt::formatter<fme::input_types> : fmt::formatter<std::string_view>
                case fme::input_types::swizzle:
                     name = fme::gui_labels::swizzle;
                     break;
+               case fme::input_types::swizzle_as_one_image:
+                    name = fme::gui_labels::swizzle_as_one_image;
+                    break;
           }
           return fmt::formatter<std::string_view>::format(name, ctx);
      }
@@ -468,6 +560,9 @@ struct fmt::formatter<fme::output_types> : fmt::formatter<std::string_view>
                     break;
                case fme::output_types::swizzle:
                     name = fme::gui_labels::swizzle;
+                    break;
+               case fme::output_types::swizzle_as_one_image:
+                    name = fme::gui_labels::swizzle_as_one_image;
                     break;
           }
           return fmt::formatter<std::string_view>::format(name, ctx);

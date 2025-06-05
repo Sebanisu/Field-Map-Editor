@@ -174,10 +174,15 @@ class [[nodiscard]] FutureOfFutureConsumer
          auto frh = get_consumer();
          frh.consume_now();
      }
-     FutureOfFutureConsumer<range_t> &operator=(range_t new_value)
+     FutureOfFutureConsumer &operator=(range_t && in_range)
      {
-          consume_now();
-          m_range = std::move(new_value);
+          if (!std::ranges::empty(m_range))
+          {
+               consume_now();
+          }
+          m_range = std::move(in_range);
+          m_out.clear();
+          m_out.reserve(std::ranges::size(m_range));
           return *this;
      }
      const FutureOfFutureConsumer<range_t> &operator++()

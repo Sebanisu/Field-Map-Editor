@@ -1,5 +1,6 @@
 #ifndef B4F3B564_D2A3_4C2C_992A_95E9DAEA83EF
 #define B4F3B564_D2A3_4C2C_992A_95E9DAEA83EF
+#include "format_imgui_text.hpp"
 #include "push_pop_id.hpp"
 #include <concepts>
 #include <functional>
@@ -15,7 +16,24 @@ namespace fme
  * @param str The text to display in the tooltip.
  * @param override Optional. If true, forces the tooltip to display even if the item is not hovered. Default is false.
  */
-void tool_tip(const std::string_view str, bool override = false);
+template<typename T>
+     requires(!std::invocable<T>)
+void tool_tip(T && str, bool override = false)
+{
+     if (!ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled) && !override)
+     {
+          return;
+     }
+
+     // const auto pop_id       = PushPopID();
+     if (ImGui::BeginTooltip())
+     {
+          const auto pop_tool_tip    = scope_guard{ &ImGui::EndTooltip };
+          const auto pop_textwrappos = scope_guard{ &ImGui::PopTextWrapPos };
+          ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);// Adjust wrap width as needed
+          format_imgui_text("{}", std::forward<T>(str));
+     }
+}
 
 /**
  * @brief Displays a tooltip using a lambda function to customize its content.

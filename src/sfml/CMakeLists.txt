@@ -23,12 +23,15 @@ add_executable(
   gui/batch.cpp
   gui/collapsing_tile_info.cpp
   gui/create_tile_button.cpp
+  gui/custom_paths_window.cpp
+  gui/field_file_window.cpp
   gui/gui.cpp
   gui/history_window.cpp
+  gui/key_value_data.cpp
   gui/import.cpp
+  gui/main_menu_paths.cpp
   gui/mouse_positions.cpp
   gui/push_pop_id.cpp
-  gui/scrolling.cpp
   gui/Selections.cpp
   gui/tool_tip.cpp
   archives_group.cpp
@@ -53,14 +56,17 @@ add_executable(
   tile_sizes.cpp
   unique_values.cpp
   UniquifyPupu.cpp
-  upscales.cpp)
+  upscales.cpp
+  utilities.cpp)
 # set_property(TARGET ${PROJECT_NAME}_SFML PROPERTY CXX_STANDARD 20)
-# find_package(ImGui-SFML REQUIRED)
 find_package(tomlplusplus REQUIRED)
 find_package(spdlog REQUIRED)
 find_package(GLEW REQUIRED)
+find_package(ctre REQUIRED)
 find_package(iconfontcppheaders REQUIRED CONFIG)
+
 include(${CMAKE_SOURCE_DIR}/cmake/imgui-sfml.cmake)
+#find_package(ImGui-SFML)
 
 add_library(${PROJECT_NAME}_SFML_Common INTERFACE)
 target_include_directories(${PROJECT_NAME}_SFML_Common
@@ -70,7 +76,7 @@ target_link_libraries(
   ${PROJECT_NAME}_SFML
   PRIVATE project_warnings
   PRIVATE project_options
-  # PRIVATE imgui::imgui PRIVATE ImGui-SFML::ImGui-SFML
+  #PRIVATE ImGui-SFML::ImGui-SFML
   PRIVATE ImGui-SFML
   PRIVATE OpenVIII_CPP_WIP_VIIIPaths
   PRIVATE OpenVIII_CPP_WIP_VIIIArchive
@@ -81,6 +87,7 @@ target_link_libraries(
   PRIVATE spdlog::spdlog
   PRIVATE GLEW::GLEW
   PRIVATE iconfontcppheaders::iconfontcppheaders
+  PRIVATE ctre::ctre
   PRIVATE ${PROJECT_NAME}_SFML_Common)
 
 target_compile_definitions(
@@ -100,7 +107,7 @@ if(MSVC)
     ${PROJECT_NAME}_SFML
     PUBLIC "/bigobj"
     PUBLIC "/await") # PUBLIC "/Zc:char8_t-"
-  # target_link_options(${PROJECT_NAME}_SFML PUBLIC "/PROFILE")
+  target_link_options(${PROJECT_NAME}_SFML PUBLIC "/PROFILE")
 elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
   target_compile_options(
     ${PROJECT_NAME}_SFML PUBLIC "-fconcepts-diagnostics-depth=2"

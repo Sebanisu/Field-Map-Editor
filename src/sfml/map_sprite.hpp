@@ -6,6 +6,8 @@
 #define FIELD_MAP_EDITOR_MAP_SPRITE_HPP
 #include "filter.hpp"
 #include "grid.hpp"
+#include "gui/key_value_data.hpp"
+#include "gui/Selections.hpp"
 #include "map_group.hpp"
 #include "map_operation.hpp"
 #include "MapHistory.hpp"
@@ -44,7 +46,7 @@ struct [[nodiscard]] map_sprite final
        (std::max)(static_cast<std::uint16_t>(START_OF_NO_PALETTE_INDEX + MAX_TEXTURE_PAGES), static_cast<std::uint16_t>(BPP16_INDEX + 1U));
 
      using BPPT           = open_viii::graphics::BPPT;
-     using SharedField    = std::shared_ptr<open_viii::archive::FIFLFS<false>>;
+     using WeakField      = std::weak_ptr<open_viii::archive::FIFLFS<false>>;
      using Map            = open_viii::graphics::background::Map;
      using Mim            = open_viii::graphics::background::Mim;
      using color_type     = open_viii::graphics::Color32RGBA;
@@ -57,16 +59,17 @@ struct [[nodiscard]] map_sprite final
    private:
      ff_8::map_group                               m_map_group = {};
      square                                        m_square    = { sf::Vector2u{}, sf::Vector2u{ TILE_SIZE, TILE_SIZE }, sf::Color::Red };
-     bool                                          m_draw_swizzle                  = { false };
-     bool                                          m_disable_texture_page_shift    = { false };
-     bool                                          m_disable_blends                = { false };
-     ff_8::filters                                 m_filters                       = {};
-     ::upscales                                    m_upscales                      = {};
-     bool                                          m_using_imported_texture        = {};
-     const sf::Texture                            *m_imported_texture              = { nullptr };
-     std::uint16_t                                 m_imported_tile_size            = {};
-     Map                                           m_imported_tile_map             = {};
-     Map                                           m_imported_tile_map_front       = {};
+     bool                                          m_draw_swizzle               = { false };
+     bool                                          m_disable_texture_page_shift = { false };
+     bool                                          m_disable_blends             = { false };
+     ff_8::filters                                 m_filters                 = { false };// default false should be override by gui to true.
+     std::weak_ptr<Selections>                     m_selections              = {};
+     ::upscales                                    m_upscales                = { m_selections };
+     bool                                          m_using_imported_texture  = {};
+     const sf::Texture                            *m_imported_texture        = { nullptr };
+     std::uint16_t                                 m_imported_tile_size      = {};
+     Map                                           m_imported_tile_map       = {};
+     Map                                           m_imported_tile_map_front = {};
      all_unique_values_and_strings                 m_all_unique_values_and_strings = {};
      open_viii::graphics::Rectangle<std::uint32_t> m_canvas                        = {};
      SharedTextures                                m_texture                       = {};
@@ -81,7 +84,13 @@ struct [[nodiscard]] map_sprite final
 
    public:
      map_sprite() = default;
-     map_sprite(ff_8::map_group map_group, bool draw_swizzle, ff_8::filters in_filters, bool force_disable_blends, bool require_coo);
+     map_sprite(
+       ff_8::map_group           map_group,
+       bool                      draw_swizzle,
+       ff_8::filters             in_filters,
+       bool                      force_disable_blends,
+       bool                      require_coo,
+       std::weak_ptr<Selections> selections);
 
 
      [[nodiscard]] std::string              appends_prefix_base_name(std::string_view title) const;
@@ -113,7 +122,7 @@ struct [[nodiscard]] map_sprite final
      [[nodiscard]] std::uint32_t                         width() const;
      [[nodiscard]] std::uint32_t                         height() const;
      [[nodiscard]] map_sprite                            with_coo(open_viii::LangT coo) const;
-     [[nodiscard]] map_sprite                            with_field(SharedField field, open_viii::LangT coo) const;
+     [[nodiscard]] map_sprite                            with_field(WeakField field, open_viii::LangT coo) const;
      [[nodiscard]] map_sprite                            with_filters(ff_8::filters filters) const;
      [[nodiscard]] const map_sprite                     &toggle_grid(bool enable, bool enable_texture_page_grid) const;
      [[nodiscard]] bool                                  empty() const;
@@ -146,9 +155,14 @@ struct [[nodiscard]] map_sprite final
      }
      [[nodiscard]] sf::Sprite  save_intersecting(const sf::Vector2i &pixel_pos, const std::uint8_t &texture_page);
      [[nodiscard]] std::size_t get_texture_pos(BPPT bpp, std::uint8_t palette, std::uint8_t texture_page) const;
-     [[nodiscard]] std::vector<std::future<std::future<void>>> save_swizzle_textures(const std::filesystem::path &path);
-     [[nodiscard]] std::vector<std::future<std::future<void>>> save_pupu_textures(const std::filesystem::path &path);
-     [[nodiscard]] std::future<std::future<void>>              load_upscale_textures(SharedTextures &ret, std::uint8_t texture_page);
+     [[nodiscard]] std::vector<std::future<std::future<void>>>
+       save_swizzle_textures(const std::string &keyed_string, const std::string &selected_path);
+       [[nodiscard]] std::vector<std::future<std::future<void>>>
+       save_combined_swizzle_texture(const std::string &keyed_string, const std::string &selected_path);
+       
+     [[nodiscard]] std::vector<std::future<std::future<void>>>
+                                                  save_pupu_textures(const std::string &keyed_string, const std::string &selected_path);
+     [[nodiscard]] std::future<std::future<void>> load_upscale_textures(SharedTextures &ret, std::uint8_t texture_page);
      [[nodiscard]] std::future<std::future<void>>
        load_deswizzle_textures(SharedTextures &ret, const ff_8::PupuID pupu, const size_t pos) const;
      [[nodiscard]] std::future<std::future<void>> load_mim_textures(SharedTextures &ret, BPPT bpp, uint8_t palette);
@@ -169,6 +183,7 @@ struct [[nodiscard]] map_sprite final
      void        compact_move_conflicts_only();
      void        compact_map_order();
      void        compact_map_order_ffnx();
+     void        first_to_working_and_original();
      void        undo();
      void        redo();
      void        undo_all();
@@ -439,11 +454,12 @@ struct [[nodiscard]] map_sprite final
      }
      [[nodiscard]] ::upscales get_upscales()
      {
-          if (m_map_group.field)
+          const auto field = m_map_group.field.lock();
+          if (!field)
           {
-               return { std::string{ m_map_group.field->get_base_name() }, m_map_group.opt_coo };
+               return { m_selections };
           }
-          return {};
+          return { std::string{ field->get_base_name() }, m_map_group.opt_coo, m_selections };
      }
 
 
@@ -499,27 +515,54 @@ struct [[nodiscard]] map_sprite final
           return ff_8::get_triangle_strip(to_Vector2f(draw_size), to_Vector2f(texture_size), src, dest);
      }
 
-     auto generate_deswizzle_paths(const ff_8::PupuID pupu) const
-     {
-          const auto            field_name       = get_base_name();
-          static constexpr auto pattern_pupu     = std::string_view("{}_{}.png");
-          static constexpr auto pattern_coo_pupu = std::string_view("{}_{}_{}.png");
-          const auto            prefix           = std::string_view{ field_name }.substr(0, 2);
-          const auto            alt_path         = std::filesystem::path(m_filters.deswizzle.value()) / prefix / field_name;
-          const auto alt_path_2 = std::filesystem::path(m_filters.deswizzle.value()).parent_path().parent_path() / prefix / field_name;
+     [[nodiscard]] std::vector<std::filesystem::path> generate_deswizzle_paths(const std::string &ext) const;
+     [[nodiscard]] std::vector<std::filesystem::path> generate_swizzle_paths(const std::string &ext) const;
 
-          if (m_map_group.opt_coo)
-          {
-               return std::array{ save_path_coo(pattern_coo_pupu, m_filters.deswizzle.value(), field_name, pupu, *m_map_group.opt_coo),
-                                  save_path_coo(pattern_coo_pupu, alt_path, field_name, pupu, *m_map_group.opt_coo),
-                                  save_path_coo(pattern_coo_pupu, alt_path_2, field_name, pupu, *m_map_group.opt_coo) };
-          }
-          return std::array{
-               save_path(pattern_pupu, m_filters.deswizzle.value(), field_name, pupu),
-               save_path(pattern_pupu, alt_path, field_name, pupu),
-               save_path(pattern_pupu, alt_path_2, field_name, pupu),
-          };
-     }
+     [[nodiscard]] std::vector<std::filesystem::path>
+       generate_deswizzle_paths(const std::filesystem::path &path, const std::string &ext) const;
+     [[nodiscard]] std::vector<std::filesystem::path>
+       generate_swizzle_paths(const std::filesystem::path &path, const std::string &ext) const;
+
+     [[nodiscard]] std::vector<std::filesystem::path> generate_deswizzle_map_paths(const std::string &ext = ".map") const;
+     [[nodiscard]] std::vector<std::filesystem::path> generate_swizzle_map_paths(const std::string &ext = ".map") const;
+     [[nodiscard]] std::vector<std::filesystem::path>
+       generate_deswizzle_map_paths(const std::filesystem::path &path, const std::string &ext) const;
+     [[nodiscard]] std::vector<std::filesystem::path>
+       generate_swizzle_map_paths(const std::filesystem::path &path, const std::string &ext) const;
+
+     [[nodiscard]] std::vector<std::filesystem::path>
+       generate_deswizzle_paths(const ff_8::PupuID pupu, const std::string &ext = ".png") const;
+     [[nodiscard]] std::vector<std::filesystem::path>
+       generate_swizzle_paths(const std::uint8_t texture_page, std::uint8_t palette, const std::string &ext = ".png") const;
+     [[nodiscard]] std::vector<std::filesystem::path>
+                        generate_swizzle_paths(const std::uint8_t texture_page, const std::string &ext = ".png") const;
+
+
+     [[nodiscard]] bool has_map_path(
+       const std::filesystem::path &filter_path,
+       const std::string           &ext                      = ".map",
+       const std::string           &secondary_output_pattern = "") const;
+     [[nodiscard]] bool has_deswizzle_path(const ff_8::PupuID pupu, const std::string &ext = ".png") const;
+     [[nodiscard]] bool has_swizzle_path(const std::uint8_t texture_page, std::uint8_t palette, const std::string &ext = ".png") const;
+     [[nodiscard]] bool has_swizzle_path(const std::uint8_t texture_page, const std::string &ext = ".png") const;
+
+     [[nodiscard]] bool has_deswizzle_path(const std::filesystem::path &filter_path, const std::string &ext = ".png") const;
+     [[nodiscard]] bool has_swizzle_path(const std::filesystem::path &filter_path, const std::string &ext = ".png") const;
+     [[nodiscard]] bool
+       has_deswizzle_path(const std::filesystem::path &filter_path, const ff_8::PupuID pupu, const std::string &ext = ".png") const;
+     [[nodiscard]] bool has_swizzle_path(
+       const std::filesystem::path &filter_path,
+       const std::uint8_t           texture_page,
+       std::uint8_t                 palette,
+       const std::string           &ext = ".png") const;
+     bool
+       has_swizzle_path(const std::filesystem::path &filter_path, const std::uint8_t texture_page, const std::string &ext = ".png") const;
+
+     [[nodiscard]] std::vector<std::filesystem::path> generate_paths(
+       const std::string    &filter_path,
+       const key_value_data &cpm,
+       const std::string    &output_pattern           = "",
+       const std::string    &secondary_output_pattern = "") const;
 };
 }// namespace fme
 #endif// FIELD_MAP_EDITOR_MAP_SPRITE_HPP

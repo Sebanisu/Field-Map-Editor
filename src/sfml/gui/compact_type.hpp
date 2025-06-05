@@ -5,6 +5,7 @@
 #ifndef FIELD_MAP_EDITOR_COMPACT_TYPE_HPP
 #define FIELD_MAP_EDITOR_COMPACT_TYPE_HPP
 #include <cstdint>
+#include <optional>
 namespace fme
 {
 enum struct compact_type
@@ -20,17 +21,69 @@ enum struct input_types
      mim,
      deswizzle,
      swizzle,
+     swizzle_as_one_image,
 };
 enum struct output_types
 {
      deswizzle,
      swizzle,
+     swizzle_as_one_image,
 };
+[[nodiscard]] constexpr static inline std::optional<output_types> to_output_type(input_types input) noexcept
+{
+     switch (input)
+     {
+          case input_types::swizzle:
+               return output_types::swizzle;
+          case input_types::deswizzle:
+               return output_types::deswizzle;
+          case input_types::swizzle_as_one_image:
+               return output_types::swizzle_as_one_image;
+          default:
+               return std::nullopt;// input_types::mim has no mapping
+     }
+}
+
+[[nodiscard]] constexpr static inline std::optional<input_types> to_input_type(output_types output) noexcept
+{
+     switch (output)
+     {
+          case output_types::swizzle:
+               return input_types::swizzle;
+          case output_types::deswizzle:
+               return input_types::deswizzle;
+          case output_types::swizzle_as_one_image:
+               return input_types::swizzle_as_one_image;
+          default:
+               return std::nullopt;// input_types::mim has no mapping
+     }
+}
 enum struct flatten_type : std::uint8_t
 {
      bpp,
      palette,
      both,
 };
+enum struct root_path_types : std::uint8_t
+{
+     selected_path,
+     ff8_path,
+     current_path
+};
+
+enum class PatternSelector : std::uint8_t
+{
+     OutputSwizzlePattern,
+     OutputDeswizzlePattern,
+     OutputMapPatternForSwizzle,
+     OutputMapPatternForDeswizzle,
+     PathPatternsCommonUpscale,
+     PathPatternsCommonUpscaleForMaps,
+     PathPatternsNoPaletteAndTexturePage,
+     PathPatternsWithPaletteAndTexturePage,
+     PathPatternsWithPupuID,
+     PathPatternsWithTexturePage
+};
+
 }// namespace fme
 #endif// FIELD_MAP_EDITOR_COMPACT_TYPE_HPP
