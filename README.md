@@ -22,6 +22,42 @@ If you find any features missing from the SFML version or have suggestions, plea
 
 ![image](https://github.com/user-attachments/assets/730fbd48-b742-47cf-bffa-b7a106e586b6)
 
+#### Batch Operation Window
+
+The Batch Operation Window will let you take input in one format and output in another format. Input formats such as `.mim`, swizzle, and deswizzle. Output formats such as swizzle, deswizzle, and swizzle as one file.
+
+![image](https://github.com/user-attachments/assets/d67f25ba-b6a8-4efc-b724-17bb98da315c)
+
+#### Impot Window WIP
+
+This feature needs more work. I did have a working test where I used this to add tiles to the swizzle, loaded in the game. You might still be able to get it to work.
+
+![image](https://github.com/user-attachments/assets/73d254c3-0835-4b1f-a93d-43ddeb020deb)
+
+#### History Window
+
+The History Window lets you see opreations performed that you can undo or redo.
+
+![image](https://github.com/user-attachments/assets/b6da167d-6627-4b36-841c-9c4b12abe76f)
+
+#### Draw and Control Panel Window
+
+The Draw window shows the current rendering of the field. The Control Panel controls the Draw window. You can also access more detailed configuration in the main menu at the top.
+
+![image](https://github.com/user-attachments/assets/322c7018-ab12-42fd-8a92-356585a93356)
+
+#### Custom Paths Window
+
+The Custom Paths Window lets you configure how the Field Map Editor search for 3rd party textures, or `.map` files.
+
+![image](https://github.com/user-attachments/assets/08fa64bd-312d-4304-b999-4f28440b191a)
+
+#### Field File Window WIP
+
+This window lets you see what files are in this field. I plan to make this alittle more useful. You can copy and paste lines of the text.
+
+![image](https://github.com/user-attachments/assets/f9b2ddfd-3c72-4ea6-a658-62ab596aa2ce)
+
 
 ### OPENGL Version
 
@@ -32,6 +68,9 @@ If you are using the OPENGL version and find a feature you would like to see in 
 **Note:** The OPENGL version requires the `res` folder, which contains the necessary shaders and textures.
 
 ![image](https://github.com/user-attachments/assets/57f33eb5-83f1-4ed1-9d0a-c19678651305)
+
+
+
 
 
 ### Credits
