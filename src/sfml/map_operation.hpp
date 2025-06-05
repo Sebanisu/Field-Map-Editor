@@ -73,7 +73,7 @@ struct source_x_y_texture_page
 {
      static const auto TILE_SIZE          = 16;
      static const auto TEXTURE_PAGE_WIDTH = 256;
-     const auto        tiles_per_row      = size / TILE_SIZE;
+     const auto        tiles_per_row      = (std::max)(size / TILE_SIZE, static_cast<decltype(size)>(TILE_SIZE));
 
      return { .source_xy    = { static_cast<int>(((tile_index % tiles_per_row) * TILE_SIZE) % TEXTURE_PAGE_WIDTH),
                                 static_cast<int>((tile_index / tiles_per_row) * TILE_SIZE) },
