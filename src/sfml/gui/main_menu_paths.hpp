@@ -3,6 +3,7 @@
 #include "fa_icons.hpp"
 #include "gui_labels.hpp"
 #include "map_directory_mode.hpp"
+#include "open_file_explorer.hpp"
 #include "scope_guard.hpp"
 #include "tool_tip.hpp"
 #include <algorithm>
@@ -40,7 +41,7 @@ struct main_menu_paths
      {
      }
 
-     void render(const std::invocable auto &generate, const std::invocable auto &refresh, const std::invocable auto & open_browser) const
+     void render(const std::invocable auto &generate, const std::invocable auto &refresh, const std::invocable auto &open_browser) const
      {
           if (!ImGui::BeginMenu(m_settings.main_label.data()))
           {
@@ -132,12 +133,8 @@ struct main_menu_paths
                               }
                          }
                          ImGui::TableNextColumn();
-                         const auto pop_id = PushPopID();
-                         delete_me         = add_delete_button(index);
-                         if (std::cmp_greater_equal(delete_me, 0))
-                         {
-                              break;
-                         }
+                         add_explore_button(path);
+                         delete_me = add_delete_button(index, delete_me);
                     }
                }
           }();
@@ -204,16 +201,15 @@ struct main_menu_paths
                                    std::invoke(refresh);
                               }
                          }
-
                          ImGui::TableNextColumn();
-                         delete_me = add_delete_button(path, m_settings.user_paths.get());
-                         if (std::cmp_greater_equal(delete_me, 0))
-                         {
-                              break;
-                         }
+                         add_explore_button(path);
+                         delete_me = add_delete_button(path, m_settings.user_paths.get(), delete_me);
                     }
                }
-
+               if (std::cmp_greater_equal(delete_me, 0))
+               {
+                    spdlog::info("delete {}", delete_me);
+               }
                if (const auto found = handle_path_deletion(m_settings.user_paths, delete_me); found.has_value())
                {
                     std::invoke(generate);
@@ -271,38 +267,57 @@ struct main_menu_paths
           return "";
      }
 
-     std::ptrdiff_t add_delete_button(const std::ptrdiff_t index) const
+     std::ptrdiff_t add_delete_button(const std::ptrdiff_t index, const std::ptrdiff_t delete_me) const
      {
-          const auto pop_id = PushPopID();
-          if (ImGui::Button(ICON_FA_TRASH))
+          const auto  pop_id      = PushPopID();
+          const float button_size = ImGui::GetFrameHeight();
+          ImGui::SameLine();
+          if (ImGui::Button(ICON_FA_TRASH, ImVec2{ button_size, button_size }))
           {
-               ImGui::CloseCurrentPopup();
-               return index;
+               // ImGui::CloseCurrentPopup();
+               return static_cast<std::ptrdiff_t>(index);
           }
           else
           {
                tool_tip("delete me");
           }
-          return -1;
+          return delete_me;
      }
 
-     std::ptrdiff_t add_delete_button(const std::string &path, const std::vector<std::string> &paths) const
+     std::ptrdiff_t add_delete_button(const std::string &path, const std::vector<std::string> &paths, const std::ptrdiff_t delete_me) const
      {
           auto       transformed_paths = paths | std::ranges::views::enumerate;
           const auto it =
             std::ranges::find_if(transformed_paths, [&path](const auto &pair) { return path.starts_with(std::get<1>(pair)); });
           if (it != std::ranges::end(transformed_paths))
+
           {
-               const auto &index  = std::get<0>(*it);
-               const auto  pop_id = PushPopID();
-               if (ImGui::Button(ICON_FA_TRASH))
+               const auto  pop_id      = PushPopID();
+               const float button_size = ImGui::GetFrameHeight();
+               ImGui::SameLine();
+               if (ImGui::Button(ICON_FA_TRASH, ImVec2{ button_size, button_size }))
                {
-                    ImGui::CloseCurrentPopup();
+                    const auto &index = std::get<0>(*it);
+
+                    // ImGui::CloseCurrentPopup();
                     return static_cast<std::ptrdiff_t>(index);
                }
-               tool_tip("delete me");
+               else
+               {
+                    tool_tip("delete me");
+               }
           }
-          return -1;
+          return delete_me;
+     }
+     void add_explore_button(const std::string &path) const
+     {
+          const float button_size = ImGui::GetFrameHeight();
+          const auto  _           = PushPopID();
+          if (ImGui::Button(ICON_FA_FOLDER_OPEN, ImVec2{ button_size, button_size }))
+          {
+               open_directory(path);
+          }
+          tool_tip(gui_labels::explore_tooltip);
      }
 };
 }// namespace fme
