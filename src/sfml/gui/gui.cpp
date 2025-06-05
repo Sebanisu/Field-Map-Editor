@@ -2206,11 +2206,24 @@ void gui::file_menu()
                          refresh_path();
                     }
                     ImGui::TableNextColumn();
-                    const auto pop_id = PushPopID();
-                    if (ImGui::Button(ICON_FA_TRASH))
+                    const auto  pop_id      = PushPopID();
+
+                    const float button_size = ImGui::GetFrameHeight();
+                    const auto  _           = PushPopID();
+                    if (ImGui::Button(ICON_FA_FOLDER_OPEN, ImVec2{ button_size, button_size }))
+                    {
+                         open_directory(path);
+                    }
+                    else
+                    {
+                         tool_tip(gui_labels::explore_tooltip);
+                    }
+
+                    ImGui::SameLine();
+                    if (ImGui::Button(ICON_FA_TRASH, ImVec2{ button_size, button_size }))
                     {
                          delete_me = index;
-                         ImGui::CloseCurrentPopup();
+                         // ImGui::CloseCurrentPopup();
                          break;
                     }
                     else
