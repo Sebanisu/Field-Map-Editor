@@ -12,7 +12,7 @@
 #include <optional>
 namespace fme
 {
-     static ImGuiTreeNodeFlags flags{};
+static ImGuiTreeNodeFlags flags{};
 }
 /**
  * @brief Safely copies a null-terminated string from one contiguous range to another.
@@ -177,12 +177,7 @@ void fme::batch::example_input_paths()
                                                      .palette       = std::uint8_t{ 0 },
                                                      .texture_page  = std::uint8_t{ 5 },
                                                      .pupu_id       = 9999U };
-     static const key_value_data map_example     = { .field_name    = "field01",
-                                                     .ext           = ".map",
-                                                     .language_code = open_viii::LangT::en,
-                                                     .palette       = std::uint8_t{ 0 },
-                                                     .texture_page  = std::uint8_t{ 5 },
-                                                     .pupu_id       = 9999U };
+     static const key_value_data map_example     = { .field_name = "field01", .ext = ".map", .language_code = open_viii::LangT::en };
      static const std::string    ff8_path        = "{ff8_path}";
      static const std::string    current_path    = "{current_path}";
 
@@ -292,12 +287,7 @@ void fme::batch::example_output_paths()
                                                  .palette       = std::uint8_t{ 0 },
                                                  .texture_page  = std::uint8_t{ 5 },
                                                  .pupu_id       = 9999U };
-     static const key_value_data map_example = { .field_name    = "field01",
-                                                 .ext           = ".map",
-                                                 .language_code = open_viii::LangT::en,
-                                                 .palette       = std::uint8_t{ 0 },
-                                                 .texture_page  = std::uint8_t{ 5 },
-                                                 .pupu_id       = 9999U };
+     static const key_value_data map_example = { .field_name = "field01", .ext = ".map", .language_code = open_viii::LangT::en };
 
      const std::string &selected_string      = get_selected_path(selections->batch_output_path, selections->batch_output_root_path_type);
 
@@ -495,7 +485,8 @@ void fme::batch::checkmark_save_map()
           return;
      }
      bool changed = false;
-     bool forced  = (selections->batch_compact_type.enabled() || selections->batch_flatten_type.enabled());
+     bool forced =
+       (selections->batch_compact_type.enabled() || selections->batch_flatten_type.enabled() || selections->batch_input_load_map);
      if (!selections->batch_output_save_map && forced)
      {
           selections->batch_output_save_map = true;
