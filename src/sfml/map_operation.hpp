@@ -73,11 +73,14 @@ struct source_x_y_texture_page
 {
      static const auto TILE_SIZE          = 16;
      static const auto TEXTURE_PAGE_WIDTH = 256;
-     const auto        tiles_per_row      = (std::max)(size / TILE_SIZE, static_cast<decltype(size)>(TILE_SIZE));
+     const auto tiles_per_row = (std::max)((size / TILE_SIZE) + (size % TILE_SIZE == 0 ? 0 : 1), static_cast<decltype(size)>(TILE_SIZE));
 
-     return { .source_xy    = { static_cast<int>(((tile_index % tiles_per_row) * TILE_SIZE) % TEXTURE_PAGE_WIDTH),
-                                static_cast<int>((tile_index / tiles_per_row) * TILE_SIZE) },
-              .texture_page = static_cast<std::uint8_t>(((tile_index % tiles_per_row) * TILE_SIZE) / TEXTURE_PAGE_WIDTH) };
+     const auto x             = static_cast<int>((tile_index % tiles_per_row) * TILE_SIZE);
+     const auto y             = static_cast<int>((tile_index / tiles_per_row) * TILE_SIZE);
+     const auto tp            = x / TEXTURE_PAGE_WIDTH;
+
+
+     return { .source_xy = { x - tp * TEXTURE_PAGE_WIDTH, y }, .texture_page = static_cast<std::uint8_t>(tp) };
 }
 
 [[nodiscard]] std::vector<std::size_t> find_intersecting_swizzle(
