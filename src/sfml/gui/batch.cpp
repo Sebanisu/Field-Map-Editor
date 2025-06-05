@@ -882,15 +882,36 @@ void fme::batch::update(sf::Time elapsed_time)
           // Optionally load the map from the input path if applicable
           if (selections->batch_input_load_map && selections->batch_input_type != input_types::mim)
           {
-               const key_value_data cpm2 = {
-                    .field_name    = m_map_sprite.get_base_name(),
-                    .ext           = ".map",
-                    .language_code = m_coo.has_value() && m_coo.value() != open_viii::LangT::generic ? m_coo : std::nullopt,
-               };
+
                const std::string &selected_string =
                  get_selected_path(selections->batch_output_path, selections->batch_output_root_path_type);
-               m_map_sprite.load_map(
-                 cpm2.replace_tags(fme::batch::get_output_map_pattern(selections->batch_input_type), selections, selected_string));
+               // const key_value_data cpm2 = {
+               //      .field_name    = m_map_sprite.get_base_name(),
+               //      .ext           = ".map",
+               //      .language_code = m_coo.has_value() && m_coo.value() != open_viii::LangT::generic ? m_coo : std::nullopt,
+               // };
+               // m_map_sprite.load_map(
+               //   cpm2.replace_tags(fme::batch::get_output_map_pattern(selections->batch_input_type), selections, selected_string));
+               switch (selections->batch_input_type)
+               {
+                    case input_types::swizzle:
+                         if (const auto paths = m_map_sprite.generate_swizzle_map_paths(std::filesystem::path(selected_string), ".map");
+                             !std::ranges::empty(paths))
+                         {
+                              m_map_sprite.load_map(paths.front());// grab the first match.
+                         }
+                         break;
+                    case input_types::deswizzle:
+                         if (const auto paths = m_map_sprite.generate_deswizzle_map_paths(std::filesystem::path(selected_string), ".map");
+                             !std::ranges::empty(paths))
+                         {
+                              m_map_sprite.load_map(paths.front());// grab the first match.
+                         }
+                         break;
+                    default:
+                         // none
+                         break;
+               }
           }
 
           // Optimize and prepare data for output
