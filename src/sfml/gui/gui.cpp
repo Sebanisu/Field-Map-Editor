@@ -2660,6 +2660,7 @@ void gui::directory_browser_display()
                }
           }
      };
+     const auto has_map_path = [&](const std::filesystem::path &path) -> bool { return m_map_sprite->has_map_path(path, ".map"); };
      switch (m_modified_directory_map)
      {
           case map_directory_mode::ff8_install_directory: {
@@ -2736,8 +2737,14 @@ void gui::directory_browser_display()
                  m_upscale_paths_enabled,
                  m_map_sprite->filter().upscale,
                  m_map_sprite->filter().deswizzle,
-                 [&](const std::filesystem::path &path) { return m_map_sprite->has_swizzle_path(path, ".png"); },
+                 [&](const std::filesystem::path &path) -> bool {
+                      // we add the paths to map search for ease of use.
+                      m_upscale_map_paths.push_back(path.string());
+                      m_upscale_map_paths_enabled.push_back(has_map_path(path));
+                      return m_map_sprite->has_swizzle_path(path, ".png");
+                 },
                  noop);
+               sort_and_remove_duplicates(m_upscale_map_paths, m_upscale_map_paths_enabled);
           }
           break;
           case map_directory_mode::load_deswizzle_textures: {
@@ -2750,8 +2757,14 @@ void gui::directory_browser_display()
                  m_deswizzle_paths_enabled,
                  m_map_sprite->filter().deswizzle,
                  m_map_sprite->filter().upscale,
-                 [&](const std::filesystem::path &path) { return m_map_sprite->has_deswizzle_path(path, ".png"); },
+                 [&](const std::filesystem::path &path) -> bool {
+                      // we add the paths to map search for ease of use.
+                      m_deswizzle_map_paths.push_back(path.string());
+                      m_deswizzle_map_paths_enabled.push_back(has_map_path(path));
+                      return m_map_sprite->has_deswizzle_path(path, ".png");
+                 },
                  noop);
+               sort_and_remove_duplicates(m_deswizzle_map_paths, m_deswizzle_map_paths_enabled);
           }
           break;
           case map_directory_mode::load_swizzle_map: {
@@ -2764,7 +2777,7 @@ void gui::directory_browser_display()
                  m_upscale_map_paths_enabled,
                  m_map_sprite->filter().upscale_map,
                  m_map_sprite->filter().deswizzle_map,
-                 [&](const std::filesystem::path &path) { return m_map_sprite->has_map_path(path, ".map"); },
+                 has_map_path,
                  [&](const std::filesystem::path &path) {
                       if (const auto paths = m_map_sprite->generate_swizzle_map_paths(path, ".map"); !std::ranges::empty(paths))
                       {
@@ -2783,7 +2796,7 @@ void gui::directory_browser_display()
                  m_deswizzle_map_paths_enabled,
                  m_map_sprite->filter().deswizzle_map,
                  m_map_sprite->filter().upscale_map,
-                 [&](const std::filesystem::path &path) { return m_map_sprite->has_map_path(path, ".map"); },
+                 has_map_path,
                  [&](const std::filesystem::path &path) {
                       if (const auto paths = m_map_sprite->generate_deswizzle_map_paths(path, ".map"); !std::ranges::empty(paths))
                       {
