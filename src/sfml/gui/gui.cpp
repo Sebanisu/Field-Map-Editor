@@ -2907,6 +2907,9 @@ void gui::file_browser_save_texture()
                     }
                     break;
                     case file_dialog_mode::load_map_file: {
+                         /// TODO load in as a filter? or leave as is... For now we'll disable the filter and just load the selected file.
+                         m_map_sprite->filter().upscale_map.disable();
+                         m_map_sprite->filter().deswizzle_map.disable();
                          m_map_sprite->load_map(selected_path);
                          m_selections->output_map_path = selected_directory.string();
                          m_selections->update_configuration_key(ConfigKey::OutputMapPath);
