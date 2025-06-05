@@ -81,6 +81,7 @@ class batch
 
    public:
      void update(sf::Time elapsed_time);
+     batch() = default;
      explicit batch(std::weak_ptr<Selections> existing_selections, std::weak_ptr<archives_group> existing_group);
      bool   in_progress() const;
      void   stop();

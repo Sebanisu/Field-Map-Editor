@@ -1260,7 +1260,15 @@ fme::batch &fme::batch::operator=(std::weak_ptr<archives_group> new_group)
 fme::batch &fme::batch::operator=(std::weak_ptr<Selections> new_selections)
 {
      stop();
-     m_selections = std::move(new_selections);
+     m_selections          = std::move(new_selections);
+     const auto selections = m_selections.lock();
+     if (!selections)
+     {
+          spdlog::error("Failed to lock m_selections: shared_ptr is expired.");
+          return *this;
+     }
+     m_input_path_valid  = safe_copy_string(selections->batch_input_path, m_input_path);
+     m_output_path_valid = safe_copy_string(selections->batch_output_path, m_output_path);
      return *this;
 }
 
@@ -1276,26 +1284,7 @@ void fme::batch::stop()
 }
 
 fme::batch::batch(std::weak_ptr<Selections> existing_selections, std::weak_ptr<archives_group> existing_group)
-  : m_selections(std::move(existing_selections))
-  , m_archives_group(std::move(existing_group))
 {
-
-     const auto archives_group = m_archives_group.lock();
-     if (!archives_group)
-     {
-          spdlog::error("Failed to lock m_archives_group: shared_ptr is expired.");
-     }
-     else if (archives_group->mapdata().size() != m_maps_enabled.size())
-     {
-          m_maps_enabled.resize(archives_group->mapdata().size(), true);
-     }
-
-     const auto selections = m_selections.lock();
-     if (!selections)
-     {
-          spdlog::error("Failed to lock m_selections: shared_ptr is expired.");
-          return;
-     }
-     m_input_path_valid  = safe_copy_string(selections->batch_input_path, m_input_path);
-     m_output_path_valid = safe_copy_string(selections->batch_output_path, m_output_path);
+     operator=(std::move(existing_selections));
+     operator=(std::move(existing_group));
 }
