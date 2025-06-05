@@ -222,6 +222,7 @@ const std::string &fme::batch::get_output_pattern(fme::output_types type)
      switch (type)
      {
           case fme::output_types::swizzle:
+          case fme::output_types::swizzle_as_one_image:
                return selections->output_swizzle_pattern;
           default:
           case fme::output_types::deswizzle:
@@ -260,6 +261,7 @@ const std::string &fme::batch::get_output_map_pattern(fme::output_types type)
      switch (type)
      {
           case fme::output_types::swizzle:
+          case fme::output_types::swizzle_as_one_image:
                return selections->output_map_pattern_for_swizzle;
           default:
           case fme::output_types::deswizzle:
@@ -361,7 +363,7 @@ void fme::batch::combo_output_type()
           spdlog::error("Failed to lock m_selections: shared_ptr is expired.");
           return;
      }
-     static constexpr auto values = std::array{ output_types::deswizzle, output_types::swizzle };
+     static constexpr auto values = std::array{ output_types::deswizzle, output_types::swizzle, output_types::swizzle_as_one_image };
      const auto            gcc    = fme::GenericComboClass(
        gui_labels::output_type,
        []() { return values; },
@@ -874,42 +876,6 @@ void fme::batch::update(sf::Time elapsed_time)
      // and it either uses the COO or COO is 'generic'
      if (!m_map_sprite.fail() && (m_map_sprite.using_coo() || m_coo.value() == open_viii::LangT::generic))
      {
-          // Optionally load the map from the input path if applicable
-          if (selections->batch_input_load_map && selections->batch_input_type != input_types::mim)
-          {
-
-               const std::string &selected_string =
-                 get_selected_path(selections->batch_output_path, selections->batch_output_root_path_type);
-               // const key_value_data cpm2 = {
-               //      .field_name    = m_map_sprite.get_base_name(),
-               //      .ext           = ".map",
-               //      .language_code = m_coo.has_value() && m_coo.value() != open_viii::LangT::generic ? m_coo : std::nullopt,
-               // };
-               // m_map_sprite.load_map(
-               //   cpm2.replace_tags(fme::batch::get_output_map_pattern(selections->batch_input_type), selections, selected_string));
-               switch (selections->batch_input_type)
-               {
-                    case input_types::swizzle:
-                         if (const auto paths = m_map_sprite.generate_swizzle_map_paths(std::filesystem::path(selected_string), ".map");
-                             !std::ranges::empty(paths))
-                         {
-                              m_map_sprite.load_map(paths.front());// grab the first match.
-                         }
-                         break;
-                    case input_types::deswizzle:
-                         if (const auto paths = m_map_sprite.generate_deswizzle_map_paths(std::filesystem::path(selected_string), ".map");
-                             !std::ranges::empty(paths))
-                         {
-                              m_map_sprite.load_map(paths.front());// grab the first match.
-                         }
-                         break;
-                    default:
-                         // none
-                         break;
-               }
-          }
-
-          // Optimize and prepare data for output
           compact();
           flatten();
 
@@ -922,6 +888,10 @@ void fme::batch::update(sf::Time elapsed_time)
                     break;
                case output_types::swizzle:
                     m_future_of_future_consumer = m_map_sprite.save_swizzle_textures(selections->output_swizzle_pattern, selected_string);
+                    break;
+               case output_types::swizzle_as_one_image:
+                    m_future_of_future_consumer =
+                      m_map_sprite.save_combined_swizzle_texture(selections->output_swizzle_pattern, selected_string);
                     break;
           }
 
@@ -1009,17 +979,21 @@ void fme::batch::generate_map_sprite()
      switch (selections->batch_input_type)
      {
           case input_types::mim:
-               // No filters applied for MIM input
+               // No filters applied for MIM input and no .map files are loaded automaticly.
                break;
 
           case input_types::deswizzle:
                // Enable deswizzle filter using the input path
                filters.deswizzle.update(selected_string).enable();
+               if (selections->batch_input_load_map)
+                    filters.deswizzle_map.update(selected_string).enable();
                break;
 
           case input_types::swizzle:
                // Enable upscale filter using the input path
                filters.upscale.update(selected_string).enable();
+               if (selections->batch_input_load_map)
+                    filters.upscale_map.update(selected_string).enable();
                break;
      }
 

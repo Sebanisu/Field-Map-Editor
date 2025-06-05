@@ -536,6 +536,9 @@ struct fmt::formatter<fme::input_types> : fmt::formatter<std::string_view>
                case fme::input_types::swizzle:
                     name = fme::gui_labels::swizzle;
                     break;
+               case fme::input_types::swizzle_as_one_image:
+                    name = fme::gui_labels::swizzle_as_one_image;
+                    break;
           }
           return fmt::formatter<std::string_view>::format(name, ctx);
      }
@@ -557,6 +560,9 @@ struct fmt::formatter<fme::output_types> : fmt::formatter<std::string_view>
                     break;
                case fme::output_types::swizzle:
                     name = fme::gui_labels::swizzle;
+                    break;
+               case fme::output_types::swizzle_as_one_image:
+                    name = fme::gui_labels::swizzle_as_one_image;
                     break;
           }
           return fmt::formatter<std::string_view>::format(name, ctx);

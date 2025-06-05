@@ -21,11 +21,13 @@ enum struct input_types
      mim,
      deswizzle,
      swizzle,
+     swizzle_as_one_image,
 };
 enum struct output_types
 {
      deswizzle,
      swizzle,
+     swizzle_as_one_image,
 };
 [[nodiscard]] constexpr static inline std::optional<output_types> to_output_type(input_types input) noexcept
 {
@@ -35,6 +37,8 @@ enum struct output_types
                return output_types::swizzle;
           case input_types::deswizzle:
                return output_types::deswizzle;
+          case input_types::swizzle_as_one_image:
+               return output_types::swizzle_as_one_image;
           default:
                return std::nullopt;// input_types::mim has no mapping
      }
@@ -48,6 +52,8 @@ enum struct output_types
                return input_types::swizzle;
           case output_types::deswizzle:
                return input_types::deswizzle;
+          case output_types::swizzle_as_one_image:
+               return input_types::swizzle_as_one_image;
           default:
                return std::nullopt;// input_types::mim has no mapping
      }
