@@ -1938,6 +1938,26 @@ std::vector<std::filesystem::path> map_sprite::generate_swizzle_paths(const std:
        selections->output_swizzle_pattern);
 }
 
+
+std::vector<std::filesystem::path> map_sprite::generate_swizzle_paths(const std::filesystem::path &path, const std::string &ext) const
+{
+     const auto selections = m_selections.lock();
+     if (!selections)
+     {
+          spdlog::error("Failed to lock m_selections: shared_ptr is expired.");
+          return {};
+     }
+     return generate_paths(
+       path.string(),
+       { .field_name    = get_base_name(),
+         .ext           = ext,
+         .language_code = m_map_group.opt_coo.has_value() && m_map_group.opt_coo.value() != open_viii::LangT::generic ? m_map_group.opt_coo
+                                                                                                                      : std::nullopt },
+
+       // selections->output_map_pattern_for_swizzle,
+       selections->output_swizzle_pattern);
+}
+
 std::vector<std::filesystem::path> map_sprite::generate_swizzle_map_paths(const std::string &ext) const
 {
      const auto selections = m_selections.lock();
@@ -2005,6 +2025,25 @@ std::vector<std::filesystem::path> map_sprite::generate_deswizzle_paths(const st
      }
      return generate_paths(
        m_filters.deswizzle.value().string(),
+       { .field_name    = get_base_name(),
+         .ext           = ext,
+         .language_code = m_map_group.opt_coo.has_value() && m_map_group.opt_coo.value() != open_viii::LangT::generic ? m_map_group.opt_coo
+                                                                                                                      : std::nullopt },
+
+       // selections->output_map_pattern_for_deswizzle,
+       selections->output_deswizzle_pattern);
+}
+
+std::vector<std::filesystem::path> map_sprite::generate_deswizzle_paths(const std::filesystem::path &path, const std::string &ext) const
+{
+     const auto selections = m_selections.lock();
+     if (!selections)
+     {
+          spdlog::error("Failed to lock m_selections: shared_ptr is expired.");
+          return {};
+     }
+     return generate_paths(
+       path.string(),
        { .field_name    = get_base_name(),
          .ext           = ext,
          .language_code = m_map_group.opt_coo.has_value() && m_map_group.opt_coo.value() != open_viii::LangT::generic ? m_map_group.opt_coo

@@ -515,6 +515,11 @@ struct [[nodiscard]] map_sprite final
      [[nodiscard]] std::vector<std::filesystem::path> generate_deswizzle_paths(const std::string &ext) const;
      [[nodiscard]] std::vector<std::filesystem::path> generate_swizzle_paths(const std::string &ext) const;
 
+     [[nodiscard]] std::vector<std::filesystem::path>
+       generate_deswizzle_paths(const std::filesystem::path &path, const std::string &ext) const;
+     [[nodiscard]] std::vector<std::filesystem::path>
+       generate_swizzle_paths(const std::filesystem::path &path, const std::string &ext) const;
+
      [[nodiscard]] std::vector<std::filesystem::path> generate_deswizzle_map_paths(const std::string &ext = ".map") const;
      [[nodiscard]] std::vector<std::filesystem::path> generate_swizzle_map_paths(const std::string &ext = ".map") const;
      [[nodiscard]] std::vector<std::filesystem::path>
