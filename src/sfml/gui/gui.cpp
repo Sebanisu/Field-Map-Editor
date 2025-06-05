@@ -2609,6 +2609,7 @@ void gui::directory_browser_display()
           return;
      }
      const auto pop_directory = scope_guard([this]() { m_directory_browser.ClearSelected(); });
+     bool       changed       = false;
      auto       selected_path = m_directory_browser.GetSelected();
      switch (m_modified_directory_map)
      {
@@ -2684,19 +2685,13 @@ void gui::directory_browser_display()
                // this stores a copy of the directory for referencing later we can also remove this path in the file menu.
                m_selections->paths_vector_upscale.push_back(m_selections->swizzle_path);
 
-               // sort the drop down
-               std::ranges::sort(m_selections->paths_vector_upscale);
-               // remove duplicates
-               {
-                    const auto to_remove = std::ranges::unique(m_selections->paths_vector_upscale);
-                    m_selections->paths_vector_upscale.erase(to_remove.begin(), to_remove.end());
-               }
+               sort_and_remove_duplicates(m_selections->paths_vector_upscale);
                m_selections->update_configuration_key(ConfigKey::PathsVectorUpscale);
 
                // append the path to the various search patterns.
                const auto upscale_result = upscales(m_selections->swizzle_path, get_coo(), m_selections);
                const auto temp_paths     = upscale_result.get_paths();
-               const auto temp_map_paths = upscale_result.get_map_paths();
+
 
                // if we have found matches
                if (!temp_paths.empty())
@@ -2705,40 +2700,21 @@ void gui::directory_browser_display()
                     {
                          // add matches to the drop down
                          m_upscale_paths.emplace_back(path.string());
-                    }
-                    // sort the drop down
-                    std::ranges::sort(m_upscale_paths);
-                    // remove duplicates
-                    {
-                         const auto to_remove = std::ranges::unique(m_upscale_paths);
-                         m_upscale_paths.erase(to_remove.begin(), to_remove.end());
+                         if (m_upscale_paths_enabled.emplace_back(m_map_sprite->has_swizzle_path(std::filesystem::path{ path })) && !changed)
+                         {
+                              m_map_sprite->filter().deswizzle.disable();
+                              m_map_sprite->filter().upscale.update(temp_paths.front()).enable();
+                              changed = true;
+                         }
                     }
 
-                    m_upscale_paths_enabled.clear();
-                    for (const auto &path : m_upscale_paths)
+                    sort_and_remove_duplicates(m_upscale_paths, m_upscale_paths_enabled);
+
+                    if (changed)
                     {
-                         m_upscale_paths_enabled.push_back(m_map_sprite->has_swizzle_path(std::filesystem::path{ path }));
+                         refresh_render_texture(true);
                     }
-                    //  select the first match
-                    m_map_sprite->filter().deswizzle.disable();
-                    m_map_sprite->filter().upscale.update(temp_paths.front()).enable();
                }
-               // /// TODO I might need a second drop down to choose the detected map to load. Though map loads are added to the map history
-               // /// they aren't something setup to be toggled. I guess I could make it clear that changing the map will overwrite any
-               // edits
-               // /// to history you have. Not sure. Though in history you can just undo the load.
-               // for (const auto &temp_map_path : temp_map_paths)
-               // {
-               //      auto          map_path      = temp_map_path / m_map_sprite->map_filename();
-               //      safedir const safe_map_path = map_path;
-               //      if (safe_map_path.is_exists())
-               //      {
-               //           m_map_sprite->load_map(map_path);
-               //           break;
-               //      }
-               // }
-
-               refresh_render_texture(true);
           }
           break;
           case map_directory_mode::load_deswizzle_textures: {
@@ -2749,19 +2725,12 @@ void gui::directory_browser_display()
                // this stores a copy of the directory for referencing later we can also remove this path in the file menu.
                m_selections->paths_vector_deswizzle.push_back(m_selections->deswizzle_path);
 
-               // sort the drop down
-               std::ranges::sort(m_selections->paths_vector_deswizzle);
-               // remove duplicates
-               {
-                    const auto to_remove = std::ranges::unique(m_selections->paths_vector_deswizzle);
-                    m_selections->paths_vector_deswizzle.erase(to_remove.begin(), to_remove.end());
-               }
+               sort_and_remove_duplicates(m_selections->paths_vector_deswizzle);
                m_selections->update_configuration_key(ConfigKey::PathsVectorDeswizzle);
 
                // append the path to the various search patterns.
-               const auto upscale_result = upscales(m_selections->deswizzle_path, get_coo(), m_selections);
-               const auto temp_paths     = upscale_result.get_paths();
-               const auto temp_map_paths = upscale_result.get_map_paths();
+               const auto deswizzle_result = upscales(m_selections->deswizzle_path, get_coo(), m_selections);
+               const auto temp_paths       = deswizzle_result.get_paths();
 
                // if we have found matches
                if (!temp_paths.empty())
@@ -2770,38 +2739,23 @@ void gui::directory_browser_display()
                     {
                          // add matches to the drop down
                          m_deswizzle_paths.emplace_back(path.string());
+                         if (
+                           m_deswizzle_paths_enabled.emplace_back(m_map_sprite->has_deswizzle_path(std::filesystem::path{ path }))
+                           && !changed)
+                         {
+                              m_map_sprite->filter().upscale.disable();
+                              m_map_sprite->filter().deswizzle.update(temp_paths.front()).enable();
+                              changed = true;
+                         }
                     }
-                    // sort the drop down
-                    std::ranges::sort(m_deswizzle_paths);
-                    // remove duplicates
-                    {
-                         const auto to_remove = std::ranges::unique(m_deswizzle_paths);
-                         m_deswizzle_paths.erase(to_remove.begin(), to_remove.end());
-                    }
-                    m_deswizzle_paths_enabled.clear();
-                    for (const auto &path : m_deswizzle_paths)
-                    {
-                         m_deswizzle_paths_enabled.push_back(m_map_sprite->has_deswizzle_path(std::filesystem::path{ path }));
-                    }
-                    //  select the first match
-                    m_map_sprite->filter().upscale.disable();
-                    m_map_sprite->filter().deswizzle.update(temp_paths.front()).enable();
-               }
-               /// TODO I might need a second drop down to choose the detected map to load. Though map loads are added to the map history
-               /// they aren't something setup to be toggled. I guess I could make it clear that changing the map will overwrite any edits
-               /// to history you have. Not sure. Though in history you can just undo the load.
-               // for (const auto &temp_map_path : temp_map_paths)
-               // {
-               //      auto          map_path      = temp_map_path / m_map_sprite->map_filename();
-               //      safedir const safe_map_path = map_path;
-               //      if (safe_map_path.is_exists())
-               //      {
-               //           m_map_sprite->load_map(map_path);
-               //           break;
-               //      }
-               // }
 
-               refresh_render_texture(true);
+                    sort_and_remove_duplicates(m_deswizzle_paths, m_deswizzle_paths_enabled);
+
+                    if (changed)
+                    {
+                         refresh_render_texture(true);
+                    }
+               }
           }
           break;
           case map_directory_mode::load_swizzle_map: {
