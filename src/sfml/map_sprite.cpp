@@ -1572,6 +1572,8 @@ void map_sprite::load_map(const std::filesystem::path &src_path)
             (void)m_map_group.maps.copy_working_to_original(fmt::format("{}: {}", gui_labels::load_map, src_path));
        },
        path);
+
+     spdlog::info("Load map: {}", src_path.string());
      update_render_texture();
 }
 void map_sprite::test_map(const std::filesystem::path &saved_path) const
