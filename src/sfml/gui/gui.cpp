@@ -2608,9 +2608,58 @@ void gui::directory_browser_display()
      {
           return;
      }
-     const auto pop_directory = scope_guard([this]() { m_directory_browser.ClearSelected(); });
-     bool       changed       = false;
-     auto       selected_path = m_directory_browser.GetSelected();
+     const auto            pop_directory         = scope_guard([this]() { m_directory_browser.ClearSelected(); });
+     bool                  changed               = false;
+     const auto            selected_path         = m_directory_browser.GetSelected();
+     static constexpr auto noop                  = []([[maybe_unused]] const std::filesystem::path &path) {};
+     const auto            process_texture_paths = [&](
+                                          std::string                                      &target_path,
+                                          ConfigKey                                         path_key,
+                                          std::vector<std::string>                         &paths_vector,
+                                          ConfigKey                                         vector_key,
+                                          std::vector<std::string>                         &target_paths,
+                                          std::vector<bool>                                &target_paths_enabled,
+                                          auto                                             &main_filter,
+                                          auto                                             &other_filter,
+                                          const std::invocable<std::filesystem::path> auto &has_path_funct,
+                                          const std::invocable<std::filesystem::path> auto &action) {
+          // Remember the last grabbed path
+          target_path = selected_path.string();
+          // Save the setting to TOML
+          m_selections->update_configuration_key(path_key);
+          // Store a copy of the directory
+          paths_vector.push_back(target_path);
+          sort_and_remove_duplicates(paths_vector);
+          m_selections->update_configuration_key(vector_key);
+
+          // Append the path to the various search patterns
+          const auto result     = upscales(target_path, get_coo(), m_selections);
+          const auto temp_paths = result.get_paths();
+
+          // If we have found matches
+          if (!temp_paths.empty())
+          {
+               for (const auto &path : temp_paths)
+               {
+                    // Add matches to the drop-down
+                    target_paths.emplace_back(path.string());
+                    bool path_enabled = std::invoke(has_path_funct, path);
+                    target_paths_enabled.emplace_back(path_enabled);
+                    if (path_enabled && !changed)
+                    {
+                         other_filter.disable();
+                         main_filter.update(path).enable();
+                         std::invoke(action, path);
+                         changed = true;
+                    }
+               }
+               sort_and_remove_duplicates(target_paths, target_paths_enabled);
+               if (changed)
+               {
+                    refresh_render_texture(true);
+               }
+          }
+     };
      switch (m_modified_directory_map)
      {
           case map_directory_mode::ff8_install_directory: {
@@ -2678,144 +2727,69 @@ void gui::directory_browser_display()
           }
           break;
           case map_directory_mode::load_swizzle_textures: {
-               // remember the last grabbed path.
-               m_selections->swizzle_path = selected_path.string();
-               // save the setting to toml
-               m_selections->update_configuration_key(ConfigKey::SwizzlePath);
-               // this stores a copy of the directory for referencing later we can also remove this path in the file menu.
-               m_selections->paths_vector_upscale.push_back(m_selections->swizzle_path);
-
-               sort_and_remove_duplicates(m_selections->paths_vector_upscale);
-               m_selections->update_configuration_key(ConfigKey::PathsVectorUpscale);
-
-               // append the path to the various search patterns.
-               const auto upscale_result = upscales(m_selections->swizzle_path, get_coo(), m_selections);
-               const auto temp_paths     = upscale_result.get_paths();
-
-
-               // if we have found matches
-               if (!temp_paths.empty())
-               {
-                    for (const auto &path : temp_paths)
-                    {
-                         // add matches to the drop down
-                         m_upscale_paths.emplace_back(path.string());
-                         if (m_upscale_paths_enabled.emplace_back(m_map_sprite->has_swizzle_path(std::filesystem::path{ path })) && !changed)
-                         {
-                              m_map_sprite->filter().deswizzle.disable();
-                              m_map_sprite->filter().upscale.update(temp_paths.front()).enable();
-                              changed = true;
-                         }
-                    }
-
-                    sort_and_remove_duplicates(m_upscale_paths, m_upscale_paths_enabled);
-
-                    if (changed)
-                    {
-                         refresh_render_texture(true);
-                    }
-               }
+               process_texture_paths(
+                 m_selections->swizzle_path,
+                 ConfigKey::SwizzlePath,
+                 m_selections->paths_vector_upscale,
+                 ConfigKey::PathsVectorUpscale,
+                 m_upscale_paths,
+                 m_upscale_paths_enabled,
+                 m_map_sprite->filter().upscale,
+                 m_map_sprite->filter().deswizzle,
+                 [&](const std::filesystem::path &path) { return m_map_sprite->has_swizzle_path(path, ".png"); },
+                 noop);
           }
           break;
           case map_directory_mode::load_deswizzle_textures: {
-               // remember the last grabbed path.
-               m_selections->deswizzle_path = selected_path.string();
-               // save the setting to toml
-               m_selections->update_configuration_key(ConfigKey::DeswizzlePath);
-               // this stores a copy of the directory for referencing later we can also remove this path in the file menu.
-               m_selections->paths_vector_deswizzle.push_back(m_selections->deswizzle_path);
-
-               sort_and_remove_duplicates(m_selections->paths_vector_deswizzle);
-               m_selections->update_configuration_key(ConfigKey::PathsVectorDeswizzle);
-
-               // append the path to the various search patterns.
-               const auto deswizzle_result = upscales(m_selections->deswizzle_path, get_coo(), m_selections);
-               const auto temp_paths       = deswizzle_result.get_paths();
-
-               // if we have found matches
-               if (!temp_paths.empty())
-               {
-                    for (const auto &path : temp_paths)
-                    {
-                         // add matches to the drop down
-                         m_deswizzle_paths.emplace_back(path.string());
-                         if (
-                           m_deswizzle_paths_enabled.emplace_back(m_map_sprite->has_deswizzle_path(std::filesystem::path{ path }))
-                           && !changed)
-                         {
-                              m_map_sprite->filter().upscale.disable();
-                              m_map_sprite->filter().deswizzle.update(temp_paths.front()).enable();
-                              changed = true;
-                         }
-                    }
-
-                    sort_and_remove_duplicates(m_deswizzle_paths, m_deswizzle_paths_enabled);
-
-                    if (changed)
-                    {
-                         refresh_render_texture(true);
-                    }
-               }
+               process_texture_paths(
+                 m_selections->deswizzle_path,
+                 ConfigKey::DeswizzlePath,
+                 m_selections->paths_vector_deswizzle,
+                 ConfigKey::PathsVectorDeswizzle,
+                 m_deswizzle_paths,
+                 m_deswizzle_paths_enabled,
+                 m_map_sprite->filter().deswizzle,
+                 m_map_sprite->filter().upscale,
+                 [&](const std::filesystem::path &path) { return m_map_sprite->has_deswizzle_path(path, ".png"); },
+                 noop);
           }
           break;
           case map_directory_mode::load_swizzle_map: {
-               // remember the last grabbed path.
-               m_selections->swizzle_path = selected_path.string();
-               // save the setting to toml
-               m_selections->update_configuration_key(ConfigKey::SwizzlePath);
-               // add path
-               // this stores a copy of the directory for referencing later we can also remove this path in the file menu.
-               m_selections->paths_vector_upscale_map.push_back(m_selections->swizzle_path);
-               // sort the drop down
-               std::ranges::sort(m_selections->paths_vector_upscale_map);
-               // remove duplicates
-               {
-                    const auto to_remove = std::ranges::unique(m_selections->paths_vector_upscale_map);
-                    m_selections->paths_vector_upscale_map.erase(to_remove.begin(), to_remove.end());
-               }
-               m_selections->update_configuration_key(ConfigKey::PathsVectorUpscaleMap);
-
-               // append the path to the various search patterns.
-               const auto upscale_result = upscales(m_selections->swizzle_path, get_coo(), m_selections);
-               // const auto temp_paths     = upscale_result.get_paths();
-               const auto temp_map_paths = upscale_result.get_map_paths();
-
-               // attempt to find .map file for this path using new method.
-               if (!std::ranges::empty(temp_map_paths))
-               {
-                    for (const auto &temp_map_path : temp_map_paths)
-                    {
-                         // add matches to the drop down
-                         m_upscale_map_paths.emplace_back(temp_map_path.string());
-
-                         m_upscale_map_paths_enabled.emplace_back(
-                           m_map_sprite->has_map_path(temp_map_path, ".map", m_selections->output_map_pattern_for_swizzle));
-                    }
-
-                    sort_and_remove_duplicates(m_upscale_map_paths, m_upscale_map_paths_enabled);
-
-                    for (const auto &temp_map_path : temp_map_paths)
-                    {
-                         auto map_path = temp_map_path / m_map_sprite->map_filename();
-                         if (const auto paths = m_map_sprite->generate_swizzle_map_paths(temp_map_path, ".map"); !std::ranges::empty(paths))
-                         {
-                              // if match found
-                              //   set path to filter, set path to enable.
-                              //   refresh the texture
-                              m_map_sprite->load_map(paths.front());// grab the first match.
-                              m_map_sprite->filter().deswizzle_map.disable();
-                              m_map_sprite->filter().upscale_map.update(temp_map_path).enable();
-                              refresh_render_texture(true);
-                              break;
-                         }
-                         // else if .map was not found
-                         //   don't change the filter.
-                    }
-               }
+               process_texture_paths(
+                 m_selections->swizzle_path,
+                 ConfigKey::SwizzlePath,
+                 m_selections->paths_vector_upscale,
+                 ConfigKey::PathsVectorUpscaleMap,
+                 m_upscale_map_paths,
+                 m_upscale_map_paths_enabled,
+                 m_map_sprite->filter().upscale_map,
+                 m_map_sprite->filter().deswizzle_map,
+                 [&](const std::filesystem::path &path) { return m_map_sprite->has_map_path(path, ".map"); },
+                 [&](const std::filesystem::path &path) {
+                      if (const auto paths = m_map_sprite->generate_swizzle_map_paths(path, ".map"); !std::ranges::empty(paths))
+                      {
+                           m_map_sprite->load_map(paths.front());// grab the first match.
+                      }
+                 });
           }
           break;
           case map_directory_mode::load_deswizzle_map: {
-               // same as above but different varible names.
+               process_texture_paths(
+                 m_selections->deswizzle_path,
+                 ConfigKey::DeswizzlePath,
+                 m_selections->paths_vector_deswizzle,
+                 ConfigKey::PathsVectorDeswizzleMap,
+                 m_deswizzle_map_paths,
+                 m_deswizzle_map_paths_enabled,
+                 m_map_sprite->filter().deswizzle_map,
+                 m_map_sprite->filter().upscale_map,
+                 [&](const std::filesystem::path &path) { return m_map_sprite->has_map_path(path, ".map"); },
+                 [&](const std::filesystem::path &path) {
+                      if (const auto paths = m_map_sprite->generate_deswizzle_map_paths(path, ".map"); !std::ranges::empty(paths))
+                      {
+                           m_map_sprite->load_map(paths.front());// grab the first match.
+                      }
+                 });
           }
           break;
      }
