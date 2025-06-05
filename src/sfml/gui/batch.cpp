@@ -10,7 +10,10 @@
 #include "push_pop_id.hpp"
 #include "tool_tip.hpp"
 #include <optional>
-
+namespace fme
+{
+     static ImGuiTreeNodeFlags flags{};
+}
 /**
  * @brief Safely copies a null-terminated string from one contiguous range to another.
  *
@@ -64,7 +67,8 @@ void fme::batch::draw_window()
      browse_output_path();
      checkmark_save_map();
      // automatic processing via compact or flatten
-     if (ImGui::CollapsingHeader(gui_labels::compact_flatten.data()))
+
+     if (ImGui::CollapsingHeader(gui_labels::compact_flatten.data(), flags))
      {
           format_imgui_wrapped_text("{}", gui_labels::compact_flatten_warning);
           combo_compact_type();
@@ -536,7 +540,7 @@ void fme::batch::combo_compact_type()
      {
           return;
      }
-     selections->update_configuration_key(ConfigKey::BatchCompact);
+     // selections->update_configuration_key(ConfigKey::BatchCompact);
 }
 void fme::batch::combo_flatten_type()
 {
@@ -581,7 +585,7 @@ void fme::batch::combo_flatten_type()
                return;
           }
      }
-     selections->update_configuration_key(ConfigKey::BatchFlatten);
+     // selections->update_configuration_key(ConfigKey::BatchFlatten);
 }
 void fme::batch::draw_multi_column_list_box(const std::string_view name, const std::vector<std::string> &items, std::vector<bool> &enabled)
 {
@@ -1308,4 +1312,14 @@ fme::batch::batch(std::weak_ptr<Selections> existing_selections, std::weak_ptr<a
 {
      operator=(std::move(existing_selections));
      operator=(std::move(existing_group));
+
+
+     const auto selections = m_selections.lock();
+     if (!selections)
+     {
+          spdlog::error("Failed to lock m_selections: shared_ptr is expired.");
+          return;
+     }
+     flags = selections->batch_compact_type.enabled() || selections->batch_flatten_type.enabled() ? ImGuiTreeNodeFlags_DefaultOpen
+                                                                                                  : ImGuiTreeNodeFlags{};
 }

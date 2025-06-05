@@ -2,12 +2,14 @@
 // Created by pcvii on 12/21/2022.
 //
 #include "Selections.hpp"
+#include "formatters.hpp"
 #include <spdlog/spdlog.h>
 using namespace open_viii;
 using namespace open_viii::graphics;
 using namespace open_viii::graphics::background;
 using namespace std::string_literals;
 using namespace std::string_view_literals;
+
 namespace fme
 {
 [[nodiscard]] consteval std::string_view key_to_string(ConfigKey key)
@@ -18,13 +20,13 @@ namespace fme
           case ConfigKey::BackgroundColor:
                return "selections_background_color"sv;
           case ConfigKey::BatchCompactEnabled:
-               return "batch_compact_enabled"sv;
+               return ff_8::ConfigKeys<ff_8::FilterTag::Compact>::enabled_key_name;
           case ConfigKey::BatchCompactType:
-               return "batch_compact_type"sv;
+               return ff_8::ConfigKeys<ff_8::FilterTag::Compact>::key_name;
           case ConfigKey::BatchFlattenEnabled:
-               return "batch_flatten_enabled"sv;
+               return ff_8::ConfigKeys<ff_8::FilterTag::Flatten>::enabled_key_name;
           case ConfigKey::BatchFlattenType:
-               return "batch_flatten_type"sv;
+               return ff_8::ConfigKeys<ff_8::FilterTag::Flatten>::key_name;
           case ConfigKey::BatchInputLoadMap:
                return "batch_input_load_map"sv;
           case ConfigKey::BatchInputPath:
@@ -148,19 +150,21 @@ namespace fme
 }
 }// namespace fme
 
-fme::Selections::Selections(bool load_config)
+fme::Selections::Selections(const Configuration config)
+  : batch_compact_type(
+      static_cast<fme::compact_type>(config[key_to_string(ConfigKey::BatchCompactType)].value_or(std::to_underlying(fme::compact_type{}))),
+      ff_8::WithFlag(
+        ff_8::FilterSettings::Default,
+        ff_8::FilterSettings::Toggle_Enabled,
+        config[key_to_string(ConfigKey::BatchCompactEnabled)].value_or(false)))
+  , batch_flatten_type(
+      static_cast<fme::flatten_type>(config[key_to_string(ConfigKey::BatchFlattenType)].value_or(std::to_underlying(fme::flatten_type{}))),
+      ff_8::WithFlag(
+        ff_8::FilterSettings::Default,
+        ff_8::FilterSettings::Toggle_Enabled,
+        config[key_to_string(ConfigKey::BatchFlattenEnabled)].value_or(false)))
 {
-     if (load_config)
-     {
-          load_configuration();
-     }
-}
-
-
-void fme::Selections::load_configuration()
-{
-     const auto          start_time = std::chrono::system_clock::now();
-     Configuration const config{};
+     const auto start_time = std::chrono::system_clock::now();
      if (auto opt_path = config[key_to_string(ConfigKey::SelectionsPath)].value<std::string>(); opt_path.has_value())
      {
           path = std::move(opt_path.value());
@@ -251,6 +255,7 @@ void fme::Selections::load_configuration()
 
      window_height       = config[key_to_string(ConfigKey::WindowHeight)].value_or(window_height_default);
      window_width        = config[key_to_string(ConfigKey::WindowWidth)].value_or(window_width_default);
+
 
      // Arrays
      if (!config.load_array(key_to_string(ConfigKey::PathPatternsCommonUpscale), paths_common_upscale))
@@ -433,10 +438,10 @@ void fme::Selections::update_configuration_key(ConfigKey key) const
      m.emplace(KEY, [](Configuration &c, const Selections &s) { c.update_array(key_to_string(KEY), s.FIELD_NAME); })
 
           MAP_INSERT_OR_ASSIGN(ConfigKey::BackgroundColor, std::bit_cast<std::uint32_t>(s.background_color));
-          MAP_MACRO(ConfigKey::BatchCompactEnabled, batch_compact_type.enabled());
-          MAP_MACRO_UNDERLYING(ConfigKey::BatchCompactType, batch_compact_type.value());
-          MAP_MACRO_UNDERLYING(ConfigKey::BatchFlattenType, batch_flatten_type.value());
-          MAP_MACRO(ConfigKey::BatchFlattenEnabled, batch_flatten_type.enabled());
+          // MAP_MACRO(ConfigKey::BatchCompactEnabled, batch_compact_type.enabled());
+          // MAP_MACRO_UNDERLYING(ConfigKey::BatchCompactType, batch_compact_type.value());
+          // MAP_MACRO_UNDERLYING(ConfigKey::BatchFlattenType, batch_flatten_type.value());
+          // MAP_MACRO(ConfigKey::BatchFlattenEnabled, batch_flatten_type.enabled());
           MAP_INSERT_OR_ASSIGN(ConfigKey::BatchInputPath, std::string(s.batch_input_path.data()));
           MAP_MACRO_UNDERLYING(ConfigKey::BatchInputRootPathType, batch_input_root_path_type);
           MAP_MACRO(ConfigKey::BatchInputLoadMap, batch_input_load_map);
@@ -495,14 +500,14 @@ void fme::Selections::update_configuration_key(ConfigKey key) const
           MAP_MACRO(ConfigKey::WindowHeight, window_height);
           MAP_MACRO(ConfigKey::WindowWidth, window_width);
 
-          m.emplace(ConfigKey::BatchCompact, [](Configuration &c, const Selections &s) {
-               c->insert_or_assign(key_to_string(ConfigKey::BatchCompactType), std::to_underlying(s.batch_compact_type.value()));
-               c->insert_or_assign(key_to_string(ConfigKey::BatchCompactEnabled), s.batch_compact_type.enabled());
-          });
-          m.emplace(ConfigKey::BatchFlatten, [](Configuration &c, const Selections &s) {
-               c->insert_or_assign(key_to_string(ConfigKey::BatchFlattenType), std::to_underlying(s.batch_flatten_type.value()));
-               c->insert_or_assign(key_to_string(ConfigKey::BatchFlattenEnabled), s.batch_flatten_type.enabled());
-          });
+          // m.emplace(ConfigKey::BatchCompact, [](Configuration &c, const Selections &s) {
+          //      c->insert_or_assign(key_to_string(ConfigKey::BatchCompactType), std::to_underlying(s.batch_compact_type.value()));
+          //      c->insert_or_assign(key_to_string(ConfigKey::BatchCompactEnabled), s.batch_compact_type.enabled());
+          // });
+          // m.emplace(ConfigKey::BatchFlatten, [](Configuration &c, const Selections &s) {
+          //      c->insert_or_assign(key_to_string(ConfigKey::BatchFlattenType), std::to_underlying(s.batch_flatten_type.value()));
+          //      c->insert_or_assign(key_to_string(ConfigKey::BatchFlattenEnabled), s.batch_flatten_type.enabled());
+          // });
 #undef MAP_MACRO
 #undef MAP_MACRO_UNDERLYING
 #undef MAP_INSERT_OR_ASSIGN

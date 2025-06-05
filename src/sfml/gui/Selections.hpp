@@ -71,10 +71,10 @@ enum class ConfigKey
      PathsVectorDeswizzle,
      PathsVectorUpscaleMap,
      PathsVectorDeswizzleMap,
-     BatchCompact,
+     //BatchCompact,
      BatchCompactType,
      BatchCompactEnabled,
-     BatchFlatten,
+     //BatchFlatten,
      BatchFlattenType,
      BatchFlattenEnabled,
      SwizzlePath,
@@ -166,8 +166,8 @@ struct Selections
      bool                           batch_input_load_map;
      bool                           batch_output_save_map;
 
-     ff_8::filter_old<compact_type, ff_8::FilterTag::Compact> batch_compact_type = { ff_8::FilterSettings::Default };
-     ff_8::filter_old<flatten_type, ff_8::FilterTag::Flatten> batch_flatten_type = { ff_8::FilterSettings::Default };
+     ff_8::filter_old<compact_type, ff_8::FilterTag::Compact> batch_compact_type;
+     ff_8::filter_old<flatten_type, ff_8::FilterTag::Flatten> batch_flatten_type;
 
      std::vector<std::string>                                 paths_with_palette_and_texture_page;
 
@@ -181,28 +181,18 @@ struct Selections
 
 
      std::vector<std::string>                                 paths_vector;
-     std::vector<std::string>                                 paths_vector_upscale   = {};
-     std::vector<std::string>                                 paths_vector_deswizzle = {};
-     std::vector<std::string>                                 paths_vector_upscale_map   = {};
-     std::vector<std::string>                                 paths_vector_deswizzle_map = {};
+     std::vector<std::string>                                 paths_vector_upscale;
+     std::vector<std::string>                                 paths_vector_deswizzle;
+     std::vector<std::string>                                 paths_vector_upscale_map;
+     std::vector<std::string>                                 paths_vector_deswizzle_map;
 
      std::vector<std::string>                                 paths_common_upscale_for_maps;
 
      /**
       * @brief Constructs a Selections object with default values.
-      *
-      * If @p load_config is true, it will automatically call load_configuration().
-      *
-      * @param load_config Whether to load the configuration during construction. Defaults to true.
       */
-     Selections(bool load_config = true);
+     Selections(const Configuration config = {});
 
-     /**
-      * @brief Loads configuration from a saved state if available; otherwise, uses default values.
-      *
-      * This function should be called during initialization if prior settings are expected.
-      */
-     void               load_configuration();
 
      /**
       * @brief Refreshes FFNx-related paths based on the current FF8 path.
