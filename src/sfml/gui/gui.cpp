@@ -13,6 +13,7 @@
 #include "push_pop_id.hpp"
 #include "safedir.hpp"
 #include "tool_tip.hpp"
+#include "utilities.hpp"
 #include <algorithm>
 #include <array>
 #include <cmath>
@@ -1527,11 +1528,11 @@ void gui::update_field()
      // Generate upscale texture paths if a field is loaded
      if (m_field)
      {
-          sort_paths();
           generate_upscale_paths();
           generate_deswizzle_paths();
           generate_upscale_map_paths();
           generate_deswizzle_map_paths();
+          sort_paths();
      }
 
      // Clear clicked tile indices used for selection logic
@@ -2722,19 +2723,20 @@ void gui::directory_browser_display()
                     m_map_sprite->filter().deswizzle.disable();
                     m_map_sprite->filter().upscale.update(temp_paths.front()).enable();
                }
-               /// TODO I might need a second drop down to choose the detected map to load. Though map loads are added to the map history
-               /// they aren't something setup to be toggled. I guess I could make it clear that changing the map will overwrite any edits
-               /// to history you have. Not sure. Though in history you can just undo the load.
-               for (const auto &temp_map_path : temp_map_paths)
-               {
-                    auto          map_path      = temp_map_path / m_map_sprite->map_filename();
-                    safedir const safe_map_path = map_path;
-                    if (safe_map_path.is_exists())
-                    {
-                         m_map_sprite->load_map(map_path);
-                         break;
-                    }
-               }
+               // /// TODO I might need a second drop down to choose the detected map to load. Though map loads are added to the map history
+               // /// they aren't something setup to be toggled. I guess I could make it clear that changing the map will overwrite any
+               // edits
+               // /// to history you have. Not sure. Though in history you can just undo the load.
+               // for (const auto &temp_map_path : temp_map_paths)
+               // {
+               //      auto          map_path      = temp_map_path / m_map_sprite->map_filename();
+               //      safedir const safe_map_path = map_path;
+               //      if (safe_map_path.is_exists())
+               //      {
+               //           m_map_sprite->load_map(map_path);
+               //           break;
+               //      }
+               // }
 
                refresh_render_texture(true);
           }
@@ -2788,16 +2790,16 @@ void gui::directory_browser_display()
                /// TODO I might need a second drop down to choose the detected map to load. Though map loads are added to the map history
                /// they aren't something setup to be toggled. I guess I could make it clear that changing the map will overwrite any edits
                /// to history you have. Not sure. Though in history you can just undo the load.
-               for (const auto &temp_map_path : temp_map_paths)
-               {
-                    auto          map_path      = temp_map_path / m_map_sprite->map_filename();
-                    safedir const safe_map_path = map_path;
-                    if (safe_map_path.is_exists())
-                    {
-                         m_map_sprite->load_map(map_path);
-                         break;
-                    }
-               }
+               // for (const auto &temp_map_path : temp_map_paths)
+               // {
+               //      auto          map_path      = temp_map_path / m_map_sprite->map_filename();
+               //      safedir const safe_map_path = map_path;
+               //      if (safe_map_path.is_exists())
+               //      {
+               //           m_map_sprite->load_map(map_path);
+               //           break;
+               //      }
+               // }
 
                refresh_render_texture(true);
           }
@@ -2821,25 +2823,41 @@ void gui::directory_browser_display()
 
                // append the path to the various search patterns.
                const auto upscale_result = upscales(m_selections->swizzle_path, get_coo(), m_selections);
-               //const auto temp_paths     = upscale_result.get_paths();
+               // const auto temp_paths     = upscale_result.get_paths();
                const auto temp_map_paths = upscale_result.get_map_paths();
 
                // attempt to find .map file for this path using new method.
-               for (const auto &temp_map_path : temp_map_paths)
+               if (!std::ranges::empty(temp_map_paths))
                {
-                    auto          map_path      = temp_map_path / m_map_sprite->map_filename();
-                    if (const auto paths = m_map_sprite->generate_swizzle_map_paths(temp_map_path, ".map"); !std::ranges::empty(paths))
+                    for (const auto &temp_map_path : temp_map_paths)
                     {
-                         m_map_sprite->load_map(paths.front());// grab the first match.
-                         break;
+                         // add matches to the drop down
+                         m_upscale_map_paths.emplace_back(temp_map_path.string());
+
+                         m_upscale_map_paths_enabled.emplace_back(
+                           m_map_sprite->has_map_path(temp_map_path, ".map", m_selections->output_map_pattern_for_swizzle));
+                    }
+
+                    sort_and_remove_duplicates(m_upscale_map_paths, m_upscale_map_paths_enabled);
+
+                    for (const auto &temp_map_path : temp_map_paths)
+                    {
+                         auto map_path = temp_map_path / m_map_sprite->map_filename();
+                         if (const auto paths = m_map_sprite->generate_swizzle_map_paths(temp_map_path, ".map"); !std::ranges::empty(paths))
+                         {
+                              // if match found
+                              //   set path to filter, set path to enable.
+                              //   refresh the texture
+                              m_map_sprite->load_map(paths.front());// grab the first match.
+                              m_map_sprite->filter().deswizzle_map.disable();
+                              m_map_sprite->filter().upscale_map.update(temp_map_path).enable();
+                              refresh_render_texture(true);
+                              break;
+                         }
+                         // else if .map was not found
+                         //   don't change the filter.
                     }
                }
-               // if match found
-               //   set path to filter, set path to enable.
-               //   refresh the texture
-               // else if .map was not found
-               //   don't change the filter.
-               // generate new map paths, at the end.
           }
           break;
           case map_directory_mode::load_deswizzle_map: {
@@ -2866,30 +2884,23 @@ std::filesystem::path gui::path_with_prefix_and_base_name(std::filesystem::path 
  * @note Paths that do not exist on the filesystem are TODO: not yet removed.
  */
 void gui::sort_paths()
-{// Check if already sorted and unique
-     const auto sort_and_unique = [&](auto &paths, ConfigKey key) {
-          bool changed = false;
-          if (!std::ranges::is_sorted(paths))
-          {
-               std::ranges::sort(paths);
-               changed = true;
-          }
-          if (std::ranges::adjacent_find(paths) != paths.end())
-          {
-               const auto removal = std::ranges::unique(paths);
-               paths.erase(removal.begin(), removal.end());
-               changed = true;
-          }
-          if (changed)
-          {
-               m_selections->update_configuration_key(key);
-          }
-     };
-     sort_and_unique(m_selections->paths_vector, ConfigKey::PathsVector);
-     sort_and_unique(m_selections->paths_vector_upscale, ConfigKey::PathsVectorUpscale);
-     sort_and_unique(m_selections->paths_vector_deswizzle, ConfigKey::PathsVectorDeswizzle);
-     sort_and_unique(m_selections->paths_vector_upscale_map, ConfigKey::PathsVectorUpscaleMap);
-     sort_and_unique(m_selections->paths_vector_deswizzle_map, ConfigKey::PathsVectorDeswizzleMap);
+{
+     if (sort_and_remove_duplicates(m_selections->paths_vector))
+          m_selections->update_configuration_key(ConfigKey::PathsVector);
+     if (sort_and_remove_duplicates(m_selections->paths_vector_upscale))
+          m_selections->update_configuration_key(ConfigKey::PathsVectorUpscale);
+     if (sort_and_remove_duplicates(m_selections->paths_vector_deswizzle))
+          m_selections->update_configuration_key(ConfigKey::PathsVectorDeswizzle);
+     if (sort_and_remove_duplicates(m_selections->paths_vector_upscale_map))
+          m_selections->update_configuration_key(ConfigKey::PathsVectorUpscaleMap);
+     if (sort_and_remove_duplicates(m_selections->paths_vector_deswizzle_map))
+          m_selections->update_configuration_key(ConfigKey::PathsVectorDeswizzleMap);
+
+
+     sort_and_remove_duplicates(m_upscale_paths, m_upscale_paths_enabled);
+     sort_and_remove_duplicates(m_upscale_map_paths, m_upscale_map_paths_enabled);
+     sort_and_remove_duplicates(m_deswizzle_paths, m_deswizzle_paths_enabled);
+     sort_and_remove_duplicates(m_deswizzle_map_paths, m_deswizzle_map_paths_enabled);
 }
 
 void gui::file_browser_save_texture()
@@ -3412,12 +3423,42 @@ mim_sprite gui::get_mim_sprite() const
               get_coo(),
               m_selections->draw_palette };
 }
-void gui::init_and_get_style()
+gui::gui()
+  : m_window(get_render_window())
 {
      // m_window.setVerticalSyncEnabled(true);
      // m_window.setFramerateLimit(0);// Disable manual frame limit
      // m_window.setVerticalSyncEnabled(false);// Disable vsync
      m_window.setVerticalSyncEnabled(true);
+     // Clear the window to black and display it immediately
+     m_window.clear(sf::Color::Black);
+     m_window.display();
+
+     m_archives_group = std::make_shared<archives_group>(get_archives_group());
+     m_batch          = fme::batch{ m_selections, m_archives_group };
+     m_field          = init_field();
+     m_mim_sprite     = get_mim_sprite();
+     m_map_sprite     = get_map_sprite();
+
+     m_import.update(m_selections);
+     m_history_window.update(m_selections);
+     m_import.update(m_map_sprite);
+     m_history_window.update(m_map_sprite);
+
+     GLenum const err = glewInit();
+     if (std::cmp_not_equal(GLEW_OK, err))
+     {
+          // GLEW initialization failed
+          const GLubyte *error_msg = glewGetErrorString(err);
+          spdlog::error("{}", reinterpret_cast<const char *>(error_msg));
+          std::terminate();
+     }
+     // Enable debug output
+     glEnable(GL_DEBUG_OUTPUT);
+     glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
+
+     // Set the debug callback function
+     glDebugMessageCallback(DebugCallback, nullptr);
      (void)ImGui::SFML::Init(m_window, false);
 
      ImGuiIO          &imgui_io   = ImGui::GetIO();
@@ -3435,12 +3476,13 @@ void gui::init_and_get_style()
      imgui_io.ConfigFlags = bitwise_or(imgui_io.ConfigFlags, ImGuiConfigFlags_DockingEnable);
      if (m_field)
      {
-          sort_paths();
+          /// TODO move the generate to a thread.
           generate_upscale_paths();
           generate_deswizzle_paths();
           generate_upscale_map_paths();
           generate_deswizzle_map_paths();
      }
+     sort_paths();
      if (!m_drag_sprite_shader)
      {
           m_drag_sprite_shader                       = std::make_shared<sf::Shader>();
@@ -3478,35 +3520,6 @@ void main()
 )";
           m_drag_sprite_shader->loadFromMemory(border_shader_raw, sf::Shader::Fragment);
      }
-}
-gui::gui()
-  : m_window(get_render_window())
-  , m_archives_group(std::make_shared<archives_group>(get_archives_group()))
-  , m_field(init_field())
-  , m_mim_sprite(get_mim_sprite())
-  , m_map_sprite(get_map_sprite())
-
-{
-     m_import.update(m_selections);
-     m_history_window.update(m_selections);
-     m_import.update(m_map_sprite);
-     m_history_window.update(m_map_sprite);
-     GLenum const err = glewInit();
-     if (std::cmp_not_equal(GLEW_OK, err))
-     {
-          // GLEW initialization failed
-          const GLubyte *error_msg = glewGetErrorString(err);
-          spdlog::error("{}", reinterpret_cast<const char *>(error_msg));
-          std::terminate();
-     }
-     // Enable debug output
-     glEnable(GL_DEBUG_OUTPUT);
-     glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
-
-     // Set the debug callback function
-     glDebugMessageCallback(DebugCallback, nullptr);
-     sort_paths();
-     init_and_get_style();
 }
 
 /**
