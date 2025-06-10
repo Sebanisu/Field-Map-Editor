@@ -107,6 +107,30 @@ class Configuration
           return false;
      }
 
+     template<typename T>
+     std::vector<T> load_array(const std::string_view key) const
+     {
+          std::vector<T> output;
+          if (!operator->()->contains(key))
+          {
+               return output;
+          }
+
+          if (const auto *array = operator[](key).as_array(); array)
+          {
+               output.clear();
+               output.reserve(array->size());
+               for (auto &&val : *array)
+               {
+                    if (auto str = val.value<T>(); str.has_value())
+                    {
+                         output.emplace_back(std::move(str.value()));
+                    }
+               }
+          }
+          return output;
+     }
+
      /**
       * @brief Updates the TOML configuration with a string array.
       *

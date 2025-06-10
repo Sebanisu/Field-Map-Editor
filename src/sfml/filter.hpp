@@ -232,9 +232,22 @@ struct filter_old
    private:
      T              m_value    = {};
      FilterSettings m_settings = {};
+     template<typename T, typename = void>
+     struct value_type_s
+     {
+          using type = T;// Default: T is not a range
+     };
+
+     template<typename T>
+     struct value_type_s<T, std::void_t<std::ranges::range_value_t<T>>>
+     {
+          using type = std::ranges::range_value_t<T>;// T is a range
+     };
+
 
    public:
-     using value_type                            = T;
+     using range_type                            = T;
+     using value_type                            = typename value_type_s<T>::type;
      static constexpr inline FilterTag tag_value = Tag;
      // filter_old()                                = default;
      filter_old(T value, FilterSettings settings)// FilterSettings::Default
@@ -272,9 +285,30 @@ struct filter_old
      template<typename U>
      filter_old &update(U &&value)
      {
-          if (m_value != value)
+          const bool selected = [&]() -> bool {
+               if constexpr (std::equality_comparable_with<range_type, U>)
+               {
+                    return m_value == value;
+               }
+               else
+               {
+                    return std::ranges::find(m_value, value) != std::ranges::end(m_value);
+               }
+          }();
+
+          if (!selected)
           {
-               m_value = std::forward<U>(value);
+               [&]() {
+                    if constexpr (std::same_as<range_type, U>)
+                    {
+                         m_value = std::forward<U>(value);
+                    }
+                    else if constexpr (std::same_as<value_type, U>)
+                    {
+                         m_value.clear();
+                         m_value.push_back(value);
+                    }
+               }();
                if constexpr (std::same_as<std::remove_cvref_t<decltype(ConfigKeys<Tag>::key_name)>, std::string_view>)
                {
                     if (HasFlag(m_settings, FilterSettings::Config_Enabled))
@@ -284,6 +318,36 @@ struct filter_old
                          {
                               spdlog::info("filter_old<{}>: \"{}\"", ConfigKeys<Tag>::key_name, m_value.string());
                               config->insert_or_assign(ConfigKeys<Tag>::key_name, m_value.string());
+                         }
+                         else if constexpr (std::ranges::range<T> && !std::is_same_v<T, std::string>)
+                         {
+                              // Collect range elements into a vector for TOML array
+                              toml::array array;
+                              array.reserve(m_value.size());
+
+                              for (const auto &current_value : m_value)
+                              {
+                                   if constexpr (std::convertible_to<value_type, std::filesystem::path>)
+                                   {
+                                        array.push_back(current_value.string());
+                                   }
+                                   else if constexpr (requires { std::declval<T>().raw(); })
+                                   {
+                                        array.push_back(current_value.raw());
+                                   }
+                                   else if constexpr (std::is_enum_v<T>)
+                                   {
+                                        array.push_back(std::to_underlying(current_value));
+                                   }
+                                   else
+                                   {
+                                        array.push_back(current_value);
+                                   }
+                              }
+
+
+                              spdlog::info("filter_old<{}>: array of size {}", ConfigKeys<Tag>::key_name, array.size());
+                              config->insert_or_assign(ConfigKeys<Tag>::key_name, array);
                          }
                          else if constexpr (requires { std::declval<T>().raw(); })
                          {
@@ -479,7 +543,18 @@ struct filter
 };
 
 template<typename T>
-concept IsFilterOld = requires(T obj) {
+concept IsFilterOldRanged = requires(T obj) {
+     { obj.update(typename std::remove_cvref_t<T>::range_type{}) } -> std::same_as<T &>;
+     { obj.value() } -> std::convertible_to<typename std::remove_cvref_t<T>::range_type const &>;
+     { obj.enabled() } -> std::convertible_to<const bool &>;
+     { obj.enable() } -> std::same_as<T &>;
+     { obj.disable() } -> std::same_as<T &>;
+     { static_cast<bool>(obj) } -> std::convertible_to<bool>;
+     { static_cast<typename std::remove_cvref_t<T>::range_type>(obj) } -> std::convertible_to<typename std::remove_cvref_t<T>::range_type>;
+};
+
+template<typename T>
+concept IsFilterOldNotRanged = requires(T obj) {
      { obj.update(typename std::remove_cvref_t<T>::value_type{}) } -> std::same_as<T &>;
      { obj.value() } -> std::convertible_to<typename std::remove_cvref_t<T>::value_type const &>;
      { obj.enabled() } -> std::convertible_to<const bool &>;
@@ -488,6 +563,9 @@ concept IsFilterOld = requires(T obj) {
      { static_cast<bool>(obj) } -> std::convertible_to<bool>;
      { static_cast<typename std::remove_cvref_t<T>::value_type>(obj) } -> std::convertible_to<typename std::remove_cvref_t<T>::value_type>;
 };
+
+template<typename T>
+concept IsFilterOld = IsFilterOldRanged<T> || IsFilterOldNotRanged<T>;
 
 template<typename T, typename TileT>
 concept IsFilter = open_viii::graphics::background::is_tile<TileT> && IsFilterOld<T> && requires(T obj, TileT tile) {
@@ -500,7 +578,7 @@ concept IsEitherFilter = IsFilterOld<T> || IsFilter<T, TileT>;
 struct filters
 {
      using TileT = open_viii::graphics::background::Tile1;
-     filter_old<PupuID, FilterTag::Pupu>                                                                            pupu;
+     filter_old<std::vector<PupuID>, FilterTag::Pupu>                                                               pupu;
      filter_old<std::filesystem::path, FilterTag::Upscale>                                                          upscale;
      filter_old<std::filesystem::path, FilterTag::Deswizzle>                                                        deswizzle;
      filter_old<std::filesystem::path, FilterTag::UpscaleMap>                                                       upscale_map;
@@ -521,13 +599,15 @@ struct filters
        : pupu([&]() -> decltype(pupu) {
             if (load_config)
             {
-                 return { std::bit_cast<PupuID>(config[ConfigKeys<FilterTag::Pupu>::key_name].value_or(PupuID{}.raw())),
+                 return { config.load_array<std::uint32_t>(ConfigKeys<FilterTag::Pupu>::key_name)
+                            | std::ranges::views::transform([](const auto &value) { return std::bit_cast<PupuID>(std::move(value)); })
+                            | std::ranges::to<std::vector>(),
                           WithFlag(
                             FilterSettings::Default,
                             FilterSettings::Toggle_Enabled,
                             config[ConfigKeys<FilterTag::Pupu>::enabled_key_name].value_or(false)) };
             }
-            return { PupuID{}, FilterSettings::All_Disabled };
+            return { typename decltype(pupu)::range_type{}, FilterSettings::All_Disabled };
        }())
        , upscale([&]() -> decltype(upscale) {
             if (load_config)
