@@ -25,16 +25,19 @@ class FieldMapEditorConan(ConanFile):
         self.requires("imgui/1.91.8-docking")
         self.requires("sfml/2.6.2")
         self.requires("zlib/1.3.1")
-        self.requires("openal-soft/1.22.2")
+        #self.requires("openal-soft/1.22.2") not compiling on gcc i think missing #include <cstdint>
+        self.requires("openal-soft/1.23.1", override=True)
         self.requires("boost-ext-ut/2.1.0") 
-        self.requires("tomlplusplus/3.0.1")
+        self.requires("tomlplusplus/3.4.0")
         self.requires("libpng/1.6.44")
         self.requires("stb/cci.20230920")        
         self.requires("iconfontcppheaders/cci.20240620")
         self.requires("ctre/3.9.0")      
     
     def build_requirements(self):
-        self.tool_requires("cmake/3.31.6")                
+        self.tool_requires("cmake/3.31.6")           
+        if platform.system() != "Windows":
+            self.tool_requires("ninja/1.12.1")             
 
         
     def configure(self):

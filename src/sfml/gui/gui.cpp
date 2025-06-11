@@ -1983,14 +1983,21 @@ void gui::edit_menu()
                          const auto pop_menu1       = scope_guard(&ImGui::EndMenu);
                          const auto process_element = [&](auto &value, auto &str) {
                               const bool selected = [&]() -> bool {
-                                   if constexpr (std::equality_comparable_with<decltype(filter.value()), decltype(value)>)
-                                   {
-                                        return filter.value() == value;
-                                   }
-                                   else
-                                   {
-                                        return std::ranges::find(filter.value(), value) != std::ranges::end(filter.value());
-                                   }
+                                   // if constexpr (std::equality_comparable_with<
+                                   //                 std::remove_cvref_t<decltype(filter)>::range_type,
+                                   //                 decltype(value)>)
+                                   // {
+                                   //      return filter.value() == value;
+                                   // }
+                                   // else if constexpr (std::equality_comparable_with<std::remove_cvref_t<decltype(filter)>::value_type, decltype(value)>)
+                                   // {
+                                   //      return std::ranges::find(filter.value(), value) != std::ranges::end(filter.value());
+                                   // }
+                                   // else
+                                   // {
+                                   //      throw;
+                                   // }
+                                   throw;
                               }();
                               bool checked = selected && filter.enabled();
                               if (ImGui::MenuItem(str.data(), nullptr, &checked))

@@ -232,16 +232,16 @@ struct filter_old
    private:
      T              m_value    = {};
      FilterSettings m_settings = {};
-     template<typename T, typename = void>
+     template<typename U, typename = void>
      struct value_type_s
      {
-          using type = T;// Default: T is not a range
+          using type = U;// Default: U is not a range
      };
 
-     template<typename T>
-     struct value_type_s<T, std::void_t<std::ranges::range_value_t<T>>>
+     template<typename U>
+     struct value_type_s<U, std::void_t<std::ranges::range_value_t<U>>>
      {
-          using type = std::ranges::range_value_t<T>;// T is a range
+          using type = std::ranges::range_value_t<U>;// U is a range
      };
 
 
@@ -286,14 +286,19 @@ struct filter_old
      filter_old &update(U &&value)
      {
           const bool selected = [&]() -> bool {
-               if constexpr (std::equality_comparable_with<range_type, U>)
-               {
-                    return m_value == value;
-               }
-               else
-               {
-                    return std::ranges::find(m_value, value) != std::ranges::end(m_value);
-               }
+               // if constexpr (std::equality_comparable_with<range_type, decltype(value)>)
+               // {
+               //      return m_value == value;
+               // }
+               // else if constexpr (std::equality_comparable_with<value_type, decltype(value)>)
+               // {
+               //      return std::ranges::find(m_value, value) != std::ranges::end(m_value);
+               // }
+               // else
+               // {
+               //      throw;
+               // }
+               throw;
           }();
 
           if (!selected)
@@ -331,11 +336,11 @@ struct filter_old
                                    {
                                         array.push_back(current_value.string());
                                    }
-                                   else if constexpr (requires { std::declval<T>().raw(); })
+                                   else if constexpr (requires { std::declval<value_type>().raw(); })
                                    {
                                         array.push_back(current_value.raw());
                                    }
-                                   else if constexpr (std::is_enum_v<T>)
+                                   else if constexpr (std::is_enum_v<value_type>)
                                    {
                                         array.push_back(std::to_underlying(current_value));
                                    }
@@ -441,8 +446,22 @@ struct filter
      FilterSettings m_settings  = {};
      OpT            m_operation = {};
 
+     template<typename U, typename = void>
+     struct value_type_s
+     {
+          using type = U;// Default: U is not a range
+     };
+
+     template<typename U>
+     struct value_type_s<U, std::void_t<std::ranges::range_value_t<U>>>
+     {
+          using type = std::ranges::range_value_t<U>;// U is a range
+     };
+
+
    public:
-     using value_type = T;
+     using range_type = T;
+     using value_type = typename value_type_s<T>::type;
      // filter()         = default;
      filter(T value, FilterSettings settings)// FilterSettings::Default
        : m_value(std::move(value))

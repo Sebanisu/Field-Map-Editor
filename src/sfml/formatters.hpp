@@ -10,7 +10,9 @@
 #include "gui/draw_mode.hpp"
 #include "gui/gui_labels.hpp"
 #include "normalized_source_tile.hpp"
+#include "PupuID.hpp"
 #include "tile_sizes.hpp"
+#include <bit>
 #include <filesystem>
 #include <fmt/format.h>
 #include <fmt/ranges.h>

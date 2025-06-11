@@ -9,6 +9,7 @@
 #include <fmt/chrono.h>
 #include <fmt/format.h>
 #include <imgui.h>
+#include <utility>
 inline const auto format_imgui_text = []<std::size_t sizeT = 0x1FEU, typename... T>(fmt::format_string<T...> fmt, T &&...items) {
      std::array<char, sizeT> buffer{};
      const auto              it = fmt::vformat_to_n(

@@ -569,14 +569,21 @@ sf::Sprite map_sprite::save_intersecting(const sf::Vector2i &pixel_pos, const st
                  if (m_filters.pupu.enabled())
                  {
                       const bool selected = [&]() -> bool {
-                           if constexpr (std::equality_comparable_with<decltype(m_filters.pupu.value()), decltype(pupu_id)>)
-                           {
-                                return m_filters.pupu.value() == pupu_id;
-                           }
-                           else
-                           {
-                                return std::ranges::find(m_filters.pupu.value(), pupu_id) != std::ranges::end(m_filters.pupu.value());
-                           }
+                         //   if constexpr (std::equality_comparable_with<std::remove_cvref_t<decltype(m_filters.pupu)>::range_type, ff_8::PupuID>)
+                         //   {
+                         //        return m_filters.pupu.value() == pupu_id;
+                         //   }
+                         //   else if constexpr (std::equality_comparable_with<
+                         //                        std::remove_cvref_t<decltype(m_filters.pupu)>::value_type,
+                         //                        ff_8::PupuID>)
+                         //   {
+                         //        return std::ranges::find(m_filters.pupu.value(), pupu_id) != std::ranges::end(m_filters.pupu.value());
+                         //   }
+                         //   else
+                         //   {
+                         //        throw;
+                         //   }
+                         throw;
                       }();
                       if (!selected)
                       {
