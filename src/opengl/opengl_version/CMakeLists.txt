@@ -31,7 +31,14 @@ add_executable(
   ff8/Configuration.cpp
   ff8/MenuSaveToggles.hpp
   ff8/PupuID.hpp
+  ImGuiDisabled.cpp
+  ImGuiPushItemWidth.cpp
+  ImGuiPushID.cpp
+  ImGuiPushStyleVar.cpp
+  ImGuiViewPortWindow.cpp
   main.cpp
+  Menu.cpp
+  OrthographicCameraController.cpp
   test/LayerTests.cpp
   test/TestBatchQuads.cpp
   test/TestBatchRenderer.cpp
@@ -40,7 +47,8 @@ add_executable(
   test/TestBatchRenderingTexture2DDynamic.cpp
   test/TestMenu.cpp
   test/TestTexture2D.cpp
-  ff8/UniquifyPupu.hpp)
+  ff8/UniquifyPupu.hpp
+  Window.cpp)
 target_link_libraries(
   ${PROJECT_NAME}_OPENGL
   PRIVATE glengine
@@ -48,7 +56,8 @@ target_link_libraries(
   PRIVATE Threads::Threads
   PRIVATE OpenVIII_CPP_WIP_VIIIGraphics
   PRIVATE OpenVIII_CPP_WIP_VIIIArchive
-  PRIVATE tomlplusplus::tomlplusplus)
+  PRIVATE tomlplusplus::tomlplusplus
+  PRIVATE imgui_glfw)
 target_include_directories(${PROJECT_NAME}_OPENGL
                            PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 set_target_paths(${PROJECT_NAME}_OPENGL)

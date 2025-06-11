@@ -135,8 +135,9 @@ class Map
           {
                if (!std::ranges::empty(m_upscale_path))
                {
-                    const auto current_max = (std::ranges::max_element)(
-                      *m_upscale_delayed_textures.textures, {}, [](const glengine::Texture &texture) { return texture.height(); });
+                    const auto current_max = (std::ranges::max_element)(*m_upscale_delayed_textures.textures,
+                                                                        {},
+                                                                        [](const glengine::Texture &texture) { return texture.height(); });
                     if (static_cast<float>(GetMim()->get_height()) * m_map_dims.tile_scale < static_cast<float>(current_max->height()))
                     {
                          m_map_dims.tile_scale = static_cast<float>(current_max->height()) / static_cast<float>(GetMim()->get_height());
@@ -164,7 +165,7 @@ class Map
                     const auto fbb                   = glengine::FrameBufferBackup{};
                     m_frame_buffer.bind();
 
-                    GlCall{}(glViewport, 0, 0, m_frame_buffer.specification().width, m_frame_buffer.specification().height);
+                    glengine::GlCall{}(glViewport, 0, 0, m_frame_buffer.specification().width, m_frame_buffer.specification().height);
                     glengine::Renderer::Clear();
                     m_frame_buffer.clear_red_integer_color_attachment();
                     render_tiles();
@@ -195,8 +196,8 @@ class Map
                float      text_width         = 0.F;
                ImVec2     last_pos           = {};
                const auto render_sub_texture = [&text_width, &last_pos](const glengine::SubTexture &sub_texture) -> bool {
-                    const auto imgui_texture_id_ref = ConvertGliDtoImTextureId(sub_texture.id());
-                    const auto uv                   = sub_texture.im_gui_uv();
+                    const auto imgui_texture_id_ref = ConvertGliDtoImTextureId<std::uint64_t>(sub_texture.id());
+                    const auto uv                   = sub_texture.im_gui_uv<ImVec2>();
                     const auto id_pop               = glengine::ImGuiPushId();
                     const auto color                = ImVec4(0.F, 0.F, 0.F, 0.F);
                     last_pos                        = ImGui::GetCursorPos();
@@ -324,21 +325,22 @@ class Map
 
                (void)ImGui::Checkbox("fit Height", &s_fit_height);
                (void)ImGui::Checkbox("fit Width", &s_fit_width);
-               m_changed.set_if_true(std::ranges::any_of(
-                 std::array{ ImGui::Checkbox("draw Grid", &s_draw_grid),
-                             [&]() -> bool {
-                                  if constexpr (!typename TileFunctions::UseBlending{})
-                                  {
-                                       return false;
-                                  }
-                                  else
-                                  {
-                                       const bool checkbox_changed      = ImGui::Checkbox("Blending", &s_blending);
-                                       const bool blend_options_changed = s_blends.on_im_gui_update();
-                                       return checkbox_changed || blend_options_changed;
-                                  }
-                             }() },
-                 std::identity{}));
+               m_changed.set_if_true(
+                 std::ranges::any_of(
+                   std::array{ ImGui::Checkbox("draw Grid", &s_draw_grid),
+                               [&]() -> bool {
+                                    if constexpr (!typename TileFunctions::UseBlending{})
+                                    {
+                                         return false;
+                                    }
+                                    else
+                                    {
+                                         const bool checkbox_changed      = ImGui::Checkbox("Blending", &s_blending);
+                                         const bool blend_options_changed = s_blends.on_im_gui_update();
+                                         return checkbox_changed || blend_options_changed;
+                                    }
+                               }() },
+                   std::identity{}));
 
 
                if (ImGui::Button("Save"))
@@ -797,7 +799,7 @@ class Map
           m_batch_renderer.bind();
           set_uniforms(m_batch_renderer.shader());
           m_frame_buffer.bind(true);
-          GlCall{}(glViewport, 0, 0, m_frame_buffer.specification().width, m_frame_buffer.specification().height);
+          glengine::GlCall{}(glViewport, 0, 0, m_frame_buffer.specification().width, m_frame_buffer.specification().height);
           m_batch_renderer.shader().set_uniform("u_Grid", m_map_dims.scaled_tile_size());
           m_batch_renderer.clear();
           m_batch_renderer.draw_quad(

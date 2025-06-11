@@ -30,9 +30,5 @@ GlidCopy Texture::id() const noexcept
 {
      return m_renderer_id;
 }
-ImTextureID ConvertGliDtoImTextureId(GlidCopy r_id)
-{
-  // ImTextureID used to be a void pointer or something now it's a 64 bit unsigned int.
-     return static_cast<ImTextureID>(std::uint32_t(r_id));
-}
+
 }// namespace glengine

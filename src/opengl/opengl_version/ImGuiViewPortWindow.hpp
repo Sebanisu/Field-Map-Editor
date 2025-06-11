@@ -10,6 +10,7 @@
 #include "ImGuiPushStyleVar.hpp"
 #include "OrthographicCameraController.hpp"
 #include "ScopeGuard.hpp"
+#include <imgui.h>
 namespace glengine
 {
 inline namespace impl
@@ -78,7 +79,7 @@ inline namespace impl
                          }
                          // Because I use the texture from OpenGL, I need to invert the V from
                          // the UV.
-                         m_imgui_texture_id_ref = ConvertGliDtoImTextureId(m_fb.get_color_attachment(0).id());
+                         m_imgui_texture_id_ref = ConvertGliDtoImTextureId<std::uint64_t>(m_fb.get_color_attachment(0).id());
                          const auto c_pos       = ImGui::GetCursorPos();
                          ImGui::SetItemAllowOverlap();
                          const auto color = ImVec4(0.F, 0.F, 0.F, 0.F);

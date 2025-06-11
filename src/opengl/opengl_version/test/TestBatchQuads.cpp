@@ -18,16 +18,16 @@ test::TestBatchQuads::TestBatchQuads()
     std::filesystem::current_path() / "res" / "shader" / "basic3.shader")
 {
   m_vertex_array.bind();
-  m_vertex_array.push_back(m_vertex_buffer, Vertex::layout());
+  m_vertex_array.push_back(m_vertex_buffer, glengine::Vertex::layout());
   m_shader.bind();
   m_shader.set_uniform("u_Color", 1.F, 1.F, 1.F, 1.F);
 }
 namespace test
 {
-static std::vector<Vertex> Vertices = []() {
-  std::vector<Vertex> r{};
-  r.reserve(TestBatchQuads::vert_count);
-  return r;
+static std::vector<glengine::Vertex> Vertices = []() {
+     std::vector<glengine::Vertex> r{};
+     r.reserve(TestBatchQuads::vert_count);
+     return r;
 }();
 static std::uint32_t DrawCount = 0U;
 }// namespace test
@@ -55,10 +55,8 @@ void test::TestBatchQuads::generate_quads() const
     {
       float r = static_cast<float>(x) / static_cast<float>(m_count[0]);
       float g = static_cast<float>(y) / static_cast<float>(m_count[1]);
-      Vertices += CreateQuad(
-        { static_cast<float>(x) - static_cast<float>(m_count[0]) / 2.F,
-          static_cast<float>(y) - static_cast<float>(m_count[1]) / 2.F,
-          0.F },
+      Vertices += glengine::CreateQuad(
+        { static_cast<float>(x) - static_cast<float>(m_count[0]) / 2.F, static_cast<float>(y) - static_cast<float>(m_count[1]) / 2.F, 0.F },
         { r, g, 1.F, 1.F },
         0);
       if (std::ranges::size(Vertices) == max_count)

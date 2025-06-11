@@ -3,7 +3,6 @@
 //
 
 #include "BatchRenderer.hpp"
-
 namespace glengine
 {
 static_assert(Renderable<BatchRenderer>);
@@ -42,7 +41,7 @@ void BatchRenderer::draw(Quad quad) const
 }
 void BatchRenderer::on_im_gui_update() const
 {
-  ImGui::Text("%s", fmt::format("Total Draws: {}", draw_count).c_str());
+  //ImGui::Text("%s", fmt::format("Total Draws: {}", draw_count).c_str());
 }
 void BatchRenderer::flush_vertices() const
 {
