@@ -34,7 +34,9 @@ class FieldMapEditorConan(ConanFile):
         self.requires("ctre/3.9.0")      
     
     def build_requirements(self):
-        self.tool_requires("cmake/3.31.6")                
+        self.tool_requires("cmake/3.31.6")    
+        if platform.system() != "Windows":
+            self.tool_requires("ninja/1.12.1")                    
 
         
     def configure(self):
