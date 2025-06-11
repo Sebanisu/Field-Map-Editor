@@ -78,6 +78,7 @@ target_link_libraries(
   PRIVATE project_options
   #PRIVATE ImGui-SFML::ImGui-SFML
   PRIVATE ImGui-SFML
+  PRIVATE glengine
   PRIVATE OpenVIII_CPP_WIP_VIIIPaths
   PRIVATE OpenVIII_CPP_WIP_VIIIArchive
   PRIVATE OpenVIII_CPP_WIP_VIIIGraphics
