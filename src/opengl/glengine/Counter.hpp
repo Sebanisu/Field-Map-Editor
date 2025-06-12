@@ -4,6 +4,9 @@
 
 #ifndef FIELD_MAP_EDITOR_COUNTER_HPP
 #define FIELD_MAP_EDITOR_COUNTER_HPP
+#include <cstddef>
+#include <cstdint>
+#include <utility>
 namespace glengine
 {
 inline namespace impl

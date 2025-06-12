@@ -3,6 +3,8 @@
 //
 
 #include "GLCheck.hpp"
+namespace glengine
+{
 bool GlCheckError(std::string_view prefix, const std::source_location location)
 {
      if (GLenum error = glGetError(); error != GL_NO_ERROR)
@@ -131,3 +133,4 @@ void BeginErrorCallBack()
 {
      glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
 }
+}// namespace glengine
