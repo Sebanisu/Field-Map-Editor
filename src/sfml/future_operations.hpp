@@ -10,35 +10,39 @@
 #include <open_viii/graphics/Color.hpp>
 #include <SFML/Graphics.hpp>
 #include <spdlog/spdlog.h>
+#include <Texture.hpp>
 #include <vector>
 namespace future_operations
 {
 class LoadColorsIntoTexture
 {
-     sf::Texture                                  *m_texture;
+     glengine::Texture * m_texture;
      std::vector<open_viii::graphics::Color32RGBA> m_colors;
      sf::Vector2u                                  m_size{};
 
    public:
-     LoadColorsIntoTexture(sf::Texture *const in_texture, std::vector<open_viii::graphics::Color32RGBA> &&in_colors, sf::Vector2u in_size);
+     LoadColorsIntoTexture(
+       glengine::Texture * const in_texture,
+       std::vector<open_viii::graphics::Color32RGBA> &&in_colors,
+       sf::Vector2u                                    in_size);
      void operator()() const;
 };
 class LoadImageIntoTexture
 {
-     sf::Texture *m_texture;
-     sf::Image    m_image;
+     glengine::Texture * const m_texture;
+     sf::Image          m_image;
 
    public:
-     LoadImageIntoTexture(sf::Texture *const in_texture, sf::Image in_image);
+     LoadImageIntoTexture(glengine::Texture * const in_texture, sf::Image in_image);
      void operator()() const;
 };
 class GetImageFromPathCreateFuture
 {
-     sf::Texture          *m_texture;
+     glengine::Texture * const m_texture;
      std::filesystem::path m_path;
 
    public:
-     GetImageFromPathCreateFuture(sf::Texture *const in_texture, std::filesystem::path in_path);
+     GetImageFromPathCreateFuture(glengine::Texture * const in_texture, std::filesystem::path in_path);
      std::future<void> operator()() const;
 };
 class save_image_to_path
@@ -53,11 +57,11 @@ class save_image_to_path
 template<std::ranges::contiguous_range range_t>
 class GetImageFromFromFirstValidPathCreateFuture
 {
-     sf::Texture *m_texture;
-     range_t      m_paths;
+     glengine::Texture * const m_texture;
+     range_t            m_paths;
 
    public:
-     GetImageFromFromFirstValidPathCreateFuture(sf::Texture *const in_texture, range_t &&in_paths)
+     GetImageFromFromFirstValidPathCreateFuture(glengine::Texture * const in_texture, range_t &&in_paths)
        : m_texture(in_texture)
        , m_paths(std::move(in_paths))
      {

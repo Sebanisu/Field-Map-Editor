@@ -25,20 +25,25 @@ open_viii::graphics::BPPT mim_sprite::get_bpp(const open_viii::graphics::BPPT &i
      }
      return 4_bpp;
 }
-std::shared_ptr<sf::Texture> mim_sprite::find_texture() const
+std::shared_ptr<glengine::Texture> mim_sprite::find_texture() const
 {
-     auto texture = std::make_shared<sf::Texture>(sf::Texture{});
-
-     if (!m_colors.empty() && width() != 0U && texture && texture->create(width(), height()))
+     if (std::ranges::empty(m_colors) || width() == 0U)
      {
-          // expects an unsigned char pointer. colors
-          // underlying type is an array of chars.
-          texture->update(reinterpret_cast<const sf::Uint8 *>(m_colors.data()));
-          texture->setSmooth(false);
-          texture->setRepeated(false);
-          texture->generateMipmap();
+          return std::make_shared<glengine::Texture>();
      }
-     return texture;
+
+     return std::make_shared<glengine::Texture>(m_colors, width(), height());
+
+     // if (!m_colors.empty() && width() != 0U && texture && texture->create(width(), height()))
+     // {
+     //      // expects an unsigned char pointer. colors
+     //      // underlying type is an array of chars.
+     //      texture->update(reinterpret_cast<const sf::Uint8 *>(m_colors.data()));
+     //      texture->setSmooth(false);
+     //      texture->setRepeated(false);
+     //      texture->generateMipmap();
+     // }
+     // return texture;
 }
 
 std::vector<open_viii::graphics::Color32RGBA> mim_sprite::get_colors()
@@ -48,10 +53,10 @@ std::vector<open_viii::graphics::Color32RGBA> mim_sprite::get_colors()
 
 [[maybe_unused]] mim_sprite::mim_sprite(
   std::weak_ptr<open_viii::archive::FIFLFS<false>> in_field,
-  const open_viii::graphics::BPPT                   &in_bpp,
-  const uint8_t                                     &in_palette,
-  const open_viii::LangT                             in_coo,
-  const bool                                         force_draw_palette)
+  const open_viii::graphics::BPPT                 &in_bpp,
+  const uint8_t                                   &in_palette,
+  const open_viii::LangT                           in_coo,
+  const bool                                       force_draw_palette)
   : m_field(std::move(in_field))
   , m_coo(in_coo)
   , m_mim(get_mim())
@@ -138,11 +143,15 @@ void mim_sprite::draw(sf::RenderTarget &target, sf::RenderStates states) const
 {
      if (m_texture)
      {
+          // TODO render the texture with glengine instead of sfml.
           states.transform *= getTransform();
           states.blendMode = sf::BlendAlpha;
-          states.texture   = m_texture.get();
+          states.texture   = nullptr;
+          // states.texture   = m_texture.get();
+          m_texture->bind();
           // draw texture
           target.draw(m_vertices.data(), 4U, sf::TriangleStrip, states);
+          m_texture->unbind();
      }
 }
 
@@ -151,16 +160,16 @@ std::array<sf::Vertex, 4U> mim_sprite::get_vertices() const
      if (m_texture)
      {
 
-          const sf::Vector2u size   = m_texture->getSize();
-          const auto         frect  = sf::FloatRect(0.F, 0.F, static_cast<float>(size.x), static_cast<float>(size.y));
-          float              left   = frect.left;
-          float              right  = left + frect.width;
-          float              top    = frect.top;
-          float              bottom = top + frect.height;
-          std::array         ret    = { sf::Vertex{ sf::Vector2f{ left, top }, sf::Vector2f{ left, top } },
-                                        sf::Vertex{ sf::Vector2f{ left, bottom }, sf::Vector2f{ left, bottom } },
-                                        sf::Vertex{ sf::Vector2f{ right, top }, sf::Vector2f{ right, top } },
-                                        sf::Vertex{ sf::Vector2f{ right, bottom }, sf::Vector2f{ right, bottom } } };
+          const auto size   = m_texture->get_size();
+          const auto frect  = sf::FloatRect(0.F, 0.F, static_cast<float>(size.x), static_cast<float>(size.y));
+          float      left   = frect.left;
+          float      right  = left + frect.width;
+          float      top    = frect.top;
+          float      bottom = top + frect.height;
+          std::array ret    = { sf::Vertex{ sf::Vector2f{ left, top }, sf::Vector2f{ left, top } },
+                                sf::Vertex{ sf::Vector2f{ left, bottom }, sf::Vector2f{ left, bottom } },
+                                sf::Vertex{ sf::Vector2f{ right, top }, sf::Vector2f{ right, top } },
+                                sf::Vertex{ sf::Vector2f{ right, bottom }, sf::Vector2f{ right, bottom } } };
           return ret;
      }
      return {};

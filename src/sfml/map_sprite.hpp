@@ -27,6 +27,7 @@
 #include <SFML/Graphics/Sprite.hpp>
 #include <SFML/Graphics/Transformable.hpp>
 #include <SFML/Graphics/Vertex.hpp>
+#include <Texture.hpp>
 #include <utility>
 namespace fme
 {
@@ -50,7 +51,7 @@ struct [[nodiscard]] map_sprite final
      using Mim            = open_viii::graphics::background::Mim;
      using color_type     = open_viii::graphics::Color32RGBA;
      using colors_type    = std::vector<color_type>;
-     using SharedTextures = std::shared_ptr<std::array<sf::Texture, MAX_TEXTURES>>;
+     using SharedTextures = std::shared_ptr<std::array<glengine::Texture, MAX_TEXTURES>>;
      using BlendModeT     = open_viii::graphics::background::BlendModeT;
      using Rectangle      = open_viii::graphics::Rectangle<std::uint32_t>;
      using iRectangle     = open_viii::graphics::Rectangle<std::int32_t>;
@@ -65,7 +66,7 @@ struct [[nodiscard]] map_sprite final
      std::weak_ptr<Selections>                     m_selections              = {};
      ::upscales                                    m_upscales                = { m_selections };
      bool                                          m_using_imported_texture  = {};
-     const sf::Texture                            *m_imported_texture        = { nullptr };
+     const glengine::Texture                            *m_imported_texture        = { nullptr };
      std::uint16_t                                 m_imported_tile_size      = {};
      Map                                           m_imported_tile_map       = {};
      Map                                           m_imported_tile_map_front = {};
@@ -97,9 +98,9 @@ struct [[nodiscard]] map_sprite final
      {
           return m_render_texture.get();
      }
-     [[nodiscard]] const sf::Texture                    *get_texture(BPPT bpp, std::uint8_t palette, std::uint8_t texture_page) const;
-     [[nodiscard]] const sf::Texture                    *get_texture(const ff_8::PupuID &pupu) const;
-     [[nodiscard]] sf::Vector2u                          get_tile_texture_size(const sf::Texture *texture) const;
+     [[nodiscard]] const glengine::Texture              *get_texture(BPPT bpp, std::uint8_t palette, std::uint8_t texture_page) const;
+     [[nodiscard]] const glengine::Texture              *get_texture(const ff_8::PupuID &pupu) const;
+     [[nodiscard]] sf::Vector2u                          get_tile_texture_size(const glengine::Texture *const texture) const;
      [[nodiscard]] sf::Vector2u                          get_tile_draw_size() const;
      [[nodiscard]] bool                                  generate_texture(sf::RenderTexture *texture) const;
      [[nodiscard]] std::uint32_t                         get_max_texture_height() const;
@@ -137,7 +138,7 @@ struct [[nodiscard]] map_sprite final
      [[nodiscard]] SharedTextures                        load_textures_internal();
      [[nodiscard]] static colors_type                    get_colors(const Mim &mim, BPPT bpp, uint8_t palette);
      [[nodiscard]] static const sf::BlendMode           &get_blend_subtract();
-     [[nodiscard]] static std::future<std::future<void>> async_save(const sf::Texture &out_texture, const std::filesystem::path &out_path);
+     [[nodiscard]] static std::future<std::future<void>> async_save(const glengine::Texture &out_texture, const std::filesystem::path &out_path);
      [[nodiscard]] bool                                  draw_imported(sf::RenderTarget &changed_tiles, sf::RenderStates states) const;
      [[nodiscard]] bool                                  using_coo() const;
      [[nodiscard]] static std::string                    str_to_lower(std::string input);
@@ -151,9 +152,9 @@ struct [[nodiscard]] map_sprite final
      [[nodiscard]] std::size_t get_texture_pos(BPPT bpp, std::uint8_t palette, std::uint8_t texture_page) const;
      [[nodiscard]] std::vector<std::future<std::future<void>>>
        save_swizzle_textures(const std::string &keyed_string, const std::string &selected_path);
-       [[nodiscard]] std::vector<std::future<std::future<void>>>
+     [[nodiscard]] std::vector<std::future<std::future<void>>>
        save_combined_swizzle_texture(const std::string &keyed_string, const std::string &selected_path);
-       
+
      [[nodiscard]] std::vector<std::future<std::future<void>>>
                                                   save_pupu_textures(const std::string &keyed_string, const std::string &selected_path);
      [[nodiscard]] std::future<std::future<void>> load_upscale_textures(SharedTextures &ret, std::uint8_t texture_page);
@@ -191,7 +192,7 @@ struct [[nodiscard]] map_sprite final
      void        load_map(const std::filesystem::path &dest_path);
      void        resize_render_texture();
      void        init_render_texture();
-     void        update_render_texture(const sf::Texture *p_texture, Map map, const tile_sizes tile_size);
+     void        update_render_texture(const glengine::Texture *p_texture, Map map, const tile_sizes tile_size);
      static void consume_futures(std::vector<std::future<void>> &futures);
      static void consume_futures(std::vector<std::future<std::future<void>>> &future_of_futures);
      void        update_position(const sf::Vector2i &pixel_pos, const uint8_t &texture_page, const sf::Vector2i &down_pixel_pos);
@@ -271,7 +272,7 @@ struct [[nodiscard]] map_sprite final
      }
 
      template<open_viii::graphics::background::is_tile tileT>
-     [[nodiscard]] const sf::Texture *get_texture(const tileT &tile) const
+     [[nodiscard]] const glengine::Texture *get_texture(const tileT &tile) const
      {
 
           if (!m_filters.deswizzle.enabled())
@@ -281,7 +282,7 @@ struct [[nodiscard]] map_sprite final
           else
           {
                // pupu_ids
-               return const_visit_original_tiles([&tile, this](const auto &tiles) -> const sf::Texture * {
+               return const_visit_original_tiles([&tile, this](const auto &tiles) -> const glengine::Texture * {
                     if (tiles.empty())
                     {
                          return nullptr;
@@ -299,11 +300,11 @@ struct [[nodiscard]] map_sprite final
                               std::ranges::advance(pupu_it, distance);
                               return get_texture(*pupu_it);
                          }
-                         return static_cast<const sf::Texture *>(nullptr);
+                         return static_cast<const glengine::Texture *>(nullptr);
                     }
                     else
                     {
-                         return static_cast<const sf::Texture *>(nullptr);
+                         return static_cast<const glengine::Texture *>(nullptr);
                     }
                });
           }

@@ -51,11 +51,27 @@ class Texture
        : m_width{ in_width }
        , m_height{ in_height }
      {
-          if (in_flip)
+          if constexpr (!std::is_const_v<std::remove_reference_t<std::ranges::range_reference_t<R>>>)
           {
-               flip(r, in_width);
+               if (in_flip)
+               {
+                    flip(r, in_width);
+               }
+               init_texture(std::ranges::data(r));
           }
-          init_texture(std::ranges::data(r));
+          else
+          {
+               if (in_flip)
+               {
+                    std::vector<std::remove_cvref_t<std::ranges::range_value_t<R>>> copy{ std::ranges::begin(r), std::ranges::end(r) };
+                    flip(copy, in_width);
+                    init_texture(std::ranges::data(copy));
+               }
+               else
+               {
+                    init_texture(std::ranges::data(r));
+               }
+          }
      }
      void init_texture(const void *color)
      {
@@ -163,6 +179,10 @@ class Texture
           {
                GlCall{}(glBindTexture, GL_TEXTURE_2D, 0U);
           }
+     }
+     constexpr glm::ivec2 get_size() const
+     {
+          return { m_width, m_height };
      }
      constexpr std::int32_t width() const
      {

@@ -3,8 +3,9 @@
 //
 
 #include "future_operations.hpp"
+#include <span>
 future_operations::LoadColorsIntoTexture::LoadColorsIntoTexture(
-  sf::Texture *const                              in_texture,
+  glengine::Texture *const                        in_texture,
   std::vector<open_viii::graphics::Color32RGBA> &&in_colors,
   sf::Vector2u                                    in_size)
   : m_texture(in_texture)
@@ -14,6 +15,11 @@ future_operations::LoadColorsIntoTexture::LoadColorsIntoTexture(
 }
 void future_operations::LoadColorsIntoTexture::operator()() const
 {
+     if (!m_texture)
+     {
+          spdlog::error("Failed to lock texture weak_ptr: texture is expired or not set.");
+          return;
+     }
      try
      {
           assert(m_size.x * m_size.y == std::ranges::size(m_colors));
@@ -21,11 +27,12 @@ void future_operations::LoadColorsIntoTexture::operator()() const
           {
                return;
           }
-          m_texture->create(m_size.x, m_size.y);
-          m_texture->update(m_colors.front().data());
-          m_texture->setSmooth(false);
-          m_texture->setRepeated(false);
-          m_texture->generateMipmap();
+          *m_texture = glengine::Texture(m_colors, m_size.x, m_size.y);
+          // m_texture->create(m_size.x, m_size.y);
+          // m_texture->update(m_colors.front().data());
+          // m_texture->setSmooth(false);
+          // m_texture->setRepeated(false);
+          // m_texture->generateMipmap();
      }
      catch (const std::exception &e)
      {
@@ -33,24 +40,31 @@ void future_operations::LoadColorsIntoTexture::operator()() const
           spdlog::error("Exception caught while creating texture: {}", e.what());
      }
 }
-future_operations::LoadImageIntoTexture::LoadImageIntoTexture(sf::Texture *const in_texture, sf::Image in_image)
+future_operations::LoadImageIntoTexture::LoadImageIntoTexture(glengine::Texture *const in_texture, sf::Image in_image)
   : m_texture(in_texture)
   , m_image(in_image)
 {
 }
 void future_operations::LoadImageIntoTexture::operator()() const
 {
+     if (!m_texture)
+     {
+          spdlog::error("Failed to lock texture weak_ptr: texture is expired or not set.");
+          return;
+     }
      try
      {
           if (m_image.getSize().x == 0 || m_image.getSize().y == 0)
           {
                return;
           }
-          m_texture->create(m_image.getSize().x, m_image.getSize().y);
-          m_texture->update(m_image);
-          m_texture->setSmooth(false);
-          m_texture->setRepeated(false);
-          m_texture->generateMipmap();
+          *m_texture = glengine::Texture(
+            std::span{ m_image.getPixelsPtr(), m_image.getSize().x * m_image.getSize().y * 4 }, m_image.getSize().x, m_image.getSize().y);
+          // m_texture->create(m_image.getSize().x, m_image.getSize().y);
+          // m_texture->update(m_image);
+          // m_texture->setSmooth(false);
+          // m_texture->setRepeated(false);
+          // m_texture->generateMipmap();
      }
      catch (const std::exception &e)
      {
@@ -58,7 +72,9 @@ void future_operations::LoadImageIntoTexture::operator()() const
           spdlog::error("Exception caught while creating texture: {}", e.what());
      }
 }
-future_operations::GetImageFromPathCreateFuture::GetImageFromPathCreateFuture(sf::Texture *const in_texture, std::filesystem::path in_path)
+future_operations::GetImageFromPathCreateFuture::GetImageFromPathCreateFuture(
+  glengine::Texture *const in_texture,
+  std::filesystem::path    in_path)
   : m_texture(in_texture)
   , m_path(std::move(in_path))
 {

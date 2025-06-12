@@ -38,11 +38,11 @@ class [[nodiscard]] Framebuffer
 
    public:
      /**
-      * @brief Constructs a Framebuffer by copying data from an existing sf::Texture.
+      * @brief Constructs a Framebuffer by copying data from an existing glengine::Texture.
       *
       * @param texture The texture to copy into the framebuffer.
       */
-     explicit Framebuffer(const sf::Texture &texture)
+     explicit Framebuffer(const glengine::Texture &texture)
      {
           // Create and configure a new texture for the framebuffer color attachment
           glGenTextures(1, &color_attachment_id);
@@ -57,8 +57,8 @@ class [[nodiscard]] Framebuffer
             GL_TEXTURE_2D,
             0,
             GL_RGBA8,
-            static_cast<GLsizei>(texture.getSize().x),
-            static_cast<GLsizei>(texture.getSize().y),
+            static_cast<GLsizei>(texture.width()),
+            static_cast<GLsizei>(texture.height()),
             0,
             GL_RGBA,
             GL_UNSIGNED_BYTE,
@@ -79,8 +79,8 @@ class [[nodiscard]] Framebuffer
           GLuint tmp;
           glCreateFramebuffers(1, &tmp);
           glBindFramebuffer(GL_READ_FRAMEBUFFER, tmp);
-          glBindTexture(GL_TEXTURE_2D, texture.getNativeHandle());
-          glFramebufferTexture2D(GL_READ_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texture.getNativeHandle(), 0);
+          glBindTexture(GL_TEXTURE_2D, texture.id());
+          glFramebufferTexture2D(GL_READ_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texture.id(), 0);
 
           // Check read framebuffer completeness
           if (GLenum status = glCheckFramebufferStatus(GL_READ_FRAMEBUFFER); status != GL_FRAMEBUFFER_COMPLETE)
@@ -92,12 +92,12 @@ class [[nodiscard]] Framebuffer
           glBlitFramebuffer(
             0,
             0,
-            static_cast<GLsizei>(texture.getSize().x),
-            static_cast<GLsizei>(texture.getSize().y),
+            static_cast<GLsizei>(texture.width()),
+            static_cast<GLsizei>(texture.height()),
             0,
             0,
-            static_cast<GLsizei>(texture.getSize().x),
-            static_cast<GLsizei>(texture.getSize().y),
+            static_cast<GLsizei>(texture.width()),
+            static_cast<GLsizei>(texture.height()),
             GL_COLOR_BUFFER_BIT,
             GL_NEAREST);
 
@@ -239,19 +239,16 @@ class [[nodiscard]] Framebuffer
  * allowing the CPU to continue processing without blocking while the GPU completes the readback.
  * The returned future will produce an sf::Image once the pixel data is ready.
  *
- * @param texture The sf::Texture to be saved into an sf::Image.
+ * @param texture The glengine::Texture to be saved into an sf::Image.
  * @return A deferred std::future that will contain the sf::Image once pixel data is read back.
  */
-std::future<sf::Image> save_image_pbo(const sf::Texture &texture)
+std::future<sf::Image> save_image_pbo(const glengine::Texture &texture)
 {
-     // Get the size of the texture
-     const auto texture_size = texture.getSize();
-
      // Backup the currently bound framebuffer (to restore it later)
      const auto backup_fbo   = backup_frame_buffer();
 
      // Calculate the size needed for the pixel buffer: width * height * 4 bytes (RGBA)
-     const auto buffer_size  = GLsizeiptr{ texture.getSize().x } * GLsizeiptr{ texture.getSize().y } * 4;
+     const auto buffer_size  = GLsizeiptr{ texture.width() } * GLsizeiptr{ texture.height() } * 4;
 
      // Create and bind a Pixel Buffer Object (PBO)
      auto       pbo_id       = 0U;
@@ -266,8 +263,8 @@ std::future<sf::Image> save_image_pbo(const sf::Texture &texture)
      glReadPixels(
        0,
        0,
-       static_cast<GLsizei>(texture.getSize().x),
-       static_cast<GLsizei>(texture.getSize().y),
+       static_cast<GLsizei>(texture.width()),
+       static_cast<GLsizei>(texture.height()),
        GL_RGBA,
        GL_UNSIGNED_BYTE,
        nullptr// Offset into PBO
@@ -279,7 +276,7 @@ std::future<sf::Image> save_image_pbo(const sf::Texture &texture)
      // Return a deferred future to perform the CPU-side readback later
      return std::async(
        std::launch::deferred,
-       [pbo_id, buffer_size, texture_size]([[maybe_unused]] Framebuffer fbo_temp) -> sf::Image {
+       [pbo_id, buffer_size, texture_size = texture.get_size()]([[maybe_unused]] Framebuffer fbo_temp) -> sf::Image {
 #ifdef __cpp_lib_smart_ptr_for_overwrite
             const auto pixels = std::make_unique_for_overwrite<std::uint8_t[]>(static_cast<std::size_t>(buffer_size));
 #else

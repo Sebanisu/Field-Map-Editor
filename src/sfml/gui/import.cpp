@@ -312,28 +312,30 @@ bool import::browse_for_image_display_preview() const
           [[maybe_unused]] const auto selected_path = m_load_file_browser.GetSelected();
           m_import_image_path                       = selected_path.string();
           m_load_file_browser.ClearSelected();
-          m_loaded_image_texture.loadFromFile(m_import_image_path);// stored on gpu.
-          m_loaded_image_texture.setRepeated(false);
-          m_loaded_image_texture.setSmooth(false);
-          m_loaded_image_texture.generateMipmap();
-          changed = true;
+          m_loaded_image_texture = glengine::Texture{ m_import_image_path };
+          //   m_loaded_image_texture.loadFromFile(m_import_image_path);// stored on gpu.
+          // m_loaded_image_texture.setRepeated(false);
+          // m_loaded_image_texture.setSmooth(false);
+          // m_loaded_image_texture.generateMipmap();
+          changed                = true;
      }
-     if (m_loaded_image_texture.getSize().x == 0 || m_loaded_image_texture.getSize().y == 0)
+     if (m_loaded_image_texture.width() == 0 || m_loaded_image_texture.height() == 0)
      {
           return false;
      }
      if (ImGui::CollapsingHeader(gui_labels::selected_image_preview.data()))
      {
-          sf::Sprite const sprite(m_loaded_image_texture);
-          const float      width             = std::max((ImGui::GetContentRegionAvail().x), 1.0F);
-          const auto       size              = m_loaded_image_texture.getSize();
+          // sf::Sprite const sprite(m_loaded_image_texture);
+          const float  width             = std::max((ImGui::GetContentRegionAvail().x), 1.0F);
+          const auto   size              = m_loaded_image_texture.get_size();
 
-          float const      scale             = width / static_cast<float>(size.x);
-          const float      height            = static_cast<float>(size.y) * scale;
-          ImVec2 const     cursor_screen_pos = ImGui::GetCursorScreenPos();
-          const auto       pop_id            = PushPopID();
-          const auto       str_id            = fmt::format("id2668{}", get_imgui_id());
-          ImGui::ImageButton(str_id.c_str(), sprite, sf::Vector2f(width, height));
+          float const  scale             = width / static_cast<float>(size.x);
+          const float  height            = static_cast<float>(size.y) * scale;
+          ImVec2 const cursor_screen_pos = ImGui::GetCursorScreenPos();
+          const auto   pop_id            = PushPopID();
+          const auto   str_id            = fmt::format("id2668{}", get_imgui_id());
+          ImGui::ImageButton(
+            str_id.c_str(), glengine::ConvertGliDtoImTextureId<ImTextureID>(m_loaded_image_texture.id()), ImVec2(width, height));
           if (ImGui::Checkbox(gui_labels::draw_grid.data(), &selections->import_image_grid))
           {
                selections->update_configuration_key(ConfigKey::ImportImageGrid);
@@ -342,7 +344,7 @@ bool import::browse_for_image_display_preview() const
           {
                static constexpr float thickness = 2.0F;
                static const ImU32     color_32  = imgui_color32(sf::Color::Red);
-               for (auto x_pos = static_cast<std::uint32_t>(selections->tile_size_value); x_pos < size.x;
+               for (auto x_pos = static_cast<std::uint32_t>(selections->tile_size_value); std::cmp_less(x_pos, size.x);
                     x_pos += static_cast<std::underlying_type_t<tile_sizes>>(selections->tile_size_value))
                {
                     ImGui::GetWindowDrawList()->AddLine(
@@ -354,7 +356,7 @@ bool import::browse_for_image_display_preview() const
                       thickness);
                }
 
-               for (auto y_pos = static_cast<std::uint32_t>(selections->tile_size_value); y_pos < size.y;
+               for (auto y_pos = static_cast<std::uint32_t>(selections->tile_size_value); std::cmp_less(y_pos, size.y);
                     y_pos += static_cast<std::underlying_type_t<tile_sizes>>(selections->tile_size_value))
                {
                     ImGui::GetWindowDrawList()->AddLine(
@@ -407,11 +409,11 @@ void import::generate_map_for_imported_image(const open_viii::graphics::backgrou
           return;
      }
      const auto tiles_wide = static_cast<uint32_t>(
-       ceil(static_cast<double>(static_cast<float>(m_loaded_image_texture.getSize().x) / static_cast<float>(selections->tile_size_value))));
+       ceil(static_cast<double>(static_cast<float>(m_loaded_image_texture.width()) / static_cast<float>(selections->tile_size_value))));
      const auto tiles_high = static_cast<uint32_t>(
-       ceil(static_cast<double>(static_cast<float>(m_loaded_image_texture.getSize().y) / static_cast<float>(selections->tile_size_value))));
+       ceil(static_cast<double>(static_cast<float>(m_loaded_image_texture.height()) / static_cast<float>(selections->tile_size_value))));
      format_imgui_text("{}: {} x {} = {}", gui_labels::possible_tiles, tiles_wide, tiles_high, tiles_wide * tiles_high);
-     if (changed && tiles_wide * tiles_high != 0U && m_loaded_image_texture.getSize() != sf::Vector2u{})
+     if (changed && tiles_wide * tiles_high != 0U && m_loaded_image_texture.get_size() != glm::ivec2{})
      {
           m_import_image_map = open_viii::graphics::background::Map{
                [&current_tile, x_tile = uint8_t{}, y_tile = uint8_t{}, &tiles_high, &tiles_wide]() mutable
@@ -482,18 +484,32 @@ void import::collapsing_header_generated_tiles() const
           for (const auto &tile : tiles)
           {
                ImGui::TableNextColumn();
-               sf::Sprite const sprite(
-                 m_loaded_image_texture,
-                 sf::IntRect(
-                   static_cast<int>(tile.x() / tile_size_px * selections->tile_size_value),
-                   static_cast<int>(tile.y() / tile_size_px * selections->tile_size_value),
-                   static_cast<int>(selections->tile_size_value),
-                   static_cast<int>(selections->tile_size_value)));
+               // sf::Sprite const sprite(
+               //   m_loaded_image_texture,
+               //   sf::IntRect(
+               //     static_cast<int>(tile.x() / tile_size_px * selections->tile_size_value),
+               //     static_cast<int>(tile.y() / tile_size_px * selections->tile_size_value),
+               //     static_cast<int>(selections->tile_size_value),
+               //     static_cast<int>(selections->tile_size_value)));
+               const auto             texSize = m_loaded_image_texture.get_size();
+               const sf::IntRect      rect    = { static_cast<int>(tile.x() / tile_size_px * selections->tile_size_value),
+                                                  static_cast<int>(tile.y() / tile_size_px * selections->tile_size_value),
+                                                  static_cast<int>(selections->tile_size_value),
+                                                  static_cast<int>(selections->tile_size_value) };
+               ImVec2                 uv0     = { static_cast<float>(rect.left) / texSize.x, static_cast<float>(rect.top) / texSize.y };
+
+               ImVec2                 uv1     = { static_cast<float>(rect.left + rect.width) / texSize.x,
+                                                  static_cast<float>(rect.top + rect.height) / texSize.y };
                const auto             the_end_tile_table_tile = PushPopID();
                static constexpr float button_size             = 32.F;
 
                const auto             str                     = fmt::format("tb{}", i++);
-               ImGui::ImageButton(str.c_str(), sprite, sf::Vector2f(button_size, button_size));
+               ImGui::ImageButton(
+                 str.c_str(),
+                 glengine::ConvertGliDtoImTextureId<ImTextureID>(m_loaded_image_texture.id()),
+                 ImVec2(button_size, button_size),
+                 uv0,
+                 uv1);
           }
      });
 }
@@ -508,12 +524,12 @@ void import::update_scaled_up_render_texture() const
           return;
      }
 
-     const auto scale_up_dim = [&](uint32_t dim) {
+     const auto scale_up_dim = [&](const std::integral auto dim) {
           return static_cast<uint32_t>(
             ceil(static_cast<double>(dim) / static_cast<double>(selections->tile_size_value))
             * static_cast<double>(selections->tile_size_value));
      };
-     const auto size = m_loaded_image_texture.getSize();
+     const auto size = m_loaded_image_texture.get_size();
      if (size == decltype(size){})
      {
           return;
@@ -521,10 +537,11 @@ void import::update_scaled_up_render_texture() const
      m_loaded_image_render_texture.create(scale_up_dim(size.x), scale_up_dim(size.y));
      m_loaded_image_render_texture.setActive(true);
      m_loaded_image_render_texture.clear(sf::Color::Transparent);
-     sf::Sprite sprite = sf::Sprite(m_loaded_image_texture);
-     sprite.setScale(1.F, -1.F);
-     sprite.setPosition(0.F, static_cast<float>(m_loaded_image_render_texture.getSize().y));
-     m_loaded_image_render_texture.draw(sprite);
+     /// TODO replace render with glengine rendering.
+     // sf::Sprite sprite = sf::Sprite(m_loaded_image_texture);
+     // sprite.setScale(1.F, -1.F);
+     // sprite.setPosition(0.F, static_cast<float>(m_loaded_image_render_texture.getSize().y));
+     // m_loaded_image_render_texture.draw(sprite);
      m_loaded_image_render_texture.setRepeated(false);
      m_loaded_image_render_texture.setSmooth(false);
      m_loaded_image_render_texture.generateMipmap();
@@ -548,7 +565,9 @@ void import::update_imported_render_texture() const
      }
      if (selections->render_imported_image)
      {
-          map_sprite->update_render_texture(&m_loaded_image_render_texture.getTexture(), m_import_image_map, selections->tile_size_value);
+          /// TODO replace render with glengine
+          // map_sprite->update_render_texture(&m_loaded_image_render_texture.getTexture(), m_import_image_map,
+          // selections->tile_size_value);
      }
 }
 
@@ -667,44 +686,46 @@ void import::find_selected_tile_for_import(open_viii::graphics::background::Map:
 
 void import::filter_empty_import_tiles() const
 {//* Filter empty tiles
-     auto selections = m_selections.lock();
 
-     if (!selections)
-     {
-          spdlog::error("m_selections is no longer valid. File: {}, Line: {}", __FILE__, __LINE__);
-          return;
-     }
-     m_loaded_image_cpu = m_loaded_image_texture.copyToImage();
-     m_import_image_map.visit_tiles([&](auto &tiles) {
-          const auto rem_range = std::ranges::remove_if(tiles, [&](const auto &tile) -> bool {
-               const auto          x_start = tile.x() / tile_size_px * selections->tile_size_value;
-               const auto          y_start = tile.y() / tile_size_px * selections->tile_size_value;
-               const int           x_max   = x_start + selections->tile_size_value;
-               const sf::Vector2u &imgsize = m_loaded_image_cpu.getSize();
-               const auto          x_end   = (std::min)(static_cast<int>(imgsize.x), x_max);
-               const int           y_max   = y_start + selections->tile_size_value;
-               const auto          y_end   = (std::min)(static_cast<int>(imgsize.y), y_max);
-               for (auto pixel_x = x_start; std::cmp_less(pixel_x, x_end); ++pixel_x)
-               {
-                    for (auto pixel_y = y_start; std::cmp_less(pixel_y, y_end); ++pixel_y)
-                    {
-                         const auto color =
-                           m_loaded_image_cpu.getPixel(static_cast<unsigned int>(pixel_x), static_cast<unsigned int>(pixel_y));
-                         if (std::cmp_greater(color.a, 0U))
-                         {
-                              return false;
-                         }
-                    }
-               }
-               return true;
-          });
-          tiles.erase(rem_range.begin(), rem_range.end());
-     });
-     m_loaded_image_cpu = {};
+     // todo fix rendering for glengine
+     //  auto selections = m_selections.lock();
+
+     // if (!selections)
+     // {
+     //      spdlog::error("m_selections is no longer valid. File: {}, Line: {}", __FILE__, __LINE__);
+     //      return;
+     // }
+     // m_loaded_image_cpu = m_loaded_image_texture.copyToImage();
+     // m_import_image_map.visit_tiles([&](auto &tiles) {
+     //      const auto rem_range = std::ranges::remove_if(tiles, [&](const auto &tile) -> bool {
+     //           const auto          x_start = tile.x() / tile_size_px * selections->tile_size_value;
+     //           const auto          y_start = tile.y() / tile_size_px * selections->tile_size_value;
+     //           const int           x_max   = x_start + selections->tile_size_value;
+     //           const sf::Vector2u &imgsize = m_loaded_image_cpu.getSize();
+     //           const auto          x_end   = (std::min)(static_cast<int>(imgsize.x), x_max);
+     //           const int           y_max   = y_start + selections->tile_size_value;
+     //           const auto          y_end   = (std::min)(static_cast<int>(imgsize.y), y_max);
+     //           for (auto pixel_x = x_start; std::cmp_less(pixel_x, x_end); ++pixel_x)
+     //           {
+     //                for (auto pixel_y = y_start; std::cmp_less(pixel_y, y_end); ++pixel_y)
+     //                {
+     //                     const auto color =
+     //                       m_loaded_image_cpu.getPixel(static_cast<unsigned int>(pixel_x), static_cast<unsigned int>(pixel_y));
+     //                     if (std::cmp_greater(color.a, 0U))
+     //                     {
+     //                          return false;
+     //                     }
+     //                }
+     //           }
+     //           return true;
+     //      });
+     //      tiles.erase(rem_range.begin(), rem_range.end());
+     // });
+     // m_loaded_image_cpu = {};
 }
 bool import::checkbox_render_imported_image() const
 {
-     if (m_loaded_image_texture.getSize() != sf::Vector2u{})
+     if (m_loaded_image_texture.get_size() != glm::ivec2{})
      {
           auto selections = m_selections.lock();
           auto map_sprite = m_map_sprite.lock();

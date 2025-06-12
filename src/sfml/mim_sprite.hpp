@@ -11,6 +11,7 @@
 #include <imgui.h>
 #include <SFML/Graphics/Sprite.hpp>
 #include <SFML/Graphics/Texture.hpp>
+#include <Texture.hpp>
 #include <vector>
 // this will hold class that has enough info to load and draw mim files.
 struct mim_sprite final
@@ -20,24 +21,24 @@ struct mim_sprite final
 
 
    private:
-     std::weak_ptr<open_viii::archive::FIFLFS<false>>            m_field             = {};
-     open_viii::LangT                                            m_coo               = {};
-     mutable std::string                                         m_mim_path          = {};
-     open_viii::graphics::background::Mim                        m_mim               = {};
-     open_viii::graphics::BPPT                                   m_bpp               = {};
-     std::uint8_t                                                m_palette           = {};
-     bool                                                        m_draw_palette      = { false };
-     std::vector<open_viii::graphics::Color32RGBA>               m_colors            = {};
-     std::shared_ptr<sf::Texture>                                m_texture           = {};
-     std::array<sf::Vertex, 4U>                                  m_vertices          = {};
+     std::weak_ptr<open_viii::archive::FIFLFS<false>>            m_field        = {};
+     open_viii::LangT                                            m_coo          = {};
+     mutable std::string                                         m_mim_path     = {};
+     open_viii::graphics::background::Mim                        m_mim          = {};
+     open_viii::graphics::BPPT                                   m_bpp          = {};
+     std::uint8_t                                                m_palette      = {};
+     bool                                                        m_draw_palette = { false };
+     std::vector<open_viii::graphics::Color32RGBA>               m_colors       = {};
+     std::shared_ptr<glengine::Texture>                          m_texture      = {};
+     std::array<sf::Vertex, 4U>                                  m_vertices     = {};
      [[nodiscard]] open_viii::graphics::background::Mim          get_mim() const;
      [[nodiscard]] static open_viii::graphics::BPPT              get_bpp(const open_viii::graphics::BPPT &in_bpp);
-     [[nodiscard]] std::shared_ptr<sf::Texture>                  find_texture() const;
+     [[nodiscard]] std::shared_ptr<glengine::Texture>            find_texture() const;
      [[nodiscard]] std::vector<open_viii::graphics::Color32RGBA> get_colors();
      [[nodiscard]] std::array<sf::Vertex, 4U>                    get_vertices() const;
 
    public:
-     const sf::Texture *get_texture() const
+     const glengine::Texture *get_texture() const
      {
           return m_texture.get();
      }
@@ -50,10 +51,10 @@ struct mim_sprite final
       */
      [[maybe_unused]] mim_sprite(
        std::weak_ptr<open_viii::archive::FIFLFS<false>> in_field,
-       const open_viii::graphics::BPPT                   &in_bpp,
-       const std::uint8_t                                &in_palette,
-       open_viii::LangT                                   in_coo,
-       bool                                               force_draw_palette = false);
+       const open_viii::graphics::BPPT                 &in_bpp,
+       const std::uint8_t                              &in_palette,
+       open_viii::LangT                                 in_coo,
+       bool                                             force_draw_palette = false);
      //  /**
      //   * Get sprite of palette texture
      //   * @param in_field
@@ -68,27 +69,27 @@ struct mim_sprite final
       * @param in_field
       * @return mim_sprite object
       */
-     [[nodiscard]] mim_sprite    with_field(std::weak_ptr<open_viii::archive::FIFLFS<false>> in_field) const;
+     [[nodiscard]] mim_sprite                                  with_field(std::weak_ptr<open_viii::archive::FIFLFS<false>> in_field) const;
      /**
       * create a new object with a new bits per pixel and the same settings
       * @param in_bpp
       * @return mim_sprite object
       */
-     [[nodiscard]] mim_sprite    with_bpp(const open_viii::graphics::BPPT &in_bpp) const;
+     [[nodiscard]] mim_sprite                                  with_bpp(const open_viii::graphics::BPPT &in_bpp) const;
      /**
       * create a new object with a new palette and the same settings
       * @param in_bpp
       * @return mim_sprite object
       */
-     [[nodiscard]] mim_sprite    with_palette(const std::uint8_t &in_palette) const;
+     [[nodiscard]] mim_sprite                                  with_palette(const std::uint8_t &in_palette) const;
      /**
       * create a new object and change coo.
       */
-     [[nodiscard]] mim_sprite    with_coo(open_viii::LangT in_coo) const;
+     [[nodiscard]] mim_sprite                                  with_coo(open_viii::LangT in_coo) const;
      /**
       * create a new object and Toggle drawing palette.
       */
-     [[nodiscard]] mim_sprite    with_draw_palette(bool in_draw_palette) const;
+     [[nodiscard]] mim_sprite                                  with_draw_palette(bool in_draw_palette) const;
      //  /**
      //   * Getter for sprite, required for changing position and drawing.
      //   * @todo maybe want to control access.
@@ -98,21 +99,21 @@ struct mim_sprite final
      /**
       * @return width in px
       */
-     [[nodiscard]] std::uint32_t width() const noexcept;
+     [[nodiscard]] std::uint32_t                               width() const noexcept;
      /**
       * @return height in px
       */
-     [[nodiscard]] std::uint32_t height() const noexcept;
+     [[nodiscard]] std::uint32_t                               height() const noexcept;
      /**
       * If in draw palette mode
       * @return true or false
       */
-     [[nodiscard]] bool          draw_palette() const noexcept;
+     [[nodiscard]] bool                                        draw_palette() const noexcept;
      /**
       * If failed state
       * @return true or false
       */
-     [[nodiscard]] bool          fail() const noexcept;
+     [[nodiscard]] bool                                        fail() const noexcept;
      [[nodiscard]] const open_viii::graphics::background::Mim &mim() const noexcept;
      void                                                      save(const std::filesystem::path &dest_path) const;
 

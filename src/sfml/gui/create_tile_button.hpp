@@ -20,21 +20,21 @@ struct tile_button_options
      /**
       * @brief Size of the button in pixels.
       */
-     sf::Vector2f          size             = {};
+     ImVec2                    size                = {};
 
      /**
       * @brief Background color of the button.
       * This is the color drawn before the image gets overlaid on top.
       * Defaults to `sf::Color::Transparent`.
       */
-     fme::color                 background_color = { colors::Transparent };
+     fme::color                background_color    = { colors::Transparent };
 
      /**
       * @brief Tint color applied to the button image.
       * This color is applied over the image itself, modifying its appearance.
       * Defaults to `sf::Color::White` (no tint).
       */
-     fme::color                 tint_color       = { colors::White };
+     fme::color                tint_color          = { colors::White };
 
      /**
       * @brief Optional override for the default button color.
@@ -42,7 +42,7 @@ struct tile_button_options
       * If set, this value will be applied using `ImGui::PushStyleColor(ImGuiCol_Button)`.
       * If not set, the style's default button color is used.
       */
-     std::optional<fme::color>  button_color            = {};
+     std::optional<fme::color> button_color        = {};
 
      /**
       * @brief Optional color for the button when hovered.
@@ -50,7 +50,7 @@ struct tile_button_options
       * If set, this value will be applied using `ImGui::PushStyleColor(ImGuiCol_ButtonHovered)`.
       * If not set, the style's default hover color is used.
       */
-     std::optional<fme::color>  button_hover_color      = {};
+     std::optional<fme::color> button_hover_color  = {};
 
      /**
       * @brief Optional color for the button when active (pressed).
@@ -58,7 +58,7 @@ struct tile_button_options
       * If set, this value will be applied using `ImGui::PushStyleColor(ImGuiCol_ButtonActive)`.
       * If not set, the style's default active color is used.
       */
-     std::optional<fme::color>  button_active_color     = {};
+     std::optional<fme::color> button_active_color = {};
 
      /**
       * @brief Optional padding size around the image in pixels.
@@ -67,11 +67,20 @@ struct tile_button_options
       * If set, this value will be applied using `ImGui::PushStyleVar(ImGuiStyleVar_FramePadding)`.
       * If not set, the style's default padding size is used.
       */
-     std::optional<ImVec2> padding_size     = {};
+     std::optional<ImVec2>     padding_size        = {};
 };
 
 template<open_viii::graphics::background::is_tile tileT>
 [[nodiscard]] bool create_tile_button(std::weak_ptr<const map_sprite> map, const tileT &tile, const tile_button_options &options = {});
-[[nodiscard]] bool create_color_button(const tile_button_options &options = {});
+struct [[nodiscard]] create_color_button
+{
+   private:
+     const tile_button_options &m_options             = {};
+     glengine::Texture          m_transparent_texture = (std::uint32_t{ 0 });
+
+   public:
+     create_color_button(const tile_button_options &options = {});
+     bool operator()() const;
+};
 }// namespace fme
 #endif /* DF4C3AF7_C3A6_4F62_8336_B0EF72752E11 */

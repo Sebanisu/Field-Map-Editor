@@ -785,7 +785,7 @@ void gui::draw_window()
      static constexpr ImGuiWindowFlags window_flags =
        ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_AlwaysHorizontalScrollbar | ImGuiWindowFlags_AlwaysVerticalScrollbar;
      static const auto DrawCheckerboardBackground =
-       [](const ImVec2 &window_pos, const sf::Vector2f &window_size, float tile_size, color color1, color color2) {
+       [](const ImVec2 &window_pos, const ImVec2 &window_size, float tile_size, color color1, color color2) {
             auto  *draw_list = ImGui::GetWindowDrawList();
             ImVec2 clip_min  = ImGui::GetWindowPos();
             ImVec2 clip_max  = { ImGui::GetWindowPos().x + ImGui::GetWindowSize().x, ImGui::GetWindowPos().y + ImGui::GetWindowSize().y };
@@ -817,12 +817,12 @@ void gui::draw_window()
                return;
           }
 
-          const auto         wsize      = ImGui::GetContentRegionAvail();
-          const auto         img_size   = m_mim_sprite.get_texture()->getSize();
+          const auto   wsize      = ImGui::GetContentRegionAvail();
+          const auto   img_size   = m_mim_sprite.get_texture()->get_size();
 
-          const auto         screen_pos = ImGui::GetCursorScreenPos();
-          const float        scale      = std::max(wsize.x / img_size.x, wsize.y / img_size.y);
-          const sf::Vector2f scaled_size(img_size.x * scale, img_size.y * scale);
+          const auto   screen_pos = ImGui::GetCursorScreenPos();
+          const float  scale      = std::max(wsize.x / img_size.x, wsize.y / img_size.y);
+          const ImVec2 scaled_size(img_size.x * scale, img_size.y * scale);
 
           DrawCheckerboardBackground(
             screen_pos,
@@ -833,7 +833,7 @@ void gui::draw_window()
 
           const auto pop_id1 = PushPopID();
 
-          ImGui::Image(*m_mim_sprite.get_texture(), scaled_size);
+          ImGui::Image(glengine::ConvertGliDtoImTextureId<ImTextureID>(m_mim_sprite.get_texture()->id()), scaled_size);
 
           draw_mim_grid_lines_for_tiles(screen_pos, scaled_size, scale);
 
@@ -853,12 +853,12 @@ void gui::draw_window()
           }
 
 
-          const auto         wsize      = ImGui::GetContentRegionAvail();
-          const auto         img_size   = m_map_sprite->get_render_texture()->getSize();
+          const auto   wsize      = ImGui::GetContentRegionAvail();
+          const auto   img_size   = m_map_sprite->get_render_texture()->getSize();
 
-          const auto         screen_pos = ImGui::GetCursorScreenPos();
-          const float        scale      = std::max(wsize.x / img_size.x, wsize.y / img_size.y);
-          const sf::Vector2f scaled_size(img_size.x * scale, img_size.y * scale);
+          const auto   screen_pos = ImGui::GetCursorScreenPos();
+          const float  scale      = std::max(wsize.x / img_size.x, wsize.y / img_size.y);
+          const ImVec2 scaled_size(img_size.x * scale, img_size.y * scale);
 
           DrawCheckerboardBackground(
             screen_pos,
@@ -869,7 +869,7 @@ void gui::draw_window()
 
           const auto pop_id1 = PushPopID();
 
-          ImGui::Image(*m_map_sprite->get_render_texture(), scaled_size);
+          ImGui::Image(*m_map_sprite->get_render_texture(), sf::Vector2f{ scaled_size.x, scaled_size.y });
 
           update_hover_and_mouse_button_status_for_map(screen_pos, scale);
 
@@ -929,7 +929,7 @@ void gui::update_hover_and_mouse_button_status_for_map(const ImVec2 &img_start, 
 }
 
 
-void gui::draw_mim_grid_lines_for_tiles(const ImVec2 &screen_pos, const sf::Vector2f &scaled_size, const float scale)
+void gui::draw_mim_grid_lines_for_tiles(const ImVec2 &screen_pos, const ImVec2 &scaled_size, const float scale)
 {
      // Drawing grid lines within the window if m_selections->draw_grid is true
      if (!m_selections->draw_grid)
@@ -956,7 +956,7 @@ void gui::draw_mim_grid_lines_for_tiles(const ImVec2 &screen_pos, const sf::Vect
      }
 }
 
-void gui::draw_mim_grid_lines_for_texture_page(const ImVec2 &screen_pos, const sf::Vector2f &scaled_size, const float scale)
+void gui::draw_mim_grid_lines_for_texture_page(const ImVec2 &screen_pos, const ImVec2 &scaled_size, const float scale)
 {
      // Drawing grid lines within the window if m_selections->draw_grid is true
      if (!m_selections->draw_texture_page_grid || m_selections->draw_palette)
@@ -992,7 +992,7 @@ void gui::draw_mim_grid_lines_for_texture_page(const ImVec2 &screen_pos, const s
      }
 }
 
-void gui::draw_map_grid_lines_for_tiles(const ImVec2 &screen_pos, const sf::Vector2f &scaled_size, const float scale)
+void gui::draw_map_grid_lines_for_tiles(const ImVec2 &screen_pos, const ImVec2 &scaled_size, const float scale)
 {
      // Drawing grid lines within the window if m_selections->draw_grid is true
      if (!m_selections->draw_grid)
@@ -1169,7 +1169,7 @@ void gui::draw_map_grid_for_conflict_tiles(const ImVec2 &screen_pos, const float
           }
      });
 }
-void gui::draw_map_grid_lines_for_texture_page(const ImVec2 &screen_pos, const sf::Vector2f &scaled_size, const float scale)
+void gui::draw_map_grid_lines_for_texture_page(const ImVec2 &screen_pos, const ImVec2 &scaled_size, const float scale)
 {
      // Drawing grid lines within the window if m_selections->draw_grid is true
      if (m_selections->draw_texture_page_grid && m_selections->draw_swizzle)
@@ -3389,17 +3389,17 @@ gui::gui()
      m_window.clear(sf::Color::Black);
      m_window.display();
 
-     m_archives_group = std::make_shared<archives_group>(get_archives_group());
-     m_batch          = fme::batch{ m_selections, m_archives_group };
-     m_field          = init_field();
-     m_mim_sprite     = get_mim_sprite();
-     m_map_sprite     = get_map_sprite();
 
-     m_import.update(m_selections);
-     m_history_window.update(m_selections);
-     m_import.update(m_map_sprite);
-     m_history_window.update(m_map_sprite);
-
+     const GLubyte *version = glGetString(GL_VERSION);
+     if (version)
+     {
+          spdlog::info("OpenGL version: {}", reinterpret_cast<const char *>(version));
+     }
+     else
+     {
+          spdlog::error("Failed to get OpenGL version. Is the context initialized?");
+     }
+     
      GLenum const err = glewInit();
      if (std::cmp_not_equal(GLEW_OK, err))
      {
@@ -3411,6 +3411,19 @@ gui::gui()
      // Enable debug output
      glEnable(GL_DEBUG_OUTPUT);
      glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
+
+     m_archives_group = std::make_shared<archives_group>(get_archives_group());
+     m_batch          = fme::batch{ m_selections, m_archives_group };
+     m_field          = init_field();
+     m_mim_sprite     = get_mim_sprite();
+     m_map_sprite     = get_map_sprite();
+
+     m_import.update(m_selections);
+     m_history_window.update(m_selections);
+     m_import.update(m_map_sprite);
+     m_history_window.update(m_map_sprite);
+
+
 
      // Set the debug callback function
      glDebugMessageCallback(DebugCallback, nullptr);

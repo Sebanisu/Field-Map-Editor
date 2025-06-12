@@ -40,16 +40,27 @@ template<is_tile tileT>
           return tile.source_y();
      }();
      static constexpr float tile_size = 16.F;
-     sf::Sprite             sprite(
-       *texture,
-       sf::IntRect(
-         static_cast<int>((static_cast<float>(src_x) / tile_size) * static_cast<float>(tile_texture_size.x)),
-         static_cast<int>((static_cast<float>(src_y) / tile_size) * static_cast<float>(tile_texture_size.y)),
-         static_cast<int>(tile_texture_size.x),
-         static_cast<int>(tile_texture_size.y)));
+     // sf::Sprite             sprite(
+     //   *texture,
+     //   sf::IntRect(
+     //     static_cast<int>((static_cast<float>(src_x) / tile_size) * static_cast<float>(tile_texture_size.x)),
+     //     static_cast<int>((static_cast<float>(src_y) / tile_size) * static_cast<float>(tile_texture_size.y)),
+     //     static_cast<int>(tile_texture_size.x),
+     //     static_cast<int>(tile_texture_size.y)));
+     const auto             rect      = sf::IntRect(
+       static_cast<int>((static_cast<float>(src_x) / tile_size) * static_cast<float>(tile_texture_size.x)),
+       static_cast<int>((static_cast<float>(src_y) / tile_size) * static_cast<float>(tile_texture_size.y)),
+       static_cast<int>(tile_texture_size.x),
+       static_cast<int>(tile_texture_size.y));
 
-     int pop_count     = {};
-     int pop_var_count = {};
+     const ImVec2 texSize = { static_cast<float>(texture->width()), static_cast<float>(texture->height()) };
+
+     const ImVec2 uv0     = { static_cast<float>(rect.left) / texSize.x, static_cast<float>(rect.top) / texSize.y };
+
+     const ImVec2 uv1 = { static_cast<float>(rect.left + rect.width) / texSize.x, static_cast<float>(rect.top + rect.height) / texSize.y };
+
+     int          pop_count     = {};
+     int          pop_var_count = {};
      if (options.button_color.has_value())
      {
           ImGui::PushStyleColor(ImGuiCol_Button, options.button_color.value());
@@ -82,10 +93,12 @@ template<is_tile tileT>
 
      return ImGui::ImageButton(
        "##tile_image_button",
-       sprite,
-       options.size == sf::Vector2f{} ? sf::Vector2f{ ImGui::GetTextLineHeight(), ImGui::GetTextLineHeight() } : options.size,
-       options.background_color,
-       options.tint_color);
+       glengine::ConvertGliDtoImTextureId<ImTextureID>(texture->id()),
+       ((options.size.x == 0 || options.size.y == 0) ? ImVec2{ ImGui::GetTextLineHeight(), ImGui::GetTextLineHeight() } : options.size),
+       uv0,
+       uv1,
+       ImVec4{ options.background_color },
+       ImVec4{ options.tint_color });
 }
 
 
@@ -95,44 +108,37 @@ template [[nodiscard]] bool fme::create_tile_button(std::weak_ptr<const fme::map
 template [[nodiscard]] bool fme::create_tile_button(std::weak_ptr<const fme::map_sprite>, const Tile3 &, const tile_button_options &);
 
 
-[[nodiscard]] bool          fme::create_color_button(const tile_button_options &options)
+[[nodiscard]] bool          fme::create_color_button::operator()() const
 {
      // needs to be in a std::shared_ptr to be returned from a lambda. it has no move or copy operations. Also it won't just use copy
      // elision.
-     static std::shared_ptr<sf::RenderTexture> transparent_texture = []() {
-          auto t = std::make_shared<sf::RenderTexture>();
-          t->create(1, 1);
-          t->clear(sf::Color::Transparent);
-          t->display();
-          return t;
-     }();
 
-     if (!transparent_texture)
+     if (m_transparent_texture.width() == 0 || m_transparent_texture.height() == 0)
      {
-          spdlog::error("{}", "transparent_texture is null");
+          spdlog::error("{}", "transparent_texture is not loaded");
           return false;
      }
 
      int pop_count     = {};
      int pop_var_count = {};
-     if (options.button_color.has_value())
+     if (m_options.button_color.has_value())
      {
-          ImGui::PushStyleColor(ImGuiCol_Button, options.button_color.value());
+          ImGui::PushStyleColor(ImGuiCol_Button, m_options.button_color.value());
           ++pop_count;
      }
-     if (options.button_hover_color.has_value())
+     if (m_options.button_hover_color.has_value())
      {
-          ImGui::PushStyleColor(ImGuiCol_ButtonHovered, options.button_hover_color.value());
+          ImGui::PushStyleColor(ImGuiCol_ButtonHovered, m_options.button_hover_color.value());
           ++pop_count;
      }
-     if (options.button_active_color.has_value())
+     if (m_options.button_active_color.has_value())
      {
-          ImGui::PushStyleColor(ImGuiCol_ButtonActive, options.button_active_color.value());
+          ImGui::PushStyleColor(ImGuiCol_ButtonActive, m_options.button_active_color.value());
           ++pop_count;
      }
-     if (options.padding_size.has_value())
+     if (m_options.padding_size.has_value())
      {
-          ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, options.padding_size.value());
+          ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, m_options.padding_size.value());
           ++pop_var_count;
      }
 
@@ -144,10 +150,15 @@ template [[nodiscard]] bool fme::create_tile_button(std::weak_ptr<const fme::map
                ImGui::PopStyleVar(pop_var_count);
      } };
      const auto pop_id = PushPopID();
+     ImVec2     uv0    = ImVec2(0.0f, 0.0f);
+     ImVec2     uv1    = ImVec2(1.0f, 1.0f);
      return ImGui::ImageButton(
-       "##color_button",
-       *transparent_texture.get(),
-       options.size == sf::Vector2f{} ? sf::Vector2f{ ImGui::GetTextLineHeight(), ImGui::GetTextLineHeight() } : options.size,
-       options.background_color,
-       options.tint_color);
+       "##tile_image_button",
+       glengine::ConvertGliDtoImTextureId<ImTextureID>(m_transparent_texture.id()),
+       ((m_options.size.x == 0 || m_options.size.y == 0) ? ImVec2{ ImGui::GetTextLineHeight(), ImGui::GetTextLineHeight() }
+                                                         : m_options.size),
+       uv0,
+       uv1,
+       ImVec4{ m_options.background_color },
+       ImVec4{ m_options.tint_color });
 }
