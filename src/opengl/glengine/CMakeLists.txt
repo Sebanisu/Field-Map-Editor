@@ -43,8 +43,7 @@ target_link_libraries(
   PUBLIC OpenGL::GL
   PUBLIC GLEW::GLEW
   PUBLIC glm::glm
-  PUBLIC stbi_wrapper
-  PUBLIC imgui::imgui)
+  PUBLIC stbi_wrapper)
 target_compile_definitions(glengine PUBLIC GLEW_STATIC)
 target_include_directories(glengine PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
