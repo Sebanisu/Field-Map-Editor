@@ -754,14 +754,12 @@ void map_sprite::enable_draw_swizzle()
 {
      m_draw_swizzle = true;
      init_render_texture();
-     m_grid = get_grid();
 }
 
 void map_sprite::disable_draw_swizzle()
 {
      m_draw_swizzle = false;
      init_render_texture();
-     m_grid = get_grid();
 }
 
 void map_sprite::draw(sf::RenderTarget &target, sf::RenderStates states) const
@@ -774,15 +772,9 @@ void map_sprite::draw(sf::RenderTarget &target, sf::RenderStates states) const
      auto quad         = ff_8::get_triangle_strip(to_Vector2f(draw_size), to_Vector2f(texture_size), {}, {});
      // draw the vertex array
      target.draw(quad.data(), quad.size(), sf::TriangleStrip, states);
-     // draw grid
-     target.draw(m_grid, states);
+
      // draw square
      target.draw(m_square, states);
-     // draw texture_page_grid
-     if (m_draw_swizzle)
-     {
-          target.draw(m_texture_page_grid, states);
-     }
 }
 void map_sprite::update_render_texture(bool reload_textures)
 {
@@ -889,28 +881,6 @@ std::string map_sprite::map_filename() const
      return std::filesystem::path(m_map_group.map_path).filename().string();
 }
 
-const map_sprite &map_sprite::toggle_grid(bool enable, bool enable_texture_page_grid) const
-{
-     if (enable)
-     {
-          m_grid.enable();
-     }
-     else
-     {
-          m_grid.disable();
-     }
-
-     if (enable_texture_page_grid)
-     {
-          // spdlog::info("enabled: {}",m_texture_page_grid.count());
-          m_texture_page_grid.enable();
-     }
-     else
-     {
-          m_texture_page_grid.disable();
-     }
-     return *this;
-}
 void map_sprite::resize_render_texture()
 {
      if (!fail())
@@ -1001,24 +971,6 @@ std::uint32_t map_sprite::height() const
           }
      }
      return m_canvas.height();
-}
-grid map_sprite::get_grid() const
-{
-     return { { TILE_SIZE, TILE_SIZE }, { width(), height() } };
-}
-grid map_sprite::get_texture_page_grid() const
-{
-     using namespace open_viii::graphics::literals;
-     if (!m_map_group.mim)
-     {
-          return {};
-     }
-     const unsigned int texture_page_width = 256U;
-     const unsigned int grid_spacing       = (1U << ((8U - (open_viii::graphics::BPPT::BPP4_CONST().raw() & 3U))));
-     //(1U << (open_viii::graphics::BPPT::CLP_VALUE - ((4_bpp).raw() & open_viii::graphics::BPPT::RAW24_VALUE)))
-     return { { grid_spacing, texture_page_width },
-              { m_map_group.mim->get_width(4_bpp), m_map_group.mim->get_height() },
-              sf::Color::Yellow };
 }
 
 all_unique_values_and_strings map_sprite::get_all_unique_values_and_strings() const
@@ -1818,8 +1770,6 @@ map_sprite::map_sprite(
   , m_canvas(get_canvas())
   , m_texture(load_textures())
   , m_render_texture(std::make_shared<sf::RenderTexture>())
-  , m_grid(get_grid())
-  , m_texture_page_grid(get_texture_page_grid())
   , m_selections(selections)
 {
      if (m_filters.upscale_map.enabled())

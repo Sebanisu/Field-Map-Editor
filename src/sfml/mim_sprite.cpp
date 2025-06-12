@@ -61,9 +61,6 @@ std::vector<open_viii::graphics::Color32RGBA> mim_sprite::get_colors()
   , m_colors(get_colors())
   , m_texture(find_texture())
   , m_vertices(get_vertices())
-  , m_grid(draw_palette() ? grid{ { 1U, 1U }, { width(), height() } } : grid{ { 16U, 16U }, { width(), height() } })
-  , m_texture_page_grid(
-      draw_palette() ? grid{} : grid{ { (1U << ((8U - (m_bpp.raw() & 3U)))), 256U }, { width(), height() }, sf::Color::Yellow })
 {
 }
 
@@ -146,12 +143,6 @@ void mim_sprite::draw(sf::RenderTarget &target, sf::RenderStates states) const
           states.texture   = m_texture.get();
           // draw texture
           target.draw(m_vertices.data(), 4U, sf::TriangleStrip, states);
-          // draw grids
-          target.draw(m_grid, states);
-          if (!m_draw_palette)
-          {
-               target.draw(m_texture_page_grid, states);
-          }
      }
 }
 
@@ -173,25 +164,4 @@ std::array<sf::Vertex, 4U> mim_sprite::get_vertices() const
           return ret;
      }
      return {};
-}
-
-const mim_sprite &mim_sprite::toggle_grids(bool enable_grid, bool enable_texture_page_grid)
-{
-     if (enable_grid)
-     {
-          m_grid.enable();
-     }
-     else
-     {
-          m_grid.disable();
-     }
-     if (enable_texture_page_grid)
-     {
-          m_texture_page_grid.enable();
-     }
-     else
-     {
-          m_texture_page_grid.disable();
-     }
-     return *this;
 }

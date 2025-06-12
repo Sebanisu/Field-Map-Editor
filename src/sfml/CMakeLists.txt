@@ -40,7 +40,6 @@ add_executable(
   formatters.cpp
   future_operations.cpp
   generic_combo.cpp
-  grid.cpp
   main.cpp
   map_group.cpp
   map_operation.cpp

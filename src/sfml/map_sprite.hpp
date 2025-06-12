@@ -5,7 +5,6 @@
 #ifndef FIELD_MAP_EDITOR_MAP_SPRITE_HPP
 #define FIELD_MAP_EDITOR_MAP_SPRITE_HPP
 #include "filter.hpp"
-#include "grid.hpp"
 #include "gui/key_value_data.hpp"
 #include "gui/Selections.hpp"
 #include "map_group.hpp"
@@ -75,8 +74,6 @@ struct [[nodiscard]] map_sprite final
      SharedTextures                                m_texture                       = {};
      std::shared_ptr<sf::RenderTexture>            m_render_texture                = {};
      std::shared_ptr<sf::RenderTexture>            m_drag_sprite_texture           = {};
-     grid                                          m_grid                          = {};
-     grid                                          m_texture_page_grid             = {};
      std::vector<std::size_t>                      m_saved_indices                 = {};
      std::vector<std::size_t>                      m_saved_imported_indices        = {};
      std::uint32_t                                 m_scale                         = { 1 };
@@ -124,13 +121,10 @@ struct [[nodiscard]] map_sprite final
      [[nodiscard]] map_sprite                            with_coo(open_viii::LangT coo) const;
      [[nodiscard]] map_sprite                            with_field(WeakField field, open_viii::LangT coo) const;
      [[nodiscard]] map_sprite                            with_filters(ff_8::filters filters) const;
-     [[nodiscard]] const map_sprite                     &toggle_grid(bool enable, bool enable_texture_page_grid) const;
      [[nodiscard]] bool                                  empty() const;
      [[nodiscard]] const ff_8::filters                  &filter() const;
      [[nodiscard]] std::uint8_t                          max_x_for_saved() const;
      [[nodiscard]] map_sprite                            update(ff_8::map_group map_group, bool draw_swizzle) const;
-     [[nodiscard]] grid                                  get_grid() const;
-     [[nodiscard]] grid                                  get_texture_page_grid() const;
      [[nodiscard]] all_unique_values_and_strings         get_all_unique_values_and_strings() const;
      [[nodiscard]] sf::Vector2u                          get_tile_texture_size_for_import() const;
      [[nodiscard]] Rectangle                             get_canvas() const;

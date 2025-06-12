@@ -806,8 +806,6 @@ void gui::draw_window()
        };
      if (mim_test())
      {
-          // m_window.draw(m_mim_sprite.toggle_grids(m_selections->draw_grid, m_selections->draw_texture_page_grid));
-
           const auto pop_style0 = scope_guard([]() { ImGui::PopStyleVar(); });
           ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.F, 0.F));
           const auto pop_id0 = PushPopID();

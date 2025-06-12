@@ -17,7 +17,6 @@
 #include "filebrowser.hpp"
 #include "formatters.hpp"
 #include "generic_combo.hpp"
-#include "grid.hpp"
 #include "gui/history_window.hpp"
 #include "import.hpp"
 #include "map_directory_mode.hpp"
