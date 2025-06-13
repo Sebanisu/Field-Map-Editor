@@ -86,6 +86,144 @@ enum class ConfigKey
      // Add more as needed
      All,
 };
+
+
+[[nodiscard]] consteval std::string_view key_to_string(ConfigKey key)
+{
+     using namespace std::string_view_literals;
+     switch (key)
+     {
+          case ConfigKey::BackgroundColor:
+               return "selections_background_color"sv;
+          case ConfigKey::BatchCompactEnabled:
+               return ff_8::ConfigKeys<ff_8::FilterTag::Compact>::enabled_key_name;
+          case ConfigKey::BatchCompactType:
+               return ff_8::ConfigKeys<ff_8::FilterTag::Compact>::key_name;
+          case ConfigKey::BatchFlattenEnabled:
+               return ff_8::ConfigKeys<ff_8::FilterTag::Flatten>::enabled_key_name;
+          case ConfigKey::BatchFlattenType:
+               return ff_8::ConfigKeys<ff_8::FilterTag::Flatten>::key_name;
+          case ConfigKey::BatchInputLoadMap:
+               return "batch_input_load_map"sv;
+          case ConfigKey::BatchInputPath:
+               return "batch_input_path"sv;
+          case ConfigKey::BatchInputRootPathType:
+               return "batch_input_root_path_type"sv;
+          case ConfigKey::BatchInputType:
+               return "batch_input_type"sv;
+          case ConfigKey::BatchOutputPath:
+               return "batch_output_path"sv;
+          case ConfigKey::BatchOutputRootPathType:
+               return "batch_output_root_path_type"sv;
+          case ConfigKey::BatchOutputType:
+               return "batch_output_type"sv;
+          case ConfigKey::BatchOutputSaveMap:
+               return "batch_output_save_map"sv;
+          case ConfigKey::Bpp:
+               return "selections_bpp"sv;
+          case ConfigKey::Coo:
+               return "selections_coo"sv;
+          case ConfigKey::CurrentPattern:
+               return "selections_current_pattern"sv;
+          case ConfigKey::CurrentPatternIndex:
+               return "selections_current_pattern_index"sv;
+          case ConfigKey::DeswizzlePath:
+               return "selections_deswizzle_path"sv;
+          case ConfigKey::DisplayBatchWindow:
+               return "selections_display_batch_window"sv;
+          case ConfigKey::DisplayControlPanelWindow:
+               return "selections_display_control_panel_window"sv;
+          case ConfigKey::DisplayCustomPathsWindow:
+               return "selections_display_custom_paths_window"sv;
+          case ConfigKey::DisplayDrawWindow:
+               return "selections_display_draw_window"sv;
+          case ConfigKey::DisplayFieldFileWindow:
+               return "selections_display_field_file_window"sv;
+          case ConfigKey::DisplayHistoryWindow:
+               return "selections_display_history_window"sv;
+          case ConfigKey::DisplayImportImage:
+               return "selections_display_import_image"sv;
+          case ConfigKey::Draw:
+               return "selections_draw"sv;
+          case ConfigKey::DrawDisableBlending:
+               return "selections_draw_disable_blending"sv;
+          case ConfigKey::DrawGrid:
+               return "selections_draw_grid"sv;
+          case ConfigKey::DrawPalette:
+               return "selections_draw_palette"sv;
+          case ConfigKey::DrawSwizzle:
+               return "selections_draw_swizzle"sv;
+          case ConfigKey::DrawTexturePageGrid:
+               return "selections_draw_texture_page_grid"sv;
+          case ConfigKey::DrawTileConflictRects:
+               return "selections_draw_tile_conflict_rects"sv;
+          case ConfigKey::ImportImageGrid:
+               return "selections_import_image_grid"sv;
+          case ConfigKey::ImportLoadImageDirectory:
+               return "import_load_image_directory"sv;
+          case ConfigKey::OutputDeswizzlePattern:
+               return "selections_output_deswizzle_pattern"sv;
+          case ConfigKey::OutputImagePath:
+               return "output_image_path"sv;
+          case ConfigKey::OutputMapPatternForDeswizzle:
+               return "selections_output_map_pattern_for_deswizzle"sv;
+          case ConfigKey::OutputMapPatternForSwizzle:
+               return "selections_output_map_pattern_for_swizzle"sv;
+          case ConfigKey::OutputMapPath:
+               return "output_map_path"sv;
+          case ConfigKey::OutputMimPath:
+               return "output_mim_path"sv;
+          case ConfigKey::OutputSwizzlePattern:
+               return "selections_output_swizzle_pattern"sv;
+          case ConfigKey::Palette:
+               return "selections_palette"sv;
+          case ConfigKey::PathPatternsCommonUpscale:
+               return "paths_common_upscale"sv;
+          case ConfigKey::PathPatternsCommonUpscaleForMaps:
+               return "paths_common_upscale_for_maps"sv;
+          case ConfigKey::PathPatternsNoPaletteAndTexturePage:
+               return "paths_no_palette_and_texture_page"sv;
+          case ConfigKey::PathPatternsWithPaletteAndTexturePage:
+               return "paths_with_palette_and_texture_page"sv;
+          case ConfigKey::PathPatternsWithPupuID:
+               return "paths_with_pupu_id"sv;
+          case ConfigKey::PathPatternsWithTexturePage:
+               return "paths_with_texture_page"sv;
+          case ConfigKey::PathsVector:
+               return "paths_vector"sv;
+          case ConfigKey::PathsVectorUpscale:
+               return "custom_upscale_paths_vector"sv;
+          case ConfigKey::PathsVectorDeswizzle:
+               return "paths_vector_deswizzle"sv;
+          case ConfigKey::PathsVectorUpscaleMap:
+               return "custom_upscale_map_paths_vector"sv;
+          case ConfigKey::PathsVectorDeswizzleMap:
+               return "paths_vector_deswizzle_map"sv;
+          case ConfigKey::RenderImportedImage:
+               return "selections_render_imported_image"sv;
+          case ConfigKey::SelectedTile:
+               return "selections_selected_tile"sv;
+          case ConfigKey::SelectionsPath:
+               return "selections_path"sv;
+          case ConfigKey::StarterField:
+               return "starter_field"sv;
+          case ConfigKey::SwizzlePath:
+               return "selections_swizzle_path"sv;
+          case ConfigKey::TileSizeValue:
+               return "selections_tile_size_value"sv;
+          case ConfigKey::UpscalePathsIndex:
+               return "upscale_paths_index"sv;
+          case ConfigKey::WindowHeight:
+               return "selections_window_height"sv;
+          case ConfigKey::WindowWidth:
+               return "selections_window_width"sv;
+
+          default: {
+               spdlog::error("{}:{} Unknown configuration key (ConfigKey): {}", __FILE__, __LINE__, std::to_underlying(key));
+               return {};
+          }
+     };
+}
 /**
  * @brief Manages various settings and selections for the application.
  *
@@ -105,12 +243,12 @@ struct Selections
      /**
       * @brief The default window width.
       */
-     static constexpr std::uint32_t window_width_default  = 800;
+     static constexpr std::uint32_t window_width_default  = 1280;
 
      /**
       * @brief The default window height.
       */
-     static constexpr std::uint32_t window_height_default = 600;
+     static constexpr std::uint32_t window_height_default = 720;
 
      open_viii::graphics::BPPT      bpp;///< Bits per pixel for rendering.
      uint8_t                        palette;///< Selected palette index.
