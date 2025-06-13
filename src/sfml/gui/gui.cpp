@@ -4,7 +4,6 @@
 #include "gui.hpp"
 #include "collapsing_tile_info.hpp"
 #include "colors.hpp"
-#include "create_tile_button.hpp"
 #include "EmptyStringIterator.hpp"
 #include "gui_labels.hpp"
 #include "imgui_color.hpp"
@@ -524,22 +523,15 @@ void gui::tile_conflicts_panel()
 
           format_imgui_text("{}", "Legend: ");
           ImGui::SameLine();
-          create_color_button()();
+          blue_color_button();
           const bool hovered_conflicts = ImGui::IsItemHovered();
           tool_tip("Button Color - Conflicts with different tiles.");
           ImGui::SameLine();
-          create_color_button(
-            { .button_color        = colors::ButtonGreen,
-              .button_hover_color  = colors::ButtonGreenHovered,
-              .button_active_color = colors::ButtonGreenActive })();
+          green_color_button();
           const bool hovered_similar = ImGui::IsItemHovered();
           tool_tip("Button Color - Conflicts with similar tiles, or duplicate tiles.");
-
           ImGui::SameLine();
-          create_color_button(
-            { .button_color        = colors::ButtonPink,
-              .button_hover_color  = colors::ButtonPinkHovered,
-              .button_active_color = colors::ButtonPinkActive })();
+          pink_color_button();
           const bool hovered_animation = ImGui::IsItemHovered();
           tool_tip("Button Color - Conflicts with similar tiles with different animation frame or blend modes.");
 
@@ -3369,37 +3361,6 @@ mim_sprite gui::get_mim_sprite() const
 }
 gui::gui(sf::RenderWindow &window)
 {
-     // m_window.setVerticalSyncEnabled(true);
-     // m_window.setFramerateLimit(0);// Disable manual frame limit
-     // m_window.setVerticalSyncEnabled(false);// Disable vsync
-     window.setVerticalSyncEnabled(true);
-     // Clear the window to black and display it immediately
-     window.clear(sf::Color::Black);
-     window.display();
-     // m_window.requestFocus();// Ensure the window has focus
-     window.setActive(true);
-     const GLubyte *version = glGetString(GL_VERSION);
-     if (version)
-     {
-          spdlog::info("OpenGL version: {}", reinterpret_cast<const char *>(version));
-     }
-     else
-     {
-          spdlog::error("Failed to get OpenGL version. Is the context initialized?");
-     }
-
-     GLenum const err = glewInit();
-     if (std::cmp_not_equal(GLEW_OK, err))
-     {
-          // GLEW initialization failed
-          const GLubyte *error_msg = glewGetErrorString(err);
-          spdlog::error("{}", reinterpret_cast<const char *>(error_msg));
-          std::terminate();
-     }
-     // Enable debug output
-     glEnable(GL_DEBUG_OUTPUT);
-     glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
-
      m_archives_group = std::make_shared<archives_group>(get_archives_group());
      m_batch          = fme::batch{ m_selections, m_archives_group };
      m_field          = init_field();
