@@ -79,7 +79,10 @@ struct [[nodiscard]] create_color_button
      glengine::Texture          m_transparent_texture = (std::uint32_t{ 0 });
 
    public:
-     create_color_button(const tile_button_options &options = {});
+     create_color_button(tile_button_options options = {})
+       : m_options(std::move(options))
+     {
+     }
      bool operator()() const;
 };
 }// namespace fme
