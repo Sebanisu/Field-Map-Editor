@@ -281,7 +281,7 @@ void gui::start(sf::RenderWindow &window)
                              if (m_event.type == sf::Event::Closed)
                              {
                                   m_batch.stop();
-                                  //window.close();
+                                  // window.close();
                                   stop_loop = true;
                              }
                         },
@@ -325,6 +325,7 @@ void gui::start(sf::RenderWindow &window)
      } while (window.isOpen() && !stop_loop);
 
      ImGui::SFML::Shutdown();
+     m_selections->update_configuration();
 }
 void gui::render_dockspace()
 {
