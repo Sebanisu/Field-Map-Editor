@@ -40,8 +40,8 @@ namespace fme
 struct gui
 {
    public:
-     gui();
-     void start();
+     gui(sf::RenderWindow &window);
+     void start(sf::RenderWindow &window);
 
    private:
      using variant_tile_t = std::variant<
@@ -56,7 +56,6 @@ struct gui
      mouse_positions                                                     m_mouse_positions     = {};
      int                                                                 m_field_index         = {};
      float                                                               m_scale_width         = {};
-     sf::RenderWindow                                                    m_window              = {};
      sf::Clock                                                           m_delta_clock         = {};
      sf::Time                                                            m_elapsed_time        = {};
      std::shared_ptr<archives_group>                                     m_archives_group      = {};
@@ -108,8 +107,6 @@ struct gui
      void                        consume_one_future();
      mim_sprite                  get_mim_sprite() const;
      std::shared_ptr<map_sprite> get_map_sprite() const;
-     void                        loop_events();
-     void                        loop();
      void                        draw_window();
      void                        update_hover_and_mouse_button_status_for_map(const ImVec2 &img_start, const float scale);
      void                        draw_map_grid_lines_for_tiles(const ImVec2 &screen_pos, const ImVec2 &scaled_size, const float scale);
@@ -151,7 +148,7 @@ struct gui
      void                      menuitem_save_map_file(bool enabled = true);
      void                      menuitem_save_map_file_modified(bool enabled = true);
      void                      menuitem_load_map_file(bool enabled = true);
-     void                      scale_window(float width = {}, float height = {});
+     // void                      scale_window(float width = {}, float height = {});
      std::uint8_t              palette() const;
      open_viii::graphics::BPPT bpp() const;
      void                      combo_blend_modes();

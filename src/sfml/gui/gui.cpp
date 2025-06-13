@@ -214,26 +214,116 @@ inline std::filesystem::path operator+(const std::filesystem::path &lhs, const T
 
 namespace fme
 {
-void gui::start()
+void gui::start(sf::RenderWindow &window)
 {
-     if (!m_window.isOpen())
-     {
-          return;
-     }
-     // m_window.requestFocus();// Ensure the window has focus
-     m_window.setActive(true);
-     scale_window(static_cast<float>(m_selections->window_width), static_cast<float>(m_selections->window_height));
+     bool stop_loop = false;
+     // scale_window(static_cast<float>(m_selections->window_width), static_cast<float>(m_selections->window_height));
      (void)icons_font();
      do
      {
           m_changed      = false;
           get_imgui_id() = {};// reset id counter
-          loop_events();
+          {
+               m_mouse_positions.update();
+               while (window.pollEvent(m_event))
+               {
+                    ImGui::SFML::ProcessEvent(window, m_event);
+                    const auto event_variant = events::get(m_event);
+                    std::visit(
+                      events::make_visitor(
+                        [this]([[maybe_unused]] const sf::Event::SizeEvent &size) {
+                             //     scale_window(static_cast<float>(size.width), static_cast<float>(size.height));
+                             // m_changed = true;
+                        },
+                        [this](const sf::Event::MouseMoveEvent &) {
+                             m_mouse_positions.mouse_moved = true;
+                             // TODO move setting mouse pos code here?
+                             m_changed                     = true;
+                        },
+                        [this](const sf::Event::KeyEvent &key) {
+                             const auto &type = m_event.type;
+                             if (type == sf::Event::EventType::KeyReleased)
+                             {
+                                  event_type_key_released(key);
+                             }
+                             else if (type == sf::Event::EventType::KeyPressed)
+                             {
+                                  event_type_key_pressed(key);
+                             }
+                        },
+                        [this](const sf::Event::MouseButtonEvent &mouse) {
+                             const sf::Mouse::Button &button = mouse.button;
+                             if (!m_mouse_positions.mouse_enabled)
+                             {
+                                  // m_mouse_positions.left = false;
+                                  return;
+                             }
+                             switch (m_event.type)
+                             {
+                                  case sf::Event::EventType::MouseButtonPressed:
+                                       ///< A mouse button was pressed (data in event.mouseButton)
+                                       {
+                                            event_type_mouse_button_pressed(button);
+                                       }
+                                       break;
+                                  case sf::Event::EventType::MouseButtonReleased:
+                                       ///< A mouse button was released (data in
+                                       ///< event.mouseButton)
+                                       {
+                                            event_type_mouse_button_released(button);
+                                       }
+                                       break;
+                                  default:
+                                       break;
+                             }
+                        },
+                        [&]([[maybe_unused]] const std::monostate &) {
+                             if (m_event.type == sf::Event::Closed)
+                             {
+                                  m_batch.stop();
+                                  //window.close();
+                                  stop_loop = true;
+                             }
+                        },
+                        []([[maybe_unused]] const auto &) {}),
+                      event_variant);
+               }
+          }
           m_elapsed_time = m_delta_clock.restart();
-          ImGui::SFML::Update(m_window, m_elapsed_time);
+          ImGui::SFML::Update(window, m_elapsed_time);
           m_batch.update(m_elapsed_time);
-          loop();
-     } while (m_window.isOpen());
+
+          // Begin non imgui drawing.
+          window.clear(sf::Color::Black);
+          directory_browser_display();
+          file_browser_save_texture();
+          render_dockspace();
+          menu_bar();
+          //     popup_batch_deswizzle();
+          //     popup_batch_reswizzle();
+          if (m_selections->display_batch_window)
+          {
+               m_batch.draw_window();
+          }
+          m_custom_paths_window.render();
+          m_field_file_window.render();
+
+          if (toggle_imgui_demo_window)
+          {
+               ImGui::ShowDemoWindow();
+          }
+          control_panel_window();
+          m_import.render();
+          m_history_window.render();
+
+          draw_window();
+          //  m_mouse_positions.cover.setColor(clear_color);
+          //  window.draw(m_mouse_positions.cover);
+          ImGui::SFML::Render(window);
+          window.display();
+          consume_one_future();
+     } while (window.isOpen() && !stop_loop);
+
      ImGui::SFML::Shutdown();
 }
 void gui::render_dockspace()
@@ -433,22 +523,22 @@ void gui::tile_conflicts_panel()
 
           format_imgui_text("{}", "Legend: ");
           ImGui::SameLine();
-          (void)create_color_button({});
+          create_color_button()();
           const bool hovered_conflicts = ImGui::IsItemHovered();
           tool_tip("Button Color - Conflicts with different tiles.");
           ImGui::SameLine();
-          (void)create_color_button(
+          create_color_button(
             { .button_color        = colors::ButtonGreen,
               .button_hover_color  = colors::ButtonGreenHovered,
-              .button_active_color = colors::ButtonGreenActive });
+              .button_active_color = colors::ButtonGreenActive })();
           const bool hovered_similar = ImGui::IsItemHovered();
           tool_tip("Button Color - Conflicts with similar tiles, or duplicate tiles.");
 
           ImGui::SameLine();
-          (void)create_color_button(
+          create_color_button(
             { .button_color        = colors::ButtonPink,
               .button_hover_color  = colors::ButtonPinkHovered,
-              .button_active_color = colors::ButtonPinkActive });
+              .button_active_color = colors::ButtonPinkActive })();
           const bool hovered_animation = ImGui::IsItemHovered();
           tool_tip("Button Color - Conflicts with similar tiles with different animation frame or blend modes.");
 
@@ -743,38 +833,6 @@ void gui::background_color_picker()
      {
           save_background_color();
      }
-}
-void gui::loop()
-{
-     // Begin non imgui drawing.
-     m_window.clear(sf::Color::Black);
-     directory_browser_display();
-     file_browser_save_texture();
-     render_dockspace();
-     menu_bar();
-     //     popup_batch_deswizzle();
-     //     popup_batch_reswizzle();
-     if (m_selections->display_batch_window)
-     {
-          m_batch.draw_window();
-     }
-     m_custom_paths_window.render();
-     m_field_file_window.render();
-
-     if (toggle_imgui_demo_window)
-     {
-          ImGui::ShowDemoWindow();
-     }
-     control_panel_window();
-     m_import.render();
-     m_history_window.render();
-
-     draw_window();
-     //  m_mouse_positions.cover.setColor(clear_color);
-     //  m_window.draw(m_mouse_positions.cover);
-     ImGui::SFML::Render(m_window);
-     m_window.display();
-     consume_one_future();
 }
 void gui::draw_window()
 {
@@ -3161,72 +3219,6 @@ void gui::refresh_path()
      update_path();
 }
 
-void gui::loop_events()
-{
-     m_mouse_positions.update();
-     while (m_window.pollEvent(m_event))
-     {
-          ImGui::SFML::ProcessEvent(m_window, m_event);
-          const auto event_variant = events::get(m_event);
-          std::visit(
-            events::make_visitor(
-              [this](const sf::Event::SizeEvent &size) {
-                   scale_window(static_cast<float>(size.width), static_cast<float>(size.height));
-                   m_changed = true;
-              },
-              [this](const sf::Event::MouseMoveEvent &) {
-                   m_mouse_positions.mouse_moved = true;
-                   // TODO move setting mouse pos code here?
-                   m_changed                     = true;
-              },
-              [this](const sf::Event::KeyEvent &key) {
-                   const auto &type = m_event.type;
-                   if (type == sf::Event::EventType::KeyReleased)
-                   {
-                        event_type_key_released(key);
-                   }
-                   else if (type == sf::Event::EventType::KeyPressed)
-                   {
-                        event_type_key_pressed(key);
-                   }
-              },
-              [this](const sf::Event::MouseButtonEvent &mouse) {
-                   const sf::Mouse::Button &button = mouse.button;
-                   if (!m_mouse_positions.mouse_enabled)
-                   {
-                        // m_mouse_positions.left = false;
-                        return;
-                   }
-                   switch (m_event.type)
-                   {
-                        case sf::Event::EventType::MouseButtonPressed:
-                             ///< A mouse button was pressed (data in event.mouseButton)
-                             {
-                                  event_type_mouse_button_pressed(button);
-                             }
-                             break;
-                        case sf::Event::EventType::MouseButtonReleased:
-                             ///< A mouse button was released (data in
-                             ///< event.mouseButton)
-                             {
-                                  event_type_mouse_button_released(button);
-                             }
-                             break;
-                        default:
-                             break;
-                   }
-              },
-              [this]([[maybe_unused]] const std::monostate &) {
-                   if (m_event.type == sf::Event::Closed)
-                   {
-                        m_batch.stop();
-                        m_window.close();
-                   }
-              },
-              []([[maybe_unused]] const auto &) {}),
-            event_variant);
-     }
-}
 void gui::event_type_mouse_button_released(const sf::Mouse::Button &button)
 {
      switch (button)
@@ -3326,30 +3318,31 @@ float gui::scaled_menubar_gap() const
      }
      return ImGui::GetFrameHeight() * static_cast<float>(image_height()) / saved_window_height;
 }
-void gui::scale_window(float width, float height)
-{
-     const auto            img_height = static_cast<float>(image_height());
-     static constexpr auto load       = [](auto &saved, auto &not_saved) {
-          if (not_saved < std::numeric_limits<float>::epsilon())
-          {
-               not_saved = saved;
-          }
-          else
-          {
-               saved = not_saved;
-          }
-     };
-     load(saved_window_width, width);
-     load(saved_window_height, height);
-     const float adjusted_height = height - ImGui::GetFrameHeight();
-     // this scales up the elements without losing the horizontal space. so
-     // going from 4:3 to 16:9 will end up with wide screen.
-     m_scale_width               = std::round(width / adjusted_height * img_height);
-     float const scaled_gap      = scaled_menubar_gap();
-     m_window.setView(
-       sf::View(
-         sf::FloatRect(std::round(m_cam_pos.x), std::round(m_cam_pos.y - scaled_gap), m_scale_width, std::round(img_height + scaled_gap))));
-}
+// void gui::scale_window(float width, float height)
+// {
+//      //const auto            img_height = static_cast<float>(image_height());
+//      static constexpr auto load       = [](auto &saved, auto &not_saved) {
+//           if (not_saved < std::numeric_limits<float>::epsilon())
+//           {
+//                not_saved = saved;
+//           }
+//           else
+//           {
+//                saved = not_saved;
+//           }
+//      };
+//      load(saved_window_width, width);
+//      load(saved_window_height, height);
+//      //const float adjusted_height = height - ImGui::GetFrameHeight();
+//      // this scales up the elements without losing the horizontal space. so
+//      // going from 4:3 to 16:9 will end up with wide screen.
+//      //m_scale_width               = std::round(width / adjusted_height * img_height);
+//      //float const scaled_gap      = scaled_menubar_gap();
+//      // m_window.setView(
+//      //   sf::View(
+//      //     sf::FloatRect(std::round(m_cam_pos.x), std::round(m_cam_pos.y - scaled_gap), m_scale_width, std::round(img_height +
+//      //     scaled_gap))));
+// }
 archives_group gui::get_archives_group() const
 {
      if (!std::ranges::empty(m_selections->path))
@@ -3357,11 +3350,6 @@ archives_group gui::get_archives_group() const
           return { open_viii::LangCommon::to_array().front(), m_selections->path };
      }
      return {};
-}
-sf::RenderWindow gui::get_render_window() const
-{
-     return sf::RenderWindow{ sf::VideoMode(m_selections->window_width, m_selections->window_height),
-                              sf::String{ gui_labels::window_title.data() } };
 }
 void gui::update_path()
 {
@@ -3378,18 +3366,17 @@ mim_sprite gui::get_mim_sprite() const
               get_coo(),
               m_selections->draw_palette };
 }
-gui::gui()
-  : m_window(get_render_window())
+gui::gui(sf::RenderWindow &window)
 {
      // m_window.setVerticalSyncEnabled(true);
      // m_window.setFramerateLimit(0);// Disable manual frame limit
      // m_window.setVerticalSyncEnabled(false);// Disable vsync
-     m_window.setVerticalSyncEnabled(true);
+     window.setVerticalSyncEnabled(true);
      // Clear the window to black and display it immediately
-     m_window.clear(sf::Color::Black);
-     m_window.display();
-
-
+     window.clear(sf::Color::Black);
+     window.display();
+     // m_window.requestFocus();// Ensure the window has focus
+     window.setActive(true);
      const GLubyte *version = glGetString(GL_VERSION);
      if (version)
      {
@@ -3399,7 +3386,7 @@ gui::gui()
      {
           spdlog::error("Failed to get OpenGL version. Is the context initialized?");
      }
-     
+
      GLenum const err = glewInit();
      if (std::cmp_not_equal(GLEW_OK, err))
      {
@@ -3424,10 +3411,9 @@ gui::gui()
      m_history_window.update(m_map_sprite);
 
 
-
      // Set the debug callback function
      glDebugMessageCallback(DebugCallback, nullptr);
-     (void)ImGui::SFML::Init(m_window, false);
+     (void)ImGui::SFML::Init(window, false);
 
      ImGuiIO          &imgui_io   = ImGui::GetIO();
      std::error_code   error_code = {};
