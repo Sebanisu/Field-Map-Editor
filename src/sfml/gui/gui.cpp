@@ -1021,15 +1021,22 @@ void gui::draw_mim_grid_lines_for_texture_page(const ImVec2 &screen_pos, const I
 
      const float  grid_spacing = [&]() {
           using namespace open_viii::graphics;
-          switch (m_selections->bpp.raw())
+          if (m_selections->bpp.bpp4())
           {
-               default:
-               case BPPT::RAW4_VALUE:
-                    return 256.f;
-               case BPPT::RAW8_VALUE:
-                    return 128.f;
-               case BPPT::RAW16_VALUE:
-                    return 64.F;
+               return 256.f;
+          }
+          else if (m_selections->bpp.bpp8())
+          {
+               return 128.f;
+          }
+          else if (m_selections->bpp.bpp16())
+          {
+               return 64.F;
+          }
+          else
+          {
+               spdlog::error("m_selections->bpp.raw() = {}", m_selections->bpp.raw());
+               throw;
           }
      }() * scale;
 
@@ -1701,12 +1708,10 @@ void gui::refresh_bpp(BPPT in_bpp)
 void gui::combo_bpp()
 {
      {
-          static constexpr auto bpp_values  = Mim::bpp_selections();
-          static constexpr auto bpp_strings = Mim::bpp_selections_c_str();
-          const auto            gcc         = GenericComboClass(
+          const auto gcc = GenericComboClass(
             gui_labels::bpp,
-            [&]() { return bpp_values; },
-            [&]() { return bpp_strings | std::ranges::views::transform([](std::string_view sv) { return sv; }); },
+            [&]() { return Mim::bpp_selections(); },
+            [&]() { return Mim::bpp_selections_c_str() | std::ranges::views::transform([](std::string_view sv) { return sv; }); },
             m_selections->bpp);
 
           if (!gcc.render())
