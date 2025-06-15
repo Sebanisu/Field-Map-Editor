@@ -1,5 +1,4 @@
 #include "mim_sprite.hpp"
-#include <SFML/Graphics/RenderTarget.hpp>
 #include <utility>
 //
 // Created by pcvii on 9/8/2021.
@@ -16,6 +15,7 @@ open_viii::graphics::background::Mim mim_sprite::get_mim() const
      return { field->get_entry_data({ std::string_view(lang_name), open_viii::graphics::background::Mim::EXT }, &m_mim_path),
               field->get_base_name() };
 }
+
 open_viii::graphics::BPPT mim_sprite::get_bpp(const open_viii::graphics::BPPT &in_bpp)
 {
      using namespace open_viii::graphics::literals;
@@ -25,6 +25,7 @@ open_viii::graphics::BPPT mim_sprite::get_bpp(const open_viii::graphics::BPPT &i
      }
      return 4_bpp;
 }
+
 std::shared_ptr<glengine::Texture> mim_sprite::find_texture() const
 {
      if (std::ranges::empty(m_colors) || width() == 0U)
@@ -33,17 +34,6 @@ std::shared_ptr<glengine::Texture> mim_sprite::find_texture() const
      }
 
      return std::make_shared<glengine::Texture>(m_colors, width(), height());
-
-     // if (!m_colors.empty() && width() != 0U && texture && texture->create(width(), height()))
-     // {
-     //      // expects an unsigned char pointer. colors
-     //      // underlying type is an array of chars.
-     //      texture->update(reinterpret_cast<const sf::Uint8 *>(m_colors.data()));
-     //      texture->setSmooth(false);
-     //      texture->setRepeated(false);
-     //      texture->generateMipmap();
-     // }
-     // return texture;
 }
 
 std::vector<open_viii::graphics::Color32RGBA> mim_sprite::get_colors()
@@ -65,7 +55,6 @@ std::vector<open_viii::graphics::Color32RGBA> mim_sprite::get_colors()
   , m_draw_palette(force_draw_palette)
   , m_colors(get_colors())
   , m_texture(find_texture())
-  , m_vertices(get_vertices())
 {
 }
 
@@ -125,52 +114,19 @@ void mim_sprite::save(const std::filesystem::path &dest_path) const
           open_viii::graphics::Png::save(m_colors, width(), height(), dest_path.string(), dest_path.stem().string(), "");
      }
 }
+
 std::string mim_sprite::mim_filename() const
 {
      return std::filesystem::path(m_mim_path).filename().string();
 }
+
 void mim_sprite::mim_save(const std::filesystem::path &dest_path) const
 {
      const auto path = dest_path.string();
      open_viii::tools::write_buffer(m_mim.buffer(), path, "");
 }
+
 [[nodiscard]] const open_viii::graphics::background::Mim &mim_sprite::mim() const noexcept
 {
      return m_mim;
-}
-
-void mim_sprite::draw(sf::RenderTarget &target, sf::RenderStates states) const
-{
-     if (m_texture)
-     {
-          // TODO render the texture with glengine instead of sfml.
-          states.transform *= getTransform();
-          states.blendMode = sf::BlendAlpha;
-          states.texture   = nullptr;
-          // states.texture   = m_texture.get();
-          m_texture->bind();
-          // draw texture
-          target.draw(m_vertices.data(), 4U, sf::TriangleStrip, states);
-          m_texture->unbind();
-     }
-}
-
-std::array<sf::Vertex, 4U> mim_sprite::get_vertices() const
-{
-     if (m_texture)
-     {
-
-          const auto size   = m_texture->get_size();
-          const auto frect  = sf::FloatRect(0.F, 0.F, static_cast<float>(size.x), static_cast<float>(size.y));
-          float      left   = frect.left;
-          float      right  = left + frect.width;
-          float      top    = frect.top;
-          float      bottom = top + frect.height;
-          std::array ret    = { sf::Vertex{ sf::Vector2f{ left, top }, sf::Vector2f{ left, top } },
-                                sf::Vertex{ sf::Vector2f{ left, bottom }, sf::Vector2f{ left, bottom } },
-                                sf::Vertex{ sf::Vector2f{ right, top }, sf::Vector2f{ right, top } },
-                                sf::Vertex{ sf::Vector2f{ right, bottom }, sf::Vector2f{ right, bottom } } };
-          return ret;
-     }
-     return {};
 }
