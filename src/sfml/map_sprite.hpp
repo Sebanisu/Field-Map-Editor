@@ -22,6 +22,7 @@
 #include <algorithm>
 #include <cstdint>
 #include <fmt/format.h>
+#include <FrameBuffer.hpp>
 #include <SFML/Graphics/Drawable.hpp>
 #include <SFML/Graphics/RenderTexture.hpp>
 #include <SFML/Graphics/Sprite.hpp>
@@ -31,9 +32,9 @@
 #include <utility>
 namespace fme
 {
-struct [[nodiscard]] map_sprite final
-  : public sf::Drawable
-  , public sf::Transformable
+struct [[nodiscard]] map_sprite// final
+//   : public sf::Drawable
+//   , public sf::Transformable
 {
    public:
      static constexpr std::uint8_t  TILE_SIZE                 = 16U;
@@ -66,15 +67,16 @@ struct [[nodiscard]] map_sprite final
      std::weak_ptr<Selections>                     m_selections              = {};
      ::upscales                                    m_upscales                = { m_selections };
      bool                                          m_using_imported_texture  = {};
-     const glengine::Texture                            *m_imported_texture        = { nullptr };
+     const glengine::Texture                      *m_imported_texture        = { nullptr };
      std::uint16_t                                 m_imported_tile_size      = {};
      Map                                           m_imported_tile_map       = {};
      Map                                           m_imported_tile_map_front = {};
      all_unique_values_and_strings                 m_all_unique_values_and_strings = {};
      open_viii::graphics::Rectangle<std::uint32_t> m_canvas                        = {};
      SharedTextures                                m_texture                       = {};
-     std::shared_ptr<sf::RenderTexture>            m_render_texture                = {};
-     std::shared_ptr<sf::RenderTexture>            m_drag_sprite_texture           = {};
+     glengine::FrameBuffer                         out_texture                     = {};
+     glengine::FrameBuffer                         m_render_framebuffer            = {};
+     glengine::FrameBuffer                         m_drag_sprite_framebuffer       = {};
      std::vector<std::size_t>                      m_saved_indices                 = {};
      std::vector<std::size_t>                      m_saved_imported_indices        = {};
      std::uint32_t                                 m_scale                         = { 1 };
@@ -91,57 +93,59 @@ struct [[nodiscard]] map_sprite final
        std::weak_ptr<Selections> selections);
 
 
-     [[nodiscard]] std::string              appends_prefix_base_name(std::string_view title) const;
+     [[nodiscard]] std::string                  appends_prefix_base_name(std::string_view title) const;
 
-     [[nodiscard]] std::uint32_t            get_map_scale() const;
-     [[nodiscard]] const sf::RenderTexture *get_render_texture() const
+     [[nodiscard]] std::uint32_t                get_map_scale() const;
+     [[nodiscard]] const glengine::FrameBuffer &get_render_texture() const
      {
-          return m_render_texture.get();
+          return m_render_framebuffer;
      }
-     [[nodiscard]] const glengine::Texture              *get_texture(BPPT bpp, std::uint8_t palette, std::uint8_t texture_page) const;
-     [[nodiscard]] const glengine::Texture              *get_texture(const ff_8::PupuID &pupu) const;
-     [[nodiscard]] sf::Vector2u                          get_tile_texture_size(const glengine::Texture *const texture) const;
-     [[nodiscard]] sf::Vector2u                          get_tile_draw_size() const;
-     [[nodiscard]] bool                                  generate_texture(sf::RenderTexture *texture) const;
-     [[nodiscard]] std::uint32_t                         get_max_texture_height() const;
-     [[nodiscard]] bool                                  local_draw(sf::RenderTarget &target, sf::RenderStates states) const;
-     [[nodiscard]] std::string                           get_base_name() const;
-     [[nodiscard]] const all_unique_values_and_strings  &uniques() const;
-     [[nodiscard]] const std::vector<ff_8::PupuID>      &working_unique_pupu() const;
-     [[nodiscard]] const std::vector<ff_8::PupuID>      &original_unique_pupu() const;
-     [[nodiscard]] const std::vector<ff_8::PupuID>      &original_pupu() const;
-     [[nodiscard]] const std::vector<ff_8::PupuID>      &working_pupu() const;
-     [[nodiscard]] const ff_8::source_tile_conflicts    &original_conflicts() const;
-     [[nodiscard]] const ff_8::source_tile_conflicts    &working_conflicts() const;
-     [[nodiscard]] const ff_8::MapHistory::nst_map      &working_similar_counts() const;
-     [[nodiscard]] const ff_8::MapHistory::nsat_map     &working_animation_counts() const;
-     [[nodiscard]] std::string                           map_filename() const;
-     [[nodiscard]] bool                                  fail() const;
-     [[nodiscard]] std::uint32_t                         width() const;
-     [[nodiscard]] std::uint32_t                         height() const;
-     [[nodiscard]] map_sprite                            with_coo(open_viii::LangT coo) const;
-     [[nodiscard]] map_sprite                            with_field(WeakField field, open_viii::LangT coo) const;
-     [[nodiscard]] map_sprite                            with_filters(ff_8::filters filters) const;
-     [[nodiscard]] bool                                  empty() const;
-     [[nodiscard]] const ff_8::filters                  &filter() const;
-     [[nodiscard]] std::uint8_t                          max_x_for_saved() const;
-     [[nodiscard]] map_sprite                            update(ff_8::map_group map_group, bool draw_swizzle) const;
-     [[nodiscard]] all_unique_values_and_strings         get_all_unique_values_and_strings() const;
-     [[nodiscard]] sf::Vector2u                          get_tile_texture_size_for_import() const;
-     [[nodiscard]] Rectangle                             get_canvas() const;
-     [[nodiscard]] bool                                  undo_enabled() const;
-     [[nodiscard]] bool                                  redo_enabled() const;
-     [[nodiscard]] bool                                  history_remove_duplicate();
-     [[nodiscard]] ff_8::filters                        &filter();
-     [[nodiscard]] static sf::BlendMode                  set_blend_mode(const BlendModeT &blend_mode, std::array<sf::Vertex, 4U> &quad);
-     [[nodiscard]] SharedTextures                        load_textures();
-     [[nodiscard]] SharedTextures                        load_textures_internal();
-     [[nodiscard]] static colors_type                    get_colors(const Mim &mim, BPPT bpp, uint8_t palette);
-     [[nodiscard]] static const sf::BlendMode           &get_blend_subtract();
-     [[nodiscard]] static std::future<std::future<void>> async_save(const glengine::Texture &out_texture, const std::filesystem::path &out_path);
-     [[nodiscard]] bool                                  draw_imported(sf::RenderTarget &changed_tiles, sf::RenderStates states) const;
-     [[nodiscard]] bool                                  using_coo() const;
-     [[nodiscard]] static std::string                    str_to_lower(std::string input);
+     [[nodiscard]] const glengine::Texture             *get_texture(BPPT bpp, std::uint8_t palette, std::uint8_t texture_page) const;
+     [[nodiscard]] const glengine::Texture             *get_texture(const ff_8::PupuID &pupu) const;
+     [[nodiscard]] sf::Vector2u                         get_tile_texture_size(const glengine::Texture *const texture) const;
+     [[nodiscard]] sf::Vector2u                         get_tile_draw_size() const;
+     [[nodiscard]] bool                                 generate_texture(const glengine::FrameBuffer &texture) const;
+     [[nodiscard]] std::uint32_t                        get_max_texture_height() const;
+     [[nodiscard]] bool                                 local_draw(const glengine::FrameBuffer &) const;
+     [[nodiscard]] bool                                 draw_imported(const glengine::FrameBuffer &) const;
+     [[nodiscard]] std::string                          get_base_name() const;
+     [[nodiscard]] const all_unique_values_and_strings &uniques() const;
+     [[nodiscard]] const std::vector<ff_8::PupuID>     &working_unique_pupu() const;
+     [[nodiscard]] const std::vector<ff_8::PupuID>     &original_unique_pupu() const;
+     [[nodiscard]] const std::vector<ff_8::PupuID>     &original_pupu() const;
+     [[nodiscard]] const std::vector<ff_8::PupuID>     &working_pupu() const;
+     [[nodiscard]] const ff_8::source_tile_conflicts   &original_conflicts() const;
+     [[nodiscard]] const ff_8::source_tile_conflicts   &working_conflicts() const;
+     [[nodiscard]] const ff_8::MapHistory::nst_map     &working_similar_counts() const;
+     [[nodiscard]] const ff_8::MapHistory::nsat_map    &working_animation_counts() const;
+     [[nodiscard]] std::string                          map_filename() const;
+     [[nodiscard]] bool                                 fail() const;
+     [[nodiscard]] std::uint32_t                        width() const;
+     [[nodiscard]] std::uint32_t                        height() const;
+     [[nodiscard]] map_sprite                           with_coo(open_viii::LangT coo) const;
+     [[nodiscard]] map_sprite                           with_field(WeakField field, open_viii::LangT coo) const;
+     [[nodiscard]] map_sprite                           with_filters(ff_8::filters filters) const;
+     [[nodiscard]] bool                                 empty() const;
+     [[nodiscard]] const ff_8::filters                 &filter() const;
+     [[nodiscard]] std::uint8_t                         max_x_for_saved() const;
+     [[nodiscard]] map_sprite                           update(ff_8::map_group map_group, bool draw_swizzle) const;
+     [[nodiscard]] all_unique_values_and_strings        get_all_unique_values_and_strings() const;
+     [[nodiscard]] sf::Vector2u                         get_tile_texture_size_for_import() const;
+     [[nodiscard]] Rectangle                            get_canvas() const;
+     [[nodiscard]] bool                                 undo_enabled() const;
+     [[nodiscard]] bool                                 redo_enabled() const;
+     [[nodiscard]] bool                                 history_remove_duplicate();
+     [[nodiscard]] ff_8::filters                       &filter();
+     [[nodiscard]] static sf::BlendMode                 set_blend_mode(const BlendModeT &blend_mode, std::array<sf::Vertex, 4U> &quad);
+     [[nodiscard]] SharedTextures                       load_textures();
+     [[nodiscard]] SharedTextures                       load_textures_internal();
+     [[nodiscard]] static colors_type                   get_colors(const Mim &mim, BPPT bpp, uint8_t palette);
+     [[nodiscard]] static const sf::BlendMode          &get_blend_subtract();
+     [[nodiscard]] static std::future<std::future<void>>
+                                      async_save(const glengine::Texture &out_texture, const std::filesystem::path &out_path);
+
+     [[nodiscard]] bool               using_coo() const;
+     [[nodiscard]] static std::string str_to_lower(std::string input);
      template<typename T>
           requires(std::same_as<std::remove_cvref_t<T>, std::string_view>)
      [[nodiscard]] static std::string str_to_lower(T input)
@@ -169,7 +173,7 @@ struct [[nodiscard]] map_sprite final
      void        map_save(const std::filesystem::path &dest_path) const;
      void        test_map(const std::filesystem::path &saved_path) const;
      void        disable_square() const;
-     void        draw(sf::RenderTarget &target, sf::RenderStates states) const final;
+     // void        draw(sf::RenderTarget &target, sf::RenderStates states) const final;
      void        enable_draw_swizzle();
      void        disable_draw_swizzle();
      void        enable_disable_blends();

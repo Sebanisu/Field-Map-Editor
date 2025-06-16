@@ -9,6 +9,8 @@
 #include "utilities.hpp"
 #include <bit>
 #include <fmt/format.h>
+#include <FrameBuffer.hpp>
+#include <FrameBufferBackup.hpp>
 #include <open_viii/graphics/Png.hpp>
 #include <ranges>
 #include <spdlog/spdlog.h>
@@ -435,7 +437,7 @@ sf::Sprite map_sprite::save_intersecting(const sf::Vector2i &pixel_pos, const st
      sf::Sprite sprite      = {};
 
      // Get the size of the sprite texture
-     const auto sprite_size = m_drag_sprite_texture->getSize();
+     const auto sprite_size = m_drag_sprite_framebuffer.get_size();
      spdlog::info("sprite_size: ({},{})", sprite_size.x, sprite_size.y);
      spdlog::info("m_scale: ({})", m_scale);
 
@@ -464,7 +466,13 @@ sf::Sprite map_sprite::save_intersecting(const sf::Vector2i &pixel_pos, const st
      }
 
      // Clear the drag sprite texture with transparency
-     m_drag_sprite_texture->clear(sf::Color::Transparent);
+
+     //causes black screen?
+     // const auto fbb = glengine::FrameBufferBackup{};
+     // m_drag_sprite_framebuffer.bind();
+     // glengine::GlCall{}(glViewport, 0, 0, m_drag_sprite_framebuffer.width(), m_drag_sprite_framebuffer.height());
+     // glengine::Renderer::Clear();
+     // m_drag_sprite_framebuffer.clear_red_integer_color_attachment();
 
      // Lambda function to draw tiles based on the front tiles and tile data, and optionally imported tiles
      const auto draw_drag_texture =
@@ -518,7 +526,8 @@ sf::Sprite map_sprite::save_intersecting(const sf::Vector2i &pixel_pos, const st
                  }
 
                  // Draw the tile to the drag sprite texture
-                 m_drag_sprite_texture->draw(quad.data(), quad.size(), sf::TriangleStrip, states);
+                 /// TODO fix sprite drawing
+                 // m_drag_sprite_texture->draw(quad.data(), quad.size(), sf::TriangleStrip, states);
             }
        };
 
@@ -536,10 +545,12 @@ sf::Sprite map_sprite::save_intersecting(const sf::Vector2i &pixel_pos, const st
      }
 
      // Display the drawn texture to make it visible
-     m_drag_sprite_texture->display();
+     /// TODO fix sprite display?
+     // m_drag_sprite_texture->display();
 
      // Set the sprite's texture to the one stored in the drag sprite texture
-     sprite.setTexture(m_drag_sprite_texture->getTexture());
+     /// TODO fix sprite set_texture?
+     // sprite.setTexture(m_drag_sprite_texture->getTexture());
 
      // Update the render texture to reflect any changes
      update_render_texture();
@@ -549,79 +560,73 @@ sf::Sprite map_sprite::save_intersecting(const sf::Vector2i &pixel_pos, const st
 }
 
 
-[[nodiscard]] bool map_sprite::local_draw(sf::RenderTarget &target, sf::RenderStates states) const
+[[nodiscard]] bool map_sprite::local_draw(const glengine::FrameBuffer &target) const
 {
      bool drew = false;
-     target.clear(sf::Color::Transparent);
      for (const auto &z : m_all_unique_values_and_strings.z().values())
      {
-          for_all_tiles(
-            [this, &states, &target, &z, &drew]([[maybe_unused]] const auto &tile_const, const auto &tile, const ff_8::PupuID pupu_id) {
-                 if (!m_saved_indices.empty())
-                 {
-                      // skip saved indices on redraw.
-                      const auto current_index = m_map_group.maps.get_offset_from_working(tile);
-                      const auto find_index    = std::ranges::find_if(
-                        m_saved_indices, [&current_index](const auto search_index) { return std::cmp_equal(search_index, current_index); });
-                      if (find_index != m_saved_indices.end())
-                      {
-                           return;
-                      }
-                 }
-                 if (m_filters.pupu.enabled())
-                 {
-                      if (m_filters.pupu.value() != pupu_id)
-                      {
-                           return;
-                      }
-                 }
-                 if (tile.z() != z)
-                 {
-                      return;
-                 }
-                 if (ff_8::tile_operations::fail_any_filters(m_filters, tile))
-                 {
-                      return;
-                 }
-                 //   if (!filter_invalid(tile_const))
-                 //   {
-                 //        return;
-                 //   }
-                 states.texture      = nullptr;
+          for_all_tiles([this, &target, &z, &drew]([[maybe_unused]] const auto &tile_const, const auto &tile, const ff_8::PupuID pupu_id) {
+               if (!m_saved_indices.empty())
+               {
+                    // skip saved indices on redraw.
+                    const auto current_index = m_map_group.maps.get_offset_from_working(tile);
+                    const auto find_index    = std::ranges::find_if(
+                      m_saved_indices, [&current_index](const auto search_index) { return std::cmp_equal(search_index, current_index); });
+                    if (find_index != m_saved_indices.end())
+                    {
+                         return;
+                    }
+               }
+               if (m_filters.pupu.enabled())
+               {
+                    if (m_filters.pupu.value() != pupu_id)
+                    {
+                         return;
+                    }
+               }
+               if (tile.z() != z)
+               {
+                    return;
+               }
+               if (ff_8::tile_operations::fail_any_filters(m_filters, tile))
+               {
+                    return;
+               }
+               const auto *texture = [&]() {
+                    if (!m_filters.deswizzle.enabled())
+                    {
+                         return get_texture(tile_const.depth(), tile_const.palette_id(), tile_const.texture_id());
+                    }
+                    else
+                    {
+                         return get_texture(pupu_id);
+                    }
+               }();
+               const auto unbind = scope_guard{ []() { glengine::Texture::unbind(); } };
+               if (texture == nullptr || texture->height() == 0 || texture->width() == 0)
+               {
+                    return;
+               }
+               texture->bind();
+               const auto texture_size = get_tile_texture_size(texture);
+               const auto draw_size    = get_tile_draw_size();
+               auto       quad         = get_triangle_strip(draw_size, texture_size, tile_const, tile);
+               /// TODO fix blendmode
+               // states.blendMode        = sf::BlendAlpha;
+               // if (!m_disable_blends)
+               // {
+               //      states.blendMode = set_blend_mode(tile.blend_mode(), quad);
+               // }
+               // apply the tileset texture
 
+               // std::lock_guard<std::mutex> lock(mutex_texture);
+               // spdlog::info("({}, {})\t", raw_texture_size.x, raw_texture_size.y);
+               // draw the vertex array
 
-                 const auto *texture = [&]() {
-                      if (!m_filters.deswizzle.enabled())
-                      {
-                           return get_texture(tile_const.depth(), tile_const.palette_id(), tile_const.texture_id());
-                      }
-                      else
-                      {
-                           return get_texture(pupu_id);
-                      }
-                 }();
-                 const auto unbind = scope_guard{ []() { glengine::Texture::unbind(); } };
-                 if (states.texture == nullptr || texture->height() == 0 || texture->width() == 0)
-                 {
-                      return;
-                 }
-                 texture->bind();
-                 const auto texture_size = get_tile_texture_size(texture);
-                 const auto draw_size    = get_tile_draw_size();
-                 auto       quad         = get_triangle_strip(draw_size, texture_size, tile_const, tile);
-                 states.blendMode        = sf::BlendAlpha;
-                 if (!m_disable_blends)
-                 {
-                      states.blendMode = set_blend_mode(tile.blend_mode(), quad);
-                 }
-                 // apply the tileset texture
-
-                 // std::lock_guard<std::mutex> lock(mutex_texture);
-                 // spdlog::info("({}, {})\t", raw_texture_size.x, raw_texture_size.y);
-                 // draw the vertex array
-                 target.draw(quad.data(), quad.size(), sf::TriangleStrip, states);
-                 drew = true;
-            });
+               /// TODO fix drawing the quad
+               // target.draw(quad.data(), quad.size(), sf::TriangleStrip);
+               drew                    = true;
+          });
      }
      return drew;
 }
@@ -649,7 +654,7 @@ sf::BlendMode map_sprite::set_blend_mode(const BlendModeT &blend_mode, std::arra
      }
      return sf::BlendAlpha;
 }
-[[nodiscard]] bool map_sprite::draw_imported([[maybe_unused]] sf::RenderTarget &target, [[maybe_unused]] sf::RenderStates states) const
+[[nodiscard]] bool map_sprite::draw_imported([[maybe_unused]] const glengine::FrameBuffer &target) const
 {
      using namespace open_viii::graphics::background;
      namespace v = std::ranges::views;
@@ -660,13 +665,11 @@ sf::BlendMode map_sprite::set_blend_mode(const BlendModeT &blend_mode, std::arra
      {
           return false;
      }
-     // states.texture  = ;
-     states.texture = nullptr;
      m_imported_texture->bind();
      const auto scope_guard{ [&]() { m_imported_texture->unbind(); } };
      bool       drew = false;
      const auto draw_imported_tile =
-       [this, &drew, &states, &target](const std::integral auto current_index, const is_tile auto &tile_const, const is_tile auto &tile) {
+       [this, &drew, &target](const std::integral auto current_index, const is_tile auto &tile_const, const is_tile auto &tile) {
             if (!m_saved_imported_indices.empty())
             {
                  const auto find_index = std::ranges::find_if(m_saved_imported_indices, [&current_index](const auto search_index) {
@@ -684,14 +687,16 @@ sf::BlendMode map_sprite::set_blend_mode(const BlendModeT &blend_mode, std::arra
             const auto draw_size    = get_tile_draw_size();
             const auto texture_size = get_tile_texture_size_for_import();
             auto       quad         = get_triangle_strip_for_imported(draw_size, texture_size, tile_const, tile);
-            states.blendMode        = sf::BlendAlpha;
-            if (!m_disable_blends)
-            {
-                 states.blendMode = set_blend_mode(tile.blend_mode(), quad);
-            }
+            /// TODO fix blend mode
+            //   states.blendMode        = sf::BlendAlpha;
+            //   if (!m_disable_blends)
+            //   {
+            //        states.blendMode = set_blend_mode(tile.blend_mode(), quad);
+            //   }
             // apply the tileset texture
-            target.draw(quad.data(), quad.size(), sf::TriangleStrip, states);
-            drew = true;
+            /// TODO fix drawing quad
+            // target.draw(quad.data(), quad.size(), sf::TriangleStrip, states);
+            drew                    = true;
        };
      m_imported_tile_map_front.visit_tiles([&](const auto &unchanged_tiles) {
           m_imported_tile_map.visit_tiles([&](const auto &changed_tiles) {
@@ -773,20 +778,20 @@ void map_sprite::disable_draw_swizzle()
      init_render_texture();
 }
 
-void map_sprite::draw(sf::RenderTarget &target, sf::RenderStates states) const
-{
-     // apply the transform
-     states.transform *= getTransform();
-     states.texture    = &m_render_texture->getTexture();
-     auto texture_size = m_render_texture->getSize();
-     auto draw_size    = sf::Vector2u(width(), height());
-     auto quad         = ff_8::get_triangle_strip(to_Vector2f(draw_size), to_Vector2f(texture_size), {}, {});
-     // draw the vertex array
-     target.draw(quad.data(), quad.size(), sf::TriangleStrip, states);
+// void map_sprite::draw(sf::RenderTarget &target, sf::RenderStates states) const
+// {
+//      // apply the transform
+//      states.transform *= getTransform();
+//      states.texture    = &m_render_texture->getTexture();
+//      auto texture_size = m_render_texture->getSize();
+//      auto draw_size    = sf::Vector2u(width(), height());
+//      auto quad         = ff_8::get_triangle_strip(to_Vector2f(draw_size), to_Vector2f(texture_size), {}, {});
+//      // draw the vertex array
+//      target.draw(quad.data(), quad.size(), sf::TriangleStrip, states);
 
-     // draw square
-     target.draw(m_square, states);
-}
+//      // draw square
+//      target.draw(m_square, states);
+// }
 void map_sprite::update_render_texture(bool reload_textures)
 {
      if (reload_textures)
@@ -794,15 +799,19 @@ void map_sprite::update_render_texture(bool reload_textures)
           m_texture = load_textures();
           reset_render_texture();
      }
-     if (!fail())
+     if (fail())
      {
-          (void)local_draw(*m_render_texture, sf::RenderStates::Default);
-          (void)draw_imported(*m_render_texture, sf::RenderStates::Default);
-          m_render_texture->display();
-          m_render_texture->setSmooth(false);
-          m_render_texture->setRepeated(false);
-          m_render_texture->generateMipmap();
+          return;
      }
+     //causes black screen?
+     const auto fbb = glengine::FrameBufferBackup{};
+     m_render_framebuffer.bind();
+     glengine::GlCall{}(glViewport, 0, 0, m_render_framebuffer.specification().width, m_render_framebuffer.specification().height);
+     glengine::Renderer::Clear();
+     m_render_framebuffer.clear_red_integer_color_attachment();
+
+     (void)local_draw(m_render_framebuffer);
+     (void)draw_imported(m_render_framebuffer);
 }
 void map_sprite::save([[maybe_unused]] const std::filesystem::path &path) const
 {
@@ -822,15 +831,15 @@ void map_sprite::save([[maybe_unused]] const std::filesystem::path &path) const
 bool map_sprite::fail() const
 {
      using namespace open_viii::graphics::literals;
-     if (!m_render_texture)
-     {
-          if (once)
-          {
-               spdlog::warn("{}", "m_render_texture is null");
-               once = false;
-          }
-          return true;
-     }
+     // if (!m_render_texture)
+     // {
+     //      if (once)
+     //      {
+     //           spdlog::warn("{}", "m_render_texture is null");
+     //           once = false;
+     //      }
+     //      return true;
+     // }
      if (!m_texture)
      {
           if (once)
@@ -895,54 +904,56 @@ std::string map_sprite::map_filename() const
 
 void map_sprite::resize_render_texture()
 {
-     if (!fail())
+     if (fail())
      {
-          auto       filtered_textures = *(m_texture.get()) | std::views::filter([](const auto &texture) {
-               const auto &size = texture.get_size();
-               return size.x != 0 && size.y != 0;
-          });
-          const auto check_size        = [this]() {
-               static const GLint max_size = []() {
-                    GLint return_val = {};
-                    glGetIntegerv(GL_MAX_TEXTURE_SIZE, &return_val);
-                    return return_val;
-               }();
-               while (std::cmp_greater(width() * m_scale, max_size) || std::cmp_greater(height() * m_scale, max_size))
-               {
-                    m_scale >>= 1U;
-                    if (m_scale <= 1U)
-                    {
-                         m_scale = 1U;
-                         break;
-                    }
-               }
-          };
-          if (filtered_textures.begin() != filtered_textures.end())
-          {
-               const auto max_height = (std::ranges::max)(filtered_textures | std::ranges::views::transform([](const auto &texture) {
-                                                               return texture.height();
-                                                          }));
-               static constexpr std::uint16_t mim_texture_height = 256U;
-               m_scale                                           = max_height / mim_texture_height;
-               if (m_filters.deswizzle.enabled())
-               {
-                    m_scale = max_height / m_canvas.height();
-               }
-          }
-          else
-          {
-               m_scale = 1U;
-          }
-          if (const std::uint16_t tmp_scale = m_imported_tile_size / map_sprite::TILE_SIZE;
-              m_using_imported_texture && std::cmp_less(m_scale, tmp_scale))
-          {
-               m_scale = tmp_scale;
-          }
-          check_size();
-          // spdlog::debug("Render Texture- scale:{}, size:({}, {})", m_scale, width() * m_scale, height() * m_scale);
-          m_render_texture->create(width() * m_scale, height() * m_scale);
-          m_drag_sprite_texture->create(TILE_SIZE * m_scale * 3, TILE_SIZE * m_scale * 3);
+          return;
      }
+     auto       filtered_textures = *(m_texture.get()) | std::views::filter([](const auto &texture) {
+          const auto &size = texture.get_size();
+          return size.x != 0 && size.y != 0;
+     });
+     const auto check_size        = [this]() {
+          static const GLint max_size = []() {
+               GLint return_val = {};
+               glGetIntegerv(GL_MAX_TEXTURE_SIZE, &return_val);
+               return return_val;
+          }();
+          while (std::cmp_greater(width() * m_scale, max_size) || std::cmp_greater(height() * m_scale, max_size))
+          {
+               m_scale >>= 1U;
+               if (m_scale <= 1U)
+               {
+                    m_scale = 1U;
+                    break;
+               }
+          }
+     };
+     if (filtered_textures.begin() != filtered_textures.end())
+     {
+          const auto max_height =
+            (std::ranges::max)(filtered_textures | std::ranges::views::transform([](const auto &texture) { return texture.height(); }));
+          static constexpr std::uint16_t mim_texture_height = 256U;
+          m_scale                                           = max_height / mim_texture_height;
+          if (m_filters.deswizzle.enabled())
+          {
+               m_scale = max_height / m_canvas.height();
+          }
+     }
+     else
+     {
+          m_scale = 1U;
+     }
+     if (const std::uint16_t tmp_scale = m_imported_tile_size / map_sprite::TILE_SIZE;
+         m_using_imported_texture && std::cmp_less(m_scale, tmp_scale))
+     {
+          m_scale = tmp_scale;
+     }
+     check_size();
+
+     m_render_framebuffer      = glengine::FrameBuffer{ glengine::FrameBufferSpecification{ .width  = static_cast<int>(width() * m_scale),
+                                                                                            .height = static_cast<int>(height() * m_scale) } };
+     m_drag_sprite_framebuffer = glengine::FrameBuffer{ glengine::FrameBufferSpecification{
+       .width = static_cast<int>(TILE_SIZE * m_scale * 3), .height = static_cast<int>(TILE_SIZE * m_scale * 3) } };
 }
 void map_sprite::init_render_texture()
 {
@@ -951,11 +962,7 @@ void map_sprite::init_render_texture()
 }
 void map_sprite::reset_render_texture()
 {
-     if (!m_render_texture || !m_drag_sprite_texture)
-     {
-          m_render_texture      = std::make_shared<sf::RenderTexture>();
-          m_drag_sprite_texture = std::make_shared<sf::RenderTexture>();
-     }
+     /// TODO remove resize or reset
      resize_render_texture();
 }
 
@@ -1199,8 +1206,8 @@ const ff_8::MapHistory::nsat_map &map_sprite::working_animation_counts() const
      future_of_futures.reserve(max_number_of_texture_pages);
 
      // Create an off-screen render texture to draw into.
-     sf::RenderTexture out_texture{};
-     out_texture.create(height, height);
+     out_texture = glengine::FrameBuffer{ glengine::FrameBufferSpecification{ .width  = static_cast<std::int32_t>(height),
+                                                                              .height = static_cast<std::int32_t>(height) } };
 
      // Loop over all unique texture pages.
      for (const auto &texture_page : unique_texture_page_ids)
@@ -1228,7 +1235,7 @@ const ff_8::MapHistory::nsat_map &map_sprite::working_animation_counts() const
                          settings.filters.value().bpp.update(bpp).enable();
 
                          // Generate the texture.
-                         if (generate_texture(&out_texture))
+                         if (generate_texture(out_texture))
                          {
 
                               // Determine output path based on COO presence.
@@ -1254,7 +1261,7 @@ const ff_8::MapHistory::nsat_map &map_sprite::working_animation_counts() const
           settings.filters.value().palette.disable();
           settings.filters.value().bpp.disable();
 
-          if (generate_texture(&out_texture))
+          if (generate_texture(out_texture))
           {
 
                // Determine output path based on COO presence.
@@ -1363,8 +1370,8 @@ const ff_8::MapHistory::nsat_map &map_sprite::working_animation_counts() const
      future_of_futures.reserve(max_number_of_texture_pages);
 
      // Create an off-screen render texture to draw into.
-     sf::RenderTexture out_texture{};
-     out_texture.create(width, height);
+     out_texture = glengine::FrameBuffer{ glengine::FrameBufferSpecification{ .width  = static_cast<std::int32_t>(width),
+                                                                              .height = static_cast<std::int32_t>(height) } };
 
      // Loop over all unique texture pages.
 
@@ -1388,7 +1395,7 @@ const ff_8::MapHistory::nsat_map &map_sprite::working_animation_counts() const
                     settings.filters.value().bpp.update(bpp).enable();
 
                     // Generate the texture.
-                    if (generate_texture(&out_texture))
+                    if (generate_texture(out_texture))
                     {
 
                          // Determine output path based on COO presence.
@@ -1412,7 +1419,7 @@ const ff_8::MapHistory::nsat_map &map_sprite::working_animation_counts() const
      settings.filters.value().palette.disable();
      settings.filters.value().bpp.disable();
 
-     if (generate_texture(&out_texture))
+     if (generate_texture(out_texture))
      {
           // Determine output path based on COO presence.
           const key_value_data cpm      = { .field_name = get_base_name(),
@@ -1500,16 +1507,16 @@ std::string map_sprite::get_base_name() const
      future_of_futures.reserve(max_number_of_texture_pages);
 
      // Setup an off-screen render texture
-     sf::RenderTexture out_texture{};
-     iRectangle const  canvas = m_map_group.maps.const_working().canvas() * static_cast<int>(m_scale);
-     out_texture.create(static_cast<std::uint32_t>(canvas.width()), static_cast<std::uint32_t>(canvas.height()));
+     iRectangle const canvas = m_map_group.maps.const_working().canvas() * static_cast<int>(m_scale);
+     out_texture = glengine::FrameBuffer{ glengine::FrameBufferSpecification{ .width  = static_cast<std::int32_t>(canvas.width()),
+                                                                              .height = static_cast<std::int32_t>(canvas.height()) } };
 
      // Loop through each Pupu ID and generate/save textures
      for (const ff_8::PupuID &pupu : unique_pupu_ids)
      {
           settings.filters.value().pupu.update(pupu).enable();// Enable this specific Pupu ID
 
-          if (generate_texture(&out_texture))
+          if (generate_texture(out_texture))
           {
                const key_value_data cpm      = { .field_name = get_base_name(),
                                                  .ext        = ".png",
@@ -1635,19 +1642,20 @@ std::filesystem::path map_sprite::save_path(
      return path / fmt::vformat(fmt::string_view(pattern), fmt::make_format_args(field_name, pupu));
 }
 
-bool map_sprite::generate_texture(sf::RenderTexture *texture) const
+bool map_sprite::generate_texture(const glengine::FrameBuffer &texture) const
 {
-     if (texture == nullptr)
+
+     // if (texture == nullptr)
+     // {
+     //      return false;
+     // }
+     if (local_draw(texture))
      {
-          return false;
-     }
-     if (local_draw(*texture, sf::RenderStates::Default))
-     {
-          (void)draw_imported(*texture, sf::RenderStates::Default);
-          texture->display();
-          texture->setSmooth(false);
-          texture->setRepeated(false);
-          texture->generateMipmap();
+          (void)draw_imported(texture);
+          //      texture->display();
+          //      texture->setSmooth(false);
+          //      texture->setRepeated(false);
+          //      texture->generateMipmap();
           return true;
      }
      return false;
@@ -1794,7 +1802,6 @@ map_sprite::map_sprite(
   , m_all_unique_values_and_strings(get_all_unique_values_and_strings())
   , m_canvas(get_canvas())
   , m_texture(load_textures())
-  , m_render_texture(std::make_shared<sf::RenderTexture>())
   , m_selections(selections)
 {
      if (m_filters.upscale_map.enabled())

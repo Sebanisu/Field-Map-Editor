@@ -905,10 +905,10 @@ void gui::draw_window()
 
 
           const auto   wsize      = ImGui::GetContentRegionAvail();
-          const auto   img_size   = m_map_sprite->get_render_texture()->getSize();
+          const auto   img_size   = m_map_sprite->get_render_texture().get_size();
 
           const auto   screen_pos = ImGui::GetCursorScreenPos();
-          const float  scale      = std::max(wsize.x / img_size.x, wsize.y / img_size.y);
+          const float  scale      = (std::max)(wsize.x / img_size.x, wsize.y / img_size.y);
           const ImVec2 scaled_size(img_size.x * scale, img_size.y * scale);
 
           DrawCheckerboardBackground(
@@ -920,7 +920,9 @@ void gui::draw_window()
 
           const auto pop_id1 = PushPopID();
 
-          ImGui::Image(*m_map_sprite->get_render_texture(), sf::Vector2f{ scaled_size.x, scaled_size.y });
+          ImGui::Image(
+            glengine::ConvertGliDtoImTextureId<ImTextureID>(m_map_sprite->get_render_texture().get_color_attachment().id()),
+            ImVec2{ scaled_size.x, scaled_size.y });
 
           update_hover_and_mouse_button_status_for_map(screen_pos, scale);
 

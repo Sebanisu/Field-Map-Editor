@@ -48,7 +48,7 @@ public:
       GlCall{}(glBindFramebuffer, GL_FRAMEBUFFER, 0);
     }
   }
-  const FrameBufferSpecification &specification() const;
+  [[nodiscard]] const FrameBufferSpecification &specification() const;
   SubTexture get_color_attachment(std::uint32_t index = 0U) const;
              operator bool()
   {
@@ -56,7 +56,10 @@ public:
              m_color_attachment, [](const auto &id) { return id != 0U; })
            && m_renderer_id != 0U && m_depth_attachment != 0U;
   }
-  int  read_pixel(uint32_t attachment_index, int x, int y) const;
+  [[nodiscard]] glm::ivec2 get_size() const;  
+  [[nodiscard]] int width() const;
+  [[nodiscard]] int height() const;
+  [[nodiscard]] int  read_pixel(uint32_t attachment_index, int x, int y) const;
 
   void clear_red_integer_color_attachment() const
   {
