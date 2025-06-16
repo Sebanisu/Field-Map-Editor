@@ -28,17 +28,17 @@ class Shader
      Shader &operator=(const Shader &) = delete;
 
      Shader(Shader &&other) noexcept;
-     Shader     &operator=(Shader &&other) noexcept;
+     Shader                   &operator=(Shader &&other) noexcept;
 
-     friend void swap(Shader &first, Shader &second) noexcept;
+     friend void               swap(Shader &first, Shader &second) noexcept;
 
-     void        bind() const;
-     static void unbind();
-     static auto backup()
+     void                      bind() const;
+     static void               unbind();
+     [[nodiscard]] static auto backup()
      {
           GLint program_binding{ 0 };// save original
           GlCall{}(glGetIntegerv, GL_CURRENT_PROGRAM, &program_binding);
-          return ScopeGuardCaptures{ [=]() {
+          return ScopeGuard{ [=]() {
                GlCall{}(glUseProgram, program_binding);
           } };// restore original shader. this might not be doing anything.
      }

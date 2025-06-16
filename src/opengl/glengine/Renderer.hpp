@@ -6,7 +6,9 @@
 #define FIELD_MAP_EDITOR_RENDERER_HPP
 #include "GLCheck.hpp"
 #include "IndexType.hpp"
+#include "ScopeGuard.hpp"
 #include <glm/glm.hpp>
+#include <memory>
 namespace glengine
 {
 #if __cpp_if_consteval
@@ -93,6 +95,24 @@ struct Renderer
      template<Bindable... Ts>
      static void Draw(const Ts &...ts)
      {
+          std::vector<std::unique_ptr<AnyScopeGuard>> backups;
+          backups.reserve(sizeof...(Ts));// Reserve space for efficiency
+
+          // Call backup() for each argument and store in-place
+          (
+            [&]() {
+                 using T = std::decay_t<decltype(ts)>;
+                 if constexpr (HasInstanceBackup<T>)
+                 {
+                      backups.emplace_back(std::make_unique<std::decay_t<decltype(ts.backup())>>(ts.backup()));
+                 }
+                 else if constexpr (HasStaticBackup<T>)
+                 {
+                      backups.emplace_back(std::make_unique<std::decay_t<decltype(T::backup())>>(T::backup()));
+                 }
+            }(),
+            ...);
+
           Renderer::bind<Ts...>(ts...);
           size_t size = Renderer::size<Ts...>(ts...);
           auto   type = glengine::Type<Ts...>(ts...);

@@ -802,14 +802,45 @@ void map_sprite::update_render_texture(bool reload_textures)
      {
           return;
      }
-     const auto fbb = glengine::FrameBufferBackup{};
+     const auto fbb = m_render_framebuffer.backup();
      m_render_framebuffer.bind();
-     glengine::GlCall{}(glViewport, 0, 0, m_render_framebuffer.specification().width, m_render_framebuffer.specification().height);
+     glengine::GlCall{}(glViewport, 0, 0, m_render_framebuffer.width(), m_render_framebuffer.height());
      glengine::Renderer::Clear();
      m_render_framebuffer.clear_red_integer_color_attachment();
+     const auto brb = m_batch_renderer.backup();
+     m_batch_renderer.bind();
+     set_uniforms(m_batch_renderer.shader());
+     m_batch_renderer.clear();
 
      (void)local_draw(m_render_framebuffer);
      (void)draw_imported(m_render_framebuffer);
+}
+
+void map_sprite::set_uniforms(const glengine::Shader &shader) const
+{
+     // if (m_offscreen_drawing || m_saving)
+     // {
+     shader.set_uniform("u_MVP", m_fixed_render_camera.view_projection_matrix());
+     // }
+     // else if (m_preview)
+     // {
+     //      shader.set_uniform("u_MVP", m_imgui_viewport_window.preview_view_projection_matrix());
+     // }
+     // else
+     // {
+     //      shader.set_uniform("u_MVP", m_imgui_viewport_window.view_projection_matrix());
+     // }
+     shader.set_uniform("u_Grid", 0.F, 0.F);
+     //    if (!s_draw_grid || m_offscreen_drawing || m_saving)
+     //    {
+     //      shader.set_uniform("u_Grid", 0.F, 0.F);
+     //    }
+     //    else
+     //    {
+     //      shader.set_uniform(
+     //        "u_Grid", m_map_dims.scaled_tile_size());
+     //    }
+     shader.set_uniform("u_Color", m_uniform_color);
 }
 void map_sprite::save([[maybe_unused]] const std::filesystem::path &path) const
 {

@@ -21,6 +21,17 @@ concept Bindable = std::default_initializable<T> && std::movable<T> && requires(
      { t.bind() } -> Void;
      { T::unbind() } -> Void;
 };
+
+template<typename T>
+concept HasInstanceBackup = requires(T t) {
+     { t.backup() };
+};
+template<typename T>
+concept HasStaticBackup = requires {
+     { T::backup() };
+};
+template<typename T>
+concept HasAnyBackup = HasInstanceBackup<T> || HasStaticBackup<T>;
 template<typename T>
 concept SizedBindable = Bindable<T> && requires(const T t) {
      { t.size() } -> std::integral;

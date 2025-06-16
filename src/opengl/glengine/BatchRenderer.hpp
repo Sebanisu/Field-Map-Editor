@@ -6,11 +6,11 @@
 #define FIELD_MAP_EDITOR_BATCHRENDERER_HPP
 #include "Event/EventItem.hpp"
 #include "IndexBufferDynamic.hpp"
-#include "Vertex.hpp"
 #include "Renderable.hpp"
 #include "Shader.hpp"
 #include "SubTexture.hpp"
 #include "Texture.hpp"
+#include "Vertex.hpp"
 #include "VertexArray.hpp"
 #include "VertexBufferDynamic.hpp"
 #include <filesystem>
@@ -51,6 +51,10 @@ class BatchRenderer
      [[maybe_unused]] const std::vector<std::uint32_t> &texture_slots() const;
      void                                               bind() const;
      static void                                        unbind();
+     [[nodiscard]] static auto                          backup()
+     {// add to tuple other backups if needed.
+          return Shader::backup();
+     }
 
    private:
      void                        flush_vertices() const;

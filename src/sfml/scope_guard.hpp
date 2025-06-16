@@ -4,18 +4,23 @@
 
 #ifndef FIELD_MAP_EDITOR_SCOPE_GUARD_HPP
 #define FIELD_MAP_EDITOR_SCOPE_GUARD_HPP
-#include <functional>
 #include <concepts>
+#include <functional>
 template<std::invocable functionT>
 struct [[nodiscard]] scope_guard
 {
+     scope_guard()
+       : m_executed{ true }
+     {
+     }
+
      explicit scope_guard(functionT &&input_function)
        : m_function(std::forward<functionT>(input_function))
      {
      }
 
      // Copy constructor
-     scope_guard(const scope_guard &) = default;
+     scope_guard(const scope_guard &) = delete;
 
      // Move constructor
      scope_guard(scope_guard &&other) noexcept
@@ -26,7 +31,7 @@ struct [[nodiscard]] scope_guard
      }
 
      // Copy assignment operator
-     scope_guard &operator=(const scope_guard &) = default;
+     scope_guard &operator=(const scope_guard &) = delete;
 
      // Move assignment operator
      scope_guard &operator=(scope_guard &&other) noexcept

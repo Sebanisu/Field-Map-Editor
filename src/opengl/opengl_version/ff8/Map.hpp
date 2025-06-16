@@ -161,7 +161,7 @@ class Map
                if (m_changed)
                {
                     m_offscreen_drawing              = true;
-                    const auto not_offscreen_drawing = glengine::ScopeGuardCaptures([&]() { m_offscreen_drawing = false; });
+                    const auto not_offscreen_drawing = glengine::ScopeGuard([&]() { m_offscreen_drawing = false; });
                     const auto fbb                   = glengine::FrameBufferBackup{};
                     m_frame_buffer.bind();
 
@@ -180,7 +180,7 @@ class Map
           m_has_hover = m_imgui_viewport_window.has_hover();
           GetViewPortPreview().on_render(m_imgui_viewport_window, [this]() {
                m_preview              = true;
-               const auto pop_preview = glengine::ScopeGuardCaptures([&]() { m_preview = false; });
+               const auto pop_preview = glengine::ScopeGuard([&]() { m_preview = false; });
                render_frame_buffer();
           });
           ff_8::ImGuiTileDisplayWindow::take_control(m_has_hover, m_id);
@@ -220,7 +220,7 @@ class Map
                     using namespace open_viii::graphics::background;
                     const auto id_pop_2    = glengine::ImGuiPushId();
                     const auto sub_texture = tile_to_sub_texture(tile);
-                    const auto increment   = glengine::ScopeGuardCaptures([&]() { ++i; });
+                    const auto increment   = glengine::ScopeGuard([&]() { ++i; });
                     if (!sub_texture)
                     {
                          return false;
@@ -377,10 +377,10 @@ class Map
                m_batch_renderer.on_im_gui_update();
                m_batch_renderer_red_integer.on_im_gui_update();
           }
-          if (ImGui::CollapsingHeader("Fixed Prerender Camera"))
-          {
-               m_fixed_render_camera.on_im_gui_update();
-          }
+          // if (ImGui::CollapsingHeader("Fixed Prerender Camera"))
+          // {
+          //      m_fixed_render_camera.on_im_gui_update();
+          // }
      }
      void on_event(const glengine::event::Item &event) const
      {
@@ -497,7 +497,7 @@ class Map
                }
                if (released.button() == Mouse::ButtonLeft)
                {
-                    const auto unset_dragging          = glengine::ScopeGuardCaptures([this]() {
+                    const auto unset_dragging          = glengine::ScopeGuard([this]() {
                          m_dragging                         = false;
                          m_map_dims.dragging_mouse_location = std::nullopt;
                          GetMapHistory()->end_preemptive_copy_mode();
@@ -792,7 +792,7 @@ class Map
                return;
           }
           const auto fbb           = glengine::FrameBufferBackup{};
-          const auto offscreen_pop = glengine::ScopeGuardCaptures([&]() { m_offscreen_drawing = false; });
+          const auto offscreen_pop = glengine::ScopeGuard([&]() { m_offscreen_drawing = false; });
           m_offscreen_drawing      = true;
           glengine::Window::default_blend();
           m_imgui_viewport_window.on_render();
@@ -812,12 +812,12 @@ class Map
      void save() const
      {
           m_saving              = true;
-          const auto not_saving = glengine::ScopeGuardCaptures([&]() { m_saving = false; });
+          const auto not_saving = glengine::ScopeGuard([&]() { m_saving = false; });
           if (s_draw_grid)
           {
                m_changed();
           }
-          const auto changed = glengine::ScopeGuardCaptures([&]() {
+          const auto changed = glengine::ScopeGuard([&]() {
                if (s_draw_grid)
                {
                     m_changed();

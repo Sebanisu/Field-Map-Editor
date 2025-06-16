@@ -27,7 +27,7 @@ class VertexBufferDynamic
           GLint vbo_binding{ 0 };
           GlCall{}(glGetIntegerv, GL_ARRAY_BUFFER_BINDING, &vbo_binding);
 
-          return ScopeGuardCaptures{ [=]() { glBindBuffer(GL_ARRAY_BUFFER, vbo_binding); } };
+          return ScopeGuard{ [=]() { glBindBuffer(GL_ARRAY_BUFFER, vbo_binding); } };
      }
      template<std::ranges::contiguous_range T>
      [[nodiscard]] glengine::IndexBufferDynamicSize update(const T &vertices) const

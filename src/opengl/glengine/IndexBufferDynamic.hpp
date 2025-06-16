@@ -49,13 +49,13 @@ class IndexBufferDynamic
      {
      }
 
-     void        bind() const;
-     static void unbind();
-     static auto backup()
+     void                      bind() const;
+     static void               unbind();
+     [[nodiscard]] static auto backup()
      {
           GLint ibo_binding{ 0 };// save original
           GlCall{}(glGetIntegerv, GL_ELEMENT_ARRAY_BUFFER_BINDING, &ibo_binding);
-          return ScopeGuardCaptures{ [=]() { GlCall{}(glBindBuffer, GL_ELEMENT_ARRAY_BUFFER, ibo_binding); } };
+          return ScopeGuard{ [=]() { GlCall{}(glBindBuffer, GL_ELEMENT_ARRAY_BUFFER, ibo_binding); } };
      }
      IndexType type() const;
 };

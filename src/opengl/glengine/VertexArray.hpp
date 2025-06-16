@@ -32,7 +32,7 @@ class VertexArray
      {
           GLint vao_binding{ 0 };
           GlCall{}(glGetIntegerv, GL_VERTEX_ARRAY_BINDING, &vao_binding);
-          return ScopeGuardCaptures{ [=]() { GlCall{}(glBindVertexArray, vao_binding); } };
+          return ScopeGuard{ [=]() { GlCall{}(glBindVertexArray, vao_binding); } };
      }
      template<Bindable bindableT, size_t ElementCount>
      void push_back(const bindableT &vertex_buffer, const VertexBufferLayout<ElementCount> &layout)

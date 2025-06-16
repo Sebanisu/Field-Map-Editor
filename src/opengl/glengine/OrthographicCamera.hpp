@@ -8,7 +8,6 @@
 #include <fmt/ranges.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
-#include <imgui.h>
 namespace glengine
 {
 class OrthographicCamera
@@ -99,49 +98,49 @@ class OrthographicCamera
      {
           return m_bounds;
      }
-     void on_im_gui_update() const
-     {
-          const auto fmt_mat_4 = [](glm::mat4 in) -> std::string {
-               return fmt::format(
-                 "[{},{},{},{}], [{},{},{},{}], [{},{},{},{}], [{},{},{},{}]",
-                 in[0][0],
-                 in[0][1],
-                 in[0][2],
-                 in[0][3],
-                 in[1][0],
-                 in[1][1],
-                 in[1][2],
-                 in[1][3],
-                 in[2][0],
-                 in[2][1],
-                 in[2][2],
-                 in[2][3],
-                 in[3][0],
-                 in[3][1],
-                 in[3][2],
-                 in[3][3]);
-          };
+     // void on_im_gui_update() const
+     // {
+     //      const auto fmt_mat_4 = [](glm::mat4 in) -> std::string {
+     //           return fmt::format(
+     //             "[{},{},{},{}], [{},{},{},{}], [{},{},{},{}], [{},{},{},{}]",
+     //             in[0][0],
+     //             in[0][1],
+     //             in[0][2],
+     //             in[0][3],
+     //             in[1][0],
+     //             in[1][1],
+     //             in[1][2],
+     //             in[1][3],
+     //             in[2][0],
+     //             in[2][1],
+     //             in[2][2],
+     //             in[2][3],
+     //             in[3][0],
+     //             in[3][1],
+     //             in[3][2],
+     //             in[3][3]);
+     //      };
 
-          ImGui::Text(
-            "%s",
-            fmt::format(
-              "Projection: {}\nView: {}\nModel: {}\nMVP: {}\nPosition - X: {}, Y: "
-              "{}, Z: {}\nRotation: {}\nPre-transform bounds - left: {}, right: {}, "
-              "bottom: {}, top: {}\n",
-              fmt_mat_4(m_projection_matrix),
-              fmt_mat_4(m_view_matrix),
-              fmt_mat_4(m_model_matrix),
-              fmt_mat_4(m_view_projection_matrix),
-              m_position.x,
-              m_position.y,
-              m_position.z,
-              m_rotation,
-              m_bounds.x,
-              m_bounds.y,
-              m_bounds.z,
-              m_bounds.w)
-              .c_str());
-     }
+     //      ImGui::Text(
+     //        "%s",
+     //        fmt::format(
+     //          "Projection: {}\nView: {}\nModel: {}\nMVP: {}\nPosition - X: {}, Y: "
+     //          "{}, Z: {}\nRotation: {}\nPre-transform bounds - left: {}, right: {}, "
+     //          "bottom: {}, top: {}\n",
+     //          fmt_mat_4(m_projection_matrix),
+     //          fmt_mat_4(m_view_matrix),
+     //          fmt_mat_4(m_model_matrix),
+     //          fmt_mat_4(m_view_projection_matrix),
+     //          m_position.x,
+     //          m_position.y,
+     //          m_position.z,
+     //          m_rotation,
+     //          m_bounds.x,
+     //          m_bounds.y,
+     //          m_bounds.z,
+     //          m_bounds.w)
+     //          .c_str());
+     // }
 
    private:
      void recalculate_mvp()

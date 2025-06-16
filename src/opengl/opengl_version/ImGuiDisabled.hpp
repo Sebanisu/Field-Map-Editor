@@ -5,8 +5,14 @@
 #ifndef FIELD_MAP_EDITOR_IMGUIDISABLED_HPP
 #define FIELD_MAP_EDITOR_IMGUIDISABLED_HPP
 #include "ScopeGuard.hpp"
+#include <imgui.h>
 namespace glengine
 {
-[[nodiscard]] ScopeGuard ImGuiDisabled(bool disabled) noexcept;
+[[nodiscard]] inline auto ImGuiDisabled(bool disabled) noexcept
+{
+
+     ImGui::BeginDisabled(disabled);
+     return ScopeGuard{ &ImGui::EndDisabled };
+}
 }// namespace glengine
 #endif// FIELD_MAP_EDITOR_IMGUIDISABLED_HPP

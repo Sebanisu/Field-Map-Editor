@@ -5,6 +5,7 @@
 #ifndef FIELD_MAP_EDITOR_IMGUIPUSHID_HPP
 #define FIELD_MAP_EDITOR_IMGUIPUSHID_HPP
 #include "ScopeGuard.hpp"
+#include <imgui.h>
 namespace glengine
 {
 /**
@@ -13,20 +14,24 @@ namespace glengine
  */
 class [[nodiscard]] ImGuiPushIdImpl
 {
-public:
-  /**
-   * ImGui::PushID(int) and increment int.
-   * @return ImGui::PopID() wrapped in a scope guard.
-   */
-  [[nodiscard]] ScopeGuard operator()() const noexcept;
-  /**
-   * reset() must be called once per frame usually at the beginning or the end.
-   * It resets an int to 0.
-   */
-  void                     reset() const noexcept;
+   public:
+     /**
+      * ImGui::PushID(int) and increment int.
+      * @return ImGui::PopID() wrapped in a scope guard.
+      */
+     [[nodiscard]] auto operator()() const noexcept
+     {
+          ImGui::PushID(++s_id);
+          return ScopeGuard{ &ImGui::PopID };
+     }
+     /**
+      * reset() must be called once per frame usually at the beginning or the end.
+      * It resets an int to 0.
+      */
+     void reset() const noexcept;
 
-private:
-  inline static constinit int s_id = {};
+   private:
+     inline static constinit int s_id = {};
 };
 static constexpr inline ImGuiPushIdImpl ImGuiPushId = {};
 }// namespace glengine

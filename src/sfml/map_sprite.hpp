@@ -24,13 +24,16 @@
 #include <cstdint>
 #include <fmt/format.h>
 #include <FrameBuffer.hpp>
+#include <OrthographicCamera.hpp>
 #include <SFML/Graphics/Drawable.hpp>
 #include <SFML/Graphics/RenderTexture.hpp>
 #include <SFML/Graphics/Sprite.hpp>
 #include <SFML/Graphics/Transformable.hpp>
 #include <SFML/Graphics/Vertex.hpp>
+#include <Shader.hpp>
 #include <Texture.hpp>
 #include <utility>
+
 namespace fme
 {
 struct [[nodiscard]] map_sprite// final
@@ -86,6 +89,12 @@ struct [[nodiscard]] map_sprite// final
      std::vector<std::size_t>                      m_saved_imported_indices        = {};
      std::uint32_t                                 m_scale                         = { 1 };
      mutable bool                                  once                            = { true };
+     mutable glengine::OrthographicCamera          m_fixed_render_camera           = {};
+
+     static constexpr auto                         s_default_color                 = glm::vec4{ 1.F };
+     static constexpr auto                         s_half_color                    = s_default_color / 2.F;
+     static constexpr auto                         s_quarter_color                 = s_half_color / 2.F;
+     mutable glm::vec4                             m_uniform_color                 = s_default_color;
 
    public:
      map_sprite() = default;
@@ -177,6 +186,7 @@ struct [[nodiscard]] map_sprite// final
      void        save(const std::filesystem::path &path) const;
      void        map_save(const std::filesystem::path &dest_path) const;
      void        test_map(const std::filesystem::path &saved_path) const;
+     void        set_uniforms(const glengine::Shader &shader) const;
      void        disable_square() const;
      // void        draw(sf::RenderTarget &target, sf::RenderStates states) const final;
      void        enable_draw_swizzle();

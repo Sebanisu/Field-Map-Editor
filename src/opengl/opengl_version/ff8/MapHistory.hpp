@@ -107,7 +107,7 @@ class [[nodiscard]] MapHistory
      }
      auto debug_count_print(std::source_location source_location = std::source_location::current()) const
      {
-          return glengine::ScopeGuardCaptures([=, this]() {
+          return glengine::ScopeGuard([=, this]() {
                spdlog::debug(
                  "Map History Count: {}\n\t{}:{}",
                  m_back_history.size() + m_front_history.size() + 2U,

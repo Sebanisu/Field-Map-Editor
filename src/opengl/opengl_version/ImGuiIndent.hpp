@@ -12,7 +12,7 @@ namespace glengine
 
 {
      ImGui::Indent(width);
-     return glengine::ScopeGuardCaptures{ [=]() { ImGui::Unindent(width); } };
+     return glengine::ScopeGuard{ [=]() { ImGui::Unindent(width); } };
 }
 }// namespace glengine
 #endif// FIELD_MAP_EDITOR_IMGUIINDENT_HPP
