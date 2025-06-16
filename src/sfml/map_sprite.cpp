@@ -467,12 +467,11 @@ sf::Sprite map_sprite::save_intersecting(const sf::Vector2i &pixel_pos, const st
 
      // Clear the drag sprite texture with transparency
 
-     //causes black screen?
-     // const auto fbb = glengine::FrameBufferBackup{};
-     // m_drag_sprite_framebuffer.bind();
-     // glengine::GlCall{}(glViewport, 0, 0, m_drag_sprite_framebuffer.width(), m_drag_sprite_framebuffer.height());
-     // glengine::Renderer::Clear();
-     // m_drag_sprite_framebuffer.clear_red_integer_color_attachment();
+     const auto fbb = glengine::FrameBufferBackup{};
+     m_drag_sprite_framebuffer.bind();
+     glengine::GlCall{}(glViewport, 0, 0, m_drag_sprite_framebuffer.width(), m_drag_sprite_framebuffer.height());
+     glengine::Renderer::Clear();
+     m_drag_sprite_framebuffer.clear_red_integer_color_attachment();
 
      // Lambda function to draw tiles based on the front tiles and tile data, and optionally imported tiles
      const auto draw_drag_texture =
@@ -803,7 +802,6 @@ void map_sprite::update_render_texture(bool reload_textures)
      {
           return;
      }
-     //causes black screen?
      const auto fbb = glengine::FrameBufferBackup{};
      m_render_framebuffer.bind();
      glengine::GlCall{}(glViewport, 0, 0, m_render_framebuffer.specification().width, m_render_framebuffer.specification().height);
