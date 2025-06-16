@@ -65,7 +65,7 @@ find_package(ctre REQUIRED)
 find_package(iconfontcppheaders REQUIRED CONFIG)
 
 include(${CMAKE_SOURCE_DIR}/cmake/imgui-sfml.cmake)
-#find_package(ImGui-SFML)
+# find_package(ImGui-SFML)
 
 add_library(${PROJECT_NAME}_SFML_Common INTERFACE)
 target_include_directories(${PROJECT_NAME}_SFML_Common
@@ -75,7 +75,7 @@ target_link_libraries(
   ${PROJECT_NAME}_SFML
   PRIVATE project_warnings
   PRIVATE project_options
-  #PRIVATE ImGui-SFML::ImGui-SFML
+  # PRIVATE ImGui-SFML::ImGui-SFML
   PRIVATE ImGui-SFML
   PRIVATE glengine
   PRIVATE OpenVIII_CPP_WIP_VIIIPaths
@@ -142,4 +142,10 @@ add_custom_command(
   COMMAND ${CMAKE_COMMAND} -E echo "Copying fonts to target directory..."
   COMMAND ${CMAKE_COMMAND} -E copy_directory "${CMAKE_SOURCE_DIR}/fonts"
           "$<TARGET_FILE_DIR:${PROJECT_NAME}_SFML>/fonts"
+  COMMAND
+    ${CMAKE_COMMAND} -E echo
+    "Copying ${CMAKE_SOURCE_DIR}/res to $<TARGET_FILE_DIR:${PROJECT_NAME}_SFML>/res"
+    
+  COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/res
+  $<TARGET_FILE_DIR:${PROJECT_NAME}_SFML>/res
   VERBATIM)

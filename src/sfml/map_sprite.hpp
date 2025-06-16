@@ -20,6 +20,7 @@
 #include "unique_values.hpp"
 #include "upscales.hpp"
 #include <algorithm>
+#include <BatchRenderer.hpp>
 #include <cstdint>
 #include <fmt/format.h>
 #include <FrameBuffer.hpp>
@@ -74,6 +75,10 @@ struct [[nodiscard]] map_sprite// final
      all_unique_values_and_strings                 m_all_unique_values_and_strings = {};
      open_viii::graphics::Rectangle<std::uint32_t> m_canvas                        = {};
      SharedTextures                                m_texture                       = {};
+     glengine::BatchRenderer                       m_batch_renderer                = { 1000 };
+     glengine::BatchRenderer                       m_batch_renderer_red_integer    = { 1,
+                                                                                       { std::filesystem::current_path() / "res" / "shader"
+                                                                                         / "red_integer.shader" } };
      glengine::FrameBuffer                         out_texture                     = {};
      glengine::FrameBuffer                         m_render_framebuffer            = {};
      glengine::FrameBuffer                         m_drag_sprite_framebuffer       = {};

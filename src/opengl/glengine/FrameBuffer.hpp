@@ -4,6 +4,7 @@
 
 #ifndef FIELD_MAP_EDITOR_FRAMEBUFFER_HPP
 #define FIELD_MAP_EDITOR_FRAMEBUFFER_HPP
+#include "FrameBufferBackup.hpp"
 #include "Renderer.hpp"
 #include "SubTexture.hpp"
 #include "UniqueValue.hpp"
@@ -48,6 +49,7 @@ public:
       GlCall{}(glBindFramebuffer, GL_FRAMEBUFFER, 0);
     }
   }
+  static FrameBufferBackup backup();
   [[nodiscard]] const FrameBufferSpecification &specification() const;
   SubTexture get_color_attachment(std::uint32_t index = 0U) const;
              operator bool()

@@ -67,13 +67,10 @@ add_custom_command(
   POST_BUILD
   COMMAND
     ${CMAKE_COMMAND} -E echo
-    "Copying ${CMAKE_CURRENT_SOURCE_DIR}/res to $<TARGET_FILE_DIR:${PROJECT_NAME}_OPENGL>/res"
-)
-add_custom_command(
-  TARGET ${PROJECT_NAME}_OPENGL
-  POST_BUILD
-  COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/res
-          $<TARGET_FILE_DIR:${PROJECT_NAME}_OPENGL>/res)
+    "Copying ${CMAKE_SOURCE_DIR}/res to $<TARGET_FILE_DIR:${PROJECT_NAME}_OPENGL>/res"
+  COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/res
+          $<TARGET_FILE_DIR:${PROJECT_NAME}_OPENGL>/res
+  VERBATIM)
 
 target_compile_definitions(${PROJECT_NAME}_OPENGL PUBLIC TOML_EXCEPTIONS=0)
 if(MSVC)

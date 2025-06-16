@@ -5,6 +5,7 @@
 #ifndef FIELD_MAP_EDITOR_SHADER_HPP
 #define FIELD_MAP_EDITOR_SHADER_HPP
 #include "Renderer.hpp"
+#include "ScopeGuard.hpp"
 #include <filesystem>
 #include <fstream>
 #include <glm/gtc/type_ptr.hpp>
@@ -33,11 +34,19 @@ class Shader
 
      void        bind() const;
      static void unbind();
+     static auto backup()
+     {
+          GLint program_binding{ 0 };// save original
+          GlCall{}(glGetIntegerv, GL_CURRENT_PROGRAM, &program_binding);
+          return ScopeGuardCaptures{ [=]() {
+               GlCall{}(glUseProgram, program_binding);
+          } };// restore original shader. this might not be doing anything.
+     }
 
-     void        set_uniform(std::string_view name, glm::vec1 v) const;
-     void        set_uniform(std::string_view name, glm::vec2 v) const;
-     void        set_uniform(std::string_view name, glm::vec3 v) const;
-     void        set_uniform(std::string_view name, glm::vec4 v) const;
+     void set_uniform(std::string_view name, glm::vec1 v) const;
+     void set_uniform(std::string_view name, glm::vec2 v) const;
+     void set_uniform(std::string_view name, glm::vec3 v) const;
+     void set_uniform(std::string_view name, glm::vec4 v) const;
      // Set Uniforms
      template<typename... T>
      // clang-format off

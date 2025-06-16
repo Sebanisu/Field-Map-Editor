@@ -20,6 +20,7 @@
 #include <open_viii/paths/Paths.hpp>
 #include <ranges>
 #include <SFML/Window/Mouse.hpp>
+#include <stacktrace>
 #include <utility>
 
 using namespace open_viii::graphics::background;
@@ -160,10 +161,13 @@ static void DebugCallback(
 {
      switch (severity)
      {
-          case GL_DEBUG_SEVERITY_HIGH:
+          case GL_DEBUG_SEVERITY_HIGH: {
                spdlog::error("OpenGL high: {}", message);
-               throw;
-               break;
+               std::stacktrace st = std::stacktrace::current();
+               std::cerr << st << std::endl;
+               // throw;
+          }
+          break;
           case GL_DEBUG_SEVERITY_MEDIUM:
                spdlog::debug("OpenGL medium: {}", message);
                break;

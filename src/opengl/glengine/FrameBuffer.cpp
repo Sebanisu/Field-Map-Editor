@@ -126,6 +126,12 @@ void FrameBuffer::bind(bool first) const
      GlCall{}(glBindFramebuffer, GL_FRAMEBUFFER, first ? m_renderer_id_first : m_renderer_id);
 }
 
+
+FrameBufferBackup FrameBuffer::backup()
+{
+     return {};
+}
+
 const FrameBufferSpecification &FrameBuffer::specification() const
 {
      return m_specification;
