@@ -120,7 +120,7 @@ struct [[nodiscard]] map_sprite// final
      [[nodiscard]] sf::Vector2u                         get_tile_draw_size() const;
      [[nodiscard]] bool                                 generate_texture(const glengine::FrameBuffer &texture) const;
      [[nodiscard]] std::uint32_t                        get_max_texture_height() const;
-     [[nodiscard]] bool                                 local_draw(const glengine::FrameBuffer &) const;
+     [[nodiscard]] bool                                 local_draw(const glengine::BatchRenderer &) const;
      [[nodiscard]] bool                                 draw_imported(const glengine::FrameBuffer &) const;
      [[nodiscard]] std::string                          get_base_name() const;
      [[nodiscard]] const all_unique_values_and_strings &uniques() const;

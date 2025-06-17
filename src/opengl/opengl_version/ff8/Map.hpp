@@ -773,7 +773,7 @@ class Map
                batch_renderer.bind();
                set_uniforms(batch_renderer.shader());
                batch_renderer.draw_quad(
-                 m_frame_buffer.get_color_attachment(index),
+                 m_frame_buffer.bind_color_attachment(index),
                  m_map_dims.scaled_position(),
                  glm::vec2(m_frame_buffer.specification().width, m_frame_buffer.specification().height));
                batch_renderer.draw();
@@ -803,7 +803,7 @@ class Map
           m_batch_renderer.shader().set_uniform("u_Grid", m_map_dims.scaled_tile_size());
           m_batch_renderer.clear();
           m_batch_renderer.draw_quad(
-            m_frame_buffer.get_color_attachment(),
+            m_frame_buffer.bind_color_attachment(),
             m_map_dims.scaled_position(),
             glm::vec2(m_frame_buffer.specification().width, m_frame_buffer.specification().height));
           m_batch_renderer.draw();

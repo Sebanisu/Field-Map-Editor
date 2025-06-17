@@ -137,7 +137,7 @@ const FrameBufferSpecification &FrameBuffer::specification() const
      return m_specification;
 }
 
-SubTexture FrameBuffer::get_color_attachment(std::uint32_t index) const
+SubTexture FrameBuffer::bind_color_attachment(std::uint32_t index) const
 {
      assert(index < 4U);
      assert(m_color_attachment[index] != 0U);
@@ -147,6 +147,13 @@ SubTexture FrameBuffer::get_color_attachment(std::uint32_t index) const
      if (m_specification.attachments[index] == FrameBufferTextureFormat::RGBA8)
           GlCall{}(glGenerateMipmap, GL_TEXTURE_2D);
      return r;
+}
+
+GlidCopy FrameBuffer::color_attachment_id(std::uint32_t index) const
+{
+     assert(index < 4U);
+     assert(m_color_attachment[index] != 0U);
+     return m_color_attachment[index];
 }
 
 glm::ivec2 FrameBuffer::get_size() const

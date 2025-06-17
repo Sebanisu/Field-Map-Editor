@@ -294,6 +294,7 @@ void gui::start(sf::RenderWindow &window)
           }
           m_elapsed_time = m_delta_clock.restart();
           ImGui::SFML::Update(window, m_elapsed_time);
+          refresh_render_texture(true);// force map redraw every frame.
           m_batch.update(m_elapsed_time);
 
           // Begin non imgui drawing.
@@ -925,7 +926,7 @@ void gui::draw_window()
           const auto pop_id1 = PushPopID();
 
           ImGui::Image(
-            glengine::ConvertGliDtoImTextureId<ImTextureID>(m_map_sprite->get_render_texture().get_color_attachment().id()),
+            glengine::ConvertGliDtoImTextureId<ImTextureID>(m_map_sprite->get_render_texture().color_attachment_id()),
             ImVec2{ scaled_size.x, scaled_size.y });
 
           update_hover_and_mouse_button_status_for_map(screen_pos, scale);

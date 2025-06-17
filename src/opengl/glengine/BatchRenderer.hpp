@@ -31,7 +31,7 @@ class BatchRenderer
      [[nodiscard]] std::size_t                  quad_count() const noexcept;
      [[nodiscard]] std::size_t                  vert_count() const noexcept;
      [[nodiscard]] [[maybe_unused]] std::size_t index_count() const noexcept;
-     [[nodiscard]] static const std::int32_t   &max_texture_image_units();
+     [[nodiscard]] static std::uint32_t         max_texture_image_units();
      void                                       clear() const;
      void draw_quad(const Texture &texture, glm::vec3 offset, glm::vec2 size = glm::vec2{ 1.F }) const;
      void draw_quad(const SubTexture &texture, glm::vec3 offset, glm::vec2 size, int id) const;
@@ -53,13 +53,19 @@ class BatchRenderer
      static void                                        unbind();
      [[nodiscard]] static auto                          backup()
      {// add to tuple other backups if needed.
-          return Shader::backup();
+
+          GLint active_texture;
+          GlCall{}(glGetIntegerv, GL_ACTIVE_TEXTURE, &active_texture);
+          return ScopeGuard{ [=, shader_pop = Shader::backup()] {
+               GlCall{}(glActiveTexture, static_cast<GLenum>(active_texture));
+          } };
      }
 
    private:
      void                        flush_vertices() const;
      void                        draw_vertices() const;
      void                        bind_textures() const;
+     std::uint32_t               m_max_textures  = {};
      std::size_t                 m_quad_count    = { 100U };
      VertexBufferDynamic         m_vertex_buffer = { quad_count() };
      IndexBufferDynamic          m_index_buffer  = { quad_count() };

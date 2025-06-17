@@ -14,11 +14,12 @@ BatchRenderer::BatchRenderer()
 BatchRenderer::BatchRenderer(std::size_t quad_count, Shader shader)
   : m_quad_count(quad_count)
   , m_shader(std::move(shader))
+  , m_max_textures(max_texture_image_units())
 {
      const auto pop_backup = m_vertex_array.backup();
      m_vertex_array.bind();
      m_vertex_array.push_back(m_vertex_buffer, Vertex::layout());
-     m_texture_slots.reserve(static_cast<std::uint32_t>(max_texture_image_units()));
+     m_texture_slots.reserve(m_max_textures);
 }
 
 void BatchRenderer::on_update(float) const
@@ -75,14 +76,11 @@ std::size_t BatchRenderer::index_count() const noexcept
 {
      return m_quad_count * 6U;
 }
-const std::int32_t &BatchRenderer::max_texture_image_units()
+std::uint32_t BatchRenderer::max_texture_image_units()
 {
-     static const std::int32_t number = []() {
-          std::int32_t texture_units{};
-          GlCall{}(glGetIntegerv, GL_MAX_TEXTURE_IMAGE_UNITS, &texture_units);
-          return texture_units;
-     }();
-     return number;
+     std::int32_t texture_units{};
+     GlCall{}(glGetIntegerv, GL_MAX_TEXTURE_IMAGE_UNITS, &texture_units);
+     return static_cast<std::uint32_t>(texture_units);
 }
 void BatchRenderer::draw_quad(const Texture &texture, glm::vec3 offset, glm::vec2 size) const
 {
@@ -111,8 +109,9 @@ void BatchRenderer::draw_quad(
      }
      else
      {
-          if (std::cmp_equal(std::ranges::size(m_texture_slots), max_texture_image_units()))
+          if (std::cmp_equal(std::ranges::size(m_texture_slots), m_max_textures))
           {
+               //when we reach the max amount of unique textures we go ahead and empty the queue and draw to the frame buffer.
                flush_vertices();
           }
           m_texture_slots.push_back(texture.id());
