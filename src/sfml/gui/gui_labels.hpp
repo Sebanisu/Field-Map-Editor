@@ -34,8 +34,8 @@ struct gui_labels
      static constexpr std::string_view control_panel                          = { "Control Panel" };
      static constexpr std::string_view upscale_path                           = { "Upscale Path" };
      static constexpr std::string_view deswizzle_path                         = { "Deswizzle Path" };
-     static constexpr std::string_view upscale_map_path                           = { "Upscale .map Path" };
-     static constexpr std::string_view deswizzle_map_path                         = { "Deswizzle .map Path" };
+     static constexpr std::string_view upscale_map_path                       = { "Upscale .map Path" };
+     static constexpr std::string_view deswizzle_map_path                     = { "Deswizzle .map Path" };
      static constexpr std::string_view processing                             = { "Processing" };
      static constexpr std::string_view display_history                        = { "History" };
      static constexpr std::string_view history                                = { "History" };
@@ -72,9 +72,10 @@ struct gui_labels
      static constexpr std::string_view reset_tool_tip                         = { "Reset window state" };
      static constexpr std::string_view save_swizzle                           = { "Save Swizzle" };
      static constexpr std::string_view swizzle                                = { "Swizzle" };
-     static constexpr std::string_view swizzle_as_one_image = {"Swizzle as one Image"};
+     static constexpr std::string_view swizzle_as_one_image                   = { "Swizzle as one Image" };
      static constexpr std::string_view deswizzle                              = { "Deswizzle" };
      static constexpr std::string_view disable_blending                       = { "Disable Blending" };
+     static constexpr std::string_view force_rendering_of_map                 = { "Force Rendering Of Map" };
      static constexpr std::string_view selected_tile_info                     = { "Selected Tile Info" };
      static constexpr std::string_view hovered_tiles                          = { "Hovered Tiles" };
      static constexpr std::string_view tile_size                              = { "Tile Size" };
@@ -115,7 +116,7 @@ struct gui_labels
 
      static constexpr std::string_view input_type                             = { "Input Type" };
      static constexpr std::string_view input_root_path_type                   = { "Input Root Path Type" };
-     
+
      static constexpr std::string_view output_type                            = { "Output Type" };
      static constexpr std::string_view output_root_path_type                  = { "Output Root Path Type" };
 
@@ -255,6 +256,9 @@ struct gui_labels
      static constexpr std::string_view disable_blending_tooltip = {
           "Use Disable blending to turn off the effect that emulates PSX-style blending for tiles with semi-transparent parts, such as "
           "lights or colored glass."
+     };
+     static constexpr std::string_view force_rendering_of_map_tooltip = {
+          "Force reloading textures and render the map at the start of each frame."
      };
      static constexpr std::string_view draw_palette_texture_tooltip = {
           "Draw Palette Texture: The .mim file uses palettes to draw tiles. 4-bit palettes have 16 colors, 8-bit palettes support up to "

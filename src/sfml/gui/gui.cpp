@@ -294,7 +294,10 @@ void gui::start(sf::RenderWindow &window)
           }
           m_elapsed_time = m_delta_clock.restart();
           ImGui::SFML::Update(window, m_elapsed_time);
-          refresh_render_texture(true);// force map redraw every frame.
+          if (m_selections->force_rendering_of_map)
+          {
+               refresh_render_texture(true);// force map redraw every frame.
+          }
           m_batch.update(m_elapsed_time);
 
           // Begin non imgui drawing.
@@ -1667,6 +1670,15 @@ void gui::checkbox_map_disable_blending()
           tool_tip(gui_labels::forced_on_while_swizzled);
           ImGui::EndDisabled();
      }
+
+     if (ImGui::Checkbox(gui_labels::force_rendering_of_map.data(), &m_selections->force_rendering_of_map))
+     {
+          m_selections->update_configuration_key(ConfigKey::ForceRenderingOfMap);
+     }
+     else
+     {
+          tool_tip(gui_labels::force_rendering_of_map_tooltip);
+     }
 }
 void gui::refresh_mim_palette_texture()
 {
@@ -1929,6 +1941,8 @@ void gui::edit_menu()
 
                if (map_test())
                {
+
+
                     if (!m_selections->draw_swizzle)
                     {
                          if (
@@ -1942,7 +1956,6 @@ void gui::edit_menu()
                               tool_tip(gui_labels::disable_blending_tooltip);
                          }
                     }
-
                     else
                     {
                          static const bool true_val = true;
@@ -1951,6 +1964,14 @@ void gui::edit_menu()
                          tool_tip(gui_labels::disable_blending_tooltip);
                          tool_tip(gui_labels::forced_on_while_swizzled);
                          ImGui::EndDisabled();
+                    }
+                    if (ImGui::MenuItem(gui_labels::force_rendering_of_map.data(), nullptr, &m_selections->force_rendering_of_map))
+                    {
+                         m_selections->update_configuration_key(ConfigKey::ForceRenderingOfMap);
+                    }
+                    else
+                    {
+                         tool_tip(gui_labels::force_rendering_of_map_tooltip);
                     }
                }
 

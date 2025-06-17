@@ -37,6 +37,7 @@ enum class ConfigKey
      DrawTileConflictRects,
      DisplayBatchWindow,
      DisplayImportImage,
+     ForceRenderingOfMap,
      ImportImageGrid,
      ImportLoadImageDirectory,
      TileSizeValue,
@@ -71,10 +72,10 @@ enum class ConfigKey
      PathsVectorDeswizzle,
      PathsVectorUpscaleMap,
      PathsVectorDeswizzleMap,
-     //BatchCompact,
+     // BatchCompact,
      BatchCompactType,
      BatchCompactEnabled,
-     //BatchFlatten,
+     // BatchFlatten,
      BatchFlattenType,
      BatchFlattenEnabled,
      SwizzlePath,
@@ -143,6 +144,8 @@ enum class ConfigKey
                return "selections_display_history_window"sv;
           case ConfigKey::DisplayImportImage:
                return "selections_display_import_image"sv;
+          case ConfigKey::ForceRenderingOfMap:
+               return "selections_force_rendering_of_map"sv;
           case ConfigKey::Draw:
                return "selections_draw"sv;
           case ConfigKey::DrawDisableBlending:
@@ -270,6 +273,7 @@ struct Selections
      bool                           draw_disable_blending;///< Whether to disable blending during rendering.
      bool                           display_batch_window;///< Whether to display the test batch window.
      bool                           display_import_image;///< Whether to display the imported image.
+     bool                           force_rendering_of_map;///< Force rendering of map on every frame.
      bool                           import_image_grid;///< Whether to overlay a grid on the imported image.
      bool                           render_imported_image;///< Whether to render the imported image.
      bool                           display_history_window;///< Whether to display history window.
