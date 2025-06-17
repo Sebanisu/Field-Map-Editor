@@ -82,8 +82,8 @@ template<is_tile tileT>
           ++pop_var_count;
      }
 
-     // Use scope_guard to safely pop style colors and variables
-     const auto pop_style = scope_guard{ [&]() {
+     // Use glengine::ScopeGuard to safely pop style colors and variables
+     const auto pop_style = glengine::ScopeGuard{ [&]() {
           if (pop_count > 0)
                ImGui::PopStyleColor(pop_count);
           if (pop_var_count > 0)
@@ -142,8 +142,8 @@ template [[nodiscard]] bool fme::create_tile_button(std::weak_ptr<const fme::map
           ++pop_var_count;
      }
 
-     // Use scope_guard to safely pop style colors and variables
-     const auto pop_style = scope_guard{ [&]() {
+     // Use glengine::ScopeGuard to safely pop style colors and variables
+     const auto pop_style = glengine::ScopeGuard{ [&]() {
           if (pop_count > 0)
                ImGui::PopStyleColor(pop_count);
           if (pop_var_count > 0)

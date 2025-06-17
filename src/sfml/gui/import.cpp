@@ -48,7 +48,7 @@ void import::render() const
           return;
      }
      // begin imgui window
-     const auto the_end = scope_guard([]() { ImGui::End(); });
+     const auto the_end = glengine::ScopeGuard([]() { ImGui::End(); });
      if (!ImGui::Begin(gui_labels::import_image.data()))
      {
           return;
@@ -144,8 +144,8 @@ open_viii::graphics::background::Map::variant_tile &import::combo_selected_tile(
 
      const float button_size  = ImGui::GetFrameHeight();
      const float button_count = 2.0f;
-     const auto  end_action =
-       scope_guard([&, current_tile_id = selections->selected_tile, this]() { changed = current_tile_id != selections->selected_tile; });
+     const auto  end_action   = glengine::ScopeGuard(
+       [&, current_tile_id = selections->selected_tile, this]() { changed = current_tile_id != selections->selected_tile; });
      // combo box with all the tiles.
      find_selected_tile_for_import(current_tile);
      save_config();
@@ -156,7 +156,7 @@ open_viii::graphics::background::Map::variant_tile &import::combo_selected_tile(
      static bool  was_hovered  = false;
 
      ImGui::PushItemWidth(ImGui::CalcItemWidth() - spacing * button_count - button_size * button_count);
-     const auto pop_item_width = scope_guard(&ImGui::PopItemWidth);
+     const auto pop_item_width = glengine::ScopeGuard(&ImGui::PopItemWidth);
 
 
      if (ImGui::BeginCombo("##Select Existing Tile", "", ImGuiComboFlags_HeightLarge))
@@ -164,15 +164,15 @@ open_viii::graphics::background::Map::variant_tile &import::combo_selected_tile(
           static constexpr int  columnWidth   = 100;// Adjust as needed
           const auto            num_columns   = std::max(1, static_cast<int>(ImGui::GetContentRegionAvail().x / columnWidth));
           static constexpr auto tooltips_size = 256.F;
-          const auto            cols_pop      = scope_guard([]() { ImGui::Columns(1); });
+          const auto            cols_pop      = glengine::ScopeGuard([]() { ImGui::Columns(1); });
           ImGui::Columns(num_columns, "##columns", false);
-          const auto the_end_combo = scope_guard([]() { ImGui::EndCombo(); });
+          const auto the_end_combo = glengine::ScopeGuard([]() { ImGui::EndCombo(); });
           map_sprite->const_visit_original_tiles([&](const auto &tiles) {
                for (int tile_id = {}; const auto &tile : tiles)
                {
-                    const auto next_col_pop = scope_guard([]() { ImGui::NextColumn(); });
+                    const auto next_col_pop = glengine::ScopeGuard([]() { ImGui::NextColumn(); });
                     const auto the_end_id_1 = PushPopID();
-                    const auto iterate      = scope_guard([&tile_id]() { ++tile_id; });
+                    const auto iterate      = glengine::ScopeGuard([&tile_id]() { ++tile_id; });
                     bool       is_selected  = (selections->selected_tile == tile_id);// You can store your selection however you
                                                                               // want, outside or inside your objects
                     if (std::ranges::any_of(
@@ -478,7 +478,7 @@ void import::collapsing_header_generated_tiles() const
      {
           return;
      }
-     const auto the_end_tile_table = scope_guard([]() { ImGui::EndTable(); });
+     const auto the_end_tile_table = glengine::ScopeGuard([]() { ImGui::EndTable(); });
      m_import_image_map.visit_tiles([&](auto &tiles) {
           std::uint32_t i{};
           for (const auto &tile : tiles)

@@ -4,12 +4,12 @@
 #include "gui_labels.hpp"
 #include "map_directory_mode.hpp"
 #include "open_file_explorer.hpp"
-#include "scope_guard.hpp"
 #include "tool_tip.hpp"
 #include <algorithm>
 #include <filesystem>
 #include <functional>
 #include <ranges>
+#include <ScopeGuard.hpp>
 #include <string>
 #include <string_view>
 #include <vector>
@@ -47,7 +47,7 @@ struct main_menu_paths
           {
                return;
           }
-          const auto end_menu1 = scope_guard(&ImGui::EndMenu);
+          const auto end_menu1 = glengine::ScopeGuard(&ImGui::EndMenu);
           [&]() {
                if (!ImGui::MenuItem(gui_labels::browse.data(), nullptr, false, true))
                {
@@ -86,7 +86,7 @@ struct main_menu_paths
                ImGui::Separator();
                if (ImGui::BeginTable("##path_table", 2))
                {
-                    const auto end_table = scope_guard(&ImGui::EndTable);
+                    const auto end_table = glengine::ScopeGuard(&ImGui::EndTable);
                     auto zip_path = std::ranges::views::zip(m_settings.generated_paths.get(), m_settings.generated_paths_enabled.get());
                     for (const auto &[index, path] : transformed_paths)
                     {
@@ -107,7 +107,7 @@ struct main_menu_paths
                          }();
                          {
                               ImGui::BeginDisabled(!enabled);
-                              const auto pop_disabled = scope_guard{ &ImGui::EndDisabled };
+                              const auto pop_disabled = glengine::ScopeGuard{ &ImGui::EndDisabled };
                               if (ImGui::MenuItem(path.data(), nullptr, &is_checked, true))
                               {
                                    if (m_main_filter.get().value() != path)
@@ -147,7 +147,7 @@ struct main_menu_paths
 
                if (ImGui::BeginTable("##path_table", 2))
                {
-                    const auto end_table = scope_guard(&ImGui::EndTable);
+                    const auto end_table = glengine::ScopeGuard(&ImGui::EndTable);
                     for (const auto &[path, enabled] :
                          std::ranges::views::zip(m_settings.generated_paths.get(), m_settings.generated_paths_enabled.get()))
                     {
@@ -156,7 +156,7 @@ struct main_menu_paths
                          ImGui::SetNextItemAllowOverlap();
                          {
                               ImGui::BeginDisabled(!enabled);
-                              const auto pop_disabled = scope_guard{ &ImGui::EndDisabled };
+                              const auto pop_disabled = glengine::ScopeGuard{ &ImGui::EndDisabled };
                               const auto path_padded  = path + "  -  ";
                               size_t offset = static_cast<size_t>(elapsed_time * chars_per_second) % (path_padded.size());// Sliding offset
                               std::string display_text = path_padded.substr(offset, max_display_chars);

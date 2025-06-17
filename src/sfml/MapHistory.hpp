@@ -6,11 +6,11 @@
 #define FIELD_MAP_EDITOR_MAPHISTORY_HPP
 #include "normalized_source_tile.hpp"
 #include "PupuID.hpp"
-#include "scope_guard.hpp"
 #include "source_tile_conflicts.hpp"
 #include "UniquifyPupu.hpp"
 #include <map>
 #include <open_viii/graphics/background/Map.hpp>
+#include <ScopeGuard.hpp>
 #include <spdlog/spdlog.h>
 /**
  * @namespace ff_8
@@ -168,11 +168,11 @@ class [[nodiscard]] MapHistory
       *
       * Outputs the count of maps in history along with the file name and line number for debugging purposes.
       *
-      * @return A `scope_guard` object that automatically logs debug information when it goes out of scope.
+      * @return A `glengine::ScopeGuard` object that automatically logs debug information when it goes out of scope.
       */
      auto                          debug_count_print() const
      {
-          return scope_guard([&]() { spdlog::debug("Map History Count: {}\n\t{}:{}", count() + 2U, __FILE__, __LINE__); });
+          return glengine::ScopeGuard([&]() { spdlog::debug("Map History Count: {}\n\t{}:{}", count() + 2U, __FILE__, __LINE__); });
      }
 
      /**
@@ -352,7 +352,7 @@ class [[nodiscard]] MapHistory
       * @throws None (assumes container operations and `debug_count_print` do not throw).
       */
      const map_t                               &first_to_original(std::string description);
-     
+
      /**
       * @brief Pushes the current working map to the undo history and sets it as the new working state.
       *

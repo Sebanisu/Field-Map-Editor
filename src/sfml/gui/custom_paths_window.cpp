@@ -201,7 +201,7 @@ void fme::custom_paths_window::populate_test_output() const
      ImGui::TableNextColumn();
      format_imgui_text("{}", "Selected Pattern: ");
      ImGui::TableNextColumn();
-     const auto pop_table = scope_guard{ &ImGui::EndTable };
+     const auto pop_table = glengine::ScopeGuard{ &ImGui::EndTable };
      using namespace std::string_view_literals;
 
      static const auto       values = std::array{ PatternSelector::OutputSwizzlePattern,
@@ -220,8 +220,7 @@ void fme::custom_paths_window::populate_test_output() const
                                         []() { return values; },
                                      []() { return values | std::views::transform(AsString{}); },
                                      selections->current_pattern,
-                                     generic_combo_settings{ .num_columns = 1 }
-     };
+                                     generic_combo_settings{ .num_columns = 1 } };
      if (gcc.render())
      {
           selections->current_pattern_index = -1;
@@ -291,7 +290,7 @@ void fme::custom_paths_window::save_pattern() const
      ImGui::TableNextColumn();
      format_imgui_text("{}", "Pattern: ");
      ImGui::TableNextColumn();
-     const auto pop_table = scope_guard{ &ImGui::EndTable };
+     const auto pop_table = glengine::ScopeGuard{ &ImGui::EndTable };
      if (ImGui::InputText("##test input", m_input_pattern_string.data(), m_input_pattern_string.size()))
      {
           save_pattern();
@@ -330,7 +329,7 @@ void fme::custom_paths_window::save_pattern() const
      {
           return false;
      }
-     const auto pop_table = scope_guard{ &ImGui::EndTable };
+     const auto pop_table = glengine::ScopeGuard{ &ImGui::EndTable };
 
      // Setup columns
      ImGui::TableSetupColumn("Pattern", ImGuiTableColumnFlags_WidthStretch);// First column stretches to content
@@ -358,7 +357,7 @@ void fme::custom_paths_window::save_pattern() const
           {
                const float availableWidth = ImGui::GetContentRegionAvail().x;
                ImGui::PushItemWidth(availableWidth);// Set textbox width to fill cell
-               const auto pop_width = scope_guard(&ImGui::PopItemWidth);
+               const auto pop_width = glengine::ScopeGuard(&ImGui::PopItemWidth);
                if (selections->current_pattern_index == static_cast<int>(index))
                {
                     if (ImGui::InputText("##test input", m_input_pattern_string.data(), m_input_pattern_string.size()))
@@ -556,7 +555,7 @@ void fme::custom_paths_window::save_pattern() const
      }
 
      ImGui::BeginDisabled(get_current_string_value() == nullptr);
-     const auto pop_disabled = scope_guard(&ImGui::EndDisabled);
+     const auto pop_disabled = glengine::ScopeGuard(&ImGui::EndDisabled);
      format_imgui_wrapped_text(
        "{}",
        "Click a {key} to add it to the pattern text box.\n"
@@ -564,7 +563,7 @@ void fme::custom_paths_window::save_pattern() const
        "These will only appear if the {key} has a value.\n\n"
        "Right-click a {key} to access a context menu for copying key values.");
      {
-          const auto pop_child = scope_guard{ &ImGui::EndChild };
+          const auto pop_child = glengine::ScopeGuard{ &ImGui::EndChild };
           if (!ImGui::BeginChild("##scrollingKeys", m_scrolling_child_size, ImGuiChildFlags_Borders, ImGuiWindowFlags_HorizontalScrollbar))
           {
                return false;
@@ -574,7 +573,7 @@ void fme::custom_paths_window::save_pattern() const
           {
                return false;
           }
-          const auto pop_table = scope_guard{ &ImGui::EndTable };
+          const auto pop_table = glengine::ScopeGuard{ &ImGui::EndTable };
           bool       bg_color  = true;
           for (const auto &[index, pair] :
                std::ranges::views::enumerate(std::ranges::views::zip(key_value_data::keys::all_keys, key_value_data::keys::all_tooltips)))
@@ -657,7 +656,7 @@ void fme::custom_paths_window::save_pattern() const
      }
 
      ImGui::BeginDisabled(get_current_string_value() == nullptr);
-     const auto pop_disabled = scope_guard(&ImGui::EndDisabled);
+     const auto pop_disabled = glengine::ScopeGuard(&ImGui::EndDisabled);
 
      format_imgui_wrapped_text(
        "{}",
@@ -665,7 +664,7 @@ void fme::custom_paths_window::save_pattern() const
        "{ff8_path}/Textures could output something like c:\\ff8\\Textures.\n"
        "Right-click a key to access a context menu for copying test output.");
 
-     const auto pop_child = scope_guard{ &ImGui::EndChild };
+     const auto pop_child = glengine::ScopeGuard{ &ImGui::EndChild };
      if (!ImGui::BeginChild("##scrollingTest", m_scrolling_child_size, ImGuiChildFlags_Borders, ImGuiWindowFlags_HorizontalScrollbar))
      {
           return false;
@@ -675,7 +674,7 @@ void fme::custom_paths_window::save_pattern() const
      {
           return false;
      }
-     const auto pop_table = scope_guard{ &ImGui::EndTable };
+     const auto pop_table = glengine::ScopeGuard{ &ImGui::EndTable };
      bool       bg_color  = true;
      for (const auto &[index, test_str] : m_output_tests | std::ranges::views::enumerate)
      {
@@ -751,19 +750,19 @@ void fme::custom_paths_window::render() const
      {
           return;
      }
-     const auto pop_end = scope_guard(&ImGui::End);
+     const auto pop_end = glengine::ScopeGuard(&ImGui::End);
      if (!ImGui::Begin(gui_labels::custom_paths_window.data()))
      {
           return;
      }
-     const auto pop_changed = scope_guard([this, &override_changed]() { m_changed = override_changed; });
+     const auto pop_changed = glengine::ScopeGuard([this, &override_changed]() { m_changed = override_changed; });
      ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 3.F);
      ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(2.F, 2.F));
      ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2(4.F, 4.F));
      const auto color = ImVec4(0.5F, 0.5F, 0.5F, 1.F);
      ImGui::PushStyleColor(ImGuiCol_TableBorderLight, color);
      ImGui::PushStyleColor(ImGuiCol_TableBorderStrong, color);
-     const auto pop_styles = scope_guard{ []() {
+     const auto pop_styles = glengine::ScopeGuard{ []() {
           ImGui::PopStyleColor(2);
           ImGui::PopStyleVar(3);
      } };

@@ -13,6 +13,7 @@
 #include <FrameBufferBackup.hpp>
 #include <open_viii/graphics/Png.hpp>
 #include <ranges>
+#include <ScopeGuard.hpp>
 #include <spdlog/spdlog.h>
 #include <stb_image.h>
 #include <utility>
@@ -103,7 +104,7 @@ std::shared_ptr<std::array<glengine::Texture, map_sprite::MAX_TEXTURES>> map_spr
      // Allocate shared array to hold the resulting textures
      auto       ret = std::make_shared<std::array<glengine::Texture, MAX_TEXTURES>>(std::array<glengine::Texture, MAX_TEXTURES>{});
 
-     const auto fofh_consumer = scope_guard{ [&]() {
+     const auto fofh_consumer = glengine::ScopeGuard{ [&]() {
           // Consume the collected nested futures immediately to kick off the work
           auto  fofh          = FutureOfFutureConsumer{ std::move(future_of_futures) };
           fofh.consume_now();
@@ -601,7 +602,7 @@ sf::Sprite map_sprite::save_intersecting(const sf::Vector2i &pixel_pos, const st
                          return get_texture(pupu_id);
                     }
                }();
-               const auto unbind = scope_guard{ []() { glengine::Texture::unbind(); } };
+               const auto unbind = glengine::ScopeGuard{ []() { glengine::Texture::unbind(); } };
                if (texture == nullptr || texture->height() == 0 || texture->width() == 0)
                {
                     return;
@@ -665,8 +666,8 @@ sf::BlendMode map_sprite::set_blend_mode(const BlendModeT &blend_mode, std::arra
           return false;
      }
      m_imported_texture->bind();
-     const auto scope_guard{ [&]() { m_imported_texture->unbind(); } };
-     bool       drew = false;
+     const auto pop_unbind = glengine::ScopeGuard{ [&]() { m_imported_texture->unbind(); } };
+     bool       drew       = false;
      const auto draw_imported_tile =
        [this, &drew, &target](const std::integral auto current_index, const is_tile auto &tile_const, const is_tile auto &tile) {
             if (!m_saved_imported_indices.empty())

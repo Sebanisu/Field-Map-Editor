@@ -3,9 +3,9 @@
 #include "format_imgui_text.hpp"
 #include "gui_labels.hpp"
 #include "push_pop_id.hpp"
-#include "scope_guard.hpp"
 #include "Selections.hpp"
 #include <open_viii/archive/FIFLFS.hpp>
+#include <ScopeGuard.hpp>
 namespace fme
 {
 struct field_file_window
@@ -56,12 +56,12 @@ struct field_file_window
           }
 
 
-          const auto pop_end = scope_guard(&ImGui::End);
+          const auto pop_end = glengine::ScopeGuard(&ImGui::End);
           if (!ImGui::Begin(gui_labels::field_file_window.data()))
           {
                return;
           }
-          const auto                      pop_changed = scope_guard([this]() { m_changed = false; });
+          const auto                      pop_changed = glengine::ScopeGuard([this]() { m_changed = false; });
           static std::vector<std::string> paths       = {};
 
           if (std::ranges::empty(paths) || m_changed)

@@ -3,7 +3,7 @@
 #include "format_imgui_text.hpp"
 #include "gui_labels.hpp"
 #include "push_pop_id.hpp"
-#include "scope_guard.hpp"
+#include <ScopeGuard.hpp>
 #include <sstream>
 #include <string>
 namespace fme
@@ -26,7 +26,7 @@ void collapsing_tile_info(
               std::string title      = index == std::numeric_limits<size_t>::max()
                                          ? fmt::format("{}", gui_labels::selected_tile_info)
                                          : fmt::format("{}: {}", gui_labels::selected_tile_info, index);
-              const auto  pushpopid0 = scope_guard{ &ImGui::PopID };
+              const auto  pushpopid0 = glengine::ScopeGuard{ &ImGui::PopID };
               ImGui::PushID(title.data());
               if (!ImGui::CollapsingHeader(title.data()))
               {
@@ -40,7 +40,7 @@ void collapsing_tile_info(
                    ImGui::TableSetupColumn("Key", ImGuiTableColumnFlags_WidthFixed);
                    ImGui::TableSetupColumn("Value", ImGuiTableColumnFlags_WidthStretch);
 
-                   const auto         the_end_table = scope_guard([]() { ImGui::EndTable(); });
+                   const auto         the_end_table = glengine::ScopeGuard([]() { ImGui::EndTable(); });
                    const auto         tile_string   = fmt::format("{}", tile);
                    std::istringstream string_stream(tile_string);
                    std::string        line;

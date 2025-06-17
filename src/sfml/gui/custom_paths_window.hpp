@@ -6,7 +6,6 @@
 #include "gui_labels.hpp"
 #include "key_value_data.hpp"
 #include "push_pop_id.hpp"
-#include "scope_guard.hpp"
 #include "Selections.hpp"
 #include "tool_tip.hpp"
 #include <array>
@@ -18,6 +17,7 @@
 #include <open_viii/strings/LangCommon.hpp>
 #include <optional>
 #include <ranges>
+#include <ScopeGuard.hpp>
 #include <string_view>
 #include <tl/string.hpp>
 

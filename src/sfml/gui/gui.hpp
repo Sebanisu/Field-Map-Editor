@@ -24,7 +24,6 @@
 #include "mouse_positions.hpp"
 #include "RangeConsumer.hpp"
 #include "safedir.hpp"
-#include "scope_guard.hpp"
 #include "Selections.hpp"
 #include "upscales.hpp"
 #include <cstdint>
@@ -33,6 +32,7 @@
 #include <imgui-SFML.h>
 #include <imgui.h>
 #include <memory>
+#include <ScopeGuard.hpp>
 #include <SFML/Graphics/RenderWindow.hpp>
 #include <SFML/Graphics/Shader.hpp>
 
@@ -101,14 +101,14 @@ struct gui
      std::array<float, 3U>       clear_color_f{};
 
 
-     create_color_button         blue_color_button = {};
+     create_color_button         blue_color_button  = {};
      create_color_button         green_color_button = { { .button_color        = colors::ButtonGreen,
-                                                       .button_hover_color  = colors::ButtonGreenHovered,
-                                                       .button_active_color = colors::ButtonGreenActive } };
+                                                          .button_hover_color  = colors::ButtonGreenHovered,
+                                                          .button_active_color = colors::ButtonGreenActive } };
 
-     create_color_button         pink_color_button = { { .button_color        = colors::ButtonPink,
-                                                      .button_hover_color  = colors::ButtonPinkHovered,
-                                                      .button_active_color = colors::ButtonPinkActive } };
+     create_color_button         pink_color_button  = { { .button_color        = colors::ButtonPink,
+                                                          .button_hover_color  = colors::ButtonPinkHovered,
+                                                          .button_active_color = colors::ButtonPinkActive } };
 
      // imgui doesn't support std::string or std::string_view or
      // std::filesystem::path, only const char *

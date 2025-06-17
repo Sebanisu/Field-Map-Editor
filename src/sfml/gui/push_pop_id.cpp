@@ -7,9 +7,9 @@ namespace fme
      return imgui_id;
 }
 
-[[nodiscard]] scope_guard<void (*)()> PushPopID()
+[[nodiscard]] glengine::ScopeGuard<void (*)()> PushPopID()
 {
      ImGui::PushID(++get_imgui_id());
-     return scope_guard{ &ImGui::PopID };
+     return glengine::ScopeGuard{ &ImGui::PopID };
 }
 }// namespace fme

@@ -18,7 +18,7 @@ void fme::history_window::render() const
      {
           return;
      }
-     const auto the_end = scope_guard([]() { ImGui::End(); });
+     const auto the_end = glengine::ScopeGuard([]() { ImGui::End(); });
 
      if (!ImGui::Begin(gui_labels::history.data()))
      {
@@ -67,7 +67,7 @@ void fme::history_window::draw_table() const
                     // Column 1: Index
                     ImGui::TableSetColumnIndex(0);
                     ImVec2 const backup_pos = ImGui::GetCursorScreenPos();
-                    const auto   pop_end    = scope_guard{ [&]() {
+                    const auto   pop_end    = glengine::ScopeGuard{ [&]() {
                          ImGui::PopStyleColor(2);
                          ImGui::SetCursorScreenPos(backup_pos);
                          format_imgui_text("{}", index);
@@ -135,7 +135,7 @@ void fme::history_window::draw_table() const
                     // Column 1: Index
                     ImGui::TableSetColumnIndex(0);
                     ImVec2 const backup_pos = ImGui::GetCursorScreenPos();
-                    const auto   pop_end    = scope_guard{ [&]() {
+                    const auto   pop_end    = glengine::ScopeGuard{ [&]() {
                          ImGui::PopStyleColor(2);
                          ImGui::SetCursorScreenPos(backup_pos);
                          format_imgui_text("{}", index);

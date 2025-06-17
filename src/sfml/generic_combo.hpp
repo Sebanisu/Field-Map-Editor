@@ -10,12 +10,12 @@
 #include "gui/push_pop_id.hpp"
 #include "gui/tool_tip.hpp"
 #include "open_file_explorer.hpp"
-#include "scope_guard.hpp"
 #include <algorithm>
 #include <fmt/format.h>
 #include <functional>
 #include <imgui.h>
 #include <ranges>
+#include <ScopeGuard.hpp>
 #include <spdlog/spdlog.h>
 #include <string_view>
 #include <utility>
@@ -157,7 +157,7 @@ class GenericComboClassWithFilter
                return static_cast<float>(count);
           }();
           ImGui::PushItemWidth(ImGui::CalcItemWidth() - spacing_ * button_count - button_size * button_count);
-          const auto  pop_item_width = scope_guard(&ImGui::PopItemWidth);
+          const auto  pop_item_width = glengine::ScopeGuard(&ImGui::PopItemWidth);
 
           const auto &current_item   = *getNext(strings_, current_idx_);
 
@@ -174,7 +174,7 @@ class GenericComboClassWithFilter
                     const char *c_str_value = std::ranges::data(string);
                     {
                          const auto pop_id     = PushPopID();
-                         const auto pop_column = scope_guard{ &ImGui::NextColumn };
+                         const auto pop_column = glengine::ScopeGuard{ &ImGui::NextColumn };
                          if (ImGui::Selectable(c_str_value, is_selected))
                          {
                               for (current_idx_ = 0; const auto &temp : strings_)
@@ -333,7 +333,7 @@ class GenericComboClassWithFilterAndFixedToggles
           renderCheckBox();
           {
                ImGui::BeginDisabled(std::ranges::none_of(fixed_toggles_, std::identity{}));
-               const auto pop_disabled = scope_guard{ &ImGui::EndDisabled };
+               const auto pop_disabled = glengine::ScopeGuard{ &ImGui::EndDisabled };
                renderComboBox();
                renderLeftButton();
                renderRightButton();
@@ -392,7 +392,7 @@ class GenericComboClassWithFilterAndFixedToggles
           const auto  _                    = PushPopID();
           const auto &current_fixed_toggle = *getNext(fixed_toggles_, current_idx_);
           ImGui::BeginDisabled(!current_fixed_toggle && !filter_.get().enabled());
-          const auto pop_disabled = scope_guard{ &ImGui::EndDisabled };
+          const auto pop_disabled = glengine::ScopeGuard{ &ImGui::EndDisabled };
           if (bool checked = filter_.get().enabled(); ImGui::Checkbox("", &checked))
           {
                checked ? filter_.get().enable() : filter_.get().disable();
@@ -416,7 +416,7 @@ class GenericComboClassWithFilterAndFixedToggles
 
           // Set up combo box width
           ImGui::PushItemWidth(ImGui::CalcItemWidth() - spacing_ * button_count - button_size * button_count);
-          const auto  pop_item_width = scope_guard(&ImGui::PopItemWidth);
+          const auto  pop_item_width = glengine::ScopeGuard(&ImGui::PopItemWidth);
 
           // Get the current item
           const auto &current_item   = *getNext(strings_, current_idx_);
@@ -430,11 +430,11 @@ class GenericComboClassWithFilterAndFixedToggles
                     const auto  index                = static_cast<decltype(current_idx_)>(index_raw);
                     const bool  is_selected          = std::ranges::equal(current_item, string);
                     const auto  pop_id               = PushPopID();
-                    const auto  pop_column           = scope_guard{ &ImGui::NextColumn };
+                    const auto  pop_column           = glengine::ScopeGuard{ &ImGui::NextColumn };
 
                     const auto &current_fixed_toggle = *getNext(fixed_toggles_, index);
                     ImGui::BeginDisabled(!current_fixed_toggle);
-                    const auto pop_disabled = scope_guard{ &ImGui::EndDisabled };
+                    const auto pop_disabled = glengine::ScopeGuard{ &ImGui::EndDisabled };
 
                     if (ImGui::Selectable(std::ranges::data(string), is_selected))
                     {
@@ -557,7 +557,7 @@ class GenericComboClassWithFilterAndFixedToggles
           format_imgui_text("{}", name_);
 
           // Get size of the text for hover area
-          ImVec2 textSize = ImGui::CalcTextSize(name_.data());
+          ImVec2 textSize     = ImGui::CalcTextSize(name_.data());
 
           // Move back to same position
           ImVec2 cursorBackup = ImGui::GetCursorScreenPos();// Save cursor position
@@ -692,7 +692,7 @@ class GenericComboClass
                return static_cast<float>(count);
           }();
           ImGui::PushItemWidth(ImGui::CalcItemWidth() - spacing_ * button_count - button_size * button_count);
-          const auto  pop_item_width = scope_guard(&ImGui::PopItemWidth);
+          const auto  pop_item_width = glengine::ScopeGuard(&ImGui::PopItemWidth);
 
           const auto &current_item   = *getNext(strings_, current_idx_);
 
@@ -712,7 +712,7 @@ class GenericComboClass
                     const char *c_str_value = std::ranges::data(string);
                     {
                          const auto pop_id     = PushPopID();
-                         const auto pop_column = scope_guard{ &ImGui::NextColumn };
+                         const auto pop_column = glengine::ScopeGuard{ &ImGui::NextColumn };
 
                          if (ImGui::Selectable(c_str_value, is_selected))
                          {
@@ -761,7 +761,7 @@ class GenericComboClass
      void renderLeftButton() const
      {
           const auto _            = PushPopID();
-          const auto pop_disabled = scope_guard{ &ImGui::EndDisabled };
+          const auto pop_disabled = glengine::ScopeGuard{ &ImGui::EndDisabled };
           ImGui::SameLine(0, spacing_);
           const auto check_valid = [&]() { return (current_idx_ <= decltype(current_idx_){}) || (current_idx_ - 1 >= size_of_values()); };
           const bool disabled    = check_valid();

@@ -2,8 +2,8 @@
 // Created by pcvii on 2/27/2023.
 //
 #include "save_image_pbo.hpp"
-#include "scope_guard.hpp"
 #include <GL/glew.h>
+#include <ScopeGuard.hpp>
 #include <spdlog/spdlog.h>
 #include <version>
 
@@ -13,7 +13,7 @@
  * Captures the currently bound framebuffer and returns a scope guard
  * that, when destroyed, restores the framebuffer binding automatically.
  *
- * @return A scope_guard that restores the previous framebuffer binding.
+ * @return A glengine::ScopeGuard that restores the previous framebuffer binding.
  */
 [[nodiscard]] auto backup_frame_buffer()
 {
@@ -22,7 +22,7 @@
      glGetIntegerv(GL_FRAMEBUFFER_BINDING, &current_framebuffer);
 
      // Create a scope guard to restore the framebuffer when it goes out of scope
-     return scope_guard([=]() { glBindFramebuffer(GL_FRAMEBUFFER, static_cast<GLuint>(current_framebuffer)); });
+     return glengine::ScopeGuard([=]() { glBindFramebuffer(GL_FRAMEBUFFER, static_cast<GLuint>(current_framebuffer)); });
 }
 
 /**
@@ -245,13 +245,13 @@ class [[nodiscard]] Framebuffer
 std::future<sf::Image> save_image_pbo(const glengine::Texture &texture)
 {
      // Backup the currently bound framebuffer (to restore it later)
-     const auto backup_fbo   = backup_frame_buffer();
+     const auto backup_fbo  = backup_frame_buffer();
 
      // Calculate the size needed for the pixel buffer: width * height * 4 bytes (RGBA)
-     const auto buffer_size  = GLsizeiptr{ texture.width() } * GLsizeiptr{ texture.height() } * 4;
+     const auto buffer_size = GLsizeiptr{ texture.width() } * GLsizeiptr{ texture.height() } * 4;
 
      // Create and bind a Pixel Buffer Object (PBO)
-     auto       pbo_id       = 0U;
+     auto       pbo_id      = 0U;
      glGenBuffers(1, &pbo_id);
      glBindBuffer(GL_PIXEL_PACK_BUFFER, pbo_id);
      glBufferData(GL_PIXEL_PACK_BUFFER, buffer_size, nullptr, GL_STREAM_READ);

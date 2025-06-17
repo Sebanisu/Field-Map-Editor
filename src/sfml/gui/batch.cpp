@@ -49,7 +49,7 @@ static bool safe_copy_string(const Src &src, Dst &dst)
 
 void fme::batch::draw_window()
 {
-     const auto end = scope_guard(&ImGui::End);
+     const auto end = glengine::ScopeGuard(&ImGui::End);
      if (!ImGui::Begin(gui_labels::batch_operation_window.data()))
      {
           return;
@@ -511,7 +511,7 @@ void fme::batch::combo_compact_type()
           spdlog::error("Failed to lock m_selections: shared_ptr is expired.");
           return;
      }
-     const auto        tool_tip_pop = scope_guard{ [&]() { tool_tip(gui_labels::compact_tooltip); } };
+     const auto        tool_tip_pop = glengine::ScopeGuard{ [&]() { tool_tip(gui_labels::compact_tooltip); } };
 
      static const auto values       = std::array{
           compact_type::rows, compact_type::all, compact_type::move_only_conflicts, compact_type::map_order, compact_type::map_order_ffnx
@@ -543,7 +543,7 @@ void fme::batch::combo_flatten_type()
           spdlog::error("Failed to lock m_selections: shared_ptr is expired.");
           return;
      }
-     const auto tool_tip_pop        = scope_guard{ [&]() { tool_tip(gui_labels::flatten_tooltip); } };
+     const auto tool_tip_pop        = glengine::ScopeGuard{ [&]() { tool_tip(gui_labels::flatten_tooltip); } };
      const bool all_or_only_palette = !selections->batch_compact_type.enabled()
                                       || (selections->batch_compact_type.value() != compact_type::map_order)
                                       || (selections->batch_compact_type.value() != compact_type::map_order_ffnx);
@@ -629,7 +629,7 @@ void fme::batch::draw_multi_column_list_box(const std::string_view name, const s
      for (size_t i = 0; i != items.size(); ++i)
      {
           const auto pop_id     = PushPopID();
-          const auto pop_column = scope_guard{ &ImGui::NextColumn };
+          const auto pop_column = glengine::ScopeGuard{ &ImGui::NextColumn };
           const auto selectable = [&]() {
                if (ImGui::Selectable(items[i].c_str(), enabled[i]))
                {
@@ -640,7 +640,7 @@ void fme::batch::draw_multi_column_list_box(const std::string_view name, const s
           if (enabled[i])
           {
                // Revert text color to default
-               const auto pop_text_color = scope_guard{ []() { ImGui::PopStyleColor(); } };
+               const auto pop_text_color = glengine::ScopeGuard{ []() { ImGui::PopStyleColor(); } };
                // Change text color and show the current enabled status
                ImGui::PushStyleColor(ImGuiCol_Text, enabled_color);
 
@@ -671,7 +671,7 @@ void fme::batch::button_start()
      }
      const auto pop_id_right = PushPopID();
      const auto spacing      = ImGui::GetStyle().ItemInnerSpacing.x;
-     const auto end_function = scope_guard{ []() {
+     const auto end_function = glengine::ScopeGuard{ []() {
           ImGui::PopStyleColor(3);
           ImGui::EndDisabled();
      } };
@@ -712,7 +712,7 @@ void fme::batch::button_stop()
      const auto pop_id_right = PushPopID();
      const auto spacing      = ImGui::GetStyle().ItemInnerSpacing.x;
      ImGui::SameLine(0, spacing);
-     const auto end_function = scope_guard{ []() {
+     const auto end_function = glengine::ScopeGuard{ []() {
           ImGui::PopStyleColor(3);
           ImGui::EndDisabled();
      } };
@@ -760,14 +760,14 @@ bool fme::batch::browse_path(std::string_view name, bool &valid_path, std::array
      {
           const float width = ImGui::CalcItemWidth();
           ImGui::PushItemWidth(width - (spacing * 2.0F) - button_width * 2.0F);
-          const auto pop_item_width = scope_guard(&ImGui::PopItemWidth);
+          const auto pop_item_width = glengine::ScopeGuard(&ImGui::PopItemWidth);
           if (!valid_path)
           {
                ImGui::PushStyleColor(ImGuiCol_FrameBg, static_cast<ImVec4>(ImColor::HSV(0.0F, 0.5F, 0.5F)));
                ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, static_cast<ImVec4>(ImColor::HSV(0.0F, 0.8F, 0.8F)));// lighter red on hover
                ImGui::PushStyleColor(ImGuiCol_FrameBgActive, static_cast<ImVec4>(ImColor::HSV(0.0F, 0.5F, 0.5F)));
           }
-          const auto pop_color = scope_guard([valid = valid_path]() {
+          const auto pop_color = glengine::ScopeGuard([valid = valid_path]() {
                if (!valid)
                {
                     ImGui::PopStyleColor(3);
@@ -1218,7 +1218,7 @@ void fme::batch::open_directory_browser()
      {
           return;
      }
-     const auto         clear_browser = scope_guard([this]() { m_directory_browser.ClearSelected(); });
+     const auto         clear_browser = glengine::ScopeGuard([this]() { m_directory_browser.ClearSelected(); });
      const std::string &selected_path = m_directory_browser.GetPwd().string();
      const auto         tmp           = safedir(selected_path);
      switch (m_directory_browser_mode)

@@ -18,7 +18,7 @@ namespace fme
  */
 template<typename T>
      requires(!std::invocable<T>)
-void tool_tip(T && str, bool override = false)
+void tool_tip(T &&str, bool override = false)
 {
      if (!ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled) && !override)
      {
@@ -28,8 +28,8 @@ void tool_tip(T && str, bool override = false)
      // const auto pop_id       = PushPopID();
      if (ImGui::BeginTooltip())
      {
-          const auto pop_tool_tip    = scope_guard{ &ImGui::EndTooltip };
-          const auto pop_textwrappos = scope_guard{ &ImGui::PopTextWrapPos };
+          const auto pop_tool_tip    = glengine::ScopeGuard{ &ImGui::EndTooltip };
+          const auto pop_textwrappos = glengine::ScopeGuard{ &ImGui::PopTextWrapPos };
           ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);// Adjust wrap width as needed
           format_imgui_text("{}", std::forward<T>(str));
      }
@@ -56,7 +56,7 @@ static inline void tool_tip(lambdaT &&lambda, bool override = false)
      // const auto pop_id       = PushPopID();
      if (ImGui::BeginTooltip())
      {
-          const auto pop_tool_tip = scope_guard{ &ImGui::EndTooltip };
+          const auto pop_tool_tip = glengine::ScopeGuard{ &ImGui::EndTooltip };
 
           std::invoke(std::forward<lambdaT>(lambda));
      }

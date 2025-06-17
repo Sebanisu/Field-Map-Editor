@@ -398,7 +398,7 @@ void gui::render_dockspace()
           ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0F, 0.0F));
      }
 
-     const auto imgui_end = scope_guard(&ImGui::End);
+     const auto imgui_end = glengine::ScopeGuard(&ImGui::End);
      (void)ImGui::Begin("##DockSpace Demo", nullptr, window_flags);
      if constexpr (!opt_padding)
      {
@@ -433,7 +433,7 @@ void gui::control_panel_window()
      {
           return;
      }
-     const auto imgui_end = scope_guard(&ImGui::End);
+     const auto imgui_end = glengine::ScopeGuard(&ImGui::End);
      if (!ImGui::Begin(gui_labels::control_panel.data()))
      {
           // m_mouse_positions.mouse_enabled = handle_mouse_cursor();
@@ -861,11 +861,11 @@ void gui::draw_window()
        };
      if (mim_test())
      {
-          const auto pop_style0 = scope_guard([]() { ImGui::PopStyleVar(); });
+          const auto pop_style0 = glengine::ScopeGuard([]() { ImGui::PopStyleVar(); });
           ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.F, 0.F));
           const auto pop_id0 = PushPopID();
-          const auto pop_end = scope_guard(&ImGui::End);
-          // const auto pop_style1 = scope_guard([]() { ImGui::PopStyleColor(); });
+          const auto pop_end = glengine::ScopeGuard(&ImGui::End);
+          // const auto pop_style1 = glengine::ScopeGuard([]() { ImGui::PopStyleColor(); });
           //  ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4{ clear_color.r / 256.F, clear_color.g / 256.F, clear_color.b / 256.F, 0.9F });
           if (!ImGui::Begin(gui_labels::draw_window_title.data(), nullptr, window_flags))
           {
@@ -896,11 +896,11 @@ void gui::draw_window()
      }
      else if (map_test())
      {
-          const auto pop_style0 = scope_guard([]() { ImGui::PopStyleVar(); });
+          const auto pop_style0 = glengine::ScopeGuard([]() { ImGui::PopStyleVar(); });
           ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.F, 0.F));
           const auto pop_id0 = PushPopID();
-          const auto pop_end = scope_guard(&ImGui::End);
-          // const auto pop_style1 = scope_guard([]() { ImGui::PopStyleColor(); });
+          const auto pop_end = glengine::ScopeGuard(&ImGui::End);
+          // const auto pop_style1 = glengine::ScopeGuard([]() { ImGui::PopStyleColor(); });
           //  ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4{ clear_color.r / 256.F, clear_color.g / 256.F, clear_color.b / 256.F, 0.9F });
           if (!ImGui::Begin(gui_labels::draw_window_title.data(), nullptr, window_flags))
           {
@@ -1765,10 +1765,10 @@ void gui::menu_bar()
      {
           return;
      }
-     const auto end_menu_bar = scope_guard(&ImGui::EndMainMenuBar);
+     const auto end_menu_bar = glengine::ScopeGuard(&ImGui::EndMainMenuBar);
      //  if (!ImGui::BeginMenuBar())
      //    return;
-     //  const auto end_menu_bar = scope_guard(&ImGui::EndMenuBar);
+     //  const auto end_menu_bar = glengine::ScopeGuard(&ImGui::EndMenuBar);
 
      file_menu();
 
@@ -1782,7 +1782,7 @@ void gui::windows_menu()
      {
           return;
      }
-     const auto end_menu = scope_guard(&ImGui::EndMenu);
+     const auto end_menu = glengine::ScopeGuard(&ImGui::EndMenu);
      if (ImGui::MenuItem(gui_labels::display_control_panel_window.data(), "Control + P", &m_selections->display_control_panel_window))
      {
           m_selections->update_configuration_key(ConfigKey::DisplayControlPanelWindow);
@@ -1833,7 +1833,7 @@ void gui::edit_menu()
      {
           return;
      }
-     const auto end_menu = scope_guard(&ImGui::EndMenu);
+     const auto end_menu = glengine::ScopeGuard(&ImGui::EndMenu);
      if (map_test())
      {
           if (ImGui::MenuItem(gui_labels::undo.data(), "Control + Z", false, m_map_sprite->undo_enabled()))
@@ -1876,7 +1876,7 @@ void gui::edit_menu()
      {
           if (ImGui::BeginMenu(gui_labels::draw.data()))
           {
-               const auto pop_menu = scope_guard(&ImGui::EndMenu);
+               const auto pop_menu = glengine::ScopeGuard(&ImGui::EndMenu);
                {
                     static const constinit auto iota_draw_mode =
                       std::views::iota(0, 2) | std::views::transform([](const int mode) { return static_cast<draw_mode>(mode); });
@@ -2030,7 +2030,7 @@ void gui::edit_menu()
 
           if (ImGui::BeginMenu(gui_labels::filters.data()))
           {
-               const auto pop_menu            = scope_guard(&ImGui::EndMenu);
+               const auto pop_menu            = glengine::ScopeGuard(&ImGui::EndMenu);
 
 
                const auto generic_filter_menu = [&](
@@ -2040,7 +2040,7 @@ void gui::edit_menu()
                                                   std::invocable auto            &&lambda) {
                     if (ImGui::BeginMenu(label.data()))
                     {
-                         const auto pop_menu1       = scope_guard(&ImGui::EndMenu);
+                         const auto pop_menu1       = glengine::ScopeGuard(&ImGui::EndMenu);
                          const auto process_element = [&](auto &value, auto &str) {
                               const bool selected = filter.value() == value;
                               bool       checked  = selected && filter.enabled();
@@ -2232,10 +2232,10 @@ void gui::file_menu()
      {
           return;
      }
-     const auto end_menu = scope_guard(&ImGui::EndMenu);
+     const auto end_menu = glengine::ScopeGuard(&ImGui::EndMenu);
      if (ImGui::BeginMenu(gui_labels::path.data()))
      {
-          const auto end_menu1 = scope_guard(&ImGui::EndMenu);
+          const auto end_menu1 = glengine::ScopeGuard(&ImGui::EndMenu);
           menuitem_locate_ff8();
           if (ImGui::MenuItem(gui_labels::explore.data(), nullptr, nullptr, !std::ranges::empty(m_selections->paths_vector)))
           {
@@ -2254,7 +2254,7 @@ void gui::file_menu()
           std::ptrdiff_t delete_me = -1;
           if (ImGui::BeginTable("##path_table", 2))
           {
-               const auto end_table = scope_guard(&ImGui::EndTable);
+               const auto end_table = glengine::ScopeGuard(&ImGui::EndTable);
                for (const auto &[index, path] : m_selections->paths_vector | std::ranges::views::enumerate)
                {
                     bool is_checked = path == m_selections->path;
@@ -2329,7 +2329,7 @@ void gui::file_menu()
 
      if (ImGui::BeginMenu(gui_labels::language.data()))
      {
-          const auto            end_menu1 = scope_guard(&ImGui::EndMenu);
+          const auto            end_menu1 = glengine::ScopeGuard(&ImGui::EndMenu);
           constexpr static auto values    = open_viii::LangCommon::to_array();
           const static auto     strings   = values | std::views::transform(AsString{});
           static auto           zip_items = std::ranges::views::zip(values, strings);
@@ -2353,11 +2353,11 @@ void gui::file_menu()
 
      if (ImGui::BeginMenu(gui_labels::field.data()))
      {
-          const auto        end_menu1 = scope_guard(&ImGui::EndMenu);
+          const auto        end_menu1 = glengine::ScopeGuard(&ImGui::EndMenu);
           static const auto cols      = 5;
           if (ImGui::BeginTable("##field_table", cols))
           {
-               const auto               end_table1    = scope_guard(&ImGui::EndTable);
+               const auto               end_table1    = glengine::ScopeGuard(&ImGui::EndTable);
                auto                     numbered_maps = m_archives_group->mapdata() | std::ranges::views::enumerate;
                static const std::string dummy         = {};
                std::string_view         start         = dummy;
@@ -2681,7 +2681,7 @@ void gui::directory_browser_display()
      {
           return;
      }
-     const auto            pop_directory         = scope_guard([this]() { m_directory_browser.ClearSelected(); });
+     const auto            pop_directory         = glengine::ScopeGuard([this]() { m_directory_browser.ClearSelected(); });
      bool                  changed               = false;
      const auto            selected_path         = m_directory_browser.GetSelected();
      static constexpr auto noop                  = []([[maybe_unused]] const std::filesystem::path &path) {};
@@ -3201,7 +3201,7 @@ void gui::combo_draw()
 }
 bool gui::combo_path()
 {
-     const auto pop_buttons = scope_guard([&]() { browse_buttons(); });
+     const auto pop_buttons = glengine::ScopeGuard([&]() { browse_buttons(); });
      const auto gcc         = GenericComboClass(
        gui_labels::path,
        [&]() { return m_selections->paths_vector; },
