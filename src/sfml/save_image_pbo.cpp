@@ -18,7 +18,7 @@
  * @param texture The glengine::Texture to be saved into an sf::Image.
  * @return A deferred std::future that will contain the sf::Image once pixel data is read back.
  */
-std::future<void> save_image_pbo(const std::filesystem::path &path, const glengine::FrameBuffer &fbo)
+std::future<void> save_image_pbo(const std::filesystem::path &path, glengine::FrameBuffer fbo)
 {
      // Backup the currently bound framebuffer (to restore it later)
      const auto backup_fbo = fbo.backup();
@@ -49,7 +49,8 @@ std::future<void> save_image_pbo(const std::filesystem::path &path, const glengi
      glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
 
      // Return a deferred future to perform the CPU-side readback later
-     return std::async(std::launch::deferred, [pbo_id, buffer_size, path, texture_size = fbo.get_size()]() {
+     return std::async(std::launch::deferred, [pbo_id, buffer_size, path, fbo_moved = std::move(fbo)]() {
+          const auto texture_size = fbo_moved.get_size();
 #ifdef __cpp_lib_smart_ptr_for_overwrite
           const auto pixels = std::make_unique_for_overwrite<std::uint8_t[]>(static_cast<std::size_t>(buffer_size));
 #else
@@ -63,7 +64,7 @@ std::future<void> save_image_pbo(const std::filesystem::path &path, const glengi
 
           // Clean up resources
           glengine::GlCall{}(glDeleteBuffers, 1, &pbo_id);
-          const int                 channels = 4;// RGBA
+          const int channels = 4;// RGBA
 
           // Create an image from retrieved pixel data
           // Flip the image vertically for stb
