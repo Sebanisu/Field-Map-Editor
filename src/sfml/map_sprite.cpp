@@ -917,7 +917,7 @@ void map_sprite::save([[maybe_unused]] const std::filesystem::path &path) const
      {
           return;
      }
-     std::future<void> task = save_image_pbo(path, m_render_framebuffer);
+     std::future<void> task = save_image_pbo(path, m_render_framebuffer.clone());
      task.wait();
 }
 bool map_sprite::fail() const
@@ -1235,7 +1235,7 @@ const ff_8::MapHistory::nsat_map &map_sprite::working_animation_counts() const
  *
  * @note Caller is responsible for consuming or waiting on the futures to ensure save completion.
  */
-[[nodiscard]] std::vector<std::future<std::future<void>>>
+[[nodiscard]] std::vector<std::future<void>>
   map_sprite::save_swizzle_textures(const std::string &keyed_string, const std::string &selected_path)
 {
      const auto selections = m_selections.lock();
@@ -1288,18 +1288,18 @@ const ff_8::MapHistory::nsat_map &map_sprite::working_animation_counts() const
      }
 
      // Prepare for gathering palette conflicts.
-     using map_type                                                          = std::remove_cvref_t<decltype(get_conflicting_palettes())>;
-     using mapped_type                                                       = typename map_type::mapped_type;
-     const map_type                              conflicting_palettes_map    = get_conflicting_palettes();
+     using map_type                                             = std::remove_cvref_t<decltype(get_conflicting_palettes())>;
+     using mapped_type                                          = typename map_type::mapped_type;
+     const map_type                 conflicting_palettes_map    = get_conflicting_palettes();
 
      // Prepare futures to track save operations.
-     std::vector<std::future<std::future<void>>> future_of_futures           = {};
-     const unsigned int                          max_number_of_texture_pages = 13U;
+     std::vector<std::future<void>> future_of_futures           = {};
+     const unsigned int             max_number_of_texture_pages = 13U;
      future_of_futures.reserve(max_number_of_texture_pages);
 
      // Create an off-screen render texture to draw into.
-     out_texture = glengine::FrameBuffer{ glengine::FrameBufferSpecification{ .width  = static_cast<std::int32_t>(height),
-                                                                              .height = static_cast<std::int32_t>(height) } };
+     const auto specification =
+       glengine::FrameBufferSpecification{ .width = static_cast<std::int32_t>(height), .height = static_cast<std::int32_t>(height) };
 
      // Loop over all unique texture pages.
      for (const auto &texture_page : unique_texture_page_ids)
@@ -1326,8 +1326,9 @@ const ff_8::MapHistory::nsat_map &map_sprite::working_animation_counts() const
                          settings.filters.value().palette.update(palette).enable();
                          settings.filters.value().bpp.update(bpp).enable();
 
+                         auto out_framebuffer = glengine::FrameBuffer{ specification };
                          // Generate the texture.
-                         if (generate_texture(out_texture))
+                         if (generate_texture(out_framebuffer))
                          {
 
                               // Determine output path based on COO presence.
@@ -1343,7 +1344,8 @@ const ff_8::MapHistory::nsat_map &map_sprite::working_animation_counts() const
 
                               // Start async save and store the future.
                               /// TODO fix render saving
-                              // future_of_futures.push_back(async_save(out_texture.getTexture(), out_path));
+
+                              future_of_futures.push_back(save_image_pbo(out_path, std::move(out_framebuffer)));
                          }
                     }
                }
@@ -1353,7 +1355,8 @@ const ff_8::MapHistory::nsat_map &map_sprite::working_animation_counts() const
           settings.filters.value().palette.disable();
           settings.filters.value().bpp.disable();
 
-          if (generate_texture(out_texture))
+          auto out_framebuffer = glengine::FrameBuffer{ specification };
+          if (generate_texture(out_framebuffer))
           {
 
                // Determine output path based on COO presence.
@@ -1367,7 +1370,7 @@ const ff_8::MapHistory::nsat_map &map_sprite::working_animation_counts() const
                auto                 out_path = cpm.replace_tags(keyed_string, selections, selected_path);
 
                /// TODO fix rendering and saving
-               // future_of_futures.push_back(async_save(out_texture.getTexture(), out_path));
+               future_of_futures.push_back(save_image_pbo(out_path, std::move(out_framebuffer)));
           }
      }
 
@@ -1381,15 +1384,15 @@ const ff_8::MapHistory::nsat_map &map_sprite::working_animation_counts() const
  * @brief Saves swizzled texture pages (and optionally palettes) to disk asynchronously.
  *
  * Generates textures for each unique texture page (and conflicting palettes if needed) and saves them as PNG files.
- * If the texture has palette conflicts (e.g., multiple palettes for the same texture page), generates separate files for each conflicting
- * palette.
+ * If the texture has palette conflicts (e.g., multiple palettes for the same texture page), generates separate files for each
+ * conflicting palette.
  *
  * @param path The base directory path where the images will be saved.
  * @return A vector of futures representing the save operations, allowing the caller to later wait or check for completion.
  *
  * @note Caller is responsible for consuming or waiting on the futures to ensure save completion.
  */
-[[nodiscard]] std::vector<std::future<std::future<void>>>
+[[nodiscard]] std::vector<std::future<void>>
   map_sprite::save_combined_swizzle_texture(const std::string &keyed_string, const std::string &selected_path)
 {
      const auto selections = m_selections.lock();
@@ -1457,8 +1460,8 @@ const ff_8::MapHistory::nsat_map &map_sprite::working_animation_counts() const
      sort_and_remove_duplicates(conflicting_palettes_flatten);
 
      // Prepare futures to track save operations.
-     std::vector<std::future<std::future<void>>> future_of_futures           = {};
-     const unsigned int                          max_number_of_texture_pages = 13U;
+     std::vector<std::future<void>> future_of_futures           = {};
+     const unsigned int             max_number_of_texture_pages = 13U;
      future_of_futures.reserve(max_number_of_texture_pages);
 
      // Create an off-screen render texture to draw into.
@@ -1554,7 +1557,7 @@ std::string map_sprite::get_base_name() const
  * @return A vector of futures, each wrapping a future task that will save one texture.
  *         Caller should consume or wait on these to ensure saving completes.
  */
-[[nodiscard]] std::vector<std::future<std::future<void>>>
+[[nodiscard]] std::vector<std::future<void>>
   map_sprite::save_pupu_textures(const std::string &keyed_string, const std::string &selected_path)
 {
      const auto selections = m_selections.lock();
@@ -1586,16 +1589,16 @@ std::string map_sprite::get_base_name() const
           return {};// Field no longer exists, nothing to save
      }
 
-     const std::string                           field_name                  = std::string{ str_to_lower(field->get_base_name()) };
-     const std::vector<ff_8::PupuID>            &unique_pupu_ids             = working_unique_pupu();// Get list of unique Pupu IDs
+     const std::string                field_name                  = std::string{ str_to_lower(field->get_base_name()) };
+     const std::vector<ff_8::PupuID> &unique_pupu_ids             = working_unique_pupu();// Get list of unique Pupu IDs
      // std::optional<open_viii::LangT> &coo             = m_map_group.opt_coo;// Language option (optional)
 
      // assert(safedir(path).is_dir());// Ensure output path is a directory
 
      // static constexpr std::string_view           pattern_pupu                = { "{}_{}.png" };// Pattern without language
      // static constexpr std::string_view           pattern_coo_pupu            = { "{}_{}_{}.png" };// Pattern with language
-     const unsigned int                          max_number_of_texture_pages = 13U;// Reserve space for futures
-     std::vector<std::future<std::future<void>>> future_of_futures           = {};
+     const unsigned int               max_number_of_texture_pages = 13U;// Reserve space for futures
+     std::vector<std::future<void>>   future_of_futures           = {};
      future_of_futures.reserve(max_number_of_texture_pages);
 
      // Setup an off-screen render texture
@@ -1618,8 +1621,8 @@ std::string map_sprite::get_base_name() const
                                                      : std::nullopt,
                                                  .pupu_id = pupu.raw() };
                auto                 out_path = cpm.replace_tags(keyed_string, selections, selected_path);
-               // std::filesystem::path const out_path = coo ? save_path_coo(pattern_coo_pupu, path, field_name, pupu, *coo)// Save with
-               // language
+               // std::filesystem::path const out_path = coo ? save_path_coo(pattern_coo_pupu, path, field_name, pupu, *coo)// Save
+               // with language
                //                                            : save_path(pattern_pupu, path, field_name, pupu);// Save without language
                /// TODO fix saving and rendering
                // future_of_futures.push_back(async_save(out_texture.getTexture(), out_path));// Queue async save
