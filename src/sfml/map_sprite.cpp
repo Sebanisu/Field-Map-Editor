@@ -322,7 +322,7 @@ std::uint8_t map_sprite::max_x_for_saved() const
                                            }
                                            return +texture_page_width::bit_8;
                                       }
-                                      return TILE_SIZE;// todo invalid?
+                                      return TILE_SIZE;
                                  });
 
           const auto found_min       = std::ranges::min_element(transform_range);
@@ -479,14 +479,16 @@ sf::Sprite map_sprite::save_intersecting(const sf::Vector2i &pixel_pos, const st
      // Lambda function to draw tiles based on the front tiles and tile data, and optionally imported tiles
      const auto draw_drag_texture =
        [this, &pixel_pos, &sprite_size](const auto &front_tiles, const auto &tiles, const std::uint16_t z, bool imported = false) {
-            sf::RenderStates       states = {};
+            // sf::RenderStates       states = {};
 
             // Set the transformation to adjust the sprite's position based on the scale and pixel position
-            static constexpr float half   = 0.5F;
-            states.transform.translate(
-              sf::Vector2f(
-                (static_cast<float>(-pixel_pos.x) * static_cast<float>(m_scale)) + (static_cast<float>(sprite_size.x) * half),
-                (static_cast<float>(-pixel_pos.y) * static_cast<float>(m_scale)) + (static_cast<float>(sprite_size.x) * half)));
+            /// TODO fix offset
+            // static constexpr float half   = 0.5F;
+
+            //   states.transform.translate(
+            //     sf::Vector2f(
+            //       (static_cast<float>(-pixel_pos.x) * static_cast<float>(m_scale)) + (static_cast<float>(sprite_size.x) * half),
+            //       (static_cast<float>(-pixel_pos.y) * static_cast<float>(m_scale)) + (static_cast<float>(sprite_size.x) * half)));
 
             // Loop through either saved imported indices or regular saved indices based on the flag
             for (const auto tile_index : imported ? m_saved_imported_indices : m_saved_indices)
@@ -519,13 +521,13 @@ sf::Sprite map_sprite::save_intersecting(const sf::Vector2i &pixel_pos, const st
                  // Generate the quad for the tile using triangle strips
                  std::array<sf::Vertex, 4U> quad = imported ? get_triangle_strip_for_imported(draw_size, texture_size, front_tile, tile)
                                                             : get_triangle_strip(draw_size, texture_size, front_tile, tile);
-
-                 // Set the blend mode for the sprite
-                 states.blendMode                = sf::BlendAlpha;
-                 if (!m_disable_blends)
-                 {
-                      states.blendMode = set_blend_mode(tile.blend_mode(), quad);
-                 }
+                 /// TODO fix blend
+                 //   // Set the blend mode for the sprite
+                 //   states.blendMode                = sf::BlendAlpha;
+                 //   if (!m_disable_blends)
+                 //   {
+                 //        states.blendMode = set_blend_mode(tile.blend_mode(), quad);
+                 //   }
 
                  // Draw the tile to the drag sprite texture
                  /// TODO fix sprite drawing
@@ -879,31 +881,12 @@ void map_sprite::update_render_texture(bool reload_textures)
      {
           return;
      }
-     const auto fbb = m_render_framebuffer.backup();
-     m_render_framebuffer.bind();
-     glengine::GlCall{}(glViewport, 0, 0, m_render_framebuffer.width(), m_render_framebuffer.height());
-     glengine::Renderer::Clear();
-     // glengine::GlCall{}(glClearColor, .5f, .5f, .5f, 1.f);
-     // glengine::GlCall{}(glClear, GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-     m_render_framebuffer.clear_red_integer_color_attachment();
-     const auto brb = m_batch_renderer.backup();
-     m_batch_renderer.bind();
-     set_uniforms(m_batch_renderer.shader());
-     m_batch_renderer.clear();
-
-     (void)local_draw(m_batch_renderer, m_batch_renderer.shader());
-     //(void)draw_imported(m_render_framebuffer);
-
-
-     m_batch_renderer.draw();
-     m_batch_renderer.on_render();
-     m_render_framebuffer.bind_color_attachment();
+     (void)generate_texture(m_render_framebuffer);
 }
 
-void map_sprite::set_uniforms(const glengine::Shader &shader) const
+void map_sprite::set_uniforms(const glengine::FrameBuffer &fbo, const glengine::Shader &shader) const
 {
-     m_fixed_render_camera.set_projection(
-       0.f, static_cast<float>(m_render_framebuffer.width()), 0.f, static_cast<float>(m_render_framebuffer.height()));
+     m_fixed_render_camera.set_projection(0.f, static_cast<float>(fbo.width()), 0.f, static_cast<float>(fbo.height()));
      // if (m_offscreen_drawing || m_saving)
      // {
      shader.set_uniform("u_MVP", m_fixed_render_camera.view_projection_matrix());
@@ -934,14 +917,8 @@ void map_sprite::save([[maybe_unused]] const std::filesystem::path &path) const
      {
           return;
      }
-     /// TODO fix image saving from render texture
-     // std::future<sf::Image> task = save_image_pbo(m_render_texture->getTexture());
-     //  task.wait();
-     //  const sf::Image image = task.get();
-     //  if (!image.saveToFile(path.string()))
-     //  {
-     //       spdlog::warn("Failed to save file: {}", path.string());
-     //  }
+     std::future<void> task = save_image_pbo(path, m_render_framebuffer);
+     task.wait();
 }
 bool map_sprite::fail() const
 {
@@ -1653,30 +1630,6 @@ std::string map_sprite::get_base_name() const
      // Note: Caller should consume_futures(future_of_futures) to wait for saves to finish
 }
 
-/**
- * @brief Launches a two-step asynchronous operation to save a texture to a file.
- *
- * First, the texture is converted into an image in a deferred future.
- * Then, the image is written to disk asynchronously once the first future completes.
- *
- * @param out_texture The texture to be saved.
- * @param out_path Filesystem path where the image will be written.
- * @return A future that holds another future, which represents the final save operation.
- */
-[[nodiscard]] std::future<std::future<void>>
-  map_sprite::async_save(const glengine::Texture &out_texture, const std::filesystem::path &out_path)
-{
-     return {
-          std::async(
-            std::launch::deferred,// Step 1: Save image conversion deferred
-            [out_path](std::future<sf::Image> image_task) -> std::future<void> {
-                 // Step 2: Save the image to disk asynchronously once ready
-                 return std::async(std::launch::async, future_operations::save_image_to_path{ out_path, image_task.get() });
-            },
-            save_image_pbo(out_texture))// Start image creation task (PBO extraction)
-     };
-}
-
 uint32_t map_sprite::get_max_texture_height() const
 {
      auto     transform_range = (*m_texture) | std::views::transform([](const glengine::Texture &texture) { return texture.height(); });
@@ -1757,24 +1710,28 @@ std::filesystem::path map_sprite::save_path(
      return path / fmt::vformat(fmt::string_view(pattern), fmt::make_format_args(field_name, pupu));
 }
 
-bool map_sprite::generate_texture([[maybe_unused]] const glengine::FrameBuffer &texture) const
+bool map_sprite::generate_texture(const glengine::FrameBuffer &fbo) const
 {
+     const auto fbb = fbo.backup();
+     fbo.bind();
+     glengine::GlCall{}(glViewport, 0, 0, fbo.width(), fbo.height());
+     glengine::Renderer::Clear();
+     // glengine::GlCall{}(glClearColor, .5f, .5f, .5f, 1.f);
+     // glengine::GlCall{}(glClear, GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+     fbo.clear_red_integer_color_attachment();
+     const auto brb = m_batch_renderer.backup();
+     m_batch_renderer.bind();
+     set_uniforms(fbo, m_batch_renderer.shader());
+     m_batch_renderer.clear();
 
-     // if (texture == nullptr)
-     // {
-     //      return false;
-     // }
-     // TODO FIX draw
-     // if (local_draw(texture))
-     // {
-
-     //      (void)draw_imported(texture);
-     //      //      texture->display();
-     //      //      texture->setSmooth(false);
-     //      //      texture->setRepeated(false);
-     //      //      texture->generateMipmap();
-     //      return true;
-     // }
+     if (local_draw(m_batch_renderer, m_batch_renderer.shader()))
+     {
+          //(void)draw_imported(fbo);
+          m_batch_renderer.draw();
+          m_batch_renderer.on_render();
+          fbo.bind_color_attachment();
+          return true;
+     }
      return false;
 }
 void map_sprite::load_map(const std::filesystem::path &src_path)

@@ -186,7 +186,7 @@ struct [[nodiscard]] map_sprite// final
      void        save(const std::filesystem::path &path) const;
      void        map_save(const std::filesystem::path &dest_path) const;
      void        test_map(const std::filesystem::path &saved_path) const;
-     void        set_uniforms(const glengine::Shader &shader) const;
+     void        set_uniforms(const glengine::FrameBuffer &fbo, const glengine::Shader &shader) const;
      void        disable_square() const;
      // void        draw(sf::RenderTarget &target, sf::RenderStates states) const final;
      void        enable_draw_swizzle();

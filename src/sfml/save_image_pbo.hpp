@@ -6,8 +6,8 @@
 #define FIELD_MAP_EDITOR_SAVE_IMAGE_PBO_HPP
 
 #include <future>
-#include <SFML/Graphics.hpp>
-#include <Texture.hpp>
+#include <filesystem>
+#include <FrameBuffer.hpp>
 
-[[nodiscard]] std::future<sf::Image> save_image_pbo(const glengine::Texture &texture);
+[[nodiscard]] std::future<void> save_image_pbo(const std::filesystem::path &, const glengine::FrameBuffer &);
 #endif// FIELD_MAP_EDITOR_SAVE_IMAGE_PBO_HPP
