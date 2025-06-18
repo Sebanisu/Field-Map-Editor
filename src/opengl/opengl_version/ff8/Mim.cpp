@@ -11,6 +11,7 @@
 #include "ImGuiTileDisplayWindow.hpp"
 #include "OrthographicCameraController.hpp"
 #include "PixelBuffer.hpp"
+#include <BlendModeSettings.hpp>
 namespace ff_8
 {
 static const Bpps               Bpp         = {};
@@ -44,7 +45,7 @@ void ff_8::Mim::on_render() const
           return;
      }
 
-     glengine::Window::default_blend();
+     glengine::BlendModeSettings::default_blend();
      m_imgui_viewport_window.on_render();
      set_uniforms();
      if (!Saving)
@@ -160,7 +161,7 @@ void ff_8::Mim::set_uniforms() const
                m_batch_renderer.shader().set_uniform("u_Grid", 1.F, 1.F);
           }
      }
-     m_batch_renderer.shader().set_uniform("u_Color", 1.F, 1.F, 1.F, 1.F);
+     m_batch_renderer.shader().set_uniform("u_Tint", 1.F, 1.F, 1.F, 1.F);
 }
 void ff_8::Mim::on_event(const glengine::event::Item &event) const
 {

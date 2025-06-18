@@ -13,6 +13,7 @@ find_package(spdlog REQUIRED)
 add_library(
   glengine STATIC
   BatchRenderer.cpp
+  BlendModeSettings.cpp
   Counter.cpp
   FrameBuffer.cpp
   FrameBufferBackup.cpp
@@ -27,6 +28,7 @@ add_library(
   SubTexture.cpp
   Texture.cpp
   TimeStep.cpp
+  Vertex.cpp
   VertexArray.cpp
   VertexBuffer.cpp
   VertexBufferDynamic.cpp)

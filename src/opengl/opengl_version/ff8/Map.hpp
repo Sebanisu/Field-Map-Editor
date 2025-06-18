@@ -35,6 +35,7 @@
 #include "TransformedSortedUniqueCopy.hpp"
 #include "UniqueTileValues.hpp"
 #include "Window.hpp"
+#include <BlendModeSettings.hpp>
 #include <Counter.hpp>
 #include <source_location>
 #include <type_traits>
@@ -557,7 +558,7 @@ class Map
           //      shader.set_uniform(
           //        "u_Grid", m_map_dims.scaled_tile_size());
           //    }
-          shader.set_uniform("u_Color", m_uniform_color);
+          shader.set_uniform("u_Tint", m_uniform_color);
      }
      std::optional<glengine::SubTexture> tile_to_sub_texture(const auto &tile) const
      {
@@ -659,7 +660,7 @@ class Map
           using open_viii::graphics::background::BlendModeT;
           BlendModeT last_blend_mode{ BlendModeT::none };
           m_uniform_color = s_default_color;
-          glengine::Window::default_blend();
+          glengine::BlendModeSettings::default_blend();
           m_imgui_viewport_window.on_render();
           m_batch_renderer.bind();
           set_uniforms(m_batch_renderer.shader());
@@ -680,7 +681,7 @@ class Map
           });
           m_batch_renderer.draw();
           m_batch_renderer.on_render();
-          glengine::Window::default_blend();
+          glengine::BlendModeSettings::default_blend();
           m_uniform_color = s_default_color;
      }
      void update_blend_mode(
@@ -712,6 +713,7 @@ class Map
                                    m_uniform_color = s_default_color;
                                    break;
                          }
+                         m_batch_renderer.shader().set_uniform("u_Tint", m_uniform_color);
                     }
                     switch (blend_mode)
                     {
@@ -726,7 +728,7 @@ class Map
                          }
                          break;
                          default:
-                              glengine::Window::default_blend();
+                              glengine::BlendModeSettings::default_blend();
                     }
                }
           }
@@ -766,7 +768,7 @@ class Map
 
      void render_frame_buffer() const
      {
-          glengine::Window::default_blend();
+          glengine::BlendModeSettings::default_blend();
           m_imgui_viewport_window.on_render();
           const auto draw_batch_render = [this](const glengine::BatchRenderer &batch_renderer, uint32_t index = 0) {
                batch_renderer.clear();
@@ -794,7 +796,7 @@ class Map
           const auto fbb           = glengine::FrameBufferBackup{};
           const auto offscreen_pop = glengine::ScopeGuard([&]() { m_offscreen_drawing = false; });
           m_offscreen_drawing      = true;
-          glengine::Window::default_blend();
+          glengine::BlendModeSettings::default_blend();
           m_imgui_viewport_window.on_render();
           m_batch_renderer.bind();
           set_uniforms(m_batch_renderer.shader());

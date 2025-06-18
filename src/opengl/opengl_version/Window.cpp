@@ -5,6 +5,7 @@
 #include "Event/Event.hpp"
 #include "ImGuiPushID.hpp"
 #include "Renderer.hpp"
+#include <BlendModeSettings.hpp>
 #include <spdlog/spdlog.h>
 
 namespace glengine
@@ -203,14 +204,13 @@ void Window::init_glfw()
           spdlog::critical("{}:{} GLEW NOT OKAY", __FILE__, __LINE__);
           std::exit(EXIT_FAILURE);
      }
-     GlCall{}(glEnable, GL_BLEND);
-     default_blend();
+     BlendModeSettings::enable_blending();
+     BlendModeSettings::default_blend();
 }
 void Window::init_im_gui(const char *const glsl_version) const
 {
      if (!ImguiInit)
      {
-
           ImguiInit = true;
           // Setup Dear ImGui context
           IMGUI_CHECKVERSION();
@@ -367,20 +367,5 @@ void Window::end_frame() const
 {
      ImGui::EndFrame();// call instead of render when minimized.
      std::this_thread::sleep_for(std::chrono::milliseconds(500));
-}
-void Window::default_blend()
-{
-     GlCall{}(glBlendFunc, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-     GlCall{}(glBlendEquation, GL_FUNC_ADD);
-}
-
-void Window::add_blend()
-{
-     GlCall{}(glBlendEquationSeparate, GL_FUNC_ADD, GL_FUNC_ADD);
-}
-
-void Window::subtract_blend()
-{
-     GlCall{}(glBlendEquationSeparate, GL_FUNC_REVERSE_SUBTRACT, GL_FUNC_ADD);
 }
 }// namespace glengine

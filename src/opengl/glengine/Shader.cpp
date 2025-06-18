@@ -166,4 +166,11 @@ void Shader::set_uniform(std::string_view name, glm::vec4 v) const
 {
      set_uniform(name, v.r, v.g, v.b, v.a);
 }
+void Shader::set_uniform(std::string_view name, const glm::mat4 &matrix) const
+{
+     const int32_t location = get_uniform_location(name);
+     if (location == -1)
+          return;
+     GlCall{}(glUniformMatrix4fv, location, 1, GLboolean{ GL_FALSE }, glm::value_ptr(matrix));
+}
 }// namespace glengine

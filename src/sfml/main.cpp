@@ -1,4 +1,5 @@
 #include "gui/gui.hpp"
+#include <BlendModeSettings.hpp>
 
 static sf::RenderWindow get_render_window()
 {
@@ -49,9 +50,11 @@ int main()
                spdlog::error("{}", reinterpret_cast<const char *>(error_msg));
                std::terminate();
           }
+          glengine::BlendModeSettings::enable_blending();
+          glengine::BlendModeSettings::default_blend();
           // Enable debug output
-          glEnable(GL_DEBUG_OUTPUT);
-          glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
+          glengine::GlCall{}(glEnable, GL_DEBUG_OUTPUT);
+          glengine::GlCall{}(glEnable, GL_DEBUG_OUTPUT_SYNCHRONOUS);
           auto the_gui = fme::gui{ window };
           the_gui.start(window);
      }

@@ -4,6 +4,9 @@
 
 #ifndef FIELD_MAP_EDITOR_VERTEXBUFFERLAYOUT_HPP
 #define FIELD_MAP_EDITOR_VERTEXBUFFERLAYOUT_HPP
+#include "concepts.hpp"
+#include <GL/glew.h>
+#include <glm/glm.hpp>
 #include <numeric>
 namespace glengine
 {

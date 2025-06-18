@@ -4,6 +4,9 @@
 
 #ifndef FIELD_MAP_EDITOR_MAPBLENDS_HPP
 #define FIELD_MAP_EDITOR_MAPBLENDS_HPP
+#include "ImGuiIndent.hpp"
+#include <BlendModeEquations.hpp>
+#include <BlendModeParameters.hpp>
 #include <GLCheck.hpp>
 class MapBlends
 {
@@ -59,7 +62,7 @@ class MapBlends
             parameters_selections[1].current_value(),
             parameters_selections[2].current_value(),
             parameters_selections[3].current_value());
-            glengine::GlCall{}(glBlendEquationSeparate, equation_selections[0].current_value(), equation_selections[1].current_value());
+          glengine::GlCall{}(glBlendEquationSeparate, equation_selections[0].current_value(), equation_selections[1].current_value());
      }
      [[nodiscard]] static bool
        blend_combos(glengine::BlendModeParameters &parameters_selections, glengine::BlendModeEquations &equation_selections)

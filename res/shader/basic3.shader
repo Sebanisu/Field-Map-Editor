@@ -46,7 +46,7 @@ layout(location = 4) in flat int v_tile_id;
 
 uniform sampler2D u_Textures[32];
 
-uniform vec4 u_Color;
+uniform vec4 u_Tint;
 uniform vec2 u_Grid;
 //uniform sampler2D u_Texture;
 
@@ -56,7 +56,7 @@ void main()
   //color = vec4(1.0);
   //color2 = vec4(1.0, 0.0, 0.0, 1.0);
 
-  int index = int(v.texture);
+  uint index = uint(v.texture);
   vec4 texColor = texture(u_Textures[index], v.TexCoord * v.tiling_factor);
   ivec2 textureSize2d = textureSize(u_Textures[index], 0);
 
@@ -70,15 +70,15 @@ void main()
 
     if ((y > 0.95 || x > 0.95) || (y2 > 0.95 || x2 > 0.95))
     {
-      color = u_Color * v.color;
+      color = u_Tint * v.color;
     }
     else
     {
-      color =texColor * u_Color * v.color;
+      color =texColor * u_Tint * v.color;
     }
   }
   else
   {
-    color = texColor * u_Color * v.color;
+    color = texColor * u_Tint * v.color;
   }
 }

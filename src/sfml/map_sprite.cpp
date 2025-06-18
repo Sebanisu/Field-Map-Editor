@@ -8,6 +8,7 @@
 #include "save_image_pbo.hpp"
 #include "utilities.hpp"
 #include <bit>
+#include <BlendModeSettings.hpp>
 #include <fmt/format.h>
 #include <FrameBuffer.hpp>
 #include <FrameBufferBackup.hpp>
@@ -561,17 +562,18 @@ sf::Sprite map_sprite::save_intersecting(const sf::Vector2i &pixel_pos, const st
 }
 
 
-[[nodiscard]] bool map_sprite::local_draw(const glengine::BatchRenderer &target) const
+[[nodiscard]] bool map_sprite::local_draw(const glengine::BatchRenderer &target, const glengine::Shader &shader) const
 {
-     const auto default_blend = []() {
-          glengine::GlCall{}(glBlendFunc, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-          glengine::GlCall{}(glBlendEquation, GL_FUNC_ADD);
-     };
-     default_blend();
-     bool drew = false;
+
+     const auto reset_blend_at_end = glengine::ScopeGuard([] { glengine::BlendModeSettings::default_blend(); });
+     glengine::BlendModeSettings::default_blend();
+     using open_viii::graphics::background::BlendModeT;
+     [[maybe_unused]] BlendModeT last_blend_mode{ BlendModeT::none };
+     m_uniform_color = s_default_color;
+     bool drew       = false;
      for (const auto &z : m_all_unique_values_and_strings.z().values())
      {
-          for_all_tiles([this, &target, &z, &drew]([[maybe_unused]] const auto &tile_const, const auto &tile, const ff_8::PupuID pupu_id) {
+          for_all_tiles([&]([[maybe_unused]] const auto &tile_const, const auto &tile, const ff_8::PupuID pupu_id) {
                if (!m_saved_indices.empty())
                {
                     // skip saved indices on redraw.
@@ -608,10 +610,49 @@ sf::Sprite map_sprite::save_intersecting(const sf::Vector2i &pixel_pos, const st
                          return get_texture(pupu_id);
                     }
                }();
-               const auto unbind = glengine::ScopeGuard{ []() { glengine::Texture::unbind(); } };
+               // const auto unbind = glengine::ScopeGuard{ []() { glengine::Texture::unbind(); } };
                if (texture == nullptr || texture->height() == 0 || texture->width() == 0)
                {
                     return;
+               }
+               auto blend_mode = tile.blend_mode();
+               if (blend_mode != last_blend_mode)
+               {
+                    target.draw();// flush buffer.
+                    last_blend_mode = blend_mode;
+                    // if (s_blends.percent_blend_enabled())
+                    // {
+                    switch (blend_mode)
+                    {
+                         case open_viii::graphics::background::BlendModeT::half_add:
+                              m_uniform_color = s_half_color;
+                              break;
+                         case open_viii::graphics::background::BlendModeT::quarter_add:
+                              m_uniform_color = s_quarter_color;
+                              break;
+                         default:
+                              m_uniform_color = s_default_color;
+                              break;
+                    }
+                    shader.set_uniform("u_Tint", m_uniform_color);
+                    // }
+                    switch (blend_mode)
+                    {
+                         case open_viii::graphics::background::BlendModeT::half_add:
+                         case open_viii::graphics::background::BlendModeT::quarter_add:
+                         case open_viii::graphics::background::BlendModeT::add: {
+                              // s_blends.set_add_blend();
+                              glengine::BlendModeSettings::add_blend();
+                         }
+                         break;
+                         case open_viii::graphics::background::BlendModeT ::subtract: {
+                              // s_blends.set_subtract_blend();
+                              glengine::BlendModeSettings::subtract_blend();
+                         }
+                         break;
+                         default:
+                              glengine::BlendModeSettings::default_blend();
+                    }
                }
                const auto                 texture_dims  = glm::vec2{ texture->width(), texture->height() };
                const auto                 texture_size  = get_tile_texture_size(texture);
@@ -622,9 +663,9 @@ sf::Sprite map_sprite::save_intersecting(const sf::Vector2i &pixel_pos, const st
                glm::vec2                  min_uv        = glm::vec2(quad[1].texCoords.x, quad[1].texCoords.y) / texture_dims;
                glm::vec2                  max_uv        = glm::vec2(quad[2].texCoords.x, quad[2].texCoords.y) / texture_dims;
 
-               //glm::vec2                  min_uv        = glm::vec2{ 0 };
-               //glm::vec2                  max_uv        = glm::vec2{ 1 };
-               // Extract draw position (x, y) from quad[0] (top-left vertex)
+               // glm::vec2                  min_uv        = glm::vec2{ 0 };
+               // glm::vec2                  max_uv        = glm::vec2{ 1 };
+               //  Extract draw position (x, y) from quad[0] (top-left vertex)
                glm::vec3                  draw_position = glm::vec3(quad[1].position.x, quad[1].position.y, 0.F);
 
                // // Extract width and height
@@ -638,7 +679,7 @@ sf::Sprite map_sprite::save_intersecting(const sf::Vector2i &pixel_pos, const st
                // Create the SubTexture
                glengine::SubTexture       subtexture(*texture, min_uv, max_uv);
 
-               m_batch_renderer.draw_quad(
+               target.draw_quad(
                  subtexture,
                  draw_position,
                  glm::vec2{ static_cast<float>(TILE_SIZE) * m_scale },
@@ -839,20 +880,21 @@ void map_sprite::update_render_texture(bool reload_textures)
      m_render_framebuffer.bind();
      glengine::GlCall{}(glViewport, 0, 0, m_render_framebuffer.width(), m_render_framebuffer.height());
      glengine::Renderer::Clear();
-     //glengine::GlCall{}(glClearColor, .5f, .5f, .5f, 1.f);
-     //glengine::GlCall{}(glClear, GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+     // glengine::GlCall{}(glClearColor, .5f, .5f, .5f, 1.f);
+     // glengine::GlCall{}(glClear, GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
      m_render_framebuffer.clear_red_integer_color_attachment();
      const auto brb = m_batch_renderer.backup();
      m_batch_renderer.bind();
      set_uniforms(m_batch_renderer.shader());
      m_batch_renderer.clear();
 
-     (void)local_draw(m_batch_renderer);
+     (void)local_draw(m_batch_renderer, m_batch_renderer.shader());
      //(void)draw_imported(m_render_framebuffer);
 
 
      m_batch_renderer.draw();
      m_batch_renderer.on_render();
+     m_render_framebuffer.bind_color_attachment();
 }
 
 void map_sprite::set_uniforms(const glengine::Shader &shader) const
@@ -881,7 +923,7 @@ void map_sprite::set_uniforms(const glengine::Shader &shader) const
      //      shader.set_uniform(
      //        "u_Grid", m_map_dims.scaled_tile_size());
      //    }
-     shader.set_uniform("u_Color", m_uniform_color);
+     shader.set_uniform("u_Tint", m_uniform_color);
 }
 void map_sprite::save([[maybe_unused]] const std::filesystem::path &path) const
 {

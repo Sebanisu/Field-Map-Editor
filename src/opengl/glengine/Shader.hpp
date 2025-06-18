@@ -4,20 +4,31 @@
 
 #ifndef FIELD_MAP_EDITOR_SHADER_HPP
 #define FIELD_MAP_EDITOR_SHADER_HPP
+#include "GLCheck.hpp"
 #include "Renderer.hpp"
 #include "ScopeGuard.hpp"
 #include <filesystem>
 #include <fstream>
+#include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
 namespace glengine
 {
 class Shader
 {
    private:
+     struct ShaderProgramSource
+     {
+          std::string vertex_shader{};
+          std::string fragment_shader{};
+     };
      std::uint32_t                                              m_renderer_id{};
      std::filesystem::path                                      m_file_path{};
      // cache for uniforms
      mutable std::unordered_map<std::string_view, std::int32_t> m_cache{};
+     [[nodiscard]] ShaderProgramSource                          parse_shader();
+     [[nodiscard]] std::uint32_t                                compile_shader(const std::uint32_t type, const std::string_view source);
+     std::uint32_t                                              create_shader(const std::string_view, const std::string_view);
+     std::int32_t                                               get_uniform_location(std::string_view name) const;
 
    public:
      Shader() = default;
@@ -43,20 +54,15 @@ class Shader
           } };// restore original shader. this might not be doing anything.
      }
 
+     // Set Uniforms
      void set_uniform(std::string_view name, glm::vec1 v) const;
      void set_uniform(std::string_view name, glm::vec2 v) const;
      void set_uniform(std::string_view name, glm::vec3 v) const;
      void set_uniform(std::string_view name, glm::vec4 v) const;
-     // Set Uniforms
+     void set_uniform(std::string_view name, const glm::mat4 &matrix) const;
      template<typename... T>
-     // clang-format off
-  requires
-    ((sizeof...(T) >= 1U)
-      && (sizeof...(T) <= 4U))
-    && ((std::floating_point<T> && ...)
-      || (std::unsigned_integral<T> && ...)
-      || (std::signed_integral<T> && ...))
-     // clang-format on
+          requires((sizeof...(T) >= 1U) && (sizeof...(T) <= 4U))
+                  && ((std::floating_point<T> && ...) || (std::unsigned_integral<T> && ...) || (std::signed_integral<T> && ...))
      void set_uniform(std::string_view name, T... v) const
      {
           const int32_t location = get_uniform_location(name);
@@ -123,7 +129,7 @@ class Shader
                }
           }
      }
-     // Set Uniforms
+
      template<std::ranges::contiguous_range T>
           requires(
             (decay_same_as<std::ranges::range_value_t<T>, float>) || (decay_same_as<std::ranges::range_value_t<T>, std::uint32_t>)
@@ -151,24 +157,6 @@ class Shader
                perform(glUniform1iv);
           }
      }
-     void set_uniform(std::string_view name, const glm::mat4 &matrix) const
-     {
-          const int32_t location = get_uniform_location(name);
-          if (location == -1)
-               return;
-          GlCall{}(glUniformMatrix4fv, location, 1, GLboolean{ GL_FALSE }, glm::value_ptr(matrix));
-     }
-
-   private:
-     struct ShaderProgramSource
-     {
-          std::string vertex_shader{};
-          std::string fragment_shader{};
-     };
-     [[nodiscard]] ShaderProgramSource parse_shader();
-     [[nodiscard]] std::uint32_t       compile_shader(const std::uint32_t type, const std::string_view source);
-     std::uint32_t                     create_shader(const std::string_view, const std::string_view);
-     std::int32_t                      get_uniform_location(std::string_view name) const;
 };
 static_assert(Bindable<Shader>);
 }// namespace glengine

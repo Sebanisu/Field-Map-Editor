@@ -91,9 +91,9 @@ struct [[nodiscard]] map_sprite// final
      mutable bool                                  once                            = { true };
      mutable glengine::OrthographicCamera          m_fixed_render_camera           = {};
 
-     static constexpr auto                         s_default_color                 = glm::vec4{ 1.F };
-     static constexpr auto                         s_half_color                    = s_default_color / 2.F;
-     static constexpr auto                         s_quarter_color                 = s_half_color / 2.F;
+     static constexpr auto                         s_default_color                 = glm::vec4{ 1.F };// RGBA = (1, 1, 1, 1)
+     static constexpr auto                         s_half_color                    = s_default_color / 2.F;// RGBA = (0.5, 0.5, 0.5, 0.5)
+     static constexpr auto                         s_quarter_color                 = s_half_color / 2.F;// RGBA = (0.25, 0.25, 0.25, 0.25)
      mutable glm::vec4                             m_uniform_color                 = s_default_color;
 
    public:
@@ -120,7 +120,7 @@ struct [[nodiscard]] map_sprite// final
      [[nodiscard]] sf::Vector2u                         get_tile_draw_size() const;
      [[nodiscard]] bool                                 generate_texture(const glengine::FrameBuffer &texture) const;
      [[nodiscard]] std::uint32_t                        get_max_texture_height() const;
-     [[nodiscard]] bool                                 local_draw(const glengine::BatchRenderer &) const;
+     [[nodiscard]] bool                                 local_draw(const glengine::BatchRenderer &, const glengine::Shader &) const;
      [[nodiscard]] bool                                 draw_imported(const glengine::FrameBuffer &) const;
      [[nodiscard]] std::string                          get_base_name() const;
      [[nodiscard]] const all_unique_values_and_strings &uniques() const;

@@ -30,7 +30,7 @@ test::TestTexture2D::TestTexture2D()
      m_vertex_array.bind();
      m_vertex_array.push_back(m_vertex_buffer, m_vertex_buffer_layout);
      m_shader.bind();
-     m_shader.set_uniform("u_Color", 1.F, 1.F, 1.F, 1.F);
+     m_shader.set_uniform("u_Tint", 1.F, 1.F, 1.F, 1.F);
      m_shader.set_uniform("u_Texture", 0);
 }
 void test::TestTexture2D::on_im_gui_update() const

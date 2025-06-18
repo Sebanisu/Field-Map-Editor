@@ -103,10 +103,6 @@ class Window final
           return get_window_data(m_window.get());
      }
 
-     static void default_blend();
-     static void add_blend();
-     static void subtract_blend();
-
      void        update_view_ports() const;
      void        render_dockspace() const;
 

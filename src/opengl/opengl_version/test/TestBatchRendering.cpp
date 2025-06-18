@@ -47,7 +47,7 @@ void test::TestBatchRendering::set_uniforms() const
      }();
      m_shader.bind();
      m_shader.set_uniform("u_MVP", glm::translate(mvp, view_offset));
-     m_shader.set_uniform("u_Color", 1.F, 1.F, 1.F, 1.F);
+     m_shader.set_uniform("u_Tint", 1.F, 1.F, 1.F, 1.F);
 }
 void test::TestBatchRendering::render_frame_buffer() const
 {
@@ -98,7 +98,7 @@ test::TestBatchRendering::TestBatchRendering()
      m_vertex_array.bind();
      m_vertex_array.push_back(m_vertex_buffer, glengine::Vertex::layout());
      m_shader.bind();
-     m_shader.set_uniform("u_Color", 1.F, 1.F, 1.F, 1.F);
+     m_shader.set_uniform("u_Tint", 1.F, 1.F, 1.F, 1.F);
      // m_shader.set_uniform("u_Texture", 0);
 }
 // #include "TestBatchRendering.hpp"
