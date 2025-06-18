@@ -615,43 +615,46 @@ sf::Sprite map_sprite::save_intersecting(const sf::Vector2i &pixel_pos, const st
                {
                     return;
                }
-               auto blend_mode = tile.blend_mode();
-               if (blend_mode != last_blend_mode)
+               if (!m_disable_blends)
                {
-                    target.draw();// flush buffer.
-                    last_blend_mode = blend_mode;
-                    // if (s_blends.percent_blend_enabled())
-                    // {
-                    switch (blend_mode)
+                    auto blend_mode = tile.blend_mode();
+                    if (blend_mode != last_blend_mode)
                     {
-                         case open_viii::graphics::background::BlendModeT::half_add:
-                              m_uniform_color = s_half_color;
-                              break;
-                         case open_viii::graphics::background::BlendModeT::quarter_add:
-                              m_uniform_color = s_quarter_color;
-                              break;
-                         default:
-                              m_uniform_color = s_default_color;
-                              break;
-                    }
-                    shader.set_uniform("u_Tint", m_uniform_color);
-                    // }
-                    switch (blend_mode)
-                    {
-                         case open_viii::graphics::background::BlendModeT::half_add:
-                         case open_viii::graphics::background::BlendModeT::quarter_add:
-                         case open_viii::graphics::background::BlendModeT::add: {
-                              // s_blends.set_add_blend();
-                              glengine::BlendModeSettings::add_blend();
+                         target.draw();// flush buffer.
+                         last_blend_mode = blend_mode;
+                         // if (s_blends.percent_blend_enabled())
+                         // {
+                         switch (blend_mode)
+                         {
+                              case open_viii::graphics::background::BlendModeT::half_add:
+                                   m_uniform_color = s_half_color;
+                                   break;
+                              case open_viii::graphics::background::BlendModeT::quarter_add:
+                                   m_uniform_color = s_quarter_color;
+                                   break;
+                              default:
+                                   m_uniform_color = s_default_color;
+                                   break;
                          }
-                         break;
-                         case open_viii::graphics::background::BlendModeT ::subtract: {
-                              // s_blends.set_subtract_blend();
-                              glengine::BlendModeSettings::subtract_blend();
+                         shader.set_uniform("u_Tint", m_uniform_color);
+                         // }
+                         switch (blend_mode)
+                         {
+                              case open_viii::graphics::background::BlendModeT::half_add:
+                              case open_viii::graphics::background::BlendModeT::quarter_add:
+                              case open_viii::graphics::background::BlendModeT::add: {
+                                   // s_blends.set_add_blend();
+                                   glengine::BlendModeSettings::add_blend();
+                              }
+                              break;
+                              case open_viii::graphics::background::BlendModeT ::subtract: {
+                                   // s_blends.set_subtract_blend();
+                                   glengine::BlendModeSettings::subtract_blend();
+                              }
+                              break;
+                              default:
+                                   glengine::BlendModeSettings::default_blend();
                          }
-                         break;
-                         default:
-                              glengine::BlendModeSettings::default_blend();
                     }
                }
                const auto                 texture_dims  = glm::vec2{ texture->width(), texture->height() };
