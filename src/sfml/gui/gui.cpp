@@ -1310,15 +1310,12 @@ void gui::consume_one_future()
      if (!m_future_of_future_consumer.done())
      {
           ++m_future_of_future_consumer;
+          if (!m_future_of_future_consumer.output_empty())
+          {
+               m_future_consumer += m_future_of_future_consumer.get_consumer();
+          }
      }
-     else if (!m_future_of_future_consumer.output_empty())
-     {
-          m_future_consumer = m_future_of_future_consumer.get_consumer();
-     }
-     else if (!m_future_consumer.done())
-     {
-          ++m_future_consumer;
-     }
+     ++m_future_consumer;
 }
 
 // void gui::popup_batch_common_filter_start(
@@ -2779,7 +2776,7 @@ void gui::directory_browser_display()
                     error_code.clear();
                }
                // todo modify these two functions :P to use the imported image.
-               m_future_of_future_consumer =
+               m_future_consumer +=
                  m_map_sprite->save_swizzle_textures(m_selections->output_swizzle_pattern, selected_path.string());// done.
                const key_value_data cpm = {
                     .field_name    = m_map_sprite->get_base_name(),
@@ -2808,8 +2805,7 @@ void gui::directory_browser_display()
                       "{}:{} - {}: {} - path: {}", __FILE__, __LINE__, error_code.value(), error_code.message(), selected_path.string());
                     error_code.clear();
                }
-               m_future_of_future_consumer =
-                 m_map_sprite->save_pupu_textures(m_selections->output_deswizzle_pattern, selected_path.string());
+               m_future_consumer += m_map_sprite->save_pupu_textures(m_selections->output_deswizzle_pattern, selected_path.string());
                const key_value_data cpm = {
                     .field_name    = m_map_sprite->get_base_name(),
                     .ext           = ".map",
