@@ -51,6 +51,19 @@ class FrameBuffer
      [[nodiscard]] const FrameBufferSpecification &specification() const;
      SubTexture                                    bind_color_attachment(std::uint32_t index = 0U) const;
      [[nodiscard]] GlidCopy                        color_attachment_id(std::uint32_t index = 0) const;
+     /**
+      * @brief Creates a deep copy of this FrameBuffer, including GPU resources.
+      *
+      * This performs a full framebuffer blit of color attachments with format RGBA8.
+      * Attachments using RED_INTEGER or other unsupported formats will be skipped.
+      *
+      * @note Depth/stencil attachments are not copied.
+      * @note RED_INTEGER attachments are skipped intentionally. If needed in the future,
+      *       they can be copied manually via glReadPixels + glTexSubImage2D.
+      *
+      * @return A new FrameBuffer instance that is a deep copy of this one.
+      */
+     [[nodiscard]] FrameBuffer clone() const;
      operator bool()
      {
           return std::ranges::any_of(m_color_attachment, [](const auto &id) { return id != 0U; }) && m_renderer_id != 0U

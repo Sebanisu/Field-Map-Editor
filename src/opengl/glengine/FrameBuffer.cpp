@@ -156,6 +156,42 @@ GlidCopy FrameBuffer::color_attachment_id(std::uint32_t index) const
      return m_color_attachment[index];
 }
 
+FrameBuffer FrameBuffer::clone() const
+{
+     const auto  backup_fbo = backup();
+     FrameBuffer copy(m_specification);
+
+     this->bind();
+     copy.bind();
+
+     for (const auto &[index, data] : std::ranges::views::zip(m_specification.attachments, attachments) | std::ranges::views::enumerate)
+     {
+          const auto &[format, attachment] = data;
+          if (format != FrameBufferTextureFormat::RGBA8)
+          {
+               // RED_INTEGER and others intentionally skipped
+               continue;
+          }
+
+          GlCall{}(glReadBuffer, attachment);
+          GlCall{}(glDrawBuffer, attachment);
+          GlCall{}(
+            glBlitFramebuffer,
+            0,
+            0,
+            m_specification.width,
+            m_specification.height,
+            0,
+            0,
+            m_specification.width,
+            m_specification.height,
+            GL_COLOR_BUFFER_BIT,
+            GL_NEAREST);
+          (void)copy.bind_color_attachment(static_cast<std::uint32_t>(index));// generates mipmaps and binds the texture.
+     }
+     return copy;
+}
+
 glm::ivec2 FrameBuffer::get_size() const
 {
      return { m_specification.width, m_specification.height };
