@@ -51,7 +51,6 @@ add_executable(
   safedir.cpp
   save_image_pbo.cpp
   source_tile_conflicts.cpp
-  square.cpp
   tile_sizes.cpp
   unique_values.cpp
   UniquifyPupu.cpp
