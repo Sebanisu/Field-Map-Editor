@@ -13,7 +13,7 @@
 #include <glm/gtc/type_ptr.hpp>
 namespace glengine
 {
-class Shader
+class [[nodiscard]] Shader
 {
    private:
      struct ShaderProgramSource
@@ -27,8 +27,8 @@ class Shader
      mutable std::unordered_map<std::string_view, std::int32_t> m_cache{};
      [[nodiscard]] ShaderProgramSource                          parse_shader();
      [[nodiscard]] std::uint32_t                                compile_shader(const std::uint32_t type, const std::string_view source);
-     std::uint32_t                                              create_shader(const std::string_view, const std::string_view);
-     std::int32_t                                               get_uniform_location(std::string_view name) const;
+     [[nodiscard]] std::uint32_t                                create_shader(const std::string_view, const std::string_view);
+     [[nodiscard]] std::int32_t                                 get_uniform_location(std::string_view name) const;
 
    public:
      Shader() = default;
