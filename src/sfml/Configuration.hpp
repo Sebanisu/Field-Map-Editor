@@ -108,6 +108,38 @@ class Configuration
      }
 
      /**
+      * @brief Loads a TOML array of booleans from the given key into a vector.
+      *
+      * This function checks whether the specified key exists and corresponds to an array.
+      * If it does, it attempts to read each element as a `bool` and appends it to the output vector.
+      *
+      * @param key The TOML key to look up.
+      * @param output A reference to a vector where the boolean values will be stored.
+      * @return true if the array was successfully loaded; false otherwise (e.g., key not found or wrong type).
+      */
+     bool load_array(const std::string_view key, std::vector<bool> &output) const
+     {
+          if (!operator->()->contains(key))
+               return false;
+
+          if (const auto *array = operator[](key).as_array(); array)
+          {
+               output.clear();
+               output.reserve(array->size());
+
+               for (const auto &val : *array)
+               {
+                    if (auto b = val.value<bool>(); b.has_value())
+                         output.push_back(*b);
+               }
+               return true;
+          }
+
+          return false;
+     }
+
+
+     /**
       * @brief Updates the TOML configuration with a string array.
       *
       * Replaces or creates the value at the given key with a TOML array
@@ -131,6 +163,8 @@ class Configuration
 
           operator->()->insert_or_assign(key, std::move(array));
      }
+
+     
 
      /**
       * @brief Loads an array of file system paths from the TOML configuration.
@@ -167,6 +201,26 @@ class Configuration
                return true;
           }
           return false;
+     }
+
+     /**
+      * @brief Writes a vector of booleans into the TOML table under the given key.
+      *
+      * This function creates a TOML array from the input vector and assigns it to the given key.
+      * Any existing value at that key will be overwritten.
+      *
+      * @param key The TOML key under which the array will be stored.
+      * @param input A vector of boolean values to be written into the TOML array.
+      */
+     void update_array(const std::string_view key, const std::vector<bool> &input)
+     {
+          toml::array array;
+          array.reserve(input.size());
+
+          for (bool b : input)
+               array.push_back(b);
+
+          operator->()->insert_or_assign(key, std::move(array));
      }
 
      /**

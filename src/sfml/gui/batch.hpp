@@ -41,7 +41,6 @@ class batch
      std::optional<open_viii::LangT>                            m_coo               = {};
      std::string                                                m_status            = {};
      map_sprite                                                 m_map_sprite        = {};
-     std::vector<bool>                                          m_maps_enabled      = {};
      std::uint8_t                                               m_num_columns       = { 5 };
      directory_mode                                             m_directory_browser_mode             = {};
      FutureOfFutureConsumer<std::vector<std::future<std::future<void>>>> m_future_of_future_consumer = {};
@@ -79,6 +78,8 @@ class batch
      //[[nodiscard]] std::filesystem::path append_file_structure(const std::filesystem::path &path) const;
      [[nodiscard]] bool browse_path(std::string_view name, bool &valid_path, std::array<char, m_buffer_size> &path_buffer);
 
+     void   checkmark_save_map();
+     bool   draw_multi_column_list_box(const std::string_view name, const std::vector<std::string> &items, std::vector<bool> &enabled);
    public:
      void update(sf::Time elapsed_time);
      batch() = default;
@@ -88,8 +89,6 @@ class batch
      batch &operator=(std::weak_ptr<archives_group> new_group);
      batch &operator=(std::weak_ptr<Selections> new_selections);
      void   draw_window();
-     void   checkmark_save_map();
-     void   draw_multi_column_list_box(const std::string_view name, const std::vector<std::string> &items, std::vector<bool> &enabled);
 };
 }// namespace fme
 #endif// FIELD_MAP_EDITOR_BATCH_HPP

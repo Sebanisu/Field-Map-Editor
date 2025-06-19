@@ -56,6 +56,7 @@ enum class ConfigKey
      BatchInputRootPathType,
      BatchOutputType,
      BatchOutputRootPathType,
+     BatchMapListEnabled,
      BackgroundColor,
      BatchInputPath,
      BatchOutputPath,
@@ -116,6 +117,8 @@ enum class ConfigKey
                return "batch_output_path"sv;
           case ConfigKey::BatchOutputRootPathType:
                return "batch_output_root_path_type"sv;
+          case ConfigKey::BatchMapListEnabled:
+               return "batch_map_list_enabled"sv;
           case ConfigKey::BatchOutputType:
                return "batch_output_type"sv;
           case ConfigKey::BatchOutputSaveMap:
@@ -302,6 +305,7 @@ struct Selections
      root_path_types                batch_input_root_path_type;
      output_types                   batch_output_type;
      root_path_types                batch_output_root_path_type;
+     std::vector<bool>              batch_map_list_enabled;
 
      std::string                    batch_input_path;
      std::string                    batch_output_path;

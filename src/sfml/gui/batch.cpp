@@ -79,7 +79,18 @@ void fme::batch::draw_window()
      const auto archives_group = m_archives_group.lock();
      if (archives_group)
      {
-          draw_multi_column_list_box("Map List", archives_group->mapdata(), m_maps_enabled);
+          const auto selections = m_selections.lock();
+          if (!selections)
+          {
+               spdlog::error("Failed to lock m_selections: shared_ptr is expired.");
+          }
+          else
+          {
+               if (draw_multi_column_list_box("Map List", archives_group->mapdata(), selections->batch_map_list_enabled))
+               {
+                    selections->update_configuration_key(ConfigKey::BatchMapListEnabled);
+               }
+          }
      }
      else
      {
@@ -580,17 +591,19 @@ void fme::batch::combo_flatten_type()
      }
      // selections->update_configuration_key(ConfigKey::BatchFlatten);
 }
-void fme::batch::draw_multi_column_list_box(const std::string_view name, const std::vector<std::string> &items, std::vector<bool> &enabled)
+bool fme::batch::draw_multi_column_list_box(const std::string_view name, const std::vector<std::string> &items, std::vector<bool> &enabled)
 {
+     bool changed = false;
      if (!ImGui::CollapsingHeader(name.data()))
      {
-          return;
+          return changed;
      }
 
 
      if (ImGui::Button(gui_labels::select_all.data()))
      {
           std::ranges::transform(enabled, enabled.begin(), [](auto &&) { return true; });
+          changed = true;
      }
 
      ImGui::SameLine();
@@ -598,6 +611,7 @@ void fme::batch::draw_multi_column_list_box(const std::string_view name, const s
      if (ImGui::Button(gui_labels::select_none.data()))
      {
           std::ranges::transform(enabled, enabled.begin(), [](auto &&) { return false; });
+          changed = true;
      }
 
      ImGui::SameLine();
@@ -626,18 +640,22 @@ void fme::batch::draw_multi_column_list_box(const std::string_view name, const s
 
      ImVec4 const enabled_color = ImVec4(0.4F, 0.8F, 0.4F, 1.0F);// Green
      assert(items.size() == enabled.size());
-     for (size_t i = 0; i != items.size(); ++i)
+     for (auto &&zipped : std::ranges::views::zip(items, enabled))
      {
-          const auto pop_id     = PushPopID();
-          const auto pop_column = glengine::ScopeGuard{ &ImGui::NextColumn };
-          const auto selectable = [&]() {
-               if (ImGui::Selectable(items[i].c_str(), enabled[i]))
+          const auto &item       = std::get<0>(zipped);// const auto& or auto& depending on the range
+          auto       &enable     = std::get<1>(zipped);// mutable reference
+
+          const auto  pop_id     = PushPopID();
+          const auto  pop_column = glengine::ScopeGuard{ &ImGui::NextColumn };
+          const auto  selectable = [&]() {
+               if (ImGui::Selectable(item.c_str(), enable))
                {
-                    enabled[i] = !enabled[i];
+                    enable  = !enable;
+                    changed = true;
                }
           };
 
-          if (enabled[i])
+          if (enable)
           {
                // Revert text color to default
                const auto pop_text_color = glengine::ScopeGuard{ []() { ImGui::PopStyleColor(); } };
@@ -654,6 +672,7 @@ void fme::batch::draw_multi_column_list_box(const std::string_view name, const s
 
      ImGui::Columns(1);
      ImGui::Separator();
+     return changed;
 }
 void fme::batch::button_start()
 {
@@ -890,8 +909,7 @@ void fme::batch::update(sf::Time elapsed_time)
                     m_future_consumer += m_map_sprite.save_swizzle_textures(selections->output_swizzle_pattern, selected_string);
                     break;
                case output_types::swizzle_as_one_image:
-                    m_future_consumer +=
-                      m_map_sprite.save_combined_swizzle_texture(selections->output_swizzle_pattern, selected_string);
+                    m_future_consumer += m_map_sprite.save_combined_swizzle_texture(selections->output_swizzle_pattern, selected_string);
                     break;
           }
 
@@ -1161,6 +1179,13 @@ void fme::batch::choose_field_and_coo()
           return;
      }
 
+     const auto selections = m_selections.lock();
+     if (!selections)
+     {
+          spdlog::error("Failed to lock m_selections: shared_ptr is expired.");
+          return;
+     }
+
      // Attempt to choose a valid field from m_fields_consumer
      while ((!m_field || !m_field->operator bool()) && !m_fields_consumer.done())
      {
@@ -1180,7 +1205,7 @@ void fme::batch::choose_field_and_coo()
                const auto offset = std::ranges::distance(std::ranges::begin(map_data), find_result);
 
                // Check if the map at this offset is enabled
-               if (m_maps_enabled.at(static_cast<std::size_t>(offset)))
+               if (selections->batch_map_list_enabled.at(static_cast<std::size_t>(offset)))
                {
                     // Create the field object from the archive and store it
                     m_field = std::make_shared<open_viii::archive::FIFLFS<false>>(tmp.get());
@@ -1238,12 +1263,19 @@ void fme::batch::open_directory_browser()
 
 fme::batch &fme::batch::operator=(std::weak_ptr<archives_group> new_group)
 {
+     const auto selections = m_selections.lock();
+     if (!selections)
+     {
+          spdlog::error("Failed to lock m_selections: shared_ptr is expired.");
+          return *this;
+     }
      stop();
      m_archives_group    = std::move(new_group);
      auto archives_group = m_archives_group.lock();
-     if (archives_group && archives_group->mapdata().size() != m_maps_enabled.size())
+     if (archives_group && archives_group->mapdata().size() != selections->batch_map_list_enabled.size())
      {
-          m_maps_enabled.resize(archives_group->mapdata().size(), true);
+          selections->batch_map_list_enabled.resize(archives_group->mapdata().size(), true);
+          selections->update_configuration_key(ConfigKey::BatchMapListEnabled);
      }
      return *this;
 }

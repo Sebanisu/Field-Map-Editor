@@ -118,8 +118,10 @@ fme::Selections::Selections(const Configuration config)
      window_height       = config[key_to_string(ConfigKey::WindowHeight)].value_or(window_height_default);
      window_width        = config[key_to_string(ConfigKey::WindowWidth)].value_or(window_width_default);
 
+     // batch_map_list_enabled
+     //  Arrays
+     (void)config.load_array(key_to_string(ConfigKey::BatchMapListEnabled), batch_map_list_enabled);
 
-     // Arrays
      if (!config.load_array(key_to_string(ConfigKey::PathPatternsCommonUpscale), paths_common_upscale))
      {
           paths_common_upscale = { "{selected_path}",
@@ -342,6 +344,8 @@ void fme::Selections::update_configuration_key(ConfigKey key) const
           MAP_MACRO(ConfigKey::OutputMimPath, output_mim_path);
           MAP_MACRO(ConfigKey::OutputSwizzlePattern, output_swizzle_pattern);
           MAP_MACRO(ConfigKey::Palette, palette & 0xFU);
+
+          MAP_UPDATE_ARRAY(ConfigKey::BatchMapListEnabled, batch_map_list_enabled);
           MAP_UPDATE_ARRAY(ConfigKey::PathPatternsCommonUpscale, paths_common_upscale);
           MAP_UPDATE_ARRAY(ConfigKey::PathPatternsCommonUpscaleForMaps, paths_common_upscale_for_maps);
           MAP_UPDATE_ARRAY(ConfigKey::PathPatternsNoPaletteAndTexturePage, paths_no_palette_and_texture_page);
