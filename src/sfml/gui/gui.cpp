@@ -1346,9 +1346,10 @@ void gui::on_click_not_imgui()
                {
                     if (m_mouse_positions.left)
                     {
+                         /// TODO fix sprite
                          // left mouse down
-                         m_mouse_positions.sprite =
-                           m_map_sprite->save_intersecting(m_mouse_positions.pixel, m_mouse_positions.texture_page);
+                         // m_mouse_positions.sprite =
+                         //   m_map_sprite->save_intersecting(m_mouse_positions.pixel, m_mouse_positions.texture_page);
                          m_mouse_positions.down_pixel = m_mouse_positions.pixel;
                          m_mouse_positions.max_tile_x = m_map_sprite->max_x_for_saved();
                     }
@@ -1360,7 +1361,7 @@ void gui::on_click_not_imgui()
 
 
                          // m_mouse_positions.cover =
-                         m_mouse_positions.sprite     = {};
+                         // m_mouse_positions.sprite     = {};
                          m_mouse_positions.max_tile_x = {};
                     }
                }
@@ -1370,7 +1371,7 @@ void gui::on_click_not_imgui()
      {
           if (m_mouse_positions.left_changed() && !m_mouse_positions.left)
           {
-               m_mouse_positions.sprite = {};
+               // m_mouse_positions.sprite = {};
                // mouse up off-screen ?
           }
      }

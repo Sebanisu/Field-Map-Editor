@@ -6,7 +6,6 @@
 #define FIELD_MAP_EDITOR_MOUSE_POSITIONS_HPP
 #include <cstdint>
 #include <glm/glm.hpp>
-#include <SFML/Graphics.hpp>
 struct mouse_positions
 {
      glm::ivec2         pixel         = {};
@@ -15,7 +14,7 @@ struct mouse_positions
      bool               left          = { false };
      bool               mouse_enabled = { false };
      bool               mouse_moved   = { false };
-     sf::Sprite         sprite        = {};
+     // sf::Sprite         sprite        = {};
      std::uint8_t       max_tile_x    = {};
      // sf::Sprite   cover         = {};
      void               update();

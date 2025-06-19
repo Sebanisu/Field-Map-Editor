@@ -24,10 +24,6 @@
 #include <fmt/format.h>
 #include <FrameBuffer.hpp>
 #include <OrthographicCamera.hpp>
-#include <SFML/Graphics/Drawable.hpp>
-#include <SFML/Graphics/Sprite.hpp>
-#include <SFML/Graphics/Transformable.hpp>
-#include <SFML/Graphics/Vertex.hpp>
 #include <Shader.hpp>
 #include <Texture.hpp>
 #include <utility>
@@ -153,7 +149,7 @@ struct [[nodiscard]] map_sprite// final
      [[nodiscard]] SharedTextures                       load_textures();
      [[nodiscard]] SharedTextures                       load_textures_internal();
      [[nodiscard]] static colors_type                   get_colors(const Mim &mim, BPPT bpp, uint8_t palette);
-     [[nodiscard]] static const sf::BlendMode          &get_blend_subtract();
+     // [[nodiscard]] static const sf::BlendMode          &get_blend_subtract();
      [[nodiscard]] static std::future<std::future<void>>
                                       async_save(const glengine::Texture &out_texture, const std::filesystem::path &out_path);
 
@@ -165,7 +161,7 @@ struct [[nodiscard]] map_sprite// final
      {
           return str_to_lower(std::string{ input });
      }
-     [[nodiscard]] sf::Sprite                     save_intersecting(const glm::ivec2 &pixel_pos, const std::uint8_t &texture_page);
+     //[[nodiscard]] sf::Sprite                     save_intersecting(const glm::ivec2 &pixel_pos, const std::uint8_t &texture_page);
      [[nodiscard]] std::size_t                    get_texture_pos(BPPT bpp, std::uint8_t palette, std::uint8_t texture_page) const;
      [[nodiscard]] std::vector<std::future<void>> save_swizzle_textures(const std::string &keyed_string, const std::string &selected_path);
      [[nodiscard]] std::vector<std::future<void>>
@@ -184,13 +180,13 @@ struct [[nodiscard]] map_sprite// final
      void        map_save(const std::filesystem::path &dest_path) const;
      void        test_map(const std::filesystem::path &saved_path) const;
      void        set_uniforms(const glengine::FrameBuffer &fbo, const glengine::Shader &shader) const;
-     //void        disable_square() const;
-     // void        draw(sf::RenderTarget &target, sf::RenderStates states) const final;
+     // void        disable_square() const;
+     //  void        draw(sf::RenderTarget &target, sf::RenderStates states) const final;
      void        enable_draw_swizzle();
      void        disable_draw_swizzle();
      void        enable_disable_blends();
      void        disable_disable_blends();
-     //void        enable_square(glm::uvec2 position);
+     // void        enable_square(glm::uvec2 position);
      void        compact_move_conflicts_only();
      void        compact_map_order();
      void        compact_map_order_ffnx();

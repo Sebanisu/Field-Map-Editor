@@ -8,8 +8,6 @@
 #include <imgui-SFML.h>
 #include <imgui.h>
 #include <open_viii/graphics/background/Map.hpp>
-#include <SFML/Graphics/Sprite.hpp>
-#include <SFML/Graphics/Vertex.hpp>
 namespace fme
 {
 /**

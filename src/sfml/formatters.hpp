@@ -19,7 +19,6 @@
 #include <open_viii/graphics/background/Map.hpp>
 #include <open_viii/graphics/BPPT.hpp>
 #include <open_viii/strings/LangCommon.hpp>
-#include <SFML/System/Vector2.hpp>
 
 namespace ff_8
 {
@@ -202,20 +201,20 @@ struct fmt::formatter<open_viii::LangT> : fmt::formatter<std::string_view>
 };
 
 
-template<open_viii::Number numT>
-struct fmt::formatter<sf::Vector2<numT>> : fmt::formatter<numT>
-{
-     // parse is inherited from formatter<std::underlying_type_t<tile_sizes>>.
-     template<typename FormatContext>
-     constexpr auto format(sf::Vector2<numT> point, FormatContext &ctx) const
-     {
-          fmt::format_to(ctx.out(), "{}", '(');
-          fmt::formatter<numT>::format(point.x, ctx);
-          fmt::format_to(ctx.out(), "{}", ", ");
-          fmt::formatter<numT>::format(point.y, ctx);
-          return fmt::format_to(ctx.out(), "{}", ')');
-     }
-};
+// template<open_viii::Number numT>
+// struct fmt::formatter<sf::Vector2<numT>> : fmt::formatter<numT>
+// {
+//      // parse is inherited from formatter<std::underlying_type_t<tile_sizes>>.
+//      template<typename FormatContext>
+//      constexpr auto format(sf::Vector2<numT> point, FormatContext &ctx) const
+//      {
+//           fmt::format_to(ctx.out(), "{}", '(');
+//           fmt::formatter<numT>::format(point.x, ctx);
+//           fmt::format_to(ctx.out(), "{}", ", ");
+//           fmt::formatter<numT>::format(point.y, ctx);
+//           return fmt::format_to(ctx.out(), "{}", ')');
+//      }
+// };
 
 template<open_viii::Number numT>
 struct fmt::formatter<open_viii::graphics::Point<numT>> : fmt::formatter<numT>

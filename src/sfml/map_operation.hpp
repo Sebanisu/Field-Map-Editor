@@ -8,8 +8,6 @@
 #include "map_group.hpp"
 #include "source_tile_conflicts.hpp"
 #include <glm/glm.hpp>
-#include <SFML/Graphics/Vertex.hpp>
-#include <SFML/System/Vector2.hpp>
 namespace ff_8
 {
 struct QuadStrip

@@ -434,136 +434,137 @@ void map_sprite::update_position(const glm::ivec2 &pixel_pos, const uint8_t &tex
      update_render_texture();
 }
 
-sf::Sprite map_sprite::save_intersecting(const glm::ivec2 &pixel_pos, const std::uint8_t &texture_page)
-{
-     // Initialize an empty sprite object
-     sf::Sprite sprite      = {};
+// sf::Sprite map_sprite::save_intersecting(const glm::ivec2 &pixel_pos, const std::uint8_t &texture_page)
+// {
+//      // Initialize an empty sprite object
+//      sf::Sprite sprite      = {};
 
-     // Get the size of the sprite texture
-     const auto sprite_size = m_drag_sprite_framebuffer.get_size();
-     spdlog::info("sprite_size: ({},{})", sprite_size.x, sprite_size.y);
-     spdlog::info("m_scale: ({})", m_scale);
+//      // Get the size of the sprite texture
+//      const auto sprite_size = m_drag_sprite_framebuffer.get_size();
+//      spdlog::info("sprite_size: ({},{})", sprite_size.x, sprite_size.y);
+//      spdlog::info("m_scale: ({})", m_scale);
 
-     // Set the texture rectangle of the sprite to cover the whole texture
-     sprite.setTextureRect({ 0, 0, static_cast<int>(sprite_size.x), static_cast<int>(sprite_size.y) });
+//      // Set the texture rectangle of the sprite to cover the whole texture
+//      sprite.setTextureRect({ 0, 0, static_cast<int>(sprite_size.x), static_cast<int>(sprite_size.y) });
 
-     // Static constant factor for offset when positioning the sprite
-     static constexpr float one_and_half = 1.5F;
+//      // Static constant factor for offset when positioning the sprite
+//      static constexpr float one_and_half = 1.5F;
 
-     // Set the sprite's position based on the provided pixel position, adjusted by TILE_SIZE
-     sprite.setPosition(
-       static_cast<float>(pixel_pos.x) - (TILE_SIZE * one_and_half), static_cast<float>(pixel_pos.y) - (TILE_SIZE * one_and_half));
+//      // Set the sprite's position based on the provided pixel position, adjusted by TILE_SIZE
+//      sprite.setPosition(
+//        static_cast<float>(pixel_pos.x) - (TILE_SIZE * one_and_half), static_cast<float>(pixel_pos.y) - (TILE_SIZE * one_and_half));
 
-     // Scale the sprite based on the m_scale factor
-     sprite.setScale(1.0F / static_cast<float>(m_scale), 1.0F / static_cast<float>(m_scale));
+//      // Scale the sprite based on the m_scale factor
+//      sprite.setScale(1.0F / static_cast<float>(m_scale), 1.0F / static_cast<float>(m_scale));
 
-     // Find intersecting tiles for the given position and texture page
-     m_saved_indices = find_intersecting(m_map_group.maps.const_working(), pixel_pos, texture_page, false, true);
+//      // Find intersecting tiles for the given position and texture page
+//      m_saved_indices = find_intersecting(m_map_group.maps.const_working(), pixel_pos, texture_page, false, true);
 
-     spdlog::info("m_saved_indices count: {}", std::ranges::size(m_saved_indices));
+//      spdlog::info("m_saved_indices count: {}", std::ranges::size(m_saved_indices));
 
-     // If drawing is not swizzled, find intersecting imported tiles as well
-     if (!m_draw_swizzle)
-     {
-          m_saved_imported_indices = find_intersecting(m_imported_tile_map, pixel_pos, texture_page, false, true);
-     }
+//      // If drawing is not swizzled, find intersecting imported tiles as well
+//      if (!m_draw_swizzle)
+//      {
+//           m_saved_imported_indices = find_intersecting(m_imported_tile_map, pixel_pos, texture_page, false, true);
+//      }
 
-     // Clear the drag sprite texture with transparency
+//      // Clear the drag sprite texture with transparency
 
-     const auto fbb = glengine::FrameBufferBackup{};
-     m_drag_sprite_framebuffer.bind();
-     glengine::GlCall{}(glViewport, 0, 0, m_drag_sprite_framebuffer.width(), m_drag_sprite_framebuffer.height());
-     glengine::Renderer::Clear();
-     m_drag_sprite_framebuffer.clear_red_integer_color_attachment();
+//      const auto fbb = glengine::FrameBufferBackup{};
+//      m_drag_sprite_framebuffer.bind();
+//      glengine::GlCall{}(glViewport, 0, 0, m_drag_sprite_framebuffer.width(), m_drag_sprite_framebuffer.height());
+//      glengine::Renderer::Clear();
+//      m_drag_sprite_framebuffer.clear_red_integer_color_attachment();
 
-     // Lambda function to draw tiles based on the front tiles and tile data, and optionally imported tiles
-     const auto draw_drag_texture = [this, &pixel_pos, &sprite_size](
-                                      const auto &front_tiles, const auto &tiles, const std::uint16_t z, bool imported = false) {
-          // sf::RenderStates       states = {};
+//      // Lambda function to draw tiles based on the front tiles and tile data, and optionally imported tiles
+//      const auto draw_drag_texture = [this, &pixel_pos, &sprite_size](
+//                                       const auto &front_tiles, const auto &tiles, const std::uint16_t z, bool imported = false) {
+//           // sf::RenderStates       states = {};
 
-          // Set the transformation to adjust the sprite's position based on the scale and pixel position
-          /// TODO fix offset
-          // static constexpr float half   = 0.5F;
+//           // Set the transformation to adjust the sprite's position based on the scale and pixel position
+//           /// TODO fix offset
+//           // static constexpr float half   = 0.5F;
 
-          //   states.transform.translate(
-          //     glm::vec2(
-          //       (static_cast<float>(-pixel_pos.x) * static_cast<float>(m_scale)) + (static_cast<float>(sprite_size.x) * half),
-          //       (static_cast<float>(-pixel_pos.y) * static_cast<float>(m_scale)) + (static_cast<float>(sprite_size.x) * half)));
+//           //   states.transform.translate(
+//           //     glm::vec2(
+//           //       (static_cast<float>(-pixel_pos.x) * static_cast<float>(m_scale)) + (static_cast<float>(sprite_size.x) * half),
+//           //       (static_cast<float>(-pixel_pos.y) * static_cast<float>(m_scale)) + (static_cast<float>(sprite_size.x) * half)));
 
-          // Loop through either saved imported indices or regular saved indices based on the flag
-          for (const auto tile_index : imported ? m_saved_imported_indices : m_saved_indices)
-          {
-               const auto &tile       = tiles[tile_index];
-               const auto &front_tile = front_tiles[tile_index];
+//           // Loop through either saved imported indices or regular saved indices based on the flag
+//           for (const auto tile_index : imported ? m_saved_imported_indices : m_saved_indices)
+//           {
+//                const auto &tile       = tiles[tile_index];
+//                const auto &front_tile = front_tiles[tile_index];
 
-               // Skip drawing if the front tile's z-index does not match the current z layer
-               if (front_tile.z() != z)
-               {
-                    continue;
-               }
+//                // Skip drawing if the front tile's z-index does not match the current z layer
+//                if (front_tile.z() != z)
+//                {
+//                     continue;
+//                }
 
-               // Set the texture for the tile, either imported or regular
+//                // Set the texture for the tile, either imported or regular
 
-               const auto *const texture =
-                 imported ? m_imported_texture : get_texture(front_tile.depth(), front_tile.palette_id(), front_tile.texture_id());
-               // states.texture =
+//                const auto *const texture =
+//                  imported ? m_imported_texture : get_texture(front_tile.depth(), front_tile.palette_id(), front_tile.texture_id());
+//                // states.texture =
 
-               // Skip if the texture is invalid (size is zero)
-               if (texture == nullptr || texture->height() == 0 || texture->width() == 0)
-               {
-                    continue;
-               }
+//                // Skip if the texture is invalid (size is zero)
+//                if (texture == nullptr || texture->height() == 0 || texture->width() == 0)
+//                {
+//                     continue;
+//                }
 
-               // Calculate draw size and texture size for the tile
-               const auto       source_tile_size      = imported ? get_tile_texture_size_for_import() : get_tile_texture_size(texture);
-               const auto       destination_tile_size = get_tile_draw_size();
-               const glm::uvec2 source_texture_size   = { texture->width(), texture->height() };
+//                // Calculate draw size and texture size for the tile
+//                const auto       source_tile_size      = imported ? get_tile_texture_size_for_import() : get_tile_texture_size(texture);
+//                const auto       destination_tile_size = get_tile_draw_size();
+//                const glm::uvec2 source_texture_size   = { texture->width(), texture->height() };
 
-               // Generate the quad for the tile using triangle strips
-               ff_8::QuadStrip  quad =
-                 imported ? get_triangle_strip_for_imported(source_tile_size, destination_tile_size, source_texture_size, front_tile, tile)
-                           : get_triangle_strip(source_tile_size, destination_tile_size, source_texture_size, front_tile, tile);
-               /// TODO fix blend
-               //   // Set the blend mode for the sprite
-               //   states.blendMode                = sf::BlendAlpha;
-               //   if (!m_disable_blends)
-               //   {
-               //        states.blendMode = set_blend_mode(tile.blend_mode(), quad);
-               //   }
+//                // Generate the quad for the tile using triangle strips
+//                ff_8::QuadStrip  quad =
+//                  imported ? get_triangle_strip_for_imported(source_tile_size, destination_tile_size, source_texture_size, front_tile,
+//                  tile)
+//                            : get_triangle_strip(source_tile_size, destination_tile_size, source_texture_size, front_tile, tile);
+//                /// TODO fix blend
+//                //   // Set the blend mode for the sprite
+//                //   states.blendMode                = sf::BlendAlpha;
+//                //   if (!m_disable_blends)
+//                //   {
+//                //        states.blendMode = set_blend_mode(tile.blend_mode(), quad);
+//                //   }
 
-               // Draw the tile to the drag sprite texture
-               /// TODO fix sprite drawing
-               // m_drag_sprite_texture->draw(quad.data(), quad.size(), sf::TriangleStrip, states);
-          }
-     };
+//                // Draw the tile to the drag sprite texture
+//                /// TODO fix sprite drawing
+//                // m_drag_sprite_texture->draw(quad.data(), quad.size(), sf::TriangleStrip, states);
+//           }
+//      };
 
-     // Iterate over all unique z values and draw the intersecting tiles at each z layer
-     for (const std::uint16_t &z : m_all_unique_values_and_strings.z().values())
-     {
-          // Draw tiles for both the regular map and the imported map
-          m_map_group.maps.original().visit_tiles([&](const auto &front_tiles) {
-               m_map_group.maps.const_working().visit_tiles([&](const auto &tiles) { draw_drag_texture(front_tiles, tiles, z); });
-          });
-          m_imported_tile_map_front.visit_tiles([&](const auto &imported_front_tiles) {
-               m_imported_tile_map.visit_tiles(
-                 [&](const auto &imported_tiles) { draw_drag_texture(imported_front_tiles, imported_tiles, z, true); });
-          });
-     }
+//      // Iterate over all unique z values and draw the intersecting tiles at each z layer
+//      for (const std::uint16_t &z : m_all_unique_values_and_strings.z().values())
+//      {
+//           // Draw tiles for both the regular map and the imported map
+//           m_map_group.maps.original().visit_tiles([&](const auto &front_tiles) {
+//                m_map_group.maps.const_working().visit_tiles([&](const auto &tiles) { draw_drag_texture(front_tiles, tiles, z); });
+//           });
+//           m_imported_tile_map_front.visit_tiles([&](const auto &imported_front_tiles) {
+//                m_imported_tile_map.visit_tiles(
+//                  [&](const auto &imported_tiles) { draw_drag_texture(imported_front_tiles, imported_tiles, z, true); });
+//           });
+//      }
 
-     // Display the drawn texture to make it visible
-     /// TODO fix sprite display?
-     // m_drag_sprite_texture->display();
+//      // Display the drawn texture to make it visible
+//      /// TODO fix sprite display?
+//      // m_drag_sprite_texture->display();
 
-     // Set the sprite's texture to the one stored in the drag sprite texture
-     /// TODO fix sprite set_texture?
-     // sprite.setTexture(m_drag_sprite_texture->getTexture());
+//      // Set the sprite's texture to the one stored in the drag sprite texture
+//      /// TODO fix sprite set_texture?
+//      // sprite.setTexture(m_drag_sprite_texture->getTexture());
 
-     // Update the render texture to reflect any changes
-     update_render_texture();
+//      // Update the render texture to reflect any changes
+//      update_render_texture();
 
-     // Return the sprite
-     return sprite;
-}
+//      // Return the sprite
+//      return sprite;
+// }
 
 
 [[nodiscard]] bool map_sprite::local_draw(const glengine::BatchRenderer &target, const glengine::Shader &shader) const
@@ -797,14 +798,14 @@ glm::uvec2 map_sprite::get_tile_texture_size(const glengine::Texture *const text
      const auto i = static_cast<std::uint32_t>(raw_texture_size.y / TILE_SIZE);
      return glm::uvec2{ i, i };
 }
-const sf::BlendMode &map_sprite::get_blend_subtract()
-{
-     const static auto blend_subtract =
-       sf::BlendMode{ sf::BlendMode::DstColor,// or One
-                      sf::BlendMode::One,      sf::BlendMode::ReverseSubtract, sf::BlendMode::One, sf::BlendMode::OneMinusSrcAlpha,
-                      sf::BlendMode::Add };
-     return blend_subtract;
-}
+// const sf::BlendMode &map_sprite::get_blend_subtract()
+// {
+//      const static auto blend_subtract =
+//        sf::BlendMode{ sf::BlendMode::DstColor,// or One
+//                       sf::BlendMode::One,      sf::BlendMode::ReverseSubtract, sf::BlendMode::One, sf::BlendMode::OneMinusSrcAlpha,
+//                       sf::BlendMode::Add };
+//      return blend_subtract;
+// }
 
 map_sprite map_sprite::with_coo(const open_viii::LangT coo) const
 {

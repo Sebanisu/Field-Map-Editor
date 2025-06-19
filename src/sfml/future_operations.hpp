@@ -8,7 +8,6 @@
 #include <filesystem>
 #include <future>
 #include <open_viii/graphics/Color.hpp>
-#include <SFML/Graphics.hpp>
 #include <spdlog/spdlog.h>
 #include <Texture.hpp>
 #include <vector>
@@ -30,10 +29,10 @@ class LoadColorsIntoTexture
 class LoadImageIntoTexture
 {
      glengine::Texture *const m_texture;
-     sf::Image                m_image;
+     //sf::Image                m_image;
 
    public:
-     LoadImageIntoTexture(glengine::Texture *const in_texture, sf::Image in_image);
+     //LoadImageIntoTexture(glengine::Texture *const in_texture, sf::Image in_image);
      void operator()() const;
 };
 class GetImageFromPathCreateFuture
@@ -45,15 +44,15 @@ class GetImageFromPathCreateFuture
      GetImageFromPathCreateFuture(glengine::Texture *const in_texture, std::filesystem::path in_path);
      std::future<void> operator()() const;
 };
-class save_image_to_path
-{
-     std::filesystem::path m_path;
-     sf::Image             m_image;
+// class save_image_to_path
+// {
+//      std::filesystem::path m_path;
+//      sf::Image             m_image;
 
-   public:
-     save_image_to_path(std::filesystem::path in_path, const sf::Image &in_image);
-     void operator()() const;
-};
+//    public:
+//      save_image_to_path(std::filesystem::path in_path, const sf::Image &in_image);
+//      void operator()() const;
+// };
 template<std::ranges::contiguous_range range_t>
 class GetImageFromFromFirstValidPathCreateFuture
 {

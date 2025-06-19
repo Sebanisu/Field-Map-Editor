@@ -634,7 +634,7 @@ void import::reset_imported_image() const
      map_sprite->update_render_texture(nullptr, {}, tile_sizes::default_size);
      m_import_image_map                = {};
      m_loaded_image_texture            = {};
-     m_loaded_image_cpu                = {};
+     //m_loaded_image_cpu                = {};
      m_import_image_path               = {};
      selections->render_imported_image = false;
      selections->update_configuration_key(ConfigKey::RenderImportedImage);
