@@ -182,7 +182,7 @@ open_viii::graphics::background::Map::variant_tile &import::combo_selected_tile(
                                                format_imgui_text("{}", tile_id);
                                                const tile_button_options options = { .size = { tooltips_size, tooltips_size } };
                                                (void)create_tile_button(map_sprite, tile, options);
-                                               //map_sprite->enable_square(tile);
+                                               // map_sprite->enable_square(tile);
                                                was_hovered = true;
                                           });
                                           return selected;
@@ -218,7 +218,7 @@ open_viii::graphics::background::Map::variant_tile &import::combo_selected_tile(
      else if (was_hovered)
      {
           was_hovered = false;
-          //map_sprite->disable_square();
+          // map_sprite->disable_square();
      }
      map_sprite->const_visit_original_tiles([&](const auto &tiles) {
           {
@@ -534,17 +534,17 @@ void import::update_scaled_up_render_texture() const
      {
           return;
      }
-     m_loaded_image_render_texture.create(scale_up_dim(size.x), scale_up_dim(size.y));
-     m_loaded_image_render_texture.setActive(true);
-     m_loaded_image_render_texture.clear(sf::Color::Transparent);
      /// TODO replace render with glengine rendering.
-     // sf::Sprite sprite = sf::Sprite(m_loaded_image_texture);
-     // sprite.setScale(1.F, -1.F);
-     // sprite.setPosition(0.F, static_cast<float>(m_loaded_image_render_texture.getSize().y));
-     // m_loaded_image_render_texture.draw(sprite);
-     m_loaded_image_render_texture.setRepeated(false);
-     m_loaded_image_render_texture.setSmooth(false);
-     m_loaded_image_render_texture.generateMipmap();
+     // m_loaded_image_render_texture.create(scale_up_dim(size.x), scale_up_dim(size.y));
+     // m_loaded_image_render_texture.setActive(true);
+     // m_loaded_image_render_texture.clear(sf::Color::Transparent);
+     // // sf::Sprite sprite = sf::Sprite(m_loaded_image_texture);
+     // // sprite.setScale(1.F, -1.F);
+     // // sprite.setPosition(0.F, static_cast<float>(m_loaded_image_render_texture.getSize().y));
+     // // m_loaded_image_render_texture.draw(sprite);
+     // m_loaded_image_render_texture.setRepeated(false);
+     // m_loaded_image_render_texture.setSmooth(false);
+     // m_loaded_image_render_texture.generateMipmap();
 }
 
 
@@ -701,7 +701,7 @@ void import::filter_empty_import_tiles() const
      //           const auto          x_start = tile.x() / tile_size_px * selections->tile_size_value;
      //           const auto          y_start = tile.y() / tile_size_px * selections->tile_size_value;
      //           const int           x_max   = x_start + selections->tile_size_value;
-     //           const sf::Vector2u &imgsize = m_loaded_image_cpu.getSize();
+     //           const glm::uvec2 &imgsize = m_loaded_image_cpu.getSize();
      //           const auto          x_end   = (std::min)(static_cast<int>(imgsize.x), x_max);
      //           const int           y_max   = y_start + selections->tile_size_value;
      //           const auto          y_end   = (std::min)(static_cast<int>(imgsize.y), y_max);

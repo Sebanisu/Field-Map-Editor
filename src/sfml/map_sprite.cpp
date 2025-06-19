@@ -486,7 +486,7 @@ sf::Sprite map_sprite::save_intersecting(const glm::ivec2 &pixel_pos, const std:
           // static constexpr float half   = 0.5F;
 
           //   states.transform.translate(
-          //     sf::Vector2f(
+          //     glm::vec2(
           //       (static_cast<float>(-pixel_pos.x) * static_cast<float>(m_scale)) + (static_cast<float>(sprite_size.x) * half),
           //       (static_cast<float>(-pixel_pos.y) * static_cast<float>(m_scale)) + (static_cast<float>(sprite_size.x) * half)));
 
@@ -751,7 +751,7 @@ sf::Sprite map_sprite::save_intersecting(const glm::ivec2 &pixel_pos, const std:
             // apply the tileset texture
             /// TODO fix drawing quad
             // target.draw(quad.data(), quad.size(), sf::TriangleStrip, states);
-            drew                         = true;
+            drew = true;
        };
      m_imported_tile_map_front.visit_tiles([&](const auto &unchanged_tiles) {
           m_imported_tile_map.visit_tiles([&](const auto &changed_tiles) {

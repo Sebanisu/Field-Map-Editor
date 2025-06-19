@@ -15,7 +15,6 @@
 #include "open_viii/graphics/background/Mim.hpp"
 #include "RangeConsumer.hpp"
 #include "settings_backup.hpp"
-// #include "square.hpp"
 #include "tile_sizes.hpp"
 #include "unique_values.hpp"
 #include "upscales.hpp"
@@ -26,7 +25,6 @@
 #include <FrameBuffer.hpp>
 #include <OrthographicCamera.hpp>
 #include <SFML/Graphics/Drawable.hpp>
-#include <SFML/Graphics/RenderTexture.hpp>
 #include <SFML/Graphics/Sprite.hpp>
 #include <SFML/Graphics/Transformable.hpp>
 #include <SFML/Graphics/Vertex.hpp>

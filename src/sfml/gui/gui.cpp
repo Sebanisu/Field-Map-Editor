@@ -951,7 +951,7 @@ void gui::update_hover_and_mouse_button_status_for_map(const ImVec2 &img_start, 
      if (ImGui::IsItemHovered())
      {
           // Calculate the mouse position relative to the image
-          sf::Vector2f relative_pos(mouse_pos.x - img_start.x, mouse_pos.y - img_start.y);
+          glm::vec2 relative_pos(mouse_pos.x - img_start.x, mouse_pos.y - img_start.y);
 
           // Map it back to the texture coordinates
           m_mouse_positions.pixel = glm::ivec2(
@@ -1256,43 +1256,44 @@ void gui::draw_map_grid_lines_for_texture_page(const ImVec2 &screen_pos, const I
           }
      }
 }
-void gui::draw_mouse_positions_sprite(const float scale, const ImVec2 &screen_pos)
+void gui::draw_mouse_positions_sprite([[maybe_unused]] const float scale, [[maybe_unused]] const ImVec2 &screen_pos)
 {
-     if (m_mouse_positions.sprite.getTexture() != nullptr)
-     {
+     // if (m_mouse_positions.sprite.getTexture() != nullptr)
+     // {
+          /// TODO replace shader and states and such with batchrendering from glengine
+          // sf::RenderStates states = {};
+          // if (m_drag_sprite_shader)
+          // {
+          //      m_drag_sprite_shader->setUniform("texture", *m_mouse_positions.sprite.getTexture());
+          //      static constexpr float border_width = 2.F;
+          //      m_drag_sprite_shader->setUniform("borderWidth", border_width);
+          //      states.shader = m_drag_sprite_shader.get();
+          // }
+          /// TODO replace RenderTexture
+          // // Prepare a render texture to draw the sprite with the shader
+          // m_shader_renderTexture.create(
+          //   static_cast<std::uint32_t>(m_mouse_positions.sprite.getGlobalBounds().width),
+          //   static_cast<std::uint32_t>(m_mouse_positions.sprite.getGlobalBounds().height));
 
-          sf::RenderStates states = {};
-          if (m_drag_sprite_shader)
-          {
-               m_drag_sprite_shader->setUniform("texture", *m_mouse_positions.sprite.getTexture());
-               static constexpr float border_width = 2.F;
-               m_drag_sprite_shader->setUniform("borderWidth", border_width);
-               states.shader = m_drag_sprite_shader.get();
-          }
-
-          // Prepare a render texture to draw the sprite with the shader
-          m_shader_renderTexture.create(
-            static_cast<std::uint32_t>(m_mouse_positions.sprite.getGlobalBounds().width),
-            static_cast<std::uint32_t>(m_mouse_positions.sprite.getGlobalBounds().height));
-
-          // Clear and draw the sprite with the shader
-          m_shader_renderTexture.clear(sf::Color::Transparent);
-          m_mouse_positions.sprite.setPosition(sf::Vector2f{});
-          m_shader_renderTexture.draw(m_mouse_positions.sprite, states);
-          m_shader_renderTexture.display();
+          // // Clear and draw the sprite with the shader
+          // m_shader_renderTexture.clear(sf::Color::Transparent);
+          /// TODO replace sprite
+          // //m_mouse_positions.sprite.setPosition(glm::vec2{});
+          // m_shader_renderTexture.draw(m_mouse_positions.sprite, states);
+          // m_shader_renderTexture.display();
 
           // int offset_y = -32 + m_mouse_positions.pixel.y % 16;
-          ImGui::SetCursorScreenPos(ImVec2(
-            (m_mouse_positions.pixel.x - 24) * scale * static_cast<float>(m_map_sprite->get_map_scale()) + screen_pos.x,
-            (m_mouse_positions.pixel.y - 24) * scale * static_cast<float>(m_map_sprite->get_map_scale()) + screen_pos.y));
-          ImGui::Image(
-            std::bit_cast<ImTextureID>(static_cast<std::uintptr_t>(m_shader_renderTexture.getTexture().getNativeHandle())),
-            ImVec2(
-              m_mouse_positions.sprite.getGlobalBounds().width * scale * static_cast<float>(m_map_sprite->get_map_scale()),
-              m_mouse_positions.sprite.getGlobalBounds().height * scale * static_cast<float>(m_map_sprite->get_map_scale())),
-            ImVec2(0, 1),
-            ImVec2(1, 0));
-     }
+          // ImGui::SetCursorScreenPos(ImVec2(
+          //   (m_mouse_positions.pixel.x - 24) * scale * static_cast<float>(m_map_sprite->get_map_scale()) + screen_pos.x,
+          //   (m_mouse_positions.pixel.y - 24) * scale * static_cast<float>(m_map_sprite->get_map_scale()) + screen_pos.y));
+          // ImGui::Image(
+          //   std::bit_cast<ImTextureID>(static_cast<std::uintptr_t>(m_shader_renderTexture.getTexture().getNativeHandle())),
+          //   ImVec2(
+          //     m_mouse_positions.sprite.getGlobalBounds().width * scale * static_cast<float>(m_map_sprite->get_map_scale()),
+          //     m_mouse_positions.sprite.getGlobalBounds().height * scale * static_cast<float>(m_map_sprite->get_map_scale())),
+          //   ImVec2(0, 1),
+          //   ImVec2(1, 0));
+     // }
 }
 void gui::consume_one_future()
 {

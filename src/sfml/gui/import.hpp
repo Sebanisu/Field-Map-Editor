@@ -10,7 +10,6 @@
 #include <memory>
 #include <open_viii/graphics/background/Map.hpp>
 #include <SFML/Graphics/Image.hpp>
-#include <SFML/Graphics/RenderTexture.hpp>
 #include <SFML/Graphics/Texture.hpp>
 #include <variant>
 
@@ -30,7 +29,7 @@ class [[nodiscard]] import
      mutable std::string                          m_import_image_path           = {};
 
      mutable glengine::Texture                    m_loaded_image_texture        = {};
-     mutable sf::RenderTexture                    m_loaded_image_render_texture = {};
+     //mutable sf::RenderTexture                    m_loaded_image_render_texture = {};
      mutable sf::Image                            m_loaded_image_cpu            = {};
 
      mutable map_directory_mode                   m_modified_directory_map      = {};
