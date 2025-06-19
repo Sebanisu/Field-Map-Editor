@@ -15,7 +15,7 @@
 #include "open_viii/graphics/background/Mim.hpp"
 #include "RangeConsumer.hpp"
 #include "settings_backup.hpp"
-#include "square.hpp"
+// #include "square.hpp"
 #include "tile_sizes.hpp"
 #include "unique_values.hpp"
 #include "upscales.hpp"
@@ -62,8 +62,9 @@ struct [[nodiscard]] map_sprite// final
      using iRectangle     = open_viii::graphics::Rectangle<std::int32_t>;
 
    private:
-     ff_8::map_group                               m_map_group = {};
-     square                                        m_square    = { sf::Vector2u{}, sf::Vector2u{ TILE_SIZE, TILE_SIZE }, sf::Color::Red };
+     ff_8::map_group                               m_map_group                  = {};
+     // TODO do I need square?
+     //  square                                        m_square    = { glm::uvec2{}, glm::uvec2{ TILE_SIZE, TILE_SIZE }, sf::Color::Red };
      bool                                          m_draw_swizzle               = { false };
      bool                                          m_disable_texture_page_shift = { false };
      bool                                          m_disable_blends             = { false };
@@ -116,8 +117,8 @@ struct [[nodiscard]] map_sprite// final
      }
      [[nodiscard]] const glengine::Texture             *get_texture(BPPT bpp, std::uint8_t palette, std::uint8_t texture_page) const;
      [[nodiscard]] const glengine::Texture             *get_texture(const ff_8::PupuID &pupu) const;
-     [[nodiscard]] sf::Vector2u                         get_tile_texture_size(const glengine::Texture *const texture) const;
-     [[nodiscard]] sf::Vector2u                         get_tile_draw_size() const;
+     [[nodiscard]] glm::uvec2                           get_tile_texture_size(const glengine::Texture *const texture) const;
+     [[nodiscard]] glm::uvec2                           get_tile_draw_size() const;
      [[nodiscard]] bool                                 generate_texture(const glengine::FrameBuffer &texture) const;
      [[nodiscard]] std::uint32_t                        get_max_texture_height() const;
      [[nodiscard]] bool                                 local_draw(const glengine::BatchRenderer &, const glengine::Shader &) const;
@@ -144,13 +145,13 @@ struct [[nodiscard]] map_sprite// final
      [[nodiscard]] std::uint8_t                         max_x_for_saved() const;
      [[nodiscard]] map_sprite                           update(ff_8::map_group map_group, bool draw_swizzle) const;
      [[nodiscard]] all_unique_values_and_strings        get_all_unique_values_and_strings() const;
-     [[nodiscard]] sf::Vector2u                         get_tile_texture_size_for_import() const;
+     [[nodiscard]] glm::uvec2                           get_tile_texture_size_for_import() const;
      [[nodiscard]] Rectangle                            get_canvas() const;
      [[nodiscard]] bool                                 undo_enabled() const;
      [[nodiscard]] bool                                 redo_enabled() const;
      [[nodiscard]] bool                                 history_remove_duplicate();
      [[nodiscard]] ff_8::filters                       &filter();
-     [[nodiscard]] static sf::BlendMode                 set_blend_mode(const BlendModeT &blend_mode, std::array<sf::Vertex, 4U> &quad);
+     //[[nodiscard]] static sf::BlendMode                 set_blend_mode(const BlendModeT &blend_mode, std::array<sf::Vertex, 4U> &quad);
      [[nodiscard]] SharedTextures                       load_textures();
      [[nodiscard]] SharedTextures                       load_textures_internal();
      [[nodiscard]] static colors_type                   get_colors(const Mim &mim, BPPT bpp, uint8_t palette);
@@ -166,7 +167,7 @@ struct [[nodiscard]] map_sprite// final
      {
           return str_to_lower(std::string{ input });
      }
-     [[nodiscard]] sf::Sprite                     save_intersecting(const sf::Vector2i &pixel_pos, const std::uint8_t &texture_page);
+     [[nodiscard]] sf::Sprite                     save_intersecting(const glm::ivec2 &pixel_pos, const std::uint8_t &texture_page);
      [[nodiscard]] std::size_t                    get_texture_pos(BPPT bpp, std::uint8_t palette, std::uint8_t texture_page) const;
      [[nodiscard]] std::vector<std::future<void>> save_swizzle_textures(const std::string &keyed_string, const std::string &selected_path);
      [[nodiscard]] std::vector<std::future<void>>
@@ -185,13 +186,13 @@ struct [[nodiscard]] map_sprite// final
      void        map_save(const std::filesystem::path &dest_path) const;
      void        test_map(const std::filesystem::path &saved_path) const;
      void        set_uniforms(const glengine::FrameBuffer &fbo, const glengine::Shader &shader) const;
-     void        disable_square() const;
+     //void        disable_square() const;
      // void        draw(sf::RenderTarget &target, sf::RenderStates states) const final;
      void        enable_draw_swizzle();
      void        disable_draw_swizzle();
      void        enable_disable_blends();
      void        disable_disable_blends();
-     void        enable_square(sf::Vector2u position);
+     //void        enable_square(glm::uvec2 position);
      void        compact_move_conflicts_only();
      void        compact_map_order();
      void        compact_map_order_ffnx();
@@ -212,7 +213,7 @@ struct [[nodiscard]] map_sprite// final
      void        update_render_texture(const glengine::Texture *p_texture, Map map, const tile_sizes tile_size);
      static void consume_futures(std::vector<std::future<void>> &futures);
      static void consume_futures(std::vector<std::future<std::future<void>>> &future_of_futures);
-     void        update_position(const sf::Vector2i &pixel_pos, const uint8_t &texture_page, const sf::Vector2i &down_pixel_pos);
+     void        update_position(const glm::ivec2 &pixel_pos, const uint8_t &texture_page, const glm::ivec2 &down_pixel_pos);
 
      static std::filesystem::path save_path_coo(
        fmt::format_string<std::string_view, std::string_view, uint8_t> pattern,
@@ -252,14 +253,14 @@ struct [[nodiscard]] map_sprite// final
 
      [[nodiscard]] std::vector<std::size_t> find_intersecting(
        const open_viii::graphics::background::Map &map,
-       const sf::Vector2i                         &pixel_pos,
+       const glm::ivec2                           &pixel_pos,
        const std::uint8_t                         &texture_page,
        bool                                        skip_filters = false,
        bool                                        find_all     = false) const;
      template<std::ranges::range tilesT>
      [[nodiscard]] std::vector<std::size_t> find_intersecting(
        const tilesT       &tiles,
-       const sf::Vector2i &pixel_pos,
+       const glm::ivec2   &pixel_pos,
        const std::uint8_t &texture_page,
        bool                skip_filters = false,
        bool                find_all     = false) const
@@ -328,28 +329,28 @@ struct [[nodiscard]] map_sprite// final
      }
 
 
-     template<open_viii::graphics::background::is_tile tile_type>
-     void enable_square(const tile_type &tile)
-     {
-          using namespace open_viii::graphics::literals;
-          auto       src_tpw = tile_type::texture_page_width(tile.depth());
-          const auto x       = [&tile, &src_tpw]() -> std::uint32_t { return tile.texture_id() * src_tpw; }();
-          const auto src_x   = [&tile, &x, this]() -> std::uint32_t {
-               if (!m_filters.deswizzle.enabled())
-               {
-                    return static_cast<std::uint32_t>(tile.x());
-               }
-               return tile.source_x() + x;
-          }();
-          const auto src_y = [&tile, this]() -> std::uint32_t {
-               if (!m_filters.deswizzle.enabled())
-               {
-                    return static_cast<std::uint32_t>(tile.y());
-               }
-               return tile.source_y();
-          }();
-          enable_square(sf::Vector2u(src_x, src_y));
-     }
+     // template<open_viii::graphics::background::is_tile tile_type>
+     // void enable_square(const tile_type &tile)
+     // {
+     //      using namespace open_viii::graphics::literals;
+     //      auto       src_tpw = tile_type::texture_page_width(tile.depth());
+     //      const auto x       = [&tile, &src_tpw]() -> std::uint32_t { return tile.texture_id() * src_tpw; }();
+     //      const auto src_x   = [&tile, &x, this]() -> std::uint32_t {
+     //           if (!m_filters.deswizzle.enabled())
+     //           {
+     //                return static_cast<std::uint32_t>(tile.x());
+     //           }
+     //           return tile.source_x() + x;
+     //      }();
+     //      const auto src_y = [&tile, this]() -> std::uint32_t {
+     //           if (!m_filters.deswizzle.enabled())
+     //           {
+     //                return static_cast<std::uint32_t>(tile.y());
+     //           }
+     //           return tile.source_y();
+     //      }();
+     //      enable_square(glm::uvec2(src_x, src_y));
+     // }
 
      auto duel_visitor(auto &&lambda) const
      {
@@ -474,26 +475,28 @@ struct [[nodiscard]] map_sprite// final
           return { std::string{ field->get_base_name() }, m_map_group.opt_coo, m_selections };
      }
 
+     static glm::vec2 to_vec2(const glm::ivec2 &v)
+     {
+          return glm::vec2(v);
+     }
+     static glm::vec2 to_vec2(const glm::uvec2 &v)
+     {
+          return glm::vec2(v);
+     }
 
-     [[nodiscard]] static sf::Vector2f to_Vector2f(sf::Vector2u in_vec)
-     {
-          return { static_cast<float>(in_vec.x), static_cast<float>(in_vec.y) };
-     }
-     [[nodiscard]] static sf::Vector2f to_Vector2f(sf::Vector2i in_vec)
-     {
-          return { static_cast<float>(in_vec.x), static_cast<float>(in_vec.y) };
-     }
-     [[nodiscard]] std::array<sf::Vertex, 4U> get_triangle_strip_for_imported(
-       const sf::Vector2u                                  &draw_size,
-       const sf::Vector2u                                  &texture_size,
+     [[nodiscard]] ff_8::QuadStrip get_triangle_strip_for_imported(
+       const glm::uvec2                                    &source_tile_size,
+       const glm::uvec2                                    &destination_tile_size,
+       const glm::uvec2                                    &source_texture_size,
        const open_viii::graphics::background::is_tile auto &tile_const,
        open_viii::graphics::background::is_tile auto      &&tile) const
      {
-          return get_triangle_strip(draw_size, texture_size, tile_const, tile, true);
+          return get_triangle_strip(source_tile_size, destination_tile_size, source_texture_size, tile_const, tile, true);
      }
-     [[nodiscard]] std::array<sf::Vertex, 4U> get_triangle_strip(
-       const sf::Vector2u                                  &draw_size,
-       const sf::Vector2u                                  &texture_size,
+     [[nodiscard]] ff_8::QuadStrip get_triangle_strip(
+       const glm::uvec2                                    &source_tile_size,
+       const glm::uvec2                                    &destination_tile_size,
+       const glm::uvec2                                    &source_texture_size,
        const open_viii::graphics::background::is_tile auto &tile_const,
        open_viii::graphics::background::is_tile auto      &&tile,
        bool                                                 imported = false) const
@@ -501,30 +504,31 @@ struct [[nodiscard]] map_sprite// final
           const auto src = [this, &tile_const, &imported]() {
                if (imported)
                {
-                    return to_Vector2f(ff_8::get_triangle_strip_source_imported(tile_const));
+                    return to_vec2(ff_8::get_triangle_strip_source_imported(tile_const));
                }
                if (m_filters.upscale.enabled())
                {
-                    return to_Vector2f(ff_8::get_triangle_strip_source_upscale(tile_const));
+                    return to_vec2(ff_8::get_triangle_strip_source_upscale(tile_const));
                }
                if (m_filters.deswizzle.enabled())
                {
-                    return to_Vector2f(ff_8::get_triangle_strip_source_deswizzle(tile_const));
+                    return to_vec2(ff_8::get_triangle_strip_source_deswizzle(tile_const));
                }
-               return to_Vector2f(ff_8::get_triangle_strip_source_default(tile_const));
+               return to_vec2(ff_8::get_triangle_strip_source_default(tile_const));
           }();
           const auto dest = [this, &tile]() {
                if (m_draw_swizzle)
                {
                     if (m_disable_texture_page_shift)
                     {
-                         return to_Vector2f(ff_8::get_triangle_strip_dest_swizzle_disable_shift(tile));
+                         return to_vec2(ff_8::get_triangle_strip_dest_swizzle_disable_shift(tile));
                     }
-                    return to_Vector2f(ff_8::get_triangle_strip_dest_swizzle(tile));
+                    return to_vec2(ff_8::get_triangle_strip_dest_swizzle(tile));
                }
-               return to_Vector2f(ff_8::get_triangle_strip_dest_default(tile));
+               return to_vec2(ff_8::get_triangle_strip_dest_default(tile));
           }();
-          return ff_8::get_triangle_strip(to_Vector2f(draw_size), to_Vector2f(texture_size), src, dest);
+          return ff_8::get_triangle_strip(
+            to_vec2(source_tile_size), to_vec2(destination_tile_size), to_vec2(source_texture_size), src, dest);
      }
 
      [[nodiscard]] std::vector<std::filesystem::path> generate_deswizzle_paths(const std::string &ext) const;

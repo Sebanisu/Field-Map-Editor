@@ -954,7 +954,7 @@ void gui::update_hover_and_mouse_button_status_for_map(const ImVec2 &img_start, 
           sf::Vector2f relative_pos(mouse_pos.x - img_start.x, mouse_pos.y - img_start.y);
 
           // Map it back to the texture coordinates
-          m_mouse_positions.pixel = sf::Vector2i(
+          m_mouse_positions.pixel = glm::ivec2(
             static_cast<int>(relative_pos.x / scale / static_cast<float>(m_map_sprite->get_map_scale())),
             static_cast<int>(relative_pos.y / scale / static_cast<float>(m_map_sprite->get_map_scale())));
 

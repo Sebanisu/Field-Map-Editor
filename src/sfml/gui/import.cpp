@@ -182,7 +182,7 @@ open_viii::graphics::background::Map::variant_tile &import::combo_selected_tile(
                                                format_imgui_text("{}", tile_id);
                                                const tile_button_options options = { .size = { tooltips_size, tooltips_size } };
                                                (void)create_tile_button(map_sprite, tile, options);
-                                               map_sprite->enable_square(tile);
+                                               //map_sprite->enable_square(tile);
                                                was_hovered = true;
                                           });
                                           return selected;
@@ -218,7 +218,7 @@ open_viii::graphics::background::Map::variant_tile &import::combo_selected_tile(
      else if (was_hovered)
      {
           was_hovered = false;
-          map_sprite->disable_square();
+          //map_sprite->disable_square();
      }
      map_sprite->const_visit_original_tiles([&](const auto &tiles) {
           {

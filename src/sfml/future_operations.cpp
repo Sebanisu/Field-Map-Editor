@@ -7,7 +7,7 @@
 future_operations::LoadColorsIntoTexture::LoadColorsIntoTexture(
   glengine::Texture *const                        in_texture,
   std::vector<open_viii::graphics::Color32RGBA> &&in_colors,
-  sf::Vector2u                                    in_size)
+  glm::uvec2                                    in_size)
   : m_texture(in_texture)
   , m_colors(std::move(in_colors))
   , m_size(in_size)

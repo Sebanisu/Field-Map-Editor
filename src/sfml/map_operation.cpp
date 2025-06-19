@@ -7,6 +7,8 @@
 #include "tile_operations.hpp"
 #include <algorithm>
 #include <functional>
+#include <glm/common.hpp>
+#include <glm/glm.hpp>
 #include <ranges>
 namespace ff_8
 {
@@ -234,7 +236,7 @@ void compact_all(map_group::Map &map)
 [[nodiscard]] std::vector<std::size_t> find_intersecting_swizzle(
   const map_group::Map &map,
   const ff_8::filters  &filters,
-  const sf::Vector2i   &pixel_pos,
+  const glm::ivec2     &pixel_pos,
   const std::uint8_t   &texture_page,
   bool                  skip_filters,
   bool                  find_all)
@@ -245,34 +247,29 @@ void compact_all(map_group::Map &map)
 [[nodiscard]] std::vector<std::size_t> find_intersecting_deswizzle(
   const map_group::Map &map,
   const ff_8::filters  &filters,
-  const sf::Vector2i   &pixel_pos,
+  const glm::ivec2     &pixel_pos,
   bool                  skip_filters,
   bool                  find_all)
 {
      return map.visit_tiles(
        [&](const auto &tiles) { return find_intersecting_deswizzle(tiles, filters, pixel_pos, skip_filters, find_all); });
 }
-std::array<sf::Vertex, 4U>
-  get_triangle_strip(const sf::Vector2f &draw_size, const sf::Vector2f &texture_size, sf::Vector2f source, sf::Vector2f dest)
+QuadStrip get_triangle_strip(
+  const glm::vec2 &source_tile_size,
+  const glm::vec2 &destination_tile_size,
+  const glm::vec2 &source_texture_size,
+  const glm::vec2 &source_position,
+  const glm::vec2 &destination_position)
 
 {
-     constexpr static auto tile_size_f = static_cast<float>(map_group::TILE_SIZE);
-     source /= tile_size_f;
-     dest /= tile_size_f;
-     const auto tovec  = [](auto &&in_x, auto &&in_y) { return sf::Vector2f{ static_cast<float>(in_x), static_cast<float>(in_y) }; };
-     const auto tovert = [&tovec](auto &&draw_x, auto &&draw_y, auto &&texture_x, auto &&texture_y) {
-          return sf::Vertex{ tovec(draw_x, draw_y), tovec(texture_x, texture_y) };
-     };
-     return std::array{
-          tovert((dest.x + 1.F) * draw_size.x, dest.y * draw_size.y, (source.x + 1.F) * texture_size.x, source.y * texture_size.y),
-          tovert(dest.x * draw_size.x, dest.y * draw_size.y, source.x * texture_size.x, source.y * texture_size.y),
-          tovert(
-            (dest.x + 1.F) * draw_size.x,
-            (dest.y + 1.F) * draw_size.y,
-            (source.x + 1.F) * texture_size.x,
-            (source.y + 1.F) * texture_size.y),
-          tovert(dest.x * draw_size.x, (dest.y + 1.F) * draw_size.y, source.x * texture_size.x, (source.y + 1.F) * texture_size.y)
-     };
+     // source_position and destination_position are in TILE_SIZE cordinates. TILE_SIZE default is 16x16.
+     // So we pass in the scaled up source_tile_size and destination_tile_size and do the conversion.
+     constexpr static auto tile_size      = static_cast<float>(map_group::TILE_SIZE);
+     const glm::vec2       aligned_source = glm::floor(source_position / tile_size);
+     return { .uv_min   = (aligned_source * source_tile_size) / source_texture_size,
+              .uv_max   = ((aligned_source + glm::vec2(1)) * source_tile_size) / source_texture_size,
+              .draw_pos = (destination_position / tile_size) * destination_tile_size };
+
 }
 bool test_if_map_same(const std::filesystem::path &saved_path, const map_group::WeakField &weak_field, const map_group::MimType &type)
 {

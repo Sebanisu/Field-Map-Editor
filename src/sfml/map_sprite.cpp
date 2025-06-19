@@ -239,7 +239,7 @@ std::future<std::future<void>> map_sprite::load_mim_textures(
                  return { std::async(
                    std::launch::deferred,
                    future_operations::LoadColorsIntoTexture{
-                     texture, get_colors(*mim, bpp, palette), sf::Vector2u{ mim->get_width(bpp), mim->get_height() } }) };
+                     texture, get_colors(*mim, bpp, palette), glm::uvec2{ mim->get_width(bpp), mim->get_height() } }) };
             },
             m_map_group.mim,
             &(ret->at(pos))) };
@@ -288,13 +288,13 @@ std::future<std::future<void>> map_sprite::load_upscale_textures(SharedTextures 
        future_operations::GetImageFromFromFirstValidPathCreateFuture{ &(ret->at(pos)), generate_swizzle_paths(texture_page) }) };
 }
 
-void set_color(std::array<sf::Vertex, 4U> &vertices, const sf::Color &color)
-{
-     std::ranges::transform(vertices, vertices.begin(), [&color](sf::Vertex vertex) {
-          vertex.color = color;
-          return vertex;
-     });
-}
+// void set_color(std::array<sf::Vertex, 4U> &vertices, const sf::Color &color)
+// {
+//      std::ranges::transform(vertices, vertices.begin(), [&color](sf::Vertex vertex) {
+//           vertex.color = color;
+//           return vertex;
+//      });
+// }
 enum struct texture_page_width : std::uint16_t
 {
      bit_4  = 256U,
@@ -356,7 +356,7 @@ void map_sprite::flatten_palette()
      update_render_texture();
 }
 
-void map_sprite::update_position(const sf::Vector2i &pixel_pos, const uint8_t &texture_page, const sf::Vector2i &down_pixel_pos)
+void map_sprite::update_position(const glm::ivec2 &pixel_pos, const uint8_t &texture_page, const glm::ivec2 &down_pixel_pos)
 {
      if (m_saved_indices.empty() && m_saved_imported_indices.empty())
      {
@@ -434,7 +434,7 @@ void map_sprite::update_position(const sf::Vector2i &pixel_pos, const uint8_t &t
      update_render_texture();
 }
 
-sf::Sprite map_sprite::save_intersecting(const sf::Vector2i &pixel_pos, const std::uint8_t &texture_page)
+sf::Sprite map_sprite::save_intersecting(const glm::ivec2 &pixel_pos, const std::uint8_t &texture_page)
 {
      // Initialize an empty sprite object
      sf::Sprite sprite      = {};
@@ -477,63 +477,65 @@ sf::Sprite map_sprite::save_intersecting(const sf::Vector2i &pixel_pos, const st
      m_drag_sprite_framebuffer.clear_red_integer_color_attachment();
 
      // Lambda function to draw tiles based on the front tiles and tile data, and optionally imported tiles
-     const auto draw_drag_texture =
-       [this, &pixel_pos, &sprite_size](const auto &front_tiles, const auto &tiles, const std::uint16_t z, bool imported = false) {
-            // sf::RenderStates       states = {};
+     const auto draw_drag_texture = [this, &pixel_pos, &sprite_size](
+                                      const auto &front_tiles, const auto &tiles, const std::uint16_t z, bool imported = false) {
+          // sf::RenderStates       states = {};
 
-            // Set the transformation to adjust the sprite's position based on the scale and pixel position
-            /// TODO fix offset
-            // static constexpr float half   = 0.5F;
+          // Set the transformation to adjust the sprite's position based on the scale and pixel position
+          /// TODO fix offset
+          // static constexpr float half   = 0.5F;
 
-            //   states.transform.translate(
-            //     sf::Vector2f(
-            //       (static_cast<float>(-pixel_pos.x) * static_cast<float>(m_scale)) + (static_cast<float>(sprite_size.x) * half),
-            //       (static_cast<float>(-pixel_pos.y) * static_cast<float>(m_scale)) + (static_cast<float>(sprite_size.x) * half)));
+          //   states.transform.translate(
+          //     sf::Vector2f(
+          //       (static_cast<float>(-pixel_pos.x) * static_cast<float>(m_scale)) + (static_cast<float>(sprite_size.x) * half),
+          //       (static_cast<float>(-pixel_pos.y) * static_cast<float>(m_scale)) + (static_cast<float>(sprite_size.x) * half)));
 
-            // Loop through either saved imported indices or regular saved indices based on the flag
-            for (const auto tile_index : imported ? m_saved_imported_indices : m_saved_indices)
-            {
-                 const auto &tile       = tiles[tile_index];
-                 const auto &front_tile = front_tiles[tile_index];
+          // Loop through either saved imported indices or regular saved indices based on the flag
+          for (const auto tile_index : imported ? m_saved_imported_indices : m_saved_indices)
+          {
+               const auto &tile       = tiles[tile_index];
+               const auto &front_tile = front_tiles[tile_index];
 
-                 // Skip drawing if the front tile's z-index does not match the current z layer
-                 if (front_tile.z() != z)
-                 {
-                      continue;
-                 }
+               // Skip drawing if the front tile's z-index does not match the current z layer
+               if (front_tile.z() != z)
+               {
+                    continue;
+               }
 
-                 // Set the texture for the tile, either imported or regular
+               // Set the texture for the tile, either imported or regular
 
-                 const auto *const texture =
-                   imported ? m_imported_texture : get_texture(front_tile.depth(), front_tile.palette_id(), front_tile.texture_id());
-                 // states.texture =
+               const auto *const texture =
+                 imported ? m_imported_texture : get_texture(front_tile.depth(), front_tile.palette_id(), front_tile.texture_id());
+               // states.texture =
 
-                 // Skip if the texture is invalid (size is zero)
-                 if (texture == nullptr || texture->height() == 0 || texture->width() == 0)
-                 {
-                      continue;
-                 }
+               // Skip if the texture is invalid (size is zero)
+               if (texture == nullptr || texture->height() == 0 || texture->width() == 0)
+               {
+                    continue;
+               }
 
-                 // Calculate draw size and texture size for the tile
-                 const auto                 draw_size    = get_tile_draw_size();
-                 const auto                 texture_size = imported ? get_tile_texture_size_for_import() : get_tile_texture_size(texture);
+               // Calculate draw size and texture size for the tile
+               const auto       source_tile_size      = imported ? get_tile_texture_size_for_import() : get_tile_texture_size(texture);
+               const auto       destination_tile_size = get_tile_draw_size();
+               const glm::uvec2 source_texture_size   = { texture->width(), texture->height() };
 
-                 // Generate the quad for the tile using triangle strips
-                 std::array<sf::Vertex, 4U> quad = imported ? get_triangle_strip_for_imported(draw_size, texture_size, front_tile, tile)
-                                                            : get_triangle_strip(draw_size, texture_size, front_tile, tile);
-                 /// TODO fix blend
-                 //   // Set the blend mode for the sprite
-                 //   states.blendMode                = sf::BlendAlpha;
-                 //   if (!m_disable_blends)
-                 //   {
-                 //        states.blendMode = set_blend_mode(tile.blend_mode(), quad);
-                 //   }
+               // Generate the quad for the tile using triangle strips
+               ff_8::QuadStrip  quad =
+                 imported ? get_triangle_strip_for_imported(source_tile_size, destination_tile_size, source_texture_size, front_tile, tile)
+                           : get_triangle_strip(source_tile_size, destination_tile_size, source_texture_size, front_tile, tile);
+               /// TODO fix blend
+               //   // Set the blend mode for the sprite
+               //   states.blendMode                = sf::BlendAlpha;
+               //   if (!m_disable_blends)
+               //   {
+               //        states.blendMode = set_blend_mode(tile.blend_mode(), quad);
+               //   }
 
-                 // Draw the tile to the drag sprite texture
-                 /// TODO fix sprite drawing
-                 // m_drag_sprite_texture->draw(quad.data(), quad.size(), sf::TriangleStrip, states);
-            }
-       };
+               // Draw the tile to the drag sprite texture
+               /// TODO fix sprite drawing
+               // m_drag_sprite_texture->draw(quad.data(), quad.size(), sf::TriangleStrip, states);
+          }
+     };
 
      // Iterate over all unique z values and draw the intersecting tiles at each z layer
      for (const std::uint16_t &z : m_all_unique_values_and_strings.z().values())
@@ -659,79 +661,52 @@ sf::Sprite map_sprite::save_intersecting(const sf::Vector2i &pixel_pos, const st
                          }
                     }
                }
-               const auto                 texture_dims  = glm::vec2{ texture->width(), texture->height() };
-               const auto                 texture_size  = get_tile_texture_size(texture);
-               const auto                 draw_size     = get_tile_draw_size();
-               std::array<sf::Vertex, 4U> quad          = get_triangle_strip(draw_size, texture_size, tile_const, tile);
-               // Extract UV coordinates from quad
-               // Assuming quad[0] is top-left, quad[1] is top-right, quad[2] is bottom-left, quad[3] is bottom-right
-               glm::vec2                  min_uv        = glm::vec2(quad[1].texCoords.x, quad[1].texCoords.y) / texture_dims;
-               glm::vec2                  max_uv        = glm::vec2(quad[2].texCoords.x, quad[2].texCoords.y) / texture_dims;
+               const auto            source_tile_size      = get_tile_draw_size();
+               const auto            destination_tile_size = get_tile_texture_size(texture);
+               const auto            source_texture_size   = glm::uvec2{ texture->width(), texture->height() };
+               const ff_8::QuadStrip quad =
+                 get_triangle_strip(source_tile_size, destination_tile_size, source_texture_size, tile_const, tile);
 
-               // glm::vec2                  min_uv        = glm::vec2{ 0 };
-               // glm::vec2                  max_uv        = glm::vec2{ 1 };
                //  Extract draw position (x, y) from quad[0] (top-left vertex)
-               glm::vec3                  draw_position = glm::vec3(quad[1].position.x, quad[1].position.y, 0.F);
-
-               // // Extract width and height
-               // glm::vec2                  draw_size     = { quad[1].position.x - quad[0].position.x,// top-right.x - top-left.x
-               //                                              quad[2].position.y - quad[0].position.y };// bottom-left.y - top-left.y
-
-               // // If SFML's texture coordinates have y increasing downward, flip y to match OpenGL's upward y
-               // min_uv.y = 1.f - (min_uv.y / texture_dims.y);
-               // max_uv.y = 1.f - (max_uv.y / texture_dims.y);
+               glm::vec3            draw_position = glm::vec3(quad.draw_pos, 0.F);
 
                // Create the SubTexture
-               glengine::SubTexture       subtexture(*texture, min_uv, max_uv);
+               glengine::SubTexture subtexture(*texture, quad.uv_min, quad.uv_max);
 
                target.draw_quad(
                  subtexture,
                  draw_position,
                  glm::vec2{ static_cast<float>(TILE_SIZE) * m_scale },
                  static_cast<int>(m_map_group.maps.get_offset_from_working(tile)));
-               /// TODO fix blendmode
-               // states.blendMode        = sf::BlendAlpha;
-               // if (!m_disable_blends)
-               // {
-               //      states.blendMode = set_blend_mode(tile.blend_mode(), quad);
-               // }
-               // apply the tileset texture
-
-               // std::lock_guard<std::mutex> lock(mutex_texture);
-               // spdlog::info("({}, {})\t", raw_texture_size.x, raw_texture_size.y);
-               // draw the vertex array
-
-               /// TODO fix drawing the quad
-               // target.draw(quad.data(), quad.size(), sf::TriangleStrip);
                drew = true;
           });
      }
      return drew;
 }
-sf::BlendMode map_sprite::set_blend_mode(const BlendModeT &blend_mode, std::array<sf::Vertex, 4U> &quad)
-{
-     if (blend_mode == BlendModeT::add)
-     {
-          return sf::BlendAdd;
-     }
-     else if (blend_mode == BlendModeT::half_add)
-     {
-          constexpr static uint8_t per_50 = (std::numeric_limits<uint8_t>::max)() / 2U;
-          set_color(quad, { per_50, per_50, per_50, per_50 });// 50% alpha
-          return sf::BlendAdd;
-     }
-     else if (blend_mode == BlendModeT::quarter_add)
-     {
-          constexpr static uint8_t per_25 = (std::numeric_limits<uint8_t>::max)() / 4U;
-          set_color(quad, { per_25, per_25, per_25, per_25 });// 25% alpha
-          return sf::BlendAdd;
-     }
-     else if (blend_mode == BlendModeT::subtract)
-     {
-          return get_blend_subtract();
-     }
-     return sf::BlendAlpha;
-}
+// sf::BlendMode map_sprite::set_blend_mode(const BlendModeT &blend_mode, std::array<sf::Vertex, 4U> &quad)
+// {
+//      if (blend_mode == BlendModeT::add)
+//      {
+//           return sf::BlendAdd;
+//      }
+//      else if (blend_mode == BlendModeT::half_add)
+//      {
+//           constexpr static uint8_t per_50 = (std::numeric_limits<uint8_t>::max)() / 2U;
+//           set_color(quad, { per_50, per_50, per_50, per_50 });// 50% alpha
+//           return sf::BlendAdd;
+//      }
+//      else if (blend_mode == BlendModeT::quarter_add)
+//      {
+//           constexpr static uint8_t per_25 = (std::numeric_limits<uint8_t>::max)() / 4U;
+//           set_color(quad, { per_25, per_25, per_25, per_25 });// 25% alpha
+//           return sf::BlendAdd;
+//      }
+//      else if (blend_mode == BlendModeT::subtract)
+//      {
+//           return get_blend_subtract();
+//      }
+//      return sf::BlendAlpha;
+// }
 [[nodiscard]] bool map_sprite::draw_imported([[maybe_unused]] const glengine::FrameBuffer &target) const
 {
      using namespace open_viii::graphics::background;
@@ -762,9 +737,11 @@ sf::BlendMode map_sprite::set_blend_mode(const BlendModeT &blend_mode, std::arra
             {
                  return;
             }
-            const auto                 draw_size    = get_tile_draw_size();
-            const auto                 texture_size = get_tile_texture_size_for_import();
-            std::array<sf::Vertex, 4U> quad         = get_triangle_strip_for_imported(draw_size, texture_size, tile_const, tile);
+            const auto       source_tile_size      = get_tile_texture_size_for_import();
+            const auto       destination_tile_size = get_tile_draw_size();
+            const glm::uvec2 source_texture_size   = { m_imported_texture->width(), m_imported_texture->height() };
+            ff_8::QuadStrip  quad =
+              get_triangle_strip_for_imported(source_tile_size, destination_tile_size, source_texture_size, tile_const, tile);
             /// TODO fix blend mode
             //   states.blendMode        = sf::BlendAlpha;
             //   if (!m_disable_blends)
@@ -774,7 +751,7 @@ sf::BlendMode map_sprite::set_blend_mode(const BlendModeT &blend_mode, std::arra
             // apply the tileset texture
             /// TODO fix drawing quad
             // target.draw(quad.data(), quad.size(), sf::TriangleStrip, states);
-            drew                                    = true;
+            drew                         = true;
        };
      m_imported_tile_map_front.visit_tiles([&](const auto &unchanged_tiles) {
           m_imported_tile_map.visit_tiles([&](const auto &changed_tiles) {
@@ -801,24 +778,24 @@ sf::BlendMode map_sprite::set_blend_mode(const BlendModeT &blend_mode, std::arra
      });
      return drew;
 }
-sf::Vector2u map_sprite::get_tile_draw_size() const
+glm::uvec2 map_sprite::get_tile_draw_size() const
 {
-     return sf::Vector2u{ TILE_SIZE * m_scale, TILE_SIZE * m_scale };
+     return glm::uvec2{ TILE_SIZE * m_scale, TILE_SIZE * m_scale };
 }
-sf::Vector2u map_sprite::get_tile_texture_size_for_import() const
+glm::uvec2 map_sprite::get_tile_texture_size_for_import() const
 {
-     return sf::Vector2u{ m_imported_tile_size, m_imported_tile_size };
+     return glm::uvec2{ m_imported_tile_size, m_imported_tile_size };
 }
-sf::Vector2u map_sprite::get_tile_texture_size(const glengine::Texture *const texture) const
+glm::uvec2 map_sprite::get_tile_texture_size(const glengine::Texture *const texture) const
 {
      const auto raw_texture_size = texture->get_size();
      if (m_filters.deswizzle.enabled())
      {
           const auto local_scale = raw_texture_size.y / m_canvas.height();
-          return sf::Vector2u{ TILE_SIZE * local_scale, TILE_SIZE * local_scale };
+          return glm::uvec2{ TILE_SIZE * local_scale, TILE_SIZE * local_scale };
      }
      const auto i = static_cast<std::uint32_t>(raw_texture_size.y / TILE_SIZE);
-     return sf::Vector2u{ i, i };
+     return glm::uvec2{ i, i };
 }
 const sf::BlendMode &map_sprite::get_blend_subtract()
 {
@@ -862,7 +839,7 @@ void map_sprite::disable_draw_swizzle()
 //      states.transform *= getTransform();
 //      states.texture    = &m_render_texture->getTexture();
 //      auto texture_size = m_render_texture->getSize();
-//      auto draw_size    = sf::Vector2u(width(), height());
+//      auto draw_size    = glm::uvec2(width(), height());
 //      auto quad         = ff_8::get_triangle_strip(to_Vector2f(draw_size), to_Vector2f(texture_size), {}, {});
 //      // draw the vertex array
 //      target.draw(quad.data(), quad.size(), sf::TriangleStrip, states);
@@ -1804,15 +1781,15 @@ void map_sprite::update_render_texture(
      m_using_imported_texture  = p_texture != nullptr;
      update_render_texture(true);
 }
-void map_sprite::enable_square(sf::Vector2u position)
-{
-     m_square = m_square.with_position(position);
-     m_square.enable();
-}
-void map_sprite::disable_square() const
-{
-     m_square.disable();
-}
+// void map_sprite::enable_square(glm::uvec2 position)
+// {
+//      m_square = m_square.with_position(position);
+//      m_square.enable();
+// }
+// void map_sprite::disable_square() const
+// {
+//      m_square.disable();
+// }
 void map_sprite::enable_disable_blends()
 {
      m_disable_blends = true;
@@ -1949,12 +1926,9 @@ std::uint32_t map_sprite::get_map_scale() const
 {
      return m_scale;
 }
-std::vector<std::size_t> map_sprite::find_intersecting(
-  const Map          &map,
-  const sf::Vector2i &pixel_pos,
-  const uint8_t      &texture_page,
-  bool                skip_filters,
-  bool                find_all) const
+std::vector<std::size_t>
+  map_sprite::find_intersecting(const Map &map, const glm::ivec2 &pixel_pos, const uint8_t &texture_page, bool skip_filters, bool find_all)
+    const
 {
      if (m_draw_swizzle)
      {

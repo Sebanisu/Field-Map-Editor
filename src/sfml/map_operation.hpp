@@ -7,10 +7,17 @@
 #include "filter.hpp"
 #include "map_group.hpp"
 #include "source_tile_conflicts.hpp"
+#include <glm/glm.hpp>
 #include <SFML/Graphics/Vertex.hpp>
 #include <SFML/System/Vector2.hpp>
 namespace ff_8
 {
+struct QuadStrip
+{
+     glm::vec2 uv_min;
+     glm::vec2 uv_max;
+     glm::vec2 draw_pos;
+};
 void flatten_bpp(map_group::Map &map);
 void flatten_palette(map_group::Map &map);
 void compact_move_conflicts_only(map_group::Map &map, const source_tile_conflicts &conflicts);
@@ -26,38 +33,41 @@ void save_modified_map(
   const map_group::Map *const  imported = nullptr);
 
 
-[[nodiscard]] std::array<sf::Vertex, 4U>
-  get_triangle_strip(const sf::Vector2f &draw_size, const sf::Vector2f &texture_size, sf::Vector2f source, sf::Vector2f dest);
+[[nodiscard]] QuadStrip get_triangle_strip(
+  const glm::vec2 &source_tile_size,
+  const glm::vec2 &destination_tile_size,
+  const glm::vec2 &source_texture_size,
+  const glm::vec2 &source_position,
+  const glm::vec2 &destination_position);
 
-[[nodiscard]] static inline sf::Vector2i get_triangle_strip_source_imported(const open_viii::graphics::background::is_tile auto &tile_const)
+[[nodiscard]] static inline glm::ivec2 get_triangle_strip_source_imported(const open_viii::graphics::background::is_tile auto &tile_const)
 {
      return { tile_const.x(), tile_const.y() };
 }
-[[nodiscard]] static inline sf::Vector2u get_triangle_strip_source_upscale(const open_viii::graphics::background::is_tile auto &tile_const)
+[[nodiscard]] static inline glm::uvec2 get_triangle_strip_source_upscale(const open_viii::graphics::background::is_tile auto &tile_const)
 {
      return { tile_const.source_x(), tile_const.source_y() };
 }
-[[nodiscard]] static inline sf::Vector2u get_triangle_strip_source_default(const open_viii::graphics::background::is_tile auto &tile_const)
+[[nodiscard]] static inline glm::uvec2 get_triangle_strip_source_default(const open_viii::graphics::background::is_tile auto &tile_const)
 {
      using tile_type             = std::remove_cvref_t<decltype(tile_const)>;
      auto                src_tpw = tile_type::texture_page_width(tile_const.depth());
      const std::uint32_t x_shift = tile_const.texture_id() * src_tpw;
      return { tile_const.source_x() + x_shift, tile_const.source_y() };
 };
-[[nodiscard]] static inline sf::Vector2i
-  get_triangle_strip_source_deswizzle(const open_viii::graphics::background::is_tile auto &tile_const)
+[[nodiscard]] static inline glm::ivec2 get_triangle_strip_source_deswizzle(const open_viii::graphics::background::is_tile auto &tile_const)
 {
      return { tile_const.x(), tile_const.y() };
 }
-[[nodiscard]] static inline sf::Vector2i get_triangle_strip_dest_default(open_viii::graphics::background::is_tile auto &&tile)
+[[nodiscard]] static inline glm::ivec2 get_triangle_strip_dest_default(open_viii::graphics::background::is_tile auto &&tile)
 {
      return { tile.x(), tile.y() };
 }
-[[nodiscard]] static inline sf::Vector2u get_triangle_strip_dest_swizzle_disable_shift(open_viii::graphics::background::is_tile auto &&tile)
+[[nodiscard]] static inline glm::uvec2 get_triangle_strip_dest_swizzle_disable_shift(open_viii::graphics::background::is_tile auto &&tile)
 {
      return { tile.source_x(), tile.source_y() };
 }
-[[nodiscard]] static inline sf::Vector2u get_triangle_strip_dest_swizzle(open_viii::graphics::background::is_tile auto &&tile)
+[[nodiscard]] static inline glm::uvec2 get_triangle_strip_dest_swizzle(open_viii::graphics::background::is_tile auto &&tile)
 {
      using namespace open_viii::graphics::literals;
      using tile_type = std::remove_cvref_t<decltype(tile)>;
@@ -65,7 +75,7 @@ void save_modified_map(
 }
 struct source_x_y_texture_page
 {
-     sf::Vector2i source_xy    = {};
+     glm::ivec2   source_xy    = {};
      std::uint8_t texture_page = {};
 };
 [[nodiscard]] static inline source_x_y_texture_page
@@ -86,14 +96,14 @@ struct source_x_y_texture_page
 [[nodiscard]] std::vector<std::size_t> find_intersecting_swizzle(
   const map_group::Map &map,
   const ff_8::filters  &filters,
-  const sf::Vector2i   &pixel_pos,
+  const glm::ivec2     &pixel_pos,
   const std::uint8_t   &texture_page,
   bool                  skip_filters,
   bool                  find_all);
 [[nodiscard]] std::vector<std::size_t> find_intersecting_deswizzle(
   const map_group::Map &map,
   const ff_8::filters  &filters,
-  const sf::Vector2i   &pixel_pos,
+  const glm::ivec2     &pixel_pos,
   bool                  skip_filters,
   bool                  find_all);
 // templates
@@ -117,7 +127,7 @@ template<std::ranges::range tilesT>
 [[nodiscard]] static inline std::vector<std::size_t> find_intersecting_swizzle(
   const tilesT        &tiles,
   const ff_8::filters &filters,
-  const sf::Vector2i  &pixel_pos,
+  const glm::ivec2    &pixel_pos,
   const std::uint8_t  &texture_page,
   bool                 skip_filters = false,
   bool                 find_all     = false)
@@ -175,7 +185,7 @@ template<std::ranges::range tilesT>
 [[nodiscard]] static inline std::vector<std::size_t> find_intersecting_deswizzle(
   const tilesT        &tiles,
   const ff_8::filters &filters,
-  const sf::Vector2i  &pixel_pos,
+  const glm::ivec2    &pixel_pos,
   bool                 skip_filters = false,
   bool                 find_all     = false)
 {
