@@ -33,6 +33,22 @@ void save_modified_map(
   const map_group::Map *const  imported = nullptr);
 
 
+/**
+ * @brief Computes a triangle strip (quad) with correct UV coordinates and draw position
+ *        for rendering a tile from a texture atlas to the screen.
+ *
+ * This function converts tile-based coordinates into normalized texture coordinates (UVs)
+ * and calculates the on-screen draw position. It assumes both source and destination
+ * positions are in map tile units (e.g., TILE_SIZE = 16x16).
+ *
+ * @param source_tile_size      Size of one tile in the texture (in pixels).
+ * @param destination_tile_size Size to render one tile on screen (in pixels).
+ * @param source_texture_size   Size of the full source texture (in pixels).
+ * @param source_position       Position in the source texture in TILE_SIZE units.
+ * @param destination_position  Position to draw the tile on screen in TILE_SIZE units.
+ *
+ * @return QuadStrip A structure containing the UV minimum/maximum and draw position.
+ */
 [[nodiscard]] QuadStrip get_triangle_strip(
   const glm::vec2 &source_tile_size,
   const glm::vec2 &destination_tile_size,
