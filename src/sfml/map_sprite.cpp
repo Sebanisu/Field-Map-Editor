@@ -1343,8 +1343,6 @@ const ff_8::MapHistory::nsat_map &map_sprite::working_animation_counts() const
                               auto                 out_path = cpm.replace_tags(keyed_string, selections, selected_path);
 
                               // Start async save and store the future.
-                              /// TODO fix render saving
-
                               future_of_futures.push_back(save_image_pbo(out_path, std::move(out_framebuffer)));
                          }
                     }
@@ -1368,8 +1366,6 @@ const ff_8::MapHistory::nsat_map &map_sprite::working_animation_counts() const
                                                      : std::nullopt,
                                                  .texture_page = texture_page };
                auto                 out_path = cpm.replace_tags(keyed_string, selections, selected_path);
-
-               /// TODO fix rendering and saving
                future_of_futures.push_back(save_image_pbo(out_path, std::move(out_framebuffer)));
           }
      }
@@ -1465,8 +1461,9 @@ const ff_8::MapHistory::nsat_map &map_sprite::working_animation_counts() const
      future_of_futures.reserve(max_number_of_texture_pages);
 
      // Create an off-screen render texture to draw into.
-     out_texture = glengine::FrameBuffer{ glengine::FrameBufferSpecification{ .width  = static_cast<std::int32_t>(width),
-                                                                              .height = static_cast<std::int32_t>(height) } };
+     const auto specification =
+       glengine::FrameBufferSpecification{ .width = static_cast<std::int32_t>(width), .height = static_cast<std::int32_t>(height) };
+
 
      // Loop over all unique texture pages.
 
@@ -1490,7 +1487,8 @@ const ff_8::MapHistory::nsat_map &map_sprite::working_animation_counts() const
                     settings.filters.value().bpp.update(bpp).enable();
 
                     // Generate the texture.
-                    if (generate_texture(out_texture))
+                    auto out_framebuffer = glengine::FrameBuffer{ specification };
+                    if (generate_texture(out_framebuffer))
                     {
 
                          // Determine output path based on COO presence.
@@ -1503,8 +1501,7 @@ const ff_8::MapHistory::nsat_map &map_sprite::working_animation_counts() const
                                                            .palette       = palette };
                          auto                 out_path = cpm.replace_tags(keyed_string, selections, selected_path);
                          // Start async save and store the future.
-                         /// TODO fix rendering save
-                         // future_of_futures.push_back(async_save(out_texture.getTexture(), out_path));
+                         future_of_futures.push_back(save_image_pbo(out_path, std::move(out_framebuffer)));
                     }
                }
           }
@@ -1514,7 +1511,8 @@ const ff_8::MapHistory::nsat_map &map_sprite::working_animation_counts() const
      settings.filters.value().palette.disable();
      settings.filters.value().bpp.disable();
 
-     if (generate_texture(out_texture))
+     auto out_framebuffer = glengine::FrameBuffer{ specification };
+     if (generate_texture(out_framebuffer))
      {
           // Determine output path based on COO presence.
           const key_value_data cpm      = { .field_name = get_base_name(),
@@ -1526,8 +1524,7 @@ const ff_8::MapHistory::nsat_map &map_sprite::working_animation_counts() const
           auto                 out_path = cpm.replace_tags(keyed_string, selections, selected_path);
 
           // Start async save and store the future.
-          /// TODO fix rendering saving
-          // future_of_futures.push_back(async_save(out_texture.getTexture(), out_path));
+          future_of_futures.push_back(save_image_pbo(out_path, std::move(out_framebuffer)));
      }
 
 
@@ -1602,16 +1599,17 @@ std::string map_sprite::get_base_name() const
      future_of_futures.reserve(max_number_of_texture_pages);
 
      // Setup an off-screen render texture
-     iRectangle const canvas = m_map_group.maps.const_working().canvas() * static_cast<int>(m_scale);
-     out_texture = glengine::FrameBuffer{ glengine::FrameBufferSpecification{ .width  = static_cast<std::int32_t>(canvas.width()),
-                                                                              .height = static_cast<std::int32_t>(canvas.height()) } };
+     iRectangle const canvas        = m_map_group.maps.const_working().canvas() * static_cast<int>(m_scale);
+     const auto       specification = glengine::FrameBufferSpecification{ .width  = static_cast<std::int32_t>(canvas.width()),
+                                                                          .height = static_cast<std::int32_t>(canvas.height()) };
+
 
      // Loop through each Pupu ID and generate/save textures
      for (const ff_8::PupuID &pupu : unique_pupu_ids)
      {
           settings.filters.value().pupu.update(pupu).enable();// Enable this specific Pupu ID
-
-          if (generate_texture(out_texture))
+          auto out_framebuffer = glengine::FrameBuffer{ specification };
+          if (generate_texture(out_framebuffer))
           {
                const key_value_data cpm      = { .field_name = get_base_name(),
                                                  .ext        = ".png",
@@ -1621,11 +1619,7 @@ std::string map_sprite::get_base_name() const
                                                      : std::nullopt,
                                                  .pupu_id = pupu.raw() };
                auto                 out_path = cpm.replace_tags(keyed_string, selections, selected_path);
-               // std::filesystem::path const out_path = coo ? save_path_coo(pattern_coo_pupu, path, field_name, pupu, *coo)// Save
-               // with language
-               //                                            : save_path(pattern_pupu, path, field_name, pupu);// Save without language
-               /// TODO fix saving and rendering
-               // future_of_futures.push_back(async_save(out_texture.getTexture(), out_path));// Queue async save
+               future_of_futures.push_back(save_image_pbo(out_path, std::move(out_framebuffer)));
           }
      }
 
