@@ -18,6 +18,7 @@ add_library(
   FrameBuffer.cpp
   FrameBufferBackup.cpp
   GLCheck.cpp
+  Image.cpp
   IndexBuffer.cpp
   IndexBufferDynamic.cpp
   Input.cpp

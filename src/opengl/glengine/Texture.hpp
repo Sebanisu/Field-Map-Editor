@@ -4,6 +4,7 @@
 
 #ifndef FIELD_MAP_EDITOR_TEXTURE_HPP
 #define FIELD_MAP_EDITOR_TEXTURE_HPP
+#include "Image.hpp"
 #include "Renderer.hpp"
 #include "UniqueValue.hpp"
 #include <concepts.hpp>
@@ -34,7 +35,8 @@ class Texture
           return m_renderer_id != 0U;
      }
      constexpr Texture() = default;
-     Texture(std::filesystem::path path);
+     Texture(Image image);
+     Texture(std::filesystem::path path, bool in_flip = false);
      Texture(std::array<std::uint8_t, 4U> color)
        : Texture(std::bit_cast<std::uint32_t>(color))
      {

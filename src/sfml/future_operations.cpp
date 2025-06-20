@@ -3,6 +3,7 @@
 //
 
 #include "future_operations.hpp"
+#include <Image.hpp>
 #include <span>
 future_operations::LoadColorsIntoTexture::LoadColorsIntoTexture(
   glengine::Texture *const                        in_texture,
@@ -40,32 +41,25 @@ void future_operations::LoadColorsIntoTexture::operator()() const
           spdlog::error("Exception caught while creating texture: {}", e.what());
      }
 }
-// future_operations::LoadImageIntoTexture::LoadImageIntoTexture(glengine::Texture *const in_texture, sf::Image in_image)
-//   : m_texture(in_texture)
-//   , m_image(in_image)
-// {
-// }
-void future_operations::LoadImageIntoTexture::operator()() const
+future_operations::LoadImageIntoTexture::LoadImageIntoTexture(glengine::Texture *const in_texture, glengine::Image in_image)
+  : m_texture(in_texture)
+  , m_image(std::move(in_image))
+{
+}
+void future_operations::LoadImageIntoTexture::operator()()
 {
      if (!m_texture)
      {
-          spdlog::error("Failed to lock texture weak_ptr: texture is expired or not set.");
+          spdlog::error("m_texture is a nullptr");
           return;
      }
      try
      {
-          // if (m_image.getSize().x == 0 || m_image.getSize().y == 0)
-          // {
-          //      return;
-          // }
-          // *m_texture = glengine::Texture(
-          //   std::span{ m_image.getPixelsPtr(), m_image.getSize().x * m_image.getSize().y * 4 }, m_image.getSize().x,
-          //   m_image.getSize().y);
-          // m_texture->create(m_image.getSize().x, m_image.getSize().y);
-          // m_texture->update(m_image);
-          // m_texture->setSmooth(false);
-          // m_texture->setRepeated(false);
-          // m_texture->generateMipmap();
+          if (m_image.width == 0 || m_image.height == 0)
+          {
+               return;
+          }
+          *m_texture = glengine::Texture(std::move(m_image));
      }
      catch (const std::exception &e)
      {
@@ -80,15 +74,13 @@ future_operations::GetImageFromPathCreateFuture::GetImageFromPathCreateFuture(
   , m_path(std::move(in_path))
 {
 }
-std::future<void> future_operations::GetImageFromPathCreateFuture::operator()() const
+std::future<void> future_operations::GetImageFromPathCreateFuture::operator()()
 {
      try
      {
           spdlog::info("texture path: \"{}\"", m_path.string());
-          // sf::Image image{};
-          // image.loadFromFile(m_path.string());
-          // return { std::async(std::launch::deferred, LoadImageIntoTexture{ m_texture, std::move(image) }) };
-          return {};
+
+          return { std::async(std::launch::deferred, LoadImageIntoTexture{ m_texture, glengine::Image(std::move(m_path), false) }) };
      }
      catch (const std::exception &e)
      {

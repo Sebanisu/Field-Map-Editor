@@ -29,11 +29,11 @@ class LoadColorsIntoTexture
 class LoadImageIntoTexture
 {
      glengine::Texture *const m_texture;
-     //sf::Image                m_image;
+     glengine::Image          m_image;
 
    public:
-     //LoadImageIntoTexture(glengine::Texture *const in_texture, sf::Image in_image);
-     void operator()() const;
+     LoadImageIntoTexture(glengine::Texture *const in_texture, glengine::Image in_image);
+     void operator()();
 };
 class GetImageFromPathCreateFuture
 {
@@ -42,7 +42,7 @@ class GetImageFromPathCreateFuture
 
    public:
      GetImageFromPathCreateFuture(glengine::Texture *const in_texture, std::filesystem::path in_path);
-     std::future<void> operator()() const;
+     std::future<void> operator()();
 };
 // class save_image_to_path
 // {
