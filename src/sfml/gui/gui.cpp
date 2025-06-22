@@ -1311,10 +1311,10 @@ void gui::consume_one_future()
      if (!m_future_of_future_consumer.done())
      {
           ++m_future_of_future_consumer;
-          if (!m_future_of_future_consumer.output_empty())
-          {
-               m_future_consumer += m_future_of_future_consumer.get_consumer();
-          }
+     }
+     else if (m_future_of_future_consumer.consumer_ready())
+     {
+          m_future_consumer += m_future_of_future_consumer.get_consumer();
      }
      ++m_future_consumer;
 }

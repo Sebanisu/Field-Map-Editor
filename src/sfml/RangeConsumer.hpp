@@ -108,8 +108,7 @@ class [[nodiscard]] FutureConsumer
      FutureConsumer(FutureConsumer &&other) noexcept
      {
           other.consume_now();
-          m_ranges = std::move(other.m_ranges);
-          other.m_ranges.clear();// optional but safe
+          std::swap(m_ranges, other.m_ranges);
      }
 
      FutureConsumer &operator=(FutureConsumer &&other) noexcept
@@ -117,7 +116,7 @@ class [[nodiscard]] FutureConsumer
           if (this != &other)
           {
                consume_now();
-               m_ranges = std::move(other.m_ranges);
+               std::swap(m_ranges, other.m_ranges);
                other.m_ranges.clear();// optional but keeps 'other' in a clean state
           }
           return *this;
@@ -199,56 +198,91 @@ class [[nodiscard]] FutureOfFutureConsumer
      using range_value_t  = std::ranges::range_value_t<range_t>;
      using future_value_t = std::remove_cvref_t<decltype(range_value_t{}.get())>;
 
-     RangeConsumer<range_t>      m_range{};
-     std::vector<future_value_t> m_out{};
+     std::vector<RangeConsumer<range_t>> m_ranges{};
+     std::vector<future_value_t>         m_out{};
 
+     void                                compact_front()
+     {
+          const auto new_begin = std::ranges::find_if(m_ranges, [](const auto &range) { return !range.done(); });
+          m_ranges.erase(m_ranges.begin(), new_begin);
+     }
 
    public:
      FutureOfFutureConsumer() = default;
      explicit FutureOfFutureConsumer(range_t in_range)
-       : m_range(std::move(in_range))
      {
-          m_out.reserve(std::ranges::size(m_range));
+          m_ranges.clear();
+          m_ranges.emplace_back(std::move(in_range));
+          m_out.reserve(std::ranges::size(m_ranges.front()));
+     }
+
+     FutureOfFutureConsumer(const FutureOfFutureConsumer &)            = delete;
+     FutureOfFutureConsumer &operator=(const FutureOfFutureConsumer &) = delete;
+
+     FutureOfFutureConsumer(FutureOfFutureConsumer &&other) noexcept
+     {
+          other.consume_now();
+          std::swap(m_ranges, other.m_ranges);
+     }
+
+     FutureOfFutureConsumer &operator=(FutureOfFutureConsumer &&other) noexcept
+     {
+          if (this != &other)
+          {
+               consume_now();
+               std::swap(m_ranges, other.m_ranges);
+               other.m_ranges.clear();// optional but keeps 'other' in a clean state
+          }
+          return *this;
      }
 
      void consume_now()
      {
-          for (; !done(); ++m_range)
+          for (auto &&range : m_ranges)
           {
-               auto &item = *m_range;
-               if (item.valid())
+               for (; !range.done(); ++range)
                {
-                    m_out.push_back(item.get());
+                    auto &item = *range;
+                    if (item.valid())
+                    {
+                         m_out.push_back(item.get());
+                    }
                }
+               auto frh = get_consumer();
+               frh.consume_now();
           }
-          auto frh = get_consumer();
-          frh.consume_now();
      }
+
      FutureOfFutureConsumer &operator=(range_t &&in_range)
      {
-          if (!std::ranges::empty(m_range))
-          {
-               consume_now();
-          }
-          m_range = std::move(in_range);
+          consume_now();
+          m_ranges.clear();
+          m_ranges.emplace_back(std::move(in_range));
           m_out.clear();
-          m_out.reserve(std::ranges::size(m_range));
+          m_out.reserve(std::ranges::size(m_ranges.first()));
           return *this;
      }
+
+     FutureOfFutureConsumer<range_t> &operator+=(range_t in_range)
+     {
+          m_ranges.emplace_back(std::move(in_range));
+          return *this;
+     }
+
+     FutureOfFutureConsumer<range_t> &operator+=(FutureOfFutureConsumer<range_t> &&other)
+     {
+          std::ranges::move(other.m_ranges, std::back_inserter(m_ranges));
+          other.m_ranges.clear();// optionally clear the moved-from consumer
+          return *this;
+     }
+
      const FutureOfFutureConsumer<range_t> &operator++()
      {
-          // if (!done())
-          //{
-          //      auto &item = *m_range;
-          //      ++m_range;
-          //      if (item.valid())
-          //      {
-          //           m_out.push_back(item.get());
-          //      }
-          // }
           if (!done())
           {
-               auto      &item  = *m_range;
+               compact_front();
+               auto      &range = m_ranges.front();
+               auto      &item  = *range;
                const auto state = item.wait_for(std::chrono::seconds(0));
                if (std::future_status::ready != state && std::future_status::deferred != state)
                {
@@ -259,25 +293,33 @@ class [[nodiscard]] FutureOfFutureConsumer
                {
                     m_out.push_back(item.get());
                }
-               ++m_range;
+               ++range;
           }
           return *this;
      }
+
      [[nodiscard]] bool done() const
      {
-          return m_range.done();
+          return std::ranges::all_of(m_ranges, [](const auto &range) { return range.done(); });// && std::empty(m_out);
      }
-     [[nodiscard]] bool output_empty() const
+
+     [[nodiscard]] bool consumer_ready() const
      {
-          return std::ranges::empty(m_out);
+          return !std::ranges::empty(m_out);
      }
+
      [[nodiscard]] FutureConsumer<std::vector<future_value_t>> get_consumer()
      {
           return FutureConsumer{ std::move(m_out) };
      }
+
      [[nodiscard]] FutureOfFutureConsumer<std::vector<future_value_t>> get_future_of_future_consumer()
      {
           return FutureOfFutureConsumer{ std::move(m_out) };
+     }
+     ~FutureOfFutureConsumer()
+     {
+          consume_now();
      }
 };
 #endif// FIELD_MAP_EDITOR_RANGECONSUMER_HPP

@@ -949,7 +949,7 @@ bool fme::batch::consume_one_future()
           return true;
      }
      // If the outer future is done but has output, consume it
-     else if (!m_future_of_future_consumer.output_empty())
+     else if (m_future_of_future_consumer.consumer_ready())
      {
           m_future_consumer += m_future_of_future_consumer.get_consumer();
           return true;
