@@ -201,10 +201,8 @@ struct [[nodiscard]] map_sprite// final
      void                                         compact_all();
      void                                         flatten_bpp();
      void                                         flatten_palette();
-     void                                         reset_render_texture();
      void                                         load_map(const std::filesystem::path &dest_path);
      void                                         resize_render_texture();
-     void                                         init_render_texture();
      void        update_render_texture(const glengine::Texture *p_texture, Map map, const tile_sizes tile_size);
      static void consume_futures(std::vector<std::future<void>> &futures);
      static void consume_futures(std::vector<std::future<std::future<void>>> &future_of_futures);

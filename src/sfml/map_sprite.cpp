@@ -818,13 +818,13 @@ map_sprite map_sprite::with_filters(ff_8::filters filters) const
 void map_sprite::enable_draw_swizzle()
 {
      m_draw_swizzle = true;
-     init_render_texture();
+     update_render_texture();
 }
 
 void map_sprite::disable_draw_swizzle()
 {
      m_draw_swizzle = false;
-     init_render_texture();
+     update_render_texture();
 }
 
 // void map_sprite::draw(sf::RenderTarget &target, sf::RenderStates states) const
@@ -847,12 +847,13 @@ void map_sprite::update_render_texture(bool reload_textures)
      {
           *m_texture = {};
           queue_texture_loading();
-          reset_render_texture();
+          resize_render_texture();
      }
      if (fail())
      {
           return;
      }
+     resize_render_texture();
      (void)generate_texture(m_render_framebuffer);
 }
 
@@ -1019,17 +1020,6 @@ void map_sprite::resize_render_texture()
      m_drag_sprite_framebuffer = glengine::FrameBuffer{ glengine::FrameBufferSpecification{
        .width = static_cast<int>(TILE_SIZE * m_scale * 3), .height = static_cast<int>(TILE_SIZE * m_scale * 3) } };
 }
-void map_sprite::init_render_texture()
-{
-     reset_render_texture();
-     update_render_texture();
-}
-void map_sprite::reset_render_texture()
-{
-     /// TODO remove resize or reset
-     resize_render_texture();
-}
-
 
 open_viii::graphics::Rectangle<std::uint32_t> map_sprite::get_canvas() const
 {
@@ -1788,12 +1778,12 @@ void map_sprite::update_render_texture(
 void map_sprite::enable_disable_blends()
 {
      m_disable_blends = true;
-     init_render_texture();
+     update_render_texture();
 }
 void map_sprite::disable_disable_blends()
 {
      m_disable_blends = false;
-     init_render_texture();
+     update_render_texture();
 }
 void map_sprite::compact_move_conflicts_only()
 {
@@ -1872,7 +1862,7 @@ map_sprite::map_sprite(
                m_filters.deswizzle_map.disable();
           }
      }
-     init_render_texture();
+     update_render_texture(true);
 }
 
 std::string map_sprite::current_undo_description() const
