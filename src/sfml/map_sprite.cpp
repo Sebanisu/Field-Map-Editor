@@ -98,18 +98,16 @@ const glengine::Texture *map_sprite::get_texture(const ff_8::PupuID &pupu) const
  *
  * @return A shared pointer to an array of loaded glengine::Texture objects of size MAX_TEXTURES.
  */
-std::shared_ptr<std::array<glengine::Texture, map_sprite::MAX_TEXTURES>> map_sprite::load_textures_internal()
+void map_sprite::queue_texture_loading()
 {
      // Container to hold nested futures representing asynchronous texture load operations
      std::vector<std::future<std::future<void>>> future_of_futures{};
 
-     // Allocate shared array to hold the resulting textures
-     auto       ret = std::make_shared<std::array<glengine::Texture, MAX_TEXTURES>>(std::array<glengine::Texture, MAX_TEXTURES>{});
 
-     const auto fofh_consumer = glengine::ScopeGuard{ [&]() {
+     const auto                                  fofh_consumer = glengine::ScopeGuard{ [&]() {
           // Consume the collected nested futures immediately to kick off the work
-          auto  fofh          = FutureOfFutureConsumer{ std::move(future_of_futures) };
-          fofh.consume_now();
+          m_future_of_future_consumer                          = std::move(future_of_futures);
+          m_future_of_future_consumer.consume_now();
      } };
 
      // Check if the deswizzle filter is enabled
@@ -117,10 +115,10 @@ std::shared_ptr<std::array<glengine::Texture, map_sprite::MAX_TEXTURES>> map_spr
      {
           // Deswizzling is enabled; load textures based on PupuIDs in order
           std::ranges::for_each(working_unique_pupu(), [&, pos = size_t{}](const ff_8::PupuID &pupu) mutable {
-               future_of_futures.push_back(load_deswizzle_textures(ret, pupu, pos));
+               future_of_futures.push_back(load_deswizzle_textures(pupu, pos));
                ++pos;
           });
-          return ret;
+          return;
      }
 
 
@@ -137,14 +135,14 @@ std::shared_ptr<std::array<glengine::Texture, map_sprite::MAX_TEXTURES>> map_spr
                if (!m_filters.upscale.enabled())
                {
                     // Schedule normal MIM texture load (no upscale)
-                    future_of_futures.push_back(load_mim_textures(ret, bpp, palette));
+                    future_of_futures.push_back(load_mim_textures(bpp, palette));
                }
                else
                {
                     // Schedule upscale texture loads for each texture page
                     for (const auto &texture_page : m_all_unique_values_and_strings.texture_page_id().values())
                     {
-                         future_of_futures.push_back(load_upscale_textures(ret, texture_page, palette));
+                         future_of_futures.push_back(load_upscale_textures(texture_page, palette));
                     }
                }
           }
@@ -156,12 +154,12 @@ std::shared_ptr<std::array<glengine::Texture, map_sprite::MAX_TEXTURES>> map_spr
      {
           for (const auto &texture_page : m_all_unique_values_and_strings.texture_page_id().values())
           {
-               future_of_futures.push_back(load_upscale_textures(ret, texture_page));
+               future_of_futures.push_back(load_upscale_textures(texture_page));
           }
      }
 
      // Return the shared array of loaded textures
-     return ret;
+     return;
 }
 
 void map_sprite::consume_futures(std::vector<std::future<std::future<void>>> &future_of_futures)
@@ -190,37 +188,34 @@ void map_sprite::consume_futures(std::vector<std::future<void>> &futures)
      });
 }
 
-std::shared_ptr<std::array<glengine::Texture, map_sprite::MAX_TEXTURES>> map_sprite::load_textures()
-{
-     std::shared_ptr<std::array<glengine::Texture, MAX_TEXTURES>> ret = load_textures_internal();
-     while (std::ranges::all_of(*ret, [](const glengine::Texture &texture) {
-          const auto size = texture.get_size();
-          // spdlog::info("{}", size);
-          return size.x == 0 || size.y == 0;
-     }))
-     {
-          if (m_filters.upscale.enabled())
-          {
-               m_filters.upscale.disable();
-               ret = load_textures_internal();
-          }
-          else if (m_filters.deswizzle.enabled())
-          {
-               m_filters.deswizzle.disable();
-               ret = load_textures_internal();
-          }
-          else
-          {
-               break;
-          }
-     }
-     return ret;
-}
+// std::shared_ptr<std::array<glengine::Texture, map_sprite::MAX_TEXTURES>> map_sprite::load_textures()
+// {
+//      std::shared_ptr<std::array<glengine::Texture, MAX_TEXTURES>> ret = queue_texture_loading();
+//      while (std::ranges::all_of(*ret, [](const glengine::Texture &texture) {
+//           const auto size = texture.get_size();
+//           // spdlog::info("{}", size);
+//           return size.x == 0 || size.y == 0;
+//      }))
+//      {
+//           if (m_filters.upscale.enabled())
+//           {
+//                m_filters.upscale.disable();
+//                ret = queue_texture_loading();
+//           }
+//           else if (m_filters.deswizzle.enabled())
+//           {
+//                m_filters.deswizzle.disable();
+//                ret = queue_texture_loading();
+//           }
+//           else
+//           {
+//                break;
+//           }
+//      }
+//      return ret;
+// }
 
-std::future<std::future<void>> map_sprite::load_mim_textures(
-  std::shared_ptr<std::array<glengine::Texture, MAX_TEXTURES>> &ret,
-  open_viii::graphics::BPPT                                     bpp,
-  std::uint8_t                                                  palette)
+std::future<std::future<void>> map_sprite::load_mim_textures(open_viii::graphics::BPPT bpp, std::uint8_t palette)
 {
      if (!m_map_group.mim)
      {
@@ -242,14 +237,11 @@ std::future<std::future<void>> map_sprite::load_mim_textures(
                      texture, get_colors(*mim, bpp, palette), glm::uvec2{ mim->get_width(bpp), mim->get_height() } }) };
             },
             m_map_group.mim,
-            &(ret->at(pos))) };
+            &(m_texture->at(pos))) };
      }
 }
 
-std::future<std::future<void>> map_sprite::load_deswizzle_textures(
-  std::shared_ptr<std::array<glengine::Texture, MAX_TEXTURES>> &ret,
-  const ff_8::PupuID                                            pupu,
-  const size_t                                                  pos) const
+std::future<std::future<void>> map_sprite::load_deswizzle_textures(const ff_8::PupuID pupu, const size_t pos) const
 {
      if (pos >= MAX_TEXTURES)
      {
@@ -258,11 +250,11 @@ std::future<std::future<void>> map_sprite::load_deswizzle_textures(
      }
      return { std::async(
        std::launch::async,
-       future_operations::GetImageFromFromFirstValidPathCreateFuture{ &(ret->at(pos)), generate_deswizzle_paths(pupu) }) };
+       future_operations::GetImageFromFromFirstValidPathCreateFuture{ &(m_texture->at(pos)), generate_deswizzle_paths(pupu) }) };
 }
 
 
-std::future<std::future<void>> map_sprite::load_upscale_textures(SharedTextures &ret, std::uint8_t texture_page, std::uint8_t palette)
+std::future<std::future<void>> map_sprite::load_upscale_textures(std::uint8_t texture_page, std::uint8_t palette)
 {
      const std::size_t pos = std::size_t{ texture_page } * MAX_PALETTES + palette;
      if (pos >= MAX_TEXTURES)
@@ -272,10 +264,11 @@ std::future<std::future<void>> map_sprite::load_upscale_textures(SharedTextures 
      }
      return { std::async(
        std::launch::async,
-       future_operations::GetImageFromFromFirstValidPathCreateFuture{ &(ret->at(pos)), generate_swizzle_paths(texture_page, palette) }) };
+       future_operations::GetImageFromFromFirstValidPathCreateFuture{ &(m_texture->at(pos)),
+                                                                      generate_swizzle_paths(texture_page, palette) }) };
 }
 
-std::future<std::future<void>> map_sprite::load_upscale_textures(SharedTextures &ret, std::uint8_t texture_page)
+std::future<std::future<void>> map_sprite::load_upscale_textures(std::uint8_t texture_page)
 {
      const std::size_t pos = START_OF_NO_PALETTE_INDEX + texture_page;
      if (pos >= MAX_TEXTURES)
@@ -285,7 +278,7 @@ std::future<std::future<void>> map_sprite::load_upscale_textures(SharedTextures 
      }
      return { std::async(
        std::launch::async,
-       future_operations::GetImageFromFromFirstValidPathCreateFuture{ &(ret->at(pos)), generate_swizzle_paths(texture_page) }) };
+       future_operations::GetImageFromFromFirstValidPathCreateFuture{ &(m_texture->at(pos)), generate_swizzle_paths(texture_page) }) };
 }
 
 // void set_color(std::array<sf::Vertex, 4U> &vertices, const sf::Color &color)
@@ -852,7 +845,8 @@ void map_sprite::update_render_texture(bool reload_textures)
 {
      if (reload_textures)
      {
-          m_texture = load_textures();
+          *m_texture = {};
+          queue_texture_loading();
           reset_render_texture();
      }
      if (fail())
@@ -1850,7 +1844,6 @@ map_sprite::map_sprite(
   , m_upscales(get_upscales())
   , m_all_unique_values_and_strings(get_all_unique_values_and_strings())
   , m_canvas(get_canvas())
-  , m_texture(load_textures())
   , m_selections(selections)
 {
      if (m_filters.upscale_map.enabled())

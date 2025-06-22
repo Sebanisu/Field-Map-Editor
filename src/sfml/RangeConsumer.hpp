@@ -259,7 +259,7 @@ class [[nodiscard]] FutureOfFutureConsumer
           m_ranges.clear();
           m_ranges.emplace_back(std::move(in_range));
           m_out.clear();
-          m_out.reserve(std::ranges::size(m_ranges.first()));
+          m_out.reserve(std::ranges::size(m_ranges.front()));
           return *this;
      }
 

@@ -56,12 +56,15 @@ struct [[nodiscard]] map_sprite// final
      using iRectangle     = open_viii::graphics::Rectangle<std::int32_t>;
 
    private:
-     ff_8::map_group                               m_map_group                  = {};
+     SharedTextures m_texture = std::make_shared<std::array<glengine::Texture, MAX_TEXTURES>>();
+     FutureOfFutureConsumer<std::vector<std::future<std::future<void>>>> m_future_of_future_consumer  = {};
+     FutureConsumer<std::vector<std::future<void>>>                      m_future_consumer            = {};
+     ff_8::map_group                                                     m_map_group                  = {};
      // TODO do I need square?
      //  square                                        m_square    = { glm::uvec2{}, glm::uvec2{ TILE_SIZE, TILE_SIZE }, sf::Color::Red };
-     bool                                          m_draw_swizzle               = { false };
-     bool                                          m_disable_texture_page_shift = { false };
-     bool                                          m_disable_blends             = { false };
+     bool                                                                m_draw_swizzle               = { false };
+     bool                                                                m_disable_texture_page_shift = { false };
+     bool                                                                m_disable_blends             = { false };
      ff_8::filters                                 m_filters                 = { false };// default false should be override by gui to true.
      std::weak_ptr<Selections>                     m_selections              = {};
      ::upscales                                    m_upscales                = { m_selections };
@@ -72,7 +75,7 @@ struct [[nodiscard]] map_sprite// final
      Map                                           m_imported_tile_map_front = {};
      all_unique_values_and_strings                 m_all_unique_values_and_strings = {};
      open_viii::graphics::Rectangle<std::uint32_t> m_canvas                        = {};
-     SharedTextures                                m_texture                       = {};
+
      glengine::BatchRenderer                       m_batch_renderer                = { 1000 };
      glengine::BatchRenderer                       m_batch_renderer_red_integer    = { 1,
                                                                                        { std::filesystem::current_path() / "res" / "shader"
@@ -146,8 +149,8 @@ struct [[nodiscard]] map_sprite// final
      [[nodiscard]] bool                                 history_remove_duplicate();
      [[nodiscard]] ff_8::filters                       &filter();
      //[[nodiscard]] static sf::BlendMode                 set_blend_mode(const BlendModeT &blend_mode, std::array<sf::Vertex, 4U> &quad);
-     [[nodiscard]] SharedTextures                       load_textures();
-     [[nodiscard]] SharedTextures                       load_textures_internal();
+     //[[nodiscard]] SharedTextures                       load_textures();
+     [[nodiscard]] void                                 queue_texture_loading();
      [[nodiscard]] static colors_type                   get_colors(const Mim &mim, BPPT bpp, uint8_t palette);
      // [[nodiscard]] static const sf::BlendMode          &get_blend_subtract();
      [[nodiscard]] static std::future<std::future<void>>
@@ -168,42 +171,40 @@ struct [[nodiscard]] map_sprite// final
        save_combined_swizzle_texture(const std::string &keyed_string, const std::string &selected_path);
 
      [[nodiscard]] std::vector<std::future<void>> save_pupu_textures(const std::string &keyed_string, const std::string &selected_path);
-     [[nodiscard]] std::future<std::future<void>> load_upscale_textures(SharedTextures &ret, std::uint8_t texture_page);
-     [[nodiscard]] std::future<std::future<void>>
-       load_deswizzle_textures(SharedTextures &ret, const ff_8::PupuID pupu, const size_t pos) const;
-     [[nodiscard]] std::future<std::future<void>> load_mim_textures(SharedTextures &ret, BPPT bpp, uint8_t palette);
-     [[nodiscard]] std::future<std::future<void>>
-                 load_upscale_textures(SharedTextures &ret, std::uint8_t texture_page, std::uint8_t palette);
+     [[nodiscard]] std::future<std::future<void>> load_upscale_textures(std::uint8_t texture_page);
+     [[nodiscard]] std::future<std::future<void>> load_deswizzle_textures(const ff_8::PupuID pupu, const size_t pos) const;
+     [[nodiscard]] std::future<std::future<void>> load_mim_textures(BPPT bpp, uint8_t palette);
+     [[nodiscard]] std::future<std::future<void>> load_upscale_textures(std::uint8_t texture_page, std::uint8_t palette);
 
-     void        save_modified_map(const std::filesystem::path &path) const;
-     void        save(const std::filesystem::path &path) const;
-     void        map_save(const std::filesystem::path &dest_path) const;
-     void        test_map(const std::filesystem::path &saved_path) const;
-     void        set_uniforms(const glengine::FrameBuffer &fbo, const glengine::Shader &shader) const;
+     void                                         save_modified_map(const std::filesystem::path &path) const;
+     void                                         save(const std::filesystem::path &path) const;
+     void                                         map_save(const std::filesystem::path &dest_path) const;
+     void                                         test_map(const std::filesystem::path &saved_path) const;
+     void                                         set_uniforms(const glengine::FrameBuffer &fbo, const glengine::Shader &shader) const;
      // void        disable_square() const;
      //  void        draw(sf::RenderTarget &target, sf::RenderStates states) const final;
-     void        enable_draw_swizzle();
-     void        disable_draw_swizzle();
-     void        enable_disable_blends();
-     void        disable_disable_blends();
+     void                                         enable_draw_swizzle();
+     void                                         disable_draw_swizzle();
+     void                                         enable_disable_blends();
+     void                                         disable_disable_blends();
      // void        enable_square(glm::uvec2 position);
-     void        compact_move_conflicts_only();
-     void        compact_map_order();
-     void        compact_map_order_ffnx();
-     void        first_to_working_and_original();
-     void        undo();
-     void        redo();
-     void        undo_all();
-     void        redo_all();
-     void        update_render_texture(bool reload_textures = false);
-     void        compact_rows();
-     void        compact_all();
-     void        flatten_bpp();
-     void        flatten_palette();
-     void        reset_render_texture();
-     void        load_map(const std::filesystem::path &dest_path);
-     void        resize_render_texture();
-     void        init_render_texture();
+     void                                         compact_move_conflicts_only();
+     void                                         compact_map_order();
+     void                                         compact_map_order_ffnx();
+     void                                         first_to_working_and_original();
+     void                                         undo();
+     void                                         redo();
+     void                                         undo_all();
+     void                                         redo_all();
+     void                                         update_render_texture(bool reload_textures = false);
+     void                                         compact_rows();
+     void                                         compact_all();
+     void                                         flatten_bpp();
+     void                                         flatten_palette();
+     void                                         reset_render_texture();
+     void                                         load_map(const std::filesystem::path &dest_path);
+     void                                         resize_render_texture();
+     void                                         init_render_texture();
      void        update_render_texture(const glengine::Texture *p_texture, Map map, const tile_sizes tile_size);
      static void consume_futures(std::vector<std::future<void>> &futures);
      static void consume_futures(std::vector<std::future<std::future<void>>> &future_of_futures);
