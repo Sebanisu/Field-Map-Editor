@@ -6,6 +6,7 @@
 #define FIELD_MAP_EDITOR_CONFIGURATION_HPP
 #include <filesystem>
 #include <fmt/std.h>
+#include <ranges>
 #include <spdlog/spdlog.h>
 #include <toml++/toml.h>
 namespace fme
@@ -134,7 +135,12 @@ class Configuration
                }
                return true;
           }
-
+          else if (const auto *str = operator[](key).as_string(); str)
+          {
+               output = str->get() | std::ranges::views::transform([](const char &c) { return c == '0' ? false : true; })
+                        | std::ranges::to<std::vector>();
+               return true;
+          }
           return false;
      }
 
@@ -164,7 +170,6 @@ class Configuration
           operator->()->insert_or_assign(key, std::move(array));
      }
 
-     
 
      /**
       * @brief Loads an array of file system paths from the TOML configuration.
@@ -214,13 +219,9 @@ class Configuration
       */
      void update_array(const std::string_view key, const std::vector<bool> &input)
      {
-          toml::array array;
-          array.reserve(input.size());
-
-          for (bool b : input)
-               array.push_back(b);
-
-          operator->()->insert_or_assign(key, std::move(array));
+          std::string encoded =
+            input | std::ranges::views::transform([](const auto &b) { return b ? '1' : '0'; }) | std::ranges::to<std::string>();
+          operator->()->insert_or_assign(key, std::move(encoded));
      }
 
      /**
