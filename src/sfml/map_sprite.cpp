@@ -675,6 +675,12 @@ void map_sprite::update_position(const glm::ivec2 &pixel_pos, const uint8_t &tex
                drew = true;
           });
      }
+     if(drew)
+     {
+          
+          m_batch_renderer.draw();
+          m_batch_renderer.on_render();
+     }
      return drew;
 }
 // sf::BlendMode map_sprite::set_blend_mode(const BlendModeT &blend_mode, std::array<sf::Vertex, 4U> &quad)
@@ -1691,12 +1697,9 @@ bool map_sprite::generate_texture(const glengine::FrameBuffer &fbo) const
      m_batch_renderer.bind();
      set_uniforms(fbo, m_batch_renderer.shader());
      m_batch_renderer.clear();
-
      if (local_draw(m_batch_renderer, m_batch_renderer.shader()))
      {
           //(void)draw_imported(fbo);
-          m_batch_renderer.draw();
-          m_batch_renderer.on_render();
           fbo.bind_color_attachment();
           return true;
      }
