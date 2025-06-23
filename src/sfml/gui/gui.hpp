@@ -61,14 +61,6 @@ struct gui
      sf::Time                                                            m_elapsed_time        = {};
      std::shared_ptr<archives_group>                                     m_archives_group      = {};
      batch                                                               m_batch;
-     std::vector<std::string>                                            m_upscale_paths               = {};
-     std::vector<bool>                                                   m_upscale_paths_enabled       = {};
-     std::vector<std::string>                                            m_deswizzle_paths             = {};
-     std::vector<bool>                                                   m_deswizzle_paths_enabled     = {};
-     std::vector<std::string>                                            m_upscale_map_paths           = {};
-     std::vector<bool>                                                   m_upscale_map_paths_enabled   = {};
-     std::vector<std::string>                                            m_deswizzle_map_paths         = {};
-     std::vector<bool>                                                   m_deswizzle_map_paths_enabled = {};
      std::shared_ptr<open_viii::archive::FIFLFS<false>>                  m_field                       = {};
      std::array<float, 2>                                                xy                            = {};
      mim_sprite                                                          m_mim_sprite                  = {};

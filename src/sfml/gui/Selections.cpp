@@ -266,6 +266,31 @@ fme::Selections::Selections(const Configuration config)
      }
      assert(has_balanced_braces(paths_vector_deswizzle_map));
 
+     if (!config.load_array(key_to_string(ConfigKey::CacheUpscalePaths), cache_upscale_paths))
+     {
+     }
+     if (!config.load_array(key_to_string(ConfigKey::CacheUpscalePathsEnabled), cache_upscale_paths_enabled))
+     {
+     }
+     if (!config.load_array(key_to_string(ConfigKey::CacheDeswizzleMapPaths), cache_deswizzle_paths))
+     {
+     }
+     if (!config.load_array(key_to_string(ConfigKey::CacheDeswizzlePaths), cache_deswizzle_paths_enabled))
+     {
+     }
+     if (!config.load_array(key_to_string(ConfigKey::CacheDeswizzlePathsEnabled), cache_upscale_map_paths))
+     {
+     }
+     if (!config.load_array(key_to_string(ConfigKey::CacheUpscaleMapPaths), cache_upscale_map_paths_enabled))
+     {
+     }
+     if (!config.load_array(key_to_string(ConfigKey::CacheUpscaleMapPathsEnabled), cache_deswizzle_map_paths))
+     {
+     }
+     if (!config.load_array(key_to_string(ConfigKey::CacheDeswizzleMapPathsEnabled), cache_deswizzle_map_paths_enabled))
+     {
+     }
+
      refresh_ffnx_paths();
 
      const auto end_time    = std::chrono::system_clock::now();
@@ -357,6 +382,16 @@ void fme::Selections::update_configuration_key(ConfigKey key) const
           MAP_UPDATE_ARRAY(ConfigKey::PathsVectorDeswizzle, paths_vector_deswizzle);
           MAP_UPDATE_ARRAY(ConfigKey::PathsVectorUpscaleMap, paths_vector_upscale_map);
           MAP_UPDATE_ARRAY(ConfigKey::PathsVectorDeswizzleMap, paths_vector_deswizzle_map);
+
+
+          MAP_UPDATE_ARRAY(ConfigKey::CacheUpscalePaths, cache_upscale_paths);
+          MAP_UPDATE_ARRAY(ConfigKey::CacheUpscalePathsEnabled, cache_upscale_paths_enabled);
+          MAP_UPDATE_ARRAY(ConfigKey::CacheDeswizzleMapPaths, cache_deswizzle_paths);
+          MAP_UPDATE_ARRAY(ConfigKey::CacheDeswizzlePaths, cache_deswizzle_paths_enabled);
+          MAP_UPDATE_ARRAY(ConfigKey::CacheDeswizzlePathsEnabled, cache_upscale_map_paths);
+          MAP_UPDATE_ARRAY(ConfigKey::CacheUpscaleMapPaths, cache_upscale_map_paths_enabled);
+          MAP_UPDATE_ARRAY(ConfigKey::CacheUpscaleMapPathsEnabled, cache_deswizzle_map_paths);
+          MAP_UPDATE_ARRAY(ConfigKey::CacheDeswizzleMapPathsEnabled, cache_deswizzle_map_paths_enabled);
           MAP_MACRO(ConfigKey::RenderImportedImage, render_imported_image);
           MAP_MACRO(ConfigKey::SelectedTile, selected_tile);
           MAP_MACRO(ConfigKey::SelectionsPath, path);

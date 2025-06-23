@@ -85,6 +85,16 @@ enum class ConfigKey
      OutputMimPath,
      OutputMapPath,
      UpscalePathsIndex,
+
+     CacheUpscalePaths,
+     CacheUpscalePathsEnabled,
+     CacheDeswizzleMapPaths,
+     CacheDeswizzlePaths,
+     CacheDeswizzlePathsEnabled,
+     CacheUpscaleMapPaths,
+     CacheUpscaleMapPathsEnabled,
+     CacheDeswizzleMapPathsEnabled,
+
      // Add more as needed
      All,
 };
@@ -223,6 +233,23 @@ enum class ConfigKey
                return "selections_window_height"sv;
           case ConfigKey::WindowWidth:
                return "selections_window_width"sv;
+          case ConfigKey::CacheUpscalePaths:
+               return "selections_cache_upscale_paths"sv;
+          case ConfigKey::CacheUpscalePathsEnabled:
+               return "selections_cache_upscale_paths_enabled"sv;
+          case ConfigKey::CacheDeswizzlePaths:
+               return "selections_cache_deswizzle_paths"sv;
+          case ConfigKey::CacheDeswizzlePathsEnabled:
+               return "selections_cache_deswizzle_paths_enabled"sv;
+          case ConfigKey::CacheUpscaleMapPaths:
+               return "selections_cache_upscale_map_paths"sv;
+          case ConfigKey::CacheUpscaleMapPathsEnabled:
+               return "selections_cache_upscale_map_paths_enabled"sv;
+          case ConfigKey::CacheDeswizzleMapPaths:
+               return "selections_cache_deswizzle_map_paths"sv;
+          case ConfigKey::CacheDeswizzleMapPathsEnabled:
+               return "selections_cache_deswizzle_map_paths_enabled"sv;
+
 
           default: {
                spdlog::error("{}:{} Unknown configuration key (ConfigKey): {}", __FILE__, __LINE__, std::to_underlying(key));
@@ -333,6 +360,15 @@ struct Selections
      std::vector<std::string>                                 paths_vector_deswizzle_map;
 
      std::vector<std::string>                                 paths_common_upscale_for_maps;
+
+     std::vector<std::string>                                 cache_upscale_paths;
+     std::vector<bool>                                        cache_upscale_paths_enabled;
+     std::vector<std::string>                                 cache_deswizzle_paths;
+     std::vector<bool>                                        cache_deswizzle_paths_enabled;
+     std::vector<std::string>                                 cache_upscale_map_paths;
+     std::vector<bool>                                        cache_upscale_map_paths_enabled;
+     std::vector<std::string>                                 cache_deswizzle_map_paths;
+     std::vector<bool>                                        cache_deswizzle_map_paths_enabled;
 
      /**
       * @brief Constructs a Selections object with default values.
