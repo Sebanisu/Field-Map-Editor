@@ -19,12 +19,12 @@ namespace fme
 {
 struct key_value_data
 {
-     std::string                                        field_name                      = {};
-     std::string                                        ext                             = { ".png" };
-     std::optional<open_viii::LangT>                    language_code                   = {};
-     std::optional<std::uint8_t>                        palette                         = {};
-     std::optional<std::uint8_t>                        texture_page                    = {};
-     std::optional<std::uint32_t>                       pupu_id                         = {};
+     std::string                     field_name    = {};
+     std::string                     ext           = { ".png" };
+     std::optional<open_viii::LangT> language_code = {};
+     std::optional<std::uint8_t>     palette       = {};
+     std::optional<std::uint8_t>     texture_page  = {};
+     std::optional<std::uint32_t>    pupu_id       = {};
 
      struct keys
      {
@@ -291,7 +291,10 @@ struct key_value_data
       */
      constexpr std::string field_prefix() const noexcept
      {
-          return field_name.substr(0, 2);
+          if (std::ranges::size(field_name) >= 2U)
+               return field_name.substr(0, 2);
+          else
+               return {};
      }
 
      /**

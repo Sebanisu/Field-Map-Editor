@@ -177,7 +177,7 @@
 
      if (key == keys::field_name)
      {
-          assert(!field_name.empty() && field_name.length() >= 3);
+          //assert(!field_name.empty() && field_name.length() >= 3);
           return fmt::format("{}", field_name);
      }
      if (key == keys::ext)

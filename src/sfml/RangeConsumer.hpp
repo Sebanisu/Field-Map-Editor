@@ -36,6 +36,14 @@ class RangeConsumer
        , end_pos(std::ranges::end(m_range))
      {
      }
+     explicit RangeConsumer(value_t in_value)
+       : RangeConsumer([&] {
+            range_t ret{};
+            ret.emplace_back(std::move(in_value));
+            return ret;
+       }())
+     {
+     }
      void restart()
      {
           pos     = std::ranges::begin(m_range);
@@ -109,6 +117,60 @@ class [[nodiscard]] FutureConsumer
           m_ranges.erase(remove_range.begin(), remove_range.end());
      }
 
+     template<typename GetHandler>
+     void consume_one(GetHandler &&handler)
+     {
+          compact();
+          if (done())
+               return;
+
+          auto &range = m_ranges.front();
+          auto &item  = *range;
+
+          try
+          {
+               if (item.valid())
+               {
+                    const auto state = item.wait_for(std::chrono::seconds(0));
+                    if (state != std::future_status::ready && state != std::future_status::deferred)
+                         return;
+
+                    std::invoke(std::forward<GetHandler>(handler), item);
+               }
+               else
+               {
+                    spdlog::warn(
+                      "Skipping future: no valid state (possibly moved-from or default-constructed), ranges_size {}, front_size {}  : "
+                      "{}:{}",
+                      m_ranges.size(),
+                      m_ranges.front().size(),
+                      __FILE__,
+                      __LINE__);
+               }
+
+               ++range;
+          }
+          catch (const std::future_error &e)
+          {
+               spdlog::error("Future error in wait_for: {}", e.what());
+               const auto st = std::stacktrace::current();
+               std::cerr << st << std::endl;
+          }
+          catch (const std::exception &e)
+          {
+               spdlog::error("Unexpected exception in wait_for: {}", e.what());
+               const auto st = std::stacktrace::current();
+               std::cerr << st << std::endl;
+          }
+          catch (...)
+          {
+               spdlog::error("Unknown exception occurred in wait_for");
+               const auto st = std::stacktrace::current();
+               std::cerr << st << std::endl;
+          }
+     }
+
+
    public:
      FutureConsumer() = default;
      explicit FutureConsumer(range_t in_range)
@@ -141,10 +203,19 @@ class [[nodiscard]] FutureConsumer
           {
                for (; !range.done(); ++range)
                {
+
+
                     auto &item = *range;
                     if (item.valid())
                     {
-                         item.get();
+                         if constexpr (std::is_void_v<decltype(std::declval<range_value_t>().get())>)
+                         {
+                              item.get();
+                         }
+                         else
+                         {
+                              std::ignore = std::move(item.get());
+                         }
                     }
                }
           }
@@ -182,52 +253,19 @@ class [[nodiscard]] FutureConsumer
      }
 
      const FutureConsumer<range_t> &operator++()
+          requires(std::is_void_v<decltype(std::declval<range_value_t>().get())>)
      {
-          compact();
-          if (!done())
-          {
-               auto &range = m_ranges.front();
-               auto &item  = *range;
-               try
-               {
-                    if (item.valid())
-                    {
-                         const auto state = item.wait_for(std::chrono::seconds(0));
-                         if (state != std::future_status::ready && state != std::future_status::deferred)
-                         {
-                              // launch policy is async and the future is not yet ready, so skip it
-                              return *this;
-                         }
-                         item.get();
-                    }
-                    else
-                    {
-                         spdlog::warn(
-                           "Skipping future: no valid state (possibly moved-from or default-constructed), ranges_size {}, front_size {}  : "
-                           "{}:{}",
-                           m_ranges.size(),
-                           m_ranges.front().size(),
-                           __FILE__,
-                           __LINE__);
-                         // std::cerr << std::stacktrace::current() << std::endl;
-                    }
-                    ++range;
-               }
-               catch (const std::future_error &e)
-               {
-                    spdlog::error("Future error in wait_for: {}", e.what());
-               }
-               catch (const std::exception &e)
-               {
-                    spdlog::error("Unexpected exception in wait_for: {}", e.what());
-               }
-               catch (...)
-               {
-                    spdlog::error("Unknown exception occurred in wait_for");
-               }
-          }
+          consume_one([](auto &fut) { fut.get(); });
           return *this;
      }
+
+     void consume_one_with_callback(auto &&callback)
+          requires(!std::is_void_v<decltype(std::declval<range_value_t>().get())>)
+     {
+          consume_one([&callback](auto &fut) { std::invoke(callback, fut.get()); });
+     }
+
+
      [[nodiscard]] bool done() const
      {
           return std::ranges::all_of(m_ranges, [](const auto &range) { return range.done(); });
@@ -315,6 +353,12 @@ class [[nodiscard]] FutureOfFutureConsumer
           return *this;
      }
 
+     FutureOfFutureConsumer<range_t> &operator+=(range_value_t in_value)
+     {
+          m_ranges.emplace_back(std::move(in_value));
+          return *this;
+     }
+
      FutureOfFutureConsumer<range_t> &operator+=(range_t in_range)
      {
           m_ranges.emplace_back(std::move(in_range));
@@ -370,14 +414,20 @@ class [[nodiscard]] FutureOfFutureConsumer
                catch (const std::future_error &e)
                {
                     spdlog::error("Future error in wait_for: {}", e.what());
+                    const auto st = std::stacktrace::current();
+                    std::cerr << st << std::endl;
                }
                catch (const std::exception &e)
                {
                     spdlog::error("Unexpected exception in wait_for: {}", e.what());
+                    const auto st = std::stacktrace::current();
+                    std::cerr << st << std::endl;
                }
                catch (...)
                {
                     spdlog::error("Unknown exception occurred in wait_for");
+                    const auto st = std::stacktrace::current();
+                    std::cerr << st << std::endl;
                }
           }
           return *this;

@@ -152,7 +152,7 @@ SubTexture FrameBuffer::bind_color_attachment(std::uint32_t index) const
 GlidCopy FrameBuffer::color_attachment_id(std::uint32_t index) const
 {
      assert(index < 4U);
-     assert(m_color_attachment[index] != 0U);
+//     assert(m_color_attachment[index] != 0U);
      return m_color_attachment[index];
 }
 

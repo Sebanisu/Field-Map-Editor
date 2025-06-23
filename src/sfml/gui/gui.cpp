@@ -1303,6 +1303,76 @@ void gui::consume_one_future()
 
      total_elapsed_time += m_elapsed_time.asMilliseconds();// add the elapsed time since last update
 
+     if (!m_future_of_future_paths_consumer.done())
+     {
+          ++m_future_of_future_paths_consumer;
+     }
+     else if (m_future_of_future_paths_consumer.consumer_ready())
+     {
+          m_future_paths_consumer += m_future_of_future_paths_consumer.get_consumer();
+     }
+     m_future_paths_consumer.consume_one_with_callback([&](PathsAndEnabled pande) {
+          auto to_string = [](ConfigKey key) -> std::string_view {
+               using namespace std::string_view_literals;
+               switch (key)
+               {
+                    case ConfigKey::CacheUpscalePaths:
+                         return "CacheUpscalePaths"sv;
+                    case ConfigKey::CacheDeswizzlePaths:
+                         return "CacheDeswizzlePaths"sv;
+                    case ConfigKey::CacheUpscaleMapPaths:
+                         return "CacheUpscaleMapPaths"sv;
+                    case ConfigKey::CacheDeswizzleMapPaths:
+                         return "CacheDeswizzleMapPaths"sv;
+                    case ConfigKey::CacheUpscalePathsEnabled:
+                         return "CacheUpscalePathsEnabled"sv;
+                    case ConfigKey::CacheDeswizzlePathsEnabled:
+                         return "CacheDeswizzlePathsEnabled"sv;
+                    case ConfigKey::CacheUpscaleMapPathsEnabled:
+                         return "CacheUpscaleMapPathsEnabled"sv;
+                    case ConfigKey::CacheDeswizzleMapPathsEnabled:
+                         return "CacheDeswizzleMapPathsEnabled"sv;
+               }
+               return ""sv;
+          };
+
+          spdlog::info("Updating path config [{}] with {} entries", to_string(pande.path_key), pande.path.size());
+          switch (pande.path_key)
+          {
+               case ConfigKey::CacheUpscalePaths:
+                    m_selections->cache_upscale_paths = std::move(pande.path);
+                    break;
+               case ConfigKey::CacheDeswizzlePaths:
+                    m_selections->cache_deswizzle_paths = std::move(pande.path);
+                    break;
+               case ConfigKey::CacheUpscaleMapPaths:
+                    m_selections->cache_upscale_map_paths = std::move(pande.path);
+                    break;
+               case ConfigKey::CacheDeswizzleMapPaths:
+                    m_selections->cache_deswizzle_map_paths = std::move(pande.path);
+                    break;
+          }
+          m_selections->update_configuration_key(pande.path_key);
+
+          spdlog::info("Updating enabled config [{}] with {} entries", to_string(pande.enabled_key), pande.enabled.size());
+          switch (pande.enabled_key)
+          {
+               case ConfigKey::CacheUpscalePathsEnabled:
+                    m_selections->cache_upscale_paths_enabled = std::move(pande.enabled);
+                    break;
+               case ConfigKey::CacheDeswizzlePathsEnabled:
+                    m_selections->cache_deswizzle_paths_enabled = std::move(pande.enabled);
+                    break;
+               case ConfigKey::CacheUpscaleMapPathsEnabled:
+                    m_selections->cache_upscale_map_paths_enabled = std::move(pande.enabled);
+                    break;
+               case ConfigKey::CacheDeswizzleMapPathsEnabled:
+                    m_selections->cache_deswizzle_map_paths_enabled = std::move(pande.enabled);
+                    break;
+          }
+          m_selections->update_configuration_key(pande.enabled_key);
+     });
+
      if (total_elapsed_time < interval)
      {
           return;
@@ -1594,10 +1664,10 @@ void gui::update_field()
      // Generate upscale texture paths if a field is loaded
      if (m_field)
      {
-          generate_upscale_paths();
-          generate_deswizzle_paths();
-          generate_upscale_map_paths();
-          generate_deswizzle_map_paths();
+          m_future_of_future_paths_consumer += generate_upscale_paths();
+          m_future_of_future_paths_consumer += generate_deswizzle_paths();
+          m_future_of_future_paths_consumer += generate_upscale_map_paths();
+          m_future_of_future_paths_consumer += generate_deswizzle_map_paths();
           sort_paths();
      }
 
@@ -2506,7 +2576,7 @@ void gui::menu_upscale_paths()
      mmp.render(
        [&]() {
             m_selections->update_configuration_key(ConfigKey::PathsVectorUpscale);
-            generate_upscale_map_paths();
+            m_future_of_future_paths_consumer += generate_upscale_map_paths();
        },
        [&]() { refresh_render_texture(true); },
        [&]() {
@@ -2533,7 +2603,7 @@ void gui::menu_deswizzle_paths()
      mmp.render(
        [&]() {
             m_selections->update_configuration_key(ConfigKey::PathsVectorDeswizzle);
-            generate_upscale_map_paths();
+            m_future_of_future_paths_consumer += generate_upscale_map_paths();
        },
        [&]() { refresh_render_texture(true); },
        [&]() {
@@ -2561,7 +2631,7 @@ void gui::menu_upscale_map_paths()
      mmp.render(
        [&]() {
             m_selections->update_configuration_key(ConfigKey::PathsVectorUpscaleMap);
-            generate_upscale_map_paths();
+            m_future_of_future_paths_consumer += generate_upscale_map_paths();
        },
        [&]() {
             if (m_map_sprite->filter().upscale_map.enabled())
@@ -2604,7 +2674,7 @@ void gui::menu_deswizzle_map_paths()
      mmp.render(
        [&]() {
             m_selections->update_configuration_key(ConfigKey::PathsVectorDeswizzleMap);
-            generate_deswizzle_map_paths();
+            m_future_of_future_paths_consumer += generate_deswizzle_map_paths();
        },
        [&]() {
             if (m_map_sprite->filter().deswizzle_map.enabled())
@@ -3425,10 +3495,10 @@ gui::gui(sf::RenderWindow &window)
      if (m_field)
      {
           /// TODO move the generate to a thread.
-          generate_upscale_paths();
-          generate_deswizzle_paths();
-          generate_upscale_map_paths();
-          generate_deswizzle_map_paths();
+          m_future_of_future_paths_consumer += generate_upscale_paths();
+          m_future_of_future_paths_consumer += generate_deswizzle_paths();
+          m_future_of_future_paths_consumer += generate_upscale_map_paths();
+          m_future_of_future_paths_consumer += generate_deswizzle_map_paths();
      }
      sort_paths();
      if (!m_drag_sprite_shader)
@@ -3835,134 +3905,145 @@ void gui::combo_deswizzle_map_path()
      refresh_render_texture(true);
 }
 
-void gui::generate_upscale_paths()
+std::future<std::future<gui::PathsAndEnabled>> gui::generate_upscale_paths()
 {
      const auto coo = get_coo();
-     m_selections->cache_upscale_paths.clear();
+     return std::async(std::launch::async, [=] -> std::future<PathsAndEnabled> {
+          gui::PathsAndEnabled pande{ .path_key = ConfigKey::CacheUpscalePaths, .enabled_key = ConfigKey::CacheUpscalePathsEnabled };
 
-     const auto get_map_paths_joined = [this, &coo](const auto &container) {
-          return container
-                 | std::views::transform([this, &coo](const std::string &path) { return upscales(path, coo, m_selections).get_paths(); })
-                 | std::views::join;
-     };
+          const auto           get_map_paths_joined = [this, &coo](const auto &container) {
+               return container | std::views::transform([this, &coo](const std::string &path) {
+                           return upscales(path, coo, m_selections).get_paths();
+                      })
+                      | std::views::join;
+          };
 
-     const auto process = [&](const auto &...ranges) {
-          (
-            [&](const auto &range) {
-                 for (const auto &path : get_map_paths_joined(range))
-                 {
-                      m_selections->cache_upscale_paths.emplace_back(path.string());
-                 }
-            }(ranges),
-            ...);
-     };
+          const auto process = [&](const auto &...ranges) {
+               (
+                 [&](const auto &range) {
+                      for (const auto &path : get_map_paths_joined(range))
+                      {
+                           pande.path.emplace_back(path.string());
+                      }
+                 }(ranges),
+                 ...);
+          };
 
-     process(m_selections->paths_vector, m_selections->paths_vector_upscale);
+          process(m_selections->paths_vector, m_selections->paths_vector_upscale);
 
-     m_selections->cache_upscale_paths_enabled.clear();
-     for (const auto &path : m_selections->cache_upscale_paths)
-     {
-          m_selections->cache_upscale_paths_enabled.push_back(m_map_sprite->has_swizzle_path(std::filesystem::path{ path }));
-     }
+          for (const auto &path : pande.path)
+          {
+               pande.enabled.push_back(m_map_sprite->has_swizzle_path(std::filesystem::path{ path }));
+          }
+          return std::async(std::launch::deferred, [moved_pande = std::move(pande)] -> PathsAndEnabled { return moved_pande; });
+     });
 }
 
 
-void gui::generate_deswizzle_paths()
+std::future<std::future<gui::PathsAndEnabled>> gui::generate_deswizzle_paths()
 {
      const auto coo = get_coo();
-     m_selections->cache_deswizzle_paths.clear();
+     return std::async(std::launch::async, [=] -> std::future<PathsAndEnabled> {
+          gui::PathsAndEnabled pande{ .path_key = ConfigKey::CacheDeswizzlePaths, .enabled_key = ConfigKey::CacheDeswizzlePathsEnabled };
 
-     const auto get_map_paths_joined = [this, &coo](const auto &container) {
-          return container
-                 | std::views::transform([this, &coo](const std::string &path) { return upscales(path, coo, m_selections).get_paths(); })
-                 | std::views::join;
-     };
+          const auto           get_map_paths_joined = [this, &coo](const auto &container) {
+               return container | std::views::transform([this, &coo](const std::string &path) {
+                           return upscales(path, coo, m_selections).get_paths();
+                      })
+                      | std::views::join;
+          };
 
-     const auto process = [&](const auto &...ranges) {
-          (
-            [&](const auto &range) {
-                 for (const auto &path : get_map_paths_joined(range))
-                 {
-                      m_selections->cache_deswizzle_paths.emplace_back(path.string());
-                 }
-            }(ranges),
-            ...);
-     };
+          const auto process = [&](const auto &...ranges) {
+               (
+                 [&](const auto &range) {
+                      for (const auto &path : get_map_paths_joined(range))
+                      {
+                           pande.path.emplace_back(path.string());
+                      }
+                 }(ranges),
+                 ...);
+          };
 
-     process(m_selections->paths_vector, m_selections->paths_vector_deswizzle);
+          process(m_selections->paths_vector, m_selections->paths_vector_deswizzle);
 
-     m_selections->cache_deswizzle_paths_enabled.clear();
-     for (const auto &path : m_selections->cache_deswizzle_paths)
-     {
-          m_selections->cache_deswizzle_paths_enabled.push_back(m_map_sprite->has_deswizzle_path(std::filesystem::path{ path }));
-     }
+          for (const auto &path : pande.path)
+          {
+               pande.enabled.push_back(m_map_sprite->has_deswizzle_path(std::filesystem::path{ path }));
+          }
+          return std::async(std::launch::deferred, [moved_pande = std::move(pande)] -> PathsAndEnabled { return moved_pande; });
+     });
 }
 
-void gui::generate_upscale_map_paths()
+std::future<std::future<gui::PathsAndEnabled>> gui::generate_upscale_map_paths()
 {
      const auto coo = get_coo();
-     m_selections->cache_upscale_map_paths.clear();
+     return std::async(std::launch::async, [=] -> std::future<PathsAndEnabled> {
+          gui::PathsAndEnabled pande{ .path_key = ConfigKey::CacheUpscaleMapPaths, .enabled_key = ConfigKey::CacheUpscaleMapPathsEnabled };
 
-     const auto get_map_paths_joined = [this, &coo](const auto &container) {
-          return container | std::views::transform([this, &coo](const std::string &path) {
-                      return upscales(path, coo, m_selections).get_map_paths();
-                 })
-                 | std::views::join;
-     };
+          const auto           get_map_paths_joined = [this, &coo](const auto &container) {
+               return container | std::views::transform([this, &coo](const std::string &path) {
+                           return upscales(path, coo, m_selections).get_map_paths();
+                      })
+                      | std::views::join;
+          };
 
-     const auto process = [&](const auto &...ranges) {
-          (
-            [&](const auto &range) {
-                 for (const auto &path : get_map_paths_joined(range))
-                 {
-                      m_selections->cache_upscale_map_paths.emplace_back(path.string());
-                 }
-            }(ranges),
-            ...);
-     };
+          const auto process = [&](const auto &...ranges) {
+               (
+                 [&](const auto &range) {
+                      for (const auto &path : get_map_paths_joined(range))
+                      {
+                           pande.path.emplace_back(path.string());
+                      }
+                 }(ranges),
+                 ...);
+          };
 
-     process(m_selections->paths_vector, m_selections->paths_vector_upscale, m_selections->paths_vector_upscale_map);
+          process(m_selections->paths_vector, m_selections->paths_vector_upscale, m_selections->paths_vector_upscale_map);
 
-     m_selections->cache_upscale_map_paths_enabled.clear();
-     for (const auto &path : m_selections->cache_upscale_map_paths)
-     {
-          m_selections->cache_upscale_map_paths_enabled.push_back(
-            m_map_sprite->has_map_path(std::filesystem::path{ path }, ".map", m_selections->output_map_pattern_for_swizzle));
-     }
+          for (const auto &path : pande.path)
+          {
+               pande.enabled.push_back(
+                 m_map_sprite->has_map_path(std::filesystem::path{ path }, ".map", m_selections->output_map_pattern_for_swizzle));
+          }
+          return std::async(std::launch::deferred, [moved_pande = std::move(pande)] -> PathsAndEnabled { return moved_pande; });
+     });
 }
 
 
-void gui::generate_deswizzle_map_paths()
+std::future<std::future<gui::PathsAndEnabled>> gui::generate_deswizzle_map_paths()
 {
      const auto coo = get_coo();
-     m_selections->cache_deswizzle_map_paths.clear();
+     return std::async(std::launch::async, [=] -> std::future<PathsAndEnabled> {
+          gui::PathsAndEnabled pande{ .path_key    = ConfigKey::CacheDeswizzleMapPaths,
+                                      .enabled_key = ConfigKey::CacheDeswizzleMapPathsEnabled };
 
-     const auto get_map_paths_joined = [this, &coo](const auto &container) {
-          return container | std::views::transform([this, &coo](const std::string &path) {
-                      return upscales(path, coo, m_selections).get_map_paths();
-                 })
-                 | std::views::join;
-     };
+          const auto           get_map_paths_joined = [this, &coo](const auto &container) {
+               return container | std::views::transform([this, &coo](const std::string &path) {
+                           return upscales(path, coo, m_selections).get_map_paths();
+                      })
+                      | std::views::join;
+          };
 
-     const auto process = [&](const auto &...ranges) {
-          (
-            [&](const auto &range) {
-                 for (const auto &path : get_map_paths_joined(range))
-                 {
-                      m_selections->cache_deswizzle_map_paths.emplace_back(path.string());
-                 }
-            }(ranges),
-            ...);
-     };
+          const auto process = [&](const auto &...ranges) {
+               (
+                 [&](const auto &range) {
+                      for (const auto &path : get_map_paths_joined(range))
+                      {
+                           pande.path.emplace_back(path.string());
+                      }
+                 }(ranges),
+                 ...);
+          };
 
-     process(m_selections->paths_vector, m_selections->paths_vector_deswizzle, m_selections->paths_vector_deswizzle_map);
+          process(m_selections->paths_vector, m_selections->paths_vector_deswizzle, m_selections->paths_vector_deswizzle_map);
 
-     m_selections->cache_deswizzle_map_paths_enabled.clear();
-     for (const auto &path : m_selections->cache_deswizzle_map_paths)
-     {
-          m_selections->cache_deswizzle_map_paths_enabled.emplace_back(
-            m_map_sprite->has_map_path(std::filesystem::path{ path }, ".map", m_selections->output_map_pattern_for_deswizzle));
-     }
+          for (const auto &path : pande.path)
+          {
+               pande.enabled.emplace_back(
+                 m_map_sprite->has_map_path(std::filesystem::path{ path }, ".map", m_selections->output_map_pattern_for_deswizzle));
+          }
+          return std::async(std::launch::deferred, [moved_pande = std::move(pande)] -> PathsAndEnabled { return moved_pande; });
+     });
 }
 
 bool gui::combo_upscale_path(ff_8::filter_old<std::filesystem::path, ff_8::FilterTag::Upscale> &filter) const
