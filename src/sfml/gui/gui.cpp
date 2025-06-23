@@ -1260,43 +1260,44 @@ void gui::draw_mouse_positions_sprite([[maybe_unused]] const float scale, [[mayb
 {
      // if (m_mouse_positions.sprite.getTexture() != nullptr)
      // {
-          /// TODO replace shader and states and such with batchrendering from glengine
-          // sf::RenderStates states = {};
-          // if (m_drag_sprite_shader)
-          // {
-          //      m_drag_sprite_shader->setUniform("texture", *m_mouse_positions.sprite.getTexture());
-          //      static constexpr float border_width = 2.F;
-          //      m_drag_sprite_shader->setUniform("borderWidth", border_width);
-          //      states.shader = m_drag_sprite_shader.get();
-          // }
-          /// TODO replace RenderTexture
-          // // Prepare a render texture to draw the sprite with the shader
-          // m_shader_renderTexture.create(
-          //   static_cast<std::uint32_t>(m_mouse_positions.sprite.getGlobalBounds().width),
-          //   static_cast<std::uint32_t>(m_mouse_positions.sprite.getGlobalBounds().height));
+     /// TODO replace shader and states and such with batchrendering from glengine
+     // sf::RenderStates states = {};
+     // if (m_drag_sprite_shader)
+     // {
+     //      m_drag_sprite_shader->setUniform("texture", *m_mouse_positions.sprite.getTexture());
+     //      static constexpr float border_width = 2.F;
+     //      m_drag_sprite_shader->setUniform("borderWidth", border_width);
+     //      states.shader = m_drag_sprite_shader.get();
+     // }
+     /// TODO replace RenderTexture
+     // // Prepare a render texture to draw the sprite with the shader
+     // m_shader_renderTexture.create(
+     //   static_cast<std::uint32_t>(m_mouse_positions.sprite.getGlobalBounds().width),
+     //   static_cast<std::uint32_t>(m_mouse_positions.sprite.getGlobalBounds().height));
 
-          // // Clear and draw the sprite with the shader
-          // m_shader_renderTexture.clear(sf::Color::Transparent);
-          /// TODO replace sprite
-          // //m_mouse_positions.sprite.setPosition(glm::vec2{});
-          // m_shader_renderTexture.draw(m_mouse_positions.sprite, states);
-          // m_shader_renderTexture.display();
+     // // Clear and draw the sprite with the shader
+     // m_shader_renderTexture.clear(sf::Color::Transparent);
+     /// TODO replace sprite
+     // //m_mouse_positions.sprite.setPosition(glm::vec2{});
+     // m_shader_renderTexture.draw(m_mouse_positions.sprite, states);
+     // m_shader_renderTexture.display();
 
-          // int offset_y = -32 + m_mouse_positions.pixel.y % 16;
-          // ImGui::SetCursorScreenPos(ImVec2(
-          //   (m_mouse_positions.pixel.x - 24) * scale * static_cast<float>(m_map_sprite->get_map_scale()) + screen_pos.x,
-          //   (m_mouse_positions.pixel.y - 24) * scale * static_cast<float>(m_map_sprite->get_map_scale()) + screen_pos.y));
-          // ImGui::Image(
-          //   std::bit_cast<ImTextureID>(static_cast<std::uintptr_t>(m_shader_renderTexture.getTexture().getNativeHandle())),
-          //   ImVec2(
-          //     m_mouse_positions.sprite.getGlobalBounds().width * scale * static_cast<float>(m_map_sprite->get_map_scale()),
-          //     m_mouse_positions.sprite.getGlobalBounds().height * scale * static_cast<float>(m_map_sprite->get_map_scale())),
-          //   ImVec2(0, 1),
-          //   ImVec2(1, 0));
+     // int offset_y = -32 + m_mouse_positions.pixel.y % 16;
+     // ImGui::SetCursorScreenPos(ImVec2(
+     //   (m_mouse_positions.pixel.x - 24) * scale * static_cast<float>(m_map_sprite->get_map_scale()) + screen_pos.x,
+     //   (m_mouse_positions.pixel.y - 24) * scale * static_cast<float>(m_map_sprite->get_map_scale()) + screen_pos.y));
+     // ImGui::Image(
+     //   std::bit_cast<ImTextureID>(static_cast<std::uintptr_t>(m_shader_renderTexture.getTexture().getNativeHandle())),
+     //   ImVec2(
+     //     m_mouse_positions.sprite.getGlobalBounds().width * scale * static_cast<float>(m_map_sprite->get_map_scale()),
+     //     m_mouse_positions.sprite.getGlobalBounds().height * scale * static_cast<float>(m_map_sprite->get_map_scale())),
+     //   ImVec2(0, 1),
+     //   ImVec2(1, 0));
      // }
 }
 void gui::consume_one_future()
 {
+     m_map_sprite->consume_one_future();
      static constexpr int interval           = 50;// the interval in milliseconds
      static int           total_elapsed_time = 0;// keep track of the elapsed time using a static variable
 

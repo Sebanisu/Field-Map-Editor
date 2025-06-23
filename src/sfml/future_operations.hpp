@@ -21,9 +21,9 @@ class LoadColorsIntoTexture
 
    public:
      LoadColorsIntoTexture(
-       glengine::Texture *const                        in_texture,
-       std::vector<open_viii::graphics::Color32RGBA> &&in_colors,
-       glm::uvec2                                      in_size);
+       glengine::Texture *const                      in_texture,
+       std::vector<open_viii::graphics::Color32RGBA> in_colors,
+       glm::uvec2                                    in_size);
      void operator()() const;
 };
 class LoadImageIntoTexture

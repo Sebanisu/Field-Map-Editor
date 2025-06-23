@@ -4,11 +4,13 @@
 
 #include "future_operations.hpp"
 #include <Image.hpp>
+#include <iostream>
 #include <span>
+#include <stacktrace>
 future_operations::LoadColorsIntoTexture::LoadColorsIntoTexture(
-  glengine::Texture *const                        in_texture,
-  std::vector<open_viii::graphics::Color32RGBA> &&in_colors,
-  glm::uvec2                                      in_size)
+  glengine::Texture *const                      in_texture,
+  std::vector<open_viii::graphics::Color32RGBA> in_colors,
+  glm::uvec2                                    in_size)
   : m_texture(in_texture)
   , m_colors(std::move(in_colors))
   , m_size(in_size)
@@ -23,17 +25,15 @@ void future_operations::LoadColorsIntoTexture::operator()() const
      }
      try
      {
+          spdlog::info("Trying to pass colors[{}] into texture ({}, {})", std::ranges::size(m_colors), m_size.x, m_size.y);
           assert(m_size.x * m_size.y == std::ranges::size(m_colors));
           if (std::ranges::empty(m_colors) || m_size.x == 0 || m_size.y == 0)
           {
                return;
           }
-          *m_texture = glengine::Texture(m_colors, m_size.x, m_size.y);
-          // m_texture->create(m_size.x, m_size.y);
-          // m_texture->update(m_colors.front().data());
-          // m_texture->setSmooth(false);
-          // m_texture->setRepeated(false);
-          // m_texture->generateMipmap();
+          *m_texture       = glengine::Texture(m_colors, m_size.x, m_size.y);
+          //const auto stack = std::stacktrace::current();
+          //std::cout << stack << std::endl;
      }
      catch (const std::exception &e)
      {
@@ -55,11 +55,14 @@ void future_operations::LoadImageIntoTexture::operator()()
      }
      try
      {
+
+          spdlog::info("Trying to pass image[{}] into texture ({}, {})", m_image.path.string(), m_image.width, m_image.height);
           if (m_image.width == 0 || m_image.height == 0)
           {
                return;
           }
           *m_texture = glengine::Texture(std::move(m_image));
+
      }
      catch (const std::exception &e)
      {

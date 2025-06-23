@@ -165,19 +165,38 @@ class [[nodiscard]] FutureConsumer
           compact_front();
           if (!done())
           {
-               auto      &range = m_ranges.front();
-               auto      &item  = *range;
-               const auto state = item.wait_for(std::chrono::seconds(0));
-               if (std::future_status::ready != state && std::future_status::deferred != state)
+               auto &range = m_ranges.front();
+               auto &item  = *range;
+               try
                {
-                    // launch policy is async and the future is not yet ready, so skip it
-                    return *this;
+                    if (item.valid())
+                    {
+                         const auto state = item.wait_for(std::chrono::seconds(0));
+                         if (state != std::future_status::ready && state != std::future_status::deferred)
+                         {
+                              // launch policy is async and the future is not yet ready, so skip it
+                              return *this;
+                         }
+                         item.get();
+                    }
+                    // else
+                    // {
+                    //      spdlog::warn("Skipping future: no valid state (possibly moved-from or default-constructed)");
+                    // }
+                    ++range;
                }
-               if (item.valid())
+               catch (const std::future_error &e)
                {
-                    item.get();
+                    spdlog::error("Future error in wait_for: {}", e.what());
                }
-               ++range;
+               catch (const std::exception &e)
+               {
+                    spdlog::error("Unexpected exception in wait_for: {}", e.what());
+               }
+               catch (...)
+               {
+                    spdlog::error("Unknown exception occurred in wait_for");
+               }
           }
           return *this;
      }
@@ -281,19 +300,39 @@ class [[nodiscard]] FutureOfFutureConsumer
           if (!done())
           {
                compact_front();
-               auto      &range = m_ranges.front();
-               auto      &item  = *range;
-               const auto state = item.wait_for(std::chrono::seconds(0));
-               if (std::future_status::ready != state && std::future_status::deferred != state)
+               auto &range = m_ranges.front();
+               auto &item  = *range;
+               try
                {
-                    // launch policy is async and the future is not yet ready, so skip it
-                    return *this;
+                    if (item.valid())
+                    {
+                         const auto state = item.wait_for(std::chrono::seconds(0));
+                         if (state != std::future_status::ready && state != std::future_status::deferred)
+                         {
+                              // launch policy is async and the future is not yet ready, so skip it
+                              return *this;
+                         }
+
+                         m_out.push_back(item.get());
+                    }
+                    // else
+                    // {
+                    //      spdlog::warn("Skipping future: no valid state (possibly moved-from or default-constructed)");
+                    // }
+                    ++range;
                }
-               if (item.valid())
+               catch (const std::future_error &e)
                {
-                    m_out.push_back(item.get());
+                    spdlog::error("Future error in wait_for: {}", e.what());
                }
-               ++range;
+               catch (const std::exception &e)
+               {
+                    spdlog::error("Unexpected exception in wait_for: {}", e.what());
+               }
+               catch (...)
+               {
+                    spdlog::error("Unknown exception occurred in wait_for");
+               }
           }
           return *this;
      }

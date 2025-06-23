@@ -106,8 +106,8 @@ void map_sprite::queue_texture_loading()
 
      const auto                                  fofh_consumer = glengine::ScopeGuard{ [&]() {
           // Consume the collected nested futures immediately to kick off the work
+
           m_future_of_future_consumer                          = std::move(future_of_futures);
-          m_future_of_future_consumer.consume_now();
      } };
 
      // Check if the deswizzle filter is enabled
@@ -227,17 +227,17 @@ std::future<std::future<void>> map_sprite::load_mim_textures(open_viii::graphics
      }
      else
      {
-          std::size_t const pos = get_texture_pos(bpp, palette, 0);
-          return { std::async(
-            std::launch::async,
-            [bpp, palette](const ff_8::map_group::SharedMim &mim, glengine::Texture *const texture) -> std::future<void> {
-                 return { std::async(
-                   std::launch::deferred,
-                   future_operations::LoadColorsIntoTexture{
-                     texture, get_colors(*mim, bpp, palette), glm::uvec2{ mim->get_width(bpp), mim->get_height() } }) };
-            },
-            m_map_group.mim,
-            &(m_texture->at(pos))) };
+          std::size_t const                    pos     = get_texture_pos(bpp, palette, 0);
+          open_viii::graphics::background::Mim mim     = *m_map_group.mim;
+          glengine::Texture *const             texture = &(m_texture->at(pos));
+          spdlog::info("Attempting to queue texture loading from .mim file : bpp {}, palette {}", bpp, +palette);
+          return { std::async(std::launch::async, [=] -> std::future<void> {
+               spdlog::info("Getting colors from .mim file : bpp {}, palette {}", bpp, +palette);
+               return { std::async(
+                 std::launch::deferred,
+                 future_operations::LoadColorsIntoTexture{
+                   texture, get_colors(mim, bpp, palette), glm::uvec2{ mim.get_width(bpp), mim.get_height() } }) };
+          }) };
      }
 }
 
@@ -845,16 +845,25 @@ void map_sprite::update_render_texture(bool reload_textures)
 {
      if (reload_textures)
      {
+          // consume all the futures.
+          m_future_of_future_consumer.consume_now();
+          m_future_consumer.consume_now();
+          // reset the textures
           *m_texture = {};
           queue_texture_loading();
-          resize_render_texture();
      }
      if (fail())
      {
           return;
      }
-     resize_render_texture();
-     (void)generate_texture(m_render_framebuffer);
+     // don't resize render texture till we have something to draw?
+     //if (std::ranges::any_of(*m_texture.get(), [](const auto &texture) { return texture.width() > 0 && texture.height() > 0; }))
+     // all tasks completed.
+     // if (m_future_of_future_consumer.done() && m_future_consumer.done())
+     {
+          resize_render_texture();
+          (void)generate_texture(m_render_framebuffer);
+     }
 }
 
 void map_sprite::set_uniforms(const glengine::FrameBuffer &fbo, const glengine::Shader &shader) const
@@ -1863,6 +1872,39 @@ map_sprite::map_sprite(
           }
      }
      update_render_texture(true);
+}
+
+void fme::map_sprite::consume_now()
+{
+     m_future_of_future_consumer.consume_now();
+     m_future_consumer.consume_now();
+     update_render_texture();
+}
+
+bool fme::map_sprite::consume_one_future()
+{
+     // If the outer future is still processing, advance it
+     if (!m_future_of_future_consumer.done())
+     {
+          ++m_future_of_future_consumer;
+          return true;
+     }
+     // If the outer future is done but has output, consume it
+     else if (m_future_of_future_consumer.consumer_ready())
+     {
+          m_future_consumer += m_future_of_future_consumer.get_consumer();
+          return true;
+     }
+     // If the inner future is still processing, advance it
+     else if (!m_future_consumer.done())
+     {
+          ++m_future_consumer;
+          update_render_texture();
+          return true;
+     }
+
+     // Nothing to do, both futures are done and consumed
+     return false;
 }
 
 std::string map_sprite::current_undo_description() const
