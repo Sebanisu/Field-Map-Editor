@@ -98,7 +98,7 @@ const glengine::Texture *map_sprite::get_texture(const ff_8::PupuID &pupu) const
  *
  * @return A shared pointer to an array of loaded glengine::Texture objects of size MAX_TEXTURES.
  */
-void map_sprite::queue_texture_loading()
+void map_sprite::queue_texture_loading() const
 {
      // Container to hold nested futures representing asynchronous texture load operations
      std::vector<std::future<std::future<void>>> future_of_futures{};
@@ -188,34 +188,31 @@ void map_sprite::consume_futures(std::vector<std::future<void>> &futures)
      });
 }
 
-// std::shared_ptr<std::array<glengine::Texture, map_sprite::MAX_TEXTURES>> map_sprite::load_textures()
-// {
-//      std::shared_ptr<std::array<glengine::Texture, MAX_TEXTURES>> ret = queue_texture_loading();
-//      while (std::ranges::all_of(*ret, [](const glengine::Texture &texture) {
-//           const auto size = texture.get_size();
-//           // spdlog::info("{}", size);
-//           return size.x == 0 || size.y == 0;
-//      }))
-//      {
-//           if (m_filters.upscale.enabled())
-//           {
-//                m_filters.upscale.disable();
-//                ret = queue_texture_loading();
-//           }
-//           else if (m_filters.deswizzle.enabled())
-//           {
-//                m_filters.deswizzle.disable();
-//                ret = queue_texture_loading();
-//           }
-//           else
-//           {
-//                break;
-//           }
-//      }
-//      return ret;
-// }
+bool map_sprite::fallback_textures() const
+{
+     if (std::ranges::all_of(*m_texture.get(), [](const glengine::Texture &texture) {
+              const auto size = texture.get_size();
+              // spdlog::info("{}", size);
+              return size.x == 0 || size.y == 0;
+         }))
+     {
+          if (m_filters.upscale.enabled())
+          {
+               m_filters.upscale.disable();
+               queue_texture_loading();
+               return true;
+          }
+          else if (m_filters.deswizzle.enabled())
+          {
+               m_filters.deswizzle.disable();
+               queue_texture_loading();
+               return true;
+          }
+     }
+     return false;
+}
 
-std::future<std::future<void>> map_sprite::load_mim_textures(open_viii::graphics::BPPT bpp, std::uint8_t palette)
+std::future<std::future<void>> map_sprite::load_mim_textures(open_viii::graphics::BPPT bpp, std::uint8_t palette) const
 {
      if (!m_map_group.mim)
      {
@@ -230,9 +227,9 @@ std::future<std::future<void>> map_sprite::load_mim_textures(open_viii::graphics
           std::size_t const                    pos     = get_texture_pos(bpp, palette, 0);
           open_viii::graphics::background::Mim mim     = *m_map_group.mim;
           glengine::Texture *const             texture = &(m_texture->at(pos));
-          spdlog::info("Attempting to queue texture loading from .mim file : bpp {}, palette {}", bpp, +palette);
+          spdlog::debug("Attempting to queue texture loading from .mim file : bpp {}, palette {}", bpp, +palette);
           return { std::async(std::launch::async, [=] -> std::future<void> {
-               spdlog::info("Getting colors from .mim file : bpp {}, palette {}", bpp, +palette);
+               spdlog::debug("Getting colors from .mim file : bpp {}, palette {}", bpp, +palette);
                return { std::async(
                  std::launch::deferred,
                  future_operations::LoadColorsIntoTexture{
@@ -254,7 +251,7 @@ std::future<std::future<void>> map_sprite::load_deswizzle_textures(const ff_8::P
 }
 
 
-std::future<std::future<void>> map_sprite::load_upscale_textures(std::uint8_t texture_page, std::uint8_t palette)
+std::future<std::future<void>> map_sprite::load_upscale_textures(std::uint8_t texture_page, std::uint8_t palette) const
 {
      const std::size_t pos = std::size_t{ texture_page } * MAX_PALETTES + palette;
      if (pos >= MAX_TEXTURES)
@@ -268,7 +265,7 @@ std::future<std::future<void>> map_sprite::load_upscale_textures(std::uint8_t te
                                                                       generate_swizzle_paths(texture_page, palette) }) };
 }
 
-std::future<std::future<void>> map_sprite::load_upscale_textures(std::uint8_t texture_page)
+std::future<std::future<void>> map_sprite::load_upscale_textures(std::uint8_t texture_page) const
 {
      const std::size_t pos = START_OF_NO_PALETTE_INDEX + texture_page;
      if (pos >= MAX_TEXTURES)
@@ -675,9 +672,9 @@ void map_sprite::update_position(const glm::ivec2 &pixel_pos, const uint8_t &tex
                drew = true;
           });
      }
-     if(drew)
+     if (drew)
      {
-          
+
           m_batch_renderer.draw();
           m_batch_renderer.on_render();
      }
@@ -847,7 +844,7 @@ void map_sprite::disable_draw_swizzle()
 //      // draw square
 //      target.draw(m_square, states);
 // }
-void map_sprite::update_render_texture(bool reload_textures)
+void map_sprite::update_render_texture(const bool reload_textures) const
 {
      if (reload_textures)
      {
@@ -863,12 +860,15 @@ void map_sprite::update_render_texture(bool reload_textures)
           return;
      }
      // don't resize render texture till we have something to draw?
-     //if (std::ranges::any_of(*m_texture.get(), [](const auto &texture) { return texture.width() > 0 && texture.height() > 0; }))
+     // if (std::ranges::any_of(*m_texture.get(), [](const auto &texture) { return texture.width() > 0 && texture.height() > 0; }))
      // all tasks completed.
-     // if (m_future_of_future_consumer.done() && m_future_consumer.done())
+     if (m_future_of_future_consumer.done() && m_future_consumer.done())
      {
-          resize_render_texture();
-          (void)generate_texture(m_render_framebuffer);
+          if (!fallback_textures())// see if no textures are loaded and fall back to .mim if not.
+          {
+               resize_render_texture();
+               (void)generate_texture(m_render_framebuffer);
+          }
      }
 }
 
@@ -905,6 +905,7 @@ void map_sprite::save([[maybe_unused]] const std::filesystem::path &path) const
      {
           return;
      }
+     consume_now();
      std::future<void> task = save_image_pbo(path, m_render_framebuffer.clone());
      task.wait();
 }
@@ -982,7 +983,7 @@ std::string map_sprite::map_filename() const
      return std::filesystem::path(m_map_group.map_path).filename().string();
 }
 
-void map_sprite::resize_render_texture()
+void map_sprite::resize_render_texture() const
 {
      if (fail())
      {
@@ -1029,9 +1030,12 @@ void map_sprite::resize_render_texture()
           m_scale = tmp_scale;
      }
      check_size();
-
-     m_render_framebuffer      = glengine::FrameBuffer{ glengine::FrameBufferSpecification{ .width  = static_cast<int>(width() * m_scale),
-                                                                                            .height = static_cast<int>(height() * m_scale) } };
+     auto spec =
+       glengine::FrameBufferSpecification{ .width = static_cast<int>(width() * m_scale), .height = static_cast<int>(height() * m_scale) };
+     if (m_render_framebuffer.width() != spec.width && m_render_framebuffer.height() != spec.height)
+     {
+          m_render_framebuffer = glengine::FrameBuffer{ std::move(spec) };
+     }
      m_drag_sprite_framebuffer = glengine::FrameBuffer{ glengine::FrameBufferSpecification{
        .width = static_cast<int>(TILE_SIZE * m_scale * 3), .height = static_cast<int>(TILE_SIZE * m_scale * 3) } };
 }
@@ -1221,6 +1225,7 @@ const ff_8::MapHistory::nsat_map &map_sprite::working_animation_counts() const
           spdlog::error("Failed to lock m_selections: shared_ptr is expired.");
           return {};
      }
+     consume_now();
      // Get the base name of the field (e.g., map name) to use in output filenames.
      // const std::string field_name              = { get_base_name() };
 
@@ -1374,6 +1379,7 @@ const ff_8::MapHistory::nsat_map &map_sprite::working_animation_counts() const
           spdlog::error("Failed to lock m_selections: shared_ptr is expired.");
           return {};
      }
+     consume_now();
      // Get the base name of the field (e.g., map name) to use in output filenames.
      // const std::string field_name              = { get_base_name() };
 
@@ -1540,6 +1546,7 @@ std::string map_sprite::get_base_name() const
           spdlog::error("Failed to lock m_selections: shared_ptr is expired.");
           return {};
      }
+     consume_now();
      // Backup current settings and adjust for saving Pupu textures
      auto settings    = settings_backup{ m_filters, m_draw_swizzle, m_disable_texture_page_shift, m_disable_blends, m_scale };
      settings.filters = ff_8::filters{ false };
@@ -1877,14 +1884,14 @@ map_sprite::map_sprite(
      update_render_texture(true);
 }
 
-void fme::map_sprite::consume_now()
+void fme::map_sprite::consume_now() const
 {
      m_future_of_future_consumer.consume_now();
      m_future_consumer.consume_now();
      update_render_texture();
 }
 
-bool fme::map_sprite::consume_one_future()
+bool fme::map_sprite::consume_one_future() const
 {
      // If the outer future is still processing, advance it
      if (!m_future_of_future_consumer.done())

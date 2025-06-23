@@ -57,15 +57,15 @@ struct [[nodiscard]] map_sprite// final
 
    private:
      SharedTextures m_texture = std::make_shared<std::array<glengine::Texture, MAX_TEXTURES>>();
-     FutureOfFutureConsumer<std::vector<std::future<std::future<void>>>> m_future_of_future_consumer  = {};
-     FutureConsumer<std::vector<std::future<void>>>                      m_future_consumer            = {};
-     ff_8::map_group                                                     m_map_group                  = {};
+     mutable FutureOfFutureConsumer<std::vector<std::future<std::future<void>>>> m_future_of_future_consumer  = {};
+     mutable FutureConsumer<std::vector<std::future<void>>>                      m_future_consumer            = {};
+     ff_8::map_group                                                             m_map_group                  = {};
      // TODO do I need square?
      //  square                                        m_square    = { glm::uvec2{}, glm::uvec2{ TILE_SIZE, TILE_SIZE }, sf::Color::Red };
-     bool                                                                m_draw_swizzle               = { false };
-     bool                                                                m_disable_texture_page_shift = { false };
-     bool                                                                m_disable_blends             = { false };
-     ff_8::filters                                 m_filters                 = { false };// default false should be override by gui to true.
+     bool                                                                        m_draw_swizzle               = { false };
+     bool                                                                        m_disable_texture_page_shift = { false };
+     bool                                                                        m_disable_blends             = { false };
+     mutable ff_8::filters                         m_filters                 = { false };// default false should be override by gui to true.
      std::weak_ptr<Selections>                     m_selections              = {};
      ::upscales                                    m_upscales                = { m_selections };
      bool                                          m_using_imported_texture  = {};
@@ -81,11 +81,11 @@ struct [[nodiscard]] map_sprite// final
                                                                                        { std::filesystem::current_path() / "res" / "shader"
                                                                                          / "red_integer.shader" } };
      glengine::FrameBuffer                         out_texture                     = {};
-     glengine::FrameBuffer                         m_render_framebuffer            = {};
-     glengine::FrameBuffer                         m_drag_sprite_framebuffer       = {};
+     mutable glengine::FrameBuffer                 m_render_framebuffer            = {};
+     mutable glengine::FrameBuffer                 m_drag_sprite_framebuffer       = {};
      std::vector<std::size_t>                      m_saved_indices                 = {};
      std::vector<std::size_t>                      m_saved_imported_indices        = {};
-     std::uint32_t                                 m_scale                         = { 1 };
+     mutable std::uint32_t                         m_scale                         = { 1 };
      mutable bool                                  once                            = { true };
      mutable glengine::OrthographicCamera          m_fixed_render_camera           = {};
 
@@ -149,8 +149,8 @@ struct [[nodiscard]] map_sprite// final
      [[nodiscard]] bool                                 history_remove_duplicate();
      [[nodiscard]] ff_8::filters                       &filter();
      //[[nodiscard]] static sf::BlendMode                 set_blend_mode(const BlendModeT &blend_mode, std::array<sf::Vertex, 4U> &quad);
-     //[[nodiscard]] SharedTextures                       load_textures();
-     [[nodiscard]] void                                 queue_texture_loading();
+     [[nodiscard]] bool                                 fallback_textures() const;
+     void                                               queue_texture_loading() const;
      [[nodiscard]] static colors_type                   get_colors(const Mim &mim, BPPT bpp, uint8_t palette);
      // [[nodiscard]] static const sf::BlendMode          &get_blend_subtract();
      [[nodiscard]] static std::future<std::future<void>>
@@ -171,10 +171,10 @@ struct [[nodiscard]] map_sprite// final
        save_combined_swizzle_texture(const std::string &keyed_string, const std::string &selected_path);
 
      [[nodiscard]] std::vector<std::future<void>> save_pupu_textures(const std::string &keyed_string, const std::string &selected_path);
-     [[nodiscard]] std::future<std::future<void>> load_upscale_textures(std::uint8_t texture_page);
+     [[nodiscard]] std::future<std::future<void>> load_upscale_textures(std::uint8_t texture_page) const;
      [[nodiscard]] std::future<std::future<void>> load_deswizzle_textures(const ff_8::PupuID pupu, const size_t pos) const;
-     [[nodiscard]] std::future<std::future<void>> load_mim_textures(BPPT bpp, uint8_t palette);
-     [[nodiscard]] std::future<std::future<void>> load_upscale_textures(std::uint8_t texture_page, std::uint8_t palette);
+     [[nodiscard]] std::future<std::future<void>> load_mim_textures(BPPT bpp, uint8_t palette) const;
+     [[nodiscard]] std::future<std::future<void>> load_upscale_textures(std::uint8_t texture_page, std::uint8_t palette) const;
 
      void                                         save_modified_map(const std::filesystem::path &path) const;
      void                                         save(const std::filesystem::path &path) const;
@@ -196,19 +196,19 @@ struct [[nodiscard]] map_sprite// final
      void                                         redo();
      void                                         undo_all();
      void                                         redo_all();
-     void                                         update_render_texture(bool reload_textures = false);
+     void                                         update_render_texture(bool reload_textures = false) const;
      void                                         compact_rows();
      void                                         compact_all();
      void                                         flatten_bpp();
      void                                         flatten_palette();
      void                                         load_map(const std::filesystem::path &dest_path);
-     void                                         resize_render_texture();
+     void                                         resize_render_texture() const;
      void        update_render_texture(const glengine::Texture *p_texture, Map map, const tile_sizes tile_size);
      static void consume_futures(std::vector<std::future<void>> &futures);
      static void consume_futures(std::vector<std::future<std::future<void>>> &future_of_futures);
      void        update_position(const glm::ivec2 &pixel_pos, const uint8_t &texture_page, const glm::ivec2 &down_pixel_pos);
-     bool        consume_one_future();
-     void        consume_now();
+     bool        consume_one_future() const;
+     void        consume_now() const;
 
      static std::filesystem::path save_path_coo(
        fmt::format_string<std::string_view, std::string_view, uint8_t> pattern,

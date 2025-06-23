@@ -25,7 +25,7 @@ void future_operations::LoadColorsIntoTexture::operator()() const
      }
      try
      {
-          spdlog::info("Trying to pass colors[{}] into texture ({}, {})", std::ranges::size(m_colors), m_size.x, m_size.y);
+          spdlog::debug("Trying to pass colors[{}] into texture ({}, {})", std::ranges::size(m_colors), m_size.x, m_size.y);
           assert(m_size.x * m_size.y == std::ranges::size(m_colors));
           if (std::ranges::empty(m_colors) || m_size.x == 0 || m_size.y == 0)
           {
