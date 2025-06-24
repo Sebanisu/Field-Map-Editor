@@ -18,6 +18,8 @@
 #include <string>
 #include <utility>
 #include <vector>
+namespace ff_8
+{
 template<typename T>
 struct unique_values_and_strings
 {
@@ -117,18 +119,20 @@ struct all_unique_values_and_strings
        , m_blend_other(tiles, ff_8::tile_operations::Blend{})
        , m_blend_mode(tiles, ff_8::tile_operations::BlendMode{})
        , m_bpp(tiles, ff_8::tile_operations::Depth{})
-       , m_animation_frame(get_map<std::uint8_t, std::uint8_t>(
-           tiles,
-           m_animation_id,
-           ff_8::tile_operations::AnimationState{},
-           {},
-           [](const auto key, const auto &tile) -> bool { return ff_8::tile_operations::AnimationIdMatch{ key } == tile; }))
-       , m_palette(get_map<std::uint8_t, open_viii::graphics::BPPT>(
-           tiles,
-           m_bpp,
-           ff_8::tile_operations::PaletteId{},
-           {},
-           [](const auto key, const auto &tile) -> bool { return ff_8::tile_operations::DepthMatch{ tile } == key; }))
+       , m_animation_frame(
+           get_map<std::uint8_t, std::uint8_t>(
+             tiles,
+             m_animation_id,
+             ff_8::tile_operations::AnimationState{},
+             {},
+             [](const auto key, const auto &tile) -> bool { return ff_8::tile_operations::AnimationIdMatch{ key } == tile; }))
+       , m_palette(
+           get_map<std::uint8_t, open_viii::graphics::BPPT>(
+             tiles,
+             m_bpp,
+             ff_8::tile_operations::PaletteId{},
+             {},
+             [](const auto key, const auto &tile) -> bool { return ff_8::tile_operations::DepthMatch{ tile } == key; }))
      {
      }
      [[nodiscard]] const auto &z() const
@@ -200,4 +204,5 @@ struct all_unique_values_and_strings
           return ret;
      }
 };
+}// namespace ff_8
 #endif// FIELD_MAP_EDITOR_UNIQUE_VALUES_HPP

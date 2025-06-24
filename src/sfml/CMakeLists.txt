@@ -47,6 +47,7 @@ add_executable(
   map_sprite.cpp
   mim_sprite.cpp
   open_file_explorer.cpp
+  path_search.cpp
   PupuID.cpp
   safedir.cpp
   save_image_pbo.cpp
@@ -54,7 +55,6 @@ add_executable(
   tile_sizes.cpp
   unique_values.cpp
   UniquifyPupu.cpp
-  upscales.cpp
   utilities.cpp)
 # set_property(TARGET ${PROJECT_NAME}_SFML PROPERTY CXX_STANDARD 20)
 find_package(tomlplusplus REQUIRED)
@@ -144,7 +144,6 @@ add_custom_command(
   COMMAND
     ${CMAKE_COMMAND} -E echo
     "Copying ${CMAKE_SOURCE_DIR}/res to $<TARGET_FILE_DIR:${PROJECT_NAME}_SFML>/res"
-    
   COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/res
-  $<TARGET_FILE_DIR:${PROJECT_NAME}_SFML>/res
+          $<TARGET_FILE_DIR:${PROJECT_NAME}_SFML>/res
   VERBATIM)

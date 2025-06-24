@@ -25,7 +25,6 @@
 #include "RangeConsumer.hpp"
 #include "safedir.hpp"
 #include "Selections.hpp"
-#include "upscales.hpp"
 #include <cstdint>
 #include <fmt/chrono.h>
 #include <GL/glew.h>

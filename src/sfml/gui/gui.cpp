@@ -9,6 +9,7 @@
 #include "imgui_color.hpp"
 #include "main_menu_paths.hpp"
 #include "open_file_explorer.hpp"
+#include "path_search.hpp"
 #include "push_pop_id.hpp"
 #include "safedir.hpp"
 #include "tool_tip.hpp"
@@ -2126,10 +2127,10 @@ void gui::edit_menu()
 
 
                const auto generic_filter_menu = [&](
-                                                  std::string_view                 label,
-                                                  HasValuesAndStringsAndZip auto &&pair,
-                                                  ff_8::IsFilterOld auto          &filter,
-                                                  std::invocable auto            &&lambda) {
+                                                  std::string_view                       label,
+                                                  ff_8::HasValuesAndStringsAndZip auto &&pair,
+                                                  ff_8::IsFilterOld auto                &filter,
+                                                  std::invocable auto                  &&lambda) {
                     if (ImGui::BeginMenu(label.data()))
                     {
                          const auto pop_menu1       = glengine::ScopeGuard(&ImGui::EndMenu);
@@ -2638,10 +2639,11 @@ void gui::menu_upscale_map_paths()
             {
                  m_map_sprite->filter().deswizzle_map.disable();
 
-                 if (const auto paths = m_map_sprite->generate_swizzle_map_paths(".map"); !std::ranges::empty(paths))
-                 {
-                      m_map_sprite->load_map(paths.front());// grab the first match.
-                 }
+                 // TODO do i want this?
+                 //   if (const auto paths = m_map_sprite->generate_swizzle_map_paths(".map"); !std::ranges::empty(paths))
+                 //   {
+                 //        m_map_sprite->load_map(paths.front());// grab the first match.
+                 //   }
             }
             else
             {
@@ -2681,10 +2683,11 @@ void gui::menu_deswizzle_map_paths()
             {
                  m_map_sprite->filter().upscale_map.disable();
 
-                 if (const auto paths = m_map_sprite->generate_deswizzle_map_paths(".map"); !std::ranges::empty(paths))
-                 {
-                      m_map_sprite->load_map(paths.front());// grab the first match.
-                 }
+                 // TODO do i want this?
+                 //   if (const auto paths = m_map_sprite->generate_deswizzle_map_paths(".map"); !std::ranges::empty(paths))
+                 //   {
+                 //        m_map_sprite->load_map(paths.front());// grab the first match.
+                 //   }
             }
             else
             {
@@ -2774,20 +2777,20 @@ void gui::directory_browser_display()
           return;
      }
      const auto            pop_directory         = glengine::ScopeGuard([this]() { m_directory_browser.ClearSelected(); });
-     bool                  changed               = false;
+     [[maybe_unused]] bool changed               = false;
      const auto            selected_path         = m_directory_browser.GetSelected();
      static constexpr auto noop                  = []([[maybe_unused]] const std::filesystem::path &path) {};
      const auto            process_texture_paths = [&](
-                                          std::string                                      &target_path,
-                                          ConfigKey                                         path_key,
-                                          std::vector<std::string>                         &paths_vector,
-                                          ConfigKey                                         vector_key,
-                                          std::vector<std::string>                         &target_paths,
-                                          std::vector<bool>                                &target_paths_enabled,
-                                          auto                                             &main_filter,
-                                          auto                                             &other_filter,
-                                          const std::invocable<std::filesystem::path> auto &has_path_funct,
-                                          const std::invocable<std::filesystem::path> auto &action) {
+                                          std::string                                                       &target_path,
+                                          ConfigKey                                                          path_key,
+                                          std::vector<std::string>                                          &paths_vector,
+                                          ConfigKey                                                          vector_key,
+                                          [[maybe_unused]] std::vector<std::string>                         &target_paths,
+                                          [[maybe_unused]] std::vector<bool>                                &target_paths_enabled,
+                                          [[maybe_unused]] auto                                             &main_filter,
+                                          [[maybe_unused]] auto                                             &other_filter,
+                                          [[maybe_unused]] const std::invocable<std::filesystem::path> auto &has_path_funct,
+                                          [[maybe_unused]] const std::invocable<std::filesystem::path> auto &action) {
           // Remember the last grabbed path
           target_path = selected_path.string();
           // Save the setting to TOML
@@ -2796,36 +2799,37 @@ void gui::directory_browser_display()
           paths_vector.push_back(target_path);
           sort_and_remove_duplicates(paths_vector);
           m_selections->update_configuration_key(vector_key);
+          // TODO fix me
+          //  // Append the path to the various search patterns
+          //  const auto result     = upscales(target_path, get_coo(), m_selections);
+          //  const auto temp_paths = result.get_paths();
 
-          // Append the path to the various search patterns
-          const auto result     = upscales(target_path, get_coo(), m_selections);
-          const auto temp_paths = result.get_paths();
-
-          // If we have found matches
-          if (!temp_paths.empty())
-          {
-               for (const auto &path : temp_paths)
-               {
-                    // Add matches to the drop-down
-                    target_paths.emplace_back(path.string());
-                    bool path_enabled = std::invoke(has_path_funct, path);
-                    target_paths_enabled.emplace_back(path_enabled);
-                    if (path_enabled && !changed)
-                    {
-                         other_filter.disable();
-                         main_filter.update(path).enable();
-                         std::invoke(action, path);
-                         changed = true;
-                    }
-               }
-               sort_and_remove_duplicates(target_paths, target_paths_enabled);
-               if (changed)
-               {
-                    refresh_render_texture(true);
-               }
-          }
+          // // If we have found matches
+          // if (!temp_paths.empty())
+          // {
+          //      for (const auto &path : temp_paths)
+          //      {
+          //           // Add matches to the drop-down
+          //           target_paths.emplace_back(path.string());
+          //           bool path_enabled = std::invoke(has_path_funct, path);
+          //           target_paths_enabled.emplace_back(path_enabled);
+          //           if (path_enabled && !changed)
+          //           {
+          //                other_filter.disable();
+          //                main_filter.update(path).enable();
+          //                std::invoke(action, path);
+          //                changed = true;
+          //           }
+          //      }
+          //      sort_and_remove_duplicates(target_paths, target_paths_enabled);
+          //      if (changed)
+          //      {
+          //           refresh_render_texture(true);
+          //      }
+          // }
      };
-     const auto has_map_path = [&](const std::filesystem::path &path) -> bool { return m_map_sprite->has_map_path(path, ".map"); };
+     // todo why is this here?
+     // const auto has_map_path = [&](const std::filesystem::path &path) -> bool { return m_map_sprite->has_map_path(path, ".map"); };
      switch (m_modified_directory_map)
      {
           case map_directory_mode::ff8_install_directory: {
@@ -2904,8 +2908,10 @@ void gui::directory_browser_display()
                  [&](const std::filesystem::path &path) -> bool {
                       // we add the paths to map search for ease of use.
                       m_selections->cache_upscale_map_paths.push_back(path.string());
-                      m_selections->cache_upscale_map_paths_enabled.push_back(has_map_path(path));
-                      return m_map_sprite->has_swizzle_path(path, ".png");
+                      // todo fix later
+                      //   m_selections->cache_upscale_map_paths_enabled.push_back(has_map_path(path));
+                      //   return m_map_sprite->has_swizzle_path(path, ".png");
+                      return false;
                  },
                  noop);
                sort_and_remove_duplicates(m_selections->cache_upscale_map_paths, m_selections->cache_upscale_map_paths_enabled);
@@ -2924,8 +2930,10 @@ void gui::directory_browser_display()
                  [&](const std::filesystem::path &path) -> bool {
                       // we add the paths to map search for ease of use.
                       m_selections->cache_deswizzle_map_paths.push_back(path.string());
-                      m_selections->cache_deswizzle_map_paths_enabled.push_back(has_map_path(path));
-                      return m_map_sprite->has_deswizzle_path(path, ".png");
+                      // todo fix later
+                      //   m_selections->cache_deswizzle_map_paths_enabled.push_back(has_map_path(path));
+                      //   return m_map_sprite->has_deswizzle_path(path, ".png");
+                      return false;
                  },
                  noop);
                sort_and_remove_duplicates(m_selections->cache_deswizzle_map_paths, m_selections->cache_deswizzle_map_paths_enabled);
@@ -2941,12 +2949,14 @@ void gui::directory_browser_display()
                  m_selections->cache_upscale_map_paths_enabled,
                  m_map_sprite->filter().upscale_map,
                  m_map_sprite->filter().deswizzle_map,
-                 has_map_path,
-                 [&](const std::filesystem::path &path) {
-                      if (const auto paths = m_map_sprite->generate_swizzle_map_paths(path, ".map"); !std::ranges::empty(paths))
-                      {
-                           m_map_sprite->load_map(paths.front());// grab the first match.
-                      }
+                 // has_map_path,
+                 []([[maybe_unused]] const std::filesystem::path &path) {},
+                 [&]([[maybe_unused]] const std::filesystem::path &path) {
+                      // TODO fix me.
+                      //    if (const auto paths = m_map_sprite->generate_swizzle_map_paths(path, ".map"); !std::ranges::empty(paths))
+                      //    {
+                      //         m_map_sprite->load_map(paths.front());// grab the first match.
+                      //    }
                  });
           }
           break;
@@ -2960,12 +2970,14 @@ void gui::directory_browser_display()
                  m_selections->cache_deswizzle_map_paths_enabled,
                  m_map_sprite->filter().deswizzle_map,
                  m_map_sprite->filter().upscale_map,
-                 has_map_path,
-                 [&](const std::filesystem::path &path) {
-                      if (const auto paths = m_map_sprite->generate_deswizzle_map_paths(path, ".map"); !std::ranges::empty(paths))
-                      {
-                           m_map_sprite->load_map(paths.front());// grab the first match.
-                      }
+                 // has_map_path,
+                 []([[maybe_unused]] const std::filesystem::path &path) {},
+                 [&]([[maybe_unused]] const std::filesystem::path &path) {
+                      // TODO fix me.
+                      //    if (const auto paths = m_map_sprite->generate_deswizzle_map_paths(path, ".map"); !std::ranges::empty(paths))
+                      //    {
+                      //         m_map_sprite->load_map(paths.front());// grab the first match.
+                      //    }
                  });
           }
           break;
@@ -3856,16 +3868,17 @@ void gui::combo_upscale_map_path()
      if (m_map_sprite->filter().upscale_map.enabled())
      {
 
-          if (const auto paths = m_map_sprite->generate_swizzle_map_paths(".map"); !std::ranges::empty(paths))
-          {
-               m_map_sprite->filter().deswizzle_map.disable();
-               m_map_sprite->load_map(paths.front());// grab the first match.
-          }
-          else
-          {
-               //.map was not found.
-               m_map_sprite->filter().upscale_map.disable();
-          }
+          // TODO fix me
+          //  if (const auto paths = m_map_sprite->generate_swizzle_map_paths(".map"); !std::ranges::empty(paths))
+          //  {
+          //       m_map_sprite->filter().deswizzle_map.disable();
+          //       m_map_sprite->load_map(paths.front());// grab the first match.
+          //  }
+          //  else
+          //  {
+          //       //.map was not found.
+          //       m_map_sprite->filter().upscale_map.disable();
+          //  }
      }
      else
      {
@@ -3890,11 +3903,11 @@ void gui::combo_deswizzle_map_path()
      if (m_map_sprite->filter().deswizzle_map.enabled())
      {
           m_map_sprite->filter().upscale_map.disable();
-
-          if (const auto paths = m_map_sprite->generate_deswizzle_map_paths(".map"); !std::ranges::empty(paths))
-          {
-               m_map_sprite->load_map(paths.front());// grab the first match.
-          }
+          // TODO fix me
+          //  if (const auto paths = m_map_sprite->generate_deswizzle_map_paths(".map"); !std::ranges::empty(paths))
+          //  {
+          //       m_map_sprite->load_map(paths.front());// grab the first match.
+          //  }
      }
      else
      {
@@ -3907,143 +3920,164 @@ void gui::combo_deswizzle_map_path()
 
 std::future<std::future<gui::PathsAndEnabled>> gui::generate_upscale_paths()
 {
-     const auto coo = get_coo();
-     return std::async(std::launch::async, [=] -> std::future<PathsAndEnabled> {
-          gui::PathsAndEnabled pande{ .path_key = ConfigKey::CacheUpscalePaths, .enabled_key = ConfigKey::CacheUpscalePathsEnabled };
 
-          const auto           get_map_paths_joined = [this, &coo](const auto &container) {
-               return container | std::views::transform([this, &coo](const std::string &path) {
-                           return upscales(path, coo, m_selections).get_paths();
-                      })
-                      | std::views::join;
-          };
+     return std::async(
+       std::launch::async,
+       [ps = ff_8::path_search{ .selections = m_selections,
+                                .opt_coo    = get_coo(),
+                                .field_name = m_map_sprite->get_base_name(),
+                                .filters_upscale_value_string =
+                                  m_map_sprite->filter().upscale.value().string() }] -> std::future<PathsAndEnabled> {
+            gui::PathsAndEnabled pande{ .path_key = ConfigKey::CacheUpscalePaths, .enabled_key = ConfigKey::CacheUpscalePathsEnabled };
 
-          const auto process = [&](const auto &...ranges) {
-               (
-                 [&](const auto &range) {
-                      for (const auto &path : get_map_paths_joined(range))
-                      {
-                           pande.path.emplace_back(path.string());
-                      }
-                 }(ranges),
-                 ...);
-          };
+            const auto           get_map_paths_joined = [&](const auto &container) {
+                 return container | std::views::transform([&](const std::string &path) {
+                             return ff_8::path_search::get_paths(ps.selections, ps.opt_coo, path);
+                        })
+                        | std::views::join;
+            };
 
-          process(m_selections->paths_vector, m_selections->paths_vector_upscale);
+            const auto process = [&](const auto &...ranges) {
+                 (
+                   [&](const auto &range) {
+                        for (const auto &path : get_map_paths_joined(range))
+                        {
+                             pande.path.emplace_back(path.string());
+                        }
+                   }(ranges),
+                   ...);
+            };
 
-          for (const auto &path : pande.path)
-          {
-               pande.enabled.push_back(m_map_sprite->has_swizzle_path(std::filesystem::path{ path }));
-          }
-          return std::async(std::launch::deferred, [moved_pande = std::move(pande)] -> PathsAndEnabled { return moved_pande; });
-     });
+            process(ps.selections->paths_vector, ps.selections->paths_vector_upscale);
+
+            for (const auto &path : pande.path)
+            {
+                 pande.enabled.push_back(ps.has_swizzle_path(std::filesystem::path{ path }));
+            }
+            return std::async(std::launch::deferred, [moved_pande = std::move(pande)] -> PathsAndEnabled { return moved_pande; });
+       });
 }
 
 
 std::future<std::future<gui::PathsAndEnabled>> gui::generate_deswizzle_paths()
 {
-     const auto coo = get_coo();
-     return std::async(std::launch::async, [=] -> std::future<PathsAndEnabled> {
-          gui::PathsAndEnabled pande{ .path_key = ConfigKey::CacheDeswizzlePaths, .enabled_key = ConfigKey::CacheDeswizzlePathsEnabled };
+     return std::async(
+       std::launch::async,
+       [ps = ff_8::path_search{ .selections = m_selections,
+                                .opt_coo    = get_coo(),
+                                .field_name = m_map_sprite->get_base_name(),
+                                .filters_deswizzle_value_string =
+                                  m_map_sprite->filter().deswizzle.value().string() }] -> std::future<PathsAndEnabled> {
+            gui::PathsAndEnabled pande{ .path_key = ConfigKey::CacheDeswizzlePaths, .enabled_key = ConfigKey::CacheDeswizzlePathsEnabled };
 
-          const auto           get_map_paths_joined = [this, &coo](const auto &container) {
-               return container | std::views::transform([this, &coo](const std::string &path) {
-                           return upscales(path, coo, m_selections).get_paths();
-                      })
-                      | std::views::join;
-          };
+            const auto           get_map_paths_joined = [&](const auto &container) {
+                 return container
+                        | std::views::transform([&](const std::string &path) { return ps.get_paths(ps.selections, ps.opt_coo, path); })
+                        | std::views::join;
+            };
 
-          const auto process = [&](const auto &...ranges) {
-               (
-                 [&](const auto &range) {
-                      for (const auto &path : get_map_paths_joined(range))
-                      {
-                           pande.path.emplace_back(path.string());
-                      }
-                 }(ranges),
-                 ...);
-          };
+            const auto process = [&](const auto &...ranges) {
+                 (
+                   [&](const auto &range) {
+                        for (const auto &path : get_map_paths_joined(range))
+                        {
+                             pande.path.emplace_back(path.string());
+                        }
+                   }(ranges),
+                   ...);
+            };
 
-          process(m_selections->paths_vector, m_selections->paths_vector_deswizzle);
+            process(ps.selections->paths_vector, ps.selections->paths_vector_deswizzle);
 
-          for (const auto &path : pande.path)
-          {
-               pande.enabled.push_back(m_map_sprite->has_deswizzle_path(std::filesystem::path{ path }));
-          }
-          return std::async(std::launch::deferred, [moved_pande = std::move(pande)] -> PathsAndEnabled { return moved_pande; });
-     });
+            for (const auto &path : pande.path)
+            {
+                 pande.enabled.push_back(ps.has_deswizzle_path(std::filesystem::path{ path }));
+            }
+            return std::async(std::launch::deferred, [moved_pande = std::move(pande)] -> PathsAndEnabled { return moved_pande; });
+       });
 }
 
 std::future<std::future<gui::PathsAndEnabled>> gui::generate_upscale_map_paths()
 {
-     const auto coo = get_coo();
-     return std::async(std::launch::async, [=] -> std::future<PathsAndEnabled> {
-          gui::PathsAndEnabled pande{ .path_key = ConfigKey::CacheUpscaleMapPaths, .enabled_key = ConfigKey::CacheUpscaleMapPathsEnabled };
+     return std::async(
+       std::launch::async,
+       [ps = ff_8::path_search{ .selections                   = m_selections,
+                                .opt_coo                      = get_coo(),
+                                .field_name                   = m_map_sprite->get_base_name(),
+                                .filters_upscale_value_string = m_map_sprite->filter().upscale.value().string(),
+                                .filters_upscale_map_value_string =
+                                  m_map_sprite->filter().upscale_map.value().string() }] -> std::future<PathsAndEnabled> {
+            gui::PathsAndEnabled pande{ .path_key    = ConfigKey::CacheUpscaleMapPaths,
+                                        .enabled_key = ConfigKey::CacheUpscaleMapPathsEnabled };
 
-          const auto           get_map_paths_joined = [this, &coo](const auto &container) {
-               return container | std::views::transform([this, &coo](const std::string &path) {
-                           return upscales(path, coo, m_selections).get_map_paths();
-                      })
-                      | std::views::join;
-          };
+            const auto           get_map_paths_joined = [&](const auto &container) {
+                 return container
+                        | std::views::transform([&](const std::string &path) { return ps.get_paths(ps.selections, ps.opt_coo, path); })
+                        | std::views::join;
+            };
 
-          const auto process = [&](const auto &...ranges) {
-               (
-                 [&](const auto &range) {
-                      for (const auto &path : get_map_paths_joined(range))
-                      {
-                           pande.path.emplace_back(path.string());
-                      }
-                 }(ranges),
-                 ...);
-          };
+            const auto process = [&](const auto &...ranges) {
+                 (
+                   [&](const auto &range) {
+                        for (const auto &path : get_map_paths_joined(range))
+                        {
+                             pande.path.emplace_back(path.string());
+                        }
+                   }(ranges),
+                   ...);
+            };
 
-          process(m_selections->paths_vector, m_selections->paths_vector_upscale, m_selections->paths_vector_upscale_map);
+            process(ps.selections->paths_vector, ps.selections->paths_vector_upscale, ps.selections->paths_vector_upscale_map);
 
-          for (const auto &path : pande.path)
-          {
-               pande.enabled.push_back(
-                 m_map_sprite->has_map_path(std::filesystem::path{ path }, ".map", m_selections->output_map_pattern_for_swizzle));
-          }
-          return std::async(std::launch::deferred, [moved_pande = std::move(pande)] -> PathsAndEnabled { return moved_pande; });
-     });
+            for (const auto &path : pande.path)
+            {
+                 pande.enabled.push_back(
+                   ps.has_map_path(std::filesystem::path{ path }, ".map", ps.selections->output_map_pattern_for_swizzle));
+            }
+            return std::async(std::launch::deferred, [moved_pande = std::move(pande)] -> PathsAndEnabled { return moved_pande; });
+       });
 }
 
 
 std::future<std::future<gui::PathsAndEnabled>> gui::generate_deswizzle_map_paths()
 {
-     const auto coo = get_coo();
-     return std::async(std::launch::async, [=] -> std::future<PathsAndEnabled> {
-          gui::PathsAndEnabled pande{ .path_key    = ConfigKey::CacheDeswizzleMapPaths,
-                                      .enabled_key = ConfigKey::CacheDeswizzleMapPathsEnabled };
+     return std::async(
+       std::launch::async,
+       [ps = ff_8::path_search{ .selections                     = m_selections,
+                                .opt_coo                        = get_coo(),
+                                .field_name                     = m_map_sprite->get_base_name(),
+                                .filters_deswizzle_value_string = m_map_sprite->filter().deswizzle.value().string(),
+                                .filters_deswizzle_map_value_string =
+                                  m_map_sprite->filter().deswizzle_map.value().string() }] -> std::future<PathsAndEnabled> {
+            gui::PathsAndEnabled pande{ .path_key    = ConfigKey::CacheDeswizzleMapPaths,
+                                        .enabled_key = ConfigKey::CacheDeswizzleMapPathsEnabled };
 
-          const auto           get_map_paths_joined = [this, &coo](const auto &container) {
-               return container | std::views::transform([this, &coo](const std::string &path) {
-                           return upscales(path, coo, m_selections).get_map_paths();
-                      })
-                      | std::views::join;
-          };
+            const auto           get_map_paths_joined = [&](const auto &container) {
+                 return container
+                        | std::views::transform([&](const std::string &path) { return ps.get_paths(ps.selections, ps.opt_coo, path); })
+                        | std::views::join;
+            };
 
-          const auto process = [&](const auto &...ranges) {
-               (
-                 [&](const auto &range) {
-                      for (const auto &path : get_map_paths_joined(range))
-                      {
-                           pande.path.emplace_back(path.string());
-                      }
-                 }(ranges),
-                 ...);
-          };
+            const auto process = [&](const auto &...ranges) {
+                 (
+                   [&](const auto &range) {
+                        for (const auto &path : get_map_paths_joined(range))
+                        {
+                             pande.path.emplace_back(path.string());
+                        }
+                   }(ranges),
+                   ...);
+            };
 
-          process(m_selections->paths_vector, m_selections->paths_vector_deswizzle, m_selections->paths_vector_deswizzle_map);
+            process(ps.selections->paths_vector, ps.selections->paths_vector_deswizzle, ps.selections->paths_vector_deswizzle_map);
 
-          for (const auto &path : pande.path)
-          {
-               pande.enabled.emplace_back(
-                 m_map_sprite->has_map_path(std::filesystem::path{ path }, ".map", m_selections->output_map_pattern_for_deswizzle));
-          }
-          return std::async(std::launch::deferred, [moved_pande = std::move(pande)] -> PathsAndEnabled { return moved_pande; });
-     });
+            for (const auto &path : pande.path)
+            {
+                 pande.enabled.emplace_back(
+                   ps.has_map_path(std::filesystem::path{ path }, ".map", ps.selections->output_map_pattern_for_deswizzle));
+            }
+            return std::async(std::launch::deferred, [moved_pande = std::move(pande)] -> PathsAndEnabled { return moved_pande; });
+       });
 }
 
 bool gui::combo_upscale_path(ff_8::filter_old<std::filesystem::path, ff_8::FilterTag::Upscale> &filter) const

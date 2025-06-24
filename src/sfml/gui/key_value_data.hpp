@@ -209,9 +209,9 @@ struct key_value_data
       * @todo This function might move as this is an odd place to put it. Maybe it should be apart of key_value_data.
       */
      [[nodiscard]] std::string replace_tags(
-       std::string                             keyed_string,
-       const std::shared_ptr<fme::Selections> &selections,
-       const std::string                      &selected_path = "{ff8_path}") const;
+       std::string                                   keyed_string,
+       const std::shared_ptr<const fme::Selections> &selections,
+       const std::string                            &selected_path = "{ff8_path}") const;
 
      /**
       * @brief Static variant of replace_tags. Doesn't access instance-specific data.
@@ -220,7 +220,8 @@ struct key_value_data
       * @param selections    Context for resolving dynamic tags like `ff8_path`, etc.
       * @return A string with all known tags replaced and slashes normalized.
       */
-     [[nodiscard]] static std::string static_replace_tags(std::string keyed_string, const std::shared_ptr<fme::Selections> &selections);
+     [[nodiscard]] static std::string
+       static_replace_tags(std::string keyed_string, const std::shared_ptr<const fme::Selections> &selections);
 
      /**
       * @brief Resolves a key using the Selections object.
@@ -229,7 +230,7 @@ struct key_value_data
       * @param selections  Context to resolve selection-dependent keys.
       * @return Resolved value or empty string if unknown.
       */
-     [[nodiscard]] static std::string static_replace_tag(std::string_view key, const std::shared_ptr<Selections> &selections);
+     [[nodiscard]] static std::string static_replace_tag(std::string_view key, const std::shared_ptr<const fme::Selections> &selections);
 
      /**
       * @brief Resolves static keys that do not require a selections context.
@@ -246,7 +247,7 @@ struct key_value_data
       * @param selections  Optional selections object to provide context.
       * @return Resolved string or empty.
       */
-     [[nodiscard]] std::string        replace_tag(std::string_view key, const std::shared_ptr<Selections> &selections) const;
+     [[nodiscard]] std::string        replace_tag(std::string_view key, const std::shared_ptr<const fme::Selections> &selections) const;
 
      /**
       * @brief Attempts to resolve a tag from instance data or static fallbacks.
@@ -267,7 +268,7 @@ struct key_value_data
       * @param selections A shared pointer to a Selections object used for tag resolution.
       * @return A new string with the tag(s) replaced using the given selections.
       */
-     [[nodiscard]] std::string        operator()(std::string_view key, const std::shared_ptr<Selections> &selections) const;
+     [[nodiscard]] std::string        operator()(std::string_view key, const std::shared_ptr<const fme::Selections> &selections) const;
 
      /**
       * @brief Replaces a tag in the given key without using external selections.

@@ -17,7 +17,6 @@
 #include "settings_backup.hpp"
 #include "tile_sizes.hpp"
 #include "unique_values.hpp"
-#include "upscales.hpp"
 #include <algorithm>
 #include <BatchRenderer.hpp>
 #include <cstdint>
@@ -67,13 +66,12 @@ struct [[nodiscard]] map_sprite// final
      bool                                                                        m_disable_blends             = { false };
      mutable ff_8::filters                         m_filters                 = { false };// default false should be override by gui to true.
      std::weak_ptr<Selections>                     m_selections              = {};
-     ::upscales                                    m_upscales                = { m_selections };
      bool                                          m_using_imported_texture  = {};
      const glengine::Texture                      *m_imported_texture        = { nullptr };
      std::uint16_t                                 m_imported_tile_size      = {};
      Map                                           m_imported_tile_map       = {};
      Map                                           m_imported_tile_map_front = {};
-     all_unique_values_and_strings                 m_all_unique_values_and_strings = {};
+     ff_8::all_unique_values_and_strings           m_all_unique_values_and_strings = {};
      open_viii::graphics::Rectangle<std::uint32_t> m_canvas                        = {};
 
      glengine::BatchRenderer                       m_batch_renderer                = { 1000 };
@@ -112,46 +110,46 @@ struct [[nodiscard]] map_sprite// final
      {
           return m_render_framebuffer;
      }
-     [[nodiscard]] const glengine::Texture             *get_texture(BPPT bpp, std::uint8_t palette, std::uint8_t texture_page) const;
-     [[nodiscard]] const glengine::Texture             *get_texture(const ff_8::PupuID &pupu) const;
-     [[nodiscard]] glm::uvec2                           get_tile_texture_size(const glengine::Texture *const texture) const;
-     [[nodiscard]] glm::uvec2                           get_tile_draw_size() const;
-     [[nodiscard]] bool                                 generate_texture(const glengine::FrameBuffer &texture) const;
-     [[nodiscard]] std::uint32_t                        get_max_texture_height() const;
-     [[nodiscard]] bool                                 local_draw(const glengine::BatchRenderer &, const glengine::Shader &) const;
-     [[nodiscard]] bool                                 draw_imported(const glengine::FrameBuffer &) const;
-     [[nodiscard]] std::string                          get_base_name() const;
-     [[nodiscard]] const all_unique_values_and_strings &uniques() const;
-     [[nodiscard]] const std::vector<ff_8::PupuID>     &working_unique_pupu() const;
-     [[nodiscard]] const std::vector<ff_8::PupuID>     &original_unique_pupu() const;
-     [[nodiscard]] const std::vector<ff_8::PupuID>     &original_pupu() const;
-     [[nodiscard]] const std::vector<ff_8::PupuID>     &working_pupu() const;
-     [[nodiscard]] const ff_8::source_tile_conflicts   &original_conflicts() const;
-     [[nodiscard]] const ff_8::source_tile_conflicts   &working_conflicts() const;
-     [[nodiscard]] const ff_8::MapHistory::nst_map     &working_similar_counts() const;
-     [[nodiscard]] const ff_8::MapHistory::nsat_map    &working_animation_counts() const;
-     [[nodiscard]] std::string                          map_filename() const;
-     [[nodiscard]] bool                                 fail() const;
-     [[nodiscard]] std::uint32_t                        width() const;
-     [[nodiscard]] std::uint32_t                        height() const;
-     [[nodiscard]] map_sprite                           with_coo(open_viii::LangT coo) const;
-     [[nodiscard]] map_sprite                           with_field(WeakField field, open_viii::LangT coo) const;
-     [[nodiscard]] map_sprite                           with_filters(ff_8::filters filters) const;
-     [[nodiscard]] bool                                 empty() const;
-     [[nodiscard]] const ff_8::filters                 &filter() const;
-     [[nodiscard]] std::uint8_t                         max_x_for_saved() const;
-     [[nodiscard]] map_sprite                           update(ff_8::map_group map_group, bool draw_swizzle) const;
-     [[nodiscard]] all_unique_values_and_strings        get_all_unique_values_and_strings() const;
-     [[nodiscard]] glm::uvec2                           get_tile_texture_size_for_import() const;
-     [[nodiscard]] Rectangle                            get_canvas() const;
-     [[nodiscard]] bool                                 undo_enabled() const;
-     [[nodiscard]] bool                                 redo_enabled() const;
-     [[nodiscard]] bool                                 history_remove_duplicate();
-     [[nodiscard]] ff_8::filters                       &filter();
+     [[nodiscard]] const glengine::Texture                   *get_texture(BPPT bpp, std::uint8_t palette, std::uint8_t texture_page) const;
+     [[nodiscard]] const glengine::Texture                   *get_texture(const ff_8::PupuID &pupu) const;
+     [[nodiscard]] glm::uvec2                                 get_tile_texture_size(const glengine::Texture *const texture) const;
+     [[nodiscard]] glm::uvec2                                 get_tile_draw_size() const;
+     [[nodiscard]] bool                                       generate_texture(const glengine::FrameBuffer &texture) const;
+     [[nodiscard]] std::uint32_t                              get_max_texture_height() const;
+     [[nodiscard]] bool                                       local_draw(const glengine::BatchRenderer &, const glengine::Shader &) const;
+     [[nodiscard]] bool                                       draw_imported(const glengine::FrameBuffer &) const;
+     [[nodiscard]] std::string                                get_base_name() const;
+     [[nodiscard]] const ff_8::all_unique_values_and_strings &uniques() const;
+     [[nodiscard]] const std::vector<ff_8::PupuID>           &working_unique_pupu() const;
+     [[nodiscard]] const std::vector<ff_8::PupuID>           &original_unique_pupu() const;
+     [[nodiscard]] const std::vector<ff_8::PupuID>           &original_pupu() const;
+     [[nodiscard]] const std::vector<ff_8::PupuID>           &working_pupu() const;
+     [[nodiscard]] const ff_8::source_tile_conflicts         &original_conflicts() const;
+     [[nodiscard]] const ff_8::source_tile_conflicts         &working_conflicts() const;
+     [[nodiscard]] const ff_8::MapHistory::nst_map           &working_similar_counts() const;
+     [[nodiscard]] const ff_8::MapHistory::nsat_map          &working_animation_counts() const;
+     [[nodiscard]] std::string                                map_filename() const;
+     [[nodiscard]] bool                                       fail() const;
+     [[nodiscard]] std::uint32_t                              width() const;
+     [[nodiscard]] std::uint32_t                              height() const;
+     [[nodiscard]] map_sprite                                 with_coo(open_viii::LangT coo) const;
+     [[nodiscard]] map_sprite                                 with_field(WeakField field, open_viii::LangT coo) const;
+     [[nodiscard]] map_sprite                                 with_filters(ff_8::filters filters) const;
+     [[nodiscard]] bool                                       empty() const;
+     [[nodiscard]] const ff_8::filters                       &filter() const;
+     [[nodiscard]] std::uint8_t                               max_x_for_saved() const;
+     [[nodiscard]] map_sprite                                 update(ff_8::map_group map_group, bool draw_swizzle) const;
+     [[nodiscard]] ff_8::all_unique_values_and_strings        get_all_unique_values_and_strings() const;
+     [[nodiscard]] glm::uvec2                                 get_tile_texture_size_for_import() const;
+     [[nodiscard]] Rectangle                                  get_canvas() const;
+     [[nodiscard]] bool                                       undo_enabled() const;
+     [[nodiscard]] bool                                       redo_enabled() const;
+     [[nodiscard]] bool                                       history_remove_duplicate();
+     [[nodiscard]] ff_8::filters                             &filter();
      //[[nodiscard]] static sf::BlendMode                 set_blend_mode(const BlendModeT &blend_mode, std::array<sf::Vertex, 4U> &quad);
-     [[nodiscard]] bool                                 fallback_textures() const;
-     void                                               queue_texture_loading() const;
-     [[nodiscard]] static colors_type                   get_colors(const Mim &mim, BPPT bpp, uint8_t palette);
+     [[nodiscard]] bool                                       fallback_textures() const;
+     void                                                     queue_texture_loading() const;
+     [[nodiscard]] static colors_type                         get_colors(const Mim &mim, BPPT bpp, uint8_t palette);
      // [[nodiscard]] static const sf::BlendMode          &get_blend_subtract();
      [[nodiscard]] static std::future<std::future<void>>
                                       async_save(const glengine::Texture &out_texture, const std::filesystem::path &out_path);
@@ -460,15 +458,6 @@ struct [[nodiscard]] map_sprite// final
      {
           return m_map_group.maps.working().visit_tiles([this](const auto &tiles) { return find_conflicting_tiles(tiles); });
      }
-     [[nodiscard]] ::upscales get_upscales()
-     {
-          const auto field = m_map_group.field.lock();
-          if (!field)
-          {
-               return { m_selections };
-          }
-          return { std::string{ field->get_base_name() }, m_map_group.opt_coo, m_selections };
-     }
 
      static glm::vec2 to_vec2(const glm::ivec2 &v)
      {
@@ -525,55 +514,6 @@ struct [[nodiscard]] map_sprite// final
           return ff_8::get_triangle_strip(
             to_vec2(source_tile_size), to_vec2(destination_tile_size), to_vec2(source_texture_size), src, dest);
      }
-
-     [[nodiscard]] std::vector<std::filesystem::path> generate_deswizzle_paths(const std::string &ext) const;
-     [[nodiscard]] std::vector<std::filesystem::path> generate_swizzle_paths(const std::string &ext) const;
-
-     [[nodiscard]] std::vector<std::filesystem::path>
-       generate_deswizzle_paths(const std::filesystem::path &path, const std::string &ext) const;
-     [[nodiscard]] std::vector<std::filesystem::path>
-       generate_swizzle_paths(const std::filesystem::path &path, const std::string &ext) const;
-
-     [[nodiscard]] std::vector<std::filesystem::path> generate_deswizzle_map_paths(const std::string &ext = ".map") const;
-     [[nodiscard]] std::vector<std::filesystem::path> generate_swizzle_map_paths(const std::string &ext = ".map") const;
-     [[nodiscard]] std::vector<std::filesystem::path>
-       generate_deswizzle_map_paths(const std::filesystem::path &path, const std::string &ext) const;
-     [[nodiscard]] std::vector<std::filesystem::path>
-       generate_swizzle_map_paths(const std::filesystem::path &path, const std::string &ext) const;
-
-     [[nodiscard]] std::vector<std::filesystem::path>
-       generate_deswizzle_paths(const ff_8::PupuID pupu, const std::string &ext = ".png") const;
-     [[nodiscard]] std::vector<std::filesystem::path>
-       generate_swizzle_paths(const std::uint8_t texture_page, std::uint8_t palette, const std::string &ext = ".png") const;
-     [[nodiscard]] std::vector<std::filesystem::path>
-                        generate_swizzle_paths(const std::uint8_t texture_page, const std::string &ext = ".png") const;
-
-
-     [[nodiscard]] bool has_map_path(
-       const std::filesystem::path &filter_path,
-       const std::string           &ext                      = ".map",
-       const std::string           &secondary_output_pattern = "") const;
-     [[nodiscard]] bool has_deswizzle_path(const ff_8::PupuID pupu, const std::string &ext = ".png") const;
-     [[nodiscard]] bool has_swizzle_path(const std::uint8_t texture_page, std::uint8_t palette, const std::string &ext = ".png") const;
-     [[nodiscard]] bool has_swizzle_path(const std::uint8_t texture_page, const std::string &ext = ".png") const;
-
-     [[nodiscard]] bool has_deswizzle_path(const std::filesystem::path &filter_path, const std::string &ext = ".png") const;
-     [[nodiscard]] bool has_swizzle_path(const std::filesystem::path &filter_path, const std::string &ext = ".png") const;
-     [[nodiscard]] bool
-       has_deswizzle_path(const std::filesystem::path &filter_path, const ff_8::PupuID pupu, const std::string &ext = ".png") const;
-     [[nodiscard]] bool has_swizzle_path(
-       const std::filesystem::path &filter_path,
-       const std::uint8_t           texture_page,
-       std::uint8_t                 palette,
-       const std::string           &ext = ".png") const;
-     bool
-       has_swizzle_path(const std::filesystem::path &filter_path, const std::uint8_t texture_page, const std::string &ext = ".png") const;
-
-     [[nodiscard]] std::vector<std::filesystem::path> generate_paths(
-       const std::string    &filter_path,
-       const key_value_data &cpm,
-       const std::string    &output_pattern           = "",
-       const std::string    &secondary_output_pattern = "") const;
 };
 }// namespace fme
 #endif// FIELD_MAP_EDITOR_MAP_SPRITE_HPP

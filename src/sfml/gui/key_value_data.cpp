@@ -2,9 +2,9 @@
 
 
 [[nodiscard]] std::string fme::key_value_data::replace_tags(
-  std::string                             keyed_string,
-  const std::shared_ptr<fme::Selections> &selections,
-  const std::string                      &selected_path) const
+  std::string                                   keyed_string,
+  const std::shared_ptr<const fme::Selections> &selections,
+  const std::string                            &selected_path) const
 {
      using namespace std::string_view_literals;
      constexpr static auto pattern          = CTRE_REGEX_INPUT_TYPE{ R"(\{([^\{\}]+)\}|\{([^\{]*)\{([^\}]+)\}([^\}]*)\})" };
@@ -45,7 +45,7 @@
 
 
 [[nodiscard]] std::string
-  fme::key_value_data::static_replace_tags(std::string keyed_string, const std::shared_ptr<fme::Selections> &selections)
+  fme::key_value_data::static_replace_tags(std::string keyed_string, const std::shared_ptr<const fme::Selections> &selections)
 {
      using namespace std::string_view_literals;
      constexpr static auto pattern          = CTRE_REGEX_INPUT_TYPE{ R"(\{([^\{\}]+)\}|\{([^\{]*)\{([^\}]+)\}([^\}]*)\})" };
@@ -79,7 +79,8 @@
 }
 
 
-[[nodiscard]] std::string fme::key_value_data::static_replace_tag(std::string_view key, const std::shared_ptr<Selections> &selections)
+[[nodiscard]] std::string
+  fme::key_value_data::static_replace_tag(std::string_view key, const std::shared_ptr<const fme::Selections> &selections)
 {
      if (selections)
      {
@@ -158,7 +159,8 @@
 }
 
 
-[[nodiscard]] std::string fme::key_value_data::replace_tag(std::string_view key, const std::shared_ptr<Selections> &selections) const
+[[nodiscard]] std::string
+  fme::key_value_data::replace_tag(std::string_view key, const std::shared_ptr<const fme::Selections> &selections) const
 {
      auto value = static_replace_tag(key, selections);
      if (value.empty())
@@ -177,7 +179,7 @@
 
      if (key == keys::field_name)
      {
-          //assert(!field_name.empty() && field_name.length() >= 3);
+          // assert(!field_name.empty() && field_name.length() >= 3);
           return fmt::format("{}", field_name);
      }
      if (key == keys::ext)
@@ -186,7 +188,7 @@
           {
                spdlog::error("{}:{} ext \"{}\"must be ext.size(), {} >= 2 && ext[0] == '.' ", __FILE__, __LINE__, ext, ext.size());
           }
-          //assert(ext.size() >= 2 && ext[0] == '.');
+          // assert(ext.size() >= 2 && ext[0] == '.');
           return fmt::format("{}", ext);
      }
      if (key == keys::field_prefix)
@@ -232,7 +234,8 @@
 }
 
 
-[[nodiscard]] std::string fme::key_value_data::operator()(std::string_view key, const std::shared_ptr<Selections> &selections) const
+[[nodiscard]] std::string
+  fme::key_value_data::operator()(std::string_view key, const std::shared_ptr<const fme::Selections> &selections) const
 {
      return replace_tag(key, selections);
 }
