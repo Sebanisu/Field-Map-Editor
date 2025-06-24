@@ -2,6 +2,8 @@
 // Created by pcvii on 11/22/2021.
 //
 #include "Shader.hpp"
+#include <iostream>
+#include <stacktrace>
 namespace glengine
 {
 Shader::Shader(std::filesystem::path file_path)
@@ -114,6 +116,8 @@ std::uint32_t Shader::compile_shader(const std::uint32_t type, const std::string
             (type == GL_VERTEX_SHADER ? "GL_VERTEX_SHADER"sv : "GL_FRAGMENT_SHADER"sv),
             message);
           GlCall{}(glDeleteShader, id);
+          const auto st = std::stacktrace::current();
+          std::cerr << st << std::endl;
           return 0U;
      }
 
