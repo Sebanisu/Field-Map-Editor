@@ -764,9 +764,8 @@ void map_sprite::update_position(const glm::ivec2 &pixel_pos, const uint8_t &tex
      }
      if (drew)
      {
-
-          m_batch_renderer.draw();
-          m_batch_renderer.on_render();
+          target.draw();
+          target.on_render();
      }
      return drew;
 }
