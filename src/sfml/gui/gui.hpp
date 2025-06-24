@@ -71,6 +71,10 @@ struct gui
           ConfigKey                path_key{};
           ConfigKey                enabled_key{};
      };
+     glengine::FrameBuffer                                                          m_checkerboard_framebuffer        = {};
+     glengine::BatchRenderer                                                        m_checkerboard_batchrenderer      = { 4,
+                                                                                                                          std::filesystem::current_path() / "res" / "shader" / "checkerboard.shader" };
+     glengine::OrthographicCamera                                                   m_fixed_render_camera             = {};
      FutureOfFutureConsumer<std::vector<std::future<std::future<PathsAndEnabled>>>> m_future_of_future_paths_consumer = {};
      FutureConsumer<std::vector<std::future<PathsAndEnabled>>>                      m_future_paths_consumer           = {};
      FutureOfFutureConsumer<std::vector<std::future<std::future<void>>>>            m_future_of_future_consumer       = {};

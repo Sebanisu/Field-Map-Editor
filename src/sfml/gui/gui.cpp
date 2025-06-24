@@ -842,27 +842,67 @@ void gui::draw_window()
      {
           return;
      }
+
+
      static constexpr ImGuiWindowFlags window_flags =
        ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_AlwaysHorizontalScrollbar | ImGuiWindowFlags_AlwaysVerticalScrollbar;
      static const auto DrawCheckerboardBackground =
-       [](const ImVec2 &window_pos, const ImVec2 &window_size, float tile_size, color color1, color color2) {
-            auto  *draw_list = ImGui::GetWindowDrawList();
-            ImVec2 clip_min  = ImGui::GetWindowPos();
-            ImVec2 clip_max  = { ImGui::GetWindowPos().x + ImGui::GetWindowSize().x, ImGui::GetWindowPos().y + ImGui::GetWindowSize().y };
-            draw_list->PushClipRect(clip_min, clip_max, true);
-            for (float y = window_pos.y; y < window_pos.y + window_size.y; y += tile_size)
+       [&](const ImVec2 &window_pos, const ImVec2 &window_size, float tile_size, color color1, color color2) {
+            const auto fbb  = m_checkerboard_framebuffer.backup();
+            const auto fbrb = m_checkerboard_batchrenderer.backup();
+            if (
+              m_checkerboard_framebuffer.width() != static_cast<int>(window_size.x)
+              || m_checkerboard_framebuffer.height() != static_cast<int>(window_size.y))
             {
-                 for (float x = window_pos.x; x < window_pos.x + window_size.x; x += tile_size)
-                 {
-                      if (!ImGui::IsRectVisible(ImVec2(x, y), ImVec2(x + tile_size, y + tile_size)))
-                      {
-                           continue;// Skip tiles that are not visible in the current viewport
-                      }
-                      bool  is_even = (static_cast<int>((x / tile_size) + (y / tile_size)) % 2 == 0);
-                      ImU32 color   = ImU32{ is_even ? color1 : color2 };
-                      draw_list->AddRectFilled(ImVec2(x, y), ImVec2(x + tile_size, y + tile_size), color);
-                 }
+                 glengine::FrameBufferSpecification spec = { .width  = static_cast<int>(window_size.x),
+                                                             .height = static_cast<int>(window_size.y) };
+                 m_checkerboard_framebuffer              = glengine::FrameBuffer{ spec };
             }
+
+            m_checkerboard_framebuffer.bind();
+            glengine::GlCall{}(glViewport, 0, 0, m_checkerboard_framebuffer.width(), m_checkerboard_framebuffer.height());
+            glengine::Renderer::Clear();
+            m_checkerboard_batchrenderer.bind();
+            m_fixed_render_camera.set_projection(
+              0.f, static_cast<float>(m_checkerboard_framebuffer.width()), 0.f, static_cast<float>(m_checkerboard_framebuffer.height()));
+
+            m_checkerboard_batchrenderer.shader().set_uniform("tile_size", tile_size);
+            //   m_checkerboard_batchrenderer.shader().set_uniform(
+            //     "resolution", glm::vec2{ m_checkerboard_framebuffer.width(), m_checkerboard_framebuffer.height() });
+            m_checkerboard_batchrenderer.shader().set_uniform("color1", glm::vec4{ color1 });
+            m_checkerboard_batchrenderer.shader().set_uniform("color2", glm::vec4{ color2 });
+            m_checkerboard_batchrenderer.shader().set_uniform("u_MVP", m_fixed_render_camera.view_projection_matrix());
+            m_checkerboard_batchrenderer.clear();
+            m_checkerboard_batchrenderer.draw_quad(
+              glm::vec3{}, fme::colors::White, glm::vec2{ m_checkerboard_framebuffer.width(), m_checkerboard_framebuffer.height() });
+            m_checkerboard_batchrenderer.draw();
+            m_checkerboard_batchrenderer.on_render();
+            m_checkerboard_framebuffer.bind_color_attachment();
+
+            ImGui::Image(glengine::ConvertGliDtoImTextureId<ImTextureID>(m_checkerboard_framebuffer.color_attachment_id()), window_size);
+
+            // Foreground image
+            ImGui::SetCursorScreenPos(window_pos);
+
+            // re-align to top-left of the image
+            //        auto *draw_list = ImGui::GetWindowDrawList();
+            //   ImVec2 clip_min  = ImGui::GetWindowPos();
+            //   ImVec2 clip_max  = { ImGui::GetWindowPos().x + ImGui::GetWindowSize().x, ImGui::GetWindowPos().y +
+            //   ImGui::GetWindowSize().y
+            //   }; draw_list->PushClipRect(clip_min, clip_max, true); for (float y = window_pos.y; y < window_pos.y +
+            //   window_size.y; y += tile_size)
+            //   {
+            //        for (float x = window_pos.x; x < window_pos.x + window_size.x; x += tile_size)
+            //        {
+            //             if (!ImGui::IsRectVisible(ImVec2(x, y), ImVec2(x + tile_size, y + tile_size)))
+            //             {
+            //                  continue;// Skip tiles that are not visible in the current viewport
+            //             }
+            //             bool  is_even = (static_cast<int>((x / tile_size) + (y / tile_size)) % 2 == 0);
+            //             ImU32 color   = ImU32{ is_even ? color1 : color2 };
+            //             draw_list->AddRectFilled(ImVec2(x, y), ImVec2(x + tile_size, y + tile_size), color);
+            //        }
+            //   }
        };
      if (mim_test())
      {
@@ -871,7 +911,8 @@ void gui::draw_window()
           const auto pop_id0 = PushPopID();
           const auto pop_end = glengine::ScopeGuard(&ImGui::End);
           // const auto pop_style1 = glengine::ScopeGuard([]() { ImGui::PopStyleColor(); });
-          //  ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4{ clear_color.r / 256.F, clear_color.g / 256.F, clear_color.b / 256.F, 0.9F });
+          //  ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4{ clear_color.r / 256.F, clear_color.g / 256.F, clear_color.b / 256.F,
+          //  0.9F });
           if (!ImGui::Begin(gui_labels::draw_window_title.data(), nullptr, window_flags))
           {
                return;
@@ -906,7 +947,8 @@ void gui::draw_window()
           const auto pop_id0 = PushPopID();
           const auto pop_end = glengine::ScopeGuard(&ImGui::End);
           // const auto pop_style1 = glengine::ScopeGuard([]() { ImGui::PopStyleColor(); });
-          //  ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4{ clear_color.r / 256.F, clear_color.g / 256.F, clear_color.b / 256.F, 0.9F });
+          //  ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4{ clear_color.r / 256.F, clear_color.g / 256.F, clear_color.b / 256.F,
+          //  0.9F });
           if (!ImGui::Begin(gui_labels::draw_window_title.data(), nullptr, window_flags))
           {
                return;
@@ -932,6 +974,27 @@ void gui::draw_window()
           ImGui::Image(
             glengine::ConvertGliDtoImTextureId<ImTextureID>(m_map_sprite->get_render_texture().color_attachment_id()),
             ImVec2{ scaled_size.x, scaled_size.y });
+
+          if (ImGui::IsItemHovered())
+          {
+               ImGui::BeginTooltip();
+               format_imgui_text(
+                 "Image size: {} x {}\n"
+                 "Available region: {:.1f} x {:.1f}\n"
+                 "Scale: {:.2f}\n"
+                 "Scaled size: {:.1f} x {:.1f}\n"
+                 "Screen position: ({:.1f}, {:.1f})",
+                 img_size.x,
+                 img_size.y,
+                 wsize.x,
+                 wsize.y,
+                 scale,
+                 scaled_size.x,
+                 scaled_size.y,
+                 screen_pos.x,
+                 screen_pos.y);
+               ImGui::EndTooltip();
+          }
 
           update_hover_and_mouse_button_status_for_map(screen_pos, scale);
 
@@ -1224,8 +1287,8 @@ void gui::draw_map_grid_for_conflict_tiles(const ImVec2 &screen_pos, const float
                     }
 
 
-                    // there might be different kinds of conflicts in the same location. but here we're assuming your either one or another.
-                    // because we can't quite draw all the colors in the same place.
+                    // there might be different kinds of conflicts in the same location. but here we're assuming your either one or
+                    // another. because we can't quite draw all the colors in the same place.
                }
                else
                {
@@ -2861,9 +2924,9 @@ void gui::directory_browser_display()
                     .language_code = m_selections && m_selections->coo != open_viii::LangT::generic && m_map_sprite->using_coo()
                                        ? std::optional{ m_selections->coo }
                                        : std::nullopt,
-               };// todo coo might not be done correctly. if the map sprite isn't using a coo we shouldn't either. m_selections->coo is what
-                 // coo we're asking for but the it will default to generic when it can't find it. so we need to know what the map sprite is
-                 // using for it's coo.
+               };// todo coo might not be done correctly. if the map sprite isn't using a coo we shouldn't either. m_selections->coo is
+                 // what coo we're asking for but the it will default to generic when it can't find it. so we need to know what the map
+                 // sprite is using for it's coo.
 
                m_map_sprite->save_modified_map(
                  cpm.replace_tags(m_selections->output_map_pattern_for_swizzle, m_selections, selected_path.string()));
@@ -2974,7 +3037,8 @@ void gui::directory_browser_display()
                  []([[maybe_unused]] const std::filesystem::path &path) {},
                  [&]([[maybe_unused]] const std::filesystem::path &path) {
                       // TODO fix me.
-                      //    if (const auto paths = m_map_sprite->generate_deswizzle_map_paths(path, ".map"); !std::ranges::empty(paths))
+                      //    if (const auto paths = m_map_sprite->generate_deswizzle_map_paths(path, ".map");
+                      //    !std::ranges::empty(paths))
                       //    {
                       //         m_map_sprite->load_map(paths.front());// grab the first match.
                       //    }
@@ -3070,7 +3134,8 @@ void gui::file_browser_save_texture()
                     }
                     break;
                     case file_dialog_mode::load_map_file: {
-                         /// TODO load in as a filter? or leave as is... For now we'll disable the filter and just load the selected file.
+                         /// TODO load in as a filter? or leave as is... For now we'll disable the filter and just load the selected
+                         /// file.
                          m_map_sprite->filter().upscale_map.disable();
                          m_map_sprite->filter().deswizzle_map.disable();
                          m_map_sprite->load_map(selected_path);
