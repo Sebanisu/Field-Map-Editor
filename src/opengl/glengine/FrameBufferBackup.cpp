@@ -6,7 +6,7 @@
 #include <GLCheck.hpp>
 glengine::FrameBufferBackup::FrameBufferBackup()
   : m_render_id{ []() -> std::uint32_t {
-                     int32_t id = {};
+                     GLint id = 0;
                      GlCall{}(glGetIntegerv, GL_FRAMEBUFFER_BINDING, &id);
                      return static_cast<std::uint32_t>(id);
                 }(),
