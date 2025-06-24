@@ -930,6 +930,17 @@ void map_sprite::update_render_texture(const bool reload_textures) const
           // reset the textures
           *m_texture = {};
           queue_texture_loading();
+
+          const auto s = m_selections.lock();
+          if (!s)
+          {
+               spdlog::error("Failed to lock m_selections: shared_ptr is expired.");
+               return;
+          }
+          if (s->force_rendering_of_map)
+          {
+               consume_now();
+          }
      }
      if (fail())
      {
