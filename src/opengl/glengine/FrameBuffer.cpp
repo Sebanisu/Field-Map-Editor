@@ -126,6 +126,15 @@ void FrameBuffer::bind(bool first) const
      GlCall{}(glBindFramebuffer, GL_FRAMEBUFFER, first ? m_renderer_id_first : m_renderer_id);
 }
 
+void FrameBuffer::bind_read(bool first) const
+{
+     GlCall{}(glBindFramebuffer, GL_READ_FRAMEBUFFER, first ? m_renderer_id_first : m_renderer_id);
+}
+
+void FrameBuffer::bind_draw(bool first) const
+{
+     GlCall{}(glBindFramebuffer, GL_DRAW_FRAMEBUFFER, first ? m_renderer_id_first : m_renderer_id);
+}
 
 FrameBufferBackup FrameBuffer::backup()
 {
@@ -161,8 +170,8 @@ FrameBuffer FrameBuffer::clone() const
      const auto  backup_fbo = backup();
      FrameBuffer copy(m_specification);
 
-     this->bind();
-     copy.bind();
+     this->bind_read();
+     copy.bind_draw();
 
      for (const auto &[index, data] : std::ranges::views::zip(m_specification.attachments, attachments) | std::ranges::views::enumerate)
      {

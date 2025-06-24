@@ -39,7 +39,35 @@ class FrameBuffer
    public:
      FrameBuffer() = default;
      FrameBuffer(FrameBufferSpecification spec);
+     /**
+      * @brief Binds the framebuffer to both the read and draw framebuffer targets.
+      *
+      * This is a convenience method that binds the framebuffer to `GL_FRAMEBUFFER`,
+      * which affects both `GL_READ_FRAMEBUFFER` and `GL_DRAW_FRAMEBUFFER`.
+      *
+      * @param first If true, binds the `m_renderer_id_first`; otherwise, binds `m_renderer_id`.
+      */
      void                  bind(bool first = false) const;
+
+     /**
+      * @brief Binds the framebuffer to the OpenGL read framebuffer target.
+      *
+      * This is used when reading from this framebuffer, such as during blitting operations.
+      *
+      * @param first If true, binds the `m_renderer_id_first`; otherwise, binds `m_renderer_id`.
+      */
+     void                  bind_read(bool first = false) const;
+
+     /**
+      * @brief Binds the framebuffer to the OpenGL draw framebuffer target.
+      *
+      * This is used when writing (drawing) to this framebuffer, such as in rendering passes
+      * or when receiving blitted content.
+      *
+      * @param first If true, binds the `m_renderer_id_first`; otherwise, binds `m_renderer_id`.
+      */
+     void                  bind_draw(bool first = false) const;
+
      constexpr static void unbind()
      {
           if (!std::is_constant_evaluated())
@@ -63,7 +91,7 @@ class FrameBuffer
       *
       * @return A new FrameBuffer instance that is a deep copy of this one.
       */
-     [[nodiscard]] FrameBuffer clone() const;
+     [[nodiscard]] FrameBuffer                     clone() const;
      operator bool()
      {
           return std::ranges::any_of(m_color_attachment, [](const auto &id) { return id != 0U; }) && m_renderer_id != 0U

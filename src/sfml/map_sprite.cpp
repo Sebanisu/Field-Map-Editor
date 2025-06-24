@@ -27,6 +27,83 @@ using namespace std::string_literals;
 
 namespace fme
 {
+
+map_sprite::map_sprite(
+  ff_8::map_group           map_group,
+  bool                      draw_swizzle,
+  ff_8::filters             in_filters,
+  bool                      force_disable_blends,
+  bool                      require_coo,
+  std::weak_ptr<Selections> selections,
+  glengine::FrameBuffer     framebuffer)
+  : m_map_group(
+      !require_coo || (map_group.opt_coo && map_group.opt_coo.value() != open_viii::LangT::generic) ? std::move(map_group)
+                                                                                                    : ff_8::map_group{})
+  , m_draw_swizzle(draw_swizzle)
+  , m_disable_blends(force_disable_blends)
+  , m_filters(std::move(in_filters))
+  , m_all_unique_values_and_strings(get_all_unique_values_and_strings())
+  , m_canvas(get_canvas())
+  , m_selections(selections)
+  , m_render_framebuffer(std::move(framebuffer))
+{
+     // TODO wip gotta use new class to get the paths.
+     // if (m_filters.upscale_map.enabled())
+     // {
+     //      if (const auto paths = generate_swizzle_map_paths(".map"); !std::ranges::empty(paths))
+     //      {
+     //           m_filters.deswizzle_map.disable();
+     //           load_map(paths.front());// grab the first match.
+     //      }
+     //      else
+     //      {
+     //           //.map was not found.
+     //           m_filters.upscale_map.disable();
+     //      }
+     // }
+     // else if (m_filters.deswizzle_map.enabled())
+     // {
+     //      if (const auto paths = generate_deswizzle_map_paths(".map"); !std::ranges::empty(paths))
+     //      {
+     //           m_filters.upscale_map.disable();
+     //           load_map(paths.front());// grab the first match.
+     //      }
+     //      else
+     //      {
+     //           //.map was not found.
+     //           m_filters.deswizzle_map.disable();
+     //      }
+     // }
+     update_render_texture(true);
+}
+
+map_sprite map_sprite::with_coo(const open_viii::LangT coo) const
+{
+     return { ff_8::map_group{ m_map_group.field, coo },
+              m_draw_swizzle,
+              m_filters,
+              m_disable_blends,
+              false,
+              m_selections,
+              m_render_framebuffer.clone() };
+}
+
+map_sprite map_sprite::with_field(map_sprite::WeakField field, const open_viii::LangT coo) const
+{
+     return { ff_8::map_group{ std::move(field), coo },
+              m_draw_swizzle,
+              m_filters,
+              m_disable_blends,
+              false,
+              m_selections,
+              m_render_framebuffer.clone() };
+}
+
+map_sprite map_sprite::with_filters(ff_8::filters filters) const
+{
+     return { m_map_group, m_draw_swizzle, std::move(filters), m_disable_blends, false, m_selections, m_render_framebuffer.clone() };
+}
+
 bool map_sprite::empty() const
 {
      return m_map_group.maps.const_working().visit_tiles([](const auto &tiles) { return std::empty(tiles); });
@@ -816,20 +893,6 @@ glm::uvec2 map_sprite::get_tile_texture_size(const glengine::Texture *const text
 //      return blend_subtract;
 // }
 
-map_sprite map_sprite::with_coo(const open_viii::LangT coo) const
-{
-     return { ff_8::map_group{ m_map_group.field, coo }, m_draw_swizzle, m_filters, m_disable_blends, false, m_selections };
-}
-
-map_sprite map_sprite::with_field(map_sprite::WeakField field, const open_viii::LangT coo) const
-{
-     return { ff_8::map_group{ std::move(field), coo }, m_draw_swizzle, m_filters, m_disable_blends, false, m_selections };
-}
-
-map_sprite map_sprite::with_filters(ff_8::filters filters) const
-{
-     return { m_map_group, m_draw_swizzle, std::move(filters), m_disable_blends, false, m_selections };
-}
 
 void map_sprite::enable_draw_swizzle()
 {
@@ -1849,52 +1912,6 @@ std::string map_sprite::str_to_lower(std::string input)
      std::ranges::transform(
        input, std::back_inserter(output), [](char character) -> char { return static_cast<char>(::tolower(character)); });
      return output;
-}
-map_sprite::map_sprite(
-  ff_8::map_group           map_group,
-  bool                      draw_swizzle,
-  ff_8::filters             in_filters,
-  bool                      force_disable_blends,
-  bool                      require_coo,
-  std::weak_ptr<Selections> selections)
-  : m_map_group(
-      !require_coo || (map_group.opt_coo && map_group.opt_coo.value() != open_viii::LangT::generic) ? std::move(map_group)
-                                                                                                    : ff_8::map_group{})
-  , m_draw_swizzle(draw_swizzle)
-  , m_disable_blends(force_disable_blends)
-  , m_filters(std::move(in_filters))
-  , m_all_unique_values_and_strings(get_all_unique_values_and_strings())
-  , m_canvas(get_canvas())
-  , m_selections(selections)
-{
-     // TODO wip gotta use new class to get the paths.
-     // if (m_filters.upscale_map.enabled())
-     // {
-     //      if (const auto paths = generate_swizzle_map_paths(".map"); !std::ranges::empty(paths))
-     //      {
-     //           m_filters.deswizzle_map.disable();
-     //           load_map(paths.front());// grab the first match.
-     //      }
-     //      else
-     //      {
-     //           //.map was not found.
-     //           m_filters.upscale_map.disable();
-     //      }
-     // }
-     // else if (m_filters.deswizzle_map.enabled())
-     // {
-     //      if (const auto paths = generate_deswizzle_map_paths(".map"); !std::ranges::empty(paths))
-     //      {
-     //           m_filters.upscale_map.disable();
-     //           load_map(paths.front());// grab the first match.
-     //      }
-     //      else
-     //      {
-     //           //.map was not found.
-     //           m_filters.deswizzle_map.disable();
-     //      }
-     // }
-     update_render_texture(true);
 }
 
 void fme::map_sprite::consume_now() const

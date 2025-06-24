@@ -100,7 +100,8 @@ struct [[nodiscard]] map_sprite// final
        ff_8::filters             in_filters,
        bool                      force_disable_blends,
        bool                      require_coo,
-       std::weak_ptr<Selections> selections);
+       std::weak_ptr<Selections> selections,
+       glengine::FrameBuffer     framebuffer = {});
 
 
      [[nodiscard]] std::string                  appends_prefix_base_name(std::string_view title) const;

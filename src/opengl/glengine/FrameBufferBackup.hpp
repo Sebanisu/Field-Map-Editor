@@ -5,8 +5,8 @@
 #ifndef FIELD_MAP_EDITOR_FRAMEBUFFERBACKUP_HPP
 #define FIELD_MAP_EDITOR_FRAMEBUFFERBACKUP_HPP
 #include "GLCheck.hpp"
-#include "UniqueValue.hpp"
 #include "ScopeGuard.hpp"
+#include "UniqueValue.hpp"
 namespace glengine
 {
 /**
@@ -14,10 +14,14 @@ namespace glengine
  */
 class [[nodiscard]] FrameBufferBackup final : public AnyScopeGuard
 {
-  Glid m_render_id = {};
+     Glid m_render_id       = {};
 
-public:
-  FrameBufferBackup();
+     Glid m_render_id_read  = {};
+
+     Glid m_render_id_draw  = {};
+
+   public:
+     FrameBufferBackup();
 };
 }// namespace glengine
 #endif// FIELD_MAP_EDITOR_FRAMEBUFFERBACKUP_HPP
