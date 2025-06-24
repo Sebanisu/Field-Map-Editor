@@ -6,6 +6,7 @@
 #include <compare>
 #include <concepts>
 #include <cstdint>
+#include <glm/glm.hpp>
 #include <imgui.h>
 #include <limits>
 #include <numeric>
@@ -222,6 +223,20 @@ struct [[nodiscard]] color
       * @return An ImVec4 object representing the color.
       */
      [[nodiscard]] constexpr operator ImVec4() const noexcept
+     {
+          return { static_cast<float>(r) / max_f<float>,
+                   static_cast<float>(g) / max_f<float>,
+                   static_cast<float>(b) / max_f<float>,
+                   static_cast<float>(a) / max_f<float> };
+     }
+
+
+     /**
+      * @brief Converts the color to an ImVec4 object.
+      *
+      * @return An ImVec4 object representing the color.
+      */
+     [[nodiscard]] constexpr operator glm::vec4() const noexcept
      {
           return { static_cast<float>(r) / max_f<float>,
                    static_cast<float>(g) / max_f<float>,
