@@ -111,7 +111,7 @@ void BatchRenderer::draw_quad(
      {
           if (std::cmp_equal(std::ranges::size(m_texture_slots), m_max_textures))
           {
-               //when we reach the max amount of unique textures we go ahead and empty the queue and draw to the frame buffer.
+               // when we reach the max amount of unique textures we go ahead and empty the queue and draw to the frame buffer.
                flush_vertices();
           }
           m_texture_slots.push_back(texture.id());
@@ -121,6 +121,17 @@ void BatchRenderer::draw_quad(
 void BatchRenderer::draw_quad(glm::vec3 offset, glm::vec4 color) const
 {
      draw(CreateQuad(offset, color, 0));
+}
+
+[[maybe_unused]] void BatchRenderer::draw_quad(glm::vec3 offset, glm::vec4 color, glm::vec2 size) const
+{
+     draw(CreateQuad(
+       offset,
+       color,
+       {},
+       1.F,
+       std::array<glm::vec2, 4U>{ glm::vec2{ 0.F, 0.F }, glm::vec2{ 1.F, 0.F }, glm::vec2{ 1.F, 1.F }, glm::vec2{ 0.F, 1.F } },
+       size));
 }
 const Shader &BatchRenderer::shader() const
 {

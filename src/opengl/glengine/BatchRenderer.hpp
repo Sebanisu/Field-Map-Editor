@@ -44,6 +44,7 @@ class BatchRenderer
        glm::vec2         size          = glm::vec2{ 1.F },
        int               id            = -1) const;
      [[maybe_unused]] void                              draw_quad(glm::vec3 offset, glm::vec4 color) const;
+     [[maybe_unused]] void                              draw_quad(glm::vec3 offset, glm::vec4 color, glm::vec2 size) const;
      void                                               draw(Quad quad) const;
      void                                               draw() const;
 
