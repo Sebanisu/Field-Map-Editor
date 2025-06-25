@@ -40,24 +40,18 @@ template<is_tile tileT>
           return tile.source_y();
      }();
      static constexpr float tile_size = 16.F;
-     // sf::Sprite             sprite(
-     //   *texture,
-     //   sf::IntRect(
-     //     static_cast<int>((static_cast<float>(src_x) / tile_size) * static_cast<float>(tile_texture_size.x)),
-     //     static_cast<int>((static_cast<float>(src_y) / tile_size) * static_cast<float>(tile_texture_size.y)),
-     //     static_cast<int>(tile_texture_size.x),
-     //     static_cast<int>(tile_texture_size.y)));
-     const auto             rect      = sf::IntRect(
+
+     const auto             rect      = glm::ivec4(
        static_cast<int>((static_cast<float>(src_x) / tile_size) * static_cast<float>(tile_texture_size.x)),
        static_cast<int>((static_cast<float>(src_y) / tile_size) * static_cast<float>(tile_texture_size.y)),
        static_cast<int>(tile_texture_size.x),
        static_cast<int>(tile_texture_size.y));
 
-     const ImVec2 texSize = { static_cast<float>(texture->width()), static_cast<float>(texture->height()) };
+     const ImVec2 texSize       = { static_cast<float>(texture->width()), static_cast<float>(texture->height()) };
 
-     const ImVec2 uv0     = { static_cast<float>(rect.left) / texSize.x, static_cast<float>(rect.top) / texSize.y };
+     const ImVec2 uv0           = { static_cast<float>(rect.x) / texSize.x, static_cast<float>(rect.y) / texSize.y };
 
-     const ImVec2 uv1 = { static_cast<float>(rect.left + rect.width) / texSize.x, static_cast<float>(rect.top + rect.height) / texSize.y };
+     const ImVec2 uv1           = { static_cast<float>(rect.x + rect.z) / texSize.x, static_cast<float>(rect.y + rect.w) / texSize.y };
 
      int          pop_count     = {};
      int          pop_var_count = {};

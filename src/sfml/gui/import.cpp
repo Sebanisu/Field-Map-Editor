@@ -484,26 +484,18 @@ void import::collapsing_header_generated_tiles() const
           for (const auto &tile : tiles)
           {
                ImGui::TableNextColumn();
-               // sf::Sprite const sprite(
-               //   m_loaded_image_texture,
-               //   sf::IntRect(
-               //     static_cast<int>(tile.x() / tile_size_px * selections->tile_size_value),
-               //     static_cast<int>(tile.y() / tile_size_px * selections->tile_size_value),
-               //     static_cast<int>(selections->tile_size_value),
-               //     static_cast<int>(selections->tile_size_value)));
-               const auto             texSize = m_loaded_image_texture.get_size();
-               const sf::IntRect      rect    = { static_cast<int>(tile.x() / tile_size_px * selections->tile_size_value),
-                                                  static_cast<int>(tile.y() / tile_size_px * selections->tile_size_value),
-                                                  static_cast<int>(selections->tile_size_value),
-                                                  static_cast<int>(selections->tile_size_value) };
-               ImVec2                 uv0     = { static_cast<float>(rect.left) / texSize.x, static_cast<float>(rect.top) / texSize.y };
+               const auto       texSize = m_loaded_image_texture.get_size();
+               const glm::ivec4 rect    = { static_cast<int>(tile.x() / tile_size_px * selections->tile_size_value),
+                                            static_cast<int>(tile.y() / tile_size_px * selections->tile_size_value),
+                                            static_cast<int>(selections->tile_size_value),
+                                            static_cast<int>(selections->tile_size_value) };
+               const ImVec2     uv0     = { static_cast<float>(rect.x) / texSize.x, static_cast<float>(rect.y) / texSize.y };
 
-               ImVec2                 uv1     = { static_cast<float>(rect.left + rect.width) / texSize.x,
-                                                  static_cast<float>(rect.top + rect.height) / texSize.y };
-               const auto             the_end_tile_table_tile = PushPopID();
-               static constexpr float button_size             = 32.F;
+               const ImVec2     uv1 = { static_cast<float>(rect.x + rect.z) / texSize.x, static_cast<float>(rect.y + rect.w) / texSize.y };
+               const auto       the_end_tile_table_tile = PushPopID();
+               static constexpr float button_size       = 32.F;
 
-               const auto             str                     = fmt::format("tb{}", i++);
+               const auto             str               = fmt::format("tb{}", i++);
                ImGui::ImageButton(
                  str.c_str(),
                  glengine::ConvertGliDtoImTextureId<ImTextureID>(m_loaded_image_texture.id()),
@@ -634,7 +626,7 @@ void import::reset_imported_image() const
      map_sprite->update_render_texture(nullptr, {}, tile_sizes::default_size);
      m_import_image_map                = {};
      m_loaded_image_texture            = {};
-     //m_loaded_image_cpu                = {};
+     // m_loaded_image_cpu                = {};
      m_import_image_path               = {};
      selections->render_imported_image = false;
      selections->update_configuration_key(ConfigKey::RenderImportedImage);
