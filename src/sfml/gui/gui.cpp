@@ -884,29 +884,7 @@ void gui::draw_window()
             m_checkerboard_framebuffer.bind_color_attachment();
 
             ImGui::Image(glengine::ConvertGliDtoImTextureId<ImTextureID>(m_checkerboard_framebuffer.color_attachment_id()), window_size);
-
-            // Foreground image
             ImGui::SetCursorScreenPos(window_pos);
-
-            // re-align to top-left of the image
-            //        auto *draw_list = ImGui::GetWindowDrawList();
-            //   ImVec2 clip_min  = ImGui::GetWindowPos();
-            //   ImVec2 clip_max  = { ImGui::GetWindowPos().x + ImGui::GetWindowSize().x, ImGui::GetWindowPos().y +
-            //   ImGui::GetWindowSize().y
-            //   }; draw_list->PushClipRect(clip_min, clip_max, true); for (float y = window_pos.y; y < window_pos.y +
-            //   window_size.y; y += tile_size)
-            //   {
-            //        for (float x = window_pos.x; x < window_pos.x + window_size.x; x += tile_size)
-            //        {
-            //             if (!ImGui::IsRectVisible(ImVec2(x, y), ImVec2(x + tile_size, y + tile_size)))
-            //             {
-            //                  continue;// Skip tiles that are not visible in the current viewport
-            //             }
-            //             bool  is_even = (static_cast<int>((x / tile_size) + (y / tile_size)) % 2 == 0);
-            //             ImU32 color   = ImU32{ is_even ? color1 : color2 };
-            //             draw_list->AddRectFilled(ImVec2(x, y), ImVec2(x + tile_size, y + tile_size), color);
-            //        }
-            //   }
        };
      if (mim_test())
      {
