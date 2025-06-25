@@ -47,8 +47,16 @@ void import::render() const
           return;
      }
      // begin imgui window
+
+     bool      &visible     = selections->display_import_image;
+     const auto pop_visible = glengine::ScopeGuard{ [&selections, &visible, was_visable = visible] {
+          if (was_visable != visible)
+          {
+               selections->update_configuration_key(ConfigKey::DisplayImportImage);
+          }
+     } };
      const auto the_end = glengine::ScopeGuard([]() { ImGui::End(); });
-     if (!ImGui::Begin(gui_labels::import_image.data()))
+     if (!ImGui::Begin(gui_labels::import_image.data(), &visible))
      {
           return;
      }

@@ -229,73 +229,8 @@ void gui::start(GLFWwindow *const window)
           m_elapsed_time = m_delta_clock;
           consume_one_future();
           glfwPollEvents();// Input
-          {
-               m_mouse_positions.update();
-               // TODO fix events
-               //      while (window.pollEvent(m_event))
-               //      {
-               //           ImGui::SFML::ProcessEvent(window, m_event);
-               //           const auto event_variant = events::get(m_event);
-               //           std::visit(
-               //             events::make_visitor(
-               //               [this]([[maybe_unused]] const sf::Event::SizeEvent &size) {
-               //                    //     scale_window(static_cast<float>(size.width), static_cast<float>(size.height));
-               //                    // m_changed = true;
-               //               },
-               //               [this](const sf::Event::MouseMoveEvent &) {
-               //                    m_mouse_positions.mouse_moved = true;
-               //                    // TODO move setting mouse pos code here?
-               //                    m_changed                     = true;
-               //               },
-               //               [this](const sf::Event::KeyEvent &key) {
-               //                    const auto &type = m_event.type;
-               //                    if (type == sf::Event::EventType::KeyReleased)
-               //                    {
-               //                         event_type_key_released(key);
-               //                    }
-               //                    else if (type == sf::Event::EventType::KeyPressed)
-               //                    {
-               //                         event_type_key_pressed(key);
-               //                    }
-               //               },
-               //               [this](const sf::Event::MouseButtonEvent &mouse) {
-               //                    const sf::Mouse::Button &button = mouse.button;
-               //                    if (!m_mouse_positions.mouse_enabled)
-               //                    {
-               //                         // m_mouse_positions.left = false;
-               //                         return;
-               //                    }
-               //                    switch (m_event.type)
-               //                    {
-               //                         case sf::Event::EventType::MouseButtonPressed:
-               //                              ///< A mouse button was pressed (data in event.mouseButton)
-               //                              {
-               //                                   event_type_mouse_button_pressed(button);
-               //                              }
-               //                              break;
-               //                         case sf::Event::EventType::MouseButtonReleased:
-               //                              ///< A mouse button was released (data in
-               //                              ///< event.mouseButton)
-               //                              {
-               //                                   event_type_mouse_button_released(button);
-               //                              }
-               //                              break;
-               //                         default:
-               //                              break;
-               //                    }
-               //               },
-               //               [&]([[maybe_unused]] const std::monostate &) {
-               //                    if (m_event.type == sf::Event::Closed)
-               //                    {
-               //                         m_batch.stop();
-               //                         // window.close();
-               //                         stop_loop = true;
-               //                    }
-               //               },
-               //               []([[maybe_unused]] const auto &) {}),
-               //             event_variant);
-               //      }
-          }
+
+          m_mouse_positions.update();
 
           ImGui_ImplGlfw_NewFrame();
           ImGui_ImplOpenGL3_NewFrame();
@@ -427,8 +362,14 @@ void gui::render_dockspace()
           ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0F, 0.0F));
      }
 
+
+     bind_shortcuts();
      const auto imgui_end = glengine::ScopeGuard(&ImGui::End);
-     (void)ImGui::Begin("##DockSpace Demo", nullptr, window_flags);
+     if (!ImGui::Begin("##FieldMapEditor", nullptr, window_flags))
+     {
+          return;
+     }
+
      if constexpr (!opt_padding)
      {
           ImGui::PopStyleVar();
@@ -462,8 +403,16 @@ void gui::control_panel_window()
      {
           return;
      }
+
+     bool      &visible     = m_selections->display_control_panel_window;
+     const auto pop_visible = glengine::ScopeGuard{ [this, &visible, was_visable = visible] {
+          if (was_visable != visible)
+          {
+               m_selections->update_configuration_key(ConfigKey::DisplayControlPanelWindow);
+          }
+     } };
      const auto imgui_end = glengine::ScopeGuard(&ImGui::End);
-     if (!ImGui::Begin(gui_labels::control_panel.data()))
+     if (!ImGui::Begin(gui_labels::control_panel.data(), &visible))
      {
           // m_mouse_positions.mouse_enabled = handle_mouse_cursor();
           return;
@@ -931,6 +880,14 @@ void gui::draw_window()
             ImGui::Image(glengine::ConvertGliDtoImTextureId<ImTextureID>(m_checkerboard_framebuffer.color_attachment_id()), window_size);
             ImGui::SetCursorScreenPos(window_pos);
        };
+
+     bool      &visible     = m_selections->display_draw_window;
+     const auto pop_visible = glengine::ScopeGuard{ [this, &visible, was_visable = visible] {
+          if (was_visable != visible)
+          {
+               m_selections->update_configuration_key(ConfigKey::DisplayDrawWindow);
+          }
+     } };
      if (mim_test())
      {
           const auto pop_style0 = glengine::ScopeGuard([]() { ImGui::PopStyleVar(); });
@@ -940,7 +897,7 @@ void gui::draw_window()
           // const auto pop_style1 = glengine::ScopeGuard([]() { ImGui::PopStyleColor(); });
           //  ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4{ clear_color.r / 256.F, clear_color.g / 256.F, clear_color.b / 256.F,
           //  0.9F });
-          if (!ImGui::Begin(gui_labels::draw_window_title.data(), nullptr, window_flags))
+          if (!ImGui::Begin(gui_labels::draw_window_title.data(), &visible, window_flags))
           {
                return;
           }
@@ -976,7 +933,7 @@ void gui::draw_window()
           // const auto pop_style1 = glengine::ScopeGuard([]() { ImGui::PopStyleColor(); });
           //  ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4{ clear_color.r / 256.F, clear_color.g / 256.F, clear_color.b / 256.F,
           //  0.9F });
-          if (!ImGui::Begin(gui_labels::draw_window_title.data(), nullptr, window_flags))
+          if (!ImGui::Begin(gui_labels::draw_window_title.data(), &visible, window_flags))
           {
                return;
           }
@@ -3434,62 +3391,67 @@ void gui::refresh_path()
 //       }
 //  }
 //  void gui::event_type_key_pressed([[maybe_unused]] const sf::Event::KeyEvent &key) {}
-//  void gui::event_type_key_released(const sf::Event::KeyEvent &key)
-//  {
-//       if (key.shift && key.control && key.code == sf::Keyboard::Z)
-//       {
-//            m_map_sprite->undo_all();
-//       }
-//       else if (key.shift && key.control && key.code == sf::Keyboard::Y)
-//       {
-//            m_map_sprite->redo_all();
-//       }
-//       else if (key.control && key.code == sf::Keyboard::Z)
-//       {
-//            m_map_sprite->undo();
-//       }
-//       else if (key.control && key.code == sf::Keyboard::Y)
-//       {
-//            m_map_sprite->redo();
-//       }
-//       else if (key.control && key.code == sf::Keyboard::H)
-//       {
-//            m_selections->display_history_window = !m_selections->display_history_window;
-//            m_selections->update_configuration_key(ConfigKey::DisplayHistoryWindow);
-//       }
-//       else if (key.control && key.code == sf::Keyboard::I)
-//       {
-//            m_selections->display_import_image = !m_selections->display_import_image;
-//            m_selections->update_configuration_key(ConfigKey::DisplayImportImage);
-//       }
-//       else if (key.control && key.code == sf::Keyboard::B)
-//       {
-//            m_selections->display_batch_window = !m_selections->display_batch_window;
-//            m_selections->update_configuration_key(ConfigKey::DisplayBatchWindow);
-//       }
-//       else if (key.control && key.code == sf::Keyboard::D)
-//       {
-//            m_selections->display_draw_window = !m_selections->display_draw_window;
-//            m_selections->update_configuration_key(ConfigKey::DisplayDrawWindow);
-//       }
-//       else if (key.control && key.code == sf::Keyboard::U)
-//       {
-//            m_selections->display_custom_paths_window = !m_selections->display_custom_paths_window;
-//            m_selections->update_configuration_key(ConfigKey::DisplayCustomPathsWindow);
-//       }
+void gui::bind_shortcuts() const
+{
 
-//      else if (key.control && key.code == sf::Keyboard::F)
-//      {
-//           m_selections->display_field_file_window = !m_selections->display_field_file_window;
-//           m_selections->update_configuration_key(ConfigKey::DisplayFieldFileWindow);
-//      }
-
-//      else if (key.control && key.code == sf::Keyboard::P)
-//      {
-//           m_selections->display_control_panel_window = !m_selections->display_control_panel_window;
-//           m_selections->update_configuration_key(ConfigKey::DisplayControlPanelWindow);
-//      }
-// }
+     constexpr auto flags = ImGuiInputFlags_RouteGlobal | ImGuiInputFlags_RouteOverFocused;
+     // Undo All: Ctrl+Shift+Z
+     if (ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiMod_Shift | ImGuiKey_Z, flags))
+     {
+          m_map_sprite->undo_all();
+     }
+     // Redo All: Ctrl+Shift+Y
+     else if (ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiMod_Shift | ImGuiKey_Y, flags))
+     {
+          m_map_sprite->redo_all();
+     }
+     // Undo: Ctrl+Z
+     else if (ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiKey_Z, flags))
+     {
+          m_map_sprite->undo();
+     }
+     // Redo: Ctrl+Y
+     else if (ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiKey_Y, flags))
+     {
+          m_map_sprite->redo();
+     }
+     // Toggle windows
+     else if (ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiKey_H, flags))
+     {
+          m_selections->display_history_window ^= true;
+          m_selections->update_configuration_key(ConfigKey::DisplayHistoryWindow);
+     }
+     else if (ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiKey_I, flags))
+     {
+          m_selections->display_import_image ^= true;
+          m_selections->update_configuration_key(ConfigKey::DisplayImportImage);
+     }
+     else if (ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiKey_B, flags))
+     {
+          m_selections->display_batch_window ^= true;
+          m_selections->update_configuration_key(ConfigKey::DisplayBatchWindow);
+     }
+     else if (ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiKey_D, flags))
+     {
+          m_selections->display_draw_window ^= true;
+          m_selections->update_configuration_key(ConfigKey::DisplayDrawWindow);
+     }
+     else if (ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiKey_U, flags))
+     {
+          m_selections->display_custom_paths_window ^= true;
+          m_selections->update_configuration_key(ConfigKey::DisplayCustomPathsWindow);
+     }
+     else if (ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiKey_F, flags))
+     {
+          m_selections->display_field_file_window ^= true;
+          m_selections->update_configuration_key(ConfigKey::DisplayFieldFileWindow);
+     }
+     else if (ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiKey_P, flags))
+     {
+          m_selections->display_control_panel_window ^= true;
+          m_selections->update_configuration_key(ConfigKey::DisplayControlPanelWindow);
+     }
+}
 std::uint32_t gui::image_height() const
 {
      if (map_test())
@@ -3596,6 +3558,7 @@ gui::gui(GLFWwindow *const window)
      m_archives_group = std::make_shared<archives_group>(get_archives_group());
      m_batch          = fme::batch{ m_selections, m_archives_group };
      m_field          = init_field();
+     m_field_file_window.refresh(m_field);
      m_mim_sprite     = get_mim_sprite();
      m_map_sprite     = get_map_sprite();
 

@@ -49,8 +49,21 @@ static bool safe_copy_string(const Src &src, Dst &dst)
 
 void fme::batch::draw_window()
 {
+     const auto selections = m_selections.lock();
+     if (!selections)
+     {
+          spdlog::error("Failed to lock m_selections: shared_ptr is expired.");
+          return;
+     }
+     bool      &visible     = selections->display_batch_window;
+     const auto pop_visible = glengine::ScopeGuard{ [&selections, &visible, was_visable = visible] {
+          if (was_visable != visible)
+          {
+               selections->update_configuration_key(ConfigKey::DisplayBatchWindow);
+          }
+     } };
      const auto end = glengine::ScopeGuard(&ImGui::End);
-     if (!ImGui::Begin(gui_labels::batch_operation_window.data()))
+     if (!ImGui::Begin(gui_labels::batch_operation_window.data(), &visible))
      {
           return;
      }
@@ -79,17 +92,9 @@ void fme::batch::draw_window()
      const auto archives_group = m_archives_group.lock();
      if (archives_group)
      {
-          const auto selections = m_selections.lock();
-          if (!selections)
+          if (draw_multi_column_list_box("Map List", archives_group->mapdata(), selections->batch_map_list_enabled))
           {
-               spdlog::error("Failed to lock m_selections: shared_ptr is expired.");
-          }
-          else
-          {
-               if (draw_multi_column_list_box("Map List", archives_group->mapdata(), selections->batch_map_list_enabled))
-               {
-                    selections->update_configuration_key(ConfigKey::BatchMapListEnabled);
-               }
+               selections->update_configuration_key(ConfigKey::BatchMapListEnabled);
           }
      }
      else

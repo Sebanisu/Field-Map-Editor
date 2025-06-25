@@ -750,8 +750,15 @@ void fme::custom_paths_window::render() const
      {
           return;
      }
+     bool      &visible     = selections->display_custom_paths_window;
+     const auto pop_visible = glengine::ScopeGuard{ [&selections, &visible, was_visable = visible] {
+          if (was_visable != visible)
+          {
+               selections->update_configuration_key(ConfigKey::DisplayCustomPathsWindow);
+          }
+     } };
      const auto pop_end = glengine::ScopeGuard(&ImGui::End);
-     if (!ImGui::Begin(gui_labels::custom_paths_window.data()))
+     if (!ImGui::Begin(gui_labels::custom_paths_window.data(), &visible))
      {
           return;
      }

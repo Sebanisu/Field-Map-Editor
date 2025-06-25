@@ -241,7 +241,7 @@ struct gui
      void adjust_source_xy_texture_page_for_import_map(uint8_t next_source_y, const uint8_t next_texture_page);
      void find_selected_tile_for_import(variant_tile_t &current_tile) const;
      // todo fix events.
-     // void event_type_key_released(const sf::Event::KeyEvent &key);
+     void bind_shortcuts() const;
      // void event_type_key_pressed(const sf::Event::KeyEvent &key);
      // void event_type_mouse_button_pressed(const sf::Mouse::Button &button);
      // void event_type_mouse_button_released(const sf::Mouse::Button &button);

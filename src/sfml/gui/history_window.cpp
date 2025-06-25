@@ -18,9 +18,17 @@ void fme::history_window::render() const
      {
           return;
      }
+
+     bool      &visible     = selections->display_history_window;
+     const auto pop_visible = glengine::ScopeGuard{ [&selections, &visible, was_visable = visible] {
+          if (was_visable != visible)
+          {
+               selections->update_configuration_key(ConfigKey::DisplayHistoryWindow);
+          }
+     } };
      const auto the_end = glengine::ScopeGuard([]() { ImGui::End(); });
 
-     if (!ImGui::Begin(gui_labels::history.data()))
+     if (!ImGui::Begin(gui_labels::history.data(), &visible))
      {
           return;
      }

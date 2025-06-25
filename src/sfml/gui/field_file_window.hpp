@@ -54,10 +54,15 @@ struct field_file_window
           {
                return;
           }
-
-
+          bool      &visible     = selections->display_field_file_window;
+          const auto pop_visible = glengine::ScopeGuard{ [&selections, &visible, was_visable = visible] {
+               if (was_visable != visible)
+               {
+                    selections->update_configuration_key(ConfigKey::DisplayFieldFileWindow);
+               }
+          } };
           const auto pop_end = glengine::ScopeGuard(&ImGui::End);
-          if (!ImGui::Begin(gui_labels::field_file_window.data()))
+          if (!ImGui::Begin(gui_labels::field_file_window.data(), &visible))
           {
                return;
           }
