@@ -34,6 +34,7 @@
 #include <ScopeGuard.hpp>
 #include <SFML/Graphics/RenderWindow.hpp>
 #include <SFML/Graphics/Shader.hpp>
+#include <TimeStep.hpp>
 
 namespace fme
 {
@@ -56,8 +57,8 @@ struct gui
      mouse_positions                                    m_mouse_positions     = {};
      int                                                m_field_index         = {};
      float                                              m_scale_width         = {};
-     sf::Clock                                          m_delta_clock         = {};
-     sf::Time                                           m_elapsed_time        = {};
+     glengine::TimeStep                                 m_delta_clock         = {};
+     float                                              m_elapsed_time        = {};///< seconds
      std::shared_ptr<archives_group>                    m_archives_group      = {};
      batch                                              m_batch;
      std::shared_ptr<open_viii::archive::FIFLFS<false>> m_field      = {};

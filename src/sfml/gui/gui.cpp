@@ -293,8 +293,8 @@ void gui::start(sf::RenderWindow &window)
                       event_variant);
                }
           }
-          m_elapsed_time = m_delta_clock.restart();
-          ImGui::SFML::Update(window, m_elapsed_time);
+          m_elapsed_time = m_delta_clock;
+          ImGui::SFML::Update(window, sf::seconds(m_elapsed_time));
           if (m_selections->force_rendering_of_map)
           {
                refresh_render_texture(true);// force map redraw every frame.
@@ -846,12 +846,33 @@ void gui::draw_window()
 
      static constexpr ImGuiWindowFlags window_flags =
        ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_AlwaysHorizontalScrollbar | ImGuiWindowFlags_AlwaysVerticalScrollbar;
+     const auto        is_valid_float  = [](const float f) -> bool { return !std::isnan(f) && !std::isinf(f); };
+     const auto        is_valid_ImVec2 = [&is_valid_float](const ImVec2 v) -> bool { return is_valid_float(v.x) && is_valid_float(v.y); };
      static const auto DrawCheckerboardBackground =
        [&](const ImVec2 &window_pos, const ImVec2 &window_size, float tile_size, color color1, color color2) {
-            if (window_size.x <= 0.f || window_size.y <= 0.f)
+            if (
+              window_size.x < 1.f || window_size.y < 1.f || !is_valid_ImVec2(window_pos) || !is_valid_ImVec2(window_size)
+              || !is_valid_float(tile_size))
             {
                  return;
             }
+            //   spdlog::info(
+            //     "window_pos: ({:.2f}, {:.2f}), window_size: ({:.2f}, {:.2f}), tile_size: {:.2f}, color1: ({}, {}, {}, {}), color2: ({},
+            //     {}, "
+            //     "{}, {})",
+            //     window_pos.x,
+            //     window_pos.y,
+            //     window_size.x,
+            //     window_size.y,
+            //     tile_size,
+            //     color1.r,
+            //     color1.g,
+            //     color1.b,
+            //     color1.a,
+            //     color2.r,
+            //     color2.g,
+            //     color2.b,
+            //     color2.a);
             const auto fbb  = m_checkerboard_framebuffer.backup();
             const auto fbrb = m_checkerboard_batchrenderer.backup();
             if (
@@ -1343,12 +1364,19 @@ void gui::draw_mouse_positions_sprite([[maybe_unused]] const float scale, [[mayb
 }
 void gui::consume_one_future()
 {
+     static constexpr float interval           = 0.013f;// the interval in seconds
+     static float           total_elapsed_time = 0.0f;// keep track of the elapsed time using a static variable
+
+     total_elapsed_time += m_elapsed_time;// add the elapsed time since last update
+
+     if (total_elapsed_time < interval)
+     {
+          return;
+     }
+     // perform your operation here
+     total_elapsed_time = 0.f;// reset the elapsed time
+
      m_map_sprite->consume_one_future();
-     static constexpr int interval           = 50;// the interval in milliseconds
-     static int           total_elapsed_time = 0;// keep track of the elapsed time using a static variable
-
-     total_elapsed_time += m_elapsed_time.asMilliseconds();// add the elapsed time since last update
-
      if (!m_future_of_future_paths_consumer.done())
      {
           ++m_future_of_future_paths_consumer;
@@ -1419,12 +1447,6 @@ void gui::consume_one_future()
           m_selections->update_configuration_key(pande.enabled_key);
      });
 
-     if (total_elapsed_time < interval)
-     {
-          return;
-     }
-     // perform your operation here
-     total_elapsed_time = 0;// reset the elapsed time
      if (!m_future_of_future_consumer.done())
      {
           ++m_future_of_future_consumer;

@@ -78,10 +78,11 @@ class batch
      //[[nodiscard]] std::filesystem::path append_file_structure(const std::filesystem::path &path) const;
      [[nodiscard]] bool browse_path(std::string_view name, bool &valid_path, std::array<char, m_buffer_size> &path_buffer);
 
-     void   checkmark_save_map();
-     bool   draw_multi_column_list_box(const std::string_view name, const std::vector<std::string> &items, std::vector<bool> &enabled);
+     void               checkmark_save_map();
+     bool draw_multi_column_list_box(const std::string_view name, const std::vector<std::string> &items, std::vector<bool> &enabled);
+
    public:
-     void update(sf::Time elapsed_time);
+     void update(float elapsed_time);
      batch() = default;
      explicit batch(std::weak_ptr<Selections> existing_selections, std::weak_ptr<archives_group> existing_group);
      bool   in_progress() const;

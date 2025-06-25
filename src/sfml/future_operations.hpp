@@ -44,15 +44,6 @@ class GetImageFromPathCreateFuture
      GetImageFromPathCreateFuture(glengine::Texture *const in_texture, std::filesystem::path in_path);
      std::future<void> operator()();
 };
-// class save_image_to_path
-// {
-//      std::filesystem::path m_path;
-//      sf::Image             m_image;
-
-//    public:
-//      save_image_to_path(std::filesystem::path in_path, const sf::Image &in_image);
-//      void operator()() const;
-// };
 template<std::ranges::contiguous_range range_t>
 class GetImageFromFromFirstValidPathCreateFuture
 {

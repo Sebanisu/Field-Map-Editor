@@ -48,16 +48,18 @@ map_sprite::map_sprite(
   , m_render_framebuffer(std::move(framebuffer))
 {
      // TODO wip gotta use new class to get the paths.
-     const auto ps = ff_8::path_search{ .selections                         = m_selections.lock(),
-                                        .opt_coo                            = m_map_group.opt_coo,
-                                        .field_name                         = get_base_name(),
-                                        .filters_deswizzle_value_string     = filter().deswizzle.value().string(),
-                                        .filters_upscale_value_string       = filter().upscale.value().string(),
-                                        .filters_deswizzle_map_value_string = filter().deswizzle_map.value().string(),
-                                        .filters_upscale_map_value_string   = filter().upscale_map.value().string(),
-                                        .working_unique_pupu                = working_unique_pupu(),
-                                        .bpp_palette                        = uniques().palette(),
-                                        .texture_page_id                    = uniques().texture_page_id() };
+     const auto ps = ff_8::path_search{
+          .selections                         = m_selections.lock(),
+          .opt_coo                            = m_map_group.opt_coo,
+          .field_name                         = get_base_name(),
+          .filters_deswizzle_value_string     = filter().deswizzle.value().string(),
+          .filters_upscale_value_string       = filter().upscale.value().string(),
+          .filters_deswizzle_map_value_string = filter().deswizzle_map.value().string(),
+          .filters_upscale_map_value_string   = filter().upscale_map.value().string(),
+          //.working_unique_pupu                = working_unique_pupu(),
+          //.bpp_palette                        = uniques().palette(),
+          //.texture_page_id                    = uniques().texture_page_id()
+     };
      if (m_filters.upscale_map.enabled())
      {
           if (const auto paths = ps.generate_swizzle_map_paths(".map"); !std::ranges::empty(paths))

@@ -201,8 +201,6 @@ public:
   }
   bool operator()(const PupuID & pupu_id) const
   {
-    // todo fix pupu filter
-
     return filter(
       // todo get pupu ID from map history? Map filters currently has no access.
       pupu_id,

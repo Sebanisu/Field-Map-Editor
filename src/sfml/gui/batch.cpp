@@ -842,7 +842,7 @@ bool fme::batch::browse_path(std::string_view name, bool &valid_path, std::array
  *
  * @param elapsed_time The time elapsed since the last update call.
  */
-void fme::batch::update(sf::Time elapsed_time)
+void fme::batch::update(float elapsed_time)
 {
      // Attempt to acquire a shared_ptr to the selections structure
      const auto selections = m_selections.lock();
@@ -852,14 +852,14 @@ void fme::batch::update(sf::Time elapsed_time)
           return;
      }
 
-     // Interval between updates in milliseconds
-     static constexpr int interval           = 30;
+     // Interval between updates in seconds
+     static constexpr float interval           = 0.03f;
 
      // Accumulated elapsed time (preserved across calls)
-     static int           total_elapsed_time = 0;
+     static float           total_elapsed_time = 0.f;
 
      // Add elapsed time from this frame to the total
-     total_elapsed_time += elapsed_time.asMilliseconds();
+     total_elapsed_time += elapsed_time;
 
      // Skip update if interval threshold hasn't been reached
      if (total_elapsed_time < interval)
@@ -868,7 +868,7 @@ void fme::batch::update(sf::Time elapsed_time)
      }
 
      // Reset accumulated time after reaching the threshold
-     total_elapsed_time = 0;
+     total_elapsed_time = 0.f;
 
      // Attempt to process any pending futures first
      if (consume_one_future())
