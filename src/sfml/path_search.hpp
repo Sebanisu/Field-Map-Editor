@@ -23,7 +23,7 @@ struct path_search
      std::string                                                                  filters_upscale_map_value_string   = {};
      std::vector<ff_8::PupuID>                                                    working_unique_pupu                = {};
      std::map<open_viii::graphics::BPPT, unique_values_and_strings<std::uint8_t>> bpp_palette                        = {};
-     std::vector<std::uint8_t>                                                    texture_page_id                    = {};
+     unique_values_and_strings<std::uint8_t>                                      texture_page_id                    = {};
 
      [[nodiscard]] std::vector<std::filesystem::path>                             generate_deswizzle_paths(const std::string &ext) const;
      [[nodiscard]] std::vector<std::filesystem::path>                             generate_swizzle_paths(const std::string &ext) const;

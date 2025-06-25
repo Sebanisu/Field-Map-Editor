@@ -848,6 +848,10 @@ void gui::draw_window()
        ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_AlwaysHorizontalScrollbar | ImGuiWindowFlags_AlwaysVerticalScrollbar;
      static const auto DrawCheckerboardBackground =
        [&](const ImVec2 &window_pos, const ImVec2 &window_size, float tile_size, color color1, color color2) {
+            if (window_size.x <= 0.f || window_size.y <= 0.f)
+            {
+                 return;
+            }
             const auto fbb  = m_checkerboard_framebuffer.backup();
             const auto fbrb = m_checkerboard_batchrenderer.backup();
             if (
@@ -860,7 +864,7 @@ void gui::draw_window()
             }
 
             m_checkerboard_framebuffer.bind();
-            glengine::GlCall{}(glViewport, 0, 0, m_checkerboard_framebuffer.width(), m_checkerboard_framebuffer.height());
+            glengine::GlCall{}(glViewport, 0, 0, (GLsizei)m_checkerboard_framebuffer.width(), (GLsizei)m_checkerboard_framebuffer.height());
             glengine::Renderer::Clear();
             m_checkerboard_batchrenderer.bind();
             m_fixed_render_camera.set_projection(
@@ -1453,22 +1457,6 @@ void gui::consume_one_future()
      }
      ++m_future_consumer;
 }
-
-// void gui::popup_batch_common_filter_start(
-//   ff_8::filter_old<std::filesystem::path> &filter,
-//   std::string_view                         prefix,
-//   std::string_view                         base_name)
-// {
-//      if (filter.enabled())
-//      {
-//           filter.update(filter.value() / prefix / base_name);
-//           safedir const path = filter.value();
-//           if (!path.is_exists() || !path.is_dir())
-//           {
-//                filter.disable();
-//           }
-//      }
-// }
 
 void gui::on_click_not_imgui()
 {
@@ -2700,13 +2688,20 @@ void gui::menu_upscale_map_paths()
        [&]() {
             if (m_map_sprite->filter().upscale_map.enabled())
             {
-                 m_map_sprite->filter().deswizzle_map.disable();
-
-                 // TODO do i want this?
-                 //   if (const auto paths = m_map_sprite->generate_swizzle_map_paths(".map"); !std::ranges::empty(paths))
-                 //   {
-                 //        m_map_sprite->load_map(paths.front());// grab the first match.
-                 //   }
+                 const auto ps =
+                   ff_8::path_search{ .selections                       = m_selections,
+                                      .opt_coo                          = get_coo(),
+                                      .field_name                       = m_map_sprite->get_base_name(),
+                                      .filters_upscale_map_value_string = m_map_sprite->filter().upscale_map.value().string() };
+                 if (const auto paths = ps.generate_swizzle_map_paths(".map"); !std::ranges::empty(paths))
+                 {
+                      m_map_sprite->filter().deswizzle_map.disable();
+                      m_map_sprite->load_map(paths.front());// grab the first match.
+                 }
+                 else
+                 {
+                      m_map_sprite->filter().upscale_map.disable();
+                 }
             }
             else
             {
@@ -2744,13 +2739,20 @@ void gui::menu_deswizzle_map_paths()
        [&]() {
             if (m_map_sprite->filter().deswizzle_map.enabled())
             {
-                 m_map_sprite->filter().upscale_map.disable();
-
-                 // TODO do i want this?
-                 //   if (const auto paths = m_map_sprite->generate_deswizzle_map_paths(".map"); !std::ranges::empty(paths))
-                 //   {
-                 //        m_map_sprite->load_map(paths.front());// grab the first match.
-                 //   }
+                 const auto ps =
+                   ff_8::path_search{ .selections                         = m_selections,
+                                      .opt_coo                            = get_coo(),
+                                      .field_name                         = m_map_sprite->get_base_name(),
+                                      .filters_deswizzle_map_value_string = m_map_sprite->filter().deswizzle_map.value().string() };
+                 if (const auto paths = ps.generate_deswizzle_map_paths(".map"); !std::ranges::empty(paths))
+                 {
+                      m_map_sprite->filter().upscale_map.disable();
+                      m_map_sprite->load_map(paths.front());// grab the first match.
+                 }
+                 else
+                 {
+                      m_map_sprite->filter().deswizzle_map.disable();
+                 }
             }
             else
             {
@@ -2862,37 +2864,35 @@ void gui::directory_browser_display()
           paths_vector.push_back(target_path);
           sort_and_remove_duplicates(paths_vector);
           m_selections->update_configuration_key(vector_key);
-          // TODO fix me
-          //  // Append the path to the various search patterns
-          //  const auto result     = upscales(target_path, get_coo(), m_selections);
-          //  const auto temp_paths = result.get_paths();
+          // Append the path to the various search patterns
+          const auto temp_paths = ff_8::path_search::get_paths(m_selections, get_coo(), target_path);
 
-          // // If we have found matches
-          // if (!temp_paths.empty())
-          // {
-          //      for (const auto &path : temp_paths)
-          //      {
-          //           // Add matches to the drop-down
-          //           target_paths.emplace_back(path.string());
-          //           bool path_enabled = std::invoke(has_path_funct, path);
-          //           target_paths_enabled.emplace_back(path_enabled);
-          //           if (path_enabled && !changed)
-          //           {
-          //                other_filter.disable();
-          //                main_filter.update(path).enable();
-          //                std::invoke(action, path);
-          //                changed = true;
-          //           }
-          //      }
-          //      sort_and_remove_duplicates(target_paths, target_paths_enabled);
-          //      if (changed)
-          //      {
-          //           refresh_render_texture(true);
-          //      }
-          // }
+          // If we have found matches
+          if (!temp_paths.empty())
+          {
+               for (const auto &path : temp_paths)
+               {
+                    // Add matches to the drop-down
+                    target_paths.emplace_back(path.string());
+                    bool path_enabled = std::invoke(has_path_funct, path);
+                    target_paths_enabled.emplace_back(path_enabled);
+                    if (path_enabled && !changed)
+                    {
+                         other_filter.disable();
+                         main_filter.update(path).enable();
+                         std::invoke(action, path);
+                         changed = true;
+                    }
+               }
+               sort_and_remove_duplicates(target_paths, target_paths_enabled);
+               if (changed)
+               {
+                    refresh_render_texture(true);
+               }
+          }
      };
-     // todo why is this here?
-     // const auto has_map_path = [&](const std::filesystem::path &path) -> bool { return m_map_sprite->has_map_path(path, ".map"); };
+     const auto ps = ff_8::path_search{ .selections = m_selections, .opt_coo = get_coo(), .field_name = m_map_sprite->get_base_name() };
+     const auto has_map_path = [&](const std::filesystem::path &path) -> bool { return ps.has_map_path(path, ".map"); };
      switch (m_modified_directory_map)
      {
           case map_directory_mode::ff8_install_directory: {
@@ -2930,7 +2930,6 @@ void gui::directory_browser_display()
 
                m_map_sprite->save_modified_map(
                  cpm.replace_tags(m_selections->output_map_pattern_for_swizzle, m_selections, selected_path.string()));
-               // m_map_sprite->save_modified_map(selected_path / m_map_sprite->map_filename());// done.
                open_directory(selected_path);
           }
           break;
@@ -2971,9 +2970,8 @@ void gui::directory_browser_display()
                  [&](const std::filesystem::path &path) -> bool {
                       // we add the paths to map search for ease of use.
                       m_selections->cache_upscale_map_paths.push_back(path.string());
-                      // todo fix later
-                      //   m_selections->cache_upscale_map_paths_enabled.push_back(has_map_path(path));
-                      //   return m_map_sprite->has_swizzle_path(path, ".png");
+                      m_selections->cache_upscale_map_paths_enabled.push_back(has_map_path(path));
+                      return ps.has_swizzle_path(path, ".png");
                       return false;
                  },
                  noop);
@@ -2993,9 +2991,8 @@ void gui::directory_browser_display()
                  [&](const std::filesystem::path &path) -> bool {
                       // we add the paths to map search for ease of use.
                       m_selections->cache_deswizzle_map_paths.push_back(path.string());
-                      // todo fix later
-                      //   m_selections->cache_deswizzle_map_paths_enabled.push_back(has_map_path(path));
-                      //   return m_map_sprite->has_deswizzle_path(path, ".png");
+                      m_selections->cache_deswizzle_map_paths_enabled.push_back(has_map_path(path));
+                      return ps.has_deswizzle_path(path, ".png");
                       return false;
                  },
                  noop);
@@ -3012,14 +3009,12 @@ void gui::directory_browser_display()
                  m_selections->cache_upscale_map_paths_enabled,
                  m_map_sprite->filter().upscale_map,
                  m_map_sprite->filter().deswizzle_map,
-                 // has_map_path,
-                 []([[maybe_unused]] const std::filesystem::path &path) {},
+                 has_map_path,
                  [&]([[maybe_unused]] const std::filesystem::path &path) {
-                      // TODO fix me.
-                      //    if (const auto paths = m_map_sprite->generate_swizzle_map_paths(path, ".map"); !std::ranges::empty(paths))
-                      //    {
-                      //         m_map_sprite->load_map(paths.front());// grab the first match.
-                      //    }
+                      if (const auto paths = ps.generate_swizzle_map_paths(path, ".map"); !std::ranges::empty(paths))
+                      {
+                           m_map_sprite->load_map(paths.front());// grab the first match.
+                      }
                  });
           }
           break;
@@ -3033,15 +3028,12 @@ void gui::directory_browser_display()
                  m_selections->cache_deswizzle_map_paths_enabled,
                  m_map_sprite->filter().deswizzle_map,
                  m_map_sprite->filter().upscale_map,
-                 // has_map_path,
-                 []([[maybe_unused]] const std::filesystem::path &path) {},
+                 has_map_path,
                  [&]([[maybe_unused]] const std::filesystem::path &path) {
-                      // TODO fix me.
-                      //    if (const auto paths = m_map_sprite->generate_deswizzle_map_paths(path, ".map");
-                      //    !std::ranges::empty(paths))
-                      //    {
-                      //         m_map_sprite->load_map(paths.front());// grab the first match.
-                      //    }
+                      if (const auto paths = ps.generate_deswizzle_map_paths(path, ".map"); !std::ranges::empty(paths))
+                      {
+                           m_map_sprite->load_map(paths.front());// grab the first match.
+                      }
                  });
           }
           break;
@@ -3571,7 +3563,6 @@ gui::gui(sf::RenderWindow &window)
      imgui_io.ConfigFlags = bitwise_or(imgui_io.ConfigFlags, ImGuiConfigFlags_DockingEnable);
      if (m_field)
      {
-          /// TODO move the generate to a thread.
           m_future_of_future_paths_consumer += generate_upscale_paths();
           m_future_of_future_paths_consumer += generate_deswizzle_paths();
           m_future_of_future_paths_consumer += generate_upscale_map_paths();
@@ -3932,18 +3923,20 @@ void gui::combo_upscale_map_path()
      // below if changed
      if (m_map_sprite->filter().upscale_map.enabled())
      {
-
-          // TODO fix me
-          //  if (const auto paths = m_map_sprite->generate_swizzle_map_paths(".map"); !std::ranges::empty(paths))
-          //  {
-          //       m_map_sprite->filter().deswizzle_map.disable();
-          //       m_map_sprite->load_map(paths.front());// grab the first match.
-          //  }
-          //  else
-          //  {
-          //       //.map was not found.
-          //       m_map_sprite->filter().upscale_map.disable();
-          //  }
+          const auto ps = ff_8::path_search{ .selections                       = m_selections,
+                                             .opt_coo                          = get_coo(),
+                                             .field_name                       = m_map_sprite->get_base_name(),
+                                             .filters_upscale_map_value_string = m_map_sprite->filter().upscale_map.value().string() };
+          if (const auto paths = ps.generate_swizzle_map_paths(".map"); !std::ranges::empty(paths))
+          {
+               m_map_sprite->filter().deswizzle_map.disable();
+               m_map_sprite->load_map(paths.front());// grab the first match.
+          }
+          else
+          {
+               //.map was not found.
+               m_map_sprite->filter().upscale_map.disable();
+          }
      }
      else
      {
@@ -3967,12 +3960,20 @@ void gui::combo_deswizzle_map_path()
      }
      if (m_map_sprite->filter().deswizzle_map.enabled())
      {
-          m_map_sprite->filter().upscale_map.disable();
-          // TODO fix me
-          //  if (const auto paths = m_map_sprite->generate_deswizzle_map_paths(".map"); !std::ranges::empty(paths))
-          //  {
-          //       m_map_sprite->load_map(paths.front());// grab the first match.
-          //  }
+          const auto ps = ff_8::path_search{ .selections                         = m_selections,
+                                             .opt_coo                            = get_coo(),
+                                             .field_name                         = m_map_sprite->get_base_name(),
+                                             .filters_deswizzle_map_value_string = m_map_sprite->filter().deswizzle_map.value().string() };
+          if (const auto paths = ps.generate_deswizzle_map_paths(".map"); !std::ranges::empty(paths))
+          {
+
+               m_map_sprite->filter().upscale_map.disable();
+               m_map_sprite->load_map(paths.front());// grab the first match.
+          }
+          else
+          {
+               m_map_sprite->filter().deswizzle_map.disable();
+          }
      }
      else
      {
@@ -3985,14 +3986,14 @@ void gui::combo_deswizzle_map_path()
 
 std::future<std::future<gui::PathsAndEnabled>> gui::generate_upscale_paths()
 {
-
      return std::async(
        std::launch::async,
-       [ps = ff_8::path_search{ .selections = m_selections,
-                                .opt_coo    = get_coo(),
-                                .field_name = m_map_sprite->get_base_name(),
-                                .filters_upscale_value_string =
-                                  m_map_sprite->filter().upscale.value().string() }] -> std::future<PathsAndEnabled> {
+       [ps = ff_8::path_search{ .selections                   = m_selections,
+                                .opt_coo                      = get_coo(),
+                                .field_name                   = m_map_sprite->get_base_name(),
+                                .filters_upscale_value_string = m_map_sprite->filter().upscale.value().string(),
+                                .bpp_palette                  = m_map_sprite->uniques().palette(),
+                                .texture_page_id = m_map_sprite->uniques().texture_page_id() }] -> std::future<PathsAndEnabled> {
             gui::PathsAndEnabled pande{ .path_key = ConfigKey::CacheUpscalePaths, .enabled_key = ConfigKey::CacheUpscalePathsEnabled };
 
             const auto           get_map_paths_joined = [&](const auto &container) {
@@ -4028,11 +4029,11 @@ std::future<std::future<gui::PathsAndEnabled>> gui::generate_deswizzle_paths()
 {
      return std::async(
        std::launch::async,
-       [ps = ff_8::path_search{ .selections = m_selections,
-                                .opt_coo    = get_coo(),
-                                .field_name = m_map_sprite->get_base_name(),
-                                .filters_deswizzle_value_string =
-                                  m_map_sprite->filter().deswizzle.value().string() }] -> std::future<PathsAndEnabled> {
+       [ps = ff_8::path_search{ .selections                     = m_selections,
+                                .opt_coo                        = get_coo(),
+                                .field_name                     = m_map_sprite->get_base_name(),
+                                .filters_deswizzle_value_string = m_map_sprite->filter().deswizzle.value().string(),
+                                .working_unique_pupu            = m_map_sprite->working_unique_pupu() }] -> std::future<PathsAndEnabled> {
             gui::PathsAndEnabled pande{ .path_key = ConfigKey::CacheDeswizzlePaths, .enabled_key = ConfigKey::CacheDeswizzlePathsEnabled };
 
             const auto           get_map_paths_joined = [&](const auto &container) {

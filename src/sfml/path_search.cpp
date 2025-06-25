@@ -45,7 +45,7 @@ bool path_search::has_swizzle_path(const std::filesystem::path &filter_path, con
                }
                for (const auto &palette : palette_set.values())
                {
-                    for (const auto &texture_page : texture_page_id)
+                    for (const auto &texture_page : texture_page_id.values())
                     {
                          if (has_swizzle_path(filter_path, texture_page, palette, ext))
                          {
@@ -56,7 +56,7 @@ bool path_search::has_swizzle_path(const std::filesystem::path &filter_path, con
           }
           return false;
      }() || [&]() {
-          for (const auto &texture_page : texture_page_id)
+          for (const auto &texture_page : texture_page_id.values())
           {
                if (has_swizzle_path(filter_path, texture_page, ext))
                {
