@@ -5,7 +5,6 @@
 #include "map_directory_mode.hpp"
 #include "map_sprite.hpp"
 #include "Selections.hpp"
-#include <imgui-SFML.h>
 #include <imgui.h>
 #include <memory>
 #include <open_viii/graphics/background/Map.hpp>

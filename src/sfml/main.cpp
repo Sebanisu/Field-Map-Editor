@@ -1,62 +1,83 @@
+
+// clang-format off
+#include <GL/glew.h>
+#include <GLFW/glfw3.h>
+// clang-format on
 #include "gui/gui.hpp"
 #include <BlendModeSettings.hpp>
 
-static sf::RenderWindow get_render_window()
+static GLFWwindow *create_glfw_window()
 {
      const fme::Configuration config = {};
-     const auto window_height        = config[key_to_string(fme::ConfigKey::WindowHeight)].value_or(fme::Selections::window_height_default);
-     const auto window_width         = config[key_to_string(fme::ConfigKey::WindowWidth)].value_or(fme::Selections::window_width_default);
-     sf::ContextSettings settings;
-     settings.majorVersion   = 4;// Request OpenGL 4.0
-     settings.minorVersion   = 0;
-     settings.attributeFlags = sf::ContextSettings::Default;
-     settings.depthBits      = 24;// Optional: depth buffer
-     settings.stencilBits    = 8;// Optional: stencil buffer
-     return sf::RenderWindow{
-          sf::VideoMode(window_width, window_height), sf::String{ fme::gui_labels::window_title.data() }, sf::Style::Default, settings
-     };
+     const int window_height         = config[key_to_string(fme::ConfigKey::WindowHeight)].value_or(fme::Selections::window_height_default);
+     const int window_width          = config[key_to_string(fme::ConfigKey::WindowWidth)].value_or(fme::Selections::window_width_default);
+
+     if (!glfwInit())
+     {
+          spdlog::error("Failed to initialize GLFW");
+          return nullptr;
+     }
+
+     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);// OpenGL 4.0
+     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
+     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+     glfwWindowHint(GLFW_DEPTH_BITS, 24);
+     glfwWindowHint(GLFW_STENCIL_BITS, 8);
+     glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GLFW_TRUE);
+
+     GLFWwindow *window = glfwCreateWindow(window_width, window_height, fme::gui_labels::window_title.data(), nullptr, nullptr);
+
+     if (!window)
+     {
+          spdlog::error("Failed to create GLFW window");
+          glfwTerminate();
+          return nullptr;
+     }
+
+     glfwMakeContextCurrent(window);
+     glfwSwapInterval(1);// Enable vsync
+     return window;
 }
 int main()
 {
-     auto window = get_render_window();
-     if (!window.isOpen())
-     {
+     GLFWwindow *window = create_glfw_window();
+     if (!window)
           return 0;
-     }
-     {// m_window.setVerticalSyncEnabled(true);
-          // m_window.setFramerateLimit(0);// Disable manual frame limit
-          // m_window.setVerticalSyncEnabled(false);// Disable vsync
-          window.setVerticalSyncEnabled(true);
-          // Clear the window to black and display it immediately
-          window.clear(sf::Color::Black);
-          window.display();
-          // m_window.requestFocus();// Ensure the window has focus
-          window.setActive(true);
-          const GLubyte *version = glGetString(GL_VERSION);
-          if (version)
-          {
-               spdlog::info("OpenGL version: {}", reinterpret_cast<const char *>(version));
-          }
-          else
-          {
-               spdlog::error("Failed to get OpenGL version. Is the context initialized?");
-          }
 
-          GLenum const err = glewInit();
-          if (std::cmp_not_equal(GLEW_OK, err))
-          {
-               // GLEW initialization failed
-               const GLubyte *error_msg = glewGetErrorString(err);
-               spdlog::error("{}", reinterpret_cast<const char *>(error_msg));
-               std::terminate();
-          }
-          glengine::BlendModeSettings::enable_blending();
-          glengine::BlendModeSettings::default_blend();
-          // Enable debug output
-          glengine::GlCall{}(glEnable, GL_DEBUG_OUTPUT);
-          glengine::GlCall{}(glEnable, GL_DEBUG_OUTPUT_SYNCHRONOUS);
+     GLenum err = glewInit();
+     if (std::cmp_not_equal(GLEW_OK, err))
+     {
+          spdlog::error("GLEW init failed: {}", reinterpret_cast<const char *>(glewGetErrorString(err)));
+          glfwDestroyWindow(window);
+          glfwTerminate();
+          return -1;
+     }
+
+     glengine::Renderer::Clear();
+     glfwSwapBuffers(window);
+
+     const GLubyte *version = glGetString(GL_VERSION);
+     if (version)
+     {
+          spdlog::info("OpenGL version: {}", reinterpret_cast<const char *>(version));
+     }
+     else
+     {
+          spdlog::error("Failed to get OpenGL version. Is the context initialized?");
+     }
+     glengine::BlendModeSettings::enable_blending();
+     glengine::BlendModeSettings::default_blend();
+     // Enable debug output
+     glengine::GlCall{}(glEnable, GL_DEBUG_OUTPUT);
+     glengine::GlCall{}(glEnable, GL_DEBUG_OUTPUT_SYNCHRONOUS);
+
+     {
           auto the_gui = fme::gui{ window };
           the_gui.start(window);
      }
-     window.close();
+
+     // Cleanup
+     glfwDestroyWindow(window);
+     glfwTerminate();
+     return 0;
 }

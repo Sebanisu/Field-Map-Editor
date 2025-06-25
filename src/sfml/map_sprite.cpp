@@ -1795,8 +1795,6 @@ bool map_sprite::generate_texture(const glengine::FrameBuffer &fbo) const
      fbo.bind();
      glengine::GlCall{}(glViewport, 0, 0, fbo.width(), fbo.height());
      glengine::Renderer::Clear();
-     // glengine::GlCall{}(glClearColor, .5f, .5f, .5f, 1.f);
-     // glengine::GlCall{}(glClear, GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
      fbo.clear_red_integer_color_attachment();
      const auto brb = m_batch_renderer.backup();
      m_batch_renderer.bind();

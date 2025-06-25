@@ -20,7 +20,6 @@
 #include <fmt/ranges.h>
 #include <open_viii/paths/Paths.hpp>
 #include <ranges>
-#include <SFML/Window/Mouse.hpp>
 #include <stacktrace>
 #include <utility>
 
@@ -106,18 +105,18 @@ static constexpr auto are_indices_in_both_ranges =
        });
 };
 
-/**
- * @brief Converts an ImVec4 color to an sf::Color.
- *
- * @param color The input color as ImVec4 (ImGui format, with floating-point components in the range [0, 1]).
- * @return sf::Color The converted color, with each component scaled to the range [0, 255].
- */
-static constexpr auto ImVec4ToSFColor = [](const ImVec4 &color) -> sf::Color {
-     return { static_cast<std::uint8_t>(color.x * 255.F),
-              static_cast<std::uint8_t>(color.y * 255.F),
-              static_cast<std::uint8_t>(color.z * 255.F),
-              static_cast<std::uint8_t>(color.w * 255.F) };
-};
+// /**
+//  * @brief Converts an ImVec4 color to an sf::Color.
+//  *
+//  * @param color The input color as ImVec4 (ImGui format, with floating-point components in the range [0, 1]).
+//  * @return sf::Color The converted color, with each component scaled to the range [0, 255].
+//  */
+// static constexpr auto ImVec4ToSFColor = [](const ImVec4 &color) -> sf::Color {
+//      return { static_cast<std::uint8_t>(color.x * 255.F),
+//               static_cast<std::uint8_t>(color.y * 255.F),
+//               static_cast<std::uint8_t>(color.z * 255.F),
+//               static_cast<std::uint8_t>(color.w * 255.F) };
+// };
 
 /**
  * @brief Calculates the maximum number of buttons that can fit per row in the available content region.
@@ -218,7 +217,7 @@ inline std::filesystem::path operator+(const std::filesystem::path &lhs, const T
 
 namespace fme
 {
-void gui::start(sf::RenderWindow &window)
+void gui::start(GLFWwindow *const window)
 {
      bool stop_loop = false;
      // scale_window(static_cast<float>(m_selections->window_width), static_cast<float>(m_selections->window_height));
@@ -227,74 +226,81 @@ void gui::start(sf::RenderWindow &window)
      {
           m_changed      = false;
           get_imgui_id() = {};// reset id counter
+          m_elapsed_time = m_delta_clock;
+          consume_one_future();
+          glfwPollEvents();// Input
           {
                m_mouse_positions.update();
-               while (window.pollEvent(m_event))
-               {
-                    ImGui::SFML::ProcessEvent(window, m_event);
-                    const auto event_variant = events::get(m_event);
-                    std::visit(
-                      events::make_visitor(
-                        [this]([[maybe_unused]] const sf::Event::SizeEvent &size) {
-                             //     scale_window(static_cast<float>(size.width), static_cast<float>(size.height));
-                             // m_changed = true;
-                        },
-                        [this](const sf::Event::MouseMoveEvent &) {
-                             m_mouse_positions.mouse_moved = true;
-                             // TODO move setting mouse pos code here?
-                             m_changed                     = true;
-                        },
-                        [this](const sf::Event::KeyEvent &key) {
-                             const auto &type = m_event.type;
-                             if (type == sf::Event::EventType::KeyReleased)
-                             {
-                                  event_type_key_released(key);
-                             }
-                             else if (type == sf::Event::EventType::KeyPressed)
-                             {
-                                  event_type_key_pressed(key);
-                             }
-                        },
-                        [this](const sf::Event::MouseButtonEvent &mouse) {
-                             const sf::Mouse::Button &button = mouse.button;
-                             if (!m_mouse_positions.mouse_enabled)
-                             {
-                                  // m_mouse_positions.left = false;
-                                  return;
-                             }
-                             switch (m_event.type)
-                             {
-                                  case sf::Event::EventType::MouseButtonPressed:
-                                       ///< A mouse button was pressed (data in event.mouseButton)
-                                       {
-                                            event_type_mouse_button_pressed(button);
-                                       }
-                                       break;
-                                  case sf::Event::EventType::MouseButtonReleased:
-                                       ///< A mouse button was released (data in
-                                       ///< event.mouseButton)
-                                       {
-                                            event_type_mouse_button_released(button);
-                                       }
-                                       break;
-                                  default:
-                                       break;
-                             }
-                        },
-                        [&]([[maybe_unused]] const std::monostate &) {
-                             if (m_event.type == sf::Event::Closed)
-                             {
-                                  m_batch.stop();
-                                  // window.close();
-                                  stop_loop = true;
-                             }
-                        },
-                        []([[maybe_unused]] const auto &) {}),
-                      event_variant);
-               }
+               // TODO fix events
+               //      while (window.pollEvent(m_event))
+               //      {
+               //           ImGui::SFML::ProcessEvent(window, m_event);
+               //           const auto event_variant = events::get(m_event);
+               //           std::visit(
+               //             events::make_visitor(
+               //               [this]([[maybe_unused]] const sf::Event::SizeEvent &size) {
+               //                    //     scale_window(static_cast<float>(size.width), static_cast<float>(size.height));
+               //                    // m_changed = true;
+               //               },
+               //               [this](const sf::Event::MouseMoveEvent &) {
+               //                    m_mouse_positions.mouse_moved = true;
+               //                    // TODO move setting mouse pos code here?
+               //                    m_changed                     = true;
+               //               },
+               //               [this](const sf::Event::KeyEvent &key) {
+               //                    const auto &type = m_event.type;
+               //                    if (type == sf::Event::EventType::KeyReleased)
+               //                    {
+               //                         event_type_key_released(key);
+               //                    }
+               //                    else if (type == sf::Event::EventType::KeyPressed)
+               //                    {
+               //                         event_type_key_pressed(key);
+               //                    }
+               //               },
+               //               [this](const sf::Event::MouseButtonEvent &mouse) {
+               //                    const sf::Mouse::Button &button = mouse.button;
+               //                    if (!m_mouse_positions.mouse_enabled)
+               //                    {
+               //                         // m_mouse_positions.left = false;
+               //                         return;
+               //                    }
+               //                    switch (m_event.type)
+               //                    {
+               //                         case sf::Event::EventType::MouseButtonPressed:
+               //                              ///< A mouse button was pressed (data in event.mouseButton)
+               //                              {
+               //                                   event_type_mouse_button_pressed(button);
+               //                              }
+               //                              break;
+               //                         case sf::Event::EventType::MouseButtonReleased:
+               //                              ///< A mouse button was released (data in
+               //                              ///< event.mouseButton)
+               //                              {
+               //                                   event_type_mouse_button_released(button);
+               //                              }
+               //                              break;
+               //                         default:
+               //                              break;
+               //                    }
+               //               },
+               //               [&]([[maybe_unused]] const std::monostate &) {
+               //                    if (m_event.type == sf::Event::Closed)
+               //                    {
+               //                         m_batch.stop();
+               //                         // window.close();
+               //                         stop_loop = true;
+               //                    }
+               //               },
+               //               []([[maybe_unused]] const auto &) {}),
+               //             event_variant);
+               //      }
           }
-          m_elapsed_time = m_delta_clock;
-          ImGui::SFML::Update(window, sf::seconds(m_elapsed_time));
+
+          ImGui_ImplGlfw_NewFrame();
+          ImGui_ImplOpenGL3_NewFrame();
+          ImGui::NewFrame();
+
           if (m_selections->force_rendering_of_map)
           {
                refresh_render_texture(true);// force map redraw every frame.
@@ -302,7 +308,6 @@ void gui::start(sf::RenderWindow &window)
           m_batch.update(m_elapsed_time);
 
           // Begin non imgui drawing.
-          window.clear(sf::Color::Black);
           directory_browser_display();
           file_browser_save_texture();
           render_dockspace();
@@ -327,13 +332,32 @@ void gui::start(sf::RenderWindow &window)
           draw_window();
           //  m_mouse_positions.cover.setColor(clear_color);
           //  window.draw(m_mouse_positions.cover);
-          ImGui::SFML::Render(window);
-          window.display();
-          consume_one_future();
-     } while (window.isOpen() && !stop_loop);
+          ImGui::Render();
 
-     ImGui::SFML::Shutdown();
-     m_selections->update_configuration();
+          int display_w, display_h;
+          glfwGetFramebufferSize(window, &display_w, &display_h);
+          glViewport(0, 0, display_w, display_h);
+
+          // Clear and draw main viewport
+          glengine::Renderer::Clear();
+          ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
+          ImGuiIO &io = ImGui::GetIO();
+          if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
+          {
+               GLFWwindow *backup_current_context = glfwGetCurrentContext();
+
+               // This must be called AFTER rendering the main draw data
+               ImGui::UpdatePlatformWindows();
+               ImGui::RenderPlatformWindowsDefault();
+
+               glfwMakeContextCurrent(backup_current_context);
+          }
+
+          // Swap only after ALL ImGui draw calls
+          glfwSwapBuffers(window);
+
+     } while (!glfwWindowShouldClose(window) && !stop_loop);
 }
 void gui::render_dockspace()
 {
@@ -3382,90 +3406,90 @@ void gui::refresh_path()
      m_selections->refresh_ffnx_paths();
      update_path();
 }
+// todo fix events.
+//  void gui::event_type_mouse_button_released(const sf::Mouse::Button &button)
+//  {
+//       switch (button)
+//       {
+//            case sf::Mouse::Left: {
+//                 // m_mouse_positions.left = false;
+//                 spdlog::trace("{}", "Left Mouse Button Up");
+//            }
+//            break;
+//            default:
+//                 break;
+//       }
+//  }
+//  void gui::event_type_mouse_button_pressed(const sf::Mouse::Button &button)
+//  {
+//       switch (button)
+//       {
+//            case sf::Mouse::Left: {
+//                 // m_mouse_positions.left = true;
+//                 spdlog::trace("{}", "Left Mouse Button Down");
+//            }
+//            break;
+//            default:
+//                 break;
+//       }
+//  }
+//  void gui::event_type_key_pressed([[maybe_unused]] const sf::Event::KeyEvent &key) {}
+//  void gui::event_type_key_released(const sf::Event::KeyEvent &key)
+//  {
+//       if (key.shift && key.control && key.code == sf::Keyboard::Z)
+//       {
+//            m_map_sprite->undo_all();
+//       }
+//       else if (key.shift && key.control && key.code == sf::Keyboard::Y)
+//       {
+//            m_map_sprite->redo_all();
+//       }
+//       else if (key.control && key.code == sf::Keyboard::Z)
+//       {
+//            m_map_sprite->undo();
+//       }
+//       else if (key.control && key.code == sf::Keyboard::Y)
+//       {
+//            m_map_sprite->redo();
+//       }
+//       else if (key.control && key.code == sf::Keyboard::H)
+//       {
+//            m_selections->display_history_window = !m_selections->display_history_window;
+//            m_selections->update_configuration_key(ConfigKey::DisplayHistoryWindow);
+//       }
+//       else if (key.control && key.code == sf::Keyboard::I)
+//       {
+//            m_selections->display_import_image = !m_selections->display_import_image;
+//            m_selections->update_configuration_key(ConfigKey::DisplayImportImage);
+//       }
+//       else if (key.control && key.code == sf::Keyboard::B)
+//       {
+//            m_selections->display_batch_window = !m_selections->display_batch_window;
+//            m_selections->update_configuration_key(ConfigKey::DisplayBatchWindow);
+//       }
+//       else if (key.control && key.code == sf::Keyboard::D)
+//       {
+//            m_selections->display_draw_window = !m_selections->display_draw_window;
+//            m_selections->update_configuration_key(ConfigKey::DisplayDrawWindow);
+//       }
+//       else if (key.control && key.code == sf::Keyboard::U)
+//       {
+//            m_selections->display_custom_paths_window = !m_selections->display_custom_paths_window;
+//            m_selections->update_configuration_key(ConfigKey::DisplayCustomPathsWindow);
+//       }
 
-void gui::event_type_mouse_button_released(const sf::Mouse::Button &button)
-{
-     switch (button)
-     {
-          case sf::Mouse::Left: {
-               // m_mouse_positions.left = false;
-               spdlog::trace("{}", "Left Mouse Button Up");
-          }
-          break;
-          default:
-               break;
-     }
-}
-void gui::event_type_mouse_button_pressed(const sf::Mouse::Button &button)
-{
-     switch (button)
-     {
-          case sf::Mouse::Left: {
-               // m_mouse_positions.left = true;
-               spdlog::trace("{}", "Left Mouse Button Down");
-          }
-          break;
-          default:
-               break;
-     }
-}
-void gui::event_type_key_pressed([[maybe_unused]] const sf::Event::KeyEvent &key) {}
-void gui::event_type_key_released(const sf::Event::KeyEvent &key)
-{
-     if (key.shift && key.control && key.code == sf::Keyboard::Z)
-     {
-          m_map_sprite->undo_all();
-     }
-     else if (key.shift && key.control && key.code == sf::Keyboard::Y)
-     {
-          m_map_sprite->redo_all();
-     }
-     else if (key.control && key.code == sf::Keyboard::Z)
-     {
-          m_map_sprite->undo();
-     }
-     else if (key.control && key.code == sf::Keyboard::Y)
-     {
-          m_map_sprite->redo();
-     }
-     else if (key.control && key.code == sf::Keyboard::H)
-     {
-          m_selections->display_history_window = !m_selections->display_history_window;
-          m_selections->update_configuration_key(ConfigKey::DisplayHistoryWindow);
-     }
-     else if (key.control && key.code == sf::Keyboard::I)
-     {
-          m_selections->display_import_image = !m_selections->display_import_image;
-          m_selections->update_configuration_key(ConfigKey::DisplayImportImage);
-     }
-     else if (key.control && key.code == sf::Keyboard::B)
-     {
-          m_selections->display_batch_window = !m_selections->display_batch_window;
-          m_selections->update_configuration_key(ConfigKey::DisplayBatchWindow);
-     }
-     else if (key.control && key.code == sf::Keyboard::D)
-     {
-          m_selections->display_draw_window = !m_selections->display_draw_window;
-          m_selections->update_configuration_key(ConfigKey::DisplayDrawWindow);
-     }
-     else if (key.control && key.code == sf::Keyboard::U)
-     {
-          m_selections->display_custom_paths_window = !m_selections->display_custom_paths_window;
-          m_selections->update_configuration_key(ConfigKey::DisplayCustomPathsWindow);
-     }
+//      else if (key.control && key.code == sf::Keyboard::F)
+//      {
+//           m_selections->display_field_file_window = !m_selections->display_field_file_window;
+//           m_selections->update_configuration_key(ConfigKey::DisplayFieldFileWindow);
+//      }
 
-     else if (key.control && key.code == sf::Keyboard::F)
-     {
-          m_selections->display_field_file_window = !m_selections->display_field_file_window;
-          m_selections->update_configuration_key(ConfigKey::DisplayFieldFileWindow);
-     }
-
-     else if (key.control && key.code == sf::Keyboard::P)
-     {
-          m_selections->display_control_panel_window = !m_selections->display_control_panel_window;
-          m_selections->update_configuration_key(ConfigKey::DisplayControlPanelWindow);
-     }
-}
+//      else if (key.control && key.code == sf::Keyboard::P)
+//      {
+//           m_selections->display_control_panel_window = !m_selections->display_control_panel_window;
+//           m_selections->update_configuration_key(ConfigKey::DisplayControlPanelWindow);
+//      }
+// }
 std::uint32_t gui::image_height() const
 {
      if (map_test())
@@ -3530,8 +3554,45 @@ mim_sprite gui::get_mim_sprite() const
               get_coo(),
               m_selections->draw_palette };
 }
-gui::gui(sf::RenderWindow &window)
+gui::gui(GLFWwindow *const window)
 {
+     // 0. Set the debug callback function
+     glDebugMessageCallback(DebugCallback, nullptr);
+
+     // 1. Create ImGui context (MUST be first!)
+     IMGUI_CHECKVERSION();
+     ImGui::CreateContext();
+     IM_ASSERT(ImGui::GetCurrentContext() != nullptr);
+
+     // 2. Configure ImGui (optional but common)
+     ImGuiIO          &imgui_io   = ImGui::GetIO();
+     std::error_code   error_code = {};
+     static const auto path       = (std::filesystem::current_path(error_code) / "Field-Map-Editor_SFML_imgui.ini").string();
+     imgui_io.ConfigFlags         = bitwise_or(imgui_io.ConfigFlags, ImGuiConfigFlags_DockingEnable);
+     imgui_io.ConfigFlags         = bitwise_or(imgui_io.ConfigFlags, ImGuiConfigFlags_ViewportsEnable);
+     imgui_io.IniFilename         = path.c_str();
+     if (error_code)
+     {
+          spdlog::warn("{}:{} - {}: {} path: \"{}\"", __FILE__, __LINE__, error_code.value(), error_code.message(), path);
+          error_code.clear();
+     }
+     ImGui::LoadIniSettingsFromDisk(path.c_str());
+
+     // 3. Set ImGui style (optional)
+     ImGui::StyleColorsDark();// or Light(), Classic()
+
+     // 4. Init backends
+     static constexpr bool use_imgui_callbacks = true;
+     const char           *glsl_version        = "#version 450 core";
+
+     ImGui_ImplGlfw_InitForOpenGL(window, use_imgui_callbacks);
+     ImGui_ImplOpenGL3_Init(glsl_version);
+     // 5. Load Fonts
+     (void)icons_font();
+     ImGui_ImplOpenGL3_DestroyFontsTexture();// safely clears existing texture
+     ImGui_ImplOpenGL3_CreateFontsTexture();// creates new one from ImGuiIO::Fonts
+
+     // 6. MISC
      m_archives_group = std::make_shared<archives_group>(get_archives_group());
      m_batch          = fme::batch{ m_selections, m_archives_group };
      m_field          = init_field();
@@ -3543,24 +3604,6 @@ gui::gui(sf::RenderWindow &window)
      m_import.update(m_map_sprite);
      m_history_window.update(m_map_sprite);
 
-
-     // Set the debug callback function
-     glDebugMessageCallback(DebugCallback, nullptr);
-     (void)ImGui::SFML::Init(window, false);
-
-     ImGuiIO          &imgui_io   = ImGui::GetIO();
-     std::error_code   error_code = {};
-     static const auto path       = (std::filesystem::current_path(error_code) / "Field-Map-Editor_SFML_imgui.ini").string();
-     imgui_io.IniFilename         = path.c_str();
-     if (error_code)
-     {
-          spdlog::warn("{}:{} - {}: {} path: \"{}\"", __FILE__, __LINE__, error_code.value(), error_code.message(), path);
-          error_code.clear();
-     }
-     ImGui::LoadIniSettingsFromDisk(path.c_str());
-     (void)icons_font();
-     ImGui::SFML::UpdateFontTexture();
-     imgui_io.ConfigFlags = bitwise_or(imgui_io.ConfigFlags, ImGuiConfigFlags_DockingEnable);
      if (m_field)
      {
           m_future_of_future_paths_consumer += generate_upscale_paths();
@@ -3569,43 +3612,54 @@ gui::gui(sf::RenderWindow &window)
           m_future_of_future_paths_consumer += generate_deswizzle_map_paths();
      }
      sort_paths();
-     if (!m_drag_sprite_shader)
-     {
-          m_drag_sprite_shader                       = std::make_shared<sf::Shader>();
-          static const std::string border_shader_raw = R"(#version 130
-uniform sampler2D texture;
-uniform float borderWidth;
+     //      if (!m_drag_sprite_shader)
+     //      {
+     //           m_drag_sprite_shader                       = std::make_shared<sf::Shader>();
+     //           static const std::string border_shader_raw = R"(#version 130
+     // uniform sampler2D texture;
+     // uniform float borderWidth;
 
-void main()
-{
-    vec4 pixel = texture2D(texture, gl_TexCoord[0].st);
-    vec2 texelSize = vec2(1.0/textureSize(texture,0).x, 1.0/textureSize(texture,0).y);
-    float alpha = 0;
-    int space = int(borderWidth);
-    int threshold = (2*space) * (2*space);
-    int count = 0;
-    for(int y=-space;y<=space;++y)
-    {
-      for(int x=-space;x<=space;++x)
-      {
-        if(texture2D(texture, gl_TexCoord[0].st + vec2(x*texelSize.x, y*texelSize.y)).a > 0.5)
-        {
-            count++;
-        }
-      }
-    }
-    if(pixel.a > 0.5)
-    {
-      gl_FragColor = pixel;
-    }
-    else
-    {
-      gl_FragColor = vec4(1, 0, 0, float(count)/float(threshold));
-    }
+     // void main()
+     // {
+     //     vec4 pixel = texture2D(texture, gl_TexCoord[0].st);
+     //     vec2 texelSize = vec2(1.0/textureSize(texture,0).x, 1.0/textureSize(texture,0).y);
+     //     float alpha = 0;
+     //     int space = int(borderWidth);
+     //     int threshold = (2*space) * (2*space);
+     //     int count = 0;
+     //     for(int y=-space;y<=space;++y)
+     //     {
+     //       for(int x=-space;x<=space;++x)
+     //       {
+     //         if(texture2D(texture, gl_TexCoord[0].st + vec2(x*texelSize.x, y*texelSize.y)).a > 0.5)
+     //         {
+     //             count++;
+     //         }
+     //       }
+     //     }
+     //     if(pixel.a > 0.5)
+     //     {
+     //       gl_FragColor = pixel;
+     //     }
+     //     else
+     //     {
+     //       gl_FragColor = vec4(1, 0, 0, float(count)/float(threshold));
+     //     }
+     // }
+     // )";
+     //           m_drag_sprite_shader->loadFromMemory(border_shader_raw, sf::Shader::Fragment);
+     //      }
 }
-)";
-          m_drag_sprite_shader->loadFromMemory(border_shader_raw, sf::Shader::Fragment);
+
+gui::~gui()
+{
+     if (m_selections)
+     {
+          m_selections->update_configuration();
      }
+     ImGui_ImplOpenGL3_Shutdown();
+     ImGui_ImplGlfw_Shutdown();
+     ImGui::DestroyContext();
 }
 
 /**

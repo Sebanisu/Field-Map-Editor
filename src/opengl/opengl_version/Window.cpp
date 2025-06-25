@@ -228,7 +228,7 @@ void Window::init_im_gui(const char *const glsl_version) const
           // Keyboard Controls io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad; //
           // Enable Gamepad Controls
           io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
-          // io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable; //events don't work
+          //io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;// events don't work
           // with viewports
 
           // Setup Dear ImGui style

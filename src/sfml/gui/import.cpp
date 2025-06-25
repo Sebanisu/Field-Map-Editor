@@ -20,7 +20,6 @@
 #include <array>
 #include <imgui.h>
 #include <open_viii/graphics/BPPT.hpp>
-#include <SFML/System/Time.hpp>
 #include <toml++/toml.h>
 
 
@@ -343,7 +342,7 @@ bool import::browse_for_image_display_preview() const
           if (selections->import_image_grid)
           {
                static constexpr float thickness = 2.0F;
-               static const ImU32     color_32  = imgui_color32(sf::Color::Red);
+               static const ImU32     color_32  = static_cast<ImU32>(fme::colors::Red);
                for (auto x_pos = static_cast<std::uint32_t>(selections->tile_size_value); std::cmp_less(x_pos, size.x);
                     x_pos += static_cast<std::underlying_type_t<tile_sizes>>(selections->tile_size_value))
                {

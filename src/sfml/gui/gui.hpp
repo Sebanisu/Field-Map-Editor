@@ -3,6 +3,10 @@
 //
 #ifndef FIELD_MAP_EDITOR_GUI_HPP
 #define FIELD_MAP_EDITOR_GUI_HPP
+// clang-format off
+#include <GL/glew.h>
+#include <GLFW/glfw3.h>
+// clang-format on
 #include "archives_group.hpp"
 #include "as_string.hpp"
 #include "batch.hpp"
@@ -27,13 +31,11 @@
 #include "Selections.hpp"
 #include <cstdint>
 #include <fmt/chrono.h>
-#include <GL/glew.h>
-#include <imgui-SFML.h>
 #include <imgui.h>
+#include <imgui_impl_glfw.h>
+#include <imgui_impl_opengl3.h>
 #include <memory>
 #include <ScopeGuard.hpp>
-#include <SFML/Graphics/RenderWindow.hpp>
-#include <SFML/Graphics/Shader.hpp>
 #include <TimeStep.hpp>
 
 namespace fme
@@ -41,8 +43,9 @@ namespace fme
 struct gui
 {
    public:
-     gui(sf::RenderWindow &window);
-     void start(sf::RenderWindow &window);
+     gui(GLFWwindow *const window);
+     void start(GLFWwindow *const window);
+     ~gui();
 
    private:
      using variant_tile_t = std::variant<
@@ -51,7 +54,8 @@ struct gui
        open_viii::graphics::background::Tile3,
        std::monostate>;
      std::shared_ptr<Selections>                        m_selections          = std::make_shared<Selections>();
-     std::shared_ptr<sf::Shader>                        m_drag_sprite_shader  = {};
+     // todo replace with glengine::Shader
+     // std::shared_ptr<sf::Shader>                        m_drag_sprite_shader  = {};
      static constexpr std::int8_t                       tile_size_px          = { 16 };
      static constexpr std::uint8_t                      tile_size_px_unsigned = { 16U };
      mouse_positions                                    m_mouse_positions     = {};
@@ -89,7 +93,8 @@ struct gui
 
      bool                                                                           m_changed                         = { false };
      //  ImGuiStyle                  m_original_style  = {};
-     sf::Event                                                                      m_event                           = {};
+     // todo fix events
+     // sf::Event                                                                      m_event                           = {};
      glm::vec2                                                                      m_cam_pos                         = {};
      std::vector<std::size_t>                                                       m_hovered_tiles_indices           = {};
      std::ptrdiff_t                                                                 m_hovered_index                   = { -1 };
@@ -118,7 +123,7 @@ struct gui
      // imgui doesn't support std::string or std::string_view or
      // std::filesystem::path, only const char *
      archives_group              get_archives_group() const;
-     sf::RenderWindow            get_render_window() const;
+     GLFWwindow *const           get_render_window() const;
      void                        update_path();
      void                        consume_one_future();
      mim_sprite                  get_mim_sprite() const;
@@ -235,10 +240,11 @@ struct gui
      void                                                    collapsing_header_generated_tiles() const;
      void adjust_source_xy_texture_page_for_import_map(uint8_t next_source_y, const uint8_t next_texture_page);
      void find_selected_tile_for_import(variant_tile_t &current_tile) const;
-     void event_type_key_released(const sf::Event::KeyEvent &key);
-     void event_type_key_pressed(const sf::Event::KeyEvent &key);
-     void event_type_mouse_button_pressed(const sf::Mouse::Button &button);
-     void event_type_mouse_button_released(const sf::Mouse::Button &button);
+     // todo fix events.
+     // void event_type_key_released(const sf::Event::KeyEvent &key);
+     // void event_type_key_pressed(const sf::Event::KeyEvent &key);
+     // void event_type_mouse_button_pressed(const sf::Mouse::Button &button);
+     // void event_type_mouse_button_released(const sf::Mouse::Button &button);
      void file_menu();
      void edit_menu();
      void windows_menu();

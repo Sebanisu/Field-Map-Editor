@@ -4,9 +4,9 @@
 
 #ifndef FIELD_MAP_EDITOR_EVENTS_HPP
 #define FIELD_MAP_EDITOR_EVENTS_HPP
-#include <SFML/Window/Event.hpp>
-#include <utility>
-#include <variant>
+// #include <SFML/Window/Event.hpp>
+// #include <utility>
+// #include <variant>
 
 namespace events
 {
@@ -19,20 +19,20 @@ template<typename... B>
      };
      return visitor{ std::forward<B>(b)... };
 }
-using sf_event_variant = std::variant<
-  std::monostate,
-  sf::Event::SizeEvent,
-  sf::Event::TextEvent,
-  sf::Event::KeyEvent,
-  sf::Event::MouseWheelEvent,
-  sf::Event::MouseWheelScrollEvent,
-  sf::Event::MouseButtonEvent,
-  sf::Event::MouseMoveEvent,
-  sf::Event::JoystickButtonEvent,
-  sf::Event::JoystickMoveEvent,
-  sf::Event::JoystickConnectEvent,
-  sf::Event::TouchEvent,
-  sf::Event::SensorEvent>;
-[[nodiscard]] sf_event_variant get(const sf::Event &event) noexcept;
+// using sf_event_variant = std::variant<
+//   std::monostate,
+//   sf::Event::SizeEvent,
+//   sf::Event::TextEvent,
+//   sf::Event::KeyEvent,
+//   sf::Event::MouseWheelEvent,
+//   sf::Event::MouseWheelScrollEvent,
+//   sf::Event::MouseButtonEvent,
+//   sf::Event::MouseMoveEvent,
+//   sf::Event::JoystickButtonEvent,
+//   sf::Event::JoystickMoveEvent,
+//   sf::Event::JoystickConnectEvent,
+//   sf::Event::TouchEvent,
+//   sf::Event::SensorEvent>;
+// [[nodiscard]] sf_event_variant get(const sf::Event &event) noexcept;
 }// namespace events
 #endif// FIELD_MAP_EDITOR_EVENTS_HPP

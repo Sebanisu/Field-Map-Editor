@@ -75,7 +75,8 @@ target_link_libraries(
   PRIVATE project_warnings
   PRIVATE project_options
   # PRIVATE ImGui-SFML::ImGui-SFML
-  PRIVATE ImGui-SFML
+  #PRIVATE ImGui-SFML
+  PRIVATE imgui_glfw
   PRIVATE glengine
   PRIVATE OpenVIII_CPP_WIP_VIIIPaths
   PRIVATE OpenVIII_CPP_WIP_VIIIArchive
@@ -84,7 +85,6 @@ target_link_libraries(
   PRIVATE imgui_filebrowser
   PRIVATE tomlplusplus::tomlplusplus
   PRIVATE spdlog::spdlog
-  PRIVATE GLEW::GLEW
   PRIVATE iconfontcppheaders::iconfontcppheaders
   PRIVATE ctre::ctre
   PRIVATE ${PROJECT_NAME}_SFML_Common)

@@ -17,7 +17,6 @@
 #include <array>
 #include <imgui.h>
 #include <memory>
-#include <SFML/System/Time.hpp>
 namespace fme
 {
 class batch
