@@ -31,5 +31,5 @@ target_compile_definitions(
   PUBLIC GLEW_STATIC)
 add_subdirectory(stbi)
 add_subdirectory(glengine)
-add_subdirectory(opengl_version)
+add_subdirectory(experimental)
 add_subdirectory(main)
