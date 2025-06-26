@@ -99,15 +99,6 @@ struct [[nodiscard]] color
      {
      }
 
-     //  /**
-     //   * @brief Constructs a color from an SFML color instance.
-     //   *
-     //   * @param c The sf::Color object containing RGBA components.
-     //   */
-     //  explicit constexpr color(const sf::Color &c) noexcept
-     //    : color(std::bit_cast<color>(c))
-     //  {
-     //  }
 
      /**
       * @brief Constructs a color from integral RGBA components.
@@ -186,16 +177,6 @@ struct [[nodiscard]] color
        : color(in_r, in_g, in_b, float_t{ 1 })
      {
      }
-
-     //  /**
-     //   * @brief Converts the color to an SFML color.
-     //   *
-     //   * @return An sf::Color object representing the color.
-     //   */
-     //  [[nodiscard]] operator sf::Color() const noexcept
-     //  {
-     //       return std::bit_cast<sf::Color>(*this);
-     //  }
 
      /**
       * @brief Converts the color to a std::uint32_t.

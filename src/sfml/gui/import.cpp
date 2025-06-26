@@ -6,7 +6,6 @@
 #include "Configuration.hpp"
 #include "create_tile_button.hpp"
 #include "cstdint"
-#include "events.hpp"
 #include "filebrowser.hpp"
 #include "filter.hpp"
 #include "format_imgui_text.hpp"
@@ -35,7 +34,7 @@ void import::render() const
           return;
      }
 
-     if (!selections->display_import_image)
+     if (!selections->display_import_image_window)
      {
           return;
      }
@@ -48,11 +47,11 @@ void import::render() const
      }
      // begin imgui window
 
-     bool      &visible     = selections->display_import_image;
+     bool      &visible     = selections->display_import_image_window;
      const auto pop_visible = glengine::ScopeGuard{ [&selections, &visible, was_visable = visible] {
           if (was_visable != visible)
           {
-               selections->update_configuration_key(ConfigKey::DisplayImportImage);
+               selections->update_configuration_key(ConfigKey::DisplayImportImageWindow);
           }
      } };
      const auto the_end = glengine::ScopeGuard([]() { ImGui::End(); });
@@ -155,7 +154,8 @@ open_viii::graphics::background::Map::variant_tile &import::combo_selected_tile(
        [&, current_tile_id = selections->selected_tile, this]() { changed = current_tile_id != selections->selected_tile; });
      // combo box with all the tiles.
      find_selected_tile_for_import(current_tile);
-     save_config();
+     //todo fix it so saving only happens when something changes.
+     //save_config();
 
 
      ImVec2 const combo_pos    = ImGui::GetCursorScreenPos();
@@ -268,7 +268,7 @@ open_viii::graphics::background::Map::variant_tile &import::combo_selected_tile(
      ImGui::SetCursorScreenPos(ImVec2(combo_pos.x + style.FramePadding.x, combo_pos.y /*+ style.FramePadding.y*/));
      using namespace open_viii::graphics::background;
      (void)std::visit(
-       events::make_visitor(
+       fme::make_visitor(
          [&](const is_tile auto &tile) -> bool { return create_tile_button(map_sprite, tile); },
          [](const std::monostate &) -> bool { return false; }),
        current_tile);

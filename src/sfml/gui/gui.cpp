@@ -1914,9 +1914,9 @@ void gui::windows_menu()
      {
           m_selections->update_configuration_key(ConfigKey::DisplayBatchWindow);
      }
-     if (ImGui::MenuItem(gui_labels::import_page.data(), "Control + I", &m_selections->display_import_image))
+     if (ImGui::MenuItem(gui_labels::import_page.data(), "Control + I", &m_selections->display_import_image_window))
      {
-          m_selections->update_configuration_key(ConfigKey::DisplayImportImage);
+          m_selections->update_configuration_key(ConfigKey::DisplayImportImageWindow);
      }
      ImGui::Separator();
      if (ImGui::MenuItem(gui_labels::display_history.data(), "Control + H", &m_selections->display_history_window))
@@ -3423,8 +3423,8 @@ void gui::bind_shortcuts() const
      }
      else if (ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiKey_I, flags))
      {
-          m_selections->display_import_image ^= true;
-          m_selections->update_configuration_key(ConfigKey::DisplayImportImage);
+          m_selections->display_import_image_window ^= true;
+          m_selections->update_configuration_key(ConfigKey::DisplayImportImageWindow);
      }
      else if (ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiKey_B, flags))
      {
@@ -3559,8 +3559,8 @@ gui::gui(GLFWwindow *const window)
      m_batch          = fme::batch{ m_selections, m_archives_group };
      m_field          = init_field();
      m_field_file_window.refresh(m_field);
-     m_mim_sprite     = get_mim_sprite();
-     m_map_sprite     = get_map_sprite();
+     m_mim_sprite = get_mim_sprite();
+     m_map_sprite = get_map_sprite();
 
      m_import.update(m_selections);
      m_history_window.update(m_selections);

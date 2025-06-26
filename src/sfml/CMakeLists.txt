@@ -36,7 +36,6 @@ add_executable(
   gui/tool_tip.cpp
   archives_group.cpp
   Configuration.cpp
-  events.cpp
   formatters.cpp
   future_operations.cpp
   generic_combo.cpp
@@ -63,9 +62,6 @@ find_package(GLEW REQUIRED)
 find_package(ctre REQUIRED)
 find_package(iconfontcppheaders REQUIRED CONFIG)
 
-include(${CMAKE_SOURCE_DIR}/cmake/imgui-sfml.cmake)
-# find_package(ImGui-SFML)
-
 add_library(${PROJECT_NAME}_SFML_Common INTERFACE)
 target_include_directories(${PROJECT_NAME}_SFML_Common
                            INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
@@ -74,8 +70,6 @@ target_link_libraries(
   ${PROJECT_NAME}_SFML
   PRIVATE project_warnings
   PRIVATE project_options
-  # PRIVATE ImGui-SFML::ImGui-SFML
-  #PRIVATE ImGui-SFML
   PRIVATE imgui_glfw
   PRIVATE glengine
   PRIVATE OpenVIII_CPP_WIP_VIIIPaths

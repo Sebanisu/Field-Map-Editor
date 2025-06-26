@@ -15,7 +15,6 @@
 #include "Configuration.hpp"
 #include "create_tile_button.hpp"
 #include "custom_paths_window.hpp"
-#include "events.hpp"
 #include "fa_icons.hpp"
 #include "field_file_window.hpp"
 #include "file_dialog_mode.hpp"

@@ -8,6 +8,16 @@
 #include <variant>
 namespace fme
 {
+
+template<typename... B>
+[[nodiscard]] inline auto make_visitor(B &&...b) noexcept
+{
+     struct visitor : public std::remove_cvref_t<B>...
+     {
+          using B::operator()...;
+     };
+     return visitor{ std::forward<B>(b)... };
+}
 void collapsing_tile_info(
   std::weak_ptr<const map_sprite>                           map,
   const open_viii::graphics::background::Map::variant_tile &current_tile,

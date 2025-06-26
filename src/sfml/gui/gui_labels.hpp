@@ -10,7 +10,7 @@ namespace fme
 {
 struct gui_labels
 {
-     static constexpr std::string_view window_title                           = { "Field-Map-Editor - Formally SFML" };
+     static constexpr std::string_view window_title                           = { "Field-Map-Editor" };
      static constexpr std::string_view remove                                 = { "Remove" };
      static constexpr std::string_view browse                                 = { "Browse" };
      static constexpr std::string_view palette                                = { "Palette" };

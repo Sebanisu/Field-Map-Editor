@@ -2,8 +2,6 @@
  * Based on back_insert_iterator and back_inserter
  * Copyright (c) Microsoft Corporation.
  * SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
- * I did this because SFML custom container doesn't have push_back.
- * I might not need something like this I thought I might.
  */
 #ifndef FIELD_MAP_EDITOR_APPEND_INSERTER_HPP
 #define FIELD_MAP_EDITOR_APPEND_INSERTER_HPP

@@ -1,5 +1,4 @@
 #include "collapsing_tile_info.hpp"
-#include "events.hpp"
 #include "format_imgui_text.hpp"
 #include "gui_labels.hpp"
 #include "push_pop_id.hpp"
@@ -20,8 +19,9 @@ void collapsing_tile_info(
           return;
      }
      using namespace open_viii::graphics::background;
+
      std::visit(
-       events::make_visitor(
+       make_visitor(
          [&](const is_tile auto &tile) {
               std::string title      = index == std::numeric_limits<size_t>::max()
                                          ? fmt::format("{}", gui_labels::selected_tile_info)

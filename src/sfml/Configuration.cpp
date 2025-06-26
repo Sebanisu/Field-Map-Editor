@@ -4,6 +4,8 @@
 
 #include "Configuration.hpp"
 #include "safedir.hpp"
+#include <iostream>
+#include <stacktrace>
 fme::Configuration::Configuration(const std::filesystem::path &in_path)
 
 
@@ -79,5 +81,7 @@ void fme::Configuration::save() const
           return;
      }
      fs << *s_table;
+     const auto st = std::stacktrace::current();
+     std::cerr << st << std::endl;
      spdlog::info("ofstream: saved config \"{}\"", s_path.string());
 }
