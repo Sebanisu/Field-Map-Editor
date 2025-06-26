@@ -23,7 +23,7 @@ class Configuration
      /**
       * @brief Constructs a Configuration object and loads the TOML configuration file.
       *
-      * The configuration file is expected to be located at `Field-Map-Editor_SFML.toml`
+      * The configuration file is expected to be located at `field-map-editor.toml`
       * relative to the current working directory.
       */
      Configuration();
@@ -253,7 +253,7 @@ class Configuration
      /**
       * @brief The path to the TOML configuration file.
       *
-      * This is a static inline constant that resolves to `Field-Map-Editor_SFML.toml`
+      * This is a static inline constant that resolves to `field-map-editor.toml`
       * in the current working directory.
       */
      static inline std::filesystem::path        s_path{};

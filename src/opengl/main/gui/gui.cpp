@@ -3529,7 +3529,7 @@ gui::gui(GLFWwindow *const window)
      // 2. Configure ImGui (optional but common)
      ImGuiIO          &imgui_io   = ImGui::GetIO();
      std::error_code   error_code = {};
-     static const auto path       = (std::filesystem::current_path(error_code) / "Field-Map-Editor_SFML_imgui.ini").string();
+     static const auto path       = (std::filesystem::current_path(error_code) / "res" / "field-map-editor_imgui.ini").string();
      imgui_io.ConfigFlags         = bitwise_or(imgui_io.ConfigFlags, ImGuiConfigFlags_DockingEnable);
      imgui_io.ConfigFlags         = bitwise_or(imgui_io.ConfigFlags, ImGuiConfigFlags_ViewportsEnable);
      imgui_io.IniFilename         = path.c_str();

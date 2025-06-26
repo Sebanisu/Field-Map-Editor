@@ -217,7 +217,7 @@ void Window::init_im_gui(const char *const glsl_version) const
           ImGui::CreateContext();
           ImGuiIO          &io         = ImGui::GetIO();
           std::error_code   error_code = {};
-          static const auto path       = (std::filesystem::current_path(error_code) / "res" / "imgui.ini").string();
+          static const auto path       = (std::filesystem::current_path(error_code) / "res" / "field-map-editor-experimental_imgui.ini").string();
           io.IniFilename               = path.c_str();
           if (error_code)
           {

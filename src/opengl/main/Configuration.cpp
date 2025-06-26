@@ -37,7 +37,7 @@ fme::Configuration::Configuration()
             return s_path;
        }
        std::error_code error_code = {};
-       s_path                     = std::filesystem::current_path(error_code) / "Field-Map-Editor_SFML.toml";
+       s_path                     = std::filesystem::current_path(error_code) / "res" / "field-map-editor.toml";
        if (error_code)
        {
             spdlog::warn("{}:{} - {}: {} path: \"{}\"", __FILE__, __LINE__, error_code.value(), error_code.message(), s_path);
