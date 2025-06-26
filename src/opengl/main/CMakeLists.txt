@@ -19,7 +19,7 @@ include(${CMAKE_SOURCE_DIR}/cmake/OpenVIII_CPP_WIP.cmake)
 include(${CMAKE_SOURCE_DIR}/cmake/ImGuiFileBrowser.cmake)
 include(${CMAKE_SOURCE_DIR}/cmake/IconFontCppHeaders.cmake)
 add_executable(
-  ${PROJECT_NAME}_SFML
+  ${PROJECT_NAME}_MAIN
   gui/batch.cpp
   gui/collapsing_tile_info.cpp
   gui/create_tile_button.cpp
@@ -55,19 +55,23 @@ add_executable(
   unique_values.cpp
   UniquifyPupu.cpp
   utilities.cpp)
-# set_property(TARGET ${PROJECT_NAME}_SFML PROPERTY CXX_STANDARD 20)
+# set_property(TARGET ${PROJECT_NAME}_MAIN PROPERTY CXX_STANDARD 20)
 find_package(tomlplusplus REQUIRED)
 find_package(spdlog REQUIRED)
 find_package(GLEW REQUIRED)
 find_package(ctre REQUIRED)
 find_package(iconfontcppheaders REQUIRED CONFIG)
 
-add_library(${PROJECT_NAME}_SFML_Common INTERFACE)
-target_include_directories(${PROJECT_NAME}_SFML_Common
+add_library(${PROJECT_NAME}_MAIN_COMMON INTERFACE)
+target_include_directories(${PROJECT_NAME}_MAIN_COMMON
                            INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
 
+string(TOLOWER "${PROJECT_NAME}" main_exec)
+
+set_target_properties(${PROJECT_NAME}_MAIN
+                      PROPERTIES OUTPUT_NAME "${main_exec}${EXE_SUFFIX}")
 target_link_libraries(
-  ${PROJECT_NAME}_SFML
+  ${PROJECT_NAME}_MAIN
   PRIVATE project_warnings
   PRIVATE project_options
   PRIVATE imgui_glfw
@@ -81,33 +85,33 @@ target_link_libraries(
   PRIVATE spdlog::spdlog
   PRIVATE iconfontcppheaders::iconfontcppheaders
   PRIVATE ctre::ctre
-  PRIVATE ${PROJECT_NAME}_SFML_Common)
+  PRIVATE ${PROJECT_NAME}_MAIN_COMMON)
 
 target_compile_definitions(
-  ${PROJECT_NAME}_SFML
+  ${PROJECT_NAME}_MAIN
   PUBLIC NOMINMAX # imgui uses unguarded min and max.
   PUBLIC TOML_EXCEPTIONS=0
   PUBLIC GLEW_STATIC)
 
 target_compile_features(
-  ${PROJECT_NAME}_SFML
+  ${PROJECT_NAME}_MAIN
   PUBLIC cxx_std_23
   PUBLIC cxx_std_20)
 if(MSVC)
   target_compile_definitions(
-    ${PROJECT_NAME}_SFML PUBLIC _CRT_SECURE_NO_WARNINGS) # required by libpng
+    ${PROJECT_NAME}_MAIN PUBLIC _CRT_SECURE_NO_WARNINGS) # required by libpng
   target_compile_options(
-    ${PROJECT_NAME}_SFML
+    ${PROJECT_NAME}_MAIN
     PUBLIC "/bigobj"
     PUBLIC "/await") # PUBLIC "/Zc:char8_t-"
-  target_link_options(${PROJECT_NAME}_SFML PUBLIC "/PROFILE")
+  target_link_options(${PROJECT_NAME}_MAIN PUBLIC "/PROFILE")
 elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
   target_compile_options(
-    ${PROJECT_NAME}_SFML PUBLIC "-fconcepts-diagnostics-depth=2"
+    ${PROJECT_NAME}_MAIN PUBLIC "-fconcepts-diagnostics-depth=2"
   )# PUBLIC "-fno-char8_t"
 elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
   target_compile_options(
-    ${PROJECT_NAME}_SFML
+    ${PROJECT_NAME}_MAIN
     PUBLIC "-stdlib=libc++"
     # PUBLIC "-march=native"
     PUBLIC "-fexperimental-library" # new in clang15 for things like std::ranges
@@ -115,7 +119,7 @@ elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
     # PUBLIC "-fno-char8_t"
   )
   target_link_options(
-    ${PROJECT_NAME}_SFML
+    ${PROJECT_NAME}_MAIN
     PUBLIC
     "-stdlib=libc++"
     # PUBLIC "-fuse-ld=lld"
@@ -126,18 +130,18 @@ elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
     PUBLIC
     "-v") # ,--gdb-index
 endif()
-enable_sanitizers(${PROJECT_NAME}_SFML)
-set_target_paths(${PROJECT_NAME}_SFML)
+enable_sanitizers(${PROJECT_NAME}_MAIN)
+set_target_paths(${PROJECT_NAME}_MAIN)
 
 add_custom_command(
-  TARGET ${PROJECT_NAME}_SFML
+  TARGET ${PROJECT_NAME}_MAIN
   POST_BUILD
   COMMAND ${CMAKE_COMMAND} -E echo "Copying fonts to target directory..."
   COMMAND ${CMAKE_COMMAND} -E copy_directory "${CMAKE_SOURCE_DIR}/fonts"
-          "$<TARGET_FILE_DIR:${PROJECT_NAME}_SFML>/fonts"
+          "$<TARGET_FILE_DIR:${PROJECT_NAME}_MAIN>/fonts"
   COMMAND
     ${CMAKE_COMMAND} -E echo
-    "Copying ${CMAKE_SOURCE_DIR}/res to $<TARGET_FILE_DIR:${PROJECT_NAME}_SFML>/res"
+    "Copying ${CMAKE_SOURCE_DIR}/res to $<TARGET_FILE_DIR:${PROJECT_NAME}_MAIN>/res"
   COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/res
-          $<TARGET_FILE_DIR:${PROJECT_NAME}_SFML>/res
+          $<TARGET_FILE_DIR:${PROJECT_NAME}_MAIN>/res
   VERBATIM)

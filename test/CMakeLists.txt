@@ -16,7 +16,7 @@ target_compile_features(
 target_link_libraries(
   ${PROJECT_NAME}_UT_source_tile_conflicts_test
   PRIVATE OpenVIII_CPP_WIP_VIIIGraphics
-  PRIVATE ${PROJECT_NAME}_SFML_Common)
+  PRIVATE ${PROJECT_NAME}_MAIN_COMMON)
 target_compile_definitions(
   ${PROJECT_NAME}_UT_source_tile_conflicts_test
   PRIVATE UT_source_tile_conflicts_test # PRIVATE NDEBUG
