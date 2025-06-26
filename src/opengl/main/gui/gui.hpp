@@ -15,6 +15,7 @@
 #include "Configuration.hpp"
 #include "create_tile_button.hpp"
 #include "custom_paths_window.hpp"
+#include "draw_window.hpp"
 #include "fa_icons.hpp"
 #include "field_file_window.hpp"
 #include "file_dialog_mode.hpp"
@@ -57,17 +58,19 @@ struct gui
      // std::shared_ptr<sf::Shader>                        m_drag_sprite_shader  = {};
      static constexpr std::int8_t                       tile_size_px          = { 16 };
      static constexpr std::uint8_t                      tile_size_px_unsigned = { 16U };
-     mouse_positions                                    m_mouse_positions     = {};
      int                                                m_field_index         = {};
      float                                              m_scale_width         = {};
      glengine::TimeStep                                 m_delta_clock         = {};
      float                                              m_elapsed_time        = {};///< seconds
      std::shared_ptr<archives_group>                    m_archives_group      = {};
-     batch                                              m_batch;
-     std::shared_ptr<open_viii::archive::FIFLFS<false>> m_field      = {};
-     std::array<float, 2>                               xy           = {};
-     mim_sprite                                         m_mim_sprite = {};
-     std::shared_ptr<map_sprite>                        m_map_sprite = {};
+     batch                                              m_batch               = {};
+     std::shared_ptr<open_viii::archive::FIFLFS<false>> m_field               = {};
+     std::array<float, 2>                               xy                    = {};
+     std::shared_ptr<mim_sprite>                        m_mim_sprite          = {};
+     std::shared_ptr<map_sprite>                        m_map_sprite          = {};
+     draw_window                                        m_draw_window         = { m_selections, m_mim_sprite, m_map_sprite };
+     custom_paths_window                                m_custom_paths_window = { m_selections };
+     field_file_window                                  m_field_file_window   = { m_field, m_selections };
      struct PathsAndEnabled
      {
           std::vector<std::string> path{};
@@ -75,10 +78,6 @@ struct gui
           ConfigKey                path_key{};
           ConfigKey                enabled_key{};
      };
-     glengine::FrameBuffer                                                          m_checkerboard_framebuffer        = {};
-     glengine::BatchRenderer                                                        m_checkerboard_batchrenderer      = { 4,
-                                                                                                                          std::filesystem::current_path() / "res" / "shader" / "checkerboard.shader" };
-     glengine::OrthographicCamera                                                   m_fixed_render_camera             = {};
      FutureOfFutureConsumer<std::vector<std::future<std::future<PathsAndEnabled>>>> m_future_of_future_paths_consumer = {};
      FutureConsumer<std::vector<std::future<PathsAndEnabled>>>                      m_future_paths_consumer           = {};
      FutureOfFutureConsumer<std::vector<std::future<std::future<void>>>>            m_future_of_future_consumer       = {};
@@ -95,10 +94,6 @@ struct gui
      // todo fix events
      // sf::Event                                                                      m_event                           = {};
      glm::vec2                                                                      m_cam_pos                         = {};
-     std::vector<std::size_t>                                                       m_hovered_tiles_indices           = {};
-     std::ptrdiff_t                                                                 m_hovered_index                   = { -1 };
-     custom_paths_window                                                            m_custom_paths_window             = { m_selections };
-     field_file_window                                                              m_field_file_window = { m_field, m_selections };
      // create a file browser instances
      ImGui::FileBrowser          m_save_file_browser{ ImGuiFileBrowserFlags_EnterNewFilename | ImGuiFileBrowserFlags_CreateNewDir
                                              | ImGuiFileBrowserFlags_EditPathString };
@@ -125,64 +120,55 @@ struct gui
      GLFWwindow *const           get_render_window() const;
      void                        update_path();
      void                        consume_one_future();
-     mim_sprite                  get_mim_sprite() const;
+     std::shared_ptr<mim_sprite> get_mim_sprite() const;
      std::shared_ptr<map_sprite> get_map_sprite() const;
-     void                        draw_window();
-     void                        update_hover_and_mouse_button_status_for_map(const ImVec2 &img_start, const float scale);
-     void                        draw_map_grid_lines_for_tiles(const ImVec2 &screen_pos, const ImVec2 &scaled_size, const float scale);
-     void                        draw_map_grid_for_conflict_tiles(const ImVec2 &screen_pos, const float scale);
-     void                      draw_map_grid_lines_for_texture_page(const ImVec2 &screen_pos, const ImVec2 &scaled_size, const float scale);
-     void                      draw_mim_grid_lines_for_tiles(const ImVec2 &screen_pos, const ImVec2 &scaled_size, const float scale);
-     void                      draw_mim_grid_lines_for_texture_page(const ImVec2 &screen_pos, const ImVec2 &scaled_size, const float scale);
-     void                      draw_mouse_positions_sprite(const float scale, const ImVec2 &screen_pos);
-     bool                      combo_path();
-     void                      combo_draw();
-     void                      file_browser_save_texture();
-     void                      directory_browser_display();
-     void                      menu_bar();
-     void                      selected_tiles_panel();
-     void                      tile_conflicts_panel();
-     void                      hovered_tiles_panel();
-     void                      combo_pupu();
-     void                      combo_palette();
-     void                      combo_bpp();
-     void                      checkbox_mim_palette_texture();
-     void                      combo_field();
-     void                      combo_coo();
-     void                      combo_draw_bit();
-     std::string               save_texture_path() const;
-     void                      update_field();
-     bool                      mim_test() const;
-     bool                      map_test() const;
-     void                      checkbox_map_swizzle();
-     void                      checkbox_map_disable_blending();
-     void                      menuitem_locate_ff8();
-     void                      menuitem_save_swizzle_textures();
-     void                      menuitem_save_deswizzle_textures();
-     void                      menuitem_load_swizzle_textures();
-     void                      menuitem_load_swizzle_textures2();
-     void                      menuitem_load_deswizzle_textures();
-     void                      menuitem_load_deswizzle_textures2();
-     void                      menuitem_save_texture(bool enabled = true);
-     void                      menuitem_save_mim_file(bool enabled = true);
-     void                      menuitem_save_map_file(bool enabled = true);
-     void                      menuitem_save_map_file_modified(bool enabled = true);
-     void                      menuitem_load_map_file(bool enabled = true);
+     bool                        combo_path();
+     void                        combo_draw();
+     void                        file_browser_save_texture();
+     void                        directory_browser_display();
+     void                        menu_bar();
+     void                        selected_tiles_panel();
+     void                        tile_conflicts_panel();
+     void                        hovered_tiles_panel();
+     void                        combo_pupu();
+     void                        combo_palette();
+     void                        combo_bpp();
+     void                        checkbox_mim_palette_texture();
+     void                        combo_field();
+     void                        combo_coo();
+     void                        combo_draw_bit();
+     std::string                 save_texture_path() const;
+     void                        update_field();
+     bool                        mim_test() const;
+     bool                        map_test() const;
+     void                        checkbox_map_swizzle();
+     void                        checkbox_map_disable_blending();
+     void                        menuitem_locate_ff8();
+     void                        menuitem_save_swizzle_textures();
+     void                        menuitem_save_deswizzle_textures();
+     void                        menuitem_load_swizzle_textures();
+     void                        menuitem_load_swizzle_textures2();
+     void                        menuitem_load_deswizzle_textures();
+     void                        menuitem_load_deswizzle_textures2();
+     void                        menuitem_save_texture(bool enabled = true);
+     void                        menuitem_save_mim_file(bool enabled = true);
+     void                        menuitem_save_map_file(bool enabled = true);
+     void                        menuitem_save_map_file_modified(bool enabled = true);
+     void                        menuitem_load_map_file(bool enabled = true);
      // void                      scale_window(float width = {}, float height = {});
-     std::uint8_t              palette() const;
-     open_viii::graphics::BPPT bpp() const;
-     void                      combo_blend_modes();
-     void                      combo_layers();
-     void                      combo_texture_pages();
-     void                      combo_animation_ids();
-     void                      combo_animation_frames();
-     void                      combo_filtered_palettes();
-     void                      combo_filtered_bpps();
-     void                      combo_blend_other();
-     void                      combo_z();
+     std::uint8_t                palette() const;
+     open_viii::graphics::BPPT   bpp() const;
+     void                        combo_blend_modes();
+     void                        combo_layers();
+     void                        combo_texture_pages();
+     void                        combo_animation_ids();
+     void                        combo_animation_frames();
+     void                        combo_filtered_palettes();
+     void                        combo_filtered_bpps();
+     void                        combo_blend_other();
+     void                        combo_z();
      std::shared_ptr<open_viii::archive::FIFLFS<false>> init_field();
      void                                               text_mouse_position() const;
-     void                                               on_click_not_imgui();
      void                                               combo_upscale_path();
      bool                    combo_upscale_path(ff_8::filter_old<std::filesystem::path, ff_8::FilterTag::Upscale> &filter) const;
      void                    combo_deswizzle_path();
@@ -196,7 +182,6 @@ struct gui
      map_directory_mode      m_modified_directory_map = {};
      // std::filesystem::path    m_loaded_swizzle_texture_path{};
      std::filesystem::path   m_loaded_deswizzle_texture_path{};
-     std::vector<std::size_t> m_clicked_tile_indices{};
      //     void                                               popup_batch_reswizzle();
      //     void                                               popup_batch_deswizzle();
      // static void              popup_batch_common_filter_start(

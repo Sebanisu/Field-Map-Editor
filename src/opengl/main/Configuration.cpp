@@ -81,7 +81,7 @@ void fme::Configuration::save() const
           return;
      }
      fs << *s_table;
-     const auto st = std::stacktrace::current();
-     std::cerr << st << std::endl;
+     // const auto st = std::stacktrace::current();
+     // std::cerr << st << std::endl;
      spdlog::info("ofstream: saved config \"{}\"", s_path.string());
 }

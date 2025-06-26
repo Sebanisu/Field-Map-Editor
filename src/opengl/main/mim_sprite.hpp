@@ -12,6 +12,8 @@
 #include <Texture.hpp>
 #include <vector>
 // this will hold class that has enough info to load and draw mim files.
+namespace fme
+{
 struct mim_sprite
 {
    private:
@@ -54,59 +56,60 @@ struct mim_sprite
       * @return mim_sprite object
       */
      [[nodiscard]] mim_sprite                                  with_field(std::weak_ptr<open_viii::archive::FIFLFS<false>> in_field) const;
-     
+
      /**
       * create a new object with a new bits per pixel and the same settings
       * @param in_bpp
       * @return mim_sprite object
       */
-           [[nodiscard]] mim_sprite                                  with_bpp(const open_viii::graphics::BPPT &in_bpp) const;
-     
-      /**
+     [[nodiscard]] mim_sprite                                  with_bpp(const open_viii::graphics::BPPT &in_bpp) const;
+
+     /**
       * create a new object with a new palette and the same settings
       * @param in_bpp
       * @return mim_sprite object
       */
-           [[nodiscard]] mim_sprite                                  with_palette(const std::uint8_t &in_palette) const;
-     
-           /**
+     [[nodiscard]] mim_sprite                                  with_palette(const std::uint8_t &in_palette) const;
+
+     /**
       * create a new object and change coo.
       */
      [[nodiscard]] mim_sprite                                  with_coo(open_viii::LangT in_coo) const;
-     
+
      /**
       * create a new object and Toggle drawing palette.
       */
      [[nodiscard]] mim_sprite                                  with_draw_palette(bool in_draw_palette) const;
-     
+
      /**
       * @return width in px
       */
      [[nodiscard]] std::uint32_t                               width() const noexcept;
-     
+
      /**
       * @return height in px
       */
      [[nodiscard]] std::uint32_t                               height() const noexcept;
-     
+
      /**
       * If in draw palette mode
       * @return true or false
       */
      [[nodiscard]] bool                                        draw_palette() const noexcept;
-     
+
      /**
       * If failed state
       * @return true or false
       */
      [[nodiscard]] bool                                        fail() const noexcept;
-     
+
      [[nodiscard]] const open_viii::graphics::background::Mim &mim() const noexcept;
-     
+
      void                                                      save(const std::filesystem::path &dest_path) const;
 
      std::string                                               mim_filename() const;
-     
+
      void                                                      mim_save(const std::filesystem::path &dest_path) const;
 };
+}// namespace fme
 #endif

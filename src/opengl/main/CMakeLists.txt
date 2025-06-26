@@ -22,8 +22,10 @@ add_executable(
   ${PROJECT_NAME}_MAIN
   gui/batch.cpp
   gui/collapsing_tile_info.cpp
+  gui/control_panel_window.cpp
   gui/create_tile_button.cpp
   gui/custom_paths_window.cpp
+  gui/draw_window.cpp
   gui/field_file_window.cpp
   gui/gui.cpp
   gui/history_window.cpp

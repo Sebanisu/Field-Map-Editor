@@ -6,7 +6,8 @@
 #define FIELD_MAP_EDITOR_MOUSE_POSITIONS_HPP
 #include <cstdint>
 #include <glm/glm.hpp>
-struct mouse_positions
+namespace fme{
+struct MousePositions
 {
      glm::ivec2         pixel         = {};
      glm::ivec2         down_pixel    = {};
@@ -24,4 +25,5 @@ struct mouse_positions
    private:
      bool old_left = { false };
 };
+}
 #endif// FIELD_MAP_EDITOR_MOUSE_POSITIONS_HPP

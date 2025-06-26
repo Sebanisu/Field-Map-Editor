@@ -3,6 +3,8 @@
 //
 // Created by pcvii on 9/8/2021.
 //
+namespace fme
+{
 open_viii::graphics::background::Mim mim_sprite::get_mim() const
 {
      auto lang_name = fmt::format("_{}{}", std::string(open_viii::LangCommon::to_string(m_coo)), open_viii::graphics::background::Mim::EXT);
@@ -129,4 +131,5 @@ void mim_sprite::mim_save(const std::filesystem::path &dest_path) const
 [[nodiscard]] const open_viii::graphics::background::Mim &mim_sprite::mim() const noexcept
 {
      return m_mim;
+}
 }

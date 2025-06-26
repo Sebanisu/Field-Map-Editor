@@ -3,12 +3,14 @@
 //
 #include "mouse_positions.hpp"
 #include <spdlog/spdlog.h>
-void mouse_positions::update()
+namespace fme
+{
+void MousePositions::update()
 {
      old_left    = left;
      mouse_moved = false;
 }
-bool mouse_positions::left_changed() const
+bool MousePositions::left_changed() const
 {
      const auto condition = old_left != left;
      if (!mouse_enabled && condition)
@@ -17,7 +19,7 @@ bool mouse_positions::left_changed() const
      }
      return condition;
 }
-void mouse_positions::update_sprite_pos([[maybe_unused]] bool swizzle, [[maybe_unused]] int spacing)
+void MousePositions::update_sprite_pos([[maybe_unused]] bool swizzle, [[maybe_unused]] int spacing)
 {
      static constexpr std::uint8_t TILE_SIZE      = 16;
      static constexpr auto         TEXTURE_OFFSET = static_cast<std::uint8_t>(TILE_SIZE * 1.5);
@@ -33,4 +35,5 @@ void mouse_positions::update_sprite_pos([[maybe_unused]] bool swizzle, [[maybe_u
      // sprite.setPosition(
      //   static_cast<float>(pixel.x - TEXTURE_OFFSET),
      //   static_cast<float>(pixel.y - TEXTURE_OFFSET));
+}
 }
