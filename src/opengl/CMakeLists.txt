@@ -32,3 +32,4 @@ target_compile_definitions(
 add_subdirectory(stbi)
 add_subdirectory(glengine)
 add_subdirectory(opengl_version)
+add_subdirectory(sfml)
