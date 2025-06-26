@@ -80,7 +80,10 @@ if(MSVC)
                                                                  # libpng
   # target_link_options(${PROJECT_NAME}_EXPERIMENTAL PRIVATE "/PROFILE")
 endif()
-
+string(TOLOWER "${PROJECT_NAME}_EXPERIMENTAL" experimental_exec)
+set_target_properties(${PROJECT_NAME}_EXPERIMENTAL PROPERTIES
+    OUTPUT_NAME "${experimental_exec}${EXE_SUFFIX}"
+)
 if(supported)
   message(STATUS "IPO / LTO enabled")
   set_target_properties(${PROJECT_NAME}_EXPERIMENTAL
