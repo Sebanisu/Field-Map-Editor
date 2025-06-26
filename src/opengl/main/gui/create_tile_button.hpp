@@ -1,6 +1,5 @@
 #ifndef DF4C3AF7_C3A6_4F62_8336_B0EF72752E11
 #define DF4C3AF7_C3A6_4F62_8336_B0EF72752E11
-
 #include "colors.hpp"
 #include "map_sprite.hpp"
 #include "push_pop_id.hpp"
@@ -72,12 +71,13 @@ template<open_viii::graphics::background::is_tile tileT>
 struct [[nodiscard]] create_color_button
 {
    private:
-     const tile_button_options &m_options             = {};
-     glengine::Texture          m_transparent_texture = (std::uint32_t{ 0 });
+     tile_button_options m_options             = {};
+     glengine::Texture   m_transparent_texture = {};
 
    public:
      create_color_button(tile_button_options options = {})
        : m_options(std::move(options))
+       , m_transparent_texture(static_cast<std::uint32_t>(colors::Transparent))
      {
      }
      bool operator()() const;
