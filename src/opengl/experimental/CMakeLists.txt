@@ -11,7 +11,7 @@ find_package(glm REQUIRED)
 find_package(imgui REQUIRED)
 find_package(tomlplusplus REQUIRED)
 add_executable(
-  ${PROJECT_NAME}_OPENGL
+  ${PROJECT_NAME}_EXPERIMENTAL
   Application.cpp
   ff8/Archive.cpp
   ff8/BPPs.cpp
@@ -50,7 +50,7 @@ add_executable(
   ff8/UniquifyPupu.hpp
   Window.cpp)
 target_link_libraries(
-  ${PROJECT_NAME}_OPENGL
+  ${PROJECT_NAME}_EXPERIMENTAL
   PRIVATE glengine
   PRIVATE project_warnings
   PRIVATE Threads::Threads
@@ -58,36 +58,38 @@ target_link_libraries(
   PRIVATE OpenVIII_CPP_WIP_VIIIArchive
   PRIVATE tomlplusplus::tomlplusplus
   PRIVATE imgui_glfw)
-target_include_directories(${PROJECT_NAME}_OPENGL
+target_include_directories(${PROJECT_NAME}_EXPERIMENTAL
                            PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
-set_target_paths(${PROJECT_NAME}_OPENGL)
+set_target_paths(${PROJECT_NAME}_EXPERIMENTAL)
 
 add_custom_command(
-  TARGET ${PROJECT_NAME}_OPENGL
+  TARGET ${PROJECT_NAME}_EXPERIMENTAL
   POST_BUILD
   COMMAND
     ${CMAKE_COMMAND} -E echo
-    "Copying ${CMAKE_SOURCE_DIR}/res to $<TARGET_FILE_DIR:${PROJECT_NAME}_OPENGL>/res"
+    "Copying ${CMAKE_SOURCE_DIR}/res to $<TARGET_FILE_DIR:${PROJECT_NAME}_EXPERIMENTAL>/res"
   COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/res
-          $<TARGET_FILE_DIR:${PROJECT_NAME}_OPENGL>/res
+          $<TARGET_FILE_DIR:${PROJECT_NAME}_EXPERIMENTAL>/res
   VERBATIM)
 
-target_compile_definitions(${PROJECT_NAME}_OPENGL PUBLIC TOML_EXCEPTIONS=0)
+target_compile_definitions(${PROJECT_NAME}_EXPERIMENTAL
+                           PUBLIC TOML_EXCEPTIONS=0)
 if(MSVC)
   target_compile_definitions(
-    ${PROJECT_NAME}_OPENGL PUBLIC _CRT_SECURE_NO_WARNINGS) # required by libpng
-  # target_link_options(${PROJECT_NAME}_OPENGL PRIVATE "/PROFILE")
+    ${PROJECT_NAME}_EXPERIMENTAL PUBLIC _CRT_SECURE_NO_WARNINGS) # required by
+                                                                 # libpng
+  # target_link_options(${PROJECT_NAME}_EXPERIMENTAL PRIVATE "/PROFILE")
 endif()
 
 if(supported)
   message(STATUS "IPO / LTO enabled")
-  set_target_properties(${PROJECT_NAME}_OPENGL
+  set_target_properties(${PROJECT_NAME}_EXPERIMENTAL
                         PROPERTIES INTERPROCEDURAL_OPTIMIZATION TRUE)
 else()
   message(STATUS "IPO / LTO not supported: <${error}>")
 endif()
 target_precompile_headers(
-  ${PROJECT_NAME}_OPENGL
+  ${PROJECT_NAME}_EXPERIMENTAL
   PRIVATE
   <open_viii/archive/Archives.hpp>
   <open_viii/graphics/BPPT.hpp>
@@ -98,12 +100,12 @@ target_precompile_headers(
   <open_viii/paths/Paths.hpp>
   <open_viii/strings/LangCommon.hpp>)
 target_compile_features(
-  ${PROJECT_NAME}_OPENGL
+  ${PROJECT_NAME}_EXPERIMENTAL
   PUBLIC cxx_std_23
   PUBLIC cxx_std_20)
-# target_include_directories(${PROJECT_NAME}_OPENGL PRIVATE
-# $<$<CONFIG:Debug>:${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/${PROJECT_NAME}_OPENGL.dir/Debug>
-# $<$<CONFIG:RelWithDebInfo>:${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/${PROJECT_NAME}_OPENGL.dir/RelWithDebInfo>
-# $<$<CONFIG:Release>:${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/${PROJECT_NAME}_OPENGL.dir/Release>
-# #$<$<CONFIG:MinSizeRel>:${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/${PROJECT_NAME}_OPENGL.dir/MinSizeRel>
-# ${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/${PROJECT_NAME}_OPENGL.dir)
+# target_include_directories(${PROJECT_NAME}_EXPERIMENTAL PRIVATE
+# $<$<CONFIG:Debug>:${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/${PROJECT_NAME}_EXPERIMENTAL.dir/Debug>
+# $<$<CONFIG:RelWithDebInfo>:${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/${PROJECT_NAME}_EXPERIMENTAL.dir/RelWithDebInfo>
+# $<$<CONFIG:Release>:${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/${PROJECT_NAME}_EXPERIMENTAL.dir/Release>
+# #$<$<CONFIG:MinSizeRel>:${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/${PROJECT_NAME}_EXPERIMENTAL.dir/MinSizeRel>
+# ${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/${PROJECT_NAME}_EXPERIMENTAL.dir)
