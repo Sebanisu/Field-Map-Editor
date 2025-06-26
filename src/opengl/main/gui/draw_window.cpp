@@ -230,22 +230,6 @@ void fme::draw_window::hovered_index(std::ptrdiff_t index)
 {
      m_hovered_index = index;
 }
-void fme::draw_window::update_hovered_tiles_indices()
-{
-     const auto t_map_sprite = m_map_sprite.lock();
-     if (!t_map_sprite)
-     {
-          spdlog::error("Failed to lock map_sprite: shared_ptr is expired.");
-          return;
-     }
-     t_map_sprite->const_visit_tiles_both([&](const auto &working_tiles, [[maybe_unused]] const auto &original_tiles) {
-          if (m_mouse_positions.mouse_moved)
-          {
-               m_hovered_tiles_indices =
-                 t_map_sprite->find_intersecting(working_tiles, m_mouse_positions.pixel, m_mouse_positions.texture_page, false, true);
-          }
-     });
-}
 const std::vector<std::size_t> &fme::draw_window::hovered_tiles_indices() const
 {
      return m_hovered_tiles_indices;
@@ -287,8 +271,9 @@ void fme::draw_window::update_hover_and_mouse_button_status_for_map(const ImVec2
      if (ImGui::IsItemHovered())
      {
           // Calculate the mouse position relative to the image
-          glm::vec2 relative_pos(mouse_pos.x - img_start.x, mouse_pos.y - img_start.y);
+          glm::vec2  relative_pos(mouse_pos.x - img_start.x, mouse_pos.y - img_start.y);
 
+          const auto old_pixel    = m_mouse_positions.pixel;
           // Map it back to the texture coordinates
           m_mouse_positions.pixel = glm::ivec2(
             static_cast<int>(relative_pos.x / scale / static_cast<float>(t_map_sprite->get_map_scale())),
@@ -298,26 +283,51 @@ void fme::draw_window::update_hover_and_mouse_button_status_for_map(const ImVec2
           {
                m_mouse_positions.pixel /= 16;
                m_mouse_positions.pixel *= 16;
+               m_mouse_positions.texture_page = static_cast<uint8_t>(m_mouse_positions.pixel.x / 256);
           }
-          m_mouse_positions.mouse_enabled = true;
-          m_mouse_positions.texture_page  = static_cast<uint8_t>(m_mouse_positions.pixel.x / 256);
-          if (ImGui::IsMouseDown(ImGuiMouseButton_Left))
+          else
           {
-               const auto strtooltip = fmt::format("({}, {})", m_mouse_positions.pixel.x, m_mouse_positions.pixel.y);
-               tool_tip(strtooltip, true);
+               m_mouse_positions.texture_page = (std::numeric_limits<std::uint8_t>::max)();
+          }
+
+          m_mouse_positions.mouse_enabled = true;
+          m_mouse_positions.mouse_moved   = (m_mouse_positions.pixel != old_pixel);
+
+
+          if (m_mouse_positions.mouse_moved)
+          {
+               t_map_sprite->const_visit_working_tiles([&](const auto &tiles) {
+                    m_hovered_tiles_indices =
+                      t_map_sprite->find_intersecting(tiles, m_mouse_positions.pixel, m_mouse_positions.texture_page, false, true);
+               });
+          }
+
+          // if (ImGui::IsMouseDown(ImGuiMouseButton_Left))
+          // {
+          const auto strtooltip = fmt::format("Position: ({}, {})", m_mouse_positions.pixel.x, m_mouse_positions.pixel.y);
+          tool_tip(strtooltip, true);
+          // }
+          if (ImGui::IsItemClicked(ImGuiMouseButton_Left))
+          {
+               m_mouse_positions.left = true;
+               if (m_mouse_positions.mouse_moved)
+               {
+                    m_clicked_tile_indices = m_hovered_tiles_indices;
+               }
+               else
+               {
+                    t_map_sprite->const_visit_working_tiles([&](const auto &tiles) {
+                         m_clicked_tile_indices =
+                           t_map_sprite->find_intersecting(tiles, m_mouse_positions.pixel, m_mouse_positions.texture_page, false, true);
+                    });
+               }
           }
      }
      else
      {
           m_mouse_positions.mouse_enabled = false;
-     }
-     if (ImGui::IsItemClicked(ImGuiMouseButton_Left))
-     {
-          m_mouse_positions.left = true;
-          t_map_sprite->const_visit_working_tiles([&](const auto &tiles) {
-               m_clicked_tile_indices =
-                 t_map_sprite->find_intersecting(tiles, m_mouse_positions.pixel, m_mouse_positions.texture_page, false, true);
-          });
+          m_mouse_positions.mouse_moved   = false;
+          m_hovered_tiles_indices.clear();
      }
      if (ImGui::IsMouseReleased(ImGuiMouseButton_Left))
      {

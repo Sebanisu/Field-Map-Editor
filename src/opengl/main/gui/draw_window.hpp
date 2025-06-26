@@ -56,7 +56,6 @@ struct [[nodiscard]] draw_window
      void                            update(std::weak_ptr<map_sprite> in_map_sprite);
      void                            render() const;
      void                            hovered_index(std::ptrdiff_t index);
-     void                            update_hovered_tiles_indices();
      const std::vector<std::size_t> &hovered_tiles_indices() const;
      const MousePositions           &mouse_positions() const;
      void                            update_mouse_positions();

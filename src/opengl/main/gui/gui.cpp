@@ -940,7 +940,6 @@ void gui::hovered_tiles_panel()
 
 
      m_map_sprite->const_visit_tiles_both([&](const auto &working_tiles, const auto &original_tiles) {
-          m_draw_window.update_hovered_tiles_indices();
           const auto &hovered_tiles_indices = m_draw_window.hovered_tiles_indices();
           format_imgui_text("{} {:4}", gui_labels::number_of_tiles, std::ranges::size(hovered_tiles_indices));
           if (!ImGui::CollapsingHeader(gui_labels::hovered_tiles.data()))
@@ -3010,6 +3009,7 @@ gui::gui(GLFWwindow *const window)
           m_future_of_future_paths_consumer += generate_upscale_map_paths();
           m_future_of_future_paths_consumer += generate_deswizzle_map_paths();
      }
+     //todo queue up sort_paths so it runs after generate is done.
      sort_paths();
      //      if (!m_drag_sprite_shader)
      //      {
