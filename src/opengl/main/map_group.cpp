@@ -21,6 +21,7 @@ static map_group::Mim load_mim(const map_group::WeakField &weak_field, const map
      const auto field = weak_field.lock();
      if (!field)
      {
+          spdlog::error("Failed to lock weak_field: shared_ptr is expired.");
           return {};
      }
      auto lang_name = fmt::format("_{}{}", open_viii::LangCommon::to_string(coo), map_group::Mim::EXT);
@@ -41,6 +42,7 @@ static map_group::MapHistory load_map_history(
      const auto field = weak_field.lock();
      if (!field)
      {
+          spdlog::error("Failed to lock weak_field: shared_ptr is expired.");
           return {};
      }
      return map_group::MapHistory{ load_map(field, coo, mim, out_path, shift) };
@@ -55,6 +57,7 @@ map_group::Map load_map(
      const auto field = weak_field.lock();
      if (!field)
      {
+          spdlog::error("Failed to lock weak_field: shared_ptr is expired.");
           return {};
      }
      if (!coo)

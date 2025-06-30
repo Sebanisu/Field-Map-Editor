@@ -44,7 +44,12 @@ struct field_file_window
      {
           // escape out if weak pointers aren't valid.
           const auto selections = m_selections.lock();
-          if (!selections || !selections->display_field_file_window)
+          if (!selections)
+          {
+               spdlog::error("Failed to lock m_selections: shared_ptr is expired.");
+               return;
+          }
+          if (!selections->display_field_file_window)
           {
                return;
           }
@@ -52,6 +57,7 @@ struct field_file_window
           const auto field = m_field.lock();
           if (!field)
           {
+               spdlog::error("Failed to lock m_field: shared_ptr is expired.");
                return;
           }
           bool      &visible     = selections->display_field_file_window;

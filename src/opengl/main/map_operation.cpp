@@ -277,6 +277,7 @@ bool test_if_map_same(const std::filesystem::path &saved_path, const map_group::
      const auto field        = weak_field.lock();
      if (!field)
      {
+          spdlog::error("Failed to lock weak_field: shared_ptr is expired.");
           return return_value;
      }
      const auto raw_map   = map_group::Map{ type, field->get_entry_data({ saved_path.filename().string() }), false };

@@ -11,6 +11,7 @@ open_viii::graphics::background::Mim mim_sprite::get_mim() const
      const auto field = m_field.lock();
      if (!field)
      {
+          spdlog::error("Failed to lock m_field: shared_ptr is expired.");
           return {};
      }
 

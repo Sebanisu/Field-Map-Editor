@@ -1619,6 +1619,7 @@ std::string map_sprite::get_base_name() const
      const auto field = m_map_group.field.lock();
      if (!field)
      {
+          spdlog::error("Failed to lock m_map_group.field: shared_ptr is expired.");
           return {};
      }
      return str_to_lower(field->get_base_name());
@@ -1665,6 +1666,7 @@ std::string map_sprite::get_base_name() const
      const auto field = m_map_group.field.lock();
      if (!field)
      {
+          spdlog::error("Failed to lock m_map_group.field: shared_ptr is expired.");
           return {};// Field no longer exists, nothing to save
      }
 
