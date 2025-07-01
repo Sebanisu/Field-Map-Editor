@@ -3,6 +3,7 @@
 //
 
 #include "FrameBuffer.hpp"
+#include <spdlog/spdlog.h>
 namespace glengine
 {
 static constexpr auto attachments =
@@ -161,7 +162,7 @@ SubTexture FrameBuffer::bind_color_attachment(std::uint32_t index) const
 GlidCopy FrameBuffer::color_attachment_id(std::uint32_t index) const
 {
      assert(index < 4U);
-//     assert(m_color_attachment[index] != 0U);
+     //     assert(m_color_attachment[index] != 0U);
      return m_color_attachment[index];
 }
 
@@ -214,6 +215,23 @@ int FrameBuffer::width() const
 int FrameBuffer::height() const
 {
      return m_specification.height;
+}
+
+int &FrameBuffer::mutable_scale()
+{
+     return m_specification.scale;
+}
+
+int FrameBuffer::scale() const
+{
+     return m_specification.scale;
+}
+
+void FrameBuffer::set_scale(int in_scale)
+{
+     assert(in_scale > 0);
+     m_specification.scale = in_scale;
+     spdlog::debug("scale updated: {}", m_specification.scale);
 }
 
 int FrameBuffer::read_pixel(uint32_t attachment_index, int x, int y) const

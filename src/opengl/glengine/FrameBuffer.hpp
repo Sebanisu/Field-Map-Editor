@@ -24,6 +24,7 @@ struct FrameBufferSpecification
                                                               {} };
      int                                      width       = {};
      int                                      height      = {};
+     int                                      scale       = { 1 };
      // uint32_t samples           = { 1 };
      //  bool     swap_chain_target = { false };
      FrameBufferSpecification                 resize(int in_width, int in_height) const
@@ -100,6 +101,9 @@ class FrameBuffer
      [[nodiscard]] glm::ivec2 get_size() const;
      [[nodiscard]] int        width() const;
      [[nodiscard]] int        height() const;
+     [[nodiscard]] int        scale() const;
+     [[nodiscard]] int       &mutable_scale();
+     void                     set_scale(int);
      [[nodiscard]] int        read_pixel(uint32_t attachment_index, int x, int y) const;
 
      void                     clear_red_integer_color_attachment() const
