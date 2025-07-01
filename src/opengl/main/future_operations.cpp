@@ -7,6 +7,8 @@
 #include <iostream>
 #include <span>
 #include <stacktrace>
+namespace fme
+{
 future_operations::LoadColorsIntoTexture::LoadColorsIntoTexture(
   glengine::Texture *const                      in_texture,
   std::vector<open_viii::graphics::Color32RGBA> in_colors,
@@ -31,9 +33,9 @@ void future_operations::LoadColorsIntoTexture::operator()() const
           {
                return;
           }
-          *m_texture       = glengine::Texture(m_colors, m_size.x, m_size.y);
-          //const auto stack = std::stacktrace::current();
-          //std::cout << stack << std::endl;
+          *m_texture = glengine::Texture(m_colors, m_size.x, m_size.y);
+          // const auto stack = std::stacktrace::current();
+          // std::cout << stack << std::endl;
      }
      catch (const std::exception &e)
      {
@@ -62,7 +64,6 @@ void future_operations::LoadImageIntoTexture::operator()()
                return;
           }
           *m_texture = glengine::Texture(std::move(m_image));
-
      }
      catch (const std::exception &e)
      {
@@ -91,4 +92,34 @@ std::future<void> future_operations::GetImageFromPathCreateFuture::operator()()
           spdlog::error("Exception caught while loading image: {}", e.what());
           return {};
      }
+}
+
+future_operations::GetImageFromFromFirstValidPathCreateFuture::GetImageFromFromFirstValidPathCreateFuture(
+  glengine::Texture *const                                        in_texture,
+  std::move_only_function<std::vector<std::filesystem::path>()> &&in_paths_get)
+  : m_texture(in_texture)
+  , m_paths_get(std::move(in_paths_get))
+{
+}
+std::future<void> future_operations::GetImageFromFromFirstValidPathCreateFuture::operator()() const
+{
+     try
+     {
+          std::vector<std::filesystem::path> m_paths = m_paths_get();
+          auto                               filtered_paths =
+            m_paths | std::ranges::views::transform([](auto &&path) -> std::filesystem::path { return std::forward<decltype(path)>(path); })
+            | std::views::filter([](safedir path) { return path.is_exists() && !path.is_dir(); });
+          if (filtered_paths.begin() == filtered_paths.end())
+          {
+               return {};
+          }
+          return GetImageFromPathCreateFuture{ m_texture, *filtered_paths.begin() }();
+     }
+     catch (const std::exception &e)
+     {
+          // Handle the exception and log the error message using spdlog
+          spdlog::error("Exception caught while loading image: {}", e.what());
+          return {};
+     }
+}
 }

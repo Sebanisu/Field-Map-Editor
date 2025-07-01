@@ -11,6 +11,8 @@
 #include <spdlog/spdlog.h>
 #include <Texture.hpp>
 #include <vector>
+namespace fme
+{
 namespace future_operations
 {
 class LoadColorsIntoTexture
@@ -44,39 +46,18 @@ class GetImageFromPathCreateFuture
      GetImageFromPathCreateFuture(glengine::Texture *const in_texture, std::filesystem::path in_path);
      std::future<void> operator()();
 };
-template<std::ranges::contiguous_range range_t>
+
 class GetImageFromFromFirstValidPathCreateFuture
 {
      glengine::Texture *const m_texture;
-     range_t                  m_paths;
+     mutable std::move_only_function<std::vector<std::filesystem::path>()> m_paths_get;
 
    public:
-     GetImageFromFromFirstValidPathCreateFuture(glengine::Texture *const in_texture, range_t &&in_paths)
-       : m_texture(in_texture)
-       , m_paths(std::move(in_paths))
-     {
-     }
-     std::future<void> operator()() const
-     {
-          try
-          {
-               auto filtered_paths =
-                 m_paths
-                 | std::ranges::views::transform([](auto &&path) -> std::filesystem::path { return std::forward<decltype(path)>(path); })
-                 | std::views::filter([](safedir path) { return path.is_exists() && !path.is_dir(); });
-               if (filtered_paths.begin() == filtered_paths.end())
-               {
-                    return {};
-               }
-               return GetImageFromPathCreateFuture{ m_texture, *filtered_paths.begin() }();
-          }
-          catch (const std::exception &e)
-          {
-               // Handle the exception and log the error message using spdlog
-               spdlog::error("Exception caught while loading image: {}", e.what());
-               return {};
-          }
-     }
+     GetImageFromFromFirstValidPathCreateFuture(
+       glengine::Texture *const                                        in_texture,
+       std::move_only_function<std::vector<std::filesystem::path>()> &&in_paths_get);
+     std::future<void> operator()() const;
 };
 }// namespace future_operations
+}
 #endif// FIELD_MAP_EDITOR_FUTURE_OPERATIONS_HPP
