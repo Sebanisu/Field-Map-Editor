@@ -811,17 +811,17 @@ void gui::background_color_picker()
 
 void gui::consume_one_future()
 {
-     static constexpr float interval           = 0.013f;// the interval in seconds
-     static float           total_elapsed_time = 0.0f;// keep track of the elapsed time using a static variable
+     // static constexpr float interval           = 0.013f;// the interval in seconds
+     // static float           total_elapsed_time = 0.0f;// keep track of the elapsed time using a static variable
 
-     total_elapsed_time += m_elapsed_time;// add the elapsed time since last update
+     // total_elapsed_time += m_elapsed_time;// add the elapsed time since last update
 
-     if (total_elapsed_time < interval)
-     {
-          return;
-     }
-     // perform your operation here
-     total_elapsed_time = 0.f;// reset the elapsed time
+     // if (total_elapsed_time < interval)
+     // {
+     //      return;
+     // }
+     // // perform your operation here
+     // total_elapsed_time = 0.f;// reset the elapsed time
 
      m_map_sprite->consume_one_future();
      if (!m_future_of_future_paths_consumer.done())
@@ -1101,15 +1101,15 @@ void gui::update_field()
           case draw_mode::draw_mim:
                // Update MIM sprite with the new field
                *m_mim_sprite = m_mim_sprite->with_field(m_field);
-               //m_draw_window.update(m_mim_sprite);
+               // m_draw_window.update(m_mim_sprite);
                break;
 
           case draw_mode::draw_map:
                // Update map sprite and associated UI elements
                *m_map_sprite = m_map_sprite->with_field(m_field, get_coo());
-               //m_draw_window.update(m_map_sprite);
-               //m_import.update(m_map_sprite);
-               //m_history_window.update(m_map_sprite);
+               // m_draw_window.update(m_map_sprite);
+               // m_import.update(m_map_sprite);
+               // m_history_window.update(m_map_sprite);
                break;
      }
 
@@ -1215,7 +1215,7 @@ void gui::refresh_mim_palette_texture()
      spdlog::info("selections_draw_palette: {}", m_selections->draw_palette ? "enabled" : "disabled");
      m_selections->update_configuration_key(ConfigKey::DrawPalette);
      *m_mim_sprite = m_mim_sprite->with_draw_palette(m_selections->draw_palette);
-     //m_draw_window.update(m_mim_sprite);
+     // m_draw_window.update(m_mim_sprite);
      m_changed     = true;
 }
 void gui::checkbox_mim_palette_texture()
@@ -2097,12 +2097,7 @@ void gui::menu_upscale_map_paths()
        [&]() {
             if (m_map_sprite->filter().upscale_map.enabled())
             {
-                 const auto ps =
-                   ff_8::path_search{ .selections                       = m_selections,
-                                      .opt_coo                          = get_coo(),
-                                      .field_name                       = m_map_sprite->get_base_name(),
-                                      .filters_upscale_map_value_string = m_map_sprite->filter().upscale_map.value().string() };
-                 if (const auto paths = ps.generate_swizzle_map_paths(".map"); !std::ranges::empty(paths))
+                 if (const auto paths = generate_swizzle_map_paths(m_selections, *m_map_sprite)(); !std::ranges::empty(paths))
                  {
                       m_map_sprite->filter().deswizzle_map.disable();
                       m_map_sprite->load_map(paths.front());// grab the first match.
@@ -2148,12 +2143,7 @@ void gui::menu_deswizzle_map_paths()
        [&]() {
             if (m_map_sprite->filter().deswizzle_map.enabled())
             {
-                 const auto ps =
-                   ff_8::path_search{ .selections                         = m_selections,
-                                      .opt_coo                            = get_coo(),
-                                      .field_name                         = m_map_sprite->get_base_name(),
-                                      .filters_deswizzle_map_value_string = m_map_sprite->filter().deswizzle_map.value().string() };
-                 if (const auto paths = ps.generate_deswizzle_map_paths(".map"); !std::ranges::empty(paths))
+                 if (const auto paths = fme::generate_deswizzle_map_paths(m_selections, *m_map_sprite)(); !std::ranges::empty(paths))
                  {
                       m_map_sprite->filter().upscale_map.disable();
                       m_map_sprite->load_map(paths.front());// grab the first match.
@@ -2300,8 +2290,9 @@ void gui::directory_browser_display()
                }
           }
      };
-     const auto ps = ff_8::path_search{ .selections = m_selections, .opt_coo = get_coo(), .field_name = m_map_sprite->get_base_name() };
-     const auto has_map_path = [&](const std::filesystem::path &path) -> bool { return ps.has_map_path(path, ".map"); };
+
+     const ff_8::path_search ps           = static_cast<ff_8::path_search>(*m_map_sprite);
+     const auto              has_map_path = [&](const std::filesystem::path &path) -> bool { return ps.has_map_path(path, ".map"); };
      switch (m_modified_directory_map)
      {
           case map_directory_mode::ff8_install_directory: {
@@ -2742,13 +2733,13 @@ void gui::refresh_draw_mode()
      {
           case draw_mode::draw_mim:
                *m_mim_sprite = *get_mim_sprite();
-               //m_draw_window.update(m_mim_sprite);
+               // m_draw_window.update(m_mim_sprite);
                break;
           case draw_mode::draw_map:
                *m_map_sprite = m_map_sprite->update(ff_8::map_group(m_field, get_coo()), m_selections->draw_swizzle);
-               //m_draw_window.update(m_map_sprite);
-               //m_import.update(m_map_sprite);
-               //m_history_window.update(m_map_sprite);
+               // m_draw_window.update(m_map_sprite);
+               // m_import.update(m_map_sprite);
+               // m_history_window.update(m_map_sprite);
                break;
      }
      m_changed = true;
@@ -3009,7 +3000,7 @@ gui::gui(GLFWwindow *const window)
           m_future_of_future_paths_consumer += generate_upscale_map_paths();
           m_future_of_future_paths_consumer += generate_deswizzle_map_paths();
      }
-     //todo queue up sort_paths so it runs after generate is done.
+     // todo queue up sort_paths so it runs after generate is done.
      sort_paths();
      //      if (!m_drag_sprite_shader)
      //      {
@@ -3376,11 +3367,7 @@ void gui::combo_upscale_map_path()
      // below if changed
      if (m_map_sprite->filter().upscale_map.enabled())
      {
-          const auto ps = ff_8::path_search{ .selections                       = m_selections,
-                                             .opt_coo                          = get_coo(),
-                                             .field_name                       = m_map_sprite->get_base_name(),
-                                             .filters_upscale_map_value_string = m_map_sprite->filter().upscale_map.value().string() };
-          if (const auto paths = ps.generate_swizzle_map_paths(".map"); !std::ranges::empty(paths))
+          if (const auto paths = generate_swizzle_map_paths(m_selections, *m_map_sprite)(); !std::ranges::empty(paths))
           {
                m_map_sprite->filter().deswizzle_map.disable();
                m_map_sprite->load_map(paths.front());// grab the first match.
@@ -3413,11 +3400,8 @@ void gui::combo_deswizzle_map_path()
      }
      if (m_map_sprite->filter().deswizzle_map.enabled())
      {
-          const auto ps = ff_8::path_search{ .selections                         = m_selections,
-                                             .opt_coo                            = get_coo(),
-                                             .field_name                         = m_map_sprite->get_base_name(),
-                                             .filters_deswizzle_map_value_string = m_map_sprite->filter().deswizzle_map.value().string() };
-          if (const auto paths = ps.generate_deswizzle_map_paths(".map"); !std::ranges::empty(paths))
+
+          if (const auto paths = fme::generate_deswizzle_map_paths(m_selections, *m_map_sprite)(); !std::ranges::empty(paths))
           {
 
                m_map_sprite->filter().upscale_map.disable();

@@ -13,6 +13,7 @@
 #include "open_viii/archive/Archives.hpp"
 #include "open_viii/graphics/background/Map.hpp"
 #include "open_viii/graphics/background/Mim.hpp"
+#include "path_search.hpp"
 #include "RangeConsumer.hpp"
 #include "settings_backup.hpp"
 #include "tile_sizes.hpp"
@@ -83,7 +84,6 @@ struct [[nodiscard]] map_sprite// final
      mutable glengine::FrameBuffer                 m_drag_sprite_framebuffer       = {};
      std::vector<std::size_t>                      m_saved_indices                 = {};
      std::vector<std::size_t>                      m_saved_imported_indices        = {};
-     mutable std::uint32_t                         m_scale                         = { 1 };
      mutable bool                                  once                            = { true };
      mutable glengine::OrthographicCamera          m_fixed_render_camera           = {};
 
@@ -102,23 +102,24 @@ struct [[nodiscard]] map_sprite// final
        bool                      require_coo,
        std::weak_ptr<Selections> selections,
        glengine::FrameBuffer     framebuffer = {});
+     explicit                                      operator ff_8::path_search() const;
 
+     [[nodiscard]] std::optional<open_viii::LangT> get_opt_coo() const;
 
-     [[nodiscard]] std::string                  appends_prefix_base_name(std::string_view title) const;
+     [[nodiscard]] std::string                     appends_prefix_base_name(std::string_view title) const;
 
-     [[nodiscard]] std::uint32_t                get_map_scale() const;
-     [[nodiscard]] const glengine::FrameBuffer &get_render_texture() const
+     [[nodiscard]] std::int32_t                    get_map_scale() const;
+     [[nodiscard]] const glengine::FrameBuffer    &get_render_texture() const
      {
           return m_render_framebuffer;
      }
-     [[nodiscard]] const glengine::Texture                   *get_texture(BPPT bpp, std::uint8_t palette, std::uint8_t texture_page) const;
-     [[nodiscard]] const glengine::Texture                   *get_texture(const ff_8::PupuID &pupu) const;
-     [[nodiscard]] glm::uvec2                                 get_tile_texture_size(const glengine::Texture *const texture) const;
-     [[nodiscard]] glm::uvec2                                 get_tile_draw_size() const;
-     [[nodiscard]] bool                                       generate_texture(const glengine::FrameBuffer &texture) const;
-     [[nodiscard]] std::uint32_t                              get_max_texture_height() const;
-     [[nodiscard]] bool                                       local_draw(const glengine::BatchRenderer &, const glengine::Shader &) const;
-     [[nodiscard]] bool                                       draw_imported(const glengine::FrameBuffer &) const;
+     [[nodiscard]] const glengine::Texture *get_texture(BPPT bpp, std::uint8_t palette, std::uint8_t texture_page) const;
+     [[nodiscard]] const glengine::Texture *get_texture(const ff_8::PupuID &pupu) const;
+     [[nodiscard]] glm::uvec2               get_tile_texture_size(const glengine::Texture *const texture) const;
+     [[nodiscard]] bool                     generate_texture(const glengine::FrameBuffer &texture) const;
+     [[nodiscard]] std::uint32_t            get_max_texture_height() const;
+     [[nodiscard]] bool local_draw(const glengine::FrameBuffer &target_framebuffer, const glengine::BatchRenderer &target_renderer) const;
+     [[nodiscard]] bool draw_imported(const glengine::FrameBuffer &) const;
      [[nodiscard]] std::string                                get_base_name() const;
      [[nodiscard]] const ff_8::all_unique_values_and_strings &uniques() const;
      [[nodiscard]] const std::vector<ff_8::PupuID>           &working_unique_pupu() const;
@@ -516,5 +517,25 @@ struct [[nodiscard]] map_sprite// final
             to_vec2(source_tile_size), to_vec2(destination_tile_size), to_vec2(source_texture_size), src, dest);
      }
 };
+
+
+std::move_only_function<std::vector<std::filesystem::path>()>
+  generate_swizzle_paths(std::shared_ptr<const Selections> in_selections, const map_sprite &in_map_sprite, std::uint8_t texture_page);
+
+std::move_only_function<std::vector<std::filesystem::path>()> generate_swizzle_paths(
+  std::shared_ptr<const Selections> in_selections,
+  const map_sprite                 &in_map_sprite,
+  std::uint8_t                      texture_page,
+  std::uint8_t                      palette);
+
+std::move_only_function<std::vector<std::filesystem::path>()>
+  generate_deswizzle_paths(std::shared_ptr<const Selections> in_selections, const map_sprite &in_map_sprite, const ff_8::PupuID pupu_id);
+
+std::move_only_function<std::vector<std::filesystem::path>()>
+  generate_swizzle_map_paths(std::shared_ptr<const Selections> in_selections, const map_sprite &in_map_sprite);
+
+std::move_only_function<std::vector<std::filesystem::path>()>
+  generate_deswizzle_map_paths(std::shared_ptr<const Selections> in_selections, const map_sprite &in_map_sprite);
+
 }// namespace fme
 #endif// FIELD_MAP_EDITOR_MAP_SPRITE_HPP
