@@ -18,6 +18,7 @@
 #include <array>
 #include <cmath>
 #include <fmt/ranges.h>
+#include <ImGuizmo.h>
 #include <open_viii/paths/Paths.hpp>
 #include <ranges>
 #include <stacktrace>
@@ -235,7 +236,8 @@ void gui::start(GLFWwindow *const window)
           ImGui_ImplGlfw_NewFrame();
           ImGui_ImplOpenGL3_NewFrame();
           ImGui::NewFrame();
-
+          ImGuizmo::BeginFrame();
+          
           if (m_selections->force_rendering_of_map)
           {
                refresh_render_texture(true);// force map redraw every frame.
