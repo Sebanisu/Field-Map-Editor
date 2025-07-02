@@ -6,6 +6,10 @@
 #include <glm/gtc/matrix_transform.hpp>// for glm::translate, glm::ortho, etc.
 #include <glm/gtc/type_ptr.hpp>// for glm::value_ptr
 #include <ImGuizmo.h>
+static ImVec2 operator+(const ImVec2 &a, const ImVec2 &b)
+{
+     return ImVec2(a.x + b.x, a.y + b.y);
+}
 
 void fme::draw_window::update(std::weak_ptr<fme::Selections> in_selections)
 {
@@ -702,14 +706,24 @@ void fme::draw_window::UseImGuizmo([[maybe_unused]] const float scale, [[maybe_u
           spdlog::error("Failed to lock map_sprite: shared_ptr is expired.");
           return;
      }
-     // Assuming m_fixed_render_camera.get_projection() returns glm::mat4
-     glm::mat4 projection = glm::ortho(
-       0.f,
-       (float)m_checkerboard_framebuffer.width(),
-       (float)m_checkerboard_framebuffer.height(),
-       0.f,// Y flipped
-       -1.f,
-       1.f);
+
+     // attempt to make gizmo stay on screen
+     ImVec2    window_pos  = ImGui::GetWindowPos();// top-left of window (includes title bar)
+     ImVec2    content_min = ImGui::GetWindowContentRegionMin();// top-left of content (relative to window)
+     ImVec2    content_max = ImGui::GetWindowContentRegionMax();// bottom-right of content (relative to window)
+
+     ImVec2    clip_min    = window_pos + content_min;// top-left of visible drawable area
+     ImVec2    clip_max    = window_pos + content_max;// bottom-right of visible drawable area
+
+     // Y flipped projection matrix for visible window area
+     glm::mat4 projection  = glm::ortho(
+       clip_min.x - screen_pos.x,
+       clip_max.x - screen_pos.x,
+       clip_max.y - screen_pos.y,// flipped Y
+       clip_min.y - screen_pos.y,
+       -1.0f,
+       1.0f);
+
      glm::mat4 view         = m_fixed_render_camera.view_matrix();// identity for 2D or your actual camera view if available
 
      auto      tilePosition = glm::vec3(m_mouse_positions.down_pixel, 0.f) * scale * static_cast<float>(t_map_sprite->get_map_scale());
@@ -720,48 +734,27 @@ void fme::draw_window::UseImGuizmo([[maybe_unused]] const float scale, [[maybe_u
      ImGuizmo::SetGizmoSizeClipSpace(selections->draw_swizzle ? 0.021f : 0.15f);
      ImGuizmo::SetOrthographic(true);
      ImGuizmo::SetDrawlist();
-     ImGuizmo::SetRect(screen_pos.x, screen_pos.y, (float)m_checkerboard_framebuffer.width(), (float)m_checkerboard_framebuffer.height());
+     // Set gizmo draw region to the visible ImGui window area
+     ImGuizmo::SetRect(clip_min.x, clip_min.y, clip_max.x - clip_min.x, clip_max.y - clip_min.y);
 
+     ImVec2 mouse = ImGui::GetMousePos();
+     if (
+       !ImGuizmo::IsUsing() && ImGuizmo::IsOver()
+       && (mouse.x < clip_min.x || mouse.x > clip_max.x || mouse.y < clip_min.y || mouse.y > clip_max.y))
+     {
+          return;// Or skip ImGuizmo interaction for this frame
+     }
 
      // Manipulate with your actual camera matrices
      if (ImGuizmo::Manipulate(
            glm::value_ptr(view), glm::value_ptr(projection), ImGuizmo::TRANSLATE, ImGuizmo::LOCAL, glm::value_ptr(objectMatrix)))
      {
-
-
           tilePosition            = objectMatrix[3];
           m_mouse_positions.pixel = glm::ivec2(
             static_cast<int>(tilePosition.x / scale / static_cast<float>(t_map_sprite->get_map_scale())),
             static_cast<int>(tilePosition.y / scale / static_cast<float>(t_map_sprite->get_map_scale())));
           m_mouse_positions.down_pixel = m_mouse_positions.pixel;
-          // spdlog::info("m_mouse_positions.down_pixel: {}, {}", m_mouse_positions.down_pixel.x, m_mouse_positions.down_pixel.y);
      }
-
-     // tool_tip(
-     //   fmt::format(
-     //     "ImGuizmo::IsUsing: {} --- ImGuizmo::IsOver: {}\nMouseDown: {}, MousePos: ({}, {}), WantCaptureMouse: "
-     //     "{}\n(ImGui::IsMouseClicked(0): {}, ImGui::IsAnyItemHovered: {}. ImGui::IsAnyItemActive: {}",
-     //     ImGuizmo::IsUsing(),
-     //     ImGuizmo::IsOver(),
-     //     ImGui::IsMouseDown(0),
-     //     ImGui::GetIO().MousePos.x,
-     //     ImGui::GetIO().MousePos.y,
-     //     ImGui::GetIO().WantCaptureMouse,
-     //     ImGui::IsMouseClicked(0),
-     //     ImGui::IsAnyItemHovered(),
-     //     ImGui::IsAnyItemActive()));
-     // ;
-
-     // if (!ImGuizmo::IsUsing())
-     // {
-     //      return;
-     // }
-     // Update your position from the modified matrix
-     // glm::vec3                  translation{};
-     // [[maybe_unused]] glm::vec3 not_used_rotation{};
-     // [[maybe_unused]] glm::vec3 not_used_scale{};
-     // ImGuizmo::DecomposeMatrixToComponents(
-     //   glm::value_ptr(objectMatrix), glm::value_ptr(translation), glm::value_ptr(not_used_rotation), glm::value_ptr(not_used_scale));
 }
 void fme::draw_window::on_click_not_imgui() const
 {
