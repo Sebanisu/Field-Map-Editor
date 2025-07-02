@@ -91,8 +91,9 @@ This project is based on the work of the following developers:
 - [Omzy](https://forums.qhimm.com/index.php?topic=13444.0) ([source](https://github.com/Sebanisu/Pupu))
 - [myst6re](https://forums.qhimm.com/index.php?topic=13050.0) ([source](https://github.com/myst6re/deling))
 - [Maki](https://forums.qhimm.com/index.php?topic=18656.0) ([source](https://github.com/MaKiPL/OpenVIII-monogame))
+- [TheCherno](https://www.youtube.com/playlist?list=PLlrATfBNZ98dC-V-N3m0Go4deliWHPFwT) ([source](https://github.com/thecherno))
 
-I referenced their code in the development of this project.
+I referenced their code or videos in the development of this project.
 
 ---
 
