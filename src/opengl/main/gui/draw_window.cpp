@@ -683,15 +683,15 @@ void fme::draw_window::UseImGuizmo([[maybe_unused]] const float scale, [[maybe_u
      }
 
      // attempt to make gizmo stay on screen
-     ImVec2    window_pos  = ImGui::GetWindowPos();// top-left of window (includes title bar)
-     ImVec2    content_min = ImGui::GetWindowContentRegionMin();// top-left of content (relative to window)
-     ImVec2    content_max = ImGui::GetWindowContentRegionMax();// bottom-right of content (relative to window)
+     ImVec2      clip_min  = ImGui::GetWindowPos() + ImGui::GetCursorPos();
+     ImVec2      clip_max  = clip_min + ImGui::GetContentRegionAvail();
 
-     ImVec2    clip_min    = window_pos + content_min;// top-left of visible drawable area
-     ImVec2    clip_max    = window_pos + content_max;// bottom-right of visible drawable area
+     // ImDrawList *draw_list = ImGui::GetForegroundDrawList();
+     // draw_list->AddRect(clip_min, clip_max, IM_COL32(255, 0, 0, 255));
+
 
      // Y flipped projection matrix for visible window area
-     glm::mat4 projection  = glm::ortho(
+     glm::mat4 projection = glm::ortho(
        clip_min.x - screen_pos.x,
        clip_max.x - screen_pos.x,
        clip_max.y - screen_pos.y,// flipped Y
