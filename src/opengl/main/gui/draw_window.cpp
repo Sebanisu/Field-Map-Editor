@@ -5,6 +5,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>// for glm::translate, glm::ortho, etc.
 #include <glm/gtc/type_ptr.hpp>// for glm::value_ptr
+#include <IconsFontAwesome6.h>
 #include <ImGuizmo.h>
 static ImVec2 operator+(const ImVec2 &a, const ImVec2 &b)
 {
@@ -744,8 +745,12 @@ void fme::draw_window::UseImGuizmo([[maybe_unused]] const float scale, [[maybe_u
 
           if (m_mouse_positions.mouse_moved)
           {
+               if (!m_translation_in_progress)
+               {
+                    m_location_backup = m_mouse_positions.down_pixel;
+               }
                m_translation_in_progress = true;
-               t_map_sprite->begin_multi_frame_working("ImGuizmo::Manipulate TRANSLATE");
+               t_map_sprite->begin_multi_frame_working(fmt::format("ImGuizmo {}, {}", ICON_FA_ARROWS_UP_DOWN_LEFT_RIGHT, ICON_FA_SPINNER));
 
                t_map_sprite->const_visit_working_tiles([&](const auto &tiles) {
                     m_hovered_tiles_indices =
@@ -759,7 +764,9 @@ void fme::draw_window::UseImGuizmo([[maybe_unused]] const float scale, [[maybe_u
      }
      else if (m_translation_in_progress && !ImGuizmo::IsUsing())
      {
-          m_translation_in_progress = false;
-          t_map_sprite->end_multi_frame_working();
+          m_translation_in_progress      = false;
+          const glm::ivec2 delta         = m_mouse_positions.down_pixel - m_location_backup;
+          std::string      history_entry = fmt::format("ImGuizmo {} ({}, {})", ICON_FA_ARROWS_UP_DOWN_LEFT_RIGHT, delta.x, delta.y);
+          t_map_sprite->end_multi_frame_working(std::move(history_entry));
      }
 }

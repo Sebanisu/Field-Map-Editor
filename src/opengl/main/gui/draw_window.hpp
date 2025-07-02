@@ -61,7 +61,7 @@ struct [[nodiscard]] draw_window
      void                            update_mouse_positions();
      const std::vector<std::size_t> &clicked_tile_indices() const;
      void                            clear_clicked_tile_indices() const;
-     void remove_clicked_index(std::size_t) const;
+     void                            remove_clicked_index(std::size_t) const;
 
    private:
      std::weak_ptr<Selections>            m_selections                 = {};
@@ -74,7 +74,8 @@ struct [[nodiscard]] draw_window
      mutable std::vector<std::size_t>     m_clicked_tile_indices       = {};
      mutable std::vector<std::size_t>     m_hovered_tiles_indices      = {};
      std::ptrdiff_t                       m_hovered_index              = { -1 };
-     mutable bool m_translation_in_progress = {false};
+     mutable glm::ivec2                           m_location_backup            = {};
+     mutable bool                         m_translation_in_progress    = { false };
      void                                 update_hover_and_mouse_button_status_for_map(const ImVec2 &img_start, const float scale) const;
      void draw_map_grid_lines_for_tiles(const ImVec2 &screen_pos, const ImVec2 &scaled_size, const float scale) const;
      void draw_map_grid_for_conflict_tiles(const ImVec2 &screen_pos, const float scale) const;
