@@ -221,34 +221,9 @@ void fme::draw_window::render() const
 
           UseImGuizmo(scale, screen_pos);
 
-          // if (ImGuizmo::IsUsing() && ImGuizmo::IsOver())
-          //      spdlog::info("ImGuizmo::IsUsing: {}  ---   ImGuizmo::IsOver: {}", ImGuizmo::IsUsing(), ImGuizmo::IsOver());
           if (!ImGuizmo::IsUsing() && !ImGuizmo::IsOver())
           {
-               // if (ImGui::IsItemHovered())
-               // {
-               //      ImGui::BeginTooltip();
-               //      format_imgui_text(
-               //        "Image size: {} x {}\n"
-               //        "Available region: {:.1f} x {:.1f}\n"
-               //        "Scale: {:.2f}\n"
-               //        "Scaled size: {:.1f} x {:.1f}\n"
-               //        "Screen position: ({:.1f}, {:.1f})",
-               //        img_size.x,
-               //        img_size.y,
-               //        wsize.x,
-               //        wsize.y,
-               //        scale,
-               //        scaled_size.x,
-               //        scaled_size.y,
-               //        screen_pos.x,
-               //        screen_pos.y);
-               //      ImGui::EndTooltip();
-               // }
-
                update_hover_and_mouse_button_status_for_map(screen_pos, scale);
-
-               on_click_not_imgui();
           }
      }
 }
@@ -336,11 +311,6 @@ void fme::draw_window::update_hover_and_mouse_button_status_for_map(const ImVec2
                });
           }
 
-          // if (ImGui::IsMouseDown(ImGuiMouseButton_Left))
-          // {
-          // const auto strtooltip = fmt::format("Position: ({}, {})", m_mouse_positions.pixel.x, m_mouse_positions.pixel.y);
-          // tool_tip(strtooltip, true);
-          // }
           if (ImGui::IsItemClicked(ImGuiMouseButton_Left))
           {
                m_mouse_positions.left = true;
@@ -354,6 +324,8 @@ void fme::draw_window::update_hover_and_mouse_button_status_for_map(const ImVec2
                          m_clicked_tile_indices =
                            t_map_sprite->find_intersecting(tiles, m_mouse_positions.pixel, m_mouse_positions.texture_page, false, true);
                     });
+
+                    m_mouse_positions.down_pixel = m_mouse_positions.pixel;
                }
           }
      }
@@ -754,61 +726,5 @@ void fme::draw_window::UseImGuizmo([[maybe_unused]] const float scale, [[maybe_u
             static_cast<int>(tilePosition.x / scale / static_cast<float>(t_map_sprite->get_map_scale())),
             static_cast<int>(tilePosition.y / scale / static_cast<float>(t_map_sprite->get_map_scale())));
           m_mouse_positions.down_pixel = m_mouse_positions.pixel;
-     }
-}
-void fme::draw_window::on_click_not_imgui() const
-{
-     const auto selections = m_selections.lock();
-     if (!selections)
-     {
-          spdlog::error("Failed to lock selections: shared_ptr is expired.");
-          return;
-     }
-     if (m_mouse_positions.mouse_enabled)
-     {
-
-          const auto t_map_sprite = m_map_sprite.lock();
-          if (!t_map_sprite)
-          {
-               spdlog::error("Failed to lock map_sprite: shared_ptr is expired.");
-               return;
-          }
-          m_mouse_positions.update_sprite_pos(selections->draw_swizzle);
-
-          const auto map_test = [&]() { return !t_map_sprite->fail() && selections->draw == draw_mode::draw_map; };
-          if (m_mouse_positions.left_changed())
-          {
-               if (map_test())
-               {
-                    if (m_mouse_positions.left)
-                    {
-                         /// TODO fix sprite
-                         // left mouse down
-                         // m_mouse_positions.sprite =
-                         //   t_map_sprite->save_intersecting(m_mouse_positions.pixel, m_mouse_positions.texture_page);
-                         m_mouse_positions.down_pixel = m_mouse_positions.pixel;
-                         m_mouse_positions.max_tile_x = t_map_sprite->max_x_for_saved();
-                    }
-                    else
-                    {
-                         // left mouse up
-                         t_map_sprite->update_position(
-                           m_mouse_positions.pixel, m_mouse_positions.texture_page, m_mouse_positions.down_pixel);
-
-
-                         // m_mouse_positions.cover =
-                         // m_mouse_positions.sprite     = {};
-                         m_mouse_positions.max_tile_x = {};
-                    }
-               }
-          }
-     }
-     else
-     {
-          if (m_mouse_positions.left_changed() && !m_mouse_positions.left)
-          {
-               // m_mouse_positions.sprite = {};
-               // mouse up off-screen ?
-          }
      }
 }

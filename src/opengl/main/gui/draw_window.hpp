@@ -81,7 +81,6 @@ struct [[nodiscard]] draw_window
      void draw_mim_grid_lines_for_tiles(const ImVec2 &screen_pos, const ImVec2 &scaled_size, const float scale) const;
      void draw_mim_grid_lines_for_texture_page(const ImVec2 &screen_pos, const ImVec2 &scaled_size, const float scale) const;
      void UseImGuizmo(const float scale, const ImVec2 &screen_pos) const;
-     void on_click_not_imgui() const;
 };
 }// namespace fme
 
