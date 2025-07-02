@@ -2,6 +2,10 @@
 #include "gui_labels.hpp"
 #include "push_pop_id.hpp"
 #include "tool_tip.hpp"
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>// for glm::translate, glm::ortho, etc.
+#include <glm/gtc/type_ptr.hpp>// for glm::value_ptr
+#include <ImGuizmo.h>
 
 void fme::draw_window::update(std::weak_ptr<fme::Selections> in_selections)
 {
@@ -104,8 +108,18 @@ void fme::draw_window::render() const
             m_checkerboard_batchrenderer.draw();
             m_checkerboard_batchrenderer.on_render();
             m_checkerboard_framebuffer.bind_color_attachment();
-
-            ImGui::Image(glengine::ConvertGliDtoImTextureId<ImTextureID>(m_checkerboard_framebuffer.color_attachment_id()), window_size);
+            if (!ImGuizmo::IsOver())
+            {
+                 ImGui::InvisibleButton("##DrawWindowViewport", window_size, ImGuiButtonFlags_None);
+            }
+            else
+            {
+                 ImGui::Dummy(window_size);// Doesn't generate a hoverable item
+            }
+            ImGui::GetWindowDrawList()->AddImage(
+              glengine::ConvertGliDtoImTextureId<ImTextureID>(m_checkerboard_framebuffer.color_attachment_id()),
+              window_pos,
+              ImVec2{ window_pos.x + window_size.x, window_pos.y + window_size.y });
             ImGui::SetCursorScreenPos(window_pos);
        };
 
@@ -150,7 +164,10 @@ void fme::draw_window::render() const
 
           const auto pop_id1 = PushPopID();
 
-          ImGui::Image(glengine::ConvertGliDtoImTextureId<ImTextureID>(t_mim_sprite->get_texture()->id()), scaled_size);
+          ImGui::GetWindowDrawList()->AddImage(
+            glengine::ConvertGliDtoImTextureId<ImTextureID>(t_mim_sprite->get_texture()->id()),
+            screen_pos,
+            ImVec2{ screen_pos.x + scaled_size.x, screen_pos.y + scaled_size.y });
 
           draw_mim_grid_lines_for_tiles(screen_pos, scaled_size, scale);
 
@@ -186,33 +203,11 @@ void fme::draw_window::render() const
             selections->background_color.fade(0.2F));
 
           const auto pop_id1 = PushPopID();
-
-          ImGui::Image(
+          ImGui::GetWindowDrawList()->AddImage(
             glengine::ConvertGliDtoImTextureId<ImTextureID>(t_map_sprite->get_render_texture().color_attachment_id()),
-            ImVec2{ scaled_size.x, scaled_size.y });
+            screen_pos,
+            ImVec2{ screen_pos.x + scaled_size.x, screen_pos.y + scaled_size.y });
 
-          if (ImGui::IsItemHovered())
-          {
-               ImGui::BeginTooltip();
-               format_imgui_text(
-                 "Image size: {} x {}\n"
-                 "Available region: {:.1f} x {:.1f}\n"
-                 "Scale: {:.2f}\n"
-                 "Scaled size: {:.1f} x {:.1f}\n"
-                 "Screen position: ({:.1f}, {:.1f})",
-                 img_size.x,
-                 img_size.y,
-                 wsize.x,
-                 wsize.y,
-                 scale,
-                 scaled_size.x,
-                 scaled_size.y,
-                 screen_pos.x,
-                 screen_pos.y);
-               ImGui::EndTooltip();
-          }
-
-          update_hover_and_mouse_button_status_for_map(screen_pos, scale);
 
           draw_map_grid_lines_for_tiles(screen_pos, scaled_size, scale);
 
@@ -220,9 +215,38 @@ void fme::draw_window::render() const
 
           draw_map_grid_for_conflict_tiles(screen_pos, scale);
 
-          draw_mouse_positions_sprite(scale, screen_pos);
+          UseImGuizmo(scale, screen_pos);
+
+          // if (ImGuizmo::IsUsing() && ImGuizmo::IsOver())
+          //      spdlog::info("ImGuizmo::IsUsing: {}  ---   ImGuizmo::IsOver: {}", ImGuizmo::IsUsing(), ImGuizmo::IsOver());
+          if (!ImGuizmo::IsUsing() && !ImGuizmo::IsOver())
+          {
+               // if (ImGui::IsItemHovered())
+               // {
+               //      ImGui::BeginTooltip();
+               //      format_imgui_text(
+               //        "Image size: {} x {}\n"
+               //        "Available region: {:.1f} x {:.1f}\n"
+               //        "Scale: {:.2f}\n"
+               //        "Scaled size: {:.1f} x {:.1f}\n"
+               //        "Screen position: ({:.1f}, {:.1f})",
+               //        img_size.x,
+               //        img_size.y,
+               //        wsize.x,
+               //        wsize.y,
+               //        scale,
+               //        scaled_size.x,
+               //        scaled_size.y,
+               //        screen_pos.x,
+               //        screen_pos.y);
+               //      ImGui::EndTooltip();
+               // }
+
+               update_hover_and_mouse_button_status_for_map(screen_pos, scale);
+
+               on_click_not_imgui();
+          }
      }
-     on_click_not_imgui();
 }
 
 
@@ -304,8 +328,8 @@ void fme::draw_window::update_hover_and_mouse_button_status_for_map(const ImVec2
 
           // if (ImGui::IsMouseDown(ImGuiMouseButton_Left))
           // {
-          const auto strtooltip = fmt::format("Position: ({}, {})", m_mouse_positions.pixel.x, m_mouse_positions.pixel.y);
-          tool_tip(strtooltip, true);
+          // const auto strtooltip = fmt::format("Position: ({}, {})", m_mouse_positions.pixel.x, m_mouse_positions.pixel.y);
+          // tool_tip(strtooltip, true);
           // }
           if (ImGui::IsItemClicked(ImGuiMouseButton_Left))
           {
@@ -654,44 +678,77 @@ void fme::draw_window::draw_mim_grid_lines_for_texture_page(const ImVec2 &screen
           ImGui::GetWindowDrawList()->AddLine(ImVec2(x, screen_pos.y), ImVec2(x, img_end.y), IM_COL32(255, 255, 0, 255));
      }
 }
-void fme::draw_window::draw_mouse_positions_sprite([[maybe_unused]] const float scale, [[maybe_unused]] const ImVec2 &screen_pos) const
+void fme::draw_window::UseImGuizmo([[maybe_unused]] const float scale, [[maybe_unused]] const ImVec2 &screen_pos) const
 {
-     // if (m_mouse_positions.sprite.getTexture() != nullptr)
-     // {
-     /// TODO replace shader and states and such with batchrendering from glengine
-     // sf::RenderStates states = {};
-     // if (m_drag_sprite_shader)
-     // {
-     //      m_drag_sprite_shader->setUniform("texture", *m_mouse_positions.sprite.getTexture());
-     //      static constexpr float border_width = 2.F;
-     //      m_drag_sprite_shader->setUniform("borderWidth", border_width);
-     //      states.shader = m_drag_sprite_shader.get();
-     // }
-     /// TODO replace RenderTexture
-     // // Prepare a render texture to draw the sprite with the shader
-     // m_shader_renderTexture.create(
-     //   static_cast<std::uint32_t>(m_mouse_positions.sprite.getGlobalBounds().width),
-     //   static_cast<std::uint32_t>(m_mouse_positions.sprite.getGlobalBounds().height));
+     if (std::ranges::empty(m_clicked_tile_indices))
+     {
+          return;
+     }
+     const auto t_map_sprite = m_map_sprite.lock();
+     if (!t_map_sprite)
+     {
+          spdlog::error("Failed to lock map_sprite: shared_ptr is expired.");
+          return;
+     }
+     // Assuming m_fixed_render_camera.get_projection() returns glm::mat4
+     glm::mat4 projection = glm::ortho(
+       0.f,
+       (float)m_checkerboard_framebuffer.width(),
+       (float)m_checkerboard_framebuffer.height(),
+       0.f,// Y flipped
+       -1.f,
+       1.f);
+     glm::mat4 view         = m_fixed_render_camera.view_matrix();// identity for 2D or your actual camera view if available
 
-     // // Clear and draw the sprite with the shader
-     // m_shader_renderTexture.clear(sf::Color::Transparent);
-     /// TODO replace sprite
-     // //m_mouse_positions.sprite.setPosition(glm::vec2{});
-     // m_shader_renderTexture.draw(m_mouse_positions.sprite, states);
-     // m_shader_renderTexture.display();
+     auto      tilePosition = glm::vec3(m_mouse_positions.down_pixel, 0.f) * scale * static_cast<float>(t_map_sprite->get_map_scale());
+     // Your object transform matrix, e.g. tile transform
+     glm::mat4 objectMatrix = glm::translate(glm::mat4(1.0f), tilePosition);
 
-     // int offset_y = -32 + m_mouse_positions.pixel.y % 16;
-     // ImGui::SetCursorScreenPos(ImVec2(
-     //   (m_mouse_positions.pixel.x - 24) * scale * static_cast<float>(t_map_sprite->get_map_scale()) + screen_pos.x,
-     //   (m_mouse_positions.pixel.y - 24) * scale * static_cast<float>(t_map_sprite->get_map_scale()) + screen_pos.y));
-     // ImGui::Image(
-     //   std::bit_cast<ImTextureID>(static_cast<std::uintptr_t>(m_shader_renderTexture.getTexture().getNativeHandle())),
-     //   ImVec2(
-     //     m_mouse_positions.sprite.getGlobalBounds().width * scale * static_cast<float>(t_map_sprite->get_map_scale()),
-     //     m_mouse_positions.sprite.getGlobalBounds().height * scale * static_cast<float>(t_map_sprite->get_map_scale())),
-     //   ImVec2(0, 1),
-     //   ImVec2(1, 0));
+     // Set ImGuizmo rect to image size and position as before
+     ImGuizmo::SetOrthographic(true);
+     ImGuizmo::SetDrawlist();
+     ImGuizmo::SetRect(screen_pos.x, screen_pos.y, (float)m_checkerboard_framebuffer.width(), (float)m_checkerboard_framebuffer.height());
+
+
+     // Manipulate with your actual camera matrices
+     if (ImGuizmo::Manipulate(
+           glm::value_ptr(view), glm::value_ptr(projection), ImGuizmo::TRANSLATE, ImGuizmo::LOCAL, glm::value_ptr(objectMatrix)))
+     {
+
+
+          tilePosition            = objectMatrix[3];
+          m_mouse_positions.pixel = glm::ivec2(
+            static_cast<int>(tilePosition.x / scale / static_cast<float>(t_map_sprite->get_map_scale())),
+            static_cast<int>(tilePosition.y / scale / static_cast<float>(t_map_sprite->get_map_scale())));
+          m_mouse_positions.down_pixel = m_mouse_positions.pixel;
+          spdlog::info("m_mouse_positions.down_pixel: {}, {}", m_mouse_positions.down_pixel.x, m_mouse_positions.down_pixel.y);
+     }
+
+     tool_tip(
+       fmt::format(
+         "ImGuizmo::IsUsing: {} --- ImGuizmo::IsOver: {}\nMouseDown: {}, MousePos: ({}, {}), WantCaptureMouse: "
+         "{}\n(ImGui::IsMouseClicked(0): {}, ImGui::IsAnyItemHovered: {}. ImGui::IsAnyItemActive: {}",
+         ImGuizmo::IsUsing(),
+         ImGuizmo::IsOver(),
+         ImGui::IsMouseDown(0),
+         ImGui::GetIO().MousePos.x,
+         ImGui::GetIO().MousePos.y,
+         ImGui::GetIO().WantCaptureMouse,
+         ImGui::IsMouseClicked(0),
+         ImGui::IsAnyItemHovered(),
+         ImGui::IsAnyItemActive()));
+     ;
+
+     // if (!ImGuizmo::IsUsing())
+     // {
+     //      return;
      // }
+     // Update your position from the modified matrix
+     // glm::vec3                  translation{};
+     // [[maybe_unused]] glm::vec3 not_used_rotation{};
+     // [[maybe_unused]] glm::vec3 not_used_scale{};
+     // ImGuizmo::DecomposeMatrixToComponents(
+     //   glm::value_ptr(objectMatrix), glm::value_ptr(translation), glm::value_ptr(not_used_rotation), glm::value_ptr(not_used_scale));
 }
 void fme::draw_window::on_click_not_imgui() const
 {
