@@ -12,12 +12,14 @@ set(CMAKE_CXX_EXTENSIONS OFF) # on g++ this ensures: -std=c++11 and not
 set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON) # automatically create a module
                                          # definition (.def) file with all
                                          # global
+
 # symbols found in the input .obj files for a SHARED library on Windows. imgui
 # test executable, with full warnings enabled
 find_package(Threads REQUIRED)
 include(${CMAKE_SOURCE_DIR}/cmake/OpenVIII_CPP_WIP.cmake)
 include(${CMAKE_SOURCE_DIR}/cmake/ImGuiFileBrowser.cmake)
-include(${CMAKE_SOURCE_DIR}/cmake/IconFontCppHeaders.cmake)
+include(${CMAKE_SOURCE_DIR}/cmake/IconFontCppHeaders.cmake)                                         
+include(${CMAKE_SOURCE_DIR}/cmake/ImGuizmo.cmake)
 add_executable(
   ${PROJECT_NAME}_MAIN
   gui/batch.cpp
@@ -86,6 +88,7 @@ target_link_libraries(
   PRIVATE spdlog::spdlog
   PRIVATE iconfontcppheaders::iconfontcppheaders
   PRIVATE ctre::ctre
+  PRIVATE ImGuizmo
   PRIVATE ${PROJECT_NAME}_MAIN_COMMON)
 
 target_compile_definitions(
