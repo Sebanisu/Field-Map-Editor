@@ -270,9 +270,15 @@ const std::vector<std::size_t> &fme::draw_window::clicked_tile_indices() const
 {
      return m_clicked_tile_indices;
 }
-void fme::draw_window::clear_clicked_tile_indices()
+void fme::draw_window::clear_clicked_tile_indices() const
 {
      m_clicked_tile_indices.clear();
+}
+
+void fme::draw_window::remove_clicked_index(std::size_t in_index) const
+{
+     const auto remove_result = std::ranges::remove_if(m_clicked_tile_indices, [&](std::size_t index) { return in_index == index; });
+     m_clicked_tile_indices.erase(remove_result.begin(), remove_result.end());
 }
 
 void fme::draw_window::update_hover_and_mouse_button_status_for_map(const ImVec2 &img_start, const float scale) const
@@ -684,6 +690,12 @@ void fme::draw_window::UseImGuizmo([[maybe_unused]] const float scale, [[maybe_u
      {
           return;
      }
+     const auto selections = m_selections.lock();
+     if (!selections)
+     {
+          spdlog::error("Failed to lock selections: shared_ptr is expired.");
+          return;
+     }
      const auto t_map_sprite = m_map_sprite.lock();
      if (!t_map_sprite)
      {
@@ -704,7 +716,8 @@ void fme::draw_window::UseImGuizmo([[maybe_unused]] const float scale, [[maybe_u
      // Your object transform matrix, e.g. tile transform
      glm::mat4 objectMatrix = glm::translate(glm::mat4(1.0f), tilePosition);
 
-     // Set ImGuizmo rect to image size and position as before
+     // Apply the adjusted size
+     ImGuizmo::SetGizmoSizeClipSpace(selections->draw_swizzle ? 0.021f : 0.15f);
      ImGuizmo::SetOrthographic(true);
      ImGuizmo::SetDrawlist();
      ImGuizmo::SetRect(screen_pos.x, screen_pos.y, (float)m_checkerboard_framebuffer.width(), (float)m_checkerboard_framebuffer.height());
@@ -721,23 +734,23 @@ void fme::draw_window::UseImGuizmo([[maybe_unused]] const float scale, [[maybe_u
             static_cast<int>(tilePosition.x / scale / static_cast<float>(t_map_sprite->get_map_scale())),
             static_cast<int>(tilePosition.y / scale / static_cast<float>(t_map_sprite->get_map_scale())));
           m_mouse_positions.down_pixel = m_mouse_positions.pixel;
-          spdlog::info("m_mouse_positions.down_pixel: {}, {}", m_mouse_positions.down_pixel.x, m_mouse_positions.down_pixel.y);
+          // spdlog::info("m_mouse_positions.down_pixel: {}, {}", m_mouse_positions.down_pixel.x, m_mouse_positions.down_pixel.y);
      }
 
-     tool_tip(
-       fmt::format(
-         "ImGuizmo::IsUsing: {} --- ImGuizmo::IsOver: {}\nMouseDown: {}, MousePos: ({}, {}), WantCaptureMouse: "
-         "{}\n(ImGui::IsMouseClicked(0): {}, ImGui::IsAnyItemHovered: {}. ImGui::IsAnyItemActive: {}",
-         ImGuizmo::IsUsing(),
-         ImGuizmo::IsOver(),
-         ImGui::IsMouseDown(0),
-         ImGui::GetIO().MousePos.x,
-         ImGui::GetIO().MousePos.y,
-         ImGui::GetIO().WantCaptureMouse,
-         ImGui::IsMouseClicked(0),
-         ImGui::IsAnyItemHovered(),
-         ImGui::IsAnyItemActive()));
-     ;
+     // tool_tip(
+     //   fmt::format(
+     //     "ImGuizmo::IsUsing: {} --- ImGuizmo::IsOver: {}\nMouseDown: {}, MousePos: ({}, {}), WantCaptureMouse: "
+     //     "{}\n(ImGui::IsMouseClicked(0): {}, ImGui::IsAnyItemHovered: {}. ImGui::IsAnyItemActive: {}",
+     //     ImGuizmo::IsUsing(),
+     //     ImGuizmo::IsOver(),
+     //     ImGui::IsMouseDown(0),
+     //     ImGui::GetIO().MousePos.x,
+     //     ImGui::GetIO().MousePos.y,
+     //     ImGui::GetIO().WantCaptureMouse,
+     //     ImGui::IsMouseClicked(0),
+     //     ImGui::IsAnyItemHovered(),
+     //     ImGui::IsAnyItemActive()));
+     // ;
 
      // if (!ImGuizmo::IsUsing())
      // {

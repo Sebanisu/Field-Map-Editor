@@ -63,7 +63,8 @@ void import::render() const
      //   * So I need to choose an existing tile to base the new tiles on.
      [[maybe_unused]] const auto &current_tile = combo_selected_tile(changed);
      // add text showing the tile's info.
-     collapsing_tile_info(map_sprite, current_tile);
+     (void)collapsing_tile_info(map_sprite, current_tile);
+     //todo handle return true which means remove item.
      //   * I need to browse for an image file.
      changed = browse_for_image_display_preview() || changed;
      //   * We need to adjust the scale to fit

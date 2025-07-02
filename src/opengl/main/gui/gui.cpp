@@ -237,7 +237,7 @@ void gui::start(GLFWwindow *const window)
           ImGui_ImplOpenGL3_NewFrame();
           ImGui::NewFrame();
           ImGuizmo::BeginFrame();
-          
+
           if (m_selections->force_rendering_of_map)
           {
                refresh_render_texture(true);// force map redraw every frame.
@@ -645,16 +645,24 @@ void gui::selected_tiles_panel()
           return;
      }
 
+     std::optional<std::size_t> remove_index = {};
      m_map_sprite->const_visit_original_tiles([&](const auto &tiles) {
           for (const auto &i : m_draw_window.clicked_tile_indices())
           {
                if (i < std::ranges::size(tiles))
                {
                     const auto &tile = tiles[i];
-                    collapsing_tile_info(m_map_sprite, tile, {}, i);
+                    if(collapsing_tile_info(m_map_sprite, tile, {}, i))
+                    {
+                         remove_index = i;
+                    }
                }
           }
      });
+     if (remove_index.has_value())
+     {
+          m_draw_window.remove_clicked_index(remove_index.value());
+     }
 }
 void gui::control_panel_window_mim()
 {
@@ -2817,8 +2825,12 @@ void gui::bind_shortcuts() const
 {
 
      constexpr auto flags = ImGuiInputFlags_RouteGlobal | ImGuiInputFlags_RouteOverFocused;
+     if (ImGui::Shortcut(ImGuiKey_Escape, flags))
+     {
+          m_draw_window.clear_clicked_tile_indices();
+     }
      // Undo All: Ctrl+Shift+Z
-     if (ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiMod_Shift | ImGuiKey_Z, flags))
+     else if (ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiMod_Shift | ImGuiKey_Z, flags))
      {
           m_map_sprite->undo_all();
      }

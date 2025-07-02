@@ -18,7 +18,7 @@ template<typename... B>
      };
      return visitor{ std::forward<B>(b)... };
 }
-void collapsing_tile_info(
+[[nodiscard]] bool collapsing_tile_info(
   std::weak_ptr<const map_sprite>                           map,
   const open_viii::graphics::background::Map::variant_tile &current_tile,
   const tile_button_options                                &options = {},

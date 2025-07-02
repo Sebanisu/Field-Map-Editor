@@ -2,12 +2,14 @@
 #include "format_imgui_text.hpp"
 #include "gui_labels.hpp"
 #include "push_pop_id.hpp"
+#include "tool_tip.hpp"
+#include <IconsFontAwesome6.h>
 #include <ScopeGuard.hpp>
 #include <sstream>
 #include <string>
 namespace fme
 {
-void collapsing_tile_info(
+bool collapsing_tile_info(
   std::weak_ptr<const map_sprite>                           map_ptr,
   const open_viii::graphics::background::Map::variant_tile &current_tile,
   const tile_button_options                                &options,
@@ -16,21 +18,32 @@ void collapsing_tile_info(
      auto map = map_ptr.lock();
      if (!map)
      {
-          return;
+          return false;
      }
      using namespace open_viii::graphics::background;
 
-     std::visit(
+     return std::visit(
        make_visitor(
-         [&](const is_tile auto &tile) {
+         [&](const is_tile auto &tile) -> bool {
               std::string title      = index == std::numeric_limits<size_t>::max()
                                          ? fmt::format("{}", gui_labels::selected_tile_info)
                                          : fmt::format("{}: {}", gui_labels::selected_tile_info, index);
               const auto  pushpopid0 = glengine::ScopeGuard{ &ImGui::PopID };
               ImGui::PushID(title.data());
-              if (!ImGui::CollapsingHeader(title.data()))
+              // ImGui::SetItemAllowOverlap();
+              const bool open = ImGui::CollapsingHeader(title.data(), ImGuiTreeNodeFlags_AllowOverlap);
+              ImGui::SameLine(ImGui::GetContentRegionAvail().x - 20);// adjust for alignment
+              if (ImGui::SmallButton(ICON_FA_TRASH))
               {
-                   return;
+                   return true;
+              }
+              else
+              {
+                   tool_tip("Remove Selected Item");
+              }
+              if (!open)
+              {
+                   return false;
               }
               const auto   pushpopid1 = PushPopID();
               ImVec2 const table_pos  = ImGui::GetCursorScreenPos();
@@ -75,8 +88,9 @@ void collapsing_tile_info(
               options_with_size.size = { width * tile_scale, width * tile_scale };
               (void)create_tile_button(map, tile, options_with_size);
               ImGui::SetCursorScreenPos(backup_pos);
+              return false;
          },
-         [](const std::monostate &) {}),
+         [](const std::monostate &) -> bool { return false; }),
        current_tile);
 }
 }// namespace fme

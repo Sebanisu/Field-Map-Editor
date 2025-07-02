@@ -60,7 +60,8 @@ struct [[nodiscard]] draw_window
      const MousePositions           &mouse_positions() const;
      void                            update_mouse_positions();
      const std::vector<std::size_t> &clicked_tile_indices() const;
-     void                            clear_clicked_tile_indices();
+     void                            clear_clicked_tile_indices() const;
+     void remove_clicked_index(std::size_t) const;
 
    private:
      std::weak_ptr<Selections>            m_selections                 = {};
