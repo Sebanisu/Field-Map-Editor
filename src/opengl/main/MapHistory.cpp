@@ -388,6 +388,10 @@ const map_t &ff_8::MapHistory::working() const
 
 map_t &ff_8::MapHistory::copy_working(std::string description)
 {
+     if (m_in_multi_frame_operation)
+     {
+          return working();
+     }
      (void)debug_count_print();
      clear_redo();
      m_undo_original_or_working.push_back(pushed::working);
@@ -395,6 +399,28 @@ map_t &ff_8::MapHistory::copy_working(std::string description)
      m_undo_change_descriptions.push_back(std::move(description));
      m_working_changed = true;
      return working();
+}
+
+map_t &ff_8::MapHistory::begin_working_copy(std::string description)
+{
+     if (!m_in_multi_frame_operation)
+     {
+          const auto pop_set = glengine::ScopeGuard{ [this] { m_in_multi_frame_operation = true; } };
+          return copy_working(std::move(description));
+     }
+     return working();
+}
+
+void ff_8::MapHistory::end_working_copy(std::string description)
+{
+     m_in_multi_frame_operation = false;
+     if (!description.empty() && !m_undo_change_descriptions.empty())
+     {
+          m_undo_change_descriptions.back() = std::move(description);
+     }
+     m_working_changed = true;
+     //if nothing changes remove undo till there are no matches.
+     std::ignore       = remove_duplicate();
 }
 
 void ff_8::MapHistory::clear_redo()
@@ -406,7 +432,7 @@ void ff_8::MapHistory::clear_redo()
 bool ff_8::MapHistory::remove_duplicate()
 {
      bool ret = false;
-     while (!undo_enabled() &&
+     while (undo_enabled() &&
          ((m_undo_original_or_working.back() == pushed::working
            && m_undo_history.back() == m_working)
           || (m_undo_original_or_working.back() == pushed::original
@@ -532,12 +558,12 @@ void ff_8::MapHistory::redo_all()
 }
 bool ff_8::MapHistory::redo_enabled() const
 {
-     return !std::ranges::empty(m_redo_history);
+     return !std::ranges::empty(m_redo_history) && !std::ranges::empty(m_redo_original_or_working);
 }
 
 bool ff_8::MapHistory::undo_enabled() const
 {
-     return !std::ranges::empty(m_undo_history);
+     return !std::ranges::empty(m_undo_history) && !std::ranges::empty(m_undo_original_or_working);
 }
 
 const map_t &ff_8::MapHistory::const_working() const

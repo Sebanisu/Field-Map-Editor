@@ -144,7 +144,6 @@ struct [[nodiscard]] map_sprite// final
      [[nodiscard]] Rectangle                                  get_canvas() const;
      [[nodiscard]] bool                                       undo_enabled() const;
      [[nodiscard]] bool                                       redo_enabled() const;
-     [[nodiscard]] bool                                       history_remove_duplicate();
      [[nodiscard]] ff_8::filters                             &filter();
      //[[nodiscard]] static sf::BlendMode                 set_blend_mode(const BlendModeT &blend_mode, std::array<sf::Vertex, 4U> &quad);
      [[nodiscard]] bool                                       fallback_textures() const;
@@ -190,6 +189,8 @@ struct [[nodiscard]] map_sprite// final
      void                                         compact_map_order();
      void                                         compact_map_order_ffnx();
      void                                         first_to_working_and_original();
+     void                                         begin_multi_frame_working(std::string description);
+     void                                         end_multi_frame_working(std::string description = {});
      void                                         undo();
      void                                         redo();
      void                                         undo_all();

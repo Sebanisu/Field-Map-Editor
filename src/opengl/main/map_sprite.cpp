@@ -547,7 +547,6 @@ void map_sprite::update_position(
           m_imported_tile_map.visit_tiles(
             [this, &update_tile_positions](auto &&tiles) { update_tile_positions(m_imported_tile_map, tiles, m_saved_imported_indices); });
      }
-     std::ignore = history_remove_duplicate();
      // m_saved_indices.clear();
      m_saved_imported_indices.clear();
      update_render_texture();
@@ -2049,6 +2048,16 @@ std::string map_sprite::current_redo_description() const
      return fmt::format("{}: {}", m_map_group.maps.current_redo_pushed(), m_map_group.maps.current_redo_description());
 }
 
+void map_sprite::begin_multi_frame_working(std::string description)
+{
+     (void)m_map_group.maps.begin_working_copy(std::move(description));
+}
+
+void map_sprite::end_multi_frame_working(std::string description)
+{
+     m_map_group.maps.end_working_copy(std::move(description));
+}
+
 void map_sprite::undo()
 {
      (void)m_map_group.maps.undo();
@@ -2076,10 +2085,6 @@ bool map_sprite::undo_enabled() const
 bool map_sprite::redo_enabled() const
 {
      return m_map_group.maps.redo_enabled();
-}
-bool map_sprite::history_remove_duplicate()
-{
-     return m_map_group.maps.remove_duplicate();
 }
 std::int32_t map_sprite::get_map_scale() const
 {

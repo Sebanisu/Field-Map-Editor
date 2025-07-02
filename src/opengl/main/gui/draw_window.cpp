@@ -717,7 +717,6 @@ void fme::draw_window::UseImGuizmo([[maybe_unused]] const float scale, [[maybe_u
           return;// Or skip ImGuizmo interaction for this frame
      }
 
-     // Manipulate with your actual camera matrices
      if (ImGuizmo::Manipulate(
            glm::value_ptr(view), glm::value_ptr(projection), ImGuizmo::TRANSLATE, ImGuizmo::LOCAL, glm::value_ptr(objectMatrix)))
      {
@@ -745,6 +744,9 @@ void fme::draw_window::UseImGuizmo([[maybe_unused]] const float scale, [[maybe_u
 
           if (m_mouse_positions.mouse_moved)
           {
+               m_translation_in_progress = true;
+               t_map_sprite->begin_multi_frame_working("ImGuizmo::Manipulate TRANSLATE");
+
                t_map_sprite->const_visit_working_tiles([&](const auto &tiles) {
                     m_hovered_tiles_indices =
                       t_map_sprite->find_intersecting(tiles, m_mouse_positions.pixel, m_mouse_positions.texture_page, false, true);
@@ -754,5 +756,10 @@ void fme::draw_window::UseImGuizmo([[maybe_unused]] const float scale, [[maybe_u
                  m_mouse_positions.pixel, m_mouse_positions.texture_page, m_mouse_positions.down_pixel, m_clicked_tile_indices);
           }
           m_mouse_positions.down_pixel = m_mouse_positions.pixel;
+     }
+     else if (m_translation_in_progress && !ImGuizmo::IsUsing())
+     {
+          m_translation_in_progress = false;
+          t_map_sprite->end_multi_frame_working();
      }
 }

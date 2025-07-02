@@ -49,6 +49,14 @@ class [[nodiscard]] MapHistory
 
    private:
      /**
+      * @brief Indicates whether a multi-frame operation is in progress.
+      *
+      * This flag is set to `true` when `begin_working_copy` is called and prevents
+      * additional copies of the working map from being created until `end_working_copy`
+      * is called, which sets it back to `false`.
+      */
+     mutable bool                  m_in_multi_frame_operation = { false };
+     /**
       * @brief Indicates whether the original state has been changed.
       *
       * This boolean flag tracks whether changes have been made to the original tile data.
@@ -314,24 +322,47 @@ class [[nodiscard]] MapHistory
       * @return A mutable reference to the working map.
       */
      map_t                                     &working();
+
      /**
       * @brief Creates a copy of the current working map and logs the planned change.
       *
-      * This function captures the current state of the working map for undo purposes
-      * and associates it with a description of the change being planned. The copied
-      * state represents the map prior to applying the change, while the description
-      * provides context for the change.
+      * If a multi-frame operation is in progress (m_in_multi_frame_operation is true),
+      * this function returns a reference to the current working map without creating a new copy.
+      * Otherwise, it captures the current state of the working map for undo purposes
+      * and associates it with a description of the change being planned.
       *
       * @param description A string describing the planned change to the working map.
       *                    This description is logged and stored for use in the undo history UI.
-      *
-      * @return A mutable reference to the copy of the working map.
-      *
-      * @details
-      * - The copied state is stored in the undo history along with the provided description.
-      * - This function is integral to the undo system, which stores the map's state before changes are applied.
+      * @return A mutable reference to the working map (either the current one or a new copy).
       */
      map_t                                     &copy_working(std::string description);
+
+     /**
+      * @brief Begins a multi-frame operation, creating a single copy of the working map.
+      *
+      * This function starts a multi-frame operation by creating a copy of the working map
+      * and setting a flag to prevent additional copies until `end_working_copy` is called.
+      * The provided description is used for the undo history.
+      *
+      * @param description A string describing the upcoming multi-frame change.
+      * @return A mutable reference to the working map copy.
+      * @note Subsequent calls to `copy_working` during the multi-frame operation will return
+      *       the same working map without creating new copies.
+      */
+     map_t                                     &begin_working_copy(std::string description);
+
+
+     /**
+      * @brief Ends a multi-frame operation, allowing new copies to be created.
+      *
+      * This function ends the multi-frame operation, allowing new copies of the working map
+      * to be created in subsequent operations. If a description is provided, it updates the
+      * description of the current undo history entry.
+      *
+      * @param description An optional string to update the undo history description.
+      *                    If empty, the original description is retained.
+      */
+     void                                       end_working_copy(std::string description = {});
 
 
      /**
