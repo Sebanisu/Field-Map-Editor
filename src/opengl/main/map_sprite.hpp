@@ -207,7 +207,6 @@ struct [[nodiscard]] map_sprite// final
      static void consume_futures(std::vector<std::future<std::future<void>>> &future_of_futures);
      void        update_position(
               const glm::ivec2               &pixel_pos,
-              const uint8_t                  &texture_page,
               const glm::ivec2               &down_pixel_pos,
               const std::vector<std::size_t> &saved_indices);
      bool                         consume_one_future() const;

@@ -473,7 +473,6 @@ void map_sprite::flatten_palette()
 
 void map_sprite::update_position(
   const glm::ivec2               &pixel_pos,
-  const uint8_t                  &texture_page,
   const glm::ivec2               &down_pixel_pos,
   const std::vector<std::size_t> &saved_indices)
 {
@@ -483,70 +482,72 @@ void map_sprite::update_position(
      }
      Map &current_map = m_map_group.maps.copy_working(
        fmt::format("{} ({},{}) -> ({},{})", gui_labels::update_position, pixel_pos.x, pixel_pos.y, down_pixel_pos.x, down_pixel_pos.y));
-     const auto update_tile_positions =
-       [this, &texture_page, &pixel_pos, &down_pixel_pos](const auto &map, auto &&tiles, const std::vector<std::size_t> &indices) {
-            for (auto i : indices)
-            {
-                 auto &tile = tiles[i];
-                 if (m_draw_swizzle)
-                 {
-                      if (auto intersecting = find_intersecting(m_imported_tile_map, pixel_pos, texture_page, true); !intersecting.empty())
-                      {
-                           // this might not be good enough as two 4 bpp tiles fit in the
-                           // same location as 8 bpp. and two 8 bpp fit in space for 16
-                           // bpp but this should catch obvious problems.
+     const auto update_tile_positions = [this, &pixel_pos, &down_pixel_pos](/*const auto &map, */ auto    &&tiles,
+                                                                            const std::vector<std::size_t> &indices) {
+          for (auto i : indices)
+          {
+               auto &tile = tiles[i];
+               if (m_draw_swizzle)
+               {
+                    //   if (auto intersecting = find_intersecting(m_imported_tile_map, pixel_pos, texture_page, true);
+                    //   !intersecting.empty())
+                    //   {
+                    //        // this might not be good enough as two 4 bpp tiles fit in the
+                    //        // same location as 8 bpp. and two 8 bpp fit in space for 16
+                    //        // bpp but this should catch obvious problems.
 
-                           // in the end it is safer to keep all 8bpp tiles aligned left
-                           // and all 4bpp aligned right. For each Texture page.
-                           // 16bpp are rare, but they should be left of 8bpp.
-                           spdlog::info(
-                             "There is at least {} tile(s) at this location. Choose an empty "
-                             "location!",// at least because I am filtering by depth and
-                                         // palette
-                             intersecting.size());
-                           return;
-                      }
-                      if (auto intersecting = find_intersecting(map, pixel_pos, texture_page, true); !intersecting.empty())
-                      {
-                           // this might not be good enough as two 4 bpp tiles fit in the
-                           // same location as 8 bpp. and two 8 bpp fit in space for 16
-                           // bpp but this should catch obvious problems.
+                    //        // in the end it is safer to keep all 8bpp tiles aligned left
+                    //        // and all 4bpp aligned right. For each Texture page.
+                    //        // 16bpp are rare, but they should be left of 8bpp.
+                    //        spdlog::info(
+                    //          "There is at least {} tile(s) at this location. Choose an empty "
+                    //          "location!",// at least because I am filtering by depth and
+                    //                      // palette
+                    //          intersecting.size());
+                    //        return;
+                    //   }
+                    //   if (auto intersecting = find_intersecting(map, pixel_pos, texture_page, true); !intersecting.empty())
+                    //   {
+                    //        // this might not be good enough as two 4 bpp tiles fit in the
+                    //        // same location as 8 bpp. and two 8 bpp fit in space for 16
+                    //        // bpp but this should catch obvious problems.
 
-                           // in the end it is safer to keep all 8bpp tiles aligned left
-                           // and all 4bpp aligned right. For each Texture page.
-                           // 16bpp are rare, but they should be left of 8bpp.
-                           spdlog::info(
-                             "There is at least {} tile(s) at this location. Choose an empty "
-                             "location!",// at least because I am filtering by depth and
-                                         // palette
-                             intersecting.size());
-                           return;
-                      }
+                    //        // in the end it is safer to keep all 8bpp tiles aligned left
+                    //        // and all 4bpp aligned right. For each Texture page.
+                    //        // 16bpp are rare, but they should be left of 8bpp.
+                    //        spdlog::info(
+                    //          "There is at least {} tile(s) at this location. Choose an empty "
+                    //          "location!",// at least because I am filtering by depth and
+                    //                      // palette
+                    //          intersecting.size());
+                    //        return;
+                    //   }
 
-                      const std::int32_t texture_page_width = 256;
-                      const std::int32_t x_offset = (down_pixel_pos.x % texture_page_width) - static_cast<std::int32_t>(tile.source_x());
-                      const std::int32_t y_offset = down_pixel_pos.y - static_cast<std::int32_t>(tile.source_y());
-                      tile                        = tile
-                               .with_source_xy(
-                                 static_cast<std::uint8_t>((((pixel_pos.x % texture_page_width) - x_offset))),
-                                 static_cast<std::uint8_t>(((pixel_pos.y - y_offset))))
-                               .with_texture_id(texture_page);
-                 }
-                 else
-                 {
-                      const std::int32_t x_offset = down_pixel_pos.x - tile.x();
-                      const std::int32_t y_offset = down_pixel_pos.y - tile.y();
-                      tile =
-                        tile.with_xy(static_cast<std::int16_t>(pixel_pos.x - x_offset), static_cast<std::int16_t>(pixel_pos.y - y_offset));
-                 }
-            }
-       };
-     current_map.visit_tiles([&](auto &&tiles) { update_tile_positions(current_map, tiles, saved_indices); });
-     if (!m_draw_swizzle)
-     {
-          m_imported_tile_map.visit_tiles(
-            [this, &update_tile_positions](auto &&tiles) { update_tile_positions(m_imported_tile_map, tiles, m_saved_imported_indices); });
-     }
+                    const std::int32_t texture_page_width = 256;
+                    const std::int32_t x_offset = (down_pixel_pos.x % texture_page_width) - static_cast<std::int32_t>(tile.source_x());
+                    const std::int32_t y_offset = down_pixel_pos.y - static_cast<std::int32_t>(tile.source_y());
+                    tile                        = tile
+                             .with_source_xy(
+                               static_cast<std::uint8_t>((((pixel_pos.x % texture_page_width) - x_offset))),
+                               static_cast<std::uint8_t>(((pixel_pos.y - y_offset))))
+                             .with_texture_id(static_cast<std::uint8_t>(pixel_pos.x / texture_page_width));
+               }
+               else
+               {
+                    const std::int32_t x_offset = down_pixel_pos.x - tile.x();
+                    const std::int32_t y_offset = down_pixel_pos.y - tile.y();
+                    tile =
+                      tile.with_xy(static_cast<std::int16_t>(pixel_pos.x - x_offset), static_cast<std::int16_t>(pixel_pos.y - y_offset));
+               }
+          }
+     };
+     current_map.visit_tiles([&](auto &&tiles) { update_tile_positions(/*current_map,*/ tiles, saved_indices); });
+     // if (!m_draw_swizzle)
+     // {
+     //      m_imported_tile_map.visit_tiles(
+     //        [this, &update_tile_positions](auto &&tiles) { update_tile_positions(m_imported_tile_map, tiles, m_saved_imported_indices);
+     //        });
+     // }
      // m_saved_indices.clear();
      m_saved_imported_indices.clear();
      update_render_texture();

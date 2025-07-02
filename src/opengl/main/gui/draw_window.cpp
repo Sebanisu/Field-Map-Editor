@@ -410,20 +410,22 @@ void fme::draw_window::draw_map_grid_for_conflict_tiles(const ImVec2 &screen_pos
                          std::ranges::advance(begin, i);
                          return *begin;
                     };
-                    // assert(std::cmp_less(index, std::ranges::size(original_tiles)) && "Index out of Range...");
-                    // const auto index_to_original_tile = [&original_tiles](const auto i) {
-                    //      auto begin = std::ranges::cbegin(original_tiles);
-                    //      std::ranges::advance(begin, i);
-                    //      return *begin;
-                    // };
-
-                    const auto &working_tile = index_to_working_tile(index);
-                    // const auto &original_tile = index_to_original_tile(index);
-                    assert(similar_counts.contains(working_tile) && "Tile wasn't in the map");
-                    const auto similar_count  = similar_counts.at(working_tile);
-                    const bool similar_over_1 = std::cmp_greater(similar_count, 1);
-                    assert(animation_counts.contains(working_tile) && "Tile wasn't in the map");
-                    const auto  animation_count  = animation_counts.at(working_tile);
+                    const auto        &working_tile  = index_to_working_tile(index);
+                    const std::uint8_t similar_count = [&] -> std::uint8_t {
+                         if (auto it = similar_counts.find(working_tile); it != similar_counts.end())
+                         {
+                              return it->second;
+                         }
+                         return {};
+                    }();
+                    const bool         similar_over_1  = std::cmp_greater(similar_count, 1);
+                    const std::uint8_t animation_count = [&] -> std::uint8_t {
+                         if (auto it = animation_counts.find(working_tile); it != animation_counts.end())
+                         {
+                              return it->second;
+                         }
+                         return {};
+                    }();
                     const bool  animation_over_1 = std::cmp_greater(animation_count, 1);
 
                     const float x                = [&]() {
@@ -704,7 +706,7 @@ void fme::draw_window::UseImGuizmo([[maybe_unused]] const float scale, [[maybe_u
      glm::mat4 objectMatrix = glm::translate(glm::mat4(1.0f), tilePosition);
 
      // Apply the adjusted size
-     ImGuizmo::SetGizmoSizeClipSpace(selections->draw_swizzle ? 0.021f : 0.15f);
+     // ImGuizmo::SetGizmoSizeClipSpace(selections->draw_swizzle ? 0.021f : 0.15f);
      ImGuizmo::SetOrthographic(true);
      ImGuizmo::SetDrawlist();
      // Set gizmo draw region to the visible ImGui window area
@@ -719,7 +721,11 @@ void fme::draw_window::UseImGuizmo([[maybe_unused]] const float scale, [[maybe_u
      }
 
      if (ImGuizmo::Manipulate(
-           glm::value_ptr(view), glm::value_ptr(projection), ImGuizmo::TRANSLATE, ImGuizmo::LOCAL, glm::value_ptr(objectMatrix)))
+           glm::value_ptr(view),
+           glm::value_ptr(projection),
+           ImGuizmo::TRANSLATE_X | ImGuizmo::TRANSLATE_Y,
+           ImGuizmo::LOCAL,
+           glm::value_ptr(objectMatrix)))
      {
           tilePosition            = objectMatrix[3];
           const auto relative_pos = glm::vec2(tilePosition.x, tilePosition.y);
@@ -757,8 +763,7 @@ void fme::draw_window::UseImGuizmo([[maybe_unused]] const float scale, [[maybe_u
                       t_map_sprite->find_intersecting(tiles, m_mouse_positions.pixel, m_mouse_positions.texture_page, false, true);
                });
 
-               t_map_sprite->update_position(
-                 m_mouse_positions.pixel, m_mouse_positions.texture_page, m_mouse_positions.down_pixel, m_clicked_tile_indices);
+               t_map_sprite->update_position(m_mouse_positions.pixel, m_mouse_positions.down_pixel, m_clicked_tile_indices);
           }
           m_mouse_positions.down_pixel = m_mouse_positions.pixel;
      }
