@@ -722,9 +722,37 @@ void fme::draw_window::UseImGuizmo([[maybe_unused]] const float scale, [[maybe_u
            glm::value_ptr(view), glm::value_ptr(projection), ImGuizmo::TRANSLATE, ImGuizmo::LOCAL, glm::value_ptr(objectMatrix)))
      {
           tilePosition            = objectMatrix[3];
+          const auto relative_pos = glm::vec2(tilePosition.x, tilePosition.y);
+          const auto old_pixel    = m_mouse_positions.down_pixel;
+          // Map it back to the texture coordinates
           m_mouse_positions.pixel = glm::ivec2(
-            static_cast<int>(tilePosition.x / scale / static_cast<float>(t_map_sprite->get_map_scale())),
-            static_cast<int>(tilePosition.y / scale / static_cast<float>(t_map_sprite->get_map_scale())));
+            static_cast<int>(relative_pos.x / scale / static_cast<float>(t_map_sprite->get_map_scale())),
+            static_cast<int>(relative_pos.y / scale / static_cast<float>(t_map_sprite->get_map_scale())));
+
+          if (selections->draw_swizzle)
+          {
+               m_mouse_positions.pixel /= 16;
+               m_mouse_positions.pixel *= 16;
+               m_mouse_positions.texture_page = static_cast<uint8_t>(m_mouse_positions.pixel.x / 256);
+          }
+          else
+          {
+               m_mouse_positions.texture_page = (std::numeric_limits<std::uint8_t>::max)();
+          }
+
+          m_mouse_positions.mouse_moved = (m_mouse_positions.pixel != old_pixel);
+
+
+          if (m_mouse_positions.mouse_moved)
+          {
+               t_map_sprite->const_visit_working_tiles([&](const auto &tiles) {
+                    m_hovered_tiles_indices =
+                      t_map_sprite->find_intersecting(tiles, m_mouse_positions.pixel, m_mouse_positions.texture_page, false, true);
+               });
+
+               t_map_sprite->update_position(
+                 m_mouse_positions.pixel, m_mouse_positions.texture_page, m_mouse_positions.down_pixel, m_clicked_tile_indices);
+          }
           m_mouse_positions.down_pixel = m_mouse_positions.pixel;
      }
 }

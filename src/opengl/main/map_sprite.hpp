@@ -82,7 +82,6 @@ struct [[nodiscard]] map_sprite// final
      glengine::FrameBuffer                         out_texture                     = {};
      mutable glengine::FrameBuffer                 m_render_framebuffer            = {};
      mutable glengine::FrameBuffer                 m_drag_sprite_framebuffer       = {};
-     std::vector<std::size_t>                      m_saved_indices                 = {};
      std::vector<std::size_t>                      m_saved_imported_indices        = {};
      mutable bool                                  once                            = { true };
      mutable glengine::OrthographicCamera          m_fixed_render_camera           = {};
@@ -139,7 +138,6 @@ struct [[nodiscard]] map_sprite// final
      [[nodiscard]] map_sprite                                 with_filters(ff_8::filters filters) const;
      [[nodiscard]] bool                                       empty() const;
      [[nodiscard]] const ff_8::filters                       &filter() const;
-     [[nodiscard]] std::uint8_t                               max_x_for_saved() const;
      [[nodiscard]] map_sprite                                 update(ff_8::map_group map_group, bool draw_swizzle) const;
      [[nodiscard]] ff_8::all_unique_values_and_strings        get_all_unique_values_and_strings() const;
      [[nodiscard]] glm::uvec2                                 get_tile_texture_size_for_import() const;
@@ -206,9 +204,13 @@ struct [[nodiscard]] map_sprite// final
      void        update_render_texture(const glengine::Texture *p_texture, Map map, const tile_sizes tile_size);
      static void consume_futures(std::vector<std::future<void>> &futures);
      static void consume_futures(std::vector<std::future<std::future<void>>> &future_of_futures);
-     void        update_position(const glm::ivec2 &pixel_pos, const uint8_t &texture_page, const glm::ivec2 &down_pixel_pos);
-     bool        consume_one_future() const;
-     void        consume_now() const;
+     void        update_position(
+              const glm::ivec2               &pixel_pos,
+              const uint8_t                  &texture_page,
+              const glm::ivec2               &down_pixel_pos,
+              const std::vector<std::size_t> &saved_indices);
+     bool                         consume_one_future() const;
+     void                         consume_now() const;
 
      static std::filesystem::path save_path_coo(
        fmt::format_string<std::string_view, std::string_view, uint8_t> pattern,

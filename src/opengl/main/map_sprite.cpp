@@ -448,34 +448,6 @@ static constexpr std::underlying_type_t<texture_page_width> operator+(texture_pa
 {
      return static_cast<std::underlying_type_t<texture_page_width>>(input);
 }
-std::uint8_t map_sprite::max_x_for_saved() const
-{
-     return m_map_group.maps.const_working().visit_tiles([this](const auto &tiles) {
-          auto       transform_range = m_saved_indices | std::views::transform([this, &tiles](std::size_t tile_index) -> std::uint16_t {
-                                      auto &tile = tiles[tile_index];
-                                      if (m_draw_swizzle)
-                                      {
-                                           if (tile.depth().bpp4())
-                                           {
-                                                return +texture_page_width::bit_4;
-                                           }
-                                           if (tile.depth().bpp16())
-                                           {
-                                                return +texture_page_width::bit_16;
-                                           }
-                                           return +texture_page_width::bit_8;
-                                      }
-                                      return TILE_SIZE;
-                                 });
-
-          const auto found_min       = std::ranges::min_element(transform_range);
-          if (found_min != std::ranges::end(transform_range))
-          {
-               return static_cast<std::uint8_t>(*found_min - TILE_SIZE);
-          }
-          return static_cast<std::uint8_t>((std::numeric_limits<std::uint8_t>::max)() - TILE_SIZE);
-     });
-}
 
 
 void map_sprite::compact_rows()
@@ -499,9 +471,13 @@ void map_sprite::flatten_palette()
      update_render_texture();
 }
 
-void map_sprite::update_position(const glm::ivec2 &pixel_pos, const uint8_t &texture_page, const glm::ivec2 &down_pixel_pos)
+void map_sprite::update_position(
+  const glm::ivec2               &pixel_pos,
+  const uint8_t                  &texture_page,
+  const glm::ivec2               &down_pixel_pos,
+  const std::vector<std::size_t> &saved_indices)
 {
-     if (m_saved_indices.empty() && m_saved_imported_indices.empty())
+     if (saved_indices.empty() && m_saved_imported_indices.empty())
      {
           return;
      }
@@ -565,14 +541,14 @@ void map_sprite::update_position(const glm::ivec2 &pixel_pos, const uint8_t &tex
                  }
             }
        };
-     current_map.visit_tiles([&](auto &&tiles) { update_tile_positions(current_map, tiles, m_saved_indices); });
+     current_map.visit_tiles([&](auto &&tiles) { update_tile_positions(current_map, tiles, saved_indices); });
      if (!m_draw_swizzle)
      {
           m_imported_tile_map.visit_tiles(
             [this, &update_tile_positions](auto &&tiles) { update_tile_positions(m_imported_tile_map, tiles, m_saved_imported_indices); });
      }
      std::ignore = history_remove_duplicate();
-     m_saved_indices.clear();
+     // m_saved_indices.clear();
      m_saved_imported_indices.clear();
      update_render_texture();
 }
@@ -723,17 +699,18 @@ void map_sprite::update_position(const glm::ivec2 &pixel_pos, const uint8_t &tex
      for (const auto &z : m_all_unique_values_and_strings.z().values())
      {
           for_all_tiles([&]([[maybe_unused]] const auto &tile_const, const auto &tile, const ff_8::PupuID pupu_id) {
-               if (!m_saved_indices.empty())
-               {
-                    // skip saved indices on redraw.
-                    const auto current_index = m_map_group.maps.get_offset_from_working(tile);
-                    const auto find_index    = std::ranges::find_if(
-                      m_saved_indices, [&current_index](const auto search_index) { return std::cmp_equal(search_index, current_index); });
-                    if (find_index != m_saved_indices.end())
-                    {
-                         return;
-                    }
-               }
+               // if (!m_saved_indices.empty())
+               // {
+               //      // skip saved indices on redraw.
+               //      const auto current_index = m_map_group.maps.get_offset_from_working(tile);
+               //      const auto find_index    = std::ranges::find_if(
+               //        m_saved_indices, [&current_index](const auto search_index) { return std::cmp_equal(search_index, current_index);
+               //        });
+               //      if (find_index != m_saved_indices.end())
+               //      {
+               //           return;
+               //      }
+               // }
                if (m_filters.pupu.enabled())
                {
                     if (m_filters.pupu.value() != pupu_id)
@@ -2136,7 +2113,7 @@ std::move_only_function<std::vector<std::filesystem::path>()>
   generate_swizzle_paths(std::shared_ptr<const Selections> in_selections, const map_sprite &in_map_sprite, std::uint8_t texture_page)
 {
      assert(in_selections && "generate_swizzle_map_paths: in_selections is null");
-     //assert(in_map_sprite && "generate_swizzle_map_paths: in_map_sprite is null");
+     // assert(in_map_sprite && "generate_swizzle_map_paths: in_map_sprite is null");
      return [ps = ff_8::path_search{ .selections                   = std::move(in_selections),
                                      .opt_coo                      = in_map_sprite.get_opt_coo(),
                                      .field_name                   = in_map_sprite.get_base_name(),
@@ -2154,7 +2131,7 @@ std::move_only_function<std::vector<std::filesystem::path>()> generate_swizzle_p
   std::uint8_t                      palette)
 {
      assert(in_selections && "generate_swizzle_map_paths: in_selections is null");
-     //assert(in_map_sprite && "generate_swizzle_map_paths: in_map_sprite is null");
+     // assert(in_map_sprite && "generate_swizzle_map_paths: in_map_sprite is null");
      return [ps = ff_8::path_search{ .selections                   = std::move(in_selections),
                                      .opt_coo                      = in_map_sprite.get_opt_coo(),
                                      .field_name                   = in_map_sprite.get_base_name(),
@@ -2170,7 +2147,7 @@ std::move_only_function<std::vector<std::filesystem::path>()>
   generate_deswizzle_paths(std::shared_ptr<const Selections> in_selections, const map_sprite &in_map_sprite, const ff_8::PupuID pupu_id)
 {
      assert(in_selections && "generate_swizzle_map_paths: in_selections is null");
-     //assert(in_map_sprite && "generate_swizzle_map_paths: in_map_sprite is null");
+     // assert(in_map_sprite && "generate_swizzle_map_paths: in_map_sprite is null");
      return [ps = ff_8::path_search{ .selections                     = std::move(in_selections),
                                      .opt_coo                        = in_map_sprite.get_opt_coo(),
                                      .field_name                     = in_map_sprite.get_base_name(),
@@ -2186,7 +2163,7 @@ std::move_only_function<std::vector<std::filesystem::path>()>
   generate_swizzle_map_paths(std::shared_ptr<const Selections> in_selections, const map_sprite &in_map_sprite)
 {
      assert(in_selections && "generate_swizzle_map_paths: in_selections is null");
-     //assert(in_map_sprite && "generate_swizzle_map_paths: in_map_sprite is null");
+     // assert(in_map_sprite && "generate_swizzle_map_paths: in_map_sprite is null");
      return [ps = ff_8::path_search{ .selections = std::move(in_selections),
                                      .opt_coo    = in_map_sprite.get_opt_coo(),
                                      .field_name = in_map_sprite.get_base_name(),
@@ -2202,7 +2179,7 @@ std::move_only_function<std::vector<std::filesystem::path>()>
 {
 
      assert(in_selections && "generate_swizzle_map_paths: in_selections is null");
-     //assert(in_map_sprite && "generate_swizzle_map_paths: in_map_sprite is null");
+     // assert(in_map_sprite && "generate_swizzle_map_paths: in_map_sprite is null");
      return [ps = ff_8::path_search{ .selections = std::move(in_selections),
                                      .opt_coo    = in_map_sprite.get_opt_coo(),
                                      .field_name = in_map_sprite.get_base_name(),
