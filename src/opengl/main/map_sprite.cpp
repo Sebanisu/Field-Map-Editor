@@ -2124,7 +2124,7 @@ std::move_only_function<std::vector<std::filesystem::path>()>
                                      .opt_coo                      = in_map_sprite.get_opt_coo(),
                                      .field_name                   = in_map_sprite.get_base_name(),
                                      .filters_upscale_value_string = in_map_sprite.filter().upscale.value().string() },
-             texture_page] -> std::vector<std::filesystem::path> {
+             texture_page]() -> std::vector<std::filesystem::path> {
           spdlog::debug("Generating swizzle paths for field: '{}', texture_page: {} ", ps.field_name, texture_page);
           return ps.generate_swizzle_paths(texture_page, ".png");
      };
@@ -2143,7 +2143,7 @@ std::move_only_function<std::vector<std::filesystem::path>()> generate_swizzle_p
                                      .field_name                   = in_map_sprite.get_base_name(),
                                      .filters_upscale_value_string = in_map_sprite.filter().upscale.value().string() },
              texture_page,
-             palette] -> std::vector<std::filesystem::path> {
+             palette]() -> std::vector<std::filesystem::path> {
           spdlog::debug("Generating swizzle paths for field: '{}', texture_page: {}, palette: {}", ps.field_name, texture_page, palette);
           return ps.generate_swizzle_paths(texture_page, palette, ".png");
      };
@@ -2158,7 +2158,7 @@ std::move_only_function<std::vector<std::filesystem::path>()>
                                      .opt_coo                        = in_map_sprite.get_opt_coo(),
                                      .field_name                     = in_map_sprite.get_base_name(),
                                      .filters_deswizzle_value_string = in_map_sprite.filter().deswizzle.value().string() },
-             pupu_id] -> std::vector<std::filesystem::path> {
+             pupu_id]() -> std::vector<std::filesystem::path> {
           spdlog::debug("Generating deswizzle paths for field: '{}', pupu_id: {}", ps.field_name, pupu_id);
           return ps.generate_deswizzle_paths(pupu_id, ".png");
      };
@@ -2174,7 +2174,7 @@ std::move_only_function<std::vector<std::filesystem::path>()>
                                      .opt_coo    = in_map_sprite.get_opt_coo(),
                                      .field_name = in_map_sprite.get_base_name(),
                                      .filters_upscale_map_value_string =
-                                       in_map_sprite.filter().upscale_map.value().string() }] -> std::vector<std::filesystem::path> {
+                                       in_map_sprite.filter().upscale_map.value().string() }]() -> std::vector<std::filesystem::path> {
           spdlog::debug("Generating swizzle map paths for field: '{}'", ps.field_name);
           return ps.generate_swizzle_map_paths(".map");
      };
@@ -2190,7 +2190,7 @@ std::move_only_function<std::vector<std::filesystem::path>()>
                                      .opt_coo    = in_map_sprite.get_opt_coo(),
                                      .field_name = in_map_sprite.get_base_name(),
                                      .filters_upscale_map_value_string =
-                                       in_map_sprite.filter().deswizzle_map.value().string() }] -> std::vector<std::filesystem::path> {
+                                       in_map_sprite.filter().deswizzle_map.value().string() }]() -> std::vector<std::filesystem::path> {
           spdlog::debug("Generating deswizzle map paths for field: '{}'", ps.field_name);
           return ps.generate_deswizzle_map_paths(".map");
      };

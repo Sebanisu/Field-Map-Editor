@@ -3484,7 +3484,7 @@ std::future<std::future<gui::PathsAndEnabled>> gui::generate_deswizzle_paths()
                                 .opt_coo                        = get_coo(),
                                 .field_name                     = m_map_sprite->get_base_name(),
                                 .filters_deswizzle_value_string = m_map_sprite->filter().deswizzle.value().string(),
-                                .working_unique_pupu            = m_map_sprite->working_unique_pupu() }] -> std::future<PathsAndEnabled> {
+                                .working_unique_pupu            = m_map_sprite->working_unique_pupu() }]() -> std::future<PathsAndEnabled> {
             gui::PathsAndEnabled pande{ .path_key = ConfigKey::CacheDeswizzlePaths, .enabled_key = ConfigKey::CacheDeswizzlePathsEnabled };
 
             const auto           get_map_paths_joined = [&](const auto &container) {
@@ -3510,7 +3510,7 @@ std::future<std::future<gui::PathsAndEnabled>> gui::generate_deswizzle_paths()
             {
                  pande.enabled.push_back(ps.has_deswizzle_path(std::filesystem::path{ path }));
             }
-            return std::async(std::launch::deferred, [moved_pande = std::move(pande)] -> PathsAndEnabled { return moved_pande; });
+            return std::async(std::launch::deferred, [moved_pande = std::move(pande)]() -> PathsAndEnabled { return moved_pande; });
        });
 }
 
@@ -3565,7 +3565,7 @@ std::future<std::future<gui::PathsAndEnabled>> gui::generate_deswizzle_map_paths
                                 .field_name                     = m_map_sprite->get_base_name(),
                                 .filters_deswizzle_value_string = m_map_sprite->filter().deswizzle.value().string(),
                                 .filters_deswizzle_map_value_string =
-                                  m_map_sprite->filter().deswizzle_map.value().string() }] -> std::future<PathsAndEnabled> {
+                                  m_map_sprite->filter().deswizzle_map.value().string() }]() -> std::future<PathsAndEnabled> {
             gui::PathsAndEnabled pande{ .path_key    = ConfigKey::CacheDeswizzleMapPaths,
                                         .enabled_key = ConfigKey::CacheDeswizzleMapPathsEnabled };
 
@@ -3593,7 +3593,7 @@ std::future<std::future<gui::PathsAndEnabled>> gui::generate_deswizzle_map_paths
                  pande.enabled.emplace_back(
                    ps.has_map_path(std::filesystem::path{ path }, ".map", ps.selections->output_map_pattern_for_deswizzle));
             }
-            return std::async(std::launch::deferred, [moved_pande = std::move(pande)] -> PathsAndEnabled { return moved_pande; });
+            return std::async(std::launch::deferred, [moved_pande = std::move(pande)]() -> PathsAndEnabled { return moved_pande; });
        });
 }
 
