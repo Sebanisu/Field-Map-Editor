@@ -605,7 +605,8 @@ struct filters
        , palette([&]() -> decltype(palette) {
             if (load_config)
             {
-                 return { config[ConfigKeys<FilterTag::Palette>::key_name].value_or(ff_8::tile_operations::PaletteIdT<TileT>{}) & 0xFU,
+                 return { static_cast<ff_8::tile_operations::PaletteIdT<TileT>>(
+                            config[ConfigKeys<FilterTag::Palette>::key_name].value_or(ff_8::tile_operations::PaletteIdT<TileT>{}) & 0xFU),
 
                           WithFlag(
                             FilterSettings::Default,
