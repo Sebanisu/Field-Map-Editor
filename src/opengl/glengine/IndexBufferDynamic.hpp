@@ -18,6 +18,12 @@ class IndexBufferDynamic
      IndexType m_type        = {};
 
    public:
+     [[nodiscard]] static auto backup()
+     {
+          GLint ibo_binding{ 0 };// save original
+          GlCall{}(glGetIntegerv, GL_ELEMENT_ARRAY_BUFFER_BINDING, &ibo_binding);
+          return ScopeGuard{ [=]() { GlCall{}(glBindBuffer, GL_ELEMENT_ARRAY_BUFFER, ibo_binding); } };
+     }
      IndexBufferDynamic() = default;
      IndexBufferDynamic(std::size_t count)
        : IndexBufferDynamic(QuadIndices(count))
@@ -51,12 +57,6 @@ class IndexBufferDynamic
 
      void                      bind() const;
      static void               unbind();
-     [[nodiscard]] static auto backup()
-     {
-          GLint ibo_binding{ 0 };// save original
-          GlCall{}(glGetIntegerv, GL_ELEMENT_ARRAY_BUFFER_BINDING, &ibo_binding);
-          return ScopeGuard{ [=]() { GlCall{}(glBindBuffer, GL_ELEMENT_ARRAY_BUFFER, ibo_binding); } };
-     }
      IndexType type() const;
 };
 static_assert(Bindable<IndexBufferDynamic> && has_Type_for_IndexType<IndexBufferDynamic>);
