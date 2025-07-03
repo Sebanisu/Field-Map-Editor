@@ -310,7 +310,7 @@ struct filter_old
      {
           return m_value;
      }
-     [[nodiscard]] const bool enabled() const
+     [[nodiscard]] bool enabled() const
      {
           return HasFlag(m_settings, FilterSettings::Toggle_Enabled);
      }
@@ -421,7 +421,7 @@ struct filter
      {
           return m_value;
      }
-     [[nodiscard]] const bool enabled() const
+     [[nodiscard]] bool enabled() const
      {
           return HasFlag(m_settings, FilterSettings::Toggle_Enabled);
      }
