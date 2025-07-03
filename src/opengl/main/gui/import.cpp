@@ -34,7 +34,8 @@ void import::render() const
           return;
      }
 
-     if (!selections->display_import_image_window)
+     // todo fix imports
+     //  if (!selections->display_import_image_window)
      {
           return;
      }

@@ -75,8 +75,8 @@ fme::Selections::Selections(const Configuration config)
      display_draw_window          = config[key_to_string(ConfigKey::DisplayDrawWindow)].value_or(true);
      display_field_file_window    = config[key_to_string(ConfigKey::DisplayFieldFileWindow)].value_or(false);
      display_history_window       = config[key_to_string(ConfigKey::DisplayHistoryWindow)].value_or(false);
-     //todo fix later. I want to merge the current branch and will make a new branch to work on imports.
-     //display_import_image_window  = config[key_to_string(ConfigKey::DisplayImportImageWindow)].value_or(false);
+     // todo fix later. I want to merge the current branch and will make a new branch to work on imports.
+     // display_import_image_window  = config[key_to_string(ConfigKey::DisplayImportImageWindow)].value_or(false);
      display_import_image         = config[key_to_string(ConfigKey::DisplayImportImage)].value_or(false);
      force_rendering_of_map       = config[key_to_string(ConfigKey::ForceRenderingOfMap)].value_or(false);
 
@@ -352,7 +352,8 @@ void fme::Selections::update_configuration_key(ConfigKey key) const
           MAP_MACRO(ConfigKey::DisplayDrawWindow, display_draw_window);
           MAP_MACRO(ConfigKey::DisplayFieldFileWindow, display_field_file_window);
           MAP_MACRO(ConfigKey::DisplayHistoryWindow, display_history_window);
-          MAP_MACRO(ConfigKey::DisplayImportImageWindow, display_import_image_window);
+          // todo fix imports
+          // MAP_MACRO(ConfigKey::DisplayImportImageWindow, display_import_image_window);
           MAP_MACRO(ConfigKey::DisplayImportImage, display_import_image);
           MAP_MACRO(ConfigKey::ForceRenderingOfMap, force_rendering_of_map);
           MAP_MACRO_UNDERLYING(ConfigKey::Draw, draw);
