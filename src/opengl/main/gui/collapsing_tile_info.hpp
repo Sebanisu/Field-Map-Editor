@@ -20,7 +20,8 @@ template<typename... B>
 }
 [[nodiscard]] bool collapsing_tile_info(
   std::weak_ptr<const map_sprite>                           map,
-  const open_viii::graphics::background::Map::variant_tile &current_tile,
+  const open_viii::graphics::background::Map::variant_tile &original_tile,
+  const open_viii::graphics::background::Map::variant_tile &working_tile,
   const tile_button_options                                &options = {},
   const std::size_t                                         index   = std::numeric_limits<size_t>::max());
 bool browse_for_image_display_preview();

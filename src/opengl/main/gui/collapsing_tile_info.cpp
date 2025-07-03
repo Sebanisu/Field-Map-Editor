@@ -11,7 +11,8 @@ namespace fme
 {
 bool collapsing_tile_info(
   std::weak_ptr<const map_sprite>                           map_ptr,
-  const open_viii::graphics::background::Map::variant_tile &current_tile,
+  const open_viii::graphics::background::Map::variant_tile &in_original_tile,
+  const open_viii::graphics::background::Map::variant_tile &in_working_tile,
   const tile_button_options                                &options,
   const std::size_t                                         index)
 {
@@ -24,7 +25,7 @@ bool collapsing_tile_info(
 
      return std::visit(
        make_visitor(
-         [&](const is_tile auto &tile) -> bool {
+         [&](const is_tile auto &original_tile, const is_tile auto &working_tile) -> bool {
               std::string title      = index == std::numeric_limits<size_t>::max()
                                          ? fmt::format("{}", gui_labels::selected_tile_info)
                                          : fmt::format("{}: {}", gui_labels::selected_tile_info, index);
@@ -54,7 +55,7 @@ bool collapsing_tile_info(
                    ImGui::TableSetupColumn("Value", ImGuiTableColumnFlags_WidthStretch);
 
                    const auto         the_end_table = glengine::ScopeGuard([]() { ImGui::EndTable(); });
-                   const auto         tile_string   = fmt::format("{}", tile);
+                   const auto         tile_string   = fmt::format("{}", working_tile);
                    std::istringstream string_stream(tile_string);
                    std::string        line;
                    std::string        key;
@@ -86,11 +87,12 @@ bool collapsing_tile_info(
                 backup_pos.y - width * position_height_scale - style.FramePadding.y * padding_height_scale));
               auto options_with_size = options;
               options_with_size.size = { width * tile_scale, width * tile_scale };
-              (void)create_tile_button(map, tile, options_with_size);
+              (void)create_tile_button(map, original_tile, options_with_size);
               ImGui::SetCursorScreenPos(backup_pos);
               return false;
          },
-         [](const std::monostate &) -> bool { return false; }),
-       current_tile);
+         [](...) -> bool { return false; }),
+       in_original_tile,
+       in_working_tile);
 }
 }// namespace fme

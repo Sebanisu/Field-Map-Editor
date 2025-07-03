@@ -646,18 +646,21 @@ void gui::selected_tiles_panel()
      }
 
      std::optional<std::size_t> remove_index = {};
-     m_map_sprite->const_visit_original_tiles([&](const auto &tiles) {
-          for (const auto &i : m_draw_window.clicked_tile_indices())
-          {
-               if (i < std::ranges::size(tiles))
+     m_map_sprite->const_visit_original_tiles([&](const auto &original_tiles) {
+          m_map_sprite->const_visit_working_tiles([&](const auto &working_tiles) {
+               for (const auto &i : m_draw_window.clicked_tile_indices())
                {
-                    const auto &tile = tiles[i];
-                    if (collapsing_tile_info(m_map_sprite, tile, {}, i))
+                    if (i < std::ranges::size(original_tiles) && i < std::ranges::size(working_tiles))
                     {
-                         remove_index = i;
+                         const auto &original_tile = original_tiles[i];
+                         const auto &working_tile  = working_tiles[i];
+                         if (collapsing_tile_info(m_map_sprite, original_tile, working_tile, {}, i))
+                         {
+                              remove_index = i;
+                         }
                     }
                }
-          }
+          });
      });
      if (remove_index.has_value())
      {

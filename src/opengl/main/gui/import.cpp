@@ -47,15 +47,15 @@ void import::render() const
      }
      // begin imgui window
 
-     //todo fix imports later
-     // bool      &visible     = selections->display_import_image_window;
-     // const auto pop_visible = glengine::ScopeGuard{ [&selections, &visible, was_visable = visible] {
-     //      if (was_visable != visible)
-     //      {
-     //           selections->update_configuration_key(ConfigKey::DisplayImportImageWindow);
-     //      }
-     // } };
-     bool visible = false;
+     // todo fix imports later
+     //  bool      &visible     = selections->display_import_image_window;
+     //  const auto pop_visible = glengine::ScopeGuard{ [&selections, &visible, was_visable = visible] {
+     //       if (was_visable != visible)
+     //       {
+     //            selections->update_configuration_key(ConfigKey::DisplayImportImageWindow);
+     //       }
+     //  } };
+     bool       visible = false;
      const auto the_end = glengine::ScopeGuard([]() { ImGui::End(); });
      if (!ImGui::Begin(gui_labels::import_image.data(), &visible))
      {
@@ -65,9 +65,9 @@ void import::render() const
      //   * So I need to choose an existing tile to base the new tiles on.
      [[maybe_unused]] const auto &current_tile = combo_selected_tile(changed);
      // add text showing the tile's info.
-     (void)collapsing_tile_info(map_sprite, current_tile);
-     //todo handle return true which means remove item.
-     //   * I need to browse for an image file.
+     (void)collapsing_tile_info(map_sprite, current_tile, current_tile);
+     // todo handle return true which means remove item.
+     //    * I need to browse for an image file.
      changed = browse_for_image_display_preview() || changed;
      //   * We need to adjust the scale to fit
      // maybe i can just create an imgui window filled with the image
@@ -157,8 +157,8 @@ open_viii::graphics::background::Map::variant_tile &import::combo_selected_tile(
        [&, current_tile_id = selections->selected_tile, this]() { changed = current_tile_id != selections->selected_tile; });
      // combo box with all the tiles.
      find_selected_tile_for_import(current_tile);
-     //todo fix it so saving only happens when something changes.
-     //save_config();
+     // todo fix it so saving only happens when something changes.
+     // save_config();
 
 
      ImVec2 const combo_pos    = ImGui::GetCursorScreenPos();
