@@ -13,8 +13,8 @@ BatchRenderer::BatchRenderer()
 }
 BatchRenderer::BatchRenderer(std::size_t quad_count, Shader shader)
   : m_quad_count(quad_count)
-  , m_shader(std::move(shader))
   , m_max_textures(max_texture_image_units())
+  , m_shader(std::move(shader))
 {
      const auto pop_backup = m_vertex_array.backup();
      m_vertex_array.bind();
