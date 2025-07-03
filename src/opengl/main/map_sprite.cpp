@@ -492,40 +492,6 @@ void map_sprite::update_position(
                auto       &working_tile  = tiles[i];
                if (m_draw_swizzle)
                {
-                    //   if (auto intersecting = find_intersecting(m_imported_tile_map, pixel_pos, texture_page, true);
-                    //   !intersecting.empty())
-                    //   {
-                    //        // this might not be good enough as two 4 bpp tiles fit in the
-                    //        // same location as 8 bpp. and two 8 bpp fit in space for 16
-                    //        // bpp but this should catch obvious problems.
-
-                    //        // in the end it is safer to keep all 8bpp tiles aligned left
-                    //        // and all 4bpp aligned right. For each Texture page.
-                    //        // 16bpp are rare, but they should be left of 8bpp.
-                    //        spdlog::info(
-                    //          "There is at least {} tile(s) at this location. Choose an empty "
-                    //          "location!",// at least because I am filtering by depth and
-                    //                      // palette
-                    //          intersecting.size());
-                    //        return;
-                    //   }
-                    //   if (auto intersecting = find_intersecting(map, pixel_pos, texture_page, true); !intersecting.empty())
-                    //   {
-                    //        // this might not be good enough as two 4 bpp tiles fit in the
-                    //        // same location as 8 bpp. and two 8 bpp fit in space for 16
-                    //        // bpp but this should catch obvious problems.
-
-                    //        // in the end it is safer to keep all 8bpp tiles aligned left
-                    //        // and all 4bpp aligned right. For each Texture page.
-                    //        // 16bpp are rare, but they should be left of 8bpp.
-                    //        spdlog::info(
-                    //          "There is at least {} tile(s) at this location. Choose an empty "
-                    //          "location!",// at least because I am filtering by depth and
-                    //                      // palette
-                    //          intersecting.size());
-                    //        return;
-                    //   }
-
                     const std::int32_t texture_page_width = 256;
                     const std::int32_t x_offset =
                       (down_pixel_pos.x % texture_page_width) - static_cast<std::int32_t>(working_tile.source_x());
