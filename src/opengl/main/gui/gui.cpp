@@ -1564,35 +1564,40 @@ void gui::edit_menu()
           {
                float sz       = ImGui::GetTextLineHeight();
                auto  zip_view = std::ranges::views::zip(fme::colors::ColorValues, fme::colors::ColorNames);
-               for (auto &&[color_value, color_name] : zip_view)
+               constexpr int columns  = 2;
+               if (ImGui::BeginTable("##ColorTable", columns, ImGuiTableFlags_SizingStretchSame))
                {
-                    if (std::cmp_less(color_value.a, 255))
+                    for (auto &&[color_value, color_name] : zip_view)
                     {
-                         continue;
-                    }
-                    ImVec2 p = ImGui::GetCursorScreenPos();
-                    ImGui::GetWindowDrawList()->AddRectFilled(p, ImVec2(p.x + sz, p.y + sz), ImU32{ color_value });
-                    ImGui::Dummy(ImVec2(sz, sz));
-                    ImGui::SameLine();
-                    if (ImGui::MenuItem(color_name.data()))
-                    {
-                         if (change_background_color(color_value))
+                         if (std::cmp_less(color_value.a, 255))
                          {
-                              save_background_color();
+                              continue;
+                         }
+                         ImGui::TableNextColumn();
+                         ImVec2 p = ImGui::GetCursorScreenPos();
+                         ImGui::GetWindowDrawList()->AddRectFilled(p, ImVec2(p.x + sz, p.y + sz), ImU32{ color_value });
+                         ImGui::Dummy(ImVec2(sz, sz));
+                         ImGui::SameLine();
+                         if (ImGui::MenuItem(color_name.data()))
+                         {
+                              if (change_background_color(color_value))
+                              {
+                                   save_background_color();
+                              }
                          }
                     }
+                    ImGui::EndTable();
                }
-
-               if (ImGui::ColorPicker3("##Choose Background Color", clear_color_f.data(), ImGuiColorEditFlags_DisplayRGB))
-               {
-                    change_background_color({ clear_color_f[0], clear_color_f[1], clear_color_f[2] });
+                    if (ImGui::ColorPicker3("##Choose Background Color", clear_color_f.data(), ImGuiColorEditFlags_DisplayRGB))
+                    {
+                         change_background_color({ clear_color_f[0], clear_color_f[1], clear_color_f[2] });
+                    }
+                    if (ImGui::IsItemDeactivatedAfterEdit())
+                    {
+                         save_background_color();
+                    }
+                    ImGui::EndMenu();
                }
-               if (ImGui::IsItemDeactivatedAfterEdit())
-               {
-                    save_background_color();
-               }
-               ImGui::EndMenu();
-          }
 
           if (ImGui::BeginMenu(gui_labels::filters.data()))
           {
