@@ -328,17 +328,18 @@ struct colors
      static constexpr color LightGray   = { 192, 192, 192 };//!< Light gray.
      static constexpr color DarkGray    = { 64, 64, 64 };//!< Dark gray.
      static constexpr color Orange      = { 255, 165, 0 };//!< Orange color.
+     static constexpr color Peach       = { 255, 153, 102 };//!< Gentle, warm orange variant
      static constexpr color Purple      = { 128, 0, 128 };//!< Purple color.
      static constexpr color Pink        = { 255, 192, 203 };//!< Pink color.
      static constexpr color Brown       = { 78, 39, 5 };//!< Brown color.
 
-     static constexpr auto  ColorValues = std::array{ Red,     Green, Blue,      White,    Black,  Transparent, Yellow, Cyan,
-                                                     Magenta, Gray,  LightGray, DarkGray, Orange, Purple,      Pink,   Brown };
+     static constexpr auto  ColorValues = std::array{ Red,  Green,     Blue,     White,  Black, Transparent, Yellow, Cyan, Magenta,
+                                                     Gray, LightGray, DarkGray, Orange, Peach, Purple,      Pink,   Brown };
 
      static constexpr auto  ColorNames =
-       std::array<std::string_view, std::ranges::size(ColorValues)>{ "Red",    "Green",  "Blue",    "White", "Black",     "Transparent",
-                                                                     "Yellow", "Cyan",   "Magenta", "Gray",  "LightGray", "DarkGray",
-                                                                     "Orange", "Purple", "Pink",    "Brown" };
+       std::array<std::string_view, std::ranges::size(ColorValues)>{ "Red",    "Green", "Blue",    "White", "Black",     "Transparent",
+                                                                     "Yellow", "Cyan",  "Magenta", "Gray",  "LightGray", "DarkGray",
+                                                                     "Orange", "Peach", "Purple",  "Pink",  "Brown" };
 
      // darkstyle imgui color blue tint
      static inline const color Button                 = color{ DarkStyle.Colors[ImGuiCol_Button] };
