@@ -12,6 +12,10 @@ static ImVec2 operator+(const ImVec2 &a, const ImVec2 &b)
      return ImVec2(a.x + b.x, a.y + b.y);
 }
 
+static ImVec2 operator-(const ImVec2 &a, const ImVec2 &b)
+{
+     return ImVec2(a.x - b.x, a.y - b.y);
+}
 void fme::draw_window::update(std::weak_ptr<fme::Selections> in_selections)
 {
      m_selections = std::move(in_selections);
@@ -681,17 +685,73 @@ void fme::draw_window::UseImGuizmo([[maybe_unused]] const float scale, [[maybe_u
           spdlog::error("Failed to lock map_sprite: shared_ptr is expired.");
           return;
      }
+     const float    edge_threshold   = 30.0f;// Distance from edge
+     const float    scroll_speed_pps = 2000.0f;// Scroll speed in pixels per second
+     const ImGuiIO &io               = ImGui::GetIO();
+     const float    dt               = io.DeltaTime;
+     const ImVec2   mouse            = ImGui::GetMousePos();
 
-     // attempt to make gizmo stay on screen
-     ImVec2      clip_min  = ImGui::GetWindowPos() + ImGui::GetCursorPos();
-     ImVec2      clip_max  = clip_min + ImGui::GetContentRegionAvail();
+     // detecting edges for scrolling
+     const ImVec2   scroll_edge_min =
+       ImGui::GetCursorScreenPos() + ImVec2{ edge_threshold, edge_threshold } + ImVec2{ ImGui::GetScrollX(), ImGui::GetScrollY() };
+     const ImVec2 scroll_edge_max = ImGui::GetCursorScreenPos() + ImGui::GetContentRegionAvail() - ImVec2{ edge_threshold, edge_threshold }
+                                    + ImVec2{ ImGui::GetScrollX(), ImGui::GetScrollY() };
 
-     // ImDrawList *draw_list = ImGui::GetForegroundDrawList();
-     // draw_list->AddRect(clip_min, clip_max, IM_COL32(255, 0, 0, 255));
+     if (ImGuizmo::IsUsing())
+     {
+          ImVec2     scroll        = { ImGui::GetScrollX(), ImGui::GetScrollY() };
+          const auto update_scroll = [&] {
+               spdlog::info("scroll: ({},{}), max: ({},{})", scroll.x, scroll.y, ImGui::GetScrollMaxX(), ImGui::GetScrollMaxY());
+               scroll.y = std::clamp(scroll.y, 0.0f, ImGui::GetScrollMaxY());
+               scroll.x = std::clamp(scroll.x, 0.0f, ImGui::GetScrollMaxX());
+               // spdlog::info("clamped scroll: ({},{})", scroll.x, scroll.y);
+
+               ImGui::SetScrollY(scroll.y);
+               ImGui::SetScrollX(scroll.x);
+          };
+          if (mouse.y < scroll_edge_min.y)
+          {
+               float dist = scroll_edge_min.y - mouse.y;
+               float t    = std::clamp(dist / edge_threshold, 0.0f, 1.0f);
+               scroll.y -= scroll_speed_pps * t * t * dt;
+               update_scroll();
+          }
+          else if (mouse.y > scroll_edge_max.y)
+          {
+               float dist = mouse.y - scroll_edge_max.y;
+               float t    = std::clamp(dist / edge_threshold, 0.0f, 1.0f);
+               scroll.y += scroll_speed_pps * t * t * dt;
+               update_scroll();
+          }
+          if (mouse.x < scroll_edge_min.x)
+          {
+               float dist = scroll_edge_min.x - mouse.x;
+               float t    = std::clamp(dist / edge_threshold, 0.0f, 1.0f);
+               scroll.x -= scroll_speed_pps * t * t * dt;
+               update_scroll();
+          }
+          else if (mouse.x > scroll_edge_max.x)
+          {
+               float dist = mouse.x - scroll_edge_max.x;
+               float t    = std::clamp(dist / edge_threshold, 0.0f, 1.0f);
+               scroll.x += scroll_speed_pps * t * t * dt;
+               update_scroll();
+          }
+     }
+
+     // scroll needed to offset clip region
+     const ImVec2 scroll    = { ImGui::GetScrollX(), ImGui::GetScrollY() };
+     // detecting where to clip the imguizmo controls.
+     const ImVec2 clip_min  = ImGui::GetCursorScreenPos() + scroll;
+     const ImVec2 clip_max  = clip_min + ImGui::GetContentRegionAvail();
+
+
+     // ImDrawList  *draw_list = ImGui::GetForegroundDrawList();
+     // draw_list->AddRect(scroll_edge_min, scroll_edge_max, IM_COL32(255, 0, 0, 255));
 
 
      // Y flipped projection matrix for visible window area
-     glm::mat4 projection = glm::ortho(
+     const glm::mat4 projection = glm::ortho(
        clip_min.x - screen_pos.x,
        clip_max.x - screen_pos.x,
        clip_max.y - screen_pos.y,// flipped Y
@@ -699,11 +759,14 @@ void fme::draw_window::UseImGuizmo([[maybe_unused]] const float scale, [[maybe_u
        -1.0f,
        1.0f);
 
-     glm::mat4 view         = m_fixed_render_camera.view_matrix();// identity for 2D or your actual camera view if available
+     const glm::mat4 view         = m_fixed_render_camera.view_matrix();// identity for 2D or your actual camera view if available
 
-     auto      tilePosition = glm::vec3(m_mouse_positions.down_pixel, 0.f) * scale * static_cast<float>(t_map_sprite->get_map_scale());
-     // Your object transform matrix, e.g. tile transform
-     glm::mat4 objectMatrix = glm::translate(glm::mat4(1.0f), tilePosition);
+     glm::mat4       objectMatrix = [&] {
+          const glm::vec3 tilePosition =
+            glm::vec3(m_mouse_positions.down_pixel, 0.f) * scale * static_cast<float>(t_map_sprite->get_map_scale());
+          // Your object transform matrix, e.g. tile transform
+          return glm::translate(glm::mat4(1.0f), tilePosition);
+     }();
 
      // Apply the adjusted size
      // ImGuizmo::SetGizmoSizeClipSpace(selections->draw_swizzle ? 0.021f : 0.15f);
@@ -712,7 +775,7 @@ void fme::draw_window::UseImGuizmo([[maybe_unused]] const float scale, [[maybe_u
      // Set gizmo draw region to the visible ImGui window area
      ImGuizmo::SetRect(clip_min.x, clip_min.y, clip_max.x - clip_min.x, clip_max.y - clip_min.y);
 
-     ImVec2 mouse = ImGui::GetMousePos();
+
      if (
        !ImGuizmo::IsUsing() && ImGuizmo::IsOver()
        && (mouse.x < clip_min.x || mouse.x > clip_max.x || mouse.y < clip_min.y || mouse.y > clip_max.y))
@@ -727,11 +790,11 @@ void fme::draw_window::UseImGuizmo([[maybe_unused]] const float scale, [[maybe_u
            ImGuizmo::LOCAL,
            glm::value_ptr(objectMatrix)))
      {
-          tilePosition            = objectMatrix[3];
-          const auto relative_pos = glm::vec2(tilePosition.x, tilePosition.y);
-          const auto old_pixel    = m_mouse_positions.down_pixel;
+          const glm::vec3 newTilePosition = objectMatrix[3];
+          const auto      relative_pos    = glm::vec2(newTilePosition.x, newTilePosition.y);
+          const auto      old_pixel       = m_mouse_positions.down_pixel;
           // Map it back to the texture coordinates
-          m_mouse_positions.pixel = glm::ivec2(
+          m_mouse_positions.pixel         = glm::ivec2(
             static_cast<int>(relative_pos.x / scale / static_cast<float>(t_map_sprite->get_map_scale())),
             static_cast<int>(relative_pos.y / scale / static_cast<float>(t_map_sprite->get_map_scale())));
 
