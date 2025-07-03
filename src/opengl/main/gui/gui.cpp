@@ -866,6 +866,9 @@ void gui::consume_one_future()
                          return "CacheUpscaleMapPathsEnabled"sv;
                     case ConfigKey::CacheDeswizzleMapPathsEnabled:
                          return "CacheDeswizzleMapPathsEnabled"sv;
+                    default: {
+                         spdlog::error("unhandled key type");
+                    }
                }
                return ""sv;
           };
@@ -885,6 +888,9 @@ void gui::consume_one_future()
                case ConfigKey::CacheDeswizzleMapPaths:
                     m_selections->cache_deswizzle_map_paths = std::move(pande.path);
                     break;
+               default: {
+                    spdlog::error("unhandled key type");
+               }
           }
           m_selections->update_configuration_key(pande.path_key);
 
@@ -903,6 +909,9 @@ void gui::consume_one_future()
                case ConfigKey::CacheDeswizzleMapPathsEnabled:
                     m_selections->cache_deswizzle_map_paths_enabled = std::move(pande.enabled);
                     break;
+               default: {
+                    spdlog::error("unhandled key type");
+               }
           }
           m_selections->update_configuration_key(pande.enabled_key);
      });
@@ -1355,10 +1364,11 @@ void gui::windows_menu()
      {
           m_selections->update_configuration_key(ConfigKey::DisplayBatchWindow);
      }
-     if (ImGui::MenuItem(gui_labels::import_page.data(), "Control + I", &m_selections->display_import_image_window))
-     {
-          m_selections->update_configuration_key(ConfigKey::DisplayImportImageWindow);
-     }
+     // todo fix imports
+     //  if (ImGui::MenuItem(gui_labels::import_page.data(), "Control + I", &m_selections->display_import_image_window))
+     //  {
+     //       m_selections->update_configuration_key(ConfigKey::DisplayImportImageWindow);
+     //  }
      ImGui::Separator();
      if (ImGui::MenuItem(gui_labels::display_history.data(), "Control + H", &m_selections->display_history_window))
      {
