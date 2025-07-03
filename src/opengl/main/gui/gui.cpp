@@ -652,7 +652,7 @@ void gui::selected_tiles_panel()
                if (i < std::ranges::size(tiles))
                {
                     const auto &tile = tiles[i];
-                    if(collapsing_tile_info(m_map_sprite, tile, {}, i))
+                    if (collapsing_tile_info(m_map_sprite, tile, {}, i))
                     {
                          remove_index = i;
                     }
@@ -3444,7 +3444,7 @@ std::future<std::future<gui::PathsAndEnabled>> gui::generate_upscale_paths()
                                 .field_name                   = m_map_sprite->get_base_name(),
                                 .filters_upscale_value_string = m_map_sprite->filter().upscale.value().string(),
                                 .bpp_palette                  = m_map_sprite->uniques().palette(),
-                                .texture_page_id = m_map_sprite->uniques().texture_page_id() }] -> std::future<PathsAndEnabled> {
+                                .texture_page_id = m_map_sprite->uniques().texture_page_id() }]() -> std::future<PathsAndEnabled> {
             gui::PathsAndEnabled pande{ .path_key = ConfigKey::CacheUpscalePaths, .enabled_key = ConfigKey::CacheUpscalePathsEnabled };
 
             const auto           get_map_paths_joined = [&](const auto &container) {
@@ -3471,7 +3471,7 @@ std::future<std::future<gui::PathsAndEnabled>> gui::generate_upscale_paths()
             {
                  pande.enabled.push_back(ps.has_swizzle_path(std::filesystem::path{ path }));
             }
-            return std::async(std::launch::deferred, [moved_pande = std::move(pande)] -> PathsAndEnabled { return moved_pande; });
+            return std::async(std::launch::deferred, [moved_pande = std::move(pande)]() -> PathsAndEnabled { return moved_pande; });
        });
 }
 
@@ -3523,7 +3523,7 @@ std::future<std::future<gui::PathsAndEnabled>> gui::generate_upscale_map_paths()
                                 .field_name                   = m_map_sprite->get_base_name(),
                                 .filters_upscale_value_string = m_map_sprite->filter().upscale.value().string(),
                                 .filters_upscale_map_value_string =
-                                  m_map_sprite->filter().upscale_map.value().string() }] -> std::future<PathsAndEnabled> {
+                                  m_map_sprite->filter().upscale_map.value().string() }]() -> std::future<PathsAndEnabled> {
             gui::PathsAndEnabled pande{ .path_key    = ConfigKey::CacheUpscaleMapPaths,
                                         .enabled_key = ConfigKey::CacheUpscaleMapPathsEnabled };
 
@@ -3551,7 +3551,7 @@ std::future<std::future<gui::PathsAndEnabled>> gui::generate_upscale_map_paths()
                  pande.enabled.push_back(
                    ps.has_map_path(std::filesystem::path{ path }, ".map", ps.selections->output_map_pattern_for_swizzle));
             }
-            return std::async(std::launch::deferred, [moved_pande = std::move(pande)] -> PathsAndEnabled { return moved_pande; });
+            return std::async(std::launch::deferred, [moved_pande = std::move(pande)]() -> PathsAndEnabled { return moved_pande; });
        });
 }
 

@@ -361,7 +361,7 @@ std::future<std::future<void>> map_sprite::load_mim_textures(open_viii::graphics
           open_viii::graphics::background::Mim mim     = *m_map_group.mim;
           glengine::Texture *const             texture = &(m_texture->at(pos));
           spdlog::debug("Attempting to queue texture loading from .mim file : bpp {}, palette {}", bpp, +palette);
-          return { std::async(std::launch::async, [=] -> std::future<void> {
+          return { std::async(std::launch::async, [=]() -> std::future<void> {
                spdlog::debug("Getting colors from .mim file : bpp {}, palette {}", bpp, +palette);
                return { std::async(
                  std::launch::deferred,

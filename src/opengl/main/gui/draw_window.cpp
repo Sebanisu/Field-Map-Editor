@@ -415,7 +415,7 @@ void fme::draw_window::draw_map_grid_for_conflict_tiles(const ImVec2 &screen_pos
                          return *begin;
                     };
                     const auto        &working_tile  = index_to_working_tile(index);
-                    const std::uint8_t similar_count = [&] -> std::uint8_t {
+                    const std::uint8_t similar_count = [&]() -> std::uint8_t {
                          if (auto it = similar_counts.find(working_tile); it != similar_counts.end())
                          {
                               return it->second;
@@ -423,7 +423,7 @@ void fme::draw_window::draw_map_grid_for_conflict_tiles(const ImVec2 &screen_pos
                          return {};
                     }();
                     const bool         similar_over_1  = std::cmp_greater(similar_count, 1);
-                    const std::uint8_t animation_count = [&] -> std::uint8_t {
+                    const std::uint8_t animation_count = [&]() -> std::uint8_t {
                          if (auto it = animation_counts.find(working_tile); it != animation_counts.end())
                          {
                               return it->second;
