@@ -1562,8 +1562,8 @@ void gui::edit_menu()
 
           if (ImGui::BeginMenu("Background Color"))
           {
-               float sz       = ImGui::GetTextLineHeight();
-               auto  zip_view = std::ranges::views::zip(fme::colors::ColorValues, fme::colors::ColorNames);
+               float         sz       = ImGui::GetTextLineHeight();
+               auto          zip_view = std::ranges::views::zip(fme::colors::ColorValues, fme::colors::ColorNames);
                constexpr int columns  = 2;
                if (ImGui::BeginTable("##ColorTable", columns, ImGuiTableFlags_SizingStretchSame))
                {
@@ -1588,16 +1588,16 @@ void gui::edit_menu()
                     }
                     ImGui::EndTable();
                }
-                    if (ImGui::ColorPicker3("##Choose Background Color", clear_color_f.data(), ImGuiColorEditFlags_DisplayRGB))
-                    {
-                         change_background_color({ clear_color_f[0], clear_color_f[1], clear_color_f[2] });
-                    }
-                    if (ImGui::IsItemDeactivatedAfterEdit())
-                    {
-                         save_background_color();
-                    }
-                    ImGui::EndMenu();
+               if (ImGui::ColorPicker3("##Choose Background Color", clear_color_f.data(), ImGuiColorEditFlags_DisplayRGB))
+               {
+                    change_background_color({ clear_color_f[0], clear_color_f[1], clear_color_f[2] });
                }
+               if (ImGui::IsItemDeactivatedAfterEdit())
+               {
+                    save_background_color();
+               }
+               ImGui::EndMenu();
+          }
 
           if (ImGui::BeginMenu(gui_labels::filters.data()))
           {
@@ -1924,6 +1924,10 @@ void gui::file_menu()
 
      if (ImGui::BeginMenu(gui_labels::field.data()))
      {
+          static std::array<char, 128> filter_buf = {};
+
+          ImGui::InputText("Filter", filter_buf.data(), filter_buf.size());
+
           const auto        end_menu1 = glengine::ScopeGuard(&ImGui::EndMenu);
           static const auto cols      = 5;
           if (ImGui::BeginTable("##field_table", cols))
@@ -1936,6 +1940,10 @@ void gui::file_menu()
                std::uint8_t             i             = 0;
                for (const auto &[index, str] : numbered_maps)
                {
+                    if (filter_buf[0] && str.find(filter_buf.data()) == std::string::npos)
+                    {
+                         continue;
+                    }
                     const auto temp = std::string_view(str).substr(0, 2);
                     if (temp == std::string_view("ma"))
                     {
