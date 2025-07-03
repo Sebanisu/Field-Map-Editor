@@ -6,6 +6,8 @@
 #define FIELD_MAP_EDITOR_LAYERITEM_HPP
 #include "Event/EventItem.hpp"
 #include "Renderable.hpp"
+#include <memory>
+#include <utility>
 namespace glengine
 {
 namespace Layer
