@@ -480,13 +480,16 @@ void map_sprite::update_position(
      {
           return;
      }
-     Map &current_map = m_map_group.maps.copy_working(
+     const Map &current_original = m_map_group.maps.original();
+     Map       &current_map      = m_map_group.maps.copy_working(
        fmt::format("{} ({},{}) -> ({},{})", gui_labels::update_position, pixel_pos.x, pixel_pos.y, down_pixel_pos.x, down_pixel_pos.y));
-     const auto update_tile_positions = [this, &pixel_pos, &down_pixel_pos](/*const auto &map, */ auto    &&tiles,
-                                                                            const std::vector<std::size_t> &indices) {
+     const auto update_tile_positions = [this, &pixel_pos, &down_pixel_pos](/*const auto &map, */ const auto &const_tiles,
+                                                                            auto                            &&tiles,
+                                                                            const std::vector<std::size_t>   &indices) {
           for (auto i : indices)
           {
-               auto &tile = tiles[i];
+               const auto &original_tile = const_tiles[i];
+               auto       &working_tile  = tiles[i];
                if (m_draw_swizzle)
                {
                     //   if (auto intersecting = find_intersecting(m_imported_tile_map, pixel_pos, texture_page, true);
@@ -524,24 +527,38 @@ void map_sprite::update_position(
                     //   }
 
                     const std::int32_t texture_page_width = 256;
-                    const std::int32_t x_offset = (down_pixel_pos.x % texture_page_width) - static_cast<std::int32_t>(tile.source_x());
-                    const std::int32_t y_offset = down_pixel_pos.y - static_cast<std::int32_t>(tile.source_y());
-                    tile                        = tile
-                             .with_source_xy(
-                               static_cast<std::uint8_t>((((pixel_pos.x % texture_page_width) - x_offset))),
-                               static_cast<std::uint8_t>(((pixel_pos.y - y_offset))))
-                             .with_texture_id(static_cast<std::uint8_t>(pixel_pos.x / texture_page_width));
+                    const std::int32_t x_offset =
+                      (down_pixel_pos.x % texture_page_width) - static_cast<std::int32_t>(working_tile.source_x());
+                    const std::int32_t y_offset     = down_pixel_pos.y - static_cast<std::int32_t>(working_tile.source_y());
+                    const std::uint8_t x            = static_cast<std::uint8_t>((((pixel_pos.x % texture_page_width) - x_offset)));
+                    const std::uint8_t y            = static_cast<std::uint8_t>(((pixel_pos.y - y_offset)));
+                    const std::uint8_t texture_page = static_cast<std::uint8_t>(pixel_pos.x / texture_page_width);
+                    using namespace open_viii::graphics;
+                    const BPPT bppt = [&]() {
+                         if (x >= 128 || original_tile.depth().bpp4())
+                         {
+                              return 4_bpp;
+                         }
+                         if (x >= 64 || original_tile.depth().bpp8())
+                         {
+                              return 8_bpp;
+                         }
+                         return original_tile.depth();
+                    }();
+                    working_tile = working_tile.with_source_xy(x, y).with_texture_id(texture_page).with_depth(bppt);
                }
                else
                {
-                    const std::int32_t x_offset = down_pixel_pos.x - tile.x();
-                    const std::int32_t y_offset = down_pixel_pos.y - tile.y();
-                    tile =
-                      tile.with_xy(static_cast<std::int16_t>(pixel_pos.x - x_offset), static_cast<std::int16_t>(pixel_pos.y - y_offset));
+                    const std::int32_t x_offset = down_pixel_pos.x - working_tile.x();
+                    const std::int32_t y_offset = down_pixel_pos.y - working_tile.y();
+                    working_tile                = working_tile.with_xy(
+                      static_cast<std::int16_t>(pixel_pos.x - x_offset), static_cast<std::int16_t>(pixel_pos.y - y_offset));
                }
           }
      };
-     current_map.visit_tiles([&](auto &&tiles) { update_tile_positions(/*current_map,*/ tiles, saved_indices); });
+     current_original.visit_tiles([&](const auto &const_tiles) {
+          current_map.visit_tiles([&](auto &&tiles) { update_tile_positions(/*current_map,*/ const_tiles, tiles, saved_indices); });
+     });
      // if (!m_draw_swizzle)
      // {
      //      m_imported_tile_map.visit_tiles(
