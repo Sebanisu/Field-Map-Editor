@@ -2857,8 +2857,9 @@ void gui::bind_shortcuts() const
      }
      else if (ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiKey_I, flags))
      {
-          m_selections->display_import_image_window ^= true;
-          m_selections->update_configuration_key(ConfigKey::DisplayImportImageWindow);
+          // todo fix imports in new branch.
+          // m_selections->display_import_image_window ^= true;
+          // m_selections->update_configuration_key(ConfigKey::DisplayImportImageWindow);
      }
      else if (ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiKey_B, flags))
      {

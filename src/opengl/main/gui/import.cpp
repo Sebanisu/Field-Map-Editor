@@ -47,13 +47,15 @@ void import::render() const
      }
      // begin imgui window
 
-     bool      &visible     = selections->display_import_image_window;
-     const auto pop_visible = glengine::ScopeGuard{ [&selections, &visible, was_visable = visible] {
-          if (was_visable != visible)
-          {
-               selections->update_configuration_key(ConfigKey::DisplayImportImageWindow);
-          }
-     } };
+     //todo fix imports later
+     // bool      &visible     = selections->display_import_image_window;
+     // const auto pop_visible = glengine::ScopeGuard{ [&selections, &visible, was_visable = visible] {
+     //      if (was_visable != visible)
+     //      {
+     //           selections->update_configuration_key(ConfigKey::DisplayImportImageWindow);
+     //      }
+     // } };
+     bool visible = false;
      const auto the_end = glengine::ScopeGuard([]() { ImGui::End(); });
      if (!ImGui::Begin(gui_labels::import_image.data(), &visible))
      {

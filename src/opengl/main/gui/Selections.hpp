@@ -305,7 +305,7 @@ struct Selections
      bool                           draw_swizzle;///< Whether to enable swizzle rendering.
      bool                           draw_disable_blending;///< Whether to disable blending during rendering.
      bool                           display_batch_window;///< Whether to display the test batch window.
-     bool                           display_import_image_window;
+     const bool                     display_import_image_window = false;
      bool                           display_import_image;///< Whether to display the imported image.
      bool                           force_rendering_of_map;///< Force rendering of map on every frame.
      bool                           import_image_grid;///< Whether to overlay a grid on the imported image.
