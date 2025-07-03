@@ -6,6 +6,9 @@
 #define FIELD_MAP_EDITOR_MENUITEM_HPP
 #include "Event/EventItem.hpp"
 #include "Renderable.hpp"
+#include <memory>
+#include <type_traits>
+#include <utility>
 namespace glengine
 {
 class MenuItem
