@@ -607,14 +607,16 @@ class [[nodiscard]] MapHistory
       * @tparam TileT Type of the tile.
       * @tparam LambdaT Type of the lambda function.
       * @param tile Reference to the working tile.
+      * @param description A string describing the planned change to the working map.
+      *                    This description is logged and stored for use in the undo history UI.
       * @param lambda Lambda function to apply.
       * @return The new tile after the operation.
       */
      template<open_viii::graphics::background::is_tile TileT, typename LambdaT>
-     auto copy_working_and_get_new_tile(const TileT &tile, LambdaT &&lambda)
+     auto copy_working_and_get_new_tile(const TileT &tile, std::string description, LambdaT &&lambda)
      {
           const auto pos = get_offset_from_working(tile);
-          (void)copy_working();
+          (void)copy_working(std::move(description));
           return working_get_tile_at_offset<TileT>(pos, std::forward<LambdaT>(lambda));
      }
 
@@ -624,12 +626,14 @@ class [[nodiscard]] MapHistory
       * @tparam TileT Type of the tile.
       * @tparam LambdaT Type of the lambda function.
       * @param indexes Vector of tile indexes.
+      * @param description A string describing the planned change to the working map.
+      *                    This description is logged and stored for use in the undo history UI.
       * @param lambda Lambda function to apply.
       */
      template<open_viii::graphics::background::is_tile TileT, typename LambdaT>
-     void copy_working_perform_operation(const std::vector<std::intmax_t> &indexes, LambdaT &&lambda)
+     void copy_working_perform_operation(const std::vector<std::intmax_t> &indexes, std::string description, LambdaT &&lambda)
      {
-          (void)copy_working();
+          (void)copy_working(std::move(description));
           for (const auto i : indexes)
           {
                working_get_tile_at_offset<TileT>(i, lambda);
@@ -642,14 +646,16 @@ class [[nodiscard]] MapHistory
       * @tparam TileT Type of the tile.
       * @tparam FilterLambdaT Type of the filter lambda.
       * @tparam LambdaT Type of the operation lambda.
+      * @param description A string describing the planned change to the working map.
+      *                    This description is logged and stored for use in the undo history UI.
       * @param filter Lambda function for filtering tiles.
       * @param lambda Lambda function to apply to filtered tiles.
       */
      template<open_viii::graphics::background::is_tile TileT, typename FilterLambdaT, typename LambdaT>
           requires(std::is_invocable_r_v<bool, FilterLambdaT, const TileT &>)
-     void copy_working_perform_operation(FilterLambdaT &&filter, LambdaT &&lambda)
+     void copy_working_perform_operation(std::string description, FilterLambdaT &&filter, LambdaT &&lambda)
      {
-          (void)copy_working();
+          (void)copy_working(std::move(description));
           working().visit_tiles([&](auto &tiles) {
                if constexpr (std::is_same_v<std::ranges::range_value_t<std::remove_cvref_t<decltype(tiles)>>, TileT>)
                {
