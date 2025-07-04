@@ -33,7 +33,7 @@ void future_operations::LoadColorsIntoTexture::operator()() const
           {
                return;
           }
-          *m_texture = glengine::Texture(m_colors, m_size.x, m_size.y);
+          *m_texture = glengine::Texture(m_colors, static_cast<int>(m_size.x), static_cast<int>(m_size.y));
           // const auto stack = std::stacktrace::current();
           // std::cout << stack << std::endl;
      }
@@ -122,4 +122,4 @@ std::future<void> future_operations::GetImageFromFromFirstValidPathCreateFuture:
           return {};
      }
 }
-}
+}// namespace fme
