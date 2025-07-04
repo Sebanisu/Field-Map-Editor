@@ -1149,8 +1149,8 @@ void map_sprite::resize_render_texture() const
           m_render_framebuffer = glengine::FrameBuffer{ std::move(spec) };
      }
      m_drag_sprite_framebuffer =
-       glengine::FrameBuffer{ glengine::FrameBufferSpecification{ .width  = static_cast<int>(TILE_SIZE * m_render_framebuffer.scale() * 3),
-                                                                  .height = static_cast<int>(TILE_SIZE * m_render_framebuffer.scale() * 3),
+       glengine::FrameBuffer{ glengine::FrameBufferSpecification{ .width  = static_cast<int>(TILE_SIZE) * m_render_framebuffer.scale() * 3,
+                                                                  .height = static_cast<int>(TILE_SIZE) * m_render_framebuffer.scale() * 3,
                                                                   .scale  = m_render_framebuffer.scale() } };
 }
 
