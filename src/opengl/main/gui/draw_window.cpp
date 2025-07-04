@@ -201,8 +201,8 @@ void fme::draw_window::render() const
           const auto   img_size   = t_map_sprite->get_render_texture().get_size();
 
           const auto   screen_pos = ImGui::GetCursorScreenPos();
-          const float  scale      = (std::max)(wsize.x / img_size.x, wsize.y / img_size.y);
-          const ImVec2 scaled_size(img_size.x * scale, img_size.y * scale);
+          const float  scale      = (std::max)(wsize.x / static_cast<float>(img_size.x), wsize.y / static_cast<float>(img_size.y));
+          const ImVec2 scaled_size(static_cast<float>(img_size.x) * scale, static_cast<float>(img_size.y) * scale);
 
           DrawCheckerboardBackground(
             screen_pos,
