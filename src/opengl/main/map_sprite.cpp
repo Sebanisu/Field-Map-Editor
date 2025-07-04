@@ -1724,10 +1724,9 @@ std::string map_sprite::get_base_name() const
      future_of_futures.reserve(max_number_of_texture_pages);
 
      // Setup an off-screen render texture
-     iRectangle const canvas        = m_map_group.maps.const_working().canvas() * static_cast<int>(m_render_framebuffer.scale());
-     const auto       specification = glengine::FrameBufferSpecification{ .width  = static_cast<std::int32_t>(canvas.width()),
-                                                                          .height = static_cast<std::int32_t>(canvas.height()),
-                                                                          .scale  = settings.scale.value() };
+     iRectangle const canvas = m_map_group.maps.const_working().canvas() * static_cast<int>(m_render_framebuffer.scale());
+     const auto       specification =
+       glengine::FrameBufferSpecification{ .width = canvas.width(), .height = canvas.height(), .scale = settings.scale.value() };
 
 
      // Loop through each Pupu ID and generate/save textures
