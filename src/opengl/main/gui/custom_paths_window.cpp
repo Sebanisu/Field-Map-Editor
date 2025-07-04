@@ -143,7 +143,7 @@ static const auto                                          m_tests = std::to_arr
      {
           return nullptr;
      }
-     return &strings[index];
+     return &strings[static_cast<std::size_t>(index)];
 }
 
 [[nodiscard]] const std::string *fme::custom_paths_window::get_current_string_value() const
@@ -178,7 +178,7 @@ void fme::custom_paths_window::populate_test_output() const
           return;
      }
      m_output_tests.clear();
-     for (const auto & test_data : m_tests)
+     for (const auto &test_data : m_tests)
      {
           std::string &output_test = m_output_tests.emplace_back(m_input_pattern_string.begin(), m_input_pattern_string.end());
           output_test              = test_data.replace_tags(output_test, selections);
