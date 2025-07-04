@@ -1554,14 +1554,14 @@ const ff_8::MapHistory::nsat_map &map_sprite::working_animation_counts() const
      {
           settings.scale = 1U;
      }
-     const auto          max_source_x = m_map_group.maps.working().visit_tiles([&](const auto &tiles) -> std::uint8_t {
+     const auto         max_source_x = m_map_group.maps.working().visit_tiles([&](const auto &tiles) -> std::uint8_t {
           auto f_t_range = tiles | std::ranges::views::filter([&](const auto &tile) { return tile.texture_id() == max_texture_page_id; })
                            | std::ranges::views::transform([](const auto &tile) { return tile.source_x(); });
           return static_cast<std::uint8_t>(std::ranges::max(f_t_range));
      });
-     const std::uint32_t width =
-       height * max_texture_page_id
-       + ((max_source_x + TILE_SIZE) * static_cast<std::uint32_t>(settings.scale.value()));//(max_texture_page_id + 1);
+     const std::int32_t width =
+       height * static_cast<std::int32_t>(max_texture_page_id)
+       + (static_cast<std::int32_t>(max_source_x + TILE_SIZE) * settings.scale.value());//(max_texture_page_id + 1);
 
      // If there’s only one bpp and at most one palette, nothing needs saving.
      if (unique_bpp.size() == 1U && unique_values.palette().at(unique_bpp.front()).values().size() <= 1U)
