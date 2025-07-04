@@ -6,7 +6,8 @@
 #define FIELD_MAP_EDITOR_MOUSE_POSITIONS_HPP
 #include <cstdint>
 #include <glm/glm.hpp>
-namespace fme{
+namespace fme
+{
 struct MousePositions
 {
      glm::ivec2         pixel         = {};
@@ -20,10 +21,10 @@ struct MousePositions
      // sf::Sprite   cover         = {};
      void               update();
      [[nodiscard]] bool left_changed() const;
-     void               update_sprite_pos(bool swizzle, int spacing = 256);
+     // void               update_sprite_pos(bool swizzle, int spacing = 256);
 
    private:
      bool old_left = { false };
 };
-}
+}// namespace fme
 #endif// FIELD_MAP_EDITOR_MOUSE_POSITIONS_HPP
