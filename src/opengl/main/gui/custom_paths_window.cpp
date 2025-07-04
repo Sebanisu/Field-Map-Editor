@@ -797,9 +797,7 @@ void fme::custom_paths_window::render() const
                     override_changed = true;
                }
           }
-          default:
-               [[fallthrough]];
-          case vector_or_string_t::unknown: {
+          default: {
                spdlog::warn("vector_or_string() is unknown type");
           }
           break;
