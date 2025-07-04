@@ -1697,10 +1697,10 @@ std::string map_sprite::get_base_name() const
 
      // Set the scale relative to a standard MIM height (256px)
      static constexpr unsigned int mim_height = { 256U };
-     settings.scale                           = get_max_texture_height() / mim_height;
-     if (settings.scale == 0U)
+     settings.scale                           = static_cast<std::int32_t>(get_max_texture_height() / mim_height);
+     if (settings.scale <= 0)
      {
-          settings.scale = 1U;
+          settings.scale = 1;
      }
 
      // Acquire the field associated with this map group
