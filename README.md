@@ -199,8 +199,9 @@ sudo apt install -y python3 python3-venv python3-pip cmake build-essential
 
 Arch
 ```sh
+pacman -Syu sudo
 sudo pacman -Syu
-sudo pacman -Syu --needed python python-virtualenv python-pip cmake base-devel python-pipx libglvnd libxcb libfontenc libice libsm libxaw libxcomposite libxcursor libxdamage libxtst libxinerama libxkbfile libxrandr libxres libxss libxv xcb-util xcb-util-cursor xcb-util-wm xcb-util-keysyms
+sudo pacman -Syu --needed python python-virtualenv python-pip cmake base-devel python-pipx libglvnd libxcb libfontenc libice libsm libxaw libxcomposite libxcursor libxdamage libxtst libxinerama libxkbfile libxrandr libxres libxss libxv xcb-util xcb-util-cursor xcb-util-wm xcb-util-keysyms git
 ```
 
 ### Step 2. Create and activate a Python virtual environment
@@ -211,11 +212,6 @@ python3 -m venv venv
 source venv/bin/activate
 ```
 
-Arch
-```sh
-python -m venv venv
-source venv/bin/activate
-```
 
 ### Step 3. Install Conan package manager
 
