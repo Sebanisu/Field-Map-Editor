@@ -68,13 +68,13 @@ void compact_move_conflicts_only(map_group::Map &map, const source_tile_conflict
           std::vector<ff_8::source_tile_conflicts::location> empty_locations =
             conflicts.range_of_empty_locations() | std::ranges::to<std::vector>();
           auto range_of_conflicts         = conflicts.range_of_conflicts();
-          //auto filtered_tiles             = tiles | std::views::filter(not_invalid);
+          // auto filtered_tiles             = tiles | std::views::filter(not_invalid);
           using tile_t                    = std::remove_cvref_t<std::ranges::range_value_t<decltype(tiles)>>;
           const auto with_depth_operation = ff_8::tile_operations::WithDepth<tile_t>{ open_viii::graphics::BPPT::BPP4_CONST() };
 
-          for (const auto indieces : range_of_conflicts)
+          for (const auto &indieces : range_of_conflicts)
           {
-               for (const auto index : indieces | std::ranges::views::drop(1))
+               for (const auto &index : indieces | std::ranges::views::drop(1))
                {
                     // these are the tiles we need to relocate.
                     auto &tile = [&]() -> decltype(auto) {
@@ -269,7 +269,6 @@ QuadStrip get_triangle_strip(
      return { .uv_min   = (aligned_source * source_tile_size) / source_texture_size,
               .uv_max   = ((aligned_source + glm::vec2(1)) * source_tile_size) / source_texture_size,
               .draw_pos = (destination_position / tile_size) * destination_tile_size };
-
 }
 bool test_if_map_same(const std::filesystem::path &saved_path, const map_group::WeakField &weak_field, const map_group::MimType &type)
 {
