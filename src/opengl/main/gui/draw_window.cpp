@@ -207,7 +207,7 @@ void fme::draw_window::render() const
           DrawCheckerboardBackground(
             screen_pos,
             scaled_size,
-            (static_cast<float>(t_map_sprite->get_map_scale() * 4.F)) * scale,
+            (static_cast<float>(t_map_sprite->get_map_scale()) * 4.F) * scale,
             selections->background_color.fade(-0.2F),
             selections->background_color.fade(0.2F));
 
@@ -740,10 +740,10 @@ void fme::draw_window::UseImGuizmo([[maybe_unused]] const float scale, [[maybe_u
      }
 
      // scroll needed to offset clip region
-     const ImVec2 scroll    = { ImGui::GetScrollX(), ImGui::GetScrollY() };
+     const ImVec2    scroll     = { ImGui::GetScrollX(), ImGui::GetScrollY() };
      // detecting where to clip the imguizmo controls.
-     const ImVec2 clip_min  = ImGui::GetCursorScreenPos() + scroll;
-     const ImVec2 clip_max  = clip_min + ImGui::GetContentRegionAvail();
+     const ImVec2    clip_min   = ImGui::GetCursorScreenPos() + scroll;
+     const ImVec2    clip_max   = clip_min + ImGui::GetContentRegionAvail();
 
 
      // ImDrawList  *draw_list = ImGui::GetForegroundDrawList();
