@@ -405,7 +405,7 @@ void fme::draw_window::draw_map_grid_for_conflict_tiles(const ImVec2 &screen_pos
           const auto &similar_counts   = t_map_sprite->working_similar_counts();
           const auto &animation_counts = t_map_sprite->working_animation_counts();
 
-          for (const auto indices : t_map_sprite->working_conflicts().range_of_conflicts())
+          for (const auto &indices : t_map_sprite->working_conflicts().range_of_conflicts())
           {
                const auto action = [&](const auto index) {
                     assert(std::cmp_less(index, std::ranges::size(working_tiles)) && "Index out of Range...");
