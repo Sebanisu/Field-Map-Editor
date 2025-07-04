@@ -504,20 +504,29 @@ void fme::custom_paths_window::save_pattern() const
 
 [[nodiscard]] bool fme::custom_paths_window::button_add_seperator() const
 {
-     static constexpr auto seperator = std::array<char, 2>{ std::filesystem::path::preferred_separator, '\0' };
+     static constexpr char seperator = std::filesystem::path::preferred_separator;
      if (ImGui::Button("Add Separator"))
      {
           size_t current_length = std::strlen(m_input_pattern_string.data());
           if (current_length + 1 < m_input_pattern_string.size())
           {
-               std::strncat(m_input_pattern_string.data(), seperator.data(), 1);
+               std::size_t len = std::strlen(m_input_pattern_string.data());
+               if (len + 1 < m_input_pattern_string.size())
+               {
+                    m_input_pattern_string[len]     = seperator;
+                    m_input_pattern_string[len + 1] = '\0';
+               }
+               else
+               {
+                    spdlog::warn("m_input_pattern_string is full");
+               }
                save_pattern();
                return true;
           }
      }
      else
      {
-          tool_tip(std::string_view{ seperator });
+          tool_tip(std::string{ seperator });
      }
      return false;
 }
@@ -787,6 +796,10 @@ void fme::custom_paths_window::render() const
                {
                     override_changed = true;
                }
+          }
+          default:
+          case vector_or_string_t::unknown: {
+               spdlog::warn("vector_or_string() is unknown type");
           }
           break;
      }
