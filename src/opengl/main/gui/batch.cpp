@@ -31,7 +31,7 @@ template<std::ranges::contiguous_range Src, std::ranges::contiguous_range Dst>
      requires std::indirectly_copyable<std::ranges::iterator_t<Src>, std::ranges::iterator_t<Dst>>
 static bool safe_copy_string(const Src &src, Dst &dst)
 {
-     const auto src_size = std::ranges::size(src);
+     const auto src_size = static_cast<std::ranges::range_difference_t<src>>(std::ranges::ssize(src));
      const auto dst_size = std::ranges::size(dst);
 
      if (src_size + 1 > dst_size)
