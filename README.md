@@ -182,6 +182,7 @@ dir /s /b bin\*.exe
 
 ---
 
+![Running on Arch Linux](https://github.com/user-attachments/assets/7dd33451-1696-49d0-8856-12ac2e608145)
 
 # Linux Build Instructions **(WIP)**
 - Make sure you have atleast GCC 15.
