@@ -896,7 +896,7 @@ glm::uvec2 map_sprite::get_tile_texture_size(const glengine::Texture *const text
      const auto raw_texture_size = texture->get_size();
      if (m_filters.deswizzle.enabled())
      {
-          const auto local_scale = raw_texture_size.y / m_canvas.height();
+          const auto local_scale = static_cast<std::uint32_t>(raw_texture_size.y) / m_canvas.height();
           return glm::uvec2{ TILE_SIZE * local_scale, TILE_SIZE * local_scale };
      }
      const auto i = static_cast<std::uint32_t>(raw_texture_size.y / TILE_SIZE);
@@ -1105,8 +1105,8 @@ void map_sprite::resize_render_texture() const
                return return_val;
           }();
 
-          while (std::cmp_greater(width() * m_render_framebuffer.scale(), max_size)
-                 || std::cmp_greater(height() * m_render_framebuffer.scale(), max_size))
+          while (std::cmp_greater(static_cast<int>(width()) * m_render_framebuffer.scale(), max_size)
+                 || std::cmp_greater(static_cast<int>(height()) * m_render_framebuffer.scale(), max_size))
           {
                m_render_framebuffer.set_scale(m_render_framebuffer.scale() >> 1U);
                if (m_render_framebuffer.scale() <= 1U)
