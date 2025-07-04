@@ -1760,7 +1760,7 @@ uint32_t map_sprite::get_max_texture_height() const
      uint32_t tex_height      = {};
      if (max_height_it != std::ranges::end(transform_range))
      {
-          tex_height = *max_height_it;
+          tex_height = static_cast<std::uint32_t>(*max_height_it);
      }
      else
      {
