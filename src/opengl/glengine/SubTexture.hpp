@@ -35,9 +35,10 @@ public:
    * Only get the uv ImGui uses it's a min and max but with swapped y values.
    * @return array of two ImVec2
    */
-  std::array<ImVec2, 2U> im_gui_uv() const
+  template <typename T = glm::vec2>
+  std::array<T, 2U> im_gui_uv() const
   {
-    return { ImVec2{ m_uv[0].x, m_uv[2].y }, ImVec2{ m_uv[2].x, m_uv[0].y } };
+    return { T{ m_uv[0].x, m_uv[2].y }, T{ m_uv[2].x, m_uv[0].y } };
   }
   void        bind(std::int32_t slot = 0) const;
   static void unbind();

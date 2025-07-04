@@ -43,6 +43,5 @@ CMakePresets.json
 CMakeUserPresets.json
 /fonts
 imgui.ini
-src/sfml/imgui.ini
-Field-Map-Editor_SFML.toml
-Field-Map-Editor_SFML_imgui.ini
+field-map-editor.toml
+field-map-editor_imgui.ini

@@ -23,9 +23,6 @@ class FieldMapEditorConan(ConanFile):
         self.requires("glew/2.2.0")
         self.requires("glm/0.9.9.8")
         self.requires("imgui/1.91.8-docking")
-        self.requires("sfml/2.6.2")
-        self.requires("zlib/1.3.1")
-        self.requires("openal-soft/1.22.2")
         self.requires("boost-ext-ut/2.1.0") 
         self.requires("tomlplusplus/3.0.1")
         self.requires("libpng/1.6.44")
@@ -52,8 +49,6 @@ class FieldMapEditorConan(ConanFile):
         tc.presets_prefix = f"conan_{self.settings.os}".lower() + "_" + str(self.settings.build_type).lower()
         imgui = self.dependencies["imgui"].cpp_info
         tc.variables["IMGUI_IMPL_DIR"] = os.path.normpath(imgui.srcdirs[0]).replace("\\", "/")        
-        tc.variables["SFML_WITH_WINDOW"] = self.dependencies["sfml"].options.window
-        tc.variables["SFML_WITH_GRAPHICS"] = self.dependencies["sfml"].options.graphics
         tc.generate()
         cmd = CMakeDeps(self)
         cmd.generate()

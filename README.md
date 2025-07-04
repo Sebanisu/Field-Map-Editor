@@ -13,13 +13,19 @@ Test Application for editing the tiles of a FF8 field. See [releases](https://gi
 -  **2025.JAN.13** - I found a small bug https://github.com/Sebanisu/Field-Map-Editor/issues/121. This could cause the Pupu to not be unique enough. It might break your exports. You may need to convert to swizzled in your current version before upgrading.
 -  **2022.SEP.12** - https://github.com/Sebanisu/Field-Map-Editor/issues/80 & https://github.com/Sebanisu/Field-Map-Editor/issues/122. I used 2 bits to note if a tile is not aligned with the 16x16 grid, via the X-axis or the Y-axis.
 
-### SFML Version
+---
 
-The SFML version is the more feature-complete version and is recommended for most users. Recently, it has seen active updates because it is the version most people are using. New features are now being developed and implemented in the SFML version first, ensuring it stays up to date and reliable.
+### Main Application
 
-If you find any features missing from the SFML version or have suggestions, please let me know. Your feedback helps shape its development.
+This was formerly the **SFML version**, but it now uses **OpenGL** with GLEW, GLFW, and ImGui, just like the Experimental Application. It is the more feature-complete version and is recommended for most users.
 
-**Note:** The SFML version requires the `fonts` folder.
+It receives regular updates, as it’s the version most people use. New features are developed and tested here first to ensure stability and reliability.
+
+If you notice any missing features or have suggestions, feel free to share your feedback — it directly shapes development.
+
+> **Note:** This version requires the `fonts` folder.
+
+> **Note:** This version also requires the `res` folder, which contains essential shaders and textures.
 
 ![image](https://github.com/user-attachments/assets/730fbd48-b742-47cf-bffa-b7a106e586b6)
 
@@ -60,23 +66,36 @@ This window lets you see what files are in this field. I plan to make this alitt
 ![image](https://github.com/user-attachments/assets/f9b2ddfd-3c72-4ea6-a658-62ab596aa2ce)
 
 
-### OPENGL Version
+---
 
-The OPENGL version has evolved into a testing ground for new features. These features are tested and refined in the OPENGL version and then backported to the SFML version where applicable. While the SFML version is the recommended version for most users, the OPENGL version might contain experimental features that have not yet made their way to the SFML version.
+### Experimental Application
 
-If you are using the OPENGL version and find a feature you would like to see in the SFML version, please let me know. Your feedback helps prioritize what gets implemented in the SFML version.
+This was formerly the **OpenGL version** and now serves as a testing ground for experimental features. Like the Main Application, it also uses **OpenGL**, GLEW, GLFW, and ImGui.
 
-**Note:** The OPENGL version requires the `res` folder, which contains the necessary shaders and textures.
+Experimental features are often trialed here first, then refined and ported to the Main Application if successful. While the Main Application is the recommended choice, the Experimental Application may include features not yet available there.
+
+If you find something in the Experimental version that you'd like to see in the Main Application, let me know — your feedback helps guide future development.
+
+> **Note:** This version requires the `res` folder, which contains essential shaders and textures.
 
 ![image](https://github.com/user-attachments/assets/57f33eb5-83f1-4ed1-9d0a-c19678651305)
 
 
-
+---
 
 
 ### Credits
 
-This project is based on the work of [Omzy](https://forums.qhimm.com/index.php?topic=13444.0) [(src)](https://github.com/Sebanisu/Pupu) and [myst6re](https://forums.qhimm.com/index.php?topic=13050.0) [(src)](https://github.com/myst6re/deling). Also [Maki](https://forums.qhimm.com/index.php?topic=18656.0) [(src)](https://github.com/MaKiPL/OpenVIII-monogame). I referenced their code to make this.
+This project is based on the work of the following developers:
+
+- [Omzy](https://forums.qhimm.com/index.php?topic=13444.0) ([source](https://github.com/Sebanisu/Pupu))
+- [myst6re](https://forums.qhimm.com/index.php?topic=13050.0) ([source](https://github.com/myst6re/deling))
+- [Maki](https://forums.qhimm.com/index.php?topic=18656.0) ([source](https://github.com/MaKiPL/OpenVIII-monogame))
+- [TheCherno](https://www.youtube.com/playlist?list=PLlrATfBNZ98dC-V-N3m0Go4deliWHPFwT) ([source](https://github.com/thecherno))
+
+I referenced their code or videos in the development of this project.
+
+---
 
 # Windows Build Instructions
 
@@ -161,29 +180,67 @@ dir /s /b bin\*.exe
 - For troubleshooting, review the output logs during each step.
 
 
+---
+
+![Running on Arch Linux](https://github.com/user-attachments/assets/7dd33451-1696-49d0-8856-12ac2e608145)
+
 # Linux Build Instructions **(WIP)**
+- Make sure you have atleast GCC 15.
+```sh
+gcc --version
+```
 
 ### Step 1. Update and install required packages
 
+Ubuntu
 ```sh
 sudo apt update
 sudo apt install -y python3 python3-venv python3-pip cmake build-essential
+```p
+
+Arch
+```sh
+pacman -Syu sudo
+sudo pacman -Syu
+sudo pacman -Syu --needed python python-virtualenv python-pip cmake base-devel python-pipx libglvnd libxcb libfontenc libice libsm libxaw libxcomposite libxcursor libxdamage libxtst libxinerama libxkbfile libxrandr libxres libxss libxv xcb-util xcb-util-cursor xcb-util-wm xcb-util-keysyms git
 ```
 
 ### Step 2. Create and activate a Python virtual environment
+
+Ubuntu
 ```sh
 python3 -m venv venv
 source venv/bin/activate
 ```
+
 
 ### Step 3. Install Conan package manager
 
 ```sh
 pip install conan
 ```
+Arch
+```sh
+pipx install conan
+pipx ensurepath
+source ~/.bashrc
+```
+
+### Step 3.5 Copy dev files to your home directory.
+I was getting permission errors in wsl. So I copied my files to my home directory to try again. I donno why it was happening. Below I am making the projects folder and i'm removing existing files and i'm cloning the files. The remove step is optional. I had old files in that directory.
+```sh
+mkdir -p ~/projects
+rm -rf ~/projects/Field-Map-Editor
+git clone --branch remove_sfml https://github.com/Sebanisu/Field-Map-Editor.git ~/projects/Field-Map-Editor
+cd ~/projects/Field-Map-Editor
+git status
+git pull
+```
+
 
 ### Step 4. Configure and Install dependencies using Conan
 #### Set Conan's home directory (optional, useful for CI environments)
+
 ```sh
 conan config home
 ```
@@ -191,8 +248,15 @@ conan config home
 #### Detect a Conan profile and name it `ubuntu24` if it doesn't already exist
 #### Replace `ubuntu24` with the appropriate profile name if necessary
 #### Redirect stdout and stderr to /dev/null and ensure the script continues regardless of errors
+
+Ubuntu
 ```sh
 conan profile detect --name ubuntu24 > /dev/null 2>&1 || true
+```
+
+Arch
+```sh
+conan profile detect --name arch > /dev/null 2>&1 || true
 ```
 
 #### List all available Conan profiles
@@ -200,8 +264,15 @@ conan profile detect --name ubuntu24 > /dev/null 2>&1 || true
 conan profile list
 ```
 #### Install dependencies using Conan
+
+Ubuntu
 ```sh
-conan install . -pr ubuntu24 -pr:b ubuntu24 --build=missing -of ./linux
+conan install . -pr ubuntu24 -pr:b ubuntu24 --build=missing -s compiler.cppstd=23 -of ./linux
+```
+
+Arch
+```sh
+conan install . -pr arch -pr:b arch --build=missing -s compiler.cppstd=23 -of ./archlinux -c tools.system.package_manager:mode=install
 ```
 
 ### Step 5. Deactivate the virtual environment
@@ -216,19 +287,14 @@ cmake --list-presets
 
 ### Step 7. Configure the build with CMake
 ```sh
-cmake --preset=conan_linux-relwithdebinfo
+rm -rf ./archlinux/build/Release/
+cmake --preset=conan_linux_release-release
 ```
 
 ### Step 8. Build the project
 ```sh
-cd ./linux/build/RelWithDebInfo/
-make
+cmake --build ./archlinux/build/Release/
 ```
 
-### Step 9. Return to the root directory (optional)
-```sh
-cd ../../../
-```
 ## Additional Notes
-- The compiled binaries can be found in the `./linux/build/RelWithDebInfo/` directory.
-
+- The compiled binaries can be found in the `./bin/` directory.

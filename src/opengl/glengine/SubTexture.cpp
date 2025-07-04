@@ -67,5 +67,3 @@ glengine::SubTexture::SubTexture(GlidCopy id)
     GL_TEXTURE_HEIGHT,
     &m_height);
 }
-// TODO make a funciton that returns the min and max uv normalized to between 0
-// and 1.

@@ -23,7 +23,7 @@ after_build:
   - cmd: >- 
       dir /s /b bin\\*.exe
 
-      xcopy "src\\opengl\\opengl_version\\res" "bin\\Release\\res" /E /I /Y
+      xcopy "res" "bin\\Release\\res" /E /I /Y
 
       xcopy "fonts" "bin\\Release\\fonts" /E /I /Y
 
