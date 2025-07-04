@@ -68,7 +68,7 @@ void compact_move_conflicts_only(map_group::Map &map, const source_tile_conflict
           std::vector<ff_8::source_tile_conflicts::location> empty_locations =
             conflicts.range_of_empty_locations() | std::ranges::to<std::vector>();
           auto range_of_conflicts         = conflicts.range_of_conflicts();
-          auto filtered_tiles             = tiles | std::views::filter(not_invalid);
+          //auto filtered_tiles             = tiles | std::views::filter(not_invalid);
           using tile_t                    = std::remove_cvref_t<std::ranges::range_value_t<decltype(tiles)>>;
           const auto with_depth_operation = ff_8::tile_operations::WithDepth<tile_t>{ open_viii::graphics::BPPT::BPP4_CONST() };
 
