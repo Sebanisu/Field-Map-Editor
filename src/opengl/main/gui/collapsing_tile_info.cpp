@@ -51,8 +51,9 @@ bool collapsing_tile_info(
               if (ImGui::BeginTable("table_tile_info", 2))
               {
                    auto split_lines = [](const std::string &str) {
-                        return std::views::split(str, '\n')
-                               | std::views::transform([](auto &&r) { return std::string_view(&*r.begin(), std::ranges::distance(r)); });
+                        return std::views::split(str, '\n') | std::views::transform([](auto &&r) {
+                                    return std::string_view(&*r.begin(), static_cast<std::size_t>(std::ranges::distance(r)));
+                               });
                    };
 
                    // Configure columns
