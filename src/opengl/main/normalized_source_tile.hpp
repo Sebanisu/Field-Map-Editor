@@ -13,6 +13,7 @@ namespace open_viii::graphics::background
 struct normalized_source_tile
 {
    public:
+     using impl_type                     = normalized_source_tile;
      TexIdBuffer         m_tex_id_buffer = {};///< Buffer holding texture ID, blending, depth, and draw flags.
      PaletteID           m_palette_id    = {};///< Identifier for the palette associated with the tile.
      Point<std::uint8_t> m_source_xy     = {};///< Source position (x, y) of the tile within the texture.
