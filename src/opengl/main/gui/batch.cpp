@@ -1018,6 +1018,10 @@ void fme::batch::generate_map_sprite()
                if (selections->batch_input_load_map)
                     filters.upscale_map.update(selected_string).enable();
                break;
+          case input_types::swizzle_as_one_image: {
+               spdlog::warn("input_types::swizzle_as_one_image is not yet handled");
+               break;
+          }
      }
 
      // Create the map sprite with appropriate settings
@@ -1250,8 +1254,8 @@ void fme::batch::open_directory_browser()
      }
      const auto         clear_browser = glengine::ScopeGuard([this]() { m_directory_browser.ClearSelected(); });
      const std::string &selected_path = m_directory_browser.GetPwd().string();
-     //todo check if the directory is valid.
-     //const auto         tmp           = safedir(selected_path);
+     // todo check if the directory is valid.
+     // const auto         tmp           = safedir(selected_path);
      switch (m_directory_browser_mode)
      {
           case directory_mode::input_mode: {
