@@ -1561,7 +1561,7 @@ const ff_8::MapHistory::nsat_map &map_sprite::working_animation_counts() const
      });
      const std::int32_t width =
        height * static_cast<std::int32_t>(max_texture_page_id)
-       + (static_cast<std::int32_t>(max_source_x + TILE_SIZE) * settings.scale.value());//(max_texture_page_id + 1);
+       + ((max_source_x + TILE_SIZE) * settings.scale.value());//(max_texture_page_id + 1);
 
      // If there’s only one bpp and at most one palette, nothing needs saving.
      if (unique_bpp.size() == 1U && unique_values.palette().at(unique_bpp.front()).values().size() <= 1U)
