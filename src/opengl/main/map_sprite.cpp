@@ -1108,10 +1108,10 @@ void map_sprite::resize_render_texture() const
           while (std::cmp_greater(static_cast<int>(width()) * m_render_framebuffer.scale(), max_size)
                  || std::cmp_greater(static_cast<int>(height()) * m_render_framebuffer.scale(), max_size))
           {
-               m_render_framebuffer.set_scale(m_render_framebuffer.scale() >> 1U);
-               if (m_render_framebuffer.scale() <= 1U)
+               m_render_framebuffer.set_scale(static_cast<std::int32_t>(static_cast<std::uint32_t>(m_render_framebuffer.scale()) >> 1U));
+               if (m_render_framebuffer.scale() <= 1)
                {
-                    m_render_framebuffer.set_scale(1U);
+                    m_render_framebuffer.set_scale(1);
                     break;
                }
           }
