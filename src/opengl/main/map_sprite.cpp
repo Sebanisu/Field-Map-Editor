@@ -46,6 +46,10 @@ map_sprite::map_sprite(
   , m_canvas(get_canvas())
   , m_render_framebuffer(std::move(framebuffer))
 {
+     if (m_map_group.field.expired())
+     {
+          return;
+     }
 
      // TODO wip gotta use new class to get the paths.
      const auto ps = ff_8::path_search{
@@ -1035,6 +1039,10 @@ bool map_sprite::fail() const
           }
           return true;
      }
+     if (m_map_group.field.expired())
+     {
+          return false;
+     }
      if (!m_map_group.mim)
      {
           return false;
@@ -1559,9 +1567,8 @@ const ff_8::MapHistory::nsat_map &map_sprite::working_animation_counts() const
                            | std::ranges::views::transform([](const auto &tile) { return tile.source_x(); });
           return static_cast<std::uint8_t>(std::ranges::max(f_t_range));
      });
-     const std::int32_t width =
-       height * static_cast<std::int32_t>(max_texture_page_id)
-       + ((max_source_x + TILE_SIZE) * settings.scale.value());//(max_texture_page_id + 1);
+     const std::int32_t width        = height * static_cast<std::int32_t>(max_texture_page_id)
+                                + ((max_source_x + TILE_SIZE) * settings.scale.value());//(max_texture_page_id + 1);
 
      // If there’s only one bpp and at most one palette, nothing needs saving.
      if (unique_bpp.size() == 1U && unique_values.palette().at(unique_bpp.front()).values().size() <= 1U)
