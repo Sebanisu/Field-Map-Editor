@@ -1001,23 +1001,27 @@ void fme::batch::generate_map_sprite()
      const std::string &selected_string = get_selected_path(selections->batch_input_path, selections->batch_input_root_path_type);
      switch (selections->batch_input_type)
      {
-          case input_types::mim:
+          case input_types::mim: {
                // No filters applied for MIM input and no .map files are loaded automaticly.
                break;
+          }
 
-          case input_types::deswizzle:
+          case input_types::deswizzle: {
                // Enable deswizzle filter using the input path
                filters.deswizzle.update(selected_string).enable();
                if (selections->batch_input_load_map)
                     filters.deswizzle_map.update(selected_string).enable();
                break;
+          }
 
-          case input_types::swizzle:
+          case input_types::swizzle: {
                // Enable upscale filter using the input path
                filters.upscale.update(selected_string).enable();
                if (selections->batch_input_load_map)
                     filters.upscale_map.update(selected_string).enable();
                break;
+          }
+
           case input_types::swizzle_as_one_image: {
                spdlog::warn("input_types::swizzle_as_one_image is not yet handled");
                break;
