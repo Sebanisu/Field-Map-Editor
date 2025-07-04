@@ -38,8 +38,8 @@ std::future<void> save_image_pbo(const std::filesystem::path &path, glengine::Fr
        glReadPixels,
        0,
        0,
-       static_cast<GLsizei>(fbo.width()),
-       static_cast<GLsizei>(fbo.height()),
+       fbo.width(),
+       fbo.height(),
        GL_RGBA,
        GL_UNSIGNED_BYTE,
        nullptr// Offset into PBO
