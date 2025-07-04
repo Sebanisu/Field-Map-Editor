@@ -695,14 +695,16 @@ struct filters
        , bpp([&]() -> decltype(bpp) {
             if (load_config)
             {
-                 return { ff_8::tile_operations::DepthT<TileT>{
-                            config[ConfigKeys<FilterTag::Bpp>::key_name].value_or(ff_8::tile_operations::DepthT<TileT>::BPP4_CONST().raw())
-                            & 3U },
+                 return {
+                      ff_8::tile_operations::DepthT<TileT>{ static_cast<decltype(ff_8::tile_operations::DepthT<TileT>::BPP4_CONST().raw())>(
+                        config[ConfigKeys<FilterTag::Bpp>::key_name].value_or(ff_8::tile_operations::DepthT<TileT>::BPP4_CONST().raw())
+                        & 3U) },
 
-                          WithFlag(
-                            FilterSettings::Default,
-                            FilterSettings::Toggle_Enabled,
-                            config[ConfigKeys<FilterTag::Bpp>::enabled_key_name].value_or(false)) };
+                      WithFlag(
+                        FilterSettings::Default,
+                        FilterSettings::Toggle_Enabled,
+                        config[ConfigKeys<FilterTag::Bpp>::enabled_key_name].value_or(false))
+                 };
             }
             return { ff_8::tile_operations::DepthT<TileT>::BPP4_CONST(), FilterSettings::All_Disabled };
        }())
