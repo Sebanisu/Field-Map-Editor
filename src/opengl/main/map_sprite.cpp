@@ -1120,11 +1120,11 @@ void map_sprite::resize_render_texture() const
      {
           const auto max_height =
             (std::ranges::max)(filtered_textures | std::ranges::views::transform([](const auto &texture) { return texture.height(); }));
-          static constexpr std::uint16_t mim_texture_height = 256U;
+          static constexpr std::int16_t mim_texture_height = 256U;
 
           if (m_filters.deswizzle.enabled()) [[unlikely]]
           {
-               m_render_framebuffer.set_scale(max_height / m_canvas.height());
+               m_render_framebuffer.set_scale(max_height / static_cast<std::int32_t>(m_canvas.height()));
           }
           else [[likely]]
           {
