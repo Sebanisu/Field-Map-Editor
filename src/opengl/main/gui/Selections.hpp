@@ -279,12 +279,12 @@ struct Selections
      /**
       * @brief The default window width.
       */
-     static constexpr std::uint32_t window_width_default  = 1280;
+     static constexpr std::int32_t window_width_default  = 1280;
 
      /**
       * @brief The default window height.
       */
-     static constexpr std::uint32_t window_height_default = 720;
+     static constexpr std::int32_t window_height_default = 720;
 
      open_viii::graphics::BPPT      bpp;///< Bits per pixel for rendering.
      uint8_t                        palette;///< Selected palette index.
