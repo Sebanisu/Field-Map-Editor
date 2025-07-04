@@ -41,9 +41,9 @@ static bool safe_copy_string(const Src &src, Dst &dst)
      }
 
      std::ranges::copy_n(std::ranges::begin(src), src_size, std::ranges::data(dst));
-     dst[src_size]  = '\0';
+     dst[static_cast<size_t>(src_size)] = '\0';
 
-     const auto tmp = safedir(std::ranges::data(dst));
+     const auto tmp                     = safedir(std::ranges::data(dst));
      return tmp.is_dir() && tmp.is_exists();
 }
 
