@@ -46,7 +46,6 @@ map_sprite::map_sprite(
   , m_canvas(get_canvas())
   , m_render_framebuffer(std::move(framebuffer))
 {
-     glm::ivec2 fb_size = m_render_framebuffer.get_size();
 
      // TODO wip gotta use new class to get the paths.
      const auto ps      = ff_8::path_search{
@@ -87,21 +86,6 @@ map_sprite::map_sprite(
                m_filters.deswizzle_map.disable();
           }
      }
-     // if (fb_size.x != 0 && fb_size.y != 0)
-     // {
-     //      if (m_draw_swizzle)
-     //      {
-     //           static constexpr auto mim_height = 256;
-     //           m_scale                          = fb_size.y / mim_height;
-     //      }
-     //      else
-     //      {
-     //           const auto minmax_y = m_map_group.maps.const_working().visit_tiles([](const auto &tiles) {
-     //                return (std::ranges::minmax)(tiles | std::ranges::views::transform([](const auto tile) { return tile.y(); }));
-     //           });
-     //           m_scale             = fb_size.y / (minmax_y.max + TILE_SIZE - minmax_y.min);
-     //      }
-     // }
      update_render_texture(true);
 }
 
