@@ -41,8 +41,8 @@ map_sprite::map_sprite(
   , m_draw_swizzle(draw_swizzle)
   , m_disable_blends(force_disable_blends)
   , m_filters(std::move(in_filters))
-  , m_all_unique_values_and_strings(get_all_unique_values_and_strings())
   , m_selections(selections)
+  , m_all_unique_values_and_strings(get_all_unique_values_and_strings())
   , m_canvas(get_canvas())
   , m_render_framebuffer(std::move(framebuffer))
 {
