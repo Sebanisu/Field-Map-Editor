@@ -828,76 +828,80 @@ void map_sprite::update_position(
 //      }
 //      return sf::BlendAlpha;
 // }
-[[nodiscard]] bool map_sprite::draw_imported([[maybe_unused]] const glengine::FrameBuffer &target_framebuffer) const
+[[nodiscard]] bool map_sprite::draw_imported([[maybe_unused]] const [[maybe_unused]] glengine::FrameBuffer &target_framebuffer) const
 {
-     using namespace open_viii::graphics::background;
-     namespace v = std::ranges::views;
-     namespace r = std::ranges;
+     // todo fix imported
+     return false;
+     // using namespace open_viii::graphics::background;
+     // namespace v = std::ranges::views;
+     // namespace r = std::ranges;
 
-     if (
-       !m_using_imported_texture || m_imported_texture == nullptr || m_imported_texture->width() == 0 || m_imported_texture->height() == 0)
-     {
-          return false;
-     }
-     m_imported_texture->bind();
-     const auto pop_unbind         = glengine::ScopeGuard{ [&]() { m_imported_texture->unbind(); } };
-     bool       drew               = false;
-     const auto draw_imported_tile = [this, &drew, &target_framebuffer](
-                                       const std::integral auto current_index, const is_tile auto &tile_const, const is_tile auto &tile) {
-          if (!m_saved_imported_indices.empty())
-          {
-               const auto find_index = std::ranges::find_if(m_saved_imported_indices, [&current_index](const auto search_index) {
-                    return std::cmp_equal(search_index, current_index);
-               });
-               if (find_index != m_saved_imported_indices.end())
-               {
-                    return;
-               }
-          }
-          if (ff_8::tile_operations::fail_any_filters(m_filters, tile))
-          {
-               return;
-          }
-          const auto source_tile_size      = get_tile_texture_size_for_import();
-          const auto destination_tile_size = glm::uvec2{ TILE_SIZE, TILE_SIZE } * static_cast<std::uint32_t>(target_framebuffer.scale());
-          const glm::uvec2 source_texture_size = { m_imported_texture->width(), m_imported_texture->height() };
-          ff_8::QuadStrip  quad =
-            get_triangle_strip_for_imported(source_tile_size, destination_tile_size, source_texture_size, tile_const, tile);
-          /// TODO fix blend mode
-          //   states.blendMode        = sf::BlendAlpha;
-          //   if (!m_disable_blends)
-          //   {
-          //        states.blendMode = set_blend_mode(tile.blend_mode(), quad);
-          //   }
-          // apply the tileset texture
-          /// TODO fix drawing quad
-          // target.draw(quad.data(), quad.size(), sf::TriangleStrip, states);
-          drew = true;
-     };
-     m_imported_tile_map_front.visit_tiles([&](const auto &unchanged_tiles) {
-          m_imported_tile_map.visit_tiles([&](const auto &changed_tiles) {
-               for (const auto &z_axis : m_all_unique_values_and_strings.z().values())
-               {
-                    const auto z_test = [&]([[maybe_unused]] const is_tile auto &tile_const, const is_tile auto &tile) {
-                         return std::cmp_equal(z_axis, tile.z());
-                    };
+     // if (
+     //   !m_using_imported_texture || m_imported_texture == nullptr || m_imported_texture->width() == 0 || m_imported_texture->height() ==
+     //   0)
+     // {
+     //      return false;
+     // }
+     // m_imported_texture->bind();
+     // const auto pop_unbind         = glengine::ScopeGuard{ [&]() { m_imported_texture->unbind(); } };
+     // bool       drew               = false;
+     // const auto draw_imported_tile = [this, &drew, &target_framebuffer](
+     //                                   const std::integral auto current_index, const is_tile auto &tile_const, const is_tile auto &tile)
+     //                                   {
+     //      if (!m_saved_imported_indices.empty())
+     //      {
+     //           const auto find_index = std::ranges::find_if(m_saved_imported_indices, [&current_index](const auto search_index) {
+     //                return std::cmp_equal(search_index, current_index);
+     //           });
+     //           if (find_index != m_saved_imported_indices.end())
+     //           {
+     //                return;
+     //           }
+     //      }
+     //      if (ff_8::tile_operations::fail_any_filters(m_filters, tile))
+     //      {
+     //           return;
+     //      }
+     //      const auto source_tile_size      = get_tile_texture_size_for_import();
+     //      const auto destination_tile_size = glm::uvec2{ TILE_SIZE, TILE_SIZE } * static_cast<std::uint32_t>(target_framebuffer.scale());
+     //      const glm::uvec2 source_texture_size = { m_imported_texture->width(), m_imported_texture->height() };
+     //      ff_8::QuadStrip  quad =
+     //        get_triangle_strip_for_imported(source_tile_size, destination_tile_size, source_texture_size, tile_const, tile);
+     //      /// TODO fix blend mode
+     //      //   states.blendMode        = sf::BlendAlpha;
+     //      //   if (!m_disable_blends)
+     //      //   {
+     //      //        states.blendMode = set_blend_mode(tile.blend_mode(), quad);
+     //      //   }
+     //      // apply the tileset texture
+     //      /// TODO fix drawing quad
+     //      // target.draw(quad.data(), quad.size(), sf::TriangleStrip, states);
+     //      drew = true;
+     // };
+     // m_imported_tile_map_front.visit_tiles([&](const auto &unchanged_tiles) {
+     //      m_imported_tile_map.visit_tiles([&](const auto &changed_tiles) {
+     //           for (const auto &z_axis : m_all_unique_values_and_strings.z().values())
+     //           {
+     //                const auto z_test = [&]([[maybe_unused]] const is_tile auto &tile_const, const is_tile auto &tile) {
+     //                     return std::cmp_equal(z_axis, tile.z());
+     //                };
 
-                    auto zipped_range = v::zip(unchanged_tiles, changed_tiles)
-                                        | v::filter([&](const auto &current) { return std::apply(Map::filter_invalid(), current); })
-                                        | v::filter([&](const auto &current) { return std::apply(z_test, current); });
-                    for (decltype(auto) current : zipped_range)
-                    {
-                         std::apply(
-                           [&](const is_tile auto &unchanged_tile, const is_tile auto &changed_tile) {
-                                const auto current_index = std::ranges::distance(&changed_tiles.front(), &changed_tile);
-                                draw_imported_tile(current_index, unchanged_tile, changed_tile);
-                           },
-                           current);
-                    }
-               }
-          });
-     });
-     return drew;
+     //                auto zipped_range = v::zip(unchanged_tiles, changed_tiles)
+     //                                    | v::filter([&](const auto &current) { return std::apply(Map::filter_invalid(), current); })
+     //                                    | v::filter([&](const auto &current) { return std::apply(z_test, current); });
+     //                for (decltype(auto) current : zipped_range)
+     //                {
+     //                     std::apply(
+     //                       [&](const is_tile auto &unchanged_tile, const is_tile auto &changed_tile) {
+     //                            const auto current_index = std::ranges::distance(&changed_tiles.front(), &changed_tile);
+     //                            draw_imported_tile(current_index, unchanged_tile, changed_tile);
+     //                       },
+     //                       current);
+     //                }
+     //           }
+     //      });
+     // });
+     // return drew;
 }
 glm::uvec2 map_sprite::get_tile_texture_size_for_import() const
 {
