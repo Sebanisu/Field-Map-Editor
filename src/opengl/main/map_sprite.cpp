@@ -1390,7 +1390,7 @@ const ff_8::MapHistory::nsat_map &map_sprite::working_animation_counts() const
      settings.scale                      = height / mim_height;
      if (settings.filters.value().deswizzle.enabled())
      {
-          settings.scale = height / m_canvas.height();
+          settings.scale = height / static_cast<std::int32_t>(m_canvas.height());
           height         = settings.scale.value() * mim_height;
      }
      if (settings.scale <= 0)
@@ -1547,7 +1547,7 @@ const ff_8::MapHistory::nsat_map &map_sprite::working_animation_counts() const
      settings.scale                      = height / mim_height;
      if (settings.filters.value().deswizzle.enabled())
      {
-          settings.scale = height / m_canvas.height();
+          settings.scale = height / static_cast<std::int32_t>(m_canvas.height());
           height         = settings.scale.value() * mim_height;
      }
      if (settings.scale == 0U)
