@@ -48,14 +48,14 @@ map_sprite::map_sprite(
 {
 
      // TODO wip gotta use new class to get the paths.
-     const auto ps      = ff_8::path_search{
-               .selections                         = m_selections.lock(),
-               .opt_coo                            = m_map_group.opt_coo,
-               .field_name                         = get_base_name(),
-               .filters_deswizzle_value_string     = filter().deswizzle.value().string(),
-               .filters_upscale_value_string       = filter().upscale.value().string(),
-               .filters_deswizzle_map_value_string = filter().deswizzle_map.value().string(),
-               .filters_upscale_map_value_string   = filter().upscale_map.value().string(),
+     const auto ps = ff_8::path_search{
+          .selections                         = m_selections.lock(),
+          .opt_coo                            = m_map_group.opt_coo,
+          .field_name                         = get_base_name(),
+          .filters_deswizzle_value_string     = filter().deswizzle.value().string(),
+          .filters_upscale_value_string       = filter().upscale.value().string(),
+          .filters_deswizzle_map_value_string = filter().deswizzle_map.value().string(),
+          .filters_upscale_map_value_string   = filter().upscale_map.value().string(),
           //.working_unique_pupu                = working_unique_pupu(),
           //.bpp_palette                        = uniques().palette(),
           //.texture_page_id                    = uniques().texture_page_id()
@@ -812,7 +812,7 @@ void map_sprite::update_position(
 //      }
 //      return sf::BlendAlpha;
 // }
-[[nodiscard]] bool map_sprite::draw_imported([[maybe_unused]] const [[maybe_unused]] glengine::FrameBuffer &target_framebuffer) const
+[[nodiscard]] bool map_sprite::draw_imported([[maybe_unused]] const glengine::FrameBuffer &target_framebuffer) const
 {
      // todo fix imported
      return false;
