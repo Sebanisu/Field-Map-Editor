@@ -1141,8 +1141,8 @@ void map_sprite::resize_render_texture() const
           m_render_framebuffer.set_scale(tmp_scale);
      }
      check_size();
-     auto spec = glengine::FrameBufferSpecification{ .width  = static_cast<int>(width() * m_render_framebuffer.scale()),
-                                                     .height = static_cast<int>(height() * m_render_framebuffer.scale()),
+     auto spec = glengine::FrameBufferSpecification{ .width  = static_cast<int>(width()) * m_render_framebuffer.scale(),
+                                                     .height = static_cast<int>(height()) * m_render_framebuffer.scale(),
                                                      .scale  = m_render_framebuffer.scale() };
      if (m_render_framebuffer.width() != spec.width && m_render_framebuffer.height() != spec.height)
      {
