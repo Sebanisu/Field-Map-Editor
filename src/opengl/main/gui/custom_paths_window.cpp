@@ -789,18 +789,19 @@ void fme::custom_paths_window::render() const
                {
                     override_changed = true;
                }
+               break;
           }
-          break;
           case vector_or_string_t::vector: {
                if (std::ranges::any_of(std::array{ combo_selected_pattern(), vector_pattern() }, std::identity{}))
                {
                     override_changed = true;
                }
+               break;
           }
           default: {
                spdlog::warn("vector_or_string() is unknown type");
+               break;
           }
-          break;
      }
 
      if (child_keys())
