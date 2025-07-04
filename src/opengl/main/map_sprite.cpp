@@ -1377,17 +1377,17 @@ const ff_8::MapHistory::nsat_map &map_sprite::working_animation_counts() const
      // Backup and override current settings for exporting textures.
      settings_backup settings(
        m_filters, m_draw_swizzle, m_disable_texture_page_shift, m_disable_blends, m_render_framebuffer.mutable_scale());
-     settings.filters                         = ff_8::filters{ false };
-     settings.filters.value().upscale         = settings.filters.backup().upscale;
-     settings.filters.value().deswizzle       = settings.filters.backup().deswizzle;
-     settings.draw_swizzle                    = true;
-     settings.disable_texture_page_shift      = true;
-     settings.disable_blends                  = true;
+     settings.filters                    = ff_8::filters{ false };
+     settings.filters.value().upscale    = settings.filters.backup().upscale;
+     settings.filters.value().deswizzle  = settings.filters.backup().deswizzle;
+     settings.draw_swizzle               = true;
+     settings.disable_texture_page_shift = true;
+     settings.disable_blends             = true;
 
      // Adjust scale based on texture height or deswizzle state.
-     uint32_t                      height     = get_max_texture_height();
-     constexpr static int mim_height = { 256U };
-     settings.scale                           = height / mim_height;
+     std::int32_t         height         = static_cast<std::int32_t>(get_max_texture_height());
+     constexpr static int mim_height     = { 256U };
+     settings.scale                      = height / mim_height;
      if (settings.filters.value().deswizzle.enabled())
      {
           settings.scale = height / m_canvas.height();
@@ -1534,17 +1534,17 @@ const ff_8::MapHistory::nsat_map &map_sprite::working_animation_counts() const
      // Backup and override current settings for exporting textures.
      settings_backup settings(
        m_filters, m_draw_swizzle, m_disable_texture_page_shift, m_disable_blends, m_render_framebuffer.mutable_scale());
-     settings.filters                         = ff_8::filters{ false };
-     settings.filters.value().upscale         = settings.filters.backup().upscale;
-     settings.filters.value().deswizzle       = settings.filters.backup().deswizzle;
-     settings.draw_swizzle                    = true;
-     settings.disable_texture_page_shift      = false;
-     settings.disable_blends                  = true;
+     settings.filters                    = ff_8::filters{ false };
+     settings.filters.value().upscale    = settings.filters.backup().upscale;
+     settings.filters.value().deswizzle  = settings.filters.backup().deswizzle;
+     settings.draw_swizzle               = true;
+     settings.disable_texture_page_shift = false;
+     settings.disable_blends             = true;
 
      // Adjust scale based on texture height or deswizzle state.
-     uint32_t                      height     = get_max_texture_height();
-     constexpr static int mim_height = { 256U };
-     settings.scale                           = height / mim_height;
+     std::int32_t         height         = static_cast<std::int32_t>(get_max_texture_height());
+     constexpr static int mim_height     = { 256U };
+     settings.scale                      = height / mim_height;
      if (settings.filters.value().deswizzle.enabled())
      {
           settings.scale = height / m_canvas.height();
