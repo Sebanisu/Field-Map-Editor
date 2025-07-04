@@ -1386,7 +1386,7 @@ const ff_8::MapHistory::nsat_map &map_sprite::working_animation_counts() const
 
      // Adjust scale based on texture height or deswizzle state.
      uint32_t                      height     = get_max_texture_height();
-     constexpr static unsigned int mim_height = { 256U };
+     constexpr static int mim_height = { 256U };
      settings.scale                           = height / mim_height;
      if (settings.filters.value().deswizzle.enabled())
      {
@@ -1543,7 +1543,7 @@ const ff_8::MapHistory::nsat_map &map_sprite::working_animation_counts() const
 
      // Adjust scale based on texture height or deswizzle state.
      uint32_t                      height     = get_max_texture_height();
-     constexpr static unsigned int mim_height = { 256U };
+     constexpr static int mim_height = { 256U };
      settings.scale                           = height / mim_height;
      if (settings.filters.value().deswizzle.enabled())
      {
