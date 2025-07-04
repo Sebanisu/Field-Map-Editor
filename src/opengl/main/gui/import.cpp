@@ -521,24 +521,24 @@ void import::collapsing_header_generated_tiles() const
 
 void import::update_scaled_up_render_texture() const
 {
+     // todo fix imports
+     //  auto selections = m_selections.lock();
+     //  if (!selections)
+     //  {
+     //       spdlog::error("m_selections is no longer valid. File: {}, Line: {}", __FILE__, __LINE__);
+     //       return;
+     //  }
 
-     auto selections = m_selections.lock();
-     if (!selections)
-     {
-          spdlog::error("m_selections is no longer valid. File: {}, Line: {}", __FILE__, __LINE__);
-          return;
-     }
-
-     const auto scale_up_dim = [&](const std::integral auto dim) {
-          return static_cast<uint32_t>(
-            ceil(static_cast<double>(dim) / static_cast<double>(selections->tile_size_value))
-            * static_cast<double>(selections->tile_size_value));
-     };
-     const auto size = m_loaded_image_texture.get_size();
-     if (size == decltype(size){})
-     {
-          return;
-     }
+     // const auto scale_up_dim = [&](const std::integral auto dim) {
+     //      return static_cast<uint32_t>(
+     //        ceil(static_cast<double>(dim) / static_cast<double>(selections->tile_size_value))
+     //        * static_cast<double>(selections->tile_size_value));
+     // };
+     // const auto size = m_loaded_image_texture.get_size();
+     // if (size == decltype(size){})
+     // {
+     //      return;
+     // }
      /// TODO replace render with glengine rendering.
      // m_loaded_image_render_texture.create(scale_up_dim(size.x), scale_up_dim(size.y));
      // m_loaded_image_render_texture.setActive(true);
