@@ -242,7 +242,7 @@ open_viii::graphics::background::Map::variant_tile &import::combo_selected_tile(
                if (ImGui::ArrowButton("##l", ImGuiDir_Left))
                {
                     --selections->selected_tile;
-                    current_tile = tiles[selections->selected_tile];
+                    current_tile = tiles[static_cast<std::size_t>(selections->selected_tile)];
                     save_config();
                     changed = true;
                }
@@ -257,7 +257,7 @@ open_viii::graphics::background::Map::variant_tile &import::combo_selected_tile(
                if (ImGui::ArrowButton("##r", ImGuiDir_Right))
                {
                     ++selections->selected_tile;
-                    current_tile = tiles[selections->selected_tile];
+                    current_tile = tiles[static_cast<std::size_t>(selections->selected_tile)];
                     save_config();
                     changed = true;
                }
