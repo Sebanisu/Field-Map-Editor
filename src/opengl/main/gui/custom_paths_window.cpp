@@ -178,7 +178,7 @@ void fme::custom_paths_window::populate_test_output() const
           return;
      }
      m_output_tests.clear();
-     for (const auto test_data : m_tests)
+     for (const auto & test_data : m_tests)
      {
           std::string &output_test = m_output_tests.emplace_back(m_input_pattern_string.begin(), m_input_pattern_string.end());
           output_test              = test_data.replace_tags(output_test, selections);
