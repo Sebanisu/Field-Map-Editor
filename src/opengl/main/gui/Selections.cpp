@@ -59,7 +59,7 @@ fme::Selections::Selections(const Configuration config)
        static_cast<output_types>(config[key_to_string(ConfigKey::BatchOutputType)].value_or(std::to_underlying(output_types{})));
      batch_output_save_map = config[key_to_string(ConfigKey::BatchOutputSaveMap)].value_or(true);
 
-     bpp                   = BPPT{ config[key_to_string(ConfigKey::Bpp)].value_or(BPPT{}.raw()) & 3U };
+     bpp                   = BPPT{ static_cast<decltype(BPPT{}.raw())>(config[key_to_string(ConfigKey::Bpp)].value_or(BPPT{}.raw()) & 3U) };
 
      coo                   = static_cast<LangT>(config[key_to_string(ConfigKey::Coo)].value_or(std::to_underlying(LangT{})));
 
