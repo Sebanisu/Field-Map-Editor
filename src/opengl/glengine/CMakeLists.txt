@@ -33,6 +33,10 @@ add_library(
   VertexArray.cpp
   VertexBuffer.cpp
   VertexBufferDynamic.cpp)
+
+if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+  target_link_libraries(glengine PUBLIC stdc++exp)
+endif()
 target_compile_features(
   glengine
   PUBLIC cxx_std_23
