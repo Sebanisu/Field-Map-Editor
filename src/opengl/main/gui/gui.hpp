@@ -117,7 +117,6 @@ struct gui
      // imgui doesn't support std::string or std::string_view or
      // std::filesystem::path, only const char *
      archives_group              get_archives_group() const;
-     GLFWwindow *const           get_render_window() const;
      void                        update_path();
      void                        consume_one_future();
      std::shared_ptr<mim_sprite> get_mim_sprite() const;
