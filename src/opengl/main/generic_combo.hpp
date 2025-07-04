@@ -711,7 +711,7 @@ class GenericComboClass
                     }
                     const char *c_str_value = std::ranges::data(string);
                     {
-                         const auto pop_id     = PushPopID();
+                         const auto pop_id2     = PushPopID();
                          const auto pop_column = glengine::ScopeGuard{ &ImGui::NextColumn };
 
                          if (ImGui::Selectable(c_str_value, is_selected))
