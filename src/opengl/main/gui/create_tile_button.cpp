@@ -10,7 +10,7 @@ template<is_tile tileT>
           spdlog::error("{}", "map_sprite is null");
           return false;
      }
-     const auto *texture = map->get_texture(tile);
+     const glengine::Texture *texture = map->get_texture(tile);
      if (texture == nullptr)
      {
           spdlog::error("{}", "Failed to get texture for tile.");
@@ -49,9 +49,11 @@ template<is_tile tileT>
 
      const ImVec2 texSize       = { static_cast<float>(texture->width()), static_cast<float>(texture->height()) };
 
-     const ImVec2 uv0           = { static_cast<float>(rect.x) / texSize.x, static_cast<float>(rect.y) / texSize.y };
+     const ImVec2 uv0           = { static_cast<float>(rect.x) / static_cast<float>(texSize.x),
+                                    static_cast<float>(rect.y) / static_cast<float>(texSize.y) };
 
-     const ImVec2 uv1           = { static_cast<float>(rect.x + rect.z) / texSize.x, static_cast<float>(rect.y + rect.w) / texSize.y };
+     const ImVec2 uv1           = { static_cast<float>(rect.x + rect.z) / static_cast<float>(texSize.x),
+                                    static_cast<float>(rect.y + rect.w) / static_cast<float>(texSize.y) };
 
      int          pop_count     = {};
      int          pop_var_count = {};
