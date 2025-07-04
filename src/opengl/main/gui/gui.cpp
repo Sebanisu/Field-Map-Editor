@@ -132,7 +132,7 @@ static constexpr auto get_count_per_row = [](float buttonWidth, float buttonSpac
      const auto count_per_row_in =
        (std::max)(static_cast<std::uint16_t>((std::floor)(ImGui::GetContentRegionAvail().x / (buttonWidth + buttonSpacing))),
                   std::uint16_t{ 2 });
-     return count_per_row_in % 2 != 0 ? count_per_row_in - 1 : count_per_row_in;
+     return count_per_row_in % 2 != 0 ? static_cast<std::uint16_t>((std::max)(count_per_row_in - 1, 2)) : count_per_row_in;
 };
 
 /**
