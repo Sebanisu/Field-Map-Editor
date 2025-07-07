@@ -946,6 +946,12 @@ void map_sprite::disable_draw_swizzle()
 // }
 void map_sprite::update_render_texture(const bool reload_textures) const
 {
+     const auto s = m_selections.lock();
+     if (!s)
+     {
+          spdlog::error("Failed to lock m_selections: shared_ptr is expired.");
+          return;
+     }
      if (reload_textures)
      {
           // consume all the futures.
@@ -955,17 +961,17 @@ void map_sprite::update_render_texture(const bool reload_textures) const
           *m_texture = {};
           queue_texture_loading();
 
-          const auto s = m_selections.lock();
-          if (!s)
+
+          if (s->force_reloading_of_textures)
           {
-               spdlog::error("Failed to lock m_selections: shared_ptr is expired.");
-               return;
-          }
-          if (s->force_rendering_of_map)
-          {
-               consume_now();
+               consume_now(false);
           }
      }
+     else if (s->force_rendering_of_map)
+     {
+          consume_now(false);
+     }
+
      if (fail())
      {
           return;
@@ -1987,11 +1993,15 @@ std::string map_sprite::str_to_lower(std::string input)
      return output;
 }
 
-void fme::map_sprite::consume_now() const
+void fme::map_sprite::consume_now(const bool update) const
 {
      m_future_of_future_consumer.consume_now();
      m_future_consumer.consume_now();
-     update_render_texture();
+     const auto s = m_selections.lock();
+     if (update)
+     {
+          update_render_texture();
+     }
 }
 
 bool fme::map_sprite::consume_one_future() const

@@ -75,6 +75,7 @@ struct gui_labels
      static constexpr std::string_view swizzle_as_one_image                   = { "Swizzle as one Image" };
      static constexpr std::string_view deswizzle                              = { "Deswizzle" };
      static constexpr std::string_view disable_blending                       = { "Disable Blending" };
+     static constexpr std::string_view force_reloading_of_textures            = { "Force Reloading Of Textures" };
      static constexpr std::string_view force_rendering_of_map                 = { "Force Rendering Of Map" };
      static constexpr std::string_view selected_tile_info                     = { "Selected Tile Info" };
      static constexpr std::string_view hovered_tiles                          = { "Hovered Tiles" };
@@ -257,8 +258,11 @@ struct gui_labels
           "Use Disable blending to turn off the effect that emulates PSX-style blending for tiles with semi-transparent parts, such as "
           "lights or colored glass."
      };
+     static constexpr std::string_view force_reloading_of_textures_tooltip = {
+          "Force reloading textures and rendering the map at the start of each frame."
+     };
      static constexpr std::string_view force_rendering_of_map_tooltip = {
-          "Force reloading textures and render the map at the start of each frame."
+          "Force rendering the map at the start of each frame."
      };
      static constexpr std::string_view draw_palette_texture_tooltip = {
           "Draw Palette Texture: The .mim file uses palettes to draw tiles. 4-bit palettes have 16 colors, 8-bit palettes support up to "

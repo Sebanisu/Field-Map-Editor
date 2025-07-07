@@ -238,9 +238,13 @@ void gui::start(GLFWwindow *const window)
           ImGui::NewFrame();
           ImGuizmo::BeginFrame();
 
-          if (m_selections->force_rendering_of_map)
+          if (m_selections->force_reloading_of_textures)
           {
-               refresh_render_texture(true);// force map redraw every frame.
+               refresh_render_texture(true);
+          }
+          else if (m_selections->force_rendering_of_map)
+          {
+               refresh_render_texture();
           }
           m_batch.update(m_elapsed_time);
 
@@ -1215,21 +1219,40 @@ void gui::checkbox_map_disable_blending()
      }
      else
      {
-          static const bool true_val = true;
+          static const bool checked = true;
           ImGui::BeginDisabled();
-          ImGui::Checkbox(gui_labels::disable_blending.data(), const_cast<bool *>(&true_val));
+          ImGui::Checkbox(gui_labels::disable_blending.data(), const_cast<bool *>(&checked));
           tool_tip(gui_labels::disable_blending_tooltip);
           tool_tip(gui_labels::forced_on_while_swizzled);
           ImGui::EndDisabled();
      }
-
-     if (ImGui::Checkbox(gui_labels::force_rendering_of_map.data(), &m_selections->force_rendering_of_map))
+     if (ImGui::Checkbox(gui_labels::force_reloading_of_textures.data(), &m_selections->force_reloading_of_textures))
      {
-          m_selections->update_configuration_key(ConfigKey::ForceRenderingOfMap);
+          m_selections->update_configuration_key(ConfigKey::ForceReloadingOfTextures);
      }
      else
      {
+          tool_tip(gui_labels::force_reloading_of_textures_tooltip);
+     }
+
+     if (!m_selections->force_reloading_of_textures)
+     {
+          if (ImGui::Checkbox(gui_labels::force_rendering_of_map.data(), &m_selections->force_rendering_of_map))
+          {
+               m_selections->update_configuration_key(ConfigKey::ForceRenderingOfMap);
+          }
+          else
+          {
+               tool_tip(gui_labels::force_rendering_of_map_tooltip);
+          }
+     }
+     else
+     {
+          ImGui::BeginDisabled();
+          static const bool checked = true;
+          ImGui::Checkbox(gui_labels::force_rendering_of_map.data(), const_cast<bool *>(&checked));
           tool_tip(gui_labels::force_rendering_of_map_tooltip);
+          ImGui::EndDisabled();
      }
 }
 void gui::refresh_mim_palette_texture()
@@ -1512,20 +1535,42 @@ void gui::edit_menu()
                     }
                     else
                     {
-                         static const bool true_val = true;
+                         static const bool checked = true;
                          ImGui::BeginDisabled();
-                         ImGui::MenuItem(gui_labels::disable_blending.data(), nullptr, const_cast<bool *>(&true_val));
+                         ImGui::MenuItem(gui_labels::disable_blending.data(), nullptr, const_cast<bool *>(&checked));
                          tool_tip(gui_labels::disable_blending_tooltip);
                          tool_tip(gui_labels::forced_on_while_swizzled);
                          ImGui::EndDisabled();
                     }
-                    if (ImGui::MenuItem(gui_labels::force_rendering_of_map.data(), nullptr, &m_selections->force_rendering_of_map))
+
+                    if (ImGui::MenuItem(
+                          gui_labels::force_reloading_of_textures.data(), nullptr, &m_selections->force_reloading_of_textures))
                     {
-                         m_selections->update_configuration_key(ConfigKey::ForceRenderingOfMap);
+                         m_selections->update_configuration_key(ConfigKey::ForceReloadingOfTextures);
                     }
                     else
                     {
+                         tool_tip(gui_labels::force_reloading_of_textures_tooltip);
+                    }
+
+                    if (!m_selections->force_reloading_of_textures)
+                    {
+                         if (ImGui::MenuItem(gui_labels::force_rendering_of_map.data(), nullptr, &m_selections->force_rendering_of_map))
+                         {
+                              m_selections->update_configuration_key(ConfigKey::ForceRenderingOfMap);
+                         }
+                         else
+                         {
+                              tool_tip(gui_labels::force_rendering_of_map_tooltip);
+                         }
+                    }
+                    else
+                    {
+                         ImGui::BeginDisabled();
+                         static const bool checked = true;
+                         ImGui::MenuItem(gui_labels::force_rendering_of_map.data(), nullptr, const_cast<bool *>(&checked));
                          tool_tip(gui_labels::force_rendering_of_map_tooltip);
+                         ImGui::EndDisabled();
                     }
                }
 

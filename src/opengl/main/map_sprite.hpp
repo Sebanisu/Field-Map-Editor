@@ -210,7 +210,7 @@ struct [[nodiscard]] map_sprite// final
               const glm::ivec2               &down_pixel_pos,
               const std::vector<std::size_t> &saved_indices);
      bool                         consume_one_future() const;
-     void                         consume_now() const;
+     void                         consume_now(const bool update = true) const;
 
      static std::filesystem::path save_path_coo(
        fmt::format_string<std::string_view, std::string_view, uint8_t> pattern,

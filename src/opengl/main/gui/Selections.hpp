@@ -38,6 +38,7 @@ enum class ConfigKey
      DisplayBatchWindow,
      DisplayImportImageWindow,
      DisplayImportImage,
+     ForceReloadingOfTextures,
      ForceRenderingOfMap,
      ImportImageGrid,
      ImportLoadImageDirectory,
@@ -160,6 +161,8 @@ enum class ConfigKey
                return "selections_display_import_image"sv;
           case ConfigKey::DisplayImportImageWindow:
                return "selections_display_import_image_window"sv;
+          case ConfigKey::ForceReloadingOfTextures:
+               return "selections_force_reloading_of_textures"sv;
           case ConfigKey::ForceRenderingOfMap:
                return "selections_force_rendering_of_map"sv;
           case ConfigKey::Draw:
@@ -308,6 +311,7 @@ struct Selections
      // todo fix imports
      //  bool                     display_import_image_window = false;
      bool                          display_import_image;///< Whether to display the imported image.
+     bool                          force_reloading_of_textures;///< Force reloading textures and rendering of map on every frame.
      bool                          force_rendering_of_map;///< Force rendering of map on every frame.
      bool                          import_image_grid;///< Whether to overlay a grid on the imported image.
      bool                          render_imported_image;///< Whether to render the imported image.

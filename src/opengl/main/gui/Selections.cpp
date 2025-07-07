@@ -78,6 +78,7 @@ fme::Selections::Selections(const Configuration config)
      // todo fix later. I want to merge the current branch and will make a new branch to work on imports.
      // display_import_image_window  = config[key_to_string(ConfigKey::DisplayImportImageWindow)].value_or(false);
      display_import_image         = config[key_to_string(ConfigKey::DisplayImportImage)].value_or(false);
+     force_reloading_of_textures  = config[key_to_string(ConfigKey::ForceReloadingOfTextures)].value_or(false);
      force_rendering_of_map       = config[key_to_string(ConfigKey::ForceRenderingOfMap)].value_or(false);
 
      draw = static_cast<draw_mode>(config[key_to_string(ConfigKey::Draw)].value_or(std::to_underlying(draw_mode::draw_map)));
@@ -356,6 +357,7 @@ void fme::Selections::update_configuration_key(ConfigKey key) const
           // MAP_MACRO(ConfigKey::DisplayImportImageWindow, display_import_image_window);
           MAP_MACRO(ConfigKey::DisplayImportImage, display_import_image);
           MAP_MACRO(ConfigKey::ForceRenderingOfMap, force_rendering_of_map);
+          MAP_MACRO(ConfigKey::ForceReloadingOfTextures, force_reloading_of_textures);
           MAP_MACRO_UNDERLYING(ConfigKey::Draw, draw);
           MAP_MACRO(ConfigKey::DrawDisableBlending, draw_disable_blending);
           MAP_MACRO(ConfigKey::DrawGrid, draw_grid);
