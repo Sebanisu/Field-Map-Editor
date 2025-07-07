@@ -296,9 +296,5 @@ cmake --preset=conan_linux_release-release
 cmake --build ./archlinux/build/Release/
 ```
 
-### Step 9. Return to the root directory (optional)
-```sh
-cd ../../../
-```
 ## Additional Notes
-- The compiled binaries can be found in the `./linux/build/RelWithDebInfo/` directory.
+- The compiled binaries can be found in the `./bin/` directory.
