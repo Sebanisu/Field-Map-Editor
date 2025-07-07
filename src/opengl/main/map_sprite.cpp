@@ -50,8 +50,10 @@ map_sprite::map_sprite(
      {
           return;
      }
-
-     // TODO wip gotta use new class to get the paths.
+     if (m_selections.expired())
+     {
+          return;
+     }
      const auto ps = ff_8::path_search{
           .selections                         = m_selections.lock(),
           .opt_coo                            = m_map_group.opt_coo,
