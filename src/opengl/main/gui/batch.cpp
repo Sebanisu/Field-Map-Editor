@@ -847,7 +847,7 @@ bool fme::batch::browse_path(std::string_view name, bool &valid_path, std::array
  *
  * @param elapsed_time The time elapsed since the last update call.
  */
-void fme::batch::update(float elapsed_time)
+void fme::batch::update([[maybe_unused]] float elapsed_time)
 {
      // Attempt to acquire a shared_ptr to the selections structure
      const auto selections = m_selections.lock();
@@ -857,29 +857,26 @@ void fme::batch::update(float elapsed_time)
           return;
      }
 
-     // Interval between updates in seconds
-     static constexpr float interval           = 0.03f;
+     // // Interval between updates in seconds
+     // static constexpr float interval           = 0.03f;
 
-     // Accumulated elapsed time (preserved across calls)
-     static float           total_elapsed_time = 0.f;
+     // // Accumulated elapsed time (preserved across calls)
+     // static float           total_elapsed_time = 0.f;
 
-     // Add elapsed time from this frame to the total
-     total_elapsed_time += elapsed_time;
+     // // Add elapsed time from this frame to the total
+     // total_elapsed_time += elapsed_time;
 
-     // Skip update if interval threshold hasn't been reached
-     if (total_elapsed_time < interval)
-     {
-          return;
-     }
+     // // Skip update if interval threshold hasn't been reached
+     // if (total_elapsed_time < interval)
+     // {
+     //      return;
+     // }
 
-     // Reset accumulated time after reaching the threshold
-     total_elapsed_time = 0.f;
+     // // Reset accumulated time after reaching the threshold
+     // total_elapsed_time = 0.f;
 
      // Attempt to process any pending futures first
-     if (consume_one_future())
-     {
-          return;
-     }
+     (void)consume_one_future();
 
      // Select the next valid field and COO if needed
      choose_field_and_coo();
@@ -890,49 +887,51 @@ void fme::batch::update(float elapsed_time)
           return;
      }
 
+     const auto pop_next = glengine::ScopeGuard([this]() {
+          reset_for_next();// Clean up and prepare for next processing cycle
+     });
+
      // Update status with the field and language info
-     m_status = fmt::format("Processing {}:{}", m_field->get_base_name(), *m_coo);
+     m_status            = fmt::format("Processing {}:{}", m_field->get_base_name(), *m_coo);
 
      // Generate the visual representation of the map
      generate_map_sprite();
 
      // Proceed only if map sprite generation succeeded
      // and it either uses the COO or COO is 'generic'
-     if (!m_map_sprite.fail() && (m_map_sprite.using_coo() || m_coo.value() == open_viii::LangT::generic))
+     if (m_map_sprite.fail() || (!m_map_sprite.using_coo() && m_coo.value() != open_viii::LangT::generic))
      {
-          compact();
-          flatten();
+          return;
+     }
+     compact();
+     flatten();
 
-          // Choose output method based on batch output type
-          const std::string &selected_string = get_selected_path(selections->batch_output_path, selections->batch_output_root_path_type);
-          switch (selections->batch_output_type)
-          {
-               case output_types::deswizzle:
-                    m_future_consumer += m_map_sprite.save_pupu_textures(selections->output_deswizzle_pattern, selected_string);
-                    break;
-               case output_types::swizzle:
-                    m_future_consumer += m_map_sprite.save_swizzle_textures(selections->output_swizzle_pattern, selected_string);
-                    break;
-               case output_types::swizzle_as_one_image:
-                    m_future_consumer += m_map_sprite.save_combined_swizzle_texture(selections->output_swizzle_pattern, selected_string);
-                    break;
-          }
-
-          // Optionally save the modified map
-          if (selections->batch_output_save_map)
-          {
-               const key_value_data cpm2 = {
-                    .field_name    = m_map_sprite.get_base_name(),
-                    .ext           = ".map",
-                    .language_code = m_coo.has_value() && m_coo.value() != open_viii::LangT::generic ? m_coo : std::nullopt,
-               };
-               m_map_sprite.save_modified_map(
-                 cpm2.replace_tags(get_output_map_pattern(selections->batch_output_type), selections, selected_string));
-          }
+     // Choose output method based on batch output type
+     const std::string &selected_string = get_selected_path(selections->batch_output_path, selections->batch_output_root_path_type);
+     switch (selections->batch_output_type)
+     {
+          case output_types::deswizzle:
+               m_future_consumer += m_map_sprite.save_pupu_textures(selections->output_deswizzle_pattern, selected_string);
+               break;
+          case output_types::swizzle:
+               m_future_consumer += m_map_sprite.save_swizzle_textures(selections->output_swizzle_pattern, selected_string);
+               break;
+          case output_types::swizzle_as_one_image:
+               m_future_consumer += m_map_sprite.save_combined_swizzle_texture(selections->output_swizzle_pattern, selected_string);
+               break;
      }
 
-     // Clean up and prepare for next processing cycle
-     reset_for_next();
+     // Optionally save the modified map
+     if (selections->batch_output_save_map)
+     {
+          const key_value_data cpm2 = {
+               .field_name    = m_map_sprite.get_base_name(),
+               .ext           = ".map",
+               .language_code = m_coo.has_value() && m_coo.value() != open_viii::LangT::generic ? m_coo : std::nullopt,
+          };
+          m_map_sprite.save_modified_map(
+            cpm2.replace_tags(get_output_map_pattern(selections->batch_output_type), selections, selected_string));
+     }
 }
 
 
@@ -1027,15 +1026,40 @@ void fme::batch::generate_map_sprite()
                break;
           }
      }
-
+     ff_8::map_group map_group = { m_field, *m_coo };
+     const bool      swizzle   = selections->batch_output_type == output_types::swizzle;
      // Create the map sprite with appropriate settings
-     m_map_sprite = map_sprite{ ff_8::map_group{ m_field, *m_coo },// field and language
-                                selections->batch_output_type == output_types::swizzle,// use swizzle format?
-                                filters,// filters to apply
-                                true,// always include image data?
-                                m_coo && m_coo.value() != open_viii::LangT::generic// use localized COO?
-                                ,
-                                m_selections };
+     if (m_coo.has_value() && m_coo.value() != open_viii::LangT::generic)
+     {
+          if (map_group.opt_coo.has_value() && map_group.opt_coo.value() != open_viii::LangT::generic)
+          {
+               // Both are non-generic and present → okay
+               m_map_sprite = map_sprite{ std::move(map_group),
+                                          swizzle,
+                                          filters,
+                                          true,
+                                          true,// use localized COO
+                                          m_selections };
+               return;
+          }
+     }
+     else if (!m_coo.has_value() || m_coo.value() == open_viii::LangT::generic)
+     {
+          if (!map_group.opt_coo.has_value() || map_group.opt_coo.value() == open_viii::LangT::generic)
+          {
+               // Both are generic or not set → okay
+               m_map_sprite = map_sprite{ std::move(map_group),
+                                          swizzle,
+                                          filters,
+                                          true,
+                                          false,// don't use localized COO
+                                          m_selections };
+               return;
+          }
+     }
+
+     // Default fallback if values are mismatched
+     m_map_sprite = {};
 }
 
 /**
