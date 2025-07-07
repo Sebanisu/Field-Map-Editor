@@ -7,8 +7,8 @@ void glengine::BlendModeSettings::enable_blending()
 
 void glengine::BlendModeSettings::default_blend()
 {
-     GlCall{}(glBlendFunc, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-     GlCall{}(glBlendEquation, GL_FUNC_ADD);
+     GlCall{}(glBlendFuncSeparate, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE);
+     GlCall{}(glBlendEquationSeparate, GL_FUNC_ADD, GL_MAX);
 }
 
 void glengine::BlendModeSettings::add_blend()
