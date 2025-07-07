@@ -285,12 +285,23 @@ bool test_if_map_same(const std::filesystem::path &saved_path, const map_group::
      raw_map.visit_tiles([&](const auto &raw_tiles) {
           saved_map.visit_tiles([&](const auto &saved_tiles) {
                if constexpr (std::is_same_v<std::remove_cvref_t<decltype(raw_tiles)>, std::remove_cvref_t<decltype(saved_tiles)>>)
-               {
-                    return_value = std::ranges::size(raw_tiles) == std::ranges::size(saved_tiles);
-                    if (!return_value)
+               {                    
+                    if (std::ranges::size(raw_tiles) != std::ranges::size(saved_tiles))
                     {
+                         if (std::ranges::empty(raw_tiles))
+                         {
+                              spdlog::warn(
+                                "[{}:{}] The saved .map may have defaulted to '_en' because a generic .map file didn't exist: {}",
+                                __FILE__,
+                                __LINE__,
+                                saved_path.filename().string());
+                              return;
+                         }
+
                          spdlog::warn(
-                           "maps are different, raw_tiles_size({}) != saved_tiles_size({}).",
+                           "[{}:{}] Maps are different, raw_tiles_size({}) != saved_tiles_size({}).",
+                           __FILE__,
+                           __LINE__,
                            std::ranges::size(raw_tiles),
                            std::ranges::size(saved_tiles));
                          return;
@@ -301,18 +312,19 @@ bool test_if_map_same(const std::filesystem::path &saved_path, const map_group::
                            return raw_tile != saved_tile;
                       });
                     pairs_dont_match.erase(std::remove(pairs_dont_match.begin(), pairs_dont_match.end(), false), pairs_dont_match.end());
-                    return_value = std::ranges::empty(pairs_dont_match);
-                    if (!return_value)
+                    if (!std::ranges::empty(pairs_dont_match))
                     {
                          spdlog::warn(
-                           "maps are different, count {} different tiles, total {} tiles",
+                           "[{}:{}] Maps are different, count {} different tiles, total {} tiles",
+                           __FILE__,
+                           __LINE__,
                            std::ranges::size(pairs_dont_match),
                            std::ranges::size(raw_tiles));
                     }
-                    else
-                    {
-                         spdlog::info("maps are the same, total {} tiles.", std::ranges::size(raw_tiles));
-                    }
+                    // else
+                    // {
+                    //      spdlog::info("maps are the same, total {} tiles.", std::ranges::size(raw_tiles));
+                    // }
                }
           });
      });
