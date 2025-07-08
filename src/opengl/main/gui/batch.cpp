@@ -1015,9 +1015,9 @@ void fme::batch::generate_map_sprite()
 
           case input_types::swizzle: {
                // Enable upscale filter using the input path
-               filters.upscale.update(selected_string).enable();
+               filters.swizzle.update(selected_string).enable();
                if (selections->batch_input_load_map)
-                    filters.upscale_map.update(selected_string).enable();
+                    filters.swizzle_map.update(selected_string).enable();
                break;
           }
 

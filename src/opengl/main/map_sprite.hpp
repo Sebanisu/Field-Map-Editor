@@ -499,7 +499,7 @@ struct [[nodiscard]] map_sprite// final
                     // Base this on dest_coords_for_swizzle
                     return to_vec2(ff_8::source_coords_for_single_swizzle(tile_const));
                }
-               if (m_filters.upscale.enabled())
+               if (m_filters.swizzle.enabled())
                {
                     return to_vec2(ff_8::source_coords_for_upscale(tile_const));
                }

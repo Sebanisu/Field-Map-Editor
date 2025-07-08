@@ -24,7 +24,7 @@ template<is_tile tileT>
           }
           auto       source_texture_page_width = tileT::texture_page_width(tile.depth());
           const auto texture_page_x_offset     = [&]() -> std::uint32_t {
-               if (map->filter().upscale.enabled())
+               if (map->filter().swizzle.enabled())
                {
                     return 0;
                }

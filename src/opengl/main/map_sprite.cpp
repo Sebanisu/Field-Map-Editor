@@ -58,17 +58,17 @@ map_sprite::map_sprite(
           .selections                              = m_selections.lock(),
           .opt_coo                                 = m_map_group.opt_coo,
           .field_name                              = get_base_name(),
-          .filters_deswizzle_value_string          = filter().deswizzle.value().string(),
-          .filters_swizzle_value_string            = filter().upscale.value().string(),
-          .filters_swizzle_as_one_image_string     = filter().swizzle_as_one_image.value().string(),
-          .filters_deswizzle_map_value_string      = filter().deswizzle_map.value().string(),
-          .filters_swizzle_map_value_string        = filter().upscale_map.value().string(),
-          .filters_swizzle_as_one_image_map_string = filter().swizzle_as_one_image_map.value().string(),
+          .filters_deswizzle_value_string          = m_filters.deswizzle.value().string(),
+          .filters_swizzle_value_string            = m_filters.swizzle.value().string(),
+          .filters_swizzle_as_one_image_string     = m_filters.swizzle_as_one_image.value().string(),
+          .filters_deswizzle_map_value_string      = m_filters.deswizzle_map.value().string(),
+          .filters_swizzle_map_value_string        = m_filters.swizzle_map.value().string(),
+          .filters_swizzle_as_one_image_map_string = m_filters.swizzle_as_one_image_map.value().string(),
           //.working_unique_pupu                = working_unique_pupu(),
           //.bpp_palette                        = uniques().palette(),
           //.texture_page_id                    = uniques().texture_page_id()
      };
-     if (m_filters.upscale_map.enabled())
+     if (m_filters.swizzle_map.enabled())
      {
           if (const auto paths = ps.generate_swizzle_map_paths(".map"); !std::ranges::empty(paths))
           {
@@ -78,14 +78,14 @@ map_sprite::map_sprite(
           else
           {
                //.map was not found.
-               m_filters.upscale_map.disable();
+               m_filters.swizzle_map.disable();
           }
      }
      else if (m_filters.deswizzle_map.enabled())
      {
           if (const auto paths = ps.generate_deswizzle_map_paths(".map"); !std::ranges::empty(paths))
           {
-               m_filters.upscale_map.disable();
+               m_filters.swizzle_map.disable();
                load_map(paths.front());// grab the first match.
           }
           else
@@ -108,12 +108,12 @@ map_sprite::operator ff_8::path_search() const
      return { .selections                              = std::move(selections),
               .opt_coo                                 = m_map_group.opt_coo,
               .field_name                              = get_base_name(),
-              .filters_deswizzle_value_string          = filter().deswizzle.value().string(),
-              .filters_swizzle_value_string            = filter().upscale.value().string(),
-              .filters_swizzle_as_one_image_string     = filter().swizzle_as_one_image.value().string(),
-              .filters_deswizzle_map_value_string      = filter().deswizzle_map.value().string(),
-              .filters_swizzle_map_value_string        = filter().upscale_map.value().string(),
-              .filters_swizzle_as_one_image_map_string = filter().swizzle_as_one_image_map.value().string(),
+              .filters_deswizzle_value_string          = m_filters.deswizzle.value().string(),
+              .filters_swizzle_value_string            = m_filters.swizzle.value().string(),
+              .filters_swizzle_as_one_image_string     = m_filters.swizzle_as_one_image.value().string(),
+              .filters_deswizzle_map_value_string      = m_filters.deswizzle_map.value().string(),
+              .filters_swizzle_map_value_string        = m_filters.swizzle_map.value().string(),
+              .filters_swizzle_as_one_image_map_string = m_filters.swizzle_as_one_image_map.value().string(),
               .working_unique_pupu                     = working_unique_pupu(),
               .bpp_palette                             = uniques().palette(),
               .texture_page_id                         = uniques().texture_page_id() };
@@ -169,7 +169,7 @@ std::size_t
 {
      if (!m_filters.swizzle_as_one_image.enabled())
      {
-          if (!m_filters.upscale.enabled())
+          if (!m_filters.swizzle.enabled())
           {
                if (bpp.bpp4())
                {
@@ -272,7 +272,7 @@ void map_sprite::queue_texture_loading() const
                {
                     future_of_futures.push_back(load_swizzle_as_one_image_textures(palette));
                }
-               else if (m_filters.upscale.enabled())
+               else if (m_filters.swizzle.enabled())
                {
                     // Schedule upscale texture loads for each texture page
                     for (const auto &texture_page : m_all_unique_values_and_strings.texture_page_id().values())
@@ -294,7 +294,7 @@ void map_sprite::queue_texture_loading() const
      {
           future_of_futures.push_back(load_swizzle_as_one_image_textures());
      }
-     else if (m_filters.upscale.enabled())
+     else if (m_filters.swizzle.enabled())
      {
           for (const auto &texture_page : m_all_unique_values_and_strings.texture_page_id().values())
           {
@@ -340,9 +340,9 @@ bool map_sprite::fallback_textures() const
               return size.x == 0 || size.y == 0;
          }))
      {
-          if (m_filters.upscale.enabled())
+          if (m_filters.swizzle.enabled())
           {
-               m_filters.upscale.disable();
+               m_filters.swizzle.disable();
                queue_texture_loading();
                return true;
           }
@@ -1436,7 +1436,7 @@ const ff_8::MapHistory::nsat_map &map_sprite::working_animation_counts() const
      settings_backup settings(
        m_filters, m_draw_swizzle, m_disable_texture_page_shift, m_disable_blends, m_render_framebuffer.mutable_scale());
      settings.filters                    = ff_8::filters{ false };
-     settings.filters.value().upscale    = settings.filters.backup().upscale;
+     settings.filters.value().swizzle    = settings.filters.backup().swizzle;
      settings.filters.value().deswizzle  = settings.filters.backup().deswizzle;
      settings.draw_swizzle               = true;
      settings.disable_texture_page_shift = true;
@@ -1593,7 +1593,7 @@ const ff_8::MapHistory::nsat_map &map_sprite::working_animation_counts() const
      settings_backup settings(
        m_filters, m_draw_swizzle, m_disable_texture_page_shift, m_disable_blends, m_render_framebuffer.mutable_scale());
      settings.filters                    = ff_8::filters{ false };
-     settings.filters.value().upscale    = settings.filters.backup().upscale;
+     settings.filters.value().swizzle    = settings.filters.backup().swizzle;
      settings.filters.value().deswizzle  = settings.filters.backup().deswizzle;
      settings.draw_swizzle               = true;
      settings.disable_texture_page_shift = false;
@@ -1748,7 +1748,7 @@ std::string map_sprite::get_base_name() const
      auto settings =
        settings_backup{ m_filters, m_draw_swizzle, m_disable_texture_page_shift, m_disable_blends, m_render_framebuffer.mutable_scale() };
      settings.filters                         = ff_8::filters{ false };
-     settings.filters.value().upscale         = settings.filters.backup().upscale;// Retain original upscale settings
+     settings.filters.value().swizzle         = settings.filters.backup().swizzle;// Retain original upscale settings
      settings.draw_swizzle                    = false;// No swizzling when saving
      settings.disable_texture_page_shift      = true;// Disable texture page shifts
      settings.disable_blends                  = true;// Disable blending
@@ -2155,7 +2155,7 @@ std::move_only_function<std::vector<std::filesystem::path>()>
      return [ps = ff_8::path_search{ .selections                   = std::move(in_selections),
                                      .opt_coo                      = in_map_sprite.get_opt_coo(),
                                      .field_name                   = in_map_sprite.get_base_name(),
-                                     .filters_swizzle_value_string = in_map_sprite.filter().upscale.value().string() },
+                                     .filters_swizzle_value_string = in_map_sprite.filter().swizzle.value().string() },
              texture_page]() -> std::vector<std::filesystem::path> {
           spdlog::debug("Generating swizzle paths for field: '{}', texture_page: {} ", ps.field_name, texture_page);
           return ps.generate_swizzle_paths(texture_page, ".png");
@@ -2197,7 +2197,7 @@ std::move_only_function<std::vector<std::filesystem::path>()> generate_swizzle_p
      return [ps = ff_8::path_search{ .selections                   = std::move(in_selections),
                                      .opt_coo                      = in_map_sprite.get_opt_coo(),
                                      .field_name                   = in_map_sprite.get_base_name(),
-                                     .filters_swizzle_value_string = in_map_sprite.filter().upscale.value().string() },
+                                     .filters_swizzle_value_string = in_map_sprite.filter().swizzle.value().string() },
              texture_page,
              palette]() -> std::vector<std::filesystem::path> {
           spdlog::debug("Generating swizzle paths for field: '{}', texture_page: {}, palette: {}", ps.field_name, texture_page, palette);
@@ -2230,7 +2230,7 @@ std::move_only_function<std::vector<std::filesystem::path>()>
                                      .opt_coo    = in_map_sprite.get_opt_coo(),
                                      .field_name = in_map_sprite.get_base_name(),
                                      .filters_swizzle_map_value_string =
-                                       in_map_sprite.filter().upscale_map.value().string() }]() -> std::vector<std::filesystem::path> {
+                                       in_map_sprite.filter().swizzle_map.value().string() }]() -> std::vector<std::filesystem::path> {
           spdlog::debug("Generating swizzle map paths for field: '{}'", ps.field_name);
           return ps.generate_swizzle_map_paths(".map");
      };

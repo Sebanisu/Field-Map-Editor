@@ -81,10 +81,10 @@ enum class FilterTag : std::uint8_t
 {
      None,
      Pupu,
-     Upscale,
+     Swizzle,
      Deswizzle,
      SwizzleAsOneImage,
-     UpscaleMap,
+     SwizzleMap,
      DeswizzleMap,
      SwizzleAsOneImageMap,
      DrawBit,
@@ -98,9 +98,7 @@ enum class FilterTag : std::uint8_t
      BlendOther,
      Bpp,
      Compact,
-     Flatten,
-     Swizzle    = Upscale,
-     SwizzleMap = UpscaleMap
+     Flatten
 };
 
 template<FilterTag Tag>
@@ -118,7 +116,7 @@ struct ConfigKeys<FilterTag::Pupu>
 };
 
 template<>
-struct ConfigKeys<FilterTag::Upscale>
+struct ConfigKeys<FilterTag::Swizzle>
 {
      static constexpr std::string_view key_name         = "filter_upscale";
      static constexpr std::string_view enabled_key_name = "filter_upscale_enabled";
@@ -139,7 +137,7 @@ struct ConfigKeys<FilterTag::SwizzleAsOneImage>
 };
 
 template<>
-struct ConfigKeys<FilterTag::UpscaleMap>
+struct ConfigKeys<FilterTag::SwizzleMap>
 {
      static constexpr std::string_view key_name         = "filter_upscale_map";
      static constexpr std::string_view enabled_key_name = "filter_upscale_map_enabled";
@@ -519,10 +517,10 @@ struct filters
 {
      using TileT = open_viii::graphics::background::Tile1;
      filter_old<PupuID, FilterTag::Pupu>                                                                    pupu;
-     filter_old<std::filesystem::path, FilterTag::Upscale>                                                  upscale;
+     filter_old<std::filesystem::path, FilterTag::Swizzle>                                                  swizzle;
      filter_old<std::filesystem::path, FilterTag::Deswizzle>                                                deswizzle;
      filter_old<std::filesystem::path, FilterTag::SwizzleAsOneImage>                                        swizzle_as_one_image;
-     filter_old<std::filesystem::path, FilterTag::UpscaleMap>                                               upscale_map;
+     filter_old<std::filesystem::path, FilterTag::SwizzleMap>                                               swizzle_map;
      filter_old<std::filesystem::path, FilterTag::DeswizzleMap>                                             deswizzle_map;
      filter_old<std::filesystem::path, FilterTag::SwizzleAsOneImageMap>                                     swizzle_as_one_image_map;
      filter<draw_bitT, ff_8::tile_operations::Draw, FilterTag::DrawBit>                                     draw_bit;
@@ -549,15 +547,15 @@ struct filters
             }
             return { PupuID{}, FilterSettings::All_Disabled };
        }())
-       , upscale([&]() -> decltype(upscale) {
+       , swizzle([&]() -> decltype(swizzle) {
             if (load_config)
             {
-                 return { std::filesystem::path{ config[ConfigKeys<FilterTag::Upscale>::key_name].value_or(std::string{}) },
+                 return { std::filesystem::path{ config[ConfigKeys<FilterTag::Swizzle>::key_name].value_or(std::string{}) },
 
                           WithFlag(
                             FilterSettings::Default,
                             FilterSettings::Toggle_Enabled,
-                            config[ConfigKeys<FilterTag::Upscale>::enabled_key_name].value_or(false)) };
+                            config[ConfigKeys<FilterTag::Swizzle>::enabled_key_name].value_or(false)) };
             }
             return { std::filesystem::path{}, FilterSettings::All_Disabled };
        }())
@@ -585,15 +583,15 @@ struct filters
             }
             return { std::filesystem::path{}, FilterSettings::All_Disabled };
        }())
-       , upscale_map([&]() -> decltype(upscale_map) {
+       , swizzle_map([&]() -> decltype(swizzle_map) {
             if (load_config)
             {
-                 return { std::filesystem::path{ config[ConfigKeys<FilterTag::UpscaleMap>::key_name].value_or(std::string{}) },
+                 return { std::filesystem::path{ config[ConfigKeys<FilterTag::SwizzleMap>::key_name].value_or(std::string{}) },
 
                           WithFlag(
                             FilterSettings::Default,
                             FilterSettings::Toggle_Enabled,
-                            config[ConfigKeys<FilterTag::UpscaleMap>::enabled_key_name].value_or(false)) };
+                            config[ConfigKeys<FilterTag::SwizzleMap>::enabled_key_name].value_or(false)) };
             }
             return { std::filesystem::path{}, FilterSettings::All_Disabled };
        }())
