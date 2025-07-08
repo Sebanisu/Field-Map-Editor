@@ -13,31 +13,30 @@ find_package(spdlog REQUIRED)
 add_library(
   glengine STATIC
   BatchRenderer.cpp
+  BlendModeSettings.cpp
   Counter.cpp
   FrameBuffer.cpp
   FrameBufferBackup.cpp
   GLCheck.cpp
-  ImGuiDisabled.cpp
-  ImGuiPushItemWidth.cpp
-  ImGuiPushID.cpp
-  ImGuiPushStyleVar.cpp
-  ImGuiViewPortWindow.cpp
+  Image.cpp
   IndexBuffer.cpp
   IndexBufferDynamic.cpp
   Input.cpp
   Layer/LayerItem.cpp
   Layer/LayerStack.cpp
-  Menu.cpp
   MenuItem.cpp
-  OrthographicCameraController.cpp
   Shader.cpp
   SubTexture.cpp
   Texture.cpp
   TimeStep.cpp
+  Vertex.cpp
   VertexArray.cpp
   VertexBuffer.cpp
-  VertexBufferDynamic.cpp
-  Window.cpp)
+  VertexBufferDynamic.cpp)
+
+if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+  target_link_libraries(glengine PUBLIC stdc++exp)
+endif()
 target_compile_features(
   glengine
   PUBLIC cxx_std_23
@@ -51,9 +50,7 @@ target_link_libraries(
   PUBLIC OpenGL::GL
   PUBLIC GLEW::GLEW
   PUBLIC glm::glm
-  PUBLIC stbi_wrapper
-  PUBLIC imgui::imgui
-  PUBLIC imgui_glfw)
+  PUBLIC stbi_wrapper)
 target_compile_definitions(glengine PUBLIC GLEW_STATIC)
 target_include_directories(glengine PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
@@ -90,52 +87,3 @@ if(supported)
 else()
   message(STATUS "IPO / LTO not supported: <${error}>")
 endif()
-
-target_precompile_headers(
-  glengine
-  PUBLIC
-  <algorithm>
-  <array>
-  <cassert>
-  <concepts>
-  <cstdint>
-  <cstring>
-  <filesystem>
-  <fstream>
-  <functional>
-  <future>
-  <iterator>
-  <memory>
-  <numeric>
-  <optional>
-  <ranges>
-  <span>
-  <sstream>
-  <string>
-  <string_view>
-  <thread>
-  <type_traits>
-  <unordered_map>
-  <utility>
-  <variant>
-  <vector>
-  <GL/glew.h>
-  <GLFW/glfw3.h>
-  <fmt/format.h>
-  <fmt/chrono.h>
-  <spdlog/spdlog.h>
-  <stb_image.h>
-  <stb_image_write.h>
-  <glm/glm.hpp>
-  <glm/gtc/matrix_transform.hpp>
-  <imgui.h>
-  <imgui_impl_glfw.h>
-  <imgui_impl_opengl3.h>
-  [["concepts.hpp"]]
-  [["Renderable.hpp"]])
-# target_include_directories(glengine PRIVATE
-# $<$<CONFIG:Debug>:${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/glengine.dir/Debug>
-# $<$<CONFIG:RelWithDebInfo>:${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/glengine.dir/RelWithDebInfo>
-# $<$<CONFIG:Release>:${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/glengine.dir/Release>
-# #$<$<CONFIG:MinSizeRel>:${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/glengine.dir/MinSizeRel>
-# ${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/glengine.dir)

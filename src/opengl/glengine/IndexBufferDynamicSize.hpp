@@ -4,6 +4,9 @@
 
 #ifndef FIELD_MAP_EDITOR_INDEXBUFFERDYNAMICSIZE_HPP
 #define FIELD_MAP_EDITOR_INDEXBUFFERDYNAMICSIZE_HPP
+#include "concepts.hpp"
+#include <cstddef>
+#include <cstdint>
 namespace glengine
 {
 /**
@@ -12,25 +15,23 @@ namespace glengine
  */
 class IndexBufferDynamicSize
 {
-private:
-  std::size_t m_size{};
+   private:
+     std::size_t m_size{};
 
-public:
-  constexpr IndexBufferDynamicSize() noexcept = default;
-  constexpr IndexBufferDynamicSize(std::size_t in_size) noexcept
-    : m_size(in_size)
-  {
-  }
-  constexpr std::size_t size() const noexcept
-  {
-    return m_size;
-  }
-  constexpr void        bind() const noexcept {}
+   public:
+     constexpr IndexBufferDynamicSize() noexcept = default;
+     constexpr IndexBufferDynamicSize(std::size_t in_size) noexcept
+       : m_size(in_size)
+     {
+     }
+     constexpr std::size_t size() const noexcept
+     {
+          return m_size;
+     }
+     constexpr void        bind() const noexcept {}
 
-  static constexpr void unbind() noexcept {}
+     static constexpr void unbind() noexcept {}
 };
-static_assert(
-  SizedBindable<
-    IndexBufferDynamicSize> && std::copyable<IndexBufferDynamicSize>);
+static_assert(SizedBindable<IndexBufferDynamicSize> && std::copyable<IndexBufferDynamicSize>);
 }// namespace glengine
 #endif// FIELD_MAP_EDITOR_INDEXBUFFERDYNAMICSIZE_HPP

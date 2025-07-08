@@ -7,14 +7,14 @@ namespace glengine
 {
 TimeStep::operator float() const
 {
-  TimePoint current = now();
-  Duration  frame   = current - last;
-  // optional check for min frame time here.
-  last              = current;
-  return frame.count();
+     TimePoint current = now();
+     Duration  frame   = current - last;
+     // optional check for min frame time here.
+     last              = current;
+     return frame.count();
 }
 TimeStep::TimePoint TimeStep::now()
 {
-  return LocalClockT::now();
+     return std::chrono::time_point_cast<Duration>(LocalClockT::now());
 }
 }// namespace glengine
