@@ -82,9 +82,11 @@ enum class FilterTag : std::uint8_t
      None,
      Pupu,
      Upscale,
+     SwizzleAsOne,
      Deswizzle,
      UpscaleMap,
      DeswizzleMap,
+     SwizzleAsOneMap,
      DrawBit,
      Z,
      Palette,
@@ -97,6 +99,8 @@ enum class FilterTag : std::uint8_t
      Bpp,
      Compact,
      Flatten,
+     Swizzle = Upscale,
+     SwizzleMap = UpscaleMap
 };
 
 template<FilterTag Tag>
