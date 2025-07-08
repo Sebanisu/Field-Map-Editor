@@ -82,11 +82,11 @@ enum class FilterTag : std::uint8_t
      None,
      Pupu,
      Upscale,
-     SwizzleAsOne,
      Deswizzle,
+     SwizzleAsOneImage,
      UpscaleMap,
      DeswizzleMap,
-     SwizzleAsOneMap,
+     SwizzleAsOneImageMap,
      DrawBit,
      Z,
      Palette,
@@ -99,7 +99,7 @@ enum class FilterTag : std::uint8_t
      Bpp,
      Compact,
      Flatten,
-     Swizzle = Upscale,
+     Swizzle    = Upscale,
      SwizzleMap = UpscaleMap
 };
 
@@ -132,6 +132,13 @@ struct ConfigKeys<FilterTag::Deswizzle>
 };
 
 template<>
+struct ConfigKeys<FilterTag::SwizzleAsOneImage>
+{
+     static constexpr std::string_view key_name         = "filter_swizzle_as_one_image";
+     static constexpr std::string_view enabled_key_name = "filter_swizzle_as_one_image_enabled";
+};
+
+template<>
 struct ConfigKeys<FilterTag::UpscaleMap>
 {
      static constexpr std::string_view key_name         = "filter_upscale_map";
@@ -143,6 +150,13 @@ struct ConfigKeys<FilterTag::DeswizzleMap>
 {
      static constexpr std::string_view key_name         = "filter_deswizzle_map";
      static constexpr std::string_view enabled_key_name = "filter_deswizzle_map_enabled";
+};
+
+template<>
+struct ConfigKeys<FilterTag::SwizzleAsOneImageMap>
+{
+     static constexpr std::string_view key_name         = "filter_swizzle_as_one_image_map";
+     static constexpr std::string_view enabled_key_name = "filter_swizzle_as_one_image_map_enabled";
 };
 
 template<>
@@ -504,14 +518,16 @@ concept IsEitherFilter = IsFilterOld<T> || IsFilter<T, TileT>;
 struct filters
 {
      using TileT = open_viii::graphics::background::Tile1;
-     filter_old<PupuID, FilterTag::Pupu>                                                                            pupu;
-     filter_old<std::filesystem::path, FilterTag::Upscale>                                                          upscale;
-     filter_old<std::filesystem::path, FilterTag::Deswizzle>                                                        deswizzle;
-     filter_old<std::filesystem::path, FilterTag::UpscaleMap>                                                       upscale_map;
-     filter_old<std::filesystem::path, FilterTag::DeswizzleMap>                                                     deswizzle_map;
-     filter<draw_bitT, ff_8::tile_operations::Draw, FilterTag::DrawBit>                                             draw_bit;
-     filter<ff_8::tile_operations::ZT<TileT>, ff_8::tile_operations::Z, FilterTag::Z>                               z;
-     filter<ff_8::tile_operations::PaletteIdT<TileT>, ff_8::tile_operations::PaletteId, FilterTag::Palette>         palette;
+     filter_old<PupuID, FilterTag::Pupu>                                                                    pupu;
+     filter_old<std::filesystem::path, FilterTag::Upscale>                                                  upscale;
+     filter_old<std::filesystem::path, FilterTag::Deswizzle>                                                deswizzle;
+     filter_old<std::filesystem::path, FilterTag::SwizzleAsOneImage>                                        swizzle_as_one_image;
+     filter_old<std::filesystem::path, FilterTag::UpscaleMap>                                               upscale_map;
+     filter_old<std::filesystem::path, FilterTag::DeswizzleMap>                                             deswizzle_map;
+     filter_old<std::filesystem::path, FilterTag::SwizzleAsOneImageMap>                                     swizzle_as_one_image_map;
+     filter<draw_bitT, ff_8::tile_operations::Draw, FilterTag::DrawBit>                                     draw_bit;
+     filter<ff_8::tile_operations::ZT<TileT>, ff_8::tile_operations::Z, FilterTag::Z>                       z;
+     filter<ff_8::tile_operations::PaletteIdT<TileT>, ff_8::tile_operations::PaletteId, FilterTag::Palette> palette;
      filter<ff_8::tile_operations::AnimationIdT<TileT>, ff_8::tile_operations::AnimationId, FilterTag::AnimationId> animation_id;
      filter<ff_8::tile_operations::AnimationStateT<TileT>, ff_8::tile_operations::AnimationState, FilterTag::AnimationFrame>
                                                                                                                   animation_frame;
@@ -557,6 +573,18 @@ struct filters
             }
             return { std::filesystem::path{}, FilterSettings::All_Disabled };
        }())
+       , swizzle_as_one_image([&]() -> decltype(swizzle_as_one_image) {
+            if (load_config)
+            {
+                 return { std::filesystem::path{ config[ConfigKeys<FilterTag::SwizzleAsOneImage>::key_name].value_or(std::string{}) },
+
+                          WithFlag(
+                            FilterSettings::Default,
+                            FilterSettings::Toggle_Enabled,
+                            config[ConfigKeys<FilterTag::SwizzleAsOneImage>::enabled_key_name].value_or(false)) };
+            }
+            return { std::filesystem::path{}, FilterSettings::All_Disabled };
+       }())
        , upscale_map([&]() -> decltype(upscale_map) {
             if (load_config)
             {
@@ -578,6 +606,18 @@ struct filters
                             FilterSettings::Default,
                             FilterSettings::Toggle_Enabled,
                             config[ConfigKeys<FilterTag::DeswizzleMap>::enabled_key_name].value_or(false)) };
+            }
+            return { std::filesystem::path{}, FilterSettings::All_Disabled };
+       }())
+       , swizzle_as_one_image_map([&]() -> decltype(swizzle_as_one_image_map) {
+            if (load_config)
+            {
+                 return { std::filesystem::path{ config[ConfigKeys<FilterTag::SwizzleAsOneImageMap>::key_name].value_or(std::string{}) },
+
+                          WithFlag(
+                            FilterSettings::Default,
+                            FilterSettings::Toggle_Enabled,
+                            config[ConfigKeys<FilterTag::SwizzleAsOneImageMap>::enabled_key_name].value_or(false)) };
             }
             return { std::filesystem::path{}, FilterSettings::All_Disabled };
        }())
