@@ -2245,7 +2245,7 @@ std::move_only_function<std::vector<std::filesystem::path>()>
      return [ps = ff_8::path_search{ .selections = std::move(in_selections),
                                      .opt_coo    = in_map_sprite.get_opt_coo(),
                                      .field_name = in_map_sprite.get_base_name(),
-                                     .filters_upscale_map_value_string =
+                                     .filters_deswizzle_map_value_string =
                                        in_map_sprite.filter().deswizzle_map.value().string() }]() -> std::vector<std::filesystem::path> {
           spdlog::debug("Generating deswizzle map paths for field: '{}'", ps.field_name);
           return ps.generate_deswizzle_map_paths(".map");
