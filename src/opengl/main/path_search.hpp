@@ -18,10 +18,10 @@ struct path_search
      OptCoo                                                                       opt_coo                             = {};
      std::string                                                                  field_name                          = {};
      std::string                                                                  filters_deswizzle_value_string      = {};
-     std::string                                                                  filters_upscale_value_string        = {};
+     std::string                                                                  filters_swizzle_value_string        = {};
      std::string                                                                  filters_swizzle_as_one_image_string = {};
      std::string                                                                  filters_deswizzle_map_value_string  = {};
-     std::string                                                                  filters_upscale_map_value_string    = {};
+     std::string                                                                  filters_swizzle_map_value_string    = {};
      std::string                                                                  filters_swizzle_as_one_image_map_string = {};
      std::vector<ff_8::PupuID>                                                    working_unique_pupu                     = {};
      std::map<open_viii::graphics::BPPT, unique_values_and_strings<std::uint8_t>> bpp_palette                             = {};

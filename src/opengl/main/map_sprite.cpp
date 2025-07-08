@@ -59,10 +59,10 @@ map_sprite::map_sprite(
           .opt_coo                                 = m_map_group.opt_coo,
           .field_name                              = get_base_name(),
           .filters_deswizzle_value_string          = filter().deswizzle.value().string(),
-          .filters_upscale_value_string            = filter().upscale.value().string(),
+          .filters_swizzle_value_string            = filter().upscale.value().string(),
           .filters_swizzle_as_one_image_string     = filter().swizzle_as_one_image.value().string(),
           .filters_deswizzle_map_value_string      = filter().deswizzle_map.value().string(),
-          .filters_upscale_map_value_string        = filter().upscale_map.value().string(),
+          .filters_swizzle_map_value_string        = filter().upscale_map.value().string(),
           .filters_swizzle_as_one_image_map_string = filter().swizzle_as_one_image_map.value().string(),
           //.working_unique_pupu                = working_unique_pupu(),
           //.bpp_palette                        = uniques().palette(),
@@ -109,10 +109,10 @@ map_sprite::operator ff_8::path_search() const
               .opt_coo                                 = m_map_group.opt_coo,
               .field_name                              = get_base_name(),
               .filters_deswizzle_value_string          = filter().deswizzle.value().string(),
-              .filters_upscale_value_string            = filter().upscale.value().string(),
+              .filters_swizzle_value_string            = filter().upscale.value().string(),
               .filters_swizzle_as_one_image_string     = filter().swizzle_as_one_image.value().string(),
               .filters_deswizzle_map_value_string      = filter().deswizzle_map.value().string(),
-              .filters_upscale_map_value_string        = filter().upscale_map.value().string(),
+              .filters_swizzle_map_value_string        = filter().upscale_map.value().string(),
               .filters_swizzle_as_one_image_map_string = filter().swizzle_as_one_image_map.value().string(),
               .working_unique_pupu                     = working_unique_pupu(),
               .bpp_palette                             = uniques().palette(),
@@ -2155,7 +2155,7 @@ std::move_only_function<std::vector<std::filesystem::path>()>
      return [ps = ff_8::path_search{ .selections                   = std::move(in_selections),
                                      .opt_coo                      = in_map_sprite.get_opt_coo(),
                                      .field_name                   = in_map_sprite.get_base_name(),
-                                     .filters_upscale_value_string = in_map_sprite.filter().upscale.value().string() },
+                                     .filters_swizzle_value_string = in_map_sprite.filter().upscale.value().string() },
              texture_page]() -> std::vector<std::filesystem::path> {
           spdlog::debug("Generating swizzle paths for field: '{}', texture_page: {} ", ps.field_name, texture_page);
           return ps.generate_swizzle_paths(texture_page, ".png");
@@ -2197,7 +2197,7 @@ std::move_only_function<std::vector<std::filesystem::path>()> generate_swizzle_p
      return [ps = ff_8::path_search{ .selections                   = std::move(in_selections),
                                      .opt_coo                      = in_map_sprite.get_opt_coo(),
                                      .field_name                   = in_map_sprite.get_base_name(),
-                                     .filters_upscale_value_string = in_map_sprite.filter().upscale.value().string() },
+                                     .filters_swizzle_value_string = in_map_sprite.filter().upscale.value().string() },
              texture_page,
              palette]() -> std::vector<std::filesystem::path> {
           spdlog::debug("Generating swizzle paths for field: '{}', texture_page: {}, palette: {}", ps.field_name, texture_page, palette);
@@ -2229,7 +2229,7 @@ std::move_only_function<std::vector<std::filesystem::path>()>
      return [ps = ff_8::path_search{ .selections = std::move(in_selections),
                                      .opt_coo    = in_map_sprite.get_opt_coo(),
                                      .field_name = in_map_sprite.get_base_name(),
-                                     .filters_upscale_map_value_string =
+                                     .filters_swizzle_map_value_string =
                                        in_map_sprite.filter().upscale_map.value().string() }]() -> std::vector<std::filesystem::path> {
           spdlog::debug("Generating swizzle map paths for field: '{}'", ps.field_name);
           return ps.generate_swizzle_map_paths(".map");

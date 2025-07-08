@@ -3514,7 +3514,7 @@ std::future<std::future<gui::PathsAndEnabled>> gui::generate_upscale_paths()
        [ps = ff_8::path_search{ .selections                   = m_selections,
                                 .opt_coo                      = get_coo(),
                                 .field_name                   = m_map_sprite->get_base_name(),
-                                .filters_upscale_value_string = m_map_sprite->filter().upscale.value().string(),
+                                .filters_swizzle_value_string = m_map_sprite->filter().upscale.value().string(),
                                 .bpp_palette                  = m_map_sprite->uniques().palette(),
                                 .texture_page_id = m_map_sprite->uniques().texture_page_id() }]() -> std::future<PathsAndEnabled> {
             gui::PathsAndEnabled pande{ .path_key = ConfigKey::CacheUpscalePaths, .enabled_key = ConfigKey::CacheUpscalePathsEnabled };
@@ -3593,8 +3593,8 @@ std::future<std::future<gui::PathsAndEnabled>> gui::generate_upscale_map_paths()
        [ps = ff_8::path_search{ .selections                   = m_selections,
                                 .opt_coo                      = get_coo(),
                                 .field_name                   = m_map_sprite->get_base_name(),
-                                .filters_upscale_value_string = m_map_sprite->filter().upscale.value().string(),
-                                .filters_upscale_map_value_string =
+                                .filters_swizzle_value_string = m_map_sprite->filter().upscale.value().string(),
+                                .filters_swizzle_map_value_string =
                                   m_map_sprite->filter().upscale_map.value().string() }]() -> std::future<PathsAndEnabled> {
             gui::PathsAndEnabled pande{ .path_key    = ConfigKey::CacheUpscaleMapPaths,
                                         .enabled_key = ConfigKey::CacheUpscaleMapPathsEnabled };

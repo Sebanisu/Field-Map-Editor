@@ -26,12 +26,12 @@ bool path_search::has_deswizzle_path(const std::filesystem::path &filter_path, c
 
 bool path_search::has_swizzle_path(const std::uint8_t texture_page, const std::string &ext) const
 {
-     return has_swizzle_path(filters_upscale_value_string, texture_page, ext);
+     return has_swizzle_path(filters_swizzle_value_string, texture_page, ext);
 }
 
 bool path_search::has_swizzle_path(const std::uint8_t texture_page, std::uint8_t palette, const std::string &ext) const
 {
-     return has_swizzle_path(filters_upscale_value_string, texture_page, palette, ext);
+     return has_swizzle_path(filters_swizzle_value_string, texture_page, palette, ext);
 }
 
 bool path_search::has_swizzle_path(const std::filesystem::path &filter_path, const std::string &ext) const
@@ -125,7 +125,7 @@ std::vector<std::filesystem::path> path_search::generate_swizzle_paths(const std
 {
 
      return generate_paths(
-       filters_upscale_value_string,
+       filters_swizzle_value_string,
        { .field_name    = field_name,
          .ext           = ext,
          .language_code = opt_coo.has_value() && opt_coo.value() != open_viii::LangT::generic ? opt_coo : std::nullopt },
@@ -152,7 +152,7 @@ std::vector<std::filesystem::path> path_search::generate_swizzle_map_paths(const
 {
 
      return generate_paths(
-       filters_upscale_map_value_string,
+       filters_swizzle_map_value_string,
        { .field_name    = field_name,
          .ext           = ext,
          .language_code = opt_coo.has_value() && opt_coo.value() != open_viii::LangT::generic ? opt_coo : std::nullopt },
@@ -245,7 +245,7 @@ std::vector<std::filesystem::path>
 {
 
      return generate_paths(
-       filters_upscale_value_string,
+       filters_swizzle_value_string,
        { .field_name    = field_name,
          .ext           = ext,
          .language_code = opt_coo.has_value() && opt_coo.value() != open_viii::LangT::generic ? opt_coo : std::nullopt,
@@ -258,7 +258,7 @@ std::vector<std::filesystem::path> path_search::generate_swizzle_paths(const std
 {
 
      return generate_paths(
-       filters_upscale_value_string,
+       filters_swizzle_value_string,
        { .field_name    = field_name,
          .ext           = ext,
          .language_code = opt_coo.has_value() && opt_coo.value() != open_viii::LangT::generic ? opt_coo : std::nullopt,
@@ -270,7 +270,7 @@ std::vector<std::filesystem::path>
   path_search::generate_swizzle_as_one_image_paths(const std::optional<std::uint8_t> &palette, const std::string &ext) const
 {
      return generate_paths(
-       filters_upscale_value_string,
+       filters_swizzle_value_string,
        { .field_name    = field_name,
          .ext           = ext,
          .language_code = opt_coo.has_value() && opt_coo.value() != open_viii::LangT::generic ? opt_coo : std::nullopt,
