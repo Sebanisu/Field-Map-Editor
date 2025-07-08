@@ -12,18 +12,20 @@ namespace ff_8
 {
 struct path_search
 {
-     using Coo                                                                                                       = open_viii::LangT;
-     using OptCoo                                                                                                    = std::optional<Coo>;
-     std::shared_ptr<const fme::Selections>                                       selections                         = {};
-     OptCoo                                                                       opt_coo                            = {};
-     std::string                                                                  field_name                         = {};
-     std::string                                                                  filters_deswizzle_value_string     = {};
-     std::string                                                                  filters_upscale_value_string       = {};
-     std::string                                                                  filters_deswizzle_map_value_string = {};
-     std::string                                                                  filters_upscale_map_value_string   = {};
-     std::vector<ff_8::PupuID>                                                    working_unique_pupu                = {};
-     std::map<open_viii::graphics::BPPT, unique_values_and_strings<std::uint8_t>> bpp_palette                        = {};
-     unique_values_and_strings<std::uint8_t>                                      texture_page_id                    = {};
+     using Coo                                                                                                        = open_viii::LangT;
+     using OptCoo                                                                                                     = std::optional<Coo>;
+     std::shared_ptr<const fme::Selections>                                       selections                          = {};
+     OptCoo                                                                       opt_coo                             = {};
+     std::string                                                                  field_name                          = {};
+     std::string                                                                  filters_deswizzle_value_string      = {};
+     std::string                                                                  filters_upscale_value_string        = {};
+     std::string                                                                  filters_swizzle_as_one_image_string = {};
+     std::string                                                                  filters_deswizzle_map_value_string  = {};
+     std::string                                                                  filters_upscale_map_value_string    = {};
+     std::string                                                                  filters_swizzle_as_one_image_map_string = {};
+     std::vector<ff_8::PupuID>                                                    working_unique_pupu                     = {};
+     std::map<open_viii::graphics::BPPT, unique_values_and_strings<std::uint8_t>> bpp_palette                             = {};
+     unique_values_and_strings<std::uint8_t>                                      texture_page_id                         = {};
 
      [[nodiscard]] std::vector<std::filesystem::path>                             generate_deswizzle_paths(const std::string &ext) const;
      [[nodiscard]] std::vector<std::filesystem::path>                             generate_swizzle_paths(const std::string &ext) const;
@@ -45,7 +47,10 @@ struct path_search
      [[nodiscard]] std::vector<std::filesystem::path>
        generate_swizzle_paths(const std::uint8_t texture_page, std::uint8_t palette, const std::string &ext = ".png") const;
      [[nodiscard]] std::vector<std::filesystem::path>
-                        generate_swizzle_paths(const std::uint8_t texture_page, const std::string &ext = ".png") const;
+       generate_swizzle_paths(const std::uint8_t texture_page, const std::string &ext = ".png") const;
+
+     [[nodiscard]] std::vector<std::filesystem::path>
+                        generate_swizzle_as_one_image_paths(const std::optional<std::uint8_t> &palette, const std::string &ext) const;
 
 
      [[nodiscard]] bool has_map_path(

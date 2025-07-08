@@ -166,12 +166,13 @@ struct [[nodiscard]] map_sprite// final
      [[nodiscard]] std::vector<std::future<void>> save_swizzle_textures(const std::string &keyed_string, const std::string &selected_path);
      [[nodiscard]] std::vector<std::future<void>>
        save_combined_swizzle_texture(const std::string &keyed_string, const std::string &selected_path);
-
      [[nodiscard]] std::vector<std::future<void>> save_pupu_textures(const std::string &keyed_string, const std::string &selected_path);
+     [[nodiscard]] std::future<std::future<void>> load_upscale_textures(std::uint8_t texture_page, std::uint8_t palette) const;
      [[nodiscard]] std::future<std::future<void>> load_upscale_textures(std::uint8_t texture_page) const;
+     [[nodiscard]] std::future<std::future<void>>
+       load_swizzle_as_one_image_textures(std::optional<std::uint8_t> palette = std::nullopt) const;
      [[nodiscard]] std::future<std::future<void>> load_deswizzle_textures(const ff_8::PupuID pupu, const size_t pos) const;
      [[nodiscard]] std::future<std::future<void>> load_mim_textures(BPPT bpp, uint8_t palette) const;
-     [[nodiscard]] std::future<std::future<void>> load_upscale_textures(std::uint8_t texture_page, std::uint8_t palette) const;
 
      void                                         save_modified_map(const std::filesystem::path &path) const;
      void                                         save(const std::filesystem::path &path) const;
@@ -205,12 +206,9 @@ struct [[nodiscard]] map_sprite// final
      void        update_render_texture(const glengine::Texture *p_texture, Map map, const tile_sizes tile_size);
      static void consume_futures(std::vector<std::future<void>> &futures);
      static void consume_futures(std::vector<std::future<std::future<void>>> &future_of_futures);
-     void        update_position(
-              const glm::ivec2               &pixel_pos,
-              const glm::ivec2               &down_pixel_pos,
-              const std::vector<std::size_t> &saved_indices);
-     bool                         consume_one_future() const;
-     void                         consume_now(const bool update = true) const;
+     void update_position(const glm::ivec2 &pixel_pos, const glm::ivec2 &down_pixel_pos, const std::vector<std::size_t> &saved_indices);
+     bool consume_one_future() const;
+     void consume_now(const bool update = true) const;
 
      static std::filesystem::path save_path_coo(
        fmt::format_string<std::string_view, std::string_view, uint8_t> pattern,
@@ -492,28 +490,35 @@ struct [[nodiscard]] map_sprite// final
           const auto src = [this, &tile_const, &imported]() {
                if (imported)
                {
-                    return to_vec2(ff_8::get_triangle_strip_source_imported(tile_const));
+                    return to_vec2(ff_8::source_coords_for_imported(tile_const));
+               }
+               if (m_filters.swizzle_as_one_image.enabled())
+               {
+                    // Calculate UVs for single texture
+                    // Source X adjusted by texture_page * texture_page_width
+                    // Base this on dest_coords_for_swizzle
+                    return to_vec2(ff_8::source_coords_for_single_swizzle(tile_const));
                }
                if (m_filters.upscale.enabled())
                {
-                    return to_vec2(ff_8::get_triangle_strip_source_upscale(tile_const));
+                    return to_vec2(ff_8::source_coords_for_upscale(tile_const));
                }
                if (m_filters.deswizzle.enabled())
                {
-                    return to_vec2(ff_8::get_triangle_strip_source_deswizzle(tile_const));
+                    return to_vec2(ff_8::source_coords_for_deswizzle(tile_const));
                }
-               return to_vec2(ff_8::get_triangle_strip_source_default(tile_const));
+               return to_vec2(ff_8::source_coords_for_default(tile_const));
           }();
           const auto dest = [this, &tile]() {
                if (m_draw_swizzle)
                {
                     if (m_disable_texture_page_shift)
                     {
-                         return to_vec2(ff_8::get_triangle_strip_dest_swizzle_disable_shift(tile));
+                         return to_vec2(ff_8::dest_coords_for_swizzle_disable_shift(tile));
                     }
-                    return to_vec2(ff_8::get_triangle_strip_dest_swizzle(tile));
+                    return to_vec2(ff_8::dest_coords_for_swizzle(tile));
                }
-               return to_vec2(ff_8::get_triangle_strip_dest_default(tile));
+               return to_vec2(ff_8::dest_coords_for_default(tile));
           }();
           return ff_8::get_triangle_strip(
             to_vec2(source_tile_size), to_vec2(destination_tile_size), to_vec2(source_texture_size), src, dest);
@@ -523,6 +528,11 @@ struct [[nodiscard]] map_sprite// final
 
 std::move_only_function<std::vector<std::filesystem::path>()>
   generate_swizzle_paths(std::shared_ptr<const Selections> in_selections, const map_sprite &in_map_sprite, std::uint8_t texture_page);
+
+std::move_only_function<std::vector<std::filesystem::path>()> generate_swizzle_as_one_image_paths(
+  std::shared_ptr<const Selections> in_selections,
+  const map_sprite                 &in_map_sprite,
+  std::optional<std::uint8_t>       palette = std::nullopt);
 
 std::move_only_function<std::vector<std::filesystem::path>()> generate_swizzle_paths(
   std::shared_ptr<const Selections> in_selections,

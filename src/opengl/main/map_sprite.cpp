@@ -55,13 +55,15 @@ map_sprite::map_sprite(
           return;
      }
      const auto ps = ff_8::path_search{
-          .selections                         = m_selections.lock(),
-          .opt_coo                            = m_map_group.opt_coo,
-          .field_name                         = get_base_name(),
-          .filters_deswizzle_value_string     = filter().deswizzle.value().string(),
-          .filters_upscale_value_string       = filter().upscale.value().string(),
-          .filters_deswizzle_map_value_string = filter().deswizzle_map.value().string(),
-          .filters_upscale_map_value_string   = filter().upscale_map.value().string(),
+          .selections                              = m_selections.lock(),
+          .opt_coo                                 = m_map_group.opt_coo,
+          .field_name                              = get_base_name(),
+          .filters_deswizzle_value_string          = filter().deswizzle.value().string(),
+          .filters_upscale_value_string            = filter().upscale.value().string(),
+          .filters_swizzle_as_one_image_string     = filter().swizzle_as_one_image.value().string(),
+          .filters_deswizzle_map_value_string      = filter().deswizzle_map.value().string(),
+          .filters_upscale_map_value_string        = filter().upscale_map.value().string(),
+          .filters_swizzle_as_one_image_map_string = filter().swizzle_as_one_image_map.value().string(),
           //.working_unique_pupu                = working_unique_pupu(),
           //.bpp_palette                        = uniques().palette(),
           //.texture_page_id                    = uniques().texture_page_id()
@@ -103,16 +105,18 @@ map_sprite::operator ff_8::path_search() const
           spdlog::error("Failed to lock m_selections: shared_ptr is expired.");
           return {};
      }
-     return { .selections                         = std::move(selections),
-              .opt_coo                            = m_map_group.opt_coo,
-              .field_name                         = get_base_name(),
-              .filters_deswizzle_value_string     = filter().deswizzle.value().string(),
-              .filters_upscale_value_string       = filter().upscale.value().string(),
-              .filters_deswizzle_map_value_string = filter().deswizzle_map.value().string(),
-              .filters_upscale_map_value_string   = filter().upscale_map.value().string(),
-              .working_unique_pupu                = working_unique_pupu(),
-              .bpp_palette                        = uniques().palette(),
-              .texture_page_id                    = uniques().texture_page_id() };
+     return { .selections                              = std::move(selections),
+              .opt_coo                                 = m_map_group.opt_coo,
+              .field_name                              = get_base_name(),
+              .filters_deswizzle_value_string          = filter().deswizzle.value().string(),
+              .filters_upscale_value_string            = filter().upscale.value().string(),
+              .filters_swizzle_as_one_image_string     = filter().swizzle_as_one_image.value().string(),
+              .filters_deswizzle_map_value_string      = filter().deswizzle_map.value().string(),
+              .filters_upscale_map_value_string        = filter().upscale_map.value().string(),
+              .filters_swizzle_as_one_image_map_string = filter().swizzle_as_one_image_map.value().string(),
+              .working_unique_pupu                     = working_unique_pupu(),
+              .bpp_palette                             = uniques().palette(),
+              .texture_page_id                         = uniques().texture_page_id() };
 }
 
 
@@ -163,23 +167,32 @@ map_sprite::colors_type
 std::size_t
   map_sprite::get_texture_pos(const open_viii::graphics::BPPT bpp, const std::uint8_t palette, const std::uint8_t texture_page) const
 {
-     if (!m_filters.upscale.enabled())
+     if (!m_filters.swizzle_as_one_image.enabled())
      {
-          if (bpp.bpp4())
+          if (!m_filters.upscale.enabled())
           {
-               return palette;
+               if (bpp.bpp4())
+               {
+                    return palette;
+               }
+               if (bpp.bpp8())
+               {
+                    return palette + std::size(Mim::palette_selections());
+               }
+               return BPP16_INDEX;// 16bpp doesn't have palettes.
           }
-          if (bpp.bpp8())
-          {
-               return palette + std::size(Mim::palette_selections());
-          }
-          return BPP16_INDEX;// 16bpp doesn't have palettes.
-     }
-     const size_t j = static_cast<size_t>(texture_page) * MAX_PALETTES + palette;
+          const size_t j = static_cast<size_t>(texture_page) * MAX_PALETTES + palette;
 
+          if (m_texture->at(j).height() == 0)
+          {
+               return START_OF_NO_PALETTE_INDEX + texture_page;
+          }
+          return j;
+     }
+     const size_t j = static_cast<size_t>(palette);
      if (m_texture->at(j).height() == 0)
      {
-          return START_OF_NO_PALETTE_INDEX + texture_page;
+          return START_OF_NO_PALETTE_INDEX;
      }
      return j;
 }
@@ -255,12 +268,11 @@ void map_sprite::queue_texture_loading() const
           }
           for (const auto &palette : palette_set.values())
           {
-               if (!m_filters.upscale.enabled())
+               if (m_filters.swizzle_as_one_image.enabled())
                {
-                    // Schedule normal MIM texture load (no upscale)
-                    future_of_futures.push_back(load_mim_textures(bpp, palette));
+                    future_of_futures.push_back(load_swizzle_as_one_image_textures(palette));
                }
-               else
+               else if (m_filters.upscale.enabled())
                {
                     // Schedule upscale texture loads for each texture page
                     for (const auto &texture_page : m_all_unique_values_and_strings.texture_page_id().values())
@@ -268,12 +280,21 @@ void map_sprite::queue_texture_loading() const
                          future_of_futures.push_back(load_upscale_textures(texture_page, palette));
                     }
                }
+               else
+               {
+                    // Schedule normal MIM texture load (no upscale)
+                    future_of_futures.push_back(load_mim_textures(bpp, palette));
+               }
           }
      }
 
 
      // Additional upscale loading for non-palette based textures
-     if (m_filters.upscale.enabled())
+     if (m_filters.swizzle_as_one_image.enabled())
+     {
+          future_of_futures.push_back(load_swizzle_as_one_image_textures());
+     }
+     else if (m_filters.upscale.enabled())
      {
           for (const auto &texture_page : m_all_unique_values_and_strings.texture_page_id().values())
           {
@@ -419,6 +440,27 @@ std::future<std::future<void>> map_sprite::load_upscale_textures(std::uint8_t te
        std::launch::async,
        future_operations::GetImageFromFromFirstValidPathCreateFuture{
          &(m_texture->at(pos)), fme::generate_swizzle_paths(std::move(selections), *this, texture_page) }) };
+}
+
+
+std::future<std::future<void>> map_sprite::load_swizzle_as_one_image_textures(std::optional<std::uint8_t> palette) const
+{
+     const std::size_t pos = palette.has_value() ? palette.value() : START_OF_NO_PALETTE_INDEX;
+     if (pos >= MAX_TEXTURES)
+     {
+          spdlog::error("{}:{} - Index out of range {} / {}", __FILE__, __LINE__, pos, MAX_TEXTURES);
+          return {};
+     }
+     auto selections = m_selections.lock();
+     if (!selections)
+     {
+          spdlog::error("Failed to lock m_selections: shared_ptr is expired.");
+          return {};
+     }
+     return { std::async(
+       std::launch::async,
+       future_operations::GetImageFromFromFirstValidPathCreateFuture{
+         &(m_texture->at(pos)), fme::generate_swizzle_as_one_image_paths(std::move(selections), *this, palette) }) };
 }
 
 // void set_color(std::array<sf::Vertex, 4U> &vertices, const sf::Color &color)
@@ -2117,6 +2159,30 @@ std::move_only_function<std::vector<std::filesystem::path>()>
              texture_page]() -> std::vector<std::filesystem::path> {
           spdlog::debug("Generating swizzle paths for field: '{}', texture_page: {} ", ps.field_name, texture_page);
           return ps.generate_swizzle_paths(texture_page, ".png");
+     };
+}
+
+std::move_only_function<std::vector<std::filesystem::path>()> generate_swizzle_as_one_image_paths(
+  std::shared_ptr<const Selections> in_selections,
+  const map_sprite                 &in_map_sprite,
+  std::optional<std::uint8_t>       palette)
+{
+     assert(in_selections && "generate_swizzle_as_one_image_paths: in_selections is null");
+     // assert(in_map_sprite && "generate_swizzle_map_paths: in_map_sprite is null");
+     return [ps = ff_8::path_search{ .selections                          = std::move(in_selections),
+                                     .opt_coo                             = in_map_sprite.get_opt_coo(),
+                                     .field_name                          = in_map_sprite.get_base_name(),
+                                     .filters_swizzle_as_one_image_string = in_map_sprite.filter().swizzle_as_one_image.value().string() },
+             palette]() -> std::vector<std::filesystem::path> {
+          if (palette.has_value())
+          {
+               spdlog::debug("Generating swizzle as one image paths for field: '{}', palette: {} ", ps.field_name, palette.value());
+          }
+          else
+          {
+               spdlog::debug("Generating swizzle as one image paths for field: '{}'", ps.field_name);
+          }
+          return ps.generate_swizzle_as_one_image_paths(palette, ".png");
      };
 }
 

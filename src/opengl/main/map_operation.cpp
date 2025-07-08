@@ -41,7 +41,7 @@ void flatten_palette(map_group::Map &map)
 void compact_map_order_ffnx(map_group::Map &map)
 {
      map.visit_tiles([](auto &&tiles) {
-          // get_triangle_strip_dest_horizontal_tile_index_swizzle
+          // dest_coords_for_horizontal_tile_index_swizzle
 
           auto filtered_tiles             = tiles | std::ranges::views::enumerate;
           using tile_t                    = std::remove_cvref_t<std::ranges::range_value_t<decltype(tiles)>>;
@@ -52,9 +52,9 @@ void compact_map_order_ffnx(map_group::Map &map)
                {
                     continue;
                }
-               const auto new_pos  = get_triangle_strip_dest_horizontal_tile_index_swizzle(tile_index, std::ranges::size(tiles));
-               const auto source_x = static_cast<ff_8::tile_operations::SourceXT<tile_t>>(new_pos.source_xy.x);
-               const auto source_y = static_cast<ff_8::tile_operations::SourceYT<tile_t>>(new_pos.source_xy.y);
+               const auto new_pos                   = dest_coords_for_horizontal_tile_index_swizzle(tile_index, std::ranges::size(tiles));
+               const auto source_x                  = static_cast<ff_8::tile_operations::SourceXT<tile_t>>(new_pos.source_xy.x);
+               const auto source_y                  = static_cast<ff_8::tile_operations::SourceYT<tile_t>>(new_pos.source_xy.y);
                const auto with_texture_id_operation = ff_8::tile_operations::WithTextureId<tile_t>{ new_pos.texture_page };
                const auto with_source_xy_operation  = ff_8::tile_operations::WithSourceXY<tile_t>{ { source_x, source_y } };
                tile                                 = tile | with_depth_operation | with_source_xy_operation | with_texture_id_operation;
@@ -285,7 +285,7 @@ bool test_if_map_same(const std::filesystem::path &saved_path, const map_group::
      raw_map.visit_tiles([&](const auto &raw_tiles) {
           saved_map.visit_tiles([&](const auto &saved_tiles) {
                if constexpr (std::is_same_v<std::remove_cvref_t<decltype(raw_tiles)>, std::remove_cvref_t<decltype(saved_tiles)>>)
-               {                    
+               {
                     if (std::ranges::size(raw_tiles) != std::ranges::size(saved_tiles))
                     {
                          if (std::ranges::empty(raw_tiles))

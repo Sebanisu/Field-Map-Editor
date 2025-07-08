@@ -16,6 +16,7 @@ struct QuadStrip
      glm::vec2 uv_max;
      glm::vec2 draw_pos;
 };
+
 void flatten_bpp(map_group::Map &map);
 void flatten_palette(map_group::Map &map);
 void compact_move_conflicts_only(map_group::Map &map, const source_tile_conflicts &conflicts);
@@ -29,7 +30,6 @@ void save_modified_map(
   const map_group::Map        &map_const,
   const map_group::Map        &map_changed,
   const map_group::Map *const  imported = nullptr);
-
 
 /**
  * @brief Computes a triangle strip (quad) with correct UV coordinates and draw position
@@ -54,55 +54,69 @@ void save_modified_map(
   const glm::vec2 &source_position,
   const glm::vec2 &destination_position);
 
-[[nodiscard]] static inline glm::ivec2 get_triangle_strip_source_imported(const open_viii::graphics::background::is_tile auto &tile_const)
+[[nodiscard]] static inline glm::ivec2 source_coords_for_imported(const open_viii::graphics::background::is_tile auto &tile_const)
 {
      return { tile_const.x(), tile_const.y() };
 }
-[[nodiscard]] static inline glm::uvec2 get_triangle_strip_source_upscale(const open_viii::graphics::background::is_tile auto &tile_const)
+
+[[nodiscard]] static inline glm::uvec2 source_coords_for_upscale(const open_viii::graphics::background::is_tile auto &tile_const)
 {
      return { tile_const.source_x(), tile_const.source_y() };
 }
-[[nodiscard]] static inline glm::uvec2 get_triangle_strip_source_default(const open_viii::graphics::background::is_tile auto &tile_const)
+
+[[nodiscard]] static inline glm::uvec2 source_coords_for_default(const open_viii::graphics::background::is_tile auto &tile_const)
 {
      using tile_type             = std::remove_cvref_t<decltype(tile_const)>;
      auto                src_tpw = tile_type::texture_page_width(tile_const.depth());
      const std::uint32_t x_shift = tile_const.texture_id() * src_tpw;
      return { tile_const.source_x() + x_shift, tile_const.source_y() };
-};
-[[nodiscard]] static inline glm::ivec2 get_triangle_strip_source_deswizzle(const open_viii::graphics::background::is_tile auto &tile_const)
+}
+
+[[nodiscard]] static inline glm::ivec2 source_coords_for_deswizzle(const open_viii::graphics::background::is_tile auto &tile_const)
 {
      return { tile_const.x(), tile_const.y() };
 }
-[[nodiscard]] static inline glm::ivec2 get_triangle_strip_dest_default(open_viii::graphics::background::is_tile auto &&tile)
+
+[[nodiscard]] static inline glm::ivec2 dest_coords_for_default(open_viii::graphics::background::is_tile auto &&tile)
 {
      return { tile.x(), tile.y() };
 }
-[[nodiscard]] static inline glm::uvec2 get_triangle_strip_dest_swizzle_disable_shift(open_viii::graphics::background::is_tile auto &&tile)
+
+[[nodiscard]] static inline glm::uvec2 dest_coords_for_swizzle_disable_shift(open_viii::graphics::background::is_tile auto &&tile)
 {
      return { tile.source_x(), tile.source_y() };
 }
-[[nodiscard]] static inline glm::uvec2 get_triangle_strip_dest_swizzle(open_viii::graphics::background::is_tile auto &&tile)
+
+[[nodiscard]] static inline glm::uvec2 dest_coords_for_swizzle(open_viii::graphics::background::is_tile auto &&tile)
 {
      using namespace open_viii::graphics::literals;
      using tile_type = std::remove_cvref_t<decltype(tile)>;
      return { static_cast<std::uint32_t>(tile.source_x() + tile.texture_id() * tile_type::texture_page_width(4_bpp)), tile.source_y() };
 }
+
+[[nodiscard]] static inline glm::uvec2 source_coords_for_single_swizzle(open_viii::graphics::background::is_tile auto &&tile)
+{
+     return dest_coords_for_swizzle(std::forward<decltype(tile)>(tile));
+}
+
+
 struct source_x_y_texture_page
 {
      glm::ivec2   source_xy    = {};
      std::uint8_t texture_page = {};
 };
+
 [[nodiscard]] static inline source_x_y_texture_page
-  get_triangle_strip_dest_horizontal_tile_index_swizzle(const std::integral auto &tile_index, const std::integral auto &size)
+  dest_coords_for_horizontal_tile_index_swizzle(const std::integral auto &tile_index, const std::integral auto &size)
 {
      static const int TILE_SIZE          = 16;
      static const int TEXTURE_PAGE_WIDTH = 256;
-     const int        tiles_per_row = (std::max)((static_cast<int>(size) / TILE_SIZE) + (static_cast<int>(size) % TILE_SIZE == 0 ? 0 : 1),
-                                          static_cast<int>(TILE_SIZE));
+     const int        tiles_per_row =
+       (std::max)((static_cast<int>(size) / TILE_SIZE) + (static_cast<int>(size) % TILE_SIZE == 0 ? 0 : 1), static_cast<int>(TILE_SIZE));
 
-     const auto       x             = (static_cast<int>(tile_index) % tiles_per_row) * TILE_SIZE;
-     const auto       y             = (static_cast<int>(tile_index) / tiles_per_row) * TILE_SIZE;
-     const auto       tp            = x / TEXTURE_PAGE_WIDTH;
+     const auto x  = (static_cast<int>(tile_index) % tiles_per_row) * TILE_SIZE;
+     const auto y  = (static_cast<int>(tile_index) / tiles_per_row) * TILE_SIZE;
+     const auto tp = x / TEXTURE_PAGE_WIDTH;
 
 
      return { .source_xy = { x - tp * TEXTURE_PAGE_WIDTH, y }, .texture_page = static_cast<std::uint8_t>(tp) };
@@ -121,7 +135,7 @@ struct source_x_y_texture_page
   const glm::ivec2     &pixel_pos,
   bool                  skip_filters,
   bool                  find_all);
-// templates
+
 template<std::integral input_t, std::integral low_t, std::integral high_t>
 static inline bool find_intersecting_in_bounds(input_t input, low_t low, high_t high)
 {
@@ -138,6 +152,7 @@ static inline void find_intersecting_get_indices(range_t &&range, out_t &out, co
           return static_cast<std::size_t>(std::distance(start, curr));
      });
 }
+
 template<std::ranges::range tilesT>
 [[nodiscard]] static inline std::vector<std::size_t> find_intersecting_swizzle(
   const tilesT        &tiles,
@@ -196,6 +211,7 @@ template<std::ranges::range tilesT>
      }
      return out;
 }
+
 template<std::ranges::range tilesT>
 [[nodiscard]] static inline std::vector<std::size_t> find_intersecting_deswizzle(
   const tilesT        &tiles,

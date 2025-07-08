@@ -266,6 +266,18 @@ std::vector<std::filesystem::path> path_search::generate_swizzle_paths(const std
        selections->output_swizzle_pattern);
 }
 
+std::vector<std::filesystem::path>
+  path_search::generate_swizzle_as_one_image_paths(const std::optional<std::uint8_t> &palette, const std::string &ext) const
+{
+     return generate_paths(
+       filters_upscale_value_string,
+       { .field_name    = field_name,
+         .ext           = ext,
+         .language_code = opt_coo.has_value() && opt_coo.value() != open_viii::LangT::generic ? opt_coo : std::nullopt,
+         .palette       = palette },
+       selections->output_swizzle_pattern);
+}
+
 std::vector<std::filesystem::path> path_search::generate_paths(
   const std::string         &filter_path,
   const fme::key_value_data &cpm,
