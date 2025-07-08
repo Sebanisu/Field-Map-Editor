@@ -2193,7 +2193,7 @@ void gui::menu_upscale_map_paths()
                  // load map from .map here.
                  m_map_sprite->first_to_working_and_original();
             }
-            refresh_render_texture(true);
+            refresh_render_texture();
        },
        [&]() {
             m_directory_browser.Open();
@@ -2239,7 +2239,7 @@ void gui::menu_deswizzle_map_paths()
                  // load map from .map here.
                  m_map_sprite->first_to_working_and_original();
             }
-            refresh_render_texture(true);
+            refresh_render_texture();
        },
        [&]() {
             m_directory_browser.Open();
@@ -3470,7 +3470,7 @@ void gui::combo_upscale_map_path()
           m_map_sprite->first_to_working_and_original();
      }
 
-     refresh_render_texture(true);
+     refresh_render_texture();
 }
 
 
@@ -3504,7 +3504,7 @@ void gui::combo_deswizzle_map_path()
           m_map_sprite->first_to_working_and_original();
      }
 
-     refresh_render_texture(true);
+     refresh_render_texture();
 }
 
 std::future<std::future<gui::PathsAndEnabled>> gui::generate_upscale_paths()
