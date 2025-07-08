@@ -2208,8 +2208,8 @@ std::move_only_function<std::vector<std::filesystem::path>()> generate_swizzle_p
 std::move_only_function<std::vector<std::filesystem::path>()>
   generate_deswizzle_paths(std::shared_ptr<const Selections> in_selections, const map_sprite &in_map_sprite, const ff_8::PupuID pupu_id)
 {
-     assert(in_selections && "generate_swizzle_map_paths: in_selections is null");
-     // assert(in_map_sprite && "generate_swizzle_map_paths: in_map_sprite is null");
+     assert(in_selections && "generate_deswizzle_paths: in_selections is null");
+     // assert(in_map_sprite && "generate_deswizzle_paths: in_map_sprite is null");
      return [ps = ff_8::path_search{ .selections                     = std::move(in_selections),
                                      .opt_coo                        = in_map_sprite.get_opt_coo(),
                                      .field_name                     = in_map_sprite.get_base_name(),
@@ -2240,8 +2240,8 @@ std::move_only_function<std::vector<std::filesystem::path>()>
   generate_deswizzle_map_paths(std::shared_ptr<const Selections> in_selections, const map_sprite &in_map_sprite)
 {
 
-     assert(in_selections && "generate_swizzle_map_paths: in_selections is null");
-     // assert(in_map_sprite && "generate_swizzle_map_paths: in_map_sprite is null");
+     assert(in_selections && "generate_deswizzle_map_paths: in_selections is null");
+     // assert(in_map_sprite && "generate_deswizzle_map_paths: in_map_sprite is null");
      return [ps = ff_8::path_search{ .selections = std::move(in_selections),
                                      .opt_coo    = in_map_sprite.get_opt_coo(),
                                      .field_name = in_map_sprite.get_base_name(),
