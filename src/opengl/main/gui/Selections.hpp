@@ -374,8 +374,8 @@ struct Selections
      std::vector<bool>                                        cache_upscale_paths_enabled;
      std::vector<std::string>                                 cache_deswizzle_paths;
      std::vector<bool>                                        cache_deswizzle_paths_enabled;
-     std::vector<std::string>                                 cache_upscale_map_paths;
-     std::vector<bool>                                        cache_upscale_map_paths_enabled;
+     std::vector<std::string>                                 cache_swizzle_map_paths;
+     std::vector<bool>                                        cache_swizzle_map_paths_enabled;
      std::vector<std::string>                                 cache_deswizzle_map_paths;
      std::vector<bool>                                        cache_deswizzle_map_paths_enabled;
 

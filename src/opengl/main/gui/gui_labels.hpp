@@ -32,9 +32,9 @@ struct gui_labels
      static constexpr std::string_view filters                                = { "Filters" };
      static constexpr std::string_view background                             = { "Background" };
      static constexpr std::string_view control_panel                          = { "Control Panel" };
-     static constexpr std::string_view upscale_path                           = { "Upscale Path" };
+     static constexpr std::string_view swizzle_path                           = { "Swizzle Path" };
      static constexpr std::string_view deswizzle_path                         = { "Deswizzle Path" };
-     static constexpr std::string_view upscale_map_path                       = { "Upscale .map Path" };
+     static constexpr std::string_view swizzle_map_path                       = { "Swizzle .map Path" };
      static constexpr std::string_view deswizzle_map_path                     = { "Deswizzle .map Path" };
      static constexpr std::string_view processing                             = { "Processing" };
      static constexpr std::string_view display_history                        = { "History" };
@@ -86,8 +86,7 @@ struct gui_labels
      static constexpr std::string_view save_map_unmodified                    = { "Save Map File (unmodified)" };
      static constexpr std::string_view save_mim_unmodified                    = { "Save Mim File (unmodified)" };
      static constexpr std::string_view save_displayed_texture                 = { "Save Displayed Texture Image" };
-     static constexpr std::string_view locate_a_custom_upscale_directory      = { "Locate a Custom Upscale Directory" };
-     static constexpr std::string_view choose_a_custom_upscale_directory      = { "Choose a Custom Upscale Directory..." };
+     static constexpr std::string_view locate_a_custom_swizzle_directory      = { "Locate a Custom Swizzle Directory" };
      static constexpr std::string_view locate_a_ff8_install                   = { "Locate a FF8 Install Directory" };
      static constexpr std::string_view choose_a_ff8_install                   = { "Choose a FF8 Install Directory..." };
      static constexpr std::string_view remove_the_selected_ff8_path           = { "Remove the selected FF8 path" };
@@ -261,12 +260,10 @@ struct gui_labels
      static constexpr std::string_view force_reloading_of_textures_tooltip = {
           "Force reloading textures and rendering the map at the start of each frame."
      };
-     static constexpr std::string_view force_rendering_of_map_tooltip = {
-          "Force rendering the map at the start of each frame."
-     };
-     static constexpr std::string_view draw_palette_texture_tooltip = {
+     static constexpr std::string_view force_rendering_of_map_tooltip = { "Force rendering the map at the start of each frame." };
+     static constexpr std::string_view draw_palette_texture_tooltip   = {
           "Draw Palette Texture: The .mim file uses palettes to draw tiles. 4-bit palettes have 16 colors, 8-bit palettes support up to "
-          "256, and 16-bit tiles don’t use palettes. This setting shows the raw palettes in a grid."
+            "256, and 16-bit tiles don’t use palettes. This setting shows the raw palettes in a grid."
      };
      static constexpr auto tile_values =
        std::array{ hex,         source,       destination,     z,   bpp, palette, texture_page, layer_id, blend_mode,

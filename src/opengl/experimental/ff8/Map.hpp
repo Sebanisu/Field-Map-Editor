@@ -108,8 +108,8 @@ class Map
        : Map(fields, {})
      {
      }
-     Map(const Fields &, std::filesystem::path upscale_path)
-       : m_upscale_path(std::move(upscale_path))
+     Map(const Fields &, std::filesystem::path swizzle_path)
+       : m_upscale_path(std::move(swizzle_path))
      {
           if (std::empty(GetMim().path) || std::empty(GetMapHistory().path))
           {
@@ -119,7 +119,7 @@ class Map
           {
                const auto stem = std::filesystem::path(GetMapHistory().path).parent_path().stem();
                m_upscale_path  = (std::filesystem::path(m_upscale_path) / stem.string().substr(0, 2) / stem).string();
-               spdlog::debug("Upscale Location: \"{}\"", m_upscale_path.string());
+               spdlog::debug("Swizzle Location: \"{}\"", m_upscale_path.string());
           }
           spdlog::debug("Loaded Map: \"{}\"", GetMapHistory().path);
           spdlog::debug("Begin Loading Textures from Mim.");

@@ -887,7 +887,7 @@ void gui::consume_one_future()
                     m_selections->cache_deswizzle_paths = std::move(pande.path);
                     break;
                case ConfigKey::CacheUpscaleMapPaths:
-                    m_selections->cache_upscale_map_paths = std::move(pande.path);
+                    m_selections->cache_swizzle_map_paths = std::move(pande.path);
                     break;
                case ConfigKey::CacheDeswizzleMapPaths:
                     m_selections->cache_deswizzle_map_paths = std::move(pande.path);
@@ -908,7 +908,7 @@ void gui::consume_one_future()
                     m_selections->cache_deswizzle_paths_enabled = std::move(pande.enabled);
                     break;
                case ConfigKey::CacheUpscaleMapPathsEnabled:
-                    m_selections->cache_upscale_map_paths_enabled = std::move(pande.enabled);
+                    m_selections->cache_swizzle_map_paths_enabled = std::move(pande.enabled);
                     break;
                case ConfigKey::CacheDeswizzleMapPathsEnabled:
                     m_selections->cache_deswizzle_map_paths_enabled = std::move(pande.enabled);
@@ -2112,7 +2112,7 @@ void gui::menu_upscale_paths()
      const main_menu_paths_settings mmps = { .user_paths              = m_selections->paths_vector_upscale,
                                              .generated_paths         = m_selections->cache_upscale_paths,
                                              .generated_paths_enabled = m_selections->cache_upscale_paths_enabled,
-                                             .main_label              = gui_labels::upscale_path,
+                                             .main_label              = gui_labels::swizzle_path,
                                              .browse_tooltip          = "Browse for a directory containing swizzle textures." };
      const main_menu_paths          mmp  = { m_map_sprite->filter().swizzle, m_map_sprite->filter().swizzle, mmps };
      mmp.render(
@@ -2165,9 +2165,9 @@ void gui::menu_upscale_map_paths()
           return;
      }
      const main_menu_paths_settings mmps = { .user_paths              = m_selections->paths_vector_upscale_map,
-                                             .generated_paths         = m_selections->cache_upscale_map_paths,
-                                             .generated_paths_enabled = m_selections->cache_upscale_map_paths_enabled,
-                                             .main_label              = gui_labels::upscale_map_path,
+                                             .generated_paths         = m_selections->cache_swizzle_map_paths,
+                                             .generated_paths_enabled = m_selections->cache_swizzle_map_paths_enabled,
+                                             .main_label              = gui_labels::swizzle_map_path,
                                              .browse_tooltip          = "Browse for a directory containing upscaled .map files." };
      const main_menu_paths          mmp  = { m_map_sprite->filter().swizzle_map, m_map_sprite->filter().swizzle_map, mmps };
      mmp.render(
@@ -2450,13 +2450,13 @@ void gui::directory_browser_display()
                  m_map_sprite->filter().deswizzle,
                  [&](const std::filesystem::path &path) -> bool {
                       // we add the paths to map search for ease of use.
-                      m_selections->cache_upscale_map_paths.push_back(path.string());
-                      m_selections->cache_upscale_map_paths_enabled.push_back(has_map_path(path));
+                      m_selections->cache_swizzle_map_paths.push_back(path.string());
+                      m_selections->cache_swizzle_map_paths_enabled.push_back(has_map_path(path));
                       return ps.has_swizzle_path(path, ".png");
                       return false;
                  },
                  noop);
-               sort_and_remove_duplicates(m_selections->cache_upscale_map_paths, m_selections->cache_upscale_map_paths_enabled);
+               sort_and_remove_duplicates(m_selections->cache_swizzle_map_paths, m_selections->cache_swizzle_map_paths_enabled);
           }
           break;
           case map_directory_mode::load_deswizzle_textures: {
@@ -2486,8 +2486,8 @@ void gui::directory_browser_display()
                  ConfigKey::SwizzlePath,
                  m_selections->paths_vector_upscale,
                  ConfigKey::PathsVectorUpscaleMap,
-                 m_selections->cache_upscale_map_paths,
-                 m_selections->cache_upscale_map_paths_enabled,
+                 m_selections->cache_swizzle_map_paths,
+                 m_selections->cache_swizzle_map_paths_enabled,
                  m_map_sprite->filter().swizzle_map,
                  m_map_sprite->filter().deswizzle_map,
                  has_map_path,
@@ -2552,7 +2552,7 @@ void gui::sort_paths()
 
 
      sort_and_remove_duplicates(m_selections->cache_upscale_paths, m_selections->cache_upscale_paths_enabled);
-     sort_and_remove_duplicates(m_selections->cache_upscale_map_paths, m_selections->cache_upscale_map_paths_enabled);
+     sort_and_remove_duplicates(m_selections->cache_swizzle_map_paths, m_selections->cache_swizzle_map_paths_enabled);
      sort_and_remove_duplicates(m_selections->cache_deswizzle_paths, m_selections->cache_deswizzle_paths_enabled);
      sort_and_remove_duplicates(m_selections->cache_deswizzle_map_paths, m_selections->cache_deswizzle_map_paths_enabled);
 }
@@ -2697,7 +2697,7 @@ void gui::menuitem_load_swizzle_textures2()
 {
      if (!ImGui::MenuItem(gui_labels::browse.data(), nullptr, false, true))
      {
-          tool_tip(gui_labels::locate_a_custom_upscale_directory);
+          tool_tip(gui_labels::locate_a_custom_swizzle_directory);
           return;
      }
      m_directory_browser.Open();
@@ -3673,7 +3673,7 @@ bool gui::combo_upscale_path(ff_8::filter_old<std::filesystem::path, ff_8::Filte
 {
 
      const auto gcc = fme::GenericComboClassWithFilterAndFixedToggles(
-       gui_labels::upscale_path,
+       gui_labels::swizzle_path,
        [this]() { return m_selections->cache_upscale_paths; },
        [this]() { return m_selections->cache_upscale_paths_enabled; },
        [this]() { return m_selections->cache_upscale_paths; },
@@ -3700,11 +3700,11 @@ bool gui::combo_deswizzle_path(ff_8::filter_old<std::filesystem::path, ff_8::Fil
 bool gui::combo_upscale_map_path(ff_8::filter_old<std::filesystem::path, ff_8::FilterTag::SwizzleMap> &filter) const
 {
      const auto gcc = fme::GenericComboClassWithFilterAndFixedToggles(
-       gui_labels::upscale_map_path,
-       [this]() { return m_selections->cache_upscale_map_paths; },
-       [this]() { return m_selections->cache_upscale_map_paths_enabled; },
-       [this]() { return m_selections->cache_upscale_map_paths; },
-       [this]() { return m_selections->cache_upscale_map_paths; },
+       gui_labels::swizzle_map_path,
+       [this]() { return m_selections->cache_swizzle_map_paths; },
+       [this]() { return m_selections->cache_swizzle_map_paths_enabled; },
+       [this]() { return m_selections->cache_swizzle_map_paths; },
+       [this]() { return m_selections->cache_swizzle_map_paths; },
        [&filter]() -> auto & { return filter; },
        generic_combo_settings{ .num_columns = 1, .show_explore_button = true });
      return m_field && gcc.render();

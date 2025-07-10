@@ -8,14 +8,11 @@
 
 namespace ff_8
 {
-static const unsigned int TexturePageCount  = 13U;
-static const unsigned int PaletteCountPlus1 = 17U;
-static const unsigned int UpscaleTextureCount =
-  PaletteCountPlus1 * TexturePageCount;
-glengine::DelayedTextures<35U>
-  LoadTextures(const open_viii::graphics::background::Mim &mim);
+static const unsigned int                      TexturePageCount    = 13U;
+static const unsigned int                      PaletteCountPlus1   = 17U;
+static const unsigned int                      UpscaleTextureCount = PaletteCountPlus1 * TexturePageCount;
+glengine::DelayedTextures<35U>                 LoadTextures(const open_viii::graphics::background::Mim &mim);
 
-glengine::DelayedTextures<UpscaleTextureCount>
-  LoadTextures(const std::filesystem::path &upscale_path);
+glengine::DelayedTextures<UpscaleTextureCount> LoadTextures(const std::filesystem::path &swizzle_path);
 }// namespace ff_8
 #endif// FIELD_MAP_EDITOR_FF8LOADTEXTURES_HPP

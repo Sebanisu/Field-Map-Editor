@@ -10,12 +10,12 @@ namespace ff_8
 {
 struct TileFunctionsUpscaleSwizzle
 {
-  using X                                  = tile_operations::SourceX;
-  using Y                                  = tile_operations::SourceY;
-  using TexturePage                        = tile_operations::TextureId;
-  using UseTexturePage                     = std::false_type;
-  using UseBlending                        = std::false_type;
-  static constexpr const char *const label = "Map (Upscale Swizzle)";
+     using X                                  = tile_operations::SourceX;
+     using Y                                  = tile_operations::SourceY;
+     using TexturePage                        = tile_operations::TextureId;
+     using UseTexturePage                     = std::false_type;
+     using UseBlending                        = std::false_type;
+     static constexpr const char *const label = "Map (Swizzle Swizzle)";
 };
 using MapUpscaleSwizzle = Map<TileFunctionsUpscaleSwizzle>;
 static_assert(glengine::Renderable<MapUpscaleSwizzle>);
