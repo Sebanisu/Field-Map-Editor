@@ -169,7 +169,10 @@ struct gui
      std::shared_ptr<open_viii::archive::FIFLFS<false>> init_field();
      void                                               text_mouse_position() const;
      void                                               combo_swizzle_path();
-     bool                    combo_swizzle_path(ff_8::filter_old<std::filesystem::path, ff_8::FilterTag::Swizzle> &filter) const;
+     bool combo_swizzle_path(ff_8::filter_old<std::filesystem::path, ff_8::FilterTag::Swizzle> &filter) const;
+     void combo_swizzle_as_one_image_path();
+     bool combo_swizzle_as_one_image_path(ff_8::filter_old<std::filesystem::path, ff_8::FilterTag::SwizzleAsOneImage> &filter) const;
+     
      void                    combo_deswizzle_path();
      bool                    combo_deswizzle_path(ff_8::filter_old<std::filesystem::path, ff_8::FilterTag::Deswizzle> &filter) const;
      void                    combo_swizzle_map_path();

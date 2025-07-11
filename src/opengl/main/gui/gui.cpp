@@ -692,6 +692,7 @@ void gui::control_panel_window_map()
 {
      combo_swizzle_path();
      combo_deswizzle_path();
+     combo_swizzle_as_one_image_path();
      combo_swizzle_map_path();
      combo_deswizzle_map_path();
      checkbox_map_swizzle();
@@ -3421,7 +3422,6 @@ void gui::combo_swizzle_path()
      refresh_render_texture(true);
 }
 
-
 void gui::combo_deswizzle_path()
 {
      if (!m_field)
@@ -3435,6 +3435,24 @@ void gui::combo_deswizzle_path()
      if (m_map_sprite->filter().deswizzle.enabled())
      {
           m_map_sprite->filter().swizzle.disable();
+     }
+
+     refresh_render_texture(true);
+}
+
+void gui::combo_swizzle_as_one_image_path()
+{
+     if (!m_field)
+     {
+          return;
+     }
+     if (!combo_swizzle_as_one_image_path(m_map_sprite->filter().swizzle_as_one_image))
+     {
+          return;
+     }
+     if (m_map_sprite->filter().swizzle_as_one_image.enabled())
+     {
+          m_map_sprite->filter().swizzle_as_one_image.disable();
      }
 
      refresh_render_texture(true);
@@ -3671,7 +3689,6 @@ std::future<std::future<gui::PathsAndEnabled>> gui::generate_deswizzle_map_paths
 
 bool gui::combo_swizzle_path(ff_8::filter_old<std::filesystem::path, ff_8::FilterTag::Swizzle> &filter) const
 {
-
      const auto gcc = fme::GenericComboClassWithFilterAndFixedToggles(
        gui_labels::swizzle_path,
        [this]() { return m_selections->cache_swizzle_paths; },
@@ -3683,6 +3700,19 @@ bool gui::combo_swizzle_path(ff_8::filter_old<std::filesystem::path, ff_8::Filte
      return m_field && gcc.render();
 }
 
+
+bool gui::combo_swizzle_as_one_image_path(ff_8::filter_old<std::filesystem::path, ff_8::FilterTag::SwizzleAsOneImage> &filter) const
+{
+     const auto gcc = fme::GenericComboClassWithFilterAndFixedToggles(
+       gui_labels::swizzle_as_one_image_path,
+       [this]() { return m_selections->cache_swizzle_paths; },
+       [this]() { return m_selections->cache_swizzle_paths_enabled; },
+       [this]() { return m_selections->cache_swizzle_paths; },
+       [this]() { return m_selections->cache_swizzle_paths; },
+       [&filter]() -> auto & { return filter; },
+       generic_combo_settings{ .num_columns = 1, .show_explore_button = true });
+     return m_field && gcc.render();
+}
 
 bool gui::combo_deswizzle_path(ff_8::filter_old<std::filesystem::path, ff_8::FilterTag::Deswizzle> &filter) const
 {
