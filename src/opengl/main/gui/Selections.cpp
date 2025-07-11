@@ -248,16 +248,16 @@ fme::Selections::Selections(const Configuration config)
      }
      assert(has_balanced_braces(paths_vector));
 
-     if (!config.load_array(key_to_string(ConfigKey::PathsVectorUpscale), paths_vector_upscale))
+     if (!config.load_array(key_to_string(ConfigKey::PathsVectorUpscale), paths_vector_swizzle))
      {
           paths_vector_deswizzle = { R"(D:\Angelwing-Ultima_Remastered_v1-0-a)" };
      }
-     assert(has_balanced_braces(paths_vector_upscale));
+     assert(has_balanced_braces(paths_vector_swizzle));
 
-     if (!config.load_array(key_to_string(ConfigKey::PathsVectorUpscaleMap), paths_vector_upscale_map))
+     if (!config.load_array(key_to_string(ConfigKey::PathsVectorUpscaleMap), paths_vector_swizzle_map))
      {
      }
-     assert(has_balanced_braces(paths_vector_upscale_map));
+     assert(has_balanced_braces(paths_vector_swizzle_map));
 
      if (!config.load_array(key_to_string(ConfigKey::PathsVectorDeswizzle), paths_vector_deswizzle))
      {
@@ -269,10 +269,10 @@ fme::Selections::Selections(const Configuration config)
      }
      assert(has_balanced_braces(paths_vector_deswizzle_map));
 
-     if (!config.load_array(key_to_string(ConfigKey::CacheUpscalePaths), cache_upscale_paths))
+     if (!config.load_array(key_to_string(ConfigKey::CacheUpscalePaths), cache_swizzle_paths))
      {
      }
-     if (!config.load_array(key_to_string(ConfigKey::CacheUpscalePathsEnabled), cache_upscale_paths_enabled))
+     if (!config.load_array(key_to_string(ConfigKey::CacheUpscalePathsEnabled), cache_swizzle_paths_enabled))
      {
      }
      if (!config.load_array(key_to_string(ConfigKey::CacheDeswizzlePaths), cache_deswizzle_paths))
@@ -384,14 +384,14 @@ void fme::Selections::update_configuration_key(ConfigKey key) const
           MAP_UPDATE_ARRAY(ConfigKey::PathPatternsWithPupuID, paths_with_pupu_id);
           MAP_UPDATE_ARRAY(ConfigKey::PathPatternsWithTexturePage, paths_with_texture_page);
           MAP_UPDATE_ARRAY(ConfigKey::PathsVector, paths_vector);
-          MAP_UPDATE_ARRAY(ConfigKey::PathsVectorUpscale, paths_vector_upscale);
+          MAP_UPDATE_ARRAY(ConfigKey::PathsVectorUpscale, paths_vector_swizzle);
           MAP_UPDATE_ARRAY(ConfigKey::PathsVectorDeswizzle, paths_vector_deswizzle);
-          MAP_UPDATE_ARRAY(ConfigKey::PathsVectorUpscaleMap, paths_vector_upscale_map);
+          MAP_UPDATE_ARRAY(ConfigKey::PathsVectorUpscaleMap, paths_vector_swizzle_map);
           MAP_UPDATE_ARRAY(ConfigKey::PathsVectorDeswizzleMap, paths_vector_deswizzle_map);
 
 
-          MAP_UPDATE_ARRAY(ConfigKey::CacheUpscalePaths, cache_upscale_paths);
-          MAP_UPDATE_ARRAY(ConfigKey::CacheUpscalePathsEnabled, cache_upscale_paths_enabled);
+          MAP_UPDATE_ARRAY(ConfigKey::CacheUpscalePaths, cache_swizzle_paths);
+          MAP_UPDATE_ARRAY(ConfigKey::CacheUpscalePathsEnabled, cache_swizzle_paths_enabled);
           MAP_UPDATE_ARRAY(ConfigKey::CacheDeswizzlePaths, cache_deswizzle_paths);
           MAP_UPDATE_ARRAY(ConfigKey::CacheDeswizzlePathsEnabled, cache_deswizzle_paths_enabled);
           MAP_UPDATE_ARRAY(ConfigKey::CacheUpscaleMapPaths, cache_swizzle_map_paths);

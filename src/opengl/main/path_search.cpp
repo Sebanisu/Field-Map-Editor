@@ -287,7 +287,7 @@ std::vector<std::filesystem::path> path_search::generate_paths(
      std::vector<std::filesystem::path> paths = {};
      if (!filter_path.empty())
      {
-          paths = generate_upscale_paths(filter_path, cpm, selections);
+          paths = generate_swizzle_paths(filter_path, cpm, selections);
      }
      if (!output_pattern.empty())
      {
@@ -308,7 +308,7 @@ std::vector<std::filesystem::path> path_search::generate_paths(
      return paths;
 }
 
-[[nodiscard]] std::vector<std::filesystem::path> path_search::generate_upscale_paths(
+[[nodiscard]] std::vector<std::filesystem::path> path_search::generate_swizzle_paths(
   const std::filesystem::path           &field_root,
   fme::key_value_data                    copy_data,
   std::shared_ptr<const fme::Selections> selections)

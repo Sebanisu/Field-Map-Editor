@@ -86,7 +86,7 @@ struct path_search
       * @param copy_data Data used to determine which keys and values to process.
       * @return Vector of generated paths for upscale output.
       */
-     [[nodiscard]] static std::vector<std::filesystem::path> generate_upscale_paths(
+     [[nodiscard]] static std::vector<std::filesystem::path> generate_swizzle_paths(
        const std::filesystem::path           &field_root,
        fme::key_value_data                    copy_data,
        std::shared_ptr<const fme::Selections> selections);

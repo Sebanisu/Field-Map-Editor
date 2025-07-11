@@ -178,10 +178,10 @@ struct gui_labels
           "Mim is the storage of the field texture in FF8. So this selection means your using the original low res textures."
      };
      static constexpr std::string_view input_deswizzle_tooltip = {
-          "Load a directory of deswizzled textures. Including `.map` files if found. They may be upscaled."
+          "Load a directory of deswizzled textures. Including `.map` files if found. They may be swizzled."
      };
      static constexpr std::string_view input_swizzle_tooltip = {
-          "Load a directory of swizzled textures. Including `.map` files if found. They may be upscaled."
+          "Load a directory of swizzled textures. Including `.map` files if found. They may be swizzled."
      };
 
      static constexpr std::string_view compact_flatten_warning = {

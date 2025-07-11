@@ -363,15 +363,15 @@ struct Selections
 
 
      std::vector<std::string>                                 paths_vector;
-     std::vector<std::string>                                 paths_vector_upscale;
+     std::vector<std::string>                                 paths_vector_swizzle;
      std::vector<std::string>                                 paths_vector_deswizzle;
-     std::vector<std::string>                                 paths_vector_upscale_map;
+     std::vector<std::string>                                 paths_vector_swizzle_map;
      std::vector<std::string>                                 paths_vector_deswizzle_map;
 
      std::vector<std::string>                                 paths_common_upscale_for_maps;
 
-     std::vector<std::string>                                 cache_upscale_paths;
-     std::vector<bool>                                        cache_upscale_paths_enabled;
+     std::vector<std::string>                                 cache_swizzle_paths;
+     std::vector<bool>                                        cache_swizzle_paths_enabled;
      std::vector<std::string>                                 cache_deswizzle_paths;
      std::vector<bool>                                        cache_deswizzle_paths_enabled;
      std::vector<std::string>                                 cache_swizzle_map_paths;
