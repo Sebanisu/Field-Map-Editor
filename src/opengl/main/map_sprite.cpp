@@ -464,7 +464,7 @@ std::future<std::future<void>> map_sprite::load_swizzle_as_one_image_textures(st
           return {};
      }
      return { std::async(
-       std::launch::async,
+       std::launch::deferred,
        future_operations::GetImageFromFromFirstValidPathCreateFuture{
          &(m_texture->at(pos)), fme::generate_swizzle_as_one_image_paths(std::move(selections), *this, palette) }) };
 }

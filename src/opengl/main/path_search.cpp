@@ -270,7 +270,7 @@ std::vector<std::filesystem::path>
   path_search::generate_swizzle_as_one_image_paths(const std::optional<std::uint8_t> &palette, const std::string &ext) const
 {
      return generate_paths(
-       filters_swizzle_value_string,
+       filters_swizzle_as_one_image_string,
        { .field_name    = field_name,
          .ext           = ext,
          .language_code = opt_coo.has_value() && opt_coo.value() != open_viii::LangT::generic ? opt_coo : std::nullopt,
@@ -364,6 +364,10 @@ std::vector<std::filesystem::path> path_search::generate_paths(
      if (copy_data.texture_page.has_value() && copy_data.palette.has_value())
      {
           return transform_and_find_a_match(selections->paths_with_palette_and_texture_page, selections->paths_no_palette_and_texture_page);
+     }
+     if (copy_data.palette.has_value())
+     {
+          return transform_and_find_a_match(selections->paths_with_palette_and_texture_page);
      }
      if (copy_data.texture_page.has_value())
      {
