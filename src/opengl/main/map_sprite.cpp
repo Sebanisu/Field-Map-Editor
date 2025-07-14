@@ -189,10 +189,10 @@ std::size_t
           }
           return j;
      }
-     const size_t j = static_cast<size_t>(palette);
+     const size_t j = static_cast<size_t>(palette) + 1U;
      if (m_texture->at(j).height() == 0)
      {
-          return START_OF_NO_PALETTE_INDEX;
+          return 0U;
      }
      return j;
 }
@@ -352,6 +352,12 @@ bool map_sprite::fallback_textures() const
                queue_texture_loading();
                return true;
           }
+          else if (m_filters.swizzle_as_one_image.enabled())
+          {
+               m_filters.swizzle_as_one_image.disable();
+               queue_texture_loading();
+               return true;
+          }
      }
      return false;
 }
@@ -445,7 +451,7 @@ std::future<std::future<void>> map_sprite::load_upscale_textures(std::uint8_t te
 
 std::future<std::future<void>> map_sprite::load_swizzle_as_one_image_textures(std::optional<std::uint8_t> palette) const
 {
-     const std::size_t pos = palette.has_value() ? palette.value() : START_OF_NO_PALETTE_INDEX;
+     const std::size_t pos = palette.has_value() ? palette.value() + 1U : 0U;
      if (pos >= MAX_TEXTURES)
      {
           spdlog::error("{}:{} - Index out of range {} / {}", __FILE__, __LINE__, pos, MAX_TEXTURES);
