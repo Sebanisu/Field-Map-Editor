@@ -3452,7 +3452,8 @@ void gui::combo_swizzle_as_one_image_path()
      }
      if (m_map_sprite->filter().swizzle_as_one_image.enabled())
      {
-          m_map_sprite->filter().swizzle_as_one_image.disable();
+          m_map_sprite->filter().swizzle.disable();
+          m_map_sprite->filter().deswizzle.disable();
      }
 
      refresh_render_texture(true);
