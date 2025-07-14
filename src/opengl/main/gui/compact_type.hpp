@@ -81,8 +81,9 @@ enum class PatternSelector : std::uint8_t
      PathPatternsCommonUpscaleForMaps,
      PathPatternsNoPaletteAndTexturePage,
      PathPatternsWithPaletteAndTexturePage,
-     PathPatternsWithPupuID,
-     PathPatternsWithTexturePage
+     PathPatternsWithPalette,
+     PathPatternsWithTexturePage,
+     PathPatternsWithPupuID
 };
 
 }// namespace fme

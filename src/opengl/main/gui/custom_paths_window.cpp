@@ -58,8 +58,9 @@ static const auto                                          m_tests = std::to_arr
           case fme::PatternSelector::PathPatternsCommonUpscaleForMaps:
           case fme::PatternSelector::PathPatternsNoPaletteAndTexturePage:
           case fme::PatternSelector::PathPatternsWithPaletteAndTexturePage:
-          case fme::PatternSelector::PathPatternsWithPupuID:
+          case fme::PatternSelector::PathPatternsWithPalette:
           case fme::PatternSelector::PathPatternsWithTexturePage:
+          case fme::PatternSelector::PathPatternsWithPupuID:
                return fme::custom_paths_window::vector_or_string_t::vector;
      }
      return fme::custom_paths_window::vector_or_string_t::unknown;
@@ -91,10 +92,12 @@ static const auto                                          m_tests = std::to_arr
           case fme::PatternSelector::PathPatternsWithPaletteAndTexturePage:
                return get_current_string_value_from_index(
                  selections->paths_with_palette_and_texture_page, selections->current_pattern_index);
-          case fme::PatternSelector::PathPatternsWithPupuID:
-               return get_current_string_value_from_index(selections->paths_with_pupu_id, selections->current_pattern_index);
+          case fme::PatternSelector::PathPatternsWithPalette:
+               return get_current_string_value_from_index(selections->paths_with_palette, selections->current_pattern_index);
           case fme::PatternSelector::PathPatternsWithTexturePage:
                return get_current_string_value_from_index(selections->paths_with_texture_page, selections->current_pattern_index);
+          case fme::PatternSelector::PathPatternsWithPupuID:
+               return get_current_string_value_from_index(selections->paths_with_pupu_id, selections->current_pattern_index);
      }
      return nullptr;
 }
@@ -123,10 +126,12 @@ static const auto                                          m_tests = std::to_arr
                return &selections->paths_no_palette_and_texture_page;
           case fme::PatternSelector::PathPatternsWithPaletteAndTexturePage:
                return &selections->paths_with_palette_and_texture_page;
-          case fme::PatternSelector::PathPatternsWithPupuID:
-               return &selections->paths_with_pupu_id;
+          case fme::PatternSelector::PathPatternsWithPalette:
+               return &selections->paths_with_palette;
           case fme::PatternSelector::PathPatternsWithTexturePage:
                return &selections->paths_with_texture_page;
+          case fme::PatternSelector::PathPatternsWithPupuID:
+               return &selections->paths_with_pupu_id;
      }
      return nullptr;
 }
@@ -212,8 +217,9 @@ void fme::custom_paths_window::populate_test_output() const
                                             PatternSelector::PathPatternsCommonUpscaleForMaps,
                                             PatternSelector::PathPatternsNoPaletteAndTexturePage,
                                             PatternSelector::PathPatternsWithPaletteAndTexturePage,
-                                            PatternSelector::PathPatternsWithPupuID,
-                                            PatternSelector::PathPatternsWithTexturePage };
+                                            PatternSelector::PathPatternsWithPalette,
+                                            PatternSelector::PathPatternsWithTexturePage,
+                                            PatternSelector::PathPatternsWithPupuID };
 
 
      const GenericComboClass gcc    = { ""sv,
@@ -270,11 +276,14 @@ void fme::custom_paths_window::save_pattern() const
           case fme::PatternSelector::PathPatternsWithPaletteAndTexturePage:
                selections->update_configuration_key(ConfigKey::PathPatternsWithPaletteAndTexturePage);
                break;
-          case fme::PatternSelector::PathPatternsWithPupuID:
-               selections->update_configuration_key(ConfigKey::PathPatternsWithPupuID);
+          case fme::PatternSelector::PathPatternsWithPalette:
+               selections->update_configuration_key(ConfigKey::PathPatternsWithPalette);
                break;
           case fme::PatternSelector::PathPatternsWithTexturePage:
                selections->update_configuration_key(ConfigKey::PathPatternsWithTexturePage);
+               break;
+          case fme::PatternSelector::PathPatternsWithPupuID:
+               selections->update_configuration_key(ConfigKey::PathPatternsWithPupuID);
                break;
      }
 }

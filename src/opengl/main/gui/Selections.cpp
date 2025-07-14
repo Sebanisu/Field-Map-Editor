@@ -191,6 +191,7 @@ fme::Selections::Selections(const Configuration config)
      }
      assert(has_balanced_braces(paths_no_palette_and_texture_page));
 
+
      if (!config.load_array(key_to_string(ConfigKey::PathPatternsWithPaletteAndTexturePage), paths_with_palette_and_texture_page))
      {
           paths_with_palette_and_texture_page = {
@@ -213,13 +214,25 @@ fme::Selections::Selections(const Configuration config)
      }
      assert(has_balanced_braces(paths_with_palette_and_texture_page));
 
-     if (!config.load_array(key_to_string(ConfigKey::PathPatternsWithPupuID), paths_with_pupu_id))
+     if (!config.load_array(key_to_string(ConfigKey::PathPatternsWithPalette), paths_with_palette))
      {
-          paths_with_pupu_id = { "{selected_path}/{field_name}_{pupu_id}{ext}",
-                                 "{selected_path}/{field_name}/{field_name}_{pupu_id}{ext}",
-                                 "{selected_path}/{field_prefix}/{field_name}/{field_name}_{pupu_id}{ext}" };
+          paths_with_palette = { "{selected_path}/{field_name}{_{2_letter_lang}}_0{palette}{ext}",
+                                 "{selected_path}/{field_name}/{field_name}{_{2_letter_lang}}_0{palette}{ext}",
+                                 "{selected_path}/{field_prefix}/{field_name}/{field_name}{_{2_letter_lang}}_0{palette}{ext}",
+
+                                 "{selected_path}/{field_name}_0{palette}{ext}",
+                                 "{selected_path}/{field_name}/{field_name}_0{palette}{ext}",
+                                 "{selected_path}/{field_prefix}/{field_name}/{field_name}_0{palette}{ext}",
+
+                                 "{selected_path}/{field_name}{_{2_letter_lang}}_{palette}{ext}",
+                                 "{selected_path}/{field_name}/{field_name}{_{2_letter_lang}}_{palette}{ext}",
+                                 "{selected_path}/{field_prefix}/{field_name}/{field_name}{_{2_letter_lang}}_{palette}{ext}",
+
+                                 "{selected_path}/{field_name}_{palette}{ext}",
+                                 "{selected_path}/{field_name}/{field_name}_{palette}{ext}",
+                                 "{selected_path}/{field_prefix}/{field_name}/{field_name}_{palette}{ext}" };
      }
-     assert(has_balanced_braces(paths_with_pupu_id));
+     assert(has_balanced_braces(paths_with_palette));
 
      if (!config.load_array(key_to_string(ConfigKey::PathPatternsWithTexturePage), paths_with_texture_page))
      {
@@ -240,6 +253,15 @@ fme::Selections::Selections(const Configuration config)
                                       "{selected_path}/{field_prefix}/{field_name}/{field_name}_{texture_page}{ext}" };
      }
      assert(has_balanced_braces(paths_with_texture_page));
+
+
+     if (!config.load_array(key_to_string(ConfigKey::PathPatternsWithPupuID), paths_with_pupu_id))
+     {
+          paths_with_pupu_id = { "{selected_path}/{field_name}_{pupu_id}{ext}",
+                                 "{selected_path}/{field_name}/{field_name}_{pupu_id}{ext}",
+                                 "{selected_path}/{field_prefix}/{field_name}/{field_name}_{pupu_id}{ext}" };
+     }
+     assert(has_balanced_braces(paths_with_pupu_id));
 
      if (!config.load_array(key_to_string(ConfigKey::PathsVector), paths_vector))
      {
@@ -381,6 +403,7 @@ void fme::Selections::update_configuration_key(ConfigKey key) const
           MAP_UPDATE_ARRAY(ConfigKey::PathPatternsCommonUpscaleForMaps, paths_common_upscale_for_maps);
           MAP_UPDATE_ARRAY(ConfigKey::PathPatternsNoPaletteAndTexturePage, paths_no_palette_and_texture_page);
           MAP_UPDATE_ARRAY(ConfigKey::PathPatternsWithPaletteAndTexturePage, paths_with_palette_and_texture_page);
+          MAP_UPDATE_ARRAY(ConfigKey::PathPatternsWithPalette, paths_with_palette);
           MAP_UPDATE_ARRAY(ConfigKey::PathPatternsWithPupuID, paths_with_pupu_id);
           MAP_UPDATE_ARRAY(ConfigKey::PathPatternsWithTexturePage, paths_with_texture_page);
           MAP_UPDATE_ARRAY(ConfigKey::PathsVector, paths_vector);

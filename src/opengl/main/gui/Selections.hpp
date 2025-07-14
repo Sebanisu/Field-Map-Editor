@@ -65,6 +65,7 @@ enum class ConfigKey
      BatchInputLoadMap,
      BatchOutputSaveMap,
      PathPatternsWithPaletteAndTexturePage,
+     PathPatternsWithPalette,
      PathPatternsWithTexturePage,
      PathPatternsWithPupuID,
      PathPatternsNoPaletteAndTexturePage,
@@ -207,10 +208,12 @@ enum class ConfigKey
                return "paths_no_palette_and_texture_page"sv;
           case ConfigKey::PathPatternsWithPaletteAndTexturePage:
                return "paths_with_palette_and_texture_page"sv;
-          case ConfigKey::PathPatternsWithPupuID:
-               return "paths_with_pupu_id"sv;
+          case ConfigKey::PathPatternsWithPalette:
+               return "paths_with_palette"sv;
           case ConfigKey::PathPatternsWithTexturePage:
                return "paths_with_texture_page"sv;
+          case ConfigKey::PathPatternsWithPupuID:
+               return "paths_with_pupu_id"sv;
           case ConfigKey::PathsVector:
                return "paths_vector"sv;
           case ConfigKey::PathsVectorUpscale:
@@ -352,6 +355,8 @@ struct Selections
      ff_8::filter_old<flatten_type, ff_8::FilterTag::Flatten> batch_flatten_type;
 
      std::vector<std::string>                                 paths_with_palette_and_texture_page;
+
+     std::vector<std::string>                                 paths_with_palette;
 
      std::vector<std::string>                                 paths_with_texture_page;
 

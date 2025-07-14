@@ -473,11 +473,14 @@ struct fmt::formatter<fme::PatternSelector> : fmt::formatter<std::string_view>
                case fme::PatternSelector::PathPatternsWithPaletteAndTexturePage:
                     name = "Path Patterns With Palette And Texture Page"sv;
                     break;
-               case fme::PatternSelector::PathPatternsWithPupuID:
-                    name = "Path Patterns With PupuID"sv;
+               case fme::PatternSelector::PathPatternsWithPalette:
+                    name = "Path Patterns With Palette"sv;
                     break;
                case fme::PatternSelector::PathPatternsWithTexturePage:
                     name = "Path Patterns With Texture Page"sv;
+                    break;
+               case fme::PatternSelector::PathPatternsWithPupuID:
+                    name = "Path Patterns With PupuID"sv;
                     break;
           }
           return fmt::formatter<std::string_view>::format(name, ctx);
