@@ -2323,16 +2323,16 @@ void gui::directory_browser_display()
      const auto            selected_path         = m_directory_browser.GetSelected();
      static constexpr auto noop                  = []([[maybe_unused]] const std::filesystem::path &path) {};
      const auto            process_texture_paths = [&](
-                                          std::string                                                       &target_path,
-                                          auto                                                               path_key,
-                                          std::vector<std::string>                                          &ff8_directory_paths,
-                                          auto                                                               vector_key,
-                                          [[maybe_unused]] std::vector<std::string>                         &target_paths,
-                                          [[maybe_unused]] std::vector<bool>                                &target_paths_enabled,
-                                          [[maybe_unused]] auto                                             &main_filter,
-                                          [[maybe_unused]] auto                                             &other_filter,
-                                          [[maybe_unused]] const std::invocable<std::filesystem::path> auto &has_path_funct,
-                                          [[maybe_unused]] const std::invocable<std::filesystem::path> auto &action) {
+                                          std::string                                                            &target_path,
+                                          auto                                                                    path_key,
+                                          std::vector<std::string>                                               &ff8_directory_paths,
+                                          auto                                                                    vector_key,
+                                          [[maybe_unused]] std::vector<std::string>                              &target_paths,
+                                          [[maybe_unused]] std::vector<std::reference_wrapper<std::vector<bool>>> target_paths_enabled,
+                                          [[maybe_unused]] auto                                                  &main_filter,
+                                          [[maybe_unused]] auto                                                   other_filter,
+                                          [[maybe_unused]] const std::invocable<std::filesystem::path> auto      &has_path_funct,
+                                          [[maybe_unused]] const std::invocable<std::filesystem::path> auto      &action) {
           // Remember the last grabbed path
           target_path = selected_path.string();
           // Save the setting to TOML
@@ -2351,17 +2351,33 @@ void gui::directory_browser_display()
                {
                     // Add matches to the drop-down
                     target_paths.emplace_back(path.string());
-                    bool path_enabled = std::invoke(has_path_funct, path);
-                    target_paths_enabled.emplace_back(path_enabled);
-                    if (path_enabled && !changed)
+                    std::vector<bool> path_values = std::invoke(has_path_funct, path);
+                    for (auto &&[target, value] : std::ranges::views::zip(target_paths_enabled, path_values))
                     {
-                         other_filter.disable();
-                         main_filter.update(path).enable();
-                         std::invoke(action, path);
-                         changed = true;
+                         target.get().emplace_back(value);
+                         if (value && !changed)
+                         {
+                              // needs to be multiple other_filters.
+                              std::apply([](auto... filters) { (filters.get().disable(), ...); }, other_filter);
+                              main_filter.update(path).enable();
+                              std::invoke(action, path);
+                              changed = true;
+                         }
                     }
                }
-               sort_and_remove_duplicates(target_paths, target_paths_enabled);
+               if (std::ranges::size(target_paths_enabled) == 3U)
+               {
+                    sort_and_remove_duplicates(
+                      target_paths, target_paths_enabled[0].get(), target_paths_enabled[1].get(), target_paths_enabled[2].get());
+               }
+               else if (std::ranges::size(target_paths_enabled) == 1U)
+               {
+                    sort_and_remove_duplicates(target_paths, target_paths_enabled.front().get());
+               }
+               else
+               {
+                    throw;
+               }
                if (changed)
                {
                     refresh_render_texture(true);
@@ -2369,8 +2385,8 @@ void gui::directory_browser_display()
           }
      };
 
-     const ff_8::path_search ps           = static_cast<ff_8::path_search>(*m_map_sprite);
-     const auto              has_map_path = [&](const std::filesystem::path &path) -> bool { return ps.has_map_path(path, ".map"); };
+     const ff_8::path_search ps = static_cast<ff_8::path_search>(*m_map_sprite);
+     const auto has_map_path    = [&](const std::filesystem::path &path) -> std::vector<bool> { return { ps.has_map_path(path, ".map") }; };
      switch (m_modified_directory_map)
      {
           case map_directory_mode::ff8_install_directory: {
@@ -2442,15 +2458,18 @@ void gui::directory_browser_display()
                  m_selections->external_textures_directory_paths,
                  []() { return ConfigKey::ExternalTexturesDirectoryPaths; },
                  m_selections->cache_texture_paths,
-                 m_selections->cache_swizzle_paths_enabled,
+                 { std::ref(m_selections->cache_swizzle_paths_enabled),
+                   std::ref(m_selections->cache_swizzle_as_one_image_paths_enabled),
+                   std::ref(m_selections->cache_deswizzle_paths_enabled) },
                  m_map_sprite->filter().swizzle,
-                 m_map_sprite->filter().deswizzle,
-                 [&](const std::filesystem::path &path) -> bool {
+                 std::tuple{ std::ref(m_map_sprite->filter().swizzle_as_one_image), std::ref(m_map_sprite->filter().deswizzle) },
+                 [&](const std::filesystem::path &path) -> std::vector<bool> {
                       // we add the paths to map search for ease of use.
                       m_selections->cache_map_paths.push_back(path.string());
-                      m_selections->cache_map_paths_enabled.push_back(has_map_path(path));
-                      return ps.has_swizzle_path(path, ".png");
-                      return false;
+                      m_selections->cache_map_paths_enabled.push_back(has_map_path(path).front());
+                      return { ps.has_swizzle_path(path, ".png"),
+                               ps.has_swizzle_as_one_image_path(path, ".png"),
+                               ps.has_deswizzle_path(path, ".png") };
                  },
                  noop);
                sort_and_remove_duplicates(m_selections->cache_map_paths, m_selections->cache_map_paths_enabled);
@@ -2463,15 +2482,18 @@ void gui::directory_browser_display()
                  m_selections->external_textures_directory_paths,
                  []() { return ConfigKey::ExternalTexturesDirectoryPaths; },
                  m_selections->cache_texture_paths,
-                 m_selections->cache_deswizzle_paths_enabled,
+                 { std::ref(m_selections->cache_swizzle_paths_enabled),
+                   std::ref(m_selections->cache_swizzle_as_one_image_paths_enabled),
+                   std::ref(m_selections->cache_deswizzle_paths_enabled) },
                  m_map_sprite->filter().deswizzle,
-                 m_map_sprite->filter().swizzle,
-                 [&](const std::filesystem::path &path) -> bool {
+                 std::tuple{ std::ref(m_map_sprite->filter().swizzle_as_one_image), std::ref(m_map_sprite->filter().swizzle) },
+                 [&](const std::filesystem::path &path) -> std::vector<bool> {
                       // we add the paths to map search for ease of use.
                       m_selections->cache_map_paths.push_back(path.string());
-                      m_selections->cache_map_paths_enabled.push_back(has_map_path(path));
-                      return ps.has_deswizzle_path(path, ".png");
-                      return false;
+                      m_selections->cache_map_paths_enabled.push_back(has_map_path(path).front());
+                      return { ps.has_swizzle_path(path, ".png"),
+                               ps.has_swizzle_as_one_image_path(path, ".png"),
+                               ps.has_deswizzle_path(path, ".png") };
                  },
                  noop);
                sort_and_remove_duplicates(m_selections->cache_map_paths, m_selections->cache_map_paths_enabled);
@@ -2484,9 +2506,9 @@ void gui::directory_browser_display()
                  m_selections->external_textures_directory_paths,
                  []() { return ConfigKey::ExternalMapsDirectoryPaths; },
                  m_selections->cache_map_paths,
-                 m_selections->cache_map_paths_enabled,
+                 { std::ref(m_selections->cache_map_paths_enabled) },
                  m_map_sprite->filter().swizzle_map,
-                 m_map_sprite->filter().deswizzle_map,
+                 std::tuple{ std::ref(m_map_sprite->filter().swizzle_as_one_image_map), std::ref(m_map_sprite->filter().deswizzle_map) },
                  has_map_path,
                  [&]([[maybe_unused]] const std::filesystem::path &path) {
                       if (const auto paths = ps.generate_swizzle_map_paths(path, ".map"); !std::ranges::empty(paths))
@@ -2503,9 +2525,9 @@ void gui::directory_browser_display()
                  m_selections->external_textures_directory_paths,
                  []() { return ConfigKey::ExternalMapsDirectoryPaths; },
                  m_selections->cache_map_paths,
-                 m_selections->cache_map_paths_enabled,
+                 { std::ref(m_selections->cache_map_paths_enabled) },
                  m_map_sprite->filter().deswizzle_map,
-                 m_map_sprite->filter().swizzle_map,
+                 std::tuple{ std::ref(m_map_sprite->filter().swizzle_as_one_image_map), std::ref(m_map_sprite->filter().swizzle_map) },
                  has_map_path,
                  [&]([[maybe_unused]] const std::filesystem::path &path) {
                       if (const auto paths = ps.generate_deswizzle_map_paths(path, ".map"); !std::ranges::empty(paths))
@@ -3650,7 +3672,7 @@ bool gui::combo_swizzle_as_one_image_path(ff_8::filter_old<std::filesystem::path
      const auto gcc = fme::GenericComboClassWithFilterAndFixedToggles(
        gui_labels::swizzle_as_one_image_path,
        [this]() { return m_selections->cache_texture_paths; },
-       [this]() { return m_selections->cache_swizzle_paths_enabled; },
+       [this]() { return m_selections->cache_swizzle_as_one_image_paths_enabled; },
        [this]() { return m_selections->cache_texture_paths; },
        [this]() { return m_selections->cache_texture_paths; },
        [&filter]() -> auto & { return filter; },

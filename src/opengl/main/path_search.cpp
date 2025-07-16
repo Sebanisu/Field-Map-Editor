@@ -14,7 +14,7 @@ bool path_search::has_deswizzle_path(const std::filesystem::path &filter_path, c
 }
 bool path_search::has_deswizzle_path(const std::filesystem::path &filter_path, const ff_8::PupuID pupu, const std::string &ext) const
 {
-     return path_search::has_swizzle_path(
+     return path_search::has_path(
        filter_path.string(),
        { .field_name    = field_name,
          .ext           = ext,
@@ -79,7 +79,7 @@ bool path_search::has_swizzle_as_one_image_path(const std::filesystem::path &fil
                }
                for (const auto &palette : palette_set.values())
                {
-                    if (has_swizzle_path(
+                    if (has_path(
                           filter_path.string(),
                           { .field_name    = field_name,
                             .ext           = ext,
@@ -93,23 +93,19 @@ bool path_search::has_swizzle_as_one_image_path(const std::filesystem::path &fil
           }
           return false;
      }() || [&]() {
-          if (has_swizzle_path(
+         return has_path(
                 filter_path.string(),
                 { .field_name    = field_name,
                   .ext           = ext,
                   .language_code = opt_coo.has_value() && opt_coo.value() != open_viii::LangT::generic ? opt_coo : std::nullopt },
-                selections))
-          {
-               return true;
-          }
-          return false;
+                selections);
      }();
 }
 
 bool path_search::has_swizzle_path(const std::filesystem::path &filter_path, const std::uint8_t texture_page, const std::string &ext) const
 {
 
-     return has_swizzle_path(
+     return has_path(
        filter_path.string(),
        { .field_name    = field_name,
          .ext           = ext,
@@ -129,7 +125,7 @@ bool path_search::has_map_path(
        fme::key_value_data{ .field_name    = field_name,
                             .ext           = ext,
                             .language_code = opt_coo.has_value() && opt_coo.value() != open_viii::LangT::generic ? opt_coo : std::nullopt };
-     if (!filter_path.empty() && has_swizzle_path(filter_path.string(), cpm, selections))
+     if (!filter_path.empty() && has_path(filter_path.string(), cpm, selections))
      {
           return true;
      }
@@ -148,7 +144,7 @@ bool path_search::has_swizzle_path(
   std::uint8_t                 palette,
   const std::string           &ext) const
 {
-     return has_swizzle_path(
+     return has_path(
        filter_path.string(),
        { .field_name    = field_name,
          .ext           = ext,
@@ -324,7 +320,7 @@ std::vector<std::filesystem::path> path_search::generate_paths(
      std::vector<std::filesystem::path> paths = {};
      if (!filter_path.empty())
      {
-          paths = generate_swizzle_paths(filter_path, cpm, selections);
+          paths = generate_paths(filter_path, cpm, selections);
      }
      if (!output_pattern.empty())
      {
@@ -345,7 +341,7 @@ std::vector<std::filesystem::path> path_search::generate_paths(
      return paths;
 }
 
-[[nodiscard]] std::vector<std::filesystem::path> path_search::generate_swizzle_paths(
+[[nodiscard]] std::vector<std::filesystem::path> path_search::generate_paths(
   const std::filesystem::path           &field_root,
   fme::key_value_data                    copy_data,
   std::shared_ptr<const fme::Selections> selections)
@@ -414,7 +410,7 @@ std::vector<std::filesystem::path> path_search::generate_paths(
 }
 
 
-[[nodiscard]] bool path_search::has_swizzle_path(
+[[nodiscard]] bool path_search::has_path(
   const std::filesystem::path           &field_root,
   fme::key_value_data                    copy_data,
   std::shared_ptr<const fme::Selections> selections)
@@ -456,17 +452,22 @@ std::vector<std::filesystem::path> path_search::generate_paths(
               })
             || ...);
      };
+
      if (copy_data.pupu_id.has_value())
      {
           return transform_and_find_a_match(selections->patterns_with_pupu_id);
      }
      if (copy_data.texture_page.has_value() && copy_data.palette.has_value())
      {
-          return transform_and_find_a_match(selections->patterns_with_palette_and_texture_page, selections->patterns_base);
+          return transform_and_find_a_match(selections->patterns_with_palette_and_texture_page);
+     }
+     if (copy_data.palette.has_value())
+     {
+          return transform_and_find_a_match(selections->patterns_with_palette);
      }
      if (copy_data.texture_page.has_value())
      {
-          return transform_and_find_a_match(selections->patterns_with_texture_page, selections->patterns_base);
+          return transform_and_find_a_match(selections->patterns_with_texture_page);
      }
      return transform_and_find_a_match(selections->patterns_base);
 }

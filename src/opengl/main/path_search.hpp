@@ -82,29 +82,35 @@ struct path_search
        const std::string         &secondary_output_pattern = "") const;
 
      /**
-      * @brief Generates a list of paths for upscale output based on the provided data.
+      * @brief Generates a list of paths for external textures or map output based on the provided data.
       *
       * @param field_root The root directory for field assets.
       * @param copy_data Data used to determine which keys and values to process.
-      * @return Vector of generated paths for upscale output.
+      * @return Vector of generated paths for external textures or map output.
       */
-     [[nodiscard]] static std::vector<std::filesystem::path> generate_swizzle_paths(
-       const std::filesystem::path           &field_root,
-       fme::key_value_data                    copy_data,
-       std::shared_ptr<const fme::Selections> selections);
-
-
-     [[nodiscard]] static bool has_swizzle_path(
+     [[nodiscard]] static std::vector<std::filesystem::path> generate_paths(
        const std::filesystem::path           &field_root,
        fme::key_value_data                    copy_data,
        std::shared_ptr<const fme::Selections> selections);
 
      /**
-      * @brief Gets a list of base paths for upscaling.
+      * @brief Generates a bool for paths for external textures or map output based on the provided data.
+      *
+      * @param field_root The root directory for field assets.
+      * @param copy_data Data used to determine which keys and values to process.
+      * @return true if found any match for generated paths for textures or map output.
+      */
+     [[nodiscard]] static bool has_path(
+       const std::filesystem::path           &field_root,
+       fme::key_value_data                    copy_data,
+       std::shared_ptr<const fme::Selections> selections);
+
+     /**
+      * @brief Gets a list of base paths for external paths for textures.
       *
       * These paths are determined based on the root and selections provided.
       *
-      * @return Vector of filesystem paths to be used for upscaling.
+      * @return Vector of filesystem paths to be used for external paths for textures.
       */
      [[nodiscard]] static std::vector<std::filesystem::path> get_paths(
        std::shared_ptr<const fme::Selections> selections,

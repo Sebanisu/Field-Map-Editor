@@ -385,8 +385,10 @@ class GenericComboClassWithFilterAndFixedToggles
      template<typename Range>
      auto getNext(const Range &range, const auto &idx) const
      {
+          assert(std::cmp_less(idx, std::ranges::size(range)) && "Index out of range!");
           return std::ranges::next(std::ranges::begin(range), idx);
      }
+
      void renderCheckBox() const
      {
           const auto  _                    = PushPopID();
