@@ -59,7 +59,7 @@ void fme::batch::draw_window()
      const auto pop_visible = glengine::ScopeGuard{ [&selections, &visible, was_visable = visible] {
           if (was_visable != visible)
           {
-               selections->update_configuration_key(ConfigKey::DisplayBatchWindow);
+               selections->update_configuration_key<ConfigKey::DisplayBatchWindow>();
           }
      } };
      const auto end = glengine::ScopeGuard(&ImGui::End);
@@ -94,7 +94,7 @@ void fme::batch::draw_window()
      {
           if (draw_multi_column_list_box("Map List", archives_group->mapdata(), selections->batch_map_list_enabled))
           {
-               selections->update_configuration_key(ConfigKey::BatchMapListEnabled);
+               selections->update_configuration_key<ConfigKey::BatchMapListEnabled>();
           }
      }
      else
@@ -134,7 +134,7 @@ void fme::batch::combo_input_type()
        selections->batch_input_type);
      if (gcc.render())
      {
-          selections->update_configuration_key(ConfigKey::BatchInputType);
+          selections->update_configuration_key<ConfigKey::BatchInputType>();
      }
 }
 
@@ -330,7 +330,7 @@ void fme::batch::save_input_path()
      }
      selections->batch_input_path = m_input_path.data();
      spdlog::info("batch_input_path: {}", selections->batch_input_path);
-     selections->update_configuration_key(ConfigKey::BatchInputPath);
+     selections->update_configuration_key<ConfigKey::BatchInputPath>();
 }
 
 void fme::batch::save_output_path()
@@ -347,7 +347,7 @@ void fme::batch::save_output_path()
      }
      selections->batch_output_path = m_output_path.data();
      spdlog::info("batch_output_path: {}", selections->batch_input_path);
-     selections->update_configuration_key(ConfigKey::BatchOutputPath);
+     selections->update_configuration_key<ConfigKey::BatchOutputPath>();
 }
 
 void fme::batch::checkbox_load_map()
@@ -368,7 +368,7 @@ void fme::batch::checkbox_load_map()
           return;
      }
      spdlog::info("batch_input_load_map: {}", selections->batch_input_load_map);
-     selections->update_configuration_key(ConfigKey::BatchInputLoadMap);
+     selections->update_configuration_key<ConfigKey::BatchInputLoadMap>();
 }
 
 void fme::batch::combo_output_type()
@@ -389,7 +389,7 @@ void fme::batch::combo_output_type()
      {
           return;
      }
-     selections->update_configuration_key(ConfigKey::BatchOutputType);
+     selections->update_configuration_key<ConfigKey::BatchOutputType>();
 }
 
 
@@ -418,7 +418,7 @@ void fme::batch::browse_input_path()
        selections->batch_input_root_path_type);
      if (gcc.render())
      {
-          selections->update_configuration_key(ConfigKey::BatchInputRootPathType);
+          selections->update_configuration_key<ConfigKey::BatchInputRootPathType>();
      }
      if (selections->batch_input_root_path_type != root_path_types::selected_path)
      {
@@ -466,7 +466,7 @@ void fme::batch::browse_output_path()
        selections->batch_output_root_path_type);
      if (gcc.render())
      {
-          selections->update_configuration_key(ConfigKey::BatchOutputRootPathType);
+          selections->update_configuration_key<ConfigKey::BatchOutputRootPathType>();
      }
      if (selections->batch_output_root_path_type != root_path_types::selected_path)
      {
@@ -514,7 +514,7 @@ void fme::batch::checkmark_save_map()
      if (ImGui::Checkbox(gui_labels::save_map_files.data(), &selections->batch_output_save_map) || changed)
      {
           spdlog::info("batch_output_save_map: {}", selections->batch_output_save_map);
-          selections->update_configuration_key(ConfigKey::BatchOutputSaveMap);
+          selections->update_configuration_key<ConfigKey::BatchOutputSaveMap>();
      }
      ImGui::EndDisabled();
 }
@@ -549,7 +549,7 @@ void fme::batch::combo_compact_type()
      {
           return;
      }
-     // selections->update_configuration_key(ConfigKey::BatchCompact);
+     // selections->update_configuration_key<ConfigKey::BatchCompact>();
 }
 void fme::batch::combo_flatten_type()
 {
@@ -594,7 +594,7 @@ void fme::batch::combo_flatten_type()
                return;
           }
      }
-     // selections->update_configuration_key(ConfigKey::BatchFlatten);
+     // selections->update_configuration_key<ConfigKey::BatchFlatten>();
 }
 bool fme::batch::draw_multi_column_list_box(const std::string_view name, const std::vector<std::string> &items, std::vector<bool> &enabled)
 {
@@ -1313,7 +1313,7 @@ fme::batch &fme::batch::operator=(std::weak_ptr<archives_group> new_group)
      if (archives_group && archives_group->mapdata().size() != selections->batch_map_list_enabled.size())
      {
           selections->batch_map_list_enabled.resize(archives_group->mapdata().size(), true);
-          selections->update_configuration_key(ConfigKey::BatchMapListEnabled);
+          selections->update_configuration_key<ConfigKey::BatchMapListEnabled>();
      }
      return *this;
 }

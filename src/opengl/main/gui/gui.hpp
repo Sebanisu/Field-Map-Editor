@@ -172,13 +172,13 @@ struct gui
      bool combo_swizzle_path(ff_8::filter_old<std::filesystem::path, ff_8::FilterTag::Swizzle> &filter) const;
      void combo_swizzle_as_one_image_path();
      bool combo_swizzle_as_one_image_path(ff_8::filter_old<std::filesystem::path, ff_8::FilterTag::SwizzleAsOneImage> &filter) const;
-     
-     void                    combo_deswizzle_path();
-     bool                    combo_deswizzle_path(ff_8::filter_old<std::filesystem::path, ff_8::FilterTag::Deswizzle> &filter) const;
-     void                    combo_swizzle_map_path();
-     bool                    combo_swizzle_map_path(ff_8::filter_old<std::filesystem::path, ff_8::FilterTag::SwizzleMap> &filter) const;
-     void                    combo_deswizzle_map_path();
-     bool                    combo_deswizzle_map_path(ff_8::filter_old<std::filesystem::path, ff_8::FilterTag::DeswizzleMap> &filter) const;
+
+     void combo_deswizzle_path();
+     bool combo_deswizzle_path(ff_8::filter_old<std::filesystem::path, ff_8::FilterTag::Deswizzle> &filter) const;
+     void combo_swizzle_map_path();
+     bool combo_swizzle_map_path(ff_8::filter_old<std::filesystem::path, ff_8::FilterTag::SwizzleMap> &filter) const;
+     void combo_deswizzle_map_path();
+     bool combo_deswizzle_map_path(ff_8::filter_old<std::filesystem::path, ff_8::FilterTag::DeswizzleMap> &filter) const;
      const open_viii::LangT &get_coo() const;
      file_dialog_mode        m_file_dialog_mode       = {};
      map_directory_mode      m_modified_directory_map = {};
@@ -251,7 +251,8 @@ struct gui
      void refresh_palette(std::uint8_t palette);
      void refresh_render_texture(bool reload_textures = false);
      void refresh_coo();
-     [[nodiscard]] static std::optional<std::string> handle_path_deletion(std::vector<std::string> &paths_vector, std::ptrdiff_t offset);
+     [[nodiscard]] static std::optional<std::string>
+       handle_path_deletion(std::vector<std::string> &ff8_directory_paths, std::ptrdiff_t offset);
      [[nodiscard]] static std::string
        find_replacement_path_value(const std::vector<std::string> &paths, const std::vector<bool> &paths_enabled);
      [[nodiscard]] static std::ptrdiff_t add_delete_button(const std::string &path, const std::vector<std::string> &paths);

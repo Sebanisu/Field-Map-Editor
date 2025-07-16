@@ -59,7 +59,7 @@ void save_modified_map(
      return { tile_const.x(), tile_const.y() };
 }
 
-[[nodiscard]] static inline glm::uvec2 source_coords_for_upscale(const open_viii::graphics::background::is_tile auto &tile_const)
+[[nodiscard]] static inline glm::uvec2 source_coords_for_swizzle(const open_viii::graphics::background::is_tile auto &tile_const)
 {
      return { tile_const.source_x(), tile_const.source_y() };
 }

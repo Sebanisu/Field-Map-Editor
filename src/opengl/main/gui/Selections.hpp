@@ -36,7 +36,8 @@ enum class ConfigKey
      DrawTexturePageGrid,
      DrawTileConflictRects,
      DisplayBatchWindow,
-     DisplayImportImageWindow,
+     // TODO fix import image
+     // DisplayImportImageWindow,
      DisplayImportImage,
      ForceReloadingOfTextures,
      ForceRenderingOfMap,
@@ -68,14 +69,12 @@ enum class ConfigKey
      PathPatternsWithPalette,
      PathPatternsWithTexturePage,
      PathPatternsWithPupuID,
-     PathPatternsNoPaletteAndTexturePage,
-     PathPatternsCommonUpscale,
-     PathPatternsCommonUpscaleForMaps,
-     PathsVector,
-     PathsVectorUpscale,
-     PathsVectorDeswizzle,
-     PathsVectorUpscaleMap,
-     PathsVectorDeswizzleMap,
+     PatternsBase,
+     PatternsCommonPrefixes,
+     PatternsCommonPrefixesForMaps,
+     FF8DirectoryPaths,
+     ExternalTexturesDirectoryPaths,
+     ExternalMapsDirectoryPaths,
      // BatchCompact,
      BatchCompactType,
      BatchCompactEnabled,
@@ -87,16 +86,14 @@ enum class ConfigKey
      OutputImagePath,
      OutputMimPath,
      OutputMapPath,
-     UpscalePathsIndex,
+     SwizzlePathsIndex,
 
-     CacheUpscalePaths,
-     CacheUpscalePathsEnabled,
-     CacheDeswizzleMapPaths,
-     CacheDeswizzlePaths,
+     CacheTexturePaths,
+     CacheSwizzlePathsEnabled,
+     CacheSwizzleAsOneImagePathsEnabled,
      CacheDeswizzlePathsEnabled,
-     CacheUpscaleMapPaths,
-     CacheUpscaleMapPathsEnabled,
-     CacheDeswizzleMapPathsEnabled,
+     CacheMapPaths,
+     CacheMapPathsEnabled,
 
      // Add more as needed
      All,
@@ -160,8 +157,9 @@ enum class ConfigKey
                return "selections_display_history_window"sv;
           case ConfigKey::DisplayImportImage:
                return "selections_display_import_image"sv;
-          case ConfigKey::DisplayImportImageWindow:
-               return "selections_display_import_image_window"sv;
+               // todo fix import window
+          // case ConfigKey::DisplayImportImageWindow:
+          //      return "selections_display_import_image_window"sv;
           case ConfigKey::ForceReloadingOfTextures:
                return "selections_force_reloading_of_textures"sv;
           case ConfigKey::ForceRenderingOfMap:
@@ -200,30 +198,26 @@ enum class ConfigKey
                return "selections_output_swizzle_pattern"sv;
           case ConfigKey::Palette:
                return "selections_palette"sv;
-          case ConfigKey::PathPatternsCommonUpscale:
-               return "paths_common_upscale"sv;
-          case ConfigKey::PathPatternsCommonUpscaleForMaps:
-               return "paths_common_upscale_for_maps"sv;
-          case ConfigKey::PathPatternsNoPaletteAndTexturePage:
-               return "paths_no_palette_and_texture_page"sv;
+          case ConfigKey::PatternsCommonPrefixes:
+               return "patterns_common_prefixes"sv;
+          case ConfigKey::PatternsCommonPrefixesForMaps:
+               return "patterns_common_prefixes_for_maps"sv;
+          case ConfigKey::PatternsBase:
+               return "patterns_base"sv;
           case ConfigKey::PathPatternsWithPaletteAndTexturePage:
-               return "paths_with_palette_and_texture_page"sv;
+               return "patterns_with_palette_and_texture_page"sv;
           case ConfigKey::PathPatternsWithPalette:
-               return "paths_with_palette"sv;
+               return "patterns_with_palette"sv;
           case ConfigKey::PathPatternsWithTexturePage:
-               return "paths_with_texture_page"sv;
+               return "patterns_with_texture_page"sv;
           case ConfigKey::PathPatternsWithPupuID:
-               return "paths_with_pupu_id"sv;
-          case ConfigKey::PathsVector:
-               return "paths_vector"sv;
-          case ConfigKey::PathsVectorUpscale:
-               return "custom_upscale_paths_vector"sv;
-          case ConfigKey::PathsVectorDeswizzle:
-               return "paths_vector_deswizzle"sv;
-          case ConfigKey::PathsVectorUpscaleMap:
-               return "custom_upscale_map_paths_vector"sv;
-          case ConfigKey::PathsVectorDeswizzleMap:
-               return "paths_vector_deswizzle_map"sv;
+               return "patterns_with_pupu_id"sv;
+          case ConfigKey::FF8DirectoryPaths:
+               return "ff8_directory_paths"sv;
+          case ConfigKey::ExternalTexturesDirectoryPaths:
+               return "external_textures_directory_paths"sv;
+          case ConfigKey::ExternalMapsDirectoryPaths:
+               return "external_maps_directory_paths"sv;
           case ConfigKey::RenderImportedImage:
                return "selections_render_imported_image"sv;
           case ConfigKey::SelectedTile:
@@ -236,27 +230,29 @@ enum class ConfigKey
                return "selections_swizzle_path"sv;
           case ConfigKey::TileSizeValue:
                return "selections_tile_size_value"sv;
-          case ConfigKey::UpscalePathsIndex:
-               return "upscale_paths_index"sv;
+          case ConfigKey::SwizzlePathsIndex:
+               return "swizzle_paths_index"sv;
           case ConfigKey::WindowHeight:
                return "selections_window_height"sv;
           case ConfigKey::WindowWidth:
                return "selections_window_width"sv;
-          case ConfigKey::CacheUpscalePaths:
-               return "selections_cache_upscale_paths"sv;
-          case ConfigKey::CacheUpscalePathsEnabled:
-               return "selections_cache_upscale_paths_enabled"sv;
-          case ConfigKey::CacheDeswizzlePaths:
+          case ConfigKey::CacheTexturePaths:
+               return "selections_cache_swizzle_paths"sv;
+          case ConfigKey::CacheSwizzlePathsEnabled:
+               return "selections_cache_swizzle_paths_enabled"sv;
+          case ConfigKey::CacheSwizzleAsOneImagePathsEnabled:
+               return "selections_cache_swizzle_as_one_image_paths_enabled"sv;
+          case ConfigKey::CacheTexturePaths:
                return "selections_cache_deswizzle_paths"sv;
           case ConfigKey::CacheDeswizzlePathsEnabled:
                return "selections_cache_deswizzle_paths_enabled"sv;
-          case ConfigKey::CacheUpscaleMapPaths:
-               return "selections_cache_upscale_map_paths"sv;
-          case ConfigKey::CacheUpscaleMapPathsEnabled:
-               return "selections_cache_upscale_map_paths_enabled"sv;
-          case ConfigKey::CacheDeswizzleMapPaths:
+          case ConfigKey::CacheMapPaths:
+               return "selections_cache_swizzle_map_paths"sv;
+          case ConfigKey::CacheMapPathsEnabled:
+               return "selections_cache_swizzle_map_paths_enabled"sv;
+          case ConfigKey::CacheMapPaths:
                return "selections_cache_deswizzle_map_paths"sv;
-          case ConfigKey::CacheDeswizzleMapPathsEnabled:
+          case ConfigKey::CacheMapPathsEnabled:
                return "selections_cache_deswizzle_map_paths_enabled"sv;
 
 
@@ -299,7 +295,7 @@ struct Selections
      open_viii::LangT              coo;///< Selected language.
      draw_mode                     draw;///< Current drawing mode.
      int                           selected_tile;///< Index of the currently selected tile.
-     int                           upscale_paths_index;
+     int                           swizzle_paths_index;
      std::int32_t                  window_width;///< Current window width.
      std::int32_t                  window_height;///< Current window height.
      tile_sizes                    tile_size_value;///< Current tile size setting.
@@ -353,36 +349,86 @@ struct Selections
 
      ff_8::filter_old<compact_type, ff_8::FilterTag::Compact> batch_compact_type;
      ff_8::filter_old<flatten_type, ff_8::FilterTag::Flatten> batch_flatten_type;
+     /// @brief File path patterns that require both a palette and a texture page to be substituted.
+     std::vector<std::string>                                 patterns_with_palette_and_texture_page;
 
-     std::vector<std::string>                                 paths_with_palette_and_texture_page;
+     /// @brief File path patterns that require only a palette to be substituted.
+     std::vector<std::string>                                 patterns_with_palette;
 
-     std::vector<std::string>                                 paths_with_palette;
+     /// @brief File path patterns that require only a texture page to be substituted.
+     std::vector<std::string>                                 patterns_with_texture_page;
 
-     std::vector<std::string>                                 paths_with_texture_page;
+     /// @brief File path patterns that require a PUPU ID to be substituted.
+     std::vector<std::string>                                 patterns_with_pupu_id;
 
-     std::vector<std::string>                                 paths_with_pupu_id;
+     /// @brief File path patterns that use no additional substitution values (e.g., no palette or texture page).
+     std::vector<std::string>                                 patterns_base;
 
-     std::vector<std::string>                                 paths_no_palette_and_texture_page;
+     /// @brief Common directory prefixes prepended to pattern paths when generating full file paths.
+     std::vector<std::string>                                 patterns_common_prefixes;
 
-     std::vector<std::string>                                 paths_common_upscale;
+     /// @brief Additional directory prefixes used specifically when searching for map files. Combined with patterns_common_prefixes.
+     std::vector<std::string>                                 patterns_common_prefixes_for_maps;
+
+     /// @brief List of base directories where FF8 game data is installed or extracted.
+     /// This is user-configurable, but a default set of paths is provided initially.
+     /// These directories are also included in pattern-based searches, since modded files are often placed here.
+     std::vector<std::string>                                 ff8_directory_paths;
+
+     /// @brief User-configured root directories for searching external texture files using path patterns.
+     /// These directories serve as the starting point for pattern-based texture file lookups.
+     std::vector<std::string>                                 external_textures_directory_paths;
+
+     /// @brief User-configured root directories for searching external map files using path patterns.
+     /// These directories serve as the starting point for pattern-based map file lookups.
+     std::vector<std::string>                                 external_maps_directory_paths;
 
 
-     std::vector<std::string>                                 paths_vector;
-     std::vector<std::string>                                 paths_vector_swizzle;
-     std::vector<std::string>                                 paths_vector_deswizzle;
-     std::vector<std::string>                                 paths_vector_swizzle_map;
-     std::vector<std::string>                                 paths_vector_deswizzle_map;
+     /**
+      * @brief Paths to cache directories for texture-related operations.
+      *
+      * Used for swizzle, deswizzle, and swizzle-as-one-image processing.
+      * Each path corresponds by index to entries in the enabled vectors below.
+      */
+     std::vector<std::string>                                 cache_texture_paths;
 
-     std::vector<std::string>                                 paths_common_upscale_for_maps;
-
-     std::vector<std::string>                                 cache_swizzle_paths;
+     /**
+      * @brief Indicates if swizzle files were detected in each texture cache path.
+      *
+      * Matches size and index with `cache_texture_paths`.
+      */
      std::vector<bool>                                        cache_swizzle_paths_enabled;
-     std::vector<std::string>                                 cache_deswizzle_paths;
+
+     /**
+      * @brief Indicates if swizzle-as-one-image files were detected in each texture cache path.
+      *
+      * Matches size and index with `cache_texture_paths`.
+      */
+     std::vector<bool>                                        cache_swizzle_as_one_image_paths_enabled;
+
+     /**
+      * @brief Indicates if deswizzle files were detected in each texture cache path.
+      *
+      * Matches size and index with `cache_texture_paths`.
+      */
      std::vector<bool>                                        cache_deswizzle_paths_enabled;
-     std::vector<std::string>                                 cache_swizzle_map_paths;
-     std::vector<bool>                                        cache_swizzle_map_paths_enabled;
-     std::vector<std::string>                                 cache_deswizzle_map_paths;
-     std::vector<bool>                                        cache_deswizzle_map_paths_enabled;
+
+     /**
+      * @brief Indicates if any map files were detected in each map cache path.
+      *
+      * Matches size and index with `cache_map_paths`.
+      */
+     std::vector<bool>                                        cache_map_paths_enabled;
+
+
+     /**
+      * @brief Paths to cache directories for map-related operations.
+      *
+      * Used for both swizzle and deswizzle map processing.
+      * Each path corresponds by index to entries in the map enabled vector.
+      */
+     std::vector<std::string>                                 cache_map_paths;
+
 
      /**
       * @brief Constructs a Selections object with default values.
@@ -396,12 +442,18 @@ struct Selections
       * This function must be rerun if the FF8 path changes, as the presence and location
       * of FFNx components are path-dependent. It reads configuration from "FFNx.toml".
       */
-     void               refresh_ffnx_paths();
+     void refresh_ffnx_paths();
 
-     void               update_configuration() const;
+     void update_configuration() const;
 
 
-     void               update_configuration_key(ConfigKey key) const;
+     template<ConfigKey... keys>
+     void update_configuration_key() const
+     {
+          Configuration config{};
+          update<keys...>(config);
+          config.save();
+     }
 
      static inline bool has_balanced_braces([[maybe_unused]] const std::string_view s)
      {
@@ -444,6 +496,28 @@ struct Selections
           //      }
           // }
           return true;
+     }
+
+   private:
+     template<ConfigKey K>
+     void load(const Configuration &) = delete;// delete fine for load because all defined and used in Selections
+
+     template<ConfigKey... Keys>
+          requires(sizeof...(Keys) > 1U)
+     void load(const Configuration &config)
+     {
+          (load<Keys>(config), ...);
+     }
+
+     template<ConfigKey K>
+     void update(Configuration &)
+       const;// can't delete or else other cpp can't find the functions in Selections.cpp will get linker errors if missing.
+
+     template<ConfigKey... Keys>
+          requires(sizeof...(Keys) > 1U)
+     void update(Configuration &config) const
+     {
+          (update<Keys>(config), ...);
      }
 };
 }// namespace fme

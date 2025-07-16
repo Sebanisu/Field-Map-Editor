@@ -167,8 +167,8 @@ struct [[nodiscard]] map_sprite// final
      [[nodiscard]] std::vector<std::future<void>>
        save_combined_swizzle_texture(const std::string &keyed_string, const std::string &selected_path);
      [[nodiscard]] std::vector<std::future<void>> save_pupu_textures(const std::string &keyed_string, const std::string &selected_path);
-     [[nodiscard]] std::future<std::future<void>> load_upscale_textures(std::uint8_t texture_page, std::uint8_t palette) const;
-     [[nodiscard]] std::future<std::future<void>> load_upscale_textures(std::uint8_t texture_page) const;
+     [[nodiscard]] std::future<std::future<void>> load_swizzle_textures(std::uint8_t texture_page, std::uint8_t palette) const;
+     [[nodiscard]] std::future<std::future<void>> load_swizzle_textures(std::uint8_t texture_page) const;
      [[nodiscard]] std::future<std::future<void>>
        load_swizzle_as_one_image_textures(std::optional<std::uint8_t> palette = std::nullopt) const;
      [[nodiscard]] std::future<std::future<void>> load_deswizzle_textures(const ff_8::PupuID pupu, const size_t pos) const;
@@ -501,7 +501,7 @@ struct [[nodiscard]] map_sprite// final
                }
                if (m_filters.swizzle.enabled())
                {
-                    return to_vec2(ff_8::source_coords_for_upscale(tile_const));
+                    return to_vec2(ff_8::source_coords_for_swizzle(tile_const));
                }
                if (m_filters.deswizzle.enabled())
                {

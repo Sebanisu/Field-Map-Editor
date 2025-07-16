@@ -277,7 +277,7 @@ void map_sprite::queue_texture_loading() const
                     // Schedule upscale texture loads for each texture page
                     for (const auto &texture_page : m_all_unique_values_and_strings.texture_page_id().values())
                     {
-                         future_of_futures.push_back(load_upscale_textures(texture_page, palette));
+                         future_of_futures.push_back(load_swizzle_textures(texture_page, palette));
                     }
                }
                else
@@ -298,7 +298,7 @@ void map_sprite::queue_texture_loading() const
      {
           for (const auto &texture_page : m_all_unique_values_and_strings.texture_page_id().values())
           {
-               future_of_futures.push_back(load_upscale_textures(texture_page));
+               future_of_futures.push_back(load_swizzle_textures(texture_page));
           }
      }
 
@@ -408,7 +408,7 @@ std::future<std::future<void>> map_sprite::load_deswizzle_textures(const ff_8::P
 }
 
 
-std::future<std::future<void>> map_sprite::load_upscale_textures(std::uint8_t texture_page, std::uint8_t palette) const
+std::future<std::future<void>> map_sprite::load_swizzle_textures(std::uint8_t texture_page, std::uint8_t palette) const
 {
      const std::size_t pos = std::size_t{ texture_page } * MAX_PALETTES + palette;
      if (pos >= MAX_TEXTURES)
@@ -428,7 +428,7 @@ std::future<std::future<void>> map_sprite::load_upscale_textures(std::uint8_t te
          &(m_texture->at(pos)), fme::generate_swizzle_paths(std::move(selections), *this, texture_page, palette) }) };
 }
 
-std::future<std::future<void>> map_sprite::load_upscale_textures(std::uint8_t texture_page) const
+std::future<std::future<void>> map_sprite::load_swizzle_textures(std::uint8_t texture_page) const
 {
      const std::size_t pos = START_OF_NO_PALETTE_INDEX + texture_page;
      if (pos >= MAX_TEXTURES)

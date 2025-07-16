@@ -54,9 +54,9 @@ static const auto                                          m_tests = std::to_arr
           case fme::PatternSelector::OutputMapPatternForSwizzle:
           case fme::PatternSelector::OutputMapPatternForDeswizzle:
                return fme::custom_paths_window::vector_or_string_t::string;
-          case fme::PatternSelector::PathPatternsCommonUpscale:
-          case fme::PatternSelector::PathPatternsCommonUpscaleForMaps:
-          case fme::PatternSelector::PathPatternsNoPaletteAndTexturePage:
+          case fme::PatternSelector::PatternsCommonPrefixes:
+          case fme::PatternSelector::PatternsCommonPrefixesForMaps:
+          case fme::PatternSelector::PatternsBase:
           case fme::PatternSelector::PathPatternsWithPaletteAndTexturePage:
           case fme::PatternSelector::PathPatternsWithPalette:
           case fme::PatternSelector::PathPatternsWithTexturePage:
@@ -83,21 +83,21 @@ static const auto                                          m_tests = std::to_arr
                return &selections->output_map_pattern_for_swizzle;
           case fme::PatternSelector::OutputMapPatternForDeswizzle:
                return &selections->output_map_pattern_for_deswizzle;
-          case fme::PatternSelector::PathPatternsCommonUpscale:
-               return get_current_string_value_from_index(selections->paths_common_upscale, selections->current_pattern_index);
-          case fme::PatternSelector::PathPatternsCommonUpscaleForMaps:
-               return get_current_string_value_from_index(selections->paths_common_upscale_for_maps, selections->current_pattern_index);
-          case fme::PatternSelector::PathPatternsNoPaletteAndTexturePage:
-               return get_current_string_value_from_index(selections->paths_no_palette_and_texture_page, selections->current_pattern_index);
+          case fme::PatternSelector::PatternsCommonPrefixes:
+               return get_current_string_value_from_index(selections->patterns_common_prefixes, selections->current_pattern_index);
+          case fme::PatternSelector::PatternsCommonPrefixesForMaps:
+               return get_current_string_value_from_index(selections->patterns_common_prefixes_for_maps, selections->current_pattern_index);
+          case fme::PatternSelector::PatternsBase:
+               return get_current_string_value_from_index(selections->patterns_base, selections->current_pattern_index);
           case fme::PatternSelector::PathPatternsWithPaletteAndTexturePage:
                return get_current_string_value_from_index(
-                 selections->paths_with_palette_and_texture_page, selections->current_pattern_index);
+                 selections->patterns_with_palette_and_texture_page, selections->current_pattern_index);
           case fme::PatternSelector::PathPatternsWithPalette:
-               return get_current_string_value_from_index(selections->paths_with_palette, selections->current_pattern_index);
+               return get_current_string_value_from_index(selections->patterns_with_palette, selections->current_pattern_index);
           case fme::PatternSelector::PathPatternsWithTexturePage:
-               return get_current_string_value_from_index(selections->paths_with_texture_page, selections->current_pattern_index);
+               return get_current_string_value_from_index(selections->patterns_with_texture_page, selections->current_pattern_index);
           case fme::PatternSelector::PathPatternsWithPupuID:
-               return get_current_string_value_from_index(selections->paths_with_pupu_id, selections->current_pattern_index);
+               return get_current_string_value_from_index(selections->patterns_with_pupu_id, selections->current_pattern_index);
      }
      return nullptr;
 }
@@ -118,20 +118,20 @@ static const auto                                          m_tests = std::to_arr
           case fme::PatternSelector::OutputMapPatternForSwizzle:
           case fme::PatternSelector::OutputMapPatternForDeswizzle:
                return nullptr;
-          case fme::PatternSelector::PathPatternsCommonUpscale:
-               return &selections->paths_common_upscale;
-          case fme::PatternSelector::PathPatternsCommonUpscaleForMaps:
-               return &selections->paths_common_upscale_for_maps;
-          case fme::PatternSelector::PathPatternsNoPaletteAndTexturePage:
-               return &selections->paths_no_palette_and_texture_page;
+          case fme::PatternSelector::PatternsCommonPrefixes:
+               return &selections->patterns_common_prefixes;
+          case fme::PatternSelector::PatternsCommonPrefixesForMaps:
+               return &selections->patterns_common_prefixes_for_maps;
+          case fme::PatternSelector::PatternsBase:
+               return &selections->patterns_base;
           case fme::PatternSelector::PathPatternsWithPaletteAndTexturePage:
-               return &selections->paths_with_palette_and_texture_page;
+               return &selections->patterns_with_palette_and_texture_page;
           case fme::PatternSelector::PathPatternsWithPalette:
-               return &selections->paths_with_palette;
+               return &selections->patterns_with_palette;
           case fme::PatternSelector::PathPatternsWithTexturePage:
-               return &selections->paths_with_texture_page;
+               return &selections->patterns_with_texture_page;
           case fme::PatternSelector::PathPatternsWithPupuID:
-               return &selections->paths_with_pupu_id;
+               return &selections->patterns_with_pupu_id;
      }
      return nullptr;
 }
@@ -213,9 +213,9 @@ void fme::custom_paths_window::populate_test_output() const
                                             PatternSelector::OutputDeswizzlePattern,
                                             PatternSelector::OutputMapPatternForSwizzle,
                                             PatternSelector::OutputMapPatternForDeswizzle,
-                                            PatternSelector::PathPatternsCommonUpscale,
-                                            PatternSelector::PathPatternsCommonUpscaleForMaps,
-                                            PatternSelector::PathPatternsNoPaletteAndTexturePage,
+                                            PatternSelector::PatternsCommonPrefixes,
+                                            PatternSelector::PatternsCommonPrefixesForMaps,
+                                            PatternSelector::PatternsBase,
                                             PatternSelector::PathPatternsWithPaletteAndTexturePage,
                                             PatternSelector::PathPatternsWithPalette,
                                             PatternSelector::PathPatternsWithTexturePage,
@@ -231,8 +231,8 @@ void fme::custom_paths_window::populate_test_output() const
      {
           selections->current_pattern_index = -1;
           populate_input_pattern();
-          selections->update_configuration_key(ConfigKey::CurrentPattern);
-          selections->update_configuration_key(ConfigKey::CurrentPatternIndex);
+          selections->update_configuration_key<ConfigKey::CurrentPattern>();
+          selections->update_configuration_key<ConfigKey::CurrentPatternIndex>();
           return true;
      }
      return false;
@@ -253,37 +253,37 @@ void fme::custom_paths_window::save_pattern() const
      switch (selections->current_pattern)
      {
           case PatternSelector::OutputSwizzlePattern:
-               selections->update_configuration_key(ConfigKey::OutputSwizzlePattern);
+               selections->update_configuration_key<ConfigKey::OutputSwizzlePattern>();
                break;
           case PatternSelector::OutputDeswizzlePattern:
-               selections->update_configuration_key(ConfigKey::OutputDeswizzlePattern);
+               selections->update_configuration_key<ConfigKey::OutputDeswizzlePattern>();
                break;
           case PatternSelector::OutputMapPatternForSwizzle:
-               selections->update_configuration_key(ConfigKey::OutputMapPatternForSwizzle);
+               selections->update_configuration_key<ConfigKey::OutputMapPatternForSwizzle>();
                break;
           case PatternSelector::OutputMapPatternForDeswizzle:
-               selections->update_configuration_key(ConfigKey::OutputMapPatternForDeswizzle);
+               selections->update_configuration_key<ConfigKey::OutputMapPatternForDeswizzle>();
                break;
-          case fme::PatternSelector::PathPatternsCommonUpscale:
-               selections->update_configuration_key(ConfigKey::PathPatternsCommonUpscale);
+          case fme::PatternSelector::PatternsCommonPrefixes:
+               selections->update_configuration_key<ConfigKey::PatternsCommonPrefixes>();
                break;
-          case fme::PatternSelector::PathPatternsCommonUpscaleForMaps:
-               selections->update_configuration_key(ConfigKey::PathPatternsCommonUpscaleForMaps);
+          case fme::PatternSelector::PatternsCommonPrefixesForMaps:
+               selections->update_configuration_key<ConfigKey::PatternsCommonPrefixesForMaps>();
                break;
-          case fme::PatternSelector::PathPatternsNoPaletteAndTexturePage:
-               selections->update_configuration_key(ConfigKey::PathPatternsNoPaletteAndTexturePage);
+          case fme::PatternSelector::PatternsBase:
+               selections->update_configuration_key<ConfigKey::PatternsBase>();
                break;
           case fme::PatternSelector::PathPatternsWithPaletteAndTexturePage:
-               selections->update_configuration_key(ConfigKey::PathPatternsWithPaletteAndTexturePage);
+               selections->update_configuration_key<ConfigKey::PathPatternsWithPaletteAndTexturePage>();
                break;
           case fme::PatternSelector::PathPatternsWithPalette:
-               selections->update_configuration_key(ConfigKey::PathPatternsWithPalette);
+               selections->update_configuration_key<ConfigKey::PathPatternsWithPalette>();
                break;
           case fme::PatternSelector::PathPatternsWithTexturePage:
-               selections->update_configuration_key(ConfigKey::PathPatternsWithTexturePage);
+               selections->update_configuration_key<ConfigKey::PathPatternsWithTexturePage>();
                break;
           case fme::PatternSelector::PathPatternsWithPupuID:
-               selections->update_configuration_key(ConfigKey::PathPatternsWithPupuID);
+               selections->update_configuration_key<ConfigKey::PathPatternsWithPupuID>();
                break;
      }
 }
@@ -380,7 +380,7 @@ void fme::custom_paths_window::save_pattern() const
                     if (ImGui::Selectable(str.c_str()))
                     {
                          selections->current_pattern_index = static_cast<int>(index);
-                         selections->update_configuration_key(ConfigKey::CurrentPatternIndex);
+                         selections->update_configuration_key<ConfigKey::CurrentPatternIndex>();
                          populate_input_pattern();
                          r_val = true;
                     }
@@ -407,7 +407,7 @@ void fme::custom_paths_window::save_pattern() const
                if (ImGui::Button(fmt::format("{}##edit_{}", ICON_FA_PEN, index).c_str()))
                {
                     selections->current_pattern_index = static_cast<int>(index);
-                    selections->update_configuration_key(ConfigKey::CurrentPatternIndex);
+                    selections->update_configuration_key<ConfigKey::CurrentPatternIndex>();
                     populate_input_pattern();
                     r_val = true;
                }
@@ -421,7 +421,7 @@ void fme::custom_paths_window::save_pattern() const
                if (ImGui::Button(fmt::format("{}##cancel_{}", ICON_FA_XMARK, index).c_str()))
                {
                     selections->current_pattern_index = -1;
-                    selections->update_configuration_key(ConfigKey::CurrentPatternIndex);
+                    selections->update_configuration_key<ConfigKey::CurrentPatternIndex>();
                     std::ranges::fill(m_input_pattern_string, '\0');
                     r_val = true;
                }
@@ -466,7 +466,7 @@ void fme::custom_paths_window::save_pattern() const
           {
                mut_vptr->emplace_back();
                selections->current_pattern_index = static_cast<int>(std::ranges::ssize(*mut_vptr) - 1);
-               selections->update_configuration_key(ConfigKey::CurrentPatternIndex);
+               selections->update_configuration_key<ConfigKey::CurrentPatternIndex>();
                populate_input_pattern();
                save_pattern();
                r_val = true;
@@ -493,13 +493,13 @@ void fme::custom_paths_window::save_pattern() const
                if (selections->current_pattern_index == static_cast<int>(delete_me.value()))
                {
                     selections->current_pattern_index = -1;
-                    selections->update_configuration_key(ConfigKey::CurrentPatternIndex);
+                    selections->update_configuration_key<ConfigKey::CurrentPatternIndex>();
                     std::ranges::fill(m_input_pattern_string, '\0');
                }
                else if (selections->current_pattern_index > static_cast<int>(delete_me.value()))
                {
                     selections->current_pattern_index--;
-                    selections->update_configuration_key(ConfigKey::CurrentPatternIndex);
+                    selections->update_configuration_key<ConfigKey::CurrentPatternIndex>();
                }
                auto iter = mut_vptr->begin();
                std::ranges::advance(iter, delete_me.value());
@@ -772,7 +772,7 @@ void fme::custom_paths_window::render() const
      const auto pop_visible = glengine::ScopeGuard{ [&selections, &visible, was_visable = visible] {
           if (was_visable != visible)
           {
-               selections->update_configuration_key(ConfigKey::DisplayCustomPathsWindow);
+               selections->update_configuration_key<ConfigKey::DisplayCustomPathsWindow>();
           }
      } };
      const auto pop_end = glengine::ScopeGuard(&ImGui::End);

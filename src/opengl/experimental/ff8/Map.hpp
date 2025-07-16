@@ -109,21 +109,21 @@ class Map
      {
      }
      Map(const Fields &, std::filesystem::path swizzle_path)
-       : m_upscale_path(std::move(swizzle_path))
+       : m_swizzle_path(std::move(swizzle_path))
      {
           if (std::empty(GetMim().path) || std::empty(GetMapHistory().path))
           {
                return;
           }
-          if (!std::ranges::empty(m_upscale_path))
+          if (!std::ranges::empty(m_swizzle_path))
           {
                const auto stem = std::filesystem::path(GetMapHistory().path).parent_path().stem();
-               m_upscale_path  = (std::filesystem::path(m_upscale_path) / stem.string().substr(0, 2) / stem).string();
-               spdlog::debug("Swizzle Location: \"{}\"", m_upscale_path.string());
+               m_swizzle_path  = (std::filesystem::path(m_swizzle_path) / stem.string().substr(0, 2) / stem).string();
+               spdlog::debug("Swizzle Location: \"{}\"", m_swizzle_path.string());
           }
           spdlog::debug("Loaded Map: \"{}\"", GetMapHistory().path);
           spdlog::debug("Begin Loading Textures from Mim.");
-          m_upscale_delayed_textures = LoadTextures(m_upscale_path);
+          m_swizzle_delayed_textures = LoadTextures(m_swizzle_path);
           visit_unsorted_unfiltered_tiles();
           const auto count            = visit_unsorted_unfiltered_tiles_count();
           m_tile_button_state         = std::vector<bool>(count, false);
@@ -132,11 +132,11 @@ class Map
      }
      void on_update(float ts) const
      {
-          if (GetMim().on_update() || m_upscale_delayed_textures.on_update())
+          if (GetMim().on_update() || m_swizzle_delayed_textures.on_update())
           {
-               if (!std::ranges::empty(m_upscale_path))
+               if (!std::ranges::empty(m_swizzle_path))
                {
-                    const auto current_max = (std::ranges::max_element)(*m_upscale_delayed_textures.textures,
+                    const auto current_max = (std::ranges::max_element)(*m_swizzle_delayed_textures.textures,
                                                                         {},
                                                                         [](const glengine::Texture &texture) { return texture.height(); });
                     if (static_cast<float>(GetMim()->get_height()) * m_map_dims.tile_scale < static_cast<float>(current_max->height()))
@@ -568,25 +568,25 @@ class Map
           const auto  texture_page_id =
             GetMapHistory()->get_original_version_of_working_tile(tile, [&](const auto &front_tile) { return front_tile.texture_id(); });
           const auto [texture_index, texture_page_width] = [&]() {
-               if (std::ranges::empty(m_upscale_path))
+               if (std::ranges::empty(m_swizzle_path))
                {
                     return index_and_page_width(bpp, palette);
                }
                return index_and_page_width(palette, texture_page_id);
           }();
           const auto texture_page_offset = [&, texture_page_width_copy = texture_page_width]() {
-               if (std::ranges::empty(m_upscale_path))
+               if (std::ranges::empty(m_swizzle_path))
                {
                     return texture_page_id * texture_page_width_copy;
                }
                return 0;
           }();
           const auto &texture = [&, texture_index = texture_index]() -> decltype(auto) {
-               if (std::ranges::empty(m_upscale_path))
+               if (std::ranges::empty(m_swizzle_path))
                {
                     return mim.delayed_textures.textures->at(texture_index);
                }
-               return m_upscale_delayed_textures.textures->at(texture_index);
+               return m_swizzle_delayed_textures.textures->at(texture_index);
           }();
           if (texture.width() == 0 || texture.height() == 0)
                return std::nullopt;
@@ -757,7 +757,7 @@ class Map
      [[maybe_unused]] [[nodiscard]] auto index_and_page_width(std::uint8_t palette, std::uint8_t texture_page) const
      {
           IndexAndPageWidthReturn r = { .texture_index = static_cast<size_t>(texture_page + 13U * (palette + 1U)) };
-          if (!m_upscale_delayed_textures.textures->at(r.texture_index))
+          if (!m_swizzle_delayed_textures.textures->at(r.texture_index))
           {
                // no palette with texture page combo was found. So attempt to load
                // texture page without palette.
@@ -887,11 +887,11 @@ class Map
      static constexpr auto                s_quarter_color              = s_half_color / 2.F;
      mutable glm::vec4                    m_uniform_color              = s_default_color;
 
-     std::filesystem::path                m_upscale_path               = {};
+     std::filesystem::path                m_swizzle_path               = {};
      // dimensions of map
      MapDims<TileFunctions>               m_map_dims                   = { GetMapHistory()->back() };
      // loads the textures overtime instead of forcing them to load at start.
-     glengine::DelayedTextures<17U * 13U> m_upscale_delayed_textures   = {};// 20 is detected max 16(+1)*13 is
+     glengine::DelayedTextures<17U * 13U> m_swizzle_delayed_textures   = {};// 20 is detected max 16(+1)*13 is
                                                                           // possible max. 0 being no palette and
                                                                           // 1-17 being with palettes
      // takes quads and draws them to the frame buffer or screen.

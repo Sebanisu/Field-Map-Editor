@@ -118,8 +118,8 @@ struct ConfigKeys<FilterTag::Pupu>
 template<>
 struct ConfigKeys<FilterTag::Swizzle>
 {
-     static constexpr std::string_view key_name         = "filter_upscale";
-     static constexpr std::string_view enabled_key_name = "filter_upscale_enabled";
+     static constexpr std::string_view key_name         = "filter_swizzle";
+     static constexpr std::string_view enabled_key_name = "filter_swizzle_enabled";
 };
 
 template<>
@@ -139,8 +139,8 @@ struct ConfigKeys<FilterTag::SwizzleAsOneImage>
 template<>
 struct ConfigKeys<FilterTag::SwizzleMap>
 {
-     static constexpr std::string_view key_name         = "filter_upscale_map";
-     static constexpr std::string_view enabled_key_name = "filter_upscale_map_enabled";
+     static constexpr std::string_view key_name         = "filter_swizzle_map";
+     static constexpr std::string_view enabled_key_name = "filter_swizzle_map_enabled";
 };
 
 template<>

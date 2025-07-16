@@ -461,13 +461,13 @@ struct fmt::formatter<fme::PatternSelector> : fmt::formatter<std::string_view>
                case fme::PatternSelector::OutputMapPatternForDeswizzle:
                     name = "Output map pattern for deswizzle"sv;
                     break;
-               case fme::PatternSelector::PathPatternsCommonUpscale:
+               case fme::PatternSelector::PatternsCommonPrefixes:
                     name = "Path Patterns Common Swizzle"sv;
                     break;
-               case fme::PatternSelector::PathPatternsCommonUpscaleForMaps:
+               case fme::PatternSelector::PatternsCommonPrefixesForMaps:
                     name = "Path Patterns Common Swizzle For Maps"sv;
                     break;
-               case fme::PatternSelector::PathPatternsNoPaletteAndTexturePage:
+               case fme::PatternSelector::PatternsBase:
                     name = "Path Patterns No Palette And Texture Page"sv;
                     break;
                case fme::PatternSelector::PathPatternsWithPaletteAndTexturePage:

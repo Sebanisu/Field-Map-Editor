@@ -230,18 +230,18 @@ struct main_menu_paths
           }();
      }
 
-     std::optional<std::string> handle_path_deletion(std::vector<std::string> &paths_vector, std::ptrdiff_t offset) const
+     std::optional<std::string> handle_path_deletion(std::vector<std::string> &ff8_directory_paths, std::ptrdiff_t offset) const
      {
           if (std::cmp_less(offset, 0))
           {
                return std::nullopt;
           }
-          auto it = std::ranges::begin(paths_vector);
+          auto it = std::ranges::begin(ff8_directory_paths);
           std::ranges::advance(it, offset);
-          if (it != std::ranges::end(paths_vector))
+          if (it != std::ranges::end(ff8_directory_paths))
           {
                auto return_value = std::optional<std::string>(std::move(*it));
-               paths_vector.erase(it);
+               ff8_directory_paths.erase(it);
                return return_value;
           }
           return std::nullopt;

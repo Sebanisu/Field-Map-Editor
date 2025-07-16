@@ -92,7 +92,7 @@ struct path_search
        std::shared_ptr<const fme::Selections> selections);
 
 
-     [[nodiscard]] static bool has_upscale_path(
+     [[nodiscard]] static bool has_swizzle_path(
        const std::filesystem::path           &field_root,
        fme::key_value_data                    copy_data,
        std::shared_ptr<const fme::Selections> selections);

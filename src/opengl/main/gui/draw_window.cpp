@@ -136,7 +136,7 @@ void fme::draw_window::render() const
      const auto pop_visible = glengine::ScopeGuard{ [&selections, &visible, was_visable = visible] {
           if (was_visable != visible)
           {
-               selections->update_configuration_key(ConfigKey::DisplayDrawWindow);
+               selections->update_configuration_key<ConfigKey::DisplayDrawWindow>();
           }
      } };
 

@@ -53,7 +53,7 @@ void import::render() const
      //  const auto pop_visible = glengine::ScopeGuard{ [&selections, &visible, was_visable = visible] {
      //       if (was_visable != visible)
      //       {
-     //            selections->update_configuration_key(ConfigKey::DisplayImportImageWindow);
+     //            selections->update_configuration_key<ConfigKey::DisplayImportImageWindow>();
      //       }
      //  } };
      bool       visible = false;
@@ -112,7 +112,7 @@ void import::render() const
      {
           // hide window and save that it's hidden.
           selections->display_import_image = false;
-          selections->update_configuration_key(ConfigKey::DisplayImportImage);
+          selections->update_configuration_key<ConfigKey::DisplayImportImage>();
           reset_imported_image();
      }
      tool_tip(gui_labels::cancel_tool_tip);
@@ -147,7 +147,7 @@ open_viii::graphics::background::Map::variant_tile &import::combo_selected_tile(
 
      static std::string current_item_str = {};
      const auto         save_config      = [&]() {
-          selections->update_configuration_key(ConfigKey::SelectedTile);
+          selections->update_configuration_key<ConfigKey::SelectedTile>();
           current_item_str = std::holds_alternative<std::monostate>(current_tile) ? "" : fmt::format("{}", selections->selected_tile);
      };
      const auto  spacing      = ImGui::GetStyle().ItemInnerSpacing.x;
@@ -319,7 +319,7 @@ bool import::browse_for_image_display_preview() const
      if (m_load_file_browser.HasSelected())
      {
           selections->import_load_image_directory = m_load_file_browser.GetDirectory().string();
-          selections->update_configuration_key(ConfigKey::ImportLoadImageDirectory);
+          selections->update_configuration_key<ConfigKey::ImportLoadImageDirectory>();
           [[maybe_unused]] const auto selected_path = m_load_file_browser.GetSelected();
           m_import_image_path                       = selected_path.string();
           m_load_file_browser.ClearSelected();
@@ -349,7 +349,7 @@ bool import::browse_for_image_display_preview() const
             str_id.c_str(), glengine::ConvertGliDtoImTextureId<ImTextureID>(m_loaded_image_texture.id()), ImVec2(width, height));
           if (ImGui::Checkbox(gui_labels::draw_grid.data(), &selections->import_image_grid))
           {
-               selections->update_configuration_key(ConfigKey::ImportImageGrid);
+               selections->update_configuration_key<ConfigKey::ImportImageGrid>();
           }
           if (selections->import_image_grid)
           {
@@ -405,7 +405,7 @@ bool import::combo_tile_size() const
      {
           return false;
      }
-     selections->update_configuration_key(ConfigKey::TileSizeValue);
+     selections->update_configuration_key<ConfigKey::TileSizeValue>();
      return true;
 }
 void import::generate_map_for_imported_image(const open_viii::graphics::background::Map::variant_tile &current_tile, bool changed) const
@@ -642,7 +642,7 @@ void import::reset_imported_image() const
      // m_loaded_image_cpu                = {};
      m_import_image_path               = {};
      selections->render_imported_image = false;
-     selections->update_configuration_key(ConfigKey::RenderImportedImage);
+     selections->update_configuration_key<ConfigKey::RenderImportedImage>();
 }
 
 
@@ -749,7 +749,7 @@ bool import::checkbox_render_imported_image() const
 
           if (ImGui::Checkbox(gui_labels::render_imported_image.data(), &selections->render_imported_image))
           {
-               selections->update_configuration_key(ConfigKey::RenderImportedImage);
+               selections->update_configuration_key<ConfigKey::RenderImportedImage>();
                // Pass texture and map and tile_size
                update_imported_render_texture();
 
