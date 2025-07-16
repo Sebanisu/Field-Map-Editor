@@ -75,12 +75,7 @@ enum class ConfigKey
      FF8DirectoryPaths,
      ExternalTexturesDirectoryPaths,
      ExternalMapsDirectoryPaths,
-     // BatchCompact,
-     BatchCompactType,
-     BatchCompactEnabled,
-     // BatchFlatten,
-     BatchFlattenType,
-     BatchFlattenEnabled,
+             
      SwizzlePath,
      DeswizzlePath,
      OutputImagePath,
@@ -97,6 +92,12 @@ enum class ConfigKey
 
      // Add more as needed
      All,
+
+     //not required by update or load.
+     BatchCompactType,
+     BatchCompactEnabled,
+     BatchFlattenType,
+     BatchFlattenEnabled,
 };
 
 
@@ -237,23 +238,17 @@ enum class ConfigKey
           case ConfigKey::WindowWidth:
                return "selections_window_width"sv;
           case ConfigKey::CacheTexturePaths:
-               return "selections_cache_swizzle_paths"sv;
+               return "selections_cache_texture_paths"sv;
           case ConfigKey::CacheSwizzlePathsEnabled:
                return "selections_cache_swizzle_paths_enabled"sv;
           case ConfigKey::CacheSwizzleAsOneImagePathsEnabled:
                return "selections_cache_swizzle_as_one_image_paths_enabled"sv;
-          case ConfigKey::CacheTexturePaths:
-               return "selections_cache_deswizzle_paths"sv;
           case ConfigKey::CacheDeswizzlePathsEnabled:
                return "selections_cache_deswizzle_paths_enabled"sv;
           case ConfigKey::CacheMapPaths:
-               return "selections_cache_swizzle_map_paths"sv;
+               return "selections_cache_map_paths"sv;
           case ConfigKey::CacheMapPathsEnabled:
-               return "selections_cache_swizzle_map_paths_enabled"sv;
-          case ConfigKey::CacheMapPaths:
-               return "selections_cache_deswizzle_map_paths"sv;
-          case ConfigKey::CacheMapPathsEnabled:
-               return "selections_cache_deswizzle_map_paths_enabled"sv;
+               return "selections_cache_map_paths_enabled"sv;
 
 
           default: {
@@ -455,46 +450,19 @@ struct Selections
           config.save();
      }
 
-     static inline bool has_balanced_braces([[maybe_unused]] const std::string_view s)
-     {
-          //      int balance = 0;
-          //      for (const char c : s)
-          //      {
-          //           if (c == '{')
-          //           {
-          //                ++balance;
-          //           }
-          //           else if (c == '}')
-          //           {
-          //                --balance;
-          //                if (balance < 0)
-          //                {
-          //                     spdlog::error("Unmatched closing brace in input: \"{}\" (note: literal braces shown as {{ and }})", s);
-          //                     return false;
-          //                }
-          //           }
-          //      }
-
-          //      if (balance != 0)
-          //      {
-          //           spdlog::error("Mismatched brace count in input: \"{}\" ({} unmatched opening brace{{}})", s, balance);
-          //           return false;
-          //      }
-
-          return true;
-     }
+     static bool has_balanced_braces([[maybe_unused]] const std::string_view s);
 
      template<std::ranges::range R>
           requires std::convertible_to<std::ranges::range_value_t<R>, std::string_view>
      static inline bool has_balanced_braces([[maybe_unused]] const R &r)
      {
-          // for (const auto &s : r)
-          // {
-          //      if (bool ok = has_balanced_braces(s); !ok)
-          //      {
-          //           return false;// found bad brace.
-          //      }
-          // }
+          for (const auto &s : r)
+          {
+               if (bool ok = has_balanced_braces(s); !ok)
+               {
+                    return false;// found bad brace.
+               }
+          }
           return true;
      }
 

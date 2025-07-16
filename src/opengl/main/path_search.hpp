@@ -73,6 +73,8 @@ struct path_search
      bool
        has_swizzle_path(const std::filesystem::path &filter_path, const std::uint8_t texture_page, const std::string &ext = ".png") const;
 
+     [[nodiscard]] bool has_swizzle_as_one_image_path(const std::filesystem::path &filter_path, const std::string &ext = ".png") const;
+
      [[nodiscard]] std::vector<std::filesystem::path> generate_paths(
        const std::string         &filter_path,
        const fme::key_value_data &cpm,

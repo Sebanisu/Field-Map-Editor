@@ -67,6 +67,45 @@ bool path_search::has_swizzle_path(const std::filesystem::path &filter_path, con
      }();
 }
 
+bool path_search::has_swizzle_as_one_image_path(const std::filesystem::path &filter_path, const std::string &ext) const
+{
+
+     return [&]() {
+          for (const auto &[bpp, palette_set] : bpp_palette)
+          {
+               if (bpp.bpp24())
+               {
+                    continue;
+               }
+               for (const auto &palette : palette_set.values())
+               {
+                    if (has_swizzle_path(
+                          filter_path.string(),
+                          { .field_name    = field_name,
+                            .ext           = ext,
+                            .language_code = opt_coo.has_value() && opt_coo.value() != open_viii::LangT::generic ? opt_coo : std::nullopt,
+                            .palette       = palette },
+                          selections))
+                    {
+                         return true;
+                    }
+               }
+          }
+          return false;
+     }() || [&]() {
+          if (has_swizzle_path(
+                filter_path.string(),
+                { .field_name    = field_name,
+                  .ext           = ext,
+                  .language_code = opt_coo.has_value() && opt_coo.value() != open_viii::LangT::generic ? opt_coo : std::nullopt },
+                selections))
+          {
+               return true;
+          }
+          return false;
+     }();
+}
+
 bool path_search::has_swizzle_path(const std::filesystem::path &filter_path, const std::uint8_t texture_page, const std::string &ext) const
 {
 
@@ -109,8 +148,6 @@ bool path_search::has_swizzle_path(
   std::uint8_t                 palette,
   const std::string           &ext) const
 {
-
-
      return has_swizzle_path(
        filter_path.string(),
        { .field_name    = field_name,

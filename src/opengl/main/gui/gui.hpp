@@ -73,10 +73,10 @@ struct gui
      field_file_window                                  m_field_file_window   = { m_field, m_selections };
      struct PathsAndEnabled
      {
-          std::vector<std::string> path{};
-          std::vector<bool>        enabled{};
-          ConfigKey                path_key{};
-          ConfigKey                enabled_key{};
+          std::vector<std::string>       path{};
+          std::vector<std::vector<bool>> enabled{};
+          ConfigKey                      path_key{};
+          std::vector<ConfigKey>         enabled_key{};
      };
      FutureOfFutureConsumer<std::vector<std::future<std::future<PathsAndEnabled>>>> m_future_of_future_paths_consumer = {};
      FutureConsumer<std::vector<std::future<PathsAndEnabled>>>                      m_future_paths_consumer           = {};
@@ -204,10 +204,8 @@ struct gui
      void open_locate_ff8_filebrowser();
      variant_tile_t                                         &combo_selected_tile(bool &changed);
      [[nodiscard]] bool                                      browse_for_image_display_preview();
-     [[nodiscard]] std::future<std::future<PathsAndEnabled>> generate_swizzle_paths();
-     [[nodiscard]] std::future<std::future<PathsAndEnabled>> generate_deswizzle_paths();
-     [[nodiscard]] std::future<std::future<PathsAndEnabled>> generate_swizzle_map_paths();
-     [[nodiscard]] std::future<std::future<PathsAndEnabled>> generate_deswizzle_map_paths();
+     [[nodiscard]] std::future<std::future<PathsAndEnabled>> generate_external_texture_paths();
+     [[nodiscard]] std::future<std::future<PathsAndEnabled>> generate_external_map_paths();
      void                                                    reset_imported_image();
      void                                                    sort_paths();
      void                                                    control_panel_window();

@@ -501,30 +501,6 @@ void fme::Selections::load<fme::ConfigKey::ExternalMapsDirectoryPaths>(const Con
 }
 
 template<>
-void fme::Selections::load<fme::ConfigKey::BatchCompactType>([[maybe_unused]] const Configuration &config)
-{
-     // no-op loaded by filter
-}
-
-template<>
-void fme::Selections::load<fme::ConfigKey::BatchCompactEnabled>([[maybe_unused]] const Configuration &config)
-{
-     // no-op loaded by filter
-}
-
-template<>
-void fme::Selections::load<fme::ConfigKey::BatchFlattenType>([[maybe_unused]] const Configuration &config)
-{
-     // no-op loaded by filter
-}
-
-template<>
-void fme::Selections::load<fme::ConfigKey::BatchFlattenEnabled>([[maybe_unused]] const Configuration &config)
-{
-     // no-op loaded by filter
-}
-
-template<>
 void fme::Selections::load<fme::ConfigKey::SwizzlePath>(const Configuration &config)
 {
      swizzle_path = config[key_to_string(ConfigKey::SwizzlePath)].value_or(path);
@@ -941,30 +917,6 @@ void fme::Selections::update<fme::ConfigKey::ExternalMapsDirectoryPaths>(Configu
 }
 
 template<>
-void fme::Selections::update<fme::ConfigKey::BatchCompactType>([[maybe_unused]] Configuration &config) const
-{
-     // no-op filter handles updating
-}
-
-template<>
-void fme::Selections::update<fme::ConfigKey::BatchCompactEnabled>([[maybe_unused]] Configuration &config) const
-{
-     // no-op filter handles updating
-}
-
-template<>
-void fme::Selections::update<fme::ConfigKey::BatchFlattenType>([[maybe_unused]] Configuration &config) const
-{
-     // no-op filter handles updating
-}
-
-template<>
-void fme::Selections::update<fme::ConfigKey::BatchFlattenEnabled>([[maybe_unused]] Configuration &config) const
-{
-     // no-op filter handles updating
-}
-
-template<>
 void fme::Selections::update<fme::ConfigKey::SwizzlePath>(Configuration &config) const
 {
      config->insert_or_assign(key_to_string(ConfigKey::SwizzlePath), swizzle_path);
@@ -1095,4 +1047,34 @@ void fme::Selections::update_configuration() const
      Configuration config{};
      update<ConfigKey::All>(config);
      config.save();
+}
+
+
+bool fme::Selections::has_balanced_braces([[maybe_unused]] const std::string_view s)
+{
+     int balance = 0;
+     for (const char c : s)
+     {
+          if (c == '{')
+          {
+               ++balance;
+          }
+          else if (c == '}')
+          {
+               --balance;
+               if (balance < 0)
+               {
+                    spdlog::error("Unmatched closing brace in input: \"{}\" (note: literal braces shown as {{ and }})", s);
+                    return false;
+               }
+          }
+     }
+
+     if (balance != 0)
+     {
+          spdlog::error("Mismatched brace count in input: \"{}\" ({} unmatched opening brace{{}})", s, balance);
+          return false;
+     }
+
+     return true;
 }
