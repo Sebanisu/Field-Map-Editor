@@ -2357,7 +2357,6 @@ void gui::directory_browser_display()
                          target.get().emplace_back(value);
                          if (value && !changed)
                          {
-                              // needs to be multiple other_filters.
                               std::apply([](auto... filters) { (filters.get().disable(), ...); }, other_filter);
                               main_filter.update(path).enable();
                               std::invoke(action, path);
@@ -2391,9 +2390,34 @@ void gui::directory_browser_display()
      {
           case map_directory_mode::ff8_install_directory: {
                m_selections->path = selected_path.string();
-               m_selections->update_configuration_key<ConfigKey::SelectionsPath>();
-               m_selections->ff8_directory_paths.push_back(selected_path.string());
-               m_selections->update_configuration_key<ConfigKey::FF8DirectoryPaths>();
+               std::apply(
+                 [&](auto *...paths) { (paths->push_back(selected_path.string()), ...); },
+                 std::tuple(&m_selections->ff8_directory_paths, &m_selections->cache_texture_paths, &m_selections->cache_map_paths));
+
+               std::apply(
+                 [&](auto &&...paths_enabled) { (std::get<0>(paths_enabled)->push_back(std::get<1>(paths_enabled)), ...); },
+                 std::tuple(
+                   std::pair(&m_selections->cache_swizzle_paths_enabled, ps.has_swizzle_path(selected_path, ".png")),
+                   std::pair(
+                     &m_selections->cache_swizzle_as_one_image_paths_enabled, ps.has_swizzle_as_one_image_path(selected_path, ".png")),
+                   std::pair(&m_selections->cache_deswizzle_paths_enabled, ps.has_deswizzle_path(selected_path, ".png")),
+                   std::pair(&m_selections->cache_map_paths_enabled, ps.has_map_path(selected_path, ".png"))));
+               // ps.has_swizzle_path(path, ".png"),
+               // ps.has_swizzle_as_one_image_path(path, ".png"),
+               // ps.has_deswizzle_path(path, ".png")
+
+
+               m_selections->update_configuration_key<>();
+
+               m_selections->update_configuration_key<
+                 ConfigKey::SelectionsPath,
+                 ConfigKey::FF8DirectoryPaths,
+                 ConfigKey::CacheTexturePaths,
+                 ConfigKey::CacheSwizzlePathsEnabled,
+                 ConfigKey::CacheSwizzleAsOneImagePathsEnabled,
+                 ConfigKey::CacheDeswizzlePathsEnabled,
+                 ConfigKey::CacheMapPaths,
+                 ConfigKey::CacheMapPathsEnabled>();
                sort_paths();
                update_path();
           }
@@ -2566,12 +2590,22 @@ void gui::sort_paths()
           m_selections->update_configuration_key<ConfigKey::ExternalMapsDirectoryPaths>();
 
 
-     sort_and_remove_duplicates(
-       m_selections->cache_texture_paths,
-       m_selections->cache_swizzle_paths_enabled,
-       m_selections->cache_swizzle_as_one_image_paths_enabled,
-       m_selections->cache_deswizzle_paths_enabled);
-     sort_and_remove_duplicates(m_selections->cache_map_paths, m_selections->cache_map_paths_enabled);
+     if (sort_and_remove_duplicates(
+           m_selections->cache_texture_paths,
+           m_selections->cache_swizzle_paths_enabled,
+           m_selections->cache_swizzle_as_one_image_paths_enabled,
+           m_selections->cache_deswizzle_paths_enabled))
+     {
+          m_selections->update_configuration_key<
+            ConfigKey::CacheTexturePaths,
+            ConfigKey::CacheSwizzlePathsEnabled,
+            ConfigKey::CacheSwizzleAsOneImagePathsEnabled,
+            ConfigKey::CacheDeswizzlePathsEnabled>();
+     }
+     if (sort_and_remove_duplicates(m_selections->cache_map_paths, m_selections->cache_map_paths_enabled))
+     {
+          m_selections->update_configuration_key<ConfigKey::CacheMapPaths, ConfigKey::CacheMapPathsEnabled>();
+     }
 }
 
 void gui::file_browser_save_texture()
