@@ -75,7 +75,7 @@ enum class ConfigKey
      FF8DirectoryPaths,
      ExternalTexturesDirectoryPaths,
      ExternalMapsDirectoryPaths,
-             
+
      SwizzlePath,
      DeswizzlePath,
      OutputImagePath,
@@ -93,7 +93,7 @@ enum class ConfigKey
      // Add more as needed
      All,
 
-     //not required by update or load.
+     // not required by update or load.
      BatchCompactType,
      BatchCompactEnabled,
      BatchFlattenType,
@@ -442,11 +442,11 @@ struct Selections
      void update_configuration() const;
 
 
-     template<ConfigKey... keys>
+     template<ConfigKey... Keys>
      void update_configuration_key() const
      {
           Configuration config{};
-          update<keys...>(config);
+          (update<Keys>(config), ...);
           config.save();
      }
 
@@ -470,23 +470,9 @@ struct Selections
      template<ConfigKey K>
      void load(const Configuration &) = delete;// delete fine for load because all defined and used in Selections
 
-     template<ConfigKey... Keys>
-          requires(sizeof...(Keys) > 1U)
-     void load(const Configuration &config)
-     {
-          (load<Keys>(config), ...);
-     }
-
      template<ConfigKey K>
      void update(Configuration &)
        const;// can't delete or else other cpp can't find the functions in Selections.cpp will get linker errors if missing.
-
-     template<ConfigKey... Keys>
-          requires(sizeof...(Keys) > 1U)
-     void update(Configuration &config) const
-     {
-          (update<Keys>(config), ...);
-     }
 };
 }// namespace fme
 #endif// FIELD_MAP_EDITOR_SELECTIONS_HPP
