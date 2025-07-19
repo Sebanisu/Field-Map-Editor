@@ -471,6 +471,7 @@ struct Selections
      void load(const Configuration &) = delete;// delete fine for load because all defined and used in Selections
 
      template<ConfigKey K>
+          requires(static_cast<std::size_t>(K) <= static_cast<std::size_t>(ConfigKey::All))
      void update(Configuration &)
        const;// can't delete or else other cpp can't find the functions in Selections.cpp will get linker errors if missing.
 };
