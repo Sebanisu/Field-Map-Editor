@@ -51,8 +51,8 @@ class [[nodiscard]] MapHistory
      /**
       * @brief Indicates whether a multi-frame operation is in progress.
       *
-      * This flag is set to `true` when `begin_working_copy` is called and prevents
-      * additional copies of the working map from being created until `end_working_copy`
+      * This flag is set to `true` when `begin_multi_frame_working` is called and prevents
+      * additional copies of the working map from being created until `end_multi_frame_working`
       * is called, which sets it back to `false`.
       */
      mutable bool                  m_in_multi_frame_operation = { false };
@@ -341,7 +341,7 @@ class [[nodiscard]] MapHistory
       * @brief Begins a multi-frame operation, creating a single copy of the working map.
       *
       * This function starts a multi-frame operation by creating a copy of the working map
-      * and setting a flag to prevent additional copies until `end_working_copy` is called.
+      * and setting a flag to prevent additional copies until `end_multi_frame_working` is called.
       * The provided description is used for the undo history.
       *
       * @param description A string describing the upcoming multi-frame change.
@@ -349,7 +349,7 @@ class [[nodiscard]] MapHistory
       * @note Subsequent calls to `copy_working` during the multi-frame operation will return
       *       the same working map without creating new copies.
       */
-     map_t                                     &begin_working_copy(std::string description);
+     map_t                                     &begin_multi_frame_working(std::string description);
 
 
      /**
@@ -362,7 +362,7 @@ class [[nodiscard]] MapHistory
       * @param description An optional string to update the undo history description.
       *                    If empty, the original description is retained.
       */
-     void                                       end_working_copy(std::string description = {});
+     void                                       end_multi_frame_working(std::string description = {});
 
 
      /**

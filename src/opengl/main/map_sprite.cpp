@@ -2089,12 +2089,12 @@ std::string map_sprite::current_redo_description() const
 
 void map_sprite::begin_multi_frame_working(std::string description)
 {
-     (void)m_map_group.maps.begin_working_copy(std::move(description));
+     (void)m_map_group.maps.begin_multi_frame_working(std::move(description));
 }
 
 void map_sprite::end_multi_frame_working(std::string description)
 {
-     m_map_group.maps.end_working_copy(std::move(description));
+     m_map_group.maps.end_multi_frame_working(std::move(description));
 }
 
 void map_sprite::undo()

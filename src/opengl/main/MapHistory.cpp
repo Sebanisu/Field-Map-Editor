@@ -401,7 +401,7 @@ map_t &ff_8::MapHistory::copy_working(std::string description)
      return working();
 }
 
-map_t &ff_8::MapHistory::begin_working_copy(std::string description)
+map_t &ff_8::MapHistory::begin_multi_frame_working(std::string description)
 {
      if (!m_in_multi_frame_operation)
      {
@@ -411,7 +411,7 @@ map_t &ff_8::MapHistory::begin_working_copy(std::string description)
      return working();
 }
 
-void ff_8::MapHistory::end_working_copy(std::string description)
+void ff_8::MapHistory::end_multi_frame_working(std::string description)
 {
      m_in_multi_frame_operation = false;
      if (!description.empty() && !m_undo_change_descriptions.empty())
@@ -419,7 +419,7 @@ void ff_8::MapHistory::end_working_copy(std::string description)
           m_undo_change_descriptions.back() = std::move(description);
      }
      m_working_changed = true;
-     //if nothing changes remove undo till there are no matches.
+     // if nothing changes remove undo till there are no matches.
      std::ignore       = remove_duplicate();
 }
 
