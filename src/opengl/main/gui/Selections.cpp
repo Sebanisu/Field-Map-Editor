@@ -61,9 +61,9 @@ void fme::Selections::load<fme::ConfigKey::Bpp>(const Configuration &config)
 }
 
 template<>
-void fme::Selections::load<fme::ConfigKey::Draw>(const Configuration &config)
+void fme::Selections::load<fme::ConfigKey::DrawMode>(const Configuration &config)
 {
-     draw = static_cast<draw_mode>(config[key_to_string(ConfigKey::Draw)].value_or(std::to_underlying(draw_mode::draw_map)));
+     draw = static_cast<draw_mode>(config[key_to_string(ConfigKey::DrawMode)].value_or(std::to_underlying(draw_mode::draw_map)));
 }
 
 template<>
@@ -73,9 +73,9 @@ void fme::Selections::load<fme::ConfigKey::Coo>(const Configuration &config)
 }
 
 template<>
-void fme::Selections::load<fme::ConfigKey::SelectedTile>(const Configuration &config)
+void fme::Selections::load<fme::ConfigKey::ImportSelectedTile>(const Configuration &config)
 {
-     selected_tile = config[key_to_string(ConfigKey::SelectedTile)].value_or(-1);
+     selected_tile = config[key_to_string(ConfigKey::ImportSelectedTile)].value_or(-1);
 }
 
 template<>
@@ -531,12 +531,6 @@ void fme::Selections::load<fme::ConfigKey::OutputMapPath>(const Configuration &c
 }
 
 template<>
-void fme::Selections::load<fme::ConfigKey::SwizzlePathsIndex>(const Configuration &config)
-{
-     swizzle_paths_index = config[key_to_string(ConfigKey::SwizzlePathsIndex)].value_or(int{});
-}
-
-template<>
 void fme::Selections::load<fme::ConfigKey::CacheTexturePaths>(const Configuration &config)
 {
      std::ignore = config.load_array(key_to_string(ConfigKey::CacheTexturePaths), cache_texture_paths);
@@ -577,9 +571,15 @@ template<>
 void fme::Selections::load<fme::ConfigKey::All>(const Configuration &config)
 {
      [&]<std::size_t... Is>(std::index_sequence<Is...>) {
-          (load<static_cast<ConfigKey>(Is)>(config), ...);
+          (
+            [&]<ConfigKey Key>() {
+                 if constexpr (!SelectionUseFFNXConfig<Key>::value)
+                      load<Key>(config);
+            }.template operator()<static_cast<ConfigKey>(Is)>(),
+            ...);
      }(std::make_index_sequence<static_cast<std::size_t>(fme::ConfigKey::All)>{});
 }
+
 
 template<>
 void fme::Selections::update<fme::ConfigKey::StarterField>(Configuration &config) const
@@ -621,9 +621,9 @@ void fme::Selections::update<fme::ConfigKey::Bpp>(Configuration &config) const
 }
 
 template<>
-void fme::Selections::update<fme::ConfigKey::Draw>(Configuration &config) const
+void fme::Selections::update<fme::ConfigKey::DrawMode>(Configuration &config) const
 {
-     config->insert_or_assign(key_to_string(ConfigKey::Draw), std::to_underlying(draw));
+     config->insert_or_assign(key_to_string(ConfigKey::DrawMode), std::to_underlying(draw));
 }
 
 template<>
@@ -633,9 +633,9 @@ void fme::Selections::update<fme::ConfigKey::Coo>(Configuration &config) const
 }
 
 template<>
-void fme::Selections::update<fme::ConfigKey::SelectedTile>(Configuration &config) const
+void fme::Selections::update<fme::ConfigKey::ImportSelectedTile>(Configuration &config) const
 {
-     config->insert_or_assign(key_to_string(ConfigKey::SelectedTile), selected_tile);
+     config->insert_or_assign(key_to_string(ConfigKey::ImportSelectedTile), selected_tile);
 }
 
 template<>
@@ -948,12 +948,6 @@ void fme::Selections::update<fme::ConfigKey::OutputMapPath>(Configuration &confi
 }
 
 template<>
-void fme::Selections::update<fme::ConfigKey::SwizzlePathsIndex>(Configuration &config) const
-{
-     config->insert_or_assign(key_to_string(ConfigKey::SwizzlePathsIndex), swizzle_paths_index);
-}
-
-template<>
 void fme::Selections::update<fme::ConfigKey::CacheTexturePaths>(Configuration &config) const
 {
      config.update_array(key_to_string(ConfigKey::CacheTexturePaths), cache_texture_paths);
@@ -993,7 +987,12 @@ template<>
 void fme::Selections::update<fme::ConfigKey::All>(Configuration &config) const
 {
      [&]<std::size_t... Is>(std::index_sequence<Is...>) {
-          (update<static_cast<ConfigKey>(Is)>(config), ...);
+          (
+            [&]<ConfigKey Key>() {
+                 if constexpr (!SelectionUseFFNXConfig<Key>::value)
+                      update<Key>(config);
+            }.template operator()<static_cast<ConfigKey>(Is)>(),
+            ...);
      }(std::make_index_sequence<static_cast<std::size_t>(fme::ConfigKey::All)>{});
 }
 

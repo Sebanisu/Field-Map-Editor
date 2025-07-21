@@ -147,7 +147,7 @@ open_viii::graphics::background::Map::variant_tile &import::combo_selected_tile(
 
      static std::string current_item_str = {};
      const auto         save_config      = [&]() {
-          selections->update_configuration_key<ConfigKey::SelectedTile>();
+          selections->update_configuration_key<ConfigKey::ImportSelectedTile>();
           current_item_str = std::holds_alternative<std::monostate>(current_tile) ? "" : fmt::format("{}", selections->selected_tile);
      };
      const auto  spacing      = ImGui::GetStyle().ItemInnerSpacing.x;

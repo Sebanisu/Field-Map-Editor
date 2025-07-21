@@ -1007,17 +1007,17 @@ void fme::batch::generate_map_sprite()
 
           case input_types::deswizzle: {
                // Enable deswizzle filter using the input path
-               filters.deswizzle.update(selected_string).enable();
+               filters.deswizzle.update(std::filesystem::path(selected_string)).enable();
                if (selections->batch_input_load_map)
-                    filters.deswizzle_map.update(selected_string).enable();
+                    filters.deswizzle_map.update(std::filesystem::path(selected_string)).enable();
                break;
           }
 
           case input_types::swizzle: {
                // Enable upscale filter using the input path
-               filters.swizzle.update(selected_string).enable();
+               filters.swizzle.update(std::filesystem::path(selected_string)).enable();
                if (selections->batch_input_load_map)
-                    filters.swizzle_map.update(selected_string).enable();
+                    filters.swizzle_map.update(std::filesystem::path(selected_string)).enable();
                break;
           }
 

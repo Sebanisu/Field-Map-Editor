@@ -265,7 +265,7 @@ struct filter_old
                  fme::Configuration const config{};
                  if constexpr (std::convertible_to<T, std::filesystem::path>)
                  {
-                      return config[ConfigKeys<Tag>::key_name].value_or(m_value.string());
+                      return config[ConfigKeys<Tag>::key_name].value_or(m_value.u8string());
                  }
                  else if constexpr (requires { std::declval<T>().raw(); })
                  {
@@ -298,8 +298,11 @@ struct filter_old
                          fme::Configuration config{};
                          if constexpr (std::convertible_to<T, std::filesystem::path>)
                          {
+                              std::u8string str_val = m_value.u8string();
+                              std::ranges::replace(str_val, u8'\\', u8'/');// normalize to forward slashes
+                              m_value = std::move(str_val);
                               spdlog::info("filter_old<{}>: \"{}\"", ConfigKeys<Tag>::key_name, m_value.string());
-                              config->insert_or_assign(ConfigKeys<Tag>::key_name, m_value.string());
+                              config->insert_or_assign(ConfigKeys<Tag>::key_name, m_value.u8string());
                          }
                          else if constexpr (requires { std::declval<T>().raw(); })
                          {
@@ -550,7 +553,7 @@ struct filters
        , swizzle([&]() -> decltype(swizzle) {
             if (load_config)
             {
-                 return { std::filesystem::path{ config[ConfigKeys<FilterTag::Swizzle>::key_name].value_or(std::string{}) },
+                 return { std::filesystem::path{ config[ConfigKeys<FilterTag::Swizzle>::key_name].value_or(std::u8string{}) },
 
                           WithFlag(
                             FilterSettings::Default,
@@ -562,7 +565,7 @@ struct filters
        , deswizzle([&]() -> decltype(deswizzle) {
             if (load_config)
             {
-                 return { std::filesystem::path{ config[ConfigKeys<FilterTag::Deswizzle>::key_name].value_or(std::string{}) },
+                 return { std::filesystem::path{ config[ConfigKeys<FilterTag::Deswizzle>::key_name].value_or(std::u8string{}) },
 
                           WithFlag(
                             FilterSettings::Default,
@@ -574,7 +577,7 @@ struct filters
        , swizzle_as_one_image([&]() -> decltype(swizzle_as_one_image) {
             if (load_config)
             {
-                 return { std::filesystem::path{ config[ConfigKeys<FilterTag::SwizzleAsOneImage>::key_name].value_or(std::string{}) },
+                 return { std::filesystem::path{ config[ConfigKeys<FilterTag::SwizzleAsOneImage>::key_name].value_or(std::u8string{}) },
 
                           WithFlag(
                             FilterSettings::Default,
@@ -586,7 +589,7 @@ struct filters
        , swizzle_map([&]() -> decltype(swizzle_map) {
             if (load_config)
             {
-                 return { std::filesystem::path{ config[ConfigKeys<FilterTag::SwizzleMap>::key_name].value_or(std::string{}) },
+                 return { std::filesystem::path{ config[ConfigKeys<FilterTag::SwizzleMap>::key_name].value_or(std::u8string{}) },
 
                           WithFlag(
                             FilterSettings::Default,
@@ -598,7 +601,7 @@ struct filters
        , deswizzle_map([&]() -> decltype(deswizzle_map) {
             if (load_config)
             {
-                 return { std::filesystem::path{ config[ConfigKeys<FilterTag::DeswizzleMap>::key_name].value_or(std::string{}) },
+                 return { std::filesystem::path{ config[ConfigKeys<FilterTag::DeswizzleMap>::key_name].value_or(std::u8string{}) },
 
                           WithFlag(
                             FilterSettings::Default,
@@ -610,7 +613,7 @@ struct filters
        , swizzle_as_one_image_map([&]() -> decltype(swizzle_as_one_image_map) {
             if (load_config)
             {
-                 return { std::filesystem::path{ config[ConfigKeys<FilterTag::SwizzleAsOneImageMap>::key_name].value_or(std::string{}) },
+                 return { std::filesystem::path{ config[ConfigKeys<FilterTag::SwizzleAsOneImageMap>::key_name].value_or(std::u8string{}) },
 
                           WithFlag(
                             FilterSettings::Default,

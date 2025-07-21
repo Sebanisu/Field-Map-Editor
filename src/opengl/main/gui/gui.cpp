@@ -2347,7 +2347,7 @@ void gui::directory_browser_display()
           // If we have found matches
           if (!temp_paths.empty())
           {
-               for (const auto &path : temp_paths)
+               for (const std::filesystem::path &path : temp_paths)
                {
                     // Add matches to the drop-down
                     target_paths.emplace_back(path.string());
@@ -2860,7 +2860,7 @@ void gui::menuitem_load_map_file(bool enabled)
 }
 void gui::refresh_draw_mode()
 {
-     m_selections->update_configuration_key<ConfigKey::Draw>();
+     m_selections->update_configuration_key<ConfigKey::DrawMode>();
      switch (m_selections->draw)
      {
           case draw_mode::draw_mim:

@@ -25,9 +25,9 @@ enum class ConfigKey
      WindowHeight,
      Palette,
      Bpp,
-     Draw,
+     DrawMode,
      Coo,
-     SelectedTile,
+     ImportSelectedTile,
      DrawDisableBlending,
      DrawGrid,
      DrawPalette,
@@ -81,7 +81,6 @@ enum class ConfigKey
      OutputImagePath,
      OutputMimPath,
      OutputMapPath,
-     SwizzlePathsIndex,
 
      CacheTexturePaths,
      CacheSwizzlePathsEnabled,
@@ -90,16 +89,21 @@ enum class ConfigKey
      CacheMapPaths,
      CacheMapPathsEnabled,
 
-     // Add more as needed
+     // FFNX can load from FFNX config but we're doing read only these. Usually only if we're changing the FF8 directory
+     FFNXModPath,
+     FFNXOverridePath,
+     FFNXDirectPath,
+
+     // All is used to map all values less than All.
      All,
 
-     // not required by update or load.
+     // Filters not required by update or load.
      BatchCompactType,
      BatchCompactEnabled,
      BatchFlattenType,
      BatchFlattenEnabled,
-};
 
+};
 
 [[nodiscard]] consteval std::string_view key_to_string(ConfigKey key)
 {
@@ -165,7 +169,7 @@ enum class ConfigKey
                return "selections_force_reloading_of_textures"sv;
           case ConfigKey::ForceRenderingOfMap:
                return "selections_force_rendering_of_map"sv;
-          case ConfigKey::Draw:
+          case ConfigKey::DrawMode:
                return "selections_draw"sv;
           case ConfigKey::DrawDisableBlending:
                return "selections_draw_disable_blending"sv;
@@ -221,7 +225,7 @@ enum class ConfigKey
                return "external_maps_directory_paths"sv;
           case ConfigKey::RenderImportedImage:
                return "selections_render_imported_image"sv;
-          case ConfigKey::SelectedTile:
+          case ConfigKey::ImportSelectedTile:
                return "selections_selected_tile"sv;
           case ConfigKey::SelectionsPath:
                return "selections_path"sv;
@@ -231,8 +235,6 @@ enum class ConfigKey
                return "selections_swizzle_path"sv;
           case ConfigKey::TileSizeValue:
                return "selections_tile_size_value"sv;
-          case ConfigKey::SwizzlePathsIndex:
-               return "swizzle_paths_index"sv;
           case ConfigKey::WindowHeight:
                return "selections_window_height"sv;
           case ConfigKey::WindowWidth:
@@ -257,6 +259,589 @@ enum class ConfigKey
           }
      };
 }
+
+template<ConfigKey Key>
+struct SelectionInfo;
+
+template<>
+struct SelectionInfo<ConfigKey::StarterField>
+{
+     using value_type = std::string;
+     static constexpr value_type default_value()
+     {
+          return "ecenter3";
+     }
+};
+template<>
+struct SelectionInfo<ConfigKey::SelectionsPath>
+{
+     using value_type = std::int32_t;
+};
+template<>
+struct SelectionInfo<ConfigKey::WindowWidth>
+{
+     using value_type = std::int32_t;
+     static constexpr value_type default_value()
+     {
+          return 1280;
+     }
+};
+template<>
+struct SelectionInfo<ConfigKey::WindowHeight>
+{
+     using value_type = std::int32_t;
+     static constexpr value_type default_value()
+     {
+          return 720;
+     }
+};
+template<>
+struct SelectionInfo<ConfigKey::Palette>
+{
+     using value_type = std::uint8_t;
+     static constexpr void post_load_operation(value_type &value)
+     {
+          value = value & 0xFU;
+     }
+};
+template<>
+struct SelectionInfo<ConfigKey::Bpp>
+{
+     using value_type = open_viii::graphics::BPPT;
+};
+template<>
+struct SelectionInfo<ConfigKey::DrawMode>
+{
+     using value_type = draw_mode;
+     static constexpr value_type default_value()
+     {
+          return draw_mode::draw_map;
+     }
+};
+template<>
+struct SelectionInfo<ConfigKey::Coo>
+{
+     using value_type = std::int32_t;
+};
+template<>
+struct SelectionInfo<ConfigKey::ImportSelectedTile>
+{
+     using value_type = std::int32_t;
+};
+template<>
+struct SelectionInfo<ConfigKey::DrawDisableBlending>
+{
+     using value_type = bool;
+};
+template<>
+struct SelectionInfo<ConfigKey::DrawGrid>
+{
+     using value_type = bool;
+};
+template<>
+struct SelectionInfo<ConfigKey::DrawPalette>
+{
+     using value_type = bool;
+};
+template<>
+struct SelectionInfo<ConfigKey::DrawSwizzle>
+{
+     using value_type = bool;
+};
+template<>
+struct SelectionInfo<ConfigKey::RenderImportedImage>
+{
+     using value_type = std::int32_t;
+};
+template<>
+struct SelectionInfo<ConfigKey::DrawTexturePageGrid>
+{
+     using value_type = bool;
+};
+template<>
+struct SelectionInfo<ConfigKey::DrawTileConflictRects>
+{
+     using value_type = bool;
+};
+template<>
+struct SelectionInfo<ConfigKey::DisplayBatchWindow>
+{
+     using value_type = bool;
+};
+// template<>
+// struct SelectionInfo<ConfigKey::DisplayImportImageWindow>
+// {
+//      using value_type = bool;
+// };
+template<>
+struct SelectionInfo<ConfigKey::DisplayImportImage>
+{
+     using value_type = bool;
+};
+template<>
+struct SelectionInfo<ConfigKey::ForceReloadingOfTextures>
+{
+     using value_type = std::int32_t;
+};
+template<>
+struct SelectionInfo<ConfigKey::ForceRenderingOfMap>
+{
+     using value_type = std::int32_t;
+};
+template<>
+struct SelectionInfo<ConfigKey::ImportImageGrid>
+{
+     using value_type = std::int32_t;
+};
+template<>
+struct SelectionInfo<ConfigKey::ImportLoadImageDirectory>
+{
+     using value_type = std::int32_t;
+};
+template<>
+struct SelectionInfo<ConfigKey::TileSizeValue>
+{
+     using value_type = std::int32_t;
+};
+template<>
+struct SelectionInfo<ConfigKey::DisplayHistoryWindow>
+{
+     using value_type = bool;
+};
+template<>
+struct SelectionInfo<ConfigKey::DisplayControlPanelWindow>
+{
+     using value_type = bool;
+};
+template<>
+struct SelectionInfo<ConfigKey::DisplayDrawWindow>
+{
+     using value_type = bool;
+};
+template<>
+struct SelectionInfo<ConfigKey::DisplayCustomPathsWindow>
+{
+     using value_type = bool;
+};
+template<>
+struct SelectionInfo<ConfigKey::DisplayFieldFileWindow>
+{
+     using value_type = bool;
+};
+template<>
+struct SelectionInfo<ConfigKey::OutputSwizzlePattern>
+{
+     using value_type = std::string;
+};
+template<>
+struct SelectionInfo<ConfigKey::OutputDeswizzlePattern>
+{
+     using value_type = std::string;
+};
+template<>
+struct SelectionInfo<ConfigKey::OutputMapPatternForSwizzle>
+{
+     using value_type = std::string;
+};
+template<>
+struct SelectionInfo<ConfigKey::OutputMapPatternForDeswizzle>
+{
+     using value_type = std::string;
+};
+template<>
+struct SelectionInfo<ConfigKey::CurrentPattern>
+{
+     using value_type = PatternSelector;
+};
+template<>
+struct SelectionInfo<ConfigKey::CurrentPatternIndex>
+{
+     using value_type = std::int32_t;
+};
+template<>
+struct SelectionInfo<ConfigKey::BatchInputType>
+{
+     using value_type = input_types;
+};
+template<>
+struct SelectionInfo<ConfigKey::BatchInputRootPathType>
+{
+     using value_type = root_path_types;
+};
+template<>
+struct SelectionInfo<ConfigKey::BatchOutputType>
+{
+     using value_type = output_types;
+};
+template<>
+struct SelectionInfo<ConfigKey::BatchOutputRootPathType>
+{
+     using value_type = root_path_types;
+};
+template<>
+struct SelectionInfo<ConfigKey::BatchMapListEnabled>
+{
+     using value_type = std::vector<bool>;
+};
+template<>
+struct SelectionInfo<ConfigKey::BackgroundColor>
+{
+     using value_type = color;
+};
+template<>
+struct SelectionInfo<ConfigKey::BatchInputPath>
+{
+     using value_type = std::string;
+};
+template<>
+struct SelectionInfo<ConfigKey::BatchOutputPath>
+{
+     using value_type = std::string;
+};
+template<>
+struct SelectionInfo<ConfigKey::BatchInputLoadMap>
+{
+     using value_type = bool;
+};
+template<>
+struct SelectionInfo<ConfigKey::BatchOutputSaveMap>
+{
+     using value_type = bool;
+};
+template<>
+struct SelectionInfo<ConfigKey::BatchCompactType>
+{
+     using value_type = ff_8::filter_old<compact_type, ff_8::FilterTag::Compact>;
+     static inline value_type default_value(const Configuration &config)
+     {
+          return { static_cast<fme::compact_type>(
+                     config[key_to_string(ConfigKey::BatchCompactType)].value_or(std::to_underlying(fme::compact_type{}))),
+                   ff_8::WithFlag(
+                     ff_8::FilterSettings::Default,
+                     ff_8::FilterSettings::Toggle_Enabled,
+                     config[key_to_string(ConfigKey::BatchCompactEnabled)].value_or(false)) };
+     }
+};
+template<>
+struct SelectionInfo<ConfigKey::BatchFlattenType>
+{
+     using value_type = ff_8::filter_old<flatten_type, ff_8::FilterTag::Flatten>;
+     static inline value_type default_value(const Configuration &config)
+     {
+          return { static_cast<fme::flatten_type>(
+                     config[key_to_string(ConfigKey::BatchFlattenType)].value_or(std::to_underlying(fme::flatten_type{}))),
+                   ff_8::WithFlag(
+                     ff_8::FilterSettings::Default,
+                     ff_8::FilterSettings::Toggle_Enabled,
+                     config[key_to_string(ConfigKey::BatchFlattenEnabled)].value_or(false)) };
+     }
+};
+template<>
+struct SelectionInfo<ConfigKey::PathPatternsWithPaletteAndTexturePage>
+{
+     using value_type = std::string;
+};
+template<>
+struct SelectionInfo<ConfigKey::PathPatternsWithPalette>
+{
+     using value_type = std::string;
+};
+template<>
+struct SelectionInfo<ConfigKey::PathPatternsWithTexturePage>
+{
+     using value_type = std::string;
+};
+template<>
+struct SelectionInfo<ConfigKey::PathPatternsWithPupuID>
+{
+     using value_type = std::string;
+};
+template<>
+struct SelectionInfo<ConfigKey::PatternsBase>
+{
+     using value_type = std::vector<std::string>;
+};
+template<>
+struct SelectionInfo<ConfigKey::PatternsCommonPrefixes>
+{
+     using value_type = std::vector<std::string>;
+};
+template<>
+struct SelectionInfo<ConfigKey::PatternsCommonPrefixesForMaps>
+{
+     using value_type = std::vector<std::string>;
+};
+template<>
+struct SelectionInfo<ConfigKey::FF8DirectoryPaths>
+{
+     using value_type = std::vector<std::filesystem::path>;
+};
+template<>
+struct SelectionInfo<ConfigKey::ExternalTexturesDirectoryPaths>
+{
+     using value_type = std::vector<std::filesystem::path>;
+};
+template<>
+struct SelectionInfo<ConfigKey::ExternalMapsDirectoryPaths>
+{
+     using value_type = std::vector<std::filesystem::path>;
+};
+template<>
+struct SelectionInfo<ConfigKey::SwizzlePath>
+{
+     using value_type = std::filesystem::path;
+};
+template<>
+struct SelectionInfo<ConfigKey::DeswizzlePath>
+{
+     using value_type = std::filesystem::path;
+};
+template<>
+struct SelectionInfo<ConfigKey::OutputImagePath>
+{
+     using value_type = std::filesystem::path;
+};
+template<>
+struct SelectionInfo<ConfigKey::OutputMimPath>
+{
+     using value_type = std::filesystem::path;
+};
+template<>
+struct SelectionInfo<ConfigKey::OutputMapPath>
+{
+     using value_type = std::filesystem::path;
+};
+template<>
+struct SelectionInfo<ConfigKey::CacheTexturePaths>
+{
+     using value_type = std::vector<std::filesystem::path>;
+};
+template<>
+struct SelectionInfo<ConfigKey::CacheSwizzlePathsEnabled>
+{
+     using value_type = std::vector<bool>;
+};
+template<>
+struct SelectionInfo<ConfigKey::CacheSwizzleAsOneImagePathsEnabled>
+{
+     using value_type = std::vector<bool>;
+};
+template<>
+struct SelectionInfo<ConfigKey::CacheDeswizzlePathsEnabled>
+{
+     using value_type = std::vector<bool>;
+};
+template<>
+struct SelectionInfo<ConfigKey::CacheMapPaths>
+{
+     using value_type = std::vector<std::filesystem::path>;
+};
+template<>
+struct SelectionInfo<ConfigKey::CacheMapPathsEnabled>
+{
+     using value_type = std::vector<bool>;
+};
+
+
+template<>
+struct SelectionInfo<ConfigKey::FFNXModPath>
+{
+     using value_type = std::filesystem::path;
+};
+template<>
+struct SelectionInfo<ConfigKey::FFNXOverridePath>
+{
+     using value_type = std::filesystem::path;
+};
+template<>
+struct SelectionInfo<ConfigKey::FFNXDirectPath>
+{
+     using value_type = std::filesystem::path;
+};
+
+template<ConfigKey Key>
+struct SelectionUseFFNXConfig : std::false_type
+{
+};
+template<>
+struct SelectionUseFFNXConfig<ConfigKey::FFNXModPath> : std::true_type
+{
+};
+template<>
+struct SelectionUseFFNXConfig<ConfigKey::FFNXOverridePath> : std::true_type
+{
+};
+template<>
+struct SelectionUseFFNXConfig<ConfigKey::FFNXDirectPath> : std::true_type
+{
+};
+
+
+template<typename ValueT>
+struct SelectionLoadStrategy
+{
+     static bool load(const Configuration &config, std::string_view config_key, ValueT &value)
+     {
+          if constexpr (std::convertible_to<ValueT, std::filesystem::path>)
+          {
+               return config[config_key].value_or(value.u8string());
+          }
+          else if constexpr (requires { std::declval<ValueT>().raw(); })
+          {
+               return config[config_key].value_or(value.raw());
+          }
+          else if constexpr (std::is_enum_v<ValueT>)
+          {
+               value = static_cast<ValueT>(config[config_key].value_or(std::to_underlying(value)));
+          }
+          else
+          {
+               value = config[config_key].value_or(value);
+          }
+          return true;
+     }
+};
+
+template<typename ValueT>
+struct SelectionUpdateStrategy
+{
+     static void update(Configuration &config, std::string_view config_key, const ValueT &value)
+     {
+          if constexpr (std::convertible_to<ValueT, std::filesystem::path>)
+          {
+               std::u8string str_val = value.u8string();
+               std::ranges::replace(str_val, u8'\\', u8'/');// normalize to forward slashes
+               spdlog::info("selection<{}>: \"{}\"", config_key, std::filesystem::path(str_val).string());
+               config->insert_or_assign(config_key, str_val);
+          }
+          else if constexpr (requires { std::declval<ValueT>().raw(); })
+          {
+               spdlog::info("selection<{}>: {}", config_key, value);
+               config->insert_or_assign(config_key, value.raw());
+          }
+          else if constexpr (std::is_enum_v<ValueT>)
+          {
+               spdlog::info("selection<{}>: {}", config_key, value);
+               config->insert_or_assign(config_key, std::to_underlying(value));
+          }
+          else
+          {
+               spdlog::info("selection<{}>: {}", config_key, value);
+               config->insert_or_assign(config_key, value);
+          }
+     }
+};
+
+
+template<ConfigKey Key>
+struct Selection
+{
+     using value_type = typename SelectionInfo<Key>::value_type;
+
+     value_type value;
+     Selection([[maybe_unused]] const Configuration &config, [[maybe_unused]] const std::optional<Configuration> &ffnx_config)
+       : value([&]() {
+            if constexpr (SelectionUseFFNXConfig<Key>::value)
+            {
+                 if (ffnx_config.has_value())
+                 {
+                      return get_default_value(&ffnx_config.value());
+                 }
+                 return get_default_value(nullptr);
+            }
+            else
+            {
+                 return get_default_value(&config);
+            }
+       })
+     {
+          if constexpr (SelectionUseFFNXConfig<Key>::value)
+          {
+               if (ffnx_config.has_value())
+               {
+                    load(ffnx_config.value());
+               }
+          }
+          else
+          {
+               load(config);
+          }
+     }
+
+   private:
+     static constexpr value_type get_default_value([[maybe_unused]] const Configuration *config)
+     {
+          if constexpr (requires(const Configuration &c) { SelectionInfo<Key>::default_value(c); })
+          {
+               if (config != nullptr)
+               {
+                    return SelectionInfo<Key>::default_value(*config);
+               }
+          }
+          else if constexpr (requires { SelectionInfo<Key>::default_value(); })
+          {
+               return SelectionInfo<Key>::default_value();
+          }
+          else
+          {
+               return {};// default-constructed
+          }
+     }
+
+     static constexpr value_type get_expensive_default_value()
+     {
+          if constexpr (requires { SelectionInfo<Key>::expensive_default_value(); })
+          {
+               return SelectionInfo<Key>::expensive_default_value();
+          }
+          else
+          {
+               return {};// default-constructed
+          }
+     }
+
+     void load(const Configuration &config)
+     {
+          if (!SelectionLoadStrategy<value_type>::load(config, config_key, value))
+          {
+               value = get_expensive_default_value();
+          }
+          if constexpr (requires(value_type &v) { SelectionInfo<Key>::post_load_operation(v); })
+          {
+               SelectionInfo<Key>::post_load_operation(value);
+          }
+     }
+
+   public:
+     // when we change directories we need to check for the ffnx config and refresh the values from that config.
+     // go back to default value if ffnx_config not there.
+     void refresh([[maybe_unused]] const std::optional<Configuration> &ffnx_config) const
+     {
+          if constexpr (SelectionUseFFNXConfig<Key>::value)
+          {
+               if (ffnx_config.has_value())
+               {
+                    load(ffnx_config.value());
+               }
+               else
+               {
+                    value = get_default_value(nullptr);
+               }
+          }
+     }
+
+     // update skips over ffnx values as we're currently not writing to the ffnx config file.
+     void update([[maybe_unused]] Configuration &config) const
+     {
+          if constexpr (!SelectionUseFFNXConfig<Key>::value)
+          {
+               SelectionUpdateStrategy<value_type>::update(config, config_key, value);
+          }
+     }
+
+     constexpr static std::string_view config_key = key_to_string(Key);
+};
+
 /**
  * @brief Manages various settings and selections for the application.
  *
@@ -290,7 +875,7 @@ struct Selections
      open_viii::LangT              coo;///< Selected language.
      draw_mode                     draw;///< Current drawing mode.
      int                           selected_tile;///< Index of the currently selected tile.
-     int                           swizzle_paths_index;
+
      std::int32_t                  window_width;///< Current window width.
      std::int32_t                  window_height;///< Current window height.
      tile_sizes                    tile_size_value;///< Current tile size setting.
@@ -446,7 +1031,12 @@ struct Selections
      void update_configuration_key() const
      {
           Configuration config{};
-          (update<Keys>(config), ...);
+          (
+            [&]<ConfigKey Key> {
+                 if constexpr (!SelectionUseFFNXConfig<Key>::value)
+                      update<Key>(config);
+            }.template operator()<Keys>(),
+            ...);
           config.save();
      }
 
