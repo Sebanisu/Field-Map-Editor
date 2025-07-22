@@ -956,24 +956,24 @@ struct Selections
           // cache these values for use later on.
           std::optional<Configuration>         ffnx_config{};
           std::optional<std::filesystem::path> ff8_path{};
-          return [&]<std::size_t... Is>(std::index_sequence<Is...>) {
-               return SelectionsArrayT {
-                    (
-                      [&]<ConfigKey Key>() {
-                           if constexpr (ConfigKey::FF8Path == Key)
-                           {
-                                auto tmp    = std::make_unique<Selection<Key>>(config, ffnx_config);
-                                ff8_path    = tmp->value;
-                                ffnx_config = get_ffnx_config(tmp->value);
-                                return std::move(tmp);
-                           }
-                           else
-                           {
-                                return std::make_unique<Selection<Key>>(config, ffnx_config);
-                           }
-                      }.template operator()<static_cast<ConfigKey>(Is)>(),
-                      ...)
-               };
+          return [&]<std::size_t... Is>(std::index_sequence<Is...>) -> SelectionsArrayT {
+               SelectionsArrayT result{};
+
+               ((result[Is] = [&]<ConfigKey Key>() -> std::unique_ptr<Selection<Key>> {
+                     if constexpr (ConfigKey::FF8Path == Key)
+                     {
+                          auto tmp    = std::make_unique<Selection<Key>>(config, ffnx_config);
+                          ff8_path    = tmp->value;
+                          ffnx_config = get_ffnx_config(tmp->value);
+                          return std::move(tmp);
+                     }
+                     else
+                     {
+                          return std::make_unique<Selection<Key>>(config, ffnx_config);
+                     }
+                }.template operator()<static_cast<ConfigKey>(Is)>()),
+                ...);
+                return result;
           }(std::make_index_sequence<SelectionsSizeT>{});
      }
 
