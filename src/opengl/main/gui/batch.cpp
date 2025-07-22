@@ -55,11 +55,11 @@ void fme::batch::draw_window()
           spdlog::error("Failed to lock m_selections: shared_ptr is expired.");
           return;
      }
-     bool      &visible     = selections->display_batch_window;
+     bool      &visible     = selections->get<ConfigKey::DisplayBatchWindow>();
      const auto pop_visible = glengine::ScopeGuard{ [&selections, &visible, was_visable = visible] {
           if (was_visable != visible)
           {
-               selections->update_configuration_key<ConfigKey::DisplayBatchWindow>();
+               selections->update<ConfigKey::DisplayBatchWindow>();
           }
      } };
      const auto end = glengine::ScopeGuard(&ImGui::End);
@@ -92,9 +92,9 @@ void fme::batch::draw_window()
      const auto archives_group = m_archives_group.lock();
      if (archives_group)
      {
-          if (draw_multi_column_list_box("Map List", archives_group->mapdata(), selections->batch_map_list_enabled))
+          if (draw_multi_column_list_box("Map List", archives_group->mapdata(), selections->get<ConfigKey::BatchMapListEnabled>()))
           {
-               selections->update_configuration_key<ConfigKey::BatchMapListEnabled>();
+               selections->update<ConfigKey::BatchMapListEnabled>();
           }
      }
      else
@@ -131,10 +131,10 @@ void fme::batch::combo_input_type()
        []() { return values; },
        []() { return values | std::views::transform(AsString{}); },
        []() { return tooltips; },
-       selections->batch_input_type);
+       selections->get<ConfigKey::BatchInputType>());
      if (gcc.render())
      {
-          selections->update_configuration_key<ConfigKey::BatchInputType>();
+          selections->update<ConfigKey::BatchInputType>();
      }
 }
 
@@ -187,24 +187,26 @@ void fme::batch::example_input_paths()
           spdlog::error("Failed to lock m_selections: shared_ptr is expired.");
           return;
      }
-     static const key_value_data png_example     = { .field_name    = "field01",
-                                                     .ext           = ".png",
-                                                     .language_code = open_viii::LangT::en,
-                                                     .palette       = std::uint8_t{ 0 },
-                                                     .texture_page  = std::uint8_t{ 5 },
-                                                     .pupu_id       = 9999U };
-     static const key_value_data map_example     = { .field_name = "field01", .ext = ".map", .language_code = open_viii::LangT::en };
-     static const std::string    ff8_path        = "{ff8_path}";
-     static const std::string    current_path    = "{current_path}";
+     static const key_value_data png_example  = { .field_name    = "field01",
+                                                  .ext           = ".png",
+                                                  .language_code = open_viii::LangT::en,
+                                                  .palette       = std::uint8_t{ 0 },
+                                                  .texture_page  = std::uint8_t{ 5 },
+                                                  .pupu_id       = 9999U };
+     static const key_value_data map_example  = { .field_name = "field01", .ext = ".map", .language_code = open_viii::LangT::en };
+     static const std::string    ff8_path     = "{ff8_path}";
+     static const std::string    current_path = "{current_path}";
 
-     const std::string          &selected_string = get_selected_path(selections->batch_input_path, selections->batch_input_root_path_type);
+     const std::string          &selected_string =
+       get_selected_path(selections->get<ConfigKey::BatchInputPath>(), selections->get<ConfigKey::BatchInputRootPathType>());
 
      // currently input and output use the same patterns this might change later.
      render_output_example_table(
        "DeSwizzleOutputExampleTable",
-       png_example.replace_tags(fme::batch::get_output_pattern(selections->batch_input_type), selections, selected_string),
-       map_example.replace_tags(fme::batch::get_output_map_pattern(selections->batch_input_type), selections, selected_string),
-       selections->batch_output_save_map);
+       png_example.replace_tags(fme::batch::get_output_pattern(selections->get<ConfigKey::BatchInputType>()), selections, selected_string),
+       map_example.replace_tags(
+         fme::batch::get_output_map_pattern(selections->get<ConfigKey::BatchInputType>()), selections, selected_string),
+       selections->get<ConfigKey::BatchOutputSaveMap>());
 }
 
 const std::string &fme::batch::get_output_pattern(fme::input_types type)
@@ -220,9 +222,9 @@ const std::string &fme::batch::get_output_pattern(fme::input_types type)
      {
           default:
           case fme::input_types::swizzle:
-               return selections->output_swizzle_pattern;
+               return selections->get<ConfigKey::OutputSwizzlePattern>();
           case fme::input_types::deswizzle:
-               return selections->output_deswizzle_pattern;
+               return selections->get<ConfigKey::OutputDeswizzlePattern>();
      }
 }
 
@@ -239,10 +241,10 @@ const std::string &fme::batch::get_output_pattern(fme::output_types type)
      {
           case fme::output_types::swizzle:
           case fme::output_types::swizzle_as_one_image:
-               return selections->output_swizzle_pattern;
+               return selections->get<ConfigKey::OutputSwizzlePattern>();
           default:
           case fme::output_types::deswizzle:
-               return selections->output_deswizzle_pattern;
+               return selections->get<ConfigKey::OutputDeswizzlePattern>();
      }
 }
 
@@ -259,9 +261,9 @@ const std::string &fme::batch::get_output_map_pattern(fme::input_types type)
      {
           default:
           case fme::input_types::swizzle:
-               return selections->output_map_pattern_for_swizzle;
+               return selections->get<ConfigKey::OutputMapPatternForSwizzle>();
           case fme::input_types::deswizzle:
-               return selections->output_map_pattern_for_deswizzle;
+               return selections->get<ConfigKey::OutputMapPatternForDeswizzle>();
      }
 }
 
@@ -278,10 +280,10 @@ const std::string &fme::batch::get_output_map_pattern(fme::output_types type)
      {
           case fme::output_types::swizzle:
           case fme::output_types::swizzle_as_one_image:
-               return selections->output_map_pattern_for_swizzle;
+               return selections->get<ConfigKey::OutputMapPatternForSwizzle>();
           default:
           case fme::output_types::deswizzle:
-               return selections->output_map_pattern_for_deswizzle;
+               return selections->get<ConfigKey::OutputMapPatternForDeswizzle>();
      }
 }
 
@@ -307,13 +309,15 @@ void fme::batch::example_output_paths()
                                                  .pupu_id       = 9999U };
      static const key_value_data map_example = { .field_name = "field01", .ext = ".map", .language_code = open_viii::LangT::en };
 
-     const std::string &selected_string      = get_selected_path(selections->batch_output_path, selections->batch_output_root_path_type);
+     const std::string          &selected_string =
+       get_selected_path(selections->get<ConfigKey::BatchOutputPath>(), selections->get<ConfigKey::BatchOutputRootPathType>());
 
      render_output_example_table(
        "DeSwizzleOutputExampleTable",
-       png_example.replace_tags(fme::batch::get_output_pattern(selections->batch_output_type), selections, selected_string),
-       map_example.replace_tags(fme::batch::get_output_map_pattern(selections->batch_output_type), selections, selected_string),
-       selections->batch_output_save_map);
+       png_example.replace_tags(fme::batch::get_output_pattern(selections->get<ConfigKey::BatchOutputType>()), selections, selected_string),
+       map_example.replace_tags(
+         fme::batch::get_output_map_pattern(selections->get<ConfigKey::BatchOutputType>()), selections, selected_string),
+       selections->get<ConfigKey::BatchOutputSaveMap>());
 }
 
 void fme::batch::save_input_path()
@@ -328,9 +332,9 @@ void fme::batch::save_input_path()
           spdlog::error("Failed to lock m_selections: shared_ptr is expired.");
           return;
      }
-     selections->batch_input_path = m_input_path.data();
-     spdlog::info("batch_input_path: {}", selections->batch_input_path);
-     selections->update_configuration_key<ConfigKey::BatchInputPath>();
+     selections->get<ConfigKey::BatchInputPath>() = m_input_path.data();
+     spdlog::info("batch_input_path: {}", selections->get<ConfigKey::BatchInputPath>());
+     selections->update<ConfigKey::BatchInputPath>();
 }
 
 void fme::batch::save_output_path()
@@ -345,9 +349,9 @@ void fme::batch::save_output_path()
           spdlog::error("Failed to lock m_selections: shared_ptr is expired.");
           return;
      }
-     selections->batch_output_path = m_output_path.data();
-     spdlog::info("batch_output_path: {}", selections->batch_input_path);
-     selections->update_configuration_key<ConfigKey::BatchOutputPath>();
+     selections->get<ConfigKey::BatchOutputPath>() = m_output_path.data();
+     spdlog::info("batch_output_path: {}", selections->get<ConfigKey::BatchInputPath>());
+     selections->update<ConfigKey::BatchOutputPath>();
 }
 
 void fme::batch::checkbox_load_map()
@@ -358,17 +362,17 @@ void fme::batch::checkbox_load_map()
           spdlog::error("Failed to lock m_selections: shared_ptr is expired.");
           return;
      }
-     if (!(selections->batch_input_type != input_types::mim))
+     if (!(selections->get<ConfigKey::BatchInputType>() != input_types::mim))
      {
           return;
      }
      const auto pop_id = PushPopID();
-     if (!ImGui::Checkbox(gui_labels::batch_load_map.data(), &selections->batch_input_load_map))
+     if (!ImGui::Checkbox(gui_labels::batch_load_map.data(), &selections->get<ConfigKey::BatchInputLoadMap>()))
      {
           return;
      }
-     spdlog::info("batch_input_load_map: {}", selections->batch_input_load_map);
-     selections->update_configuration_key<ConfigKey::BatchInputLoadMap>();
+     spdlog::info("batch_input_load_map: {}", selections->get<ConfigKey::BatchInputLoadMap>());
+     selections->update<ConfigKey::BatchInputLoadMap>();
 }
 
 void fme::batch::combo_output_type()
@@ -384,12 +388,12 @@ void fme::batch::combo_output_type()
        gui_labels::output_type,
        []() { return values; },
        []() { return values | std::views::transform(AsString{}); },
-       selections->batch_output_type);
+       selections->get<ConfigKey::BatchOutputType>());
      if (!gcc.render())
      {
           return;
      }
-     selections->update_configuration_key<ConfigKey::BatchOutputType>();
+     selections->update<ConfigKey::BatchOutputType>();
 }
 
 
@@ -401,7 +405,7 @@ void fme::batch::browse_input_path()
           spdlog::error("Failed to lock m_selections: shared_ptr is expired.");
           return;
      }
-     if (selections->batch_input_type == input_types::mim)
+     if (selections->get<ConfigKey::BatchInputType>() == input_types::mim)
      {
           // using embedded images from ff8.
           return;
@@ -415,18 +419,19 @@ void fme::batch::browse_input_path()
        []() { return values; },
        []() { return values | std::views::transform(AsString{}); },
        []() { return tooltips; },
-       selections->batch_input_root_path_type);
+       selections->get<ConfigKey::BatchInputRootPathType>());
      if (gcc.render())
      {
-          selections->update_configuration_key<ConfigKey::BatchInputRootPathType>();
+          selections->update<ConfigKey::BatchInputRootPathType>();
      }
-     if (selections->batch_input_root_path_type != root_path_types::selected_path)
+     if (selections->get<ConfigKey::BatchInputRootPathType>() != root_path_types::selected_path)
      {
-          const float        button_size      = ImGui::GetFrameHeight();
-          const float        button_width     = button_size * 3.0F;
-          const auto         pop_id           = PushPopID();
-          const std::string &selected_string  = get_selected_path(selections->batch_input_path, selections->batch_input_root_path_type);
-          std::string        processed_string = key_value_data::static_replace_tags(selected_string, selections);
+          const float        button_size  = ImGui::GetFrameHeight();
+          const float        button_width = button_size * 3.0F;
+          const auto         pop_id       = PushPopID();
+          const std::string &selected_string =
+            get_selected_path(selections->get<ConfigKey::BatchInputPath>(), selections->get<ConfigKey::BatchInputRootPathType>());
+          std::string processed_string = key_value_data::static_replace_tags(selected_string, selections);
           if (ImGui::Button(gui_labels::explore.data(), ImVec2{ button_width, button_size }))
           {
                open_directory(processed_string);
@@ -437,7 +442,7 @@ void fme::batch::browse_input_path()
           }
      }
 
-     const bool path_changed = selections->batch_input_root_path_type == root_path_types::selected_path
+     const bool path_changed = selections->get<ConfigKey::BatchInputRootPathType>() == root_path_types::selected_path
                                && browse_path(gui_labels::input_path, m_input_path_valid, m_input_path);
      example_input_paths();
      if (!path_changed)
@@ -463,18 +468,19 @@ void fme::batch::browse_output_path()
        []() { return values; },
        []() { return values | std::views::transform(AsString{}); },
        []() { return tooltips; },
-       selections->batch_output_root_path_type);
+       selections->get<ConfigKey::BatchOutputRootPathType>());
      if (gcc.render())
      {
-          selections->update_configuration_key<ConfigKey::BatchOutputRootPathType>();
+          selections->update<ConfigKey::BatchOutputRootPathType>();
      }
-     if (selections->batch_output_root_path_type != root_path_types::selected_path)
+     if (selections->get<ConfigKey::BatchOutputRootPathType>() != root_path_types::selected_path)
      {
-          const float        button_size      = ImGui::GetFrameHeight();
-          const float        button_width     = button_size * 3.0F;
-          const auto         pop_id           = PushPopID();
-          const std::string &selected_string  = get_selected_path(selections->batch_output_path, selections->batch_output_root_path_type);
-          std::string        processed_string = key_value_data::static_replace_tags(selected_string, selections);
+          const float        button_size  = ImGui::GetFrameHeight();
+          const float        button_width = button_size * 3.0F;
+          const auto         pop_id       = PushPopID();
+          const std::string &selected_string =
+            get_selected_path(selections->get<ConfigKey::BatchOutputPath>(), selections->get<ConfigKey::BatchOutputRootPathType>());
+          std::string processed_string = key_value_data::static_replace_tags(selected_string, selections);
           if (ImGui::Button(gui_labels::explore.data(), ImVec2{ button_width, button_size }))
           {
                open_directory(processed_string);
@@ -484,7 +490,7 @@ void fme::batch::browse_output_path()
                tool_tip(processed_string);
           }
      }
-     const bool path_changed = selections->batch_output_root_path_type == root_path_types::selected_path
+     const bool path_changed = selections->get<ConfigKey::BatchOutputRootPathType>() == root_path_types::selected_path
                                && browse_path(gui_labels::output_path, m_output_path_valid, m_output_path);
      example_output_paths();
      if (!path_changed)
@@ -504,17 +510,18 @@ void fme::batch::checkmark_save_map()
      }
      bool changed = false;
      bool forced =
-       (selections->batch_compact_type.enabled() || selections->batch_flatten_type.enabled() || selections->batch_input_load_map);
-     if (!selections->batch_output_save_map && forced)
+       (selections->get<ConfigKey::BatchCompactType>().enabled() || selections->get<ConfigKey::BatchFlattenType>().enabled()
+        || selections->get<ConfigKey::BatchInputLoadMap>());
+     if (!selections->get<ConfigKey::BatchOutputSaveMap>() && forced)
      {
-          selections->batch_output_save_map = true;
-          changed                           = true;
+          selections->get<ConfigKey::BatchOutputSaveMap>() = true;
+          changed                                          = true;
      }
      ImGui::BeginDisabled(forced);
-     if (ImGui::Checkbox(gui_labels::save_map_files.data(), &selections->batch_output_save_map) || changed)
+     if (ImGui::Checkbox(gui_labels::save_map_files.data(), &selections->get<ConfigKey::BatchOutputSaveMap>()) || changed)
      {
-          spdlog::info("batch_output_save_map: {}", selections->batch_output_save_map);
-          selections->update_configuration_key<ConfigKey::BatchOutputSaveMap>();
+          spdlog::info("batch_output_save_map: {}", selections->get<ConfigKey::BatchOutputSaveMap>());
+          selections->update<ConfigKey::BatchOutputSaveMap>();
      }
      ImGui::EndDisabled();
 }
@@ -543,13 +550,13 @@ void fme::batch::combo_compact_type()
        []() { return values; },
        []() { return values | std::views::transform(AsString{}); },
        []() { return tool_tips; },
-       [&]() -> auto              &{ return selections->batch_compact_type; });
+       [&]() -> auto              &{ return selections->get<ConfigKey::BatchCompactType>(); });
 
      if (!gcc.render())
      {
           return;
      }
-     // selections->update_configuration_key<ConfigKey::BatchCompact>();
+     // selections->update<ConfigKey::BatchCompact>();
 }
 void fme::batch::combo_flatten_type()
 {
@@ -560,9 +567,9 @@ void fme::batch::combo_flatten_type()
           return;
      }
      const auto tool_tip_pop        = glengine::ScopeGuard{ [&]() { tool_tip(gui_labels::flatten_tooltip); } };
-     const bool all_or_only_palette = !selections->batch_compact_type.enabled()
-                                      || (selections->batch_compact_type.value() != compact_type::map_order)
-                                      || (selections->batch_compact_type.value() != compact_type::map_order_ffnx);
+     const bool all_or_only_palette = !selections->get<ConfigKey::BatchCompactType>().enabled()
+                                      || (selections->get<ConfigKey::BatchCompactType>().value() != compact_type::map_order)
+                                      || (selections->get<ConfigKey::BatchCompactType>().value() != compact_type::map_order_ffnx);
      static constexpr auto values = std::array{ flatten_type::bpp, flatten_type::palette, flatten_type::both };
      static constexpr auto tool_tips =
        std::array{ gui_labels::flatten_bpp_tooltip, gui_labels::flatten_palette_tooltip, gui_labels::flatten_both_tooltip };
@@ -575,7 +582,7 @@ void fme::batch::combo_flatten_type()
             [&]() { return values; },
             [&]() { return values | std::views::transform(AsString{}); },
             [&]() { return tool_tips; },
-            [&]() -> auto & { return selections->batch_flatten_type; });
+            [&]() -> auto & { return selections->get<ConfigKey::BatchFlattenType>(); });
           if (!gcc.render())
           {
                return;
@@ -588,13 +595,13 @@ void fme::batch::combo_flatten_type()
             [&]() { return values_only_palette; },
             [&]() { return values_only_palette | std::views::transform(AsString{}); },
             [&]() { return tool_tips_only_palette; },
-            [&]() -> auto & { return selections->batch_flatten_type; });
+            [&]() -> auto & { return selections->get<ConfigKey::BatchFlattenType>(); });
           if (!gcc.render())
           {
                return;
           }
      }
-     // selections->update_configuration_key<ConfigKey::BatchFlatten>();
+     // selections->update<ConfigKey::BatchFlatten>();
 }
 bool fme::batch::draw_multi_column_list_box(const std::string_view name, const std::vector<std::string> &items, std::vector<bool> &enabled)
 {
@@ -700,9 +707,9 @@ void fme::batch::button_start()
           ImGui::EndDisabled();
      } };
      ImGui::BeginDisabled(
-       ((selections->batch_input_type == input_types::mim
-         || (!m_input_path_valid && selections->batch_input_root_path_type == root_path_types::selected_path))
-        && (!m_output_path_valid && selections->batch_output_root_path_type == root_path_types::selected_path))
+       ((selections->get<ConfigKey::BatchInputType>() == input_types::mim
+         || (!m_input_path_valid && selections->get<ConfigKey::BatchInputRootPathType>() == root_path_types::selected_path))
+        && (!m_output_path_valid && selections->get<ConfigKey::BatchOutputRootPathType>() == root_path_types::selected_path))
        || !archives_group);
      ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.0F, 0.5F, 0.0F, 1.0F));// Green
      ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.3F, 0.8F, 0.3F, 1.0F));// Light green hover
@@ -741,9 +748,9 @@ void fme::batch::button_stop()
           ImGui::EndDisabled();
      } };
      ImGui::BeginDisabled(
-       ((selections->batch_input_type == input_types::mim
-         || (!m_input_path_valid && selections->batch_input_root_path_type == root_path_types::selected_path))
-        && (!m_output_path_valid && selections->batch_output_root_path_type == root_path_types::selected_path))
+       ((selections->get<ConfigKey::BatchInputType>() == input_types::mim
+         || (!m_input_path_valid && selections->get<ConfigKey::BatchInputRootPathType>() == root_path_types::selected_path))
+        && (!m_output_path_valid && selections->get<ConfigKey::BatchOutputRootPathType>() == root_path_types::selected_path))
        || !archives_group);
      ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.5F, 0.0F, 0.0F, 1.0F));// Red
      ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.8F, 0.3F, 0.3F, 1.0F));// Light red hover
@@ -907,22 +914,24 @@ void fme::batch::update([[maybe_unused]] float elapsed_time)
      flatten();
 
      // Choose output method based on batch output type
-     const std::string &selected_string = get_selected_path(selections->batch_output_path, selections->batch_output_root_path_type);
-     switch (selections->batch_output_type)
+     const std::string &selected_string =
+       get_selected_path(selections->get<ConfigKey::BatchOutputPath>(), selections->get<ConfigKey::BatchOutputRootPathType>());
+     switch (selections->get<ConfigKey::BatchOutputType>())
      {
           case output_types::deswizzle:
-               m_future_consumer += m_map_sprite.save_pupu_textures(selections->output_deswizzle_pattern, selected_string);
+               m_future_consumer += m_map_sprite.save_pupu_textures(selections->get<ConfigKey::OutputDeswizzlePattern>(), selected_string);
                break;
           case output_types::swizzle:
-               m_future_consumer += m_map_sprite.save_swizzle_textures(selections->output_swizzle_pattern, selected_string);
+               m_future_consumer += m_map_sprite.save_swizzle_textures(selections->get<ConfigKey::OutputSwizzlePattern>(), selected_string);
                break;
           case output_types::swizzle_as_one_image:
-               m_future_consumer += m_map_sprite.save_combined_swizzle_texture(selections->output_swizzle_pattern, selected_string);
+               m_future_consumer +=
+                 m_map_sprite.save_combined_swizzle_texture(selections->get<ConfigKey::OutputSwizzlePattern>(), selected_string);
                break;
      }
 
      // Optionally save the modified map
-     if (selections->batch_output_save_map)
+     if (selections->get<ConfigKey::BatchOutputSaveMap>())
      {
           const key_value_data cpm2 = {
                .field_name    = m_map_sprite.get_base_name(),
@@ -930,7 +939,7 @@ void fme::batch::update([[maybe_unused]] float elapsed_time)
                .language_code = m_coo.has_value() && m_coo.value() != open_viii::LangT::generic ? m_coo : std::nullopt,
           };
           m_map_sprite.save_modified_map(
-            cpm2.replace_tags(get_output_map_pattern(selections->batch_output_type), selections, selected_string));
+            cpm2.replace_tags(get_output_map_pattern(selections->get<ConfigKey::BatchOutputType>()), selections, selected_string));
      }
 }
 
@@ -994,11 +1003,12 @@ void fme::batch::generate_map_sprite()
      assert(m_coo);
 
      // Initialize filters with default disabled state
-     ff_8::filters      filters         = { false };
+     ff_8::filters      filters = { false };
 
      // Enable specific filters depending on the input type
-     const std::string &selected_string = get_selected_path(selections->batch_input_path, selections->batch_input_root_path_type);
-     switch (selections->batch_input_type)
+     const std::string &selected_string =
+       get_selected_path(selections->get<ConfigKey::BatchInputPath>(), selections->get<ConfigKey::BatchInputRootPathType>());
+     switch (selections->get<ConfigKey::BatchInputType>())
      {
           case input_types::mim: {
                // No filters applied for MIM input and no .map files are loaded automaticly.
@@ -1008,7 +1018,7 @@ void fme::batch::generate_map_sprite()
           case input_types::deswizzle: {
                // Enable deswizzle filter using the input path
                filters.deswizzle.update(std::filesystem::path(selected_string)).enable();
-               if (selections->batch_input_load_map)
+               if (selections->get<ConfigKey::BatchInputLoadMap>())
                     filters.deswizzle_map.update(std::filesystem::path(selected_string)).enable();
                break;
           }
@@ -1016,7 +1026,7 @@ void fme::batch::generate_map_sprite()
           case input_types::swizzle: {
                // Enable upscale filter using the input path
                filters.swizzle.update(std::filesystem::path(selected_string)).enable();
-               if (selections->batch_input_load_map)
+               if (selections->get<ConfigKey::BatchInputLoadMap>())
                     filters.swizzle_map.update(std::filesystem::path(selected_string)).enable();
                break;
           }
@@ -1027,7 +1037,7 @@ void fme::batch::generate_map_sprite()
           }
      }
      ff_8::map_group map_group = { m_field, *m_coo };
-     const bool      swizzle   = selections->batch_output_type == output_types::swizzle;
+     const bool      swizzle   = selections->get<ConfigKey::BatchOutputType>() == output_types::swizzle;
      // Create the map sprite with appropriate settings
      if (m_coo.has_value() && m_coo.value() != open_viii::LangT::generic)
      {
@@ -1080,13 +1090,13 @@ void fme::batch::compact()
      }
 
      // Skip if compact type is not enabled
-     if (!selections->batch_compact_type.enabled())
+     if (!selections->get<ConfigKey::BatchCompactType>().enabled())
      {
           return;
      }
 
      // Apply the appropriate compaction strategy based on the selected type
-     switch (selections->batch_compact_type.value())
+     switch (selections->get<ConfigKey::BatchCompactType>().value())
      {
           case compact_type::rows:
                m_map_sprite.compact_rows();
@@ -1125,19 +1135,19 @@ void fme::batch::flatten()
      }
 
      // Skip if flattening is not enabled
-     if (!selections->batch_flatten_type.enabled())
+     if (!selections->get<ConfigKey::BatchFlattenType>().enabled())
      {
           return;
      }
 
      // Determine and apply flattening strategy
-     switch (selections->batch_flatten_type.value())
+     switch (selections->get<ConfigKey::BatchFlattenType>().value())
      {
           case flatten_type::bpp:
                // Only flatten BPP if compact type isn't using map order
                if (
-                 !selections->batch_compact_type.enabled()
-                 || (selections->batch_compact_type.value() != compact_type::map_order && selections->batch_compact_type.value() != compact_type::map_order_ffnx))
+                 !selections->get<ConfigKey::BatchCompactType>().enabled()
+                 || (selections->get<ConfigKey::BatchCompactType>().value() != compact_type::map_order && selections->get<ConfigKey::BatchCompactType>().value() != compact_type::map_order_ffnx))
                {
                     m_map_sprite.flatten_bpp();
                }
@@ -1150,8 +1160,8 @@ void fme::batch::flatten()
           case flatten_type::both:
                // Only flatten BPP if not using map order
                if (
-                 !selections->batch_compact_type.enabled()
-                 || (selections->batch_compact_type.value() != compact_type::map_order && selections->batch_compact_type.value() != compact_type::map_order_ffnx))
+                 !selections->get<ConfigKey::BatchCompactType>().enabled()
+                 || (selections->get<ConfigKey::BatchCompactType>().value() != compact_type::map_order && selections->get<ConfigKey::BatchCompactType>().value() != compact_type::map_order_ffnx))
                {
                     m_map_sprite.flatten_bpp();
                }
@@ -1160,7 +1170,7 @@ void fme::batch::flatten()
      }
 
      // If the compact strategy is not map-order-based, re-apply compaction
-     if (selections->batch_compact_type.value() != compact_type::map_order)
+     if (selections->get<ConfigKey::BatchCompactType>().value() != compact_type::map_order)
      {
           compact();
      }
@@ -1242,7 +1252,7 @@ void fme::batch::choose_field_and_coo()
                const auto offset = std::ranges::distance(std::ranges::begin(map_data), find_result);
 
                // Check if the map at this offset is enabled
-               if (selections->batch_map_list_enabled.at(static_cast<std::size_t>(offset)))
+               if (selections->get<ConfigKey::BatchMapListEnabled>().at(static_cast<std::size_t>(offset)))
                {
                     // Create the field object from the archive and store it
                     m_field = std::make_shared<open_viii::archive::FIFLFS<false>>(tmp.get());
@@ -1310,10 +1320,10 @@ fme::batch &fme::batch::operator=(std::weak_ptr<archives_group> new_group)
      stop();
      m_archives_group    = std::move(new_group);
      auto archives_group = m_archives_group.lock();
-     if (archives_group && archives_group->mapdata().size() != selections->batch_map_list_enabled.size())
+     if (archives_group && archives_group->mapdata().size() != selections->get<ConfigKey::BatchMapListEnabled>().size())
      {
-          selections->batch_map_list_enabled.resize(archives_group->mapdata().size(), true);
-          selections->update_configuration_key<ConfigKey::BatchMapListEnabled>();
+          selections->get<ConfigKey::BatchMapListEnabled>().resize(archives_group->mapdata().size(), true);
+          selections->update<ConfigKey::BatchMapListEnabled>();
      }
      return *this;
 }
@@ -1327,8 +1337,8 @@ fme::batch &fme::batch::operator=(std::weak_ptr<Selections> new_selections)
           spdlog::error("Failed to lock m_selections: shared_ptr is expired.");
           return *this;
      }
-     m_input_path_valid  = safe_copy_string(selections->batch_input_path, m_input_path);
-     m_output_path_valid = safe_copy_string(selections->batch_output_path, m_output_path);
+     m_input_path_valid  = safe_copy_string(selections->get<ConfigKey::BatchInputPath>(), m_input_path);
+     m_output_path_valid = safe_copy_string(selections->get<ConfigKey::BatchOutputPath>(), m_output_path);
      return *this;
 }
 
@@ -1355,6 +1365,7 @@ fme::batch::batch(std::weak_ptr<Selections> existing_selections, std::weak_ptr<a
           spdlog::error("Failed to lock m_selections: shared_ptr is expired.");
           return;
      }
-     flags = selections->batch_compact_type.enabled() || selections->batch_flatten_type.enabled() ? ImGuiTreeNodeFlags_DefaultOpen
-                                                                                                  : ImGuiTreeNodeFlags{};
+     flags = selections->get<ConfigKey::BatchCompactType>().enabled() || selections->get<ConfigKey::BatchFlattenType>().enabled()
+               ? ImGuiTreeNodeFlags_DefaultOpen
+               : ImGuiTreeNodeFlags{};
 }

@@ -43,7 +43,7 @@ std::vector<const char *> archives_group::get_c_str(const std::vector<std::strin
      return ret;
 }
 
-const std::string &archives_group::path() const noexcept
+const std::filesystem::path &archives_group::path() const noexcept
 {
      return m_path;
 }
@@ -83,7 +83,7 @@ std::shared_ptr<open_viii::archive::FIFLFS<false>> archives_group::field(const i
      }
      return archive;
 }
-archives_group archives_group::with_path(const std::string &in_path) const
+archives_group archives_group::with_path(const std::filesystem::path &in_path) const
 {
      return { m_coo, in_path };
 }

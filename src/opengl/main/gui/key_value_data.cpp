@@ -4,7 +4,7 @@
 [[nodiscard]] std::string fme::key_value_data::replace_tags(
   std::string                                   keyed_string,
   const std::shared_ptr<const fme::Selections> &selections,
-  const std::string                            &selected_path) const
+  const std::filesystem::path                  &selected_path) const
 {
      using namespace std::string_view_literals;
      constexpr static auto pattern          = CTRE_REGEX_INPUT_TYPE{ R"(\{([^\{\}]+)\}|\{([^\{]*)\{([^\}]+)\}([^\}]*)\})" };
@@ -26,7 +26,7 @@
                const auto value       = [&]() {
                     if (key == keys::selected_path)
                     {
-                         return selected_path;
+                         return selected_path.string();
                     }
                     return replace_tag(key, selections);
                }();
@@ -85,22 +85,22 @@
      if (selections)
      {
           if (keys::ff8_path == key)
-               return selections->path;
+               return selections->get<ConfigKey::FF8Path>().string();
 
           if (keys::ffnx_mod_path == key)
-               return selections->ffnx_mod_path;
+               return selections->get<ConfigKey::FFNXModPath>().string();
 
           if (keys::ffnx_direct_mode_path == key)
-               return selections->ffnx_direct_mode_path;
+               return selections->get<ConfigKey::FFNXDirectPath>().string();
 
           if (keys::ffnx_override_path == key)
-               return selections->ffnx_override_path;
+               return selections->get<ConfigKey::FFNXOverridePath>().string();
 
           if (key == keys::batch_input_path)
-               return selections->batch_input_path;
+               return selections->get<ConfigKey::BatchInputPath>();
 
           if (key == keys::batch_output_path)
-               return selections->batch_output_path;
+               return selections->get<ConfigKey::BatchOutputPath>();
      }
      return static_replace_tag(key);
 }

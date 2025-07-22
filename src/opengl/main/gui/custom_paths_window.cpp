@@ -47,7 +47,7 @@ static const auto                                          m_tests = std::to_arr
           spdlog::error("Failed to lock m_selections: shared_ptr is expired.");
           return fme::custom_paths_window::vector_or_string_t::unknown;
      }
-     switch (selections->current_pattern)
+     switch (selections->get<ConfigKey::CurrentPattern>())
      {
           case fme::PatternSelector::OutputSwizzlePattern:
           case fme::PatternSelector::OutputDeswizzlePattern:
@@ -73,31 +73,37 @@ static const auto                                          m_tests = std::to_arr
           spdlog::error("Failed to lock m_selections: shared_ptr is expired.");
           return nullptr;
      }
-     switch (selections->current_pattern)
+     switch (selections->get<ConfigKey::CurrentPattern>())
      {
           case fme::PatternSelector::OutputSwizzlePattern:
-               return &selections->output_swizzle_pattern;
+               return &selections->get<ConfigKey::OutputSwizzlePattern>();
           case fme::PatternSelector::OutputDeswizzlePattern:
-               return &selections->output_deswizzle_pattern;
+               return &selections->get<ConfigKey::OutputDeswizzlePattern>();
           case fme::PatternSelector::OutputMapPatternForSwizzle:
-               return &selections->output_map_pattern_for_swizzle;
+               return &selections->get<ConfigKey::OutputMapPatternForSwizzle>();
           case fme::PatternSelector::OutputMapPatternForDeswizzle:
-               return &selections->output_map_pattern_for_deswizzle;
+               return &selections->get<ConfigKey::OutputMapPatternForDeswizzle>();
           case fme::PatternSelector::PatternsCommonPrefixes:
-               return get_current_string_value_from_index(selections->patterns_common_prefixes, selections->current_pattern_index);
+               return get_current_string_value_from_index(
+                 selections->get<ConfigKey::PatternsCommonPrefixes>(), selections->get<ConfigKey::CurrentPatternIndex>());
           case fme::PatternSelector::PatternsCommonPrefixesForMaps:
-               return get_current_string_value_from_index(selections->patterns_common_prefixes_for_maps, selections->current_pattern_index);
+               return get_current_string_value_from_index(
+                 selections->get<ConfigKey::PatternsCommonPrefixesForMaps>(), selections->get<ConfigKey::CurrentPatternIndex>());
           case fme::PatternSelector::PatternsBase:
-               return get_current_string_value_from_index(selections->patterns_base, selections->current_pattern_index);
+               return get_current_string_value_from_index(
+                 selections->get<ConfigKey::PatternsBase>(), selections->get<ConfigKey::CurrentPatternIndex>());
           case fme::PatternSelector::PathPatternsWithPaletteAndTexturePage:
                return get_current_string_value_from_index(
-                 selections->patterns_with_palette_and_texture_page, selections->current_pattern_index);
+                 selections->get<ConfigKey::PathPatternsWithPaletteAndTexturePage>(), selections->get<ConfigKey::CurrentPatternIndex>());
           case fme::PatternSelector::PathPatternsWithPalette:
-               return get_current_string_value_from_index(selections->patterns_with_palette, selections->current_pattern_index);
+               return get_current_string_value_from_index(
+                 selections->get<ConfigKey::PathPatternsWithPalette>(), selections->get<ConfigKey::CurrentPatternIndex>());
           case fme::PatternSelector::PathPatternsWithTexturePage:
-               return get_current_string_value_from_index(selections->patterns_with_texture_page, selections->current_pattern_index);
+               return get_current_string_value_from_index(
+                 selections->get<ConfigKey::PathPatternsWithTexturePage>(), selections->get<ConfigKey::CurrentPatternIndex>());
           case fme::PatternSelector::PathPatternsWithPupuID:
-               return get_current_string_value_from_index(selections->patterns_with_pupu_id, selections->current_pattern_index);
+               return get_current_string_value_from_index(
+                 selections->get<ConfigKey::PathPatternsWithPupuID>(), selections->get<ConfigKey::CurrentPatternIndex>());
      }
      return nullptr;
 }
@@ -111,7 +117,7 @@ static const auto                                          m_tests = std::to_arr
           spdlog::error("Failed to lock m_selections: shared_ptr is expired.");
           return nullptr;
      }
-     switch (selections->current_pattern)
+     switch (selections->get<ConfigKey::CurrentPattern>())
      {
           case fme::PatternSelector::OutputSwizzlePattern:
           case fme::PatternSelector::OutputDeswizzlePattern:
@@ -119,19 +125,19 @@ static const auto                                          m_tests = std::to_arr
           case fme::PatternSelector::OutputMapPatternForDeswizzle:
                return nullptr;
           case fme::PatternSelector::PatternsCommonPrefixes:
-               return &selections->patterns_common_prefixes;
+               return &selections->get<ConfigKey::PatternsCommonPrefixes>();
           case fme::PatternSelector::PatternsCommonPrefixesForMaps:
-               return &selections->patterns_common_prefixes_for_maps;
+               return &selections->get<ConfigKey::PatternsCommonPrefixesForMaps>();
           case fme::PatternSelector::PatternsBase:
-               return &selections->patterns_base;
+               return &selections->get<ConfigKey::PatternsBase>();
           case fme::PatternSelector::PathPatternsWithPaletteAndTexturePage:
-               return &selections->patterns_with_palette_and_texture_page;
+               return &selections->get<ConfigKey::PathPatternsWithPaletteAndTexturePage>();
           case fme::PatternSelector::PathPatternsWithPalette:
-               return &selections->patterns_with_palette;
+               return &selections->get<ConfigKey::PathPatternsWithPalette>();
           case fme::PatternSelector::PathPatternsWithTexturePage:
-               return &selections->patterns_with_texture_page;
+               return &selections->get<ConfigKey::PathPatternsWithTexturePage>();
           case fme::PatternSelector::PathPatternsWithPupuID:
-               return &selections->patterns_with_pupu_id;
+               return &selections->get<ConfigKey::PathPatternsWithPupuID>();
      }
      return nullptr;
 }
@@ -225,14 +231,14 @@ void fme::custom_paths_window::populate_test_output() const
      const GenericComboClass gcc    = { ""sv,
                                         []() { return values; },
                                      []() { return values | std::views::transform(AsString{}); },
-                                     selections->current_pattern,
+                                     selections->get<ConfigKey::CurrentPattern>(),
                                      generic_combo_settings{ .num_columns = 1 } };
      if (gcc.render())
      {
-          selections->current_pattern_index = -1;
+          selections->get<ConfigKey::CurrentPatternIndex>() = -1;
           populate_input_pattern();
-          selections->update_configuration_key<ConfigKey::CurrentPattern>();
-          selections->update_configuration_key<ConfigKey::CurrentPatternIndex>();
+          selections->update<ConfigKey::CurrentPattern>();
+          selections->update<ConfigKey::CurrentPatternIndex>();
           return true;
      }
      return false;
@@ -250,40 +256,40 @@ void fme::custom_paths_window::save_pattern() const
      {
           *strptr = std::string{ m_input_pattern_string.data() };
      }
-     switch (selections->current_pattern)
+     switch (selections->get<ConfigKey::CurrentPattern>())
      {
           case PatternSelector::OutputSwizzlePattern:
-               selections->update_configuration_key<ConfigKey::OutputSwizzlePattern>();
+               selections->update<ConfigKey::OutputSwizzlePattern>();
                break;
           case PatternSelector::OutputDeswizzlePattern:
-               selections->update_configuration_key<ConfigKey::OutputDeswizzlePattern>();
+               selections->update<ConfigKey::OutputDeswizzlePattern>();
                break;
           case PatternSelector::OutputMapPatternForSwizzle:
-               selections->update_configuration_key<ConfigKey::OutputMapPatternForSwizzle>();
+               selections->update<ConfigKey::OutputMapPatternForSwizzle>();
                break;
           case PatternSelector::OutputMapPatternForDeswizzle:
-               selections->update_configuration_key<ConfigKey::OutputMapPatternForDeswizzle>();
+               selections->update<ConfigKey::OutputMapPatternForDeswizzle>();
                break;
           case fme::PatternSelector::PatternsCommonPrefixes:
-               selections->update_configuration_key<ConfigKey::PatternsCommonPrefixes>();
+               selections->update<ConfigKey::PatternsCommonPrefixes>();
                break;
           case fme::PatternSelector::PatternsCommonPrefixesForMaps:
-               selections->update_configuration_key<ConfigKey::PatternsCommonPrefixesForMaps>();
+               selections->update<ConfigKey::PatternsCommonPrefixesForMaps>();
                break;
           case fme::PatternSelector::PatternsBase:
-               selections->update_configuration_key<ConfigKey::PatternsBase>();
+               selections->update<ConfigKey::PatternsBase>();
                break;
           case fme::PatternSelector::PathPatternsWithPaletteAndTexturePage:
-               selections->update_configuration_key<ConfigKey::PathPatternsWithPaletteAndTexturePage>();
+               selections->update<ConfigKey::PathPatternsWithPaletteAndTexturePage>();
                break;
           case fme::PatternSelector::PathPatternsWithPalette:
-               selections->update_configuration_key<ConfigKey::PathPatternsWithPalette>();
+               selections->update<ConfigKey::PathPatternsWithPalette>();
                break;
           case fme::PatternSelector::PathPatternsWithTexturePage:
-               selections->update_configuration_key<ConfigKey::PathPatternsWithTexturePage>();
+               selections->update<ConfigKey::PathPatternsWithTexturePage>();
                break;
           case fme::PatternSelector::PathPatternsWithPupuID:
-               selections->update_configuration_key<ConfigKey::PathPatternsWithPupuID>();
+               selections->update<ConfigKey::PathPatternsWithPupuID>();
                break;
      }
 }
@@ -367,7 +373,7 @@ void fme::custom_paths_window::save_pattern() const
                const float availableWidth = ImGui::GetContentRegionAvail().x;
                ImGui::PushItemWidth(availableWidth);// Set textbox width to fill cell
                const auto pop_width = glengine::ScopeGuard(&ImGui::PopItemWidth);
-               if (selections->current_pattern_index == static_cast<int>(index))
+               if (selections->get<ConfigKey::CurrentPatternIndex>() == static_cast<int>(index))
                {
                     if (ImGui::InputText("##test input", m_input_pattern_string.data(), m_input_pattern_string.size()))
                     {
@@ -379,8 +385,8 @@ void fme::custom_paths_window::save_pattern() const
                {
                     if (ImGui::Selectable(str.c_str()))
                     {
-                         selections->current_pattern_index = static_cast<int>(index);
-                         selections->update_configuration_key<ConfigKey::CurrentPatternIndex>();
+                         selections->get<ConfigKey::CurrentPatternIndex>() = static_cast<int>(index);
+                         selections->update<ConfigKey::CurrentPatternIndex>();
                          populate_input_pattern();
                          r_val = true;
                     }
@@ -401,13 +407,13 @@ void fme::custom_paths_window::save_pattern() const
                tool_tip("Delete");
           }
           ImGui::SameLine();// Keep buttons on the same line
-          if (selections->current_pattern_index != static_cast<int>(index))
+          if (selections->get<ConfigKey::CurrentPatternIndex>() != static_cast<int>(index))
           {
                // Edit button
                if (ImGui::Button(fmt::format("{}##edit_{}", ICON_FA_PEN, index).c_str()))
                {
-                    selections->current_pattern_index = static_cast<int>(index);
-                    selections->update_configuration_key<ConfigKey::CurrentPatternIndex>();
+                    selections->get<ConfigKey::CurrentPatternIndex>() = static_cast<int>(index);
+                    selections->update<ConfigKey::CurrentPatternIndex>();
                     populate_input_pattern();
                     r_val = true;
                }
@@ -420,8 +426,8 @@ void fme::custom_paths_window::save_pattern() const
           {
                if (ImGui::Button(fmt::format("{}##cancel_{}", ICON_FA_XMARK, index).c_str()))
                {
-                    selections->current_pattern_index = -1;
-                    selections->update_configuration_key<ConfigKey::CurrentPatternIndex>();
+                    selections->get<ConfigKey::CurrentPatternIndex>() = -1;
+                    selections->update<ConfigKey::CurrentPatternIndex>();
                     std::ranges::fill(m_input_pattern_string, '\0');
                     r_val = true;
                }
@@ -435,7 +441,7 @@ void fme::custom_paths_window::save_pattern() const
           // Copy button
           if (ImGui::Button(fmt::format("{}##copy_{}", ICON_FA_CLIPBOARD, index).c_str()))
           {
-               if (selections->current_pattern_index != static_cast<int>(index))
+               if (selections->get<ConfigKey::CurrentPatternIndex>() != static_cast<int>(index))
                {
                     ImGui::SetClipboardText(str.c_str());
                }
@@ -465,8 +471,8 @@ void fme::custom_paths_window::save_pattern() const
           if (auto *const mut_vptr = get_current_string_vector_mutable(); mut_vptr)
           {
                mut_vptr->emplace_back();
-               selections->current_pattern_index = static_cast<int>(std::ranges::ssize(*mut_vptr) - 1);
-               selections->update_configuration_key<ConfigKey::CurrentPatternIndex>();
+               selections->get<ConfigKey::CurrentPatternIndex>() = static_cast<int>(std::ranges::ssize(*mut_vptr) - 1);
+               selections->update<ConfigKey::CurrentPatternIndex>();
                populate_input_pattern();
                save_pattern();
                r_val = true;
@@ -490,16 +496,16 @@ void fme::custom_paths_window::save_pattern() const
      {
           if (auto *const mut_vptr = get_current_string_vector_mutable(); mut_vptr)
           {
-               if (selections->current_pattern_index == static_cast<int>(delete_me.value()))
+               if (selections->get<ConfigKey::CurrentPatternIndex>() == static_cast<int>(delete_me.value()))
                {
-                    selections->current_pattern_index = -1;
-                    selections->update_configuration_key<ConfigKey::CurrentPatternIndex>();
+                    selections->get<ConfigKey::CurrentPatternIndex>() = -1;
+                    selections->update<ConfigKey::CurrentPatternIndex>();
                     std::ranges::fill(m_input_pattern_string, '\0');
                }
-               else if (selections->current_pattern_index > static_cast<int>(delete_me.value()))
+               else if (selections->get<ConfigKey::CurrentPatternIndex>() > static_cast<int>(delete_me.value()))
                {
-                    selections->current_pattern_index--;
-                    selections->update_configuration_key<ConfigKey::CurrentPatternIndex>();
+                    selections->get<ConfigKey::CurrentPatternIndex>()--;
+                    selections->update<ConfigKey::CurrentPatternIndex>();
                }
                auto iter = mut_vptr->begin();
                std::ranges::advance(iter, delete_me.value());
@@ -764,15 +770,15 @@ void fme::custom_paths_window::render() const
      using namespace std::string_view_literals;
      bool override_changed = { false };
      auto selections       = m_selections.lock();
-     if (!selections || !selections->display_custom_paths_window)
+     if (!selections || !selections->get<ConfigKey::DisplayCustomPathsWindow>())
      {
           return;
      }
-     bool      &visible     = selections->display_custom_paths_window;
+     bool      &visible     = selections->get<ConfigKey::DisplayCustomPathsWindow>();
      const auto pop_visible = glengine::ScopeGuard{ [&selections, &visible, was_visable = visible] {
           if (was_visable != visible)
           {
-               selections->update_configuration_key<ConfigKey::DisplayCustomPathsWindow>();
+               selections->update<ConfigKey::DisplayCustomPathsWindow>();
           }
      } };
      const auto pop_end = glengine::ScopeGuard(&ImGui::End);

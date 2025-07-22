@@ -41,8 +41,10 @@ static void setWindowIcon(GLFWwindow *const window)
 static GLFWwindow *create_glfw_window()
 {
      const fme::Configuration config = {};
-     const int window_height         = config[key_to_string(fme::ConfigKey::WindowHeight)].value_or(fme::Selections::window_height_default);
-     const int window_width          = config[key_to_string(fme::ConfigKey::WindowWidth)].value_or(fme::Selections::window_width_default);
+     const int                window_height =
+       config[key_to_string(fme::ConfigKey::WindowHeight)].value_or(fme::SelectionInfo<fme::ConfigKey::WindowHeight>::default_value());
+     const int window_width =
+       config[key_to_string(fme::ConfigKey::WindowWidth)].value_or(fme::SelectionInfo<fme::ConfigKey::WindowWidth>::default_value());
 
      if (!glfwInit())
      {

@@ -73,10 +73,10 @@ struct gui
      field_file_window                                  m_field_file_window   = { m_field, m_selections };
      struct PathsAndEnabled
      {
-          std::vector<std::string>       path{};
-          std::vector<std::vector<bool>> enabled{};
-          ConfigKey                      path_key{};
-          std::vector<ConfigKey>         enabled_key{};
+          std::vector<std::filesystem::path> path{};
+          std::vector<std::vector<bool>>     enabled{};
+          ConfigKey                          path_key{};
+          std::vector<ConfigKey>             enabled_key{};
      };
      FutureOfFutureConsumer<std::vector<std::future<std::future<PathsAndEnabled>>>> m_future_of_future_paths_consumer = {};
      FutureConsumer<std::vector<std::future<PathsAndEnabled>>>                      m_future_paths_consumer           = {};

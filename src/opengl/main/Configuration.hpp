@@ -198,9 +198,11 @@ class Configuration
                output.reserve(array->size());
                for (auto &&val : *array)
                {
-                    if (auto str = val.value<std::string>(); str.has_value())
+                    if (auto str_opt = val.value<std::u8string>(); str_opt)
                     {
-                         output.emplace_back(std::move(str.value()));
+                         auto str = std::move(*str_opt);
+                         std::ranges::replace(str, u8'\\', u8'/');
+                         output.emplace_back(std::move(str));
                     }
                }
                return true;

@@ -100,10 +100,8 @@ struct path_search
       * @param copy_data Data used to determine which keys and values to process.
       * @return true if found any match for generated paths for textures or map output.
       */
-     [[nodiscard]] static bool has_path(
-       const std::filesystem::path           &field_root,
-       fme::key_value_data                    copy_data,
-       std::shared_ptr<const fme::Selections> selections);
+     [[nodiscard]] static bool
+       has_path(const std::filesystem::path &field_root, fme::key_value_data copy_data, std::shared_ptr<const fme::Selections> selections);
 
      /**
       * @brief Gets a list of base paths for external paths for textures.
@@ -115,7 +113,7 @@ struct path_search
      [[nodiscard]] static std::vector<std::filesystem::path> get_paths(
        std::shared_ptr<const fme::Selections> selections,
        std::optional<open_viii::LangT>        coo,
-       std::string                            root = "{current_path}");
+       std::filesystem::path                  root = "{current_path}");
 
      /**
       * @brief Gets the list of map paths including common fallback locations.
@@ -128,7 +126,7 @@ struct path_search
      [[nodiscard]] static std::vector<std::filesystem::path> get_map_paths(
        std::shared_ptr<const fme::Selections> selections,
        std::optional<open_viii::LangT>        coo,
-       std::string                            root = "{current_path}");
+       std::filesystem::path                  root = "{current_path}");
 };
 }// namespace ff_8
 

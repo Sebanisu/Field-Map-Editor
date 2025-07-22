@@ -20,7 +20,7 @@ namespace fme
 enum class ConfigKey
 {
      StarterField,
-     SelectionsPath,
+     FF8Path,
      WindowWidth,
      WindowHeight,
      Palette,
@@ -94,13 +94,14 @@ enum class ConfigKey
      FFNXOverridePath,
      FFNXDirectPath,
 
+     // Filters not required by update or load.
+     BatchCompactType,
+     BatchFlattenType,
      // All is used to map all values less than All.
      All,
 
      // Filters not required by update or load.
-     BatchCompactType,
      BatchCompactEnabled,
-     BatchFlattenType,
      BatchFlattenEnabled,
 
 };
@@ -227,7 +228,7 @@ enum class ConfigKey
                return "selections_render_imported_image"sv;
           case ConfigKey::ImportSelectedTile:
                return "selections_selected_tile"sv;
-          case ConfigKey::SelectionsPath:
+          case ConfigKey::FF8Path:
                return "selections_path"sv;
           case ConfigKey::StarterField:
                return "starter_field"sv;
@@ -251,8 +252,12 @@ enum class ConfigKey
                return "selections_cache_map_paths"sv;
           case ConfigKey::CacheMapPathsEnabled:
                return "selections_cache_map_paths_enabled"sv;
-
-
+          case ConfigKey::FFNXModPath:
+               return "mod_path"sv;
+          case ConfigKey::FFNXOverridePath:
+               return "override_path"sv;
+          case ConfigKey::FFNXDirectPath:
+               return "direct_mode_path"sv;
           default: {
                spdlog::error("{}:{} Unknown configuration key (ConfigKey): {}", __FILE__, __LINE__, std::to_underlying(key));
                return {};
@@ -273,9 +278,9 @@ struct SelectionInfo<ConfigKey::StarterField>
      }
 };
 template<>
-struct SelectionInfo<ConfigKey::SelectionsPath>
+struct SelectionInfo<ConfigKey::FF8Path>
 {
-     using value_type = std::int32_t;
+     using value_type = std::filesystem::path;
 };
 template<>
 struct SelectionInfo<ConfigKey::WindowWidth>
@@ -321,7 +326,7 @@ struct SelectionInfo<ConfigKey::DrawMode>
 template<>
 struct SelectionInfo<ConfigKey::Coo>
 {
-     using value_type = std::int32_t;
+     using value_type = open_viii::LangT;
 };
 template<>
 struct SelectionInfo<ConfigKey::ImportSelectedTile>
@@ -351,7 +356,7 @@ struct SelectionInfo<ConfigKey::DrawSwizzle>
 template<>
 struct SelectionInfo<ConfigKey::RenderImportedImage>
 {
-     using value_type = std::int32_t;
+     using value_type = bool;
 };
 template<>
 struct SelectionInfo<ConfigKey::DrawTexturePageGrid>
@@ -381,27 +386,27 @@ struct SelectionInfo<ConfigKey::DisplayImportImage>
 template<>
 struct SelectionInfo<ConfigKey::ForceReloadingOfTextures>
 {
-     using value_type = std::int32_t;
+     using value_type = bool;
 };
 template<>
 struct SelectionInfo<ConfigKey::ForceRenderingOfMap>
 {
-     using value_type = std::int32_t;
+     using value_type = bool;
 };
 template<>
 struct SelectionInfo<ConfigKey::ImportImageGrid>
 {
-     using value_type = std::int32_t;
+     using value_type = bool;
 };
 template<>
 struct SelectionInfo<ConfigKey::ImportLoadImageDirectory>
 {
-     using value_type = std::int32_t;
+     using value_type = std::filesystem::path;
 };
 template<>
 struct SelectionInfo<ConfigKey::TileSizeValue>
 {
-     using value_type = std::int32_t;
+     using value_type = tile_sizes;
 };
 template<>
 struct SelectionInfo<ConfigKey::DisplayHistoryWindow>
@@ -539,22 +544,22 @@ struct SelectionInfo<ConfigKey::BatchFlattenType>
 template<>
 struct SelectionInfo<ConfigKey::PathPatternsWithPaletteAndTexturePage>
 {
-     using value_type = std::string;
+     using value_type = std::vector<std::string>;
 };
 template<>
 struct SelectionInfo<ConfigKey::PathPatternsWithPalette>
 {
-     using value_type = std::string;
+     using value_type = std::vector<std::string>;
 };
 template<>
 struct SelectionInfo<ConfigKey::PathPatternsWithTexturePage>
 {
-     using value_type = std::string;
+     using value_type = std::vector<std::string>;
 };
 template<>
 struct SelectionInfo<ConfigKey::PathPatternsWithPupuID>
 {
-     using value_type = std::string;
+     using value_type = std::vector<std::string>;
 };
 template<>
 struct SelectionInfo<ConfigKey::PatternsBase>
@@ -647,16 +652,28 @@ template<>
 struct SelectionInfo<ConfigKey::FFNXModPath>
 {
      using value_type = std::filesystem::path;
+     static value_type default_value()
+     {
+          return "mods/Textures";
+     }
 };
 template<>
 struct SelectionInfo<ConfigKey::FFNXOverridePath>
 {
      using value_type = std::filesystem::path;
+     static value_type default_value()
+     {
+          return "override";
+     }
 };
 template<>
 struct SelectionInfo<ConfigKey::FFNXDirectPath>
 {
      using value_type = std::filesystem::path;
+     static value_type default_value()
+     {
+          return "direct";
+     }
 };
 
 template<ConfigKey Key>
@@ -682,17 +699,33 @@ struct SelectionLoadStrategy
 {
      static bool load(const Configuration &config, std::string_view config_key, ValueT &value)
      {
-          if constexpr (std::convertible_to<ValueT, std::filesystem::path>)
+          if constexpr (std::same_as<ValueT, std::filesystem::path>)
           {
-               return config[config_key].value_or(value.u8string());
+               value = config[config_key].value_or(value.u8string());
+          }
+          else if constexpr (std::convertible_to<ValueT, fme::color>)
+          {
+               value = std::bit_cast<fme::color>(config[config_key].value_or(std::bit_cast<std::uint32_t>(fme::colors::White)));
           }
           else if constexpr (requires { std::declval<ValueT>().raw(); })
           {
-               return config[config_key].value_or(value.raw());
+               value = ValueT{ config[config_key].value_or(value.raw()) };
           }
           else if constexpr (std::is_enum_v<ValueT>)
           {
                value = static_cast<ValueT>(config[config_key].value_or(std::to_underlying(value)));
+          }
+          else if constexpr (std::same_as<ValueT, std::vector<std::string>>)
+          {
+               return config.load_array(config_key, value);
+          }
+          else if constexpr (std::same_as<ValueT, std::vector<bool>>)
+          {
+               return config.load_array(config_key, value);
+          }
+          else if constexpr (std::same_as<ValueT, std::vector<std::filesystem::path>>)
+          {
+               return config.load_array(config_key, value);
           }
           else
           {
@@ -702,17 +735,40 @@ struct SelectionLoadStrategy
      }
 };
 
+template<>
+struct SelectionLoadStrategy<ff_8::filter_old<flatten_type, ff_8::FilterTag::Flatten>>
+{
+     static bool load(...)
+     {
+          return true;
+     }
+};
+
+template<>
+struct SelectionLoadStrategy<ff_8::filter_old<compact_type, ff_8::FilterTag::Compact>>
+{
+     static bool load(...)
+     {
+          return true;
+     }
+};
+
 template<typename ValueT>
 struct SelectionUpdateStrategy
 {
      static void update(Configuration &config, std::string_view config_key, const ValueT &value)
      {
-          if constexpr (std::convertible_to<ValueT, std::filesystem::path>)
+          if constexpr (std::same_as<ValueT, std::filesystem::path>)
           {
                std::u8string str_val = value.u8string();
                std::ranges::replace(str_val, u8'\\', u8'/');// normalize to forward slashes
                spdlog::info("selection<{}>: \"{}\"", config_key, std::filesystem::path(str_val).string());
                config->insert_or_assign(config_key, str_val);
+          }
+          else if constexpr (std::convertible_to<ValueT, fme::color>)
+          {
+               spdlog::info("selection<{}>: {}", config_key, value);
+               config->insert_or_assign(config_key, std::bit_cast<std::uint32_t>(value));
           }
           else if constexpr (requires { std::declval<ValueT>().raw(); })
           {
@@ -724,6 +780,18 @@ struct SelectionUpdateStrategy
                spdlog::info("selection<{}>: {}", config_key, value);
                config->insert_or_assign(config_key, std::to_underlying(value));
           }
+          else if constexpr (std::same_as<ValueT, std::vector<std::string>>)
+          {
+               config.update_array(config_key, value);
+          }
+          else if constexpr (std::same_as<ValueT, std::vector<bool>>)
+          {
+               config.update_array(config_key, value);
+          }
+          else if constexpr (std::same_as<ValueT, std::vector<std::filesystem::path>>)
+          {
+               config.update_array(config_key, value);
+          }
           else
           {
                spdlog::info("selection<{}>: {}", config_key, value);
@@ -733,8 +801,25 @@ struct SelectionUpdateStrategy
 };
 
 
+template<>
+struct SelectionUpdateStrategy<ff_8::filter_old<flatten_type, ff_8::FilterTag::Flatten>>
+{
+     static void update(...) {}
+};
+
+template<>
+struct SelectionUpdateStrategy<ff_8::filter_old<compact_type, ff_8::FilterTag::Compact>>
+{
+     static void update(...) {}
+};
+
+struct SelectionBase
+{
+     virtual ~SelectionBase() = default;
+};
+
 template<ConfigKey Key>
-struct Selection
+struct Selection : SelectionBase
 {
      using value_type = typename SelectionInfo<Key>::value_type;
 
@@ -753,7 +838,7 @@ struct Selection
             {
                  return get_default_value(&config);
             }
-       })
+       }())
      {
           if constexpr (SelectionUseFFNXConfig<Key>::value)
           {
@@ -777,26 +862,37 @@ struct Selection
                {
                     return SelectionInfo<Key>::default_value(*config);
                }
+               else
+               {
+                    if constexpr (std::default_initializable<value_type>)
+                    {
+                         return {};// default-constructed
+                    }
+                    else
+                    {
+                         throw std::runtime_error("Selection not initialized and not default-initializable");
+                    }
+               }
           }
           else if constexpr (requires { SelectionInfo<Key>::default_value(); })
           {
                return SelectionInfo<Key>::default_value();
           }
-          else
+          else if constexpr (std::default_initializable<value_type>)
           {
                return {};// default-constructed
+          }
+          else
+          {
+               throw std::runtime_error("Selection not initialized and not default-initializable");
           }
      }
 
-     static constexpr value_type get_expensive_default_value()
+     void set_expensive_default_value()
      {
           if constexpr (requires { SelectionInfo<Key>::expensive_default_value(); })
           {
-               return SelectionInfo<Key>::expensive_default_value();
-          }
-          else
-          {
-               return {};// default-constructed
+               value = SelectionInfo<Key>::expensive_default_value();
           }
      }
 
@@ -804,7 +900,7 @@ struct Selection
      {
           if (!SelectionLoadStrategy<value_type>::load(config, config_key, value))
           {
-               value = get_expensive_default_value();
+               set_expensive_default_value();
           }
           if constexpr (requires(value_type &v) { SelectionInfo<Key>::post_load_operation(v); })
           {
@@ -815,7 +911,7 @@ struct Selection
    public:
      // when we change directories we need to check for the ffnx config and refresh the values from that config.
      // go back to default value if ffnx_config not there.
-     void refresh([[maybe_unused]] const std::optional<Configuration> &ffnx_config) const
+     void refresh([[maybe_unused]] const std::optional<Configuration> &ffnx_config)
      {
           if constexpr (SelectionUseFFNXConfig<Key>::value)
           {
@@ -850,195 +946,167 @@ struct Selection
  */
 struct Selections
 {
-     /**
-      * @brief The path to the current working directory.
-      *
-      * Initializes to the current working directory on construction. If an error occurs while
-      * determining the path, it logs a warning using spdlog.
-      */
-     std::string                   path;
+   private:
+     static constexpr std::size_t SelectionsSizeT = static_cast<std::size_t>(fme::ConfigKey::All);
+     using SelectionsArrayT                       = std::array<std::unique_ptr<SelectionBase>, SelectionsSizeT>;
+     SelectionsArrayT m_selections_array;
 
-     /**
-      * @brief The default window width.
-      */
-     static constexpr std::int32_t window_width_default  = 1280;
+     SelectionsArrayT load_selections_array(const Configuration &config)
+     {
+          // cache these values for use later on.
+          std::optional<Configuration>         ffnx_config{};
+          std::optional<std::filesystem::path> ff8_path{};
+          return [&]<std::size_t... Is>(std::index_sequence<Is...>) {
+               return SelectionsArrayT {
+                    (
+                      [&]<ConfigKey Key>() {
+                           if constexpr (ConfigKey::FF8Path == Key)
+                           {
+                                auto tmp    = std::make_unique<Selection<Key>>(config, ffnx_config);
+                                ff8_path    = tmp->value;
+                                ffnx_config = get_ffnx_config(tmp->value);
+                                return std::move(tmp);
+                           }
+                           else
+                           {
+                                return std::make_unique<Selection<Key>>(config, ffnx_config);
+                           }
+                      }.template operator()<static_cast<ConfigKey>(Is)>(),
+                      ...)
+               };
+          }(std::make_index_sequence<SelectionsSizeT>{});
+     }
 
-     /**
-      * @brief The default window height.
-      */
-     static constexpr std::int32_t window_height_default = 720;
+     ///**
+     // * @brief Refreshes FFNx-related paths based on the current FF8 path.
+     // *
+     // * This function must be rerun if the FF8 path changes, as the presence and location
+     // * of FFNx components are path-dependent. It reads configuration from "FFNx.toml".
+     // */
+     // void                         refresh_ffnx_paths(const std::filesystem::path &ff8_path);
+     std::optional<Configuration> get_ffnx_config() const;
+     std::optional<Configuration> get_ffnx_config(const std::filesystem::path &ff8_path) const;
 
-     open_viii::graphics::BPPT     bpp;///< Bits per pixel for rendering.
-     uint8_t                       palette;///< Selected palette index.
-     // int                            field         = {};///< Selected field index. Set by gui after reading starter_field
-     std::string                   starter_field;///< field name.
-     open_viii::LangT              coo;///< Selected language.
-     draw_mode                     draw;///< Current drawing mode.
-     int                           selected_tile;///< Index of the currently selected tile.
-
-     std::int32_t                  window_width;///< Current window width.
-     std::int32_t                  window_height;///< Current window height.
-     tile_sizes                    tile_size_value;///< Current tile size setting.
-
-     bool                          draw_palette;///< Whether to draw the palette.
-     bool                          draw_grid;///< Whether to draw the grid.
-     bool                          draw_texture_page_grid;///< Whether to draw the texture page grid.
-     bool                          draw_tile_conflict_rects;///< Whether to draw the tile conflicts rectangles.
-     bool                          draw_swizzle;///< Whether to enable swizzle rendering.
-     bool                          draw_disable_blending;///< Whether to disable blending during rendering.
-     bool                          display_batch_window;///< Whether to display the test batch window.
-     // todo fix imports
-     //  bool                     display_import_image_window = false;
-     bool                          display_import_image;///< Whether to display the imported image.
-     bool                          force_reloading_of_textures;///< Force reloading textures and rendering of map on every frame.
-     bool                          force_rendering_of_map;///< Force rendering of map on every frame.
-     bool                          import_image_grid;///< Whether to overlay a grid on the imported image.
-     bool                          render_imported_image;///< Whether to render the imported image.
-     bool                          display_history_window;///< Whether to display history window.
-     bool                          display_control_panel_window;///< Whether to display control panel window.
-     bool                          display_draw_window;///< Whether to display draw window.
-     bool                          display_custom_paths_window;///< Whether to display custom paths window.
-     bool                          display_field_file_window;///< Whether to display field file window.
-     std::string                   ffnx_mod_path;
-     std::string                   ffnx_override_path;
-     std::string                   ffnx_direct_mode_path;
-     std::string                   output_swizzle_pattern;
-     std::string                   output_deswizzle_pattern;
-     std::string                   output_map_pattern_for_swizzle;
-     std::string                   output_map_pattern_for_deswizzle;
-     std::string                   swizzle_path;
-     std::string                   deswizzle_path;
-     std::string                   output_map_path;
-     std::string                   output_mim_path;
-     std::string                   output_image_path;
-     std::string                   import_load_image_directory;
-     PatternSelector               current_pattern;
-     int                           current_pattern_index;
-     color                         background_color;///< Remember to user's selected Background Color for draw Window.
-
-     input_types                   batch_input_type;
-     root_path_types               batch_input_root_path_type;
-     output_types                  batch_output_type;
-     root_path_types               batch_output_root_path_type;
-     std::vector<bool>             batch_map_list_enabled;
-
-     std::string                   batch_input_path;
-     std::string                   batch_output_path;
-     bool                          batch_input_load_map;
-     bool                          batch_output_save_map;
-
-     ff_8::filter_old<compact_type, ff_8::FilterTag::Compact> batch_compact_type;
-     ff_8::filter_old<flatten_type, ff_8::FilterTag::Flatten> batch_flatten_type;
-     /// @brief File path patterns that require both a palette and a texture page to be substituted.
-     std::vector<std::string>                                 patterns_with_palette_and_texture_page;
-
-     /// @brief File path patterns that require only a palette to be substituted.
-     std::vector<std::string>                                 patterns_with_palette;
-
-     /// @brief File path patterns that require only a texture page to be substituted.
-     std::vector<std::string>                                 patterns_with_texture_page;
-
-     /// @brief File path patterns that require a PUPU ID to be substituted.
-     std::vector<std::string>                                 patterns_with_pupu_id;
-
-     /// @brief File path patterns that use no additional substitution values (e.g., no palette or texture page).
-     std::vector<std::string>                                 patterns_base;
-
-     /// @brief Common directory prefixes prepended to pattern paths when generating full file paths.
-     std::vector<std::string>                                 patterns_common_prefixes;
-
-     /// @brief Additional directory prefixes used specifically when searching for map files. Combined with patterns_common_prefixes.
-     std::vector<std::string>                                 patterns_common_prefixes_for_maps;
-
-     /// @brief List of base directories where FF8 game data is installed or extracted.
-     /// This is user-configurable, but a default set of paths is provided initially.
-     /// These directories are also included in pattern-based searches, since modded files are often placed here.
-     std::vector<std::string>                                 ff8_directory_paths;
-
-     /// @brief User-configured root directories for searching external texture files using path patterns.
-     /// These directories serve as the starting point for pattern-based texture file lookups.
-     std::vector<std::string>                                 external_textures_directory_paths;
-
-     /// @brief User-configured root directories for searching external map files using path patterns.
-     /// These directories serve as the starting point for pattern-based map file lookups.
-     std::vector<std::string>                                 external_maps_directory_paths;
-
-
-     /**
-      * @brief Paths to cache directories for texture-related operations.
-      *
-      * Used for swizzle, deswizzle, and swizzle-as-one-image processing.
-      * Each path corresponds by index to entries in the enabled vectors below.
-      */
-     std::vector<std::string>                                 cache_texture_paths;
-
-     /**
-      * @brief Indicates if swizzle files were detected in each texture cache path.
-      *
-      * Matches size and index with `cache_texture_paths`.
-      */
-     std::vector<bool>                                        cache_swizzle_paths_enabled;
-
-     /**
-      * @brief Indicates if swizzle-as-one-image files were detected in each texture cache path.
-      *
-      * Matches size and index with `cache_texture_paths`.
-      */
-     std::vector<bool>                                        cache_swizzle_as_one_image_paths_enabled;
-
-     /**
-      * @brief Indicates if deswizzle files were detected in each texture cache path.
-      *
-      * Matches size and index with `cache_texture_paths`.
-      */
-     std::vector<bool>                                        cache_deswizzle_paths_enabled;
-
-     /**
-      * @brief Indicates if any map files were detected in each map cache path.
-      *
-      * Matches size and index with `cache_map_paths`.
-      */
-     std::vector<bool>                                        cache_map_paths_enabled;
-
-
-     /**
-      * @brief Paths to cache directories for map-related operations.
-      *
-      * Used for both swizzle and deswizzle map processing.
-      * Each path corresponds by index to entries in the map enabled vector.
-      */
-     std::vector<std::string>                                 cache_map_paths;
-
-
+   public:
      /**
       * @brief Constructs a Selections object with default values.
       */
      Selections(const Configuration config = {});
 
+     template<ConfigKey Key>
+          requires(SelectionsSizeT > static_cast<std::size_t>(Key))
+     auto &get()
+     {
+          static constexpr std::size_t index = static_cast<std::size_t>(Key);
+          using ValueT                       = typename SelectionInfo<Key>::value_type;
 
-     /**
-      * @brief Refreshes FFNx-related paths based on the current FF8 path.
-      *
-      * This function must be rerun if the FF8 path changes, as the presence and location
-      * of FFNx components are path-dependent. It reads configuration from "FFNx.toml".
-      */
-     void refresh_ffnx_paths();
+          if (!m_selections_array[index])
+          {
+               if constexpr (std::default_initializable<ValueT>)
+               {
+                    throw std::runtime_error("Mutable access to default-initialized value is not supported");
+               }
+               else
+               {
+                    throw std::runtime_error("Selection not initialized and not default-initializable");
+               }
+          }
+          Selection<Key> *selection = static_cast<Selection<Key> *>(m_selections_array[index].get());
+          return selection->value;
+     }
 
-     void update_configuration() const;
+     template<ConfigKey Key>
+          requires(SelectionsSizeT > static_cast<std::size_t>(Key))
+     const auto &get() const
+     {
+          static constexpr std::size_t index = static_cast<std::size_t>(Key);
+          using ValueT                       = typename SelectionInfo<Key>::value_type;
+
+          if (!m_selections_array[index])
+          {
+               if constexpr (std::default_initializable<ValueT>)
+               {
+                    static const ValueT default_value{};
+                    return default_value;
+               }
+               else
+               {
+                    throw std::runtime_error("Selection not initialized and not default-initializable");
+               }
+          }
+          const Selection<Key> *selection = static_cast<const Selection<Key> *>(m_selections_array[index].get());
+          return selection->value;
+     }
+
+     template<ConfigKey... Keys>
+     void refresh()
+     {
+          if constexpr (sizeof...(Keys) == 1U && ((Keys == ConfigKey::All) && ...))
+          {
+               [&]<std::size_t... Is>(std::index_sequence<Is...>) {
+                    refresh<(static_cast<ConfigKey>(Is))...>();
+               }(std::make_index_sequence<static_cast<std::size_t>(fme::ConfigKey::All)>{});
+          }
+          else
+          {
+               const std::optional<Configuration> ffnx_config = get_ffnx_config();
+               (
+                 [&]<ConfigKey Key> {
+                      static constexpr std::size_t index = static_cast<std::size_t>(Key);
+                      if (index >= std::ranges::size(m_selections_array) || !m_selections_array[index])
+                      {
+                           return;
+                      }
+                      Selection<Key> *selection = static_cast<Selection<Key> *>(m_selections_array[index].get());
+                      selection->refresh(ffnx_config);
+                 }.template operator()<Keys>(),
+                 ...);
+          }
+     }
 
 
      template<ConfigKey... Keys>
-     void update_configuration_key() const
+     void update()
      {
-          Configuration config{};
-          (
-            [&]<ConfigKey Key> {
-                 if constexpr (!SelectionUseFFNXConfig<Key>::value)
-                      update<Key>(config);
-            }.template operator()<Keys>(),
-            ...);
-          config.save();
+          if constexpr (sizeof...(Keys) == 1U && ((Keys == ConfigKey::All) && ...))
+          {
+               [&]<std::size_t... Is>(std::index_sequence<Is...>) {
+                    update<(static_cast<ConfigKey>(Is))...>();
+               }(std::make_index_sequence<static_cast<std::size_t>(fme::ConfigKey::All)>{});
+          }
+          else
+          {
+               Configuration config{};
+               (
+                 [&]<ConfigKey Key> {
+                      static constexpr std::size_t index = static_cast<std::size_t>(Key);
+                      if (index >= std::ranges::size(m_selections_array) || !m_selections_array[index])
+                      {
+                           return;
+                      }
+                      Selection<Key> *selection = static_cast<Selection<Key> *>(m_selections_array[index].get());
+                      selection->update(config);
+                 }.template operator()<Keys>(),
+                 ...);
+               config.save();
+          }
      }
+
+     // void update_configuration() const;
+
+
+     // template<ConfigKey... Keys>
+     // void update_configuration_key() const
+     // {
+     //      Configuration config{};
+     //      (
+     //        [&]<ConfigKey Key> {
+     //             if constexpr (!SelectionUseFFNXConfig<Key>::value)
+     //                  update<Key>(config);
+     //        }.template operator()<Keys>(),
+     //        ...);
+     //      config.save();
+     // }
 
      static bool has_balanced_braces([[maybe_unused]] const std::string_view s);
 
@@ -1056,14 +1124,14 @@ struct Selections
           return true;
      }
 
-   private:
-     template<ConfigKey K>
-     void load(const Configuration &) = delete;// delete fine for load because all defined and used in Selections
+     //    private:
+     //      template<ConfigKey K>
+     //      void load(const Configuration &) = delete;// delete fine for load because all defined and used in Selections
 
-     template<ConfigKey K>
-          requires(static_cast<std::size_t>(K) <= static_cast<std::size_t>(ConfigKey::All))
-     void update(Configuration &)
-       const;// can't delete or else other cpp can't find the functions in Selections.cpp will get linker errors if missing.
+     //      template<ConfigKey K>
+     //           requires(static_cast<std::size_t>(K) <= static_cast<std::size_t>(ConfigKey::All))
+     //      void update(Configuration &)
+     //        const;// can't delete or else other cpp can't find the functions in Selections.cpp will get linker errors if missing.
 };
 }// namespace fme
 #endif// FIELD_MAP_EDITOR_SELECTIONS_HPP

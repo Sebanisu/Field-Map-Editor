@@ -14,16 +14,16 @@ void fme::history_window::render() const
           spdlog::error("m_selections is no longer valid. File: {}, Line: {}", __FILE__, __LINE__);
           return;
      }
-     if (!selections->display_history_window)
+     if (!selections->get<ConfigKey::DisplayHistoryWindow>())
      {
           return;
      }
 
-     bool      &visible     = selections->display_history_window;
+     bool      &visible     = selections->get<ConfigKey::DisplayHistoryWindow>();
      const auto pop_visible = glengine::ScopeGuard{ [&selections, &visible, was_visable = visible] {
           if (was_visable != visible)
           {
-               selections->update_configuration_key<ConfigKey::DisplayHistoryWindow>();
+               selections->update<ConfigKey::DisplayHistoryWindow>();
           }
      } };
      const auto the_end = glengine::ScopeGuard([]() { ImGui::End(); });

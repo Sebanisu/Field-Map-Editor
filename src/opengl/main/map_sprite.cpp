@@ -1010,12 +1010,12 @@ void map_sprite::update_render_texture(const bool reload_textures) const
           queue_texture_loading();
 
 
-          if (s->force_reloading_of_textures)
+          if (s->get<ConfigKey::ForceReloadingOfTextures>())
           {
                consume_now(false);
           }
      }
-     else if (s->force_rendering_of_map)
+     else if (s->get<ConfigKey::ForceRenderingOfMap>())
      {
           consume_now(false);
      }

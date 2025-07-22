@@ -211,7 +211,7 @@ struct key_value_data
      [[nodiscard]] std::string replace_tags(
        std::string                                   keyed_string,
        const std::shared_ptr<const fme::Selections> &selections,
-       const std::string                            &selected_path = "{ff8_path}") const;
+       const std::filesystem::path                  &selected_path = "{ff8_path}") const;
 
      /**
       * @brief Static variant of replace_tags. Doesn't access instance-specific data.

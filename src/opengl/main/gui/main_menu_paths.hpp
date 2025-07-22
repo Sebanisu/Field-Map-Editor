@@ -17,11 +17,11 @@ namespace fme
 {
 struct main_menu_paths_settings
 {
-     std::reference_wrapper<std::vector<std::string>> user_paths;
-     std::reference_wrapper<std::vector<std::string>> generated_paths;
-     std::reference_wrapper<std::vector<bool>>        generated_paths_enabled;
-     std::string_view                                 main_label;
-     std::string_view                                 browse_tooltip;
+     std::reference_wrapper<std::vector<std::filesystem::path>> user_paths;
+     std::reference_wrapper<std::vector<std::filesystem::path>> generated_paths;
+     std::reference_wrapper<std::vector<bool>>                  generated_paths_enabled;
+     std::string_view                                           main_label;
+     std::string_view                                           browse_tooltip;
 };
 template<typename main_filter_t, typename other_filter_t>
 struct main_menu_paths
@@ -108,7 +108,7 @@ struct main_menu_paths
                          {
                               ImGui::BeginDisabled(!enabled);
                               const auto pop_disabled = glengine::ScopeGuard{ &ImGui::EndDisabled };
-                              if (ImGui::MenuItem(path.data(), nullptr, &is_checked, true))
+                              if (ImGui::MenuItem(path.string().data(), nullptr, &is_checked, true))
                               {
                                    if (m_main_filter.get().value() != path)
                                    {
@@ -157,7 +157,7 @@ struct main_menu_paths
                          {
                               ImGui::BeginDisabled(!enabled);
                               const auto pop_disabled = glengine::ScopeGuard{ &ImGui::EndDisabled };
-                              const auto path_padded  = path + "  -  ";
+                              const auto path_padded  = path.string() + "  -  ";
                               size_t offset = static_cast<size_t>(elapsed_time * chars_per_second) % (path_padded.size());// Sliding offset
                               std::string display_text = path_padded.substr(offset, max_display_chars);
                               if (display_text.size() < max_display_chars && offset > 0)
@@ -230,7 +230,8 @@ struct main_menu_paths
           }();
      }
 
-     std::optional<std::string> handle_path_deletion(std::vector<std::string> &ff8_directory_paths, std::ptrdiff_t offset) const
+     std::optional<std::filesystem::path>
+       handle_path_deletion(std::vector<std::filesystem::path> &ff8_directory_paths, std::ptrdiff_t offset) const
      {
           if (std::cmp_less(offset, 0))
           {
@@ -240,22 +241,23 @@ struct main_menu_paths
           std::ranges::advance(it, offset);
           if (it != std::ranges::end(ff8_directory_paths))
           {
-               auto return_value = std::optional<std::string>(std::move(*it));
+               auto return_value = std::optional<std::filesystem::path>(std::move(*it));
                ff8_directory_paths.erase(it);
                return return_value;
           }
           return std::nullopt;
      }
 
-     std::string find_replacement_path_value(const std::vector<std::string> &paths, const std::vector<bool> &paths_enabled) const
+     std::filesystem::path
+       find_replacement_path_value(const std::vector<std::filesystem::path> &paths, const std::vector<bool> &paths_enabled) const
      {
           if (std::ranges::empty(paths))
           {
-               return "";
+               return {};
           }
           if (std::ranges::size(paths) == std::ranges::size(paths_enabled))
           {
-               return "";
+               return {};
           }
 
           auto zip_paths = std::ranges::views::zip(paths, paths_enabled);
@@ -264,7 +266,7 @@ struct main_menu_paths
           {
                return std::get<0>(*it);
           }
-          return "";
+          return {};
      }
 
      std::ptrdiff_t add_delete_button(const std::ptrdiff_t index, const std::ptrdiff_t delete_me) const
@@ -284,11 +286,14 @@ struct main_menu_paths
           return delete_me;
      }
 
-     std::ptrdiff_t add_delete_button(const std::string &path, const std::vector<std::string> &paths, const std::ptrdiff_t delete_me) const
+     std::ptrdiff_t add_delete_button(
+       const std::filesystem::path              &path,
+       const std::vector<std::filesystem::path> &paths,
+       const std::ptrdiff_t                      delete_me) const
      {
           auto       transformed_paths = paths | std::ranges::views::enumerate;
-          const auto it =
-            std::ranges::find_if(transformed_paths, [&path](const auto &pair) { return path.starts_with(std::get<1>(pair)); });
+          const auto it                = std::ranges::find_if(
+            transformed_paths, [&path](const auto &pair) { return path.string().starts_with(std::get<1>(pair).string()); });
           if (it != std::ranges::end(transformed_paths))
 
           {
@@ -309,7 +314,7 @@ struct main_menu_paths
           }
           return delete_me;
      }
-     void add_explore_button(const std::string &path) const
+     void add_explore_button(const std::filesystem::path &path) const
      {
           const float button_size = ImGui::GetFrameHeight();
           const auto  _           = PushPopID();

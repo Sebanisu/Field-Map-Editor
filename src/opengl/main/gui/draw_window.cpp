@@ -39,7 +39,7 @@ void fme::draw_window::render() const
           spdlog::error("Failed to lock selections: shared_ptr is expired.");
           return;
      }
-     if (!selections->display_draw_window)
+     if (!selections->get<ConfigKey::DisplayDrawWindow>())
      {
           return;
      }
@@ -132,16 +132,16 @@ void fme::draw_window::render() const
             ImGui::SetCursorScreenPos(window_pos);
        };
 
-     bool      &visible     = selections->display_draw_window;
+     bool      &visible     = selections->get<ConfigKey::DisplayDrawWindow>();
      const auto pop_visible = glengine::ScopeGuard{ [&selections, &visible, was_visable = visible] {
           if (was_visable != visible)
           {
-               selections->update_configuration_key<ConfigKey::DisplayDrawWindow>();
+               selections->update<ConfigKey::DisplayDrawWindow>();
           }
      } };
 
-     const auto map_test = [&]() { return !t_map_sprite->fail() && selections->draw == draw_mode::draw_map; };
-     const auto mim_test = [&]() { return !t_mim_sprite->fail() && selections->draw == draw_mode::draw_mim; };
+     const auto map_test = [&]() { return !t_map_sprite->fail() && selections->get<ConfigKey::DrawMode>() == draw_mode::draw_map; };
+     const auto mim_test = [&]() { return !t_mim_sprite->fail() && selections->get<ConfigKey::DrawMode>() == draw_mode::draw_mim; };
 
      if (mim_test())
      {
@@ -167,9 +167,9 @@ void fme::draw_window::render() const
           DrawCheckerboardBackground(
             screen_pos,
             scaled_size,
-            (selections->draw_palette ? 0.25F * scale : 4.F * scale),
-            selections->background_color.fade(-0.2F),
-            selections->background_color.fade(0.2F));
+            (selections->get<ConfigKey::DrawPalette>() ? 0.25F * scale : 4.F * scale),
+            selections->get<ConfigKey::BackgroundColor>().fade(-0.2F),
+            selections->get<ConfigKey::BackgroundColor>().fade(0.2F));
 
           const auto pop_id1 = PushPopID();
 
@@ -208,8 +208,8 @@ void fme::draw_window::render() const
             screen_pos,
             scaled_size,
             (static_cast<float>(t_map_sprite->get_map_scale()) * 4.F) * scale,
-            selections->background_color.fade(-0.2F),
-            selections->background_color.fade(0.2F));
+            selections->get<ConfigKey::BackgroundColor>().fade(-0.2F),
+            selections->get<ConfigKey::BackgroundColor>().fade(0.2F));
 
           const auto pop_id1 = PushPopID();
           ImGui::GetWindowDrawList()->AddImage(
@@ -293,7 +293,7 @@ void fme::draw_window::update_hover_and_mouse_button_status_for_map(const ImVec2
             static_cast<int>(relative_pos.x / scale / static_cast<float>(t_map_sprite->get_map_scale())),
             static_cast<int>(relative_pos.y / scale / static_cast<float>(t_map_sprite->get_map_scale())));
 
-          if (selections->draw_swizzle)
+          if (selections->get<ConfigKey::DrawSwizzle>())
           {
                m_mouse_positions.pixel /= 16;
                m_mouse_positions.pixel *= 16;
@@ -353,8 +353,8 @@ void fme::draw_window::draw_map_grid_lines_for_tiles(const ImVec2 &screen_pos, c
           spdlog::error("Failed to lock selections: shared_ptr is expired.");
           return;
      }
-     // Drawing grid lines within the window if selections->draw_grid is true
-     if (!selections->draw_grid)
+     // Drawing grid lines within the window if selections->get<ConfigKey::DrawGrid>() is true
+     if (!selections->get<ConfigKey::DrawGrid>())
      {
           return;
      }
@@ -391,7 +391,7 @@ void fme::draw_window::draw_map_grid_for_conflict_tiles(const ImVec2 &screen_pos
           spdlog::error("Failed to lock selections: shared_ptr is expired.");
           return;
      }
-     if (!selections->draw_tile_conflict_rects)
+     if (!selections->get<ConfigKey::DrawTileConflictRects>())
      {
           return;
      }
@@ -433,7 +433,7 @@ void fme::draw_window::draw_map_grid_for_conflict_tiles(const ImVec2 &screen_pos
                     const bool  animation_over_1 = std::cmp_greater(animation_count, 1);
 
                     const float x                = [&]() {
-                         if (selections->draw_swizzle)
+                         if (selections->get<ConfigKey::DrawSwizzle>())
                          {
                               return screen_pos.x
                             + ((static_cast<float>(working_tile.source_x()) + (static_cast<float>(working_tile.texture_id()) * 256.F)) * scale * static_cast<float>(t_map_sprite->get_map_scale()));
@@ -442,7 +442,7 @@ void fme::draw_window::draw_map_grid_for_conflict_tiles(const ImVec2 &screen_pos
                                 + (static_cast<float>(working_tile.x()) * scale * static_cast<float>(t_map_sprite->get_map_scale()));
                     }();
                     const float y = [&]() {
-                         if (selections->draw_swizzle)
+                         if (selections->get<ConfigKey::DrawSwizzle>())
                          {
                               return screen_pos.y
                                      + (static_cast<float>(working_tile.source_y()) * scale * static_cast<float>(t_map_sprite->get_map_scale()));
@@ -455,8 +455,8 @@ void fme::draw_window::draw_map_grid_for_conflict_tiles(const ImVec2 &screen_pos
                          const auto default_thickness = 3.F;
                          const auto hover_thickeness  = 4.5F;
                          if (
-                           (!selections->draw_swizzle && !animation_over_1 && std::cmp_not_equal(m_hovered_index, index))
-                           || ((selections->draw_swizzle || animation_over_1) && std::ranges::find(indices, m_hovered_index) == std::ranges::end(indices)))
+                           (!selections->get<ConfigKey::DrawSwizzle>() && !animation_over_1 && std::cmp_not_equal(m_hovered_index, index))
+                           || ((selections->get<ConfigKey::DrawSwizzle>() || animation_over_1) && std::ranges::find(indices, m_hovered_index) == std::ranges::end(indices)))
                          {
                               if (
                                 std::ranges::empty(m_hovered_tiles_indices)
@@ -487,7 +487,7 @@ void fme::draw_window::draw_map_grid_for_conflict_tiles(const ImVec2 &screen_pos
                                    return { colors::ButtonActive.opaque().fade(-.2F), default_thickness };
                               }
 
-                              if (selections->draw_swizzle)
+                              if (selections->get<ConfigKey::DrawSwizzle>())
                               {
                                    std::string strtooltip = fmt::format(
                                      "Indicies: {}\n{}", indices, indices | std::ranges::views::transform(index_to_working_tile));
@@ -521,7 +521,7 @@ void fme::draw_window::draw_map_grid_for_conflict_tiles(const ImVec2 &screen_pos
 
                     // todo add hover action using the hovered_indices and change color for if similar counts >1
                };
-               if (selections->draw_swizzle)
+               if (selections->get<ConfigKey::DrawSwizzle>())
                {// all are drawn in the same spot so we only need to draw one.
                     if (std::ranges::find(indices, m_hovered_index) == std::ranges::end(indices))
                     {
@@ -555,8 +555,8 @@ void fme::draw_window::draw_map_grid_lines_for_texture_page(const ImVec2 &screen
           spdlog::error("Failed to lock selections: shared_ptr is expired.");
           return;
      }
-     // Drawing grid lines within the window if selections->draw_grid is true
-     if (!selections->draw_texture_page_grid || !selections->draw_swizzle)
+     // Drawing grid lines within the window if selections->get<ConfigKey::DrawGrid>() is true
+     if (!selections->get<ConfigKey::DrawTexturePageGrid>() || !selections->get<ConfigKey::DrawSwizzle>())
      {
           return;
      }
@@ -587,8 +587,8 @@ void fme::draw_window::draw_mim_grid_lines_for_tiles(const ImVec2 &screen_pos, c
           spdlog::error("Failed to lock selections: shared_ptr is expired.");
           return;
      }
-     // Drawing grid lines within the window if selections->draw_grid is true
-     if (!selections->draw_grid)
+     // Drawing grid lines within the window if selections->get<ConfigKey::DrawGrid>() is true
+     if (!selections->get<ConfigKey::DrawGrid>())
      {
           return;
      }
@@ -603,7 +603,7 @@ void fme::draw_window::draw_mim_grid_lines_for_tiles(const ImVec2 &screen_pos, c
      const ImVec2 img_end      = { screen_pos.x + scaled_size.x, screen_pos.y + scaled_size.y };
 
      // Calculate grid spacing
-     const float  grid_spacing = (selections->draw_palette ? 1.F : 16.0f) * scale;
+     const float  grid_spacing = (selections->get<ConfigKey::DrawPalette>() ? 1.F : 16.0f) * scale;
 
      // Iterate over horizontal and vertical lines
      for (float x = screen_pos.x; x < img_end.x; x += grid_spacing)
@@ -626,8 +626,8 @@ void fme::draw_window::draw_mim_grid_lines_for_texture_page(const ImVec2 &screen
           spdlog::error("Failed to lock selections: shared_ptr is expired.");
           return;
      }
-     // Drawing grid lines within the window if selections->draw_grid is true
-     if (!selections->draw_texture_page_grid || selections->draw_palette)
+     // Drawing grid lines within the window if selections->get<ConfigKey::DrawGrid>() is true
+     if (!selections->get<ConfigKey::DrawTexturePageGrid>() || selections->get<ConfigKey::DrawPalette>())
      {
           return;
      }
@@ -639,26 +639,26 @@ void fme::draw_window::draw_mim_grid_lines_for_texture_page(const ImVec2 &screen
 
      const float  grid_spacing = [&]() {
           using namespace open_viii::graphics;
-          if (selections->bpp.bpp4())
+          if (selections->get<ConfigKey::Bpp>().bpp4())
           {
                return 256.f;
           }
-          else if (selections->bpp.bpp8())
+          else if (selections->get<ConfigKey::Bpp>().bpp8())
           {
                return 128.f;
           }
-          else if (selections->bpp.bpp16())
+          else if (selections->get<ConfigKey::Bpp>().bpp16())
           {
                return 64.F;
           }
           else
           {
-               spdlog::error("selections->bpp.raw() = {}", selections->bpp.raw());
+               spdlog::error("selections->get<ConfigKey::Bpp>().raw() = {}", selections->get<ConfigKey::Bpp>().raw());
                throw;
           }
      }() * scale;
 
-     //  selections->bpp
+     //  selections->get<ConfigKey::Bpp>()
 
      // Iterate over horizontal and vertical lines
      for (float x = screen_pos.x; x < img_end.x; x += grid_spacing)
@@ -769,7 +769,7 @@ void fme::draw_window::UseImGuizmo([[maybe_unused]] const float scale, [[maybe_u
      }();
 
      // Apply the adjusted size
-     // ImGuizmo::SetGizmoSizeClipSpace(selections->draw_swizzle ? 0.021f : 0.15f);
+     // ImGuizmo::SetGizmoSizeClipSpace(selections->get<ConfigKey::DrawSwizzle>() ? 0.021f : 0.15f);
      ImGuizmo::SetOrthographic(true);
      ImGuizmo::SetDrawlist();
      // Set gizmo draw region to the visible ImGui window area
@@ -798,7 +798,7 @@ void fme::draw_window::UseImGuizmo([[maybe_unused]] const float scale, [[maybe_u
             static_cast<int>(relative_pos.x / scale / static_cast<float>(t_map_sprite->get_map_scale())),
             static_cast<int>(relative_pos.y / scale / static_cast<float>(t_map_sprite->get_map_scale())));
 
-          if (selections->draw_swizzle)
+          if (selections->get<ConfigKey::DrawSwizzle>())
           {
                m_mouse_positions.pixel /= 16;
                m_mouse_positions.pixel *= 16;

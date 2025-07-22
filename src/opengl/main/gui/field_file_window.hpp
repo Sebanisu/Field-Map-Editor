@@ -49,7 +49,7 @@ struct field_file_window
                spdlog::error("Failed to lock m_selections: shared_ptr is expired.");
                return;
           }
-          if (!selections->display_field_file_window)
+          if (!selections->get<ConfigKey::DisplayFieldFileWindow>())
           {
                return;
           }
@@ -60,11 +60,11 @@ struct field_file_window
                spdlog::error("Failed to lock m_field: shared_ptr is expired.");
                return;
           }
-          bool      &visible     = selections->display_field_file_window;
+          bool      &visible     = selections->get<ConfigKey::DisplayFieldFileWindow>();
           const auto pop_visible = glengine::ScopeGuard{ [&selections, &visible, was_visable = visible] {
                if (was_visable != visible)
                {
-                    selections->update_configuration_key<ConfigKey::DisplayFieldFileWindow>();
+                    selections->update<ConfigKey::DisplayFieldFileWindow>();
                }
           } };
           const auto pop_end = glengine::ScopeGuard(&ImGui::End);
