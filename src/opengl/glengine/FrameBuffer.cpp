@@ -165,14 +165,32 @@ GlidCopy FrameBuffer::color_attachment_id(std::uint32_t index) const
      //     assert(m_color_attachment[index] != 0U);
      return m_color_attachment[index];
 }
-
+static bool is_framebuffer_complete(GLenum target, std::string_view context = "")
+{
+     GLenum status = GlCall{}(glCheckFramebufferStatus, target);
+     if (status != GL_FRAMEBUFFER_COMPLETE)
+     {
+          spdlog::warn("Framebuffer incomplete in context: {} (status: 0x{:X})", context, status);
+          return false;
+     }
+     return true;
+}
 FrameBuffer FrameBuffer::clone() const
 {
      const auto  backup_fbo = backup();
-     FrameBuffer copy(m_specification);
 
      this->bind_read();
+     if (!is_framebuffer_complete(GL_READ_FRAMEBUFFER, "FrameBuffer::clone - source"))
+     {
+          return {};
+     }
+     
+     FrameBuffer copy(m_specification);
      copy.bind_draw();
+     if (!is_framebuffer_complete(GL_DRAW_FRAMEBUFFER, "FrameBuffer::clone - destination"))
+     {
+          return {};
+     }
 
      for (const auto &[index, data] : std::ranges::views::zip(m_specification.attachments, attachments) | std::ranges::views::enumerate)
      {
