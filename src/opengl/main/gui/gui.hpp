@@ -204,10 +204,10 @@ struct gui
      void open_locate_ff8_filebrowser();
      variant_tile_t                                         &combo_selected_tile(bool &changed);
      [[nodiscard]] bool                                      browse_for_image_display_preview();
+     [[nodiscard]] std::future<std::future<PathsAndEnabled>> generate_sort_paths();
      [[nodiscard]] std::future<std::future<PathsAndEnabled>> generate_external_texture_paths();
      [[nodiscard]] std::future<std::future<PathsAndEnabled>> generate_external_map_paths();
      void                                                    reset_imported_image();
-     void                                                    sort_paths();
      void                                                    control_panel_window();
      std::uint32_t                                           image_height() const;
      static std::vector<std::filesystem::path>               find_maps_in_directory(const std::filesystem::path &src, size_t reserve = {});

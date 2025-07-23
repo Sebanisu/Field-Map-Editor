@@ -3,6 +3,7 @@
 //
 #include "Selections.hpp"
 #include "formatters.hpp"
+#include "utilities.hpp"
 #include <spdlog/spdlog.h>
 using namespace open_viii;
 using namespace open_viii::graphics;
@@ -1005,15 +1006,17 @@ using namespace std::string_view_literals;
 fme::Selections::Selections(const Configuration config)
   : m_selections_array(load_selections_array(config))
 {
-     const auto start_time  = std::chrono::system_clock::now();
-
-     // load<ConfigKey::All>(Configuration{});
-
-     //     refresh_ffnx_paths();
-
-     const auto end_time    = std::chrono::system_clock::now();
-     const auto duration_us = std::chrono::duration_cast<std::chrono::microseconds>(end_time - start_time).count();
-     spdlog::info("Configuration Load Time: {:.3f} ms", static_cast<float>(duration_us) / 1000.0F);
+     sort_paths();
+     // FF8DirectoryPaths, FF8Path,
+     std::filesystem::path &path  = get<ConfigKey::FF8Path>();
+     const auto            &paths = get<ConfigKey::FF8DirectoryPaths>();
+     if (std::ranges::find(paths, path) == paths.end())
+     {
+          if (!paths.empty())
+          {
+               path = paths.front();
+          }
+     }
 }
 
 std::optional<fme::Configuration> fme::Selections::get_ffnx_config() const
@@ -1067,31 +1070,40 @@ std::optional<fme::Configuration> fme::Selections::get_ffnx_config(const std::fi
 // }
 
 
-bool fme::Selections::has_balanced_braces([[maybe_unused]] const std::string_view s)
+
+/**
+ * @brief Sorts and deduplicates the stored paths.
+ *
+ * This function reads the current paths from `FF8DirectoryPaths`, sorts them alphabetically,
+ * and removes duplicates. If the paths are already sorted and unique, no action is taken.
+ * After modification, the updated paths are saved back into the configuration.
+ *
+ * @note Paths that do not exist on the filesystem are TODO: not yet removed.
+ */
+void fme::Selections::sort_paths()
 {
-     int balance = 0;
-     for (const char c : s)
-     {
-          if (c == '{')
-          {
-               ++balance;
-          }
-          else if (c == '}')
-          {
-               --balance;
-               if (balance < 0)
-               {
-                    spdlog::error("Unmatched closing brace in input: \"{}\" (note: literal braces shown as {{ and }})", s);
-                    return false;
-               }
-          }
-     }
+     if (sort_and_remove_duplicates(get<ConfigKey::FF8DirectoryPaths>()))
+          update<ConfigKey::FF8DirectoryPaths>();
+     if (sort_and_remove_duplicates(get<ConfigKey::ExternalTexturesDirectoryPaths>()))
+          update<ConfigKey::ExternalTexturesDirectoryPaths>();
+     if (sort_and_remove_duplicates(get<ConfigKey::ExternalMapsDirectoryPaths>()))
+          update<ConfigKey::ExternalMapsDirectoryPaths>();
 
-     if (balance != 0)
-     {
-          spdlog::error("Mismatched brace count in input: \"{}\" ({} unmatched opening brace{{}})", s, balance);
-          return false;
-     }
 
-     return true;
+     if (sort_and_remove_duplicates(
+           get<ConfigKey::CacheTexturePaths>(),
+           get<ConfigKey::CacheSwizzlePathsEnabled>(),
+           get<ConfigKey::CacheSwizzleAsOneImagePathsEnabled>(),
+           get<ConfigKey::CacheDeswizzlePathsEnabled>()))
+     {
+          update<
+            ConfigKey::CacheTexturePaths,
+            ConfigKey::CacheSwizzlePathsEnabled,
+            ConfigKey::CacheSwizzleAsOneImagePathsEnabled,
+            ConfigKey::CacheDeswizzlePathsEnabled>();
+     }
+     if (sort_and_remove_duplicates(get<ConfigKey::CacheMapPaths>(), get<ConfigKey::CacheMapPathsEnabled>()))
+     {
+          update<ConfigKey::CacheMapPaths, ConfigKey::CacheMapPathsEnabled>();
+     }
 }

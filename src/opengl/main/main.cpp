@@ -40,11 +40,12 @@ static void setWindowIcon(GLFWwindow *const window)
 
 static GLFWwindow *create_glfw_window()
 {
-     const fme::Configuration config = {};
-     const int                window_height =
-       config[key_to_string(fme::ConfigKey::WindowHeight)].value_or(fme::SelectionInfo<fme::ConfigKey::WindowHeight>::default_value());
+     using namespace fme;
+     const Configuration config = {};
+     const int           window_height =
+       config[SelectionInfo<ConfigKey::WindowHeight>::id].value_or(SelectionInfo<ConfigKey::WindowHeight>::default_value());
      const int window_width =
-       config[key_to_string(fme::ConfigKey::WindowWidth)].value_or(fme::SelectionInfo<fme::ConfigKey::WindowWidth>::default_value());
+       config[SelectionInfo<ConfigKey::WindowWidth>::id].value_or(SelectionInfo<ConfigKey::WindowWidth>::default_value());
 
      if (!glfwInit())
      {
@@ -59,7 +60,7 @@ static GLFWwindow *create_glfw_window()
      glfwWindowHint(GLFW_STENCIL_BITS, 8);
      glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GLFW_TRUE);
 
-     GLFWwindow *window = glfwCreateWindow(window_width, window_height, fme::gui_labels::window_title.data(), nullptr, nullptr);
+     GLFWwindow *window = glfwCreateWindow(window_width, window_height, gui_labels::window_title.data(), nullptr, nullptr);
 
      if (!window)
      {

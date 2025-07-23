@@ -298,6 +298,9 @@ void gui::start(GLFWwindow *const window)
           glfwSwapBuffers(window);
 
      } while (!glfwWindowShouldClose(window) && !stop_loop);
+     glfwSetWindowTitle(window, "Shutting down... Cleaning up background threads");
+     glfwPollEvents();// Ensure the title update is processed
+     glfwSwapBuffers(window);// Optional, may be necessary to flush events depending on context
 }
 void gui::render_dockspace()
 {
@@ -1154,7 +1157,7 @@ void gui::update_field()
      {
           m_future_of_future_paths_consumer += generate_external_texture_paths();
           m_future_of_future_paths_consumer += generate_external_map_paths();
-          sort_paths();
+          m_future_of_future_paths_consumer += generate_sort_paths();
      }
 
      // Clear clicked tile indices used for selection logic
@@ -2444,7 +2447,7 @@ void gui::directory_browser_display()
                  ConfigKey::CacheDeswizzlePathsEnabled,
                  ConfigKey::CacheMapPaths,
                  ConfigKey::CacheMapPathsEnabled>();
-               sort_paths();
+               m_selections->sort_paths();
                update_path();
           }
           break;
@@ -2602,42 +2605,7 @@ std::filesystem::path gui::path_with_prefix_and_base_name(std::filesystem::path 
      return selected_path;
 }
 
-/**
- * @brief Sorts and deduplicates the stored paths.
- *
- * This function reads the current paths from `m_selections->paths`, sorts them alphabetically,
- * and removes duplicates. If the paths are already sorted and unique, no action is taken.
- * After modification, the updated paths are saved back into the configuration.
- *
- * @note Paths that do not exist on the filesystem are TODO: not yet removed.
- */
-void gui::sort_paths()
-{
-     if (sort_and_remove_duplicates(m_selections->get<ConfigKey::FF8DirectoryPaths>()))
-          m_selections->update<ConfigKey::FF8DirectoryPaths>();
-     if (sort_and_remove_duplicates(m_selections->get<ConfigKey::ExternalTexturesDirectoryPaths>()))
-          m_selections->update<ConfigKey::ExternalTexturesDirectoryPaths>();
-     if (sort_and_remove_duplicates(m_selections->get<ConfigKey::ExternalMapsDirectoryPaths>()))
-          m_selections->update<ConfigKey::ExternalMapsDirectoryPaths>();
 
-
-     if (sort_and_remove_duplicates(
-           m_selections->get<ConfigKey::CacheTexturePaths>(),
-           m_selections->get<ConfigKey::CacheSwizzlePathsEnabled>(),
-           m_selections->get<ConfigKey::CacheSwizzleAsOneImagePathsEnabled>(),
-           m_selections->get<ConfigKey::CacheDeswizzlePathsEnabled>()))
-     {
-          m_selections->update<
-            ConfigKey::CacheTexturePaths,
-            ConfigKey::CacheSwizzlePathsEnabled,
-            ConfigKey::CacheSwizzleAsOneImagePathsEnabled,
-            ConfigKey::CacheDeswizzlePathsEnabled>();
-     }
-     if (sort_and_remove_duplicates(m_selections->get<ConfigKey::CacheMapPaths>(), m_selections->get<ConfigKey::CacheMapPathsEnabled>()))
-     {
-          m_selections->update<ConfigKey::CacheMapPaths, ConfigKey::CacheMapPathsEnabled>();
-     }
-}
 
 void gui::file_browser_save_texture()
 {
@@ -3168,9 +3136,8 @@ gui::gui(GLFWwindow *const window)
      {
           m_future_of_future_paths_consumer += generate_external_texture_paths();
           m_future_of_future_paths_consumer += generate_external_map_paths();
+          m_future_of_future_paths_consumer += generate_sort_paths();
      }
-     // todo queue up sort_paths so it runs after generate is done.
-     sort_paths();
      //      if (!m_drag_sprite_shader)
      //      {
      //           m_drag_sprite_shader                       = std::make_shared<sf::Shader>();
@@ -3605,6 +3572,16 @@ void gui::combo_deswizzle_map_path()
      }
 
      refresh_render_texture();
+}
+
+std::future<std::future<gui::PathsAndEnabled>> gui::generate_sort_paths()
+{
+     return std::async(std::launch::deferred, [selections = m_selections]() -> std::future<PathsAndEnabled> {
+          return std::async(std::launch::deferred, [selections]() -> PathsAndEnabled {
+               selections->sort_paths();
+               return {};// default-constructed PathsAndEnabled
+          });
+     });
 }
 
 std::future<std::future<gui::PathsAndEnabled>> gui::generate_external_texture_paths()

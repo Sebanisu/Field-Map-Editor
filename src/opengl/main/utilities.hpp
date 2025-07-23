@@ -31,6 +31,36 @@ constexpr inline bool sort_and_remove_duplicates(R &...ranges) noexcept
      }
      return changed;
 }
+
+bool has_balanced_braces([[maybe_unused]] const std::string_view s);
+bool has_balanced_braces([[maybe_unused]] const std::u8string_view s);
+
+// using the template here is to avoid implicit conversions. converting the path to u8string to pass to the u8string_view overload.
+template<typename T>
+     requires(std::same_as<std::remove_cvref_t<T>, std::filesystem::path>)
+static inline bool has_balanced_braces([[maybe_unused]] const T &s)
+{
+     return has_balanced_braces(s.u8string());
+}
+
+template<std::ranges::range R>
+     requires(
+       (std::convertible_to<std::ranges::range_value_t<R>, std::string_view>
+        || std::convertible_to<std::ranges::range_value_t<R>, std::u8string_view>
+        || std::same_as<std::remove_cvref_t<std::ranges::range_value_t<R>>, std::filesystem::path>)
+       && !std::same_as<std::remove_cvref_t<R>, std::filesystem::path>)
+static inline bool has_balanced_braces([[maybe_unused]] const R &r)
+{
+     for (const auto &s : r)
+     {
+          if (bool ok = has_balanced_braces(s); !ok)
+          {
+               return false;// found bad brace.
+          }
+     }
+     return true;
+}
+
 }// namespace fme
 
 #endif /* B24A24CC_B3E6_4D3F_AFB1_C86F174A1902 */
