@@ -1037,6 +1037,15 @@ struct Selection : SelectionBase
           }
      }
 };
+;
+consteval inline auto load_selections_id_array()
+{
+     return []<std::size_t... Is>(std::index_sequence<Is...>) constexpr {
+          return std::array<std::string_view, static_cast<std::size_t>(fme::ConfigKey::All)>{
+               SelectionInfo<static_cast<ConfigKey>(Is)>::id...
+          };
+     }(std::make_index_sequence<static_cast<std::size_t>(fme::ConfigKey::All)>{});
+}
 
 /**
  * @brief Manages various settings and selections for the application.
@@ -1049,9 +1058,11 @@ struct Selections
    private:
      static constexpr std::size_t SelectionsSizeT = static_cast<std::size_t>(fme::ConfigKey::All);
      using SelectionsArrayT                       = std::array<std::unique_ptr<SelectionBase>, SelectionsSizeT>;
-     using SelectionsIDArrayT                     = std::array<std::string_view, SelectionsSizeT>;
+     SelectionsArrayT                                                      m_selections_array;
 
-     SelectionsArrayT load_selections_array(const Configuration &config)
+     static inline constexpr std::array<std::string_view, SelectionsSizeT> s_selections_id_array = load_selections_id_array();
+
+     SelectionsArrayT                                                      load_selections_array(const Configuration &config)
      {
           // cache these values for use later on.
           std::optional<Configuration>         ffnx_config{};
@@ -1076,15 +1087,6 @@ struct Selections
                return result;
           }(std::make_index_sequence<SelectionsSizeT>{});
      }
-     SelectionsArrayT                    m_selections_array;
-
-     static constexpr SelectionsIDArrayT load_selections_id_array()
-     {
-          return []<std::size_t... Is>(std::index_sequence<Is...>) constexpr {
-               return SelectionsIDArrayT{ SelectionInfo<static_cast<ConfigKey>(Is)>::id... };
-          }(std::make_index_sequence<SelectionsSizeT>{});
-     }
-     static constexpr SelectionsIDArrayT s_selections_id_array = load_selections_id_array();
 
      ///**
      // * @brief Refreshes FFNx-related paths based on the current FF8 path.
@@ -1093,8 +1095,8 @@ struct Selections
      // * of FFNx components are path-dependent. It reads configuration from "FFNx.toml".
      // */
      // void                         refresh_ffnx_paths(const std::filesystem::path &ff8_path);
-     std::optional<Configuration>        get_ffnx_config() const;
-     std::optional<Configuration>        get_ffnx_config(const std::filesystem::path &ff8_path) const;
+     std::optional<Configuration> get_ffnx_config() const;
+     std::optional<Configuration> get_ffnx_config(const std::filesystem::path &ff8_path) const;
 
    public:
      /**
@@ -1145,6 +1147,14 @@ struct Selections
           }
           const Selection<Key> *selection = static_cast<const Selection<Key> *>(m_selections_array[index].get());
           return selection->value;
+     }
+
+     const auto get_id(ConfigKey key)
+     {
+          assert(
+            static_cast<std::size_t>(key) < std::ranges::size(s_selections_id_array)
+            && "Key out of range, must be less than ConfigKey::All");
+          return s_selections_id_array[static_cast<std::size_t>(key)];
      }
 
      template<ConfigKey... Keys>

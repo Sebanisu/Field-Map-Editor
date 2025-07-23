@@ -854,30 +854,7 @@ void gui::consume_one_future()
           m_future_paths_consumer += m_future_of_future_paths_consumer.get_consumer();
      }
      m_future_paths_consumer.consume_one_with_callback([&](PathsAndEnabled pande) {
-          auto to_string = [](ConfigKey key) -> std::string_view {
-               using namespace std::string_view_literals;
-               switch (key)
-               {
-                    case ConfigKey::CacheTexturePaths:
-                         return "CacheTexturePaths"sv;
-                    case ConfigKey::CacheMapPaths:
-                         return "CacheMapPaths"sv;
-                    case ConfigKey::CacheSwizzlePathsEnabled:
-                         return "CacheSwizzlePathsEnabled"sv;
-                    case ConfigKey::CacheSwizzleAsOneImagePathsEnabled:
-                         return "CacheSwizzleAsOneImagePathsEnabled"sv;
-                    case ConfigKey::CacheDeswizzlePathsEnabled:
-                         return "CacheDeswizzlePathsEnabled"sv;
-                    case ConfigKey::CacheMapPathsEnabled:
-                         return "CacheMapPathsEnabled"sv;
-                    default: {
-                         spdlog::error("unhandled key type");
-                    }
-               }
-               return ""sv;
-          };
-
-          spdlog::info("Updating path config [{}] with {} entries", to_string(pande.path_key), pande.path.size());
+          spdlog::info("Updating path config [{}] with {} entries", m_selections->get_id(pande.path_key), pande.path.size());
           switch (pande.path_key)
           {
                case ConfigKey::CacheTexturePaths:
@@ -895,7 +872,7 @@ void gui::consume_one_future()
 
           for (auto &&[key, enabled] : std::ranges::views::zip(pande.enabled_key, pande.enabled))
           {
-               spdlog::info("Updating enabled config [{}] with {} entries", to_string(key), enabled.size());
+               spdlog::info("Updating enabled config [{}] with {} entries", m_selections->get_id(key), enabled.size());
                switch (key)
                {
                     case ConfigKey::CacheSwizzlePathsEnabled:
@@ -2604,7 +2581,6 @@ std::filesystem::path gui::path_with_prefix_and_base_name(std::filesystem::path 
      selected_path                    = selected_path / prefix / base_name;
      return selected_path;
 }
-
 
 
 void gui::file_browser_save_texture()
