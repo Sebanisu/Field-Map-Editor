@@ -854,6 +854,10 @@ void gui::consume_one_future()
           m_future_paths_consumer += m_future_of_future_paths_consumer.get_consumer();
      }
      m_future_paths_consumer.consume_one_with_callback([&](PathsAndEnabled pande) {
+          if (pande.path.empty())
+          {
+               return;
+          }
           spdlog::info("Updating path config [{}] with {} entries", m_selections->get_id(pande.path_key), pande.path.size());
           switch (pande.path_key)
           {
@@ -866,12 +870,16 @@ void gui::consume_one_future()
                     m_selections->update<ConfigKey::CacheMapPaths>();
                     break;
                default: {
-                    spdlog::error("unhandled key type");
+                    spdlog::warn("{}:{} - Unhandled key type: {}", __FILE__, __LINE__, m_selections->get_id(pande.path_key));
                }
           }
 
           for (auto &&[key, enabled] : std::ranges::views::zip(pande.enabled_key, pande.enabled))
           {
+               if (enabled.empty())
+               {
+                    continue;
+               }
                spdlog::info("Updating enabled config [{}] with {} entries", m_selections->get_id(key), enabled.size());
                switch (key)
                {
@@ -892,7 +900,7 @@ void gui::consume_one_future()
                          m_selections->update<ConfigKey::CacheMapPathsEnabled>();
                          break;
                     default: {
-                         spdlog::error("unhandled key type");
+                         spdlog::warn("{}:{} - Unhandled key type: {}", __FILE__, __LINE__, m_selections->get_id(key));
                          throw;
                     }
                }
