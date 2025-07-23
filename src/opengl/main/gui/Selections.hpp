@@ -286,12 +286,20 @@ struct SelectionInfo<ConfigKey::DisplayControlPanelWindow>
 {
      using value_type                     = bool;
      static constexpr std::string_view id = "DisplayControlPanelWindow";
+     static constexpr value_type       default_value()
+     {
+          return true;
+     }
 };
 template<>
 struct SelectionInfo<ConfigKey::DisplayDrawWindow>
 {
      using value_type                     = bool;
      static constexpr std::string_view id = "DisplayDrawWindow";
+     static constexpr value_type       default_value()
+     {
+          return true;
+     }
 };
 template<>
 struct SelectionInfo<ConfigKey::DisplayCustomPathsWindow>
@@ -404,6 +412,10 @@ struct SelectionInfo<ConfigKey::BatchOutputSaveMap>
 {
      using value_type                     = bool;
      static constexpr std::string_view id = "BatchOutputSaveMap";
+     static constexpr value_type       default_value()
+     {
+          return true;
+     }
 };
 
 template<>
@@ -837,6 +849,13 @@ struct SelectionLoadStrategy
           else
           {
                value = config[id].value_or(value);
+          }
+          if constexpr (std::ranges::range<ValueT>)
+          {
+               if (std::ranges::empty(value))
+               {
+                    return false;
+               }
           }
           return true;
      }
