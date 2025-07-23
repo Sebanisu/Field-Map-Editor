@@ -1078,13 +1078,13 @@ struct Selections
      }
      SelectionsArrayT                    m_selections_array;
 
-     // static constexpr SelectionsIDArrayT load_selections_id_array()
-     // {
-     //      return []<std::size_t... Is>(std::index_sequence<Is...>) constexpr {
-     //           return SelectionsIDArrayT{ SelectionInfo<static_cast<ConfigKey>(Is)>::id... };
-     //      }(std::make_index_sequence<SelectionsSizeT>{});
-     // }
-     // static constexpr SelectionsIDArrayT s_selections_id_array = load_selections_id_array();
+     static constexpr SelectionsIDArrayT load_selections_id_array()
+     {
+          return []<std::size_t... Is>(std::index_sequence<Is...>) constexpr {
+               return SelectionsIDArrayT{ SelectionInfo<static_cast<ConfigKey>(Is)>::id... };
+          }(std::make_index_sequence<SelectionsSizeT>{});
+     }
+     static constexpr SelectionsIDArrayT s_selections_id_array = load_selections_id_array();
 
      ///**
      // * @brief Refreshes FFNx-related paths based on the current FF8 path.
