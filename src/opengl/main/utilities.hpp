@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <concepts>
 #include <ranges>
+#include <filesystem>
 namespace fme
 {
 template<typename R>
