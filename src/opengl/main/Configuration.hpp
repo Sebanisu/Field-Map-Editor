@@ -243,9 +243,11 @@ class Configuration
           toml::array array;
           array.reserve(input.size());
 
-          for (const auto &str : input)
+          for (const auto &path : input)
           {
-               array.push_back(str.string());
+               auto str = path.u8string();
+               std::ranges::replace(str, u8'\\', u8'/');
+               array.push_back(str);
           }
 
           operator->()->insert_or_assign(key, std::move(array));
