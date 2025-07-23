@@ -4,6 +4,7 @@
 #include <concepts>
 #include <filesystem>
 #include <ranges>
+#include <tuple>
 namespace fme
 {
 template<typename R>
@@ -40,8 +41,7 @@ constexpr inline bool remove_empty_values(R &...ranges)
      auto       zip_view   = std::ranges::views::zip(ranges...);
      auto       it         = std::ranges::remove_if(
                  zip_view,
-                 [](const auto &group) {
-                      const auto &val = std::get<0>(group);
+                 [](const auto &val) {
                       if constexpr (std::ranges::range<std::remove_cvref_t<decltype(val)>>)
                       {
                            return std::ranges::empty(val);
