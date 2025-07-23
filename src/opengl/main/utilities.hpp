@@ -2,8 +2,8 @@
 #define B24A24CC_B3E6_4D3F_AFB1_C86F174A1902
 #include <algorithm>
 #include <concepts>
-#include <ranges>
 #include <filesystem>
+#include <ranges>
 namespace fme
 {
 template<typename R>
@@ -13,9 +13,9 @@ concept erasable_range = std::ranges::range<R> && requires(R &r) {
 template<erasable_range... R>
 constexpr inline bool sort_and_remove_duplicates(R &...ranges) noexcept
 {
-     bool changed  = false;
+     bool       changed    = false;
      const auto projection = [](const auto &values) { return std::get<0>(values); };
-     auto zip_view = std::ranges::views::zip(ranges...);
+     auto       zip_view   = std::ranges::views::zip(ranges...);
      if (!std::ranges::is_sorted(zip_view, {}, projection))
      {
           std::ranges::sort(zip_view, {}, projection);
@@ -32,6 +32,72 @@ constexpr inline bool sort_and_remove_duplicates(R &...ranges) noexcept
      }
      return changed;
 }
+
+template<erasable_range... R>
+constexpr inline bool remove_empty_values(R &...ranges)
+{
+     const auto projection = [](const auto &values) -> const auto & { return std::get<0>(values); };
+     auto       zip_view   = std::ranges::views::zip(ranges...);
+     auto       it         = std::ranges::remove_if(
+                 zip_view,
+                 [](const auto &group) {
+                      const auto &val = std::get<0>(group);
+                      if constexpr (std::ranges::range<std::remove_cvref_t<decltype(val)>>)
+                      {
+                           return std::ranges::empty(val);
+                      }
+                      else
+                      {
+                           return false;
+                      }
+                 },
+                 projection)
+                 .begin();
+
+     const auto offset = std::ranges::distance(zip_view.begin(), it);
+     if (offset < std::ranges::distance(zip_view))
+     {
+          (ranges.erase(std::ranges::next(ranges.begin(), offset), ranges.end()), ...);
+          return true;
+     }
+     return false;
+}
+
+#include <filesystem>
+
+template<erasable_range... R>
+inline bool remove_nonexistent_paths(const bool remove_on_error, R &...ranges)
+{
+     auto       zip_view = std::ranges::views::zip(ranges...);
+     auto       it       = std::ranges::remove_if(zip_view, [remove_on_error](const auto &group) {
+                    const auto &path = std::get<0>(group);
+                    if constexpr (std::same_as<std::remove_cvref_t<decltype(path)>, std::filesystem::path>)
+                    {
+                         try
+                         {
+                              return !std::filesystem::exists(path);
+                         }
+                         catch (const std::filesystem::filesystem_error &)
+                         {
+                              return remove_on_error;// true treats errors as "path does not exist"
+                              // true might not be desired as you take a disc out of the drive or something it would get removed.
+                         }
+                    }
+                    else
+                    {
+                         return false;
+                    }
+               }).begin();
+
+     const auto offset   = std::ranges::distance(zip_view.begin(), it);
+     if (offset < std::ranges::distance(zip_view))
+     {
+          (ranges.erase(std::ranges::next(ranges.begin(), offset), ranges.end()), ...);
+          return true;
+     }
+     return false;
+}
+
 
 bool has_balanced_braces([[maybe_unused]] const std::string_view s);
 bool has_balanced_braces([[maybe_unused]] const std::u8string_view s);
