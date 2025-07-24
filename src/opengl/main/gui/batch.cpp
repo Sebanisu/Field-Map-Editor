@@ -126,7 +126,7 @@ void fme::batch::combo_input_type()
      static constexpr auto values = std::array{ input_types::mim, input_types::deswizzle, input_types::swizzle };
      static constexpr auto tooltips =
        std::array{ gui_labels::input_mim_tooltip, gui_labels::input_deswizzle_tooltip, gui_labels::input_swizzle_tooltip };
-     const auto gcc = fme::GenericComboClass(
+     const auto gcc = fme::GenericCombo(
        gui_labels::input_type,
        []() { return values; },
        []() { return values | std::views::transform(AsString{}); },
@@ -384,7 +384,7 @@ void fme::batch::combo_output_type()
           return;
      }
      static constexpr auto values = std::array{ output_types::deswizzle, output_types::swizzle, output_types::swizzle_as_one_image };
-     const auto            gcc    = fme::GenericComboClass(
+     const auto            gcc    = fme::GenericCombo(
        gui_labels::output_type,
        []() { return values; },
        []() { return values | std::views::transform(AsString{}); },
@@ -414,7 +414,7 @@ void fme::batch::browse_input_path()
      static constexpr auto values = std::array{ root_path_types::selected_path, root_path_types::ff8_path, root_path_types::current_path };
      static constexpr auto tooltips =
        std::array{ gui_labels::selected_path_tooltip, gui_labels::ff8_path_tooltip, gui_labels::current_path_tooltip };
-     const auto gcc = fme::GenericComboClass(
+     const auto gcc = fme::GenericCombo(
        gui_labels::input_root_path_type,
        []() { return values; },
        []() { return values | std::views::transform(AsString{}); },
@@ -463,7 +463,7 @@ void fme::batch::browse_output_path()
      static constexpr auto values = std::array{ root_path_types::selected_path, root_path_types::ff8_path, root_path_types::current_path };
      static constexpr auto tooltips =
        std::array{ gui_labels::selected_path_tooltip, gui_labels::ff8_path_tooltip, gui_labels::current_path_tooltip };
-     const auto gcc = fme::GenericComboClass(
+     const auto gcc = fme::GenericCombo(
        gui_labels::output_root_path_type,
        []() { return values; },
        []() { return values | std::views::transform(AsString{}); },
@@ -545,7 +545,7 @@ void fme::batch::combo_compact_type()
                                                gui_labels::compact_map_order_tooltip,
                                                gui_labels::compact_map_order_ffnx_tooltip };
 
-     const auto        gcc       = fme::GenericComboClassWithFilter(
+     const auto        gcc       = fme::GenericComboWithFilter(
        gui_labels::compact,
        []() { return values; },
        []() { return values | std::views::transform(AsString{}); },
@@ -577,7 +577,7 @@ void fme::batch::combo_flatten_type()
      static constexpr auto tool_tips_only_palette = std::array{ gui_labels::flatten_palette_tooltip };
      if (all_or_only_palette)
      {
-          const auto gcc = fme::GenericComboClassWithFilter(
+          const auto gcc = fme::GenericComboWithFilter(
             gui_labels::flatten,
             [&]() { return values; },
             [&]() { return values | std::views::transform(AsString{}); },
@@ -590,7 +590,7 @@ void fme::batch::combo_flatten_type()
      }
      else
      {
-          const auto gcc = fme::GenericComboClassWithFilter(
+          const auto gcc = fme::GenericComboWithFilter(
             gui_labels::flatten,
             [&]() { return values_only_palette; },
             [&]() { return values_only_palette | std::views::transform(AsString{}); },

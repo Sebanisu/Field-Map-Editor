@@ -400,7 +400,7 @@ bool import::combo_tile_size() const
 
      static constexpr auto values =
        std::array{ tile_sizes::default_size, tile_sizes::x_2_size, tile_sizes::x_4_size, tile_sizes::x_8_size, tile_sizes::x_16_size };
-     const auto gcc = GenericComboClass(
+     const auto gcc = GenericCombo(
        gui_labels::tile_size,
        []() -> decltype(auto) { return values; },
        []() { return values | std::views::transform(AsString{}); },

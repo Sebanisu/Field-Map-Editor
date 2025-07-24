@@ -215,7 +215,7 @@ void fme::custom_paths_window::populate_test_output() const
      const auto pop_table = glengine::ScopeGuard{ &ImGui::EndTable };
      using namespace std::string_view_literals;
 
-     static const auto       values = std::array{ PatternSelector::OutputSwizzlePattern,
+     static const auto  values = std::array{ PatternSelector::OutputSwizzlePattern,
                                             PatternSelector::OutputDeswizzlePattern,
                                             PatternSelector::OutputMapPatternForSwizzle,
                                             PatternSelector::OutputMapPatternForDeswizzle,
@@ -228,11 +228,11 @@ void fme::custom_paths_window::populate_test_output() const
                                             PatternSelector::PathPatternsWithPupuID };
 
 
-     const GenericComboClass gcc    = { ""sv,
-                                        []() { return values; },
-                                     []() { return values | std::views::transform(AsString{}); },
-                                     selections->get<ConfigKey::CurrentPattern>(),
-                                     generic_combo_settings{ .num_columns = 1 } };
+     const GenericCombo gcc    = { ""sv,
+                                   []() { return values; },
+                                []() { return values | std::views::transform(AsString{}); },
+                                selections->get<ConfigKey::CurrentPattern>(),
+                                generic_combo_settings{ .num_columns = 1 } };
      if (gcc.render())
      {
           selections->get<ConfigKey::CurrentPatternIndex>() = -1;

@@ -1026,7 +1026,7 @@ void gui::hovered_tiles_panel()
 void gui::combo_coo()
 {
      constexpr static auto values = open_viii::LangCommon::to_array();
-     const auto            gcc    = GenericComboClass(
+     const auto            gcc    = GenericCombo(
        gui_labels::language,
        []() { return values; },
        []() { return values | std::views::transform(AsString{}); },
@@ -1077,7 +1077,7 @@ void gui::refresh_field()
 
 void gui::combo_field()
 {
-     const auto gcc = GenericComboClass(
+     const auto gcc = GenericCombo(
        gui_labels::field,
        [this]() { return std::views::iota(0, static_cast<int>(std::ranges::ssize(m_archives_group->mapdata()))); },
        [this]() {
@@ -1291,7 +1291,7 @@ void gui::refresh_bpp(BPPT in_bpp)
 void gui::combo_bpp()
 {
      {
-          const auto gcc = GenericComboClass(
+          const auto gcc = GenericCombo(
             gui_labels::bpp,
             [&]() { return Mim::bpp_selections(); },
             [&]() { return Mim::bpp_selections_c_str() | std::ranges::views::transform([](std::string_view sv) { return sv; }); },
@@ -1323,7 +1323,7 @@ void gui::combo_palette()
           {
                static constexpr auto palette_values  = Mim::palette_selections();
                static constexpr auto palette_strings = Mim::palette_selections_c_str();
-               const auto            gcc             = GenericComboClass(
+               const auto            gcc             = GenericCombo(
                  gui_labels::palette,
                  []() { return palette_values | std::ranges::views::transform([](auto i) { return static_cast<uint8_t>(i); }); },
                  []() { return palette_strings | std::ranges::views::transform([](std::string_view sv) { return sv; }); },
@@ -2866,7 +2866,7 @@ void gui::combo_draw()
      static const auto str_draw_mode =
        iota_draw_mode | std::views::transform([](draw_mode in_draw_mode) { return fmt::format("{}", in_draw_mode); });
 
-     const auto gcc = GenericComboClass(
+     const auto gcc = GenericCombo(
        gui_labels::draw, [=]() { return iota_draw_mode; }, [=]() { return str_draw_mode; }, m_selections->get<ConfigKey::DrawMode>());
 
      if (!gcc.render())
@@ -2878,7 +2878,7 @@ void gui::combo_draw()
 bool gui::combo_path()
 {
      const auto pop_buttons = glengine::ScopeGuard([&]() { browse_buttons(); });
-     const auto gcc         = GenericComboClass(
+     const auto gcc         = GenericCombo(
        gui_labels::path,
        [&]() { return m_selections->get<ConfigKey::FF8DirectoryPaths>(); },
        [&]() {
@@ -3205,7 +3205,7 @@ std::shared_ptr<map_sprite> gui::get_map_sprite() const
 
 void gui::combo_pupu()
 {
-     const auto gcc = GenericComboClassWithFilter(
+     const auto gcc = GenericComboWithFilter(
        gui_labels::pupu_id,
        [&]() { return m_map_sprite->working_unique_pupu(); },
        [&]() { return m_map_sprite->working_unique_pupu() | std::views::transform(AsString{}); },
@@ -3227,7 +3227,7 @@ void gui::combo_draw_bit()
 {
      using namespace std::string_view_literals;
      static constexpr auto values = std::array{ ff_8::draw_bitT::all, ff_8::draw_bitT::enabled, ff_8::draw_bitT::disabled };
-     const auto            gcc    = fme::GenericComboClassWithFilter(
+     const auto            gcc    = fme::GenericComboWithFilter(
        gui_labels::draw_bit,
        []() { return values; },
        []() { return values | std::views::transform(AsString{}); },
@@ -3275,7 +3275,7 @@ void gui::combo_filtered_palettes()
           return;
      }
      const auto &pair = map.at(key);
-     const auto  gcc  = fme::GenericComboClassWithFilter(
+     const auto  gcc  = fme::GenericComboWithFilter(
        gui_labels::palette,
        [&pair]() { return pair.values(); },
        [&pair]() { return pair.strings(); },
@@ -3291,7 +3291,7 @@ void gui::combo_filtered_palettes()
 void gui::combo_filtered_bpps()
 {
      const auto &pair = m_map_sprite->uniques().bpp();
-     const auto  gcc  = fme::GenericComboClassWithFilter(
+     const auto  gcc  = fme::GenericComboWithFilter(
        gui_labels::bpp,
        [&pair]() { return pair.values(); },
        [&pair]() { return pair.strings(); },
@@ -3307,7 +3307,7 @@ void gui::combo_filtered_bpps()
 void gui::combo_blend_modes()
 {
      const auto &pair = m_map_sprite->uniques().blend_mode();
-     const auto  gcc  = fme::GenericComboClassWithFilter(
+     const auto  gcc  = fme::GenericComboWithFilter(
        gui_labels::blend_mode,
        [&pair]() { return pair.values(); },
        [&pair]() { return pair.strings(); },
@@ -3332,7 +3332,7 @@ void gui::refresh_render_texture(bool reload_textures)
 void gui::combo_layers()
 {
      const auto &pair = m_map_sprite->uniques().layer_id();
-     const auto  gcc  = fme::GenericComboClassWithFilter(
+     const auto  gcc  = fme::GenericComboWithFilter(
        gui_labels::layer_id,
        [&pair]() { return pair.values(); },
        [&pair]() { return pair.strings(); },
@@ -3348,7 +3348,7 @@ void gui::combo_layers()
 void gui::combo_texture_pages()
 {
      const auto &pair = m_map_sprite->uniques().texture_page_id();
-     const auto  gcc  = fme::GenericComboClassWithFilter(
+     const auto  gcc  = fme::GenericComboWithFilter(
        gui_labels::texture_page,
        [&pair]() { return pair.values(); },
        [&pair]() { return pair.strings(); },
@@ -3364,7 +3364,7 @@ void gui::combo_texture_pages()
 void gui::combo_animation_ids()
 {
      const auto &pair = m_map_sprite->uniques().animation_id();
-     const auto  gcc  = fme::GenericComboClassWithFilter(
+     const auto  gcc  = fme::GenericComboWithFilter(
        gui_labels::animation_id,
        [&pair]() { return pair.values(); },
        [&pair]() { return pair.strings(); },
@@ -3380,7 +3380,7 @@ void gui::combo_animation_ids()
 void gui::combo_blend_other()
 {
      const auto &pair = m_map_sprite->uniques().blend_other();
-     const auto  gcc  = fme::GenericComboClassWithFilter(
+     const auto  gcc  = fme::GenericComboWithFilter(
        gui_labels::blend_other,
        [&pair]() { return pair.values(); },
        [&pair]() { return pair.strings(); },
@@ -3397,7 +3397,7 @@ void gui::combo_blend_other()
 void gui::combo_z()
 {
      const auto &pair = m_map_sprite->uniques().z();
-     const auto  gcc  = fme::GenericComboClassWithFilter(
+     const auto  gcc  = fme::GenericComboWithFilter(
        gui_labels::z,
        [&pair]() { return pair.values(); },
        [&pair]() { return pair.strings(); },
@@ -3419,7 +3419,7 @@ void gui::combo_animation_frames()
           return;
      }
      const auto &pair = map.at(key);
-     const auto  gcc  = fme::GenericComboClassWithFilter(
+     const auto  gcc  = fme::GenericComboWithFilter(
        gui_labels::animation_frame,
        [&pair]() { return pair.values(); },
        [&pair]() { return pair.strings(); },
@@ -3685,7 +3685,7 @@ std::future<std::future<gui::PathsAndEnabled>> gui::generate_external_map_paths(
 
 bool gui::combo_swizzle_path(ff_8::filter_old<std::filesystem::path, ff_8::FilterTag::Swizzle> &filter) const
 {
-     const auto gcc = fme::GenericComboClassWithFilterAndFixedToggles(
+     const auto gcc = fme::GenericComboWithFilterAndFixedToggles(
        gui_labels::swizzle_path,
        [this]() { return m_selections->get<ConfigKey::CacheTexturePaths>(); },
        [this]() { return m_selections->get<ConfigKey::CacheSwizzlePathsEnabled>(); },
@@ -3702,7 +3702,7 @@ bool gui::combo_swizzle_path(ff_8::filter_old<std::filesystem::path, ff_8::Filte
 
 bool gui::combo_swizzle_as_one_image_path(ff_8::filter_old<std::filesystem::path, ff_8::FilterTag::SwizzleAsOneImage> &filter) const
 {
-     const auto gcc = fme::GenericComboClassWithFilterAndFixedToggles(
+     const auto gcc = fme::GenericComboWithFilterAndFixedToggles(
        gui_labels::swizzle_as_one_image_path,
        [this]() { return m_selections->get<ConfigKey::CacheTexturePaths>(); },
        [this]() { return m_selections->get<ConfigKey::CacheSwizzleAsOneImagePathsEnabled>(); },
@@ -3718,7 +3718,7 @@ bool gui::combo_swizzle_as_one_image_path(ff_8::filter_old<std::filesystem::path
 
 bool gui::combo_deswizzle_path(ff_8::filter_old<std::filesystem::path, ff_8::FilterTag::Deswizzle> &filter) const
 {
-     const auto gcc = fme::GenericComboClassWithFilterAndFixedToggles(
+     const auto gcc = fme::GenericComboWithFilterAndFixedToggles(
        gui_labels::deswizzle_path,
        [this]() { return m_selections->get<ConfigKey::CacheTexturePaths>(); },
        [this]() { return m_selections->get<ConfigKey::CacheDeswizzlePathsEnabled>(); },
@@ -3734,7 +3734,7 @@ bool gui::combo_deswizzle_path(ff_8::filter_old<std::filesystem::path, ff_8::Fil
 
 bool gui::combo_swizzle_map_path(ff_8::filter_old<std::filesystem::path, ff_8::FilterTag::SwizzleMap> &filter) const
 {
-     const auto gcc = fme::GenericComboClassWithFilterAndFixedToggles(
+     const auto gcc = fme::GenericComboWithFilterAndFixedToggles(
        gui_labels::swizzle_map_path,
        [this]() { return m_selections->get<ConfigKey::CacheMapPaths>(); },
        [this]() { return m_selections->get<ConfigKey::CacheMapPathsEnabled>(); },
@@ -3751,7 +3751,7 @@ bool gui::combo_swizzle_map_path(ff_8::filter_old<std::filesystem::path, ff_8::F
 
 bool gui::combo_deswizzle_map_path(ff_8::filter_old<std::filesystem::path, ff_8::FilterTag::DeswizzleMap> &filter) const
 {
-     const auto gcc = fme::GenericComboClassWithFilterAndFixedToggles(
+     const auto gcc = fme::GenericComboWithFilterAndFixedToggles(
        gui_labels::deswizzle_map_path,
        [this]() { return m_selections->get<ConfigKey::CacheMapPaths>(); },
        [this]() { return m_selections->get<ConfigKey::CacheMapPathsEnabled>(); },

@@ -50,10 +50,10 @@ template<
   returns_range_concept  StringLambdaT,
   returns_range_concept  tool_tip_lambda_t,
   returns_filter_concept filter_lambdaT>
-class GenericComboClassWithFilter
+class GenericComboWithFilter
 {
    public:
-     GenericComboClassWithFilter(
+     GenericComboWithFilter(
        std::string_view       name,
        ValueLambdaT         &&value_lambda,
        StringLambdaT        &&string_lambda,
@@ -296,10 +296,10 @@ template<
   returns_range_concept  StringLambdaT,
   returns_range_concept  ToolTipLambdaT,
   returns_filter_concept FilterLambdaT>
-class GenericComboClassWithFilterAndFixedToggles
+class GenericComboWithFilterAndFixedToggles
 {
    public:
-     GenericComboClassWithFilterAndFixedToggles(
+     GenericComboWithFilterAndFixedToggles(
        std::string_view       name,
        ValueLambdaT         &&value_lambda,
        FixedTogglesLambdaT  &&fixed_toggles_lambda,
@@ -435,6 +435,10 @@ class GenericComboClassWithFilterAndFixedToggles
                     const auto  pop_column           = glengine::ScopeGuard{ &ImGui::NextColumn };
 
                     const auto &current_fixed_toggle = *getNext(fixed_toggles_, index);
+                    if (!current_fixed_toggle)
+                    {
+                         continue;
+                    }
                     ImGui::BeginDisabled(!current_fixed_toggle);
                     const auto pop_disabled = glengine::ScopeGuard{ &ImGui::EndDisabled };
 
@@ -581,10 +585,10 @@ template<
   returns_range_concept StringLambdaT,
   typename ValueT,
   returns_range_concept tool_tip_lambda_t = StringLambdaT>
-class GenericComboClass
+class GenericCombo
 {
    public:
-     GenericComboClass(
+     GenericCombo(
        std::string_view       name,
        ValueLambdaT         &&value_lambda,
        StringLambdaT        &&string_lambda,
@@ -602,7 +606,7 @@ class GenericComboClass
      {
      }
 
-     GenericComboClass(
+     GenericCombo(
        std::string_view       name,
        ValueLambdaT         &&value_lambda,
        StringLambdaT        &&string_lambda,
@@ -713,7 +717,7 @@ class GenericComboClass
                     }
                     const char *c_str_value = std::ranges::data(string);
                     {
-                         const auto pop_id2     = PushPopID();
+                         const auto pop_id2    = PushPopID();
                          const auto pop_column = glengine::ScopeGuard{ &ImGui::NextColumn };
 
                          if (ImGui::Selectable(c_str_value, is_selected))
