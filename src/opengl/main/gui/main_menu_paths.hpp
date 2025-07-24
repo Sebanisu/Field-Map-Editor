@@ -90,9 +90,6 @@ struct main_menu_paths
                     auto zip_path = std::ranges::views::zip(m_settings.generated_paths.get(), m_settings.generated_paths_enabled.get());
                     for (const auto &[index, path] : transformed_paths)
                     {
-                         bool is_checked = path == m_main_filter.get().value() && m_main_filter.get().enabled();
-                         ImGui::TableNextColumn();
-                         ImGui::SetNextItemAllowOverlap();
                          auto it      = std::ranges::find_if(zip_path, [&path](const auto &pair) {
                               const auto &[t_path, t_enabled] = pair;
                               return std::ranges::equal(path, t_path);
@@ -105,6 +102,13 @@ struct main_menu_paths
                               }
                               return false;
                          }();
+                         // if (!enabled)
+                         // {
+                         //      continue;
+                         // }
+                         bool is_checked = path == m_main_filter.get().value() && m_main_filter.get().enabled();
+                         ImGui::TableNextColumn();
+                         ImGui::SetNextItemAllowOverlap();
                          {
                               ImGui::BeginDisabled(!enabled);
                               const auto pop_disabled = glengine::ScopeGuard{ &ImGui::EndDisabled };
@@ -151,6 +155,10 @@ struct main_menu_paths
                     for (const auto &[path, enabled] :
                          std::ranges::views::zip(m_settings.generated_paths.get(), m_settings.generated_paths_enabled.get()))
                     {
+                         if (!enabled)
+                         {
+                              continue;
+                         }
                          bool is_checked = path == m_main_filter.get().value() && m_main_filter.get().enabled();
                          ImGui::TableNextColumn();
                          ImGui::SetNextItemAllowOverlap();
