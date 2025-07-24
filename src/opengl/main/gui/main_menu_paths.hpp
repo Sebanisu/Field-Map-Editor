@@ -143,10 +143,13 @@ struct main_menu_paths
                }
           }();
           [&]() {
-               if (std::ranges::empty(m_settings.generated_paths.get()))
+               if (
+                 std::ranges::empty(m_settings.generated_paths.get())
+                 || std::ranges::none_of(m_settings.generated_paths_enabled.get(), std::identity{}))
                {
                     return;
                }
+
                ImGui::Separator();
 
                if (ImGui::BeginTable("##path_table", 2))
