@@ -463,7 +463,8 @@ std::vector<std::filesystem::path> path_search::generate_paths(
      }
      if (copy_data.palette.has_value())
      {
-          return transform_and_find_a_match(selections->get<fme::ConfigKey::PathPatternsWithPalette>());
+          //matches texture_page so we skip this and look for matches with out palette
+          return false;//transform_and_find_a_match(selections->get<fme::ConfigKey::PathPatternsWithPalette>());
      }
      if (copy_data.texture_page.has_value())
      {
