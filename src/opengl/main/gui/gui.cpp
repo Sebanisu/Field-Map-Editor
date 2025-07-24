@@ -2416,12 +2416,6 @@ void gui::directory_browser_display()
                      ps.has_swizzle_as_one_image_path(selected_path, ".png")),
                    std::pair(&m_selections->get<ConfigKey::CacheDeswizzlePathsEnabled>(), ps.has_deswizzle_path(selected_path, ".png")),
                    std::pair(&m_selections->get<ConfigKey::CacheMapPathsEnabled>(), ps.has_map_path(selected_path, ".png"))));
-               // ps.has_swizzle_path(path, ".png"),
-               // ps.has_swizzle_as_one_image_path(path, ".png"),
-               // ps.has_deswizzle_path(path, ".png")
-
-
-               m_selections->update<>();
 
                m_selections->update<
                  ConfigKey::FF8Path,
