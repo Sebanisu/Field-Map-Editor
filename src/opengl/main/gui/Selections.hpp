@@ -108,6 +108,41 @@ enum class ConfigKey
 
 };
 
+template<ConfigKey... Keys>
+consteval bool has_duplicate_keys()
+{
+     std::array<ConfigKey, sizeof...(Keys)> arr = { Keys... };
+
+     if (std::ranges::any_of(arr, [](ConfigKey k) { return k == ConfigKey::All; }) && sizeof...(Keys) > 1U)
+     {
+          // if we need to match keys above All we could adjust the function to allow that.
+          return true;// ConfigKey::All and something else present
+     }
+
+     std::ranges::sort(arr);
+     return std::ranges::adjacent_find(arr) != arr.end();
+}
+
+template<ConfigKey... Keys>
+consteval bool has_valid_keys()
+{
+     using UT                            = std::underlying_type_t<ConfigKey>;
+     std::array<UT, sizeof...(Keys)> arr = { std::to_underlying(Keys)... };
+
+     if constexpr (std::signed_integral<UT>)
+     {
+          const auto minmax_value = std::ranges::minmax_element(arr);
+          const auto &[min, max]  = minmax_value;
+          return *min >= UT{} && *max <= std::to_underlying(ConfigKey::All);
+     }
+     else
+     {
+          const auto max_value = std::ranges::max_element(arr);
+          return *max_value <= std::to_underlying(ConfigKey::All);
+     }
+}
+
+
 template<ConfigKey Key>
 struct SelectionInfo;
 
@@ -1146,7 +1181,7 @@ struct Selections
      }
 
      template<ConfigKey Key>
-          requires(SelectionsSizeT > static_cast<std::size_t>(Key))
+          requires(has_valid_keys<Key>())
      const auto &get() const
      {
           static constexpr std::size_t index = static_cast<std::size_t>(Key);
@@ -1177,6 +1212,7 @@ struct Selections
      }
 
      template<ConfigKey... Keys>
+          requires(!has_duplicate_keys<Keys...>() && has_valid_keys<Keys...>())
      void refresh()
      {
           if constexpr (sizeof...(Keys) == 1U && ((Keys == ConfigKey::All) && ...))
@@ -1204,6 +1240,7 @@ struct Selections
 
 
      template<ConfigKey... Keys>
+          requires(!has_duplicate_keys<Keys...>() && has_valid_keys<Keys...>())
      void update()
      {
           if constexpr (sizeof...(Keys) == 1U && ((Keys == ConfigKey::All) && ...))
@@ -1231,32 +1268,6 @@ struct Selections
      }
 
      void sort_paths();
-
-     // void update_configuration() const;
-
-
-     // template<ConfigKey... Keys>
-     // void update_configuration_key() const
-     // {
-     //      Configuration config{};
-     //      (
-     //        [&]<ConfigKey Key> {
-     //             if constexpr (!SelectionUseFFNXConfig<Key>::value)
-     //                  update<Key>(config);
-     //        }.template operator()<Keys>(),
-     //        ...);
-     //      config.save();
-     // }
-
-
-     //    private:
-     //      template<ConfigKey K>
-     //      void load(const Configuration &) = delete;// delete fine for load because all defined and used in Selections
-
-     //      template<ConfigKey K>
-     //           requires(static_cast<std::size_t>(K) <= static_cast<std::size_t>(ConfigKey::All))
-     //      void update(Configuration &)
-     //        const;// can't delete or else other cpp can't find the functions in Selections.cpp will get linker errors if missing.
 };
 }// namespace fme
 #endif// FIELD_MAP_EDITOR_SELECTIONS_HPP
