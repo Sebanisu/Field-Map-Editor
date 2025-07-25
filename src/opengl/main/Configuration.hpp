@@ -63,6 +63,8 @@ class Configuration
       */
      toml::node_view<const toml::node> operator[](std::string_view i) const;
 
+     toml::node_view<const toml::node> operator()(std::string_view root, std::string_view child) const;
+
      /**
       * @brief Saves the current state of the configuration back to the file.
       *
