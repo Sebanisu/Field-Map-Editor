@@ -5,12 +5,17 @@
 #include <filesystem>
 #include <ranges>
 #include <tuple>
+#include <variant>
+#include <vector>
+
 namespace fme
 {
+
 template<typename R>
 concept erasable_range = std::ranges::range<R> && requires(R &r) {
      { r.erase(std::ranges::begin(r), std::ranges::end(r)) } -> std::same_as<typename R::iterator>;
 };
+
 template<erasable_range... R>
 constexpr inline bool sort_and_remove_duplicates(R &...ranges) noexcept
 {
@@ -126,6 +131,72 @@ static inline bool has_balanced_braces([[maybe_unused]] const R &r)
           }
      }
      return true;
+}
+
+template<std::ranges::sized_range rangeT>
+constexpr inline auto generate_combinations_more(const rangeT &pupu_ids)
+{
+     size_t n = std::ranges::size(pupu_ids);
+     // Create a view that generates all combinations
+     return std::ranges::iota_view(size_t{ 1 }, size_t{ 1ull << n })
+            | std::views::transform([n, &pupu_ids, mask = std::vector<bool>(n, false)](size_t) mutable {
+                   const auto increment_mask = [](std::vector<bool> &mask) -> bool {
+                        for (size_t i = 0; i < mask.size(); ++i)
+                        {
+                             if (!mask[i])
+                             {
+                                  mask[i] = true;
+                                  std::fill(mask.begin(), mask.begin() + i, false);
+                                  return true;
+                             }
+                        }
+                        return false;// All 1s, no more increments possible
+                   };
+                   // Increment the mask to get the next combination
+                   (void)increment_mask(mask);
+
+                   // Generate the combination based on the current mask
+                   return pupu_ids | std::views::enumerate | std::views::filter([&mask](const auto &tuple) {
+                               const auto &[idx, _] = tuple;
+                               return mask[idx];
+                          })
+                          | std::views::transform([](const auto &tuple) {
+                                 const auto &[_, id] = tuple;
+                                 return id;
+                            });
+              });
+}
+
+template<std::ranges::sized_range rangeT>
+constexpr inline auto generate_combinations_64bit(const rangeT &pupu_ids)
+{
+     size_t n     = std::ranges::size(pupu_ids);
+     size_t total = 1ull << n;
+
+     return std::views::iota(1ull, total) | std::views::transform([n, &pupu_ids](size_t mask) {
+                 return pupu_ids | std::views::enumerate | std::views::filter([mask](const auto &tuple) {
+                             const auto &[idx, _] = tuple;
+                             return mask & (1ull << idx);
+                        })
+                        | std::views::transform([](const auto &tuple) {
+                               const auto &[_, id] = tuple;
+                               return id;
+                          });
+            });
+}
+
+template<std::ranges::sized_range rangeT>
+constexpr inline auto generate_combinations(const rangeT &pupu_ids)
+{
+     // Define the variant type to hold both possible range types
+     using CombinationRange = std::variant<
+       decltype(generate_combinations_64bit(std::declval<std::remove_cvref_t<decltype(pupu_ids)>>())),
+       decltype(generate_combinations_more(std::declval<std::remove_cvref_t<decltype(pupu_ids)>>()))>;
+     if (std::ranges::size(pupu_ids) >= 64ull)
+     {
+          return CombinationRange{ generate_combinations_more(pupu_ids) };
+     }
+     return CombinationRange{ generate_combinations_64bit(pupu_ids) };
 }
 
 }// namespace fme
