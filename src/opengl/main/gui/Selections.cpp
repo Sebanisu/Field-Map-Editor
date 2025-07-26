@@ -58,11 +58,10 @@ void fme::Selections::sort_paths()
      const bool remove_on_error = true;// or false depending on behavior you want
 
      auto       process         = [&]<ConfigKey... Keys>() {
-
           auto args           = std::forward_as_tuple(get<Keys>()...);// tuple of references
           auto args_with_bool = std::tuple_cat(std::make_tuple(remove_on_error), args);
 
-          bool changed    = false;
+          bool changed        = false;
           changed |= std::apply(remove_empty_values<std::remove_cvref_t<decltype(get<Keys>())>...>, args);
           changed |= std::apply(remove_nonexistent_paths<std::remove_cvref_t<decltype(get<Keys>())>...>, args_with_bool);
           changed |= std::apply(sort_and_remove_duplicates<std::remove_cvref_t<decltype(get<Keys>())>...>, args);
@@ -72,14 +71,13 @@ void fme::Selections::sort_paths()
      };
 
      process.template operator()<ConfigKey::FF8DirectoryPaths>();
-     process.template operator()<ConfigKey::ExternalTexturesDirectoryPaths>();
-     process.template operator()<ConfigKey::ExternalMapsDirectoryPaths>();
+     process.template operator()<ConfigKey::ExternalTexturesAndMapsDirectoryPaths>();
 
      process.template operator()<
-       ConfigKey::CacheTexturePaths,
+       ConfigKey::CacheTextureAndMapPaths,
        ConfigKey::CacheSwizzlePathsEnabled,
        ConfigKey::CacheSwizzleAsOneImagePathsEnabled,
        ConfigKey::CacheDeswizzlePathsEnabled>();
 
-     process.template operator()<ConfigKey::CacheMapPaths, ConfigKey::CacheMapPathsEnabled>();
+     process.template operator()<ConfigKey::CacheTextureAndMapPaths, ConfigKey::CacheMapPathsEnabled>();
 }

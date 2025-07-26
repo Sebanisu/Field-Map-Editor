@@ -123,9 +123,11 @@ void fme::batch::combo_input_type()
           spdlog::error("Failed to lock m_selections: shared_ptr is expired.");
           return;
      }
-     static constexpr auto values = std::array{ input_types::mim, input_types::deswizzle, input_types::swizzle };
-     static constexpr auto tooltips =
-       std::array{ gui_labels::input_mim_tooltip, gui_labels::input_deswizzle_tooltip, gui_labels::input_swizzle_tooltip };
+     static constexpr auto values = std::array{ input_types::mim, input_types::deswizzle, input_types::swizzle, input_types::swizzle_as_one_image };
+     static constexpr auto tooltips = std::array{ gui_labels::input_mim_tooltip,
+                                                  gui_labels::input_deswizzle_tooltip,
+                                                  gui_labels::input_swizzle_tooltip,
+                                                  gui_labels::input_swizzle_as_one_image_tooltip };
      const auto gcc = fme::GenericCombo(
        gui_labels::input_type,
        []() { return values; },
@@ -1019,20 +1021,27 @@ void fme::batch::generate_map_sprite()
                // Enable deswizzle filter using the input path
                filters.deswizzle.update(std::filesystem::path(selected_string)).enable();
                if (selections->get<ConfigKey::BatchInputLoadMap>())
-                    filters.deswizzle_map.update(std::filesystem::path(selected_string)).enable();
+                    filters.map.update(std::filesystem::path(selected_string)).enable();
                break;
           }
 
           case input_types::swizzle: {
-               // Enable upscale filter using the input path
+               // Enable swizzle filter using the input path
                filters.swizzle.update(std::filesystem::path(selected_string)).enable();
                if (selections->get<ConfigKey::BatchInputLoadMap>())
-                    filters.swizzle_map.update(std::filesystem::path(selected_string)).enable();
+                    filters.map.update(std::filesystem::path(selected_string)).enable();
                break;
           }
 
           case input_types::swizzle_as_one_image: {
-               spdlog::warn("input_types::swizzle_as_one_image is not yet handled");
+               // Enable swizzle as one image filter using the input path
+               filters.swizzle_as_one_image.update(std::filesystem::path(selected_string)).enable();
+               if (selections->get<ConfigKey::BatchInputLoadMap>())
+                    filters.map.update(std::filesystem::path(selected_string)).enable();
+               break;
+          }
+          default: {
+               spdlog::warn("input_types is not yet handled");
                break;
           }
      }

@@ -55,43 +55,27 @@ map_sprite::map_sprite(
           return;
      }
      const auto ps = ff_8::path_search{
-          .selections                              = m_selections.lock(),
-          .opt_coo                                 = m_map_group.opt_coo,
-          .field_name                              = get_base_name(),
-          .filters_deswizzle_value_string          = m_filters.deswizzle.value().string(),
-          .filters_swizzle_value_string            = m_filters.swizzle.value().string(),
-          .filters_swizzle_as_one_image_string     = m_filters.swizzle_as_one_image.value().string(),
-          .filters_deswizzle_map_value_string      = m_filters.deswizzle_map.value().string(),
-          .filters_swizzle_map_value_string        = m_filters.swizzle_map.value().string(),
-          .filters_swizzle_as_one_image_map_string = m_filters.swizzle_as_one_image_map.value().string(),
+          .selections                          = m_selections.lock(),
+          .opt_coo                             = m_map_group.opt_coo,
+          .field_name                          = get_base_name(),
+          .filters_deswizzle_value_string      = m_filters.deswizzle.value().string(),
+          .filters_swizzle_value_string        = m_filters.swizzle.value().string(),
+          .filters_swizzle_as_one_image_string = m_filters.swizzle_as_one_image.value().string(),
+          .filters_map_value_string            = m_filters.map.value().string()
           //.working_unique_pupu                = working_unique_pupu(),
           //.bpp_palette                        = uniques().palette(),
           //.texture_page_id                    = uniques().texture_page_id()
      };
-     if (m_filters.swizzle_map.enabled())
+     if (m_filters.map.enabled())
      {
-          if (const auto paths = ps.generate_swizzle_map_paths(".map"); !std::ranges::empty(paths))
+          if (const auto paths = ps.generate_map_paths(".map"); !std::ranges::empty(paths))
           {
-               m_filters.deswizzle_map.disable();
                load_map(paths.front());// grab the first match.
           }
           else
           {
                //.map was not found.
-               m_filters.swizzle_map.disable();
-          }
-     }
-     else if (m_filters.deswizzle_map.enabled())
-     {
-          if (const auto paths = ps.generate_deswizzle_map_paths(".map"); !std::ranges::empty(paths))
-          {
-               m_filters.swizzle_map.disable();
-               load_map(paths.front());// grab the first match.
-          }
-          else
-          {
-               //.map was not found.
-               m_filters.deswizzle_map.disable();
+               m_filters.map.disable();
           }
      }
      update_render_texture(true);
@@ -105,18 +89,16 @@ map_sprite::operator ff_8::path_search() const
           spdlog::error("Failed to lock m_selections: shared_ptr is expired.");
           return {};
      }
-     return { .selections                              = std::move(selections),
-              .opt_coo                                 = m_map_group.opt_coo,
-              .field_name                              = get_base_name(),
-              .filters_deswizzle_value_string          = m_filters.deswizzle.value().string(),
-              .filters_swizzle_value_string            = m_filters.swizzle.value().string(),
-              .filters_swizzle_as_one_image_string     = m_filters.swizzle_as_one_image.value().string(),
-              .filters_deswizzle_map_value_string      = m_filters.deswizzle_map.value().string(),
-              .filters_swizzle_map_value_string        = m_filters.swizzle_map.value().string(),
-              .filters_swizzle_as_one_image_map_string = m_filters.swizzle_as_one_image_map.value().string(),
-              .working_unique_pupu                     = working_unique_pupu(),
-              .bpp_palette                             = uniques().palette(),
-              .texture_page_id                         = uniques().texture_page_id() };
+     return { .selections                          = std::move(selections),
+              .opt_coo                             = m_map_group.opt_coo,
+              .field_name                          = get_base_name(),
+              .filters_deswizzle_value_string      = m_filters.deswizzle.value().string(),
+              .filters_swizzle_value_string        = m_filters.swizzle.value().string(),
+              .filters_swizzle_as_one_image_string = m_filters.swizzle_as_one_image.value().string(),
+              .filters_map_value_string            = m_filters.map.value().string(),
+              .working_unique_pupu                 = working_unique_pupu(),
+              .bpp_palette                         = uniques().palette(),
+              .texture_page_id                     = uniques().texture_page_id() };
 }
 
 
@@ -2156,8 +2138,8 @@ std::string map_sprite::appends_prefix_base_name(std::string_view title) const
 std::move_only_function<std::vector<std::filesystem::path>()>
   generate_swizzle_paths(std::shared_ptr<const Selections> in_selections, const map_sprite &in_map_sprite, std::uint8_t texture_page)
 {
-     assert(in_selections && "generate_swizzle_map_paths: in_selections is null");
-     // assert(in_map_sprite && "generate_swizzle_map_paths: in_map_sprite is null");
+     assert(in_selections && "generate_map_paths: in_selections is null");
+     // assert(in_map_sprite && "generate_map_paths: in_map_sprite is null");
      return [ps = ff_8::path_search{ .selections                   = std::move(in_selections),
                                      .opt_coo                      = in_map_sprite.get_opt_coo(),
                                      .field_name                   = in_map_sprite.get_base_name(),
@@ -2174,7 +2156,7 @@ std::move_only_function<std::vector<std::filesystem::path>()> generate_swizzle_a
   std::optional<std::uint8_t>       palette)
 {
      assert(in_selections && "generate_swizzle_as_one_image_paths: in_selections is null");
-     // assert(in_map_sprite && "generate_swizzle_map_paths: in_map_sprite is null");
+     // assert(in_map_sprite && "generate_map_paths: in_map_sprite is null");
      return [ps = ff_8::path_search{ .selections                          = std::move(in_selections),
                                      .opt_coo                             = in_map_sprite.get_opt_coo(),
                                      .field_name                          = in_map_sprite.get_base_name(),
@@ -2198,8 +2180,8 @@ std::move_only_function<std::vector<std::filesystem::path>()> generate_swizzle_p
   std::uint8_t                      texture_page,
   std::uint8_t                      palette)
 {
-     assert(in_selections && "generate_swizzle_map_paths: in_selections is null");
-     // assert(in_map_sprite && "generate_swizzle_map_paths: in_map_sprite is null");
+     assert(in_selections && "generate_map_paths: in_selections is null");
+     // assert(in_map_sprite && "generate_map_paths: in_map_sprite is null");
      return [ps = ff_8::path_search{ .selections                   = std::move(in_selections),
                                      .opt_coo                      = in_map_sprite.get_opt_coo(),
                                      .field_name                   = in_map_sprite.get_base_name(),
@@ -2228,33 +2210,17 @@ std::move_only_function<std::vector<std::filesystem::path>()>
 
 
 std::move_only_function<std::vector<std::filesystem::path>()>
-  generate_swizzle_map_paths(std::shared_ptr<const Selections> in_selections, const map_sprite &in_map_sprite)
+  generate_map_paths(std::shared_ptr<const Selections> in_selections, const map_sprite &in_map_sprite)
 {
-     assert(in_selections && "generate_swizzle_map_paths: in_selections is null");
-     // assert(in_map_sprite && "generate_swizzle_map_paths: in_map_sprite is null");
+     assert(in_selections && "generate_map_paths: in_selections is null");
+     // assert(in_map_sprite && "generate_map_paths: in_map_sprite is null");
      return [ps = ff_8::path_search{ .selections = std::move(in_selections),
                                      .opt_coo    = in_map_sprite.get_opt_coo(),
                                      .field_name = in_map_sprite.get_base_name(),
-                                     .filters_swizzle_map_value_string =
-                                       in_map_sprite.filter().swizzle_map.value().string() }]() -> std::vector<std::filesystem::path> {
-          spdlog::debug("Generating swizzle map paths for field: '{}'", ps.field_name);
-          return ps.generate_swizzle_map_paths(".map");
-     };
-}
-
-std::move_only_function<std::vector<std::filesystem::path>()>
-  generate_deswizzle_map_paths(std::shared_ptr<const Selections> in_selections, const map_sprite &in_map_sprite)
-{
-
-     assert(in_selections && "generate_deswizzle_map_paths: in_selections is null");
-     // assert(in_map_sprite && "generate_deswizzle_map_paths: in_map_sprite is null");
-     return [ps = ff_8::path_search{ .selections = std::move(in_selections),
-                                     .opt_coo    = in_map_sprite.get_opt_coo(),
-                                     .field_name = in_map_sprite.get_base_name(),
-                                     .filters_deswizzle_map_value_string =
-                                       in_map_sprite.filter().deswizzle_map.value().string() }]() -> std::vector<std::filesystem::path> {
-          spdlog::debug("Generating deswizzle map paths for field: '{}'", ps.field_name);
-          return ps.generate_deswizzle_map_paths(".map");
+                                     .filters_map_value_string =
+                                       in_map_sprite.filter().map.value().string() }]() -> std::vector<std::filesystem::path> {
+          spdlog::debug("Generating map paths for field: '{}'", ps.field_name);
+          return ps.generate_map_paths(".map");
      };
 }
 

@@ -391,6 +391,10 @@ class GenericComboWithFilterAndFixedToggles
 
      void renderCheckBox() const
      {
+          if (std::cmp_less_equal(std::ranges::size(fixed_toggles_), current_idx_))
+          {
+               return;
+          }
           const auto  _                    = PushPopID();
           const auto &current_fixed_toggle = *getNext(fixed_toggles_, current_idx_);
           ImGui::BeginDisabled(!current_fixed_toggle && !filter_.get().enabled());
@@ -429,11 +433,15 @@ class GenericComboWithFilterAndFixedToggles
                ImGui::Columns(settings_.num_columns, "##columns", false);
                for (const auto &[index_raw, string] : std::ranges::views::enumerate(strings_))
                {
-                    const auto  index                = static_cast<decltype(current_idx_)>(index_raw);
-                    const bool  is_selected          = std::ranges::equal(current_item, string);
-                    const auto  pop_id               = PushPopID();
-                    const auto  pop_column           = glengine::ScopeGuard{ &ImGui::NextColumn };
+                    const auto index       = static_cast<decltype(current_idx_)>(index_raw);
+                    const bool is_selected = std::ranges::equal(current_item, string);
+                    const auto pop_id      = PushPopID();
+                    const auto pop_column  = glengine::ScopeGuard{ &ImGui::NextColumn };
 
+                    if (std::cmp_less_equal(std::ranges::size(fixed_toggles_), index))
+                    {
+                         continue;
+                    }
                     const auto &current_fixed_toggle = *getNext(fixed_toggles_, index);
                     if (!current_fixed_toggle)
                     {
@@ -490,6 +498,10 @@ class GenericComboWithFilterAndFixedToggles
                {
                     for (auto i = current_idx_ - 1; i >= 0; --i)
                     {
+                         if (std::cmp_less_equal(std::ranges::size(fixed_toggles_), i))
+                         {
+                              continue;
+                         }
                          if (*getNext(fixed_toggles_, i))
                          {
                               return i;
@@ -519,6 +531,10 @@ class GenericComboWithFilterAndFixedToggles
                {
                     for (auto i = current_idx_ + 1; i < size_of_values(); ++i)
                     {
+                         if (std::cmp_less_equal(std::ranges::size(fixed_toggles_), i))
+                         {
+                              continue;
+                         }
                          if (*getNext(fixed_toggles_, i))
                          {
                               return i;

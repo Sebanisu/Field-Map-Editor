@@ -75,20 +75,19 @@ enum class ConfigKey
      PatternsBase,
      PatternsCommonPrefixes,
      PatternsCommonPrefixesForMaps,
-     ExternalTexturesDirectoryPaths,
-     ExternalMapsDirectoryPaths,
+     ExternalTexturesAndMapsDirectoryPaths,
 
      SwizzlePath,
+     SwizzleAsOneImagePath,
      DeswizzlePath,
      OutputImagePath,
      OutputMimPath,
      OutputMapPath,
 
-     CacheTexturePaths,
+     CacheTextureAndMapPaths,
      CacheSwizzlePathsEnabled,
      CacheSwizzleAsOneImagePathsEnabled,
      CacheDeswizzlePathsEnabled,
-     CacheMapPaths,
      CacheMapPathsEnabled,
 
      // FFNX can load from FFNX config but we're doing read only these. Usually only if we're changing the FF8 directory
@@ -702,10 +701,10 @@ struct SelectionInfo<ConfigKey::FF8DirectoryPaths>
      }
 };
 template<>
-struct SelectionInfo<ConfigKey::ExternalTexturesDirectoryPaths>
+struct SelectionInfo<ConfigKey::ExternalTexturesAndMapsDirectoryPaths>
 {
      using value_type                     = std::vector<std::filesystem::path>;
-     static constexpr std::string_view id = "ExternalTexturesDirectoryPaths";
+     static constexpr std::string_view id = "ExternalTexturesAndMapsDirectoryPaths";
      static value_type                 expensive_default_value()
      {
           using namespace std::string_literals;
@@ -717,16 +716,17 @@ struct SelectionInfo<ConfigKey::ExternalTexturesDirectoryPaths>
      }
 };
 template<>
-struct SelectionInfo<ConfigKey::ExternalMapsDirectoryPaths>
-{
-     using value_type                     = std::vector<std::filesystem::path>;
-     static constexpr std::string_view id = "ExternalMapsDirectoryPaths";
-};
-template<>
 struct SelectionInfo<ConfigKey::SwizzlePath>
 {
      using value_type                                     = std::filesystem::path;
      static constexpr std::string_view id                 = "SwizzlePath";
+     static constexpr ConfigKey        default_value_copy = ConfigKey::FF8Path;
+};
+template<>
+struct SelectionInfo<ConfigKey::SwizzleAsOneImagePath>
+{
+     using value_type                                     = std::filesystem::path;
+     static constexpr std::string_view id                 = "SwizzleAsOneImagePath";
      static constexpr ConfigKey        default_value_copy = ConfigKey::FF8Path;
 };
 template<>
@@ -758,10 +758,10 @@ struct SelectionInfo<ConfigKey::OutputMapPath>
      static constexpr ConfigKey        default_value_copy = ConfigKey::FF8Path;
 };
 template<>
-struct SelectionInfo<ConfigKey::CacheTexturePaths>
+struct SelectionInfo<ConfigKey::CacheTextureAndMapPaths>
 {
      using value_type                     = std::vector<std::filesystem::path>;
-     static constexpr std::string_view id = "CacheTexturePaths";
+     static constexpr std::string_view id = "CacheTextureAndMapPaths";
 };
 template<>
 struct SelectionInfo<ConfigKey::CacheSwizzlePathsEnabled>
@@ -780,12 +780,6 @@ struct SelectionInfo<ConfigKey::CacheDeswizzlePathsEnabled>
 {
      using value_type                     = std::vector<bool>;
      static constexpr std::string_view id = "CacheDeswizzlePathsEnabled";
-};
-template<>
-struct SelectionInfo<ConfigKey::CacheMapPaths>
-{
-     using value_type                     = std::vector<std::filesystem::path>;
-     static constexpr std::string_view id = "CacheMapPaths";
 };
 template<>
 struct SelectionInfo<ConfigKey::CacheMapPathsEnabled>

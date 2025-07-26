@@ -35,8 +35,7 @@ struct gui_labels
      static constexpr std::string_view swizzle_path                           = { "Swizzle Path" };
      static constexpr std::string_view swizzle_as_one_image_path              = { "Swizzle As One Image Path" };
      static constexpr std::string_view deswizzle_path                         = { "Deswizzle Path" };
-     static constexpr std::string_view swizzle_map_path                       = { "Swizzle .map Path" };
-     static constexpr std::string_view deswizzle_map_path                     = { "Deswizzle .map Path" };
+     static constexpr std::string_view map_path                               = { ".map Path" };
      static constexpr std::string_view processing                             = { "Processing" };
      static constexpr std::string_view display_history                        = { "History" };
      static constexpr std::string_view history                                = { "History" };
@@ -178,11 +177,17 @@ struct gui_labels
      static constexpr std::string_view input_mim_tooltip = {
           "Mim is the storage of the field texture in FF8. So this selection means your using the original low res textures."
      };
+     
      static constexpr std::string_view input_deswizzle_tooltip = {
-          "Load a directory of deswizzled textures. Including `.map` files if found. They may be swizzled."
+          "Load a directory of deswizzled textures. Including `.map` files if found."
      };
+     
      static constexpr std::string_view input_swizzle_tooltip = {
-          "Load a directory of swizzled textures. Including `.map` files if found. They may be swizzled."
+          "Load a directory of swizzled textures. Including `.map` files if found."
+     };
+     
+     static constexpr std::string_view input_swizzle_as_one_image_tooltip = {
+          "Load a directory of swizzled as one image textures. Including `.map` files if found."
      };
 
      static constexpr std::string_view compact_flatten_warning = {

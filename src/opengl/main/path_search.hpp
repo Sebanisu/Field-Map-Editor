@@ -20,12 +20,10 @@ struct path_search
      std::string                                                                  filters_deswizzle_value_string      = {};
      std::string                                                                  filters_swizzle_value_string        = {};
      std::string                                                                  filters_swizzle_as_one_image_string = {};
-     std::string                                                                  filters_deswizzle_map_value_string  = {};
-     std::string                                                                  filters_swizzle_map_value_string    = {};
-     std::string                                                                  filters_swizzle_as_one_image_map_string = {};
-     std::vector<ff_8::PupuID>                                                    working_unique_pupu                     = {};
-     std::map<open_viii::graphics::BPPT, unique_values_and_strings<std::uint8_t>> bpp_palette                             = {};
-     unique_values_and_strings<std::uint8_t>                                      texture_page_id                         = {};
+     std::string                                                                  filters_map_value_string            = {};
+     std::vector<ff_8::PupuID>                                                    working_unique_pupu                 = {};
+     std::map<open_viii::graphics::BPPT, unique_values_and_strings<std::uint8_t>> bpp_palette                         = {};
+     unique_values_and_strings<std::uint8_t>                                      texture_page_id                     = {};
 
      [[nodiscard]] std::vector<std::filesystem::path>                             generate_deswizzle_paths(const std::string &ext) const;
      [[nodiscard]] std::vector<std::filesystem::path>                             generate_swizzle_paths(const std::string &ext) const;
@@ -35,12 +33,8 @@ struct path_search
      [[nodiscard]] std::vector<std::filesystem::path>
        generate_swizzle_paths(const std::filesystem::path &path, const std::string &ext) const;
 
-     [[nodiscard]] std::vector<std::filesystem::path> generate_deswizzle_map_paths(const std::string &ext = ".map") const;
-     [[nodiscard]] std::vector<std::filesystem::path> generate_swizzle_map_paths(const std::string &ext = ".map") const;
-     [[nodiscard]] std::vector<std::filesystem::path>
-       generate_deswizzle_map_paths(const std::filesystem::path &path, const std::string &ext) const;
-     [[nodiscard]] std::vector<std::filesystem::path>
-       generate_swizzle_map_paths(const std::filesystem::path &path, const std::string &ext) const;
+     [[nodiscard]] std::vector<std::filesystem::path> generate_map_paths(const std::string &ext = ".map") const;
+     [[nodiscard]] std::vector<std::filesystem::path> generate_map_paths(const std::filesystem::path &path, const std::string &ext) const;
 
      [[nodiscard]] std::vector<std::filesystem::path>
        generate_deswizzle_paths(const ff_8::PupuID pupu, const std::string &ext = ".png") const;
@@ -76,10 +70,9 @@ struct path_search
      [[nodiscard]] bool has_swizzle_as_one_image_path(const std::filesystem::path &filter_path, const std::string &ext = ".png") const;
 
      [[nodiscard]] std::vector<std::filesystem::path> generate_paths(
-       const std::string         &filter_path,
-       const fme::key_value_data &cpm,
-       const std::string         &output_pattern           = "",
-       const std::string         &secondary_output_pattern = "") const;
+       const std::string                      &filter_path,
+       const fme::key_value_data              &cpm,
+       const std::vector<const std::string *> &output_patterns = {}) const;
 
      /**
       * @brief Generates a list of paths for external textures or map output based on the provided data.

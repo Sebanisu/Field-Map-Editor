@@ -164,7 +164,7 @@ std::vector<std::filesystem::path> path_search::generate_swizzle_paths(const std
          .language_code = opt_coo.has_value() && opt_coo.value() != open_viii::LangT::generic ? opt_coo : std::nullopt },
 
        // selections->get<fme::ConfigKey::OutputMapPatternForSwizzle>(),
-       selections->get<fme::ConfigKey::OutputSwizzlePattern>());
+       { &selections->get<fme::ConfigKey::OutputSwizzlePattern>() });
 }
 
 
@@ -178,37 +178,25 @@ std::vector<std::filesystem::path> path_search::generate_swizzle_paths(const std
          .language_code = opt_coo.has_value() && opt_coo.value() != open_viii::LangT::generic ? opt_coo : std::nullopt },
 
        // selections->get<fme::ConfigKey::OutputMapPatternForSwizzle>(),
-       selections->get<fme::ConfigKey::OutputSwizzlePattern>());
+       { &selections->get<fme::ConfigKey::OutputSwizzlePattern>() });
 }
 
-std::vector<std::filesystem::path> path_search::generate_swizzle_map_paths(const std::string &ext) const
+std::vector<std::filesystem::path> path_search::generate_map_paths(const std::string &ext) const
 {
 
      return generate_paths(
-       filters_swizzle_map_value_string,
+       filters_map_value_string,
        { .field_name    = field_name,
          .ext           = ext,
          .language_code = opt_coo.has_value() && opt_coo.value() != open_viii::LangT::generic ? opt_coo : std::nullopt },
 
-       selections->get<fme::ConfigKey::OutputMapPatternForSwizzle>(),
-       selections->get<fme::ConfigKey::OutputSwizzlePattern>());
+       { &selections->get<fme::ConfigKey::OutputMapPatternForSwizzle>(),
+         &selections->get<fme::ConfigKey::OutputMapPatternForDeswizzle>(),
+         &selections->get<fme::ConfigKey::OutputSwizzlePattern>(),
+         &selections->get<fme::ConfigKey::OutputDeswizzlePattern>() });
 }
 
-std::vector<std::filesystem::path> path_search::generate_swizzle_map_paths(const std::filesystem::path &path, const std::string &ext) const
-{
-
-     return generate_paths(
-       path.string(),
-       { .field_name    = field_name,
-         .ext           = ext,
-         .language_code = opt_coo.has_value() && opt_coo.value() != open_viii::LangT::generic ? opt_coo : std::nullopt },
-
-       selections->get<fme::ConfigKey::OutputMapPatternForSwizzle>(),
-       selections->get<fme::ConfigKey::OutputSwizzlePattern>());
-}
-
-std::vector<std::filesystem::path>
-  path_search::generate_deswizzle_map_paths(const std::filesystem::path &path, const std::string &ext) const
+std::vector<std::filesystem::path> path_search::generate_map_paths(const std::filesystem::path &path, const std::string &ext) const
 {
 
      return generate_paths(
@@ -217,8 +205,10 @@ std::vector<std::filesystem::path>
          .ext           = ext,
          .language_code = opt_coo.has_value() && opt_coo.value() != open_viii::LangT::generic ? opt_coo : std::nullopt },
 
-       selections->get<fme::ConfigKey::OutputMapPatternForDeswizzle>(),
-       selections->get<fme::ConfigKey::OutputDeswizzlePattern>());
+       { &selections->get<fme::ConfigKey::OutputMapPatternForSwizzle>(),
+         &selections->get<fme::ConfigKey::OutputMapPatternForDeswizzle>(),
+         &selections->get<fme::ConfigKey::OutputSwizzlePattern>(),
+         &selections->get<fme::ConfigKey::OutputDeswizzlePattern>() });
 }
 
 std::vector<std::filesystem::path> path_search::generate_deswizzle_paths(const std::string &ext) const
@@ -230,8 +220,7 @@ std::vector<std::filesystem::path> path_search::generate_deswizzle_paths(const s
          .ext           = ext,
          .language_code = opt_coo.has_value() && opt_coo.value() != open_viii::LangT::generic ? opt_coo : std::nullopt },
 
-       // selections->get<fme::ConfigKey::OutputMapPatternForDeswizzle>(),
-       selections->get<fme::ConfigKey::OutputDeswizzlePattern>());
+       { &selections->get<fme::ConfigKey::OutputDeswizzlePattern>() });
 }
 
 std::vector<std::filesystem::path> path_search::generate_deswizzle_paths(const std::filesystem::path &path, const std::string &ext) const
@@ -243,23 +232,8 @@ std::vector<std::filesystem::path> path_search::generate_deswizzle_paths(const s
          .ext           = ext,
          .language_code = opt_coo.has_value() && opt_coo.value() != open_viii::LangT::generic ? opt_coo : std::nullopt },
 
-       // selections->get<fme::ConfigKey::OutputMapPatternForDeswizzle>(),
-       selections->get<fme::ConfigKey::OutputDeswizzlePattern>());
+       { &selections->get<fme::ConfigKey::OutputDeswizzlePattern>() });
 }
-
-std::vector<std::filesystem::path> path_search::generate_deswizzle_map_paths(const std::string &ext) const
-{
-
-     return generate_paths(
-       filters_deswizzle_map_value_string,
-       { .field_name    = field_name,
-         .ext           = ext,
-         .language_code = opt_coo.has_value() && opt_coo.value() != open_viii::LangT::generic ? opt_coo : std::nullopt },
-
-       selections->get<fme::ConfigKey::OutputMapPatternForDeswizzle>(),
-       selections->get<fme::ConfigKey::OutputDeswizzlePattern>());
-}
-
 
 std::vector<std::filesystem::path> path_search::generate_deswizzle_paths(const ff_8::PupuID pupu, const std::string &ext) const
 {
@@ -270,7 +244,7 @@ std::vector<std::filesystem::path> path_search::generate_deswizzle_paths(const f
          .ext           = ext,
          .language_code = opt_coo.has_value() && opt_coo.value() != open_viii::LangT::generic ? opt_coo : std::nullopt,
          .pupu_id       = pupu.raw() },
-       selections->get<fme::ConfigKey::OutputDeswizzlePattern>());
+       { &selections->get<fme::ConfigKey::OutputDeswizzlePattern>() });
 }
 
 std::vector<std::filesystem::path>
@@ -284,7 +258,7 @@ std::vector<std::filesystem::path>
          .language_code = opt_coo.has_value() && opt_coo.value() != open_viii::LangT::generic ? opt_coo : std::nullopt,
          .palette       = palette,
          .texture_page  = texture_page },
-       selections->get<fme::ConfigKey::OutputSwizzlePattern>());
+       { &selections->get<fme::ConfigKey::OutputSwizzlePattern>() });
 }
 
 std::vector<std::filesystem::path> path_search::generate_swizzle_paths(const std::uint8_t texture_page, const std::string &ext) const
@@ -296,7 +270,7 @@ std::vector<std::filesystem::path> path_search::generate_swizzle_paths(const std
          .ext           = ext,
          .language_code = opt_coo.has_value() && opt_coo.value() != open_viii::LangT::generic ? opt_coo : std::nullopt,
          .texture_page  = texture_page },
-       selections->get<fme::ConfigKey::OutputSwizzlePattern>());
+       { &selections->get<fme::ConfigKey::OutputSwizzlePattern>() });
 }
 
 std::vector<std::filesystem::path>
@@ -308,31 +282,26 @@ std::vector<std::filesystem::path>
          .ext           = ext,
          .language_code = opt_coo.has_value() && opt_coo.value() != open_viii::LangT::generic ? opt_coo : std::nullopt,
          .palette       = palette },
-       selections->get<fme::ConfigKey::OutputSwizzlePattern>());
+       { &selections->get<fme::ConfigKey::OutputSwizzlePattern>() });
 }
 
 std::vector<std::filesystem::path> path_search::generate_paths(
-  const std::string         &filter_path,
-  const fme::key_value_data &cpm,
-  const std::string         &output_pattern,
-  const std::string         &secondary_output_pattern) const
+  const std::string                      &filter_path,
+  const fme::key_value_data              &cpm,
+  const std::vector<const std::string *> &output_patterns) const
 {
      std::vector<std::filesystem::path> paths = {};
      if (!filter_path.empty())
      {
           paths = generate_paths(filter_path, cpm, selections);
      }
-     if (!output_pattern.empty())
+     for (const auto &output_pattern : output_patterns)
      {
-          auto temp = cpm.replace_tags(output_pattern, selections, filter_path);
-          if (const auto test = safedir{ temp }; !test.is_dir() && test.is_exists())
+          if (!output_pattern || !output_pattern->empty())
           {
-               paths.push_back(std::move(temp));
+               continue;
           }
-     }
-     if (!secondary_output_pattern.empty())
-     {
-          auto temp = cpm.replace_tags(secondary_output_pattern, selections, filter_path);
+          auto temp = cpm.replace_tags(*output_pattern, selections, filter_path);
           if (const auto test = safedir{ temp }; !test.is_dir() && test.is_exists())
           {
                paths.push_back(std::move(temp));
@@ -463,8 +432,8 @@ std::vector<std::filesystem::path> path_search::generate_paths(
      }
      if (copy_data.palette.has_value())
      {
-          //matches texture_page so we skip this and look for matches with out palette
-          return false;//transform_and_find_a_match(selections->get<fme::ConfigKey::PathPatternsWithPalette>());
+          // matches texture_page so we skip this and look for matches with out palette
+          return false;// transform_and_find_a_match(selections->get<fme::ConfigKey::PathPatternsWithPalette>());
      }
      if (copy_data.texture_page.has_value())
      {

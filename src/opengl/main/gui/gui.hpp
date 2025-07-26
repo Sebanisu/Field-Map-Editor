@@ -172,13 +172,10 @@ struct gui
      bool combo_swizzle_path(ff_8::filter_old<std::filesystem::path, ff_8::FilterTag::Swizzle> &filter) const;
      void combo_swizzle_as_one_image_path();
      bool combo_swizzle_as_one_image_path(ff_8::filter_old<std::filesystem::path, ff_8::FilterTag::SwizzleAsOneImage> &filter) const;
-
      void combo_deswizzle_path();
      bool combo_deswizzle_path(ff_8::filter_old<std::filesystem::path, ff_8::FilterTag::Deswizzle> &filter) const;
-     void combo_swizzle_map_path();
-     bool combo_swizzle_map_path(ff_8::filter_old<std::filesystem::path, ff_8::FilterTag::SwizzleMap> &filter) const;
-     void combo_deswizzle_map_path();
-     bool combo_deswizzle_map_path(ff_8::filter_old<std::filesystem::path, ff_8::FilterTag::DeswizzleMap> &filter) const;
+     void combo_map_path();
+     bool combo_map_path(ff_8::filter_old<std::filesystem::path, ff_8::FilterTag::Map> &filter) const;
      const open_viii::LangT &get_coo() const;
      file_dialog_mode        m_file_dialog_mode       = {};
      map_directory_mode      m_modified_directory_map = {};
@@ -241,9 +238,9 @@ struct gui
      void refresh_path();
      void browse_buttons();
      void menu_swizzle_paths();
+     void menu_swizzle_as_one_image_paths();
      void menu_deswizzle_paths();
-     void menu_swizzle_map_paths();
-     void menu_deswizzle_map_paths();
+     void menu_map_paths();
      void refresh_field();
      void refresh_bpp(open_viii::graphics::BPPT in_bpp);
      void refresh_palette(std::uint8_t palette);

@@ -23,18 +23,18 @@ struct main_menu_paths_settings
      std::string_view                                           main_label;
      std::string_view                                           browse_tooltip;
 };
-template<typename main_filter_t, typename other_filter_t>
+template<typename main_filter_t, typename... other_filter_t>
 struct main_menu_paths
 {
 
    private:
-     mutable std::reference_wrapper<main_filter_t>  m_main_filter;
-     mutable std::reference_wrapper<other_filter_t> m_other_filter;
-     main_menu_paths_settings                       m_settings;
+     mutable std::reference_wrapper<main_filter_t> m_main_filter;
+     mutable std::tuple<other_filter_t &...>       m_other_filter;
+     main_menu_paths_settings                      m_settings;
 
 
    public:
-     main_menu_paths(main_filter_t &main_filter, other_filter_t &other_filter, main_menu_paths_settings settings)
+     main_menu_paths(main_filter_t &main_filter, std::tuple<other_filter_t &...> other_filter, main_menu_paths_settings settings)
        : m_main_filter(main_filter)
        , m_other_filter(other_filter)
        , m_settings(settings)
@@ -116,9 +116,8 @@ struct main_menu_paths
                               {
                                    if (m_main_filter.get().value() != path)
                                    {
-                                        m_main_filter.get().update(path);
-                                        m_other_filter.get().disable();
-                                        m_main_filter.get().enable();
+                                        std::apply([](auto &...other_filter) { (other_filter.disable(), ...); }, m_other_filter);
+                                        m_main_filter.get().update(path).enable();
                                    }
                                    else
                                    {
@@ -128,7 +127,7 @@ struct main_menu_paths
                                         }
                                         else
                                         {
-                                             m_other_filter.get().disable();
+                                             std::apply([](auto &...other_filter) { (other_filter.disable(), ...); }, m_other_filter);
                                              m_main_filter.get().enable();
                                         }
                                    }
@@ -192,9 +191,8 @@ struct main_menu_paths
                               {
                                    if (m_main_filter.get().value() != path)
                                    {
-                                        m_main_filter.get().update(path);
-                                        m_other_filter.get().disable();
-                                        m_main_filter.get().enable();
+                                        std::apply([](auto &...other_filter) { (other_filter.disable(), ...); }, m_other_filter);
+                                        m_main_filter.get().update(path).enable();
                                    }
                                    else
                                    {
@@ -204,7 +202,7 @@ struct main_menu_paths
                                         }
                                         else
                                         {
-                                             m_other_filter.get().disable();
+                                             std::apply([](auto &...other_filter) { (other_filter.disable(), ...); }, m_other_filter);
                                              m_main_filter.get().enable();
                                         }
                                    }

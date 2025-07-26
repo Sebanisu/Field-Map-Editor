@@ -544,10 +544,7 @@ std::move_only_function<std::vector<std::filesystem::path>()>
   generate_deswizzle_paths(std::shared_ptr<const Selections> in_selections, const map_sprite &in_map_sprite, const ff_8::PupuID pupu_id);
 
 std::move_only_function<std::vector<std::filesystem::path>()>
-  generate_swizzle_map_paths(std::shared_ptr<const Selections> in_selections, const map_sprite &in_map_sprite);
-
-std::move_only_function<std::vector<std::filesystem::path>()>
-  generate_deswizzle_map_paths(std::shared_ptr<const Selections> in_selections, const map_sprite &in_map_sprite);
+  generate_map_paths(std::shared_ptr<const Selections> in_selections, const map_sprite &in_map_sprite);
 
 }// namespace fme
 #endif// FIELD_MAP_EDITOR_MAP_SPRITE_HPP

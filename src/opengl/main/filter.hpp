@@ -84,9 +84,7 @@ enum class FilterTag : std::uint8_t
      Swizzle,
      Deswizzle,
      SwizzleAsOneImage,
-     SwizzleMap,
-     DeswizzleMap,
-     SwizzleAsOneImageMap,
+     Map,
      DrawBit,
      Z,
      Palette,
@@ -137,24 +135,10 @@ struct ConfigKeys<FilterTag::SwizzleAsOneImage>
 };
 
 template<>
-struct ConfigKeys<FilterTag::SwizzleMap>
+struct ConfigKeys<FilterTag::Map>
 {
-     static constexpr std::string_view key_name         = "filter_swizzle_map";
-     static constexpr std::string_view enabled_key_name = "filter_swizzle_map_enabled";
-};
-
-template<>
-struct ConfigKeys<FilterTag::DeswizzleMap>
-{
-     static constexpr std::string_view key_name         = "filter_deswizzle_map";
-     static constexpr std::string_view enabled_key_name = "filter_deswizzle_map_enabled";
-};
-
-template<>
-struct ConfigKeys<FilterTag::SwizzleAsOneImageMap>
-{
-     static constexpr std::string_view key_name         = "filter_swizzle_as_one_image_map";
-     static constexpr std::string_view enabled_key_name = "filter_swizzle_as_one_image_map_enabled";
+     static constexpr std::string_view key_name         = "filter_map";
+     static constexpr std::string_view enabled_key_name = "filter_map_enabled";
 };
 
 template<>
@@ -519,16 +503,14 @@ concept IsEitherFilter = IsFilterOld<T> || IsFilter<T, TileT>;
 struct filters
 {
      using TileT = open_viii::graphics::background::Tile1;
-     filter_old<PupuID, FilterTag::Pupu>                                                                    pupu;
-     filter_old<std::filesystem::path, FilterTag::Swizzle>                                                  swizzle;
-     filter_old<std::filesystem::path, FilterTag::Deswizzle>                                                deswizzle;
-     filter_old<std::filesystem::path, FilterTag::SwizzleAsOneImage>                                        swizzle_as_one_image;
-     filter_old<std::filesystem::path, FilterTag::SwizzleMap>                                               swizzle_map;
-     filter_old<std::filesystem::path, FilterTag::DeswizzleMap>                                             deswizzle_map;
-     filter_old<std::filesystem::path, FilterTag::SwizzleAsOneImageMap>                                     swizzle_as_one_image_map;
-     filter<draw_bitT, ff_8::tile_operations::Draw, FilterTag::DrawBit>                                     draw_bit;
-     filter<ff_8::tile_operations::ZT<TileT>, ff_8::tile_operations::Z, FilterTag::Z>                       z;
-     filter<ff_8::tile_operations::PaletteIdT<TileT>, ff_8::tile_operations::PaletteId, FilterTag::Palette> palette;
+     filter_old<PupuID, FilterTag::Pupu>                                                                            pupu;
+     filter_old<std::filesystem::path, FilterTag::Swizzle>                                                          swizzle;
+     filter_old<std::filesystem::path, FilterTag::Deswizzle>                                                        deswizzle;
+     filter_old<std::filesystem::path, FilterTag::SwizzleAsOneImage>                                                swizzle_as_one_image;
+     filter_old<std::filesystem::path, FilterTag::Map>                                                              map;
+     filter<draw_bitT, ff_8::tile_operations::Draw, FilterTag::DrawBit>                                             draw_bit;
+     filter<ff_8::tile_operations::ZT<TileT>, ff_8::tile_operations::Z, FilterTag::Z>                               z;
+     filter<ff_8::tile_operations::PaletteIdT<TileT>, ff_8::tile_operations::PaletteId, FilterTag::Palette>         palette;
      filter<ff_8::tile_operations::AnimationIdT<TileT>, ff_8::tile_operations::AnimationId, FilterTag::AnimationId> animation_id;
      filter<ff_8::tile_operations::AnimationStateT<TileT>, ff_8::tile_operations::AnimationState, FilterTag::AnimationFrame>
                                                                                                                   animation_frame;
@@ -586,39 +568,15 @@ struct filters
             }
             return { std::filesystem::path{}, FilterSettings::All_Disabled };
        }())
-       , swizzle_map([&]() -> decltype(swizzle_map) {
+       , map([&]() -> decltype(map) {
             if (load_config)
             {
-                 return { std::filesystem::path{ config[ConfigKeys<FilterTag::SwizzleMap>::key_name].value_or(std::u8string{}) },
+                 return { std::filesystem::path{ config[ConfigKeys<FilterTag::Map>::key_name].value_or(std::u8string{}) },
 
                           WithFlag(
                             FilterSettings::Default,
                             FilterSettings::Toggle_Enabled,
-                            config[ConfigKeys<FilterTag::SwizzleMap>::enabled_key_name].value_or(false)) };
-            }
-            return { std::filesystem::path{}, FilterSettings::All_Disabled };
-       }())
-       , deswizzle_map([&]() -> decltype(deswizzle_map) {
-            if (load_config)
-            {
-                 return { std::filesystem::path{ config[ConfigKeys<FilterTag::DeswizzleMap>::key_name].value_or(std::u8string{}) },
-
-                          WithFlag(
-                            FilterSettings::Default,
-                            FilterSettings::Toggle_Enabled,
-                            config[ConfigKeys<FilterTag::DeswizzleMap>::enabled_key_name].value_or(false)) };
-            }
-            return { std::filesystem::path{}, FilterSettings::All_Disabled };
-       }())
-       , swizzle_as_one_image_map([&]() -> decltype(swizzle_as_one_image_map) {
-            if (load_config)
-            {
-                 return { std::filesystem::path{ config[ConfigKeys<FilterTag::SwizzleAsOneImageMap>::key_name].value_or(std::u8string{}) },
-
-                          WithFlag(
-                            FilterSettings::Default,
-                            FilterSettings::Toggle_Enabled,
-                            config[ConfigKeys<FilterTag::SwizzleAsOneImageMap>::enabled_key_name].value_or(false)) };
+                            config[ConfigKeys<FilterTag::Map>::enabled_key_name].value_or(false)) };
             }
             return { std::filesystem::path{}, FilterSettings::All_Disabled };
        }())
