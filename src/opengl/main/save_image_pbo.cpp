@@ -18,14 +18,14 @@
  * @param texture The glengine::Texture to be saved into an sf::Image.
  * @return A deferred std::future that will contain the sf::Image once pixel data is read back.
  */
-std::future<void> save_image_pbo(const std::filesystem::path &path, glengine::FrameBuffer fbo)
+std::future<void> save_image_pbo(std::filesystem::path in_path, glengine::FrameBuffer in_fbo)
 {
      // Backup the currently bound framebuffer (to restore it later)
-     const auto backup_fbo = fbo.backup();
-     fbo.bind();
+     const auto backup_fbo = in_fbo.backup();
+     in_fbo.bind();
 
      // Calculate the size needed for the pixel buffer: width * height * 4 bytes (RGBA)
-     const auto buffer_size = GLsizeiptr{ fbo.width() } * GLsizeiptr{ fbo.height() } * GLsizeiptr{ 4 };
+     const auto buffer_size = GLsizeiptr{ in_fbo.width() } * GLsizeiptr{ in_fbo.height() } * GLsizeiptr{ 4 };
 
      // Create and bind a Pixel Buffer Object (PBO)
      auto       pbo_id      = 0U;
@@ -38,8 +38,8 @@ std::future<void> save_image_pbo(const std::filesystem::path &path, glengine::Fr
        glReadPixels,
        0,
        0,
-       fbo.width(),
-       fbo.height(),
+       in_fbo.width(),
+       in_fbo.height(),
        GL_RGBA,
        GL_UNSIGNED_BYTE,
        nullptr// Offset into PBO
@@ -49,8 +49,8 @@ std::future<void> save_image_pbo(const std::filesystem::path &path, glengine::Fr
      glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
 
      // Return a deferred future to perform the CPU-side readback later
-     return std::async(std::launch::deferred, [pbo_id, buffer_size, path, fbo_moved = std::move(fbo)]() {
-          const auto texture_size = fbo_moved.get_size();
+     return std::async(std::launch::deferred, [pbo_id, buffer_size, path = std::move(in_path), fbo = std::move(in_fbo)]() {
+          const auto texture_size = fbo.get_size();
 #ifdef __cpp_lib_smart_ptr_for_overwrite
           const auto pixels = std::make_unique_for_overwrite<std::uint8_t[]>(static_cast<std::size_t>(buffer_size));
 #else

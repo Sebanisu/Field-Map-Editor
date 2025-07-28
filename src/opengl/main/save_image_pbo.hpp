@@ -9,5 +9,5 @@
 #include <filesystem>
 #include <FrameBuffer.hpp>
 
-[[nodiscard]] std::future<void> save_image_pbo(const std::filesystem::path &, glengine::FrameBuffer);
+[[nodiscard]] std::future<void> save_image_pbo(std::filesystem::path, glengine::FrameBuffer);
 #endif// FIELD_MAP_EDITOR_SAVE_IMAGE_PBO_HPP

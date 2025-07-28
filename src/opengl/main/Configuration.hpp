@@ -29,7 +29,7 @@ class Configuration
      Configuration();
 
 
-     Configuration(const std::filesystem::path &);
+     Configuration(std::filesystem::path);
 
      /**
       * @brief Provides mutable access to the underlying TOML table.
@@ -311,12 +311,13 @@ class Configuration
       * This is a static inline constant that resolves to `field-map-editor.toml`
       * in the current working directory.
       */
-     static inline std::filesystem::path        s_path{};
+     std::filesystem::path                      m_path{};
 
      /**
       * @brief The in-memory representation of the TOML configuration file.
       */
-     static inline std::unique_ptr<toml::table> s_table{};
+     static inline std::map<std::filesystem::path,toml::table> s_tables{};
+     toml::table                               *m_table{};
 };
 }// namespace fme
 #endif// FIELD_MAP_EDITOR_CONFIGURATION_HPP

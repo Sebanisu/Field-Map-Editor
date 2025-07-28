@@ -1496,18 +1496,18 @@ const ff_8::MapHistory::nsat_map &map_sprite::working_animation_counts() const
                          {
 
                               // Determine output path based on COO presence.
-                              const key_value_data cpm      = { .field_name    = get_base_name(),
-                                                                .ext           = ".png",
-                                                                .language_code = m_map_group.opt_coo.has_value()
+                              const key_value_data  cpm      = { .field_name    = get_base_name(),
+                                                                 .ext           = ".png",
+                                                                 .language_code = m_map_group.opt_coo.has_value()
                                                                                 && m_map_group.opt_coo.value() != open_viii::LangT::generic
-                                                                                   ? m_map_group.opt_coo
-                                                                                   : std::nullopt,
-                                                                .palette       = palette,
-                                                                .texture_page  = texture_page };
-                              auto                 out_path = cpm.replace_tags(keyed_string, selections, selected_path);
+                                                                                    ? m_map_group.opt_coo
+                                                                                    : std::nullopt,
+                                                                 .palette       = palette,
+                                                                 .texture_page  = texture_page };
+                              std::filesystem::path out_path = cpm.replace_tags(keyed_string, selections, selected_path);
 
                               // Start async save and store the future.
-                              future_of_futures.push_back(save_image_pbo(out_path, std::move(out_framebuffer)));
+                              future_of_futures.push_back(save_image_pbo(std::move(out_path), std::move(out_framebuffer)));
                          }
                     }
                }
@@ -1522,15 +1522,15 @@ const ff_8::MapHistory::nsat_map &map_sprite::working_animation_counts() const
           {
 
                // Determine output path based on COO presence.
-               const key_value_data cpm      = { .field_name = get_base_name(),
-                                                 .ext        = ".png",
-                                                 .language_code =
+               const key_value_data  cpm      = { .field_name = get_base_name(),
+                                                  .ext        = ".png",
+                                                  .language_code =
                                               m_map_group.opt_coo.has_value() && m_map_group.opt_coo.value() != open_viii::LangT::generic
-                                                     ? m_map_group.opt_coo
-                                                     : std::nullopt,
-                                                 .texture_page = texture_page };
-               auto                 out_path = cpm.replace_tags(keyed_string, selections, selected_path);
-               future_of_futures.push_back(save_image_pbo(out_path, std::move(out_framebuffer)));
+                                                      ? m_map_group.opt_coo
+                                                      : std::nullopt,
+                                                  .texture_page = texture_page };
+               std::filesystem::path out_path = cpm.replace_tags(keyed_string, selections, selected_path);
+               future_of_futures.push_back(save_image_pbo(std::move(out_path), std::move(out_framebuffer)));
           }
      }
 
@@ -1659,16 +1659,16 @@ const ff_8::MapHistory::nsat_map &map_sprite::working_animation_counts() const
                     {
 
                          // Determine output path based on COO presence.
-                         const key_value_data cpm      = { .field_name    = get_base_name(),
-                                                           .ext           = ".png",
-                                                           .language_code = m_map_group.opt_coo.has_value()
+                         const key_value_data  cpm      = { .field_name    = get_base_name(),
+                                                            .ext           = ".png",
+                                                            .language_code = m_map_group.opt_coo.has_value()
                                                                            && m_map_group.opt_coo.value() != open_viii::LangT::generic
-                                                                              ? m_map_group.opt_coo
-                                                                              : std::nullopt,
-                                                           .palette       = palette };
-                         auto                 out_path = cpm.replace_tags(keyed_string, selections, selected_path);
+                                                                               ? m_map_group.opt_coo
+                                                                               : std::nullopt,
+                                                            .palette       = palette };
+                         std::filesystem::path out_path = cpm.replace_tags(keyed_string, selections, selected_path);
                          // Start async save and store the future.
-                         future_of_futures.push_back(save_image_pbo(out_path, std::move(out_framebuffer)));
+                         future_of_futures.push_back(save_image_pbo(std::move(out_path), std::move(out_framebuffer)));
                     }
                }
           }
@@ -1682,16 +1682,16 @@ const ff_8::MapHistory::nsat_map &map_sprite::working_animation_counts() const
      if (generate_texture(out_framebuffer))
      {
           // Determine output path based on COO presence.
-          const key_value_data cpm      = { .field_name = get_base_name(),
-                                            .ext        = ".png",
-                                            .language_code =
+          const key_value_data  cpm      = { .field_name = get_base_name(),
+                                             .ext        = ".png",
+                                             .language_code =
                                          m_map_group.opt_coo.has_value() && m_map_group.opt_coo.value() != open_viii::LangT::generic
-                                                ? m_map_group.opt_coo
-                                                : std::nullopt };
-          auto                 out_path = cpm.replace_tags(keyed_string, selections, selected_path);
+                                                 ? m_map_group.opt_coo
+                                                 : std::nullopt };
+          std::filesystem::path out_path = cpm.replace_tags(keyed_string, selections, selected_path);
 
           // Start async save and store the future.
-          future_of_futures.push_back(save_image_pbo(out_path, std::move(out_framebuffer)));
+          future_of_futures.push_back(save_image_pbo(std::move(out_path), std::move(out_framebuffer)));
      }
 
 
@@ -1782,15 +1782,15 @@ std::string map_sprite::get_base_name() const
           auto out_framebuffer = glengine::FrameBuffer{ specification };
           if (generate_texture(out_framebuffer))
           {
-               const key_value_data cpm      = { .field_name = get_base_name(),
-                                                 .ext        = ".png",
-                                                 .language_code =
+               const key_value_data  cpm      = { .field_name = get_base_name(),
+                                                  .ext        = ".png",
+                                                  .language_code =
                                               m_map_group.opt_coo.has_value() && m_map_group.opt_coo.value() != open_viii::LangT::generic
-                                                     ? m_map_group.opt_coo
-                                                     : std::nullopt,
-                                                 .pupu_id = pupu.raw() };
-               auto                 out_path = cpm.replace_tags(keyed_string, selections, selected_path);
-               future_of_futures.push_back(save_image_pbo(out_path, std::move(out_framebuffer)));
+                                                      ? m_map_group.opt_coo
+                                                      : std::nullopt,
+                                                  .pupu_id = pupu.raw() };
+               std::filesystem::path out_path = cpm.replace_tags(keyed_string, selections, selected_path);
+               future_of_futures.push_back(save_image_pbo(std::move(out_path), std::move(out_framebuffer)));
           }
      }
 
@@ -1861,26 +1861,33 @@ std::string map_sprite::get_base_name() const
      const auto       specification =
        glengine::FrameBufferSpecification{ .width = canvas.width(), .height = canvas.height(), .scale = settings.scale.value() };
 
-     auto nested     = generate_combinations_more(unique_pupu_ids);
-     auto enumerated = std::views::enumerate(nested);
+     auto                        nested             = generate_combinations_more(unique_pupu_ids);
+     auto                        enumerated         = std::views::enumerate(nested);
 
+     const key_value_data        config_path_values = { .field_name    = get_base_name(),
+                                                        .ext           = ".toml",
+                                                        .language_code = m_map_group.opt_coo.has_value()
+                                                                      && m_map_group.opt_coo.value() != open_viii::LangT::generic
+                                                                           ? m_map_group.opt_coo
+                                                                           : std::nullopt };
+     const std::filesystem::path config_path        = config_path_values.replace_tags(keyed_string, selections, selected_path);
+     auto config = Configuration(config_path);
      // Loop through each Pupu ID and generate/save textures
-     for (auto &&[index,pupu_range] : enumerated)
+     for (auto &&[index, pupu_range] : enumerated)
      {
-
           settings.filters.value().multi_pupu.update(pupu_range).enable();// Enable this specific Pupu ID
           auto out_framebuffer = glengine::FrameBuffer{ specification };
           if (generate_texture(out_framebuffer))
           {
-               const key_value_data cpm      = { .field_name = get_base_name(),
-                                                 .ext        = ".png",
-                                                 .language_code =
+               const key_value_data  cpm      = { .field_name = get_base_name(),
+                                                  .ext        = ".png",
+                                                  .language_code =
                                               m_map_group.opt_coo.has_value() && m_map_group.opt_coo.value() != open_viii::LangT::generic
-                                                     ? m_map_group.opt_coo
-                                                     : std::nullopt,
-                                                 .pupu_id = static_cast<uint32_t>(index) };
-               auto                 out_path = cpm.replace_tags(keyed_string, selections, selected_path);
-               future_of_futures.push_back(save_image_pbo(out_path, std::move(out_framebuffer)));
+                                                      ? m_map_group.opt_coo
+                                                      : std::nullopt,
+                                                  .pupu_id = static_cast<std::uint32_t>(index) };
+               std::filesystem::path out_path = cpm.replace_tags(keyed_string, selections, selected_path);
+               future_of_futures.push_back(save_image_pbo(std::move(out_path), std::move(out_framebuffer)));
           }
      }
 
