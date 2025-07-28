@@ -51,10 +51,11 @@ struct PupuID
      {
      }
      constexpr explicit PupuID(const open_viii::graphics::background::is_tile auto &tile, std::uint8_t offset = 0U) noexcept
-       : PupuID(std::uint32_t{ ((static_cast<std::uint32_t>(tile.layer_id()) & layer_mask) << layer_offset)
-                               | ((static_cast<std::uint32_t>(tile.blend_mode()) & blend_mask) << blend_offset)
-                               | static_cast<std::uint32_t>(tile.animation_id() << animation_offset)
-                               | static_cast<std::uint32_t>(tile.animation_state() << animation_state_offset) | (offset & offset_mask) })
+       : PupuID(
+           std::uint32_t{ ((static_cast<std::uint32_t>(tile.layer_id()) & layer_mask) << layer_offset)
+                          | ((static_cast<std::uint32_t>(tile.blend_mode()) & blend_mask) << blend_offset)
+                          | static_cast<std::uint32_t>(tile.animation_id() << animation_offset)
+                          | static_cast<std::uint32_t>(tile.animation_state() << animation_state_offset) | (offset & offset_mask) })
      {
           if (tile.x() % tile_grid_size != 0)
           {
@@ -126,6 +127,10 @@ struct PupuID
      {
           auto cpy = *this;
           return cpy += right.raw();
+     }
+     [[nodiscard]] constexpr explicit operator std::uint32_t() const noexcept
+     {
+          return m_raw;
      }
      [[nodiscard]] constexpr std::uint32_t raw() const noexcept
      {

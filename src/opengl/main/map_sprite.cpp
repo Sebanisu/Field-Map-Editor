@@ -1862,13 +1862,13 @@ std::string map_sprite::get_base_name() const
        glengine::FrameBufferSpecification{ .width = canvas.width(), .height = canvas.height(), .scale = settings.scale.value() };
 
      auto nested     = generate_combinations_more(unique_pupu_ids);
-     auto flattened  = nested | std::views::join;
-     auto enumerated = std::views::enumerate(flattened);
+     auto enumerated = std::views::enumerate(nested);
 
      // Loop through each Pupu ID and generate/save textures
-     for (const ff_8::PupuID &pupu : unique_pupu_ids)
+     for (auto &&[index,pupu_range] : enumerated)
      {
-          settings.filters.value().pupu.update(pupu).enable();// Enable this specific Pupu ID
+
+          settings.filters.value().multi_pupu.update(pupu_range).enable();// Enable this specific Pupu ID
           auto out_framebuffer = glengine::FrameBuffer{ specification };
           if (generate_texture(out_framebuffer))
           {
@@ -1878,7 +1878,7 @@ std::string map_sprite::get_base_name() const
                                               m_map_group.opt_coo.has_value() && m_map_group.opt_coo.value() != open_viii::LangT::generic
                                                      ? m_map_group.opt_coo
                                                      : std::nullopt,
-                                                 .pupu_id = pupu.raw() };
+                                                 .pupu_id = static_cast<uint32_t>(index) };
                auto                 out_path = cpm.replace_tags(keyed_string, selections, selected_path);
                future_of_futures.push_back(save_image_pbo(out_path, std::move(out_framebuffer)));
           }

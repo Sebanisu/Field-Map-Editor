@@ -404,16 +404,41 @@ struct filter_old
      template<typename U>
      filter_old &update(U &&value)
      {
-          if (m_value != value)
+          if constexpr (
+            !std::same_as<std::remove_cvref_t<U>, value_type> && std::ranges::range<std::remove_cvref_t<U>>
+            && std::ranges::range<value_type>)
           {
-               m_value = std::forward<U>(value);
-               if constexpr (std::same_as<std::remove_cvref_t<decltype(ConfigKeys<Tag>::key_name)>, std::string_view>)
+               if (!std::ranges::equal(m_value, value))
                {
-                    if (HasFlag(m_settings, FilterSettings::Config_Enabled))
+                    if constexpr (requires(value_type v) { v.clear(); })
                     {
-                         fme::Configuration config{};
-                         FilterUpdateStrategy<value_type>::update(config, ConfigKeys<Tag>::key_name, m_value);
-                         config.save();
+                         m_value.clear();
+                    }
+                    std::ranges::move(value, std::back_inserter(m_value));
+                    if constexpr (std::same_as<std::remove_cvref_t<decltype(ConfigKeys<Tag>::key_name)>, std::string_view>)
+                    {
+                         if (HasFlag(m_settings, FilterSettings::Config_Enabled))
+                         {
+                              fme::Configuration config{};
+                              FilterUpdateStrategy<value_type>::update(config, ConfigKeys<Tag>::key_name, m_value);
+                              config.save();
+                         }
+                    }
+               }
+          }
+          else
+          {
+               if (m_value != value)
+               {
+                    m_value = std::forward<U>(value);
+                    if constexpr (std::same_as<std::remove_cvref_t<decltype(ConfigKeys<Tag>::key_name)>, std::string_view>)
+                    {
+                         if (HasFlag(m_settings, FilterSettings::Config_Enabled))
+                         {
+                              fme::Configuration config{};
+                              FilterUpdateStrategy<value_type>::update(config, ConfigKeys<Tag>::key_name, m_value);
+                              config.save();
+                         }
                     }
                }
           }
