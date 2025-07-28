@@ -136,17 +136,18 @@ static inline bool has_balanced_braces([[maybe_unused]] const R &r)
 template<std::ranges::sized_range rangeT>
 constexpr inline auto generate_combinations_more(const rangeT &pupu_ids)
 {
-     size_t n = std::ranges::size(pupu_ids);
+     size_t n              = std::ranges::size(pupu_ids);
+     using difference_type = std::ranges::range_difference_t<std::vector<bool>>;
      // Create a view that generates all combinations
      return std::ranges::iota_view(size_t{ 1 }, size_t{ 1ull << n })
             | std::views::transform([n, &pupu_ids, mask = std::vector<bool>(n, false)](size_t) mutable {
                    const auto increment_mask = [&]() -> bool {
-                        for (size_t i = 0; i < mask.size(); ++i)
+                        for (auto &&[index, bit] : std::views::enumerate(mask))
                         {
-                             if (!mask[i])
+                             if (!bit)
                              {
-                                  mask[i] = true;
-                                  std::fill(mask.begin(), mask.begin() + i, false);
+                                  bit = true;
+                                  std::fill(mask.begin(), mask.begin() + static_cast<difference_type>(index), false);
                                   return true;
                              }
                         }
@@ -158,7 +159,7 @@ constexpr inline auto generate_combinations_more(const rangeT &pupu_ids)
                    // Generate the combination based on the current mask
                    return pupu_ids | std::views::enumerate | std::views::filter([&mask](const auto &tuple) {
                                const auto &[idx, _] = tuple;
-                               return mask[idx];
+                               return mask[static_cast<std::size_t>(idx)];
                           })
                           | std::views::transform([](const auto &tuple) {
                                  const auto &[_, id] = tuple;
