@@ -2315,67 +2315,6 @@ void gui::directory_browser_display()
      const auto            pop_directory         = glengine::ScopeGuard([this]() { m_directory_browser.ClearSelected(); });
      [[maybe_unused]] bool changed               = false;
      const auto            selected_path         = m_directory_browser.GetSelected();
-     const auto            process_texture_paths = [&](
-                                          std::filesystem::path                                                  &target_path,
-                                          auto                                                                    path_key,
-                                          std::vector<std::filesystem::path>                                     &ff8_directory_paths,
-                                          auto                                                                    vector_key,
-                                          [[maybe_unused]] std::vector<std::filesystem::path>                    &target_paths,
-                                          [[maybe_unused]] std::vector<std::reference_wrapper<std::vector<bool>>> target_paths_enabled,
-                                          [[maybe_unused]] auto                                                  &main_filter,
-                                          [[maybe_unused]] auto                                                   other_filter,
-                                          [[maybe_unused]] const std::invocable<std::filesystem::path> auto      &has_path_funct,
-                                          [[maybe_unused]] const std::invocable<std::filesystem::path> auto      &action) {
-          // Remember the last grabbed path
-          target_path = selected_path;
-          // Save the setting to TOML
-          m_selections->update<path_key()>();
-          // Store a copy of the directory
-          ff8_directory_paths.push_back(target_path);
-          sort_and_remove_duplicates(ff8_directory_paths);
-          m_selections->update<vector_key()>();
-          // Append the path to the various search patterns
-          const auto temp_paths = ff_8::path_search::get_paths(m_selections, get_coo(), target_path);
-
-          // If we have found matches
-          if (!temp_paths.empty())
-          {
-               for (const std::filesystem::path &path : temp_paths)
-               {
-                    // Add matches to the drop-down
-                    target_paths.emplace_back(path.string());
-                    std::vector<bool> path_values = std::invoke(has_path_funct, path);
-                    for (auto &&[target, value] : std::ranges::views::zip(target_paths_enabled, path_values))
-                    {
-                         target.get().emplace_back(value);
-                         if (value && !changed)
-                         {
-                              std::apply([](auto... filters) { (filters.get().disable(), ...); }, other_filter);
-                              main_filter.update(path).enable();
-                              std::invoke(action, path);
-                              changed = true;
-                         }
-                    }
-               }
-               if (std::ranges::size(target_paths_enabled) == 3U)
-               {
-                    sort_and_remove_duplicates(
-                      target_paths, target_paths_enabled[0].get(), target_paths_enabled[1].get(), target_paths_enabled[2].get());
-               }
-               else if (std::ranges::size(target_paths_enabled) == 1U)
-               {
-                    sort_and_remove_duplicates(target_paths, target_paths_enabled.front().get());
-               }
-               else
-               {
-                    throw;
-               }
-               if (changed)
-               {
-                    // todo see why i have this here.
-               }
-          }
-     };
 
      const ff_8::path_search ps    = static_cast<ff_8::path_search>(*m_map_sprite);
      // const auto has_map_path    = [&](const std::filesystem::path &path) -> std::vector<bool> { return { ps.has_map_path(path, ".map") };
@@ -2417,7 +2356,7 @@ void gui::directory_browser_display()
           return false;
      };
 
-     const auto try_enable_map_filter = [&]() -> {
+     const auto try_enable_map_filter = [&]() -> bool{
           if (m_selections->get<ConfigKey::CacheMapPathsEnabled>().back())
           {
                m_map_sprite->filter().map.update(selected_path).enable();
@@ -2496,7 +2435,7 @@ void gui::directory_browser_display()
           case map_directory_mode::load_swizzle_textures: {
 
                add_path_to_config();
-               bool changed = try_enable_filter.template operator()<ConfigKey::CacheSwizzlePathsEnabled>(
+               changed |= try_enable_filter.template operator()<ConfigKey::CacheSwizzlePathsEnabled>(
                  m_map_sprite->filter().swizzle, m_map_sprite->filter().swizzle_as_one_image, m_map_sprite->filter().deswizzle);
                changed |= try_enable_map_filter();
                m_selections->sort_paths();
@@ -2512,7 +2451,7 @@ void gui::directory_browser_display()
           case map_directory_mode::load_swizzle_as_one_image_textures: {
 
                add_path_to_config();
-               bool changed = try_enable_filter.template operator()<ConfigKey::CacheSwizzleAsOneImagePathsEnabled>(
+               changed |= try_enable_filter.template operator()<ConfigKey::CacheSwizzleAsOneImagePathsEnabled>(
                  m_map_sprite->filter().swizzle_as_one_image, m_map_sprite->filter().swizzle, m_map_sprite->filter().deswizzle);
                changed |= try_enable_map_filter();
                m_selections->sort_paths();
@@ -2527,7 +2466,7 @@ void gui::directory_browser_display()
           case map_directory_mode::load_deswizzle_textures: {
 
                add_path_to_config();
-               bool changed = try_enable_filter.template operator()<ConfigKey::CacheDeswizzlePathsEnabled>(
+               changed |= try_enable_filter.template operator()<ConfigKey::CacheDeswizzlePathsEnabled>(
                  m_map_sprite->filter().deswizzle, m_map_sprite->filter().swizzle_as_one_image, m_map_sprite->filter().swizzle);
                changed |= try_enable_map_filter();
                m_selections->sort_paths();
@@ -2540,7 +2479,7 @@ void gui::directory_browser_display()
           break;
           case map_directory_mode::load_map: {
                add_path_to_config();
-               bool changed = try_enable_map_filter();
+               changed |= try_enable_map_filter();
                m_selections->sort_paths();
                update_path();
                if (changed)
