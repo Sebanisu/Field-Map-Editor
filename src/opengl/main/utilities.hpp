@@ -140,7 +140,7 @@ constexpr inline auto generate_combinations_more(const rangeT &pupu_ids)
      // Create a view that generates all combinations
      return std::ranges::iota_view(size_t{ 1 }, size_t{ 1ull << n })
             | std::views::transform([n, &pupu_ids, mask = std::vector<bool>(n, false)](size_t) mutable {
-                   const auto increment_mask = [](std::vector<bool> &mask) -> bool {
+                   const auto increment_mask = [&]() -> bool {
                         for (size_t i = 0; i < mask.size(); ++i)
                         {
                              if (!mask[i])
@@ -153,7 +153,7 @@ constexpr inline auto generate_combinations_more(const rangeT &pupu_ids)
                         return false;// All 1s, no more increments possible
                    };
                    // Increment the mask to get the next combination
-                   (void)increment_mask(mask);
+                   (void)increment_mask();
 
                    // Generate the combination based on the current mask
                    return pupu_ids | std::views::enumerate | std::views::filter([&mask](const auto &tuple) {
