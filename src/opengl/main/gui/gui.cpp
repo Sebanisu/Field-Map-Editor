@@ -2362,7 +2362,7 @@ void gui::directory_browser_display()
                m_map_sprite->filter().map.update(selected_path).enable();
                return true;
           }
-          return false
+          return false;
      };
 
      const auto optional_coo = [&]() -> std::optional<open_viii::LangT> {
