@@ -541,6 +541,9 @@ struct fmt::formatter<fme::input_types> : fmt::formatter<std::string_view>
                case fme::input_types::swizzle_as_one_image:
                     name = fme::gui_labels::swizzle_as_one_image;
                     break;
+               case fme::input_types::deswizzle_combined:
+                    name = fme::gui_labels::deswizzle_combined;
+                    break;
           }
           return fmt::formatter<std::string_view>::format(name, ctx);
      }
@@ -548,8 +551,7 @@ struct fmt::formatter<fme::input_types> : fmt::formatter<std::string_view>
 
 template<>
 struct fmt::formatter<fme::output_types> : fmt::formatter<std::string_view>
-{
-     // parse is inherited from formatter<string_view>.
+{// parse is inherited from formatter<string_view>.
      template<typename FormatContext>
      constexpr auto format(fme::output_types in_output_type, FormatContext &ctx) const
      {
@@ -565,6 +567,9 @@ struct fmt::formatter<fme::output_types> : fmt::formatter<std::string_view>
                     break;
                case fme::output_types::swizzle_as_one_image:
                     name = fme::gui_labels::swizzle_as_one_image;
+                    break;
+               case fme::output_types::deswizzle_combined:
+                    name = fme::gui_labels::deswizzle_combined;
                     break;
           }
           return fmt::formatter<std::string_view>::format(name, ctx);

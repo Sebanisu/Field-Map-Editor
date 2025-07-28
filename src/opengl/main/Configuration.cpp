@@ -72,7 +72,7 @@ toml::node_view<const toml::node> fme::Configuration::operator()(std::string_vie
      return root_node[child];
 }
 
-void fme::Configuration::save() const
+void fme::Configuration::save(const bool remove_from_cache) const
 {
      std::error_code error_code = {};
      (void)std::filesystem::create_directories(m_path.parent_path(), error_code);
@@ -92,4 +92,11 @@ void fme::Configuration::save() const
      // const auto st = std::stacktrace::current();
      // std::cerr << st << std::endl;
      spdlog::info("ofstream: saved config \"{}\"", m_path.string());
+
+     if (remove_from_cache)
+     {
+          s_tables.erase(m_path);
+          m_table = nullptr;
+          m_path  = std::filesystem::path{};
+     }
 }

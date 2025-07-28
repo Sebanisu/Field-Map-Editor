@@ -74,6 +74,7 @@ struct gui_labels
      static constexpr std::string_view swizzle                                = { "Swizzle" };
      static constexpr std::string_view swizzle_as_one_image                   = { "Swizzle as one Image" };
      static constexpr std::string_view deswizzle                              = { "Deswizzle" };
+     static constexpr std::string_view deswizzle_combined                     = { "Deswizzle Combined" };
      static constexpr std::string_view disable_blending                       = { "Disable Blending" };
      static constexpr std::string_view force_reloading_of_textures            = { "Force Reloading Of Textures" };
      static constexpr std::string_view force_rendering_of_map                 = { "Force Rendering Of Map" };
@@ -177,15 +178,15 @@ struct gui_labels
      static constexpr std::string_view input_mim_tooltip = {
           "Mim is the storage of the field texture in FF8. So this selection means your using the original low res textures."
      };
-     
+
      static constexpr std::string_view input_deswizzle_tooltip = {
           "Load a directory of deswizzled textures. Including `.map` files if found."
      };
-     
+
      static constexpr std::string_view input_swizzle_tooltip = {
           "Load a directory of swizzled textures. Including `.map` files if found."
      };
-     
+
      static constexpr std::string_view input_swizzle_as_one_image_tooltip = {
           "Load a directory of swizzled as one image textures. Including `.map` files if found."
      };

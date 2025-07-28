@@ -242,11 +242,12 @@ const std::string &fme::batch::get_output_pattern(fme::output_types type)
      }
      switch (type)
      {
-          case fme::output_types::swizzle:
-          case fme::output_types::swizzle_as_one_image:
+          case output_types::swizzle:
+          case output_types::swizzle_as_one_image:
                return selections->get<ConfigKey::OutputSwizzlePattern>();
           default:
-          case fme::output_types::deswizzle:
+          case output_types::deswizzle:
+          case output_types::deswizzle_combined:
                return selections->get<ConfigKey::OutputDeswizzlePattern>();
      }
 }
@@ -281,11 +282,12 @@ const std::string &fme::batch::get_output_map_pattern(fme::output_types type)
      }
      switch (type)
      {
-          case fme::output_types::swizzle:
-          case fme::output_types::swizzle_as_one_image:
+          case output_types::swizzle:
+          case output_types::swizzle_as_one_image:
                return selections->get<ConfigKey::OutputMapPatternForSwizzle>();
           default:
-          case fme::output_types::deswizzle:
+          case output_types::deswizzle:
+          case output_types::deswizzle_combined:
                return selections->get<ConfigKey::OutputMapPatternForDeswizzle>();
      }
 }
@@ -386,8 +388,9 @@ void fme::batch::combo_output_type()
           spdlog::error("Failed to lock m_selections: shared_ptr is expired.");
           return;
      }
-     static constexpr auto values = std::array{ output_types::deswizzle, output_types::swizzle, output_types::swizzle_as_one_image };
-     const auto            gcc    = fme::GenericCombo(
+     static constexpr auto values =
+       std::array{ output_types::deswizzle, output_types::swizzle, output_types::swizzle_as_one_image, output_types::deswizzle_combined };
+     const auto gcc = fme::GenericCombo(
        gui_labels::output_type,
        []() { return values; },
        []() { return values | std::views::transform(AsString{}); },
@@ -888,6 +891,13 @@ void fme::batch::update([[maybe_unused]] float elapsed_time)
      // Attempt to process any pending futures first
      (void)consume_one_future();
 
+     //hold back we queue too much it crashes.
+     if (!m_future_of_future_consumer.done() || !m_future_consumer.done())
+     {
+          return;
+     }
+
+
      // Select the next valid field and COO if needed
      choose_field_and_coo();
 
@@ -924,6 +934,10 @@ void fme::batch::update([[maybe_unused]] float elapsed_time)
           case output_types::deswizzle:
                m_future_consumer +=
                  m_map_sprite.save_deswizzle_textures(selections->get<ConfigKey::OutputDeswizzlePattern>(), selected_string);
+               break;
+          case output_types::deswizzle_combined:
+               m_future_consumer +=
+                 m_map_sprite.save_deswizzle_combined_textures(selections->get<ConfigKey::OutputDeswizzlePattern>(), selected_string);
                break;
           case output_types::swizzle:
                m_future_consumer += m_map_sprite.save_swizzle_textures(selections->get<ConfigKey::OutputSwizzlePattern>(), selected_string);

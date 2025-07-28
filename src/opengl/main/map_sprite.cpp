@@ -714,13 +714,17 @@ void map_sprite::update_position(
                //           return;
                //      }
                // }
-               if (m_filters.pupu.enabled())
+               if (m_filters.multi_pupu.enabled() && std::ranges::all_of(m_filters.multi_pupu.value(), [&](const auto &test_pupu) -> bool {
+                        return test_pupu != pupu_id;
+                   }))
                {
-                    if (m_filters.pupu.value() != pupu_id)
-                    {
-                         return;
-                    }
+                    return;
                }
+               if (m_filters.pupu.enabled() && m_filters.pupu.value() != pupu_id)
+               {
+                    return;
+               }
+
                if (tile.z() != z)
                {
                     return;
@@ -1846,6 +1850,11 @@ std::string map_sprite::get_base_name() const
 
      const std::string                field_name                  = std::string{ str_to_lower(field->get_base_name()) };
      const std::vector<ff_8::PupuID> &unique_pupu_ids             = working_unique_pupu();// Get list of unique Pupu IDs
+     const auto                      &animation_ids               = m_all_unique_values_and_strings.animation_id();
+     const auto                      &animation_states            = m_all_unique_values_and_strings.animation_frame();
+     const auto                      &layer_ids                   = m_all_unique_values_and_strings.layer_id();
+     const auto                      &blend_modes                 = m_all_unique_values_and_strings.blend_mode();
+
      // std::optional<open_viii::LangT> &coo             = m_map_group.opt_coo;// Language option (optional)
 
      // assert(safedir(path).is_dir());// Ensure output path is a directory
@@ -1871,26 +1880,75 @@ std::string map_sprite::get_base_name() const
                                                                            ? m_map_group.opt_coo
                                                                            : std::nullopt };
      const std::filesystem::path config_path        = config_path_values.replace_tags(keyed_string, selections, selected_path);
-     auto config = Configuration(config_path);
+     auto                        config             = Configuration(config_path);
+     config->clear();
+     const auto coo =
+       m_map_group.opt_coo.has_value() && m_map_group.opt_coo.value() != open_viii::LangT::generic ? m_map_group.opt_coo : std::nullopt;
+     config->insert_or_assign("field_name", get_base_name());
+     if (coo.has_value())
+     {
+          config->insert_or_assign("coo", std::to_underlying(coo.value()));
+     }
+     else
+     {
+          config->erase("coo");
+     }
      // Loop through each Pupu ID and generate/save textures
      for (auto &&[index, pupu_range] : enumerated)
      {
           settings.filters.value().multi_pupu.update(pupu_range).enable();// Enable this specific Pupu ID
-          auto out_framebuffer = glengine::FrameBuffer{ specification };
-          if (generate_texture(out_framebuffer))
+          // if (std::ranges::size(settings.filters.value().multi_pupu.value()) == 1ull && std::ranges::size(unique_pupu_ids) != 1ull)
+          // {
+          //      continue;
+          // }
+          for (auto &&[blend_mode, layer_id, animation_id] :
+               std::views::cartesian_product(blend_modes.values(), layer_ids.values(), animation_ids.values()))
           {
-               const key_value_data  cpm      = { .field_name = get_base_name(),
-                                                  .ext        = ".png",
-                                                  .language_code =
-                                              m_map_group.opt_coo.has_value() && m_map_group.opt_coo.value() != open_viii::LangT::generic
-                                                      ? m_map_group.opt_coo
-                                                      : std::nullopt,
-                                                  .pupu_id = static_cast<std::uint32_t>(index) };
-               std::filesystem::path out_path = cpm.replace_tags(keyed_string, selections, selected_path);
-               future_of_futures.push_back(save_image_pbo(std::move(out_path), std::move(out_framebuffer)));
+               for (const auto &animation_state : animation_states.at(animation_id).values())
+               {
+                    if (!std::ranges::all_of(settings.filters.value().multi_pupu.value(), [&](const ff_8::PupuID &pupu_id) -> bool {
+                             return pupu_id.animation_id() == animation_id && pupu_id.animation_state() == animation_state
+                                    && pupu_id.layer_id() == layer_id && pupu_id.blend_mode() == blend_mode;
+                        }))
+                    {
+
+                         continue;
+                    }
+
+                    auto out_framebuffer = glengine::FrameBuffer{ specification };
+                    if (generate_texture(out_framebuffer))
+                    {
+                         toml::table file;
+                         file.insert("bits", fmt::format("{:0B}", static_cast<std::uint32_t>(index) + 1U));
+                         const key_value_data  cpm      = { .field_name    = get_base_name(),
+                                                            .ext           = ".png",
+                                                            .language_code = coo,
+                                                            .pupu_id       = static_cast<std::uint32_t>(index) };
+
+                         std::filesystem::path out_path = cpm.replace_tags(keyed_string, selections, selected_path);
+                         for (const ff_8::PupuID &pupu_id : pupu_range)
+                         {
+                              toml::table pupu_entry;
+                              pupu_entry.insert("raw", pupu_id.raw());
+                              pupu_entry.insert("offset", pupu_id.offset());
+                              pupu_entry.insert("x_aligned", pupu_id.is_x_not_aligned_to_grid());
+                              pupu_entry.insert("y_aligned", pupu_id.is_y_not_aligned_to_grid());
+                              pupu_entry.insert("layer", pupu_id.layer_id());
+                              pupu_entry.insert("blend", std::to_underlying(pupu_id.blend_mode()));
+                              pupu_entry.insert("anim_id", pupu_id.animation_id());
+                              pupu_entry.insert("anim_state", pupu_id.animation_state());
+                              file.insert(fmt::format("{:08X}", static_cast<std::uint32_t>(pupu_id)), std::move(pupu_entry));
+                         }
+
+                         config->insert_or_assign(out_path.filename().string(), std::move(file));
+
+                         future_of_futures.push_back(save_image_pbo(std::move(out_path), std::move(out_framebuffer)));
+                    }
+               }
           }
      }
 
+     config.save(true);
      return future_of_futures;
      // Note: Caller should consume_futures(future_of_futures) to wait for saves to finish
 }

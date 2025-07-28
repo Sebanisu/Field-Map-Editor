@@ -352,24 +352,44 @@ struct SelectionInfo<ConfigKey::OutputSwizzlePattern>
 {
      using value_type                     = std::string;
      static constexpr std::string_view id = "OutputSwizzlePattern";
+     static inline value_type          default_value()
+     {
+          using namespace std::string_literals;
+          return "{selected_path}\\{demaster}"s;
+     }
 };
 template<>
 struct SelectionInfo<ConfigKey::OutputDeswizzlePattern>
 {
      using value_type                     = std::string;
      static constexpr std::string_view id = "OutputDeswizzlePattern";
+     static inline value_type          default_value()
+     {
+          using namespace std::string_literals;
+          return "{selected_path}\\deswizzle\\{demaster}"s;
+     }
 };
 template<>
 struct SelectionInfo<ConfigKey::OutputMapPatternForSwizzle>
 {
      using value_type                     = std::string;
      static constexpr std::string_view id = "OutputMapPatternForSwizzle";
+     static inline value_type          default_value()
+     {
+          using namespace std::string_literals;
+          return "{selected_path}\\{demaster}"s;
+     }
 };
 template<>
 struct SelectionInfo<ConfigKey::OutputMapPatternForDeswizzle>
 {
      using value_type                     = std::string;
      static constexpr std::string_view id = "OutputMapPatternForDeswizzle";
+     static inline value_type          default_value()
+     {
+          using namespace std::string_literals;
+          return "{selected_path}\\deswizzle\\{demaster}"s;
+     }
 };
 template<>
 struct SelectionInfo<ConfigKey::CurrentPattern>
@@ -887,7 +907,7 @@ template<ff_8::FilterTag Tag>
 struct SelectionLoadStrategy<ff_8::filter_old<Tag>>
 {
      // No loading: object is fully initialized elsewhere
-     static bool load(...)
+     static bool load(auto &&...) noexcept
      {
           return true;// We're returning true to prevent fall back logic from triggering.
      }
@@ -944,7 +964,7 @@ struct SelectionUpdateStrategy
 template<ff_8::FilterTag Tag>
 struct SelectionUpdateStrategy<ff_8::filter_old<Tag>>
 {
-     static void update(...)
+     static void update(auto &&...) noexcept
      {
           // No-op: filter manages its own update
      }
@@ -1035,6 +1055,10 @@ struct Selection : SelectionBase
           {
                std::ignore =
                  SelectionLoadStrategy<value_type>::load(config, SelectionInfo<SelectionInfo<Key>::default_value_copy>::id, value);
+          }
+          else
+          {
+               value = get_default_value(nullptr);
           }
      }
 

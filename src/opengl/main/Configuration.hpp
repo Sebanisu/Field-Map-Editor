@@ -70,7 +70,7 @@ class Configuration
       *
       * Writes the in-memory TOML table to the configuration file located at `m_path`.
       */
-     void                              save() const;
+     void                              save(const bool remove_from_cache = false) const;
 
 
      template<typename OutputT, typename InputT = OutputT>
@@ -147,13 +147,13 @@ class Configuration
       * This is a static inline constant that resolves to `field-map-editor.toml`
       * in the current working directory.
       */
-     std::filesystem::path                                      m_path{};
+     mutable std::filesystem::path                              m_path = {};
 
      /**
       * @brief The in-memory representation of the TOML configuration file.
       */
      static inline std::map<std::filesystem::path, toml::table> s_tables{};
-     toml::table                                               *m_table{};
+     mutable toml::table                                       *m_table = {};
 };
 
 
