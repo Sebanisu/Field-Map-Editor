@@ -307,9 +307,9 @@ struct FilterLoadStrategy
           {
                return config.load_array(id, value);
           }
-          else if constexpr (std::same_as<ValueT, std::vector<PupuID>> )
+          else if constexpr (std::same_as<ValueT, std::vector<PupuID>>)
           {
-               return config.load_array<PupuID,std::uint32_t>(id, value);
+               (void)config.load_array<PupuID, std::uint32_t>(id, value);
           }
           else
           {
