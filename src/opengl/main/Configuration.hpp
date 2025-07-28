@@ -172,7 +172,7 @@ class Configuration
  *       that uses `operator->()` and `operator[]` for TOML table access.
  */
 template<>
-bool Configuration::load_array<std::string, std::string>(const std::string_view key, std::vector<std::string> &output) const
+inline bool Configuration::load_array<std::string, std::string>(const std::string_view key, std::vector<std::string> &output) const
 {
      if (!operator->()->contains(key))
      {
@@ -206,7 +206,7 @@ bool Configuration::load_array<std::string, std::string>(const std::string_view 
  * @return true if the array was successfully loaded; false otherwise (e.g., key not found or wrong type).
  */
 template<>
-bool Configuration::load_array<bool, bool>(const std::string_view key, std::vector<bool> &output) const
+inline bool Configuration::load_array<bool, bool>(const std::string_view key, std::vector<bool> &output) const
 {
      if (!operator->()->contains(key))
           return false;
@@ -248,7 +248,7 @@ bool Configuration::load_array<bool, bool>(const std::string_view key, std::vect
  * @note Requires access via `operator->()` and `operator[]` to the TOML table.
  */
 template<>
-bool Configuration::load_array<std::filesystem::path, std::filesystem::path>(
+inline bool Configuration::load_array<std::filesystem::path, std::filesystem::path>(
   const std::string_view              key,
   std::vector<std::filesystem::path> &output) const
 {
@@ -286,7 +286,7 @@ bool Configuration::load_array<std::filesystem::path, std::filesystem::path>(
  * @param input A vector of boolean values to be written into the TOML array.
  */
 template<>
-void Configuration::update_array<bool, bool>(const std::string_view key, const std::vector<bool> &input)
+inline void Configuration::update_array<bool, bool>(const std::string_view key, const std::vector<bool> &input)
 {
      std::string encoded =
        input | std::ranges::views::transform([](const auto &b) { return b ? '1' : '0'; }) | std::ranges::to<std::string>();
@@ -306,7 +306,7 @@ void Configuration::update_array<bool, bool>(const std::string_view key, const s
  * @note Requires access via `operator->()` to the TOML table.
  */
 template<>
-void Configuration::update_array<std::filesystem::path, std::filesystem::path>(
+inline void Configuration::update_array<std::filesystem::path, std::filesystem::path>(
   const std::string_view                    key,
   const std::vector<std::filesystem::path> &input)
 {
