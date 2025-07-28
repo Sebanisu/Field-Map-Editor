@@ -6,8 +6,41 @@
 #define FIELD_MAP_EDITOR_CONCEPTS_HPP
 #include <concepts>
 #include <ranges>
+#include <vector>
 namespace glengine
 {
+
+template<typename T>
+struct is_std_vector_impl : std::false_type
+{
+};
+
+template<typename T, typename Alloc>
+struct is_std_vector_impl<std::vector<T, Alloc>> : std::true_type
+{
+};
+
+template<typename T>
+static const constexpr bool is_std_vector_v = is_std_vector_impl<T>::value;
+
+template<typename T>
+concept is_std_vector = is_std_vector_v<T>;
+
+template<typename T>
+struct vector_elem_type
+{
+     using type = void;
+};
+
+template<typename T, typename Alloc>
+struct vector_elem_type<std::vector<T, Alloc>>
+{
+     using type = std::remove_cvref_t<T>;
+};
+
+template<typename T>
+using vector_elem_type_t = typename vector_elem_type<T>::type;
+
 template<typename T>
 concept is_enum = std::is_enum_v<T>;
 template<typename T>

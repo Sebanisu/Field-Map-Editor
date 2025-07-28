@@ -12,6 +12,7 @@
 #include "open_viii/graphics/BPPT.hpp"
 #include "PupuID.hpp"
 #include "tile_operations.hpp"
+#include <concepts.hpp>
 #include <cstdint>
 #include <filesystem>
 #include <fmt/format.h>
@@ -295,32 +296,20 @@ struct FilterLoadStrategy
           {
                value = static_cast<ValueT>(config[id].value_or(std::to_underlying(value)));
           }
-          else if constexpr (std::same_as<ValueT, std::vector<std::string>>)
+          else if constexpr (glengine::is_std_vector<ValueT>)
           {
-               return config.load_array(id, value);
-          }
-          else if constexpr (std::same_as<ValueT, std::vector<bool>>)
-          {
-               return config.load_array(id, value);
-          }
-          else if constexpr (std::same_as<ValueT, std::vector<std::filesystem::path>>)
-          {
-               return config.load_array(id, value);
-          }
-          else if constexpr (std::same_as<ValueT, std::vector<PupuID>>)
-          {
-               (void)config.load_array<PupuID, std::uint32_t>(id, value);
+               if constexpr (std::same_as<glengine::vector_elem_type_t<ValueT>, PupuID>)
+               {
+                    (void)config.load_array<glengine::vector_elem_type_t<ValueT>, std::uint32_t>(id, value);
+               }
+               else
+               {
+                    (void)config.load_array<glengine::vector_elem_type_t<ValueT>>(id, value);
+               }
           }
           else
           {
                value = config[id].value_or(value);
-          }
-          if constexpr (std::ranges::range<ValueT>)
-          {
-               if (std::ranges::empty(value))
-               {
-                    return value;
-               }
           }
           return value;
      }
@@ -334,10 +323,13 @@ struct FilterLoadStrategy
           return FilterSettings::All_Disabled;
      }
 };
+template<typename ValueT>
+struct FilterConversionStrategy;
 
 template<typename ValueT>
 struct FilterUpdateStrategy
 {
+
      static void update(fme::Configuration &config, std::string_view id, const ValueT &value)
      {
           if constexpr (std::same_as<ValueT, std::filesystem::path>)
@@ -362,17 +354,16 @@ struct FilterUpdateStrategy
                spdlog::info("selection<{}>: {}", id, value);
                config->insert_or_assign(id, std::to_underlying(value));
           }
-          else if constexpr (std::same_as<ValueT, std::vector<std::string>>)
+          else if constexpr (glengine::is_std_vector<ValueT>)
           {
-               config.update_array(id, value);
-          }
-          else if constexpr (std::same_as<ValueT, std::vector<bool>>)
-          {
-               config.update_array(id, value);
-          }
-          else if constexpr (std::same_as<ValueT, std::vector<std::filesystem::path>>)
-          {
-               config.update_array(id, value);
+               if constexpr (std::same_as<glengine::vector_elem_type_t<ValueT>, PupuID>)
+               {
+                    config.update_array<glengine::vector_elem_type_t<ValueT>, std::uint32_t>(id, value);
+               }
+               else
+               {
+                    config.update_array<glengine::vector_elem_type_t<ValueT>>(id, value);
+               }
           }
           else
           {
@@ -517,7 +508,7 @@ struct filter
      {
      }
      filter(FilterSettings settings)
-       : filter_old(HasFlag(settings, FilterSettings::Config_Enabled), fme::Configuration{})
+       : filter(HasFlag(settings, FilterSettings::Config_Enabled), fme::Configuration{})
      {
      }
 

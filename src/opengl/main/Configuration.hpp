@@ -144,6 +144,40 @@ class Configuration
      }
 
      /**
+      * @brief Updates the TOML configuration with a string array.
+      *
+      * Replaces or creates the value at the given key with a TOML array
+      * containing the provided strings.
+      *
+      * @param key The TOML key under which to store the array.
+      * @param input The vector of strings to write into the config.
+      *
+      * @note This function expects that the caller is accessing a wrapper
+      *       that uses `operator->()` for TOML table access.
+      */
+
+     template<typename InputT, typename OutputT = InputT>
+     void update_array(const std::string_view key, const std::vector<InputT> &input)
+     {
+          toml::array array;
+          array.reserve(input.size());
+
+          for (const auto &str : input)
+          {
+               if constexpr (std::same_as<InputT, OutputT>)
+               {
+                    array.push_back(str);
+               }
+               else
+               {
+                    array.push_back(static_cast<OutputT>(str));
+               }
+          }
+
+          operator->()->insert_or_assign(key, std::move(array));
+     }
+
+     /**
       * @brief Loads a TOML array of booleans from the given key into a vector.
       *
       * This function checks whether the specified key exists and corresponds to an array.
@@ -178,32 +212,6 @@ class Configuration
                return true;
           }
           return false;
-     }
-
-
-     /**
-      * @brief Updates the TOML configuration with a string array.
-      *
-      * Replaces or creates the value at the given key with a TOML array
-      * containing the provided strings.
-      *
-      * @param key The TOML key under which to store the array.
-      * @param input The vector of strings to write into the config.
-      *
-      * @note This function expects that the caller is accessing a wrapper
-      *       that uses `operator->()` for TOML table access.
-      */
-     void update_array(const std::string_view key, const std::vector<std::string> &input)
-     {
-          toml::array array;
-          array.reserve(input.size());
-
-          for (const auto &str : input)
-          {
-               array.push_back(str);
-          }
-
-          operator->()->insert_or_assign(key, std::move(array));
      }
 
 
@@ -258,7 +266,8 @@ class Configuration
       * @param key The TOML key under which the array will be stored.
       * @param input A vector of boolean values to be written into the TOML array.
       */
-     void update_array(const std::string_view key, const std::vector<bool> &input)
+     template<>
+     void update_array<bool, bool>(const std::string_view key, const std::vector<bool> &input)
      {
           std::string encoded =
             input | std::ranges::views::transform([](const auto &b) { return b ? '1' : '0'; }) | std::ranges::to<std::string>();
@@ -277,7 +286,10 @@ class Configuration
       * @note Paths are converted to strings using `path.string()`.
       * @note Requires access via `operator->()` to the TOML table.
       */
-     void update_array(const std::string_view key, const std::vector<std::filesystem::path> &input)
+     template<>
+     void update_array<std::filesystem::path, std::filesystem::path>(
+       const std::string_view                    key,
+       const std::vector<std::filesystem::path> &input)
      {
           toml::array array;
           array.reserve(input.size());
