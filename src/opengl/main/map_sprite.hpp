@@ -162,11 +162,15 @@ struct [[nodiscard]] map_sprite// final
           return str_to_lower(std::string{ input });
      }
      //[[nodiscard]] sf::Sprite                     save_intersecting(const glm::ivec2 &pixel_pos, const std::uint8_t &texture_page);
-     [[nodiscard]] std::size_t                    get_texture_pos(BPPT bpp, std::uint8_t palette, std::uint8_t texture_page) const;
-     [[nodiscard]] std::vector<std::future<void>> save_swizzle_textures(const std::string &keyed_string, const std::string &selected_path);
+     [[nodiscard]] std::size_t get_texture_pos(BPPT bpp, std::uint8_t palette, std::uint8_t texture_page) const;
      [[nodiscard]] std::vector<std::future<void>>
-       save_combined_swizzle_texture(const std::string &keyed_string, const std::string &selected_path);
-     [[nodiscard]] std::vector<std::future<void>> save_pupu_textures(const std::string &keyed_string, const std::string &selected_path);
+       save_swizzle_textures(const std::string &keyed_string, const std::filesystem::path &selected_path);
+     [[nodiscard]] std::vector<std::future<void>>
+       save_swizzle_as_one_image_textures(const std::string &keyed_string, const std::filesystem::path &selected_path);
+     [[nodiscard]] std::vector<std::future<void>>
+       save_deswizzle_textures(const std::string &keyed_string, const std::filesystem::path &selected_path);
+     [[nodiscard]] std::vector<std::future<void>>
+       save_deswizzle_combined_textures(const std::string &keyed_string, const std::filesystem::path &selected_path);
      [[nodiscard]] std::future<std::future<void>> load_swizzle_textures(std::uint8_t texture_page, std::uint8_t palette) const;
      [[nodiscard]] std::future<std::future<void>> load_swizzle_textures(std::uint8_t texture_page) const;
      [[nodiscard]] std::future<std::future<void>>

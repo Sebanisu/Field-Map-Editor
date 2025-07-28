@@ -73,6 +73,38 @@ class Configuration
      void                              save() const;
 
 
+     template<typename OutputT, typename InputT = OutputT>
+          requires std::constructible_from<OutputT, InputT>
+     bool load_array(const std::string_view key, std::vector<OutputT> &output) const
+     {
+          if (!operator->()->contains(key))
+          {
+               return false;
+          }
+
+          if (const auto *array = operator[](key).as_array(); array)
+          {
+               output.clear();
+               output.reserve(array->size());
+               for (auto &&val : *array)
+               {
+                    if (auto str = val.value<InputT>(); str.has_value())
+                    {
+                         if constexpr (std::same_as<std::remove_cvref_t<InputT>, std::remove_cvref_t<OutputT>>)
+                         {
+                              output.emplace_back(std::move(str.value()));
+                         }
+                         else
+                         {
+                              output.push_back(static_cast<OutputT>(str.value()));
+                         }
+                    }
+               }
+               return true;
+          }
+          return false;
+     }
+
      /**
       * @brief Loads a string array from the TOML configuration.
       *
@@ -87,7 +119,8 @@ class Configuration
       * @note This function expects that the caller is accessing a wrapper
       *       that uses `operator->()` and `operator[]` for TOML table access.
       */
-     bool                              load_array(const std::string_view key, std::vector<std::string> &output) const
+     template<>
+     bool load_array<std::string, std::string>(const std::string_view key, std::vector<std::string> &output) const
      {
           if (!operator->()->contains(key))
           {
@@ -120,7 +153,8 @@ class Configuration
       * @param output A reference to a vector where the boolean values will be stored.
       * @return true if the array was successfully loaded; false otherwise (e.g., key not found or wrong type).
       */
-     bool load_array(const std::string_view key, std::vector<bool> &output) const
+     template<>
+     bool load_array<bool, bool>(const std::string_view key, std::vector<bool> &output) const
      {
           if (!operator->()->contains(key))
                return false;
@@ -187,7 +221,9 @@ class Configuration
       * @note Assumes the TOML array contains strings representing file system paths.
       * @note Requires access via `operator->()` and `operator[]` to the TOML table.
       */
-     bool load_array(const std::string_view key, std::vector<std::filesystem::path> &output) const
+     template<>
+     bool load_array<std::filesystem::path, std::filesystem::path>(const std::string_view key, std::vector<std::filesystem::path> &output)
+       const
      {
           if (!operator->()->contains(key))
           {
@@ -211,6 +247,7 @@ class Configuration
           }
           return false;
      }
+
 
      /**
       * @brief Writes a vector of booleans into the TOML table under the given key.

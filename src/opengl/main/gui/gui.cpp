@@ -2408,61 +2408,76 @@ void gui::directory_browser_display()
             ConfigKey::CacheMapPathsEnabled>();
      };
 
+     const auto try_enable_filter = [&]<ConfigKey Key, typename Filter, typename... Others>(Filter &filter, Others &...others) {
+          if (m_selections->get<Key>().back())
+          {
+               filter.update(selected_path).enable();
+               (others.disable(), ...);// fold expression
+          }
+     };
+
+     const auto try_enable_map_filter = [&]() {
+          if (m_selections->get<ConfigKey::CacheMapPathsEnabled>().back())
+          {
+               m_map_sprite->filter().map.update(selected_path).enable();
+          }
+     };
+
+     const auto optional_coo = [&]() -> std::optional<open_viii::LangT> {
+          const auto coo = m_selections->get<ConfigKey::Coo>();
+          return (coo != open_viii::LangT::generic && m_map_sprite->using_coo()) ? std::optional{ coo } : std::nullopt;
+     }();
+
+     const auto save_map_with_pattern = [&]<ConfigKey Key>() {
+          const key_value_data cpm = {
+               .field_name    = m_map_sprite->get_base_name(),
+               .ext           = ".map",
+               .language_code = optional_coo,
+          };
+          m_map_sprite->save_modified_map(cpm.replace_tags(m_selections->get<Key>(), m_selections, selected_path));
+     };
+
+     const auto ensure_directory = [&](const std::filesystem::path &path) {
+          std::error_code ec;
+          std::filesystem::create_directories(path, ec);
+          if (ec)
+          {
+               spdlog::error("{}:{} - {}: {} - path: {}", __FILE__, __LINE__, ec.value(), ec.message(), path.string());
+          }
+     };
+
      switch (m_modified_directory_map)
      {
-          case map_directory_mode::save_swizzle_textures: {
-               m_selections->get<ConfigKey::SwizzlePath>() = selected_path.string();
-               m_selections->update<ConfigKey::SwizzlePath>();
-               std::error_code error_code{};
-               std::filesystem::create_directories(selected_path, error_code);
-               if (error_code)
-               {
-                    spdlog::error(
-                      "{}:{} - {}: {} - path: {}", __FILE__, __LINE__, error_code.value(), error_code.message(), selected_path.string());
-                    error_code.clear();
-               }
                // todo modify these two functions :P to use the imported image.
+          case map_directory_mode::save_swizzle_textures: {
+               m_selections->get<ConfigKey::SwizzlePath>() = selected_path;
+               m_selections->update<ConfigKey::SwizzlePath>();
+               ensure_directory(selected_path);
                m_future_consumer +=
-                 m_map_sprite->save_swizzle_textures(m_selections->get<ConfigKey::OutputSwizzlePattern>(), selected_path.string());// done.
-               const key_value_data cpm = {
-                    .field_name = m_map_sprite->get_base_name(),
-                    .ext        = ".map",
-                    .language_code =
-                      m_selections && m_selections->get<ConfigKey::Coo>() != open_viii::LangT::generic && m_map_sprite->using_coo()
-                        ? std::optional{ m_selections->get<ConfigKey::Coo>() }
-                        : std::nullopt,
-               };// todo coo might not be done correctly. if the map sprite isn't using a coo we shouldn't either.
-                 // m_selections->get<ConfigKey::Coo>() is what coo we're asking for but the it will default to generic when it can't find
-                 // it. so we need to know what the map sprite is using for it's coo.
-
-               m_map_sprite->save_modified_map(
-                 cpm.replace_tags(m_selections->get<ConfigKey::OutputMapPatternForSwizzle>(), m_selections, selected_path.string()));
+                 m_map_sprite->save_swizzle_textures(m_selections->get<ConfigKey::OutputSwizzlePattern>(), selected_path);
+               save_map_with_pattern.template operator()<ConfigKey::OutputMapPatternForSwizzle>();
                open_directory(selected_path);
           }
           break;
-          case map_directory_mode::save_deswizzle_textures: {
-               m_selections->get<ConfigKey::DeswizzlePath>() = selected_path.string();
-               m_selections->update<ConfigKey::DeswizzlePath>();
-               std::error_code error_code{};
-               std::filesystem::create_directories(selected_path, error_code);
-               if (error_code)
-               {
-                    spdlog::error(
-                      "{}:{} - {}: {} - path: {}", __FILE__, __LINE__, error_code.value(), error_code.message(), selected_path.string());
-                    error_code.clear();
-               }
+
+          case map_directory_mode::save_swizzle_as_one_image_textures: {
+               m_selections->get<ConfigKey::SwizzleAsOneImagePath>() = selected_path;
+               m_selections->update<ConfigKey::SwizzleAsOneImagePath>();
+               ensure_directory(selected_path);
                m_future_consumer +=
-                 m_map_sprite->save_pupu_textures(m_selections->get<ConfigKey::OutputDeswizzlePattern>(), selected_path.string());
-               const key_value_data cpm = {
-                    .field_name = m_map_sprite->get_base_name(),
-                    .ext        = ".map",
-                    .language_code =
-                      m_selections && m_selections->get<ConfigKey::Coo>() != open_viii::LangT::generic && m_map_sprite->using_coo()
-                        ? std::optional{ m_selections->get<ConfigKey::Coo>() }
-                        : std::nullopt,
-               };
-               m_map_sprite->save_modified_map(
-                 cpm.replace_tags(m_selections->get<ConfigKey::OutputMapPatternForDeswizzle>(), m_selections, selected_path.string()));
+                 m_map_sprite->save_swizzle_as_one_image_textures(m_selections->get<ConfigKey::OutputSwizzlePattern>(), selected_path);
+               save_map_with_pattern.template operator()<ConfigKey::OutputMapPatternForSwizzle>();
+               open_directory(selected_path);
+          }
+          break;
+
+          case map_directory_mode::save_deswizzle_textures: {
+               m_selections->get<ConfigKey::DeswizzlePath>() = selected_path;
+               m_selections->update<ConfigKey::DeswizzlePath>();
+               ensure_directory(selected_path);
+               m_future_consumer +=
+                 m_map_sprite->save_deswizzle_textures(m_selections->get<ConfigKey::OutputDeswizzlePattern>(), selected_path.string());                 
+               save_map_with_pattern.template operator()<ConfigKey::OutputMapPatternForDeswizzle>();
                open_directory(selected_path);
           }
           break;
@@ -2478,18 +2493,9 @@ void gui::directory_browser_display()
           case map_directory_mode::load_swizzle_textures: {
 
                add_path_to_config();
-               if (m_selections->get<ConfigKey::CacheSwizzlePathsEnabled>().back())
-               {
-                    m_map_sprite->filter().swizzle.update(selected_path).enable();
-                    std::apply(
-                      [](auto &...filters) { (filters.disable(), ...); },
-                      std::forward_as_tuple(m_map_sprite->filter().swizzle_as_one_image, m_map_sprite->filter().deswizzle));
-               }
-               if (m_selections->get<ConfigKey::CacheMapPathsEnabled>().back())
-               {
-                    m_map_sprite->filter().map.update(selected_path).enable();
-               }
-
+               try_enable_filter.template operator()<ConfigKey::CacheSwizzlePathsEnabled>(
+                 m_map_sprite->filter().swizzle, m_map_sprite->filter().swizzle_as_one_image, m_map_sprite->filter().deswizzle);
+               try_enable_map_filter();
                m_selections->sort_paths();
                update_path();
           }
@@ -2499,18 +2505,9 @@ void gui::directory_browser_display()
           case map_directory_mode::load_swizzle_as_one_image_textures: {
 
                add_path_to_config();
-               if (m_selections->get<ConfigKey::CacheDeswizzlePathsEnabled>().back())
-               {
-                    m_map_sprite->filter().swizzle_as_one_image.update(selected_path).enable();
-                    std::apply(
-                      [](auto &...filters) { (filters.disable(), ...); },
-                      std::forward_as_tuple(m_map_sprite->filter().deswizzle, m_map_sprite->filter().swizzle));
-               }
-               if (m_selections->get<ConfigKey::CacheMapPathsEnabled>().back())
-               {
-                    m_map_sprite->filter().map.update(selected_path).enable();
-               }
-
+               try_enable_filter.template operator()<ConfigKey::CacheSwizzleAsOneImagePathsEnabled>(
+                 m_map_sprite->filter().swizzle_as_one_image, m_map_sprite->filter().swizzle, m_map_sprite->filter().deswizzle);
+               try_enable_map_filter();
                m_selections->sort_paths();
                update_path();
           }
@@ -2519,29 +2516,16 @@ void gui::directory_browser_display()
           case map_directory_mode::load_deswizzle_textures: {
 
                add_path_to_config();
-               if (m_selections->get<ConfigKey::CacheDeswizzlePathsEnabled>().back())
-               {
-                    m_map_sprite->filter().deswizzle.update(selected_path).enable();
-                    std::apply(
-                      [](auto &...filters) { (filters.disable(), ...); },
-                      std::forward_as_tuple(m_map_sprite->filter().swizzle_as_one_image, m_map_sprite->filter().swizzle));
-               }
-               if (m_selections->get<ConfigKey::CacheMapPathsEnabled>().back())
-               {
-                    m_map_sprite->filter().map.update(selected_path).enable();
-               }
-
+               try_enable_filter.template operator()<ConfigKey::CacheDeswizzlePathsEnabled>(
+                 m_map_sprite->filter().deswizzle, m_map_sprite->filter().swizzle_as_one_image, m_map_sprite->filter().swizzle);
+               try_enable_map_filter();
                m_selections->sort_paths();
                update_path();
           }
           break;
           case map_directory_mode::load_map: {
                add_path_to_config();
-               if (m_selections->get<ConfigKey::CacheMapPathsEnabled>().back())
-               {
-                    m_map_sprite->filter().map.update(selected_path).enable();
-               }
-
+               try_enable_map_filter();
                m_selections->sort_paths();
                update_path();
           }
@@ -3616,7 +3600,7 @@ std::future<std::future<gui::PathsAndEnabled>> gui::generate_external_map_paths(
        });
 }
 
-bool gui::combo_swizzle_path(ff_8::filter_old<std::filesystem::path, ff_8::FilterTag::Swizzle> &filter) const
+bool gui::combo_swizzle_path(ff_8::filter_old<ff_8::FilterTag::Swizzle> &filter) const
 {
      const auto gcc = fme::GenericComboWithFilterAndFixedToggles(
        gui_labels::swizzle_path,
@@ -3633,7 +3617,7 @@ bool gui::combo_swizzle_path(ff_8::filter_old<std::filesystem::path, ff_8::Filte
 }
 
 
-bool gui::combo_swizzle_as_one_image_path(ff_8::filter_old<std::filesystem::path, ff_8::FilterTag::SwizzleAsOneImage> &filter) const
+bool gui::combo_swizzle_as_one_image_path(ff_8::filter_old<ff_8::FilterTag::SwizzleAsOneImage> &filter) const
 {
      const auto gcc = fme::GenericComboWithFilterAndFixedToggles(
        gui_labels::swizzle_as_one_image_path,
@@ -3649,7 +3633,7 @@ bool gui::combo_swizzle_as_one_image_path(ff_8::filter_old<std::filesystem::path
      return m_field && gcc.render();
 }
 
-bool gui::combo_deswizzle_path(ff_8::filter_old<std::filesystem::path, ff_8::FilterTag::Deswizzle> &filter) const
+bool gui::combo_deswizzle_path(ff_8::filter_old<ff_8::FilterTag::Deswizzle> &filter) const
 {
      const auto gcc = fme::GenericComboWithFilterAndFixedToggles(
        gui_labels::deswizzle_path,
@@ -3665,7 +3649,7 @@ bool gui::combo_deswizzle_path(ff_8::filter_old<std::filesystem::path, ff_8::Fil
      return m_field && gcc.render();
 }
 
-bool gui::combo_map_path(ff_8::filter_old<std::filesystem::path, ff_8::FilterTag::Map> &filter) const
+bool gui::combo_map_path(ff_8::filter_old<ff_8::FilterTag::Map> &filter) const
 {
      const auto gcc = fme::GenericComboWithFilterAndFixedToggles(
        gui_labels::map_path,

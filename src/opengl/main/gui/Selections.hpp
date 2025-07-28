@@ -460,15 +460,11 @@ struct SelectionInfo<ConfigKey::BatchCompactEnabled>
 template<>
 struct SelectionInfo<ConfigKey::BatchCompactType>
 {
-     using value_type                     = ff_8::filter_old<compact_type, ff_8::FilterTag::Compact>;
+     using value_type                     = ff_8::filter_old<ff_8::FilterTag::Compact>;
      static constexpr std::string_view id = ff_8::ConfigKeys<ff_8::FilterTag::Compact>::key_name;
      static inline value_type          default_value(const Configuration &config)
      {
-          return { static_cast<fme::compact_type>(config[id].value_or(std::to_underlying(fme::compact_type{}))),
-                   ff_8::WithFlag(
-                     ff_8::FilterSettings::Default,
-                     ff_8::FilterSettings::Toggle_Enabled,
-                     config[SelectionInfo<ConfigKey::BatchCompactEnabled>::id].value_or(false)) };
+          return { true, config };
      }
 };
 
@@ -480,15 +476,11 @@ struct SelectionInfo<ConfigKey::BatchFlattenEnabled>
 template<>
 struct SelectionInfo<ConfigKey::BatchFlattenType>
 {
-     using value_type                     = ff_8::filter_old<flatten_type, ff_8::FilterTag::Flatten>;
+     using value_type                     = ff_8::filter_old<ff_8::FilterTag::Flatten>;
      static constexpr std::string_view id = ff_8::ConfigKeys<ff_8::FilterTag::Flatten>::key_name;
      static inline value_type          default_value(const Configuration &config)
      {
-          return { static_cast<fme::flatten_type>(config[id].value_or(std::to_underlying(fme::flatten_type{}))),
-                   ff_8::WithFlag(
-                     ff_8::FilterSettings::Default,
-                     ff_8::FilterSettings::Toggle_Enabled,
-                     config[SelectionInfo<ConfigKey::BatchFlattenEnabled>::id].value_or(false)) };
+          return { true, config };
      }
 };
 template<>
@@ -891,8 +883,8 @@ struct SelectionLoadStrategy
 };
 
 // For filters that are constructed with full context and do not support default init
-template<typename T, ff_8::FilterTag Tag>
-struct SelectionLoadStrategy<ff_8::filter_old<T, Tag>>
+template<ff_8::FilterTag Tag>
+struct SelectionLoadStrategy<ff_8::filter_old<Tag>>
 {
      // No loading: object is fully initialized elsewhere
      static bool load(...)
@@ -949,8 +941,8 @@ struct SelectionUpdateStrategy
 };
 
 // Skip updating for filters — they update themselves
-template<typename T, ff_8::FilterTag Tag>
-struct SelectionUpdateStrategy<ff_8::filter_old<T, Tag>>
+template<ff_8::FilterTag Tag>
+struct SelectionUpdateStrategy<ff_8::filter_old<Tag>>
 {
      static void update(...)
      {

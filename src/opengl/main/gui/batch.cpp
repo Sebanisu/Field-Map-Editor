@@ -123,12 +123,13 @@ void fme::batch::combo_input_type()
           spdlog::error("Failed to lock m_selections: shared_ptr is expired.");
           return;
      }
-     static constexpr auto values = std::array{ input_types::mim, input_types::deswizzle, input_types::swizzle, input_types::swizzle_as_one_image };
+     static constexpr auto values =
+       std::array{ input_types::mim, input_types::deswizzle, input_types::swizzle, input_types::swizzle_as_one_image };
      static constexpr auto tooltips = std::array{ gui_labels::input_mim_tooltip,
                                                   gui_labels::input_deswizzle_tooltip,
                                                   gui_labels::input_swizzle_tooltip,
                                                   gui_labels::input_swizzle_as_one_image_tooltip };
-     const auto gcc = fme::GenericCombo(
+     const auto            gcc      = fme::GenericCombo(
        gui_labels::input_type,
        []() { return values; },
        []() { return values | std::views::transform(AsString{}); },
@@ -921,14 +922,15 @@ void fme::batch::update([[maybe_unused]] float elapsed_time)
      switch (selections->get<ConfigKey::BatchOutputType>())
      {
           case output_types::deswizzle:
-               m_future_consumer += m_map_sprite.save_pupu_textures(selections->get<ConfigKey::OutputDeswizzlePattern>(), selected_string);
+               m_future_consumer +=
+                 m_map_sprite.save_deswizzle_textures(selections->get<ConfigKey::OutputDeswizzlePattern>(), selected_string);
                break;
           case output_types::swizzle:
                m_future_consumer += m_map_sprite.save_swizzle_textures(selections->get<ConfigKey::OutputSwizzlePattern>(), selected_string);
                break;
           case output_types::swizzle_as_one_image:
                m_future_consumer +=
-                 m_map_sprite.save_combined_swizzle_texture(selections->get<ConfigKey::OutputSwizzlePattern>(), selected_string);
+                 m_map_sprite.save_swizzle_as_one_image_textures(selections->get<ConfigKey::OutputSwizzlePattern>(), selected_string);
                break;
      }
 

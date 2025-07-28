@@ -6,6 +6,8 @@
 #define FIELD_MAP_EDITOR_FILTER_HPP
 #include "Configuration.hpp"
 #include "draw_bit_t.hpp"
+#include "gui/colors.hpp"
+#include "gui/compact_type.hpp"
 #include "open_viii/graphics/background/BlendModeT.hpp"
 #include "open_viii/graphics/BPPT.hpp"
 #include "PupuID.hpp"
@@ -81,6 +83,7 @@ enum class FilterTag : std::uint8_t
 {
      None,
      Pupu,
+     MultiPupu,
      Swizzle,
      Deswizzle,
      SwizzleAsOneImage,
@@ -100,22 +103,28 @@ enum class FilterTag : std::uint8_t
 };
 
 template<FilterTag Tag>
-struct ConfigKeys
-{
-     static constexpr std::nullptr_t key_name         = nullptr;
-     static constexpr std::nullptr_t enabled_key_name = nullptr;
-};
+struct ConfigKeys;
 
 template<>
 struct ConfigKeys<FilterTag::Pupu>
 {
+     using value_type                                   = PupuID;
      static constexpr std::string_view key_name         = "filter_pupu";
      static constexpr std::string_view enabled_key_name = "filter_pupu_enabled";
 };
 
 template<>
+struct ConfigKeys<FilterTag::MultiPupu>
+{
+     using value_type                                   = std::vector<PupuID>;
+     static constexpr std::string_view key_name         = "filter_multi_pupu";
+     static constexpr std::string_view enabled_key_name = "filter_multi_pupu_enabled";
+};
+
+template<>
 struct ConfigKeys<FilterTag::Swizzle>
 {
+     using value_type                                   = std::filesystem::path;
      static constexpr std::string_view key_name         = "filter_swizzle";
      static constexpr std::string_view enabled_key_name = "filter_swizzle_enabled";
 };
@@ -123,6 +132,7 @@ struct ConfigKeys<FilterTag::Swizzle>
 template<>
 struct ConfigKeys<FilterTag::Deswizzle>
 {
+     using value_type                                   = std::filesystem::path;
      static constexpr std::string_view key_name         = "filter_deswizzle";
      static constexpr std::string_view enabled_key_name = "filter_deswizzle_enabled";
 };
@@ -130,6 +140,7 @@ struct ConfigKeys<FilterTag::Deswizzle>
 template<>
 struct ConfigKeys<FilterTag::SwizzleAsOneImage>
 {
+     using value_type                                   = std::filesystem::path;
      static constexpr std::string_view key_name         = "filter_swizzle_as_one_image";
      static constexpr std::string_view enabled_key_name = "filter_swizzle_as_one_image_enabled";
 };
@@ -137,6 +148,7 @@ struct ConfigKeys<FilterTag::SwizzleAsOneImage>
 template<>
 struct ConfigKeys<FilterTag::Map>
 {
+     using value_type                                   = std::filesystem::path;
      static constexpr std::string_view key_name         = "filter_map";
      static constexpr std::string_view enabled_key_name = "filter_map_enabled";
 };
@@ -144,6 +156,8 @@ struct ConfigKeys<FilterTag::Map>
 template<>
 struct ConfigKeys<FilterTag::DrawBit>
 {
+     using value_type                                   = draw_bitT;
+     using operation_type                               = ff_8::tile_operations::Draw;
      static constexpr std::string_view key_name         = "filter_draw";
      static constexpr std::string_view enabled_key_name = "filter_draw_enabled";
 };
@@ -151,6 +165,9 @@ struct ConfigKeys<FilterTag::DrawBit>
 template<>
 struct ConfigKeys<FilterTag::Z>
 {
+     using TileT                                        = open_viii::graphics::background::Tile1;
+     using value_type                                   = ff_8::tile_operations::ZT<TileT>;
+     using operation_type                               = ff_8::tile_operations::Z;
      static constexpr std::string_view key_name         = "filter_z";
      static constexpr std::string_view enabled_key_name = "filter_z_enabled";
 };
@@ -158,6 +175,9 @@ struct ConfigKeys<FilterTag::Z>
 template<>
 struct ConfigKeys<FilterTag::Palette>
 {
+     using TileT                                        = open_viii::graphics::background::Tile1;
+     using value_type                                   = ff_8::tile_operations::PaletteIdT<TileT>;
+     using operation_type                               = ff_8::tile_operations::PaletteId;
      static constexpr std::string_view key_name         = "selections_palette";
      static constexpr std::string_view enabled_key_name = "selections_palette_enabled";
 };
@@ -165,6 +185,9 @@ struct ConfigKeys<FilterTag::Palette>
 template<>
 struct ConfigKeys<FilterTag::AnimationId>
 {
+     using TileT                                        = open_viii::graphics::background::Tile1;
+     using value_type                                   = ff_8::tile_operations::AnimationIdT<TileT>;
+     using operation_type                               = ff_8::tile_operations::AnimationId;
      static constexpr std::string_view key_name         = "filter_animation_id";
      static constexpr std::string_view enabled_key_name = "filter_animation_id_enabled";
 };
@@ -172,6 +195,9 @@ struct ConfigKeys<FilterTag::AnimationId>
 template<>
 struct ConfigKeys<FilterTag::AnimationFrame>
 {
+     using TileT                                        = open_viii::graphics::background::Tile1;
+     using value_type                                   = ff_8::tile_operations::AnimationStateT<TileT>;
+     using operation_type                               = ff_8::tile_operations::AnimationState;
      static constexpr std::string_view key_name         = "filter_animation_frame";
      static constexpr std::string_view enabled_key_name = "filter_animation_frame_enabled";
 };
@@ -179,6 +205,9 @@ struct ConfigKeys<FilterTag::AnimationFrame>
 template<>
 struct ConfigKeys<FilterTag::LayerId>
 {
+     using TileT                                        = open_viii::graphics::background::Tile1;
+     using value_type                                   = ff_8::tile_operations::LayerIdT<TileT>;
+     using operation_type                               = ff_8::tile_operations::LayerId;
      static constexpr std::string_view key_name         = "filter_layer_id";
      static constexpr std::string_view enabled_key_name = "filter_layer_id_enabled";
 };
@@ -186,6 +215,9 @@ struct ConfigKeys<FilterTag::LayerId>
 template<>
 struct ConfigKeys<FilterTag::TexturePageId>
 {
+     using TileT                                        = open_viii::graphics::background::Tile1;
+     using value_type                                   = ff_8::tile_operations::TextureIdT<TileT>;
+     using operation_type                               = ff_8::tile_operations::TextureId;
      static constexpr std::string_view key_name         = "filter_texture_page_id";
      static constexpr std::string_view enabled_key_name = "filter_texture_page_id_enabled";
 };
@@ -193,6 +225,9 @@ struct ConfigKeys<FilterTag::TexturePageId>
 template<>
 struct ConfigKeys<FilterTag::BlendMode>
 {
+     using TileT                                        = open_viii::graphics::background::Tile1;
+     using value_type                                   = ff_8::tile_operations::BlendModeT<TileT>;
+     using operation_type                               = ff_8::tile_operations::BlendMode;
      static constexpr std::string_view key_name         = "filter_blend_mode";
      static constexpr std::string_view enabled_key_name = "filter_blend_mode_enabled";
 };
@@ -200,6 +235,9 @@ struct ConfigKeys<FilterTag::BlendMode>
 template<>
 struct ConfigKeys<FilterTag::BlendOther>
 {
+     using TileT                                        = open_viii::graphics::background::Tile1;
+     using value_type                                   = ff_8::tile_operations::BlendT<TileT>;
+     using operation_type                               = ff_8::tile_operations::Blend;
      static constexpr std::string_view key_name         = "filter_blend_other";
      static constexpr std::string_view enabled_key_name = "filter_blend_other_enabled";
 };
@@ -207,6 +245,9 @@ struct ConfigKeys<FilterTag::BlendOther>
 template<>
 struct ConfigKeys<FilterTag::Bpp>
 {
+     using TileT                                        = open_viii::graphics::background::Tile1;
+     using value_type                                   = ff_8::tile_operations::DepthT<TileT>;
+     using operation_type                               = ff_8::tile_operations::Depth;
      static constexpr std::string_view key_name         = "selections_bpp";
      static constexpr std::string_view enabled_key_name = "selections_bpp_enabled";
 };
@@ -214,6 +255,7 @@ struct ConfigKeys<FilterTag::Bpp>
 template<>
 struct ConfigKeys<FilterTag::Compact>
 {
+     using value_type                                   = fme::compact_type;
      static constexpr std::string_view key_name         = "batch_compact_type";
      static constexpr std::string_view enabled_key_name = "batch_compact_enabled";
 };
@@ -221,52 +263,151 @@ struct ConfigKeys<FilterTag::Compact>
 template<>
 struct ConfigKeys<FilterTag::Flatten>
 {
+     using value_type                                   = fme::flatten_type;
      static constexpr std::string_view key_name         = "batch_flatten_type";
      static constexpr std::string_view enabled_key_name = "batch_flatten_enabled";
 };
 
 
-template<typename T, FilterTag Tag>
+template<std::default_initializable ValueT>
+struct FilterLoadStrategy
+{
+     static ValueT load_value(bool load_config, const fme::Configuration &config, std::string_view id)
+     {
+          ValueT value = {};
+          if (!config->contains(id) || !load_config)
+          {
+               return value;
+          }
+          if constexpr (std::same_as<ValueT, std::filesystem::path>)
+          {
+               value = config[id].value_or(value.u8string());
+          }
+          else if constexpr (std::convertible_to<ValueT, fme::color>)
+          {
+               value = std::bit_cast<fme::color>(config[id].value_or(std::bit_cast<std::uint32_t>(value)));
+          }
+          else if constexpr (requires { std::declval<ValueT>().raw(); })
+          {
+               value = ValueT{ config[id].value_or(value.raw()) };
+          }
+          else if constexpr (std::is_enum_v<ValueT>)
+          {
+               value = static_cast<ValueT>(config[id].value_or(std::to_underlying(value)));
+          }
+          else if constexpr (std::same_as<ValueT, std::vector<std::string>>)
+          {
+               return config.load_array(id, value);
+          }
+          else if constexpr (std::same_as<ValueT, std::vector<bool>>)
+          {
+               return config.load_array(id, value);
+          }
+          else if constexpr (std::same_as<ValueT, std::vector<std::filesystem::path>>)
+          {
+               return config.load_array(id, value);
+          }
+          else if constexpr (std::same_as<ValueT, std::vector<PupuID>> )
+          {
+               return config.load_array<PupuID,std::uint32_t>(id, value);
+          }
+          else
+          {
+               value = config[id].value_or(value);
+          }
+          if constexpr (std::ranges::range<ValueT>)
+          {
+               if (std::ranges::empty(value))
+               {
+                    return value;
+               }
+          }
+          return value;
+     }
+
+     static constexpr FilterSettings load_settings(bool load_config, const fme::Configuration &config, std::string_view enabled_key_name)
+     {
+          if (load_config)
+          {
+               return WithFlag(FilterSettings::Default, FilterSettings::Toggle_Enabled, config[enabled_key_name].value_or(false));
+          }
+          return FilterSettings::All_Disabled;
+     }
+};
+
+template<typename ValueT>
+struct FilterUpdateStrategy
+{
+     static void update(fme::Configuration &config, std::string_view id, const ValueT &value)
+     {
+          if constexpr (std::same_as<ValueT, std::filesystem::path>)
+          {
+               std::u8string str_val = value.u8string();
+               std::ranges::replace(str_val, u8'\\', u8'/');// normalize to forward slashes
+               spdlog::info("selection<{}>: \"{}\"", id, std::filesystem::path(str_val).string());
+               config->insert_or_assign(id, str_val);
+          }
+          else if constexpr (std::convertible_to<ValueT, fme::color>)
+          {
+               spdlog::info("selection<{}>: {}", id, value);
+               config->insert_or_assign(id, std::bit_cast<std::uint32_t>(value));
+          }
+          else if constexpr (requires { std::declval<ValueT>().raw(); })
+          {
+               spdlog::info("selection<{}>: {}", id, value);
+               config->insert_or_assign(id, value.raw());
+          }
+          else if constexpr (std::is_enum_v<ValueT>)
+          {
+               spdlog::info("selection<{}>: {}", id, value);
+               config->insert_or_assign(id, std::to_underlying(value));
+          }
+          else if constexpr (std::same_as<ValueT, std::vector<std::string>>)
+          {
+               config.update_array(id, value);
+          }
+          else if constexpr (std::same_as<ValueT, std::vector<bool>>)
+          {
+               config.update_array(id, value);
+          }
+          else if constexpr (std::same_as<ValueT, std::vector<std::filesystem::path>>)
+          {
+               config.update_array(id, value);
+          }
+          else
+          {
+               spdlog::info("selection<{}>: {}", id, value);
+               config->insert_or_assign(id, value);
+          }
+     }
+};
+
+
+template<FilterTag Tag>
 struct filter_old
 {
+   public:
+     using value_type                            = ConfigKeys<Tag>::value_type;
+     static constexpr inline FilterTag tag_value = Tag;
+
    private:
-     T              m_value    = {};
+     value_type     m_value    = {};
      FilterSettings m_settings = {};
 
    public:
-     using value_type                            = T;
-     static constexpr inline FilterTag tag_value = Tag;
-     // filter_old()                                = default;
-     filter_old(T value, FilterSettings settings)// FilterSettings::Default
+     filter_old(value_type value, FilterSettings settings)// FilterSettings::Default
        : m_value(std::move(value))
        , m_settings(settings)
      {
      }
-     filter_old(FilterSettings settings)// FilterSettings::Default
-       : m_value([&]() -> T {
-            if (HasFlag(m_settings, FilterSettings::Config_Enabled))
-            {
-                 fme::Configuration const config{};
-                 if constexpr (std::convertible_to<T, std::filesystem::path>)
-                 {
-                      return config[ConfigKeys<Tag>::key_name].value_or(m_value.u8string());
-                 }
-                 else if constexpr (requires { std::declval<T>().raw(); })
-                 {
-                      return config[ConfigKeys<Tag>::key_name].value_or(m_value.raw());
-                 }
-                 else if constexpr (std::is_enum_v<T>)
-                 {
-                      return static_cast<T>(config[ConfigKeys<Tag>::key_name].value_or(std::to_underlying(m_value)));
-                 }
-                 else
-                 {
-                      return config[ConfigKeys<Tag>::key_name].value_or(m_value);
-                 }
-            }
-            return {};
-       }())
-       , m_settings(settings)
+     filter_old(bool load_config, const fme::Configuration &config)
+       : filter_old(
+           FilterLoadStrategy<value_type>::load_value(load_config, config, ConfigKeys<Tag>::key_name),
+           FilterLoadStrategy<value_type>::load_settings(load_config, config, ConfigKeys<Tag>::enabled_key_name))
+     {
+     }
+     filter_old(FilterSettings settings)
+       : filter_old(HasFlag(settings, FilterSettings::Config_Enabled), fme::Configuration{})
      {
      }
      template<typename U>
@@ -280,36 +421,14 @@ struct filter_old
                     if (HasFlag(m_settings, FilterSettings::Config_Enabled))
                     {
                          fme::Configuration config{};
-                         if constexpr (std::convertible_to<T, std::filesystem::path>)
-                         {
-                              std::u8string str_val = m_value.u8string();
-                              std::ranges::replace(str_val, u8'\\', u8'/');// normalize to forward slashes
-                              m_value = std::move(str_val);
-                              spdlog::info("filter_old<{}>: \"{}\"", ConfigKeys<Tag>::key_name, m_value.string());
-                              config->insert_or_assign(ConfigKeys<Tag>::key_name, m_value.u8string());
-                         }
-                         else if constexpr (requires { std::declval<T>().raw(); })
-                         {
-                              spdlog::info("filter_old<{}>: {}", ConfigKeys<Tag>::key_name, m_value);
-                              config->insert_or_assign(ConfigKeys<Tag>::key_name, m_value.raw());
-                         }
-                         else if constexpr (std::is_enum_v<T>)
-                         {
-                              spdlog::info("filter_old<{}>: {}", ConfigKeys<Tag>::key_name, m_value);
-                              config->insert_or_assign(ConfigKeys<Tag>::key_name, std::to_underlying(m_value));
-                         }
-                         else
-                         {
-                              spdlog::info("filter_old<{}>: {}", ConfigKeys<Tag>::key_name, m_value);
-                              config->insert_or_assign(ConfigKeys<Tag>::key_name, m_value);
-                         }
+                         FilterUpdateStrategy<value_type>::update(config, ConfigKeys<Tag>::key_name, m_value);
                          config.save();
                     }
                }
           }
           return *this;
      }
-     [[nodiscard]] const T &value() const
+     [[nodiscard]] const value_type &value() const
      {
           return m_value;
      }
@@ -355,11 +474,11 @@ struct filter_old
           }
           return *this;
      }
-     [[nodiscard]] bool operator==(const T &cmp) const
+     [[nodiscard]] bool operator==(const value_type &cmp) const
      {
           return m_value == cmp;
      }
-     [[nodiscard]] bool operator!=(const T &cmp) const
+     [[nodiscard]] bool operator!=(const value_type &cmp) const
      {
           return m_value != cmp;
      }
@@ -367,27 +486,47 @@ struct filter_old
      {
           return enabled();
      }
-     explicit operator T() const
+     explicit operator value_type() const
      {
           return m_value;
      }
 };
-template<typename T, typename OpT, FilterTag Tag>
+template<FilterTag Tag>
 struct filter
 {
+   public:
+     using value_type                            = ConfigKeys<Tag>::value_type;
+     using operation_type                        = ConfigKeys<Tag>::operation_type;
+     static constexpr inline FilterTag tag_value = Tag;
+
    private:
-     T              m_value     = {};
-     FilterSettings m_settings  = {};
-     OpT            m_operation = {};
+     value_type                         m_value     = {};
+     FilterSettings                     m_settings  = {};
+     static const inline operation_type s_operation = {};
 
    public:
-     using value_type = T;
-     // filter()         = default;
-     filter(T value, FilterSettings settings)// FilterSettings::Default
+     filter(value_type value, FilterSettings settings)// FilterSettings::Default
        : m_value(std::move(value))
        , m_settings(settings)
      {
      }
+     filter(bool load_config, const fme::Configuration &config)
+       : filter(
+           FilterLoadStrategy<value_type>::load_value(load_config, config, ConfigKeys<Tag>::key_name),
+           FilterLoadStrategy<value_type>::load_settings(load_config, config, ConfigKeys<Tag>::enabled_key_name))
+     {
+     }
+     filter(FilterSettings settings)
+       : filter_old(HasFlag(settings, FilterSettings::Config_Enabled), fme::Configuration{})
+     {
+     }
+
+     template<open_viii::graphics::background::is_tile TileT>
+     filter &update(const TileT &tile)
+     {
+          return update(std::invoke(s_operation, tile));
+     }
+
      template<typename U>
      filter &update(U &&value)
      {
@@ -399,28 +538,14 @@ struct filter
                     if (HasFlag(m_settings, FilterSettings::Config_Enabled))
                     {
                          fme::Configuration config{};
-                         if constexpr (requires { std::declval<T>().raw(); })
-                         {
-                              spdlog::info("filter<{}>: {}", ConfigKeys<Tag>::key_name, m_value);
-                              config->insert_or_assign(ConfigKeys<Tag>::key_name, m_value.raw());
-                         }
-                         else if constexpr (std::is_enum_v<T>)
-                         {
-                              spdlog::info("filter<{}>: {}", ConfigKeys<Tag>::key_name, m_value);
-                              config->insert_or_assign(ConfigKeys<Tag>::key_name, std::to_underlying(m_value));
-                         }
-                         else
-                         {
-                              spdlog::info("filter<{}>: {}", ConfigKeys<Tag>::key_name, m_value);
-                              config->insert_or_assign(ConfigKeys<Tag>::key_name, m_value);
-                         }
+                         FilterUpdateStrategy<value_type>::update(config, ConfigKeys<Tag>::key_name, m_value);
                          config.save();
                     }
                }
           }
           return *this;
      }
-     [[nodiscard]] const T &value() const
+     [[nodiscard]] const value_type &value() const
      {
           return m_value;
      }
@@ -458,11 +583,11 @@ struct filter
           }
           return *this;
      }
-     [[nodiscard]] bool operator==(const T &cmp) const
+     [[nodiscard]] bool operator==(const value_type &cmp) const
      {
           return m_value == cmp;
      }
-     [[nodiscard]] bool operator!=(const T &cmp) const
+     [[nodiscard]] bool operator!=(const value_type &cmp) const
      {
           return m_value != cmp;
      }
@@ -470,14 +595,14 @@ struct filter
      {
           return enabled();
      }
-     explicit operator T() const
+     explicit operator value_type() const
      {
           return m_value;
      }
      template<open_viii::graphics::background::is_tile TileT>
      bool operator()(const TileT &tile) const
      {
-          return !enabled() || (m_value == std::invoke(m_operation, tile));
+          return !enabled() || (m_value == std::invoke(s_operation, tile));
      }
 };
 
@@ -503,214 +628,40 @@ concept IsEitherFilter = IsFilterOld<T> || IsFilter<T, TileT>;
 struct filters
 {
      using TileT = open_viii::graphics::background::Tile1;
-     filter_old<PupuID, FilterTag::Pupu>                                                                            pupu;
-     filter_old<std::filesystem::path, FilterTag::Swizzle>                                                          swizzle;
-     filter_old<std::filesystem::path, FilterTag::Deswizzle>                                                        deswizzle;
-     filter_old<std::filesystem::path, FilterTag::SwizzleAsOneImage>                                                swizzle_as_one_image;
-     filter_old<std::filesystem::path, FilterTag::Map>                                                              map;
-     filter<draw_bitT, ff_8::tile_operations::Draw, FilterTag::DrawBit>                                             draw_bit;
-     filter<ff_8::tile_operations::ZT<TileT>, ff_8::tile_operations::Z, FilterTag::Z>                               z;
-     filter<ff_8::tile_operations::PaletteIdT<TileT>, ff_8::tile_operations::PaletteId, FilterTag::Palette>         palette;
-     filter<ff_8::tile_operations::AnimationIdT<TileT>, ff_8::tile_operations::AnimationId, FilterTag::AnimationId> animation_id;
-     filter<ff_8::tile_operations::AnimationStateT<TileT>, ff_8::tile_operations::AnimationState, FilterTag::AnimationFrame>
-                                                                                                                  animation_frame;
-     filter<ff_8::tile_operations::LayerIdT<TileT>, ff_8::tile_operations::LayerId, FilterTag::LayerId>           layer_id;
-     filter<ff_8::tile_operations::TextureIdT<TileT>, ff_8::tile_operations::TextureId, FilterTag::TexturePageId> texture_page_id;
-     filter<ff_8::tile_operations::BlendModeT<TileT>, ff_8::tile_operations::BlendMode, FilterTag::BlendMode>     blend_mode;
-     filter<ff_8::tile_operations::BlendT<TileT>, ff_8::tile_operations::Blend, FilterTag::BlendOther>            blend_other;
-     filter<ff_8::tile_operations::DepthT<TileT>, ff_8::tile_operations::Depth, FilterTag::Bpp>                   bpp;
+     filter_old<FilterTag::Pupu>              pupu;
+     filter_old<FilterTag::MultiPupu>         multi_pupu;
+     filter_old<FilterTag::Swizzle>           swizzle;
+     filter_old<FilterTag::Deswizzle>         deswizzle;
+     filter_old<FilterTag::SwizzleAsOneImage> swizzle_as_one_image;
+     filter_old<FilterTag::Map>               map;
+     filter<FilterTag::DrawBit>               draw_bit;
+     filter<FilterTag::Z>                     z;
+     filter<FilterTag::Palette>               palette;
+     filter<FilterTag::AnimationId>           animation_id;
+     filter<FilterTag::AnimationFrame>        animation_frame;
+     filter<FilterTag::LayerId>               layer_id;
+     filter<FilterTag::TexturePageId>         texture_page_id;
+     filter<FilterTag::BlendMode>             blend_mode;
+     filter<FilterTag::BlendOther>            blend_other;
+     filter<FilterTag::Bpp>                   bpp;
 
      filters(bool load_config, fme::Configuration const config = {})
-       : pupu([&]() -> decltype(pupu) {
-            if (load_config)
-            {
-                 return { std::bit_cast<PupuID>(config[ConfigKeys<FilterTag::Pupu>::key_name].value_or(PupuID{}.raw())),
-                          WithFlag(
-                            FilterSettings::Default,
-                            FilterSettings::Toggle_Enabled,
-                            config[ConfigKeys<FilterTag::Pupu>::enabled_key_name].value_or(false)) };
-            }
-            return { PupuID{}, FilterSettings::All_Disabled };
-       }())
-       , swizzle([&]() -> decltype(swizzle) {
-            if (load_config)
-            {
-                 return { std::filesystem::path{ config[ConfigKeys<FilterTag::Swizzle>::key_name].value_or(std::u8string{}) },
-
-                          WithFlag(
-                            FilterSettings::Default,
-                            FilterSettings::Toggle_Enabled,
-                            config[ConfigKeys<FilterTag::Swizzle>::enabled_key_name].value_or(false)) };
-            }
-            return { std::filesystem::path{}, FilterSettings::All_Disabled };
-       }())
-       , deswizzle([&]() -> decltype(deswizzle) {
-            if (load_config)
-            {
-                 return { std::filesystem::path{ config[ConfigKeys<FilterTag::Deswizzle>::key_name].value_or(std::u8string{}) },
-
-                          WithFlag(
-                            FilterSettings::Default,
-                            FilterSettings::Toggle_Enabled,
-                            config[ConfigKeys<FilterTag::Deswizzle>::enabled_key_name].value_or(false)) };
-            }
-            return { std::filesystem::path{}, FilterSettings::All_Disabled };
-       }())
-       , swizzle_as_one_image([&]() -> decltype(swizzle_as_one_image) {
-            if (load_config)
-            {
-                 return { std::filesystem::path{ config[ConfigKeys<FilterTag::SwizzleAsOneImage>::key_name].value_or(std::u8string{}) },
-
-                          WithFlag(
-                            FilterSettings::Default,
-                            FilterSettings::Toggle_Enabled,
-                            config[ConfigKeys<FilterTag::SwizzleAsOneImage>::enabled_key_name].value_or(false)) };
-            }
-            return { std::filesystem::path{}, FilterSettings::All_Disabled };
-       }())
-       , map([&]() -> decltype(map) {
-            if (load_config)
-            {
-                 return { std::filesystem::path{ config[ConfigKeys<FilterTag::Map>::key_name].value_or(std::u8string{}) },
-
-                          WithFlag(
-                            FilterSettings::Default,
-                            FilterSettings::Toggle_Enabled,
-                            config[ConfigKeys<FilterTag::Map>::enabled_key_name].value_or(false)) };
-            }
-            return { std::filesystem::path{}, FilterSettings::All_Disabled };
-       }())
-       , draw_bit([&]() -> decltype(draw_bit) {
-            if (load_config)
-            {
-                 return { static_cast<draw_bitT>(
-                            config[ConfigKeys<FilterTag::DrawBit>::key_name].value_or(std::to_underlying(draw_bitT{}))),
-
-                          WithFlag(
-                            FilterSettings::Default,
-                            FilterSettings::Toggle_Enabled,
-                            config[ConfigKeys<FilterTag::DrawBit>::enabled_key_name].value_or(false)) };
-            }
-            return { draw_bitT{}, FilterSettings::All_Disabled };
-       }())
-       , z([&]() -> decltype(z) {
-            if (load_config)
-            {
-                 return { config[ConfigKeys<FilterTag::Z>::key_name].value_or(ff_8::tile_operations::ZT<TileT>{}),
-
-                          WithFlag(
-                            FilterSettings::Default,
-                            FilterSettings::Toggle_Enabled,
-                            config[ConfigKeys<FilterTag::Z>::enabled_key_name].value_or(false)) };
-            }
-            return { ff_8::tile_operations::ZT<TileT>{}, FilterSettings::All_Disabled };
-       }())
-       , palette([&]() -> decltype(palette) {
-            if (load_config)
-            {
-                 return { static_cast<ff_8::tile_operations::PaletteIdT<TileT>>(
-                            config[ConfigKeys<FilterTag::Palette>::key_name].value_or(ff_8::tile_operations::PaletteIdT<TileT>{}) & 0xFU),
-
-                          WithFlag(
-                            FilterSettings::Default,
-                            FilterSettings::Toggle_Enabled,
-                            config[ConfigKeys<FilterTag::Palette>::enabled_key_name].value_or(false)) };
-            }
-            return { ff_8::tile_operations::PaletteIdT<TileT>{}, FilterSettings::All_Disabled };
-       }())
-
-
-       , animation_id([&]() -> decltype(animation_id) {
-            if (load_config)
-            {
-                 return { config[ConfigKeys<FilterTag::AnimationId>::key_name].value_or(ff_8::tile_operations::AnimationIdT<TileT>{}),
-
-                          WithFlag(
-                            FilterSettings::Default,
-                            FilterSettings::Toggle_Enabled,
-                            config[ConfigKeys<FilterTag::AnimationId>::enabled_key_name].value_or(false)) };
-            }
-            return { ff_8::tile_operations::AnimationIdT<TileT>{}, FilterSettings::All_Disabled };
-       }())
-       , animation_frame([&]() -> decltype(animation_frame) {
-            if (load_config)
-            {
-                 return { config[ConfigKeys<FilterTag::AnimationFrame>::key_name].value_or(ff_8::tile_operations::AnimationStateT<TileT>{}),
-
-                          WithFlag(
-                            FilterSettings::Default,
-                            FilterSettings::Toggle_Enabled,
-                            config[ConfigKeys<FilterTag::AnimationFrame>::enabled_key_name].value_or(false)) };
-            }
-            return { ff_8::tile_operations::AnimationStateT<TileT>{}, FilterSettings::All_Disabled };
-       }())
-       , layer_id([&]() -> decltype(layer_id) {
-            if (load_config)
-            {
-                 return { config[ConfigKeys<FilterTag::LayerId>::key_name].value_or(ff_8::tile_operations::LayerIdT<TileT>{}),
-
-                          WithFlag(
-                            FilterSettings::Default,
-                            FilterSettings::Toggle_Enabled,
-                            config[ConfigKeys<FilterTag::LayerId>::enabled_key_name].value_or(false)) };
-            }
-            return { ff_8::tile_operations::LayerIdT<TileT>{}, FilterSettings::All_Disabled };
-       }())
-       , texture_page_id([&]() -> decltype(texture_page_id) {
-            if (load_config)
-            {
-                 return { config[ConfigKeys<FilterTag::TexturePageId>::key_name].value_or(ff_8::tile_operations::TextureIdT<TileT>{}),
-
-                          WithFlag(
-                            FilterSettings::Default,
-                            FilterSettings::Toggle_Enabled,
-                            config[ConfigKeys<FilterTag::TexturePageId>::enabled_key_name].value_or(false)) };
-            }
-            return { ff_8::tile_operations::TextureIdT<TileT>{}, FilterSettings::All_Disabled };
-       }())
-       , blend_mode([&]() -> decltype(blend_mode) {
-            if (load_config)
-            {
-                 return {
-                      static_cast<ff_8::tile_operations::BlendModeT<TileT>>(config[ConfigKeys<FilterTag::BlendMode>::key_name].value_or(
-                        std::to_underlying(ff_8::tile_operations::BlendModeT<TileT>{ ff_8::tile_operations::BlendModeT<TileT>::none }))),
-
-                      WithFlag(
-                        FilterSettings::Default,
-                        FilterSettings::Toggle_Enabled,
-                        config[ConfigKeys<FilterTag::BlendMode>::enabled_key_name].value_or(false))
-                 };
-            }
-            return { ff_8::tile_operations::BlendModeT<TileT>::none, FilterSettings::All_Disabled };
-       }())
-       , blend_other([&]() -> decltype(blend_other) {
-            if (load_config)
-            {
-                 return { config[ConfigKeys<FilterTag::BlendOther>::key_name].value_or(ff_8::tile_operations::BlendT<TileT>{}),
-
-                          WithFlag(
-                            FilterSettings::Default,
-                            FilterSettings::Toggle_Enabled,
-                            config[ConfigKeys<FilterTag::BlendOther>::enabled_key_name].value_or(false)) };
-            }
-            return { ff_8::tile_operations::BlendT<TileT>{}, FilterSettings::All_Disabled };
-       }())
-       , bpp([&]() -> decltype(bpp) {
-            if (load_config)
-            {
-                 return {
-                      ff_8::tile_operations::DepthT<TileT>{ static_cast<decltype(ff_8::tile_operations::DepthT<TileT>::BPP4_CONST().raw())>(
-                        config[ConfigKeys<FilterTag::Bpp>::key_name].value_or(ff_8::tile_operations::DepthT<TileT>::BPP4_CONST().raw())
-                        & 3U) },
-
-                      WithFlag(
-                        FilterSettings::Default,
-                        FilterSettings::Toggle_Enabled,
-                        config[ConfigKeys<FilterTag::Bpp>::enabled_key_name].value_or(false))
-                 };
-            }
-            return { ff_8::tile_operations::DepthT<TileT>::BPP4_CONST(), FilterSettings::All_Disabled };
-       }())
+       : pupu(load_config, config)
+       , multi_pupu(load_config, config)
+       , swizzle(load_config, config)
+       , deswizzle(load_config, config)
+       , swizzle_as_one_image(load_config, config)
+       , map(load_config, config)
+       , draw_bit(load_config, config)
+       , z(load_config, config)
+       , palette(load_config, config)
+       , animation_id(load_config, config)
+       , animation_frame(load_config, config)
+       , layer_id(load_config, config)
+       , texture_page_id(load_config, config)
+       , blend_mode(load_config, config)
+       , blend_other(load_config, config)
+       , bpp(load_config, config)
      {
      }
 

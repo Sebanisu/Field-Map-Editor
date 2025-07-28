@@ -1397,7 +1397,7 @@ const ff_8::MapHistory::nsat_map &map_sprite::working_animation_counts() const
  * @note Caller is responsible for consuming or waiting on the futures to ensure save completion.
  */
 [[nodiscard]] std::vector<std::future<void>>
-  map_sprite::save_swizzle_textures(const std::string &keyed_string, const std::string &selected_path)
+  map_sprite::save_swizzle_textures(const std::string &keyed_string, const std::filesystem::path &selected_path)
 {
      const auto selections = m_selections.lock();
      if (!selections)
@@ -1553,7 +1553,7 @@ const ff_8::MapHistory::nsat_map &map_sprite::working_animation_counts() const
  * @note Caller is responsible for consuming or waiting on the futures to ensure save completion.
  */
 [[nodiscard]] std::vector<std::future<void>>
-  map_sprite::save_combined_swizzle_texture(const std::string &keyed_string, const std::string &selected_path)
+  map_sprite::save_swizzle_as_one_image_textures(const std::string &keyed_string, const std::filesystem::path &selected_path)
 {
      const auto selections = m_selections.lock();
      if (!selections)
@@ -1723,7 +1723,7 @@ std::string map_sprite::get_base_name() const
  *         Caller should consume or wait on these to ensure saving completes.
  */
 [[nodiscard]] std::vector<std::future<void>>
-  map_sprite::save_pupu_textures(const std::string &keyed_string, const std::string &selected_path)
+  map_sprite::save_deswizzle_textures(const std::string &keyed_string, const std::filesystem::path &selected_path)
 {
      const auto selections = m_selections.lock();
      if (!selections)
@@ -1774,6 +1774,96 @@ std::string map_sprite::get_base_name() const
      const auto       specification =
        glengine::FrameBufferSpecification{ .width = canvas.width(), .height = canvas.height(), .scale = settings.scale.value() };
 
+
+     // Loop through each Pupu ID and generate/save textures
+     for (const ff_8::PupuID &pupu : unique_pupu_ids)
+     {
+          settings.filters.value().pupu.update(pupu).enable();// Enable this specific Pupu ID
+          auto out_framebuffer = glengine::FrameBuffer{ specification };
+          if (generate_texture(out_framebuffer))
+          {
+               const key_value_data cpm      = { .field_name = get_base_name(),
+                                                 .ext        = ".png",
+                                                 .language_code =
+                                              m_map_group.opt_coo.has_value() && m_map_group.opt_coo.value() != open_viii::LangT::generic
+                                                     ? m_map_group.opt_coo
+                                                     : std::nullopt,
+                                                 .pupu_id = pupu.raw() };
+               auto                 out_path = cpm.replace_tags(keyed_string, selections, selected_path);
+               future_of_futures.push_back(save_image_pbo(out_path, std::move(out_framebuffer)));
+          }
+     }
+
+     return future_of_futures;
+     // Note: Caller should consume_futures(future_of_futures) to wait for saves to finish
+}
+
+/**
+ * @brief Saves unique "Pupu" textures for the map field to individual PNG files.
+ *
+ * This function sets up temporary settings specifically for Pupu texture rendering,
+ * generates textures using the current map data, and asynchronously saves them to disk.
+ * Each texture is saved under a specific file naming pattern based on the field name and Pupu ID.
+ *
+ * @param path Filesystem path where the textures should be saved. Must be a directory.
+ * @return A vector of futures, each wrapping a future task that will save one texture.
+ *         Caller should consume or wait on these to ensure saving completes.
+ */
+[[nodiscard]] std::vector<std::future<void>>
+  map_sprite::save_deswizzle_combined_textures(const std::string &keyed_string, const std::filesystem::path &selected_path)
+{
+     const auto selections = m_selections.lock();
+     if (!selections)
+     {
+          spdlog::error("Failed to lock m_selections: shared_ptr is expired.");
+          return {};
+     }
+     consume_now();
+     // Backup current settings and adjust for saving Pupu textures
+     auto settings =
+       settings_backup{ m_filters, m_draw_swizzle, m_disable_texture_page_shift, m_disable_blends, m_render_framebuffer.mutable_scale() };
+     settings.filters                         = ff_8::filters{ false };
+     settings.filters.value().swizzle         = settings.filters.backup().swizzle;// Retain original upscale settings
+     settings.draw_swizzle                    = false;// No swizzling when saving
+     settings.disable_texture_page_shift      = true;// Disable texture page shifts
+     settings.disable_blends                  = true;// Disable blending
+
+     // Set the scale relative to a standard MIM height (256px)
+     static constexpr unsigned int mim_height = { 256U };
+     settings.scale                           = static_cast<std::int32_t>(get_max_texture_height() / mim_height);
+     if (settings.scale <= 0)
+     {
+          settings.scale = 1;
+     }
+
+     // Acquire the field associated with this map group
+     const auto field = m_map_group.field.lock();
+     if (!field)
+     {
+          spdlog::error("Failed to lock m_map_group.field: shared_ptr is expired.");
+          return {};// Field no longer exists, nothing to save
+     }
+
+     const std::string                field_name                  = std::string{ str_to_lower(field->get_base_name()) };
+     const std::vector<ff_8::PupuID> &unique_pupu_ids             = working_unique_pupu();// Get list of unique Pupu IDs
+     // std::optional<open_viii::LangT> &coo             = m_map_group.opt_coo;// Language option (optional)
+
+     // assert(safedir(path).is_dir());// Ensure output path is a directory
+
+     // static constexpr std::string_view           pattern_pupu                = { "{}_{}.png" };// Pattern without language
+     // static constexpr std::string_view           pattern_coo_pupu            = { "{}_{}_{}.png" };// Pattern with language
+     const unsigned int               max_number_of_texture_pages = 13U;// Reserve space for futures
+     std::vector<std::future<void>>   future_of_futures           = {};
+     future_of_futures.reserve(max_number_of_texture_pages);
+
+     // Setup an off-screen render texture
+     iRectangle const canvas = m_map_group.maps.const_working().canvas() * m_render_framebuffer.scale();
+     const auto       specification =
+       glengine::FrameBufferSpecification{ .width = canvas.width(), .height = canvas.height(), .scale = settings.scale.value() };
+
+     auto nested     = generate_combinations_more(unique_pupu_ids);
+     auto flattened  = nested | std::views::join;
+     auto enumerated = std::views::enumerate(flattened);
 
      // Loop through each Pupu ID and generate/save textures
      for (const ff_8::PupuID &pupu : unique_pupu_ids)
