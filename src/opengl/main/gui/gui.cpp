@@ -2315,7 +2315,6 @@ void gui::directory_browser_display()
      const auto            pop_directory         = glengine::ScopeGuard([this]() { m_directory_browser.ClearSelected(); });
      [[maybe_unused]] bool changed               = false;
      const auto            selected_path         = m_directory_browser.GetSelected();
-     static constexpr auto noop                  = []([[maybe_unused]] const std::filesystem::path &path) {};
      const auto            process_texture_paths = [&](
                                           std::filesystem::path                                                  &target_path,
                                           auto                                                                    path_key,
@@ -2373,7 +2372,7 @@ void gui::directory_browser_display()
                }
                if (changed)
                {
-                    refresh_render_texture(true);
+                    // todo see why i have this here.
                }
           }
      };
@@ -2408,19 +2407,23 @@ void gui::directory_browser_display()
             ConfigKey::CacheMapPathsEnabled>();
      };
 
-     const auto try_enable_filter = [&]<ConfigKey Key, typename Filter, typename... Others>(Filter &filter, Others &...others) {
+     const auto try_enable_filter = [&]<ConfigKey Key, typename Filter, typename... Others>(Filter &filter, Others &...others) -> bool {
           if (m_selections->get<Key>().back())
           {
                filter.update(selected_path).enable();
                (others.disable(), ...);// fold expression
+               return true;
           }
+          return false;
      };
 
-     const auto try_enable_map_filter = [&]() {
+     const auto try_enable_map_filter = [&]() -> {
           if (m_selections->get<ConfigKey::CacheMapPathsEnabled>().back())
           {
                m_map_sprite->filter().map.update(selected_path).enable();
+               return true;
           }
+          return false
      };
 
      const auto optional_coo = [&]() -> std::optional<open_viii::LangT> {
@@ -2476,7 +2479,7 @@ void gui::directory_browser_display()
                m_selections->update<ConfigKey::DeswizzlePath>();
                ensure_directory(selected_path);
                m_future_consumer +=
-                 m_map_sprite->save_deswizzle_textures(m_selections->get<ConfigKey::OutputDeswizzlePattern>(), selected_path.string());                 
+                 m_map_sprite->save_deswizzle_textures(m_selections->get<ConfigKey::OutputDeswizzlePattern>(), selected_path.string());
                save_map_with_pattern.template operator()<ConfigKey::OutputMapPatternForDeswizzle>();
                open_directory(selected_path);
           }
@@ -2493,11 +2496,15 @@ void gui::directory_browser_display()
           case map_directory_mode::load_swizzle_textures: {
 
                add_path_to_config();
-               try_enable_filter.template operator()<ConfigKey::CacheSwizzlePathsEnabled>(
+               bool changed = try_enable_filter.template operator()<ConfigKey::CacheSwizzlePathsEnabled>(
                  m_map_sprite->filter().swizzle, m_map_sprite->filter().swizzle_as_one_image, m_map_sprite->filter().deswizzle);
-               try_enable_map_filter();
+               changed |= try_enable_map_filter();
                m_selections->sort_paths();
                update_path();
+               if (changed)
+               {
+                    refresh_render_texture(true);
+               }
           }
           break;
 
@@ -2505,29 +2512,41 @@ void gui::directory_browser_display()
           case map_directory_mode::load_swizzle_as_one_image_textures: {
 
                add_path_to_config();
-               try_enable_filter.template operator()<ConfigKey::CacheSwizzleAsOneImagePathsEnabled>(
+               bool changed = try_enable_filter.template operator()<ConfigKey::CacheSwizzleAsOneImagePathsEnabled>(
                  m_map_sprite->filter().swizzle_as_one_image, m_map_sprite->filter().swizzle, m_map_sprite->filter().deswizzle);
-               try_enable_map_filter();
+               changed |= try_enable_map_filter();
                m_selections->sort_paths();
                update_path();
+               if (changed)
+               {
+                    refresh_render_texture(true);
+               }
           }
           break;
 
           case map_directory_mode::load_deswizzle_textures: {
 
                add_path_to_config();
-               try_enable_filter.template operator()<ConfigKey::CacheDeswizzlePathsEnabled>(
+               bool changed = try_enable_filter.template operator()<ConfigKey::CacheDeswizzlePathsEnabled>(
                  m_map_sprite->filter().deswizzle, m_map_sprite->filter().swizzle_as_one_image, m_map_sprite->filter().swizzle);
-               try_enable_map_filter();
+               changed |= try_enable_map_filter();
                m_selections->sort_paths();
                update_path();
+               if (changed)
+               {
+                    refresh_render_texture(true);
+               }
           }
           break;
           case map_directory_mode::load_map: {
                add_path_to_config();
-               try_enable_map_filter();
+               bool changed = try_enable_map_filter();
                m_selections->sort_paths();
                update_path();
+               if (changed)
+               {
+                    refresh_render_texture(true);
+               }
           }
      }
 }
