@@ -129,7 +129,7 @@ class Configuration
                }
                return false;
           }
-          if constexpr (std::same_as<InputT, OutputT> && std::same_as<InputT, std::filesystem::path>)
+          else if constexpr (std::same_as<InputT, OutputT> && std::same_as<InputT, std::filesystem::path>)
           {
                if (!table.contains(key))
                {
@@ -147,28 +147,6 @@ class Configuration
                               auto str = std::move(*str_opt);
                               std::ranges::replace(str, u8'\\', u8'/');
                               output.emplace_back(std::move(str));
-                         }
-                    }
-                    return true;
-               }
-               return false;
-          }
-          if constexpr (std::same_as<InputT, OutputT> && std::same_as<InputT, std::string>)
-          {
-               if (!table.contains(key))
-               {
-                    return false;
-               }
-
-               if (const auto *array = table[key].as_array(); array)
-               {
-                    output.clear();
-                    output.reserve(array->size());
-                    for (auto &&val : *array)
-                    {
-                         if (auto str = val.value<std::string>(); str.has_value())
-                         {
-                              output.emplace_back(std::move(str.value()));
                          }
                     }
                     return true;
@@ -235,7 +213,7 @@ class Configuration
                  input | std::ranges::views::transform([](const auto &b) { return b ? '1' : '0'; }) | std::ranges::to<std::string>();
                table.insert_or_assign(key, std::move(encoded));
           }
-          if constexpr (std::same_as<InputT, OutputT> && std::same_as<InputT, std::filesystem::path>)
+          else if constexpr (std::same_as<InputT, OutputT> && std::same_as<InputT, std::filesystem::path>)
           {
 
                toml::array array;

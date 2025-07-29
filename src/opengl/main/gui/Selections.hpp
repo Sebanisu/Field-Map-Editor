@@ -875,17 +875,22 @@ struct SelectionLoadStrategy
           {
                value = static_cast<ValueT>(config[id].value_or(std::to_underlying(value)));
           }
-          else if constexpr (std::same_as<ValueT, std::vector<std::string>>)
+          else if constexpr (glengine::is_std_vector<ValueT>)
           {
-               return Configuration::load_array(config, id, value);
-          }
-          else if constexpr (std::same_as<ValueT, std::vector<bool>>)
-          {
-               return Configuration::load_array(config, id, value);
-          }
-          else if constexpr (std::same_as<ValueT, std::vector<std::filesystem::path>>)
-          {
-               return Configuration::load_array(config, id, value);
+               if constexpr (std::is_enum_v<glengine::vector_elem_type_t<ValueT>>)
+               {
+                    return fme::Configuration::
+                      load_array<glengine::vector_elem_type_t<ValueT>, std::underlying_type_t<glengine::vector_elem_type_t<ValueT>>>(
+                        config, id, value);
+               }
+               else if constexpr (std::same_as<glengine::vector_elem_type_t<ValueT>, ff_8::PupuID>)
+               {
+                    return fme::Configuration::load_array<glengine::vector_elem_type_t<ValueT>, std::uint32_t>(config, id, value);
+               }
+               else
+               {
+                    return fme::Configuration::load_array<glengine::vector_elem_type_t<ValueT>>(config, id, value);
+               }
           }
           else
           {
