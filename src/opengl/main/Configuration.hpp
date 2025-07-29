@@ -96,8 +96,7 @@ class Configuration
       *
       * @note For `bool`, both TOML arrays of booleans and strings of `'0'`/`'1'` are supported.
       * @note For `std::filesystem::path`, values are expected as UTF-8 strings and backslashes are converted to slashes.
-      * @note For `std::string`, a standard TOML array of strings is parsed.
-      * @note For all other types, values are parsed as `InputT`, and optionally cast to `OutputT`.
+      * @note For all other types (including `std::string`), values are parsed as `InputT` and optionally cast to `OutputT`.
       * @note This function requires that `InputT` is statically castable to `OutputT`.
       */
      template<typename OutputT, typename InputT = OutputT>
@@ -248,6 +247,7 @@ class Configuration
                table.insert_or_assign(key, std::move(array));
           }
      }
+     bool reload();
 
    private:
      /**

@@ -6,6 +6,7 @@
 #define FIELD_MAP_EDITOR_FILTER_HPP
 #include "Configuration.hpp"
 #include "draw_bit_t.hpp"
+#include "formatters.hpp"
 #include "gui/colors.hpp"
 #include "gui/compact_type.hpp"
 #include "open_viii/graphics/background/BlendModeT.hpp"
@@ -431,6 +432,11 @@ struct FilterLoadStrategy
           return value;
      }
 
+     static constexpr FilterSettings load_settings(const toml::table &config, std::string_view enabled_key_name)
+     {
+          return load_settings(config, enabled_key_name);
+     }
+
      static constexpr FilterSettings load_settings(bool load_config, const toml::table &config, std::string_view enabled_key_name)
      {
           if (load_config)
@@ -471,7 +477,13 @@ struct FilterUpdateStrategy
           }
           else if constexpr (glengine::is_std_vector<ValueT>)
           {
-               if constexpr (std::same_as<glengine::vector_elem_type_t<ValueT>, PupuID>)
+               if constexpr (std::is_enum_v<glengine::vector_elem_type_t<ValueT>>)
+               {
+                    fme::Configuration::
+                      update_array<glengine::vector_elem_type_t<ValueT>, std::underlying_type_t<glengine::vector_elem_type_t<ValueT>>>(
+                        config, id, value);
+               }
+               else if constexpr (std::same_as<glengine::vector_elem_type_t<ValueT>, PupuID>)
                {
                     fme::Configuration::update_array<glengine::vector_elem_type_t<ValueT>, std::uint32_t>(config, id, value);
                }
@@ -523,9 +535,38 @@ struct filter_old
        : filter_old(HasFlag(settings, FilterSettings::Config_Enabled), fme::Configuration{})
      {
      }
+
+     filter_old &reload(const toml::table &table)
+     {
+          m_value    = FilterLoadStrategy<value_type>::load_value(table, ConfigKeys<Tag>::key_name);
+          m_settings = FilterLoadStrategy<value_type>::load_settings(table, ConfigKeys<Tag>::enabled_key_name);
+          return *this;
+     }
+
+     filter_old &reload()
+     {
+          if (HasFlag(m_settings, FilterSettings::Config_Enabled))
+          {
+               fme::Configuration config{};
+               return reload(config);
+          }
+          return *this;
+     }
+
+     template<typename U>
+     const filter_old &update([[maybe_unused]] U &&value) const
+          requires(std::same_as<std::remove_cvref_t<U>, toml::table>)
+     {
+          FilterUpdateStrategy<value_type>::update_value(value, ConfigKeys<Tag>::key_name, m_value);
+          return *this;
+     }
      template<typename U>
      filter_old &update([[maybe_unused]] U &&value)
      {
+          if constexpr (std::same_as<std::remove_cvref_t<U>, toml::table>)
+          {
+               FilterUpdateStrategy<value_type>::update_value(value, ConfigKeys<Tag>::key_name, m_value);
+          }
           if constexpr (
             !std::same_as<std::remove_cvref_t<U>, value_type> && std::ranges::range<std::remove_cvref_t<U>>
             && std::ranges::range<value_type>)
@@ -537,14 +578,11 @@ struct filter_old
                          m_value.clear();
                     }
                     std::ranges::move(value, std::back_inserter(m_value));
-                    if constexpr (std::same_as<std::remove_cvref_t<decltype(ConfigKeys<Tag>::key_name)>, std::string_view>)
+                    if (HasFlag(m_settings, FilterSettings::Config_Enabled))
                     {
-                         if (HasFlag(m_settings, FilterSettings::Config_Enabled))
-                         {
-                              fme::Configuration config{};
-                              FilterUpdateStrategy<value_type>::update_value(*config, ConfigKeys<Tag>::key_name, m_value);
-                              config.save();
-                         }
+                         fme::Configuration config{};
+                         FilterUpdateStrategy<value_type>::update_value(*config, ConfigKeys<Tag>::key_name, m_value);
+                         config.save();
                     }
                }
           }
@@ -553,14 +591,11 @@ struct filter_old
                if (m_value != value)
                {
                     m_value = std::forward<U>(value);
-                    if constexpr (std::same_as<std::remove_cvref_t<decltype(ConfigKeys<Tag>::key_name)>, std::string_view>)
+                    if (HasFlag(m_settings, FilterSettings::Config_Enabled))
                     {
-                         if (HasFlag(m_settings, FilterSettings::Config_Enabled))
-                         {
-                              fme::Configuration config{};
-                              FilterUpdateStrategy<value_type>::update_value(config, ConfigKeys<Tag>::key_name, m_value);
-                              config.save();
-                         }
+                         fme::Configuration config{};
+                         FilterUpdateStrategy<value_type>::update_value(config, ConfigKeys<Tag>::key_name, m_value);
+                         config.save();
                     }
                }
           }
@@ -669,20 +704,45 @@ struct filter
      {
      }
 
-     template<open_viii::graphics::background::is_tile TileT>
-     filter &update(const TileT &tile)
+     filter &reload(const toml::table &table)
      {
-          return update(std::invoke(s_operation, tile));
+          m_value    = FilterLoadStrategy<value_type>::load_value(table, ConfigKeys<Tag>::key_name);
+          m_settings = FilterLoadStrategy<value_type>::load_settings(table, ConfigKeys<Tag>::enabled_key_name);
+          return *this;
      }
 
+     filter &reload()
+     {
+          if (HasFlag(m_settings, FilterSettings::Config_Enabled))
+          {
+               fme::Configuration config{};
+               return reload(config);
+          }
+          return *this;
+     }
+     template<typename U>
+     const filter &update([[maybe_unused]] U &&value) const
+          requires(std::same_as<std::remove_cvref_t<U>, toml::table>)
+     {
+          FilterUpdateStrategy<value_type>::update_value(value, ConfigKeys<Tag>::key_name, m_value);
+          return *this;
+     }
      template<typename U>
      filter &update(U &&value)
      {
-          if (m_value != value)
+          if constexpr (open_viii::graphics::background::is_tile<std::remove_cvref_t<U>>)
           {
-               m_value = std::forward<U>(value);
-               if constexpr (std::same_as<std::remove_cvref_t<decltype(ConfigKeys<Tag>::key_name)>, std::string_view>)
+               return update(std::invoke(s_operation, value));
+          }
+          else if constexpr (std::same_as<std::remove_cvref_t<U>, toml::table>)
+          {
+               FilterUpdateStrategy<value_type>::update_value(value, ConfigKeys<Tag>::key_name, m_value);
+          }
+          else
+          {
+               if (m_value != value)
                {
+                    m_value = std::forward<U>(value);
                     if (HasFlag(m_settings, FilterSettings::Config_Enabled))
                     {
                          fme::Configuration config{};
@@ -846,6 +906,68 @@ struct filters
        , bpp(load_config, config)
        , multi_bpp(load_config, config)
      {
+     }
+
+     void reload(const toml::table &table)
+     {
+          [&table](auto &...operations) {
+               (operations.reload(table), ...);
+          }(pupu,
+            multi_pupu,
+            swizzle,
+            deswizzle,
+            swizzle_as_one_image,
+            map,
+            draw_bit,
+            z,
+            multi_z,
+            palette,
+            multi_palette,
+            animation_id,
+            multi_animation_id,
+            animation_frame,
+            multi_animation_frame,
+            layer_id,
+            multi_layer_id,
+            texture_page_id,
+            multi_texture_page_id,
+            blend_mode,
+            multi_blend_mode,
+            blend_other,
+            multi_blend_other,
+            bpp,
+            multi_bpp);
+     }
+
+     void update(toml::table &table) const
+     {
+          [&table](const auto &...operations) {
+               (operations.update(table), ...);
+          }(pupu,
+            multi_pupu,
+            swizzle,
+            deswizzle,
+            swizzle_as_one_image,
+            map,
+            draw_bit,
+            z,
+            multi_z,
+            palette,
+            multi_palette,
+            animation_id,
+            multi_animation_id,
+            animation_frame,
+            multi_animation_frame,
+            layer_id,
+            multi_layer_id,
+            texture_page_id,
+            multi_texture_page_id,
+            blend_mode,
+            multi_blend_mode,
+            blend_other,
+            multi_blend_other,
+            bpp,
+            multi_bpp);
      }
 
 

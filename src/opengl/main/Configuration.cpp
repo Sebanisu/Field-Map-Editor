@@ -118,3 +118,17 @@ void fme::Configuration::save(const bool remove_from_cache) const
           m_path  = std::filesystem::path{};
      }
 }
+
+bool fme::Configuration::reload()
+{
+     toml::parse_result result = toml::parse_file(m_path.string());
+     if (!result)
+     {
+          spdlog::warn("TOML reload failed: {}\n\t{}", result.error().description(), m_path.string());
+          return false;
+     }
+
+     s_tables[m_path] = std::move(result).table();
+     m_table          = &s_tables[m_path];
+     return true;
+}
