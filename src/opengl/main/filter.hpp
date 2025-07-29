@@ -533,7 +533,7 @@ struct filter_old
                          if (HasFlag(m_settings, FilterSettings::Config_Enabled))
                          {
                               fme::Configuration config{};
-                              FilterUpdateStrategy<value_type>::update(config, ConfigKeys<Tag>::key_name, m_value);
+                              FilterUpdateStrategy<value_type>::update(*config, ConfigKeys<Tag>::key_name, m_value);
                               config.save();
                          }
                     }

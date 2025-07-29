@@ -31,6 +31,11 @@ class Configuration
 
      Configuration(std::filesystem::path);
 
+     operator toml::table &() &;
+     operator const toml::table &() const &;
+     toml::table                      &operator*() &;
+     toml::table const                &operator*() const &;
+
      /**
       * @brief Provides mutable access to the underlying TOML table.
       * @return A pointer to the mutable TOML table.

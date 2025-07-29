@@ -46,6 +46,24 @@ fme::Configuration::Configuration()
 {
 }
 
+
+fme::Configuration::operator toml::table &() &
+{
+     return *m_table;
+}
+fme::Configuration::operator const toml::table &() const &
+{
+     return *m_table;
+}
+toml::table &fme::Configuration::operator*() &
+{
+     return *m_table;
+}
+toml::table const &fme::Configuration::operator*() const &
+{
+     return *m_table;
+}
+
 toml::table *fme::Configuration::operator->() &
 {
      return m_table;
