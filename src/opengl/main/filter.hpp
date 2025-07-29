@@ -91,14 +91,23 @@ enum class FilterTag : std::uint8_t
      Map,
      DrawBit,
      Z,
+     MultiZ,
      Palette,
+     MultiPalette,
      AnimationId,
+     MultiAnimationId,
      AnimationFrame,
+     MultiAnimationFrame,
      LayerId,
+     MultiLayerId,
      TexturePageId,
+     MultiTexturePageId,
      BlendMode,
+     MultiBlendMode,
      BlendOther,
+     MultiBlendOther,
      Bpp,
+     MultiBpp,
      Compact,
      Flatten
 };
@@ -153,12 +162,16 @@ struct ConfigKeys<FilterTag::Map>
      static constexpr std::string_view key_name         = "filter_map";
      static constexpr std::string_view enabled_key_name = "filter_map_enabled";
 };
-
 template<>
 struct ConfigKeys<FilterTag::DrawBit>
 {
      using value_type                                   = draw_bitT;
-     using operation_type                               = ff_8::tile_operations::Draw;
+     static constexpr draw_bitT to_draw_bitT(bool in)
+     {
+          return in ? draw_bitT::enabled : draw_bitT::disabled;
+     }
+     using operation_type =
+       decltype([](auto &&...args) { return to_draw_bitT(ff_8::tile_operations::Draw{}(std::forward<decltype(args)>(args)...)); });
      static constexpr std::string_view key_name         = "filter_draw";
      static constexpr std::string_view enabled_key_name = "filter_draw_enabled";
 };
@@ -173,14 +186,35 @@ struct ConfigKeys<FilterTag::Z>
      static constexpr std::string_view enabled_key_name = "filter_z_enabled";
 };
 
+
+template<>
+struct ConfigKeys<FilterTag::MultiZ>
+{
+     using TileT                                        = open_viii::graphics::background::Tile1;
+     using value_type                                   = std::vector<ff_8::tile_operations::ZT<TileT>>;
+     using operation_type                               = ff_8::tile_operations::Z;
+     static constexpr std::string_view key_name         = "filter_multi_z";
+     static constexpr std::string_view enabled_key_name = "filter_multi_z_enabled";
+};
+
 template<>
 struct ConfigKeys<FilterTag::Palette>
 {
      using TileT                                        = open_viii::graphics::background::Tile1;
      using value_type                                   = ff_8::tile_operations::PaletteIdT<TileT>;
      using operation_type                               = ff_8::tile_operations::PaletteId;
-     static constexpr std::string_view key_name         = "selections_palette";
-     static constexpr std::string_view enabled_key_name = "selections_palette_enabled";
+     static constexpr std::string_view key_name         = "filter_palette";
+     static constexpr std::string_view enabled_key_name = "filter_palette_enabled";
+};
+
+template<>
+struct ConfigKeys<FilterTag::MultiPalette>
+{
+     using TileT                                        = open_viii::graphics::background::Tile1;
+     using value_type                                   = std::vector<ff_8::tile_operations::PaletteIdT<TileT>>;
+     using operation_type                               = ff_8::tile_operations::PaletteId;
+     static constexpr std::string_view key_name         = "filter_multi_palette";
+     static constexpr std::string_view enabled_key_name = "filter_multi_palette_enabled";
 };
 
 template<>
@@ -194,6 +228,16 @@ struct ConfigKeys<FilterTag::AnimationId>
 };
 
 template<>
+struct ConfigKeys<FilterTag::MultiAnimationId>
+{
+     using TileT                                        = open_viii::graphics::background::Tile1;
+     using value_type                                   = std::vector<ff_8::tile_operations::AnimationIdT<TileT>>;
+     using operation_type                               = ff_8::tile_operations::AnimationId;
+     static constexpr std::string_view key_name         = "filter_multi_animation_id";
+     static constexpr std::string_view enabled_key_name = "filter_multi_animation_id_enabled";
+};
+
+template<>
 struct ConfigKeys<FilterTag::AnimationFrame>
 {
      using TileT                                        = open_viii::graphics::background::Tile1;
@@ -201,6 +245,17 @@ struct ConfigKeys<FilterTag::AnimationFrame>
      using operation_type                               = ff_8::tile_operations::AnimationState;
      static constexpr std::string_view key_name         = "filter_animation_frame";
      static constexpr std::string_view enabled_key_name = "filter_animation_frame_enabled";
+};
+
+
+template<>
+struct ConfigKeys<FilterTag::MultiAnimationFrame>
+{
+     using TileT                                        = open_viii::graphics::background::Tile1;
+     using value_type                                   = std::vector<ff_8::tile_operations::AnimationStateT<TileT>>;
+     using operation_type                               = ff_8::tile_operations::AnimationState;
+     static constexpr std::string_view key_name         = "filter_multi_animation_frame";
+     static constexpr std::string_view enabled_key_name = "filter_multi_animation_frame_enabled";
 };
 
 template<>
@@ -211,6 +266,17 @@ struct ConfigKeys<FilterTag::LayerId>
      using operation_type                               = ff_8::tile_operations::LayerId;
      static constexpr std::string_view key_name         = "filter_layer_id";
      static constexpr std::string_view enabled_key_name = "filter_layer_id_enabled";
+};
+
+
+template<>
+struct ConfigKeys<FilterTag::MultiLayerId>
+{
+     using TileT                                        = open_viii::graphics::background::Tile1;
+     using value_type                                   = std::vector<ff_8::tile_operations::LayerIdT<TileT>>;
+     using operation_type                               = ff_8::tile_operations::LayerId;
+     static constexpr std::string_view key_name         = "filter_multi_layer_id";
+     static constexpr std::string_view enabled_key_name = "filter_multi_layer_id_enabled";
 };
 
 template<>
@@ -224,6 +290,16 @@ struct ConfigKeys<FilterTag::TexturePageId>
 };
 
 template<>
+struct ConfigKeys<FilterTag::MultiTexturePageId>
+{
+     using TileT                                        = open_viii::graphics::background::Tile1;
+     using value_type                                   = std::vector<ff_8::tile_operations::TextureIdT<TileT>>;
+     using operation_type                               = ff_8::tile_operations::TextureId;
+     static constexpr std::string_view key_name         = "filter_multi_texture_page_id";
+     static constexpr std::string_view enabled_key_name = "filter_multi_texture_page_id_enabled";
+};
+
+template<>
 struct ConfigKeys<FilterTag::BlendMode>
 {
      using TileT                                        = open_viii::graphics::background::Tile1;
@@ -231,6 +307,16 @@ struct ConfigKeys<FilterTag::BlendMode>
      using operation_type                               = ff_8::tile_operations::BlendMode;
      static constexpr std::string_view key_name         = "filter_blend_mode";
      static constexpr std::string_view enabled_key_name = "filter_blend_mode_enabled";
+};
+
+template<>
+struct ConfigKeys<FilterTag::MultiBlendMode>
+{
+     using TileT                                        = open_viii::graphics::background::Tile1;
+     using value_type                                   = std::vector<ff_8::tile_operations::BlendModeT<TileT>>;
+     using operation_type                               = ff_8::tile_operations::BlendMode;
+     static constexpr std::string_view enabled_key_name = "filter_multi_blend_mode_enabled";
+     static constexpr std::string_view key_name         = "filter_multi_blend_mode";
 };
 
 template<>
@@ -243,14 +329,35 @@ struct ConfigKeys<FilterTag::BlendOther>
      static constexpr std::string_view enabled_key_name = "filter_blend_other_enabled";
 };
 
+
+template<>
+struct ConfigKeys<FilterTag::MultiBlendOther>
+{
+     using TileT                                        = open_viii::graphics::background::Tile1;
+     using value_type                                   = ff_8::tile_operations::BlendT<TileT>;
+     using operation_type                               = ff_8::tile_operations::Blend;
+     static constexpr std::string_view key_name         = "filter_multi_blend_other";
+     static constexpr std::string_view enabled_key_name = "filter_multi_blend_other_enabled";
+};
+
 template<>
 struct ConfigKeys<FilterTag::Bpp>
 {
      using TileT                                        = open_viii::graphics::background::Tile1;
      using value_type                                   = ff_8::tile_operations::DepthT<TileT>;
      using operation_type                               = ff_8::tile_operations::Depth;
-     static constexpr std::string_view key_name         = "selections_bpp";
-     static constexpr std::string_view enabled_key_name = "selections_bpp_enabled";
+     static constexpr std::string_view key_name         = "filter_bpp";
+     static constexpr std::string_view enabled_key_name = "filter_bpp_enabled";
+};
+
+template<>
+struct ConfigKeys<FilterTag::MultiBpp>
+{
+     using TileT                                        = open_viii::graphics::background::Tile1;
+     using value_type                                   = ff_8::tile_operations::DepthT<TileT>;
+     using operation_type                               = ff_8::tile_operations::Depth;
+     static constexpr std::string_view key_name         = "filter_multi_bpp";
+     static constexpr std::string_view enabled_key_name = "filter_multi_bpp_enabled";
 };
 
 template<>
@@ -298,7 +405,13 @@ struct FilterLoadStrategy
           }
           else if constexpr (glengine::is_std_vector<ValueT>)
           {
-               if constexpr (std::same_as<glengine::vector_elem_type_t<ValueT>, PupuID>)
+               if constexpr (std::is_enum_v<glengine::vector_elem_type_t<ValueT>>)
+               {
+                    (void)
+                      config.load_array<glengine::vector_elem_type_t<ValueT>, std::underlying_type_t<glengine::vector_elem_type_t<ValueT>>>(
+                        id, value);
+               }
+               else if constexpr (std::same_as<glengine::vector_elem_type_t<ValueT>, PupuID>)
                {
                     (void)config.load_array<glengine::vector_elem_type_t<ValueT>, std::uint32_t>(id, value);
                }
@@ -490,6 +603,18 @@ struct filter_old
           }
           return *this;
      }
+     template<typename T>
+     [[nodiscard]] bool contains(const T &cmp) const
+     {
+          if constexpr (std::ranges::range<value_type>)
+          {
+               return std::ranges::any_of(m_value, [&](const auto &current) { return current == cmp; });
+          }
+          else
+          {
+               return m_value == cmp;
+          }
+     }
      [[nodiscard]] bool operator==(const value_type &cmp) const
      {
           return m_value == cmp;
@@ -599,6 +724,19 @@ struct filter
           }
           return *this;
      }
+
+     template<typename T>
+     [[nodiscard]] bool contains(const T &cmp) const
+     {
+          if constexpr (std::ranges::range<value_type>)
+          {
+               return std::ranges::any_of(m_value, [&](const auto &current) { return current == cmp; });
+          }
+          else
+          {
+               return m_value == cmp;
+          }
+     }
      [[nodiscard]] bool operator==(const value_type &cmp) const
      {
           return m_value == cmp;
@@ -618,7 +756,7 @@ struct filter
      template<open_viii::graphics::background::is_tile TileT>
      bool operator()(const TileT &tile) const
      {
-          return !enabled() || (m_value == std::invoke(s_operation, tile));
+          return !enabled() || contains(std::invoke(s_operation, tile));
      }
 };
 
@@ -652,14 +790,23 @@ struct filters
      filter_old<FilterTag::Map>               map;
      filter<FilterTag::DrawBit>               draw_bit;
      filter<FilterTag::Z>                     z;
+     filter<FilterTag::MultiZ>                multi_z;
      filter<FilterTag::Palette>               palette;
+     filter<FilterTag::MultiPalette>          multi_palette;
      filter<FilterTag::AnimationId>           animation_id;
+     filter<FilterTag::MultiAnimationId>      multi_animation_id;
      filter<FilterTag::AnimationFrame>        animation_frame;
+     filter<FilterTag::MultiAnimationFrame>   multi_animation_frame;
      filter<FilterTag::LayerId>               layer_id;
+     filter<FilterTag::MultiLayerId>          multi_layer_id;
      filter<FilterTag::TexturePageId>         texture_page_id;
+     filter<FilterTag::MultiTexturePageId>    multi_texture_page_id;
      filter<FilterTag::BlendMode>             blend_mode;
+     filter<FilterTag::MultiBlendMode>        multi_blend_mode;
      filter<FilterTag::BlendOther>            blend_other;
+     filter<FilterTag::MultiBlendOther>       multi_blend_other;
      filter<FilterTag::Bpp>                   bpp;
+     filter<FilterTag::MultiBpp>              multi_bpp;
 
      filters(bool load_config, fme::Configuration const config = {})
        : pupu(load_config, config)
@@ -670,14 +817,23 @@ struct filters
        , map(load_config, config)
        , draw_bit(load_config, config)
        , z(load_config, config)
+       , multi_z(load_config, config)
        , palette(load_config, config)
+       , multi_palette(load_config, config)
        , animation_id(load_config, config)
+       , multi_animation_id(load_config, config)
        , animation_frame(load_config, config)
+       , multi_animation_frame(load_config, config)
        , layer_id(load_config, config)
+       , multi_layer_id(load_config, config)
        , texture_page_id(load_config, config)
+       , multi_texture_page_id(load_config, config)
        , blend_mode(load_config, config)
+       , multi_blend_mode(load_config, config)
        , blend_other(load_config, config)
+       , multi_blend_other(load_config, config)
        , bpp(load_config, config)
+       , multi_bpp(load_config, config)
      {
      }
 
@@ -687,7 +843,25 @@ struct filters
      {
           return [&tile](const auto &...operations) -> bool {
                return (std::invoke(operations, tile) && ...);
-          }(draw_bit, z, palette, animation_id, animation_frame, layer_id, texture_page_id, blend_mode, blend_other, bpp);
+          }(draw_bit,
+                                                    z,
+                                                    multi_z,
+                                                    palette,
+                                                    multi_palette,
+                                                    animation_id,
+                                                    multi_animation_id,
+                                                    animation_frame,
+                                                    multi_animation_frame,
+                                                    layer_id,
+                                                    multi_layer_id,
+                                                    texture_page_id,
+                                                    multi_texture_page_id,
+                                                    blend_mode,
+                                                    multi_blend_mode,
+                                                    blend_other,
+                                                    multi_blend_other,
+                                                    bpp,
+                                                    multi_bpp);
      }
 };
 namespace tile_operations

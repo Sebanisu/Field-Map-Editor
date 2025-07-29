@@ -74,7 +74,7 @@ class Configuration
 
 
      template<typename OutputT, typename InputT = OutputT>
-          requires std::constructible_from<OutputT, InputT>
+     requires requires { static_cast<OutputT>(std::declval<InputT>()); }
      bool load_array(const std::string_view key, std::vector<OutputT> &output) const
      {
           if (!operator->()->contains(key))
