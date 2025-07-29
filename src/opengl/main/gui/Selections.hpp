@@ -877,15 +877,15 @@ struct SelectionLoadStrategy
           }
           else if constexpr (std::same_as<ValueT, std::vector<std::string>>)
           {
-               return config.load_array(id, value);
+               return Configuration::load_array(config, id, value);
           }
           else if constexpr (std::same_as<ValueT, std::vector<bool>>)
           {
-               return config.load_array(id, value);
+               return Configuration::load_array(config, id, value);
           }
           else if constexpr (std::same_as<ValueT, std::vector<std::filesystem::path>>)
           {
-               return config.load_array(id, value);
+               return Configuration::load_array(config, id, value);
           }
           else
           {
@@ -942,15 +942,15 @@ struct SelectionUpdateStrategy
           }
           else if constexpr (std::same_as<ValueT, std::vector<std::string>>)
           {
-               config.update_array(id, value);
+               Configuration::update_array(config, id, value);
           }
           else if constexpr (std::same_as<ValueT, std::vector<bool>>)
           {
-               config.update_array(id, value);
+               Configuration::update_array(config, id, value);
           }
           else if constexpr (std::same_as<ValueT, std::vector<std::filesystem::path>>)
           {
-               config.update_array(id, value);
+               Configuration::update_array(config, id, value);
           }
           else
           {

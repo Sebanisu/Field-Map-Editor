@@ -165,7 +165,7 @@ struct ConfigKeys<FilterTag::Map>
 template<>
 struct ConfigKeys<FilterTag::DrawBit>
 {
-     using value_type                                   = draw_bitT;
+     using value_type = draw_bitT;
      static constexpr draw_bitT to_draw_bitT(bool in)
      {
           return in ? draw_bitT::enabled : draw_bitT::disabled;
@@ -380,10 +380,14 @@ struct ConfigKeys<FilterTag::Flatten>
 template<std::default_initializable ValueT>
 struct FilterLoadStrategy
 {
-     static ValueT load_value(bool load_config, const fme::Configuration &config, std::string_view id)
+     static ValueT load_value(const toml::table &config, std::string_view id)
+     {
+          return load_value(true, config, id);
+     }
+     static ValueT load_value(bool load_config, const toml::table &config, std::string_view id)
      {
           ValueT value = {};
-          if (!config->contains(id) || !load_config)
+          if (!config.contains(id) || !load_config)
           {
                return value;
           }
@@ -407,17 +411,17 @@ struct FilterLoadStrategy
           {
                if constexpr (std::is_enum_v<glengine::vector_elem_type_t<ValueT>>)
                {
-                    (void)
-                      config.load_array<glengine::vector_elem_type_t<ValueT>, std::underlying_type_t<glengine::vector_elem_type_t<ValueT>>>(
-                        id, value);
+                    (void)fme::Configuration::
+                      load_array<glengine::vector_elem_type_t<ValueT>, std::underlying_type_t<glengine::vector_elem_type_t<ValueT>>>(
+                        config, id, value);
                }
                else if constexpr (std::same_as<glengine::vector_elem_type_t<ValueT>, PupuID>)
                {
-                    (void)config.load_array<glengine::vector_elem_type_t<ValueT>, std::uint32_t>(id, value);
+                    (void)fme::Configuration::load_array<glengine::vector_elem_type_t<ValueT>, std::uint32_t>(config, id, value);
                }
                else
                {
-                    (void)config.load_array<glengine::vector_elem_type_t<ValueT>>(id, value);
+                    (void)fme::Configuration::load_array<glengine::vector_elem_type_t<ValueT>>(config, id, value);
                }
           }
           else
@@ -427,7 +431,7 @@ struct FilterLoadStrategy
           return value;
      }
 
-     static constexpr FilterSettings load_settings(bool load_config, const fme::Configuration &config, std::string_view enabled_key_name)
+     static constexpr FilterSettings load_settings(bool load_config, const toml::table &config, std::string_view enabled_key_name)
      {
           if (load_config)
           {
@@ -436,53 +440,58 @@ struct FilterLoadStrategy
           return FilterSettings::All_Disabled;
      }
 };
-template<typename ValueT>
-struct FilterConversionStrategy;
 
 template<typename ValueT>
 struct FilterUpdateStrategy
 {
 
-     static void update(fme::Configuration &config, std::string_view id, const ValueT &value)
+     static void update_value(toml::table &config, std::string_view id, const ValueT &value)
      {
           if constexpr (std::same_as<ValueT, std::filesystem::path>)
           {
                std::u8string str_val = value.u8string();
                std::ranges::replace(str_val, u8'\\', u8'/');// normalize to forward slashes
                spdlog::info("selection<{}>: \"{}\"", id, std::filesystem::path(str_val).string());
-               config->insert_or_assign(id, str_val);
+               config.insert_or_assign(id, str_val);
           }
           else if constexpr (std::convertible_to<ValueT, fme::color>)
           {
                spdlog::info("selection<{}>: {}", id, value);
-               config->insert_or_assign(id, std::bit_cast<std::uint32_t>(value));
+               config.insert_or_assign(id, std::bit_cast<std::uint32_t>(value));
           }
           else if constexpr (requires { std::declval<ValueT>().raw(); })
           {
                spdlog::info("selection<{}>: {}", id, value);
-               config->insert_or_assign(id, value.raw());
+               config.insert_or_assign(id, value.raw());
           }
           else if constexpr (std::is_enum_v<ValueT>)
           {
                spdlog::info("selection<{}>: {}", id, value);
-               config->insert_or_assign(id, std::to_underlying(value));
+               config.insert_or_assign(id, std::to_underlying(value));
           }
           else if constexpr (glengine::is_std_vector<ValueT>)
           {
                if constexpr (std::same_as<glengine::vector_elem_type_t<ValueT>, PupuID>)
                {
-                    config.update_array<glengine::vector_elem_type_t<ValueT>, std::uint32_t>(id, value);
+                    fme::Configuration::update_array<glengine::vector_elem_type_t<ValueT>, std::uint32_t>(config, id, value);
                }
                else
                {
-                    config.update_array<glengine::vector_elem_type_t<ValueT>>(id, value);
+                    fme::Configuration::update_array<glengine::vector_elem_type_t<ValueT>>(config, id, value);
                }
           }
           else
           {
                spdlog::info("selection<{}>: {}", id, value);
-               config->insert_or_assign(id, value);
+               config.insert_or_assign(id, value);
           }
+     }
+
+     static void update_settings(toml::table &config, std::string_view enabled_key_name, FilterSettings settings)
+     {
+          // Check if the Toggle_Enabled flag is set, write it to config
+          const bool enabled = HasFlag(settings, FilterSettings::Toggle_Enabled);
+          config.insert_or_assign(std::string{ enabled_key_name }, toml::value{ enabled });
      }
 };
 
@@ -515,7 +524,7 @@ struct filter_old
      {
      }
      template<typename U>
-     filter_old &update(U &&value)
+     filter_old &update([[maybe_unused]] U &&value)
      {
           if constexpr (
             !std::same_as<std::remove_cvref_t<U>, value_type> && std::ranges::range<std::remove_cvref_t<U>>
@@ -533,7 +542,7 @@ struct filter_old
                          if (HasFlag(m_settings, FilterSettings::Config_Enabled))
                          {
                               fme::Configuration config{};
-                              FilterUpdateStrategy<value_type>::update(*config, ConfigKeys<Tag>::key_name, m_value);
+                              FilterUpdateStrategy<value_type>::update_value(*config, ConfigKeys<Tag>::key_name, m_value);
                               config.save();
                          }
                     }
@@ -549,7 +558,7 @@ struct filter_old
                          if (HasFlag(m_settings, FilterSettings::Config_Enabled))
                          {
                               fme::Configuration config{};
-                              FilterUpdateStrategy<value_type>::update(config, ConfigKeys<Tag>::key_name, m_value);
+                              FilterUpdateStrategy<value_type>::update_value(config, ConfigKeys<Tag>::key_name, m_value);
                               config.save();
                          }
                     }
@@ -576,9 +585,8 @@ struct filter_old
           {
                if (HasFlag(m_settings, FilterSettings::Config_Enabled))
                {
-                    spdlog::info("filter_old<{}>: enabled", ConfigKeys<Tag>::key_name);
                     fme::Configuration config{};
-                    config->insert_or_assign(ConfigKeys<Tag>::enabled_key_name, enabled());
+                    FilterUpdateStrategy<value_type>::update_settings(config, ConfigKeys<Tag>::enabled_key_name, m_settings);
                     config.save();
                }
           }
@@ -595,9 +603,8 @@ struct filter_old
           {
                if (HasFlag(m_settings, FilterSettings::Config_Enabled))
                {
-                    spdlog::info("filter_old<{}>: disabled", ConfigKeys<Tag>::key_name);
                     fme::Configuration config{};
-                    config->insert_or_assign(ConfigKeys<Tag>::enabled_key_name, enabled());
+                    FilterUpdateStrategy<value_type>::update_settings(config, ConfigKeys<Tag>::enabled_key_name, m_settings);
                     config.save();
                }
           }
@@ -679,7 +686,7 @@ struct filter
                     if (HasFlag(m_settings, FilterSettings::Config_Enabled))
                     {
                          fme::Configuration config{};
-                         FilterUpdateStrategy<value_type>::update(config, ConfigKeys<Tag>::key_name, m_value);
+                         FilterUpdateStrategy<value_type>::update_value(config, ConfigKeys<Tag>::key_name, m_value);
                          config.save();
                     }
                }
@@ -701,9 +708,8 @@ struct filter
           {
                if (HasFlag(m_settings, FilterSettings::Config_Enabled))
                {
-                    spdlog::info("filter<{}>: enabled", ConfigKeys<Tag>::key_name);
                     fme::Configuration config{};
-                    config->insert_or_assign(ConfigKeys<Tag>::enabled_key_name, enabled());
+                    FilterUpdateStrategy<value_type>::update_settings(config, ConfigKeys<Tag>::enabled_key_name, m_settings);
                     config.save();
                }
           }
@@ -716,9 +722,8 @@ struct filter
           {
                if (HasFlag(m_settings, FilterSettings::Config_Enabled))
                {
-                    spdlog::info("filter<{}>: disabled", ConfigKeys<Tag>::key_name);
                     fme::Configuration config{};
-                    config->insert_or_assign(ConfigKeys<Tag>::enabled_key_name, enabled());
+                    FilterUpdateStrategy<value_type>::update_settings(config, ConfigKeys<Tag>::enabled_key_name, m_settings);
                     config.save();
                }
           }
@@ -759,6 +764,12 @@ struct filter
           return !enabled() || contains(std::invoke(s_operation, tile));
      }
 };
+
+template<typename FilterT>
+using FilterLoadStrategyFromFilter = FilterLoadStrategy<typename ConfigKeys<FilterT::tag_value>::value_type>;
+
+template<typename FilterT>
+using FilterUpdateStrategyFromFilter = FilterUpdateStrategy<typename ConfigKeys<FilterT::tag_value>::value_type>;
 
 template<typename T>
 concept IsFilterOld = requires(T obj) {

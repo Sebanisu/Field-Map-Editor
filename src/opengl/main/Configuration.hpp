@@ -79,15 +79,15 @@ class Configuration
 
 
      template<typename OutputT, typename InputT = OutputT>
-     requires requires { static_cast<OutputT>(std::declval<InputT>()); }
-     bool load_array(const std::string_view key, std::vector<OutputT> &output) const
+          requires requires { static_cast<OutputT>(std::declval<InputT>()); }
+     static bool load_array(const toml::table &table, const std::string_view key, std::vector<OutputT> &output)
      {
-          if (!operator->()->contains(key))
+          if (!table.contains(key))
           {
                return false;
           }
 
-          if (const auto *array = operator[](key).as_array(); array)
+          if (const auto *array = table[key].as_array(); array)
           {
                output.clear();
                output.reserve(array->size());
@@ -125,7 +125,7 @@ class Configuration
       */
 
      template<typename InputT, typename OutputT = InputT>
-     void update_array(const std::string_view key, const std::vector<InputT> &input)
+     static void update_array(toml::table &table, const std::string_view key, const std::vector<InputT> &input)
      {
           toml::array array;
           array.reserve(input.size());
@@ -142,7 +142,7 @@ class Configuration
                }
           }
 
-          operator->()->insert_or_assign(key, std::move(array));
+          table.insert_or_assign(key, std::move(array));
      }
 
    private:
@@ -177,14 +177,17 @@ class Configuration
  *       that uses `operator->()` and `operator[]` for TOML table access.
  */
 template<>
-inline bool Configuration::load_array<std::string, std::string>(const std::string_view key, std::vector<std::string> &output) const
+static inline bool Configuration::load_array<std::string, std::string>(
+  const toml::table        &table,
+  const std::string_view    key,
+  std::vector<std::string> &output)
 {
-     if (!operator->()->contains(key))
+     if (!table.contains(key))
      {
           return false;
      }
 
-     if (const auto *array = operator[](key).as_array(); array)
+     if (const auto *array = table[key].as_array(); array)
      {
           output.clear();
           output.reserve(array->size());
@@ -211,12 +214,12 @@ inline bool Configuration::load_array<std::string, std::string>(const std::strin
  * @return true if the array was successfully loaded; false otherwise (e.g., key not found or wrong type).
  */
 template<>
-inline bool Configuration::load_array<bool, bool>(const std::string_view key, std::vector<bool> &output) const
+static inline bool Configuration::load_array<bool, bool>(const toml::table &table, const std::string_view key, std::vector<bool> &output)
 {
-     if (!operator->()->contains(key))
+     if (!table.contains(key))
           return false;
 
-     if (const auto *array = operator[](key).as_array(); array)
+     if (const auto *array = table[key].as_array(); array)
      {
           output.clear();
           output.reserve(array->size());
@@ -228,7 +231,7 @@ inline bool Configuration::load_array<bool, bool>(const std::string_view key, st
           }
           return true;
      }
-     else if (const auto *str = operator[](key).as_string(); str)
+     else if (const auto *str = table[key].as_string(); str)
      {
           output = str->get() | std::ranges::views::transform([](const char &c) { return c == '0' ? false : true; })
                    | std::ranges::to<std::vector>();
@@ -253,16 +256,17 @@ inline bool Configuration::load_array<bool, bool>(const std::string_view key, st
  * @note Requires access via `operator->()` and `operator[]` to the TOML table.
  */
 template<>
-inline bool Configuration::load_array<std::filesystem::path, std::filesystem::path>(
+static inline bool Configuration::load_array<std::filesystem::path, std::filesystem::path>(
+  const toml::table                  &table,
   const std::string_view              key,
-  std::vector<std::filesystem::path> &output) const
+  std::vector<std::filesystem::path> &output)
 {
-     if (!operator->()->contains(key))
+     if (!table.contains(key))
      {
           return false;
      }
 
-     if (const auto *array = operator[](key).as_array(); array)
+     if (const auto *array = table[key].as_array(); array)
      {
           output.clear();
           output.reserve(array->size());
@@ -291,11 +295,11 @@ inline bool Configuration::load_array<std::filesystem::path, std::filesystem::pa
  * @param input A vector of boolean values to be written into the TOML array.
  */
 template<>
-inline void Configuration::update_array<bool, bool>(const std::string_view key, const std::vector<bool> &input)
+static inline void Configuration::update_array<bool, bool>(toml::table &table, const std::string_view key, const std::vector<bool> &input)
 {
      std::string encoded =
        input | std::ranges::views::transform([](const auto &b) { return b ? '1' : '0'; }) | std::ranges::to<std::string>();
-     operator->()->insert_or_assign(key, std::move(encoded));
+     table.insert_or_assign(key, std::move(encoded));
 }
 
 /**
@@ -311,7 +315,8 @@ inline void Configuration::update_array<bool, bool>(const std::string_view key, 
  * @note Requires access via `operator->()` to the TOML table.
  */
 template<>
-inline void Configuration::update_array<std::filesystem::path, std::filesystem::path>(
+static inline void Configuration::update_array<std::filesystem::path, std::filesystem::path>(
+  toml::table                              &table,
   const std::string_view                    key,
   const std::vector<std::filesystem::path> &input)
 {
@@ -325,7 +330,7 @@ inline void Configuration::update_array<std::filesystem::path, std::filesystem::
           array.push_back(str);
      }
 
-     operator->()->insert_or_assign(key, std::move(array));
+     table.insert_or_assign(key, std::move(array));
 }
 
 }// namespace fme
