@@ -1937,7 +1937,7 @@ std::string map_sprite::get_base_name() const
                          const key_value_data  cpm                 = { .field_name    = get_base_name(),
                                                                        .ext           = ".png",
                                                                        .language_code = coo,
-                                                                       .pupu_id       = static_cast<std::uint32_t>(index++) };
+                                                                       .pupu_id       = index++ };
 
                          std::filesystem::path out_path            = cpm.replace_tags(keyed_string, selections, selected_path);
                          // for (const ff_8::PupuID &pupu_id : pupu_range)
