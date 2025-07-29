@@ -110,7 +110,6 @@ class Configuration
           return false;
      }
 
-
      /**
       * @brief Updates the TOML configuration with a string array.
       *
@@ -161,7 +160,20 @@ class Configuration
      mutable toml::table                                       *m_table = {};
 };
 
+// Tell the compiler not to instantiate these here
+extern template bool Configuration::load_array<std::filesystem::path, std::filesystem::path>(
+  const toml::table &,
+  const std::string_view,
+  std::vector<std::filesystem::path> &);
+extern template bool
+  Configuration::load_array<std::string, std::string>(const toml::table &, const std::string_view, std::vector<std::string> &);
+extern template bool Configuration::load_array<bool, bool>(const toml::table &, const std::string_view, std::vector<bool> &);
 
+extern template void Configuration::update_array<std::filesystem::path, std::filesystem::path>(
+  toml::table &,
+  const std::string_view,
+  const std::vector<std::filesystem::path> &);
+extern template void Configuration::update_array<bool, bool>(toml::table &, const std::string_view, const std::vector<bool> &);
 
 }// namespace fme
 #endif// FIELD_MAP_EDITOR_CONFIGURATION_HPP
