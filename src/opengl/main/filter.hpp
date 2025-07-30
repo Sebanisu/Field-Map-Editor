@@ -596,7 +596,7 @@ struct filter_old
      }
 
      template<typename U>
-          requires(std::equality_comparable<std::remove_cvref_t<U>, value_type> && std::assignable_from<value_type &, U>)
+          requires(std::equality_comparable_with<std::remove_cvref_t<U>, value_type> && std::assignable_from<value_type &, U>)
 
      filter_old &update(U &&value)
      {
