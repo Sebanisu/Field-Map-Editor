@@ -3120,7 +3120,7 @@ void gui::combo_pupu()
             return m_map_sprite->working_unique_pupu()
                    | std::views::transform([](const ff_8::PupuID &pupu_id) -> decltype(auto) { return pupu_id.create_summary(); });
        },
-       [this]() -> auto & { return m_map_sprite->filter().pupu; });
+       [this]() -> auto & { return m_map_sprite->filter().multi_pupu; });
 
      if (!gcc.render())
      {

@@ -562,44 +562,53 @@ struct filter_old
           FilterUpdateStrategy<value_type>::update_settings(value, ConfigKeys<Tag>::enabled_key_name, m_settings);
           return *this;
      }
+
      template<typename U>
-     filter_old &update([[maybe_unused]] U &&value)
+          requires std::same_as<std::remove_cvref_t<U>, toml::table>
+     filter_old &update(U &&value)
      {
-          if constexpr (std::same_as<std::remove_cvref_t<U>, toml::table>)
-          {
-               FilterUpdateStrategy<value_type>::update_value(value, ConfigKeys<Tag>::key_name, m_value);
-               FilterUpdateStrategy<value_type>::update_settings(value, ConfigKeys<Tag>::enabled_key_name, m_settings);
-          }
-          else if constexpr (
+          FilterUpdateStrategy<value_type>::update_value(value, ConfigKeys<Tag>::key_name, m_value);
+          FilterUpdateStrategy<value_type>::update_settings(value, ConfigKeys<Tag>::enabled_key_name, m_settings);
+          return *this;
+     }
+
+     template<typename U>
+          requires(
             !std::same_as<std::remove_cvref_t<U>, value_type> && std::ranges::range<std::remove_cvref_t<U>>
             && std::ranges::range<value_type>)
+     filter_old &update(U &&value)
+     {
+          if (!std::ranges::equal(m_value, value))
           {
-               if (!std::ranges::equal(m_value, value))
+               if constexpr (requires(value_type v) { v.clear(); })
+                    m_value.clear();
+
+               std::ranges::move(value, std::back_inserter(m_value));
+
+               if (HasFlag(m_settings, FilterSettings::Config_Enabled))
                {
-                    if constexpr (requires(value_type v) { v.clear(); })
-                    {
-                         m_value.clear();
-                    }
-                    std::ranges::move(value, std::back_inserter(m_value));
-                    if (HasFlag(m_settings, FilterSettings::Config_Enabled))
-                    {
-                         fme::Configuration config{};
-                         FilterUpdateStrategy<value_type>::update_value(*config, ConfigKeys<Tag>::key_name, m_value);
-                         config.save();
-                    }
+                    fme::Configuration config{};
+                    FilterUpdateStrategy<value_type>::update_value(*config, ConfigKeys<Tag>::key_name, m_value);
+                    config.save();
                }
           }
-          else
+          return *this;
+     }
+
+     template<typename U>
+          requires(std::equality_comparable<std::remove_cvref_t<U>, value_type> && std::assignable_from<value_type &, U>)
+
+     filter_old &update(U &&value)
+     {
+          if (m_value != value)
           {
-               if (m_value != value)
+               m_value = std::forward<U>(value);
+
+               if (HasFlag(m_settings, FilterSettings::Config_Enabled))
                {
-                    m_value = std::forward<U>(value);
-                    if (HasFlag(m_settings, FilterSettings::Config_Enabled))
-                    {
-                         fme::Configuration config{};
-                         FilterUpdateStrategy<value_type>::update_value(config, ConfigKeys<Tag>::key_name, m_value);
-                         config.save();
-                    }
+                    fme::Configuration config{};
+                    FilterUpdateStrategy<value_type>::update_value(config, ConfigKeys<Tag>::key_name, m_value);
+                    config.save();
                }
           }
           return *this;
