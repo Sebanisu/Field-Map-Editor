@@ -9,6 +9,7 @@
 #include "draw_mode.hpp"
 #include "filter.hpp"
 #include "tile_sizes.hpp"
+#include "utilities.hpp"
 #include <filesystem>
 #include <open_viii/graphics/background/BlendModeT.hpp>
 #include <open_viii/graphics/BPPT.hpp>
