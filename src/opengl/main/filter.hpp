@@ -457,22 +457,22 @@ struct FilterUpdateStrategy
           {
                std::u8string str_val = value.u8string();
                std::ranges::replace(str_val, u8'\\', u8'/');// normalize to forward slashes
-               spdlog::info("selection<{}>: \"{}\"", id, std::filesystem::path(str_val).string());
+               spdlog::debug("selection<{}>: \"{}\"", id, std::filesystem::path(str_val).string());
                config.insert_or_assign(id, str_val);
           }
           else if constexpr (std::convertible_to<ValueT, fme::color>)
           {
-               spdlog::info("selection<{}>: {}", id, value);
+               spdlog::debug("selection<{}>: {}", id, value);
                config.insert_or_assign(id, std::bit_cast<std::uint32_t>(value));
           }
           else if constexpr (requires { std::declval<ValueT>().raw(); })
           {
-               spdlog::info("selection<{}>: {}", id, value);
+               spdlog::debug("selection<{}>: {}", id, value);
                config.insert_or_assign(id, value.raw());
           }
           else if constexpr (std::is_enum_v<ValueT>)
           {
-               spdlog::info("selection<{}>: {}", id, value);
+               spdlog::debug("selection<{}>: {}", id, value);
                config.insert_or_assign(id, std::to_underlying(value));
           }
           else if constexpr (glengine::is_std_vector<ValueT>)
@@ -491,10 +491,11 @@ struct FilterUpdateStrategy
                {
                     fme::Configuration::update_array<glengine::vector_elem_type_t<ValueT>>(config, id, value);
                }
+               spdlog::debug("selection<{}>", id);
           }
           else
           {
-               spdlog::info("selection<{}>: {}", id, value);
+               spdlog::debug("selection<{}>: {}", id, value);
                config.insert_or_assign(id, value);
           }
      }
@@ -566,6 +567,7 @@ struct filter_old
           if constexpr (std::same_as<std::remove_cvref_t<U>, toml::table>)
           {
                FilterUpdateStrategy<value_type>::update_value(value, ConfigKeys<Tag>::key_name, m_value);
+               FilterUpdateStrategy<value_type>::update_settings(value, ConfigKeys<Tag>::enabled_key_name, m_settings);
           }
           if constexpr (
             !std::same_as<std::remove_cvref_t<U>, value_type> && std::ranges::range<std::remove_cvref_t<U>>
