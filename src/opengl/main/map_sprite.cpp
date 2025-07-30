@@ -1809,17 +1809,135 @@ std::string map_sprite::get_base_name() const
      // Note: Caller should consume_futures(future_of_futures) to wait for saves to finish
 }
 
-/**
- * @brief Saves unique "Pupu" textures for the map field to individual PNG files.
- *
- * This function sets up temporary settings specifically for Pupu texture rendering,
- * generates textures using the current map data, and asynchronously saves them to disk.
- * Each texture is saved under a specific file naming pattern based on the field name and Pupu ID.
- *
- * @param path Filesystem path where the textures should be saved. Must be a directory.
- * @return A vector of futures, each wrapping a future task that will save one texture.
- *         Caller should consume or wait on these to ensure saving completes.
- */
+
+[[nodiscard]] std::vector<std::future<void>>
+  map_sprite::save_deswizzle_combined_toml(const std::string &keyed_string, const std::filesystem::path &selected_path)
+{
+     const auto selections = m_selections.lock();
+     if (!selections)
+     {
+          spdlog::error("Failed to lock m_selections: shared_ptr is expired.");
+          return {};
+     }
+     consume_now();
+     // Backup current settings and adjust for saving Pupu textures
+     auto settings =
+       settings_backup{ m_filters, m_draw_swizzle, m_disable_texture_page_shift, m_disable_blends, m_render_framebuffer.mutable_scale() };
+     settings.filters                         = ff_8::filters{ false };
+     settings.filters.value().swizzle         = settings.filters.backup().swizzle;// Retain original upscale settings
+     settings.draw_swizzle                    = false;// No swizzling when saving
+     settings.disable_texture_page_shift      = true;// Disable texture page shifts
+     settings.disable_blends                  = true;// Disable blending
+
+     // Set the scale relative to a standard MIM height (256px)
+     static constexpr unsigned int mim_height = { 256U };
+     settings.scale                           = static_cast<std::int32_t>(get_max_texture_height() / mim_height);
+     if (settings.scale <= 0)
+     {
+          settings.scale = 1;
+     }
+
+     // Acquire the field associated with this map group
+     const auto field = m_map_group.field.lock();
+     if (!field)
+     {
+          spdlog::error("Failed to lock m_map_group.field: shared_ptr is expired.");
+          return {};// Field no longer exists, nothing to save
+     }
+
+     const std::string                field_name        = std::string{ str_to_lower(field->get_base_name()) };
+     const std::vector<ff_8::PupuID> &unique_pupu_ids   = working_unique_pupu();// Get list of unique Pupu IDs
+     std::vector<std::future<void>>   future_of_futures = {};
+     // Setup an off-screen render texture
+     iRectangle const                 canvas            = m_map_group.maps.const_working().canvas() * m_render_framebuffer.scale();
+     const auto                       specification =
+       glengine::FrameBufferSpecification{ .width = canvas.width(), .height = canvas.height(), .scale = settings.scale.value() };
+     const key_value_data        config_path_values = { .ext = ".toml" };
+     const std::filesystem::path config_path =
+       config_path_values.replace_tags("{selected_path}/res/deswizzle{ext}"s, selections, selected_path);
+     auto       config = Configuration(config_path);
+     const auto coo =
+       m_map_group.opt_coo.has_value() && m_map_group.opt_coo.value() != open_viii::LangT::generic ? m_map_group.opt_coo : std::nullopt;
+     std::string coo_key = [&]() {
+          if (coo.has_value())
+          {
+               return std::string(open_viii::LangCommon::to_string_3_char(coo.value()));
+          }
+          else
+          {
+               const auto opt_coo_local = field->get_lang_from_fl_paths();
+               if (opt_coo_local.has_value() && std::to_underlying(opt_coo_local.value()) < std::to_underlying(open_viii::LangT::generic))
+               {
+                    return std::string(open_viii::LangCommon::to_string_3_char(opt_coo_local.value()));
+               }
+               else
+               {
+                    return "x"s;
+               }
+          }
+     }();
+     const auto append = [&](const std::string &file_name, toml::table &&file_table) {
+          // toml::table field_table = config[base_name].value_or(toml::table{});
+          toml::table *field_table = nullptr;
+
+          if (auto node = config->get(field_name); node && node->is_table())
+          {
+               field_table = node->as_table();
+          }
+          else
+          {
+               config->insert(field_name, toml::table{});
+               field_table = config->get(field_name)->as_table();
+          }
+          // toml::table coo_table   = field_table[coo_key].value_or(toml::table{});
+          toml::table *coo_table = nullptr;
+
+          if (auto node = field_table->get(coo_key); node && node->is_table())
+          {
+               coo_table = node->as_table();
+          }
+          else
+          {
+               field_table->insert(coo_key, toml::table{});
+               coo_table = field_table->get(coo_key)->as_table();
+          }
+          // Insert or assign the file entry
+          coo_table->insert_or_assign(file_name, std::move(file_table));
+     };
+
+     toml::table ids_table = {};
+     for (auto &&pupu : unique_pupu_ids)
+     {
+          const auto pupu_str = fmt::format("{:08X}", pupu.raw());
+          ids_table.insert(pupu_str, pupu.raw());
+     }
+     append("unique_pupu_ids", std::move(ids_table));
+     // Loop through each Pupu ID and generate/save textures
+     // for (auto &&[index, pupu_range] : enumerated)
+
+
+     for (auto &&pupu : unique_pupu_ids)
+     {
+          auto &filters         = settings.filters.value();
+          auto  updated_filters = std::forward_as_tuple(filters.multi_pupu.update(std::vector{ pupu }).enable());
+          auto  out_framebuffer = glengine::FrameBuffer{ specification };
+          if (generate_texture(out_framebuffer))// todo make a if would pass filter with out generating textures.
+          {
+               toml::table          file;
+               const key_value_data cpm = {
+                    .field_name = field_name, .ext = ".png", .language_code = coo, .pupu_id = static_cast<std::uint32_t>(pupu)
+               };
+
+               std::apply([&](auto &&...fns) { (fns.update(file), ...); }, updated_filters);
+               std::filesystem::path out_path = cpm.replace_tags(keyed_string, selections, selected_path);
+               append(out_path.filename().string(), std::move(file));
+          }
+     }
+     return future_of_futures;
+     // Note: Caller should consume_futures(future_of_futures) to wait for saves to finish
+}
+
+
 [[nodiscard]] std::vector<std::future<void>>
   map_sprite::save_deswizzle_combined_textures(const std::string &keyed_string, const std::filesystem::path &selected_path)
 {
@@ -1855,96 +1973,75 @@ std::string map_sprite::get_base_name() const
           return {};// Field no longer exists, nothing to save
      }
 
-     const std::string              field_name                  = std::string{ str_to_lower(field->get_base_name()) };
-     // const std::vector<ff_8::PupuID> &unique_pupu_ids             = working_unique_pupu();// Get list of unique Pupu IDs
-     const auto                    &animation_ids               = m_all_unique_values_and_strings.animation_id();
-     const auto                    &animation_states            = m_all_unique_values_and_strings.animation_frame();
-     const auto                    &layer_ids                   = m_all_unique_values_and_strings.layer_id();
-     const auto                    &blend_modes                 = m_all_unique_values_and_strings.blend_mode();
-     // const auto                      &zs                          = m_all_unique_values_and_strings.z();
-
-     // std::optional<open_viii::LangT> &coo             = m_map_group.opt_coo;// Language option (optional)
-
-     // assert(safedir(path).is_dir());// Ensure output path is a directory
-
-     // static constexpr std::string_view           pattern_pupu                = { "{}_{}.png" };// Pattern without language
-     // static constexpr std::string_view           pattern_coo_pupu            = { "{}_{}_{}.png" };// Pattern with language
-     const unsigned int             max_number_of_texture_pages = 13U;// Reserve space for futures
-     std::vector<std::future<void>> future_of_futures           = {};
-     future_of_futures.reserve(max_number_of_texture_pages);
+     const std::string              field_name        = std::string{ str_to_lower(field->get_base_name()) };
+     std::vector<std::future<void>> future_of_futures = {};
 
      // Setup an off-screen render texture
-     iRectangle const canvas = m_map_group.maps.const_working().canvas() * m_render_framebuffer.scale();
-     const auto       specification =
+     iRectangle const               canvas            = m_map_group.maps.const_working().canvas() * m_render_framebuffer.scale();
+     const auto                     specification =
        glengine::FrameBufferSpecification{ .width = canvas.width(), .height = canvas.height(), .scale = settings.scale.value() };
 
-     // auto                        nested             = generate_combinations_more(unique_pupu_ids);
-     // auto                        enumerated         = std::views::enumerate(nested);
 
-     const key_value_data        config_path_values = { .field_name    = get_base_name(),
-                                                        .ext           = ".toml",
-                                                        .language_code = m_map_group.opt_coo.has_value()
-                                                                      && m_map_group.opt_coo.value() != open_viii::LangT::generic
-                                                                           ? m_map_group.opt_coo
-                                                                           : std::nullopt };
+     const key_value_data        config_path_values = { .field_name = get_base_name(), .ext = ".toml" };
      const std::filesystem::path config_path =
-       config_path_values.replace_tags("{selected_path}/deswizzle{ext}"s, selections, selected_path);
-     auto       config = Configuration(config_path);
-     // config->clear();
+       config_path_values.replace_tags("{selected_path}/res/deswizzle{ext}"s, selections, selected_path);
+     const auto config = Configuration(config_path);
+
      const auto coo =
        m_map_group.opt_coo.has_value() && m_map_group.opt_coo.value() != open_viii::LangT::generic ? m_map_group.opt_coo : std::nullopt;
-     toml::table field_table = {};
-     toml::table coo_table   = {};
-     std::string coo_key     = [&coo]() {
+
+     std::string my_coo_key = [&]() {
           if (coo.has_value())
           {
                return std::string(open_viii::LangCommon::to_string_3_char(coo.value()));
           }
           else
           {
-               return "UNK"s;
+               const auto opt_coo_local = field->get_lang_from_fl_paths();
+               if (opt_coo_local.has_value() && std::to_underlying(opt_coo_local.value()) < std::to_underlying(open_viii::LangT::generic))
+               {
+                    return std::string(open_viii::LangCommon::to_string_3_char(opt_coo_local.value()));
+               }
+               else
+               {
+                    return "x"s;
+               }
           }
      }();
-     // Loop through each Pupu ID and generate/save textures
-     // for (auto &&[index, pupu_range] : enumerated)
+     const toml::table &root_table = config;
+
+     if (auto it_base = root_table.find(field_name); it_base != root_table.end() && it_base->second.is_table())
      {
-          // settings.filters.value().multi_pupu.update(pupu_range).enable();// Enable this specific Pupu ID
-          //  if (std::ranges::size(settings.filters.value().multi_pupu.value()) == 1ull && std::ranges::size(unique_pupu_ids) != 1ull)
-          //  {
-          //       continue;
-          //  }+
-          std::uint32_t index = {};
-          for (auto &&[blend_mode, layer_id, animation_id] :
-               std::views::cartesian_product(blend_modes.values(), layer_ids.values(), animation_ids.values()))
+          const toml::table &field_table = *it_base->second.as_table();
+          for (auto &&[coo_key, coo_node] : field_table)
           {
-               for (const auto &animation_state : animation_states.at(animation_id).values())
+               if (coo_key != my_coo_key)
+                    continue;
+               if (!coo_node.is_table())
+                    continue;
+               auto &coo_table = *coo_node.as_table();
+
+               for (auto &&[file_name, file_node] : coo_table)
                {
-                    auto &filters         = settings.filters.value();
-                    auto  updated_filters = std::forward_as_tuple(
-                      filters.layer_id.update(layer_id).enable(),
-                      filters.multi_animation_id.update(std::vector<std::uint8_t>{ animation_id }).enable(),
-                      filters.animation_frame.update(animation_state).enable(),
-                      filters.blend_mode.update(blend_mode).enable());
+                    if (file_name == "unique_pupu_ids")
+                         continue;
+                    if (!file_node.is_table())
+                         continue;
+                    auto &filters = settings.filters.value();
+                    filters.reload(*file_node.as_table());
 
                     auto out_framebuffer = glengine::FrameBuffer{ specification };
                     if (generate_texture(out_framebuffer))
                     {
-                         toml::table          file;
-                         const key_value_data cpm = {
-                              .field_name = get_base_name(), .ext = ".png", .language_code = coo, .pupu_id = index++
-                         };
+                         const key_value_data  cpm      = { .field_name = field_name, .ext = ".png" };
 
-                         std::apply([&](auto &&...fns) { (fns.update(file), ...); }, updated_filters);
                          std::filesystem::path out_path = cpm.replace_tags(keyed_string, selections, selected_path);
-                         coo_table.insert_or_assign(out_path.filename().string(), std::move(file));
-                         //future_of_futures.push_back(save_image_pbo(std::move(out_path), std::move(out_framebuffer)));
+                         out_path                       = out_path.parent_path() / std::string(file_name);
+                         future_of_futures.push_back(save_image_pbo(std::move(out_path), std::move(out_framebuffer)));
                     }
                }
           }
      }
-     field_table.insert_or_assign(coo_key, std::move(coo_table));
-     config->insert_or_assign(get_base_name(), std::move(field_table));
-     config.save();// true
      return future_of_futures;
      // Note: Caller should consume_futures(future_of_futures) to wait for saves to finish
 }

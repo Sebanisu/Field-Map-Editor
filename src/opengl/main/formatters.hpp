@@ -541,8 +541,11 @@ struct fmt::formatter<fme::input_types> : fmt::formatter<std::string_view>
                case fme::input_types::swizzle_as_one_image:
                     name = fme::gui_labels::swizzle_as_one_image;
                     break;
-               case fme::input_types::deswizzle_combined:
-                    name = fme::gui_labels::deswizzle_combined;
+               // case fme::input_types::deswizzle_combined_toml:
+               //      name = fme::gui_labels::deswizzle_combined_toml;
+               //      break;
+               case fme::input_types::deswizzle_combined_images:
+                    name = fme::gui_labels::deswizzle_combined_images;
                     break;
           }
           return fmt::formatter<std::string_view>::format(name, ctx);
@@ -568,8 +571,11 @@ struct fmt::formatter<fme::output_types> : fmt::formatter<std::string_view>
                case fme::output_types::swizzle_as_one_image:
                     name = fme::gui_labels::swizzle_as_one_image;
                     break;
-               case fme::output_types::deswizzle_combined:
-                    name = fme::gui_labels::deswizzle_combined;
+               case fme::output_types::deswizzle_combined_toml:
+                    name = fme::gui_labels::deswizzle_combined_toml;
+                    break;
+               case fme::output_types::deswizzle_combined_images:
+                    name = fme::gui_labels::deswizzle_combined_images;
                     break;
           }
           return fmt::formatter<std::string_view>::format(name, ctx);

@@ -22,14 +22,16 @@ enum struct input_types
      deswizzle,
      swizzle,
      swizzle_as_one_image,
-     deswizzle_combined,
+     //deswizzle_combined_toml,
+     deswizzle_combined_images, //only have one combined step for input that takes images and toml
 };
 enum struct output_types
 {
      deswizzle,
      swizzle,
      swizzle_as_one_image,
-     deswizzle_combined,
+     deswizzle_combined_toml,
+     deswizzle_combined_images,
 };
 [[nodiscard]] constexpr static inline std::optional<output_types> to_output_type(input_types input) noexcept
 {
@@ -41,8 +43,10 @@ enum struct output_types
                return output_types::deswizzle;
           case input_types::swizzle_as_one_image:
                return output_types::swizzle_as_one_image;
-          case input_types::deswizzle_combined:
-               return output_types::deswizzle_combined;
+          // case input_types::deswizzle_combined_toml:
+          //      return output_types::deswizzle_combined_toml;
+          case input_types::deswizzle_combined_images:
+               return output_types::deswizzle_combined_images;
           default:
                return std::nullopt;// input_types::mim has no mapping
      }
@@ -58,8 +62,10 @@ enum struct output_types
                return input_types::deswizzle;
           case output_types::swizzle_as_one_image:
                return input_types::swizzle_as_one_image;
-          case output_types::deswizzle_combined:
-               return input_types::deswizzle_combined;
+          // case output_types::deswizzle_combined_toml:
+          //      return input_types::deswizzle_combined_toml;
+          case output_types::deswizzle_combined_images:
+               return input_types::deswizzle_combined_images;
           default:
                return std::nullopt;// input_types::mim has no mapping
      }

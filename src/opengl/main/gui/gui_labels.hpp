@@ -74,7 +74,8 @@ struct gui_labels
      static constexpr std::string_view swizzle                                = { "Swizzle" };
      static constexpr std::string_view swizzle_as_one_image                   = { "Swizzle as one Image" };
      static constexpr std::string_view deswizzle                              = { "Deswizzle" };
-     static constexpr std::string_view deswizzle_combined                     = { "Deswizzle Combined" };
+     static constexpr std::string_view deswizzle_combined_toml                = { "Generate .toml for combined deswizzles" };
+     static constexpr std::string_view deswizzle_combined_images                = { "Read .toml for combined deswizzles to make images" };
      static constexpr std::string_view disable_blending                       = { "Disable Blending" };
      static constexpr std::string_view force_reloading_of_textures            = { "Force Reloading Of Textures" };
      static constexpr std::string_view force_rendering_of_map                 = { "Force Rendering Of Map" };

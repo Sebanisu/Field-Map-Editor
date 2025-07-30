@@ -434,7 +434,7 @@ struct FilterLoadStrategy
 
      static constexpr FilterSettings load_settings(const toml::table &config, std::string_view enabled_key_name)
      {
-          return load_settings(config, enabled_key_name);
+          return load_settings(true, config, enabled_key_name);
      }
 
      static constexpr FilterSettings load_settings(bool load_config, const toml::table &config, std::string_view enabled_key_name)
@@ -559,6 +559,7 @@ struct filter_old
           requires(std::same_as<std::remove_cvref_t<U>, toml::table>)
      {
           FilterUpdateStrategy<value_type>::update_value(value, ConfigKeys<Tag>::key_name, m_value);
+          FilterUpdateStrategy<value_type>::update_settings(value, ConfigKeys<Tag>::enabled_key_name, m_settings);
           return *this;
      }
      template<typename U>
@@ -569,7 +570,7 @@ struct filter_old
                FilterUpdateStrategy<value_type>::update_value(value, ConfigKeys<Tag>::key_name, m_value);
                FilterUpdateStrategy<value_type>::update_settings(value, ConfigKeys<Tag>::enabled_key_name, m_settings);
           }
-          if constexpr (
+          else if constexpr (
             !std::same_as<std::remove_cvref_t<U>, value_type> && std::ranges::range<std::remove_cvref_t<U>>
             && std::ranges::range<value_type>)
           {
@@ -727,6 +728,7 @@ struct filter
           requires(std::same_as<std::remove_cvref_t<U>, toml::table>)
      {
           FilterUpdateStrategy<value_type>::update_value(value, ConfigKeys<Tag>::key_name, m_value);
+          FilterUpdateStrategy<value_type>::update_settings(value, ConfigKeys<Tag>::enabled_key_name, m_settings);
           return *this;
      }
      template<typename U>
@@ -739,6 +741,7 @@ struct filter
           else if constexpr (std::same_as<std::remove_cvref_t<U>, toml::table>)
           {
                FilterUpdateStrategy<value_type>::update_value(value, ConfigKeys<Tag>::key_name, m_value);
+               FilterUpdateStrategy<value_type>::update_settings(value, ConfigKeys<Tag>::enabled_key_name, m_settings);
           }
           else
           {

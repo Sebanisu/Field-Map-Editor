@@ -69,7 +69,21 @@ void fme::batch::draw_window()
      }
      open_directory_browser();
      // while in_progress disable changing the values.
-     const bool disabled = in_progress();
+     const bool  disabled      = in_progress();
+     static bool prev_disabled = disabled;
+     if (prev_disabled != disabled && !disabled)
+     {
+          if (selections->get<ConfigKey::BatchOutputType>() == output_types::deswizzle_combined_toml)
+          {
+               const key_value_data        config_path_values = { .ext = ".toml" };
+               const std::filesystem::path config_path =
+                 config_path_values.replace_tags("{selected_path}/res/deswizzle{ext}", selections, "{current_path}");
+               auto config = Configuration(config_path);
+               config.save();
+          }
+     }
+     prev_disabled = disabled;
+
      ImGui::BeginDisabled(disabled);
      // input values
      combo_input_type();
@@ -247,7 +261,8 @@ const std::string &fme::batch::get_output_pattern(fme::output_types type)
                return selections->get<ConfigKey::OutputSwizzlePattern>();
           default:
           case output_types::deswizzle:
-          case output_types::deswizzle_combined:
+          case output_types::deswizzle_combined_toml:
+          case output_types::deswizzle_combined_images:
                return selections->get<ConfigKey::OutputDeswizzlePattern>();
      }
 }
@@ -287,7 +302,8 @@ const std::string &fme::batch::get_output_map_pattern(fme::output_types type)
                return selections->get<ConfigKey::OutputMapPatternForSwizzle>();
           default:
           case output_types::deswizzle:
-          case output_types::deswizzle_combined:
+          case output_types::deswizzle_combined_toml:
+          case output_types::deswizzle_combined_images:
                return selections->get<ConfigKey::OutputMapPatternForDeswizzle>();
      }
 }
@@ -388,9 +404,12 @@ void fme::batch::combo_output_type()
           spdlog::error("Failed to lock m_selections: shared_ptr is expired.");
           return;
      }
-     static constexpr auto values =
-       std::array{ output_types::deswizzle, output_types::swizzle, output_types::swizzle_as_one_image, output_types::deswizzle_combined };
-     const auto gcc = fme::GenericCombo(
+     static constexpr auto values = std::array{ output_types::deswizzle,
+                                                output_types::swizzle,
+                                                output_types::swizzle_as_one_image,
+                                                output_types::deswizzle_combined_toml,
+                                                output_types::deswizzle_combined_images };
+     const auto            gcc    = fme::GenericCombo(
        gui_labels::output_type,
        []() { return values; },
        []() { return values | std::views::transform(AsString{}); },
@@ -725,6 +744,14 @@ void fme::batch::button_start()
      {
           return;
      }
+     if (selections->get<ConfigKey::BatchOutputType>() == output_types::deswizzle_combined_toml)
+     {
+          const key_value_data        config_path_values = { .ext = ".toml" };
+          const std::filesystem::path config_path =
+            config_path_values.replace_tags("{selected_path}/res/deswizzle{ext}", selections, "{current_path}");
+          auto config = Configuration(config_path);
+          config->clear();
+     }
 
      m_fields_consumer = archives_group->fields();
      m_field.reset();
@@ -891,7 +918,7 @@ void fme::batch::update([[maybe_unused]] float elapsed_time)
      // Attempt to process any pending futures first
      (void)consume_one_future();
 
-     //hold back we queue too much it crashes.
+     // hold back we queue too much it crashes.
      if (!m_future_of_future_consumer.done() || !m_future_consumer.done())
      {
           return;
@@ -935,7 +962,11 @@ void fme::batch::update([[maybe_unused]] float elapsed_time)
                m_future_consumer +=
                  m_map_sprite.save_deswizzle_textures(selections->get<ConfigKey::OutputDeswizzlePattern>(), selected_string);
                break;
-          case output_types::deswizzle_combined:
+          case output_types::deswizzle_combined_toml:
+               m_future_consumer +=
+                 m_map_sprite.save_deswizzle_combined_toml(selections->get<ConfigKey::OutputDeswizzlePattern>(), selected_string);
+               break;
+          case output_types::deswizzle_combined_images:
                m_future_consumer +=
                  m_map_sprite.save_deswizzle_combined_textures(selections->get<ConfigKey::OutputDeswizzlePattern>(), selected_string);
                break;
@@ -949,7 +980,9 @@ void fme::batch::update([[maybe_unused]] float elapsed_time)
      }
 
      // Optionally save the modified map
-     if (selections->get<ConfigKey::BatchOutputSaveMap>())
+     if (
+       selections->get<ConfigKey::BatchOutputSaveMap>()
+       && selections->get<ConfigKey::BatchOutputType>() != output_types::deswizzle_combined_toml)
      {
           const key_value_data cpm2 = {
                .field_name    = m_map_sprite.get_base_name(),

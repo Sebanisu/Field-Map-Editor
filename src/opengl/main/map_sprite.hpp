@@ -170,8 +170,11 @@ struct [[nodiscard]] map_sprite// final
      [[nodiscard]] std::vector<std::future<void>>
        save_deswizzle_textures(const std::string &keyed_string, const std::filesystem::path &selected_path);
      [[nodiscard]] std::vector<std::future<void>>
+       save_deswizzle_combined_toml(const std::string &keyed_string, const std::filesystem::path &selected_path);
+     [[nodiscard]] std::vector<std::future<void>>
        save_deswizzle_combined_textures(const std::string &keyed_string, const std::filesystem::path &selected_path);
-     [[nodiscard]] std::future<std::future<void>> load_swizzle_textures(std::uint8_t texture_page, std::uint8_t palette) const;
+      [[nodiscard]] std::future<std::future<void>>
+                                                  load_swizzle_textures(std::uint8_t texture_page, std::uint8_t palette) const;
      [[nodiscard]] std::future<std::future<void>> load_swizzle_textures(std::uint8_t texture_page) const;
      [[nodiscard]] std::future<std::future<void>>
        load_swizzle_as_one_image_textures(std::optional<std::uint8_t> palette = std::nullopt) const;

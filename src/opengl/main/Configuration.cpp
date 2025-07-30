@@ -10,16 +10,20 @@
 fme::Configuration::Configuration(std::filesystem::path in_path)
   : m_path(std::move(in_path))
   , m_table([&]() {
-       auto [it, inserted] = s_tables.try_emplace(m_path, [&]() {
+       auto it = s_tables.find(m_path);
+       if (it == s_tables.end())
+       {
             toml::parse_result result = toml::parse_file(m_path.string());
             if (!result)
             {
                  spdlog::warn("TOML Parsing failed: {}\n\t{}", result.error().description(), m_path.string());
-                 return toml::table{};
+                 it = s_tables.emplace(m_path, toml::table{}).first;
             }
-            return std::move(result).table();
-       }());
-
+            else
+            {
+                 it = s_tables.emplace(m_path, std::move(result).table()).first;
+            }
+       }
        return &it->second;
   }())
 {
