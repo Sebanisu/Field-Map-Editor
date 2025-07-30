@@ -1887,20 +1887,24 @@ std::string map_sprite::get_base_name() const
                                                                       && m_map_group.opt_coo.value() != open_viii::LangT::generic
                                                                            ? m_map_group.opt_coo
                                                                            : std::nullopt };
-     const std::filesystem::path config_path        = config_path_values.replace_tags(keyed_string, selections, selected_path);
-     auto                        config             = Configuration(config_path);
-     config->clear();
+     const std::filesystem::path config_path =
+       config_path_values.replace_tags("{selected_path}/deswizzle{ext}"s, selections, selected_path);
+     auto       config = Configuration(config_path);
+     // config->clear();
      const auto coo =
        m_map_group.opt_coo.has_value() && m_map_group.opt_coo.value() != open_viii::LangT::generic ? m_map_group.opt_coo : std::nullopt;
-     config->insert_or_assign("field_name", get_base_name());
-     if (coo.has_value())
-     {
-          config->insert_or_assign("coo", std::to_underlying(coo.value()));
-     }
-     else
-     {
-          config->erase("coo");
-     }
+     toml::table field_table = {};
+     toml::table coo_table   = {};
+     std::string coo_key     = [&coo]() {
+          if (coo.has_value())
+          {
+               return std::string(open_viii::LangCommon::to_string_3_char(coo.value()));
+          }
+          else
+          {
+               return "UNK"s;
+          }
+     }();
      // Loop through each Pupu ID and generate/save textures
      // for (auto &&[index, pupu_range] : enumerated)
      {
@@ -1908,70 +1912,39 @@ std::string map_sprite::get_base_name() const
           //  if (std::ranges::size(settings.filters.value().multi_pupu.value()) == 1ull && std::ranges::size(unique_pupu_ids) != 1ull)
           //  {
           //       continue;
-          //  }
+          //  }+
           std::uint32_t index = {};
           for (auto &&[blend_mode, layer_id, animation_id] :
                std::views::cartesian_product(blend_modes.values(), layer_ids.values(), animation_ids.values()))
           {
                for (const auto &animation_state : animation_states.at(animation_id).values())
                {
-                    // settings.filters.value().z.update(z).enable();
-                    settings.filters.value().layer_id.update(layer_id).enable();
-                    settings.filters.value().multi_animation_id.update(std::vector<std::uint8_t>{ animation_id }).enable();
-                    settings.filters.value().animation_frame.update(animation_state).enable();
-                    settings.filters.value().blend_mode.update(blend_mode).enable();
-                    // if (!std::ranges::all_of(settings.filters.value().multi_pupu.value(), [&](const ff_8::PupuID &pupu_id) -> bool {
-                    //          return pupu_id.animation_id() == animation_id && pupu_id.animation_state() == animation_state
-                    //                 && pupu_id.layer_id() == layer_id && pupu_id.blend_mode() == blend_mode && z ==
-                    //     }))
-                    // {
-
-                    //      continue;
-                    // }
+                    auto &filters         = settings.filters.value();
+                    auto  updated_filters = std::forward_as_tuple(
+                      filters.layer_id.update(layer_id).enable(),
+                      filters.multi_animation_id.update(std::vector<std::uint8_t>{ animation_id }).enable(),
+                      filters.animation_frame.update(animation_state).enable(),
+                      filters.blend_mode.update(blend_mode).enable());
 
                     auto out_framebuffer = glengine::FrameBuffer{ specification };
                     if (generate_texture(out_framebuffer))
                     {
-                         toml::table           file;
-                         // file.insert("bits", fmt::format("{:0B}", static_cast<std::uint32_t>(index) + 1U));
-                         const key_value_data  cpm                 = { .field_name    = get_base_name(),
-                                                                       .ext           = ".png",
-                                                                       .language_code = coo,
-                                                                       .pupu_id       = index++ };
+                         toml::table          file;
+                         const key_value_data cpm = {
+                              .field_name = get_base_name(), .ext = ".png", .language_code = coo, .pupu_id = index++
+                         };
 
-                         std::filesystem::path out_path            = cpm.replace_tags(keyed_string, selections, selected_path);
-                         // for (const ff_8::PupuID &pupu_id : pupu_range)
-                         // {
-                         //      toml::table pupu_entry;
-                         //      pupu_entry.insert("raw", pupu_id.raw());
-                         //      pupu_entry.insert("offset", pupu_id.offset());
-                         //      pupu_entry.insert("x_aligned", pupu_id.is_x_not_aligned_to_grid());
-                         //      pupu_entry.insert("y_aligned", pupu_id.is_y_not_aligned_to_grid());
-                         //      pupu_entry.insert("layer", pupu_id.layer_id());
-                         //      pupu_entry.insert("blend", std::to_underlying(pupu_id.blend_mode()));
-                         //      pupu_entry.insert("anim_id", pupu_id.animation_id());
-                         //      pupu_entry.insert("anim_state", pupu_id.animation_state());
-                         //      file.insert(fmt::format("{:08X}", static_cast<std::uint32_t>(pupu_id)), std::move(pupu_entry));
-                         // }
-                         // file.insert("z", z);
-                         toml::array           animation_ids_array = {};
-                         for (const auto &value : settings.filters.value().multi_animation_id.value())
-                              animation_ids_array.push_back(value);
-                         file.insert("layer_id", layer_id);
-                         file.insert("animation_id", std::move(animation_ids_array));
-                         file.insert("animation_state", animation_state);
-                         file.insert("blend_mode", std::to_underlying(blend_mode));
-
-
-                         config->insert_or_assign(out_path.filename().string(), std::move(file));
-
-                         future_of_futures.push_back(save_image_pbo(std::move(out_path), std::move(out_framebuffer)));
+                         std::apply([&](auto &&...fns) { (fns.update(file), ...); }, updated_filters);
+                         std::filesystem::path out_path = cpm.replace_tags(keyed_string, selections, selected_path);
+                         coo_table.insert_or_assign(out_path.filename().string(), std::move(file));
+                         //future_of_futures.push_back(save_image_pbo(std::move(out_path), std::move(out_framebuffer)));
                     }
                }
           }
      }
-
-     config.save(true);
+     field_table.insert_or_assign(coo_key, std::move(coo_table));
+     config->insert_or_assign(get_base_name(), std::move(field_table));
+     config.save();// true
      return future_of_futures;
      // Note: Caller should consume_futures(future_of_futures) to wait for saves to finish
 }
