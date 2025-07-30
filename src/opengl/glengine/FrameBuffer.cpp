@@ -177,14 +177,14 @@ static bool is_framebuffer_complete(GLenum target, std::string_view context = ""
 }
 FrameBuffer FrameBuffer::clone() const
 {
-     const auto  backup_fbo = backup();
+     const auto backup_fbo = backup();
 
      this->bind_read();
      if (!is_framebuffer_complete(GL_READ_FRAMEBUFFER, "FrameBuffer::clone - source"))
      {
           return {};
      }
-     
+
      FrameBuffer copy(m_specification);
      copy.bind_draw();
      if (!is_framebuffer_complete(GL_DRAW_FRAMEBUFFER, "FrameBuffer::clone - destination"))
@@ -200,6 +200,24 @@ FrameBuffer FrameBuffer::clone() const
                // RED_INTEGER and others intentionally skipped
                continue;
           }
+          GLint maxColorAttachments = 0;
+          GlCall{}(glGetIntegerv, GL_MAX_COLOR_ATTACHMENTS, &maxColorAttachments);
+
+          if (!(std::cmp_greater_equal(attachment, GL_COLOR_ATTACHMENT0)
+                && std::cmp_less(attachment, GL_COLOR_ATTACHMENT0 + maxColorAttachments)))
+          {
+               continue;
+          }
+
+          // GLint objectType = GL_NONE;
+          // GlCall{}(
+          //   glGetFramebufferAttachmentParameteriv, GL_READ_FRAMEBUFFER, attachment, GL_FRAMEBUFFER_ATTACHMENT_OBJECT_TYPE, &objectType);
+
+          // if (objectType == GL_NONE)
+          // {
+          //      // Nothing attached at this read attachment
+          //      continue;
+          // }
 
           GlCall{}(glReadBuffer, attachment);
           GlCall{}(glDrawBuffer, attachment);

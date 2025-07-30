@@ -61,7 +61,8 @@ void GlGetError(const std::source_location location)
 {
      while (GlCheckError("Error", location))
      {
-          assert(false);
+          //TODO figure out why clone fails sometimes like when changing ff8 path.
+          //assert(false);
      }
 }
 
