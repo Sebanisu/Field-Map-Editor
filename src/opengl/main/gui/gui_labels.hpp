@@ -39,7 +39,7 @@ struct gui_labels
      static constexpr std::string_view processing                             = { "Processing" };
      static constexpr std::string_view display_history                        = { "History" };
      static constexpr std::string_view history                                = { "History" };
-     static constexpr std::string_view animation_frame                        = { "Animation Frame" };
+     static constexpr std::string_view animation_state                        = { "Animation State" };
      static constexpr std::string_view z                                      = { "Z" };
      static constexpr std::string_view blend_other                            = { "Blend Other" };
      static constexpr std::string_view blend_mode                             = { "Blend Mode" };
@@ -75,7 +75,7 @@ struct gui_labels
      static constexpr std::string_view swizzle_as_one_image                   = { "Swizzle as one Image" };
      static constexpr std::string_view deswizzle                              = { "Deswizzle" };
      static constexpr std::string_view deswizzle_combined_toml                = { "Generate .toml for combined deswizzles" };
-     static constexpr std::string_view deswizzle_combined_images                = { "Read .toml for combined deswizzles to make images" };
+     static constexpr std::string_view deswizzle_combined_images              = { "Read .toml for combined deswizzles to make images" };
      static constexpr std::string_view disable_blending                       = { "Disable Blending" };
      static constexpr std::string_view force_reloading_of_textures            = { "Force Reloading Of Textures" };
      static constexpr std::string_view force_rendering_of_map                 = { "Force Rendering Of Map" };
@@ -275,7 +275,7 @@ struct gui_labels
      };
      static constexpr auto tile_values =
        std::array{ hex,         source,       destination,     z,   bpp, palette, texture_page, layer_id, blend_mode,
-                   blend_other, animation_id, animation_frame, draw };
+                   blend_other, animation_id, animation_state, draw };
 
 
      static constexpr std::string_view selected_path         = { "{selected_path}" };

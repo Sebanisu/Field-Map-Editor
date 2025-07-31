@@ -317,7 +317,7 @@ struct fmt::formatter<tileT> : fmt::formatter<std::string>
             tile.blend(),
             fme::gui_labels::animation_id,
             tile.animation_id(),
-            fme::gui_labels::animation_frame,
+            fme::gui_labels::animation_state,
             tile.animation_state(),
             fme::gui_labels::draw,
             tile.draw());
@@ -365,7 +365,7 @@ struct fmt::formatter<open_viii::graphics::background::normalized_source_tile> :
             tile.m_tex_id_buffer.blend(),
             fme::gui_labels::animation_id,
             tile.m_animation_id,
-            fme::gui_labels::animation_frame,
+            fme::gui_labels::animation_state,
             tile.m_animation_state,
             fme::gui_labels::draw,
             tile.m_tex_id_buffer.draw);

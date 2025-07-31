@@ -67,10 +67,6 @@ struct unique_values_and_strings
 
      [[nodiscard]] std::vector<std::string> get_strings(const std::vector<T> &data) const
      {
-          using namespace open_viii::graphics::background;
-          using namespace open_viii::graphics;
-          using namespace open_viii::graphics::literals;
-          using namespace std::string_literals;
           std::vector<std::string> vector;
           vector.reserve(std::size(data));
           std::ranges::transform(data, std::back_inserter(vector), [](const T &t_value) { return fmt::format("{}", t_value); });
@@ -109,10 +105,7 @@ struct all_unique_values_and_strings
      explicit all_unique_values_and_strings(std::monostate /*unused*/) {}
      template<std::ranges::range tilesT>
      explicit all_unique_values_and_strings(const tilesT &tiles)
-       : m_z(
-           tiles,
-           [](const auto &tile) { return tile.z(); },
-           std::greater<>{})
+       : m_z(tiles, ff_8::tile_operations::Z{}, std::greater<>{})
        , m_layer_id(tiles, ff_8::tile_operations::LayerId{})
        , m_texture_page_id(tiles, ff_8::tile_operations::TextureId{})
        , m_animation_id(tiles, ff_8::tile_operations::AnimationId{})
@@ -163,7 +156,7 @@ struct all_unique_values_and_strings
      {
           return m_bpp;
      }
-     [[nodiscard]] const auto &animation_frame() const
+     [[nodiscard]] const auto &animation_state() const
      {
           return m_animation_frame;
      }

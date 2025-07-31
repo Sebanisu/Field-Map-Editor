@@ -1782,12 +1782,12 @@ void gui::edit_menu()
                       });
 
                     {
-                         const auto &map = m_map_sprite->uniques().animation_frame();
+                         const auto &map = m_map_sprite->uniques().animation_state();
                          const auto &key = m_map_sprite->filter().animation_id.value();
                          if (map.contains(key))
                          {
                               generic_filter_menu(
-                                gui_labels::animation_frame.data(), map.at(key), m_map_sprite->filter().animation_frame, [&]() {
+                                gui_labels::animation_state.data(), map.at(key), m_map_sprite->filter().animation_state, [&]() {
                                      refresh_render_texture();
                                 });
                          }
@@ -3182,12 +3182,12 @@ void gui::combo_filtered_palettes()
           return;
      }
      const auto &pair = map.at(key);
-     const auto  gcc  = fme::GenericComboWithFilter(
+     const auto  gcc  = fme::GenericComboWithMultiFilter(
        gui_labels::palette,
        [&pair]() { return pair.values(); },
        [&pair]() { return pair.strings(); },
-       EmptyStringView{},
-       [this]() -> auto  &{ return m_map_sprite->filter().palette; });
+       [&pair]() { return pair.strings(); },
+       [this]() -> auto  &{ return m_map_sprite->filter().multi_palette; });
      if (!gcc.render())
      {
           return;
@@ -3214,12 +3214,12 @@ void gui::combo_filtered_bpps()
 void gui::combo_filtered_blend_modes()
 {
      const auto &pair = m_map_sprite->uniques().blend_mode();
-     const auto  gcc  = fme::GenericComboWithFilter(
+     const auto  gcc  = fme::GenericComboWithMultiFilter(
        gui_labels::blend_mode,
        [&pair]() { return pair.values(); },
        [&pair]() { return pair.strings(); },
-       EmptyStringView{},
-       [this]() -> auto  &{ return m_map_sprite->filter().blend_mode; });
+       [&pair]() { return pair.strings(); },
+       [this]() -> auto  &{ return m_map_sprite->filter().multi_blend_mode; });
      if (!gcc.render())
      {
           return;
@@ -3239,12 +3239,12 @@ void gui::refresh_render_texture(bool reload_textures)
 void gui::combo_filtered_layers()
 {
      const auto &pair = m_map_sprite->uniques().layer_id();
-     const auto  gcc  = fme::GenericComboWithFilter(
+     const auto  gcc  = fme::GenericComboWithMultiFilter(
        gui_labels::layer_id,
        [&pair]() { return pair.values(); },
        [&pair]() { return pair.strings(); },
-       EmptyStringView{},
-       [this]() -> auto  &{ return m_map_sprite->filter().layer_id; });
+       [&pair]() { return pair.strings(); },
+       [this]() -> auto  &{ return m_map_sprite->filter().multi_layer_id; });
      if (!gcc.render())
      {
           return;
@@ -3255,12 +3255,12 @@ void gui::combo_filtered_layers()
 void gui::combo_filtered_texture_pages()
 {
      const auto &pair = m_map_sprite->uniques().texture_page_id();
-     const auto  gcc  = fme::GenericComboWithFilter(
+     const auto  gcc  = fme::GenericComboWithMultiFilter(
        gui_labels::texture_page,
        [&pair]() { return pair.values(); },
        [&pair]() { return pair.strings(); },
-       EmptyStringView{},
-       [this]() -> auto  &{ return m_map_sprite->filter().texture_page_id; });
+       [&pair]() { return pair.strings(); },
+       [this]() -> auto  &{ return m_map_sprite->filter().multi_texture_page_id; });
      if (!gcc.render())
      {
           return;
@@ -3271,12 +3271,12 @@ void gui::combo_filtered_texture_pages()
 void gui::combo_filtered_animation_ids()
 {
      const auto &pair = m_map_sprite->uniques().animation_id();
-     const auto  gcc  = fme::GenericComboWithFilter(
+     const auto  gcc  = fme::GenericComboWithMultiFilter(
        gui_labels::animation_id,
        [&pair]() { return pair.values(); },
        [&pair]() { return pair.strings(); },
-       EmptyStringView{},
-       [this]() -> auto  &{ return m_map_sprite->filter().animation_id; });
+       [&pair]() { return pair.strings(); },
+       [this]() -> auto  &{ return m_map_sprite->filter().multi_animation_id; });
      if (!gcc.render())
      {
           return;
@@ -3287,12 +3287,12 @@ void gui::combo_filtered_animation_ids()
 void gui::combo_filtered_blend_other()
 {
      const auto &pair = m_map_sprite->uniques().blend_other();
-     const auto  gcc  = fme::GenericComboWithFilter(
+     const auto  gcc  = fme::GenericComboWithMultiFilter(
        gui_labels::blend_other,
        [&pair]() { return pair.values(); },
        [&pair]() { return pair.strings(); },
-       EmptyStringView{},
-       [this]() -> auto  &{ return m_map_sprite->filter().blend_other; });
+       [&pair]() { return pair.strings(); },
+       [this]() -> auto  &{ return m_map_sprite->filter().multi_blend_other; });
      if (!gcc.render())
      {
           return;
@@ -3304,12 +3304,12 @@ void gui::combo_filtered_blend_other()
 void gui::combo_filtered_z()
 {
      const auto &pair = m_map_sprite->uniques().z();
-     const auto  gcc  = fme::GenericComboWithFilter(
+     const auto  gcc  = fme::GenericComboWithMultiFilter(
        gui_labels::z,
        [&pair]() { return pair.values(); },
        [&pair]() { return pair.strings(); },
-       EmptyStringView{},
-       [this]() -> auto  &{ return m_map_sprite->filter().z; });
+       [&pair]() { return pair.strings(); },
+       [this]() -> auto  &{ return m_map_sprite->filter().multi_z; });
      if (!gcc.render())
      {
           return;
@@ -3319,19 +3319,19 @@ void gui::combo_filtered_z()
 
 void gui::combo_filtered_animation_states()
 {
-     const auto &map = m_map_sprite->uniques().animation_frame();
+     const auto &map = m_map_sprite->uniques().animation_state();
      const auto &key = m_map_sprite->filter().animation_id.value();
      if (!map.contains(key))
      {
           return;
      }
      const auto &pair = map.at(key);
-     const auto  gcc  = fme::GenericComboWithFilter(
-       gui_labels::animation_frame,
+     const auto  gcc  = fme::GenericComboWithMultiFilter(
+       gui_labels::animation_state,
        [&pair]() { return pair.values(); },
        [&pair]() { return pair.strings(); },
-       EmptyStringView{},
-       [this]() -> auto  &{ return m_map_sprite->filter().animation_frame; });
+       [&pair]() { return pair.strings(); },
+       [this]() -> auto  &{ return m_map_sprite->filter().multi_animation_state; });
      if (!gcc.render())
      {
           return;

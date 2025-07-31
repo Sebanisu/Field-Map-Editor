@@ -335,7 +335,7 @@ template<>
 struct ConfigKeys<FilterTag::MultiBlendOther>
 {
      using TileT                                        = open_viii::graphics::background::Tile1;
-     using value_type                                   = ff_8::tile_operations::BlendT<TileT>;
+     using value_type                                   = std::vector<ff_8::tile_operations::BlendT<TileT>>;
      using operation_type                               = ff_8::tile_operations::Blend;
      static constexpr std::string_view key_name         = "filter_multi_blend_other";
      static constexpr std::string_view enabled_key_name = "filter_multi_blend_other_enabled";
@@ -921,8 +921,8 @@ struct filters
      filter<FilterTag::MultiPalette>          multi_palette;
      filter<FilterTag::AnimationId>           animation_id;
      filter<FilterTag::MultiAnimationId>      multi_animation_id;
-     filter<FilterTag::AnimationFrame>        animation_frame;
-     filter<FilterTag::MultiAnimationFrame>   multi_animation_frame;
+     filter<FilterTag::AnimationFrame>        animation_state;
+     filter<FilterTag::MultiAnimationFrame>   multi_animation_state;
      filter<FilterTag::LayerId>               layer_id;
      filter<FilterTag::MultiLayerId>          multi_layer_id;
      filter<FilterTag::TexturePageId>         texture_page_id;
@@ -948,8 +948,8 @@ struct filters
        , multi_palette(load_config, config)
        , animation_id(load_config, config)
        , multi_animation_id(load_config, config)
-       , animation_frame(load_config, config)
-       , multi_animation_frame(load_config, config)
+       , animation_state(load_config, config)
+       , multi_animation_state(load_config, config)
        , layer_id(load_config, config)
        , multi_layer_id(load_config, config)
        , texture_page_id(load_config, config)
@@ -980,8 +980,8 @@ struct filters
             multi_palette,
             animation_id,
             multi_animation_id,
-            animation_frame,
-            multi_animation_frame,
+            animation_state,
+            multi_animation_state,
             layer_id,
             multi_layer_id,
             texture_page_id,
@@ -1011,8 +1011,8 @@ struct filters
             multi_palette,
             animation_id,
             multi_animation_id,
-            animation_frame,
-            multi_animation_frame,
+            animation_state,
+            multi_animation_state,
             layer_id,
             multi_layer_id,
             texture_page_id,
@@ -1038,8 +1038,8 @@ struct filters
                                                     multi_palette,
                                                     animation_id,
                                                     multi_animation_id,
-                                                    animation_frame,
-                                                    multi_animation_frame,
+                                                    animation_state,
+                                                    multi_animation_state,
                                                     layer_id,
                                                     multi_layer_id,
                                                     texture_page_id,
