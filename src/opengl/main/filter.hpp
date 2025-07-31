@@ -355,7 +355,7 @@ template<>
 struct ConfigKeys<FilterTag::MultiBpp>
 {
      using TileT                                        = open_viii::graphics::background::Tile1;
-     using value_type                                   = ff_8::tile_operations::DepthT<TileT>;
+     using value_type                                   = std::vector<ff_8::tile_operations::DepthT<TileT>>;
      using operation_type                               = ff_8::tile_operations::Depth;
      static constexpr std::string_view key_name         = "filter_multi_bpp";
      static constexpr std::string_view enabled_key_name = "filter_multi_bpp_enabled";
@@ -415,6 +415,10 @@ struct FilterLoadStrategy
                     (void)fme::Configuration::
                       load_array<glengine::vector_elem_type_t<ValueT>, std::underlying_type_t<glengine::vector_elem_type_t<ValueT>>>(
                         config, id, value);
+               }
+               else if constexpr (std::same_as<glengine::vector_elem_type_t<ValueT>, open_viii::graphics::BPPT>)
+               {
+                    (void)fme::Configuration::load_array<glengine::vector_elem_type_t<ValueT>, std::uint8_t>(config, id, value);
                }
                else if constexpr (std::same_as<glengine::vector_elem_type_t<ValueT>, PupuID>)
                {
@@ -482,6 +486,10 @@ struct FilterUpdateStrategy
                     fme::Configuration::
                       update_array<glengine::vector_elem_type_t<ValueT>, std::underlying_type_t<glengine::vector_elem_type_t<ValueT>>>(
                         config, id, value);
+               }
+               else if constexpr (std::same_as<glengine::vector_elem_type_t<ValueT>, open_viii::graphics::BPPT>)
+               {
+                    fme::Configuration::update_array<glengine::vector_elem_type_t<ValueT>, std::uint8_t>(config, id, value);
                }
                else if constexpr (std::same_as<glengine::vector_elem_type_t<ValueT>, PupuID>)
                {
@@ -743,31 +751,63 @@ struct filter
      }
      template<typename U>
      filter &update(U &&value)
+          requires open_viii::graphics::background::is_tile<std::remove_cvref_t<U>>
      {
-          if constexpr (open_viii::graphics::background::is_tile<std::remove_cvref_t<U>>)
+          return update(std::invoke(s_operation, value));
+     }
+
+     template<typename U>
+          requires std::same_as<std::remove_cvref_t<U>, toml::table>
+     filter &update(U &&value)
+     {
+          FilterUpdateStrategy<value_type>::update_value(value, ConfigKeys<Tag>::key_name, m_value);
+          FilterUpdateStrategy<value_type>::update_settings(value, ConfigKeys<Tag>::enabled_key_name, m_settings);
+          return *this;
+     }
+
+     template<typename U>
+          requires(
+            !std::same_as<std::remove_cvref_t<U>, value_type> && std::ranges::range<std::remove_cvref_t<U>>
+            && std::ranges::range<value_type>
+            && std::indirectly_movable<std::ranges::iterator_t<std::remove_cvref_t<U>>, std::back_insert_iterator<value_type>>)
+     filter &update(U &&value)
+     {
+          if (!std::ranges::equal(m_value, value))
           {
-               return update(std::invoke(s_operation, value));
-          }
-          else if constexpr (std::same_as<std::remove_cvref_t<U>, toml::table>)
-          {
-               FilterUpdateStrategy<value_type>::update_value(value, ConfigKeys<Tag>::key_name, m_value);
-               FilterUpdateStrategy<value_type>::update_settings(value, ConfigKeys<Tag>::enabled_key_name, m_settings);
-          }
-          else
-          {
-               if (m_value != value)
+               if constexpr (requires(value_type v) { v.clear(); })
+                    m_value.clear();
+
+               std::ranges::move(value, std::back_inserter(m_value));
+
+               if (HasFlag(m_settings, FilterSettings::Config_Enabled))
                {
-                    m_value = std::forward<U>(value);
-                    if (HasFlag(m_settings, FilterSettings::Config_Enabled))
-                    {
-                         fme::Configuration config{};
-                         FilterUpdateStrategy<value_type>::update_value(config, ConfigKeys<Tag>::key_name, m_value);
-                         config.save();
-                    }
+                    fme::Configuration config{};
+                    FilterUpdateStrategy<value_type>::update_value(*config, ConfigKeys<Tag>::key_name, m_value);
+                    config.save();
                }
           }
           return *this;
      }
+
+     template<typename U>
+          requires(std::equality_comparable_with<std::remove_cvref_t<U>, value_type> && std::assignable_from<value_type &, U>)
+
+     filter &update(U &&value)
+     {
+          if (m_value != value)
+          {
+               m_value = std::forward<U>(value);
+
+               if (HasFlag(m_settings, FilterSettings::Config_Enabled))
+               {
+                    fme::Configuration config{};
+                    FilterUpdateStrategy<value_type>::update_value(config, ConfigKeys<Tag>::key_name, m_value);
+                    config.save();
+               }
+          }
+          return *this;
+     }
+
      [[nodiscard]] const value_type &value() const
      {
           return m_value;

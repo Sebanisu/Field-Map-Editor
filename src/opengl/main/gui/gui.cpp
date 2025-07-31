@@ -681,8 +681,8 @@ void gui::control_panel_window_mim()
      {
           if (!m_mim_sprite->draw_palette())
           {
-               combo_bpp();
-               combo_palette();
+               combo_mim_bpp();
+               combo_mim_palette();
                format_imgui_text("{} == {}", gui_labels::width, gui_labels::max_tiles);
           }
      }
@@ -787,17 +787,17 @@ void gui::collapsing_header_filters()
 {
      if (ImGui::CollapsingHeader(gui_labels::filters.data()))
      {
-          combo_pupu();
+          combo_filtered_pupu();
           combo_filtered_bpps();
           combo_filtered_palettes();
-          combo_blend_modes();
-          combo_blend_other();
-          combo_layers();
-          combo_texture_pages();
-          combo_animation_ids();
-          combo_animation_frames();
-          combo_z();
-          combo_draw_bit();
+          combo_filtered_blend_modes();
+          combo_filtered_blend_other();
+          combo_filtered_layers();
+          combo_filtered_texture_pages();
+          combo_filtered_animation_ids();
+          combo_filtered_animation_states();
+          combo_filtered_z();
+          combo_filtered_draw_bit();
      }
 }
 bool gui::change_background_color(const fme::color &in_color)
@@ -1283,7 +1283,7 @@ void gui::refresh_bpp(BPPT in_bpp)
      }
      m_changed = true;
 }
-void gui::combo_bpp()
+void gui::combo_mim_bpp()
 {
      {
           const auto gcc = GenericCombo(
@@ -1311,7 +1311,7 @@ static void update_palette(map_sprite &sprite, [[maybe_unused]] uint8_t palette)
 {
      sprite.update_render_texture();
 }
-void gui::combo_palette()
+void gui::combo_mim_palette()
 {
      if (m_selections->get<ConfigKey::Bpp>() != BPPT::BPP16_CONST())
      {
@@ -2312,16 +2312,16 @@ void gui::directory_browser_display()
      {
           return;
      }
-     const auto            pop_directory         = glengine::ScopeGuard([this]() { m_directory_browser.ClearSelected(); });
-     [[maybe_unused]] bool changed               = false;
-     const auto            selected_path         = m_directory_browser.GetSelected();
+     const auto              pop_directory = glengine::ScopeGuard([this]() { m_directory_browser.ClearSelected(); });
+     [[maybe_unused]] bool   changed       = false;
+     const auto              selected_path = m_directory_browser.GetSelected();
 
-     const ff_8::path_search ps    = static_cast<ff_8::path_search>(*m_map_sprite);
+     const ff_8::path_search ps            = static_cast<ff_8::path_search>(*m_map_sprite);
      // const auto has_map_path    = [&](const std::filesystem::path &path) -> std::vector<bool> { return { ps.has_map_path(path, ".map") };
      // };
 
 
-     const auto add_path_to_config = [&]<ConfigKey Key = ConfigKey::ExternalTexturesAndMapsDirectoryPaths, ConfigKey... Keys>() {
+     const auto add_path_to_config         = [&]<ConfigKey Key = ConfigKey::ExternalTexturesAndMapsDirectoryPaths, ConfigKey... Keys>() {
           std::apply(
             [&](auto *...paths) { (paths->push_back(selected_path), ...); },
             std::tuple(&m_selections->get<Key>(), &m_selections->get<ConfigKey::CacheTextureAndMapPaths>()));
@@ -2337,13 +2337,13 @@ void gui::directory_browser_display()
               std::pair(&m_selections->get<ConfigKey::CacheMapPathsEnabled>(), ps.has_map_path(selected_path, ".png"))));
 
           m_selections->update<
-            Key,
-            Keys...,
-            ConfigKey::CacheTextureAndMapPaths,
-            ConfigKey::CacheSwizzlePathsEnabled,
-            ConfigKey::CacheSwizzleAsOneImagePathsEnabled,
-            ConfigKey::CacheDeswizzlePathsEnabled,
-            ConfigKey::CacheMapPathsEnabled>();
+                    Key,
+                    Keys...,
+                    ConfigKey::CacheTextureAndMapPaths,
+                    ConfigKey::CacheSwizzlePathsEnabled,
+                    ConfigKey::CacheSwizzleAsOneImagePathsEnabled,
+                    ConfigKey::CacheDeswizzlePathsEnabled,
+                    ConfigKey::CacheMapPathsEnabled>();
      };
 
      const auto try_enable_filter = [&]<ConfigKey Key, typename Filter, typename... Others>(Filter &filter, Others &...others) -> bool {
@@ -2356,7 +2356,7 @@ void gui::directory_browser_display()
           return false;
      };
 
-     const auto try_enable_map_filter = [&]() -> bool{
+     const auto try_enable_map_filter = [&]() -> bool {
           if (m_selections->get<ConfigKey::CacheMapPathsEnabled>().back())
           {
                m_map_sprite->filter().map.update(selected_path).enable();
@@ -3110,7 +3110,7 @@ std::shared_ptr<map_sprite> gui::get_map_sprite() const
        m_selections);
 }
 
-void gui::combo_pupu()
+void gui::combo_filtered_pupu()
 {
      const auto gcc = GenericComboWithMultiFilter(
        gui_labels::pupu_id,
@@ -3130,7 +3130,7 @@ void gui::combo_pupu()
      m_changed = true;
 }
 
-void gui::combo_draw_bit()
+void gui::combo_filtered_draw_bit()
 {
      using namespace std::string_view_literals;
      static constexpr auto values = std::array{ ff_8::draw_bitT::all, ff_8::draw_bitT::enabled, ff_8::draw_bitT::disabled };
@@ -3198,12 +3198,12 @@ void gui::combo_filtered_palettes()
 void gui::combo_filtered_bpps()
 {
      const auto &pair = m_map_sprite->uniques().bpp();
-     const auto  gcc  = fme::GenericComboWithFilter(
+     const auto  gcc  = fme::GenericComboWithMultiFilter(
        gui_labels::bpp,
        [&pair]() { return pair.values(); },
        [&pair]() { return pair.strings(); },
-       EmptyStringView{},
-       [this]() -> auto  &{ return m_map_sprite->filter().bpp; });
+       [&pair]() { return pair.strings(); },
+       [this]() -> auto  &{ return m_map_sprite->filter().multi_bpp; });
      if (!gcc.render())
      {
           return;
@@ -3211,7 +3211,7 @@ void gui::combo_filtered_bpps()
      refresh_bpp(m_map_sprite->filter().bpp.value());
 }
 
-void gui::combo_blend_modes()
+void gui::combo_filtered_blend_modes()
 {
      const auto &pair = m_map_sprite->uniques().blend_mode();
      const auto  gcc  = fme::GenericComboWithFilter(
@@ -3236,7 +3236,7 @@ void gui::refresh_render_texture(bool reload_textures)
 }
 
 
-void gui::combo_layers()
+void gui::combo_filtered_layers()
 {
      const auto &pair = m_map_sprite->uniques().layer_id();
      const auto  gcc  = fme::GenericComboWithFilter(
@@ -3252,7 +3252,7 @@ void gui::combo_layers()
      m_map_sprite->update_render_texture();
      m_changed = true;
 }
-void gui::combo_texture_pages()
+void gui::combo_filtered_texture_pages()
 {
      const auto &pair = m_map_sprite->uniques().texture_page_id();
      const auto  gcc  = fme::GenericComboWithFilter(
@@ -3268,7 +3268,7 @@ void gui::combo_texture_pages()
      m_map_sprite->update_render_texture();
      m_changed = true;
 }
-void gui::combo_animation_ids()
+void gui::combo_filtered_animation_ids()
 {
      const auto &pair = m_map_sprite->uniques().animation_id();
      const auto  gcc  = fme::GenericComboWithFilter(
@@ -3284,7 +3284,7 @@ void gui::combo_animation_ids()
      m_map_sprite->update_render_texture();
      m_changed = true;
 }
-void gui::combo_blend_other()
+void gui::combo_filtered_blend_other()
 {
      const auto &pair = m_map_sprite->uniques().blend_other();
      const auto  gcc  = fme::GenericComboWithFilter(
@@ -3301,7 +3301,7 @@ void gui::combo_blend_other()
 }
 
 
-void gui::combo_z()
+void gui::combo_filtered_z()
 {
      const auto &pair = m_map_sprite->uniques().z();
      const auto  gcc  = fme::GenericComboWithFilter(
@@ -3317,7 +3317,7 @@ void gui::combo_z()
      refresh_render_texture();
 }
 
-void gui::combo_animation_frames()
+void gui::combo_filtered_animation_states()
 {
      const auto &map = m_map_sprite->uniques().animation_frame();
      const auto &key = m_map_sprite->filter().animation_id.value();
