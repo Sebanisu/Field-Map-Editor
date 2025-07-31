@@ -575,7 +575,8 @@ struct filter_old
      template<typename U>
           requires(
             !std::same_as<std::remove_cvref_t<U>, value_type> && std::ranges::range<std::remove_cvref_t<U>>
-            && std::ranges::range<value_type>)
+            && std::ranges::range<value_type>
+            && std::indirectly_movable<std::ranges::iterator_t<std::remove_cvref_t<U>>, std::back_insert_iterator<value_type>>)
      filter_old &update(U &&value)
      {
           if (!std::ranges::equal(m_value, value))
