@@ -290,6 +290,251 @@ class GenericComboWithFilter
      }
 };
 
+
+template<
+  returns_range_concept  ValueLambdaT,
+  returns_range_concept  StringLambdaT,
+  returns_range_concept  tool_tip_lambda_t,
+  returns_filter_concept filter_lambdaT>
+class GenericComboWithMultiFilter
+{
+   public:
+     GenericComboWithMultiFilter(
+       std::string_view       name,
+       ValueLambdaT         &&value_lambda,
+       StringLambdaT        &&string_lambda,
+       tool_tip_lambda_t    &&tool_tip_lambda,
+       filter_lambdaT       &&filter_lambda,
+       generic_combo_settings settings = {})
+       : name_(name)
+       , values_(std::invoke(std::forward<ValueLambdaT>(value_lambda)))
+       , strings_(std::invoke(std::forward<StringLambdaT>(string_lambda)))
+       , tool_tips_(std::invoke(std::forward<tool_tip_lambda_t>(tool_tip_lambda)))
+       , filter_(std::invoke(std::forward<filter_lambdaT>(filter_lambda)))
+       , settings_(settings)
+       , current_idx_(std::ranges::size(values_), false)
+       , changed_(false)
+       , spacing_(ImGui::GetStyle().ItemInnerSpacing.x)
+     {
+          updateCurrentIndex();
+     }
+
+     bool render() const
+     {
+          if (values_.empty() || strings_.empty())
+          {
+               return false;
+          }
+
+          updateCurrentIndex();
+
+          const auto old_idx = current_idx_;
+          renderCheckBox();
+          renderComboBox();
+          renderExploreButton();
+          renderTitle();
+
+          if (old_idx != current_idx_)
+          {
+               // Log changes between old and current index states
+               for (auto [value, str, old_flag, new_flag] : std::views::zip(values_, strings_, old_idx, current_idx_))
+               {
+                    if (old_flag != new_flag)
+                    {
+                         const char *state = new_flag ? "Enabled" : "Disabled";
+                         spdlog::info("{}: \t{}\t{}\t{}\t{}", gui_labels::set, name_, value, str, state);
+                    }
+               }
+
+               filter_.get().update(
+                 std::views::zip(values_, current_idx_) | std::views::filter([](const auto &tuple) { return std::get<1>(tuple); })
+                 | std::views::transform([](const auto &tuple) { return std::get<0>(tuple); }) | std::ranges::to<std::vector>());
+          }
+
+          return old_idx != current_idx_ || changed_;
+     }
+
+   private:
+     std::string_view                                                                  name_;
+     std::invoke_result_t<ValueLambdaT>                                                values_;
+     std::invoke_result_t<StringLambdaT>                                               strings_;
+     std::invoke_result_t<tool_tip_lambda_t>                                           tool_tips_;
+     std::reference_wrapper<std::remove_cvref_t<std::invoke_result_t<filter_lambdaT>>> filter_;
+     generic_combo_settings                                                            settings_;
+     mutable std::vector<bool>                                                         current_idx_;
+     mutable bool                                                                      changed_;
+     const float                                                                       spacing_;
+
+     void                                                                              updateCurrentIndex() const
+     {
+          const auto &filter_value = filter_.get().value();
+          for (auto &&[value, enabled] : std::views::zip(values_, current_idx_))
+          {
+               if (auto it = std::ranges::find(filter_value, value); it != filter_value.end())
+               {
+                    enabled = true;
+               }
+          }
+     }
+
+     // template<typename Range>
+     // auto getNext(const Range &range, const auto &idx) const
+     // {
+     //      return std::ranges::next(std::ranges::begin(range), idx);
+     // }
+     void renderCheckBox() const
+     {
+          const auto _        = PushPopID();
+          bool       disabled = std::ranges::none_of(current_idx_, std::identity{});
+          if (disabled && filter_.get().enabled())
+          {
+               filter_.get().disable();
+               changed_ = true;
+          }
+          ImGui::BeginDisabled(disabled);
+
+          if (bool checked = filter_.get().enabled(); ImGui::Checkbox("", &checked))
+          {
+               checked ? filter_.get().enable() : filter_.get().disable();
+               changed_ = true;
+          }
+          ImGui::SameLine(0, spacing_);
+          ImGui::EndDisabled();
+     }
+
+     void renderComboBox() const
+     {
+          const auto  _            = PushPopID();
+          const float button_size  = ImGui::GetFrameHeight();
+          const float button_count = [&]() {
+               int count = 1;
+               if (settings_.show_explore_button)
+               {
+                    ++count;
+               }
+               return static_cast<float>(count);
+          }();
+          ImGui::PushItemWidth(ImGui::CalcItemWidth() - spacing_ * button_count - button_size * button_count);
+          const auto pop_item_width = glengine::ScopeGuard(&ImGui::PopItemWidth);
+
+          auto       zip_view       = std::views::zip(strings_, current_idx_, tool_tips_);
+
+          auto current_view = std::views::zip(strings_, current_idx_) | std::views::filter([](const auto &tup) { return std::get<1>(tup); })
+                              | std::views::transform([](const auto &tup) { return std::get<0>(tup); });
+          const auto current_item = [&]() {
+               auto tmp = std::ranges::join_with_view(current_view, std::string_view{ ", " }) | std::ranges::to<std::string>();
+               if (std::ranges::empty(tmp))
+               {
+                    tmp = "Select a value...";
+               }
+               return tmp;
+          }();
+
+
+          if (ImGui::BeginCombo("##Empty", std::ranges::data(current_item), ImGuiComboFlags_HeightLarge))
+          // The second parameter is the label previewed
+          // before opening the combo.
+          {
+               ImGui::Columns(settings_.num_columns, "##columns", false);
+
+               for (auto &&[string, is_selected, tooltip] : zip_view)
+               {
+                    // You can store your selection however you
+                    // want, outside or inside your objects
+                    const char *c_str_value = std::ranges::data(string);
+                    {
+                         const auto pop_id     = PushPopID();
+                         const auto pop_column = glengine::ScopeGuard{ &ImGui::NextColumn };
+                         if (ImGui::Selectable(c_str_value, is_selected, ImGuiSelectableFlags_DontClosePopups))
+                         {
+                              if (!is_selected)
+                              {
+                                   filter_.get().enable();
+                              }
+                              is_selected = !is_selected;
+                              changed_    = true;
+                         }
+
+                         if (is_selected)
+                         {
+                              ImGui::SetItemDefaultFocus();
+                              // You may set the initial focus when
+                              // opening the combo (scrolling + for
+                              // keyboard navigation support)
+                         }
+                         tool_tip(tooltip);
+                    }
+               }
+               ImGui::Columns(1);
+               ImGui::EndCombo();
+          }
+
+          tool_tip(current_item);
+     }
+
+     auto size_of_values() const
+     {
+          return static_cast<std::ranges::range_difference_t<std::remove_cvref_t<decltype(values_)>>>(std::ranges::size(values_));
+     }
+
+     void renderExploreButton() const
+     {
+          if constexpr (std::same_as<std::filesystem::path, std::ranges::range_value_t<std::remove_cvref_t<decltype(values_)>>>)
+          {
+               if (!settings_.show_explore_button)
+               {
+                    return;
+               }
+
+               ImGui::SameLine(0, spacing_);
+               const float button_size = ImGui::GetFrameHeight();
+               const auto  _           = PushPopID();
+
+               if (ImGui::Button(ICON_FA_FOLDER_OPEN, ImVec2{ button_size, button_size }))
+               {
+                    ImGui::OpenPopup("ExploreDirectoryPopup");
+               }
+
+               tool_tip(gui_labels::explore_tooltip);
+
+               if (ImGui::BeginPopup("ExploreDirectoryPopup"))
+               {
+                    bool any_active = false;
+                    for (auto [val, active] : std::views::zip(values_, current_idx_))
+                    {
+                         if (active)
+                         {
+                              any_active = true;
+                              if (ImGui::MenuItem(val.c_str()))
+                              {
+                                   open_directory(val);
+                                   ImGui::CloseCurrentPopup();
+                              }
+                         }
+                    }
+
+                    if (!any_active)
+                    {
+                         ImGui::TextDisabled("No active entries.");
+                    }
+
+                    ImGui::EndPopup();
+               }
+          }
+     }
+
+     void renderTitle() const
+     {
+          if (std::ranges::empty(name_))
+          {
+               return;
+          }
+          ImGui::SameLine(0, spacing_);
+          format_imgui_text("{}", name_);
+     }
+};
+
+
 template<
   returns_range_concept  ValueLambdaT,
   returns_range_concept  FixedTogglesLambdaT,

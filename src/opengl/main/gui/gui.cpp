@@ -3112,7 +3112,7 @@ std::shared_ptr<map_sprite> gui::get_map_sprite() const
 
 void gui::combo_pupu()
 {
-     const auto gcc = GenericComboWithFilter(
+     const auto gcc = GenericComboWithMultiFilter(
        gui_labels::pupu_id,
        [&]() { return m_map_sprite->working_unique_pupu(); },
        [&]() { return m_map_sprite->working_unique_pupu() | std::views::transform(AsString{}); },
@@ -3120,7 +3120,7 @@ void gui::combo_pupu()
             return m_map_sprite->working_unique_pupu()
                    | std::views::transform([](const ff_8::PupuID &pupu_id) -> decltype(auto) { return pupu_id.create_summary(); });
        },
-       [this]() -> auto & { return m_map_sprite->filter().pupu; });
+       [this]() -> auto & { return m_map_sprite->filter().multi_pupu; });
 
      if (!gcc.render())
      {
