@@ -45,6 +45,10 @@ void fme::filter_window::render() const
           spdlog::error("Failed to lock selections: shared_ptr is expired.");
           return;
      }
+     if (!lock_selections->get<ConfigKey::DisplayFiltersWindow>())
+     {
+          return;
+     }
      bool      &visible     = lock_selections->get<ConfigKey::DisplayFiltersWindow>();
      const auto pop_visible = glengine::ScopeGuard{ [&lock_selections, &visible, was_visable = visible] {
           if (was_visable != visible)
@@ -53,26 +57,27 @@ void fme::filter_window::render() const
           }
      } };
      const auto pop_end = glengine::ScopeGuard(&ImGui::End);
-     if (ImGui::Begin(gui_labels::filters.data(), &visible))
+     if (!ImGui::Begin(gui_labels::filters.data(), &visible))
      {
-          auto lock_map_sprite = m_map_sprite.lock();
-          if (!lock_map_sprite)
-          {
-               spdlog::error("Failed to lock map_sprite: shared_ptr is expired.");
-               return;
-          }
-          combo_filtered_pupu(lock_map_sprite);
-          combo_filtered_bpps(lock_map_sprite);
-          combo_filtered_palettes(lock_map_sprite);
-          combo_filtered_blend_modes(lock_map_sprite);
-          combo_filtered_blend_other(lock_map_sprite);
-          combo_filtered_layers(lock_map_sprite);
-          combo_filtered_texture_pages(lock_map_sprite);
-          combo_filtered_animation_ids(lock_map_sprite);
-          combo_filtered_animation_states(lock_map_sprite);
-          combo_filtered_z(lock_map_sprite);
-          combo_filtered_draw_bit(lock_map_sprite);
+          return;
      }
+     auto lock_map_sprite = m_map_sprite.lock();
+     if (!lock_map_sprite)
+     {
+          spdlog::error("Failed to lock map_sprite: shared_ptr is expired.");
+          return;
+     }
+     combo_filtered_pupu(lock_map_sprite);
+     combo_filtered_bpps(lock_map_sprite);
+     combo_filtered_palettes(lock_map_sprite);
+     combo_filtered_blend_modes(lock_map_sprite);
+     combo_filtered_blend_other(lock_map_sprite);
+     combo_filtered_layers(lock_map_sprite);
+     combo_filtered_texture_pages(lock_map_sprite);
+     combo_filtered_animation_ids(lock_map_sprite);
+     combo_filtered_animation_states(lock_map_sprite);
+     combo_filtered_z(lock_map_sprite);
+     combo_filtered_draw_bit(lock_map_sprite);
 }
 void fme::filter_window::update(std::weak_ptr<Selections> in_selections)
 {
@@ -82,8 +87,6 @@ void fme::filter_window::update(std::weak_ptr<map_sprite> in_map_sprite)
 {
      m_map_sprite = std::move(in_map_sprite);
 }
-
-
 
 
 void fme::filter_window::combo_filtered_layers(std::shared_ptr<map_sprite> &lock_map_sprite) const
