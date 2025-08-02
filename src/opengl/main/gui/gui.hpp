@@ -20,6 +20,7 @@
 #include "field_file_window.hpp"
 #include "file_dialog_mode.hpp"
 #include "filebrowser.hpp"
+#include "filter_window.hpp"
 #include "formatters.hpp"
 #include "generic_combo.hpp"
 #include "gui/history_window.hpp"
@@ -63,11 +64,12 @@ struct gui
      glengine::TimeStep                                 m_delta_clock         = {};
      float                                              m_elapsed_time        = {};///< seconds
      std::shared_ptr<archives_group>                    m_archives_group      = {};
-     batch                                              m_batch               = {};
+     batch                                              m_batch_window        = {};
      std::shared_ptr<open_viii::archive::FIFLFS<false>> m_field               = {};
      std::array<float, 2>                               xy                    = {};
      std::shared_ptr<mim_sprite>                        m_mim_sprite          = {};
      std::shared_ptr<map_sprite>                        m_map_sprite          = {};
+     filter_window                                      m_filter_window       = { m_selections, m_map_sprite };
      draw_window                                        m_draw_window         = { m_selections, m_mim_sprite, m_map_sprite };
      custom_paths_window                                m_custom_paths_window = { m_selections };
      field_file_window                                  m_field_file_window   = { m_field, m_selections };
@@ -129,13 +131,11 @@ struct gui
      void                        selected_tiles_panel();
      void                        tile_conflicts_panel();
      void                        hovered_tiles_panel();
-     void                        combo_filtered_pupu();
      void                        combo_mim_palette();
      void                        combo_mim_bpp();
      void                        checkbox_mim_palette_texture();
      void                        combo_field();
      void                        combo_coo();
-     void                        combo_filtered_draw_bit();
      std::string                 save_texture_path() const;
      void                        update_field();
      bool                        mim_test() const;
@@ -157,15 +157,6 @@ struct gui
      // void                      scale_window(float width = {}, float height = {});
      std::uint8_t                palette() const;
      open_viii::graphics::BPPT   bpp() const;
-     void                        combo_filtered_blend_modes();
-     void                        combo_filtered_layers();
-     void                        combo_filtered_texture_pages();
-     void                        combo_filtered_animation_ids();
-     void                        combo_filtered_animation_states();
-     void                        combo_filtered_palettes();
-     void                        combo_filtered_bpps();
-     void                        combo_filtered_blend_other();
-     void                        combo_filtered_z();
      std::shared_ptr<open_viii::archive::FIFLFS<false>> init_field();
      void                                               text_mouse_position() const;
      void                                               combo_swizzle_path();
@@ -211,7 +202,6 @@ struct gui
      float                                                   scaled_menubar_gap() const;
      void                                                    render_dockspace();
      void                                                    background_color_picker();
-     void                                                    collapsing_header_filters();
      void                                                    compact_flatten_buttons();
      void                                                    frame_rate();
      void                                                    control_panel_window_map();

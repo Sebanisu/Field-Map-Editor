@@ -609,7 +609,17 @@ struct filter_old
 
      filter_old &update(U &&value)
      {
-          if (m_value != value)
+          const bool not_same = [&]() {
+               if constexpr (std::is_enum_v<std::remove_cvref_t<U>> && std::is_enum_v<std::remove_cvref_t<value_type>>)
+               {
+                    return std::to_underlying(m_value) != std::to_underlying(value);
+               }
+               else
+               {
+                    return m_value != value;
+               }
+          }();
+          if (not_same)
           {
                m_value = std::forward<U>(value);
 
@@ -794,7 +804,17 @@ struct filter
 
      filter &update(U &&value)
      {
-          if (m_value != value)
+          const bool not_same = [&]() {
+               if constexpr (std::is_enum_v<std::remove_cvref_t<U>> && std::is_enum_v<std::remove_cvref_t<value_type>>)
+               {
+                    return std::to_underlying(m_value) != std::to_underlying(value);
+               }
+               else
+               {
+                    return m_value != value;
+               }
+          }();
+          if (not_same)
           {
                m_value = std::forward<U>(value);
 

@@ -28,6 +28,7 @@ add_executable(
   gui/custom_paths_window.cpp
   gui/draw_window.cpp
   gui/field_file_window.cpp
+  gui/filter_window.cpp
   gui/gui.cpp
   gui/history_window.cpp
   gui/key_value_data.cpp

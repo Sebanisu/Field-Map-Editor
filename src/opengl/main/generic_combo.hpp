@@ -112,7 +112,19 @@ class GenericComboWithFilter
 
      void                                                                              updateCurrentIndex() const
      {
-          const auto found = std::find(std::ranges::begin(values_), std::ranges::end(values_), filter_.get().value());
+          const auto found = std::find_if(std::ranges::begin(values_), std::ranges::end(values_), [&](const auto &tmp) {
+               using FilterValueT = std::remove_cvref_t<decltype(filter_.get().value())>;
+               using ValuesValueT = std::remove_cvref_t<std::ranges::range_value_t<decltype(values_)>>;
+
+               if constexpr (std::is_enum_v<FilterValueT> && std::is_enum_v<ValuesValueT>)
+               {
+                    return std::to_underlying(filter_.get().value()) == std::to_underlying(tmp);
+               }
+               else
+               {
+                    return filter_.get().value() == tmp;
+               }
+          });
           if (found != std::ranges::end(values_))
           {
                current_idx_ = std::ranges::distance(std::ranges::begin(values_), found);

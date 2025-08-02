@@ -53,6 +53,7 @@ enum class ConfigKey
      DisplayDrawWindow,
      DisplayCustomPathsWindow,
      DisplayFieldFileWindow,
+     DisplayFiltersWindow,
      OutputSwizzlePattern,
      OutputDeswizzlePattern,
      OutputMapPatternForSwizzle,
@@ -348,7 +349,15 @@ struct SelectionInfo<ConfigKey::DisplayFieldFileWindow>
      using value_type                     = bool;
      static constexpr std::string_view id = "DisplayFieldFileWindow";
 };
+
 template<>
+struct SelectionInfo<ConfigKey::DisplayFiltersWindow>
+{
+     using value_type                     = bool;
+     static constexpr std::string_view id = "DisplayFiltersWindow";
+};
+
+ template<>
 struct SelectionInfo<ConfigKey::OutputSwizzlePattern>
 {
      using value_type                     = std::string;

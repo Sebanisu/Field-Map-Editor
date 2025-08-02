@@ -246,7 +246,7 @@ void gui::start(GLFWwindow *const window)
           {
                refresh_render_texture();
           }
-          m_batch.update(m_elapsed_time);
+          m_batch_window.update(m_elapsed_time);
 
           // Begin non imgui drawing.
           directory_browser_display();
@@ -256,7 +256,7 @@ void gui::start(GLFWwindow *const window)
           //     popup_batch_reswizzle();
           if (m_selections->get<ConfigKey::DisplayBatchWindow>())
           {
-               m_batch.draw_window();
+               m_batch_window.draw_window();
           }
           m_custom_paths_window.render();
           m_field_file_window.render();
@@ -268,7 +268,7 @@ void gui::start(GLFWwindow *const window)
           control_panel_window();
           m_import.render();
           m_history_window.render();
-
+          m_filter_window.render();
           m_draw_window.render();
           //  m_mouse_positions.cover.setColor(clear_color);
           //  window.draw(m_mouse_positions.cover);
@@ -701,7 +701,7 @@ void gui::control_panel_window_map()
      m_changed = m_import.checkbox_render_imported_image() || m_changed;
      checkbox_map_disable_blending();
      compact_flatten_buttons();
-     collapsing_header_filters();
+     m_filter_window.collapsing_header_filters();
      // if (m_changed)
      // {
      //      scale_window();
@@ -782,23 +782,6 @@ void gui::compact_flatten_buttons()
      tool_tip(gui_labels::flatten_palette_tooltip);
 
      ImGui::EndTable();
-}
-void gui::collapsing_header_filters()
-{
-     if (ImGui::CollapsingHeader(gui_labels::filters.data()))
-     {
-          combo_filtered_pupu();
-          combo_filtered_bpps();
-          combo_filtered_palettes();
-          combo_filtered_blend_modes();
-          combo_filtered_blend_other();
-          combo_filtered_layers();
-          combo_filtered_texture_pages();
-          combo_filtered_animation_ids();
-          combo_filtered_animation_states();
-          combo_filtered_z();
-          combo_filtered_draw_bit();
-     }
 }
 bool gui::change_background_color(const fme::color &in_color)
 {
@@ -1397,6 +1380,12 @@ void gui::windows_menu()
            gui_labels::display_field_file_window.data(), "Control + F", &m_selections->get<ConfigKey::DisplayFieldFileWindow>()))
      {
           m_selections->update<ConfigKey::DisplayFieldFileWindow>();
+     }
+
+     ImGui::Separator();
+     if (ImGui::MenuItem(gui_labels::filters.data(), nullptr, &m_selections->get<ConfigKey::DisplayFiltersWindow>()))
+     {
+          m_selections->update<ConfigKey::DisplayFiltersWindow>();
      }
 }
 void gui::edit_menu()
@@ -2958,7 +2947,7 @@ archives_group gui::get_archives_group() const
 void gui::update_path()
 {
      m_archives_group = std::make_shared<archives_group>(m_archives_group->with_path(m_selections->get<ConfigKey::FF8Path>()));
-     m_batch          = m_archives_group;
+     m_batch_window   = m_archives_group;
      m_custom_paths_window.refresh();
      update_field();
 }
@@ -3011,13 +3000,14 @@ gui::gui(GLFWwindow *const window)
 
      // 6. MISC
      m_archives_group = std::make_shared<archives_group>(get_archives_group());
-     m_batch          = fme::batch{ m_selections, m_archives_group };
+     m_batch_window   = fme::batch{ m_selections, m_archives_group };
      m_field          = init_field();
      m_field_file_window.refresh(m_field);
      m_mim_sprite = get_mim_sprite();
      m_map_sprite = get_map_sprite();
      m_draw_window.update(m_mim_sprite);
      m_draw_window.update(m_map_sprite);
+     m_filter_window.update(m_map_sprite);
      m_import.update(m_selections);
      m_history_window.update(m_selections);
      m_import.update(m_map_sprite);
@@ -3110,45 +3100,6 @@ std::shared_ptr<map_sprite> gui::get_map_sprite() const
        m_selections);
 }
 
-void gui::combo_filtered_pupu()
-{
-     const auto gcc = GenericComboWithMultiFilter(
-       gui_labels::pupu_id,
-       [&]() { return m_map_sprite->working_unique_pupu(); },
-       [&]() { return m_map_sprite->working_unique_pupu() | std::views::transform(AsString{}); },
-       [&]() {
-            return m_map_sprite->working_unique_pupu()
-                   | std::views::transform([](const ff_8::PupuID &pupu_id) -> decltype(auto) { return pupu_id.create_summary(); });
-       },
-       [this]() -> auto & { return m_map_sprite->filter().multi_pupu; });
-
-     if (!gcc.render())
-     {
-          return;
-     }
-     m_map_sprite->update_render_texture();
-     m_changed = true;
-}
-
-void gui::combo_filtered_draw_bit()
-{
-     using namespace std::string_view_literals;
-     static constexpr auto values = std::array{ ff_8::draw_bitT::all, ff_8::draw_bitT::enabled, ff_8::draw_bitT::disabled };
-     const auto            gcc    = fme::GenericComboWithFilter(
-       gui_labels::draw_bit,
-       []() { return values; },
-       []() { return values | std::views::transform(AsString{}); },
-       []() {
-            return std::array{ gui_labels::draw_bit_all_tooltip,
-                               gui_labels::draw_bit_enabled_tooltip,
-                               gui_labels::draw_bit_disabled_tooltip };
-       },
-       [this]() -> auto               &{ return m_map_sprite->filter().draw_bit; });
-     if (!gcc.render())
-          return;
-     m_map_sprite->update_render_texture();
-     m_changed = true;
-}
 
 void gui::refresh_palette(std::uint8_t palette)
 {
@@ -3173,60 +3124,6 @@ void gui::refresh_palette(std::uint8_t palette)
      }
      m_changed = true;
 }
-void gui::combo_filtered_palettes()
-{
-     const auto &map = m_map_sprite->uniques().palette();
-     const auto &key = m_map_sprite->filter().bpp.value();
-     if (!map.contains(key))
-     {
-          return;
-     }
-     const auto &pair = map.at(key);
-     const auto  gcc  = fme::GenericComboWithMultiFilter(
-       gui_labels::palette,
-       [&pair]() { return pair.values(); },
-       [&pair]() { return pair.strings(); },
-       [&pair]() { return pair.strings(); },
-       [this]() -> auto  &{ return m_map_sprite->filter().multi_palette; });
-     if (!gcc.render())
-     {
-          return;
-     }
-     refresh_palette(m_map_sprite->filter().palette.value());
-}
-
-void gui::combo_filtered_bpps()
-{
-     const auto &pair = m_map_sprite->uniques().bpp();
-     const auto  gcc  = fme::GenericComboWithMultiFilter(
-       gui_labels::bpp,
-       [&pair]() { return pair.values(); },
-       [&pair]() { return pair.strings(); },
-       [&pair]() { return pair.strings(); },
-       [this]() -> auto  &{ return m_map_sprite->filter().multi_bpp; });
-     if (!gcc.render())
-     {
-          return;
-     }
-     refresh_bpp(m_map_sprite->filter().bpp.value());
-}
-
-void gui::combo_filtered_blend_modes()
-{
-     const auto &pair = m_map_sprite->uniques().blend_mode();
-     const auto  gcc  = fme::GenericComboWithMultiFilter(
-       gui_labels::blend_mode,
-       [&pair]() { return pair.values(); },
-       [&pair]() { return pair.strings(); },
-       [&pair]() { return pair.strings(); },
-       [this]() -> auto  &{ return m_map_sprite->filter().multi_blend_mode; });
-     if (!gcc.render())
-     {
-          return;
-     }
-     m_map_sprite->update_render_texture();
-     m_changed = true;
-}
 
 
 void gui::refresh_render_texture(bool reload_textures)
@@ -3235,109 +3132,6 @@ void gui::refresh_render_texture(bool reload_textures)
      m_changed = true;
 }
 
-
-void gui::combo_filtered_layers()
-{
-     const auto &pair = m_map_sprite->uniques().layer_id();
-     const auto  gcc  = fme::GenericComboWithMultiFilter(
-       gui_labels::layer_id,
-       [&pair]() { return pair.values(); },
-       [&pair]() { return pair.strings(); },
-       [&pair]() { return pair.strings(); },
-       [this]() -> auto  &{ return m_map_sprite->filter().multi_layer_id; });
-     if (!gcc.render())
-     {
-          return;
-     }
-     m_map_sprite->update_render_texture();
-     m_changed = true;
-}
-void gui::combo_filtered_texture_pages()
-{
-     const auto &pair = m_map_sprite->uniques().texture_page_id();
-     const auto  gcc  = fme::GenericComboWithMultiFilter(
-       gui_labels::texture_page,
-       [&pair]() { return pair.values(); },
-       [&pair]() { return pair.strings(); },
-       [&pair]() { return pair.strings(); },
-       [this]() -> auto  &{ return m_map_sprite->filter().multi_texture_page_id; });
-     if (!gcc.render())
-     {
-          return;
-     }
-     m_map_sprite->update_render_texture();
-     m_changed = true;
-}
-void gui::combo_filtered_animation_ids()
-{
-     const auto &pair = m_map_sprite->uniques().animation_id();
-     const auto  gcc  = fme::GenericComboWithMultiFilter(
-       gui_labels::animation_id,
-       [&pair]() { return pair.values(); },
-       [&pair]() { return pair.strings(); },
-       [&pair]() { return pair.strings(); },
-       [this]() -> auto  &{ return m_map_sprite->filter().multi_animation_id; });
-     if (!gcc.render())
-     {
-          return;
-     }
-     m_map_sprite->update_render_texture();
-     m_changed = true;
-}
-void gui::combo_filtered_blend_other()
-{
-     const auto &pair = m_map_sprite->uniques().blend_other();
-     const auto  gcc  = fme::GenericComboWithMultiFilter(
-       gui_labels::blend_other,
-       [&pair]() { return pair.values(); },
-       [&pair]() { return pair.strings(); },
-       [&pair]() { return pair.strings(); },
-       [this]() -> auto  &{ return m_map_sprite->filter().multi_blend_other; });
-     if (!gcc.render())
-     {
-          return;
-     }
-     refresh_render_texture();
-}
-
-
-void gui::combo_filtered_z()
-{
-     const auto &pair = m_map_sprite->uniques().z();
-     const auto  gcc  = fme::GenericComboWithMultiFilter(
-       gui_labels::z,
-       [&pair]() { return pair.values(); },
-       [&pair]() { return pair.strings(); },
-       [&pair]() { return pair.strings(); },
-       [this]() -> auto  &{ return m_map_sprite->filter().multi_z; });
-     if (!gcc.render())
-     {
-          return;
-     }
-     refresh_render_texture();
-}
-
-void gui::combo_filtered_animation_states()
-{
-     const auto &map = m_map_sprite->uniques().animation_state();
-     const auto &key = m_map_sprite->filter().animation_id.value();
-     if (!map.contains(key))
-     {
-          return;
-     }
-     const auto &pair = map.at(key);
-     const auto  gcc  = fme::GenericComboWithMultiFilter(
-       gui_labels::animation_state,
-       [&pair]() { return pair.values(); },
-       [&pair]() { return pair.strings(); },
-       [&pair]() { return pair.strings(); },
-       [this]() -> auto  &{ return m_map_sprite->filter().multi_animation_state; });
-     if (!gcc.render())
-     {
-          return;
-     }
-     refresh_render_texture();
-}
 
 BPPT gui::bpp() const
 {
