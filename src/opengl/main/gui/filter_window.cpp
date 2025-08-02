@@ -158,7 +158,7 @@ void fme::filter_window::combo_filtered_palettes(std::shared_ptr<map_sprite> &lo
      // Deduplicate based on value
      std::ranges::sort(value_string_pairs, {}, [](const auto &pair) { return std::get<0>(pair); });
      const auto unique_range = std::ranges::unique(value_string_pairs, {}, [](const auto &pair) { return std::get<0>(pair); });
-     value_string_pairs.erase(unique_range.begin());
+     value_string_pairs.erase(unique_range.begin(), unique_range.end());
 
      // Extract values and strings into separate views
      auto       values  = value_string_pairs | std::views::transform([](const auto &pair) { return std::get<0>(pair); });
@@ -286,7 +286,7 @@ void fme::filter_window::combo_filtered_animation_states(std::shared_ptr<map_spr
 
      std::ranges::sort(value_string_pairs, {}, [](const auto &pair) { return std::get<0>(pair); });
      const auto unique_range = std::ranges::unique(value_string_pairs, {}, [](const auto &pair) { return std::get<0>(pair); });
-     value_string_pairs.erase(unique_range.begin());
+     value_string_pairs.erase(unique_range.begin(), unique_range.end());
 
      auto       values  = value_string_pairs | std::views::transform([&](const auto &pair) { return std::get<0>(pair); });
      auto       strings = value_string_pairs | std::views::transform([&](const auto &pair) { return std::get<1>(pair); });
