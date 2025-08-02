@@ -67,6 +67,15 @@ void fme::filter_window::render() const
           spdlog::error("Failed to lock map_sprite: shared_ptr is expired.");
           return;
      }
+     if (lock_map_sprite->fail())
+     {
+          format_imgui_text("The `.map` is in an invalid state.\nSo no filters are avalible.");
+          return;
+     }
+     if (lock_selections->get<ConfigKey::DrawMode>() != draw_mode::draw_map)
+     {
+          format_imgui_text("The draw mode is not set to `.map`.\nFilter changes won't show on draw window.");
+     }
      combo_filtered_pupu(lock_map_sprite);
      combo_filtered_bpps(lock_map_sprite);
      combo_filtered_palettes(lock_map_sprite);
