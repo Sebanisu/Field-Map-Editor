@@ -138,21 +138,27 @@ void fme::filter_window::combo_filtered_palettes(std::shared_ptr<map_sprite> &lo
 {
      const auto &map         = lock_map_sprite->uniques().palette();
      const auto &keys        = lock_map_sprite->filter().multi_bpp.value();
-
-     // Gather all (value, string) pairs from matching palette entries
      const auto  join_vector = [](auto &&pairs) {
-          return pairs | std::views::transform([](const auto &pair) {
-                      const auto &vs = pair.values();
-                      const auto &ss = pair.strings();
-                      return std::views::zip(vs, ss);
-                 })
-                 | std::views::join | std::ranges::to<std::vector>();
+          auto transform_pairs =
+            pairs | std::views::transform([](const auto &pair) { return std::views::zip(pair.values(), pair.strings()); });
+          auto join_pairs = std::ranges::join_view(transform_pairs);
+          return join_pairs | std::ranges::to<std::vector>();
      };
 
-     auto value_string_pairs = keys.empty() ? join_vector(map | std::views::values)
-                                            : join_vector(
-                                                keys | std::views::filter([&](const auto &key) { return map.contains(key); })
-                                                | std::views::transform([&](const auto &key) { return map.at(key); }));
+     auto value_string_pairs = [&]() {
+          if (keys.empty() || !lock_map_sprite->filter().multi_bpp.enabled())
+          {
+               return join_vector(map | std::views::values);
+          }
+          else
+          {
+               auto keys_filter = keys | std::views::filter([&](const auto &key) { return map.contains(key); });
+               auto keys_transform =
+                 keys_filter | std::views::transform([&](const auto &key) { return map.at(key); }) | std::ranges::to<std::vector>();
+
+               return join_vector(keys_transform);
+          }
+     }();
 
 
      // Deduplicate based on value
@@ -271,18 +277,26 @@ void fme::filter_window::combo_filtered_animation_states(std::shared_ptr<map_spr
      const auto &map         = lock_map_sprite->uniques().animation_state();
      const auto &keys        = lock_map_sprite->filter().multi_animation_id.value();
      const auto  join_vector = [](auto &&pairs) {
-          return pairs | std::views::transform([](const auto &pair) {
-                      const auto &vs = pair.values();
-                      const auto &ss = pair.strings();
-                      return std::views::zip(vs, ss);
-                 })
-                 | std::views::join | std::ranges::to<std::vector>();
+          auto transform_pairs =
+            pairs | std::views::transform([](const auto &pair) { return std::views::zip(pair.values(), pair.strings()); });
+          auto join_pairs = std::ranges::join_view(transform_pairs);
+          return join_pairs | std::ranges::to<std::vector>();
      };
 
-     auto value_string_pairs = keys.empty() ? join_vector(map | std::views::values)
-                                            : join_vector(
-                                                keys | std::views::filter([&](const auto &key) { return map.contains(key); })
-                                                | std::views::transform([&](const auto &key) { return map.at(key); }));
+     auto value_string_pairs = [&]() {
+          if (keys.empty() || !lock_map_sprite->filter().multi_animation_id.enabled())
+          {
+               return join_vector(map | std::views::values);
+          }
+          else
+          {
+               auto keys_filter = keys | std::views::filter([&](const auto &key) { return map.contains(key); });
+               auto keys_transform =
+                 keys_filter | std::views::transform([&](const auto &key) { return map.at(key); }) | std::ranges::to<std::vector>();
+
+               return join_vector(keys_transform);
+          }
+     }();
 
      std::ranges::sort(value_string_pairs, {}, [](const auto &pair) { return std::get<0>(pair); });
      const auto unique_range = std::ranges::unique(value_string_pairs, {}, [](const auto &pair) { return std::get<0>(pair); });
