@@ -46,6 +46,12 @@ struct unique_values_and_strings
        , m_strings(get_strings(m_values))
      {
      }
+     explicit unique_values_and_strings(std::vector<value_type> in_values, std::vector<std::string> in_strings)
+       : m_values(std::move(in_values))
+       , m_strings(std::move(in_strings))
+     {
+     }
+
      [[nodiscard]] const auto &values() const
      {
           return m_values;

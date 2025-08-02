@@ -247,27 +247,7 @@ struct gui
 
      static inline constinit bool        toggle_imgui_demo_window = { false };
 
-     struct map_pupu_id
-     {
-          std::shared_ptr<map_sprite> m_map_sprite = {};
-          const auto                 &values() const
-          {
-               return m_map_sprite->working_unique_pupu();
-          }
-          auto strings() const
-          {
-               return m_map_sprite->working_unique_pupu() | std::views::transform(AsString{});
-          }
-          auto tooltips() const
-          {
-               return m_map_sprite->working_unique_pupu()
-                      | std::views::transform([](const ff_8::PupuID &pupu_id) -> decltype(auto) { return pupu_id.create_summary(); });
-          }
-          auto zip() const
-          {
-               return std::ranges::views::zip(values(), strings(), tooltips());
-          }
-     };
+
 };
 }// namespace fme
 #endif// FIELD_MAP_EDITOR_GUI_HPP

@@ -4,12 +4,14 @@
 
 #ifndef FIELD_MAP_EDITOR_GENERIC_COMBO_HPP
 #define FIELD_MAP_EDITOR_GENERIC_COMBO_HPP
+#include "filter.hpp"
 #include "format_imgui_text.hpp"
 #include "gui/fa_icons.hpp"
 #include "gui/gui_labels.hpp"
 #include "gui/push_pop_id.hpp"
 #include "gui/tool_tip.hpp"
 #include "open_file_explorer.hpp"
+#include "unique_values.hpp"
 #include <algorithm>
 #include <fmt/format.h>
 #include <functional>
@@ -299,6 +301,182 @@ class GenericComboWithFilter
           }
           ImGui::SameLine(0, spacing_);
           format_imgui_text("{}", name_);
+     }
+};
+
+template<ff_8::HasValuesAndStringsAndZip HasValuesAndStringsAndZipT, ff_8::IsFilterOld IsFilterOldT, std::invocable invocableT>
+struct GenericMenuWithFilter
+{
+   private:
+     std::string_view             m_label;
+     HasValuesAndStringsAndZipT &&m_pair;
+     IsFilterOldT                &m_filter;
+     invocableT                 &&m_lambda;
+
+   public:
+     GenericMenuWithFilter(std::string_view label, HasValuesAndStringsAndZipT &&pair, IsFilterOldT &filter, invocableT &&lambda)
+       : m_label(label)
+       , m_pair(std::forward<HasValuesAndStringsAndZipT>(pair))
+       , m_filter(filter)
+       , m_lambda(std::forward<invocableT>(lambda))
+     {
+     }
+
+     void operator()()
+     {
+          if (ImGui::BeginMenu(m_label.data()))
+          {
+               const auto pop_menu1       = glengine::ScopeGuard(&ImGui::EndMenu);
+               const auto process_element = [&](auto &value, auto &str) {
+                    const bool selected = m_filter.value() == value;
+                    bool       checked  = selected && m_filter.enabled();
+                    if (ImGui::MenuItem(str.data(), nullptr, &checked))
+                    {
+                         if (selected)
+                         {
+                              if (m_filter.enabled())
+                              {
+                                   m_filter.disable();
+                              }
+                              else
+                              {
+                                   m_filter.enable();
+                              }
+                         }
+                         else
+                         {
+                              m_filter.update(value);
+                              m_filter.enable();
+                         }
+                         std::invoke(m_lambda);
+                    }
+               };
+               const std::uint32_t cols = { 3U };
+               std::uint32_t       i    = {};
+               ImGui::BeginTable("##filter_menu_items", cols);
+               for (auto &&t : m_pair.zip())
+               {
+                    if (i % cols == 0U)
+                    {
+                         ImGui::TableNextRow();
+                    }
+                    ImGui::TableNextColumn();
+                    if constexpr (std::tuple_size_v<std::decay_t<decltype(t)>> == 2)
+                    {
+                         auto &&[value, str] = t;
+                         // Handle the case where tuple has 2 elements
+                         process_element(value, str);
+                    }
+                    else if constexpr (std::tuple_size_v<std::decay_t<decltype(t)>> == 3)
+                    {
+                         auto &&[value, str, tooltip_str] = t;
+                         // Handle the case where tuple has 3 elements
+                         process_element(value, str);
+                         tool_tip(tooltip_str);
+                    }
+                    ++i;
+               }
+               ImGui::EndTable();
+          }
+     }
+};
+
+
+template<ff_8::HasValuesAndStringsAndZip HasValuesAndStringsAndZipT, ff_8::IsFilterOld IsFilterOldT, std::invocable invocableT>
+struct GenericMenuWithMultiFilter
+{
+   private:
+     std::string_view                  m_label;
+     const HasValuesAndStringsAndZipT &m_pair;
+     IsFilterOldT                     &m_filter;
+     invocableT                      &&m_lambda;
+
+   public:
+     GenericMenuWithMultiFilter(std::string_view label, const HasValuesAndStringsAndZipT &pair, IsFilterOldT &filter, invocableT &&lambda)
+       : m_label(label)
+       , m_pair(pair)
+       , m_filter(filter)
+       , m_lambda(std::forward<invocableT>(lambda))
+     {
+     }
+
+     void operator()()
+     {
+          if (ImGui::BeginMenu(m_label.data()))
+          {
+               const auto pop_menu1       = glengine::ScopeGuard(&ImGui::EndMenu);
+               const auto process_element = [&](auto &value, auto &str) {
+                    auto       copy_value = m_filter.value();
+                    auto       it         = std::ranges::find_if(copy_value, [&](const auto &tmp) { return tmp == value; });
+                    const bool selected   = it != copy_value.end();
+
+                    // ImGui::BeginGroup();
+
+                    // Draw the checkmark icon or empty space for alignment
+                    ImGui::TextUnformatted(selected ? ICON_FA_CHECK : "  ");// Keep spacing even if not selected
+
+                    ImGui::SameLine();
+                    if (ImGui::Selectable(str.data(), selected, ImGuiSelectableFlags_DontClosePopups))
+                    {
+                         if (selected)
+                         {
+                              copy_value.erase(it);
+                              m_filter.update(copy_value);
+                              if (m_filter.enabled() && copy_value.empty())
+                              {
+                                   m_filter.disable();
+                              }
+                         }
+                         else
+                         {
+                              copy_value.push_back(value);
+                              std::ranges::sort(copy_value);
+                              m_filter.update(copy_value);
+                              m_filter.enable();
+                         }
+                         std::invoke(m_lambda);
+                    }
+                    // ImGui::EndGroup();
+               };
+               bool checked = m_filter.enabled();
+               if (ImGui::Checkbox("Toggle Filter", &checked))
+               {
+                    if (checked)
+                    {
+                         m_filter.enable();
+                    }
+                    else
+                    {
+                         m_filter.disable();
+                    }
+               }
+               const std::uint32_t cols = { 3U };
+               std::uint32_t       i    = {};
+               ImGui::BeginTable("##filter_menu_items", cols);
+               for (auto &&t : m_pair.zip())
+               {
+                    if (i % cols == 0U)
+                    {
+                         ImGui::TableNextRow();
+                    }
+                    ImGui::TableNextColumn();
+                    if constexpr (std::tuple_size_v<std::decay_t<decltype(t)>> == 2)
+                    {
+                         auto &&[value, str] = t;
+                         // Handle the case where tuple has 2 elements
+                         process_element(value, str);
+                    }
+                    else if constexpr (std::tuple_size_v<std::decay_t<decltype(t)>> == 3)
+                    {
+                         auto &&[value, str, tooltip_str] = t;
+                         // Handle the case where tuple has 3 elements
+                         process_element(value, str);
+                         tool_tip(tooltip_str);
+                    }
+                    ++i;
+               }
+               ImGui::EndTable();
+          }
      }
 };
 
