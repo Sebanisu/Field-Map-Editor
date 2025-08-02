@@ -15,16 +15,16 @@ struct filter_window
 
    private:
      void                      combo_filtered_pupu(std::shared_ptr<map_sprite> &) const;
-     void                      combo_filtered_draw_bit(std::shared_ptr<map_sprite> &) const;
+     void                      combo_filtered_bpps(std::shared_ptr<map_sprite> &) const;
+     void                      combo_filtered_palettes(std::shared_ptr<map_sprite> &) const;
      void                      combo_filtered_blend_modes(std::shared_ptr<map_sprite> &) const;
+     void                      combo_filtered_blend_other(std::shared_ptr<map_sprite> &) const;
      void                      combo_filtered_layers(std::shared_ptr<map_sprite> &) const;
      void                      combo_filtered_texture_pages(std::shared_ptr<map_sprite> &) const;
      void                      combo_filtered_animation_ids(std::shared_ptr<map_sprite> &) const;
      void                      combo_filtered_animation_states(std::shared_ptr<map_sprite> &) const;
-     void                      combo_filtered_palettes(std::shared_ptr<map_sprite> &) const;
-     void                      combo_filtered_bpps(std::shared_ptr<map_sprite> &) const;
-     void                      combo_filtered_blend_other(std::shared_ptr<map_sprite> &) const;
      void                      combo_filtered_z(std::shared_ptr<map_sprite> &) const;
+     void                      combo_filtered_draw_bit(std::shared_ptr<map_sprite> &) const;
      mutable bool              m_changed    = false;
      std::weak_ptr<Selections> m_selections = {};
      std::weak_ptr<map_sprite> m_map_sprite = {};
