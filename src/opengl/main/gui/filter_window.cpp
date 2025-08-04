@@ -76,17 +76,18 @@ void fme::filter_window::render() const
      {
           format_imgui_text("The draw mode is not set to `.map`.\nFilter changes won't show on draw window.");
      }
-     static float raw_thumb_size = 96.f;
-     ImGui::SliderFloat("Thumbnail Size", &raw_thumb_size, 96.f, 1024.f);
-     const ImVec2 thumb_size{ raw_thumb_size, raw_thumb_size };
+     static float thumb_size_width = 96.f;
+     ImGui::SliderFloat("Thumbnail Size", &thumb_size_width, 96.f, 1024.f);
      const ImVec2 region_size = ImGui::GetContentRegionAvail();
      const float  padding     = ImGui::GetStyle().FramePadding.x * 2.0f + ImGui::GetStyle().ItemSpacing.x;
-     const int    col_count   = static_cast<int>(region_size.x / (thumb_size.x + padding));
+     const int    col_count   = static_cast<int>(region_size.x / (thumb_size_width + padding));
 
      ImGui::Columns(col_count > 0 ? col_count : 1, "##get_deswizzle_combined_textures", false);
      for (const auto &[file_name, framebuffer] : lock_map_sprite->get_deswizzle_combined_textures())
      {
-          ImTextureID tex_id = glengine::ConvertGliDtoImTextureId<ImTextureID>(framebuffer.color_attachment_id());
+          ImTextureID  tex_id       = glengine::ConvertGliDtoImTextureId<ImTextureID>(framebuffer.color_attachment_id());
+          const auto   aspect_ratio = static_cast<float>(framebuffer.height()) / static_cast<float>(framebuffer.width());
+          const ImVec2 thumb_size   = { thumb_size_width, thumb_size_width * aspect_ratio };
           // Draw thumbnail using ImageButton
           // const auto pop_id = PushPopID();
           if (ImGui::ImageButton(file_name.c_str(), tex_id, thumb_size))
