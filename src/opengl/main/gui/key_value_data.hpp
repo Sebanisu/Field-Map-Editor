@@ -21,6 +21,7 @@ struct key_value_data
 {
      std::string                     field_name    = {};
      std::string                     ext           = { ".png" };
+     std::string                     full_filename = {};
      std::optional<open_viii::LangT> language_code = {};
      std::optional<std::uint8_t>     palette       = {};
      std::optional<std::uint8_t>     texture_page  = {};
@@ -37,6 +38,7 @@ struct key_value_data
           static constexpr std::string_view batch_input_path              = { "batch_input_path" };
           static constexpr std::string_view batch_output_path             = { "batch_output_path" };
           static constexpr std::string_view field_name                    = { "field_name" };
+          static constexpr std::string_view full_filename                 = { "full_filename" };
           static constexpr std::string_view ext                           = { "ext" };
           static constexpr std::string_view field_prefix                  = { "field_prefix" };
           static constexpr std::string_view letter_2_lang                 = { "2_letter_lang" };
@@ -45,10 +47,13 @@ struct key_value_data
           static constexpr std::string_view texture_page                  = { "texture_page" };
           static constexpr std::string_view pupu_id                       = { "pupu_id" };
           static constexpr std::string_view demaster_mod_path             = { "demaster_mod_path" };
+          static constexpr std::string_view ffnx_map                      = { "ffnx_map" };
           static constexpr std::string_view ffnx_multi_texture            = { "ffnx_multi_texture" };
           static constexpr std::string_view ffnx_single_texture           = { "ffnx_single_texture" };
-          static constexpr std::string_view ffnx_map                      = { "ffnx_map" };
           static constexpr std::string_view demaster                      = { "demaster" };
+          static constexpr std::string_view ffnx_multi_texture_full       = { "ffnx_multi_texture_full" };
+          static constexpr std::string_view ffnx_single_texture_full      = { "ffnx_single_texture_full" };
+          static constexpr std::string_view demaster_full                 = { "demaster_full" };
           static constexpr std::string_view field_main                    = { "field_main" };
           static constexpr std::string_view field_lang                    = { "field_lang" };
           static constexpr std::string_view chara_main                    = { "chara_main" };
@@ -73,6 +78,7 @@ struct key_value_data
                                                                                                               // batch_output_path,
                                                                                                               field_name,
                                                                                                               ext,
+                                                                                                              full_filename,
                                                                                                               field_prefix,
                                                                                                               letter_2_lang,
                                                                                                               letter_3_lang,
@@ -80,10 +86,13 @@ struct key_value_data
                                                                                                               texture_page,
                                                                                                               pupu_id,
                                                                                                               demaster_mod_path,
+                                                                                                              ffnx_map,
                                                                                                               ffnx_multi_texture,
                                                                                                               ffnx_single_texture,
-                                                                                                              ffnx_map,
                                                                                                               demaster,
+                                                                                                              ffnx_multi_texture_full,
+                                                                                                              ffnx_single_texture_full,
+                                                                                                              demaster_full,
                                                                                                               field_main,
                                                                                                               field_lang,
                                                                                                               chara_main,
@@ -103,14 +112,19 @@ struct key_value_data
           static constexpr std::string_view batch_output_path_tooltip  = { "The destination folder for processed batch output." };
           static constexpr std::string_view field_name_tooltip         = { "The name of the current field or scene." };
           static constexpr std::string_view ext_tooltip                = { "The file extension of the current resource." };
-          static constexpr std::string_view field_prefix_tooltip       = { "The prefix used for field-related assets." };
-          static constexpr std::string_view letter_2_lang_tooltip      = { "The two-letter language code (e.g., 'en' for English)." };
-          static constexpr std::string_view letter_3_lang_tooltip      = { "The three-letter language code (e.g., 'eng' for English)." };
-          static constexpr std::string_view palette_tooltip            = { "The color palette ID for textures." };
-          static constexpr std::string_view texture_page_tooltip       = { "The texture page ID used for rendering." };
-          static constexpr std::string_view pupu_id_tooltip = { "The 32-bit hex number used for Pupu ID. This is for deswizzles." };
+          static constexpr std::string_view full_filename_tooltip = { "The full filename including extension of the current resource." };
+          static constexpr std::string_view field_prefix_tooltip  = { "The prefix used for field-related assets." };
+          static constexpr std::string_view letter_2_lang_tooltip = { "The two-letter language code (e.g., 'en' for English)." };
+          static constexpr std::string_view letter_3_lang_tooltip = { "The three-letter language code (e.g., 'eng' for English)." };
+          static constexpr std::string_view palette_tooltip       = { "The color palette ID for textures." };
+          static constexpr std::string_view texture_page_tooltip  = { "The texture page ID used for rendering." };
+          static constexpr std::string_view pupu_id_tooltip       = { "The 32-bit hex number used for Pupu ID. This is for deswizzles." };
           static constexpr std::string_view demaster_mod_path_tooltip  = { "The mod directory for Demaster, an FF8 modding tool." };
 
+          static constexpr std::string_view ffnx_map_tooltip           = {
+               "Path layout for FFNx map data in direct mode:\n"
+                         "{ffnx_direct_mode_path}/field/mapdata/{field_prefix}/{field_name}/{field_name}{_{2_letter_lang}}{ext}"
+          };
           static constexpr std::string_view ffnx_multi_texture_tooltip = {
                "Path layout for FFNx multi-texture field assets:\n"
                "{ffnx_mod_path}/field/mapdata/{field_prefix}/{field_name}/{field_name}{_{2_letter_lang}}_{texture_page}{ext}"
@@ -119,16 +133,23 @@ struct key_value_data
                "Path layout for FFNx single-texture field assets:\n"
                "{ffnx_mod_path}/field/mapdata/{field_name}/{field_name}{_{2_letter_lang}}{ext}"
           };
-          static constexpr std::string_view ffnx_map_tooltip = {
-               "Path layout for FFNx map data in direct mode:\n"
-               "{ffnx_direct_mode_path}/field/mapdata/{field_prefix}/{field_name}/{field_name}{_{2_letter_lang}}{ext}"
-          };
           static constexpr std::string_view demaster_tooltip = {
                "Path layout for field background textures in Demaster:\n"
                "{demaster_mod_path}/textures/field_bg/{field_prefix}/{field_name}/"
                "{field_name}{_{2_letter_lang}}{_{texture_page}}{_{palette}}{_{pupu_id}}{ext}"
           };
-
+          static constexpr std::string_view ffnx_multi_texture_full_tooltip = {
+               "Path layout for FFNx multi-texture field assets:\n"
+               "{ffnx_mod_path}/field/mapdata/{field_prefix}/{field_name}/{full_filename}"
+          };
+          static constexpr std::string_view ffnx_single_texture_full_tooltip = {
+               "Path layout for FFNx single-texture field assets:\n"
+               "{ffnx_mod_path}/field/mapdata/{field_name}/{full_filename}"
+          };
+          static constexpr std::string_view demaster_full_tooltip = {
+               "Path layout for field background textures in Demaster:\n"
+               "{demaster_mod_path}/textures/field_bg/{field_prefix}/{field_name}/{full_filename}"
+          };
           static constexpr std::string_view field_main_tooltip = {
                "Standard path for field assets:\n"
                "field/mapdata/{field_prefix}/{field_name}/{field_name}{ext}"
@@ -165,6 +186,7 @@ struct key_value_data
                                                                                  // batch_output_path_tooltip,
                                                                                  field_name_tooltip,
                                                                                  ext_tooltip,
+                                                                                 full_filename_tooltip,
                                                                                  field_prefix_tooltip,
                                                                                  letter_2_lang_tooltip,
                                                                                  letter_3_lang_tooltip,
@@ -172,10 +194,13 @@ struct key_value_data
                                                                                  texture_page_tooltip,
                                                                                  pupu_id_tooltip,
                                                                                  demaster_mod_path_tooltip,
+                                                                                 ffnx_map_tooltip,
                                                                                  ffnx_multi_texture_tooltip,
                                                                                  ffnx_single_texture_tooltip,
-                                                                                 ffnx_map_tooltip,
                                                                                  demaster_tooltip,
+                                                                                 ffnx_multi_texture_full_tooltip,
+                                                                                 ffnx_single_texture_full_tooltip,
+                                                                                 demaster_full_tooltip,
                                                                                  field_main_tooltip,
                                                                                  field_lang_tooltip,
                                                                                  chara_main_tooltip,

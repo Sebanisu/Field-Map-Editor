@@ -122,6 +122,9 @@
           return path.string();
      }
 
+     if (key == keys::ffnx_map)
+          return "{ffnx_direct_mode_path}/field/mapdata/{field_prefix}/{field_name}/{field_name}{_{2_letter_lang}}{ext}";
+
      if (key == keys::demaster_mod_path)
           return "DEMASTER_EXP";
 
@@ -131,12 +134,18 @@
      if (key == keys::ffnx_single_texture)
           return "{ffnx_mod_path}/field/mapdata/{field_name}/{field_name}{_{2_letter_lang}}{_{pupu_id}}{ext}";
 
-     if (key == keys::ffnx_map)
-          return "{ffnx_direct_mode_path}/field/mapdata/{field_prefix}/{field_name}/{field_name}{_{2_letter_lang}}{ext}";
-
      if (key == keys::demaster)
           return "{demaster_mod_path}/textures/field_bg/{field_prefix}/{field_name}/"
                  "{field_name}{_{2_letter_lang}}{_{texture_page}}{_{palette}}{_{pupu_id}}{ext}";
+
+     if (key == keys::ffnx_multi_texture_full)
+          return "{ffnx_mod_path}/field/mapdata/{field_prefix}/{field_name}/{full_filename}";
+
+     if (key == keys::ffnx_single_texture_full)
+          return "{ffnx_mod_path}/field/mapdata/{field_name}/{full_filename}";
+
+     if (key == keys::demaster_full)
+          return "{demaster_mod_path}/textures/field_bg/{field_prefix}/{field_name}/{full_filename}";
 
      if (key == keys::field_main)
           return "field/mapdata/{field_prefix}/{field_name}/{field_name}{ext}";
@@ -191,6 +200,9 @@
           // assert(ext.size() >= 2 && ext[0] == '.');
           return fmt::format("{}", ext);
      }
+     if (key == keys::full_filename)
+          return fmt::format("{}", full_filename);
+
      if (key == keys::field_prefix)
           return field_prefix();
 
