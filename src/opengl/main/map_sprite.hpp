@@ -59,6 +59,8 @@ struct [[nodiscard]] map_sprite// final
      SharedTextures m_texture = std::make_shared<std::array<glengine::Texture, MAX_TEXTURES>>();
      mutable FutureOfFutureConsumer<std::vector<std::future<std::future<void>>>> m_future_of_future_consumer  = {};
      mutable FutureConsumer<std::vector<std::future<void>>>                      m_future_consumer            = {};
+     mutable std::map<std::string, glengine::FrameBuffer>                        m_cache_framebuffer          = {};
+     std::map<std::string, std::string>                                          m_cache_framebuffer_tooltips = {};
      ff_8::map_group                                                             m_map_group                  = {};
      // TODO do I need square?
      //  square                                        m_square    = { glm::uvec2{}, glm::uvec2{ TILE_SIZE, TILE_SIZE }, sf::Color::Red };
@@ -90,6 +92,7 @@ struct [[nodiscard]] map_sprite// final
      static constexpr auto                         s_half_color                    = s_default_color / 2.F;// RGBA = (0.5, 0.5, 0.5, 0.5)
      static constexpr auto                         s_quarter_color                 = s_half_color / 2.F;// RGBA = (0.25, 0.25, 0.25, 0.25)
      mutable glm::vec4                             m_uniform_color                 = s_default_color;
+     [[nodiscard]] settings_backup                 get_backup_settings();
 
    public:
      map_sprite() = default;
@@ -171,10 +174,11 @@ struct [[nodiscard]] map_sprite// final
        save_deswizzle_textures(const std::string &keyed_string, const std::filesystem::path &selected_path);
      [[nodiscard]] std::vector<std::future<void>>
        save_deswizzle_combined_toml(const std::string &keyed_string, const std::filesystem::path &selected_path);
+     [[nodiscard]] const std::map<std::string, std::string>           &get_deswizzle_combined_textures_tooltips();
+     [[nodiscard]] const std::map<std::string, glengine::FrameBuffer> &get_deswizzle_combined_textures();
      [[nodiscard]] std::vector<std::future<void>>
        save_deswizzle_combined_textures(const std::string &keyed_string, const std::filesystem::path &selected_path);
-      [[nodiscard]] std::future<std::future<void>>
-                                                  load_swizzle_textures(std::uint8_t texture_page, std::uint8_t palette) const;
+     [[nodiscard]] std::future<std::future<void>> load_swizzle_textures(std::uint8_t texture_page, std::uint8_t palette) const;
      [[nodiscard]] std::future<std::future<void>> load_swizzle_textures(std::uint8_t texture_page) const;
      [[nodiscard]] std::future<std::future<void>>
        load_swizzle_as_one_image_textures(std::optional<std::uint8_t> palette = std::nullopt) const;

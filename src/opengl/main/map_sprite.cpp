@@ -1000,6 +1000,7 @@ void map_sprite::update_render_texture(const bool reload_textures) const
           m_future_consumer.consume_now();
           // reset the textures
           *m_texture = {};
+          m_cache_framebuffer.clear();
           queue_texture_loading();
 
 
@@ -1432,28 +1433,10 @@ const ff_8::MapHistory::nsat_map &map_sprite::working_animation_counts() const
      const auto     &unique_bpp              = unique_values.bpp().values();
 
      // Backup and override current settings for exporting textures.
-     settings_backup settings(
-       m_filters, m_draw_swizzle, m_disable_texture_page_shift, m_disable_blends, m_render_framebuffer.mutable_scale());
-     settings.filters                    = ff_8::filters{ false };
-     settings.filters.value().swizzle    = settings.filters.backup().swizzle;
-     settings.filters.value().deswizzle  = settings.filters.backup().deswizzle;
-     settings.draw_swizzle               = true;
-     settings.disable_texture_page_shift = true;
-     settings.disable_blends             = true;
+     settings_backup settings                = get_backup_settings();
 
      // Adjust scale based on texture height or deswizzle state.
-     std::int32_t         height         = static_cast<std::int32_t>(get_max_texture_height());
-     constexpr static int mim_height     = { 256U };
-     settings.scale                      = height / mim_height;
-     if (settings.filters.value().deswizzle.enabled())
-     {
-          settings.scale = height / static_cast<std::int32_t>(m_canvas.height());
-          height         = settings.scale.value() * mim_height;
-     }
-     if (settings.scale <= 0)
-     {
-          settings.scale = 1;
-     }
+     std::int32_t    height                  = static_cast<std::int32_t>(get_max_texture_height());
 
      // If there’s only one bpp and at most one palette, nothing needs saving.
      if (unique_bpp.size() == 1U && unique_values.palette().at(unique_bpp.front()).values().size() <= 1U)
@@ -1472,9 +1455,8 @@ const ff_8::MapHistory::nsat_map &map_sprite::working_animation_counts() const
      future_of_futures.reserve(max_number_of_texture_pages);
 
      // Create an off-screen render texture to draw into.
-     const auto specification = glengine::FrameBufferSpecification{ .width  = static_cast<std::int32_t>(height),
-                                                                    .height = static_cast<std::int32_t>(height),
-                                                                    .scale  = settings.scale.value() };
+     const auto specification =
+       glengine::FrameBufferSpecification{ .width = height, .height = height, .scale = m_render_framebuffer.scale() };
 
      // Loop over all unique texture pages.
      for (const auto &texture_page : unique_texture_page_ids)
@@ -1583,41 +1565,22 @@ const ff_8::MapHistory::nsat_map &map_sprite::working_animation_counts() const
      // static constexpr std::string_view pattern_coo_texture_page_palette = { "{}_{}_{}_{}.png" };
 
      // Extract unique texture page IDs and BPP (bits per pixel) values from the map.
-     const auto      unique_values           = get_all_unique_values_and_strings();
-     const auto     &unique_texture_page_ids = unique_values.texture_page_id().values();
-     const auto     &unique_bpp              = unique_values.bpp().values();
-     const auto      max_texture_page_id     = std::ranges::max(unique_texture_page_ids);
+     const auto         unique_values           = get_all_unique_values_and_strings();
+     const auto        &unique_texture_page_ids = unique_values.texture_page_id().values();
+     const auto        &unique_bpp              = unique_values.bpp().values();
+     const auto         max_texture_page_id     = std::ranges::max(unique_texture_page_ids);
 
      // Backup and override current settings for exporting textures.
-     settings_backup settings(
-       m_filters, m_draw_swizzle, m_disable_texture_page_shift, m_disable_blends, m_render_framebuffer.mutable_scale());
-     settings.filters                    = ff_8::filters{ false };
-     settings.filters.value().swizzle    = settings.filters.backup().swizzle;
-     settings.filters.value().deswizzle  = settings.filters.backup().deswizzle;
-     settings.draw_swizzle               = true;
-     settings.disable_texture_page_shift = false;
-     settings.disable_blends             = true;
+     settings_backup    settings                = get_backup_settings();
+     std::int32_t       height                  = static_cast<std::int32_t>(get_max_texture_height());
 
-     // Adjust scale based on texture height or deswizzle state.
-     std::int32_t         height         = static_cast<std::int32_t>(get_max_texture_height());
-     constexpr static int mim_height     = { 256U };
-     settings.scale                      = height / mim_height;
-     if (settings.filters.value().deswizzle.enabled())
-     {
-          settings.scale = height / static_cast<std::int32_t>(m_canvas.height());
-          height         = settings.scale.value() * mim_height;
-     }
-     if (settings.scale == 0U)
-     {
-          settings.scale = 1U;
-     }
-     const auto         max_source_x = m_map_group.maps.working().visit_tiles([&](const auto &tiles) -> std::uint8_t {
+     const auto         max_source_x            = m_map_group.maps.working().visit_tiles([&](const auto &tiles) -> std::uint8_t {
           auto f_t_range = tiles | std::ranges::views::filter([&](const auto &tile) { return tile.texture_id() == max_texture_page_id; })
                            | std::ranges::views::transform([](const auto &tile) { return tile.source_x(); });
           return static_cast<std::uint8_t>(std::ranges::max(f_t_range));
      });
-     const std::int32_t width        = height * static_cast<std::int32_t>(max_texture_page_id)
-                                + ((max_source_x + TILE_SIZE) * settings.scale.value());//(max_texture_page_id + 1);
+     const std::int32_t width                   = height * static_cast<std::int32_t>(max_texture_page_id)
+                                + ((max_source_x + TILE_SIZE) * m_render_framebuffer.scale());//(max_texture_page_id + 1);
 
      // If there’s only one bpp and at most one palette, nothing needs saving.
      if (unique_bpp.size() == 1U && unique_values.palette().at(unique_bpp.front()).values().size() <= 1U)
@@ -1638,9 +1601,8 @@ const ff_8::MapHistory::nsat_map &map_sprite::working_animation_counts() const
      future_of_futures.reserve(max_number_of_texture_pages);
 
      // Create an off-screen render texture to draw into.
-     const auto specification = glengine::FrameBufferSpecification{ .width  = static_cast<std::int32_t>(width),
-                                                                    .height = static_cast<std::int32_t>(height),
-                                                                    .scale  = settings.scale.value() };
+     const auto specification =
+       glengine::FrameBufferSpecification{ .width = width, .height = height, .scale = m_render_framebuffer.scale() };
 
 
      // Loop over all unique texture pages.
@@ -1744,24 +1706,10 @@ std::string map_sprite::get_base_name() const
      }
      consume_now();
      // Backup current settings and adjust for saving Pupu textures
-     auto settings =
-       settings_backup{ m_filters, m_draw_swizzle, m_disable_texture_page_shift, m_disable_blends, m_render_framebuffer.mutable_scale() };
-     settings.filters                         = ff_8::filters{ false };
-     settings.filters.value().swizzle         = settings.filters.backup().swizzle;// Retain original upscale settings
-     settings.draw_swizzle                    = false;// No swizzling when saving
-     settings.disable_texture_page_shift      = true;// Disable texture page shifts
-     settings.disable_blends                  = true;// Disable blending
-
-     // Set the scale relative to a standard MIM height (256px)
-     static constexpr unsigned int mim_height = { 256U };
-     settings.scale                           = static_cast<std::int32_t>(get_max_texture_height() / mim_height);
-     if (settings.scale <= 0)
-     {
-          settings.scale = 1;
-     }
+     auto       settings = get_backup_settings();
 
      // Acquire the field associated with this map group
-     const auto field = m_map_group.field.lock();
+     const auto field    = m_map_group.field.lock();
      if (!field)
      {
           spdlog::error("Failed to lock m_map_group.field: shared_ptr is expired.");
@@ -1783,7 +1731,7 @@ std::string map_sprite::get_base_name() const
      // Setup an off-screen render texture
      iRectangle const canvas = m_map_group.maps.const_working().canvas() * m_render_framebuffer.scale();
      const auto       specification =
-       glengine::FrameBufferSpecification{ .width = canvas.width(), .height = canvas.height(), .scale = settings.scale.value() };
+       glengine::FrameBufferSpecification{ .width = canvas.width(), .height = canvas.height(), .scale = m_render_framebuffer.scale() };
 
 
      // Loop through each Pupu ID and generate/save textures
@@ -1821,24 +1769,10 @@ std::string map_sprite::get_base_name() const
      }
      consume_now();
      // Backup current settings and adjust for saving Pupu textures
-     auto settings =
-       settings_backup{ m_filters, m_draw_swizzle, m_disable_texture_page_shift, m_disable_blends, m_render_framebuffer.mutable_scale() };
-     settings.filters                         = ff_8::filters{ false };
-     settings.filters.value().swizzle         = settings.filters.backup().swizzle;// Retain original upscale settings
-     settings.draw_swizzle                    = false;// No swizzling when saving
-     settings.disable_texture_page_shift      = true;// Disable texture page shifts
-     settings.disable_blends                  = true;// Disable blending
-
-     // Set the scale relative to a standard MIM height (256px)
-     static constexpr unsigned int mim_height = { 256U };
-     settings.scale                           = static_cast<std::int32_t>(get_max_texture_height() / mim_height);
-     if (settings.scale <= 0)
-     {
-          settings.scale = 1;
-     }
+     auto       settings = get_backup_settings();
 
      // Acquire the field associated with this map group
-     const auto field = m_map_group.field.lock();
+     const auto field    = m_map_group.field.lock();
      if (!field)
      {
           spdlog::error("Failed to lock m_map_group.field: shared_ptr is expired.");
@@ -1851,7 +1785,7 @@ std::string map_sprite::get_base_name() const
      // Setup an off-screen render texture
      iRectangle const                 canvas            = m_map_group.maps.const_working().canvas() * m_render_framebuffer.scale();
      const auto                       specification =
-       glengine::FrameBufferSpecification{ .width = canvas.width(), .height = canvas.height(), .scale = settings.scale.value() };
+       glengine::FrameBufferSpecification{ .width = canvas.width(), .height = canvas.height(), .scale = m_render_framebuffer.scale() };
      const key_value_data        config_path_values = { .ext = ".toml" };
      const std::filesystem::path config_path =
        config_path_values.replace_tags("{selected_path}/res/deswizzle{ext}"s, selections, selected_path);
@@ -1936,7 +1870,36 @@ std::string map_sprite::get_base_name() const
      return future_of_futures;
      // Note: Caller should consume_futures(future_of_futures) to wait for saves to finish
 }
+[[nodiscard]] settings_backup map_sprite::get_backup_settings()
+{
+     auto settings = settings_backup{
+          m_filters, m_draw_swizzle, m_disable_texture_page_shift, m_disable_blends
+          //, m_render_framebuffer.mutable_scale()
+     };
+     settings.filters                              = ff_8::filters{ false };
+     settings.filters.value().swizzle              = settings.filters.backup().swizzle;
+     settings.filters.value().swizzle_as_one_image = settings.filters.backup().swizzle_as_one_image;
+     settings.filters.value().deswizzle            = settings.filters.backup().deswizzle;
+     settings.filters.value().map                  = settings.filters.backup().map;
+     settings.draw_swizzle                         = false;// No swizzling when saving
+     settings.disable_texture_page_shift           = true;// Disable texture page shifts
+     settings.disable_blends                       = true;// Disable blending
 
+     // Adjust scale based on texture height or deswizzle state.
+     // std::int32_t         height                   = static_cast<std::int32_t>(get_max_texture_height());
+     // constexpr static int mim_height               = { 256 };
+     // settings.scale                                = height / mim_height;
+     // if (settings.filters.value().deswizzle.enabled())
+     // {
+     //      settings.scale = height / static_cast<std::int32_t>(m_canvas.height());
+     //      height         = m_render_framebuffer.scale() * mim_height;
+     // }
+     // if (settings.scale == 0U)
+     // {
+     //      settings.scale = 1U;
+     // }
+     return settings;
+}
 
 [[nodiscard]] std::vector<std::future<void>>
   map_sprite::save_deswizzle_combined_textures(const std::string &keyed_string, const std::filesystem::path &selected_path)
@@ -1949,24 +1912,10 @@ std::string map_sprite::get_base_name() const
      }
      consume_now();
      // Backup current settings and adjust for saving Pupu textures
-     auto settings =
-       settings_backup{ m_filters, m_draw_swizzle, m_disable_texture_page_shift, m_disable_blends, m_render_framebuffer.mutable_scale() };
-     settings.filters                         = ff_8::filters{ false };
-     settings.filters.value().swizzle         = settings.filters.backup().swizzle;// Retain original upscale settings
-     settings.draw_swizzle                    = false;// No swizzling when saving
-     settings.disable_texture_page_shift      = true;// Disable texture page shifts
-     settings.disable_blends                  = true;// Disable blending
-
-     // Set the scale relative to a standard MIM height (256px)
-     static constexpr unsigned int mim_height = { 256U };
-     settings.scale                           = static_cast<std::int32_t>(get_max_texture_height() / mim_height);
-     if (settings.scale <= 0)
-     {
-          settings.scale = 1;
-     }
+     auto       settings = get_backup_settings();
 
      // Acquire the field associated with this map group
-     const auto field = m_map_group.field.lock();
+     const auto field    = m_map_group.field.lock();
      if (!field)
      {
           spdlog::error("Failed to lock m_map_group.field: shared_ptr is expired.");
@@ -1979,7 +1928,7 @@ std::string map_sprite::get_base_name() const
      // Setup an off-screen render texture
      iRectangle const               canvas            = m_map_group.maps.const_working().canvas() * m_render_framebuffer.scale();
      const auto                     specification =
-       glengine::FrameBufferSpecification{ .width = canvas.width(), .height = canvas.height(), .scale = settings.scale.value() };
+       glengine::FrameBufferSpecification{ .width = canvas.width(), .height = canvas.height(), .scale = m_render_framebuffer.scale() };
 
 
      const key_value_data        config_path_values = { .ext = ".toml" };
@@ -2044,6 +1993,117 @@ std::string map_sprite::get_base_name() const
      }
      return future_of_futures;
      // Note: Caller should consume_futures(future_of_futures) to wait for saves to finish
+}
+
+[[nodiscard]] const std::map<std::string, std::string> &map_sprite::get_deswizzle_combined_textures_tooltips()
+{
+     return m_cache_framebuffer_tooltips;
+}
+
+[[nodiscard]] const std::map<std::string, glengine::FrameBuffer> &map_sprite::get_deswizzle_combined_textures()
+{
+     const auto selections = m_selections.lock();
+     if (!selections)
+     {
+          spdlog::error("Failed to lock m_selections: shared_ptr is expired.");
+          return m_cache_framebuffer;
+     }
+     if (!m_future_of_future_consumer.done() || !m_future_consumer.done())
+     {
+          return m_cache_framebuffer;
+     }
+     // Backup current settings and adjust for saving Pupu textures
+     auto       settings = get_backup_settings();
+
+     // Acquire the field associated with this map group
+     const auto field    = m_map_group.field.lock();
+     if (!field)
+     {
+          spdlog::error("Failed to lock m_map_group.field: shared_ptr is expired.");
+          return m_cache_framebuffer;// Field no longer exists, nothing to save
+     }
+
+     const std::string field_name = std::string{ str_to_lower(field->get_base_name()) };
+
+     // Setup an off-screen render texture
+     iRectangle const  canvas     = m_map_group.maps.const_working().canvas() * m_render_framebuffer.scale();
+     const auto        specification =
+       glengine::FrameBufferSpecification{ .width = canvas.width(), .height = canvas.height(), .scale = m_render_framebuffer.scale() };
+
+
+     const key_value_data        config_path_values = { .ext = ".toml" };
+     const std::filesystem::path config_path =
+       config_path_values.replace_tags("{selected_path}/res/deswizzle{ext}"s, selections, "{current_path}");
+     const auto config = Configuration(config_path);
+
+     const auto coo =
+       m_map_group.opt_coo.has_value() && m_map_group.opt_coo.value() != open_viii::LangT::generic ? m_map_group.opt_coo : std::nullopt;
+
+     std::string my_coo_key = [&]() {
+          if (coo.has_value())
+          {
+               return std::string(open_viii::LangCommon::to_string_3_char(coo.value()));
+          }
+          else
+          {
+               const auto opt_coo_local = field->get_lang_from_fl_paths();
+               if (opt_coo_local.has_value() && std::to_underlying(opt_coo_local.value()) < std::to_underlying(open_viii::LangT::generic))
+               {
+                    return std::string(open_viii::LangCommon::to_string_3_char(opt_coo_local.value()));
+               }
+               else
+               {
+                    return "x"s;
+               }
+          }
+     }();
+     const toml::table &root_table = config;
+
+     if (auto it_base = root_table.find(field_name); it_base != root_table.end() && it_base->second.is_table())
+     {
+          const toml::table &field_table = *it_base->second.as_table();
+          for (auto &&[coo_key, coo_node] : field_table)
+          {
+               if (coo_key != my_coo_key)
+                    continue;
+               if (!coo_node.is_table())
+                    continue;
+               auto &coo_table = *coo_node.as_table();
+
+               for (auto &&[file_name, file_node] : coo_table)
+               {
+                    if (file_name == "unique_pupu_ids")
+                         continue;
+                    if (!file_node.is_table())
+                         continue;
+                    const auto file_name_str = std::string(file_name);
+                    if (m_cache_framebuffer.contains(file_name_str))
+                    {
+                         continue;
+                    }
+                    auto &filters = settings.filters.value();
+                    filters.reload(*file_node.as_table());
+
+                    auto [it, inserted] = m_cache_framebuffer.emplace(file_name_str, specification);
+                    if (inserted)
+                    {
+                         if (!generate_texture(it->second))
+                         {
+                              m_cache_framebuffer.erase(it);// Don't keep junk
+                         }
+                         else
+                         {
+                              m_cache_framebuffer_tooltips[file_name_str] = [&]() {
+                                   std::ostringstream ss{};
+                                   ss << *file_node.as_table();
+                                   return ss.str();
+                              }();
+                         }
+                    }
+               }
+          }
+     }
+     return m_cache_framebuffer;
 }
 
 uint32_t map_sprite::get_max_texture_height() const

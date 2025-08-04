@@ -989,10 +989,11 @@ struct filters
                (operations.reload(table), ...);
           }(pupu,
             multi_pupu,
-            swizzle,
-            deswizzle,
-            swizzle_as_one_image,
-            map,
+            //these 4 filters control drawing with external textures. reloading them from a toml table. is not desired currently.
+            //swizzle,
+            //deswizzle,
+            //swizzle_as_one_image,
+            //map,
             draw_bit,
             z,
             multi_z,

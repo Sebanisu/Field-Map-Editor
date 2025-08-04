@@ -76,17 +76,47 @@ void fme::filter_window::render() const
      {
           format_imgui_text("The draw mode is not set to `.map`.\nFilter changes won't show on draw window.");
      }
-     combo_filtered_pupu(lock_map_sprite);
-     combo_filtered_bpps(lock_map_sprite);
-     combo_filtered_palettes(lock_map_sprite);
-     combo_filtered_blend_modes(lock_map_sprite);
-     combo_filtered_blend_other(lock_map_sprite);
-     combo_filtered_layers(lock_map_sprite);
-     combo_filtered_texture_pages(lock_map_sprite);
-     combo_filtered_animation_ids(lock_map_sprite);
-     combo_filtered_animation_states(lock_map_sprite);
-     combo_filtered_z(lock_map_sprite);
-     combo_filtered_draw_bit(lock_map_sprite);
+     static float raw_thumb_size = 96.f;
+     ImGui::SliderFloat("Thumbnail Size", &raw_thumb_size, 96.f, 1024.f);
+     const ImVec2 thumb_size{ raw_thumb_size, raw_thumb_size };
+     const ImVec2 region_size = ImGui::GetContentRegionAvail();
+     const float  padding     = ImGui::GetStyle().FramePadding.x * 2.0f + ImGui::GetStyle().ItemSpacing.x;
+     const int    col_count   = static_cast<int>(region_size.x / (thumb_size.x + padding));
+
+     ImGui::Columns(col_count > 0 ? col_count : 1, "##get_deswizzle_combined_textures", false);
+     for (const auto &[file_name, framebuffer] : lock_map_sprite->get_deswizzle_combined_textures())
+     {
+          ImTextureID tex_id = glengine::ConvertGliDtoImTextureId<ImTextureID>(framebuffer.color_attachment_id());
+          // Draw thumbnail using ImageButton
+          // const auto pop_id = PushPopID();
+          if (ImGui::ImageButton(file_name.c_str(), tex_id, thumb_size))
+          {
+               // tbd
+          }
+          else if (lock_map_sprite->get_deswizzle_combined_textures_tooltips().contains(file_name))
+          {
+               tool_tip(lock_map_sprite->get_deswizzle_combined_textures_tooltips().at(file_name));
+          }
+          // Label under image (optional)
+          ImGui::TextWrapped("%s", file_name.c_str());
+          ImGui::NextColumn();
+     }
+     ImGui::Columns(1);
+
+     if (false)
+     {
+          combo_filtered_pupu(lock_map_sprite);
+          combo_filtered_bpps(lock_map_sprite);
+          combo_filtered_palettes(lock_map_sprite);
+          combo_filtered_blend_modes(lock_map_sprite);
+          combo_filtered_blend_other(lock_map_sprite);
+          combo_filtered_layers(lock_map_sprite);
+          combo_filtered_texture_pages(lock_map_sprite);
+          combo_filtered_animation_ids(lock_map_sprite);
+          combo_filtered_animation_states(lock_map_sprite);
+          combo_filtered_z(lock_map_sprite);
+          combo_filtered_draw_bit(lock_map_sprite);
+     }
 }
 
 void fme::filter_window::menu() const

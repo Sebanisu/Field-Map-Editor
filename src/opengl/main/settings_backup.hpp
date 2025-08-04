@@ -71,19 +71,20 @@ struct settings_backup
      setting_backup<bool>          draw_swizzle;
      setting_backup<bool>          disable_texture_page_shift;
      setting_backup<bool>          disable_blends;
-     setting_backup<std::int32_t>  scale;
+     // setting_backup<std::int32_t>  scale;
 
      settings_backup(
        ff_8::filters &in_filters,
        bool          &in_draw_swizzle,
        bool          &in_disable_texture_page_shift,
-       bool          &in_disable_blends,
-       std::int32_t  &in_scale)
+       bool          &in_disable_blends
+       // , std::int32_t  &in_scale
+       )
        : filters{ in_filters }
        , draw_swizzle{ in_draw_swizzle }
        , disable_texture_page_shift{ in_disable_texture_page_shift }
        , disable_blends{ in_disable_blends }
-       , scale{ in_scale }
+     //, scale{ in_scale }
      {
      }
 };
