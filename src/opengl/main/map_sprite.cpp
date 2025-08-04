@@ -1982,7 +1982,7 @@ std::string map_sprite::get_base_name() const
        glengine::FrameBufferSpecification{ .width = canvas.width(), .height = canvas.height(), .scale = settings.scale.value() };
 
 
-     const key_value_data        config_path_values = { .field_name = get_base_name(), .ext = ".toml" };
+     const key_value_data        config_path_values = { .ext = ".toml" };
      const std::filesystem::path config_path =
        config_path_values.replace_tags("{selected_path}/res/deswizzle{ext}"s, selections, selected_path);
      const auto config = Configuration(config_path);
