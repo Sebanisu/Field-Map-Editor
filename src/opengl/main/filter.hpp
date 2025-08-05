@@ -566,8 +566,16 @@ struct filter_old
      const filter_old &update([[maybe_unused]] U &&value) const
           requires(std::same_as<std::remove_cvref_t<U>, toml::table>)
      {
-          FilterUpdateStrategy<value_type>::update_value(value, ConfigKeys<Tag>::key_name, m_value);
-          FilterUpdateStrategy<value_type>::update_settings(value, ConfigKeys<Tag>::enabled_key_name, m_settings);
+          if (enabled())
+          {
+               FilterUpdateStrategy<value_type>::update_value(value, ConfigKeys<Tag>::key_name, m_value);
+               FilterUpdateStrategy<value_type>::update_settings(value, ConfigKeys<Tag>::enabled_key_name, m_settings);
+          }
+          else
+          {
+               value.erase(ConfigKeys<Tag>::key_name);
+               value.erase(ConfigKeys<Tag>::enabled_key_name);
+          }
           return *this;
      }
 
@@ -575,8 +583,16 @@ struct filter_old
           requires std::same_as<std::remove_cvref_t<U>, toml::table>
      filter_old &update(U &&value)
      {
-          FilterUpdateStrategy<value_type>::update_value(value, ConfigKeys<Tag>::key_name, m_value);
-          FilterUpdateStrategy<value_type>::update_settings(value, ConfigKeys<Tag>::enabled_key_name, m_settings);
+          if (enabled())
+          {
+               FilterUpdateStrategy<value_type>::update_value(value, ConfigKeys<Tag>::key_name, m_value);
+               FilterUpdateStrategy<value_type>::update_settings(value, ConfigKeys<Tag>::enabled_key_name, m_settings);
+          }
+          else
+          {
+               value.erase(ConfigKeys<Tag>::key_name);
+               value.erase(ConfigKeys<Tag>::enabled_key_name);
+          }
           return *this;
      }
 
@@ -755,8 +771,16 @@ struct filter
      const filter &update([[maybe_unused]] U &&value) const
           requires(std::same_as<std::remove_cvref_t<U>, toml::table>)
      {
-          FilterUpdateStrategy<value_type>::update_value(value, ConfigKeys<Tag>::key_name, m_value);
-          FilterUpdateStrategy<value_type>::update_settings(value, ConfigKeys<Tag>::enabled_key_name, m_settings);
+          if (enabled())
+          {
+               FilterUpdateStrategy<value_type>::update_value(value, ConfigKeys<Tag>::key_name, m_value);
+               FilterUpdateStrategy<value_type>::update_settings(value, ConfigKeys<Tag>::enabled_key_name, m_settings);
+          }
+          else
+          {
+               value.erase(ConfigKeys<Tag>::key_name);
+               value.erase(ConfigKeys<Tag>::enabled_key_name);
+          }
           return *this;
      }
      template<typename U>
@@ -770,8 +794,16 @@ struct filter
           requires std::same_as<std::remove_cvref_t<U>, toml::table>
      filter &update(U &&value)
      {
-          FilterUpdateStrategy<value_type>::update_value(value, ConfigKeys<Tag>::key_name, m_value);
-          FilterUpdateStrategy<value_type>::update_settings(value, ConfigKeys<Tag>::enabled_key_name, m_settings);
+          if (enabled())
+          {
+               FilterUpdateStrategy<value_type>::update_value(value, ConfigKeys<Tag>::key_name, m_value);
+               FilterUpdateStrategy<value_type>::update_settings(value, ConfigKeys<Tag>::enabled_key_name, m_settings);
+          }
+          else
+          {
+               value.erase(ConfigKeys<Tag>::key_name);
+               value.erase(ConfigKeys<Tag>::enabled_key_name);
+          }
           return *this;
      }
 
@@ -1021,10 +1053,10 @@ struct filters
                (operations.update(table), ...);
           }(pupu,
             multi_pupu,
-            swizzle,
-            deswizzle,
-            swizzle_as_one_image,
-            map,
+            //swizzle,
+            //deswizzle,
+            //swizzle_as_one_image,
+            //map,
             draw_bit,
             z,
             multi_z,

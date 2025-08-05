@@ -2000,7 +2000,7 @@ std::string map_sprite::get_base_name() const
      return m_cache_framebuffer_tooltips;
 }
 
-[[nodiscard]] const std::map<std::string, glengine::FrameBuffer> &map_sprite::get_deswizzle_combined_textures()
+[[nodiscard]] std::map<std::string, glengine::FrameBuffer> &map_sprite::get_deswizzle_combined_textures()
 {
      const auto selections = m_selections.lock();
      if (!selections)
@@ -2101,9 +2101,117 @@ std::string map_sprite::get_base_name() const
                          }
                     }
                }
+
+               for (auto &&[file_name, file_node] : coo_table)
+               {
+                    // Skip specific keys and non-table nodes early
+                    if (file_name == "unique_pupu_ids" || !file_node.is_table())
+                         continue;
+
+                    std::string file_name_str = std::string(file_name);
+
+                    // Skip if already cached
+                    // if (m_cache_framebuffer.contains(file_name_str))
+                    //      continue;
+
+                    // Try to emplace a new framebuffer
+                    auto [it, inserted] = m_cache_framebuffer.try_emplace(file_name_str, specification);
+                    if (!inserted)
+                         continue;
+
+                    // If inserted, initialize the framebuffer
+                    // auto      &framebuffer = it->second;
+                    // const auto _           = framebuffer.backup();//for RAII
+                    // framebuffer.bind();
+                    // glengine::Renderer::Clear();
+
+                    // Create tooltip string lazily using a lambda
+                    m_cache_framebuffer_tooltips[file_name_str] = [&]() -> std::string {
+                         std::ostringstream ss;
+                         ss << *file_node.as_table();// Safe since we checked is_table() earlier
+                         return ss.str();
+                    }();
+               }
           }
      }
      return m_cache_framebuffer;
+}
+
+toml::table *map_sprite::get_deswizzle_combined_toml_table(const std::string &file_name_str)
+{
+     const auto selections = m_selections.lock();
+     if (!selections)
+     {
+          spdlog::error("Failed to lock m_selections: shared_ptr is expired.");
+          return nullptr;
+     }
+     const auto field = m_map_group.field.lock();
+     if (!field)
+     {
+          spdlog::error("Failed to lock m_map_group.field: shared_ptr is expired.");
+          return nullptr;// Field no longer exists, nothing to save
+     }
+
+     const std::string field_name = std::string{ str_to_lower(field->get_base_name()) };
+
+     // Setup an off-screen render texture
+     iRectangle const  canvas     = m_map_group.maps.const_working().canvas() * m_render_framebuffer.scale();
+     const auto        specification =
+       glengine::FrameBufferSpecification{ .width = canvas.width(), .height = canvas.height(), .scale = m_render_framebuffer.scale() };
+
+
+     const key_value_data        config_path_values = { .ext = ".toml" };
+     const std::filesystem::path config_path =
+       config_path_values.replace_tags("{selected_path}/res/deswizzle{ext}"s, selections, "{current_path}");
+     auto       config = Configuration(config_path);
+
+     const auto coo =
+       m_map_group.opt_coo.has_value() && m_map_group.opt_coo.value() != open_viii::LangT::generic ? m_map_group.opt_coo : std::nullopt;
+
+     std::string my_coo_key = [&]() {
+          if (coo.has_value())
+          {
+               return std::string(open_viii::LangCommon::to_string_3_char(coo.value()));
+          }
+          else
+          {
+               const auto opt_coo_local = field->get_lang_from_fl_paths();
+               if (opt_coo_local.has_value() && std::to_underlying(opt_coo_local.value()) < std::to_underlying(open_viii::LangT::generic))
+               {
+                    return std::string(open_viii::LangCommon::to_string_3_char(opt_coo_local.value()));
+               }
+               else
+               {
+                    return "x"s;
+               }
+          }
+     }();
+     toml::table &root_table = config;
+
+     if (auto it_base = root_table.find(field_name); it_base != root_table.end() && it_base->second.is_table())
+     {
+          toml::table &field_table = *it_base->second.as_table();
+          for (auto &&[coo_key, coo_node] : field_table)
+          {
+               if (coo_key != my_coo_key)
+                    continue;
+               if (!coo_node.is_table())
+                    continue;
+               auto &coo_table = *coo_node.as_table();
+
+               for (auto &&[file_name, file_node] : coo_table)
+               {
+                    if (file_name == "unique_pupu_ids")
+                         continue;
+                    if (!file_node.is_table())
+                         continue;
+                    if (file_name_str != file_name)
+                         continue;
+                    return file_node.as_table();
+               }
+          }
+     }
+     return nullptr;
 }
 
 uint32_t map_sprite::get_max_texture_height() const
