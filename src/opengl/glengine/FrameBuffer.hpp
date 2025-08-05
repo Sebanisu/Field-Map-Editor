@@ -14,13 +14,14 @@ enum class FrameBufferTextureFormat
 {
      None,
      RGBA8,
+     RGBA8UI,
      RED_INTEGER,
 };
 struct FrameBufferSpecification
 {
      std::array<FrameBufferTextureFormat, 4U> attachments = { FrameBufferTextureFormat::RGBA8,
                                                               FrameBufferTextureFormat::RED_INTEGER,
-                                                              {},
+                                                              FrameBufferTextureFormat::RGBA8UI,
                                                               {} };
      int                                      width       = {};
      int                                      height      = {};

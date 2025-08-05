@@ -7,62 +7,77 @@ layout(location = 2) in vec2 a_texCoord;
 layout(location = 3) in float a_texture;
 layout(location = 4) in float a_tiling_factor;
 layout(location = 5) in int a_tile_id;
+layout(location = 6) in uint a_pupu_id; // NEW
 
-struct vertex_output
-{
+struct vertex_output {
   float texture;
   vec2 TexCoord;
   vec4 color;
   float tiling_factor;
 };
+
 layout(location = 0) out vertex_output v;
 layout(location = 4) out flat int v_tile_id;
+layout(location = 5) out flat uint v_pupu_id; // NEW
+
 uniform mat4 u_MVP;
 
 void main()
 {
-  gl_Position = u_MVP * vec4(a_position,1.0);
-  v.TexCoord = a_texCoord;
+  gl_Position = u_MVP * vec4(a_position, 1.0);
+  v.TexCoord = a_texCoord * a_tiling_factor;
   v.texture = a_texture;
-  v.tiling_factor = a_tiling_factor;
   v.color = a_color;
+  v.tiling_factor = a_tiling_factor;
   v_tile_id = a_tile_id;
+  v_pupu_id = a_pupu_id;
 }
-  #shader fragment
-  #version 450
+
+#shader fragment
+#version 450
 
 layout(location = 0) out vec4 color;
 layout(location = 1) out int tile_id;
+layout(location = 2) out uvec4 pupu_data;
 
-struct vertex_output
-{
+struct vertex_output {
   float texture;
   vec2 TexCoord;
   vec4 color;
   float tiling_factor;
 };
+
 layout(location = 0) in vertex_output v;
 layout(location = 4) in flat int v_tile_id;
+layout(location = 5) in flat uint v_pupu_id; // NEW
 
 uniform sampler2D u_Textures[32];
-
 uniform vec4 u_Tint;
 uniform vec2 u_Grid;
-//uniform sampler2D u_Texture;
+
+uvec4 PackUintToRGBA(uint value) {
+    return uvec4(
+        (value >> 0u)  & 0xFFu,
+        (value >> 8u)  & 0xFFu,
+        (value >> 16u) & 0xFFu,
+        (value >> 24u) & 0xFFu
+    );
+}
 
 void main()
 {
   tile_id = v_tile_id;
-  //color = vec4(1.0);
-  //color2 = vec4(1.0, 0.0, 0.0, 1.0);
+  pupu_data = PackUintToRGBA(v_pupu_id);
 
-  uint index = uint(v.texture);
-  vec4 texColor = texture(u_Textures[index], v.TexCoord * v.tiling_factor);
-  ivec2 textureSize2d = textureSize(u_Textures[index], 0);
+  int index = int(v.texture);
+  vec4 texColor = texture(u_Textures[index], v.TexCoord);
 
-  if (u_Grid.y > 0 && u_Grid.x > 0)
+  if (u_Grid.x > 0.0 && u_Grid.y > 0.0)
   {
-    vec2 grid_size = vec2(float(textureSize2d.x)/u_Grid.x, float(textureSize2d.y)/u_Grid.y);
+    ivec2 textureSize2d = textureSize(u_Textures[index], 0);
+    vec2 grid_size = vec2(float(textureSize2d.x) / u_Grid.x,
+                          float(textureSize2d.y) / u_Grid.y);
+
     float y = fract(v.TexCoord.y * grid_size.y);
     float x = fract(v.TexCoord.x * grid_size.x);
     float y2 = fract((1.0 - v.TexCoord.y) * grid_size.y);
@@ -74,7 +89,7 @@ void main()
     }
     else
     {
-      color =texColor * u_Tint * v.color;
+      color = texColor * u_Tint * v.color;
     }
   }
   else

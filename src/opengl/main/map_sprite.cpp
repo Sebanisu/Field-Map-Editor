@@ -824,7 +824,8 @@ void map_sprite::update_position(
                  subtexture,
                  draw_position,
                  glm::vec2{ static_cast<float>(TILE_SIZE * target_framebuffer.scale()) },
-                 static_cast<int>(m_map_group.maps.get_offset_from_working(tile)));
+                 static_cast<int>(m_map_group.maps.get_offset_from_working(tile)),
+                 pupu_id.raw());
                drew = true;
           });
      }

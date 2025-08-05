@@ -3,14 +3,7 @@
 namespace glengine
 {
 
-VertexBufferLayout<6U> Vertex::layout()
-{
-     return {
-          glengine::VertexBufferElementType<float>{ 3U }, glengine::VertexBufferElementType<float>{ 4U },
-          glengine::VertexBufferElementType<float>{ 2U }, glengine::VertexBufferElementType<float>{ 1U },
-          glengine::VertexBufferElementType<float>{ 1U }, glengine::VertexBufferElementType<int>{ 1U },
-     };
-}
+
 
 Quad CreateQuad(
   const glm::vec3                 offset,
@@ -19,7 +12,8 @@ Quad CreateQuad(
   const float                     tiling_factor,
   const std::array<glm::vec2, 4U> uv,
   const glm::vec2                 size,
-  const int                       id)
+  const int                       id,
+  const unsigned int              pupu_id)
 {
      const auto f_texture_id = static_cast<float>(texture_id);
      return {
@@ -28,25 +22,29 @@ Quad CreateQuad(
                   .uv            = uv[0],
                   .texture_slot  = f_texture_id,
                   .tiling_factor = tiling_factor,
-                  .tile_id       = id },// 0
+                  .tile_id       = id,
+                  .pupu_id       = pupu_id },// 0
           Vertex{ .location      = { offset + glm::vec3{ size.x, 0.F, 0.F } },
                   .color         = { color },
                   .uv            = uv[1],
                   .texture_slot  = f_texture_id,
                   .tiling_factor = tiling_factor,
-                  .tile_id       = id },// 1
+                  .tile_id       = id,
+                  .pupu_id       = pupu_id },// 1
           Vertex{ .location      = { offset + glm::vec3{ size.x, size.y, 0.F } },
                   .color         = { color },
                   .uv            = uv[2],
                   .texture_slot  = f_texture_id,
                   .tiling_factor = tiling_factor,
-                  .tile_id       = id },// 2
+                  .tile_id       = id,
+                  .pupu_id       = pupu_id },// 2
           Vertex{ .location{ offset + glm::vec3{ 0.F, size.y, 0.F } },
                   .color         = { color },
                   .uv            = uv[3],
                   .texture_slot  = f_texture_id,
                   .tiling_factor = tiling_factor,
-                  .tile_id       = id },// 3
+                  .tile_id       = id,
+                  .pupu_id       = pupu_id },// 3
      };
 }
 

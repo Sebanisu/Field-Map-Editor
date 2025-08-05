@@ -94,9 +94,14 @@ static decltype(auto) GenerateColorAttachments(const FrameBufferSpecification &s
                case FrameBufferTextureFormat::RED_INTEGER: {
                     return Glid{ AttachColorTexture(spec.width, spec.height, GL_R32I, GL_RED_INTEGER, GL_INT), Texture::destroy };
                }
+               case FrameBufferTextureFormat::RGBA8UI: {
+                    return Glid{ AttachColorTexture(spec.width, spec.height, GL_RGBA8UI, GL_RGBA_INTEGER, GL_UNSIGNED_BYTE),
+                                 Texture::destroy };
+               }
                case FrameBufferTextureFormat::None:
                     break;
           }
+
           return Glid{};
      };
      return std::array<Glid, 4U>{

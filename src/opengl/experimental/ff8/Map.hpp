@@ -676,7 +676,9 @@ class Map
                  *sub_texture,
                  tile_to_draw_pos(tile),
                  m_map_dims.scaled_tile_size(),
-                 static_cast<int>(GetMapHistory()->get_offset_from_working(tile)));
+                 static_cast<int>(GetMapHistory()->get_offset_from_working(tile)),
+                 GetMapHistory()->get_pupu_from_working(tile).raw()
+               );
                return true;
           });
           m_batch_renderer.draw();
