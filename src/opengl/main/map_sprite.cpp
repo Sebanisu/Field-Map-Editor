@@ -1786,58 +1786,13 @@ std::string map_sprite::get_base_name() const
      iRectangle const                 canvas            = m_map_group.maps.const_working().canvas() * m_render_framebuffer.scale();
      const auto                       specification =
        glengine::FrameBufferSpecification{ .width = canvas.width(), .height = canvas.height(), .scale = m_render_framebuffer.scale() };
-     const key_value_data        config_path_values = { .ext = ".toml" };
-     const std::filesystem::path config_path =
-       config_path_values.replace_tags("{selected_path}/res/deswizzle{ext}"s, selections, selected_path);
-     auto       config = Configuration(config_path);
+     toml::table *coo_table = get_deswizzle_combined_coo_table();
+     if (!coo_table)
+     {
+          return {};
+     }
      const auto coo =
        m_map_group.opt_coo.has_value() && m_map_group.opt_coo.value() != open_viii::LangT::generic ? m_map_group.opt_coo : std::nullopt;
-     std::string coo_key = [&]() {
-          if (coo.has_value())
-          {
-               return std::string(open_viii::LangCommon::to_string_3_char(coo.value()));
-          }
-          else
-          {
-               const auto opt_coo_local = field->get_lang_from_fl_paths();
-               if (opt_coo_local.has_value() && std::to_underlying(opt_coo_local.value()) < std::to_underlying(open_viii::LangT::generic))
-               {
-                    return std::string(open_viii::LangCommon::to_string_3_char(opt_coo_local.value()));
-               }
-               else
-               {
-                    return "x"s;
-               }
-          }
-     }();
-     const auto append = [&](const std::string &file_name, toml::table &&file_table) {
-          // toml::table field_table = config[base_name].value_or(toml::table{});
-          toml::table *field_table = nullptr;
-
-          if (auto node = config->get(field_name); node && node->is_table())
-          {
-               field_table = node->as_table();
-          }
-          else
-          {
-               config->insert(field_name, toml::table{});
-               field_table = config->get(field_name)->as_table();
-          }
-          // toml::table coo_table   = field_table[coo_key].value_or(toml::table{});
-          toml::table *coo_table = nullptr;
-
-          if (auto node = field_table->get(coo_key); node && node->is_table())
-          {
-               coo_table = node->as_table();
-          }
-          else
-          {
-               field_table->insert(coo_key, toml::table{});
-               coo_table = field_table->get(coo_key)->as_table();
-          }
-          // Insert or assign the file entry
-          coo_table->insert_or_assign(file_name, std::move(file_table));
-     };
 
      toml::table ids_table = {};
      for (auto &&pupu : unique_pupu_ids)
@@ -1845,7 +1800,8 @@ std::string map_sprite::get_base_name() const
           const auto pupu_str = fmt::format("{:08X}", pupu.raw());
           ids_table.insert(pupu_str, pupu.raw());
      }
-     append("unique_pupu_ids", std::move(ids_table));
+     coo_table->insert_or_assign("unique_pupu_ids", std::move(ids_table));
+
      // Loop through each Pupu ID and generate/save textures
      // for (auto &&[index, pupu_range] : enumerated)
 
@@ -1864,7 +1820,8 @@ std::string map_sprite::get_base_name() const
 
                std::apply([&](auto &&...fns) { (fns.update(file), ...); }, updated_filters);
                std::filesystem::path out_path = cpm.replace_tags(keyed_string, selections, selected_path);
-               append(out_path.filename().string(), std::move(file));
+
+               coo_table->insert_or_assign(out_path.filename().string(), std::move(file));
           }
      }
      return future_of_futures;
@@ -1957,38 +1914,28 @@ std::string map_sprite::get_base_name() const
                }
           }
      }();
-     const toml::table &root_table = config;
-
-     if (auto it_base = root_table.find(field_name); it_base != root_table.end() && it_base->second.is_table())
+     const toml::table *coo_table = get_deswizzle_combined_coo_table();
+     if (!coo_table)
      {
-          const toml::table &field_table = *it_base->second.as_table();
-          for (auto &&[coo_key, coo_node] : field_table)
+          return {};
+     }
+     for (auto &&[file_name, file_node] : *coo_table)
+     {
+          if (file_name == "unique_pupu_ids")
+               continue;
+          if (!file_node.is_table())
+               continue;
+          auto &filters = settings.filters.value();
+          filters.reload(*file_node.as_table());
+
+          auto out_framebuffer = glengine::FrameBuffer{ specification };
+          if (generate_texture(out_framebuffer))
           {
-               if (coo_key != my_coo_key)
-                    continue;
-               if (!coo_node.is_table())
-                    continue;
-               auto &coo_table = *coo_node.as_table();
+               const key_value_data  cpm      = { .field_name = field_name, .ext = ".png" };
 
-               for (auto &&[file_name, file_node] : coo_table)
-               {
-                    if (file_name == "unique_pupu_ids")
-                         continue;
-                    if (!file_node.is_table())
-                         continue;
-                    auto &filters = settings.filters.value();
-                    filters.reload(*file_node.as_table());
-
-                    auto out_framebuffer = glengine::FrameBuffer{ specification };
-                    if (generate_texture(out_framebuffer))
-                    {
-                         const key_value_data  cpm      = { .field_name = field_name, .ext = ".png" };
-
-                         std::filesystem::path out_path = cpm.replace_tags(keyed_string, selections, selected_path);
-                         out_path                       = out_path.parent_path() / std::string(file_name);
-                         future_of_futures.push_back(save_image_pbo(std::move(out_path), std::move(out_framebuffer)));
-                    }
-               }
+               std::filesystem::path out_path = cpm.replace_tags(keyed_string, selections, selected_path);
+               out_path                       = out_path.parent_path() / std::string(file_name);
+               future_of_futures.push_back(save_image_pbo(std::move(out_path), std::move(out_framebuffer)));
           }
      }
      return future_of_futures;
@@ -2038,155 +1985,126 @@ std::string map_sprite::get_base_name() const
      const auto        specification =
        glengine::FrameBufferSpecification{ .width = canvas.width(), .height = canvas.height(), .scale = m_render_framebuffer.scale() };
 
-
-     const key_value_data        config_path_values = { .ext = ".toml" };
-     const std::filesystem::path config_path =
-       config_path_values.replace_tags("{selected_path}/res/deswizzle{ext}"s, selections, "{current_path}");
-     const auto config = Configuration(config_path);
-
-     const auto coo =
-       m_map_group.opt_coo.has_value() && m_map_group.opt_coo.value() != open_viii::LangT::generic ? m_map_group.opt_coo : std::nullopt;
-
-     std::string my_coo_key = [&]() {
-          if (coo.has_value())
-          {
-               return std::string(open_viii::LangCommon::to_string_3_char(coo.value()));
-          }
-          else
-          {
-               const auto opt_coo_local = field->get_lang_from_fl_paths();
-               if (opt_coo_local.has_value() && std::to_underlying(opt_coo_local.value()) < std::to_underlying(open_viii::LangT::generic))
-               {
-                    return std::string(open_viii::LangCommon::to_string_3_char(opt_coo_local.value()));
-               }
-               else
-               {
-                    return "x"s;
-               }
-          }
-     }();
-     const toml::table &root_table = config;
-     if (auto it_base = root_table.find(field_name); it_base != root_table.end() && it_base->second.is_table())
+     const toml::table *coo_table = get_deswizzle_combined_coo_table();
+     if (!coo_table)
      {
-          const toml::table &field_table = *it_base->second.as_table();
-          for (auto &&[coo_key, coo_node] : field_table)
+          return m_cache_framebuffer;
+     }
+     for (auto &&[file_name, file_node] : *coo_table)
+     {
+          if (file_name == "unique_pupu_ids")
+               continue;
+          if (!file_node.is_table())
+               continue;
+          const auto file_name_str = std::string(file_name);
+          if (m_cache_framebuffer.contains(file_name_str))
           {
-               if (coo_key != my_coo_key)
-                    continue;
-               if (!coo_node.is_table())
-                    continue;
-               auto &coo_table = *coo_node.as_table();
+               continue;
+          }
+          auto &filters = settings.filters.value();
+          filters.reload(*file_node.as_table());
 
-               for (auto &&[file_name, file_node] : coo_table)
+          auto [it, inserted] = m_cache_framebuffer.emplace(file_name_str, specification);
+          if (inserted)
+          {
+               m_cache_framebuffer_tooltips[file_name_str] = [&]() {
+                    std::ostringstream ss{};
+                    ss << *file_node.as_table();
+                    return ss.str();
+               }();
+               if (!it->second.has_value())
                {
-                    if (file_name == "unique_pupu_ids")
-                         continue;
-                    if (!file_node.is_table())
-                         continue;
-                    const auto file_name_str = std::string(file_name);
-                    if (m_cache_framebuffer.contains(file_name_str))
-                    {
-                         continue;
-                    }
-                    auto &filters = settings.filters.value();
-                    filters.reload(*file_node.as_table());
-
-                    auto [it, inserted] = m_cache_framebuffer.emplace(file_name_str, specification);
-                    if (inserted)
-                    {
-                         m_cache_framebuffer_tooltips[file_name_str] = [&]() {
-                              std::ostringstream ss{};
-                              ss << *file_node.as_table();
-                              return ss.str();
-                         }();
-                         if (!it->second.has_value())
-                         {
-                              continue;
-                         }
-                         if (!generate_texture(it->second.value()))
-                         {
-                              it->second.reset();
-                         }
-                    }
+                    continue;
+               }
+               if (!generate_texture(it->second.value()))
+               {
+                    it->second.reset();
                }
           }
      }
+
+
      return m_cache_framebuffer;
 }
 
-toml::table *map_sprite::get_deswizzle_combined_toml_table(const std::string &file_name_str)
+toml::table *map_sprite::get_deswizzle_combined_coo_table()
 {
      const auto selections = m_selections.lock();
      if (!selections)
      {
-          spdlog::error("Failed to lock m_selections: shared_ptr is expired.");
+          spdlog::error("Failed to lock m_selections.");
           return nullptr;
      }
      const auto field = m_map_group.field.lock();
      if (!field)
      {
-          spdlog::error("Failed to lock m_map_group.field: shared_ptr is expired.");
-          return nullptr;// Field no longer exists, nothing to save
+          spdlog::error("Failed to lock m_map_group.field.");
+          return nullptr;
      }
 
-     const std::string field_name = std::string{ str_to_lower(field->get_base_name()) };
-
-     // Setup an off-screen render texture
-     iRectangle const  canvas     = m_map_group.maps.const_working().canvas() * m_render_framebuffer.scale();
-     const auto        specification =
-       glengine::FrameBufferSpecification{ .width = canvas.width(), .height = canvas.height(), .scale = m_render_framebuffer.scale() };
-
+     const std::string           field_name         = str_to_lower(field->get_base_name());
 
      const key_value_data        config_path_values = { .ext = ".toml" };
      const std::filesystem::path config_path =
        config_path_values.replace_tags("{selected_path}/res/deswizzle{ext}"s, selections, "{current_path}");
-     auto       config = Configuration(config_path);
+     auto              config      = Configuration(config_path);
+     toml::table      &root_table  = config;
 
-     const auto coo =
-       m_map_group.opt_coo.has_value() && m_map_group.opt_coo.value() != open_viii::LangT::generic ? m_map_group.opt_coo : std::nullopt;
+     const auto        coo         = m_map_group.opt_coo.has_value() && m_map_group.opt_coo.value() != open_viii::LangT::generic
+                                       ? m_map_group.opt_coo
+                                       : field->get_lang_from_fl_paths();
 
-     std::string my_coo_key = [&]() {
-          if (coo.has_value())
+     const std::string my_coo_key  = (coo.has_value() && std::to_underlying(coo.value()) < std::to_underlying(open_viii::LangT::generic))
+                                       ? std::string(open_viii::LangCommon::to_string_3_char(coo.value()))
+                                       : "x";
+
+
+     toml::table      *field_table = nullptr;
+
+     toml::table      *coo_table   = nullptr;
+     if (auto it_base = root_table.find(field_name); it_base != root_table.end() && it_base->second.is_table())
+     {
+          field_table = it_base->second.as_table();
+     }
+     else
+     {
+          auto &&[it, inserted] = field_table->insert(my_coo_key, toml::table{});
+          if (inserted)
           {
-               return std::string(open_viii::LangCommon::to_string_3_char(coo.value()));
+               field_table = it->second.is_table() ? it->second.as_table() : nullptr;
+          }
+     }
+     if (field_table)
+     {
+          if (auto it_coo = field_table->find(my_coo_key); it_coo != field_table->end() && it_coo->second.is_table())
+          {
+               return it_coo->second.as_table();
           }
           else
           {
-               const auto opt_coo_local = field->get_lang_from_fl_paths();
-               if (opt_coo_local.has_value() && std::to_underlying(opt_coo_local.value()) < std::to_underlying(open_viii::LangT::generic))
+               auto &&[it, inserted] = field_table->insert(my_coo_key, toml::table{});
+
+               if (inserted)
                {
-                    return std::string(open_viii::LangCommon::to_string_3_char(opt_coo_local.value()));
-               }
-               else
-               {
-                    return "x"s;
+                    coo_table = it->second.is_table() ? it->second.as_table() : nullptr;
                }
           }
-     }();
-     toml::table &root_table = config;
+     }
 
-     if (auto it_base = root_table.find(field_name); it_base != root_table.end() && it_base->second.is_table())
+     return coo_table;
+}
+
+toml::table *map_sprite::get_deswizzle_combined_toml_table(const std::string &file_name_str)
+{
+
+     toml::table *coo_table = get_deswizzle_combined_coo_table();
+     if (!coo_table)
      {
-          toml::table &field_table = *it_base->second.as_table();
-          for (auto &&[coo_key, coo_node] : field_table)
-          {
-               if (coo_key != my_coo_key)
-                    continue;
-               if (!coo_node.is_table())
-                    continue;
-               auto &coo_table = *coo_node.as_table();
-
-               for (auto &&[file_name, file_node] : coo_table)
-               {
-                    if (file_name == "unique_pupu_ids")
-                         continue;
-                    if (!file_node.is_table())
-                         continue;
-                    if (file_name_str != file_name)
-                         continue;
-                    return file_node.as_table();
-               }
-          }
+          return nullptr;
+     }
+     if (auto it_base = coo_table->find(file_name_str); it_base != coo_table->end() && it_base->second.is_table())
+     {
+          return it_base->second.as_table();
      }
      return nullptr;
 }
