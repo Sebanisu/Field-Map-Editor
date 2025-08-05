@@ -2000,7 +2000,7 @@ std::string map_sprite::get_base_name() const
      return m_cache_framebuffer_tooltips;
 }
 
-[[nodiscard]] std::map<std::string, glengine::FrameBuffer> &map_sprite::get_deswizzle_combined_textures()
+[[nodiscard]] std::map<std::string, std::optional<glengine::FrameBuffer>> &map_sprite::get_deswizzle_combined_textures()
 {
      const auto selections = m_selections.lock();
      if (!selections)
@@ -2009,6 +2009,14 @@ std::string map_sprite::get_base_name() const
           return m_cache_framebuffer;
      }
      if (!m_future_of_future_consumer.done() || !m_future_consumer.done())
+     {
+          return m_cache_framebuffer;
+     }
+     if (std::ranges::all_of(*m_texture.get(), [](const glengine::Texture &texture) {
+              const auto size = texture.get_size();
+              // spdlog::info("{}", size);
+              return size.x == 0 || size.y == 0;
+         }))
      {
           return m_cache_framebuffer;
      }
@@ -2057,8 +2065,8 @@ std::string map_sprite::get_base_name() const
                }
           }
      }();
-     const toml::table &root_table = config;
-
+     const toml::table                                                                                           &root_table = config;
+     std::vector<std::pair<ff_8::filters, std::map<std::string, std::optional<glengine::FrameBuffer>>::iterator>> inserted_elements = {};
      if (auto it_base = root_table.find(field_name); it_base != root_table.end() && it_base->second.is_table())
      {
           const toml::table &field_table = *it_base->second.as_table();
@@ -2087,50 +2095,20 @@ std::string map_sprite::get_base_name() const
                     auto [it, inserted] = m_cache_framebuffer.emplace(file_name_str, specification);
                     if (inserted)
                     {
-                         if (!generate_texture(it->second))
+                         m_cache_framebuffer_tooltips[file_name_str] = [&]() {
+                              std::ostringstream ss{};
+                              ss << *file_node.as_table();
+                              return ss.str();
+                         }();
+                         if (!it->second.has_value())
                          {
-                              m_cache_framebuffer.erase(it);// Don't keep junk
+                              continue;
                          }
-                         else
+                         if (!generate_texture(it->second.value()))
                          {
-                              m_cache_framebuffer_tooltips[file_name_str] = [&]() {
-                                   std::ostringstream ss{};
-                                   ss << *file_node.as_table();
-                                   return ss.str();
-                              }();
+                              it->second.reset();
                          }
                     }
-               }
-
-               for (auto &&[file_name, file_node] : coo_table)
-               {
-                    // Skip specific keys and non-table nodes early
-                    if (file_name == "unique_pupu_ids" || !file_node.is_table())
-                         continue;
-
-                    std::string file_name_str = std::string(file_name);
-
-                    // Skip if already cached
-                    // if (m_cache_framebuffer.contains(file_name_str))
-                    //      continue;
-
-                    // Try to emplace a new framebuffer
-                    auto [it, inserted] = m_cache_framebuffer.try_emplace(file_name_str, specification);
-                    if (!inserted)
-                         continue;
-
-                    // If inserted, initialize the framebuffer
-                    // auto      &framebuffer = it->second;
-                    // const auto _           = framebuffer.backup();//for RAII
-                    // framebuffer.bind();
-                    // glengine::Renderer::Clear();
-
-                    // Create tooltip string lazily using a lambda
-                    m_cache_framebuffer_tooltips[file_name_str] = [&]() -> std::string {
-                         std::ostringstream ss;
-                         ss << *file_node.as_table();// Safe since we checked is_table() earlier
-                         return ss.str();
-                    }();
                }
           }
      }

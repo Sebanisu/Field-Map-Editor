@@ -59,7 +59,7 @@ struct [[nodiscard]] map_sprite// final
      SharedTextures m_texture = std::make_shared<std::array<glengine::Texture, MAX_TEXTURES>>();
      mutable FutureOfFutureConsumer<std::vector<std::future<std::future<void>>>> m_future_of_future_consumer  = {};
      mutable FutureConsumer<std::vector<std::future<void>>>                      m_future_consumer            = {};
-     mutable std::map<std::string, glengine::FrameBuffer>                        m_cache_framebuffer          = {};
+     mutable std::map<std::string, std::optional<glengine::FrameBuffer>>         m_cache_framebuffer          = {};
      std::map<std::string, std::string>                                          m_cache_framebuffer_tooltips = {};
      ff_8::map_group                                                             m_map_group                  = {};
      // TODO do I need square?
@@ -174,9 +174,9 @@ struct [[nodiscard]] map_sprite// final
        save_deswizzle_textures(const std::string &keyed_string, const std::filesystem::path &selected_path);
      [[nodiscard]] std::vector<std::future<void>>
        save_deswizzle_combined_toml(const std::string &keyed_string, const std::filesystem::path &selected_path);
-     [[nodiscard]] const std::map<std::string, std::string>           &get_deswizzle_combined_textures_tooltips();
-     [[nodiscard]] std::map<std::string, glengine::FrameBuffer> &get_deswizzle_combined_textures();
-     [[nodiscard]] toml::table                                  *get_deswizzle_combined_toml_table(const std::string &);
+     [[nodiscard]] const std::map<std::string, std::string>                    &get_deswizzle_combined_textures_tooltips();
+     [[nodiscard]] std::map<std::string, std::optional<glengine::FrameBuffer>> &get_deswizzle_combined_textures();
+     [[nodiscard]] toml::table                                                 *get_deswizzle_combined_toml_table(const std::string &);
      [[nodiscard]] std::vector<std::future<void>>
        save_deswizzle_combined_textures(const std::string &keyed_string, const std::filesystem::path &selected_path);
      [[nodiscard]] std::future<std::future<void>> load_swizzle_textures(std::uint8_t texture_page, std::uint8_t palette) const;

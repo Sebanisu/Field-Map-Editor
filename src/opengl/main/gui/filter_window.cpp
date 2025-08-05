@@ -91,19 +91,48 @@ void fme::filter_window::render() const
           textures_map.erase(selected_file_name);
           (void)lock_map_sprite->get_deswizzle_combined_textures();
      }
-     if (selected_file_name.empty() || !textures_map.contains(selected_file_name))
-     {
-
-          ImGui::Columns(col_count > 0 ? col_count : 1, "##get_deswizzle_combined_textures", false);
-          for (const auto &[file_name, framebuffer] : textures_map)
+     static float aspect_ratio  = 1.f;
+     const auto   draw_elements = [&](auto &&file_name, auto &&framebuffer, auto &&on_click) {
+          if (framebuffer.has_value())
           {
-               ImTextureID  tex_id       = glengine::ConvertGliDtoImTextureId<ImTextureID>(framebuffer.color_attachment_id());
-               const auto   aspect_ratio = static_cast<float>(framebuffer.height()) / static_cast<float>(framebuffer.width());
-               const ImVec2 thumb_size   = { thumb_size_width, thumb_size_width * aspect_ratio };
-               // Draw thumbnail using ImageButton
-               // const auto pop_id = PushPopID();
+               ImTextureID tex_id = glengine::ConvertGliDtoImTextureId<ImTextureID>(framebuffer.value().color_attachment_id());
+               aspect_ratio       = static_cast<float>(framebuffer.value().height()) / static_cast<float>(framebuffer.value().width());
+               const ImVec2 thumb_size = { thumb_size_width, thumb_size_width * aspect_ratio };
                if (ImGui::ImageButton(file_name.c_str(), tex_id, thumb_size))
                {
+                    on_click();
+               }
+               else if (lock_map_sprite->get_deswizzle_combined_textures_tooltips().contains(file_name))
+               {
+                    tool_tip(lock_map_sprite->get_deswizzle_combined_textures_tooltips().at(file_name));
+               }
+          }
+          else
+          {
+               const auto pop_id            = PushPopID();
+               ImVec2     padded_thumb_size = { thumb_size_width + ImGui::GetStyle().FramePadding.x * 2.0f,
+                                                thumb_size_width * aspect_ratio + ImGui::GetStyle().FramePadding.y * 2.0f };
+               if (ImGui::Button("##Empty", padded_thumb_size))
+               {
+                    on_click();
+               }
+               else if (lock_map_sprite->get_deswizzle_combined_textures_tooltips().contains(file_name))
+               {
+                    tool_tip(lock_map_sprite->get_deswizzle_combined_textures_tooltips().at(file_name));
+               }
+          }
+          // Label under image (optional)
+          ImGui::TextWrapped("%s", file_name.c_str());
+          ImGui::NextColumn();
+     };
+     if (selected_file_name.empty() || !textures_map.contains(selected_file_name))
+     {
+          ImGui::Columns(col_count > 0 ? col_count : 1, "##get_deswizzle_combined_textures", false);
+
+
+          for (const auto &[file_name, framebuffer] : textures_map)
+          {
+               const auto action = [&]() {
                     if (auto *ptr = lock_map_sprite->get_deswizzle_combined_toml_table(file_name); ptr)
                     {
                          selected_file_name  = file_name;
@@ -111,33 +140,16 @@ void fme::filter_window::render() const
                          lock_map_sprite->filter().reload(*ptr);
                          lock_map_sprite->update_render_texture();
                     }
-               }
-               else if (lock_map_sprite->get_deswizzle_combined_textures_tooltips().contains(file_name))
-               {
-                    tool_tip(lock_map_sprite->get_deswizzle_combined_textures_tooltips().at(file_name));
-               }
-               // Label under image (optional)
-               ImGui::TextWrapped("%s", file_name.c_str());
-               ImGui::NextColumn();
+               };
+               draw_elements(file_name, framebuffer, action);
           }
           ImGui::Columns(1);
      }
      else if (textures_map.contains(selected_file_name))
      {
-          const auto  &framebuffer  = textures_map.at(selected_file_name);
-          ImTextureID  tex_id       = glengine::ConvertGliDtoImTextureId<ImTextureID>(framebuffer.color_attachment_id());
-          const auto   aspect_ratio = static_cast<float>(framebuffer.height()) / static_cast<float>(framebuffer.width());
-          const ImVec2 thumb_size   = { thumb_size_width, thumb_size_width * aspect_ratio };
-          if (ImGui::ImageButton(selected_file_name.c_str(), tex_id, thumb_size))
-          {
-               selected_file_name = {};
-          }
-          else if (lock_map_sprite->get_deswizzle_combined_textures_tooltips().contains(selected_file_name))
-          {
-               tool_tip(lock_map_sprite->get_deswizzle_combined_textures_tooltips().at(selected_file_name));
-          }
-          // Label under image (optional)
-          ImGui::TextWrapped("%s", selected_file_name.c_str());
+          const auto  action      = [&]() { selected_file_name = {}; };
+          const auto &framebuffer = textures_map.at(selected_file_name);
+          draw_elements(selected_file_name, framebuffer, action);
 
           ImGui::Separator();
 
@@ -152,6 +164,7 @@ void fme::filter_window::render() const
           combo_filtered_animation_states(lock_map_sprite);
           combo_filtered_z(lock_map_sprite);
           combo_filtered_draw_bit(lock_map_sprite);
+
           if (m_changed)
           {
                reload_thumbnail = true;
