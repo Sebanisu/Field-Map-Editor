@@ -2065,8 +2065,7 @@ std::string map_sprite::get_base_name() const
                }
           }
      }();
-     const toml::table                                                                                           &root_table = config;
-     std::vector<std::pair<ff_8::filters, std::map<std::string, std::optional<glengine::FrameBuffer>>::iterator>> inserted_elements = {};
+     const toml::table &root_table = config;
      if (auto it_base = root_table.find(field_name); it_base != root_table.end() && it_base->second.is_table())
      {
           const toml::table &field_table = *it_base->second.as_table();
