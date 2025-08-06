@@ -88,10 +88,11 @@ struct [[nodiscard]] map_sprite// final
      mutable bool                                  once                            = { true };
      mutable glengine::OrthographicCamera          m_fixed_render_camera           = {};
 
-     static constexpr auto                         s_default_color                 = glm::vec4{ 1.F };// RGBA = (1, 1, 1, 1)
-     static constexpr auto                         s_half_color                    = s_default_color / 2.F;// RGBA = (0.5, 0.5, 0.5, 0.5)
-     static constexpr auto                         s_quarter_color                 = s_half_color / 2.F;// RGBA = (0.25, 0.25, 0.25, 0.25)
-     mutable glm::vec4                             m_uniform_color                 = s_default_color;
+     static constexpr auto                         s_default_color                 = glm::vec4{ 1.F, 1.F, 1.F, 1.F };// white, fully opaque
+     static constexpr auto                         s_half_color    = glm::vec4{ 0.5F, 0.5F, 0.5F, 1.F };// dimmed, fully opaque
+     static constexpr auto                         s_quarter_color = glm::vec4{ 0.25F, 0.25F, 0.25F, 1.F };// very dim, fully opaque
+
+     mutable glm::vec4                             m_uniform_color = s_default_color;
      [[nodiscard]] settings_backup                 get_backup_settings();
 
    public:
@@ -180,7 +181,7 @@ struct [[nodiscard]] map_sprite// final
      [[nodiscard]] toml::table                                                 *get_deswizzle_combined_toml_table(const std::string &);
      [[nodiscard]] std::string                                                  get_recommended_prefix();
      [[nodiscard]] toml::table *rename_deswizzle_combined_toml_table(const std::string &, const std::string &);
-     [[nodiscard]] std::size_t remove_deswizzle_combined_toml_table(const std::string &);
+     [[nodiscard]] std::size_t  remove_deswizzle_combined_toml_table(const std::string &);
      [[nodiscard]] toml::table *add_deswizzle_combined_toml_table(const std::string &);
      [[nodiscard]] std::vector<std::future<void>>
        save_deswizzle_combined_textures(const std::string &keyed_string, const std::filesystem::path &selected_path);
