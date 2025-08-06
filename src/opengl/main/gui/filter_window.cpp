@@ -2,6 +2,7 @@
 #include "as_string.hpp"
 #include "generic_combo.hpp"
 #include "gui_labels.hpp"
+#include <ctre.hpp>
 
 fme::filter_window::filter_window(std::weak_ptr<Selections> in_selections, std::weak_ptr<map_sprite> in_map_sprite)
   : m_selections(std::move(in_selections))
@@ -38,10 +39,10 @@ void fme::filter_window::collapsing_header_filters() const
 
 void fme::filter_window::render() const
 {
-     static std::array<char,128> file_name_buffer{};
-     static bool reload_thumbnail = false;
-     m_changed                    = false;
-     auto lock_selections         = m_selections.lock();
+     static std::array<char, 128> file_name_buffer{};
+     static bool                  reload_thumbnail = false;
+     m_changed                                     = false;
+     auto lock_selections                          = m_selections.lock();
      if (!lock_selections)
      {
           spdlog::error("Failed to lock selections: shared_ptr is expired.");
@@ -51,6 +52,13 @@ void fme::filter_window::render() const
      {
           return;
      }
+     const auto save = [&]() {
+          const key_value_data        config_path_values = { .ext = ".toml" };
+          const std::filesystem::path config_path =
+            config_path_values.replace_tags("{selected_path}/res/deswizzle{ext}", lock_selections, "{current_path}");
+          auto config = Configuration(config_path);
+          config.save();
+     };
      bool      &visible     = lock_selections->get<ConfigKey::DisplayFiltersWindow>();
      const auto pop_visible = glengine::ScopeGuard{ [&lock_selections, &visible, was_visable = visible] {
           if (was_visable != visible)
@@ -133,7 +141,7 @@ void fme::filter_window::render() const
                const auto action = [&]() {
                     if (auto *ptr = lock_map_sprite->get_deswizzle_combined_toml_table(file_name); ptr)
                     {
-                         selected_file_name  = file_name;
+                         selected_file_name         = file_name;
                          constexpr size_t max_chars = file_name_buffer.size() - 1;// space for null terminator
                          std::ranges::copy_n(
                            selected_file_name.begin(),
@@ -145,7 +153,6 @@ void fme::filter_window::render() const
                     }
                };
                draw_elements(file_name, framebuffer, action);
-
                // Label under image (optional)
                ImGui::TextWrapped("%s", file_name.c_str());
                ImGui::NextColumn();
@@ -156,15 +163,51 @@ void fme::filter_window::render() const
      {
           const auto action = [&]() {
                selected_file_name = {};
-               file_name_buffer ={};
+               file_name_buffer   = {};
           };
           const auto &framebuffer = textures_map.at(selected_file_name);
           draw_elements(selected_file_name, framebuffer, action);
-          if (ImGui::InputText("##Empty", file_name_buffer.data(), file_name_buffer.size()-1U))
+          if (ImGui::InputText("##Empty", file_name_buffer.data(), file_name_buffer.size() - 1U))
           {
-               
           }
-          //ImGui::Button
+
+          constexpr static auto pattern  = CTRE_REGEX_INPUT_TYPE{ R".((?i)^[a-z0-9_\-\.]+\.png$)." };
+          bool                  valid_fn = ctre::match<pattern>(
+            file_name_buffer.data(),
+            file_name_buffer.data()
+              + static_cast<std::ranges::range_difference_t<std::array<char, 1>>>(
+                strnlen(file_name_buffer.data(), file_name_buffer.size())));
+          if (!valid_fn)
+          {
+               ImGui::TextColored(ImVec4(1.0f, 0.0f, 0.0f, 1.0f), "Invalid filename (must be alphanumeric with .png extension)");
+          }
+          ImGui::BeginDisabled(
+            std::ranges::equal(
+              selected_file_name, std::string_view(file_name_buffer.data(), strnlen(file_name_buffer.data(), file_name_buffer.size()))));
+          ImGui::BeginDisabled(!valid_fn);
+          if (ImGui::Button("Rename"))
+          {
+               auto new_file_name = std::string(file_name_buffer.data());
+               (void)lock_map_sprite->rename_deswizzle_combined_toml_table(selected_file_name, new_file_name);
+               selected_file_name = std::move(new_file_name);
+               save();
+          }
+          ImGui::EndDisabled();
+          ImGui::SameLine();
+          if (ImGui::Button("Reset"))
+          {
+               file_name_buffer           = {};
+               constexpr size_t max_chars = file_name_buffer.size() - 1;// space for null terminator
+               std::ranges::copy_n(
+                 selected_file_name.begin(),
+                 (std::min)(max_chars, static_cast<size_t>(selected_file_name.size())),
+                 file_name_buffer.begin());
+          }
+          else
+          {
+               tool_tip(selected_file_name);
+          }
+          ImGui::EndDisabled();
 
           ImGui::Separator();
 
@@ -184,11 +227,7 @@ void fme::filter_window::render() const
           {
                reload_thumbnail = true;
                lock_map_sprite->filter().update(*selected_toml_table);
-               const key_value_data        config_path_values = { .ext = ".toml" };
-               const std::filesystem::path config_path =
-                 config_path_values.replace_tags("{selected_path}/res/deswizzle{ext}", lock_selections, "{current_path}");
-               auto config = Configuration(config_path);
-               config.save();
+               save();
           }
      }
 }
