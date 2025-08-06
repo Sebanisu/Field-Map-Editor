@@ -88,12 +88,23 @@ void fme::filter_window::render() const
      }
      static float thumb_size_width = 96.f;
      ImGui::SliderFloat("Thumbnail Size", &thumb_size_width, 96.f, 1024.f);
-     const ImVec2        region_size         = ImGui::GetContentRegionAvail();
-     const float         padding             = ImGui::GetStyle().FramePadding.x * 2.0f + ImGui::GetStyle().ItemSpacing.x;
-     const int           col_count           = static_cast<int>(region_size.x / (thumb_size_width + padding));
-     static std::string  selected_file_name  = {};
-     static toml::table *selected_toml_table = {};
-     auto               &textures_map        = lock_map_sprite->get_deswizzle_combined_textures();
+     const ImVec2                    region_size         = ImGui::GetContentRegionAvail();
+     const float                     padding             = ImGui::GetStyle().FramePadding.x * 2.0f + ImGui::GetStyle().ItemSpacing.x;
+     const int                       col_count           = static_cast<int>(region_size.x / (thumb_size_width + padding));
+     static std::string              selected_file_name  = {};
+     static toml::table             *selected_toml_table = {};
+     static std::vector<std::string> remove_queue        = {};
+     if (!remove_queue.empty())
+     {
+          for (const std::string &file_name : remove_queue)
+          {
+               (void)lock_map_sprite->remove_deswizzle_combined_toml_table(file_name);
+               save();
+          }
+          remove_queue.clear();
+     }
+     auto &textures_map = lock_map_sprite->get_deswizzle_combined_textures();
+
      if (reload_thumbnail)
      {
           reload_thumbnail = false;
@@ -102,6 +113,15 @@ void fme::filter_window::render() const
      }
      static float aspect_ratio  = 1.f;
      const auto   draw_elements = [&](auto &&file_name, auto &&framebuffer, auto &&on_click) {
+          const std::string &tooltip_str = [&]() -> const std::string   &{
+               static const std::string empty_msg = "No filters are enabled...";
+               if (lock_map_sprite->get_deswizzle_combined_textures_tooltips().contains(file_name))
+               {
+                    const std::string &tmp = lock_map_sprite->get_deswizzle_combined_textures_tooltips().at(file_name);
+                    return tmp.empty() ? empty_msg : tmp;
+               }
+               return empty_msg;
+          }();
           if (framebuffer.has_value())
           {
                ImTextureID tex_id = glengine::ConvertGliDtoImTextureId<ImTextureID>(framebuffer.value().color_attachment_id());
@@ -111,9 +131,9 @@ void fme::filter_window::render() const
                {
                     on_click();
                }
-               else if (lock_map_sprite->get_deswizzle_combined_textures_tooltips().contains(file_name))
+               else
                {
-                    tool_tip(lock_map_sprite->get_deswizzle_combined_textures_tooltips().at(file_name));
+                    tool_tip(tooltip_str);
                }
           }
           else
@@ -125,9 +145,9 @@ void fme::filter_window::render() const
                {
                     on_click();
                }
-               else if (lock_map_sprite->get_deswizzle_combined_textures_tooltips().contains(file_name))
+               else
                {
-                    tool_tip(lock_map_sprite->get_deswizzle_combined_textures_tooltips().at(file_name));
+                    tool_tip(tooltip_str);
                }
           }
      };
@@ -154,9 +174,55 @@ void fme::filter_window::render() const
                };
                draw_elements(file_name, framebuffer, action);
                // Label under image (optional)
-               ImGui::TextWrapped("%s", file_name.c_str());
+               const float  button_width    = ImGui::GetFrameHeight();
+               const ImVec2 button_size     = { button_width, button_width };
+               const float  text_area_width = thumb_size_width - button_width + ImGui::GetStyle().FramePadding.x;
+               // Remember the top-left of where we want to start
+               const ImVec2 text_start_pos  = ImGui::GetCursorScreenPos();
+
+               ImGui::PushTextWrapPos(ImGui::GetCursorPosX() + text_area_width);
+               ImGui::Text("%s", file_name.c_str());
+               ImGui::PopTextWrapPos();
+               const ImVec2 backup_pos = ImGui::GetCursorScreenPos();
+               // Position the button at top-right of this block (same Y as the start of the text)
+               ImGui::SetCursorScreenPos(ImVec2(text_start_pos.x + text_area_width + ImGui::GetStyle().FramePadding.x, text_start_pos.y));
+               const auto pop_id = PushPopID();
+               if (ImGui::Button(ICON_FA_TRASH, button_size))
+               {
+                    remove_queue.push_back(file_name);
+               }
+               else
+               {
+                    tool_tip("Remove");
+               }
+               ImGui::SetCursorScreenPos(ImVec2(backup_pos.x, (std::max)(ImGui::GetCursorScreenPos().y, backup_pos.y)));
                ImGui::NextColumn();
           }
+
+          ImTextureID tex_id = glengine::ConvertGliDtoImTextureId<ImTextureID>(lock_map_sprite->get_render_texture().color_attachment_id());
+          aspect_ratio       = static_cast<float>(lock_map_sprite->get_render_texture().height())
+                         / static_cast<float>(lock_map_sprite->get_render_texture().width());
+          const ImVec2 thumb_size = { thumb_size_width, thumb_size_width * aspect_ratio };
+          if (ImGui::ImageButton("add new item", tex_id, thumb_size))
+          {
+               selected_file_name = fmt::format(
+                 "{}_{:%Y%m%d_%H%M%S}.png",
+                 lock_map_sprite->get_recommended_prefix(),
+                 std::chrono::time_point_cast<std::chrono::seconds>(std::chrono::system_clock::now()));
+               selected_toml_table        = lock_map_sprite->add_deswizzle_combined_toml_table(selected_file_name);
+
+               constexpr size_t max_chars = file_name_buffer.size() - 1;// space for null terminator
+               std::ranges::copy_n(
+                 selected_file_name.begin(),
+                 (std::min)(max_chars, static_cast<size_t>(selected_file_name.size())),
+                 file_name_buffer.begin());
+               save();
+          }
+          else
+          {
+               tool_tip("Add new entry...");
+          }
+          format_imgui_wrapped_text("Add new entry...");
           ImGui::Columns(1);
      }
      else if (textures_map.contains(selected_file_name))
@@ -181,6 +247,16 @@ void fme::filter_window::render() const
           {
                ImGui::TextColored(ImVec4(1.0f, 0.0f, 0.0f, 1.0f), "Invalid filename (must be alphanumeric with .png extension)");
           }
+          const std::string prefix = lock_map_sprite->get_recommended_prefix();
+          if (ImGui::Button("Copy Prefix"))
+          {
+               ImGui::SetClipboardText(prefix.c_str());
+          }
+          else
+          {
+               tool_tip(prefix);
+          }
+          ImGui::SameLine();
           ImGui::BeginDisabled(
             std::ranges::equal(
               selected_file_name, std::string_view(file_name_buffer.data(), strnlen(file_name_buffer.data(), file_name_buffer.size()))));
@@ -208,10 +284,24 @@ void fme::filter_window::render() const
                tool_tip(selected_file_name);
           }
           ImGui::EndDisabled();
-
+          ImGui::SameLine();
+          if (ImGui::Button(ICON_FA_TRASH))
+          {
+               remove_queue.push_back(std::move(selected_file_name));
+               action();
+          }
+          else
+          {
+               tool_tip("Remove");
+          }
           ImGui::Separator();
 
           combo_filtered_pupu(lock_map_sprite);
+          ImGui::Separator();
+          format_imgui_wrapped_text(
+            "You may use these other filters in the export or testing process but we only can import via Pupu IDs. This may change in the "
+            "future once we figure out how.");
+          ImGui::Separator();
           combo_filtered_bpps(lock_map_sprite);
           combo_filtered_palettes(lock_map_sprite);
           combo_filtered_blend_modes(lock_map_sprite);

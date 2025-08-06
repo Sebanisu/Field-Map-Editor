@@ -1827,6 +1827,29 @@ std::string map_sprite::get_base_name() const
      return future_of_futures;
      // Note: Caller should consume_futures(future_of_futures) to wait for saves to finish
 }
+[[nodiscard]] std::string map_sprite::get_recommended_prefix()
+{
+     const auto selections = m_selections.lock();
+     if (!selections)
+     {
+          spdlog::error("Failed to lock m_selections: shared_ptr is expired.");
+          return {};
+     }
+     const auto field = m_map_group.field.lock();
+     if (!field)
+     {
+          spdlog::error("Failed to lock m_map_group.field: shared_ptr is expired.");
+          return {};// Field no longer exists, nothing to save
+     }
+
+     const std::string field_name = std::string{ str_to_lower(field->get_base_name()) };
+     const auto        coo =
+       m_map_group.opt_coo.has_value() && m_map_group.opt_coo.value() != open_viii::LangT::generic ? m_map_group.opt_coo : std::nullopt;
+     const key_value_data     cpm     = { .field_name = field_name, .ext = ".png", .language_code = coo };
+     static const std::string pattern = "{field_name}{_{2_letter_lang}}";
+
+     return cpm.replace_tags(pattern, selections, "{current_path}");
+}
 [[nodiscard]] settings_backup map_sprite::get_backup_settings()
 {
      auto settings = settings_backup{
@@ -2166,6 +2189,33 @@ toml::table *map_sprite::get_deswizzle_combined_toml_table(const std::string &fi
      return it_new->second.as_table();
 }
 
+[[nodiscard]] std::size_t map_sprite::remove_deswizzle_combined_toml_table(const std::string &name)
+{
+     size_t       removed_count = 0;
+
+     toml::table *coo_table     = get_deswizzle_combined_coo_table();
+     if (!coo_table)
+     {
+          spdlog::error("Failed to retrieve coo_table.");
+          return 0;
+     }
+
+     removed_count += coo_table->erase(name);
+     removed_count += m_cache_framebuffer.erase(name);
+     removed_count += m_cache_framebuffer_tooltips.erase(name);
+
+     if (removed_count > 0)
+     {
+          spdlog::info("Removed texture entry '{}'.", name);
+     }
+     else
+     {
+          spdlog::debug("Texture entry '{}' not found in any table.", name);
+     }
+
+     return removed_count;
+}
+
 [[nodiscard]] toml::table *map_sprite::add_deswizzle_combined_toml_table(const std::string &new_file_name)
 {
      toml::table *coo_table = get_deswizzle_combined_coo_table();
@@ -2194,6 +2244,11 @@ toml::table *map_sprite::get_deswizzle_combined_toml_table(const std::string &fi
      }
 
      spdlog::info("Inserted new texture entry '{}'.", new_file_name);
+     m_cache_framebuffer_tooltips[new_file_name] = [&]() {
+          std::ostringstream ss{};
+          ss << *it->second.as_table();
+          return ss.str();
+     }();
      return it->second.as_table();
 }
 
