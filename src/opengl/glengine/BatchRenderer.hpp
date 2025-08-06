@@ -34,7 +34,7 @@ class BatchRenderer
      [[nodiscard]] static std::uint32_t         max_texture_image_units();
      void                                       clear() const;
      void draw_quad(const Texture &texture, glm::vec3 offset, glm::vec2 size = glm::vec2{ 1.F }) const;
-     void draw_quad(const SubTexture &texture, glm::vec3 offset, glm::vec2 size, int id, unsigned int pupu_id) const;
+     void draw_quad(const SubTexture &texture, glm::vec3 offset, glm::vec2 size, int id) const;
      void draw_quad(const SubTexture &texture, glm::vec3 offset, glm::vec2 size = glm::vec2{ 1.F }) const;
      void draw_quad(
        glm::vec3         offset,
@@ -42,8 +42,7 @@ class BatchRenderer
        const SubTexture &texture,
        const float       tiling_factor = 1.F,
        glm::vec2         size          = glm::vec2{ 1.F },
-       int               id            = -1,
-       unsigned int      pupu_id       = 0) const;
+       int               id            = -1) const;
      [[maybe_unused]] void                              draw_quad(glm::vec3 offset, glm::vec4 color) const;
      [[maybe_unused]] void                              draw_quad(glm::vec3 offset, glm::vec4 color, glm::vec2 size) const;
      void                                               draw(Quad quad) const;
@@ -58,7 +57,9 @@ class BatchRenderer
 
           GLint active_texture;
           GlCall{}(glGetIntegerv, GL_ACTIVE_TEXTURE, &active_texture);
-          return ScopeGuard{ [=, shader_pop = Shader::backup()] { GlCall{}(glActiveTexture, static_cast<GLenum>(active_texture)); } };
+          return ScopeGuard{ [=, shader_pop = Shader::backup()] {
+               GlCall{}(glActiveTexture, static_cast<GLenum>(active_texture));
+          } };
      }
 
    private:

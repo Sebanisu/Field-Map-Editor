@@ -90,9 +90,9 @@ void BatchRenderer::draw_quad(const SubTexture &texture, glm::vec3 offset, glm::
 {
      draw_quad(offset, { 1.F, 1.F, 1.F, 1.F }, texture, 1.F, size);
 }
-void BatchRenderer::draw_quad(const SubTexture &texture, glm::vec3 offset, glm::vec2 size, int id, unsigned int pupu_id) const
+void BatchRenderer::draw_quad(const SubTexture &texture, glm::vec3 offset, glm::vec2 size, int id) const
 {
-     draw_quad(offset, { 1.F, 1.F, 1.F, 1.F }, texture, 1.F, size, id, pupu_id);
+     draw_quad(offset, { 1.F, 1.F, 1.F, 1.F }, texture, 1.F, size, id);
 }
 void BatchRenderer::draw_quad(
   glm::vec3         offset,
@@ -100,13 +100,12 @@ void BatchRenderer::draw_quad(
   const SubTexture &texture,
   const float       tiling_factor,
   glm::vec2         size,
-  int               id,
-  unsigned int      pupu_id) const
+  int               id) const
 {
      if (const auto result = std::ranges::find(m_texture_slots, texture.id()); result != std::ranges::end(m_texture_slots))
      {
           draw(CreateQuad(
-            offset, color, static_cast<int>(result - std::ranges::begin(m_texture_slots)), tiling_factor, texture.uv(), size, id, pupu_id));
+            offset, color, static_cast<int>(result - std::ranges::begin(m_texture_slots)), tiling_factor, texture.uv(), size, id));
      }
      else
      {
@@ -115,8 +114,8 @@ void BatchRenderer::draw_quad(
                // when we reach the max amount of unique textures we go ahead and empty the queue and draw to the frame buffer.
                flush_vertices();
           }
-          draw(CreateQuad(
-            offset, color, static_cast<int>(result - std::ranges::begin(m_texture_slots)), tiling_factor, texture.uv(), size, id, pupu_id));
+          m_texture_slots.push_back(texture.id());
+          draw(CreateQuad(offset, color, static_cast<int>(std::ranges::size(m_texture_slots) - 1U), tiling_factor, texture.uv(), size));
      }
 }
 void BatchRenderer::draw_quad(glm::vec3 offset, glm::vec4 color) const
