@@ -2109,6 +2109,95 @@ toml::table *map_sprite::get_deswizzle_combined_toml_table(const std::string &fi
      return nullptr;
 }
 
+[[nodiscard]] toml::table *
+  map_sprite::rename_deswizzle_combined_toml_table(const std::string &old_file_name, const std::string &new_file_name)
+{
+     toml::table *coo_table = get_deswizzle_combined_coo_table();
+     if (!coo_table)
+     {
+          spdlog::error("Failed to retrieve coo_table.");
+          return nullptr;
+     }
+
+     // Check if new name already exists
+     if (coo_table->contains(new_file_name))
+     {
+          spdlog::warn("Cannot rename: new texture name '{}' already exists.", new_file_name);
+          return nullptr;
+     }
+
+     // Lookup old table
+     auto it_old = coo_table->find(old_file_name);
+     if (it_old == coo_table->end() || !it_old->second.is_table())
+     {
+          spdlog::warn("Cannot rename: old texture '{}' not found or is not a table.", old_file_name);
+          return nullptr;
+     }
+
+     // Clone and insert under new name
+     toml::table new_table     = *it_old->second.as_table();
+     auto &&[it_new, inserted] = coo_table->insert_or_assign(new_file_name, std::move(new_table));
+
+     if (!inserted)
+     {
+          spdlog::error("Unexpected: insert_or_assign returned false for '{}'.", new_file_name);
+          return nullptr;
+     }
+
+     spdlog::info("Renamed texture entry from '{}' to '{}'.", old_file_name, new_file_name);
+
+     // Remove old entry
+     coo_table->erase(old_file_name);
+
+     // Move framebuffer cache
+     if (auto it_cache = m_cache_framebuffer.find(old_file_name); it_cache != m_cache_framebuffer.end())
+     {
+          m_cache_framebuffer[new_file_name] = std::move(it_cache->second);
+          m_cache_framebuffer.erase(it_cache);
+     }
+
+     // Move tooltip cache
+     if (auto it_tooltip = m_cache_framebuffer_tooltips.find(old_file_name); it_tooltip != m_cache_framebuffer_tooltips.end())
+     {
+          m_cache_framebuffer_tooltips[new_file_name] = std::move(it_tooltip->second);
+          m_cache_framebuffer_tooltips.erase(it_tooltip);
+     }
+
+     return it_new->second.as_table();
+}
+
+[[nodiscard]] toml::table *map_sprite::add_deswizzle_combined_toml_table(const std::string &new_file_name)
+{
+     toml::table *coo_table = get_deswizzle_combined_coo_table();
+     if (!coo_table)
+     {
+          spdlog::error("Failed to retrieve coo_table.");
+          return nullptr;
+     }
+
+     if (coo_table->contains(new_file_name))
+     {
+          spdlog::warn("Cannot insert: entry '{}' already exists in coo_table.", new_file_name);
+          return nullptr;
+     }
+
+     // Create and populate new entry
+     toml::table new_table{};
+     filter().update(new_table);// This mutates new_table directly
+
+     // Insert into coo_table
+     auto [it, inserted] = coo_table->insert(new_file_name, std::move(new_table));
+     if (!inserted)
+     {
+          spdlog::error("Failed to insert new entry '{}'.", new_file_name);
+          return nullptr;
+     }
+
+     spdlog::info("Inserted new texture entry '{}'.", new_file_name);
+     return it->second.as_table();
+}
+
+
 uint32_t map_sprite::get_max_texture_height() const
 {
      auto     transform_range = (*m_texture) | std::views::transform([](const glengine::Texture &texture) { return texture.height(); });
