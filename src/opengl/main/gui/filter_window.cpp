@@ -38,6 +38,7 @@ void fme::filter_window::collapsing_header_filters() const
 
 void fme::filter_window::render() const
 {
+     static std::array<char,128> file_name_buffer{};
      static bool reload_thumbnail = false;
      m_changed                    = false;
      auto lock_selections         = m_selections.lock();
@@ -121,9 +122,6 @@ void fme::filter_window::render() const
                     tool_tip(lock_map_sprite->get_deswizzle_combined_textures_tooltips().at(file_name));
                }
           }
-          // Label under image (optional)
-          ImGui::TextWrapped("%s", file_name.c_str());
-          ImGui::NextColumn();
      };
      if (selected_file_name.empty() || !textures_map.contains(selected_file_name))
      {
@@ -136,20 +134,37 @@ void fme::filter_window::render() const
                     if (auto *ptr = lock_map_sprite->get_deswizzle_combined_toml_table(file_name); ptr)
                     {
                          selected_file_name  = file_name;
+                         constexpr size_t max_chars = file_name_buffer.size() - 1;// space for null terminator
+                         std::ranges::copy_n(
+                           selected_file_name.begin(),
+                           (std::min)(max_chars, static_cast<size_t>(selected_file_name.size())),
+                           file_name_buffer.begin());
                          selected_toml_table = ptr;
                          lock_map_sprite->filter().reload(*ptr);
                          lock_map_sprite->update_render_texture();
                     }
                };
                draw_elements(file_name, framebuffer, action);
+
+               // Label under image (optional)
+               ImGui::TextWrapped("%s", file_name.c_str());
+               ImGui::NextColumn();
           }
           ImGui::Columns(1);
      }
      else if (textures_map.contains(selected_file_name))
      {
-          const auto  action      = [&]() { selected_file_name = {}; };
+          const auto action = [&]() {
+               selected_file_name = {};
+               file_name_buffer ={};
+          };
           const auto &framebuffer = textures_map.at(selected_file_name);
           draw_elements(selected_file_name, framebuffer, action);
+          if (ImGui::InputText("##Empty", file_name_buffer.data(), file_name_buffer.size()-1U))
+          {
+               
+          }
+          //ImGui::Button
 
           ImGui::Separator();
 
