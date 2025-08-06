@@ -18,7 +18,10 @@ class VertexBufferDynamic
      std::size_t m_max_size{};
 
    public:
-     VertexBufferDynamic() = default;
+     // A quad is made of 2 triangles, each needing 3 indices → 2 × 3 = 6
+     static constexpr std::size_t IndicesPerQuad = 2 * 3;
+
+     VertexBufferDynamic()                       = default;
      VertexBufferDynamic(size_t count);
      void                      bind() const;
      static void               unbind();
@@ -40,7 +43,7 @@ class VertexBufferDynamic
             0,
             static_cast<std::ptrdiff_t>(std::ranges::size(vertices) * sizeof(std::ranges::range_value_t<T>)),
             std::ranges::data(vertices));
-          return glengine::IndexBufferDynamicSize((std::ranges::size(vertices) / std::size(Quad{}) * 6U));
+          return glengine::IndexBufferDynamicSize((std::ranges::size(vertices) / std::size(Quad{}) * IndicesPerQuad));
      }
 };
 static_assert(Bindable<VertexBufferDynamic>);
