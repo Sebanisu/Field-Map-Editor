@@ -698,7 +698,8 @@ void map_sprite::update_position(
      using open_viii::graphics::background::BlendModeT;
      [[maybe_unused]] BlendModeT last_blend_mode{ BlendModeT::none };
      m_uniform_color = s_default_color;
-     bool drew       = false;
+     shader.set_uniform("u_Tint", s_default_color);
+     bool drew = false;
      for (const auto &z : m_all_unique_values_and_strings.z().values())
      {
           for_all_tiles([&]([[maybe_unused]] const auto &tile_const, const auto &tile, const ff_8::PupuID pupu_id) {
