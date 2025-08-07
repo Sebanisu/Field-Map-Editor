@@ -67,33 +67,33 @@ struct [[nodiscard]] map_sprite// final
      bool                                                                        m_draw_swizzle               = { false };
      bool                                                                        m_disable_texture_page_shift = { false };
      bool                                                                        m_disable_blends             = { false };
-     mutable ff_8::filters                           m_filters    = { false };// default false should be override by gui to true.
-     std::weak_ptr<Selections>                       m_selections = {};
-     bool                                            m_using_imported_texture        = {};
-     const glengine::Texture                        *m_imported_texture              = { nullptr };
-     std::uint16_t                                   m_imported_tile_size            = {};
-     Map                                             m_imported_tile_map             = {};
-     Map                                             m_imported_tile_map_front       = {};
-     ff_8::all_unique_values_and_strings             m_all_unique_values_and_strings = {};
-     open_viii::graphics::Rectangle<std::uint32_t>   m_canvas                        = {};
+     mutable ff_8::filters                          m_filters                = { false };// default false should be override by gui to true.
+     std::weak_ptr<Selections>                      m_selections             = {};
+     bool                                           m_using_imported_texture = {};
+     const glengine::Texture                       *m_imported_texture       = { nullptr };
+     std::uint16_t                                  m_imported_tile_size     = {};
+     Map                                            m_imported_tile_map      = {};
+     Map                                            m_imported_tile_map_front       = {};
+     ff_8::all_unique_values_and_strings            m_all_unique_values_and_strings = {};
+     open_viii::graphics::Rectangle<std::uint32_t>  m_canvas                        = {};
 
-     glengine::BatchRenderer                         m_batch_renderer                = { 1000 };
-     glengine::BatchRenderer                         m_batch_renderer_red_integer    = { 1,
-                                                                                         { std::filesystem::current_path() / "res" / "shader"
-                                                                                           / "red_integer.shader" } };
+     glengine::BatchRenderer                        m_batch_renderer                = { 1000 };
+     glengine::BatchRenderer                        m_batch_renderer_red_integer    = { 1,
+                                                                                        { std::filesystem::current_path() / "res" / "shader"
+                                                                                          / "red_integer.shader" } };
 
      mutable std::shared_ptr<glengine::FrameBuffer> m_render_framebuffer            = {};
 
-     std::vector<std::size_t>                        m_saved_imported_indices        = {};
-     mutable bool                                    once                            = { true };
-     mutable glengine::OrthographicCamera            m_fixed_render_camera           = {};
+     std::vector<std::size_t>                       m_saved_imported_indices        = {};
+     mutable bool                                   once                            = { true };
+     mutable glengine::OrthographicCamera           m_fixed_render_camera           = {};
 
-     static constexpr auto                           s_default_color = glm::vec4{ 1.F, 1.F, 1.F, 1.F };// white, fully opaque
-     static constexpr auto                           s_half_color    = glm::vec4{ 0.5F, 0.5F, 0.5F, 1.F };// dimmed, fully opaque
-     static constexpr auto                           s_quarter_color = glm::vec4{ 0.25F, 0.25F, 0.25F, 1.F };// very dim, fully opaque
+     static constexpr auto                          s_default_color                 = glm::vec4{ 1.F, 1.F, 1.F, 1.F };// white, fully opaque
+     static constexpr auto                          s_half_color    = glm::vec4{ 0.5F, 0.5F, 0.5F, 1.F };// dimmed, fully opaque
+     static constexpr auto                          s_quarter_color = glm::vec4{ 0.25F, 0.25F, 0.25F, 1.F };// very dim, fully opaque
 
-     mutable glm::vec4                               m_uniform_color = s_default_color;
-     [[nodiscard]] settings_backup                   get_backup_settings();
+     mutable glm::vec4                              m_uniform_color = s_default_color;
+     [[nodiscard]] settings_backup                  get_backup_settings(const bool);
 
    public:
      map_sprite() = default;

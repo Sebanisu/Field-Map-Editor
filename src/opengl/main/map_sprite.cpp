@@ -183,6 +183,7 @@ const glengine::Texture *
      }
      return &m_texture->at(index);
 }
+
 const glengine::Texture *map_sprite::get_texture(const ff_8::PupuID &pupu) const
 {
      const auto &values = original_unique_pupu();
@@ -443,13 +444,6 @@ std::future<std::future<void>> map_sprite::load_swizzle_as_one_image_textures(st
          &(m_texture->at(pos)), fme::generate_swizzle_as_one_image_paths(std::move(selections), *this, palette) }) };
 }
 
-// void set_color(std::array<sf::Vertex, 4U> &vertices, const sf::Color &color)
-// {
-//      std::ranges::transform(vertices, vertices.begin(), [&color](sf::Vertex vertex) {
-//           vertex.color = color;
-//           return vertex;
-//      });
-// }
 enum struct texture_page_width : std::uint16_t
 {
      bit_4  = 256U,
@@ -548,139 +542,6 @@ void map_sprite::update_position(
      update_render_texture();
 }
 
-// sf::Sprite map_sprite::save_intersecting(const glm::ivec2 &pixel_pos, const std::uint8_t &texture_page)
-// {
-//      // Initialize an empty sprite object
-//      sf::Sprite sprite      = {};
-
-//      // Get the size of the sprite texture
-//      const auto sprite_size = m_drag_sprite_framebuffer.get_size();
-//      spdlog::info("sprite_size: ({},{})", sprite_size.x, sprite_size.y);
-//      spdlog::info("m_scale: ({})", m_scale);
-
-//      // Set the texture rectangle of the sprite to cover the whole texture
-//      sprite.setTextureRect({ 0, 0, static_cast<int>(sprite_size.x), static_cast<int>(sprite_size.y) });
-
-//      // Static constant factor for offset when positioning the sprite
-//      static constexpr float one_and_half = 1.5F;
-
-//      // Set the sprite's position based on the provided pixel position, adjusted by TILE_SIZE
-//      sprite.setPosition(
-//        static_cast<float>(pixel_pos.x) - (TILE_SIZE * one_and_half), static_cast<float>(pixel_pos.y) - (TILE_SIZE * one_and_half));
-
-//      // Scale the sprite based on the m_scale factor
-//      sprite.setScale(1.0F / static_cast<float>(m_scale), 1.0F / static_cast<float>(m_scale));
-
-//      // Find intersecting tiles for the given position and texture page
-//      m_saved_indices = find_intersecting(m_map_group.maps.const_working(), pixel_pos, texture_page, false, true);
-
-//      spdlog::info("m_saved_indices count: {}", std::ranges::size(m_saved_indices));
-
-//      // If drawing is not swizzled, find intersecting imported tiles as well
-//      if (!m_draw_swizzle)
-//      {
-//           m_saved_imported_indices = find_intersecting(m_imported_tile_map, pixel_pos, texture_page, false, true);
-//      }
-
-//      // Clear the drag sprite texture with transparency
-
-//      const auto fbb = glengine::FrameBufferBackup{};
-//      m_drag_sprite_framebuffer.bind();
-//      glengine::GlCall{}(glViewport, 0, 0, m_drag_sprite_framebuffer.width(), m_drag_sprite_framebuffer.height());
-//      glengine::Renderer::Clear();
-//      m_drag_sprite_framebuffer.clear_red_integer_color_attachment();
-
-//      // Lambda function to draw tiles based on the front tiles and tile data, and optionally imported tiles
-//      const auto draw_drag_texture = [this, &pixel_pos, &sprite_size](
-//                                       const auto &front_tiles, const auto &tiles, const std::uint16_t z, bool imported = false) {
-//           // sf::RenderStates       states = {};
-
-//           // Set the transformation to adjust the sprite's position based on the scale and pixel position
-//           /// TODO fix offset
-//           // static constexpr float half   = 0.5F;
-
-//           //   states.transform.translate(
-//           //     glm::vec2(
-//           //       (static_cast<float>(-pixel_pos.x) * static_cast<float>(m_scale)) + (static_cast<float>(sprite_size.x) * half),
-//           //       (static_cast<float>(-pixel_pos.y) * static_cast<float>(m_scale)) + (static_cast<float>(sprite_size.x) * half)));
-
-//           // Loop through either saved imported indices or regular saved indices based on the flag
-//           for (const auto tile_index : imported ? m_saved_imported_indices : m_saved_indices)
-//           {
-//                const auto &tile       = tiles[tile_index];
-//                const auto &front_tile = front_tiles[tile_index];
-
-//                // Skip drawing if the front tile's z-index does not match the current z layer
-//                if (front_tile.z() != z)
-//                {
-//                     continue;
-//                }
-
-//                // Set the texture for the tile, either imported or regular
-
-//                const auto *const texture =
-//                  imported ? m_imported_texture : get_texture(front_tile.depth(), front_tile.palette_id(), front_tile.texture_id());
-//                // states.texture =
-
-//                // Skip if the texture is invalid (size is zero)
-//                if (texture == nullptr || texture->height() == 0 || texture->width() == 0)
-//                {
-//                     continue;
-//                }
-
-//                // Calculate draw size and texture size for the tile
-//                const auto       source_tile_size      = imported ? get_tile_texture_size_for_import() : get_tile_texture_size(texture);
-//                const auto       destination_tile_size = get_tile_draw_size();
-//                const glm::uvec2 source_texture_size   = { texture->width(), texture->height() };
-
-//                // Generate the quad for the tile using triangle strips
-//                ff_8::QuadStrip  quad =
-//                  imported ? get_triangle_strip_for_imported(source_tile_size, destination_tile_size, source_texture_size, front_tile,
-//                  tile)
-//                            : get_triangle_strip(source_tile_size, destination_tile_size, source_texture_size, front_tile, tile);
-//                /// TODO fix blend
-//                //   // Set the blend mode for the sprite
-//                //   states.blendMode                = sf::BlendAlpha;
-//                //   if (!m_disable_blends)
-//                //   {
-//                //        states.blendMode = set_blend_mode(tile.blend_mode(), quad);
-//                //   }
-
-//                // Draw the tile to the drag sprite texture
-//                /// TODO fix sprite drawing
-//                // m_drag_sprite_texture->draw(quad.data(), quad.size(), sf::TriangleStrip, states);
-//           }
-//      };
-
-//      // Iterate over all unique z values and draw the intersecting tiles at each z layer
-//      for (const std::uint16_t &z : m_all_unique_values_and_strings.z().values())
-//      {
-//           // Draw tiles for both the regular map and the imported map
-//           m_map_group.maps.original().visit_tiles([&](const auto &front_tiles) {
-//                m_map_group.maps.const_working().visit_tiles([&](const auto &tiles) { draw_drag_texture(front_tiles, tiles, z); });
-//           });
-//           m_imported_tile_map_front.visit_tiles([&](const auto &imported_front_tiles) {
-//                m_imported_tile_map.visit_tiles(
-//                  [&](const auto &imported_tiles) { draw_drag_texture(imported_front_tiles, imported_tiles, z, true); });
-//           });
-//      }
-
-//      // Display the drawn texture to make it visible
-//      /// TODO fix sprite display?
-//      // m_drag_sprite_texture->display();
-
-//      // Set the sprite's texture to the one stored in the drag sprite texture
-//      /// TODO fix sprite set_texture?
-//      // sprite.setTexture(m_drag_sprite_texture->getTexture());
-
-//      // Update the render texture to reflect any changes
-//      update_render_texture();
-
-//      // Return the sprite
-//      return sprite;
-// }
-
-
 [[nodiscard]] bool
   map_sprite::local_draw(const glengine::FrameBuffer &target_framebuffer, const glengine::BatchRenderer &target_renderer) const
 {
@@ -695,18 +556,6 @@ void map_sprite::update_position(
      for (const auto &z : m_all_unique_values_and_strings.z().values())
      {
           for_all_tiles([&]([[maybe_unused]] const auto &tile_const, const auto &tile, const ff_8::PupuID pupu_id) {
-               // if (!m_saved_indices.empty())
-               // {
-               //      // skip saved indices on redraw.
-               //      const auto current_index = m_map_group.maps.get_offset_from_working(tile);
-               //      const auto find_index    = std::ranges::find_if(
-               //        m_saved_indices, [&current_index](const auto search_index) { return std::cmp_equal(search_index, current_index);
-               //        });
-               //      if (find_index != m_saved_indices.end())
-               //      {
-               //           return;
-               //      }
-               // }
                if (
                  m_filters.multi_animation_id.enabled()
                  && std::ranges::all_of(
@@ -743,7 +592,7 @@ void map_sprite::update_position(
                          return get_texture(pupu_id);
                     }
                }();
-               // const auto unbind = glengine::ScopeGuard{ []() { glengine::Texture::unbind(); } };
+               
                if (texture == nullptr || texture->height() == 0 || texture->width() == 0)
                {
                     return;
@@ -828,30 +677,7 @@ void map_sprite::update_position(
      }
      return drew;
 }
-// sf::BlendMode map_sprite::set_blend_mode(const BlendModeT &blend_mode, std::array<sf::Vertex, 4U> &quad)
-// {
-//      if (blend_mode == BlendModeT::add)
-//      {
-//           return sf::BlendAdd;
-//      }
-//      else if (blend_mode == BlendModeT::half_add)
-//      {
-//           constexpr static uint8_t per_50 = (std::numeric_limits<uint8_t>::max)() / 2U;
-//           set_color(quad, { per_50, per_50, per_50, per_50 });// 50% alpha
-//           return sf::BlendAdd;
-//      }
-//      else if (blend_mode == BlendModeT::quarter_add)
-//      {
-//           constexpr static uint8_t per_25 = (std::numeric_limits<uint8_t>::max)() / 4U;
-//           set_color(quad, { per_25, per_25, per_25, per_25 });// 25% alpha
-//           return sf::BlendAdd;
-//      }
-//      else if (blend_mode == BlendModeT::subtract)
-//      {
-//           return get_blend_subtract();
-//      }
-//      return sf::BlendAlpha;
-// }
+
 [[nodiscard]] bool map_sprite::draw_imported([[maybe_unused]] const glengine::FrameBuffer &target_framebuffer) const
 {
      // todo fix imported
@@ -927,10 +753,12 @@ void map_sprite::update_position(
      // });
      // return drew;
 }
+
 glm::uvec2 map_sprite::get_tile_texture_size_for_import() const
 {
      return glm::uvec2{ m_imported_tile_size, m_imported_tile_size };
 }
+
 glm::uvec2 map_sprite::get_tile_texture_size(const glengine::Texture *const texture) const
 {
      const auto raw_texture_size = texture->get_size();
@@ -942,15 +770,6 @@ glm::uvec2 map_sprite::get_tile_texture_size(const glengine::Texture *const text
      const auto i = static_cast<std::uint32_t>(raw_texture_size.y / TILE_SIZE);
      return glm::uvec2{ i, i };
 }
-// const sf::BlendMode &map_sprite::get_blend_subtract()
-// {
-//      const static auto blend_subtract =
-//        sf::BlendMode{ sf::BlendMode::DstColor,// or One
-//                       sf::BlendMode::One,      sf::BlendMode::ReverseSubtract, sf::BlendMode::One, sf::BlendMode::OneMinusSrcAlpha,
-//                       sf::BlendMode::Add };
-//      return blend_subtract;
-// }
-
 
 void map_sprite::enable_draw_swizzle()
 {
@@ -964,20 +783,6 @@ void map_sprite::disable_draw_swizzle()
      update_render_texture();
 }
 
-// void map_sprite::draw(sf::RenderTarget &target, sf::RenderStates states) const
-// {
-//      // apply the transform
-//      states.transform *= getTransform();
-//      states.texture    = &m_render_texture->getTexture();
-//      auto texture_size = m_render_texture->getSize();
-//      auto draw_size    = glm::uvec2(width(), height());
-//      auto quad         = ff_8::get_triangle_strip(to_Vector2f(draw_size), to_Vector2f(texture_size), {}, {});
-//      // draw the vertex array
-//      target.draw(quad.data(), quad.size(), sf::TriangleStrip, states);
-
-//      // draw square
-//      target.draw(m_square, states);
-// }
 void map_sprite::update_render_texture(const bool reload_textures) const
 {
      const auto s = m_selections.lock();
@@ -1199,7 +1004,7 @@ void map_sprite::resize_render_texture() const
      if (m_render_framebuffer->width() != spec.width && m_render_framebuffer->height() != spec.height)
      {
           *m_render_framebuffer = glengine::FrameBuffer{ std::move(spec) };
-     }     
+     }
 }
 
 open_viii::graphics::Rectangle<std::uint32_t> map_sprite::get_canvas() const
@@ -1408,14 +1213,6 @@ const ff_8::MapHistory::nsat_map &map_sprite::working_animation_counts() const
           return {};
      }
      consume_now();
-     // Get the base name of the field (e.g., map name) to use in output filenames.
-     // const std::string field_name              = { get_base_name() };
-
-     // Define filename patterns for various cases (with/without palette, with/without COO region).
-     // static constexpr std::string_view pattern_texture_page             = { "{}_{}.png" };
-     // static constexpr std::string_view pattern_texture_page_palette     = { "{}_{}_{}.png" };
-     // static constexpr std::string_view pattern_coo_texture_page         = { "{}_{}_{}.png" };
-     // static constexpr std::string_view pattern_coo_texture_page_palette = { "{}_{}_{}_{}.png" };
 
      // Extract unique texture page IDs and BPP (bits per pixel) values from the map.
      const auto      unique_values           = get_all_unique_values_and_strings();
@@ -1423,7 +1220,7 @@ const ff_8::MapHistory::nsat_map &map_sprite::working_animation_counts() const
      const auto     &unique_bpp              = unique_values.bpp().values();
 
      // Backup and override current settings for exporting textures.
-     settings_backup settings                = get_backup_settings();
+     settings_backup settings                = get_backup_settings(true);
 
      // Adjust scale based on texture height or deswizzle state.
      std::int32_t    height                  = static_cast<std::int32_t>(get_max_texture_height());
@@ -1545,15 +1342,6 @@ const ff_8::MapHistory::nsat_map &map_sprite::working_animation_counts() const
           return {};
      }
      consume_now();
-     // Get the base name of the field (e.g., map name) to use in output filenames.
-     // const std::string field_name              = { get_base_name() };
-
-     // Define filename patterns for various cases (with/without palette, with/without COO region).
-     // static constexpr std::string_view pattern_texture_page             = { "{}_{}.png" };
-     // static constexpr std::string_view pattern_texture_page_palette     = { "{}_{}_{}.png" };
-     // static constexpr std::string_view pattern_coo_texture_page         = { "{}_{}_{}.png" };
-     // static constexpr std::string_view pattern_coo_texture_page_palette = { "{}_{}_{}_{}.png" };
-
      // Extract unique texture page IDs and BPP (bits per pixel) values from the map.
      const auto         unique_values           = get_all_unique_values_and_strings();
      const auto        &unique_texture_page_ids = unique_values.texture_page_id().values();
@@ -1561,7 +1349,8 @@ const ff_8::MapHistory::nsat_map &map_sprite::working_animation_counts() const
      const auto         max_texture_page_id     = std::ranges::max(unique_texture_page_ids);
 
      // Backup and override current settings for exporting textures.
-     settings_backup    settings                = get_backup_settings();
+     settings_backup    settings                = get_backup_settings(true);
+     settings.disable_texture_page_shift        = false;// Disable texture page shifts
      std::int32_t       height                  = static_cast<std::int32_t>(get_max_texture_height());
 
      const auto         max_source_x            = m_map_group.maps.working().visit_tiles([&](const auto &tiles) -> std::uint8_t {
@@ -1696,7 +1485,7 @@ std::string map_sprite::get_base_name() const
      }
      consume_now();
      // Backup current settings and adjust for saving Pupu textures
-     auto       settings = get_backup_settings();
+     auto       settings = get_backup_settings(false);
 
      // Acquire the field associated with this map group
      const auto field    = m_map_group.field.lock();
@@ -1708,12 +1497,6 @@ std::string map_sprite::get_base_name() const
 
      const std::string                field_name                  = std::string{ str_to_lower(field->get_base_name()) };
      const std::vector<ff_8::PupuID> &unique_pupu_ids             = working_unique_pupu();// Get list of unique Pupu IDs
-     // std::optional<open_viii::LangT> &coo             = m_map_group.opt_coo;// Language option (optional)
-
-     // assert(safedir(path).is_dir());// Ensure output path is a directory
-
-     // static constexpr std::string_view           pattern_pupu                = { "{}_{}.png" };// Pattern without language
-     // static constexpr std::string_view           pattern_coo_pupu            = { "{}_{}_{}.png" };// Pattern with language
      const unsigned int               max_number_of_texture_pages = 13U;// Reserve space for futures
      std::vector<std::future<void>>   future_of_futures           = {};
      future_of_futures.reserve(max_number_of_texture_pages);
@@ -1759,7 +1542,7 @@ std::string map_sprite::get_base_name() const
      }
      consume_now();
      // Backup current settings and adjust for saving Pupu textures
-     auto       settings = get_backup_settings();
+     auto       settings = get_backup_settings(false);
 
      // Acquire the field associated with this map group
      const auto field    = m_map_group.field.lock();
@@ -1840,7 +1623,7 @@ std::string map_sprite::get_base_name() const
 
      return cpm.replace_tags(pattern, selections, "{current_path}");
 }
-[[nodiscard]] settings_backup map_sprite::get_backup_settings()
+[[nodiscard]] settings_backup map_sprite::get_backup_settings(const bool draw_swizzle)
 {
      auto settings = settings_backup{
           m_filters, m_draw_swizzle, m_disable_texture_page_shift, m_disable_blends
@@ -1851,23 +1634,10 @@ std::string map_sprite::get_base_name() const
      settings.filters.value().swizzle_as_one_image = settings.filters.backup().swizzle_as_one_image;
      settings.filters.value().deswizzle            = settings.filters.backup().deswizzle;
      settings.filters.value().map                  = settings.filters.backup().map;
-     settings.draw_swizzle                         = false;// No swizzling when saving
+     settings.draw_swizzle                         = draw_swizzle;// No swizzling when saving
      settings.disable_texture_page_shift           = true;// Disable texture page shifts
      settings.disable_blends                       = true;// Disable blending
 
-     // Adjust scale based on texture height or deswizzle state.
-     // std::int32_t         height                   = static_cast<std::int32_t>(get_max_texture_height());
-     // constexpr static int mim_height               = { 256 };
-     // settings.scale                                = height / mim_height;
-     // if (settings.filters.value().deswizzle.enabled())
-     // {
-     //      settings.scale = height / static_cast<std::int32_t>(m_canvas.height());
-     //      height         = m_render_framebuffer.scale() * mim_height;
-     // }
-     // if (settings.scale == 0U)
-     // {
-     //      settings.scale = 1U;
-     // }
      return settings;
 }
 
@@ -1882,7 +1652,7 @@ std::string map_sprite::get_base_name() const
      }
      consume_now();
      // Backup current settings and adjust for saving Pupu textures
-     auto       settings = get_backup_settings();
+     auto       settings = get_backup_settings(false);
 
      // Acquire the field associated with this map group
      const auto field    = m_map_group.field.lock();
@@ -1981,7 +1751,7 @@ std::string map_sprite::get_base_name() const
           return m_cache_framebuffer;
      }
      // Backup current settings and adjust for saving Pupu textures
-     auto       settings = get_backup_settings();
+     auto       settings = get_backup_settings(false);
 
      // Acquire the field associated with this map group
      const auto field    = m_map_group.field.lock();
