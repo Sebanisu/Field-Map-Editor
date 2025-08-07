@@ -225,6 +225,7 @@ void gui::start(GLFWwindow *const window)
 
           // Begin non imgui drawing.
           directory_browser_display();
+          file_browser_display();
           render_dockspace();
           menu_bar();
           //     popup_batch_deswizzle();
@@ -2385,7 +2386,7 @@ std::filesystem::path gui::path_with_prefix_and_base_name(std::filesystem::path 
 }
 
 
-void gui::file_browser_save_texture()
+void gui::file_browser_display()
 {
      m_save_file_browser.Display();
      if (m_save_file_browser.HasSelected())

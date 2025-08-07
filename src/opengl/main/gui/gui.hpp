@@ -125,7 +125,7 @@ struct gui
      std::shared_ptr<map_sprite> get_map_sprite() const;
      bool                        combo_path();
      void                        combo_draw();
-     void                        file_browser_save_texture();
+     void                        file_browser_display();
      void                        directory_browser_display();
      void                        menu_bar();
      void                        selected_tiles_panel();
@@ -246,8 +246,6 @@ struct gui
 
 
      static inline constinit bool        toggle_imgui_demo_window = { false };
-
-
 };
 }// namespace fme
 #endif// FIELD_MAP_EDITOR_GUI_HPP

@@ -68,8 +68,8 @@ void fme::batch::draw_window()
           return;
      }
      open_directory_browser();
-     // while in_progress disable changing the values.
-     const bool  disabled      = in_progress();
+       // while in_progress disable changing the values.
+       const bool disabled      = in_progress();
      static bool prev_disabled = disabled;
      if (prev_disabled != disabled && !disabled)
      {
