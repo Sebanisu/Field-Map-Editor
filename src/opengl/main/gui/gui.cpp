@@ -2207,9 +2207,6 @@ void gui::directory_browser_display()
      const auto              selected_path = m_directory_browser.GetSelected();
 
      const ff_8::path_search ps            = static_cast<ff_8::path_search>(*m_map_sprite);
-     // const auto has_map_path    = [&](const std::filesystem::path &path) -> std::vector<bool> { return { ps.has_map_path(path, ".map") };
-     // };
-
 
      const auto add_path_to_config         = [&]<ConfigKey Key = ConfigKey::ExternalTexturesAndMapsDirectoryPaths, ConfigKey... Keys>() {
           std::apply(
@@ -3230,8 +3227,7 @@ std::future<std::future<gui::PathsAndEnabled>> gui::generate_external_map_paths(
             };
 
             process(
-              ps.selections->get<ConfigKey::FF8DirectoryPaths>(),
-              ps.selections->get<ConfigKey::ExternalTexturesAndMapsDirectoryPaths>());
+              ps.selections->get<ConfigKey::FF8DirectoryPaths>(), ps.selections->get<ConfigKey::ExternalTexturesAndMapsDirectoryPaths>());
             pande.enabled.resize(pande.enabled_key.size());
             for (auto &&[key, enabled] : std::ranges::views::zip(pande.enabled_key, pande.enabled))
             {
@@ -3239,9 +3235,15 @@ std::future<std::future<gui::PathsAndEnabled>> gui::generate_external_map_paths(
                  {
                       switch (key)
                       {
-                           case ConfigKey::CacheMapPathsEnabled:
-                                enabled.push_back(ps.has_map_path(std::filesystem::path{ path }, ".map"));
+                           case ConfigKey::CacheMapPathsEnabled: {
+                                bool e = ps.has_map_path(std::filesystem::path{ path }, ".map");
+                                enabled.push_back(e);
+                                if (e)
+                                {
+                                     spdlog::info("Found .map path: {}", path);
+                                }
                                 break;
+                           }
                            default:
                                 throw;
                       }

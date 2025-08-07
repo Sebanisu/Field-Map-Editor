@@ -77,7 +77,6 @@ void fme::Selections::sort_paths()
        ConfigKey::CacheTextureAndMapPaths,
        ConfigKey::CacheSwizzlePathsEnabled,
        ConfigKey::CacheSwizzleAsOneImagePathsEnabled,
-       ConfigKey::CacheDeswizzlePathsEnabled>();
-
-     process.template operator()<ConfigKey::CacheTextureAndMapPaths, ConfigKey::CacheMapPathsEnabled>();
+       ConfigKey::CacheDeswizzlePathsEnabled,
+       ConfigKey::CacheMapPathsEnabled>();
 }
