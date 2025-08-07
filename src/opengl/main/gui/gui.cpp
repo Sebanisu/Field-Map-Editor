@@ -1838,6 +1838,7 @@ void gui::file_menu()
      }
      menu_swizzle_paths();
      menu_deswizzle_paths();
+     menu_swizzle_as_one_image_paths();
      menu_map_paths();
 
      if (ImGui::BeginMenu(gui_labels::language.data()))
@@ -2076,7 +2077,6 @@ void gui::menu_deswizzle_paths()
             m_modified_directory_map = map_directory_mode::load_deswizzle_textures;
        });
 }
-
 
 void gui::menu_map_paths()
 {
@@ -3186,7 +3186,7 @@ std::future<std::future<gui::PathsAndEnabled>> gui::generate_external_texture_pa
                                 enabled.push_back(ps.has_swizzle_as_one_image_path(std::filesystem::path{ path }));
                                 break;
                            case ConfigKey::CacheDeswizzlePathsEnabled:
-                                enabled.push_back(ps.has_swizzle_path(std::filesystem::path{ path }));
+                                enabled.push_back(ps.has_deswizzle_path(std::filesystem::path{ path }));
                                 break;
                            default:
                                 throw;
