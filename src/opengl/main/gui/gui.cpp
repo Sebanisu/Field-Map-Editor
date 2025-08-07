@@ -2224,7 +2224,7 @@ void gui::directory_browser_display()
                 &m_selections->get<ConfigKey::CacheSwizzleAsOneImagePathsEnabled>(),
                 ps.has_swizzle_as_one_image_path(selected_path, ".png")),
               std::pair(&m_selections->get<ConfigKey::CacheDeswizzlePathsEnabled>(), ps.has_deswizzle_path(selected_path, ".png")),
-              std::pair(&m_selections->get<ConfigKey::CacheMapPathsEnabled>(), ps.has_map_path(selected_path, ".png"))));
+              std::pair(&m_selections->get<ConfigKey::CacheMapPathsEnabled>(), ps.has_map_path(selected_path, ".map"))));
 
           m_selections->update<
                     Key,
@@ -3231,7 +3231,6 @@ std::future<std::future<gui::PathsAndEnabled>> gui::generate_external_map_paths(
 
             process(
               ps.selections->get<ConfigKey::FF8DirectoryPaths>(),
-              ps.selections->get<ConfigKey::ExternalTexturesAndMapsDirectoryPaths>(),
               ps.selections->get<ConfigKey::ExternalTexturesAndMapsDirectoryPaths>());
             pande.enabled.resize(pande.enabled_key.size());
             for (auto &&[key, enabled] : std::ranges::views::zip(pande.enabled_key, pande.enabled))
@@ -3241,8 +3240,7 @@ std::future<std::future<gui::PathsAndEnabled>> gui::generate_external_map_paths(
                       switch (key)
                       {
                            case ConfigKey::CacheMapPathsEnabled:
-                                enabled.push_back(ps.has_map_path(
-                                  std::filesystem::path{ path }, ".map", ps.selections->get<ConfigKey::OutputMapPatternForSwizzle>()));
+                                enabled.push_back(ps.has_map_path(std::filesystem::path{ path }, ".map"));
                                 break;
                            default:
                                 throw;
