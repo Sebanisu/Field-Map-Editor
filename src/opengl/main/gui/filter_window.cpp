@@ -199,9 +199,9 @@ void fme::filter_window::render() const
                ImGui::NextColumn();
           }
 
-          ImTextureID tex_id = glengine::ConvertGliDtoImTextureId<ImTextureID>(lock_map_sprite->get_render_texture().color_attachment_id());
-          aspect_ratio       = static_cast<float>(lock_map_sprite->get_render_texture().height())
-                         / static_cast<float>(lock_map_sprite->get_render_texture().width());
+          ImTextureID tex_id = glengine::ConvertGliDtoImTextureId<ImTextureID>(lock_map_sprite->get_framebuffer().color_attachment_id());
+          aspect_ratio       = static_cast<float>(lock_map_sprite->get_framebuffer().height())
+                         / static_cast<float>(lock_map_sprite->get_framebuffer().width());
           const ImVec2 thumb_size = { thumb_size_width, thumb_size_width * aspect_ratio };
           if (ImGui::ImageButton("add new item", tex_id, thumb_size))
           {

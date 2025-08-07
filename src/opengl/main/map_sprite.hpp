@@ -111,7 +111,7 @@ struct [[nodiscard]] map_sprite// final
 
      [[nodiscard]] std::string                     appends_prefix_base_name(std::string_view title) const;
 
-     [[nodiscard]] std::int32_t                    get_map_scale() const;
+     //[[nodiscard]] std::int32_t                    get_map_scale() const;
      [[nodiscard]] const glengine::FrameBuffer    &get_render_texture() const
      {
           return m_render_framebuffer;

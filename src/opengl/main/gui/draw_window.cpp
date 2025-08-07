@@ -197,23 +197,24 @@ void fme::draw_window::render() const
           }
 
 
-          const auto   wsize      = ImGui::GetContentRegionAvail();
-          const auto   img_size   = t_map_sprite->get_render_texture().get_size();
+          const auto   wsize       = ImGui::GetContentRegionAvail();
+          const auto  &framebuffer = t_map_sprite->get_framebuffer();
+          const auto   img_size    = framebuffer.get_size();
 
-          const auto   screen_pos = ImGui::GetCursorScreenPos();
-          const float  scale      = (std::max)(wsize.x / static_cast<float>(img_size.x), wsize.y / static_cast<float>(img_size.y));
+          const auto   screen_pos  = ImGui::GetCursorScreenPos();
+          const float  scale       = (std::max)(wsize.x / static_cast<float>(img_size.x), wsize.y / static_cast<float>(img_size.y));
           const ImVec2 scaled_size(static_cast<float>(img_size.x) * scale, static_cast<float>(img_size.y) * scale);
 
           DrawCheckerboardBackground(
             screen_pos,
             scaled_size,
-            (static_cast<float>(t_map_sprite->get_map_scale()) * 4.F) * scale,
+            (static_cast<float>(framebuffer.scale()) * 4.F) * scale,
             selections->get<ConfigKey::BackgroundColor>().fade(-0.2F),
             selections->get<ConfigKey::BackgroundColor>().fade(0.2F));
 
           const auto pop_id1 = PushPopID();
           ImGui::GetWindowDrawList()->AddImage(
-            glengine::ConvertGliDtoImTextureId<ImTextureID>(t_map_sprite->get_render_texture().color_attachment_id()),
+            glengine::ConvertGliDtoImTextureId<ImTextureID>(framebuffer.color_attachment_id()),
             screen_pos,
             ImVec2{ screen_pos.x + scaled_size.x, screen_pos.y + scaled_size.y });
 
@@ -280,18 +281,18 @@ void fme::draw_window::update_hover_and_mouse_button_status_for_map(const ImVec2
           return;
      }
 
+     const auto  &framebuffer = t_map_sprite->get_framebuffer();
      // Check if the mouse is over the image
      const ImVec2 mouse_pos = ImGui::GetMousePos();
      if (ImGui::IsItemHovered())
      {
           // Calculate the mouse position relative to the image
-          glm::vec2  relative_pos(mouse_pos.x - img_start.x, mouse_pos.y - img_start.y);
-
+          glm::vec2   relative_pos(mouse_pos.x - img_start.x, mouse_pos.y - img_start.y);
           const auto old_pixel    = m_mouse_positions.pixel;
           // Map it back to the texture coordinates
-          m_mouse_positions.pixel = glm::ivec2(
-            static_cast<int>(relative_pos.x / scale / static_cast<float>(t_map_sprite->get_map_scale())),
-            static_cast<int>(relative_pos.y / scale / static_cast<float>(t_map_sprite->get_map_scale())));
+          m_mouse_positions.pixel  = glm::ivec2(
+            static_cast<int>(relative_pos.x / scale / static_cast<float>(framebuffer.scale())),
+            static_cast<int>(relative_pos.y / scale / static_cast<float>(framebuffer.scale())));
 
           if (selections->get<ConfigKey::DrawSwizzle>())
           {
@@ -364,11 +365,12 @@ void fme::draw_window::draw_map_grid_lines_for_tiles(const ImVec2 &screen_pos, c
           spdlog::error("Failed to lock map_sprite: shared_ptr is expired.");
           return;
      }
+     const auto  &framebuffer  = t_map_sprite->get_framebuffer();
      // Get the starting position and size of the image
      const ImVec2 img_end      = { screen_pos.x + scaled_size.x, screen_pos.y + scaled_size.y };
 
      // Calculate grid spacing
-     const float  grid_spacing = 16.0f * scale * static_cast<float>(t_map_sprite->get_map_scale());
+     const float  grid_spacing = 16.0f * scale * static_cast<float>(framebuffer.scale());
 
      // Iterate over horizontal and vertical lines
      for (float x = screen_pos.x; x < img_end.x; x += grid_spacing)
@@ -401,6 +403,7 @@ void fme::draw_window::draw_map_grid_for_conflict_tiles(const ImVec2 &screen_pos
           spdlog::error("Failed to lock map_sprite: shared_ptr is expired.");
           return;
      }
+     const auto &framebuffer = t_map_sprite->get_framebuffer();
      t_map_sprite->const_visit_working_tiles([&](const auto &working_tiles) {
           const auto &similar_counts   = t_map_sprite->working_similar_counts();
           const auto &animation_counts = t_map_sprite->working_animation_counts();
@@ -436,21 +439,21 @@ void fme::draw_window::draw_map_grid_for_conflict_tiles(const ImVec2 &screen_pos
                          if (selections->get<ConfigKey::DrawSwizzle>())
                          {
                               return screen_pos.x
-                            + ((static_cast<float>(working_tile.source_x()) + (static_cast<float>(working_tile.texture_id()) * 256.F)) * scale * static_cast<float>(t_map_sprite->get_map_scale()));
+                            + ((static_cast<float>(working_tile.source_x()) + (static_cast<float>(working_tile.texture_id()) * 256.F)) * scale * static_cast<float>(framebuffer.scale()));
                          }
                          return screen_pos.x
-                                + (static_cast<float>(working_tile.x()) * scale * static_cast<float>(t_map_sprite->get_map_scale()));
+                                + (static_cast<float>(working_tile.x()) * scale * static_cast<float>(framebuffer.scale()));
                     }();
                     const float y = [&]() {
                          if (selections->get<ConfigKey::DrawSwizzle>())
                          {
                               return screen_pos.y
-                                     + (static_cast<float>(working_tile.source_y()) * scale * static_cast<float>(t_map_sprite->get_map_scale()));
+                                     + (static_cast<float>(working_tile.source_y()) * scale * static_cast<float>(framebuffer.scale()));
                          }
                          return screen_pos.y
-                                + (static_cast<float>(working_tile.y()) * scale * static_cast<float>(t_map_sprite->get_map_scale()));
+                                + (static_cast<float>(working_tile.y()) * scale * static_cast<float>(framebuffer.scale()));
                     }();
-                    const float tile_size     = 16.0f * scale * static_cast<float>(t_map_sprite->get_map_scale());
+                    const float tile_size     = 16.0f * scale * static_cast<float>(framebuffer.scale());
                     const auto [c, thickness] = [&]() -> std::pair<color, float> {
                          const auto default_thickness = 3.F;
                          const auto hover_thickeness  = 4.5F;
@@ -566,11 +569,12 @@ void fme::draw_window::draw_map_grid_lines_for_texture_page(const ImVec2 &screen
           spdlog::error("Failed to lock map_sprite: shared_ptr is expired.");
           return;
      }
+     const auto  &framebuffer  = t_map_sprite->get_framebuffer();
      // Get the starting position and size of the image
      const ImVec2 img_end      = { screen_pos.x + scaled_size.x, screen_pos.y + scaled_size.y };
 
      // Calculate grid spacing
-     const float  grid_spacing = 256.0f * scale * static_cast<float>(t_map_sprite->get_map_scale());
+     const float  grid_spacing = 256.0f * scale * static_cast<float>(framebuffer.scale());
 
      // Iterate over horizontal and vertical lines
      for (float x = screen_pos.x; x < img_end.x; x += grid_spacing)
@@ -685,6 +689,7 @@ void fme::draw_window::UseImGuizmo([[maybe_unused]] const float scale, [[maybe_u
           spdlog::error("Failed to lock map_sprite: shared_ptr is expired.");
           return;
      }
+     const auto    &framebuffer      = t_map_sprite->get_framebuffer();
      const float    edge_threshold   = 30.0f;// Distance from edge
      const float    scroll_speed_pps = 2000.0f;// Scroll speed in pixels per second
      const ImGuiIO &io               = ImGui::GetIO();
@@ -763,7 +768,7 @@ void fme::draw_window::UseImGuizmo([[maybe_unused]] const float scale, [[maybe_u
 
      glm::mat4       objectMatrix = [&] {
           const glm::vec3 tilePosition =
-            glm::vec3(m_mouse_positions.down_pixel, 0.f) * scale * static_cast<float>(t_map_sprite->get_map_scale());
+            glm::vec3(m_mouse_positions.down_pixel, 0.f) * scale * static_cast<float>(framebuffer.scale());
           // Your object transform matrix, e.g. tile transform
           return glm::translate(glm::mat4(1.0f), tilePosition);
      }();
@@ -795,8 +800,8 @@ void fme::draw_window::UseImGuizmo([[maybe_unused]] const float scale, [[maybe_u
           const auto      old_pixel       = m_mouse_positions.down_pixel;
           // Map it back to the texture coordinates
           m_mouse_positions.pixel         = glm::ivec2(
-            static_cast<int>(relative_pos.x / scale / static_cast<float>(t_map_sprite->get_map_scale())),
-            static_cast<int>(relative_pos.y / scale / static_cast<float>(t_map_sprite->get_map_scale())));
+            static_cast<int>(relative_pos.x / scale / static_cast<float>(framebuffer.scale())),
+            static_cast<int>(relative_pos.y / scale / static_cast<float>(framebuffer.scale())));
 
           if (selections->get<ConfigKey::DrawSwizzle>())
           {

@@ -2563,10 +2563,10 @@ bool map_sprite::redo_enabled() const
 {
      return m_map_group.maps.redo_enabled();
 }
-std::int32_t map_sprite::get_map_scale() const
-{
-     return m_render_framebuffer.scale();
-}
+// std::int32_t map_sprite::get_map_scale() const
+// {
+//      return m_render_framebuffer.scale();
+// }
 std::vector<std::size_t>
   map_sprite::find_intersecting(const Map &map, const glm::ivec2 &pixel_pos, const uint8_t &texture_page, bool skip_filters, bool find_all)
     const
