@@ -1837,11 +1837,6 @@ void gui::file_menu()
      {
           return;
      }
-     menu_swizzle_paths();
-     menu_deswizzle_paths();
-     menu_swizzle_as_one_image_paths();
-     menu_map_paths();
-
      if (ImGui::BeginMenu(gui_labels::language.data()))
      {
           const auto            end_menu1 = glengine::ScopeGuard(&ImGui::EndMenu);
@@ -1941,18 +1936,21 @@ void gui::file_menu()
      if (map_test())
      {
           ImGui::Separator();
+          menuitem_load_map_file();
           menuitem_save_map_file();
           menuitem_save_map_file_modified();
-          menuitem_load_map_file();
           ImGui::Separator();
+          if (ImGui::BeginMenu("Load External Files..."))
+          {
+               const auto end_menu1 = glengine::ScopeGuard(&ImGui::EndMenu);
+               menu_swizzle_paths();
+               menu_deswizzle_paths();
+               menu_swizzle_as_one_image_paths();
+               menu_map_paths();
+          }
           menuitem_save_swizzle_textures();
-          menuitem_load_swizzle_textures();
-          ImGui::Separator();
-          menuitem_save_swizzle_as_one_image_textures();
-          menuitem_load_swizzle_as_one_image_textures();
-          ImGui::Separator();
+          menuitem_save_swizzle_as_one_image_textures();          
           menuitem_save_deswizzle_textures();
-          menuitem_load_deswizzle_textures();
      }
 }
 
