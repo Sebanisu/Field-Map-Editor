@@ -1948,6 +1948,9 @@ void gui::file_menu()
           menuitem_save_swizzle_textures();
           menuitem_load_swizzle_textures();
           ImGui::Separator();
+          menuitem_save_swizzle_as_one_image_textures();
+          menuitem_load_swizzle_as_one_image_textures();
+          ImGui::Separator();
           menuitem_save_deswizzle_textures();
           menuitem_load_deswizzle_textures();
      }
@@ -2495,6 +2498,20 @@ void gui::menuitem_save_swizzle_textures()
      m_modified_directory_map = map_directory_mode::save_swizzle_textures;
 }
 
+void gui::menuitem_save_swizzle_as_one_image_textures()
+{
+     if (!ImGui::MenuItem(gui_labels::save_swizzle_as_one_image_textures.data(), nullptr, false, true))
+     {
+          tool_tip("Browse for a directory to save swizzle as one image textures.");
+          return;
+     }
+     m_directory_browser.Open();
+     m_directory_browser.SetTitle(m_map_sprite->appends_prefix_base_name(gui_labels::choose_directory_to_save_textures_to));
+     m_directory_browser.SetDirectory(m_selections->get<ConfigKey::SwizzleAsOneImagePath>());
+     m_directory_browser.SetTypeFilters({ ".map", ".png" });
+     m_modified_directory_map = map_directory_mode::save_swizzle_as_one_image_textures;
+}
+
 void gui::menuitem_save_deswizzle_textures()
 {
      if (!ImGui::MenuItem(gui_labels::save_deswizzled_textures.data(), nullptr, false, true))
@@ -2508,23 +2525,24 @@ void gui::menuitem_save_deswizzle_textures()
      m_directory_browser.SetTypeFilters({ ".map", ".png" });
      m_modified_directory_map = map_directory_mode::save_deswizzle_textures;
 }
-void gui::menuitem_load_swizzle_textures()
+
+void gui::menuitem_load_swizzle_as_one_image_textures()
 {
-     if (!ImGui::MenuItem("Load Swizzled Textures", nullptr, false, true))
+     if (!ImGui::MenuItem("Load Swizzle as One Image Textures", nullptr, false, true))
      {
-          tool_tip("Browse for a directory containing swizzled textures.");
+          tool_tip(gui_labels::locate_a_custom_swizzle_as_one_image_directory);
           return;
      }
      m_directory_browser.Open();
      m_directory_browser.SetTitle(gui_labels::choose_directory_to_load_textures_from.data());
-     m_directory_browser.SetDirectory(m_selections->get<ConfigKey::SwizzlePath>());
+     m_directory_browser.SetDirectory(m_selections->get<ConfigKey::SwizzleAsOneImagePath>());
      m_directory_browser.SetTypeFilters({ ".map", ".png" });
-     m_modified_directory_map = map_directory_mode::load_swizzle_textures;
+     m_modified_directory_map = map_directory_mode::load_swizzle_as_one_image_textures;
 }
 
-void gui::menuitem_load_swizzle_textures2()
+void gui::menuitem_load_swizzle_textures()
 {
-     if (!ImGui::MenuItem(gui_labels::browse.data(), nullptr, false, true))
+     if (!ImGui::MenuItem("Load Swizzled Textures", nullptr, false, true))
      {
           tool_tip(gui_labels::locate_a_custom_swizzle_directory);
           return;
@@ -2535,25 +2553,12 @@ void gui::menuitem_load_swizzle_textures2()
      m_directory_browser.SetTypeFilters({ ".map", ".png" });
      m_modified_directory_map = map_directory_mode::load_swizzle_textures;
 }
+
 void gui::menuitem_load_deswizzle_textures()
 {
      if (!ImGui::MenuItem("Load Deswizzled Textures", nullptr, false, true))
      {
-          tool_tip("Browse for a directory containing deswizzled textures.");
-          return;
-     }
-     m_directory_browser.Open();
-     m_directory_browser.SetTitle(gui_labels::choose_directory_to_load_textures_from.data());
-     m_directory_browser.SetDirectory(m_selections->get<ConfigKey::DeswizzlePath>());
-     m_directory_browser.SetTypeFilters({ ".map", ".png" });
-     m_modified_directory_map = map_directory_mode::load_deswizzle_textures;
-}
-
-void gui::menuitem_load_deswizzle_textures2()
-{
-     if (!ImGui::MenuItem(gui_labels::browse.data(), nullptr, false, true))
-     {
-          tool_tip("Browse for a directory containing deswizzled textures.");
+          tool_tip(gui_labels::locate_a_custom_deswizzle_directory);
           return;
      }
      m_directory_browser.Open();
