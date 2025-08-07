@@ -1085,11 +1085,11 @@ bool map_sprite::fail() const
      }
      if (m_map_group.field.expired())
      {
-          return false;
+          return true;
      }
      if (!m_map_group.mim)
      {
-          return false;
+          return true;
      }
      if (m_map_group.mim->get_width(4_bpp, false) == 0)
      {
