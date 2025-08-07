@@ -165,76 +165,30 @@ GlidCopy FrameBuffer::color_attachment_id(std::uint32_t index) const
      //     assert(m_color_attachment[index] != 0U);
      return m_color_attachment[index];
 }
-static bool is_framebuffer_complete(GLenum target, std::string_view context = "")
-{
-     GLenum status = GlCall{}(glCheckFramebufferStatus, target);
-     if (status != GL_FRAMEBUFFER_COMPLETE)
-     {
-          spdlog::warn("Framebuffer incomplete in context: {} (status: 0x{:X})", context, status);
-          return false;
-     }
-     return true;
-}
+
 FrameBuffer FrameBuffer::clone() const
 {
-     const auto backup_fbo = backup();
-
-     this->bind_read();
-     if (!is_framebuffer_complete(GL_READ_FRAMEBUFFER, "FrameBuffer::clone - source"))
-     {
-          return {};
-     }
+     const auto  backup_fbo = backup();
 
      FrameBuffer copy(m_specification);
+
+     this->bind_read();
      copy.bind_draw();
-     if (!is_framebuffer_complete(GL_DRAW_FRAMEBUFFER, "FrameBuffer::clone - destination"))
-     {
-          return {};
-     }
-
-     for (const auto &[index, data] : std::ranges::views::zip(m_specification.attachments, attachments) | std::ranges::views::enumerate)
-     {
-          const auto &[format, attachment] = data;
-          if (format != FrameBufferTextureFormat::RGBA8)
-          {
-               // RED_INTEGER and others intentionally skipped
-               continue;
-          }
-          GLint maxColorAttachments = 0;
-          GlCall{}(glGetIntegerv, GL_MAX_COLOR_ATTACHMENTS, &maxColorAttachments);
-
-          if (!(std::cmp_greater_equal(attachment, GL_COLOR_ATTACHMENT0)
-                && std::cmp_less(attachment, GL_COLOR_ATTACHMENT0 + maxColorAttachments)))
-          {
-               continue;
-          }
-
-          // GLint objectType = GL_NONE;
-          // GlCall{}(
-          //   glGetFramebufferAttachmentParameteriv, GL_READ_FRAMEBUFFER, attachment, GL_FRAMEBUFFER_ATTACHMENT_OBJECT_TYPE, &objectType);
-
-          // if (objectType == GL_NONE)
-          // {
-          //      // Nothing attached at this read attachment
-          //      continue;
-          // }
-
-          GlCall{}(glReadBuffer, attachment);
-          GlCall{}(glDrawBuffer, attachment);
-          GlCall{}(
-            glBlitFramebuffer,
-            0,
-            0,
-            m_specification.width,
-            m_specification.height,
-            0,
-            0,
-            m_specification.width,
-            m_specification.height,
-            GL_COLOR_BUFFER_BIT,
-            GL_NEAREST);
-          (void)copy.bind_color_attachment(static_cast<std::uint32_t>(index));// generates mipmaps and binds the texture.
-     }
+     GlCall{}(glReadBuffer, GL_COLOR_ATTACHMENT0);
+     GlCall{}(glDrawBuffer, GL_COLOR_ATTACHMENT0);
+     GlCall{}(
+       glBlitFramebuffer,
+       0,
+       0,
+       m_specification.width,
+       m_specification.height,
+       0,
+       0,
+       m_specification.width,
+       m_specification.height,
+       GL_COLOR_BUFFER_BIT,
+       GL_NEAREST);
+     (void)copy.bind_color_attachment(0);// generates mipmaps and binds the texture.
      return copy;
 }
 
