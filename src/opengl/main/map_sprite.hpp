@@ -67,44 +67,44 @@ struct [[nodiscard]] map_sprite// final
      bool                                                                        m_draw_swizzle               = { false };
      bool                                                                        m_disable_texture_page_shift = { false };
      bool                                                                        m_disable_blends             = { false };
-     mutable ff_8::filters                         m_filters                 = { false };// default false should be override by gui to true.
-     std::weak_ptr<Selections>                     m_selections              = {};
-     bool                                          m_using_imported_texture  = {};
-     const glengine::Texture                      *m_imported_texture        = { nullptr };
-     std::uint16_t                                 m_imported_tile_size      = {};
-     Map                                           m_imported_tile_map       = {};
-     Map                                           m_imported_tile_map_front = {};
-     ff_8::all_unique_values_and_strings           m_all_unique_values_and_strings = {};
-     open_viii::graphics::Rectangle<std::uint32_t> m_canvas                        = {};
+     mutable ff_8::filters                           m_filters    = { false };// default false should be override by gui to true.
+     std::weak_ptr<Selections>                       m_selections = {};
+     bool                                            m_using_imported_texture        = {};
+     const glengine::Texture                        *m_imported_texture              = { nullptr };
+     std::uint16_t                                   m_imported_tile_size            = {};
+     Map                                             m_imported_tile_map             = {};
+     Map                                             m_imported_tile_map_front       = {};
+     ff_8::all_unique_values_and_strings             m_all_unique_values_and_strings = {};
+     open_viii::graphics::Rectangle<std::uint32_t>   m_canvas                        = {};
 
-     glengine::BatchRenderer                       m_batch_renderer                = { 1000 };
-     glengine::BatchRenderer                       m_batch_renderer_red_integer    = { 1,
-                                                                                       { std::filesystem::current_path() / "res" / "shader"
-                                                                                         / "red_integer.shader" } };
-     glengine::FrameBuffer                         out_texture                     = {};
-     mutable glengine::FrameBuffer                 m_render_framebuffer            = {};
-     mutable glengine::FrameBuffer                 m_drag_sprite_framebuffer       = {};
-     std::vector<std::size_t>                      m_saved_imported_indices        = {};
-     mutable bool                                  once                            = { true };
-     mutable glengine::OrthographicCamera          m_fixed_render_camera           = {};
+     glengine::BatchRenderer                         m_batch_renderer                = { 1000 };
+     glengine::BatchRenderer                         m_batch_renderer_red_integer    = { 1,
+                                                                                         { std::filesystem::current_path() / "res" / "shader"
+                                                                                           / "red_integer.shader" } };
 
-     static constexpr auto                         s_default_color                 = glm::vec4{ 1.F, 1.F, 1.F, 1.F };// white, fully opaque
-     static constexpr auto                         s_half_color    = glm::vec4{ 0.5F, 0.5F, 0.5F, 1.F };// dimmed, fully opaque
-     static constexpr auto                         s_quarter_color = glm::vec4{ 0.25F, 0.25F, 0.25F, 1.F };// very dim, fully opaque
+     mutable std::shared_ptr<glengine::FrameBuffer> m_render_framebuffer            = {};
 
-     mutable glm::vec4                             m_uniform_color = s_default_color;
-     [[nodiscard]] settings_backup                 get_backup_settings();
+     std::vector<std::size_t>                        m_saved_imported_indices        = {};
+     mutable bool                                    once                            = { true };
+     mutable glengine::OrthographicCamera            m_fixed_render_camera           = {};
+
+     static constexpr auto                           s_default_color = glm::vec4{ 1.F, 1.F, 1.F, 1.F };// white, fully opaque
+     static constexpr auto                           s_half_color    = glm::vec4{ 0.5F, 0.5F, 0.5F, 1.F };// dimmed, fully opaque
+     static constexpr auto                           s_quarter_color = glm::vec4{ 0.25F, 0.25F, 0.25F, 1.F };// very dim, fully opaque
+
+     mutable glm::vec4                               m_uniform_color = s_default_color;
+     [[nodiscard]] settings_backup                   get_backup_settings();
 
    public:
      map_sprite() = default;
      map_sprite(
-       ff_8::map_group           map_group,
-       bool                      draw_swizzle,
-       ff_8::filters             in_filters,
-       bool                      force_disable_blends,
-       bool                      require_coo,
-       std::weak_ptr<Selections> selections,
-       glengine::FrameBuffer     framebuffer = {});
+       ff_8::map_group                        map_group,
+       bool                                   draw_swizzle,
+       ff_8::filters                          in_filters,
+       bool                                   force_disable_blends,
+       bool                                   require_coo,
+       std::weak_ptr<Selections>              selections,
+       std::shared_ptr<glengine::FrameBuffer> framebuffer = std::make_shared<glengine::FrameBuffer>());
      explicit                                      operator ff_8::path_search() const;
 
      [[nodiscard]] std::optional<open_viii::LangT> get_opt_coo() const;
@@ -113,7 +113,8 @@ struct [[nodiscard]] map_sprite// final
 
      [[nodiscard]] const glengine::FrameBuffer    &get_framebuffer() const
      {
-          return m_render_framebuffer;
+          assert(m_render_framebuffer && "frame buffer is null ptr");
+          return *m_render_framebuffer;
      }
      [[nodiscard]] const glengine::Texture *get_texture(BPPT bpp, std::uint8_t palette, std::uint8_t texture_page) const;
      [[nodiscard]] const glengine::Texture *get_texture(const ff_8::PupuID &pupu) const;

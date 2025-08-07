@@ -28,13 +28,13 @@ namespace fme
 {
 
 map_sprite::map_sprite(
-  ff_8::map_group           map_group,
-  bool                      draw_swizzle,
-  ff_8::filters             in_filters,
-  bool                      force_disable_blends,
-  bool                      require_coo,
-  std::weak_ptr<Selections> selections,
-  glengine::FrameBuffer     framebuffer)
+  ff_8::map_group                        map_group,
+  bool                                   draw_swizzle,
+  ff_8::filters                          in_filters,
+  bool                                   force_disable_blends,
+  bool                                   require_coo,
+  std::weak_ptr<Selections>              selections,
+  std::shared_ptr<glengine::FrameBuffer> framebuffer)
   : m_map_group(
       !require_coo || (map_group.opt_coo && map_group.opt_coo.value() != open_viii::LangT::generic) ? std::move(map_group)
                                                                                                     : ff_8::map_group{})
@@ -110,29 +110,21 @@ map_sprite::operator ff_8::path_search() const
 
 map_sprite map_sprite::with_coo(const open_viii::LangT coo) const
 {
-     return { ff_8::map_group{ m_map_group.field, coo },
-              m_draw_swizzle,
-              m_filters,
-              m_disable_blends,
-              false,
-              m_selections,
-              m_render_framebuffer.clone() };
+     return {
+          ff_8::map_group{ m_map_group.field, coo }, m_draw_swizzle, m_filters, m_disable_blends, false, m_selections, m_render_framebuffer
+     };
 }
 
 map_sprite map_sprite::with_field(map_sprite::WeakField field, const open_viii::LangT coo) const
 {
-     return { ff_8::map_group{ std::move(field), coo },
-              m_draw_swizzle,
-              m_filters,
-              m_disable_blends,
-              false,
-              m_selections,
-              m_render_framebuffer.clone() };
+     return {
+          ff_8::map_group{ std::move(field), coo }, m_draw_swizzle, m_filters, m_disable_blends, false, m_selections, m_render_framebuffer
+     };
 }
 
 map_sprite map_sprite::with_filters(ff_8::filters filters) const
 {
-     return { m_map_group, m_draw_swizzle, std::move(filters), m_disable_blends, false, m_selections, m_render_framebuffer.clone() };
+     return { m_map_group, m_draw_swizzle, std::move(filters), m_disable_blends, false, m_selections, m_render_framebuffer };
 }
 
 bool map_sprite::empty() const
@@ -1027,7 +1019,8 @@ void map_sprite::update_render_texture(const bool reload_textures) const
           if (!fallback_textures())// see if no textures are loaded and fall back to .mim if not.
           {
                resize_render_texture();
-               (void)generate_texture(m_render_framebuffer);
+               assert(m_render_framebuffer && "m_render_framebuffer is nullptr");
+               (void)generate_texture(*m_render_framebuffer);
           }
      }
 }
@@ -1066,7 +1059,7 @@ void map_sprite::save([[maybe_unused]] const std::filesystem::path &path) const
           return;
      }
      consume_now();
-     std::future<void> task = save_image_pbo(path, m_render_framebuffer.clone());
+     std::future<void> task = save_image_pbo(path, m_render_framebuffer->clone());
      task.wait();
 }
 bool map_sprite::fail() const
@@ -1164,13 +1157,13 @@ void map_sprite::resize_render_texture() const
                return return_val;
           }();
 
-          while (std::cmp_greater(static_cast<int>(width()) * m_render_framebuffer.scale(), max_size)
-                 || std::cmp_greater(static_cast<int>(height()) * m_render_framebuffer.scale(), max_size))
+          while (std::cmp_greater(static_cast<int>(width()) * m_render_framebuffer->scale(), max_size)
+                 || std::cmp_greater(static_cast<int>(height()) * m_render_framebuffer->scale(), max_size))
           {
-               m_render_framebuffer.set_scale(static_cast<std::int32_t>(static_cast<std::uint32_t>(m_render_framebuffer.scale()) >> 1U));
-               if (m_render_framebuffer.scale() <= 1)
+               m_render_framebuffer->set_scale(static_cast<std::int32_t>(static_cast<std::uint32_t>(m_render_framebuffer->scale()) >> 1U));
+               if (m_render_framebuffer->scale() <= 1)
                {
-                    m_render_framebuffer.set_scale(1);
+                    m_render_framebuffer->set_scale(1);
                     break;
                }
           }
@@ -1183,34 +1176,30 @@ void map_sprite::resize_render_texture() const
 
           if (m_filters.deswizzle.enabled()) [[unlikely]]
           {
-               m_render_framebuffer.set_scale(max_height / static_cast<std::int32_t>(m_canvas.height()));
+               m_render_framebuffer->set_scale(max_height / static_cast<std::int32_t>(m_canvas.height()));
           }
           else [[likely]]
           {
-               m_render_framebuffer.set_scale(max_height / mim_texture_height);
+               m_render_framebuffer->set_scale(max_height / mim_texture_height);
           }
      }
      else
      {
-          m_render_framebuffer.set_scale(1U);
+          m_render_framebuffer->set_scale(1U);
      }
      if (const std::uint16_t tmp_scale = m_imported_tile_size / map_sprite::TILE_SIZE;
-         m_using_imported_texture && std::cmp_less(m_render_framebuffer.scale(), tmp_scale))
+         m_using_imported_texture && std::cmp_less(m_render_framebuffer->scale(), tmp_scale))
      {
-          m_render_framebuffer.set_scale(tmp_scale);
+          m_render_framebuffer->set_scale(tmp_scale);
      }
      check_size();
-     auto spec = glengine::FrameBufferSpecification{ .width  = static_cast<int>(width()) * m_render_framebuffer.scale(),
-                                                     .height = static_cast<int>(height()) * m_render_framebuffer.scale(),
-                                                     .scale  = m_render_framebuffer.scale() };
-     if (m_render_framebuffer.width() != spec.width && m_render_framebuffer.height() != spec.height)
+     auto spec = glengine::FrameBufferSpecification{ .width  = static_cast<int>(width()) * m_render_framebuffer->scale(),
+                                                     .height = static_cast<int>(height()) * m_render_framebuffer->scale(),
+                                                     .scale  = m_render_framebuffer->scale() };
+     if (m_render_framebuffer->width() != spec.width && m_render_framebuffer->height() != spec.height)
      {
-          m_render_framebuffer = glengine::FrameBuffer{ std::move(spec) };
-     }
-     m_drag_sprite_framebuffer =
-       glengine::FrameBuffer{ glengine::FrameBufferSpecification{ .width  = static_cast<int>(TILE_SIZE) * m_render_framebuffer.scale() * 3,
-                                                                  .height = static_cast<int>(TILE_SIZE) * m_render_framebuffer.scale() * 3,
-                                                                  .scale  = m_render_framebuffer.scale() } };
+          *m_render_framebuffer = glengine::FrameBuffer{ std::move(spec) };
+     }     
 }
 
 open_viii::graphics::Rectangle<std::uint32_t> map_sprite::get_canvas() const
@@ -1457,7 +1446,7 @@ const ff_8::MapHistory::nsat_map &map_sprite::working_animation_counts() const
 
      // Create an off-screen render texture to draw into.
      const auto specification =
-       glengine::FrameBufferSpecification{ .width = height, .height = height, .scale = m_render_framebuffer.scale() };
+       glengine::FrameBufferSpecification{ .width = height, .height = height, .scale = m_render_framebuffer->scale() };
 
      // Loop over all unique texture pages.
      for (const auto &texture_page : unique_texture_page_ids)
@@ -1581,7 +1570,7 @@ const ff_8::MapHistory::nsat_map &map_sprite::working_animation_counts() const
           return static_cast<std::uint8_t>(std::ranges::max(f_t_range));
      });
      const std::int32_t width                   = height * static_cast<std::int32_t>(max_texture_page_id)
-                                + ((max_source_x + TILE_SIZE) * m_render_framebuffer.scale());//(max_texture_page_id + 1);
+                                + ((max_source_x + TILE_SIZE) * m_render_framebuffer->scale());//(max_texture_page_id + 1);
 
      // If there’s only one bpp and at most one palette, nothing needs saving.
      if (unique_bpp.size() == 1U && unique_values.palette().at(unique_bpp.front()).values().size() <= 1U)
@@ -1603,7 +1592,7 @@ const ff_8::MapHistory::nsat_map &map_sprite::working_animation_counts() const
 
      // Create an off-screen render texture to draw into.
      const auto specification =
-       glengine::FrameBufferSpecification{ .width = width, .height = height, .scale = m_render_framebuffer.scale() };
+       glengine::FrameBufferSpecification{ .width = width, .height = height, .scale = m_render_framebuffer->scale() };
 
 
      // Loop over all unique texture pages.
@@ -1730,9 +1719,9 @@ std::string map_sprite::get_base_name() const
      future_of_futures.reserve(max_number_of_texture_pages);
 
      // Setup an off-screen render texture
-     iRectangle const canvas = m_map_group.maps.const_working().canvas() * m_render_framebuffer.scale();
+     iRectangle const canvas = m_map_group.maps.const_working().canvas() * m_render_framebuffer->scale();
      const auto       specification =
-       glengine::FrameBufferSpecification{ .width = canvas.width(), .height = canvas.height(), .scale = m_render_framebuffer.scale() };
+       glengine::FrameBufferSpecification{ .width = canvas.width(), .height = canvas.height(), .scale = m_render_framebuffer->scale() };
 
 
      // Loop through each Pupu ID and generate/save textures
@@ -1784,9 +1773,9 @@ std::string map_sprite::get_base_name() const
      const std::vector<ff_8::PupuID> &unique_pupu_ids   = working_unique_pupu();// Get list of unique Pupu IDs
      std::vector<std::future<void>>   future_of_futures = {};
      // Setup an off-screen render texture
-     iRectangle const                 canvas            = m_map_group.maps.const_working().canvas() * m_render_framebuffer.scale();
+     iRectangle const                 canvas            = m_map_group.maps.const_working().canvas() * m_render_framebuffer->scale();
      const auto                       specification =
-       glengine::FrameBufferSpecification{ .width = canvas.width(), .height = canvas.height(), .scale = m_render_framebuffer.scale() };
+       glengine::FrameBufferSpecification{ .width = canvas.width(), .height = canvas.height(), .scale = m_render_framebuffer->scale() };
      toml::table *coo_table = get_deswizzle_combined_coo_table();
      if (!coo_table)
      {
@@ -1907,9 +1896,9 @@ std::string map_sprite::get_base_name() const
      std::vector<std::future<void>> future_of_futures = {};
 
      // Setup an off-screen render texture
-     iRectangle const               canvas            = m_map_group.maps.const_working().canvas() * m_render_framebuffer.scale();
+     iRectangle const               canvas            = m_map_group.maps.const_working().canvas() * m_render_framebuffer->scale();
      const auto                     specification =
-       glengine::FrameBufferSpecification{ .width = canvas.width(), .height = canvas.height(), .scale = m_render_framebuffer.scale() };
+       glengine::FrameBufferSpecification{ .width = canvas.width(), .height = canvas.height(), .scale = m_render_framebuffer->scale() };
 
 
      const key_value_data        config_path_values = { .ext = ".toml" };
@@ -2005,9 +1994,9 @@ std::string map_sprite::get_base_name() const
      const std::string field_name = std::string{ str_to_lower(field->get_base_name()) };
 
      // Setup an off-screen render texture
-     iRectangle const  canvas     = m_map_group.maps.const_working().canvas() * m_render_framebuffer.scale();
+     iRectangle const  canvas     = m_map_group.maps.const_working().canvas() * m_render_framebuffer->scale();
      const auto        specification =
-       glengine::FrameBufferSpecification{ .width = canvas.width(), .height = canvas.height(), .scale = m_render_framebuffer.scale() };
+       glengine::FrameBufferSpecification{ .width = canvas.width(), .height = canvas.height(), .scale = m_render_framebuffer->scale() };
 
      const toml::table *coo_table = get_deswizzle_combined_coo_table();
      if (!coo_table)
