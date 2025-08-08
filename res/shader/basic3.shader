@@ -35,8 +35,8 @@ void main()
   #version 450
 
 layout(location = 0) out vec4 color;
-layout(location = 1) out int tile_id;
-layout(location = 2) out vec4 out_mask;
+layout(location = 1) out uvec4 out_mask;
+layout(location = 2) out int tile_id;
 
 struct vertex_output
 {
@@ -55,11 +55,11 @@ uniform vec4 u_Tint;
 uniform vec2 u_Grid;
 
 vec4 encode_uint_to_rgba(uint id) {
-    return vec4(
-        float((id >> 24u) & 0xFFu) / 255.0,
-        float((id >> 16u) & 0xFFu) / 255.0,
-        float((id >>  8u) & 0xFFu) / 255.0,
-        float(id & 0xFFu) / 255.0
+    return uvec4(
+        (id >> 24) & 0xFFu,
+        (id >> 16) & 0xFFu,
+        (id >>  8) & 0xFFu,
+        id & 0xFFu
     );
 }
 
