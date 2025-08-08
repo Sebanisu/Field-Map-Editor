@@ -979,6 +979,11 @@ void gui::hovered_tiles_panel()
 }
 void gui::combo_coo()
 {
+     bool remaster = m_field->is_remaster_from_fl_paths();
+     if (!remaster)
+     {
+          return;
+     }
      constexpr static auto values = open_viii::LangCommon::to_array();
      const auto            gcc    = GenericCombo(
        gui_labels::language,
@@ -1837,7 +1842,8 @@ void gui::file_menu()
      {
           return;
      }
-     if (ImGui::BeginMenu(gui_labels::language.data()))
+     bool remaster = m_field->is_remaster_from_fl_paths();
+     if (remaster && ImGui::BeginMenu(gui_labels::language.data()))
      {
           const auto            end_menu1 = glengine::ScopeGuard(&ImGui::EndMenu);
           constexpr static auto values    = open_viii::LangCommon::to_array();
@@ -1949,7 +1955,7 @@ void gui::file_menu()
                menu_map_paths();
           }
           menuitem_save_swizzle_textures();
-          menuitem_save_swizzle_as_one_image_textures();          
+          menuitem_save_swizzle_as_one_image_textures();
           menuitem_save_deswizzle_textures();
      }
 }

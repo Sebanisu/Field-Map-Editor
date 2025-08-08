@@ -1670,34 +1670,7 @@ std::string map_sprite::get_base_name() const
      const auto                     specification =
        glengine::FrameBufferSpecification{ .width = canvas.width(), .height = canvas.height(), .scale = m_render_framebuffer->scale() };
 
-
-     const key_value_data        config_path_values = { .ext = ".toml" };
-     const std::filesystem::path config_path =
-       config_path_values.replace_tags("{selected_path}/res/deswizzle{ext}"s, selections, selected_path);
-     const auto config = Configuration(config_path);
-
-     const auto coo =
-       m_map_group.opt_coo.has_value() && m_map_group.opt_coo.value() != open_viii::LangT::generic ? m_map_group.opt_coo : std::nullopt;
-
-     std::string my_coo_key = [&]() {
-          if (coo.has_value())
-          {
-               return std::string(open_viii::LangCommon::to_string_3_char(coo.value()));
-          }
-          else
-          {
-               const auto opt_coo_local = field->get_lang_from_fl_paths();
-               if (opt_coo_local.has_value() && std::to_underlying(opt_coo_local.value()) < std::to_underlying(open_viii::LangT::generic))
-               {
-                    return std::string(open_viii::LangCommon::to_string_3_char(opt_coo_local.value()));
-               }
-               else
-               {
-                    return "x"s;
-               }
-          }
-     }();
-     const toml::table *coo_table = get_deswizzle_combined_coo_table();
+       const toml::table *coo_table = get_deswizzle_combined_coo_table();
      if (!coo_table)
      {
           return {};
@@ -1837,7 +1810,7 @@ toml::table *map_sprite::get_deswizzle_combined_coo_table()
                                        ? m_map_group.opt_coo
                                        : field->get_lang_from_fl_paths();
 
-     const std::string my_coo_key  = (coo.has_value() && std::to_underlying(coo.value()) < std::to_underlying(open_viii::LangT::generic))
+     const std::string my_coo_key  = (coo.has_value())
                                        ? std::string(open_viii::LangCommon::to_string_3_char(coo.value()))
                                        : "x";
 
