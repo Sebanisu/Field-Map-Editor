@@ -14,6 +14,7 @@ enum class FrameBufferTextureFormat
 {
      None,
      RGBA8,
+     RGBA8UI,
      RED_INTEGER,
 };
 struct FrameBufferSpecification
