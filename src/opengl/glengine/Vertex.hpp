@@ -13,19 +13,26 @@ namespace glengine
 {
 struct Vertex
 {
-     glm::vec3                     location      = {};
-     glm::vec4                     color         = { 1.F, 1.F, 1.F, 1.F };
-     glm::vec2                     uv            = {};
-     float                         texture_slot  = {};
-     float                         tiling_factor = { 1.F };
-     int                           tile_id       = { -1 };
-     static VertexBufferLayout<6U> layout();
+     glm::vec3    location      = {};
+     glm::vec4    color         = { 1.F, 1.F, 1.F, 1.F };
+     glm::vec2    uv            = {};
+     float        texture_slot  = {};
+     float        tiling_factor = { 1.F };
+     int          tile_id       = { -1 };
+     unsigned int pupu_id       = { 0 };
+
+     static auto consteval layout()
+     {
+          return VertexBufferLayout{ glengine::VertexBufferElementType<float>{ 3U },       glengine::VertexBufferElementType<float>{ 4U },
+                                     glengine::VertexBufferElementType<float>{ 2U },       glengine::VertexBufferElementType<float>{ 1U },
+                                     glengine::VertexBufferElementType<float>{ 1U },       glengine::VertexBufferElementType<int>{ 1U },
+                                     glengine::VertexBufferElementType<unsigned int>{ 1U } };
+     }
 };
 static_assert(std::movable<Vertex> && std::copyable<Vertex> && std::default_initializable<Vertex>);
 
 using Quad                            = std::array<Vertex, 4U>;
 static constexpr auto QuadIndicesInit = std::array<std::uint32_t, 6U>{ 0, 1, 2, 2, 3, 0 };
-
 
 
 template<std::size_t count>

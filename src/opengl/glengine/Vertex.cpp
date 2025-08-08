@@ -3,15 +3,6 @@
 namespace glengine
 {
 
-VertexBufferLayout<6U> Vertex::layout()
-{
-     return {
-          glengine::VertexBufferElementType<float>{ 3U }, glengine::VertexBufferElementType<float>{ 4U },
-          glengine::VertexBufferElementType<float>{ 2U }, glengine::VertexBufferElementType<float>{ 1U },
-          glengine::VertexBufferElementType<float>{ 1U }, glengine::VertexBufferElementType<int>{ 1U },
-     };
-}
-
 Quad CreateQuad(
   const glm::vec3                 offset,
   const glm::vec4                 color,
