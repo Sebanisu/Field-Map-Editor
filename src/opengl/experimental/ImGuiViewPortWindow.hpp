@@ -68,7 +68,7 @@ inline namespace impl
                               const auto ffb = FrameBufferBackup();
                               m_fb.bind();
                               m_clear_impl();
-                              m_fb.clear_red_integer_color_attachment();
+                              m_fb.clear_non_standard_color_attachments();
                               callable();
                               if (m_debug_text)
                               {

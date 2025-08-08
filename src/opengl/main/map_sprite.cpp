@@ -592,7 +592,7 @@ void map_sprite::update_position(
                          return get_texture(pupu_id);
                     }
                }();
-               
+
                if (texture == nullptr || texture->height() == 0 || texture->width() == 0)
                {
                     return;
@@ -666,7 +666,8 @@ void map_sprite::update_position(
                  subtexture,
                  draw_position,
                  glm::vec2{ static_cast<float>(TILE_SIZE * target_framebuffer.scale()) },
-                 static_cast<int>(m_map_group.maps.get_offset_from_working(tile)));
+                 static_cast<int>(m_map_group.maps.get_offset_from_working(tile)),
+                 pupu_id.raw());
                drew = true;
           });
      }
@@ -1343,22 +1344,22 @@ const ff_8::MapHistory::nsat_map &map_sprite::working_animation_counts() const
      }
      consume_now();
      // Extract unique texture page IDs and BPP (bits per pixel) values from the map.
-     const auto         unique_values           = get_all_unique_values_and_strings();
-     const auto        &unique_texture_page_ids = unique_values.texture_page_id().values();
-     const auto        &unique_bpp              = unique_values.bpp().values();
-     const auto         max_texture_page_id     = std::ranges::max(unique_texture_page_ids);
+     const auto      unique_values           = get_all_unique_values_and_strings();
+     const auto     &unique_texture_page_ids = unique_values.texture_page_id().values();
+     const auto     &unique_bpp              = unique_values.bpp().values();
+     const auto      max_texture_page_id     = std::ranges::max(unique_texture_page_ids);
 
      // Backup and override current settings for exporting textures.
-     settings_backup    settings                = get_backup_settings(true);
-     settings.disable_texture_page_shift        = false;// Disable texture page shifts
-     std::int32_t       height                  = static_cast<std::int32_t>(get_max_texture_height());
+     settings_backup settings                = get_backup_settings(true);
+     settings.disable_texture_page_shift     = false;// Disable texture page shifts
+     std::int32_t       height               = static_cast<std::int32_t>(get_max_texture_height());
 
-     const auto         max_source_x            = m_map_group.maps.working().visit_tiles([&](const auto &tiles) -> std::uint8_t {
+     const auto         max_source_x         = m_map_group.maps.working().visit_tiles([&](const auto &tiles) -> std::uint8_t {
           auto f_t_range = tiles | std::ranges::views::filter([&](const auto &tile) { return tile.texture_id() == max_texture_page_id; })
                            | std::ranges::views::transform([](const auto &tile) { return tile.source_x(); });
           return static_cast<std::uint8_t>(std::ranges::max(f_t_range));
      });
-     const std::int32_t width                   = height * static_cast<std::int32_t>(max_texture_page_id)
+     const std::int32_t width                = height * static_cast<std::int32_t>(max_texture_page_id)
                                 + ((max_source_x + TILE_SIZE) * m_render_framebuffer->scale());//(max_texture_page_id + 1);
 
      // If there’s only one bpp and at most one palette, nothing needs saving.
@@ -1670,7 +1671,7 @@ std::string map_sprite::get_base_name() const
      const auto                     specification =
        glengine::FrameBufferSpecification{ .width = canvas.width(), .height = canvas.height(), .scale = m_render_framebuffer->scale() };
 
-       const toml::table *coo_table = get_deswizzle_combined_coo_table();
+     const toml::table *coo_table = get_deswizzle_combined_coo_table();
      if (!coo_table)
      {
           return {};
@@ -1810,9 +1811,7 @@ toml::table *map_sprite::get_deswizzle_combined_coo_table()
                                        ? m_map_group.opt_coo
                                        : field->get_lang_from_fl_paths();
 
-     const std::string my_coo_key  = (coo.has_value())
-                                       ? std::string(open_viii::LangCommon::to_string_3_char(coo.value()))
-                                       : "x";
+     const std::string my_coo_key  = (coo.has_value()) ? std::string(open_viii::LangCommon::to_string_3_char(coo.value())) : "x";
 
 
      toml::table      *field_table = nullptr;
@@ -2072,7 +2071,7 @@ bool map_sprite::generate_texture(const glengine::FrameBuffer &fbo) const
      fbo.bind();
      glengine::GlCall{}(glViewport, 0, 0, fbo.width(), fbo.height());
      glengine::Renderer::Clear();
-     fbo.clear_red_integer_color_attachment();
+     fbo.clear_non_standard_color_attachments();
      const auto brb = m_batch_renderer.backup();
      m_batch_renderer.bind();
      set_uniforms(fbo, m_batch_renderer.shader());
@@ -2080,7 +2079,8 @@ bool map_sprite::generate_texture(const glengine::FrameBuffer &fbo) const
      if (local_draw(fbo, m_batch_renderer))
      {
           //(void)draw_imported(fbo);
-          fbo.bind_color_attachment();
+          fbo.bind_color_attachment(0);
+          fbo.bind_color_attachment(2);
           return true;
      }
      return false;

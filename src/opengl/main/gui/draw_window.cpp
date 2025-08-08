@@ -214,7 +214,7 @@ void fme::draw_window::render() const
 
           const auto pop_id1 = PushPopID();
           ImGui::GetWindowDrawList()->AddImage(
-            glengine::ConvertGliDtoImTextureId<ImTextureID>(framebuffer.color_attachment_id()),
+            glengine::ConvertGliDtoImTextureId<ImTextureID>(framebuffer.color_attachment_id(2)),
             screen_pos,
             ImVec2{ screen_pos.x + scaled_size.x, screen_pos.y + scaled_size.y });
 

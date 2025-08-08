@@ -21,8 +21,8 @@ struct FrameBufferSpecification
 {
      std::array<FrameBufferTextureFormat, 4U> attachments = { FrameBufferTextureFormat::RGBA8,
                                                               FrameBufferTextureFormat::RGBA8UI,
-                                                              FrameBufferTextureFormat::RED_INTEGER,
-                                                              {} };
+                                                              FrameBufferTextureFormat::RGBA8,
+                                                              FrameBufferTextureFormat::RED_INTEGER };
      int                                      width       = {};
      int                                      height      = {};
      int                                      scale       = { 1 };
@@ -107,17 +107,26 @@ class FrameBuffer
      void                     set_scale(int);
      [[nodiscard]] int        read_pixel(uint32_t attachment_index, int x, int y) const;
 
-     void                     clear_red_integer_color_attachment() const
+     void                     clear_non_standard_color_attachments() const
      {
           for (uint8_t i{}; i != 4U; ++i)
           {
-               if (m_specification.attachments[i] != FrameBufferTextureFormat::RED_INTEGER)
+               switch (m_specification.attachments[i])
                {
-                    continue;
+                    case FrameBufferTextureFormat::RGBA8UI: {
+                         static constexpr const std::array<GLuint, 4> clearValue = {};
+                         GlCall{}(glClearTexImage, m_color_attachment[1], 0, GL_RGBA_INTEGER, GL_UNSIGNED_INT, clearValue.data());
+                         break;
+                    }
+                    case FrameBufferTextureFormat::RED_INTEGER: {
+                         static constexpr const int value = -1;
+                         GlCall{}(glClearTexImage, m_color_attachment[i], 0, GL_RED_INTEGER, GL_INT, &value);
+                         break;
+                    }
+                    default:
+                         // unhandled.
+                         break;
                }
-               const int value = -1;
-
-               GlCall{}(glClearTexImage, m_color_attachment[i], 0, GL_RED_INTEGER, GL_INT, &value);
           }
      }
 

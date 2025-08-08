@@ -78,9 +78,9 @@ struct [[nodiscard]] map_sprite// final
      open_viii::graphics::Rectangle<std::uint32_t>  m_canvas                        = {};
 
      glengine::BatchRenderer                        m_batch_renderer                = { 1000 };
-     glengine::BatchRenderer                        m_batch_renderer_red_integer    = { 1,
-                                                                                        { std::filesystem::current_path() / "res" / "shader"
-                                                                                          / "red_integer.shader" } };
+     // glengine::BatchRenderer                        m_batch_renderer_red_integer    = { 1,
+     //                                                                                    { std::filesystem::current_path() / "res" / "shader"
+     //                                                                                      / "red_integer.shader" } };
 
      mutable std::shared_ptr<glengine::FrameBuffer> m_render_framebuffer            = {};
 

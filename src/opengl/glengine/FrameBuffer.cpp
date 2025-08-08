@@ -189,10 +189,31 @@ FrameBuffer FrameBuffer::clone() const
 
      FrameBuffer copy(m_specification);
 
+     // Bind this FBO for reading
      this->bind_read();
+
+     // Bind copy FBO for drawing
      copy.bind_draw();
+
+     // Blit COLOR_ATTACHMENT0
      GlCall{}(glReadBuffer, GL_COLOR_ATTACHMENT0);
      GlCall{}(glDrawBuffer, GL_COLOR_ATTACHMENT0);
+     GlCall{}(
+       glBlitFramebuffer,
+       0,
+       0,
+       m_specification.width,
+       m_specification.height,
+       0,
+       0,
+       m_specification.width,
+       m_specification.height,
+       GL_COLOR_BUFFER_BIT,
+       GL_NEAREST);
+
+     // Blit COLOR_ATTACHMENT1
+     GlCall{}(glReadBuffer, GL_COLOR_ATTACHMENT1);
+     GlCall{}(glDrawBuffer, GL_COLOR_ATTACHMENT1);
      GlCall{}(
        glBlitFramebuffer,
        0,

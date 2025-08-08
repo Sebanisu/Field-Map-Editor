@@ -168,7 +168,7 @@ class Map
 
                     glengine::GlCall{}(glViewport, 0, 0, m_frame_buffer.specification().width, m_frame_buffer.specification().height);
                     glengine::Renderer::Clear();
-                    m_frame_buffer.clear_red_integer_color_attachment();
+                    m_frame_buffer.clear_non_standard_color_attachments();
                     render_tiles();
                     if (!m_saving)
                     {
@@ -676,7 +676,8 @@ class Map
                  *sub_texture,
                  tile_to_draw_pos(tile),
                  m_map_dims.scaled_tile_size(),
-                 static_cast<int>(GetMapHistory()->get_offset_from_working(tile)));
+                 static_cast<int>(GetMapHistory()->get_offset_from_working(tile)),
+                 GetMapHistory()->get_pupu_from_working(tile).raw());
                return true;
           });
           m_batch_renderer.draw();

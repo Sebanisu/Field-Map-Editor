@@ -90,9 +90,9 @@ void BatchRenderer::draw_quad(const SubTexture &texture, glm::vec3 offset, glm::
 {
      draw_quad(offset, { 1.F, 1.F, 1.F, 1.F }, texture, 1.F, size);
 }
-void BatchRenderer::draw_quad(const SubTexture &texture, glm::vec3 offset, glm::vec2 size, int id) const
+void BatchRenderer::draw_quad(const SubTexture &texture, glm::vec3 offset, glm::vec2 size, int id, unsigned int pupu_id) const
 {
-     draw_quad(offset, { 1.F, 1.F, 1.F, 1.F }, texture, 1.F, size, id);
+     draw_quad(offset, { 1.F, 1.F, 1.F, 1.F }, texture, 1.F, size, id, pupu_id);
 }
 void BatchRenderer::draw_quad(
   glm::vec3         offset,
@@ -100,12 +100,13 @@ void BatchRenderer::draw_quad(
   const SubTexture &texture,
   const float       tiling_factor,
   glm::vec2         size,
-  int               id) const
+  int               id,
+  unsigned int      pupu_id) const
 {
      if (const auto result = std::ranges::find(m_texture_slots, texture.id()); result != std::ranges::end(m_texture_slots))
      {
           draw(CreateQuad(
-            offset, color, static_cast<int>(result - std::ranges::begin(m_texture_slots)), tiling_factor, texture.uv(), size, id));
+            offset, color, static_cast<int>(result - std::ranges::begin(m_texture_slots)), tiling_factor, texture.uv(), size, id, pupu_id));
      }
      else
      {
@@ -115,7 +116,8 @@ void BatchRenderer::draw_quad(
                flush_vertices();
           }
           m_texture_slots.push_back(texture.id());
-          draw(CreateQuad(offset, color, static_cast<int>(std::ranges::size(m_texture_slots) - 1U), tiling_factor, texture.uv(), size));
+          draw(CreateQuad(
+            offset, color, static_cast<int>(std::ranges::size(m_texture_slots) - 1U), tiling_factor, texture.uv(), size, id, pupu_id));
      }
 }
 void BatchRenderer::draw_quad(glm::vec3 offset, glm::vec4 color) const
