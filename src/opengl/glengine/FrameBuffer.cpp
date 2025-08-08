@@ -91,6 +91,16 @@ static decltype(auto) GenerateColorAttachments(const FrameBufferSpecification &s
                case FrameBufferTextureFormat::RGBA8: {
                     return Glid{ AttachColorTexture(spec.width, spec.height, GL_RGBA8, GL_RGBA), Texture::destroy };
                }
+               case FrameBufferTextureFormat::RGBA8UI: {
+                    return Glid{ AttachColorTexture(
+                                   spec.width,
+                                   spec.height,
+                                   GL_RGBA8UI,// internal format: 8-bit unsigned int RGBA
+                                   GL_RGBA_INTEGER,// format: integer RGBA
+                                   GL_UNSIGNED_BYTE// type: unsigned byte per channel
+                                   ),
+                                 Texture::destroy };
+               }
                case FrameBufferTextureFormat::RED_INTEGER: {
                     return Glid{ AttachColorTexture(spec.width, spec.height, GL_R32I, GL_RED_INTEGER, GL_INT), Texture::destroy };
                }
@@ -154,8 +164,15 @@ SubTexture FrameBuffer::bind_color_attachment(std::uint32_t index) const
      // called here to update mipmaps after texture changed.
      auto r = SubTexture(m_color_attachment[index]);
      r.bind();
-     if (m_specification.attachments[index] == FrameBufferTextureFormat::RGBA8)
-          GlCall{}(glGenerateMipmap, GL_TEXTURE_2D);
+     switch (m_specification.attachments[index])
+     {
+          case FrameBufferTextureFormat::RGBA8: {
+               GlCall{}(glGenerateMipmap, GL_TEXTURE_2D);
+               break;
+          }
+          default:
+               break;
+     }
      return r;
 }
 
@@ -229,15 +246,23 @@ int FrameBuffer::read_pixel(uint32_t attachment_index, int x, int y) const
      int pixel_data = { -1 };
      assert(attachment_index < 4);
      assert(m_color_attachment[attachment_index] != 0);
-     if (m_specification.attachments[attachment_index] == FrameBufferTextureFormat::RGBA8)
+     switch (m_specification.attachments[attachment_index])
      {
-          GlCall{}(glReadBuffer, attachments[attachment_index]);
-          GlCall{}(glReadPixels, x, y, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, &pixel_data);
-     }
-     else if (m_specification.attachments[attachment_index] == FrameBufferTextureFormat::RED_INTEGER)
-     {
-          GlCall{}(glReadBuffer, attachments[attachment_index]);
-          GlCall{}(glReadPixels, x, y, 1, 1, GL_RED_INTEGER, GL_INT, &pixel_data);
+          case FrameBufferTextureFormat::RGBA8: {
+               GlCall{}(glReadBuffer, attachments[attachment_index]);
+               GlCall{}(glReadPixels, x, y, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, &pixel_data);
+               break;
+          }
+          case FrameBufferTextureFormat::RGBA8UI: {
+               GlCall{}(glReadBuffer, attachments[attachment_index]);
+               GlCall{}(glReadPixels, x, y, 1, 1, GL_RGBA_INTEGER, GL_UNSIGNED_BYTE, &pixel_data);
+               break;
+          }
+          case FrameBufferTextureFormat::RED_INTEGER: {
+               GlCall{}(glReadBuffer, attachments[attachment_index]);
+               GlCall{}(glReadPixels, x, y, 1, 1, GL_RED_INTEGER, GL_INT, &pixel_data);
+               break;
+          }
      }
      return pixel_data;
 }
