@@ -13,13 +13,13 @@ namespace glengine
 {
 struct Vertex
 {
-     glm::vec3    location      = {};
-     glm::vec4    color         = { 1.F, 1.F, 1.F, 1.F };
-     glm::vec2    uv            = {};
-     float        texture_slot  = {};
-     float        tiling_factor = { 1.F };
-     int          tile_id       = { -1 };
-     unsigned int pupu_id       = { 0 };
+     glm::vec3     location      = {};
+     glm::vec4     color         = { 1.F, 1.F, 1.F, 1.F };
+     glm::vec2     uv            = {};
+     float         texture_slot  = {};
+     float         tiling_factor = { 1.F };
+     int           tile_id       = { -1 };
+     std::uint32_t pupu_id       = { 0 };
 
      static auto consteval layout()
      {
@@ -59,9 +59,10 @@ Quad CreateQuad(
   const glm::vec4                 color,
   const int                       texture_id    = {},
   const float                     tiling_factor = 1.F,
-  const std::array<glm::vec2, 4U> uv   = { glm::vec2{ 0.F, 0.F }, glm::vec2{ 1.F, 0.F }, glm::vec2{ 1.F, 1.F }, glm::vec2{ 0.F, 1.F } },
-  const glm::vec2                 size = { 1.F, 1.F },
-  const int                       id   = -1);
+  const std::array<glm::vec2, 4U> uv      = { glm::vec2{ 0.F, 0.F }, glm::vec2{ 1.F, 0.F }, glm::vec2{ 1.F, 1.F }, glm::vec2{ 0.F, 1.F } },
+  const glm::vec2                 size    = { 1.F, 1.F },
+  const int                       id      = -1,
+  const std::uint32_t             pupu_id = 0);
 
 [[nodiscard]] std::vector<std::uint32_t> QuadIndices(std::size_t count);
 std::vector<Vertex>                     &operator+=(std::vector<Vertex> &vertices, const Quad &quad);
