@@ -7,6 +7,7 @@ layout(location = 2) in vec2 a_texCoord;
 layout(location = 3) in float a_texture;
 layout(location = 4) in float a_tiling_factor;
 layout(location = 5) in int a_tile_id;
+layout(location = 6) in uint a_pupu_id;
 
 struct vertex_output
 {
@@ -17,6 +18,7 @@ struct vertex_output
 };
 layout(location = 0) out vertex_output v;
 layout(location = 4) out flat int v_tile_id;
+layout(location = 5) out flat uint v_pupu_id;
 uniform mat4 u_MVP;
 
 void main()
@@ -27,12 +29,14 @@ void main()
   v.tiling_factor = a_tiling_factor;
   v.color = a_color;
   v_tile_id = a_tile_id;
+  v_pupu_id = a_pupu_id;
 }
   #shader fragment
   #version 450
 
 layout(location = 0) out vec4 color;
 layout(location = 1) out int tile_id;
+layout(location = 2) out vec4 out_mask;
 
 struct vertex_output
 {
@@ -43,19 +47,27 @@ struct vertex_output
 };
 layout(location = 0) in vertex_output v;
 layout(location = 4) in flat int v_tile_id;
+layout(location = 5) in flat uint v_pupu_id;
 
 uniform sampler2D u_Textures[32];
 
 uniform vec4 u_Tint;
 uniform vec2 u_Grid;
-//uniform sampler2D u_Texture;
+
+vec4 encode_uint_to_rgba(uint id) {
+    return vec4(
+        float((id >> 24u) & 0xFFu) / 255.0,
+        float((id >> 16u) & 0xFFu) / 255.0,
+        float((id >>  8u) & 0xFFu) / 255.0,
+        float(id & 0xFFu) / 255.0
+    );
+}
 
 void main()
 {
-  tile_id = v_tile_id;
-  //color = vec4(1.0);
-  //color2 = vec4(1.0, 0.0, 0.0, 1.0);
-
+  tile_id = v_tile_id;  
+  out_mask  = encode_uint_to_rgba(v_pupu_id);
+  
   uint index = uint(v.texture);
   vec4 texColor = texture(u_Textures[index], v.TexCoord * v.tiling_factor);
   ivec2 textureSize2d = textureSize(u_Textures[index], 0);
