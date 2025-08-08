@@ -44,7 +44,7 @@ class VertexArray
             [i = std::uint32_t{}, offset = static_cast<const std::uint8_t *>(nullptr), &layout](
               const VertexBufferElement &element) mutable {
                  GlCall{}(glEnableVertexAttribArray, i);
-                 if (element.m_type == GL_INT)
+                 if (element.m_type == GL_INT || element.m_type == GL_UNSIGNED_INT)
                  {
                       GlCall{}(glVertexAttribIPointer, i, element.m_count, element.m_type, layout.stride(), offset);
                  }
