@@ -2,6 +2,11 @@ image:
   - Visual Studio 2022
 clone_folder: c:\projects\source
 
+install:
+  - ps: Start-Process -FilePath "C:\Program Files (x86)\Microsoft Visual Studio\Installer\vs_installer.exe" `
+        -ArgumentList "update --quiet --norestart --wait" `
+        -Wait
+
 environment:
   PYTHON: "C:\\Python38-x64\\python.exe"
 
