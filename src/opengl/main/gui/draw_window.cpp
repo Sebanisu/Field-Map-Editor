@@ -197,20 +197,43 @@ void fme::draw_window::render() const
           }
 
 
-          const auto   wsize       = ImGui::GetContentRegionAvail();
-          const auto  &framebuffer = t_map_sprite->get_framebuffer();
-          const auto   img_size    = framebuffer.get_size();
+          const auto                wsize       = ImGui::GetContentRegionAvail();
+          const auto               &framebuffer = t_map_sprite->get_framebuffer();
+          const auto                img_size    = framebuffer.get_size();
 
-          const auto   screen_pos  = ImGui::GetCursorScreenPos();
-          const float  scale       = (std::max)(wsize.x / static_cast<float>(img_size.x), wsize.y / static_cast<float>(img_size.y));
-          const ImVec2 scaled_size(static_cast<float>(img_size.x) * scale, static_cast<float>(img_size.y) * scale);
+          const auto                screen_pos  = ImGui::GetCursorScreenPos();
+          const float               scale = (std::max)(wsize.x / static_cast<float>(img_size.x), wsize.y / static_cast<float>(img_size.y));
+          const ImVec2              scaled_size(static_cast<float>(img_size.x) * scale, static_cast<float>(img_size.y) * scale);
+
+          const BackgroundSettings &bg_settings = selections->get<ConfigKey::BackgroundSettings>();
+          const auto                color1      = [&]() {
+               if (HasFlag(bg_settings, BackgroundSettings::Solid) || HasFlag(bg_settings, BackgroundSettings::TwoColors))
+               {
+                    return selections->get<ConfigKey::BackgroundColor>();
+               }
+               return selections->get<ConfigKey::BackgroundColor>().fade(-0.2F);
+          }();
+
+          const auto color2 = [&]() {
+               if (HasFlag(bg_settings, BackgroundSettings::Solid))
+               {
+                    return selections->get<ConfigKey::BackgroundColor>();
+               }
+               if (HasFlag(bg_settings, BackgroundSettings::TwoColors))
+               {
+                    return selections->get<ConfigKey::BackgroundColor2>();
+               }
+               return selections->get<ConfigKey::BackgroundColor>().fade(0.2F);
+          }();
+
 
           DrawCheckerboardBackground(
             screen_pos,
             scaled_size,
-            (static_cast<float>(framebuffer.scale()) * 4.F) * scale,
-            selections->get<ConfigKey::BackgroundColor>().fade(-0.2F),
-            selections->get<ConfigKey::BackgroundColor>().fade(0.2F));
+            (static_cast<float>(framebuffer.scale()) * static_cast<float>(selections->get<ConfigKey::BackgroundCheckerboardScale>()))
+              * scale,
+            color1,
+            color2);
 
           const auto pop_id1 = PushPopID();
           ImGui::GetWindowDrawList()->AddImage(

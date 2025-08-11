@@ -200,22 +200,6 @@ struct fmt::formatter<open_viii::LangT> : fmt::formatter<std::string_view>
      }
 };
 
-
-// template<open_viii::Number numT>
-// struct fmt::formatter<sf::Vector2<numT>> : fmt::formatter<numT>
-// {
-//      // parse is inherited from formatter<std::underlying_type_t<tile_sizes>>.
-//      template<typename FormatContext>
-//      constexpr auto format(sf::Vector2<numT> point, FormatContext &ctx) const
-//      {
-//           fmt::format_to(ctx.out(), "{}", '(');
-//           fmt::formatter<numT>::format(point.x, ctx);
-//           fmt::format_to(ctx.out(), "{}", ", ");
-//           fmt::formatter<numT>::format(point.y, ctx);
-//           return fmt::format_to(ctx.out(), "{}", ')');
-//      }
-// };
-
 template<open_viii::Number numT>
 struct fmt::formatter<open_viii::graphics::Point<numT>> : fmt::formatter<numT>
 {
@@ -230,6 +214,50 @@ struct fmt::formatter<open_viii::graphics::Point<numT>> : fmt::formatter<numT>
           return fmt::format_to(ctx.out(), "{}", ')');
      }
 };
+
+template<>
+struct fmt::formatter<fme::BackgroundSettings>
+{
+     // parse is default; no custom format parsing needed
+     template<typename ParseContext>
+     constexpr auto parse(ParseContext &ctx)
+     {
+          return ctx.begin();
+     }
+
+     template<typename FormatContext>
+     auto format(fme::BackgroundSettings bs, FormatContext &ctx) const
+     {
+          using enum fme::BackgroundSettings;
+
+          if (bs == Default)
+          {
+               return fmt::format_to(ctx.out(), "Default (OneColor | Checkerboard)");
+          }
+
+          bool       first      = true;
+
+          const auto write_part = [&](std::string_view part) {
+               if (!first)
+                    fmt::format_to(ctx.out(), " | ");
+               fmt::format_to(ctx.out(), "{}", part);
+               first = false;
+          };
+
+          if (HasFlag(bs, TwoColors))
+               write_part("TwoColors");
+          else
+               write_part("OneColor");
+
+          if (HasFlag(bs, Solid))
+               write_part("Solid");
+          else
+               write_part("Checkerboard");
+
+          return ctx.out();
+     }
+};
+
 template<open_viii::Number numT>
 struct fmt::formatter<open_viii::graphics::Rectangle<numT>> : fmt::formatter<open_viii::graphics::Point<numT>>
 {

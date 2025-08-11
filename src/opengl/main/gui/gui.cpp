@@ -759,20 +759,6 @@ void gui::compact_flatten_buttons()
 
      ImGui::EndTable();
 }
-bool gui::change_background_color(const fme::color &in_color)
-{
-     if (m_selections->get<ConfigKey::BackgroundColor>() == in_color)
-     {
-          return false;
-     }
-     m_selections->get<ConfigKey::BackgroundColor>() = in_color;
-     return true;
-}
-void gui::save_background_color()
-{
-     spdlog::info("selections_background_color: {}", m_selections->get<ConfigKey::BackgroundColor>());
-     m_selections->update<ConfigKey::BackgroundColor>();
-}
 void gui::background_color_picker()
 {
      clear_color_f = { static_cast<float>(m_selections->get<ConfigKey::BackgroundColor>().r) / 255.F,
@@ -780,11 +766,11 @@ void gui::background_color_picker()
                        static_cast<float>(m_selections->get<ConfigKey::BackgroundColor>().b) / 255.F };
      if (ImGui::ColorEdit3(gui_labels::background.data(), clear_color_f.data(), ImGuiColorEditFlags_DisplayRGB))
      {
-          change_background_color({ clear_color_f[0], clear_color_f[1], clear_color_f[2] });
+          m_selections->get<ConfigKey::BackgroundColor>() = { clear_color_f[0], clear_color_f[1], clear_color_f[2] };
      }
      if (ImGui::IsItemDeactivatedAfterEdit())
      {
-          save_background_color();
+          m_selections->update<ConfigKey::BackgroundColor>();
      }
 }
 
@@ -1589,9 +1575,33 @@ void gui::edit_menu()
 
           if (ImGui::BeginMenu("Background Color"))
           {
+               BackgroundSettings  &bg_settings = m_selections->get<ConfigKey::BackgroundSettings>();
+               bool                 two_colors  = HasFlag(bg_settings, BackgroundSettings::TwoColors);
+               bool                 solid       = HasFlag(bg_settings, BackgroundSettings::Solid);
+               int                  exponent    = std::bit_width(m_selections->get<ConfigKey::BackgroundCheckerboardScale>()) - 1;
+               static constexpr int max_power   = 8;
+               static constexpr int min_power   = 0;
+               if (ImGui::SliderInt("Checkerboard Scale", &exponent, min_power, max_power))
+               {
+                    m_selections->get<ConfigKey::BackgroundCheckerboardScale>() = static_cast<std::uint16_t>(1 << exponent);
+                    m_selections->update<ConfigKey::BackgroundCheckerboardScale>();
+               }
+
+               if (ImGui::MenuItem("Solid Color", {}, &solid))
+               {
+                    SetFlag(m_selections->get<ConfigKey::BackgroundSettings>(), BackgroundSettings::Solid, solid);
+               }
+
+               if (ImGui::MenuItem("Two Colors", {}, &two_colors, !solid))
+               {
+                    SetFlag(m_selections->get<ConfigKey::BackgroundSettings>(), BackgroundSettings::TwoColors, two_colors);
+               }
+
+
                float         sz       = ImGui::GetTextLineHeight();
                auto          zip_view = std::ranges::views::zip(fme::colors::ColorValues, fme::colors::ColorNames);
                constexpr int columns  = 2;
+               format_imgui_wrapped_text("Hold Control to set Secondary Background Color");
                if (ImGui::BeginTable("##ColorTable", columns, ImGuiTableFlags_SizingStretchSame))
                {
                     for (auto &&[color_value, color_name] : zip_view)
@@ -1607,21 +1617,46 @@ void gui::edit_menu()
                          ImGui::SameLine();
                          if (ImGui::MenuItem(color_name.data()))
                          {
-                              if (change_background_color(color_value))
+                              bool ctrl_pressed = ImGui::GetIO().KeyCtrl;
+                              if (ctrl_pressed)
                               {
-                                   save_background_color();
+                                   m_selections->get<ConfigKey::BackgroundColor2>() = color_value;
+                                   m_selections->update<ConfigKey::BackgroundColor2>();
+                              }
+                              else
+                              {
+                                   m_selections->get<ConfigKey::BackgroundColor>() = color_value;
+                                   m_selections->update<ConfigKey::BackgroundColor>();
                               }
                          }
                     }
                     ImGui::EndTable();
                }
-               if (ImGui::ColorPicker3("##Choose Background Color", clear_color_f.data(), ImGuiColorEditFlags_DisplayRGB))
+
+               clear_color_f  = { static_cast<float>(m_selections->get<ConfigKey::BackgroundColor>().r) / 255.F,
+                                  static_cast<float>(m_selections->get<ConfigKey::BackgroundColor>().g) / 255.F,
+                                  static_cast<float>(m_selections->get<ConfigKey::BackgroundColor>().b) / 255.F };
+               clear_color_f2 = { static_cast<float>(m_selections->get<ConfigKey::BackgroundColor2>().r) / 255.F,
+                                  static_cast<float>(m_selections->get<ConfigKey::BackgroundColor2>().g) / 255.F,
+                                  static_cast<float>(m_selections->get<ConfigKey::BackgroundColor2>().b) / 255.F };
+               if (ImGui::ColorPicker3("##Choose Primary Background Color", clear_color_f.data(), ImGuiColorEditFlags_DisplayRGB))
                {
-                    change_background_color({ clear_color_f[0], clear_color_f[1], clear_color_f[2] });
+                    m_selections->get<ConfigKey::BackgroundColor>() = { clear_color_f[0], clear_color_f[1], clear_color_f[2] };
                }
                if (ImGui::IsItemDeactivatedAfterEdit())
                {
-                    save_background_color();
+                    m_selections->update<ConfigKey::BackgroundColor>();
+               }
+               if (HasFlag(bg_settings, BackgroundSettings::TwoColors) && !HasFlag(bg_settings, BackgroundSettings::Solid))
+               {
+                    if (ImGui::ColorPicker3("##Choose Secondary Background Color", clear_color_f2.data(), ImGuiColorEditFlags_DisplayRGB))
+                    {
+                         m_selections->get<ConfigKey::BackgroundColor2>() = { clear_color_f2[0], clear_color_f2[1], clear_color_f2[2] };
+                    }
+                    if (ImGui::IsItemDeactivatedAfterEdit())
+                    {
+                         m_selections->update<ConfigKey::BackgroundColor2>();
+                    }
                }
                ImGui::EndMenu();
           }

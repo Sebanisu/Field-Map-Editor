@@ -105,6 +105,7 @@ struct gui
 
 
      std::array<float, 3U>       clear_color_f{};
+     std::array<float, 3U>       clear_color_f2{};
 
 
      create_color_button         blue_color_button  = {};
@@ -223,8 +224,6 @@ struct gui
      void refresh_map_disable_blending();
      void refresh_draw_mode();
      void refresh_mim_palette_texture();
-     bool change_background_color(const fme::color &);
-     void save_background_color();
      void refresh_path();
      void browse_buttons();
      void menu_swizzle_paths();

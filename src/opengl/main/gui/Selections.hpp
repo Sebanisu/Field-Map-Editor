@@ -19,7 +19,6 @@
 namespace fme
 {
 
-
 enum class ConfigKey
 {
      StarterField,
@@ -66,7 +65,10 @@ enum class ConfigKey
      BatchOutputType,
      BatchOutputRootPathType,
      BatchMapListEnabled,
+     BackgroundCheckerboardScale,
      BackgroundColor,
+     BackgroundColor2,
+     BackgroundSettings,
      BatchInputPath,
      BatchOutputPath,
      BatchInputLoadMap,
@@ -364,7 +366,7 @@ struct SelectionInfo<ConfigKey::DisplayFiltersWindow>
      static constexpr std::string_view id = "DisplayFiltersWindow";
 };
 
- template<>
+template<>
 struct SelectionInfo<ConfigKey::OutputSwizzlePattern>
 {
      using value_type                     = std::string;
@@ -451,6 +453,16 @@ struct SelectionInfo<ConfigKey::BatchMapListEnabled>
      static constexpr std::string_view id = "BatchMapListEnabled";
 };
 template<>
+struct SelectionInfo<ConfigKey::BackgroundCheckerboardScale>
+{
+     using value_type                     = std::uint16_t;
+     static constexpr std::string_view id = "BackgroundCheckerboardScale";
+     static inline value_type          default_value()
+     {
+          return 4U;
+     }
+};
+template<>
 struct SelectionInfo<ConfigKey::BackgroundColor>
 {
      using value_type                     = color;
@@ -458,6 +470,26 @@ struct SelectionInfo<ConfigKey::BackgroundColor>
      static inline value_type          default_value()
      {
           return fme::colors::White;
+     }
+};
+template<>
+struct SelectionInfo<ConfigKey::BackgroundColor2>
+{
+     using value_type                     = color;
+     static constexpr std::string_view id = "BackgroundColor2";
+     static inline value_type          default_value()
+     {
+          return fme::colors::White;
+     }
+};
+template<>
+struct SelectionInfo<ConfigKey::BackgroundSettings>
+{
+     using value_type                     = BackgroundSettings;
+     static constexpr std::string_view id = "BackgroundSettings";
+     static inline value_type          default_value()
+     {
+          return BackgroundSettings::Default;
      }
 };
 template<>
