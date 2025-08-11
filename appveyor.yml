@@ -2,12 +2,23 @@ image:
   - Visual Studio 2022
 clone_folder: c:\projects\source
 install:
+  # Verify current Visual Studio version
   - ps: |
-      # Download specific Visual Studio 17.14.2 bootstrapper (replace with exact URL from Microsoft)
-      Invoke-WebRequest -Uri 'https://aka.ms/vs/17/release/17.14.2/vs_community.exe' -OutFile "$env:TEMP\vs_community.exe"
-      # Install or update Visual Studio with required workloads
-      & "$env:TEMP\vs_community.exe" --quiet --wait --norestart --add Microsoft.VisualStudio.Workload.CoreEditor --add Microsoft.VisualStudio.Workload.NativeDesktop --includeRecommended
-  - call "C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\Tools\VsDevCmd.bat"
+      $vsVersion = & "C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\IDE\devenv.exe" /? | Select-String "Version"
+      Write-Host "Visual Studio Version: $vsVersion"
+  # Try to add MSVC 14.42 toolset (used by v17.14.2)
+  - ps: |
+      & "C:\Program Files (x86)\Microsoft Visual Studio\Installer\setup.exe" modify --installPath "C:\Program Files\Microsoft Visual Studio\2022\Community" --add Microsoft.VisualStudio.Component.VC.14.42.17.14.x86.x64 --quiet --norestart --wait
+      if ($LASTEXITCODE -eq 0) { Write-Host "Successfully added MSVC 14.42 toolset" } else { Write-Host "Failed to add MSVC 14.42 toolset, error code: $LASTEXITCODE" }
+  # Fallback: Update Visual Studio to v17.14.2 if toolset add fails
+  - ps: |
+      if ($LASTEXITCODE -ne 0) {
+        Write-Host "Attempting to update Visual Studio to v17.14.2"
+        & "C:\Program Files (x86)\Microsoft Visual Studio\Installer\setup.exe" update --installPath "C:\Program Files\Microsoft Visual Studio\2022\Community" --channelUri https://aka.ms/vs/17/release/17.14.2/channel --quiet --norestart --wait
+        if ($LASTEXITCODE -eq 0) { Write-Host "Successfully updated to Visual Studio v17.14.2" } else { Write-Host "Failed to update Visual Studio, error code: $LASTEXITCODE" }
+      }
+  # Verify compiler version
+  - call "C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvars64.bat"
   - cl
 
 environment:
@@ -53,7 +64,7 @@ build_script:
 
       conan config home
 
-      conan profile detect --name windows_msvc > nul 2> nul & exit 0
+      conan profile detect --name windows_msvc settings.compiler.version=143 > nul 2> nul & exit 0 
 
       REM Install dependencies with Conan using the profiles
 
