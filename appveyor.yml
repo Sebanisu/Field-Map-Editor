@@ -1,11 +1,12 @@
 image:
   - Visual Studio 2022
 clone_folder: c:\projects\source
-
 install:
-  - ps: Start-Process -FilePath "C:\Program Files (x86)\Microsoft Visual Studio\Installer\vs_installer.exe" `
-        -ArgumentList "update --quiet --norestart --wait" `
-        -Wait
+  - ps: |
+      Invoke-WebRequest -Uri 'https://aka.ms/vs/17/release/vs_community.exe' -OutFile "$env:TEMP\vs_community.exe"
+      & "$env:TEMP\vs_community.exe" --quiet --wait --norestart --add Microsoft.VisualStudio.Workload.CoreEditor --includeRecommended --channelUri https://aka.ms/vs/17/release/channel
+  - call "C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\Tools\VsDevCmd.bat"
+  - cl
 
 environment:
   PYTHON: "C:\\Python38-x64\\python.exe"
