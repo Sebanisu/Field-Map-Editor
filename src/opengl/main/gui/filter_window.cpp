@@ -92,6 +92,7 @@ void fme::filter_window::render() const
      const float                     padding             = ImGui::GetStyle().FramePadding.x * 2.0f + ImGui::GetStyle().ItemSpacing.x;
      const int                       col_count           = static_cast<int>(region_size.x / (thumb_size_width + padding));
      static std::string              selected_file_name  = {};
+     static std::string              hovered_file_name   = {};
      static toml::table             *selected_toml_table = {};
      static std::vector<std::string> remove_queue        = {};
      if (!remove_queue.empty())
@@ -124,7 +125,9 @@ void fme::filter_window::render() const
           }();
           if (framebuffer.has_value())
           {
-               ImTextureID tex_id = glengine::ConvertGliDtoImTextureId<ImTextureID>(framebuffer.value().color_attachment_id());
+               ImTextureID tex_id = (hovered_file_name == file_name)
+                                        ? glengine::ConvertGliDtoImTextureId<ImTextureID>(framebuffer.value().color_attachment_id(2))
+                                        : glengine::ConvertGliDtoImTextureId<ImTextureID>(framebuffer.value().color_attachment_id());
                aspect_ratio       = static_cast<float>(framebuffer.value().height()) / static_cast<float>(framebuffer.value().width());
                const ImVec2 thumb_size = { thumb_size_width, thumb_size_width * aspect_ratio };
                if (ImGui::ImageButton(file_name.c_str(), tex_id, thumb_size))
@@ -134,6 +137,14 @@ void fme::filter_window::render() const
                else
                {
                     tool_tip(tooltip_str);
+               }
+               if (ImGui::IsItemHovered())
+               {
+                    hovered_file_name = file_name;
+               }
+               else if (hovered_file_name == file_name)
+               {
+                    hovered_file_name = {};
                }
           }
           else
@@ -199,8 +210,11 @@ void fme::filter_window::render() const
                ImGui::NextColumn();
           }
 
-          ImTextureID tex_id = glengine::ConvertGliDtoImTextureId<ImTextureID>(lock_map_sprite->get_framebuffer().color_attachment_id());
-          aspect_ratio       = static_cast<float>(lock_map_sprite->get_framebuffer().height())
+          ImTextureID tex_id =
+            hovered_file_name == "##add"
+              ? glengine::ConvertGliDtoImTextureId<ImTextureID>(lock_map_sprite->get_framebuffer().color_attachment_id(2))
+              : glengine::ConvertGliDtoImTextureId<ImTextureID>(lock_map_sprite->get_framebuffer().color_attachment_id());
+          aspect_ratio = static_cast<float>(lock_map_sprite->get_framebuffer().height())
                          / static_cast<float>(lock_map_sprite->get_framebuffer().width());
           const ImVec2 thumb_size = { thumb_size_width, thumb_size_width * aspect_ratio };
           if (ImGui::ImageButton("add new item", tex_id, thumb_size))
@@ -221,6 +235,15 @@ void fme::filter_window::render() const
           else
           {
                tool_tip("Add new entry...");
+          }
+
+          if (ImGui::IsItemHovered())
+          {
+               hovered_file_name = "##add";
+          }
+          else if (hovered_file_name == "##add")
+          {
+               hovered_file_name = {};
           }
           format_imgui_wrapped_text("Add new entry...");
           ImGui::Columns(1);
