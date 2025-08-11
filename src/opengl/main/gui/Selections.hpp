@@ -36,6 +36,7 @@ enum class ConfigKey
      DrawGrid,
      DrawPalette,
      DrawSwizzle,
+     DrawPupuMask,
      RenderImportedImage,// if needed
      DrawTexturePageGrid,
      DrawTileConflictRects,
@@ -244,6 +245,12 @@ struct SelectionInfo<ConfigKey::DrawSwizzle>
 {
      using value_type                     = bool;
      static constexpr std::string_view id = "DrawSwizzle";
+};
+template<>
+struct SelectionInfo<ConfigKey::DrawPupuMask>
+{
+     using value_type                     = bool;
+     static constexpr std::string_view id = "DrawPupuMask";
 };
 template<>
 struct SelectionInfo<ConfigKey::RenderImportedImage>

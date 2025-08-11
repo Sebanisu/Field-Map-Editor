@@ -214,10 +214,10 @@ void fme::draw_window::render() const
 
           const auto pop_id1 = PushPopID();
           ImGui::GetWindowDrawList()->AddImage(
-            glengine::ConvertGliDtoImTextureId<ImTextureID>(framebuffer.color_attachment_id(2)),
+            glengine::ConvertGliDtoImTextureId<ImTextureID>(
+              framebuffer.color_attachment_id(selections->get<ConfigKey::DrawPupuMask>() ? 2 : 0)),
             screen_pos,
             ImVec2{ screen_pos.x + scaled_size.x, screen_pos.y + scaled_size.y });
-
 
           draw_map_grid_lines_for_tiles(screen_pos, scaled_size, scale);
 
@@ -283,14 +283,14 @@ void fme::draw_window::update_hover_and_mouse_button_status_for_map(const ImVec2
 
      const auto  &framebuffer = t_map_sprite->get_framebuffer();
      // Check if the mouse is over the image
-     const ImVec2 mouse_pos = ImGui::GetMousePos();
+     const ImVec2 mouse_pos   = ImGui::GetMousePos();
      if (ImGui::IsItemHovered())
      {
           // Calculate the mouse position relative to the image
-          glm::vec2   relative_pos(mouse_pos.x - img_start.x, mouse_pos.y - img_start.y);
+          glm::vec2  relative_pos(mouse_pos.x - img_start.x, mouse_pos.y - img_start.y);
           const auto old_pixel    = m_mouse_positions.pixel;
           // Map it back to the texture coordinates
-          m_mouse_positions.pixel  = glm::ivec2(
+          m_mouse_positions.pixel = glm::ivec2(
             static_cast<int>(relative_pos.x / scale / static_cast<float>(framebuffer.scale())),
             static_cast<int>(relative_pos.y / scale / static_cast<float>(framebuffer.scale())));
 
@@ -441,8 +441,7 @@ void fme::draw_window::draw_map_grid_for_conflict_tiles(const ImVec2 &screen_pos
                               return screen_pos.x
                             + ((static_cast<float>(working_tile.source_x()) + (static_cast<float>(working_tile.texture_id()) * 256.F)) * scale * static_cast<float>(framebuffer.scale()));
                          }
-                         return screen_pos.x
-                                + (static_cast<float>(working_tile.x()) * scale * static_cast<float>(framebuffer.scale()));
+                         return screen_pos.x + (static_cast<float>(working_tile.x()) * scale * static_cast<float>(framebuffer.scale()));
                     }();
                     const float y = [&]() {
                          if (selections->get<ConfigKey::DrawSwizzle>())
@@ -450,8 +449,7 @@ void fme::draw_window::draw_map_grid_for_conflict_tiles(const ImVec2 &screen_pos
                               return screen_pos.y
                                      + (static_cast<float>(working_tile.source_y()) * scale * static_cast<float>(framebuffer.scale()));
                          }
-                         return screen_pos.y
-                                + (static_cast<float>(working_tile.y()) * scale * static_cast<float>(framebuffer.scale()));
+                         return screen_pos.y + (static_cast<float>(working_tile.y()) * scale * static_cast<float>(framebuffer.scale()));
                     }();
                     const float tile_size     = 16.0f * scale * static_cast<float>(framebuffer.scale());
                     const auto [c, thickness] = [&]() -> std::pair<color, float> {
@@ -767,8 +765,7 @@ void fme::draw_window::UseImGuizmo([[maybe_unused]] const float scale, [[maybe_u
      const glm::mat4 view         = m_fixed_render_camera.view_matrix();// identity for 2D or your actual camera view if available
 
      glm::mat4       objectMatrix = [&] {
-          const glm::vec3 tilePosition =
-            glm::vec3(m_mouse_positions.down_pixel, 0.f) * scale * static_cast<float>(framebuffer.scale());
+          const glm::vec3 tilePosition = glm::vec3(m_mouse_positions.down_pixel, 0.f) * scale * static_cast<float>(framebuffer.scale());
           // Your object transform matrix, e.g. tile transform
           return glm::translate(glm::mat4(1.0f), tilePosition);
      }();

@@ -553,6 +553,7 @@ void map_sprite::update_position(
      m_uniform_color = s_default_color;
      shader.set_uniform("u_Tint", s_default_color);
      bool drew = false;
+     const auto &unique_pupu_ids = working_unique_pupu();
      for (const auto &z : m_all_unique_values_and_strings.z().values())
      {
           for_all_tiles([&]([[maybe_unused]] const auto &tile_const, const auto &tile, const ff_8::PupuID pupu_id) {
@@ -661,12 +662,19 @@ void map_sprite::update_position(
                spdlog::debug("Draw position: ({}, {}, {})", draw_position.x, draw_position.y, draw_position.z);
                spdlog::debug("UV min: ({}, {})", quad.uv_min.x, quad.uv_min.y);
                spdlog::debug("UV max: ({}, {})", quad.uv_max.x, quad.uv_max.y);
-
+               // static_cast<int>(m_map_group.maps.get_offset_from_working(tile))
+               const auto find_id = [&]() {
+                    if (const auto it = std::ranges::find(unique_pupu_ids, pupu_id); it != std::ranges::end(unique_pupu_ids))
+                    {
+                         return static_cast<int>(it - std::ranges::begin(unique_pupu_ids));
+                    }
+                    return -1;
+               };
                target_renderer.draw_quad(
                  subtexture,
                  draw_position,
                  glm::vec2{ static_cast<float>(TILE_SIZE * target_framebuffer.scale()) },
-                 static_cast<int>(m_map_group.maps.get_offset_from_working(tile)),
+                 static_cast<int>(find_id()),
                  pupu_id.raw());
                drew = true;
           });

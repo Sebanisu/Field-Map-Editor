@@ -64,18 +64,17 @@ uvec4 uvec4_encode_uint_to_rgba(uint id) {
     );
 }
 
-vec4 vec4_encode_uint_to_rgba(uint id) {
-    // Extract bits according to your layout
-    uint r = (id >> 21u) & 0x7FFu;   // 11 bits: bits 21..31
-    uint g = (id >> 10u) & 0x7FFu;   // 11 bits: bits 10..20
-    uint b = id & 0x3FFu;             // 10 bits: bits 0..9
+//https://github.com/hughsk/glsl-hsv2rgb/blob/master/index.glsl
+vec3 hsv2rgb(vec3 c) {
+    vec4 K = vec4(1.0, 2.0 / 3.0, 1.0 / 3.0, 3.0);
+    vec3 p = abs(fract(c.xxx + K.xyz) * 6.0 - K.www);
+    return c.z * mix(K.xxx, clamp(p - K.xxx, 0.0, 1.0), c.y);
+}
 
-    return vec4(
-        float(r) / 2047.0,  // Normalize 11 bits to [0,1]
-        float(g) / 2047.0,  // Normalize 11 bits to [0,1]
-        float(b) / 1023.0,  // Normalize 10 bits to [0,1]
-        1.0                 // Full alpha for visibility
-    );
+vec4 vec4_encode_uint_to_rgba(int id) {
+    float hue = fract(float(id) * 0.61803398875);
+    vec3 temp_color = hsv2rgb(vec3(hue, 0.8, 0.9));
+    return vec4(temp_color,1.0);
 }
 
 void main()
@@ -91,7 +90,7 @@ void main()
     if (texColor.a > 0.0)
     {
         uout_mask  = uvec4_encode_uint_to_rgba(v_pupu_id);
-        out_mask = vec4_encode_uint_to_rgba(v_pupu_id);
+        out_mask = vec4_encode_uint_to_rgba(v_tile_id);
     }
 
     if (u_Grid.y > 0 && u_Grid.x > 0)

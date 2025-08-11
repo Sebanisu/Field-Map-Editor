@@ -1201,6 +1201,16 @@ void gui::checkbox_map_disable_blending()
           tool_tip(gui_labels::force_rendering_of_map_tooltip);
           ImGui::EndDisabled();
      }
+
+
+     if (ImGui::Checkbox("Draw Pupu Mask", &m_selections->get<ConfigKey::DrawPupuMask>()))
+     {
+          m_selections->update<ConfigKey::DrawPupuMask>();
+     }
+     else
+     {
+          tool_tip("Draw Pupu Mask preview.");
+     }
 }
 void gui::refresh_mim_palette_texture()
 {
