@@ -1,7 +1,6 @@
 image:
   - Visual Studio 2022
 clone_folder: c:\projects\source
-image: Visual Studio 2022
 install:
   - ps: |
       # Download specific Visual Studio 17.14.2 bootstrapper (replace with exact URL from Microsoft)
