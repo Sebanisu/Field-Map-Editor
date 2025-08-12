@@ -1010,7 +1010,7 @@ void map_sprite::resize_render_texture() const
      auto spec = glengine::FrameBufferSpecification{ .width  = static_cast<int>(width()) * m_render_framebuffer->scale(),
                                                      .height = static_cast<int>(height()) * m_render_framebuffer->scale(),
                                                      .scale  = m_render_framebuffer->scale() };
-     if (m_render_framebuffer->width() != spec.width && m_render_framebuffer->height() != spec.height)
+     if (m_render_framebuffer->width() != spec.width || m_render_framebuffer->height() != spec.height)
      {
           *m_render_framebuffer = glengine::FrameBuffer{ std::move(spec) };
      }
