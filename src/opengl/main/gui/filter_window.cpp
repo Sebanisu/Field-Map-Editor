@@ -1,7 +1,9 @@
 #include "filter_window.hpp"
 #include "as_string.hpp"
 #include "generic_combo.hpp"
+#include "gui/ImGuiDisabled.hpp"
 #include "gui_labels.hpp"
+#include "push_pop_id.hpp"
 #include <ctre.hpp>
 
 fme::filter_window::filter_window(std::weak_ptr<Selections> in_selections, std::weak_ptr<map_sprite> in_map_sprite)
@@ -39,42 +41,21 @@ void fme::filter_window::collapsing_header_filters() const
 
 void fme::filter_window::render() const
 {
-     static std::array<char, 128> file_name_buffer{};
-     static bool                  reload_thumbnail = false;
-     m_changed                                     = false;
-     auto lock_selections                          = m_selections.lock();
+     m_changed            = false;
+     auto lock_selections = m_selections.lock();
      if (!lock_selections)
      {
           spdlog::error("Failed to lock selections: shared_ptr is expired.");
-          return;
-     }
-     if (!lock_selections->get<ConfigKey::DisplayFiltersWindow>())
-     {
-          return;
-     }
-     const auto save = [&]() {
-          const key_value_data        config_path_values = { .ext = ".toml" };
-          const std::filesystem::path config_path =
-            config_path_values.replace_tags("{selected_path}/res/deswizzle{ext}", lock_selections, "{current_path}");
-          auto config = Configuration(config_path);
-          config.save();
-     };
-     bool      &visible     = lock_selections->get<ConfigKey::DisplayFiltersWindow>();
-     const auto pop_visible = glengine::ScopeGuard{ [&lock_selections, &visible, was_visable = visible] {
-          if (was_visable != visible)
-          {
-               lock_selections->update<ConfigKey::DisplayFiltersWindow>();
-          }
-     } };
-     const auto pop_end = glengine::ScopeGuard(&ImGui::End);
-     if (!ImGui::Begin(gui_labels::filters.data(), &visible))
-     {
           return;
      }
      auto lock_map_sprite = m_map_sprite.lock();
      if (!lock_map_sprite)
      {
           spdlog::error("Failed to lock map_sprite: shared_ptr is expired.");
+          return;
+     }
+     if (!begin_window(lock_selections))
+     {
           return;
      }
      if (lock_map_sprite->fail())
@@ -86,262 +67,28 @@ void fme::filter_window::render() const
      {
           format_imgui_text("The draw mode is not set to `.map`.\nFilter changes won't show on draw window.");
      }
-     static float thumb_size_width = 96.f;
-     ImGui::SliderFloat("Thumbnail Size", &thumb_size_width, 96.f, 1024.f);
-     const ImVec2                    region_size         = ImGui::GetContentRegionAvail();
-     const float                     padding             = ImGui::GetStyle().FramePadding.x * 2.0f + ImGui::GetStyle().ItemSpacing.x;
-     const int                       col_count           = static_cast<int>(region_size.x / (thumb_size_width + padding));
-     static std::string              selected_file_name  = {};
-     static std::string              hovered_file_name   = {};
-     static toml::table             *selected_toml_table = {};
-     static std::vector<std::string> remove_queue        = {};
-     if (!remove_queue.empty())
-     {
-          for (const std::string &file_name : remove_queue)
-          {
-               (void)lock_map_sprite->remove_deswizzle_combined_toml_table(file_name);
-               save();
-          }
-          remove_queue.clear();
-     }
-     auto &textures_map = lock_map_sprite->get_deswizzle_combined_textures();
+     const auto pop_end = glengine::ScopeGuard(&ImGui::End);
 
-     if (reload_thumbnail)
+     handle_remove_queue(lock_selections, lock_map_sprite);
+
+     ImGui::SliderFloat("Thumbnail Size", &m_thumb_size_width, 96.f, 1024.f);
+
+     m_textures_map = &lock_map_sprite->get_deswizzle_combined_textures();
+
+     if (m_reload_thumbnail)
      {
-          reload_thumbnail = false;
-          textures_map.erase(selected_file_name);
+          m_reload_thumbnail = false;
+          m_textures_map->erase(m_selected_file_name);
           (void)lock_map_sprite->get_deswizzle_combined_textures();
      }
-     static float aspect_ratio  = 1.f;
-     const auto   draw_elements = [&](auto &&file_name, auto &&framebuffer, auto &&on_click) {
-          const std::string &tooltip_str = [&]() -> const std::string   &{
-               static const std::string empty_msg = "No filters are enabled...";
-               if (lock_map_sprite->get_deswizzle_combined_textures_tooltips().contains(file_name))
-               {
-                    const std::string &tmp = lock_map_sprite->get_deswizzle_combined_textures_tooltips().at(file_name);
-                    return tmp.empty() ? empty_msg : tmp;
-               }
-               return empty_msg;
-          }();
-          if (framebuffer.has_value())
-          {
-               ImTextureID tex_id = (hovered_file_name == file_name)
-                                        ? glengine::ConvertGliDtoImTextureId<ImTextureID>(framebuffer.value().color_attachment_id(2))
-                                        : glengine::ConvertGliDtoImTextureId<ImTextureID>(framebuffer.value().color_attachment_id());
-               aspect_ratio       = static_cast<float>(framebuffer.value().height()) / static_cast<float>(framebuffer.value().width());
-               const ImVec2 thumb_size = { thumb_size_width, thumb_size_width * aspect_ratio };
-               if (ImGui::ImageButton(file_name.c_str(), tex_id, thumb_size))
-               {
-                    on_click();
-               }
-               else
-               {
-                    tool_tip(tooltip_str);
-               }
-               if (ImGui::IsItemHovered())
-               {
-                    hovered_file_name = file_name;
-               }
-               else if (hovered_file_name == file_name)
-               {
-                    hovered_file_name = {};
-               }
-          }
-          else
-          {
-               const auto pop_id            = PushPopID();
-               ImVec2     padded_thumb_size = { thumb_size_width + ImGui::GetStyle().FramePadding.x * 2.0f,
-                                                thumb_size_width * aspect_ratio + ImGui::GetStyle().FramePadding.y * 2.0f };
-               if (ImGui::Button("##Empty", padded_thumb_size))
-               {
-                    on_click();
-               }
-               else
-               {
-                    tool_tip(tooltip_str);
-               }
-          }
-     };
-     if (selected_file_name.empty() || !textures_map.contains(selected_file_name))
+
+     if (m_selected_file_name.empty() || !m_textures_map->contains(m_selected_file_name))
      {
-          ImGui::Columns(col_count > 0 ? col_count : 1, "##get_deswizzle_combined_textures", false);
-
-
-          for (const auto &[file_name, framebuffer] : textures_map)
-          {
-               const auto action = [&]() {
-                    if (auto *ptr = lock_map_sprite->get_deswizzle_combined_toml_table(file_name); ptr)
-                    {
-                         selected_file_name         = file_name;
-                         constexpr size_t max_chars = file_name_buffer.size() - 1;// space for null terminator
-                         std::ranges::copy_n(
-                           selected_file_name.begin(),
-                           (std::min)(max_chars, static_cast<size_t>(selected_file_name.size())),
-                           file_name_buffer.begin());
-                         selected_toml_table = ptr;
-                         lock_map_sprite->filter().reload(*ptr);
-                         lock_map_sprite->update_render_texture();
-                    }
-               };
-               draw_elements(file_name, framebuffer, action);
-               // Label under image (optional)
-               const float  button_width    = ImGui::GetFrameHeight();
-               const ImVec2 button_size     = { button_width, button_width };
-               const float  text_area_width = thumb_size_width - button_width + ImGui::GetStyle().FramePadding.x;
-               // Remember the top-left of where we want to start
-               const ImVec2 text_start_pos  = ImGui::GetCursorScreenPos();
-
-               ImGui::PushTextWrapPos(ImGui::GetCursorPosX() + text_area_width);
-               ImGui::Text("%s", file_name.c_str());
-               ImGui::PopTextWrapPos();
-               const ImVec2 backup_pos = ImGui::GetCursorScreenPos();
-               // Position the button at top-right of this block (same Y as the start of the text)
-               ImGui::SetCursorScreenPos(ImVec2(text_start_pos.x + text_area_width + ImGui::GetStyle().FramePadding.x, text_start_pos.y));
-               const auto pop_id = PushPopID();
-               if (ImGui::Button(ICON_FA_TRASH, button_size))
-               {
-                    remove_queue.push_back(file_name);
-               }
-               else
-               {
-                    tool_tip("Remove");
-               }
-               ImGui::SetCursorScreenPos(ImVec2(backup_pos.x, (std::max)(ImGui::GetCursorScreenPos().y, backup_pos.y)));
-               ImGui::NextColumn();
-          }
-
-          ImTextureID tex_id =
-            hovered_file_name == "##add"
-              ? glengine::ConvertGliDtoImTextureId<ImTextureID>(lock_map_sprite->get_framebuffer().color_attachment_id(2))
-              : glengine::ConvertGliDtoImTextureId<ImTextureID>(lock_map_sprite->get_framebuffer().color_attachment_id());
-          aspect_ratio = static_cast<float>(lock_map_sprite->get_framebuffer().height())
-                         / static_cast<float>(lock_map_sprite->get_framebuffer().width());
-          const ImVec2 thumb_size = { thumb_size_width, thumb_size_width * aspect_ratio };
-          if (ImGui::ImageButton("add new item", tex_id, thumb_size))
-          {
-               selected_file_name = fmt::format(
-                 "{}_{:%Y%m%d_%H%M%S}.png",
-                 lock_map_sprite->get_recommended_prefix(),
-                 std::chrono::time_point_cast<std::chrono::seconds>(std::chrono::system_clock::now()));
-               selected_toml_table        = lock_map_sprite->add_deswizzle_combined_toml_table(selected_file_name);
-
-               constexpr size_t max_chars = file_name_buffer.size() - 1;// space for null terminator
-               std::ranges::copy_n(
-                 selected_file_name.begin(),
-                 (std::min)(max_chars, static_cast<size_t>(selected_file_name.size())),
-                 file_name_buffer.begin());
-               save();
-          }
-          else
-          {
-               tool_tip("Add new entry...");
-          }
-
-          if (ImGui::IsItemHovered())
-          {
-               hovered_file_name = "##add";
-          }
-          else if (hovered_file_name == "##add")
-          {
-               hovered_file_name = {};
-          }
-          format_imgui_wrapped_text("Add new entry...");
-          ImGui::Columns(1);
+          render_list_view(lock_selections, lock_map_sprite);
      }
-     else if (textures_map.contains(selected_file_name))
+     else if (m_textures_map->contains(m_selected_file_name))
      {
-          const auto action = [&]() {
-               selected_file_name = {};
-               file_name_buffer   = {};
-          };
-          const auto &framebuffer = textures_map.at(selected_file_name);
-          draw_elements(selected_file_name, framebuffer, action);
-          if (ImGui::InputText("##Empty", file_name_buffer.data(), file_name_buffer.size() - 1U))
-          {
-          }
-
-          constexpr static auto pattern  = CTRE_REGEX_INPUT_TYPE{ R".((?i)^[a-z0-9_\-\.]+\.png$)." };
-          bool                  valid_fn = ctre::match<pattern>(
-            file_name_buffer.data(),
-            file_name_buffer.data()
-              + static_cast<std::ranges::range_difference_t<std::array<char, 1>>>(
-                strnlen(file_name_buffer.data(), file_name_buffer.size())));
-          if (!valid_fn)
-          {
-               ImGui::TextColored(ImVec4(1.0f, 0.0f, 0.0f, 1.0f), "Invalid filename (must be alphanumeric with .png extension)");
-          }
-          const std::string prefix = lock_map_sprite->get_recommended_prefix();
-          if (ImGui::Button("Copy Prefix"))
-          {
-               ImGui::SetClipboardText(prefix.c_str());
-          }
-          else
-          {
-               tool_tip(prefix);
-          }
-          ImGui::SameLine();
-          ImGui::BeginDisabled(
-            std::ranges::equal(
-              selected_file_name, std::string_view(file_name_buffer.data(), strnlen(file_name_buffer.data(), file_name_buffer.size()))));
-          ImGui::BeginDisabled(!valid_fn);
-          if (ImGui::Button("Rename"))
-          {
-               auto new_file_name = std::string(file_name_buffer.data());
-               (void)lock_map_sprite->rename_deswizzle_combined_toml_table(selected_file_name, new_file_name);
-               selected_file_name = std::move(new_file_name);
-               save();
-          }
-          ImGui::EndDisabled();
-          ImGui::SameLine();
-          if (ImGui::Button("Reset"))
-          {
-               file_name_buffer           = {};
-               constexpr size_t max_chars = file_name_buffer.size() - 1;// space for null terminator
-               std::ranges::copy_n(
-                 selected_file_name.begin(),
-                 (std::min)(max_chars, static_cast<size_t>(selected_file_name.size())),
-                 file_name_buffer.begin());
-          }
-          else
-          {
-               tool_tip(selected_file_name);
-          }
-          ImGui::EndDisabled();
-          ImGui::SameLine();
-          if (ImGui::Button(ICON_FA_TRASH))
-          {
-               remove_queue.push_back(std::move(selected_file_name));
-               action();
-          }
-          else
-          {
-               tool_tip("Remove");
-          }
-          ImGui::Separator();
-
-          combo_filtered_pupu(lock_map_sprite);
-          ImGui::Separator();
-          format_imgui_wrapped_text(
-            "You may use these other filters in the export or testing process but we only can import via Pupu IDs. This may change in the "
-            "future once we figure out how.");
-          ImGui::Separator();
-          combo_filtered_bpps(lock_map_sprite);
-          combo_filtered_palettes(lock_map_sprite);
-          combo_filtered_blend_modes(lock_map_sprite);
-          combo_filtered_blend_other(lock_map_sprite);
-          combo_filtered_layers(lock_map_sprite);
-          combo_filtered_texture_pages(lock_map_sprite);
-          combo_filtered_animation_ids(lock_map_sprite);
-          combo_filtered_animation_states(lock_map_sprite);
-          combo_filtered_z(lock_map_sprite);
-          combo_filtered_draw_bit(lock_map_sprite);
-
-          if (m_changed)
-          {
-               reload_thumbnail = true;
-               lock_map_sprite->filter().update(*selected_toml_table);
-               save();
-          }
+          render_detail_view(lock_selections, lock_map_sprite);
      }
 }
 
@@ -376,7 +123,335 @@ void fme::filter_window::update(std::weak_ptr<map_sprite> in_map_sprite)
      m_map_sprite = std::move(in_map_sprite);
 }
 
-void fme::filter_window::combo_filtered_pupu(std::shared_ptr<map_sprite> &lock_map_sprite) const
+bool fme::filter_window::begin_window(const std::shared_ptr<Selections> &lock_selections) const
+{
+     bool      &visible     = lock_selections->get<ConfigKey::DisplayFiltersWindow>();
+     const auto pop_visible = glengine::ScopeGuard{ [&lock_selections, &visible, was_visable = visible] {
+          if (was_visable != visible)
+          {
+               lock_selections->update<ConfigKey::DisplayFiltersWindow>();
+          }
+     } };
+     if (!visible || !ImGui::Begin(gui_labels::filters.data(), &visible))
+     {
+          return false;
+     }
+     return true;
+}
+
+void fme::filter_window::handle_remove_queue(
+  const std::shared_ptr<Selections> &lock_selections,
+  const std::shared_ptr<map_sprite> &lock_map_sprite) const
+{
+     if (m_remove_queue.empty())
+          return;
+
+     for (const auto &file_name : m_remove_queue)
+     {
+          (void)lock_map_sprite->remove_deswizzle_combined_toml_table(file_name);
+          save_config(lock_selections);
+     }
+     m_remove_queue.clear();
+}
+
+void fme::filter_window::save_config(const std::shared_ptr<Selections> &lock_selections) const
+{
+     const key_value_data        config_path_values = { .ext = ".toml" };
+     const std::filesystem::path config_path =
+       config_path_values.replace_tags("{selected_path}/res/deswizzle{ext}", lock_selections, "{current_path}");
+     auto config = Configuration(config_path);
+     config.save();
+}
+
+void fme::filter_window::render_list_view(
+  const std::shared_ptr<Selections> &lock_selections,
+  const std::shared_ptr<map_sprite> &lock_map_sprite) const
+{
+     ImGui::Columns(calc_column_count(), "##get_deswizzle_combined_textures", false);
+
+     for (const auto &[file_name, framebuffer] : *m_textures_map)
+     {
+          draw_thumbnail(lock_map_sprite, file_name, framebuffer, [&]() { select_file(file_name, lock_map_sprite); });
+          draw_thumbnail_label(file_name);
+          ImGui::NextColumn();
+     }
+
+     draw_add_new_button(lock_selections, lock_map_sprite);
+
+     ImGui::Columns(1);
+}
+
+int fme::filter_window::calc_column_count() const
+{
+     const ImVec2 region_size = ImGui::GetContentRegionAvail();
+     const float  padding     = ImGui::GetStyle().FramePadding.x * 2.0f + ImGui::GetStyle().ItemSpacing.x;
+     const int    count       = static_cast<int>(region_size.x / (m_thumb_size_width + padding));
+     return count > 0 ? count : 1;
+}
+
+
+void fme::filter_window::select_file(const std::string &file_name, const std::shared_ptr<map_sprite> &lock_map_sprite) const
+{
+     if (auto *ptr = lock_map_sprite->get_deswizzle_combined_toml_table(file_name); ptr)
+     {
+          m_selected_file_name = file_name;
+          const auto count     = (std::min)(s_max_chars, static_cast<size_t>(m_selected_file_name.size()));
+          std::ranges::copy_n(m_selected_file_name.begin(), count, m_file_name_buffer.begin());
+          m_file_name_buffer[count] = '\0';
+          m_selected_toml_table     = ptr;
+          lock_map_sprite->filter().reload(*ptr);
+          lock_map_sprite->update_render_texture();
+          m_previous_file_name = prev_key();
+          m_next_file_name     = next_key();
+     }
+}
+
+
+std::optional<std::string> fme::filter_window::prev_key() const
+{
+     auto it = m_textures_map->find(m_selected_file_name);
+     if (std::ranges::end(*m_textures_map) == it || std::ranges::begin(*m_textures_map) == it)
+     {
+          return std::nullopt;
+     }
+     it = std::ranges::prev(it);
+     return it->first;
+}
+
+std::optional<std::string> fme::filter_window::next_key() const
+{
+     if (std::ranges::empty(*m_textures_map))
+     {
+          return std::nullopt;
+     }
+     auto it = m_textures_map->find(m_selected_file_name);
+     if (std::ranges::end(*m_textures_map) == it)
+     {
+          return std::nullopt;
+     }
+     it = std::ranges::next(it);
+     if (std::ranges::end(*m_textures_map) == it)
+     {
+          // return std::nullopt;
+          return std::ranges::begin(*m_textures_map)->first;// loop
+     }
+     return it->first;
+}
+
+void fme::filter_window::draw_thumbnail_label(const std::string &file_name) const
+{
+     // Label under image (optional)
+     const float  button_width    = ImGui::GetFrameHeight();
+     const ImVec2 button_size     = { button_width, button_width };
+     const float  text_area_width = m_thumb_size_width - button_width + ImGui::GetStyle().FramePadding.x;
+     // Remember the top-left of where we want to start
+     const ImVec2 text_start_pos  = ImGui::GetCursorScreenPos();
+
+     ImGui::PushTextWrapPos(ImGui::GetCursorPosX() + text_area_width);
+     ImGui::Text("%s", file_name.c_str());
+     ImGui::PopTextWrapPos();
+     const ImVec2 backup_pos = ImGui::GetCursorScreenPos();
+     // Position the button at top-right of this block (same Y as the start of the text)
+     ImGui::SetCursorScreenPos(ImVec2(text_start_pos.x + text_area_width + ImGui::GetStyle().FramePadding.x, text_start_pos.y));
+     const auto pop_id = PushPopID();
+     if (ImGui::Button(ICON_FA_TRASH, button_size))
+     {
+          m_remove_queue.push_back(file_name);
+     }
+     else
+     {
+          tool_tip("Remove");
+     }
+     ImGui::SetCursorScreenPos(ImVec2(backup_pos.x, (std::max)(ImGui::GetCursorScreenPos().y, backup_pos.y)));
+}
+
+
+void fme::filter_window::draw_add_new_button(
+  const std::shared_ptr<Selections> &lock_selections,
+  const std::shared_ptr<map_sprite> &lock_map_sprite) const
+{
+
+
+     ImTextureID tex_id = m_hovered_file_name == "##add"
+                            ? glengine::ConvertGliDtoImTextureId<ImTextureID>(lock_map_sprite->get_framebuffer().color_attachment_id(2))
+                            : glengine::ConvertGliDtoImTextureId<ImTextureID>(lock_map_sprite->get_framebuffer().color_attachment_id());
+     m_aspect_ratio =
+       static_cast<float>(lock_map_sprite->get_framebuffer().height()) / static_cast<float>(lock_map_sprite->get_framebuffer().width());
+     const ImVec2 thumb_size = { m_thumb_size_width, m_thumb_size_width * m_aspect_ratio };
+     if (ImGui::ImageButton("add new item", tex_id, thumb_size))
+     {
+          m_selected_file_name = fmt::format(
+            "{}_{:%Y%m%d_%H%M%S}.png",
+            lock_map_sprite->get_recommended_prefix(),
+            std::chrono::time_point_cast<std::chrono::seconds>(std::chrono::system_clock::now()));
+          m_selected_toml_table = lock_map_sprite->add_deswizzle_combined_toml_table(m_selected_file_name);
+
+          std::ranges::copy_n(
+            m_selected_file_name.begin(),
+            (std::min)(s_max_chars, static_cast<size_t>(m_selected_file_name.size())),
+            m_file_name_buffer.begin());
+          save_config(lock_selections);
+     }
+     else
+     {
+          tool_tip("Add new entry...");
+     }
+
+     if (ImGui::IsItemHovered())
+     {
+          m_hovered_file_name = "##add";
+     }
+     else if (m_hovered_file_name == "##add")
+     {
+          m_hovered_file_name = {};
+     }
+     format_imgui_wrapped_text("Add new entry...");
+}
+
+void fme::filter_window::render_detail_view(
+  const std::shared_ptr<Selections> &lock_selections,
+  const std::shared_ptr<map_sprite> &lock_map_sprite) const
+{
+     const auto &framebuffer = m_textures_map->at(m_selected_file_name);
+     draw_thumbnail(lock_map_sprite, m_selected_file_name, framebuffer, [&]() { unselect_file(); });
+     draw_filename_controls(lock_selections, lock_map_sprite);
+     ImGui::Separator();
+     draw_filter_controls(lock_map_sprite);
+
+     if (m_changed)
+     {
+          m_reload_thumbnail = true;
+          lock_map_sprite->filter().update(*m_selected_toml_table);
+          save_config(lock_selections);
+     }
+}
+
+void fme::filter_window::draw_filename_controls(
+  const std::shared_ptr<Selections> &lock_selections,
+  const std::shared_ptr<map_sprite> &lock_map_sprite) const
+{
+     if (ImGui::InputText("##Empty", m_file_name_buffer.data(), m_file_name_buffer.size() - 1U))
+     {
+     }
+
+     constexpr static auto pattern  = CTRE_REGEX_INPUT_TYPE{ R".((?i)^[a-z0-9_\-\.]+\.png$)." };
+     bool                  valid_fn = ctre::match<pattern>(
+       m_file_name_buffer.data(),
+       m_file_name_buffer.data()
+         + static_cast<std::ranges::range_difference_t<std::array<char, 1>>>(
+           strnlen(m_file_name_buffer.data(), m_file_name_buffer.size())));
+     if (!valid_fn)
+     {
+          ImGui::TextColored(ImVec4(1.0f, 0.0f, 0.0f, 1.0f), "Invalid filename (must be alphanumeric with .png extension)");
+     }
+     const std::string prefix = lock_map_sprite->get_recommended_prefix();
+     if (ImGui::Button("Copy Prefix"))
+     {
+          ImGui::SetClipboardText(prefix.c_str());
+     }
+     else
+     {
+          tool_tip(prefix);
+     }
+     ImGui::SameLine();
+     ImGui::BeginDisabled(
+       std::ranges::equal(
+         m_selected_file_name, std::string_view(m_file_name_buffer.data(), strnlen(m_file_name_buffer.data(), m_file_name_buffer.size()))));
+     ImGui::BeginDisabled(!valid_fn);
+     if (ImGui::Button("Rename"))
+     {
+          auto new_file_name = std::string(m_file_name_buffer.data());
+          (void)lock_map_sprite->rename_deswizzle_combined_toml_table(m_selected_file_name, new_file_name);
+          m_selected_file_name = std::move(new_file_name);
+          save_config(lock_selections);
+     }
+     ImGui::EndDisabled();
+     ImGui::SameLine();
+     if (ImGui::Button("Reset"))
+     {
+          m_file_name_buffer = {};
+          std::ranges::copy_n(
+            m_selected_file_name.begin(),
+            (std::min)(s_max_chars, static_cast<size_t>(m_selected_file_name.size())),
+            m_file_name_buffer.begin());
+     }
+     else
+     {
+          tool_tip(m_selected_file_name);
+     }
+     ImGui::EndDisabled();
+     ImGui::SameLine();
+     {
+          const auto pop_id        = PushPopID();
+          const bool has_prev      = m_previous_file_name.has_value();
+          const auto disabled      = ImGuiDisabled(!has_prev);
+
+          const bool       activate_prev = ImGui::ArrowButton("##l", ImGuiDir_Left) || (has_prev && ImGui::IsKeyPressed(ImGuiKey_LeftArrow));
+          if (activate_prev)
+          {
+               select_file(m_previous_file_name.value(), lock_map_sprite);
+          }
+          else if (has_prev)
+          {
+               tool_tip(m_previous_file_name.value());
+          }
+     }
+     ImGui::SameLine();
+     {
+          const auto pop_id        = PushPopID();
+          const bool has_next      = m_next_file_name.has_value();
+          const auto disabled      = ImGuiDisabled(!has_next);
+
+          const bool       activate_next = ImGui::ArrowButton("##l", ImGuiDir_Right) || (has_next && ImGui::IsKeyPressed(ImGuiKey_RightArrow));
+          if (activate_next)
+          {
+               select_file(m_next_file_name.value(), lock_map_sprite);
+          }
+          else if (has_next)
+          {
+               tool_tip(m_next_file_name.value());
+          }
+     }
+     ImGui::SameLine();
+     if (ImGui::Button(ICON_FA_TRASH))
+     {
+          m_remove_queue.push_back(std::move(m_selected_file_name));
+          unselect_file();
+     }
+     else
+     {
+          tool_tip("Remove");
+     }
+}
+
+void fme::filter_window::unselect_file() const
+{
+     m_selected_file_name = {};
+     m_file_name_buffer   = {};
+}
+
+void fme::filter_window::draw_filter_controls(const std::shared_ptr<map_sprite> &lock_map_sprite) const
+{
+
+     combo_filtered_pupu(lock_map_sprite);
+     ImGui::Separator();
+     format_imgui_wrapped_text(
+       "You may use these other filters in the export or testing process but we only can import via Pupu IDs. This may change in the "
+       "future once we figure out how.");
+     ImGui::Separator();
+     combo_filtered_bpps(lock_map_sprite);
+     combo_filtered_palettes(lock_map_sprite);
+     combo_filtered_blend_modes(lock_map_sprite);
+     combo_filtered_blend_other(lock_map_sprite);
+     combo_filtered_layers(lock_map_sprite);
+     combo_filtered_texture_pages(lock_map_sprite);
+     combo_filtered_animation_ids(lock_map_sprite);
+     combo_filtered_animation_states(lock_map_sprite);
+     combo_filtered_z(lock_map_sprite);
+     combo_filtered_draw_bit(lock_map_sprite);
+}
+
+void fme::filter_window::combo_filtered_pupu(const std::shared_ptr<map_sprite> &lock_map_sprite) const
 {
      const auto gcc = GenericComboWithMultiFilter(
        gui_labels::pupu_id,
@@ -396,7 +471,7 @@ void fme::filter_window::combo_filtered_pupu(std::shared_ptr<map_sprite> &lock_m
      m_changed = true;
 }
 
-void fme::filter_window::combo_filtered_bpps(std::shared_ptr<map_sprite> &lock_map_sprite) const
+void fme::filter_window::combo_filtered_bpps(const std::shared_ptr<map_sprite> &lock_map_sprite) const
 {
      const auto &pair = lock_map_sprite->uniques().bpp();
      const auto  gcc  = fme::GenericComboWithMultiFilter(
@@ -413,7 +488,7 @@ void fme::filter_window::combo_filtered_bpps(std::shared_ptr<map_sprite> &lock_m
      m_changed = true;
 }
 
-void fme::filter_window::combo_filtered_palettes(std::shared_ptr<map_sprite> &lock_map_sprite) const
+void fme::filter_window::combo_filtered_palettes(const std::shared_ptr<map_sprite> &lock_map_sprite) const
 {
      const auto &map         = lock_map_sprite->uniques().palette();
      const auto &keys        = lock_map_sprite->filter().multi_bpp.value();
@@ -465,7 +540,7 @@ void fme::filter_window::combo_filtered_palettes(std::shared_ptr<map_sprite> &lo
 }
 
 
-void fme::filter_window::combo_filtered_blend_modes(std::shared_ptr<map_sprite> &lock_map_sprite) const
+void fme::filter_window::combo_filtered_blend_modes(const std::shared_ptr<map_sprite> &lock_map_sprite) const
 {
      const auto &pair = lock_map_sprite->uniques().blend_mode();
      const auto  gcc  = fme::GenericComboWithMultiFilter(
@@ -482,7 +557,7 @@ void fme::filter_window::combo_filtered_blend_modes(std::shared_ptr<map_sprite> 
      m_changed = true;
 }
 
-void fme::filter_window::combo_filtered_blend_other(std::shared_ptr<map_sprite> &lock_map_sprite) const
+void fme::filter_window::combo_filtered_blend_other(const std::shared_ptr<map_sprite> &lock_map_sprite) const
 {
      const auto &pair = lock_map_sprite->uniques().blend_other();
      const auto  gcc  = fme::GenericComboWithMultiFilter(
@@ -499,7 +574,7 @@ void fme::filter_window::combo_filtered_blend_other(std::shared_ptr<map_sprite> 
      m_changed = true;
 }
 
-void fme::filter_window::combo_filtered_layers(std::shared_ptr<map_sprite> &lock_map_sprite) const
+void fme::filter_window::combo_filtered_layers(const std::shared_ptr<map_sprite> &lock_map_sprite) const
 {
      const auto &pair = lock_map_sprite->uniques().layer_id();
      const auto  gcc  = fme::GenericComboWithMultiFilter(
@@ -516,7 +591,7 @@ void fme::filter_window::combo_filtered_layers(std::shared_ptr<map_sprite> &lock
      m_changed = true;
 }
 
-void fme::filter_window::combo_filtered_texture_pages(std::shared_ptr<map_sprite> &lock_map_sprite) const
+void fme::filter_window::combo_filtered_texture_pages(const std::shared_ptr<map_sprite> &lock_map_sprite) const
 {
      const auto &pair = lock_map_sprite->uniques().texture_page_id();
      const auto  gcc  = fme::GenericComboWithMultiFilter(
@@ -533,7 +608,7 @@ void fme::filter_window::combo_filtered_texture_pages(std::shared_ptr<map_sprite
      m_changed = true;
 }
 
-void fme::filter_window::combo_filtered_animation_ids(std::shared_ptr<map_sprite> &lock_map_sprite) const
+void fme::filter_window::combo_filtered_animation_ids(const std::shared_ptr<map_sprite> &lock_map_sprite) const
 {
      const auto &pair = lock_map_sprite->uniques().animation_id();
      const auto  gcc  = fme::GenericComboWithMultiFilter(
@@ -550,7 +625,7 @@ void fme::filter_window::combo_filtered_animation_ids(std::shared_ptr<map_sprite
      m_changed = true;
 }
 
-void fme::filter_window::combo_filtered_animation_states(std::shared_ptr<map_sprite> &lock_map_sprite) const
+void fme::filter_window::combo_filtered_animation_states(const std::shared_ptr<map_sprite> &lock_map_sprite) const
 {
      const auto &map         = lock_map_sprite->uniques().animation_state();
      const auto &keys        = lock_map_sprite->filter().multi_animation_id.value();
@@ -595,7 +670,7 @@ void fme::filter_window::combo_filtered_animation_states(std::shared_ptr<map_spr
      m_changed = true;
 }
 
-void fme::filter_window::combo_filtered_z(std::shared_ptr<map_sprite> &lock_map_sprite) const
+void fme::filter_window::combo_filtered_z(const std::shared_ptr<map_sprite> &lock_map_sprite) const
 {
      const auto &pair = lock_map_sprite->uniques().z();
      const auto  gcc  = fme::GenericComboWithMultiFilter(
@@ -612,7 +687,7 @@ void fme::filter_window::combo_filtered_z(std::shared_ptr<map_sprite> &lock_map_
      m_changed = true;
 }
 
-void fme::filter_window::combo_filtered_draw_bit(std::shared_ptr<map_sprite> &lock_map_sprite) const
+void fme::filter_window::combo_filtered_draw_bit(const std::shared_ptr<map_sprite> &lock_map_sprite) const
 {
      using namespace std::string_view_literals;
      static constexpr auto values = std::array{ ff_8::draw_bitT::all, ff_8::draw_bitT::enabled, ff_8::draw_bitT::disabled };
@@ -654,7 +729,7 @@ struct map_pupu_id
      }
 };
 
-void fme::filter_window::menu_filtered_pupu(std::shared_ptr<map_sprite> &lock_map_sprite) const
+void fme::filter_window::menu_filtered_pupu(const std::shared_ptr<map_sprite> &lock_map_sprite) const
 {
      GenericMenuWithMultiFilter(gui_labels::pupu_id, map_pupu_id{ lock_map_sprite }, lock_map_sprite->filter().multi_pupu, [&]() {
           lock_map_sprite->update_render_texture();
@@ -662,7 +737,7 @@ void fme::filter_window::menu_filtered_pupu(std::shared_ptr<map_sprite> &lock_ma
      })();
 }
 
-void fme::filter_window::menu_filtered_bpps(std::shared_ptr<map_sprite> &lock_map_sprite) const
+void fme::filter_window::menu_filtered_bpps(const std::shared_ptr<map_sprite> &lock_map_sprite) const
 {
      GenericMenuWithMultiFilter(gui_labels::bpp, lock_map_sprite->uniques().bpp(), lock_map_sprite->filter().multi_bpp, [&]() {
           lock_map_sprite->update_render_texture();
@@ -670,7 +745,7 @@ void fme::filter_window::menu_filtered_bpps(std::shared_ptr<map_sprite> &lock_ma
      })();
 }
 
-void fme::filter_window::menu_filtered_palettes(std::shared_ptr<map_sprite> &lock_map_sprite) const
+void fme::filter_window::menu_filtered_palettes(const std::shared_ptr<map_sprite> &lock_map_sprite) const
 {
      const auto &map         = lock_map_sprite->uniques().palette();
      const auto &keys        = lock_map_sprite->filter().multi_bpp.value();
@@ -710,7 +785,7 @@ void fme::filter_window::menu_filtered_palettes(std::shared_ptr<map_sprite> &loc
      })();
 }
 
-void fme::filter_window::menu_filtered_blend_modes(std::shared_ptr<map_sprite> &lock_map_sprite) const
+void fme::filter_window::menu_filtered_blend_modes(const std::shared_ptr<map_sprite> &lock_map_sprite) const
 {
      GenericMenuWithMultiFilter(
        gui_labels::blend_mode, lock_map_sprite->uniques().blend_mode(), lock_map_sprite->filter().multi_blend_mode, [&]() {
@@ -719,7 +794,7 @@ void fme::filter_window::menu_filtered_blend_modes(std::shared_ptr<map_sprite> &
        })();
 }
 
-void fme::filter_window::menu_filtered_blend_other(std::shared_ptr<map_sprite> &lock_map_sprite) const
+void fme::filter_window::menu_filtered_blend_other(const std::shared_ptr<map_sprite> &lock_map_sprite) const
 {
      GenericMenuWithMultiFilter(
        gui_labels::blend_other, lock_map_sprite->uniques().blend_other(), lock_map_sprite->filter().multi_blend_other, [&]() {
@@ -728,7 +803,7 @@ void fme::filter_window::menu_filtered_blend_other(std::shared_ptr<map_sprite> &
        })();
 }
 
-void fme::filter_window::menu_filtered_layers(std::shared_ptr<map_sprite> &lock_map_sprite) const
+void fme::filter_window::menu_filtered_layers(const std::shared_ptr<map_sprite> &lock_map_sprite) const
 {
      GenericMenuWithMultiFilter(
        gui_labels::layer_id, lock_map_sprite->uniques().layer_id(), lock_map_sprite->filter().multi_layer_id, [&]() {
@@ -737,7 +812,7 @@ void fme::filter_window::menu_filtered_layers(std::shared_ptr<map_sprite> &lock_
        })();
 }
 
-void fme::filter_window::menu_filtered_texture_pages(std::shared_ptr<map_sprite> &lock_map_sprite) const
+void fme::filter_window::menu_filtered_texture_pages(const std::shared_ptr<map_sprite> &lock_map_sprite) const
 {
      GenericMenuWithMultiFilter(
        gui_labels::texture_page, lock_map_sprite->uniques().texture_page_id(), lock_map_sprite->filter().multi_texture_page_id, [&]() {
@@ -746,7 +821,7 @@ void fme::filter_window::menu_filtered_texture_pages(std::shared_ptr<map_sprite>
        })();
 }
 
-void fme::filter_window::menu_filtered_animation_ids(std::shared_ptr<map_sprite> &lock_map_sprite) const
+void fme::filter_window::menu_filtered_animation_ids(const std::shared_ptr<map_sprite> &lock_map_sprite) const
 {
      GenericMenuWithMultiFilter(
        gui_labels::animation_id, lock_map_sprite->uniques().animation_id(), lock_map_sprite->filter().multi_animation_id, [&]() {
@@ -755,7 +830,7 @@ void fme::filter_window::menu_filtered_animation_ids(std::shared_ptr<map_sprite>
        })();
 }
 
-void fme::filter_window::menu_filtered_animation_states(std::shared_ptr<map_sprite> &lock_map_sprite) const
+void fme::filter_window::menu_filtered_animation_states(const std::shared_ptr<map_sprite> &lock_map_sprite) const
 {
      const auto &map         = lock_map_sprite->uniques().animation_state();
      const auto &keys        = lock_map_sprite->filter().multi_animation_id.value();
@@ -796,7 +871,7 @@ void fme::filter_window::menu_filtered_animation_states(std::shared_ptr<map_spri
        })();
 }
 
-void fme::filter_window::menu_filtered_z(std::shared_ptr<map_sprite> &lock_map_sprite) const
+void fme::filter_window::menu_filtered_z(const std::shared_ptr<map_sprite> &lock_map_sprite) const
 {
      GenericMenuWithMultiFilter(gui_labels::z, lock_map_sprite->uniques().z(), lock_map_sprite->filter().multi_z, [&]() {
           lock_map_sprite->update_render_texture();
@@ -831,10 +906,65 @@ struct map_draw_bit
      }
 };
 
-void fme::filter_window::menu_filtered_draw_bit(std::shared_ptr<map_sprite> &lock_map_sprite) const
+void fme::filter_window::menu_filtered_draw_bit(const std::shared_ptr<map_sprite> &lock_map_sprite) const
 {
      GenericMenuWithFilter(gui_labels::draw_bit, map_draw_bit{}, lock_map_sprite->filter().draw_bit, [&]() {
           lock_map_sprite->update_render_texture();
           m_changed = true;
      })();
+}
+
+void fme::filter_window::draw_thumbnail(
+  const std::shared_ptr<map_sprite>          &lock_map_sprite,
+  const std::string                          &file_name,
+  const std::optional<glengine::FrameBuffer> &framebuffer,
+  std::move_only_function<void()>             on_click) const
+{
+     const std::string &tooltip_str = [&]() -> const std::string & {
+          static const std::string empty_msg = "No filters are enabled...";
+          if (lock_map_sprite->get_deswizzle_combined_textures_tooltips().contains(file_name))
+          {
+               const std::string &tmp = lock_map_sprite->get_deswizzle_combined_textures_tooltips().at(file_name);
+               return tmp.empty() ? empty_msg : tmp;
+          }
+          return empty_msg;
+     }();
+     if (framebuffer.has_value())
+     {
+          ImTextureID tex_id      = (m_hovered_file_name == file_name)
+                                      ? glengine::ConvertGliDtoImTextureId<ImTextureID>(framebuffer.value().color_attachment_id(2))
+                                      : glengine::ConvertGliDtoImTextureId<ImTextureID>(framebuffer.value().color_attachment_id());
+          m_aspect_ratio          = static_cast<float>(framebuffer.value().height()) / static_cast<float>(framebuffer.value().width());
+          const ImVec2 thumb_size = { m_thumb_size_width, m_thumb_size_width * m_aspect_ratio };
+          if (ImGui::ImageButton(file_name.c_str(), tex_id, thumb_size))
+          {
+               std::invoke(on_click);
+          }
+          else
+          {
+               tool_tip(tooltip_str);
+          }
+          if (ImGui::IsItemHovered())
+          {
+               m_hovered_file_name = file_name;
+          }
+          else if (m_hovered_file_name == file_name)
+          {
+               m_hovered_file_name = {};
+          }
+     }
+     else
+     {
+          const auto pop_id            = PushPopID();
+          ImVec2     padded_thumb_size = { m_thumb_size_width + ImGui::GetStyle().FramePadding.x * 2.0f,
+                                           m_thumb_size_width * m_aspect_ratio + ImGui::GetStyle().FramePadding.y * 2.0f };
+          if (ImGui::Button("##Empty", padded_thumb_size))
+          {
+               on_click();
+          }
+          else
+          {
+               tool_tip(tooltip_str);
+          }
+     }
 }
