@@ -149,8 +149,8 @@ void fme::filter_window::handle_remove_queue(
      for (const auto &file_name : m_remove_queue)
      {
           (void)lock_map_sprite->remove_deswizzle_combined_toml_table(file_name);
-          save_config(lock_selections);
      }
+     save_config(lock_selections);
      m_remove_queue.clear();
 }
 
@@ -167,6 +167,37 @@ void fme::filter_window::render_list_view(
   const std::shared_ptr<Selections> &lock_selections,
   const std::shared_ptr<map_sprite> &lock_map_sprite) const
 {
+     ImGui::BeginDisabled(std::ranges::empty(m_multi_select));
+     format_imgui_wrapped_text("Selected {} Items(s): ", std::ranges::size(m_multi_select));
+     ImGui::SameLine();
+     // Combine into a new entry (keep originals)
+     if (ImGui::Button(ICON_FA_LAYER_GROUP " Combine (New)"))
+     {
+          // todo: combine into new entry
+     }
+     tool_tip("Combine selected entries into a new entry without removing the originals.");
+     ImGui::SameLine();
+     // Combine and replace originals
+     if (ImGui::Button(ICON_FA_OBJECT_GROUP " Combine (Replace)"))
+     {
+          // todo: combine into one entry and remove originals
+     }
+     tool_tip("Combine selected entries into one entry and remove the originals.");
+     ImGui::SameLine();
+     // Copy
+     if (ImGui::Button(ICON_FA_COPY " Copy"))
+     {
+          // todo: copy create new entries with generated name (prefix_timestamp_index.png).
+     }
+     tool_tip("Copy selected entries into new entries with generated names.");
+     ImGui::SameLine();
+     if (ImGui::Button(ICON_FA_TRASH " Remove"))
+     {
+          std::ranges::move(m_multi_select, std::back_inserter(m_remove_queue));
+          m_multi_select.clear();
+     }
+     tool_tip("Remove selected entries.");
+     ImGui::EndDisabled();
      ImGui::Columns(calc_column_count(), "##get_deswizzle_combined_textures", false);
 
      for (const auto &[file_name, framebuffer] : *m_textures_map)
@@ -194,6 +225,20 @@ void fme::filter_window::select_file(const std::string &file_name, const std::sh
 {
      if (auto *ptr = lock_map_sprite->get_deswizzle_combined_toml_table(file_name); ptr)
      {
+          if (ImGui::GetIO().KeyCtrl)
+          {
+               const auto it = std::ranges::find(m_multi_select, file_name);
+               if (it == std::ranges::end(m_multi_select))
+               {
+                    m_multi_select.push_back(file_name);
+               }
+               else
+               {
+                    m_multi_select.erase(it);
+               }
+               return;
+          }
+          m_multi_select.clear();
           m_selected_file_name = file_name;
           const auto count     = (std::min)(s_max_chars, static_cast<size_t>(m_selected_file_name.size()));
           std::ranges::copy_n(m_selected_file_name.begin(), count, m_file_name_buffer.begin());
@@ -284,12 +329,22 @@ void fme::filter_window::draw_add_new_button(
             "{}_{:%Y%m%d_%H%M%S}.png",
             lock_map_sprite->get_recommended_prefix(),
             std::chrono::time_point_cast<std::chrono::seconds>(std::chrono::system_clock::now()));
-          m_selected_toml_table = lock_map_sprite->add_deswizzle_combined_toml_table(m_selected_file_name);
+          if (!ImGui::GetIO().KeyCtrl)
+          {
+               m_multi_select.clear();
+               m_selected_toml_table = lock_map_sprite->add_deswizzle_combined_toml_table(m_selected_file_name);
+               
+               std::ranges::copy_n(
+                    m_selected_file_name.begin(),
+                    (std::min)(s_max_chars, static_cast<size_t>(m_selected_file_name.size())),
+                    m_file_name_buffer.begin());
+          }
+          else
+          {
+               (void)lock_map_sprite->add_deswizzle_combined_toml_table(m_selected_file_name);
+               m_selected_file_name.clear();
+          }
 
-          std::ranges::copy_n(
-            m_selected_file_name.begin(),
-            (std::min)(s_max_chars, static_cast<size_t>(m_selected_file_name.size())),
-            m_file_name_buffer.begin());
           save_config(lock_selections);
      }
      else
@@ -386,7 +441,7 @@ void fme::filter_window::draw_filename_controls(
           const bool has_prev      = m_previous_file_name.has_value();
           const auto disabled      = ImGuiDisabled(!has_prev);
 
-          const bool       activate_prev = ImGui::ArrowButton("##l", ImGuiDir_Left) || (has_prev && ImGui::IsKeyPressed(ImGuiKey_LeftArrow));
+          const bool activate_prev = ImGui::ArrowButton("##l", ImGuiDir_Left) || (has_prev && ImGui::IsKeyPressed(ImGuiKey_LeftArrow));
           if (activate_prev)
           {
                select_file(m_previous_file_name.value(), lock_map_sprite);
@@ -402,7 +457,7 @@ void fme::filter_window::draw_filename_controls(
           const bool has_next      = m_next_file_name.has_value();
           const auto disabled      = ImGuiDisabled(!has_next);
 
-          const bool       activate_next = ImGui::ArrowButton("##l", ImGuiDir_Right) || (has_next && ImGui::IsKeyPressed(ImGuiKey_RightArrow));
+          const bool activate_next = ImGui::ArrowButton("##l", ImGuiDir_Right) || (has_next && ImGui::IsKeyPressed(ImGuiKey_RightArrow));
           if (activate_next)
           {
                select_file(m_next_file_name.value(), lock_map_sprite);
@@ -931,11 +986,27 @@ void fme::filter_window::draw_thumbnail(
      }();
      if (framebuffer.has_value())
      {
-          ImTextureID tex_id      = (m_hovered_file_name == file_name)
-                                      ? glengine::ConvertGliDtoImTextureId<ImTextureID>(framebuffer.value().color_attachment_id(2))
-                                      : glengine::ConvertGliDtoImTextureId<ImTextureID>(framebuffer.value().color_attachment_id());
-          m_aspect_ratio          = static_cast<float>(framebuffer.value().height()) / static_cast<float>(framebuffer.value().width());
-          const ImVec2 thumb_size = { m_thumb_size_width, m_thumb_size_width * m_aspect_ratio };
+          ImTextureID tex_id           = (m_hovered_file_name == file_name)
+                                           ? glengine::ConvertGliDtoImTextureId<ImTextureID>(framebuffer.value().color_attachment_id(2))
+                                           : glengine::ConvertGliDtoImTextureId<ImTextureID>(framebuffer.value().color_attachment_id());
+          m_aspect_ratio               = static_cast<float>(framebuffer.value().height()) / static_cast<float>(framebuffer.value().width());
+          const ImVec2 thumb_size      = { m_thumb_size_width, m_thumb_size_width * m_aspect_ratio };
+
+          const auto   it              = std::ranges::find(m_multi_select, file_name);
+          bool         selected        = it != std::ranges::end(m_multi_select);
+          const auto   pop_style_color = glengine::ScopeGuard{ [selected]() {
+               if (selected)
+               {
+                    ImGui::PopStyleColor(3);
+               }
+          } };
+          if (selected)
+          {
+               ImGui::PushStyleColor(ImGuiCol_Button, colors::ButtonGreen);
+               ImGui::PushStyleColor(ImGuiCol_ButtonHovered, colors::ButtonGreenHovered);
+               ImGui::PushStyleColor(ImGuiCol_ButtonActive, colors::ButtonGreenActive);
+          }
+
           if (ImGui::ImageButton(file_name.c_str(), tex_id, thumb_size))
           {
                std::invoke(on_click);

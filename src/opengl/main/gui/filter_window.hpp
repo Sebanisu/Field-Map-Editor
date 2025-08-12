@@ -67,6 +67,7 @@ struct filter_window
      mutable bool                                                         m_reload_thumbnail    = { false };
      mutable float                                                        m_aspect_ratio        = { 1.f };
      mutable float                                                        m_thumb_size_width    = { 96.f };
+     mutable std::vector<std::string>                                     m_multi_select        = {};
      mutable std::string                                                  m_selected_file_name  = {};
      mutable std::string                                                  m_hovered_file_name   = {};
      mutable std::optional<std::string>                                   m_previous_file_name  = {};
