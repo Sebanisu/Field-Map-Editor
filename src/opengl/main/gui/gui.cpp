@@ -761,16 +761,33 @@ void gui::compact_flatten_buttons()
 }
 void gui::background_color_picker()
 {
-     clear_color_f = { static_cast<float>(m_selections->get<ConfigKey::BackgroundColor>().r) / 255.F,
-                       static_cast<float>(m_selections->get<ConfigKey::BackgroundColor>().g) / 255.F,
-                       static_cast<float>(m_selections->get<ConfigKey::BackgroundColor>().b) / 255.F };
-     if (ImGui::ColorEdit3(gui_labels::background.data(), clear_color_f.data(), ImGuiColorEditFlags_DisplayRGB))
+     BackgroundSettings &bg_settings   = m_selections->get<ConfigKey::BackgroundSettings>();
+     clear_color_f                     = { static_cast<float>(m_selections->get<ConfigKey::BackgroundColor>().r) / 255.F,
+                                           static_cast<float>(m_selections->get<ConfigKey::BackgroundColor>().g) / 255.F,
+                                           static_cast<float>(m_selections->get<ConfigKey::BackgroundColor>().b) / 255.F };
+     clear_color_f2                    = { static_cast<float>(m_selections->get<ConfigKey::BackgroundColor2>().r) / 255.F,
+                                           static_cast<float>(m_selections->get<ConfigKey::BackgroundColor2>().g) / 255.F,
+                                           static_cast<float>(m_selections->get<ConfigKey::BackgroundColor2>().b) / 255.F };
+
+     static constexpr const auto flags = ImGuiColorEditFlags_DisplayRGB | ImGuiColorEditFlags_DisplayHSV | ImGuiColorEditFlags_DisplayHex;
+     if (ImGui::ColorEdit3(gui_labels::background.data(), clear_color_f.data(), flags))
      {
           m_selections->get<ConfigKey::BackgroundColor>() = { clear_color_f[0], clear_color_f[1], clear_color_f[2] };
      }
      if (ImGui::IsItemDeactivatedAfterEdit())
      {
           m_selections->update<ConfigKey::BackgroundColor>();
+     }
+     if (HasFlag(bg_settings, BackgroundSettings::TwoColors) && !HasFlag(bg_settings, BackgroundSettings::Solid))
+     {
+          if (ImGui::ColorEdit3(gui_labels::background2.data(), clear_color_f2.data(), flags))
+          {
+               m_selections->get<ConfigKey::BackgroundColor2>() = { clear_color_f2[0], clear_color_f2[1], clear_color_f2[2] };
+          }
+          if (ImGui::IsItemDeactivatedAfterEdit())
+          {
+               m_selections->update<ConfigKey::BackgroundColor2>();
+          }
      }
 }
 
@@ -1639,7 +1656,9 @@ void gui::edit_menu()
                clear_color_f2 = { static_cast<float>(m_selections->get<ConfigKey::BackgroundColor2>().r) / 255.F,
                                   static_cast<float>(m_selections->get<ConfigKey::BackgroundColor2>().g) / 255.F,
                                   static_cast<float>(m_selections->get<ConfigKey::BackgroundColor2>().b) / 255.F };
-               if (ImGui::ColorPicker3("##Choose Primary Background Color", clear_color_f.data(), ImGuiColorEditFlags_DisplayRGB))
+               static constexpr const auto flags =
+                 ImGuiColorEditFlags_DisplayRGB | ImGuiColorEditFlags_DisplayHSV | ImGuiColorEditFlags_DisplayHex;
+               if (ImGui::ColorPicker3("##Choose Primary Background Color", clear_color_f.data(), flags))
                {
                     m_selections->get<ConfigKey::BackgroundColor>() = { clear_color_f[0], clear_color_f[1], clear_color_f[2] };
                }
@@ -1649,7 +1668,7 @@ void gui::edit_menu()
                }
                if (HasFlag(bg_settings, BackgroundSettings::TwoColors) && !HasFlag(bg_settings, BackgroundSettings::Solid))
                {
-                    if (ImGui::ColorPicker3("##Choose Secondary Background Color", clear_color_f2.data(), ImGuiColorEditFlags_DisplayRGB))
+                    if (ImGui::ColorPicker3("##Choose Secondary Background Color", clear_color_f2.data(), flags))
                     {
                          m_selections->get<ConfigKey::BackgroundColor2>() = { clear_color_f2[0], clear_color_f2[1], clear_color_f2[2] };
                     }

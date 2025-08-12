@@ -31,6 +31,7 @@ struct gui_labels
      static constexpr std::string_view max_tiles                         = { "Max Tiles" };
      static constexpr std::string_view filters                           = { "Filters" };
      static constexpr std::string_view background                        = { "Background" };
+     static constexpr std::string_view background2                        = { "##Background2" };
      static constexpr std::string_view control_panel                     = { "Control Panel" };
      static constexpr std::string_view swizzle_path                      = { "Swizzle Path" };
      static constexpr std::string_view swizzle_as_one_image_path         = { "Swizzle As One Image Path" };
