@@ -459,7 +459,7 @@ inline constexpr bool ValidateBackgroundSettings(BackgroundSettings setting)
      // Must only contain valid bits
      if (std::to_underlying(setting) & ~std::to_underlying(BackgroundSettings::Solid | BackgroundSettings::TwoColors))
      {
-          if !consteval
+          if (!std::is_constant_evaluated())
           {
                spdlog::debug("Invalid BackgroundSettings: contains unknown bits ({:#X})", std::to_underlying(setting));
           }
@@ -471,7 +471,7 @@ inline constexpr bool ValidateBackgroundSettings(BackgroundSettings setting)
        (setting & (BackgroundSettings::Solid | BackgroundSettings::TwoColors))
        == (BackgroundSettings::Solid | BackgroundSettings::TwoColors))
      {
-          if !consteval
+          if (!std::is_constant_evaluated())
           {
                spdlog::debug("Invalid BackgroundSettings: Solid and TwoColors cannot be combined ({:#X})", std::to_underlying(setting));
           }
