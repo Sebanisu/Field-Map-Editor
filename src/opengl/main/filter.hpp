@@ -23,8 +23,7 @@
 #include <vector>
 namespace ff_8
 {
-enum class FilterSettings : std::uint8_t
-{
+enum class FilterSettings : std::uint8_t {
      All_Disabled   = 0U,
      Toggle_Enabled = 0x1U << 0,
      Config_Enabled = 0x1U << 1,
