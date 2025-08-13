@@ -2012,7 +2012,7 @@ toml::table *map_sprite::add_combine_deswizzle_combined_toml_table(
      }
 
      toml::table new_table{};
-     filter().update(new_table);// This mutates new_table directly
+     tmp_filters.update(new_table);// This mutates new_table directly
      auto [it, inserted] = coo_table->insert(new_file_name, std::move(new_table));
      if (!inserted)
      {

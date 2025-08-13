@@ -79,7 +79,8 @@ struct [[nodiscard]] map_sprite// final
 
      glengine::BatchRenderer                        m_batch_renderer                = { 1000 };
      // glengine::BatchRenderer                        m_batch_renderer_red_integer    = { 1,
-     //                                                                                    { std::filesystem::current_path() / "res" / "shader"
+     //                                                                                    { std::filesystem::current_path() / "res" /
+     //                                                                                    "shader"
      //                                                                                      / "red_integer.shader" } };
 
      mutable std::shared_ptr<glengine::FrameBuffer> m_render_framebuffer            = {};
@@ -183,7 +184,7 @@ struct [[nodiscard]] map_sprite// final
      [[nodiscard]] toml::table *rename_deswizzle_combined_toml_table(const std::string &, const std::string &);
      [[nodiscard]] std::size_t  remove_deswizzle_combined_toml_table(const std::string &);
      [[nodiscard]] toml::table *add_deswizzle_combined_toml_table(const std::string &);
-     [[nodiscard]] toml::table *add_combine_deswizzle_combined_toml_table(const std::vector<std::string> &, const std::string &, const bool);
+     [[nodiscard]] toml::table *add_combine_deswizzle_combined_toml_table(const std::vector<std::string> &, const std::string &);
      [[nodiscard]] std::vector<std::future<void>>
        save_deswizzle_combined_textures(const std::string &keyed_string, const std::filesystem::path &selected_path);
      [[nodiscard]] std::future<std::future<void>> load_swizzle_textures(std::uint8_t texture_page, std::uint8_t palette) const;
