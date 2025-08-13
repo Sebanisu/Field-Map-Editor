@@ -167,38 +167,49 @@ void fme::filter_window::render_list_view(
   const std::shared_ptr<Selections> &lock_selections,
   const std::shared_ptr<map_sprite> &lock_map_sprite) const
 {
+     const float  button_height = ImGui::GetTextLineHeight() + ImGui::GetStyle().FramePadding.y * 2.0f;
+     const ImVec2 button_size   = { m_tool_button_size_width, button_height };
+     ImGui::Columns(calc_column_count(m_tool_button_size_width), "##get_deswizzle_combined_tool_buttons", false);
      ImGui::BeginDisabled(std::ranges::empty(m_multi_select));
      format_imgui_wrapped_text("Selected {} Items(s): ", std::ranges::size(m_multi_select));
-     ImGui::SameLine();
+     ImGui::NextColumn();
      // Combine into a new entry (keep originals)
-     if (ImGui::Button(ICON_FA_LAYER_GROUP " Combine (New)"))
+     if (ImGui::Button(ICON_FA_LAYER_GROUP " Combine (New)", button_size))
      {
           // todo: combine into new entry
      }
      tool_tip("Combine selected entries into a new entry without removing the originals.");
-     ImGui::SameLine();
+     ImGui::NextColumn();
      // Combine and replace originals
-     if (ImGui::Button(ICON_FA_OBJECT_GROUP " Combine (Replace)"))
+     if (ImGui::Button(ICON_FA_OBJECT_GROUP " Combine (Replace)", button_size))
      {
           // todo: combine into one entry and remove originals
      }
      tool_tip("Combine selected entries into one entry and remove the originals.");
-     ImGui::SameLine();
+     ImGui::NextColumn();
      // Copy
-     if (ImGui::Button(ICON_FA_COPY " Copy"))
+     if (ImGui::Button(ICON_FA_COPY " Copy", button_size))
      {
           // todo: copy create new entries with generated name (prefix_timestamp_index.png).
      }
      tool_tip("Copy selected entries into new entries with generated names.");
-     ImGui::SameLine();
-     if (ImGui::Button(ICON_FA_TRASH " Remove"))
+     ImGui::NextColumn();
+     if (ImGui::Button(ICON_FA_TRASH " Remove", button_size))
      {
           std::ranges::move(m_multi_select, std::back_inserter(m_remove_queue));
           m_multi_select.clear();
      }
      tool_tip("Remove selected entries.");
      ImGui::EndDisabled();
-     ImGui::Columns(calc_column_count(), "##get_deswizzle_combined_textures", false);
+     ImGui::NextColumn();
+     if (ImGui::Button(ICON_FA_PLUS " Add New", button_size))
+     {
+          add_new_entry(lock_selections, lock_map_sprite);
+     }
+     tool_tip("Add a new entry.\nHold Ctrl to add multiple entries.\nWithout Ctrl, the mode will switch to editing the new entry.");
+
+     ImGui::Columns(1);
+     ImGui::Columns(calc_column_count(m_thumb_size_width), "##get_deswizzle_combined_textures", false);
 
      for (const auto &[file_name, framebuffer] : *m_textures_map)
      {
@@ -212,11 +223,11 @@ void fme::filter_window::render_list_view(
      ImGui::Columns(1);
 }
 
-int fme::filter_window::calc_column_count() const
+int fme::filter_window::calc_column_count(float width) const
 {
      const ImVec2 region_size = ImGui::GetContentRegionAvail();
      const float  padding     = ImGui::GetStyle().FramePadding.x * 2.0f + ImGui::GetStyle().ItemSpacing.x;
-     const int    count       = static_cast<int>(region_size.x / (m_thumb_size_width + padding));
+     const int    count       = static_cast<int>(region_size.x / (width + padding));
      return count > 0 ? count : 1;
 }
 
@@ -325,31 +336,11 @@ void fme::filter_window::draw_add_new_button(
      const ImVec2 thumb_size = { m_thumb_size_width, m_thumb_size_width * m_aspect_ratio };
      if (ImGui::ImageButton("add new item", tex_id, thumb_size))
      {
-          m_selected_file_name = fmt::format(
-            "{}_{:%Y%m%d_%H%M%S}.png",
-            lock_map_sprite->get_recommended_prefix(),
-            std::chrono::time_point_cast<std::chrono::seconds>(std::chrono::system_clock::now()));
-          if (!ImGui::GetIO().KeyCtrl)
-          {
-               m_multi_select.clear();
-               m_selected_toml_table = lock_map_sprite->add_deswizzle_combined_toml_table(m_selected_file_name);
-               
-               std::ranges::copy_n(
-                    m_selected_file_name.begin(),
-                    (std::min)(s_max_chars, static_cast<size_t>(m_selected_file_name.size())),
-                    m_file_name_buffer.begin());
-          }
-          else
-          {
-               (void)lock_map_sprite->add_deswizzle_combined_toml_table(m_selected_file_name);
-               m_selected_file_name.clear();
-          }
-
-          save_config(lock_selections);
+          add_new_entry(lock_selections, lock_map_sprite);
      }
      else
      {
-          tool_tip("Add new entry...");
+          tool_tip("Add a new entry.\nHold Ctrl to add multiple entries.\nWithout Ctrl, the mode will switch to editing the new entry.");
      }
 
      if (ImGui::IsItemHovered())
@@ -361,6 +352,34 @@ void fme::filter_window::draw_add_new_button(
           m_hovered_file_name = {};
      }
      format_imgui_wrapped_text("Add new entry...");
+}
+
+void fme::filter_window::add_new_entry(
+  const std::shared_ptr<Selections> &lock_selections,
+  const std::shared_ptr<map_sprite> &lock_map_sprite) const
+{
+
+     m_selected_file_name = fmt::format(
+       "{}_{:%Y%m%d_%H%M%S}.png",
+       lock_map_sprite->get_recommended_prefix(),
+       std::chrono::time_point_cast<std::chrono::seconds>(std::chrono::system_clock::now()));
+     if (!ImGui::GetIO().KeyCtrl)
+     {
+          m_multi_select.clear();
+          m_selected_toml_table = lock_map_sprite->add_deswizzle_combined_toml_table(m_selected_file_name);
+
+          std::ranges::copy_n(
+            m_selected_file_name.begin(),
+            (std::min)(s_max_chars, static_cast<size_t>(m_selected_file_name.size())),
+            m_file_name_buffer.begin());
+     }
+     else
+     {
+          (void)lock_map_sprite->add_deswizzle_combined_toml_table(m_selected_file_name);
+          m_selected_file_name.clear();
+     }
+
+     save_config(lock_selections);
 }
 
 void fme::filter_window::render_detail_view(

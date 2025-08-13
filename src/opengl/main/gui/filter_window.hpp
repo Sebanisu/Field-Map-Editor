@@ -20,12 +20,13 @@ struct filter_window
      void               handle_remove_queue(const std::shared_ptr<Selections> &, const std::shared_ptr<map_sprite> &) const;
      void               save_config(const std::shared_ptr<Selections> &) const;
      void               render_list_view(const std::shared_ptr<Selections> &, const std::shared_ptr<map_sprite> &) const;
-     [[nodiscard]] int  calc_column_count() const;
+     [[nodiscard]] int  calc_column_count(float) const;
      void               select_file(const std::string &, const std::shared_ptr<map_sprite> &) const;
      [[nodiscard]] std::optional<std::string> prev_key() const;
      [[nodiscard]] std::optional<std::string> next_key() const;
      void                                     draw_thumbnail_label(const std::string &) const;
      void draw_add_new_button(const std::shared_ptr<Selections> &, const std::shared_ptr<map_sprite> &) const;
+     void add_new_entry(const std::shared_ptr<Selections> &, const std::shared_ptr<map_sprite> &) const;
      void render_detail_view(const std::shared_ptr<Selections> &, const std::shared_ptr<map_sprite> &) const;
      void draw_filename_controls(const std::shared_ptr<Selections> &, const std::shared_ptr<map_sprite> &) const;
      void unselect_file() const;
@@ -59,23 +60,24 @@ struct filter_window
        const std::optional<glengine::FrameBuffer> &framebuffer,
        std::move_only_function<void()>             on_click) const;
 
-     mutable bool                                                         m_changed             = { false };
-     std::weak_ptr<Selections>                                            m_selections          = {};
-     std::weak_ptr<map_sprite>                                            m_map_sprite          = {};
+     mutable bool                                                         m_changed                = { false };
+     std::weak_ptr<Selections>                                            m_selections             = {};
+     std::weak_ptr<map_sprite>                                            m_map_sprite             = {};
 
 
-     mutable bool                                                         m_reload_thumbnail    = { false };
-     mutable float                                                        m_aspect_ratio        = { 1.f };
-     mutable float                                                        m_thumb_size_width    = { 96.f };
-     mutable std::vector<std::string>                                     m_multi_select        = {};
-     mutable std::string                                                  m_selected_file_name  = {};
-     mutable std::string                                                  m_hovered_file_name   = {};
-     mutable std::optional<std::string>                                   m_previous_file_name  = {};
-     mutable std::optional<std::string>                                   m_next_file_name      = {};
-     mutable toml::table                                                 *m_selected_toml_table = {};
-     mutable std::vector<std::string>                                     m_remove_queue        = {};
-     mutable std::array<char, 128>                                        m_file_name_buffer    = {};
-     mutable std::map<std::string, std::optional<glengine::FrameBuffer>> *m_textures_map        = {};
+     mutable bool                                                         m_reload_thumbnail       = { false };
+     mutable float                                                        m_aspect_ratio           = { 1.f };
+     float                                                                m_tool_button_size_width = { 152.f };
+     mutable float                                                        m_thumb_size_width       = { 96.f };
+     mutable std::vector<std::string>                                     m_multi_select           = {};
+     mutable std::string                                                  m_selected_file_name     = {};
+     mutable std::string                                                  m_hovered_file_name      = {};
+     mutable std::optional<std::string>                                   m_previous_file_name     = {};
+     mutable std::optional<std::string>                                   m_next_file_name         = {};
+     mutable toml::table                                                 *m_selected_toml_table    = {};
+     mutable std::vector<std::string>                                     m_remove_queue           = {};
+     mutable std::array<char, 128>                                        m_file_name_buffer       = {};
+     mutable std::map<std::string, std::optional<glengine::FrameBuffer>> *m_textures_map           = {};
      static const constexpr size_t                                        s_max_chars =
        std::ranges::size(std::remove_cvref_t<decltype(m_file_name_buffer)>{}) - 1U;// space for null terminator
 };
