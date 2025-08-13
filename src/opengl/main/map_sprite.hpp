@@ -178,12 +178,17 @@ struct [[nodiscard]] map_sprite// final
        save_deswizzle_combined_toml(const std::string &keyed_string, const std::filesystem::path &selected_path);
      [[nodiscard]] const std::map<std::string, std::string>                    &get_deswizzle_combined_textures_tooltips();
      [[nodiscard]] std::map<std::string, std::optional<glengine::FrameBuffer>> &get_deswizzle_combined_textures();
-     [[nodiscard]] toml::table                                                 *get_deswizzle_combined_coo_table();
-     [[nodiscard]] toml::table                                                 *get_deswizzle_combined_toml_table(const std::string &);
-     [[nodiscard]] std::string                                                  get_recommended_prefix();
+     [[nodiscard]] std::string  generate_deswizzle_combined_tool_tip(const toml::table *file_table) const;
+     [[nodiscard]] toml::table *get_deswizzle_combined_coo_table();
+     [[nodiscard]] toml::table *get_deswizzle_combined_toml_table(const std::string &);
+     [[nodiscard]] std::string  get_recommended_prefix();
      [[nodiscard]] toml::table *rename_deswizzle_combined_toml_table(const std::string &, const std::string &);
      [[nodiscard]] std::size_t  remove_deswizzle_combined_toml_table(const std::string &);
      [[nodiscard]] toml::table *add_deswizzle_combined_toml_table(const std::string &);
+     void                       refresh_tooltip(const std::string &);
+     void                       apply_multi_pupu_filter_deswizzle_combined_toml_table(
+                             const std::string                                  &file_name_key,
+                             const ff_8::filter_old<ff_8::FilterTag::MultiPupu> &new_filter);
      [[nodiscard]] toml::table *add_combine_deswizzle_combined_toml_table(const std::vector<std::string> &, const std::string &);
      [[nodiscard]] std::vector<std::future<void>>
        save_deswizzle_combined_textures(const std::string &keyed_string, const std::filesystem::path &selected_path);

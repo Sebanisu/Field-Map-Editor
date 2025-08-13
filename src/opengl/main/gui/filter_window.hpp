@@ -25,41 +25,42 @@ struct filter_window
      [[nodiscard]] std::optional<std::string> prev_key() const;
      [[nodiscard]] std::optional<std::string> next_key() const;
      void                                     draw_thumbnail_label(const std::string &) const;
-     void draw_add_new_button(const std::shared_ptr<Selections> &, const std::shared_ptr<map_sprite> &) const;
-     void add_new_entry(const std::shared_ptr<Selections> &, const std::shared_ptr<map_sprite> &) const;
-     [[nodiscard]] std::string generate_file_name(const std::shared_ptr<map_sprite> &,const std::optional<int> index = std::nullopt) const;
-     void render_detail_view(const std::shared_ptr<Selections> &, const std::shared_ptr<map_sprite> &) const;
-     void draw_filename_controls(const std::shared_ptr<Selections> &, const std::shared_ptr<map_sprite> &) const;
-     void unselect_file() const;
-     void draw_filter_controls(const std::shared_ptr<map_sprite> &) const;
-     void combo_filtered_pupu(const std::shared_ptr<map_sprite> &) const;
-     void combo_filtered_bpps(const std::shared_ptr<map_sprite> &) const;
-     void combo_filtered_palettes(const std::shared_ptr<map_sprite> &) const;
-     void combo_filtered_blend_modes(const std::shared_ptr<map_sprite> &) const;
-     void combo_filtered_blend_other(const std::shared_ptr<map_sprite> &) const;
-     void combo_filtered_layers(const std::shared_ptr<map_sprite> &) const;
-     void combo_filtered_texture_pages(const std::shared_ptr<map_sprite> &) const;
-     void combo_filtered_animation_ids(const std::shared_ptr<map_sprite> &) const;
-     void combo_filtered_animation_states(const std::shared_ptr<map_sprite> &) const;
-     void combo_filtered_z(const std::shared_ptr<map_sprite> &) const;
-     void combo_filtered_draw_bit(const std::shared_ptr<map_sprite> &) const;
-     void menu_filtered_pupu(const std::shared_ptr<map_sprite> &) const;
-     void menu_filtered_bpps(const std::shared_ptr<map_sprite> &) const;
-     void menu_filtered_palettes(const std::shared_ptr<map_sprite> &) const;
-     void menu_filtered_blend_modes(const std::shared_ptr<map_sprite> &) const;
-     void menu_filtered_blend_other(const std::shared_ptr<map_sprite> &) const;
-     void menu_filtered_layers(const std::shared_ptr<map_sprite> &) const;
-     void menu_filtered_texture_pages(const std::shared_ptr<map_sprite> &) const;
-     void menu_filtered_animation_ids(const std::shared_ptr<map_sprite> &) const;
-     void menu_filtered_animation_states(const std::shared_ptr<map_sprite> &) const;
-     void menu_filtered_z(const std::shared_ptr<map_sprite> &) const;
-     void menu_filtered_draw_bit(const std::shared_ptr<map_sprite> &) const;
+     void                      draw_add_new_button(const std::shared_ptr<Selections> &, const std::shared_ptr<map_sprite> &) const;
+     void                      add_new_entry(const std::shared_ptr<Selections> &, const std::shared_ptr<map_sprite> &) const;
+     [[nodiscard]] std::string generate_file_name(const std::shared_ptr<map_sprite> &, const std::optional<int> index = std::nullopt) const;
+     void                      render_detail_view(const std::shared_ptr<Selections> &, const std::shared_ptr<map_sprite> &) const;
+     void                      draw_filename_controls(const std::shared_ptr<Selections> &, const std::shared_ptr<map_sprite> &) const;
+     void                      unselect_file() const;
+     void                      draw_filter_controls(const std::shared_ptr<map_sprite> &) const;
+     void                      popup_combo_filtered_pupu(const std::shared_ptr<Selections> &, const std::shared_ptr<map_sprite> &) const;
+     void                      combo_filtered_pupu(const std::shared_ptr<map_sprite> &) const;
+     void                      combo_filtered_bpps(const std::shared_ptr<map_sprite> &) const;
+     void                      combo_filtered_palettes(const std::shared_ptr<map_sprite> &) const;
+     void                      combo_filtered_blend_modes(const std::shared_ptr<map_sprite> &) const;
+     void                      combo_filtered_blend_other(const std::shared_ptr<map_sprite> &) const;
+     void                      combo_filtered_layers(const std::shared_ptr<map_sprite> &) const;
+     void                      combo_filtered_texture_pages(const std::shared_ptr<map_sprite> &) const;
+     void                      combo_filtered_animation_ids(const std::shared_ptr<map_sprite> &) const;
+     void                      combo_filtered_animation_states(const std::shared_ptr<map_sprite> &) const;
+     void                      combo_filtered_z(const std::shared_ptr<map_sprite> &) const;
+     void                      combo_filtered_draw_bit(const std::shared_ptr<map_sprite> &) const;
+     void                      menu_filtered_pupu(const std::shared_ptr<map_sprite> &) const;
+     void                      menu_filtered_bpps(const std::shared_ptr<map_sprite> &) const;
+     void                      menu_filtered_palettes(const std::shared_ptr<map_sprite> &) const;
+     void                      menu_filtered_blend_modes(const std::shared_ptr<map_sprite> &) const;
+     void                      menu_filtered_blend_other(const std::shared_ptr<map_sprite> &) const;
+     void                      menu_filtered_layers(const std::shared_ptr<map_sprite> &) const;
+     void                      menu_filtered_texture_pages(const std::shared_ptr<map_sprite> &) const;
+     void                      menu_filtered_animation_ids(const std::shared_ptr<map_sprite> &) const;
+     void                      menu_filtered_animation_states(const std::shared_ptr<map_sprite> &) const;
+     void                      menu_filtered_z(const std::shared_ptr<map_sprite> &) const;
+     void                      menu_filtered_draw_bit(const std::shared_ptr<map_sprite> &) const;
 
-     void draw_thumbnail(
-       const std::shared_ptr<map_sprite>          &lock_map_sprite,
-       const std::string                          &file_name,
-       const std::optional<glengine::FrameBuffer> &framebuffer,
-       std::move_only_function<void()>             on_click) const;
+     void                      draw_thumbnail(
+                            const std::shared_ptr<map_sprite>          &lock_map_sprite,
+                            const std::string                          &file_name,
+                            const std::optional<glengine::FrameBuffer> &framebuffer,
+                            std::move_only_function<void()>             on_click) const;
 
      mutable bool                                                         m_changed                = { false };
      std::weak_ptr<Selections>                                            m_selections             = {};
@@ -70,6 +71,7 @@ struct filter_window
      mutable float                                                        m_aspect_ratio           = { 1.f };
      float                                                                m_tool_button_size_width = { 152.f };
      mutable float                                                        m_thumb_size_width       = { 96.f };
+     mutable ff_8::filter_old<ff_8::FilterTag::MultiPupu>                 m_multi_select_filter    = { ff_8::FilterSettings::All_Disabled };
      mutable std::vector<std::string>                                     m_multi_select           = {};
      mutable std::string                                                  m_selected_file_name     = {};
      mutable std::string                                                  m_hovered_file_name      = {};

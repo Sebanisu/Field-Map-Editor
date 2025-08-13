@@ -1772,11 +1772,7 @@ std::string map_sprite::get_base_name() const
           auto [it, inserted] = m_cache_framebuffer.emplace(file_name_str, specification);
           if (inserted)
           {
-               m_cache_framebuffer_tooltips[file_name_str] = [&]() {
-                    std::ostringstream ss{};
-                    ss << *file_node.as_table();
-                    return ss.str();
-               }();
+               m_cache_framebuffer_tooltips[file_name_str] = generate_deswizzle_combined_tool_tip(file_node.as_table());
                if (!it->second.has_value())
                {
                     continue;
@@ -1791,6 +1787,26 @@ std::string map_sprite::get_base_name() const
 
      return m_cache_framebuffer;
 }
+
+std::string map_sprite::generate_deswizzle_combined_tool_tip(const toml::table *file_table) const
+{
+     std::ostringstream ss{};
+     ss << *file_table;
+
+     if (auto pupu_array = (*file_table)["filter_multi_pupu"].as_array(); pupu_array)
+     {
+          for (auto &elem : *pupu_array)
+          {
+               if (auto val = elem.value<uint32_t>(); val)
+               {
+                    ff_8::PupuID pupu_id{ *val };
+
+                    ss << fmt::format("\n\nPupu ID: {:08X} - {}\n{}\n", *val, *val, pupu_id.create_summary());
+               }
+          }
+     }
+     return ss.str();
+};
 
 toml::table *map_sprite::get_deswizzle_combined_coo_table()
 {
@@ -1984,18 +2000,51 @@ toml::table *map_sprite::get_deswizzle_combined_toml_table(const std::string &fi
      }
 
      spdlog::info("Inserted new texture entry '{}'.", new_file_name);
-     m_cache_framebuffer_tooltips[new_file_name] = [&]() {
-          std::ostringstream ss{};
-          ss << *it->second.as_table();
-          return ss.str();
-     }();
+     m_cache_framebuffer_tooltips[new_file_name] = generate_deswizzle_combined_tool_tip(&new_table);
      return it->second.as_table();
 }
 
+void map_sprite::refresh_tooltip(const std::string &file_name)
+{
 
-toml::table *map_sprite::add_combine_deswizzle_combined_toml_table(
-  const std::vector<std::string> &file_names,
-  const std::string              &new_file_name)
+     if (const auto *table = get_deswizzle_combined_toml_table(file_name); table)
+     {
+          m_cache_framebuffer_tooltips[file_name] = generate_deswizzle_combined_tool_tip(table);
+     }
+}
+
+void map_sprite::apply_multi_pupu_filter_deswizzle_combined_toml_table(
+  const std::string                                  &file_name_key,
+  const ff_8::filter_old<ff_8::FilterTag::MultiPupu> &new_filter)
+{
+     if (auto *table = get_deswizzle_combined_toml_table(file_name_key))
+     {
+          if (new_filter.enabled())
+          {
+               // Update in-memory filter state from the table
+               ff_8::filter_old<ff_8::FilterTag::MultiPupu> copy_filter = {new_filter.value(), ff_8::FilterSettings::Toggle_Enabled};
+
+               copy_filter.combine(*table);
+               copy_filter.update(*table);
+          }
+          else
+          {
+               ff_8::filter_old<ff_8::FilterTag::MultiPupu> copy_filter = (ff_8::FilterSettings::Toggle_Enabled);
+               copy_filter.reload(*table);
+               ff_8::filter_old<ff_8::FilterTag::MultiPupu>::value_type tempvec = {};
+
+               std::ranges::remove_copy_if(copy_filter.value(), std::back_inserter(tempvec), [&](const auto &value) {
+                    return std::ranges::find(new_filter.value(), value) != std::ranges::end(new_filter.value());
+               });
+               copy_filter.update(std::move(tempvec));
+               copy_filter.update(*table);
+          }
+     }
+}
+
+
+toml::table *
+  map_sprite::add_combine_deswizzle_combined_toml_table(const std::vector<std::string> &file_names, const std::string &new_file_name)
 {
      toml::table *coo_table = get_deswizzle_combined_coo_table();
      if (!coo_table)
@@ -2020,11 +2069,7 @@ toml::table *map_sprite::add_combine_deswizzle_combined_toml_table(
           return nullptr;
      }
      spdlog::info("Inserted new texture entry '{}'.", new_file_name);
-     m_cache_framebuffer_tooltips[new_file_name] = [&]() {
-          std::ostringstream ss{};
-          ss << *it->second.as_table();
-          return ss.str();
-     }();
+     m_cache_framebuffer_tooltips[new_file_name] = generate_deswizzle_combined_tool_tip(&new_table);
      return it->second.as_table();
 }
 

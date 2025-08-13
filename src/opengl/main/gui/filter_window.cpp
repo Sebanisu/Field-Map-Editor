@@ -78,7 +78,17 @@ void fme::filter_window::render() const
      if (m_reload_thumbnail)
      {
           m_reload_thumbnail = false;
-          m_textures_map->erase(m_selected_file_name);
+          if (!m_multi_select.empty())
+          {
+               for (const std::string &current_file_name : m_multi_select)
+               {
+                    m_textures_map->erase(current_file_name);
+               }
+          }
+          else
+          {
+               m_textures_map->erase(m_selected_file_name);
+          }
           (void)lock_map_sprite->get_deswizzle_combined_textures();
      }
 
@@ -202,6 +212,13 @@ void fme::filter_window::render_list_view(
           m_multi_select.clear();
      }
      tool_tip("Remove selected entries.");
+     ImGui::NextColumn();
+     if (ImGui::Button(ICON_FA_FILTER " Pupu Filter", button_size))
+     {
+          ImGui::OpenPopup("Pupu Filter Popup");
+     }
+     tool_tip("Bulk enable or disable pupu.");
+     popup_combo_filtered_pupu(lock_selections, lock_map_sprite);
      ImGui::NextColumn();
      if (ImGui::Button(ICON_FA_BROOM " Clear Selection", button_size))
      {
@@ -546,6 +563,47 @@ void fme::filter_window::draw_filter_controls(const std::shared_ptr<map_sprite> 
      combo_filtered_animation_states(lock_map_sprite);
      combo_filtered_z(lock_map_sprite);
      combo_filtered_draw_bit(lock_map_sprite);
+}
+
+
+void fme::filter_window::popup_combo_filtered_pupu(
+  const std::shared_ptr<Selections> &lock_selections,
+  const std::shared_ptr<map_sprite> &lock_map_sprite) const
+{
+     if (ImGui::BeginPopupModal("Pupu Filter Popup", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
+     {
+          const auto gcc = GenericComboWithMultiFilter(
+            gui_labels::pupu_id,
+            [&]() { return lock_map_sprite->working_unique_pupu(); },
+            [&]() { return lock_map_sprite->working_unique_pupu() | std::views::transform(AsString{}); },
+            [&]() {
+                 return lock_map_sprite->working_unique_pupu()
+                        | std::views::transform([](const ff_8::PupuID &pupu_id) -> decltype(auto) { return pupu_id.create_summary(); });
+            },
+            [&]() -> auto & { return m_multi_select_filter; });
+          (void)gcc.render();
+          format_imgui_wrapped_text(
+            "{}",
+            m_multi_select_filter.enabled() ? "IDs will be " ICON_FA_LAYER_GROUP " added to the selected entries."
+                                            : "IDs will be " ICON_FA_TRASH " removed from the selected entries.");
+          if (ImGui::Button(ICON_FA_CHECK " Apply"))
+          {
+               for (const std::string &file_name : m_multi_select)
+               {
+                    lock_map_sprite->apply_multi_pupu_filter_deswizzle_combined_toml_table(file_name, m_multi_select_filter);
+               }
+               m_reload_thumbnail = true;
+               ImGui::CloseCurrentPopup();
+               save_config(lock_selections);
+          }
+          ImGui::SameLine();
+          if (ImGui::Button(ICON_FA_XMARK " Cancel"))
+          {
+               ImGui::CloseCurrentPopup();
+          }
+
+          ImGui::EndPopup();
+     }
 }
 
 void fme::filter_window::combo_filtered_pupu(const std::shared_ptr<map_sprite> &lock_map_sprite) const
