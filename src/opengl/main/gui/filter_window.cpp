@@ -176,14 +176,16 @@ void fme::filter_window::render_list_view(
      // Combine into a new entry (keep originals)
      if (ImGui::Button(ICON_FA_LAYER_GROUP " Combine (New)", button_size))
      {
-          // todo: combine into new entry
+          (void)lock_map_sprite->add_combine_deswizzle_combined_toml_table(m_multi_select, generate_file_name(lock_map_sprite));
      }
      tool_tip("Combine selected entries into a new entry without removing the originals.");
      ImGui::NextColumn();
      // Combine and replace originals
      if (ImGui::Button(ICON_FA_OBJECT_GROUP " Combine (Replace)", button_size))
      {
-          // todo: combine into one entry and remove originals
+          (void)lock_map_sprite->add_combine_deswizzle_combined_toml_table(m_multi_select, generate_file_name(lock_map_sprite));
+          std::ranges::move(m_multi_select, std::back_inserter(m_remove_queue));
+          m_multi_select.clear();
      }
      tool_tip("Combine selected entries into one entry and remove the originals.");
      ImGui::NextColumn();
@@ -200,6 +202,12 @@ void fme::filter_window::render_list_view(
           m_multi_select.clear();
      }
      tool_tip("Remove selected entries.");
+     ImGui::NextColumn();
+     if (ImGui::Button(ICON_FA_BROOM " Clear Selection", button_size))
+     {
+          m_multi_select.clear();
+     }
+     tool_tip("Clear the current selection.");
      ImGui::EndDisabled();
      ImGui::NextColumn();
      if (ImGui::Button(ICON_FA_PLUS " Add New", button_size))
@@ -207,8 +215,8 @@ void fme::filter_window::render_list_view(
           add_new_entry(lock_selections, lock_map_sprite);
      }
      tool_tip("Add a new entry.\nHold Ctrl to add multiple entries.\nWithout Ctrl, the mode will switch to editing the new entry.");
-
      ImGui::Columns(1);
+     ImGui::BeginChild("##Scrolling");
      ImGui::Columns(calc_column_count(m_thumb_size_width), "##get_deswizzle_combined_textures", false);
 
      for (const auto &[file_name, framebuffer] : *m_textures_map)
@@ -221,6 +229,7 @@ void fme::filter_window::render_list_view(
      draw_add_new_button(lock_selections, lock_map_sprite);
 
      ImGui::Columns(1);
+     ImGui::EndChild();
 }
 
 int fme::filter_window::calc_column_count(float width) const
@@ -359,10 +368,7 @@ void fme::filter_window::add_new_entry(
   const std::shared_ptr<map_sprite> &lock_map_sprite) const
 {
 
-     m_selected_file_name = fmt::format(
-       "{}_{:%Y%m%d_%H%M%S}.png",
-       lock_map_sprite->get_recommended_prefix(),
-       std::chrono::time_point_cast<std::chrono::seconds>(std::chrono::system_clock::now()));
+     m_selected_file_name = generate_file_name(lock_map_sprite);
      if (!ImGui::GetIO().KeyCtrl)
      {
           m_multi_select.clear();
@@ -380,6 +386,23 @@ void fme::filter_window::add_new_entry(
      }
 
      save_config(lock_selections);
+}
+
+
+std::string fme::filter_window::generate_file_name(const std::shared_ptr<map_sprite> &lock_map_sprite, const std::optional<int> index) const
+{
+     if (index.has_value())
+     {
+          return fmt::format(
+            "{}_{:%Y%m%d_%H%M%S}_{}.png",
+            lock_map_sprite->get_recommended_prefix(),
+            std::chrono::time_point_cast<std::chrono::seconds>(std::chrono::system_clock::now()),
+            index.value());
+     }
+     return fmt::format(
+       "{}_{:%Y%m%d_%H%M%S}.png",
+       lock_map_sprite->get_recommended_prefix(),
+       std::chrono::time_point_cast<std::chrono::seconds>(std::chrono::system_clock::now()));
 }
 
 void fme::filter_window::render_detail_view(

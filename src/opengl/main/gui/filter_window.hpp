@@ -27,6 +27,7 @@ struct filter_window
      void                                     draw_thumbnail_label(const std::string &) const;
      void draw_add_new_button(const std::shared_ptr<Selections> &, const std::shared_ptr<map_sprite> &) const;
      void add_new_entry(const std::shared_ptr<Selections> &, const std::shared_ptr<map_sprite> &) const;
+     [[nodiscard]] std::string generate_file_name(const std::shared_ptr<map_sprite> &,const std::optional<int> index = std::nullopt) const;
      void render_detail_view(const std::shared_ptr<Selections> &, const std::shared_ptr<map_sprite> &) const;
      void draw_filename_controls(const std::shared_ptr<Selections> &, const std::shared_ptr<map_sprite> &) const;
      void unselect_file() const;
