@@ -562,6 +562,35 @@ struct filter_old
           return *this;
      }
 
+     filter_old &combine(const toml::table &table)
+     {
+          // Load temporary values
+          const auto tmp_settings = FilterLoadStrategy<value_type>::load_settings(table, ConfigKeys<Tag>::enabled_key_name);
+
+          // Only merge if enabled
+          if (HasFlag(tmp_settings, FilterSettings::Config_Enabled))
+          {
+               auto tmp_value = FilterLoadStrategy<value_type>::load_value(table, ConfigKeys<Tag>::key_name);
+               if constexpr (glengine::is_std_vector<value_type>)
+               {
+                    m_value.insert(m_value.end(), std::make_move_iterator(tmp_value.begin()), std::make_move_iterator(tmp_value.end()));
+                    std::ranges::sort(m_value);
+                    const auto not_unique = std::ranges::unique(m_value);
+                    m_value.erase(not_unique.begin(), not_unique.end());
+               }
+               else
+               {
+                    // Fallback for non-vector types: overwrite
+                    m_value = std::move(tmp_value);
+               }
+
+               m_settings |= tmp_settings;
+          }
+
+          return *this;
+     }
+
+
      template<typename U>
      const filter_old &update([[maybe_unused]] U &&value) const
           requires(std::same_as<std::remove_cvref_t<U>, toml::table>)
@@ -755,6 +784,35 @@ struct filter
      {
           m_value    = FilterLoadStrategy<value_type>::load_value(table, ConfigKeys<Tag>::key_name);
           m_settings = FilterLoadStrategy<value_type>::load_settings(table, ConfigKeys<Tag>::enabled_key_name);
+          return *this;
+     }
+
+
+     filter &combine(const toml::table &table)
+     {
+          // Load temporary values
+          const auto tmp_settings = FilterLoadStrategy<value_type>::load_settings(table, ConfigKeys<Tag>::enabled_key_name);
+
+          // Only merge if enabled
+          if (HasFlag(tmp_settings, FilterSettings::Config_Enabled))
+          {
+               auto tmp_value = FilterLoadStrategy<value_type>::load_value(table, ConfigKeys<Tag>::key_name);
+               if constexpr (glengine::is_std_vector<value_type>)
+               {
+                    m_value.insert(m_value.end(), std::make_move_iterator(tmp_value.begin()), std::make_move_iterator(tmp_value.end()));
+                    std::ranges::sort(m_value);
+                    const auto not_unique = std::ranges::unique(m_value);
+                    m_value.erase(not_unique.begin(), not_unique.end());
+               }
+               else
+               {
+                    // Fallback for non-vector types: overwrite
+                    m_value = std::move(tmp_value);
+               }
+
+               m_settings |= tmp_settings;
+          }
+
           return *this;
      }
 
@@ -1021,11 +1079,44 @@ struct filters
                (operations.reload(table), ...);
           }(pupu,
             multi_pupu,
-            //these 4 filters control drawing with external textures. reloading them from a toml table. is not desired currently.
-            //swizzle,
-            //deswizzle,
-            //swizzle_as_one_image,
-            //map,
+            // these 4 filters control drawing with external textures. reloading them from a toml table. is not desired currently.
+            // swizzle,
+            // deswizzle,
+            // swizzle_as_one_image,
+            // map,
+            draw_bit,
+            z,
+            multi_z,
+            palette,
+            multi_palette,
+            animation_id,
+            multi_animation_id,
+            animation_state,
+            multi_animation_state,
+            layer_id,
+            multi_layer_id,
+            texture_page_id,
+            multi_texture_page_id,
+            blend_mode,
+            multi_blend_mode,
+            blend_other,
+            multi_blend_other,
+            bpp,
+            multi_bpp);
+     }
+
+
+     void combine(const toml::table &table)
+     {
+          [&table](auto &...operations) {
+               (operations.combine(table), ...);
+          }(pupu,
+            multi_pupu,
+            // these 4 filters control drawing with external textures. reloading them from a toml table. is not desired currently.
+            // swizzle,
+            // deswizzle,
+            // swizzle_as_one_image,
+            // map,
             draw_bit,
             z,
             multi_z,
@@ -1053,10 +1144,10 @@ struct filters
                (operations.update(table), ...);
           }(pupu,
             multi_pupu,
-            //swizzle,
-            //deswizzle,
-            //swizzle_as_one_image,
-            //map,
+            // swizzle,
+            // deswizzle,
+            // swizzle_as_one_image,
+            // map,
             draw_bit,
             z,
             multi_z,
