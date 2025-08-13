@@ -769,7 +769,7 @@ void gui::background_color_picker()
                                            static_cast<float>(m_selections->get<ConfigKey::BackgroundColor2>().g) / 255.F,
                                            static_cast<float>(m_selections->get<ConfigKey::BackgroundColor2>().b) / 255.F };
 
-     static constexpr const auto flags = ImGuiColorEditFlags_DisplayRGB | ImGuiColorEditFlags_DisplayHSV | ImGuiColorEditFlags_DisplayHex;
+     static constexpr const auto flags = /*ImGuiColorEditFlags_DisplayRGB | ImGuiColorEditFlags_DisplayHSV |*/ ImGuiColorEditFlags_DisplayHex;
      if (ImGui::ColorEdit3(gui_labels::background.data(), clear_color_f.data(), flags))
      {
           m_selections->get<ConfigKey::BackgroundColor>() = { clear_color_f[0], clear_color_f[1], clear_color_f[2] };
@@ -1657,7 +1657,7 @@ void gui::edit_menu()
                                   static_cast<float>(m_selections->get<ConfigKey::BackgroundColor2>().g) / 255.F,
                                   static_cast<float>(m_selections->get<ConfigKey::BackgroundColor2>().b) / 255.F };
                static constexpr const auto flags =
-                 ImGuiColorEditFlags_DisplayRGB | ImGuiColorEditFlags_DisplayHSV | ImGuiColorEditFlags_DisplayHex;
+                 /*ImGuiColorEditFlags_DisplayRGB | ImGuiColorEditFlags_DisplayHSV |*/ ImGuiColorEditFlags_DisplayHex;
                if (ImGui::ColorPicker3("##Choose Primary Background Color", clear_color_f.data(), flags))
                {
                     m_selections->get<ConfigKey::BackgroundColor>() = { clear_color_f[0], clear_color_f[1], clear_color_f[2] };
