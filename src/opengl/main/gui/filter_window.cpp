@@ -54,6 +54,7 @@ void fme::filter_window::render() const
           spdlog::error("Failed to lock map_sprite: shared_ptr is expired.");
           return;
      }
+     const auto pop_end = glengine::ScopeGuard(&ImGui::End);
      if (!begin_window(lock_selections))
      {
           return;
@@ -67,7 +68,6 @@ void fme::filter_window::render() const
      {
           format_imgui_text("The draw mode is not set to `.map`.\nFilter changes won't show on draw window.");
      }
-     const auto pop_end = glengine::ScopeGuard(&ImGui::End);
 
      handle_remove_queue(lock_selections, lock_map_sprite);
 
