@@ -552,7 +552,7 @@ void map_sprite::update_position(
      [[maybe_unused]] BlendModeT last_blend_mode{ BlendModeT::none };
      m_uniform_color = s_default_color;
      shader.set_uniform("u_Tint", s_default_color);
-     bool drew = false;
+     bool        drew            = false;
      const auto &unique_pupu_ids = working_unique_pupu();
      for (const auto &z : m_all_unique_values_and_strings.z().values())
      {
@@ -1983,6 +1983,42 @@ toml::table *map_sprite::get_deswizzle_combined_toml_table(const std::string &fi
           return nullptr;
      }
 
+     spdlog::info("Inserted new texture entry '{}'.", new_file_name);
+     m_cache_framebuffer_tooltips[new_file_name] = [&]() {
+          std::ostringstream ss{};
+          ss << *it->second.as_table();
+          return ss.str();
+     }();
+     return it->second.as_table();
+}
+
+
+toml::table *map_sprite::add_combine_deswizzle_combined_toml_table(
+  const std::vector<std::string> &file_names,
+  const std::string              &new_file_name)
+{
+     toml::table *coo_table = get_deswizzle_combined_coo_table();
+     if (!coo_table)
+     {
+          return nullptr;
+     }
+     ff_8::filters tmp_filters = { false };
+     for (const std::string &file_name_str : file_names)
+     {
+          if (auto it_base = coo_table->find(file_name_str); it_base != coo_table->end() && it_base->second.is_table())
+          {
+               tmp_filters.combine(*it_base->second.as_table());
+          }
+     }
+
+     toml::table new_table{};
+     filter().update(new_table);// This mutates new_table directly
+     auto [it, inserted] = coo_table->insert(new_file_name, std::move(new_table));
+     if (!inserted)
+     {
+          spdlog::error("Failed to insert new entry '{}'.", new_file_name);
+          return nullptr;
+     }
      spdlog::info("Inserted new texture entry '{}'.", new_file_name);
      m_cache_framebuffer_tooltips[new_file_name] = [&]() {
           std::ostringstream ss{};
