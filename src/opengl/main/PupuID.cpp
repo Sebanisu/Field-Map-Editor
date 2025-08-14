@@ -82,7 +82,7 @@ namespace ff_8
 // };
 // struct PupuIDComparator
 // {
-//      const std::unordered_map<PupuID, size_t> *pupuCount;
+//      const std::unordered_map<PupuID, size_t> *pupuCount; //not sure what this will do lol. the ids are stored in a vector and we know the count from std::size()
 
 //      bool                                      operator()(const PupuID &a, const PupuID &b) const
 //      {
