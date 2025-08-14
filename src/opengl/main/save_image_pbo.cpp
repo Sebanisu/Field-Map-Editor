@@ -20,65 +20,103 @@
  */
 std::future<void> save_image_pbo(std::filesystem::path in_path, glengine::FrameBuffer in_fbo)
 {
-     // Backup the currently bound framebuffer (to restore it later)
+     // Backup currently bound framebuffer (restored by your helper)
      const auto backup_fbo = in_fbo.backup();
      in_fbo.bind();
 
-     // Calculate the size needed for the pixel buffer: width * height * 4 bytes (RGBA)
-     const auto buffer_size = GLsizeiptr{ in_fbo.width() } * GLsizeiptr{ in_fbo.height() } * GLsizeiptr{ 4 };
+     // Save GL state we’ll touch
+     GLint prev_read_buffer = GL_COLOR_ATTACHMENT0;
+     glengine::GlCall{}(glGetIntegerv, GL_READ_BUFFER, &prev_read_buffer);
 
-     // Create and bind a Pixel Buffer Object (PBO)
-     auto       pbo_id      = 0U;
+     GLint prev_pack_alignment = 4;
+     glengine::GlCall{}(glGetIntegerv, GL_PACK_ALIGNMENT, &prev_pack_alignment);
+
+     GLint prev_pack_row_length = 0;
+     glengine::GlCall{}(glGetIntegerv, GL_PACK_ROW_LENGTH, &prev_pack_row_length);
+
+     // Set correct read target for RGBA8 normalized data
+     glengine::GlCall{}(glReadBuffer, GL_COLOR_ATTACHMENT0);
+     glengine::GlCall{}(glPixelStorei, GL_PACK_ALIGNMENT, 1);
+     glengine::GlCall{}(glPixelStorei, GL_PACK_ROW_LENGTH, 0);
+
+     const GLsizei    w           = static_cast<GLsizei>(in_fbo.width());
+     const GLsizei    h           = static_cast<GLsizei>(in_fbo.height());
+     const GLint      channels    = 4;
+     const GLsizeiptr buffer_size = GLsizeiptr{ w } * GLsizeiptr{ h } * GLsizeiptr{ channels };
+
+     // Create and bind PBO
+     GLuint           pbo_id      = 0;
      glGenBuffers(1, &pbo_id);
      glBindBuffer(GL_PIXEL_PACK_BUFFER, pbo_id);
      glBufferData(GL_PIXEL_PACK_BUFFER, buffer_size, nullptr, GL_STREAM_READ);
 
-     // Request GPU to copy the texture pixels into the PBO
-     glengine::GlCall{}(
-       glReadPixels,
-       0,
-       0,
-       in_fbo.width(),
-       in_fbo.height(),
-       GL_RGBA,
-       GL_UNSIGNED_BYTE,
-       nullptr// Offset into PBO
-     );
+     // Issue the readback (normalized RGBA8)
+     glengine::GlCall{}(glReadPixels, 0, 0, w, h, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
 
-     // Unbind the PBO after issuing the readback
+     if (GLenum err = glGetError(); err != GL_NO_ERROR)
+     {
+          spdlog::error("save_image_pbo: glReadPixels error: 0x{:X}", static_cast<unsigned>(err));
+     }
+
+     // Unbind PBO
      glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
 
-     // Return a deferred future to perform the CPU-side readback later
-     return std::async(std::launch::deferred, [pbo_id, buffer_size, path = std::move(in_path), fbo = std::move(in_fbo)]() {
-          const auto texture_size = fbo.get_size();
+     // Restore GL state
+     glengine::GlCall{}(glReadBuffer, prev_read_buffer);
+     glengine::GlCall{}(glPixelStorei, GL_PACK_ALIGNMENT, prev_pack_alignment);
+     glengine::GlCall{}(glPixelStorei, GL_PACK_ROW_LENGTH, prev_pack_row_length);
+
+     // Return deferred CPU-side save
+     return std::async(std::launch::deferred, [pbo_id, buffer_size, w, h, channels, path = std::move(in_path), fbo = std::move(in_fbo)]() {
+          // Ensure directory exists
+          if (!path.parent_path().empty())
+          {
+               std::error_code ec;
+               std::filesystem::create_directories(path.parent_path(), ec);
+               if (ec)
+               {
+                    spdlog::error("Failed to create directories for '{}': {}", path.string(), ec.message());
+               }
+          }
+
 #ifdef __cpp_lib_smart_ptr_for_overwrite
-          const auto pixels = std::make_unique_for_overwrite<std::uint8_t[]>(static_cast<std::size_t>(buffer_size));
+          auto pixels = std::make_unique_for_overwrite<std::uint8_t[]>(static_cast<std::size_t>(buffer_size));
 #else
-            const auto pixels = std::make_unique<std::uint8_t[]>(static_cast<std::size_t>(buffer_size));
+        auto pixels = std::make_unique<std::uint8_t[]>(static_cast<std::size_t>(buffer_size));
 #endif
 
-          // Bind PBO and retrieve pixel data
+          // Retrieve from PBO
           glengine::GlCall{}(glBindBuffer, GL_PIXEL_PACK_BUFFER, pbo_id);
           glengine::GlCall{}(glGetBufferSubData, GL_PIXEL_PACK_BUFFER, 0, buffer_size, pixels.get());
+          if (GLenum err = glGetError(); err != GL_NO_ERROR)
+          {
+               spdlog::error("save_image_pbo: glGetBufferSubData error: 0x{:X}", static_cast<unsigned>(err));
+          }
           glengine::GlCall{}(glBindBuffer, GL_PIXEL_PACK_BUFFER, 0);
 
-          // Clean up resources
+          // Delete PBO
           glengine::GlCall{}(glDeleteBuffers, 1, &pbo_id);
-          const int channels = 4;// RGBA
 
-          // Create an image from retrieved pixel data
-          // Flip the image vertically for stb
-          // std::vector<std::uint8_t> flipped(buffer_size);
-          // for (int y = 0; y < texture_size.y; ++y)
-          // {
-          //      std::memcpy(
-          //        &flipped[y * texture_size.x * channels],
-          //        &pixels[(texture_size.y - 1 - y) * texture_size.x * channels],
-          //        texture_size.x * channels);
-          // }
+          // Flip vertically
+          std::unique_ptr<std::uint8_t[]> flipped   = std::make_unique<std::uint8_t[]>(static_cast<std::size_t>(buffer_size));
+          const std::size_t               row_bytes = static_cast<std::size_t>(w) * static_cast<std::size_t>(channels);
+          for (GLint y = 0; y < h; ++y)
+          {
+               const std::size_t src = static_cast<std::size_t>(h - 1 - y) * row_bytes;
+               const std::size_t dst = static_cast<std::size_t>(y) * row_bytes;
+               std::memcpy(flipped.get() + dst, pixels.get() + src, row_bytes);
+          }
 
-          // Save as PNG
-          stbi_write_png(path.string().c_str(), texture_size.x, texture_size.y, channels, pixels.get(), texture_size.x * channels);
+          // Save PNG
+          int ok = stbi_write_png(path.string().c_str(), w, h, channels, flipped.get(), static_cast<int>(row_bytes));
+          if (!ok)
+          {
+               spdlog::error("stbi_write_png failed for '{}'", path.string());
+          }
+          else
+          {
+               spdlog::info("Wrote RGBA8 attachment to '{}'", path.string());
+          }
      });
 }
 
