@@ -81,6 +81,7 @@ struct filter_window
      mutable std::vector<std::string>                                     m_remove_queue           = {};
      mutable std::array<char, 128>                                        m_file_name_buffer       = {};
      mutable std::map<std::string, std::optional<glengine::FrameBuffer>> *m_textures_map           = {};
+     mutable std::string                                                  m_last_selected          = {};
      static const constexpr size_t                                        s_max_chars =
        std::ranges::size(std::remove_cvref_t<decltype(m_file_name_buffer)>{}) - 1U;// space for null terminator
 };

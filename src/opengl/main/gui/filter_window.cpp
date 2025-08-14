@@ -72,6 +72,17 @@ void fme::filter_window::render() const
      handle_remove_queue(lock_selections, lock_map_sprite);
 
      ImGui::SliderFloat("Thumbnail Size", &m_thumb_size_width, 96.f, 1024.f);
+     bool  ctrl  = ImGui::GetIO().KeyCtrl;
+     float wheel = ImGui::GetIO().MouseWheel;
+
+     if (ImGui::IsWindowHovered(ImGuiHoveredFlags_ChildWindows) && ctrl)
+     {
+          static const constexpr auto speed = 20.f;
+          if (wheel > 0.0f)
+               m_thumb_size_width = std::min(m_thumb_size_width + (wheel * speed), 1024.f);
+          else if (wheel < 0.0f)
+               m_thumb_size_width = std::max(m_thumb_size_width + (wheel * speed), 96.f);// add because wheel is negative
+     }
 
      m_textures_map = &lock_map_sprite->get_deswizzle_combined_textures();
 
@@ -268,10 +279,80 @@ void fme::filter_window::select_file(const std::string &file_name, const std::sh
                if (it == std::ranges::end(m_multi_select))
                {
                     m_multi_select.push_back(file_name);
+                    m_last_selected = file_name;
                }
                else
                {
+                    m_last_selected = {};
                     m_multi_select.erase(it);
+               }
+               return;
+          }
+          else if (ImGui::GetIO().KeyShift && std::ranges::empty(m_last_selected))
+          {
+               // No anchor set yet — just select this one and set anchor
+               m_multi_select.clear();
+               m_multi_select.push_back(file_name);
+               m_last_selected = file_name;
+               return;
+          }
+          else if (ImGui::GetIO().KeyAlt && std::ranges::empty(m_last_selected))
+          {
+               m_last_selected = file_name;
+               return;
+          }
+          else if ((ImGui::GetIO().KeyShift || ImGui::GetIO().KeyAlt) && !std::ranges::empty(m_last_selected))
+          {
+               auto last_it            = m_textures_map->find(m_last_selected);
+               auto it                 = m_textures_map->find(file_name);
+               m_last_selected         = file_name;
+               const auto get_subrange = [&]() {
+                    // Figure out order
+                    auto begin_it = last_it;
+                    auto end_it   = it;
+                    // Walk forward until we either find end_it or hit the real end
+                    for (auto tmp = last_it; tmp != m_textures_map->end(); ++tmp)
+                    {
+                         if (tmp == it)
+                         {
+                              // last_it comes before it
+                              return std::ranges::subrange(begin_it, std::ranges::next(end_it));
+                         }
+                    }
+
+                    // If we didn’t find it going forward, then last_it must come after it
+                    begin_it = it;
+                    end_it   = last_it;
+                    return std::ranges::subrange(begin_it, std::ranges::next(end_it));
+               };
+
+               const auto add = [this](auto &&range) {
+                    for (const auto &[file_name, _] : range)
+                    {
+                         m_multi_select.push_back(file_name);
+                    }
+                    std::ranges::sort(m_multi_select);
+                    auto not_unique = std::ranges::unique(m_multi_select);
+                    m_multi_select.erase(not_unique.begin(), not_unique.end());
+               };
+
+               const auto remove = [this](auto &&range) {
+                    for (const auto &[file_name, _] : range)
+                    {
+                         auto found = std::ranges::find(m_multi_select, file_name);
+                         if (found != m_multi_select.end())
+                         {
+                              m_multi_select.erase(found);
+                         }
+                    }
+               };
+               if (ImGui::GetIO().KeyShift)
+               {
+                    add(get_subrange());
+               }
+               else
+               {
+                    remove(get_subrange());
                }
                return;
           }
@@ -541,6 +622,7 @@ void fme::filter_window::draw_filename_controls(
 void fme::filter_window::unselect_file() const
 {
      m_selected_file_name = {};
+     m_last_selected      = {};
      m_file_name_buffer   = {};
 }
 
