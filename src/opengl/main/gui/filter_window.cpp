@@ -198,6 +198,7 @@ void fme::filter_window::render_list_view(
      if (ImGui::Button(ICON_FA_LAYER_GROUP " Combine (New)", button_size))
      {
           (void)lock_map_sprite->add_combine_deswizzle_combined_toml_table(m_multi_select, generate_file_name(lock_map_sprite));
+          save_config(lock_selections);
      }
      tool_tip("Combine selected entries into a new entry without removing the originals.");
      ImGui::NextColumn();
@@ -213,6 +214,9 @@ void fme::filter_window::render_list_view(
      // Copy
      if (ImGui::Button(ICON_FA_COPY " Copy", button_size))
      {
+          (void)lock_map_sprite->copy_deswizzle_combined_toml_table(
+            m_multi_select, [&, index = int{}]() mutable { return generate_file_name(lock_map_sprite, index++); });
+          save_config(lock_selections);
           // todo: copy create new entries with generated name (prefix_timestamp_index.png).
      }
      tool_tip("Copy selected entries into new entries with generated names.");
@@ -489,18 +493,15 @@ void fme::filter_window::add_new_entry(
 
 std::string fme::filter_window::generate_file_name(const std::shared_ptr<map_sprite> &lock_map_sprite, const std::optional<int> index) const
 {
+     auto now = std::chrono::system_clock::now();
+     auto sec = std::chrono::time_point_cast<std::chrono::seconds>(now);
+     auto ms  = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()) % 1000;
      if (index.has_value())
      {
           return fmt::format(
-            "{}_{:%Y%m%d_%H%M%S}_{}.png",
-            lock_map_sprite->get_recommended_prefix(),
-            std::chrono::time_point_cast<std::chrono::seconds>(std::chrono::system_clock::now()),
-            index.value());
+            "{}_{:%Y%m%d_%H%M%S}_{:03d}_{}.png", lock_map_sprite->get_recommended_prefix(), sec, ms.count(), index.value());
      }
-     return fmt::format(
-       "{}_{:%Y%m%d_%H%M%S}.png",
-       lock_map_sprite->get_recommended_prefix(),
-       std::chrono::time_point_cast<std::chrono::seconds>(std::chrono::system_clock::now()));
+     return fmt::format("{}_{:%Y%m%d_%H%M%S}_{:03d}.png", lock_map_sprite->get_recommended_prefix(), sec, ms.count());
 }
 
 void fme::filter_window::render_detail_view(

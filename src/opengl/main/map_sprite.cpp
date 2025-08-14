@@ -2022,7 +2022,7 @@ void map_sprite::apply_multi_pupu_filter_deswizzle_combined_toml_table(
           if (new_filter.enabled())
           {
                // Update in-memory filter state from the table
-               ff_8::filter_old<ff_8::FilterTag::MultiPupu> copy_filter = {new_filter.value(), ff_8::FilterSettings::Toggle_Enabled};
+               ff_8::filter_old<ff_8::FilterTag::MultiPupu> copy_filter = { new_filter.value(), ff_8::FilterSettings::Toggle_Enabled };
 
                copy_filter.combine(*table);
                copy_filter.update(*table);
@@ -2071,6 +2071,52 @@ toml::table *
      spdlog::info("Inserted new texture entry '{}'.", new_file_name);
      m_cache_framebuffer_tooltips[new_file_name] = generate_deswizzle_combined_tool_tip(&new_table);
      return it->second.as_table();
+}
+
+
+void map_sprite::copy_deswizzle_combined_toml_table(
+  const std::vector<std::string>            &existing_names,
+  std::move_only_function<std::string(void)> generate_name)
+{
+     toml::table *coo_table = get_deswizzle_combined_coo_table();
+     if (!coo_table)
+          return;
+
+     for (const std::string &name : existing_names)
+     {
+          auto it_src = coo_table->find(name);
+          if (it_src == coo_table->end() || !it_src->second.is_table())
+               continue;
+
+          toml::table *source_table  = it_src->second.as_table();
+
+          std::string  new_file_name = generate_name();
+          if (new_file_name.empty())
+          {
+               spdlog::warn("Generated name is empty; skipping copy for '{}'.", name);
+               continue;
+          }
+
+          toml::table new_table = *source_table;
+          auto [it, inserted]   = coo_table->insert(new_file_name, std::move(new_table));
+          if (!inserted)
+          {
+               spdlog::error("Failed to insert new entry '{}'.", new_file_name);
+               continue;
+          }
+
+          // // Copy tooltip if available, otherwise generate one
+          // if (auto tooltip_it = m_cache_framebuffer_tooltips.find(name); tooltip_it != m_cache_framebuffer_tooltips.end())
+          // {
+          //      m_cache_framebuffer_tooltips[new_file_name] = tooltip_it->second;
+          // }
+          // else
+          // {
+          //      m_cache_framebuffer_tooltips[new_file_name] = generate_deswizzle_combined_tool_tip(it->second.as_table());
+          // }
+
+          spdlog::info("Copied table '{}' to '{}'.", name, new_file_name);
+     }
 }
 
 

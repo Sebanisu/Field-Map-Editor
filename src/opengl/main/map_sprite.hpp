@@ -190,6 +190,7 @@ struct [[nodiscard]] map_sprite// final
                              const std::string                                  &file_name_key,
                              const ff_8::filter_old<ff_8::FilterTag::MultiPupu> &new_filter);
      [[nodiscard]] toml::table *add_combine_deswizzle_combined_toml_table(const std::vector<std::string> &, const std::string &);
+     void                       copy_deswizzle_combined_toml_table(const std::vector<std::string> &,std::move_only_function<std::string(void)>);
      [[nodiscard]] std::vector<std::future<void>>
        save_deswizzle_combined_textures(const std::string &keyed_string, const std::filesystem::path &selected_path);
      [[nodiscard]] std::future<std::future<void>> load_swizzle_textures(std::uint8_t texture_page, std::uint8_t palette) const;
