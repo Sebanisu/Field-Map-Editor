@@ -8,7 +8,10 @@
 #include <filesystem>
 #include <FrameBuffer.hpp>
 #include <future>
+#include <GL/glew.h>
 
-[[nodiscard]] std::future<void> save_image_pbo(std::filesystem::path, glengine::FrameBuffer);
-[[nodiscard]] std::future<void> save_rgba8ui_attachment_as_png(std::filesystem::path, glengine::FrameBuffer);
+[[nodiscard]] std::future<void>
+  save_image_pbo(std::filesystem::path, glengine::FrameBuffer, const GLenum attachment = GL_COLOR_ATTACHMENT0);
+[[nodiscard]] std::future<void>
+  save_rgba8ui_attachment_as_png(std::filesystem::path, glengine::FrameBuffer, const GLenum attachment = GL_COLOR_ATTACHMENT1);
 #endif// FIELD_MAP_EDITOR_SAVE_IMAGE_PBO_HPP

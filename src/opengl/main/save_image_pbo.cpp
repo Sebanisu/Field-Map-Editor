@@ -2,7 +2,6 @@
 // Created by pcvii on 2/27/2023.
 //
 #include "save_image_pbo.hpp"
-#include <GL/glew.h>
 #include <ScopeGuard.hpp>
 #include <spdlog/spdlog.h>
 #include <stb_image_write.h>
@@ -18,7 +17,8 @@
  * @param texture The glengine::Texture to be saved into an sf::Image.
  * @return A deferred std::future that will contain the sf::Image once pixel data is read back.
  */
-std::future<void> save_image_pbo(std::filesystem::path in_path, glengine::FrameBuffer in_fbo)
+std::future<void>
+  save_image_pbo(std::filesystem::path in_path, glengine::FrameBuffer in_fbo, const GLenum attachment)
 {
      // Backup currently bound framebuffer (restored by your helper)
      const auto backup_fbo = in_fbo.backup();
@@ -35,7 +35,7 @@ std::future<void> save_image_pbo(std::filesystem::path in_path, glengine::FrameB
      glengine::GlCall{}(glGetIntegerv, GL_PACK_ROW_LENGTH, &prev_pack_row_length);
 
      // Set correct read target for RGBA8 normalized data
-     glengine::GlCall{}(glReadBuffer, GL_COLOR_ATTACHMENT0);
+     glengine::GlCall{}(glReadBuffer, attachment);
      glengine::GlCall{}(glPixelStorei, GL_PACK_ALIGNMENT, 1);
      glengine::GlCall{}(glPixelStorei, GL_PACK_ROW_LENGTH, 0);
 
@@ -97,18 +97,18 @@ std::future<void> save_image_pbo(std::filesystem::path in_path, glengine::FrameB
           // Delete PBO
           glengine::GlCall{}(glDeleteBuffers, 1, &pbo_id);
 
-          // Flip vertically
-          std::unique_ptr<std::uint8_t[]> flipped   = std::make_unique<std::uint8_t[]>(static_cast<std::size_t>(buffer_size));
-          const std::size_t               row_bytes = static_cast<std::size_t>(w) * static_cast<std::size_t>(channels);
-          for (GLint y = 0; y < h; ++y)
-          {
-               const std::size_t src = static_cast<std::size_t>(h - 1 - y) * row_bytes;
-               const std::size_t dst = static_cast<std::size_t>(y) * row_bytes;
-               std::memcpy(flipped.get() + dst, pixels.get() + src, row_bytes);
-          }
+          // // Flip vertically
+          // std::unique_ptr<std::uint8_t[]> flipped   = std::make_unique<std::uint8_t[]>(static_cast<std::size_t>(buffer_size));
+           const std::size_t               row_bytes = static_cast<std::size_t>(w) * static_cast<std::size_t>(channels);
+          // for (GLint y = 0; y < h; ++y)
+          // {
+          //      const std::size_t src = static_cast<std::size_t>(h - 1 - y) * row_bytes;
+          //      const std::size_t dst = static_cast<std::size_t>(y) * row_bytes;
+          //      std::memcpy(flipped.get() + dst, pixels.get() + src, row_bytes);
+          // }
 
           // Save PNG
-          int ok = stbi_write_png(path.string().c_str(), w, h, channels, flipped.get(), static_cast<int>(row_bytes));
+          int ok = stbi_write_png(path.string().c_str(), w, h, channels, pixels.get(), static_cast<int>(row_bytes));
           if (!ok)
           {
                spdlog::error("stbi_write_png failed for '{}'", path.string());
@@ -120,7 +120,10 @@ std::future<void> save_image_pbo(std::filesystem::path in_path, glengine::FrameB
      });
 }
 
-std::future<void> save_rgba8ui_attachment_as_png(std::filesystem::path in_path, glengine::FrameBuffer in_fbo)
+std::future<void> save_rgba8ui_attachment_as_png(
+  std::filesystem::path in_path,
+  glengine::FrameBuffer in_fbo,
+  const GLenum          attachment)
 {
      // Backup FBO (your helper should restore on scope exit)
      const auto backup_fbo = in_fbo.backup();
@@ -137,7 +140,7 @@ std::future<void> save_rgba8ui_attachment_as_png(std::filesystem::path in_path, 
      glengine::GlCall{}(glGetIntegerv, GL_PACK_ROW_LENGTH, &prev_pack_row_length);
 
      // Switch to the integer color attachment we want to read
-     glengine::GlCall{}(glReadBuffer, GL_COLOR_ATTACHMENT1);
+     glengine::GlCall{}(glReadBuffer, attachment);
 
      // Make sure pack state is sane for tightly-packed bytes
      glengine::GlCall{}(glPixelStorei, GL_PACK_ALIGNMENT, 1);
@@ -213,18 +216,18 @@ std::future<void> save_rgba8ui_attachment_as_png(std::filesystem::path in_path, 
           // Delete PBO now that data is on CPU
           glengine::GlCall{}(glDeleteBuffers, 1, &pbo_id);
 
-          // Flip vertically (OpenGL origin is bottom-left)
-          std::unique_ptr<std::uint8_t[]> flipped   = std::make_unique<std::uint8_t[]>(static_cast<std::size_t>(buffer_size));
+          // // Flip vertically (OpenGL origin is bottom-left)
+          // std::unique_ptr<std::uint8_t[]> flipped   = std::make_unique<std::uint8_t[]>(static_cast<std::size_t>(buffer_size));
           const std::size_t               row_bytes = static_cast<std::size_t>(w) * static_cast<std::size_t>(channels);
-          for (GLint y = 0; y < h; ++y)
-          {
-               const std::size_t src = static_cast<std::size_t>(h - 1 - y) * row_bytes;
-               const std::size_t dst = static_cast<std::size_t>(y) * row_bytes;
-               std::memcpy(flipped.get() + dst, pixels.get() + src, row_bytes);
-          }
+          // for (GLint y = 0; y < h; ++y)
+          // {
+          //      const std::size_t src = static_cast<std::size_t>(h - 1 - y) * row_bytes;
+          //      const std::size_t dst = static_cast<std::size_t>(y) * row_bytes;
+          //      std::memcpy(flipped.get() + dst, pixels.get() + src, row_bytes);
+          // }
 
           // Write PNG (stbi expects 0..255 bytes; RGBA8UI matches that)
-          int ok = stbi_write_png(path.string().c_str(), w, h, channels, flipped.get(), static_cast<int>(row_bytes));
+          int ok = stbi_write_png(path.string().c_str(), w, h, channels, pixels.get(), static_cast<int>(row_bytes));
           if (!ok)
           {
                spdlog::error("stbi_write_png failed for '{}'", path.string());

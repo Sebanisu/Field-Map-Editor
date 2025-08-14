@@ -226,7 +226,24 @@ FrameBuffer FrameBuffer::clone() const
        m_specification.height,
        GL_COLOR_BUFFER_BIT,
        GL_NEAREST);
+
+     // Blit COLOR_ATTACHMENT2
+     GlCall{}(glReadBuffer, GL_COLOR_ATTACHMENT2);
+     GlCall{}(glDrawBuffer, GL_COLOR_ATTACHMENT2);
+     GlCall{}(
+       glBlitFramebuffer,
+       0,
+       0,
+       m_specification.width,
+       m_specification.height,
+       0,
+       0,
+       m_specification.width,
+       m_specification.height,
+       GL_COLOR_BUFFER_BIT,
+       GL_NEAREST);
      (void)copy.bind_color_attachment(0);// generates mipmaps and binds the texture.
+     (void)copy.bind_color_attachment(2);// generates mipmaps and binds the texture.
      return copy;
 }
 
