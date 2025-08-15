@@ -2,6 +2,9 @@
 // Created by pcvii on 2/27/2023.
 //
 #include "save_image_pbo.hpp"
+#include "formatters.hpp"
+#include "PupuID.hpp"
+#include <ranges>
 #include <ScopeGuard.hpp>
 #include <spdlog/spdlog.h>
 #include <stb_image_write.h>
@@ -17,8 +20,7 @@
  * @param texture The glengine::Texture to be saved into an sf::Image.
  * @return A deferred std::future that will contain the sf::Image once pixel data is read back.
  */
-std::future<void>
-  save_image_pbo(std::filesystem::path in_path, glengine::FrameBuffer in_fbo, const GLenum attachment)
+std::future<void> save_image_pbo(std::filesystem::path in_path, glengine::FrameBuffer in_fbo, const GLenum attachment)
 {
      // Backup currently bound framebuffer (restored by your helper)
      const auto backup_fbo = in_fbo.backup();
@@ -99,7 +101,7 @@ std::future<void>
 
           // // Flip vertically
           // std::unique_ptr<std::uint8_t[]> flipped   = std::make_unique<std::uint8_t[]>(static_cast<std::size_t>(buffer_size));
-           const std::size_t               row_bytes = static_cast<std::size_t>(w) * static_cast<std::size_t>(channels);
+          const std::size_t row_bytes = static_cast<std::size_t>(w) * static_cast<std::size_t>(channels);
           // for (GLint y = 0; y < h; ++y)
           // {
           //      const std::size_t src = static_cast<std::size_t>(h - 1 - y) * row_bytes;
@@ -108,22 +110,19 @@ std::future<void>
           // }
 
           // Save PNG
-          int ok = stbi_write_png(path.string().c_str(), w, h, channels, pixels.get(), static_cast<int>(row_bytes));
+          int               ok        = stbi_write_png(path.string().c_str(), w, h, channels, pixels.get(), static_cast<int>(row_bytes));
           if (!ok)
           {
                spdlog::error("stbi_write_png failed for '{}'", path.string());
           }
           else
           {
-               spdlog::info("Wrote RGBA8 attachment to '{}'", path.string());
+               spdlog::debug("Wrote RGBA8 attachment to '{}'", path.string());
           }
      });
 }
 
-std::future<void> save_rgba8ui_attachment_as_png(
-  std::filesystem::path in_path,
-  glengine::FrameBuffer in_fbo,
-  const GLenum          attachment)
+std::future<void> save_rgba8ui_attachment_as_png(std::filesystem::path in_path, glengine::FrameBuffer in_fbo, const GLenum attachment)
 {
      // Backup FBO (your helper should restore on scope exit)
      const auto backup_fbo = in_fbo.backup();
@@ -218,7 +217,7 @@ std::future<void> save_rgba8ui_attachment_as_png(
 
           // // Flip vertically (OpenGL origin is bottom-left)
           // std::unique_ptr<std::uint8_t[]> flipped   = std::make_unique<std::uint8_t[]>(static_cast<std::size_t>(buffer_size));
-          const std::size_t               row_bytes = static_cast<std::size_t>(w) * static_cast<std::size_t>(channels);
+          const std::size_t         row_bytes  = static_cast<std::size_t>(w) * static_cast<std::size_t>(channels);
           // for (GLint y = 0; y < h; ++y)
           // {
           //      const std::size_t src = static_cast<std::size_t>(h - 1 - y) * row_bytes;
@@ -227,14 +226,53 @@ std::future<void> save_rgba8ui_attachment_as_png(
           // }
 
           // Write PNG (stbi expects 0..255 bytes; RGBA8UI matches that)
-          int ok = stbi_write_png(path.string().c_str(), w, h, channels, pixels.get(), static_cast<int>(row_bytes));
-          if (!ok)
+          const auto                span       = std::span(reinterpret_cast<const ff_8::PupuID *>(pixels.get()), w * h);
+          std::vector<ff_8::PupuID> unique_ids = std::vector(span.begin(), span.end());
+          std::ranges::sort(unique_ids);
+          unique_ids.erase(std::ranges::unique(unique_ids).begin(), unique_ids.end());
+          // Remove default-constructed PupuID{} if it exists
+          unique_ids.erase(std::ranges::remove(unique_ids, ff_8::PupuID{}).begin(), unique_ids.end());
+
+          // For each unique PupuID, create a vector of masks
+          std::vector<std::vector<uint32_t>> masks;
+
+          for (ff_8::PupuID id : unique_ids)
           {
-               spdlog::error("stbi_write_png failed for '{}'", path.string());
+               std::vector<uint32_t> mask;
+               mask.reserve(span.size());
+
+               for (ff_8::PupuID p : span)
+               {
+                    mask.push_back(p == id ? 0xFFFFFFFFu : 0xFF000000u);
+               }
+
+               masks.push_back(std::move(mask));
           }
-          else
+
           {
-               spdlog::info("Wrote RGBA8UI attachment to '{}'", path.string());
+               int ok = stbi_write_png(path.string().c_str(), w, h, channels, pixels.get(), static_cast<int>(row_bytes));
+               if (!ok)
+               {
+                    spdlog::error("stbi_write_png failed for '{}'", path.string());
+               }
+               else
+               {
+                    spdlog::debug("Wrote RGBA8UI attachment to '{}'", path.string());
+               }
+          }
+
+          for (auto &&[id, mask] : std::views::zip(unique_ids, masks))
+          {
+               const auto current_path = path.parent_path() / fmt::format("{}_{}{}", path.stem().string(), id, path.extension().string());
+               int        ok = stbi_write_png(current_path.string().c_str(), w, h, channels, &mask.front(), static_cast<int>(row_bytes));
+               if (!ok)
+               {
+                    spdlog::error("stbi_write_png failed for '{}'", path.string());
+               }
+               else
+               {
+                    spdlog::debug("Wrote RGBA8UI attachment to '{}'", path.string());
+               }
           }
      });
 }
