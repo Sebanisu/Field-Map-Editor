@@ -1541,7 +1541,7 @@ std::string map_sprite::get_base_name() const
 
 
 [[nodiscard]] std::vector<std::future<void>>
-  map_sprite::save_deswizzle_combined_toml(const std::string &keyed_string, const std::filesystem::path &selected_path)
+  map_sprite::save_deswizzle_generate_toml(const std::string &keyed_string, const std::filesystem::path &selected_path)
 {
      const auto selections = m_selections.lock();
      if (!selections)
@@ -1651,7 +1651,7 @@ std::string map_sprite::get_base_name() const
 }
 
 [[nodiscard]] std::vector<std::future<void>>
-  map_sprite::save_deswizzle_combined_textures(const std::string &keyed_string, const std::filesystem::path &selected_path)
+  map_sprite::save_deswizzle_full_filename_textures(const std::string &keyed_string, const std::filesystem::path &selected_path)
 {
      const auto selections = m_selections.lock();
      if (!selections)
@@ -1696,10 +1696,22 @@ std::string map_sprite::get_base_name() const
           auto out_framebuffer = glengine::FrameBuffer{ specification };
           if (generate_texture(out_framebuffer))
           {
-               const key_value_data  cpm      = { .field_name = field_name, .ext = ".png" };
+               const key_value_data  cpm      = { .field_name = field_name, .full_filename = std::string(file_name) };
 
                std::filesystem::path out_path = cpm.replace_tags(keyed_string, selections, selected_path);
-               out_path                       = out_path.parent_path() / std::string(file_name);
+               std::filesystem::path mask_path =
+                 out_path.parent_path() / (out_path.stem().string() + "_index_mask" + out_path.extension().string());
+               std::filesystem::path hi_mask_path =
+                 out_path.parent_path() / (out_path.stem().string() + "_32bit_mask" + out_path.extension().string());
+               spdlog::debug(
+                 "Queued image save: main='{}', index_mask='{}', 32bit_mask='{}' ",
+                 out_path.string(),
+                 mask_path.string(),
+                 hi_mask_path.string());
+
+
+               future_of_futures.push_back(save_rgba8ui_attachment_as_png(std::move(hi_mask_path), out_framebuffer.clone()));
+               future_of_futures.push_back(save_image_pbo(std::move(mask_path), out_framebuffer.clone(), GL_COLOR_ATTACHMENT2));
                future_of_futures.push_back(save_image_pbo(std::move(out_path), std::move(out_framebuffer)));
           }
      }

@@ -56,6 +56,7 @@ enum class ConfigKey
      DisplayFiltersWindow,
      OutputSwizzlePattern,
      OutputDeswizzlePattern,
+     OutputFullFileNamePattern,
      OutputMapPatternForSwizzle,
      OutputMapPatternForDeswizzle,
      CurrentPattern,
@@ -77,6 +78,7 @@ enum class ConfigKey
      PathPatternsWithPalette,
      PathPatternsWithTexturePage,
      PathPatternsWithPupuID,
+     PathPatternsWithFullFileName,
      PatternsBase,
      PatternsCommonPrefixes,
      PatternsCommonPrefixesForMaps,
@@ -85,6 +87,7 @@ enum class ConfigKey
      SwizzlePath,
      SwizzleAsOneImagePath,
      DeswizzlePath,
+     FullFileNamePath,
      OutputImagePath,
      OutputMimPath,
      OutputMapPath,
@@ -93,6 +96,7 @@ enum class ConfigKey
      CacheSwizzlePathsEnabled,
      CacheSwizzleAsOneImagePathsEnabled,
      CacheDeswizzlePathsEnabled,
+     CacheFullFileNamePathsEnabled,
      CacheMapPathsEnabled,
 
      // FFNX can load from FFNX config but we're doing read only these. Usually only if we're changing the FF8 directory
@@ -388,6 +392,19 @@ struct SelectionInfo<ConfigKey::OutputDeswizzlePattern>
           return "{selected_path}\\deswizzle\\{demaster}"s;
      }
 };
+
+template<>
+struct SelectionInfo<ConfigKey::OutputFullFileNamePattern>
+{
+     using value_type                     = std::string;
+     static constexpr std::string_view id = "OutputFullFileNamePattern";
+     static inline value_type          default_value()
+     {
+          using namespace std::string_literals;
+          return "{selected_path}\\full_filename\\{demaster_full}"s;
+     }
+};
+
 template<>
 struct SelectionInfo<ConfigKey::OutputMapPatternForSwizzle>
 {
@@ -647,9 +664,31 @@ struct SelectionInfo<ConfigKey::PathPatternsWithPupuID>
      static value_type                 expensive_default_value()
      {
           using namespace std::string_literals;
-          return { "{selected_path}/{field_name}_{pupu_id}{ext}"s,
+          return { "{selected_path}/{field_name}_{_{2_letter_lang}_{pupu_id}{ext}"s,
+                   "{selected_path}/{field_name}/{field_name}_{_{2_letter_lang}_{pupu_id}{ext}"s,
+                   "{selected_path}/{field_prefix}/{field_name}/{field_name}_{_{2_letter_lang}_{pupu_id}{ext}"s
+
+                   "{selected_path}/{field_name}_{pupu_id}{ext}"s,
                    "{selected_path}/{field_name}/{field_name}_{pupu_id}{ext}"s,
                    "{selected_path}/{field_prefix}/{field_name}/{field_name}_{pupu_id}{ext}"s };
+     }
+     static void post_load_operation([[maybe_unused]] const value_type &value)
+     {
+          assert(has_balanced_braces(value));
+     }
+};
+
+template<>
+struct SelectionInfo<ConfigKey::PathPatternsWithFullFileName>
+{
+     using value_type                     = std::vector<std::string>;
+     static constexpr std::string_view id = "PathPatternsWithFullFileName";
+     static value_type                 expensive_default_value()
+     {
+          using namespace std::string_literals;
+          return { "{selected_path}/{full_filename}"s,
+                   "{selected_path}/{field_name}/{full_filename}"s,
+                   "{selected_path}/{field_prefix}/{field_name}/{full_filename}"s };
      }
      static void post_load_operation([[maybe_unused]] const value_type &value)
      {
@@ -798,6 +837,13 @@ struct SelectionInfo<ConfigKey::DeswizzlePath>
      static constexpr ConfigKey        default_value_copy = ConfigKey::FF8Path;
 };
 template<>
+struct SelectionInfo<ConfigKey::FullFileNamePath>
+{
+     using value_type                                     = std::filesystem::path;
+     static constexpr std::string_view id                 = "FullFileNamePath";
+     static constexpr ConfigKey        default_value_copy = ConfigKey::FF8Path;
+};
+template<>
 struct SelectionInfo<ConfigKey::OutputImagePath>
 {
      using value_type                                     = std::filesystem::path;
@@ -841,6 +887,12 @@ struct SelectionInfo<ConfigKey::CacheDeswizzlePathsEnabled>
 {
      using value_type                     = std::vector<bool>;
      static constexpr std::string_view id = "CacheDeswizzlePathsEnabled";
+};
+template<>
+struct SelectionInfo<ConfigKey::CacheFullFileNamePathsEnabled>
+{
+     using value_type                     = std::vector<bool>;
+     static constexpr std::string_view id = "CacheFullFileNamePathsEnabled";
 };
 template<>
 struct SelectionInfo<ConfigKey::CacheMapPathsEnabled>

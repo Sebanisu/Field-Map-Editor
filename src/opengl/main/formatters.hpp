@@ -483,6 +483,9 @@ struct fmt::formatter<fme::PatternSelector> : fmt::formatter<std::string_view>
                case fme::PatternSelector::OutputDeswizzlePattern:
                     name = "Output deswizzle pattern"sv;
                     break;
+               case fme::PatternSelector::OutputFullFileNamePattern:
+                    name = "Output Full Filename Pattern (.toml)"sv;
+                    break;
                case fme::PatternSelector::OutputMapPatternForSwizzle:
                     name = "Output map pattern for swizzle"sv;
                     break;
@@ -510,6 +513,8 @@ struct fmt::formatter<fme::PatternSelector> : fmt::formatter<std::string_view>
                case fme::PatternSelector::PathPatternsWithPupuID:
                     name = "Path Patterns With PupuID"sv;
                     break;
+               case fme::PatternSelector::PathPatternsWithFullFileName:
+                    name = "Path Patterens With Full Filename (.toml)"sv;
           }
           return fmt::formatter<std::string_view>::format(name, ctx);
      }
@@ -569,11 +574,11 @@ struct fmt::formatter<fme::input_types> : fmt::formatter<std::string_view>
                case fme::input_types::swizzle_as_one_image:
                     name = fme::gui_labels::swizzle_as_one_image;
                     break;
-               // case fme::input_types::deswizzle_combined_toml:
-               //      name = fme::gui_labels::deswizzle_combined_toml;
+               // case fme::input_types::deswizzle_generate_toml:
+               //      name = fme::gui_labels::deswizzle_generate_toml;
                //      break;
-               case fme::input_types::deswizzle_combined_images:
-                    name = fme::gui_labels::deswizzle_combined_images;
+               case fme::input_types::deswizzle_full_filename:
+                    name = fme::gui_labels::deswizzle_full_filename;
                     break;
           }
           return fmt::formatter<std::string_view>::format(name, ctx);
@@ -599,11 +604,11 @@ struct fmt::formatter<fme::output_types> : fmt::formatter<std::string_view>
                case fme::output_types::swizzle_as_one_image:
                     name = fme::gui_labels::swizzle_as_one_image;
                     break;
-               case fme::output_types::deswizzle_combined_toml:
-                    name = fme::gui_labels::deswizzle_combined_toml;
+               case fme::output_types::deswizzle_generate_toml:
+                    name = fme::gui_labels::deswizzle_generate_toml;
                     break;
-               case fme::output_types::deswizzle_combined_images:
-                    name = fme::gui_labels::deswizzle_combined_images;
+               case fme::output_types::deswizzle_full_filename:
+                    name = fme::gui_labels::deswizzle_full_filename;
                     break;
           }
           return fmt::formatter<std::string_view>::format(name, ctx);

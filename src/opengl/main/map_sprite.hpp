@@ -175,7 +175,7 @@ struct [[nodiscard]] map_sprite// final
      [[nodiscard]] std::vector<std::future<void>>
        save_deswizzle_textures(const std::string &keyed_string, const std::filesystem::path &selected_path);
      [[nodiscard]] std::vector<std::future<void>>
-       save_deswizzle_combined_toml(const std::string &keyed_string, const std::filesystem::path &selected_path);
+       save_deswizzle_generate_toml(const std::string &keyed_string, const std::filesystem::path &selected_path);
      [[nodiscard]] const std::map<std::string, std::string>                    &get_deswizzle_combined_textures_tooltips();
      [[nodiscard]] std::map<std::string, std::optional<glengine::FrameBuffer>> &get_deswizzle_combined_textures();
      [[nodiscard]] std::string  generate_deswizzle_combined_tool_tip(const toml::table *file_table) const;
@@ -190,9 +190,9 @@ struct [[nodiscard]] map_sprite// final
                              const std::string                                  &file_name_key,
                              const ff_8::filter_old<ff_8::FilterTag::MultiPupu> &new_filter);
      [[nodiscard]] toml::table *add_combine_deswizzle_combined_toml_table(const std::vector<std::string> &, const std::string &);
-     void                       copy_deswizzle_combined_toml_table(const std::vector<std::string> &,std::move_only_function<std::string(void)>);
+     void copy_deswizzle_combined_toml_table(const std::vector<std::string> &, std::move_only_function<std::string(void)>);
      [[nodiscard]] std::vector<std::future<void>>
-       save_deswizzle_combined_textures(const std::string &keyed_string, const std::filesystem::path &selected_path);
+       save_deswizzle_full_filename_textures(const std::string &keyed_string, const std::filesystem::path &selected_path);
      [[nodiscard]] std::future<std::future<void>> load_swizzle_textures(std::uint8_t texture_page, std::uint8_t palette) const;
      [[nodiscard]] std::future<std::future<void>> load_swizzle_textures(std::uint8_t texture_page) const;
      [[nodiscard]] std::future<std::future<void>>

@@ -166,6 +166,8 @@ struct gui
      bool                    combo_swizzle_as_one_image_path(ff_8::filter_old<ff_8::FilterTag::SwizzleAsOneImage> &filter) const;
      void                    combo_deswizzle_path();
      bool                    combo_deswizzle_path(ff_8::filter_old<ff_8::FilterTag::Deswizzle> &filter) const;
+     void                    combo_full_filename_path();
+     bool                    combo_full_filename_path(ff_8::filter_old<ff_8::FilterTag::FullFileName> &filter) const;
      void                    combo_map_path();
      bool                    combo_map_path(ff_8::filter_old<ff_8::FilterTag::Map> &filter) const;
      const open_viii::LangT &get_coo() const;
@@ -229,6 +231,7 @@ struct gui
      void menu_swizzle_paths();
      void menu_swizzle_as_one_image_paths();
      void menu_deswizzle_paths();
+     void menu_full_filename_paths();
      void menu_map_paths();
      void refresh_field();
      void refresh_bpp(open_viii::graphics::BPPT in_bpp);

@@ -31,11 +31,12 @@ struct gui_labels
      static constexpr std::string_view max_tiles                         = { "Max Tiles" };
      static constexpr std::string_view filters                           = { "Filters" };
      static constexpr std::string_view background                        = { "Background" };
-     static constexpr std::string_view background2                        = { "##Background2" };
+     static constexpr std::string_view background2                       = { "##Background2" };
      static constexpr std::string_view control_panel                     = { "Control Panel" };
      static constexpr std::string_view swizzle_path                      = { "Swizzle Path" };
      static constexpr std::string_view swizzle_as_one_image_path         = { "Swizzle As One Image Path" };
      static constexpr std::string_view deswizzle_path                    = { "Deswizzle Path" };
+     static constexpr std::string_view full_filename_path                = { "Full Filename Path (.toml)" };
      static constexpr std::string_view map_path                          = { ".map Path" };
      static constexpr std::string_view processing                        = { "Processing" };
      static constexpr std::string_view display_history                   = { "History" };
@@ -75,8 +76,8 @@ struct gui_labels
      static constexpr std::string_view swizzle                           = { "Swizzle" };
      static constexpr std::string_view swizzle_as_one_image              = { "Swizzle as one Image" };
      static constexpr std::string_view deswizzle                         = { "Deswizzle" };
-     static constexpr std::string_view deswizzle_combined_toml           = { "Generate .toml for combined deswizzles" };
-     static constexpr std::string_view deswizzle_combined_images         = { "Read .toml for combined deswizzles to make images" };
+     static constexpr std::string_view deswizzle_generate_toml           = { "Generate .toml for combined deswizzles" };
+     static constexpr std::string_view deswizzle_full_filename           = { "Read .toml for combined deswizzles to make images" };
      static constexpr std::string_view disable_blending                  = { "Disable Blending" };
      static constexpr std::string_view force_reloading_of_textures       = { "Force Reloading Of Textures" };
      static constexpr std::string_view force_rendering_of_map            = { "Force Rendering Of Map" };
@@ -196,6 +197,10 @@ struct gui_labels
 
      static constexpr std::string_view input_swizzle_as_one_image_tooltip = {
           "Load a directory of swizzled as one image textures. Including `.map` files if found."
+     };
+
+     static constexpr std::string_view input_full_filename_image_tooltip = {
+          "Load a directory of full filename textures. Including `.map` files if found. (.toml)"
      };
 
      static constexpr std::string_view compact_flatten_warning = {

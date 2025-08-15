@@ -23,7 +23,8 @@
 #include <vector>
 namespace ff_8
 {
-enum class FilterSettings : std::uint8_t {
+enum class FilterSettings : std::uint8_t
+{
      All_Disabled   = 0U,
      Toggle_Enabled = 0x1U << 0,
      Config_Enabled = 0x1U << 1,
@@ -88,6 +89,7 @@ enum class FilterTag : std::uint8_t
      Swizzle,
      Deswizzle,
      SwizzleAsOneImage,
+     FullFileName,
      Map,
      DrawBit,
      Z,
@@ -154,6 +156,15 @@ struct ConfigKeys<FilterTag::SwizzleAsOneImage>
      static constexpr std::string_view key_name         = "filter_swizzle_as_one_image";
      static constexpr std::string_view enabled_key_name = "filter_swizzle_as_one_image_enabled";
 };
+
+template<>
+struct ConfigKeys<FilterTag::FullFileName>
+{
+     using value_type                                   = std::filesystem::path;
+     static constexpr std::string_view key_name         = "filter_full_filename";
+     static constexpr std::string_view enabled_key_name = "filter_full_filename_enabled";
+};
+
 
 template<>
 struct ConfigKeys<FilterTag::Map>
@@ -1022,6 +1033,7 @@ struct filters
      filter_old<FilterTag::Swizzle>           swizzle;
      filter_old<FilterTag::Deswizzle>         deswizzle;
      filter_old<FilterTag::SwizzleAsOneImage> swizzle_as_one_image;
+     filter_old<FilterTag::FullFileName>      full_filename;
      filter_old<FilterTag::Map>               map;
      filter<FilterTag::DrawBit>               draw_bit;
      filter<FilterTag::Z>                     z;
@@ -1049,6 +1061,7 @@ struct filters
        , swizzle(load_config, config)
        , deswizzle(load_config, config)
        , swizzle_as_one_image(load_config, config)
+       , full_filename(load_config, config)
        , map(load_config, config)
        , draw_bit(load_config, config)
        , z(load_config, config)
@@ -1082,6 +1095,7 @@ struct filters
             // swizzle,
             // deswizzle,
             // swizzle_as_one_image,
+            // full_filename,
             // map,
             draw_bit,
             z,
@@ -1111,10 +1125,11 @@ struct filters
                (operations.combine(table), ...);
           }(pupu,
             multi_pupu,
-            // these 4 filters control drawing with external textures. reloading them from a toml table. is not desired currently.
+            // these filters control drawing with external textures. reloading them from a toml table. is not desired currently.
             // swizzle,
             // deswizzle,
             // swizzle_as_one_image,
+            // full_filename,
             // map,
             draw_bit,
             z,
@@ -1143,9 +1158,11 @@ struct filters
                (operations.update(table), ...);
           }(pupu,
             multi_pupu,
+            // these filters control drawing with external textures. reloading them from a toml table. is not desired currently.
             // swizzle,
             // deswizzle,
             // swizzle_as_one_image,
+            // full_filename,
             // map,
             draw_bit,
             z,

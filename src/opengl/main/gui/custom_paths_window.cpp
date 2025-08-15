@@ -61,6 +61,7 @@ static const auto                                          m_tests = std::to_arr
           case fme::PatternSelector::PathPatternsWithPalette:
           case fme::PatternSelector::PathPatternsWithTexturePage:
           case fme::PatternSelector::PathPatternsWithPupuID:
+          case fme::PatternSelector::PathPatternsWithFullFileName:
                return fme::custom_paths_window::vector_or_string_t::vector;
      }
      return fme::custom_paths_window::vector_or_string_t::unknown;
@@ -104,6 +105,9 @@ static const auto                                          m_tests = std::to_arr
           case fme::PatternSelector::PathPatternsWithPupuID:
                return get_current_string_value_from_index(
                  selections->get<ConfigKey::PathPatternsWithPupuID>(), selections->get<ConfigKey::CurrentPatternIndex>());
+          case fme::PatternSelector::PathPatternsWithFullFileName:
+               return get_current_string_value_from_index(
+                 selections->get<ConfigKey::PathPatternsWithFullFileName>(), selections->get<ConfigKey::CurrentPatternIndex>());
      }
      return nullptr;
 }
@@ -138,6 +142,8 @@ static const auto                                          m_tests = std::to_arr
                return &selections->get<ConfigKey::PathPatternsWithTexturePage>();
           case fme::PatternSelector::PathPatternsWithPupuID:
                return &selections->get<ConfigKey::PathPatternsWithPupuID>();
+          case fme::PatternSelector::PathPatternsWithFullFileName:
+               return &selections->get<ConfigKey::PathPatternsWithFullFileName>();
      }
      return nullptr;
 }
@@ -225,7 +231,8 @@ void fme::custom_paths_window::populate_test_output() const
                                             PatternSelector::PathPatternsWithPaletteAndTexturePage,
                                             PatternSelector::PathPatternsWithPalette,
                                             PatternSelector::PathPatternsWithTexturePage,
-                                            PatternSelector::PathPatternsWithPupuID };
+                                            PatternSelector::PathPatternsWithPupuID,
+                                            PatternSelector::PathPatternsWithFullFileName };
 
 
      const GenericCombo gcc    = { ""sv,
@@ -290,6 +297,9 @@ void fme::custom_paths_window::save_pattern() const
                break;
           case fme::PatternSelector::PathPatternsWithPupuID:
                selections->update<ConfigKey::PathPatternsWithPupuID>();
+               break;
+          case fme::PatternSelector::PathPatternsWithFullFileName:
+               selections->update<ConfigKey::PathPatternsWithFullFileName>();
                break;
      }
 }

@@ -78,5 +78,6 @@ void fme::Selections::sort_paths()
        ConfigKey::CacheSwizzlePathsEnabled,
        ConfigKey::CacheSwizzleAsOneImagePathsEnabled,
        ConfigKey::CacheDeswizzlePathsEnabled,
+       ConfigKey::CacheFullFileNamePathsEnabled,
        ConfigKey::CacheMapPathsEnabled>();
 }
