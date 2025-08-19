@@ -5,6 +5,23 @@
 // clang-format on
 #include "gui/gui.hpp"
 #include <BlendModeSettings.hpp>
+#include <spdlog/sinks/basic_file_sink.h>
+
+#ifdef _WIN32
+#include <windows.h>
+
+int        main(int argc, char **argv);// your existing main
+
+int WINAPI WinMain(
+  [[maybe_unused]] HINSTANCE hInstance,
+  [[maybe_unused]] HINSTANCE hPrevInstance,
+  [[maybe_unused]] LPSTR     lpCmdLine,
+  [[maybe_unused]] int       nCmdShow)
+{
+     // Convert lpCmdLine to argc/argv if needed, or just call main(0,nullptr)
+     return main(__argc, __argv);
+}
+#endif
 
 static void setWindowIcon(GLFWwindow *const window)
 {
@@ -73,8 +90,35 @@ static GLFWwindow *create_glfw_window()
      glfwSwapInterval(1);// Enable vsync
      return window;
 }
-int main()
+int main([[maybe_unused]] int argc, [[maybe_unused]] char **argv)
 {
+     try
+     {
+          // Create file logger and set as default
+          auto file_logger = spdlog::basic_logger_mt("file_logger", "res/field_map_editor.log", true);
+
+          // Remove logger name from output pattern
+          file_logger->set_pattern(R"([%Y-%m-%d %H:%M:%S.%e] [%^%l%$] %v)");
+
+          spdlog::set_default_logger(file_logger);
+
+// Set log level based on build type
+#ifndef NDEBUG
+          spdlog::set_level(spdlog::level::debug);// Debug build
+#else
+          spdlog::set_level(spdlog::level::info);// Release build
+#endif
+
+          // Optional: control flush policy
+          spdlog::flush_on(spdlog::level::warn);
+
+          // Now log anywhere
+          spdlog::info("App started");
+     }
+     catch (const spdlog::spdlog_ex &ex)
+     {
+          std::cerr << "Log init failed: " << ex.what() << std::endl;
+     }
      GLFWwindow *const window = create_glfw_window();
      if (!window)
           return 0;
