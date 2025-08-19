@@ -2440,8 +2440,9 @@ void gui::directory_browser_display()
           break;
 
           case map_directory_mode::load_swizzle_textures: {
-
-               add_path_to_config();
+               m_selections->get<ConfigKey::SwizzlePath>() = selected_path;
+               m_selections->update<ConfigKey::SwizzlePath>();
+                add_path_to_config();
                changed |= try_enable_filter.template operator()<ConfigKey::CacheSwizzlePathsEnabled>(
                  m_map_sprite->filter().swizzle,
                  m_map_sprite->filter().swizzle_as_one_image,
@@ -2459,7 +2460,8 @@ void gui::directory_browser_display()
 
 
           case map_directory_mode::load_swizzle_as_one_image_textures: {
-
+               m_selections->get<ConfigKey::SwizzleAsOneImagePath>() = selected_path;
+               m_selections->update<ConfigKey::SwizzleAsOneImagePath>();
                add_path_to_config();
                changed |= try_enable_filter.template operator()<ConfigKey::CacheSwizzleAsOneImagePathsEnabled>(
                  m_map_sprite->filter().swizzle_as_one_image,
@@ -2477,7 +2479,8 @@ void gui::directory_browser_display()
           break;
 
           case map_directory_mode::load_deswizzle_textures: {
-
+               m_selections->get<ConfigKey::DeswizzlePath>() = selected_path;
+               m_selections->update<ConfigKey::DeswizzlePath>();
                add_path_to_config();
                changed |= try_enable_filter.template operator()<ConfigKey::CacheDeswizzlePathsEnabled>(
                  m_map_sprite->filter().deswizzle,
@@ -2495,7 +2498,8 @@ void gui::directory_browser_display()
 
 
           case map_directory_mode::load_full_filename_textures: {
-
+               m_selections->get<ConfigKey::FullFileNamePath>() = selected_path;
+               m_selections->update<ConfigKey::FullFileNamePath>();
                add_path_to_config();
                changed |= try_enable_filter.template operator()<ConfigKey::CacheFullFileNamePathsEnabled>(
                  m_map_sprite->filter().full_filename,
@@ -2512,6 +2516,8 @@ void gui::directory_browser_display()
           }
           break;
           case map_directory_mode::load_map: {
+               m_selections->get<ConfigKey::OutputMapPath>() = selected_path;
+               m_selections->update<ConfigKey::OutputMapPath>();
                add_path_to_config();
                changed |= try_enable_map_filter();
                m_selections->sort_paths();
@@ -2545,14 +2551,14 @@ void gui::file_browser_display()
                {
                     case file_dialog_mode::save_mim_file: {
                          m_mim_sprite->mim_save(selected_path);
-                         m_selections->get<ConfigKey::OutputMimPath>() = selected_directory.string();
+                         m_selections->get<ConfigKey::OutputMimPath>() = selected_directory;
                          m_selections->update<ConfigKey::OutputMimPath>();
                          open_file_explorer(selected_path);
                     }
                     break;
                     case file_dialog_mode::save_image_file: {
                          m_mim_sprite->save(selected_path);
-                         m_selections->get<ConfigKey::OutputImagePath>() = selected_directory.string();
+                         m_selections->get<ConfigKey::OutputImagePath>() = selected_directory;
                          m_selections->update<ConfigKey::OutputImagePath>();
                          open_file_explorer(selected_path);
                     }
@@ -2569,14 +2575,14 @@ void gui::file_browser_display()
                {
                     case file_dialog_mode::save_modified_map_file: {
                          m_map_sprite->save_modified_map(selected_path);
-                         m_selections->get<ConfigKey::OutputMapPath>() = selected_directory.string();
+                         m_selections->get<ConfigKey::OutputMapPath>() = selected_directory;
                          m_selections->update<ConfigKey::OutputMapPath>();
                          open_file_explorer(selected_path);
                     }
                     break;
                     case file_dialog_mode::save_unmodified_map_file: {
                          m_map_sprite->map_save(selected_path);
-                         m_selections->get<ConfigKey::OutputMapPath>() = selected_directory.string();
+                         m_selections->get<ConfigKey::OutputMapPath>() = selected_directory;
                          m_selections->update<ConfigKey::OutputMapPath>();
                          open_file_explorer(selected_path);
                     }
@@ -2587,14 +2593,14 @@ void gui::file_browser_display()
                          m_map_sprite->filter().map.disable();
                          m_map_sprite->filter().map.disable();
                          m_map_sprite->load_map(selected_path);
-                         m_selections->get<ConfigKey::OutputMapPath>() = selected_directory.string();
+                         m_selections->get<ConfigKey::OutputMapPath>() = selected_directory;
                          m_selections->update<ConfigKey::OutputMapPath>();
                          m_changed = true;
                     }
                     break;
                     case file_dialog_mode::save_image_file: {
                          m_map_sprite->save(selected_path);
-                         m_selections->get<ConfigKey::OutputImagePath>() = selected_directory.string();
+                         m_selections->get<ConfigKey::OutputImagePath>() = selected_directory;
                          m_selections->update<ConfigKey::OutputImagePath>();
                          open_file_explorer(selected_path);
                     }
@@ -3309,67 +3315,60 @@ std::future<std::future<gui::PathsAndEnabled>> gui::generate_sort_paths()
 
 std::future<std::future<gui::PathsAndEnabled>> gui::generate_external_texture_paths()
 {
-     return std::async(
-       std::launch::async,
-       [ps = ff_8::path_search{ .selections                   = m_selections,
-                                .opt_coo                      = get_coo(),
-                                .field_name                   = m_map_sprite->get_base_name(),
-                                .filters_swizzle_value_string = m_map_sprite->filter().swizzle.value().string(),
-                                .bpp_palette                  = m_map_sprite->uniques().palette(),
-                                .texture_page_id = m_map_sprite->uniques().texture_page_id() }]() -> std::future<PathsAndEnabled> {
-            gui::PathsAndEnabled pande{ .path_key    = ConfigKey::CacheTextureAndMapPaths,
-                                        .enabled_key = { ConfigKey::CacheSwizzlePathsEnabled,
-                                                         ConfigKey::CacheSwizzleAsOneImagePathsEnabled,
-                                                         ConfigKey::CacheDeswizzlePathsEnabled,
-                                                         ConfigKey::CacheFullFileNamePathsEnabled } };
+     return std::async(std::launch::async, [ps = static_cast<ff_8::path_search>(*m_map_sprite)]() -> std::future<PathsAndEnabled> {
+          gui::PathsAndEnabled pande{ .path_key    = ConfigKey::CacheTextureAndMapPaths,
+                                      .enabled_key = { ConfigKey::CacheSwizzlePathsEnabled,
+                                                       ConfigKey::CacheSwizzleAsOneImagePathsEnabled,
+                                                       ConfigKey::CacheDeswizzlePathsEnabled,
+                                                       ConfigKey::CacheFullFileNamePathsEnabled } };
 
-            const auto           get_map_paths_joined = [&](const auto &container) {
-                 return container | std::views::transform([&](const std::filesystem::path &path) {
-                             return ff_8::path_search::get_paths(ps.selections, ps.opt_coo, path);
-                        })
-                        | std::views::join;
-            };
+          const auto           get_map_paths_joined = [&](const auto &container) {
+               return container | std::views::transform([&](const std::filesystem::path &path) {
+                           return ff_8::path_search::get_paths(ps.selections, ps.opt_coo, path);
+                      })
+                      | std::views::join;
+          };
 
-            const auto process = [&](const auto &...ranges) {
-                 (
-                   [&](const auto &range) {
-                        for (const auto &path : get_map_paths_joined(range))
-                        {
-                             pande.path.emplace_back(path.string());
-                        }
-                   }(ranges),
-                   ...);
-            };
-
-            process(
-              ps.selections->get<ConfigKey::FF8DirectoryPaths>(), ps.selections->get<ConfigKey::ExternalTexturesAndMapsDirectoryPaths>());
-
-            pande.enabled.resize(pande.enabled_key.size());
-            for (auto &&[key, enabled] : std::ranges::views::zip(pande.enabled_key, pande.enabled))
-            {
-                 for (const auto &path : pande.path)
-                 {
-                      switch (key)
+          const auto process = [&](const auto &...ranges) {
+               (
+                 [&](const auto &range) {
+                      for (const auto &path : get_map_paths_joined(range))
                       {
-                           case ConfigKey::CacheSwizzlePathsEnabled:
-                                enabled.push_back(ps.has_swizzle_path(std::filesystem::path{ path }));
-                                break;
-                           case ConfigKey::CacheSwizzleAsOneImagePathsEnabled:
-                                enabled.push_back(ps.has_swizzle_as_one_image_path(std::filesystem::path{ path }));
-                                break;
-                           case ConfigKey::CacheDeswizzlePathsEnabled:
-                                enabled.push_back(ps.has_deswizzle_path(std::filesystem::path{ path }));
-                                break;
-                           case ConfigKey::CacheFullFileNamePathsEnabled:
-                                enabled.push_back(ps.has_full_filename_path(std::filesystem::path{ path }));
-                                break;
-                           default:
-                                throw;
+                           pande.path.emplace_back(path.string());
                       }
-                 }
-            }
-            return std::async(std::launch::deferred, [moved_pande = std::move(pande)]() -> PathsAndEnabled { return moved_pande; });
-       });
+                 }(ranges),
+                 ...);
+          };
+
+          process(
+            ps.selections->get<ConfigKey::FF8DirectoryPaths>(), ps.selections->get<ConfigKey::ExternalTexturesAndMapsDirectoryPaths>());
+
+          pande.enabled.resize(pande.enabled_key.size());
+          for (auto &&[key, enabled] : std::ranges::views::zip(pande.enabled_key, pande.enabled))
+          {
+               for (const auto &path : pande.path)
+               {
+                    switch (key)
+                    {
+                         case ConfigKey::CacheSwizzlePathsEnabled:
+                              enabled.push_back(ps.has_swizzle_path(std::filesystem::path{ path }));
+                              break;
+                         case ConfigKey::CacheSwizzleAsOneImagePathsEnabled:
+                              enabled.push_back(ps.has_swizzle_as_one_image_path(std::filesystem::path{ path }));
+                              break;
+                         case ConfigKey::CacheDeswizzlePathsEnabled:
+                              enabled.push_back(ps.has_deswizzle_path(std::filesystem::path{ path }));
+                              break;
+                         case ConfigKey::CacheFullFileNamePathsEnabled:
+                              enabled.push_back(ps.has_full_filename_path(std::filesystem::path{ path }));
+                              break;
+                         default:
+                              throw;
+                    }
+               }
+          }
+          return std::async(std::launch::deferred, [moved_pande = std::move(pande)]() -> PathsAndEnabled { return moved_pande; });
+     });
 }
 
 
