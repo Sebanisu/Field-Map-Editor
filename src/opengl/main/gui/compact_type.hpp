@@ -83,6 +83,16 @@ enum struct root_path_types : std::uint8_t
      current_path
 };
 
+
+enum struct VectorOrString : std::uint8_t
+{
+     unknown,
+     vector,
+     string,
+};
+
+
+
 enum class PatternSelector : std::uint8_t
 {
      OutputSwizzlePattern,
@@ -90,6 +100,7 @@ enum class PatternSelector : std::uint8_t
      OutputFullFileNamePattern,
      OutputMapPatternForSwizzle,
      OutputMapPatternForDeswizzle,
+     OutputMapPatternForFullFileName,
      PatternsCommonPrefixes,
      PatternsCommonPrefixesForMaps,
      PatternsBase,
@@ -98,7 +109,7 @@ enum class PatternSelector : std::uint8_t
      PathPatternsWithTexturePage,
      PathPatternsWithPupuID,
      PathPatternsWithFullFileName,
+     End,
 };
-
 }// namespace fme
 #endif// FIELD_MAP_EDITOR_COMPACT_TYPE_HPP
