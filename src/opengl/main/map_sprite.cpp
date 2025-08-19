@@ -347,6 +347,12 @@ bool map_sprite::fallback_textures() const
                queue_texture_loading();
                return true;
           }
+          else if (m_filters.full_filename.enabled())
+          {
+               m_filters.full_filename.disable();
+               queue_texture_loading();
+               return true;
+          }
      }
      return false;
 }
@@ -620,13 +626,13 @@ void map_sprite::update_position(
                     return;
                }
                const auto *texture = [&]() {
-                    if (!m_filters.deswizzle.enabled())
+                    if (m_filters.deswizzle.enabled() || m_filters.full_filename.enabled())
                     {
-                         return get_texture(tile_const.depth(), tile_const.palette_id(), tile_const.texture_id());
+                         return get_texture(pupu_id);
                     }
                     else
                     {
-                         return get_texture(pupu_id);
+                         return get_texture(tile_const.depth(), tile_const.palette_id(), tile_const.texture_id());
                     }
                }();
 
@@ -691,13 +697,13 @@ void map_sprite::update_position(
                // Create the SubTexture
                glengine::SubTexture subtexture(*texture, quad.uv_min, quad.uv_max);
 
-               spdlog::debug("Target framebuffer scale: {}", target_framebuffer.scale());
-               spdlog::debug("Destination tile size: ({}, {})", destination_tile_size.x, destination_tile_size.y);
-               spdlog::debug("Source tile size: ({}, {})", source_tile_size.x, source_tile_size.y);
-               spdlog::debug("Source texture size: ({}, {})", source_texture_size.x, source_texture_size.y);
-               spdlog::debug("Draw position: ({}, {}, {})", draw_position.x, draw_position.y, draw_position.z);
-               spdlog::debug("UV min: ({}, {})", quad.uv_min.x, quad.uv_min.y);
-               spdlog::debug("UV max: ({}, {})", quad.uv_max.x, quad.uv_max.y);
+               spdlog::trace("Target framebuffer scale: {}", target_framebuffer.scale());
+               spdlog::trace("Destination tile size: ({}, {})", destination_tile_size.x, destination_tile_size.y);
+               spdlog::trace("Source tile size: ({}, {})", source_tile_size.x, source_tile_size.y);
+               spdlog::trace("Source texture size: ({}, {})", source_texture_size.x, source_texture_size.y);
+               spdlog::trace("Draw position: ({}, {}, {})", draw_position.x, draw_position.y, draw_position.z);
+               spdlog::trace("UV min: ({}, {})", quad.uv_min.x, quad.uv_min.y);
+               spdlog::trace("UV max: ({}, {})", quad.uv_max.x, quad.uv_max.y);
                const auto find_id = [&]() {
                     if (const auto it = std::ranges::find(unique_pupu_ids, pupu_id); it != std::ranges::end(unique_pupu_ids))
                     {
@@ -806,7 +812,7 @@ glm::uvec2 map_sprite::get_tile_texture_size_for_import() const
 glm::uvec2 map_sprite::get_tile_texture_size(const glengine::Texture *const texture) const
 {
      const auto raw_texture_size = texture->get_size();
-     if (m_filters.deswizzle.enabled())
+     if (m_filters.deswizzle.enabled() || m_filters.full_filename.enabled())
      {
           const auto local_scale = static_cast<std::uint32_t>(raw_texture_size.y) / m_canvas.height();
           return glm::uvec2{ TILE_SIZE * local_scale, TILE_SIZE * local_scale };
@@ -1023,7 +1029,7 @@ void map_sprite::resize_render_texture() const
             (std::ranges::max)(filtered_textures | std::ranges::views::transform([](const auto &texture) { return texture.height(); }));
           static constexpr std::int16_t mim_texture_height = 256U;
 
-          if (m_filters.deswizzle.enabled()) [[unlikely]]
+          if (m_filters.deswizzle.enabled() || m_filters.full_filename.enabled()) [[unlikely]]
           {
                m_render_framebuffer->set_scale(max_height / static_cast<std::int32_t>(m_canvas.height()));
           }
