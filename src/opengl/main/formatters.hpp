@@ -14,6 +14,7 @@
 #include <filesystem>
 #include <fmt/format.h>
 #include <fmt/ranges.h>
+#include <Formatters.hpp>
 #include <functional>
 #include <open_viii/graphics/background/BlendModeT.hpp>
 #include <open_viii/graphics/background/Map.hpp>
@@ -492,6 +493,9 @@ struct fmt::formatter<fme::PatternSelector> : fmt::formatter<std::string_view>
                case fme::PatternSelector::OutputMapPatternForDeswizzle:
                     name = "Output map pattern for deswizzle"sv;
                     break;
+               case fme::PatternSelector::OutputMapPatternForFullFileName:
+                    name = "Output map pattern for Full Filename (.toml)"sv;
+                    break;
                case fme::PatternSelector::PatternsCommonPrefixes:
                     name = "Path Patterns Common Swizzle"sv;
                     break;
@@ -514,7 +518,7 @@ struct fmt::formatter<fme::PatternSelector> : fmt::formatter<std::string_view>
                     name = "Path Patterns With PupuID"sv;
                     break;
                case fme::PatternSelector::PathPatternsWithFullFileName:
-                    name = "Path Patterens With Full Filename (.toml)"sv;
+                    name = "Path Patterns With Full Filename (.toml)"sv;
           }
           return fmt::formatter<std::string_view>::format(name, ctx);
      }
