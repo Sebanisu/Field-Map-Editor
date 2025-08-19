@@ -82,7 +82,7 @@ if(MSVC)
 endif()
 string(TOLOWER "${PROJECT_NAME}_EXPERIMENTAL" experimental_exec)
 set_target_properties(${PROJECT_NAME}_EXPERIMENTAL PROPERTIES
-    OUTPUT_NAME "${experimental_exec}${EXE_SUFFIX}"
+    OUTPUT_NAME "${experimental_exec}"
 )
 if(supported)
   message(STATUS "IPO / LTO enabled")
