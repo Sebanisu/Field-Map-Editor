@@ -209,7 +209,7 @@ std::future<void> save_image_pbo(
                       conv_color_best = conv_cache[std::get<0>(*it)];
                       if (color_in != conv_color_best && logged_colors.insert({ color_in, conv_color_best }).second)
                       {
-                           spdlog::warn("{} != {}", color_in, conv_color_best);
+                           spdlog::debug("{} != {}", color_in, conv_color_best);
                       }
                  }
             }
