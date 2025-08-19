@@ -238,7 +238,7 @@ void fme::draw_window::render() const
           const auto pop_id1 = PushPopID();
           ImGui::GetWindowDrawList()->AddImage(
             glengine::ConvertGliDtoImTextureId<ImTextureID>(
-              framebuffer.color_attachment_id(selections->get<ConfigKey::DrawPupuMask>() ? 2 : 0)),
+              framebuffer.color_attachment_id(selections->get<ConfigKey::DrawPupuMask>() ? 1 : 0)),
             screen_pos,
             ImVec2{ screen_pos.x + scaled_size.x, screen_pos.y + scaled_size.y });
 
