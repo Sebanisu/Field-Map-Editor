@@ -3,6 +3,116 @@
 #include "fa_icons.hpp"
 #include "formatters.hpp"
 
+namespace fme
+{
+// Primary template (undefined)
+template<PatternSelector Sel>
+struct PatternInfo;
+
+// ---- Specializations ----
+
+// Output patterns → string
+template<>
+struct PatternInfo<PatternSelector::OutputSwizzlePattern>
+{
+     static constexpr ConfigKey      key  = ConfigKey::OutputSwizzlePattern;
+     static constexpr VectorOrString type = VectorOrString::string;
+};
+
+template<>
+struct PatternInfo<PatternSelector::OutputDeswizzlePattern>
+{
+     static constexpr ConfigKey      key  = ConfigKey::OutputDeswizzlePattern;
+     static constexpr VectorOrString type = VectorOrString::string;
+};
+
+template<>
+struct PatternInfo<PatternSelector::OutputFullFileNamePattern>
+{
+     static constexpr ConfigKey      key  = ConfigKey::OutputFullFileNamePattern;
+     static constexpr VectorOrString type = VectorOrString::string;
+};
+
+template<>
+struct PatternInfo<PatternSelector::OutputMapPatternForSwizzle>
+{
+     static constexpr ConfigKey      key  = ConfigKey::OutputMapPatternForSwizzle;
+     static constexpr VectorOrString type = VectorOrString::string;
+};
+
+template<>
+struct PatternInfo<PatternSelector::OutputMapPatternForDeswizzle>
+{
+     static constexpr ConfigKey      key  = ConfigKey::OutputMapPatternForDeswizzle;
+     static constexpr VectorOrString type = VectorOrString::string;
+};
+
+template<>
+struct PatternInfo<PatternSelector::OutputMapPatternForFullFileName>
+{
+     static constexpr ConfigKey      key  = ConfigKey::OutputMapPatternForFullFileName;
+     static constexpr VectorOrString type = VectorOrString::string;
+};
+
+// Vector patterns
+template<>
+struct PatternInfo<PatternSelector::PatternsCommonPrefixes>
+{
+     static constexpr ConfigKey      key  = ConfigKey::PatternsCommonPrefixes;
+     static constexpr VectorOrString type = VectorOrString::vector;
+};
+
+template<>
+struct PatternInfo<PatternSelector::PatternsCommonPrefixesForMaps>
+{
+     static constexpr ConfigKey      key  = ConfigKey::PatternsCommonPrefixesForMaps;
+     static constexpr VectorOrString type = VectorOrString::vector;
+};
+
+template<>
+struct PatternInfo<PatternSelector::PatternsBase>
+{
+     static constexpr ConfigKey      key  = ConfigKey::PatternsBase;
+     static constexpr VectorOrString type = VectorOrString::vector;
+};
+
+template<>
+struct PatternInfo<PatternSelector::PathPatternsWithPaletteAndTexturePage>
+{
+     static constexpr ConfigKey      key  = ConfigKey::PathPatternsWithPaletteAndTexturePage;
+     static constexpr VectorOrString type = VectorOrString::vector;
+};
+
+template<>
+struct PatternInfo<PatternSelector::PathPatternsWithPalette>
+{
+     static constexpr ConfigKey      key  = ConfigKey::PathPatternsWithPalette;
+     static constexpr VectorOrString type = VectorOrString::vector;
+};
+
+template<>
+struct PatternInfo<PatternSelector::PathPatternsWithTexturePage>
+{
+     static constexpr ConfigKey      key  = ConfigKey::PathPatternsWithTexturePage;
+     static constexpr VectorOrString type = VectorOrString::vector;
+};
+
+template<>
+struct PatternInfo<PatternSelector::PathPatternsWithPupuID>
+{
+     static constexpr ConfigKey      key  = ConfigKey::PathPatternsWithPupuID;
+     static constexpr VectorOrString type = VectorOrString::vector;
+};
+
+template<>
+struct PatternInfo<PatternSelector::PathPatternsWithFullFileName>
+{
+     static constexpr ConfigKey      key  = ConfigKey::PathPatternsWithFullFileName;
+     static constexpr VectorOrString type = VectorOrString::vector;
+};
+}// namespace fme
+
+
 static const auto trim = [](const std::string &str) -> std::string {
      auto start = str.find_first_not_of(" \t\n\r\f\v");
      if (start == std::string::npos)
@@ -12,8 +122,14 @@ static const auto trim = [](const std::string &str) -> std::string {
      return str.substr(start, end - start + 1);
 };
 
+[[nodiscard]] static consteval auto load_pattern_selector_array()
+{
+     return []<std::size_t... Is>(std::index_sequence<Is...>) constexpr {
+          return std::array<fme::PatternSelector, sizeof...(Is)>{ static_cast<fme::PatternSelector>(Is)... };
+     }(std::make_index_sequence<static_cast<std::size_t>(fme::PatternSelector::End)>{});
+}
 
-static const auto                                          m_tests = std::to_array<fme::key_value_data>({
+static const auto   m_tests = std::to_array<fme::key_value_data>({
   { .field_name = "ecmall1", .ext = ".ca" },// Basic field_name + ext match
   { .field_name = "ecmall1", .ext = ".jsm", .language_code = open_viii::LangT::en, .pupu_id = 987654U },// Field with language suffix
   { .field_name = "ecmall1", .ext = ".msd", .language_code = open_viii::LangT::jp, .pupu_id = 543210U },// Another language case
@@ -27,143 +143,141 @@ static const auto                                          m_tests = std::to_arr
   { .field_name = "cdfield1", .ext = ".pmd", .pupu_id = 210987U },// Another general field match
   { .field_name = "cdfield2", .ext = ".pvp", .palette = std::uint8_t{ 2 }, .pupu_id = 210987U },// Field with palette
   { .field_name    = "bgkote1a",
-                                             .ext           = ".tiff",
-                                             .language_code = open_viii::LangT::es,
-                                             .texture_page  = std::uint8_t{ 5 } },// With texture_page
+      .ext           = ".tiff",
+      .language_code = open_viii::LangT::es,
+      .texture_page  = std::uint8_t{ 5 } },// With texture_page
   { .field_name = "bggate_1", .ext = ".gif", .language_code = open_viii::LangT::it, .pupu_id = 78901U },// With pupu_id
   { .field_name    = "bgeat1a",
-                                             .ext           = ".bmp",
-                                             .language_code = open_viii::LangT::de,
-                                             .palette       = std::uint8_t{ 4 },
-                                             .texture_page  = std::uint8_t{ 3 },
-                                             .pupu_id       = 123456U }// Full case
+      .ext           = ".bmp",
+      .language_code = open_viii::LangT::de,
+      .palette       = std::uint8_t{ 4 },
+      .texture_page  = std::uint8_t{ 3 },
+      .pupu_id       = 123456U }// Full case
 });
 
-[[nodiscard]] fme::custom_paths_window::vector_or_string_t fme::custom_paths_window::vector_or_string() const
+fme::VectorOrString fme::custom_paths_window::vector_or_string() const
 {
-     const auto selections = m_selections.lock();
-     if (!selections)
-     {
-          spdlog::error("Failed to lock m_selections: shared_ptr is expired.");
-          return fme::custom_paths_window::vector_or_string_t::unknown;
-     }
-     switch (selections->get<ConfigKey::CurrentPattern>())
-     {
-          case fme::PatternSelector::OutputSwizzlePattern:
-          case fme::PatternSelector::OutputDeswizzlePattern:
-          case fme::PatternSelector::OutputMapPatternForSwizzle:
-          case fme::PatternSelector::OutputMapPatternForDeswizzle:
-               return fme::custom_paths_window::vector_or_string_t::string;
-          case fme::PatternSelector::PatternsCommonPrefixes:
-          case fme::PatternSelector::PatternsCommonPrefixesForMaps:
-          case fme::PatternSelector::PatternsBase:
-          case fme::PatternSelector::PathPatternsWithPaletteAndTexturePage:
-          case fme::PatternSelector::PathPatternsWithPalette:
-          case fme::PatternSelector::PathPatternsWithTexturePage:
-          case fme::PatternSelector::PathPatternsWithPupuID:
-          case fme::PatternSelector::PathPatternsWithFullFileName:
-               return fme::custom_paths_window::vector_or_string_t::vector;
-     }
-     return fme::custom_paths_window::vector_or_string_t::unknown;
-}
-[[nodiscard]] std::string *fme::custom_paths_window::get_current_string_value_mutable() const
-{
-     const auto selections = m_selections.lock();
-     if (!selections)
-     {
-          spdlog::error("Failed to lock m_selections: shared_ptr is expired.");
-          return nullptr;
-     }
-     switch (selections->get<ConfigKey::CurrentPattern>())
-     {
-          case fme::PatternSelector::OutputSwizzlePattern:
-               return &selections->get<ConfigKey::OutputSwizzlePattern>();
-          case fme::PatternSelector::OutputDeswizzlePattern:
-               return &selections->get<ConfigKey::OutputDeswizzlePattern>();
-          case fme::PatternSelector::OutputMapPatternForSwizzle:
-               return &selections->get<ConfigKey::OutputMapPatternForSwizzle>();
-          case fme::PatternSelector::OutputMapPatternForDeswizzle:
-               return &selections->get<ConfigKey::OutputMapPatternForDeswizzle>();
-          case fme::PatternSelector::PatternsCommonPrefixes:
-               return get_current_string_value_from_index(
-                 selections->get<ConfigKey::PatternsCommonPrefixes>(), selections->get<ConfigKey::CurrentPatternIndex>());
-          case fme::PatternSelector::PatternsCommonPrefixesForMaps:
-               return get_current_string_value_from_index(
-                 selections->get<ConfigKey::PatternsCommonPrefixesForMaps>(), selections->get<ConfigKey::CurrentPatternIndex>());
-          case fme::PatternSelector::PatternsBase:
-               return get_current_string_value_from_index(
-                 selections->get<ConfigKey::PatternsBase>(), selections->get<ConfigKey::CurrentPatternIndex>());
-          case fme::PatternSelector::PathPatternsWithPaletteAndTexturePage:
-               return get_current_string_value_from_index(
-                 selections->get<ConfigKey::PathPatternsWithPaletteAndTexturePage>(), selections->get<ConfigKey::CurrentPatternIndex>());
-          case fme::PatternSelector::PathPatternsWithPalette:
-               return get_current_string_value_from_index(
-                 selections->get<ConfigKey::PathPatternsWithPalette>(), selections->get<ConfigKey::CurrentPatternIndex>());
-          case fme::PatternSelector::PathPatternsWithTexturePage:
-               return get_current_string_value_from_index(
-                 selections->get<ConfigKey::PathPatternsWithTexturePage>(), selections->get<ConfigKey::CurrentPatternIndex>());
-          case fme::PatternSelector::PathPatternsWithPupuID:
-               return get_current_string_value_from_index(
-                 selections->get<ConfigKey::PathPatternsWithPupuID>(), selections->get<ConfigKey::CurrentPatternIndex>());
-          case fme::PatternSelector::PathPatternsWithFullFileName:
-               return get_current_string_value_from_index(
-                 selections->get<ConfigKey::PathPatternsWithFullFileName>(), selections->get<ConfigKey::CurrentPatternIndex>());
-     }
-     return nullptr;
+     return [&]<std::size_t... Is>(std::index_sequence<Is...>) {
+          const auto selections = m_selections.lock();
+          if (!selections)
+          {
+               spdlog::error("Failed to lock m_selections: shared_ptr is expired.");
+               return fme::VectorOrString::unknown;
+          }
+          fme::VectorOrString result = fme::VectorOrString::unknown;
+          bool                found =
+            (([&]() -> bool {
+                  if (selections->get<ConfigKey::CurrentPattern>() == static_cast<fme::PatternSelector>(Is))
+                  {
+                       result = fme::PatternInfo<static_cast<fme::PatternSelector>(Is)>::type;
+                       return true;
+                  }
+                  return false;
+             }())
+             || ...);
+
+          if (!found)
+          {
+               spdlog::critical(
+                 "Unhandled PatternSelector value: {}:{}",
+                 std::to_underlying(selections->get<ConfigKey::CurrentPattern>()),
+                 selections->get<ConfigKey::CurrentPattern>());
+               throw std::runtime_error("Unhandled PatternSelector value in vector_or_string()");
+          }
+          return result;
+     }(std::make_index_sequence<static_cast<std::size_t>(fme::PatternSelector::End)>{});
 }
 
-
-[[nodiscard]] std::vector<std::string> *fme::custom_paths_window::get_current_string_vector_mutable() const
+std::string *fme::custom_paths_window::get_current_string_value_mutable() const
 {
-     const auto selections = m_selections.lock();
-     if (!selections)
-     {
-          spdlog::error("Failed to lock m_selections: shared_ptr is expired.");
-          return nullptr;
-     }
-     switch (selections->get<ConfigKey::CurrentPattern>())
-     {
-          case fme::PatternSelector::OutputSwizzlePattern:
-          case fme::PatternSelector::OutputDeswizzlePattern:
-          case fme::PatternSelector::OutputMapPatternForSwizzle:
-          case fme::PatternSelector::OutputMapPatternForDeswizzle:
+     return [&]<std::size_t... Is>(std::index_sequence<Is...>) -> std::string * {
+          const auto selections = m_selections.lock();
+          if (!selections)
+          {
+               spdlog::error("Failed to lock m_selections: shared_ptr is expired.");
                return nullptr;
-          case fme::PatternSelector::PatternsCommonPrefixes:
-               return &selections->get<ConfigKey::PatternsCommonPrefixes>();
-          case fme::PatternSelector::PatternsCommonPrefixesForMaps:
-               return &selections->get<ConfigKey::PatternsCommonPrefixesForMaps>();
-          case fme::PatternSelector::PatternsBase:
-               return &selections->get<ConfigKey::PatternsBase>();
-          case fme::PatternSelector::PathPatternsWithPaletteAndTexturePage:
-               return &selections->get<ConfigKey::PathPatternsWithPaletteAndTexturePage>();
-          case fme::PatternSelector::PathPatternsWithPalette:
-               return &selections->get<ConfigKey::PathPatternsWithPalette>();
-          case fme::PatternSelector::PathPatternsWithTexturePage:
-               return &selections->get<ConfigKey::PathPatternsWithTexturePage>();
-          case fme::PatternSelector::PathPatternsWithPupuID:
-               return &selections->get<ConfigKey::PathPatternsWithPupuID>();
-          case fme::PatternSelector::PathPatternsWithFullFileName:
-               return &selections->get<ConfigKey::PathPatternsWithFullFileName>();
-     }
-     return nullptr;
+          }
+          std::string *result = nullptr;
+          (([&]() {
+                if (selections->get<ConfigKey::CurrentPattern>() == static_cast<fme::PatternSelector>(Is))
+                {
+                     if constexpr (fme::PatternInfo<static_cast<fme::PatternSelector>(Is)>::type == VectorOrString::string)
+                     {
+                          result = &selections->get<fme::PatternInfo<static_cast<fme::PatternSelector>(Is)>::key>();
+                     }
+                     else if constexpr (fme::PatternInfo<static_cast<fme::PatternSelector>(Is)>::type == VectorOrString::vector)
+                     {
+                          result = get_current_string_value_from_index(
+                            selections->get<fme::PatternInfo<static_cast<fme::PatternSelector>(Is)>::key>(),
+                            selections->get<ConfigKey::CurrentPatternIndex>());
+                     }
+                }
+           }()),
+           ...);
+          if (!result)
+          {
+               spdlog::debug(
+                 "Pattern Vector is empty, or Unhandled PatternSelector value: {}:{}",
+                 std::to_underlying(selections->get<ConfigKey::CurrentPattern>()),
+                 selections->get<ConfigKey::CurrentPattern>());
+          }
+          return result;
+     }(std::make_index_sequence<static_cast<std::size_t>(fme::PatternSelector::End)>{});
 }
 
-[[nodiscard]] const std::vector<std::string> *fme::custom_paths_window::get_current_string_vector() const
+std::vector<std::string> *fme::custom_paths_window::get_current_string_vector_mutable() const
+{
+     return [&]<std::size_t... Is>(std::index_sequence<Is...>) -> std::vector<std::string> * {
+          const auto selections = m_selections.lock();
+          if (!selections)
+          {
+               spdlog::error("Failed to lock m_selections: shared_ptr is expired.");
+               return nullptr;
+          }
+          std::vector<std::string> *result = nullptr;
+          (([&]() {
+                if (selections->get<ConfigKey::CurrentPattern>() == static_cast<fme::PatternSelector>(Is))
+                {
+                     if constexpr (fme::PatternInfo<static_cast<fme::PatternSelector>(Is)>::type == VectorOrString::vector)
+                     {
+                          result = &selections->get<fme::PatternInfo<static_cast<fme::PatternSelector>(Is)>::key>();
+                     }
+                }
+           }()),
+           ...);
+          if (!result)
+          {
+               spdlog::debug(
+                 "VectorOrString type is not vector, or Unhandled PatternSelector value: {}:{}",
+                 std::to_underlying(selections->get<ConfigKey::CurrentPattern>()),
+                 selections->get<ConfigKey::CurrentPattern>());
+          }
+          return result;
+     }(std::make_index_sequence<static_cast<std::size_t>(fme::PatternSelector::End)>{});
+}
+
+const std::vector<std::string> *fme::custom_paths_window::get_current_string_vector() const
 {
      return get_current_string_vector_mutable();
 }
 
-
-[[nodiscard]] std::string *fme::custom_paths_window::get_current_string_value_from_index(std::vector<std::string> &strings, const int index)
+std::string *fme::custom_paths_window::get_current_string_value_from_index(std::vector<std::string> &strings, const int index)
 {
-     if (index < 0 || index >= std::ranges::ssize(strings))
+     if (strings.empty())
+     {
+          return nullptr;// no valid element exists
+     }
+
+     // clamp index into [0, size-1]
+     auto clamped = std::clamp(index, -1, static_cast<int>(std::ranges::ssize(strings)) - 1);
+     if (clamped == -1)
      {
           return nullptr;
      }
-     return &strings[static_cast<std::size_t>(index)];
+     return &strings[static_cast<std::size_t>(clamped)];
 }
 
-[[nodiscard]] const std::string *fme::custom_paths_window::get_current_string_value() const
+const std::string *fme::custom_paths_window::get_current_string_value() const
 {
      return get_current_string_value_mutable();
 }
@@ -202,7 +316,8 @@ void fme::custom_paths_window::populate_test_output() const
      }
 }
 
-[[nodiscard]] bool fme::custom_paths_window::combo_selected_pattern() const
+
+bool fme::custom_paths_window::combo_selected_pattern() const
 {
      auto selections = m_selections.lock();
      if (!selections)
@@ -221,18 +336,7 @@ void fme::custom_paths_window::populate_test_output() const
      const auto pop_table = glengine::ScopeGuard{ &ImGui::EndTable };
      using namespace std::string_view_literals;
 
-     static const auto  values = std::array{ PatternSelector::OutputSwizzlePattern,
-                                            PatternSelector::OutputDeswizzlePattern,
-                                            PatternSelector::OutputMapPatternForSwizzle,
-                                            PatternSelector::OutputMapPatternForDeswizzle,
-                                            PatternSelector::PatternsCommonPrefixes,
-                                            PatternSelector::PatternsCommonPrefixesForMaps,
-                                            PatternSelector::PatternsBase,
-                                            PatternSelector::PathPatternsWithPaletteAndTexturePage,
-                                            PatternSelector::PathPatternsWithPalette,
-                                            PatternSelector::PathPatternsWithTexturePage,
-                                            PatternSelector::PathPatternsWithPupuID,
-                                            PatternSelector::PathPatternsWithFullFileName };
+     static const auto  values = load_pattern_selector_array();
 
 
      const GenericCombo gcc    = { ""sv,
@@ -253,58 +357,41 @@ void fme::custom_paths_window::populate_test_output() const
 
 void fme::custom_paths_window::save_pattern() const
 {
-     const auto selections = m_selections.lock();
-     if (!selections)
-     {
-          spdlog::error("Failed to lock m_selections: shared_ptr is expired.");
-          return;
-     }
-     if (auto *const strptr = get_current_string_value_mutable(); strptr)
-     {
-          *strptr = std::string{ m_input_pattern_string.data() };
-     }
-     switch (selections->get<ConfigKey::CurrentPattern>())
-     {
-          case PatternSelector::OutputSwizzlePattern:
-               selections->update<ConfigKey::OutputSwizzlePattern>();
-               break;
-          case PatternSelector::OutputDeswizzlePattern:
-               selections->update<ConfigKey::OutputDeswizzlePattern>();
-               break;
-          case PatternSelector::OutputMapPatternForSwizzle:
-               selections->update<ConfigKey::OutputMapPatternForSwizzle>();
-               break;
-          case PatternSelector::OutputMapPatternForDeswizzle:
-               selections->update<ConfigKey::OutputMapPatternForDeswizzle>();
-               break;
-          case fme::PatternSelector::PatternsCommonPrefixes:
-               selections->update<ConfigKey::PatternsCommonPrefixes>();
-               break;
-          case fme::PatternSelector::PatternsCommonPrefixesForMaps:
-               selections->update<ConfigKey::PatternsCommonPrefixesForMaps>();
-               break;
-          case fme::PatternSelector::PatternsBase:
-               selections->update<ConfigKey::PatternsBase>();
-               break;
-          case fme::PatternSelector::PathPatternsWithPaletteAndTexturePage:
-               selections->update<ConfigKey::PathPatternsWithPaletteAndTexturePage>();
-               break;
-          case fme::PatternSelector::PathPatternsWithPalette:
-               selections->update<ConfigKey::PathPatternsWithPalette>();
-               break;
-          case fme::PatternSelector::PathPatternsWithTexturePage:
-               selections->update<ConfigKey::PathPatternsWithTexturePage>();
-               break;
-          case fme::PatternSelector::PathPatternsWithPupuID:
-               selections->update<ConfigKey::PathPatternsWithPupuID>();
-               break;
-          case fme::PatternSelector::PathPatternsWithFullFileName:
-               selections->update<ConfigKey::PathPatternsWithFullFileName>();
-               break;
-     }
+     [&]<std::size_t... Is>(std::index_sequence<Is...>) {
+          const auto selections = m_selections.lock();
+          if (!selections)
+          {
+               spdlog::error("Failed to lock m_selections: shared_ptr is expired.");
+               return;
+          }
+
+          if (auto *const strptr = get_current_string_value_mutable(); strptr)
+          {
+               *strptr = std::string{ m_input_pattern_string.data() };
+          }
+
+          bool found =
+            (([&]() {
+                  if (selections->get<ConfigKey::CurrentPattern>() == static_cast<fme::PatternSelector>(Is))
+                  {
+                       selections->update<fme::PatternInfo<static_cast<fme::PatternSelector>(Is)>::key>();
+                       return true;
+                  }
+                  return false;
+             }())
+             || ...);
+          if (!found)
+          {
+               spdlog::critical(
+                 "Unhandled PatternSelector value: {}:{}",
+                 std::to_underlying(selections->get<ConfigKey::CurrentPattern>()),
+                 selections->get<ConfigKey::CurrentPattern>());
+               throw std::runtime_error("Unhandled PatternSelector value in save_pattern()");
+          }
+     }(std::make_index_sequence<static_cast<std::size_t>(fme::PatternSelector::End)>{});
 }
 
-[[nodiscard]] bool fme::custom_paths_window::textbox_pattern() const
+bool fme::custom_paths_window::textbox_pattern() const
 {
 
      if (!ImGui::BeginTable("##test input", 2, ImGuiTableFlags_SizingStretchProp))
@@ -335,7 +422,7 @@ void fme::custom_paths_window::save_pattern() const
      return false;
 }
 
-[[nodiscard]] bool fme::custom_paths_window::vector_pattern() const
+bool fme::custom_paths_window::vector_pattern() const
 {
      const auto *const vptr = get_current_string_vector();
      if (!vptr)
@@ -419,6 +506,7 @@ void fme::custom_paths_window::save_pattern() const
           ImGui::SameLine();// Keep buttons on the same line
           if (selections->get<ConfigKey::CurrentPatternIndex>() != static_cast<int>(index))
           {
+               const auto pop_id = PushPopID();
                // Edit button
                if (ImGui::Button(fmt::format("{}##edit_{}", ICON_FA_PEN, index).c_str()))
                {
@@ -527,7 +615,7 @@ void fme::custom_paths_window::save_pattern() const
      return r_val;
 }
 
-[[nodiscard]] bool fme::custom_paths_window::button_add_seperator() const
+bool fme::custom_paths_window::button_add_seperator() const
 {
      static constexpr char seperator = std::filesystem::path::preferred_separator;
      if (ImGui::Button("Add Separator"))
@@ -556,7 +644,7 @@ void fme::custom_paths_window::save_pattern() const
      return false;
 }
 
-[[nodiscard]] bool fme::custom_paths_window::button_remove_last_key() const
+bool fme::custom_paths_window::button_remove_last_key() const
 {
      if (ImGui::Button("Remove Last {Key}"))
      {
@@ -580,7 +668,7 @@ void fme::custom_paths_window::save_pattern() const
      return false;
 }
 
-[[nodiscard]] bool fme::custom_paths_window::child_keys() const
+bool fme::custom_paths_window::child_keys() const
 {
      bool override_changed = false;
      if (!ImGui::CollapsingHeader("Keys", ImGuiTreeNodeFlags_DefaultOpen))
@@ -681,7 +769,7 @@ void fme::custom_paths_window::save_pattern() const
      return override_changed;
 }
 
-[[nodiscard]] bool fme::custom_paths_window::child_test_output() const
+bool fme::custom_paths_window::child_test_output() const
 {
      bool override_changed = false;
      if (!ImGui::CollapsingHeader("Test Output", ImGuiTreeNodeFlags_DefaultOpen))
@@ -809,14 +897,14 @@ void fme::custom_paths_window::render() const
      } };
      switch (vector_or_string())
      {
-          case vector_or_string_t::string: {
+          case VectorOrString::string: {
                if (std::ranges::any_of(std::array{ combo_selected_pattern(), textbox_pattern() }, std::identity{}))
                {
                     override_changed = true;
                }
                break;
           }
-          case vector_or_string_t::vector: {
+          case VectorOrString::vector: {
                if (std::ranges::any_of(std::array{ combo_selected_pattern(), vector_pattern() }, std::identity{}))
                {
                     override_changed = true;
