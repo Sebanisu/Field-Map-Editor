@@ -18,7 +18,6 @@
 #include <spdlog/spdlog.h>
 namespace fme
 {
-
 enum class ConfigKey
 {
      StarterField,
@@ -59,6 +58,7 @@ enum class ConfigKey
      OutputFullFileNamePattern,
      OutputMapPatternForSwizzle,
      OutputMapPatternForDeswizzle,
+     OutputMapPatternForFullFileName,
      CurrentPattern,
      CurrentPatternIndex,
      BatchInputType,
@@ -425,6 +425,17 @@ struct SelectionInfo<ConfigKey::OutputMapPatternForDeswizzle>
      {
           using namespace std::string_literals;
           return "{selected_path}\\deswizzle\\{demaster}"s;
+     }
+};
+template<>
+struct SelectionInfo<ConfigKey::OutputMapPatternForFullFileName>
+{
+     using value_type                     = std::string;
+     static constexpr std::string_view id = "OutputMapPatternForFullFileName";
+     static inline value_type          default_value()
+     {
+          using namespace std::string_literals;
+          return "{selected_path}\\full_filename\\{demaster}"s;
      }
 };
 template<>
