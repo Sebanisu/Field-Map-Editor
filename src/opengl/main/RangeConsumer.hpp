@@ -153,20 +153,17 @@ class [[nodiscard]] FutureConsumer
           catch (const std::future_error &e)
           {
                spdlog::error("Future error in wait_for: {}", e.what());
-               const auto st = std::stacktrace::current();
-               std::cerr << st << std::endl;
+               spdlog::error("{}", std::stacktrace::current());
           }
           catch (const std::exception &e)
           {
                spdlog::error("Unexpected exception in wait_for: {}", e.what());
-               const auto st = std::stacktrace::current();
-               std::cerr << st << std::endl;
+               spdlog::error("{}", std::stacktrace::current());
           }
           catch (...)
           {
                spdlog::error("Unknown exception occurred in wait_for");
-               const auto st = std::stacktrace::current();
-               std::cerr << st << std::endl;
+               spdlog::error("{}", std::stacktrace::current());
           }
      }
 
@@ -414,20 +411,17 @@ class [[nodiscard]] FutureOfFutureConsumer
                catch (const std::future_error &e)
                {
                     spdlog::error("Future error in wait_for: {}", e.what());
-                    const auto st = std::stacktrace::current();
-                    std::cerr << st << std::endl;
+                    spdlog::error("{}", std::stacktrace::current());
                }
                catch (const std::exception &e)
                {
                     spdlog::error("Unexpected exception in wait_for: {}", e.what());
-                    const auto st = std::stacktrace::current();
-                    std::cerr << st << std::endl;
+                    spdlog::error("{}", std::stacktrace::current());
                }
                catch (...)
                {
                     spdlog::error("Unknown exception occurred in wait_for");
-                    const auto st = std::stacktrace::current();
-                    std::cerr << st << std::endl;
+                    spdlog::error("{}", std::stacktrace::current());
                }
           }
           return *this;
