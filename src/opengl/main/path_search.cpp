@@ -142,6 +142,7 @@ std::vector<std::filesystem::path> path_search::generate_map_paths(const std::st
 
        { &selections->get<fme::ConfigKey::OutputMapPatternForSwizzle>(),
          &selections->get<fme::ConfigKey::OutputMapPatternForDeswizzle>(),
+         &selections->get<fme::ConfigKey::OutputMapPatternForFullFileName>(),
          &selections->get<fme::ConfigKey::OutputSwizzlePattern>(),
          &selections->get<fme::ConfigKey::OutputDeswizzlePattern>() });
 }
