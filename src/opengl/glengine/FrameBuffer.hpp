@@ -81,6 +81,7 @@ class FrameBuffer
      [[nodiscard]] const FrameBufferSpecification &specification() const;
      SubTexture                                    bind_color_attachment(std::uint32_t index = 0U) const;
      [[nodiscard]] GlidCopy                        color_attachment_id(std::uint32_t index = 0) const;
+     [[nodiscard]] Texture                         steal_color_attachment_id(std::uint32_t index);
      /**
       * @brief Creates a deep copy of this FrameBuffer, including GPU resources.
       *

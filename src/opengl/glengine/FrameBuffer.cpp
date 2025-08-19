@@ -194,6 +194,14 @@ GlidCopy FrameBuffer::color_attachment_id(std::uint32_t index) const
      return m_color_attachment[index];
 }
 
+
+Texture FrameBuffer::steal_color_attachment_id(std::uint32_t index)
+{
+     assert(index < 4U);
+     //     assert(m_color_attachment[index] != 0U);
+     return { std::move(m_color_attachment[index]), width(), height() };
+}
+
 FrameBuffer FrameBuffer::clone() const
 {
      const auto  backup_fbo = backup();

@@ -188,7 +188,7 @@ const glengine::Texture *
      return &m_texture->at(index);
 }
 
-const glengine::Texture *map_sprite::get_texture(const ff_8::PupuID &pupu) const
+glengine::Texture *map_sprite::get_texture_mutable(const ff_8::PupuID &pupu) const
 {
      const auto &values = original_unique_pupu();
      auto        it     = std::ranges::find(values, pupu);
@@ -203,6 +203,11 @@ const glengine::Texture *map_sprite::get_texture(const ff_8::PupuID &pupu) const
           return &m_texture->at(i);
      }
      return nullptr;
+}
+
+const glengine::Texture *map_sprite::get_texture(const ff_8::PupuID &pupu) const
+{
+     return (get_texture_mutable(pupu));
 }
 
 /**
@@ -239,9 +244,9 @@ void map_sprite::queue_texture_loading() const
      if (m_filters.full_filename.enabled())
      {
           // Deswizzling is enabled; load textures based on PupuIDs in order
-          const auto  filenames   = toml_filenames();
-          //const auto &unique_pupu = working_unique_pupu();
-          const auto  operation   = [&](const std::string &filename) {
+          const auto filenames = toml_filenames();
+          // const auto &unique_pupu = working_unique_pupu();
+          const auto operation = [&](const std::string &filename) {
                // Original
                future_of_futures.push_back(load_full_filename_textures(filename));
 
@@ -250,13 +255,15 @@ void map_sprite::queue_texture_loading() const
                auto                        mask_name = fmt::format("{}_mask{}", p.stem().string(), p.extension().string());
                future_of_futures.push_back(load_full_filename_textures(mask_name));
 
-               //todo use pupu ids in the toml table for each entry instead of using all the unique pupu ids for each file.
-               // // Pupu Mask variant White on Black Mask.
-               // for (const auto &pupu : unique_pupu)
-               // {
-               //      auto pupu_name = fmt::format("{}_mask_{}{}", p.stem().string(), pupu, p.extension().string());
-               //      future_of_futures.push_back(load_full_filename_textures(pupu_name));
-               // }
+               m_full_filename_to_mask_name[filename] = mask_name;
+
+               // todo use pupu ids in the toml table for each entry instead of using all the unique pupu ids for each file.
+               //  // Pupu Mask variant White on Black Mask.
+               //  for (const auto &pupu : unique_pupu)
+               //  {
+               //       auto pupu_name = fmt::format("{}_mask_{}{}", p.stem().string(), pupu, p.extension().string());
+               //       future_of_futures.push_back(load_full_filename_textures(pupu_name));
+               //  }
           };
           std::ranges::for_each(filenames, operation);
           spdlog::info(
@@ -884,6 +891,7 @@ void map_sprite::update_render_texture(const bool reload_textures) const
      // all tasks completed.
      if (m_future_of_future_consumer.done() && m_future_consumer.done())
      {
+          const auto fbo_backup = glengine::FrameBuffer::backup();
           if (m_filters.full_filename.enabled() && !m_full_filename_textures.empty())
           {
                std::erase_if(m_full_filename_textures, [](auto &pair) {
@@ -892,7 +900,65 @@ void map_sprite::update_render_texture(const bool reload_textures) const
                     return size.x == 0 || size.y == 0;
                });
                spdlog::info(
-                 "{}:{}, Loaded and purged empty textures, m_full_filename_textures.size() = {}", __FILE__, __LINE__, std::ranges::size(m_full_filename_textures));
+                 "{}:{}, Loaded and purged empty textures, m_full_filename_textures.size() = {}",
+                 __FILE__,
+                 __LINE__,
+                 std::ranges::size(m_full_filename_textures));
+               std::vector<std::string> remove_queue = {};
+               for (const auto &[filename, maskname] : m_full_filename_to_mask_name)
+               {
+                    if (!m_full_filename_textures.contains(filename) || !m_full_filename_textures.contains(maskname))
+                         continue;
+                    glengine::Texture                           &main_texture = m_full_filename_textures.at(filename);
+                    const glengine::Texture                     &mask_texture = m_full_filename_textures.at(maskname);
+                    const toml::table                           *file_table   = get_deswizzle_combined_toml_table(filename);
+                    ff_8::filter_old<ff_8::FilterTag::MultiPupu> multi_pupu   = { ff_8::FilterSettings::All_Disabled };
+                    multi_pupu.reload(*file_table);
+                    if (!multi_pupu.enabled())
+                    {
+                         continue;
+                    }
+                    if (multi_pupu.value().empty())
+                    {
+                         continue;
+                    }
+
+                    if (std::cmp_equal(multi_pupu.value().size(), 1))
+                    {
+                         // Only one pupu.
+                         glengine::Texture *target_texture = get_texture_mutable(multi_pupu.value().front());
+                         if (!target_texture)
+                         {
+                              continue;
+                         }
+
+                         const auto size   = main_texture.get_size();
+                         auto       spec   = glengine::FrameBufferSpecification{ .width = size.x, .height = size.y, .scale = 1 };
+                         auto       fbo    = glengine::FrameBuffer{ std::move(spec) };
+                         auto       shader = glengine::Shader(std::filesystem::current_path() / "res" / "shader" / "mask.shader");
+                         fbo.bind();
+                         shader.bind();
+                         main_texture.bind(0);
+                         mask_texture.bind(1);
+                         shader.set_uniform("mainTex", 0);
+                         shader.set_uniform("maskTex", 1);
+                         glengine::BlendModeSettings::default_blend();
+
+                         m_fixed_render_camera.set_projection(0.f, static_cast<float>(fbo.width()), 0.f, static_cast<float>(fbo.height()));
+                         shader.set_uniform("u_MVP", m_fixed_render_camera.view_projection_matrix());
+
+                         // todo apply mask.
+                         *target_texture = fbo.steal_color_attachment_id(0);
+                         remove_queue.push_back(filename);
+                         remove_queue.push_back(maskname);
+                    }
+               }
+
+               for (const std::string &filename : remove_queue)
+               {
+                    m_full_filename_textures.erase(filename);
+                    m_full_filename_to_mask_name.erase(filename);
+               }
           }
           if (!fallback_textures())// see if no textures are loaded and fall back to .mim if not.
           {
@@ -1975,7 +2041,7 @@ toml::table *map_sprite::get_deswizzle_combined_coo_table() const
      return result;
 }
 
-toml::table *map_sprite::get_deswizzle_combined_toml_table(const std::string &file_name_str)
+toml::table *map_sprite::get_deswizzle_combined_toml_table(const std::string &file_name_str) const
 {
 
      toml::table *coo_table = get_deswizzle_combined_coo_table();

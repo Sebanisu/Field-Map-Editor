@@ -70,23 +70,6 @@ void fme::draw_window::render() const
             {
                  return;
             }
-            //   spdlog::info(
-            //     "window_pos: ({:.2f}, {:.2f}), window_size: ({:.2f}, {:.2f}), tile_size: {:.2f}, color1: ({}, {}, {}, {}), color2: ({},
-            //     {}, "
-            //     "{}, {})",
-            //     window_pos.x,
-            //     window_pos.y,
-            //     window_size.x,
-            //     window_size.y,
-            //     tile_size,
-            //     color1.r,
-            //     color1.g,
-            //     color1.b,
-            //     color1.a,
-            //     color2.r,
-            //     color2.g,
-            //     color2.b,
-            //     color2.a);
             const auto fbb  = m_checkerboard_framebuffer.backup();
             const auto fbrb = m_checkerboard_batchrenderer.backup();
             if (

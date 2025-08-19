@@ -11,6 +11,7 @@
 #include <filesystem>
 #include <stb_image.h>
 #include <stb_image_write.h>
+#include <utility>
 namespace glengine
 {
 #if __cpp_if_consteval
@@ -35,6 +36,13 @@ class Texture
           return m_renderer_id != 0U;
      }
      constexpr Texture() = default;
+
+     Texture(Glid &&new_id, std::int32_t new_width, std::int32_t new_height)
+       : m_renderer_id(std::exchange(new_id, {}))
+       , m_width(new_width)
+       , m_height(new_height)
+     {
+     }
      Texture(Image image);
      Texture(std::filesystem::path path, bool in_flip = false);
      Texture(std::array<std::uint8_t, 4U> color)

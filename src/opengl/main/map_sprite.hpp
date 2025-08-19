@@ -58,6 +58,7 @@ struct [[nodiscard]] map_sprite// final
    private:
      SharedTextures                                   m_texture = std::make_shared<std::array<glengine::Texture, MAX_TEXTURES>>();
      mutable std::map<std::string, glengine::Texture> m_full_filename_textures                                = {};
+     mutable std::map<std::string, std::string>       m_full_filename_to_mask_name                            = {};
      mutable FutureOfFutureConsumer<std::vector<std::future<std::future<void>>>> m_future_of_future_consumer  = {};
      mutable FutureConsumer<std::vector<std::future<void>>>                      m_future_consumer            = {};
      mutable std::map<std::string, std::optional<glengine::FrameBuffer>>         m_cache_framebuffer          = {};
@@ -119,6 +120,7 @@ struct [[nodiscard]] map_sprite// final
           return *m_render_framebuffer;
      }
      [[nodiscard]] const glengine::Texture *get_texture(BPPT bpp, std::uint8_t palette, std::uint8_t texture_page) const;
+     [[nodiscard]] glengine::Texture       *get_texture_mutable(const ff_8::PupuID &pupu) const;
      [[nodiscard]] const glengine::Texture *get_texture(const ff_8::PupuID &pupu) const;
      [[nodiscard]] glm::uvec2               get_tile_texture_size(const glengine::Texture *const texture) const;
      [[nodiscard]] bool                     generate_texture(const glengine::FrameBuffer &texture) const;
@@ -182,7 +184,7 @@ struct [[nodiscard]] map_sprite// final
      [[nodiscard]] std::map<std::string, std::optional<glengine::FrameBuffer>> &get_deswizzle_combined_textures();
      [[nodiscard]] std::string              generate_deswizzle_combined_tool_tip(const toml::table *file_table) const;
      [[nodiscard]] toml::table             *get_deswizzle_combined_coo_table() const;
-     [[nodiscard]] toml::table             *get_deswizzle_combined_toml_table(const std::string &);
+     [[nodiscard]] toml::table             *get_deswizzle_combined_toml_table(const std::string &) const;
      [[nodiscard]] std::vector<std::string> toml_filenames() const;
      [[nodiscard]] std::string              get_recommended_prefix();
      [[nodiscard]] toml::table             *rename_deswizzle_combined_toml_table(const std::string &, const std::string &);
