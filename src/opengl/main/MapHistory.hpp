@@ -8,8 +8,10 @@
 #include "PupuID.hpp"
 #include "source_tile_conflicts.hpp"
 #include "UniquifyPupu.hpp"
+#include <glm/glm.hpp>
 #include <map>
 #include <open_viii/graphics/background/Map.hpp>
+#include <ranges>
 #include <ScopeGuard.hpp>
 #include <spdlog/spdlog.h>
 /**
@@ -55,7 +57,7 @@ class [[nodiscard]] MapHistory
       * additional copies of the working map from being created until `end_multi_frame_working`
       * is called, which sets it back to `false`.
       */
-     mutable bool                  m_in_multi_frame_operation = { false };
+     mutable bool                   m_in_multi_frame_operation   = { false };
      /**
       * @brief Indicates whether the original state has been changed.
       *
@@ -66,7 +68,7 @@ class [[nodiscard]] MapHistory
       *
       * @note This flag is used to track modifications to the original tile data.
       */
-     mutable bool                  m_original_changed         = { false };
+     mutable bool                   m_original_changed           = { false };
 
      /**
       * @brief Indicates whether the working state has been changed.
@@ -78,55 +80,67 @@ class [[nodiscard]] MapHistory
       *
       * @note This flag is used to track modifications to the working tile data.
       */
-     mutable bool                  m_working_changed          = { false };
+     mutable bool                   m_working_changed            = { false };
 
 
      // Current states
      /**
       * @brief The active original map state.
       */
-     map_t                         m_original                 = {};
+     map_t                          m_original                   = {};
 
 
      /**
       * @brief The active working map state.
       */
-     map_t                         m_working                  = {};
+     map_t                          m_working                    = {};
 
      // Corresponding PupuIDs
      /**
       * @brief PupuID list corresponding to the original map state.
       */
-     mutable std::vector<PupuID>   m_original_pupu            = {};
+     mutable std::vector<PupuID>    m_original_pupu              = {};
 
      /**
       * @brief PupuID list corresponding to the working map state.
       */
-     mutable std::vector<PupuID>   m_working_pupu             = {};
+     mutable std::vector<PupuID>    m_working_pupu               = {};
 
 
      // Corresponding PupuIDs
      /**
       * @brief Unique PupuID list corresponding to the original map state.
       */
-     mutable std::vector<PupuID>   m_original_unique_pupu     = {};
+     mutable std::vector<PupuID>    m_original_unique_pupu       = {};
 
      /**
       * @brief Unique PupuID list corresponding to the working map state.
       */
-     mutable std::vector<PupuID>   m_working_unique_pupu      = {};
+     mutable std::vector<PupuID>    m_working_unique_pupu        = {};
+
+
+     /**
+      * @brief Unique PupuID color list corresponding to the original map state.
+      */
+     mutable std::vector<glm::vec4> m_original_unique_pupu_color = {};
+
+
+     /**
+      * @brief Unique PupuID color list corresponding to the working map state.
+      */
+     mutable std::vector<glm::vec4> m_working_unique_pupu_color  = {};
 
 
      // Corresponding Source Conflicts
      /**
       * @brief Source Conflict list corresponding to the original map state.
       */
-     mutable source_tile_conflicts m_original_conflicts       = {};
+     mutable source_tile_conflicts  m_original_conflicts         = {};
 
      /**
       * @brief Source Conflict list corresponding to the working map state.
       */
-     mutable source_tile_conflicts m_working_conflicts        = {};
+     mutable source_tile_conflicts  m_working_conflicts          = {};
 
 
      /**
@@ -134,42 +148,42 @@ class [[nodiscard]] MapHistory
       * what the count is. We're using this to know if a tile is being used in more than one location. Mostly just to high light it
       * differently. Or provide a user with information.
       */
-     mutable nst_map               m_working_similar_counts   = {};
+     mutable nst_map                m_working_similar_counts     = {};
 
-     mutable nsat_map              m_working_animation_counts = {};
+     mutable nsat_map               m_working_animation_counts   = {};
 
 
      // Consolidated history and tracking
      /**
       * @brief Unified undo history for both original and working states.
       */
-     std::vector<map_t>            m_undo_history             = {};
+     std::vector<map_t>             m_undo_history               = {};
      /**
       * @brief Tracks whether a history entry belongs to the original or working state.
       */
-     std::vector<pushed>           m_undo_original_or_working = {};
+     std::vector<pushed>            m_undo_original_or_working   = {};
 
      // Redo history and tracking
      /**
       * @brief Unified redo history for both original and working states.
       */
-     std::vector<map_t>            m_redo_history             = {};
+     std::vector<map_t>             m_redo_history               = {};
 
      /**
       * @brief Tracks redo states for original or working states.
       */
-     std::vector<pushed>           m_redo_original_or_working = {};
+     std::vector<pushed>            m_redo_original_or_working   = {};
 
      // New vectors for tracking descriptions of changes
      /**
       * @brief Descriptions of undo changes corresponding to `m_undo_original_or_working`.
       */
-     std::vector<std::string>      m_undo_change_descriptions = {};
+     std::vector<std::string>       m_undo_change_descriptions   = {};
 
      /**
       * @brief Descriptions of redo changes corresponding to `m_redo_original_or_working`.
       */
-     std::vector<std::string>      m_redo_change_descriptions = {};
+     std::vector<std::string>       m_redo_change_descriptions   = {};
 
      /**
       * @brief Debug utility to print the current map history count.
@@ -178,7 +192,7 @@ class [[nodiscard]] MapHistory
       *
       * @return A `glengine::ScopeGuard` object that automatically logs debug information when it goes out of scope.
       */
-     auto                          debug_count_print() const
+     auto                           debug_count_print() const
      {
           return glengine::ScopeGuard([&]() { spdlog::debug("Map History Count: {}\n\t{}:{}", count() + 2U, __FILE__, __LINE__); });
      }
@@ -303,25 +317,25 @@ class [[nodiscard]] MapHistory
       * @brief Retrieves the current original map.
       * @return A constant reference to the original map.
       */
-     const map_t                               &original() const;
+     const map_t                             &original() const;
 
      /**
       * @brief Retrieves the current working map as a constant reference.
       * @return A constant reference to the working map.
       */
-     const map_t                               &const_working() const;
+     const map_t                             &const_working() const;
 
      /**
       * @brief Retrieves the current working map.
       * @return A constant reference to the working map.
       */
-     const map_t                               &working() const;
+     const map_t                             &working() const;
 
      /**
       * @brief Provides a mutable reference to the working map for modifications.
       * @return A mutable reference to the working map.
       */
-     map_t                                     &working();
+     map_t                                   &working();
 
      /**
       * @brief Creates a copy of the current working map and logs the planned change.
@@ -335,7 +349,7 @@ class [[nodiscard]] MapHistory
       *                    This description is logged and stored for use in the undo history UI.
       * @return A mutable reference to the working map (either the current one or a new copy).
       */
-     map_t                                     &copy_working(std::string description);
+     map_t                                   &copy_working(std::string description);
 
      /**
       * @brief Begins a multi-frame operation, creating a single copy of the working map.
@@ -349,7 +363,7 @@ class [[nodiscard]] MapHistory
       * @note Subsequent calls to `copy_working` during the multi-frame operation will return
       *       the same working map without creating new copies.
       */
-     map_t                                     &begin_multi_frame_working(std::string description);
+     map_t                                   &begin_multi_frame_working(std::string description);
 
 
      /**
@@ -362,7 +376,7 @@ class [[nodiscard]] MapHistory
       * @param description An optional string to update the undo history description.
       *                    If empty, the original description is retained.
       */
-     void                                       end_multi_frame_working(std::string description = {});
+     void                                     end_multi_frame_working(std::string description = {});
 
 
      /**
@@ -382,7 +396,7 @@ class [[nodiscard]] MapHistory
       * cleared.
       * @throws None (assumes container operations and `debug_count_print` do not throw).
       */
-     const map_t                               &first_to_original(std::string description);
+     const map_t                             &first_to_original(std::string description);
 
      /**
       * @brief Pushes the current working map to the undo history and sets it as the new working state.
@@ -401,7 +415,7 @@ class [[nodiscard]] MapHistory
       * cleared.
       * @throws None (assumes container operations and `debug_count_print` do not throw).
       */
-     const map_t                               &first_to_working(std::string description);
+     const map_t                             &first_to_working(std::string description);
 
      /**
       * @brief Copies the current working map to the original map and logs the reason for the operation.
@@ -419,54 +433,54 @@ class [[nodiscard]] MapHistory
       * - After calling this function, other components (e.g., texture loaders) may need updates to reflect
       *   the new state of the map, as changes could affect rendering or other operations.
       */
-     const map_t                               &copy_working_to_original(std::string description);
+     const map_t                             &copy_working_to_original(std::string description);
 
      /**
       * @brief Checks whether undo operations are possible.
       * @return True if undo is enabled, false otherwise.
       */
-     bool                                       undo_enabled() const;
+     bool                                     undo_enabled() const;
 
      /**
       * @brief Checks whether redo operations are possible.
       * @return True if redo is enabled, false otherwise.
       */
-     bool                                       redo_enabled() const;
+     bool                                     redo_enabled() const;
 
      /**
       * @brief Performs all available redo operations.
       */
-     void                                       redo_all();
+     void                                     redo_all();
 
      /**
       * @brief Performs all available undo operations.
       */
-     void                                       undo_all();
+     void                                     undo_all();
 
      /**
       * @brief Performs a single redo operation.
       * @return True if a redo was successfully performed, false otherwise.
       */
-     bool                                       redo();
+     bool                                     redo();
 
      /**
       * @brief Performs a single undo operation.
       * @param skip_redo If true, skips saving the undone change for redo.
       * @return True if an undo was successfully performed, false otherwise.
       */
-     bool                                       undo(bool skip_redo = false);
+     bool                                     undo(bool skip_redo = false);
 
      /**
       * @brief Removes duplicate entries from the undo history.
       * @return True if duplicates were found and removed, false otherwise.
       */
-     bool                                       remove_duplicate();
+     bool                                     remove_duplicate();
 
      /**
       * @brief Retrieves the total number of changes in the undo history.
       * @return The size of the undo history.
       */
-     size_t                                     count() const;
+     size_t                                   count() const;
 
      /**
       * @brief Regenerates all PupuID data and Source Conflicts data for the maps in the original state.
@@ -478,7 +492,7 @@ class [[nodiscard]] MapHistory
       * @param force If `true`, forces a regeneration even if the data is considered up-to-date.
       *              If `false` (default), the regeneration occurs only if necessary.
       */
-     void                                       refresh_original_all(bool force = false) const;
+     void                                     refresh_original_all(bool force = false) const;
 
      /**
       * @brief Regenerates all PupuID data and Source Conflicts data for the maps in the working state.
@@ -490,20 +504,20 @@ class [[nodiscard]] MapHistory
       * @param force If `true`, forces a regeneration even if the data is considered up-to-date.
       *              If `false` (default), the regeneration occurs only if necessary.
       */
-     void                                       refresh_working_all(bool force = false) const;
+     void                                     refresh_working_all(bool force = false) const;
 
 
      /**
       * @brief Retrieves the PupuIDs for the original map.
       * @return A constant reference to the vector of PupuIDs for the original map.
       */
-     [[nodiscard]] const std::vector<PupuID>   &original_pupu() const noexcept;
+     [[nodiscard]] const std::vector<PupuID> &original_pupu() const noexcept;
 
      /**
       * @brief Retrieves the PupuIDs for the working map.
       * @return A constant reference to the vector of PupuIDs for the working map.
       */
-     [[nodiscard]] const std::vector<PupuID>   &working_pupu() const noexcept;
+     [[nodiscard]] const std::vector<PupuID> &working_pupu() const noexcept;
 
 
      /**
@@ -517,7 +531,7 @@ class [[nodiscard]] MapHistory
       * @return A constant reference to a vector of unique `PupuID` values for the original state.
       * @note The returned vector is guaranteed to contain only unique values.
       */
-     const std::vector<ff_8::PupuID>           &original_unique_pupu() const noexcept;
+     const std::vector<ff_8::PupuID>         &original_unique_pupu() const noexcept;
 
      /**
       * @brief Retrieves the unique PupuIDs for the working state of the map.
@@ -530,7 +544,80 @@ class [[nodiscard]] MapHistory
       * @return A constant reference to a vector of unique `PupuID` values for the working state.
       * @note The returned vector is guaranteed to contain only unique values.
       */
-     const std::vector<ff_8::PupuID>           &working_unique_pupu() const noexcept;
+     const std::vector<ff_8::PupuID>         &working_unique_pupu() const noexcept;
+
+     /**
+      * @brief Retrieves the unique colors associated with the original PupuIDs.
+      *
+      * This function provides a constant reference to a vector of `glm::vec4` color values
+      * corresponding to the unique PupuIDs from the original state of the map.
+      *
+      * These colors are generated for use when drawing to a color attachment (e.g., in a mask
+      * rendering pass). Each unique PupuID is mapped to a distinct color, ensuring that tiles
+      * can be reliably identified in render targets. The colors are also cached in memory to
+      * allow reverse lookup from a color back to its associated PupuID.
+      *
+      * @return A constant reference to a vector of `glm::vec4` values, one per unique original PupuID.
+      * @note The returned colors are guaranteed to be unique for each PupuID.
+      * @warning Assertions may be added in the future to validate the uniqueness of the mapping.
+      */
+     const std::vector<glm::vec4>            &original_unique_pupu_color() const noexcept;
+
+     /**
+      * @brief Retrieves the unique colors associated with the working PupuIDs.
+      *
+      * This function provides a constant reference to a vector of `glm::vec4` color values
+      * corresponding to the unique PupuIDs from the working state of the map.
+      *
+      * These colors are generated for use when drawing to a color attachment (e.g., in a mask
+      * rendering pass). Each unique PupuID is mapped to a distinct color, ensuring that tiles
+      * can be reliably identified in render targets. The colors are also cached in memory to
+      * allow reverse lookup from a color back to its associated PupuID.
+      *
+      * @return A constant reference to a vector of `glm::vec4` values, one per unique working PupuID.
+      * @note The returned colors are guaranteed to be unique for each PupuID.
+      * @warning Assertions may be added in the future to validate the uniqueness of the mapping.
+      */
+     const std::vector<glm::vec4>            &working_unique_pupu_color() const noexcept;
+
+
+     /**
+      * @brief Retrieves the PupuID associated with a given working color.
+      *
+      * This function performs a reverse lookup from a `glm::vec4` color value
+      * to its corresponding `PupuID` in the working map state.
+      *
+      * Colors are generated uniquely for each `PupuID` to support rendering
+      * to a color attachment (e.g., mask rendering). This method allows
+      * translating a color read from such a render target back into the logical
+      * tile identifier (`PupuID`) it represents.
+      *
+      * @param in_color The color value to look up.
+      * @return An `std::optional<PupuID>` containing the corresponding PupuID
+      *         if the color exists in the working map, or `std::nullopt` if
+      *         no match is found.
+      *
+      * @note The mapping between colors and PupuIDs is guaranteed to be one-to-one,
+      *       assuming color generation succeeded without collisions.
+      * @warning Floating-point equality (`==`) is used for comparison. Ensure the
+      *          input color matches exactly a generated working color; otherwise,
+      *          the lookup will fail.
+      */
+     std::optional<PupuID>                    working_color_to_pupu_id(const glm::vec4 &in_color) const noexcept
+     {
+          auto color_and_ids = std::views::zip(working_unique_pupu_color(), working_unique_pupu());
+          if (auto &&it = std::ranges::find_if(
+                color_and_ids,
+                [&](const auto &current_pair) {
+                     auto &&[color, _] = current_pair;
+                     return in_color == color;
+                });
+              it != std::ranges::end(color_and_ids))
+          {
+               return std::get<1>(*it);
+          }
+          return std::nullopt;
+     }
 
 
      /**
@@ -543,6 +630,7 @@ class [[nodiscard]] MapHistory
       * @return A constant reference to the current `source_tile_conflicts` object.
       */
      [[nodiscard]] const source_tile_conflicts &working_conflicts() const noexcept;
+
 
      /**
       * @brief Returns a constant reference to the map holding the count of similar tiles.

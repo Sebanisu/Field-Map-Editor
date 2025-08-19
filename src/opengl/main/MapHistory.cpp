@@ -3,6 +3,7 @@
 //
 
 #include "MapHistory.hpp"
+#include "gui/colors.hpp"
 
 using namespace open_viii::graphics::background;
 using map_t = Map;
@@ -256,7 +257,15 @@ static void
 }
 
 
+static std::vector<glm::vec4> create_colors_from_indexes(std::size_t count)
+{
+     return std::views::iota(0u, static_cast<std::uint32_t>(count))
+            | std::views::transform([&](const auto index) { return fme::colors::encode_uint_to_rgba(static_cast<std::uint32_t>(index)); })
+            | std::ranges::to<std::vector>();
+}
+
 }// namespace ff_8
+
 
 ff_8::MapHistory::MapHistory(map_t map)
   : m_original(std::move(map))
@@ -265,6 +274,8 @@ ff_8::MapHistory::MapHistory(map_t map)
   , m_working_pupu(m_original_pupu)
   , m_original_unique_pupu(make_unique_pupu(m_original_pupu))
   , m_working_unique_pupu(m_original_unique_pupu)
+  , m_original_unique_pupu_color(create_colors_from_indexes(std::ranges::size(m_original_unique_pupu)))
+  , m_working_unique_pupu_color(m_original_unique_pupu_color)
   , m_original_conflicts(calculate_conflicts(m_original))
   , m_working_conflicts(calculate_conflicts(m_original))
   , m_working_similar_counts(populate_similar_tile_count(m_working, m_working_conflicts.range_of_conflicts_flattened()))
@@ -299,14 +310,21 @@ void ff_8::MapHistory::refresh_original_pupu() const
 {
      m_original_pupu        = calculate_pupu(m_original);
      m_original_unique_pupu = make_unique_pupu(m_original_pupu);
+     if (std::ranges::size(m_original_unique_pupu) != std::ranges::size(m_original_unique_pupu_color))
+     {
+          m_original_unique_pupu_color = create_colors_from_indexes(std::ranges::size(m_original_unique_pupu));
+     }
 }
 
 void ff_8::MapHistory::refresh_working_pupu() const
 {
      m_working_pupu        = calculate_pupu(m_working);
      m_working_unique_pupu = make_unique_pupu(m_working_pupu);
+     if (std::ranges::size(m_original_unique_pupu) != std::ranges::size(m_working_unique_pupu_color))
+     {
+          m_working_unique_pupu_color = create_colors_from_indexes(std::ranges::size(m_working_unique_pupu));
+     }
 }
-
 
 void ff_8::MapHistory::refresh_original_conflicts() const
 {
@@ -340,6 +358,18 @@ const std::vector<ff_8::PupuID> &ff_8::MapHistory::working_unique_pupu() const n
 {
      return m_working_unique_pupu;
 }
+
+
+const std::vector<glm::vec4> &ff_8::MapHistory::original_unique_pupu_color() const noexcept
+{
+     return m_original_unique_pupu_color;
+}
+
+const std::vector<glm::vec4> &ff_8::MapHistory::working_unique_pupu_color() const noexcept
+{
+     return m_working_unique_pupu_color;
+}
+
 
 const ff_8::source_tile_conflicts &ff_8::MapHistory::original_conflicts() const noexcept
 {
