@@ -111,8 +111,6 @@ void fme::Configuration::save(const bool remove_from_cache) const
           return;
      }
      fs << *m_table;
-     // const auto st = std::stacktrace::current();
-     // std::cerr << st << std::endl;
      spdlog::info("ofstream: saved config \"{}\"", m_path.string());
 
      if (remove_from_cache)
