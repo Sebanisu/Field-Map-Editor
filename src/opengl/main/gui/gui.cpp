@@ -21,7 +21,6 @@
 #include <ImGuizmo.h>
 #include <open_viii/paths/Paths.hpp>
 #include <ranges>
-#include <stacktrace>
 #include <utility>
 
 using namespace open_viii::graphics::background;
@@ -139,8 +138,7 @@ static void DebugCallback(
      {
           case GL_DEBUG_SEVERITY_HIGH: {
                spdlog::error("OpenGL high: {}", message);
-               std::stacktrace st = std::stacktrace::current();
-               std::cerr << st << std::endl;
+               spdlog::error("{}", std::stacktrace::current());
                // throw;
           }
           break;
