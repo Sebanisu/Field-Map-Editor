@@ -33,11 +33,10 @@ void main()
 }
   #shader fragment
   #version 450
-
+precision highp float; // Ensure high precision for calculations
 layout(location = 0) out vec4 color;
-layout(location = 1) out uvec4 uout_mask;
-layout(location = 2) out vec4 out_mask;
-layout(location = 3) out int tile_id;
+layout(location = 1) out vec4 out_mask;
+layout(location = 2) out int tile_id;
 
 struct vertex_output
 {
@@ -55,15 +54,6 @@ uniform sampler2D u_Textures[32];
 uniform vec4 u_Tint;
 uniform vec2 u_Grid;
 
-uvec4 uvec4_encode_uint_to_rgba(uint id) {
-    return uvec4(
-        (id >> 24) & 0xFFu,
-        (id >> 16) & 0xFFu,
-        (id >>  8) & 0xFFu,
-        id & 0xFFu
-    );
-}
-
 //https://github.com/hughsk/glsl-hsv2rgb/blob/master/index.glsl
 vec3 hsv2rgb(vec3 c) {
     vec4 K = vec4(1.0, 2.0 / 3.0, 1.0 / 3.0, 3.0);
@@ -71,10 +61,13 @@ vec3 hsv2rgb(vec3 c) {
     return c.z * mix(K.xxx, clamp(p - K.xxx, 0.0, 1.0), c.y);
 }
 
-vec4 vec4_encode_uint_to_rgba(int id) {
+vec4 vec4_encode_uint_to_rgba(uint id) {
     float hue = fract(float(id) * 0.61803398875);
     vec3 temp_color = hsv2rgb(vec3(hue, 0.8, 0.9));
-    return vec4(temp_color,1.0);
+    // Round to nearest integer to match C++ conversion
+    //vec3 rounded_color = floor(temp_color * 255.0 + 0.5) / 255.0;
+    //return vec4(rounded_color, 1.0);
+    return vec4(temp_color, 1.0);
 }
 
 void main()
@@ -87,10 +80,9 @@ void main()
     ivec2 textureSize2d = textureSize(u_Textures[index], 0);
 
     // Only write mask outputs if alpha > 0
-    if (texColor.a > 0.0)
+    if (texColor.a != 0.0)
     {
-        uout_mask  = uvec4_encode_uint_to_rgba(v_pupu_id);
-        out_mask = vec4_encode_uint_to_rgba(v_tile_id);
+        out_mask  = vec4_encode_uint_to_rgba(v_pupu_id);
     }
 
     if (u_Grid.y > 0 && u_Grid.x > 0)
