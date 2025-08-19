@@ -4,7 +4,7 @@
 
 #include "GLCheck.hpp"
 #include <iostream>
-#include <stacktrace>
+#include "Formatters.hpp"
 namespace glengine
 {
 bool GlCheckError(std::string_view prefix, const std::source_location location)
@@ -12,9 +12,6 @@ bool GlCheckError(std::string_view prefix, const std::source_location location)
      if (GLenum error = glGetError(); error != GL_NO_ERROR)
      {
           using namespace std::string_view_literals;
-
-          const auto stack = std::stacktrace::current();
-
           spdlog::error(
             "{} {}:{}:{} {}: 0x{:>04X}:{}",
             prefix,
@@ -43,7 +40,7 @@ bool GlCheckError(std::string_view prefix, const std::source_location location)
                  }
                  return ""sv;
             }());
-          std::cerr << "Stack trace:\n" << stack << std::endl;
+          spdlog::error("{}", std::stacktrace::current());
           return true;
      }
      return false;
