@@ -103,14 +103,14 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char **argv)
           spdlog::set_default_logger(file_logger);
 
 // Set log level based on build type
-#ifndef NDEBUG
+// #ifndef NDEBUG
           spdlog::set_level(spdlog::level::debug);// Debug build
-#else
-          spdlog::set_level(spdlog::level::info);// Release build
-#endif
+// #else
+//           spdlog::set_level(spdlog::level::info);// Release build
+// #endif
 
           // Optional: control flush policy
-          spdlog::flush_on(spdlog::level::warn);
+          spdlog::flush_on(spdlog::level::info);
 
           // Now log anywhere
           spdlog::info("App started");
