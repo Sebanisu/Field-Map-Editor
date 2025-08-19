@@ -59,6 +59,7 @@ map_sprite::map_sprite(
           .opt_coo                             = m_map_group.opt_coo,
           .field_name                          = get_base_name(),
           .filters_deswizzle_value_string      = m_filters.deswizzle.value().string(),
+          .filters_full_filename_value_string  = m_filters.full_filename.value().string(),
           .filters_swizzle_value_string        = m_filters.swizzle.value().string(),
           .filters_swizzle_as_one_image_string = m_filters.swizzle_as_one_image.value().string(),
           .filters_map_value_string            = m_filters.map.value().string()
@@ -93,6 +94,7 @@ map_sprite::operator ff_8::path_search() const
               .opt_coo                             = m_map_group.opt_coo,
               .field_name                          = get_base_name(),
               .filters_deswizzle_value_string      = m_filters.deswizzle.value().string(),
+              .filters_full_filename_value_string  = m_filters.full_filename.value().string(),
               .filters_swizzle_value_string        = m_filters.swizzle.value().string(),
               .filters_swizzle_as_one_image_string = m_filters.swizzle_as_one_image.value().string(),
               .filters_map_value_string            = m_filters.map.value().string(),
@@ -227,6 +229,16 @@ void map_sprite::queue_texture_loading() const
           // Deswizzling is enabled; load textures based on PupuIDs in order
           std::ranges::for_each(working_unique_pupu(), [&, pos = size_t{}](const ff_8::PupuID &pupu) mutable {
                future_of_futures.push_back(load_deswizzle_textures(pupu, pos));
+               ++pos;
+          });
+          return;
+     }
+
+     if (m_filters.full_filename.enabled())
+     {
+          // Deswizzling is enabled; load textures based on PupuIDs in order
+          std::ranges::for_each(toml_filenames(), [&, pos = size_t{}](const std::string &filename) mutable {
+               future_of_futures.push_back(load_full_filename_textures(filename, pos));
                ++pos;
           });
           return;
@@ -382,6 +394,24 @@ std::future<std::future<void>> map_sprite::load_deswizzle_textures(const ff_8::P
          &(m_texture->at(pos)), fme::generate_deswizzle_paths(std::move(selections), *this, pupu) }) };
 }
 
+std::future<std::future<void>> map_sprite::load_full_filename_textures(const std::string filename, const size_t pos) const
+{
+     if (pos >= MAX_TEXTURES)
+     {
+          spdlog::error("{}:{} - Index out of range {} / {}", __FILE__, __LINE__, pos, MAX_TEXTURES);
+          return {};
+     }
+     auto selections = m_selections.lock();
+     if (!selections)
+     {
+          spdlog::error("Failed to lock m_selections: shared_ptr is expired.");
+          return {};
+     }
+     return { std::async(
+       std::launch::async,
+       future_operations::GetImageFromFromFirstValidPathCreateFuture{
+         &(m_texture->at(pos)), fme::generate_full_filename_paths(std::move(selections), *this, filename) }) };
+}
 
 std::future<std::future<void>> map_sprite::load_swizzle_textures(std::uint8_t texture_page, std::uint8_t palette) const
 {
@@ -1712,7 +1742,7 @@ std::string map_sprite::get_base_name() const
 
                std::filesystem::path out_path = cpm.replace_tags(keyed_string, selections, selected_path);
                std::filesystem::path mask_path =
-                 out_path.parent_path() / (out_path.stem().string() + "_index_mask" + out_path.extension().string());
+                 out_path.parent_path() / (out_path.stem().string() + "_mask" + out_path.extension().string());
                spdlog::debug("Queued image save: main='{}', mask='{}'", out_path.string(), mask_path.string());
                future_of_futures.push_back(
                  save_image_pbo(std::move(mask_path), out_framebuffer.clone(), GL_COLOR_ATTACHMENT1, working_unique_color_pupu()));
@@ -1824,7 +1854,7 @@ std::string map_sprite::generate_deswizzle_combined_tool_tip(const toml::table *
      return ss.str();
 };
 
-toml::table *map_sprite::get_deswizzle_combined_coo_table()
+toml::table *map_sprite::get_deswizzle_combined_coo_table() const
 {
      const auto selections = m_selections.lock();
      if (!selections)
@@ -1887,6 +1917,29 @@ toml::table *map_sprite::get_deswizzle_combined_coo_table()
      }
 
      return coo_table;
+}
+
+[[nodiscard]] std::vector<std::string> map_sprite::toml_filenames() const
+{
+     std::vector<std::string> result{};
+     const toml::table       *coo_table = get_deswizzle_combined_coo_table();
+     if (!coo_table)
+     {
+          return result;
+     }
+     result.reserve(coo_table->size());
+     for (const auto &[key, value] : *coo_table)
+     {
+          if (!value.is_table())
+          {
+               continue;
+          }
+          if (auto key_str = key.str(); key_str.size() > 4 && key_str.ends_with(".png")) //todo case insensitive compare?
+          {
+               result.emplace_back(std::move(key_str));
+          }
+     }
+     return result;
 }
 
 toml::table *map_sprite::get_deswizzle_combined_toml_table(const std::string &file_name_str)
@@ -2541,6 +2594,23 @@ std::move_only_function<std::vector<std::filesystem::path>()>
              pupu_id]() -> std::vector<std::filesystem::path> {
           spdlog::debug("Generating deswizzle paths for field: '{}', pupu_id: {}", ps.field_name, pupu_id);
           return ps.generate_deswizzle_paths(pupu_id, ".png");
+     };
+}
+
+std::move_only_function<std::vector<std::filesystem::path>()> generate_full_filename_paths(
+  std::shared_ptr<const Selections> in_selections,
+  const map_sprite                 &in_map_sprite,
+  const std::string                &filename)
+{
+     assert(in_selections && "generate_full_filename_paths: in_selections is null");
+     // assert(in_map_sprite && "generate_full_filename_paths: in_map_sprite is null");
+     return [ps = ff_8::path_search{ .selections                         = std::move(in_selections),
+                                     .opt_coo                            = in_map_sprite.get_opt_coo(),
+                                     .field_name                         = in_map_sprite.get_base_name(),
+                                     .filters_full_filename_value_string = in_map_sprite.filter().full_filename.value().string() },
+             filename]() -> std::vector<std::filesystem::path> {
+          spdlog::debug("Generating full filename paths for field: '{}', filename: {}", ps.field_name, filename);
+          return ps.generate_full_filename_paths(filename);
      };
 }
 
