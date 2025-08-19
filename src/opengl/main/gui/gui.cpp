@@ -150,7 +150,7 @@ static void DebugCallback(
                break;
           case GL_DEBUG_SEVERITY_NOTIFICATION:
           default:
-               spdlog::debug("OpenGL notification: {}", message);
+               spdlog::trace("OpenGL notification: {}", message);
                break;
      }
 }

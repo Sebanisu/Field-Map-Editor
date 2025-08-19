@@ -142,7 +142,7 @@ FrameBuffer::FrameBuffer(FrameBufferSpecification spec)
 void FrameBuffer::bind(bool first) const
 {
      GlCall{}(glBindFramebuffer, GL_FRAMEBUFFER, first ? m_renderer_id_first : m_renderer_id);
-     spdlog::debug(
+     spdlog::trace(
        "Binding framebuffer: {}, ID: {}",
        first ? "m_renderer_id_first" : "m_renderer_id",
        first ? static_cast<uint32_t>(m_renderer_id_first) : static_cast<uint32_t>(m_renderer_id));
