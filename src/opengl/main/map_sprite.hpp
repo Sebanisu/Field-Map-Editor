@@ -56,7 +56,8 @@ struct [[nodiscard]] map_sprite// final
      using iRectangle     = open_viii::graphics::Rectangle<std::int32_t>;
 
    private:
-     SharedTextures m_texture = std::make_shared<std::array<glengine::Texture, MAX_TEXTURES>>();
+     SharedTextures                                   m_texture = std::make_shared<std::array<glengine::Texture, MAX_TEXTURES>>();
+     mutable std::map<std::string, glengine::Texture> m_full_filename_textures                                = {};
      mutable FutureOfFutureConsumer<std::vector<std::future<std::future<void>>>> m_future_of_future_consumer  = {};
      mutable FutureConsumer<std::vector<std::future<void>>>                      m_future_consumer            = {};
      mutable std::map<std::string, std::optional<glengine::FrameBuffer>>         m_cache_framebuffer          = {};
@@ -179,18 +180,18 @@ struct [[nodiscard]] map_sprite// final
        save_deswizzle_generate_toml(const std::string &keyed_string, const std::filesystem::path &selected_path);
      [[nodiscard]] const std::map<std::string, std::string>                    &get_deswizzle_combined_textures_tooltips();
      [[nodiscard]] std::map<std::string, std::optional<glengine::FrameBuffer>> &get_deswizzle_combined_textures();
-     [[nodiscard]] std::string  generate_deswizzle_combined_tool_tip(const toml::table *file_table) const;
-     [[nodiscard]] toml::table *get_deswizzle_combined_coo_table() const;
-     [[nodiscard]] toml::table *get_deswizzle_combined_toml_table(const std::string &);
+     [[nodiscard]] std::string              generate_deswizzle_combined_tool_tip(const toml::table *file_table) const;
+     [[nodiscard]] toml::table             *get_deswizzle_combined_coo_table() const;
+     [[nodiscard]] toml::table             *get_deswizzle_combined_toml_table(const std::string &);
      [[nodiscard]] std::vector<std::string> toml_filenames() const;
-     [[nodiscard]] std::string get_recommended_prefix();
-     [[nodiscard]] toml::table *rename_deswizzle_combined_toml_table(const std::string &, const std::string &);
-     [[nodiscard]] std::size_t  remove_deswizzle_combined_toml_table(const std::string &);
-     [[nodiscard]] toml::table *add_deswizzle_combined_toml_table(const std::string &);
-     void                       refresh_tooltip(const std::string &);
-     void                       apply_multi_pupu_filter_deswizzle_combined_toml_table(
-                             const std::string                                  &file_name_key,
-                             const ff_8::filter_old<ff_8::FilterTag::MultiPupu> &new_filter);
+     [[nodiscard]] std::string              get_recommended_prefix();
+     [[nodiscard]] toml::table             *rename_deswizzle_combined_toml_table(const std::string &, const std::string &);
+     [[nodiscard]] std::size_t              remove_deswizzle_combined_toml_table(const std::string &);
+     [[nodiscard]] toml::table             *add_deswizzle_combined_toml_table(const std::string &);
+     void                                   refresh_tooltip(const std::string &);
+     void                                   apply_multi_pupu_filter_deswizzle_combined_toml_table(
+                                         const std::string                                  &file_name_key,
+                                         const ff_8::filter_old<ff_8::FilterTag::MultiPupu> &new_filter);
      [[nodiscard]] toml::table *add_combine_deswizzle_combined_toml_table(const std::vector<std::string> &, const std::string &);
      void copy_deswizzle_combined_toml_table(const std::vector<std::string> &, std::move_only_function<std::string(void)>);
      [[nodiscard]] std::vector<std::future<void>>
@@ -200,8 +201,8 @@ struct [[nodiscard]] map_sprite// final
      [[nodiscard]] std::future<std::future<void>>
        load_swizzle_as_one_image_textures(std::optional<std::uint8_t> palette = std::nullopt) const;
      [[nodiscard]] std::future<std::future<void>> load_deswizzle_textures(const ff_8::PupuID pupu, const size_t pos) const;
-     [[nodiscard]] std::future<std::future<void>> load_full_filename_textures(const std::string filename, const size_t pos) const;
-       [[nodiscard]] std::future<std::future<void>> load_mim_textures(BPPT bpp, uint8_t palette) const;
+     [[nodiscard]] std::future<std::future<void>> load_full_filename_textures(const std::string filename) const;
+     [[nodiscard]] std::future<std::future<void>> load_mim_textures(BPPT bpp, uint8_t palette) const;
 
      void                                         save_modified_map(const std::filesystem::path &path) const;
      void                                         save(const std::filesystem::path &path) const;
@@ -580,9 +581,8 @@ std::move_only_function<std::vector<std::filesystem::path>()> generate_full_file
   const map_sprite                 &in_map_sprite,
   const std::string                &filename);
 
-  std::move_only_function<std::vector<std::filesystem::path>()> generate_map_paths(
-    std::shared_ptr<const Selections> in_selections,
-    const map_sprite                 &in_map_sprite);
+std::move_only_function<std::vector<std::filesystem::path>()>
+  generate_map_paths(std::shared_ptr<const Selections> in_selections, const map_sprite &in_map_sprite);
 
 }// namespace fme
 #endif// FIELD_MAP_EDITOR_MAP_SPRITE_HPP

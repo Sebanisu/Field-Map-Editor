@@ -239,10 +239,28 @@ void map_sprite::queue_texture_loading() const
      if (m_filters.full_filename.enabled())
      {
           // Deswizzling is enabled; load textures based on PupuIDs in order
-          std::ranges::for_each(toml_filenames(), [&, pos = size_t{}](const std::string &filename) mutable {
-               future_of_futures.push_back(load_full_filename_textures(filename, pos));
-               ++pos;
-          });
+          const auto  filenames   = toml_filenames();
+          //const auto &unique_pupu = working_unique_pupu();
+          const auto  operation   = [&](const std::string &filename) {
+               // Original
+               future_of_futures.push_back(load_full_filename_textures(filename));
+
+               // Mask variant Colorful Mask
+               const std::filesystem::path p(filename);
+               auto                        mask_name = fmt::format("{}_mask{}", p.stem().string(), p.extension().string());
+               future_of_futures.push_back(load_full_filename_textures(mask_name));
+
+               //todo use pupu ids in the toml table for each entry instead of using all the unique pupu ids for each file.
+               // // Pupu Mask variant White on Black Mask.
+               // for (const auto &pupu : unique_pupu)
+               // {
+               //      auto pupu_name = fmt::format("{}_mask_{}{}", p.stem().string(), pupu, p.extension().string());
+               //      future_of_futures.push_back(load_full_filename_textures(pupu_name));
+               // }
+          };
+          std::ranges::for_each(filenames, operation);
+          spdlog::info(
+            "{}:{}, Queued up m_full_filename_textures.size() = {}", __FILE__, __LINE__, std::ranges::size(m_full_filename_textures));
           return;
      }
 
@@ -402,13 +420,8 @@ std::future<std::future<void>> map_sprite::load_deswizzle_textures(const ff_8::P
          &(m_texture->at(pos)), fme::generate_deswizzle_paths(std::move(selections), *this, pupu) }) };
 }
 
-std::future<std::future<void>> map_sprite::load_full_filename_textures(const std::string filename, const size_t pos) const
+std::future<std::future<void>> map_sprite::load_full_filename_textures(const std::string filename) const
 {
-     if (pos >= MAX_TEXTURES)
-     {
-          spdlog::error("{}:{} - Index out of range {} / {}", __FILE__, __LINE__, pos, MAX_TEXTURES);
-          return {};
-     }
      auto selections = m_selections.lock();
      if (!selections)
      {
@@ -418,7 +431,7 @@ std::future<std::future<void>> map_sprite::load_full_filename_textures(const std
      return { std::async(
        std::launch::async,
        future_operations::GetImageFromFromFirstValidPathCreateFuture{
-         &(m_texture->at(pos)), fme::generate_full_filename_paths(std::move(selections), *this, filename) }) };
+         &(m_full_filename_textures[filename]), fme::generate_full_filename_paths(std::move(selections), *this, filename) }) };
 }
 
 std::future<std::future<void>> map_sprite::load_swizzle_textures(std::uint8_t texture_page, std::uint8_t palette) const
@@ -871,6 +884,16 @@ void map_sprite::update_render_texture(const bool reload_textures) const
      // all tasks completed.
      if (m_future_of_future_consumer.done() && m_future_consumer.done())
      {
+          if (m_filters.full_filename.enabled() && !m_full_filename_textures.empty())
+          {
+               std::erase_if(m_full_filename_textures, [](auto &pair) {
+                    const auto &texture = pair.second;
+                    const auto  size    = texture.get_size();
+                    return size.x == 0 || size.y == 0;
+               });
+               spdlog::info(
+                 "{}:{}, Loaded and purged empty textures, m_full_filename_textures.size() = {}", __FILE__, __LINE__, std::ranges::size(m_full_filename_textures));
+          }
           if (!fallback_textures())// see if no textures are loaded and fall back to .mim if not.
           {
                resize_render_texture();
@@ -1947,6 +1970,8 @@ toml::table *map_sprite::get_deswizzle_combined_coo_table() const
                result.emplace_back(std::move(key_str));
           }
      }
+     std::ranges::sort(result);
+     result.erase(std::ranges::unique(result).begin(), std::ranges::end(result));
      return result;
 }
 
