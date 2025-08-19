@@ -64,6 +64,7 @@ map_sprite::map_sprite(
           .filters_swizzle_as_one_image_string = m_filters.swizzle_as_one_image.value().string(),
           .filters_map_value_string            = m_filters.map.value().string()
           //.working_unique_pupu                = working_unique_pupu(),
+          //.current_filenames                  = toml_filenames(),
           //.bpp_palette                        = uniques().palette(),
           //.texture_page_id                    = uniques().texture_page_id()
      };
@@ -99,6 +100,7 @@ map_sprite::operator ff_8::path_search() const
               .filters_swizzle_as_one_image_string = m_filters.swizzle_as_one_image.value().string(),
               .filters_map_value_string            = m_filters.map.value().string(),
               .working_unique_pupu                 = working_unique_pupu(),
+              .current_filenames                   = toml_filenames(),
               .bpp_palette                         = uniques().palette(),
               .texture_page_id                     = uniques().texture_page_id() };
 }
@@ -1934,7 +1936,7 @@ toml::table *map_sprite::get_deswizzle_combined_coo_table() const
           {
                continue;
           }
-          if (auto key_str = key.str(); key_str.size() > 4 && key_str.ends_with(".png")) //todo case insensitive compare?
+          if (auto key_str = key.str(); key_str.size() > 4 && key_str.ends_with(".png"))// todo case insensitive compare?
           {
                result.emplace_back(std::move(key_str));
           }
