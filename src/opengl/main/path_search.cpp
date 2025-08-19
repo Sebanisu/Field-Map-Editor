@@ -44,9 +44,8 @@ std::vector<std::filesystem::path> path_search::generate_deswizzle_paths(const f
 
 std::vector<std::filesystem::path> path_search::generate_full_filename_paths(const std::string &full_filename) const
 {
-
      return generate_paths(
-       filters_deswizzle_value_string,
+       filters_full_filename_value_string,
        { .field_name    = field_name,
          .full_filename = full_filename,
          .language_code = opt_coo.has_value() && opt_coo.value() != open_viii::LangT::generic ? opt_coo : std::nullopt },
