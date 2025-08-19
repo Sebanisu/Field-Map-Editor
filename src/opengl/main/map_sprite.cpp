@@ -557,6 +557,10 @@ void map_sprite::update_position(
      for (const auto &z : m_all_unique_values_and_strings.z().values())
      {
           for_all_tiles([&]([[maybe_unused]] const auto &tile_const, const auto &tile, const ff_8::PupuID pupu_id) {
+               if (pupu_id.raw() == 0)
+               {
+                    throw std::logic_error("pupu_id.raw() returned 0 — this indicates a coding error.");
+               }
                if (
                  m_filters.multi_animation_id.enabled()
                  && std::ranges::all_of(
@@ -662,7 +666,6 @@ void map_sprite::update_position(
                spdlog::debug("Draw position: ({}, {}, {})", draw_position.x, draw_position.y, draw_position.z);
                spdlog::debug("UV min: ({}, {})", quad.uv_min.x, quad.uv_min.y);
                spdlog::debug("UV max: ({}, {})", quad.uv_max.x, quad.uv_max.y);
-               // static_cast<int>(m_map_group.maps.get_offset_from_working(tile))
                const auto find_id = [&]() {
                     if (const auto it = std::ranges::find(unique_pupu_ids, pupu_id); it != std::ranges::end(unique_pupu_ids))
                     {
@@ -674,8 +677,8 @@ void map_sprite::update_position(
                  subtexture,
                  draw_position,
                  glm::vec2{ static_cast<float>(TILE_SIZE * target_framebuffer.scale()) },
-                 static_cast<int>(find_id()),
-                 pupu_id.raw());
+                 static_cast<int>(m_map_group.maps.get_offset_from_working(tile)),
+                 static_cast<GLuint>(find_id()));
                drew = true;
           });
      }
@@ -1088,6 +1091,15 @@ const std::vector<ff_8::PupuID> &map_sprite::working_unique_pupu() const
      m_map_group.maps.refresh_working_all();
      return m_map_group.maps.working_unique_pupu();
 }
+
+std::vector<std::tuple<glm::vec4, ff_8::PupuID>> map_sprite::working_unique_color_pupu() const
+{
+     // side effect. we wait till pupu is needed than we refresh it.
+     m_map_group.maps.refresh_working_all();
+     return std::views::zip(m_map_group.maps.working_unique_pupu_color(), m_map_group.maps.working_unique_pupu())
+            | std::ranges::to<std::vector>();
+}
+
 const std::vector<ff_8::PupuID> &map_sprite::original_unique_pupu() const
 {
      // side effect. we wait till pupu is needed than we refresh it.
@@ -1701,17 +1713,9 @@ std::string map_sprite::get_base_name() const
                std::filesystem::path out_path = cpm.replace_tags(keyed_string, selections, selected_path);
                std::filesystem::path mask_path =
                  out_path.parent_path() / (out_path.stem().string() + "_index_mask" + out_path.extension().string());
-               std::filesystem::path hi_mask_path =
-                 out_path.parent_path() / (out_path.stem().string() + "_32bit_mask" + out_path.extension().string());
-               spdlog::debug(
-                 "Queued image save: main='{}', index_mask='{}', 32bit_mask='{}' ",
-                 out_path.string(),
-                 mask_path.string(),
-                 hi_mask_path.string());
-
-
-               future_of_futures.push_back(save_rgba8ui_attachment_as_png(std::move(hi_mask_path), out_framebuffer.clone()));
-               future_of_futures.push_back(save_image_pbo(std::move(mask_path), out_framebuffer.clone(), GL_COLOR_ATTACHMENT2));
+               spdlog::debug("Queued image save: main='{}', mask='{}'", out_path.string(), mask_path.string());
+               future_of_futures.push_back(
+                 save_image_pbo(std::move(mask_path), out_framebuffer.clone(), GL_COLOR_ATTACHMENT1, working_unique_color_pupu()));
                future_of_futures.push_back(save_image_pbo(std::move(out_path), std::move(out_framebuffer)));
           }
      }
@@ -1859,7 +1863,7 @@ toml::table *map_sprite::get_deswizzle_combined_coo_table()
      }
      else
      {
-          auto &&[it, inserted] = field_table->insert(my_coo_key, toml::table{});
+          auto &&[it, inserted] = root_table.insert(field_name, toml::table{});
           if (inserted)
           {
                field_table = it->second.is_table() ? it->second.as_table() : nullptr;
@@ -2212,13 +2216,14 @@ std::filesystem::path map_sprite::save_path(
      return path / fmt::vformat(fmt::string_view(pattern), fmt::make_format_args(field_name, pupu));
 }
 
+
 bool map_sprite::generate_texture(const glengine::FrameBuffer &fbo) const
 {
      const auto fbb = fbo.backup();
      fbo.bind();
      glengine::GlCall{}(glViewport, 0, 0, fbo.width(), fbo.height());
-     glengine::Renderer::Clear();
      fbo.clear_non_standard_color_attachments();
+     glengine::Renderer::Clear();
      const auto brb = m_batch_renderer.backup();
      m_batch_renderer.bind();
      set_uniforms(fbo, m_batch_renderer.shader());
@@ -2227,7 +2232,7 @@ bool map_sprite::generate_texture(const glengine::FrameBuffer &fbo) const
      {
           //(void)draw_imported(fbo);
           fbo.bind_color_attachment(0);
-          fbo.bind_color_attachment(2);
+          fbo.bind_color_attachment(1);
           return true;
      }
      return false;
