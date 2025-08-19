@@ -192,6 +192,7 @@ bool path_search::has_full_filename_path(const std::filesystem::path &filter_pat
      return std::ranges::any_of(
        current_filenames, [&](const std::string full_filename) { return has_full_filename_path(filter_path, full_filename); });
 }
+
 bool path_search::has_full_filename_path(const std::filesystem::path &filter_path, const std::string &full_filename) const
 {
      return path_search::has_path(
@@ -202,6 +203,23 @@ bool path_search::has_full_filename_path(const std::filesystem::path &filter_pat
        selections);
      //   || safedir(cpm.replace_tags(get<fme::ConfigKey::OutputMapPatternForDeswizzle>(), selections, filter_path.string())).is_exists();
 }
+
+// bool path_search::has_full_filename_path(const std::filesystem::path &filter_path, const std::string &full_filename) const
+// {
+//      spdlog::info("has_full_filename_path called with filter_path='{}', full_filename='{}'", filter_path.string(), full_filename);
+
+//      auto result = path_search::has_path(
+//        filter_path.string(),
+//        { .field_name    = field_name,
+//          .full_filename = full_filename,
+//          .language_code = opt_coo.has_value() && opt_coo.value() != open_viii::LangT::generic ? opt_coo : std::nullopt },
+//        selections);
+
+//      spdlog::info("has_full_filename_path returning {}", result);
+
+//      return result;
+// }
+
 
 bool path_search::has_swizzle_path(const std::uint8_t texture_page, const std::string &ext) const
 {
