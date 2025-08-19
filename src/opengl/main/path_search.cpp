@@ -190,7 +190,7 @@ bool path_search::has_full_filename_path() const
 bool path_search::has_full_filename_path(const std::filesystem::path &filter_path) const
 {
      return std::ranges::any_of(
-       current_filenames, [&](const std::string full_filename) { return has_deswizzle_path(filter_path, full_filename); });
+       current_filenames, [&](const std::string full_filename) { return has_full_filename_path(filter_path, full_filename); });
 }
 bool path_search::has_full_filename_path(const std::filesystem::path &filter_path, const std::string &full_filename) const
 {
