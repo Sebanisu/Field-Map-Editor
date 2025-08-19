@@ -54,11 +54,11 @@ void fme::filter_window::render() const
           spdlog::error("Failed to lock map_sprite: shared_ptr is expired.");
           return;
      }
-     const auto pop_end = glengine::ScopeGuard(&ImGui::End);
      if (!begin_window(lock_selections))
      {
           return;
      }
+     const auto pop_end = glengine::ScopeGuard(&ImGui::End);
      if (lock_map_sprite->fail())
      {
           format_imgui_text("The `.map` is in an invalid state.\nSo no filters are avalible.");
@@ -153,8 +153,13 @@ bool fme::filter_window::begin_window(const std::shared_ptr<Selections> &lock_se
                lock_selections->update<ConfigKey::DisplayFiltersWindow>();
           }
      } };
-     if (!visible || !ImGui::Begin(gui_labels::filters.data(), &visible))
+     if (!visible)
      {
+          return false;
+     }
+     if (!ImGui::Begin(gui_labels::filters.data(), &visible))
+     {
+          ImGui::End();
           return false;
      }
      return true;
@@ -440,7 +445,7 @@ void fme::filter_window::draw_add_new_button(
 
 
      ImTextureID tex_id = m_hovered_file_name == "##add"
-                            ? glengine::ConvertGliDtoImTextureId<ImTextureID>(lock_map_sprite->get_framebuffer().color_attachment_id(2))
+                            ? glengine::ConvertGliDtoImTextureId<ImTextureID>(lock_map_sprite->get_framebuffer().color_attachment_id(1))
                             : glengine::ConvertGliDtoImTextureId<ImTextureID>(lock_map_sprite->get_framebuffer().color_attachment_id());
      m_aspect_ratio =
        static_cast<float>(lock_map_sprite->get_framebuffer().height()) / static_cast<float>(lock_map_sprite->get_framebuffer().width());
@@ -1170,7 +1175,7 @@ void fme::filter_window::draw_thumbnail(
      if (framebuffer.has_value())
      {
           ImTextureID tex_id           = (m_hovered_file_name == file_name)
-                                           ? glengine::ConvertGliDtoImTextureId<ImTextureID>(framebuffer.value().color_attachment_id(2))
+                                           ? glengine::ConvertGliDtoImTextureId<ImTextureID>(framebuffer.value().color_attachment_id(1))
                                            : glengine::ConvertGliDtoImTextureId<ImTextureID>(framebuffer.value().color_attachment_id());
           m_aspect_ratio               = static_cast<float>(framebuffer.value().height()) / static_cast<float>(framebuffer.value().width());
           const ImVec2 thumb_size      = { m_thumb_size_width, m_thumb_size_width * m_aspect_ratio };
