@@ -55,21 +55,28 @@ static std::uint32_t
      //        spdlog::debug(
      //          "m_color_attachment {}\n",
      //          static_cast<uint32_t>(m_color_attachment));
-     std::uint8_t i{};
+     std::uint8_t num_attachments{};
      if (first)
      {
-          GlCall{}(glFramebufferTexture2D, GL_FRAMEBUFFER, attachments[i], GL_TEXTURE_2D, color_attachments[i], 0);
-          ++i;
+          GlCall{}(
+            glFramebufferTexture2D, GL_FRAMEBUFFER, attachments[num_attachments], GL_TEXTURE_2D, color_attachments[num_attachments], 0);
+          ++num_attachments;
      }
      else
      {
-          for (; i != 4U; ++i)
+          for (; num_attachments != 4U; ++num_attachments)
           {
-               if (color_attachments[i] == 0U)
+               if (color_attachments[num_attachments] == 0U)
                {
-                    continue;
+                    break;
                }
-               GlCall{}(glFramebufferTexture2D, GL_FRAMEBUFFER, attachments[i], GL_TEXTURE_2D, color_attachments[i], 0);
+               GlCall{}(
+                 glFramebufferTexture2D,
+                 GL_FRAMEBUFFER,
+                 attachments[num_attachments],
+                 GL_TEXTURE_2D,
+                 color_attachments[num_attachments],
+                 0);
           }
           GlCall{}(glFramebufferTexture2D, GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depth_attachment, 0);
      }
@@ -79,7 +86,7 @@ static std::uint32_t
      {
           spdlog::critical("{}:{} NOT GL_FRAMEBUFFER_COMPLETE - {}", __FILE__, __LINE__, status);
      }
-     glDrawBuffers(i, attachments.data());
+     glDrawBuffers(num_attachments, attachments.data());
      return tmp;
 }
 
@@ -135,6 +142,10 @@ FrameBuffer::FrameBuffer(FrameBufferSpecification spec)
 void FrameBuffer::bind(bool first) const
 {
      GlCall{}(glBindFramebuffer, GL_FRAMEBUFFER, first ? m_renderer_id_first : m_renderer_id);
+     spdlog::debug(
+       "Binding framebuffer: {}, ID: {}",
+       first ? "m_renderer_id_first" : "m_renderer_id",
+       first ? static_cast<uint32_t>(m_renderer_id_first) : static_cast<uint32_t>(m_renderer_id));
 }
 
 void FrameBuffer::bind_read(bool first) const
@@ -226,24 +237,8 @@ FrameBuffer FrameBuffer::clone() const
        m_specification.height,
        GL_COLOR_BUFFER_BIT,
        GL_NEAREST);
-
-     // Blit COLOR_ATTACHMENT2
-     GlCall{}(glReadBuffer, GL_COLOR_ATTACHMENT2);
-     GlCall{}(glDrawBuffer, GL_COLOR_ATTACHMENT2);
-     GlCall{}(
-       glBlitFramebuffer,
-       0,
-       0,
-       m_specification.width,
-       m_specification.height,
-       0,
-       0,
-       m_specification.width,
-       m_specification.height,
-       GL_COLOR_BUFFER_BIT,
-       GL_NEAREST);
      (void)copy.bind_color_attachment(0);// generates mipmaps and binds the texture.
-     (void)copy.bind_color_attachment(2);// generates mipmaps and binds the texture.
+     (void)copy.bind_color_attachment(1);// generates mipmaps and binds the texture.
      return copy;
 }
 
