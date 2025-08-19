@@ -90,6 +90,34 @@ struct [[nodiscard]] color
      {
      }
 
+
+     /// Construct from glm::vec3 (assumes 0.0–1.0 range, opaque alpha)
+     explicit color(const glm::vec3 &v)
+       : r(static_cast<std::uint8_t>(glm::clamp(v.r, 0.0f, 1.0f) * max_f<float>))
+       , g(static_cast<std::uint8_t>(glm::clamp(v.g, 0.0f, 1.0f) * max_f<float>))
+       , b(static_cast<std::uint8_t>(glm::clamp(v.b, 0.0f, 1.0f) * max_f<float>))
+       , a((std::numeric_limits<std::uint8_t>::max)())
+     {
+     }
+
+     /// Construct from glm::vec4 (assumes 0.0–1.0 range including alpha)
+     explicit color(const glm::vec4 &v)
+       : r(static_cast<std::uint8_t>(glm::clamp(v.r, 0.0f, 1.0f) * max_f<float>))
+       , g(static_cast<std::uint8_t>(glm::clamp(v.g, 0.0f, 1.0f) * max_f<float>))
+       , b(static_cast<std::uint8_t>(glm::clamp(v.b, 0.0f, 1.0f) * max_f<float>))
+       , a(static_cast<std::uint8_t>(glm::clamp(v.a, 0.0f, 1.0f) * max_f<float>))
+     {
+     }
+
+
+     explicit color(const glm::ivec4 &v)
+       : r(static_cast<std::uint8_t>(v.x))
+       , g(static_cast<std::uint8_t>(v.y))
+       , b(static_cast<std::uint8_t>(v.z))
+       , a(static_cast<std::uint8_t>(v.w))
+     {
+     }
+
      /**
       * @brief Constructs a color from an ImColor instance.
       *
@@ -226,6 +254,17 @@ struct [[nodiscard]] color
                    static_cast<float>(a) / max_f<float> };
      }
 
+     // Calculate difference with another color
+     [[nodiscard]] double difference(const color &other) const
+     {
+          int dr = static_cast<int>(r) - static_cast<int>(other.r);
+          int dg = static_cast<int>(g) - static_cast<int>(other.g);
+          int db = static_cast<int>(b) - static_cast<int>(other.b);
+          int da = static_cast<int>(a) - static_cast<int>(other.a);
+
+          return std::sqrt(dr * dr + dg * dg + db * db + da * da);
+     }
+
      /**
       * @brief Compares two colors for equality or ordering.
       *
@@ -343,80 +382,102 @@ struct colors
                                                                      "Orange", "Peach", "Purple",  "Pink",  "Brown" };
 
      // darkstyle imgui color blue tint
-     static inline const color Button                 = color{ DarkStyle.Colors[ImGuiCol_Button] };
-     static inline const color ButtonHovered          = color{ DarkStyle.Colors[ImGuiCol_ButtonHovered] };
-     static inline const color ButtonActive           = color{ DarkStyle.Colors[ImGuiCol_ButtonActive] };
+     static inline const color             Button                 = color{ DarkStyle.Colors[ImGuiCol_Button] };
+     static inline const color             ButtonHovered          = color{ DarkStyle.Colors[ImGuiCol_ButtonHovered] };
+     static inline const color             ButtonActive           = color{ DarkStyle.Colors[ImGuiCol_ButtonActive] };
 
      // Green tint
-     static constexpr color    ButtonGreen            = color{ ImVec4(0.26f, 0.98f, 0.26f, 0.40f) };
-     static constexpr color    ButtonGreenHovered     = color{ ImVec4(0.26f, 0.98f, 0.26f, 1.00f) };
-     static constexpr color    ButtonGreenActive      = color{ ImVec4(0.06f, 0.53f, 0.06f, 1.00f) };
+     static constexpr color                ButtonGreen            = color{ ImVec4(0.26f, 0.98f, 0.26f, 0.40f) };
+     static constexpr color                ButtonGreenHovered     = color{ ImVec4(0.26f, 0.98f, 0.26f, 1.00f) };
+     static constexpr color                ButtonGreenActive      = color{ ImVec4(0.06f, 0.53f, 0.06f, 1.00f) };
 
      // Red tint
-     static constexpr color    ButtonRed              = color{ ImVec4(0.98f, 0.26f, 0.26f, 0.40f) };
-     static constexpr color    ButtonRedHovered       = color{ ImVec4(0.98f, 0.26f, 0.26f, 1.00f) };
-     static constexpr color    ButtonRedActive        = color{ ImVec4(0.53f, 0.06f, 0.06f, 1.00f) };
+     static constexpr color                ButtonRed              = color{ ImVec4(0.98f, 0.26f, 0.26f, 0.40f) };
+     static constexpr color                ButtonRedHovered       = color{ ImVec4(0.98f, 0.26f, 0.26f, 1.00f) };
+     static constexpr color                ButtonRedActive        = color{ ImVec4(0.53f, 0.06f, 0.06f, 1.00f) };
 
      // Dark Blue tint
-     static constexpr color    ButtonDarkBlue         = color{ ImVec4(0.26f, 0.26f, 0.59f, 0.40f) };
-     static constexpr color    ButtonDarkBlueHovered  = color{ ImVec4(0.26f, 0.26f, 0.59f, 1.00f) };
-     static constexpr color    ButtonDarkBlueActive   = color{ ImVec4(0.06f, 0.06f, 0.53f, 1.00f) };
+     static constexpr color                ButtonDarkBlue         = color{ ImVec4(0.26f, 0.26f, 0.59f, 0.40f) };
+     static constexpr color                ButtonDarkBlueHovered  = color{ ImVec4(0.26f, 0.26f, 0.59f, 1.00f) };
+     static constexpr color                ButtonDarkBlueActive   = color{ ImVec4(0.06f, 0.06f, 0.53f, 1.00f) };
 
      // Yellow tint
-     static constexpr color    ButtonYellow           = color{ ImVec4(0.98f, 0.98f, 0.26f, 0.40f) };
-     static constexpr color    ButtonYellowHovered    = color{ ImVec4(0.98f, 0.98f, 0.26f, 1.00f) };
-     static constexpr color    ButtonYellowActive     = color{ ImVec4(0.53f, 0.53f, 0.06f, 1.00f) };
+     static constexpr color                ButtonYellow           = color{ ImVec4(0.98f, 0.98f, 0.26f, 0.40f) };
+     static constexpr color                ButtonYellowHovered    = color{ ImVec4(0.98f, 0.98f, 0.26f, 1.00f) };
+     static constexpr color                ButtonYellowActive     = color{ ImVec4(0.53f, 0.53f, 0.06f, 1.00f) };
 
      // Orange tint
-     static constexpr color    ButtonOrange           = color{ ImVec4(0.98f, 0.59f, 0.26f, 0.40f) };
-     static constexpr color    ButtonOrangeHovered    = color{ ImVec4(0.98f, 0.59f, 0.26f, 1.00f) };
-     static constexpr color    ButtonOrangeActive     = color{ ImVec4(0.53f, 0.26f, 0.06f, 1.00f) };
+     static constexpr color                ButtonOrange           = color{ ImVec4(0.98f, 0.59f, 0.26f, 0.40f) };
+     static constexpr color                ButtonOrangeHovered    = color{ ImVec4(0.98f, 0.59f, 0.26f, 1.00f) };
+     static constexpr color                ButtonOrangeActive     = color{ ImVec4(0.53f, 0.26f, 0.06f, 1.00f) };
 
      // Pink tint
-     static constexpr color    ButtonPink             = color{ ImVec4(0.98f, 0.26f, 0.59f, 0.40f) };
-     static constexpr color    ButtonPinkHovered      = color{ ImVec4(0.98f, 0.26f, 0.59f, 1.00f) };
-     static constexpr color    ButtonPinkActive       = color{ ImVec4(0.53f, 0.06f, 0.29f, 1.00f) };
+     static constexpr color                ButtonPink             = color{ ImVec4(0.98f, 0.26f, 0.59f, 0.40f) };
+     static constexpr color                ButtonPinkHovered      = color{ ImVec4(0.98f, 0.26f, 0.59f, 1.00f) };
+     static constexpr color                ButtonPinkActive       = color{ ImVec4(0.53f, 0.06f, 0.29f, 1.00f) };
 
      // Tan tint
-     static constexpr color    ButtonTan              = color{ ImVec4(0.98f, 0.84f, 0.57f, 0.40f) };
-     static constexpr color    ButtonTanHovered       = color{ ImVec4(0.98f, 0.84f, 0.57f, 1.00f) };
-     static constexpr color    ButtonTanActive        = color{ ImVec4(0.53f, 0.48f, 0.29f, 1.00f) };
+     static constexpr color                ButtonTan              = color{ ImVec4(0.98f, 0.84f, 0.57f, 0.40f) };
+     static constexpr color                ButtonTanHovered       = color{ ImVec4(0.98f, 0.84f, 0.57f, 1.00f) };
+     static constexpr color                ButtonTanActive        = color{ ImVec4(0.53f, 0.48f, 0.29f, 1.00f) };
 
      // tableColors
-     static constexpr color    TableDarkRed           = color{ 120, 40, 40 };
-     static constexpr color    TableLightDarkRed      = color{ 160, 60, 60 };
-     static constexpr color    TableDarkRedHovered    = TableLightDarkRed.fade(0.4F);
-     static constexpr color    TableDarkRedActive     = color{ 100, 20, 20 };
+     static constexpr color                TableDarkRed           = color{ 120, 40, 40 };
+     static constexpr color                TableLightDarkRed      = color{ 160, 60, 60 };
+     static constexpr color                TableDarkRedHovered    = TableLightDarkRed.fade(0.4F);
+     static constexpr color                TableDarkRedActive     = color{ 100, 20, 20 };
 
-     static constexpr color    TableDarkGray          = color{ 80, 80, 80 };
-     static constexpr color    TableLightDarkGray     = color{ 100, 100, 100 };
-     static constexpr color    TableDarkGrayHovered   = TableLightDarkGray.fade(0.4F);
-     static constexpr color    TableDarkGrayActive    = color{ 50, 50, 50 };
+     static constexpr color                TableDarkGray          = color{ 80, 80, 80 };
+     static constexpr color                TableLightDarkGray     = color{ 100, 100, 100 };
+     static constexpr color                TableDarkGrayHovered   = TableLightDarkGray.fade(0.4F);
+     static constexpr color                TableDarkGrayActive    = color{ 50, 50, 50 };
 
-     static constexpr color    TableDarkBlue          = color{ 40, 60, 120 };
-     static constexpr color    TableLightDarkBlue     = color{ 60, 90, 160 };
-     static constexpr color    TableDarkBlueHovered   = TableLightDarkBlue.fade(0.4F);
-     static constexpr color    TableDarkBlueActive    = color{ 20, 40, 100 };
+     static constexpr color                TableDarkBlue          = color{ 40, 60, 120 };
+     static constexpr color                TableLightDarkBlue     = color{ 60, 90, 160 };
+     static constexpr color                TableDarkBlueHovered   = TableLightDarkBlue.fade(0.4F);
+     static constexpr color                TableDarkBlueActive    = color{ 20, 40, 100 };
 
-     static constexpr color    TableDarkGreen         = color{ 40, 120, 60 };
-     static constexpr color    TableLightDarkGreen    = color{ 60, 160, 90 };
-     static constexpr color    TableDarkGreenHovered  = TableLightDarkGreen.fade(0.4F);
-     static constexpr color    TableDarkGreenActive   = color{ 20, 100, 40 };
+     static constexpr color                TableDarkGreen         = color{ 40, 120, 60 };
+     static constexpr color                TableLightDarkGreen    = color{ 60, 160, 90 };
+     static constexpr color                TableDarkGreenHovered  = TableLightDarkGreen.fade(0.4F);
+     static constexpr color                TableDarkGreenActive   = color{ 20, 100, 40 };
 
-     static constexpr color    TableDarkPurple        = color{ 80, 40, 120 };
-     static constexpr color    TableLightDarkPurple   = color{ 110, 60, 160 };
-     static constexpr color    TableDarkPurpleHovered = TableLightDarkPurple.fade(0.4F);
-     static constexpr color    TableDarkPurpleActive  = color{ 50, 20, 100 };
+     static constexpr color                TableDarkPurple        = color{ 80, 40, 120 };
+     static constexpr color                TableLightDarkPurple   = color{ 110, 60, 160 };
+     static constexpr color                TableDarkPurpleHovered = TableLightDarkPurple.fade(0.4F);
+     static constexpr color                TableDarkPurpleActive  = color{ 50, 20, 100 };
 
-     static constexpr color    TableDarkTeal          = color{ 40, 100, 100 };
-     static constexpr color    TableLightDarkTeal     = color{ 60, 140, 140 };
-     static constexpr color    TableDarkTealHovered   = TableLightDarkTeal.fade(0.4F);
-     static constexpr color    TableDarkTealActive    = color{ 20, 80, 80 };
+     static constexpr color                TableDarkTeal          = color{ 40, 100, 100 };
+     static constexpr color                TableLightDarkTeal     = color{ 60, 140, 140 };
+     static constexpr color                TableDarkTealHovered   = TableLightDarkTeal.fade(0.4F);
+     static constexpr color                TableDarkTealActive    = color{ 20, 80, 80 };
 
-     static constexpr color    TableDarkOrange        = color{ 120, 80, 40 };
-     static constexpr color    TableLightDarkOrange   = color{ 160, 110, 60 };
-     static constexpr color    TableDarkOrangeHovered = TableLightDarkOrange.fade(0.4F);
-     static constexpr color    TableDarkOrangeActive  = color{ 100, 50, 20 };
+     static constexpr color                TableDarkOrange        = color{ 120, 80, 40 };
+     static constexpr color                TableLightDarkOrange   = color{ 160, 110, 60 };
+     static constexpr color                TableDarkOrangeHovered = TableLightDarkOrange.fade(0.4F);
+     static constexpr color                TableDarkOrangeActive  = color{ 100, 50, 20 };
+
+
+     [[nodiscard]] static inline glm::vec3 hsv2rgb(const glm::vec3 &c)
+     {
+          static const glm::vec4 K = glm::vec4(1.0f, 2.0f / 3.0f, 1.0f / 3.0f, 3.0f);
+          // Replace GLSL c.xxx + K.xyz with explicit vector construction
+          const glm::vec3        p = glm::abs(glm::fract(glm::vec3(c.x) + glm::vec3(K.x, K.y, K.z)) * 6.0f - glm::vec3(K.w));
+          // Replace GLSL mix and clamp with GLM equivalents, ensuring correct argument types
+          return c.z * glm::mix(glm::vec3(K.x), glm::clamp(p - glm::vec3(K.x), 0.0f, 1.0f), c.y);
+     }
+
+     [[nodiscard]] static inline glm::vec4 encode_uint_to_rgba(const unsigned int id)
+     {
+          static constexpr float GOLDEN_RATIO = 0.61803398875f;
+          static constexpr float SATURATION   = 0.8f;
+          static constexpr float VALUE        = 0.9f;
+          const float            hue          = glm::fract(static_cast<float>(id) * GOLDEN_RATIO);
+          const glm::vec3        temp_color   = hsv2rgb(glm::vec3(hue, SATURATION, VALUE));// Explicitly round to integers for comparison
+          // glm::vec3              rounded_color = glm::floor(temp_color * 255.0f + 0.5f);
+          /// return glm::vec4(rounded_color / 255.0f, 1.0f);// Keep in [0,1] for rendering
+          return glm::vec4(temp_color, 1.f);
+     }
 };
 
 
@@ -539,7 +600,6 @@ constexpr void SetFlag(BackgroundSettings &current, BackgroundSettings flag, boo
      SetFlag(initial, flag, enabled);
      return initial;
 }
-
 
 static_assert(
   SetFlag(BackgroundSettings::OneColor, BackgroundSettings::TwoColors, true) == BackgroundSettings::TwoColors,
