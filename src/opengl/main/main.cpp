@@ -70,8 +70,8 @@ static GLFWwindow *create_glfw_window()
           return nullptr;
      }
 
-     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);// OpenGL 4.0
-     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
+     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);// OpenGL 4.3
+     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
      glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
      glfwWindowHint(GLFW_DEPTH_BITS, 24);
      glfwWindowHint(GLFW_STENCIL_BITS, 8);
