@@ -320,7 +320,7 @@ struct [[nodiscard]] map_sprite// final
      [[nodiscard]] const glengine::Texture *get_texture(const tileT &tile) const
      {
 
-          if (!m_filters.deswizzle.enabled())
+          if (!m_filters.deswizzle.enabled() && !m_filters.full_filename.enabled())
           {
                return get_texture(tile.depth(), tile.palette_id(), tile.texture_id());
           }
@@ -538,7 +538,7 @@ struct [[nodiscard]] map_sprite// final
                {
                     return to_vec2(ff_8::source_coords_for_swizzle(tile_const));
                }
-               if (m_filters.deswizzle.enabled())
+               if (m_filters.deswizzle.enabled() || m_filters.full_filename.enabled())
                {
                     return to_vec2(ff_8::source_coords_for_deswizzle(tile_const));
                }
