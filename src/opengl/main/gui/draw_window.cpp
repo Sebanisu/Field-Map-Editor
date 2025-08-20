@@ -98,7 +98,6 @@ void fme::draw_window::render() const
             m_checkerboard_batchrenderer.draw_quad(
               glm::vec3{}, fme::colors::White, glm::vec2{ m_checkerboard_framebuffer.width(), m_checkerboard_framebuffer.height() });
             m_checkerboard_batchrenderer.draw();
-            m_checkerboard_batchrenderer.on_render();
             m_checkerboard_framebuffer.bind_color_attachment();
             if (!ImGuizmo::IsOver())
             {
