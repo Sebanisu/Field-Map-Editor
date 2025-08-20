@@ -9,6 +9,7 @@
 #include "utilities.hpp"
 #include <bit>
 #include <BlendModeSettings.hpp>
+#include <CompShader.hpp>
 #include <fmt/format.h>
 #include <FrameBuffer.hpp>
 #include <FrameBufferBackup.hpp>
@@ -891,7 +892,6 @@ void map_sprite::update_render_texture(const bool reload_textures) const
      // all tasks completed.
      if (m_future_of_future_consumer.done() && m_future_consumer.done())
      {
-          const auto fbo_backup = glengine::FrameBuffer::backup();
           if (m_filters.full_filename.enabled() && !m_full_filename_textures.empty())
           {
                std::erase_if(m_full_filename_textures, [](auto &pair) {
@@ -905,6 +905,7 @@ void map_sprite::update_render_texture(const bool reload_textures) const
                  __LINE__,
                  std::ranges::size(m_full_filename_textures));
                std::vector<std::string> remove_queue = {};
+               glengine::CompShader     shader(std::filesystem::current_path() / "res" / "shader" / "mask.comp");
                for (const auto &[filename, maskname] : m_full_filename_to_mask_name)
                {
                     if (!m_full_filename_textures.contains(filename) || !m_full_filename_textures.contains(maskname))
@@ -931,24 +932,18 @@ void map_sprite::update_render_texture(const bool reload_textures) const
                          {
                               continue;
                          }
+                         const auto size = main_texture.get_size();
+                         *target_texture = glengine::Texture(size.x, size.y);
 
-                         const auto size   = main_texture.get_size();
-                         auto       spec   = glengine::FrameBufferSpecification{ .width = size.x, .height = size.y, .scale = 1 };
-                         auto       fbo    = glengine::FrameBuffer{ std::move(spec) };
-                         auto       shader = glengine::Shader(std::filesystem::current_path() / "res" / "shader" / "mask.shader");
-                         fbo.bind();
+                         mask_texture.bind(0);
+                         main_texture.bind(1);
+                         target_texture->bind_write_only(2);
+                         
+                         // Load and execute compute shader
+                         const auto pop_shader = shader.backup();
                          shader.bind();
-                         main_texture.bind(0);
-                         mask_texture.bind(1);
-                         shader.set_uniform("mainTex", 0);
-                         shader.set_uniform("maskTex", 1);
-                         glengine::BlendModeSettings::default_blend();
-
-                         m_fixed_render_camera.set_projection(0.f, static_cast<float>(fbo.width()), 0.f, static_cast<float>(fbo.height()));
-                         shader.set_uniform("u_MVP", m_fixed_render_camera.view_projection_matrix());
-
-                         // todo apply mask.
-                         *target_texture = fbo.steal_color_attachment_id(0);
+                         shader.set_uniform("chosenColor", glm::vec3(0.0f, 0.0f, 0.0f));// Set target color (e.g., red)
+                         shader.execute(size.x, size.y);                         
                          remove_queue.push_back(filename);
                          remove_queue.push_back(maskname);
                     }
