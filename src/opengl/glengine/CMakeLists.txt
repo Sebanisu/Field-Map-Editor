@@ -14,6 +14,7 @@ add_library(
   glengine STATIC
   BatchRenderer.cpp
   BlendModeSettings.cpp
+  CompShader.cpp
   Counter.cpp
   FrameBuffer.cpp
   FrameBufferBackup.cpp
