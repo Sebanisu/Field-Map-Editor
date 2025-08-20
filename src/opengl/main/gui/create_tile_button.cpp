@@ -18,7 +18,7 @@ template<is_tile tileT>
      }
      const auto tile_texture_size = map->get_tile_texture_size(texture);
      const auto src_x             = [&]() -> std::uint32_t {
-          if (map->filter().deswizzle.enabled())
+          if (map->filter().deswizzle.enabled() || map->filter().full_filename.enabled())
           {
                return static_cast<std::uint32_t>(tile.x());
           }
@@ -33,7 +33,7 @@ template<is_tile tileT>
           return tile.source_x() + texture_page_x_offset;
      }();
      const auto src_y = [&]() -> std::uint32_t {
-          if (map->filter().deswizzle.enabled())
+          if (map->filter().deswizzle.enabled() || map->filter().full_filename.enabled())
           {
                return static_cast<std::uint32_t>(tile.y());
           }
