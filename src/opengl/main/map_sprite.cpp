@@ -938,12 +938,12 @@ void map_sprite::update_render_texture(const bool reload_textures) const
                          mask_texture.bind(0);
                          main_texture.bind(1);
                          target_texture->bind_write_only(2);
-                         
+
                          // Load and execute compute shader
                          const auto pop_shader = shader.backup();
                          shader.bind();
                          shader.set_uniform("chosenColor", glm::vec3(0.0f, 0.0f, 0.0f));// Set target color (e.g., red)
-                         shader.execute(size.x, size.y);                         
+                         shader.execute(size.x, size.y);
                          remove_queue.push_back(filename);
                          remove_queue.push_back(maskname);
                     }
@@ -1776,6 +1776,7 @@ std::string map_sprite::get_base_name() const
      settings.filters.value().swizzle              = settings.filters.backup().swizzle;
      settings.filters.value().swizzle_as_one_image = settings.filters.backup().swizzle_as_one_image;
      settings.filters.value().deswizzle            = settings.filters.backup().deswizzle;
+     settings.filters.value().full_filename        = settings.filters.backup().full_filename;
      settings.filters.value().map                  = settings.filters.backup().map;
      settings.draw_swizzle                         = draw_swizzle;// No swizzling when saving
      settings.disable_texture_page_shift           = true;// Disable texture page shifts
