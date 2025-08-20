@@ -29,15 +29,15 @@ class Texture
      // std::int32_t             m_bpp         = {};
      // std::vector<open_viii::graphics::Color32RGBA> m_colors       = {};
 
-   static const constexpr GLint      s_sized_interal_format = GL_RGBA8;
-   static const constexpr GLenum     s_base_interal_format  = GL_RGBA;
-   static const constexpr GLenum s_type =   GL_UNSIGNED_BYTE;
+   public:
+     static const constexpr GLint  s_sized_interal_format = GL_RGBA8;
+     static const constexpr GLenum s_base_interal_format  = GL_RGBA;
+     static const constexpr GLenum s_type                 = GL_UNSIGNED_BYTE;
 
- public:
-   operator bool() const noexcept
-   {
-        return m_renderer_id != 0U;
-   }
+     operator bool() const noexcept
+     {
+          return m_renderer_id != 0U;
+     }
      constexpr Texture() = default;
 
      Texture(Glid &&new_id, std::int32_t new_width, std::int32_t new_height)

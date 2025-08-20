@@ -41,6 +41,8 @@ public:
     return { T{ m_uv[0].x, m_uv[2].y }, T{ m_uv[2].x, m_uv[0].y } };
   }
   void        bind(std::int32_t slot = 0) const;
+  void        bind_read_only(int slot) const;
+  void        bind_write_only(int slot) const;
   static void unbind();
 
 
