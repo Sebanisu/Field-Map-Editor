@@ -10,6 +10,7 @@
 #include <bit>
 #include <BlendModeSettings.hpp>
 #include <CompShader.hpp>
+#include <expected>
 #include <fmt/format.h>
 #include <FrameBuffer.hpp>
 #include <FrameBufferBackup.hpp>
@@ -894,66 +895,139 @@ void map_sprite::update_render_texture(const bool reload_textures) const
      {
           if (m_filters.full_filename.enabled() && !m_full_filename_textures.empty())
           {
-               std::erase_if(m_full_filename_textures, [](auto &pair) {
-                    const auto &texture = pair.second;
-                    const auto  size    = texture.get_size();
-                    return size.x == 0 || size.y == 0;
-               });
-               spdlog::info(
-                 "{}:{}, Loaded and purged empty textures, m_full_filename_textures.size() = {}",
-                 __FILE__,
-                 __LINE__,
-                 std::ranges::size(m_full_filename_textures));
-               std::vector<std::string> remove_queue = {};
-               glengine::CompShader     shader(std::filesystem::current_path() / "res" / "shader" / "mask.comp");
-               for (const auto &[filename, maskname] : m_full_filename_to_mask_name)
-               {
-                    if (!m_full_filename_textures.contains(filename) || !m_full_filename_textures.contains(maskname))
-                         continue;
-                    glengine::Texture                           &main_texture = m_full_filename_textures.at(filename);
-                    const glengine::Texture                     &mask_texture = m_full_filename_textures.at(maskname);
-                    const toml::table                           *file_table   = get_deswizzle_combined_toml_table(filename);
-                    ff_8::filter_old<ff_8::FilterTag::MultiPupu> multi_pupu   = { ff_8::FilterSettings::All_Disabled };
-                    multi_pupu.reload(*file_table);
-                    if (!multi_pupu.enabled())
+               [&]() {// wrapped in lambda to allow early return will move to member function later.
+                    std::erase_if(m_full_filename_textures, [](auto &pair) {
+                         const auto &texture = pair.second;
+                         const auto  size    = texture.get_size();
+                         return size.x == 0 || size.y == 0;
+                    });
+                    spdlog::info(
+                      "{}:{}, Loaded and purged empty textures, m_full_filename_textures.size() = {}",
+                      __FILE__,
+                      __LINE__,
+                      std::ranges::size(m_full_filename_textures));
+                    if (m_full_filename_textures.empty())
                     {
-                         continue;
+                         return;
                     }
-                    if (multi_pupu.value().empty())
-                    {
-                         continue;
-                    }
+                    const bool                all_masks_exist = std::ranges::all_of(m_full_filename_to_mask_name, [&](const auto &pair) {
+                         const auto &[filename, maskname] = pair;
+                         if (!m_full_filename_textures.contains(filename))
+                         {
+                              // we don't care if the mask name doesn't exist if filename does not.
+                              return true;
+                         }
+                         return m_full_filename_textures.contains(maskname);
+                    });
+                    std::optional<map_sprite> opt_map_sprite{};
+                    std::map<std::string, std::optional<glengine::FrameBuffer>> *opt_textures_map = {};
+                    if (!all_masks_exist)
+                    {// this generates framebuffers containing the masks on GL_COLOR_ATTACHMENT1 with scale canvas_size/max_texture_size.
+                         opt_map_sprite = { m_map_group, false, { false }, true, false, m_selections };
+                         opt_map_sprite->consume_now();// force load textures now.
+                         // calculate scale using one of the existing textures
+                         const auto canvas = opt_map_sprite->get_canvas();
+                         const auto [min_it, max_it] =
+                           std::ranges::minmax_element(m_full_filename_textures, [](const auto &apair, const auto &bpair) {
+                                const auto &a  = std::get<1>(apair);
+                                const auto &b  = std::get<1>(bpair);
+                                const auto  sa = a.get_size();
+                                const auto  sb = b.get_size();
+                                return (sa.x * sa.y) < (sb.x * sb.y);
+                           });
 
-                    if (std::cmp_equal(multi_pupu.value().size(), 1))
+                         const auto max_size = std::get<1>(*max_it).get_size();
+                         assert(std::get<1>(*min_it).get_size() == max_size);
+                         const auto scale = glm::ivec2(canvas.width(), canvas.height()) / max_size;
+                         assert(scale.x == scale.y);
+                         assert(std::has_single_bit(static_cast<unsigned int>(scale.x)));
+                         opt_textures_map = &opt_map_sprite->get_deswizzle_combined_textures(scale.x);
+                    }
+                    std::vector<std::string> remove_queue = {};
+                    glengine::CompShader     shader(std::filesystem::current_path() / "res" / "shader" / "mask.comp");
+                    for (const auto &[filename, maskname] : m_full_filename_to_mask_name)
                     {
-                         // Only one pupu.
-                         glengine::Texture *target_texture = get_texture_mutable(multi_pupu.value().front());
-                         if (!target_texture)
+                         if (!m_full_filename_textures.contains(filename))
+                              continue;
+                         glengine::Texture &main_texture = m_full_filename_textures.at(filename);
+                         // todo support multiple white on black mask textures?
+                         const auto         mask_texture = [&]() -> std::expected<const glengine::SubTexture, std::string> {
+                              if (auto it = m_full_filename_textures.find(maskname); it != m_full_filename_textures.end())
+                              {
+                                   return it->second;
+                              }
+
+                              if (!opt_textures_map)
+                              {
+                                   return std::unexpected("opt_textures_map is null");
+                              }
+
+                              auto map_it = opt_textures_map->find(filename);
+                              if (map_it == opt_textures_map->end())
+                              {
+                                   return std::unexpected("Filename not found: " + filename);
+                              }
+
+                              if (!map_it->second.has_value())
+                              {
+                                   return std::unexpected("FrameBuffer has no value");
+                              }
+
+                              return map_it->second->color_attachment_id(1);
+                         }();
+                         if (!mask_texture)
+                         {
+                              spdlog::error("Mask lookup failed: {}", mask_texture.error());
+                         }
+
+                         const toml::table                           *file_table = get_deswizzle_combined_toml_table(filename);
+                         ff_8::filter_old<ff_8::FilterTag::MultiPupu> multi_pupu = { ff_8::FilterSettings::All_Disabled };
+                         multi_pupu.reload(*file_table);
+                         if (!multi_pupu.enabled())
                          {
                               continue;
                          }
-                         const auto size = main_texture.get_size();
-                         *target_texture = glengine::Texture(size.x, size.y);
+                         if (multi_pupu.value().empty())
+                         {
+                              continue;
+                         }
 
-                         mask_texture.bind(0);
-                         main_texture.bind(1);
-                         target_texture->bind_write_only(2);
+                         if (std::cmp_equal(multi_pupu.value().size(), 1))
+                         {
+                              // Only one pupu.
+                              glengine::Texture *target_texture = get_texture_mutable(multi_pupu.value().front());
+                              if (!target_texture)
+                              {
+                                   continue;
+                              }
+                              const auto size = main_texture.get_size();
 
-                         // Load and execute compute shader
-                         const auto pop_shader = shader.backup();
-                         shader.bind();
-                         shader.set_uniform("chosenColor", glm::vec3(0.0f, 0.0f, 0.0f));// Set target color (e.g., red)
-                         shader.execute(size.x, size.y);
-                         remove_queue.push_back(filename);
-                         remove_queue.push_back(maskname);
+                              if (const auto t_size = target_texture->get_size(); t_size.x != 0 and t_size.y != 0)
+                              {
+                                   continue;// texture in use already.
+                              }
+                              *target_texture = glengine::Texture(size.x, size.y);
+
+                              mask_texture->bind_read_only(0);
+                              main_texture.bind_read_only(1);
+                              target_texture->bind_write_only(2);
+
+                              // Load and execute compute shader
+                              const auto pop_shader = shader.backup();
+                              shader.bind();
+                              shader.set_uniform("chosenColor", glm::vec3(0.0f, 0.0f, 0.0f));// Set target color (e.g., red)
+                              shader.execute(size.x, size.y);
+                              remove_queue.push_back(filename);
+                              remove_queue.push_back(maskname);
+                         }
                     }
-               }
 
-               for (const std::string &filename : remove_queue)
-               {
-                    m_full_filename_textures.erase(filename);
-                    m_full_filename_to_mask_name.erase(filename);
-               }
+                    for (const std::string &filename : remove_queue)
+                    {
+                         m_full_filename_textures.erase(filename);
+                         m_full_filename_to_mask_name.erase(filename);
+                    }
+               }();
           }
           if (!fallback_textures())// see if no textures are loaded and fall back to .mim if not.
           {
@@ -1851,7 +1925,7 @@ std::string map_sprite::get_base_name() const
      return m_cache_framebuffer_tooltips;
 }
 
-[[nodiscard]] std::map<std::string, std::optional<glengine::FrameBuffer>> &map_sprite::get_deswizzle_combined_textures()
+[[nodiscard]] std::map<std::string, std::optional<glengine::FrameBuffer>> &map_sprite::get_deswizzle_combined_textures(const int scale)
 {
      const auto selections = m_selections.lock();
      if (!selections)
@@ -1885,9 +1959,14 @@ std::string map_sprite::get_base_name() const
      const std::string field_name = std::string{ str_to_lower(field->get_base_name()) };
 
      // Setup an off-screen render texture
-     iRectangle const  canvas     = m_map_group.maps.const_working().canvas() * m_render_framebuffer->scale();
-     const auto        specification =
-       glengine::FrameBufferSpecification{ .width = canvas.width(), .height = canvas.height(), .scale = m_render_framebuffer->scale() };
+     iRectangle const  canvas =
+       m_map_group.maps.const_working().canvas()
+       * (scale > 0 && std::has_single_bit(static_cast<unsigned int>(scale)) ? scale : m_render_framebuffer->scale());
+     const auto specification = glengine::FrameBufferSpecification{
+          .width  = canvas.width(),
+          .height = canvas.height(),
+          .scale  = (scale > 0 && std::has_single_bit(static_cast<unsigned int>(scale)) ? scale : m_render_framebuffer->scale())
+     };
 
      const toml::table *coo_table = get_deswizzle_combined_coo_table();
      if (!coo_table)

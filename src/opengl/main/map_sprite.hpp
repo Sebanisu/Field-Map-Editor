@@ -181,7 +181,7 @@ struct [[nodiscard]] map_sprite// final
      [[nodiscard]] std::vector<std::future<void>>
        save_deswizzle_generate_toml(const std::string &keyed_string, const std::filesystem::path &selected_path);
      [[nodiscard]] const std::map<std::string, std::string>                    &get_deswizzle_combined_textures_tooltips();
-     [[nodiscard]] std::map<std::string, std::optional<glengine::FrameBuffer>> &get_deswizzle_combined_textures();
+     [[nodiscard]] std::map<std::string, std::optional<glengine::FrameBuffer>> &get_deswizzle_combined_textures(const int scale = {});
      [[nodiscard]] std::string              generate_deswizzle_combined_tool_tip(const toml::table *file_table) const;
      [[nodiscard]] toml::table             *get_deswizzle_combined_coo_table() const;
      [[nodiscard]] toml::table             *get_deswizzle_combined_toml_table(const std::string &) const;
