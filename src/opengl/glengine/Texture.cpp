@@ -20,6 +20,17 @@ void Texture::bind(int slot) const
 }
 
 
+void Texture::bind_read_only(int slot) const
+{
+     //GlCall{}(glBindImageTexture, slot, m_renderer_id, 0, static_cast<GLboolean>(GL_FALSE), 0, GL_READ_ONLY, s_sized_interal_format);
+     bind(slot);
+}
+void Texture::bind_write_only(int slot) const
+{
+     GlCall{}(glBindImageTexture, slot, m_renderer_id, 0, static_cast<GLboolean>(GL_FALSE), 0, GL_WRITE_ONLY, s_sized_interal_format);
+}
+
+
 GlidCopy Texture::id() const noexcept
 {
      return m_renderer_id;

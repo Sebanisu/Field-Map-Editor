@@ -29,12 +29,15 @@ class Texture
      // std::int32_t             m_bpp         = {};
      // std::vector<open_viii::graphics::Color32RGBA> m_colors       = {};
 
+   static const constexpr GLint      s_sized_interal_format = GL_RGBA8;
+   static const constexpr GLenum     s_base_interal_format  = GL_RGBA;
+   static const constexpr GLenum s_type =   GL_UNSIGNED_BYTE;
 
-   public:
-     operator bool() const noexcept
-     {
-          return m_renderer_id != 0U;
-     }
+ public:
+   operator bool() const noexcept
+   {
+        return m_renderer_id != 0U;
+   }
      constexpr Texture() = default;
 
      Texture(Glid &&new_id, std::int32_t new_width, std::int32_t new_height)
@@ -42,6 +45,12 @@ class Texture
        , m_width(new_width)
        , m_height(new_height)
      {
+     }
+     Texture(std::int32_t new_width, std::int32_t new_height)
+       : m_width{ new_width }
+       , m_height{ new_height }
+     {
+          init_texture(nullptr);// allocate uninitialized texture
      }
      Texture(Image image);
      Texture(std::filesystem::path path, bool in_flip = false);
@@ -96,11 +105,11 @@ class Texture
                                     return tmp;
                                }(),
                                 destroy };
-          GlCall{}(&glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-          GlCall{}(&glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_NEAREST);
-          GlCall{}(&glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-          GlCall{}(&glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-          GlCall{}(glTexImage2D, GL_TEXTURE_2D, 0, GL_RGBA8, width(), height(), 0, GL_RGBA, GL_UNSIGNED_BYTE, color);
+          GlCall{}(glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+          GlCall{}(glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_NEAREST);
+          GlCall{}(glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+          GlCall{}(glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+          GlCall{}(glTexImage2D, GL_TEXTURE_2D, 0, s_sized_interal_format, width(), height(), 0, s_base_interal_format, s_type, color);
           // Unavailable in OpenGL 2.1, use gluBuild2DMipmaps() instead
           GlCall{}(glGenerateMipmap, GL_TEXTURE_2D);
           GlCall{}(glBindTexture, GL_TEXTURE_2D, 0);
@@ -175,6 +184,8 @@ class Texture
 
      GlidCopy              id() const noexcept;
      void                  bind(int slot = 0) const;
+     void                  bind_read_only(int slot) const;
+     void                  bind_write_only(int slot) const;
      constexpr static void destroy(const std::uint32_t id)
      {
           if FME_NOT_CONSTEVAL
