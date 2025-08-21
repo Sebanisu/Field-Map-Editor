@@ -30,7 +30,7 @@ void HistogramBuffer::read_back(std::vector<GLuint> &data)
           return;
      }
      data.resize(m_count);
-     glFinish();
+     //glFinish();
      glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_buffer_id);
      // glGetBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, m_count * sizeof(GLuint), data.data());
      void *ptr = glMapBufferRange(GL_SHADER_STORAGE_BUFFER, 0, m_count * sizeof(GLuint), GL_MAP_READ_BIT);
@@ -49,6 +49,7 @@ void HistogramBuffer::read_back(std::vector<GLuint> &data)
 
 void HistogramBuffer::reset() const
 {
+     //todo we could write a shader to clear the buffer on the gpu. donno if it would be faster.
      if (!m_buffer_id)
      {
           spdlog::error("HistogramBuffer not initialized, cannot reset");
