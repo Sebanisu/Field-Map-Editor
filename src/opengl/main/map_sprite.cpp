@@ -1029,8 +1029,8 @@ void map_sprite::update_render_texture(const bool reload_textures) const
                               }
                               *target_texture = glengine::Texture(size.x, size.y);
 
-                              mask_texture->bind(0);
-                              main_texture.bind(1);
+                              mask_texture->bind_read_only(0);
+                              main_texture.bind_read_only(1);
                               target_texture->bind_write_only(2);
 
                               // Load and execute compute shader
@@ -1104,8 +1104,8 @@ void map_sprite::update_render_texture(const bool reload_textures) const
                          }
                          *target_texture = glengine::Texture(size.x, size.y);
 
-                         mask_texture.bind(0);
-                         main_texture.bind(1);
+                         mask_texture.bind_read_only(0);
+                         main_texture.bind_read_only(1);
                          target_texture->bind_write_only(2);
 
                          // Load and execute compute shader

@@ -5,14 +5,20 @@ precision highp float; // sets default float precision for the shader
 precision highp int;   // sets default int precision for the shader
 
 // Input textures: mask and image
-layout(binding = 0) uniform sampler2D maskTexture;
-layout(binding = 1) uniform sampler2D imageTexture;
+layout(binding = 0,rgba8) uniform image2D maskTexture;
+layout(binding = 1,rgba8) uniform image2D imageTexture;
 
 // Output texture with RGBA8 format
 layout(binding = 2, rgba8) uniform image2D outputTexture;
 
 // Uniform for the chosen target color (RGB, normalized 0-1)
 uniform vec3 chosenColor;
+
+// Tolerance for black (RGB sum < tolerance)
+uniform float blackTolerance = 0.01; 
+
+// threshold for difference in maskColor and chosenColor
+uniform float threshold = 0.1;
 
 // Compute shader work group size
 layout(local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
@@ -25,34 +31,28 @@ void main() {
         return;
     }
     
-    //vec2 uv = vec2(pixelCoord) / vec2(outputSize);
-    highp vec2 uv = (vec2(pixelCoord) + 0.5) / vec2(outputSize);
-    vec4 maskColor = texture(maskTexture, uv);
-    vec4 imageColor = texture(imageTexture, uv);
+    vec4 maskColor = imageLoad(maskTexture, pixelCoord);
+    vec4 imageColor = imageLoad(imageTexture, pixelCoord);
     
     // Find the closest color by comparing with chosenColor
     vec3 maskRGB = maskColor.rgb;
     float dist = distance(maskRGB, chosenColor);
     
     // Check if chosenColor is approximately black (small tolerance for floating-point precision)
-    const float blackTolerance = 0.01;
     bool isChosenBlack = (distance(chosenColor, vec3(0.0, 0.0, 0.0)) < blackTolerance);
     
     if (isChosenBlack) {
         // Reverse logic: use image color if mask is not black, transparent if mask is black
         if (distance(maskRGB, vec3(0.0, 0.0, 0.0)) < blackTolerance) {
-            imageStore(outputTexture, pixelCoord, vec4(0.0, 0.0, 0.0, 0.0)); // Transparent for black            
-            //imageStore(outputTexture, pixelCoord, imageColor);
+            imageStore(outputTexture, pixelCoord, vec4(0.0, 0.0, 0.0, 0.0)); // Transparent for black
         } else {
             imageStore(outputTexture, pixelCoord, imageColor); // Use image for non-black
         }
     } else {
         // Original logic: use image color if within threshold of chosenColor
-        const float threshold = 0.1;
         if (dist <= threshold) {
             imageStore(outputTexture, pixelCoord, imageColor);
         } else {                        
-            //imageStore(outputTexture, pixelCoord, imageColor);
             imageStore(outputTexture, pixelCoord, vec4(0.0, 0.0, 0.0, 0.0));
         }
     }
