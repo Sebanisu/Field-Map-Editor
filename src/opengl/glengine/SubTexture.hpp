@@ -47,16 +47,19 @@ public:
   void        bind_write_only(int slot) const;
   static void unbind();
 
+  [[nodiscard]] int        width() const noexcept;
+  [[nodiscard]] int height() const noexcept;
+  [[nodiscard]] glm::ivec2 get_size() const noexcept;
 
 private:
-  static constexpr auto default_uv  = std::array{ glm::vec2{ 0.F, 0.F },
-                                                 glm::vec2{ 1.F, 0.F },
-                                                 glm::vec2{ 1.F, 1.F },
-                                                 glm::vec2{ 0.F, 1.F } };
-  GlidCopy              m_render_id = {};
-  GLint                 m_width     = {};
-  GLint                 m_height    = {};
-  std::remove_cvref_t<decltype(default_uv)> m_uv = { default_uv };
+  static constexpr auto default_uv =
+    std::array{ glm::vec2{ 0.F, 0.F }, glm::vec2{ 1.F, 0.F }, glm::vec2{ 1.F, 1.F }, glm::vec2{ 0.F, 1.F } };
+  GlidCopy                                      m_render_id = {};
+  GLint                                         m_width     = {};
+  GLint                                         m_height    = {};
+  std::remove_cvref_t<decltype(default_uv)>     m_uv        = { default_uv };
+
+  [[nodiscard]] std::pair<glm::vec2, glm::vec2> minmax_uv() const noexcept;
 };
 static_assert(Bindable<SubTexture>);
 }// namespace glengine
