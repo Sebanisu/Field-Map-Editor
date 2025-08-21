@@ -19,6 +19,7 @@ add_library(
   FrameBuffer.cpp
   FrameBufferBackup.cpp
   GLCheck.cpp
+  HistogramBuffer.cpp
   Image.cpp
   IndexBuffer.cpp
   IndexBufferDynamic.cpp
@@ -26,6 +27,7 @@ add_library(
   Layer/LayerItem.cpp
   Layer/LayerStack.cpp
   MenuItem.cpp
+  PaletteBuffer.cpp
   Shader.cpp
   SubTexture.cpp
   Texture.cpp
