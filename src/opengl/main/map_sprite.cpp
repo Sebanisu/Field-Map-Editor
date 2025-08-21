@@ -948,6 +948,8 @@ void map_sprite::update_render_texture(const bool reload_textures) const
                     std::vector<std::string> remove_queue = {};
                     glengine::CompShader     shader(std::filesystem::current_path() / "res" / "shader" / "mask.comp");
                     glengine::CompShader     shader_count(std::filesystem::current_path() / "res" / "shader" / "mask_count.comp");
+                    std::map<std::size_t, std::vector<std::tuple<std::uint32_t, glengine::SubTexture, glengine::SubTexture>>>
+                      multi_pupu_post_op;
                     for (const auto &[filename, maskname] : m_full_filename_to_mask_name)
                     {
                          if (!m_full_filename_textures.contains(filename))
@@ -1058,12 +1060,55 @@ void map_sprite::update_render_texture(const bool reload_textures) const
                                    {
                                         continue;
                                    }
+                                   multi_pupu_post_op[index].emplace_back(count, *mask_texture, main_texture);
                                    spdlog::info("Index {:>3}, Color {}, Pupu {}, Count {:>6}", index, fme::color{ color }, pupu, count);
                               }
+                              // I need both textures a index and count.
+                              // We need to take an index that doesn't have texture or texture.get_size() == glm::ivec2(0,0)
+                              // We to sort the textures by the count for that index, largest to smallest
+                              // We can grab the color again using the index.
+                              // We use the color and the decided main_texture and mask_texture and creat the output texture at
+                              // *m_texture[index];
+                              //  Then we remove the filename and maskname using the remove_queue.
+                              //  We'll need to using some kinda map of index to tuple. And start a new loop after this loop.
 
                               remove_queue.push_back(filename);
                               remove_queue.push_back(maskname);
                          }
+                    }
+
+                    for (auto &&[index, tuple_vector] : multi_pupu_post_op)
+                    {
+                         const auto &unique_pupu = working_unique_pupu();
+                         const auto &palette     = m_map_group.maps.working_unique_pupu_color();
+                         const auto &pupu        = unique_pupu.at(index);
+                         const auto &color       = palette.at(index);
+                         // sort the tuple vector
+                         std::ranges::sort(tuple_vector, std::greater{}, [](const auto &tuple) { return std::get<0>(tuple); });
+                         const auto &[count, mask_texture, main_texture] = tuple_vector.front();
+
+                         glengine::Texture *target_texture               = get_texture_mutable(pupu);
+                         if (!target_texture)
+                         {
+                              continue;
+                         }
+                         const auto size = main_texture.get_size();
+
+                         if (const auto t_size = target_texture->get_size(); t_size.x != 0 and t_size.y != 0)
+                         {
+                              continue;// texture in use already.
+                         }
+                         *target_texture = glengine::Texture(size.x, size.y);
+
+                         mask_texture.bind(0);
+                         main_texture.bind(1);
+                         target_texture->bind_write_only(2);
+
+                         // Load and execute compute shader
+                         const auto pop_shader = shader.backup();
+                         shader.bind();
+                         shader.set_uniform("chosenColor", color);// Set target color (e.g., red)
+                         shader.execute(size.x, size.y, GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
                     }
 
                     for (const std::string &filename : remove_queue)
@@ -1073,6 +1118,7 @@ void map_sprite::update_render_texture(const bool reload_textures) const
                     }
                }();
           }
+      
           if (!fallback_textures())// see if no textures are loaded and fall back to .mim if not.
           {
                resize_render_texture();
