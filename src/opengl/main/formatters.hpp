@@ -438,7 +438,7 @@ struct fmt::formatter<fme::color>
      template<typename FormatContext>
      auto format(const fme::color &c, FormatContext &ctx) const
      {
-          return fmt::format_to(ctx.out(), "({},{},{},{})", c.r, c.g, c.b, c.a);
+          return fmt::format_to(ctx.out(), "({:>3},{:>3},{:>3},{:>3})", c.r, c.g, c.b, c.a);
      }
 };
 
