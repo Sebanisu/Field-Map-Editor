@@ -30,6 +30,7 @@ struct gui_labels
      static constexpr std::string_view windows                           = { "Windows" };
      static constexpr std::string_view max_tiles                         = { "Max Tiles" };
      static constexpr std::string_view filters                           = { "Filters" };
+     static constexpr std::string_view deswizzle_toml_editor             = { "deswizzle.toml Editor" };
      static constexpr std::string_view background                        = { "Background" };
      static constexpr std::string_view background2                       = { "##Background2" };
      static constexpr std::string_view control_panel                     = { "Control Panel" };

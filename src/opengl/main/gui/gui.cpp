@@ -1377,7 +1377,7 @@ void gui::windows_menu()
      }
 
      ImGui::Separator();
-     if (ImGui::MenuItem(gui_labels::filters.data(), nullptr, &m_selections->get<ConfigKey::DisplayFiltersWindow>()))
+     if (ImGui::MenuItem(gui_labels::deswizzle_toml_editor.data(), nullptr, &m_selections->get<ConfigKey::DisplayFiltersWindow>()))
      {
           m_selections->update<ConfigKey::DisplayFiltersWindow>();
      }

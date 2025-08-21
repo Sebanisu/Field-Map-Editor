@@ -157,7 +157,7 @@ bool fme::filter_window::begin_window(const std::shared_ptr<Selections> &lock_se
      {
           return false;
      }
-     if (!ImGui::Begin(gui_labels::filters.data(), &visible))
+     if (!ImGui::Begin(gui_labels::deswizzle_toml_editor.data(), &visible))
      {
           ImGui::End();
           return false;
