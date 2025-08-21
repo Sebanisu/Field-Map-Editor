@@ -183,7 +183,9 @@ class Texture
      }
 
      GlidCopy              id() const noexcept;
+     //use for sampler2d
      void                  bind(int slot = 0) const;
+     //use for image2d
      void                  bind_read_only(int slot) const;
      void                  bind_write_only(int slot) const;
      constexpr static void destroy(const std::uint32_t id)
