@@ -14,7 +14,9 @@
 #include <fmt/format.h>
 #include <FrameBuffer.hpp>
 #include <FrameBufferBackup.hpp>
+#include <HistogramBuffer.hpp>
 #include <open_viii/graphics/Png.hpp>
+#include <PaletteBuffer.hpp>
 #include <ranges>
 #include <ScopeGuard.hpp>
 #include <spdlog/spdlog.h>
@@ -945,6 +947,7 @@ void map_sprite::update_render_texture(const bool reload_textures) const
                     }
                     std::vector<std::string> remove_queue = {};
                     glengine::CompShader     shader(std::filesystem::current_path() / "res" / "shader" / "mask.comp");
+                    glengine::CompShader     shader_count(std::filesystem::current_path() / "res" / "shader" / "mask_count.comp");
                     for (const auto &[filename, maskname] : m_full_filename_to_mask_name)
                     {
                          if (!m_full_filename_textures.contains(filename))
@@ -1008,15 +1011,56 @@ void map_sprite::update_render_texture(const bool reload_textures) const
                               }
                               *target_texture = glengine::Texture(size.x, size.y);
 
-                              mask_texture->bind_read_only(0);
-                              main_texture.bind_read_only(1);
+                              mask_texture->bind(0);
+                              main_texture.bind(1);
                               target_texture->bind_write_only(2);
 
                               // Load and execute compute shader
                               const auto pop_shader = shader.backup();
                               shader.bind();
                               shader.set_uniform("chosenColor", glm::vec3(0.0f, 0.0f, 0.0f));// Set target color (e.g., red)
-                              shader.execute(size.x, size.y);
+                              shader.execute(size.x, size.y, GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+                              remove_queue.push_back(filename);
+                              remove_queue.push_back(maskname);
+                         }
+                         else// more than one.
+                         {
+                              const auto             &unique_pupu = working_unique_pupu();
+                              const auto             &palette     = m_map_group.maps.working_unique_pupu_color();
+                              glengine::PaletteBuffer pb{};
+                              pb.initialize(palette);
+                              if (!pb.id())
+                              {
+                                   spdlog::critical("PaletteBuffer initialization failed, aborting");
+                              }
+                              glengine::HistogramBuffer hb{ std::ranges::size(palette) };
+                              if (!hb.id())
+                              {
+                                   spdlog::critical("HistogramBuffer initialization failed, aborting");
+                              }
+                              pb.bind(2);
+                              hb.bind(1);
+                              mask_texture->bind_read_only(0);
+                              const auto size       = main_texture.get_size();
+                              const auto pop_shader = shader_count.backup();
+                              shader_count.bind();
+                              shader_count.set_uniform("numColors", static_cast<GLint>(std::ranges::size(palette)));
+                              shader_count.execute(size.x, size.y, GL_SHADER_STORAGE_BARRIER_BIT);
+
+                              std::vector<GLuint> counts;
+                              hb.read_back(counts);
+
+                              spdlog::info("Maskname \"{}\" counts: ", maskname);
+                              for (const auto &[index, zip] : std::views::zip(palette, unique_pupu, counts) | std::views::enumerate)
+                              {
+                                   const auto &[color, pupu, count] = zip;
+                                   if (count == 0)
+                                   {
+                                        continue;
+                                   }
+                                   spdlog::info("Index {:>3}, Color {}, Pupu {}, Count {:>6}", index, fme::color{ color }, pupu, count);
+                              }
+
                               remove_queue.push_back(filename);
                               remove_queue.push_back(maskname);
                          }
