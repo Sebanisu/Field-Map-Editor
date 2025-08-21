@@ -3,17 +3,18 @@
 #include "GLCheck.hpp"
 #include "Renderer.hpp"
 #include "ScopeGuard.hpp"
+#include "UniqueValue.hpp"
 #include <filesystem>
 #include <fstream>
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
 namespace glengine
 {
-class [[nodiscard]] CompShader
+struct CompShader
 {
    private:
-     GLuint                                                     m_program_id{};
      std::filesystem::path                                      m_path{};
+     Glid                                                       m_program_id{};
 
      static GLuint                                              create_compute_shader(const std::string &source);
      static GLuint                                              create_compute_program(const GLuint &shader);
@@ -23,11 +24,14 @@ class [[nodiscard]] CompShader
 
    public:
      CompShader() = default;
-     CompShader(std::filesystem::path);
-     void   bind() const;
-     GLuint id() const;
-     void   execute(GLuint, GLuint) const;
-     ~CompShader() noexcept;
+     CompShader(std::filesystem::path in_path)
+       : m_path(std::move(in_path))
+       , m_program_id(Glid{ create(m_path), destroy })
+     {
+     }
+     void                      bind() const;
+     GlidCopy                  id() const;
+     void                      execute(GLuint, GLuint, GLbitfield) const;
 
      [[nodiscard]] static auto backup()
      {
@@ -142,6 +146,9 @@ class [[nodiscard]] CompShader
                perform(glUniform1iv);
           }
      }
+
+     static GLuint create(const std::filesystem::path &path);
+     static void   destroy(const GLuint id);
 };
 }// namespace glengine
 #endif /* BC882A74_AA62_484B_A1DD_0524A057427E */

@@ -6,53 +6,36 @@
 #include <iostream>
 namespace glengine
 {
-Shader::Shader(std::filesystem::path file_path)
-  : m_file_path(std::move(file_path))
+
+GLuint Shader::create(const std::filesystem::path &path)
 {
      const auto          pop_backup = backup();
-     ShaderProgramSource source     = parse_shader();
-     m_renderer_id                  = create_shader(source.vertex_shader, source.fragment_shader);
+     ShaderProgramSource source     = parse_shader(path);
+     return create_shader(source.vertex_shader, source.fragment_shader);
 }
-Shader::~Shader()
+
+void Shader::destroy(const GLuint id)
 {
-     GlCall{}(glDeleteProgram, m_renderer_id);
+     GlCall{}(glDeleteProgram, id);
      unbind();
 }
-Shader::Shader(Shader &&other) noexcept
-  : Shader()
-{
-     swap(*this, other);
-}
-Shader &Shader::operator=(Shader &&other) noexcept
-{
-     swap(*this, other);
-     return *this;
-}
-void swap(Shader &first, Shader &second) noexcept// nothrow
-{
-     // enable ADL (not necessary in our case, but good practice)
-     using std::swap;
 
-     // by swapping the members of two objects,
-     // the two objects are effectively swapped
-     swap(first.m_renderer_id, second.m_renderer_id);
-     swap(first.m_file_path, second.m_file_path);
-     swap(first.m_cache, second.m_cache);
-}
 void Shader::bind() const
 {
      GlCall{}(glUseProgram, m_renderer_id);
 }
+
 void Shader::unbind()
 {
      GlCall{}(glUseProgram, 0U);
 }
-Shader::ShaderProgramSource Shader::parse_shader()
+
+Shader::ShaderProgramSource Shader::parse_shader(const std::filesystem::path &path)
 {
-     std::ifstream fs(m_file_path, std::ios::binary | std::ios::in);
+     std::ifstream fs(path, std::ios::binary | std::ios::in);
      if (!fs.is_open())
      {
-          spdlog::error("{}:{} - Failed to open shader \n\t\"{}\"", __FILE__, __LINE__, m_file_path.string());
+          spdlog::error("{}:{} - Failed to open shader \n\t\"{}\"", __FILE__, __LINE__, path.string());
           return {};
      }
      enum class ShaderType
@@ -93,6 +76,7 @@ Shader::ShaderProgramSource Shader::parse_shader()
 
      return { ss[0].str(), ss[1].str() };
 }
+
 std::uint32_t Shader::compile_shader(const std::uint32_t type, const std::string_view source)
 {
      using namespace std::string_view_literals;

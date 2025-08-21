@@ -7,13 +7,14 @@
 #include "GLCheck.hpp"
 #include "Renderer.hpp"
 #include "ScopeGuard.hpp"
+#include "UniqueValue.hpp"
 #include <filesystem>
 #include <fstream>
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
 namespace glengine
 {
-class [[nodiscard]] Shader
+struct [[nodiscard]] Shader
 {
    private:
      struct ShaderProgramSource
@@ -21,27 +22,25 @@ class [[nodiscard]] Shader
           std::string vertex_shader{};
           std::string fragment_shader{};
      };
-     std::uint32_t                                              m_renderer_id{};
      std::filesystem::path                                      m_file_path{};
+     Glid                                                       m_renderer_id{};
      // cache for uniforms
      mutable std::unordered_map<std::string_view, std::int32_t> m_cache{};
-     [[nodiscard]] ShaderProgramSource                          parse_shader();
-     [[nodiscard]] std::uint32_t                                compile_shader(const std::uint32_t type, const std::string_view source);
-     [[nodiscard]] std::uint32_t                                create_shader(const std::string_view, const std::string_view);
+     static [[nodiscard]] ShaderProgramSource                   parse_shader(const std::filesystem::path &path);
+     static [[nodiscard]] std::uint32_t                         compile_shader(const std::uint32_t type, const std::string_view source);
+     static [[nodiscard]] std::uint32_t                         create_shader(const std::string_view, const std::string_view);
      [[nodiscard]] std::int32_t                                 get_uniform_location(std::string_view name) const;
 
    public:
      Shader() = default;
-     Shader(std::filesystem::path file_path);
-     ~Shader();
+     Shader(std::filesystem::path file_path)
+       : m_file_path(std::move(file_path))
+       , m_renderer_id(Glid{ create(m_file_path), destroy })
+     {
+     }
 
-     Shader(const Shader &)            = delete;
-     Shader &operator=(const Shader &) = delete;
-
-     Shader(Shader &&other) noexcept;
-     Shader                   &operator=(Shader &&other) noexcept;
-
-     friend void               swap(Shader &first, Shader &second) noexcept;
+     static GLuint             create(const std::filesystem::path &path);
+     static void               destroy(const GLuint id);
 
      void                      bind() const;
      static void               unbind();
