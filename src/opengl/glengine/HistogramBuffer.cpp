@@ -46,6 +46,24 @@ void HistogramBuffer::read_back(std::vector<GLuint> &data)
      }
 }
 
+
+void HistogramBuffer::reset() const
+{
+     if (!m_buffer_id)
+     {
+          spdlog::error("HistogramBuffer not initialized, cannot reset");
+          return;
+     }
+     std::vector<GLuint> zero_data(m_count, 0);
+     glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_buffer_id);
+     glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, m_count * sizeof(GLuint), zero_data.data());
+     glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+     if (glGetError() != GL_NO_ERROR)
+     {
+          spdlog::error("Failed to reset HistogramBuffer data");
+     }
+}
+
 GlidCopy HistogramBuffer::id() const
 {
      return m_buffer_id;
@@ -68,7 +86,7 @@ GLuint HistogramBuffer::create(size_t count)
      }
      std::vector<GLuint> init_data(count, 0);
      glBindBuffer(GL_SHADER_STORAGE_BUFFER, temp_id);
-     glBufferData(GL_SHADER_STORAGE_BUFFER, count * sizeof(GLuint), init_data.data(), GL_STATIC_COPY);
+     glBufferData(GL_SHADER_STORAGE_BUFFER, count * sizeof(GLuint), init_data.data(), GL_DYNAMIC_COPY);
      glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
      if (glGetError() != GL_NO_ERROR)
      {

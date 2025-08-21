@@ -15,6 +15,7 @@ class HistogramBuffer
 
      GlidCopy id() const;
      size_t   count() const;
+     void     reset() const;
 
    private:
      size_t        m_count;

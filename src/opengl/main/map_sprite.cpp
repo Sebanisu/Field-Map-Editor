@@ -950,6 +950,22 @@ void map_sprite::update_render_texture(const bool reload_textures) const
                     glengine::CompShader     shader_count(std::filesystem::current_path() / "res" / "shader" / "mask_count.comp");
                     std::map<std::size_t, std::vector<std::tuple<std::uint32_t, glengine::SubTexture, glengine::SubTexture>>>
                       multi_pupu_post_op;
+                    const auto             &unique_pupu = working_unique_pupu();
+                    const auto             &palette     = m_map_group.maps.working_unique_pupu_color();
+                    glengine::PaletteBuffer pb{};
+                    pb.initialize(palette);
+                    if (!pb.id())
+                    {
+                         spdlog::critical("PaletteBuffer initialization failed, aborting");
+                         return;
+                    }
+                    glengine::HistogramBuffer hb{ std::ranges::size(palette) };
+                    if (!hb.id())
+                    {
+                         spdlog::critical("HistogramBuffer initialization failed, aborting");
+                         return;
+                    }
+
                     for (const auto &[filename, maskname] : m_full_filename_to_mask_name)
                     {
                          if (!m_full_filename_textures.contains(filename))
@@ -1027,19 +1043,7 @@ void map_sprite::update_render_texture(const bool reload_textures) const
                          }
                          else// more than one.
                          {
-                              const auto             &unique_pupu = working_unique_pupu();
-                              const auto             &palette     = m_map_group.maps.working_unique_pupu_color();
-                              glengine::PaletteBuffer pb{};
-                              pb.initialize(palette);
-                              if (!pb.id())
-                              {
-                                   spdlog::critical("PaletteBuffer initialization failed, aborting");
-                              }
-                              glengine::HistogramBuffer hb{ std::ranges::size(palette) };
-                              if (!hb.id())
-                              {
-                                   spdlog::critical("HistogramBuffer initialization failed, aborting");
-                              }
+                              
                               pb.bind(2);
                               hb.bind(1);
                               mask_texture->bind_read_only(0);
@@ -1049,8 +1053,10 @@ void map_sprite::update_render_texture(const bool reload_textures) const
                               shader_count.set_uniform("numColors", static_cast<GLint>(std::ranges::size(palette)));
                               shader_count.execute(size.x, size.y, GL_SHADER_STORAGE_BARRIER_BIT);
 
+                              //todo use a std::async to defer this to later. Because of warnings from gpu for doing it too fast. And I'm not sure it'll fix it but it might.
                               std::vector<GLuint> counts;
                               hb.read_back(counts);
+                              hb.reset();
 
                               spdlog::info("Maskname \"{}\" counts: ", maskname);
                               for (const auto &[index, zip] : std::views::zip(palette, unique_pupu, counts) | std::views::enumerate)
@@ -1079,8 +1085,6 @@ void map_sprite::update_render_texture(const bool reload_textures) const
 
                     for (auto &&[index, tuple_vector] : multi_pupu_post_op)
                     {
-                         const auto &unique_pupu = working_unique_pupu();
-                         const auto &palette     = m_map_group.maps.working_unique_pupu_color();
                          const auto &pupu        = unique_pupu.at(index);
                          const auto &color       = palette.at(index);
                          // sort the tuple vector
