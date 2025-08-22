@@ -949,7 +949,7 @@ void map_sprite::update_render_texture(const bool reload_textures) const
                     glengine::CompShader     shader(std::filesystem::current_path() / "res" / "shader" / "mask.comp");
                     glengine::CompShader     shader_count(std::filesystem::current_path() / "res" / "shader" / "mask_count.comp");
                     std::map<std::size_t, std::vector<std::tuple<std::uint32_t, glengine::SubTexture, glengine::SubTexture>>>
-                      multi_pupu_post_op;
+                                            multi_pupu_post_op;
                     const auto             &unique_pupu = working_unique_pupu();
                     const auto             &palette     = m_map_group.maps.working_unique_pupu_color();
                     glengine::PaletteBuffer pb{};
@@ -1043,7 +1043,7 @@ void map_sprite::update_render_texture(const bool reload_textures) const
                          }
                          else// more than one.
                          {
-                              
+
                               pb.bind(2);
                               hb.bind(1);
                               mask_texture->bind_read_only(0);
@@ -1053,7 +1053,8 @@ void map_sprite::update_render_texture(const bool reload_textures) const
                               shader_count.set_uniform("numColors", static_cast<GLint>(std::ranges::size(palette)));
                               shader_count.execute(size.x, size.y, GL_SHADER_STORAGE_BARRIER_BIT);
 
-                              //todo use a std::async to defer this to later. Because of warnings from gpu for doing it too fast. And I'm not sure it'll fix it but it might.
+                              // todo use a std::async to defer this to later. Because of warnings from gpu for doing it too fast. And I'm
+                              // not sure it'll fix it but it might.
                               std::vector<GLuint> counts;
                               hb.read_back(counts);
                               hb.reset();
@@ -1085,8 +1086,8 @@ void map_sprite::update_render_texture(const bool reload_textures) const
 
                     for (auto &&[index, tuple_vector] : multi_pupu_post_op)
                     {
-                         const auto &pupu        = unique_pupu.at(index);
-                         const auto &color       = palette.at(index);
+                         const auto &pupu  = unique_pupu.at(index);
+                         const auto &color = palette.at(index);
                          // sort the tuple vector
                          std::ranges::sort(tuple_vector, std::greater{}, [](const auto &tuple) { return std::get<0>(tuple); });
                          const auto &[count, mask_texture, main_texture] = tuple_vector.front();
@@ -1122,7 +1123,7 @@ void map_sprite::update_render_texture(const bool reload_textures) const
                     }
                }();
           }
-      
+
           if (!fallback_textures())// see if no textures are loaded and fall back to .mim if not.
           {
                resize_render_texture();
@@ -2019,7 +2020,7 @@ std::string map_sprite::get_base_name() const
      return m_cache_framebuffer_tooltips;
 }
 
-[[nodiscard]] std::map<std::string, std::optional<glengine::FrameBuffer>> &map_sprite::get_deswizzle_combined_textures(const int scale)
+[[nodiscard]] std::map<std::string, std::optional<glengine::FrameBuffer>> &map_sprite::get_deswizzle_combined_textures(const int in_scale)
 {
      const auto selections = m_selections.lock();
      if (!selections)
@@ -2039,6 +2040,13 @@ std::string map_sprite::get_base_name() const
      {
           return m_cache_framebuffer;
      }
+     const int scale = [&]() {
+          if (in_scale <= 0 || !std::has_single_bit(static_cast<unsigned int>(in_scale)))
+          {
+               return m_render_framebuffer->scale();
+          }
+          return in_scale;
+     }();
      // Backup current settings and adjust for saving Pupu textures
      auto       settings = get_backup_settings(false);
 
@@ -2053,14 +2061,8 @@ std::string map_sprite::get_base_name() const
      const std::string field_name = std::string{ str_to_lower(field->get_base_name()) };
 
      // Setup an off-screen render texture
-     iRectangle const  canvas =
-       m_map_group.maps.const_working().canvas()
-       * (scale > 0 && std::has_single_bit(static_cast<unsigned int>(scale)) ? scale : m_render_framebuffer->scale());
-     const auto specification = glengine::FrameBufferSpecification{
-          .width  = canvas.width(),
-          .height = canvas.height(),
-          .scale  = (scale > 0 && std::has_single_bit(static_cast<unsigned int>(scale)) ? scale : m_render_framebuffer->scale())
-     };
+     iRectangle const  canvas     = m_map_group.maps.const_working().canvas() * scale;
+     const auto specification = glengine::FrameBufferSpecification{ .width = canvas.width(), .height = canvas.height(), .scale = scale };
 
      const toml::table *coo_table = get_deswizzle_combined_coo_table();
      if (!coo_table)
