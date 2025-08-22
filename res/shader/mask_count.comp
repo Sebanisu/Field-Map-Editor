@@ -9,6 +9,10 @@ layout(binding = 2, std430) buffer PaletteBuffer {
     vec4 palette[];
 };
 
+layout(binding = 3, std430) buffer DistanceBuffer { 
+    float palette_distance[];
+};
+
 uniform int numColors;
 uniform float blackTolerance = 0.01; // Tolerance for black (RGB sum < tolerance)
 
@@ -42,4 +46,7 @@ void main() {
     }
 
     atomicAdd(counts[bestIndex], 1u);
+
+    palette_distance[bestIndex] = bestDist;
+
 }
