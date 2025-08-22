@@ -12,7 +12,7 @@ layout(binding = 1,rgba8) uniform image2D imageTexture;
 layout(binding = 2, rgba8) uniform image2D outputTexture;
 
 // Uniform for the chosen target color (RGB, normalized 0-1)
-uniform vec3 chosenColor;
+uniform vec4 chosenColor;
 
 // Tolerance for black (RGB sum < tolerance)
 uniform float blackTolerance = 0.01; 
@@ -36,10 +36,10 @@ void main() {
     
     // Find the closest color by comparing with chosenColor
     vec3 maskRGB = maskColor.rgb;
-    float dist = distance(maskRGB, chosenColor);
+    float dist = distance(maskRGB, chosenColor.rgb);
     
     // Check if chosenColor is approximately black (small tolerance for floating-point precision)
-    bool isChosenBlack = (distance(chosenColor, vec3(0.0, 0.0, 0.0)) < blackTolerance);
+    bool isChosenBlack = (distance(chosenColor.rgb, vec3(0.0, 0.0, 0.0)) < blackTolerance);
     
     if (isChosenBlack) {
         // Reverse logic: use image color if mask is not black, transparent if mask is black
@@ -47,13 +47,16 @@ void main() {
             imageStore(outputTexture, pixelCoord, vec4(0.0, 0.0, 0.0, 0.0)); // Transparent for black
         } else {
             imageStore(outputTexture, pixelCoord, imageColor); // Use image for non-black
+            //imageStore(outputTexture, pixelCoord, chosenColor);
         }
     } else {
         // Original logic: use image color if within threshold of chosenColor
         if (dist <= threshold) {
             imageStore(outputTexture, pixelCoord, imageColor);
+            //imageStore(outputTexture, pixelCoord, chosenColor);
         } else {                        
             imageStore(outputTexture, pixelCoord, vec4(0.0, 0.0, 0.0, 0.0));
+
         }
     }
 }
