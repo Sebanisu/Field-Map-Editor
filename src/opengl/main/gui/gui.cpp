@@ -2882,7 +2882,7 @@ void gui::bind_shortcuts() const
 {
 
      constexpr auto flags = ImGuiInputFlags_RouteGlobal | ImGuiInputFlags_RouteOverFocused;
-     if (ImGui::Shortcut(ImGuiKey_Escape, flags))
+     if (ImGui::Shortcut(ImGuiKey_Escape, ImGuiInputFlags_RouteGlobal))
      {
           m_draw_window.clear_clicked_tile_indices();
      }
