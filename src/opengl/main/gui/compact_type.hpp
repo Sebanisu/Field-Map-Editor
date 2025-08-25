@@ -92,12 +92,12 @@ enum struct VectorOrString : std::uint8_t
 };
 
 
-
 enum class PatternSelector : std::uint8_t
 {
      OutputSwizzlePattern,
      OutputDeswizzlePattern,
      OutputFullFileNamePattern,
+     OutputTomlPattern,
      OutputMapPatternForSwizzle,
      OutputMapPatternForDeswizzle,
      OutputMapPatternForFullFileName,

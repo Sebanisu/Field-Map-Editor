@@ -1,5 +1,14 @@
 #include "key_value_data.hpp"
 
+// constexpr static auto pattern          = CTRE_REGEX_INPUT_TYPE{ R"(\{([^\{\}]+)\}|\{([^\{]*)\{([^\}]+)\}([^\}]*)\})" };
+// constexpr static auto pattern = CTRE_REGEX_INPUT_TYPE{
+//      R"(\{(?<prefix1>[^\{\}\?\:]*)\{(?<key1>[^\{\}\?\:]+)\}(?<suffix1>[^\{\}\?\:]*)\?\:(?<alt_pattern>.+?)\:\?\}|\{(?<prefix2>[^\{\}\?\:]*)\{(?<key2>[^\{\}\?\:]+)\}(?<suffix2>[^\{\}\?\:]*)\}|\{(?<key3>[^\{\}\?\:]+)\})"
+// };
+constexpr static auto pattern = CTRE_REGEX_INPUT_TYPE{
+     R"(\{(?<prefix1>[^{}?:]*)\{(?<key1>[^{}?:]+)\}(?<suffix1>[^{}?:]*)\?:(?<alt_pattern>.+?):\?\}|\{(?<prefix2>[^{}?:]*)\{(?<key2>[^{}?:]+)\}(?<suffix2>[^{}?:]*)\}|\{(?<key3>[^{}?:]+)\})"
+};
+
+constexpr static auto     searcher = ctre::search_all<pattern>;
 
 [[nodiscard]] std::string fme::key_value_data::replace_tags(
   std::string                                   keyed_string,
@@ -7,37 +16,81 @@
   const std::filesystem::path                  &selected_path) const
 {
      using namespace std::string_view_literals;
-     constexpr static auto pattern          = CTRE_REGEX_INPUT_TYPE{ R"(\{([^\{\}]+)\}|\{([^\{]*)\{([^\}]+)\}([^\}]*)\})" };
-     std::string           copy_for_matches = keyed_string;// copy so data won't get lost when we change it.
-     auto                  matches          = ctre::search_all<pattern>(copy_for_matches);
-     int                   layers_deep      = 10;
-     const static size_t   replace_str_id   = 0;
-     const static size_t   key_id_alt       = 3;
-     const static size_t   key_id           = 1;
-     const static size_t   prefix_id        = 2;
-     const static size_t   suffix_id        = 4;
+     std::string copy_for_matches = keyed_string;// copy so data won't get lost when we change it.
+     auto        matches          = searcher(copy_for_matches);
+     int         layers_deep      = 10;
      do
      {
           for ([[maybe_unused]] const auto &match : matches)
           {
-               const auto replace_str = std::string_view{ match.get<replace_str_id>() };
-               const auto key         = std::string_view{ match.get<key_id>() }.empty() ? std::string_view{ match.get<key_id_alt>() }
-                                                                                        : std::string_view{ match.get<key_id>() };
-               const auto value       = [&]() {
+
+
+               const auto       full = match.get<0>();// full match text, always works
+               const auto       key1 = match.get<"key1">();
+               const auto       key2 = match.get<"key2">();
+               const auto       key3 = match.get<"key3">();
+               const auto       alt  = match.get<"alt_pattern">();
+               const auto       pre1 = match.get<"prefix1">();
+               const auto       suf1 = match.get<"suffix1">();
+               const auto       pre2 = match.get<"prefix2">();
+               const auto       suf2 = match.get<"suffix2">();
+
+               std::string_view key;
+               std::string_view prefix;
+               std::string_view suffix;
+               std::string_view alt_pattern;
+
+               if (key1)
+               {
+                    key         = key1.to_view();
+                    prefix      = pre1.to_view();
+                    suffix      = suf1.to_view();
+                    alt_pattern = alt.to_view();
+               }
+               else if (key2)
+               {
+                    key    = key2.to_view();
+                    prefix = pre2.to_view();
+                    suffix = suf2.to_view();
+               }
+               else if (key3)
+               {
+                    key = key3.to_view();
+               }
+
+               const auto value = [&]() {
                     if (key == keys::selected_path)
                     {
+                         if (selected_path.empty())
+                         {
+                              prefix = {};
+                              suffix = {};
+                         }
+
                          return selected_path.string();
                     }
-                    return replace_tag(key, selections);
+                    std::string temp = replace_tag(key, selections);
+
+                    if (temp.empty())
+                    {
+                         prefix = {};
+                         suffix = {};
+
+                         if (alt && !alt_pattern.empty())
+                         {
+                              // Use alt pattern literally (will be expanded in a later pass)
+                              return std::string{ alt_pattern };
+                         }
+                    }
+                    return temp;
                }();
-               const auto prefix = value.empty() ? std::string_view{} : std::string_view{ match.get<prefix_id>() };
-               const auto suffix = value.empty() ? std::string_view{} : std::string_view{ match.get<suffix_id>() };
-               keyed_string      = keyed_string | std::views::split(replace_str)
-                              | std::views::join_with(fmt::format("{}{}{}", prefix, value, suffix)) | std::ranges::to<std::string>();
+
+               keyed_string = keyed_string | std::views::split(full) | std::views::join_with(fmt::format("{}{}{}", prefix, value, suffix))
+                              | std::ranges::to<std::string>();
           }
           // check for nested keys.
           copy_for_matches = keyed_string;
-          matches          = ctre::search_all<pattern>(copy_for_matches);
+          matches          = searcher(copy_for_matches);
      } while (!std::ranges::empty(matches) && ((--layers_deep) != 0));
      tl::string::replace_slashes(keyed_string);// fixes slashes to be windows or linux based.
      return keyed_string;
@@ -48,31 +101,68 @@
   fme::key_value_data::static_replace_tags(std::string keyed_string, const std::shared_ptr<const fme::Selections> &selections)
 {
      using namespace std::string_view_literals;
-     constexpr static auto pattern          = CTRE_REGEX_INPUT_TYPE{ R"(\{([^\{\}]+)\}|\{([^\{]*)\{([^\}]+)\}([^\}]*)\})" };
-     std::string           copy_for_matches = keyed_string;// copy so data won't get lost when we change it.
-     auto                  matches          = ctre::search_all<pattern>(copy_for_matches);
-     int                   layers_deep      = 10;
-     const static size_t   replace_str_id   = 0;
-     const static size_t   key_id_alt       = 3;
-     const static size_t   key_id           = 1;
-     const static size_t   prefix_id        = 2;
-     const static size_t   suffix_id        = 4;
+     std::string copy_for_matches = keyed_string;// copy so data won't get lost when we change it.
+     auto        matches          = searcher(copy_for_matches);
+     int         layers_deep      = 10;
      do
      {
           for ([[maybe_unused]] const auto &match : matches)
           {
-               const auto replace_str = std::string_view{ match.get<replace_str_id>() };
-               const auto key         = std::string_view{ match.get<key_id>() }.empty() ? std::string_view{ match.get<key_id_alt>() }
-                                                                                        : std::string_view{ match.get<key_id>() };
-               const auto value       = static_replace_tag(key, selections);
-               const auto prefix      = value.empty() ? std::string_view{} : std::string_view{ match.get<prefix_id>() };
-               const auto suffix      = value.empty() ? std::string_view{} : std::string_view{ match.get<suffix_id>() };
-               keyed_string           = keyed_string | std::views::split(replace_str)
-                              | std::views::join_with(fmt::format("{}{}{}", prefix, value, suffix)) | std::ranges::to<std::string>();
+
+               const auto       full = match.get<0>();// full match text, always works
+               const auto       key1 = match.get<"key1">();
+               const auto       key2 = match.get<"key2">();
+               const auto       key3 = match.get<"key3">();
+               const auto       alt  = match.get<"alt_pattern">();
+               const auto       pre1 = match.get<"prefix1">();
+               const auto       suf1 = match.get<"suffix1">();
+               const auto       pre2 = match.get<"prefix2">();
+               const auto       suf2 = match.get<"suffix2">();
+
+               std::string_view key;
+               std::string_view prefix;
+               std::string_view suffix;
+               std::string_view alt_pattern;
+
+               if (key1)
+               {
+                    key         = key1.to_view();
+                    prefix      = pre1.to_view();
+                    suffix      = suf1.to_view();
+                    alt_pattern = alt.to_view();
+               }
+               else if (key2)
+               {
+                    key    = key2.to_view();
+                    prefix = pre2.to_view();
+                    suffix = suf2.to_view();
+               }
+               else if (key3)
+               {
+                    key = key3.to_view();
+               }
+
+
+               std::string value = static_replace_tag(key, selections);
+               if (value.empty())
+               {
+                    prefix = {};
+                    suffix = {};
+
+                    if (alt && !alt_pattern.empty())
+                    {
+                         // Use alt pattern literally (will be expanded in a later pass)
+                         value = std::string{ alt_pattern };
+                    }
+               }
+
+
+               keyed_string = keyed_string | std::views::split(full) | std::views::join_with(fmt::format("{}{}{}", prefix, value, suffix))
+                              | std::ranges::to<std::string>();
           }
           // check for nested keys.
           copy_for_matches = keyed_string;
-          matches          = ctre::search_all<pattern>(copy_for_matches);
+          matches          = searcher(copy_for_matches);
      } while (!std::ranges::empty(matches) && ((--layers_deep) != 0));
      tl::string::replace_slashes(keyed_string);// fixes slashes to be windows or linux based.
      return keyed_string;

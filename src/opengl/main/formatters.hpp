@@ -487,6 +487,9 @@ struct fmt::formatter<fme::PatternSelector> : fmt::formatter<std::string_view>
                case fme::PatternSelector::OutputFullFileNamePattern:
                     name = "Output Full Filename Pattern (.toml)"sv;
                     break;
+               case fme::PatternSelector::OutputTomlPattern:
+                    name = "Output '.toml' Pattern"sv;
+                    break;
                case fme::PatternSelector::OutputMapPatternForSwizzle:
                     name = "Output map pattern for swizzle"sv;
                     break;

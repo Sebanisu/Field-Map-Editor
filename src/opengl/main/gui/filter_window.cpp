@@ -182,9 +182,10 @@ void fme::filter_window::handle_remove_queue(
 
 void fme::filter_window::save_config(const std::shared_ptr<Selections> &lock_selections) const
 {
+     
      const key_value_data        config_path_values = { .ext = ".toml" };
      const std::filesystem::path config_path =
-       config_path_values.replace_tags("{selected_path}/res/deswizzle{ext}", lock_selections, "{current_path}");
+       config_path_values.replace_tags(lock_selections->get<ConfigKey::OutputTomlPattern>(), lock_selections);
      auto config = Configuration(config_path);
      config.save();
 }

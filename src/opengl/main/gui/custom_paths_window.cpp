@@ -34,7 +34,14 @@ struct PatternInfo<PatternSelector::OutputFullFileNamePattern>
 };
 
 template<>
-struct PatternInfo<PatternSelector::OutputMapPatternForSwizzle>
+struct PatternInfo<PatternSelector::OutputTomlPattern>
+{
+     static constexpr ConfigKey      key  = ConfigKey::OutputTomlPattern;
+     static constexpr VectorOrString type = VectorOrString::string;
+};
+
+  template<>
+  struct PatternInfo<PatternSelector::OutputMapPatternForSwizzle>
 {
      static constexpr ConfigKey      key  = ConfigKey::OutputMapPatternForSwizzle;
      static constexpr VectorOrString type = VectorOrString::string;

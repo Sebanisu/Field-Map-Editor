@@ -2138,23 +2138,21 @@ toml::table *map_sprite::get_deswizzle_combined_coo_table() const
      }
 
      const std::string           field_name         = str_to_lower(field->get_base_name());
-
      const key_value_data        config_path_values = { .ext = ".toml" };
-     const std::filesystem::path config_path =
-       config_path_values.replace_tags("{selected_path}/res/deswizzle{ext}"s, selections, "{current_path}");
-     auto              config      = Configuration(config_path);
-     toml::table      &root_table  = config;
+     const std::filesystem::path config_path = config_path_values.replace_tags(selections->get<ConfigKey::OutputTomlPattern>(), selections);
+     auto                        config      = Configuration(config_path);
+     toml::table                &root_table  = config;
 
-     const auto        coo         = m_map_group.opt_coo.has_value() && m_map_group.opt_coo.value() != open_viii::LangT::generic
-                                       ? m_map_group.opt_coo
-                                       : field->get_lang_from_fl_paths();
+     const auto                  coo         = m_map_group.opt_coo.has_value() && m_map_group.opt_coo.value() != open_viii::LangT::generic
+                                                 ? m_map_group.opt_coo
+                                                 : field->get_lang_from_fl_paths();
 
-     const std::string my_coo_key  = (coo.has_value()) ? std::string(open_viii::LangCommon::to_string_3_char(coo.value())) : "x";
+     const std::string           my_coo_key  = (coo.has_value()) ? std::string(open_viii::LangCommon::to_string_3_char(coo.value())) : "x";
 
 
-     toml::table      *field_table = nullptr;
+     toml::table                *field_table = nullptr;
 
-     toml::table      *coo_table   = nullptr;
+     toml::table                *coo_table   = nullptr;
      if (auto it_base = root_table.find(field_name); it_base != root_table.end() && it_base->second.is_table())
      {
           field_table = it_base->second.as_table();

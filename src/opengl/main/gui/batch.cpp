@@ -77,7 +77,7 @@ void fme::batch::draw_window()
           {
                const key_value_data        config_path_values = { .ext = ".toml" };
                const std::filesystem::path config_path =
-                 config_path_values.replace_tags("{selected_path}/res/deswizzle{ext}", selections, "{current_path}");
+                 config_path_values.replace_tags(selections->get<ConfigKey::OutputTomlPattern>(), selections);
                auto config = Configuration(config_path);
                config.save();
           }
@@ -757,7 +757,7 @@ void fme::batch::button_start()
      {
           const key_value_data        config_path_values = { .ext = ".toml" };
           const std::filesystem::path config_path =
-            config_path_values.replace_tags("{selected_path}/res/deswizzle{ext}", selections, "{current_path}");
+            config_path_values.replace_tags(selections->get<ConfigKey::OutputTomlPattern>(), selections);
           auto config = Configuration(config_path);
           config->clear();
      }

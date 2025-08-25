@@ -23,6 +23,8 @@ enum class ConfigKey
      StarterField,
      FF8DirectoryPaths,
      FF8Path,
+     TomlPaths,
+     TomlPath,
      WindowWidth,
      WindowHeight,
      Palette,
@@ -56,6 +58,7 @@ enum class ConfigKey
      OutputSwizzlePattern,
      OutputDeswizzlePattern,
      OutputFullFileNamePattern,
+     OutputTomlPattern,
      OutputMapPatternForSwizzle,
      OutputMapPatternForDeswizzle,
      OutputMapPatternForFullFileName,
@@ -169,6 +172,12 @@ struct SelectionInfo<ConfigKey::FF8Path>
 {
      using value_type                     = std::filesystem::path;
      static constexpr std::string_view id = "FF8Path";
+};
+template<>
+struct SelectionInfo<ConfigKey::TomlPath>
+{
+     using value_type                     = std::filesystem::path;
+     static constexpr std::string_view id = "TomlPath";
 };
 template<>
 struct SelectionInfo<ConfigKey::WindowWidth>
@@ -402,6 +411,18 @@ struct SelectionInfo<ConfigKey::OutputFullFileNamePattern>
      {
           using namespace std::string_literals;
           return "{selected_path}\\full_filename\\{demaster_full}"s;
+     }
+};
+
+template<>
+struct SelectionInfo<ConfigKey::OutputTomlPattern>
+{
+     using value_type                     = std::string;
+     static constexpr std::string_view id = "OutputTomlPattern";
+     static inline value_type          default_value()
+     {
+          using namespace std::string_literals;
+          return "{current_path}\\res\\deswizzle{ext}"s;
      }
 };
 
@@ -811,6 +832,26 @@ struct SelectionInfo<ConfigKey::FF8DirectoryPaths>
           assert(has_balanced_braces(value));
      }
 };
+
+
+
+
+template<>
+struct SelectionInfo<ConfigKey::TomlPaths>
+{
+     using value_type                     = std::vector<std::filesystem::path>;
+     static constexpr std::string_view id = "TomlPaths";
+     // static value_type                 expensive_default_value()
+     // {
+     //      const auto &default_paths = open_viii::Paths::get();
+     //      return { default_paths.begin(), default_paths.end() };
+     // }
+     // static void post_load_operation([[maybe_unused]] const value_type &value)
+     // {
+     //      assert(has_balanced_braces(value));
+     // }
+};
+
 template<>
 struct SelectionInfo<ConfigKey::ExternalTexturesAndMapsDirectoryPaths>
 {
