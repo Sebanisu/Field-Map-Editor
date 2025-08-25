@@ -137,41 +137,75 @@ static const auto trim = [](const std::string &str) -> std::string {
 }
 
 static const auto m_tests = std::to_array<fme::key_value_data>(
-  { { .field_name = "ecmall1", .ext = ".ca" },// Basic field_name + ext match
-    { .field_name = "ecmall1", .ext = ".jsm", .language_code = open_viii::LangT::en, .pupu_id = 987654U },// Field with language suffix
-    { .field_name = "ecmall1", .ext = ".msd", .language_code = open_viii::LangT::jp, .pupu_id = 543210U },// Another language case
+  { { .field_name = "ecmall1", .ext = ".ca", .full_filename = "ecmall1.ca" },// Basic field_name + ext match
+    { .field_name    = "ecmall1",
+      .ext           = ".jsm",
+      .full_filename = "ecmall1_en.jsm",
+      .language_code = open_viii::LangT::en,
+      .pupu_id       = 987654U },// Field with language suffix
+    { .field_name    = "ecmall1",
+      .ext           = ".msd",
+      .full_filename = "ecmall1_jp.msd",
+      .language_code = open_viii::LangT::jp,
+      .pupu_id       = 543210U },// Another language case
     { .field_name    = "ecmall1",
       .ext           = ".map",
+      .full_filename = "ecmall1_de.map",
       .language_code = open_viii::LangT::de,
       .pupu_id       = 234567U },// Different language, different ext
-    { .field_name = "ecmall1", .ext = ".mim", .language_code = open_viii::LangT::fr, .pupu_id = 890123U },// Another unique case
-    { .field_name = "ecmall1", .ext = ".inf", .language_code = open_viii::LangT::it, .pupu_id = 456789U },// Italian match
-    { .field_name = "ecmall1", .ext = ".sfx", .pupu_id = 678901U },// No language, unique ext
-    { .field_name = "ecmall1", .ext = ".tdw", .language_code = open_viii::LangT::es, .pupu_id = 321098U },// Spanish case
-    { .field_name = "cwwood2", .ext = ".one" },// `chara.one` match
+    { .field_name    = "ecmall1",
+      .ext           = ".mim",
+      .full_filename = "ecmall1_fr.mim",
+      .language_code = open_viii::LangT::fr,
+      .pupu_id       = 890123U },// Another unique case
+    { .field_name    = "ecmall1",
+      .ext           = ".inf",
+      .full_filename = "ecmall1_it.inf",
+      .language_code = open_viii::LangT::it,
+      .pupu_id       = 456789U },// Italian match
+    { .field_name = "ecmall1", .ext = ".sfx", .full_filename = "ecmall1.sfx", .pupu_id = 678901U },// No language, unique ext
+    { .field_name    = "ecmall1",
+      .ext           = ".tdw",
+      .full_filename = "ecmall1_es.tdw",
+      .language_code = open_viii::LangT::es,
+      .pupu_id       = 321098U },// Spanish case
+    { .field_name = "cwwood2", .ext = ".one", .full_filename = "cwwood2.one" },// `chara.one` match
     { .field_name    = "cwwood2",
       .ext           = ".one",
+      .full_filename = "cwwood2_jp.one",
       .language_code = open_viii::LangT::jp,
       .pupu_id       = 765432U },// `chara_{2_letter_lang}.one` match
-    { .field_name = "cdfield1", .ext = ".pmd", .pupu_id = 210987U },// Another general field match
-    { .field_name = "cdfield2", .ext = ".pvp", .palette = std::uint8_t{ 2 }, .pupu_id = 210987U },// Field with palette
+    { .field_name = "cdfield1", .ext = ".pmd", .full_filename = "cdfield1.pmd", .pupu_id = 210987U },// Another general field match
+    { .field_name    = "cdfield2",
+      .ext           = ".pvp",
+      .full_filename = "cdfield2_palette2.pvp",
+      .palette       = std::uint8_t{ 2 },
+      .pupu_id       = 210987U },// Field with palette
     { .field_name    = "bgkote1a",
       .ext           = ".tiff",
+      .full_filename = "bgkote1a_es_pg5.tiff",
       .language_code = open_viii::LangT::es,
       .texture_page  = std::uint8_t{ 5 } },// With texture_page
-    { .field_name = "bggate_1", .ext = ".gif", .language_code = open_viii::LangT::it, .pupu_id = 78901U },// With pupu_id
+    { .field_name    = "bggate_1",
+      .ext           = ".gif",
+      .full_filename = "bggate1_it.gif",
+      .language_code = open_viii::LangT::it,
+      .pupu_id       = 78901U },// With pupu_id
     { .field_name    = "bgeat1a",
       .ext           = ".bmp",
+      .full_filename = "bgeat1a_de_pal4_pg3.bmp",
       .language_code = open_viii::LangT::de,
       .palette       = std::uint8_t{ 4 },
       .texture_page  = std::uint8_t{ 3 },
       .pupu_id       = 123456U },// Full case
-    { .field_name = "deswizzle", .ext = ".toml" },
+    { .field_name = "deswizzle", .ext = ".toml", .full_filename = "deswizzle.toml" },
     {
       .field_name    = "bgeat1a",
+      .ext           = ".test",
       .full_filename = "full_filename.test",
       .language_code = open_viii::LangT::de,
     } });
+
 
 fme::VectorOrString fme::custom_paths_window::vector_or_string() const
 {
