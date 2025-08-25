@@ -19,13 +19,54 @@ namespace fme
 {
 struct key_value_data
 {
+     /// @brief Name of the field without extension or language suffix.
+     /// @details Typically corresponds to the base asset identifier.
      std::string                     field_name    = {};
+
+     /// @brief File extension (including the leading dot).
+     /// @details Used when constructing filenames from the pieces.
+     /// Defaults to ".png".
      std::string                     ext           = { ".png" };
+
+     /// @brief Complete filename including extension.
+     /// @details Represents the actual stored filename, usually parsed from a TOML.
+     /// Unlike @ref ext, this is not constructed but read as-is.
      std::string                     full_filename = {};
+
+     /// @brief Optional language code.
+     /// @details Enum value indicating the localization of the asset.
+     /// Can represent either a 2-letter or 3-letter code depending on context.
+     /// - 2-letter codes (e.g., `jp`, `en`, `de`) are common; the generic case is omitted.
+     /// - 3-letter codes are also supported; the generic case is represented as `x`.
      std::optional<open_viii::LangT> language_code = {};
+
+
+     /// @brief Optional palette index.
+     /// @details In the original `.mim` textures, palettes were used with color keys
+     /// (4-bit or 8-bit) to construct the final image.
+     /// Multiple palettes could exist for a single texture, allowing reuse of the same
+     /// pixel data with different color sets.
      std::optional<std::uint8_t>     palette       = {};
+
+     /// @brief Optional texture page index.
+     /// @details Original field textures were very wide but limited to 256px in height.
+     /// Since the game engine could only handle ~256px wide textures, these were split
+     /// into pages:
+     /// - 8-bit color-keyed textures → 128px wide pages
+     /// - 16-bit color variants (rare, no palette) → 64px wide pages
+     ///
+     /// In the modern pipeline, textures are normalized to 256x256. Depending on
+     /// the bits-per-pixel, portions of the page may be half-empty or 3/4 empty.
      std::optional<std::uint8_t>     texture_page  = {};
+
+     /// @brief Optional pupu identifier.
+     /// @details Represents a slice of the image containing a unique set of tiles and properties
+     /// (e.g., animation ID, state, layer ID, blend mode).
+     /// This helps prevent overlap when exporting or importing image data.
+     /// In the newer TOML-based mode, multiple pupu_ids that are normally drawn together
+     /// can be grouped for export, and later split back apart using a mask.
      std::optional<std::uint32_t>    pupu_id       = {};
+
 
      struct keys
      {
