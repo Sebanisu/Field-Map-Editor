@@ -1,9 +1,5 @@
 #include "key_value_data.hpp"
 
-// constexpr static auto pattern          = CTRE_REGEX_INPUT_TYPE{ R"(\{([^\{\}]+)\}|\{([^\{]*)\{([^\}]+)\}([^\}]*)\})" };
-// constexpr static auto pattern = CTRE_REGEX_INPUT_TYPE{
-//      R"(\{(?<prefix1>[^\{\}\?\:]*)\{(?<key1>[^\{\}\?\:]+)\}(?<suffix1>[^\{\}\?\:]*)\?\:(?<alt_pattern>.+?)\:\?\}|\{(?<prefix2>[^\{\}\?\:]*)\{(?<key2>[^\{\}\?\:]+)\}(?<suffix2>[^\{\}\?\:]*)\}|\{(?<key3>[^\{\}\?\:]+)\})"
-// };
 constexpr static auto pattern = CTRE_REGEX_INPUT_TYPE{
      R"(\{(?<prefix1>[^{}?:]*)\{(?<key1>[^{}?:]+)\}(?<suffix1>[^{}?:]*)\?:(?<alt_pattern>.+?):\?\}|\{(?<prefix2>[^{}?:]*)\{(?<key2>[^{}?:]+)\}(?<suffix2>[^{}?:]*)\}|\{(?<key3>[^{}?:]+)\})"
 };
@@ -176,6 +172,9 @@ constexpr static auto     searcher = ctre::search_all<pattern>;
      {
           if (keys::ff8_path == key)
                return selections->get<ConfigKey::FF8Path>().string();
+
+          if (keys::current_toml_path == key)
+               return selections->get<ConfigKey::TomlPath>().string();
 
           if (keys::ffnx_mod_path == key)
                return selections->get<ConfigKey::FFNXModPath>().string();

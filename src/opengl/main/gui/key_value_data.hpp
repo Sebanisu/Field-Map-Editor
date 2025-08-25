@@ -32,6 +32,7 @@ struct key_value_data
           static constexpr std::string_view selected_path                 = { "selected_path" };
           static constexpr std::string_view ff8_path                      = { "ff8_path" };
           static constexpr std::string_view current_path                  = { "current_path" };
+          static constexpr std::string_view current_toml_path             = { "current_toml_path" };
           static constexpr std::string_view ffnx_mod_path                 = { "ffnx_mod_path" };
           static constexpr std::string_view ffnx_direct_mode_path         = { "ffnx_direct_mode_path" };
           static constexpr std::string_view ffnx_override_path            = { "ffnx_override_path" };
@@ -69,8 +70,9 @@ struct key_value_data
           static constexpr std::string_view x                             = { "x" };
 
           static constexpr auto             all_keys                      = std::to_array<std::string_view>({ selected_path,
-                                                                                                              // ff8_path,
-                                                                                                              // current_path,
+                                                                                                              ff8_path,
+                                                                                                              current_path,
+                                                                                                              current_toml_path,
                                                                                                               ffnx_mod_path,
                                                                                                               ffnx_direct_mode_path,
                                                                                                               ffnx_override_path,
@@ -103,6 +105,7 @@ struct key_value_data
           static constexpr std::string_view selected_path_tooltip         = { "The user chooses a path to output or read data from." };
           static constexpr std::string_view ff8_path_tooltip              = { "The root directory where Final Fantasy VIII is installed." };
           static constexpr std::string_view current_path_tooltip          = { "The current working directory." };
+          static constexpr std::string_view current_toml_path_tooltip     = { "The current selected toml path." };
           static constexpr std::string_view ffnx_mod_path_tooltip         = { "The base directory for FFNx mod files." };
           static constexpr std::string_view ffnx_direct_mode_path_tooltip = {
                "The directory for FFNx direct mode files, allowing file overrides. `.map` files would go here."
@@ -119,11 +122,11 @@ struct key_value_data
           static constexpr std::string_view palette_tooltip       = { "The color palette ID for textures." };
           static constexpr std::string_view texture_page_tooltip  = { "The texture page ID used for rendering." };
           static constexpr std::string_view pupu_id_tooltip       = { "The 32-bit hex number used for Pupu ID. This is for deswizzles." };
-          static constexpr std::string_view demaster_mod_path_tooltip  = { "The mod directory for Demaster, an FF8 modding tool." };
+          static constexpr std::string_view demaster_mod_path_tooltip = { "The mod directory for Demaster, an FF8 modding tool." };
 
-          static constexpr std::string_view ffnx_map_tooltip           = {
+          static constexpr std::string_view ffnx_map_tooltip          = {
                "Path layout for FFNx map data in direct mode:\n"
-                         "{ffnx_direct_mode_path}/field/mapdata/{field_prefix}/{field_name}/{field_name}{_{2_letter_lang}}{ext}"
+                        "{ffnx_direct_mode_path}/field/mapdata/{field_prefix}/{field_name}/{field_name}{_{2_letter_lang}}{ext}"
           };
           static constexpr std::string_view ffnx_multi_texture_tooltip = {
                "Path layout for FFNx multi-texture field assets:\n"
@@ -177,8 +180,9 @@ struct key_value_data
 
 
           static constexpr auto all_tooltips = std::to_array<std::string_view>({ selected_path_tooltip,
-                                                                                 // ff8_path_tooltip,
-                                                                                 // current_path_tooltip,
+                                                                                 ff8_path_tooltip,
+                                                                                 current_path_tooltip,
+                                                                                 current_toml_path_tooltip,
                                                                                  ffnx_mod_path_tooltip,
                                                                                  ffnx_direct_mode_path_tooltip,
                                                                                  ffnx_override_path_tooltip,

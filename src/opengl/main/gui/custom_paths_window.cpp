@@ -40,8 +40,8 @@ struct PatternInfo<PatternSelector::OutputTomlPattern>
      static constexpr VectorOrString type = VectorOrString::string;
 };
 
-  template<>
-  struct PatternInfo<PatternSelector::OutputMapPatternForSwizzle>
+template<>
+struct PatternInfo<PatternSelector::OutputMapPatternForSwizzle>
 {
      static constexpr ConfigKey      key  = ConfigKey::OutputMapPatternForSwizzle;
      static constexpr VectorOrString type = VectorOrString::string;
@@ -136,31 +136,42 @@ static const auto trim = [](const std::string &str) -> std::string {
      }(std::make_index_sequence<static_cast<std::size_t>(fme::PatternSelector::End)>{});
 }
 
-static const auto   m_tests = std::to_array<fme::key_value_data>({
-  { .field_name = "ecmall1", .ext = ".ca" },// Basic field_name + ext match
-  { .field_name = "ecmall1", .ext = ".jsm", .language_code = open_viii::LangT::en, .pupu_id = 987654U },// Field with language suffix
-  { .field_name = "ecmall1", .ext = ".msd", .language_code = open_viii::LangT::jp, .pupu_id = 543210U },// Another language case
-  { .field_name = "ecmall1", .ext = ".map", .language_code = open_viii::LangT::de, .pupu_id = 234567U },// Different language, different ext
-  { .field_name = "ecmall1", .ext = ".mim", .language_code = open_viii::LangT::fr, .pupu_id = 890123U },// Another unique case
-  { .field_name = "ecmall1", .ext = ".inf", .language_code = open_viii::LangT::it, .pupu_id = 456789U },// Italian match
-  { .field_name = "ecmall1", .ext = ".sfx", .pupu_id = 678901U },// No language, unique ext
-  { .field_name = "ecmall1", .ext = ".tdw", .language_code = open_viii::LangT::es, .pupu_id = 321098U },// Spanish case
-  { .field_name = "cwwood2", .ext = ".one" },// `chara.one` match
-  { .field_name = "cwwood2", .ext = ".one", .language_code = open_viii::LangT::jp, .pupu_id = 765432U },// `chara_{2_letter_lang}.one` match
-  { .field_name = "cdfield1", .ext = ".pmd", .pupu_id = 210987U },// Another general field match
-  { .field_name = "cdfield2", .ext = ".pvp", .palette = std::uint8_t{ 2 }, .pupu_id = 210987U },// Field with palette
-  { .field_name    = "bgkote1a",
+static const auto m_tests = std::to_array<fme::key_value_data>(
+  { { .field_name = "ecmall1", .ext = ".ca" },// Basic field_name + ext match
+    { .field_name = "ecmall1", .ext = ".jsm", .language_code = open_viii::LangT::en, .pupu_id = 987654U },// Field with language suffix
+    { .field_name = "ecmall1", .ext = ".msd", .language_code = open_viii::LangT::jp, .pupu_id = 543210U },// Another language case
+    { .field_name    = "ecmall1",
+      .ext           = ".map",
+      .language_code = open_viii::LangT::de,
+      .pupu_id       = 234567U },// Different language, different ext
+    { .field_name = "ecmall1", .ext = ".mim", .language_code = open_viii::LangT::fr, .pupu_id = 890123U },// Another unique case
+    { .field_name = "ecmall1", .ext = ".inf", .language_code = open_viii::LangT::it, .pupu_id = 456789U },// Italian match
+    { .field_name = "ecmall1", .ext = ".sfx", .pupu_id = 678901U },// No language, unique ext
+    { .field_name = "ecmall1", .ext = ".tdw", .language_code = open_viii::LangT::es, .pupu_id = 321098U },// Spanish case
+    { .field_name = "cwwood2", .ext = ".one" },// `chara.one` match
+    { .field_name    = "cwwood2",
+      .ext           = ".one",
+      .language_code = open_viii::LangT::jp,
+      .pupu_id       = 765432U },// `chara_{2_letter_lang}.one` match
+    { .field_name = "cdfield1", .ext = ".pmd", .pupu_id = 210987U },// Another general field match
+    { .field_name = "cdfield2", .ext = ".pvp", .palette = std::uint8_t{ 2 }, .pupu_id = 210987U },// Field with palette
+    { .field_name    = "bgkote1a",
       .ext           = ".tiff",
       .language_code = open_viii::LangT::es,
       .texture_page  = std::uint8_t{ 5 } },// With texture_page
-  { .field_name = "bggate_1", .ext = ".gif", .language_code = open_viii::LangT::it, .pupu_id = 78901U },// With pupu_id
-  { .field_name    = "bgeat1a",
+    { .field_name = "bggate_1", .ext = ".gif", .language_code = open_viii::LangT::it, .pupu_id = 78901U },// With pupu_id
+    { .field_name    = "bgeat1a",
       .ext           = ".bmp",
       .language_code = open_viii::LangT::de,
       .palette       = std::uint8_t{ 4 },
       .texture_page  = std::uint8_t{ 3 },
-      .pupu_id       = 123456U }// Full case
-});
+      .pupu_id       = 123456U },// Full case
+    { .field_name = "deswizzle", .ext = ".toml" },
+    {
+      .field_name    = "bgeat1a",
+      .full_filename = "full_filename.test",
+      .language_code = open_viii::LangT::de,
+    } });
 
 fme::VectorOrString fme::custom_paths_window::vector_or_string() const
 {
@@ -318,8 +329,9 @@ void fme::custom_paths_window::populate_test_output() const
      m_output_tests.clear();
      for (const auto &test_data : m_tests)
      {
-          std::string &output_test = m_output_tests.emplace_back(m_input_pattern_string.begin(), m_input_pattern_string.end());
-          output_test              = test_data.replace_tags(output_test, selections);
+          const auto   m_input_pattern_string_view = std::string_view(m_input_pattern_string.data());
+          std::string &output_test                 = m_output_tests.emplace_back(m_input_pattern_string_view);
+          output_test                              = test_data.replace_tags(output_test, selections);
      }
 }
 
@@ -419,7 +431,7 @@ bool fme::custom_paths_window::textbox_pattern() const
      {
           if (ImGui::Selectable("Copy Pattern"))
           {
-               const auto test_str = trim(std::string{ m_input_pattern_string.data(), m_input_pattern_string.size() });
+               const auto test_str = trim(std::string{ m_input_pattern_string.data() });
                ImGui::SetClipboardText(test_str.data());
           }
           if (ImGui::Button("Close"))
@@ -552,7 +564,7 @@ bool fme::custom_paths_window::vector_pattern() const
                }
                else
                {
-                    const auto test_str = trim(std::string{ m_input_pattern_string.data(), m_input_pattern_string.size() });
+                    const auto test_str = trim(std::string{ m_input_pattern_string.data() });
                     ImGui::SetClipboardText(test_str.data());
                }
           }
@@ -840,7 +852,11 @@ bool fme::custom_paths_window::child_test_output() const
                     ImGui::CloseCurrentPopup();
                ImGui::EndPopup();
           }
-          ImGui::SetItemTooltip("Right-click to open popup");
+          else
+          {
+               const auto tool_tip_string = fmt::format("{}\n\nRight-click to open popup.", test_str.data());
+               ImGui::SetItemTooltip("%s", tool_tip_string.data());
+          }
      }
      return override_changed;
 }
