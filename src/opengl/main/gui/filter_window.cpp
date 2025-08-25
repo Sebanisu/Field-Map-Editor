@@ -68,9 +68,15 @@ void fme::filter_window::render() const
      {
           format_imgui_text("The draw mode is not set to `.map`.\nFilter changes won't show on draw window.");
      }
-
+     
      handle_remove_queue(lock_selections, lock_map_sprite);
-
+     constexpr auto flags = ImGuiInputFlags_RouteOverFocused;
+     if (ImGui::Shortcut(ImGuiKey_Escape, flags))
+     {
+          m_last_selected      = {};
+          m_selected_file_name = {};
+          m_multi_select.clear();
+     }
      ImGui::SliderFloat("Thumbnail Size", &m_thumb_size_width, 96.f, 1024.f);
      bool  ctrl  = ImGui::GetIO().KeyCtrl;
      float wheel = ImGui::GetIO().MouseWheel;
@@ -182,7 +188,8 @@ void fme::filter_window::handle_remove_queue(
 
 void fme::filter_window::save_config(const std::shared_ptr<Selections> &lock_selections) const
 {
-     
+
+     // TODO fill in common values here or else users can't use them. Like Field names and coo
      const key_value_data        config_path_values = { .ext = ".toml" };
      const std::filesystem::path config_path =
        config_path_values.replace_tags(lock_selections->get<ConfigKey::OutputTomlPattern>(), lock_selections);
@@ -194,6 +201,7 @@ void fme::filter_window::render_list_view(
   const std::shared_ptr<Selections> &lock_selections,
   const std::shared_ptr<map_sprite> &lock_map_sprite) const
 {
+     
      const float  button_height = ImGui::GetTextLineHeight() + ImGui::GetStyle().FramePadding.y * 2.0f;
      const ImVec2 button_size   = { m_tool_button_size_width, button_height };
      ImGui::Columns(calc_column_count(m_tool_button_size_width), "##get_deswizzle_combined_tool_buttons", false);
@@ -477,6 +485,7 @@ void fme::filter_window::add_new_entry(
 {
 
      m_selected_file_name = generate_file_name(lock_map_sprite);
+
      if (!ImGui::GetIO().KeyCtrl)
      {
           m_multi_select.clear();
