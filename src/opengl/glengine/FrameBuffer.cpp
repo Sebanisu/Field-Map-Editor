@@ -279,7 +279,7 @@ void FrameBuffer::set_scale(int in_scale)
 {
      assert(in_scale > 0);
      m_specification.scale = in_scale;
-     spdlog::debug("scale updated: {}", m_specification.scale);
+     spdlog::trace("scale updated: {}", m_specification.scale);
 }
 
 int FrameBuffer::read_pixel(uint32_t attachment_index, int x, int y) const
