@@ -16,6 +16,7 @@ add_library(
   BlendModeSettings.cpp
   CompShader.cpp
   Counter.cpp
+  DistanceBuffer.cpp
   FrameBuffer.cpp
   FrameBufferBackup.cpp
   GLCheck.cpp

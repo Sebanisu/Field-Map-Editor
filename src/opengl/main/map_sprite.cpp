@@ -10,6 +10,7 @@
 #include <bit>
 #include <BlendModeSettings.hpp>
 #include <CompShader.hpp>
+#include <DistanceBuffer.hpp>
 #include <expected>
 #include <fmt/format.h>
 #include <FrameBuffer.hpp>
@@ -965,7 +966,7 @@ void map_sprite::update_render_texture(const bool reload_textures) const
                     std::vector<std::string> remove_queue = {};
                     glengine::CompShader     shader(std::filesystem::current_path() / "res" / "shader" / "mask.comp");
                     glengine::CompShader     shader_count(std::filesystem::current_path() / "res" / "shader" / "mask_count.comp");
-                    std::map<std::size_t, std::vector<std::tuple<std::uint32_t, glengine::SubTexture, glengine::SubTexture>>>
+                    std::map<std::size_t, std::vector<std::tuple<std::uint32_t, float, glengine::SubTexture, glengine::SubTexture>>>
                                             multi_pupu_post_op;
                     const auto             &unique_pupu = working_unique_pupu();
                     const auto             &palette     = m_map_group.maps.working_unique_pupu_color();
@@ -980,6 +981,12 @@ void map_sprite::update_render_texture(const bool reload_textures) const
                     if (!hb.id())
                     {
                          spdlog::critical("HistogramBuffer initialization failed, aborting");
+                         return;
+                    }
+                    glengine::DistanceBuffer db{ std::ranges::size(palette) };
+                    if (!db.id())
+                    {
+                         spdlog::critical("DistanceBuffer initialization failed, aborting");
                          return;
                     }
 
@@ -1060,7 +1067,7 @@ void map_sprite::update_render_texture(const bool reload_textures) const
                          }
                          else// more than one.
                          {
-
+                              db.bind(3);
                               pb.bind(2);
                               hb.bind(1);
                               mask_texture->bind_read_only(0);
@@ -1075,17 +1082,27 @@ void map_sprite::update_render_texture(const bool reload_textures) const
                               std::vector<GLuint> counts;
                               hb.read_back(counts);
                               hb.reset();
+                              std::vector<float> distances;
+                              db.read_back(distances);
+                              db.reset();
 
                               spdlog::info("Maskname \"{}\" counts: ", maskname);
-                              for (const auto &[index, zip] : std::views::zip(palette, unique_pupu, counts) | std::views::enumerate)
+                              for (const auto &[index, zip] :
+                                   std::views::zip(palette, unique_pupu, counts, distances) | std::views::enumerate)
                               {
-                                   const auto &[color, pupu, count] = zip;
+                                   const auto &[color, pupu, count, distance] = zip;
                                    if (count == 0)
                                    {
                                         continue;
                                    }
-                                   multi_pupu_post_op[index].emplace_back(count, *mask_texture, main_texture);
-                                   spdlog::info("Index {:>3}, Color {}, Pupu {}, Count {:>6}", index, fme::color{ color }, pupu, count);
+                                   multi_pupu_post_op[index].emplace_back(count, distance, *mask_texture, main_texture);
+                                   spdlog::info(
+                                     "Index {:>3}, Color {}, Pupu {}, Count {:>6}, Distance {:.3f}",
+                                     index,
+                                     fme::color{ color },
+                                     pupu,
+                                     count,
+                                     distance);
                               }
                               // I need both textures a index and count.
                               // We need to take an index that doesn't have texture or texture.get_size() == glm::ivec2(0,0)
@@ -1107,9 +1124,9 @@ void map_sprite::update_render_texture(const bool reload_textures) const
                          const auto &color = palette.at(index);
                          // sort the tuple vector
                          std::ranges::sort(tuple_vector, std::greater{}, [](const auto &tuple) { return std::get<0>(tuple); });
-                         const auto &[count, mask_texture, main_texture] = tuple_vector.front();
+                         const auto &[count, distance, mask_texture, main_texture] = tuple_vector.front();
 
-                         glengine::Texture *target_texture               = get_texture_mutable(pupu);
+                         glengine::Texture *target_texture                         = get_texture_mutable(pupu);
                          if (!target_texture)
                          {
                               continue;
@@ -1130,6 +1147,8 @@ void map_sprite::update_render_texture(const bool reload_textures) const
                          const auto pop_shader = shader.backup();
                          shader.bind();
                          shader.set_uniform("chosenColor", color);// Set target color (e.g., red)
+                         // todo might need to adjust the distance it's slightly off. like round up or something.
+                         shader.set_uniform("threshold", distance);
                          shader.execute(size.x, size.y, GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
                     }
 
