@@ -1060,7 +1060,7 @@ void map_sprite::update_render_texture(const bool reload_textures) const
                               // Load and execute compute shader
                               const auto pop_shader = shader.backup();
                               shader.bind();
-                              shader.set_uniform("chosenColor", glm::vec3(0.0f, 0.0f, 0.0f));// Set target color (e.g., red)
+                              shader.set_uniform("chosenColor", glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
                               shader.execute(size.x, size.y, GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
                               remove_queue.push_back(filename);
                               remove_queue.push_back(maskname);
@@ -1097,7 +1097,7 @@ void map_sprite::update_render_texture(const bool reload_textures) const
                                    }
                                    multi_pupu_post_op[index].emplace_back(count, distance, *mask_texture, main_texture);
                                    spdlog::info(
-                                     "Index {:>3}, Color {}, Pupu {}, Count {:>6}, Distance {:.3f}",
+                                     "Index {:>3}, Color {}, Pupu {}, Count {:>6}, Distance {}",
                                      index,
                                      fme::color{ color },
                                      pupu,

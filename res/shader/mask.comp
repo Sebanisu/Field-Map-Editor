@@ -34,29 +34,27 @@ void main() {
     vec4 maskColor = imageLoad(maskTexture, pixelCoord);
     vec4 imageColor = imageLoad(imageTexture, pixelCoord);
     
-    // Find the closest color by comparing with chosenColor
-    vec3 maskRGB = maskColor.rgb;
-    float dist = distance(maskRGB, chosenColor.rgb);
     
     // Check if chosenColor is approximately black (small tolerance for floating-point precision)
     bool isChosenBlack = (distance(chosenColor.rgb, vec3(0.0, 0.0, 0.0)) < blackTolerance);
     
     if (isChosenBlack) {
         // Reverse logic: use image color if mask is not black, transparent if mask is black
-        if (distance(maskRGB, vec3(0.0, 0.0, 0.0)) < blackTolerance) {
+        if (distance(maskColor.rgb, vec3(0.0, 0.0, 0.0)) < blackTolerance) {
             imageStore(outputTexture, pixelCoord, vec4(0.0, 0.0, 0.0, 0.0)); // Transparent for black
         } else {
             imageStore(outputTexture, pixelCoord, imageColor); // Use image for non-black
-            //imageStore(outputTexture, pixelCoord, chosenColor);
         }
     } else {
+        
+    // Find the closest color by comparing with chosenColor
+        vec4 d = maskColor - chosenColor;
+        float dist = dot(d,d);
         // Original logic: use image color if within threshold of chosenColor
         if (dist <= threshold) {
             imageStore(outputTexture, pixelCoord, imageColor);
-            //imageStore(outputTexture, pixelCoord, chosenColor);
         } else {                        
             imageStore(outputTexture, pixelCoord, vec4(0.0, 0.0, 0.0, 0.0));
-
         }
     }
 }
