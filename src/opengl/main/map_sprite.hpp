@@ -62,7 +62,7 @@ struct [[nodiscard]] map_sprite// final
      mutable FutureOfFutureConsumer<std::vector<std::future<std::future<void>>>> m_future_of_future_consumer  = {};
      mutable FutureConsumer<std::vector<std::future<void>>>                      m_future_consumer            = {};
      mutable std::map<std::string, std::optional<glengine::FrameBuffer>>         m_cache_framebuffer          = {};
-     std::map<std::string, std::string>                                          m_cache_framebuffer_tooltips = {};
+     mutable std::map<std::string, std::string>                                  m_cache_framebuffer_tooltips = {};
      ff_8::map_group                                                             m_map_group                  = {};
      // TODO do I need square?
      //  square                                        m_square    = { glm::uvec2{}, glm::uvec2{ TILE_SIZE, TILE_SIZE }, sf::Color::Red };
@@ -228,6 +228,7 @@ struct [[nodiscard]] map_sprite// final
      void                                         redo();
      void                                         undo_all();
      void                                         redo_all();
+     void                                         clear_toml_cached_framebuffers() const;
      void                                         update_render_texture(bool reload_textures = false) const;
      void                                         compact_rows();
      void                                         compact_all();

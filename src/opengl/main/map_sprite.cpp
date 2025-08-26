@@ -857,10 +857,26 @@ void map_sprite::disable_draw_swizzle()
      update_render_texture();
 }
 
+void map_sprite::clear_toml_cached_framebuffers() const
+{
+     const auto selections = m_selections.lock();
+     if (!selections)
+     {
+          spdlog::error("Failed to lock m_selections: shared_ptr is expired.");
+          return;
+     }
+     const key_value_data        config_path_values = { .ext = ".toml" };
+     const std::filesystem::path config_path = config_path_values.replace_tags(selections->get<ConfigKey::OutputTomlPattern>(), selections);
+     auto                        config      = Configuration(config_path);
+     config.save(true);
+     m_cache_framebuffer.clear();
+     m_cache_framebuffer_tooltips.clear();
+}
+
 void map_sprite::update_render_texture(const bool reload_textures) const
 {
-     const auto s = m_selections.lock();
-     if (!s)
+     const auto selections = m_selections.lock();
+     if (!selections)
      {
           spdlog::error("Failed to lock m_selections: shared_ptr is expired.");
           return;
@@ -873,15 +889,16 @@ void map_sprite::update_render_texture(const bool reload_textures) const
           // reset the textures
           *m_texture = {};
           m_cache_framebuffer.clear();
+          m_cache_framebuffer_tooltips.clear();
           queue_texture_loading();
 
 
-          if (s->get<ConfigKey::ForceReloadingOfTextures>())
+          if (selections->get<ConfigKey::ForceReloadingOfTextures>())
           {
                consume_now(false);
           }
      }
-     else if (s->get<ConfigKey::ForceRenderingOfMap>())
+     else if (selections->get<ConfigKey::ForceRenderingOfMap>())
      {
           consume_now(false);
      }
