@@ -5,6 +5,7 @@
 #include "Configuration.hpp"
 #include "safedir.hpp"
 #include <iostream>
+#include <ScopeGuard.hpp>
 #include <stacktrace>
 
 fme::Configuration::Configuration(std::filesystem::path in_path)
@@ -96,6 +97,15 @@ toml::node_view<const toml::node> fme::Configuration::operator()(std::string_vie
 
 void fme::Configuration::save(const bool remove_from_cache) const
 {
+     const auto      pop_erase  = glengine::ScopeGuard([&]() {
+          if (remove_from_cache)
+          {
+               s_tables.erase(m_path);
+               m_table = nullptr;
+               m_path  = std::filesystem::path{};
+          }
+     });
+
      std::error_code error_code = {};
      (void)std::filesystem::create_directories(m_path.parent_path(), error_code);
      if (error_code)
@@ -112,13 +122,6 @@ void fme::Configuration::save(const bool remove_from_cache) const
      }
      fs << *m_table;
      spdlog::info("ofstream: saved config \"{}\"", m_path.string());
-
-     if (remove_from_cache)
-     {
-          s_tables.erase(m_path);
-          m_table = nullptr;
-          m_path  = std::filesystem::path{};
-     }
 }
 
 bool fme::Configuration::reload()
