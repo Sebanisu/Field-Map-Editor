@@ -2044,22 +2044,60 @@ void gui::file_menu()
           if (!TomlPaths.empty())
           {
                ImGui::Separator();
-               const auto &TomlPath = m_selections->get<ConfigKey::TomlPath>();
-               for (const auto &path : TomlPaths)
+               const auto    &TomlPath  = m_selections->get<ConfigKey::TomlPath>();
+               std::ptrdiff_t delete_me   = -1;
+               const float    button_size = ImGui::GetFrameHeight();
+               if (ImGui::BeginTable("##path_table", 2))
                {
-                    bool selected = TomlPath == path;
-                    if (ImGui::MenuItem(path.string().c_str(), nullptr, &selected))
+                    const auto end_table = glengine::ScopeGuard(&ImGui::EndTable);
+                    for (const auto &[index, path] : TomlPaths | std::views::enumerate)
                     {
-                         m_map_sprite->clear_toml_cached_framebuffers();
-                         if (selected)
+                         bool selected = TomlPath == path;
+                         ImGui::TableNextColumn();
+                         ImGui::SetNextItemAllowOverlap();
+                         if (ImGui::MenuItem(path.string().c_str(), nullptr, &selected))
                          {
-                              m_selections->get<ConfigKey::TomlPath>() = path;
+                              m_map_sprite->clear_toml_cached_framebuffers();
+                              if (selected)
+                              {
+                                   m_selections->get<ConfigKey::TomlPath>() = path;
+                              }
+                              else
+                              {
+                                   m_selections->get<ConfigKey::TomlPath>().clear();
+                              }
+                              m_custom_paths_window.refresh();
+                         }
+                         ImGui::TableNextColumn();
+                         const auto _ = PushPopID();
+                         if (ImGui::Button(ICON_FA_TRASH, ImVec2{ button_size, button_size }))
+                         {
+                              delete_me = index;
+                              // ImGui::CloseCurrentPopup();
+                              break;
                          }
                          else
                          {
-                              m_selections->get<ConfigKey::TomlPath>().clear();
+                              tool_tip("delete me");
                          }
-                         m_custom_paths_window.refresh();
+                    }
+               }
+
+               if (std::cmp_greater(delete_me, -1))
+               {
+                    auto it = std::ranges::begin(m_selections->get<ConfigKey::TomlPaths>());
+                    std::ranges::advance(it, delete_me);
+                    if (it != std::ranges::end(m_selections->get<ConfigKey::TomlPaths>()))
+                    {
+                         bool selected = *it == m_selections->get<ConfigKey::TomlPath>();
+                         m_selections->get<ConfigKey::TomlPaths>().erase(it);
+                         m_selections->update<ConfigKey::TomlPaths>();
+                         if (selected)
+                         {
+                              m_map_sprite->clear_toml_cached_framebuffers();
+                              m_selections->get<ConfigKey::TomlPath>().clear();
+                              m_custom_paths_window.refresh();
+                         }
                     }
                }
           }
