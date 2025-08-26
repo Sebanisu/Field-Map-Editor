@@ -72,6 +72,7 @@ void fme::Selections::sort_paths()
 
      process.template operator()<ConfigKey::FF8DirectoryPaths>();
      process.template operator()<ConfigKey::ExternalTexturesAndMapsDirectoryPaths>();
+     process.template operator()<ConfigKey::TomlPaths>();
 
      process.template operator()<
        ConfigKey::CacheTextureAndMapPaths,
