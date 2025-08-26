@@ -2,6 +2,7 @@
 #include "as_string.hpp"
 #include "fa_icons.hpp"
 #include "formatters.hpp"
+#include <functional>
 
 namespace fme
 {
@@ -206,6 +207,19 @@ static const auto m_tests = std::to_array<fme::key_value_data>(
       .language_code = open_viii::LangT::de,
     } });
 
+
+void fme::custom_paths_window::register_callback(Callback cb)
+{
+     callbacks.emplace_back(std::move(cb));
+}
+
+void fme::custom_paths_window::notify(ConfigKey key) const
+{
+     for (auto &cb : callbacks)
+     {
+          std::invoke(cb, key);
+     }
+}
 
 fme::VectorOrString fme::custom_paths_window::vector_or_string() const
 {
@@ -418,15 +432,15 @@ void fme::custom_paths_window::save_pattern() const
                return;
           }
 
-          if (auto *const strptr = get_current_string_value_mutable(); strptr)
-          {
-               *strptr = std::string{ m_input_pattern_string.data() };
-          }
-
           bool found =
             (([&]() {
                   if (selections->get<ConfigKey::CurrentPattern>() == static_cast<fme::PatternSelector>(Is))
                   {
+                       if (auto *const strptr = get_current_string_value_mutable(); strptr)
+                       {
+                            notify(fme::PatternInfo<static_cast<fme::PatternSelector>(Is)>::key);
+                            *strptr = std::string{ m_input_pattern_string.data() };
+                       }
                        selections->update<fme::PatternInfo<static_cast<fme::PatternSelector>(Is)>::key>();
                        return true;
                   }

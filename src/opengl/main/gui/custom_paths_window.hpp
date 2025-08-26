@@ -13,6 +13,7 @@
 #include <ctre.hpp>
 #include <fmt/format.h>
 #include <fmt/ranges.h>
+#include <functional>
 #include <imgui.h>
 #include <open_viii/strings/LangCommon.hpp>
 #include <optional>
@@ -26,6 +27,8 @@ namespace fme
 struct custom_paths_window
 {
 
+     using Callback = std::move_only_function<void(ConfigKey)>;
+
    private:
      static constexpr std::uint32_t                      s_options_size_value      = { 4U };
      static constexpr std::size_t                        s_input_string_size_value = { 256U };
@@ -36,6 +39,7 @@ struct custom_paths_window
      mutable std::array<char, s_input_string_size_value> m_input_pattern_string = {};
      mutable std::vector<std::string>                    m_output_tests         = {};
      mutable ImVec2                                      m_scrolling_child_size = {};
+     mutable std::vector<Callback>                       callbacks              = {};
 
 
      /**
@@ -240,6 +244,38 @@ struct custom_paths_window
      [[nodiscard]] bool                            child_test_output() const;
 
    public:
+     /**
+      * @brief Registers a callback to be notified when configuration keys change.
+      *
+      * This function stores the provided callback so that it will be invoked
+      * whenever a configuration change is notified through @ref notify.
+      *
+      * The callback receives the @ref ConfigKey of the configuration that
+      * changed. It can then decide whether to act on that key.
+      *
+      * @param cb The callback to register. Ownership of the callback is
+      *           transferred and stored internally. Callbacks must be
+      *           move-constructible.
+      *
+      * @note Callbacks are invoked in the order they are registered.
+      *       Currently there is no way to unregister a callback.
+      */
+     void register_callback(Callback cb);
+
+     /**
+      * @brief Notifies all registered callbacks of a configuration change.
+      *
+      * This function calls every registered callback with the given
+      * @ref ConfigKey. Each callback may choose to ignore the key or
+      * perform some action in response.
+      *
+      * @param key The configuration key that changed.
+      *
+      * @note All callbacks are invoked synchronously in the order they
+      *       were registered.
+      */
+     void notify(ConfigKey key) const;
+
      /**
       * @brief Constructs a CustomPathsWindow with the given selections.
       *
