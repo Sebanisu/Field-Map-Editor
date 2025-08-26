@@ -8565,35 +8565,27 @@ filter_multi_pupu = [ 2121728 ]
 filter_multi_pupu_enabled = true
 
 [bgmdele1.x.'bgmdele1_00400000.png']
-filter_multi_pupu = [ 4194304 ]
+filter_multi_pupu = [ 4194304, 4194305 ]
 filter_multi_pupu_enabled = true
 
-[bgmdele1.x.'bgmdele1_00400001.png']
-filter_multi_pupu = [ 4194305 ]
+[bgmdele1.x.'bgmdele1_20250826_150014_671_0.png']
+filter_multi_pupu = [ 4194304, 4194305, 4198400 ]
 filter_multi_pupu_enabled = true
 
-[bgmdele1.x.'bgmdele1_00401000.png']
-filter_multi_pupu = [ 4198400 ]
+[bgmdele1.x.'bgmdele1_20250826_150014_671_1.png']
+filter_multi_pupu = [ 4194304, 4194305, 4198448 ]
 filter_multi_pupu_enabled = true
 
-[bgmdele1.x.'bgmdele1_00401010.png']
-filter_multi_pupu = [ 4198416 ]
+[bgmdele1.x.'bgmdele1_20250826_150014_671_2.png']
+filter_multi_pupu = [ 4194304, 4194305, 4198432 ]
 filter_multi_pupu_enabled = true
 
-[bgmdele1.x.'bgmdele1_00401020.png']
-filter_multi_pupu = [ 4198432 ]
+[bgmdele1.x.'bgmdele1_20250826_150014_671_3.png']
+filter_multi_pupu = [ 4194304, 4194305, 4198416 ]
 filter_multi_pupu_enabled = true
 
-[bgmdele1.x.'bgmdele1_00401030.png']
-filter_multi_pupu = [ 4198448 ]
-filter_multi_pupu_enabled = true
-
-[bgmdele1.x.'bgmdele1_004FF000.png']
-filter_multi_pupu = [ 5238784 ]
-filter_multi_pupu_enabled = true
-
-[bgmdele1.x.'bgmdele1_004FF001.png']
-filter_multi_pupu = [ 5238785 ]
+[bgmdele1.x.'bgmdele1_20250826_150237_543.png']
+filter_multi_pupu = [ 5238784, 5238785 ]
 filter_multi_pupu_enabled = true
 
 [bgmdele1.x.unique_pupu_ids]
@@ -8622,24 +8614,8 @@ filter_multi_pupu_enabled = true
 filter_multi_pupu = [ 2093056 ]
 filter_multi_pupu_enabled = true
 
-[bgmdele2.x.'bgmdele2_004FF000.png']
-filter_multi_pupu = [ 5238784 ]
-filter_multi_pupu_enabled = true
-
-[bgmdele2.x.'bgmdele2_004FF001.png']
-filter_multi_pupu = [ 5238785 ]
-filter_multi_pupu_enabled = true
-
-[bgmdele2.x.'bgmdele2_004FF002.png']
-filter_multi_pupu = [ 5238786 ]
-filter_multi_pupu_enabled = true
-
-[bgmdele2.x.'bgmdele2_004FF003.png']
-filter_multi_pupu = [ 5238787 ]
-filter_multi_pupu_enabled = true
-
-[bgmdele2.x.'bgmdele2_004FF004.png']
-filter_multi_pupu = [ 5238788 ]
+[bgmdele2.x.'bgmdele2_20250826_150316_526.png']
+filter_multi_pupu = [ 5238784, 5238785, 5238786, 5238787, 5238788 ]
 filter_multi_pupu_enabled = true
 
 [bgmdele2.x.unique_pupu_ids]
@@ -8659,16 +8635,8 @@ filter_multi_pupu_enabled = true
 filter_multi_pupu = [ 2093056 ]
 filter_multi_pupu_enabled = true
 
-[bgmdele3.x.'bgmdele3_004FF000.png']
-filter_multi_pupu = [ 5238784 ]
-filter_multi_pupu_enabled = true
-
-[bgmdele3.x.'bgmdele3_004FF001.png']
-filter_multi_pupu = [ 5238785 ]
-filter_multi_pupu_enabled = true
-
-[bgmdele3.x.'bgmdele3_004FF002.png']
-filter_multi_pupu = [ 5238786 ]
+[bgmdele3.x.'bgmdele3_20250826_150329_619.png']
+filter_multi_pupu = [ 5238784, 5238785, 5238786 ]
 filter_multi_pupu_enabled = true
 
 [bgmdele3.x.unique_pupu_ids]
@@ -8703,59 +8671,31 @@ filter_multi_pupu = [ 1064960 ]
 filter_multi_pupu_enabled = true
 
 [bgmdele4.x.'bgmdele4_00400000.png']
-filter_multi_pupu = [ 4194304 ]
+filter_multi_pupu = [ 4194304, 4202496, 4202497, 4202498 ]
 filter_multi_pupu_enabled = true
 
 [bgmdele4.x.'bgmdele4_00401000.png']
-filter_multi_pupu = [ 4198400 ]
+filter_multi_pupu = [ 4194304, 4198400, 4202496, 4202497, 4202498 ]
 filter_multi_pupu_enabled = true
 
 [bgmdele4.x.'bgmdele4_00401010.png']
-filter_multi_pupu = [ 4198416 ]
-filter_multi_pupu_enabled = true
-
-[bgmdele4.x.'bgmdele4_00401011.png']
-filter_multi_pupu = [ 4198417 ]
+filter_multi_pupu = [ 4194304, 4198416, 4198417, 4202496, 4202497, 4202498 ]
 filter_multi_pupu_enabled = true
 
 [bgmdele4.x.'bgmdele4_00401020.png']
-filter_multi_pupu = [ 4198432 ]
-filter_multi_pupu_enabled = true
-
-[bgmdele4.x.'bgmdele4_00401021.png']
-filter_multi_pupu = [ 4198433 ]
+filter_multi_pupu = [ 4194304, 4198432, 4198433, 4202496, 4202497, 4202498 ]
 filter_multi_pupu_enabled = true
 
 [bgmdele4.x.'bgmdele4_00401030.png']
-filter_multi_pupu = [ 4198448 ]
-filter_multi_pupu_enabled = true
-
-[bgmdele4.x.'bgmdele4_00401031.png']
-filter_multi_pupu = [ 4198449 ]
+filter_multi_pupu = [ 4194304, 4198448, 4198449, 4202496, 4202497, 4202498 ]
 filter_multi_pupu_enabled = true
 
 [bgmdele4.x.'bgmdele4_00402000.png']
-filter_multi_pupu = [ 4202496 ]
+filter_multi_pupu = [ 4202496, 4202497, 4202498 ]
 filter_multi_pupu_enabled = true
 
-[bgmdele4.x.'bgmdele4_00402001.png']
-filter_multi_pupu = [ 4202497 ]
-filter_multi_pupu_enabled = true
-
-[bgmdele4.x.'bgmdele4_00402002.png']
-filter_multi_pupu = [ 4202498 ]
-filter_multi_pupu_enabled = true
-
-[bgmdele4.x.'bgmdele4_004FF000.png']
-filter_multi_pupu = [ 5238784 ]
-filter_multi_pupu_enabled = true
-
-[bgmdele4.x.'bgmdele4_004FF001.png']
-filter_multi_pupu = [ 5238785 ]
-filter_multi_pupu_enabled = true
-
-[bgmdele4.x.'bgmdele4_004FF002.png']
-filter_multi_pupu = [ 5238786 ]
+[bgmdele4.x.'bgmdele4_20250826_150344_654.png']
+filter_multi_pupu = [ 5238784, 5238785, 5238786 ]
 filter_multi_pupu_enabled = true
 
 [bgmdele4.x.unique_pupu_ids]
@@ -8789,75 +8729,71 @@ filter_multi_pupu = [ 2093057 ]
 filter_multi_pupu_enabled = true
 
 [bgmon_1.eng.'bgmon_1_en_00400000.png']
-filter_multi_pupu = [ 4194304 ]
+filter_multi_pupu = [ 4194304, 4198400, 5238784, 5238785 ]
 filter_multi_pupu_enabled = true
 
 [bgmon_1.eng.'bgmon_1_en_00400010.png']
-filter_multi_pupu = [ 4194320 ]
+filter_multi_pupu = [ 4194320, 4198400, 5238784, 5238785 ]
 filter_multi_pupu_enabled = true
 
 [bgmon_1.eng.'bgmon_1_en_00400020.png']
-filter_multi_pupu = [ 4194336 ]
+filter_multi_pupu = [ 4194336, 4198400, 5238784, 5238785 ]
 filter_multi_pupu_enabled = true
 
 [bgmon_1.eng.'bgmon_1_en_00400030.png']
-filter_multi_pupu = [ 4194352 ]
+filter_multi_pupu = [ 4194352, 4198400, 5238784, 5238785 ]
 filter_multi_pupu_enabled = true
 
 [bgmon_1.eng.'bgmon_1_en_00400040.png']
-filter_multi_pupu = [ 4194368 ]
+filter_multi_pupu = [ 4194368, 4198400, 5238784, 5238785 ]
 filter_multi_pupu_enabled = true
 
 [bgmon_1.eng.'bgmon_1_en_00400050.png']
-filter_multi_pupu = [ 4194384 ]
+filter_multi_pupu = [ 4194384, 4198400, 5238784, 5238785 ]
 filter_multi_pupu_enabled = true
 
 [bgmon_1.eng.'bgmon_1_en_00400060.png']
-filter_multi_pupu = [ 4194400 ]
+filter_multi_pupu = [ 4194400, 4198400, 5238784, 5238785 ]
 filter_multi_pupu_enabled = true
 
 [bgmon_1.eng.'bgmon_1_en_00400070.png']
-filter_multi_pupu = [ 4194416 ]
+filter_multi_pupu = [ 4194416, 4198400, 5238784, 5238785 ]
 filter_multi_pupu_enabled = true
 
 [bgmon_1.eng.'bgmon_1_en_00401000.png']
-filter_multi_pupu = [ 4198400 ]
+filter_multi_pupu = [ 4194304, 4198400, 5238784, 5238785 ]
 filter_multi_pupu_enabled = true
 
 [bgmon_1.eng.'bgmon_1_en_00401010.png']
-filter_multi_pupu = [ 4198416 ]
+filter_multi_pupu = [ 4194304, 4198416, 5238784, 5238785 ]
 filter_multi_pupu_enabled = true
 
 [bgmon_1.eng.'bgmon_1_en_00401020.png']
-filter_multi_pupu = [ 4198432 ]
+filter_multi_pupu = [ 4194304, 4198432, 5238784, 5238785 ]
 filter_multi_pupu_enabled = true
 
 [bgmon_1.eng.'bgmon_1_en_00401030.png']
-filter_multi_pupu = [ 4198448 ]
+filter_multi_pupu = [ 4194304, 4198448, 5238784, 5238785 ]
 filter_multi_pupu_enabled = true
 
 [bgmon_1.eng.'bgmon_1_en_00401040.png']
-filter_multi_pupu = [ 4198464 ]
+filter_multi_pupu = [ 4194304, 4198464, 5238784, 5238785 ]
 filter_multi_pupu_enabled = true
 
 [bgmon_1.eng.'bgmon_1_en_00401050.png']
-filter_multi_pupu = [ 4198480 ]
+filter_multi_pupu = [ 4194304, 4198480, 5238784, 5238785 ]
 filter_multi_pupu_enabled = true
 
 [bgmon_1.eng.'bgmon_1_en_00401060.png']
-filter_multi_pupu = [ 4198496 ]
+filter_multi_pupu = [ 4194304, 4198496, 5238784, 5238785 ]
 filter_multi_pupu_enabled = true
 
 [bgmon_1.eng.'bgmon_1_en_00401070.png']
-filter_multi_pupu = [ 4198512 ]
+filter_multi_pupu = [ 4194304, 4198512, 5238784, 5238785 ]
 filter_multi_pupu_enabled = true
 
-[bgmon_1.eng.'bgmon_1_en_004FF000.png']
-filter_multi_pupu = [ 5238784 ]
-filter_multi_pupu_enabled = true
-
-[bgmon_1.eng.'bgmon_1_en_004FF001.png']
-filter_multi_pupu = [ 5238785 ]
+[bgmon_1.eng.'bgmon_1_en_20250826_151015_504.png']
+filter_multi_pupu = [ 4194304, 4202496, 4202497, 4202498, 5238784, 5238785 ]
 filter_multi_pupu_enabled = true
 
 [bgmon_1.eng.unique_pupu_ids]
