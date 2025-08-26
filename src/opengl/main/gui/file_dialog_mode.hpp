@@ -11,5 +11,6 @@ enum struct file_dialog_mode
      load_map_file,
      save_image_file,
      save_mim_file,
+     select_toml_file,
 };
 #endif// FIELD_MAP_EDITOR_FILE_DIALOG_MODE_HPP
