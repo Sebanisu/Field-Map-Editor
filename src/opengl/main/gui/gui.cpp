@@ -2001,6 +2001,50 @@ void gui::file_menu()
           return;
      }
      ImGui::Separator();
+     if (ImGui::BeginMenu("TOML Editor"))
+     {
+          const auto end_menutoml = glengine::ScopeGuard(&ImGui::EndMenu);
+
+          // Show
+          bool       show         = m_selections->get<ConfigKey::DisplayFiltersWindow>();
+          if (ImGui::MenuItem("Show", nullptr, &show))
+          {
+               m_selections->get<ConfigKey::DisplayFiltersWindow>() = show;
+               m_selections->update<ConfigKey::DisplayFiltersWindow>();
+          }
+          if (ImGui::MenuItem("Browse"))
+          {
+               auto current_directory = m_selections->get<ConfigKey::TomlPath>();
+
+               auto filename          = current_directory;
+               if (current_directory.has_parent_path())
+               {
+                    current_directory = current_directory.parent_path();
+               }
+               else
+               {
+                    current_directory = std::filesystem::current_path();
+               }
+
+
+               if (filename.has_filename())
+               {
+                    filename = filename.filename();
+               }
+               else
+               {
+                    filename = "deswizzle.toml";
+               }
+
+               m_save_file_browser.Open();
+               m_save_file_browser.SetTitle(gui_labels::save_texture_as.data());
+               m_save_file_browser.SetDirectory(current_directory);
+               m_save_file_browser.SetTypeFilters({ ".toml" });
+               m_save_file_browser.SetInputName(filename);
+               m_file_dialog_mode = file_dialog_mode::select_toml_file;
+          }
+     }
+     ImGui::Separator();
      menuitem_save_texture(mim_test() || map_test());
      if (mim_test())
      {
@@ -2442,7 +2486,7 @@ void gui::directory_browser_display()
           case map_directory_mode::load_swizzle_textures: {
                m_selections->get<ConfigKey::SwizzlePath>() = selected_path;
                m_selections->update<ConfigKey::SwizzlePath>();
-                add_path_to_config();
+               add_path_to_config();
                changed |= try_enable_filter.template operator()<ConfigKey::CacheSwizzlePathsEnabled>(
                  m_map_sprite->filter().swizzle,
                  m_map_sprite->filter().swizzle_as_one_image,
@@ -2545,6 +2589,14 @@ void gui::file_browser_display()
      {
           [[maybe_unused]] const auto &selected_path      = m_save_file_browser.GetSelected();
           [[maybe_unused]] const auto &selected_directory = m_save_file_browser.GetDirectory();
+          const auto                   update_selected_toml_path = [&]() {
+               m_selections->get<ConfigKey::TomlPath>() = selected_path;
+               m_selections->get<ConfigKey::TomlPaths>().push_back(selected_path);
+               m_selections->update<ConfigKey::TomlPath, ConfigKey::TomlPaths>();
+               m_selections->sort_paths();
+               m_changed = true;
+          };
+
           if (mim_test())
           {
                switch (m_file_dialog_mode)
@@ -2561,6 +2613,10 @@ void gui::file_browser_display()
                          m_selections->get<ConfigKey::OutputImagePath>() = selected_directory;
                          m_selections->update<ConfigKey::OutputImagePath>();
                          open_file_explorer(selected_path);
+                    }
+                    break;
+                    case file_dialog_mode::select_toml_file: {
+                         update_selected_toml_path();
                     }
                     break;
                     default:
@@ -2603,6 +2659,11 @@ void gui::file_browser_display()
                          m_selections->get<ConfigKey::OutputImagePath>() = selected_directory;
                          m_selections->update<ConfigKey::OutputImagePath>();
                          open_file_explorer(selected_path);
+                    }
+                    break;
+                    case file_dialog_mode::select_toml_file:
+                    {
+                         update_selected_toml_path();
                     }
                     break;
                     default:
