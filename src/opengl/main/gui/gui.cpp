@@ -2014,9 +2014,8 @@ void gui::file_menu()
           }
           if (ImGui::MenuItem("Browse"))
           {
-               auto current_directory = m_selections->get<ConfigKey::TomlPath>();
-
-               auto filename          = current_directory;
+               std::filesystem::path current_directory = m_selections->get<ConfigKey::TomlPath>();
+               std::filesystem::path filename          = current_directory;
                if (current_directory.has_parent_path())
                {
                     current_directory = current_directory.parent_path();
@@ -2025,8 +2024,6 @@ void gui::file_menu()
                {
                     current_directory = std::filesystem::current_path();
                }
-
-
                if (filename.has_filename())
                {
                     filename = filename.filename();
@@ -2040,8 +2037,31 @@ void gui::file_menu()
                m_save_file_browser.SetTitle(gui_labels::save_texture_as.data());
                m_save_file_browser.SetDirectory(current_directory);
                m_save_file_browser.SetTypeFilters({ ".toml" });
-               m_save_file_browser.SetInputName(filename);
+               m_save_file_browser.SetInputName(filename.string());
                m_file_dialog_mode = file_dialog_mode::select_toml_file;
+          }
+          const auto &TomlPaths = m_selections->get<ConfigKey::TomlPaths>();
+          if (!TomlPaths.empty())
+          {
+               ImGui::Separator();
+               const auto &TomlPath = m_selections->get<ConfigKey::TomlPath>();
+               for (const auto &path : TomlPaths)
+               {
+                    bool selected = TomlPath == path;
+                    if (ImGui::MenuItem(path.string().c_str(), nullptr, &selected))
+                    {
+                         m_map_sprite->clear_toml_cached_framebuffers();
+                         if (selected)
+                         {
+                              m_selections->get<ConfigKey::TomlPath>() = path;
+                         }
+                         else
+                         {
+                              m_selections->get<ConfigKey::TomlPath>().clear();
+                         }
+                         m_custom_paths_window.refresh();
+                    }
+               }
           }
      }
      ImGui::Separator();
@@ -2587,13 +2607,15 @@ void gui::file_browser_display()
      m_save_file_browser.Display();
      if (m_save_file_browser.HasSelected())
      {
-          [[maybe_unused]] const auto &selected_path      = m_save_file_browser.GetSelected();
-          [[maybe_unused]] const auto &selected_directory = m_save_file_browser.GetDirectory();
+          [[maybe_unused]] const auto &selected_path             = m_save_file_browser.GetSelected();
+          [[maybe_unused]] const auto &selected_directory        = m_save_file_browser.GetDirectory();
           const auto                   update_selected_toml_path = [&]() {
+               m_map_sprite->clear_toml_cached_framebuffers();
                m_selections->get<ConfigKey::TomlPath>() = selected_path;
                m_selections->get<ConfigKey::TomlPaths>().push_back(selected_path);
                m_selections->update<ConfigKey::TomlPath, ConfigKey::TomlPaths>();
                m_selections->sort_paths();
+               m_custom_paths_window.refresh();
                m_changed = true;
           };
 
@@ -2661,8 +2683,7 @@ void gui::file_browser_display()
                          open_file_explorer(selected_path);
                     }
                     break;
-                    case file_dialog_mode::select_toml_file:
-                    {
+                    case file_dialog_mode::select_toml_file: {
                          update_selected_toml_path();
                     }
                     break;
@@ -3133,6 +3154,14 @@ gui::gui(GLFWwindow *const window)
           m_future_of_future_paths_consumer += generate_external_map_paths();
           m_future_of_future_paths_consumer += generate_sort_paths();
      }
+
+     m_custom_paths_window.register_callback([&](const ConfigKey key) {
+          if (key != ConfigKey::OutputTomlPattern || !m_map_sprite)
+          {
+               return;
+          }
+          m_map_sprite->clear_toml_cached_framebuffers();
+     });
      //      if (!m_drag_sprite_shader)
      //      {
      //           m_drag_sprite_shader                       = std::make_shared<sf::Shader>();
