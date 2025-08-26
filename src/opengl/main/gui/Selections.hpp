@@ -422,7 +422,7 @@ struct SelectionInfo<ConfigKey::OutputTomlPattern>
      static inline value_type          default_value()
      {
           using namespace std::string_literals;
-          return "{{current_toml_path}?:{current_path}\\res\\deswizzle{ext}:?}"s;
+          return R"({{current_toml_path}?:{current_path}\res\deswizzle.toml:?})"s;
      }
 };
 
