@@ -74,6 +74,10 @@ class Configuration
       * @brief Saves the current state of the configuration back to the file.
       *
       * Writes the in-memory TOML table to the configuration file located at `m_path`.
+      *
+      * @param remove_from_cache If true, the TOML table will also be removed from
+      *        the in-memory cache after saving. This can be useful if you want to
+      *        force a reload the next time the configuration is accessed.
       */
      void                              save(const bool remove_from_cache = false) const;
 
