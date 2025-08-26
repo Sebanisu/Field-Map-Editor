@@ -4,6 +4,7 @@
 #include "Paths.hpp"
 #include "Configuration.hpp"
 #include "GenericCombo.hpp"
+#include <open_viii/paths/Paths.hpp>
 static constexpr auto ff8_directory_paths      = std::string_view{ "ff8_directory_paths" };
 static constexpr auto ff8_directory_path_index = std::string_view{ "ff8_directory_path_index" };
 bool                  ff_8::Paths::on_im_gui_update() const

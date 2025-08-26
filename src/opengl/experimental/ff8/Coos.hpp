@@ -7,8 +7,8 @@
 #include "Configuration.hpp"
 #include "ScopeGuard.hpp"
 #include <Event/EventItem.hpp>
+#include <open_viii/strings/LangCommon.hpp>
 #include <Renderable.hpp>
-
 namespace ff_8
 {
 class Coos

@@ -4,6 +4,7 @@
 
 #include "Upscales.hpp"
 #include "GenericCombo.hpp"
+#include <tl/string.hpp>
 static constexpr auto swizzle_paths_index  = std::string_view("swizzle_paths_index");
 static constexpr auto upscale_paths_vector = std::string_view("upscale_paths_vector");
 bool                  ff_8::Upscales::on_im_gui_update() const

@@ -6,6 +6,7 @@
 #include "ImGuiPushID.hpp"
 #include "Renderer.hpp"
 #include <BlendModeSettings.hpp>
+#include <filesystem>
 #include <spdlog/spdlog.h>
 
 namespace glengine
@@ -217,8 +218,8 @@ void Window::init_im_gui(const char *const glsl_version) const
           ImGui::CreateContext();
           ImGuiIO          &io         = ImGui::GetIO();
           std::error_code   error_code = {};
-          static const auto path       = (std::filesystem::current_path(error_code) / "res" / "field-map-editor-experimental_imgui.ini").string();
-          io.IniFilename               = path.c_str();
+          static const auto path = (std::filesystem::current_path(error_code) / "res" / "field-map-editor-experimental_imgui.ini").string();
+          io.IniFilename         = path.c_str();
           if (error_code)
           {
                spdlog::warn("{}:{} - {}: {} path: \"{}\"", __FILE__, __LINE__, error_code.value(), error_code.message(), path);
@@ -228,8 +229,8 @@ void Window::init_im_gui(const char *const glsl_version) const
           // Keyboard Controls io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad; //
           // Enable Gamepad Controls
           io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
-          //io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;// events don't work
-          // with viewports
+          // io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;// events don't work
+          //  with viewports
 
           // Setup Dear ImGui style
           ImGui::StyleColorsDark();

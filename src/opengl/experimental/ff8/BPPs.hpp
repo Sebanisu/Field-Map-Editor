@@ -6,6 +6,7 @@
 #define FIELD_MAP_EDITOR_BPPS_HPP
 #include "Event/EventItem.hpp"
 #include "Renderable.hpp"
+#include <open_viii/graphics/BPPT.hpp>
 namespace ff_8
 {
 class Bpps

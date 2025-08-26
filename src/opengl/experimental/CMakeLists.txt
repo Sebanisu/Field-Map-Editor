@@ -91,17 +91,17 @@ if(supported)
 else()
   message(STATUS "IPO / LTO not supported: <${error}>")
 endif()
-target_precompile_headers(
-  ${PROJECT_NAME}_EXPERIMENTAL
-  PRIVATE
-  <open_viii/archive/Archives.hpp>
-  <open_viii/graphics/BPPT.hpp>
-  <open_viii/graphics/Rectangle.hpp>
-  <open_viii/graphics/background/Map.hpp>
-  <open_viii/graphics/background/Mim.hpp>
-  <open_viii/graphics/color/Color32.hpp>
-  <open_viii/paths/Paths.hpp>
-  <open_viii/strings/LangCommon.hpp>)
+# target_precompile_headers(
+#   ${PROJECT_NAME}_EXPERIMENTAL
+#   PRIVATE
+#   <open_viii/archive/Archives.hpp>
+#   <open_viii/graphics/BPPT.hpp>
+#   <open_viii/graphics/Rectangle.hpp>
+#   <open_viii/graphics/background/Map.hpp>
+#   <open_viii/graphics/background/Mim.hpp>
+#   <open_viii/graphics/color/Color32.hpp>
+#   <open_viii/paths/Paths.hpp>
+#   <open_viii/strings/LangCommon.hpp>)
 target_compile_features(
   ${PROJECT_NAME}_EXPERIMENTAL
   PUBLIC cxx_std_23

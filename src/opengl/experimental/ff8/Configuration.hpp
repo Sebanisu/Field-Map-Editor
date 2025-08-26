@@ -6,6 +6,7 @@
 #define FIELD_MAP_EDITOR_CONFIGURATION_HPP
 #include <spdlog/spdlog.h>
 #include <toml++/toml.h>
+#include <filesystem>
 class Configuration
 {
    public:
