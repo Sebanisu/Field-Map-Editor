@@ -7,7 +7,7 @@ DistanceBuffer::DistanceBuffer(size_t count)
 {
 }
 
-void DistanceBuffer::bind(float binding_point)
+void DistanceBuffer::bind(GLuint binding_point)
 {
      if (!m_buffer_id)
      {
@@ -75,9 +75,9 @@ size_t DistanceBuffer::count() const
 }
 
 
-float DistanceBuffer::create(size_t count)
+GLuint DistanceBuffer::create(size_t count)
 {
-     float temp_id = {};
+     GLuint temp_id = {};
      GlCall{}(glGenBuffers, 1, &temp_id);
      if (!temp_id)
      {
@@ -95,7 +95,7 @@ float DistanceBuffer::create(size_t count)
      return temp_id;
 }
 
-void DistanceBuffer::destroy(const float id)
+void DistanceBuffer::destroy(const GLuint id)
 {
      GlCall{}(glDeleteBuffers, 1, &id);
 }
