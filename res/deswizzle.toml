@@ -7,6 +7,8 @@ filter_multi_pupu_enabled = true
 004FF001 = 5238785
 
 [bccent15.x.'bccent15_004FF000.png']
+filter_multi_pupu = [ 5238784, 5238785, 5238786, 5238787, 5238788, 5238789, 5238790, 5238791, 5238792 ]
+filter_multi_pupu_enabled = true
 
 [bccent15.x.'bccent15_004FF001.png']
 filter_multi_pupu = [ 5238785, 5238786, 5238787, 5238788, 5238789, 5238790, 5238791, 5238792 ]
