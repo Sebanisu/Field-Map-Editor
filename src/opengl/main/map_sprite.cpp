@@ -872,6 +872,7 @@ void map_sprite::clear_toml_cached_framebuffers() const
      config.save(true);
      m_cache_framebuffer.clear();
      m_cache_framebuffer_tooltips.clear();
+     m_cache_framebuffer_pupuids.clear();
 }
 
 void map_sprite::update_render_texture(const bool reload_textures) const
@@ -891,6 +892,7 @@ void map_sprite::update_render_texture(const bool reload_textures) const
           *m_texture = {};
           m_cache_framebuffer.clear();
           m_cache_framebuffer_tooltips.clear();
+          m_cache_framebuffer_pupuids.clear();
           queue_texture_loading();
 
 
@@ -2056,6 +2058,13 @@ std::string map_sprite::get_base_name() const
      return m_cache_framebuffer_tooltips;
 }
 
+
+[[nodiscard]] const std::map<std::string, std::vector<ff_8::PupuID>> &map_sprite::get_deswizzle_combined_textures_pupuids()
+{
+     return m_cache_framebuffer_pupuids;
+}
+
+
 [[nodiscard]] std::map<std::string, std::optional<glengine::FrameBuffer>> &map_sprite::get_deswizzle_combined_textures(const int in_scale)
 {
      const auto selections = m_selections.lock();
@@ -2123,6 +2132,7 @@ std::string map_sprite::get_base_name() const
           if (inserted)
           {
                m_cache_framebuffer_tooltips[file_name_str] = generate_deswizzle_combined_tool_tip(file_node.as_table());
+               cache_pupuids(file_name_str, filters);
                if (!it->second.has_value())
                {
                     continue;
@@ -2134,9 +2144,48 @@ std::string map_sprite::get_base_name() const
           }
      }
 
-
      return m_cache_framebuffer;
 }
+
+void map_sprite::cache_pupuids(const std::string &file_name_str, const ff_8::filters &filters) const
+{
+     if (filters.multi_pupu.enabled() && filters.pupu.enabled())
+     {
+          m_cache_framebuffer_pupuids[file_name_str] = filters.multi_pupu.value();
+          m_cache_framebuffer_pupuids[file_name_str].push_back(filters.pupu.value());
+     }
+     else if (filters.multi_pupu.enabled())
+     {
+          m_cache_framebuffer_pupuids[file_name_str] = filters.multi_pupu.value();
+     }
+     else if (filters.pupu.enabled())
+     {
+          m_cache_framebuffer_pupuids[file_name_str].push_back(filters.pupu.value());
+     }
+}
+// m_cache_framebuffer_pupuids
+
+
+std::vector<ff_8::PupuID> map_sprite::generate_deswizzle_combined_pupu_id(const toml::table *file_table) const
+{
+     std::vector<ff_8::PupuID> result{};
+
+     if (auto pupu_array = (*file_table)["filter_multi_pupu"].as_array(); pupu_array)
+     {
+          for (auto &elem : *pupu_array)
+          {
+               if (auto val = elem.value<uint32_t>(); val)
+               {
+                    result.emplace_back(*val);
+               }
+          }
+     }
+     if (auto val = (*file_table)["filter_pupu"].value<uint32_t>(); val)
+     {
+          result.emplace_back(*val);
+     }
+     return result;
+};
 
 std::string map_sprite::generate_deswizzle_combined_tool_tip(const toml::table *file_table) const
 {
@@ -2315,6 +2364,12 @@ toml::table *map_sprite::get_deswizzle_combined_toml_table(const std::string &fi
           m_cache_framebuffer_tooltips.erase(it_tooltip);
      }
 
+     if (auto it_tooltip = m_cache_framebuffer_pupuids.find(old_file_name); it_tooltip != m_cache_framebuffer_pupuids.end())
+     {
+          m_cache_framebuffer_pupuids[new_file_name] = std::move(it_tooltip->second);
+          m_cache_framebuffer_pupuids.erase(it_tooltip);
+     }
+
      return it_new->second.as_table();
 }
 
@@ -2332,6 +2387,7 @@ toml::table *map_sprite::get_deswizzle_combined_toml_table(const std::string &fi
      removed_count += coo_table->erase(name);
      removed_count += m_cache_framebuffer.erase(name);
      removed_count += m_cache_framebuffer_tooltips.erase(name);
+     removed_count += m_cache_framebuffer_pupuids.erase(name);
 
      if (removed_count > 0)
      {
@@ -2374,15 +2430,17 @@ toml::table *map_sprite::get_deswizzle_combined_toml_table(const std::string &fi
 
      spdlog::info("Inserted new texture entry '{}'.", new_file_name);
      m_cache_framebuffer_tooltips[new_file_name] = generate_deswizzle_combined_tool_tip(&new_table);
+     cache_pupuids(new_file_name, filter());
+
      return it->second.as_table();
 }
 
 void map_sprite::refresh_tooltip(const std::string &file_name)
 {
-
      if (const auto *table = get_deswizzle_combined_toml_table(file_name); table)
      {
           m_cache_framebuffer_tooltips[file_name] = generate_deswizzle_combined_tool_tip(table);
+          m_cache_framebuffer_pupuids[file_name] = generate_deswizzle_combined_pupu_id(table);
      }
 }
 
@@ -2443,6 +2501,7 @@ toml::table *
      }
      spdlog::info("Inserted new texture entry '{}'.", new_file_name);
      m_cache_framebuffer_tooltips[new_file_name] = generate_deswizzle_combined_tool_tip(&new_table);
+     cache_pupuids(new_file_name, tmp_filters);
      return it->second.as_table();
 }
 
@@ -2477,17 +2536,6 @@ void map_sprite::copy_deswizzle_combined_toml_table(
                spdlog::error("Failed to insert new entry '{}'.", new_file_name);
                continue;
           }
-
-          // // Copy tooltip if available, otherwise generate one
-          // if (auto tooltip_it = m_cache_framebuffer_tooltips.find(name); tooltip_it != m_cache_framebuffer_tooltips.end())
-          // {
-          //      m_cache_framebuffer_tooltips[new_file_name] = tooltip_it->second;
-          // }
-          // else
-          // {
-          //      m_cache_framebuffer_tooltips[new_file_name] = generate_deswizzle_combined_tool_tip(it->second.as_table());
-          // }
-
           spdlog::info("Copied table '{}' to '{}'.", name, new_file_name);
      }
 }

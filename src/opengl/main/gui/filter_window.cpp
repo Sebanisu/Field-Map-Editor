@@ -4,6 +4,7 @@
 #include "gui/ImGuiDisabled.hpp"
 #include "gui_labels.hpp"
 #include "push_pop_id.hpp"
+#include <set>
 #include <ctre.hpp>
 
 fme::filter_window::filter_window(std::weak_ptr<Selections> in_selections, std::weak_ptr<map_sprite> in_map_sprite)
@@ -68,7 +69,7 @@ void fme::filter_window::render() const
      {
           format_imgui_text("The draw mode is not set to `.map`.\nFilter changes won't show on draw window.");
      }
-     
+
      handle_remove_queue(lock_selections, lock_map_sprite);
      constexpr auto flags = ImGuiInputFlags_RouteOverFocused;
      if (ImGui::Shortcut(ImGuiKey_Escape, flags))
@@ -201,9 +202,20 @@ void fme::filter_window::render_list_view(
   const std::shared_ptr<Selections> &lock_selections,
   const std::shared_ptr<map_sprite> &lock_map_sprite) const
 {
-     
+
      const float  button_height = ImGui::GetTextLineHeight() + ImGui::GetStyle().FramePadding.y * 2.0f;
      const ImVec2 button_size   = { m_tool_button_size_width, button_height };
+     const auto   unused_ids    = get_unused_ids();
+     format_imgui_text("Unused Pupu IDs: {}", unused_ids.size());
+     if (!unused_ids.empty() && ImGui::IsItemHovered())
+     {
+          ImGui::BeginTooltip();
+          for (const auto &id : unused_ids)
+          {
+               format_imgui_text("{}\n", id);
+          }
+          ImGui::EndTooltip();
+     }
      ImGui::Columns(calc_column_count(m_tool_button_size_width), "##get_deswizzle_combined_tool_buttons", false);
      ImGui::BeginDisabled(std::ranges::empty(m_multi_select));
      format_imgui_wrapped_text("Selected {} Items(s): ", std::ranges::size(m_multi_select));
@@ -663,6 +675,42 @@ void fme::filter_window::draw_filter_controls(const std::shared_ptr<map_sprite> 
      combo_filtered_draw_bit(lock_map_sprite);
 }
 
+std::vector<ff_8::PupuID> fme::filter_window::get_unused_ids() const
+{
+     auto lock_map_sprite = m_map_sprite.lock();
+     if (!lock_map_sprite)
+     {
+          spdlog::error("Failed to lock map_sprite: shared_ptr is expired.");
+          return{};
+     }
+     std::set<ff_8::PupuID> used_pupu{};
+
+     // collect used IDs from textures_map
+     for (const auto &[file_name, _] : *m_textures_map)
+     {
+          const auto &pupu_map = lock_map_sprite->get_deswizzle_combined_textures_pupuids();
+
+          if (auto it = pupu_map.find(file_name); it != pupu_map.end())
+          {
+               used_pupu.insert(it->second.begin(), it->second.end());
+          }
+     }
+
+     // get all possible IDs
+     const auto               &all_ids = lock_map_sprite->working_unique_pupu();
+
+     // compute unused
+     std::vector<ff_8::PupuID> unused_ids;
+     unused_ids.reserve(all_ids.size());
+
+     for (const auto &id : all_ids)
+     {
+          if (!used_pupu.contains(id))
+               unused_ids.push_back(id);
+     }
+     std::ranges::sort(unused_ids);
+     return unused_ids;
+}
 
 void fme::filter_window::popup_combo_filtered_pupu(
   const std::shared_ptr<Selections> &lock_selections,

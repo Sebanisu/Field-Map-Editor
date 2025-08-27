@@ -22,6 +22,7 @@ struct filter_window
      void               render_list_view(const std::shared_ptr<Selections> &, const std::shared_ptr<map_sprite> &) const;
      [[nodiscard]] int  calc_column_count(float) const;
      void               select_file(const std::string &, const std::shared_ptr<map_sprite> &) const;
+     [[nodiscard]] std::vector<ff_8::PupuID>  get_unused_ids() const;
      [[nodiscard]] std::optional<std::string> prev_key() const;
      [[nodiscard]] std::optional<std::string> next_key() const;
      void                                     draw_thumbnail_label(const std::string &) const;
