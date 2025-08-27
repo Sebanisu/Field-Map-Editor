@@ -2044,7 +2044,7 @@ void gui::file_menu()
           if (!TomlPaths.empty())
           {
                ImGui::Separator();
-               const auto    &TomlPath  = m_selections->get<ConfigKey::TomlPath>();
+               const auto    &TomlPath    = m_selections->get<ConfigKey::TomlPath>();
                std::ptrdiff_t delete_me   = -1;
                const float    button_size = ImGui::GetFrameHeight();
                if (ImGui::BeginTable("##path_table", 2))
@@ -2998,14 +2998,85 @@ void gui::refresh_path()
 //       }
 //  }
 //  void gui::event_type_key_pressed([[maybe_unused]] const sf::Event::KeyEvent &key) {}
-void gui::bind_shortcuts() const
+void gui::bind_shortcuts()
 {
-
+     using namespace std::string_view_literals;
      constexpr auto flags = ImGuiInputFlags_RouteGlobal | ImGuiInputFlags_RouteOverFocused;
      if (ImGui::Shortcut(ImGuiKey_Escape, ImGuiInputFlags_RouteGlobal))
      {
           m_draw_window.clear_clicked_tile_indices();
      }
+
+     // Inside your GUI update loop where you already handle shortcuts
+     if (ImGui::Shortcut(ImGuiKey_PageDown, flags))
+     {
+          const auto &maps = m_archives_group->mapdata();
+
+          do
+          {
+               m_field_index++;
+               if (m_field_index >= static_cast<int>(maps.size()))
+                    m_field_index = 0;// wrap around
+          } while (std::string_view(*std::ranges::next(maps.begin(), m_field_index)).starts_with("ma"sv));
+
+          refresh_field();
+     }
+     else if (ImGui::Shortcut(ImGuiKey_PageUp, flags))
+     {
+          const auto &maps = m_archives_group->mapdata();
+
+          do
+          {
+               m_field_index--;
+               if (m_field_index < 0)
+                    m_field_index = static_cast<int>(maps.size()) - 1;// wrap around
+          } while (std::string_view(*std::ranges::next(maps.begin(), m_field_index)).starts_with("ma"sv));
+
+          refresh_field();
+     }
+
+
+     // COO switching with Ctrl + PageUp/PageDown
+     else if (ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiKey_PageDown, flags))
+     {
+          if (m_field && m_field->is_remaster_from_fl_paths())
+          {
+               auto          &coo    = m_selections->get<ConfigKey::Coo>();
+               constexpr auto values = open_viii::LangCommon::to_array();
+
+               // find current index
+               const auto     it     = std::find(values.begin(), values.end(), coo);
+               if (it != values.end())
+               {
+                    size_t idx = std::ranges::distance(values.begin(), it);
+                    idx        = (idx + 1) % values.size();// wrap forward
+                    coo        = values[idx];
+               }
+
+               refresh_coo();
+          }
+     }
+     else if (ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiKey_PageUp, flags))
+     {
+          if (m_field && m_field->is_remaster_from_fl_paths())
+          {
+               auto          &coo    = m_selections->get<ConfigKey::Coo>();
+               constexpr auto values = open_viii::LangCommon::to_array();
+
+               // find current index
+               const auto     it     = std::find(values.begin(), values.end(), coo);
+               if (it != values.end())
+               {
+                    size_t idx = std::ranges::distance(values.begin(), it);
+                    idx        = (idx + values.size() - 1) % values.size();// wrap backward
+                    coo        = values[idx];
+               }
+
+               refresh_coo();
+          }
+     }
+
+
      // Undo All: Ctrl+Shift+Z
      else if (ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiMod_Shift | ImGuiKey_Z, flags))
      {
