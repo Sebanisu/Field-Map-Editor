@@ -3103,12 +3103,13 @@ void gui::bind_shortcuts()
           m_selections->get<ConfigKey::DisplayHistoryWindow>() ^= true;
           m_selections->update<ConfigKey::DisplayHistoryWindow>();
      }
-     else if (ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiKey_I, flags))
-     {
-          // todo fix imports in new branch.
-          // m_selections->display_import_image_window ^= true;
-          // m_selections->update<ConfigKey::DisplayImportImageWindow>();
-     }
+     //todo imports window conflicts with inverse selection
+     // else if (ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiKey_I, flags))
+     // {
+     //      // todo fix imports in new branch.
+     //      // m_selections->display_import_image_window ^= true;
+     //      // m_selections->update<ConfigKey::DisplayImportImageWindow>();
+     // }
      else if (ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiKey_B, flags))
      {
           m_selections->get<ConfigKey::DisplayBatchWindow>() ^= true;

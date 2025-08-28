@@ -4,8 +4,8 @@
 #include "gui/ImGuiDisabled.hpp"
 #include "gui_labels.hpp"
 #include "push_pop_id.hpp"
-#include <set>
 #include <ctre.hpp>
+#include <set>
 
 fme::filter_window::filter_window(std::weak_ptr<Selections> in_selections, std::weak_ptr<map_sprite> in_map_sprite)
   : m_selections(std::move(in_selections))
@@ -72,12 +72,67 @@ void fme::filter_window::render() const
 
      handle_remove_queue(lock_selections, lock_map_sprite);
      constexpr auto flags = ImGuiInputFlags_RouteOverFocused;
-     if (ImGui::Shortcut(ImGuiKey_Escape, flags))
+     if (!m_selected_file_name.empty() && !m_textures_map->contains(m_selected_file_name))
+     {
+          m_selected_file_name = {};
+     }
+     if (!m_last_selected.empty() && !m_textures_map->contains(m_last_selected))
+     {
+          m_last_selected = {};
+     }
+     if (!m_multi_select.empty())
+     {
+          std::erase_if(m_multi_select, [&](const std::string &filename) { return !m_textures_map->contains(filename); });
+     }
+
+     // Clear selection with Escape
+     if (ImGui::Shortcut(ImGuiKey_Escape, flags) || ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiMod_Shift | ImGuiKey_A, flags))
      {
           m_last_selected      = {};
           m_selected_file_name = {};
           m_multi_select.clear();
      }
+     // Select All with Ctrl+A (only if no active edit)
+     else if (m_selected_file_name.empty() && ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiKey_A, flags))
+     {
+          m_multi_select.clear();
+          m_multi_select.reserve(m_textures_map->size());
+          for (const auto &[file_name, _] : *m_textures_map)
+          {
+               m_multi_select.push_back(file_name);
+          }
+
+          // Optionally set last_selected to the last file
+          if (!m_multi_select.empty())
+               m_last_selected = m_multi_select.back();
+          else
+               m_last_selected = {};
+     }
+     // Inverse selection with Ctrl+I (only if no active edit)
+     else if (m_selected_file_name.empty() && ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiKey_I, flags))
+     {
+          std::vector<std::string> new_selection;
+          new_selection.reserve(m_textures_map->size());
+
+          for (const auto &[file_name, _] : *m_textures_map)
+          {
+               // Add file_name if it is NOT currently selected
+               if (std::ranges::find(m_multi_select, file_name) == m_multi_select.end())
+               {
+                    new_selection.push_back(file_name);
+               }
+          }
+
+          m_multi_select = std::move(new_selection);
+
+          // Update last selected item if any are now selected
+          if (!m_multi_select.empty())
+               m_last_selected = m_multi_select.back();
+          else
+               m_last_selected = {};
+     }
+
+
      ImGui::SliderFloat("Thumbnail Size", &m_thumb_size_width, 96.f, 1024.f);
      bool  ctrl  = ImGui::GetIO().KeyCtrl;
      float wheel = ImGui::GetIO().MouseWheel;
@@ -681,7 +736,7 @@ std::vector<ff_8::PupuID> fme::filter_window::get_unused_ids() const
      if (!lock_map_sprite)
      {
           spdlog::error("Failed to lock map_sprite: shared_ptr is expired.");
-          return{};
+          return {};
      }
      std::set<ff_8::PupuID> used_pupu{};
 
