@@ -178,9 +178,8 @@ struct [[nodiscard]] map_sprite// final
      [[nodiscard]] std::vector<std::future<void>>
        save_swizzle_as_one_image_textures(const std::string &keyed_string, const std::filesystem::path &selected_path);
      [[nodiscard]] std::vector<std::future<void>>
-       save_deswizzle_textures(const std::string &keyed_string, const std::filesystem::path &selected_path);
-     [[nodiscard]] std::vector<std::future<void>>
-          save_deswizzle_generate_toml(const std::string &keyed_string, const std::filesystem::path &selected_path);
+          save_deswizzle_textures(const std::string &keyed_string, const std::filesystem::path &selected_path);
+     void save_deswizzle_generate_toml(const std::string &keyed_string, const std::filesystem::path &selected_path);
      void cache_pupuids(const std::string &, const ff_8::filters &) const;
      [[nodiscard]] const std::map<std::string, std::string>                    &get_deswizzle_combined_textures_tooltips();
      [[nodiscard]] const std::map<std::string, std::vector<ff_8::PupuID>>      &get_deswizzle_combined_textures_pupuids();

@@ -972,8 +972,7 @@ void fme::batch::update([[maybe_unused]] float elapsed_time)
                  m_map_sprite.save_deswizzle_textures(selections->get<ConfigKey::OutputDeswizzlePattern>(), selected_string);
                break;
           case output_types::deswizzle_generate_toml:
-               m_future_consumer +=
-                 m_map_sprite.save_deswizzle_generate_toml(selections->get<ConfigKey::OutputDeswizzlePattern>(), selected_string);
+               m_map_sprite.save_deswizzle_generate_toml(selections->get<ConfigKey::OutputDeswizzlePattern>(), selected_string);
                break;
           case output_types::deswizzle_full_filename:
                m_future_consumer += m_map_sprite.save_deswizzle_full_filename_textures(

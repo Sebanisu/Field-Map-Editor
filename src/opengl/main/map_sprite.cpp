@@ -1881,14 +1881,13 @@ std::string map_sprite::get_base_name() const
 }
 
 
-[[nodiscard]] std::vector<std::future<void>>
-  map_sprite::save_deswizzle_generate_toml(const std::string &keyed_string, const std::filesystem::path &selected_path)
+void map_sprite::save_deswizzle_generate_toml(const std::string &keyed_string, const std::filesystem::path &selected_path)
 {
      const auto selections = m_selections.lock();
      if (!selections)
      {
           spdlog::error("Failed to lock m_selections: shared_ptr is expired.");
-          return {};
+          return;
      }
      consume_now();
      // Backup current settings and adjust for saving Pupu textures
@@ -1899,12 +1898,11 @@ std::string map_sprite::get_base_name() const
      if (!field)
      {
           spdlog::error("Failed to lock m_map_group.field: shared_ptr is expired.");
-          return {};// Field no longer exists, nothing to save
+          return;// Field no longer exists, nothing to save
      }
 
      const std::string                field_name        = std::string{ str_to_lower(field->get_base_name()) };
      const std::vector<ff_8::PupuID> &unique_pupu_ids   = working_unique_pupu();// Get list of unique Pupu IDs
-     std::vector<std::future<void>>   future_of_futures = {};
      // Setup an off-screen render texture
      iRectangle const                 canvas            = m_map_group.maps.const_working().canvas() * m_render_framebuffer->scale();
      const auto                       specification =
@@ -1912,7 +1910,7 @@ std::string map_sprite::get_base_name() const
      toml::table *coo_table = get_deswizzle_combined_coo_table();
      if (!coo_table)
      {
-          return {};
+          return;
      }
      const auto coo =
        m_map_group.opt_coo.has_value() && m_map_group.opt_coo.value() != open_viii::LangT::generic ? m_map_group.opt_coo : std::nullopt;
@@ -1947,8 +1945,6 @@ std::string map_sprite::get_base_name() const
                coo_table->insert_or_assign(out_path.filename().string(), std::move(file));
           }
      }
-     return future_of_futures;
-     // Note: Caller should consume_futures(future_of_futures) to wait for saves to finish
 }
 [[nodiscard]] std::string map_sprite::get_recommended_prefix()
 {
@@ -2440,7 +2436,7 @@ void map_sprite::refresh_tooltip(const std::string &file_name)
      if (const auto *table = get_deswizzle_combined_toml_table(file_name); table)
      {
           m_cache_framebuffer_tooltips[file_name] = generate_deswizzle_combined_tool_tip(table);
-          m_cache_framebuffer_pupuids[file_name] = generate_deswizzle_combined_pupu_id(table);
+          m_cache_framebuffer_pupuids[file_name]  = generate_deswizzle_combined_pupu_id(table);
      }
 }
 
