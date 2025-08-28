@@ -1043,13 +1043,14 @@ void gui::refresh_field()
 
 void gui::combo_field()
 {
+     
      const auto gcc = GenericCombo(
        gui_labels::field,
        [this]() { return std::views::iota(0, static_cast<int>(std::ranges::ssize(m_archives_group->mapdata()))); },
        [this]() {
             return m_archives_group->mapdata() | std::ranges::views::transform([](const std::string &str) -> std::string_view {
                         using namespace std::string_view_literals;
-                        return std::string_view(str).starts_with("ma"sv) ? ""sv : str;
+                        return (std::string_view(str).starts_with("ma"sv) || (std::string_view(str) == "ec"sv || (std::string_view(str) == "te"sv)) ? ""sv : std::string_view(str));
                    });
        },
        m_field_index);
@@ -1934,7 +1935,7 @@ void gui::file_menu()
                }
           }
      }
-
+     using namespace std::string_view_literals;
      if (ImGui::BeginMenu(gui_labels::field.data()))
      {
           static std::array<char, 128> filter_buf = {};
@@ -1957,12 +1958,11 @@ void gui::file_menu()
                     {
                          continue;
                     }
-                    const auto temp = std::string_view(str).substr(0, 2);
-                    if (temp == std::string_view("ma"))
+                    if (std::string_view(str) == "ec"sv || std::string_view(str) == "te"sv || std::string_view(str).starts_with("ma"sv))
                     {
                          continue;
                     }
-                    if (start != temp || (i % cols == 0))
+                    if (const auto temp = std::string_view(str).substr(0, 2); start != temp || (i % cols == 0))
                     {
                          start = temp;
                          ImGui::TableNextRow();
@@ -3008,6 +3008,7 @@ void gui::bind_shortcuts()
      }
 
      // Inside your GUI update loop where you already handle shortcuts
+     const auto test_field = [](std::string_view test) -> bool { return test == "ec"sv || test == "te"sv || test.starts_with("ma"sv); };
      if (ImGui::Shortcut(ImGuiKey_PageDown, flags))
      {
           const auto &maps = m_archives_group->mapdata();
@@ -3017,7 +3018,7 @@ void gui::bind_shortcuts()
                m_field_index++;
                if (m_field_index >= static_cast<int>(maps.size()))
                     m_field_index = 0;// wrap around
-          } while (std::string_view(*std::ranges::next(maps.begin(), m_field_index)).starts_with("ma"sv));
+          } while (test_field(std::string_view(*std::ranges::next(maps.begin(), m_field_index))));
 
           refresh_field();
      }
@@ -3030,7 +3031,7 @@ void gui::bind_shortcuts()
                m_field_index--;
                if (m_field_index < 0)
                     m_field_index = static_cast<int>(maps.size()) - 1;// wrap around
-          } while (std::string_view(*std::ranges::next(maps.begin(), m_field_index)).starts_with("ma"sv));
+          } while (test_field(std::string_view(*std::ranges::next(maps.begin(), m_field_index))));
 
           refresh_field();
      }
@@ -3103,13 +3104,13 @@ void gui::bind_shortcuts()
           m_selections->get<ConfigKey::DisplayHistoryWindow>() ^= true;
           m_selections->update<ConfigKey::DisplayHistoryWindow>();
      }
-     //todo imports window conflicts with inverse selection
-     // else if (ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiKey_I, flags))
-     // {
-     //      // todo fix imports in new branch.
-     //      // m_selections->display_import_image_window ^= true;
-     //      // m_selections->update<ConfigKey::DisplayImportImageWindow>();
-     // }
+     // todo imports window conflicts with inverse selection
+     //  else if (ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiKey_I, flags))
+     //  {
+     //       // todo fix imports in new branch.
+     //       // m_selections->display_import_image_window ^= true;
+     //       // m_selections->update<ConfigKey::DisplayImportImageWindow>();
+     //  }
      else if (ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiKey_B, flags))
      {
           m_selections->get<ConfigKey::DisplayBatchWindow>() ^= true;
