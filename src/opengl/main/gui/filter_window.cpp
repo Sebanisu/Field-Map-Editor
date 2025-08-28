@@ -71,6 +71,21 @@ void fme::filter_window::render() const
      }
 
      handle_remove_queue(lock_selections, lock_map_sprite);
+     if (m_regenerate_items)
+     {
+          m_regenerate_items     = false;
+          toml::table *coo_table = lock_map_sprite->get_deswizzle_combined_coo_table();
+          if (coo_table)
+          {
+               if (m_textures_map)
+               {
+                    m_textures_map->clear();
+               }
+               coo_table->clear();// wipe old contents
+               lock_map_sprite->save_deswizzle_generate_toml(lock_selections->get<ConfigKey::OutputDeswizzlePattern>(), {});
+               save_config(lock_selections);
+          }
+     }
      constexpr auto flags = ImGuiInputFlags_RouteOverFocused;
      if (!m_selected_file_name.empty() && !m_textures_map->contains(m_selected_file_name))
      {
@@ -328,6 +343,12 @@ void fme::filter_window::render_list_view(
           add_new_entry(lock_selections, lock_map_sprite);
      }
      tool_tip("Add a new entry.\nHold Ctrl to add multiple entries.\nWithout Ctrl, the mode will switch to editing the new entry.");
+     ImGui::NextColumn();
+     if (ImGui::Button(ICON_FA_REPEAT " Regenerate", button_size))
+     {
+          m_regenerate_items = true;
+     }
+     tool_tip("Clear and regenerate the TOML entries from PupuIDs.");
      ImGui::Columns(1);
      ImGui::BeginChild("##Scrolling");
      ImGui::Columns(calc_column_count(m_thumb_size_width), "##get_deswizzle_combined_textures", false);

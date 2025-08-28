@@ -69,6 +69,7 @@ struct filter_window
 
 
      mutable bool                                                         m_reload_thumbnail       = { false };
+     mutable bool                                                         m_regenerate_items       = { false };
      mutable float                                                        m_aspect_ratio           = { 1.f };
      float                                                                m_tool_button_size_width = { 152.f };
      mutable float                                                        m_thumb_size_width       = { 96.f };
