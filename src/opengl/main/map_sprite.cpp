@@ -2287,7 +2287,9 @@ toml::table *map_sprite::get_deswizzle_combined_coo_table(open_viii::LangT *cons
           if (std::cmp_equal(index, max_failover))
                break;
           coo_table = get_table_by_coo(lang);
-          if (coo_table)
+          // if max_failover is default to 0 we allow empty tables because you might be starting from scratch. when drawing or rendering we
+          // try to skip empty tables
+          if (coo_table && (max_failover == 0 || !coo_table->empty()))
           {
                if (out_used_coo)
                     *out_used_coo = lang;
@@ -2318,7 +2320,7 @@ toml::table *map_sprite::get_deswizzle_combined_coo_table(open_viii::LangT *cons
 [[nodiscard]] std::vector<std::string> map_sprite::toml_filenames() const
 {
      std::vector<std::string> result{};
-     const toml::table       *coo_table = get_deswizzle_combined_coo_table({},-1);
+     const toml::table       *coo_table = get_deswizzle_combined_coo_table({}, -1);
      if (!coo_table)
      {
           return result;
