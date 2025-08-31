@@ -77,6 +77,8 @@ enum class ConfigKey
      BatchOutputPath,
      BatchInputLoadMap,
      BatchOutputSaveMap,
+     BatchGenerateColorfulMask,
+     BatchGenerateWhiteOnBlackMask,
      PathPatternsWithPaletteAndTexturePage,
      PathPatternsWithPalette,
      PathPatternsWithTexturePage,
@@ -571,6 +573,28 @@ struct SelectionInfo<ConfigKey::BatchOutputSaveMap>
 };
 
 template<>
+struct SelectionInfo<ConfigKey::BatchGenerateColorfulMask>
+{
+     using value_type                     = bool;
+     static constexpr std::string_view id = "BatchGenerateColorfulMask";
+     static constexpr value_type       default_value()
+     {
+          return true;
+     }
+};
+
+template<>
+struct SelectionInfo<ConfigKey::BatchGenerateWhiteOnBlackMask>
+{
+     using value_type                     = bool;
+     static constexpr std::string_view id = "BatchGenerateWhiteOnBlackMask";
+     static constexpr value_type       default_value()
+     {
+          return true;
+     }
+};
+
+template<>
 struct SelectionInfo<ConfigKey::BatchCompactEnabled>
 {
      static constexpr std::string_view id = ff_8::ConfigKeys<ff_8::FilterTag::Compact>::enabled_key_name;
@@ -832,8 +856,6 @@ struct SelectionInfo<ConfigKey::FF8DirectoryPaths>
           assert(has_balanced_braces(value));
      }
 };
-
-
 
 
 template<>

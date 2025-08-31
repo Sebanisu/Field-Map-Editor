@@ -93,6 +93,7 @@ void fme::batch::draw_window()
      combo_output_type();
      browse_output_path();
      checkmark_save_map();
+     checkmarks_save_masks();
      // automatic processing via compact or flatten
 
      if (ImGui::CollapsingHeader(gui_labels::compact_flatten.data(), flags))
@@ -558,6 +559,46 @@ void fme::batch::checkmark_save_map()
           selections->update<ConfigKey::BatchOutputSaveMap>();
      }
      ImGui::EndDisabled();
+}
+
+void fme::batch::checkmarks_save_masks()
+{
+     const auto selections = m_selections.lock();
+     if (!selections)
+     {
+          spdlog::error("Failed to lock m_selections: shared_ptr is expired.");
+          return;
+     }
+     if (selections->get<ConfigKey::BatchOutputType>() != output_types::deswizzle_full_filename)
+     {
+          return;
+     }
+
+
+     if (ImGui::Checkbox(gui_labels::BatchGenerateColorfulMask.data(), &selections->get<ConfigKey::BatchGenerateColorfulMask>()))
+     {
+          spdlog::info("batch_generate_colorful_mask: {}", selections->get<ConfigKey::BatchGenerateColorfulMask>());
+          selections->update<ConfigKey::BatchGenerateColorfulMask>();
+     }
+
+     if (selections->get<ConfigKey::BatchGenerateColorfulMask>())
+     {
+          if (ImGui::Checkbox(
+                gui_labels::BatchGenerateWhiteOnBlackMask.data(), &selections->get<ConfigKey::BatchGenerateWhiteOnBlackMask>()))
+          {
+               spdlog::info("batch_generate_white_on_black_mask: {}", selections->get<ConfigKey::BatchGenerateWhiteOnBlackMask>());
+               selections->update<ConfigKey::BatchGenerateWhiteOnBlackMask>();
+          }
+     }
+     else
+     {
+          constexpr static const bool is_true = false;
+          ImGui::BeginDisabled(true);
+          if (ImGui::Checkbox(gui_labels::BatchGenerateWhiteOnBlackMask.data(), const_cast<bool *>(&is_true)))
+          {
+          }
+          ImGui::EndDisabled();
+     }
 }
 
 void fme::batch::combo_compact_type()

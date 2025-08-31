@@ -78,6 +78,7 @@ class batch
      [[nodiscard]] bool browse_path(std::string_view name, bool &valid_path, std::array<char, m_buffer_size> &path_buffer);
 
      void               checkmark_save_map();
+     void               checkmarks_save_masks();
      bool draw_multi_column_list_box(const std::string_view name, const std::vector<std::string> &items, std::vector<bool> &enabled);
 
    public:

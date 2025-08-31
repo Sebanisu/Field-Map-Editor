@@ -162,6 +162,8 @@ struct gui_labels
      static constexpr std::string_view stop                                   = { "Stop" };
 
      static constexpr std::string_view save_map_files                         = { "Save `.map` files" };
+     static constexpr std::string_view BatchGenerateColorfulMask              = { "Generate Colorful Masks" };
+     static constexpr std::string_view BatchGenerateWhiteOnBlackMask          = { "Generate White On Black Masks" };
 
      static constexpr std::string_view draw_bit_all_tooltip                   = { "Show all regardless of bit being enabled or disabled." };
 

@@ -1901,10 +1901,10 @@ void map_sprite::save_deswizzle_generate_toml(const std::string &keyed_string, c
           return;// Field no longer exists, nothing to save
      }
 
-     const std::string                field_name        = std::string{ str_to_lower(field->get_base_name()) };
-     const std::vector<ff_8::PupuID> &unique_pupu_ids   = working_unique_pupu();// Get list of unique Pupu IDs
+     const std::string                field_name      = std::string{ str_to_lower(field->get_base_name()) };
+     const std::vector<ff_8::PupuID> &unique_pupu_ids = working_unique_pupu();// Get list of unique Pupu IDs
      // Setup an off-screen render texture
-     iRectangle const                 canvas            = m_map_group.maps.const_working().canvas() * m_render_framebuffer->scale();
+     iRectangle const                 canvas          = m_map_group.maps.const_working().canvas() * m_render_framebuffer->scale();
      const auto                       specification =
        glengine::FrameBufferSpecification{ .width = canvas.width(), .height = canvas.height(), .scale = m_render_framebuffer->scale() };
      toml::table *coo_table = get_deswizzle_combined_coo_table();
@@ -2037,11 +2037,22 @@ void map_sprite::save_deswizzle_generate_toml(const std::string &keyed_string, c
                const key_value_data  cpm      = { .field_name = field_name, .full_filename = std::string(file_name) };
 
                std::filesystem::path out_path = cpm.replace_tags(keyed_string, selections, selected_path);
-               std::filesystem::path mask_path =
-                 out_path.parent_path() / (out_path.stem().string() + "_mask" + out_path.extension().string());
-               spdlog::debug("Queued image save: main='{}', mask='{}'", out_path.string(), mask_path.string());
-               future_of_futures.push_back(
-                 save_image_pbo(std::move(mask_path), out_framebuffer.clone(), GL_COLOR_ATTACHMENT1, working_unique_color_pupu()));
+               if (selections->get<ConfigKey::BatchGenerateColorfulMask>())
+               {
+                    std::filesystem::path mask_path =
+                      out_path.parent_path() / (out_path.stem().string() + "_mask" + out_path.extension().string());
+                    spdlog::debug("Queued image save: mask='{}'", mask_path.string());
+                    const auto colors_to_pupu = [&]() -> std::vector<std::tuple<glm::vec4, ff_8::PupuID>> {
+                         if (selections->get<ConfigKey::BatchGenerateWhiteOnBlackMask>())
+                         {
+                              return working_unique_color_pupu();
+                         }
+                         return {};
+                    };
+                    future_of_futures.push_back(
+                      save_image_pbo(std::move(mask_path), out_framebuffer.clone(), GL_COLOR_ATTACHMENT1, colors_to_pupu()));
+               }
+               spdlog::debug("Queued image save: main='{}'", out_path.string());
                future_of_futures.push_back(save_image_pbo(std::move(out_path), std::move(out_framebuffer)));
           }
      }
