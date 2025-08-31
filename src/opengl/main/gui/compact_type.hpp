@@ -112,5 +112,18 @@ enum class PatternSelector : std::uint8_t
      PathPatternsWithFullFileName,
      End,
 };
+
+enum struct FailOverLevels : std::int8_t
+{
+     All     = -1,
+     Loaded  = 0,
+     Generic = 1,
+     EN      = 2,
+     FR      = 3,
+     DE      = 4,
+     IT      = 5,
+     ES      = 6,
+     JP      = 7,
+};
 }// namespace fme
 #endif// FIELD_MAP_EDITOR_COMPACT_TYPE_HPP

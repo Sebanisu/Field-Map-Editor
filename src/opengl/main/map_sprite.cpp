@@ -2016,7 +2016,7 @@ void map_sprite::save_deswizzle_generate_toml(const std::string &keyed_string, c
      iRectangle const               canvas            = m_map_group.maps.const_working().canvas() * m_render_framebuffer->scale();
      const auto                     specification =
        glengine::FrameBufferSpecification{ .width = canvas.width(), .height = canvas.height(), .scale = m_render_framebuffer->scale() };
-     open_viii::LangT  *coo;
+     open_viii::LangT  coo       = {};
      const toml::table *coo_table = get_deswizzle_combined_coo_table(&coo, -1);
 
      if (!coo_table)
@@ -2036,9 +2036,9 @@ void map_sprite::save_deswizzle_generate_toml(const std::string &keyed_string, c
           if (generate_texture(out_framebuffer))
           {
                const key_value_data  cpm      = { .field_name    = field_name,
-                                                  .language_code = coo == open_viii::LangT::Generic ? std::optional<open_viii::LangT>(coo)
-                                                                                                    : std::optional<open_viii::LangT>{},
-                                                  .full_filename = std::string(file_name) };
+                                                  .full_filename = std::string(file_name),
+                                                  .language_code = coo == open_viii::LangT::generic ? std::optional<open_viii::LangT>(coo)
+                                                                                                     : std::optional<open_viii::LangT>{} };
 
                std::filesystem::path out_path = cpm.replace_tags(keyed_string, selections, selected_path);
                if (selections->get<ConfigKey::BatchGenerateColorfulMask>())

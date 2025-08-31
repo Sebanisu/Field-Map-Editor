@@ -49,6 +49,7 @@ enum class ConfigKey
      ImportImageGrid,
      ImportLoadImageDirectory,
      TileSizeValue,
+     TOMLFailOverForEditor,
      DisplayHistoryWindow,
      DisplayControlPanelWindow,
      DisplayDrawWindow,
@@ -329,6 +330,12 @@ struct SelectionInfo<ConfigKey::ImportLoadImageDirectory>
 {
      using value_type                     = std::filesystem::path;
      static constexpr std::string_view id = "ImportLoadImageDirectory";
+};
+template<>
+struct SelectionInfo<ConfigKey::TOMLFailOverForEditor>
+{
+     using value_type                     = FailOverLevels;
+     static constexpr std::string_view id = "TOMLFailOverForEditor";
 };
 template<>
 struct SelectionInfo<ConfigKey::TileSizeValue>

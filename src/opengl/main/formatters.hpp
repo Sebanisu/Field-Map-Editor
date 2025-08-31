@@ -162,6 +162,50 @@ struct fmt::formatter<draw_mode> : fmt::formatter<std::string_view>
           return fmt::formatter<std::string_view>::format(name, ctx);
      }
 };
+
+template<>
+struct fmt::formatter<fme::FailOverLevels> : fmt::formatter<std::string_view>
+{
+     // parse is inherited from formatter<string_view>.
+     template<typename FormatContext>
+     constexpr auto format(fme::FailOverLevels level, FormatContext &ctx) const
+     {
+          using namespace std::string_view_literals;
+          std::string_view name = {};
+          switch (level)
+          {
+               case fme::FailOverLevels::EN:
+                    name = open_viii::LangCommon::ENFULL;
+                    break;
+               case fme::FailOverLevels::FR:
+                    name = open_viii::LangCommon::FRFULL;
+                    break;
+               case fme::FailOverLevels::DE:
+                    name = open_viii::LangCommon::DEFULL;
+                    break;
+               case fme::FailOverLevels::IT:
+                    name = open_viii::LangCommon::ITFULL;
+                    break;
+               case fme::FailOverLevels::ES:
+                    name = open_viii::LangCommon::ESFULL;
+                    break;
+               case fme::FailOverLevels::JP:
+                    name = open_viii::LangCommon::JPFULL;
+                    break;
+               case fme::FailOverLevels::Generic:
+                    name = "Generic"sv;
+                    break;
+               case fme::FailOverLevels::All:
+                    name = "All"sv;
+                    break;
+               case fme::FailOverLevels::Loaded:
+                    name = "Loaded"sv;
+                    break;
+          }
+          return fmt::formatter<std::string_view>::format(name, ctx);
+     }
+};
+
 template<>
 struct fmt::formatter<open_viii::LangT> : fmt::formatter<std::string_view>
 {
