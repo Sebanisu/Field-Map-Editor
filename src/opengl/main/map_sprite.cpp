@@ -2273,7 +2273,7 @@ toml::table *map_sprite::get_deswizzle_combined_coo_table(open_viii::LangT *cons
          open_viii::LangT::it,
          open_viii::LangT::es,
          open_viii::LangT::jp });
-     auto get_table_by_coo = [&](const open_viii::LangT lang) -> toml::table * {
+     const auto get_table_by_coo = [&](const open_viii::LangT lang) -> toml::table * {
           const std::string key = (lang != open_viii::LangT::generic) ? std::string(open_viii::LangCommon::to_string_3_char(lang)) : "x";
 
           if (auto it_coo = field_table->find(key); it_coo != field_table->end() && it_coo->second.is_table())
