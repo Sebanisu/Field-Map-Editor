@@ -71,6 +71,7 @@ void fme::filter_window::render() const
      }
 
      handle_remove_queue(lock_selections, lock_map_sprite);
+     handle_rename_queue(lock_selections, lock_map_sprite);
      if (m_regenerate_items)
      {
           m_regenerate_items     = false;
@@ -257,6 +258,21 @@ void fme::filter_window::handle_remove_queue(
      m_remove_queue.clear();
 }
 
+void fme::filter_window::handle_rename_queue(
+  const std::shared_ptr<Selections> &lock_selections,
+  const std::shared_ptr<map_sprite> &lock_map_sprite) const
+{
+     if (m_rename_queue.empty())
+          return;
+
+     for (const auto &[old_name, new_name] : m_rename_queue)
+     {
+          (void)lock_map_sprite->rename_deswizzle_combined_toml_table(old_name, new_name);
+     }
+     save_config(lock_selections);
+     m_rename_queue.clear();
+}
+
 void fme::filter_window::save_config(const std::shared_ptr<Selections> &lock_selections) const
 {
 
@@ -301,7 +317,10 @@ void fme::filter_window::render_list_view(
      // Combine and replace originals
      if (ImGui::Button(ICON_FA_OBJECT_GROUP " Combine (Replace)", button_size))
      {
-          (void)lock_map_sprite->add_combine_deswizzle_combined_toml_table(m_multi_select, generate_file_name(lock_map_sprite));
+          std::string temp_name = generate_file_name(lock_map_sprite);
+          (void) lock_map_sprite->add_combine_deswizzle_combined_toml_table(m_multi_select, temp_name);
+          std::ranges::sort(m_multi_select);
+          m_rename_queue.emplace_back(std::move(temp_name), m_multi_select.front());
           std::ranges::move(m_multi_select, std::back_inserter(m_remove_queue));
           m_multi_select.clear();
      }

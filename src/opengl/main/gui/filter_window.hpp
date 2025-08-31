@@ -18,6 +18,7 @@ struct filter_window
    private:
      [[nodiscard]] bool begin_window(const std::shared_ptr<Selections> &) const;
      void               handle_remove_queue(const std::shared_ptr<Selections> &, const std::shared_ptr<map_sprite> &) const;
+     void               handle_rename_queue(const std::shared_ptr<Selections> &, const std::shared_ptr<map_sprite> &) const;
      void               save_config(const std::shared_ptr<Selections> &) const;
      void               render_list_view(const std::shared_ptr<Selections> &, const std::shared_ptr<map_sprite> &) const;
      [[nodiscard]] int  calc_column_count(float) const;
@@ -81,6 +82,7 @@ struct filter_window
      mutable std::optional<std::string>                                   m_next_file_name         = {};
      mutable toml::table                                                 *m_selected_toml_table    = {};
      mutable std::vector<std::string>                                     m_remove_queue           = {};
+     mutable std::vector<std::pair<std::string, std::string>>             m_rename_queue           = {};
      mutable std::array<char, 128>                                        m_file_name_buffer       = {};
      mutable std::map<std::string, std::optional<glengine::FrameBuffer>> *m_textures_map           = {};
      mutable std::string                                                  m_last_selected          = {};
