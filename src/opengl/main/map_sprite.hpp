@@ -186,17 +186,17 @@ struct [[nodiscard]] map_sprite// final
      [[nodiscard]] std::map<std::string, std::optional<glengine::FrameBuffer>> &get_deswizzle_combined_textures(const int scale = {});
      [[nodiscard]] std::string               generate_deswizzle_combined_tool_tip(const toml::table *file_table) const;
      [[nodiscard]] std::vector<ff_8::PupuID> generate_deswizzle_combined_pupu_id(const toml::table *file_table) const;
-     [[nodiscard]] toml::table              *get_deswizzle_combined_coo_table() const;
-     [[nodiscard]] toml::table              *get_deswizzle_combined_toml_table(const std::string &) const;
-     [[nodiscard]] std::vector<std::string>  toml_filenames() const;
-     [[nodiscard]] std::string               get_recommended_prefix();
-     [[nodiscard]] toml::table              *rename_deswizzle_combined_toml_table(const std::string &, const std::string &);
-     [[nodiscard]] std::size_t               remove_deswizzle_combined_toml_table(const std::string &);
-     [[nodiscard]] toml::table              *add_deswizzle_combined_toml_table(const std::string &);
-     void                                    refresh_tooltip(const std::string &);
-     void                                    apply_multi_pupu_filter_deswizzle_combined_toml_table(
-                                          const std::string                                  &file_name_key,
-                                          const ff_8::filter_old<ff_8::FilterTag::MultiPupu> &new_filter);
+     [[nodiscard]] toml::table *get_deswizzle_combined_coo_table(open_viii::LangT *out_used_coo = nullptr, std::int8_t failover = {}) const;
+     [[nodiscard]] toml::table *get_deswizzle_combined_toml_table(const std::string &) const;
+     [[nodiscard]] std::vector<std::string> toml_filenames() const;
+     [[nodiscard]] std::string              get_recommended_prefix();
+     [[nodiscard]] toml::table             *rename_deswizzle_combined_toml_table(const std::string &, const std::string &);
+     [[nodiscard]] std::size_t              remove_deswizzle_combined_toml_table(const std::string &);
+     [[nodiscard]] toml::table             *add_deswizzle_combined_toml_table(const std::string &);
+     void                                   refresh_tooltip(const std::string &);
+     void                                   apply_multi_pupu_filter_deswizzle_combined_toml_table(
+                                         const std::string                                  &file_name_key,
+                                         const ff_8::filter_old<ff_8::FilterTag::MultiPupu> &new_filter);
      [[nodiscard]] toml::table *add_combine_deswizzle_combined_toml_table(const std::vector<std::string> &, const std::string &);
      void copy_deswizzle_combined_toml_table(const std::vector<std::string> &, std::move_only_function<std::string(void)>);
      [[nodiscard]] std::vector<std::future<void>>

@@ -2214,7 +2214,7 @@ std::string map_sprite::generate_deswizzle_combined_tool_tip(const toml::table *
      return ss.str();
 };
 
-toml::table *map_sprite::get_deswizzle_combined_coo_table() const
+toml::table *map_sprite::get_deswizzle_combined_coo_table(open_viii::LangT *const out_used_coo, std::int8_t max_failover) const
 {
      const auto selections = m_selections.lock();
      if (!selections)
@@ -2235,16 +2235,15 @@ toml::table *map_sprite::get_deswizzle_combined_coo_table() const
      auto                        config      = Configuration(config_path);
      toml::table                &root_table  = config;
 
-     const auto                  coo         = m_map_group.opt_coo.has_value() && m_map_group.opt_coo.value() != open_viii::LangT::generic
+     const auto                  coo_opt     = m_map_group.opt_coo.has_value() && m_map_group.opt_coo.value() != open_viii::LangT::generic
                                                  ? m_map_group.opt_coo
                                                  : field->get_lang_from_fl_paths();
-
-     const std::string           my_coo_key  = (coo.has_value()) ? std::string(open_viii::LangCommon::to_string_3_char(coo.value())) : "x";
-
 
      toml::table                *field_table = nullptr;
 
      toml::table                *coo_table   = nullptr;
+
+
      if (auto it_base = root_table.find(field_name); it_base != root_table.end() && it_base->second.is_table())
      {
           field_table = it_base->second.as_table();
@@ -2257,20 +2256,55 @@ toml::table *map_sprite::get_deswizzle_combined_coo_table() const
                field_table = it->second.is_table() ? it->second.as_table() : nullptr;
           }
      }
-     if (field_table)
+     if (!field_table)
      {
-          if (auto it_coo = field_table->find(my_coo_key); it_coo != field_table->end() && it_coo->second.is_table())
-          {
-               return it_coo->second.as_table();
-          }
-          else
-          {
-               auto &&[it, inserted] = field_table->insert(my_coo_key, toml::table{});
+          return nullptr;
+     }
+     const auto failover_sequence = std::to_array({
+       coo_opt.value_or(open_viii::LangT::generic),
+       open_viii::LangT::generic,
+       open_viii::LangT::en,
+       open_viii::LangT::fr,
+       open_viii::LangT::de,
+       open_viii::LangT::it,
+       open_viii::LangT::es,
+       open_viii::LangT::jp});
+     auto get_table_by_coo = [&](const open_viii::LangT lang) -> toml::table * {
+          const std::string key = (lang != open_viii::LangT::generic) ? std::string(open_viii::LangCommon::to_string_3_char(lang)) : "x";
 
-               if (inserted)
-               {
-                    coo_table = it->second.is_table() ? it->second.as_table() : nullptr;
-               }
+          if (auto it_coo = field_table->find(key); it_coo != field_table->end() && it_coo->second.is_table())
+               return it_coo->second.as_table();
+          return nullptr;
+     };
+
+
+     for (const auto &[index, lang] : failover_sequence | std::views::enumerate)
+     {
+          if (std::cmp_equal(index, max_failover))
+               break;
+          coo_table = get_table_by_coo(lang);
+          if (coo_table)
+          {
+               if (out_used_coo)
+                    *out_used_coo = lang;
+               break;
+          }
+     }
+
+     if (!coo_table)
+     {
+          const auto        lang = coo_opt.value_or(open_viii::LangT::generic);
+          const std::string key  = (lang != open_viii::LangT::generic) ? std::string(open_viii::LangCommon::to_string_3_char(lang)) : "x";
+          auto &&[it, inserted]  = field_table->insert(key, toml::table{});
+
+          if (inserted)
+          {
+               coo_table = it->second.is_table() ? it->second.as_table() : nullptr;
+          }
+
+          if (out_used_coo)
+          {
+               *out_used_coo = lang;
           }
      }
 
