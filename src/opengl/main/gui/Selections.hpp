@@ -590,7 +590,7 @@ struct SelectionInfo<ConfigKey::BatchGenerateWhiteOnBlackMask>
      static constexpr std::string_view id = "BatchGenerateWhiteOnBlackMask";
      static constexpr value_type       default_value()
      {
-          return true;
+          return false;
      }
 };
 
