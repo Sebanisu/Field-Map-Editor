@@ -2281,7 +2281,6 @@ toml::table *map_sprite::get_deswizzle_combined_coo_table(open_viii::LangT *cons
           return nullptr;
      };
 
-
      for (const auto &[index, lang] : failover_sequence | std::views::enumerate)
      {
           if (std::cmp_equal(index, max_failover))
