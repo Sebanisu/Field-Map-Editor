@@ -56,6 +56,7 @@ enum class ConfigKey
      DisplayFieldFileWindow,
      DisplayFiltersWindow,
      OutputSwizzlePattern,
+     OutputSwizzleAsOneImagePattern,
      OutputDeswizzlePattern,
      OutputFullFileNamePattern,
      OutputTomlPattern,
@@ -386,21 +387,70 @@ struct SelectionInfo<ConfigKey::OutputSwizzlePattern>
 {
      using value_type                     = std::string;
      static constexpr std::string_view id = "OutputSwizzlePattern";
-     static inline value_type          default_value()
+
+     static inline value_type          default_value_demaster()
      {
           using namespace std::string_literals;
           return "{selected_path}\\{demaster}"s;
      }
+
+     static inline value_type default_value_ffnx()
+     {
+          using namespace std::string_literals;
+          return "{selected_path}\\{ffnx_multi_texture}"s;
+     }
+
+     static inline value_type default_value()
+     {
+          return default_value_demaster();
+     }
 };
+
+template<>
+struct SelectionInfo<ConfigKey::OutputSwizzleAsOneImagePattern>
+{
+     using value_type                     = std::string;
+     static constexpr std::string_view id = "OutputSwizzleAsOneImagePattern";
+
+     static inline value_type          default_value_demaster()
+     {
+          using namespace std::string_literals;
+          return "{selected_path}\\{demaster}"s;
+     }
+
+     static inline value_type default_value_ffnx()
+     {
+          using namespace std::string_literals;
+          return "{selected_path}\\{ffnx_single_texture}"s;
+     }
+
+     static inline value_type default_value()
+     {
+          return default_value_demaster();
+     }
+};
+
 template<>
 struct SelectionInfo<ConfigKey::OutputDeswizzlePattern>
 {
      using value_type                     = std::string;
      static constexpr std::string_view id = "OutputDeswizzlePattern";
-     static inline value_type          default_value()
+
+     static inline value_type          default_value_demaster()
      {
           using namespace std::string_literals;
           return "{selected_path}\\deswizzle\\{demaster}"s;
+     }
+
+     static inline value_type default_value_ffnx()
+     {
+          using namespace std::string_literals;
+          return "{selected_path}\\deswizzle\\{ffnx_multi_texture}"s;
+     }
+
+     static inline value_type default_value()
+     {
+          return default_value_demaster();
      }
 };
 
@@ -409,10 +459,22 @@ struct SelectionInfo<ConfigKey::OutputFullFileNamePattern>
 {
      using value_type                     = std::string;
      static constexpr std::string_view id = "OutputFullFileNamePattern";
-     static inline value_type          default_value()
+
+     static inline value_type          default_value_demaster()
      {
           using namespace std::string_literals;
           return "{selected_path}\\full_filename\\{demaster_full}"s;
+     }
+
+     static inline value_type default_value_ffnx()
+     {
+          using namespace std::string_literals;
+          return "{selected_path}\\full_filename\\{ffnx_multi_texture_full}"s;
+     }
+
+     static inline value_type default_value()
+     {
+          return default_value_demaster();
      }
 };
 
@@ -433,10 +495,22 @@ struct SelectionInfo<ConfigKey::OutputMapPatternForSwizzle>
 {
      using value_type                     = std::string;
      static constexpr std::string_view id = "OutputMapPatternForSwizzle";
-     static inline value_type          default_value()
+
+     static inline value_type          default_value_demaster()
      {
           using namespace std::string_literals;
           return "{selected_path}\\{demaster}"s;
+     }
+
+     static inline value_type default_value_ffnx()
+     {
+          using namespace std::string_literals;
+          return "{selected_path}\\{ffnx_map}"s;
+     }
+
+     static inline value_type default_value()
+     {
+          return default_value_demaster();
      }
 };
 template<>
@@ -444,10 +518,22 @@ struct SelectionInfo<ConfigKey::OutputMapPatternForDeswizzle>
 {
      using value_type                     = std::string;
      static constexpr std::string_view id = "OutputMapPatternForDeswizzle";
-     static inline value_type          default_value()
+
+     static inline value_type          default_value_demaster()
      {
           using namespace std::string_literals;
           return "{selected_path}\\deswizzle\\{demaster}"s;
+     }
+
+     static inline value_type default_value_ffnx()
+     {
+          using namespace std::string_literals;
+          return "{selected_path}\\deswizzle\\{ffnx_map}"s;
+     }
+
+     static inline value_type default_value()
+     {
+          return default_value_demaster();
      }
 };
 template<>
@@ -455,10 +541,22 @@ struct SelectionInfo<ConfigKey::OutputMapPatternForFullFileName>
 {
      using value_type                     = std::string;
      static constexpr std::string_view id = "OutputMapPatternForFullFileName";
-     static inline value_type          default_value()
+
+     static inline value_type          default_value_demaster()
      {
           using namespace std::string_literals;
           return "{selected_path}\\full_filename\\{demaster}"s;
+     }
+
+     static inline value_type default_value_ffnx()
+     {
+          using namespace std::string_literals;
+          return "{selected_path}\\full_filename\\{ffnx_map}"s;
+     }
+
+     static inline value_type default_value()
+     {
+          return default_value_demaster();
      }
 };
 template<>
@@ -1280,6 +1378,32 @@ struct Selection : SelectionBase
                SelectionUpdateStrategy<value_type>::update(config, SelectionInfo<Key>::id, value);
           }
      }
+
+     bool reset_to_demaster()
+     {
+          if constexpr (requires { SelectionInfo<Key>::default_value_demaster(); })
+          {
+               value = SelectionInfo<Key>::default_value_demaster();
+               return true;
+          }
+          else
+          {
+               return false;
+          }
+     }
+
+     bool reset_to_ffnx()
+     {
+          if constexpr (requires { SelectionInfo<Key>::default_value_ffnx(); })
+          {
+               value = SelectionInfo<Key>::default_value_ffnx();
+               return true;
+          }
+          else
+          {
+               return false;
+          }
+     }
 };
 ;
 consteval inline auto load_selections_id_array()
@@ -1455,6 +1579,46 @@ struct Selections
                  ...);
                config.save();
           }
+     }
+
+     void reset_to_demaster()
+     {
+          Configuration config{};
+          [&]<std::size_t... Is>(std::index_sequence<Is...>) {
+               (
+                 [&]<ConfigKey Key>() {
+                      if (m_selections_array[Is])
+                      {
+                           auto *selection = static_cast<Selection<Key> *>(m_selections_array[Is].get());
+                           if (selection->reset_to_demaster())
+                           {
+                                selection->update(config);
+                           }
+                      }
+                 }.template operator()<static_cast<ConfigKey>(Is)>(),
+                 ...);
+          }(std::make_index_sequence<SelectionsSizeT>{});
+          config.save();
+     }
+
+     void reset_to_ffnx()
+     {
+          Configuration config{};
+          [&]<std::size_t... Is>(std::index_sequence<Is...>) {
+               (
+                 [&]<ConfigKey Key>() {
+                      if (m_selections_array[Is])
+                      {
+                           auto *selection = static_cast<Selection<Key> *>(m_selections_array[Is].get());
+                           if (selection->reset_to_ffnx())
+                           {
+                                selection->update(config);
+                           }
+                      }
+                 }.template operator()<static_cast<ConfigKey>(Is)>(),
+                 ...);
+          }(std::make_index_sequence<SelectionsSizeT>{});
+          config.save();
      }
 
      void sort_paths();

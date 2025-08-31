@@ -95,6 +95,7 @@ enum struct VectorOrString : std::uint8_t
 enum class PatternSelector : std::uint8_t
 {
      OutputSwizzlePattern,
+     OutputSwizzleAsOneImagePattern,
      OutputDeswizzlePattern,
      OutputFullFileNamePattern,
      OutputTomlPattern,

@@ -21,6 +21,13 @@ struct PatternInfo<PatternSelector::OutputSwizzlePattern>
 };
 
 template<>
+struct PatternInfo<PatternSelector::OutputSwizzleAsOneImagePattern>
+{
+     static constexpr ConfigKey      key  = ConfigKey::OutputSwizzleAsOneImagePattern;
+     static constexpr VectorOrString type = VectorOrString::string;
+};
+
+template<>
 struct PatternInfo<PatternSelector::OutputDeswizzlePattern>
 {
      static constexpr ConfigKey      key  = ConfigKey::OutputDeswizzlePattern;
@@ -966,6 +973,34 @@ void fme::custom_paths_window::render() const
           ImGui::PopStyleColor(2);
           ImGui::PopStyleVar(3);
      } };
+     if (ImGui::Button("Reset to FFNX"))
+     {
+          selections->reset_to_ffnx();
+          override_changed = true;
+          populate_input_pattern();
+     }
+     else
+     {
+          tool_tip(
+            "Resets all applicable patterns to their default FFNX values. Patterns without an FFNX reset function are unaffected. This "
+            "will overwrite any customizations already made. You can further customize individual patterns below after using this for "
+            "convenience.");
+     }
+     ImGui::SameLine();
+     if (ImGui::Button("Reset to Demaster"))
+     {
+          selections->reset_to_demaster();
+          override_changed = true;
+          populate_input_pattern();
+     }
+     else
+     {
+          tool_tip(
+            "Resets all applicable patterns to their default Demaster values. Patterns without a Demaster reset function are unaffected. "
+            "This will overwrite any customizations already made. You can further customize individual patterns below after using this for "
+            "convenience.");
+     }
+     ImGui::Separator();
      switch (vector_or_string())
      {
           case VectorOrString::string: {

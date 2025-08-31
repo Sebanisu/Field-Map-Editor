@@ -245,6 +245,8 @@ const std::string &fme::batch::get_output_pattern(fme::input_types type)
           case fme::input_types::mim:
           case fme::input_types::swizzle:
                return selections->get<ConfigKey::OutputSwizzlePattern>();
+          case fme::input_types::swizzle_as_one_image:
+               return selections->get<ConfigKey::OutputSwizzleAsOneImagePattern>();
           case fme::input_types::deswizzle:
                return selections->get<ConfigKey::OutputDeswizzlePattern>();
           case fme::input_types::deswizzle_full_filename:
@@ -266,14 +268,19 @@ const std::string &fme::batch::get_output_pattern(fme::output_types type)
      switch (type)
      {
           case output_types::swizzle:
-          case output_types::swizzle_as_one_image:
                return selections->get<ConfigKey::OutputSwizzlePattern>();
-          default:
+          case output_types::swizzle_as_one_image:
+               return selections->get<ConfigKey::OutputSwizzleAsOneImagePattern>();
           case output_types::deswizzle:
-          case output_types::deswizzle_generate_toml:
                return selections->get<ConfigKey::OutputDeswizzlePattern>();
           case output_types::deswizzle_full_filename:
                return selections->get<ConfigKey::OutputFullFileNamePattern>();
+          case output_types::deswizzle_generate_toml:
+               // OutputDeswizzlePattern is used for generating the image filenames for the toml entries.
+               // The toml file uses OutputTomlPattern for the toml filename and path.
+               return selections->get<ConfigKey::OutputDeswizzlePattern>();
+          default:
+               throw;
      }
 }
 
@@ -559,7 +566,8 @@ void fme::batch::checkmark_save_map()
           spdlog::info("batch_output_save_map: {}", selections->get<ConfigKey::BatchOutputSaveMap>());
           selections->update<ConfigKey::BatchOutputSaveMap>();
      }
-     else {
+     else
+     {
           tool_tip(gui_labels::save_map_files_tooltip);
      }
      ImGui::EndDisabled();
@@ -601,7 +609,7 @@ void fme::batch::checkmarks_save_masks()
           {
                tool_tip(gui_labels::BatchGenerateWhiteOnBlackMaskToolTip);
           }
-          }
+     }
      else
      {
           constexpr static const bool is_true = false;
@@ -1036,8 +1044,8 @@ void fme::batch::update([[maybe_unused]] float elapsed_time)
                m_future_consumer += m_map_sprite.save_swizzle_textures(selections->get<ConfigKey::OutputSwizzlePattern>(), selected_string);
                break;
           case output_types::swizzle_as_one_image:
-               m_future_consumer +=
-                 m_map_sprite.save_swizzle_as_one_image_textures(selections->get<ConfigKey::OutputSwizzlePattern>(), selected_string);
+               m_future_consumer += m_map_sprite.save_swizzle_as_one_image_textures(
+                 selections->get<ConfigKey::OutputSwizzleAsOneImagePattern>(), selected_string);
                break;
      }
 

@@ -481,6 +481,9 @@ struct fmt::formatter<fme::PatternSelector> : fmt::formatter<std::string_view>
                case fme::PatternSelector::OutputSwizzlePattern:
                     name = "Output swizzle pattern"sv;
                     break;
+               case fme::PatternSelector::OutputSwizzleAsOneImagePattern:
+                    name = "Output Swizzle as One Image Pattern"sv;
+                    break;
                case fme::PatternSelector::OutputDeswizzlePattern:
                     name = "Output deswizzle pattern"sv;
                     break;

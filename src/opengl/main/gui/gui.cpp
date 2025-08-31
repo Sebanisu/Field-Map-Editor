@@ -2515,8 +2515,8 @@ void gui::directory_browser_display()
                m_selections->get<ConfigKey::SwizzleAsOneImagePath>() = selected_path;
                m_selections->update<ConfigKey::SwizzleAsOneImagePath>();
                ensure_directory(selected_path);
-               m_future_consumer +=
-                 m_map_sprite->save_swizzle_as_one_image_textures(m_selections->get<ConfigKey::OutputSwizzlePattern>(), selected_path);
+               m_future_consumer += m_map_sprite->save_swizzle_as_one_image_textures(
+                 m_selections->get<ConfigKey::OutputSwizzleAsOneImagePattern>(), selected_path);
                save_map_with_pattern.template operator()<ConfigKey::OutputMapPatternForSwizzle>();
                open_directory(selected_path);
           }
