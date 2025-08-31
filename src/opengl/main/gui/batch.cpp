@@ -400,6 +400,7 @@ void fme::batch::checkbox_load_map()
      const auto pop_id = PushPopID();
      if (!ImGui::Checkbox(gui_labels::batch_load_map.data(), &selections->get<ConfigKey::BatchInputLoadMap>()))
      {
+          tool_tip(gui_labels::load_map_files_tooltip);
           return;
      }
      spdlog::info("batch_input_load_map: {}", selections->get<ConfigKey::BatchInputLoadMap>());
@@ -558,6 +559,9 @@ void fme::batch::checkmark_save_map()
           spdlog::info("batch_output_save_map: {}", selections->get<ConfigKey::BatchOutputSaveMap>());
           selections->update<ConfigKey::BatchOutputSaveMap>();
      }
+     else {
+          tool_tip(gui_labels::save_map_files_tooltip);
+     }
      ImGui::EndDisabled();
 }
 
@@ -580,6 +584,10 @@ void fme::batch::checkmarks_save_masks()
           spdlog::info("batch_generate_colorful_mask: {}", selections->get<ConfigKey::BatchGenerateColorfulMask>());
           selections->update<ConfigKey::BatchGenerateColorfulMask>();
      }
+     else
+     {
+          tool_tip(gui_labels::BatchGenerateColorfulMaskToolTip);
+     }
 
      if (selections->get<ConfigKey::BatchGenerateColorfulMask>())
      {
@@ -589,7 +597,11 @@ void fme::batch::checkmarks_save_masks()
                spdlog::info("batch_generate_white_on_black_mask: {}", selections->get<ConfigKey::BatchGenerateWhiteOnBlackMask>());
                selections->update<ConfigKey::BatchGenerateWhiteOnBlackMask>();
           }
-     }
+          else
+          {
+               tool_tip(gui_labels::BatchGenerateWhiteOnBlackMaskToolTip);
+          }
+          }
      else
      {
           constexpr static const bool is_true = false;
@@ -598,6 +610,7 @@ void fme::batch::checkmarks_save_masks()
           {
           }
           ImGui::EndDisabled();
+          tool_tip(gui_labels::TooltipBatchGenerateWhiteOnBlackMaskDisabled);
      }
 }
 

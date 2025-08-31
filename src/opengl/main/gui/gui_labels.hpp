@@ -164,21 +164,46 @@ struct gui_labels
      static constexpr std::string_view save_map_files                         = { "Save `.map` files" };
      static constexpr std::string_view BatchGenerateColorfulMask              = { "Generate Colorful Masks" };
      static constexpr std::string_view BatchGenerateWhiteOnBlackMask          = { "Generate White On Black Masks" };
-
-     static constexpr std::string_view draw_bit_all_tooltip                   = { "Show all regardless of bit being enabled or disabled." };
-
-     static constexpr std::string_view draw_bit_enabled_tooltip               = { "Show only tiles with draw bit enabled" };
-
-     static constexpr std::string_view draw_bit_disabled_tooltip              = { "Show only tiles with draw bit disabled" };
      static constexpr std::string_view display_custom_paths_window            = { "Display Custom Paths Window" };
      static constexpr std::string_view display_field_file_window              = { "Display Field File Window" };
 
      static constexpr std::string_view field_file_window                      = { "Field File Window" };
      static constexpr std::string_view custom_paths_window                    = { "Custom Paths Window" };
 
-     static constexpr std::string_view move_conflicts_only_tooltip            = {
+     static constexpr std::string_view draw_bit_all_tooltip                   = { "Show all regardless of bit being enabled or disabled." };
+     static constexpr std::string_view draw_bit_enabled_tooltip               = { "Show only tiles with draw bit enabled" };
+     static constexpr std::string_view draw_bit_disabled_tooltip              = { "Show only tiles with draw bit disabled" };
+
+     static constexpr std::string_view save_map_files_tooltip                 = {
+          "Save `.map` files when outputting textures for each field."
+                          "This is optional unless you use an option that modifies your maps."
+     };
+     static constexpr std::string_view load_map_files_tooltip = {
+          "Scan the selected input path for `.map` files for each field"
+          "and load them before processing the selected batch operations."
+     };
+     static constexpr std::string_view BatchGenerateColorfulMaskToolTip = {
+          "Produces per-texture colorful masks, where each unique color maps to a PupuID. "
+          "These are mainly used to split the image into separate textures. "
+          "A compute shader counts pixel coverage and assigns each texture to the PupuID "
+          "with the highest pixel count (default behavior)."
+     };
+
+     static constexpr std::string_view BatchGenerateWhiteOnBlackMaskToolTip = {
+          "Produces white-on-black masks for each texture - useful for importing into Photoshop "
+          "or other editors. Each mask highlights one texture in white while the rest of the image "
+          "is black.\n"
+          "Note: this can generate many files, which makes importing slow. For now, they are mainly "
+          "for external editing rather than our pipeline, though we may optimize and integrate them later."
+     };
+     static constexpr std::string_view TooltipBatchGenerateWhiteOnBlackMaskDisabled = {
+          "White-on-black masks require colorful masks to be enabled. "
+          "Enable 'Generate Colorful Masks' first to use this option."
+     };
+
+     static constexpr std::string_view move_conflicts_only_tooltip = {
           "Move Only Conflicts: It takes any tiles with conflicting source locations and it moves all but one to new locations that are "
-                     "detected as empty. It also changes the depth to 4bpp. "
+          "detected as empty. It also changes the depth to 4bpp. "
      };
 
      static constexpr std::string_view explore_tooltip = {
