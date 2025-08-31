@@ -2016,8 +2016,9 @@ void map_sprite::save_deswizzle_generate_toml(const std::string &keyed_string, c
      iRectangle const               canvas            = m_map_group.maps.const_working().canvas() * m_render_framebuffer->scale();
      const auto                     specification =
        glengine::FrameBufferSpecification{ .width = canvas.width(), .height = canvas.height(), .scale = m_render_framebuffer->scale() };
+     open_viii::LangT  *coo;
+     const toml::table *coo_table = get_deswizzle_combined_coo_table(&coo, -1);
 
-     const toml::table *coo_table = get_deswizzle_combined_coo_table();
      if (!coo_table)
      {
           return {};
@@ -2034,7 +2035,10 @@ void map_sprite::save_deswizzle_generate_toml(const std::string &keyed_string, c
           auto out_framebuffer = glengine::FrameBuffer{ specification };
           if (generate_texture(out_framebuffer))
           {
-               const key_value_data  cpm      = { .field_name = field_name, .full_filename = std::string(file_name) };
+               const key_value_data  cpm      = { .field_name    = field_name,
+                                                  .language_code = coo == open_viii::LangT::Generic ? std::optional<open_viii::LangT>(coo)
+                                                                                                    : std::optional<open_viii::LangT>{},
+                                                  .full_filename = std::string(file_name) };
 
                std::filesystem::path out_path = cpm.replace_tags(keyed_string, selections, selected_path);
                if (selections->get<ConfigKey::BatchGenerateColorfulMask>())
@@ -2260,15 +2264,15 @@ toml::table *map_sprite::get_deswizzle_combined_coo_table(open_viii::LangT *cons
      {
           return nullptr;
      }
-     const auto failover_sequence = std::to_array({
-       coo_opt.value_or(open_viii::LangT::generic),
-       open_viii::LangT::generic,
-       open_viii::LangT::en,
-       open_viii::LangT::fr,
-       open_viii::LangT::de,
-       open_viii::LangT::it,
-       open_viii::LangT::es,
-       open_viii::LangT::jp});
+     const auto failover_sequence = std::to_array(
+       { coo_opt.value_or(open_viii::LangT::generic),
+         open_viii::LangT::generic,
+         open_viii::LangT::en,
+         open_viii::LangT::fr,
+         open_viii::LangT::de,
+         open_viii::LangT::it,
+         open_viii::LangT::es,
+         open_viii::LangT::jp });
      auto get_table_by_coo = [&](const open_viii::LangT lang) -> toml::table * {
           const std::string key = (lang != open_viii::LangT::generic) ? std::string(open_viii::LangCommon::to_string_3_char(lang)) : "x";
 
@@ -2314,7 +2318,7 @@ toml::table *map_sprite::get_deswizzle_combined_coo_table(open_viii::LangT *cons
 [[nodiscard]] std::vector<std::string> map_sprite::toml_filenames() const
 {
      std::vector<std::string> result{};
-     const toml::table       *coo_table = get_deswizzle_combined_coo_table();
+     const toml::table       *coo_table = get_deswizzle_combined_coo_table({},-1);
      if (!coo_table)
      {
           return result;
