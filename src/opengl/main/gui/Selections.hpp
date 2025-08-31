@@ -818,9 +818,9 @@ struct SelectionInfo<ConfigKey::PathPatternsWithPupuID>
      static value_type                 expensive_default_value()
      {
           using namespace std::string_literals;
-          return { "{selected_path}/{field_name}_{_{2_letter_lang}_{pupu_id}{ext}"s,
-                   "{selected_path}/{field_name}/{field_name}_{_{2_letter_lang}_{pupu_id}{ext}"s,
-                   "{selected_path}/{field_prefix}/{field_name}/{field_name}_{_{2_letter_lang}_{pupu_id}{ext}"s
+          return { "{selected_path}/{field_name}{_{2_letter_lang}}_{pupu_id}{ext}"s,
+                   "{selected_path}/{field_name}/{field_name}{_{2_letter_lang}}_{pupu_id}{ext}"s,
+                   "{selected_path}/{field_prefix}/{field_name}/{field_name}{_{2_letter_lang}}_{pupu_id}{ext}"s,
 
                    "{selected_path}/{field_name}_{pupu_id}{ext}"s,
                    "{selected_path}/{field_name}/{field_name}_{pupu_id}{ext}"s,
