@@ -92,7 +92,7 @@ filter_multi_pupu = [ 4194304, 4194305, 4206592, 5238784, 5238785, 5238786 ]
 filter_multi_pupu_enabled = true
 
 [bcform1a.x.'bcform1a_00400002.png']
-filter_multi_pupu = [ 4194306, 4198400, 5238784, 5238785, 5238786 ]
+filter_multi_pupu = [ 4198400, 5238784, 5238785, 5238786 ]
 filter_multi_pupu_enabled = true
 
 [bcform1a.x.'bcform1a_00402000.png']
