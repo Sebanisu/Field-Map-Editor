@@ -126,7 +126,7 @@ GLuint CompShader::create(const std::filesystem::path &path)
 
           const auto  size = std::filesystem::file_size(path);
           std::string content(size, '\0');
-          fs.read(content.data(), size);
+          fs.read(content.data(), static_cast<std::streamsize>(size));
 
           if (!fs)
           {
