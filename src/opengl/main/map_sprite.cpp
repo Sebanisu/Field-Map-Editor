@@ -2284,8 +2284,6 @@ toml::table *
 
      for (const auto &[index, lang] : failover_sequence | std::views::enumerate)
      {
-          if (std::cmp_equal(index, std::to_underlying(max_failover)))
-               break;
           coo_table = get_table_by_coo(lang);
           // if max_failover is default to 0 we allow empty tables because you might be starting from scratch. when drawing or rendering we
           // try to skip empty tables
@@ -2295,6 +2293,8 @@ toml::table *
                     *out_used_coo = lang;
                break;
           }
+          if (std::cmp_equal(index, std::to_underlying(max_failover)))
+               break;
      }
 
      if (!coo_table)
