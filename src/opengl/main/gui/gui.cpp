@@ -1043,14 +1043,18 @@ void gui::refresh_field()
 
 void gui::combo_field()
 {
-     
+
      const auto gcc = GenericCombo(
        gui_labels::field,
        [this]() { return std::views::iota(0, static_cast<int>(std::ranges::ssize(m_archives_group->mapdata()))); },
        [this]() {
             return m_archives_group->mapdata() | std::ranges::views::transform([](const std::string &str) -> std::string_view {
                         using namespace std::string_view_literals;
-                        return (std::string_view(str).starts_with("ma"sv) || (std::string_view(str) == "ec"sv || (std::string_view(str) == "te"sv)) ? ""sv : std::string_view(str));
+                        return (
+                          std::string_view(str).starts_with("ma"sv)
+                              || (std::string_view(str) == "ec"sv || std::string_view(str) == "te"sv || std::string_view(str) == "fhdeck3a"sv)
+                            ? ""sv
+                            : std::string_view(str));
                    });
        },
        m_field_index);
@@ -1341,6 +1345,12 @@ void gui::windows_menu()
      if (ImGui::MenuItem("ImGui Demo Window", std::nullptr_t{}, &toggle_imgui_demo_window))
      {
      }
+     ImGui::Separator();
+     if (ImGui::MenuItem(
+           gui_labels::display_field_file_window.data(), "Control + F", &m_selections->get<ConfigKey::DisplayFieldFileWindow>()))
+     {
+          m_selections->update<ConfigKey::DisplayFieldFileWindow>();
+     }
      if (!map_test() && !mim_test())
      {
           return;
@@ -1369,12 +1379,6 @@ void gui::windows_menu()
            gui_labels::display_custom_paths_window.data(), "Control + U", &m_selections->get<ConfigKey::DisplayCustomPathsWindow>()))
      {
           m_selections->update<ConfigKey::DisplayCustomPathsWindow>();
-     }
-     ImGui::Separator();
-     if (ImGui::MenuItem(
-           gui_labels::display_field_file_window.data(), "Control + F", &m_selections->get<ConfigKey::DisplayFieldFileWindow>()))
-     {
-          m_selections->update<ConfigKey::DisplayFieldFileWindow>();
      }
 
      ImGui::Separator();
@@ -1958,7 +1962,9 @@ void gui::file_menu()
                     {
                          continue;
                     }
-                    if (std::string_view(str) == "ec"sv || std::string_view(str) == "te"sv || std::string_view(str).starts_with("ma"sv))
+                    if (
+                      std::string_view(str) == "ec"sv || std::string_view(str) == "te"sv || std::string_view(str) == "fhdeck3a"sv
+                      || std::string_view(str).starts_with("ma"sv))
                     {
                          continue;
                     }
@@ -3008,7 +3014,9 @@ void gui::bind_shortcuts()
      }
 
      // Inside your GUI update loop where you already handle shortcuts
-     const auto test_field = [](std::string_view test) -> bool { return test == "ec"sv || test == "te"sv || test.starts_with("ma"sv); };
+     const auto test_field = [](std::string_view test) -> bool {
+          return test == "ec"sv || test == "te"sv || test == "fhdeck3a"sv || test.starts_with("ma"sv);
+     };
      if (ImGui::Shortcut(ImGuiKey_PageDown, flags))
      {
           const auto &maps = m_archives_group->mapdata();
