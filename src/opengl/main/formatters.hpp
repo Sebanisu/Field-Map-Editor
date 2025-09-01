@@ -569,6 +569,10 @@ struct fmt::formatter<fme::PatternSelector> : fmt::formatter<std::string_view>
                     break;
                case fme::PatternSelector::PathPatternsWithFullFileName:
                     name = "Path Patterns With Full Filename (.toml)"sv;
+                    break;
+               case fme::PatternSelector::End:
+                    name = "End";
+                    break;
           }
           return fmt::formatter<std::string_view>::format(name, ctx);
      }
