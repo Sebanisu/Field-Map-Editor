@@ -282,29 +282,34 @@ void FrameBuffer::set_scale(int in_scale)
      spdlog::trace("scale updated: {}", m_specification.scale);
 }
 
-int FrameBuffer::read_pixel(uint32_t attachment_index, int x, int y) const
+FrameBuffer::Pixel FrameBuffer::read_pixel(uint32_t attachment_index, int x, int y) const
 {
-     int pixel_data = { -1 };
-     assert(attachment_index < 4);
-     assert(m_color_attachment[attachment_index] != 0);
+     if (attachment_index >= 4 || m_color_attachment[attachment_index] == 0)
+          return std::monostate{};// invalid attachment
      switch (m_specification.attachments[attachment_index])
      {
           case FrameBufferTextureFormat::RGBA8: {
+               std::array<uint8_t, 4> pixel_data = { 0 };
                GlCall{}(glReadBuffer, attachments[attachment_index]);
                GlCall{}(glReadPixels, x, y, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, &pixel_data);
-               break;
+               return pixel_data;
           }
           case FrameBufferTextureFormat::RGBA8UI: {
+               std::array<uint8_t, 4> pixel_data = { 0 };
                GlCall{}(glReadBuffer, attachments[attachment_index]);
                GlCall{}(glReadPixels, x, y, 1, 1, GL_RGBA_INTEGER, GL_UNSIGNED_BYTE, &pixel_data);
-               break;
+               return pixel_data;
           }
           case FrameBufferTextureFormat::RED_INTEGER: {
+               int pixel_data = 0;
                GlCall{}(glReadBuffer, attachments[attachment_index]);
                GlCall{}(glReadPixels, x, y, 1, 1, GL_RED_INTEGER, GL_INT, &pixel_data);
                break;
           }
+          case FrameBufferTextureFormat::None: {
+               return std::monostate{};// invalid attachment
+          }
      }
-     return pixel_data;
+     return std::monostate{};// invalid attachment
 }
 }// namespace glengine

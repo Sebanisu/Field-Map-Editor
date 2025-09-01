@@ -8,6 +8,7 @@
 #include "Renderer.hpp"
 #include "SubTexture.hpp"
 #include "UniqueValue.hpp"
+#include <variant>
 namespace glengine
 {
 enum class FrameBufferTextureFormat
@@ -39,6 +40,7 @@ struct FrameBufferSpecification
 class FrameBuffer
 {
    public:
+     using Pixel   = std::variant<std::monostate, int, std::array<uint8_t, 4>>;
      FrameBuffer() = default;
      FrameBuffer(FrameBufferSpecification spec);
      /**
@@ -106,7 +108,7 @@ class FrameBuffer
      [[nodiscard]] int        scale() const;
      [[nodiscard]] int       &mutable_scale();
      void                     set_scale(int);
-     [[nodiscard]] int        read_pixel(uint32_t attachment_index, int x, int y) const;
+     [[nodiscard]] Pixel      read_pixel(uint32_t attachment_index, int x, int y) const;
 
      void                     clear_non_standard_color_attachments() const
      {
