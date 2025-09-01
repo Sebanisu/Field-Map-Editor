@@ -2603,7 +2603,7 @@ void gui::directory_browser_display()
                     refresh_render_texture(true);
                }
           }
-
+          break;
 
           case map_directory_mode::load_full_filename_textures: {
                m_selections->get<ConfigKey::FullFileNamePath>() = selected_path;
