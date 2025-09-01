@@ -2016,8 +2016,8 @@ void map_sprite::save_deswizzle_generate_toml(const std::string &keyed_string, c
      iRectangle const               canvas            = m_map_group.maps.const_working().canvas() * m_render_framebuffer->scale();
      const auto                     specification =
        glengine::FrameBufferSpecification{ .width = canvas.width(), .height = canvas.height(), .scale = m_render_framebuffer->scale() };
-     open_viii::LangT  coo       = {};
-     const toml::table *coo_table = get_deswizzle_combined_coo_table(&coo, -1);
+     open_viii::LangT   coo       = {};
+     const toml::table *coo_table = get_deswizzle_combined_coo_table(&coo, fme::FailOverLevels::All);
 
      if (!coo_table)
      {
@@ -2038,7 +2038,7 @@ void map_sprite::save_deswizzle_generate_toml(const std::string &keyed_string, c
                const key_value_data  cpm      = { .field_name    = field_name,
                                                   .full_filename = std::string(file_name),
                                                   .language_code = coo == open_viii::LangT::generic ? std::optional<open_viii::LangT>(coo)
-                                                                                                     : std::optional<open_viii::LangT>{} };
+                                                                                                    : std::optional<open_viii::LangT>{} };
 
                std::filesystem::path out_path = cpm.replace_tags(keyed_string, selections, selected_path);
                if (selections->get<ConfigKey::BatchGenerateColorfulMask>())
@@ -2218,7 +2218,8 @@ std::string map_sprite::generate_deswizzle_combined_tool_tip(const toml::table *
      return ss.str();
 };
 
-toml::table *map_sprite::get_deswizzle_combined_coo_table(open_viii::LangT *const out_used_coo, std::int8_t max_failover) const
+toml::table *
+  map_sprite::get_deswizzle_combined_coo_table(open_viii::LangT *const out_used_coo, const fme::FailOverLevels max_failover) const
 {
      const auto selections = m_selections.lock();
      if (!selections)
@@ -2283,12 +2284,12 @@ toml::table *map_sprite::get_deswizzle_combined_coo_table(open_viii::LangT *cons
 
      for (const auto &[index, lang] : failover_sequence | std::views::enumerate)
      {
-          if (std::cmp_equal(index, max_failover))
+          if (std::cmp_equal(index, std::to_underlying(max_failover)))
                break;
           coo_table = get_table_by_coo(lang);
           // if max_failover is default to 0 we allow empty tables because you might be starting from scratch. when drawing or rendering we
           // try to skip empty tables
-          if (coo_table && (max_failover == 0 || !coo_table->empty()))
+          if (coo_table && (max_failover == fme::FailOverLevels::Loaded || !coo_table->empty()))
           {
                if (out_used_coo)
                     *out_used_coo = lang;
@@ -2319,7 +2320,7 @@ toml::table *map_sprite::get_deswizzle_combined_coo_table(open_viii::LangT *cons
 [[nodiscard]] std::vector<std::string> map_sprite::toml_filenames() const
 {
      std::vector<std::string> result{};
-     const toml::table       *coo_table = get_deswizzle_combined_coo_table({}, -1);
+     const toml::table       *coo_table = get_deswizzle_combined_coo_table({}, fme::FailOverLevels::All);
      if (!coo_table)
      {
           return result;

@@ -186,8 +186,10 @@ struct [[nodiscard]] map_sprite// final
      [[nodiscard]] std::map<std::string, std::optional<glengine::FrameBuffer>> &get_deswizzle_combined_textures(const int scale = {});
      [[nodiscard]] std::string               generate_deswizzle_combined_tool_tip(const toml::table *file_table) const;
      [[nodiscard]] std::vector<ff_8::PupuID> generate_deswizzle_combined_pupu_id(const toml::table *file_table) const;
-     [[nodiscard]] toml::table *get_deswizzle_combined_coo_table(open_viii::LangT *out_used_coo = nullptr, std::int8_t failover = {}) const;
-     [[nodiscard]] toml::table *get_deswizzle_combined_toml_table(const std::string &) const;
+     [[nodiscard]] toml::table              *get_deswizzle_combined_coo_table(
+                    open_viii::LangT   *out_used_coo = nullptr,
+                    fme::FailOverLevels failover     = fme::FailOverLevels::Loaded) const;
+     [[nodiscard]] toml::table             *get_deswizzle_combined_toml_table(const std::string &) const;
      [[nodiscard]] std::vector<std::string> toml_filenames() const;
      [[nodiscard]] std::string              get_recommended_prefix();
      [[nodiscard]] toml::table             *rename_deswizzle_combined_toml_table(const std::string &, const std::string &);
