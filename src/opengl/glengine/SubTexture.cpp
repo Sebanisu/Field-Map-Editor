@@ -70,7 +70,7 @@ int glengine::SubTexture::width() const noexcept
           return m_width;
      }
      auto [min_uv, max_uv] = minmax_uv();
-     return static_cast<int>(std::round((max_uv.x - min_uv.x) * m_width));
+     return static_cast<int>(std::round((max_uv.x - min_uv.x) * static_cast<float>(m_width)));
 }
 
 int glengine::SubTexture::height() const noexcept
@@ -80,7 +80,7 @@ int glengine::SubTexture::height() const noexcept
           return m_height;
      }
      auto [min_uv, max_uv] = minmax_uv();
-     return static_cast<int>(std::round((max_uv.y - min_uv.y) * m_height));
+     return static_cast<int>(std::round((max_uv.y - min_uv.y) * static_cast<float>(m_height)));
 }
 
 glm::ivec2 glengine::SubTexture::get_size() const noexcept
