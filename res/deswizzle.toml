@@ -75,28 +75,28 @@ filter_multi_pupu_enabled = true
 00401014 = 4198420
 00401015 = 4198421
 
-[bcform1a.x.'bcform1a_lighting_no_train.png']
-filter_multi_pupu = [ 4190208 ]
+[bcform1a.x.'bcform1a_00100000.png']
+filter_multi_pupu = [ 1048576 ]
 filter_multi_pupu_enabled = true
 
-[bcform1a.x.'bcform1a_lighting_with_train1.png']
-filter_multi_pupu = [ 1048576, 3145728 ]
-filter_multi_pupu_enabled = true
-
-[bcform1a.x.'bcform1a_lighting_with_train2.png']
+[bcform1a.x.'bcform1a_00300000.png']
 filter_multi_pupu = [ 3145728 ]
 filter_multi_pupu_enabled = true
 
-[bcform1a.x.'bcform1a_no_train.png']
-filter_multi_pupu = [ 4198400, 5238784, 5238785, 5238786 ]
+[bcform1a.x.'bcform1a_003FF000.png']
+filter_multi_pupu = [ 4190208 ]
 filter_multi_pupu_enabled = true
 
-[bcform1a.x.'bcform1a_with_train.png']
+[bcform1a.x.'bcform1a_00400000.png']
+filter_multi_pupu = [ 4194304, 4194305, 4206592, 5238784, 5238785, 5238786 ]
+filter_multi_pupu_enabled = true
+
+[bcform1a.x.'bcform1a_00400002.png']
+filter_multi_pupu = [ 4194306, 4198400, 5238784, 5238785, 5238786 ]
+filter_multi_pupu_enabled = true
+
+[bcform1a.x.'bcform1a_00402000.png']
 filter_multi_pupu = [ 4194304, 4194305, 4194306, 4202496, 4206592, 5238784, 5238785, 5238786 ]
-filter_multi_pupu_enabled = true
-
-[bcform1a.x.'bcform1a_with_train_door_open.png']
-filter_multi_pupu = [ 4194304, 4194305, 4194306, 4206592, 5238784, 5238785, 5238786 ]
 filter_multi_pupu_enabled = true
 
 [bcform1a.x.unique_pupu_ids]
