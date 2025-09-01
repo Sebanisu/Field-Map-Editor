@@ -74,8 +74,9 @@ void fme::filter_window::render() const
      handle_rename_queue(lock_selections, lock_map_sprite);
      if (m_regenerate_items)
      {
-          m_regenerate_items     = false;
-          toml::table *coo_table = lock_map_sprite->get_deswizzle_combined_coo_table();
+          m_regenerate_items = false;
+          toml::table *coo_table =
+            lock_map_sprite->get_deswizzle_combined_coo_table({}, lock_selections->get<ConfigKey::TOMLFailOverForEditor>());
           if (coo_table)
           {
                if (m_textures_map)
@@ -292,7 +293,8 @@ void fme::filter_window::render_list_view(
      const float  button_height = ImGui::GetTextLineHeight() + ImGui::GetStyle().FramePadding.y * 2.0f;
      const ImVec2 button_size   = { m_tool_button_size_width, button_height };
      const auto   unused_ids    = get_unused_ids();
-     format_imgui_text("Unused Pupu IDs: {}", unused_ids.size());
+     const auto   used_coo      = lock_map_sprite->get_used_coo(lock_selections->get<ConfigKey::TOMLFailOverForEditor>());
+     format_imgui_text("Unused Pupu IDs: {}\t Used Language Code: {}", unused_ids.size(), used_coo);
      if (!unused_ids.empty() && ImGui::IsItemHovered())
      {
           ImGui::BeginTooltip();
@@ -301,6 +303,32 @@ void fme::filter_window::render_list_view(
                format_imgui_text("{}\n", id);
           }
           ImGui::EndTooltip();
+     }
+
+
+     static const constexpr auto FailOverLevelsArray = []() {
+          constexpr auto                               first = std::to_underlying(FailOverLevels::Begin);
+          constexpr auto                               last  = std::to_underlying(FailOverLevels::End);
+
+          std::array<FailOverLevels, last - first + 1> arr   = {};
+
+          auto range = std::views::iota(first, last + 1) | std::views::transform([](auto v) { return static_cast<FailOverLevels>(v); });
+
+          std::ranges::copy(range, arr.begin());
+          return arr;
+     }();
+     const auto gcc = GenericCombo(
+       "Fail Over",
+       [&]() { return FailOverLevelsArray; },
+       [&]() { return FailOverLevelsArray | std::views::transform(AsString{}); },
+       lock_selections->get<ConfigKey::TOMLFailOverForEditor>());
+     if (gcc.render())
+     {
+          lock_selections->update<ConfigKey::TOMLFailOverForEditor>();
+          if (m_textures_map)
+          {
+               m_textures_map->clear();
+          }
      }
      ImGui::Columns(calc_column_count(m_tool_button_size_width), "##get_deswizzle_combined_tool_buttons", false);
      ImGui::BeginDisabled(std::ranges::empty(m_multi_select));
@@ -318,7 +346,7 @@ void fme::filter_window::render_list_view(
      if (ImGui::Button(ICON_FA_OBJECT_GROUP " Combine (Replace)", button_size))
      {
           std::string temp_name = generate_file_name(lock_map_sprite);
-          (void) lock_map_sprite->add_combine_deswizzle_combined_toml_table(m_multi_select, temp_name);
+          (void)lock_map_sprite->add_combine_deswizzle_combined_toml_table(m_multi_select, temp_name);
           std::ranges::sort(m_multi_select);
           m_rename_queue.emplace_back(std::move(temp_name), m_multi_select.front());
           std::ranges::move(m_multi_select, std::back_inserter(m_remove_queue));

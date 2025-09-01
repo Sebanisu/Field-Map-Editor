@@ -1907,7 +1907,7 @@ void map_sprite::save_deswizzle_generate_toml(const std::string &keyed_string, c
      iRectangle const                 canvas          = m_map_group.maps.const_working().canvas() * m_render_framebuffer->scale();
      const auto                       specification =
        glengine::FrameBufferSpecification{ .width = canvas.width(), .height = canvas.height(), .scale = m_render_framebuffer->scale() };
-     toml::table *coo_table = get_deswizzle_combined_coo_table();
+     toml::table *coo_table = get_deswizzle_combined_coo_table({}, selections->get<ConfigKey::TOMLFailOverForEditor>());
      if (!coo_table)
      {
           return;
@@ -2120,7 +2120,7 @@ void map_sprite::save_deswizzle_generate_toml(const std::string &keyed_string, c
      iRectangle const  canvas     = m_map_group.maps.const_working().canvas() * scale;
      const auto specification = glengine::FrameBufferSpecification{ .width = canvas.width(), .height = canvas.height(), .scale = scale };
 
-     const toml::table *coo_table = get_deswizzle_combined_coo_table();
+     const toml::table *coo_table = get_deswizzle_combined_coo_table({}, selections->get<ConfigKey::TOMLFailOverForEditor>());
      if (!coo_table)
      {
           return m_cache_framebuffer;
@@ -2217,6 +2217,78 @@ std::string map_sprite::generate_deswizzle_combined_tool_tip(const toml::table *
      }
      return ss.str();
 };
+
+open_viii::LangT map_sprite::get_used_coo(const fme::FailOverLevels max_failover) const
+{
+    const auto selections = m_selections.lock();
+    if (!selections)
+        return open_viii::LangT::generic;
+
+    const auto field = m_map_group.field.lock();
+    if (!field)
+        return open_viii::LangT::generic;
+
+    const std::string field_name = str_to_lower(field->get_base_name());
+
+    const auto coo_opt =
+        m_map_group.opt_coo.has_value() && m_map_group.opt_coo.value() != open_viii::LangT::generic
+            ? m_map_group.opt_coo
+            : field->get_lang_from_fl_paths();
+
+    const auto failover_sequence = std::to_array(
+        { coo_opt.value_or(open_viii::LangT::generic),
+          open_viii::LangT::generic,
+          open_viii::LangT::en,
+          open_viii::LangT::fr,
+          open_viii::LangT::de,
+          open_viii::LangT::it,
+          open_viii::LangT::es,
+          open_viii::LangT::jp });
+
+    const key_value_data config_path_values{ .ext = ".toml" };
+    const std::filesystem::path config_path =
+        config_path_values.replace_tags(selections->get<ConfigKey::OutputTomlPattern>(), selections);
+
+    auto config = Configuration(config_path);
+    toml::table &root_table = config;
+
+    toml::table *field_table = nullptr;
+    if (auto it_base = root_table.find(field_name);
+        it_base != root_table.end() && it_base->second.is_table())
+    {
+        field_table = it_base->second.as_table();
+    }
+
+    if (!field_table)
+        return coo_opt.value_or(open_viii::LangT::generic);
+
+    auto get_table_by_coo = [&](const open_viii::LangT lang) -> toml::table * {
+        const std::string key =
+            (lang != open_viii::LangT::generic)
+                ? std::string(open_viii::LangCommon::to_string_3_char(lang))
+                : "x";
+
+        if (auto it_coo = field_table->find(key);
+            it_coo != field_table->end() && it_coo->second.is_table())
+            return it_coo->second.as_table();
+
+        return nullptr;
+    };
+
+    for (const auto &[index, lang] : failover_sequence | std::views::enumerate)
+    {
+        auto *coo_table = get_table_by_coo(lang);
+
+        if (coo_table && (max_failover == fme::FailOverLevels::Loaded || !coo_table->empty()))
+            return lang;
+
+        if (std::cmp_equal(index, std::to_underlying(max_failover)))
+            break;
+    }
+
+    // mimic the "insert" branch of the original
+    return coo_opt.value_or(open_viii::LangT::generic);
+}
 
 toml::table *
   map_sprite::get_deswizzle_combined_coo_table(open_viii::LangT *const out_used_coo, const fme::FailOverLevels max_failover) const
@@ -2345,7 +2417,13 @@ toml::table *
 toml::table *map_sprite::get_deswizzle_combined_toml_table(const std::string &file_name_str) const
 {
 
-     toml::table *coo_table = get_deswizzle_combined_coo_table();
+     const auto selections = m_selections.lock();
+     if (!selections)
+     {
+          spdlog::error("Failed to lock m_selections.");
+          return nullptr;
+     }
+     toml::table *coo_table = get_deswizzle_combined_coo_table({}, selections->get<ConfigKey::TOMLFailOverForEditor>());
      if (!coo_table)
      {
           return nullptr;
@@ -2360,7 +2438,13 @@ toml::table *map_sprite::get_deswizzle_combined_toml_table(const std::string &fi
 [[nodiscard]] toml::table *
   map_sprite::rename_deswizzle_combined_toml_table(const std::string &old_file_name, const std::string &new_file_name)
 {
-     toml::table *coo_table = get_deswizzle_combined_coo_table();
+     const auto selections = m_selections.lock();
+     if (!selections)
+     {
+          spdlog::error("Failed to lock m_selections.");
+          return nullptr;
+     }
+     toml::table *coo_table = get_deswizzle_combined_coo_table({}, selections->get<ConfigKey::TOMLFailOverForEditor>());
      if (!coo_table)
      {
           spdlog::error("Failed to retrieve coo_table.");
@@ -2422,9 +2506,15 @@ toml::table *map_sprite::get_deswizzle_combined_toml_table(const std::string &fi
 
 [[nodiscard]] std::size_t map_sprite::remove_deswizzle_combined_toml_table(const std::string &name)
 {
+     const auto selections = m_selections.lock();
+     if (!selections)
+     {
+          spdlog::error("Failed to lock m_selections.");
+          return {};
+     }
      size_t       removed_count = 0;
 
-     toml::table *coo_table     = get_deswizzle_combined_coo_table();
+     toml::table *coo_table     = get_deswizzle_combined_coo_table({}, selections->get<ConfigKey::TOMLFailOverForEditor>());
      if (!coo_table)
      {
           spdlog::error("Failed to retrieve coo_table.");
@@ -2450,7 +2540,13 @@ toml::table *map_sprite::get_deswizzle_combined_toml_table(const std::string &fi
 
 [[nodiscard]] toml::table *map_sprite::add_deswizzle_combined_toml_table(const std::string &new_file_name)
 {
-     toml::table *coo_table = get_deswizzle_combined_coo_table();
+     const auto selections = m_selections.lock();
+     if (!selections)
+     {
+          spdlog::error("Failed to lock m_selections.");
+          return nullptr;
+     }
+     toml::table *coo_table = get_deswizzle_combined_coo_table({}, selections->get<ConfigKey::TOMLFailOverForEditor>());
      if (!coo_table)
      {
           spdlog::error("Failed to retrieve coo_table.");
@@ -2524,7 +2620,13 @@ void map_sprite::apply_multi_pupu_filter_deswizzle_combined_toml_table(
 toml::table *
   map_sprite::add_combine_deswizzle_combined_toml_table(const std::vector<std::string> &file_names, const std::string &new_file_name)
 {
-     toml::table *coo_table = get_deswizzle_combined_coo_table();
+     const auto selections = m_selections.lock();
+     if (!selections)
+     {
+          spdlog::error("Failed to lock m_selections.");
+          return nullptr;
+     }
+     toml::table *coo_table = get_deswizzle_combined_coo_table({}, selections->get<ConfigKey::TOMLFailOverForEditor>());
      if (!coo_table)
      {
           return nullptr;
@@ -2557,7 +2659,13 @@ void map_sprite::copy_deswizzle_combined_toml_table(
   const std::vector<std::string>            &existing_names,
   std::move_only_function<std::string(void)> generate_name)
 {
-     toml::table *coo_table = get_deswizzle_combined_coo_table();
+     const auto selections = m_selections.lock();
+     if (!selections)
+     {
+          spdlog::error("Failed to lock m_selections.");
+          return;
+     }
+     toml::table *coo_table = get_deswizzle_combined_coo_table({}, selections->get<ConfigKey::TOMLFailOverForEditor>());
      if (!coo_table)
           return;
 

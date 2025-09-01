@@ -124,6 +124,8 @@ enum struct FailOverLevels : std::int8_t
      IT      = 5,
      ES      = 6,
      JP      = 7,
+     Begin   = All,
+     End     = JP,
 };
 }// namespace fme
 #endif// FIELD_MAP_EDITOR_COMPACT_TYPE_HPP
