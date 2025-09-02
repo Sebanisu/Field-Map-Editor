@@ -511,9 +511,9 @@ void fme::filter_window::select_file(const std::string &file_name, const std::sh
           }
           m_multi_select.clear();
           m_selected_file_name = file_name;
-          const auto count     = (std::min)(s_max_chars, static_cast<size_t>(m_selected_file_name.size()));
+          const auto count     = (std::min)(s_max_chars, m_selected_file_name.size());
           std::ranges::copy_n(
-            m_selected_file_name.begin(), static_cast<std::ranges::range_difference_t<std::string>> (count), m_file_name_buffer.begin());
+            m_selected_file_name.begin(), static_cast<std::ranges::range_difference_t<std::string>>(count), m_file_name_buffer.begin());
           m_file_name_buffer[count] = '\0';
           m_selected_toml_table     = ptr;
           lock_map_sprite->filter().reload(*ptr);
@@ -630,7 +630,7 @@ void fme::filter_window::add_new_entry(
           std::ranges::copy_n(
             m_selected_file_name.begin(),
             static_cast<std::ranges::range_difference_t<std::string>>(
-              (std::min)(s_max_chars, static_cast<size_t>(m_selected_file_name.size()))),
+              (std::min)(s_max_chars, m_selected_file_name.size())),
             m_file_name_buffer.begin());
      }
      else
@@ -721,7 +721,7 @@ void fme::filter_window::draw_filename_controls(
           std::ranges::copy_n(
             m_selected_file_name.begin(),
             static_cast<std::ranges::range_difference_t<std::string>>(
-              (std::min)(s_max_chars, static_cast<size_t>(m_selected_file_name.size()))),
+              (std::min)(s_max_chars, m_selected_file_name.size())),
             m_file_name_buffer.begin());
      }
      else
