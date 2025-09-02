@@ -168,9 +168,9 @@ std::future<void> save_image_pbo(
                       {
                            auto it = std::ranges::min_element(color_ids, [&](const auto &a, const auto &b) {
                                 auto get_conv = [](const glm::vec4 &c) {
-                                     auto it = conv_cache.find(c);
-                                     if (it != conv_cache.end())
-                                          return it->second;
+                                     auto nested_it = conv_cache.find(c);
+                                     if (nested_it != conv_cache.end())
+                                          return nested_it->second;
                                      fme::color conv = static_cast<fme::color>(c);
                                      conv_cache.emplace(c, conv);
                                      return conv;
@@ -199,7 +199,7 @@ std::future<void> save_image_pbo(
                  if (mask.empty())
                       mask.resize(span.size(), fme::colors::Black);
 
-                 mask[i]       = fme::colors::White;
+                 mask[staic_cast<std::size_t>(i)] = fme::colors::White;
 
                  auto       it = std::ranges::find_if(color_ids, [&](const auto &tup) { return std::get<1>(tup) == best_id; });
 
