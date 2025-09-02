@@ -31,6 +31,7 @@ set(MAIN_SOURCES
     gui/gui.cpp
     gui/history_window.cpp
     gui/key_value_data.cpp
+    gui/keyboard_shortcuts_window.cpp
     gui/import.cpp
     gui/main_menu_paths.cpp
     gui/mouse_positions.cpp

@@ -50,6 +50,7 @@ enum class ConfigKey
      ImportLoadImageDirectory,
      TileSizeValue,
      TOMLFailOverForEditor,
+     DisplayKeyboardShortcutsWindow,
      DisplayHistoryWindow,
      DisplayControlPanelWindow,
      DisplayDrawWindow,
@@ -336,12 +337,22 @@ struct SelectionInfo<ConfigKey::TOMLFailOverForEditor>
 {
      using value_type                     = FailOverLevels;
      static constexpr std::string_view id = "TOMLFailOverForEditor";
+     static constexpr value_type       default_value()
+     {
+          return FailOverLevels::Generic;
+     }
 };
 template<>
 struct SelectionInfo<ConfigKey::TileSizeValue>
 {
      using value_type                     = tile_sizes;
      static constexpr std::string_view id = "TileSizeValue";
+};
+template<>
+struct SelectionInfo<ConfigKey::DisplayKeyboardShortcutsWindow>
+{
+     using value_type                     = bool;
+     static constexpr std::string_view id = "DisplayKeyboardShortcutsWindow";
 };
 template<>
 struct SelectionInfo<ConfigKey::DisplayHistoryWindow>
