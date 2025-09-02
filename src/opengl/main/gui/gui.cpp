@@ -236,7 +236,7 @@ void gui::start(GLFWwindow *const window)
           m_field_file_window.render();
           m_keyboard_shortcuts_window.render();
 
-            if (toggle_imgui_demo_window)
+          if (toggle_imgui_demo_window)
           {
                ImGui::ShowDemoWindow();
           }
@@ -3076,9 +3076,9 @@ void gui::bind_shortcuts()
                const auto     it     = std::find(values.begin(), values.end(), coo);
                if (it != values.end())
                {
-                    size_t idx = std::ranges::distance(values.begin(), it);
-                    idx        = (idx + 1) % values.size();// wrap forward
-                    coo        = values[idx];
+                    auto idx = static_cast<std::size_t>(std::ranges::distance(values.begin(), it));
+                    idx      = (idx + 1U) % values.size();// wrap forward
+                    coo      = values[idx];
                }
 
                refresh_coo();
@@ -3095,9 +3095,9 @@ void gui::bind_shortcuts()
                const auto     it     = std::find(values.begin(), values.end(), coo);
                if (it != values.end())
                {
-                    size_t idx = std::ranges::distance(values.begin(), it);
-                    idx        = (idx + values.size() - 1) % values.size();// wrap backward
-                    coo        = values[idx];
+                    auto idx = static_cast<std::size_t>(std::ranges::distance(values.begin(), it));
+                    idx      = (idx + values.size() - 1U) % values.size();// wrap backward
+                    coo      = values[idx];
                }
 
                refresh_coo();
