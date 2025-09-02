@@ -24,8 +24,8 @@ namespace fme
 struct [[nodiscard]] color
 {
      std::uint8_t r                          = {};//!< Red component (0-255)
-     std::uint8_t b                          = {};//!< Green component (0-255)
-     std::uint8_t g                          = {};//!< Blue component (0-255)
+     std::uint8_t g                          = {};//!< Green component (0-255)
+     std::uint8_t b                          = {};//!< Blue component (0-255)
      std::uint8_t a                          = { (std::numeric_limits<std::uint8_t>::max)() };//!< Alpha (opacity) component (0-255)
 
      /**
