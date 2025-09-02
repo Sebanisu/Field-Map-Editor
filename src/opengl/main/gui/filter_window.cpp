@@ -357,7 +357,7 @@ void fme::filter_window::render_list_view(
      // Copy
      if (ImGui::Button(ICON_FA_COPY " Copy", button_size))
      {
-          (void)lock_map_sprite->copy_deswizzle_combined_toml_table(
+          lock_map_sprite->copy_deswizzle_combined_toml_table(
             m_multi_select, [&, index = int{}]() mutable { return generate_file_name(lock_map_sprite, index++); });
           save_config(lock_selections);
           // todo: copy create new entries with generated name (prefix_timestamp_index.png).
