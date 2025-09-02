@@ -56,9 +56,9 @@ void HistogramBuffer::reset() const
           return;
      }
      std::vector<GLuint> zero_data(m_count, 0);
-     glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_buffer_id);
-     glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, m_count * sizeof(GLuint), zero_data.data());
-     glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+     GlCall{}(glBindBuffer, GL_SHADER_STORAGE_BUFFER, m_buffer_id);
+     GlCall{}(glBufferSubData, GL_SHADER_STORAGE_BUFFER, 0, static_cast<GLsizeiptr>(m_count * sizeof(GLuint)), zero_data.data());
+     GlCall{}(glBindBuffer, GL_SHADER_STORAGE_BUFFER, 0);
      if (glGetError() != GL_NO_ERROR)
      {
           spdlog::error("Failed to reset HistogramBuffer data");
@@ -86,9 +86,9 @@ GLuint HistogramBuffer::create(size_t count)
           return {};
      }
      std::vector<GLuint> init_data(count, 0);
-     GlCall{}(glBindBuffer,GL_SHADER_STORAGE_BUFFER, temp_id);
-     GlCall{}(glBufferData, GL_SHADER_STORAGE_BUFFER, static_cast<GLsizeiptr>(count * sizeof(GLuint), init_data.data()), GL_DYNAMIC_COPY);
-     GlCall{}(glBindBuffer,GL_SHADER_STORAGE_BUFFER, 0);
+     GlCall{}(glBindBuffer, GL_SHADER_STORAGE_BUFFER, temp_id);
+     GlCall{}(glBufferData, GL_SHADER_STORAGE_BUFFER, static_cast<GLsizeiptr>(count * sizeof(GLuint)), init_data.data(), GL_DYNAMIC_COPY);
+     GlCall{}(glBindBuffer, GL_SHADER_STORAGE_BUFFER, 0);
      if (glGetError() != GL_NO_ERROR)
      {
           spdlog::error("Failed to initialize HistogramBuffer data");

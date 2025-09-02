@@ -146,7 +146,7 @@ std::future<void> save_image_pbo(
                  return;
             }
 
-            const auto                                       span = std::span(reinterpret_cast<const fme::color *>(pixels.get()), w * h);
+            const auto span = std::span(reinterpret_cast<const fme::color *>(pixels.get()), static_cast<std::size_t>(w * h));
             // For each unique PupuID, create a vector of masks
             std::map<ff_8::PupuID, std::vector<fme::color>>  masks;
             std::set<std::pair<fme::color, fme::color>>      logged_colors;
