@@ -25,6 +25,7 @@
 #include "generic_combo.hpp"
 #include "gui/history_window.hpp"
 #include "import.hpp"
+#include "keyboard_shortcuts_window.hpp"
 #include "map_directory_mode.hpp"
 #include "mouse_positions.hpp"
 #include "RangeConsumer.hpp"
@@ -54,25 +55,26 @@ struct gui
        open_viii::graphics::background::Tile2,
        open_viii::graphics::background::Tile3,
        std::monostate>;
-     std::shared_ptr<Selections>                        m_selections          = std::make_shared<Selections>();
+     std::shared_ptr<Selections>                        m_selections                = std::make_shared<Selections>();
      // todo replace with glengine::Shader
      // std::shared_ptr<sf::Shader>                        m_drag_sprite_shader  = {};
-     static constexpr std::int8_t                       tile_size_px          = { 16 };
-     static constexpr std::uint8_t                      tile_size_px_unsigned = { 16U };
-     int                                                m_field_index         = {};
-     float                                              m_scale_width         = {};
-     glengine::TimeStep                                 m_delta_clock         = {};
-     float                                              m_elapsed_time        = {};///< seconds
-     std::shared_ptr<archives_group>                    m_archives_group      = {};
-     batch                                              m_batch_window        = {};
-     std::shared_ptr<open_viii::archive::FIFLFS<false>> m_field               = {};
-     std::array<float, 2>                               xy                    = {};
-     std::shared_ptr<mim_sprite>                        m_mim_sprite          = {};
-     std::shared_ptr<map_sprite>                        m_map_sprite          = {};
-     filter_window                                      m_filter_window       = { m_selections, m_map_sprite };
-     draw_window                                        m_draw_window         = { m_selections, m_mim_sprite, m_map_sprite };
-     custom_paths_window                                m_custom_paths_window = { m_selections };
-     field_file_window                                  m_field_file_window   = { m_field, m_selections };
+     static constexpr std::int8_t                       tile_size_px                = { 16 };
+     static constexpr std::uint8_t                      tile_size_px_unsigned       = { 16U };
+     int                                                m_field_index               = {};
+     float                                              m_scale_width               = {};
+     glengine::TimeStep                                 m_delta_clock               = {};
+     float                                              m_elapsed_time              = {};///< seconds
+     std::shared_ptr<archives_group>                    m_archives_group            = {};
+     batch                                              m_batch_window              = {};
+     std::shared_ptr<open_viii::archive::FIFLFS<false>> m_field                     = {};
+     std::array<float, 2>                               xy                          = {};
+     std::shared_ptr<mim_sprite>                        m_mim_sprite                = {};
+     std::shared_ptr<map_sprite>                        m_map_sprite                = {};
+     filter_window                                      m_filter_window             = { m_selections, m_map_sprite };
+     draw_window                                        m_draw_window               = { m_selections, m_mim_sprite, m_map_sprite };
+     custom_paths_window                                m_custom_paths_window       = { m_selections };
+     field_file_window                                  m_field_file_window         = { m_field, m_selections };
+     keyboard_shortcuts_window                          m_keyboard_shortcuts_window = { m_selections };
      struct PathsAndEnabled
      {
           std::vector<std::filesystem::path> path{};
@@ -222,6 +224,7 @@ struct gui
      void file_menu();
      void edit_menu();
      void windows_menu();
+     void help_menu();
      void refresh_map_swizzle();
      void refresh_map_disable_blending();
      void refresh_draw_mode();

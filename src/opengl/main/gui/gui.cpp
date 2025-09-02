@@ -234,8 +234,9 @@ void gui::start(GLFWwindow *const window)
           }
           m_custom_paths_window.render();
           m_field_file_window.render();
+          m_keyboard_shortcuts_window.render();
 
-          if (toggle_imgui_demo_window)
+            if (toggle_imgui_demo_window)
           {
                ImGui::ShowDemoWindow();
           }
@@ -1329,7 +1330,25 @@ void gui::menu_bar()
      edit_menu();
 
      windows_menu();
+
+     help_menu();
 }
+
+void gui::help_menu()
+{
+
+     if (!ImGui::BeginMenu(gui_labels::help.data()))
+     {
+          return;
+     }
+     const auto end_menu = glengine::ScopeGuard(&ImGui::EndMenu);
+     if (ImGui::MenuItem(
+           gui_labels::DisplayKeyboardShortcutsWindow.data(), nullptr, &m_selections->get<ConfigKey::DisplayKeyboardShortcutsWindow>()))
+     {
+          m_selections->update<ConfigKey::DisplayKeyboardShortcutsWindow>();
+     }
+}
+
 void gui::windows_menu()
 {
      if (!ImGui::BeginMenu(gui_labels::windows.data()))
