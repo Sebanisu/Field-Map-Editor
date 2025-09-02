@@ -114,9 +114,9 @@ void fme::filter_window::render() const
      {
           m_multi_select.clear();
           m_multi_select.reserve(m_textures_map->size());
-          for (const auto &[file_name, _] : *m_textures_map)
+          for (const auto &[current_file_name, _] : *m_textures_map)
           {
-               m_multi_select.push_back(file_name);
+               m_multi_select.push_back(current_file_name);
           }
 
           // Optionally set last_selected to the last file
@@ -131,12 +131,12 @@ void fme::filter_window::render() const
           std::vector<std::string> new_selection;
           new_selection.reserve(m_textures_map->size());
 
-          for (const auto &[file_name, _] : *m_textures_map)
+          for (const auto &[current_file_name, _] : *m_textures_map)
           {
                // Add file_name if it is NOT currently selected
-               if (std::ranges::find(m_multi_select, file_name) == m_multi_select.end())
+               if (std::ranges::find(m_multi_select, current_file_name) == m_multi_select.end())
                {
-                    new_selection.push_back(file_name);
+                    new_selection.push_back(current_file_name);
                }
           }
 
@@ -480,9 +480,9 @@ void fme::filter_window::select_file(const std::string &file_name, const std::sh
                };
 
                const auto add = [this](auto &&range) {
-                    for (const auto &[file_name, _] : range)
+                    for (const auto &[current_file_name, _] : range)
                     {
-                         m_multi_select.push_back(file_name);
+                         m_multi_select.push_back(current_file_name);
                     }
                     std::ranges::sort(m_multi_select);
                     auto not_unique = std::ranges::unique(m_multi_select);
@@ -490,9 +490,9 @@ void fme::filter_window::select_file(const std::string &file_name, const std::sh
                };
 
                const auto remove = [this](auto &&range) {
-                    for (const auto &[file_name, _] : range)
+                    for (const auto &[current_file_name, _] : range)
                     {
-                         auto found = std::ranges::find(m_multi_select, file_name);
+                         auto found = std::ranges::find(m_multi_select, current_file_name);
                          if (found != m_multi_select.end())
                          {
                               m_multi_select.erase(found);
@@ -812,11 +812,11 @@ std::vector<ff_8::PupuID> fme::filter_window::get_unused_ids() const
      std::set<ff_8::PupuID> used_pupu{};
 
      // collect used IDs from textures_map
-     for (const auto &[file_name, _] : *m_textures_map)
+     for (const auto &[current_file_name, _] : *m_textures_map)
      {
           const auto &pupu_map = lock_map_sprite->get_deswizzle_combined_textures_pupuids();
 
-          if (auto it = pupu_map.find(file_name); it != pupu_map.end())
+          if (auto it = pupu_map.find(current_file_name); it != pupu_map.end())
           {
                used_pupu.insert(it->second.begin(), it->second.end());
           }

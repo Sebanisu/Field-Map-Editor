@@ -1063,7 +1063,7 @@ void map_sprite::update_render_texture(const bool reload_textures) const
                               const auto pop_shader = shader.backup();
                               shader.bind();
                               shader.set_uniform("chosenColor", glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
-                              shader.execute(size.x, size.y, GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+                              shader.execute(static_cast<GLuint>(size.x), static_cast<GLuint>(size.y), GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
                               remove_queue.push_back(filename);
                               remove_queue.push_back(maskname);
                          }
@@ -1077,7 +1077,7 @@ void map_sprite::update_render_texture(const bool reload_textures) const
                               const auto pop_shader = shader_count.backup();
                               shader_count.bind();
                               shader_count.set_uniform("numColors", static_cast<GLint>(std::ranges::size(palette)));
-                              shader_count.execute(size.x, size.y, GL_SHADER_STORAGE_BARRIER_BIT);
+                              shader_count.execute(static_cast<GLuint>(size.x), static_cast<GLuint>(size.y), GL_SHADER_STORAGE_BARRIER_BIT);
 
                               // todo use a std::async to defer this to later. Because of warnings from gpu for doing it too fast. And I'm
                               // not sure it'll fix it but it might.
@@ -1097,7 +1097,8 @@ void map_sprite::update_render_texture(const bool reload_textures) const
                                    {
                                         continue;
                                    }
-                                   multi_pupu_post_op[index].emplace_back(count, distance, *mask_texture, main_texture);
+                                   multi_pupu_post_op[static_cast<std::size_t>(index)].emplace_back(
+                                     count, distance, *mask_texture, main_texture);
                                    spdlog::info(
                                      "Index {:>3}, Color {}, Pupu {}, Count {:>6}, Distance {}",
                                      index,
@@ -1151,7 +1152,7 @@ void map_sprite::update_render_texture(const bool reload_textures) const
                          shader.set_uniform("chosenColor", color);// Set target color (e.g., red)
                          // todo might need to adjust the distance it's slightly off. like round up or something.
                          shader.set_uniform("threshold", distance);
-                         shader.execute(size.x, size.y, GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+                         shader.execute(static_cast<GLuint>(size.x), static_cast<GLuint>(size.y), GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
                     }
 
                     for (const std::string &filename : remove_queue)
@@ -2220,74 +2221,67 @@ std::string map_sprite::generate_deswizzle_combined_tool_tip(const toml::table *
 
 open_viii::LangT map_sprite::get_used_coo(const fme::FailOverLevels max_failover) const
 {
-    const auto selections = m_selections.lock();
-    if (!selections)
-        return open_viii::LangT::generic;
+     const auto selections = m_selections.lock();
+     if (!selections)
+          return open_viii::LangT::generic;
 
-    const auto field = m_map_group.field.lock();
-    if (!field)
-        return open_viii::LangT::generic;
+     const auto field = m_map_group.field.lock();
+     if (!field)
+          return open_viii::LangT::generic;
 
-    const std::string field_name = str_to_lower(field->get_base_name());
+     const std::string field_name        = str_to_lower(field->get_base_name());
 
-    const auto coo_opt =
-        m_map_group.opt_coo.has_value() && m_map_group.opt_coo.value() != open_viii::LangT::generic
-            ? m_map_group.opt_coo
-            : field->get_lang_from_fl_paths();
+     const auto        coo_opt           = m_map_group.opt_coo.has_value() && m_map_group.opt_coo.value() != open_viii::LangT::generic
+                                             ? m_map_group.opt_coo
+                                             : field->get_lang_from_fl_paths();
 
-    const auto failover_sequence = std::to_array(
-        { coo_opt.value_or(open_viii::LangT::generic),
-          open_viii::LangT::generic,
-          open_viii::LangT::en,
-          open_viii::LangT::fr,
-          open_viii::LangT::de,
-          open_viii::LangT::it,
-          open_viii::LangT::es,
-          open_viii::LangT::jp });
+     const auto        failover_sequence = std::to_array(
+       { coo_opt.value_or(open_viii::LangT::generic),
+                open_viii::LangT::generic,
+                open_viii::LangT::en,
+                open_viii::LangT::fr,
+                open_viii::LangT::de,
+                open_viii::LangT::it,
+                open_viii::LangT::es,
+                open_viii::LangT::jp });
 
-    const key_value_data config_path_values{ .ext = ".toml" };
-    const std::filesystem::path config_path =
-        config_path_values.replace_tags(selections->get<ConfigKey::OutputTomlPattern>(), selections);
+     const key_value_data        config_path_values{ .ext = ".toml" };
+     const std::filesystem::path config_path = config_path_values.replace_tags(selections->get<ConfigKey::OutputTomlPattern>(), selections);
 
-    auto config = Configuration(config_path);
-    toml::table &root_table = config;
+     auto                        config      = Configuration(config_path);
+     toml::table                &root_table  = config;
 
-    toml::table *field_table = nullptr;
-    if (auto it_base = root_table.find(field_name);
-        it_base != root_table.end() && it_base->second.is_table())
-    {
-        field_table = it_base->second.as_table();
-    }
+     toml::table                *field_table = nullptr;
+     if (auto it_base = root_table.find(field_name); it_base != root_table.end() && it_base->second.is_table())
+     {
+          field_table = it_base->second.as_table();
+     }
 
-    if (!field_table)
-        return coo_opt.value_or(open_viii::LangT::generic);
+     if (!field_table)
+          return coo_opt.value_or(open_viii::LangT::generic);
 
-    auto get_table_by_coo = [&](const open_viii::LangT lang) -> toml::table * {
-        const std::string key =
-            (lang != open_viii::LangT::generic)
-                ? std::string(open_viii::LangCommon::to_string_3_char(lang))
-                : "x";
+     auto get_table_by_coo = [&](const open_viii::LangT lang) -> toml::table * {
+          const std::string key = (lang != open_viii::LangT::generic) ? std::string(open_viii::LangCommon::to_string_3_char(lang)) : "x";
 
-        if (auto it_coo = field_table->find(key);
-            it_coo != field_table->end() && it_coo->second.is_table())
-            return it_coo->second.as_table();
+          if (auto it_coo = field_table->find(key); it_coo != field_table->end() && it_coo->second.is_table())
+               return it_coo->second.as_table();
 
-        return nullptr;
-    };
+          return nullptr;
+     };
 
-    for (const auto &[index, lang] : failover_sequence | std::views::enumerate)
-    {
-        auto *coo_table = get_table_by_coo(lang);
+     for (const auto &[index, lang] : failover_sequence | std::views::enumerate)
+     {
+          auto *coo_table = get_table_by_coo(lang);
 
-        if (coo_table && (max_failover == fme::FailOverLevels::Loaded || !coo_table->empty()))
-            return lang;
+          if (coo_table && (max_failover == fme::FailOverLevels::Loaded || !coo_table->empty()))
+               return lang;
 
-        if (std::cmp_equal(index, std::to_underlying(max_failover)))
-            break;
-    }
+          if (std::cmp_equal(index, std::to_underlying(max_failover)))
+               break;
+     }
 
-    // mimic the "insert" branch of the original
-    return coo_opt.value_or(open_viii::LangT::generic);
+     // mimic the "insert" branch of the original
+     return coo_opt.value_or(open_viii::LangT::generic);
 }
 
 toml::table *
