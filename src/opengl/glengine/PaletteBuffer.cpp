@@ -26,7 +26,7 @@ void PaletteBuffer::bind(GLuint binding_point)
           spdlog::error("PaletteBuffer not initialized, cannot bind");
           return;
      }
-     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, binding_point, m_buffer_id);
+     GlCall{}(glBindBufferBase, GL_SHADER_STORAGE_BUFFER, binding_point, m_buffer_id);
      if (glGetError() != GL_NO_ERROR)
      {
           spdlog::error("Failed to bind PaletteBuffer");

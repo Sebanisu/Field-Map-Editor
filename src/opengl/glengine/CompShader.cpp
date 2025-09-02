@@ -55,10 +55,10 @@ void CompShader::execute(GLuint width, GLuint height, GLbitfield bf) const
      // Dispatch compute shader
      // glDispatchCompute((width + 15) / 16, (height + 15) / 16, 1);
      // glDispatchCompute((width + 7) / 8, (height + 3) / 4, 1);
-     glDispatchCompute((width + 7) / 8, (height + 7) / 8, 1);
+     GlCall{}(glDispatchCompute, (width + 7) / 8, (height + 7) / 8, 1);
 
      // Ensure compute shader writes are complete
-     glMemoryBarrier(bf);
+     GlCall{}(glMemoryBarrier, bf);
 }
 
 

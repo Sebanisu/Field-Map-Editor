@@ -14,7 +14,7 @@ void DistanceBuffer::bind(GLuint binding_point)
           spdlog::error("DistanceBuffer not initialized, cannot bind");
           return;
      }
-     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, binding_point, m_buffer_id);
+     GlCall{}(glBindBufferBase, GL_SHADER_STORAGE_BUFFER, binding_point, m_buffer_id);
      if (glGetError() != GL_NO_ERROR)
      {
           spdlog::error("Failed to bind DistanceBuffer");
@@ -36,7 +36,11 @@ void DistanceBuffer::read_back(std::vector<float> &data)
      if (ptr)
      {
           std::memcpy(data.data(), ptr, m_count * sizeof(float));
-          glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
+          const bool result = GlCall{}(glUnmapBuffer, GL_SHADER_STORAGE_BUFFER);
+          if (!result)
+          {
+               spdlog::error("glUnmapBuffer failed: buffer data may be corrupted (id={}, count={})", *m_buffer_id, m_count);
+          }
      }
      GlCall{}(glBindBuffer, GL_SHADER_STORAGE_BUFFER, 0);
      if (glGetError() != GL_NO_ERROR)
