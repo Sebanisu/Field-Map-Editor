@@ -31,15 +31,16 @@ void HistogramBuffer::read_back(std::vector<GLuint> &data)
      }
      data.resize(m_count);
      // glFinish();
-     glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_buffer_id);
+     GlCall{}(glBindBuffer, GL_SHADER_STORAGE_BUFFER, m_buffer_id);
      // glGetBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, m_count * sizeof(GLuint), data.data());
-     void *ptr = glMapBufferRange(GL_SHADER_STORAGE_BUFFER, 0, m_count * sizeof(GLuint), GL_MAP_READ_BIT);
+     void *ptr =
+       GlCall{}(glMapBufferRange, GL_SHADER_STORAGE_BUFFER, 0, static_cast<GLsizeiptr>(m_count * sizeof(GLuint)), GL_MAP_READ_BIT);
      if (ptr)
      {
           std::memcpy(data.data(), ptr, m_count * sizeof(GLuint));
-          glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
+          GlCall{}(glUnmapBuffer, GL_SHADER_STORAGE_BUFFER);
      }
-     glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+     GlCall{}(glBindBuffer, GL_SHADER_STORAGE_BUFFER, 0);
      if (glGetError() != GL_NO_ERROR)
      {
           spdlog::error("Failed to read back HistogramBuffer data");
