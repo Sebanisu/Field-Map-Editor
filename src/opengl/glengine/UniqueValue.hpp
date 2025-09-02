@@ -45,7 +45,10 @@ class UniqueValue
           swap(left.m_value, right.m_value);
           swap(left.m_function, right.m_function);
      }
-
+     constexpr T operator*() const noexcept
+     {
+          return m_value;
+     }
      constexpr operator T() const noexcept
      {
           return m_value;
@@ -194,6 +197,10 @@ class WeakValue
      constexpr WeakValue(const UniqueValueArray<U, Usz> &t)
        : m_value(t.m_value)
      {
+     }
+     constexpr T operator*() const noexcept
+     {
+          return m_value;
      }
      constexpr operator T() const noexcept
      {
