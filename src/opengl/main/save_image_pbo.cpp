@@ -59,8 +59,8 @@ std::future<void> save_image_pbo(
      glengine::GlCall{}(glPixelStorei, GL_PACK_ALIGNMENT, 1);
      glengine::GlCall{}(glPixelStorei, GL_PACK_ROW_LENGTH, 0);
 
-     const GLsizei    w           = static_cast<GLsizei>(in_fbo.width());
-     const GLsizei    h           = static_cast<GLsizei>(in_fbo.height());
+     const GLsizei    w           = in_fbo.width();
+     const GLsizei    h           = in_fbo.height();
      const GLint      channels    = 4;
      const GLsizeiptr buffer_size = GLsizeiptr{ w } * GLsizeiptr{ h } * GLsizeiptr{ channels };
 
@@ -199,7 +199,7 @@ std::future<void> save_image_pbo(
                  if (mask.empty())
                       mask.resize(span.size(), fme::colors::Black);
 
-                 mask[staic_cast<std::size_t>(i)] = fme::colors::White;
+                 mask[static_cast<std::size_t>(i)] = fme::colors::White;
 
                  auto       it = std::ranges::find_if(color_ids, [&](const auto &tup) { return std::get<1>(tup) == best_id; });
 

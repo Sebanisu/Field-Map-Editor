@@ -14,6 +14,7 @@
 #include <imgui.h>
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_opengl3.h>
+#include <memory>
 
 namespace glengine
 {
@@ -103,8 +104,8 @@ class Window final
           return get_window_data(m_window.get());
      }
 
-     void        update_view_ports() const;
-     void        render_dockspace() const;
+     void update_view_ports() const;
+     void render_dockspace() const;
 
    private:
      Window(WindowData);
