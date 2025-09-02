@@ -38,7 +38,11 @@ void HistogramBuffer::read_back(std::vector<GLuint> &data)
      if (ptr)
      {
           std::memcpy(data.data(), ptr, m_count * sizeof(GLuint));
-          GlCall{}(glUnmapBuffer, GL_SHADER_STORAGE_BUFFER);
+          bool result = GlCall{}(glUnmapBuffer, GL_SHADER_STORAGE_BUFFER);
+          if (!result)
+          {
+               spdlog::error("glUnmapBuffer failed: buffer data may be corrupted (id={}, count={})", m_buffer_id, m_count);
+          }
      }
      GlCall{}(glBindBuffer, GL_SHADER_STORAGE_BUFFER, 0);
      if (glGetError() != GL_NO_ERROR)
