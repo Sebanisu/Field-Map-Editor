@@ -526,10 +526,20 @@ void fme::filter_window::select_file(const std::string &file_name, const std::sh
 
 std::optional<std::string> fme::filter_window::prev_key() const
 {
-     auto it = m_textures_map->find(m_selected_file_name);
-     if (std::ranges::end(*m_textures_map) == it || std::ranges::begin(*m_textures_map) == it)
+     if (std::ranges::empty(*m_textures_map))
      {
           return std::nullopt;
+     }
+     auto it = m_textures_map->find(m_selected_file_name);
+     if (it == std::ranges::end(*m_textures_map))
+     {
+          return std::nullopt;// not found
+     }
+     if (it == std::ranges::begin(*m_textures_map))
+     {
+          // wrap around to last element
+          auto last = std::ranges::prev(std::ranges::end(*m_textures_map));
+          return last->first;
      }
      it = std::ranges::prev(it);
      return it->first;
@@ -549,7 +559,6 @@ std::optional<std::string> fme::filter_window::next_key() const
      it = std::ranges::next(it);
      if (std::ranges::end(*m_textures_map) == it)
      {
-          // return std::nullopt;
           return std::ranges::begin(*m_textures_map)->first;// loop
      }
      return it->first;
