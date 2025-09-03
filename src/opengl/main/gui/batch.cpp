@@ -1233,10 +1233,6 @@ void fme::batch::compact()
      }
 
      // Skip if compact type is not enabled
-     if (!selections->get<ConfigKey::BatchCompactType>().enabled())
-     {
-          return;
-     }
 
      if (selections->get<ConfigKey::BatchOutputType>() == output_types::swizzle_as_one_image)
      {
@@ -1244,6 +1240,10 @@ void fme::batch::compact()
      }
      else
      {
+          if (!selections->get<ConfigKey::BatchCompactType>().enabled())
+          {
+               return;
+          }
           // Apply the appropriate compaction strategy based on the selected type
           switch (selections->get<ConfigKey::BatchCompactType>().value())
           {
