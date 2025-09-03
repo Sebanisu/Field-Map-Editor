@@ -99,8 +99,14 @@ void fme::batch::draw_window()
      if (ImGui::CollapsingHeader(gui_labels::compact_flatten.data(), flags))
      {
           format_imgui_wrapped_text("{}", gui_labels::compact_flatten_warning);
+          if (selections->get<ConfigKey::BatchOutputType>() == output_types::swizzle_as_one_image)
+          {
+               format_imgui_wrapped_text("\n{} forces {}", fme::gui_labels::swizzle_as_one_image, fme::gui_labels::compact_map_order_ffnx);
+          }
+          ImGui::BeginDisabled(selections->get<ConfigKey::BatchOutputType>() == output_types::swizzle_as_one_image);
           combo_compact_type();
           combo_flatten_type();
+          ImGui::EndDisabled();
      }
      // toggle maps to be processed.
 
@@ -554,7 +560,8 @@ void fme::batch::checkmark_save_map()
      bool changed = false;
      bool forced =
        (selections->get<ConfigKey::BatchCompactType>().enabled() || selections->get<ConfigKey::BatchFlattenType>().enabled()
-        || selections->get<ConfigKey::BatchInputLoadMap>());
+        || selections->get<ConfigKey::BatchInputLoadMap>()
+        || selections->get<ConfigKey::BatchOutputType>() == output_types::swizzle_as_one_image);
      if (!selections->get<ConfigKey::BatchOutputSaveMap>() && forced)
      {
           selections->get<ConfigKey::BatchOutputSaveMap>() = true;
@@ -1051,8 +1058,9 @@ void fme::batch::update([[maybe_unused]] float elapsed_time)
 
      // Optionally save the modified map
      if (
-       selections->get<ConfigKey::BatchOutputSaveMap>()
-       && selections->get<ConfigKey::BatchOutputType>() != output_types::deswizzle_generate_toml)
+       (selections->get<ConfigKey::BatchOutputSaveMap>()
+        && selections->get<ConfigKey::BatchOutputType>() != output_types::deswizzle_generate_toml)
+       || selections->get<ConfigKey::BatchOutputType>() == output_types::swizzle_as_one_image)
      {
           const key_value_data cpm2 = {
                .field_name    = m_map_sprite.get_base_name(),
@@ -1230,24 +1238,31 @@ void fme::batch::compact()
           return;
      }
 
-     // Apply the appropriate compaction strategy based on the selected type
-     switch (selections->get<ConfigKey::BatchCompactType>().value())
+     if (selections->get<ConfigKey::BatchOutputType>() == output_types::swizzle_as_one_image)
      {
-          case compact_type::rows:
-               m_map_sprite.compact_rows();
-               break;
-          case compact_type::all:
-               m_map_sprite.compact_all();
-               break;
-          case compact_type::move_only_conflicts:
-               m_map_sprite.compact_move_conflicts_only();
-               break;
-          case compact_type::map_order:
-               m_map_sprite.compact_map_order();
-               break;
-          case compact_type::map_order_ffnx:
-               m_map_sprite.compact_map_order_ffnx();
-               break;
+          m_map_sprite.compact_map_order_ffnx();
+     }
+     else
+     {
+          // Apply the appropriate compaction strategy based on the selected type
+          switch (selections->get<ConfigKey::BatchCompactType>().value())
+          {
+               case compact_type::rows:
+                    m_map_sprite.compact_rows();
+                    break;
+               case compact_type::all:
+                    m_map_sprite.compact_all();
+                    break;
+               case compact_type::move_only_conflicts:
+                    m_map_sprite.compact_move_conflicts_only();
+                    break;
+               case compact_type::map_order:
+                    m_map_sprite.compact_map_order();
+                    break;
+               case compact_type::map_order_ffnx:
+                    m_map_sprite.compact_map_order_ffnx();
+                    break;
+          }
      }
 }
 
@@ -1276,38 +1291,44 @@ void fme::batch::flatten()
      }
 
      // Determine and apply flattening strategy
-     switch (selections->get<ConfigKey::BatchFlattenType>().value())
+     if (selections->get<ConfigKey::BatchOutputType>() != output_types::swizzle_as_one_image)
      {
-          case flatten_type::bpp:
-               // Only flatten BPP if compact type isn't using map order
-               if (
+          switch (selections->get<ConfigKey::BatchFlattenType>().value())
+          {
+               case flatten_type::bpp:
+                    // Only flatten BPP if compact type isn't using map order
+                    if (
                  !selections->get<ConfigKey::BatchCompactType>().enabled()
                  || (selections->get<ConfigKey::BatchCompactType>().value() != compact_type::map_order && selections->get<ConfigKey::BatchCompactType>().value() != compact_type::map_order_ffnx))
-               {
-                    m_map_sprite.flatten_bpp();
-               }
-               break;
+                    {
+                         m_map_sprite.flatten_bpp();
+                    }
+                    break;
 
-          case flatten_type::palette:
-               m_map_sprite.flatten_palette();
-               break;
+               case flatten_type::palette:
+                    m_map_sprite.flatten_palette();
+                    break;
 
-          case flatten_type::both:
-               // Only flatten BPP if not using map order
-               if (
+               case flatten_type::both:
+                    // Only flatten BPP if not using map order
+                    if (
                  !selections->get<ConfigKey::BatchCompactType>().enabled()
                  || (selections->get<ConfigKey::BatchCompactType>().value() != compact_type::map_order && selections->get<ConfigKey::BatchCompactType>().value() != compact_type::map_order_ffnx))
-               {
-                    m_map_sprite.flatten_bpp();
-               }
-               m_map_sprite.flatten_palette();
-               break;
-     }
+                    {
+                         m_map_sprite.flatten_bpp();
+                    }
+                    m_map_sprite.flatten_palette();
+                    break;
+          }
 
-     // If the compact strategy is not map-order-based, re-apply compaction
-     if (selections->get<ConfigKey::BatchCompactType>().value() != compact_type::map_order)
-     {
-          compact();
+
+          // If the compact strategy is not map-order-based, re-apply compaction
+          if (
+            selections->get<ConfigKey::BatchCompactType>().value() != compact_type::map_order
+            && selections->get<ConfigKey::BatchCompactType>().value() != compact_type::map_order_ffnx)
+          {
+               compact();
+          }
      }
 }
 
