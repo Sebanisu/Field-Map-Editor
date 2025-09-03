@@ -19490,7 +19490,7 @@ filter_multi_pupu_enabled = true
 004FF000 = 5238784
 004FF001 = 5238785
 
-[dosea_2.x.'dosea_2_20250828_160950_511.png']
+[dosea_2.x.'dosea_2_004FF000.png']
 filter_multi_pupu = [ 5238784, 5238785, 5238786, 5238787 ]
 filter_multi_pupu_enabled = true
 
@@ -20223,7 +20223,7 @@ filter_multi_pupu_enabled = true
 filter_multi_pupu = [ 2093057 ]
 filter_multi_pupu_enabled = true
 
-[ebexit6.x.'ebexit6_20250828_163105_230.png']
+[ebexit6.x.'ebexit6_004FF000.png']
 filter_multi_pupu = [ 5238784, 5238785, 5238786 ]
 filter_multi_pupu_enabled = true
 
@@ -33181,15 +33181,15 @@ filter_multi_pupu = [ 2101249 ]
 filter_multi_pupu_enabled = true
 
 [epmeet1.x.'epmeet1_00400000.png']
-filter_multi_pupu = [ 4194304 ]
+filter_multi_pupu = [ 4194304, 5238784, 5238785, 5238786 ]
 filter_multi_pupu_enabled = true
 
 [epmeet1.x.'epmeet1_00400010.png']
-filter_multi_pupu = [ 4194320 ]
+filter_multi_pupu = [ 4194320, 5238784, 5238785, 5238786 ]
 filter_multi_pupu_enabled = true
 
 [epmeet1.x.'epmeet1_00400020.png']
-filter_multi_pupu = [ 4194336 ]
+filter_multi_pupu = [ 4194336, 5238784, 5238785, 5238786 ]
 filter_multi_pupu_enabled = true
 
 [epmeet1.x.'epmeet1_00403010.png']
@@ -33197,15 +33197,11 @@ filter_multi_pupu = [ 4206608 ]
 filter_multi_pupu_enabled = true
 
 [epmeet1.x.'epmeet1_004FF000.png']
-filter_multi_pupu = [ 5238784 ]
+filter_multi_pupu = [ 5238784, 5238785, 5238786 ]
 filter_multi_pupu_enabled = true
 
 [epmeet1.x.'epmeet1_01403000.png']
 filter_multi_pupu = [ 20983808 ]
-filter_multi_pupu_enabled = true
-
-[epmeet1.x.'epmeet1_20250828_225818_706.png']
-filter_multi_pupu = [ 5238784, 5238785, 5238786 ]
 filter_multi_pupu_enabled = true
 
 [epmeet1.x.unique_pupu_ids]
