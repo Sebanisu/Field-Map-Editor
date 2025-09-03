@@ -101,7 +101,7 @@ void fme::batch::draw_window()
           format_imgui_wrapped_text("{}", gui_labels::compact_flatten_warning);
           if (selections->get<ConfigKey::BatchOutputType>() == output_types::swizzle_as_one_image)
           {
-               format_imgui_wrapped_text("\n{} forces {}", fme::gui_labels::swizzle_as_one_image, fme::gui_labels::compact_map_order_ffnx);
+               format_imgui_wrapped_text("\n{} forces {}", fme::gui_labels::swizzle_as_one_image, fme::gui_labels::compact_map_order_ffnx2);
           }
           ImGui::BeginDisabled(selections->get<ConfigKey::BatchOutputType>() == output_types::swizzle_as_one_image);
           combo_compact_type();
