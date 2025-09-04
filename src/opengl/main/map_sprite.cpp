@@ -1822,12 +1822,17 @@ const ff_8::MapHistory::nsat_map &map_sprite::working_animation_counts() const
 
      // Prepare futures to track save operations.
      std::vector<std::future<void>> future_of_futures = {};
+
      future_of_futures.push_back(
        std::async(
          std::launch::async,
-         [map = m_map_group.maps.const_working(), path = cpm.replace_tags(keyed_string, selections, selected_path)]() mutable {
+         [map  = m_map_group.maps.const_working(),
+          pupu = m_map_group.maps.working_pupu() | std::views::transform([](const auto &pupu_id) { return pupu_id.raw(); })
+                 | std::ranges::to<std::vector>(),
+          path = cpm.replace_tags(keyed_string, selections, selected_path)]() mutable {
+              ;
               map.unshift_from_origin();
-              map.save_csv(path);
+              map.save_csv(path, pupu);
          }));
      return future_of_futures;
 }
