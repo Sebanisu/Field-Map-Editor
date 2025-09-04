@@ -397,6 +397,35 @@ void fme::filter_window::render_list_view(
      }
      tool_tip("Clear and regenerate the TOML entries from PupuIDs.");
      ImGui::Columns(1);
+     format_imgui_text("{}", "Combine some entries based on attributes:");
+     ImGui::Columns(calc_column_count(m_tool_button_size_width), "##get_deswizzle_combined_based_on_attributes", false);
+          static constinit bool check_offset       = false;
+     static constinit bool check_animation_id = false;
+     ImGui::BeginDisabled(check_animation_id);
+     (void)ImGui::Checkbox("Offset", &check_offset);
+     ImGui::EndDisabled();
+     tool_tip("mask 0xFFFF'FFF0U vs PupuID and combine all of those elements.");
+     ImGui::NextColumn();
+     if (ImGui::Checkbox("Animation ID", &check_animation_id))
+     {
+          if (check_animation_id)
+          {
+               check_offset = true;
+          }
+          {
+               check_offset = false;
+          }
+     }
+     tool_tip("mask 0xFFF0'0FF0U vs PupuID and combine all of those elements.");
+     ImGui::NextColumn();
+     ImGui::BeginDisabled(!check_offset && !check_animation_id);
+     if (ImGui::Button("Combine (w/attribute)"))
+     {
+          // trigger function here.
+     }
+     ImGui::EndDisabled();
+     tool_tip("Automaticly combine with attributes selected. Replacing entries.");
+     ImGui::Columns(1);
      ImGui::BeginChild("##Scrolling");
      ImGui::Columns(calc_column_count(m_thumb_size_width), "##get_deswizzle_combined_textures", false);
 
@@ -638,8 +667,7 @@ void fme::filter_window::add_new_entry(
 
           std::ranges::copy_n(
             m_selected_file_name.begin(),
-            static_cast<std::ranges::range_difference_t<std::string>>(
-              (std::min)(s_max_chars, m_selected_file_name.size())),
+            static_cast<std::ranges::range_difference_t<std::string>>((std::min)(s_max_chars, m_selected_file_name.size())),
             m_file_name_buffer.begin());
      }
      else
@@ -729,8 +757,7 @@ void fme::filter_window::draw_filename_controls(
           m_file_name_buffer = {};
           std::ranges::copy_n(
             m_selected_file_name.begin(),
-            static_cast<std::ranges::range_difference_t<std::string>>(
-              (std::min)(s_max_chars, m_selected_file_name.size())),
+            static_cast<std::ranges::range_difference_t<std::string>>((std::min)(s_max_chars, m_selected_file_name.size())),
             m_file_name_buffer.begin());
      }
      else
