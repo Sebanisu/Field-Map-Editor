@@ -668,6 +668,9 @@ struct fmt::formatter<fme::output_types> : fmt::formatter<std::string_view>
                case fme::output_types::deswizzle_full_filename:
                     name = fme::gui_labels::deswizzle_full_filename;
                     break;
+               case fme::output_types::csv:
+                    name = ".csv";
+                    break;
           }
           return fmt::formatter<std::string_view>::format(name, ctx);
      }

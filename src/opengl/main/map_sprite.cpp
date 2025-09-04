@@ -1803,6 +1803,36 @@ const ff_8::MapHistory::nsat_map &map_sprite::working_animation_counts() const
      // consume_futures(future_of_futures); // Optionally wait here.
 }
 
+[[nodiscard]] std::vector<std::future<void>>
+  map_sprite::save_csv(const std::string &keyed_string, const std::filesystem::path &selected_path)
+{
+     const auto selections = m_selections.lock();
+     if (!selections)
+     {
+          spdlog::error("Failed to lock m_selections: shared_ptr is expired.");
+          return {};
+     }
+
+     const key_value_data           cpm               = { .field_name = get_base_name(),
+                                                          .ext        = ".csv",
+                                                          .language_code =
+                                    m_map_group.opt_coo.has_value() && m_map_group.opt_coo.value() != open_viii::LangT::generic
+                                                              ? m_map_group.opt_coo
+                                                              : std::nullopt };
+
+     // Prepare futures to track save operations.
+     std::vector<std::future<void>> future_of_futures = {};
+     future_of_futures.push_back(
+       std::async(
+         std::launch::async,
+         [map = m_map_group.maps.const_working(), path = cpm.replace_tags(keyed_string, selections, selected_path)]() mutable {
+              map.unshift_from_origin();
+              map.save_csv(path);
+         }));
+     return future_of_futures;
+}
+
+
 std::string map_sprite::get_base_name() const
 {
      const auto field = m_map_group.field.lock();

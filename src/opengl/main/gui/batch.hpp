@@ -49,7 +49,9 @@ class batch
 
      void               combo_input_type();
      void               combo_output_type();
+     void               combo_compact_type_ffnx();
      void               combo_compact_type();
+     void               combo_flatten_type_bpp();
      void               combo_flatten_type();
      void               browse_input_path();
      void               browse_output_path();

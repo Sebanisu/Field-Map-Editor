@@ -32,6 +32,7 @@ enum struct output_types
      swizzle_as_one_image,
      deswizzle_generate_toml,
      deswizzle_full_filename,
+     csv,
 };
 [[nodiscard]] constexpr static inline std::optional<output_types> to_output_type(input_types input) noexcept
 {
@@ -66,6 +67,7 @@ enum struct output_types
           //      return input_types::deswizzle_generate_toml;
           case output_types::deswizzle_full_filename:
                return input_types::deswizzle_full_filename;
+          //case output_types::csv:
           default:
                return std::nullopt;// input_types::mim has no mapping
      }

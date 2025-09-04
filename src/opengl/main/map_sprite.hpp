@@ -56,20 +56,20 @@ struct [[nodiscard]] map_sprite// final
      using iRectangle     = open_viii::graphics::Rectangle<std::int32_t>;
 
    private:
-     SharedTextures                                   m_texture = std::make_shared<std::array<glengine::Texture, MAX_TEXTURES>>();
-     mutable std::map<std::string, glengine::Texture> m_full_filename_textures                                = {};
-     mutable std::map<std::string, std::string>       m_full_filename_to_mask_name                            = {};
+     mutable std::map<std::string, glengine::Texture>                            m_full_filename_textures     = {};
+     mutable std::map<std::string, std::string>                                  m_full_filename_to_mask_name = {};
      mutable FutureOfFutureConsumer<std::vector<std::future<std::future<void>>>> m_future_of_future_consumer  = {};
      mutable FutureConsumer<std::vector<std::future<void>>>                      m_future_consumer            = {};
-     mutable std::map<std::string, std::optional<glengine::FrameBuffer>>         m_cache_framebuffer          = {};
-     mutable std::map<std::string, std::string>                                  m_cache_framebuffer_tooltips = {};
-     mutable std::map<std::string, std::vector<ff_8::PupuID>>                    m_cache_framebuffer_pupuids  = {};
-     ff_8::map_group                                                             m_map_group                  = {};
+     SharedTextures m_texture = std::make_shared<std::array<glengine::Texture, MAX_TEXTURES>>();
+     mutable std::map<std::string, std::optional<glengine::FrameBuffer>> m_cache_framebuffer          = {};
+     mutable std::map<std::string, std::string>                          m_cache_framebuffer_tooltips = {};
+     mutable std::map<std::string, std::vector<ff_8::PupuID>>            m_cache_framebuffer_pupuids  = {};
+     ff_8::map_group                                                     m_map_group                  = {};
      // TODO do I need square?
      //  square                                        m_square    = { glm::uvec2{}, glm::uvec2{ TILE_SIZE, TILE_SIZE }, sf::Color::Red };
-     bool                                                                        m_draw_swizzle               = { false };
-     bool                                                                        m_disable_texture_page_shift = { false };
-     bool                                                                        m_disable_blends             = { false };
+     bool                                                                m_draw_swizzle               = { false };
+     bool                                                                m_disable_texture_page_shift = { false };
+     bool                                                                m_disable_blends             = { false };
      mutable ff_8::filters                          m_filters                = { false };// default false should be override by gui to true.
      std::weak_ptr<Selections>                      m_selections             = {};
      bool                                           m_using_imported_texture = {};
@@ -177,6 +177,7 @@ struct [[nodiscard]] map_sprite// final
        save_swizzle_textures(const std::string &keyed_string, const std::filesystem::path &selected_path);
      [[nodiscard]] std::vector<std::future<void>>
        save_swizzle_as_one_image_textures(const std::string &keyed_string, const std::filesystem::path &selected_path);
+     [[nodiscard]] std::vector<std::future<void>> save_csv(const std::string &keyed_string, const std::filesystem::path &selected_path);
      [[nodiscard]] std::vector<std::future<void>>
           save_deswizzle_textures(const std::string &keyed_string, const std::filesystem::path &selected_path);
      void save_deswizzle_generate_toml(const std::string &keyed_string, const std::filesystem::path &selected_path);
@@ -564,6 +565,14 @@ struct [[nodiscard]] map_sprite// final
           }();
           return ff_8::get_triangle_strip(
             to_vec2(source_tile_size), to_vec2(destination_tile_size), to_vec2(source_texture_size), src, dest);
+     }
+
+     // Move constructor and move assignment
+     map_sprite(map_sprite &&) noexcept            = default;
+     map_sprite &operator=(map_sprite &&) noexcept = default;
+     ~map_sprite()
+     {
+          consume_now();
      }
 };
 

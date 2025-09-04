@@ -102,11 +102,17 @@ void fme::batch::draw_window()
           if (selections->get<ConfigKey::BatchOutputType>() == output_types::swizzle_as_one_image)
           {
                format_imgui_wrapped_text("\n{} forces {}", fme::gui_labels::swizzle_as_one_image, fme::gui_labels::compact_map_order_ffnx2);
+
+               ImGui::BeginDisabled(true);
+               combo_compact_type_ffnx();
+               combo_flatten_type_bpp();
+               ImGui::EndDisabled();
           }
-          ImGui::BeginDisabled(selections->get<ConfigKey::BatchOutputType>() == output_types::swizzle_as_one_image);
-          combo_compact_type();
-          combo_flatten_type();
-          ImGui::EndDisabled();
+          else
+          {
+               combo_compact_type();
+               combo_flatten_type();
+          }
      }
      // toggle maps to be processed.
 
@@ -285,6 +291,8 @@ const std::string &fme::batch::get_output_pattern(fme::output_types type)
                // OutputDeswizzlePattern is used for generating the image filenames for the toml entries.
                // The toml file uses OutputTomlPattern for the toml filename and path.
                return selections->get<ConfigKey::OutputDeswizzlePattern>();
+          case output_types::csv:
+               return selections->get<ConfigKey::OutputMapPatternForSwizzle>();
           default:
                throw;
      }
@@ -322,6 +330,7 @@ const std::string &fme::batch::get_output_map_pattern(fme::output_types type)
      {
           case output_types::swizzle:
           case output_types::swizzle_as_one_image:
+          case output_types::csv:
                return selections->get<ConfigKey::OutputMapPatternForSwizzle>();
           default:
           case output_types::deswizzle:
@@ -432,7 +441,8 @@ void fme::batch::combo_output_type()
                                                 output_types::swizzle,
                                                 output_types::swizzle_as_one_image,
                                                 output_types::deswizzle_generate_toml,
-                                                output_types::deswizzle_full_filename };
+                                                output_types::deswizzle_full_filename,
+                                                output_types::csv };
      const auto            gcc    = fme::GenericCombo(
        gui_labels::output_type,
        []() { return values; },
@@ -629,6 +639,35 @@ void fme::batch::checkmarks_save_masks()
      }
 }
 
+void fme::batch::combo_compact_type_ffnx()
+{
+     const auto selections = m_selections.lock();
+     if (!selections)
+     {
+          spdlog::error("Failed to lock m_selections: shared_ptr is expired.");
+          return;
+     }
+     const auto            tool_tip_pop = glengine::ScopeGuard{ [&]() { tool_tip(gui_labels::compact_tooltip); } };
+     static constexpr auto values       = std::array{ compact_type::map_order_ffnx };
+     static constexpr auto tool_tips    = std::array{ gui_labels::compact_map_order_ffnx_tooltip };
+     static auto           filter       = []() {
+          ff_8::filter_old<ff_8::FilterTag::Compact> f{ ff_8::FilterSettings::All_Disabled };
+          f.update(compact_type::map_order_ffnx);
+          f.enable();
+          return f;
+     }();
+
+     const auto gcc = fme::GenericComboWithFilter(
+       gui_labels::compact,
+       []() { return values; },
+       []() { return values | std::views::transform(AsString{}); },
+       []() { return tool_tips; },
+       [&]() -> auto & { return filter; });
+
+     (void)gcc.render();
+}
+
+
 void fme::batch::combo_compact_type()
 {
      const auto selections = m_selections.lock();
@@ -655,11 +694,36 @@ void fme::batch::combo_compact_type()
        []() { return tool_tips; },
        [&]() -> auto              &{ return selections->get<ConfigKey::BatchCompactType>(); });
 
-     if (!gcc.render())
+     (void)gcc.render();
+}
+void fme::batch::combo_flatten_type_bpp()
+{
+     const auto selections = m_selections.lock();
+     if (!selections)
      {
+          spdlog::error("Failed to lock m_selections: shared_ptr is expired.");
           return;
      }
-     // selections->update<ConfigKey::BatchCompact>();
+     const auto            tool_tip_pop = glengine::ScopeGuard{ [&]() { tool_tip(gui_labels::flatten_tooltip); } };
+     static constexpr auto values       = std::array{ flatten_type::bpp };
+     static constexpr auto tool_tips    = std::array{ gui_labels::flatten_bpp_tooltip };
+
+
+     static auto           filter       = []() {
+          ff_8::filter_old<ff_8::FilterTag::Flatten> f{ ff_8::FilterSettings::All_Disabled };
+          f.update(flatten_type::bpp);
+          f.enable();
+          return f;
+     }();
+
+     const auto gcc = fme::GenericComboWithFilter(
+       gui_labels::compact,
+       []() { return values; },
+       []() { return values | std::views::transform(AsString{}); },
+       []() { return tool_tips; },
+       [&]() -> auto & { return selections->get<ConfigKey::BatchFlattenType>(); });
+
+     (void)gcc.render();
 }
 void fme::batch::combo_flatten_type()
 {
@@ -1053,6 +1117,9 @@ void fme::batch::update([[maybe_unused]] float elapsed_time)
           case output_types::swizzle_as_one_image:
                m_future_consumer += m_map_sprite.save_swizzle_as_one_image_textures(
                  selections->get<ConfigKey::OutputSwizzleAsOneImagePattern>(), selected_string);
+               break;
+          case output_types::csv:
+               m_future_consumer += m_map_sprite.save_csv(selections->get<ConfigKey::OutputMapPatternForSwizzle>(), selected_string);
                break;
      }
 
