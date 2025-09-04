@@ -566,14 +566,6 @@ struct [[nodiscard]] map_sprite// final
           return ff_8::get_triangle_strip(
             to_vec2(source_tile_size), to_vec2(destination_tile_size), to_vec2(source_texture_size), src, dest);
      }
-
-     // Move constructor and move assignment
-     map_sprite(map_sprite &&) noexcept            = default;
-     map_sprite &operator=(map_sprite &&) noexcept = default;
-     ~map_sprite()
-     {
-          consume_now();
-     }
 };
 
 
