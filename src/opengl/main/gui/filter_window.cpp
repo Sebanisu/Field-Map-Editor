@@ -41,11 +41,11 @@ void fme::filter_window::collapsing_header_filters() const
 }
 bool fme::filter_window::shortcut(const ImGuiKeyChord key_chord)
 {
-     if(!m_was_focused)
+     if (!m_was_focused)
      {
-     return false;
+          return false;
      }
-      // Clear selection with Escape
+     // Clear selection with Escape
      if (key_chord == ImGuiKey_Escape || key_chord == (ImGuiMod_Ctrl | ImGuiMod_Shift | ImGuiKey_A))
      {
           m_last_selected      = {};
@@ -68,7 +68,7 @@ bool fme::filter_window::shortcut(const ImGuiKeyChord key_chord)
                m_last_selected = m_multi_select.back();
           else
                m_last_selected = {};
-               
+
           return true;
      }
      // Inverse selection with Ctrl+I (only if no active edit)
@@ -131,22 +131,7 @@ void fme::filter_window::render() const
 
      handle_remove_queue(lock_selections, lock_map_sprite);
      handle_rename_queue(lock_selections, lock_map_sprite);
-     if (m_regenerate_items)
-     {
-          m_regenerate_items = false;
-          toml::table *coo_table =
-            lock_map_sprite->get_deswizzle_combined_coo_table({}, lock_selections->get<ConfigKey::TOMLFailOverForEditor>());
-          if (coo_table)
-          {
-               if (m_textures_map)
-               {
-                    m_textures_map->clear();
-               }
-               coo_table->clear();// wipe old contents
-               lock_map_sprite->save_deswizzle_generate_toml(lock_selections->get<ConfigKey::OutputDeswizzlePattern>(), {});
-               save_config(lock_selections);
-          }
-     }
+     handle_regenerate(lock_selections, lock_map_sprite);
      if (!m_selected_file_name.empty() && !m_textures_map->contains(m_selected_file_name))
      {
           m_selected_file_name = {};
@@ -159,9 +144,6 @@ void fme::filter_window::render() const
      {
           std::erase_if(m_multi_select, [&](const std::string &filename) { return !m_textures_map->contains(filename); });
      }
-
-    
-     
 
 
      ImGui::SliderFloat("Thumbnail Size", &m_thumb_size_width, 96.f, 1024.f);
@@ -287,6 +269,28 @@ void fme::filter_window::handle_rename_queue(
      }
      save_config(lock_selections);
      m_rename_queue.clear();
+}
+
+void fme::filter_window::handle_regenerate(const std::shared_ptr<Selections> &lock_selections, const std::shared_ptr<map_sprite> &lock_map_sprite) const
+{
+     if (!m_regenerate_items)
+     {
+          return;
+     }
+     m_regenerate_items = false;
+     toml::table *coo_table =
+       lock_map_sprite->get_deswizzle_combined_coo_table({}, lock_selections->get<ConfigKey::TOMLFailOverForEditor>());
+     if (!coo_table)
+     {
+          return;
+     }
+     if (m_textures_map)
+     {
+          m_textures_map->clear();
+     }
+     coo_table->clear();// wipe old contents
+     lock_map_sprite->save_deswizzle_generate_toml(lock_selections->get<ConfigKey::OutputDeswizzlePattern>(), {});
+     save_config(lock_selections);
 }
 
 void fme::filter_window::save_config(const std::shared_ptr<Selections> &lock_selections) const

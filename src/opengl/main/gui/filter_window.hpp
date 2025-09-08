@@ -20,6 +20,7 @@ struct filter_window
      [[nodiscard]] bool begin_window(const std::shared_ptr<Selections> &) const;
      void               handle_remove_queue(const std::shared_ptr<Selections> &, const std::shared_ptr<map_sprite> &) const;
      void               handle_rename_queue(const std::shared_ptr<Selections> &, const std::shared_ptr<map_sprite> &) const;
+     void               handle_regenerate(const std::shared_ptr<Selections> &, const std::shared_ptr<map_sprite> &) const;
      void               save_config(const std::shared_ptr<Selections> &) const;
      void               render_list_view(const std::shared_ptr<Selections> &, const std::shared_ptr<map_sprite> &) const;
      [[nodiscard]] int  calc_column_count(float) const;
