@@ -2416,10 +2416,10 @@ toml::table *
      const auto get_table_by_coo = [&](const std::string &key) -> toml::table * {
           if (auto it_coo = field_table->find(key); it_coo != field_table->end() && it_coo->second.is_table())
           {
-               spdlog::debug("{}:{}, found key!: {}", __FILE__, __LINE__, key);
+               spdlog::trace("{}:{}, found key!: {}", __FILE__, __LINE__, key);
                return it_coo->second.as_table();
           }
-          spdlog::debug("{}:{}, NO! did not find key: {}", __FILE__, __LINE__, key);
+          spdlog::trace("{}:{}, NO! did not find key: {}", __FILE__, __LINE__, key);
           return nullptr;
      };
 
@@ -2439,7 +2439,7 @@ toml::table *
                }
                if (!coo_table)
                {
-                    spdlog::debug("{}:{}, key:{}", __FILE__, __LINE__, key);
+                    spdlog::trace("{}:{}, key:{}", __FILE__, __LINE__, key);
                     auto &&[it, inserted] = field_table->insert(key, toml::table{});
                     if (inserted)
                     {
