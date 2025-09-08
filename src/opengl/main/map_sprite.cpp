@@ -963,7 +963,8 @@ void map_sprite::update_render_texture(const bool reload_textures) const
                          const auto scale = glm::ivec2(canvas.width(), canvas.height()) / max_size;
                          assert(scale.x == scale.y);
                          assert(std::has_single_bit(static_cast<unsigned int>(scale.x)));
-                         opt_textures_map = &opt_map_sprite->get_deswizzle_combined_textures(scale.x);
+                         opt_textures_map = &opt_map_sprite->get_deswizzle_combined_textures(scale.x);                         
+                         opt_map_sprite->consume_now();// force load textures now.
                     }
                     std::vector<std::string> remove_queue = {};
                     glengine::CompShader     shader(std::filesystem::current_path() / "res" / "shader" / "mask.comp");
