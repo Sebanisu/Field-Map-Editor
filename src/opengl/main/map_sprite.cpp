@@ -2143,31 +2143,19 @@ void map_sprite::save_deswizzle_generate_toml(const std::string &keyed_string, c
      {
           return m_cache_framebuffer;
      }
-     const int scale = [&]() {
-          if (in_scale <= 0 || !std::has_single_bit(static_cast<unsigned int>(in_scale)))
-          {
-               return m_render_framebuffer->scale();
-          }
-          return in_scale;
-     }();
-     // Backup current settings and adjust for saving Pupu textures
-     auto       settings = get_backup_settings(false);
 
      // Acquire the field associated with this map group
-     const auto field    = m_map_group.field.lock();
+     const auto field = m_map_group.field.lock();
      if (!field)
      {
           spdlog::error("Failed to lock m_map_group.field: shared_ptr is expired.");
           return m_cache_framebuffer;// Field no longer exists, nothing to save
      }
 
-     const std::string field_name = std::string{ str_to_lower(field->get_base_name()) };
+     const std::string              field_name = std::string{ str_to_lower(field->get_base_name()) };
 
-     // Setup an off-screen render texture
-     iRectangle const  canvas     = m_map_group.maps.const_working().canvas() * scale;
-     const auto specification = glengine::FrameBufferSpecification{ .width = canvas.width(), .height = canvas.height(), .scale = scale };
-
-     const toml::table *coo_table = get_deswizzle_combined_coo_table({}, selections->get<ConfigKey::TOMLFailOverForEditor>());
+     std::vector<std::future<void>> futures;
+     const toml::table             *coo_table = get_deswizzle_combined_coo_table({}, selections->get<ConfigKey::TOMLFailOverForEditor>());
      if (!coo_table)
      {
           return m_cache_framebuffer;
@@ -2178,30 +2166,49 @@ void map_sprite::save_deswizzle_generate_toml(const std::string &keyed_string, c
                continue;
           if (!file_node.is_table())
                continue;
-          const auto file_name_str = std::string(file_name);
-          if (m_cache_framebuffer.contains(file_name_str))
+          auto out_file_name_str = std::string(file_name);
+          if (m_cache_framebuffer.contains(out_file_name_str))
           {
                continue;
           }
-          auto &filters = settings.filters.value();
-          filters.reload(*file_node.as_table());
+          // Insert placeholder entry in the map *synchronously*
+          auto [it, inserted] = m_cache_framebuffer.emplace(out_file_name_str, std::nullopt);
+          if (!inserted)
+               continue;
 
-          auto [it, inserted] = m_cache_framebuffer.emplace(file_name_str, specification);
-          if (inserted)
-          {
-               m_cache_framebuffer_tooltips[file_name_str] = generate_deswizzle_combined_tool_tip(file_node.as_table());
-               cache_pupuids(file_name_str, filters);
-               if (!it->second.has_value())
+          futures.emplace_back(std::async(std::launch::deferred, [this, it, &file_node, in_scale]() {
+               const int scale = [&]() {
+                    if (in_scale <= 0 || !std::has_single_bit(static_cast<unsigned int>(in_scale)))
+                    {
+                         return m_render_framebuffer->scale();
+                    }
+                    return in_scale;
+               }();
+               // Setup an off-screen render texture
+               iRectangle const canvas = m_map_group.maps.const_working().canvas() * scale;
+               const auto       specification =
+                 glengine::FrameBufferSpecification{ .width = canvas.width(), .height = canvas.height(), .scale = scale };
+               // Backup current settings and adjust for saving Pupu textures
+               auto  settings = get_backup_settings(false);
+               auto &filters  = settings.filters.value();
+               filters.reload(*file_node.as_table());
+
+               // Generate
+               m_cache_framebuffer_tooltips[it->first] = generate_deswizzle_combined_tool_tip(file_node.as_table());
+
+               cache_pupuids(it->first, filters);
+
+               if (glengine::FrameBuffer fb(specification); generate_texture(fb))
                {
-                    continue;
+                    it->second = std::move(fb);// replace empty optional
                }
-               if (!generate_texture(it->second.value()))
+               else
                {
-                    it->second.reset();
+                    it->second.reset();// stays empty if generation failed
                }
-          }
+          }));
      }
-
+     m_future_consumer += std::move(futures);
      return m_cache_framebuffer;
 }
 
@@ -2407,8 +2414,9 @@ toml::table *
      for (const auto &[index, lang] : failover_sequence | std::views::enumerate)
      {
           coo_table = get_table_by_coo(lang);
-          // if max_failover is default to 0 we allow empty tables because you might be starting from scratch. when drawing or rendering we
-          // try to skip empty tables //skipping empty might be causing issues. || (!m_map_group.opt_coo.has_value() && !coo_table->empty())
+          // if max_failover is default to 0 we allow empty tables because you might be starting from scratch. when drawing or
+          // rendering we try to skip empty tables //skipping empty might be causing issues. || (!m_map_group.opt_coo.has_value() &&
+          // !coo_table->empty())
           if (coo_table && (max_failover == fme::FailOverLevels::Loaded))
           {
                if (out_used_coo)
