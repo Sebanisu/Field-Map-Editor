@@ -52648,7 +52648,7 @@ filter_multi_pupu = [ 1077280 ]
 filter_multi_pupu_enabled = true
 
 [gmmoni1.eng.'gmmoni1_en_00400000.png']
-filter_multi_pupu = [ 4194304 ]
+filter_multi_pupu = [ 4194304, 5238784 ]
 filter_multi_pupu_enabled = true
 
 [gmmoni1.eng.'gmmoni1_en_00401000.png']
@@ -52905,10 +52905,6 @@ filter_multi_pupu_enabled = true
 
 [gmmoni1.eng.'gmmoni1_en_0041D010.png']
 filter_multi_pupu = [ 4313104 ]
-filter_multi_pupu_enabled = true
-
-[gmmoni1.eng.'gmmoni1_en_004FF000.png']
-filter_multi_pupu = [ 5238784 ]
 filter_multi_pupu_enabled = true
 
 [gmmoni1.eng.'gmmoni1_en_0140A020.png']
