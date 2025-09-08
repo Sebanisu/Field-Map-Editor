@@ -1915,17 +1915,32 @@ std::string map_sprite::get_base_name() const
      return future_of_futures;
      // Note: Caller should consume_futures(future_of_futures) to wait for saves to finish
 }
-
-
 void map_sprite::save_deswizzle_generate_toml(const std::string &keyed_string, const std::filesystem::path &selected_path)
 {
+     consume_now();
      const auto selections = m_selections.lock();
      if (!selections)
      {
           spdlog::error("Failed to lock m_selections: shared_ptr is expired.");
           return;
      }
-     consume_now();
+     open_viii::LangT used_coo  = {};
+     toml::table     *coo_table = get_deswizzle_combined_coo_table(&used_coo, selections->get<ConfigKey::TOMLFailOverForEditor>());
+     spdlog::info("used_coo: {} ", used_coo);
+     if (!coo_table)
+     {
+          spdlog::error("Failed to create coo_table");
+          return;
+     }
+     save_deswizzle_generate_toml(keyed_string, selected_path, *coo_table, selections);
+}
+
+void map_sprite::save_deswizzle_generate_toml(
+  const std::string                 &keyed_string,
+  const std::filesystem::path       &selected_path,
+  toml::table                       &coo_table,
+  const std::shared_ptr<Selections> &selections)
+{
      // Backup current settings and adjust for saving Pupu textures
      auto       settings = get_backup_settings(false);
 
@@ -1943,15 +1958,8 @@ void map_sprite::save_deswizzle_generate_toml(const std::string &keyed_string, c
      iRectangle const                 canvas          = m_map_group.maps.const_working().canvas() * m_render_framebuffer->scale();
      const auto                       specification =
        glengine::FrameBufferSpecification{ .width = canvas.width(), .height = canvas.height(), .scale = m_render_framebuffer->scale() };
-     open_viii::LangT used_coo  = {};
-     toml::table     *coo_table = get_deswizzle_combined_coo_table(&used_coo, selections->get<ConfigKey::TOMLFailOverForEditor>());
-     if (!coo_table)
-     {
-          return;
-     }
      const auto coo =
        m_map_group.opt_coo.has_value() && m_map_group.opt_coo.value() != open_viii::LangT::generic ? m_map_group.opt_coo : std::nullopt;
-     spdlog::info("used_coo: {} ", used_coo);
      if (coo.has_value())
      {
           spdlog::info("coo: {} ", *coo);
@@ -1967,7 +1975,7 @@ void map_sprite::save_deswizzle_generate_toml(const std::string &keyed_string, c
           const auto pupu_str = fmt::format("{:08X}", pupu.raw());
           ids_table.insert(pupu_str, pupu.raw());
      }
-     coo_table->insert_or_assign("unique_pupu_ids", std::move(ids_table));
+     coo_table.insert_or_assign("unique_pupu_ids", std::move(ids_table));
 
      // Loop through each Pupu ID and generate/save textures
      // for (auto &&[index, pupu_range] : enumerated)
@@ -1988,7 +1996,7 @@ void map_sprite::save_deswizzle_generate_toml(const std::string &keyed_string, c
                std::apply([&](auto &&...fns) { (fns.update(file), ...); }, updated_filters);
                std::filesystem::path out_path = cpm.replace_tags(keyed_string, selections, selected_path);
 
-               coo_table->insert_or_assign(out_path.filename().string(), std::move(file));
+               coo_table.insert_or_assign(out_path.filename().string(), std::move(file));
           }
      }
 }

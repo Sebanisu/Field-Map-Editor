@@ -271,7 +271,9 @@ void fme::filter_window::handle_rename_queue(
      m_rename_queue.clear();
 }
 
-void fme::filter_window::handle_regenerate(const std::shared_ptr<Selections> &lock_selections, const std::shared_ptr<map_sprite> &lock_map_sprite) const
+void fme::filter_window::handle_regenerate(
+  const std::shared_ptr<Selections> &lock_selections,
+  const std::shared_ptr<map_sprite> &lock_map_sprite) const
 {
      if (!m_regenerate_items)
      {
@@ -289,7 +291,8 @@ void fme::filter_window::handle_regenerate(const std::shared_ptr<Selections> &lo
           m_textures_map->clear();
      }
      coo_table->clear();// wipe old contents
-     lock_map_sprite->save_deswizzle_generate_toml(lock_selections->get<ConfigKey::OutputDeswizzlePattern>(), {});
+     lock_map_sprite->save_deswizzle_generate_toml(
+       lock_selections->get<ConfigKey::OutputDeswizzlePattern>(), {}, *coo_table, lock_selections);
      save_config(lock_selections);
 }
 

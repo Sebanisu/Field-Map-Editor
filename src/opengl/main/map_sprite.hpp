@@ -181,9 +181,14 @@ struct [[nodiscard]] map_sprite// final
      [[nodiscard]] std::vector<std::future<void>>
           save_deswizzle_textures(const std::string &keyed_string, const std::filesystem::path &selected_path);
      void save_deswizzle_generate_toml(const std::string &keyed_string, const std::filesystem::path &selected_path);
-     void cache_pupuids(const std::string &, const ff_8::filters &) const;
-     [[nodiscard]] const std::map<std::string, std::string>                    &get_deswizzle_combined_textures_tooltips();
-     [[nodiscard]] const std::map<std::string, std::vector<ff_8::PupuID>>      &get_deswizzle_combined_textures_pupuids();
+     void save_deswizzle_generate_toml(
+       const std::string                 &keyed_string,
+       const std::filesystem::path       &selected_path,
+       toml::table                       &coo_table,
+       const std::shared_ptr<Selections> &selections);
+     void                                                                  cache_pupuids(const std::string &, const ff_8::filters &) const;
+     [[nodiscard]] const std::map<std::string, std::string>               &get_deswizzle_combined_textures_tooltips();
+     [[nodiscard]] const std::map<std::string, std::vector<ff_8::PupuID>> &get_deswizzle_combined_textures_pupuids();
      [[nodiscard]] std::map<std::string, std::optional<glengine::FrameBuffer>> &get_deswizzle_combined_textures(const int scale = {});
      [[nodiscard]] std::string               generate_deswizzle_combined_tool_tip(const toml::table *file_table) const;
      [[nodiscard]] std::vector<ff_8::PupuID> generate_deswizzle_combined_pupu_id(const toml::table *file_table) const;
