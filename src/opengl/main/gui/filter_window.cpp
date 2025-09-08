@@ -39,7 +39,63 @@ void fme::filter_window::collapsing_header_filters() const
           combo_filtered_draw_bit(lock_map_sprite);
      }
 }
+bool fme::filter_window::shortcut(const ImGuiKeyChord key_chord)
+{
+     if(!m_was_focused)
+     {
+     return false;
+     }
+      // Clear selection with Escape
+     if (key_chord == ImGuiKey_Escape || key_chord == (ImGuiMod_Ctrl | ImGuiMod_Shift | ImGuiKey_A))
+     {
+          m_last_selected      = {};
+          m_selected_file_name = {};
+          m_multi_select.clear();
+          return true;
+     }
+     // Select All with Ctrl+A (only if no active edit)
+     else if (m_selected_file_name.empty() && key_chord == (ImGuiMod_Ctrl | ImGuiKey_A))
+     {
+          m_multi_select.clear();
+          m_multi_select.reserve(m_textures_map->size());
+          for (const auto &[current_file_name, _] : *m_textures_map)
+          {
+               m_multi_select.push_back(current_file_name);
+          }
 
+          // Optionally set last_selected to the last file
+          if (!m_multi_select.empty())
+               m_last_selected = m_multi_select.back();
+          else
+               m_last_selected = {};
+               
+          return true;
+     }
+     // Inverse selection with Ctrl+I (only if no active edit)
+     else if (m_selected_file_name.empty() && key_chord == (ImGuiMod_Ctrl | ImGuiKey_I))
+     {
+          std::vector<std::string> new_selection;
+          new_selection.reserve(m_textures_map->size());
+
+          for (const auto &[current_file_name, _] : *m_textures_map)
+          {
+               // Add file_name if it is NOT currently selected
+               if (std::ranges::find(m_multi_select, current_file_name) == m_multi_select.end())
+               {
+                    new_selection.push_back(current_file_name);
+               }
+          }
+
+          m_multi_select = std::move(new_selection);
+
+          // Update last selected item if any are now selected
+          if (!m_multi_select.empty())
+               m_last_selected = m_multi_select.back();
+          else
+               m_last_selected = {};
+     }
+     return false;
+}
 void fme::filter_window::render() const
 {
      m_changed            = false;
@@ -59,7 +115,10 @@ void fme::filter_window::render() const
      {
           return;
      }
-     const auto pop_end = glengine::ScopeGuard(&ImGui::End);
+     const auto pop_end = glengine::ScopeGuard([&]() {
+          m_was_focused = ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows);
+          ImGui::End();
+     });
      if (lock_map_sprite->fail())
      {
           format_imgui_text("The `.map` is in an invalid state.\nSo no filters are avalible.");
@@ -88,7 +147,6 @@ void fme::filter_window::render() const
                save_config(lock_selections);
           }
      }
-     constexpr auto flags = ImGuiInputFlags_RouteOverFocused;
      if (!m_selected_file_name.empty() && !m_textures_map->contains(m_selected_file_name))
      {
           m_selected_file_name = {};
@@ -102,52 +160,8 @@ void fme::filter_window::render() const
           std::erase_if(m_multi_select, [&](const std::string &filename) { return !m_textures_map->contains(filename); });
      }
 
-     // Clear selection with Escape
-     if (ImGui::Shortcut(ImGuiKey_Escape, flags) || ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiMod_Shift | ImGuiKey_A, flags))
-     {
-          m_last_selected      = {};
-          m_selected_file_name = {};
-          m_multi_select.clear();
-     }
-     // Select All with Ctrl+A (only if no active edit)
-     else if (m_selected_file_name.empty() && ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiKey_A, flags))
-     {
-          m_multi_select.clear();
-          m_multi_select.reserve(m_textures_map->size());
-          for (const auto &[current_file_name, _] : *m_textures_map)
-          {
-               m_multi_select.push_back(current_file_name);
-          }
-
-          // Optionally set last_selected to the last file
-          if (!m_multi_select.empty())
-               m_last_selected = m_multi_select.back();
-          else
-               m_last_selected = {};
-     }
-     // Inverse selection with Ctrl+I (only if no active edit)
-     else if (m_selected_file_name.empty() && ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiKey_I, flags))
-     {
-          std::vector<std::string> new_selection;
-          new_selection.reserve(m_textures_map->size());
-
-          for (const auto &[current_file_name, _] : *m_textures_map)
-          {
-               // Add file_name if it is NOT currently selected
-               if (std::ranges::find(m_multi_select, current_file_name) == m_multi_select.end())
-               {
-                    new_selection.push_back(current_file_name);
-               }
-          }
-
-          m_multi_select = std::move(new_selection);
-
-          // Update last selected item if any are now selected
-          if (!m_multi_select.empty())
-               m_last_selected = m_multi_select.back();
-          else
-               m_last_selected = {};
-     }
+    
+     
 
 
      ImGui::SliderFloat("Thumbnail Size", &m_thumb_size_width, 96.f, 1024.f);
@@ -238,6 +252,7 @@ bool fme::filter_window::begin_window(const std::shared_ptr<Selections> &lock_se
      }
      if (!ImGui::Begin(gui_labels::deswizzle_toml_editor.data(), &visible))
      {
+          m_was_focused = false;
           ImGui::End();
           return false;
      }
@@ -461,7 +476,7 @@ void fme::filter_window::render_list_view(
                                    {
                                         for (const ff_8::PupuID &i_pupu_id : temp_filter.value())
                                         {
-                                             if (u_pupu_id == i_pupu_id || !u_pupu_id.same_base(i_pupu_id))
+                                             if (u_pupu_id != i_pupu_id && u_pupu_id.same_base(i_pupu_id))
                                              {
                                                   copy_values.push_back(u_pupu_id);
                                              }

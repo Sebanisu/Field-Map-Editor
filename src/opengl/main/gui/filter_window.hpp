@@ -9,11 +9,12 @@ namespace fme
 struct filter_window
 {
      filter_window(std::weak_ptr<Selections>, std::weak_ptr<map_sprite>);
-     void collapsing_header_filters() const;
-     void render() const;
-     void menu() const;
-     void update(std::weak_ptr<Selections>);
-     void update(std::weak_ptr<map_sprite>);
+     void               collapsing_header_filters() const;
+     [[nodiscard]] bool shortcut(const ImGuiKeyChord);
+     void               render() const;
+     void               menu() const;
+     void               update(std::weak_ptr<Selections>);
+     void               update(std::weak_ptr<map_sprite>);
 
    private:
      [[nodiscard]] bool begin_window(const std::shared_ptr<Selections> &) const;
@@ -71,6 +72,7 @@ struct filter_window
 
      mutable bool                                                         m_reload_thumbnail       = { false };
      mutable bool                                                         m_regenerate_items       = { false };
+     mutable bool                                                         m_was_focused            = { false };
      mutable float                                                        m_aspect_ratio           = { 1.f };
      float                                                                m_tool_button_size_width = { 152.f };
      mutable float                                                        m_thumb_size_width       = { 96.f };

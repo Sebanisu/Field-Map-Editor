@@ -1943,13 +1943,23 @@ void map_sprite::save_deswizzle_generate_toml(const std::string &keyed_string, c
      iRectangle const                 canvas          = m_map_group.maps.const_working().canvas() * m_render_framebuffer->scale();
      const auto                       specification =
        glengine::FrameBufferSpecification{ .width = canvas.width(), .height = canvas.height(), .scale = m_render_framebuffer->scale() };
-     toml::table *coo_table = get_deswizzle_combined_coo_table({}, selections->get<ConfigKey::TOMLFailOverForEditor>());
+     open_viii::LangT used_coo  = {};
+     toml::table     *coo_table = get_deswizzle_combined_coo_table(&used_coo, selections->get<ConfigKey::TOMLFailOverForEditor>());
      if (!coo_table)
      {
           return;
      }
      const auto coo =
        m_map_group.opt_coo.has_value() && m_map_group.opt_coo.value() != open_viii::LangT::generic ? m_map_group.opt_coo : std::nullopt;
+     spdlog::info("used_coo: {} ", used_coo);
+     if (coo.has_value())
+     {
+          spdlog::info("coo: {} ", *coo);
+     }
+     if (m_map_group.opt_coo.has_value())
+     {
+          spdlog::info("m_map_group.opt_coo: {} ", *m_map_group.opt_coo);
+     }
 
      toml::table ids_table = {};
      for (auto &&pupu : unique_pupu_ids)
@@ -1982,6 +1992,7 @@ void map_sprite::save_deswizzle_generate_toml(const std::string &keyed_string, c
           }
      }
 }
+
 [[nodiscard]] std::string map_sprite::get_recommended_prefix()
 {
      const auto selections = m_selections.lock();
@@ -2341,13 +2352,17 @@ toml::table *
      auto                        config      = Configuration(config_path);
      toml::table                &root_table  = config;
 
-     const auto                  coo_opt     = m_map_group.opt_coo.has_value() && m_map_group.opt_coo.value() != open_viii::LangT::generic
-                                                 ? m_map_group.opt_coo
-                                                 : field->get_lang_from_fl_paths();
+     const auto                  coo_opt     = [&]() {
+          if (m_map_group.opt_coo.has_value())
+          {
+               return m_map_group.opt_coo;
+          }
+          return field->get_lang_from_fl_paths();
+     }();
 
-     toml::table                *field_table = nullptr;
+     toml::table *field_table = nullptr;
 
-     toml::table                *coo_table   = nullptr;
+     toml::table *coo_table   = nullptr;
 
 
      if (auto it_base = root_table.find(field_name); it_base != root_table.end() && it_base->second.is_table())
@@ -2376,7 +2391,13 @@ toml::table *
          open_viii::LangT::es,
          open_viii::LangT::jp });
      const auto get_table_by_coo = [&](const open_viii::LangT lang) -> toml::table * {
-          const std::string key = (lang != open_viii::LangT::generic) ? std::string(open_viii::LangCommon::to_string_3_char(lang)) : "x";
+          const std::string key = [&]() {
+               if (lang != open_viii::LangT::generic)
+               {
+                    return std::string(open_viii::LangCommon::to_string_3_char(lang));
+               }
+               return std::string("x");
+          }();
 
           if (auto it_coo = field_table->find(key); it_coo != field_table->end() && it_coo->second.is_table())
                return it_coo->second.as_table();
@@ -2387,8 +2408,8 @@ toml::table *
      {
           coo_table = get_table_by_coo(lang);
           // if max_failover is default to 0 we allow empty tables because you might be starting from scratch. when drawing or rendering we
-          // try to skip empty tables
-          if (coo_table && (max_failover == fme::FailOverLevels::Loaded || !coo_table->empty()))
+          // try to skip empty tables //skipping empty might be causing issues. || (!m_map_group.opt_coo.has_value() && !coo_table->empty())
+          if (coo_table && (max_failover == fme::FailOverLevels::Loaded))
           {
                if (out_used_coo)
                     *out_used_coo = lang;
@@ -2401,8 +2422,15 @@ toml::table *
      if (!coo_table)
      {
           const auto        lang = coo_opt.value_or(open_viii::LangT::generic);
-          const std::string key  = (lang != open_viii::LangT::generic) ? std::string(open_viii::LangCommon::to_string_3_char(lang)) : "x";
-          auto &&[it, inserted]  = field_table->insert(key, toml::table{});
+          const std::string key  = [&]() {
+               if (lang != open_viii::LangT::generic)
+               {
+                    return std::string(open_viii::LangCommon::to_string_3_char(lang));
+               }
+               return std::string("x");
+          }();
+
+          auto &&[it, inserted] = field_table->insert(key, toml::table{});
 
           if (inserted)
           {

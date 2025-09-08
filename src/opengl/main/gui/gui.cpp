@@ -3026,17 +3026,23 @@ void gui::refresh_path()
 void gui::bind_shortcuts()
 {
      using namespace std::string_view_literals;
-     constexpr auto flags = ImGuiInputFlags_RouteGlobal | ImGuiInputFlags_RouteOverFocused;
-     if (ImGui::Shortcut(ImGuiKey_Escape, ImGuiInputFlags_RouteGlobal))
-     {
-          m_draw_window.clear_clicked_tile_indices();
-     }
+     constexpr auto flags      = ImGuiInputFlags_RouteGlobal | ImGuiInputFlags_RouteOverFocused;
 
      // Inside your GUI update loop where you already handle shortcuts
-     const auto test_field = [](std::string_view test) -> bool {
+     const auto     test_field = [](std::string_view test) -> bool {
           return test == "ec"sv || test == "te"sv || test == "fhdeck3a"sv || test.starts_with("ma"sv);
      };
-     if (ImGui::Shortcut(ImGuiKey_PageDown, flags))
+
+     if (const ImGuiKeyChord escapeChord = (ImGuiKey_Escape);
+         ImGui::Shortcut(escapeChord, flags) || ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiMod_Shift | ImGuiKey_A, flags))
+     {
+          if (!m_filter_window.shortcut(escapeChord))
+          {
+               m_draw_window.clear_clicked_tile_indices();
+          }
+     }
+
+     else if (ImGui::Shortcut(ImGuiKey_PageDown, flags))
      {
           const auto &maps = m_archives_group->mapdata();
 
@@ -3062,8 +3068,6 @@ void gui::bind_shortcuts()
 
           refresh_field();
      }
-
-
      // COO switching with Ctrl + PageUp/PageDown
      else if (ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiKey_PageDown, flags))
      {
@@ -3131,13 +3135,23 @@ void gui::bind_shortcuts()
           m_selections->get<ConfigKey::DisplayHistoryWindow>() ^= true;
           m_selections->update<ConfigKey::DisplayHistoryWindow>();
      }
+     else if (const ImGuiKeyChord selectAllChord = (ImGuiMod_Ctrl | ImGuiKey_A); ImGui::Shortcut(selectAllChord, flags))
+     {
+          if (!m_filter_window.shortcut(selectAllChord))
+          {
+               // select all action for draw window? seems a bit extreme
+          }
+     }
      // todo imports window conflicts with inverse selection
-     //  else if (ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiKey_I, flags))
-     //  {
-     //       // todo fix imports in new branch.
-     //       // m_selections->display_import_image_window ^= true;
-     //       // m_selections->update<ConfigKey::DisplayImportImageWindow>();
-     //  }
+     else if (const ImGuiKeyChord invertChord = (ImGuiMod_Ctrl | ImGuiKey_I); ImGui::Shortcut(invertChord, flags))
+     {
+          if (!m_filter_window.shortcut(invertChord))
+          {
+               // todo fix imports in new branch.
+               // m_selections->display_import_image_window ^= true;
+               // m_selections->update<ConfigKey::DisplayImportImageWindow>();
+          }
+     }
      else if (ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiKey_B, flags))
      {
           m_selections->get<ConfigKey::DisplayBatchWindow>() ^= true;
@@ -3164,6 +3178,7 @@ void gui::bind_shortcuts()
           m_selections->update<ConfigKey::DisplayControlPanelWindow>();
      }
 }
+
 std::uint32_t gui::image_height() const
 {
      if (map_test())
