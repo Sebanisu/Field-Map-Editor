@@ -509,7 +509,7 @@ struct FilterUpdateStrategy
                {
                     fme::Configuration::update_array<glengine::vector_elem_type_t<ValueT>>(config, id, value);
                }
-               spdlog::debug("selection<{}>", id);
+               spdlog::trace("selection<{}>", id);
           }
           else
           {
