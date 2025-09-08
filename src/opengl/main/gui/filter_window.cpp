@@ -399,7 +399,7 @@ void fme::filter_window::render_list_view(
      ImGui::Columns(1);
      format_imgui_text("{}", "Combine some entries based on attributes:");
      ImGui::Columns(calc_column_count(m_tool_button_size_width), "##get_deswizzle_combined_based_on_attributes", false);
-          static constinit bool check_offset       = false;
+     static constinit bool check_offset       = false;
      static constinit bool check_animation_id = false;
      ImGui::BeginDisabled(check_animation_id);
      (void)ImGui::Checkbox("Offset", &check_offset);
@@ -421,7 +421,62 @@ void fme::filter_window::render_list_view(
      ImGui::BeginDisabled(!check_offset && !check_animation_id);
      if (ImGui::Button("Combine (w/attribute)"))
      {
-          // trigger function here.
+          [&]() {
+               const auto  &unique_pupu_ids = lock_map_sprite->working_unique_pupu();
+               toml::table *coo_table =
+                 lock_map_sprite->get_deswizzle_combined_coo_table({}, lock_selections->get<ConfigKey::TOMLFailOverForEditor>());
+
+               if (coo_table && check_offset)
+               {
+                    for (auto &&[key, value] : *coo_table)
+                    {
+                         if (value.is_table())
+                         {
+                              ff_8::filter_old<ff_8::FilterTag::MultiPupu> temp_filter = { ff_8::FilterSettings::All_Disabled };
+                              toml::table                                 &file_table  = *value.as_table();
+                              temp_filter.reload(file_table);// loads from table;
+                              if (!temp_filter.enabled())
+                              {
+                                   continue;
+                              }
+                              if (std::ranges::any_of(temp_filter.value(), [](const ff_8::PupuID &pupu_id) {
+                                       return pupu_id.blend_mode() != open_viii::graphics::background::BlendModeT::none;
+                                  }))
+                              {
+                                   continue;
+                              }
+                              if (std::ranges::all_of(
+                                    temp_filter.value(), [](const ff_8::PupuID &pupu_id) { return pupu_id.offset() > 0; }))
+                              {
+                                   // mark for deletion
+                                   m_remove_queue.emplace_back(key);
+                                   continue;
+                              }
+                              if (std::ranges::all_of(
+                                    temp_filter.value(), [](const ff_8::PupuID &pupu_id) { return pupu_id.offset() == 0; }))
+                              {
+                                   // append offsets > 0 to these.
+                                   auto copy_values = temp_filter.value();
+                                   for (const ff_8::PupuID &u_pupu_id : unique_pupu_ids)
+                                   {
+                                        for (const ff_8::PupuID &i_pupu_id : temp_filter.value())
+                                        {
+                                             if (u_pupu_id == i_pupu_id || !u_pupu_id.same_base(i_pupu_id))
+                                             {
+                                                  copy_values.push_back(u_pupu_id);
+                                             }
+                                        }
+                                   }
+                                   std::ranges::sort(copy_values);
+                                   const auto remove_range = std::ranges::unique(copy_values);
+                                   copy_values.erase(remove_range.begin(), remove_range.end());
+                                   temp_filter.update(std::move(copy_values));
+                                   temp_filter.update(file_table);
+                              }
+                         }
+                    }
+               }
+          }();
      }
      ImGui::EndDisabled();
      tool_tip("Automaticly combine with attributes selected. Replacing entries.");
