@@ -55311,11 +55311,7 @@ filter_multi_pupu = [ 4247568 ]
 filter_multi_pupu_enabled = true
 
 [gmmoni1.x.'gmmoni1_0040D020.png']
-filter_multi_pupu = [ 4247584 ]
-filter_multi_pupu_enabled = true
-
-[gmmoni1.x.'gmmoni1_0040D021.png']
-filter_multi_pupu = [ 4247585 ]
+filter_multi_pupu = [ 4247584, 4247585 ]
 filter_multi_pupu_enabled = true
 
 [gmmoni1.x.'gmmoni1_0040E000.png']
