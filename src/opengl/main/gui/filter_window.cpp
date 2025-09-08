@@ -279,6 +279,7 @@ void fme::filter_window::handle_regenerate(
      {
           return;
      }
+     spdlog::debug("{}:{} Regenerate Started", __FILE__, __LINE__);
      m_regenerate_items = false;
      toml::table *coo_table =
        lock_map_sprite->get_deswizzle_combined_coo_table({}, lock_selections->get<ConfigKey::TOMLFailOverForEditor>());
@@ -294,6 +295,7 @@ void fme::filter_window::handle_regenerate(
      lock_map_sprite->save_deswizzle_generate_toml(
        lock_selections->get<ConfigKey::OutputDeswizzlePattern>(), {}, *coo_table, lock_selections);
      save_config(lock_selections);
+     spdlog::debug("{}:{} Regenerate Ended", __FILE__, __LINE__);
 }
 
 void fme::filter_window::save_config(const std::shared_ptr<Selections> &lock_selections) const

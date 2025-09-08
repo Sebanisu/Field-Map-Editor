@@ -963,7 +963,7 @@ void map_sprite::update_render_texture(const bool reload_textures) const
                          const auto scale = glm::ivec2(canvas.width(), canvas.height()) / max_size;
                          assert(scale.x == scale.y);
                          assert(std::has_single_bit(static_cast<unsigned int>(scale.x)));
-                         opt_textures_map = &opt_map_sprite->get_deswizzle_combined_textures(scale.x);                         
+                         opt_textures_map = &opt_map_sprite->get_deswizzle_combined_textures(scale.x);
                          opt_map_sprite->consume_now();// force load textures now.
                     }
                     std::vector<std::string> remove_queue = {};
@@ -2406,60 +2406,49 @@ toml::table *
          open_viii::LangT::it,
          open_viii::LangT::es,
          open_viii::LangT::jp });
-     const auto get_table_by_coo = [&](const open_viii::LangT lang) -> toml::table * {
-          const std::string key = [&]() {
-               if (lang != open_viii::LangT::generic)
-               {
-                    return std::string(open_viii::LangCommon::to_string_3_char(lang));
-               }
-               return std::string("x");
-          }();
-
+     const auto get_key_str = [&](const open_viii::LangT lang) {
+          if (lang != open_viii::LangT::generic)
+          {
+               return std::string(open_viii::LangCommon::to_string_3_char(lang));
+          }
+          return std::string("x");
+     };
+     const auto get_table_by_coo = [&](const std::string &key) -> toml::table * {
           if (auto it_coo = field_table->find(key); it_coo != field_table->end() && it_coo->second.is_table())
+          {
+               spdlog::debug("{}:{}, found key!: {}", __FILE__, __LINE__, key);
                return it_coo->second.as_table();
+          }
+          spdlog::debug("{}:{}, NO! did not find key: {}", __FILE__, __LINE__, key);
           return nullptr;
      };
 
      for (const auto &[index, lang] : failover_sequence | std::views::enumerate)
      {
-          coo_table = get_table_by_coo(lang);
-          // if max_failover is default to 0 we allow empty tables because you might be starting from scratch. when drawing or
-          // rendering we try to skip empty tables //skipping empty might be causing issues. || (!m_map_group.opt_coo.has_value() &&
-          // !coo_table->empty())
-          if (coo_table && (max_failover == fme::FailOverLevels::Loaded))
+          const std::string key        = get_key_str(lang);
+          coo_table                    = get_table_by_coo(key);
+          const bool has_valid_table   = (coo_table != nullptr && !std::ranges::empty(*coo_table));
+          const bool is_failover_match = std::cmp_equal(std::to_underlying(max_failover), index);
+          const bool matches_opt_coo   = (m_map_group.opt_coo.has_value() && m_map_group.opt_coo.value() == lang);
+
+          if (has_valid_table || is_failover_match || matches_opt_coo)
           {
                if (out_used_coo)
-                    *out_used_coo = lang;
-               break;
-          }
-          if (std::cmp_equal(index, std::to_underlying(max_failover)))
-               break;
-     }
-
-     if (!coo_table)
-     {
-          const auto        lang = coo_opt.value_or(open_viii::LangT::generic);
-          const std::string key  = [&]() {
-               if (lang != open_viii::LangT::generic)
                {
-                    return std::string(open_viii::LangCommon::to_string_3_char(lang));
+                    *out_used_coo = lang;
                }
-               return std::string("x");
-          }();
-
-          auto &&[it, inserted] = field_table->insert(key, toml::table{});
-
-          if (inserted)
-          {
-               coo_table = it->second.is_table() ? it->second.as_table() : nullptr;
-          }
-
-          if (out_used_coo)
-          {
-               *out_used_coo = lang;
+               if (!coo_table)
+               {
+                    spdlog::debug("{}:{}, key:{}", __FILE__, __LINE__, key);
+                    auto &&[it, inserted] = field_table->insert(key, toml::table{});
+                    if (inserted)
+                    {
+                         coo_table = it->second.is_table() ? it->second.as_table() : nullptr;
+                    }
+               }
+               break;
           }
      }
-
      return coo_table;
 }
 
