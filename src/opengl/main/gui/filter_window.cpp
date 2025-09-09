@@ -704,7 +704,7 @@ void fme::filter_window::render_list_view(
 
      for (const auto &[file_name, framebuffer] : *m_textures_map)
      {
-          draw_thumbnail(lock_map_sprite, file_name, framebuffer, [&]() { select_file(file_name, lock_map_sprite); });
+          draw_thumbnail(lock_selections, lock_map_sprite, file_name, framebuffer, [&]() { select_file(file_name, lock_map_sprite); });
           draw_thumbnail_label(file_name);
           ImGui::NextColumn();
      }
@@ -971,7 +971,7 @@ void fme::filter_window::render_detail_view(
   const std::shared_ptr<map_sprite> &lock_map_sprite) const
 {
      const auto &framebuffer = m_textures_map->at(m_selected_file_name);
-     draw_thumbnail(lock_map_sprite, m_selected_file_name, framebuffer, [&]() { unselect_file(); });
+     draw_thumbnail(lock_selections, lock_map_sprite, m_selected_file_name, framebuffer, [&]() { unselect_file(); });
      draw_filename_controls(lock_selections, lock_map_sprite);
      ImGui::Separator();
      draw_filter_controls(lock_map_sprite);
@@ -1653,6 +1653,7 @@ void fme::filter_window::menu_filtered_draw_bit(const std::shared_ptr<map_sprite
 }
 
 void fme::filter_window::draw_thumbnail(
+  const std::shared_ptr<Selections>          &lock_selections,
   const std::shared_ptr<map_sprite>          &lock_map_sprite,
   const std::string                          &file_name,
   const std::optional<glengine::FrameBuffer> &framebuffer,
@@ -1703,8 +1704,36 @@ void fme::filter_window::draw_thumbnail(
           {
                if (ImGui::MenuItem("Add to selected", nullptr, nullptr, !m_multi_select.empty()))
                {
-                    // // Merge temp_filter values into selected_filter
-                    // selected_filter.addValues(temp_filter.value());
+                    ff_8::filter_old<ff_8::FilterTag::MultiPupu> temp_filter = { ff_8::FilterSettings::All_Disabled };
+                    const toml::table *const                     file_table = lock_map_sprite->get_deswizzle_combined_toml_table(file_name);
+                    if (file_table)
+                    {
+                         temp_filter.reload(*file_table);
+                         temp_filter.enable();
+                         for (const std::string &update_file_name : m_multi_select)
+                         {
+                              lock_map_sprite->apply_multi_pupu_filter_deswizzle_combined_toml_table(update_file_name, temp_filter);
+                         }
+                         m_reload_thumbnail = true;
+                         save_config(lock_selections);
+                    }
+               }
+               if (ImGui::MenuItem("Remove from selected", nullptr, nullptr, !m_multi_select.empty()))
+               {
+                    ff_8::filter_old<ff_8::FilterTag::MultiPupu> temp_filter = { ff_8::FilterSettings::All_Disabled };
+                    const toml::table *const                     file_table = lock_map_sprite->get_deswizzle_combined_toml_table(file_name);
+                    if (file_table)
+                    {
+                         temp_filter.reload(*file_table);
+                         temp_filter.disable();
+                         for (const std::string &update_file_name : m_multi_select)
+                         {
+                              lock_map_sprite->apply_multi_pupu_filter_deswizzle_combined_toml_table(
+                                update_file_name, temp_filter);
+                         }
+                         m_reload_thumbnail = true;
+                         save_config(lock_selections);
+                    }
                }
                ImGui::EndPopup();
           }

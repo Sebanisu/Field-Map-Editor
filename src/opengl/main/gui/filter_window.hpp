@@ -61,6 +61,7 @@ struct filter_window
      void                      menu_filtered_draw_bit(const std::shared_ptr<map_sprite> &) const;
 
      void                      draw_thumbnail(
+                            const std::shared_ptr<Selections>          &lock_selections,
                             const std::shared_ptr<map_sprite>          &lock_map_sprite,
                             const std::string                          &file_name,
                             const std::optional<glengine::FrameBuffer> &framebuffer,
