@@ -1050,7 +1050,8 @@ void fme::filter_window::popup_combo_filtered_pupu(
                  return lock_map_sprite->working_unique_pupu()
                         | std::views::transform([](const ff_8::PupuID &pupu_id) -> decltype(auto) { return pupu_id.create_summary(); });
             },
-            [&]() -> auto & { return m_multi_select_filter; });
+            [&]() -> auto & { return m_multi_select_filter; },
+            generic_combo_settings{ .num_columns = 5 });
           (void)gcc.render();
           format_imgui_wrapped_text(
             "{}",
@@ -1086,7 +1087,8 @@ void fme::filter_window::combo_filtered_pupu(const std::shared_ptr<map_sprite> &
             return lock_map_sprite->working_unique_pupu()
                    | std::views::transform([](const ff_8::PupuID &pupu_id) -> decltype(auto) { return pupu_id.create_summary(); });
        },
-       [&]() -> auto & { return lock_map_sprite->filter().multi_pupu; });
+       [&]() -> auto & { return lock_map_sprite->filter().multi_pupu; },
+       generic_combo_settings{ .num_columns = 5 });
 
      if (!gcc.render())
      {
