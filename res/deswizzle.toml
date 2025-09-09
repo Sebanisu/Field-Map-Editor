@@ -45782,32 +45782,28 @@ filter_multi_pupu_enabled = true
 filter_multi_pupu = [ 9437200 ]
 filter_multi_pupu_enabled = true
 
-[glfury1.x.'glfury1_00C00010.png']
-filter_multi_pupu = [ 12582928, 12582929, 12582930 ]
-filter_multi_pupu_enabled = true
-
 [glfury1.x.'glfury1_00C02000.png']
-filter_multi_pupu = [ 12591104 ]
+filter_multi_pupu = [ 12582928, 12582929, 12582930, 12591104 ]
 filter_multi_pupu_enabled = true
 
 [glfury1.x.'glfury1_00C02010.png']
-filter_multi_pupu = [ 12591120 ]
+filter_multi_pupu = [ 12582928, 12582929, 12582930, 12591120 ]
 filter_multi_pupu_enabled = true
 
 [glfury1.x.'glfury1_00C02020.png']
-filter_multi_pupu = [ 12591136 ]
+filter_multi_pupu = [ 12582928, 12582929, 12582930, 12591136 ]
 filter_multi_pupu_enabled = true
 
 [glfury1.x.'glfury1_00C02030.png']
-filter_multi_pupu = [ 12591152 ]
+filter_multi_pupu = [ 12582928, 12582929, 12582930, 12591152 ]
 filter_multi_pupu_enabled = true
 
 [glfury1.x.'glfury1_00C02040.png']
-filter_multi_pupu = [ 12591168 ]
+filter_multi_pupu = [ 12582928, 12582929, 12582930, 12591168 ]
 filter_multi_pupu_enabled = true
 
 [glfury1.x.'glfury1_00C02050.png']
-filter_multi_pupu = [ 12591184 ]
+filter_multi_pupu = [ 12582928, 12582929, 12582930, 12591184 ]
 filter_multi_pupu_enabled = true
 
 [glfury1.x.unique_pupu_ids]
