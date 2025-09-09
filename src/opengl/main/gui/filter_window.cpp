@@ -436,9 +436,10 @@ void fme::filter_window::render_list_view(
      ImGui::Columns(1);
      format_imgui_text("{}", "Combine some entries based on attributes:");
      ImGui::Columns(calc_column_count(m_tool_button_size_width), "##get_deswizzle_combined_based_on_attributes", false);
-     static constinit bool check_offset          = false;
-     static constinit bool check_animation_id    = false;
-     static constinit bool check_animation_state = false;
+     static constinit bool check_offset                        = false;
+     static constinit bool check_animation_id                  = false;
+     static constinit bool check_animation_state               = false;
+     static constinit bool check_allow_same_blend = false;
      ImGui::BeginDisabled(check_animation_id);
      if (check_animation_id)
      {
@@ -470,6 +471,13 @@ void fme::filter_window::render_list_view(
      tool_tip(
        "mask 0xFFF0'00FFU vs PupuID and combine all of those elements. Join animations of the same state because they usually don't "
        "overlap.");
+
+     ImGui::NextColumn();
+     if (ImGui::Checkbox("(Allow Blend)", &check_allow_same_blend))
+     {
+     }
+
+     tool_tip("mask 0xFFF0'00FFU vs PupuID and combine all of those elements. Allow combines on the same blend.");
      ImGui::NextColumn();
      combo_exclude_animation_id_from_state(lock_map_sprite);
      ImGui::NextColumn();
@@ -494,7 +502,7 @@ void fme::filter_window::render_list_view(
                               {
                                    continue;
                               }
-                              if (std::ranges::any_of(temp_filter.value(), [](const ff_8::PupuID &pupu_id) {
+                              if (!check_allow_same_blend && std::ranges::any_of(temp_filter.value(), [](const ff_8::PupuID &pupu_id) {
                                        return pupu_id.blend_mode() != open_viii::graphics::background::BlendModeT::none;
                                   }))
                               {
@@ -551,7 +559,7 @@ void fme::filter_window::render_list_view(
                               {
                                    continue;
                               }
-                              if (std::ranges::any_of(temp_filter.value(), [](const ff_8::PupuID &pupu_id) {
+                              if (!check_allow_same_blend && std::ranges::any_of(temp_filter.value(), [](const ff_8::PupuID &pupu_id) {
                                        return pupu_id.blend_mode() != open_viii::graphics::background::BlendModeT::none;
                                   }))
                               {
@@ -659,7 +667,7 @@ void fme::filter_window::render_list_view(
                               {
                                    continue;
                               }
-                              if (std::ranges::any_of(temp_filter.value(), [](const ff_8::PupuID &pupu_id) {
+                              if (!check_allow_same_blend && std::ranges::any_of(temp_filter.value(), [](const ff_8::PupuID &pupu_id) {
                                        return pupu_id.blend_mode() != open_viii::graphics::background::BlendModeT::none;
                                   }))
                               {
