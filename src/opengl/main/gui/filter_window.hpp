@@ -79,6 +79,7 @@ struct filter_window
      mutable float                                                        m_thumb_size_width       = { 96.f };
      mutable ff_8::filter_old<ff_8::FilterTag::MultiPupu>                 m_multi_select_filter    = { ff_8::FilterSettings::All_Disabled };
      mutable std::vector<std::string>                                     m_multi_select           = {};
+     mutable std::vector<std::string>                                     m_reload_list            = {};
      mutable std::string                                                  m_selected_file_name     = {};
      mutable std::string                                                  m_hovered_file_name      = {};
      mutable std::optional<std::string>                                   m_previous_file_name     = {};
