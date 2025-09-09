@@ -539,74 +539,6 @@ void fme::filter_window::render_list_view(
                          }
                     }
                }
-               if (coo_table && check_animation_id)
-               {
-                    for (auto &&[key, value] : *coo_table)
-                    {
-                         if (value.is_table())
-                         {
-                              ff_8::filter_old<ff_8::FilterTag::MultiPupu> temp_filter = { ff_8::FilterSettings::All_Disabled };
-                              toml::table                                 &file_table  = *value.as_table();
-                              temp_filter.reload(file_table);// loads from table;
-                              if (!temp_filter.enabled())
-                              {
-                                   continue;
-                              }
-                              if (std::ranges::any_of(temp_filter.value(), [](const ff_8::PupuID &pupu_id) {
-                                       return pupu_id.blend_mode() != open_viii::graphics::background::BlendModeT::none;
-                                  }))
-                              {
-                                   continue;
-                              }
-                              if (std::ranges::all_of(
-                                    temp_filter.value(), [](const ff_8::PupuID &pupu_id) { return pupu_id.offset() > 0; }))
-                              {
-                                   // mark for deletion
-                                   m_remove_queue.emplace_back(key);
-                                   continue;
-                              }
-                              if (std::ranges::all_of(
-                                    temp_filter.value(), [](const ff_8::PupuID &pupu_id) { return pupu_id.offset() == 0; }))
-                              {
-                                   // append offsets > 0 to these.
-                                   auto copy_values = temp_filter.value();
-                                   bool reload      = false;
-                                   for (const ff_8::PupuID &u_pupu_id : unique_pupu_ids)
-                                   {
-                                        for (const ff_8::PupuID &i_pupu_id : temp_filter.value())
-                                        {
-                                             if (
-                                                  u_pupu_id != i_pupu_id &&
-                                                  (
-                                                       u_pupu_id.same_base(i_pupu_id) ||
-                                                       (
-                                                            u_pupu_id.same_animation_base(i_pupu_id) &&
-                                                            i_pupu_id.animation_id() != 0xFFU &&
-                                                            u_pupu_id.animation_id() == 0xFFU &&
-                                                            u_pupu_id.animation_state() == 0x00U
-                                                       )
-                                                  )
-                                             )
-                                             {
-                                                  copy_values.push_back(u_pupu_id);
-                                                  reload = true;
-                                             }
-                                        }
-                                   }
-                                   if (reload)
-                                   {
-                                        m_reload_list.emplace_back(key);
-                                        m_reload_thumbnail = true;
-                                   }
-                                   std::ranges::sort(copy_values);
-                                   const auto remove_range = std::ranges::unique(copy_values);
-                                   copy_values.erase(remove_range.begin(), remove_range.end());
-                                   temp_filter.update(std::move(copy_values));
-                                   temp_filter.update(file_table);
-                              }
-                         }
-                    }
-               }
                if (coo_table && check_animation_state)
                {
                     for (auto &&[key, value] : *coo_table)
@@ -695,6 +627,76 @@ void fme::filter_window::render_list_view(
                          {
                               // Duplicate → queue for removal
                               m_remove_queue.push_back(std::string{ key.str() });
+                         }
+                    }
+               }
+
+
+               if (coo_table && check_animation_id)
+               {
+                    for (auto &&[key, value] : *coo_table)
+                    {
+                         if (value.is_table())
+                         {
+                              ff_8::filter_old<ff_8::FilterTag::MultiPupu> temp_filter = { ff_8::FilterSettings::All_Disabled };
+                              toml::table                                 &file_table  = *value.as_table();
+                              temp_filter.reload(file_table);// loads from table;
+                              if (!temp_filter.enabled())
+                              {
+                                   continue;
+                              }
+                              if (std::ranges::any_of(temp_filter.value(), [](const ff_8::PupuID &pupu_id) {
+                                       return pupu_id.blend_mode() != open_viii::graphics::background::BlendModeT::none;
+                                  }))
+                              {
+                                   continue;
+                              }
+                              if (std::ranges::all_of(
+                                    temp_filter.value(), [](const ff_8::PupuID &pupu_id) { return pupu_id.offset() > 0; }))
+                              {
+                                   // mark for deletion
+                                   m_remove_queue.emplace_back(key);
+                                   continue;
+                              }
+                              if (std::ranges::all_of(
+                                    temp_filter.value(), [](const ff_8::PupuID &pupu_id) { return pupu_id.offset() == 0; }))
+                              {
+                                   // append offsets > 0 to these.
+                                   auto copy_values = temp_filter.value();
+                                   bool reload      = false;
+                                   for (const ff_8::PupuID &u_pupu_id : unique_pupu_ids)
+                                   {
+                                        for (const ff_8::PupuID &i_pupu_id : temp_filter.value())
+                                        {
+                                             if (
+                                                  u_pupu_id != i_pupu_id &&
+                                                  (
+                                                       u_pupu_id.same_base(i_pupu_id) ||
+                                                       (
+                                                            u_pupu_id.same_animation_base(i_pupu_id) &&
+                                                            i_pupu_id.animation_id() != 0xFFU &&
+                                                            u_pupu_id.animation_id() == 0xFFU &&
+                                                            u_pupu_id.animation_state() == 0x00U
+                                                       )
+                                                  )
+                                             )
+                                             {
+                                                  copy_values.push_back(u_pupu_id);
+                                                  reload = true;
+                                             }
+                                        }
+                                   }
+                                   if (reload)
+                                   {
+                                        m_reload_list.emplace_back(key);
+                                        m_reload_thumbnail = true;
+                                   }
+                                   std::ranges::sort(copy_values);
+                                   const auto remove_range = std::ranges::unique(copy_values);
+                                   copy_values.erase(remove_range.begin(), remove_range.end());
+                                   temp_filter.update(std::move(copy_values));
+                                   temp_filter.update(file_table);
+                              }
                          }
                     }
                }
