@@ -179,11 +179,16 @@ void fme::filter_window::render() const
                     m_textures_map->erase(current_file_name);
                }
           }
-          else
+          else if (!m_selected_file_name.empty())
           {
                m_textures_map->erase(m_selected_file_name);
           }
+          
           (void)lock_map_sprite->get_deswizzle_combined_textures();
+          if (!m_selected_file_name.empty())
+          {
+               lock_map_sprite->consume_now();
+          }
      }
 
      if (m_selected_file_name.empty() || !m_textures_map->contains(m_selected_file_name))
