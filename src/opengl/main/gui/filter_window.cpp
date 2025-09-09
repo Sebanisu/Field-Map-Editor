@@ -183,7 +183,7 @@ void fme::filter_window::render() const
           {
                m_textures_map->erase(m_selected_file_name);
           }
-          
+
           (void)lock_map_sprite->get_deswizzle_combined_textures();
           if (!m_selected_file_name.empty())
           {
@@ -439,11 +439,19 @@ void fme::filter_window::render_list_view(
      static constinit bool check_offset       = false;
      static constinit bool check_animation_id = false;
      ImGui::BeginDisabled(check_animation_id);
-     (void)ImGui::Checkbox("Offset", &check_offset);
+     if (check_animation_id)
+     {
+          bool is_true = true;
+          (void)ImGui::Checkbox("Offset", &is_true);
+     }
+     else
+     {
+          (void)ImGui::Checkbox("Offset", &check_offset);
+     }
      ImGui::EndDisabled();
      tool_tip("mask 0xFFFF'FFF0U vs PupuID and combine all of those elements.");
      ImGui::NextColumn();
-     if (ImGui::Checkbox("Animation ID", &check_animation_id))
+     if (ImGui::Checkbox("Animation", &check_animation_id))
      {
           if (check_animation_id)
           {
@@ -453,7 +461,9 @@ void fme::filter_window::render_list_view(
                check_offset = false;
           }
      }
-     tool_tip("mask 0xFFF0'0FF0U vs PupuID and combine all of those elements.");
+     tool_tip(
+       "mask 0xFFF0'0000U vs PupuID and combine all of those elements. If one of the PupuIDs is has Animation ID 0xFF and Animation State "
+       "0x00");
      ImGui::NextColumn();
      ImGui::BeginDisabled(!check_offset && !check_animation_id);
      if (ImGui::Button("Combine (w/attribute)"))
