@@ -146,6 +146,11 @@ struct PupuID
           constexpr auto mask = 0xFFF0'0000U;
           return (m_raw & mask) == (right.raw() & mask);
      }
+     [[nodiscard]] bool constexpr same_animation_state_base(PupuID right) const noexcept
+     {
+          constexpr auto mask = 0xFFF0'0FF0U;
+          return (m_raw & mask) == (right.raw() & mask);
+     }
      constexpr auto            operator<=>(const PupuID &) const noexcept = default;
      [[nodiscard]] std::string create_summary() const;
 
