@@ -44,6 +44,7 @@ struct filter_window
      void                      combo_filtered_blend_other(const std::shared_ptr<map_sprite> &) const;
      void                      combo_filtered_layers(const std::shared_ptr<map_sprite> &) const;
      void                      combo_filtered_texture_pages(const std::shared_ptr<map_sprite> &) const;
+     void                      combo_exclude_animation_id_from_state(const std::shared_ptr<map_sprite> &lock_map_sprite) const;
      void                      combo_filtered_animation_ids(const std::shared_ptr<map_sprite> &) const;
      void                      combo_filtered_animation_states(const std::shared_ptr<map_sprite> &) const;
      void                      combo_filtered_z(const std::shared_ptr<map_sprite> &) const;
@@ -67,30 +68,31 @@ struct filter_window
                             const std::optional<glengine::FrameBuffer> &framebuffer,
                             std::move_only_function<void()>             on_click) const;
 
-     mutable bool                                                         m_changed                = { false };
-     std::weak_ptr<Selections>                                            m_selections             = {};
-     std::weak_ptr<map_sprite>                                            m_map_sprite             = {};
+     mutable bool                                             m_changed                          = { false };
+     std::weak_ptr<Selections>                                m_selections                       = {};
+     std::weak_ptr<map_sprite>                                m_map_sprite                       = {};
 
 
-     mutable bool                                                         m_reload_thumbnail       = { false };
-     mutable bool                                                         m_regenerate_items       = { false };
-     mutable bool                                                         m_was_focused            = { false };
-     mutable float                                                        m_aspect_ratio           = { 1.f };
-     float                                                                m_tool_button_size_width = { 152.f };
-     mutable float                                                        m_thumb_size_width       = { 96.f };
-     mutable ff_8::filter_old<ff_8::FilterTag::MultiPupu>                 m_multi_select_filter    = { ff_8::FilterSettings::All_Disabled };
-     mutable std::vector<std::string>                                     m_multi_select           = {};
-     mutable std::vector<std::string>                                     m_reload_list            = {};
-     mutable std::string                                                  m_selected_file_name     = {};
-     mutable std::string                                                  m_hovered_file_name      = {};
-     mutable std::optional<std::string>                                   m_previous_file_name     = {};
-     mutable std::optional<std::string>                                   m_next_file_name         = {};
-     mutable toml::table                                                 *m_selected_toml_table    = {};
-     mutable std::vector<std::string>                                     m_remove_queue           = {};
-     mutable std::vector<std::pair<std::string, std::string>>             m_rename_queue           = {};
-     mutable std::array<char, 128>                                        m_file_name_buffer       = {};
-     mutable std::map<std::string, std::optional<glengine::FrameBuffer>> *m_textures_map           = {};
-     mutable std::string                                                  m_last_selected          = {};
+     mutable bool                                             m_reload_thumbnail                 = { false };
+     mutable bool                                             m_regenerate_items                 = { false };
+     mutable bool                                             m_was_focused                      = { false };
+     mutable float                                            m_aspect_ratio                     = { 1.f };
+     float                                                    m_tool_button_size_width           = { 152.f };
+     mutable float                                            m_thumb_size_width                 = { 96.f };
+     mutable ff_8::filter_old<ff_8::FilterTag::MultiPupu>     m_multi_select_filter              = { ff_8::FilterSettings::All_Disabled };
+     mutable ff_8::filter<ff_8::FilterTag::MultiAnimationId>  m_excluded_animation_id_from_state = { ff_8::FilterSettings::All_Disabled };
+     mutable std::vector<std::string>                         m_multi_select                     = {};
+     mutable std::vector<std::string>                         m_reload_list                      = {};
+     mutable std::string                                      m_selected_file_name               = {};
+     mutable std::string                                      m_hovered_file_name                = {};
+     mutable std::optional<std::string>                       m_previous_file_name               = {};
+     mutable std::optional<std::string>                       m_next_file_name                   = {};
+     mutable toml::table                                     *m_selected_toml_table              = {};
+     mutable std::vector<std::string>                         m_remove_queue                     = {};
+     mutable std::vector<std::pair<std::string, std::string>> m_rename_queue                     = {};
+     mutable std::array<char, 128>                            m_file_name_buffer                 = {};
+     mutable std::map<std::string, std::optional<glengine::FrameBuffer>> *m_textures_map         = {};
+     mutable std::string                                                  m_last_selected        = {};
      static const constexpr size_t                                        s_max_chars =
        std::ranges::size(std::remove_cvref_t<decltype(m_file_name_buffer)>{}) - 1U;// space for null terminator
 };

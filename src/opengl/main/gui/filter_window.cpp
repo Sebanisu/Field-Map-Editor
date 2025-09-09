@@ -471,6 +471,8 @@ void fme::filter_window::render_list_view(
        "mask 0xFFF0'00FFU vs PupuID and combine all of those elements. Join animations of the same state because they usually don't "
        "overlap.");
      ImGui::NextColumn();
+     combo_exclude_animation_id_from_state(lock_map_sprite);
+     ImGui::NextColumn();
      ImGui::BeginDisabled(!check_offset && !check_animation_id && !check_animation_state);
      if (ImGui::Button("Combine (w/attribute)"))
      {
@@ -568,8 +570,25 @@ void fme::filter_window::render_list_view(
                                    bool reload      = false;
                                    for (const ff_8::PupuID &u_pupu_id : unique_pupu_ids)
                                    {
+
+                                        if (
+                                          m_excluded_animation_id_from_state.enabled()
+                                          && std::ranges::any_of(m_excluded_animation_id_from_state.value(), [&](const auto &id) {
+                                                  return u_pupu_id.animation_id() == id;
+                                             }))
+                                        {
+                                             continue;
+                                        }
                                         for (const ff_8::PupuID &i_pupu_id : temp_filter.value())
                                         {
+                                             if (
+                                               m_excluded_animation_id_from_state.enabled()
+                                               && std::ranges::any_of(m_excluded_animation_id_from_state.value(), [&](const auto &id) {
+                                                       return i_pupu_id.animation_id() == id;
+                                                  }))
+                                             {
+                                                  continue;
+                                             }
                                              if (
                                                   u_pupu_id != i_pupu_id &&
                                                   (
@@ -1346,6 +1365,26 @@ void fme::filter_window::combo_filtered_texture_pages(const std::shared_ptr<map_
      m_changed = true;
 }
 
+
+void fme::filter_window::combo_exclude_animation_id_from_state(const std::shared_ptr<map_sprite> &lock_map_sprite) const
+{
+     const auto &pair = lock_map_sprite->uniques().animation_id();
+     ImGui::BeginDisabled(std::ranges::size(pair.values()) <= 1U || std::ranges::size(pair.strings()) <= 1U);
+     const auto pop_disabled = glengine::ScopeGuard(&ImGui::EndDisabled);
+     const auto gcc          = fme::GenericComboWithMultiFilter(
+       "Exclude",
+       [&pair]() { return pair.values() | std::views::take(std::ranges::size(pair.values()) - 1u); },
+       [&pair]() { return pair.strings() | std::views::take(std::ranges::size(pair.strings()) - 1u); },
+       [&pair]() { return pair.strings() | std::views::take(std::ranges::size(pair.strings()) - 1u); },
+       [&]() -> auto          &{ return m_excluded_animation_id_from_state; });
+     if (!gcc.render())
+     {
+          return;
+     }
+     tool_tip("Exclude Animation IDs from State Combine");
+     m_changed = true;
+}
+
 void fme::filter_window::combo_filtered_animation_ids(const std::shared_ptr<map_sprite> &lock_map_sprite) const
 {
      const auto &pair = lock_map_sprite->uniques().animation_id();
@@ -1354,6 +1393,7 @@ void fme::filter_window::combo_filtered_animation_ids(const std::shared_ptr<map_
        [&pair]() { return pair.values(); },
        [&pair]() { return pair.strings(); },
        [&pair]() { return pair.strings(); },
+       //       filter<FilterTag::MultiAnimationId> multi_animation_id;
        [&]() -> auto  &{ return lock_map_sprite->filter().multi_animation_id; });
      if (!gcc.render())
      {
@@ -1728,8 +1768,7 @@ void fme::filter_window::draw_thumbnail(
                          temp_filter.disable();
                          for (const std::string &update_file_name : m_multi_select)
                          {
-                              lock_map_sprite->apply_multi_pupu_filter_deswizzle_combined_toml_table(
-                                update_file_name, temp_filter);
+                              lock_map_sprite->apply_multi_pupu_filter_deswizzle_combined_toml_table(update_file_name, temp_filter);
                          }
                          m_reload_thumbnail = true;
                          save_config(lock_selections);
