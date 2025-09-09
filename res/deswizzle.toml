@@ -52664,27 +52664,27 @@ filter_multi_pupu = [ 4198432 ]
 filter_multi_pupu_enabled = true
 
 [gmmoni1.eng.'gmmoni1_en_00401030.png']
-filter_multi_pupu = [ 4198448 ]
+filter_multi_pupu = [ 4198448, 4227104, 4231200 ]
 filter_multi_pupu_enabled = true
 
 [gmmoni1.eng.'gmmoni1_en_00401040.png']
-filter_multi_pupu = [ 4198464 ]
+filter_multi_pupu = [ 4198464, 4227104, 4231200 ]
 filter_multi_pupu_enabled = true
 
 [gmmoni1.eng.'gmmoni1_en_00401050.png']
-filter_multi_pupu = [ 4198480 ]
+filter_multi_pupu = [ 4198480, 4227104, 4231200 ]
 filter_multi_pupu_enabled = true
 
 [gmmoni1.eng.'gmmoni1_en_00401060.png']
-filter_multi_pupu = [ 4198496 ]
+filter_multi_pupu = [ 4198496, 4227104, 4231200 ]
 filter_multi_pupu_enabled = true
 
 [gmmoni1.eng.'gmmoni1_en_00401070.png']
-filter_multi_pupu = [ 4198512 ]
+filter_multi_pupu = [ 4198512, 4227104, 4231200 ]
 filter_multi_pupu_enabled = true
 
 [gmmoni1.eng.'gmmoni1_en_00401080.png']
-filter_multi_pupu = [ 4198528 ]
+filter_multi_pupu = [ 4198528, 4227104, 4231200 ]
 filter_multi_pupu_enabled = true
 
 [gmmoni1.eng.'gmmoni1_en_00402000.png']
@@ -52760,7 +52760,7 @@ filter_multi_pupu = [ 4227088 ]
 filter_multi_pupu_enabled = true
 
 [gmmoni1.eng.'gmmoni1_en_00408020.png']
-filter_multi_pupu = [ 4227104 ]
+filter_multi_pupu = [ 4227104, 4231200 ]
 filter_multi_pupu_enabled = true
 
 [gmmoni1.eng.'gmmoni1_en_00409000.png']
@@ -52769,10 +52769,6 @@ filter_multi_pupu_enabled = true
 
 [gmmoni1.eng.'gmmoni1_en_00409010.png']
 filter_multi_pupu = [ 4231184 ]
-filter_multi_pupu_enabled = true
-
-[gmmoni1.eng.'gmmoni1_en_00409020.png']
-filter_multi_pupu = [ 4231200 ]
 filter_multi_pupu_enabled = true
 
 [gmmoni1.eng.'gmmoni1_en_0040A000.png']
@@ -52808,11 +52804,7 @@ filter_multi_pupu = [ 4247568 ]
 filter_multi_pupu_enabled = true
 
 [gmmoni1.eng.'gmmoni1_en_0040D020.png']
-filter_multi_pupu = [ 4247584 ]
-filter_multi_pupu_enabled = true
-
-[gmmoni1.eng.'gmmoni1_en_0040D021.png']
-filter_multi_pupu = [ 4247585 ]
+filter_multi_pupu = [ 4247584, 4247585 ]
 filter_multi_pupu_enabled = true
 
 [gmmoni1.eng.'gmmoni1_en_0040E000.png']
