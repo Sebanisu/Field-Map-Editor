@@ -1701,7 +1701,7 @@ void fme::filter_window::draw_thumbnail(
           const auto pop_id = PushPopID();
           if (ImGui::BeginPopupContextItem("FilterOptions"))// right-click menu for this button
           {
-               if (ImGui::MenuItem("Add to selected", nullptr, !m_multi_select.empty()))
+               if (ImGui::MenuItem("Add to selected", nullptr, nullptr, !m_multi_select.empty()))
                {
                     // // Merge temp_filter values into selected_filter
                     // selected_filter.addValues(temp_filter.value());
