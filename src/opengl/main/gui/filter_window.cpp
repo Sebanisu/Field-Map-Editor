@@ -1698,6 +1698,16 @@ void fme::filter_window::draw_thumbnail(
           {
                tool_tip(tooltip_str);
           }
+          const auto pop_id = PushPopID();
+          if (ImGui::BeginPopupContextItem("FilterOptions"))// right-click menu for this button
+          {
+               if (ImGui::MenuItem("Add to selected", nullptr, ))
+               {
+                    // // Merge temp_filter values into selected_filter
+                    // selected_filter.addValues(temp_filter.value());
+               }
+               ImGui::EndPopup();
+          }
           if (ImGui::IsItemHovered())
           {
                m_hovered_file_name = file_name;
