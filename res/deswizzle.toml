@@ -42706,19 +42706,7 @@ filter_multi_pupu = [ 2093056 ]
 filter_multi_pupu_enabled = true
 
 [gfrich1a.x.'gfrich1a_004FF000.png']
-filter_multi_pupu = [ 5238784 ]
-filter_multi_pupu_enabled = true
-
-[gfrich1a.x.'gfrich1a_004FF001.png']
-filter_multi_pupu = [ 5238785 ]
-filter_multi_pupu_enabled = true
-
-[gfrich1a.x.'gfrich1a_004FF002.png']
-filter_multi_pupu = [ 5238786 ]
-filter_multi_pupu_enabled = true
-
-[gfrich1a.x.'gfrich1a_004FF003.png']
-filter_multi_pupu = [ 5238787 ]
+filter_multi_pupu = [ 5238784, 5238785, 5238786, 5238787 ]
 filter_multi_pupu_enabled = true
 
 [gfrich1a.x.unique_pupu_ids]
