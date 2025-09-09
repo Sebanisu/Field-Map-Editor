@@ -1377,13 +1377,13 @@ void fme::filter_window::combo_filtered_texture_pages(const std::shared_ptr<map_
 void fme::filter_window::combo_exclude_animation_id_from_state(const std::shared_ptr<map_sprite> &lock_map_sprite) const
 {
      const auto &pair = lock_map_sprite->uniques().animation_id();
-     ImGui::BeginDisabled(std::ranges::size(pair.values()) <= 1U || std::ranges::size(pair.strings()) <= 1U);
-     const auto pop_disabled = glengine::ScopeGuard(&ImGui::EndDisabled);
+     // ImGui::BeginDisabled(std::ranges::size(pair.values()) <= 1U || std::ranges::size(pair.strings()) <= 1U);
+     // const auto pop_disabled = glengine::ScopeGuard(&ImGui::EndDisabled);
      const auto gcc          = fme::GenericComboWithMultiFilter(
        "Exclude",
-       [&pair]() { return pair.values() | std::views::take(std::ranges::size(pair.values()) - 1u); },
-       [&pair]() { return pair.strings() | std::views::take(std::ranges::size(pair.strings()) - 1u); },
-       [&pair]() { return pair.strings() | std::views::take(std::ranges::size(pair.strings()) - 1u); },
+       [&pair]() { return pair.values(); },
+       [&pair]() { return pair.strings(); },
+       [&pair]() { return pair.strings(); },
        [&]() -> auto          &{ return m_excluded_animation_id_from_state; });
      if (!gcc.render())
      {
