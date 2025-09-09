@@ -458,9 +458,6 @@ void fme::filter_window::render_list_view(
           {
                check_offset = true;
           }
-          {
-               check_offset = false;
-          }
      }
      tool_tip(
        "mask 0xFFF0'0000U vs PupuID and combine all of those elements. If one of the PupuIDs is has Animation ID 0xFF and Animation State "
@@ -1165,7 +1162,7 @@ void fme::filter_window::popup_combo_filtered_pupu(
                         | std::views::transform([](const ff_8::PupuID &pupu_id) -> decltype(auto) { return pupu_id.create_summary(); });
             },
             [&]() -> auto & { return m_multi_select_filter; },
-            generic_combo_settings{ .num_columns = 3 });
+            generic_combo_settings{ .num_columns = 2 });
           (void)gcc.render();
           format_imgui_wrapped_text(
             "{}",
