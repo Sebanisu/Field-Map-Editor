@@ -508,8 +508,8 @@ void fme::filter_window::render_list_view(
                                    m_remove_queue.emplace_back(key);
                                    continue;
                               }
-                              if (std::ranges::all_of(
-                                    temp_filter.value(), [](const ff_8::PupuID &pupu_id) { return pupu_id.offset() == 0; }))
+                              // if (std::ranges::all_of(
+                              //       temp_filter.value(), [](const ff_8::PupuID &pupu_id) { return pupu_id.offset() == 0; }))
                               {
                                    // append offsets > 0 to these.
                                    auto copy_values = temp_filter.value();
@@ -565,8 +565,6 @@ void fme::filter_window::render_list_view(
                                    m_remove_queue.emplace_back(key);
                                    continue;
                               }
-                              if (std::ranges::all_of(
-                                    temp_filter.value(), [](const ff_8::PupuID &pupu_id) { return pupu_id.offset() == 0; }))
                               {
                                    // append offsets > 0 to these.
                                    auto copy_values = temp_filter.value();
@@ -658,8 +656,6 @@ void fme::filter_window::render_list_view(
                                    m_remove_queue.emplace_back(key);
                                    continue;
                               }
-                              if (std::ranges::all_of(
-                                    temp_filter.value(), [](const ff_8::PupuID &pupu_id) { return pupu_id.offset() == 0; }))
                               {
                                    // append offsets > 0 to these.
                                    auto copy_values = temp_filter.value();
