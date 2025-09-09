@@ -1053,7 +1053,7 @@ void gui::combo_field()
                         using namespace std::string_view_literals;
                         return (
                           std::string_view(str).starts_with("ma"sv)
-                              || (std::string_view(str) == "ec"sv || std::string_view(str) == "te"sv || std::string_view(str) == "fhdeck3a"sv)
+                              || (std::string_view(str) == "ec"sv || std::string_view(str) == "te"sv || std::string_view(str) == "fhdeck3a"sv || std::string_view(str) == "ggroad4"sv)
                             ? ""sv
                             : std::string_view(str));
                    });
@@ -1983,7 +1983,7 @@ void gui::file_menu()
                     }
                     if (
                       std::string_view(str) == "ec"sv || std::string_view(str) == "te"sv || std::string_view(str) == "fhdeck3a"sv
-                      || std::string_view(str).starts_with("ma"sv))
+                      || std::string_view(str) == "ggroad4"sv || std::string_view(str).starts_with("ma"sv))
                     {
                          continue;
                     }
@@ -3030,7 +3030,8 @@ void gui::bind_shortcuts()
 
      // Inside your GUI update loop where you already handle shortcuts
      const auto     test_field = [](std::string_view test) -> bool {
-          return test == "ec"sv || test == "te"sv || test == "fhdeck3a"sv || test.starts_with("ma"sv);
+          return test == "ec"sv || test == "te"sv || test == "fhdeck3a"sv || test.starts_with("ma"sv)
+                 || test == "ggroad4"sv;
      };
 
      if (const ImGuiKeyChord escapeChord = (ImGuiKey_Escape);
